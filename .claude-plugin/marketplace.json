@@ -1,0 +1,13 @@
+{
+  "name": "research-paper-pipeline",
+  "owner": { "name": "zernie", "url": "https://github.com/zernie" },
+  "metadata": { "description": "Machine-checkable gates for writing a research paper in git" },
+  "plugins": [
+    {
+      "name": "research-paper-pipeline",
+      "source": "./",
+      "description": "ESLint rules over LaTeX sources, harnesses, and CI for paper repos",
+      "version": "0.0.1"
+    }
+  ]
+}
