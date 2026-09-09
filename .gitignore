@@ -1,0 +1,8 @@
+node_modules/
+_build/
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+.vigiles/state/
