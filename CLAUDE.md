@@ -38,6 +38,42 @@ exactly like a rule that passed. Any rule shipped here must be loud when its inp
 empty. This is the specific defect that blocks stage 1 of the plan: in the source base a
 fresh clone yields RC=0, 652 findings, zero errors — because 19 rules saw no files at all.
 
+## Distribution — no `smh init`, and that is a measured decision (2026-09-10)
+
+Considered: a `research-paper-pipeline init` command that installs the ESLint config and the
+Claude plugin in one shot, the way `vigiles init` does. **Rejected for now**, and the reason is
+worth keeping so it is not reopened.
+
+**What makes `vigiles init` earn its existence** — read from its own implementation, not guessed:
+
+```
+Scanning linters and project files...
+  <linter>: <N> rules
+✓ Generated .vigiles/generated.d.ts
+✓ Generated .vigiles/schema.json (YAML-LSP frontmatter schema)
+```
+
+It **generates artifacts by measuring the repo it lands in** — TypeScript types for the rules
+*that project* actually has. That is work no template can do, so a command is the only way to do it.
+
+**This repo has nothing of that shape yet.** Five rules, no per-project configuration, nothing to
+derive from the host repo. An `init` here would copy files — and copying files is exactly what the
+two standard channels already do, for free:
+
+| what ships | standard channel | user's side |
+|---|---|---|
+| skills | `.claude-plugin/marketplace.json` + `plugin.json` | `/plugin marketplace add <owner>/<repo>` then `/plugin install` |
+| ESLint rules | an npm package | `npm i -D <pkg>` + a few lines in `eslint.config.mjs` |
+
+Both are measured, not assumed: `vigiles` and `Imbad0202/academic-research-skills` (47k stars) both
+ship `.claude-plugin/marketplace.json`, and ARS advertises install as two commands.
+
+🔴 **The condition that would flip this decision:** the moment something must be *derived* from the
+host repo — detecting the venue/format of the paper and enabling the matching rule set, or reading
+an existing `.tex` to decide what to check. That is generation by measurement, and it is what a
+command is for. Until then, a hand-written `init` is work that npm and the plugin marketplace are
+already doing.
+
 ## Cost
 
 This is a **private** repository, so its GitHub Actions minutes come out of the account-wide
