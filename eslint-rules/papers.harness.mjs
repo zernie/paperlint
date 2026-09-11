@@ -60,7 +60,7 @@ const declaring = (papers) => ({ "research-paper-pipeline": { papers } });
 
 // A declared root wins, including a nested one — the first consumer's is two levels deep, and
 // a helper that only handled a single path segment would work on every fixture and fail there.
-for (const declared of ["papers", "docs/papers", "migratsiya/papers", "a/b/c/d"]) {
+for (const declared of ["papers", "docs/papers", "writing/drafts", "a/b/c/d"]) {
   const repo = repoWith(declared);
   assert.equal(
     papersRoot(declaring(declared), repo),
@@ -78,12 +78,12 @@ for (const declared of ["papers", "docs/papers", "migratsiya/papers", "a/b/c/d"]
 {
   const repo = repoWith("somewhere-else");
   assert.throws(
-    () => papersRoot(declaring("migratsiya/papers"), repo),
+    () => papersRoot(declaring("writing/drafts"), repo),
     (e) =>
       /does not exist/.test(e.message) &&
       // names WHAT was declared, so the reader does not have to guess which of several
       // candidate paths the tool was looking at,
-      e.message.includes('"migratsiya/papers"') &&
+      e.message.includes('"writing/drafts"') &&
       // names WHERE it looked,
       e.message.includes(repo) &&
       // tells the reader it came from package.json rather than from a default,
@@ -123,8 +123,8 @@ for (const bad of ["", null, 0, false, [], {}, 42])
 // directory; an absolute path there is a different pattern with different behaviour, and the
 // breakage would show up as "the rule stopped matching", i.e. as silence.
 {
-  const repo = repoWith("migratsiya/papers");
-  const got = papersRoot(declaring("migratsiya/papers"), repo);
+  const repo = repoWith("writing/drafts");
+  const got = papersRoot(declaring("writing/drafts"), repo);
   assert.equal(isAbsolute(got), false, "the root must be returned relative, not resolved");
   assert.equal(got.includes(repo), false, "the root must not carry the base directory");
 }
@@ -135,11 +135,11 @@ for (const bad of ["", null, 0, false, [], {}, 42])
 // used cwd would pass every test run from the repository root and fail in exactly the setups
 // nobody runs tests in.
 {
-  const real = repoWith("migratsiya/papers");
+  const real = repoWith("writing/drafts");
   const empty = repoWith("unrelated");
-  assert.equal(papersRoot(declaring("migratsiya/papers"), real), "migratsiya/papers");
+  assert.equal(papersRoot(declaring("writing/drafts"), real), "writing/drafts");
   assert.throws(
-    () => papersRoot(declaring("migratsiya/papers"), empty),
+    () => papersRoot(declaring("writing/drafts"), empty),
     /does not exist/,
     "baseDir must be what is consulted — the same declaration must fail against a base that " +
       "does not contain the root",
@@ -182,6 +182,10 @@ for (const bad of ["", null, 0, false, [], {}, 42])
 // name; it may appear ONLY in this file (as the value under test) and in prose that documents
 // the decision.
 {
+  // ⚠️ ЕДИНСТВЕННОЕ законное вхождение этого слова в пакете, и оно здесь по необходимости:
+  // это ПРЕДМЕТ ассерта. Фикстуры выше намеренно используют нейтральные пути
+  // (`writing/drafts`) — до 12.09.2026 они писали настоящее имя каталога потребителя, и
+  // аудит перед публикацией показал одиннадцать вхождений там, где по смыслу нужно одно.
   const FORBIDDEN = "migratsiya";
   const SELF = fileURLToPath(import.meta.url);
   const skipDirs = new Set(["node_modules", ".git", "fixtures"]);
