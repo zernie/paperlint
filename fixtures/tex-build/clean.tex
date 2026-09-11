@@ -1,0 +1,21 @@
+% Fixture: a build that is NOT in review mode and promises nothing it has already shipped.
+% The rule must run here and find nothing -- that is the quiet half of `tex/future-promise`.
+%
+% The line below is an AUTHOR NOTE inside a LaTeX comment, and it deliberately carries a
+% promise phrase: the full harness will be released once the table is redrawn.
+% A finding on it would be exactly the false positive that gets a check switched off.
+\documentclass[sigconf,screen]{acmart}
+\settopmatter{printfolios=true}
+\begin{document}
+\title{A short and honest paper}
+
+\begin{abstract}
+We measured one thing and report it plainly. The number is small and we say so.
+The harness that produced these numbers is in the repository named in Availability,
+and we cover 95\% of the cases we set out to cover.
+\end{abstract}
+
+\section{Availability}
+The harness and the raw runs are public in the repository linked above.
+
+\end{document}

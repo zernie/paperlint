@@ -1,9 +1,17 @@
 # CLAUDE.md — research-paper-pipeline
 
-Machine-checkable gates for writing a research paper in git. Extracted from a private
-knowledge base; **nothing has been extracted yet** — see `README.md` for what this is meant
-to become and `idei/paper-pipeline-extraction/05-plan-perenosa-2026-09-10.md` in that base
-for the staged plan.
+Machine-checkable gates for writing a research paper in git, extracted from a private
+knowledge base.
+
+**Extracted so far (2026-09-11):** two ESLint rule modules over LaTeX — `latex-language.mjs`
+(a language that projects `.tex` into a markdown-shaped text with lengths and offsets
+preserved) and `tex-build.mjs` (`tex/future-promise`) — with their harnesses, their mutation
+batteries, and fixtures replacing the private corpus the tests used to read.
+
+**Not extracted:** the ~30 prose rules that consume the projection. Until they arrive, the
+language has exactly one downstream consumer here, and that consumer reads the file from disk
+rather than the projection — so the projection's own correctness is asserted directly in
+`latex-language.harness.mjs`, part II, not inferred from anyone's finding count.
 
 ## First command in a fresh container
 
@@ -160,6 +168,33 @@ in the consumer on 2026-09-10 (25.1.0 -> 27.1.4) and cost real recovery work.
 npm ls vigiles    # prints `invalid` when what is installed does not satisfy the manifest
 ```
 
+## The guard against a green zero
+
+Rule 4 is enforced, not asserted: `scripts/rules-see-files.mjs` loads `eslint.config.mjs`,
+lints the repository, and asks ESLint for the effective config of every linted file. A rule
+enabled for **zero** files is named and the script exits 1.
+
+```bash
+npm run check:globs
+```
+
+It is per RULE, not per glob, and that distinction is the point: a rule can be enabled in one
+block whose glob is empty while a different block is busy, so "some glob matched something" is
+not evidence about the rule you care about. Both halves are tested
+(`scripts/rules-see-files.harness.mjs`) and both directions are mutated
+(`scripts/rules-see-files.mutations.mjs` — under-reporting and over-reporting must die on
+*different* assertions, or only one half of the guard is really tested).
+
+## Mutations
+
+```bash
+npm run mutations    # 12 + 11 + 2, each with a "the patch landed" assertion
+```
+
+A green harness under a mutation is a finding about the TEST, not a conclusion about the
+defence. Each battery prints the harness line and the assertion text its mutation died on;
+"killed" without saying by what is half an answer.
+
 ## Cost
 
 This is a **private** repository, so its GitHub Actions minutes come out of the account-wide
@@ -170,26 +205,31 @@ there is no CI here, and that is deliberate.
 ## Testing
 
 ```bash
-npx vigiles test .          # every harness on disk
+npx vigiles test --min=1    # every harness on disk, and loud when that set is empty
 npx vigiles test <file>     # one harness
 ```
+
+⚠️ **Not `vigiles test .`** — the `.` is read as a FILE, the runner dies with
+`ERR_UNSUPPORTED_DIR_IMPORT`, and it still exits 0. See the measured table below.
 
 Skills, if and when they arrive, are tested **through vigiles** — a colocated
 `<skill>.harness.mjs` beside the skill. Not through a bespoke script: a home-grown runner
 here once printed confident, byte-identical "clean" verdicts for three different skills that
 had never loaded.
 
-## `npm test` is RED until stage 2, deliberately
+## `npm test` — `--min=1` stays, and here is what it is for
 
-The script is `vigiles test --min=1`. With no harness on disk yet that exits 1:
+The script is `vigiles test --min=1`. It went green on 2026-09-11 when the first harnesses
+landed; before that it correctly exited 1:
 
 ```
 ✗ vigiles test: --min=1 but only 0 test file(s) matched — evals never executed
   (check the paths/globs, or that the run was reached).
 ```
 
-That is the correct state for a repo whose whole premise is rule 4. Do **not** "fix" it by
-dropping `--min`; it goes green the moment the first harness lands.
+Do **not** "fix" a future red by dropping `--min` — the flag is the only thing standing
+between "every test passed" and "no test ran", which is rule 4 applied to the test runner
+itself.
 
 🔴 **Two ways this command lies if written differently, both measured 2026-09-11:**
 

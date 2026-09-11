@@ -1,0 +1,51 @@
+% Fixture for the LaTeX language, defect half. Identical in shape to `clean.tex`, with the
+% promise moved OUT of the comment and INTO a figure caption and the closing prose.
+%
+% The caption is the load-bearing part. Prose inside `\caption{}` used to be invisible to
+% every rule reading a `.tex` file, because it was blanked TWICE over: once as an opaque
+% macro argument and once again as part of the surrounding float. A measurement on the
+% source corpus (three papers, 2026-09-06) put the cost at 11 blocks / 384 words of author
+% English that no check could see; 253 of those words agree with `texcount`'s own
+% "Words outside text" count for one of the three.
+\documentclass[sigconf,screen]{acmart}
+\usepackage{natbib}
+\newcommand{\tool}{Widget}
+\settopmatter{printfolios=true}
+\begin{document}
+\title{A short and honest paper}
+\author{Anonymous Author}
+
+\begin{abstract}
+We measured one thing and report it plainly. The number is small and we say so.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+We wanted to know whether a cheap check finds the same defects as an expensive one.
+The flag \texttt{shadow-budget} caps the run, and the cap is $n = 10$ files in total.
+We cover 95\% of the cases we set out to cover, at a cost of \$5 per run.
+
+\begin{table}[t]
+\caption{Deterministic audit of ten files. The full table will be released later.}
+\label{tab:results}
+\begin{tabular}{lrr}
+check & found & missed \\
+cheap & 4 & 6 \\
+expensive & 9 & 1 \\
+\end{tabular}
+\end{table}
+
+\section{Method}
+We took ten files, ran both checks, and wrote down what each one said.\footnote{Both
+runs used the same machine and the same working directory, in that order.}
+
+\[
+  E = m c^2
+\]
+
+\section{Results}
+We found four of the ten with the cheap check and nine with the expensive one, and we
+report both numbers together with the files behind them \cite{someone2020}.
+
+\bibliography{refs}
+\end{document}

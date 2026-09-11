@@ -1,0 +1,50 @@
+% Fixture for the LaTeX language: one document carrying every construct the projection has
+% to survive -- preamble, abstract environment, sections, inline and display math, an opaque
+% macro family, a `\texttt{}` span, a float with a caption, a footnote, comments, and a
+% bibliography macro. The projection must stay character-for-character the same LENGTH as
+% this file, and no rule may fire on it.
+%
+% Author note, deliberately carrying a promise phrase: the appendix will be released once
+% the table below is redrawn. It sits in a comment, so it is not prose and not a finding.
+\documentclass[sigconf,screen]{acmart}
+\usepackage{natbib}
+\newcommand{\tool}{Widget}
+\settopmatter{printfolios=true}
+\begin{document}
+\title{A short and honest paper}
+\author{Anonymous Author}
+
+\begin{abstract}
+We measured one thing and report it plainly. The number is small and we say so.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+We wanted to know whether a cheap check finds the same defects as an expensive one.
+The flag \texttt{shadow-budget} caps the run, and the cap is $n = 10$ files in total.
+We cover 95\% of the cases we set out to cover, at a cost of \$5 per run.
+
+\begin{table}[t]
+\caption{Deterministic audit of ten files, reported exactly as they were counted.}
+\label{tab:results}
+\begin{tabular}{lrr}
+check & found & missed \\
+cheap & 4 & 6 \\
+expensive & 9 & 1 \\
+\end{tabular}
+\end{table}
+
+\section{Method}
+We took ten files, ran both checks, and wrote down what each one said.\footnote{Both
+runs used the same machine and the same working directory, in that order.}
+
+\[
+  E = m c^2
+\]
+
+\section{Results}
+We found four of the ten with the cheap check and nine with the expensive one, and we
+report both numbers together with the files behind them \cite{someone2020}.
+
+\bibliography{refs}
+\end{document}

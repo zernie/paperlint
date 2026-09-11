@@ -1,0 +1,24 @@
+% Fixture: the defect the rule exists for -- a shipped (non-review) build that still promises
+% a future release of something it has already handed over. Two of these, in the two most
+% read positions of a paper: the end of the abstract and the end of the conclusion.
+%
+% The failure mode this reproduces: a paper printed `(full harness at camera-ready)` in the
+% abstract while its own Availability paragraph three lines down said the harness was already
+% open. The document contradicted itself two against one, and the losing side was the
+% abstract -- the part indexed by the digital library and the only part most people read.
+\documentclass[sigconf,screen]{acmart}
+\settopmatter{printfolios=true}
+\begin{document}
+\title{A short and honest paper}
+
+\begin{abstract}
+We measured one thing and report it plainly (full harness at camera-ready).
+\end{abstract}
+
+\section{Availability}
+The harness and the raw runs are public in the repository linked above.
+
+\section{Conclusion}
+We reported what we counted. The complete data set will be made publicly available.
+
+\end{document}

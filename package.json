@@ -7,9 +7,15 @@
   "license": "UNLICENSED",
   "scripts": {
     "test": "vigiles test --min=1",
-    "lint": "vigiles lint"
+    "lint": "eslint .",
+    "lint:skills": "vigiles lint",
+    "check:globs": "node scripts/rules-see-files.mjs",
+    "mutations": "node eslint-rules/tex-build.mutations.mjs && node eslint-rules/latex-language.mutations.mjs && node scripts/rules-see-files.mutations.mjs"
   },
   "devDependencies": {
+    "@eslint/plugin-kit": "^0.7.2",
+    "@unified-latex/unified-latex-util-parse": "^1.8.4",
+    "eslint": "^10.9.1",
     "vigiles": "^27.1.4"
   }
 }
