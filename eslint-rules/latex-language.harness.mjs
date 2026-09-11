@@ -358,7 +358,7 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
   assert.ok(ms.length >= 1, "fixtures/latex-language/defect.tex produced no findings at all");
   assert.deepEqual(
     ms.map((m) => `${m.line}:${m.text}`),
-    ["29:will be released"],
+    ["30:will be released"],
     "the finding set of defect.tex drifted from the frozen measurement",
   );
   // The promise sits inside a `\caption{}`, which is the point: the defect fixture differs from
