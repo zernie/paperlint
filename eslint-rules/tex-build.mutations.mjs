@@ -55,26 +55,26 @@ const M = [
   [
     "comments/blanking",
     "stop cutting LaTeX comments — an author note `% camera-ready blocker` becomes a finding",
-    "          .map((l) => l.replace(/(^|[^\\\\])%.*$/, \"$1\"));",
-    "          .map((l) => l); /* MUT */",
+    "          .map((l) => l.replace(/(^|[^\\\\])%.*$/, \"$1\"));\n        lines.forEach((line, i) => {",
+    "          .map((l) => l); /* MUT */\n        lines.forEach((line, i) => {",
   ],
   [
     "comments/escaped percent",
     "treat `\\%` as the start of a comment — the rest of the line behind the percent goes invisible",
-    "          .map((l) => l.replace(/(^|[^\\\\])%.*$/, \"$1\"));",
-    "          .map((l) => l.replace(/%.*$/, \"\")); /* MUT */",
+    "          .map((l) => l.replace(/(^|[^\\\\])%.*$/, \"$1\"));\n        lines.forEach((line, i) => {",
+    "          .map((l) => l.replace(/%.*$/, \"\")); /* MUT */\n        lines.forEach((line, i) => {",
   ],
   [
     "address/line",
     "report every finding on line 1 — the address, which is what the move to a lint rule bought, is lost",
-    "              start: { line: i + 1, column },",
-    "              start: { line: 1, column: 1 }, /* MUT */",
+    "            loc: {\n              start: { line: i + 1, column },",
+    "            loc: {\n              start: { line: 1, column: 1 }, /* MUT */",
   ],
   [
     "address/column",
     "report the start of the line instead of the start of the match",
-    "          const column = m.index + 1;",
-    "          const column = 1; /* MUT */",
+    "          if (!m) return;\n          const column = m.index + 1;",
+    "          if (!m) return;\n          const column = 1; /* MUT */",
   ],
   [
     "capture/finding text",
@@ -82,11 +82,83 @@ const M = [
     "            data: { text: m[0] },",
     "            data: { text: line.trim() }, /* MUT */",
   ],
+  // ── tex/acm-frontmatter-override ───────────────────────────────────────────
+  [
+    "frontmatter/acmart guard",
+    "drop the `acmart` guard — `\\pagestyle{plain}` in an ordinary `article` becomes a finding, " +
+      "which is the false positive that gets a rule switched off on its first day",
+    "        if (!ACMART_RE.test(code)) return;",
+    "        if (false) return; /* MUT */",
+  ],
+  [
+    "frontmatter/nonacm exemption",
+    "stop exempting `nonacm` — the rule punishes the very escape hatch its own message recommends",
+    "        if (NONACM_RE.test(code)) return;",
+    "        if (false) return; /* MUT */",
+  ],
+  [
+    "frontmatter/setcopyright",
+    "remove `\\setcopyright{none}` from the set — the first of the three lines of the " +
+      "desk-rejected preamble stops being caught",
+    "    re: /\\\\setcopyright\\s*\\{\\s*none\\s*\\}/g,",
+    "    re: /\\\\setcopyright\\s*\\{\\s*NEVER\\s*\\}/g, /* MUT */",
+  ],
+  [
+    "frontmatter/permission footnote",
+    "remove the `\\renewcommand\\footnotetextcopyrightpermission` branch — the permission block " +
+      "on page 1 can be blanked silently",
+    "    re: /\\\\renewcommand\\s*\\*?\\s*\\{?\\s*\\\\footnotetextcopyrightpermission/g,",
+    "    re: /\\\\renewcommand\\s*\\*?\\s*\\{?\\s*\\\\NEVERfootnotetext/g, /* MUT */",
+  ],
+  [
+    "frontmatter/pagestyle empty",
+    "narrow the page-style branch to `plain` — `\\pagestyle{empty}` strips the same furniture and " +
+      "goes unnoticed",
+    "    re: /\\\\(?:this)?pagestyle\\s*\\{\\s*(?:plain|empty)\\s*\\}/g,",
+    "    re: /\\\\(?:this)?pagestyle\\s*\\{\\s*(?:plain)\\s*\\}/g, /* MUT */",
+  ],
+  [
+    "frontmatter/thispagestyle",
+    "drop `(?:this)?` — `\\thispagestyle{empty}`, which targets page 1 SPECIFICALLY, stops being caught",
+    "    re: /\\\\(?:this)?pagestyle\\s*\\{\\s*(?:plain|empty)\\s*\\}/g,",
+    "    re: /\\\\pagestyle\\s*\\{\\s*(?:plain|empty)\\s*\\}/g, /* MUT */",
+  ],
+  [
+    "frontmatter/comment blanking",
+    "stop cutting LaTeX comments — the accepted sibling paper's COMMENTED record of its old " +
+      "preamble becomes three findings, and the arming `\\documentclass` may come from a comment too",
+    "          .map((l) => l.replace(/(^|[^\\\\])%.*$/, \"$1\"));\n        const code = lines.join(\"\\n\");",
+    "          .map((l) => l);\n        const code = lines.join(\"\\n\"); /* MUT */",
+  ],
+  // ⚠️ `frontmatter/lastIndex reset` STOOD HERE AND WAS REMOVED, not silenced. It mutated away
+  // an explicit `re.lastIndex = 0` and the harness stayed GREEN — which by this file's own
+  // ranking is a finding about the TEST or about the CODE, never a pass. It was the code: a
+  // `/g` `exec` that returns `null` resets `lastIndex` itself, and the loop always drains the
+  // regex, so the line was a guard nothing could kill. The line is gone; the property is held
+  // by the harness assertion that lints one input twice in a single process.
+  [
+    "frontmatter/line",
+    "report every finding on line 1 — the address of the offending preamble line is lost",
+    "                  start: { line: i + 1, column },",
+    "                  start: { line: 1, column: 1 }, /* MUT */",
+  ],
+  [
+    "frontmatter/all matches per line",
+    "take only the FIRST match of each pattern per line — a compacted preamble is under-counted",
+    "            while ((m = re.exec(line)) !== null) {",
+    "            if ((m = re.exec(line)) !== null) { /* MUT */",
+  ],
+  [
+    "frontmatter/column",
+    "report the start of the line instead of the start of the match (second rule's copy)",
+    "              const column = m.index + 1;",
+    "              const column = 1; /* MUT */",
+  ],
   [
     "disk read/quiet instead of throwing",
     "remove the `try/catch` around the read — the rule THROWS on a stdin run where there is no file",
-    "        try {\n          text = readFileSync(context.filename, \"utf8\");\n        } catch {\n          return;\n        }",
-    "        text = readFileSync(context.filename, \"utf8\"); /* MUT */",
+    "        try {\n          text = readFileSync(context.filename, \"utf8\");\n        } catch {\n          return;\n        }\n        if (REVIEW_MODE_RE.test(text)) return;",
+    "        text = readFileSync(context.filename, \"utf8\"); /* MUT */\n        if (REVIEW_MODE_RE.test(text)) return;",
   ],
 ];
 

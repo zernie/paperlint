@@ -1,0 +1,23 @@
+% Fixture: the defect the rule exists for -- an `acmart` preamble that takes elements OFF the
+% front page. This is the shape of a preamble that was desk-rejected before any content review
+% with the reason "substantially deviating from the specified template... front page lacks
+% elements included in the template".
+%
+% All three lines are on the front page's side of the ledger, and none of them is compensating
+% for something the class does: the `review` option turns on line numbers and folios
+% (acmart.cls:93-99) and touches neither the copyright statement nor the permission footnote.
+\documentclass[sigconf,review,anonymous]{acmart}
+\setcopyright{none}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+\pagestyle{plain}
+\begin{document}
+\title{A paper that deleted its own front page}
+
+\begin{abstract}
+We measured one thing and report it plainly. The number is small and we say so.
+\end{abstract}
+
+\section{Availability}
+The harness and the raw runs are public in the repository linked above.
+
+\end{document}

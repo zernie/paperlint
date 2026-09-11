@@ -1,0 +1,25 @@
+% Fixture: an `acmart` build that leaves ACM's front matter alone. The rule must RUN here and
+% find nothing -- that is the quiet half of `tex/acm-frontmatter-override`.
+%
+% 🔴 The block below is the load-bearing part of this fixture, and it is copied from the shape
+% of a real accepted paper: the three overrides are kept as a COMMENTED RECORD of what the
+% preamble used to do. A finding on a comment would be exactly the false positive that gets a
+% check switched off, and here it would also punish the one habit that saved the sibling paper.
+%   was: \documentclass[sigconf,review]{acmart}
+%        \setcopyright{none}
+%        \renewcommand\footnotetextcopyrightpermission[1]{}
+%        \pagestyle{plain}
+\documentclass[sigconf,screen]{acmart}
+\setcopyright{cc}
+\acmConference[Fixture '26]{A Workshop That Does Not Exist}{October 12--16, 2026}{Nowhere}
+\begin{document}
+\title{A paper that keeps its own front page}
+
+\begin{abstract}
+We measured one thing and report it plainly. The number is small and we say so.
+\end{abstract}
+
+\section{Availability}
+The harness and the raw runs are public in the repository linked above.
+
+\end{document}

@@ -33,8 +33,16 @@ export default [
       // ELSE's work. An `error` that fails on a correct input gets switched off the same day,
       // and then the binary checks stop being read too.
       "tex/future-promise": "warn",
+      // 🔴 `warn` HERE AND `error` IN A CONSUMER, on purpose. The finding itself is binary —
+      // the macro is present or it is not — and it has a named exemption (`nonacm`), so in a
+      // repository that lints a REAL paper it belongs at `error`: the cost of a miss is a desk
+      // reject with no content review, and that asymmetry is the whole argument. This
+      // repository lints fixtures that are broken by construction, where the same severity
+      // would only mean `npx eslint .` exits non-zero on a healthy checkout. The severity is
+      // a statement about the CORPUS being linted, not about how sure the rule is.
+      "tex/acm-frontmatter-override": "warn",
     },
-    // ⚠️ `npx eslint .` therefore reports three warnings on a healthy checkout: the two defect
+    // ⚠️ `npx eslint .` therefore reports six warnings on a healthy checkout: the four defect
     // fixtures are DEFECTIVE ON PURPOSE, and that is what makes the fire half of every harness
     // real. Do not silence them by adding an ignore — a rule that lints only clean inputs is
     // one whose firing path nothing exercises, which is rule 4 wearing a different hat. The

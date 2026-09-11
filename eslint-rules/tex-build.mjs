@@ -63,6 +63,40 @@ const FUTURE_PROMISE_RE =
 const REVIEW_MODE_RE =
   /^[^%\n]*(?:\\documentclass\[[^\]]*\breview\b|printacmref=false)/m;
 
+/** Is this an `acmart` build at all? Outside acmart none of the macros below mean anything. */
+const ACMART_RE = /\\documentclass(?:\s*\[[^\]]*\])?\s*\{acmart\}/;
+
+/**
+ * acmart's OWN escape hatch for "this is not going to an ACM venue": in `nonacm` mode the
+ * class disables the ACM Reference Format itself (`acmart.cls:110-121`, "in 'nonacm' mode we
+ * disable the \"ACM Reference Format\""). A build that declares it is not an ACM submission
+ * is exempt — that is the supported way to say so, and it is a class option rather than a
+ * hand-rolled blanking of the front matter.
+ */
+const NONACM_RE = /\\documentclass\s*\[[^\]]*\bnonacm\b/;
+
+/**
+ * The overrides whose ENTIRE effect is to remove furniture the template puts on page 1.
+ * Each entry names what disappears, because a message that only says "do not do this" gets
+ * read as style advice.
+ */
+const FRONTMATTER_OVERRIDES = [
+  {
+    re: /\\setcopyright\s*\{\s*none\s*\}/g,
+    removes: "the copyright statement (acmart.cls:1857, copyright mode 0)",
+  },
+  {
+    re: /\\renewcommand\s*\*?\s*\{?\s*\\footnotetextcopyrightpermission/g,
+    removes: "the permission/copyright footnote block on page 1 (acmart.cls:2180)",
+  },
+  {
+    re: /\\(?:this)?pagestyle\s*\{\s*(?:plain|empty)\s*\}/g,
+    removes:
+      "acmart's own page style, i.e. the running heads and folios it restores at " +
+      "\\begin{document} (acmart.cls:2876-2881)",
+  },
+];
+
 // ═════════════════════════════════════════════════════════════════════════════
 // future-promise — a shipped build promises what it has already handed over
 // ═════════════════════════════════════════════════════════════════════════════
@@ -159,4 +193,129 @@ const futurePromise = {
   },
 };
 
-export default { "future-promise": futurePromise };
+// ══════════════════════════════════════════════════════════════════════════════
+// acm-frontmatter-override — the build blanks template furniture off page 1
+// ══════════════════════════════════════════════════════════════════════════════
+// 🔴 Added 2026-09-11, from a DESK REJECT. A submission was rejected before any content
+// review with the reason "substantially deviating from the specified template… front page
+// lacks elements included in the template". Its preamble carried three lines whose entire
+// effect is to take elements off the front page:
+//
+//     \setcopyright{none}
+//     \renewcommand\footnotetextcopyrightpermission[1]{}
+//     \pagestyle{plain}
+//
+// The same three lines sit COMMENTED OUT in a sibling paper of the same corpus — the one that
+// was accepted. The safer pattern was already known in the same directory and was not carried
+// over. That is the shape this check exists for: a defect that is invisible in the source,
+// visible only on the rendered first page, and fatal before anyone reads a word.
+//
+// ⚠️ THE RULE IS NOT CONDITIONED ON REVIEW MODE, AND THAT IS A MEASUREMENT, NOT A CHOICE.
+// The obvious framing — "flag these when `\documentclass[review]`, because review mode already
+// handles the front matter" — does not survive reading `acmart.cls`. The `review` option does
+// exactly two things (`acmart.cls:93-99`): it turns on line numbers and sets
+// `\@ACM@printfoliostrue`. It does not touch the copyright statement, the permission footnote
+// or the page style. So the overrides are not fighting review mode; they strip the same
+// furniture in EVERY mode — and stripping it in the camera-ready is worse, because that is
+// the version the digital library keeps.
+//
+// The guards are therefore about the CLASS, not the stage:
+//   - `acmart` only. Outside it `\pagestyle{plain}` is an ordinary, correct line;
+//   - `nonacm` exempts, because that is acmart's own supported way to say "not an ACM venue",
+//     and in that mode the class disables the ACM Reference Format itself (`acmart.cls:110`).
+//
+// 🔴 `printacmref=false` IS DELIBERATELY NOT IN THE SET, though it was in the rejected preamble
+// and it too removes a block from page 1. Two reasons, and the first is structural: the
+// sibling rule in this very file reads `printacmref=false` as a SIGN OF REVIEW MODE
+// (`REVIEW_MODE_RE`). A module where one rule treats a token as a legitimate marker and
+// another calls the same token a defect is a module that contradicts itself, and the reader
+// cannot tell which half to believe. The second is that ACM sanctions it for preprints. If it
+// ever needs catching, it needs catching together with a decision about `REVIEW_MODE_RE` —
+// not as a fourth line in this array.
+//
+// SEVERITY is for the CONSUMER to set, and the two configs differ on purpose: this repository
+// lints fixtures that are broken by construction, a consumer lints a real paper. The finding
+// is binary — the macro is present or it is not — it has a named exemption, and the cost of a
+// miss is a rejection with no content review. In a consumer that is `error`.
+const acmFrontmatterOverride = {
+  meta: {
+    type: "problem",
+    docs: {
+      description:
+        "an acmart build overrides ACM's front-matter commands, removing template elements from page 1",
+    },
+    schema: [],
+    messages: {
+      override:
+        "«{{text}}» removes {{removes}} from the front page of an `acmart` build. A submission " +
+        "was desk-rejected for exactly this — «substantially deviating from the specified " +
+        "template… front page lacks elements included in the template» — before any content " +
+        "review happened. The `review` option does not suppress this furniture itself " +
+        "(acmart.cls:93-99 turns on line numbers and folios, nothing else), so the line is not " +
+        "compensating for the class: it is fighting the template. Delete it. If this paper " +
+        "genuinely is not going to an ACM venue, say so the supported way — " +
+        "`\\documentclass[…,nonacm]{acmart}` — and the class drops the ACM Reference Format " +
+        "on its own",
+    },
+  },
+  create(context) {
+    return {
+      root() {
+        // Same single guard as the sibling rule, and for the same measured reason: a separate
+        // `existsSync` before the read is covered by this `catch` in every case it could
+        // fire, i.e. it is an assertion no mutation can kill.
+        let text;
+        try {
+          text = readFileSync(context.filename, "utf8");
+        } catch {
+          return;
+        }
+        // Comments are blanked BEFORE the guards, not only before the search — unlike the
+        // sibling rule, which carries the `^[^%\n]*` prefix inside each pattern instead.
+        // It matters here: the accepted sibling paper of the source corpus keeps this exact
+        // block commented out as a record of what it used to do, and a `\documentclass` line
+        // quoted inside a comment must not arm the rule any more than a commented
+        // `\setcopyright{none}` must trip it. Columns do not shift: a match is only possible
+        // to the LEFT of `%`, and the left part of the line survives character for character.
+        // An escaped `\%` is not a comment.
+        const lines = text
+          .split("\n")
+          .map((l) => l.replace(/(^|[^\\])%.*$/, "$1"));
+        const code = lines.join("\n");
+        if (!ACMART_RE.test(code)) return;
+        if (NONACM_RE.test(code)) return;
+        lines.forEach((line, i) => {
+          for (const { re, removes } of FRONTMATTER_OVERRIDES) {
+            // 🔴 NO `re.lastIndex = 0` HERE, AND THAT IS A MEASUREMENT. These regexes are
+            // module-level and `/g`, so they carry `lastIndex` across files, and the obvious
+            // defensive line is to reset it. A mutation run on 2026-09-11 removed that line
+            // and the harness stayed GREEN — because the loop below always drains the regex,
+            // and a `/g` `exec` that returns `null` resets `lastIndex` to 0 by itself. The
+            // reset was a guard no mutation could kill, i.e. the same dead assertion dressed
+            // as robustness that the sibling rule's single-`try` comment describes. What
+            // keeps the property honest instead is an ASSERTION, not a line of code: the
+            // harness lints the same input twice in one process and requires the two runs to
+            // agree. Add a `break` to this loop and that assertion is what will fail.
+            let m;
+            while ((m = re.exec(line)) !== null) {
+              const column = m.index + 1;
+              context.report({
+                loc: {
+                  start: { line: i + 1, column },
+                  end: { line: i + 1, column: column + m[0].length },
+                },
+                messageId: "override",
+                data: { text: m[0], removes },
+              });
+            }
+          }
+        });
+      },
+    };
+  },
+};
+
+export default {
+  "future-promise": futurePromise,
+  "acm-frontmatter-override": acmFrontmatterOverride,
+};
