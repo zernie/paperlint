@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "lint:skills": "vigiles lint",
     "check:globs": "node scripts/rules-see-files.mjs",
-    "mutations": "node eslint-rules/tex-build.mutations.mjs && node eslint-rules/latex-language.mutations.mjs && node scripts/rules-see-files.mutations.mjs"
+    "mutations": "node scripts/run-mutations.mjs"
   },
   "devDependencies": {
     "@eslint/plugin-kit": "^0.7.2",

@@ -1,0 +1,85 @@
+# CI for research-paper-pipeline — ONE job, every gate, bonds set BY MEASUREMENT.
+#
+# ── WHY ONE JOB ─────────────────────────────────────────────────────────────
+# Parallelism does not save billable minutes, it ADDS them: every job pays for its own
+# setup + checkout + install (~20-30 s). Splitting is worth it for signal isolation on a big
+# matrix; here the whole suite is 84 seconds, so a second job would cost more than it isolates.
+#
+# ⛽ THIS REPOSITORY IS PRIVATE, so its minutes come out of the SAME 3000/month account quota as
+# every other private repo on the account. That is why the gates are measured rather than
+# guessed, and why nothing here runs on a schedule.
+#
+# ── THE MEASUREMENT THE BONDS COME FROM (local, 2026-09-11) ─────────────────
+#   npm test (4 harnesses)              7.2 s
+#   npm run lint (eslint over fixtures) 1.1 s
+#   npm run check:globs                 0.7 s
+#   npm run mutations (4 batteries)    74.7 s   ← 45 mutations, the expensive and the load-bearing part
+#   ───────────────────────────────────────────
+#   total work                         ~84 s, plus checkout + install
+#
+# Expect ~3 minutes warm. `timeout-minutes: 8` on the job is ~2.7×, and `npm ci` carries its OWN
+# bond because a job-level bond cannot tell "the registry hung" from "the suite is slow" and so
+# hands a hang the whole job.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push supersedes an older one on the same ref. Note this does NOT make the cancelled
+# run free — cancellation arrives after the expensive steps have already run and been billed —
+# it only stops the tail.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # 🔴 ITS OWN BOND. This is the only step that talks to the network, and a hung registry is
+      # indistinguishable from a slow suite at the job level. Measured in the consumer repo:
+      # a `npm ci` without its own bond once held a job for five minutes on a slow mirror.
+      - name: npm ci
+        run: npm ci
+        timeout-minutes: 5
+
+      # Harnesses. `--min=1` is inside the script and it is load-bearing: `vigiles test` given a
+      # DIRECTORY (or a bare `.`) exits 0 having executed nothing, which reads exactly like a
+      # clean suite. Measured 2026-09-11 in the consumer repo: `vigiles test eslint-rules/` →
+      # "0 passed, 1 skipped", RC=0.
+      - name: npm test
+        run: npm test
+
+      # The rules themselves, over this repository's own fixtures. Two of the four fixtures are
+      # DEFECTIVE ON PURPOSE, so a healthy checkout reports warnings here and still exits 0 —
+      # the pass/fail signal for rule behaviour lives in `npm test`, not in the warning count.
+      - name: npm run lint
+        run: npm run lint
+
+      # 🔴 THE GREEN-ZERO GUARD. A rule whose glob matches no file is never invoked, and a run
+      # with no findings is byte-identical to a run that examined everything and passed. This
+      # asks ESLint for the effective config of every linted file and names any rule that saw
+      # none. In the source corpus it once found NINETEEN blind rules on a green run.
+      - name: npm run check:globs
+        run: npm run check:globs
+
+      # 45 mutations across 4 batteries. This is what makes the green above mean something: a
+      # harness that cannot fail and a harness that passed look identical from outside. The
+      # runner DISCOVERS batteries rather than listing them, errors on finding zero, and errors
+      # on any harness that has no battery — see scripts/run-mutations.mjs for why (the hand
+      # list it replaced had already gone stale by one file, silently).
+      - name: npm run mutations
+        run: npm run mutations
