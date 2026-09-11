@@ -6,10 +6,10 @@
   "type": "module",
   "license": "UNLICENSED",
   "scripts": {
-    "test": "vigiles test .",
+    "test": "vigiles test --min=1",
     "lint": "vigiles lint"
   },
   "devDependencies": {
-    "vigiles": "^25.1.0"
+    "vigiles": "^27.1.4"
   }
 }
