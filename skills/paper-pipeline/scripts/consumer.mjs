@@ -343,6 +343,43 @@ export function consumerTimezone({ env = process.env, cwd = process.cwd() } = {}
   return tz;
 }
 
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+// THE SEVENTH CARRIER — WHOM THE SCHOLARLY APIs SHOULD CONTACT
+//
+// Crossref and friends run a "polite pool": send a `mailto:` in the User-Agent and you get the
+// faster, more reliable tier, plus a warning by email instead of a silent block if your usage
+// looks abusive.
+//
+// 🔴 WHY THIS CANNOT BE A CONSTANT, and it is not a privacy point but a correctness one. A
+// hard-coded address makes EVERY user of this package send traffic attributed to ONE person: the
+// rate-limit warnings go to someone who cannot act on them, and the person actually hammering
+// the API never hears about it. (It is also how one author's personal address ends up in a
+// public repository, which is the reason it was noticed.)
+//
+// ── WHY AN ABSENT VALUE IS A SILENT DEFAULT HERE, UNLIKE EVERY CARRIER ABOVE ────
+// The others throw when undeclared because a missing path makes a FILTER match nothing, and a
+// filter matching nothing reports "clean" about files it never opened. Nothing of that shape
+// happens here: with no address the request simply goes to the public pool — slower and more
+// rate-limited, which is visible as slowness, not as a wrong answer. Throwing would refuse to
+// check citations at all over a courtesy header.
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * The contact address for scholarly-API User-Agents, or `null` when none is declared.
+ *
+ * @returns the declared address, or `null` — callers omit the `mailto:` fragment on `null`.
+ */
+export function consumerContactEmail({ env = process.env, cwd = process.cwd() } = {}) {
+  const declared = consumerPkg({ env, cwd })?.[CONFIG_KEY]?.contactEmail;
+  if (declared === undefined || declared === null) return null;
+  if (typeof declared !== "string" || !declared.includes("@"))
+    throw new TypeError(
+      `${CONFIG_KEY}: "contactEmail" must be an email address, got ${JSON.stringify(declared)}. ` +
+        `Remove the key entirely to use the public pool.`,
+    );
+  return declared;
+}
+
 /**
  * The individual script paths, derived from one root.
  *

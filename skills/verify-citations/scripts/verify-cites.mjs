@@ -49,11 +49,17 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, extname } from "node:path";
 import { createHash } from "node:crypto";
+import { consumerContactEmail } from "../../paper-pipeline/scripts/consumer.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CACHE_PATH = join(__dirname, ".cite-cache.json");
-const USER_AGENT =
-  "verify-cites/1.0 (KB citation gate; mailto:ximiksxgm@gmail.com)";
+// 🔴 THE ADDRESS IS THE CONSUMER'S, NOT OURS. Crossref's "polite pool" keys off this `mailto:`:
+// it decides who gets the faster tier and, more to the point, WHOM THEY WARN before blocking.
+// Hard-coded, it pointed at one person for every user of this package — so the warnings would
+// reach someone who cannot act on them while the actual caller heard nothing. Undeclared, we
+// send no `mailto:` and land in the public pool: slower, never wrong.
+const CONTACT = consumerContactEmail();
+const USER_AGENT = `verify-cites/1.0 (citation gate${CONTACT ? `; mailto:${CONTACT}` : ""})`;
 const TIMEOUT_MS = 15000;
 const TITLE_THRESHOLD = 0.7; // Levenshtein-normalized similarity
 const YEAR_TOLERANCE = 1; // ±1
