@@ -225,6 +225,21 @@ assert.equal(
 {
   const declaredRoot = fakeConsumer({ scripts: "tools/pipeline" });
   mkdirSync(join(declaredRoot, "tools", "pipeline"), { recursive: true });
+
+  // 🔴 RELATIVE, AND `/`-SEPARATED, ASSERTED BEFORE THE EQUALITIES BELOW — and the order is a
+  // finding, not a preference. `assert` aborts at the first failure, so with this line placed
+  // after them a resolver that returned an absolute path died on "must be returned as written":
+  // the mutation run reported RED-but-a-DIFFERENT-case, i.e. this assertion was never reached and
+  // nothing showed it can fail. The narrow property goes first; the equalities then cover the rest.
+  // The value is compared against text a human typed inside a SKILL.md, so an absolute path makes
+  // every `startsWith` false — not an error, an empty loop body.
+  assert.equal(
+    isAbsolute(scriptsRoot({ env: {}, cwd: declaredRoot })),
+    false,
+    "scriptsRoot returned an ABSOLUTE path. Callers match it against prose, so every comparison " +
+      "would be false and every check built on it would silently examine nothing.",
+  );
+
   assert.equal(
     scriptsRoot({ env: {}, cwd: declaredRoot }),
     "tools/pipeline",
@@ -238,16 +253,6 @@ assert.equal(
     DEFAULT_SCRIPTS_ROOT,
     "with nothing declared the customary location must be used — otherwise every consumer that " +
       "keeps the symlink where the prose already looks would have to say so",
-  );
-
-  // 🔴 RELATIVE, AND `/`-SEPARATED. This value is compared against text a human typed inside a
-  // SKILL.md; an absolute path makes every `startsWith` test false, which is not an error but an
-  // empty loop body — the failure the throws below exist to prevent, arrived at from inside.
-  assert.equal(
-    isAbsolute(scriptsRoot({ env: {}, cwd: declaredRoot })),
-    false,
-    "scriptsRoot returned an ABSOLUTE path. Callers match it against prose, so every comparison " +
-      "would be false and every check built on it would silently examine nothing.",
   );
 
   // CLAUDE_PROJECT_DIR outranks the cwd here too, for the reason it does in consumerRoot: a hook
@@ -344,9 +349,9 @@ assert.equal(
 // SIBLING directory whose name merely starts with the root's.
 {
   const s = pipelineScripts("a/b");
-  assert.equal(s.prefix, "a/b/", "prefix must end in a separator");
-  assert.equal(s.announce, "a/b/announce.mjs");
-  assert.equal(s.ledger, "a/b/ledger.mjs");
+  // The boundary is asserted BEFORE the literal equality for the same reason part VIII reorders:
+  // `assert` aborts at the first failure, and a prefix that lost its slash died on "must end in a
+  // separator" — leaving the assertion that states WHY the slash matters unreached and unproven.
   assert.equal(
     "a/b-other/ledger.mjs".startsWith(s.prefix),
     false,
@@ -354,6 +359,9 @@ assert.equal(
       "and every such path is mistaken for a pipeline script",
   );
   assert.equal("a/b/ledger.mjs".startsWith(s.prefix), true, "the prefix failed on a real member");
+  assert.equal(s.prefix, "a/b/", "prefix must end in a separator");
+  assert.equal(s.announce, "a/b/announce.mjs");
+  assert.equal(s.ledger, "a/b/ledger.mjs");
 }
 
 console.log(
