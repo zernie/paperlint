@@ -5,21 +5,30 @@
 # setup + checkout + install (~20-30 s). Splitting is worth it for signal isolation on a big
 # matrix; here the whole suite is 84 seconds, so a second job would cost more than it isolates.
 #
-# ⛽ THIS REPOSITORY IS PRIVATE, so its minutes come out of the SAME 3000/month account quota as
-# every other private repo on the account. That is why the gates are measured rather than
-# guessed, and why nothing here runs on a schedule.
+# ⛽ THIS REPOSITORY IS PUBLIC, so its minutes are FREE — they do not touch the account's
+# 3000/month quota (verified against the API 2026-09-12: `"private": false`). The header said
+# PRIVATE until then, which was true when written and is the reason the gates were measured
+# rather than guessed. Keep measuring them anyway: the bond exists to stop a HANG, and a hang
+# costs wall-clock and a red check whether or not anyone is billed.
 #
-# ── THE MEASUREMENT THE BONDS COME FROM (local, 2026-09-11) ─────────────────
-#   npm test (4 harnesses)              7.2 s
-#   npm run lint (eslint over fixtures) 1.1 s
-#   npm run check:globs                 0.7 s
-#   npm run mutations (4 batteries)    74.7 s   ← 45 mutations, the expensive and the load-bearing part
+# ── THE MEASUREMENT THE BONDS COME FROM (local, 2026-09-12) ─────────────────
+#   npm test (12 harnesses)              11 s
+#   npm run lint (eslint over fixtures)   1 s
+#   npm run check:globs                   1 s
+#   npm run mutations (12 batteries)    242 s   ← 130 mutations, the expensive and load-bearing part
 #   ───────────────────────────────────────────
-#   total work                         ~84 s, plus checkout + install
+#   total work                          ~255 s, plus checkout + install
 #
-# Expect ~3 minutes warm. `timeout-minutes: 8` on the job is ~2.7×, and `npm ci` carries its OWN
-# bond because a job-level bond cannot tell "the registry hung" from "the suite is slow" and so
-# hands a hang the whole job.
+# 🔴 THE PREVIOUS NUMBERS ARE KEPT NOWHERE BUT THIS SENTENCE, ON PURPOSE: they said ~84 s total
+# with `timeout-minutes: 8`, i.e. a ~2.7× bond. The pipeline's checkers arrived on 2026-09-12 and
+# tripled every count — 4 harnesses became 12, 45 mutations became 130 — which would have left an
+# 8-minute bond at ~1.3× of a ~6-minute run. A bond that tight fails on a slow runner and reads
+# as a broken suite rather than as a bond. Re-measure when the counts move again; do not cite the
+# table above without re-running it.
+#
+# Expect ~6 minutes warm. `timeout-minutes: 20` is ~3.3×, and `npm ci` carries its OWN bond
+# because a job-level bond cannot tell "the registry hung" from "the suite is slow" and so hands
+# a hang the whole job.
 name: ci
 
 on:
@@ -40,7 +49,7 @@ permissions:
 jobs:
   gates:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
