@@ -285,6 +285,64 @@ export function scriptsRoot({ env = process.env, cwd = process.cwd() } = {}) {
   return rel;
 }
 
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+// THE SIXTH CARRIER — WHICH WALL CLOCK THE CONSUMER SCHEDULES AGAINST
+//
+// `papersRoot()` answers "where are the papers", `ledgerPath()` "where is the journal",
+// `citeChecks` "where are the consumer's citation checkers", `scriptsRoot()` "by what path does
+// prose name these scripts", `triggerCases` "where are the consumer's own trigger cases". This
+// answers the sixth: IN WHAT TIME ZONE does a deadline anchor get written.
+//
+// 🔴 WHY IT IS A DECLARATION AND NOT A CONSTANT. A deadline is the one quantity in this pipeline
+// that is meaningless without a zone, and the zone belongs to the PERSON, not to the pipeline —
+// the same CFP date is a different wall-clock hour for every author. A package that hard-codes
+// one author's zone quietly schedules everyone else's submit-day at the wrong hour, and the
+// failure surfaces as "I thought I had another day", which is the exact failure the AoE section
+// of `plan-paper-timeline` exists to prevent.
+//
+// ── WHY THE DEFAULT IS `UTC` AND NOT A GUESS AT THE HOST'S ZONE ─────────────────
+// `Intl.DateTimeFormat().resolvedOptions().timeZone` would return whatever zone the container
+// happens to carry — which in CI is `UTC` and on a laptop is the laptop's, so the SAME repository
+// would schedule differently depending on where the command ran. A fixed `UTC` is wrong in a way
+// the reader can see and correct; a host-derived zone is wrong in a way that moves.
+//
+// ⚠️ VALIDATED, not merely typed. `Intl.DateTimeFormat` throws `RangeError` on an unknown zone, so
+// a typo like `Europe/Berlinn` is caught here — before it reaches a calendar API that would either
+// reject it a network round-trip later or, worse, accept a zone the author did not mean.
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+
+/** The default. `UTC` is the only zone that is nobody's local time, so it cannot be mistaken for one. */
+export const DEFAULT_TIMEZONE = "UTC";
+
+/**
+ * The IANA time zone the consumer's deadline anchors are written in.
+ *
+ * @returns the zone as DECLARED, e.g. `"Europe/Berlin"` — suitable for a calendar API's
+ *          `timeZone` field and for `Intl` options.
+ */
+export function consumerTimezone({ env = process.env, cwd = process.cwd() } = {}) {
+  const declared = consumerPkg({ env, cwd })?.[CONFIG_KEY]?.timezone;
+  // 🔴 `declared === undefined`, NOT `declared ?? DEFAULT` — the same distinction every carrier
+  // above makes: `"timezone": null` is a keystroke, not an absence.
+  const tz = declared === undefined ? DEFAULT_TIMEZONE : declared;
+  if (typeof tz !== "string" || tz.length === 0)
+    throw new TypeError(
+      `${CONFIG_KEY}: "timezone" must be a non-empty IANA zone string, got ${JSON.stringify(tz)}`,
+    );
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: tz });
+  } catch {
+    throw new RangeError(
+      `${CONFIG_KEY}: "timezone" is ${JSON.stringify(tz)}, which is not an IANA time zone this ` +
+        `runtime knows (e.g. "Europe/Berlin", "America/New_York", "UTC").\n` +
+        `Fix it in package.json under "${CONFIG_KEY}".\n` +
+        `This throws rather than falling back to ${DEFAULT_TIMEZONE} on purpose: a silent fallback ` +
+        `would put every deadline anchor at the wrong hour while looking like it worked.`,
+    );
+  }
+  return tz;
+}
+
 /**
  * The individual script paths, derived from one root.
  *

@@ -1,5 +1,5 @@
 /**
- * skill-contract.mutations.mjs — the non-vacuity proof for the ten colocated skill harnesses.
+ * skill-contract.mutations.mjs — the non-vacuity proof for the colocated skill harnesses.
  *
  * Run: `node skills/skill-contract.mutations.mjs` (~1 min; it rewrites each SKILL.md and restores
  * it, so it is not part of the plain test run).
@@ -58,7 +58,39 @@ const ANNOUNCERS = [
   ["pc-panel-review", "harden-paper"],
   ["sweep-design-space", "research-ideate"],
   ["tighten-paper", "grade-paper-writing"],
+  // ── wave ② (2026-09-12). Same defect shape: all twelve are `checkSkill()` stage skills
+  // carrying exactly one `announce.mjs <self>` line, verified unambiguous before these were
+  // written. Siblings stay pairwise distinct across the WHOLE list, so no two cases can pass
+  // on one shared accident.
+  ["build-benchmark", "draft-paper"],
+  ["camera-ready", "extend-paper"],
+  ["harden-paper", "paper-adversarial-review"],
+  ["paper-status", "render-paper"],
+  ["extend-paper", "camera-ready"],
+  ["study-accepted-papers", "analyze-sibling-paper"],
+  ["verify-citations", "cold-read-diff"],
+  ["render-paper", "paper-status"],
+  ["find-venue", "plan-paper-timeline"],
+  ["research-ideate", "sweep-design-space"],
+  ["plan-paper-timeline", "study-accepted-papers"],
+  ["grade-paper-writing", "verify-citations"],
 ];
+
+// 🔴 «Каждый сиблинг различен» — это УТВЕРЖДЕНИЕ, а не пожелание в комментарии. Список пишется
+// руками, и ровно такой список уже протухал молча. Если два случая мутируют в одно и то же имя,
+// они могут пройти на одной общей случайности, и батарея перестаёт различать их провалы.
+{
+  const seen = new Set();
+  for (const [skill, sibling] of ANNOUNCERS) {
+    if (skill === sibling) throw new Error(`${skill}: сиблинг обязан ОТЛИЧАТЬСЯ от самого скилла`);
+    if (seen.has(sibling))
+      throw new Error(
+        `сиблинг "${sibling}" назван дважды — случаи перестали быть независимыми. ` +
+          `Каждому случаю нужен свой, иначе два из них могут пройти на одной случайности.`,
+      );
+    seen.add(sibling);
+  }
+}
 
 const CASES = ANNOUNCERS.map(([skill, sibling]) => ({
   name: `${skill}: announces as ${sibling}`,

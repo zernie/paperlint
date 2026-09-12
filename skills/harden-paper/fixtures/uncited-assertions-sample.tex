@@ -1,0 +1,77 @@
+% fixtures/uncited-assertions-sample.tex
+% Contract fixture for the uncited-assertion checker — documents exactly what MUST and MUST NOT flag.
+% Since 2026-08-27 that checker is the ESLint rule `paper/uncited-assertion` (eslint-rules/paper-claims.mjs);
+% this file is its test, run by eslint-rules/paper-claims.harness.mjs.
+% Each numbered case is annotated with the expected verdict. Keep in the repo (it IS the contract).
+\documentclass{article}
+\begin{document}
+
+% (1) MUST FLAG — uncited empirical claim about prior work (percentage + verb, no cite, no "we").
+Transformers outperform RNNs by 12\%.
+
+% (2) MUST NOT FLAG — same claim, now carrying a citation.
+Transformers outperform RNNs by 12\% \cite{vaswani2017}.
+
+% (3) MUST NOT FLAG — float pointer; the verb refers to a Table, not to prior work.
+Table 2 shows the aggregated results across all runs.
+
+% (4) MUST NOT FLAG — the only number is a year (year guard).
+In 2026, the field continued to attract new benchmarks.
+
+% (5) MUST NOT FLAG — the paper's OWN reported result (we/our guard); numbers allowed uncited.
+We find a 6\% reduction in false positives (p<0.05) over the baseline.
+
+% (6) MUST NOT FLAG — a definition sentence, even though it contains a number.
+A transformer block is defined as a stack of 6 attention sub-layers.
+
+% (7) MUST NOT FLAG — version-number guard (v2.1) and a math-mode number ($n = 512$) both skipped;
+%     no "we", so this isolates the version + math guards (no empirical signal survives).
+The baseline model ships as release v2.1 with a hidden size of $n = 512$.
+
+% (8) MUST FLAG — bare fuzzy quantifier making a claim about prior work, no cite.
+Most prior detectors silently miss adversarial inputs.
+
+% ── regression cases for the adversarial-review fixes (S5–S10) ──────────────────
+
+% (S6) MUST NOT FLAG — numeric-style citation [12] is a citation (dominant CS style).
+Transformers outperform RNNs by 12\% [12].
+
+% (S6b) MUST NOT FLAG — citation range/list [3, 4] and [1]--[3] both count.
+Prior detectors reduce error by 20\% [3, 4].
+
+% (S7) MUST NOT FLAG — biblatex \footcite is a citation macro.
+Prior work improves accuracy by 15\% \footcite{smith2020}.
+
+% (S7b) MUST NOT FLAG — \citeauthor / \parencite are citation macros too.
+\citeauthor{jones2019} shows a 9\% reduction over the baseline \parencite{jones2019}.
+
+% (S8) MUST NOT FLAG — "cf." must NOT sever the trailing \cite into its own segment.
+RNN baselines underperform on long sequences, cf. \cite{vaswani2017}.
+
+% (S8b) MUST NOT FLAG — "e.g." before a capital must not break the sentence off its cite.
+Several detectors miss adversarial inputs, e.g. Gradient attacks \cite{goodfellow2015}.
+
+% (S9) MUST NOT FLAG — float pointer via \ref-macro (no literal digit); verb refers to a Table.
+Table~\ref{tab:results} shows the aggregated numbers across all runs.
+
+% (S9b) MUST NOT FLAG — \autoref / \Cref float pointers, verb-only.
+\Cref{fig:overview} demonstrates the pipeline end to end.
+
+% (S10) MUST NOT FLAG — tabular body: numeric rows are data, not a prose claim.
+The results appear below.
+\begin{tabular}{lll}
+Model & Acc & F1 \\
+BERT  & 0.91 & 0.89 \\
+GPT   & 0.94 & 0.93 \\
+\end{tabular}
+
+% (S5) MUST FLAG — bare country "US" must NOT be read as the paper's own result ("us").
+US-based detectors reject 40\% of benign inputs.
+
+% (S5b) MUST FLAG — "Our reading of the literature" is a claim about OTHERS, not an own result.
+Our reading of the literature shows transformers outperform every prior baseline.
+
+% (S5c) MUST NOT FLAG — genuine own result: "our method" is the subject.
+Our method reduces false positives by 6\% over the strongest baseline.
+
+\end{document}
