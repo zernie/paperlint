@@ -1,0 +1,87 @@
+# Composite action: set up what the LaTeX rules need, then run ESLint over a consumer's corpus.
+#
+# WHY AN ACTION AND NOT A DOCUMENTED `run:` BLOCK. Two steps have to happen in this order and
+# neither is guessable from the outside: `texcount` must exist on PATH before ESLint starts, and
+# the ESLint invocation has to carry `--no-config-lookup` so a consumer's nested configs cannot
+# quietly change which rules are enabled. A consumer who copies only the second step gets a green
+# job over rules that silently degraded — see the `texcount` note below.
+#
+# 🔴 THE GREEN-ZERO GUARD IS PART OF THIS ACTION, NOT AN OPTIONAL EXTRA. `eslint` prints findings
+# and exits 0 when there are none — and "no findings" is byte-identical to "not one rule was handed
+# a single file". A rule whose glob matched nothing is never invoked, and a rule that is never
+# invoked physically cannot report that. So this action asserts that ESLint linted at least one
+# file and fails loudly when it did not. This does NOT replace a per-rule glob audit (the package's
+# own `npm run check:globs` does that, and it reads the package's config, not yours) — it closes the
+# one failure mode that needs no config knowledge: nothing was linted at all.
+name: research-paper-pipeline — LaTeX prose gate
+description: Install the toolchain the texcount/* rules need, run ESLint, and refuse to pass on an empty run.
+
+inputs:
+  config:
+    description: Path to the ESLint flat config that enables the rules.
+    required: false
+    default: eslint.config.mjs
+  paths:
+    description: What to lint, as ESLint would take it on the command line.
+    required: false
+    default: "."
+  max-warnings:
+    description: >-
+      Passed through to ESLint. The default -1 means warnings never fail the job: in this rule set
+      most findings are advisory by design, and a gate that fails on advice gets muted.
+    required: false
+    default: "-1"
+  texcount:
+    description: >-
+      Install texcount. Leave on unless the corpus has no .tex. 🔴 WITHOUT THIS PACKAGE THE STEP
+      DOES NOT FAIL, IT QUIETLY DEGRADES — the `texcount/walls` and `texcount/appendix-ratio` rules
+      count words with the external binary and fall back to a weaker count when it is absent.
+    required: false
+    default: "true"
+  working-directory:
+    description: Directory to run in.
+    required: false
+    default: "."
+
+runs:
+  using: composite
+  steps:
+    # texlive-extra-utils is what carries /usr/bin/texcount. Cached, because the apt fetch is the
+    # only network hop in this action and a slow mirror once cost a caller 14 minutes.
+    - name: texcount (feeds the texcount/* rules over .tex)
+      if: inputs.texcount == 'true'
+      uses: awalsh128/cache-apt-pkgs-action@v1
+      with:
+        packages: texlive-extra-utils
+        version: "1.0"
+
+    # 🔴 EXIT=0 AND EMPTY OUTPUT IS NOT "CLEAN" — an installer can put nothing in place and report
+    # success. So the binary is checked for existence, not the installer's return code.
+    - name: texcount is actually on PATH
+      if: inputs.texcount == 'true'
+      shell: bash
+      run: |
+        command -v texcount >/dev/null || {
+          echo "::error::texcount is not on PATH after the install step. The texcount/* rules would" \
+               "silently fall back to a weaker word count, and this job would still be green."
+          exit 1
+        }
+        texcount -version | head -1
+
+    # ONE ESLint invocation, JSON to disk, exit code preserved and then handed to the guard.
+    # Running ESLint twice (once for humans, once for the machine) would lint the corpus twice and
+    # could disagree with itself. The guard lives in `scripts/eslint-report-guard.mjs` rather than
+    # inline here, because an inline `node -e` blob cannot be reached by a test.
+    - name: eslint
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        RPP_CONFIG: ${{ inputs.config }}
+        RPP_PATHS: ${{ inputs.paths }}
+        RPP_MAXWARN: ${{ inputs.max-warnings }}
+      run: |
+        npx eslint --no-config-lookup --config "$RPP_CONFIG" \
+          --max-warnings="$RPP_MAXWARN" -f json -o "$RUNNER_TEMP/eslint.json" $RPP_PATHS
+        RC=$?
+        node "$GITHUB_ACTION_PATH/scripts/eslint-report-guard.mjs" \
+          "$RUNNER_TEMP/eslint.json" "$RC" "$RPP_PATHS" "$RPP_CONFIG"
