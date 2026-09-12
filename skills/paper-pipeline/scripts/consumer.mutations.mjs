@@ -88,7 +88,7 @@ const MUTATIONS = [
   ],
   [
     "the prefix loses its trailing separator",
-    [[SRC, "    prefix: `${root}/`,", "    prefix: `${root}`,"]],
+    [[SRC, "    prefix: `${base}/`,", "    prefix: `${base}`,"]],
     "the prefix matched a sibling directory sharing the root's name",
     "the boundary between the pipeline's scripts and a directory merely named like them",
   ],
