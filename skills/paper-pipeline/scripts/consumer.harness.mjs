@@ -12,20 +12,27 @@
  * ever sees the good case cannot tell a working resolver from a constant.
  *
  * Assertions run at module top level: `vigiles test` treats "did not throw" as a pass.
+ *
+ * Parts VIII-X cover the fourth carrier, `scriptsRoot()`. It fails in the same silent direction
+ * as the rest and worse: its value is a PREFIX a caller filters prose with, so a wrong one
+ * matches nothing and every check built on it reports zero findings.
  */
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import {
   CONFIG_KEY,
+  DEFAULT_SCRIPTS_ROOT,
   consumerRoot,
   consumerSkillsDir,
   insideNodeModules,
   isMain,
   ledgerPath,
+  pipelineScripts,
+  scriptsRoot,
 } from "./consumer.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -211,6 +218,145 @@ assert.equal(
   "isMain claimed a module was the entry point while something else was",
 );
 
+// ── VIII. THE FOURTH CARRIER — declared wins, absent falls back to the default ────────────────
+// Both directions in one block on purpose: a resolver that returned the declaration for every
+// input and a resolver that returned the default for every input each pass HALF of this pair,
+// and half of a pair is a constant wearing a function's name.
+{
+  const declaredRoot = fakeConsumer({ scripts: "tools/pipeline" });
+  mkdirSync(join(declaredRoot, "tools", "pipeline"), { recursive: true });
+  assert.equal(
+    scriptsRoot({ env: {}, cwd: declaredRoot }),
+    "tools/pipeline",
+    "a declared scripts path must be returned as written",
+  );
+
+  const defaultRoot = fakeConsumer(undefined);
+  mkdirSync(join(defaultRoot, DEFAULT_SCRIPTS_ROOT), { recursive: true });
+  assert.equal(
+    scriptsRoot({ env: {}, cwd: defaultRoot }),
+    DEFAULT_SCRIPTS_ROOT,
+    "with nothing declared the customary location must be used — otherwise every consumer that " +
+      "keeps the symlink where the prose already looks would have to say so",
+  );
+
+  // 🔴 RELATIVE, AND `/`-SEPARATED. This value is compared against text a human typed inside a
+  // SKILL.md; an absolute path makes every `startsWith` test false, which is not an error but an
+  // empty loop body — the failure the throws below exist to prevent, arrived at from inside.
+  assert.equal(
+    isAbsolute(scriptsRoot({ env: {}, cwd: declaredRoot })),
+    false,
+    "scriptsRoot returned an ABSOLUTE path. Callers match it against prose, so every comparison " +
+      "would be false and every check built on it would silently examine nothing.",
+  );
+
+  // CLAUDE_PROJECT_DIR outranks the cwd here too, for the reason it does in consumerRoot: a hook
+  // or an editor starts the process wherever it likes.
+  assert.equal(
+    scriptsRoot({ env: { CLAUDE_PROJECT_DIR: declaredRoot }, cwd: defaultRoot }),
+    "tools/pipeline",
+    "the declaration must be read from CLAUDE_PROJECT_DIR when it is set, not from the cwd",
+  );
+}
+
+// ── IX. THE FOURTH CARRIER — the two refusals, each checked for its CURE ──────────────────────
+{
+  // 1. A value that resolves inside node_modules. This is the tempting wrong fix after the move,
+  //    and it is how the DEFAULT fails as well: with the process started inside the installed
+  //    package and CLAUDE_PROJECT_DIR unset, the consumer root is itself under node_modules.
+  const root = fakeConsumer({ scripts: "node_modules/research-paper-pipeline/skills/pp/scripts" });
+  mkdirSync(join(root, "node_modules", "research-paper-pipeline", "skills", "pp", "scripts"), {
+    recursive: true,
+  });
+  let err;
+  try {
+    scriptsRoot({ env: {}, cwd: root });
+  } catch (e) {
+    err = e;
+  }
+  assert.ok(
+    err,
+    "🔴 scriptsRoot ACCEPTED a path inside node_modules — and the directory exists, so nothing " +
+      "else would have complained. `npm ci` deletes that tree, and a skill's prose would name a " +
+      "path the repository does not track.",
+  );
+  assert.match(err.message, /node_modules/, "the refusal must say what is wrong with the path");
+  assert.match(
+    err.message,
+    /symlink/,
+    "the refusal must carry the cure — the symlink is what keeps the documented path working",
+  );
+
+  // The same failure reached through the DEFAULT: nothing declared, root under node_modules.
+  const installed = installedDir(fakeConsumer(undefined));
+  mkdirSync(join(installed, DEFAULT_SCRIPTS_ROOT), { recursive: true });
+  assert.throws(
+    () => scriptsRoot({ env: {}, cwd: installed }),
+    /node_modules/,
+    "the default resolved under node_modules and was accepted. A consumer root inside an " +
+      "installed package is the one case where the default is wrong, and it is silent.",
+  );
+
+  // 2. A value that is not on disk at all — the wrong-prefix case, which produces no findings
+  //    rather than wrong ones.
+  let missing;
+  try {
+    scriptsRoot({ env: {}, cwd: fakeConsumer({ scripts: "tools/nope" }) });
+  } catch (e) {
+    missing = e;
+  }
+  assert.ok(
+    missing,
+    "🔴 scriptsRoot accepted a path that does not exist. Callers use it as a PREFIX: a wrong one " +
+      "matches no instruction, so every check reports zero findings and exits 0 — byte-identical " +
+      "to a corpus that was examined and passed.",
+  );
+  assert.match(missing.message, /"scripts"/, "the refusal must name the key to fix");
+  assert.match(missing.message, /package\.json/, "the refusal must name the file the key goes in");
+
+  // And the default's version of that message must say the default was used — otherwise someone
+  // who declared nothing goes looking in package.json for a line that is not there.
+  assert.throws(
+    () => scriptsRoot({ env: {}, cwd: fakeConsumer(undefined) }),
+    /Nothing was declared/,
+    "a missing default must say it WAS the default; the declared-value message sends the reader " +
+      "to a key that does not exist",
+  );
+
+  // 3. Anything written down must be usable; only ABSENCE may fall through to the default.
+  assert.throws(
+    () => scriptsRoot({ env: {}, cwd: fakeConsumer({ scripts: null }) }),
+    /must be a non-empty string/,
+    'a `"scripts": null` was accepted. `?? DEFAULT` reads an explicit null as an absence, which ' +
+      "is a typed keystroke being ignored.",
+  );
+  assert.throws(
+    () => scriptsRoot({ env: {}, cwd: fakeConsumer({ scripts: "" }) }),
+    /must be a non-empty string/,
+    "an empty scripts path was accepted; it resolves to the consumer root itself, so the prefix " +
+      "would match every command in every skill",
+  );
+}
+
+// ── X. THE SCRIPT NAMES ARE DERIVED, NOT RESTATED ─────────────────────────────────────────────
+// The names belong to this package; a consumer that spelled them out would keep its copy in step
+// by hand. The trailing slash on `prefix` is load-bearing: without it the prefix also matches a
+// SIBLING directory whose name merely starts with the root's.
+{
+  const s = pipelineScripts("a/b");
+  assert.equal(s.prefix, "a/b/", "prefix must end in a separator");
+  assert.equal(s.announce, "a/b/announce.mjs");
+  assert.equal(s.ledger, "a/b/ledger.mjs");
+  assert.equal(
+    "a/b-other/ledger.mjs".startsWith(s.prefix),
+    false,
+    "the prefix matched a sibling directory sharing the root's name — drop the trailing slash " +
+      "and every such path is mistaken for a pipeline script",
+  );
+  assert.equal("a/b/ledger.mjs".startsWith(s.prefix), true, "the prefix failed on a real member");
+}
+
 console.log(
-  "✓ consumer: three rungs each proved in both directions, node_modules refused, symlinked main guard held",
+  "✓ consumer: three rungs each proved in both directions, node_modules refused, symlinked main guard held, " +
+    "scripts root declared/default/refused",
 );

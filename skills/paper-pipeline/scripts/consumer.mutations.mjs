@@ -46,6 +46,46 @@ const MUTATIONS = [
     "isMain is false through a symlink",
     "every CLI in this directory when a consumer runs it at the path its skills document",
   ],
+
+  // ── the fourth carrier. Its defects are worse than the three above: the value is a PREFIX a
+  // caller filters prose with, so a wrong one matches nothing and every check built on it
+  // reports zero findings — the green zero this package has a dedicated guard against.
+  [
+    "a declared `null` scripts path is read as an absence",
+    [
+      [
+        SRC,
+        "const rel = declared === undefined ? DEFAULT_SCRIPTS_ROOT : declared;",
+        "const rel = declared ?? DEFAULT_SCRIPTS_ROOT;",
+      ],
+    ],
+    'a `"scripts": null` was accepted',
+    "the absence/keystroke distinction — a typed null is ignored and the default silently wins",
+  ],
+  [
+    "a scripts path inside node_modules is no longer refused",
+    [[SRC, "  if (insideNodeModules(abs))", "  if (false && insideNodeModules(abs))"]],
+    "scriptsRoot ACCEPTED a path inside node_modules",
+    "the guard against naming a path `npm ci` deletes and git does not track",
+  ],
+  [
+    "a scripts path that is not on disk is no longer refused",
+    [[SRC, "  if (!existsSync(abs))", "  if (false && !existsSync(abs))"]],
+    "scriptsRoot accepted a path that does not exist",
+    "the only net under the wrong prefix, whose symptom is zero findings and exit 0",
+  ],
+  [
+    "the scripts root is returned resolved instead of as declared",
+    [[SRC, "  return rel;", "  return abs;"]],
+    "scriptsRoot returned an ABSOLUTE path",
+    "prose comparison — every `startsWith` against a SKILL.md becomes false",
+  ],
+  [
+    "the prefix loses its trailing separator",
+    [[SRC, "    prefix: `${root}/`,", "    prefix: `${root}`,"]],
+    "the prefix matched a sibling directory sharing the root's name",
+    "the boundary between the pipeline's scripts and a directory merely named like them",
+  ],
 ];
 
 process.exit(

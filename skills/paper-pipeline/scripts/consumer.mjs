@@ -10,7 +10,10 @@
  *   2. where does the run ledger live, now that the directory next to this file is wiped by
  *      `npm ci`;
  *   3. was this file executed, or merely imported — a question whose usual answer stops
- *      working the moment the file is reached through a symlink.
+ *      working the moment the file is reached through a symlink;
+ *   4. by what path a SKILL'S PROSE names these scripts, so that a checker can tell an
+ *      instruction that runs them from one that runs something else. See the fourth-carrier
+ *      section at the bottom of this file.
  *
  * ── HOW THIS PACKAGE IS REACHED ─────────────────────────────────────────────
  * A consumer keeps a symlink where the directory used to be:
@@ -192,4 +195,110 @@ export function ledgerPathExisting(hereDir, opts) {
         `empty ledger) or fix the "ledger" declaration in package.json.`,
     );
   return p;
+}
+
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+// THE FOURTH CARRIER — WHERE A SKILL'S PROSE NAMES THESE SCRIPTS
+//
+// `papersRoot()` answers "where does the consumer keep its papers"; `ledgerPath()` answers
+// "where does the run journal live"; `citeChecks` (read in `run-mechanical.mjs`) answers "where
+// are the consumer's own citation checkers". This answers the fourth: BY WHAT PATH does a skill
+// instruct the model to run `announce.mjs` and `ledger.mjs`.
+//
+// 🔴 IT IS A DIFFERENT KIND OF PATH FROM THE OTHER THREE, and the difference decides the API.
+// The other three are read by CODE and may be absolute. This one is compared against text a
+// human wrote inside a SKILL.md — `node .claude/skills/paper-pipeline/scripts/ledger.mjs record
+// …` — so it must stay relative to the consumer root and spelled with `/`, exactly as the prose
+// spells it. Returning an absolute path here would make every `startsWith` test false and every
+// check that depends on it pass over an empty set.
+//
+// ── WHY IT NEEDS A DECLARATION AT ALL ───────────────────────────────────────
+// `.claude/skills` is fixed by the agent harness and `paper-pipeline/scripts` is this package's
+// own convention, so the default is right for a consumer that keeps the customary symlink. It
+// is NOT right for a consumer that mounts the scripts elsewhere, renames the skill, or has not
+// made the symlink yet — and the failure in all three cases is the silent one: a prefix that
+// matches nothing turns `for (… of commands) if (!c.script.startsWith(prefix)) continue;` into a
+// loop with an empty body. Zero findings, exit 0, indistinguishable from a corpus that passed.
+//
+// ── THE TWO REFUSALS ────────────────────────────────────────────────────────
+//   1. the resolved directory is inside `node_modules` — refused even though it exists. This is
+//      the tempting wrong fix after the move ("just point at the installed copy"), and it is
+//      wrong twice over: `npm ci` deletes that tree, and a skill's prose would then name a path
+//      no one can read in the repository. It is also how the DEFAULT fails: with the process
+//      started inside the installed package and `CLAUDE_PROJECT_DIR` unset, `consumerRoot()` is
+//      itself under `node_modules`, and the default resolves under it.
+//   2. the resolved directory is not on disk — refused for the reason in the paragraph above:
+//      the wrong prefix produces no findings rather than wrong ones.
+// ═════════════════════════════════════════════════════════════════════════════════════════════
+
+/**
+ * The default. A consumer that declares nothing is assumed to keep the customary symlink at the
+ * customary place, so that the path a skill's prose already names keeps resolving.
+ */
+export const DEFAULT_SCRIPTS_ROOT = ".claude/skills/paper-pipeline/scripts";
+
+/**
+ * The root-relative path by which the consumer's skills name this package's pipeline scripts.
+ *
+ * @returns the path as DECLARED (relative, `/`-separated) — it is compared against prose, not
+ *          opened. Use `join(consumerRoot(), …)` when you need to touch the file.
+ */
+export function scriptsRoot({ env = process.env, cwd = process.cwd() } = {}) {
+  const root = consumerRoot({ env, cwd });
+  const declared = consumerPkg({ env, cwd })?.[CONFIG_KEY]?.scripts;
+  // 🔴 `declared === undefined`, NOT `declared ?? DEFAULT` — the same distinction `papersRoot()`
+  // and `ledgerPath()` make, for the same reason: `"scripts": null` is a keystroke, not an
+  // absence, and silently substituting the default for it hides a typo behind a working run.
+  const rel = declared === undefined ? DEFAULT_SCRIPTS_ROOT : declared;
+  if (typeof rel !== "string" || rel.length === 0)
+    throw new TypeError(
+      `${CONFIG_KEY}: "scripts" must be a non-empty string, got ${JSON.stringify(rel)}`,
+    );
+
+  const abs = resolve(root, rel);
+  if (insideNodeModules(abs))
+    throw new Error(
+      `${CONFIG_KEY}: the pipeline scripts path "${rel}" resolves to ${abs}, which is inside ` +
+        `node_modules.\n` +
+        `That path cannot be the one a skill names: \`npm ci\` deletes the tree, and the ` +
+        `instruction would point at a directory the repository does not track.\n` +
+        `Keep a symlink where the prose already looks —\n` +
+        `  ${join(root, DEFAULT_SCRIPTS_ROOT)} -> node_modules/${CONFIG_KEY}/skills/paper-pipeline/scripts\n` +
+        `— or declare the real, repository-relative location in ${join(root, "package.json")}:\n` +
+        `  "${CONFIG_KEY}": { "scripts": "path/to/pipeline/scripts" }\n` +
+        `(If nothing was declared, the root itself is under node_modules: run the command from ` +
+        `the consumer repository, or export CLAUDE_PROJECT_DIR.)`,
+    );
+  if (!existsSync(abs))
+    throw new Error(
+      `${CONFIG_KEY}: the pipeline scripts path "${rel}" does not exist under ${root}.\n` +
+        (declared === undefined
+          ? `Nothing was declared, so the default "${DEFAULT_SCRIPTS_ROOT}" was used. Create the ` +
+            `symlink there, or declare the real location in package.json:\n` +
+            `  "${CONFIG_KEY}": { "scripts": "path/to/pipeline/scripts" }`
+          : `It is declared in package.json under "${CONFIG_KEY}" as ` +
+            `"scripts": ${JSON.stringify(declared)}. Fix it there, or create the directory.`) +
+        `\nThis is thrown rather than ignored on purpose: this value is a PREFIX that callers ` +
+        `filter prose with, so a wrong one matches no instruction at all and every check built ` +
+        `on it reports zero findings — byte-identical to a corpus that was checked and passed.`,
+    );
+  return rel;
+}
+
+/**
+ * The individual script paths, derived from one root.
+ *
+ * 🔴 THE NAMES LIVE HERE, NOT IN THE CONSUMER — the same half that keeps `paperFiles()` honest.
+ * `announce.mjs` and `ledger.mjs` are this package's contract; a consumer that spelled them out
+ * itself would keep its copy of the list in step by hand, and a hand-kept list rots silently.
+ */
+export function pipelineScripts(root) {
+  return {
+    /** What every prose path under this root starts with. Trailing slash, for `startsWith`. */
+    prefix: `${root}/`,
+    /** Announces that a gate has started. */
+    announce: `${root}/announce.mjs`,
+    /** Appends the verdict row. */
+    ledger: `${root}/ledger.mjs`,
+  };
 }
