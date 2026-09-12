@@ -293,12 +293,20 @@ export function scriptsRoot({ env = process.env, cwd = process.cwd() } = {}) {
  * itself would keep its copy of the list in step by hand, and a hand-kept list rots silently.
  */
 export function pipelineScripts(root) {
+  // 🔴 ONE TRAILING SLASH, NOT THE ONE THAT WAS TYPED. `scriptsRoot()` returns the declaration
+  // verbatim — it must, the value is compared against prose — so `"scripts": "tools/pipeline/"`
+  // is a perfectly reasonable thing for someone to write and reaches here with its own slash.
+  // Concatenating another gives `tools/pipeline//`, which matches NOTHING: every filter built on
+  // the prefix goes quiet and the checks report a clean corpus they never entered. The normalise
+  // belongs here rather than in the resolver, because here the value is being turned into a path
+  // and there it is still the consumer's own words.
+  const base = root.replace(/\/+$/, "");
   return {
     /** What every prose path under this root starts with. Trailing slash, for `startsWith`. */
-    prefix: `${root}/`,
+    prefix: `${base}/`,
     /** Announces that a gate has started. */
-    announce: `${root}/announce.mjs`,
+    announce: `${base}/announce.mjs`,
     /** Appends the verdict row. */
-    ledger: `${root}/ledger.mjs`,
+    ledger: `${base}/ledger.mjs`,
   };
 }

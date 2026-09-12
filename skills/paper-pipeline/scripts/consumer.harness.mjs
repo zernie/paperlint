@@ -362,6 +362,18 @@ assert.equal(
   assert.equal(s.prefix, "a/b/", "prefix must end in a separator");
   assert.equal(s.announce, "a/b/announce.mjs");
   assert.equal(s.ledger, "a/b/ledger.mjs");
+
+  // EXACTLY ONE slash, whatever the consumer typed. `scriptsRoot()` returns the declaration
+  // verbatim, so a trailing slash in package.json arrives here intact; `${root}/` would then give
+  // `a/b//`, which matches nothing — the silent direction again.
+  const typedSlash = pipelineScripts("a/b/");
+  assert.equal(
+    typedSlash.prefix,
+    "a/b/",
+    'a declared trailing slash doubled the separator. `"scripts": "tools/pipeline/"` is a normal ' +
+      "thing to write, and the doubled prefix matches no instruction at all.",
+  );
+  assert.equal(typedSlash.ledger, "a/b/ledger.mjs", "the script paths doubled the separator too");
 }
 
 console.log(

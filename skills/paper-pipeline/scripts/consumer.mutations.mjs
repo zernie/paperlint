@@ -81,6 +81,12 @@ const MUTATIONS = [
     "prose comparison — every `startsWith` against a SKILL.md becomes false",
   ],
   [
+    "a declared trailing slash is no longer normalised",
+    [[SRC, 'const base = root.replace(/\\/+$/, "");', "const base = root;"]],
+    "a declared trailing slash doubled the separator",
+    "the one input a consumer types by habit, whose doubled prefix matches nothing",
+  ],
+  [
     "the prefix loses its trailing separator",
     [[SRC, "    prefix: `${root}/`,", "    prefix: `${root}`,"]],
     "the prefix matched a sibling directory sharing the root's name",
