@@ -30,9 +30,9 @@
  *
  * Run: `npm run mutations`
  */
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { readdirSync, statSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -68,16 +68,50 @@ if (mutations.length === 0) {
 }
 
 // Guard 2 — a harness nothing can kill is a harness that proves nothing.
-const orphans = harness.filter(
-  (h) => !mutations.includes(h.replace(/\.harness\.mjs$/, ".mutations.mjs")),
-);
+//
+// Coverage is ASKED FOR, not inferred from filenames: each battery is run in report mode, where
+// `runMutations` prints the harnesses its own cases name and returns without editing anything.
+// The filename rule it replaces was a proxy that this repo's own corpus breaks —
+// `ledger.mutations.mjs` kills `gates.harness.mjs`, and no naming convention says so.
+const covered = new Set();
+for (const m of mutations) {
+  const r = spawnSync(process.execPath, [m], {
+    cwd: ROOT,
+    encoding: "utf8",
+    env: { ...process.env, MUTATIONS_REPORT_COVERAGE: "1" },
+  });
+  if (r.status !== 0) {
+    console.error(
+      `❌ ${m} could not report its coverage (exit ${r.status}).\n` +
+        `   A battery that cannot say what it kills is not evidence of anything.\n` +
+        (r.stderr ?? ""),
+    );
+    process.exit(1);
+  }
+  for (const line of (r.stdout ?? "").split("\n")) {
+    const [tag, path] = line.split("\t");
+    if (tag === "MUTATION-COVERS" && path) covered.add(relative(ROOT, resolve(ROOT, path.trim())));
+  }
+}
+// A battery that reports nothing is itself the green zero, one level down.
+if (covered.size === 0) {
+  console.error(
+    "❌ the batteries reported ZERO harnesses between them.\n" +
+      "   Either none of them calls runMutations at import time, or report mode is broken. " +
+      "Both\n   make the guard below vacuous, so it refuses to pass.",
+  );
+  process.exit(1);
+}
+const orphans = harness.filter((h) => !covered.has(h));
 if (orphans.length > 0) {
   console.error(
-    `❌ ${orphans.length} harness(es) with no mutation battery:\n` +
-      orphans.map((o) => `   ${o}  →  expected ${o.replace(/\.harness\.mjs$/, ".mutations.mjs")}`).join("\n") +
+    `❌ ${orphans.length} harness(es) no mutation battery can kill:\n` +
+      orphans.map((o) => `   ${o}`).join("\n") +
       "\n   A green harness is not evidence on its own — silence is the success state of every " +
       "check\n   here, so «it passed» and «it cannot fail» look the same from outside. The " +
-      "battery is\n   what tells them apart.",
+      "battery is\n   what tells them apart.\n" +
+      "   Fix by adding a case whose `harness` names the file, in a new battery or an existing " +
+      "one.",
   );
   process.exit(1);
 }

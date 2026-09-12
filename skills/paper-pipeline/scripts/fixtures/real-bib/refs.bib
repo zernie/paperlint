@@ -1,0 +1,153 @@
+% real-world-refs.bib — НАСТОЯЩИЙ BibTeX, а не написанный руками. Заморожен 12.09.2026.
+%
+% 🔴 ПОЧЕМУ ФИКСТУРА НАСТОЯЩАЯ. Прежний парсер падал на форме `}}` в конце последнего поля, и
+% комментарий в `extract-ref-facts.harness.mjs` прямо говорит: фикстура, написанная руками, почти
+% наверняка закрыла бы запись на своей строке — то есть тест прошёл бы, а корпус нет. Поэтому
+% здесь лежат подлинные байты (27 записей, 28 вхождений `}}`), а не их аккуратная имитация.
+%
+% ОТКУДА. Библиография ПРИНЯТОЙ статьи (труды выходят 12.10.2026), то есть список чужих
+% опубликованных работ, который и так станет публичным. Проверено перед копированием: ноль
+% самоцитирований, ноль упоминаний автора, ноль приватных путей — только цитируемые чужие работы.
+% Статья под анонимным ревью для этой цели НЕ бралась намеренно: набор ссылок сам по себе
+% отпечаток, и публиковать его до раскрытия нельзя.
+%
+% ЧТО ЭТИМ ПРОВЕРЯЕТСЯ: что разбор переживает настоящие формы. Число записей считается ИЗ ФАЙЛА
+% (`^@`), а не вписано константой — константа устареет при первой дописанной записи.
+@inproceedings{jimenez2024swebench,
+  author={Jimenez, Carlos E. and Yang, John and Wettig, Alexander and Yao, Shunyu and Pei, Kexin and Press, Ofir and Narasimhan, Karthik},
+  title={{SWE-bench}: Can Language Models Resolve Real-World {GitHub} Issues?},
+  booktitle={International Conference on Learning Representations (ICLR)}, year={2024},
+  doi={10.48550/arXiv.2310.06770}}
+@inproceedings{yang2024sweagent,
+  author={Yang, John and Jimenez, Carlos E. and Wettig, Alexander and Lieret, Kilian and Yao, Shunyu and Narasimhan, Karthik and Press, Ofir},
+  title={{SWE-agent}: Agent-Computer Interfaces Enable Automated Software Engineering},
+  booktitle={Advances in Neural Information Processing Systems (NeurIPS)}, year={2024},
+  doi={10.48550/arXiv.2405.15793}}
+@inproceedings{jain2025livecodebench,
+  author={Jain, Naman and Han, King and Gu, Alex and Li, Wen-Ding and Yan, Fanjia and Zhang, Tianjun and Wang, Sida and Solar-Lezama, Armando and Sen, Koushik and Stoica, Ion},
+  title={{LiveCodeBench}: Holistic and Contamination Free Evaluation of Large Language Models for Code},
+  booktitle={International Conference on Learning Representations (ICLR)}, year={2025},
+  doi={10.48550/arXiv.2403.07974}}
+@article{chen2021humaneval,
+  author={Chen, Mark and Tworek, Jerry and Jun, Heewoo and Yuan, Qiming and others},
+  title={Evaluating Large Language Models Trained on Code}, journal={arXiv preprint arXiv:2107.03374}, year={2021},
+  doi={10.48550/arXiv.2107.03374}}
+@inproceedings{jiang2023llmlingua,
+  author={Jiang, Huiqiang and Wu, Qianhui and Lin, Chin-Yew and Yang, Yuqing and Qiu, Lili},
+  title={{LLMLingua}: Compressing Prompts for Accelerated Inference of Large Language Models},
+  booktitle={Conference on Empirical Methods in Natural Language Processing (EMNLP)}, year={2023}, note={arXiv:2310.05736},
+  doi={10.18653/v1/2023.emnlp-main.825}}
+@inproceedings{zheng2024sglang,
+  author={Zheng, Lianmin and Yin, Liangsheng and Xie, Zhiqiang and others},
+  title={{SGLang}: Efficient Execution of Structured Language Model Programs},
+  booktitle={Advances in Neural Information Processing Systems (NeurIPS)}, year={2024},
+  doi={10.48550/arXiv.2312.07104}}
+@article{chen2023frugalgpt,
+  author={Chen, Lingjiao and Zaharia, Matei and Zou, James},
+  title={{FrugalGPT}: How to Use Large Language Models While Reducing Cost and Improving Performance},
+  journal={arXiv preprint arXiv:2305.05176}, year={2023}, doi={10.48550/arXiv.2305.05176}}
+@article{schwartz2020greenai,
+  author={Schwartz, Roy and Dodge, Jesse and Smith, Noah A. and Etzioni, Oren},
+  title={Green {AI}}, journal={Communications of the ACM}, volume={63}, number={12}, pages={54--63}, year={2020},
+  doi={10.1145/3381831}}
+% 2026-08-24, found by scripts/bib-authors.mjs (the THIRD entry with this same defect): the
+% order below was the arXiv preprint's. NeurIPS D&B 2021 orders them Raji, Denton, Bender,
+% Hanna, Paullada. We cite the proceedings. Confirmed on the DBLP API (which returns the
+% NeurIPS and CoRR records separately) and against arXiv 2111.15366.
+@inproceedings{raji2021benchmark,
+  author={Raji, Inioluwa Deborah and Denton, Emily and Bender, Emily M. and Hanna, Alex and Paullada, Amandalynne},
+  title={{AI} and the Everything in the Whole Wide World Benchmark},
+  booktitle={NeurIPS Datasets and Benchmarks Track}, year={2021},
+  doi={10.48550/arXiv.2111.15366}}
+@article{biderman2024lessons,
+  author={Biderman, Stella and Schoelkopf, Hailey and Sutawika, Lintang and Gao, Leo and Tow, Jonathan and others},
+  title={Lessons from the Trenches on Reproducible Evaluation of Language Models},
+  journal={arXiv preprint arXiv:2405.14782}, year={2024}, doi={10.48550/arXiv.2405.14782}}
+@inproceedings{jacobs2021measurement,
+  author={Jacobs, Abigail Z. and Wallach, Hanna},
+  title={Measurement and Fairness},
+  booktitle={ACM Conference on Fairness, Accountability, and Transparency (FAccT)}, pages={375--385}, year={2021},
+  doi={10.1145/3442188.3445901}}
+@inproceedings{yao2023react,
+  author={Yao, Shunyu and Zhao, Jeffrey and Yu, Dian and Du, Nan and Shafran, Izhak and Narasimhan, Karthik and Cao, Yuan},
+  title={{ReAct}: Synergizing Reasoning and Acting in Language Models},
+  booktitle={International Conference on Learning Representations (ICLR)}, year={2023},
+  doi={10.48550/arXiv.2210.03629}}
+% 2026-08-24: Eric Hambro was MISSING below. The NeurIPS 2023 version has 9 authors, the arXiv
+% preprint 8 — we cite the proceedings, so the proceedings author list is the correct one.
+% Confirmed on the DBLP API, which lists both records side by side (NeurIPS 2023 vs CoRR 2023).
+% NB: this comment lives OUTSIDE the entry on purpose — `%` is NOT a comment inside a BibTeX
+% entry, and putting it there made BibTeX skip the whole record silently (measured the same day).
+@inproceedings{schick2023toolformer,
+  author={Schick, Timo and Dwivedi-Yu, Jane and Dess{\`i}, Roberto and Raileanu, Roberta and Lomeli, Maria and Hambro, Eric and Zettlemoyer, Luke and Cancedda, Nicola and Scialom, Thomas},
+  title={{Toolformer}: Language Models Can Teach Themselves to Use Tools},
+  booktitle={Advances in Neural Information Processing Systems (NeurIPS)}, year={2023},
+  doi={10.48550/arXiv.2302.04761}}
+@article{liu2024seagentsurvey,
+  author={Liu, Junwei and Wang, Kaixin and Chen, Yixuan and Peng, Xin and Chen, Zhenpeng and Zhang, Lingming and Lou, Yiling},
+  title={Large Language Model-Based Agents for Software Engineering: A Survey},
+  journal={arXiv preprint arXiv:2409.02977}, year={2024}, doi={10.48550/arXiv.2409.02977}}
+@inproceedings{agarwal2021precipice,
+  author={Agarwal, Rishabh and Schwarzer, Max and Castro, Pablo Samuel and Courville, Aaron and Bellemare, Marc G.},
+  title={Deep Reinforcement Learning at the Edge of the Statistical Precipice},
+  booktitle={Advances in Neural Information Processing Systems (NeurIPS)}, year={2021},
+  doi={10.48550/arXiv.2108.13264}}
+@article{liang2023helm,
+  author={Liang, Percy and Bommasani, Rishi and Lee, Tony and others},
+  title={Holistic Evaluation of Language Models}, journal={Transactions on Machine Learning Research (TMLR)}, year={2023},
+  doi={10.48550/arXiv.2211.09110}}
+@article{kapoor2024agentsmatter,
+  author={Kapoor, Sayash and Stroebl, Benedikt and Siegel, Zachary S. and Nadgir, Nitya and Narayanan, Arvind},
+  title={{AI} Agents That Matter}, journal={arXiv preprint arXiv:2407.01502}, year={2024},
+  doi={10.48550/arXiv.2407.01502}}
+% 2026-08-24: order below was the PREPRINT's (Tay last). ICLR 2022 puts Tay second. We cite ICLR.
+% ⚠️ PIPELINE-STATUS recorded "dehghani author-order fixed" on 2026-07-22 — it was fixed to the
+% arXiv order, which is a different list from the published one. Confirmed on the DBLP API.
+@inproceedings{dehghani2022efficiency,
+  author={Dehghani, Mostafa and Tay, Yi and Arnab, Anurag and Beyer, Lucas and Vaswani, Ashish},
+  title={The Efficiency Misnomer},
+  booktitle={International Conference on Learning Representations (ICLR)}, year={2022},
+  doi={10.48550/arXiv.2110.12894}}
+@article{barke2023grounded,
+  author={Barke, Shraddha and James, Michael B. and Polikarpova, Nadia},
+  title={Grounded {Copilot}: How Programmers Interact with Code-Generating Models},
+  journal={Proceedings of the ACM on Programming Languages (OOPSLA)}, volume={7}, pages={85--111}, year={2023},
+  doi={10.1145/3586030}}
+@article{bai2026spend,
+  author={Bai, Longju and Huang, Zhemin and Wang, Xingyao and Sun, Jiao and Mihalcea, Rada and Brynjolfsson, Erik and Pentland, Alex and Pei, Jiaxin},
+  title={How Do {AI} Agents Spend Your Money? Analyzing and Predicting Token Consumption in Agentic Coding Tasks},
+  journal={arXiv preprint arXiv:2604.22750}, year={2026}, doi={10.48550/arXiv.2604.22750}}
+@misc{jetbrains2026caveman,
+  author={Shiryaev, Denis},
+  title={Does Speaking to Agents Like Cavemen Really Save 65\% of Tokens? {We} Test},
+  year={2026},
+  howpublished={{JetBrains} {AI} blog},
+  url={https://blog.jetbrains.com/ai/2026/07/speak-to-ai-agents-like-cavemen-tosave-tokens/},
+  note={Independent A/B test of the caveman skill on 86 {Claude Code} tasks; about 8.5\% output savings vs.\ the advertised 65\%. Secondary coverage: \url{https://www.infoworld.com/article/4193775/talk-like-a-caveman-prompts-save-tokens-but-far-less-than-promised.html}}}
+@inproceedings{lago2024threats,
+  author={Lago, Patricia and Runeson, Per and Song, Qunying and Verdecchia, Roberto},
+  title={Threats to Validity in Software Engineering -- hypocritical paper section or essential analysis?},
+  booktitle={Proceedings of the 18th ACM/IEEE International Symposium on Empirical Software Engineering and Measurement (ESEM)},
+  pages={314--324}, year={2024}, doi={10.1145/3674805.3686691}}
+@article{erol2025costofpass,
+  author={Erol, Mehmet Hamza and El, Batu and Suzgun, Mirac and Yuksekgonul, Mert and Zou, James},
+  title={Cost-of-Pass: An Economic Framework for Evaluating Language Models},
+  journal={arXiv preprint arXiv:2504.13359}, year={2025}, doi={10.48550/arXiv.2504.13359}}
+@inproceedings{bean2025construct,
+  author={Bean, Andrew M. and Kearns, Ryan Othniel and Romanou, Angelika and others},
+  title={Measuring What Matters: Construct Validity in Large Language Model Benchmarks},
+  booktitle={NeurIPS Datasets and Benchmarks Track}, year={2025},
+  doi={10.48550/arXiv.2511.04703}}
+@inproceedings{liu2023evalplus,
+  author={Liu, Jiawei and Xia, Chunqiu Steven and Wang, Yuyao and Zhang, Lingming},
+  title={Is Your Code Generated by {ChatGPT} Really Correct? Rigorous Evaluation of Large Language Models for Code Generation},
+  booktitle={Advances in Neural Information Processing Systems (NeurIPS)}, year={2023},
+  doi={10.48550/arXiv.2305.01210}}
+@article{liang2025swebenchillusion,
+  author={Liang, Shanchao and Garg, Spandan and Zilouchian Moghaddam, Roshanak},
+  title={The {SWE-Bench} Illusion: When State-of-the-Art {LLMs} Remember Instead of Reason},
+  journal={arXiv preprint arXiv:2506.12286}, year={2025}, doi={10.48550/arXiv.2506.12286}}
+@article{yao2024taubench,
+  author={Yao, Shunyu and Shinn, Noah and Razavi, Pedram and Narasimhan, Karthik},
+  title={{$\tau$-bench}: A Benchmark for Tool-Agent-User Interaction in Real-World Domains},
+  journal={arXiv preprint arXiv:2406.12045}, year={2024}, doi={10.48550/arXiv.2406.12045}}

@@ -18,6 +18,14 @@ import { execFileSync } from "node:child_process";
 
 const RULES = "eslint-rules/papers.mjs";
 const HARNESS = "eslint-rules/papers.harness.mjs";
+
+// Coverage mode — see `scripts/run-mutations.mjs` guard 2 and the block in
+// `lib/mutation-driver.mjs`. Says what this battery can kill, without touching a file.
+if (process.env.MUTATIONS_REPORT_COVERAGE) {
+  console.log(`MUTATION-COVERS\t${HARNESS}`);
+  process.exit(0);
+}
+
 const PRISTINE = readFileSync(RULES, "utf8");
 
 const M = [

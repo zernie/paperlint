@@ -20,6 +20,13 @@ import { execFileSync } from "node:child_process";
 
 const GUARD = "scripts/rules-see-files.mjs";
 const HARNESS = "scripts/rules-see-files.harness.mjs";
+
+// Coverage mode — see `scripts/run-mutations.mjs` guard 2.
+if (process.env.MUTATIONS_REPORT_COVERAGE) {
+  console.log(`MUTATION-COVERS\t${HARNESS}`);
+  process.exit(0);
+}
+
 const PRISTINE = readFileSync(GUARD, "utf8");
 
 const M = [
