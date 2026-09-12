@@ -136,14 +136,74 @@ The last row is not "it blocks the dangerous thing" — it fails to load and the
 **everything**, including `echo hi`. A consumer in that state cannot run any Bash command,
 and the one command that would repair it is also Bash.
 
-⇒ **The `.hook.ts` source lives HERE and is typechecked HERE; the package ships the compiled
-`.mjs`.** Type safety moves to the producer's side, which is where it belongs; the consumer
-gets something that loads.
+⇒ **The package ships `.mjs`** — the consumer gets something that loads.
 
 (Not established: *why* the TypeScript loader refuses a path inside `node_modules`. The real
 cause is swallowed by a `catch` in vigiles' `hook-runtime.js`, and calling `loadHookProgram`
 directly measures a different load path — it fails even on the control. Knowing *that* is
 enough to choose the carrier.)
+
+#### 🔴 CORRECTED 2026-09-12, when the first three hooks actually moved: THERE IS NO `.hook.ts` TWIN
+
+This section used to promise «the `.hook.ts` source lives HERE and is typechecked HERE; the
+package ships the compiled `.mjs`». Shipping the first three hooks retired that plan, and the
+reason is worth keeping: **a twin can drift from its build, and nothing would notice.** One file
+cannot.
+
+What the twin was for was the CAPABILITY CHECK — `vigiles compile` refuses a hook that imports
+anything but `vigiles/hook`, because the import list *is* the capability surface. That check is a
+function, `checkHookImports`, and `hooks/hooks.harness.mjs` runs it over every shipped
+`.hook.mjs` directly. Same check, applied to the artifact that actually executes, with no second
+file to keep in step. What is lost is `tsc` on the hook body and the typed `e.ctx` — named here
+rather than left as an omission.
+
+⚠️ **`checkHookImports` IS A TEXT REGEX, so it counts an import-shaped sentence in a COMMENT.**
+Measured 2026-09-12: the check failed on `paper-edit-guard.hook.mjs`'s own docblock, which quoted
+a rejected import while explaining why it was rejected. Do not loosen the check to make prose
+fit — it is the same check any future `compile`/`lint` pass applies to the shipped file. Describe
+a forbidden import in words instead of writing one.
+
+#### 🔴 AND NOT A THIN SPEC IN THE CONSUMER EITHER — measured, and it is the form that looks right
+
+The obvious alternative is a small `.hook.ts` in the consumer that pulls the decision logic out of
+this package. It RUNS — deny input RC=2 with the reason, allow input RC=0 and silent — and it
+cannot be maintained:
+
+```
+$ npx vigiles compile
+✗ .vigiles/hooks/probe.hook.ts — hook program uses capabilities outside `vigiles/hook`:
+  <pkg>/hooks/decide.mjs — only the sanctioned API is allowed (capability = API surface).
+```
+
+`compile` is also what writes the tamper-evident stamp, so a hook it refuses **can never be
+re-stamped** — and the runtime fails CLOSED on a stamp that no longer matches its source:
+
+```
+vigiles: hook … does not match its compiled stamp (tampered).
+… the way out is a FILE WRITE, not a command — this refusal blocks the recompile too.
+```
+
+Measured end to end: editing such a file makes the gate refuse `echo hi`, and the only steady
+state is clearing the stamp to `{}` and running permanently unstamped. Shipping the whole program
+keeps the stamp question from arising (no sidecar ⇒ no check) and pins the source by lockfile
+integrity instead — stronger than a local stamp, since a consumer cannot hand-edit an installed
+tree without the next install reverting it.
+
+#### How a consumer wires a shipped hook
+
+`.claude/settings.json`, one block per hook, pointing straight into the install — no symlink and
+no compile step on the consumer's side:
+
+```json
+{ "type": "command",
+  "command": "node \"$CLAUDE_PROJECT_DIR/node_modules/vigiles/dist/cli.js\" hook-runtime run-program \"$CLAUDE_PROJECT_DIR/node_modules/research-paper-pipeline/hooks/paper-edit-guard.hook.mjs\"" }
+```
+
+⚠️ **A shipped hook cannot import a sibling module of this package** — capability closure being
+the point — so the papers-root resolver is spelled out in all three hook files. Duplication that
+cannot be removed is CHECKED instead: part VII of the harness compares the captured values
+against each other, rather than grepping for a literal (a substring search finds the same text in
+the prose *about* the value one line above it).
 
 ### `vigiles` is a devDependency, and its pin is TIED to the consumer's
 
