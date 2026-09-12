@@ -36,7 +36,14 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SKIP = new Set(["node_modules", ".git", "fixtures"]);
+// 🔴 `.claude` IS A VIEW OF `skills/`, NOT A SECOND COPY OF IT. This repository is its own first
+// consumer: `.claude/skills/<name>` are symlinks back to `skills/<name>` so that the path every
+// SKILL.md's prose names resolves here too (see `skills/skill-contract.mutations.mjs`). Walking
+// into it counts each harness TWICE under two spellings of one file, and the second spelling is
+// never what a battery names — so every skill harness read as an orphan while being perfectly
+// covered. Measured 2026-09-12: 11 phantom orphans, all of them the same files seen through the
+// symlink. Skipping the view is not an exemption: the real files are still walked under `skills/`.
+const SKIP = new Set(["node_modules", ".git", "fixtures", ".claude"]);
 
 /** Every `*.harness.mjs` and `*.mutations.mjs` on disk, as repo-relative paths. */
 function collect(dir, found = { harness: [], mutations: [] }) {

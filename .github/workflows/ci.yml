@@ -15,6 +15,7 @@
 #   npm test (12 harnesses)              11 s
 #   npm run lint (eslint over fixtures)   1 s
 #   npm run check:globs                   1 s
+#   npm run lint:skills (vigiles lint)    3 s   ← added 2026-09-12 with the first ten skills
 #   npm run mutations (12 batteries)    242 s   ← 130 mutations, the expensive and load-bearing part
 #   ───────────────────────────────────────────
 #   total work                          ~255 s, plus checkout + install
@@ -77,6 +78,26 @@ jobs:
       # the pass/fail signal for rule behaviour lives in `npm test`, not in the warning count.
       - name: npm run lint
         run: npm run lint
+
+      # 🔴 THE ONLY GATE THAT LOOKS AT THE SKILLS THEMSELVES — declared in package.json since
+      # this repository had a `lint:skills` script and NOT WIRED HERE. That cost nothing while the
+      # package shipped rules only; the first skill arrived 2026-09-12 and made it the one check
+      # covering frontmatter, `allowed-tools` contracts, dangling pointers and name collisions.
+      # `npm run lint` above is ESLint over .tex/.md fixtures and never opens a SKILL.md.
+      #
+      # A PLAIN GATE, NOT `continue-on-error` — and that is a measurement, not a preference. In
+      # the consumer repository this command CANNOT exit 0: a repo-wide "Markdown code block refs"
+      # pass walks prose that quotes OTHER projects' commands, so it is pinned under
+      # `continue-on-error` there and gates nothing. Measured here on a clean tree 2026-09-12:
+      # **28 findings, 0 error, exit 0, 3 seconds**. Nothing to hide, so nothing is hidden.
+      #
+      # ⚠️ Warnings are expected and do not fail the run (description budgets, missing
+      # `disallowed-tools:` fences). What fails it is severity `error` — a malformed frontmatter
+      # or a pointer to a file that does not exist. Bond is 3 × the measured 3 s, floored at the
+      # 1-minute granularity GitHub bills in.
+      - name: npm run lint:skills
+        run: npm run lint:skills
+        timeout-minutes: 2
 
       # 🔴 THE GREEN-ZERO GUARD. A rule whose glob matches no file is never invoked, and a run
       # with no findings is byte-identical to a run that examined everything and passed. This

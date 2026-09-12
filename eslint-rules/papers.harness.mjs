@@ -186,7 +186,17 @@ for (const bad of ["", null, 0, false, [], {}, 42])
   // это ПРЕДМЕТ ассерта. Фикстуры выше намеренно используют нейтральные пути
   // (`writing/drafts`) — до 12.09.2026 они писали настоящее имя каталога потребителя, и
   // аудит перед публикацией показал одиннадцать вхождений там, где по смыслу нужно одно.
-  const FORBIDDEN = "migratsiya";
+  // ⚠️ THIS LIST HOLDS PATH TOKENS ONLY, AND THE PERSONAL NAMES ARE DELIBERATELY ABSENT.
+  // Extending it to the owner's name was tried on 2026-09-12 and reverted the same hour by the
+  // consumer-side audit that reads this repository before it is published: to GUARD against a
+  // string a checker must SPELL it, so the extension put a private personal name into a public
+  // source file and into a public commit message — a leak created by the leak detector. A
+  // directory name is a layout fact and is safe to spell here; a person is not.
+  //
+  // The personal half therefore lives in the CONSUMER, where those strings already are, and runs
+  // over `node_modules/<this package>` from there. That is rule T3 of the extraction plan, and
+  // this is the measurement that made it non-negotiable rather than merely tidy.
+  const FORBIDDEN = ["migratsiya"];
   const SELF = fileURLToPath(import.meta.url);
   const skipDirs = new Set(["node_modules", ".git", "fixtures"]);
   const offenders = [];
@@ -206,14 +216,15 @@ for (const bad of ["", null, 0, false, [], {}, 42])
       } catch {
         continue;
       }
-      if (text.includes(FORBIDDEN)) offenders.push(p.slice(ROOT.length + 1));
+      const hit = FORBIDDEN.find((w) => text.includes(w));
+      if (hit) offenders.push(`${p.slice(ROOT.length + 1)} (${hit})`);
     }
   };
   walk(ROOT);
   assert.deepEqual(
     offenders,
     [],
-    `this package names the first consumer's own directory ("${FORBIDDEN}") in: ` +
+    `this package names the first consumer's own directory ("${FORBIDDEN.join(", ")}") in: ` +
       `${offenders.join(", ")}. A package that hard-codes one consumer's layout has exactly ` +
       `one possible user, which is the thing the extraction exists to undo. The root belongs ` +
       `in the consumer's package.json — see eslint-rules/papers.mjs`,
