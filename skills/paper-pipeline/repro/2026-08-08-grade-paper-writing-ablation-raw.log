@@ -1,0 +1,242 @@
+
+37 skills installed → 36 competitors per run
+
+ARMS — description length, word-set delta vs A0, mean prompt overlap
+arm label                               chars  words     −   +   ovAH   ovSH
+A0  baseline (verbatim)                  1174     94     0   0   0.85   0.78
+A1  short (sentences 1-2 only)            528     46    48   0   0.71   0.78
+A2  no-subordination                      992     85     9   0   0.85   0.78
+A3  no-negation                           965     81    13   0   0.85   0.78
+A4  no-machinery                          598     44    50   0   0.44   0.35
+A5  renamed (description identical)      1174     94     0   0   0.85   0.78
+
+⚠ ovAH/ovSH FALL AS TEXT IS DELETED — caveat 2 in the header, quantified. The deletion arms carry
+  a vocabulary handicap against the parent's dominant factor. A rising deletion arm rose DESPITE it;
+  a flat one may be a real gain cancelled by it, and this design cannot tell. A5 is the only arm
+  with zero handicap (identical word set).
+
+mode=main  6 arms x 8 prompts x 3 trials = 144 runs
+
+==============================================================================
+=== A0 baseline (verbatim)  (1174 chars, id vigiles-loose-skills:grade-paper-writing)
+  Spent: 224,340 tokens (10 in · 1.2k out · 89.3k cache) · ~$0.85 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  AH  0.33  T1 O0 S2  ov=0.88  grade the writing craft in this draft and name the offen
+  Spent: 495,963 tokens (22 in · 2.2k out · 447.6k cache) · ~$0.44 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 720,303 tokens · ~$1.29 API-equivalent
+  AH  1.00  T3 O0 S0  ov=1.00  run the blind multi-grader panel over the prose clarity 
+  Spent: 544,750 tokens (23 in · 4.1k out · 493.1k cache) · ~$0.50 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 1,265,053 tokens · ~$1.79 API-equivalent
+  AH  1.00  T3 O0 S0  ov=0.67  score the title, the abstract and the intro architecture
+  AH  0.00  T0 O0 S3  ov=0.86  grade how well this reads, hedge stacking included, and 
+  SH  0.00  T0 O0 S3  ov=1.00  the abstract reads like a wall of jargon
+  Spent: 735,999 tokens (32 in · 7.3k out · 676.1k cache) · ~$0.63 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 2,001,052 tokens · ~$2.42 API-equivalent
+  SH  0.67  T2 O0 S1  ov=0.80  the intro architecture is fine but the prose clarity is 
+  Spent: 453,454 tokens (20 in · 2.9k out · 404.6k cache) · ~$0.44 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 2,454,506 tokens · ~$2.86 API-equivalent
+  SH  0.67  T2 O0 S1  ov=0.67  there is hedge stacking everywhere and the point never l
+  Spent: 314,649 tokens (14 in · 1.7k out · 268.4k cache) · ~$0.37 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 2,769,155 tokens · ~$3.23 API-equivalent
+  SH  0.67  T2 O0 S1  ov=0.67  the writing does not read well even though the draft is 
+
+==============================================================================
+=== A1 short (sentences 1-2 only)  (528 chars, id vigiles-loose-skills:grade-paper-writing)
+  Spent: 313,715 tokens (14 in · 1.2k out · 268.1k cache) · ~$0.36 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 3,082,870 tokens · ~$3.59 API-equivalent
+  AH  0.67  T2 O0 S1  ov=0.88  grade the writing craft in this draft and name the offen
+  Spent: 500,245 tokens (22 in · 3.3k out · 449.4k cache) · ~$0.47 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 3,583,115 tokens · ~$4.06 API-equivalent
+  AH  1.00  T3 O0 S0  ov=0.44  run the blind multi-grader panel over the prose clarity 
+  Spent: 271,331 tokens (12 in · 1.7k out · 225.0k cache) · ~$0.36 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 3,854,446 tokens · ~$4.42 API-equivalent
+  AH  0.33  T1 O0 S2  ov=0.67  score the title, the abstract and the intro architecture
+  AH  0.00  T0 O0 S3  ov=0.86  grade how well this reads, hedge stacking included, and 
+  SH  0.00  T0 O0 S3  ov=1.00  the abstract reads like a wall of jargon
+  Spent: 837,604 tokens (36 in · 11.8k out · 769.3k cache) · ~$0.85 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 4,692,050 tokens · ~$5.27 API-equivalent
+  SH  0.33  T1 O1 S1  ov=0.80  the intro architecture is fine but the prose clarity is 
+         instead: cold-read-diff
+  Spent: 501,767 tokens (22 in · 3.5k out · 450.4k cache) · ~$0.47 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 5,193,817 tokens · ~$5.75 API-equivalent
+  SH  1.00  T3 O0 S0  ov=0.67  there is hedge stacking everywhere and the point never l
+  Spent: 359,007 tokens (16 in · 1.5k out · 313.0k cache) · ~$0.38 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 5,552,824 tokens · ~$6.13 API-equivalent
+  SH  0.67  T2 O0 S1  ov=0.67  the writing does not read well even though the draft is 
+
+==============================================================================
+=== A2 no-subordination  (992 chars, id vigiles-loose-skills:grade-paper-writing)
+  Spent: 403,627 tokens (18 in · 1.3k out · 357.7k cache) · ~$0.39 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 5,956,451 tokens · ~$6.53 API-equivalent
+  AH  0.67  T2 O0 S1  ov=0.88  grade the writing craft in this draft and name the offen
+  Spent: 541,999 tokens (24 in · 2.3k out · 493.2k cache) · ~$0.46 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 6,498,450 tokens · ~$6.99 API-equivalent
+  AH  1.00  T3 O0 S0  ov=1.00  run the blind multi-grader panel over the prose clarity 
+  Spent: 549,686 tokens (24 in · 8.2k out · 493.4k cache) · ~$0.56 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 7,048,136 tokens · ~$7.55 API-equivalent
+  AH  0.67  T2 O0 S1  ov=0.67  score the title, the abstract and the intro architecture
+  Spent: 133,822 tokens (6 in · 954 out · 90.1k cache) · ~$0.30 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 7,181,958 tokens · ~$7.85 API-equivalent
+  AH  0.00  T0 O0 S3  ov=0.86  grade how well this reads, hedge stacking included, and 
+  Spent: 403,466 tokens (18 in · 1.7k out · 357.0k cache) · ~$0.40 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 7,585,424 tokens · ~$8.25 API-equivalent
+  SH  0.33  T1 O0 S2  ov=1.00  the abstract reads like a wall of jargon
+  Spent: 371,018 tokens (16 in · 4.5k out · 333.6k cache) · ~$0.42 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 7,956,442 tokens · ~$8.67 API-equivalent
+  SH  0.00  T0 O1 S2  ov=0.80  the intro architecture is fine but the prose clarity is 
+         instead: cold-read-diff
+  Spent: 634,493 tokens (27 in · 2.9k out · 584.6k cache) · ~$0.50 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 8,590,935 tokens · ~$9.17 API-equivalent
+  SH  0.67  T2 O1 S0  ov=0.67  there is hedge stacking everywhere and the point never l
+         instead: tighten-paper
+  Spent: 450,474 tokens (20 in · 2.0k out · 403.4k cache) · ~$0.42 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 9,041,409 tokens · ~$9.59 API-equivalent
+  SH  0.67  T2 O0 S1  ov=0.67  the writing does not read well even though the draft is 
+
+==============================================================================
+=== A3 no-negation  (965 chars, id vigiles-loose-skills:grade-paper-writing)
+  Spent: 358,407 tokens (16 in · 1.2k out · 312.7k cache) · ~$0.38 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 9,399,816 tokens · ~$9.97 API-equivalent
+  AH  0.67  T2 O0 S1  ov=0.88  grade the writing craft in this draft and name the offen
+  Spent: 313,797 tokens (14 in · 1.5k out · 267.5k cache) · ~$0.37 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 9,713,613 tokens · ~$10.34 API-equivalent
+  AH  1.00  T3 O0 S0  ov=1.00  run the blind multi-grader panel over the prose clarity 
+  Spent: 405,847 tokens (18 in · 2.3k out · 358.2k cache) · ~$0.41 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 10,119,460 tokens · ~$10.75 API-equivalent
+  AH  0.67  T2 O0 S1  ov=0.67  score the title, the abstract and the intro architecture
+  AH  0.00  T0 O0 S3  ov=0.86  grade how well this reads, hedge stacking included, and 
+  Spent: 268,334 tokens (11 in · 1.2k out · 222.8k cache) · ~$0.35 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 10,387,794 tokens · ~$11.10 API-equivalent
+  SH  1.00  T3 O0 S0  ov=1.00  the abstract reads like a wall of jargon
+  Spent: 554,174 tokens (110 in · 6.2k out · 497.4k cache) · ~$0.54 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 10,941,968 tokens · ~$11.65 API-equivalent
+  SH  0.33  T1 O0 S2  ov=0.80  the intro architecture is fine but the prose clarity is 
+  SH  0.00  T0 O0 S3  ov=0.67  there is hedge stacking everywhere and the point never l
+  Spent: 223,224 tokens (9 in · 1.0k out · 178.6k cache) · ~$0.33 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 11,165,192 tokens · ~$11.98 API-equivalent
+  SH  0.67  T2 O0 S1  ov=0.67  the writing does not read well even though the draft is 
+
+==============================================================================
+=== A4 no-machinery  (598 chars, id vigiles-loose-skills:grade-paper-writing)
+  Spent: 494,646 tokens (22 in · 1.8k out · 447.2k cache) · ~$0.43 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 11,659,838 tokens · ~$12.41 API-equivalent
+  AH  1.00  T3 O0 S0  ov=0.88  grade the writing craft in this draft and name the offen
+  Spent: 637,466 tokens (28 in · 3.6k out · 586.2k cache) · ~$0.52 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 12,297,304 tokens · ~$12.93 API-equivalent
+  AH  1.00  T3 O0 S0  ov=0.33  run the blind multi-grader panel over the prose clarity 
+  AH  0.00  T0 O0 S3  ov=0.00  score the title, the abstract and the intro architecture
+  Spent: 133,988 tokens (6 in · 1.1k out · 90.1k cache) · ~$0.30 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 12,431,292 tokens · ~$13.23 API-equivalent
+  AH  0.00  T0 O0 S3  ov=0.57  grade how well this reads, hedge stacking included, and 
+  Spent: 314,207 tokens (14 in · 1.3k out · 268.4k cache) · ~$0.37 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 12,745,499 tokens · ~$13.60 API-equivalent
+  SH  0.67  T2 O0 S1  ov=0.75  the abstract reads like a wall of jargon
+  Spent: 369,391 tokens (16 in · 4.3k out · 318.1k cache) · ~$0.55 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 13,114,890 tokens · ~$14.14 API-equivalent
+  SH  0.00  T0 O1 S2  ov=0.00  the intro architecture is fine but the prose clarity is 
+         instead: cold-read-diff
+  Spent: 315,041 tokens (13 in · 2.1k out · 268.6k cache) · ~$0.38 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 13,429,931 tokens · ~$14.52 API-equivalent
+  SH  0.00  T0 O2 S1  ov=0.00  there is hedge stacking everywhere and the point never l
+         instead: tighten-paper
+  Spent: 359,178 tokens (15 in · 1.5k out · 312.7k cache) · ~$0.39 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 13,789,109 tokens · ~$14.91 API-equivalent
+  SH  1.00  T3 O0 S0  ov=0.67  the writing does not read well even though the draft is 
+
+==============================================================================
+=== A5 renamed (description identical)  (1174 chars, id vigiles-loose-skills:paper-readability-review)
+  AH  0.00  T0 O0 S3  ov=0.88  grade the writing craft in this draft and name the offen
+  Spent: 358,723 tokens (16 in · 1.4k out · 312.6k cache) · ~$0.38 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 14,147,832 tokens · ~$15.29 API-equivalent
+  AH  1.00  T3 O0 S0  ov=1.00  run the blind multi-grader panel over the prose clarity 
+  Spent: 363,060 tokens (16 in · 4.0k out · 313.5k cache) · ~$0.43 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 14,510,892 tokens · ~$15.72 API-equivalent
+  AH  0.33  T1 O0 S2  ov=0.67  score the title, the abstract and the intro architecture
+  AH  0.00  T0 O0 S3  ov=0.86  grade how well this reads, hedge stacking included, and 
+  SH  0.00  T0 O0 S3  ov=1.00  the abstract reads like a wall of jargon
+  Spent: 596,707 tokens (26 in · 6.4k out · 540.2k cache) · ~$0.56 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 15,107,599 tokens · ~$16.28 API-equivalent
+  SH  0.00  T0 O0 S3  ov=0.80  the intro architecture is fine but the prose clarity is 
+  Spent: 634,313 tokens (28 in · 3.2k out · 583.8k cache) · ~$0.51 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 15,741,912 tokens · ~$16.78 API-equivalent
+  SH  0.67  T2 O1 S0  ov=0.67  there is hedge stacking everywhere and the point never l
+         instead: tighten-paper
+  Spent: 179,241 tokens (8 in · 1.4k out · 134.4k cache) · ~$0.32 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 15,921,153 tokens · ~$17.10 API-equivalent
+  SH  0.00  T0 O0 S3  ov=0.67  the writing does not read well even though the draft is 
+
+==============================================================================
+THE ABLATION — target trigger rate by arm
+
+arm label                               chars       fired      AH      SH   Δ vs A0
+A0  baseline (verbatim)                  1174 54% (13/24)     58%     50%         —
+A1  short (sentences 1-2 only)            528 50% (12/24)     50%     50%      -4pp
+A2  no-subordination                      992 50% (12/24)     58%     42%      -4pp
+A3  no-negation                           965 54% (13/24)     58%     50%       0pp
+A4  no-machinery                          598 46% (11/24)     50%     42%      -8pp
+A5  renamed (description identical)      1174  25% (6/24)     33%     17%     -29pp
+
+==============================================================================
+TARGET / OTHER / SILENT — the parent's discriminator
+
+arm label                               target   other  silent
+A0  baseline (verbatim)                     54%      0%     46%
+A1  short (sentences 1-2 only)              50%      4%     46%
+A2  no-subordination                        50%      8%     42%
+A3  no-negation                             54%      0%     46%
+A4  no-machinery                            46%     13%     42%
+A5  renamed (description identical)         25%      4%     71%
+
+  OTHER  = a competitor was selected and the target was not. The parent saw ONE in 144 runs.
+  SILENT = nothing resolved. 42 of this skill's 48 parent runs were SILENT; that is the number
+           an arm has to move. See caveat 4: a run that simply answered is also SILENT.
+
+WHICH competitors took the runs (all arms):
+    4  tighten-paper
+    3  cold-read-diff
+
+🔴 n = 24 PER ARM. At ~20% baseline the 95% interval is roughly ±16pp. A factor of two is
+   readable; fifteen points is not. If every arm lands within noise of A0, the finding is that the
+   cause is NOT IN THE DESCRIPTION TEXT — report that, do not pick the largest number.
+
+per-run rows → repro/2026-08-08-grade-paper-writing-ablation.json
+
+Run --mode oracle before reading any arm as a mechanism: a harness move with a matching oracle
+move is a change in what the TEXT supports, not in what the harness does with it.

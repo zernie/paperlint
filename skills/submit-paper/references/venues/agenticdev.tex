@@ -1,0 +1,18 @@
+% agenticdev.tex — числа площадки для стражей В ПРЕАМБУЛЕ. LaTeX не читает YAML, поэтому
+% значения продублированы из venues/agenticdev.jsonc (источник правды — его читает правило
+% `pdf/profile`, см. eslint-rules/pdf-facts.mjs:128). in — дюймы.
+%
+% 🔴 ЗДЕСЬ СТОЯЛО `venues/agenticdev.yaml`, И ТАКОГО ФАЙЛА НЕТ (поправлено 12.09.2026). Ссылка
+% повисла при переходе YAML → JSONC 26.08 и пережила его, потому что комментарий ничем не
+% проверяется: «источник правды» назывался файлом, которого нет, а настоящий лежал рядом.
+% ⚠️ И дубль держится РУКАМИ. Сверка 12.09: 7.087 / 9.252 / 2 / 9 / 5 / 2 совпадают с .jsonc —
+% сегодня. Механизма, который бы это гарантировал, нет; кандидат — генерировать этот файл из
+% .jsonc одной строкой сборки, тогда расхождение станет невыразимым (см.
+% idei/paper-pipeline-extraction/10-latex-carriers-2026-09-12.md).
+% ⚠️ w/h — ПОТОЛКИ («text width must not exceed 18 cm»), не цели: acmart ставит меньше.
+\def\venuetextblockw{7.087}
+\def\venuetextblockh{9.252}
+\def\venuecolumns{2}
+\def\venuebodypt{9}
+\def\venuebodypagesmax{5}
+\def\venuerefpagesmax{2}

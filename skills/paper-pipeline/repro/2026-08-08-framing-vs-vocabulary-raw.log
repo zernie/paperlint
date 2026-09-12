@@ -1,0 +1,245 @@
+
+37 skills installed → 36 competitors per run
+
+MEASURED VOCABULARY OVERLAP (prompt content-words found in the target description)
+skill                      AH    AL    SH    SL   HIGH-LOW
+tighten-paper            0.81  0.00  0.79  0.04   +0.78
+grade-paper-writing      0.85  0.14  0.78  0.05   +0.72
+argument-arc             0.86  0.00  0.69  0.00   +0.77
+
+mode=main  3 skills x 4 cells x 4 prompts x 3 trials = 144 runs
+
+=== tighten-paper  [ACTION  / HIGH overlap]
+  Spent: 268,613 tokens (11 in · 1.2k out · 163.4k cache) · ~$0.69 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  0.67  T2 O0 S1  ov=1.00  produce a cut and fold plan for this draft — which secti
+  Spent: 313,255 tokens (12 in · 1.2k out · 267.7k cache) · ~$0.36 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 581,868 tokens · ~$1.06 API-equivalent
+  1.00  T3 O0 S0  ov=0.57  tell me which parts are TMI and belong in the appendix i
+  0.00  T0 O0 S3  ov=0.67  reorder and merge whatever is needed so it is not too lo
+  Spent: 359,374 tokens (15 in · 1.6k out · 312.7k cache) · ~$0.39 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 941,242 tokens · ~$1.44 API-equivalent
+  1.00  T3 O0 S0  ov=1.00  give me a structural verdict on this drafted paper, cove
+
+=== tighten-paper  [ACTION  / LOW  overlap]
+  Spent: 818,892 tokens (35 in · 4.4k out · 764.9k cache) · ~$0.59 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 1,760,134 tokens · ~$2.04 API-equivalent
+  1.00  T3 O0 S0  ov=0.00  decide what gets deleted from this manuscript and list i
+  Spent: 272,298 tokens (12 in · 2.3k out · 224.9k cache) · ~$0.37 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 2,032,432 tokens · ~$2.41 API-equivalent
+  0.33  T1 O0 S2  ov=0.00  tell me which two chapters should be welded into one, an
+  Spent: 269,556 tokens (12 in · 1.3k out · 224.2k cache) · ~$0.35 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 2,301,988 tokens · ~$2.76 API-equivalent
+  0.33  T1 O0 S2  ov=0.00  I want a shortlist of paragraphs to delete so it fits on
+  Spent: 586,948 tokens (25 in · 2.4k out · 538.1k cache) · ~$0.48 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 2,888,936 tokens · ~$3.24 API-equivalent
+  1.00  T3 O0 S0  ov=0.00  rank the chapters by how little they matter, worst first
+
+=== tighten-paper  [SITUATION / HIGH overlap]
+  0.00  T0 O0 S3  ov=1.00  this feels long and overly complex, and the middle drags
+  Spent: 313,677 tokens (13 in · 1.3k out · 267.8k cache) · ~$0.37 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 3,202,613 tokens · ~$3.60 API-equivalent
+  1.00  T3 O0 S0  ov=0.67  after three review rounds it has collected a lot of hedg
+  Spent: 359,774 tokens (16 in · 1.6k out · 313.3k cache) · ~$0.39 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 3,562,387 tokens · ~$3.99 API-equivalent
+  0.67  T2 O0 S1  ov=0.50  it does not deliver its point and nobody could skim it
+  Spent: 268,281 tokens (10 in · 1.1k out · 223.0k cache) · ~$0.35 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 3,830,668 tokens · ~$4.34 API-equivalent
+  1.00  T3 O0 S0  ov=1.00  it is too long for its contribution and hard to read cov
+
+=== tighten-paper  [SITUATION / LOW  overlap]
+  Spent: 685,381 tokens (119 in · 5.8k out · 629.8k cache) · ~$0.57 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 4,516,049 tokens · ~$4.92 API-equivalent
+  0.00  T0 O1 S2  ov=0.00  people keep bailing out partway through and I cannot tel
+         instead: grade-paper-writing
+  0.00  T0 O0 S3  ov=0.00  there is a nine page ceiling and I am well over it
+  Spent: 363,146 tokens (16 in · 2.8k out · 314.6k cache) · ~$0.41 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 4,879,195 tokens · ~$5.33 API-equivalent
+  0.33  T1 O0 S2  ov=0.00  my co-author says the whole thing sprawls and he lost th
+  Spent: 133,764 tokens (6 in · 830 out · 90.1k cache) · ~$0.30 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 5,012,959 tokens · ~$5.62 API-equivalent
+  0.00  T0 O0 S3  ov=0.17  every paragraph seems necessary to me and yet the whole 
+
+=== grade-paper-writing  [ACTION  / HIGH overlap]
+  0.00  T0 O0 S3  ov=0.88  grade the writing craft in this draft and name the offen
+  Spent: 587,385 tokens (26 in · 2.7k out · 537.9k cache) · ~$0.48 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 5,600,344 tokens · ~$6.10 API-equivalent
+  1.00  T3 O0 S0  ov=1.00  run the blind multi-grader panel over the prose clarity 
+  Spent: 226,090 tokens (10 in · 3.1k out · 179.1k cache) · ~$0.36 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 5,826,434 tokens · ~$6.47 API-equivalent
+  0.00  T0 O0 S3  ov=0.67  score the title, the abstract and the intro architecture
+  Spent: 133,732 tokens (6 in · 803 out · 90.1k cache) · ~$0.30 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 5,960,166 tokens · ~$6.76 API-equivalent
+  0.00  T0 O0 S3  ov=0.86  grade how well this reads, hedge stacking included, and 
+
+=== grade-paper-writing  [ACTION  / LOW  overlap]
+  Spent: 319,174 tokens (14 in · 3.7k out · 270.3k cache) · ~$0.41 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 6,279,340 tokens · ~$7.17 API-equivalent
+  0.00  T0 O0 S3  ov=0.14  mark this manuscript out of five on how it is put togeth
+  Spent: 224,508 tokens (10 in · 1.3k out · 179.3k cache) · ~$0.34 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 6,503,848 tokens · ~$7.51 API-equivalent
+  0.33  T1 O0 S2  ov=0.00  give me a scored report card on the language, with the w
+  Spent: 133,528 tokens (6 in · 606 out · 90.1k cache) · ~$0.29 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 6,637,376 tokens · ~$7.80 API-equivalent
+  0.00  T0 O0 S3  ov=0.13  rate how professional the phrasing sounds against papers
+  0.00  T0 O0 S3  ov=0.29  assign a number to the quality of the English here and p
+
+=== grade-paper-writing  [SITUATION / HIGH overlap]
+  0.00  T0 O0 S3  ov=1.00  the abstract reads like a wall of jargon
+  0.00  T0 O0 S3  ov=0.80  the intro architecture is fine but the prose clarity is 
+  0.00  T0 O0 S3  ov=0.67  there is hedge stacking everywhere and the point never l
+  Spent: 315,150 tokens (14 in · 1.8k out · 268.6k cache) · ~$0.38 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 6,952,526 tokens · ~$8.18 API-equivalent
+  0.67  T2 O0 S1  ov=0.67  the writing does not read well even though the draft is 
+
+=== grade-paper-writing  [SITUATION / LOW  overlap]
+  Spent: 133,456 tokens (6 in · 531 out · 90.1k cache) · ~$0.29 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 7,085,982 tokens · ~$8.47 API-equivalent
+  0.00  T0 O0 S3  ov=0.00  something about the way this is worded makes me wince an
+  Spent: 133,530 tokens (6 in · 627 out · 90.1k cache) · ~$0.29 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 7,219,512 tokens · ~$8.76 API-equivalent
+  0.00  T0 O0 S3  ov=0.00  my supervisor said the English gets in the way of the sc
+  Spent: 133,279 tokens (6 in · 364 out · 90.1k cache) · ~$0.29 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 7,352,791 tokens · ~$9.05 API-equivalent
+  0.00  T0 O0 S3  ov=0.20  the sentences are correct but they feel like wet cardboa
+  Spent: 133,973 tokens (6 in · 1.1k out · 90.1k cache) · ~$0.30 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 7,486,764 tokens · ~$9.35 API-equivalent
+  0.00  T0 O0 S3  ov=0.00  I went through my own opening twice and still had to sta
+
+=== argument-arc  [ACTION  / HIGH overlap]
+  Spent: 267,398 tokens (11 in · 683 out · 223.0k cache) · ~$0.34 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 7,754,162 tokens · ~$9.69 API-equivalent
+  1.00  T3 O0 S0  ov=1.00  build the one-sentence-per-section outline before the la
+  Spent: 313,723 tokens (14 in · 1.2k out · 267.9k cache) · ~$0.37 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 8,067,885 tokens · ~$10.06 API-equivalent
+  1.00  T3 O0 S0  ov=1.00  run the bottom-up inevitability pass over the argument a
+  Spent: 267,096 tokens (9 in · 557 out · 223.0k cache) · ~$0.34 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 8,334,981 tokens · ~$10.40 API-equivalent
+  1.00  T3 O0 S0  ov=0.86  repair the argument architecture — the same structural o
+  Spent: 268,114 tokens (12 in · 947 out · 223.0k cache) · ~$0.35 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 8,603,095 tokens · ~$10.74 API-equivalent
+  1.00  T3 O0 S0  ov=0.57  check the name and number budget, the reader has too muc
+
+=== argument-arc  [ACTION  / LOW  overlap]
+  Spent: 179,101 tokens (8 in · 1.4k out · 134.4k cache) · ~$0.32 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 8,782,196 tokens · ~$11.06 API-equivalent
+  0.33  T1 O0 S2  ov=0.00  give me a single line for each part of the manuscript, w
+  Spent: 635,950 tokens (28 in · 3.1k out · 584.1k cache) · ~$0.51 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 9,418,146 tokens · ~$11.58 API-equivalent
+  1.00  T3 O0 S0  ov=0.00  make the ending feel unavoidable given everything before
+  Spent: 685,144 tokens (29 in · 3.4k out · 632.8k cache) · ~$0.53 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 10,103,290 tokens · ~$12.11 API-equivalent
+  1.00  T3 O0 S0  ov=0.00  count how many invented labels and figures the audience 
+  Spent: 133,777 tokens (6 in · 842 out · 90.1k cache) · ~$0.30 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 10,237,067 tokens · ~$12.41 API-equivalent
+  0.00  T0 O0 S3  ov=0.00  lay out the chain of reasoning as a list so I can see wh
+
+=== argument-arc  [SITUATION / HIGH overlap]
+  Spent: 267,056 tokens (9 in · 548 out · 223.0k cache) · ~$0.34 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 10,504,123 tokens · ~$12.75 API-equivalent
+  1.00  T3 O0 S0  ov=1.00  the reader says we throw ideas at them
+  Spent: 268,105 tokens (10 in · 1.0k out · 223.0k cache) · ~$0.35 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 10,772,228 tokens · ~$13.09 API-equivalent
+  1.00  T3 O0 S0  ov=0.60  the same structural objection repeats in every round
+  Spent: 451,000 tokens (20 in · 2.3k out · 402.9k cache) · ~$0.43 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 11,223,228 tokens · ~$13.52 API-equivalent
+  1.00  T3 O0 S0  ov=0.67  there is no argument architecture here, just a sequence
+  Spent: 268,287 tokens (11 in · 1.1k out · 223.0k cache) · ~$0.35 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 11,491,515 tokens · ~$13.87 API-equivalent
+  1.00  T3 O0 S0  ov=0.50  we blew the name and number budget somewhere in the midd
+
+=== argument-arc  [SITUATION / LOW  overlap]
+  Spent: 133,143 tokens (6 in · 239 out · 90.1k cache) · ~$0.29 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 11,624,658 tokens · ~$14.16 API-equivalent
+  0.00  T0 O0 S3  ov=0.00  each part is fine alone but together they do not add up 
+  Spent: 360,852 tokens (16 in · 2.5k out · 312.8k cache) · ~$0.40 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 11,985,510 tokens · ~$14.56 API-equivalent
+  1.00  T3 O0 S0  ov=0.00  my advisor cannot tell what the conclusion depends on
+  Spent: 133,182 tokens (6 in · 290 out · 90.1k cache) · ~$0.29 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 12,118,692 tokens · ~$14.85 API-equivalent
+  0.00  T0 O0 S3  ov=0.00  the ending arrives without having been earned
+  Spent: 88,664 tokens (4 in · 56 out · 60.0k cache) · ~$0.19 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 12,207,356 tokens · ~$15.04 API-equivalent
+  0.00  T0 O0 S3  ov=0.00  someone asked me what the point was and I gave three ans
+
+==============================================================================
+THE 2x2 — target trigger rate
+
+                          HIGH overlap     LOW overlap
+ACTION                     64% (23/36)     44% (16/36)
+SITUATION                  61% (22/36)      11% (4/36)
+
+main effect of FRAMING   (AH+AL) - (SH+SL) = 18pp
+main effect of VOCABULARY (AH+SH) - (AL+SL) = 35pp
+
+  A (lexical) predicts   AH high, SH high, AL low,  SL low
+  B (framing) predicts   AH high, AL high, SH low,  SL low
+  observed               AH 64%  AL 44%  SH 61%  SL 11%
+
+==============================================================================
+WHAT FIRED INSTEAD — the C discriminator
+
+cell                        target   other   silent
+ACTION  / HIGH overlap         64%      0%     36%
+ACTION  / LOW  overlap         44%      0%     56%
+SITUATION / HIGH overlap       61%      0%     39%
+SITUATION / LOW  overlap       11%      3%     86%
+
+  OTHER  = a competitor was selected and the target was not. The prompt routed somewhere;
+           the selector disagreed. Ambiguity (C) or a lexically nearer rival (A).
+  SILENT = nothing resolved. The target was never selected AND neither was anything else.
+           A description that does not cover the phrasing (A or B) — but see caveat 2:
+           a run that simply answered the question is also SILENT.
+
+WHICH competitors took the runs (all cells):
+    1  grade-paper-writing
+
+per-skill, target rate by cell:
+skill                       AH      AL      SH      SL
+tighten-paper              67%     67%     67%      8%
+grade-paper-writing        25%      8%     17%      0%
+argument-arc              100%     58%    100%     25%
+
+per-run rows → repro/2026-08-08-framing-vs-vocabulary.json
+
+Run --mode oracle before concluding C is dead: the 2x2 alone cannot tell "the description was
+not a candidate" from "no description could have been", and that is exactly what C claims.

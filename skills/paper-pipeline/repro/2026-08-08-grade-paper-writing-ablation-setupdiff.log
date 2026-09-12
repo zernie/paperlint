@@ -1,0 +1,59 @@
+
+37 skills installed → 36 competitors per run
+
+ARMS — description length, word-set delta vs A0, mean prompt overlap
+arm label                               chars  words     −   +   ovAH   ovSH
+A0  baseline (verbatim)                  1174     94     0   0   0.85   0.78
+A1  short (sentences 1-2 only)            528     46    48   0   0.71   0.78
+A2  no-subordination                      992     85     9   0   0.85   0.78
+A3  no-negation                           965     81    13   0   0.85   0.78
+A4  no-machinery                          598     44    50   0   0.44   0.35
+A5  renamed (description identical)      1174     94     0   0   0.85   0.78
+A6  persona-only (A1's mirror)            225     22    72   0   0.19   0.35
+
+⚠ ovAH/ovSH FALL AS TEXT IS DELETED — caveat 2 in the header, quantified. The deletion arms carry
+  a vocabulary handicap against the parent's dominant factor. A rising deletion arm rose DESPITE it;
+  a flat one may be a real gain cancelled by it, and this design cannot tell. A5 is the only arm
+  with zero handicap (identical word set).
+
+HARNESS OPTIONS — this file vs the parent (extracted from both sources)
+option        ablation                          parent
+allowedTools  ["Skill"                          ["Skill"
+trials        TRIALS                            TRIALS
+concurrency   3                                 3
+spacingSec    2                                 2
+timeoutMs     180000                            180000
+minPrompts    4                                 4
+fixture       /.exec(src)?.[0] ?? "").replace(  FIXTURE
+skillsDir     dir                               SKILLS_DIR
+
+fixture sha256/16   ablation 1cee4e4c8fc95e59
+FIXTURE source block identical to the parent's: YES
+fired predicate identical (modulo the id it matches): YES
+firedSkills() helper identical: YES
+
+ARM DIR INTEGRITY — sha256/16 of each SKILL.md frontmatter vs the real .claude/skills
+  A0  37 skills · unintended frontmatter diffs: none
+  A1  37 skills · unintended frontmatter diffs: none
+  A2  37 skills · unintended frontmatter diffs: none
+  A3  37 skills · unintended frontmatter diffs: none
+  A4  37 skills · unintended frontmatter diffs: none
+  A5  37 skills · unintended frontmatter diffs: none
+  A6  37 skills · unintended frontmatter diffs: none
+
+ROW BY ROW — parent (8 prompts) vs this file's A0 (8 prompts)
+cell   parent      A0      Δ   prompt
+AH        0/3     1/3     +1   grade the writing craft in this draft and name the off
+AH        3/3     3/3      0   run the blind multi-grader panel over the prose clarit
+AH        0/3     3/3     +3   score the title, the abstract and the intro architectu
+AH        0/3     0/3      0   grade how well this reads, hedge stacking included, an
+SH        0/3     0/3      0   the abstract reads like a wall of jargon
+SH        0/3     2/3     +2   the intro architecture is fine but the prose clarity i
+SH        0/3     2/3     +2   there is hedge stacking everywhere and the point never
+SH        2/3     2/3      0   the writing does not read well even though the draft i
+         5/24   13/24     +8   TOTAL
+
+  3 of 8 prompts moved by ≥2 of 3 trials. Spread across many prompts ⇒ a global shift
+  (session, load, model routing). Concentrated in one or two ⇒ something prompt-specific.
+
+SETUPDIFF COMPLETE. No tokens spent.

@@ -1,0 +1,270 @@
+{
+  "version": 1,
+  "recordedAt": "2026-08-07T01:07:09.341Z",
+  "reports": {
+    "pipeline-firing": {
+      "name": "pipeline-firing",
+      "trials": 1,
+      "arms": {
+        "tighten-paper": {
+          "runs": 8,
+          "metrics": {
+            "recall": 0.75,
+            "falsePositiveRate": 0
+          },
+          "stats": {
+            "recall": {
+              "mean": 0.75,
+              "std": 0.5,
+              "se": 0.25,
+              "n": 4,
+              "passK": 0
+            },
+            "falsePositiveRate": {
+              "mean": 0,
+              "std": 0,
+              "se": 0,
+              "n": 4,
+              "passK": 0
+            }
+          },
+          "usage": {
+            "totalCostUsd": 0.9953834000000001,
+            "meanCostUsd": 0.12442292500000002,
+            "meanDurationMs": 10830.5,
+            "totalInputTokens": 36,
+            "totalOutputTokens": 3983,
+            "totalCacheCreationTokens": 119008,
+            "totalCacheReadTokens": 721678
+          }
+        },
+        "grade-paper-writing": {
+          "runs": 8,
+          "metrics": {
+            "recall": 0.5,
+            "falsePositiveRate": 0
+          },
+          "stats": {
+            "recall": {
+              "mean": 0.5,
+              "std": 0.5773502691896257,
+              "se": 0.28867513459481287,
+              "n": 4,
+              "passK": 0
+            },
+            "falsePositiveRate": {
+              "mean": 0,
+              "std": 0,
+              "se": 0,
+              "n": 4,
+              "passK": 0
+            }
+          },
+          "usage": {
+            "totalCostUsd": 1.0452466,
+            "meanCostUsd": 0.130655825,
+            "meanDurationMs": 13598.25,
+            "totalInputTokens": 38,
+            "totalOutputTokens": 5884,
+            "totalCacheCreationTokens": 120445,
+            "totalCacheReadTokens": 763892
+          }
+        },
+        "argument-arc": {
+          "runs": 8,
+          "metrics": {
+            "recall": 0.75,
+            "falsePositiveRate": 0
+          },
+          "stats": {
+            "recall": {
+              "mean": 0.75,
+              "std": 0.5,
+              "se": 0.25,
+              "n": 4,
+              "passK": 0
+            },
+            "falsePositiveRate": {
+              "mean": 0,
+              "std": 0,
+              "se": 0,
+              "n": 4,
+              "passK": 0
+            }
+          },
+          "usage": {
+            "totalCostUsd": 1.062707,
+            "meanCostUsd": 0.132838375,
+            "meanDurationMs": 11936.25,
+            "totalInputTokens": 43,
+            "totalOutputTokens": 4402,
+            "totalCacheCreationTokens": 120427,
+            "totalCacheReadTokens": 896590
+          }
+        },
+        "paper-adversarial-review": {
+          "runs": 8,
+          "metrics": {
+            "recall": 0.75,
+            "falsePositiveRate": 0
+          },
+          "stats": {
+            "recall": {
+              "mean": 0.75,
+              "std": 0.5,
+              "se": 0.25,
+              "n": 4,
+              "passK": 0
+            },
+            "falsePositiveRate": {
+              "mean": 0,
+              "std": 0,
+              "se": 0,
+              "n": 4,
+              "passK": 0
+            }
+          },
+          "usage": {
+            "totalCostUsd": 1.3513067,
+            "meanCostUsd": 0.1689133375,
+            "meanDurationMs": 21940.125,
+            "totalInputTokens": 68,
+            "totalOutputTokens": 10272,
+            "totalCacheCreationTokens": 126522,
+            "totalCacheReadTokens": 1442859
+          }
+        },
+        "pc-panel-review": {
+          "runs": 8,
+          "metrics": {
+            "recall": 0.75,
+            "falsePositiveRate": 0
+          },
+          "stats": {
+            "recall": {
+              "mean": 0.75,
+              "std": 0.5,
+              "se": 0.25,
+              "n": 4,
+              "passK": 0
+            },
+            "falsePositiveRate": {
+              "mean": 0,
+              "std": 0,
+              "se": 0,
+              "n": 4,
+              "passK": 0
+            }
+          },
+          "usage": {
+            "totalCostUsd": 1.4467628,
+            "meanCostUsd": 0.18084535,
+            "meanDurationMs": 26701,
+            "totalInputTokens": 642,
+            "totalOutputTokens": 12323,
+            "totalCacheCreationTokens": 128442,
+            "totalCacheReadTokens": 1614556
+          }
+        },
+        "cold-read-diff": {
+          "runs": 8,
+          "metrics": {
+            "recall": 0.5,
+            "falsePositiveRate": 0
+          },
+          "stats": {
+            "recall": {
+              "mean": 0.5,
+              "std": 0.5773502691896257,
+              "se": 0.28867513459481287,
+              "n": 4,
+              "passK": 0
+            },
+            "falsePositiveRate": {
+              "mean": 0,
+              "std": 0,
+              "se": 0,
+              "n": 4,
+              "passK": 0
+            }
+          },
+          "usage": {
+            "totalCostUsd": 1.1799009,
+            "meanCostUsd": 0.1474876125,
+            "meanDurationMs": 16845.875,
+            "totalInputTokens": 53,
+            "totalOutputTokens": 7500,
+            "totalCacheCreationTokens": 123048,
+            "totalCacheReadTokens": 1079763
+          }
+        },
+        "verify-citations": {
+          "runs": 8,
+          "metrics": {
+            "recall": 1,
+            "falsePositiveRate": 0
+          },
+          "stats": {
+            "recall": {
+              "mean": 1,
+              "std": 0,
+              "se": 0,
+              "n": 4,
+              "passK": 1
+            },
+            "falsePositiveRate": {
+              "mean": 0,
+              "std": 0,
+              "se": 0,
+              "n": 4,
+              "passK": 0
+            }
+          },
+          "usage": {
+            "totalCostUsd": 1.2063428999999999,
+            "meanCostUsd": 0.15079286249999999,
+            "meanDurationMs": 17178.25,
+            "totalInputTokens": 52,
+            "totalOutputTokens": 7682,
+            "totalCacheCreationTokens": 124837,
+            "totalCacheReadTokens": 1123033
+          }
+        },
+        "map-prior-work": {
+          "runs": 8,
+          "metrics": {
+            "recall": 0.75,
+            "falsePositiveRate": 0
+          },
+          "stats": {
+            "recall": {
+              "mean": 0.75,
+              "std": 0.5,
+              "se": 0.25,
+              "n": 4,
+              "passK": 0
+            },
+            "falsePositiveRate": {
+              "mean": 0,
+              "std": 0,
+              "se": 0,
+              "n": 4,
+              "passK": 0
+            }
+          },
+          "usage": {
+            "totalCostUsd": 1.2584402000000001,
+            "meanCostUsd": 0.15730502500000001,
+            "meanDurationMs": 19536.25,
+            "totalInputTokens": 55,
+            "totalOutputTokens": 9461,
+            "totalCacheCreationTokens": 126289,
+            "totalCacheReadTokens": 1178704
+          }
+        }
+      },
+      "totalCostUsd": 9.5460905,
+      "aborted": false
+    }
+  }
+}

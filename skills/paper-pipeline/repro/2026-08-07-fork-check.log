@@ -1,0 +1,52 @@
+matched pairs: OK (8 cases × 4 pairs × 2 languages × 3 trial(s) = 192 runs; origins: 14 en, 18 ru; 37 skills installed → 36 competitors per run)
+  Spent: 1,678,108 tokens (74 in · 12.3k out · 1392.1k cache) · ~$2.78 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Spent: 2,195,058 tokens (96 in · 16.9k out · 1988.9k cache) · ~$2.42 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 3,873,166 tokens · ~$5.21 API-equivalent
+
+=== cold-read-diff — fires AFTER a prose edit — the reader with no context
+  en: 75% (12 runs)
+    0.33  [ru] I rewrote the third paragraph of the intro — check the sentences a
+    1.00  [en] just edited the threats section, would a reader with no context ge
+    1.00  [ru] I fixed the wording in 4.2, run a fresh reader over it before I cl
+    0.67  [ru] these sentences are short, true, and it is still unclear what they
+  ru: 67% (12 runs)
+    0.67  [ru] я переписал третий абзац intro — проверь что предложения вообще чт
+    1.00  [en] только что правил секцию threats, поймёт ли её читатель без контек
+    1.00  [ru] поправил формулировки в 4.2, прогони свежим читателем до того как 
+    0.00  [ru] эти предложения короткие, правдивые и всё равно непонятно что они 
+  Spent: 1,780,463 tokens (78 in · 13.6k out · 1593.7k cache) · ~$2.26 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 5,653,629 tokens · ~$7.47 API-equivalent
+  Spent: 1,223,136 tokens (54 in · 11.1k out · 1030.2k cache) · ~$2.06 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 6,876,765 tokens · ~$9.53 API-equivalent
+
+=== map-prior-work — who already did this — BEFORE drafting, reshapes the contribution
+  en: 75% (12 runs)
+    0.33  [ru] who has already done this before us — I want to know before I star
+    0.67  [en] sweep the landscape: everyone working on this, prior versus concur
+    1.00  [ru] I need a related-work skeleton and a verdict on what we can still 
+    1.00  [en] find every competing group in this space and date them against our
+  ru: 75% (12 runs)
+    0.00  [ru] кто уже это сделал до нас — хочу знать до того как начну писать
+    1.00  [en] прочеши ландшафт: все кто работает над этим, prior против concurre
+    1.00  [ru] нужен скелет related work и вердикт что мы ещё можем клеймить свои
+    1.00  [en] найди все конкурирующие группы в этой области и датируй их относит
+
+skill                         en     ru    delta
+cold-read-diff               75%    67%  -8pp
+map-prior-work               75%    75%  +0pp
+
+OVERALL   en 18/24 (75%)   ru 17/24 (71%)   delta -4pp
+
+SPLIT BY ORIGIN — is the gap about language, or about which side was translated?
+origin          en     ru    delta
+en-original    89%   100%  +11pp   (8/9 vs 9/9)
+ru-original    67%    53%  -13pp   (10/15 vs 8/15)
+
+No gate: this file measures an effect, it does not enforce one. Read OVERALL first, then SPLIT BY ORIGIN — a gap that appears only on translated Russian is a finding about translation, not about Russian.
+
+total spend: $9.53 API-equivalent
+no baseline at /home/user/mine/.claude/skills/paper-pipeline/pipeline-language.baseline.json — record one with --update-baseline

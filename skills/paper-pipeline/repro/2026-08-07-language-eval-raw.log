@@ -1,0 +1,166 @@
+matched pairs: OK (8 cases × 4 pairs × 2 languages × 3 trial(s) = 192 runs; origins: 14 en, 18 ru; 37 skills installed → 36 competitors per run)
+  Spent: 1,347,349 tokens (53 in · 6.0k out · 1161.5k cache) · ~$1.53 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Spent: 1,263,264 tokens (51 in · 7.0k out · 1090.6k cache) · ~$1.43 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 2,610,613 tokens · ~$2.96 API-equivalent
+
+=== tighten-paper — structural bloat — cut/fold/merge, NOT sentence craft
+  en: 92% (12 runs)
+    1.00  [ru] the paper has bloated and the middle sags — what do I cut?
+    1.00  [en] this draft is 14 pages against a 9 page limit, what goes
+    1.00  [ru] after three review rounds it is all filler and hedges, I need a cu
+    0.67  [en] sections 4 and 5 say the same thing twice, and nobody would skim a
+  ru: 67% (12 runs)
+    1.00  [ru] статья раздулась, середина провисает — что резать?
+    0.33  [en] в черновике 14 страниц при лимите 9, что убираем
+    1.00  [ru] после трёх раундов ревью там одна вода и хеджи, нужен план сокраще
+    0.33  [en] секции 4 и 5 говорят одно и то же дважды, и это невозможно пролист
+  Spent: 1,443,611 tokens (64 in · 7.7k out · 1254.6k cache) · ~$1.59 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 4,054,224 tokens · ~$4.55 API-equivalent
+  Spent: 1,219,781 tokens (54 in · 11.1k out · 1029.4k cache) · ~$1.56 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 5,274,005 tokens · ~$6.10 API-equivalent
+
+=== grade-paper-writing — prose craft — the sentence is the unit, NOT the section
+  en: 67% (12 runs)
+    1.00  [ru] grade how it is written — it reads like a wall of jargon
+    0.33  [en] is the writing any good or does it read like shit
+    0.67  [ru] the abstract sounds clumsy even though the substance is fine, grad
+    0.67  [en] grade the craft: title, abstract, sentence clarity, hedge stacking
+  ru: 25% (12 runs)
+    0.33  [ru] оцени как написано — читается как стена жаргона
+    0.00  [en] текст вообще нормальный или читается как дерьмо
+    0.00  [ru] abstract звучит криво хотя по смыслу всё на месте, дай оценку проз
+    0.67  [en] оцени ремесло: заголовок, аннотация, ясность предложений, нагромож
+  Spent: 1,165,006 tokens (47 in · 6.5k out · 980.5k cache) · ~$1.47 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 6,439,011 tokens · ~$7.57 API-equivalent
+  Spent: 803,102 tokens (32 in · 3.8k out · 625.0k cache) · ~$1.30 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 7,242,113 tokens · ~$8.87 API-equivalent
+
+=== argument-arc — argument architecture — does one conclusion become inevitable
+  en: 83% (12 runs)
+    1.00  [ru] a reviewer has now said twice that we throw disconnected ideas at 
+    0.67  [en] does the paper actually carry a reader to one conclusion or just l
+    0.67  [ru] we introduce five named things and three numbers — that feels like
+    1.00  [en] before the big rewrite I want one sentence per section, bottom up
+  ru: 50% (12 runs)
+    1.00  [ru] ревьюер второй раз пишет что мы кидаем в него идеи без связи
+    0.00  [en] статья реально ведёт читателя к одному выводу или просто перечисля
+    0.00  [ru] мы вводим пять именованных штук и три числа — по-моему это перебор
+    1.00  [en] перед большой переписью хочу по одному предложению на секцию, сниз
+  Spent: 1,722,432 tokens (70 in · 9.9k out · 1528.1k cache) · ~$1.72 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 8,964,545 tokens · ~$10.59 API-equivalent
+  Spent: 1,312,088 tokens (51 in · 9.5k out · 1121.6k cache) · ~$1.57 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 10,276,633 tokens · ~$12.16 API-equivalent
+
+=== paper-adversarial-review — ONE hostile reviewer, fast
+  en: 83% (12 runs)
+    1.00  [ru] red-team this paper, what will reviewer 2 hit it with
+    0.33  [en] would reviewer 2 buy this claim about the hook finding
+    1.00  [ru] find the weak spots before submission — one hostile but fair revie
+    1.00  [en] what is our desk reject risk and where do we overclaim
+  ru: 75% (12 runs)
+    1.00  [ru] red-team эту статью, чем будет бить reviewer 2
+    0.00  [en] купится ли reviewer 2 на это утверждение про находку с хуком
+    1.00  [ru] найди слабые места до сабмита — один злой но честный рецензент
+    1.00  [en] какой у нас риск desk reject и где мы переобещаем
+  Spent: 2,371,996 tokens (101 in · 17.8k out · 2160.1k cache) · ~$2.09 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 12,648,629 tokens · ~$14.25 API-equivalent
+  Spent: 2,511,258 tokens (109 in · 17.3k out · 2301.1k cache) · ~$2.11 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 15,159,887 tokens · ~$16.36 API-equivalent
+
+=== pc-panel-review — the WHOLE committee + an accept probability, not one reviewer
+  en: 75% (12 runs)
+    0.33  [ru] honestly, what is the acceptance probability for this paper
+    1.00  [en] simulate the whole program committee, not one reviewer
+    1.00  [ru] what will the PC discussion decide — accept or reject
+    0.67  [ru] I need several independent reviewers with different lenses plus a 
+  ru: 58% (12 runs)
+    0.00  [ru] какая вероятность принятия у этой статьи, если честно
+    1.00  [en] смоделируй весь программный комитет, а не одного рецензента
+    0.67  [ru] что решат на PC discussion — accept или reject
+    0.67  [ru] нужно несколько независимых ревьюеров с разными линзами плюс мета-
+  Spent: 1,120,795 tokens (46 in · 5.2k out · 937.9k cache) · ~$1.43 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 16,280,682 tokens · ~$17.80 API-equivalent
+  Spent: 1,536,237 tokens (66 in · 9.3k out · 1345.3k cache) · ~$1.64 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 17,816,919 tokens · ~$19.44 API-equivalent
+
+=== cold-read-diff — fires AFTER a prose edit — the reader with no context
+  en: 67% (12 runs)
+    0.67  [ru] I rewrote the third paragraph of the intro — check the sentences a
+    1.00  [en] just edited the threats section, would a reader with no context ge
+    1.00  [ru] I fixed the wording in 4.2, run a fresh reader over it before I cl
+    0.00  [ru] these sentences are short, true, and it is still unclear what they
+  ru: 67% (12 runs)
+    0.33  [ru] я переписал третий абзац intro — проверь что предложения вообще чт
+    1.00  [en] только что правил секцию threats, поймёт ли её читатель без контек
+    1.00  [ru] поправил формулировки в 4.2, прогони свежим читателем до того как 
+    0.33  [ru] эти предложения короткие, правдивые и всё равно непонятно что они 
+  Spent: 2,601,385 tokens (111 in · 16.3k out · 2392.0k cache) · ~$2.13 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 20,418,304 tokens · ~$21.56 API-equivalent
+  Spent: 2,372,195 tokens (100 in · 19.0k out · 2155.8k cache) · ~$2.12 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 22,790,499 tokens · ~$23.69 API-equivalent
+
+=== verify-citations — are the cites REAL — a pre-submit metadata gate
+  en: 92% (12 runs)
+    1.00  [ru] check that every citation is real before submission
+    0.67  [en] did we hallucinate any of these refs
+    1.00  [ru] verify the metadata on every cite — year, venue, authors, doi
+    1.00  [en] one bibtex entry looks invented to me, check the whole bibliograph
+  ru: 67% (12 runs)
+    1.00  [ru] проверь что все цитаты настоящие перед сабмитом
+    0.00  [en] мы не выдумали какие-нибудь из этих ссылок
+    0.67  [ru] сверь метаданные по каждому cite — год, венью, авторы, doi
+    1.00  [en] одна bibtex-запись выглядит выдуманной, проверь всю библиографию
+  Spent: 938,215 tokens (35 in · 4.4k out · 758.4k cache) · ~$1.35 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 23,728,714 tokens · ~$25.04 API-equivalent
+  Spent: 1,268,180 tokens (49 in · 8.5k out · 1077.7k cache) · ~$1.55 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 24,996,894 tokens · ~$26.59 API-equivalent
+
+=== map-prior-work — who already did this — BEFORE drafting, reshapes the contribution
+  en: 67% (12 runs)
+    0.00  [ru] who has already done this before us — I want to know before I star
+    1.00  [en] sweep the landscape: everyone working on this, prior versus concur
+    0.67  [ru] I need a related-work skeleton and a verdict on what we can still 
+    1.00  [en] find every competing group in this space and date them against our
+  ru: 75% (12 runs)
+    0.00  [ru] кто уже это сделал до нас — хочу знать до того как начну писать
+    1.00  [en] прочеши ландшафт: все кто работает над этим, prior против concurre
+    1.00  [ru] нужен скелет related work и вердикт что мы ещё можем клеймить свои
+    1.00  [en] найди все конкурирующие группы в этой области и датируй их относит
+
+skill                         en     ru    delta
+tighten-paper                92%    67%  -25pp
+grade-paper-writing          67%    25%  -42pp
+argument-arc                 83%    50%  -33pp
+paper-adversarial-review     83%    75%  -8pp
+pc-panel-review              75%    58%  -17pp
+cold-read-diff               67%    67%  +0pp
+verify-citations             92%    67%  -25pp
+map-prior-work               67%    75%  +8pp
+
+OVERALL   en 75/96 (78%)   ru 58/96 (60%)   delta -18pp
+
+SPLIT BY ORIGIN — is the gap about language, or about which side was translated?
+origin          en     ru    delta
+en-original    81%    60%  -21pp   (34/42 vs 25/42)
+ru-original    76%    61%  -15pp   (41/54 vs 33/54)
+
+No gate: this file measures an effect, it does not enforce one. Read OVERALL first, then SPLIT BY ORIGIN — a gap that appears only on translated Russian is a finding about translation, not about Russian.
+
+total spend: $26.59 API-equivalent
+no baseline at /home/user/mine/.claude/skills/paper-pipeline/pipeline-language.baseline.json — record one with --update-baseline

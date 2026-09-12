@@ -1,0 +1,63 @@
+arm=before  3 skills x 4 fresh prompts x 2 languages x 3 trials = 72 runs; 37 skills installed
+  Spent: 1,453,678 tokens (64 in · 13.5k out · 1257.7k cache) · ~$1.68 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Spent: 1,549,893 tokens (68 in · 14.3k out · 1348.5k cache) · ~$1.80 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 3,003,571 tokens · ~$3.48 API-equivalent
+
+=== grade-paper-writing  (measured gap on the OLD set: -42pp)
+  ru: 25%
+    0.33  у меня ощущение, что вступление написано тяжело, но я не понимаю чем
+    0.00  рецензент назвал текст многословным — согласен ли ты и где конкретно
+    0.00  нужен разбор по пунктам: заголовок, первый абзац, подача выводов
+    0.67  сравни как это написано с тем, как пишут сильные статьи в этой облас
+  en: 25%
+    0.00  the introduction feels heavy to me and I cannot tell what exactly ma
+    0.00  a reviewer called the text wordy — do you agree, and where exactly
+    0.00  I want a point-by-point breakdown: the title, the opening paragraph,
+    1.00  compare how this is written against how strong papers in this field 
+  Spent: 2,059,169 tokens (90 in · 19.7k out · 1861.8k cache) · ~$1.93 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 5,062,740 tokens · ~$5.41 API-equivalent
+  Spent: 1,171,665 tokens (52 in · 9.0k out · 985.6k cache) · ~$1.50 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 6,234,405 tokens · ~$6.91 API-equivalent
+
+=== argument-arc  (measured gap on the OLD set: -33pp)
+  ru: 25%
+    0.00  я сам путаюсь, зачем в статье нужна четвёртая секция
+    0.67  хочу проверить, что каждая часть работает на итоговое утверждение
+    0.00  если убрать середину, изменится ли что-нибудь для вывода
+    0.33  у нас слишком много терминов, которые читателю придётся запоминать
+  en: 17%
+    0.00  I am myself unsure what the fourth section is even for
+    0.67  I want to check that every part works toward the final claim
+    0.00  if the middle came out, would anything change for the conclusion
+    0.00  there are too many terms the reader will have to keep in their head
+  Spent: 1,677,901 tokens (71 in · 9.2k out · 1484.3k cache) · ~$1.70 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 7,912,306 tokens · ~$8.61 API-equivalent
+  Spent: 1,175,219 tokens (51 in · 6.7k out · 989.7k cache) · ~$1.48 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 9,087,525 tokens · ~$10.09 API-equivalent
+
+=== tighten-paper  (measured gap on the OLD set: -25pp)
+  ru: 42%
+    0.67  текст не влезает, надо решить чем пожертвовать и куда это переложить
+    0.67  какие куски спокойно уедут в приложение без потери для рецензента
+    0.00  мне кажется, третья и пятая части дублируют друг друга — так ли это
+    0.33  нужен план, что убрать, чтобы статья стала на страницу короче
+  en: 33%
+    0.00  the text does not fit; decide what to sacrifice and where to move it
+    0.67  which chunks can move to an appendix without costing the reviewer an
+    0.00  I suspect parts three and five duplicate each other — is that so
+    0.67  I need a plan for what to remove to make the paper one page shorter
+
+skill                      ru     en
+grade-paper-writing       25%   25%
+argument-arc              25%   17%
+tighten-paper             42%   33%
+
+ARM=before   RU 11/36 (31%)   EN 9/36 (25%)   gap 6pp
+
+Run the OTHER arm and compare BOTH columns. Russian rising while English falls is a LOSS: longer descriptions compete for the same context budget across all 37 skills.

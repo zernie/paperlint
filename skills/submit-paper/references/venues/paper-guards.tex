@@ -1,0 +1,41 @@
+% paper-guards.tex — стражи, которые превращают дефект статьи в ОТКАЗ СБОРКИ.
+%
+% Подключается из преамбулы статьи: \input{paper-guards}
+% Находится по TEXINPUTS, который выставляет check-render.sh (каталог `references/venues/`).
+%
+% ПОЧЕМУ ОТДЕЛЬНЫЙ ФАЙЛ, А НЕ КОПИЯ В КАЖДОЙ СТАТЬЕ. Первая редакция стража (26.08) жила
+% инлайном в `agenticdev-2026/paper.tex`, и замер тем же вечером показал цену: из трёх статей
+% в LaTeX страж был ровно у ОДНОЙ. То есть грепу по логу в `check-render.sh` он дублем не
+% являлся — для двух других он был единственной проверкой. Копия на статью деградирует ровно
+% так же, как деградирует любая конвенция, которую только пишут.
+%
+% 🔴 ОБЕ ПОЛОВИНЫ ДОКАЗАНЫ ЗАМЕРОМ, И ПОРЯДОК ИМЕННО ЭТОТ (правило `papers/CLAUDE.md`):
+% сначала «молчит на верном». На чистом `agenticdev-2026/paper.tex`: 0 ошибок, PDF 621 325 байт.
+% На подсаженном `\ref{ghost-xyz}`: `! Package paper Error: undefined references`.
+% На подсаженном `\cite{ghost-xyz}`: `! Package paper Error: undefined citations (natbib)`.
+%
+% 🔴 GATED ON \finalpass, И ЭТО НЕСУЩЕЕ. На первом проходе `.aux` пуст, поэтому НЕОПРЕДЕЛЕНЫ
+% ВСЕ ссылки по построению. Замер 26.08 с безусловной формой: проход 1 падает ⇒ `.aux` никогда
+% не дописывается ⇒ проход 2 падает на том же ⇒ цикл НЕ СХОДИТСЯ и PDF не появляется вообще.
+% Финальный проход получает `\def\finalpass{}` в командной строке (см. `check-render.sh`),
+% обычные проходы молчат.
+%
+% 🔴 ДВА ФЛАГА, А НЕ ОДИН, И ЭТО ТОЖЕ ЗАМЕР. Первая версия смотрела только на `\@refundefined`
+% ядра LaTeX, и подсаженный `\cite{ghost}` прошёл насквозь: `acmart` грузит NATBIB, который
+% печатает СВОЁ предупреждение и флага ядра не трогает. Флаг natbib —
+% `\NAT@undefined` (`\newcommand\NAT@citeundefined{\gdef\NAT@undefined{...}}`, natbib.sty:1095).
+% Поймано подсадкой дефекта, а не чтением кода: страж рапортовал «чисто» о статье, в чьём логе
+% стояло `Package natbib Warning: Citation 'ghost' on page 6 undefined`.
+%
+% ⚠️ Файл намеренно НЕ содержит ничего, кроме стражей ссылок. Проверки геометрии и лимита
+% страниц у каждой площадки свои и живут в её `<venue>.tex`.
+\makeatletter
+\AtEndDocument{%
+  \ifdefined\finalpass
+    \ifx\@refundefined\relax\else
+      \PackageError{paper}{undefined references - see the log}{}\fi
+    \@ifundefined{NAT@undefined}{}{%
+      \PackageError{paper}{undefined citations (natbib) - see the log}{}}%
+  \fi
+}
+\makeatother

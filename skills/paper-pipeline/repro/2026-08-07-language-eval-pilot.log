@@ -1,0 +1,33 @@
+matched pairs: OK (8 cases × 4 pairs × 2 languages × 2 trial(s) = 128 runs; origins: 14 en, 18 ru; 37 skills installed → 36 competitors per run)
+  Spent: 902,258 tokens (35 in · 5.1k out · 776.0k cache) · ~$1.04 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Spent: 808,469 tokens (31 in · 4.0k out · 685.2k cache) · ~$0.99 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 1,710,727 tokens · ~$2.03 API-equivalent
+
+=== tighten-paper — structural bloat — cut/fold/merge, NOT sentence craft
+  en: 88% (8 runs)
+    1.00  [ru] the paper has bloated and the middle sags — what do I cut?
+    1.00  [en] this draft is 14 pages against a 9 page limit, what goes
+    1.00  [ru] after three review rounds it is all filler and hedges, I need a cu
+    0.50  [en] sections 4 and 5 say the same thing twice, and nobody would skim a
+  ru: 75% (8 runs)
+    1.00  [ru] статья раздулась, середина провисает — что резать?
+    1.00  [en] в черновике 14 страниц при лимите 9, что убираем
+    1.00  [ru] после трёх раундов ревью там одна вода и хеджи, нужен план сокраще
+    0.00  [en] секции 4 и 5 говорят одно и то же дважды, и это невозможно пролист
+
+skill                         en     ru    delta
+tighten-paper                88%    75%  -13pp
+
+OVERALL   en 7/8 (88%)   ru 6/8 (75%)   delta -13pp
+
+SPLIT BY ORIGIN — is the gap about language, or about which side was translated?
+origin          en     ru    delta
+en-original    75%    50%  -25pp   (3/4 vs 2/4)
+ru-original   100%   100%  +0pp   (4/4 vs 4/4)
+
+No gate: this file measures an effect, it does not enforce one. Read OVERALL first, then SPLIT BY ORIGIN — a gap that appears only on translated Russian is a finding about translation, not about Russian.
+
+total spend: $2.03 API-equivalent
+no baseline at /home/user/mine/.claude/skills/paper-pipeline/pipeline-language.baseline.json — record one with --update-baseline

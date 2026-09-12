@@ -1,0 +1,55 @@
+// Профиль формата AISec @ ACM CCS. Данные для правил `pdf/*` над `_build/paper.facts.json`.
+// Проза про площадку и треки — в `aisec.md` рядом.
+//
+// ЛИМИТЫ СТРАНИЦ — дословно с https://aisec.cc/ (проверено 2026-08-26, не по памяти):
+//   «Submitted papers must be at most 10 pages long in double-column ACM format---excluding
+//    bibliography and well-marked appendices, for which up to two additional pages can be used
+//    (hence, the paper's overall length must be of 12 pages at most).»
+// В нашей карточке до сегодня стояло «up to ~10pp» — приблизительное число, которое нельзя
+// вписывать в гейт: он либо пропустит перебор, либо покраснеет на корректной статье.
+//
+// ⚠️ Оговорка площадки, которую стоит помнить: «if ... you get a warning stating that "Too many
+// pages: the limit is 12 pages, found 13", this is OK -- as long as the 13th page contains ONLY
+// the "Generative AI paragraph"». Наш гейт этого исключения НЕ знает и на 13-й странице
+// покраснеет. Это осознанно: случай редкий, а автоматика, умеющая «иногда можно», хуже прямого
+// отказа, который человек снимает глазами.
+//
+// ГЕОМЕТРИЯ И ШРИФТЫ унаследованы от `acmart sigconf` — того же класса, что у agenticdev, и
+// замерены там же (banal + pdffonts, 26.08). AISec отсылает к «main ACM CCS'26 formatting
+// instructions», собственных чисел не публикует.
+{
+  "template": "acmart",
+
+  "page_size": "letter",
+  "page_w_in": 8.5,
+  "page_h_in": 11.0,
+
+  "textblock_w_in": 7.087,
+  "textblock_h_in": 9.252,
+  // ACM требует свести колонки последней страницы; 29.08 Conference Publishing вернул за это
+  // принятую статью («Please correct the last page balancing»). Допуск с запасом: замеры того
+  // дня дали 2.7 pt у сведённой версии и 321.4 у несведённой — между ними ничего не лежит.
+  "last_page_balance_tol_pt": 120,
+
+  "columns": 2,
+
+  "body_pt": 9,
+  // banal меряет моду по отрендеренному тексту, а не объявленный кегль (замер: 9.30 при 9).
+  "body_pt_tol": 0.5,
+
+  "ref_pt_min": 7,
+  "ref_pt_max": 9,
+
+  "fonts_text": "LinLibertine",
+  "fonts_title": "LinBiolinum",
+
+  // Четыре трека (original research · position/open-problem · SoK · benchmark) — лимиты у всех
+  // ОДИНАКОВЫЕ, площадка их не разделяет. Ключи оставлены раздельными, чтобы `venue.json`
+  // статьи называл свой трек: он нужен не для чисел, а чтобы было видно, куда она подана.
+  "kinds": {
+    "research":  { "body_pages_max": 10, "ref_pages_max": 2 },
+    "benchmark": { "body_pages_max": 10, "ref_pages_max": 2 },
+    "position":  { "body_pages_max": 10, "ref_pages_max": 2 },
+    "sok":       { "body_pages_max": 10, "ref_pages_max": 2 }
+  }
+}

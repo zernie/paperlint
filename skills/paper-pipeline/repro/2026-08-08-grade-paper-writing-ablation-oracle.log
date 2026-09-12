@@ -1,0 +1,136 @@
+
+37 skills installed → 36 competitors per run
+
+ARMS — description length, word-set delta vs A0, mean prompt overlap
+arm label                               chars  words     −   +   ovAH   ovSH
+A0  baseline (verbatim)                  1174     94     0   0   0.85   0.78
+A1  short (sentences 1-2 only)            528     46    48   0   0.71   0.78
+A2  no-subordination                      992     85     9   0   0.85   0.78
+A3  no-negation                           965     81    13   0   0.85   0.78
+A4  no-machinery                          598     44    50   0   0.44   0.35
+A5  renamed (description identical)      1174     94     0   0   0.85   0.78
+
+⚠ ovAH/ovSH FALL AS TEXT IS DELETED — caveat 2 in the header, quantified. The deletion arms carry
+  a vocabulary handicap against the parent's dominant factor. A rising deletion arm rose DESPITE it;
+  a flat one may be a real gain cancelled by it, and this design cannot tell. A5 is the only arm
+  with zero handicap (identical word set).
+
+oracle: 6 arms x 8 closed-book picks over 37 descriptions
+
+=== A0 baseline (verbatim)
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing         grade the writing craft in this draft and name the offendi
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing         run the blind multi-grader panel over the prose clarity an
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing         score the title, the abstract and the intro architecture o
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing         grade how well this reads, hedge stacking included, and gi
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   grade-paper-writing         the abstract reads like a wall of jargon
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   grade-paper-writing         the intro architecture is fine but the prose clarity is no
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  miss  tighten-paper               there is hedge stacking everywhere and the point never lan
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   grade-paper-writing         the writing does not read well even though the draft is fi
+=== A1 short (sentences 1-2 only)
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing         grade the writing craft in this draft and name the offendi
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing         run the blind multi-grader panel over the prose clarity an
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing         score the title, the abstract and the intro architecture o
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing         grade how well this reads, hedge stacking included, and gi
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   grade-paper-writing         the abstract reads like a wall of jargon
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   grade-paper-writing         the intro architecture is fine but the prose clarity is no
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  miss  tighten-paper               there is hedge stacking everywhere and the point never lan
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   grade-paper-writing         the writing does not read well even though the draft is fi
+=== A2 no-subordination
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing         grade the writing craft in this draft and name the offendi
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing         run the blind multi-grader panel over the prose clarity an
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing         score the title, the abstract and the intro architecture o
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing         grade how well this reads, hedge stacking included, and gi
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   grade-paper-writing         the abstract reads like a wall of jargon
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   grade-paper-writing         the intro architecture is fine but the prose clarity is no
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   grade-paper-writing         there is hedge stacking everywhere and the point never lan
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   grade-paper-writing         the writing does not read well even though the draft is fi
+=== A3 no-negation
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing         grade the writing craft in this draft and name the offendi
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing         run the blind multi-grader panel over the prose clarity an
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing         score the title, the abstract and the intro architecture o
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing         grade how well this reads, hedge stacking included, and gi
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   grade-paper-writing         the abstract reads like a wall of jargon
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   grade-paper-writing         the intro architecture is fine but the prose clarity is no
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  miss  cold-read-diff              there is hedge stacking everywhere and the point never lan
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   grade-paper-writing         the writing does not read well even though the draft is fi
+=== A4 no-machinery
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing         grade the writing craft in this draft and name the offendi
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing         run the blind multi-grader panel over the prose clarity an
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing         score the title, the abstract and the intro architecture o
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing         grade how well this reads, hedge stacking included, and gi
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   grade-paper-writing         the abstract reads like a wall of jargon
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   grade-paper-writing         the intro architecture is fine but the prose clarity is no
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   grade-paper-writing         there is hedge stacking everywhere and the point never lan
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   grade-paper-writing         the writing does not read well even though the draft is fi
+=== A5 renamed (description identical)
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  miss  ?grade-paper-writing        grade the writing craft in this draft and name the offendi
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  miss  ?grade-paper-writing        run the blind multi-grader panel over the prose clarity an
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  miss  ?grade-paper-writing        score the title, the abstract and the intro architecture o
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  miss  ?grade-paper-writing        grade how well this reads, hedge stacking included, and gi
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  miss  ?grade-paper-writing        the abstract reads like a wall of jargon
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  miss  ?grade-paper-writing        the intro architecture is fine but the prose clarity is no
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  miss  tighten-paper               there is hedge stacking everywhere and the point never lan
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  miss  ?grade-paper-writing        the writing does not read well even though the draft is fi
+
+ORACLE ACCURACY BY ARM (closed book, 37 descriptions in context, 1 pick each)
+arm label                               hit    AH    SH   none  wrong
+A0  baseline (verbatim)                  7/8   4/4   3/4     0      1
+A1  short (sentences 1-2 only)           7/8   4/4   3/4     0      1
+A2  no-subordination                     8/8   4/4   4/4     0      0
+A3  no-negation                          7/8   4/4   3/4     0      1
+A4  no-machinery                         8/8   4/4   4/4     0      0
+A5  renamed (description identical)      0/8   0/4   0/4     0      8
+
+rows → repro/2026-08-08-grade-paper-writing-ablation-oracle.json
+
+READ AS AN UPPER BOUND, NOT A HUMAN, and read it AGAINST the harness arms: an arm where the
+oracle moves WITH the harness changed what is recoverable from the text; an arm where the oracle
+is flat and the harness moves changed what the harness DOES with the same recoverable text.

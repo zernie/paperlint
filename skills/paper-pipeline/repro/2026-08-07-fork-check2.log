@@ -1,0 +1,33 @@
+matched pairs: OK (8 cases × 4 pairs × 2 languages × 3 trial(s) = 192 runs; origins: 14 en, 18 ru; 37 skills installed → 36 competitors per run)
+  Spent: 2,090,765 tokens (92 in · 19.2k out · 1886.1k cache) · ~$2.56 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Spent: 2,815,272 tokens (122 in · 39.9k out · 2576.6k cache) · ~$3.05 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 4,906,037 tokens · ~$5.61 API-equivalent
+
+=== paper-adversarial-review — ONE hostile reviewer, fast
+  en: 75% (12 runs)
+    1.00  [ru] red-team this paper, what will reviewer 2 hit it with
+    0.00  [en] would reviewer 2 buy this claim about the hook finding
+    1.00  [ru] find the weak spots before submission — one hostile but fair revie
+    1.00  [en] what is our desk reject risk and where do we overclaim
+  ru: 75% (12 runs)
+    1.00  [ru] red-team эту статью, чем будет бить reviewer 2
+    0.00  [en] купится ли reviewer 2 на это утверждение про находку с хуком
+    1.00  [ru] найди слабые места до сабмита — один злой но честный рецензент
+    1.00  [en] какой у нас риск desk reject и где мы переобещаем
+
+skill                         en     ru    delta
+paper-adversarial-review     75%    75%  +0pp
+
+OVERALL   en 9/12 (75%)   ru 9/12 (75%)   delta 0pp
+
+SPLIT BY ORIGIN — is the gap about language, or about which side was translated?
+origin          en     ru    delta
+en-original    50%    50%  +0pp   (3/6 vs 3/6)
+ru-original   100%   100%  +0pp   (6/6 vs 6/6)
+
+No gate: this file measures an effect, it does not enforce one. Read OVERALL first, then SPLIT BY ORIGIN — a gap that appears only on translated Russian is a finding about translation, not about Russian.
+
+total spend: $5.61 API-equivalent
+no baseline at /home/user/mine/.claude/skills/paper-pipeline/pipeline-language.baseline.json — record one with --update-baseline

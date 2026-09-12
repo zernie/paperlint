@@ -1,0 +1,11 @@
+1. The state to remove is therefore not the rule but its claim about itself.
+
+2. These files are filled with constructions nobody built.
+
+3. Three answers, all of them after the fact.
+
+4. Section 4.4 invites the suspicion that the resolver guesses.
+
+5. The only part that reads English is the one not allowed to decide anything. It proposes; the other two dispose.
+
+6. The audit found six problems: the config was stale, the hook silently no-ops on error, the guard reads a variable the harness never sets, the fallback path was never tested, the log rotates before anyone reads it, and the alert fires into a channel nobody watches.

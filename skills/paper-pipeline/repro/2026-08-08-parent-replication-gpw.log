@@ -1,0 +1,98 @@
+patched: filter the MAIN LOOP to grade-paper-writing, cells AH+SH (guards untouched)
+patched: redirect the JSON output so the parent's own result file survives
+
+running the PARENT'S code, grade-paper-writing AH+SH only, 3 trials = 24 runs
+  parent : /home/user/mine/.claude/skills/paper-pipeline/framing-vs-vocabulary.eval.mjs
+  patched: /tmp/claude-0/-home-user-mine/8268acb1-66a2-55ac-858e-2b9e3c81f84e/scratchpad/parent-repl/replication.mjs
+
+
+37 skills installed → 36 competitors per run
+
+MEASURED VOCABULARY OVERLAP (prompt content-words found in the target description)
+skill                      AH    AL    SH    SL   HIGH-LOW
+tighten-paper            0.81  0.00  0.79  0.04   +0.78
+grade-paper-writing      0.85  0.14  0.78  0.05   +0.72
+argument-arc             0.86  0.00  0.69  0.00   +0.77
+
+mode=main  3 skills x 4 cells x 4 prompts x 3 trials = 144 runs
+
+=== grade-paper-writing  [ACTION  / HIGH overlap]
+  Spent: 404,155 tokens (18 in · 1.6k out · 357.3k cache) · ~$0.40 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  1.00  T3 O0 S0  ov=0.88  grade the writing craft in this draft and name the offen
+  Spent: 498,692 tokens (22 in · 2.7k out · 448.8k cache) · ~$0.46 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 902,847 tokens · ~$0.86 API-equivalent
+  1.00  T3 O0 S0  ov=1.00  run the blind multi-grader panel over the prose clarity 
+  Spent: 499,035 tokens (22 in · 3.4k out · 448.3k cache) · ~$0.47 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 1,401,882 tokens · ~$1.33 API-equivalent
+  1.00  T3 O0 S0  ov=0.67  score the title, the abstract and the intro architecture
+  Spent: 133,709 tokens (6 in · 778 out · 90.1k cache) · ~$0.30 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 1,535,591 tokens · ~$1.63 API-equivalent
+  0.00  T0 O0 S3  ov=0.86  grade how well this reads, hedge stacking included, and 
+
+=== grade-paper-writing  [SITUATION / HIGH overlap]
+  Spent: 587,085 tokens (26 in · 2.4k out · 537.8k cache) · ~$0.48 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 2,122,676 tokens · ~$2.10 API-equivalent
+  0.67  T2 O0 S1  ov=1.00  the abstract reads like a wall of jargon
+  Spent: 894,628 tokens (38 in · 13.9k out · 821.6k cache) · ~$0.91 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 3,017,304 tokens · ~$3.02 API-equivalent
+  0.00  T0 O1 S2  ov=0.80  the intro architecture is fine but the prose clarity is 
+         instead: cold-read-diff
+  Spent: 496,058 tokens (21 in · 2.2k out · 448.0k cache) · ~$0.44 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 3,513,362 tokens · ~$3.46 API-equivalent
+  0.33  T1 O2 S0  ov=0.67  there is hedge stacking everywhere and the point never l
+         instead: tighten-paper
+  Spent: 134,038 tokens (6 in · 1.1k out · 90.1k cache) · ~$0.30 API-equivalent
+  Billed to: your Claude subscription — $0 metered ✅
+  Session so far: 3,647,400 tokens · ~$3.76 API-equivalent
+  0.00  T0 O0 S3  ov=0.67  the writing does not read well even though the draft is 
+
+==============================================================================
+THE 2x2 — target trigger rate
+
+                          HIGH overlap     LOW overlap
+ACTION                      75% (9/12)      NaN% (0/0)
+SITUATION                   25% (3/12)      NaN% (0/0)
+
+main effect of FRAMING   (AH+AL) - (SH+SL) = 50pp
+main effect of VOCABULARY (AH+SH) - (AL+SL) = NaNpp
+
+  A (lexical) predicts   AH high, SH high, AL low,  SL low
+  B (framing) predicts   AH high, AL high, SH low,  SL low
+  observed               AH 75%  AL NaN%  SH 25%  SL NaN%
+
+==============================================================================
+WHAT FIRED INSTEAD — the C discriminator
+
+cell                        target   other   silent
+ACTION  / HIGH overlap         75%      0%     25%
+ACTION  / LOW  overlap        NaN%    NaN%    NaN%
+SITUATION / HIGH overlap       25%     25%     50%
+SITUATION / LOW  overlap      NaN%    NaN%    NaN%
+
+  OTHER  = a competitor was selected and the target was not. The prompt routed somewhere;
+           the selector disagreed. Ambiguity (C) or a lexically nearer rival (A).
+  SILENT = nothing resolved. The target was never selected AND neither was anything else.
+           A description that does not cover the phrasing (A or B) — but see caveat 2:
+           a run that simply answered the question is also SILENT.
+
+WHICH competitors took the runs (all cells):
+    2  tighten-paper
+    1  cold-read-diff
+
+per-skill, target rate by cell:
+skill                       AH      AL      SH      SL
+tighten-paper             NaN%    NaN%    NaN%    NaN%
+grade-paper-writing        75%    NaN%     25%    NaN%
+argument-arc              NaN%    NaN%    NaN%    NaN%
+
+per-run rows → repro/2026-08-08-framing-vs-vocabulary.json
+
+Run --mode oracle before concluding C is dead: the 2x2 alone cannot tell "the description was
+not a candidate" from "no description could have been", and that is exactly what C claims.

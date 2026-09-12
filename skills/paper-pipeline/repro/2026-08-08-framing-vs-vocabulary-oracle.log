@@ -1,0 +1,118 @@
+
+37 skills installed → 36 competitors per run
+
+MEASURED VOCABULARY OVERLAP (prompt content-words found in the target description)
+skill                      AH    AL    SH    SL   HIGH-LOW
+tighten-paper            0.81  0.00  0.79  0.04   +0.78
+grade-paper-writing      0.85  0.14  0.78  0.05   +0.72
+argument-arc             0.86  0.00  0.69  0.00   +0.77
+
+oracle: 48 closed-book picks over 37 descriptions
+
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   tighten-paper             produce a cut and fold plan for this draft — which sections do
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   tighten-paper             tell me which parts are TMI and belong in the appendix instead
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   tighten-paper             reorder and merge whatever is needed so it is not too long for
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   tighten-paper             give me a structural verdict on this drafted paper, cover to c
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AL  HIT   tighten-paper             decide what gets deleted from this manuscript and list it back
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AL  HIT   tighten-paper             tell me which two chapters should be welded into one, and whic
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AL  HIT   tighten-paper             I want a shortlist of paragraphs to delete so it fits on fewer
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AL  HIT   tighten-paper             rank the chapters by how little they matter, worst first, so I
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   tighten-paper             this feels long and overly complex, and the middle drags
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   tighten-paper             after three review rounds it has collected a lot of hedge-mass
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   tighten-paper             it does not deliver its point and nobody could skim it
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   tighten-paper             it is too long for its contribution and hard to read cover to 
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SL  miss  NONE                      people keep bailing out partway through and I cannot tell why
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SL  HIT   tighten-paper             there is a nine page ceiling and I am well over it
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SL  HIT   tighten-paper             my co-author says the whole thing sprawls and he lost the thre
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SL  miss  cold-read-diff            every paragraph seems necessary to me and yet the whole is exh
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing       grade the writing craft in this draft and name the offending s
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing       run the blind multi-grader panel over the prose clarity and ja
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing       score the title, the abstract and the intro architecture one t
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   grade-paper-writing       grade how well this reads, hedge stacking included, and give m
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AL  HIT   grade-paper-writing       mark this manuscript out of five on how it is put together at 
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AL  HIT   grade-paper-writing       give me a scored report card on the language, with the worst e
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AL  miss  NONE                      rate how professional the phrasing sounds against papers peopl
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AL  miss  NONE                      assign a number to the quality of the English here and point a
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   grade-paper-writing       the abstract reads like a wall of jargon
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   grade-paper-writing       the intro architecture is fine but the prose clarity is not
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   grade-paper-writing       there is hedge stacking everywhere and the point never lands
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   grade-paper-writing       the writing does not read well even though the draft is finish
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SL  miss  NONE                      something about the way this is worded makes me wince and I ca
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SL  miss  NONE                      my supervisor said the English gets in the way of the science
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SL  miss  cold-read-diff            the sentences are correct but they feel like wet cardboard
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SL  miss  NONE                      I went through my own opening twice and still had to start ove
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   argument-arc              build the one-sentence-per-section outline before the large re
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   argument-arc              run the bottom-up inevitability pass over the argument archite
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   argument-arc              repair the argument architecture — the same structural objecti
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AH  HIT   argument-arc              check the name and number budget, the reader has too much to c
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AL  HIT   argument-arc              give me a single line for each part of the manuscript, working
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AL  HIT   argument-arc              make the ending feel unavoidable given everything before it, a
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AL  miss  tighten-paper             count how many invented labels and figures the audience must m
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  AL  miss  NONE                      lay out the chain of reasoning as a list so I can see where a 
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   argument-arc              the reader says we throw ideas at them
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   argument-arc              the same structural objection repeats in every round
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   argument-arc              there is no argument architecture here, just a sequence
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SH  HIT   argument-arc              we blew the name and number budget somewhere in the middle
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SL  miss  tighten-paper             each part is fine alone but together they do not add up to any
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SL  HIT   argument-arc              my advisor cannot tell what the conclusion depends on
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SL  miss  NONE                      the ending arrives without having been earned
+Ignoring 24 permissions.allow entries from .claude/settings.json and .claude/settings.local.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/user/mine"].hasTrustDialogAccepted: true in /root/.claude.json.
+  SL  miss  NONE                      someone asked me what the point was and I gave three answers
+
+ORACLE ACCURACY BY CELL (closed book, 37 descriptions in context, 1 pick each)
+cell                        hit   none  wrong
+ACTION  / HIGH overlap      12/12     0      0
+ACTION  / LOW  overlap       8/12     3      1
+SITUATION / HIGH overlap    12/12     0      0
+SITUATION / LOW  overlap     3/12     6      3
+
+rows → repro/2026-08-08-framing-vs-vocabulary-oracle.json
+
+READ THIS AS AN UPPER BOUND, NOT A HUMAN. The oracle's task is strictly easier than the harness's (closed book, nothing else to do, no context budget). A cell the ORACLE also misses is a cell whose descriptions do not determine the answer — that is C. A cell the oracle gets and the harness does not is a cell where the information exists and the selector is not using it — that is not C.

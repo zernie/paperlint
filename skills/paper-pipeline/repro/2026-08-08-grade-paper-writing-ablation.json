@@ -1,0 +1,1032 @@
+{
+  "trials": 3,
+  "competitors": 36,
+  "baselineDescChars": 1174,
+  "results": [
+    {
+      "arm": "A0",
+      "label": "baseline (verbatim)",
+      "skill": "grade-paper-writing",
+      "descChars": 1174,
+      "cell": "AH",
+      "prompt": "grade the writing craft in this draft and name the offending sentence in each dimension",
+      "trials": 3,
+      "rate": 0.3333333333333333,
+      "errored": 0,
+      "overlap": 0.875,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A0",
+      "label": "baseline (verbatim)",
+      "skill": "grade-paper-writing",
+      "descChars": 1174,
+      "cell": "AH",
+      "prompt": "run the blind multi-grader panel over the prose clarity and jargon discipline",
+      "trials": 3,
+      "rate": 1,
+      "errored": 0,
+      "overlap": 1,
+      "buckets": [
+        "TARGET",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A0",
+      "label": "baseline (verbatim)",
+      "skill": "grade-paper-writing",
+      "descChars": 1174,
+      "cell": "AH",
+      "prompt": "score the title, the abstract and the intro architecture one to five",
+      "trials": 3,
+      "rate": 1,
+      "errored": 0,
+      "overlap": 0.667,
+      "buckets": [
+        "TARGET",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A0",
+      "label": "baseline (verbatim)",
+      "skill": "grade-paper-writing",
+      "descChars": 1174,
+      "cell": "AH",
+      "prompt": "grade how well this reads, hedge stacking included, and give me the fix for each",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 0.857,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "SILENT"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A0",
+      "label": "baseline (verbatim)",
+      "skill": "grade-paper-writing",
+      "descChars": 1174,
+      "cell": "SH",
+      "prompt": "the abstract reads like a wall of jargon",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 1,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "SILENT"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A0",
+      "label": "baseline (verbatim)",
+      "skill": "grade-paper-writing",
+      "descChars": 1174,
+      "cell": "SH",
+      "prompt": "the intro architecture is fine but the prose clarity is not",
+      "trials": 3,
+      "rate": 0.6666666666666666,
+      "errored": 0,
+      "overlap": 0.8,
+      "buckets": [
+        "TARGET",
+        "TARGET",
+        "SILENT"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A0",
+      "label": "baseline (verbatim)",
+      "skill": "grade-paper-writing",
+      "descChars": 1174,
+      "cell": "SH",
+      "prompt": "there is hedge stacking everywhere and the point never lands",
+      "trials": 3,
+      "rate": 0.6666666666666666,
+      "errored": 0,
+      "overlap": 0.667,
+      "buckets": [
+        "SILENT",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A0",
+      "label": "baseline (verbatim)",
+      "skill": "grade-paper-writing",
+      "descChars": 1174,
+      "cell": "SH",
+      "prompt": "the writing does not read well even though the draft is finished",
+      "trials": 3,
+      "rate": 0.6666666666666666,
+      "errored": 0,
+      "overlap": 0.667,
+      "buckets": [
+        "SILENT",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A1",
+      "label": "short (sentences 1-2 only)",
+      "skill": "grade-paper-writing",
+      "descChars": 528,
+      "cell": "AH",
+      "prompt": "grade the writing craft in this draft and name the offending sentence in each dimension",
+      "trials": 3,
+      "rate": 0.6666666666666666,
+      "errored": 0,
+      "overlap": 0.875,
+      "buckets": [
+        "SILENT",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A1",
+      "label": "short (sentences 1-2 only)",
+      "skill": "grade-paper-writing",
+      "descChars": 528,
+      "cell": "AH",
+      "prompt": "run the blind multi-grader panel over the prose clarity and jargon discipline",
+      "trials": 3,
+      "rate": 1,
+      "errored": 0,
+      "overlap": 0.444,
+      "buckets": [
+        "TARGET",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A1",
+      "label": "short (sentences 1-2 only)",
+      "skill": "grade-paper-writing",
+      "descChars": 528,
+      "cell": "AH",
+      "prompt": "score the title, the abstract and the intro architecture one to five",
+      "trials": 3,
+      "rate": 0.3333333333333333,
+      "errored": 0,
+      "overlap": 0.667,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A1",
+      "label": "short (sentences 1-2 only)",
+      "skill": "grade-paper-writing",
+      "descChars": 528,
+      "cell": "AH",
+      "prompt": "grade how well this reads, hedge stacking included, and give me the fix for each",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 0.857,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "SILENT"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A1",
+      "label": "short (sentences 1-2 only)",
+      "skill": "grade-paper-writing",
+      "descChars": 528,
+      "cell": "SH",
+      "prompt": "the abstract reads like a wall of jargon",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 1,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "SILENT"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A1",
+      "label": "short (sentences 1-2 only)",
+      "skill": "grade-paper-writing",
+      "descChars": 528,
+      "cell": "SH",
+      "prompt": "the intro architecture is fine but the prose clarity is not",
+      "trials": 3,
+      "rate": 0.3333333333333333,
+      "errored": 0,
+      "overlap": 0.8,
+      "buckets": [
+        "TARGET",
+        "OTHER",
+        "SILENT"
+      ],
+      "othersFired": [
+        "cold-read-diff"
+      ]
+    },
+    {
+      "arm": "A1",
+      "label": "short (sentences 1-2 only)",
+      "skill": "grade-paper-writing",
+      "descChars": 528,
+      "cell": "SH",
+      "prompt": "there is hedge stacking everywhere and the point never lands",
+      "trials": 3,
+      "rate": 1,
+      "errored": 0,
+      "overlap": 0.667,
+      "buckets": [
+        "TARGET",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A1",
+      "label": "short (sentences 1-2 only)",
+      "skill": "grade-paper-writing",
+      "descChars": 528,
+      "cell": "SH",
+      "prompt": "the writing does not read well even though the draft is finished",
+      "trials": 3,
+      "rate": 0.6666666666666666,
+      "errored": 0,
+      "overlap": 0.667,
+      "buckets": [
+        "SILENT",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A2",
+      "label": "no-subordination",
+      "skill": "grade-paper-writing",
+      "descChars": 992,
+      "cell": "AH",
+      "prompt": "grade the writing craft in this draft and name the offending sentence in each dimension",
+      "trials": 3,
+      "rate": 0.6666666666666666,
+      "errored": 0,
+      "overlap": 0.875,
+      "buckets": [
+        "SILENT",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A2",
+      "label": "no-subordination",
+      "skill": "grade-paper-writing",
+      "descChars": 992,
+      "cell": "AH",
+      "prompt": "run the blind multi-grader panel over the prose clarity and jargon discipline",
+      "trials": 3,
+      "rate": 1,
+      "errored": 0,
+      "overlap": 1,
+      "buckets": [
+        "TARGET",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A2",
+      "label": "no-subordination",
+      "skill": "grade-paper-writing",
+      "descChars": 992,
+      "cell": "AH",
+      "prompt": "score the title, the abstract and the intro architecture one to five",
+      "trials": 3,
+      "rate": 0.6666666666666666,
+      "errored": 0,
+      "overlap": 0.667,
+      "buckets": [
+        "TARGET",
+        "SILENT",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A2",
+      "label": "no-subordination",
+      "skill": "grade-paper-writing",
+      "descChars": 992,
+      "cell": "AH",
+      "prompt": "grade how well this reads, hedge stacking included, and give me the fix for each",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 0.857,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "SILENT"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A2",
+      "label": "no-subordination",
+      "skill": "grade-paper-writing",
+      "descChars": 992,
+      "cell": "SH",
+      "prompt": "the abstract reads like a wall of jargon",
+      "trials": 3,
+      "rate": 0.3333333333333333,
+      "errored": 0,
+      "overlap": 1,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A2",
+      "label": "no-subordination",
+      "skill": "grade-paper-writing",
+      "descChars": 992,
+      "cell": "SH",
+      "prompt": "the intro architecture is fine but the prose clarity is not",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 0.8,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "OTHER"
+      ],
+      "othersFired": [
+        "cold-read-diff"
+      ]
+    },
+    {
+      "arm": "A2",
+      "label": "no-subordination",
+      "skill": "grade-paper-writing",
+      "descChars": 992,
+      "cell": "SH",
+      "prompt": "there is hedge stacking everywhere and the point never lands",
+      "trials": 3,
+      "rate": 0.6666666666666666,
+      "errored": 0,
+      "overlap": 0.667,
+      "buckets": [
+        "OTHER",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": [
+        "tighten-paper"
+      ]
+    },
+    {
+      "arm": "A2",
+      "label": "no-subordination",
+      "skill": "grade-paper-writing",
+      "descChars": 992,
+      "cell": "SH",
+      "prompt": "the writing does not read well even though the draft is finished",
+      "trials": 3,
+      "rate": 0.6666666666666666,
+      "errored": 0,
+      "overlap": 0.667,
+      "buckets": [
+        "SILENT",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A3",
+      "label": "no-negation",
+      "skill": "grade-paper-writing",
+      "descChars": 965,
+      "cell": "AH",
+      "prompt": "grade the writing craft in this draft and name the offending sentence in each dimension",
+      "trials": 3,
+      "rate": 0.6666666666666666,
+      "errored": 0,
+      "overlap": 0.875,
+      "buckets": [
+        "SILENT",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A3",
+      "label": "no-negation",
+      "skill": "grade-paper-writing",
+      "descChars": 965,
+      "cell": "AH",
+      "prompt": "run the blind multi-grader panel over the prose clarity and jargon discipline",
+      "trials": 3,
+      "rate": 1,
+      "errored": 0,
+      "overlap": 1,
+      "buckets": [
+        "TARGET",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A3",
+      "label": "no-negation",
+      "skill": "grade-paper-writing",
+      "descChars": 965,
+      "cell": "AH",
+      "prompt": "score the title, the abstract and the intro architecture one to five",
+      "trials": 3,
+      "rate": 0.6666666666666666,
+      "errored": 0,
+      "overlap": 0.667,
+      "buckets": [
+        "SILENT",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A3",
+      "label": "no-negation",
+      "skill": "grade-paper-writing",
+      "descChars": 965,
+      "cell": "AH",
+      "prompt": "grade how well this reads, hedge stacking included, and give me the fix for each",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 0.857,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "SILENT"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A3",
+      "label": "no-negation",
+      "skill": "grade-paper-writing",
+      "descChars": 965,
+      "cell": "SH",
+      "prompt": "the abstract reads like a wall of jargon",
+      "trials": 3,
+      "rate": 1,
+      "errored": 0,
+      "overlap": 1,
+      "buckets": [
+        "TARGET",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A3",
+      "label": "no-negation",
+      "skill": "grade-paper-writing",
+      "descChars": 965,
+      "cell": "SH",
+      "prompt": "the intro architecture is fine but the prose clarity is not",
+      "trials": 3,
+      "rate": 0.3333333333333333,
+      "errored": 0,
+      "overlap": 0.8,
+      "buckets": [
+        "SILENT",
+        "TARGET",
+        "SILENT"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A3",
+      "label": "no-negation",
+      "skill": "grade-paper-writing",
+      "descChars": 965,
+      "cell": "SH",
+      "prompt": "there is hedge stacking everywhere and the point never lands",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 0.667,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "SILENT"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A3",
+      "label": "no-negation",
+      "skill": "grade-paper-writing",
+      "descChars": 965,
+      "cell": "SH",
+      "prompt": "the writing does not read well even though the draft is finished",
+      "trials": 3,
+      "rate": 0.6666666666666666,
+      "errored": 0,
+      "overlap": 0.667,
+      "buckets": [
+        "SILENT",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A4",
+      "label": "no-machinery",
+      "skill": "grade-paper-writing",
+      "descChars": 598,
+      "cell": "AH",
+      "prompt": "grade the writing craft in this draft and name the offending sentence in each dimension",
+      "trials": 3,
+      "rate": 1,
+      "errored": 0,
+      "overlap": 0.875,
+      "buckets": [
+        "TARGET",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A4",
+      "label": "no-machinery",
+      "skill": "grade-paper-writing",
+      "descChars": 598,
+      "cell": "AH",
+      "prompt": "run the blind multi-grader panel over the prose clarity and jargon discipline",
+      "trials": 3,
+      "rate": 1,
+      "errored": 0,
+      "overlap": 0.333,
+      "buckets": [
+        "TARGET",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A4",
+      "label": "no-machinery",
+      "skill": "grade-paper-writing",
+      "descChars": 598,
+      "cell": "AH",
+      "prompt": "score the title, the abstract and the intro architecture one to five",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 0,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "SILENT"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A4",
+      "label": "no-machinery",
+      "skill": "grade-paper-writing",
+      "descChars": 598,
+      "cell": "AH",
+      "prompt": "grade how well this reads, hedge stacking included, and give me the fix for each",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 0.571,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "SILENT"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A4",
+      "label": "no-machinery",
+      "skill": "grade-paper-writing",
+      "descChars": 598,
+      "cell": "SH",
+      "prompt": "the abstract reads like a wall of jargon",
+      "trials": 3,
+      "rate": 0.6666666666666666,
+      "errored": 0,
+      "overlap": 0.75,
+      "buckets": [
+        "SILENT",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A4",
+      "label": "no-machinery",
+      "skill": "grade-paper-writing",
+      "descChars": 598,
+      "cell": "SH",
+      "prompt": "the intro architecture is fine but the prose clarity is not",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 0,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "OTHER"
+      ],
+      "othersFired": [
+        "cold-read-diff"
+      ]
+    },
+    {
+      "arm": "A4",
+      "label": "no-machinery",
+      "skill": "grade-paper-writing",
+      "descChars": 598,
+      "cell": "SH",
+      "prompt": "there is hedge stacking everywhere and the point never lands",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 0,
+      "buckets": [
+        "OTHER",
+        "SILENT",
+        "OTHER"
+      ],
+      "othersFired": [
+        "tighten-paper",
+        "tighten-paper"
+      ]
+    },
+    {
+      "arm": "A4",
+      "label": "no-machinery",
+      "skill": "grade-paper-writing",
+      "descChars": 598,
+      "cell": "SH",
+      "prompt": "the writing does not read well even though the draft is finished",
+      "trials": 3,
+      "rate": 1,
+      "errored": 0,
+      "overlap": 0.667,
+      "buckets": [
+        "TARGET",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A5",
+      "label": "renamed (description identical)",
+      "skill": "paper-readability-review",
+      "descChars": 1174,
+      "cell": "AH",
+      "prompt": "grade the writing craft in this draft and name the offending sentence in each dimension",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 0.875,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "SILENT"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A5",
+      "label": "renamed (description identical)",
+      "skill": "paper-readability-review",
+      "descChars": 1174,
+      "cell": "AH",
+      "prompt": "run the blind multi-grader panel over the prose clarity and jargon discipline",
+      "trials": 3,
+      "rate": 1,
+      "errored": 0,
+      "overlap": 1,
+      "buckets": [
+        "TARGET",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A5",
+      "label": "renamed (description identical)",
+      "skill": "paper-readability-review",
+      "descChars": 1174,
+      "cell": "AH",
+      "prompt": "score the title, the abstract and the intro architecture one to five",
+      "trials": 3,
+      "rate": 0.3333333333333333,
+      "errored": 0,
+      "overlap": 0.667,
+      "buckets": [
+        "SILENT",
+        "TARGET",
+        "SILENT"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A5",
+      "label": "renamed (description identical)",
+      "skill": "paper-readability-review",
+      "descChars": 1174,
+      "cell": "AH",
+      "prompt": "grade how well this reads, hedge stacking included, and give me the fix for each",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 0.857,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "SILENT"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A5",
+      "label": "renamed (description identical)",
+      "skill": "paper-readability-review",
+      "descChars": 1174,
+      "cell": "SH",
+      "prompt": "the abstract reads like a wall of jargon",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 1,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "SILENT"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A5",
+      "label": "renamed (description identical)",
+      "skill": "paper-readability-review",
+      "descChars": 1174,
+      "cell": "SH",
+      "prompt": "the intro architecture is fine but the prose clarity is not",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 0.8,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "SILENT"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A5",
+      "label": "renamed (description identical)",
+      "skill": "paper-readability-review",
+      "descChars": 1174,
+      "cell": "SH",
+      "prompt": "there is hedge stacking everywhere and the point never lands",
+      "trials": 3,
+      "rate": 0.6666666666666666,
+      "errored": 0,
+      "overlap": 0.667,
+      "buckets": [
+        "TARGET",
+        "OTHER",
+        "TARGET"
+      ],
+      "othersFired": [
+        "tighten-paper"
+      ]
+    },
+    {
+      "arm": "A5",
+      "label": "renamed (description identical)",
+      "skill": "paper-readability-review",
+      "descChars": 1174,
+      "cell": "SH",
+      "prompt": "the writing does not read well even though the draft is finished",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 0.667,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "SILENT"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A6",
+      "label": "persona-only (A1's mirror)",
+      "skill": "grade-paper-writing",
+      "descChars": 225,
+      "cell": "AH",
+      "prompt": "grade the writing craft in this draft and name the offending sentence in each dimension",
+      "trials": 3,
+      "rate": 0.3333333333333333,
+      "errored": 0,
+      "overlap": 0.25,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A6",
+      "label": "persona-only (A1's mirror)",
+      "skill": "grade-paper-writing",
+      "descChars": 225,
+      "cell": "AH",
+      "prompt": "run the blind multi-grader panel over the prose clarity and jargon discipline",
+      "trials": 3,
+      "rate": 1,
+      "errored": 0,
+      "overlap": 0.222,
+      "buckets": [
+        "TARGET",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A6",
+      "label": "persona-only (A1's mirror)",
+      "skill": "grade-paper-writing",
+      "descChars": 225,
+      "cell": "AH",
+      "prompt": "score the title, the abstract and the intro architecture one to five",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 0,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "SILENT"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A6",
+      "label": "persona-only (A1's mirror)",
+      "skill": "grade-paper-writing",
+      "descChars": 225,
+      "cell": "AH",
+      "prompt": "grade how well this reads, hedge stacking included, and give me the fix for each",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 0.286,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "SILENT"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A6",
+      "label": "persona-only (A1's mirror)",
+      "skill": "grade-paper-writing",
+      "descChars": 225,
+      "cell": "SH",
+      "prompt": "the abstract reads like a wall of jargon",
+      "trials": 3,
+      "rate": 1,
+      "errored": 0,
+      "overlap": 0.75,
+      "buckets": [
+        "TARGET",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A6",
+      "label": "persona-only (A1's mirror)",
+      "skill": "grade-paper-writing",
+      "descChars": 225,
+      "cell": "SH",
+      "prompt": "the intro architecture is fine but the prose clarity is not",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 0,
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "SILENT"
+      ],
+      "othersFired": []
+    },
+    {
+      "arm": "A6",
+      "label": "persona-only (A1's mirror)",
+      "skill": "grade-paper-writing",
+      "descChars": 225,
+      "cell": "SH",
+      "prompt": "there is hedge stacking everywhere and the point never lands",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 0,
+      "buckets": [
+        "OTHER",
+        "OTHER",
+        "OTHER"
+      ],
+      "othersFired": [
+        "tighten-paper",
+        "tighten-paper",
+        "tighten-paper"
+      ]
+    },
+    {
+      "arm": "A6",
+      "label": "persona-only (A1's mirror)",
+      "skill": "grade-paper-writing",
+      "descChars": 225,
+      "cell": "SH",
+      "prompt": "the writing does not read well even though the draft is finished",
+      "trials": 3,
+      "rate": 1,
+      "errored": 0,
+      "overlap": 0.667,
+      "buckets": [
+        "TARGET",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    }
+  ]
+}

@@ -74,6 +74,12 @@ const ANNOUNCERS = [
   ["research-ideate", "sweep-design-space"],
   ["plan-paper-timeline", "study-accepted-papers"],
   ["grade-paper-writing", "verify-citations"],
+  // ── wave ③ (2026-09-12). `submit-paper` is a `checkSkill()` stage skill with exactly one
+  // `announce.mjs submit-paper` line (verified unambiguous before this was written). Its sibling
+  // is the conductor itself — the only name left that keeps the whole list pairwise distinct, and
+  // a fitting one: recording a submission under the orchestrator's gate is precisely the
+  // copy-paste slip that reads FRESH on the wrong row.
+  ["submit-paper", "paper-pipeline"],
 ];
 
 // 🔴 «Каждый сиблинг различен» — это УТВЕРЖДЕНИЕ, а не пожелание в комментарии. Список пишется
@@ -118,13 +124,36 @@ CASES.push({
   expect: 'command(s) omit "-g"',
 });
 
+// ── wave ③: the conductor. NOT a `checkSkill()` skill — its harness (`paper-pipeline.harness.mjs`)
+// checks ROUTING INTEGRITY, so the defect has to be a routing one, the same way
+// `osf-artifact-upload` above gets the defect ITS harness is about.
+//
+// 🔴 THE FORWARD DIRECTION IS THE ONE A MUTATION CAN REACH. Backward ("a wired stage the map never
+// names") cannot be planted by editing the map alone — deleting a route makes the skill un-named,
+// which is exactly what the MISSING allowance list tolerates for three skills, so the kill would
+// depend on which name was picked. Forward is unconditional: a bolded backticked token in a routing
+// table that resolves to no skill directory is a route to nowhere, and a run following the map
+// stalls there. `**\`camera-ready\`**` occurs exactly once, so the edit cannot be ambiguous.
+CASES.push({
+  name: "paper-pipeline: the map routes to a skill that does not exist",
+  disables: "forward routing integrity — the conductor pointing at a name with no SKILL.md behind it",
+  edits: [[md("paper-pipeline"), "**`camera-ready`**", "**`camera-ready-v2`**"]],
+  harness: harness("paper-pipeline"),
+  expect: "no .claude/skills/camera-ready-v2/SKILL.md exists",
+});
+
 // 🔴 A FLOOR, NOT A COMMENT. The list above is written by hand, and a hand-written list of paths
 // is the thing this package replaced in `package.json` on 2026-09-11 because it had already
 // rotted SILENTLY. A skill added to `skills/` with a colocated harness and no case here would be
 // caught by `run-mutations.mjs` — but only on the run AFTER someone added it, and only if they
 // ran it. This asserts the pairing from the other side, at import time.
+// 🔴 THE `paper-pipeline` EXCLUSION IS GONE (wave ③, 2026-09-12). It was written when that
+// directory held only `scripts/` — no SKILL.md, no colocated harness, nothing for a case to kill.
+// Both arrived with wave ③, so the exclusion would now hide the orchestrator from the very floor
+// that exists to notice an uncovered harness: `e.name !== "paper-pipeline"` and «it has no harness»
+// were the same statement for one day and are opposite statements now.
 const withHarness = readdirSync(HERE, { withFileTypes: true })
-  .filter((e) => e.isDirectory() && e.name !== "paper-pipeline")
+  .filter((e) => e.isDirectory())
   .map((e) => e.name)
   .filter((n) => readdirSync(join(HERE, n)).includes(`${n}.harness.mjs`));
 const covered = new Set(CASES.map((c) => c.harness));

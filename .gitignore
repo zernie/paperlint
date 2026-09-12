@@ -6,3 +6,10 @@ _build/
 *.log
 *.out
 .vigiles/state/
+
+# 🔴 The pipeline's reproduction logs are EVIDENCE, not build output. `*.log` above is a LaTeX rule
+# (`paper.log`), and it silently swallowed all 13 files under skills/paper-pipeline/repro/ when they
+# arrived — a commit would have carried the eval claims and none of the raw runs behind them, which is
+# the exact artifact loss `repro/` exists to prevent. Measured at the moment of the move, not guessed:
+# `git check-ignore -v` named this line for every one of them.
+!skills/paper-pipeline/repro/*.log

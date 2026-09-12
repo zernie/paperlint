@@ -1,0 +1,450 @@
+[
+  {
+    "arm": "A0",
+    "label": "baseline (verbatim)",
+    "cell": "AH",
+    "prompt": "grade the writing craft in this draft and name the offending sentence in each dimension",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A0",
+    "label": "baseline (verbatim)",
+    "cell": "AH",
+    "prompt": "run the blind multi-grader panel over the prose clarity and jargon discipline",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A0",
+    "label": "baseline (verbatim)",
+    "cell": "AH",
+    "prompt": "score the title, the abstract and the intro architecture one to five",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A0",
+    "label": "baseline (verbatim)",
+    "cell": "AH",
+    "prompt": "grade how well this reads, hedge stacking included, and give me the fix for each",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A0",
+    "label": "baseline (verbatim)",
+    "cell": "SH",
+    "prompt": "the abstract reads like a wall of jargon",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A0",
+    "label": "baseline (verbatim)",
+    "cell": "SH",
+    "prompt": "the intro architecture is fine but the prose clarity is not",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A0",
+    "label": "baseline (verbatim)",
+    "cell": "SH",
+    "prompt": "there is hedge stacking everywhere and the point never lands",
+    "pick": "tighten-paper",
+    "ok": false
+  },
+  {
+    "arm": "A0",
+    "label": "baseline (verbatim)",
+    "cell": "SH",
+    "prompt": "the writing does not read well even though the draft is finished",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A1",
+    "label": "short (sentences 1-2 only)",
+    "cell": "AH",
+    "prompt": "grade the writing craft in this draft and name the offending sentence in each dimension",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A1",
+    "label": "short (sentences 1-2 only)",
+    "cell": "AH",
+    "prompt": "run the blind multi-grader panel over the prose clarity and jargon discipline",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A1",
+    "label": "short (sentences 1-2 only)",
+    "cell": "AH",
+    "prompt": "score the title, the abstract and the intro architecture one to five",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A1",
+    "label": "short (sentences 1-2 only)",
+    "cell": "AH",
+    "prompt": "grade how well this reads, hedge stacking included, and give me the fix for each",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A1",
+    "label": "short (sentences 1-2 only)",
+    "cell": "SH",
+    "prompt": "the abstract reads like a wall of jargon",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A1",
+    "label": "short (sentences 1-2 only)",
+    "cell": "SH",
+    "prompt": "the intro architecture is fine but the prose clarity is not",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A1",
+    "label": "short (sentences 1-2 only)",
+    "cell": "SH",
+    "prompt": "there is hedge stacking everywhere and the point never lands",
+    "pick": "tighten-paper",
+    "ok": false
+  },
+  {
+    "arm": "A1",
+    "label": "short (sentences 1-2 only)",
+    "cell": "SH",
+    "prompt": "the writing does not read well even though the draft is finished",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A2",
+    "label": "no-subordination",
+    "cell": "AH",
+    "prompt": "grade the writing craft in this draft and name the offending sentence in each dimension",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A2",
+    "label": "no-subordination",
+    "cell": "AH",
+    "prompt": "run the blind multi-grader panel over the prose clarity and jargon discipline",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A2",
+    "label": "no-subordination",
+    "cell": "AH",
+    "prompt": "score the title, the abstract and the intro architecture one to five",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A2",
+    "label": "no-subordination",
+    "cell": "AH",
+    "prompt": "grade how well this reads, hedge stacking included, and give me the fix for each",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A2",
+    "label": "no-subordination",
+    "cell": "SH",
+    "prompt": "the abstract reads like a wall of jargon",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A2",
+    "label": "no-subordination",
+    "cell": "SH",
+    "prompt": "the intro architecture is fine but the prose clarity is not",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A2",
+    "label": "no-subordination",
+    "cell": "SH",
+    "prompt": "there is hedge stacking everywhere and the point never lands",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A2",
+    "label": "no-subordination",
+    "cell": "SH",
+    "prompt": "the writing does not read well even though the draft is finished",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A3",
+    "label": "no-negation",
+    "cell": "AH",
+    "prompt": "grade the writing craft in this draft and name the offending sentence in each dimension",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A3",
+    "label": "no-negation",
+    "cell": "AH",
+    "prompt": "run the blind multi-grader panel over the prose clarity and jargon discipline",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A3",
+    "label": "no-negation",
+    "cell": "AH",
+    "prompt": "score the title, the abstract and the intro architecture one to five",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A3",
+    "label": "no-negation",
+    "cell": "AH",
+    "prompt": "grade how well this reads, hedge stacking included, and give me the fix for each",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A3",
+    "label": "no-negation",
+    "cell": "SH",
+    "prompt": "the abstract reads like a wall of jargon",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A3",
+    "label": "no-negation",
+    "cell": "SH",
+    "prompt": "the intro architecture is fine but the prose clarity is not",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A3",
+    "label": "no-negation",
+    "cell": "SH",
+    "prompt": "there is hedge stacking everywhere and the point never lands",
+    "pick": "cold-read-diff",
+    "ok": false
+  },
+  {
+    "arm": "A3",
+    "label": "no-negation",
+    "cell": "SH",
+    "prompt": "the writing does not read well even though the draft is finished",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A4",
+    "label": "no-machinery",
+    "cell": "AH",
+    "prompt": "grade the writing craft in this draft and name the offending sentence in each dimension",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A4",
+    "label": "no-machinery",
+    "cell": "AH",
+    "prompt": "run the blind multi-grader panel over the prose clarity and jargon discipline",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A4",
+    "label": "no-machinery",
+    "cell": "AH",
+    "prompt": "score the title, the abstract and the intro architecture one to five",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A4",
+    "label": "no-machinery",
+    "cell": "AH",
+    "prompt": "grade how well this reads, hedge stacking included, and give me the fix for each",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A4",
+    "label": "no-machinery",
+    "cell": "SH",
+    "prompt": "the abstract reads like a wall of jargon",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A4",
+    "label": "no-machinery",
+    "cell": "SH",
+    "prompt": "the intro architecture is fine but the prose clarity is not",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A4",
+    "label": "no-machinery",
+    "cell": "SH",
+    "prompt": "there is hedge stacking everywhere and the point never lands",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A4",
+    "label": "no-machinery",
+    "cell": "SH",
+    "prompt": "the writing does not read well even though the draft is finished",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A5",
+    "label": "renamed (description identical)",
+    "cell": "AH",
+    "prompt": "grade the writing craft in this draft and name the offending sentence in each dimension",
+    "pick": "?grade-paper-writing",
+    "ok": false
+  },
+  {
+    "arm": "A5",
+    "label": "renamed (description identical)",
+    "cell": "AH",
+    "prompt": "run the blind multi-grader panel over the prose clarity and jargon discipline",
+    "pick": "?grade-paper-writing",
+    "ok": false
+  },
+  {
+    "arm": "A5",
+    "label": "renamed (description identical)",
+    "cell": "AH",
+    "prompt": "score the title, the abstract and the intro architecture one to five",
+    "pick": "?grade-paper-writing",
+    "ok": false
+  },
+  {
+    "arm": "A5",
+    "label": "renamed (description identical)",
+    "cell": "AH",
+    "prompt": "grade how well this reads, hedge stacking included, and give me the fix for each",
+    "pick": "?grade-paper-writing",
+    "ok": false
+  },
+  {
+    "arm": "A5",
+    "label": "renamed (description identical)",
+    "cell": "SH",
+    "prompt": "the abstract reads like a wall of jargon",
+    "pick": "?grade-paper-writing",
+    "ok": false
+  },
+  {
+    "arm": "A5",
+    "label": "renamed (description identical)",
+    "cell": "SH",
+    "prompt": "the intro architecture is fine but the prose clarity is not",
+    "pick": "?grade-paper-writing",
+    "ok": false
+  },
+  {
+    "arm": "A5",
+    "label": "renamed (description identical)",
+    "cell": "SH",
+    "prompt": "there is hedge stacking everywhere and the point never lands",
+    "pick": "tighten-paper",
+    "ok": false
+  },
+  {
+    "arm": "A5",
+    "label": "renamed (description identical)",
+    "cell": "SH",
+    "prompt": "the writing does not read well even though the draft is finished",
+    "pick": "?grade-paper-writing",
+    "ok": false
+  },
+  {
+    "arm": "A6",
+    "label": "persona-only (A1's mirror)",
+    "cell": "AH",
+    "prompt": "grade the writing craft in this draft and name the offending sentence in each dimension",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A6",
+    "label": "persona-only (A1's mirror)",
+    "cell": "AH",
+    "prompt": "run the blind multi-grader panel over the prose clarity and jargon discipline",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A6",
+    "label": "persona-only (A1's mirror)",
+    "cell": "AH",
+    "prompt": "score the title, the abstract and the intro architecture one to five",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A6",
+    "label": "persona-only (A1's mirror)",
+    "cell": "AH",
+    "prompt": "grade how well this reads, hedge stacking included, and give me the fix for each",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A6",
+    "label": "persona-only (A1's mirror)",
+    "cell": "SH",
+    "prompt": "the abstract reads like a wall of jargon",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A6",
+    "label": "persona-only (A1's mirror)",
+    "cell": "SH",
+    "prompt": "the intro architecture is fine but the prose clarity is not",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A6",
+    "label": "persona-only (A1's mirror)",
+    "cell": "SH",
+    "prompt": "there is hedge stacking everywhere and the point never lands",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "arm": "A6",
+    "label": "persona-only (A1's mirror)",
+    "cell": "SH",
+    "prompt": "the writing does not read well even though the draft is finished",
+    "pick": "grade-paper-writing",
+    "ok": true
+  }
+]

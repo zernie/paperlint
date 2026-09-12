@@ -4,11 +4,11 @@ description: Upload or replace a paper's reproduction artifact file on an OSF pr
 allowed-tools: [Read, Write, Grep, Glob, Bash]
 ---
 
-<!-- vigiles:sha256:6fd5fa7f93df9336 compiled from skills/osf-artifact-upload/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:334c907233abc97c compiled from skills/osf-artifact-upload/SKILL.md.spec.ts -->
 
 # osf-artifact-upload — push/replace a file on an OSF project via API
 
-Verified working 2026-07-18 (replaced `artifact.zip` on node `9yzjn`, the AgenticDev artifact).
+Verified working 2026-07-18 (replaced `artifact.zip` on the node of a real submission's artifact).
 
 ## Prereq — an OSF personal access token
 - Create at **osf.io/settings/tokens** → scope **`osf.full_write`** (read-only cannot write). Shown once.
@@ -23,13 +23,13 @@ Verified working 2026-07-18 (replaced `artifact.zip` on node `9yzjn`, the Agenti
 - **Flaky proxy:** calls intermittently return 0 bytes / empty. **Retry** (loop until valid JSON;
   `--retry 3`). Verify by API metadata, not only by the waterbutler download (download-back flakes most).
 - **CA bundle:** in this env, add `--cacert /root/.ccr/ca-bundle.crt` to every curl.
-- **Node GUID:** the `osf.io/<guid>` in the paper's Availability (e.g. `9yzjn`) IS the node id; the
+- **Node GUID:** the `osf.io/<guid>` in the paper's Availability (a five-character guid, e.g. `ab12c`) IS the node id; the
   `?view_only=…` is a separate anonymized link. With the owner token you address the node by its guid.
 - **`set +x`** and keep the token only in a shell variable — never in printed output.
 
 ## Recipe (all curl; `$T`=token, `$CA`=/root/.ccr/ca-bundle.crt, `$NODE`=guid, `$ZIP`=local file)
 ```bash
-set +x; CA=/root/.ccr/ca-bundle.crt; T="$OSF_TOKEN"; AUTH="Authorization: Bearer $T"; NODE=9yzjn
+set +x; CA=/root/.ccr/ca-bundle.crt; T="$OSF_TOKEN"; AUTH="Authorization: Bearer $T"; NODE=<guid>   # the node from YOUR paper's Availability line
 # 1. verify auth (expect HTTP 200 + your name)
 curl -g -s --retry 3 --cacert $CA -H "$AUTH" https://api.osf.io/v2/users/me/ \
   | python3 -c "import sys,json;d=json.load(sys.stdin);print('auth:',d['data']['attributes']['full_name'])"

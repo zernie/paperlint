@@ -1,0 +1,338 @@
+[
+  {
+    "skill": "tighten-paper",
+    "cell": "AH",
+    "prompt": "produce a cut and fold plan for this draft — which sections do not earn their place",
+    "pick": "tighten-paper",
+    "ok": true
+  },
+  {
+    "skill": "tighten-paper",
+    "cell": "AH",
+    "prompt": "tell me which parts are TMI and belong in the appendix instead of the paper",
+    "pick": "tighten-paper",
+    "ok": true
+  },
+  {
+    "skill": "tighten-paper",
+    "cell": "AH",
+    "prompt": "reorder and merge whatever is needed so it is not too long for its contribution",
+    "pick": "tighten-paper",
+    "ok": true
+  },
+  {
+    "skill": "tighten-paper",
+    "cell": "AH",
+    "prompt": "give me a structural verdict on this drafted paper, cover to cover, as an editor would",
+    "pick": "tighten-paper",
+    "ok": true
+  },
+  {
+    "skill": "tighten-paper",
+    "cell": "AL",
+    "prompt": "decide what gets deleted from this manuscript and list it back to me",
+    "pick": "tighten-paper",
+    "ok": true
+  },
+  {
+    "skill": "tighten-paper",
+    "cell": "AL",
+    "prompt": "tell me which two chapters should be welded into one, and which should go last",
+    "pick": "tighten-paper",
+    "ok": true
+  },
+  {
+    "skill": "tighten-paper",
+    "cell": "AL",
+    "prompt": "I want a shortlist of paragraphs to delete so it fits on fewer pages",
+    "pick": "tighten-paper",
+    "ok": true
+  },
+  {
+    "skill": "tighten-paper",
+    "cell": "AL",
+    "prompt": "rank the chapters by how little they matter, worst first, so I know where to swing the axe",
+    "pick": "tighten-paper",
+    "ok": true
+  },
+  {
+    "skill": "tighten-paper",
+    "cell": "SH",
+    "prompt": "this feels long and overly complex, and the middle drags",
+    "pick": "tighten-paper",
+    "ok": true
+  },
+  {
+    "skill": "tighten-paper",
+    "cell": "SH",
+    "prompt": "after three review rounds it has collected a lot of hedge-mass",
+    "pick": "tighten-paper",
+    "ok": true
+  },
+  {
+    "skill": "tighten-paper",
+    "cell": "SH",
+    "prompt": "it does not deliver its point and nobody could skim it",
+    "pick": "tighten-paper",
+    "ok": true
+  },
+  {
+    "skill": "tighten-paper",
+    "cell": "SH",
+    "prompt": "it is too long for its contribution and hard to read cover to cover",
+    "pick": "tighten-paper",
+    "ok": true
+  },
+  {
+    "skill": "tighten-paper",
+    "cell": "SL",
+    "prompt": "people keep bailing out partway through and I cannot tell why",
+    "pick": "NONE",
+    "ok": false
+  },
+  {
+    "skill": "tighten-paper",
+    "cell": "SL",
+    "prompt": "there is a nine page ceiling and I am well over it",
+    "pick": "tighten-paper",
+    "ok": true
+  },
+  {
+    "skill": "tighten-paper",
+    "cell": "SL",
+    "prompt": "my co-author says the whole thing sprawls and he lost the thread",
+    "pick": "tighten-paper",
+    "ok": true
+  },
+  {
+    "skill": "tighten-paper",
+    "cell": "SL",
+    "prompt": "every paragraph seems necessary to me and yet the whole is exhausting",
+    "pick": "cold-read-diff",
+    "ok": false
+  },
+  {
+    "skill": "grade-paper-writing",
+    "cell": "AH",
+    "prompt": "grade the writing craft in this draft and name the offending sentence in each dimension",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "skill": "grade-paper-writing",
+    "cell": "AH",
+    "prompt": "run the blind multi-grader panel over the prose clarity and jargon discipline",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "skill": "grade-paper-writing",
+    "cell": "AH",
+    "prompt": "score the title, the abstract and the intro architecture one to five",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "skill": "grade-paper-writing",
+    "cell": "AH",
+    "prompt": "grade how well this reads, hedge stacking included, and give me the fix for each",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "skill": "grade-paper-writing",
+    "cell": "AL",
+    "prompt": "mark this manuscript out of five on how it is put together at the sentence level",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "skill": "grade-paper-writing",
+    "cell": "AL",
+    "prompt": "give me a scored report card on the language, with the worst example under each heading",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "skill": "grade-paper-writing",
+    "cell": "AL",
+    "prompt": "rate how professional the phrasing sounds against papers people actually finish",
+    "pick": "NONE",
+    "ok": false
+  },
+  {
+    "skill": "grade-paper-writing",
+    "cell": "AL",
+    "prompt": "assign a number to the quality of the English here and point at the ugliest example",
+    "pick": "NONE",
+    "ok": false
+  },
+  {
+    "skill": "grade-paper-writing",
+    "cell": "SH",
+    "prompt": "the abstract reads like a wall of jargon",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "skill": "grade-paper-writing",
+    "cell": "SH",
+    "prompt": "the intro architecture is fine but the prose clarity is not",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "skill": "grade-paper-writing",
+    "cell": "SH",
+    "prompt": "there is hedge stacking everywhere and the point never lands",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "skill": "grade-paper-writing",
+    "cell": "SH",
+    "prompt": "the writing does not read well even though the draft is finished",
+    "pick": "grade-paper-writing",
+    "ok": true
+  },
+  {
+    "skill": "grade-paper-writing",
+    "cell": "SL",
+    "prompt": "something about the way this is worded makes me wince and I cannot name it",
+    "pick": "NONE",
+    "ok": false
+  },
+  {
+    "skill": "grade-paper-writing",
+    "cell": "SL",
+    "prompt": "my supervisor said the English gets in the way of the science",
+    "pick": "NONE",
+    "ok": false
+  },
+  {
+    "skill": "grade-paper-writing",
+    "cell": "SL",
+    "prompt": "the sentences are correct but they feel like wet cardboard",
+    "pick": "cold-read-diff",
+    "ok": false
+  },
+  {
+    "skill": "grade-paper-writing",
+    "cell": "SL",
+    "prompt": "I went through my own opening twice and still had to start over",
+    "pick": "NONE",
+    "ok": false
+  },
+  {
+    "skill": "argument-arc",
+    "cell": "AH",
+    "prompt": "build the one-sentence-per-section outline before the large rewrite",
+    "pick": "argument-arc",
+    "ok": true
+  },
+  {
+    "skill": "argument-arc",
+    "cell": "AH",
+    "prompt": "run the bottom-up inevitability pass over the argument architecture",
+    "pick": "argument-arc",
+    "ok": true
+  },
+  {
+    "skill": "argument-arc",
+    "cell": "AH",
+    "prompt": "repair the argument architecture — the same structural objection keeps repeating",
+    "pick": "argument-arc",
+    "ok": true
+  },
+  {
+    "skill": "argument-arc",
+    "cell": "AH",
+    "prompt": "check the name and number budget, the reader has too much to carry",
+    "pick": "argument-arc",
+    "ok": true
+  },
+  {
+    "skill": "argument-arc",
+    "cell": "AL",
+    "prompt": "give me a single line for each part of the manuscript, working backwards from the finish",
+    "pick": "argument-arc",
+    "ok": true
+  },
+  {
+    "skill": "argument-arc",
+    "cell": "AL",
+    "prompt": "make the ending feel unavoidable given everything before it, and tell me what to move",
+    "pick": "argument-arc",
+    "ok": true
+  },
+  {
+    "skill": "argument-arc",
+    "cell": "AL",
+    "prompt": "count how many invented labels and figures the audience must memorise, and trim the list",
+    "pick": "tighten-paper",
+    "ok": false
+  },
+  {
+    "skill": "argument-arc",
+    "cell": "AL",
+    "prompt": "lay out the chain of reasoning as a list so I can see where a link is missing",
+    "pick": "NONE",
+    "ok": false
+  },
+  {
+    "skill": "argument-arc",
+    "cell": "SH",
+    "prompt": "the reader says we throw ideas at them",
+    "pick": "argument-arc",
+    "ok": true
+  },
+  {
+    "skill": "argument-arc",
+    "cell": "SH",
+    "prompt": "the same structural objection repeats in every round",
+    "pick": "argument-arc",
+    "ok": true
+  },
+  {
+    "skill": "argument-arc",
+    "cell": "SH",
+    "prompt": "there is no argument architecture here, just a sequence",
+    "pick": "argument-arc",
+    "ok": true
+  },
+  {
+    "skill": "argument-arc",
+    "cell": "SH",
+    "prompt": "we blew the name and number budget somewhere in the middle",
+    "pick": "argument-arc",
+    "ok": true
+  },
+  {
+    "skill": "argument-arc",
+    "cell": "SL",
+    "prompt": "each part is fine alone but together they do not add up to anything",
+    "pick": "tighten-paper",
+    "ok": false
+  },
+  {
+    "skill": "argument-arc",
+    "cell": "SL",
+    "prompt": "my advisor cannot tell what the conclusion depends on",
+    "pick": "argument-arc",
+    "ok": true
+  },
+  {
+    "skill": "argument-arc",
+    "cell": "SL",
+    "prompt": "the ending arrives without having been earned",
+    "pick": "NONE",
+    "ok": false
+  },
+  {
+    "skill": "argument-arc",
+    "cell": "SL",
+    "prompt": "someone asked me what the point was and I gave three answers",
+    "pick": "NONE",
+    "ok": false
+  }
+]

@@ -1,0 +1,139 @@
+{
+  "trials": 3,
+  "competitors": 36,
+  "results": [
+    {
+      "skill": "grade-paper-writing",
+      "cell": "AH",
+      "prompt": "grade the writing craft in this draft and name the offending sentence in each dimension",
+      "trials": 3,
+      "rate": 1,
+      "errored": 0,
+      "overlap": 0.875,
+      "lexArgmax": "grade-paper-writing",
+      "buckets": [
+        "TARGET",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "skill": "grade-paper-writing",
+      "cell": "AH",
+      "prompt": "run the blind multi-grader panel over the prose clarity and jargon discipline",
+      "trials": 3,
+      "rate": 1,
+      "errored": 0,
+      "overlap": 1,
+      "lexArgmax": "grade-paper-writing",
+      "buckets": [
+        "TARGET",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "skill": "grade-paper-writing",
+      "cell": "AH",
+      "prompt": "score the title, the abstract and the intro architecture one to five",
+      "trials": 3,
+      "rate": 1,
+      "errored": 0,
+      "overlap": 0.667,
+      "lexArgmax": "grade-paper-writing",
+      "buckets": [
+        "TARGET",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "skill": "grade-paper-writing",
+      "cell": "AH",
+      "prompt": "grade how well this reads, hedge stacking included, and give me the fix for each",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 0.857,
+      "lexArgmax": "grade-paper-writing",
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "SILENT"
+      ],
+      "othersFired": []
+    },
+    {
+      "skill": "grade-paper-writing",
+      "cell": "SH",
+      "prompt": "the abstract reads like a wall of jargon",
+      "trials": 3,
+      "rate": 0.6666666666666666,
+      "errored": 0,
+      "overlap": 1,
+      "lexArgmax": "grade-paper-writing",
+      "buckets": [
+        "SILENT",
+        "TARGET",
+        "TARGET"
+      ],
+      "othersFired": []
+    },
+    {
+      "skill": "grade-paper-writing",
+      "cell": "SH",
+      "prompt": "the intro architecture is fine but the prose clarity is not",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 0.8,
+      "lexArgmax": "grade-paper-writing",
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "OTHER"
+      ],
+      "othersFired": [
+        "cold-read-diff"
+      ]
+    },
+    {
+      "skill": "grade-paper-writing",
+      "cell": "SH",
+      "prompt": "there is hedge stacking everywhere and the point never lands",
+      "trials": 3,
+      "rate": 0.3333333333333333,
+      "errored": 0,
+      "overlap": 0.667,
+      "lexArgmax": "grade-paper-writing",
+      "buckets": [
+        "OTHER",
+        "TARGET",
+        "OTHER"
+      ],
+      "othersFired": [
+        "tighten-paper",
+        "tighten-paper"
+      ]
+    },
+    {
+      "skill": "grade-paper-writing",
+      "cell": "SH",
+      "prompt": "the writing does not read well even though the draft is finished",
+      "trials": 3,
+      "rate": 0,
+      "errored": 0,
+      "overlap": 0.667,
+      "lexArgmax": "grade-paper-writing",
+      "buckets": [
+        "SILENT",
+        "SILENT",
+        "SILENT"
+      ],
+      "othersFired": []
+    }
+  ]
+}
