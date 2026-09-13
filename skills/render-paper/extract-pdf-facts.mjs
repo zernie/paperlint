@@ -35,6 +35,7 @@ import {
 } from "node:fs";
 import { createHash } from "node:crypto";
 import { join, dirname, basename } from "node:path";
+import { isMain } from "../paper-pipeline/scripts/consumer.mjs";
 
 const ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 
@@ -235,7 +236,12 @@ export function resolveTarget(arg) {
   return { paperDir, pdf, decl: decl || {} };
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// 🔴 `isMain`, А НЕ `import.meta.url === `file://${process.argv[1]}``. Node приводит точку входа
+// к РЕАЛЬНОМУ пути для `import.meta.url`, но оставляет `process.argv[1]` как набрано, поэтому
+// через симлинк они не равны и CLI молча не исполняется — процесс выходит 0, не сделав ничего.
+// Потребитель добирается до этих скриптов именно через симлинк. Наблюдено 14.09 на прогоне
+// 34784079821: `extract-pdf-facts.mjs --strict` вернул RC=0 и не создал файл фактов.
+if (isMain(import.meta.url)) {
   const argv = process.argv.slice(2);
   const strict = argv.includes("--strict");
   const [target, venue, kind] = argv.filter((a) => a !== "--strict");

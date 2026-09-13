@@ -25,6 +25,7 @@
  * planted empty glob.
  */
 import { ESLint } from "eslint";
+import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
 
 /** ESLint accepts severities as strings and as numbers; `off` and `0` are the same thing. */
 const isOff = (v) => {
@@ -63,7 +64,12 @@ export async function rulesSeeFiles({ cwd }) {
 }
 
 // CLI entry. Guarded so the harness can import the function without running the process exit.
-if (import.meta.url === `file://${process.argv[1]}`) {
+// 🔴 `isMain`, А НЕ `import.meta.url === `file://${process.argv[1]}``. Node приводит точку входа
+// к РЕАЛЬНОМУ пути для `import.meta.url`, но оставляет `process.argv[1]` как набрано, поэтому
+// через симлинк они не равны и CLI молча не исполняется — процесс выходит 0, не сделав ничего.
+// Потребитель добирается до этих скриптов именно через симлинк. Наблюдено 14.09 на прогоне
+// 34784079821: `extract-pdf-facts.mjs --strict` вернул RC=0 и не создал файл фактов.
+if (isMain(import.meta.url)) {
   const { rules, linted, blind } = await rulesSeeFiles({ cwd: process.cwd() });
   for (const { rule, files } of rules) console.log(`${String(files).padStart(4)}  ${rule}`);
   console.log(`\n${rules.length} rule(s) declared, ${linted} file(s) linted.`);

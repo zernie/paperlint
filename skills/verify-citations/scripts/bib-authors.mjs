@@ -47,6 +47,7 @@
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join, extname } from "node:path";
 import { headings as mdHeadings, requireMarkdown } from "../../../lib/markdown.mjs";
+import { isMain } from "../../paper-pipeline/scripts/consumer.mjs";
 
 const DBLP = "https://dblp.org/search/publ/api";
 
@@ -397,4 +398,9 @@ async function main() {
   process.exit(findings.length ? 1 : unchecked.length ? 2 : 0);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) await main();
+// 🔴 `isMain`, А НЕ `import.meta.url === `file://${process.argv[1]}``. Node приводит точку входа
+// к РЕАЛЬНОМУ пути для `import.meta.url`, но оставляет `process.argv[1]` как набрано, поэтому
+// через симлинк они не равны и CLI молча не исполняется — процесс выходит 0, не сделав ничего.
+// Потребитель добирается до этих скриптов именно через симлинк. Наблюдено 14.09 на прогоне
+// 34784079821: `extract-pdf-facts.mjs --strict` вернул RC=0 и не создал файл фактов.
+if (isMain(import.meta.url)) await main();
