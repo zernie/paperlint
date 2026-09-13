@@ -80,8 +80,14 @@ runs:
         RPP_PATHS: ${{ inputs.paths }}
         RPP_MAXWARN: ${{ inputs.max-warnings }}
       run: |
+        # 🔴 `|| RC=$?` IS LOAD-BEARING, NOT STYLE. GitHub runs composite `shell: bash` as
+        # `bash --noprofile --norc -eo pipefail`, so a bare `npx eslint` that exits non-zero
+        # ABORTS THE SCRIPT and the guard below never runs — measured, not reasoned: the line
+        # after a failing command did not print. That is the whole error path of this action
+        # (a bad config, an unreadable report, a non-zero ESLint), so under `-e` the guard was
+        # reachable ONLY on success, which is the one case it was not written for.
+        RC=0
         npx eslint --no-config-lookup --config "$RPP_CONFIG" \
-          --max-warnings="$RPP_MAXWARN" -f json -o "$RUNNER_TEMP/eslint.json" $RPP_PATHS
-        RC=$?
+          --max-warnings="$RPP_MAXWARN" -f json -o "$RUNNER_TEMP/eslint.json" $RPP_PATHS || RC=$?
         node "$GITHUB_ACTION_PATH/scripts/eslint-report-guard.mjs" \
           "$RUNNER_TEMP/eslint.json" "$RC" "$RPP_PATHS" "$RPP_CONFIG"

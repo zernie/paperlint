@@ -15,6 +15,7 @@ import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { spawnSync } from "node:child_process";
 import yaml from "js-yaml";
 import { guard } from "./scripts/eslint-report-guard.mjs";
 
@@ -43,8 +44,61 @@ assert.match(
   /eslint-report-guard\.mjs/,
   "the eslint step must hand its report to scripts/eslint-report-guard.mjs",
 );
-// ESLint's own code must reach the guard, not be swallowed by the pipeline.
-assert.match(eslintStep.run, /RC=\$\?/, "the eslint step must capture ESLint's return code");
+// ── I-b. THE STEP'S SHELL SEMANTICS, EXECUTED — not grepped ───────────────────────────────────
+//
+// 🔴 THE ASSERTION THAT STOOD HERE READ THE TEXT (`/RC=\$\?/`) AND WAS GREEN OVER A DEAD ERROR
+// PATH. GitHub runs composite `shell: bash` as `bash --noprofile --norc -eo pipefail`. Under `-e`
+// a bare `npx eslint` that exits non-zero ABORTS THE SCRIPT, so the guard on the next line never
+// ran — and the file contained the characters `RC=$?` either way, so the text assertion could not
+// tell the two apart. Every failure this action exists to explain (bad config, unreadable report,
+// non-zero ESLint) lives on exactly that dead path.
+//
+// So: execute the REAL `run:` block under the REAL flags, with a stub standing in for `npx`, and
+// require that the guard was reached and that ESLint's code came through it.
+const stubbedStepRun = (stubRc) => {
+  const bin = mkdtempSync(join(tmpdir(), "rpp-bin-"));
+  writeFileSync(
+    join(bin, "npx"),
+    `#!/usr/bin/env bash\n` +
+      `out=""\n` +
+      `while [ $# -gt 0 ]; do [ "$1" = "-o" ] && out="$2"; shift; done\n` +
+      `printf '%s' "$REPORT_JSON" > "$out"\n` +
+      `exit "$STUB_RC"\n`,
+    { mode: 0o755 },
+  );
+  return spawnSync("bash", ["--noprofile", "--norc", "-eo", "pipefail", "-c", eslintStep.run], {
+    cwd: TMP,
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      PATH: `${bin}:${process.env.PATH}`,
+      RUNNER_TEMP: TMP,
+      GITHUB_ACTION_PATH: HERE,
+      RPP_CONFIG: "eslint.config.mjs",
+      RPP_PATHS: ".",
+      RPP_MAXWARN: "-1",
+      STUB_RC: String(stubRc),
+      REPORT_JSON: JSON.stringify([{ filePath: "/x/a.md", messages: [] }]),
+    },
+  });
+};
+
+// FIRES-THROUGH: ESLint failed. This is the case the old text assertion could not see.
+{
+  const r = stubbedStepRun(2);
+  assert.match(
+    r.stdout,
+    /linted 1 file\(s\)/,
+    "the guard must still run when ESLint exits non-zero — under `bash -e` a bare command aborts the step",
+  );
+  assert.equal(r.status, 2, "ESLint's failure code must come through the guard, not be masked to 1");
+}
+// QUIET HALF: ESLint succeeded — the guard runs and passes 0 through.
+{
+  const r = stubbedStepRun(0);
+  assert.match(r.stdout, /linted 1 file\(s\)/, "the guard must run on success too");
+  assert.equal(r.status, 0, "a clean run must stay green");
+}
 
 // texcount is checked for EXISTENCE, not by the installer's exit code: an installer can put nothing
 // in place and report success (measured in this corpus, 2026-09-01).
@@ -97,4 +151,4 @@ assert.equal(
   assert.match(lines.join("\n"), /linted 1 file\(s\) · 0 finding\(s\)/);
 }
 
-console.log("✓ action.yml shape (parsed, not grepped) + guard behaviour, both halves — 17 assertions");
+console.log("✓ action.yml shape (parsed, not grepped) + guard behaviour, both halves — 20 assertions");
