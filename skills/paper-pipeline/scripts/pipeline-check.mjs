@@ -381,11 +381,23 @@ function newestSourceDate(dir) {
       const dirty = execFileSync("git", ["status", "--porcelain", "--", p], {
         encoding: "utf8",
       }).trim();
-      when = dirty
-        ? new Date(statSync(p).mtimeMs).toISOString().slice(0, 10)
+      // 🔴 ПУСТОЙ ВЫВОД `git log` — НЕ ДАТА. Команда выходит 0 и печатает НИЧЕГО, когда у пути нет
+      // истории: поверхностный клон (`actions/checkout` по умолчанию `fetch-depth: 1`), файл вне
+      // git, файл внутри `node_modules`. Раньше это пустое значение уходило дальше как `when`,
+      // весь `newestSourceDate` возвращал "", и `stale-continuous` со `stale-cold-read` молча
+      // переставали срабатывать — то есть проверка протухшести сама протухала без единого слова.
+      //
+      // Замер 14.09: фикстура `fixtures/dirty` живёт в этом пакете, у потребителя она под
+      // `node_modules`. Локально `git log` отдавал 2026-09-12 — дату коммита, КОТОРЫЙ ЭТОТ ПУТЬ
+      // УДАЛИЛ из дерева потребителя, то есть проверка держалась на призраке истории. В CI с
+      // поверхностным клоном призрака нет, вывод пуст, и харнесс упал на
+      // «pipeline-check reports stale-continuous on the dirty fixture» (прогон 34784079821).
+      const logged = dirty
+        ? ""
         : execFileSync("git", ["log", "-1", "--format=%cs", "--", p], {
             encoding: "utf8",
           }).trim();
+      when = logged || new Date(statSync(p).mtimeMs).toISOString().slice(0, 10);
     } catch {
       when = new Date(statSync(p).mtimeMs).toISOString().slice(0, 10); // no git here: fall back
     }
