@@ -1,7 +1,7 @@
 {
   "v": 1,
-  "generated": "2026-09-13T21:51:04.220Z",
-  "commit": "7140d4c",
+  "generated": "2026-09-15T14:16:29.203Z",
+  "commit": "6b37464",
   "runs": [
     {
       "kind": "skill",
@@ -20,7 +20,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/analyze-sibling-paper/analyze-sibling-paper.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "2d4b0a7952010bf1"
     },
     {
@@ -30,7 +30,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/argument-arc/argument-arc.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "cb8a027a1cf3319e"
     },
     {
@@ -40,7 +40,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/build-benchmark/build-benchmark.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "643f6584ca245828"
     },
     {
@@ -50,7 +50,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/camera-ready/camera-ready.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "74cd5a823f788d2f"
     },
     {
@@ -60,7 +60,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/cold-read-diff/cold-read-diff.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "9bc9444b994eee53"
     },
     {
@@ -70,7 +70,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/draft-paper/draft-paper.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "ccdf199e6b6a3e66"
     },
     {
@@ -80,7 +80,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/extend-paper/extend-paper.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "887c9ffdbcb71db4"
     },
     {
@@ -90,7 +90,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/find-venue/find-venue.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "c47520ef7bbb5dab"
     },
     {
@@ -100,7 +100,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/grade-paper-writing/grade-paper-writing.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "c4d5c6e916774b35"
     },
     {
@@ -110,7 +110,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/harden-paper/harden-paper.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "b99e9b65f8f731ac"
     },
     {
@@ -120,7 +120,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/map-prior-work/map-prior-work.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "5d32db42f25f15f9"
     },
     {
@@ -130,7 +130,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/osf-artifact-upload/osf-artifact-upload.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "a2ee966b6f727cb7"
     },
     {
@@ -140,7 +140,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/paper-adversarial-review/paper-adversarial-review.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "9afdf64840be6d39"
     },
     {
@@ -150,7 +150,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/paper-pipeline/paper-pipeline.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "4d5a2ca270c98fb6"
     },
     {
@@ -160,7 +160,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/paper-status/paper-status.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "4a1ce57b7b285e51"
     },
     {
@@ -170,7 +170,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/pc-panel-review/pc-panel-review.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "eee3fafd36d333d1"
     },
     {
@@ -180,7 +180,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/plan-paper-timeline/plan-paper-timeline.effects.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "b050b1dce00e08f5"
     },
     {
@@ -190,7 +190,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/plan-paper-timeline/plan-paper-timeline.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "b050b1dce00e08f5"
     },
     {
@@ -200,7 +200,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/render-paper/render-paper.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "b1150dc4e8504e0f"
     },
     {
@@ -210,7 +210,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/research-ideate/research-ideate.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "42eb6fc77404851f"
     },
     {
@@ -220,7 +220,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/study-accepted-papers/study-accepted-papers.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "19eaf42b81c91174"
     },
     {
@@ -230,7 +230,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/submit-paper/submit-paper.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "e2374e70a3f134ce"
     },
     {
@@ -240,7 +240,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/sweep-design-space/sweep-design-space.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "b7e00e1c92b249d4"
     },
     {
@@ -250,7 +250,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/tighten-paper/tighten-paper.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "13b188c980ebe7f1"
     },
     {
@@ -260,7 +260,7 @@
       "tier": "harness",
       "how": "colocated",
       "by": "skills/verify-citations/verify-citations.harness.mjs",
-      "at": "2026-09-13T21:51:04.198Z",
+      "at": "2026-09-15T14:16:29.181Z",
       "sha": "6a0d82da301f0845"
     }
   ]
