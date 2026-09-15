@@ -28,7 +28,7 @@ function run(src, options = OPTS) {
 }
 
 const fm = (body, extra = "") =>
-  ["---", "title: сосед", "created: 2026-08-01", extra, "---", "", body].filter(Boolean).join("\n");
+  ["---", "title: сосед", 'created: "2026-08-01"', extra, "---", "", body].filter(Boolean).join("\n");
 
 // ── 1. МОЛЧИТ, когда поле объявлено и значение допустимо ────────────────────────
 {
@@ -42,8 +42,8 @@ const fm = (body, extra = "") =>
 // ── 2. СРАБАТЫВАЕТ, когда поля нет ──────────────────────────────────────────────
 {
   const m = run(fm("Разбор без объявленного поля."));
-  assert.equal(m.length, 1, `ожидалась одна находка, пришло ${m.length}`);
-  assert.match(m[0].message, /нет поля `read`/, m[0].message);
+  assert.equal(m.length, 1, `случай 2: отсутствующее поле обязано давать РОВНО одну находку, пришло ${m.length}`);
+  assert.match(m[0].message, /нет поля `read`/, `случай 2: находка обязана называть «нет поля», пришла: ${m[0].message}`);
   assert.match(m[0].message, /что именно прочитано/, "подсказка из опции обязана доехать до текста");
   recordCheck("отсутствующее поле — находка, с подсказкой из опции");
 }
@@ -51,7 +51,7 @@ const fm = (body, extra = "") =>
 // ── 3. СРАБАТЫВАЕТ на значении не из списка ─────────────────────────────────────
 {
   const m = run(fm("Разбор.", "read: полностью"));
-  assert.equal(m.length, 1, `ожидалась одна находка, пришло ${m.length}`);
+  assert.equal(m.length, 1, `случай 3: значение вне словаря обязано давать одну находку, пришло ${m.length}`);
   assert.match(m[0].message, /`read: полностью` — значение не из списка/, m[0].message);
   recordCheck("значение вне словаря — находка, и она называет пришедшее значение");
 }
@@ -103,7 +103,7 @@ const fm = (body, extra = "") =>
 {
   const bare = "# Сосед\n\nРазбор без всякой шапки.\n";
   const m = run(bare);
-  assert.equal(m.length, 1, `ожидалась находка на документе без фронтматтера, пришло ${m.length}`);
+  assert.equal(m.length, 1, `случай 7: документ без фронтматтера обязан давать находку, пришло ${m.length}`);
   assert.match(m[0].message, /нет фронтматтера/, m[0].message);
   recordCheck("документ без фронтматтера не освобождается — иначе гейт обходится удалением шапки");
 }
@@ -114,10 +114,10 @@ const fm = (body, extra = "") =>
 // Случай проверяет обе стороны границы на неквотированной дате.
 {
   const oldUnquoted = ["---", "created: 2026-07-01", "---", "", "Без поля."].join("\n");
-  assert.deepEqual(run(oldUnquoted), [], "неквотированная СТАРАЯ дата обязана освобождать");
+  assert.deepEqual(run(oldUnquoted), [], "случай 8: неквотированная СТАРАЯ дата обязана освобождать");
 
   const newUnquoted = ["---", "created: 2026-08-01", "---", "", "Без поля."].join("\n");
-  assert.equal(run(newUnquoted).length, 1, "неквотированная НОВАЯ дата обязана включать проверку");
+  assert.equal(run(newUnquoted).length, 1, "случай 8: неквотированная НОВАЯ дата обязана ВКЛЮЧАТЬ проверку");
 
   const quoted = ["---", 'created: "2026-08-01"', "---", "", "Без поля."].join("\n");
   assert.equal(run(quoted).length, 1, "квотированная дата ведёт себя так же, как неквотированная");
@@ -128,7 +128,7 @@ const fm = (body, extra = "") =>
 {
   const broken = ["---", "title: [нет закрывающей", "created: 2026-08-01", "---", "", "Тело."].join("\n");
   const m = run(broken);
-  assert.equal(m.length, 1, `ожидалась одна находка, пришло ${m.length}`);
+  assert.equal(m.length, 1, `случай 9: сломанный YAML обязан давать одну находку, пришло ${m.length}`);
   assert.match(m[0].message, /не разбирается как YAML/, m[0].message);
   recordCheck("неразбираемая шапка — отдельное сообщение, а не молчание и не «поля нет»");
 }
@@ -139,7 +139,7 @@ const fm = (body, extra = "") =>
 {
   const empty = ["---", "created: 2026-08-01", "read:", "---", "", "Тело."].join("\n");
   const m = run(empty);
-  assert.equal(m.length, 1, `ожидалась одна находка, пришло ${m.length}`);
+  assert.equal(m.length, 1, `случай 10: пустое значение обязано читаться как отсутствующее, пришло ${m.length}`);
   assert.match(m[0].message, /нет поля `read`/, m[0].message);
   recordCheck("пустое значение поля = отсутствующее, а не «значение ---»");
 }
