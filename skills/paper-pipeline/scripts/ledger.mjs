@@ -382,6 +382,52 @@ export function readLedger() {
 }
 
 /**
+ * The most recent run of one key — by TIMESTAMP, not by position in the file.
+ *
+ * 🔴 WHY THIS IS NOT `runs[runs.length - 1]`, WHICH IS WHAT IT USED TO BE. The comment at the
+ * top of this file works out that "last row wins" is right for repeated runs of one check, and
+ * that is still the rule here. What it assumed without saying is that FILE ORDER EQUALS TIME
+ * ORDER. That holds for an append-only file with one writer, and it stops holding the moment two
+ * branches both append and git merges them: `.gitattributes` in the consumer declares
+ * `merge=union`, which concatenates "ours, then theirs" and orders nothing.
+ *
+ * Measured 2026-09-15 (external review, P1), two rows of one check:
+ *
+ *     by position in file   ABSTAINED findings=0  2026-09-14
+ *     by timestamp          FINDING   findings=3  2026-09-15
+ *
+ * So a merge that lands an older row after a newer one HIDES the finding and reports a clean
+ * state — a substituted verdict, not a cosmetic reordering of a log.
+ *
+ * ⚠️ THE FIX BELONGS TO THE READER, AND THAT IS THE ARCHITECTURAL POINT. A merge driver that
+ * sorts by `ts` would close exactly one source of disorder and would have to be installed on
+ * every clone (`git config merge.<name>.driver`), which is the cost `union` exists to avoid.
+ * Disorder has other doors: a hand-edited ledger, two processes appending at once, a restored
+ * backup. Making the READER independent of order closes all of them at once, and after it the
+ * merge driver's behaviour stops mattering.
+ *
+ * Ties and missing stamps keep the OLD behaviour on purpose, so this change is a strict
+ * refinement rather than a new policy:
+ *   - equal `ts`   -> the later row in the file wins (two runs inside one second: file order is
+ *                     the only information there is, and it is the true order for one writer);
+ *   - one row has no parsable `ts` -> the stamped row wins (a stamp is evidence, its absence is not);
+ *   - neither has one -> file order, exactly as before.
+ */
+function latestRun(runs) {
+  let best = null;
+  let bestTime = null;
+  for (const r of runs) {
+    const t = Date.parse(r.ts ?? '');
+    const time = Number.isFinite(t) ? t : null;
+    if (best === null) { best = r; bestTime = time; continue; }
+    if (time === null && bestTime === null) { best = r; bestTime = time; continue; }
+    if (time === null) continue;
+    if (bestTime === null || time >= bestTime) { best = r; bestTime = time; }
+  }
+  return best;
+}
+
+/**
  * The computed state of every CHECK for one paper. This REPLACES the hand-maintained table —
  * it is not a second copy of it. Nothing here is declared; every field is derived from the
  * ledger plus the current bytes on disk.
@@ -400,7 +446,7 @@ export function status(paperDir, { gates } = {}) {
   return known.map((g) => {
     const { key, skill, check } = parseGate(g);
     const runs = rows.filter((r) => rowKey(r) === key);
-    const last = runs[runs.length - 1] || null;
+    const last = latestRun(runs);
     const nowSkill = skillHash(skill);
 
     let state;
