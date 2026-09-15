@@ -27,7 +27,7 @@
  * interrupted run cannot leave a neutered checker behind.
  */
 import { runMutations } from "../../../lib/mutation-driver.mjs";
-import { resolve, dirname, join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { consumerRoot } from "./consumer.mjs";
 
