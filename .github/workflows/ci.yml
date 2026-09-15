@@ -111,5 +111,19 @@ jobs:
       # runner DISCOVERS batteries rather than listing them, errors on finding zero, and errors
       # on any harness that has no battery — see scripts/run-mutations.mjs for why (the hand
       # list it replaced had already gone stale by one file, silently).
+      # 🔴 THE `claude` CLI IS A TEST DEPENDENCY HERE, and its absence was NOT harmless.
+      # `plan-paper-timeline.effects.harness.mjs` spawns the real agent binary; without it the
+      # harness SKIPS, the skip exits 0 through `vigiles test`, and the mutation driver read that
+      # as "the mutation survived". Measured 2026-09-15 on run 34966606186: two survivors in CI,
+      # zero locally, the difference being this binary and nothing about the code.
+      #
+      # The driver now REFUSES a battery whose harness skips (lib/mutation-driver.mjs), so the
+      # wrong diagnosis is gone either way. This step is the other half: it restores the evidence
+      # instead of settling for an honest "no evidence". No API key — the tier drives a scripted
+      # stand-in, which is why it costs seconds and $0.
+      - name: the agent binary the effects tier observes
+        run: npm i -g @anthropic-ai/claude-code
+        timeout-minutes: 3
+
       - name: npm run mutations
         run: npm run mutations
