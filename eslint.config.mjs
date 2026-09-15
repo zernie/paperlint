@@ -13,6 +13,8 @@
  */
 import { texLanguage } from "./eslint-rules/latex-language.mjs";
 import texBuild from "./eslint-rules/tex-build.mjs";
+import markdown from "@eslint/markdown";
+import reviewRules from "./eslint-rules/review-findings-cause.mjs";
 
 export default [
   /**
@@ -64,6 +66,20 @@ export default [
       "no-misleading-character-class": "error",
       "no-prototype-builtins": "error",
     },
+  },
+  /**
+   * Первое markdown-правило пакета — единица 1 шага 9 (переезд из потребителя).
+   * Блок нацелен на СВОИ фикстуры: у потребителя тот же плагин наводится на его
+   * каталог отчётов ревью. `warn` по той же причине, что и у .tex ниже: фикстуры
+   * дефектны НАРОЧНО, и `error` означал бы, что `npx eslint .` красный на здоровом
+   * чекауте. Сигнал живёт в `npm test`, а не в числе предупреждений.
+   */
+  {
+    files: ["fixtures/review-findings-cause/**/*.md"],
+    plugins: { markdown, review: reviewRules },
+    language: "markdown/gfm",
+    languageOptions: { frontmatter: "yaml" },
+    rules: { "review/findings-cause": "warn" },
   },
   {
     files: ["**/*.tex"],
