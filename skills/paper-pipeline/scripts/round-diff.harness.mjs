@@ -42,12 +42,10 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve, dirname } from "node:path";
+import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { consumerRoot } from "./consumer.mjs";
 const HERE = dirname(fileURLToPath(import.meta.url));
 
-const ROOT = consumerRoot();
 const SCRIPT = join(HERE, "round-diff.mjs");
 const tmp = mkdtempSync(join(tmpdir(), "round-diff-harness-"));
 

@@ -21,7 +21,7 @@
  * The source is restored in a `finally`, and the run refuses to start on a dirty working tree.
  */
 import { runMutations } from "../../../lib/mutation-driver.mjs";
-import { resolve, dirname, join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { consumerRoot } from "./consumer.mjs";
 

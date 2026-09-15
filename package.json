@@ -13,6 +13,7 @@
     "mutations": "node scripts/run-mutations.mjs"
   },
   "devDependencies": {
+    "@eslint/markdown": "^8.0.3",
     "@eslint/plugin-kit": "^0.7.2",
     "@retorquere/bibtex-parser": "^10.0.1",
     "@unified-latex/unified-latex-util-parse": "^1.8.4",
