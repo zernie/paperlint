@@ -126,6 +126,48 @@ try {
   check('and the sibling keeps its own row', both[1].findings, 0);
   check('the sibling did not inherit the finding', both[1].everFound, false);
 
+  // ── 8. ORDER IN THE FILE IS NOT ORDER IN TIME ────────────────────────────────────────────
+  // The defect (external review, P1, 2026-09-15): `status()` took `runs[runs.length - 1]`, so the
+  // verdict was decided by POSITION. The consumer declares `merge=union` for this ledger, and
+  // union concatenates "ours, then theirs" without ordering anything — so a merge that lands an
+  // older row after a newer one hid the finding and reported a clean state.
+  //
+  // The fixture reproduces exactly that shape: both rows are REAL (written by `record`), only
+  // their order in the file is swapped, which is all a union merge does. The older row's stamp is
+  // set explicitly rather than slept for, so the test is deterministic and costs no wall clock.
+  const LEDGER_FILE = process.env.PIPELINE_LEDGER;
+  writeFileSync(join(paper, 'merge.md'), '---\nfindings: 3\n---\n');
+  record({ skill: gate, check: 'merge-order', paper, kind: 'ABSTAINED', reason: 'no-witness' });
+  record({ skill: gate, check: 'merge-order', paper, kind: 'FINDING', findings: 3, report: 'merge.md' });
+
+  {
+    const all = readFileSync(LEDGER_FILE, 'utf8').split('\n').filter(Boolean);
+    const [abstained, finding] = all.slice(-2).map((l) => JSON.parse(l));
+    abstained.ts = '2026-01-01T00:00:00.000Z'; // заведомо старше, без зависимости от таймера
+    writeFileSync(
+      LEDGER_FILE,
+      [...all.slice(0, -2), JSON.stringify(finding), JSON.stringify(abstained)].join('\n') + '\n',
+    );
+  }
+
+  const merged = status(paper, { gates: [`${gate}/merge-order`] })[0];
+  check('an older row sitting AFTER a newer one does not hide the finding', merged.findings, 3);
+  check('...and the verdict does not come from the stale abstention', merged.abstained, null);
+
+  // The other half: EQUAL stamps must keep the old behaviour — file order decides. Two runs inside
+  // one second carry no other information, and for a single writer file order is the true order.
+  {
+    const all = readFileSync(LEDGER_FILE, 'utf8').split('\n').filter(Boolean);
+    const [finding, abstained] = all.slice(-2).map((l) => JSON.parse(l));
+    const sameTs = finding.ts;
+    writeFileSync(
+      LEDGER_FILE,
+      [...all.slice(0, -2), JSON.stringify({ ...finding, ts: sameTs }), JSON.stringify({ ...abstained, ts: sameTs })].join('\n') + '\n',
+    );
+    const tie = status(paper, { gates: [`${gate}/merge-order`] })[0];
+    check('with equal stamps the later row in the file still wins', tie.findings, 0);
+  }
+
 } finally {
   // The ledger lives inside `tmp`, so removing the fixture removes it too. Nothing to restore,
   // which is the point — there is no window in which real history is at risk.
