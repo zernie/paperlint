@@ -16,20 +16,32 @@ deadline attached.
 The wager is narrow and testable: **anything a reviewer could check mechanically should fail
 the build, not the review.** Everything that needs taste stays prose and says so out loud.
 
-## Status — measured 2026-09-16
+## What is actually in here
 
-| | |
-|---|---:|
-| ESLint rules over paper sources | **6** |
-| harnesses — one per surface, both halves | **45** |
-| mutation batteries — a green harness proves nothing alone | **22** |
-| paper-stage skills | **24** |
-| hooks, shipped as runnable `.mjs` | **5** |
-| files tracked | 308 |
+Four kinds of thing, and the numbers only matter once you know what each kind *is*.
+
+**Rules that read your paper and fail the build.** They run under ESLint, over `.tex` and `.md`,
+and they check the things a reviewer would check by hand — a stage that claims a PDF has the
+bytes to back it, a bibliography entry a reader can actually reach, `§` where the venue wants
+"Section". Six of them today.
+
+**A test beside every rule, and it has to prove BOTH halves** — that the rule fires on a
+defect planted on purpose, *and* that it stays silent on clean input. Half a test is how a
+rule that checks nothing passes for a rule that found nothing. Forty-five of those.
+
+**A battery that tries to break each test.** It edits the rule to remove one load-bearing
+property and requires the test to go red at the assertion that property belongs to. A green
+test proves nothing on its own: silence is the success state of every check here, so "it
+passed" and "it cannot fail" look identical from outside. Twenty-two batteries, and CI
+refuses a test that no battery can kill.
+
+**Skills that drive the writing**, one per stage — pick a venue, draft, tighten, review,
+submit, camera-ready. Twenty-four. These are prose for a model to follow, not code: the
+stages that need taste stay taste, and say so.
 
 ```bash
-npm test             # every harness on disk
-npm run mutations    # every battery; a harness nothing can kill is not a test
+npm test                  # every test on disk
+npm run test:mutations    # try to break each test; a test nothing can kill is not a test
 ```
 
 ## What may live here, and what may not
@@ -46,18 +58,59 @@ notes. If it would need one line changed — yes, and that line becomes an optio
 
 ## Why it is not "yet another academic skills suite"
 
-Measured 2026-09-10 by cloning the two nearest neighbours, not by reading their descriptions:
+Both neighbours were **cloned and read**, 2026-09-10, rather than judged by their descriptions.
+The first finding was that a previous version of this section was wrong: they are not thin, and
+they do have enforcement.
 
-- [`Imbad0202/academic-research-skills`](https://github.com/Imbad0202/academic-research-skills)
-  — 47k stars, 2 590 files, 430 python files, its own linters and a PreToolUse guard. It is
-  **CC BY-NC 4.0**: not an open-source licence, commercial use restricted by design.
-- [`tlorans/research-paper-pipeline`](https://github.com/tlorans/research-paper-pipeline)
-  — a control plane over the above. Its stage gate compares a threshold against a `score`
-  that the audited model itself wrote.
+[`Imbad0202/academic-research-skills`](https://github.com/Imbad0202/academic-research-skills)
+— 47 259 stars, 2 590 files, 430 of them Python. It ships a markdown linter (224 lines), a
+skill-frontmatter linter (267), a CI threshold gate, a 241-line PreToolUse write guard, and a
+gold-set calibration with declared acceptance thresholds (FNR < 0.15, FPR < 0.10). Anyone who
+tells you it is "just prompts" has not opened it.
 
-Neither ships a single rule that reads a LaTeX source. Searching both trees for `eslint` and
-`aclpubcheck` returns **zero**. That gap — mechanical checks on the paper's own source — is
-what this repo is for.
+[`tlorans/research-paper-pipeline`](https://github.com/tlorans/research-paper-pipeline)
+— a control plane over the above.
+
+### The difference is WHAT a gate is allowed to read
+
+Here is that project's stage gate, verbatim from its `pipeline.yaml`:
+
+```yaml
+  - id: integrity
+    gate:
+      field: score
+      op: gte
+      threshold: 8
+```
+
+🔴 **`score` is written by the model being audited.** Its own `agents/auditor.md` asks the model
+to score itself, and the gate then compares that number to 8. A model that would rather pass
+than fail has one obvious move, and no part of the pipeline can tell a paper that improved from
+a model that got more generous. The threshold is real; the measurement it reads is not.
+
+Every gate in this repo takes its input from something the model does not author: bytes on disk,
+an AST node, the exit code of `pdflatex`. Where that is impossible — is the argument any good,
+does the prose land — this repo does not pretend, and says so in the skill.
+
+### And nothing in either reads the paper's source
+
+Searching both trees for `eslint` and `aclpubcheck` returns **zero**. Neither ships a rule that
+opens a `.tex` file. That is the gap: a paper is a repository long before it is a PDF, and the
+repository was going unchecked.
+
+### Venue facts are data here, not memory
+
+`skills/submit-paper/references/venues/` carries a card per venue — page limit, blind policy,
+what the CFP actually says, the anonymisation rules, plus a machine-readable `.jsonc` and a
+`.tex` template. Three venues today (AgenticDev @ ASE, AISec @ CCS, REALM @ EMNLP). Each card
+carries its own "re-verify the CFP each year" line with the URL, because venue facts rot yearly
+and a fact nobody re-checks is worse than no fact.
+
+### And it can actually be used
+
+The neighbour above is **CC BY-NC 4.0** — not an open-source licence, commercial use restricted
+by design. This repo is MIT; see [Licence](#licence) for why that section also records the two
+months it got this wrong.
 
 ## Setup
 

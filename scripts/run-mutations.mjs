@@ -28,7 +28,7 @@
  * rollback leaves the mutant on disk. Each battery re-reads the file and verifies the rollback
  * byte for byte, so the window is small, but it is not zero.
  *
- * Run: `npm run mutations`
+ * Run: `npm run test:mutations`
  */
 import { execFileSync, spawnSync } from "node:child_process";
 import { readdirSync, statSync } from "node:fs";
