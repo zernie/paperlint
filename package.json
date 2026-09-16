@@ -15,9 +15,9 @@
   },
   "dependencies": {
     "@eslint/plugin-kit": "^0.7.2",
-    "@retorquere/bibtex-parser": "^10.0.1",
+    "@retorquere/bibtex-parser": "^11.0.0",
     "@unified-latex/unified-latex-util-parse": "^1.8.4",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^5.4.2"
   },
   "devDependencies": {
     "@eslint/markdown": "^8.0.3",
