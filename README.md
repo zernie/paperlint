@@ -23,21 +23,25 @@ Four kinds of thing, and the numbers only matter once you know what each kind *i
 **Rules that read your paper and fail the build.** They run under ESLint, over `.tex` and `.md`,
 and they check the things a reviewer would check by hand — a stage that claims a PDF has the
 bytes to back it, a bibliography entry a reader can actually reach, `§` where the venue wants
-"Section". Six of them today.
+"Section". <!-- count:rules -->10 of them today.
 
 **A test beside every rule, and it has to prove BOTH halves** — that the rule fires on a
 defect planted on purpose, *and* that it stays silent on clean input. Half a test is how a
-rule that checks nothing passes for a rule that found nothing. Forty-five of those.
+rule that checks nothing passes for a rule that found nothing. <!-- count:harnesses -->49 of those.
 
 **A battery that tries to break each test.** It edits the rule to remove one load-bearing
 property and requires the test to go red at the assertion that property belongs to. A green
 test proves nothing on its own: silence is the success state of every check here, so "it
-passed" and "it cannot fail" look identical from outside. Twenty-two batteries, and CI
+passed" and "it cannot fail" look identical from outside. <!-- count:batteries -->26 batteries, and CI
 refuses a test that no battery can kill.
 
 **Skills that drive the writing**, one per stage — pick a venue, draft, tighten, review,
-submit, camera-ready. Twenty-four. These are prose for a model to follow, not code: the
+submit, camera-ready. <!-- count:skills -->24. These are prose for a model to follow, not code: the
 stages that need taste stay taste, and say so.
+
+Every number above is produced by `npm run check:readme`, not typed by hand — it recounts the
+tree and fails when the prose drifts. It already had: the four counts here said 45 harnesses and
+22 batteries while the tree held 49 and 26.
 
 ```bash
 npm test                  # every test on disk

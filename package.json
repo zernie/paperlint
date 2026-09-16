@@ -11,7 +11,8 @@
     "lint:skills": "vigiles lint",
     "check:globs": "node scripts/rules-see-files.mjs",
     "check:content-only": "node scripts/rules-are-content-only.mjs",
-    "test:mutations": "node scripts/run-mutations.mjs"
+    "test:mutations": "node scripts/run-mutations.mjs",
+    "check:readme": "node scripts/readme-numbers.mjs"
   },
   "dependencies": {
     "@eslint/plugin-kit": "^0.7.2",
