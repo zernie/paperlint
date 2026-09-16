@@ -47,6 +47,7 @@
  * many, and the field must not be weaker than the filenames it describes.
  */
 import { existsSync, statSync, readdirSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { load } from "js-yaml";
 
@@ -84,6 +85,21 @@ function frozenPdfs(versionsDir) {
     out.push({ name, date: m[1], stage: m[2] });
   }
   return out;
+}
+
+/**
+ * Does this object name a commit that EXISTS? Not "does the text contain a hex string" —
+ * the predecessor asked the second question and passed on a hash that is not in the
+ * repository at all (measured 2026-09-16: a paper's scorecard recorded
+ * `Final PDF = commit f0ea066`, and `git cat-file` does not resolve it).
+ */
+function commitExists(sha, cwd) {
+  try {
+    execFileSync("git", ["cat-file", "-e", `${sha}^{commit}`], { cwd, stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export default {
@@ -194,6 +210,72 @@ export default {
                 messageId: "fileNotDeclared",
                 data: { file: f.name, stage: f.stage, date: f.date },
               });
+            }
+          },
+        };
+      },
+    },
+
+    /**
+     * `paper/source` — a declared stage must be tied to a source the repository can still
+     * produce, and the tie must RESOLVE.
+     *
+     * Separate from `paper/stages` for one reason: SEVERITY. The byte checks are the
+     * consumer's gate (error) because a wrong size is mechanical and fixable in the same
+     * pass. A missing or dead commit reference is equally binary but only the AUTHOR knows
+     * which build actually went to the portal, so failing a build on it would be a gate the
+     * author cannot clear — and a gate people cannot clear is a gate they switch off.
+     *
+     * 🔴 WHAT IS NOT CHECKED, and the omission is deliberate: that the commit is not LATER
+     * than the stage date. It reads like a free invariant — source cannot postdate the build
+     * it produced — and it is wrong here, because this repository SQUASH-merges: a paper
+     * submitted on 22 July has its source in a commit dated 5 August, since the session that
+     * carried it was squashed afterwards. The check would fire on correct input, and for a
+     * rule that is the one failure mode worse than missing a defect.
+     */
+    source: {
+      meta: {
+        type: "problem",
+        docs: {
+          description:
+            "объявленная стадия привязана к коммиту, и этот коммит РЕЗОЛВИТСЯ, а не просто выглядит как хеш",
+        },
+        schema: [],
+        messages: {
+          noSource:
+            "стадия «{{stage}}» ({{date}}) не привязана ни к коммиту, ни к замороженному исходнику. Git хранит исходник вечно — но только если записано, КАКОЙ",
+          deadCommit:
+            "стадия «{{stage}}» ({{date}}) ссылается на коммит `{{sha}}`, которого в репозитории НЕТ — привязка мёртвая, сверить сборку не с чем",
+        },
+      },
+      create(context) {
+        const dir = dirname(context.filename);
+        return {
+          yaml(node) {
+            let data;
+            try {
+              data = load(node.value ?? "");
+            } catch {
+              return; // `paper/stages` уже отчиталось о нечитаемом YAML
+            }
+            const raw = data?.stages;
+            if (!Array.isArray(raw)) return;
+            for (const rec of raw) {
+              const stage = String(rec?.stage ?? "");
+              if (!STAGES.includes(stage)) continue;
+              const date = isoDate(rec?.date);
+              const sha = rec?.commit === undefined ? "" : String(rec.commit);
+              if (sha !== "") {
+                // Каталог статьи, а не `context.cwd`: git сам поднимется до корня
+                // репозитория, и правило перестаёт зависеть от того, откуда его позвали.
+                if (!commitExists(sha, dir))
+                  context.report({ node, messageId: "deadCommit", data: { stage, date, sha } });
+                continue;
+              }
+              // ⚠️ Освобождение, а не дыра: сборка могла идти НЕ из этого репозитория, и тогда
+              // доказательством служат сами байты исходника рядом с pdf.
+              if (existsSync(join(dir, "versions", `${date}-${stage}.tex`))) continue;
+              context.report({ node, messageId: "noSource", data: { stage, date } });
             }
           },
         };
