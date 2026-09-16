@@ -44,9 +44,23 @@
  *
  * ── WHERE THE CONSUMER'S PAPERS ARE ─────────────────────────────────────────
  * One declaration, `"research-paper-pipeline": { "papers": "…" }`, read the way a hook is able to
- * read anything at all: `needs: [provide("pkg", "cat package.json")]`. The alternatives were
- * measured and killed in `eslint-rules/papers.mjs` — an env var cannot be read from a hook at
- * all (no imports), and a symlinked root makes ESLint report zero files.
+ * read anything at all: `needs: [provide("pkg", "cat \"${CLAUDE_PROJECT_DIR:-.}/package.json\"")]`.
+ * The alternatives were measured and killed in `eslint-rules/papers.mjs` — an env var cannot be
+ * read from a hook at all (no imports), and a symlinked root makes ESLint report zero files.
+ *
+ * 🔴 THE PATH IS ANCHORED, AND THAT IS NOT DECORATION. vigiles runs a provider "via execSync in
+ * the hook's cwd", so a bare `cat package.json` resolves against whatever directory the hook
+ * PROCESS happens to have — which is set by the consumer's wiring, a string this hook cannot
+ * see and does not control. With the wiring this package documents (`cd "$CLAUDE_PROJECT_DIR"
+ * && node …`) the bare read is correct; without it, any tool cwd outside the project root makes
+ * the read fail, and by the paragraph below that failure DENIES EVERY BASH COMMAND until
+ * something external resets the cwd — `pwd` included, so the wedge cannot be escaped from the
+ * shell. Reported 2026-09-16 by a session that hit exactly that after a `cd` into a subtree.
+ *
+ * ⚠️ The wiring is not hypothetical to lose: `vigiles compile` has REGENERATED it without the
+ * `cd` prefix once already in this corpus. A gate whose blast radius is "all of Bash" must not
+ * rest on a prefix a code generator can drop. `${CLAUDE_PROJECT_DIR:-.}` keeps the old behaviour
+ * when the variable is absent, so this is strictly wider than what it replaces.
  *
  * 🔴 AN UNREADABLE DECLARATION DENIES, IT DOES NOT DEFAULT. Measured 2026-09-12: when the
  * provider's command fails — no `package.json`, or one with conflict markers in it — `e.ctx.pkg`
@@ -352,7 +366,7 @@ const namesPaperSource = (raw, prefixes) =>
 export default experimental_defineHook({
   on: "PreToolUse",
   match: tools("Bash"),
-  needs: [provide("pkg", "cat package.json")],
+  needs: [provide("pkg", 'cat "${CLAUDE_PROJECT_DIR:-.}/package.json"')],
   decide: (e) => {
     const root = papersRoot(e.ctx.pkg);
     // A `deny` object rather than a string means the root could not be established. Returning it
