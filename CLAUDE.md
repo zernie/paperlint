@@ -60,7 +60,7 @@ Not optional and not "when something breaks": `vigiles` is a real dependency, an
 harness, spec and hook resolves through it. A container where `npm install` never ran fails
 in ways that look like broken code rather than a missing install.
 
-## The four rules that decide what may live here
+## The eight rules that decide what may live here — and what may not be written
 
 **1. Mechanism goes to vigiles, data stays here.** A file that names nothing local — no rule
 of ours, no fixture of ours — is machinery, and machinery belongs in
@@ -110,6 +110,29 @@ assumption is not this package — it is somebody else's whole session.
 "MIT — see LICENSE" on 2026-09-16. There is no `LICENSE` file and `package.json` says
 `UNLICENSED`. Publishing is irreversible and this repo is public: every factual claim in a
 document meant for strangers gets checked against the disk in the same pass that writes it.
+
+**8. 🔴 NEVER WRITE A GLOB OR A REGEX INSIDE A BLOCK COMMENT.** An asterisk followed by a
+slash **ends the comment**, wherever it appears — in a path (a folder wildcard), in a regex
+whose last literal is an asterisk (one matching bold markup, for instance), in a quoted
+example. The rest of the comment becomes code, the file stops parsing, and the error points
+at a line further down that is perfectly fine.
+
+⚠️ Note this rule does not quote the sequence either, not even here. A documented example is
+the thing that gets copied into code — and that is exactly how the fourth occurrence
+happened: it was copied out of a comment written to explain the first three.
+
+This is not a hypothetical and not a rare slip. **It fired four times in a single session on
+2026-09-16** — three in the consumer, once here — and each time the diagnosis cost minutes
+because `SyntaxError: Unexpected token '.'` says nothing about comments.
+
+| instead of | write |
+|---|---|
+| a glob with an asterisk and slash | spell it: "every folder under papers" |
+| a regex with an asterisk before a slash | describe what it matched, in words |
+| an example needing both | put it in a line comment (two slashes), never a block |
+
+⇒ **In a block comment, prose describes the pattern; it never quotes it.** If the exact
+characters matter, they belong in the code or in a line comment beside it.
 
 ## Distribution — no `smh init`, and that is a measured decision (2026-09-10)
 
