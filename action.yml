@@ -22,9 +22,12 @@ inputs:
     required: false
     default: eslint.config.mjs
   paths:
-    description: What to lint, as ESLint would take it on the command line.
-    required: false
-    default: "."
+    description: >-
+      What to lint, as ESLint would take it on the command line. REQUIRED, and deliberately
+      without a default: the previous default was "." — the whole checkout — so a caller who
+      never thought about scope still got a green job, over whatever happened to be in the
+      repository. Scope is the one thing this action cannot guess.
+    required: true
   max-warnings:
     description: >-
       Passed through to ESLint. The default -1 means warnings never fail the job: in this rule set
@@ -46,6 +49,23 @@ inputs:
 runs:
   using: composite
   steps:
+    # 🔴 `required: true` ABOVE IS A DECLARATION, NOT AN ENFORCEMENT. GitHub does not enforce
+    # required inputs for COMPOSITE actions — a caller who omits `paths` reaches this step with
+    # an empty string and no error of any kind. So the contract is checked here, where it can
+    # actually fail, rather than trusted where it is merely written down. Same reasoning as the
+    # green-zero guard below: the declaration and the check are different things.
+    - name: paths was actually given
+      shell: bash
+      env:
+        RPP_PATHS: ${{ inputs.paths }}
+      run: |
+        if [ -z "${RPP_PATHS// /}" ]; then
+          echo "::error::input \`paths\` is required and was empty. Name what to lint, e.g." \
+               "\`paths: papers\`. There is no default on purpose: linting the whole checkout" \
+               "by accident produces a green job over a scope nobody chose."
+          exit 1
+        fi
+
     # texlive-extra-utils is what carries /usr/bin/texcount. Cached, because the apt fetch is the
     # only network hop in this action and a slow mirror once cost a caller 14 minutes.
     - name: texcount (feeds the texcount/* rules over .tex)
