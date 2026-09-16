@@ -26,7 +26,18 @@ const check = (label, cond) => {
   n++;
 };
 
-assert.deepEqual(Object.keys(stages.rules).sort(), ["source", "stages"], "rule set changed");
+// 🔴 Счётчик `n` СКВОЗНОЙ, поэтому печатать его под заголовком одного правила — значит
+// приписывать этому правилу чужие ассерты. Так и было: строка про `paper/source` сообщала
+// семнадцать, из которых десять проверяли `paper/stages`. `since()` отдаёт дельту своего
+// блока, и число снова описывает то, что названо рядом.
+let mark = 0;
+const since = () => {
+  const d = n - mark;
+  mark = n;
+  return d;
+};
+
+assert.deepEqual(Object.keys(stages.rules).sort(), ["author-list", "source", "stages"], "rule set changed");
 
 /** Findings for one fixture paper, as plain message strings. */
 function lint(name) {
@@ -83,7 +94,7 @@ check("deleting the frontmatter does NOT silence the rule when bytes exist",
 check("the same stage declared twice with different dates is accepted",
       lint("twice").length === 0);
 
-console.log(`✓ ${String(n)} assertions passed — paper/stages, both directions`);
+console.log(`✓ ${String(since())} assertions passed — paper/stages, both directions`);
 
 // ── `paper/source`: the SOURCE is frozen on disk, and the bytes are compared ────────────
 // 🔴 This block replaced a git-based one on 2026-09-16, and the reason is a measurement, not
@@ -148,4 +159,72 @@ console.log(`✓ ${String(n)} assertions passed — paper/stages, both direction
   }
 }
 
-console.log(`✓ ${String(n)} assertions passed — paper/source, frozen bytes instead of a sha`);
+console.log(`✓ ${String(since())} assertions passed — paper/source, frozen bytes instead of a sha`);
+
+// ── `paper/author-list`: отгруженная статья должна себе прогон сверки списков авторов ────
+//
+// Предмет у этого правила ДРУГОЙ, чем у двух соседей выше: те сверяют объявление с байтами,
+// это — объявление с записью о прогоне. Общий у них ровно один вход, поле `stages`, и ради
+// него правило и живёт в этом модуле.
+{
+  const lintAuthors = (name, opts = {}) => {
+    const file = join(FIX, name, "PIPELINE-STATUS.md");
+    const msgs = linter.verify(readFileSync(file, "utf-8"), [{
+      files: ["**/*.md"],
+      plugins: { markdown, paper: stages },
+      language: "markdown/gfm",
+      languageOptions: { frontmatter: "yaml" },
+      rules: { "paper/author-list": ["error", opts] },
+    }], file);
+    assert.deepEqual(msgs.filter((m) => m.fatal), [], `${name}: the rule threw`);
+    return msgs.map((m) => m.message);
+  };
+
+  // ── молчит там, где обязано ──
+  check("прогон записан в табеле — молчит",
+        lintAuthors("authors-ran").length === 0);
+  // Черновик никого не просил себя читать, поэтому ничего и не должен. Это не послабление:
+  // предмет правила — ДОЛГ отгруженной статьи, а у неотгруженной долга нет.
+  check("стадия не объявлена вовсе — молчит, черновик ничего не должен",
+        lintAuthors("nothing").length === 0);
+  // Пустой список — это не «стадия есть»: запись `stages: []` встречается у статьи, которую
+  // завели, но никуда не подали.
+  check("пустой список стадий — молчит",
+        linter.verify("---\nstages: []\n---\n# S\n", [{
+          files: ["**/*.md"], plugins: { markdown, paper: stages },
+          language: "markdown/gfm", languageOptions: { frontmatter: "yaml" },
+          rules: { "paper/author-list": "error" },
+        }], join(FIX, "x", "PIPELINE-STATUS.md")).length === 0);
+
+  // ── срабатывает на подложенном дефекте ──
+  const owed = lintAuthors("ok");
+  check("стадия объявлена, прогона нет — находка", owed.length === 1);
+  // 🔴 Сообщение обязано назвать КЛАСС, а не только факт пропуска: иначе читатель принимает
+  // его за дубль проверки существования ссылок и закрывает как шум. Класс — авторы препринта
+  // при объявленной конференции, и он невидим для проверки, что ссылка резолвится.
+  check("и оно называет класс, который ловит сверка, а не только пропуск",
+        /ПРЕПРИНТА/.test(owed[0]));
+
+  // ── то, ради чего перенос и делался ──
+  // Предшественница выводила стадию РЕГУЛЯРКОЙ ПО ПРОЗЕ табеля. Перезамер 17.09: у
+  // `agenticdev-2026` проза видит `submitted`, а фронтматтер — `submitted, camera-ready`.
+  // Здесь список берётся из поля, поэтому обе стадии попадают в текст находки.
+  const two = lintAuthors("twice");
+  check("список стадий в сообщении взят из ПОЛЯ и несёт их все",
+        two.length === 1 && /submitted\/submitted/.test(two[0]));
+
+  // ── данные потребителя остаются у потребителя ──
+  // Предшественница зашивала в текст сообщения путь `.claude/skills/verify-citations/...` —
+  // адрес ОДНОГО репозитория внутри публичного пакета.
+  const withCmd = lintAuthors("ok", { command: "node scripts/bib-authors.mjs <статья>" });
+  check("команда прогона приходит опцией и попадает в сообщение",
+        /scripts\/bib-authors\.mjs/.test(withCmd[0]));
+  check("а без опции сообщение не выдумывает путь",
+        !/bib-authors\.mjs/.test(owed[0]));
+  // Маркер тоже данные: пакет не может знать, как ИМЕННО потребитель записывает прогон.
+  check("маркер настраивается — с другим маркером та же статья становится должником",
+        lintAuthors("authors-ran", { marker: "no-such-marker" }).length === 1);
+}
+console.log(`✓ ${String(since())} assertions passed — paper/author-list, долг отгруженной статьи`);
+
+console.log(`✓ ${String(n)} assertions passed in total`);
