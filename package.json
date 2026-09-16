@@ -1,8 +1,7 @@
 {
   "name": "research-paper-pipeline",
-  "version": "0.0.0",
-  "private": true,
-  "description": "Machine-checkable gates for writing a research paper in git",
+  "version": "0.1.0",
+  "description": "Machine-checkable gates for a research paper kept in git: ESLint rules over .tex/.md paper sources, plus the skills and hooks that drive each stage.",
   "type": "module",
   "license": "MIT",
   "scripts": {
@@ -11,8 +10,8 @@
     "lint:skills": "vigiles lint",
     "check:globs": "node scripts/rules-see-files.mjs",
     "check:content-only": "node scripts/rules-are-content-only.mjs",
-    "test:mutations": "node scripts/run-mutations.mjs",
-    "check:readme": "node scripts/readme-numbers.mjs"
+    "check:readme": "node scripts/readme-numbers.mjs",
+    "test:sabotage": "node scripts/run-mutations.mjs"
   },
   "dependencies": {
     "@eslint/plugin-kit": "^0.7.2",
@@ -27,5 +26,23 @@
   },
   "peerDependencies": {
     "vigiles": "^27.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zernie/research-paper-pipeline.git"
+  },
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "latex",
+    "tex",
+    "research",
+    "paper",
+    "academic",
+    "linter",
+    "claude-code"
+  ],
+  "engines": {
+    "node": ">=22.13"
   }
 }

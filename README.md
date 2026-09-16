@@ -1,144 +1,283 @@
 # research-paper-pipeline
 
-Machine-checkable gates for writing a research paper **in git**: ESLint rules that read the
-paper's own source, skills that drive each stage, hooks that stop a bad edit before it lands,
-and a harness beside every one of them proving it both fires on a planted defect and stays
-quiet on clean input.
+**Your paper is a repository long before it is a PDF — and nothing lints it.**
 
-## Why it exists
+An **ESLint plugin** for a research paper kept in git. It reads your `.tex` or `.md` source and a
+small status file beside it, and fails the build on the things a reviewer would otherwise catch by
+hand: a submission whose PDF is not the PDF you declared, a bibliography entry carrying the
+preprint's authors, `§` where the venue asks for "Section".
 
-A paper is a repository long before it is a PDF, and almost nothing checks it as one. Writing
-conventions — every claim carries a number, a "read it" checkbox says what was actually read,
-a finished stage has the file it claims — live in guidelines and are enforced by nobody, so
-they rot silently. That is the same failure class as an un-linted codebase, with a submission
-deadline attached.
+**Who this is for:** you write papers in git, you already run Node and ESLint 10 flat config, and
+you work with an AI coding agent — the design assumes one, because the checks are built so that
+**nothing a rule reads is authored by the thing being checked.** If that last part is not your
+problem, this will feel like overkill, and it is.
 
-The wager is narrow and testable: **anything a reviewer could check mechanically should fail
-the build, not the review.** Everything that needs taste stays prose and says so out loud.
+> ⚠️ **Findings are written in Russian today.** Rule names, options and this page are English; the
+> message text is not. It is a translation, not a redesign — [open an issue](https://github.com/zernie/research-paper-pipeline/issues)
+> if it blocks you.
 
-## What is actually in here
+## What it checks, and what it reads
 
-Four kinds of thing, and the numbers only matter once you know what each kind *is*.
+Most rules read a **scorecard** — one markdown file per paper, whose frontmatter is the paper's
+machine-readable claim about itself. This is the input the rules exist for, so here it is in full:
 
-**Rules that read your paper and fail the build.** They run under ESLint, over `.tex` and `.md`,
-and they check the things a reviewer would check by hand — a stage that claims a PDF has the
-bytes to back it, a bibliography entry a reader can actually reach, `§` where the venue wants
-"Section". <!-- count:rules -->10 of them today.
+```markdown
+---
+stages:
+  - stage: submitted
+    date: 2026-07-22
+    venue: AgenticDev 2026 @ ASE
+    pdf: versions/2026-07-22-submitted.pdf
+    bytes: 352357                              # checked against the file, both directions
+  - stage: camera-ready
+    date: 2026-08-29
+    venue: AgenticDev 2026 @ ASE
+    pdf: versions/2026-08-29-camera-ready.pdf
+    bytes: 616175
+    source: versions/2026-08-29-camera-ready.tex   # frozen .tex, checked by size
+---
 
-**A test beside every rule, and it has to prove BOTH halves** — that the rule fires on a
-defect planted on purpose, *and* that it stays silent on clean input. Half a test is how a
-rule that checks nothing passes for a rule that found nothing. <!-- count:harnesses -->49 of those.
+# PIPELINE-STATUS
 
-**A battery that tries to break each test.** It edits the rule to remove one load-bearing
-property and requires the test to go red at the assertion that property belongs to. A green
-test proves nothing on its own: silence is the success state of every check here, so "it
-passed" and "it cannot fail" look identical from outside. <!-- count:batteries -->26 batteries, and CI
-refuses a test that no battery can kill.
-
-**Skills that drive the writing**, one per stage — pick a venue, draft, tighten, review,
-submit, camera-ready. <!-- count:skills -->24. These are prose for a model to follow, not code: the
-stages that need taste stay taste, and say so.
-
-Every number above is produced by `npm run check:readme`, not typed by hand — it recounts the
-tree and fails when the prose drifts. It already had: the four counts here said 45 harnesses and
-22 batteries while the tree held 49 and 26.
-
-```bash
-npm test                  # every test on disk
-npm run test:mutations    # try to break each test; a test nothing can kill is not a test
+| id | what | ok | when | notes |
+|---|---|---|---|---|
+| cites | any \cite added or moved | ☑ | 2026-08-24 | `bib-authors` run: 27 entries, 1 mismatch, fixed |
 ```
 
-## What may live here, and what may not
+**Who writes it:** your agent does, as it works — that is the point. A human maintaining
+`bytes: 352357` by hand would stop within a week. The rules exist because an agent's *claim* that
+it froze a submission and the *bytes on disk* are different things.
 
-| | |
-|---|---|
-| **in scope** | ESLint rules over `.tex`/`.md` paper sources · their harnesses and mutation batteries · paper-stage skills · hooks and CI that enforce them |
-| **out of scope** | anything that knows about one specific author, venue, employer or application — that stays in its owner's private notes |
-| **not here either** | agent-harness machinery (skill corpus, trigger ledger, model containment). Its home is [vigiles](https://github.com/zernie/vigiles) |
+Now a paper that says it was submitted, with a stale PDF and no stated research question:
 
-The test is mechanical rather than tasteful: **would this file work, unedited, for someone
-else's paper?** If it names a person, a venue or a deadline — no, and it belongs in private
-notes. If it would need one line changed — yes, and that line becomes an option.
+```
+papers/my-paper/PIPELINE-STATUS.md
+  1:1  error    «submitted» (2026-07-22): объявлено 412553 байт, на диске 100 — это НЕ тот файл
+  1:1  error    стадия «submitted» (2026-07-22) не несёт замороженного исходника…
+  1:1  warning  объявлена стадия «submitted», но прогон сверки списков авторов не записан…
+papers/my-paper/paper.tex
+  1:1  warning  статья отгружена, но НИ РАЗУ не формулирует research question явно…
 
-## Why it is not "yet another academic skills suite"
+✖ 4 problems (2 errors, 2 warnings)
+```
 
-Both neighbours were **cloned and read**, 2026-09-10, rather than judged by their descriptions.
-The first finding was that a previous version of this section was wrong: they are not thin, and
-they do have enforcement.
+Real output, not an illustration. Findings are reported at `1:1` because their subject is the
+*file's claim*, not a span of text in it.
 
-[`Imbad0202/academic-research-skills`](https://github.com/Imbad0202/academic-research-skills)
-— 47 259 stars, 2 590 files, 430 of them Python. It ships a markdown linter (224 lines), a
-skill-frontmatter linter (267), a CI threshold gate, a 241-line PreToolUse write guard, and a
-gold-set calibration with declared acceptance thresholds (FNR < 0.15, FPR < 0.10). Anyone who
-tells you it is "just prompts" has not opened it.
+Two are errors because the answer is binary — the bytes match or they do not. Two are warnings
+because the answer is a judgement, and **a gate that fails on a judgement gets muted.**
 
-[`tlorans/research-paper-pipeline`](https://github.com/tlorans/research-paper-pipeline)
-— a control plane over the above.
+## Install
 
-### The difference is WHAT a gate is allowed to read
+Not published to npm yet, so install from the repository. Pin a **commit on `main`**: a squash
+merge orphans branch commits and `gc` collects them — measured here, of four recorded shas one
+still resolved ninety minutes later.
 
-Here is that project's stage gate, verbatim from its `pipeline.yaml`:
+```bash
+npm i -D github:zernie/research-paper-pipeline#8a06e4c \
+         eslint@^10.9.1 @eslint/markdown@^8.0.3
+```
+
+Needs **Node ≥ 22.13** and ESLint 10 flat config. Once a version is published this becomes
+`npm i -D research-paper-pipeline`, and nothing else changes.
+
+## Wire it up
+
+Nothing is auto-discovered: you say where your papers live and which rules you want. Rules come
+from four modules; each block below is one of them.
+
+```js
+// eslint.config.mjs
+import markdown from "@eslint/markdown";
+import paperStages from "research-paper-pipeline/eslint-rules/paper-stages.mjs";
+import researchQuestion from "research-paper-pipeline/eslint-rules/paper-research-question.mjs";
+import typography from "research-paper-pipeline/eslint-rules/paper-typography.mjs";
+import texBuild from "research-paper-pipeline/eslint-rules/tex-build.mjs";
+import docFields from "research-paper-pipeline/eslint-rules/doc-fields.mjs";
+import findingsCause from "research-paper-pipeline/eslint-rules/review-findings-cause.mjs";
+import coldReadCause from "research-paper-pipeline/eslint-rules/cold-read-cause.mjs";
+// `texLanguage` is a NAMED export, and the module is loaded dynamically because it pulls a
+// LaTeX parser you do not want to pay for when you lint only markdown.
+const { texLanguage } = await import("research-paper-pipeline/eslint-rules/latex-language.mjs");
+
+export default [
+  // 1. The scorecard — what the paper claims about itself.
+  {
+    files: ["papers/*/PIPELINE-STATUS.md"],
+    plugins: { markdown, paper: paperStages },
+    language: "markdown/gfm",
+    languageOptions: { frontmatter: "yaml" },
+    rules: {
+      "paper/stages": "error",
+      "paper/source": "error",
+      // `command` is pure text, pasted into the finding so the reader knows what to run.
+      // The package never hardcodes your paths.
+      "paper/author-list": ["warn", { command: "node scripts/bib-authors.mjs papers/my-paper" }],
+    },
+  },
+
+  // 2. The paper itself, as LaTeX. `tex/latex` is a real ESLint language: .tex is PARSED.
+  {
+    files: ["papers/*/paper.tex"],
+    plugins: {
+      tex: { languages: { latex: texLanguage }, rules: texBuild },
+      paper: { rules: { ...researchQuestion.rules, ...typography.rules } },
+    },
+    language: "tex/latex",
+    rules: {
+      "paper/research-question": "warn",
+      "paper/typography": ["warn", { debt: {} }],   // see "declared debt" below
+      "tex/future-promise": "warn",
+      "tex/acm-frontmatter-override": "error",
+    },
+  },
+
+  // 3. A paper written in markdown instead — same two rules, different language.
+  {
+    files: ["papers/*/paper.md", "papers/*/draft.md"],
+    plugins: { markdown, paper: { rules: { ...researchQuestion.rules, ...typography.rules } } },
+    language: "markdown/gfm",
+    languageOptions: { frontmatter: "yaml" },
+    rules: { "paper/research-question": "warn", "paper/typography": ["warn", { debt: {} }] },
+  },
+
+  // 4. Review notes — optional, and only useful if you keep them in the repo.
+  {
+    files: ["papers/*/reviews/*.md"],
+    plugins: { markdown, review: { rules: { ...findingsCause.rules, ...coldReadCause.rules } }, doc: docFields },
+    language: "markdown/gfm",
+    languageOptions: { frontmatter: "yaml" },
+    rules: {
+      // `sinceCreated` exempts notes written before you adopted the rule — retrofitting a
+      // backlog prints twenty findings in one run, which is how a check gets switched off.
+      "review/findings-cause": ["error", { minFindings: 3, sinceCreated: "2026-08-23" }],
+      "review/cold-read-cause": "warn",
+      // `fields` is a map: field name -> the values it may take, plus a hint shown in the
+      // finding. Declaring the vocabulary is the point; a free-text field cannot be checked.
+      "doc/fields": [
+        "warn",
+        { fields: { read: { values: ["full", "abstract", "none"], hint: "how much of it you read" } } },
+      ],
+    },
+  },
+];
+```
+
+```bash
+npx eslint papers
+```
+
+**`paper/typography` and declared debt.** It counts conventions a reviewer already raised against
+a per-paper budget you declare, so it is silent on existing text and speaks only when the count
+grows. Start with `{ debt: {} }` to see every count, then freeze the numbers you are not fixing
+today.
+
+## In CI
+
+A complete job. The composite action runs ESLint once and — this is the part a hand-written
+`run:` block always misses — **refuses to pass on an empty run**: ESLint exits 0 when it finds
+nothing, and "no findings" is byte-identical to "not one rule was handed a single file".
 
 ```yaml
-  - id: integrity
-    gate:
-      field: score
-      op: gte
-      threshold: 8
+name: paper gates
+on: [push, pull_request]
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: npm ci
+      - uses: zernie/research-paper-pipeline@8a06e4c   # no version tags yet — pin a sha
+        with:
+          paths: papers            # REQUIRED, no default
+          config: eslint.config.mjs
+          texcount: "false"        # true only if YOUR config has rules that shell out to texcount
 ```
 
-🔴 **`score` is written by the model being audited.** Its own `agents/auditor.md` asks the model
-to score itself, and the gate then compares that number to 8. A model that would rather pass
-than fail has one obvious move, and no part of the pipeline can tell a paper that improved from
-a model that got more generous. The threshold is real; the measurement it reads is not.
+`paths` is required on purpose: it used to default to `.`, so a caller who never thought about
+scope still got a green job over whatever was in the checkout. A first step fails when it is
+empty, because GitHub does **not** enforce `required:` for composite actions.
 
-Every gate in this repo takes its input from something the model does not author: bytes on disk,
-an AST node, the exit code of `pdflatex`. Where that is impossible — is the argument any good,
-does the prose land — this repo does not pretend, and says so in the skill.
+## The rules
 
-### And nothing in either reads the paper's source
+<!-- count:rules -->10 today. Severity is yours.
 
-Searching both trees for `eslint` and `aclpubcheck` returns **zero**. Neither ships a rule that
-opens a `.tex` file. That is the gap: a paper is a repository long before it is a PDF, and the
-repository was going unchecked.
+| rule | from | fires when |
+|---|---|---|
+| `paper/stages` | `paper-stages.mjs` | a declared stage's PDF is missing, or its byte count does not match the file |
+| `paper/source` | `paper-stages.mjs` | a declared stage has no frozen source beside its PDF, or the source's bytes differ |
+| `paper/author-list` | `paper-stages.mjs` | a shipped paper records no author-list check — the class where a citation resolves but carries the *preprint's* authors |
+| `paper/research-question` | `paper-research-question.mjs` | a shipped paper never states its research question |
+| `paper/typography` | `paper-typography.mjs` | conventions a reviewer already raised exceed the declared debt |
+| `tex/future-promise` | `tex-build.mjs` | the text promises a future release of something already handed over |
+| `tex/acm-frontmatter-override` | `tex-build.mjs` | an `acmart` build overrides ACM's front-matter commands, removing template elements from page 1 |
+| `doc/fields` | `doc-fields.mjs` | frontmatter is missing a declared field, or carries a value outside the declared set |
+| `review/findings-cause` | `review-findings-cause.mjs` | a review report with findings does not say what let them through |
+| `review/cold-read-cause` | `cold-read-cause.mjs` | an open re-read finding does not name its cause |
 
-### Venue facts are data here, not memory
+## Words this page uses
 
-`skills/submit-paper/references/venues/` carries a card per venue — page limit, blind policy,
-what the CFP actually says, the anonymisation rules, plus a machine-readable `.jsonc` and a
-`.tex` template. Three venues today (AgenticDev @ ASE, AISec @ CCS, REALM @ EMNLP). Each card
-carries its own "re-verify the CFP each year" line with the URL, because venue facts rot yearly
-and a fact nobody re-checks is worse than no fact.
+- **stage** — a point a paper reached and cannot un-reach: `submitted`, `camera-ready`, `arxiv`.
+- **scorecard** — `PIPELINE-STATUS.md`, the file above. One per paper.
+- **frozen** — a copy of the exact PDF or `.tex` that was sent, kept in `versions/`. Bytes, not a
+  commit reference: squash and `gc` destroy commit references, and did.
+- **harness** — the test beside a rule. **battery** — a set of edits that try to break a harness.
 
-### And it can actually be used
+## Also in the box
 
-The neighbour above is **CC BY-NC 4.0** — not an open-source licence, commercial use restricted
-by design. This repo is MIT; see [Licence](#licence) for why that section also records the two
-months it got this wrong.
+**<!-- count:skills -->24 skills** — one per stage, prose for an AI agent to follow: pick a venue,
+draft, tighten, review, submit, camera-ready. Not code, and the stages that need taste stay taste.
 
-## Setup
+**3 hooks** for [vigiles](https://github.com/zernie/vigiles), a runner that executes checks inside
+an agent's edit loop: a guard that refuses to overwrite a frozen submission, and two nudges that
+fire when the scorecard and the paper drift apart.
+
+Both optional. The rules work without either.
+
+## How this is tested
+
+Every rule has a harness proving **both halves** — it fires on a planted defect *and* stays silent
+on clean input — and a battery that removes one load-bearing property and demands the harness go
+red at the assertion that property belongs to.
 
 ```bash
-npm install          # first command in any fresh clone, before touching a spec or a hook
+npm test                 # <!-- count:harnesses -->50 harnesses
+npm run test:sabotage    # <!-- count:batteries -->27 batteries (mutation testing)
 ```
+
+CI refuses a harness that no battery can kill, because silence is the success state of every check
+here: "it passed" and "it cannot fail" look identical from outside. Counts above are produced by
+`npm run check:readme`, not typed by hand.
+
+## Why not one of the existing academic skill suites
+
+The nearest neighbour, [`Imbad0202/academic-research-skills`](https://github.com/Imbad0202/academic-research-skills),
+is a serious project with its own linters, a CI threshold gate and a write guard. "Just prompts"
+is wrong about it.
+
+The difference is **what a check is allowed to read.** Its integrity gate thresholds a numeric
+score that the audited model writes about itself. Here, nothing a rule reads is authored by the
+thing being checked: `paper/stages` compares a declared byte count against `statSync`, and
+`paper/source` does the same for the frozen `.tex`. It also reads the paper's LaTeX source, which
+that suite does not — it checks process artefacts.
+
+Licensing differs too: that suite is CC BY-NC 4.0, this is MIT.
 
 ## Layout
 
 ```
-eslint-rules/     one rule per file, its harness and mutation battery beside it
-fixtures/         .tex and .md fixtures — a clean one and a defective one per rule
-skills/           paper-stage skills; a consumer symlinks these into .claude/skills/
-hooks/            runnable .mjs programs, not .hook.ts sources — see CLAUDE.md
-scripts/          repo-wide runners (mutations, glob coverage, skill lint)
-.github/          CI — one job, and the minute budget is decided before adding a second
+eslint-rules/   the rules, each with its .harness.mjs and .mutations.mjs beside it
+lib/            shared readers — markdown, skill corpus, the mutation driver
+hooks/          three hooks for vigiles
+skills/         24 stage skills
+scripts/        this repo's own gates
+action.yml      the CI composite action
+fixtures/       inputs the harnesses lint
 ```
 
 ## Licence
 
-**MIT** — see [LICENSE](LICENSE). Chosen deliberately, and it is the one thing this repo
-refuses to copy from its nearest neighbour: a suite that restricts commercial use by licence
-cannot be adopted by the people whose papers it would check.
-
-Until 2026-09-16 this repo was public and declared `UNLICENSED` with no `LICENSE` file, which
-means the default applied — all rights reserved, nobody could use it — while the section above
-criticised a neighbour for exactly that class of restriction.
+MIT — see [LICENSE](LICENSE).

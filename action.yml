@@ -36,9 +36,12 @@ inputs:
     default: "-1"
   texcount:
     description: >-
-      Install texcount. Leave on unless the corpus has no .tex. 🔴 WITHOUT THIS PACKAGE THE STEP
-      DOES NOT FAIL, IT QUIETLY DEGRADES — the `texcount/walls` and `texcount/appendix-ratio` rules
-      count words with the external binary and fall back to a weaker count when it is absent.
+      Install the `texcount` binary before linting. 🔴 THIS PACKAGE SHIPS NO RULE THAT USES IT —
+      measured 2026-09-17, zero rules named `texcount/*` here. It is on by default for CONSUMERS
+      whose own config carries such rules (the author's does: `texcount/walls`,
+      `texcount/appendix-ratio`), because without the binary those rules DO NOT FAIL — they
+      quietly fall back to a weaker word count and the job stays green. If your config has no
+      such rule, set this to "false" and save the apt fetch.
     required: false
     default: "true"
   working-directory:
@@ -68,7 +71,7 @@ runs:
 
     # texlive-extra-utils is what carries /usr/bin/texcount. Cached, because the apt fetch is the
     # only network hop in this action and a slow mirror once cost a caller 14 minutes.
-    - name: texcount (feeds the texcount/* rules over .tex)
+    - name: texcount (for a CONSUMER's texcount/* rules — this package ships none)
       if: inputs.texcount == 'true'
       uses: awalsh128/cache-apt-pkgs-action@v1
       with:
