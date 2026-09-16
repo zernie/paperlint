@@ -21,6 +21,6 @@
     "@retorquere/bibtex-parser": "^10.0.1",
     "@unified-latex/unified-latex-util-parse": "^1.8.4",
     "eslint": "^10.9.1",
-    "vigiles": "^27.1.4"
+    "vigiles": "^27.2.0"
   }
 }
