@@ -3,15 +3,52 @@
 Machine-checkable gates for writing a research paper in git, extracted from a private
 knowledge base.
 
-**Extracted so far (2026-09-11):** two ESLint rule modules over LaTeX — `latex-language.mjs`
-(a language that projects `.tex` into a markdown-shaped text with lengths and offsets
-preserved) and `tex-build.mjs` (`tex/future-promise`) — with their harnesses, their mutation
-batteries, and fixtures replacing the private corpus the tests used to read.
+## 🎯 THE GOAL, in one sentence
 
-**Not extracted:** the ~30 prose rules that consume the projection. Until they arrive, the
-language has exactly one downstream consumer here, and that consumer reads the file from disk
-rather than the projection — so the projection's own correctness is asserted directly in
-`latex-language.harness.mjs`, part II, not inferred from anyone's finding count.
+**Move every paper-writing convention a machine can decide OUT of prose and INTO an engine
+that fails the build** — and keep everything else honestly labelled as prose. The engine is
+ESLint. The unit of progress is "one more verdict decided by the engine instead of by a
+hand-written script".
+
+That last clause is the whole direction, and it is the part that keeps being forgotten:
+
+```
+ prose in a guideline   →   hand-written script   →   ESLint rule in the engine
+ rots silently              runs, but is OURS         editor-time · free AST · suppressible
+ ← where this started       ← where most of it is     ← where it is going
+```
+
+🔴 **A hand-written script is a WAYPOINT, not a destination.** Writing a new one is allowed
+only when the engine genuinely cannot express the check — and "cannot" means MEASURED, not
+assumed. Two things that sound like limits and are not:
+
+- *"ESLint only sees one file"* — true of its AST, false of the rule: a rule is an ordinary
+  JS module and may call `execFileSync("git", …)` or read a sibling file. If the reason to
+  stay a script is "it needs git", that reason is weak; measure the real cost before using it.
+- *"this runs programs, not lints files"* — that is a real limit, and the answer is the seam
+  already proven here: **a script PRODUCES facts into a JSON file, and ESLint JUDGES that
+  file.** The verdict lands in the engine even though the work did not.
+
+## 📊 STATE — measured 2026-09-16 (re-measure, never cite)
+
+| | |
+|---|---:|
+| ESLint rules | **6** — `latex-language` · `tex-build` · `papers` · `cold-read-cause` · `review-findings-cause` · `doc-fields` |
+| harnesses | **45** |
+| mutation batteries | **22** |
+| skills | **24** |
+| hooks (runnable `.mjs`) | **5** |
+| repo-wide scripts | 5 |
+| files tracked / commits | 308 / 43 |
+
+**A real consumer dogfoods this package on every CI run**, so a breaking change here turns a
+paper pipeline red somewhere else the same day. That is deliberate — it is the only thing
+keeping the extraction honest.
+
+⚠️ **This table is a SNAPSHOT, not a fact about today, and it has already gone stale once.**
+The line standing here until 2026-09-16 said "two ESLint rule modules" while six were shipped,
+24 skills had moved in, and hooks existed at all. Re-measure with `git ls-files` before
+repeating any number from it.
 
 ## First command in a fresh container
 
@@ -23,7 +60,7 @@ Not optional and not "when something breaks": `vigiles` is a real dependency, an
 harness, spec and hook resolves through it. A container where `npm install` never ran fails
 in ways that look like broken code rather than a missing install.
 
-## The four rules that decide what may live here
+## The eight rules that decide what may live here — and what may not be written
 
 **1. Mechanism goes to vigiles, data stays here.** A file that names nothing local — no rule
 of ours, no fixture of ours — is machinery, and machinery belongs in
@@ -45,6 +82,57 @@ mutation, and assert the patch actually landed before trusting a green run.
 exactly like a rule that passed. Any rule shipped here must be loud when its input set is
 empty. This is the specific defect that blocks stage 1 of the plan: in the source base a
 fresh clone yields RC=0, 652 findings, zero errors — because 19 rules saw no files at all.
+
+**5. "It can't be done in the engine" must be MEASURED, not assumed.** Every one of these was
+stated confidently on 2026-09-16 and every one fell to a single command:
+
+| the claim | what one command showed |
+|---|---|
+| "a lint rule can't know a git date, so this stays a script" | a rule is plain JS; `execFileSync("git", …)` is legal in it. The real costs (per-file invocation, `--cache` keyed on content) are solvable, so this was a preference dressed as a limit |
+| "we need our own glob expander" | `fs.globSync` ships in Node 22 and returned the identical set. 31 hand-written lines of regex existed for nothing |
+| "the tool can't run a file that config excludes" | it can, and says so: `matches exclude … — running because you named it` |
+
+⇒ Before writing machinery, **run the thing you are about to replace and paste its output.**
+"I couldn't get it to work" is data about the attempt, not about the tool.
+
+**6. A program shipped by this package MUST NOT depend on the consumer's cwd.** Measured
+2026-09-16: three hooks here read their config as `provide("pkg", "cat package.json")`. The
+consumer's session changed directory into a subfolder for unrelated reasons, `cat` failed, and
+the Bash gate — which fails closed, correctly — denied **every command in that session**,
+including the one that would undo it. The nudges next to it would have failed *silently*,
+which is worse.
+
+Resolve paths from the repository root (`git rev-parse --show-toplevel`) or from the module's
+own location, never from where the caller happens to stand. The blast radius of a cwd
+assumption is not this package — it is somebody else's whole session.
+
+**7. Do not describe what you have not opened.** A `README` here nearly shipped the line
+"MIT — see LICENSE" on 2026-09-16. There is no `LICENSE` file and `package.json` says
+`UNLICENSED`. Publishing is irreversible and this repo is public: every factual claim in a
+document meant for strangers gets checked against the disk in the same pass that writes it.
+
+**8. 🔴 NEVER WRITE A GLOB OR A REGEX INSIDE A BLOCK COMMENT.** An asterisk followed by a
+slash **ends the comment**, wherever it appears — in a path (a folder wildcard), in a regex
+whose last literal is an asterisk (one matching bold markup, for instance), in a quoted
+example. The rest of the comment becomes code, the file stops parsing, and the error points
+at a line further down that is perfectly fine.
+
+⚠️ Note this rule does not quote the sequence either, not even here. A documented example is
+the thing that gets copied into code — and that is exactly how the fourth occurrence
+happened: it was copied out of a comment written to explain the first three.
+
+This is not a hypothetical and not a rare slip. **It fired four times in a single session on
+2026-09-16** — three in the consumer, once here — and each time the diagnosis cost minutes
+because `SyntaxError: Unexpected token '.'` says nothing about comments.
+
+| instead of | write |
+|---|---|
+| a glob with an asterisk and slash | spell it: "every folder under papers" |
+| a regex with an asterisk before a slash | describe what it matched, in words |
+| an example needing both | put it in a line comment (two slashes), never a block |
+
+⇒ **In a block comment, prose describes the pattern; it never quotes it.** If the exact
+characters matter, they belong in the code or in a line comment beside it.
 
 ## Distribution — no `smh init`, and that is a measured decision (2026-09-10)
 
@@ -227,6 +315,51 @@ in the consumer on 2026-09-10 (25.1.0 -> 27.1.4) and cost real recovery work.
 ```bash
 npm ls vigiles    # prints `invalid` when what is installed does not satisfy the manifest
 ```
+
+⚠️ **What that command does NOT tell you, and the boundary matters because the command reads
+like a freshness check.** It compares what is INSTALLED against this repo's MANIFEST. It says
+nothing about the registry. Measured 2026-09-16: manifest `^27.1.4`, installed `27.1.6`,
+published `27.2.0` — exit code **0**, because the range is satisfied. The repo had been one
+minor behind for days and every local check was green.
+
+#### Dependabot carries the half `npm ls` cannot — and its two delays STACK
+
+That staleness is why `.github/dependabot.yml` exists here. The reasoning is worth keeping
+because the obvious objection to a bot in this org is already recorded and does NOT apply:
+a bot was switched off in a sibling repository for burning Actions minutes — **that
+repository is private**. This one is public, minutes are free, so the objection does not
+travel. If this repo is ever made private, revisit the file along with it.
+
+🔴 **A new release does NOT wake the bot.** Two delays add up, and the second one is invisible
+until you read the reference:
+
+| | default | what the docs say |
+|---|---:|---|
+| `schedule.interval` | — | the check runs on the schedule and only on the schedule |
+| **`cooldown`** | **3 days** | *"a new version is not considered for a version update until 3 days after its release"* |
+
+With the weekly schedule this file shipped with first, the window was **3–10 days**. It is now
+`daily`, and `vigiles` is listed in `cooldown.exclude`, so for THIS package the window is one
+schedule tick.
+
+**Why `vigiles` and nothing else is exempt:** the cooldown guards against a release that gets
+yanked hours later. That is a real risk for a third-party package and an empty one for our own
+— we would be the ones yanking it, and we can ship several versions of it in a single day, so
+a three-day hold would have the bot proposing the version from the day before yesterday.
+
+🔴 **And the conclusion is bigger than a cadence knob: for our OWN package no bot schedule is
+the primary path, because no schedule can outrun same-day releases.** The primary path is the
+rule already recorded in the consumer's base — merge a PR in `vigiles`, bump every consumer in
+the same pass. The bot is the backstop for the case that actually bit us: the rule named ONE
+consumer while there were two, and this repo sat forgotten on `^27.1.4`.
+
+⚠️ **What the file does not control**, recorded because the sibling repo already lost a day to
+it: `dependabot.yml` configures *version* updates only. **Security** updates are a separate
+mechanism driven by advisories and a repository SETTING; their cadence cannot be changed from
+this file, and deleting the file would not stop them.
+
+Need it now rather than at the next tick: **Insights → Dependency graph → Dependabot → Check
+for updates**.
 
 ## The guard against a green zero
 

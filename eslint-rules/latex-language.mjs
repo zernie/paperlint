@@ -359,9 +359,21 @@ const directiveStart = /^\s*eslint(?:-enable|-disable(?:(?:-next)?-line)?)?(?:\s
 class TexSourceCode extends TextSourceCodeBase {
   #steps; #parents = new WeakMap(); #comments = []; #inline;
   ast;
-  constructor({ text, ast }) {
+  /**
+   * `raw` is the UNPROJECTED `.tex`, and it is here because the projection is lossy by design:
+   * it blanks macros, so a rule that must count `\S\ref` or `Fig.~\ref` sees spaces. Those
+   * rules are about MARKUP, not prose, and the projection exists precisely to hide markup.
+   *
+   * 🔴 Positions stay interchangeable, which is what makes this safe rather than a second
+   * coordinate system: `blank()` overwrites characters with spaces and never changes length,
+   * so an offset computed on `raw` addresses the same byte of `text`. A rule may therefore
+   * scan `raw` and report with the offset it found.
+   */
+  raw;
+  constructor({ text, ast, raw }) {
     super({ ast, text, lineEndingPattern: /\r?\n/u });
     this.ast = ast;
+    this.raw = raw ?? text;
     this.traverse();
   }
   getParent(node) { return this.#parents.get(node); }
@@ -399,13 +411,21 @@ export const texLanguage = {
   fileType: "text", lineStart: 1, columnStart: 1, nodeTypeKey: "type",
   defaultLanguageOptions: {}, validateLanguageOptions() {},
   parse(file) {
-    try { const { root, text } = texToMdast(String(file.body)); return { ok: true, ast: root, projected: text }; }
+    try {
+      const raw = String(file.body);
+      const { root, text } = texToMdast(raw);
+      return { ok: true, ast: root, projected: text, raw };
+    }
     catch (ex) { return { ok: false, errors: [ex] }; }
   },
   createSourceCode(file, parseResult) {
     // 🔴 LOAD-BEARING: the SourceCode receives the PROJECTION, not the source. Lengths and
     // offsets are equal, so the position of a finding points into the real `.tex` while the
     // rule sees prose.
-    return new TexSourceCode({ text: parseResult.projected, ast: parseResult.ast });
+    return new TexSourceCode({
+      text: parseResult.projected,
+      ast: parseResult.ast,
+      raw: parseResult.raw,
+    });
   },
 };

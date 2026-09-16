@@ -194,6 +194,20 @@ try {
     allow("an unrelated write", `echo x ${GT} /tmp/unrelated.txt`);
     // The false positives that blocked real work: a bundle copy is data, and a grep is a read.
     allow("a copy into a paper's repro bundle", `cp h.mjs docs/papers/alpha/repro/anon/h.mjs`);
+    // A FROZEN SNAPSHOT is archival, not the live source: `versions/` is immutable by
+    // construction and `paper/stages` gates it by bytes, which is stricter than anything the
+    // PostToolUse checks this guard protects would say about it.
+    allow("freezing a snapshot into versions/", `cp /tmp/frozen.tex docs/papers/alpha/versions/2026-08-29-camera-ready.tex`);
+    allow("a redirect into versions/", `echo x ${GT} docs/papers/alpha/versions/a.tex`);
+    // ⚠️ NOT exempt, and deliberately asserted so the limit is recorded rather than discovered:
+    // with the LIVE source as the copy's argument, `namesPaperSource` hits on that token, and
+    // argv carries no direction — `cp a b` and `cp b a` are the same shape. Freezing therefore
+    // goes through a temp file, which is what the refusal already tells the caller to do.
+    deny("a copy whose SOURCE argument is the live paper", `cp ${T} docs/papers/alpha/versions/a.tex`);
+    // 🔴 The other half: the carve-out must not reach the LIVE source, which keeps the same
+    // extension. Without this assert the exemption could be widened to `.tex` and stay green.
+    deny("sed -i on the live source beside versions/", `sed -i s/a/b/ ${T}`);
+    deny("a write to a .tex that merely MENTIONS versions", `cp /tmp/versions/a.tex ${T}`);
     allow("a grep of a status file", `grep -c x docs/papers/alpha/PIPELINE-STATUS.md 2${GT}/dev/null`);
   }
 

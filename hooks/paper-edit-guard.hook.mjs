@@ -44,9 +44,23 @@
  *
  * ── WHERE THE CONSUMER'S PAPERS ARE ─────────────────────────────────────────
  * One declaration, `"research-paper-pipeline": { "papers": "…" }`, read the way a hook is able to
- * read anything at all: `needs: [provide("pkg", "cat package.json")]`. The alternatives were
- * measured and killed in `eslint-rules/papers.mjs` — an env var cannot be read from a hook at
- * all (no imports), and a symlinked root makes ESLint report zero files.
+ * read anything at all: `needs: [provide("pkg", "cat \"${CLAUDE_PROJECT_DIR:-.}/package.json\"")]`.
+ * The alternatives were measured and killed in `eslint-rules/papers.mjs` — an env var cannot be
+ * read from a hook at all (no imports), and a symlinked root makes ESLint report zero files.
+ *
+ * 🔴 THE PATH IS ANCHORED, AND THAT IS NOT DECORATION. vigiles runs a provider "via execSync in
+ * the hook's cwd", so a bare `cat package.json` resolves against whatever directory the hook
+ * PROCESS happens to have — which is set by the consumer's wiring, a string this hook cannot
+ * see and does not control. With the wiring this package documents (`cd "$CLAUDE_PROJECT_DIR"
+ * && node …`) the bare read is correct; without it, any tool cwd outside the project root makes
+ * the read fail, and by the paragraph below that failure DENIES EVERY BASH COMMAND until
+ * something external resets the cwd — `pwd` included, so the wedge cannot be escaped from the
+ * shell. Reported 2026-09-16 by a session that hit exactly that after a `cd` into a subtree.
+ *
+ * ⚠️ The wiring is not hypothetical to lose: `vigiles compile` has REGENERATED it without the
+ * `cd` prefix once already in this corpus. A gate whose blast radius is "all of Bash" must not
+ * rest on a prefix a code generator can drop. `${CLAUDE_PROJECT_DIR:-.}` keeps the old behaviour
+ * when the variable is absent, so this is strictly wider than what it replaces.
  *
  * 🔴 AN UNREADABLE DECLARATION DENIES, IT DOES NOT DEFAULT. Measured 2026-09-12: when the
  * provider's command fails — no `package.json`, or one with conflict markers in it — `e.ctx.pkg`
@@ -250,8 +264,14 @@ const unquote = (s) =>
     .replace(/"((?:[^"\\]|\\.)*)"/g, "$1");
 
 const redirectsInto = (raw, prefixes) =>
-  redirectTargets(raw).some((t) =>
-    prefixes.some((p) => t === p || t.startsWith(p + "/") || t.includes("/" + p + "/")),
+  redirectTargets(raw).some(
+    (t) =>
+      // ⚠️ This leg is WIDER than the argv leg: it claims any redirect target under the root,
+      // whatever its extension, so the frozen-snapshot carve-out has to be repeated here. It
+      // does not reach the argv leg's carve-outs either — noted, not widened, because loosening
+      // a guard beyond the case at hand is how gates stop holding.
+      !isFrozenSnapshot(t) &&
+      prefixes.some((p) => t === p || t.startsWith(p + "/") || t.includes("/" + p + "/")),
   );
 
 /**
@@ -310,8 +330,28 @@ const runsMutator = (cmd) => MUTATORS.some((m) => cmd.runs(m));
  * is data, code and bundles that no readability gate looks at. Observed while it was blocking
  * the artifact fix the pre-submission gate had just asked for.
  */
-const isPaperSource = (p) =>
+const isPaperSource = (p) => !isFrozenSnapshot(p) && hasSourceExtension(p);
+
+const hasSourceExtension = (p) =>
   p.endsWith(".tex") || /\/(paper|draft)\.md$/.test(p) || /^(paper|draft)\.md$/.test(p);
+
+/**
+ * A FROZEN SNAPSHOT — a file under a paper's `versions/`, which is the same carve-out as the
+ * reproduction bundle above and was missed only because a snapshot keeps the `.tex` extension of
+ * the live source it was copied from.
+ *
+ * 🔴 Why the gate must not claim it. Everything the guard protects is a PostToolUse check on the
+ * paper being WRITTEN — readability thresholds, the pipeline nudge, the unrun-gate check. None of
+ * them has anything to say about a snapshot: a frozen version is immutable by construction, it is
+ * never the file an author edits, and `paper/stages` already gates it far more strictly than any
+ * of those, by BYTES, in both directions.
+ *
+ * ⚠️ Observed: restoring `versions/2026-08-29-camera-ready.tex` from the one commit that still
+ * resolved was denied, so the only recoverable source of four declared stages was unreachable by
+ * the tool that could reach it. The guard was refusing the archival write while the live
+ * `paper.tex` beside it — the file it actually exists to protect — stayed open.
+ */
+const isFrozenSnapshot = (p) => /(^|\/)versions\/[^/]+$/.test(p);
 
 /** Paper-source paths named as arguments (as opposed to redirection targets). */
 const namesPaperSource = (raw, prefixes) =>
@@ -326,7 +366,7 @@ const namesPaperSource = (raw, prefixes) =>
 export default experimental_defineHook({
   on: "PreToolUse",
   match: tools("Bash"),
-  needs: [provide("pkg", "cat package.json")],
+  needs: [provide("pkg", 'cat "${CLAUDE_PROJECT_DIR:-.}/package.json"')],
   decide: (e) => {
     const root = papersRoot(e.ctx.pkg);
     // A `deny` object rather than a string means the root could not be established. Returning it

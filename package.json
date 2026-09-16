@@ -4,12 +4,13 @@
   "private": true,
   "description": "Machine-checkable gates for writing a research paper in git",
   "type": "module",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "test": "vigiles test --min=1",
     "lint": "eslint .",
     "lint:skills": "vigiles lint",
     "check:globs": "node scripts/rules-see-files.mjs",
+    "check:content-only": "node scripts/rules-are-content-only.mjs",
     "mutations": "node scripts/run-mutations.mjs"
   },
   "dependencies": {
@@ -21,6 +22,6 @@
     "@retorquere/bibtex-parser": "^10.0.1",
     "@unified-latex/unified-latex-util-parse": "^1.8.4",
     "eslint": "^10.9.1",
-    "vigiles": "^27.1.4"
+    "vigiles": "^27.2.0"
   }
 }
