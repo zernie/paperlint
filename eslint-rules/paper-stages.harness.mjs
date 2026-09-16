@@ -94,6 +94,12 @@ console.log(`✓ ${String(n)} assertions passed — paper/stages, both direction
 {
   const { mkdtempSync, writeFileSync, mkdirSync, rmSync } = await import("node:fs");
   const root = mkdtempSync(join(FIX, "..", ".tmp-stages-src-"));
+  // 🔴 try/finally, а НЕ уборка в конце блока. Наблюдено 16.09: под каждой мутацией ассерт
+  // бросает — то есть ровно тогда, когда харнесс делает свою работу, — и уборка на счастливом
+  // пути не выполняется. За один прогон батареи в репозитории осталось ВОСЕМЬ каталогов
+  // `.tmp-stages-src-*`, по числу намеренно убитых мутаций. Мусор здесь не косметика: драйвер
+  // мутаций отказывается работать на грязном дереве, то есть харнесс ломал бы следующий прогон.
+  try {
   const paper = join(root, "one");
   mkdirSync(join(paper, "versions"), { recursive: true });
   writeFileSync(join(paper, "versions", "2026-07-22-submitted.tex"), "x".repeat(120));
@@ -137,7 +143,9 @@ console.log(`✓ ${String(n)} assertions passed — paper/stages, both direction
   check("an acknowledged loss is still reported, not silenced",
         lost.length === 1 && /УТРАЧЕННЫМ/.test(lost[0]));
 
-  rmSync(root, { recursive: true, force: true });
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 }
 
 console.log(`✓ ${String(n)} assertions passed — paper/source, frozen bytes instead of a sha`);
