@@ -250,8 +250,14 @@ const unquote = (s) =>
     .replace(/"((?:[^"\\]|\\.)*)"/g, "$1");
 
 const redirectsInto = (raw, prefixes) =>
-  redirectTargets(raw).some((t) =>
-    prefixes.some((p) => t === p || t.startsWith(p + "/") || t.includes("/" + p + "/")),
+  redirectTargets(raw).some(
+    (t) =>
+      // ⚠️ This leg is WIDER than the argv leg: it claims any redirect target under the root,
+      // whatever its extension, so the frozen-snapshot carve-out has to be repeated here. It
+      // does not reach the argv leg's carve-outs either — noted, not widened, because loosening
+      // a guard beyond the case at hand is how gates stop holding.
+      !isFrozenSnapshot(t) &&
+      prefixes.some((p) => t === p || t.startsWith(p + "/") || t.includes("/" + p + "/")),
   );
 
 /**
@@ -310,8 +316,28 @@ const runsMutator = (cmd) => MUTATORS.some((m) => cmd.runs(m));
  * is data, code and bundles that no readability gate looks at. Observed while it was blocking
  * the artifact fix the pre-submission gate had just asked for.
  */
-const isPaperSource = (p) =>
+const isPaperSource = (p) => !isFrozenSnapshot(p) && hasSourceExtension(p);
+
+const hasSourceExtension = (p) =>
   p.endsWith(".tex") || /\/(paper|draft)\.md$/.test(p) || /^(paper|draft)\.md$/.test(p);
+
+/**
+ * A FROZEN SNAPSHOT — a file under a paper's `versions/`, which is the same carve-out as the
+ * reproduction bundle above and was missed only because a snapshot keeps the `.tex` extension of
+ * the live source it was copied from.
+ *
+ * 🔴 Why the gate must not claim it. Everything the guard protects is a PostToolUse check on the
+ * paper being WRITTEN — readability thresholds, the pipeline nudge, the unrun-gate check. None of
+ * them has anything to say about a snapshot: a frozen version is immutable by construction, it is
+ * never the file an author edits, and `paper/stages` already gates it far more strictly than any
+ * of those, by BYTES, in both directions.
+ *
+ * ⚠️ Observed: restoring `versions/2026-08-29-camera-ready.tex` from the one commit that still
+ * resolved was denied, so the only recoverable source of four declared stages was unreachable by
+ * the tool that could reach it. The guard was refusing the archival write while the live
+ * `paper.tex` beside it — the file it actually exists to protect — stayed open.
+ */
+const isFrozenSnapshot = (p) => /(^|\/)versions\/[^/]+$/.test(p);
 
 /** Paper-source paths named as arguments (as opposed to redirection targets). */
 const namesPaperSource = (raw, prefixes) =>
