@@ -67,6 +67,10 @@ PACKAGES=(
                             # Modern, so the PDF compiles clean and is typeset in the wrong fonts.
                             # Correct fonts also change metrics — on agenticdev-2026 the switch
                             # surfaced an overfull box that the CM build did not have.
+  # 🔴 Добавлено 2026-09-17: `eslint-rules/paper-texcount.harness.mjs` падал в свежем
+  # контейнере, и его собственный отказ называл лекарство — «ставится вместе с TeX Live:
+  # texlive-extra-utils». Знание было, оно просто не лежало в исполняемом файле.
+  texlive-extra-utils       # texcount — счёт слов, которым меряется объём статьи
   texlive-plain-generic     # binhex.tex, pulled in by newtx. Missing it is the opposite failure:
                             # a HARD "! LaTeX Error: File `binhex.tex' not found" + emergency stop,
                             # i.e. installing texlive-fonts-extra alone BREAKS a build that worked.
@@ -170,11 +174,22 @@ REQUIRED_FILES=(
 )
 
 
+# 🔴 ОДИН список, потому что копий было ДВЕ — здесь и в проверке после установки, — а файл
+# сам предупреждает абзацем выше: «a second list is how the two copies above drifted apart».
+# Добавление `texcount` в одну из них и было бы тем самым расхождением.
+REQUIRED_BINS=(pdflatex bibtex pdfinfo texcount)
+
 want_acm=0
-[ "${1:-}" = "--acm" ] && want_acm=1
+want_textidote=0
+for arg in "$@"; do
+  case "$arg" in
+    --acm) want_acm=1 ;;
+    --textidote) want_textidote=1 ;;
+  esac
+done
 
 missing=()
-for bin in pdflatex bibtex pdfinfo; do
+for bin in "${REQUIRED_BINS[@]}"; do
   command -v "$bin" >/dev/null || missing+=("$bin")
 done
 if [ "$want_acm" = 1 ] && command -v kpsewhich >/dev/null; then
@@ -218,7 +233,7 @@ fi
 # installs cleanly and still leaves `pdfinfo` absent is exactly the silent half-success
 # this script exists to end.
 still=()
-for bin in pdflatex bibtex pdfinfo; do
+for bin in "${REQUIRED_BINS[@]}"; do
   command -v "$bin" >/dev/null || still+=("$bin")
 done
 if [ "$want_acm" = 1 ] && ! kpsewhich acmart.cls >/dev/null 2>&1; then
@@ -231,3 +246,37 @@ if [ ${#still[@]} -gt 0 ]; then
 fi
 
 echo "✓ LaTeX toolchain installed and verified"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# textidote — НЕ apt-пакет, поэтому и стоит отдельно, а не строкой в PACKAGES.
+#
+# 🔴 ПРИЁМКА ЗДЕСЬ ДРУГАЯ, И ЭТО ГЛАВНОЕ. Для бинаря годится `command -v`; для jar-файла он
+# бессмысленен — наличие файла ничего не говорит о том, запустится ли он. Проверка поэтому
+# ЗАПУСКАЕТ его, ровно как требует правило «приёмка — не „установилось“, а „ЗАПУСКАЕТСЯ“».
+# Скачанный битым jar (обрыв, страница ошибки вместо файла) лежит на диске и выглядит
+# установленным; отличает его только попытка выполнить.
+#
+# ⚠️ Нужна Java. Её здесь НЕ ставим: `default-jre` тянет ещё сотни мегабайт, а отсутствие
+# Java — это состояние, о котором надо сказать, а не молча вылечить.
+if [ "$want_textidote" = 1 ]; then
+  jar="${TEXTIDOTE_JAR:-/opt/textidote/textidote.jar}"
+  if ! command -v java >/dev/null; then
+    echo "🔴 textidote требует Java, а её нет. Поставить: apt-get install -y default-jre"
+    exit 1
+  fi
+  if ! java -jar "$jar" --version >/dev/null 2>&1; then
+    echo "Ставлю textidote — ~8 МБ, один файл."
+    mkdir -p "$(dirname "$jar")"
+    if ! curl -sSLf -o "$jar" https://github.com/sylvainhalle/textidote/releases/download/v0.9/textidote.jar; then
+      echo "🔴 не удалось скачать textidote.jar"
+      exit 1
+    fi
+  fi
+  # Проверяем ПОСЛЕ скачивания, и тем же способом: запуском. Curl мог отдать 200 и страницу.
+  if ! java -jar "$jar" --version >/dev/null 2>&1; then
+    echo "🔴 textidote.jar на месте ($jar), но НЕ ЗАПУСКАЕТСЯ — файл битый или это не jar"
+    exit 1
+  fi
+  echo "✓ textidote установлен и запускается ($jar)"
+  echo "  харнессу нужна переменная:  export TEXTIDOTE_JAR=$jar"
+fi
