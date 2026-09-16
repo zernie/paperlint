@@ -44,5 +44,9 @@
   ],
   "engines": {
     "node": ">=22.13"
+  },
+  "bin": {
+    "research-paper-pipeline": "bin/rpp.mjs",
+    "rpp": "bin/rpp.mjs"
   }
 }
