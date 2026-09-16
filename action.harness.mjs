@@ -16,7 +16,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
-import yaml from "js-yaml";
+import * as yaml from "js-yaml";
 import { guard } from "./scripts/eslint-report-guard.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));

@@ -381,7 +381,7 @@ not evidence about the rule you care about. Both halves are tested
 ## Mutations
 
 ```bash
-npm run mutations    # 12 + 11 + 2, each with a "the patch landed" assertion
+npm run test:mutations    # 12 + 11 + 2, each with a "the patch landed" assertion
 ```
 
 A green harness under a mutation is a finding about the TEST, not a conclusion about the

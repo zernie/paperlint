@@ -11,17 +11,20 @@
     "lint:skills": "vigiles lint",
     "check:globs": "node scripts/rules-see-files.mjs",
     "check:content-only": "node scripts/rules-are-content-only.mjs",
-    "mutations": "node scripts/run-mutations.mjs"
+    "test:mutations": "node scripts/run-mutations.mjs"
   },
   "dependencies": {
+    "@eslint/plugin-kit": "^0.7.2",
+    "@retorquere/bibtex-parser": "^10.0.1",
+    "@unified-latex/unified-latex-util-parse": "^1.8.4",
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
     "@eslint/markdown": "^8.0.3",
-    "@eslint/plugin-kit": "^0.7.2",
-    "@retorquere/bibtex-parser": "^10.0.1",
-    "@unified-latex/unified-latex-util-parse": "^1.8.4",
     "eslint": "^10.9.1",
+    "vigiles": "^27.2.0"
+  },
+  "peerDependencies": {
     "vigiles": "^27.2.0"
   }
 }
