@@ -3,15 +3,52 @@
 Machine-checkable gates for writing a research paper in git, extracted from a private
 knowledge base.
 
-**Extracted so far (2026-09-11):** two ESLint rule modules over LaTeX — `latex-language.mjs`
-(a language that projects `.tex` into a markdown-shaped text with lengths and offsets
-preserved) and `tex-build.mjs` (`tex/future-promise`) — with their harnesses, their mutation
-batteries, and fixtures replacing the private corpus the tests used to read.
+## 🎯 THE GOAL, in one sentence
 
-**Not extracted:** the ~30 prose rules that consume the projection. Until they arrive, the
-language has exactly one downstream consumer here, and that consumer reads the file from disk
-rather than the projection — so the projection's own correctness is asserted directly in
-`latex-language.harness.mjs`, part II, not inferred from anyone's finding count.
+**Move every paper-writing convention a machine can decide OUT of prose and INTO an engine
+that fails the build** — and keep everything else honestly labelled as prose. The engine is
+ESLint. The unit of progress is "one more verdict decided by the engine instead of by a
+hand-written script".
+
+That last clause is the whole direction, and it is the part that keeps being forgotten:
+
+```
+ prose in a guideline   →   hand-written script   →   ESLint rule in the engine
+ rots silently              runs, but is OURS         editor-time · free AST · suppressible
+ ← where this started       ← where most of it is     ← where it is going
+```
+
+🔴 **A hand-written script is a WAYPOINT, not a destination.** Writing a new one is allowed
+only when the engine genuinely cannot express the check — and "cannot" means MEASURED, not
+assumed. Two things that sound like limits and are not:
+
+- *"ESLint only sees one file"* — true of its AST, false of the rule: a rule is an ordinary
+  JS module and may call `execFileSync("git", …)` or read a sibling file. If the reason to
+  stay a script is "it needs git", that reason is weak; measure the real cost before using it.
+- *"this runs programs, not lints files"* — that is a real limit, and the answer is the seam
+  already proven here: **a script PRODUCES facts into a JSON file, and ESLint JUDGES that
+  file.** The verdict lands in the engine even though the work did not.
+
+## 📊 STATE — measured 2026-09-16 (re-measure, never cite)
+
+| | |
+|---|---:|
+| ESLint rules | **6** — `latex-language` · `tex-build` · `papers` · `cold-read-cause` · `review-findings-cause` · `doc-fields` |
+| harnesses | **45** |
+| mutation batteries | **22** |
+| skills | **24** |
+| hooks (runnable `.mjs`) | **5** |
+| repo-wide scripts | 5 |
+| files tracked / commits | 308 / 43 |
+
+**A real consumer dogfoods this package on every CI run**, so a breaking change here turns a
+paper pipeline red somewhere else the same day. That is deliberate — it is the only thing
+keeping the extraction honest.
+
+⚠️ **This table is a SNAPSHOT, not a fact about today, and it has already gone stale once.**
+The line standing here until 2026-09-16 said "two ESLint rule modules" while six were shipped,
+24 skills had moved in, and hooks existed at all. Re-measure with `git ls-files` before
+repeating any number from it.
 
 ## First command in a fresh container
 
@@ -45,6 +82,34 @@ mutation, and assert the patch actually landed before trusting a green run.
 exactly like a rule that passed. Any rule shipped here must be loud when its input set is
 empty. This is the specific defect that blocks stage 1 of the plan: in the source base a
 fresh clone yields RC=0, 652 findings, zero errors — because 19 rules saw no files at all.
+
+**5. "It can't be done in the engine" must be MEASURED, not assumed.** Every one of these was
+stated confidently on 2026-09-16 and every one fell to a single command:
+
+| the claim | what one command showed |
+|---|---|
+| "a lint rule can't know a git date, so this stays a script" | a rule is plain JS; `execFileSync("git", …)` is legal in it. The real costs (per-file invocation, `--cache` keyed on content) are solvable, so this was a preference dressed as a limit |
+| "we need our own glob expander" | `fs.globSync` ships in Node 22 and returned the identical set. 31 hand-written lines of regex existed for nothing |
+| "the tool can't run a file that config excludes" | it can, and says so: `matches exclude … — running because you named it` |
+
+⇒ Before writing machinery, **run the thing you are about to replace and paste its output.**
+"I couldn't get it to work" is data about the attempt, not about the tool.
+
+**6. A program shipped by this package MUST NOT depend on the consumer's cwd.** Measured
+2026-09-16: three hooks here read their config as `provide("pkg", "cat package.json")`. The
+consumer's session changed directory into a subfolder for unrelated reasons, `cat` failed, and
+the Bash gate — which fails closed, correctly — denied **every command in that session**,
+including the one that would undo it. The nudges next to it would have failed *silently*,
+which is worse.
+
+Resolve paths from the repository root (`git rev-parse --show-toplevel`) or from the module's
+own location, never from where the caller happens to stand. The blast radius of a cwd
+assumption is not this package — it is somebody else's whole session.
+
+**7. Do not describe what you have not opened.** A `README` here nearly shipped the line
+"MIT — see LICENSE" on 2026-09-16. There is no `LICENSE` file and `package.json` says
+`UNLICENSED`. Publishing is irreversible and this repo is public: every factual claim in a
+document meant for strangers gets checked against the disk in the same pass that writes it.
 
 ## Distribution — no `smh init`, and that is a measured decision (2026-09-10)
 
