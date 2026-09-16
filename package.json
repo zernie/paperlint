@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "lint:skills": "vigiles lint",
     "check:globs": "node scripts/rules-see-files.mjs",
+    "check:content-only": "node scripts/rules-are-content-only.mjs",
     "mutations": "node scripts/run-mutations.mjs"
   },
   "dependencies": {
