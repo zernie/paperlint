@@ -78,7 +78,10 @@ scripts/          repo-wide runners (mutations, glob coverage, skill lint)
 
 ## Licence
 
-⚠️ **Not settled yet.** `package.json` says `UNLICENSED` and there is no `LICENSE` file, which
-means the default applies: all rights reserved, and nobody may use this. That is a placeholder,
-not a decision — and an awkward one, because the section above criticises a neighbour for a
-restrictive licence. Until a licence is chosen, treat the code as readable but not reusable.
+**MIT** — see [LICENSE](LICENSE). Chosen deliberately, and it is the one thing this repo
+refuses to copy from its nearest neighbour: a suite that restricts commercial use by licence
+cannot be adopted by the people whose papers it would check.
+
+Until 2026-09-16 this repo was public and declared `UNLICENSED` with no `LICENSE` file, which
+means the default applied — all rights reserved, nobody could use it — while the section above
+criticised a neighbour for exactly that class of restriction.

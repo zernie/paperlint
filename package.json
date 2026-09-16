@@ -4,7 +4,7 @@
   "private": true,
   "description": "Machine-checkable gates for writing a research paper in git",
   "type": "module",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "test": "vigiles test --min=1",
     "lint": "eslint .",
