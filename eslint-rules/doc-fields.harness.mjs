@@ -52,7 +52,8 @@ const fm = (body, extra = "") =>
 {
   const m = run(fm("Разбор.", "read: полностью"));
   assert.equal(m.length, 1, `случай 3: значение вне словаря обязано давать одну находку, пришло ${m.length}`);
-  assert.match(m[0].message, /`read: полностью` — value is not in the list/, m[0].message);
+  assert.match(m[0].message, /`read: полностью` — value is not in the list/,
+    `значение вне словаря обязано быть НАЗВАНО значением вне словаря — пришло: ${m[0].message}`);
   recordCheck("значение вне словаря — находка, и она называет пришедшее значение");
 }
 
@@ -65,7 +66,7 @@ const fm = (body, extra = "") =>
   );
   const m = run(confession);
   assert.equal(m.length, 1, "жирная проза со словом «Прочитано» не объявляет поля — ожидалась находка");
-  assert.match(m[0].message, /no `read` field/, m[0].message);
+  assert.match(m[0].message, /no `read` field/, `пропущенное поле обязано быть НАЗВАНО (случай 1) — пришло: ${m[0].message}`);
 
   // и обратная половина: то же признание, объявленное ПОЛЕМ, законно и молчит
   const declared = fm("Полный текст обязателен до сабмита.", "read: abstract");
@@ -106,7 +107,8 @@ const fm = (body, extra = "") =>
   const bare = "# Сосед\n\nРазбор без всякой шапки.\n";
   const m = run(bare);
   assert.equal(m.length, 1, `случай 7: документ без фронтматтера обязан давать находку, пришло ${m.length}`);
-  assert.match(m[0].message, /no frontmatter/, m[0].message);
+  assert.match(m[0].message, /no frontmatter/,
+    `отсутствие шапки обязано иметь СВОЙ вердикт — пришло: ${m[0].message}`);
   recordCheck("документ без фронтматтера не освобождается — иначе гейт обходится удалением шапки");
 }
 
@@ -131,7 +133,8 @@ const fm = (body, extra = "") =>
   const broken = ["---", "title: [нет закрывающей", "created: 2026-08-01", "---", "", "Тело."].join("\n");
   const m = run(broken);
   assert.equal(m.length, 1, `случай 9: сломанный YAML обязан давать одну находку, пришло ${m.length}`);
-  assert.match(m[0].message, /does not parse as YAML/, m[0].message);
+  assert.match(m[0].message, /does not parse as YAML/,
+    `сломанная шапка обязана иметь СВОЙ вердикт — пришло: ${m[0].message}`);
   recordCheck("неразбираемая шапка — отдельное сообщение, а не молчание и не «поля нет»");
 }
 
@@ -142,7 +145,7 @@ const fm = (body, extra = "") =>
   const empty = ["---", "created: 2026-08-01", "read:", "---", "", "Тело."].join("\n");
   const m = run(empty);
   assert.equal(m.length, 1, `случай 10: пустое значение обязано читаться как отсутствующее, пришло ${m.length}`);
-  assert.match(m[0].message, /no `read` field/, m[0].message);
+  assert.match(m[0].message, /no `read` field/, `пропущенное поле обязано быть НАЗВАНО (случай 2) — пришло: ${m[0].message}`);
   recordCheck("пустое значение поля = отсутствующее, а не «значение ---»");
 }
 
