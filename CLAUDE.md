@@ -316,6 +316,51 @@ in the consumer on 2026-09-10 (25.1.0 -> 27.1.4) and cost real recovery work.
 npm ls vigiles    # prints `invalid` when what is installed does not satisfy the manifest
 ```
 
+⚠️ **What that command does NOT tell you, and the boundary matters because the command reads
+like a freshness check.** It compares what is INSTALLED against this repo's MANIFEST. It says
+nothing about the registry. Measured 2026-09-16: manifest `^27.1.4`, installed `27.1.6`,
+published `27.2.0` — exit code **0**, because the range is satisfied. The repo had been one
+minor behind for days and every local check was green.
+
+#### Dependabot carries the half `npm ls` cannot — and its two delays STACK
+
+That staleness is why `.github/dependabot.yml` exists here. The reasoning is worth keeping
+because the obvious objection to a bot in this org is already recorded and does NOT apply:
+a bot was switched off in a sibling repository for burning Actions minutes — **that
+repository is private**. This one is public, minutes are free, so the objection does not
+travel. If this repo is ever made private, revisit the file along with it.
+
+🔴 **A new release does NOT wake the bot.** Two delays add up, and the second one is invisible
+until you read the reference:
+
+| | default | what the docs say |
+|---|---:|---|
+| `schedule.interval` | — | the check runs on the schedule and only on the schedule |
+| **`cooldown`** | **3 days** | *"a new version is not considered for a version update until 3 days after its release"* |
+
+With the weekly schedule this file shipped with first, the window was **3–10 days**. It is now
+`daily`, and `vigiles` is listed in `cooldown.exclude`, so for THIS package the window is one
+schedule tick.
+
+**Why `vigiles` and nothing else is exempt:** the cooldown guards against a release that gets
+yanked hours later. That is a real risk for a third-party package and an empty one for our own
+— we would be the ones yanking it, and we can ship several versions of it in a single day, so
+a three-day hold would have the bot proposing the version from the day before yesterday.
+
+🔴 **And the conclusion is bigger than a cadence knob: for our OWN package no bot schedule is
+the primary path, because no schedule can outrun same-day releases.** The primary path is the
+rule already recorded in the consumer's base — merge a PR in `vigiles`, bump every consumer in
+the same pass. The bot is the backstop for the case that actually bit us: the rule named ONE
+consumer while there were two, and this repo sat forgotten on `^27.1.4`.
+
+⚠️ **What the file does not control**, recorded because the sibling repo already lost a day to
+it: `dependabot.yml` configures *version* updates only. **Security** updates are a separate
+mechanism driven by advisories and a repository SETTING; their cadence cannot be changed from
+this file, and deleting the file would not stop them.
+
+Need it now rather than at the next tick: **Insights → Dependency graph → Dependabot → Check
+for updates**.
+
 ## The guard against a green zero
 
 Rule 4 is enforced, not asserted: `scripts/rules-see-files.mjs` loads `eslint.config.mjs`,
