@@ -99,6 +99,21 @@ const STOP = { hook_event_name: "Stop", tool_name: "", tool_input: {} };
 const at = (dir, name, input) =>
   runHook(program(name), input, { cwd: dir, env: { CLAUDE_PROJECT_DIR: dir } });
 
+/**
+ * The same hook, run with the tool's cwd DRIFTED away from the project root.
+ *
+ * 🔴 Why this helper has to exist at all: `at()` sets `cwd` and `CLAUDE_PROJECT_DIR` to the SAME
+ * directory, so a provider reading `package.json` relatively and one reading it anchored are
+ * indistinguishable under it. The defect was therefore invisible by construction — not missed
+ * by inattention, but unexpressible by the only runner the harness had.
+ *
+ * ⚠️ The drifted cwd is deliberately a directory with NO `package.json`, because that is the
+ * live case: a session `cd`s into a subtree, and vigiles runs every provider «via execSync in
+ * the hook's cwd».
+ */
+const adrift = (dir, name, input) =>
+  runHook(program(name), input, { cwd: mkdtempSync(join(tmpdir(), "drift-")), env: { CLAUDE_PROJECT_DIR: dir } });
+
 /** An injected notice, as the model would receive it — not the returned reaction. */
 const injected = (r) => {
   try {
@@ -209,6 +224,37 @@ try {
     deny("sed -i on the live source beside versions/", `sed -i s/a/b/ ${T}`);
     deny("a write to a .tex that merely MENTIONS versions", `cp /tmp/versions/a.tex ${T}`);
     allow("a grep of a status file", `grep -c x docs/papers/alpha/PIPELINE-STATUS.md 2${GT}/dev/null`);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // III-b. CWD DRIFT — every hook reads its manifest from the PROJECT ROOT
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🔴 Reported live 2026-09-16 by a consumer session: after a `cd` into a subdirectory with no
+  // `package.json`, `paper-edit-guard` denied EVERY Bash command — `pwd` included — and the wedge
+  // could not be escaped from the shell, because a PreToolUse hook fires before the command that
+  // would fix it. The cause is one character of scope: the provider read `package.json`
+  // relatively, and vigiles runs providers «via execSync in the hook's cwd».
+  //
+  // 🔴 AND THE SIBLINGS FAIL THE OTHER WAY, WHICH IS WHY THEY GET THEIR OWN ASSERTIONS. They are
+  // PostToolUse and answer `nothing()` when the root will not parse, so a drifted cwd does not
+  // block anything — it turns them OFF. Silence is a nudge's success state, so a dead nudge and a
+  // working one produce identical output. The lockout announces itself; this does not.
+  {
+    const dir = fixture({ "research-paper-pipeline": { papers: "docs/papers" } });
+
+    // paper-edit-guard: still GUARDS from a foreign cwd, rather than denying everything.
+    const write = at(dir, "paper-edit-guard", onBash(`sed -i s/a/b/ docs/papers/alpha/paper.tex`));
+    check("drift · guard still blocks a paper write", write.exitCode === 2);
+    const idle = adrift(dir, "paper-edit-guard", onBash("echo hi"));
+    check(`drift · guard does NOT deny an unrelated command (rc=${idle.exitCode})`, idle.exitCode === 0);
+    const guarded = adrift(dir, "paper-edit-guard", onBash(`sed -i s/a/b/ docs/papers/alpha/paper.tex`));
+    check("drift · guard STILL blocks the paper write it exists for", guarded.exitCode === 2);
+
+    // The two PostToolUse hooks: still SPEAK from a foreign cwd.
+    const nudge = adrift(dir, "paper-skills-nudge", onEdit(`${dir}/docs/papers/alpha/paper.tex`));
+    check("drift · the skills nudge still fires", injected(nudge).length > 0);
+    const gates = adrift(dir, "paper-status-gates", onEdit(`${dir}/docs/papers/alpha/PIPELINE-STATUS.md`));
+    check(`drift · the status-gates hook still runs (rc=${gates.exitCode})`, gates.exitCode === 0);
   }
 
   // ═══════════════════════════════════════════════════════════════════════════

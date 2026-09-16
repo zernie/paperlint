@@ -114,7 +114,17 @@ const surface = (dir) =>
 export default experimental_defineReact({
   on: "PostToolUse",
   match: tools("Edit", "Write", "MultiEdit"),
-  needs: [provide("pkg", "cat package.json")],
+  // 🔴 ПУТЬ ПРИВЯЗАН К КОРНЮ ПРОЕКТА, и это не косметика. vigiles исполняет провайдер «via
+  // execSync in the hook's cwd», а cwd процесса хука задаёт проводка потребителя — строка,
+  // которой этот хук не видит. Голое `cat package.json` поэтому читается от того каталога,
+  // куда в последний раз ушёл инструмент Bash, и `cd` в подкаталог без манифеста ломает чтение.
+  //
+  // ⚠️ ОТКАЗ ЗДЕСЬ ТИХИЙ, и потому опаснее, чем у соседа. `paper-edit-guard` на PreToolUse при
+  // нечитаемом объявлении ДЕНАИТ — громко и заметно. Этот хук на PostToolUse возвращает
+  // `nothing()`, то есть просто перестаёт срабатывать: цепочка `cat` падает → пустая строка →
+  // `JSON.parse("")` бросает → `papersRoot` отдаёт null → тишина. А тишина у нуджа и есть
+  // состояние успеха, поэтому мёртвый хук неотличим от работающего.
+  needs: [provide("pkg", 'cat "${CLAUDE_PROJECT_DIR:-.}/package.json"')],
   react: (e) => {
     const root = papersRoot(e.ctx.pkg);
     if (root === null) return nothing();
