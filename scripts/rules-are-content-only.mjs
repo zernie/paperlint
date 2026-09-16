@@ -15,15 +15,14 @@
  * green, so the failure is one-directional and in the flattering direction.
  *
  * ── WHAT IT CHECKS, AND WHY NOT A GREP ──────────────────────────────────────
- * `child_process` in the AST: `import`, and `require()` for the CommonJS case. Parsed, not
- * grepped, so the string in this very comment is not a finding — a text guard would have to
- * exempt itself, which is the failure mode that makes text guards unmaintainable.
+ * A `child_process` spawner called with `git` as the program, read from the AST. Parsed, not
+ * grepped, so the words `git cat-file` in this very comment are not a finding — a text guard
+ * would have to exempt itself, which is the failure mode that makes text guards unmaintainable.
  *
- * ⚠️ THE BOUND, stated so the check is not mistaken for more than it is. It answers "does a
- * rule spawn a process", which is a PROXY for "does a rule read history". A rule could open
- * `.git/` with `fs` and pass. That is not covered, and the honest reason is that a rule reading
- * any path under `.git` is indistinguishable at this level from a rule reading a data file.
- * What IS covered is every form the defect has actually taken.
+ * ⚠️ THE BOUND, stated so the check is not mistaken for more than it is. Two things pass: a
+ * rule that opens `.git/` with `fs` (indistinguishable at this level from reading a data file),
+ * and a rule that assembles the program name at runtime. Both accepted deliberately — see the
+ * note on `SPAWNERS` for the false positive that forced the predicate this narrow.
  *
  * Run: `node scripts/rules-are-content-only.mjs`  (exit 1 and a named rule on a finding)
  * Tested by: `scripts/rules-are-content-only.harness.mjs` — quiet on the real corpus, firing on
@@ -34,36 +33,44 @@ import { join } from "node:path";
 import { parse } from "espree";
 import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
 
-const BANNED = new Set(["child_process", "node:child_process"]);
+/**
+ * 🔴 THE PREDICATE IS "RUNS GIT", NOT "SPAWNS A PROCESS", and the narrowing was forced by a
+ * FALSE POSITIVE on the consumer's corpus the hour this check shipped: `paper-texcount.mjs`
+ * shells out to `texcount` to count words in a .tex, which is a measuring tool, not history.
+ * A false positive on an `error` gate is worse than a miss — the gate that cannot be cleared
+ * gets switched off, and this one would have been switched off on its first run.
+ *
+ * ⚠️ THE COST OF NARROWING, stated rather than hidden: a rule that builds the program name at
+ * runtime (`const g = "gi" + "t"`) passes. That is accepted. The defect has taken exactly one
+ * form — a literal `git` handed to a `child_process` function — and a check that also caught
+ * the contrived form would have to claim every spawn, which is the false positive above.
+ */
+const SPAWNERS = new Set([
+  "exec", "execSync", "execFile", "execFileSync", "spawn", "spawnSync", "fork",
+]);
+
+/** `"git"` as the program, or `"git …"` as the head of a shell line handed to `exec`. */
+const isGit = (v) => typeof v === "string" && (v === "git" || v.startsWith("git "));
 
 /** Rule sources only: a mutation file plants defects on purpose, a harness asserts about them. */
 const isRuleSource = (f) =>
   f.endsWith(".mjs") && !f.endsWith(".mutations.mjs") && !f.endsWith(".harness.mjs");
 
-/** @param {string} src @returns {string[]} the banned specifiers this source pulls in */
+/** @param {string} src @returns {string[]} the git invocations this source makes */
 export function processImports(src) {
   const ast = parse(src, { ecmaVersion: "latest", sourceType: "module", range: false });
   const found = [];
   const walk = (n) => {
     if (n === null || typeof n !== "object") return;
     if (Array.isArray(n)) return n.forEach(walk);
-    if (
-      (n.type === "ImportDeclaration" || n.type === "ExportNamedDeclaration" ||
-       n.type === "ExportAllDeclaration") &&
-      n.source?.value !== undefined && BANNED.has(String(n.source.value))
-    ) found.push(String(n.source.value));
-    if (
-      n.type === "CallExpression" && n.callee?.name === "require" &&
-      n.arguments?.[0]?.value !== undefined && BANNED.has(String(n.arguments[0].value))
-    ) found.push(String(n.arguments[0].value));
-    // 🔴 A dynamic `import()` is an `ImportExpression`, NOT a `CallExpression` with an `Import`
-    // callee — that spelling is the legacy one and espree does not produce it. Caught by the
-    // harness on the first run, which is the whole argument for listing the node types a check
-    // walks instead of describing its coverage in prose.
-    if (
-      n.type === "ImportExpression" &&
-      n.source?.value !== undefined && BANNED.has(String(n.source.value))
-    ) found.push(String(n.source.value));
+    // Both spellings of the callee: `execFileSync(…)` after a named import, and
+    // `cp.execFileSync(…)` after a namespace import. Listed, not described — the node types a
+    // check walks are the only honest statement of its coverage.
+    if (n.type === "CallExpression") {
+      const name = n.callee?.type === "MemberExpression" ? n.callee.property?.name : n.callee?.name;
+      if (SPAWNERS.has(String(name)) && isGit(n.arguments?.[0]?.value))
+        found.push(String(n.arguments[0].value));
+    }
     for (const k of Object.keys(n)) if (k !== "parent") walk(n[k]);
   };
   walk(ast);

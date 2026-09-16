@@ -30,26 +30,43 @@ const check = (label, ok) => { n++; assert.equal(ok, true, label); };
   check("mutation files are not scanned as rules", !checked.some((f) => f.endsWith(".mutations.mjs")));
 }
 
-// ── II. fires on every form the defect takes ─────────────────────────────────
+// ── II. fires on every form the defect has taken ────────────────────────────
 for (const [label, src] of [
-  ["a static import", `import { execFileSync } from "child_process";\nexport default {};`],
-  ["the node: prefix", `import cp from "node:child_process";\nexport default {};`],
-  ["a require call", `const cp = require("child_process");\nmodule.exports = {};`],
-  ["a dynamic import", `const cp = await import("node:child_process");\nexport default {};`],
+  ["execFileSync with a git argv", `import { execFileSync } from "node:child_process";
+     execFileSync("git", ["cat-file", "-e", sha]);`],
+  ["a namespaced call", `import cp from "node:child_process";
+     cp.spawnSync("git", ["rev-parse", ref]);`],
+  ["execSync with a git shell line", `import { execSync } from "child_process";
+     execSync("git log --oneline -1");`],
+  ["exec, async form", `exec("git rev-list --all", cb);`],
 ]) {
   check(`FIRES on ${label}`, processImports(src).length === 1);
 }
 
-// ── III. quiet on sources that only MENTION it — what a grep cannot do ───────
+// ── III. the FALSE POSITIVE that forced the narrowing, asserted so it cannot return ──
+// 🔴 `paper-texcount.mjs` in the consumer shells out to `texcount` to count words in a .tex.
+// The first version of this check keyed on importing `child_process` at all, so it claimed that
+// rule on its first run — a false positive on an `error` gate, which is worse than a miss
+// because the gate that cannot be cleared gets switched off rather than fixed.
 for (const [label, src] of [
-  ["a comment naming the module", `// never reach for child_process here\nexport default {};`],
-  ["a string literal", `export const why = "child_process is banned in rules";`],
-  ["a message a rule reports", `export default { meta: { messages: { m: "use node:child_process? no" } } };`],
+  ["a rule spawning texcount", `import { execFileSync } from "node:child_process";
+     execFileSync("texcount", ["-brief", file]);`],
+  ["a rule spawning pdflatex", `import { spawnSync } from "node:child_process";
+     spawnSync("pdflatex", [tex]);`],
+  ["importing child_process without running git", `import { execFileSync } from "node:child_process";
+     export default {};`],
 ]) {
   check(`quiet on ${label}`, processImports(src).length === 0);
 }
 
-// An unrelated import is not a finding — otherwise "fires" would mean "fires at everything".
-check("quiet on an unrelated import", processImports(`import { statSync } from "node:fs";`).length === 0);
+// ── IV. quiet on sources that only MENTION it — what a grep cannot do ───────
+for (const [label, src] of [
+  ["a comment naming git", `// never reach for git cat-file here\nexport default {};`],
+  ["a string literal", `export const why = "git cat-file is banned in rules";`],
+  ["a reported message", `export default { meta: { messages: { m: "run git cat-file? no" } } };`],
+  ["a program merely NAMED git-something", `execFileSync("git-lfs-helper", []);`],
+]) {
+  check(`quiet on ${label}`, processImports(src).length === 0);
+}
 
 console.log(`rules-are-content-only.harness: ${n} assertions passed`);
