@@ -53,6 +53,14 @@ check("текст без пометок даёт пустой набор — CLI
     check("СИМЛИНК на каталог не удваивает счёт — это не новый каталог",
           countFiles(root, ".harness.mjs") === 2);
 
+    // 🔴 ВТОРОЙ вид ссылки, и его здесь не было — поймала мутация, а не я. Ссылка на КАТАЛОГ
+    // отсекается уже тем, что `lstat` не считает её каталогом; отдельный страж
+    // `isSymbolicLink()` нужен ради ссылки на ФАЙЛ с подходящим суффиксом — она прошла бы
+    // проверку `endsWith` и удвоила счёт. Без этого ассерта страж выглядел бы мёртвым кодом.
+    symlinkSync(join(root, "real", "a.harness.mjs"), join(root, "link.harness.mjs"));
+    check("СИМЛИНК на файл-харнесс тоже не удваивает счёт",
+          countFiles(root, ".harness.mjs") === 2);
+
     mkdirSync(join(root, "node_modules", "pkg"), { recursive: true });
     writeFileSync(join(root, "node_modules", "pkg", "c.harness.mjs"), "");
     check("node_modules не считается", countFiles(root, ".harness.mjs") === 2);
