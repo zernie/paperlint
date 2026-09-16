@@ -1,0 +1,29 @@
+\documentclass{acmart}
+\begin{filecontents*}{refs.bib}
+@inproceedings{reachable,
+  title  = {A paper a reader can actually open},
+  author = {Doe, Jane},
+  year   = {2026},
+  doi    = {10.1145/3843282.3844423}
+}
+@article{alsoreachable,
+  title = {Reachable through a url instead},
+  author = {Roe, Rick},
+  year  = {2025},
+  url   = {https://example.org/paper}
+}
+@misc{reachableviaarxiv,
+  title = {Reachable because the note carries the arXiv id},
+  author = {Poe, Pat},
+  note  = {arXiv:2310.05736}
+}
+\end{filecontents*}
+\begin{document}
+\title{A clean paper}
+\section{Introduction}
+\label{sec:intro}
+Consistent cross-references: Figure~\ref{fig:one} and Figure~\ref{fig:two}.
+Section~\ref{sec:intro} is written out, never abbreviated with a sign.
+Effect sizes are written with a leading zero: $p < 0.05$ and $d = 0.21$.
+The arXiv identifier 2310.05736 must not be read as a bare decimal.
+\end{document}

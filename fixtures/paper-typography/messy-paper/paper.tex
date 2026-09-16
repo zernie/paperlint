@@ -1,0 +1,27 @@
+\documentclass{acmart}
+\begin{filecontents*}{refs.bib}
+@inproceedings{unreachableone,
+  title  = {No doi, no url, no arXiv id},
+  author = {Doe, Jane},
+  year   = {2026}
+}
+@article{unreachabletwo,
+  title  = {Also unreachable},
+  author = {Roe, Rick},
+  year   = {2025}
+}
+@misc{reachable,
+  title = {This one is fine},
+  note  = {arXiv:2310.05736}
+}
+\end{filecontents*}
+\begin{document}
+\title{A messy paper}
+\section{Introduction}
+\label{sec:intro}
+The literal sign appears here: §~\ref{sec:intro}.
+The macro form renders as the same sign: \S\ref{sec:intro} and \S~\ref{sec:intro}.
+Mixed cross-references: Fig.~\ref{fig:one} next to Figure~\ref{fig:two}.
+Bare decimals with no leading zero: $p < .05$ and $d = .21$.
+The arXiv identifier 2310.05736 must still not be counted.
+\end{document}
