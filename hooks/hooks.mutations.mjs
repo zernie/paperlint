@@ -118,8 +118,29 @@ const M = [
     "guard/the whole subtree guarded, not just sources",
     "drop the extension filter — copying a script into a paper's repro bundle is denied, which is " +
       "ordinary work being refused, and a guard that refuses ordinary work gets muted",
-    "const isPaperSource = (p) =>\n  p.endsWith(\".tex\") || /\\/(paper|draft)\\.md$/.test(p) || /^(paper|draft)\\.md$/.test(p);",
-    "const isPaperSource = (p) => p.length > 0;",
+    // 🔴 Цель переехала 16.09: `isPaperSource` разделена на «не снимок» И «расширение исходника»,
+    // когда `versions/` получил вырезку. Мутация метит именно в ФИЛЬТР РАСШИРЕНИЯ — снятие
+    // вырезки это другое свойство и у него своя мутация ниже.
+    "const hasSourceExtension = (p) =>\n  p.endsWith(\".tex\") || /\\/(paper|draft)\\.md$/.test(p) || /^(paper|draft)\\.md$/.test(p);",
+    "const hasSourceExtension = (p) => p.length > 0;",
+  ],
+  [
+    GUARD,
+    "guard/вырезка versions/ перестаёт освобождать",
+    "снять освобождение замороженных снимков — архивная запись в `versions/` снова запрещена, " +
+      "и восстановить исходник статьи нечем: гейт закрывает неизменяемый артефакт, оставляя " +
+      "открытым живой `paper.tex`, ради которого он и существует",
+    "const isPaperSource = (p) => !isFrozenSnapshot(p) && hasSourceExtension(p);",
+    "const isPaperSource = (p) => hasSourceExtension(p);",
+  ],
+  [
+    GUARD,
+    "guard/вырезка versions/ становится ШИРЕ, чем надо",
+    "объявить снимком что угодно — вырезка накрывает живой `paper.tex`, и страж перестаёт " +
+      "быть стражем, продолжая выглядеть установленным. Парная к предыдущей: одна доказывает, " +
+      "что освобождение ЕСТЬ, другая — что оно не дотягивается до того, что защищают",
+    "const isFrozenSnapshot = (p) => /(^|\\/)versions\\/[^/]+$/.test(p);",
+    "const isFrozenSnapshot = () => true;",
   ],
   [
     GUARD,
