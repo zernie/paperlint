@@ -33,6 +33,12 @@ async function cli(args, cwd) {
   try {
     const code = await run(args, { log: (...a) => out.push(a.join(" ")), err: (...a) => out.push(a.join(" ")) });
     return { code, out: out.join("\n") };
+  } catch (e) {
+    // 🔴 УТЕЧКА ИСКЛЮЧЕНИЯ — ЭТО СВОЙСТВО, КОТОРОЕ НАДО УТВЕРЖДАТЬ АССЕРТОМ, А НЕ ЛОВИТЬ
+    // ПАДЕНИЕМ. Мутация, снимающая catch вокруг ESLint, роняла харнесс СТЕКОМ, и драйвер — по
+    // своему строгому правилу «убито только на СВОЁМ ассерте» — отказывался считать это
+    // убийством и печатал «survived». То есть настоящий дефект выглядел как слабый тест.
+    return { code: 99, out: `THREW: ${e?.message ?? e}` };
   } finally {
     process.chdir(prev);
   }
@@ -104,6 +110,8 @@ check("путь и опции разбираются", (() => {
     // стек вместо объяснения.
     mkdirSync(join(root, "nothing"), { recursive: true });
     const empty = await cli(["check", "nothing"], root);
+    check("утилита НЕ выпускает исключение наружу — отказ объявляется кодом возврата",
+          empty.code !== 99);
     check("пустой набор — ОТКАЗ, а не зелёный ноль", empty.code === 1);
     check("и отказ объясняет, что именно не нашлось",
           /nothing was linted/.test(empty.out) && /not a clean report/.test(empty.out));
