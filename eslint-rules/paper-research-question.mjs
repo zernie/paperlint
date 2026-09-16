@@ -73,7 +73,7 @@ export default {
         type: "suggestion",
         docs: {
           description:
-            "статья, объявившая стадию, формулирует свой research question явно — иначе рецензент реконструирует его сам и пишет об этом",
+            "a paper that declares a stage states its research question explicitly — otherwise the reviewer reconstructs it themselves, and says so",
         },
         schema: [
           {
@@ -88,7 +88,7 @@ export default {
         ],
         messages: {
           missing:
-            "статья отгружена (стадия «{{stages}}»), но НИ РАЗУ не формулирует research question явно. Это дословный пункт рецензента A по agenticdev (#20). Advisory: у position-статьи RQ может и не быть, но тогда это РЕШЕНИЕ, а не пропуск",
+            "the paper shipped (stage «{{stages}}») but never states a research question. This is reviewer A's verbatim point on agenticdev (#20). Advisory: a position paper may legitimately have none — but then that is a DECISION, not an omission",
         },
       },
       create(context) {

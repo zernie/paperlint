@@ -65,7 +65,7 @@ export default {
         type: "problem",
         docs: {
           description:
-            "документ объявляет обязательные поля фронтматтера с допустимыми значениями, а не намекает на них разметкой",
+            "a document declares its required frontmatter fields and their allowed values, instead of hinting at them with markup",
         },
         schema: [
           {
@@ -91,12 +91,12 @@ export default {
         ],
         messages: {
           noFrontmatter:
-            "нет фронтматтера — документ этого класса обязан объявлять поля {{names}}. Отсутствие шапки не освобождает: иначе проверка обходится её удалением.",
-          malformed: "фронтматтер не разбирается как YAML ({{why}}) — поля {{names}} прочитать нечем.",
+            "no frontmatter — a document of this class must declare the fields {{names}}. A missing header is not an exemption: otherwise the check is bypassed by deleting it.",
+          malformed: "the frontmatter does not parse as YAML ({{why}}) — there is nothing to read the fields {{names}} from.",
           missing:
-            "во фронтматтере нет поля `{{name}}`{{hint}}. Допустимые значения: {{values}}. Пометка в тексте полем не является: разметка говорит об оформлении, а не о данных.",
+            "the frontmatter has no `{{name}}` field{{hint}}. Allowed values: {{values}}. A note in the body is not a field: markup describes presentation, not data.",
           badValue:
-            "`{{name}}: {{actual}}` — значение не из списка. Допустимые: {{values}}.",
+            "`{{name}}: {{actual}}` — value is not in the list. Allowed: {{values}}.",
         },
       },
       create(context) {
@@ -122,7 +122,7 @@ export default {
               context.report({
                 node,
                 messageId: "malformed",
-                data: { why: "шапка не является отображением ключ–значение", names: names.join(", ") },
+                data: { why: "the header is not a key-value mapping", names: names.join(", ") },
               });
               return;
             }

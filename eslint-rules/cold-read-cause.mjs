@@ -43,7 +43,7 @@ export default {
         type: "suggestion",
         docs: {
           description:
-            "каждая ОТКРЫТАЯ находка перечита обязана называть причину — что в пайплайне её породило",
+            "every OPEN cold-read finding names its cause — what in the pipeline produced it",
         },
         schema: [
           {
@@ -58,7 +58,7 @@ export default {
         ],
         messages: {
           noCause:
-            "открытая находка перечита не называет «{{marker}}» (скилл · нет скилла · хук · правило). Находка без причины чинится точечно, и следующий экземпляр того же класса опять найдут глазами.",
+            "an open cold-read finding does not name a «{{marker}}» (a skill · a missing skill · a hook · a rule). A finding without a cause gets patched in one spot, and the next instance of the same class is found by eye again.",
         },
       },
       create(context) {

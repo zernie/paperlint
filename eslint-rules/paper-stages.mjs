@@ -93,19 +93,19 @@ export default {
         type: "problem",
         docs: {
           description:
-            "стадия статьи объявлена полем, и каждое объявление сверено с байтами на диске в обе стороны",
+            "a paper's stage is declared as a FIELD, and every declaration is checked against the bytes on disk in both directions",
         },
         schema: [],
         messages: {
-          badYaml: "фронтматтер не разбирается как YAML: {{reason}}",
-          notAList: "`stages` обязано быть СПИСКОМ записей, а не {{got}} — статья может дойти до одной стадии дважды",
-          badStage: "неизвестная стадия «{{stage}}» — словарь: {{known}}",
-          missingKey: "в записи стадии «{{stage}}» нет поля `{{key}}`",
-          badDate: "дата «{{date}}» в записи «{{stage}}» не в формате YYYY-MM-DD",
-          declaredNoFile: "объявлена стадия «{{stage}}» ({{date}}), но файла `{{pdf}}` на диске нет",
-          bytesDiffer: "«{{stage}}» ({{date}}): объявлено {{want}} байт, на диске {{got}} — это НЕ тот файл",
+          badYaml: "the frontmatter does not parse as YAML: {{reason}}",
+          notAList: "`stages` must be a LIST of entries, not {{got}} — a paper can reach the same stage twice",
+          badStage: "unknown stage «{{stage}}» — the vocabulary is: {{known}}",
+          missingKey: "the «{{stage}}» entry has no `{{key}}` field",
+          badDate: "the date «{{date}}» in the «{{stage}}» entry is not YYYY-MM-DD",
+          declaredNoFile: "stage «{{stage}}» ({{date}}) is declared, but `{{pdf}}` is not on disk",
+          bytesDiffer: "«{{stage}}» ({{date}}): {{want}} bytes declared, {{got}} on disk — this is NOT that file",
           fileNotDeclared:
-            "`versions/{{file}}` заморожен, но стадия «{{stage}}» на {{date}} не объявлена в `stages` — артефакт обогнал объявление",
+            "`versions/{{file}}` is frozen, but no «{{stage}}» stage on {{date}} is declared in `stages` — the artefact ran ahead of the declaration",
         },
       },
       create(context) {
@@ -127,7 +127,7 @@ export default {
               context.report({
                 node,
                 messageId: "notAList",
-                data: { got: raw === null ? "пусто" : typeof raw },
+                data: { got: raw === null ? "empty" : typeof raw },
               });
               return;
             }
@@ -272,7 +272,7 @@ export default {
         type: "suggestion",
         docs: {
           description:
-            "у статьи с объявленной стадией записан прогон сверки списков авторов — класса, невидимого для проверки существования ссылок",
+            "a paper that declares a stage records that the author-list check ran — a class the existence check cannot see",
         },
         schema: [
           {
@@ -291,7 +291,7 @@ export default {
         ],
         messages: {
           neverRan:
-            "объявлена стадия «{{stages}}», но прогон сверки списков авторов в табеле не записан (искали «{{marker}}»). Она ловит то, чего проверка существования ссылок не видит: ссылка есть, id резолвится, а авторы взяты от ПРЕПРИНТА при объявленной конференции{{how}}",
+            "stage «{{stages}}» is declared, but the scorecard records no author-list run (looked for «{{marker}}» in its table). It catches what an existence check cannot see: the citation resolves, the id resolves, and the authors are the PREPRINT's while the entry declares a conference{{how}}",
         },
       },
       create(context) {
@@ -338,7 +338,7 @@ export default {
               data: {
                 stages: stages.join("/"),
                 marker,
-                how: command ? `. Прогнать: ${command}` : "",
+                how: command ? `. Run: ${command}` : "",
               },
             });
           },
@@ -351,18 +351,18 @@ export default {
         type: "problem",
         docs: {
           description:
-            "у объявленной стадии исходник заморожен рядом с pdf и сверен побайтово — не ссылкой на коммит",
+            "a declared stage freezes its source beside the pdf and is checked by bytes — not by a commit reference",
         },
         schema: [],
         messages: {
           noSource:
-            "стадия «{{stage}}» ({{date}}) не несёт замороженного исходника. Ссылка на коммит для этого не годится: сквош и gc её убивают — в этом корпусе так уже потеряно три исходника из четырёх",
+            "stage «{{stage}}» ({{date}}) carries no frozen source. A commit reference will not do: squash and gc destroy it — three of four sources were lost that way in this corpus",
           sourceMissing:
-            "«{{stage}}» ({{date}}): объявлен исходник `{{src}}`, но файла на диске нет",
+            "«{{stage}}» ({{date}}): source `{{src}}` is declared, but the file is not on disk",
           sourceBytes:
-            "«{{stage}}» ({{date}}): исходник объявлен как {{want}} байт, на диске {{got}} — это НЕ тот файл",
+            "«{{stage}}» ({{date}}): the source is declared as {{want}} bytes, {{got}} on disk — this is NOT that file",
           lostAcknowledged:
-            "стадия «{{stage}}» ({{date}}): исходник объявлен УТРАЧЕННЫМ. Сопоставить сборку со строкой рецензента больше не с чем — если копия найдётся, положить в versions/ и снять флаг",
+            "stage «{{stage}}» ({{date}}): the source is declared LOST. There is nothing left to match a build against a reviewer's line — if a copy turns up, put it in versions/ and clear the flag",
         },
       },
       create(context) {

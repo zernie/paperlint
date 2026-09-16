@@ -72,10 +72,10 @@ function typographyCounts(text) {
 }
 
 const LABEL = {
-  sectionSign: "`§` вместо «Section» (рецензент B)",
-  bareDecimal: "десятичная дробь без ведущего нуля, `.05` вместо `0.05` (рецензент B)",
-  figMixed: "`Fig.` и `Figure` в одном документе вперемешку",
-  unreachable: "записей библиографии без doi/url/arXiv-id — читателю не за что взяться (рецензент A)",
+  sectionSign: "`§` instead of «Section» (reviewer B)",
+  bareDecimal: "a decimal without a leading zero, `.05` instead of `0.05` (reviewer B)",
+  figMixed: "`Fig.` and `Figure` mixed in one document",
+  unreachable: "bibliography entries with no doi/url/arXiv id — a reader has nothing to follow (reviewer A)",
 };
 
 export default {
@@ -85,7 +85,7 @@ export default {
         type: "suggestion",
         docs: {
           description:
-            "механические конвенции, которые уже называл рецензент, считаются против объявленного долга: молчит на старом, говорит на выросшем",
+            "mechanical conventions a reviewer already raised, counted against a declared debt: silent on what was already there, loud on what grew",
         },
         schema: [
           {
@@ -98,7 +98,7 @@ export default {
           },
         ],
         messages: {
-          grew: "{{n}} × {{label}}{{grew}}. Долг снижать можно молча, рост репортится",
+          grew: "{{n}} × {{label}}{{grew}}. Paying the debt down is silent; growth is reported",
         },
       },
       create(context) {
@@ -125,7 +125,7 @@ export default {
                 data: {
                   n: String(n),
                   label: LABEL[field],
-                  grew: before > 0 ? ` (было ${String(before)}, стало ${String(n)})` : "",
+                  grew: before > 0 ? ` (was ${String(before)}, now ${String(n)})` : "",
                 },
               });
             }

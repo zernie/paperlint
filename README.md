@@ -2,19 +2,26 @@
 
 **Your paper is a repository long before it is a PDF — and nothing lints it.**
 
-An **ESLint plugin** for a research paper kept in git. It reads your `.tex` or `.md` source and a
-small status file beside it, and fails the build on the things a reviewer would otherwise catch by
-hand: a submission whose PDF is not the PDF you declared, a bibliography entry carrying the
-preprint's authors, `§` where the venue asks for "Section".
+A pipeline for taking a paper from idea to camera-ready **inside the repository**, with the parts
+that can be checked mechanically actually checked. Three kinds of thing, and they are meant to be
+used together:
 
-**Who this is for:** you write papers in git, you already run Node and ESLint 10 flat config, and
-you work with an AI coding agent — the design assumes one, because the checks are built so that
-**nothing a rule reads is authored by the thing being checked.** If that last part is not your
-problem, this will feel like overkill, and it is.
+- **24 skills**, one per stage — find a venue, draft, tighten, adversarial review, submit,
+  camera-ready. Prose an AI coding agent follows.
+- **10 rules** that check what those stages *claim*: the PDF you say you submitted has the bytes
+  you declared, the bibliography names the published version's authors, the paper states its
+  research question.
+- **3 hooks** that stop a bad edit in the agent's loop — overwriting a frozen submission, letting
+  the scorecard and the paper drift apart.
 
-> ⚠️ **Findings are written in Russian today.** Rule names, options and this page are English; the
-> message text is not. It is a translation, not a redesign — [open an issue](https://github.com/zernie/research-paper-pipeline/issues)
-> if it blocks you.
+The rules run under ESLint, so you invoke them with `npx eslint` and get findings with file
+positions and a non-zero exit code. That is all you need from it — the config block below is
+copy-paste.
+
+**Who this is for:** you keep a paper in git and an AI agent does much of the typing. The design
+assumes that agent: every check is built so that **nothing a rule reads is authored by the thing
+being checked.** A skill can claim it froze the submission; the rule compares the byte count.
+You need Node installed. You do not need to know ESLint.
 
 ## What it checks, and what it reads
 
@@ -52,17 +59,24 @@ Now a paper that says it was submitted, with a stale PDF and no stated research 
 
 ```
 papers/my-paper/PIPELINE-STATUS.md
-  1:1  error    «submitted» (2026-07-22): объявлено 412553 байт, на диске 100 — это НЕ тот файл
-  1:1  error    стадия «submitted» (2026-07-22) не несёт замороженного исходника…
-  1:1  warning  объявлена стадия «submitted», но прогон сверки списков авторов не записан…
+  1:1  error    «submitted» (2026-07-22): 412553 bytes declared, 100 on disk — this is NOT that file
+  1:1  error    stage «submitted» (2026-07-22) carries no frozen source. A commit reference will not
+                do: squash and gc destroy it — three of four sources were lost that way in this corpus
+  1:1  warning  stage «submitted» is declared, but the scorecard records no author-list run (looked
+                for «bib-authors» in its table). It catches what an existence check cannot see: the
+                citation resolves, the id resolves, and the authors are the PREPRINT's while the
+                entry declares a conference. Run: node scripts/bib-authors.mjs papers/my-paper
+
 papers/my-paper/paper.tex
-  1:1  warning  статья отгружена, но НИ РАЗУ не формулирует research question явно…
+  1:1  warning  the paper shipped (stage «submitted») but never states a research question. This is
+                reviewer A's verbatim point on agenticdev (#20). Advisory: a position paper may
+                legitimately have none — but then that is a DECISION, not an omission
 
 ✖ 4 problems (2 errors, 2 warnings)
 ```
 
-Real output, not an illustration. Findings are reported at `1:1` because their subject is the
-*file's claim*, not a span of text in it.
+Real output, wrapped to fit. Findings sit at `1:1` because their subject is the *file's claim*, not
+a span of text in it.
 
 Two are errors because the answer is binary — the bytes match or they do not. Two are warnings
 because the answer is a judgement, and **a gate that fails on a judgement gets muted.**
@@ -228,14 +242,13 @@ empty, because GitHub does **not** enforce `required:` for composite actions.
 
 ## Also in the box
 
-**<!-- count:skills -->24 skills** — one per stage, prose for an AI agent to follow: pick a venue,
-draft, tighten, review, submit, camera-ready. Not code, and the stages that need taste stay taste.
+**The <!-- count:skills -->24 skills** are markdown, one directory each, and they name the scripts
+they run. Point your agent at `skills/` and ask it for a stage by name. The stages that need taste
+stay taste and say so — `paper-adversarial-review` does not pretend to be a checker.
 
-**3 hooks** for [vigiles](https://github.com/zernie/vigiles), a runner that executes checks inside
-an agent's edit loop: a guard that refuses to overwrite a frozen submission, and two nudges that
-fire when the scorecard and the paper drift apart.
-
-Both optional. The rules work without either.
+**The 3 hooks** need [vigiles](https://github.com/zernie/vigiles), a runner that executes checks
+inside an agent's edit loop. Without it you lose the in-loop guard; the rules and skills are
+unaffected.
 
 ## How this is tested
 

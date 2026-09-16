@@ -53,7 +53,7 @@ export default {
         type: "suggestion",
         docs: {
           description:
-            "отчёт ревью с находками обязан называть, что в пайплайне их пропустило",
+            "a review report with findings names what in the pipeline let them through",
         },
         schema: [
           {
@@ -68,7 +68,7 @@ export default {
         ],
         messages: {
           noCause:
-            "{{count}} находок и ни одной пометки «{{marker}}». Сначала назвать, что в ПАЙПЛАЙНЕ это пропустило (дефект скилла · отсутствующий скилл · хук · правило), и чинить ЭТО: правка текста получается прогоном починенного инструмента, а не вместо него.",
+            "{{count}} findings and not one «{{marker}}» note. First name what in the PIPELINE let them through (a defective skill · a missing skill · a hook · a rule) and fix THAT: the text edit falls out of running the fixed tool, not instead of it.",
         },
       },
       create(context) {

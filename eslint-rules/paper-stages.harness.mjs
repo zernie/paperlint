@@ -72,7 +72,7 @@ check("and it names BOTH numbers, not just 'mismatch'",
 
 const missing = lint("nofile");
 check("a declared stage with no file on disk is reported",
-      missing.length === 1 && /на диске нет/.test(missing[0]));
+      missing.length === 1 && /not on disk/.test(missing[0]));
 
 // ── direction two: bytes owe their declaration ──────────────────────────────────────────
 // 🔴 The live case this rule was written for: a camera-ready pdf sat frozen for 16 days while
@@ -86,7 +86,7 @@ check("and it names the file and the stage",
 // frontmatter — which is the cheapest edit in the file.
 const noheader = lint("noheader");
 check("deleting the frontmatter does NOT silence the rule when bytes exist",
-      noheader.length === 1 && /не объявлена/.test(noheader[0]));
+      noheader.length === 1 && /ran ahead of the declaration/.test(noheader[0]));
 
 // ── a LIST, not a map: the same stage twice ─────────────────────────────────────────────
 // One paper in the source corpus was submitted to one venue, rejected, and resubmitted to
@@ -140,19 +140,19 @@ console.log(`✓ ${String(since())} assertions passed — paper/stages, both dir
 
   const gone = lintIn(rec("    source: versions/nope.tex\n    sourceBytes: 1\n"));
   check("a declared source that is not on disk is reported",
-        gone.length === 1 && /на диске нет/.test(gone[0]));
+        gone.length === 1 && /not on disk/.test(gone[0]));
 
   const none = lintIn(rec(""));
   check("a stage with no frozen source at all is reported", none.length === 1);
   // 🔴 The message must say WHY a commit reference is not an acceptable substitute — otherwise
   // the next author reaches for the thing that already failed here.
-  check("and it says a commit reference will not do", /сквош и gc/.test(none[0]));
+  check("and it says a commit reference will not do", /squash and gc/.test(none[0]));
 
   // Acknowledging the loss is a RECORD, not an exemption: the rule keeps speaking, because the
   // state is still defective — merely unfixable today.
   const lost = lintIn(rec("    sourceLost: true\n"));
   check("an acknowledged loss is still reported, not silenced",
-        lost.length === 1 && /УТРАЧЕННЫМ/.test(lost[0]));
+        lost.length === 1 && /declared LOST/.test(lost[0]));
 
   } finally {
     rmSync(root, { recursive: true, force: true });
@@ -203,7 +203,7 @@ console.log(`✓ ${String(since())} assertions passed — paper/source, frozen b
   // его за дубль проверки существования ссылок и закрывает как шум. Класс — авторы препринта
   // при объявленной конференции, и он невидим для проверки, что ссылка резолвится.
   check("и оно называет класс, который ловит сверка, а не только пропуск",
-        /ПРЕПРИНТА/.test(owed[0]));
+        /PREPRINT/.test(owed[0]));
 
   // ── то, ради чего перенос и делался ──
   // Предшественница выводила стадию РЕГУЛЯРКОЙ ПО ПРОЗЕ табеля. Перезамер 17.09: у
