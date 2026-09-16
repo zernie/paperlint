@@ -15,8 +15,9 @@
 #   npm test (12 harnesses)              11 s
 #   npm run lint (eslint over fixtures)   1 s
 #   npm run check:globs                   1 s
+#   npm run check:readme                  1 s   <- числа README сверяются с деревом
 #   npm run lint:skills (vigiles lint)    3 s   ← added 2026-09-12 with the first ten skills
-#   npm run test:mutations (12 batteries)    242 s   ← 130 mutations, the expensive and load-bearing part
+#   npm run test:sabotage (12 batteries)    242 s   ← 130 mutations, the expensive and load-bearing part
 #   ───────────────────────────────────────────
 #   total work                          ~255 s, plus checkout + install
 #
@@ -106,6 +107,11 @@ jobs:
       - name: npm run check:globs
         run: npm run check:globs
 
+      # README называет числа. Этот шаг их ПРОИЗВОДИТ и сверяет — прежде он был нужен, потому
+      # что проза обещала 45 харнессов и 22 батареи при 49 и 26 на диске.
+      - name: npm run check:readme
+        run: npm run check:readme
+
       # 45 mutations across 4 batteries. This is what makes the green above mean something: a
       # harness that cannot fail and a harness that passed look identical from outside. The
       # runner DISCOVERS batteries rather than listing them, errors on finding zero, and errors
@@ -126,4 +132,4 @@ jobs:
         timeout-minutes: 3
 
       - name: mutation batteries
-        run: npm run test:mutations
+        run: npm run test:sabotage
