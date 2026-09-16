@@ -87,7 +87,20 @@ export function rulesAreContentOnly({ cwd }) {
 }
 
 if (isMain(import.meta.url)) {
-  const { checked, findings } = rulesAreContentOnly({ cwd: join(import.meta.dirname, "..") });
+  // 🔴 `process.cwd()`, NOT the package root. A consumer installs this package and runs the
+  // script from its own repository, where the rules that matter are ITS `eslint-rules/` — the
+  // package's own are already checked by the package's own gate. Anchored to the package root
+  // the consumer's gate would re-check the same eight files and report a confident zero about
+  // rules it never opened: a counter that counts what it ignores.
+  const cwd = process.cwd();
+  const { checked, findings } = rulesAreContentOnly({ cwd });
+  if (checked.length === 0) {
+    console.error(
+      `${join(cwd, "eslint-rules")}: no rule sources. Either this is not a repository with ` +
+        `ESLint rules, or the directory moved — a silent zero here would read as a clean run.`,
+    );
+    process.exit(1);
+  }
   for (const { file, specifier } of findings) {
     console.error(
       `${file}: imports \`${specifier}\`. A rule may not ask git: history is rewritten by ` +
@@ -95,6 +108,8 @@ if (isMain(import.meta.url)) {
         `the rule has to hold. Put the fact on disk and check it by bytes.`,
     );
   }
-  console.log(`rules-are-content-only: ${checked.length} rule sources, ${findings.length} findings`);
+  console.log(
+    `rules-are-content-only: ${checked.length} rule sources under ${cwd}, ${findings.length} findings`,
+  );
   process.exit(findings.length === 0 ? 0 : 1);
 }
