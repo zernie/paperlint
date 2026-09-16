@@ -88,103 +88,72 @@ merge orphans branch commits and `gc` collects them — measured here, of four r
 still resolved ninety minutes later.
 
 ```bash
-npm i -D github:zernie/research-paper-pipeline#8a06e4c \
-         eslint@^10.9.1 @eslint/markdown@^8.0.3
+npm i -D github:zernie/research-paper-pipeline#8a06e4c
 ```
 
-Needs **Node ≥ 22.13** and ESLint 10 flat config. Once a version is published this becomes
+Needs **Node ≥ 22.13** and nothing else — ESLint and the markdown language come with the package,
+because the command runs them for you. Once a version is published this becomes
 `npm i -D research-paper-pipeline`, and nothing else changes.
 
-## Wire it up
+## Use it
 
-Nothing is auto-discovered: you say where your papers live and which rules you want. Rules come
-from four modules; each block below is one of them.
+```bash
+npx research-paper-pipeline check papers
+```
+
+That is the whole setup. The command carries its own rule configuration, so there is no config
+file to write and nothing about ESLint to learn.
+
+Three things only you can supply — the run marker for your author-list script, your typography
+debt, your frontmatter vocabulary — come from an optional JSON file:
+
+```bash
+npx research-paper-pipeline check papers --options rpp.json
+```
+
+```json
+{
+  "authorListCommand": "node scripts/bib-authors.mjs",
+  "typographyDebt":    { "papers/my-paper": { "sectionSign": 12 } },
+  "docFields":         { "read": { "values": ["full", "abstract", "none"] } },
+  "reviewSince":       "2026-08-23"
+}
+```
+
+`--json` prints machine-readable findings instead of the report. Naming a path is required: a
+default of `.` would lint whatever happens to be in the checkout and call it green.
+
+<details>
+<summary>Already have an <code>eslint.config.mjs</code>? Wire the rules in yourself</summary>
+
+The rules are ordinary ESLint rules, so a repo that already lints can import them directly instead
+of using the command. Each module exports its rules; the LaTeX language is a named export.
 
 ```js
-// eslint.config.mjs
 import markdown from "@eslint/markdown";
 import paperStages from "research-paper-pipeline/eslint-rules/paper-stages.mjs";
-import researchQuestion from "research-paper-pipeline/eslint-rules/paper-research-question.mjs";
-import typography from "research-paper-pipeline/eslint-rules/paper-typography.mjs";
-import texBuild from "research-paper-pipeline/eslint-rules/tex-build.mjs";
-import docFields from "research-paper-pipeline/eslint-rules/doc-fields.mjs";
-import findingsCause from "research-paper-pipeline/eslint-rules/review-findings-cause.mjs";
-import coldReadCause from "research-paper-pipeline/eslint-rules/cold-read-cause.mjs";
-// `texLanguage` is a NAMED export, and the module is loaded dynamically because it pulls a
-// LaTeX parser you do not want to pay for when you lint only markdown.
 const { texLanguage } = await import("research-paper-pipeline/eslint-rules/latex-language.mjs");
 
 export default [
-  // 1. The scorecard — what the paper claims about itself.
   {
     files: ["papers/*/PIPELINE-STATUS.md"],
     plugins: { markdown, paper: paperStages },
     language: "markdown/gfm",
     languageOptions: { frontmatter: "yaml" },
-    rules: {
-      "paper/stages": "error",
-      "paper/source": "error",
-      // `command` is pure text, pasted into the finding so the reader knows what to run.
-      // The package never hardcodes your paths.
-      "paper/author-list": ["warn", { command: "node scripts/bib-authors.mjs papers/my-paper" }],
-    },
+    rules: { "paper/stages": "error", "paper/source": "error" },
   },
-
-  // 2. The paper itself, as LaTeX. `tex/latex` is a real ESLint language: .tex is PARSED.
   {
     files: ["papers/*/paper.tex"],
-    plugins: {
-      tex: { languages: { latex: texLanguage }, rules: texBuild },
-      paper: { rules: { ...researchQuestion.rules, ...typography.rules } },
-    },
+    plugins: { tex: { languages: { latex: texLanguage } } },
     language: "tex/latex",
-    rules: {
-      "paper/research-question": "warn",
-      "paper/typography": ["warn", { debt: {} }],   // see "declared debt" below
-      "tex/future-promise": "warn",
-      "tex/acm-frontmatter-override": "error",
-    },
-  },
-
-  // 3. A paper written in markdown instead — same two rules, different language.
-  {
-    files: ["papers/*/paper.md", "papers/*/draft.md"],
-    plugins: { markdown, paper: { rules: { ...researchQuestion.rules, ...typography.rules } } },
-    language: "markdown/gfm",
-    languageOptions: { frontmatter: "yaml" },
-    rules: { "paper/research-question": "warn", "paper/typography": ["warn", { debt: {} }] },
-  },
-
-  // 4. Review notes — optional, and only useful if you keep them in the repo.
-  {
-    files: ["papers/*/reviews/*.md"],
-    plugins: { markdown, review: { rules: { ...findingsCause.rules, ...coldReadCause.rules } }, doc: docFields },
-    language: "markdown/gfm",
-    languageOptions: { frontmatter: "yaml" },
-    rules: {
-      // `sinceCreated` exempts notes written before you adopted the rule — retrofitting a
-      // backlog prints twenty findings in one run, which is how a check gets switched off.
-      "review/findings-cause": ["error", { minFindings: 3, sinceCreated: "2026-08-23" }],
-      "review/cold-read-cause": "warn",
-      // `fields` is a map: field name -> the values it may take, plus a hint shown in the
-      // finding. Declaring the vocabulary is the point; a free-text field cannot be checked.
-      "doc/fields": [
-        "warn",
-        { fields: { read: { values: ["full", "abstract", "none"], hint: "how much of it you read" } } },
-      ],
-    },
+    rules: {},
   },
 ];
 ```
 
-```bash
-npx eslint papers
-```
+`bin/rpp.mjs` builds the full four-block config this way — read it rather than re-deriving it.
 
-**`paper/typography` and declared debt.** It counts conventions a reviewer already raised against
-a per-paper budget you declare, so it is silent on existing text and speaks only when the count
-grows. Start with `{ debt: {} }` to see every count, then freeze the numbers you are not fixing
-today.
+</details>
 
 ## In CI
 
@@ -254,16 +223,13 @@ unaffected.
 
 Every rule has a harness proving **both halves** — it fires on a planted defect *and* stays silent
 on clean input — and a battery that removes one load-bearing property and demands the harness go
-red at the assertion that property belongs to.
-
-```bash
-npm test                 # <!-- count:harnesses -->50 harnesses
-npm run test:sabotage    # <!-- count:batteries -->27 batteries (mutation testing)
-```
+red at the assertion that property belongs to. <!-- count:harnesses -->51 harnesses,
+<!-- count:batteries -->28 batteries.
 
 CI refuses a harness that no battery can kill, because silence is the success state of every check
-here: "it passed" and "it cannot fail" look identical from outside. Counts above are produced by
-`npm run check:readme`, not typed by hand.
+here: "it passed" and "it cannot fail" look identical from outside. It caught a real one on the way
+in: `js-yaml` 5 stopped parsing an unquoted date as a `Date`, every harness stayed green under both
+majors, and only the battery noticed the rule's coercion had become dead code.
 
 ## Why not one of the existing academic skill suites
 
@@ -290,6 +256,18 @@ scripts/        this repo's own gates
 action.yml      the CI composite action
 fixtures/       inputs the harnesses lint
 ```
+
+## Working on this package
+
+```bash
+npm install
+npm test                 # every harness
+npm run test:sabotage    # break each rule on purpose; a harness nothing can kill is not a harness
+npm run check:readme     # the counts above are recounted from the tree, not typed by hand
+```
+
+None of these are needed to USE the tool — they are here because the gates are part of the
+argument, not decoration.
 
 ## Licence
 

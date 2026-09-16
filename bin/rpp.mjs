@@ -20,6 +20,7 @@
 import { ESLint } from "eslint";
 import { readFileSync, existsSync } from "node:fs";
 import markdown from "@eslint/markdown";
+import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
 
 import paperStages from "../eslint-rules/paper-stages.mjs";
 import researchQuestion from "../eslint-rules/paper-research-question.mjs";
@@ -175,4 +176,12 @@ export async function run(argv, { log = console.log, err = console.error } = {})
   return results.some((r) => r.errorCount > 0) ? 1 : 0;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) process.exit(await run(process.argv.slice(2)));
+// 🔴 `isMain`, А НЕ СРАВНЕНИЕ СТРОК. Первая редакция писала
+//     if (import.meta.url === `file://${process.argv[1]}`)
+// и утилита, запущенная через `node_modules/.bin/rpp`, МОЛЧА ВЫХОДИЛА С НУЛЁМ: npm ставит туда
+// СИМЛИНК, `process.argv[1]` остаётся путём симлинка, а `import.meta.url` — реальным путём, и
+// условие ложно. То есть единственный способ, которым утилиту запускает настоящий потребитель,
+// не работал вовсе — а выглядел как чистый прогон.
+// Хелпер в пакете УЖЕ БЫЛ, и его докстринг описывает ровно этот отказ дословно: «turns a CLI
+// into a no-op that exits 0». Написал руками то, что лежало готовым.
+if (isMain(import.meta.url)) process.exit(await run(process.argv.slice(2)));

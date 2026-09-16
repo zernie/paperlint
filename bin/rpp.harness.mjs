@@ -11,7 +11,8 @@
  * Оба закреплены ассертами ниже, чтобы вернуться назад было нельзя.
  */
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync, symlinkSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -124,6 +125,32 @@ check("путь и опции разбираются", (() => {
     const noFile = await cli(["check", "papers", "--options", "nope.json"], root);
     check("отсутствующий файл опций тоже назван",
           noFile.code === 2 && /options file not found/.test(noFile.out));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+// ── ЗАПУСК ЧЕРЕЗ СИМЛИНК — единственный способ, которым утилиту зовёт потребитель ───────
+//
+// 🔴 npm кладёт в `node_modules/.bin/` СИМЛИНК. Первая редакция сравнивала `import.meta.url` с
+// `file://${process.argv[1]}`: у симлинка эти два пути РАЗНЫЕ, условие ложно, и утилита молча
+// выходила с нулём. Прямой `node bin/rpp.mjs` при этом работал — то есть дефект был невидим
+// ровно тем способом, которым его проверяют.
+{
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-link-")));
+  try {
+    const link = join(root, "rpp-shim");
+    symlinkSync(join(HERE, "rpp.mjs"), link);
+    const paper = join(root, "papers", "p");
+    mkdirSync(join(paper, "versions"), { recursive: true });
+    writeFileSync(
+      join(paper, "PIPELINE-STATUS.md"),
+      "---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/a.pdf\n    bytes: 1\n---\n# S\n",
+    );
+    const r = spawnSync(process.execPath, [link, "check", "papers"], { cwd: root, encoding: "utf8" });
+    const out = (r.stdout ?? "") + (r.stderr ?? "");
+    check("через СИМЛИНК утилита работает, а не выходит молча нулём", r.status === 1);
+    check("и печатает находки", /paper\/stages/.test(out));
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
