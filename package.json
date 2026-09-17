@@ -19,13 +19,19 @@
     "@retorquere/bibtex-parser": "^10.0.1",
     "@unified-latex/unified-latex-util-parse": "^1.8.4",
     "eslint": "^10.9.1",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "markdown-it": "^14.3.0"
   },
   "devDependencies": {
     "vigiles": "^27.2.0"
   },
   "peerDependencies": {
     "vigiles": "^27.2.0"
+  },
+  "peerDependenciesMeta": {
+    "vigiles": {
+      "optional": true
+    }
   },
   "repository": {
     "type": "git",

@@ -307,6 +307,29 @@ a dependency does not install. Putting it in `dependencies` risks npm installing
 copy under `node_modules/research-paper-pipeline/node_modules/vigiles` whenever the ranges
 drift — two runtimes, two sets of stamps and state.
 
+🔴 **THE PARAGRAPH ABOVE WAS TRUE AND THE INSTALL DID THE OPPOSITE — measured 2026-09-17.**
+`devDependencies` is not the only entry naming `vigiles`: `peerDependencies` names it too, and
+**npm 7+ installs peers automatically**. So every consumer got it anyway, together with its
+transitive weight. `npm pack`, then install the tarball into an empty project:
+
+| | packages | `du -sm node_modules` |
+|---|---:|---:|
+| peer as declared before | 188 | **142 MB** |
+| `peerDependenciesMeta: { vigiles: { optional: true } }` | 164 | **56 MB** |
+
+The 86 MB are `@ast-grep/napi` (51 MB) and `typescript` (23 MB), pulled through `vigiles` — and
+paid for by a consumer who only wants the ESLint rules and never loads a hook.
+
+`optional: true` is the entry that matches what this section already argues: the consumer brings
+its own `vigiles` *when it uses the hooks*, and npm stops deciding that for them. Both halves
+measured on the 56 MB tree: `eslint-rules/latex-language.mjs` and
+`skills/paper-pipeline/scripts/pipeline-check.mjs` load and run (RC=0), while
+`hooks/paper-edit-guard.hook.mjs` fails with `ERR_MODULE_NOT_FOUND` — which is this contract
+working, not a defect, exactly as argued below.
+
+⚠️ The consumer in this project's own base is unaffected: it declares `vigiles` itself
+(`devDependencies: ^27.2.0`), so nothing about its tree changes.
+
 🔴 **Therefore the pin here and the pin in the consumer move TOGETHER, in one pass.** A major
 mismatch means a hook compiled by one version is executed by another: the stamp does not
 verify, the hook does not load, and `PreToolUse` refuses every command. That already happened
