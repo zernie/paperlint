@@ -37,21 +37,37 @@ const check = (label, cond) => {
 
 /** Прогон утилиты с перехватом вывода — тише и быстрее, чем поднимать процесс. */
 async function cli(args, cwd) {
-  const out = [];
+  // 🔴 ПОТОКИ РАЗВЕДЕНЫ, И ЭТО НЕСУЩЕЕ. Пока харнесс складывал log и err в один массив, он
+  // физически не мог увидеть, что строка `config: …` уезжает в stdout ПЕРЕД JSON и ломает
+  // любой парсер у потребителя. Дефект нашёлся не тестом, а попыткой подключить к этому
+  // выводу собственный экшен — то есть тест был слеп ровно к тому, что обязан был ловить.
+  // `out` остаётся склейкой для ассертов про текст; `stdout` — то, что уйдёт в пайп.
+  const stdout = [];
+  const stderr = [];
   const prev = process.cwd();
   if (cwd) process.chdir(cwd);
   try {
     const code = await run(args, {
-      log: (...a) => out.push(a.join(" ")),
-      err: (...a) => out.push(a.join(" ")),
+      log: (...a) => stdout.push(a.join(" ")),
+      err: (...a) => stderr.push(a.join(" ")),
     });
-    return { code, out: out.join("\n") };
+    return {
+      code,
+      out: [...stdout, ...stderr].join("\n"),
+      stdout: stdout.join("\n"),
+      stderr: stderr.join("\n"),
+    };
   } catch (e) {
     // 🔴 УТЕЧКА ИСКЛЮЧЕНИЯ — ЭТО СВОЙСТВО, КОТОРОЕ НАДО УТВЕРЖДАТЬ АССЕРТОМ, А НЕ ЛОВИТЬ
     // ПАДЕНИЕМ. Мутация, снимающая catch вокруг ESLint, роняла харнесс СТЕКОМ, и драйвер — по
     // своему строгому правилу «убито только на СВОЁМ ассерте» — отказывался считать это
     // убийством и печатал «survived». То есть настоящий дефект выглядел как слабый тест.
-    return { code: 99, out: `THREW: ${e?.message ?? e}` };
+    return {
+      code: 99,
+      out: `THREW: ${e?.message ?? e}`,
+      stdout: "",
+      stderr: `THREW: ${e?.message ?? e}`,
+    };
   } finally {
     process.chdir(prev);
   }
@@ -74,6 +90,14 @@ check(
       a.json === true
     );
   })(),
+);
+check(
+  "порог предупреждений по умолчанию ОТРИЦАТЕЛЬНЫЙ — совет не валит прогон",
+  parseArgs(["lint"]).maxWarnings === -1,
+);
+check(
+  "и разбирается, когда назван явно",
+  parseArgs(["lint", "--max-warnings", "0"]).maxWarnings === 0,
 );
 check(
   "прежнее написание `--options` продолжает работать — флаг в чужом CI не наш, чтобы его ломать",
@@ -227,7 +251,7 @@ check(
       "`--json` отдаёт разбираемый JSON",
       (() => {
         try {
-          return Array.isArray(JSON.parse(json.out));
+          return Array.isArray(JSON.parse(json.stdout));
         } catch {
           return false;
         }
@@ -371,6 +395,56 @@ check(
   }
 }
 
+// ── ПОРОГ ПРЕДУПРЕЖДЕНИЙ ───────────────────────────────────────────────────────────────
+//
+// Вход `max-warnings` есть у экшена, и когда экшен перестал звать eslint напрямую, порог
+// обязан был появиться здесь — иначе он потерялся бы МОЛЧА: прогон остался бы зелёным, а
+// настройка потребителя перестала бы что-либо значить.
+{
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-warn-")));
+  try {
+    const paper = join(root, "papers", "p1");
+    mkdirSync(join(paper, "versions"), { recursive: true });
+    writeFileSync(join(paper, "versions", "s.tex"), "abcd");
+    writeFileSync(
+      join(paper, "versions", "2026-07-22-submitted.pdf"),
+      "x".repeat(100),
+    );
+    // Три знака § — правило `paper/typography`, уровень warn и только warn.
+    writeFileSync(
+      join(paper, "paper.md"),
+      "# Intro\n\nRQ1: does it hold?\n\nSee \u00a7 5 and \u00a7 6 and \u00a7 7.\n",
+    );
+    writeFileSync(
+      join(paper, "PIPELINE-STATUS.md"),
+      `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: 100\n    source: versions/s.tex\n    sourceBytes: 4\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`,
+    );
+    writeFileSync(join(root, "rpp.json"), JSON.stringify({ papers: "papers" }));
+
+    const lax = await cli(["lint"], root);
+    check(
+      "предупреждение БЕЗ порога прогон не валит — иначе гейт на советах глушат целиком",
+      lax.code === 0,
+    );
+    const strict = await cli(["lint", "--max-warnings", "0"], root);
+    check(
+      "а с порогом 0 — валит, и это ровно то же предупреждение",
+      strict.code === 1,
+    );
+    check(
+      "и отказ называет ЧИСЛО и ПОРОГ, а не просто «слишком много»",
+      /1 warning\(s\) exceed the --max-warnings limit of 0/.test(strict.out),
+    );
+    const generous = await cli(["lint", "--max-warnings", "5"], root);
+    check(
+      "порог ВЫШЕ числа находок молчит — проверка про порог, а не про наличие warn",
+      generous.code === 0,
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
 // ── СТРУКТУРА ДОЕЗЖАЕТ ДО КОМАНДЫ ──────────────────────────────────────────────────────
 //
 // `structure.mjs` проверен отдельно и целиком (`structure.harness.mjs`). Здесь — ровно один
@@ -400,11 +474,28 @@ check(
     );
 
     const j = await cli(["lint", "--json"], root);
+    // 🔴 Дефект, ради которого потоки разведены: строка `config: …` в stdout перед массивом
+    // ломает `| jq` у потребителя. Обе половины — stdout чист, и строка при этом НЕ ПОТЕРЯНА.
+    check(
+      "`--json`: stdout — чистый JSON, ни одной служебной строки перед ним",
+      (() => {
+        try {
+          JSON.parse(j.stdout);
+          return true;
+        } catch {
+          return false;
+        }
+      })(),
+    );
+    check(
+      "и строка про найденный конфиг не потеряна — она ушла в stderr",
+      /config: rpp\.json/.test(j.stderr) && !/config:/.test(j.stdout),
+    );
     check(
       "`--json` отдаёт ОДИН массив, в котором находка о пропаже лежит рядом с находками правил",
       (() => {
         try {
-          const parsed = JSON.parse(j.out.split("\n").slice(1).join("\n"));
+          const parsed = JSON.parse(j.stdout);
           return parsed.some((x) =>
             x.messages?.some((m) => m.ruleId === "structure/required-file"),
           );

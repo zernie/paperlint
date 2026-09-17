@@ -11,7 +11,12 @@
  * A guard only ever observed silent is indistinguishable from a dead one.
  */
 import assert from "node:assert/strict";
-import { readFileSync, writeFileSync, mkdtempSync, realpathSync } from "node:fs";
+import {
+  readFileSync,
+  writeFileSync,
+  mkdtempSync,
+  realpathSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -26,23 +31,49 @@ const action = yaml.load(readFileSync(join(HERE, "action.yml"), "utf8"));
 // ── I. SHAPE, read as nodes ───────────────────────────────────────────────────────────────────
 assert.equal(action.runs.using, "composite", "the action must be composite");
 const names = action.runs.steps.map((s) => s.name);
-assert.equal(action.runs.steps.length, 4, `expected 4 steps, got ${action.runs.steps.length}: ${names}`);
+assert.equal(
+  action.runs.steps.length,
+  4,
+  `expected 4 steps, got ${action.runs.steps.length}: ${names}`,
+);
 
-const eslintStep = action.runs.steps.find((s) => s.name === "eslint");
-assert.ok(eslintStep, `no step named "eslint" among: ${names}`);
+const eslintStep = action.runs.steps.find((s) => s.name === "rpp lint");
+assert.ok(eslintStep, `no step named "rpp lint" among: ${names}`);
 
-// `--no-config-lookup` is LOAD-BEARING: without it a consumer's nested config silently changes
-// which rules are enabled, and the job stays green over a different rule set than the one asked for.
+// 🔴 THE ACTION MUST CALL THE PACKAGE'S OWN CLI, NOT ESLINT. This is not tidiness: while the step
+// invoked `npx eslint` directly it was a SECOND implementation of the same job, and it had already
+// drifted — the directory-structure check (a paper directory with no PIPELINE-STATUS.md gets zero
+// rules and reports clean) lives in `bin/rpp.mjs`, so in CI it did not run at all. Any future edit
+// that reaches past the CLI reintroduces exactly that gap, silently and greenly.
 assert.match(
   eslintStep.run,
-  /--no-config-lookup/,
-  "the eslint step must pass --no-config-lookup, or a nested consumer config can change the rule set",
+  /npx rpp lint/,
+  "the lint step must call this package's own CLI — invoking eslint directly bypasses rpp.json and the structure check",
+);
+assert.doesNotMatch(
+  eslintStep.run,
+  /npx eslint/,
+  "the lint step must not invoke eslint directly — that is the bypass this step was fixed to remove",
+);
+// `--no-config-lookup` is deliberately absent and is NOT missing: the CLI builds its config with
+// `overrideConfigFile: true`, so a consumer's nested config cannot reach the run. The guarantee
+// moved from a flag into the code — assert the code, not the flag.
+assert.match(
+  readFileSync(new URL("./bin/rpp.mjs", import.meta.url), "utf8"),
+  /overrideConfigFile:\s*true/,
+  "the CLI must pin its own config, or a consumer's nested config silently changes the rule set",
+);
+// The redirect into a report file is only sound while `--json` keeps stdout clean.
+assert.match(
+  eslintStep.run,
+  /--json > "\$RUNNER_TEMP\/rpp\.json"/,
+  "the machine-readable report must be redirected whole — it is what the guard reads",
 );
 // The guard must be CALLED, and by file — an inline blob would be untestable.
 assert.match(
   eslintStep.run,
   /eslint-report-guard\.mjs/,
-  "the eslint step must hand its report to scripts/eslint-report-guard.mjs",
+  "the lint step must hand its report to scripts/eslint-report-guard.mjs",
 );
 // ── I-b. THE STEP'S SHELL SEMANTICS, EXECUTED — not grepped ───────────────────────────────────
 //
@@ -59,28 +90,33 @@ const stubbedStepRun = (stubRc) => {
   const bin = realpathSync(mkdtempSync(join(tmpdir(), "rpp-bin-")));
   writeFileSync(
     join(bin, "npx"),
+    // Заглушка печатает отчёт В STDOUT, а не в файл по флагу `-o`: шаг больше не передаёт
+    // `-o`, он РЕДИРЕКТИТ вывод. Значит заглушка проверяет заодно и сам редирект — если он
+    // пропадёт из шага, файл останется пустым и страж скажет «nothing was measured».
     `#!/usr/bin/env bash\n` +
-      `out=""\n` +
-      `while [ $# -gt 0 ]; do [ "$1" = "-o" ] && out="$2"; shift; done\n` +
-      `printf '%s' "$REPORT_JSON" > "$out"\n` +
+      `printf '%s' "$REPORT_JSON"\n` +
       `exit "$STUB_RC"\n`,
     { mode: 0o755 },
   );
-  return spawnSync("bash", ["--noprofile", "--norc", "-eo", "pipefail", "-c", eslintStep.run], {
-    cwd: TMP,
-    encoding: "utf8",
-    env: {
-      ...process.env,
-      PATH: `${bin}:${process.env.PATH}`,
-      RUNNER_TEMP: TMP,
-      GITHUB_ACTION_PATH: HERE,
-      RPP_CONFIG: "eslint.config.mjs",
-      RPP_PATHS: ".",
-      RPP_MAXWARN: "-1",
-      STUB_RC: String(stubRc),
-      REPORT_JSON: JSON.stringify([{ filePath: "/x/a.md", messages: [] }]),
+  return spawnSync(
+    "bash",
+    ["--noprofile", "--norc", "-eo", "pipefail", "-c", eslintStep.run],
+    {
+      cwd: TMP,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        PATH: `${bin}:${process.env.PATH}`,
+        RUNNER_TEMP: TMP,
+        GITHUB_ACTION_PATH: HERE,
+        RPP_CONFIG: "eslint.config.mjs",
+        RPP_PATHS: ".",
+        RPP_MAXWARN: "-1",
+        STUB_RC: String(stubRc),
+        REPORT_JSON: JSON.stringify([{ filePath: "/x/a.md", messages: [] }]),
+      },
     },
-  });
+  );
 };
 
 // FIRES-THROUGH: ESLint failed. This is the case the old text assertion could not see.
@@ -91,12 +127,20 @@ const stubbedStepRun = (stubRc) => {
     /linted 1 file\(s\)/,
     "the guard must still run when ESLint exits non-zero — under `bash -e` a bare command aborts the step",
   );
-  assert.equal(r.status, 2, "ESLint's failure code must come through the guard, not be masked to 1");
+  assert.equal(
+    r.status,
+    2,
+    "ESLint's failure code must come through the guard, not be masked to 1",
+  );
 }
 // QUIET HALF: ESLint succeeded — the guard runs and passes 0 through.
 {
   const r = stubbedStepRun(0);
-  assert.match(r.stdout, /linted 1 file\(s\)/, "the guard must run on success too");
+  assert.match(
+    r.stdout,
+    /linted 1 file\(s\)/,
+    "the guard must run on success too",
+  );
   assert.equal(r.status, 0, "a clean run must stay green");
 }
 
@@ -104,9 +148,19 @@ const stubbedStepRun = (stubRc) => {
 // in place and report success (measured in this corpus, 2026-09-01).
 const pathStep = action.runs.steps.find((s) => /on PATH/i.test(s.name ?? ""));
 assert.ok(pathStep, `no step verifying texcount is on PATH among: ${names}`);
-assert.match(pathStep.run, /command -v texcount/, "the PATH step must probe the binary itself");
+assert.match(
+  pathStep.run,
+  /command -v texcount/,
+  "the PATH step must probe the binary itself",
+);
 
-for (const key of ["config", "paths", "max-warnings", "texcount", "working-directory"])
+for (const key of [
+  "config",
+  "paths",
+  "max-warnings",
+  "texcount",
+  "working-directory",
+])
   assert.ok(action.inputs[key], `input \`${key}\` is missing`);
 
 // ── `paths` is REQUIRED, and the requirement is ENFORCED, not merely declared ─────────────────
@@ -114,14 +168,23 @@ for (const key of ["config", "paths", "max-warnings", "texcount", "working-direc
 // input reaches the first step with an empty string and no error at all. So two separate things
 // are asserted here, and neither implies the other: that the contract is DECLARED, and that a
 // step exists which can actually fail on it.
-assert.equal(action.inputs.paths.required, true, "`paths` must be declared required");
+assert.equal(
+  action.inputs.paths.required,
+  true,
+  "`paths` must be declared required",
+);
 assert.ok(
   !("default" in action.inputs.paths),
   "`paths` must have NO default — the old default `.` linted the whole checkout, so a caller " +
     "who never chose a scope still got a green job over one",
 );
-const pathsGuard = action.runs.steps.find((s) => /paths was actually given/i.test(s.name ?? ""));
-assert.ok(pathsGuard, `no step enforcing the \`paths\` contract among: ${names}`);
+const pathsGuard = action.runs.steps.find((s) =>
+  /paths was actually given/i.test(s.name ?? ""),
+);
+assert.ok(
+  pathsGuard,
+  `no step enforcing the \`paths\` contract among: ${names}`,
+);
 assert.match(
   pathsGuard.run,
   /exit 1/,
@@ -145,13 +208,28 @@ const fixture = (name, body) => {
 
 // FIRES: zero files linted. The whole reason the guard exists.
 {
-  const { code, lines } = guard(fixture("empty.json", "[]"), 0, { paths: ".", config: "c.mjs" });
-  assert.equal(code, 1, "a report of zero linted files must FAIL, not pass as clean");
+  const { code, lines } = guard(fixture("empty.json", "[]"), 0, {
+    paths: ".",
+    config: "c.mjs",
+  });
+  assert.equal(
+    code,
+    1,
+    "a report of zero linted files must FAIL, not pass as clean",
+  );
   assert.match(lines.join("\n"), /linted ZERO files/);
 }
 // FIRES: the report is absent or unparsable — nothing was measured either way.
-assert.equal(guard(join(TMP, "absent.json"), 0).code, 1, "an unreadable report must FAIL");
-assert.equal(guard(fixture("garbage.json", "{oops"), 0).code, 1, "an unparsable report must FAIL");
+assert.equal(
+  guard(join(TMP, "absent.json"), 0).code,
+  1,
+  "an unreadable report must FAIL",
+);
+assert.equal(
+  guard(fixture("garbage.json", "{oops"), 0).code,
+  1,
+  "an unparsable report must FAIL",
+);
 assert.equal(
   guard(fixture("object.json", '{"not":"an array"}'), 0).code,
   1,
@@ -163,19 +241,41 @@ assert.equal(
   const one = fixture(
     "one.json",
     JSON.stringify([
-      { filePath: "/x/a.md", messages: [{ severity: 1, line: 3, column: 1, ruleId: "paper/x", message: "m" }] },
+      {
+        filePath: "/x/a.md",
+        messages: [
+          { severity: 1, line: 3, column: 1, ruleId: "paper/x", message: "m" },
+        ],
+      },
     ]),
   );
-  assert.equal(guard(one, 0).code, 0, "a real run with findings must pass ESLint's own 0 through");
-  assert.equal(guard(one, 2).code, 2, "a real run must pass ESLint's failure code through, not mask it");
+  assert.equal(
+    guard(one, 0).code,
+    0,
+    "a real run with findings must pass ESLint's own 0 through",
+  );
+  assert.equal(
+    guard(one, 2).code,
+    2,
+    "a real run must pass ESLint's failure code through, not mask it",
+  );
 }
 // QUIET: a file linted with NO findings is a legitimate clean run — the guard must not fire on it.
 {
-  const clean = fixture("clean.json", JSON.stringify([{ filePath: "/x/a.md", messages: [] }]));
+  const clean = fixture(
+    "clean.json",
+    JSON.stringify([{ filePath: "/x/a.md", messages: [] }]),
+  );
   const { code, lines } = guard(clean, 0);
-  assert.equal(code, 0, "one file linted with zero findings is CLEAN, not empty — the guard must be quiet");
+  assert.equal(
+    code,
+    0,
+    "one file linted with zero findings is CLEAN, not empty — the guard must be quiet",
+  );
   assert.doesNotMatch(lines.join("\n"), /linted ZERO files/);
   assert.match(lines.join("\n"), /linted 1 file\(s\) · 0 finding\(s\)/);
 }
 
-console.log("✓ action.yml shape (parsed, not grepped) + guard behaviour, both halves — 20 assertions");
+console.log(
+  "✓ action.yml shape (parsed, not grepped) + guard behaviour, both halves — 20 assertions",
+);

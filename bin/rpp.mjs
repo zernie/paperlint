@@ -57,7 +57,9 @@ lint:
                       of ".": linting whatever happens to be in the checkout is how a green
                       report over a scope nobody chose gets produced.
   --config <file>     use this rpp.json instead of the discovered one
-  --json              machine-readable findings instead of the human report
+  --json              machine-readable findings on stdout, nothing else on it
+  --max-warnings <n>  fail when warnings exceed n. Default -1: warnings never fail, because
+                      most findings here are advisory and a gate that fails on advice gets muted
 
 rpp.json — found by walking up from the current directory, the way every other tool in the
 stack finds its config. \`papers\` is required; every other key is optional:
@@ -170,6 +172,9 @@ export function parseArgs(argv) {
     paths: [],
     config: null,
     json: false,
+    // -1 = предупреждения НИКОГДА не валят прогон. В этом наборе большинство находок
+    // советательные по замыслу, а гейт, падающий на совете, глушат целиком.
+    maxWarnings: -1,
   };
   const rest = [...argv];
   if (rest[0] && !rest[0].startsWith("-")) out.cmd = rest.shift();
@@ -180,6 +185,7 @@ export function parseArgs(argv) {
     // other tool in the stack calls this file its config — but a flag in someone's CI is not
     // ours to break.
     else if (a === "--config" || a === "--options") out.config = rest[++i];
+    else if (a === "--max-warnings") out.maxWarnings = Number(rest[++i]);
     else if (a === "--help" || a === "-h") out.help = true;
     else out.paths.push(a);
   }
@@ -323,7 +329,13 @@ export async function run(
     }
     // Найденный конфиг НАЗЫВАЕТСЯ вслух. Иначе прогон из чужого каталога подхватывает чужой
     // файл и об этом не говорит — а расхождение долга типографики выглядит как находка.
-    log(`config: ${relative(cwd, configPath) || CONFIG_NAME}`);
+    //
+    // 🔴 В РЕЖИМЕ `--json` — В stderr. Машинный вывод обязан быть ОДНИМ разбираемым документом:
+    // строка перед массивом ломает любой `| jq`, а сломает она его у потребителя, не у нас.
+    // Поймано не тестом, а попыткой подключить к этому выводу собственный экшен; в харнессе
+    // я эту строку сначала ОБХОДИЛ (срезал первую строку перед JSON.parse) — то есть обход
+    // прятал дефект ровно там, где он должен был кричать.
+    (a.json ? err : log)(`config: ${relative(cwd, configPath) || CONFIG_NAME}`);
   }
 
   // 🔴 `papers` — ОБЯЗАТЕЛЬНОЕ ПОЛЕ. Каталог статей — единственное, без чего инструмент не
@@ -416,7 +428,19 @@ export async function run(
           : `✓ ${results.length} file(s) checked, no findings`),
     );
   }
-  return structure.length > 0 || results.some((r) => r.errorCount > 0) ? 1 : 0;
+  if (structure.length > 0 || results.some((r) => r.errorCount > 0)) return 1;
+  // Предупреждения валят прогон только когда порог назван ЯВНО. Отрицательный порог —
+  // «не считать вовсе», и это умолчание.
+  if (a.maxWarnings >= 0) {
+    const warnings = results.reduce((n, r) => n + r.warningCount, 0);
+    if (warnings > a.maxWarnings) {
+      err(
+        `${warnings} warning(s) exceed the --max-warnings limit of ${a.maxWarnings}`,
+      );
+      return 1;
+    }
+  }
+  return 0;
 }
 
 // 🔴 `isMain`, А НЕ СРАВНЕНИЕ СТРОК. Первая редакция писала

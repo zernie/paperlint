@@ -263,10 +263,11 @@ The repository ships a GitHub composite action. Add one step:
     paths: papers
 ```
 
-`paths` is required. The action also refuses to pass when zero files were linted, so a typo in
-the path shows up as a red job instead of a green one. Optional inputs: `config` (your own
-ESLint config, see the bottom of this page), `max-warnings` (default `-1`, warnings never fail
-the job), `texcount` (default `true`; set to `false` if you have no `texcount/*` rules of your
+The action runs `rpp lint`, so CI and your terminal execute the same code — including the
+required-files check and `rpp.json`. `paths` is required, and the job refuses to pass when zero
+files were linted, so a typo in the path shows up red instead of green. Optional inputs: `config`
+(a path to `rpp.json`, only when the upward search cannot reach it), `max-warnings` (default `-1`,
+warnings never fail the job), `texcount` (default `true`; set to `false` if you have no `texcount/*` rules of your
 own — this package ships none), `working-directory`.
 
 ## Skills and hooks in Claude Code
