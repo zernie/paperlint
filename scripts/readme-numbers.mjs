@@ -109,35 +109,51 @@ export function declaredCounts(text) {
   return out;
 }
 
+/**
+ * 🔴 ДВА ФАЙЛА, А НЕ ОДИН, и это не послабление. 17.09 README сократили до того, что нужно
+ * пользователю, а методику тестирования перенесли в CONTRIBUTING.md — вместе с числами
+ * харнессов и батарей. Проверка, знающая один файл, ответила бы «в README нет ни одной
+ * пометки» и была бы ФОРМАЛЬНО права: числа никуда не делись, они переехали.
+ * Требование осталось прежним и сильным: КАЖДОЕ число на диске обязано быть объявлено
+ * где-то из этих файлов. Меняется только где именно.
+ */
+export const DECLARING_FILES = ["README.md", "CONTRIBUTING.md"];
+
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const readme = readFileSync(join(ROOT, "README.md"), "utf-8");
-  const declared = declaredCounts(readme);
+  const declared = {};
+  const declaredIn = {}; // чтобы находка отправляла чинить В ТОТ файл, где число написано
+  for (const f of DECLARING_FILES) {
+    for (const [k, v] of Object.entries(declaredCounts(readFileSync(join(ROOT, f), "utf-8")))) {
+      declared[k] = v;
+      declaredIn[k] = f;
+    }
+  }
   const actual = await actualCounts();
   const keys = Object.keys(actual);
 
   // Пустой скан — это НЕ «расхождений нет». Без этого стража удаление всех пометок из README
   // сделало бы проверку вечно зелёной.
   if (Object.keys(declared).length === 0) {
-    console.error("🔴 в README нет ни одной пометки `<!-- count:… -->` — сверять нечего, а значит проверка ничего не утверждает");
+    console.error(`🔴 ни в одном из ${DECLARING_FILES.join(", ")} нет пометки \`<!-- count:… -->\` — сверять нечего, а значит проверка ничего не утверждает`);
     process.exit(1);
   }
 
   const bad = [];
   for (const k of keys) {
-    if (!(k in declared)) bad.push(`  ${k}: на диске ${actual[k]}, а в README не объявлено вовсе`);
-    else if (declared[k] !== actual[k]) bad.push(`  ${k}: README обещает ${declared[k]}, на диске ${actual[k]}`);
+    if (!(k in declared)) bad.push(`  ${k}: на диске ${actual[k]}, а не объявлено ни в README, ни в CONTRIBUTING`);
+    else if (declared[k] !== actual[k]) bad.push(`  ${k}: ${declaredIn[k]} обещает ${declared[k]}, на диске ${actual[k]}`);
   }
   for (const k of Object.keys(declared)) {
-    if (!keys.includes(k)) bad.push(`  ${k}: README объявляет ${declared[k]}, но такого счётчика нет`);
+    if (!keys.includes(k)) bad.push(`  ${k}: объявлено ${declared[k]}, но такого счётчика нет`);
   }
 
   if (bad.length) {
-    console.error("🔴 README называет числа, которых нет на диске:");
+    console.error("🔴 названы числа, которых нет на диске:");
     for (const b of bad) console.error(b);
     console.error("\n  Числа в README производятся этой командой, а не пишутся рукой.");
     process.exit(1);
   }
   console.log(
-    `✓ README: ${keys.map((k) => `${k} ${actual[k]}`).join(" · ")} — каждое число сверено с диском`,
+    `✓ ${keys.map((k) => `${k} ${actual[k]}`).join(" · ")} — каждое число сверено с диском`,
   );
 }
