@@ -449,6 +449,35 @@ Skills are tested **through vigiles** — a colocated `<skill>.harness.mjs` besi
 empty — issue #6.) Not through a bespoke script: a home-grown runner here once printed
 confident, byte-identical "clean" verdicts for three different skills that had never loaded.
 
+### Every npm script takes an exclusive lock, and that is not ceremony
+
+`npm run *` in this repository goes through `scripts/exclusive.mjs`, which holds
+`.vigiles/exclusive.lock` for the duration. A second gate started while one is running does not
+queue and does not race — it **refuses**, names the holder, and exits 3.
+
+🔴 **The reason is that `test:sabotage` edits the working tree in place.** That strategy is
+deliberate (see `lib/mutation-driver.mjs` — copying the repo per mutation costs minutes instead
+of seconds), and its one cost is that any parallel reader sees a source file mid-mutation. The
+resulting failure is **false, non-deterministic, and blames the wrong file**: it reports a broken
+assertion, not a mutation, and it reads as "the suite is flaky". That has already cost a wrong
+conclusion here — two runs in a row produced *different* error messages and the diagnosis "I broke
+round-diff" was incorrect.
+
+A prose instruction "don't run them at the same time" existed and did not work: prose does not
+execute, so it does not apply to the person in the other terminal, the agent, or the editor with
+tests on save. Measured live, with the batteries running:
+
+```
+$ npm test
+🔴 отказ: этот репозиторий сейчас занят прогоном, который ПРАВИТ ФАЙЛЫ НА МЕСТЕ.
+   держит: pid 6645, «node scripts/run-mutations.mjs», с 2026-09-17T05:22:28.757Z
+RC=3
+```
+
+⚠️ A lock left behind by a process that no longer exists is **taken over** with a message, not
+respected. Otherwise one interrupted run would block the repository forever, and the first cure
+anybody reaches for would be "delete the lock by hand" — i.e. switching the mechanism off.
+
 ## `npm test` — `--min=1` stays, and here is what it is for
 
 The script is `vigiles test --min=1`. It went green on 2026-09-11 when the first harnesses

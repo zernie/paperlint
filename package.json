@@ -5,13 +5,13 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "test": "vigiles test --min=1",
-    "lint": "eslint .",
-    "lint:skills": "vigiles lint",
-    "check:globs": "node scripts/rules-see-files.mjs",
-    "check:content-only": "node scripts/rules-are-content-only.mjs",
-    "check:readme": "node scripts/readme-numbers.mjs",
-    "test:sabotage": "node scripts/run-mutations.mjs"
+    "test": "node scripts/exclusive.mjs vigiles test --min=1",
+    "lint": "node scripts/exclusive.mjs eslint .",
+    "lint:skills": "node scripts/exclusive.mjs vigiles lint",
+    "check:globs": "node scripts/exclusive.mjs node scripts/rules-see-files.mjs",
+    "check:content-only": "node scripts/exclusive.mjs node scripts/rules-are-content-only.mjs",
+    "check:readme": "node scripts/exclusive.mjs node scripts/readme-numbers.mjs",
+    "test:sabotage": "node scripts/exclusive.mjs node scripts/run-mutations.mjs"
   },
   "dependencies": {
     "@eslint/markdown": "^8.0.3",

@@ -13,3 +13,6 @@ _build/
 # the exact artifact loss `repro/` exists to prevent. Measured at the moment of the move, not guessed:
 # `git check-ignore -v` named this line for every one of them.
 !skills/paper-pipeline/repro/*.log
+
+# Замок взаимного исключения прогонов (scripts/exclusive.mjs) — живёт только на время прогона.
+.vigiles/exclusive.lock/
