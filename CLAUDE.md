@@ -60,7 +60,7 @@ Not optional and not "when something breaks": `vigiles` is a real dependency, an
 harness, spec and hook resolves through it. A container where `npm install` never ran fails
 in ways that look like broken code rather than a missing install.
 
-## The eight rules that decide what may live here — and what may not be written
+## The ten rules that decide what may live here — and what may not be written
 
 **1. Mechanism goes to vigiles, data stays here.** A file that names nothing local — no rule
 of ours, no fixture of ours — is machinery, and machinery belongs in
@@ -133,6 +133,37 @@ because `SyntaxError: Unexpected token '.'` says nothing about comments.
 
 ⇒ **In a block comment, prose describes the pattern; it never quotes it.** If the exact
 characters matter, they belong in the code or in a line comment beside it.
+
+**9. Measure the DEFECT before proposing the fix — and read "this is quick" as a warning.**
+Rule 5 is about the tool you are replacing; this one is about the order of work.
+
+1. **Show the defect**: command output, or a file quote with a line number. A proposed fix with
+   no exhibited defect is not a fix, it is a preference.
+2. **Name the layer and the channel** it touches: ESLint rule · skill · hook · CLI · CI action
+   · path resolution. More than one is a conversation, not a commit.
+3. **An adversarial second pass is encouraged, and it is not free.** Spend it on a fork in the
+   road, on anything that goes outward, and on a conclusion you are about to act on.
+4. **A quick fix is almost never quick** — it is quick to *propose* precisely because nothing
+   was opened.
+
+Four proposals were made and withdrawn in one session on 2026-09-17 for exactly this reason —
+[`docs/incidents.md`](docs/incidents.md).
+
+**10. The only impure thing in this package is WHERE IT IS INSTALLED — and it lives in ONE
+module.** Rule 6 generalised: the caller's cwd is one case of it. Checking logic — lint rules,
+skills, hooks — must not know its own location, nor its distance from anything else. Every
+answer to *where* comes from `lib/consumer.mjs`, which adapts per channel: own checkout ·
+`node_modules` · plugin cache · CI. A skill naming a script by an install-specific path in its
+own prose walks around that door, and 208 such literals across 190 lines do exactly that.
+
+⚠️ Deliberately NOT full hexagonal architecture, and that is a decision: there is no database or
+service to swap, and the lint rules are already pure functions over an AST, so ports around them
+would be ceremony with no subject. One thing here is impure, so one thing gets a port.
+
+⏳ **The mechanical half is owed and is the point**: a lint rule that makes an install-specific
+path literal outside the port a finding. Prose will not hold this class — four silent breakages
+happened *while* comments explaining the hazard sat directly above the code
+([`docs/incidents.md`](docs/incidents.md)).
 
 ## Distribution — no `smh init`, and that is a measured decision (2026-09-10)
 
