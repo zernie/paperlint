@@ -187,10 +187,33 @@ It **generates artifacts by measuring the repo it lands in** — TypeScript type
 derive from the host repo. An `init` here would copy files — and copying files is exactly what the
 two standard channels already do, for free:
 
-| what ships | standard channel | user's side |
+| what ships | channel | user's side |
 |---|---|---|
-| skills | `.claude-plugin/marketplace.json` + `plugin.json` | `/plugin marketplace add <owner>/<repo>` then `/plugin install` **plus the npm package beside it — see below** |
-| ESLint rules | an npm package | `npm i -D <pkg>` + a few lines in `eslint.config.mjs` |
+| **all code** — rules, skills, hooks, scripts | an npm package | `npm i -D research-paper-pipeline` |
+| **hook wiring only** | the plugin in `plugin/` | `/plugin marketplace add <owner>/<repo>` then `/plugin install` |
+
+🔴 **THE PLUGIN CARRIES NO CODE, AND THAT IS THE DESIGN — measured 2026-09-17.** Claude Code runs
+`npm ci --ignore-scripts` for a plugin *"only when the plugin's root directory contains both a
+package.json and a supported lockfile"*, with a 60-second timeout, and *"a failed or skipped
+install never blocks the plugin"*. Until today the marketplace pointed at `"source": "./"` — the
+repository root — which holds a lockfile of **251 packages**, there for the ESLint rules and of no
+use to a hook. A slow network therefore produced a plugin that loaded with a partial tree and hooks
+that failed with `cannot find module vigiles`, silently.
+
+`plugin/` has no `package.json`, so that install does not run at all. Its `hooks/hooks.json` points
+at the consumer's own npm copy through `${CLAUDE_PROJECT_DIR}` — the same command a consumer used to
+paste by hand, now written by the plugin. `vigiles/hook` resolves upward from
+`node_modules/research-paper-pipeline/hooks/`, which is the contract documented below.
+
+⚠️ **Two manifests now exist and neither is stale.** `plugin/.claude-plugin/plugin.json` is what
+people install. The one at the repository root stays because the skill **eval** tier needs a
+complete plugin at the root (`pluginDir` in `lib/skill-eval-kit.mjs`) — it is a local test fixture,
+not a delivery channel, and the marketplace no longer points at it.
+
+⚠️ **Skills do NOT travel through the plugin, deliberately.** They name their scripts by an
+install-specific path (208 literals, issue #19), so a plugin-only consumer would install skills whose
+first command fails. They ship with the npm package, where those paths resolve. When #19 lands, the
+plugin can carry them too.
 
 🔴 **THE TWO ROWS ARE NOT INDEPENDENT, AND THE TABLE READ AS IF THEY WERE** (issue #8, counted
 again 2026-09-17). The marketplace row needs no npm — that is true of the CHANNEL and false of

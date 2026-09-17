@@ -1,0 +1,8 @@
+{
+  "name": "research-paper-pipeline",
+  "version": "0.1.0",
+  "description": "Wiring for the research-paper-pipeline hooks. The code itself comes from the npm package installed in the consumer's project — this plugin carries no code and no dependencies on purpose.",
+  "author": { "name": "zernie" },
+  "repository": "https://github.com/zernie/research-paper-pipeline",
+  "keywords": ["latex", "academic-writing", "eslint", "linting", "ci"]
+}
