@@ -84,12 +84,45 @@ jobs:
         run: npm ci
         timeout-minutes: 5
 
-      # Harnesses. `--min=1` is inside the script and it is load-bearing: `vigiles test` given a
-      # DIRECTORY (or a bare `.`) exits 0 having executed nothing, which reads exactly like a
-      # clean suite. Measured 2026-09-11 in the consumer repo: `vigiles test eslint-rules/` →
-      # "0 passed, 1 skipped", RC=0.
+      # Harnesses. `--min=1` is inside the script: it refuses a run where NOTHING matched.
+      #
+      # 🔴 ЧТО ОНО НЕ ДЕЛАЕТ, вопреки тому, что здесь было написано до 17.09: от каталога в
+      # аргументе оно НЕ защищает. Замер: `npx vigiles test . --min=1` → `0 passed, 1 skipped`,
+      # **RC=0** — каталог существует, дискавери берёт его за файл, и он засчитывается в
+      # минимум. Прежняя редакция называла `--min=1` «load-bearing» ровно против этого случая,
+      # то есть утверждала защиту, которой нет. От этого случая защищает `--no-skip` ниже.
+      # 🔴 THE `claude` CLI IS A TEST DEPENDENCY HERE, and its absence was NOT harmless.
+      # `plan-paper-timeline.effects.harness.mjs` spawns the real agent binary; without it the
+      # harness SKIPS, the skip exits 0 through `vigiles test`, and the mutation driver read that
+      # as "the mutation survived". Measured 2026-09-15 on run 34966606186: two survivors in CI,
+      # zero locally, the difference being this binary and nothing about the code.
+      #
+      # The driver now REFUSES a battery whose harness skips (lib/mutation-driver.mjs), so the
+      # wrong diagnosis is gone either way. This step is the other half: it restores the evidence
+      # instead of settling for an honest "no evidence". No API key — the tier drives a scripted
+      # stand-in, which is why it costs seconds and $0.
+      # 🔴 DELIBERATELY UNPINNED, and since issue #7 that is finally honest. The tier exists to
+      # notice upstream moving, so a pin would defeat it — but until the version was OBSERVED
+      # rather than probed for, an unpinned install meant the assertions characterized whatever
+      # shipped that morning while the docblock named 2.1.227 (measured drift: 2.1.273). The run
+      # now prints both numbers, so the log says which version the green belongs to.
+      - name: the agent binary the effects tier observes
+        run: npm i -g @anthropic-ai/claude-code
+        timeout-minutes: 3
+
+      # 🔴 `--no-skip` ЗДЕСЬ, И ИМЕННО ПОСЛЕ УСТАНОВКИ ВЫШЕ. Замер 17.09: без него пропуск —
+      # зелёный, а статус `skip` получает НЕ ТОЛЬКО объявленный автором `skip()`, но и файл,
+      # который не смог ЗАГРУЗИТЬСЯ. То есть один флаг закрывает обе двери разом.
+      #
+      # ⚠️ Порядок шагов был неверен и делал установку выше почти бессмысленной: `npm test`
+      # стоял ДО неё, поэтому ярус эффектов в этом джобе пропускался всегда, а бинарь
+      # доставался только мутационным батареям. Комментарий про «its absence was NOT harmless»
+      # описывал ровно этот вред и при этом сам от него не защищал.
+      #
+      # ⚠️ И флаг стоит В ШАГЕ, а не в `package.json`: джоб `macos` ниже гоняет тот же `npm test`
+      # БЕЗ установки бинаря, там пропуск законен, и общий флаг покрасил бы его напрасно.
       - name: npm test
-        run: npm test
+        run: npm test -- --no-skip
 
       # The rules themselves, over this repository's own fixtures. Two of the four fixtures are
       # DEFECTIVE ON PURPOSE, so a healthy checkout reports warnings here and still exits 0 —
@@ -134,25 +167,6 @@ jobs:
       # runner DISCOVERS batteries rather than listing them, errors on finding zero, and errors
       # on any harness that has no battery — see scripts/run-mutations.mjs for why (the hand
       # list it replaced had already gone stale by one file, silently).
-      # 🔴 THE `claude` CLI IS A TEST DEPENDENCY HERE, and its absence was NOT harmless.
-      # `plan-paper-timeline.effects.harness.mjs` spawns the real agent binary; without it the
-      # harness SKIPS, the skip exits 0 through `vigiles test`, and the mutation driver read that
-      # as "the mutation survived". Measured 2026-09-15 on run 34966606186: two survivors in CI,
-      # zero locally, the difference being this binary and nothing about the code.
-      #
-      # The driver now REFUSES a battery whose harness skips (lib/mutation-driver.mjs), so the
-      # wrong diagnosis is gone either way. This step is the other half: it restores the evidence
-      # instead of settling for an honest "no evidence". No API key — the tier drives a scripted
-      # stand-in, which is why it costs seconds and $0.
-      # 🔴 DELIBERATELY UNPINNED, and since issue #7 that is finally honest. The tier exists to
-      # notice upstream moving, so a pin would defeat it — but until the version was OBSERVED
-      # rather than probed for, an unpinned install meant the assertions characterized whatever
-      # shipped that morning while the docblock named 2.1.227 (measured drift: 2.1.273). The run
-      # now prints both numbers, so the log says which version the green belongs to.
-      - name: the agent binary the effects tier observes
-        run: npm i -g @anthropic-ai/claude-code
-        timeout-minutes: 3
-
       - name: mutation batteries
         run: npm run test:sabotage
 
