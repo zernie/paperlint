@@ -224,8 +224,8 @@ unaffected.
 
 Every rule has a harness proving **both halves** — it fires on a planted defect *and* stays silent
 on clean input — and a battery that removes one load-bearing property and demands the harness go
-red at the assertion that property belongs to. <!-- count:harnesses -->52 harnesses,
-<!-- count:batteries -->29 batteries.
+red at the assertion that property belongs to. <!-- count:harnesses -->53 harnesses,
+<!-- count:batteries -->30 batteries.
 
 CI refuses a harness that no battery can kill, because silence is the success state of every check
 here: "it passed" and "it cannot fail" look identical from outside. It caught a real one on the way

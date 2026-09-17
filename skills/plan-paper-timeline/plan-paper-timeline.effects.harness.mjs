@@ -24,7 +24,15 @@
  * pinning it, and is a far better way to learn it than a created event.
  *
  * ── WHAT THIS PINS (a characterization test, deliberately) ───────────────────────
- * Under `claude -p` 2.1.227 the whole `mcp__*` surface is ABSENT, and so is `ToolSearch`.
+ * Under `claude -p` at `CHARACTERIZED_CLI` (`lib/agent-cli-version.mjs`, 2.1.227) the whole
+ * `mcp__*` surface is ABSENT, and so is `ToolSearch`.
+ *
+ * 🔴 THAT NUMBER IS A VALUE, NOT PROSE, and it was prose until issue #7. The probe below used
+ * to run with `stdio: "ignore"`, so the version the CLI printed was never read — this tier
+ * characterized whatever the runner installed that day while this paragraph kept saying 2.1.227.
+ * Measured: 2.1.273 on the reporter's machine and on this one, forty-six patch releases of drift
+ * that nothing in a green log could show. The version is now OBSERVED, reported in the summary
+ * below, and named in every failure message — so a red says which version it characterized.
  * That means:
  *   1. §3 of this skill is UNEXECUTABLE in any headless / CI context. It is an
  *      interactive-session-only step. Nothing in the file says so.
@@ -46,6 +54,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { runHarnessTest, skip } from "vigiles";
+import { observeAgentCli } from "../../lib/agent-cli-version.mjs";
 import { DEFAULT_TIMEZONE } from "../paper-pipeline/scripts/consumer.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -72,11 +81,14 @@ const CLAUDE_DIR = resolve(REPO, ".claude");
 
 // The deterministic tier spawns the real agent binary. Without it there is nothing to
 // observe, and a silent ✓ would be the exact lie this tier exists to end.
-const { status } = await import("node:child_process").then((m) =>
-  Promise.resolve(m.spawnSync("claude", ["--version"], { stdio: "ignore" })),
-);
-if (status !== 0)
-  skip("plan-paper-timeline effects: the `claude` CLI is not installed, so no run can be observed");
+//
+// 🔴 OBSERVED, NOT PROBED. This spawn already existed; it ran with `stdio: "ignore"`, which
+// discarded the one thing worth reading. `observeAgentCli` keeps the spawn and keeps the string,
+// refuses an exit-0-with-empty-stdout as "not an observation", and carries the characterized
+// version alongside so the two can be compared on every run instead of by a reader's memory.
+const { spawnSync } = await import("node:child_process");
+const cli = observeAgentCli({ spawnSync });
+if (!cli.present) skip(`plan-paper-timeline effects: ${cli.note}`);
 
 const declaredMcp = [
   "mcp__Google_Calendar__list_events",
@@ -151,6 +163,7 @@ try {
   if (!absent(cal))
     throw new Error(
       `THE ENVIRONMENT CHANGED — and this is good news that must be read, not silenced. ` +
+        `Observed \`claude\` ${cli.version} (characterized against ${cli.characterized}). ` +
         `\`mcp__Google_Calendar__list_events\` is now REACHABLE from \`claude -p\` ` +
         `(result: ${cal ? cal.resultText.slice(0, 200) : "no call recorded"}). ` +
         `Consequences: (a) §3 of this skill is now executable headlessly, so it can finally be ` +
@@ -162,7 +175,8 @@ try {
   const ts = call("ToolSearch");
   if (!absent(ts))
     throw new Error(
-      `\`ToolSearch\` is now available under \`claude -p\` (result: ` +
+      `\`ToolSearch\` is now available under \`claude -p\` ${cli.version} ` +
+        `(characterized against ${cli.characterized}) (result: ` +
         `${ts ? ts.resultText.slice(0, 200) : "no call recorded"}). The 2026-08-10 sweep recorded ` +
         `"ToolSearch missing from allowed-tools" as a finding about THIS SKILL; measured on ` +
         `2026-08-11 it was a fact about the ENVIRONMENT (headless had no ToolSearch at all). ` +
@@ -173,6 +187,10 @@ try {
   console.log(
     `✓ plan-paper-timeline [effects]: skill activated and its body reached the model; ` +
       `Read (declared+granted) works — the run is live.\n` +
+      // 🔴 The version goes in the REPORT, not only into failures. A characterization test that
+      // silently still holds is indistinguishable from one nobody re-checked, so the run says
+      // which version it held against — and says it whether or not the numbers agree.
+      `  CLI: ${cli.note}\n` +
       `  PINNED: ${String(declaredMcp.length)} of its 10 declared entries are MCP calendar tools, ` +
       `and the whole mcp__* surface is ABSENT under \`claude -p\`; \`ToolSearch\` is absent too.\n` +
       `  → §3 ("Create the calendar events") is an INTERACTIVE-SESSION-ONLY step. Nothing in ` +

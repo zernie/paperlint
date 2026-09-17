@@ -127,6 +127,11 @@ jobs:
       # wrong diagnosis is gone either way. This step is the other half: it restores the evidence
       # instead of settling for an honest "no evidence". No API key — the tier drives a scripted
       # stand-in, which is why it costs seconds and $0.
+      # 🔴 DELIBERATELY UNPINNED, and since issue #7 that is finally honest. The tier exists to
+      # notice upstream moving, so a pin would defeat it — but until the version was OBSERVED
+      # rather than probed for, an unpinned install meant the assertions characterized whatever
+      # shipped that morning while the docblock named 2.1.227 (measured drift: 2.1.273). The run
+      # now prints both numbers, so the log says which version the green belongs to.
       - name: the agent binary the effects tier observes
         run: npm i -g @anthropic-ai/claude-code
         timeout-minutes: 3
