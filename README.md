@@ -1,27 +1,60 @@
 # research-paper-pipeline
 
-**Your paper is a repository long before it is a PDF — and nothing lints it.**
+**Mechanical checks for a paper you keep in git.**
 
 A pipeline for taking a paper from idea to camera-ready **inside the repository**, with the parts
 that can be checked mechanically actually checked. Three kinds of thing, and they are meant to be
 used together:
 
-- **24 skills**, one per stage — find a venue, draft, tighten, adversarial review, submit,
-  camera-ready. Prose an AI coding agent follows.
+- **24 skills** — a skill is one markdown file of instructions your AI agent reads when it
+  reaches that stage of the work: find a venue, draft, tighten, adversarial review, submit,
+  camera-ready. No code, no magic; the agent follows the file.
 - **13 rules** that check what those stages *claim*: the PDF you say you submitted has the bytes
   you declared, the bibliography names the published version's authors, the paper states its
   research question.
 - **3 hooks** that stop a bad edit in the agent's loop — overwriting a frozen submission, letting
   the scorecard and the paper drift apart.
 
-The rules run under ESLint, so you invoke them with `npx eslint` and get findings with file
-positions and a non-zero exit code. That is all you need from it — the config block below is
-copy-paste.
+One command runs all of it:
+
+```bash
+npx research-paper-pipeline check papers
+```
+
+Findings come back with file and line, and the exit code is non-zero when something is wrong, so
+CI can gate on it. There is no config file to write. (The rules happen to be built on ESLint
+underneath — that is an implementation detail, and you never see it.)
 
 **Who this is for:** you keep a paper in git and an AI agent does much of the typing. The design
 assumes that agent: every check is built so that **nothing a rule reads is authored by the thing
 being checked.** A skill can claim it froze the submission; the rule compares the byte count.
 You need Node installed. You do not need to know ESLint.
+
+## The pipeline
+
+```
+   idea ──► venue ──► experiment ──► draft ──► review ──► submit ──► camera-ready ──► extend
+    │         │           │            │         │          │             │             │
+    │         │           │            │         │          │             │             └─ next
+    │         │           │            │         │          │             │                paper
+    │         │           │            │         │          │             └─ de-anonymise,
+    │         │           │            │         │          │                archival DOI
+    │         │           │            │         │          └─ freeze the PDF, record its bytes
+    │         │           │            │         └─ tighten · grade the writing · red-team ·
+    │         │           │            │            simulated programme committee
+    │         │           │            └─ render to PDF · verify every citation exists
+    │         │           └─ run it, ship a reproduction artifact
+    │         └─ rank real CFPs, put the deadlines on a calendar
+    └─ go / no-go before you invest
+
+   ┌───────────────────────────────────────────────────────────────────────────────────────┐
+   │  scorecard.md — one file per paper. Which stage it is in, which PDF, how many bytes.   │
+   │  The stages above WRITE it. The rules READ it and compare against the files on disk.   │
+   └───────────────────────────────────────────────────────────────────────────────────────┘
+            ▲                                                          ▲
+            │  npx research-paper-pipeline check papers                │  hooks, in the agent's
+            │  — 13 rules, run by you or by CI                         │    loop, live edits
+```
 
 ## What it checks, and what it reads
 
@@ -256,15 +289,21 @@ unaffected.
 
 ## How this is tested
 
-Every rule has a harness proving **both halves** — it fires on a planted defect *and* stays silent
-on clean input — and a battery that removes one load-bearing property and demands the harness go
-red at the assertion that property belongs to. <!-- count:harnesses -->54 harnesses,
-<!-- count:batteries -->31 batteries.
+Every rule ships with a **harness**: a test that runs the rule twice. Once on a file with a defect
+planted in it, where the rule must find it. Once on a clean file, where the rule must say nothing.
 
-CI refuses a harness that no battery can kill, because silence is the success state of every check
-here: "it passed" and "it cannot fail" look identical from outside. It caught a real one on the way
-in: `js-yaml` 5 stopped parsing an unquoted date as a `Date`, every harness stayed green under both
-majors, and only the battery noticed the rule's coercion had become dead code.
+The second run is the one people skip, and it is the one that matters. A rule that is broken and
+finds nothing passes the first kind of test by accident — from outside, "there is nothing wrong
+here" and "this check never ran" look exactly the same.
+
+On top of that, each rule has a **battery**: it deletes one thing the rule depends on and then
+demands the harness go red, at the specific assertion that thing belongs to. If nothing goes red,
+that part of the rule was never doing any work. CI refuses a rule whose battery cannot kill it.
+<!-- count:harnesses -->54 harnesses, <!-- count:batteries -->31 batteries.
+
+It caught a real one on the way in: `js-yaml` 5 stopped parsing an unquoted date as a `Date`.
+Every harness stayed green under both majors, and only the battery noticed that the rule's
+date coercion had become dead code.
 
 ## Why not one of the existing academic skill suites
 
