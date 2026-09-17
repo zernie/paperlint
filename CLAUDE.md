@@ -390,10 +390,25 @@ defence. Each battery prints the harness line and the assertion text its mutatio
 
 ## Cost
 
-This is a **private** repository, so its GitHub Actions minutes come out of the account-wide
-3000/month shared with every other private repo. Public repos are free; private ones are not.
-Decide the budget **before** the first workflow file, not after the first bill. Until then
-there is no CI here, and that is deliberate.
+⛽ **This repository is PUBLIC, so its Actions minutes are FREE.** Verified against the API on
+2026-09-17: `"private": false`, `"visibility": "public"`, and three active workflows — `ci`,
+`dependabot auto-merge`, and Dependabot's own updates runner.
+
+🔴 **This paragraph said the exact opposite until now, and the correction is the lesson, not the
+fact.** It read «This is a **private** repository … Until then there is no CI here, and that is
+deliberate» — both halves false, and false in the file an agent loads FIRST. The flip to public
+happened on 2026-09-12 and *was* recorded, at `.github/workflows/ci.yml:8-9`, which is a file
+nobody opens before deciding whether there is any CI to check. Reported as issue #6.
+
+⚠️ So the rule this leaves behind is about WHERE a correction lands: a measurement written into
+the artifact it describes is not written down for the reader who needs it. **Status that changes
+what a session DOES belongs in this file**; the workflow header can carry the detail.
+
+What stays true, because the reasoning outlives the flip: minutes on a **private** repo come out
+of the account-wide 3000/month shared with every other private repo, and the budget is decided
+**before** the first workflow file, not after the first bill. **If this repository is ever made
+private again, this section and `.github/dependabot.yml` are revisited together** — the bot is
+justified two hundred lines above precisely by these minutes being free.
 
 ## Testing
 
@@ -405,10 +420,11 @@ npx vigiles test <file>     # one harness
 ⚠️ **Not `vigiles test .`** — the `.` is read as a FILE, the runner dies with
 `ERR_UNSUPPORTED_DIR_IMPORT`, and it still exits 0. See the measured table below.
 
-Skills, if and when they arrive, are tested **through vigiles** — a colocated
-`<skill>.harness.mjs` beside the skill. Not through a bespoke script: a home-grown runner
-here once printed confident, byte-identical "clean" verdicts for three different skills that
-had never loaded.
+Skills are tested **through vigiles** — a colocated `<skill>.harness.mjs` beside the skill.
+(This read «Skills, if and when they arrive» until 2026-09-17; there are 24 of them under
+`skills/` carrying a `SKILL.md`, and the README's opening line claimed the repository was
+empty — issue #6.) Not through a bespoke script: a home-grown runner here once printed
+confident, byte-identical "clean" verdicts for three different skills that had never loaded.
 
 ## `npm test` — `--min=1` stays, and here is what it is for
 
