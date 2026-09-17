@@ -47,8 +47,16 @@ on:
 # A newer push supersedes an older one on the same ref. Note this does NOT make the cancelled
 # run free — cancellation arrives after the expensive steps have already run and been billed —
 # it only stops the tail.
+# 🔴 КЛЮЧ ГРУППЫ РАЗЛИЧАЕТ СОБЫТИЕ, И ЭТО ЗАМЕР, А НЕ ПРЕДОСТОРОЖНОСТЬ (17.09.2026).
+# С одним ключом `ci-<ref>` навешивание метки `osx` на только что открытый PR УБИЛО прогон
+# гейтов: событие `labeled` попало в ту же группу и отменило идущий `pull_request/opened`.
+# Наблюдено на PR #17 — `gates` пришёл `cancelled` в прогоне 44 и `skipped` в прогоне 45, то
+# есть полного набора гейтов у PR не оказалось НИ ОДНОГО, при двух зелёных галочках рядом.
+#
+# Разные ключи потому, что это разные работы: прогон по КОДУ проверяет код, прогон по МЕТКЕ
+# проверяет платформу. Отменять первый вторым — терять проверку, а не экономить минуты.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.ref }}-${{ github.event.action == 'labeled' && 'label' || 'code' }}
   cancel-in-progress: true
 
 permissions:
