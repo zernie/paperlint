@@ -26,8 +26,9 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const { run, parseArgs, buildConfig, init, nextSteps, installHookRuntime } =
-  await import(join(HERE, "rpp.mjs"));
+const { run, parseArgs, buildConfig, nextSteps } = await import(
+  join(HERE, "rpp.mjs")
+);
 
 let n = 0;
 const check = (label, cond) => {
@@ -123,7 +124,7 @@ check(
       "и печатает ВСЕ три следующих шага, а не только первый",
       /rpp check/.test(first.out) &&
         /research-paper-pipeline@/.test(first.out) &&
-        /--with-hooks/.test(first.out),
+        /npm i -D vigiles/.test(first.out),
     );
     check(
       "и НЕ советует ставить плагин, пока его рантайма нет",
@@ -281,114 +282,34 @@ console.log(
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
-// `init --with-hooks`: the copy-paste step became a command that RUNS.
+// Step 3 must not send anyone to `/plugin install` before the runtime is on disk.
 //
-// 🔴 The spawner is injected, so the case that matters most is stageable: an install that
-// FAILS. A tool that prints "done" over a failed npm is the exact defect this package exists
-// to object to, and it cannot be tested at all when the spawn is hard-wired.
-
-check(
-  "--with-hooks is parsed",
-  parseArgs(["init", "--with-hooks"]).withHooks === true,
-);
-check("and is off unless asked", parseArgs(["init"]).withHooks === false);
+// 🔴 This survived the withdrawal of the `--with-hooks` flag, because it is not about the flag.
+// Claude Code's contract is «a failed or skipped install never blocks the plugin», so a plugin
+// installed without its runtime loads and its hooks die on `Cannot find module` with nothing
+// said. Telling someone to install the plugin first is therefore telling them to build that.
 
 {
-  // FIRES on the planted defect: npm exits non-zero.
-  const out = [];
-  const ok = installHookRuntime({
-    spawnSync: () => ({
-      status: 1,
-      stderr: "npm error code ETARGET\nnpm error notarget",
-    }),
-    log: (m) => out.push(m),
-  });
-  const text = out.join("\n");
-  check("a failed install returns false", ok === false);
-  check(
-    "says npm failed, with its exit code",
-    /could not install vigiles.*npm exited 1/s.test(text),
-  );
-  check(
-    "carries npm's own last words, not a paraphrase",
-    text.includes("ETARGET"),
-  );
-  check(
-    "states the blast radius",
-    /rules and the CLI are unaffected/.test(text),
-  );
-  check("and how to retry", text.includes("npm i -D vigiles"));
-}
-
-{
-  // SILENT on the clean path, and the command it runs is the one we mean.
-  const out = [];
-  let argv = null;
-  const ok = installHookRuntime({
-    spawnSync: (cmd, args) => {
-      argv = [cmd, ...args];
-      return { status: 0, stderr: "" };
-    },
-    log: (m) => out.push(m),
-  });
-  check("a clean install returns true", ok === true);
-  check(
-    "it really runs `npm i -D vigiles`",
-    argv.join(" ") === "npm i -D vigiles",
-  );
-  check(
-    "the size is announced BEFORE spending it",
-    /installing vigiles.*93 MB/s.test(out[0]),
-  );
-  check(
-    "no failure text on a clean run",
-    !out.join("\n").includes("could not install"),
-  );
-}
-
-{
-  // Step 3 changes shape once the runtime is there — no dead instruction to re-install.
   const before = nextSteps("papers", { hooksReady: false });
   const after = nextSteps("papers", { hooksReady: true });
   check(
-    "without the runtime, step 3 offers the one command",
-    before.includes("rpp init --with-hooks"),
+    "without the runtime, step 3 names the runtime and its size",
+    /npm i -D vigiles/.test(before) && /93 MB/.test(before),
   );
   check(
     "and says skipping it costs only the hooks",
     /rules and the CLI do not use vigiles/.test(before),
   );
   check(
-    "with the runtime, the install line is gone",
-    !after.includes("--with-hooks"),
+    "without the runtime, /plugin install is NOT offered",
+    !before.includes("/plugin install"),
   );
   check(
-    "and only the plugin wiring is left",
+    "with the runtime, only the plugin wiring is left",
     after.includes("/plugin install research-paper-pipeline"),
   );
-}
-
-{
-  // An install already on disk must NOT be spent twice.
-  const dir = realpathSync(mkdtempSync(join(tmpdir(), "rpp-init-")));
-  try {
-    mkdirSync(join(dir, "node_modules", "vigiles"), { recursive: true });
-    const out = [];
-    let spawned = false;
-    init(dir, {
-      log: (m) => out.push(m),
-      withHooks: true,
-      spawnSync: () => {
-        spawned = true;
-        return { status: 0, stderr: "" };
-      },
-    });
-    check(
-      "vigiles already present — npm is not spawned at all",
-      spawned === false,
-    );
-    check("and the run says so", out.join("\n").includes("already installed"));
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
+  check(
+    "and the install line is gone once it is installed",
+    !after.includes("npm i -D vigiles"),
+  );
 }

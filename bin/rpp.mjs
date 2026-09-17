@@ -153,14 +153,12 @@ export function parseArgs(argv) {
     paths: [],
     options: null,
     json: false,
-    withHooks: false,
   };
   const rest = [...argv];
   if (rest[0] && !rest[0].startsWith("-")) out.cmd = rest.shift();
   for (let i = 0; i < rest.length; i++) {
     const a = rest[i];
     if (a === "--json") out.json = true;
-    else if (a === "--with-hooks") out.withHooks = true;
     else if (a === "--options") out.options = rest[++i];
     else if (a === "--help" || a === "-h") out.help = true;
     else out.paths.push(a);
@@ -188,17 +186,17 @@ export const RPP_JSON = `{
 `;
 
 /**
- * Step 3 is the one that used to be a COPY-PASTE, and that was the complaint.
+ * Step 3 must not send anyone to `/plugin install` before the runtime is there.
  *
- * 🔴 WHY IT IS STILL NOT AUTOMATIC BY DEFAULT. Installing `vigiles` costs 93 MB in a clean
- * project — measured, not estimated: 51 MB of `@ast-grep`, 23 MB of `typescript`, 5 MB of
- * vigiles itself, 36 packages. None of it is used by `rpp check`, which is what most people
- * install this package for. Charging every linter user 93 MB for three editor hooks they may
- * never load is the wrong default, so the install is a FLAG — and the flag RUNS it, instead of
- * printing a line to copy.
+ * 🔴 A plugin whose hooks cannot load is worse than no plugin. Claude Code's own contract says
+ * «a failed or skipped install never blocks the plugin», so the hooks would die on
+ * `Cannot find module` and nothing would say so — the exact shape this project spent a day
+ * fixing upstream. So the `/plugin` lines appear only once vigiles is on disk.
  *
- * ⚠️ And the size is printed before it happens, because a tool that quietly adds 93 MB to
- * someone's `node_modules` has spent their disk without telling them.
+ * ⚠️ The manual `npm i -D vigiles` above is still wrong and is still here: 93 MB measured in a
+ * clean project, charged to people who only ever lint. A `--with-hooks` flag was written and
+ * WITHDRAWN — a flag is one more action, not one fewer. Replacing the runtime dependency
+ * outright is the open work.
  */
 export function nextSteps(papersDir = "papers", { hooksReady = false } = {}) {
   const hooks = hooksReady
@@ -208,8 +206,8 @@ export function nextSteps(papersDir = "papers", { hooksReady = false } = {}) {
         `       /plugin install research-paper-pipeline@research-paper-pipeline`,
       ]
     : [
-        `  3. optional — the three editor hooks for Claude Code, in one command`,
-        `       npx rpp init --with-hooks     (installs vigiles, their runtime: ~93 MB)`,
+        `  3. optional — the three editor hooks for Claude Code need a runtime first`,
+        `       npm i -D vigiles      (~93 MB; nothing above uses it)`,
         ``,
         `     Skip it and everything above still works: the hooks are an in-editor guard,`,
         `     the rules and the CLI do not use vigiles at all.`,
@@ -231,34 +229,7 @@ export function nextSteps(papersDir = "papers", { hooksReady = false } = {}) {
   ].join("\n");
 }
 
-/**
- * Install the hook runtime, and REPORT WHAT HAPPENED rather than assuming it worked.
- *
- * 🔴 The spawner is injected for the same reason it was in vigiles' own CLI probe: the one case
- * that matters most — the install FAILING — cannot be staged when the spawn is hard-wired. A
- * failed install that printed "done" would be the exact defect this package exists to object to.
- */
-export function installHookRuntime({ spawnSync, log }) {
-  log(`installing vigiles (the hooks' runtime, ~93 MB) …`);
-  const r = spawnSync("npm", ["i", "-D", "vigiles"], { encoding: "utf8" });
-  if (r.status === 0) {
-    log(`vigiles installed`);
-    return true;
-  }
-  const why = (r.stderr ?? "").trim().split("\n").slice(-3).join("\n");
-  log(
-    `✗ could not install vigiles (npm exited ${String(r.status ?? "with no status")}).\n` +
-      (why ? `${why}\n` : "") +
-      `  The hooks stay off; the rules and the CLI are unaffected.\n` +
-      `  To retry by hand:  npm i -D vigiles`,
-  );
-  return false;
-}
-
-export function init(
-  dir,
-  { log = console.log, withHooks = false, spawnSync } = {},
-) {
+export function init(dir, { log = console.log } = {}) {
   const target = join(dir, "rpp.json");
   if (existsSync(target))
     log(`rpp.json already there — kept as is, nothing overwritten`);
@@ -270,9 +241,6 @@ export function init(
   }
   // Already present counts as ready: re-installing what is there would spend the 93 MB twice.
   let hooksReady = existsSync(join(dir, "node_modules", "vigiles"));
-  if (withHooks && !hooksReady)
-    hooksReady = installHookRuntime({ spawnSync, log });
-  else if (withHooks) log(`vigiles already installed — nothing to do`);
   log(nextSteps("papers", { hooksReady }));
   return 0;
 }
@@ -286,10 +254,7 @@ export async function run(
     log(USAGE);
     return a.help ? 0 : 2;
   }
-  if (a.cmd === "init") {
-    const { spawnSync } = await import("node:child_process");
-    return init(a.paths[0] ?? ".", { log, withHooks: a.withHooks, spawnSync });
-  }
+  if (a.cmd === "init") return init(a.paths[0] ?? ".", { log });
   if (a.cmd !== "check") {
     err(`unknown command \`${a.cmd}\`\n\n${USAGE}`);
     return 2;
