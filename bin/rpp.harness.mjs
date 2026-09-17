@@ -11,14 +11,23 @@
  * Оба закреплены ассертами ниже, чтобы вернуться назад было нельзя.
  */
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, realpathSync, symlinkSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  readFileSync,
+  rmSync,
+  realpathSync,
+  symlinkSync,
+} from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const { run, parseArgs, buildConfig } = await import(join(HERE, "rpp.mjs"));
+const { run, parseArgs, buildConfig, init, nextSteps, installHookRuntime } =
+  await import(join(HERE, "rpp.mjs"));
 
 let n = 0;
 const check = (label, cond) => {
@@ -32,7 +41,10 @@ async function cli(args, cwd) {
   const prev = process.cwd();
   if (cwd) process.chdir(cwd);
   try {
-    const code = await run(args, { log: (...a) => out.push(a.join(" ")), err: (...a) => out.push(a.join(" ")) });
+    const code = await run(args, {
+      log: (...a) => out.push(a.join(" ")),
+      err: (...a) => out.push(a.join(" ")),
+    });
     return { code, out: out.join("\n") };
   } catch (e) {
     // 🔴 УТЕЧКА ИСКЛЮЧЕНИЯ — ЭТО СВОЙСТВО, КОТОРОЕ НАДО УТВЕРЖДАТЬ АССЕРТОМ, А НЕ ЛОВИТЬ
@@ -46,63 +58,113 @@ async function cli(args, cwd) {
 }
 
 // ── разбор аргументов ───────────────────────────────────────────────────────────────────
-check("`--help` первым аргументом — это ФЛАГ, а не команда", parseArgs(["--help"]).help === true);
+check(
+  "`--help` первым аргументом — это ФЛАГ, а не команда",
+  parseArgs(["--help"]).help === true,
+);
 check("и команда при этом не выдумывается", parseArgs(["--help"]).cmd === null);
-check("путь и опции разбираются", (() => {
-  const a = parseArgs(["check", "papers", "--options", "o.json", "--json"]);
-  return a.cmd === "check" && a.paths[0] === "papers" && a.options === "o.json" && a.json === true;
-})());
+check(
+  "путь и опции разбираются",
+  (() => {
+    const a = parseArgs(["check", "papers", "--options", "o.json", "--json"]);
+    return (
+      a.cmd === "check" &&
+      a.paths[0] === "papers" &&
+      a.options === "o.json" &&
+      a.json === true
+    );
+  })(),
+);
 
 // ── конфиг собирается, и данные потребителя доезжают ────────────────────────────────────
 {
-  const cfg = buildConfig({ typographyDebt: { x: { sectionSign: 3 } }, authorListCommand: "run-me" }, null);
-  check("без языка LaTeX конфиг всё равно собирается — корпус без .tex не повод отказывать",
-        Array.isArray(cfg) && cfg.length === 3);
-  check("с языком LaTeX добавляется четвёртый блок", buildConfig({}, {}).length === 4);
-  const status = cfg.find((c) => c.files.some((f) => f.includes("PIPELINE-STATUS")));
-  check("команда из опций доезжает до правила",
-        status.rules["paper/author-list"][1].command === "run-me");
+  const cfg = buildConfig(
+    { typographyDebt: { x: { sectionSign: 3 } }, authorListCommand: "run-me" },
+    null,
+  );
+  check(
+    "без языка LaTeX конфиг всё равно собирается — корпус без .tex не повод отказывать",
+    Array.isArray(cfg) && cfg.length === 3,
+  );
+  check(
+    "с языком LaTeX добавляется четвёртый блок",
+    buildConfig({}, {}).length === 4,
+  );
+  const status = cfg.find((c) =>
+    c.files.some((f) => f.includes("PIPELINE-STATUS")),
+  );
+  check(
+    "команда из опций доезжает до правила",
+    status.rules["paper/author-list"][1].command === "run-me",
+  );
 }
 
 // ── отказы обязаны быть ОБЪЯСНИМЫМИ ─────────────────────────────────────────────────────
 {
   const r = await cli(["--help"]);
-  check("`--help` печатает usage и выходит нулём", r.code === 0 && /npx research-paper-pipeline check/.test(r.out));
+  check(
+    "`--help` печатает usage и выходит нулём",
+    r.code === 0 && /npx research-paper-pipeline check/.test(r.out),
+  );
 }
 // ── `init` — единственный ответ на «как это запустить» ──────────────────────────────────
 {
   const dir = realpathSync(mkdtempSync(join(tmpdir(), "rpp-init-")));
   try {
     const first = await cli(["init", dir]);
-    check("init выходит нулём и называет записанный файл",
-          first.code === 0 && /wrote .*rpp\.json/.test(first.out));
-    check("и печатает ВСЕ три следующих шага, а не только первый",
-          /rpp check/.test(first.out) && /research-paper-pipeline@/.test(first.out) && /plugin install/.test(first.out));
-    check("файл действительно на диске и это валидный JSON",
-          JSON.parse(readFileSync(join(dir, "rpp.json"), "utf8")).minFindings === 3);
+    check(
+      "init выходит нулём и называет записанный файл",
+      first.code === 0 && /wrote .*rpp\.json/.test(first.out),
+    );
+    // Все три шага на месте. Третий теперь НЕ зовёт `/plugin install` до того, как рантайм
+    // стоит: плагин без vigiles ставит хуки, которые не загрузятся, — тот самый класс, ради
+    // которого этот пакет существует. Пока рантайма нет, третий шаг предлагает его поставить.
+    check(
+      "и печатает ВСЕ три следующих шага, а не только первый",
+      /rpp check/.test(first.out) &&
+        /research-paper-pipeline@/.test(first.out) &&
+        /--with-hooks/.test(first.out),
+    );
+    check(
+      "и НЕ советует ставить плагин, пока его рантайма нет",
+      !/plugin install/.test(first.out),
+    );
+    check(
+      "файл действительно на диске и это валидный JSON",
+      JSON.parse(readFileSync(join(dir, "rpp.json"), "utf8")).minFindings === 3,
+    );
 
     // Вторая половина: чужой файл не трогаем. Молча затереть настройку пользователя хуже,
     // чем не сделать ничего, поэтому отказ обязан быть ГРОМКИМ.
     writeFileSync(join(dir, "rpp.json"), '{"mine":true}', "utf8");
     const second = await cli(["init", dir]);
-    check("повторный init НЕ перезаписывает и говорит об этом",
-          second.code === 0 && /already there/.test(second.out));
-    check("и содержимое пользователя цело побайтово",
-          readFileSync(join(dir, "rpp.json"), "utf8") === '{"mine":true}');
+    check(
+      "повторный init НЕ перезаписывает и говорит об этом",
+      second.code === 0 && /already there/.test(second.out),
+    );
+    check(
+      "и содержимое пользователя цело побайтово",
+      readFileSync(join(dir, "rpp.json"), "utf8") === '{"mine":true}',
+    );
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 }
 {
   const r = await cli(["frobnicate"]);
-  check("неизвестная команда НАЗЫВАЕТСЯ", r.code === 2 && /unknown command `frobnicate`/.test(r.out));
+  check(
+    "неизвестная команда НАЗЫВАЕТСЯ",
+    r.code === 2 && /unknown command `frobnicate`/.test(r.out),
+  );
 }
 {
   const r = await cli(["check"]);
   // Умолчание "." дало бы зелёный прогон по случайному содержимому — тот же контракт, что у
   // экшена, и та же причина.
-  check("`check` без пути отказывает и говорит, чего не хватает",
-        r.code === 2 && /needs at least one path/.test(r.out));
+  check(
+    "`check` без пути отказывает и говорит, чего не хватает",
+    r.code === 2 && /needs at least one path/.test(r.out),
+  );
 }
 
 // ── на живых файлах: обе половины ───────────────────────────────────────────────────────
@@ -111,7 +173,10 @@ check("путь и опции разбираются", (() => {
   try {
     const paper = join(root, "papers", "p1");
     mkdirSync(join(paper, "versions"), { recursive: true });
-    writeFileSync(join(paper, "versions", "2026-07-22-submitted.pdf"), "x".repeat(100));
+    writeFileSync(
+      join(paper, "versions", "2026-07-22-submitted.pdf"),
+      "x".repeat(100),
+    );
     const status = (bytes) =>
       `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: ${bytes}\n    source: versions/s.tex\n    sourceBytes: 4\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`;
     writeFileSync(join(paper, "versions", "s.tex"), "abcd");
@@ -119,36 +184,61 @@ check("путь и опции разбираются", (() => {
 
     writeFileSync(join(paper, "PIPELINE-STATUS.md"), status(100));
     const clean = await cli(["check", "papers"], root);
-    check("на чистом корпусе — ноль и внятный отчёт", clean.code === 0 && /no findings/.test(clean.out));
+    check(
+      "на чистом корпусе — ноль и внятный отчёт",
+      clean.code === 0 && /no findings/.test(clean.out),
+    );
 
     writeFileSync(join(paper, "PIPELINE-STATUS.md"), status(999));
     const dirty = await cli(["check", "papers"], root);
     check("подложенное расхождение байтов — находка и код 1", dirty.code === 1);
-    check("и находка называет ОБА числа", /999/.test(dirty.out) && /100/.test(dirty.out));
+    check(
+      "и находка называет ОБА числа",
+      /999/.test(dirty.out) && /100/.test(dirty.out),
+    );
 
     const json = await cli(["check", "papers", "--json"], root);
-    check("`--json` отдаёт разбираемый JSON", (() => {
-      try { return Array.isArray(JSON.parse(json.out)); } catch { return false; }
-    })());
+    check(
+      "`--json` отдаёт разбираемый JSON",
+      (() => {
+        try {
+          return Array.isArray(JSON.parse(json.out));
+        } catch {
+          return false;
+        }
+      })(),
+    );
 
     // 🔴 Сторож от зелёного ноля: ESLint бросает на пустом наборе, и до починки здесь вылетал
     // стек вместо объяснения.
     mkdirSync(join(root, "nothing"), { recursive: true });
     const empty = await cli(["check", "nothing"], root);
-    check("утилита НЕ выпускает исключение наружу — отказ объявляется кодом возврата",
-          empty.code !== 99);
+    check(
+      "утилита НЕ выпускает исключение наружу — отказ объявляется кодом возврата",
+      empty.code !== 99,
+    );
     check("пустой набор — ОТКАЗ, а не зелёный ноль", empty.code === 1);
-    check("и отказ объясняет, что именно не нашлось",
-          /nothing was linted/.test(empty.out) && /not a clean report/.test(empty.out));
+    check(
+      "и отказ объясняет, что именно не нашлось",
+      /nothing was linted/.test(empty.out) &&
+        /not a clean report/.test(empty.out),
+    );
 
     writeFileSync(join(root, "bad.json"), "{ not json");
     const bad = await cli(["check", "papers", "--options", "bad.json"], root);
-    check("битый файл опций НАЗЫВАЕТСЯ, а не роняет стек",
-          bad.code === 2 && /not valid JSON/.test(bad.out));
+    check(
+      "битый файл опций НАЗЫВАЕТСЯ, а не роняет стек",
+      bad.code === 2 && /not valid JSON/.test(bad.out),
+    );
 
-    const noFile = await cli(["check", "papers", "--options", "nope.json"], root);
-    check("отсутствующий файл опций тоже назван",
-          noFile.code === 2 && /options file not found/.test(noFile.out));
+    const noFile = await cli(
+      ["check", "papers", "--options", "nope.json"],
+      root,
+    );
+    check(
+      "отсутствующий файл опций тоже назван",
+      noFile.code === 2 && /options file not found/.test(noFile.out),
+    );
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -171,13 +261,134 @@ check("путь и опции разбираются", (() => {
       join(paper, "PIPELINE-STATUS.md"),
       "---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/a.pdf\n    bytes: 1\n---\n# S\n",
     );
-    const r = spawnSync(process.execPath, [link, "check", "papers"], { cwd: root, encoding: "utf8" });
+    const r = spawnSync(process.execPath, [link, "check", "papers"], {
+      cwd: root,
+      encoding: "utf8",
+    });
     const out = (r.stdout ?? "") + (r.stderr ?? "");
-    check("через СИМЛИНК утилита работает, а не выходит молча нулём", r.status === 1);
+    check(
+      "через СИМЛИНК утилита работает, а не выходит молча нулём",
+      r.status === 1,
+    );
     check("и печатает находки", /paper\/stages/.test(out));
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
 }
 
-console.log(`✓ ${String(n)} assertions passed — rpp check, одна команда вместо конфига руками`);
+console.log(
+  `✓ ${String(n)} assertions passed — rpp check, одна команда вместо конфига руками`,
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// `init --with-hooks`: the copy-paste step became a command that RUNS.
+//
+// 🔴 The spawner is injected, so the case that matters most is stageable: an install that
+// FAILS. A tool that prints "done" over a failed npm is the exact defect this package exists
+// to object to, and it cannot be tested at all when the spawn is hard-wired.
+
+check(
+  "--with-hooks is parsed",
+  parseArgs(["init", "--with-hooks"]).withHooks === true,
+);
+check("and is off unless asked", parseArgs(["init"]).withHooks === false);
+
+{
+  // FIRES on the planted defect: npm exits non-zero.
+  const out = [];
+  const ok = installHookRuntime({
+    spawnSync: () => ({
+      status: 1,
+      stderr: "npm error code ETARGET\nnpm error notarget",
+    }),
+    log: (m) => out.push(m),
+  });
+  const text = out.join("\n");
+  check("a failed install returns false", ok === false);
+  check(
+    "says npm failed, with its exit code",
+    /could not install vigiles.*npm exited 1/s.test(text),
+  );
+  check(
+    "carries npm's own last words, not a paraphrase",
+    text.includes("ETARGET"),
+  );
+  check(
+    "states the blast radius",
+    /rules and the CLI are unaffected/.test(text),
+  );
+  check("and how to retry", text.includes("npm i -D vigiles"));
+}
+
+{
+  // SILENT on the clean path, and the command it runs is the one we mean.
+  const out = [];
+  let argv = null;
+  const ok = installHookRuntime({
+    spawnSync: (cmd, args) => {
+      argv = [cmd, ...args];
+      return { status: 0, stderr: "" };
+    },
+    log: (m) => out.push(m),
+  });
+  check("a clean install returns true", ok === true);
+  check(
+    "it really runs `npm i -D vigiles`",
+    argv.join(" ") === "npm i -D vigiles",
+  );
+  check(
+    "the size is announced BEFORE spending it",
+    /installing vigiles.*93 MB/s.test(out[0]),
+  );
+  check(
+    "no failure text on a clean run",
+    !out.join("\n").includes("could not install"),
+  );
+}
+
+{
+  // Step 3 changes shape once the runtime is there — no dead instruction to re-install.
+  const before = nextSteps("papers", { hooksReady: false });
+  const after = nextSteps("papers", { hooksReady: true });
+  check(
+    "without the runtime, step 3 offers the one command",
+    before.includes("rpp init --with-hooks"),
+  );
+  check(
+    "and says skipping it costs only the hooks",
+    /rules and the CLI do not use vigiles/.test(before),
+  );
+  check(
+    "with the runtime, the install line is gone",
+    !after.includes("--with-hooks"),
+  );
+  check(
+    "and only the plugin wiring is left",
+    after.includes("/plugin install research-paper-pipeline"),
+  );
+}
+
+{
+  // An install already on disk must NOT be spent twice.
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), "rpp-init-")));
+  try {
+    mkdirSync(join(dir, "node_modules", "vigiles"), { recursive: true });
+    const out = [];
+    let spawned = false;
+    init(dir, {
+      log: (m) => out.push(m),
+      withHooks: true,
+      spawnSync: () => {
+        spawned = true;
+        return { status: 0, stderr: "" };
+      },
+    });
+    check(
+      "vigiles already present — npm is not spawned at all",
+      spawned === false,
+    );
+    check("and the run says so", out.join("\n").includes("already installed"));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}

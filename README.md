@@ -6,7 +6,7 @@ agent (Claude Code). It ships two things:
 - **<!-- count:skills -->24 skills** — instruction files the agent reads, one per stage of writing a paper: decide
   whether the idea is worth it, pick a venue, run the study, draft, tighten, red-team, simulate
   the program committee, submit, camera-ready, extend into a second paper.
-- **<!-- count:rules -->13 rules and 3 hooks** — machine checks that verify what those stages *claim*. Each paper
+- **<!-- count:rules -->13 rules and 3 hooks** — machine checks that verify what those stages _claim_. Each paper
   keeps a scorecard file, `PIPELINE-STATUS.md`. A skill writes "submitted on this date, this PDF,
   this many bytes" into it; a rule then reads the scorecard and compares it with the files on
   disk. The rule never trusts the skill's word.
@@ -26,7 +26,7 @@ npx rpp check papers  # runs every rule over the papers/ directory
 `check` needs at least one path. There is no default on purpose: linting "." would pass over
 whatever happens to be in the checkout.
 
-The exit code is `1` when any rule reports an error, and also `1` when *nothing* was checked —
+The exit code is `1` when any rule reports an error, and also `1` when _nothing_ was checked —
 a clean report over zero files is not a clean report. `--json` prints machine-readable findings.
 
 ## What else has to be on the machine
@@ -35,15 +35,15 @@ a clean report over zero files is not a clean report. `--json` prints machine-re
 matter**: they build PDFs, read them back, and run external checkers, so they call programs this
 package does not ship.
 
-| program | comes from | which skills call it | what happens without it |
-|---|---|---|---|
-| `pdflatex`, `bibtex` | TeX Live | render-paper, submit-paper, camera-ready | no PDF is produced — loud |
-| `pdfinfo`, `pdftotext` | poppler-utils | render-paper, submit-paper | checks that read the built PDF report that they did not run |
-| `texcount` | TeX Live (`texlive-extra-utils`) | render-paper, grade-paper-writing | the length checks cannot run |
-| `checkcites` | TeX Live | render-paper | nothing asks whether a bibliography entry is uncited |
-| `java` | any JRE (21 works) | render-paper | TeXtidote does not run, and **nothing else spell-checks the text** |
-| `python3` | your system | the analysis and report scripts | those scripts do not start |
-| `tlmgr` | TeX Live | the TeX installer itself | you cannot add a TeX package |
+| program                | comes from                       | which skills call it                     | what happens without it                                            |
+| ---------------------- | -------------------------------- | ---------------------------------------- | ------------------------------------------------------------------ |
+| `pdflatex`, `bibtex`   | TeX Live                         | render-paper, submit-paper, camera-ready | no PDF is produced — loud                                          |
+| `pdfinfo`, `pdftotext` | poppler-utils                    | render-paper, submit-paper               | checks that read the built PDF report that they did not run        |
+| `texcount`             | TeX Live (`texlive-extra-utils`) | render-paper, grade-paper-writing        | the length checks cannot run                                       |
+| `checkcites`           | TeX Live                         | render-paper                             | nothing asks whether a bibliography entry is uncited               |
+| `java`                 | any JRE (21 works)               | render-paper                             | TeXtidote does not run, and **nothing else spell-checks the text** |
+| `python3`              | your system                      | the analysis and report scripts          | those scripts do not start                                         |
+| `tlmgr`                | TeX Live                         | the TeX installer itself                 | you cannot add a TeX package                                       |
 
 🔴 **Most of these fail QUIETLY**, which is why they are listed rather than left to be discovered.
 A missing checker and a passing checker look identical from outside, so every script here states in
@@ -146,7 +146,9 @@ stages:
     source: versions/2026-07-22-submitted.tex
     sourceBytes: 57210
 ---
+
 # PIPELINE-STATUS
+
 | id | status | date | result |
 | ... one row per stage the skills ran ... |
 ```
@@ -155,18 +157,18 @@ A template with every row explained is in `skills/paper-pipeline/references/pipe
 
 ## What the rules check
 
-| Rule | Reads | Fails when |
-|---|---|---|
-| `paper/stages` | `PIPELINE-STATUS.md` | a declared stage has no PDF on disk, the byte count differs, or a frozen PDF exists with no declaration |
-| `paper/source` | `PIPELINE-STATUS.md` | a declared stage has no frozen `.tex` beside its PDF (a commit hash does not count — squash and gc destroy it) |
-| `paper/author-list` | `PIPELINE-STATUS.md` | a paper was submitted but the scorecard never recorded an author-list check of the bibliography |
-| `paper/research-question` | `paper.tex`, `paper.md` | the paper shipped without stating its research question |
-| `paper/typography` | `paper.tex`, `paper.md` | mechanical conventions a reviewer already flagged got *worse* (existing debt is tolerated, growth is not) |
-| `tex/future-promise` | `paper.tex` | a camera-ready build still says "will be released" about something already handed over |
-| `tex/acm-frontmatter-override` | `paper.tex` | an `acmart` build overrides ACM's front-matter commands and drops template elements from page 1 |
-| `review/findings-cause` | `reviews/*.md` | a review report lists findings but does not say which pipeline step let them through |
-| `review/cold-read-cause` | `reviews/*.md` | an open cold-read finding has no stated cause |
-| `doc/fields` | `reviews/*.md` | a front-matter field is missing or holds a value outside the list you configured |
+| Rule                           | Reads                   | Fails when                                                                                                     |
+| ------------------------------ | ----------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `paper/stages`                 | `PIPELINE-STATUS.md`    | a declared stage has no PDF on disk, the byte count differs, or a frozen PDF exists with no declaration        |
+| `paper/source`                 | `PIPELINE-STATUS.md`    | a declared stage has no frozen `.tex` beside its PDF (a commit hash does not count — squash and gc destroy it) |
+| `paper/author-list`            | `PIPELINE-STATUS.md`    | a paper was submitted but the scorecard never recorded an author-list check of the bibliography                |
+| `paper/research-question`      | `paper.tex`, `paper.md` | the paper shipped without stating its research question                                                        |
+| `paper/typography`             | `paper.tex`, `paper.md` | mechanical conventions a reviewer already flagged got _worse_ (existing debt is tolerated, growth is not)      |
+| `tex/future-promise`           | `paper.tex`             | a camera-ready build still says "will be released" about something already handed over                         |
+| `tex/acm-frontmatter-override` | `paper.tex`             | an `acmart` build overrides ACM's front-matter commands and drops template elements from page 1                |
+| `review/findings-cause`        | `reviews/*.md`          | a review report lists findings but does not say which pipeline step let them through                           |
+| `review/cold-read-cause`       | `reviews/*.md`          | an open cold-read finding has no stated cause                                                                  |
+| `doc/fields`                   | `reviews/*.md`          | a front-matter field is missing or holds a value outside the list you configured                               |
 
 Errors fail the run. Warnings print and do not. Three more rules guard the package's own code
 and do not run on your papers.
@@ -183,11 +185,11 @@ npx rpp check papers --options rpp.json
 ```json
 {
   "authorListCommand": "node scripts/bib-authors.mjs",
-  "typographyDebt":    { "papers/my-paper": { "sectionSign": 12 } },
-  "docFields":         { "read": { "values": ["full", "abstract", "none"] } },
-  "reviewSince":       "2026-08-23",
-  "minFindings":       3,
-  "causeMarker":       "Cause:"
+  "typographyDebt": { "papers/my-paper": { "sectionSign": 12 } },
+  "docFields": { "read": { "values": ["full", "abstract", "none"] } },
+  "reviewSince": "2026-08-23",
+  "minFindings": 3,
+  "causeMarker": "Cause:"
 }
 ```
 
@@ -217,28 +219,28 @@ own — this package ships none), `working-directory`.
 
 ## Skills and hooks in Claude Code
 
-The skills and hooks are delivered as a Claude Code plugin. The hooks run on the
-[`vigiles`](https://github.com/zernie/vigiles) runtime, so install it too:
+The skills and hooks are delivered as a Claude Code plugin. One command sets them up:
 
 ```sh
-npm i -D vigiles
+npx rpp init --with-hooks
 ```
 
-Then, inside Claude Code:
+It installs [`vigiles`](https://github.com/zernie/vigiles) — the runtime the three hooks run on —
+and then prints the two `/plugin` lines to paste into Claude Code. If vigiles is already there it
+installs nothing and says so.
 
-```
-/plugin marketplace add zernie/research-paper-pipeline
-/plugin install research-paper-pipeline@research-paper-pipeline
-```
+**It is a flag and not the default because of what it costs: 93 MB** — measured in a clean project,
+of which 51 MB is `@ast-grep` and 23 MB is `typescript`. `rpp check` uses none of it. Skip the flag
+and the rules, the CLI and the skills all work; what you lose is the in-editor guard.
 
 That installs all 24 skills (`/paper-pipeline` is the entry point; it routes to the rest) and
 three hooks:
 
-| Hook | When | What it does |
-|---|---|---|
-| `paper-edit-guard` | before a Bash command | blocks writing a paper source from Bash, because a Bash write skips every check that hangs on Edit/Write |
-| `paper-skills-nudge` | after an Edit/Write on a paper | shows the agent the pre-submit checklist |
-| `paper-status-gates` | after an Edit/Write on a paper | reads that paper's scorecard and lists the gates that have not run yet |
+| Hook                 | When                           | What it does                                                                                             |
+| -------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `paper-edit-guard`   | before a Bash command          | blocks writing a paper source from Bash, because a Bash write skips every check that hangs on Edit/Write |
+| `paper-skills-nudge` | after an Edit/Write on a paper | shows the agent the pre-submit checklist                                                                 |
+| `paper-status-gates` | after an Edit/Write on a paper | reads that paper's scorecard and lists the gates that have not run yet                                   |
 
 The hooks look for papers under `papers/`. To use another directory, declare it once in your
 `package.json`:

@@ -60,7 +60,10 @@ options file (every key optional):
 export function buildConfig(opts = {}, texLanguage) {
   const paperRules = { ...researchQuestion.rules, ...typography.rules };
   const typographyOpt = ["warn", { debt: opts.typographyDebt ?? {} }];
-  const md = { language: "markdown/gfm", languageOptions: { frontmatter: "yaml" } };
+  const md = {
+    language: "markdown/gfm",
+    languageOptions: { frontmatter: "yaml" },
+  };
 
   const cfg = [
     {
@@ -80,7 +83,10 @@ export function buildConfig(opts = {}, texLanguage) {
       files: ["**/paper.md", "**/draft.md"],
       plugins: { markdown, paper: { rules: paperRules } },
       ...md,
-      rules: { "paper/research-question": "warn", "paper/typography": typographyOpt },
+      rules: {
+        "paper/research-question": "warn",
+        "paper/typography": typographyOpt,
+      },
     },
     {
       files: ["**/reviews/*.md"],
@@ -108,8 +114,13 @@ export function buildConfig(opts = {}, texLanguage) {
             ...(opts.reviewSince ? { sinceCreated: opts.reviewSince } : {}),
           },
         ],
-        "review/cold-read-cause": ["warn", { ...(opts.causeMarker ? { causeMarker: opts.causeMarker } : {}) }],
-        ...(opts.docFields ? { "doc/fields": ["warn", { fields: opts.docFields }] } : {}),
+        "review/cold-read-cause": [
+          "warn",
+          { ...(opts.causeMarker ? { causeMarker: opts.causeMarker } : {}) },
+        ],
+        ...(opts.docFields
+          ? { "doc/fields": ["warn", { fields: opts.docFields }] }
+          : {}),
       },
     },
   ];
@@ -119,7 +130,10 @@ export function buildConfig(opts = {}, texLanguage) {
   if (texLanguage)
     cfg.push({
       files: ["**/paper.tex"],
-      plugins: { tex: { languages: { latex: texLanguage }, rules: texBuild }, paper: { rules: paperRules } },
+      plugins: {
+        tex: { languages: { latex: texLanguage }, rules: texBuild },
+        paper: { rules: paperRules },
+      },
       language: "tex/latex",
       rules: {
         "paper/research-question": "warn",
@@ -134,12 +148,19 @@ export function buildConfig(opts = {}, texLanguage) {
 export function parseArgs(argv) {
   // `--help` разбирается ДО того, как argv[0] станет командой: иначе `rpp --help` отвечает
   // «unknown command `--help`» — поймано первым же прогоном утилиты.
-  const out = { cmd: null, paths: [], options: null, json: false };
+  const out = {
+    cmd: null,
+    paths: [],
+    options: null,
+    json: false,
+    withHooks: false,
+  };
   const rest = [...argv];
   if (rest[0] && !rest[0].startsWith("-")) out.cmd = rest.shift();
   for (let i = 0; i < rest.length; i++) {
     const a = rest[i];
     if (a === "--json") out.json = true;
+    else if (a === "--with-hooks") out.withHooks = true;
     else if (a === "--options") out.options = rest[++i];
     else if (a === "--help" || a === "-h") out.help = true;
     else out.paths.push(a);
@@ -166,7 +187,33 @@ export const RPP_JSON = `{
 }
 `;
 
-export function nextSteps(papersDir = "papers") {
+/**
+ * Step 3 is the one that used to be a COPY-PASTE, and that was the complaint.
+ *
+ * 🔴 WHY IT IS STILL NOT AUTOMATIC BY DEFAULT. Installing `vigiles` costs 93 MB in a clean
+ * project — measured, not estimated: 51 MB of `@ast-grep`, 23 MB of `typescript`, 5 MB of
+ * vigiles itself, 36 packages. None of it is used by `rpp check`, which is what most people
+ * install this package for. Charging every linter user 93 MB for three editor hooks they may
+ * never load is the wrong default, so the install is a FLAG — and the flag RUNS it, instead of
+ * printing a line to copy.
+ *
+ * ⚠️ And the size is printed before it happens, because a tool that quietly adds 93 MB to
+ * someone's `node_modules` has spent their disk without telling them.
+ */
+export function nextSteps(papersDir = "papers", { hooksReady = false } = {}) {
+  const hooks = hooksReady
+    ? [
+        `  3. the three editor hooks — vigiles is installed, so only the wiring is left`,
+        `       /plugin marketplace add zernie/research-paper-pipeline`,
+        `       /plugin install research-paper-pipeline@research-paper-pipeline`,
+      ]
+    : [
+        `  3. optional — the three editor hooks for Claude Code, in one command`,
+        `       npx rpp init --with-hooks     (installs vigiles, their runtime: ~93 MB)`,
+        ``,
+        `     Skip it and everything above still works: the hooks are an in-editor guard,`,
+        `     the rules and the CLI do not use vigiles at all.`,
+      ];
   return [
     ``,
     `Next, in order:`,
@@ -179,46 +226,106 @@ export function nextSteps(papersDir = "papers") {
     `         with:`,
     `           paths: ${papersDir}`,
     ``,
-    `  3. optional — the three editor hooks, which need vigiles as their runtime`,
-    `       npm i -D vigiles`,
-    `       /plugin marketplace add zernie/research-paper-pipeline`,
-    `       /plugin install research-paper-pipeline@research-paper-pipeline`,
+    ...hooks,
     ``,
   ].join("\n");
 }
 
-export function init(dir, { log = console.log } = {}) {
+/**
+ * Install the hook runtime, and REPORT WHAT HAPPENED rather than assuming it worked.
+ *
+ * 🔴 The spawner is injected for the same reason it was in vigiles' own CLI probe: the one case
+ * that matters most — the install FAILING — cannot be staged when the spawn is hard-wired. A
+ * failed install that printed "done" would be the exact defect this package exists to object to.
+ */
+export function installHookRuntime({ spawnSync, log }) {
+  log(`installing vigiles (the hooks' runtime, ~93 MB) …`);
+  const r = spawnSync("npm", ["i", "-D", "vigiles"], { encoding: "utf8" });
+  if (r.status === 0) {
+    log(`vigiles installed`);
+    return true;
+  }
+  const why = (r.stderr ?? "").trim().split("\n").slice(-3).join("\n");
+  log(
+    `✗ could not install vigiles (npm exited ${String(r.status ?? "with no status")}).\n` +
+      (why ? `${why}\n` : "") +
+      `  The hooks stay off; the rules and the CLI are unaffected.\n` +
+      `  To retry by hand:  npm i -D vigiles`,
+  );
+  return false;
+}
+
+export function init(
+  dir,
+  { log = console.log, withHooks = false, spawnSync } = {},
+) {
   const target = join(dir, "rpp.json");
-  if (existsSync(target)) log(`rpp.json already there — kept as is, nothing overwritten`);
+  if (existsSync(target))
+    log(`rpp.json already there — kept as is, nothing overwritten`);
   else {
     writeFileSync(target, RPP_JSON, "utf8");
-    log(`wrote ${target} — the three things only you can supply; every key is optional`);
+    log(
+      `wrote ${target} — the three things only you can supply; every key is optional`,
+    );
   }
-  log(nextSteps());
+  // Already present counts as ready: re-installing what is there would spend the 93 MB twice.
+  let hooksReady = existsSync(join(dir, "node_modules", "vigiles"));
+  if (withHooks && !hooksReady)
+    hooksReady = installHookRuntime({ spawnSync, log });
+  else if (withHooks) log(`vigiles already installed — nothing to do`);
+  log(nextSteps("papers", { hooksReady }));
   return 0;
 }
 
-export async function run(argv, { log = console.log, err = console.error } = {}) {
+export async function run(
+  argv,
+  { log = console.log, err = console.error } = {},
+) {
   const a = parseArgs(argv);
-  if (a.help || !a.cmd) { log(USAGE); return a.help ? 0 : 2; }
-  if (a.cmd === "init") return init(a.paths[0] ?? ".", { log });
-  if (a.cmd !== "check") { err(`unknown command \`${a.cmd}\`\n\n${USAGE}`); return 2; }
+  if (a.help || !a.cmd) {
+    log(USAGE);
+    return a.help ? 0 : 2;
+  }
+  if (a.cmd === "init") {
+    const { spawnSync } = await import("node:child_process");
+    return init(a.paths[0] ?? ".", { log, withHooks: a.withHooks, spawnSync });
+  }
+  if (a.cmd !== "check") {
+    err(`unknown command \`${a.cmd}\`\n\n${USAGE}`);
+    return 2;
+  }
   // Тот же контракт, что у экшена: охват называет вызывающий. Умолчание "." дало бы зелёный
   // прогон по тому, что случайно лежит рядом.
-  if (a.paths.length === 0) { err(`\`check\` needs at least one path, e.g. \`check papers\`\n\n${USAGE}`); return 2; }
+  if (a.paths.length === 0) {
+    err(`\`check\` needs at least one path, e.g. \`check papers\`\n\n${USAGE}`);
+    return 2;
+  }
 
   let opts = {};
   if (a.options) {
-    if (!existsSync(a.options)) { err(`options file not found: ${a.options}`); return 2; }
-    try { opts = JSON.parse(readFileSync(a.options, "utf8")); }
-    catch (e) { err(`options file is not valid JSON: ${e.message}`); return 2; }
+    if (!existsSync(a.options)) {
+      err(`options file not found: ${a.options}`);
+      return 2;
+    }
+    try {
+      opts = JSON.parse(readFileSync(a.options, "utf8"));
+    } catch (e) {
+      err(`options file is not valid JSON: ${e.message}`);
+      return 2;
+    }
   }
 
   let texLanguage = null;
-  try { ({ texLanguage } = await import("../eslint-rules/latex-language.mjs")); }
-  catch { /* без парсера LaTeX работаем по markdown */ }
+  try {
+    ({ texLanguage } = await import("../eslint-rules/latex-language.mjs"));
+  } catch {
+    /* без парсера LaTeX работаем по markdown */
+  }
 
-  const eslint = new ESLint({ overrideConfigFile: true, overrideConfig: buildConfig(opts, texLanguage) });
+  const eslint = new ESLint({
+    overrideConfigFile: true,
+    overrideConfig: buildConfig(opts, texLanguage),
+  });
 
   // 🔴 ESLint БРОСАЕТ на пустом наборе (`NoFilesFoundError`) — сторож ниже до этого просто не
   // доживал, что и показал первый же прогон по пустому каталогу: вместо внятного сообщения
@@ -227,7 +334,11 @@ export async function run(argv, { log = console.log, err = console.error } = {})
   try {
     results = await eslint.lintFiles(a.paths);
   } catch (e) {
-    if (e?.messageTemplate === "file-not-found" || /No files matching/i.test(e?.message ?? "")) results = [];
+    if (
+      e?.messageTemplate === "file-not-found" ||
+      /No files matching/i.test(e?.message ?? "")
+    )
+      results = [];
     else throw e;
   }
 
@@ -236,7 +347,9 @@ export async function run(argv, { log = console.log, err = console.error } = {})
   // досталось ни одного файла». Правило, чей глоб не совпал, не вызывается — и, не вызвавшись,
   // физически не может об этом сообщить.
   if (results.length === 0) {
-    err(`nothing was linted under ${a.paths.join(", ")} — no PIPELINE-STATUS.md, paper.md/tex or reviews/ found there. A clean report over zero files is not a clean report.`);
+    err(
+      `nothing was linted under ${a.paths.join(", ")} — no PIPELINE-STATUS.md, paper.md/tex or reviews/ found there. A clean report over zero files is not a clean report.`,
+    );
     return 1;
   }
 
