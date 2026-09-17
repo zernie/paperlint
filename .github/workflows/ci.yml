@@ -36,7 +36,13 @@ name: ci
 on:
   push:
     branches: [main]
+  # 🔴 `types:` ПЕРЕЧИСЛЕН ЦЕЛИКОМ, ВКЛЮЧАЯ УМОЛЧАНИЯ. Стоит объявить этот ключ — и умолчания
+  # (`opened`, `synchronize`, `reopened`) ПРОПАДАЮТ; забыть их значило бы выключить CI на пушах
+  # в PR, и заметить это можно было бы только по отсутствию прогона, то есть по тишине.
+  # `labeled` добавлен ради macOS-джоба ниже: без него метка, повешенная на открытый PR, ничего
+  # не запускает — событие просто не происходит.
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
 
 # A newer push supersedes an older one on the same ref. Note this does NOT make the cancelled
 # run free — cancellation arrives after the expensive steps have already run and been billed —
@@ -50,6 +56,9 @@ permissions:
 
 jobs:
   gates:
+    # Навешивание метки — не изменение кода. Без этого условия каждый клик по метке поднимал бы
+    # весь шестиминутный набор заново, ничего нового не проверив.
+    if: github.event_name != 'pull_request' || github.event.action != 'labeled'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -138,3 +147,55 @@ jobs:
 
       - name: mutation batteries
         run: npm run test:sabotage
+
+  # ── macOS ПО МЕТКЕ, А НЕ В МАТРИЦЕ ───────────────────────────────────────────────────────────
+  #
+  # Issue #9: `npm test` был красным ТОЛЬКО на macOS. Причина — `/var` там симлинк на
+  # `/private/var`, поэтому `import.meta.url` резолвится в realpath, а `process.argv[1]` и любой
+  # составленный тестом путь остаются как набраны: один каталог под двумя именами. Починка
+  # (`50d6463`) закреплена правилом ESLint, но правило сторожит ИДИОМУ, а не поведение — на Linux
+  # `realpathSync` тождественна, и снятая обёртка не краснит ни один поведенческий тест. То есть
+  # единственный способ узнать, что харнессы на macOS действительно зелёные, — прогнать их там.
+  #
+  # 🔴 ПОЧЕМУ НЕ ПОСТОЯННАЯ МАТРИЦА. Раннер macOS тарифицируется с МНОЖИТЕЛЕМ 10 к Linux. Для
+  # публичного репозитория минуты не выставляются к оплате, но ставить постоянный десятикратный
+  # джоб ради платформы, на которой здесь никто не разрабатывает, — это плата за то, что меняется
+  # раз в полгода. Метка делает цену решением человека в тот момент, когда он знает, зачем.
+  #
+  # Как пользоваться: повесить на PR метку `osx`. Событие `labeled` поднимет ЭТОТ джоб, а `gates`
+  # выше пропустится — он уже отработал на пуше.
+  #
+  # ⚠️ Гоняется только `npm test`, и это не экономия ради экономии: предмет #9 — харнессы,
+  # читающие временный каталог. Мутационные батареи (242 с) на десятикратном раннере стоили бы
+  # сорока минут Linux-эквивалента и проверяли бы ровно то же, что уже проверено на Linux.
+  macos:
+    if: >
+      github.event_name == 'pull_request' &&
+      contains(github.event.pull_request.labels.*.name, 'osx')
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: npm ci
+        run: npm ci
+        timeout-minutes: 8
+      # Различитель, ради которого джоб и существует: печатает ОБА написания временного корня.
+      # Совпали — значит платформа не та, и зелёный ниже ничего про macOS не говорит.
+      - name: две записи одного каталога — видит ли их эта машина
+        run: |
+          node -e '
+            const { mkdtempSync, realpathSync } = require("node:fs");
+            const { tmpdir } = require("node:os");
+            const { join } = require("node:path");
+            const d = mkdtempSync(join(tmpdir(), "probe-"));
+            console.log("as typed :", d);
+            console.log("realpath :", realpathSync(d));
+            console.log(d === realpathSync(d) ? "СОВПАЛИ — ловушки #9 на этой машине нет"
+                                              : "РАЗОШЛИСЬ — это та платформа, ради которой джоб есть");
+          '
+      - name: npm test
+        run: npm test
