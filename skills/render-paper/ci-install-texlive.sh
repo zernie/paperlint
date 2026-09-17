@@ -164,5 +164,25 @@ if [ -n "$missing" ]; then
   exit 1
 fi
 
-echo "✅ TeX Live готов: ${#NEED[@]} требуемых файлов на месте, $(du -sh --block-size=1M "$TEXDIR" | cut -f1) МБ"
+# 🔴 И БИНАРИ ТОЖЕ, А НЕ ТОЛЬКО ФАЙЛЫ. Проверка выше ищет `.cls`/`.sty` через `kpsewhich` —
+# файлом. `texcount` файлом не ищется, он ИСПОЛНЯЕМЫЙ, поэтому его отсутствие проходило мимо
+# и всплывало двумя шагами позже, красной сборкой статьи (замер 2026-09-17).
+# Берём из REQUIRED_BINS только помеченные `:tex` — `pdfinfo` приезжает из poppler через apt,
+# и искать его здесь было бы ложным срабатыванием.
+mapfile -t NEED_BINS < <(
+  sed -n '/^REQUIRED_BINS=(/,/)$/p' "$HERE/ensure-toolchain.sh" \
+    | tr ' ' '\n' | sed -e 's/^REQUIRED_BINS=(//' -e 's/)$//' \
+    | grep ':tex$' | sed 's/:tex$//' | grep -v '^$'
+)
+[ "${#NEED_BINS[@]}" -ge 1 ] || { echo "🔴 REQUIRED_BINS разобрался пустым — сломан разбор" >&2; exit 1; }
+missing_bins=""
+for b in "${NEED_BINS[@]}"; do [ -x "$BIN/$b" ] || missing_bins="$missing_bins $b"; done
+if [ -n "$missing_bins" ]; then
+  echo "🔴 после установки НЕТ БИНАРЕЙ:$missing_bins" >&2
+  echo "Добавь несущий пакет в CTAN_PACKAGES ($HERE/ensure-toolchain.sh)." >&2
+  echo "Найти пакет по файлу:  tlmgr search --global --file <имя>" >&2
+  exit 1
+fi
+
+echo "✅ TeX Live готов: ${#NEED[@]} требуемых файлов и ${#NEED_BINS[@]} бинарей на месте, $(du -sh --block-size=1M "$TEXDIR" | cut -f1) МБ"
 echo "PATH: $BIN"

@@ -188,7 +188,20 @@ REQUIRED_FILES=(
 # 🔴 ОДИН список, потому что копий было ДВЕ — здесь и в проверке после установки, — а файл
 # сам предупреждает абзацем выше: «a second list is how the two copies above drifted apart».
 # Добавление `texcount` в одну из них и было бы тем самым расхождением.
-REQUIRED_BINS=(pdflatex bibtex pdfinfo texcount)
+# 🔴 ЗА ДВОЕТОЧИЕМ — ПОСТАВЩИК, и он несущий. Проверки ниже ищут по `PATH` и потому
+# поставщика не различают — этого достаточно, чтобы сказать «инструмента нет», и НЕ
+# достаточно, чтобы сказать «установка TeX Live прошла успешно»: `pdfinfo` приезжает из
+# poppler через apt, и требовать его в дереве TeX было бы ложным срабатыванием.
+# Замер 2026-09-17: `texcount` отсутствовал в CTAN-списке, установщик проверял только
+# REQUIRED_FILES (`.cls`/`.sty`, ищутся `kpsewhich`), бинарь файлом не ищется — и
+# установщик отчитался «✅ TeX Live готов» над деревом без него. Красным стала сборка
+# статьи двумя шагами позже, и виноватым выглядел потребитель.
+#   tex — обязан оказаться в дереве TeX Live после установки; за это отвечает CTAN_PACKAGES
+#   apt — приезжает отдельным пакетом системы, в дереве TeX его искать нельзя
+REQUIRED_BINS=(pdflatex:tex bibtex:tex pdfinfo:apt texcount:tex)
+
+# Имя без пометки — для проверок по `PATH`, которым поставщик безразличен.
+bin_name() { printf '%s' "${1%%:*}"; }
 
 want_acm=0
 want_textidote=0
@@ -200,7 +213,8 @@ for arg in "$@"; do
 done
 
 missing=()
-for bin in "${REQUIRED_BINS[@]}"; do
+for entry in "${REQUIRED_BINS[@]}"; do
+  bin="$(bin_name "$entry")"
   command -v "$bin" >/dev/null || missing+=("$bin")
 done
 if [ "$want_acm" = 1 ] && command -v kpsewhich >/dev/null; then
@@ -244,7 +258,8 @@ fi
 # installs cleanly and still leaves `pdfinfo` absent is exactly the silent half-success
 # this script exists to end.
 still=()
-for bin in "${REQUIRED_BINS[@]}"; do
+for entry in "${REQUIRED_BINS[@]}"; do
+  bin="$(bin_name "$entry")"
   command -v "$bin" >/dev/null || still+=("$bin")
 done
 if [ "$want_acm" = 1 ] && ! kpsewhich acmart.cls >/dev/null 2>&1; then
