@@ -93,12 +93,19 @@ const cases = [];
 const BASELINE = 76;
 {
   const m = await findings(mdLinter, join(ROOT, "skills"), RULE_MD);
-  assert.ok(
-    m.length <= BASELINE,
-    `the skills corpus now has ${m.length} install-specific paths, up from the frozen ` +
-      `${BASELINE}. This number may only go DOWN: a new one is a new bet on a delivery ` +
-      `channel. Fix the path, or — if the debt was genuinely paid down elsewhere — lower ` +
-      `BASELINE in this file to ${m.length} in the same commit.`,
+  // EXACT, not `<=`, and the battery is why. A one-directional ratchet passes when the
+  // baseline is RAISED, so the number it guards can be loosened without a single test going
+  // red — which the mutation `BASELINE = 760` demonstrated on the first run of this file.
+  // Equality makes both directions cost a deliberate edit: the debt cannot grow, and paying
+  // it down cannot be left half-recorded.
+  assert.equal(
+    m.length,
+    BASELINE,
+    m.length > BASELINE
+      ? `the skills corpus now has ${m.length} install-specific paths, up from the frozen ` +
+        `${BASELINE}: a new one is a new bet on a delivery channel. Fix the path.`
+      : `the skills corpus is down to ${m.length} install-specific paths from ${BASELINE} — ` +
+        `good. Lower BASELINE to ${m.length} in this file, in the same commit that paid it.`,
   );
   cases.push(`ratchet: ${m.length} install-specific paths in skills, frozen at ${BASELINE}`);
 }
@@ -113,10 +120,12 @@ const BASELINE = 76;
 const BASELINE_LIB = 2;
 {
   const m = await findings(jsLinter, join(ROOT, "lib"), RULE_JS);
-  assert.ok(
-    m.length <= BASELINE_LIB,
-    `lib/ now has ${m.length} install-specific literals, up from the frozen ${BASELINE_LIB}: ` +
-      JSON.stringify(m.map((x) => `${x.line}:${x.column}`)),
+  assert.equal(
+    m.length,
+    BASELINE_LIB,
+    `lib/ has ${m.length} install-specific literals against a frozen ${BASELINE_LIB}: ` +
+      JSON.stringify(m.map((x) => `${x.line}:${x.column}`)) +
+      ` — up means a new bet on a channel, down means lower BASELINE_LIB in this commit.`,
   );
   cases.push(`ratchet: ${m.length} install-specific literals in lib/, frozen at ${BASELINE_LIB}`);
 }
