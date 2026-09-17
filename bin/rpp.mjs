@@ -18,7 +18,8 @@
  * `.claude/skills/verify-citations/...`. Поэтому они приходят файлом `--options`.
  */
 import { ESLint } from "eslint";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import markdown from "@eslint/markdown";
 import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
 
@@ -32,6 +33,11 @@ import coldReadCause from "../eslint-rules/cold-read-cause.mjs";
 
 const USAGE = `research-paper-pipeline — machine-checkable gates for a paper kept in git
 
+  npx rpp init [dir]                  set the project up: writes rpp.json, prints what to paste
+  npx rpp check <paths…>              run every rule over your papers
+  npx rpp --help
+
+check:
   npx research-paper-pipeline check <paths…> [--options <file.json>] [--json]
 
   <paths…>            where your papers live, e.g. papers  (REQUIRED, no default:
@@ -127,9 +133,60 @@ export function parseArgs(argv) {
   return out;
 }
 
+/**
+ * `rpp init` — единственный ответ на «а как это вообще запустить».
+ *
+ * 🔴 ЗАЧЕМ. До неё установка была РАССЫПАНА по README пятью кусками: поставь пакет · поставь
+ * vigiles · набери две команды /plugin · вставь шаг в воркфлоу · сочини rpp.json по образцу.
+ * Пять мест — это пять возможностей бросить, и ни одно из них не проверяемо.
+ *
+ * ⚠️ Чужие файлы НЕ ПЕРЕЗАПИСЫВАЕТ. Существующий rpp.json остаётся как есть, и команда об этом
+ * говорит: молча затереть настройку пользователя хуже, чем не сделать ничего.
+ */
+export const RPP_JSON = `{
+  "authorListCommand": "node scripts/bib-authors.mjs",
+  "typographyDebt": {},
+  "docFields": {},
+  "minFindings": 3
+}
+`;
+
+export function nextSteps(papersDir = "papers") {
+  return [
+    ``,
+    `Next, in order:`,
+    ``,
+    `  1. check your papers`,
+    `       npx rpp check ${papersDir}`,
+    ``,
+    `  2. same check in CI — add this step to a workflow`,
+    `       - uses: zernie/research-paper-pipeline@<commit-sha>`,
+    `         with:`,
+    `           paths: ${papersDir}`,
+    ``,
+    `  3. optional — the three editor hooks, which need vigiles as their runtime`,
+    `       npm i -D vigiles`,
+    `       /plugin marketplace add zernie/research-paper-pipeline`,
+    `       /plugin install research-paper-pipeline@research-paper-pipeline`,
+    ``,
+  ].join("\n");
+}
+
+export function init(dir, { log = console.log } = {}) {
+  const target = join(dir, "rpp.json");
+  if (existsSync(target)) log(`rpp.json already there — kept as is, nothing overwritten`);
+  else {
+    writeFileSync(target, RPP_JSON, "utf8");
+    log(`wrote ${target} — the three things only you can supply; every key is optional`);
+  }
+  log(nextSteps());
+  return 0;
+}
+
 export async function run(argv, { log = console.log, err = console.error } = {}) {
   const a = parseArgs(argv);
   if (a.help || !a.cmd) { log(USAGE); return a.help ? 0 : 2; }
+  if (a.cmd === "init") return init(a.paths[0] ?? ".", { log });
   if (a.cmd !== "check") { err(`unknown command \`${a.cmd}\`\n\n${USAGE}`); return 2; }
   // Тот же контракт, что у экшена: охват называет вызывающий. Умолчание "." дало бы зелёный
   // прогон по тому, что случайно лежит рядом.

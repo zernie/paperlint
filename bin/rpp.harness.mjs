@@ -11,7 +11,7 @@
  * Оба закреплены ассертами ниже, чтобы вернуться назад было нельзя.
  */
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync, symlinkSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, realpathSync, symlinkSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
@@ -68,6 +68,30 @@ check("путь и опции разбираются", (() => {
 {
   const r = await cli(["--help"]);
   check("`--help` печатает usage и выходит нулём", r.code === 0 && /npx research-paper-pipeline check/.test(r.out));
+}
+// ── `init` — единственный ответ на «как это запустить» ──────────────────────────────────
+{
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), "rpp-init-")));
+  try {
+    const first = await cli(["init", dir]);
+    check("init выходит нулём и называет записанный файл",
+          first.code === 0 && /wrote .*rpp\.json/.test(first.out));
+    check("и печатает ВСЕ три следующих шага, а не только первый",
+          /rpp check/.test(first.out) && /research-paper-pipeline@/.test(first.out) && /plugin install/.test(first.out));
+    check("файл действительно на диске и это валидный JSON",
+          JSON.parse(readFileSync(join(dir, "rpp.json"), "utf8")).minFindings === 3);
+
+    // Вторая половина: чужой файл не трогаем. Молча затереть настройку пользователя хуже,
+    // чем не сделать ничего, поэтому отказ обязан быть ГРОМКИМ.
+    writeFileSync(join(dir, "rpp.json"), '{"mine":true}', "utf8");
+    const second = await cli(["init", dir]);
+    check("повторный init НЕ перезаписывает и говорит об этом",
+          second.code === 0 && /already there/.test(second.out));
+    check("и содержимое пользователя цело побайтово",
+          readFileSync(join(dir, "rpp.json"), "utf8") === '{"mine":true}');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 }
 {
   const r = await cli(["frobnicate"]);
