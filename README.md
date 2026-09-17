@@ -19,19 +19,27 @@ Not on npm yet — install from GitHub, pinned to a commit:
 
 ```sh
 npm i -D github:zernie/research-paper-pipeline#<commit-sha>
-npx rpp init          # writes rpp.json and prints the next steps
-npx rpp check papers  # runs every rule over the papers/ directory
+npx rpp init   # writes rpp.json and prints the next steps
+npx rpp lint   # runs every rule over the directory rpp.json names
 ```
 
-`check` needs at least one path. There is no default on purpose: linting "." would pass over
-whatever happens to be in the checkout.
+`rpp lint` finds `rpp.json` by walking up from the current directory, the way eslint and tsc find
+theirs, so it works from anywhere in the repository. Pass a path to lint something else for one
+run: `rpp lint papers/my-paper`.
 
-The exit code is `1` when any rule reports an error, and also `1` when _nothing_ was checked —
+The scope always comes from one of those two, never from a default. Linting `"."` would pass over
+whatever happens to be in the checkout and report green on a scope nobody chose.
+
+The exit code is `1` when any rule reports an error, and also `1` when _nothing_ was linted —
 a clean report over zero files is not a clean report. `--json` prints machine-readable findings.
+
+(The command used to be `rpp check`. That still runs and tells you what replaced it. `check`
+elsewhere in the ecosystem — `cargo check`, `tsc --noEmit` — means "build but emit nothing", and
+building the paper is a separate job this CLI is growing.)
 
 ## What else has to be on the machine
 
-`rpp check` needs nothing but Node — it reads your files and reports. **The skills are a different
+`rpp lint` needs nothing but Node — it reads your files and reports. **The skills are a different
 matter**: they build PDFs, read them back, and run external checkers, so they call programs this
 package does not ship.
 
@@ -122,7 +130,7 @@ are separate questions here.
                                     with the files beside it (bytes, dates, names)
                                                       │
                                                       ▼
-                                              npx rpp check papers
+                                                  npx rpp lint
                                               (locally, and in CI via action.yml)
 ```
 
@@ -173,17 +181,18 @@ A template with every row explained is in `skills/paper-pipeline/references/pipe
 Errors fail the run. Warnings print and do not. Three more rules guard the package's own code
 and do not run on your papers.
 
-## The options file
+## `rpp.json`
 
-`rpp init` writes `rpp.json`. It holds the facts only you can supply; every key is optional.
-Pass it explicitly:
+`rpp init` writes it. It holds the facts only this repository can supply — nothing in it is
+guessable by a package that has never seen your corpus, which is why it is a file and not a pile
+of flags.
 
-```sh
-npx rpp check papers --options rpp.json
-```
+`rpp lint` looks for it in the current directory and then upwards, and prints which one it found.
+`--config <file>` overrides the search.
 
 ```json
 {
+  "papers": "papers",
   "authorListCommand": "node scripts/bib-authors.mjs",
   "typographyDebt": { "papers/my-paper": { "sectionSign": 12 } },
   "docFields": { "read": { "values": ["full", "abstract", "none"] } },
@@ -192,6 +201,19 @@ npx rpp check papers --options rpp.json
   "causeMarker": "Cause:"
 }
 ```
+
+| key                 | required | what it is                                                                       |
+| ------------------- | -------- | -------------------------------------------------------------------------------- |
+| `papers`            | **yes**  | the directory your papers live in, relative to `rpp.json`. One string or a list.   |
+| `authorListCommand` | no       | prints the author list from your `.bib`, so a rule can compare it with the PDF     |
+| `typographyDebt`    | no       | per-paper allowance of existing typography findings, so the count can only go down |
+| `docFields`         | no       | front-matter fields your review notes must carry, and the values each may hold     |
+| `reviewSince`       | no       | ignore review findings filed before this date                                      |
+| `minFindings`       | no       | how many findings a cold read must produce before it counts as a cold read         |
+| `causeMarker`       | no       | the word your review notes use to introduce a cause, e.g. `Cause:`                 |
+
+`papers` is required because the directory is the one thing the tool cannot guess and must not
+default: a default of `"."` turns every run into a green report over the whole checkout.
 
 - `authorListCommand` — the command `paper/author-list` tells you to run when the check is missing.
 - `typographyDebt` — per-paper counts of known typography issues; the rule stays quiet at or below them.
@@ -253,7 +275,7 @@ right test goes red.
 <details>
 <summary>Already have an ESLint config? Use the rules directly</summary>
 
-Under the hood `rpp check` builds an ESLint flat config and runs it. If your repository already
+Under the hood `rpp lint` builds an ESLint flat config and runs it. If your repository already
 lints with ESLint, you can import the rule modules from `research-paper-pipeline/eslint-rules/`
 and wire them yourself; `bin/rpp.mjs` exports `buildConfig(options, texLanguage)` that returns
 the exact config the CLI uses, so the shortest path is:

@@ -1,5 +1,5 @@
 /**
- * Обе половины для утилиты `research-paper-pipeline check`, и отдельно — три отказа, каждый из
+ * Обе половины для утилиты `research-paper-pipeline lint`, и отдельно — отказы, каждый из
  * которых обязан быть ОБЪЯСНИМЫМ, а не просто ненулевым.
  *
  * 🔴 Два из проверяемых здесь дефектов утилита уже имела, и оба нашлись ПЕРВЫМ ЖЕ прогоном,
@@ -26,9 +26,8 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const { run, parseArgs, buildConfig, nextSteps } = await import(
-  join(HERE, "rpp.mjs")
-);
+const { run, parseArgs, buildConfig, nextSteps, findConfig, toPaths } =
+  await import(join(HERE, "rpp.mjs"));
 
 let n = 0;
 const check = (label, cond) => {
@@ -65,16 +64,27 @@ check(
 );
 check("и команда при этом не выдумывается", parseArgs(["--help"]).cmd === null);
 check(
-  "путь и опции разбираются",
+  "путь и конфиг разбираются",
   (() => {
-    const a = parseArgs(["check", "papers", "--options", "o.json", "--json"]);
+    const a = parseArgs(["lint", "papers", "--config", "o.json", "--json"]);
     return (
-      a.cmd === "check" &&
+      a.cmd === "lint" &&
       a.paths[0] === "papers" &&
-      a.options === "o.json" &&
+      a.config === "o.json" &&
       a.json === true
     );
   })(),
+);
+check(
+  "прежнее написание `--options` продолжает работать — флаг в чужом CI не наш, чтобы его ломать",
+  parseArgs(["lint", "--options", "o.json"]).config === "o.json",
+);
+check(
+  "`papers` строкой и списком нормализуются одинаково",
+  toPaths("papers")[0] === "papers" &&
+    toPaths(["a", "b"]).length === 2 &&
+    toPaths(undefined).length === 0 &&
+    toPaths("  ").length === 0,
 );
 
 // ── конфиг собирается, и данные потребителя доезжают ────────────────────────────────────
@@ -105,7 +115,7 @@ check(
   const r = await cli(["--help"]);
   check(
     "`--help` печатает usage и выходит нулём",
-    r.code === 0 && /npx research-paper-pipeline check/.test(r.out),
+    r.code === 0 && /npx rpp lint/.test(r.out),
   );
 }
 // ── `init` — единственный ответ на «как это запустить» ──────────────────────────────────
@@ -121,7 +131,7 @@ check(
     // приезжает обычной зависимостью пакета, ставить руками больше нечего.
     check(
       "и печатает ВСЕ три следующих шага, а не только первый",
-      /rpp check/.test(first.out) &&
+      /rpp lint/.test(first.out) &&
         /research-paper-pipeline@/.test(first.out) &&
         /plugin install research-paper-pipeline/.test(first.out),
     );
@@ -132,6 +142,13 @@ check(
     check(
       "файл действительно на диске и это валидный JSON",
       JSON.parse(readFileSync(join(dir, "rpp.json"), "utf8")).minFindings === 3,
+    );
+    // 🔴 `papers` обязан быть в том, что пишет init. Иначе первая же команда после установки
+    // упирается в им же написанный конфиг: поле обязательное, а шаблон его не содержит.
+    check(
+      "и он содержит обязательное поле `papers`",
+      JSON.parse(readFileSync(join(dir, "rpp.json"), "utf8")).papers ===
+        "papers",
     );
 
     // Вторая половина: чужой файл не трогаем. Молча затереть настройку пользователя хуже,
@@ -158,13 +175,21 @@ check(
   );
 }
 {
-  const r = await cli(["check"]);
   // Умолчание "." дало бы зелёный прогон по случайному содержимому — тот же контракт, что у
-  // экшена, и та же причина.
-  check(
-    "`check` без пути отказывает и говорит, чего не хватает",
-    r.code === 2 && /needs at least one path/.test(r.out),
-  );
+  // экшена, и та же причина. Пустой каталог без конфига — ровно этот случай.
+  const bare = realpathSync(mkdtempSync(join(tmpdir(), "rpp-bare-")));
+  try {
+    const r = await cli(["lint"], bare);
+    check(
+      "`lint` без пути И без конфига отказывает и называет ОБА выхода",
+      r.code === 2 &&
+        /nothing to lint/.test(r.out) &&
+        /rpp init/.test(r.out) &&
+        /rpp lint papers/.test(r.out),
+    );
+  } finally {
+    rmSync(bare, { recursive: true, force: true });
+  }
 }
 
 // ── на живых файлах: обе половины ───────────────────────────────────────────────────────
@@ -183,21 +208,21 @@ check(
     writeFileSync(join(paper, "paper.md"), "# Intro\n\nRQ1: does it hold?\n");
 
     writeFileSync(join(paper, "PIPELINE-STATUS.md"), status(100));
-    const clean = await cli(["check", "papers"], root);
+    const clean = await cli(["lint", "papers"], root);
     check(
       "на чистом корпусе — ноль и внятный отчёт",
       clean.code === 0 && /no findings/.test(clean.out),
     );
 
     writeFileSync(join(paper, "PIPELINE-STATUS.md"), status(999));
-    const dirty = await cli(["check", "papers"], root);
+    const dirty = await cli(["lint", "papers"], root);
     check("подложенное расхождение байтов — находка и код 1", dirty.code === 1);
     check(
       "и находка называет ОБА числа",
       /999/.test(dirty.out) && /100/.test(dirty.out),
     );
 
-    const json = await cli(["check", "papers", "--json"], root);
+    const json = await cli(["lint", "papers", "--json"], root);
     check(
       "`--json` отдаёт разбираемый JSON",
       (() => {
@@ -212,7 +237,7 @@ check(
     // 🔴 Сторож от зелёного ноля: ESLint бросает на пустом наборе, и до починки здесь вылетал
     // стек вместо объяснения.
     mkdirSync(join(root, "nothing"), { recursive: true });
-    const empty = await cli(["check", "nothing"], root);
+    const empty = await cli(["lint", "nothing"], root);
     check(
       "утилита НЕ выпускает исключение наружу — отказ объявляется кодом возврата",
       empty.code !== 99,
@@ -225,19 +250,121 @@ check(
     );
 
     writeFileSync(join(root, "bad.json"), "{ not json");
-    const bad = await cli(["check", "papers", "--options", "bad.json"], root);
+    const bad = await cli(["lint", "papers", "--config", "bad.json"], root);
     check(
-      "битый файл опций НАЗЫВАЕТСЯ, а не роняет стек",
+      "битый конфиг НАЗЫВАЕТСЯ, а не роняет стек",
       bad.code === 2 && /not valid JSON/.test(bad.out),
     );
 
-    const noFile = await cli(
-      ["check", "papers", "--options", "nope.json"],
-      root,
+    const noFile = await cli(["lint", "papers", "--config", "nope.json"], root);
+    check(
+      "отсутствующий конфиг тоже назван",
+      noFile.code === 2 && /config file not found/.test(noFile.out),
+    );
+
+    // `check` остаётся псевдонимом: чужой воркфлоу не ломаем, но говорим, чем заменено.
+    const alias = await cli(["check", "papers"], root);
+    check(
+      "`check` ещё работает и печатает, чем он заменён",
+      alias.code === 1 && /`check` is now `lint`/.test(alias.out),
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+// ── КОНФИГ НАХОДИТСЯ САМ, И КАТАЛОГ СТАТЕЙ ОБЪЯВЛЕН В НЁМ ──────────────────────────────
+//
+// 🔴 ДЕФЕКТ, РАДИ КОТОРОГО ЭТОТ БЛОК СУЩЕСТВУЕТ: `rpp init` писал `rpp.json`, а `rpp check`
+// читал его ТОЛЬКО по явному `--options`. То есть файл, который утилита сама же и создала,
+// на прогон не влиял — и узнать об этом было неоткуда: нулевой долг типографики выглядит
+// ровно как ненайденный конфиг.
+{
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-cfg-")));
+  try {
+    const paper = join(root, "papers", "p1");
+    mkdirSync(join(paper, "versions"), { recursive: true });
+    writeFileSync(join(paper, "versions", "s.tex"), "abcd");
+    writeFileSync(
+      join(paper, "versions", "2026-07-22-submitted.pdf"),
+      "x".repeat(100),
+    );
+    writeFileSync(join(paper, "paper.md"), "# Intro\n\nRQ1: does it hold?\n");
+    const status = (bytes) =>
+      `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: ${bytes}\n    source: versions/s.tex\n    sourceBytes: 4\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`;
+    writeFileSync(join(paper, "PIPELINE-STATUS.md"), status(100));
+
+    // findConfig — отдельно от прогона, чтобы отказ был различим
+    writeFileSync(join(root, "rpp.json"), JSON.stringify({ papers: "papers" }));
+    check(
+      "findConfig поднимается вверх из подкаталога и находит файл в корне",
+      findConfig(paper) === join(root, "rpp.json"),
+    );
+    // Тавтологии здесь быть не может: соседнее дерево НЕ должно подхватывать наш файл.
+    // Утверждать `=== null` на живой ФС нельзя — выше по цепочке может лежать чужой rpp.json,
+    // поэтому утверждается то, что проверяемо: наш конфиг оттуда не виден.
+    const sibling = realpathSync(mkdtempSync(join(tmpdir(), "rpp-other-")));
+    check(
+      "конфиг НЕ утекает в соседнее дерево — поиск идёт вверх, а не вширь",
+      findConfig(sibling) !== join(root, "rpp.json"),
+    );
+    rmSync(sibling, { recursive: true, force: true });
+
+    const found = await cli(["lint"], root);
+    check(
+      "конфиг НАЙДЕН сам: `lint` без единого аргумента отрабатывает",
+      found.code === 0 && /no findings/.test(found.out),
     );
     check(
-      "отсутствующий файл опций тоже назван",
-      noFile.code === 2 && /options file not found/.test(noFile.out),
+      "и найденный файл НАЗВАН вслух — молчаливая подмена настроек недопустима",
+      /config: rpp\.json/.test(found.out),
+    );
+
+    // 🔴 РАЗЛИЧИТЕЛЬ РЕЗОЛВА. Запуск ИЗ каталога статьи: конфиг тот же, а `"papers": "papers"`,
+    // разрешённый относительно ТЕКУЩЕГО каталога, указал бы на `papers/p1/papers` — такого нет,
+    // и прогон упал бы «nothing was linted» там, где весь корпус на месте.
+    const fromSub = await cli(["lint"], paper);
+    check(
+      "путь из конфига резолвится относительно КАТАЛОГА КОНФИГА, а не текущего",
+      fromSub.code === 0 && /no findings/.test(fromSub.out),
+    );
+
+    // Данные потребителя из найденного конфига реально доезжают до правил, а не просто читаются.
+    writeFileSync(join(paper, "PIPELINE-STATUS.md"), status(999));
+    const dirty = await cli(["lint"], root);
+    check(
+      "найденный конфиг не отменяет находок — расхождение по-прежнему ловится",
+      dirty.code === 1 && /999/.test(dirty.out),
+    );
+    writeFileSync(join(paper, "PIPELINE-STATUS.md"), status(100));
+
+    // Аргумент ПЕРЕОПРЕДЕЛЯЕТ конфиг: одна статья вместо корпуса, без правки файла.
+    mkdirSync(join(root, "elsewhere"), { recursive: true });
+    const override = await cli(["lint", "elsewhere"], root);
+    check(
+      "аргумент командной строки ПЕРЕОПРЕДЕЛЯЕТ `papers` из конфига",
+      override.code === 1 &&
+        /nothing was linted under elsewhere/.test(override.out),
+    );
+
+    // 🔴 `papers` — ОБЯЗАТЕЛЬНОЕ ПОЛЕ. Конфиг без него не «пустой конфиг», а незаконченный:
+    // молча уехать на умолчание "." значит прогнать правила по всему чекауту.
+    writeFileSync(join(root, "rpp.json"), JSON.stringify({ minFindings: 3 }));
+    const noPapers = await cli(["lint"], root);
+    check(
+      "конфиг БЕЗ `papers` — отказ, и поле названо поимённо",
+      noPapers.code === 2 &&
+        /must declare `papers`/.test(noPapers.out) &&
+        /cannot guess/.test(noPapers.out),
+    );
+    check(
+      'пустая строка в `papers` считается отсутствующей, а не каталогом ""',
+      (
+        await (async () => {
+          writeFileSync(join(root, "rpp.json"), JSON.stringify({ papers: "" }));
+          return await cli(["lint"], root);
+        })()
+      ).code === 2,
     );
   } finally {
     rmSync(root, { recursive: true, force: true });
@@ -261,7 +388,7 @@ check(
       join(paper, "PIPELINE-STATUS.md"),
       "---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/a.pdf\n    bytes: 1\n---\n# S\n",
     );
-    const r = spawnSync(process.execPath, [link, "check", "papers"], {
+    const r = spawnSync(process.execPath, [link, "lint", "papers"], {
       cwd: root,
       encoding: "utf8",
     });
@@ -277,7 +404,7 @@ check(
 }
 
 console.log(
-  `✓ ${String(n)} assertions passed — rpp check, одна команда вместо конфига руками`,
+  `✓ ${String(n)} assertions passed — rpp lint, одна команда вместо конфига руками`,
 );
 
 // ─────────────────────────────────────────────────────────────────────────────

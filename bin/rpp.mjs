@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * `research-paper-pipeline check <paths…>` — прогнать все правила по корпусу статей.
+ * `research-paper-pipeline lint [paths…]` — прогнать все правила по корпусу статей.
  *
  * 🔴 ЗАЧЕМ ЭТА УТИЛИТА СУЩЕСТВУЕТ. До неё «установка» означала: поставь пакет И НАПИШИ РУКАМИ
  * шестьдесят строк flat-конфига ESLint, перечислив десять правил, три языка и четыре блока
@@ -9,17 +9,24 @@
  * бегут — но это ВНУТРЕННЕЕ устройство, и знать его для запуска больше не нужно.
  *
  * Два входа в инструмент, и оба теперь целые:
- *     npx research-paper-pipeline check papers      ← здесь
+ *     npx research-paper-pipeline lint              ← здесь
  *     uses: zernie/research-paper-pipeline@<sha>    ← action.yml
  *
  * ⚠️ ГРАНИЦА, КОТОРУЮ УТИЛИТА НЕ ИМЕЕТ ПРАВА СТЕРЕТЬ: данные потребителя остаются у потребителя.
  * Долг типографики, маркер прогона сверки авторов, словарь полей — всё это про ОДИН корпус, и
  * зашивать их в пакет значило бы повторить дефект, из-за которого в сообщении правила стоял путь
- * `.claude/skills/verify-citations/...`. Поэтому они приходят файлом `--options`.
+ * `.claude/skills/verify-citations/...`. Поэтому они живут в `rpp.json` у потребителя.
+ *
+ * 🔴 ПОЧЕМУ КОМАНДА НАЗЫВАЕТСЯ `lint`, А НЕ `check`. Она делает ровно то, что этим словом
+ * называют все остальные: читает файлы, ничего не меняет, печатает находки, выходит ненулём.
+ * `check` в экосистеме занято другим смыслом — `cargo check`, `tsc --noEmit`, `npm run check` —
+ * это «собери, но не выводи артефакт», то есть половина СБОРКИ. Пакет, у которого сборка статьи
+ * впереди, не имеет права занимать это слово линтером. `check` остаётся псевдонимом и печатает,
+ * чем его заменили: молча сломать чужой воркфлоу хуже, чем попросить поправить строку.
  */
 import { ESLint } from "eslint";
 import { readFileSync, existsSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, dirname, resolve, relative } from "node:path";
 import markdown from "@eslint/markdown";
 import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
 
@@ -34,19 +41,24 @@ import coldReadCause from "../eslint-rules/cold-read-cause.mjs";
 const USAGE = `research-paper-pipeline — machine-checkable gates for a paper kept in git
 
   npx rpp init [dir]                  set the project up: writes rpp.json, prints what to paste
-  npx rpp check <paths…>              run every rule over your papers
+  npx rpp lint [paths…]               run every rule over your papers
   npx rpp --help
 
-check:
-  npx research-paper-pipeline check <paths…> [--options <file.json>] [--json]
+lint:
+  npx rpp lint [paths…] [--config <file.json>] [--json]
 
-  <paths…>            where your papers live, e.g. papers  (REQUIRED, no default:
-                      a default of "." lints whatever happens to be in the checkout)
-  --options <file>    JSON with the data only you can supply — see "options" below
+  <paths…>            where your papers live, e.g. papers. Optional ONLY because rpp.json
+                      declares it — one of the two must name the scope. There is no default
+                      of ".": linting whatever happens to be in the checkout is how a green
+                      report over a scope nobody chose gets produced.
+  --config <file>     use this rpp.json instead of the discovered one
   --json              machine-readable findings instead of the human report
 
-options file (every key optional):
+rpp.json — found by walking up from the current directory, the way every other tool in the
+stack finds its config. \`papers\` is required; every other key is optional:
+
   {
+    "papers":            "papers",
     "authorListCommand": "node scripts/bib-authors.mjs",
     "typographyDebt":    { "papers/my-paper": { "sectionSign": 12 } },
     "docFields":         { "read": { "values": ["full", "abstract", "none"] } },
@@ -151,7 +163,7 @@ export function parseArgs(argv) {
   const out = {
     cmd: null,
     paths: [],
-    options: null,
+    config: null,
     json: false,
   };
   const rest = [...argv];
@@ -159,11 +171,35 @@ export function parseArgs(argv) {
   for (let i = 0; i < rest.length; i++) {
     const a = rest[i];
     if (a === "--json") out.json = true;
-    else if (a === "--options") out.options = rest[++i];
+    // `--options` was the first spelling and is kept working. It named the wrong thing — every
+    // other tool in the stack calls this file its config — but a flag in someone's CI is not
+    // ours to break.
+    else if (a === "--config" || a === "--options") out.config = rest[++i];
     else if (a === "--help" || a === "-h") out.help = true;
     else out.paths.push(a);
   }
   return out;
+}
+
+export const CONFIG_NAME = "rpp.json";
+
+/**
+ * 🔴 `rpp init` ПИСАЛ КОНФИГ, КОТОРЫЙ `rpp check` НЕ ЧИТАЛ НИКОГДА. Файл появлялся, команда
+ * молчала, прогон шёл на умолчаниях — то есть настройка пользователя не действовала, и узнать
+ * об этом было неоткуда: отсутствие долга типографики выглядит ровно как ноль долга.
+ *
+ * Поиск — вверх от текущего каталога до корня ФС, как это делают eslint, prettier, tsc и
+ * остальные. Запуск из подкаталога статьи тогда видит тот же конфиг, что запуск из корня репо.
+ */
+export function findConfig(startDir) {
+  let dir = resolve(startDir);
+  for (;;) {
+    const candidate = join(dir, CONFIG_NAME);
+    if (existsSync(candidate)) return candidate;
+    const up = dirname(dir);
+    if (up === dir) return null;
+    dir = up;
+  }
 }
 
 /**
@@ -177,6 +213,7 @@ export function parseArgs(argv) {
  * говорит: молча затереть настройку пользователя хуже, чем не сделать ничего.
  */
 export const RPP_JSON = `{
+  "papers": "papers",
   "authorListCommand": "node scripts/bib-authors.mjs",
   "typographyDebt": {},
   "docFields": {},
@@ -207,8 +244,8 @@ export function nextSteps(papersDir = "papers") {
     ``,
     `Next, in order:`,
     ``,
-    `  1. check your papers`,
-    `       npx rpp check ${papersDir}`,
+    `  1. lint your papers`,
+    `       npx rpp lint`,
     ``,
     `  2. same check in CI — add this step to a workflow`,
     `       - uses: zernie/research-paper-pipeline@<commit-sha>`,
@@ -230,15 +267,23 @@ export function init(dir, { log = console.log } = {}) {
       `wrote ${target} — the three things only you can supply; every key is optional`,
     );
   }
-  // Already present counts as ready: re-installing what is there would spend the 93 MB twice.
-  let hooksReady = existsSync(join(dir, "node_modules", "vigiles"));
-  log(nextSteps("papers", { hooksReady }));
+  log(nextSteps("papers"));
   return 0;
 }
 
+/** `papers` may be one directory or several; both spellings normalise to a list. */
+export function toPaths(papers) {
+  if (typeof papers === "string") return papers.trim() ? [papers.trim()] : [];
+  if (Array.isArray(papers))
+    return papers.filter((x) => typeof x === "string" && x.trim());
+  return [];
+}
+
+const hasPapers = (opts) => toPaths(opts.papers).length > 0;
+
 export async function run(
   argv,
-  { log = console.log, err = console.error } = {},
+  { log = console.log, err = console.error, cwd = process.cwd() } = {},
 ) {
   const a = parseArgs(argv);
   if (a.help || !a.cmd) {
@@ -246,29 +291,66 @@ export async function run(
     return a.help ? 0 : 2;
   }
   if (a.cmd === "init") return init(a.paths[0] ?? ".", { log });
-  if (a.cmd !== "check") {
+  if (a.cmd === "check")
+    err(
+      `\`check\` is now \`lint\` — running it anyway. Update the call to \`rpp lint\`.`,
+    );
+  if (a.cmd !== "lint" && a.cmd !== "check") {
     err(`unknown command \`${a.cmd}\`\n\n${USAGE}`);
     return 2;
   }
-  // Тот же контракт, что у экшена: охват называет вызывающий. Умолчание "." дало бы зелёный
-  // прогон по тому, что случайно лежит рядом.
-  if (a.paths.length === 0) {
-    err(`\`check\` needs at least one path, e.g. \`check papers\`\n\n${USAGE}`);
+
+  // 🔴 КОНФИГ ИЩЕТСЯ САМ. Явный `--config` побеждает найденный — он назван вслух, и подмена
+  // молчаливой не бывает.
+  const configPath = a.config ?? findConfig(cwd);
+  if (a.config && !existsSync(a.config)) {
+    err(`config file not found: ${a.config}`);
     return 2;
   }
 
   let opts = {};
-  if (a.options) {
-    if (!existsSync(a.options)) {
-      err(`options file not found: ${a.options}`);
-      return 2;
-    }
+  if (configPath) {
     try {
-      opts = JSON.parse(readFileSync(a.options, "utf8"));
+      opts = JSON.parse(readFileSync(configPath, "utf8"));
     } catch (e) {
-      err(`options file is not valid JSON: ${e.message}`);
+      err(`${configPath} is not valid JSON: ${e.message}`);
       return 2;
     }
+    // Найденный конфиг НАЗЫВАЕТСЯ вслух. Иначе прогон из чужого каталога подхватывает чужой
+    // файл и об этом не говорит — а расхождение долга типографики выглядит как находка.
+    log(`config: ${relative(cwd, configPath) || CONFIG_NAME}`);
+  }
+
+  // 🔴 `papers` — ОБЯЗАТЕЛЬНОЕ ПОЛЕ. Каталог статей — единственное, без чего инструмент не
+  // знает, над чем он работает, и единственное, чего нельзя угадать: умолчание "." прогоняет
+  // правила по всему чекауту и выходит зелёным по охвату, который никто не выбирал.
+  if (configPath && !hasPapers(opts)) {
+    err(
+      `${configPath} must declare \`papers\` — the directory your papers live in, e.g.\n` +
+        `  { "papers": "papers" }\n` +
+        `It is the one thing this tool cannot guess.`,
+    );
+    return 2;
+  }
+
+  // Аргумент командной строки ПЕРЕОПРЕДЕЛЯЕТ конфиг: одна статья из корпуса линтуется без
+  // правки файла.
+  //
+  // 🔴 Путь ИЗ КОНФИГА резолвится относительно КАТАЛОГА КОНФИГА, а не текущего. Иначе подъём
+  // вверх бессмыслен: из `papers/aisec-2026` файл нашёлся бы, а `"papers": "papers"` указал бы
+  // на `papers/aisec-2026/papers`, которого нет, — и прогон упал бы «ничего не найдено» там,
+  // где всё на месте. Аргумент командной строки остаётся относительно текущего каталога: его
+  // набрали здесь и сейчас.
+  const paths =
+    a.paths.length > 0
+      ? a.paths
+      : toPaths(opts.papers).map((rel) => resolve(dirname(configPath), rel));
+  if (paths.length === 0) {
+    err(
+      `nothing to lint: no path was given and no ${CONFIG_NAME} was found.\n` +
+        `Run \`npx rpp init\` here, or pass the directory: \`rpp lint papers\`.`,
+    );
+    return 2;
   }
 
   let texLanguage = null;
@@ -288,7 +370,7 @@ export async function run(
   // вылетал стек из недр eslint-helpers.js. Отказ остаётся отказом, но объяснимым.
   let results;
   try {
-    results = await eslint.lintFiles(a.paths);
+    results = await eslint.lintFiles(paths);
   } catch (e) {
     if (
       e?.messageTemplate === "file-not-found" ||
@@ -304,7 +386,7 @@ export async function run(
   // физически не может об этом сообщить.
   if (results.length === 0) {
     err(
-      `nothing was linted under ${a.paths.join(", ")} — no PIPELINE-STATUS.md, paper.md/tex or reviews/ found there. A clean report over zero files is not a clean report.`,
+      `nothing was linted under ${paths.map((x) => relative(cwd, x) || x).join(", ")} — no PIPELINE-STATUS.md, paper.md/tex or reviews/ found there. A clean report over zero files is not a clean report.`,
     );
     return 1;
   }
