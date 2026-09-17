@@ -219,23 +219,13 @@ own — this package ships none), `working-directory`.
 
 ## Skills and hooks in Claude Code
 
-The skills and hooks are delivered as a Claude Code plugin. The three hooks run on
-[`vigiles`](https://github.com/zernie/vigiles), so it has to be installed first:
+The skills and hooks are delivered as a Claude Code plugin. Its runtime came with this package,
+so there is nothing else to install — type these inside Claude Code:
 
-```sh
-npm i -D vigiles
+```
 /plugin marketplace add zernie/research-paper-pipeline
 /plugin install research-paper-pipeline@research-paper-pipeline
 ```
-
-⚠️ **This is the worst part of the install and it is being replaced.** `vigiles` costs 93 MB in a
-clean project — 51 MB of `@ast-grep`, 23 MB of `typescript` — and nothing outside the hooks uses
-any of it. Installing the plugin *without* it is worse than not installing it: Claude Code's
-contract is that a failed or skipped dependency install never blocks a plugin, so the plugin would
-load and its hooks would die on `Cannot find module` with nothing said.
-
-Skip this section entirely and everything above still works. The rules, the CLI and the skills do
-not use vigiles; what you lose is the in-editor guard.
 
 That installs all 24 skills (`/paper-pipeline` is the entry point; it routes to the rest) and
 three hooks:

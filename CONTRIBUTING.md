@@ -20,6 +20,7 @@ here" and "this check never ran" look exactly the same.
 On top of that, each rule has a **battery**: it deletes one thing the rule depends on and then
 demands the harness go red, at the specific assertion that thing belongs to. If nothing goes red,
 that part of the rule was never doing any work. CI refuses a rule whose battery cannot kill it.
+
 <!-- count:harnesses -->54 harnesses, <!-- count:batteries -->31 batteries.
 
 It caught a real one on the way in: `js-yaml` 5 stopped parsing an unquoted date as a `Date`.
@@ -79,6 +80,6 @@ Licensing differs too: that suite is CC BY-NC 4.0, this is MIT.
 they run. Point your agent at `skills/` and ask it for a stage by name. The stages that need taste
 stay taste and say so — `paper-adversarial-review` does not pretend to be a checker.
 
-**The 3 hooks** need [vigiles](https://github.com/zernie/vigiles), a runner that executes checks
-inside an agent's edit loop. Without it you lose the in-loop guard; the rules and skills are
-unaffected.
+**The 3 hooks** run on [vigiles](https://github.com/zernie/vigiles), a runner that executes checks
+inside an agent's edit loop. It is an ordinary dependency of this package, so it installs with it —
+and it is most of what the install weighs.

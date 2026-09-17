@@ -186,32 +186,23 @@ export const RPP_JSON = `{
 `;
 
 /**
- * Step 3 must not send anyone to `/plugin install` before the runtime is there.
+ * Step 3 is now two lines, and both are typed inside Claude Code rather than in a terminal.
  *
- * 🔴 A plugin whose hooks cannot load is worse than no plugin. Claude Code's own contract says
- * «a failed or skipped install never blocks the plugin», so the hooks would die on
- * `Cannot find module` and nothing would say so — the exact shape this project spent a day
- * fixing upstream. So the `/plugin` lines appear only once vigiles is on disk.
- *
- * ⚠️ The manual `npm i -D vigiles` above is still wrong and is still here: 93 MB measured in a
- * clean project, charged to people who only ever lint. A `--with-hooks` flag was written and
- * WITHDRAWN — a flag is one more action, not one fewer. Replacing the runtime dependency
- * outright is the open work.
+ * The hook runtime (`vigiles`) arrives with this package as an ordinary dependency, so there is
+ * nothing to install by hand. That replaced, in order: a copy-paste line, then a `--with-hooks`
+ * flag, then a self-contained bundle — none of which were needed once the weight was measured
+ * (127 MB for the whole install) and judged acceptable. The simplest thing that works was one
+ * line in `dependencies`.
  */
-export function nextSteps(papersDir = "papers", { hooksReady = false } = {}) {
-  const hooks = hooksReady
-    ? [
-        `  3. the three editor hooks — vigiles is installed, so only the wiring is left`,
-        `       /plugin marketplace add zernie/research-paper-pipeline`,
-        `       /plugin install research-paper-pipeline@research-paper-pipeline`,
-      ]
-    : [
-        `  3. optional — the three editor hooks for Claude Code need a runtime first`,
-        `       npm i -D vigiles      (~93 MB; nothing above uses it)`,
-        ``,
-        `     Skip it and everything above still works: the hooks are an in-editor guard,`,
-        `     the rules and the CLI do not use vigiles at all.`,
-      ];
+export function nextSteps(papersDir = "papers") {
+  const hooks = [
+    `  3. optional — the three editor hooks, typed INSIDE Claude Code`,
+    `       /plugin marketplace add zernie/research-paper-pipeline`,
+    `       /plugin install research-paper-pipeline@research-paper-pipeline`,
+    ``,
+    `     Their runtime came with this package; there is nothing else to install.`,
+    `     Skip this and everything above still works — the hooks are an in-editor guard.`,
+  ];
   return [
     ``,
     `Next, in order:`,

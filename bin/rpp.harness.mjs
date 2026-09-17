@@ -117,18 +117,17 @@ check(
       "init выходит нулём и называет записанный файл",
       first.code === 0 && /wrote .*rpp\.json/.test(first.out),
     );
-    // Все три шага на месте. Третий теперь НЕ зовёт `/plugin install` до того, как рантайм
-    // стоит: плагин без vigiles ставит хуки, которые не загрузятся, — тот самый класс, ради
-    // которого этот пакет существует. Пока рантайма нет, третий шаг предлагает его поставить.
+    // Все три шага на месте. Третий — две строки, набираемые ВНУТРИ Claude Code: рантайм
+    // приезжает обычной зависимостью пакета, ставить руками больше нечего.
     check(
       "и печатает ВСЕ три следующих шага, а не только первый",
       /rpp check/.test(first.out) &&
         /research-paper-pipeline@/.test(first.out) &&
-        /npm i -D vigiles/.test(first.out),
+        /plugin install research-paper-pipeline/.test(first.out),
     );
     check(
-      "и НЕ советует ставить плагин, пока его рантайма нет",
-      !/plugin install/.test(first.out),
+      "и НЕ просит ставить рантайм руками — он приезжает зависимостью",
+      !/npm i -D vigiles/.test(first.out),
     );
     check(
       "файл действительно на диске и это валидный JSON",
@@ -282,34 +281,26 @@ console.log(
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Step 3 must not send anyone to `/plugin install` before the runtime is on disk.
+// Step 3 has ONE shape now: two lines typed inside Claude Code.
 //
-// 🔴 This survived the withdrawal of the `--with-hooks` flag, because it is not about the flag.
-// Claude Code's contract is «a failed or skipped install never blocks the plugin», so a plugin
-// installed without its runtime loads and its hooks die on `Cannot find module` with nothing
-// said. Telling someone to install the plugin first is therefore telling them to build that.
+// 🔴 It must never ask for a manual runtime install again. That instruction went through three
+// forms — a copy-paste line, a `--with-hooks` flag, a self-contained bundle — and all three were
+// wrong for the same reason: the runtime is an ordinary dependency, so there is nothing to do.
 
 {
-  const before = nextSteps("papers", { hooksReady: false });
-  const after = nextSteps("papers", { hooksReady: true });
+  const steps = nextSteps("papers");
   check(
-    "without the runtime, step 3 names the runtime and its size",
-    /npm i -D vigiles/.test(before) && /93 MB/.test(before),
+    "step 3 gives the two /plugin lines",
+    steps.includes("/plugin marketplace add") &&
+      steps.includes("/plugin install research-paper-pipeline"),
+  );
+  check("and asks for NO manual install", !/npm i -D vigiles/.test(steps));
+  check(
+    "and says the runtime already came along",
+    /runtime came with this package/.test(steps),
   );
   check(
-    "and says skipping it costs only the hooks",
-    /rules and the CLI do not use vigiles/.test(before),
-  );
-  check(
-    "without the runtime, /plugin install is NOT offered",
-    !before.includes("/plugin install"),
-  );
-  check(
-    "with the runtime, only the plugin wiring is left",
-    after.includes("/plugin install research-paper-pipeline"),
-  );
-  check(
-    "and the install line is gone once it is installed",
-    !after.includes("npm i -D vigiles"),
+    "skipping it is still safe, and says so",
+    /everything above still works/.test(steps),
   );
 }

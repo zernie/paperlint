@@ -19,21 +19,17 @@
     "@unified-latex/unified-latex-util-parse": "^1.8.4",
     "eslint": "^10.9.1",
     "js-yaml": "^4.1.0",
-    "markdown-it": "^14.3.0"
+    "markdown-it": "^14.3.0",
+    "vigiles": "^27.3.0"
   },
   "devDependencies": {
-    "@retorquere/bibtex-parser": "^10.0.1",
-    "vigiles": "^27.2.0"
+    "@retorquere/bibtex-parser": "^10.0.1"
   },
   "peerDependencies": {
-    "@retorquere/bibtex-parser": "^10.0.1",
-    "vigiles": "^27.2.0"
+    "@retorquere/bibtex-parser": "^10.0.1"
   },
   "peerDependenciesMeta": {
     "@retorquere/bibtex-parser": {
-      "optional": true
-    },
-    "vigiles": {
       "optional": true
     }
   },
