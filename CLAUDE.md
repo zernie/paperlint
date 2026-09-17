@@ -60,7 +60,7 @@ Not optional and not "when something breaks": `vigiles` is a real dependency, an
 harness, spec and hook resolves through it. A container where `npm install` never ran fails
 in ways that look like broken code rather than a missing install.
 
-## The eight rules that decide what may live here — and what may not be written
+## The ten rules that decide what may live here — and what may not be written
 
 **1. Mechanism goes to vigiles, data stays here.** A file that names nothing local — no rule
 of ours, no fixture of ours — is machinery, and machinery belongs in
@@ -134,6 +134,37 @@ because `SyntaxError: Unexpected token '.'` says nothing about comments.
 ⇒ **In a block comment, prose describes the pattern; it never quotes it.** If the exact
 characters matter, they belong in the code or in a line comment beside it.
 
+**9. Measure the DEFECT before proposing the fix — and read "this is quick" as a warning.**
+Rule 5 is about the tool you are replacing; this one is about the order of work.
+
+1. **Show the defect**: command output, or a file quote with a line number. A proposed fix with
+   no exhibited defect is not a fix, it is a preference.
+2. **Name the layer and the channel** it touches: ESLint rule · skill · hook · CLI · CI action
+   · path resolution. More than one is a conversation, not a commit.
+3. **An adversarial second pass is encouraged, and it is not free.** Spend it on a fork in the
+   road, on anything that goes outward, and on a conclusion you are about to act on.
+4. **A quick fix is almost never quick** — it is quick to *propose* precisely because nothing
+   was opened.
+
+Four proposals were made and withdrawn in one session on 2026-09-17 for exactly this reason —
+[`docs/incidents.md`](docs/incidents.md).
+
+**10. The only impure thing in this package is WHERE IT IS INSTALLED — and it lives in ONE
+module.** Rule 6 generalised: the caller's cwd is one case of it. Checking logic — lint rules,
+skills, hooks — must not know its own location, nor its distance from anything else. Every
+answer to *where* comes from `lib/consumer.mjs`, which adapts per channel: own checkout ·
+`node_modules` · plugin cache · CI. A skill naming a script by an install-specific path in its
+own prose walks around that door, and 208 such literals across 190 lines do exactly that.
+
+⚠️ Deliberately NOT full hexagonal architecture, and that is a decision: there is no database or
+service to swap, and the lint rules are already pure functions over an AST, so ports around them
+would be ceremony with no subject. One thing here is impure, so one thing gets a port.
+
+⏳ **The mechanical half is owed and is the point**: a lint rule that makes an install-specific
+path literal outside the port a finding. Prose will not hold this class — four silent breakages
+happened *while* comments explaining the hazard sat directly above the code
+([`docs/incidents.md`](docs/incidents.md)).
+
 ## Distribution — no `smh init`, and that is a measured decision (2026-09-10)
 
 Considered: a `research-paper-pipeline init` command that installs the ESLint config and the
@@ -158,8 +189,32 @@ two standard channels already do, for free:
 
 | what ships | standard channel | user's side |
 |---|---|---|
-| skills | `.claude-plugin/marketplace.json` + `plugin.json` | `/plugin marketplace add <owner>/<repo>` then `/plugin install` |
+| skills | `.claude-plugin/marketplace.json` + `plugin.json` | `/plugin marketplace add <owner>/<repo>` then `/plugin install` **plus the npm package beside it — see below** |
 | ESLint rules | an npm package | `npm i -D <pkg>` + a few lines in `eslint.config.mjs` |
+
+🔴 **THE TWO ROWS ARE NOT INDEPENDENT, AND THE TABLE READ AS IF THEY WERE** (issue #8, counted
+again 2026-09-17). The marketplace row needs no npm — that is true of the CHANNEL and false of
+what travels through it:
+
+```
+$ ls skills/*/SKILL.md | wc -l                      24
+$ grep -l "paper-pipeline/scripts" skills/*/SKILL.md | wc -l   23
+```
+
+Twenty-three of twenty-four skills name `paper-pipeline/scripts` in their own prose — the paths
+the model is told to run. Those resolve through the symlink into
+`node_modules/research-paper-pipeline/`, i.e. back through the npm channel. The single
+self-contained skill is `osf-artifact-upload` (52 lines, talks only to the OSF API).
+
+**So a consumer who installs the plugin and nothing else gets 24 skills of which 23 point at
+scripts that are not there.** Nothing fails at install time; it fails later, in the middle of a
+session, as a path that does not exist.
+
+⚠️ **This is a statement of fact, not a plan.** Making the marketplace channel genuinely
+standalone means either vendoring the scripts into every skill (24 copies of the thing this
+package exists to have ONE of) or rewriting 23 skills to call a binary that the npm package
+provides. Both are real work with real trade-offs; neither is done. Until one of them is, the
+honest instruction is the table above: install both.
 
 Both are measured, not assumed: `vigiles` and `Imbad0202/academic-research-skills` (47k stars) both
 ship `.claude-plugin/marketplace.json`, and ARS advertises install as two commands.
@@ -307,6 +362,57 @@ a dependency does not install. Putting it in `dependencies` risks npm installing
 copy under `node_modules/research-paper-pipeline/node_modules/vigiles` whenever the ranges
 drift — two runtimes, two sets of stamps and state.
 
+🔴 **THE PARAGRAPH ABOVE WAS TRUE AND THE INSTALL DID THE OPPOSITE — measured 2026-09-17.**
+`devDependencies` is not the only entry naming `vigiles`: `peerDependencies` names it too, and
+**npm 7+ installs peers automatically**. So every consumer got it anyway, together with its
+transitive weight. `npm pack`, then install the tarball into an empty project:
+
+| | packages | `du -sm node_modules` |
+|---|---:|---:|
+| peer as declared before | 188 | **142 MB** |
+| `peerDependenciesMeta: { vigiles: { optional: true } }` | 164 | **56 MB** |
+
+The 86 MB are `@ast-grep/napi` (51 MB) and `typescript` (23 MB), pulled through `vigiles` — and
+paid for by a consumer who only wants the ESLint rules and never loads a hook.
+
+`optional: true` is the entry that matches what this section already argues: the consumer brings
+its own `vigiles` *when it uses the hooks*, and npm stops deciding that for them. Both halves
+measured on the 56 MB tree: `eslint-rules/latex-language.mjs` and
+`skills/paper-pipeline/scripts/pipeline-check.mjs` load and run (RC=0), while
+`hooks/paper-edit-guard.hook.mjs` fails with `ERR_MODULE_NOT_FOUND` — which is this contract
+working, not a defect, exactly as argued below.
+
+⚠️ The consumer in this project's own base is unaffected: it declares `vigiles` itself
+(`devDependencies: ^27.2.0`), so nothing about its tree changes.
+
+### The `.bib` parser is optional for the same reason, and the failure says so out loud
+
+`@retorquere/bibtex-parser` is imported at exactly one site
+(`skills/paper-pipeline/scripts/extract-ref-facts.mjs`, and already through a dynamic
+`await import`), and it costs **15 MB of a 56 MB tree**: 9 MB itself, plus
+`wink-eng-lite-web-model` (4 MB, an English NLP model) and `unicode2latex` (2 MB). That is 27%
+of the install for one call that only a consumer extracting bibliography facts ever makes.
+
+| | packages | `du -sm node_modules` |
+|---|---:|---:|
+| after the `vigiles` peer was made optional | 164 | 56 MB |
+| parser moved to an optional peer as well | 149 | **39 MB** |
+
+🔴 **`optionalDependencies` is the wrong entry and was tried first** — npm *installs* those and
+only tolerates failure, so the weight stays. What makes a dependency genuinely opt-in is
+`peerDependencies` + `peerDependenciesMeta: { optional: true }`, the same pair used for `vigiles`.
+It stays in `devDependencies` too, because this package's own harnesses parse `.bib`.
+
+⚠️ A silent skip here would be the worst outcome: a missing checker and a passing one look
+identical, and "the bibliography was not checked" reads as "the bibliography is fine". So the
+absence throws, and the message carries the cure rather than the diagnosis:
+
+```
+разбор .bib требует @retorquere/bibtex-parser — он объявлен ОПЦИОНАЛЬНЫМ, потому что весит 15 МБ…
+   Поставить:  npm i -D @retorquere/bibtex-parser
+   Почему не своя регулярка: замер 26.08 — регулярка давала 0 записей на обоих настоящих файлах…
+```
+
 🔴 **Therefore the pin here and the pin in the consumer move TOGETHER, in one pass.** A major
 mismatch means a hook compiled by one version is executed by another: the stamp does not
 verify, the hook does not load, and `PreToolUse` refuses every command. That already happened
@@ -381,7 +487,7 @@ not evidence about the rule you care about. Both halves are tested
 ## Mutations
 
 ```bash
-npm run test:mutations    # 12 + 11 + 2, each with a "the patch landed" assertion
+npm run test:sabotage    # 12 + 11 + 2, each with a "the patch landed" assertion
 ```
 
 A green harness under a mutation is a finding about the TEST, not a conclusion about the
@@ -390,10 +496,25 @@ defence. Each battery prints the harness line and the assertion text its mutatio
 
 ## Cost
 
-This is a **private** repository, so its GitHub Actions minutes come out of the account-wide
-3000/month shared with every other private repo. Public repos are free; private ones are not.
-Decide the budget **before** the first workflow file, not after the first bill. Until then
-there is no CI here, and that is deliberate.
+⛽ **This repository is PUBLIC, so its Actions minutes are FREE.** Verified against the API on
+2026-09-17: `"private": false`, `"visibility": "public"`, and three active workflows — `ci`,
+`dependabot auto-merge`, and Dependabot's own updates runner.
+
+🔴 **This paragraph said the exact opposite until now, and the correction is the lesson, not the
+fact.** It read «This is a **private** repository … Until then there is no CI here, and that is
+deliberate» — both halves false, and false in the file an agent loads FIRST. The flip to public
+happened on 2026-09-12 and *was* recorded, at `.github/workflows/ci.yml:8-9`, which is a file
+nobody opens before deciding whether there is any CI to check. Reported as issue #6.
+
+⚠️ So the rule this leaves behind is about WHERE a correction lands: a measurement written into
+the artifact it describes is not written down for the reader who needs it. **Status that changes
+what a session DOES belongs in this file**; the workflow header can carry the detail.
+
+What stays true, because the reasoning outlives the flip: minutes on a **private** repo come out
+of the account-wide 3000/month shared with every other private repo, and the budget is decided
+**before** the first workflow file, not after the first bill. **If this repository is ever made
+private again, this section and `.github/dependabot.yml` are revisited together** — the bot is
+justified two hundred lines above precisely by these minutes being free.
 
 ## Testing
 
@@ -405,10 +526,40 @@ npx vigiles test <file>     # one harness
 ⚠️ **Not `vigiles test .`** — the `.` is read as a FILE, the runner dies with
 `ERR_UNSUPPORTED_DIR_IMPORT`, and it still exits 0. See the measured table below.
 
-Skills, if and when they arrive, are tested **through vigiles** — a colocated
-`<skill>.harness.mjs` beside the skill. Not through a bespoke script: a home-grown runner
-here once printed confident, byte-identical "clean" verdicts for three different skills that
-had never loaded.
+Skills are tested **through vigiles** — a colocated `<skill>.harness.mjs` beside the skill.
+(This read «Skills, if and when they arrive» until 2026-09-17; there are 24 of them under
+`skills/` carrying a `SKILL.md`, and the README's opening line claimed the repository was
+empty — issue #6.) Not through a bespoke script: a home-grown runner here once printed
+confident, byte-identical "clean" verdicts for three different skills that had never loaded.
+
+### Every npm script takes an exclusive lock, and that is not ceremony
+
+`npm run *` in this repository goes through `scripts/exclusive.mjs`, which holds
+`.vigiles/exclusive.lock` for the duration. A second gate started while one is running does not
+queue and does not race — it **refuses**, names the holder, and exits 3.
+
+🔴 **The reason is that `test:sabotage` edits the working tree in place.** That strategy is
+deliberate (see `lib/mutation-driver.mjs` — copying the repo per mutation costs minutes instead
+of seconds), and its one cost is that any parallel reader sees a source file mid-mutation. The
+resulting failure is **false, non-deterministic, and blames the wrong file**: it reports a broken
+assertion, not a mutation, and it reads as "the suite is flaky". That has already cost a wrong
+conclusion here — two runs in a row produced *different* error messages and the diagnosis "I broke
+round-diff" was incorrect.
+
+A prose instruction "don't run them at the same time" existed and did not work: prose does not
+execute, so it does not apply to the person in the other terminal, the agent, or the editor with
+tests on save. Measured live, with the batteries running:
+
+```
+$ npm test
+🔴 отказ: этот репозиторий сейчас занят прогоном, который ПРАВИТ ФАЙЛЫ НА МЕСТЕ.
+   держит: pid 6645, «node scripts/run-mutations.mjs», с 2026-09-17T05:22:28.757Z
+RC=3
+```
+
+⚠️ A lock left behind by a process that no longer exists is **taken over** with a message, not
+respected. Otherwise one interrupted run would block the repository forever, and the first cure
+anybody reaches for would be "delete the lock by hand" — i.e. switching the mechanism off.
 
 ## `npm test` — `--min=1` stays, and here is what it is for
 

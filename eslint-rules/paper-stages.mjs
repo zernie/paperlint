@@ -93,19 +93,19 @@ export default {
         type: "problem",
         docs: {
           description:
-            "стадия статьи объявлена полем, и каждое объявление сверено с байтами на диске в обе стороны",
+            "a paper's stage is declared as a FIELD, and every declaration is checked against the bytes on disk in both directions",
         },
         schema: [],
         messages: {
-          badYaml: "фронтматтер не разбирается как YAML: {{reason}}",
-          notAList: "`stages` обязано быть СПИСКОМ записей, а не {{got}} — статья может дойти до одной стадии дважды",
-          badStage: "неизвестная стадия «{{stage}}» — словарь: {{known}}",
-          missingKey: "в записи стадии «{{stage}}» нет поля `{{key}}`",
-          badDate: "дата «{{date}}» в записи «{{stage}}» не в формате YYYY-MM-DD",
-          declaredNoFile: "объявлена стадия «{{stage}}» ({{date}}), но файла `{{pdf}}` на диске нет",
-          bytesDiffer: "«{{stage}}» ({{date}}): объявлено {{want}} байт, на диске {{got}} — это НЕ тот файл",
+          badYaml: "the frontmatter does not parse as YAML: {{reason}}",
+          notAList: "`stages` must be a LIST of entries, not {{got}} — a paper can reach the same stage twice",
+          badStage: "unknown stage «{{stage}}» — the vocabulary is: {{known}}",
+          missingKey: "the «{{stage}}» entry has no `{{key}}` field",
+          badDate: "the date «{{date}}» in the «{{stage}}» entry is not YYYY-MM-DD",
+          declaredNoFile: "stage «{{stage}}» ({{date}}) is declared, but `{{pdf}}` is not on disk",
+          bytesDiffer: "«{{stage}}» ({{date}}): {{want}} bytes declared, {{got}} on disk — this is NOT that file",
           fileNotDeclared:
-            "`versions/{{file}}` заморожен, но стадия «{{stage}}» на {{date}} не объявлена в `stages` — артефакт обогнал объявление",
+            "`versions/{{file}}` is frozen, but no «{{stage}}» stage on {{date}} is declared in `stages` — the artefact ran ahead of the declaration",
         },
       },
       create(context) {
@@ -127,7 +127,7 @@ export default {
               context.report({
                 node,
                 messageId: "notAList",
-                data: { got: raw === null ? "пусто" : typeof raw },
+                data: { got: raw === null ? "empty" : typeof raw },
               });
               return;
             }
@@ -231,23 +231,138 @@ export default {
      * because a stage frozen BEFORE this convention existed cannot be fixed at all — those
      * bytes are gone. Failing a build over unrecoverable history is a gate nobody can clear.
      */
+    /**
+     * `paper/author-list` — отгруженная статья ДОЛЖНА СЕБЕ прогон сверки списков авторов.
+     *
+     * Класс, который ловит эта сверка, невидим для проверки существования ссылок: ссылка есть,
+     * идентификатор резолвится, а авторы взяты от ПРЕПРИНТА при объявленной конференции. На живом
+     * корпусе так нашлось семь записей в трёх статьях, включая ВЫБРОШЕННОГО ЖИВОГО ЧЕЛОВЕКА
+     * (`schick2023toolformer` — пропущен Eric Hambro; у версии NeurIPS девять авторов, у препринта
+     * восемь). Две из семи найдены на УЖЕ ОТПРАВЛЕННОЙ статье.
+     *
+     * 🔴 ЧТО ИСПРАВЛЕНО ПЕРЕНОСОМ, и это замер, а не вкус. Предшественница выводила объявленную
+     * стадию РЕГУЛЯРКОЙ ПО ПРОЗЕ того же файла. Перезамер 2026-09-17 на живом корпусе: у
+     * `agenticdev-2026` проза видит `submitted`, фронтматтер объявляет `submitted, camera-ready` —
+     * шаблон `/camera-ready (?:uploaded|submitted|отгружен)/i` не ловит ту форму, которой стадия
+     * записана. Набор находок сегодня от этого не менялся (обе проверки спрашивали лишь «есть ли
+     * ХОТЬ ОДНА стадия»), но СООБЩЕНИЕ печатало неверный список стадий. Здесь предмет — то же
+     * поле `stages`, которое `paper/stages` уже сверяет с байтами в обе стороны.
+     *
+     * 🔴 МАРКЕР ИЩЕТСЯ В ЯЧЕЙКАХ ТАБЛИЦЫ, А НЕ ГРЕПОМ ПО ФАЙЛУ. Первая редакция делала
+     * `context.sourceCode.text.includes(marker)` и оправдывалась комментарием «у ячейки-примечания
+     * нет своего узла». Это оказалось ПРОСТО НЕВЕРНО — замер 2026-09-17 показал, что парсер
+     * markdown отдаёт `table`, `tableRow` и `tableCell` (двенадцать ячеек на трёхстрочной
+     * таблице). Правило базы говорит дословно: «markdown разбираем парсером».
+     *
+     * Разбор к тому же СТРОЖЕ грепа, и разница содержательная: маркер, упомянутый в прозе за
+     * пределами скоркарда — в заголовке, в абзаце «надо будет прогнать bib-authors», в чужой
+     * цитате, — больше не засчитывается как запись о прогоне. Грепу эти три случая неотличимы от
+     * настоящей записи.
+     *
+     * ⚠️ ЧЕГО ЭТО ВСЁ ЕЩЁ НЕ ЧИНИТ: внутри ячейки свидетельство остаётся ПРОЗОЙ, и прогон,
+     * сформулированный другими словами, правило не увидит. Настоящее лекарство — поле во
+     * фронтматтере (`gates.cites.ran`), а не более умный поиск по тексту; это отдельная работа,
+     * задевающая четыре живых табеля.
+     *
+     * Поэтому severity назначает ПОТРЕБИТЕЛЬ, и по умолчанию это не `error`: доказательство
+     * прогона — проза, а ложное срабатывание на блокирующем уровне дороже пропуска.
+     */
+    "author-list": {
+      meta: {
+        type: "suggestion",
+        docs: {
+          description:
+            "a paper that declares a stage records that the author-list check ran — a class the existence check cannot see",
+        },
+        schema: [
+          {
+            type: "object",
+            properties: {
+              // Маркер прогона в табеле. Данные — у потребителя: как ИМЕННО он записывает, что
+              // сверка состоялась, пакет знать не может.
+              marker: { type: "string" },
+              // Чем прогнать. Это АДРЕС ПОТРЕБИТЕЛЯ, и в публичном пакете его быть не должно:
+              // предшественница зашивала `.claude/skills/verify-citations/scripts/bib-authors.mjs`
+              // прямо в текст сообщения.
+              command: { type: "string" },
+            },
+            additionalProperties: false,
+          },
+        ],
+        messages: {
+          neverRan:
+            "stage «{{stages}}» is declared, but the scorecard records no author-list run (looked for «{{marker}}» in its table). It catches what an existence check cannot see: the citation resolves, the id resolves, and the authors are the PREPRINT's while the entry declares a conference{{how}}",
+        },
+      },
+      create(context) {
+        const opts = context.options?.[0] ?? {};
+        const marker = opts.marker ?? "bib-authors";
+        const command = opts.command ?? "";
+
+        // Решение откладывается до конца файла: узел фронтматтера приходит ПЕРВЫМ, а таблица
+        // после него. Отчитаться на `yaml` значит вынести вердикт, не увидев скоркарда.
+        let declaredAt = null;
+        let stages = [];
+        let recorded = false;
+
+        return {
+          yaml(node) {
+            let data;
+            try {
+              data = load(node.value ?? "");
+            } catch {
+              return; // о нечитаемом YAML уже отчиталось `paper/stages`
+            }
+            const raw = data?.stages;
+            if (!Array.isArray(raw)) return;
+            stages = raw.map((r) => r?.stage).filter(Boolean);
+            // Один страж, а не два: `raw.length === 0` был бы ЧАСТНЫМ случаем этого же условия,
+            // и мутация по нему оказалась бы неубиваемой — второй страж её глушит. Здесь же
+            // покрыт и случай непустого списка из записей без поля `stage`.
+            if (stages.length === 0) return; // не отгружено — ничего не должно
+            declaredAt = node;
+          },
+
+          // Свидетельство — ЯЧЕЙКА СКОРКАРДА, а не любое вхождение строки в файл. Узел у неё
+          // есть; первая редакция утверждала обратное и грепала весь текст.
+          tableCell(node) {
+            if (recorded) return;
+            if (context.sourceCode.getText(node).includes(marker)) recorded = true;
+          },
+
+          "root:exit"() {
+            if (!declaredAt || recorded) return;
+            context.report({
+              node: declaredAt,
+              messageId: "neverRan",
+              data: {
+                stages: stages.join("/"),
+                marker,
+                how: command ? `. Run: ${command}` : "",
+              },
+            });
+          },
+        };
+      },
+    },
+
     source: {
       meta: {
         type: "problem",
         docs: {
           description:
-            "у объявленной стадии исходник заморожен рядом с pdf и сверен побайтово — не ссылкой на коммит",
+            "a declared stage freezes its source beside the pdf and is checked by bytes — not by a commit reference",
         },
         schema: [],
         messages: {
           noSource:
-            "стадия «{{stage}}» ({{date}}) не несёт замороженного исходника. Ссылка на коммит для этого не годится: сквош и gc её убивают — в этом корпусе так уже потеряно три исходника из четырёх",
+            "stage «{{stage}}» ({{date}}) carries no frozen source. A commit reference will not do: squash and gc destroy it — three of four sources were lost that way in this corpus",
           sourceMissing:
-            "«{{stage}}» ({{date}}): объявлен исходник `{{src}}`, но файла на диске нет",
+            "«{{stage}}» ({{date}}): source `{{src}}` is declared, but the file is not on disk",
           sourceBytes:
-            "«{{stage}}» ({{date}}): исходник объявлен как {{want}} байт, на диске {{got}} — это НЕ тот файл",
+            "«{{stage}}» ({{date}}): the source is declared as {{want}} bytes, {{got}} on disk — this is NOT that file",
           lostAcknowledged:
-            "стадия «{{stage}}» ({{date}}): исходник объявлен УТРАЧЕННЫМ. Сопоставить сборку со строкой рецензента больше не с чем — если копия найдётся, положить в versions/ и снять флаг",
+            "stage «{{stage}}» ({{date}}): the source is declared LOST. There is nothing left to match a build against a reviewer's line — if a copy turns up, put it in versions/ and clear the flag",
         },
       },
       create(context) {

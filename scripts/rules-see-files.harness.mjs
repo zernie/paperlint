@@ -15,7 +15,7 @@
  */
 import assert from "node:assert/strict";
 import { ESLint } from "eslint";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -24,7 +24,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
 const { rulesSeeFiles } = await import(join(HERE, "rules-see-files.mjs"));
 
-const TMP = mkdtempSync(join(tmpdir(), "rules-see-files-"));
+const TMP = realpathSync(mkdtempSync(join(tmpdir(), "rules-see-files-")));
 process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
 
 // ═════════════════════════════════════════════════════════════════════════════

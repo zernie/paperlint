@@ -15,8 +15,9 @@
 #   npm test (12 harnesses)              11 s
 #   npm run lint (eslint over fixtures)   1 s
 #   npm run check:globs                   1 s
+#   npm run check:readme                  1 s   <- числа README сверяются с деревом
 #   npm run lint:skills (vigiles lint)    3 s   ← added 2026-09-12 with the first ten skills
-#   npm run test:mutations (12 batteries)    242 s   ← 130 mutations, the expensive and load-bearing part
+#   npm run test:sabotage (12 batteries)    242 s   ← 130 mutations, the expensive and load-bearing part
 #   ───────────────────────────────────────────
 #   total work                          ~255 s, plus checkout + install
 #
@@ -35,13 +36,27 @@ name: ci
 on:
   push:
     branches: [main]
+  # 🔴 `types:` ПЕРЕЧИСЛЕН ЦЕЛИКОМ, ВКЛЮЧАЯ УМОЛЧАНИЯ. Стоит объявить этот ключ — и умолчания
+  # (`opened`, `synchronize`, `reopened`) ПРОПАДАЮТ; забыть их значило бы выключить CI на пушах
+  # в PR, и заметить это можно было бы только по отсутствию прогона, то есть по тишине.
+  # `labeled` добавлен ради macOS-джоба ниже: без него метка, повешенная на открытый PR, ничего
+  # не запускает — событие просто не происходит.
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
 
 # A newer push supersedes an older one on the same ref. Note this does NOT make the cancelled
 # run free — cancellation arrives after the expensive steps have already run and been billed —
 # it only stops the tail.
+# 🔴 КЛЮЧ ГРУППЫ РАЗЛИЧАЕТ СОБЫТИЕ, И ЭТО ЗАМЕР, А НЕ ПРЕДОСТОРОЖНОСТЬ (17.09.2026).
+# С одним ключом `ci-<ref>` навешивание метки `osx` на только что открытый PR УБИЛО прогон
+# гейтов: событие `labeled` попало в ту же группу и отменило идущий `pull_request/opened`.
+# Наблюдено на PR #17 — `gates` пришёл `cancelled` в прогоне 44 и `skipped` в прогоне 45, то
+# есть полного набора гейтов у PR не оказалось НИ ОДНОГО, при двух зелёных галочках рядом.
+#
+# Разные ключи потому, что это разные работы: прогон по КОДУ проверяет код, прогон по МЕТКЕ
+# проверяет платформу. Отменять первый вторым — терять проверку, а не экономить минуты.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.ref }}-${{ github.event.action == 'labeled' && 'label' || 'code' }}
   cancel-in-progress: true
 
 permissions:
@@ -49,6 +64,9 @@ permissions:
 
 jobs:
   gates:
+    # Навешивание метки — не изменение кода. Без этого условия каждый клик по метке поднимал бы
+    # весь шестиминутный набор заново, ничего нового не проверив.
+    if: github.event_name != 'pull_request' || github.event.action != 'labeled'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -66,12 +84,45 @@ jobs:
         run: npm ci
         timeout-minutes: 5
 
-      # Harnesses. `--min=1` is inside the script and it is load-bearing: `vigiles test` given a
-      # DIRECTORY (or a bare `.`) exits 0 having executed nothing, which reads exactly like a
-      # clean suite. Measured 2026-09-11 in the consumer repo: `vigiles test eslint-rules/` →
-      # "0 passed, 1 skipped", RC=0.
+      # Harnesses. `--min=1` is inside the script: it refuses a run where NOTHING matched.
+      #
+      # 🔴 ЧТО ОНО НЕ ДЕЛАЕТ, вопреки тому, что здесь было написано до 17.09: от каталога в
+      # аргументе оно НЕ защищает. Замер: `npx vigiles test . --min=1` → `0 passed, 1 skipped`,
+      # **RC=0** — каталог существует, дискавери берёт его за файл, и он засчитывается в
+      # минимум. Прежняя редакция называла `--min=1` «load-bearing» ровно против этого случая,
+      # то есть утверждала защиту, которой нет. От этого случая защищает `--no-skip` ниже.
+      # 🔴 THE `claude` CLI IS A TEST DEPENDENCY HERE, and its absence was NOT harmless.
+      # `plan-paper-timeline.effects.harness.mjs` spawns the real agent binary; without it the
+      # harness SKIPS, the skip exits 0 through `vigiles test`, and the mutation driver read that
+      # as "the mutation survived". Measured 2026-09-15 on run 34966606186: two survivors in CI,
+      # zero locally, the difference being this binary and nothing about the code.
+      #
+      # The driver now REFUSES a battery whose harness skips (lib/mutation-driver.mjs), so the
+      # wrong diagnosis is gone either way. This step is the other half: it restores the evidence
+      # instead of settling for an honest "no evidence". No API key — the tier drives a scripted
+      # stand-in, which is why it costs seconds and $0.
+      # 🔴 DELIBERATELY UNPINNED, and since issue #7 that is finally honest. The tier exists to
+      # notice upstream moving, so a pin would defeat it — but until the version was OBSERVED
+      # rather than probed for, an unpinned install meant the assertions characterized whatever
+      # shipped that morning while the docblock named 2.1.227 (measured drift: 2.1.273). The run
+      # now prints both numbers, so the log says which version the green belongs to.
+      - name: the agent binary the effects tier observes
+        run: npm i -g @anthropic-ai/claude-code
+        timeout-minutes: 3
+
+      # 🔴 `--no-skip` ЗДЕСЬ, И ИМЕННО ПОСЛЕ УСТАНОВКИ ВЫШЕ. Замер 17.09: без него пропуск —
+      # зелёный, а статус `skip` получает НЕ ТОЛЬКО объявленный автором `skip()`, но и файл,
+      # который не смог ЗАГРУЗИТЬСЯ. То есть один флаг закрывает обе двери разом.
+      #
+      # ⚠️ Порядок шагов был неверен и делал установку выше почти бессмысленной: `npm test`
+      # стоял ДО неё, поэтому ярус эффектов в этом джобе пропускался всегда, а бинарь
+      # доставался только мутационным батареям. Комментарий про «its absence was NOT harmless»
+      # описывал ровно этот вред и при этом сам от него не защищал.
+      #
+      # ⚠️ И флаг стоит В ШАГЕ, а не в `package.json`: джоб `macos` ниже гоняет тот же `npm test`
+      # БЕЗ установки бинаря, там пропуск законен, и общий флаг покрасил бы его напрасно.
       - name: npm test
-        run: npm test
+        run: npm test -- --no-skip
 
       # The rules themselves, over this repository's own fixtures. Two of the four fixtures are
       # DEFECTIVE ON PURPOSE, so a healthy checkout reports warnings here and still exits 0 —
@@ -106,24 +157,67 @@ jobs:
       - name: npm run check:globs
         run: npm run check:globs
 
+      # README называет числа. Этот шаг их ПРОИЗВОДИТ и сверяет — прежде он был нужен, потому
+      # что проза обещала 45 харнессов и 22 батареи при 49 и 26 на диске.
+      - name: npm run check:readme
+        run: npm run check:readme
+
       # 45 mutations across 4 batteries. This is what makes the green above mean something: a
       # harness that cannot fail and a harness that passed look identical from outside. The
       # runner DISCOVERS batteries rather than listing them, errors on finding zero, and errors
       # on any harness that has no battery — see scripts/run-mutations.mjs for why (the hand
       # list it replaced had already gone stale by one file, silently).
-      # 🔴 THE `claude` CLI IS A TEST DEPENDENCY HERE, and its absence was NOT harmless.
-      # `plan-paper-timeline.effects.harness.mjs` spawns the real agent binary; without it the
-      # harness SKIPS, the skip exits 0 through `vigiles test`, and the mutation driver read that
-      # as "the mutation survived". Measured 2026-09-15 on run 34966606186: two survivors in CI,
-      # zero locally, the difference being this binary and nothing about the code.
-      #
-      # The driver now REFUSES a battery whose harness skips (lib/mutation-driver.mjs), so the
-      # wrong diagnosis is gone either way. This step is the other half: it restores the evidence
-      # instead of settling for an honest "no evidence". No API key — the tier drives a scripted
-      # stand-in, which is why it costs seconds and $0.
-      - name: the agent binary the effects tier observes
-        run: npm i -g @anthropic-ai/claude-code
-        timeout-minutes: 3
-
       - name: mutation batteries
-        run: npm run test:mutations
+        run: npm run test:sabotage
+
+  # ── macOS ПО МЕТКЕ, А НЕ В МАТРИЦЕ ───────────────────────────────────────────────────────────
+  #
+  # Issue #9: `npm test` был красным ТОЛЬКО на macOS. Причина — `/var` там симлинк на
+  # `/private/var`, поэтому `import.meta.url` резолвится в realpath, а `process.argv[1]` и любой
+  # составленный тестом путь остаются как набраны: один каталог под двумя именами. Починка
+  # (`50d6463`) закреплена правилом ESLint, но правило сторожит ИДИОМУ, а не поведение — на Linux
+  # `realpathSync` тождественна, и снятая обёртка не краснит ни один поведенческий тест. То есть
+  # единственный способ узнать, что харнессы на macOS действительно зелёные, — прогнать их там.
+  #
+  # 🔴 ПОЧЕМУ НЕ ПОСТОЯННАЯ МАТРИЦА. Раннер macOS тарифицируется с МНОЖИТЕЛЕМ 10 к Linux. Для
+  # публичного репозитория минуты не выставляются к оплате, но ставить постоянный десятикратный
+  # джоб ради платформы, на которой здесь никто не разрабатывает, — это плата за то, что меняется
+  # раз в полгода. Метка делает цену решением человека в тот момент, когда он знает, зачем.
+  #
+  # Как пользоваться: повесить на PR метку `osx`. Событие `labeled` поднимет ЭТОТ джоб, а `gates`
+  # выше пропустится — он уже отработал на пуше.
+  #
+  # ⚠️ Гоняется только `npm test`, и это не экономия ради экономии: предмет #9 — харнессы,
+  # читающие временный каталог. Мутационные батареи (242 с) на десятикратном раннере стоили бы
+  # сорока минут Linux-эквивалента и проверяли бы ровно то же, что уже проверено на Linux.
+  macos:
+    if: >
+      github.event_name == 'pull_request' &&
+      contains(github.event.pull_request.labels.*.name, 'osx')
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: npm ci
+        run: npm ci
+        timeout-minutes: 8
+      # Различитель, ради которого джоб и существует: печатает ОБА написания временного корня.
+      # Совпали — значит платформа не та, и зелёный ниже ничего про macOS не говорит.
+      - name: две записи одного каталога — видит ли их эта машина
+        run: |
+          node -e '
+            const { mkdtempSync, realpathSync } = require("node:fs");
+            const { tmpdir } = require("node:os");
+            const { join } = require("node:path");
+            const d = mkdtempSync(join(tmpdir(), "probe-"));
+            console.log("as typed :", d);
+            console.log("realpath :", realpathSync(d));
+            console.log(d === realpathSync(d) ? "СОВПАЛИ — ловушки #9 на этой машине нет"
+                                              : "РАЗОШЛИСЬ — это та платформа, ради которой джоб есть");
+          '
+      - name: npm test
+        run: npm test

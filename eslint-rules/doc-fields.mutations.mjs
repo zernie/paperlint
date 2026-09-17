@@ -60,7 +60,7 @@ process.exit(
       {
         name: "сломанный YAML перестаёт иметь свой вердикт",
         harness: HARNESS,
-        expect: "не разбирается как YAML",
+        expect: "сломанная шапка обязана иметь СВОЙ вердикт",
         disables: "разделение причин — неразбираемая шапка становится неотличимой от тишины",
         edits: [[RULE, 'messageId: "malformed",\n                data: { why: e.reason', 'messageId: "missing",\n                data: { why: e.reason']],
       },

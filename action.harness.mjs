@@ -11,7 +11,7 @@
  * A guard only ever observed silent is indistinguishable from a dead one.
  */
 import assert from "node:assert/strict";
-import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdtempSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,13 +20,13 @@ import * as yaml from "js-yaml";
 import { guard } from "./scripts/eslint-report-guard.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const TMP = mkdtempSync(join(tmpdir(), "rpp-action-"));
+const TMP = realpathSync(mkdtempSync(join(tmpdir(), "rpp-action-")));
 const action = yaml.load(readFileSync(join(HERE, "action.yml"), "utf8"));
 
 // ── I. SHAPE, read as nodes ───────────────────────────────────────────────────────────────────
 assert.equal(action.runs.using, "composite", "the action must be composite");
 const names = action.runs.steps.map((s) => s.name);
-assert.equal(action.runs.steps.length, 3, `expected 3 steps, got ${action.runs.steps.length}: ${names}`);
+assert.equal(action.runs.steps.length, 4, `expected 4 steps, got ${action.runs.steps.length}: ${names}`);
 
 const eslintStep = action.runs.steps.find((s) => s.name === "eslint");
 assert.ok(eslintStep, `no step named "eslint" among: ${names}`);
@@ -56,7 +56,7 @@ assert.match(
 // So: execute the REAL `run:` block under the REAL flags, with a stub standing in for `npx`, and
 // require that the guard was reached and that ESLint's code came through it.
 const stubbedStepRun = (stubRc) => {
-  const bin = mkdtempSync(join(tmpdir(), "rpp-bin-"));
+  const bin = realpathSync(mkdtempSync(join(tmpdir(), "rpp-bin-")));
   writeFileSync(
     join(bin, "npx"),
     `#!/usr/bin/env bash\n` +
@@ -108,6 +108,33 @@ assert.match(pathStep.run, /command -v texcount/, "the PATH step must probe the 
 
 for (const key of ["config", "paths", "max-warnings", "texcount", "working-directory"])
   assert.ok(action.inputs[key], `input \`${key}\` is missing`);
+
+// ── `paths` is REQUIRED, and the requirement is ENFORCED, not merely declared ─────────────────
+// 🔴 GitHub does not enforce `required: true` for COMPOSITE actions. A caller who omits the
+// input reaches the first step with an empty string and no error at all. So two separate things
+// are asserted here, and neither implies the other: that the contract is DECLARED, and that a
+// step exists which can actually fail on it.
+assert.equal(action.inputs.paths.required, true, "`paths` must be declared required");
+assert.ok(
+  !("default" in action.inputs.paths),
+  "`paths` must have NO default — the old default `.` linted the whole checkout, so a caller " +
+    "who never chose a scope still got a green job over one",
+);
+const pathsGuard = action.runs.steps.find((s) => /paths was actually given/i.test(s.name ?? ""));
+assert.ok(pathsGuard, `no step enforcing the \`paths\` contract among: ${names}`);
+assert.match(
+  pathsGuard.run,
+  /exit 1/,
+  "the `paths` guard must FAIL, not warn — a declaration nobody checks is documentation",
+);
+// И оно обязано стоять ПЕРВЫМ: проверка охвата после установки texlive стоила бы минуты apt
+// ради заведомо неверного вызова.
+assert.equal(
+  action.runs.steps[0].name,
+  pathsGuard.name,
+  "the `paths` guard must run FIRST — checking scope after an apt install burns minutes on a " +
+    "call that was already wrong",
+);
 
 // ── II. BEHAVIOUR of the guard — both halves, on fixtures ─────────────────────────────────────
 const fixture = (name, body) => {

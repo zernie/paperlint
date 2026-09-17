@@ -29,7 +29,7 @@
  */
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -38,7 +38,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 
 const ROOT = consumerRoot();
 const SCRIPT = join(HERE, "check-provenance.mjs");
-const tmp = mkdtempSync(join(tmpdir(), "prov-harness-"));
+const tmp = realpathSync(mkdtempSync(join(tmpdir(), "prov-harness-")));
 
 /** Run the gate over a fixture and return the set of finding kinds it reported. */
 function kinds(dir) {

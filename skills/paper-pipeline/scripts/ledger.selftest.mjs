@@ -7,12 +7,12 @@
 //
 //   node .claude/skills/paper-pipeline/scripts/ledger.selftest.mjs
 
-import { mkdtempSync, writeFileSync, rmSync, readFileSync, appendFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, rmSync, readFileSync, appendFileSync, existsSync, realpathSync } from 'node:fs';
 import { consumerSkillsDir } from './consumer.mjs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const tmp = mkdtempSync(join(tmpdir(), 'ledger-selftest-'));
+const tmp = realpathSync(mkdtempSync(join(tmpdir(), 'ledger-selftest-')));
 const paper = join(tmp, 'a-paper');
 
 // 🔴 Point the ledger at a throwaway file BEFORE importing it. The first version wrote to the real

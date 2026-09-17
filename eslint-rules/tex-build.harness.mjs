@@ -62,6 +62,7 @@ import {
   readFileSync,
   rmSync,
   writeFileSync,
+  realpathSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
@@ -72,7 +73,7 @@ const ROOT = join(HERE, ".."); // eslint-rules → repository root
 const RULES = join(HERE, "tex-build.mjs");
 assert.ok(existsSync(RULES), `no entry point for the test: ${RULES}`);
 
-const TMP = mkdtempSync(join(tmpdir(), "tex-build-"));
+const TMP = realpathSync(mkdtempSync(join(tmpdir(), "tex-build-")));
 // Cleanup is registered IMMEDIATELY, not at the end of the file: assertions throw, and an
 // `rmSync` at the bottom never runs in exactly the runs that are red.
 process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));

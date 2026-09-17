@@ -28,7 +28,7 @@
  */
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -37,7 +37,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 
 const ROOT = consumerRoot();
 const SCRIPT = join(HERE, "pipeline-check.mjs");
-const tmp = mkdtempSync(join(tmpdir(), "pipecheck-harness-"));
+const tmp = realpathSync(mkdtempSync(join(tmpdir(), "pipecheck-harness-")));
 
 // The paper source is written NOW, so `newestSourceDate` returns today and the staleness comparison
 // has something real to compare against. Every clean row therefore carries today's date: hard-coding

@@ -41,8 +41,8 @@ const cases = [];
   const m = await on("defect.md");
   assert.equal(m.length, 1, `ожидалась одна находка, пришло ${m.length}: ${JSON.stringify(m)}`);
   assert.equal(m[0].ruleId, "review/findings-cause");
-  assert.match(m[0].message, /3 находок/, "сообщение обязано называть ЧИСЛО находок");
-  assert.match(m[0].message, /ПАЙПЛАЙНЕ/, "и говорить, что чинить надо инструмент, а не абзац");
+  assert.match(m[0].message, /3 findings/, "сообщение обязано называть ЧИСЛО находок");
+  assert.match(m[0].message, /PIPELINE/, "и говорить, что чинить надо инструмент, а не абзац");
   assert.equal(m[0].line, 1, "находка про ФАЙЛ, поэтому позиция — начало документа");
   cases.push("отчёт с находками и без разбора причин → находка, число названо");
 }
