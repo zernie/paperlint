@@ -202,9 +202,10 @@ of flags.
 }
 ```
 
-| key                 | required | what it is                                                                       |
-| ------------------- | -------- | -------------------------------------------------------------------------------- |
+| key                 | required | what it is                                                                         |
+| ------------------- | -------- | ---------------------------------------------------------------------------------- |
 | `papers`            | **yes**  | the directory your papers live in, relative to `rpp.json`. One string or a list.   |
+| `structure`         | no       | which files every paper directory must contain — see below. `false` turns it off.  |
 | `authorListCommand` | no       | prints the author list from your `.bib`, so a rule can compare it with the PDF     |
 | `typographyDebt`    | no       | per-paper allowance of existing typography findings, so the count can only go down |
 | `docFields`         | no       | front-matter fields your review notes must carry, and the values each may hold     |
@@ -214,6 +215,35 @@ of flags.
 
 `papers` is required because the directory is the one thing the tool cannot guess and must not
 default: a default of `"."` turns every run into a green report over the whole checkout.
+
+## Required files
+
+A rule runs on a file it was handed. A file that is missing is never handed to anything — so no
+rule can report it, and a paper directory without `PIPELINE-STATUS.md` gets **zero** rules and a
+clean report. `rpp lint` therefore checks presence itself, before ESLint runs.
+
+Detection is generous and requirements are strict, on purpose. A directory counts as a paper only
+once it already holds one of the marker files, so `research/`, `plans/` and other neighbours in
+the corpus are left alone; an error-level check that fires on a correct tree gets switched off,
+and the real findings leave with it.
+
+```json
+"structure": {
+  "markers":      ["PIPELINE-STATUS.md", "paper.tex", "paper.md", "venue.json"],
+  "require":      ["PIPELINE-STATUS.md"],
+  "requireOneOf": [["paper.tex", "paper.md"]],
+  "ignore":       []
+}
+```
+
+Those are the defaults; you only write the block to change them. They were measured against a
+real five-paper corpus rather than chosen — it passes with zero findings, while adding
+`paper.pdf` to `require` produces two findings on papers that are perfectly fine, which is why it
+is not there.
+
+This is the half [ls-lint](https://ls-lint.org/) cannot do. ls-lint judges the **names** of files
+that exist; it has nothing to compare against for a file that does not. Use both: ls-lint for
+"what is there is named right", this for "what must be there is there".
 
 - `authorListCommand` — the command `paper/author-list` tells you to run when the check is missing.
 - `typographyDebt` — per-paper counts of known typography issues; the rule stays quiet at or below them.

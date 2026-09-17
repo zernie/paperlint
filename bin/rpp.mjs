@@ -29,6 +29,11 @@ import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { join, dirname, resolve, relative } from "node:path";
 import markdown from "@eslint/markdown";
 import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import {
+  checkStructure,
+  formatStructure,
+  asEslintResults,
+} from "./structure.mjs";
 
 import paperStages from "../eslint-rules/paper-stages.mjs";
 import researchQuestion from "../eslint-rules/paper-research-question.mjs";
@@ -353,6 +358,12 @@ export async function run(
     return 2;
   }
 
+  // 🔴 СТРУКТУРА ПРОВЕРЯЕТСЯ ДО ESLint И ОТДЕЛЬНО ОТ НЕГО. Правило вызывается для поданного
+  // файла; пропавший файл не подаётся, поэтому о пропаже не может сообщить никакое правило —
+  // каталог без `PIPELINE-STATUS.md` просто не получает ни одного правила и отчитывается
+  // чисто. Разбор, почему это не лечится плагином структуры для ESLint, — в `structure.mjs`.
+  const structure = checkStructure(paths, opts.structure, { cwd });
+
   let texLanguage = null;
   try {
     ({ texLanguage } = await import("../eslint-rules/latex-language.mjs"));
@@ -391,12 +402,21 @@ export async function run(
     return 1;
   }
 
-  if (a.json) log(JSON.stringify(results, null, 1));
+  if (a.json)
+    log(JSON.stringify([...asEslintResults(structure), ...results], null, 1));
   else {
+    // Пропажи печатаются ПЕРВЫМИ: они объясняют, почему отчёт ниже может быть подозрительно
+    // коротким. Обратный порядок читался бы как «всё чисто, а, и ещё вот».
+    if (structure.length > 0) log(formatStructure(structure));
     const out = await (await eslint.loadFormatter("stylish")).format(results);
-    log(out.trim() || `✓ ${results.length} file(s) checked, no findings`);
+    log(
+      out.trim() ||
+        (structure.length > 0
+          ? ""
+          : `✓ ${results.length} file(s) checked, no findings`),
+    );
   }
-  return results.some((r) => r.errorCount > 0) ? 1 : 0;
+  return structure.length > 0 || results.some((r) => r.errorCount > 0) ? 1 : 0;
 }
 
 // 🔴 `isMain`, А НЕ СРАВНЕНИЕ СТРОК. Первая редакция писала

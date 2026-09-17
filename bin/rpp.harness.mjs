@@ -371,6 +371,64 @@ check(
   }
 }
 
+// ── СТРУКТУРА ДОЕЗЖАЕТ ДО КОМАНДЫ ──────────────────────────────────────────────────────
+//
+// `structure.mjs` проверен отдельно и целиком (`structure.harness.mjs`). Здесь — ровно один
+// факт, которого тот харнесс знать не может: что модуль ПОДКЛЮЧЁН. Корректный модуль, забытый
+// в `run()`, даёт ноль находок и выглядит как чистый корпус.
+{
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-wired-")));
+  try {
+    const paper = join(root, "papers", "orphan");
+    mkdirSync(paper, { recursive: true });
+    // Маркер есть, табеля нет: НИ ОДНО правило пайплайна по этому каталогу не бежит.
+    writeFileSync(join(paper, "paper.tex"), "\\documentclass{article}\n");
+    writeFileSync(join(root, "rpp.json"), JSON.stringify({ papers: "papers" }));
+
+    const r = await cli(["lint"], root);
+    check(
+      "каталог без табеля — НЕ зелёный ноль: команда выходит единицей",
+      r.code === 1,
+    );
+    check(
+      "и находка напечатана до отчёта ESLint, с последствием",
+      /missing `PIPELINE-STATUS\.md`/.test(r.out) && /ZERO rules/.test(r.out),
+    );
+    check(
+      "и НЕ печатает «no findings» поверх найденного",
+      !/no findings/.test(r.out),
+    );
+
+    const j = await cli(["lint", "--json"], root);
+    check(
+      "`--json` отдаёт ОДИН массив, в котором находка о пропаже лежит рядом с находками правил",
+      (() => {
+        try {
+          const parsed = JSON.parse(j.out.split("\n").slice(1).join("\n"));
+          return parsed.some((x) =>
+            x.messages?.some((m) => m.ruleId === "structure/required-file"),
+          );
+        } catch {
+          return false;
+        }
+      })(),
+    );
+
+    // Парная половина ЗДЕСЬ ЖЕ: дописали табель — проверка замолчала.
+    writeFileSync(
+      join(paper, "PIPELINE-STATUS.md"),
+      "---\nstages: []\n---\n# S\n",
+    );
+    const after = await cli(["lint"], root);
+    check(
+      "дописали табель — жалоба на структуру ушла",
+      !/missing `PIPELINE-STATUS\.md`/.test(after.out),
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
 // ── ЗАПУСК ЧЕРЕЗ СИМЛИНК — единственный способ, которым утилиту зовёт потребитель ───────
 //
 // 🔴 npm кладёт в `node_modules/.bin/` СИМЛИНК. Первая редакция сравнивала `import.meta.url` с
