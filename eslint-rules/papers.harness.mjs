@@ -17,7 +17,7 @@
  * not throw" as success; an exported `tests` object is run by nothing.
  */
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -27,7 +27,7 @@ import { DEFAULT_PAPERS_ROOT, paperFiles, papersRoot } from "./papers.mjs";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
 
-const TMP = mkdtempSync(join(tmpdir(), "papers-root-"));
+const TMP = realpathSync(mkdtempSync(join(tmpdir(), "papers-root-")));
 // Registered immediately, not at the end: assertions throw, and cleanup at the bottom of a
 // file never runs in exactly the runs that are red.
 process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));

@@ -40,14 +40,14 @@
  */
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 const SCRIPT = join(HERE, "round-diff.mjs");
-const tmp = mkdtempSync(join(tmpdir(), "round-diff-harness-"));
+const tmp = realpathSync(mkdtempSync(join(tmpdir(), "round-diff-harness-")));
 
 
 // ── the fixture paper ────────────────────────────────────────────────────────────────────────

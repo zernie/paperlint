@@ -26,7 +26,7 @@
 import assert from "node:assert/strict";
 import { runHook } from "vigiles";
 import { checkHookImports } from "vigiles/hook";
-import { mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -59,7 +59,7 @@ const check = (label, cond) => {
  * checkout, which is what `npm install` of a local package does anyway.
  */
 const consumer = (block, { papers = "docs/papers", paper = "alpha" } = {}) => {
-  const dir = mkdtempSync(join(tmpdir(), "rpp-hooks-"));
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), "rpp-hooks-")));
   const nm = join(dir, "node_modules");
   mkdirSync(nm, { recursive: true });
   symlinkSync(join(ROOT, "node_modules", "vigiles"), join(nm, "vigiles"));
@@ -112,7 +112,7 @@ const at = (dir, name, input) =>
  * the hook's cwd».
  */
 const adrift = (dir, name, input) =>
-  runHook(program(name), input, { cwd: mkdtempSync(join(tmpdir(), "drift-")), env: { CLAUDE_PROJECT_DIR: dir } });
+  runHook(program(name), input, { cwd: realpathSync(mkdtempSync(join(tmpdir(), "drift-"))), env: { CLAUDE_PROJECT_DIR: dir } });
 
 /** An injected notice, as the model would receive it — not the returned reaction. */
 const injected = (r) => {

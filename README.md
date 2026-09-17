@@ -8,7 +8,7 @@ used together:
 
 - **24 skills**, one per stage — find a venue, draft, tighten, adversarial review, submit,
   camera-ready. Prose an AI coding agent follows.
-- **10 rules** that check what those stages *claim*: the PDF you say you submitted has the bytes
+- **11 rules** that check what those stages *claim*: the PDF you say you submitted has the bytes
   you declared, the bibliography names the published version's authors, the paper states its
   research question.
 - **3 hooks** that stop a bad edit in the agent's loop — overwriting a frozen submission, letting
@@ -186,7 +186,7 @@ empty, because GitHub does **not** enforce `required:` for composite actions.
 
 ## The rules
 
-<!-- count:rules -->10 today. Severity is yours.
+<!-- count:rules -->11 today. Severity is yours.
 
 | rule | from | fires when |
 |---|---|---|
@@ -200,6 +200,7 @@ empty, because GitHub does **not** enforce `required:` for composite actions.
 | `doc/fields` | `doc-fields.mjs` | frontmatter is missing a declared field, or carries a value outside the declared set |
 | `review/findings-cause` | `review-findings-cause.mjs` | a review report with findings does not say what let them through |
 | `review/cold-read-cause` | `cold-read-cause.mjs` | an open re-read finding does not name its cause |
+| `local/temp-root-realpath` | `temp-root-realpath.mjs` | a temp root taken from `tmpdir()` is not resolved to its realpath where it is created — on macOS `/var` is a symlink, so one directory gets two spellings and every path comparison built on it compares them |
 
 ## Words this page uses
 
@@ -223,8 +224,8 @@ unaffected.
 
 Every rule has a harness proving **both halves** — it fires on a planted defect *and* stays silent
 on clean input — and a battery that removes one load-bearing property and demands the harness go
-red at the assertion that property belongs to. <!-- count:harnesses -->51 harnesses,
-<!-- count:batteries -->28 batteries.
+red at the assertion that property belongs to. <!-- count:harnesses -->52 harnesses,
+<!-- count:batteries -->29 batteries.
 
 CI refuses a harness that no battery can kill, because silence is the success state of every check
 here: "it passed" and "it cannot fail" look identical from outside. It caught a real one on the way

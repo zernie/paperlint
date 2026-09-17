@@ -41,7 +41,7 @@
  *
  * Cost: $0 (scripted mock model, no API key). Wall clock ~30-60s for one CLI spawn.
  */
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -257,7 +257,7 @@ async function prescribedCall() {
 }
 
 const prescribed = await prescribedCall();
-const logDir = mkdtempSync(join(tmpdir(), "ppt-effects-"));
+const logDir = realpathSync(mkdtempSync(join(tmpdir(), "ppt-effects-")));
 const callLog = join(logDir, "calls.jsonl");
 
 try {

@@ -11,7 +11,7 @@
  * A guard only ever observed silent is indistinguishable from a dead one.
  */
 import assert from "node:assert/strict";
-import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdtempSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,7 +20,7 @@ import * as yaml from "js-yaml";
 import { guard } from "./scripts/eslint-report-guard.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const TMP = mkdtempSync(join(tmpdir(), "rpp-action-"));
+const TMP = realpathSync(mkdtempSync(join(tmpdir(), "rpp-action-")));
 const action = yaml.load(readFileSync(join(HERE, "action.yml"), "utf8"));
 
 // ── I. SHAPE, read as nodes ───────────────────────────────────────────────────────────────────
@@ -56,7 +56,7 @@ assert.match(
 // So: execute the REAL `run:` block under the REAL flags, with a stub standing in for `npx`, and
 // require that the guard was reached and that ESLint's code came through it.
 const stubbedStepRun = (stubRc) => {
-  const bin = mkdtempSync(join(tmpdir(), "rpp-bin-"));
+  const bin = realpathSync(mkdtempSync(join(tmpdir(), "rpp-bin-")));
   writeFileSync(
     join(bin, "npx"),
     `#!/usr/bin/env bash\n` +

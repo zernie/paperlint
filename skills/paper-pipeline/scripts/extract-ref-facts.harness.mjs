@@ -29,6 +29,7 @@ import {
   readdirSync,
   rmSync,
   writeFileSync,
+  realpathSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -66,7 +67,7 @@ const REAL_PAPERS = existsSync(PAPERS_ROOT)
       .map((e) => e.name)
   : [];
 
-const TMP = mkdtempSync(join(tmpdir(), "extract-ref-facts-"));
+const TMP = realpathSync(mkdtempSync(join(tmpdir(), "extract-ref-facts-")));
 // Уборка вешается СРАЗУ: ассерты бросают, и «rmSync внизу файла» не выполняется ровно в тех
 // прогонах, которые красные.
 process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));

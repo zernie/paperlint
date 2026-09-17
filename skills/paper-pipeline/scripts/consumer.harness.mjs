@@ -18,7 +18,7 @@
  * matches nothing and every check built on it reports zero findings.
  */
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -36,7 +36,7 @@ import {
 } from "./consumer.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const TMP = mkdtempSync(join(tmpdir(), "consumer-harness-"));
+const TMP = realpathSync(mkdtempSync(join(tmpdir(), "consumer-harness-")));
 process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
 
 /** A throwaway consumer repository with the given `research-paper-pipeline` block (or none). */

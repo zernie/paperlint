@@ -21,7 +21,7 @@
  */
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -30,7 +30,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 
 const ROOT = consumerRoot();
 const SCRIPT = join(HERE, "artifact-coverage.mjs");
-const tmp = mkdtempSync(join(tmpdir(), "artifact-harness-"));
+const tmp = realpathSync(mkdtempSync(join(tmpdir(), "artifact-harness-")));
 
 function run(dir, flagsOnly = true) {
   const argv = flagsOnly ? [SCRIPT, dir, "--flags-only"] : [SCRIPT, dir];

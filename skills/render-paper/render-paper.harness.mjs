@@ -27,6 +27,7 @@ import {
   readFileSync,
   readdirSync,
   writeFileSync,
+  realpathSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
@@ -139,7 +140,7 @@ for (const pkg of ["texlive-fonts-extra", "texlive-plain-generic"]) {
   // `paper-guards.tex`: он проверяет, что резолв не зависит от cwd, а не что файл существует.
   // Без кандидата проверять нечего, и это печатается, а не проглатывается.
   if (candidates.length > 0) {
-    const outside = mkdtempSync(join(tmpdir(), "venues-cwd-"));
+    const outside = realpathSync(mkdtempSync(join(tmpdir(), "venues-cwd-")));
     const env = { ...process.env };
     delete env.CLAUDE_PROJECT_DIR;
     const r = run(["--print-venues"], { cwd: outside, env });
@@ -173,7 +174,7 @@ for (const pkg of ["texlive-fonts-extra", "texlive-plain-generic"]) {
   // ничего не разрешилось ⇒ exit 2 + имя недостающего файла. ⚠️ Что эта форма больше НЕ
   // проверяет: что пустой корень потребителя не заставит скрипт врать, — и не должна, потому
   // что такой корень теперь законно перекрывается копией в пакете.
-  const empty = mkdtempSync(join(tmpdir(), "venues-none-"));
+  const empty = realpathSync(mkdtempSync(join(tmpdir(), "venues-none-")));
   const lonely = join(empty, "check-render.sh");
   copyFileSync(CHECK, lonely);
   const none = spawnSync("bash", [lonely, "--print-venues"], {
@@ -191,7 +192,7 @@ for (const pkg of ["texlive-fonts-extra", "texlive-plain-generic"]) {
   // Половина третья — ПОРЯДОК ступеней. Он не косметика: в день переезда обе ступени будут
   // истинны одновременно, и победить обязан пакет, иначе потребитель молча продолжит собирать
   // со своей старой копией. Подкладываем ОБА кандидата и смотрим, какой выбран.
-  const both = mkdtempSync(join(tmpdir(), "venues-both-"));
+  const both = realpathSync(mkdtempSync(join(tmpdir(), "venues-both-")));
   const pkgVenues = join(
     both,
     "node_modules",

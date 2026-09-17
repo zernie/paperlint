@@ -49,6 +49,7 @@ import {
   readFileSync,
   rmSync,
   writeFileSync,
+  realpathSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
@@ -61,7 +62,7 @@ assert.ok(existsSync(LANG), `no entry point for the test: ${LANG}`);
 
 const { texLanguage, texToMdast } = await import(LANG);
 
-const TMP = mkdtempSync(join(tmpdir(), "latex-language-"));
+const TMP = realpathSync(mkdtempSync(join(tmpdir(), "latex-language-")));
 // Cleanup is registered IMMEDIATELY, not at the end of the file: assertions throw, and an
 // `rmSync` at the bottom never runs in exactly the runs that are red.
 process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));

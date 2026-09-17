@@ -34,7 +34,7 @@
  */
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -44,7 +44,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = consumerRoot();
 const SCRIPT = join(HERE, "population-map.mjs");
 const SELFTEST = join(HERE, "population-map.selftest.mjs");
-const tmp = mkdtempSync(join(tmpdir(), "popmap-harness-"));
+const tmp = realpathSync(mkdtempSync(join(tmpdir(), "popmap-harness-")));
 
 /** Run a node script; never throws on a non-zero exit. */
 function run(argv) {

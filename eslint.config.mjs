@@ -15,6 +15,7 @@ import { texLanguage } from "./eslint-rules/latex-language.mjs";
 import texBuild from "./eslint-rules/tex-build.mjs";
 import markdown from "@eslint/markdown";
 import reviewRules from "./eslint-rules/review-findings-cause.mjs";
+import localRules from "./eslint-rules/temp-root-realpath.mjs";
 
 export default [
   /**
@@ -46,7 +47,15 @@ export default [
   {
     files: ["**/*.mjs"],
     languageOptions: { ecmaVersion: 2024, sourceType: "module" },
+    plugins: { local: localRules },
     rules: {
+      // 🔴 `error`, И ЭТО РЕШЕНИЕ, А НЕ УМОЛЧАНИЕ. Правило открывается ГЕЙТОМ на чистом
+      // корпусе: все пятнадцать площадок разрешены в том же коммите, поэтому долга, который
+      // пришлось бы глушить, нет. Строже того: дефект, который оно ловит, ВОСПРОИЗВОДИМ
+      // ТОЛЬКО НА macOS, а CI здесь ровно один — `ubuntu-latest`. То есть на Linux это
+      // единственный сторож, который вообще может покраснеть, и `warn` означал бы, что его
+      // никто никогда не увидит: `eslint .` выходит нулём на предупреждениях.
+      "local/temp-root-realpath": "error",
       // Мёртвый импорт — не стиль, а след незаконченной правки: он говорит, что файл когда-то
       // делал что-то ещё. Пятнадцать таких и нашлись переездом.
       "no-unused-vars": "error",
