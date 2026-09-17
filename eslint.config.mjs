@@ -63,9 +63,10 @@ export default [
       // above: this one does NOT open on a clean corpus. Two shipped modules print a command
       // for a human that names an install-specific path, and neither is fixable by the
       // answer the skills get — a printed command has to be resolved through the port at
-      // runtime. The line is held by a ratchet in the harness, which permits today's two and
-      // refuses a third; the severity only keeps `npx eslint .` from being red on a healthy
-      // clone, which is how a rule gets switched off and its binary neighbours ignored.
+      // runtime. Nothing freezes that number: a ratchet would say "at least not worse" on the
+      // same day the rule was written, which is how a removal turns into a decision to keep.
+      // The severity only keeps `npx eslint .` from being red on a healthy clone, which is how
+      // a rule gets switched off and its binary neighbours ignored with it.
       "port/js-install-path": "warn",
       // 🔴 `error`, И ЭТО РЕШЕНИЕ, А НЕ УМОЛЧАНИЕ. Правило открывается ГЕЙТОМ на чистом
       // корпусе: все пятнадцать площадок разрешены в том же коммите, поэтому долга, который
@@ -115,8 +116,9 @@ export default [
    *
    * The severity is a statement about the CORPUS, exactly as in the .tex block below: the
    * finding itself is binary, but the corpus carries known debt that cannot be paid in the
-   * commit that introduces the rule. `npm test` holds the ratchet, so the number may fall
-   * and never rise; `warn` keeps a clean clone from being red in the meantime.
+   * commit that introduces the rule. That debt is an ISSUE with an owner, deliberately not a
+   * frozen constant in a test — see the harness for why. `warn` keeps a clean clone from being
+   * red until the paths are gone; when they are, this line becomes `error`.
    */
   {
     files: ["skills/**/*.md"],

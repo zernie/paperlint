@@ -88,12 +88,46 @@ merge orphans branch commits and `gc` collects them — measured here, of four r
 still resolved ninety minutes later.
 
 ```bash
-npm i -D github:zernie/research-paper-pipeline#8a06e4c
+npm i -D github:zernie/research-paper-pipeline#1091efd
 ```
 
 Needs **Node ≥ 22.13** and nothing else — ESLint and the markdown language come with the package,
 because the command runs them for you. Once a version is published this becomes
 `npm i -D research-paper-pipeline`, and nothing else changes.
+
+### The hooks, if you want them
+
+Three hooks ship with the package: a `PreToolUse` gate that refuses to let a paper source be
+written from Bash (which would skip every `PostToolUse` check), and two `PostToolUse` nudges. They
+need [`vigiles`](https://github.com/zernie/vigiles) in your project — it is the runtime that
+executes them:
+
+```bash
+npm i -D vigiles
+```
+
+Then install the plugin, which writes the wiring for you:
+
+```
+/plugin marketplace add zernie/research-paper-pipeline
+/plugin install research-paper-pipeline
+```
+
+🔴 **The plugin contains no code — it is wiring, and nothing else.** Its commands point at the npm
+copy in your own project through `${CLAUDE_PROJECT_DIR}`. That is deliberate: Claude Code installs a
+plugin's dependencies itself, *"only when the plugin's root directory contains both a package.json
+and a supported lockfile"*, with a **60-second timeout**, and *"a failed or skipped install never
+blocks the plugin"*. A plugin that carried this package's own lockfile — 251 packages, there for the
+ESLint rules — could therefore load with a partial tree and hooks that fail silently. `plugin/` has
+no `package.json`, so that install does not run at all.
+
+If you would rather not install the plugin, the same three lines go in `.claude/settings.json` by
+hand; `plugin/hooks/hooks.json` is exactly what to copy.
+
+⚠️ **Skills do not come through the plugin**, on purpose — they name their scripts by a path that
+only exists in an npm install ([#19](https://github.com/zernie/research-paper-pipeline/issues/19)),
+so a plugin-only install would give you skills whose first command fails. They arrive with the npm
+package, where those paths resolve.
 
 ## Use it
 
@@ -251,7 +285,8 @@ Licensing differs too: that suite is CC BY-NC 4.0, this is MIT.
 ```
 eslint-rules/   the rules, each with its .harness.mjs and .mutations.mjs beside it
 lib/            shared readers — markdown, skill corpus, the mutation driver
-hooks/          three hooks for vigiles
+hooks/          three hooks for vigiles — the code
+plugin/         the Claude Code plugin: wiring for those hooks, no code, no package.json
 skills/         24 stage skills
 scripts/        this repo's own gates
 action.yml      the CI composite action
