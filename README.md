@@ -8,7 +8,7 @@ used together:
 
 - **24 skills**, one per stage — find a venue, draft, tighten, adversarial review, submit,
   camera-ready. Prose an AI coding agent follows.
-- **11 rules** that check what those stages *claim*: the PDF you say you submitted has the bytes
+- **13 rules** that check what those stages *claim*: the PDF you say you submitted has the bytes
   you declared, the bibliography names the published version's authors, the paper states its
   research question.
 - **3 hooks** that stop a bad edit in the agent's loop — overwriting a frozen submission, letting
@@ -186,7 +186,7 @@ empty, because GitHub does **not** enforce `required:` for composite actions.
 
 ## The rules
 
-<!-- count:rules -->11 today. Severity is yours.
+<!-- count:rules -->13 today. Severity is yours.
 
 | rule | from | fires when |
 |---|---|---|
@@ -224,8 +224,8 @@ unaffected.
 
 Every rule has a harness proving **both halves** — it fires on a planted defect *and* stays silent
 on clean input — and a battery that removes one load-bearing property and demands the harness go
-red at the assertion that property belongs to. <!-- count:harnesses -->53 harnesses,
-<!-- count:batteries -->30 batteries.
+red at the assertion that property belongs to. <!-- count:harnesses -->54 harnesses,
+<!-- count:batteries -->31 batteries.
 
 CI refuses a harness that no battery can kill, because silence is the success state of every check
 here: "it passed" and "it cannot fail" look identical from outside. It caught a real one on the way

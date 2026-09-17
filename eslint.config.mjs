@@ -16,8 +16,18 @@ import texBuild from "./eslint-rules/tex-build.mjs";
 import markdown from "@eslint/markdown";
 import reviewRules from "./eslint-rules/review-findings-cause.mjs";
 import localRules from "./eslint-rules/temp-root-realpath.mjs";
+import portRules from "./eslint-rules/install-path-literals.mjs";
 
 export default [
+  // 🔴 TRANSIENT DIRECTORIES ARE NOT THE CORPUS, and leaving them in is a RACE, not untidiness.
+  // `paper-stages.harness.mjs` creates a temp tree under fixtures and removes it when done,
+  // while `latex-language.harness.mjs` lints the whole repository to prove its glob matches
+  // real files. Run in parallel, ESLint enumerates a path and then reads it, and the file can
+  // be gone in between: ENOENT, in a harness that has nothing to do with either.
+  //
+  // Measured 2026-09-17: the race had been latent and surfaced the moment a 54th harness
+  // shifted the scheduling. Nothing about the new harness was wrong — which is the point.
+  { ignores: [".tmp-stages-src-*/", "fixtures/.tmp-*/"] },
   /**
    * 🔴 ЭТОТ БЛОК — ПРО САМ ПАКЕТ, и до 2026-09-15 его здесь не было: конфиг нёс ровно один
    * блок для `.tex` (глоб внутри этого комментария не привожу: последовательность
@@ -47,8 +57,16 @@ export default [
   {
     files: ["**/*.mjs"],
     languageOptions: { ecmaVersion: 2024, sourceType: "module" },
-    plugins: { local: localRules },
+    plugins: { local: localRules, port: portRules },
     rules: {
+      // Rule 10's mechanical half, code side. `warn` and not `error`, unlike its neighbour
+      // above: this one does NOT open on a clean corpus. Two shipped modules print a command
+      // for a human that names an install-specific path, and neither is fixable by the
+      // answer the skills get — a printed command has to be resolved through the port at
+      // runtime. The line is held by a ratchet in the harness, which permits today's two and
+      // refuses a third; the severity only keeps `npx eslint .` from being red on a healthy
+      // clone, which is how a rule gets switched off and its binary neighbours ignored.
+      "port/js-install-path": "warn",
       // 🔴 `error`, И ЭТО РЕШЕНИЕ, А НЕ УМОЛЧАНИЕ. Правило открывается ГЕЙТОМ на чистом
       // корпусе: все пятнадцать площадок разрешены в том же коммите, поэтому долга, который
       // пришлось бы глушить, нет. Строже того: дефект, который оно ловит, ВОСПРОИЗВОДИМ
@@ -89,6 +107,23 @@ export default [
     language: "markdown/gfm",
     languageOptions: { frontmatter: "yaml" },
     rules: { "review/findings-cause": "warn" },
+  },
+  /**
+   * Rule 10's mechanical half, prose side — and this is where the debt actually is: 76
+   * findings across 29 skills on a healthy checkout, every one of them a command that
+   * resolves in one delivery channel and is absent in another.
+   *
+   * The severity is a statement about the CORPUS, exactly as in the .tex block below: the
+   * finding itself is binary, but the corpus carries known debt that cannot be paid in the
+   * commit that introduces the rule. `npm test` holds the ratchet, so the number may fall
+   * and never rise; `warn` keeps a clean clone from being red in the meantime.
+   */
+  {
+    files: ["skills/**/*.md"],
+    plugins: { markdown, port: portRules },
+    language: "markdown/gfm",
+    languageOptions: { frontmatter: "yaml" },
+    rules: { "port/md-install-path": "warn" },
   },
   {
     files: ["**/*.tex"],
