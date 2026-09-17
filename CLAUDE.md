@@ -158,8 +158,32 @@ two standard channels already do, for free:
 
 | what ships | standard channel | user's side |
 |---|---|---|
-| skills | `.claude-plugin/marketplace.json` + `plugin.json` | `/plugin marketplace add <owner>/<repo>` then `/plugin install` |
+| skills | `.claude-plugin/marketplace.json` + `plugin.json` | `/plugin marketplace add <owner>/<repo>` then `/plugin install` **plus the npm package beside it — see below** |
 | ESLint rules | an npm package | `npm i -D <pkg>` + a few lines in `eslint.config.mjs` |
+
+🔴 **THE TWO ROWS ARE NOT INDEPENDENT, AND THE TABLE READ AS IF THEY WERE** (issue #8, counted
+again 2026-09-17). The marketplace row needs no npm — that is true of the CHANNEL and false of
+what travels through it:
+
+```
+$ ls skills/*/SKILL.md | wc -l                      24
+$ grep -l "paper-pipeline/scripts" skills/*/SKILL.md | wc -l   23
+```
+
+Twenty-three of twenty-four skills name `paper-pipeline/scripts` in their own prose — the paths
+the model is told to run. Those resolve through the symlink into
+`node_modules/research-paper-pipeline/`, i.e. back through the npm channel. The single
+self-contained skill is `osf-artifact-upload` (52 lines, talks only to the OSF API).
+
+**So a consumer who installs the plugin and nothing else gets 24 skills of which 23 point at
+scripts that are not there.** Nothing fails at install time; it fails later, in the middle of a
+session, as a path that does not exist.
+
+⚠️ **This is a statement of fact, not a plan.** Making the marketplace channel genuinely
+standalone means either vendoring the scripts into every skill (24 copies of the thing this
+package exists to have ONE of) or rewriting 23 skills to call a binary that the npm package
+provides. Both are real work with real trade-offs; neither is done. Until one of them is, the
+honest instruction is the table above: install both.
 
 Both are measured, not assumed: `vigiles` and `Imbad0202/academic-research-skills` (47k stars) both
 ship `.claude-plugin/marketplace.json`, and ARS advertises install as two commands.
