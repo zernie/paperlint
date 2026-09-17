@@ -64,7 +64,7 @@ export default {
       create(context) {
         const {
           openSection = "^Открыто",
-          causeMarker = "Причина:",
+          causeMarker = "Cause:",
           sinceCreated,
         } = context.options[0] ?? {};
         const title = new RegExp(openSection);

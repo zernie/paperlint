@@ -122,7 +122,8 @@ npx rpp check papers --options rpp.json
   "typographyDebt":    { "papers/my-paper": { "sectionSign": 12 } },
   "docFields":         { "read": { "values": ["full", "abstract", "none"] } },
   "reviewSince":       "2026-08-23",
-  "minFindings":       3
+  "minFindings":       3,
+  "causeMarker":       "Cause:"
 }
 ```
 
@@ -131,6 +132,8 @@ npx rpp check papers --options rpp.json
 - `docFields` — required front-matter fields in review files and their allowed values.
 - `reviewSince` — only review files created on or after this date are checked.
 - `minFindings` — a review with fewer findings than this is not required to name causes.
+- `causeMarker` — the phrase a review uses to name a cause (default `Cause:`). Set it to
+  whatever your reviews actually write, in any language.
 
 ## In CI
 

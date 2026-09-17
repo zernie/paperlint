@@ -155,6 +155,40 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
   );
 }
 
+// ── 3b. ИНСТИТУЦИЯ НЕ ИСЧЕЗАЕТ ──────────────────────────────────────────────
+//
+// `author={{Adversa AI}}` — двойная скобка означает «одно имя целиком, не разбирать». Парсер
+// отдаёт такое как `{name}`, БЕЗ `lastName`, и это верно: у организации фамилии нет.
+// Замер 17.09 на настоящем aisec-2026: одиннадцать записей из пятидесяти одной приходили с
+// `authors = []`, потому что joinName эту форму не знал. Отказ в сторону ТИШИНЫ — сверка по
+// таким записям не находила ничего и выглядела пройденной.
+{
+  const bib = `@misc{inst,
+  author={{Adversa AI}},
+  title={A Report}, year={2026}}
+@misc{inst2,
+  author={{sh-guard contributors}},
+  title={Another}, year={2026}}`;
+  const es = await X.parseBib(bib);
+  assert.deepEqual(
+    es.map((e) => e.authors),
+    [["Adversa AI"], ["sh-guard contributors"]],
+    `институция потеряна или разобрана на части: ${JSON.stringify(es.map((e) => e.authors))}`,
+  );
+  assert.equal(es[0].truncated, false, "институция — это не `and others`");
+}
+
+// ── 3c. …И ОДИНАРНАЯ СКОБКА ПО-ПРЕЖНЕМУ РАЗБИРАЕТСЯ КАК ЧЕЛОВЕК ─────────────
+//
+// Вторая половина. Без неё починка выше неотличима от «перестали разбирать имена вообще»:
+// одинарная скобка — обычный автор, и порядок «Фамилия, Имя» обязан быть развёрнут.
+{
+  const bib = `@misc{human, author={Adversa, Alice}, title={T}, year={2026}}`;
+  const [e] = await X.parseBib(bib);
+  assert.deepEqual(e.authors, ["Alice Adversa"],
+    `одинарная скобка обязана разбираться как человек: ${JSON.stringify(e.authors)}`);
+}
+
 // ── 3. ДЕФЕКТ №3: имя из .bib приводится к порядку «Имя Фамилия» ─────────────
 //
 // В BibTeX пишут `Jimenez, Carlos E.`, и «последний алфавитный токен» такой строки — `e`.

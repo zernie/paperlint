@@ -115,3 +115,49 @@ const cases = [];
 recordCheck(cases.length);
 console.log(`review/findings-cause: ${cases.length} случая:`);
 for (const c of cases) console.log(`  ok  ${c}`);
+
+// ── ПОМЕТКА ЗАДАЁТСЯ ОПЦИЕЙ, А НЕ ЗАШИТА ──────────────────────────────────────────────────────
+//
+// Умолчание английское с 2026-09-17. До этого стояло русское «Причина:», и поменять его было
+// нечем: `causeMarker` не пробрасывался через CLI, так что англоязычный пользователь правило
+// уровня `error` удовлетворить не мог вовсе. Обе половины:
+//   а) с чужой пометкой в опциях отчёт, использующий ЕЁ, проходит;
+//   б) тот же отчёт без опции — находка. Иначе «опция принята» неотличимо от «правило молчит».
+//
+// ⚠️ Форма фикстуры несущая: находки считаются по НУМЕРОВАННЫМ строкам таблицы (и жирным
+// пунктам списка), а не по любому списку. Первая редакция этого блока подложила обычный
+// `- finding one`, правило не сработало ни разу, и ОБЕ половины проходили впустую.
+{
+  const body = [
+    "---", "created: 2026-09-01", "---", "",
+    "| # | что | где |", "|---|---|---|",
+    "| 1 | a | §1 |", "| 2 | b | §2 |", "| 3 | c | §3 |", "",
+    "Причина: the pipeline step that let them through.", "",
+  ].join("\n");
+
+  const lintWith = async (options) => {
+    const e = new ESLint({
+      overrideConfigFile: true,
+      overrideConfig: [
+        {
+          files: ["**/*.md"],
+          plugins: { markdown, review: reviewRules },
+          language: "markdown/gfm",
+          languageOptions: { frontmatter: "yaml" },
+          rules: { "review/findings-cause": ["error", options] },
+        },
+      ],
+    });
+    return (await e.lintText(body, { filePath: join(FIX, "option-probe.md") }))[0].messages;
+  };
+
+  const withOpt = await lintWith({ minFindings: 3, causeMarker: "Причина:" });
+  assert.deepEqual(withOpt, [],
+    `пометка из опций обязана приниматься, пришло: ${JSON.stringify(withOpt)}`);
+
+  const withoutOpt = await lintWith({ minFindings: 3 });
+  assert.equal(withoutOpt.length, 1,
+    "без опции та же пометка НЕ считается причиной — иначе опция ничего не решает");
+  assert.match(withoutOpt[0].message, /Cause:/,
+    "и в тексте находки стоит АНГЛИЙСКОЕ умолчание, а не то, чего в файле нет");
+}

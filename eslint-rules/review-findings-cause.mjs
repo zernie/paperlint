@@ -72,7 +72,7 @@ export default {
         },
       },
       create(context) {
-        const { minFindings = 3, causeMarker = "Причина:", sinceCreated } = context.options[0] ?? {};
+        const { minFindings = 3, causeMarker = "Cause:", sinceCreated } = context.options[0] ?? {};
         let findings = 0;
         let hasCause = false;
         let created = "";

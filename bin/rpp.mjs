@@ -51,7 +51,8 @@ options file (every key optional):
     "typographyDebt":    { "papers/my-paper": { "sectionSign": 12 } },
     "docFields":         { "read": { "values": ["full", "abstract", "none"] } },
     "reviewSince":       "2026-08-23",
-    "minFindings":       3
+    "minFindings":       3,
+    "causeMarker":       "Cause:"
   }
 `;
 
@@ -90,11 +91,24 @@ export function buildConfig(opts = {}, texLanguage) {
       },
       ...md,
       rules: {
+        /*
+         * 🔴 УМОЛЧАНИЕ АНГЛИЙСКОЕ С 2026-09-17. Стояло «Причина:» — русское слово в пакете,
+         * интерфейс которого английский. Правило уровня `error` требовало от человека
+         * дописать в свой файл кириллицу, а поменять пометку было нечем: `causeMarker`
+         * не пробрасывался через CLI вовсе. Единственным выходом было бросить команду и
+         * собирать конфиг ESLint руками — то есть дефект выталкивал ровно на тот путь,
+         * от которого утилита избавляет.
+         * Русская пометка осталась ВЫРАЗИМОЙ, но теперь как значение, а не как умолчание.
+         */
         "review/findings-cause": [
           "error",
-          { minFindings: opts.minFindings ?? 3, ...(opts.reviewSince ? { sinceCreated: opts.reviewSince } : {}) },
+          {
+            minFindings: opts.minFindings ?? 3,
+            ...(opts.causeMarker ? { causeMarker: opts.causeMarker } : {}),
+            ...(opts.reviewSince ? { sinceCreated: opts.reviewSince } : {}),
+          },
         ],
-        "review/cold-read-cause": "warn",
+        "review/cold-read-cause": ["warn", { ...(opts.causeMarker ? { causeMarker: opts.causeMarker } : {}) }],
         ...(opts.docFields ? { "doc/fields": ["warn", { fields: opts.docFields }] } : {}),
       },
     },
@@ -147,7 +161,8 @@ export const RPP_JSON = `{
   "authorListCommand": "node scripts/bib-authors.mjs",
   "typographyDebt": {},
   "docFields": {},
-  "minFindings": 3
+  "minFindings": 3,
+  "causeMarker": "Cause:"
 }
 `;
 
