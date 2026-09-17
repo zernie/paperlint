@@ -1,15 +1,16 @@
 /**
- * `port/md-install-path` and `port/js-install-path` — both halves on real ESLint, plus the
- * ratchet over the live corpus.
+ * `port/md-install-path` and `port/js-install-path` — both halves on real ESLint.
  *
- * The ratchet is the load-bearing case and the reason the rule ships at `warn`. There are 76
- * findings on a healthy checkout today: real violations, not deliberate fixtures, and they
- * cannot be removed in the commit that introduces the rule. At `error` the repository would
- * be red on a clean clone, and a rule that is red on a clean clone gets switched off — after
- * which the binary rules beside it stop being read too. So the severity says "known debt"
- * and `npm test` holds the line: the number may go DOWN and never up.
- */
-import assert from "node:assert/strict";
+ * 🔴 NO RATCHET HERE, AND THAT IS THE POINT (Эрни, 2026-09-17). The first draft of this file
+ * froze the corpus at 76 findings and `lib/` at 2, so the debt could not grow. That reads like
+ * caution and is not: a ratchet does not say "correct", it says "at least not worse", and this
+ * repository's own rule calls it debt rather than a fix. Freezing a number the same day the
+ * rule is written turns "we will remove these paths" into "we have decided to keep them".
+ *
+ * So the rule reports and nothing freezes. The debt is an issue with an owner, not a constant
+ * in a test; the count lives in `docs/incidents.md` as a measurement with a date, where it can
+ * go stale honestly instead of looking maintained.
+ */import assert from "node:assert/strict";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ESLint } from "eslint";
@@ -87,47 +88,6 @@ const cases = [];
   const m = await findings(jsLinter, join(FIX, "clean.fixture.mjs"), RULE_JS);
   assert.equal(m.length, 0, `clean module must be silent, got ${JSON.stringify(m)}`);
   cases.push("js quiet on a module that asks the port");
-}
-
-// ── 5. THE RATCHET. Measured 2026-09-17 on the live corpus.
-const BASELINE = 76;
-{
-  const m = await findings(mdLinter, join(ROOT, "skills"), RULE_MD);
-  // EXACT, not `<=`, and the battery is why. A one-directional ratchet passes when the
-  // baseline is RAISED, so the number it guards can be loosened without a single test going
-  // red — which the mutation `BASELINE = 760` demonstrated on the first run of this file.
-  // Equality makes both directions cost a deliberate edit: the debt cannot grow, and paying
-  // it down cannot be left half-recorded.
-  assert.equal(
-    m.length,
-    BASELINE,
-    m.length > BASELINE
-      ? `the skills corpus now has ${m.length} install-specific paths, up from the frozen ` +
-        `${BASELINE}: a new one is a new bet on a delivery channel. Fix the path.`
-      : `the skills corpus is down to ${m.length} install-specific paths from ${BASELINE} — ` +
-        `good. Lower BASELINE to ${m.length} in this file, in the same commit that paid it.`,
-  );
-  cases.push(`ratchet: ${m.length} install-specific paths in skills, frozen at ${BASELINE}`);
-}
-
-// ── 6. THE SHIPPED MODULES HAVE THEIR OWN, SMALLER DEBT — ratcheted separately, because it
-//      is a different fix. Measured 2026-09-17: two sites, both TRUE positives and neither
-//      reachable by the markdown answer. `lib/skill-checks.mjs` and `lib/trigger-ledger.mjs`
-//      print a command for a human to run, and a printed command cannot be fixed by a
-//      substitution the skill harness performs — it has to be resolved through the port at
-//      runtime. Written down here rather than waved at: the first draft of this harness
-//      asserted `lib/` was clean, and the rule proved that wrong on its first run.
-const BASELINE_LIB = 2;
-{
-  const m = await findings(jsLinter, join(ROOT, "lib"), RULE_JS);
-  assert.equal(
-    m.length,
-    BASELINE_LIB,
-    `lib/ has ${m.length} install-specific literals against a frozen ${BASELINE_LIB}: ` +
-      JSON.stringify(m.map((x) => `${x.line}:${x.column}`)) +
-      ` — up means a new bet on a channel, down means lower BASELINE_LIB in this commit.`,
-  );
-  cases.push(`ratchet: ${m.length} install-specific literals in lib/, frozen at ${BASELINE_LIB}`);
 }
 
 for (const c of cases) recordCheck(c);

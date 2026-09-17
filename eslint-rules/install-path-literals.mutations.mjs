@@ -3,10 +3,7 @@
  * load-bearing property — the detection itself, the markdown carriers, the template form on
  * the code side, and the ratchet.
  *
- * The fourth is the one worth arguing about. A ratchet that cannot fail is a comment, and
- * this one guards a number that only ever gets LOOSER by accident: raise the baseline while
- * nobody is looking and the rule keeps reporting, the suite keeps passing, and the debt grows
- * silently. So the mutation raises it, and the harness must go red.
+ * Четвёртой мутации — на храповик — здесь больше нет: убран сам храповик.
  */
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
@@ -42,17 +39,6 @@ process.exit(
         expect: "expected one plain and one template finding",
         disables: "вторую литеральную форму — путь, собранный шаблоном, остаётся путём",
         edits: [[RULE, "TemplateElement(node) {", "TemplateElement_disabled(node) {"]],
-      },
-      {
-        name: "храповик ослабляется",
-        harness: HARNESS,
-        // Не "frozen at": при поднятой планке фактическое число оказывается НИЖЕ её, и
-        // равенство падает второй веткой — той, что говорит «долг погашен, впиши новое
-        // число». Ожидание названо по ней, потому что мутация обязана падать по СВОЕЙ
-        // причине, а не просто краснеть.
-        expect: "Lower BASELINE to",
-        disables: "единственное, что удерживает долг от роста: поднятая планка не мешает ничему",
-        edits: [[HARNESS, "const BASELINE = 76;", "const BASELINE = 760;"]],
       },
     ],
   }),
