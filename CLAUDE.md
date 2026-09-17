@@ -330,6 +330,34 @@ working, not a defect, exactly as argued below.
 ⚠️ The consumer in this project's own base is unaffected: it declares `vigiles` itself
 (`devDependencies: ^27.2.0`), so nothing about its tree changes.
 
+### The `.bib` parser is optional for the same reason, and the failure says so out loud
+
+`@retorquere/bibtex-parser` is imported at exactly one site
+(`skills/paper-pipeline/scripts/extract-ref-facts.mjs`, and already through a dynamic
+`await import`), and it costs **15 MB of a 56 MB tree**: 9 MB itself, plus
+`wink-eng-lite-web-model` (4 MB, an English NLP model) and `unicode2latex` (2 MB). That is 27%
+of the install for one call that only a consumer extracting bibliography facts ever makes.
+
+| | packages | `du -sm node_modules` |
+|---|---:|---:|
+| after the `vigiles` peer was made optional | 164 | 56 MB |
+| parser moved to an optional peer as well | 149 | **39 MB** |
+
+🔴 **`optionalDependencies` is the wrong entry and was tried first** — npm *installs* those and
+only tolerates failure, so the weight stays. What makes a dependency genuinely opt-in is
+`peerDependencies` + `peerDependenciesMeta: { optional: true }`, the same pair used for `vigiles`.
+It stays in `devDependencies` too, because this package's own harnesses parse `.bib`.
+
+⚠️ A silent skip here would be the worst outcome: a missing checker and a passing one look
+identical, and "the bibliography was not checked" reads as "the bibliography is fine". So the
+absence throws, and the message carries the cure rather than the diagnosis:
+
+```
+разбор .bib требует @retorquere/bibtex-parser — он объявлен ОПЦИОНАЛЬНЫМ, потому что весит 15 МБ…
+   Поставить:  npm i -D @retorquere/bibtex-parser
+   Почему не своя регулярка: замер 26.08 — регулярка давала 0 записей на обоих настоящих файлах…
+```
+
 🔴 **Therefore the pin here and the pin in the consumer move TOGETHER, in one pass.** A major
 mismatch means a hook compiled by one version is executed by another: the stamp does not
 verify, the hook does not load, and `PreToolUse` refuses every command. That already happened
