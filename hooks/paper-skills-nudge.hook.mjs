@@ -33,9 +33,9 @@
 import { experimental_defineReact, tools, provide, notice, nothing } from "vigiles/hook";
 
 /** The key every carrier of this package reads its consumer-specific settings from. */
-const CONFIG_KEY = "research-paper-pipeline";
+export const CONFIG_KEY = "research-paper-pipeline";
 /** The default. A consumer that declares nothing is assumed to keep papers in `papers/`. */
-const DEFAULT_PAPERS_ROOT = "papers";
+export const DEFAULT_PAPERS_ROOT = "papers";
 
 /**
  * The declared papers root, or `null` when it is unusable.

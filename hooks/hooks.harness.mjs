@@ -29,7 +29,7 @@ import { checkHookImports } from "vigiles/hook";
 import { mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const HOOKS = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HOOKS, "..");
@@ -428,23 +428,28 @@ try {
   // ═══════════════════════════════════════════════════════════════════════════
   // 🔴 The carrier's key and default are SPELLED OUT IN ALL THREE FILES, and they have to be: a
   // compiled hook may import only `vigiles/hook`, so a shared module is not available to them.
-  // Duplication that cannot be removed has to be CHECKED instead, and checked by comparing the
-  // captured values against each other rather than by grepping for a literal — a substring
-  // search would find the same text in the prose ABOUT the value one line above it.
+  // Duplication that cannot be removed has to be CHECKED instead.
+  //
+  // 🔴 THE VALUES ARE IMPORTED, NOT READ OUT OF THE SOURCE TEXT. Until 2026-09-18 this block
+  // matched `/^const CONFIG_KEY = "([^"]+)";$/m` against each file — a shadow of the declaration
+  // rather than the declaration, and a shadow has SPELLINGS. Adding `export`, a change with no
+  // effect whatsoever on behaviour, turned the check red; that is how the shadow announced
+  // itself. Widening the pattern to `(?:export )?` was the first fix and it was wrong: it moves
+  // the next break one spelling away (single quotes, an indented declaration, `export {X}` at
+  // the foot of the file) instead of removing the class.
+  //
+  // The real fix was available all along, because the constraint on a compiled hook is on what it
+  // may IMPORT, not on what it may EXPORT. All three export these two values now, so this asks
+  // the module system and compares actual runtime values. No pattern is left to drift, and the
+  // check can no longer match the prose ABOUT the value instead of the value — a comment is not
+  // an export.
   {
-    const seen = SHIPPED.map((f) => {
-      const src = readFileSync(join(HOOKS, f), "utf8");
-      return {
-        f,
-        // `export` ОПЦИОНАЛЕН, и это не послабление. `paper-edit-guard` отдаёт эти значения
-        // наружу намеренно: `rpp doctor` обязан спросить корень статей у САМОГО хука, иначе
-        // заведётся вторая копия логики — ровно тот дефект, о котором doctor и сообщает.
-        // Прежний якорь `^const …` этого не допускал и покраснел на правке, ничего не менявшей
-        // в поведении: он сторожил НАПИСАНИЕ, а не объявление.
-        key: (src.match(/^(?:export )?const CONFIG_KEY = "([^"]+)";$/m) ?? [])[1],
-        def: (src.match(/^(?:export )?const DEFAULT_PAPERS_ROOT = "([^"]+)";$/m) ?? [])[1],
-      };
-    });
+    const seen = await Promise.all(
+      SHIPPED.map(async (f) => {
+        const mod = await import(pathToFileURL(join(HOOKS, f)).href);
+        return { f, key: mod.CONFIG_KEY, def: mod.DEFAULT_PAPERS_ROOT };
+      }),
+    );
     for (const s of seen) {
       check(`${s.f} declares CONFIG_KEY`, typeof s.key === "string" && s.key.length > 0);
       check(`${s.f} declares DEFAULT_PAPERS_ROOT`, typeof s.def === "string" && s.def.length > 0);
