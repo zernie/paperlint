@@ -79,8 +79,8 @@ import { pathToFileURL } from "node:url";
 
 // Re-exported, not re-declared — see the note in `lib/paper-config.mjs`. This file is not a hook
 // and never needed its own copy.
-export { CONFIG_KEY } from "../../../lib/paper-config.mjs";
 import { CONFIG_KEY } from "../../../lib/paper-config.mjs";
+export { CONFIG_KEY };
 
 /**
  * True when `metaUrl` belongs to the module Node was told to execute.
