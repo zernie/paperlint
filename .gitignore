@@ -17,3 +17,8 @@ _build/
 # Замок взаимного исключения прогонов (scripts/exclusive.mjs) — живёт только на время прогона.
 .vigiles/exclusive.lock/
 dist/
+
+# Runtime decision log written by the vigiles hook runner on every deny. It records what
+# happened on THIS machine during THIS run, so it is telemetry, not evidence: committing it
+# would replay one developer's local probe as if it were a property of the package.
+.vigiles/runs.jsonl
