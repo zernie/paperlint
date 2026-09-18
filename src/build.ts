@@ -23,6 +23,10 @@
 import { existsSync, readdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join, relative, extname } from "node:path";
+import type { BuildResult } from "./types.ts";
+
+/** Что запускать и с какими преднастроенными аргументами. */
+export type Interpreter = readonly [bin: string, preArgs: readonly string[]];
 
 /**
  * Порядок ЗНАЧИМ: первый найденный и побеждает. `build.sh` в корне статьи стоит первым, потому
@@ -38,7 +42,10 @@ export const PAPER_MARKERS = [
   "venue.json",
 ];
 
-export function findBuildScript(paperDir, candidates = BUILD_SCRIPTS) {
+export function findBuildScript(
+  paperDir: string,
+  candidates: readonly string[] = BUILD_SCRIPTS,
+): { rel: string; path: string } | null {
   for (const rel of candidates) {
     const p = join(paperDir, rel);
     if (existsSync(p)) return { rel, path: p };
@@ -51,7 +58,7 @@ export function findBuildScript(paperDir, candidates = BUILD_SCRIPTS) {
  * `+x` может не быть вовсе (git хранит его, а распаковка тарбола — не всегда), и тогда прямой
  * запуск падает «Permission denied» по причине, не имеющей отношения к статье.
  */
-export function interpreterFor(scriptPath) {
+export function interpreterFor(scriptPath: string): Interpreter {
   const ext = extname(scriptPath);
   if (ext === ".mjs" || ext === ".js") return [process.execPath, []];
   if (ext === ".py") return ["python3", []];
@@ -60,7 +67,7 @@ export function interpreterFor(scriptPath) {
 
 /** @returns {{dir: string, status: "built"|"failed"|"no-script", script?: string, code?: number}} */
 export function buildPaper(
-  paperDir,
+  paperDir: string,
   {
     candidates = BUILD_SCRIPTS,
     run = spawnSync,
@@ -75,8 +82,13 @@ export function buildPaper(
     // переписал `paper.pdf` в рабочем дереве. Отказ выглядел как успех: вывод сборки на экране
     // легко принять за подробный dry-run.
     dryRun = false,
+  }: {
+    candidates?: readonly string[];
+    run?: typeof spawnSync;
+    cwd?: string;
+    dryRun?: boolean;
   } = {},
-) {
+): BuildResult {
   const found = findBuildScript(paperDir, candidates);
   const dir = relative(cwd, paperDir) || paperDir;
   if (!found) return { dir, status: "no-script" };
@@ -94,7 +106,10 @@ export function buildPaper(
 }
 
 /** Непосредственные подкаталоги, похожие на статью. Скрытые — не статьи. */
-export function papersIn(root, markers = PAPER_MARKERS) {
+export function papersIn(
+  root: string,
+  markers: readonly string[] = PAPER_MARKERS,
+): string[] {
   try {
     return readdirSync(root, { withFileTypes: true })
       .filter((e) => e.isDirectory() && !e.name.startsWith("."))
@@ -105,8 +120,8 @@ export function papersIn(root, markers = PAPER_MARKERS) {
   }
 }
 
-export function formatResults(results) {
-  const line = (r) =>
+export function formatResults(results: readonly BuildResult[]): string {
+  const line = (r: BuildResult): string =>
     r.status === "built"
       ? `  ✓ ${r.dir} — ${r.script}${r.dry ? "  (не запускался: --dry-run)" : ""}`
       : r.status === "failed"
@@ -120,9 +135,13 @@ export function formatResults(results) {
  * случаев и порождало тихий пропуск: «нечего собирать» и «собралось» давали один и тот же
  * зелёный прогон.
  */
-export const anyFailed = (results) => results.some((r) => r.status !== "built");
+export const anyFailed = (results: readonly BuildResult[]): boolean =>
+  results.some((r) => r.status !== "built");
 
-export function remedyFor(results, candidates = BUILD_SCRIPTS) {
+export function remedyFor(
+  results: readonly BuildResult[],
+  candidates: readonly string[] = BUILD_SCRIPTS,
+): string {
   const missing = results.filter((r) => r.status === "no-script");
   if (missing.length === 0) return "";
   return (

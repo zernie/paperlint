@@ -21,7 +21,7 @@ import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { checkStructure, formatStructure, asEslintResults, STRUCTURE_DEFAULTS } =
-  await import(join(HERE, "structure.mjs"));
+  await import(join(HERE, "structure.ts"));
 
 let n = 0;
 const check = (label, cond) => {

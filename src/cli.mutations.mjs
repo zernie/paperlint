@@ -8,8 +8,8 @@ import { runMutations } from "../lib/mutation-driver.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "..");
-const CLI = join(HERE, "rpp.mjs");
-const HARNESS = join(HERE, "rpp.harness.mjs");
+const CLI = join(HERE, "cli.ts");
+const HARNESS = join(HERE, "cli.harness.mjs");
 
 process.exit(
   runMutations({

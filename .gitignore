@@ -16,3 +16,4 @@ _build/
 
 # Замок взаимного исключения прогонов (scripts/exclusive.mjs) — живёт только на время прогона.
 .vigiles/exclusive.lock/
+dist/

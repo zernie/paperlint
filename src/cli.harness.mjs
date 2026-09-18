@@ -27,7 +27,7 @@ import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { run, parseArgs, buildConfig, nextSteps, findConfig, toPaths, runHook } =
-  await import(join(HERE, "rpp.mjs"));
+  await import(join(HERE, "cli.ts"));
 
 let n = 0;
 const check = (label, cond) => {
@@ -607,7 +607,7 @@ check(
   const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-link-")));
   try {
     const link = join(root, "rpp-shim");
-    symlinkSync(join(HERE, "rpp.mjs"), link);
+    symlinkSync(join(HERE, "..", "bin", "rpp.mjs"), link);
     const paper = join(root, "papers", "p");
     mkdirSync(join(paper, "versions"), { recursive: true });
     writeFileSync(

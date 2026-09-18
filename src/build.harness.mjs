@@ -29,7 +29,7 @@ const {
   formatResults,
   anyFailed,
   remedyFor,
-} = await import(join(HERE, "build.mjs"));
+} = await import(join(HERE, "build.ts"));
 
 let n = 0;
 const check = (label, cond) => {

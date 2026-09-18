@@ -58,8 +58,14 @@ assert.doesNotMatch(
 // `--no-config-lookup` is deliberately absent and is NOT missing: the CLI builds its config with
 // `overrideConfigFile: true`, so a consumer's nested config cannot reach the run. The guarantee
 // moved from a flag into the code — assert the code, not the flag.
+//
+// 🔴 AND ASSERT IT IN THE FILE THAT HOLDS IT. This read said `bin/rpp.mjs` until the CLI moved to
+// TypeScript; `bin/rpp.mjs` is now a loader shim and contains no such call, so the assertion went
+// red on a move that changed no behaviour. That redness is the point — the same assertion written
+// as a grep over "the CLI" would have kept passing against whichever file still matched, which is
+// how a check quietly stops watching its subject.
 assert.match(
-  readFileSync(new URL("./bin/rpp.mjs", import.meta.url), "utf8"),
+  readFileSync(new URL("./src/cli.ts", import.meta.url), "utf8"),
   /overrideConfigFile:\s*true/,
   "the CLI must pin its own config, or a consumer's nested config silently changes the rule set",
 );

@@ -22,6 +22,10 @@
  */
 import { readdirSync, existsSync } from "node:fs";
 import { join, relative, basename } from "node:path";
+import type { StructureConfig, StructureFinding } from "./types.ts";
+
+/** Требования после наложения конфига потребителя на умолчания. */
+type Rules = Required<StructureConfig>;
 
 /**
  * Умолчания ЗАМЕРЕНЫ по живому корпусу из пяти каталогов статей, а не выбраны по вкусу: при
@@ -38,12 +42,14 @@ export const STRUCTURE_DEFAULTS = {
 };
 
 /** Конфиг потребителя поверх умолчаний; `structure: false` выключает проверку целиком. */
-export function structureRules(structure) {
+export function structureRules(
+  structure: StructureConfig | false | undefined,
+): Rules | null {
   if (structure === false) return null;
   return { ...STRUCTURE_DEFAULTS, ...(structure ?? {}) };
 }
 
-const dirsIn = (dir) => {
+const dirsIn = (dir: string): string[] => {
   try {
     return readdirSync(dir, { withFileTypes: true })
       .filter((e) => e.isDirectory() && !e.name.startsWith("."))
@@ -57,11 +63,15 @@ const dirsIn = (dir) => {
 /**
  * @returns {{file: string, message: string}[]} находки, по одной на пропавший файл.
  */
-export function checkStructure(paths, structure, { cwd = process.cwd() } = {}) {
+export function checkStructure(
+  paths: readonly string[],
+  structure: StructureConfig | false | undefined,
+  { cwd = process.cwd() }: { cwd?: string } = {},
+): StructureFinding[] {
   const rules = structureRules(structure);
   if (!rules) return [];
-  const findings = [];
-  const say = (p) => relative(cwd, p) || p;
+  const findings: StructureFinding[] = [];
+  const say = (p: string): string => relative(cwd, p) || p;
 
   for (const root of paths) {
     for (const name of dirsIn(root)) {
@@ -69,7 +79,7 @@ export function checkStructure(paths, structure, { cwd = process.cwd() } = {}) {
       const dir = join(root, name);
 
       // Щедрое обнаружение: без единого маркера это просто соседний каталог, а не статья.
-      if (!rules.markers.some((m) => existsSync(join(dir, m)))) continue;
+      if (!rules.markers.some((m: string) => existsSync(join(dir, m)))) continue;
 
       for (const required of rules.require)
         if (!existsSync(join(dir, required)))
@@ -79,10 +89,10 @@ export function checkStructure(paths, structure, { cwd = process.cwd() } = {}) {
           });
 
       for (const group of rules.requireOneOf)
-        if (!group.some((f) => existsSync(join(dir, f))))
+        if (!group.some((f: string) => existsSync(join(dir, f))))
           findings.push({
             file: say(dir),
-            message: `missing all of ${group.map((f) => `\`${f}\``).join(", ")} — a paper directory with no source is not something the rules can check`,
+            message: `missing all of ${group.map((f: string) => `\`${f}\``).join(", ")} — a paper directory with no source is not something the rules can check`,
           });
     }
   }
@@ -94,18 +104,20 @@ export function checkStructure(paths, structure, { cwd = process.cwd() } = {}) {
  * второй половины читается как придирка к оформлению; с ней видно, что каталог не проверяется
  * вовсе, а отчёт по нему зелёный.
  */
-function whyMissingMatters(file, dirName) {
+function whyMissingMatters(file: string, dirName: string): string {
   if (file === "PIPELINE-STATUS.md")
     return `every pipeline rule keys off this file, so \`${dirName}\` currently gets ZERO rules and reports clean`;
   return `declared as required in rpp.json`;
 }
 
-export function formatStructure(findings) {
-  const byDir = new Map();
+export function formatStructure(findings: readonly StructureFinding[]): string {
+  const byDir = new Map<string, string[]>();
   for (const f of findings)
     byDir.set(f.file, [...(byDir.get(f.file) ?? []), f.message]);
   return [...byDir]
-    .map(([dir, msgs]) => [dir, ...msgs.map((m) => `  error  ${m}`)].join("\n"))
+    .map(([dir, msgs]) =>
+      [dir, ...msgs.map((m) => `  error  ${m}`)].join("\n"),
+    )
     .join("\n\n");
 }
 
@@ -115,13 +127,13 @@ export function formatStructure(findings) {
  * каждого потребителя писать второй парсер — и первый же, кто его не написал бы, читал бы
  * «структурных находок нет» вместо «я их не разбираю».
  */
-export function asEslintResults(findings) {
-  const byDir = new Map();
+export function asEslintResults(findings: readonly StructureFinding[]): unknown[] {
+  const byDir = new Map<string, string[]>();
   for (const f of findings)
     byDir.set(f.file, [...(byDir.get(f.file) ?? []), f.message]);
   return [...byDir].map(([filePath, msgs]) => ({
     filePath,
-    messages: msgs.map((message) => ({
+    messages: msgs.map((message: string) => ({
       ruleId: "structure/required-file",
       severity: 2,
       message,
