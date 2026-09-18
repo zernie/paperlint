@@ -436,8 +436,13 @@ try {
       const src = readFileSync(join(HOOKS, f), "utf8");
       return {
         f,
-        key: (src.match(/^const CONFIG_KEY = "([^"]+)";$/m) ?? [])[1],
-        def: (src.match(/^const DEFAULT_PAPERS_ROOT = "([^"]+)";$/m) ?? [])[1],
+        // `export` ОПЦИОНАЛЕН, и это не послабление. `paper-edit-guard` отдаёт эти значения
+        // наружу намеренно: `rpp doctor` обязан спросить корень статей у САМОГО хука, иначе
+        // заведётся вторая копия логики — ровно тот дефект, о котором doctor и сообщает.
+        // Прежний якорь `^const …` этого не допускал и покраснел на правке, ничего не менявшей
+        // в поведении: он сторожил НАПИСАНИЕ, а не объявление.
+        key: (src.match(/^(?:export )?const CONFIG_KEY = "([^"]+)";$/m) ?? [])[1],
+        def: (src.match(/^(?:export )?const DEFAULT_PAPERS_ROOT = "([^"]+)";$/m) ?? [])[1],
       };
     });
     for (const s of seen) {
