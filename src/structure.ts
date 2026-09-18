@@ -107,7 +107,7 @@ export function checkStructure(
 function whyMissingMatters(file: string, dirName: string): string {
   if (file === "PIPELINE-STATUS.md")
     return `every pipeline rule keys off this file, so \`${dirName}\` currently gets ZERO rules and reports clean`;
-  return `declared as required in rpp.json`;
+  return `declared as required by your \`structure\` configuration`;
 }
 
 export function formatStructure(findings: readonly StructureFinding[]): string {

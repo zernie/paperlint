@@ -210,7 +210,7 @@ try {
   check("у падения назван код", /кодом 3/.test(out));
   check(
     "у отсутствия — сказано, чего именно нет",
-    /НЕТ скрипта сборки/.test(out),
+    /NO build script/.test(out),
   );
 } finally {
   rmSync(root, { recursive: true, force: true });

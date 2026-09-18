@@ -123,10 +123,10 @@ export function papersIn(
 export function formatResults(results: readonly BuildResult[]): string {
   const line = (r: BuildResult): string =>
     r.status === "built"
-      ? `  ✓ ${r.dir} — ${r.script}${r.dry ? "  (не запускался: --dry-run)" : ""}`
+      ? `  ✓ ${r.dir} — ${r.script}${r.dry ? "  (not run: --dry-run)" : ""}`
       : r.status === "failed"
-        ? `  ✗ ${r.dir} — ${r.script} вышел с кодом ${r.code}`
-        : `  ✗ ${r.dir} — НЕТ скрипта сборки`;
+        ? `  ✗ ${r.dir} — ${r.script} exited with code ${r.code}`
+        : `  ✗ ${r.dir} — NO build script`;
   return results.map(line).join("\n");
 }
 
@@ -145,9 +145,11 @@ export function remedyFor(
   const missing = results.filter((r) => r.status === "no-script");
   if (missing.length === 0) return "";
   return (
-    `\nНи одного скрипта сборки не нашлось у: ${missing.map((r) => r.dir).join(", ")}.\n` +
-    `Искали (в этом порядке): ${candidates.join(", ")}.\n` +
-    `Это НЕ «нечего собирать» — это статья, которую не соберёт ни CI, ни человек одной командой.\n` +
-    `Положите скрипт по одному из этих путей либо назовите свой в rpp.json: { "buildScripts": [...] }`
+    `\nNo build script was found for: ${missing.map((r) => r.dir).join(", ")}.\n` +
+    `Looked for, in this order: ${candidates.join(", ")}.\n` +
+    `This is NOT "nothing to build" — it is a paper that neither CI nor a person can build with\n` +
+    `one command.\n` +
+    `Put a script at one of those paths, or name your own in package.json:\n` +
+    `  { "research-paper-pipeline": { "buildScripts": ["my-build.sh"] } }`
   );
 }

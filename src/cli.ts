@@ -502,7 +502,7 @@ function runBuild(
     targets = roots.flatMap((r) => papersIn(r));
     if (targets.length === 0) {
       err(
-        `--all: ни одной статьи не нашлось под ${roots.join(", ") || "(не задано)"}`,
+        `--all: no papers found under ${roots.join(", ") || "(nothing declared)"}`,
       );
       return 1;
     }
@@ -510,9 +510,9 @@ function runBuild(
     targets = a.paths.map((p) => resolve(cwd, p));
   } else {
     err(
-      `\`build\` нужна цель: \`rpp build papers/my-paper\` либо \`rpp build --all\`.\n` +
-        `Умолчания «собрать всё» здесь нет намеренно — сборка дорогая и с побочными эффектами,\n` +
-        `поэтому цель называют, как у make, docker и latexmk.`,
+      `\`build\` needs a target: \`rpp build papers/my-paper\` or \`rpp build --all\`.\n` +
+        `There is deliberately no "build everything" default: a build is expensive and has side\n` +
+        `effects, so the target is named — as with make, docker and latexmk.`,
     );
     return 2;
   }

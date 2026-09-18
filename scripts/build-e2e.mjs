@@ -124,7 +124,7 @@ try {
   console.log();
   console.log("остальные исходы команды");
   check("упавшая сборка названа упавшей, с кодом", /✗ .*broken/.test(out) && /\b3\b/.test(out));
-  check("статья без скрипта названа отдельно", /no-script|НЕТ скрипта/i.test(out));
+  check("статья без скрипта названа отдельно", /NO build script/.test(out));
   check("и прогон в целом — ОТКАЗ, раз две статьи из четырёх не собрались", r.status !== 0);
 } finally {
   rmSync(work, { recursive: true, force: true });
