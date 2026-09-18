@@ -33,9 +33,9 @@ assumed. Two things that sound like limits and are not:
 
 | | |
 |---|---:|
-| ESLint rules | **6** — `latex-language` · `tex-build` · `papers` · `cold-read-cause` · `review-findings-cause` · `doc-fields` |
-| harnesses | **45** |
-| mutation batteries | **22** |
+| ESLint rules | **5** — `latex-language` · `tex-build` · `papers` · `review-findings-cause` · `doc-fields` |
+| harnesses | **57** |
+| mutation batteries | **34** |
 | skills | **24** |
 | hooks (runnable `.mjs`) | **5** |
 | repo-wide scripts | 5 |

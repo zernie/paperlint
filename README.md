@@ -6,7 +6,7 @@ agent (Claude Code). It ships two things:
 - **<!-- count:skills -->24 skills** — instruction files the agent reads, one per stage of writing a paper: decide
   whether the idea is worth it, pick a venue, run the study, draft, tighten, red-team, simulate
   the program committee, submit, camera-ready, extend into a second paper.
-- **<!-- count:rules -->13 rules and 3 hooks** — machine checks that verify what those stages _claim_. Each paper
+- **<!-- count:rules -->12 rules and 3 hooks** — machine checks that verify what those stages _claim_. Each paper
   keeps a scorecard file, `PIPELINE-STATUS.md`. A skill writes "submitted on this date, this PDF,
   this many bytes" into it; a rule then reads the scorecard and compares it with the files on
   disk. The rule never trusts the skill's word.
@@ -206,7 +206,6 @@ A template with every row explained is in `skills/paper-pipeline/references/pipe
 | `tex/future-promise`           | `paper.tex`             | a camera-ready build still says "will be released" about something already handed over                         |
 | `tex/acm-frontmatter-override` | `paper.tex`             | an `acmart` build overrides ACM's front-matter commands and drops template elements from page 1                |
 | `review/findings-cause`        | `reviews/*.md`          | a review report lists findings but does not say which pipeline step let them through                           |
-| `review/cold-read-cause`       | `reviews/*.md`          | an open cold-read finding has no stated cause                                                                  |
 | `doc/fields`                   | `reviews/*.md`          | a front-matter field is missing or holds a value outside the list you configured                               |
 
 Errors fail the run. Warnings print and do not. Three more rules guard the package's own code

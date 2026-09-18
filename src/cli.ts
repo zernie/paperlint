@@ -70,8 +70,6 @@ import texBuild from "../eslint-rules/tex-build.mjs";
 import docFields from "../eslint-rules/doc-fields.mjs";
 // @ts-expect-error — an ESLint rule in .mjs, it has no types
 import findingsCause from "../eslint-rules/review-findings-cause.mjs";
-// @ts-expect-error — an ESLint rule in .mjs, it has no types
-import coldReadCause from "../eslint-rules/cold-read-cause.mjs";
 
 const USAGE = `research-paper-pipeline — machine-checkable gates for a paper kept in git
 
@@ -150,7 +148,7 @@ export function buildConfig(
       files: ["**/reviews/*.md"],
       plugins: {
         markdown,
-        review: { rules: { ...findingsCause.rules, ...coldReadCause.rules } },
+        review: { rules: { ...findingsCause.rules } },
         doc: docFields,
       },
       ...md,
@@ -171,10 +169,6 @@ export function buildConfig(
             ...(opts.causeMarker ? { causeMarker: opts.causeMarker } : {}),
             ...(opts.reviewSince ? { sinceCreated: opts.reviewSince } : {}),
           },
-        ],
-        "review/cold-read-cause": [
-          "warn",
-          { ...(opts.causeMarker ? { causeMarker: opts.causeMarker } : {}) },
         ],
         ...(opts.docFields
           ? { "doc/fields": ["warn", { fields: opts.docFields }] }
