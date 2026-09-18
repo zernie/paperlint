@@ -49,7 +49,7 @@ export default {
           {
             type: "object",
             properties: {
-              openSection: { type: "string" },
+              openSection: { type: "array", items: { type: "string" }, minItems: 1 },
               causeMarker: { type: "string" },
               sinceCreated: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
             },
@@ -63,15 +63,22 @@ export default {
       },
       create(context) {
         const {
-          // 🔴 УМОЛЧАНИЕ АНГЛИЙСКОЕ, И ЭТО НЕ КОСМЕТИКА. Русское «^Открыто» означало, что у
-          // любого потребителя, чьи заметки озаглавлены иначе, секция не находится вовсе:
-          // ноль находок, зелёный прогон, сторож молча выключен. Тот же дефект, что был у
-          // `causeMarker` (#31); там его починили, здесь пропустили.
-          openSection = "^Open",
+          // 🔴 A LIST OF NAMES, NOT A PATTERN, AND NOT ONE LANGUAGE. This option used to be
+          // a lone string compiled with `new RegExp`, while the schema advertised
+          // `type: "string"` and said nothing about regex. A consumer naming their section
+          // "C++ issues" got a THROW from inside the rule; "Open findings (2)" silently
+          // became a capture group; "Open" with no `^` also matched "Reopened". None of
+          // that is something a person configuring a section title agreed to.
+          //
+          // The default was also Russian ("^Открыто") until today, which made the guard
+          // find nothing — zero findings, green run, silently off — for everyone whose
+          // notes are headed in any other language. Picking English instead would only
+          // move the silence to the other corpus. A list picks neither.
+          openSection = ["Open", "Открыто"],
           causeMarker = "Cause:",
           sinceCreated,
         } = context.options[0] ?? {};
-        const title = new RegExp(openSection);
+        const titles = new Set(openSection.map((t) => t.trim().toLowerCase()));
         let created = "";
         // Внутри секции «Открыто» — да или нет. Состояние, а не поиск по тексту: границу
         // задаёт СЛЕДУЮЩИЙ заголовок того же или более высокого уровня, как в разметке и
@@ -85,7 +92,7 @@ export default {
           },
           heading(node) {
             if (inOpen && node.depth <= openDepth) inOpen = false;
-            if (!inOpen && title.test(textOf(node))) {
+            if (!inOpen && titles.has(textOf(node).trim().toLowerCase())) {
               inOpen = true;
               openDepth = node.depth;
             }
