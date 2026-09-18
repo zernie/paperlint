@@ -355,9 +355,17 @@ export async function init(dir: string, opts: InitOptions = {}): Promise<number>
   const missing = missingPrograms(run);
   if (missing.length === 0) log(`  ✓ all ${String(PROGRAMS.length)} are on PATH`);
   else {
-    for (const p of missing) log(`  ✗ ${p.bin.padEnd(10)} ${p.from} — ${p.without}`);
-    log(`      nothing is installed for you — an install that can fail quietly is worse than a`);
-    log(`      step that says what it needs. Run these yourself:`);
+    // 🔴 НАЗВАНИЯ И СЧЁТ ЗДЕСЬ, ПОСЛЕДСТВИЯ — В ОТЧЁТЕ doctor НИЖЕ, И ЭТО НЕ ЭКОНОМИЯ СТРОК.
+    // Первая редакция печатала здесь ту же таблицу «✗ программа — что молчит без неё», которую
+    // через двадцать строк печатает doctor. Мало того что читатель видел её дважды, — ассерт
+    // харнесса не мог отличить одну от другой и оставил мутацию, вырезавшую лекарство ИЗ init,
+    // зелёной. Один факт печатает один автор.
+    log(
+      `  ✗ ${String(missing.length)} of ${String(PROGRAMS.length)} missing: ` +
+        missing.map((p) => p.bin).join(", "),
+    );
+    log(`      what each one is for is in the doctor report below. Nothing is installed for you —`);
+    log(`      an install that can fail quietly is worse than a step that says what it needs:`);
     for (const cmd of [...new Set(missing.map((p) => p.install))]) log(`        ${cmd}`);
   }
 

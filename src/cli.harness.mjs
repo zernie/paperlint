@@ -462,8 +462,8 @@ check(
       // строку, напечатанную другой командой, и отчитывался о покрытии, которого не было.
       const own = out.text().split("── rpp doctor")[0];
       check(
-        "каждая пропажа НАЗВАНА вместе с последствием",
-        /✗ pdflatex/.test(own) && /no PDF is produced/.test(own),
+        "каждая пропажа НАЗВАНА, и их посчитано столько же, сколько названо",
+        /✗ 7 of 7 missing: pdflatex, bibtex/.test(own),
       );
       check(
         "🔴 и несёт КОМАНДУ УСТАНОВКИ — лекарство, а не диагноз",
@@ -471,7 +471,13 @@ check(
       );
       check(
         "и сказано прямо, что ничего не ставится за пользователя",
-        /nothing is installed for you/.test(own),
+        /Nothing is installed for you/.test(own),
+      );
+      // Один факт — один автор: последствия каждой пропажи печатает doctor, и печатает их РАЗ.
+      check(
+        "и init НЕ повторяет таблицу doctor двадцатью строками выше неё",
+        !/no PDF is produced/.test(own) &&
+          /no PDF is produced/.test(out.text().split("── rpp doctor")[1] ?? ""),
       );
       check(
         "а спрошенная система, в которой всё есть, не даёт ни одной пропажи",

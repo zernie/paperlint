@@ -180,6 +180,16 @@ process.exit(
         edits: [[INIT, "    for (const cmd of [...new Set(missing.map((p) => p.install))]) log(`        ${cmd}`);", "    void missing;"]],
       },
       {
+        name: "пропажи перестают называться поимённо",
+        harness: HARNESS,
+        expect: "каждая пропажа НАЗВАНА, и их посчитано столько же, сколько названо",
+        disables:
+          "связь между ЧИСЛОМ и ИМЕНАМИ в одной строке. «Не хватает программ» без имён требует " +
+          "идти искать их в другом отчёте, а счётчик без имён — это ровно тот счётчик, который " +
+          "обещает покрытие и не выносит вердикта",
+        edits: [[INIT, "    log(\n      `  ✗ ${String(missing.length)} of ${String(PROGRAMS.length)} missing: ` +\n        missing.map((p) => p.bin).join(\", \"),\n    );", "    log(`  ✗ some programs are missing`);"]],
+      },
+      {
         name: "утилита снова читает только rpp.json",
         harness: HARNESS,
         expect:
