@@ -1,33 +1,34 @@
 #!/usr/bin/env node
 /**
- * ВЗАИМНОЕ ИСКЛЮЧЕНИЕ ДЛЯ ПРОГОНОВ, КОТОРЫЕ ТРОГАЮТ ОДНИ И ТЕ ЖЕ ФАЙЛЫ.
+ * MUTUAL EXCLUSION FOR RUNS THAT TOUCH THE SAME FILES.
  *
- * ── ЗАЧЕМ ────────────────────────────────────────────────────────────────────────────────────
- * `test:sabotage` правит исходники НА МЕСТЕ — это осознанная стратегия, объяснённая в шапке
- * `lib/mutation-driver.mjs`: девять случаев переписывают настоящий файл, а копировать под
- * каждую мутацию весь репозиторий значит минуты вместо секунд.
+ * ── WHY ──────────────────────────────────────────────────────────────────────────────────────
+ * `test:sabotage` edits the sources IN PLACE — a deliberate strategy, explained in the header of
+ * `lib/mutation-driver.mjs`: nine cases rewrite the real file, and copying the whole repository
+ * per mutation would mean minutes instead of seconds.
  *
- * Цена у стратегии одна: пока батарея идёт, ЛЮБОЙ параллельный `npm test` читает файл в
- * изувеченном состоянии и падает — с сообщением про ассерт, не про мутацию. Отказ ЛОЖНЫЙ,
- * НЕДЕТЕРМИНИРОВАННЫЙ (зависит от того, какую секунду поймали) и читается как «тесты флейкают»,
- * то есть уводит ровно в ту сторону, где чинить нечего. Это уже стоило разбора: два прогона
- * подряд дали РАЗНЫЕ сообщения об ошибке, и вывод «я сломал round-diff» был неверен.
+ * The strategy has one cost: while the battery runs, ANY parallel `npm test` reads a file in its
+ * mutilated state and fails — with a message about an assertion, not about a mutation. The
+ * failure is FALSE, NON-DETERMINISTIC (it depends on which second you caught) and reads as "the
+ * tests are flaky", i.e. it leads in exactly the direction where there is nothing to fix. This
+ * has already cost an investigation: two runs in a row gave DIFFERENT error messages, and the
+ * conclusion "I broke round-diff" was wrong.
  *
- * ── ПОЧЕМУ ЗАМОК, А НЕ ИНСТРУКЦИЯ «НЕ ЗАПУСКАЙ ОДНОВРЕМЕННО» ──────────────────────────────────
- * Инструкция уже была — прозой, в CLAUDE.md потребителя. Она не исполняется, поэтому не
- * проверяется и не действует на того, кто её не прочитал: человека в соседнем терминале, агента,
- * редактор с автотестами. Замок отказывает ГРОМКО и называет причину в тот момент, когда она
- * важна.
+ * ── WHY A LOCK AND NOT AN INSTRUCTION "DON'T RUN THEM AT THE SAME TIME" ───────────────────────
+ * The instruction already existed — as prose, in the consumer's CLAUDE.md. Prose does not
+ * execute, so it is not checked and does not apply to anyone who has not read it: the person in
+ * the other terminal, the agent, the editor with tests on save. A lock refuses LOUDLY and names
+ * the reason at the moment it matters.
  *
- * ── КАК ─────────────────────────────────────────────────────────────────────────────────────
- * `mkdirSync` атомарен: каталог либо создан нами, либо уже существует — гонки нет, в отличие от
- * «проверить existsSync, потом записать». Внутри лежит pid и команда держателя; если процесс с
- * этим pid мёртв, замок перехватывается с явным сообщением, иначе прерванный прогон блокировал бы
- * репозиторий навсегда, и первым же лечением стало бы «удалить замок руками», то есть отключение
- * механизма.
+ * ── HOW ─────────────────────────────────────────────────────────────────────────────────────
+ * `mkdirSync` is atomic: either we created the directory or it already existed — there is no
+ * race, unlike "check existsSync, then write". Inside it lie the holder's pid and command; if the
+ * process with that pid is dead, the lock is taken over with an explicit message, otherwise an
+ * interrupted run would block the repository forever, and the first cure would be "delete the
+ * lock by hand", i.e. switching the mechanism off.
  *
- * Снимается замок в `finally` И на сигналах — ровно по той же причине, по которой драйвер мутаций
- * восстанавливает исходники на SIGINT/SIGTERM.
+ * The lock is released in `finally` AND on signals — for exactly the same reason the mutation
+ * driver restores the sources on SIGINT/SIGTERM.
  */
 import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -44,13 +45,13 @@ if (argv.length === 0) {
   process.exit(2);
 }
 
-/** Жив ли процесс. `kill(pid, 0)` ничего не посылает — только проверяет существование и права. */
+/** Is the process alive. `kill(pid, 0)` sends nothing — it only checks existence and rights. */
 function alive(pid) {
   try {
     process.kill(pid, 0);
     return true;
   } catch (e) {
-    return e.code === "EPERM"; // существует, но чужой — считаем живым
+    return e.code === "EPERM"; // exists but belongs to someone else — counted as alive
   }
 }
 
@@ -58,7 +59,7 @@ function readHolder() {
   try {
     return JSON.parse(readFileSync(INFO, "utf8"));
   } catch {
-    return null; // замок есть, описание нечитаемо — ниже это решается как «мёртвый»
+    return null; // the lock exists, its description is unreadable — resolved below as "dead"
   }
 }
 
@@ -70,17 +71,17 @@ function acquire() {
     const holder = readHolder();
     if (holder && alive(holder.pid)) {
       console.error(
-        `🔴 отказ: этот репозиторий сейчас занят прогоном, который ПРАВИТ ФАЙЛЫ НА МЕСТЕ.\n` +
-          `   держит: pid ${holder.pid}, «${holder.cmd}», с ${holder.at}\n` +
-          `   Параллельный запуск дал бы ЛОЖНЫЕ падения — тест прочитал бы исходник в изувеченном\n` +
-          `   состоянии и пожаловался бы на ассерт, а не на мутацию. Дождись окончания.`,
+        `🔴 refused: this repository is busy with a run that EDITS FILES IN PLACE.\n` +
+          `   held by: pid ${holder.pid}, "${holder.cmd}", since ${holder.at}\n` +
+          `   A parallel run would produce FALSE failures — a test would read the source in its\n` +
+          `   mutilated state and complain about an assertion, not a mutation. Wait for it to finish.`,
       );
       process.exit(3);
     }
     console.error(
-      `⚠️  замок остался от прогона, которого больше нет` +
-        (holder ? ` (pid ${holder.pid}, «${holder.cmd}»)` : " (описание нечитаемо)") +
-        ` — перехватываю.`,
+      `⚠️  the lock was left behind by a run that no longer exists` +
+        (holder ? ` (pid ${holder.pid}, "${holder.cmd}")` : " (description unreadable)") +
+        ` — taking it over.`,
     );
     rmSync(LOCK, { recursive: true, force: true });
     mkdirSync(LOCK, { recursive: false });
@@ -100,16 +101,17 @@ for (const sig of ["SIGINT", "SIGTERM", "SIGHUP"]) {
   });
 }
 
-// 🔴 `process.on("exit")`, А НЕ `finally`, И ЭТО НЕ СТИЛЬ. Первая редакция снимала замок в
-// `finally` — и он ОСТАВАЛСЯ НА ДИСКЕ: `process.exit()` завершает процесс немедленно, стек не
-// разматывается, `finally` не исполняется. Поймано прогоном (замок пережил успешный запуск), а
-// не чтением. Цена дефекта была бы ровно обратной замыслу: каждый прогон оставлял бы репозиторий
-// «занятым», и первым лечением стало бы «удалить замок руками», то есть отключение механизма.
+// 🔴 `process.on("exit")`, NOT `finally`, AND THIS IS NOT STYLE. The first edition released the
+// lock in `finally` — and it STAYED ON DISK: `process.exit()` terminates the process immediately,
+// the stack is not unwound, `finally` does not run. Caught by a run (the lock outlived a
+// successful launch), not by reading. The cost of the defect would have been exactly the inverse
+// of the intent: every run would leave the repository "busy", and the first cure would be "delete
+// the lock by hand", i.e. switching the mechanism off.
 process.on("exit", release);
 
 const r = spawnSync(argv[0], argv.slice(1), { stdio: "inherit", shell: false });
 if (r.error) {
-  console.error(`🔴 не удалось запустить «${argv.join(" ")}»: ${r.error.message}`);
+  console.error(`🔴 failed to launch "${argv.join(" ")}": ${r.error.message}`);
   process.exit(127);
 }
 process.exit(r.status ?? 1);

@@ -125,7 +125,7 @@ bash node_modules/research-paper-pipeline/skills/render-paper/ensure-checkers.sh
    ✅ rebiber
    ✅ jinja2
    ✅ textidote (/opt/textidote/textidote.jar)
-✅ все чекеры установлены И запускаются
+✅ all checkers are installed AND run
 ```
 
 It checks that the tools RUN, not that pip exited zero — `aclpubcheck --help` prints usage and

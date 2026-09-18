@@ -21,8 +21,9 @@
 #
 # ── THE DECISION THIS IMPLEMENTS ────────────────────────────────────────────────
 # 2026-08-14 (`#134`) enumerated four codification forms and said to pick by context,
-# naming this home explicitly: *"скрипт скилла — если это часть уже существующего
-# пайплайна (как здесь: `render-paper` уже был подходящим домом, просто не полным)"*.
+# naming this home explicitly: *"a skill's script — if this is part of an already existing
+# pipeline (as here: `render-paper` was already a suitable home, just not a complete one)"*
+# (the quoted decision was written in Russian; translated here).
 # It also set the search rule that points here: look for a home BY CLASS OF ACTION, and
 # "TeX Live is missing" is a wider class than "this one paper". So the install does not
 # belong in a per-paper build script.
@@ -67,10 +68,10 @@ PACKAGES=(
                             # Modern, so the PDF compiles clean and is typeset in the wrong fonts.
                             # Correct fonts also change metrics — on agenticdev-2026 the switch
                             # surfaced an overfull box that the CM build did not have.
-  # 🔴 Добавлено 2026-09-17: `eslint-rules/paper-texcount.harness.mjs` падал в свежем
-  # контейнере, и его собственный отказ называл лекарство — «ставится вместе с TeX Live:
-  # texlive-extra-utils». Знание было, оно просто не лежало в исполняемом файле.
-  texlive-extra-utils       # texcount — счёт слов, которым меряется объём статьи
+  # 🔴 Added 2026-09-17: `eslint-rules/paper-texcount.harness.mjs` was failing in a fresh
+  # container, and its own failure named the remedy — "installed together with TeX Live:
+  # texlive-extra-utils". The knowledge existed, it just did not live in an executable file.
+  texlive-extra-utils       # texcount — the word count by which a paper's length is measured
   texlive-plain-generic     # binhex.tex, pulled in by newtx. Missing it is the opposite failure:
                             # a HARD "! LaTeX Error: File `binhex.tex' not found" + emergency stop,
                             # i.e. installing texlive-fonts-extra alone BREAKS a build that worked.
@@ -79,91 +80,92 @@ PACKAGES=(
 )
 APT_LINE="apt-get install -y --no-install-recommends ${PACKAGES[*]}"
 
-# 🔴 КОНТРАКТ — ЭТОТ СПИСОК ФАЙЛОВ, А НЕ ИМЕНА ПАКЕТОВ ВЫШЕ (2026-09-01).
-# Локально TeX ставится apt-ом (список выше), в CI — апстримным tlmgr по CTAN-именам
-# (.github/workflows/paper-gates.yml, джоб `build`). Имена не совпадают и совпасть не могут:
-# один texlive-fonts-extra — это libertine + inconsolata + newtx у tlmgr, один
-# texlive-publishers — это acmart. Свести в один список нельзя.
+# 🔴 THE CONTRACT IS THIS LIST OF FILES, NOT THE PACKAGE NAMES ABOVE (2026-09-01).
+# Locally TeX is installed by apt (the list above), in CI by upstream tlmgr under CTAN names
+# (.github/workflows/paper-gates.yml, the `build` job). The names do not match and cannot match:
+# one texlive-fonts-extra is libertine + inconsolata + newtx for tlmgr, one texlive-publishers is
+# acmart. They cannot be merged into a single list.
 #
-# Свести можно РЕЗУЛЬТАТ: оба пути обязаны привести к одному и тому же набору файлов.
-# Поэтому список ниже читается ОБОИМИ — этим скриптом и воркфлоу (тем же разбором sed) —
-# и является единственным местом, где он объявлен. Разъехаться установкам можно;
-# разъехаться незаметно — нет.
+# What can be merged is the RESULT: both paths must lead to the same set of files.
+# That is why the list below is read by BOTH — by this script and by the workflow (with the same sed
+# parse) — and is the only place where it is declared. The installs are allowed to drift apart;
+# drifting apart unnoticed is not allowed.
 #
-# Что здесь лежит и почему именно оно:
-#   libertine/zi4/newtxmath — acmart.cls:776-784 проверяет ВСЕ ТРИ и при отсутствии ЛЮБОГО
-#     выставляет \@ACM@newfontsfalse, молча уходя на Computer Modern: PDF собирается, выглядит
-#     нормальным, набран не тем шрифтом, а другая метрика даёт другую пагинацию.
-#   totpages/environ — их тянет САМ acmart, а не статья, поэтому греп по \usepackage в
-#     paper.tex их не находит. Оба всплыли по одному, каждый ценой полного прогона CI.
-#   balance — сведение колонок последней страницы, требование ACM (правило pdf/balance).
-# 🔴 ТРЕТИЙ СЛОВАРЬ ТОГО ЖЕ НАБОРА — имена CTAN для tlmgr (2026-09-01).
-# PACKAGES выше — имена apt (локальная разработка на Debian/Ubuntu).
-# CTAN_PACKAGES ниже — имена tlmgr (CI, апстримный TeX Live).
-# REQUIRED_FILES — контракт, который обязаны выполнить ОБА.
+# What lies here and why exactly this:
+#   libertine/zi4/newtxmath — acmart.cls:776-784 checks ALL THREE and, if ANY of them is missing,
+#     sets \@ACM@newfontsfalse and silently falls back to Computer Modern: the PDF compiles, looks
+#     normal, is typeset in the wrong font, and a different metric gives a different pagination.
+#   totpages/environ — they are pulled in by acmart ITSELF, not by the paper, so grepping for
+#     \usepackage in paper.tex does not find them. Both surfaced one at a time, each at the cost of
+#     a full CI run.
+#   balance — balancing the columns of the last page, an ACM requirement (the pdf/balance rule).
+# 🔴 A THIRD DICTIONARY OF THE SAME SET — the CTAN names for tlmgr (2026-09-01).
+# PACKAGES above are apt names (local development on Debian/Ubuntu).
+# CTAN_PACKAGES below are tlmgr names (CI, upstream TeX Live).
+# REQUIRED_FILES is the contract BOTH of them must satisfy.
 #
-# Почему не один список: у apt минимальная единица — дистрибутивный пакет, и ради трёх
-# шрифтовых семейств (71 МБ) он тянет texlive-fonts-extra целиком (1691 МБ, 96% мусора).
-# У tlmgr единица — CTAN-пакет. Замер 2026-09-01: apt-путь 2100 МБ, tlmgr-путь 230 МБ.
-# Разбор всех трёх способов с номерами прогонов — ci-tex-toolchain-decision.md рядом.
+# Why not one list: apt's minimal unit is a distribution package, and for the sake of three font
+# families (71 MB) it pulls in the whole of texlive-fonts-extra (1691 MB, 96% junk).
+# tlmgr's unit is a CTAN package. Measured 2026-09-01: the apt path 2100 MB, the tlmgr path 230 MB.
+# The analysis of all three approaches with run numbers is in ci-tex-toolchain-decision.md next door.
 #
-# 🔴 СПИСОК ВЫВЕДЕН СБОРКОЙ, А НЕ ЧТЕНИЕМ \usepackage. Девять пакетов ниже (xstring …
-# doclicense) не назвала бы никакая сверка с исходником статьи: их тянет сам acmart.
-# Найдены циклом «собрать → выдернуть недостающий файл → tlmgr search --file → поставить»,
-# прогнанным ЛОКАЛЬНО. Это важно: в CLAUDE.md записано «ставить коллекциями, а не именами»,
-# и причина там названа честно — «каждое имя стоит полного прогона CI (~25 мин квоты)».
-# Локальный цикл стоит НОЛЬ, поэтому точный список снова выгоднее коллекции.
+# 🔴 THE LIST WAS DERIVED BY BUILDING, NOT BY READING \usepackage. The nine packages below (xstring …
+# doclicense) would not be named by any cross-check against the paper's source: acmart itself pulls
+# them in. They were found by the loop "build → pull out the missing file → tlmgr search --file →
+# install", run LOCALLY. That matters: CLAUDE.md says "install by collections, not by names", and the
+# reason given there is honest — "every name costs a full CI run (~25 min of quota)".
+# The local loop costs ZERO, so an exact list is again better than a collection.
 #
-# ⚠️ И ловушка, на которой цикл споткнулся: недостающий шрифт даёт ДРУГУЮ форму ошибки —
-# не «File `x.sty' not found», а «Font \aclhv=phvb not loadable: Metric (TFM) file not
-# found». Грепать надо обе.
+# ⚠️ And the trap the loop stumbled on: a missing font gives a DIFFERENT shape of error —
+# not "File `x.sty' not found" but "Font \aclhv=phvb not loadable: Metric (TFM) file not
+# found". Both have to be grepped for.
 CTAN_PACKAGES=(
-  scheme-basic              # pdflatex, kpsewhich, bibtex — база
+  scheme-basic              # pdflatex, kpsewhich, bibtex — the base
   latex latex-bin bibtex
 
   # --- ACM (agenticdev-2026, acmart) ---
   acmart
-  libertine inconsolata newtx   # 🔴 ВСЕ ТРИ: acmart.cls:776-784 проверяет каждый и при
-                                # отсутствии ЛЮБОГО молча уходит на Computer Modern
-  totpages environ preprint     # preprint несёт balance.sty
+  libertine inconsolata newtx   # 🔴 ALL THREE: acmart.cls:776-784 checks each of them and, if ANY
+                                # is missing, silently falls back to Computer Modern
+  totpages environ preprint     # preprint carries balance.sty
   seqsplit xurl enumitem booktabs hyperref geometry pgf
   caption natbib microtype xcolor
 
-  # --- то, что тянет САМ acmart (найдено сборкой 2026-09-01) ---
+  # --- what acmart ITSELF pulls in (found by building, 2026-09-01) ---
   xstring everyshi hyperxmp ncctools cmap float comment upquote doclicense
 
   # --- ACL (compile-rules-2026, acl.sty) ---
   lineno
-  psnfss helvetic times courier symbol zapfding   # Helvetica/Times: без них
-                                # «Font ptmr8t not loadable», PDF не собирается вовсе.
-                                # 🔴 `urw-base35` здесь СТОЯЛО И БЫЛО ВЫДУМАНО: tlmgr
-                                # отвечает «package urw-base35 not present in repository».
-                                # Поймал локальный прогон 01.09; на CI это стоило бы
-                                # прогона. Пяти имён выше достаточно — ACL-статья
-                                # собрана и проверена по встроенным шрифтам (Nimbus).
+  psnfss helvetic times courier symbol zapfding   # Helvetica/Times: without them
+                                # "Font ptmr8t not loadable", the PDF does not build at all.
+                                # 🔴 `urw-base35` STOOD HERE AND WAS INVENTED: tlmgr answers
+                                # "package urw-base35 not present in repository".
+                                # A local run on 01.09 caught it; in CI it would have cost
+                                # a run. The five names above are enough — the ACL paper is
+                                # built and checked by its embedded fonts (Nimbus).
 
-  # 🔴 cm-super — ЛОВИТ ТИХУЮ РАСТЕРИЗАЦИЮ, добавлен 2026-09-01 по находке гейта pdf/fonts.
-  # Без него ACL-статья собиралась БЕЗ ОШИБОК и содержала шрифт «F277 · Type 3» — растровый.
-  # pdflatex не жалуется: не найдя Type 1 для sftt (CM Sans Typewriter, это \texttt внутри
-  # sans-контекста шаблона ACL), он молча генерирует битмап. PDF выглядит собранным, а ACM и
-  # ACL такой PDF отбивают.
-  # Замер: до — 1 шрифт Type 3, после — 0, заменён на sftt0800.pfb из cm-super.
-  # lmodern пробовался в паре и НЕ является причиной починки: имена в PDF стали SFTT*, а не
-  # LMTT*, то есть сработал именно cm-super. В список идёт один пакет, а не оба наугад.
+  # 🔴 cm-super — IT CATCHES SILENT RASTERIZATION, added 2026-09-01 on a finding of the pdf/fonts
+  # gate. Without it the ACL paper built WITHOUT ERRORS and contained the font "F277 · Type 3" — a
+  # bitmap one. pdflatex does not complain: having failed to find a Type 1 for sftt (CM Sans
+  # Typewriter, that is \texttt inside the sans context of the ACL template), it silently generates
+  # a bitmap. The PDF looks built, and both ACM and ACL reject such a PDF.
+  # Measured: before — 1 Type 3 font, after — 0, replaced by sftt0800.pfb from cm-super.
+  # lmodern was tried alongside and is NOT the reason for the fix: the names in the PDF became SFTT*,
+  # not LMTT*, that is, cm-super is what worked. One package goes into the list, not both at random.
   cm-super
 
-  # --- инструменты проверок ---
+  # --- the checking tools ---
   checkcites
-  # 🔴 texcount — ДОБАВЛЕН 2026-09-17 ПО КРАСНОМУ CI ПОТРЕБИТЕЛЯ, и дыра была невидима.
-  # `REQUIRED_BINS` ниже требует texcount, и apt-список выше его несёт
-  # (`texlive-extra-utils`) — а этот, CTAN-список, не нёс. Значит инструмент приезжал
-  # ровно по одному пути из двух, и какой сработает, решал не код, а КЭШ: пока
-  # `~/texlive` попадал из кэша GitHub Actions, дерево уже содержало texcount и шаг был
-  # зелёным. На первом промахе кэша холодная установка собрала TeX Live без него, и
-  # `repro/build-submission.sh` упал с «missing: texcount».
-  # 🔴 Урок не про имя пакета: ДВА СПИСКА ОДНОГО ИНСТРУМЕНТА расходятся молча, а
-  # расхождение проявляется только в неудачный день. Тот же класс, что `urw-base35`
-  # и `cm-super` выше — оба тоже найдены прогоном, а не чтением.
+  # 🔴 texcount — ADDED 2026-09-17 ON A CONSUMER'S RED CI, and the hole was invisible.
+  # `REQUIRED_BINS` below requires texcount, and the apt list above carries it
+  # (`texlive-extra-utils`) — while this one, the CTAN list, did not. So the tool arrived by
+  # exactly one of the two paths, and which one fired was decided not by code but by the CACHE:
+  # as long as `~/texlive` came from the GitHub Actions cache, the tree already contained texcount
+  # and the step was green. On the first cache miss a cold install built TeX Live without it, and
+  # `repro/build-submission.sh` failed with "missing: texcount".
+  # 🔴 The lesson is not about a package name: TWO LISTS OF ONE TOOL drift apart silently, and the
+  # divergence shows up only on an unlucky day. The same class as `urw-base35` and `cm-super` above
+  # — both were also found by a run, not by reading.
   texcount
 )
 
@@ -185,22 +187,22 @@ REQUIRED_FILES=(
 )
 
 
-# 🔴 ОДИН список, потому что копий было ДВЕ — здесь и в проверке после установки, — а файл
-# сам предупреждает абзацем выше: «a second list is how the two copies above drifted apart».
-# Добавление `texcount` в одну из них и было бы тем самым расхождением.
-# 🔴 ЗА ДВОЕТОЧИЕМ — ПОСТАВЩИК, и он несущий. Проверки ниже ищут по `PATH` и потому
-# поставщика не различают — этого достаточно, чтобы сказать «инструмента нет», и НЕ
-# достаточно, чтобы сказать «установка TeX Live прошла успешно»: `pdfinfo` приезжает из
-# poppler через apt, и требовать его в дереве TeX было бы ложным срабатыванием.
-# Замер 2026-09-17: `texcount` отсутствовал в CTAN-списке, установщик проверял только
-# REQUIRED_FILES (`.cls`/`.sty`, ищутся `kpsewhich`), бинарь файлом не ищется — и
-# установщик отчитался «✅ TeX Live готов» над деревом без него. Красным стала сборка
-# статьи двумя шагами позже, и виноватым выглядел потребитель.
-#   tex — обязан оказаться в дереве TeX Live после установки; за это отвечает CTAN_PACKAGES
-#   apt — приезжает отдельным пакетом системы, в дереве TeX его искать нельзя
+# 🔴 ONE list, because there used to be TWO copies — here and in the post-install check — and the
+# file itself warns a paragraph above: "a second list is how the two copies above drifted apart".
+# Adding `texcount` to one of them would have been exactly that divergence.
+# 🔴 AFTER THE COLON IS THE SUPPLIER, and it is load-bearing. The checks below look along `PATH` and
+# therefore do not tell suppliers apart — that is enough to say "the tool is absent" and NOT enough
+# to say "the TeX Live install succeeded": `pdfinfo` arrives from poppler via apt, and requiring it
+# in the TeX tree would be a false positive.
+# Measured 2026-09-17: `texcount` was absent from the CTAN list, the installer checked only
+# REQUIRED_FILES (`.cls`/`.sty`, looked up by `kpsewhich`), a binary is not looked up as a file — and
+# the installer reported "✅ TeX Live is ready" over a tree without it. What went red was the paper
+# build two steps later, and the consumer looked like the guilty party.
+#   tex — must end up in the TeX Live tree after the install; CTAN_PACKAGES is responsible for that
+#   apt — arrives as a separate system package, it must not be looked for in the TeX tree
 REQUIRED_BINS=(pdflatex:tex bibtex:tex pdfinfo:apt texcount:tex)
 
-# Имя без пометки — для проверок по `PATH`, которым поставщик безразличен.
+# The name without the marker — for checks along `PATH`, to which the supplier is irrelevant.
 bin_name() { printf '%s' "${1%%:*}"; }
 
 want_acm=0
@@ -274,35 +276,35 @@ fi
 echo "✓ LaTeX toolchain installed and verified"
 
 # ─────────────────────────────────────────────────────────────────────────────
-# textidote — НЕ apt-пакет, поэтому и стоит отдельно, а не строкой в PACKAGES.
+# textidote — NOT an apt package, which is why it stands apart rather than as a line in PACKAGES.
 #
-# 🔴 ПРИЁМКА ЗДЕСЬ ДРУГАЯ, И ЭТО ГЛАВНОЕ. Для бинаря годится `command -v`; для jar-файла он
-# бессмысленен — наличие файла ничего не говорит о том, запустится ли он. Проверка поэтому
-# ЗАПУСКАЕТ его, ровно как требует правило «приёмка — не „установилось“, а „ЗАПУСКАЕТСЯ“».
-# Скачанный битым jar (обрыв, страница ошибки вместо файла) лежит на диске и выглядит
-# установленным; отличает его только попытка выполнить.
+# 🔴 THE ACCEPTANCE CHECK HERE IS DIFFERENT, AND THAT IS THE MAIN POINT. For a binary `command -v`
+# will do; for a jar file it is meaningless — the presence of the file says nothing about whether it
+# will run. So the check RUNS it, exactly as the rule demands: "acceptance is not 'it installed' but
+# 'it RUNS'". A jar downloaded broken (a truncated transfer, an error page instead of a file) lies on
+# disk and looks installed; only an attempt to execute it tells the difference.
 #
-# ⚠️ Нужна Java. Её здесь НЕ ставим: `default-jre` тянет ещё сотни мегабайт, а отсутствие
-# Java — это состояние, о котором надо сказать, а не молча вылечить.
+# ⚠️ Java is needed. We do NOT install it here: `default-jre` pulls in hundreds more megabytes, and
+# the absence of Java is a state to speak about, not to cure silently.
 if [ "$want_textidote" = 1 ]; then
   jar="${TEXTIDOTE_JAR:-/opt/textidote/textidote.jar}"
   if ! command -v java >/dev/null; then
-    echo "🔴 textidote требует Java, а её нет. Поставить: apt-get install -y default-jre"
+    echo "🔴 textidote requires Java, and there is none. Install it with: apt-get install -y default-jre"
     exit 1
   fi
   if ! java -jar "$jar" --version >/dev/null 2>&1; then
-    echo "Ставлю textidote — ~8 МБ, один файл."
+    echo "Installing textidote — ~8 MB, a single file."
     mkdir -p "$(dirname "$jar")"
     if ! curl -sSLf -o "$jar" https://github.com/sylvainhalle/textidote/releases/download/v0.9/textidote.jar; then
-      echo "🔴 не удалось скачать textidote.jar"
+      echo "🔴 failed to download textidote.jar"
       exit 1
     fi
   fi
-  # Проверяем ПОСЛЕ скачивания, и тем же способом: запуском. Curl мог отдать 200 и страницу.
+  # We check AFTER the download, and the same way: by running it. Curl may have returned 200 and a page.
   if ! java -jar "$jar" --version >/dev/null 2>&1; then
-    echo "🔴 textidote.jar на месте ($jar), но НЕ ЗАПУСКАЕТСЯ — файл битый или это не jar"
+    echo "🔴 textidote.jar is in place ($jar), but it DOES NOT RUN — the file is broken or it is not a jar"
     exit 1
   fi
-  echo "✓ textidote установлен и запускается ($jar)"
-  echo "  харнессу нужна переменная:  export TEXTIDOTE_JAR=$jar"
+  echo "✓ textidote is installed and runs ($jar)"
+  echo "  the harness needs this variable:  export TEXTIDOTE_JAR=$jar"
 fi

@@ -15,48 +15,51 @@
 
 set -uo pipefail
 
-# ── ГДЕ ЛЕЖИТ `paper-guards.tex` И ЧТО БУДЕТ, ЕСЛИ ЕГО НЕ НАЙТИ ───────────────
-# Статьи подключают стража ссылок одной строкой `\input{paper-guards}`. Путь в ней НЕ
-# указан — LaTeX ищет файл по `TEXINPUTS`, и выставить эту переменную обязан вызывающий.
+# ── WHERE `paper-guards.tex` LIVES AND WHAT HAPPENS IF IT IS NOT FOUND ────────
+# Papers pull in the reference guard with one line, `\input{paper-guards}`. The path is NOT
+# spelled out there — LaTeX looks the file up via `TEXINPUTS`, and the caller must set that variable.
 #
-# 🔴 РЕЖИМ ОТКАЗА ЗДЕСЬ ТИХИЙ, И РАДИ ЭТОГО ВСЯ ФУНКЦИЯ. Не найденный `\input` НЕ роняет
-# сборку: LaTeX пишет `File \`paper-guards.tex' not found` в лог и продолжает. PDF выходит,
-# выглядит нормально, и просто больше не содержит проверки висячих ссылок — то есть дефект,
-# ради которого страж заведён, возвращается вместе с зелёным отчётом. Сломанный `import` в
-# JS падает громко; здесь надо падать самим.
+# 🔴 THE FAILURE MODE HERE IS SILENT, AND THE WHOLE FUNCTION EXISTS FOR THAT. An `\input` that is
+# not found does NOT fail the build: LaTeX writes `File \`paper-guards.tex' not found` into the log
+# and carries on. The PDF comes out, looks fine, and simply no longer contains the dangling-reference
+# check — that is, the defect the guard was set up for comes back together with a green report.
+# A broken `import` in JS fails loudly; here we have to fail on our own.
 #
-# Лестница из ТРЁХ кандидатов, потому что каталог ПЕРЕЕХАЛ (12.09): `venues/` теперь везёт пакет
-# `research-paper-pipeline`, а у потребителя на прежнем месте стоит симлинк в него. Порядок
-# «объявленный пакет → сосед по пакету → каталог у потребителя» намеренный: пакет должен
-# побеждать молча. Громко становится только если НЕТ НИ ОДНОГО.
-# 🔴 КАТАЛОГ САМОГО СКРИПТА — АБСОЛЮТНЫМ И ДО ЛЮБОГО `cd` (12.09.2026, вечер).
-# Найдено КРАСНЫМ ХАРНЕССОМ `gates.harness.mjs`, а не вычиткой, и это моя же регрессия того же
-# дня: ниже скрипт делает `cd "$DIR"` в каталог статьи, а резолв venues стоит ПОСЛЕ этого `cd`.
-# Значит `git rev-parse --show-toplevel` выполнялся уже во временном каталоге фикстуры, корень не
-# находился, и сборка честно останавливалась — на тесте, который до этого проходил.
+# A ladder of THREE candidates, because the directory MOVED (12.09): `venues/` is now carried by the
+# `research-paper-pipeline` package, and at the consumer's old location there is a symlink into it.
+# The order "the declared package → a sibling inside the package → the consumer's directory" is
+# deliberate: the package must win silently. It only gets loud when there is NOT A SINGLE ONE.
+# 🔴 THE SCRIPT'S OWN DIRECTORY — TAKEN ABSOLUTE AND BEFORE ANY `cd` (12.09.2026, evening).
+# Found by a RED HARNESS, `gates.harness.mjs`, not by proofreading, and it is my own regression from
+# the same day: below, the script does `cd "$DIR"` into the paper directory, and the venues resolve
+# stood AFTER that `cd`. So `git rev-parse --show-toplevel` was already running in the fixture's
+# temporary directory, the root was not found, and the build honestly stopped — on a test that had
+# been passing until then.
 #
-# ⚠️ Прежняя версия ошибалась ТАК ЖЕ, но молча: она не проверяла результат и собирала PDF без
-# стража ссылок. То есть покраснение — это не новая поломка, а проявление старой; но тест,
-# который вчера был зелёным, а сегодня красный, чинить всё равно мне.
+# ⚠️ The previous version was wrong THE SAME WAY, but silently: it did not check the result and built
+# the PDF without the reference guard. That is, going red is not a new breakage but a manifestation
+# of an old one; still, a test that was green yesterday and is red today is mine to fix.
 #
-# Соседний `build.sh` этот же урок уже носит в комментарии («Каталог скрипта берётся ОДИН раз и
-# АБСОЛЮТНЫМ, до cd») — там на нём падал CI 30.08. Второй экземпляр того же класса в файле рядом.
+# The neighbouring `build.sh` already carries this same lesson in a comment ("The script directory is
+# taken ONCE and ABSOLUTE, before cd") — CI failed on it there on 30.08. A second instance of the same
+# class in a file right next door.
 SELF_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 resolve_venues() {
   local root pkg
-  # Три источника корня, от самого явного к самому надёжному. Последний — расположение СКРИПТА
-  # (`.claude/skills/render-paper/` ⇒ три уровня вверх), и он единственный не зависит ни от
-  # текущего каталога, ни от того, лежит ли вызывающий внутри git-дерева.
-  # ⚠️ СКОБКИ ОБЯЗАТЕЛЬНЫ, и это поймал харнесс через минуту после того, как я написал строку без
-  # них. В bash `A || B && C` разбирается как `(A || B) && C`, поэтому при УСПЕШНОМ `git rev-parse`
-  # выполнялся ещё и `pwd`, и подстановка возвращала ДВЕ строки — корень репозитория плюс текущий
-  # каталог. Вручную из каталога вне git это не воспроизводилось: там git падал, и ветка была одна.
-  # ⚠️ ПОСЛЕДНЯЯ СТУПЕНЬ ИЩЕТ, А НЕ СЧИТАЕТ УРОВНИ. Здесь стояло `cd "$SELF_DIR/../../.."` —
-  # верно для `.claude/skills/render-paper/` (три уровня до корня) и молча неверно после
-  # переезда скилла в пакет, где он лежит в `skills/render-paper/` (два): подъём промахивался
-  # ВЫШЕ репозитория, и рунг 2 искал venues в чужом каталоге. Подъём до каталога с `.claude`
-  # от глубины не зависит.
+  # Three sources for the root, from the most explicit to the most reliable. The last one is the
+  # SCRIPT's location (`.claude/skills/render-paper/` ⇒ three levels up), and it is the only one that
+  # depends neither on the current directory nor on whether the caller sits inside a git tree.
+  # ⚠️ THE PARENTHESES ARE MANDATORY, and the harness caught this a minute after I wrote the line
+  # without them. In bash `A || B && C` parses as `(A || B) && C`, so on a SUCCESSFUL `git rev-parse`
+  # the `pwd` ran as well, and the substitution returned TWO lines — the repository root plus the
+  # current directory. By hand from a directory outside git this did not reproduce: there git failed,
+  # and only one branch ran.
+  # ⚠️ THE LAST RUNG SEARCHES, IT DOES NOT COUNT LEVELS. `cd "$SELF_DIR/../../.."` used to stand here
+  # — correct for `.claude/skills/render-paper/` (three levels to the root) and silently wrong after
+  # the skill moved into the package, where it lies in `skills/render-paper/` (two): the climb
+  # overshot ABOVE the repository, and rung 2 looked for venues in someone else's directory. Climbing
+  # up to the directory that holds `.claude` does not depend on the depth.
   local probe="$SELF_DIR" fallback=""
   while [ "$probe" != "/" ]; do
     if [ -d "$probe/.claude" ]; then fallback="$probe"; break; fi
@@ -64,28 +67,30 @@ resolve_venues() {
   done
   root="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || printf '%s' "$fallback")}"
 
-  # 1) пакет, если он уже везёт venues/ (после шага 5)
+  # 1) the package, if it already carries venues/ (after step 5)
   pkg=$(node -e 'try{process.stdout.write(require.resolve("research-paper-pipeline/venues/paper-guards.tex"))}catch{}' 2>/dev/null || true)
   if [ -n "$pkg" ] && [ -f "$pkg" ]; then
     dirname "$pkg"
     return 0
   fi
 
-  # 2) СОСЕДНИЙ СКИЛЛ, от каталога ЭТОГО скрипта. Заведена 12.09 вместе с переносом
-  # `submit-paper` в пакет, и она единственная из трёх работает В ОБОИХ мирах разом:
-  #   • чекаут пакета      `skills/render-paper/..` → `skills/submit-paper/references/venues`
-  #   • потребитель        `.claude/skills/render-paper/..` → `.claude/skills/submit-paper/...`
-  #     (оба каталога — симлинки в пакет, `-f` их проходит, а `cd`+`pwd` оставляет логический путь)
-  # Рунг 1 зависит от cwd (`node -e` резолвит от текущего каталога), рунг 3 — от того, что корень
-  # потребителя вообще нашёлся. Этот не зависит ни от того, ни от другого — ровно тот якорь, из-за
-  # отсутствия которого 12.09 уже краснел `gates.harness.mjs`.
+  # 2) THE SIBLING SKILL, from THIS script's directory. Added 12.09 together with the move of
+  # `submit-paper` into the package, and it is the only one of the three that works in BOTH worlds at
+  # once:
+  #   • package checkout   `skills/render-paper/..` → `skills/submit-paper/references/venues`
+  #   • consumer           `.claude/skills/render-paper/..` → `.claude/skills/submit-paper/...`
+  #     (both directories are symlinks into the package, `-f` goes through them, and `cd`+`pwd`
+  #     leaves the logical path)
+  # Rung 1 depends on cwd (`node -e` resolves from the current directory), rung 3 depends on the
+  # consumer's root having been found at all. This one depends on neither — exactly the anchor whose
+  # absence had `gates.harness.mjs` red on 12.09.
   local sibling="$SELF_DIR/../submit-paper/references/venues"
   if [ -f "$sibling/paper-guards.tex" ]; then
     (cd "$sibling" && pwd)
     return 0
   fi
 
-  # 3) каталог скилла в потребителе — для потребителя, который смонтировал скиллы иначе
+  # 3) the skill directory in the consumer — for a consumer that mounted the skills differently
   local local_dir="$root/.claude/skills/submit-paper/references/venues"
   if [ -f "$local_dir/paper-guards.tex" ]; then
     printf '%s\n' "$local_dir"
@@ -95,17 +100,17 @@ resolve_venues() {
   return 1
 }
 
-# Отдельный режим, чтобы резолв можно было ПРОВЕРИТЬ, а не только выполнить: без него
-# единственный способ узнать, куда смотрит скрипт, — собрать статью целиком.
+# A separate mode so that the resolve can be CHECKED and not merely executed: without it the only
+# way to learn where the script looks is to build the whole paper.
 if [ "${1:-}" = "--print-venues" ]; then
   if VD=$(resolve_venues); then
     printf '%s\n' "$VD"
     exit 0
   fi
-  echo "✗ paper-guards.tex не найден: ни по имени пакета research-paper-pipeline, ни рядом со скриптом" >&2
-  echo "  (skills/submit-paper/references/venues), ни у потребителя (.claude/skills/submit-paper/references/venues)." >&2
-  echo "  Собирать статью без него нельзя: \\input{paper-guards} не упадёт, а молча исчезнет," >&2
-  echo "  и PDF соберётся БЕЗ проверки висячих \\ref и \\cite." >&2
+  echo "✗ paper-guards.tex not found: not under the package name research-paper-pipeline, not beside the script" >&2
+  echo "  (skills/submit-paper/references/venues), not at the consumer (.claude/skills/submit-paper/references/venues)." >&2
+  echo "  Building the paper without it is not allowed: \\input{paper-guards} will not fail, it will vanish silently," >&2
+  echo "  and the PDF will be built WITHOUT the check for dangling \\ref and \\cite." >&2
   exit 2
 fi
 
@@ -116,50 +121,50 @@ THRESH="${3:-5}"
 cd "$DIR" || { echo "FAIL: cannot cd $DIR"; exit 2; }
 LOG="$BASE.log"
 
-# 🔴 УСЛОВИЕ `-f "$BASE.tex"` ДОБАВЛЕНО 26.08 — без него ветка «нет лога → exit 2» стала
-# НЕДОСТИЖИМОЙ, и это моя же регрессия того же дня. Финальный проход зовётся как
-# `pdflatex -jobname="$BASE" '\input{...}'`, и такая форма создаёт `$BASE.log` ДАЖЕ когда
-# исходника нет: скрипт находил лог, доходил до общего `exit 1` и рапортовал «FAIL: почини
-# находки» вместо честного «нет лога, сборку не гоняли».
+# 🔴 THE CONDITION `-f "$BASE.tex"` WAS ADDED ON 26.08 — without it the branch "no log → exit 2"
+# became UNREACHABLE, and that is my own regression from the same day. The final pass is invoked as
+# `pdflatex -jobname="$BASE" '\input{...}'`, and that form creates `$BASE.log` EVEN when there is no
+# source: the script found a log, reached the common `exit 1` and reported "FAIL: fix the findings"
+# instead of the honest "no log, the build was never run".
 #
-# Замер, изолирующий причину (каталог без `paper.tex`):
-#   версия до 22642552 → exit 2, на диске только texput.log
-#   версия после       → exit 1, на диске paper.log И texput.log
-# Разница ровно в `paper.log`, который пишет мой третий проход.
+# The measurement that isolates the cause (a directory without `paper.tex`):
+#   version before 22642552 → exit 2, only texput.log on disk
+#   version after           → exit 1, paper.log AND texput.log on disk
+# The difference is exactly `paper.log`, which my third pass writes.
 if [ "${NO_COMPILE:-0}" != "1" ] && [ -f "$BASE.tex" ]; then
   # Two passes: overfull boxes surface on every pass; a second pass settles refs
   # so Reference/Citation-undefined warnings are accurate.
-  # 🔴 TEXINPUTS обязателен, и это найдено падением 26.08. Статьи подключают числа своей площадки
-  # через `\input{<venue>}`, а файл лежит в `.claude/skills/submit-paper/references/venues/`.
-  # Без этого пути сборка падает `File \`agenticdev.tex' not found` — а `|| true` ниже её глотает,
-  # после чего скрипт читает лог НЕИЗВЕСТНОГО происхождения и рапортует по нему. То есть
-  # компиляция этой статьи здесь молча не работала, и заметно это стало только когда появился
-  # проход БЕЗ `|| true`.
+  # 🔴 TEXINPUTS is mandatory, and that was found by a crash on 26.08. Papers pull in their venue's
+  # numbers via `\input{<venue>}`, and the file lies in `.claude/skills/submit-paper/references/venues/`.
+  # Without that path the build fails with `File \`agenticdev.tex' not found` — and the `|| true`
+  # below swallows it, after which the script reads a log of UNKNOWN origin and reports on it. That
+  # is, compiling this paper here silently did not work, and it only became visible once a pass
+  # WITHOUT `|| true` appeared.
   if ! VENUES_DIR=$(resolve_venues); then
-    echo "✗ paper-guards.tex не найден — сборка остановлена ДО pdflatex." >&2
-    echo "  Иначе \\input{paper-guards} молча исчезнет и PDF выйдет без проверки ссылок." >&2
+    echo "✗ paper-guards.tex not found — the build is stopped BEFORE pdflatex." >&2
+    echo "  Otherwise \\input{paper-guards} vanishes silently and the PDF comes out without the reference check." >&2
     exit 2
   fi
   export TEXINPUTS="${VENUES_DIR}:${TEXINPUTS:-}"
-  # Вторая половина: спросить у самого TeX, видит ли он файл по этому пути. `resolve_venues`
-  # проверил наличие файла на диске; `kpsewhich` проверяет, что он виден ИМЕННО ТАК, как его
-  # будет искать `\input` — то есть с учётом TEXINPUTS, кэша ls-R и прав.
+  # The second half: ask TeX itself whether it sees the file by that path. `resolve_venues` checked
+  # that the file is present on disk; `kpsewhich` checks that it is visible EXACTLY THE WAY `\input`
+  # will look for it — that is, taking TEXINPUTS, the ls-R cache and permissions into account.
   if ! kpsewhich paper-guards.tex >/dev/null 2>&1; then
-    echo "✗ каталог найден ($VENUES_DIR), но kpsewhich не видит paper-guards.tex — TEXINPUTS не сработал." >&2
+    echo "✗ the directory was found ($VENUES_DIR), but kpsewhich does not see paper-guards.tex — TEXINPUTS did not take effect." >&2
     exit 2
   fi
   pdflatex -interaction=nonstopmode "$BASE.tex" >/dev/null 2>&1 || true
   pdflatex -interaction=nonstopmode "$BASE.tex" >/dev/null 2>&1 || true
-  # 🔴 ФИНАЛЬНЫЙ проход с `\finalpass` — им активируются стражи преамбулы, которым нужен
-  # СОШЕДШИЙСЯ `.aux`. Сегодня это «нет висячих ссылок и цитат»: LaTeX этот факт уже знает,
-  # и спросить его строго сильнее, чем читать потом его дневник грепом (см. блок про
-  # undefined ниже — он остаётся как страховка для статей без стража в преамбуле).
+  # 🔴 THE FINAL pass with `\finalpass` — it activates the preamble guards, which need a `.aux` that
+  # has CONVERGED. Today that means "no dangling references and citations": LaTeX already knows this
+  # fact, and asking it is strictly stronger than grepping its diary afterwards (see the undefined
+  # block below — it stays as insurance for papers without a guard in the preamble).
   #
-  # Почему отдельным проходом, а не флагом на всех трёх: на первом проходе `.aux` пуст, все
-  # ссылки не определены ПО ПОСТРОЕНИЮ. Замер 26.08 с безусловной формой: проход 1 падает →
-  # `.aux` не дописан → проход 2 падает на том же → цикл НЕ СХОДИТСЯ никогда.
+  # Why a separate pass and not a flag on all three: on the first pass the `.aux` is empty, every
+  # reference is undefined BY CONSTRUCTION. Measured 26.08 with the unconditional form: pass 1 fails →
+  # the `.aux` is not written → pass 2 fails on the same thing → the cycle NEVER CONVERGES.
   #
-  # `|| true` тут НЕТ намеренно: если страж сработал, это находка, а не шум.
+  # There is deliberately NO `|| true` here: if the guard fired, that is a finding, not noise.
   pdflatex -interaction=nonstopmode -jobname="$BASE" '\def\finalpass{}\input{'"$BASE"'}' >/dev/null 2>&1
 fi
 
@@ -296,25 +301,24 @@ fi
 CAMERA_ONLY='ACM reference format is mandatory|CCS concepts are mandatory'
 CLASS_RE="^(Class|Package) (acmart|IEEEtran|llncs|refcheck) Warning"
 
-# 🔴 СОВЕТУЮЩИЕ предупреждения класса: печатаются, но НЕ блокируют (2026-09-02).
+# 🔴 ADVISORY class warnings: printed, but NOT blocking (2026-09-02).
 #
-# Тот же довод, что абзацем выше про CAMERA_ONLY, только с другой стороны: гейт, который
-# валит статью за то, на что автор повлиять не может, глушат целиком — вместе с настоящими
-# находками. Замер, из-за которого список появился, — первый же прогон починенного
-# render-gate по корпусу:
+# The same argument as the paragraph above about CAMERA_ONLY, only from the other side: a gate that
+# fails a paper over something the author cannot influence gets muted entirely — together with the
+# real findings. The measurement that produced the list is the very first run of the fixed
+# render-gate over the corpus:
 #
-#   agenticdev-2026   1 предупреждение, `\vspace`. В paper.tex его НЕТ, в .sty статьи НЕТ —
-#                     порождает пакет. Издатель принял этот PDF со второй подачи с НУЛЁМ
-#                     находок, то есть его собственная проверка возражений не имела.
-#   aisec-2026        3, из них ДВА про отсутствие описаний у изображений — вот это
-#                     требование ACM, чинится автором, и остаётся блокирующим.
+#   agenticdev-2026   1 warning, `\vspace`. It is NOT in paper.tex, NOT in the paper's .sty — the
+#                     package generates it. The publisher accepted this PDF on the second submission
+#                     with ZERO findings, that is, its own check had no objections.
+#   aisec-2026        3, TWO of them about images with no descriptions — that one IS an ACM
+#                     requirement, it is fixed by the author, and it stays blocking.
 #
-# То есть в одном ведре лежали находка, которую надо чинить, и шум, который чинить нечем.
-# Разделение — не ослабление: `\vspace` по-прежнему виден в выводе отдельной строкой.
+# That is, one bucket held a finding that must be fixed and noise that cannot be fixed at all.
+# Splitting them is not a weakening: `\vspace` is still visible in the output on its own line.
 #
-# ⚠️ Список держать УЗКИМ и пополнять только по замеру: каждая строка здесь — это класс
-# находок, который перестал ронять сборку. Расширение «на всякий случай» превращает гейт
-# обратно в печать.
+# ⚠️ Keep the list NARROW and extend it only by measurement: every line here is a class of findings
+# that stopped failing the build. Extending it "just in case" turns the gate back into a printer.
 CLASS_ADVISORY='\\vspace should only be used'
 if [ "$review_mode" = 1 ]; then
   echo "  stage: SUBMISSION (review mode) — camera-ready-only requirements not gated"
@@ -323,7 +327,7 @@ else
   echo "  stage: CAMERA-READY"
   class_hits=$(grep -E "$CLASS_RE" "$LOG" || true)
 fi
-# Одна выборка, два ведра: блокирующее и советующее. Считать их одним числом и было дефектом.
+# One selection, two buckets: blocking and advisory. Counting them as one number WAS the defect.
 class_block=$(printf '%s\n' "$class_hits" | grep -vE '^$' | grep -vE "$CLASS_ADVISORY" || true)
 class_advis=$(printf '%s\n' "$class_hits" | grep -vE '^$' | grep -E "$CLASS_ADVISORY" || true)
 classwarn=$(printf '%s\n' "$class_block" | grep -cE '^.' || true)
@@ -337,16 +341,16 @@ if [ "$classadv" -gt 0 ]; then
   printf '%s\n' "$class_advis" | sed 's/^/      /' | head -20
 fi
 
-# ⌫ ACM fonts: проверка УДАЛЕНА 2026-08-26 — переехала в правило `pdf/fonts`.
-# (намеренно НЕ блок `# ---`: блоки считает храповик, а надгробие проверкой не является)
-# Блок жил здесь с 25.08 и был первым, кто ловил «acmart молча уехал на Computer Modern».
-# Теперь то же самое делает `eslint-rules/pdf-facts.mjs` над `_build/paper.facts.json`, и делает
-# ШИРЕ: здешний блок пропускал review-режим, правило судит артефакт всегда. Два источника правды
-# об одном факте разъезжаются — поэтому дубль удалён, а не оставлен «на всякий случай».
+# ⌫ ACM fonts: the check was REMOVED 2026-08-26 — it moved into the `pdf/fonts` rule.
+# (deliberately NOT a `# ---` block: the ratchet counts blocks, and a tombstone is not a check)
+# The block lived here from 25.08 and was the first to catch "acmart silently fell back to Computer
+# Modern". The same thing is now done by `eslint-rules/pdf-facts.mjs` over `_build/paper.facts.json`,
+# and it does it WIDER: the block here skipped review mode, the rule judges the artifact always. Two
+# sources of truth about one fact drift apart — so the duplicate was deleted, not kept "just in case".
 #
-# 🔴 Условие, при котором это станет потерей: правило смотрит на статьи, объявившие площадку в
-# `venue.json`. Появится статья со сборкой, но без `venue.json` — её шрифты не проверит никто.
-# Сегодня таких нет (все три настоящие статьи объявлены).
+# 🔴 The condition under which this becomes a loss: the rule looks at papers that declared their venue
+# in `venue.json`. Should a paper appear with a build but without `venue.json`, nobody will check its
+# fonts. Today there are none (all three real papers are declared).
 
 # --- chktex, if installed: LaTeX-source typography the log cannot see ---
 # Adopted 2026-08-24 instead of writing our own. Measured first: out of the box it produced 28

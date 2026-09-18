@@ -63,10 +63,10 @@ import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { headings as mdHeadings, splitSections, requireMarkdown } from '../../../lib/markdown.mjs';
 
-// Разбор разметки — парсером (`CLAUDE.md`, 2026-08-11). Падаем, а не деградируем: без парсера
-// в статье не нашлось бы НИ ОДНОЙ секции, и проверка «каждая секция с числом названа в
-// индексе артефакта» прошла бы вчистую — то есть ровно тот отказ, ради которого этот файл и
-// написан (отсутствие невидимо проверяющему, который смотрит только на присутствующее).
+// Markup is parsed with a parser (`CLAUDE.md`, 2026-08-11). We fail rather than degrade: without
+// the parser NOT A SINGLE section would be found in the paper, and the check "every section with a
+// number is named in the artifact index" would pass clean — that is exactly the failure this file
+// was written for (absence is invisible to a checker that looks only at what is present).
 requireMarkdown();
 
 const args = process.argv.slice(2);
@@ -108,11 +108,12 @@ const findings = [];
 // "Reports a number" means a BOLD span containing digits — the paper's own convention for a figure
 // it is asserting, as opposed to a section number or a citation. A section that merely mentions
 // §4.3 in passing does not trip this.
-// 2026-08-11: и граница тела, и нарезка на секции — от парсера. Прежние `^## ` / `^### `
-// считали секцией любую строку с решётками, включая решётки внутри ```-блока: статья,
-// ЦИТИРУЮЩАЯ чужой `## 4.2 …` в примере, получала лишнюю «секцию», а её жирные числа —
-// требование быть названными в индексе артефакта. Соглашение `-1 / >>> 0` сохранено:
-// заголовок в самой первой строке файла прежнее выражение тоже не считало границей.
+// 2026-08-11: both the body boundary and the split into sections come from the parser. The former
+// `^## ` / `^### ` counted any line with hashes as a section, including hashes inside a ```-block:
+// a paper QUOTING somebody else's `## 4.2 …` in an example got an extra "section", and its bold
+// numbers got a requirement to be named in the artifact index. The `-1 / >>> 0` convention is kept:
+// the former expression did not treat a heading on the very first line of the file as a boundary
+// either.
 const freeH = mdHeadings(paper).find((h) => h.depth === 2 && /^(Limitations|References|Ethical)/u.test(h.text));
 const body = paper.slice(0, (freeH ? freeH.offset : -1) >>> 0 || paper.length);
 const SECTION_NUM = /^(\d+(?:\.\d+)?)\.?\s+(.+)$/u;
@@ -122,9 +123,9 @@ for (const chunk of splitSections(body, { min: 2, max: 2 })) {
   if (!h) continue;
   const subs = splitSections(chunk.raw, { min: 3, max: 3 });
   for (const subSec of subs) {
-    // `subs.length === 1` — «подсекций нет вообще», ровно то, что прежде проверялось как
-    // `sub === chunk`: тогда числа считаются по самой секции. Если подсекции ЕСТЬ, ведущий
-    // кусок секции (до первой `###`) не проверяется — так было и раньше.
+    // `subs.length === 1` means "there are no subsections at all", exactly what used to be checked
+    // as `sub === chunk`: the numbers are then counted against the section itself. If subsections DO
+    // exist, the section's leading chunk (before the first `###`) is not checked — as it was before.
     const sh = subSec.heading
       ? SUBSECTION_NUM.exec(subSec.heading.text)
       : (subs.length === 1 ? [null, h[1], h[2]] : null);
@@ -166,8 +167,9 @@ for (const m of index.matchAll(/`([A-Za-z0-9_./-]+\/[A-Za-z0-9_.*/-]+)`/g)) {
 
 // ---- 3. reverse: a result on disk that neither the paper nor the index mentions ---------------
 // The unit is an EXPERIMENT DIRECTORY under `repro/` that holds a headline write-up — this
-// project's own convention, stated in `repro/README.md`: "идёшь в папку, там RESULTS.md с полным
-// разбором". A directory with a RESULTS.md is a run somebody finished and wrote up.
+// project's own convention, stated in `repro/README.md`: "you go into the folder, and there is a
+// RESULTS.md with the full write-up". A directory with a RESULTS.md is a run somebody finished and
+// wrote up.
 //
 // "Mentioned" is: the directory's name, or its name with a trailing -YYYY-MM-DD stripped, appears
 // in the paper OR in the released index. Matching is LITERAL on purpose. Prefix or fuzzy matching

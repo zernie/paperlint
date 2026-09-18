@@ -130,7 +130,7 @@ for (const c of cases) console.log(`  ok  ${c}`);
 {
   const body = [
     "---", "created: 2026-09-01", "---", "",
-    "| # | что | где |", "|---|---|---|",
+    "| # | what | where |", "|---|---|---|",
     "| 1 | a | §1 |", "| 2 | b | §2 |", "| 3 | c | §3 |", "",
     "Причина: the pipeline step that let them through.", "",
   ].join("\n");

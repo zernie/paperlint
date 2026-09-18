@@ -5,8 +5,8 @@
 // and `ledger.mjs`'s verdict vocabulary, both of which are conventions of this knowledge base rather
 // than of any product. Moving it would export a schema nobody else has.
 //
-// WHY. Запрос владельца репозитория, 2026-08-07: «lack observability into pipeline status and whether skills are actually
-// being called — let's ensure each skill outputs something when activated».
+// WHY. Repository owner's request, 2026-08-07: "lack observability into pipeline status and whether
+// skills are actually being called — let's ensure each skill outputs something when activated".
 //
 // The failure behind that sentence is specific and it has happened three times in this repo. An
 // advisory check CANNOT BE SEEN FAILING: silence is both its error state and its normal state.

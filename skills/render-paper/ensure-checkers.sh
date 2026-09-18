@@ -1,68 +1,69 @@
 #!/usr/bin/env bash
-# ensure-checkers.sh — ставит ВСЕ внешние чекеры статьи одной командой и ДОКАЗЫВАЕТ, что
-# каждый запускается. Идемпотентно: повторный запуск ничего не ломает.
+# ensure-checkers.sh — installs ALL the external paper checkers with one command and PROVES that
+# each one runs. Idempotent: running it again breaks nothing.
 #
 #   bash node_modules/research-paper-pipeline/skills/render-paper/ensure-checkers.sh
 #
-# ЗАЧЕМ ОН СУЩЕСТВУЕТ (2026-09-04). Раньше установка жила КОММЕНТАРИЕМ в requirements.txt:
-# пять команд, включая `cp -r … site-packages/`. Тот блок был неверен по трём осям сразу,
-# и все три обнаружились при попытке им воспользоваться:
-#   1. НЕ НУЖЕН — у bibtexparser 1.3.0 есть готовая сборка, хватает пина `<2`;
-#   2. НЕПОЛОН  — молчал про cffi и unidecode, оба нужны, оба всплыли падением;
-#   3. ВРЕДЕН   — копирование в site-packages оставляет метаданные pip врущими
-#                 (`pip list` показывал 2.0.0b9 поверх файлов 1.4.4).
-# Проза не исполняется и потому не проверяется. Скрипт — исполняется.
+# WHY IT EXISTS (2026-09-04). The install used to live as a COMMENT in requirements.txt:
+# five commands, `cp -r … site-packages/` among them. That block was wrong along three axes at
+# once, and all three showed up on the first attempt to use it:
+#   1. NOT NEEDED  — bibtexparser 1.3.0 has a prebuilt wheel, the pin `<2` is enough;
+#   2. INCOMPLETE  — it said nothing about cffi and unidecode, both needed, both surfaced by a crash;
+#   3. HARMFUL     — copying into site-packages leaves pip's metadata lying
+#                    (`pip list` showed 2.0.0b9 on top of 1.4.4 files).
+# Prose is not executed and therefore not checked. A script is executed.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 JAR_DIR="${TEXTIDOTE_DIR:-/opt/textidote}"
 JAR="$JAR_DIR/textidote.jar"
 JAR_URL="https://github.com/sylvainhalle/textidote/releases/download/v0.9/textidote.jar"
-JAR_SHA="3ad1aaa0922709f8"     # префикс sha256, сверен 2026-09-04
+JAR_SHA="3ad1aaa0922709f8"     # sha256 prefix, checked 2026-09-04
 
-echo "== python-зависимости =="
-# `--only-binary :all:` НЕСУЩИЙ: он превращает «зависимость без готовой сборки (.whl)» из невнятного
-# провала сборки в отказ, называющий пакет. Ровно так 17.09 нашёлся `tsv` — до этого
-# установка падала стеком из недр setuptools, и виноватым выглядел bibtexparser.
+echo "== python dependencies =="
+# `--only-binary :all:` IS LOAD-BEARING: it turns "a dependency with no prebuilt wheel (.whl)" from
+# an inscrutable build failure into a refusal that names the package. That is exactly how `tsv` was
+# found on 17.09 — before that the install failed with a stack from the depths of setuptools, and
+# bibtexparser looked like the guilty one.
 pip install -q --only-binary :all: -r "$HERE/checkers-requirements.txt"
-# Сам чекер — БЕЗ его зависимостей: они перечислены в requirements.txt поимённо, минус
-# несобираемый `tsv`, который он не импортирует. Причина — в шапке requirements.txt.
+# The checker itself — WITHOUT its dependencies: they are listed in requirements.txt by name, minus
+# the unbuildable `tsv`, which it does not import. The reason is in the header of requirements.txt.
 pip install -q --no-deps aclpubcheck
 
-echo "== TeXtidote (jar, не pip-пакет) =="
+echo "== TeXtidote (a jar, not a pip package) =="
 if [ -f "$JAR" ]; then
-  echo "   уже на месте: $JAR"
+  echo "   already in place: $JAR"
 else
   mkdir -p "$JAR_DIR"
   curl -sSL --max-time 300 -o "$JAR" "$JAR_URL"
 fi
 got="$(sha256sum "$JAR" | cut -c1-16)"
 if [ "$got" != "$JAR_SHA" ]; then
-  echo "🔴 sha256 не сошёлся: ждали $JAR_SHA…, получили $got…" >&2
-  echo "   Файл НЕ тот, что проверяли. Не пользоваться, разобраться." >&2
+  echo "🔴 sha256 does not match: expected $JAR_SHA…, got $got…" >&2
+  echo "   The file is NOT the one that was checked. Do not use it, find out why." >&2
   exit 1
 fi
 
-# 🔴 ГЛАВНАЯ ЧАСТЬ. Установщику верить нельзя — верить можно только тому, что инструмент
-# ЗАПУСКАЕТСЯ. «Установлен» и «работает» отличаются, и в этой репе на этой разнице уже
-# записан отдельный отказ: handoff зафиксировал «aclpubcheck: All Clear» для проверки,
-# которая ни разу не выполнялась. Отсутствующий чекер и прошедший выглядят одинаково.
-echo "== проверка, что каждый чекер РАБОТАЕТ =="
+# 🔴 THE MAIN PART. The installer cannot be trusted — the only thing that can be trusted is that
+# the tool RUNS. "Installed" and "works" are different, and this repo already records a separate
+# failure on that difference: a handoff recorded "aclpubcheck: All Clear" for a check that was
+# never executed once. A missing checker and a passing one look the same.
+echo "== checking that every checker WORKS =="
 fail=0
-# 🔴 ИМПОРТ МОДУЛЯ, А НЕ `--help`. Замер 17.09: `--help` печатает usage и выходит НУЛЁМ
-# на интерпретаторе, где pandas не импортируется вовсе (numpy/pandas собраны друг против
-# друга: «numpy.dtype size changed»). То есть приёмка, стоявшая здесь, пропускала ровно тот
-# отказ, ради которого написана. `import aclpubcheck.formatchecker` тянет numpy и pandas на
-# 15-й и 20-й строках самого чекера и потому падает честно.
+# 🔴 IMPORT THE MODULE, NOT `--help`. Measured 17.09: `--help` prints usage and exits ZERO on an
+# interpreter where pandas does not import at all (numpy/pandas built against each other:
+# "numpy.dtype size changed"). That is, the acceptance check that stood here let through exactly
+# the failure it was written for. `import aclpubcheck.formatchecker` pulls in numpy and pandas on
+# lines 15 and 20 of the checker itself and therefore fails honestly.
 python3 -c "import aclpubcheck.formatchecker" >/dev/null 2>&1 \
-  && echo "   ✅ aclpubcheck" || { echo "   ❌ aclpubcheck установлен, но не запускается"; fail=1; }
+  && echo "   ✅ aclpubcheck" || { echo "   ❌ aclpubcheck is installed, but does not run"; fail=1; }
 python3 -c "import rebiber" >/dev/null 2>&1 \
-  && echo "   ✅ rebiber" || { echo "   ❌ rebiber не импортируется"; fail=1; }
+  && echo "   ✅ rebiber" || { echo "   ❌ rebiber does not import"; fail=1; }
 python3 -c "import jinja2" >/dev/null 2>&1 \
-  && echo "   ✅ jinja2" || { echo "   ❌ jinja2 не импортируется"; fail=1; }
+  && echo "   ✅ jinja2" || { echo "   ❌ jinja2 does not import"; fail=1; }
 java -jar "$JAR" --version >/dev/null 2>&1 \
-  && echo "   ✅ textidote ($JAR)" || { echo "   ❌ textidote не запускается (нужна JRE; java 21 подходит)"; fail=1; }
+  && echo "   ✅ textidote ($JAR)" || { echo "   ❌ textidote does not run (a JRE is needed; java 21 works)"; fail=1; }
 
-[ "$fail" -eq 0 ] || { echo; echo "🔴 не всё работает — см. выше" >&2; exit 1; }
+[ "$fail" -eq 0 ] || { echo; echo "🔴 not everything works — see above" >&2; exit 1; }
 echo
-echo "✅ все чекеры установлены И запускаются"
+echo "✅ all checkers are installed AND run"

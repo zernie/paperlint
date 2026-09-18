@@ -1,62 +1,66 @@
 #!/usr/bin/env node
 /**
- * extract-ref-facts.mjs — разобрать библиографию статьи, спросить реестры и записать ФАКТЫ в JSON.
- * Ничего не судит.
+ * extract-ref-facts.mjs — parse a paper's bibliography, ask the registries and write FACTS to JSON.
+ * It judges nothing.
  *
- * Usage: node extract-ref-facts.mjs <папка статьи|paper.md|refs.bib> [--offline] [--refresh]
+ * Usage: node extract-ref-facts.mjs <paper dir|paper.md|refs.bib> [--offline] [--refresh]
  *                                   [--cache=PATH] [--out=PATH] [--quiet]
- * Выход: 0 — факты записаны · 1 — записать нечего (нет источника, нет записей).
+ * Exit: 0 — facts written · 1 — nothing to write (no source, no entries).
  *
- * ЗАЧЕМ РАЗДЕЛЕНИЕ. До 2026-08-26 измерение и суждение жили в одном скрипте
- * (`verify-refs.mjs`, 20 emit-сайтов, 8 видов находок) — то есть на пятой ступени лесенки
- * `the consumer's papers CLAUDE.md`. Суждение переехало в правила ESLint (`eslint-rules/ref-facts.mjs`):
- * реестр правил, severity конфигом, `eslint-disable` с причиной, позиции `file:line:col`. Сюда
- * осталась сантехника: разбор разметки, разбор `.bib`, сеть, разбор ответов реестров.
+ * WHY THE SPLIT. Before 2026-08-26 measurement and judgement lived in one script
+ * (`verify-refs.mjs`, 20 emit sites, 8 kinds of findings) — that is, on the fifth rung of the
+ * ladder in `the consumer's papers CLAUDE.md`. The judgement moved into ESLint rules
+ * (`eslint-rules/ref-facts.mjs`): a registry of rules, severity from config, `eslint-disable` with a
+ * reason, `file:line:col` positions. What stayed here is the plumbing: parsing markup, parsing
+ * `.bib`, the network, parsing the registries' responses.
  *
- * Прецедент в этой же базе — `render-paper/extract-pdf-facts.mjs` + `eslint-rules/pdf-facts.mjs`.
- * Граница ровно та же: во внешний мир ходит скрипт, суждение выносит правило.
+ * The precedent in this same knowledge base is `render-paper/extract-pdf-facts.mjs` +
+ * `eslint-rules/pdf-facts.mjs`. The boundary is exactly the same: the script goes out into the
+ * world, the rule passes the judgement.
  *
- * 🔴 ПОЧЕМУ ПРАВИЛО НЕ МОЖЕТ ЖИТЬ НАД САМОЙ СТАТЬЁЙ. Из трёх статей базы `paper.md` есть у одной
- * (`<paper-a>`); у `<paper-b>` и `<paper-c>` библиография — `refs.bib`, а `.bib`
- * ни один language-плагин ESLint не разбирает. Общий вход, который умеет и то и другое, —
- * JSON фактов. Цена известна и записана: находка адресуется в факты, а не в строку `paper.md`;
- * поэтому у каждой записи в фактах лежит `line` источника, и правило печатает его в сообщении.
+ * 🔴 WHY THE RULE CANNOT LIVE OVER THE PAPER ITSELF. Of the three papers in the knowledge base one
+ * has a `paper.md` (`<paper-a>`); in `<paper-b>` and `<paper-c>` the bibliography is `refs.bib`, and
+ * no ESLint language plugin parses `.bib`. The common input that can do both is the facts JSON.
+ * The price is known and written down: a finding is addressed into the facts, not into a line of
+ * `paper.md`; that is why every entry in the facts carries the `line` of its source, and the rule
+ * prints it in the message.
  *
- * 🔴 ЧТО ПОЧИНЕНО ЭТИМ ПЕРЕЕЗДОМ (обе ноги были МЕРТВЫ, замер 2026-08-26):
+ * 🔴 WHAT THIS MOVE FIXED (both legs were DEAD, measured 2026-08-26):
  *
- *  1. `.bib` НИКОГДА НЕ ОТКРЫВАЛСЯ. `resolveSource` перебирал `paper.md` → `draft.md` →
- *     `build/custom.bib`; `refs.bib` в списке не было, хотя текст ошибки обещал «or .bib».
- *     Прогон: `verify-refs.mjs <papers-root>/<paper-b>` →
- *     «no paper.md, draft.md or .bib … nothing to check».
- *  2. ПАРСЕР `.bib` НЕ БРАЛ НАСТОЯЩИЕ ФАЙЛЫ. Регулярка `/@\w+\{([^,]+),([\s\S]*?)\n\}/g` требовала
- *     `}` на отдельной строке, а обе наши `refs.bib` закрывают запись на строке последнего поля
- *     (`note={arXiv:2310.06770}}`). Прогон прямо по файлу: «parsed 0 references out of
- *     …/<paper-b>/refs.bib». То есть 40 строк `parseBib` не отработали ни разу.
- *  3. И ТРЕТИЙ, скрытый за первыми двумя: в `.bib` автор пишется «Фамилия, Имя», а сравнение
- *     брало ПОСЛЕДНИЙ токен строки — для `Jimenez, Carlos E.` это `e`. Даже если бы регулярка
- *     работала, сверка авторов по `.bib` сравнивала бы инициалы с фамилиями.
+ *  1. `.bib` WAS NEVER OPENED. `resolveSource` walked `paper.md` → `draft.md` →
+ *     `build/custom.bib`; `refs.bib` was not on the list, although the error text promised
+ *     "or .bib". The run: `verify-refs.mjs <papers-root>/<paper-b>` →
+ *     "no paper.md, draft.md or .bib … nothing to check".
+ *  2. THE `.bib` PARSER DID NOT TAKE THE REAL FILES. The regex `/@\w+\{([^,]+),([\s\S]*?)\n\}/g`
+ *     required a `}` on a line of its own, while both of our `refs.bib` close an entry on the line
+ *     of the last field (`note={arXiv:2310.06770}}`). A run straight at the file: "parsed 0
+ *     references out of …/<paper-b>/refs.bib". That is, 40 lines of `parseBib` never ran once.
+ *  3. AND A THIRD, hidden behind the first two: in `.bib` an author is written "Surname, First
+ *     name", while the comparison took the LAST token of the string — for `Jimenez, Carlos E.` that
+ *     is `e`. Even if the regex had worked, checking authors against `.bib` would have compared
+ *     initials with surnames.
  *
- * Всё это лечится не аккуратностью, а тем, что `.bib` разбирает НАСТОЯЩИЙ ПАРСЕР
- * (`@retorquere/bibtex-parser`), который отдаёт `lastName` отдельным полем — класс №3 становится
- * невыразимым. Занятость проверена прогоном на обоих настоящих файлах ДО выбора: `bibtex-parse`,
- * `@retorquere/bibtex-parser`, `citation-js` и `astrocite-bibtex` — все четыре дают верные 27 и 51
- * запись против нуля у нашей регулярки. Взят retorquere, потому что он единственный отдаёт
- * СТРУКТУРНОЕ имя; с любым другим фамилию пришлось бы выкусывать руками, то есть писать самим ту
- * самую половину, которая и была сломана.
+ * None of this is cured by being careful, but by having `.bib` parsed by a REAL PARSER
+ * (`@retorquere/bibtex-parser`), which returns `lastName` as a separate field — class #3 becomes
+ * inexpressible. Occupancy was checked by a run over both real files BEFORE the choice:
+ * `bibtex-parse`, `@retorquere/bibtex-parser`, `citation-js` and `astrocite-bibtex` — all four give
+ * the correct 27 and 51 entries against zero from our regex. retorquere was taken because it is the
+ * only one that returns a STRUCTURED name; with any other the surname would have to be cut out by
+ * hand, that is, we would be writing ourselves the very half that was broken.
  *
- * 🔴 КЕШ — ЭТО ДОКАЗАТЕЛЬСТВО, А НЕ ВТОРАЯ ДЕКЛАРАЦИЯ. `<статья>/repro/refs-cache.json` хранит
- * СЫРЫЕ ТЕЛА ответов реестров и коммитится (у `<paper-a>` он лежит в git с 16.08).
- * Его нельзя сочинить — только обновить из реестра. Факты в `_build/` производны от него и от
- * библиографии, поэтому `_build/` в `.gitignore`, а в фактах лежит `source_sha256`: правило
- * `refs/fresh` сверяет его с файлом на диске, и протухшие факты становятся находкой, а не тишиной.
- * Ровно тот отказ, из-за которого `api:check` в vigiles печатал «no drift», читая `dist/` от
- * предыдущей сборки.
+ * 🔴 THE CACHE IS EVIDENCE, NOT A SECOND DECLARATION. `<paper>/repro/refs-cache.json` keeps the RAW
+ * BODIES of the registries' responses and is committed (for `<paper-a>` it has been in git since
+ * 16.08). It cannot be made up — only refreshed from the registry. The facts in `_build/` are
+ * derived from it and from the bibliography, which is why `_build/` is in `.gitignore` while the
+ * facts carry `source_sha256`: the rule `refs/fresh` compares it with the file on disk, and stale
+ * facts become a finding rather than silence. Exactly the failure that made `api:check` in vigiles
+ * print "no drift" while reading a `dist/` from the previous build.
  *
- * 🔴 РАЗБОР ОТВЕТОВ ЖИВЁТ ЗДЕСЬ, А НЕ В ПРАВИЛЕ, И ЭТО НЕСУЩЕЕ. Кеш хранит сырые тела именно
- * затем, чтобы читатели CrossRef-JSON и arXiv-Atom прогонялись на настоящих ответах: каждый
- * сфабрикованный заголовок, который эта база когда-либо отгружала, найден чтением ответа реестра,
- * а не сравнением. Если бы кеш хранил разобранные записи, эти читатели остались бы непокрытыми,
- * выглядя покрытыми.
+ * 🔴 PARSING THE RESPONSES LIVES HERE, NOT IN THE RULE, AND THAT IS LOAD-BEARING. The cache keeps
+ * raw bodies precisely so that the CrossRef-JSON and arXiv-Atom readers are exercised on real
+ * responses: every fabricated title this knowledge base has ever shipped was found by reading the
+ * registry's response, not by a comparison. If the cache kept parsed entries, those readers would
+ * stay uncovered while looking covered.
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -64,45 +68,45 @@ import { join, resolve, dirname, basename } from "node:path";
 import { headings as mdHeadings, requireMarkdown } from "../../../lib/markdown.mjs";
 import { isMain } from "./consumer.mjs";
 
-// Разбор разметки — парсером (`CLAUDE.md`, 2026-08-11). Падаем, а не деградируем: без парсера
-// список литературы не нашёлся бы вовсе, и факты вышли бы пустыми — то есть чистый вердикт про
-// статью, у которой на самом деле сорок источников.
+// Markup is parsed with a parser (`CLAUDE.md`, 2026-08-11). We fail rather than degrade: without
+// the parser the reference list would not be found at all, and the facts would come out empty —
+// that is, a clean verdict about a paper that in fact has forty references.
 requireMarkdown();
 
 const ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const CROSSREF = "https://api.crossref.org/works/";
 const ARXIV = "https://export.arxiv.org/api/query?id_list=";
-// CrossRef просит контакт в User-Agent и за него отдаёт вежливый пул. Ни аккаунта, ни ключа —
-// это любезность, анонимный пул режется по частоте.
+// CrossRef asks for a contact in the User-Agent and gives the polite pool in return. No account
+// and no key — it is a courtesy, the anonymous pool is rate-limited.
 const UA = "extract-ref-facts/1.0 (https://github.com/; paper-pipeline citation facts)";
 
 export const SCHEMA = 1;
 
-// ── разбор: список литературы в markdown ─────────────────────────────────────
+// ── parsing: the reference list in markdown ──────────────────────────────────
 //
-// Та же форма, что читает `repro/md2submission.py`, намеренно: этот скрипт превращает список в
-// .bib, который реально загружается на площадку, поэтому всё, что записью считает он, — запись.
-// `^\d{1,2}. ` открывает запись, отступ продолжает её, пустая строка закрывает.
+// The same shape that `repro/md2submission.py` reads, deliberately: that script turns the list into
+// the .bib actually uploaded to the venue, so whatever it counts as an entry is an entry.
+// `^\d{1,2}. ` opens an entry, an indent continues it, a blank line closes it.
 
 const REF_OPEN = /^(\d{1,2})\.\s+(.*)$/;
-/** Рабочие пометки, не доезжающие до PDF; md2submission их срезает, значит и мы. */
+/** Working notes that never reach the PDF; md2submission strips them, so we do too. */
 const BRACKET_NOTE = /\[(VERIFY|ANONYMIZ)[^\]]*\]/g;
 
 export function parseMarkdownRefs(text) {
-  // Секцию режет парсер. Прежнее `text.split(/^## References\s*$/m)[1]` открывало список
-  // литературы на `## References`, процитированном внутри ```-блока, — а в этой репе статьи
-  // цитируют собственную разметку кусками.
+  // The section is cut by the parser. The former `text.split(/^## References\s*$/m)[1]` opened the
+  // reference list on a `## References` quoted inside a ```-block — and in this repo papers quote
+  // their own markup in chunks.
   const refsHs = mdHeadings(text).filter((h) => h.depth === 2 && /^References\s*$/u.test(h.text));
   if (refsHs.length === 0) return [];
   const nl = text.indexOf("\n", refsHs[0].offset);
   const body = text.slice(nl === -1 ? text.length : nl, refsHs[1] ? refsHs[1].offset : text.length);
-  // Строка начала тела в исходном файле — чтобы у записи был АДРЕС в `paper.md`, а не только
-  // номер в списке. Правило печатает его в сообщении: файл фактов лежит в `_build/`, и без
-  // строки источника находку пришлось бы искать глазами.
+  // The line where the body starts in the source file — so that an entry has an ADDRESS in
+  // `paper.md` and not just a number in a list. The rule prints it in the message: the facts file
+  // lives in `_build/`, and without the source line a finding would have to be hunted for by eye.
   const bodyLine = text.slice(0, nl === -1 ? text.length : nl).split("\n").length;
-  // Заголовок закрывает список — приложения идут ПОСЛЕ библиографии, и без этого их нумерованная
-  // проза разбиралась бы как ссылки. Номера строк берём у парсера: `/^#{1,6}\s/` считал заголовком
-  // и решётку внутри ```-блока.
+  // A heading closes the list — appendices come AFTER the bibliography, and without this their
+  // numbered prose would be parsed as references. The line numbers come from the parser:
+  // `/^#{1,6}\s/` also counted a hash inside a ```-block as a heading.
   const headingLines = new Set(mdHeadings(body).map((h) => h.line));
   const entries = [];
   let cur = null;
@@ -131,7 +135,7 @@ export function parseMarkdownRefs(text) {
   return entries.map(splitEntry).filter(Boolean);
 }
 
-/** `A, B, C. *Title.* rest` → авторы / заголовок / остаток — форма, которую делает md2submission. */
+/** `A, B, C. *Title.* rest` → authors / title / remainder — the shape md2submission produces. */
 function splitEntry(e) {
   const base = { n: e.n, line: e.line, key: null, raw: e.raw };
   const mt = /\*(.+?)\*/.exec(e.raw);
@@ -150,8 +154,9 @@ function splitAuthors(a) {
 }
 
 /**
- * `Z. Xiang et al.` — запись намеренно даёт ПРЕФИКС списка авторов. Это факт о записи, а не
- * суждение, поэтому усечение снимается здесь, а правило получает уже честный префикс и флаг.
+ * `Z. Xiang et al.` — the entry deliberately gives a PREFIX of the author list. That is a fact about
+ * the entry, not a judgement, so the truncation is removed here and the rule receives an honest
+ * prefix plus a flag.
  */
 const ET_AL = /\bet\s+al\.?$/i;
 function dropEtAl(authors) {
@@ -164,39 +169,41 @@ function dropEtAl(authors) {
 
 const yearIn = (s) => (/\b(19|20)\d{2}\b/.exec(s ?? "") ?? [null])[0];
 
-// ── разбор: .bib НАСТОЯЩИМ ПАРСЕРОМ ──────────────────────────────────────────
+// ── parsing: .bib WITH A REAL PARSER ─────────────────────────────────────────
 
 /**
- * Порядок имени приводится к «Имя Фамилия» — той же форме, в которой авторы записаны в markdown.
- * Тогда у правила ОДНА функция `surname()` (последний алфавитный токен) на оба источника, а не
- * две ветки. Приведение формата — работа разбора; сравнение — работа правила.
+ * The name order is normalised to "First name Surname" — the same shape in which authors are written
+ * in markdown. Then the rule has ONE `surname()` function (the last alphabetic token) for both
+ * sources instead of two branches. Normalising the format is the parser's job; comparing is the
+ * rule's job.
  *
- * 🔴 ДВЕ ФОРМЫ, И ОБЕ ПЕРЕЧИСЛЕНЫ ЯВНО. Парсер отдаёт институцию (`author={{Adversa AI}}` —
- * двойная скобка значит «одно имя целиком, не разбирать») как `{name}`, БЕЗ `lastName`: у
- * организации фамилии нет, и это верно. Первая редакция этой функции формы `name` не знала,
- * поэтому все четыре поля были undefined, строка выходила пустой, и вызывающий отбрасывал её
- * своим `.filter(Boolean)` — автор исчезал молча.
+ * 🔴 TWO SHAPES, AND BOTH ARE LISTED EXPLICITLY. The parser returns an institution
+ * (`author={{Adversa AI}}` — the double brace means "one name as a whole, do not split") as
+ * `{name}`, WITHOUT `lastName`: an organisation has no surname, and that is correct. The first
+ * revision of this function did not know the `name` shape, so all four fields were undefined, the
+ * string came out empty, and the caller dropped it with its own `.filter(Boolean)` — the author
+ * disappeared silently.
  *
- * Замер 2026-09-17 на настоящем aisec-2026: ОДИННАДЦАТЬ записей из пятидесяти одной приходили
- * с `authors = []`, то есть сверка по ним не находила ничего и выглядела пройденной. Ровно тот
- * отказ в сторону тишины, против которого и брали настоящий парсер вместо регулярки.
+ * Measured 2026-09-17 on the real aisec-2026: ELEVEN entries out of fifty-one arrived with
+ * `authors = []`, that is, the check over them found nothing and looked like it had passed. Exactly
+ * the failure toward silence against which a real parser was taken instead of a regex.
  *
- * ⚠️ Перечисление, а не «первое непустое поле»: со списком следующая форма читается как
- * отсутствующая строка, а с `??`-цепочкой по произвольным полям она растворилась бы снова.
+ * ⚠️ An enumeration, not "the first non-empty field": with a list the next shape reads as a missing
+ * line, whereas with a `??` chain over arbitrary fields it would dissolve again.
  */
 const joinName = (a) =>
   a.name ?? [a.firstName, a.prefix, a.lastName, a.suffix].filter(Boolean).join(" ").trim();
 
 /**
- * 🔴 ПАРСЕР .bib — ОПЦИОНАЛЬНАЯ ЗАВИСИМОСТЬ, И ОТКАЗ ОБЯЗАН БЫТЬ ГРОМКИМ И С ЛЕКАРСТВОМ.
- * Он весит 15 МБ из 56 МБ установки потребителя (сам пакет 9 МБ плюс англоязычная модель
- * `wink-eng-lite-web-model` 4 МБ и `unicode2latex` 2 МБ) — 27% веса ради одного вызова, который
- * нужен только тому, кто извлекает факты о библиографии. Импорт здесь и так динамический, то
- * есть ленивость уже была; манифест просто перестал врать про обязательность.
+ * 🔴 THE .bib PARSER IS AN OPTIONAL DEPENDENCY, AND THE FAILURE MUST BE LOUD AND CARRY THE CURE.
+ * It weighs 15 MB out of the consumer's 56 MB install (the package itself 9 MB plus the English
+ * model `wink-eng-lite-web-model` 4 MB and `unicode2latex` 2 MB) — 27% of the weight for a single
+ * call that only whoever extracts bibliography facts needs. The import here is dynamic anyway, so
+ * the laziness was already there; the manifest merely stopped lying about it being required.
  *
- * ⚠️ Тихий пропуск здесь был бы худшим из вариантов: отсутствующий чекер и прошедший выглядят
- * одинаково, а «библиография не проверена» читается как «библиография в порядке». Поэтому
- * сообщение называет команду, а не факт.
+ * ⚠️ A silent skip here would be the worst of the options: a missing checker and a passing one look
+ * the same, and "the bibliography was not checked" reads as "the bibliography is fine". That is why
+ * the message names the command, not the fact.
  */
 export async function parseBib(text) {
   let parse;
@@ -205,18 +212,19 @@ export async function parseBib(text) {
   } catch (e) {
     if (e?.code !== "ERR_MODULE_NOT_FOUND") throw e;
     throw new Error(
-      "разбор .bib требует @retorquere/bibtex-parser — он объявлен ОПЦИОНАЛЬНЫМ, потому что " +
-        "весит 15 МБ и нужен только для фактов о библиографии.\n" +
-        "   Поставить:  npm i -D @retorquere/bibtex-parser\n" +
-        "   Почему не своя регулярка: замер 26.08 — регулярка давала 0 записей на обоих " +
-        "настоящих файлах, четыре библиотеки давали верные 27 и 51.",
+      "parsing .bib requires @retorquere/bibtex-parser — it is declared OPTIONAL because it " +
+        "weighs 15 MB and is needed only for bibliography facts.\n" +
+        "   Install:  npm i -D @retorquere/bibtex-parser\n" +
+        "   Why not our own regex: measured 26.08 — the regex gave 0 entries on both real " +
+        "files, four libraries gave the correct 27 and 51.",
     );
   }
-  // `sentenceCase: false` — заголовок нужен как написан. Наша нормализация всё равно приводит
-  // регистр, но факт обязан быть фактом: пересказанный заголовок нельзя показать человеку.
+  // `sentenceCase: false` — the title is needed as written. Our normalisation folds the case
+  // anyway, but a fact has to be a fact: a paraphrased title cannot be shown to a human.
   const res = parse(text, { sentenceCase: false, verbatimFields: [] });
-  // Строка записи в файле — по её ключу. Парсер позиций не отдаёт, а адрес находке нужен;
-  // ключ в `.bib` уникален по определению формата, так что поиск однозначен.
+  // The entry's line in the file — found by its key. The parser gives no positions, and a finding
+  // needs an address; a key in `.bib` is unique by definition of the format, so the search is
+  // unambiguous.
   const lines = text.split("\n");
   const lineOfKey = (key) => {
     const i = lines.findIndex((l) => l.includes(`{${key},`));
@@ -225,7 +233,7 @@ export async function parseBib(text) {
   return res.entries.map((e, i) => {
     const f = e.fields ?? {};
     const names = Array.isArray(f.author) ? f.author : [];
-    // `and others` — это `et al.` формата BibTeX. Парсер отдаёт его как автора без имени.
+    // `and others` is BibTeX's `et al.`. The parser returns it as an author with no first name.
     const isOthers = (a) => !a.firstName && /^others$/i.test(a.lastName ?? "");
     const truncated = names.some(isOthers);
     const authors = names.filter((a) => !isOthers(a)).map(joinName).filter(Boolean);
@@ -235,8 +243,8 @@ export async function parseBib(text) {
       n: i + 1,
       line: lineOfKey(e.key),
       key: e.key,
-      // `raw` — по нему ищутся идентификаторы: они прячутся и в `note`, и в `journal`
-      // (`arXiv preprint arXiv:2107.03374`), и в отдельном поле `doi`.
+      // `raw` is where identifiers are looked for: they hide in `note`, in `journal`
+      // (`arXiv preprint arXiv:2107.03374`), and in a separate `doi` field.
       raw: [str(f.author && authors.join(" and ")), str(f.title), venueText, str(f.doi), str(f.url), str(f.year)]
         .filter(Boolean)
         .join(" "),
@@ -245,13 +253,13 @@ export async function parseBib(text) {
       title: str(f.title).trim() || null,
       year: str(f.year).trim() || null,
       venue_text: [venueText, str(f.doi)].filter(Boolean).join(" "),
-      // DOI в BibTeX объявляется полем, а не спрятан в прозе — берём его прямо, не выуживая.
+      // In BibTeX a DOI is declared as a field rather than hidden in prose — take it directly.
       doi_field: str(f.doi).trim() || null,
     };
   });
 }
 
-// ── идентификаторы ───────────────────────────────────────────────────────────
+// ── identifiers ──────────────────────────────────────────────────────────────
 
 const ARXIV_RE = /arxiv[:\s]\s*(\d{4}\.\d{4,5})(v\d+)?/i;
 const DOI_RE = /(?:doi[:\s]\s*|doi\.org\/)(10\.\d{4,9}\/[^\s,;)}]+)/i;
@@ -259,42 +267,43 @@ const ARXIV_RE_G = new RegExp(ARXIV_RE.source, "gi");
 const DOI_RE_G = new RegExp(DOI_RE.source, "gi");
 
 /**
- * ВСЕ идентификаторы записи, а не первый.
+ * ALL identifiers of an entry, not the first one.
  *
- * 🔴 Запись [16] статьи, против которой это писалось, — одна нумерованная запись, несущая ДВЕ
- * работы (TOGA и её позднейший переразбор), у каждой свой arXiv id. Парсер, останавливающийся на
- * первом, проверяет половину записи и молчит про вторую — ровно та тишина, ради снятия которой
- * всё это существует. Сравнить лишние нечем (у записи один заголовок и один список авторов, и они
- * про первую работу), поэтому они РЕЗОЛВЯТСЯ, а правило говорит, что не сравнивало их.
+ * 🔴 Entry [16] of the paper this was written against is one numbered entry carrying TWO works
+ * (TOGA and its later re-analysis), each with its own arXiv id. A parser that stops at the first
+ * checks half the entry and stays silent about the second — exactly the silence all of this exists
+ * to remove. There is nothing to compare the extras against (the entry has one title and one author
+ * list, and they are about the first work), so they are RESOLVED while the rule says it did not
+ * compare them.
  */
 export function extractIds(entry) {
   const hay = `${entry.venue_text ?? ""} ${entry.raw ?? ""}`;
   const uniq = (xs) => [...new Set(xs)];
   const doi = uniq([
     ...(entry.doi_field ? [entry.doi_field] : []),
-    // Точка в конце принадлежит предложению, а не DOI. Суффиксы законно содержат точки
-    // (10.18653/v1/2020.acl-main.168), поэтому срезается только ПОСЛЕДНЯЯ.
+    // A trailing period belongs to the sentence, not to the DOI. Suffixes legitimately contain
+    // periods (10.18653/v1/2020.acl-main.168), so only the LAST one is stripped.
     ...[...hay.matchAll(DOI_RE_G)].map((m) => m[1].replace(/[.,]$/, "")),
   ]);
   return { arxiv: uniq([...hay.matchAll(ARXIV_RE_G)].map((m) => m[1])), doi };
 }
 
 /**
- * 🔴 `10.48550/arXiv.NNNN.NNNNN` — DOI, ЗАРЕГИСТРИРОВАННЫЙ В DATACITE, А НЕ В CROSSREF.
- * Замер 2026-08-26: `api.crossref.org/works/10.48550%2FarXiv.2107.03374` → **HTTP 404**,
- * «Resource not found», при том что DOI совершенно настоящий и стоит в `<paper-b>/refs.bib`.
- * Спросив про него CrossRef, мы получили бы `unresolvable-id` на КОРРЕКТНОЙ записи — то есть
- * правило уровня `error`, падающее на верном входе, которое выключают в тот же день.
- * Такой DOI разрешается в arXiv по его же номеру.
+ * 🔴 `10.48550/arXiv.NNNN.NNNNN` IS A DOI REGISTERED WITH DATACITE, NOT WITH CROSSREF.
+ * Measured 2026-08-26: `api.crossref.org/works/10.48550%2FarXiv.2107.03374` → **HTTP 404**,
+ * "Resource not found", while the DOI is perfectly real and sits in `<paper-b>/refs.bib`.
+ * Asking CrossRef about it would have produced `unresolvable-id` on a CORRECT entry — that is, an
+ * `error`-level rule failing on valid input, which gets switched off the same day.
+ * Such a DOI resolves at arXiv by its own number.
  */
 export const ARXIV_DOI = /^10\.48550\/arxiv\.(\d{4}\.\d{4,5})(v\d+)?$/i;
 
-/** Запись, о которой судят заголовок/авторов/год: DOI, если он есть. */
+/** The record the title/authors/year are judged against: the DOI, if there is one. */
 export const primaryOf = (ids) =>
   ids.doi.length ? `doi:${ids.doi[0]}` : ids.arxiv.length ? `arxiv:${ids.arxiv[0]}` : null;
 export const allKeys = (ids) => [...ids.doi.map((d) => `doi:${d}`), ...ids.arxiv.map((a) => `arxiv:${a}`)];
 
-/** Куда идти за ключом и с каким id. Решается ДО сети — от этого зависит и разбор ответа. */
+/** Where to go for a key and with which id. Decided BEFORE the network — parsing depends on it. */
 export function routeOf(key) {
   const kind = key.slice(0, key.indexOf(":"));
   const id = key.slice(key.indexOf(":") + 1);
@@ -304,7 +313,7 @@ export function routeOf(key) {
   return { registry: "crossref", url: CROSSREF + encodeURIComponent(id) };
 }
 
-// ── читатели реестров ────────────────────────────────────────────────────────
+// ── registry readers ─────────────────────────────────────────────────────────
 
 export function readCrossref(body) {
   const j = JSON.parse(body);
@@ -315,11 +324,11 @@ export function readCrossref(body) {
     m["published-print"]?.["date-parts"]?.[0]?.[0] ??
     m["published-online"]?.["date-parts"]?.[0]?.[0] ??
     null;
-  // 🔴 CrossRef кладёт подзаголовок после двоеточия в ОТДЕЛЬНОЕ поле: для TOSEM-овской
-  // «Variability-Aware Static Analysis at Scale: An Empirical Study» он отдаёт
+  // 🔴 CrossRef puts the subtitle after the colon into a SEPARATE field: for TOSEM's
+  // "Variability-Aware Static Analysis at Scale: An Empirical Study" it returns
   // title=["Variability-Aware Static Analysis at Scale"], subtitle=["An Empirical Study"].
-  // Сравнение с одним `title[0]` дало корректной записи 0.69 и объявило заголовок выдуманным.
-  // Чекер, срабатывающий на корректных записях, глушат — и тогда он не чекер.
+  // Comparing against `title[0]` alone gave a correct entry 0.69 and declared the title made up.
+  // A checker that fires on correct entries gets muted — and then it is not a checker.
   const parts = [
     ...(Array.isArray(m.title) ? m.title : [m.title]),
     ...(Array.isArray(m.subtitle) ? m.subtitle : m.subtitle ? [m.subtitle] : []),
@@ -335,7 +344,7 @@ export function readCrossref(body) {
   };
 }
 
-/** arXiv отвечает Atom. Один `<entry>` на id; ноль записей — id не разрешается. */
+/** arXiv answers in Atom. One `<entry>` per id; zero entries means the id does not resolve. */
 export function readArxiv(body) {
   const entry = /<entry>([\s\S]*?)<\/entry>/.exec(body);
   if (!entry) return null;
@@ -353,11 +362,12 @@ export function readArxiv(body) {
     authors,
     year: published ? published.slice(0, 4) : null,
     venue: null,
-    // Собственные поля arXiv «это где-то вышло». Любое из них значит, что есть опубликованная версия.
+    // arXiv's own "this came out somewhere" fields. Either of them means a published version
+    // exists.
     journalRef: tag("arxiv:journal_ref"),
     doi: tag("arxiv:doi"),
-    // Ответ поиска по отозванному или выдуманному id всё равно возвращает <entry>, чей id —
-    // эхо запроса; у настоящей записи заголовок никогда не «Error».
+    // A search for a withdrawn or invented id still returns an <entry> whose id echoes the query;
+    // a real entry's title is never "Error".
     error: /^Error$/i.test(tag("title") ?? ""),
   };
 }
@@ -370,7 +380,7 @@ const unescapeXml = (s) =>
     .replace(/&apos;/g, "'")
     .replace(/&amp;/g, "&");
 
-// ── кеш и сеть ───────────────────────────────────────────────────────────────
+// ── cache and network ────────────────────────────────────────────────────────
 
 export function loadCache(path) {
   if (!path || !existsSync(path)) return {};
@@ -394,15 +404,15 @@ async function fetchKey(key) {
 }
 
 /**
- * Сырой ответ → запись фактов. Именно ЗДЕСЬ живёт всё, что может бросить: правило, которое
- * бросает, роняет весь прогон ESLint, а не одну находку.
+ * A raw response → a facts record. Everything that can throw lives HERE: a rule that throws brings
+ * down the whole ESLint run, not one finding.
  */
 export function recordFrom(key, cached) {
   if (!cached) return { cached: false };
   const { registry } = routeOf(key);
   const base = { cached: true, registry, httpStatus: cached.httpStatus ?? null, fetched: cached.fetched ?? null };
   if (cached.httpStatus !== 200) return base;
-  let rec; // без инициализатора: try присваивает, catch возвращает (2026-08-28)
+  let rec; // no initializer: try assigns it, catch returns (2026-08-28)
   try {
     rec = registry === "crossref" ? readCrossref(cached.body) : readArxiv(cached.body);
   } catch (e) {
@@ -412,9 +422,9 @@ export function recordFrom(key, cached) {
   return { ...base, found: !rec.error, ...rec };
 }
 
-// ── сборка фактов ────────────────────────────────────────────────────────────
+// ── assembling the facts ─────────────────────────────────────────────────────
 
-/** `paper.md` → `draft.md` → `refs.bib` → `build/custom.bib`. `refs.bib` ДОБАВЛЕН 26.08 (дефект №1). */
+/** `paper.md` → `draft.md` → `refs.bib` → `build/custom.bib`. `refs.bib` ADDED 26.08 (defect #1). */
 export const SOURCE_ORDER = ["paper.md", "draft.md", "refs.bib", "build/custom.bib"];
 
 export function resolveSource(target) {
@@ -432,7 +442,7 @@ export async function loadEntries(path) {
   return path.endsWith(".bib") ? parseBib(text) : parseMarkdownRefs(text);
 }
 
-/** Все ключи реестров, нужные списку записей. Считаются один раз, чтобы запросы шли пачкой. */
+/** Every registry key a list of entries needs. Computed once so the requests go in one batch. */
 export function keysFor(entries) {
   const keys = new Set();
   for (const e of entries) for (const k of allKeys(extractIds(e))) keys.add(k);
@@ -472,7 +482,7 @@ async function main(argv) {
 
   const src = resolveSource(target);
   if (!src) {
-    console.error(`🛑 нет ${SOURCE_ORDER.join(", ")} под ${resolve(target)} — библиографию брать неоткуда.`);
+    console.error(`🛑 no ${SOURCE_ORDER.join(", ")} under ${resolve(target)} — nowhere to take a bibliography from.`);
     return 1;
   }
   const paperDir = statSync(resolve(target)).isFile() ? dirname(src) : resolve(target);
@@ -482,9 +492,9 @@ async function main(argv) {
   const text = readFileSync(src, "utf8");
   const entries = await loadEntries(src);
   if (!entries.length) {
-    // 🔴 Ноль записей — подозреваемый, а не успех. Факты с пустым списком выглядели бы как чистая
-    // библиография, поэтому их не пишем вовсе и выходим ненулевым кодом.
-    console.error(`🛑 из ${rel(src)} разобрано 0 записей. Тишина здесь выглядела бы как чистая библиография.`);
+    // 🔴 Zero entries is a suspect, not a success. Facts with an empty list would look like a
+    // clean bibliography, so we do not write them at all and exit with a non-zero code.
+    console.error(`🛑 parsed 0 entries out of ${rel(src)}. Silence here would look like a clean bibliography.`);
     return 1;
   }
 
@@ -497,13 +507,13 @@ async function main(argv) {
         cache[k] = await fetchKey(k);
         fetched++;
       } catch (err) {
-        // Сетевой отказ — НЕ чистый результат: ключ остаётся отсутствующим, и правило скажет,
-        // что запись не проверена, вместо того чтобы объявить её верной.
+        // A network failure is NOT a clean result: the key stays missing, and the rule will say
+        // the entry was not checked instead of declaring it correct.
         if (!quiet) console.error(`   … ${k}: ${err.message}`);
       }
-      // Тело в скобках: сокращённая стрелка возвращает Timeout из исполнителя промиса, где его
-      // никто не читает (`no-promise-executor-return`, 2026-08-28). Поведение то же.
-      await new Promise((r) => { setTimeout(r, 250); }); // оба реестра просят вежливый темп
+      // A braced body: a concise arrow returns the Timeout out of the promise executor, where
+      // nobody reads it (`no-promise-executor-return`, 2026-08-28). The behaviour is the same.
+      await new Promise((r) => { setTimeout(r, 250); }); // both registries ask for a polite pace
     }
     if (fetched) saveCache(cachePath, cache);
   }
@@ -513,8 +523,8 @@ async function main(argv) {
   writeFileSync(out, `${JSON.stringify(facts, null, 2)}\n`);
   const resolved = Object.values(facts.records).filter((r) => r.found).length;
   console.log(
-    `📚 ${basename(src)} → ${rel(out)} (${entries.length} записей, ${Object.keys(facts.records).length} идентификаторов, ` +
-      `${resolved} разрешились${offline ? ", offline" : fetched ? `, +${fetched} запрошено` : ", всё из кеша"})`,
+    `📚 ${basename(src)} → ${rel(out)} (${entries.length} entries, ${Object.keys(facts.records).length} identifiers, ` +
+      `${resolved} resolved${offline ? ", offline" : fetched ? `, +${fetched} fetched` : ", all from cache"})`,
   );
   return 0;
 }

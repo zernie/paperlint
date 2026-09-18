@@ -1,17 +1,17 @@
 ---
-title: "Ревью статьи — раунд 3"
+title: "Paper review — round 3"
 created: 2026-09-01
 ---
 
-# Находки
+# Findings
 
-| # | что | где |
+| # | what | where |
 |---|---|---|
-| 1 | число в абстракте не сходится с таблицей 2 | §1 |
-| 2 | ссылка на снятую работу | §4 |
-| 3 | обещание в прошедшем времени про неопубликованное | §6 |
+| 1 | the number in the abstract does not match table 2 | §1 |
+| 2 | a reference to a withdrawn work | §4 |
+| 3 | a past-tense promise about something unpublished | §6 |
 
-## Разбор
+## Analysis
 
-Cause: гейт чисел читал только `paper.md` и не открывал `.tex`, поэтому таблица
-и абстракт сверялись в разных файлах. Чинить надо гейт, а не абзац.
+Cause: the numbers gate read only `paper.md` and never opened `.tex`, so the table
+and the abstract were compared in different files. Fix the gate, not the paragraph.

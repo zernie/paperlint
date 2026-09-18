@@ -1,47 +1,51 @@
 #!/usr/bin/env node
 /**
- * check-provenance — есть ли у статьи гейт чисел на этапе сборки, и что он ещё НЕ покрывает.
+ * check-provenance — does the paper have a build-time numbers gate, and what does it still NOT
+ * cover.
  *
- * 🔴 ТРИ ИЗ ПЯТИ ПРОВЕРОК УЕХАЛИ В ПРАВИЛА ESLint 2026-08-26 (`eslint-rules/paper-registry.mjs`):
+ * 🔴 THREE OF THE FIVE CHECKS MOVED INTO ESLint RULES ON 2026-08-26
+ * (`eslint-rules/paper-registry.mjs`):
  *
  *   arm-mismatch     → `paper/number-arm-mismatch`
  *   untraced-number  → `paper/number-untraced`
  *   arm-unlabelled   → `paper/number-arm-unlabelled`
  *
- * Все три говорили про ПРЕДЛОЖЕНИЕ В СТАТЬЕ, а провенанс-файлы (`NOTES.md`, `CLAIMS.md`,
- * `repro/artifact-anon/NUMBERS.md`, `NUMBER-ARMS.tsv`) были для них КОНФИГУРАЦИЕЙ — тем, что
- * задаёт, какое предложение считать дефектным. Ровно как профиль площадки для `pdf/profile`.
- * Паритет доказан ДО удаления: настоящая статья (5 `arm-mismatch` + 5 чисел `untraced`,
- * множества совпали) плюс 17 фикстур. Разбор —
+ * All three spoke about a SENTENCE IN THE PAPER, while the provenance files (`NOTES.md`,
+ * `CLAIMS.md`, `repro/artifact-anon/NUMBERS.md`, `NUMBER-ARMS.tsv`) were CONFIGURATION for them —
+ * what sets which sentence counts as defective. Exactly like a venue profile for `pdf/profile`.
+ * Parity was proved BEFORE the deletion: the real paper (5 `arm-mismatch` + 5 `untraced` numbers,
+ * the sets matched) plus 17 fixtures. The write-up is in
  * `the author's private research notes`.
  *
- * ЧТО ОСТАЛОСЬ ЗДЕСЬ, И ПОЧЕМУ ЭТО НЕ ЛЕНЬ. Две оставшиеся проверки **не читают тело статьи
- * вообще** — им на вход дан только каталог:
+ * WHAT IS LEFT HERE, AND WHY THAT IS NOT LAZINESS. The two remaining checks **do not read the body
+ * of the paper at all** — all they are given is the directory:
  *
- *   no-numbers-gate   в статье нет `repro/paper_numbers.py`, то есть каждая напечатанная величина
- *                     здесь — набранная руками цифра, чья единственная связь с файлом данных —
- *                     чья-то память.
- *   numbers-coverage  сколько величин засорсено и сколько ещё сырых (храповик
- *                     `numbers-grandfathered.txt`). Это ВООБЩЕ НЕ НАХОДКА, а замер покрытия —
- *                     у ESLint нет severity «к сведению», а выкинуть его значило бы потерять
- *                     единственную строку, отвечающую «а гейт-то покрывает то, что проверит
- *                     рецензент?».
+ *   no-numbers-gate   the paper has no `repro/paper_numbers.py`, that is, every printed quantity
+ *                     here is a hand-typed digit whose only link to its data file is somebody's
+ *                     memory.
+ *   numbers-coverage  how many quantities are sourced and how many are still raw (the
+ *                     `numbers-grandfathered.txt` ratchet). This is NOT A FINDING AT ALL, it is a
+ *                     coverage measurement — ESLint has no "for information" severity, and throwing
+ *                     it away would mean losing the only line that answers "does the gate cover what
+ *                     a reviewer will check?".
  *
- * Проверка, которая не читает линтуемый файл, не может быть правилом о нём — этот различитель и
- * решил обе.
+ * A check that does not read the file being linted cannot be a rule about it — that discriminator
+ * decided both.
  *
- * ═══ ИСТОРИЯ ОТКАЗА, из-за которого файл вообще появился (сохранена дословно) ═══
- * 2026-08-05, за 29 часов до дедлайна. Заголовок статьи читал «147 real rules files exactly as
- * their projects committed them, 22 fail admission». В агрегате артефакта
- * `.all.annotated.failedContradicted = 22` — на файлах КАК ЗАКОММИЧЕНО не падает ничего. 22 —
- * контрфактическая рука, где догадки экстрактора вписаны так, будто их написал автор.
+ * ═══ THE FAILURE STORY that made this file exist at all (kept verbatim) ═══
+ * 2026-08-05, 29 hours before the deadline. The paper's headline read "147 real rules files exactly
+ * as their projects committed them, 22 fail admission". In the artifact's aggregate
+ * `.all.annotated.failedContradicted = 22` — on the files AS COMMITTED nothing fails. 22 is the
+ * counterfactual arm, where the extractor's guesses are written in as if the author had written
+ * them.
  *
- * Ни одна проверка пайплайна этого не видела, и причина структурная: каждая смотрит на ОДНУ
- * сторону. verify-citations проверяет, что ссылка настоящая. Диф сохранения клеймов — что клейм
- * не вырос (и он не вырос, 22 всегда было 22). Ревьюер артефакта пересчитывает число из данных, и
- * оно сходится, потому что число ВЕРНОЕ. Панель читает прозу и принимает «unmodified» за факт.
- * Дефект живёт только в СТЫКЕ между предложением и путём к полю, и обе стороны сразу не держал
- * никто. Держит их теперь `paper/number-arm-mismatch`.
+ * Not one check in the pipeline saw this, and the reason is structural: each looks at ONE side.
+ * verify-citations checks that a reference is real. The claims-preservation diff checks that a
+ * claim did not grow (and it did not grow, 22 was always 22). The artifact reviewer recomputes the
+ * number from the data, and it agrees, because the number is CORRECT. The panel reads the prose and
+ * takes "unmodified" as a fact. The defect lives only in the JOINT between the sentence and the
+ * path to the field, and nobody held both sides at once. `paper/number-arm-mismatch` holds them
+ * now.
  *
  * Advisory. Exit 0 always; findings on stdout.
  */
@@ -49,10 +53,11 @@ import { readFileSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { isMain } from "./consumer.mjs";
 
-// 🔴 ИМПОРТА `markdown.mjs` БОЛЬШЕ НЕТ, И ЭТО СЛЕДСТВИЕ ПЕРЕЕЗДА, А НЕ УПРОЩЕНИЕ. Разметку тут
-// разбирать больше нечем и незачем: обе оставшиеся проверки смотрят на КАТАЛОГ, а не на текст.
-// Границы библиографии (`## References`), ради которых стоял `requireMarkdown()`, нужны теперь
-// правилам в `eslint-rules/paper-registry.mjs`, и там их даёт сам ESLint.
+// 🔴 THERE IS NO `markdown.mjs` IMPORT ANY MORE, AND THAT IS A CONSEQUENCE OF THE MOVE, NOT A
+// SIMPLIFICATION. There is nothing left here to parse markup with and no reason to: both remaining
+// checks look at the DIRECTORY, not at the text. The bibliography boundaries (`## References`) that
+// `requireMarkdown()` stood for are now needed by the rules in `eslint-rules/paper-registry.mjs`,
+// and there ESLint itself provides them.
 
 /**
  * Has this paper adopted the build-time numbers gate, and how far?
@@ -71,8 +76,8 @@ import { isMain } from "./consumer.mjs";
  * what belongs HERE is the generic question: does this paper have one, and what does it still leave
  * uncovered?
  *
- * ⚠️ Чтение `NUMBER-ARMS.tsv` (находка `arm-unlabelled`) уехало 2026-08-26 в правило
- * `paper/number-arm-unlabelled`; реестр по-прежнему работает для статьи, у которой он есть.
+ * ⚠️ Reading `NUMBER-ARMS.tsv` (the `arm-unlabelled` finding) moved on 2026-08-26 into the rule
+ * `paper/number-arm-unlabelled`; the registry still works for a paper that has one.
  */
 function checkNumbersGate(dir) {
   const out = [];
@@ -110,22 +115,22 @@ function checkNumbersGate(dir) {
 }
 
 /**
- * Почему гварды вынесены В ОТДЕЛЬНУЮ функцию, а не оставлены ранними `return` внутри
- * `checkProvenance` — замер 2026-08-26.
+ * Why the guards were pulled out INTO A SEPARATE function instead of being left as early
+ * `return`s inside `checkProvenance` — measured 2026-08-26.
  *
- * 🔴 Скрипт печатал `🔢 check-provenance — clean` для `<paper-b>` и `<paper-c>`, ни разу
- * ничего не проверив: обе статьи в LaTeX, `paper.md` у них нет, `find(existsSync)` отдавал
- * `undefined`, и функция выходила пустым массивом. То есть **«у тебя нет гейта чисел» было
- * заглушено ровно на тех статьях, у которых его нет** — `repro/paper_numbers.py` существует
- * только у `<paper-a>`. Уверенный зелёный на трёх статьях из четырёх.
+ * 🔴 The script printed `🔢 check-provenance — clean` for `<paper-b>` and `<paper-c>` without
+ * checking anything at all: both papers are in LaTeX, they have no `paper.md`, `find(existsSync)`
+ * returned `undefined`, and the function exited with an empty array. That is, **"you have no
+ * numbers gate" was muted on exactly those papers that do not have one** — `repro/paper_numbers.py`
+ * exists only in `<paper-a>`. A confident green on three papers out of four.
  *
- * Пропуск, неотличимый от прохода, — это тот же отказ, что «0 checks» против «checks passed» в
- * интерфейсе PR. Соседи по каталогу (`artifact-coverage.mjs`, `population-map.mjs`) давно
- * печатают `⏭️ SKIPPED … absence of findings here is absence of checking, not a clean bill`;
- * этот файл был единственным, кто молчал.
+ * A skip indistinguishable from a pass is the same failure as "0 checks" versus "checks passed" in
+ * the PR interface. The neighbours in this directory (`artifact-coverage.mjs`,
+ * `population-map.mjs`) have long printed `⏭️ SKIPPED … absence of findings here is absence of
+ * checking, not a clean bill`; this file was the only one that stayed silent.
  *
- * Гвард — ОДИН на оба потребителя (список находок и вывод CLI), чтобы причина пропуска не могла
- * разъехаться с самим пропуском.
+ * The guard is ONE for both consumers (the findings list and the CLI output), so that the reason
+ * for the skip cannot drift apart from the skip itself.
  */
 export function provenanceScope(dir) {
   const paper = ["paper.md", "draft.md"]
@@ -135,7 +140,7 @@ export function provenanceScope(dir) {
     return {
       covered: false,
       reason:
-        "нет paper.md и draft.md — чекер читает только markdown, статья в .tex им НЕ покрыта",
+        "no paper.md/draft.md — this checker reads markdown only, a .tex paper is NOT covered",
     };
   }
   const prov = [
@@ -151,7 +156,7 @@ export function provenanceScope(dir) {
     return {
       covered: false,
       reason:
-        "нет ни одного непустого NOTES.md / CLAIMS.md / repro/artifact-anon/NUMBERS.md",
+        "no non-empty NOTES.md / CLAIMS.md / repro/artifact-anon/NUMBERS.md",
     };
   }
   return { covered: true, reason: null };
@@ -169,11 +174,11 @@ if (isMain(import.meta.url)) {
     console.log(`🔢 check-provenance — ${f.length} finding(s):`);
     for (const x of f) console.log(`   [${x.kind}] ${x.msg}`);
   } else {
-    // Пропуск и проход печатаются РАЗНЫМИ строками — см. комментарий у `provenanceScope`.
+    // A skip and a pass print as DIFFERENT lines — see the comment on `provenanceScope`.
     const scope = provenanceScope(dir);
     if (scope.covered) console.log("🔢 check-provenance — clean");
     else
-      console.log(`⏭️  check-provenance SKIPPED для ${dir} — ${scope.reason}`);
+      console.log(`⏭️  check-provenance SKIPPED for ${dir} — ${scope.reason}`);
   }
   process.exit(0);
 }

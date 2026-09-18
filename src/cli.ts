@@ -1,28 +1,29 @@
 #!/usr/bin/env node
 /**
- * `research-paper-pipeline lint [paths…]` — прогнать все правила по корпусу статей.
+ * `research-paper-pipeline lint [paths…]` — run every rule over the corpus of papers.
  *
- * 🔴 ЗАЧЕМ ЭТА УТИЛИТА СУЩЕСТВУЕТ. До неё «установка» означала: поставь пакет И НАПИШИ РУКАМИ
- * шестьдесят строк flat-конфига ESLint, перечислив десять правил, три языка и четыре блока
- * `files`. То есть инструмент вываливал свою реализацию на пользователя: чтобы посчитать байты
- * pdf, надо было сперва узнать, что такое `language: "tex/latex"`. Под ESLint правила по-прежнему
- * бегут — но это ВНУТРЕННЕЕ устройство, и знать его для запуска больше не нужно.
+ * 🔴 WHY THIS UTILITY EXISTS. Before it, "installation" meant: install the package AND WRITE BY
+ * HAND sixty lines of ESLint flat config, listing ten rules, three languages and four `files`
+ * blocks. That is, the tool dumped its own implementation onto the user: to count the bytes of a
+ * pdf you first had to learn what `language: "tex/latex"` is. The rules still run under ESLint —
+ * but that is INTERNAL machinery, and you no longer need to know it in order to run them.
  *
- * Два входа в инструмент, и оба теперь целые:
- *     npx research-paper-pipeline lint              ← здесь
+ * Two entry points into the tool, and both are whole now:
+ *     npx research-paper-pipeline lint              ← here
  *     uses: zernie/research-paper-pipeline@<sha>    ← action.yml
  *
- * ⚠️ ГРАНИЦА, КОТОРУЮ УТИЛИТА НЕ ИМЕЕТ ПРАВА СТЕРЕТЬ: данные потребителя остаются у потребителя.
- * Долг типографики, маркер прогона сверки авторов, словарь полей — всё это про ОДИН корпус, и
- * зашивать их в пакет значило бы повторить дефект, из-за которого в сообщении правила стоял путь
- * `.claude/skills/verify-citations/...`. Поэтому они живут в `rpp.json` у потребителя.
+ * ⚠️ THE BOUNDARY THIS UTILITY HAS NO RIGHT TO ERASE: the consumer's data stays with the consumer.
+ * The typography debt, the marker of the author-list check run, the field dictionary — all of that
+ * is about ONE corpus, and wiring it into the package would repeat the defect that put the path
+ * `.claude/skills/verify-citations/...` into a rule's message. So they live in the consumer's
+ * `rpp.json`.
  *
- * 🔴 ПОЧЕМУ КОМАНДА НАЗЫВАЕТСЯ `lint`, А НЕ `check`. Она делает ровно то, что этим словом
- * называют все остальные: читает файлы, ничего не меняет, печатает находки, выходит ненулём.
- * `check` в экосистеме занято другим смыслом — `cargo check`, `tsc --noEmit`, `npm run check` —
- * это «собери, но не выводи артефакт», то есть половина СБОРКИ. Пакет, у которого сборка статьи
- * впереди, не имеет права занимать это слово линтером. `check` остаётся псевдонимом и печатает,
- * чем его заменили: молча сломать чужой воркфлоу хуже, чем попросить поправить строку.
+ * 🔴 WHY THE COMMAND IS CALLED `lint` AND NOT `check`. It does exactly what everyone else calls by
+ * that word: reads files, changes nothing, prints findings, exits non-zero. `check` is taken in the
+ * ecosystem by another meaning — `cargo check`, `tsc --noEmit`, `npm run check` — it means "build,
+ * but do not emit the artifact", that is, half of a BUILD. A package whose paper build comes first
+ * has no right to occupy that word with a linter. `check` stays as an alias and prints what
+ * replaced it: silently breaking someone else's workflow is worse than asking them to fix a line.
  */
 import { ESLint, type Linter } from "eslint";
 import { readFileSync, existsSync, writeFileSync } from "node:fs";
@@ -31,8 +32,8 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join, dirname, resolve, relative, basename } from "node:path";
 import markdown from "@eslint/markdown";
-// @ts-expect-error — хелпер живёт в .mjs-части пакета (29 833 строки правил и скриптов скиллов),
-// которую эта задача не переписывает. Типов у него нет, а поведение закреплено харнессом.
+// @ts-expect-error — the helper lives in the .mjs half of the package (29 833 lines of rules and
+// skill scripts), which this task does not rewrite. It has no types, and a harness pins its behaviour.
 import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
 export { isMain };
 import type { Args, RppConfig, ConfigRead } from "./types.ts";
@@ -57,19 +58,19 @@ import { CONFIG_KEY } from "../lib/paper-config.mjs";
 export { init };
 export { nextSteps } from "./init.ts";
 
-// @ts-expect-error — правило ESLint на .mjs, типов не имеет
+// @ts-expect-error — an ESLint rule in .mjs, it has no types
 import paperStages from "../eslint-rules/paper-stages.mjs";
-// @ts-expect-error — правило ESLint на .mjs, типов не имеет
+// @ts-expect-error — an ESLint rule in .mjs, it has no types
 import researchQuestion from "../eslint-rules/paper-research-question.mjs";
-// @ts-expect-error — правило ESLint на .mjs, типов не имеет
+// @ts-expect-error — an ESLint rule in .mjs, it has no types
 import typography from "../eslint-rules/paper-typography.mjs";
-// @ts-expect-error — правило ESLint на .mjs, типов не имеет
+// @ts-expect-error — an ESLint rule in .mjs, it has no types
 import texBuild from "../eslint-rules/tex-build.mjs";
-// @ts-expect-error — правило ESLint на .mjs, типов не имеет
+// @ts-expect-error — an ESLint rule in .mjs, it has no types
 import docFields from "../eslint-rules/doc-fields.mjs";
-// @ts-expect-error — правило ESLint на .mjs, типов не имеет
+// @ts-expect-error — an ESLint rule in .mjs, it has no types
 import findingsCause from "../eslint-rules/review-findings-cause.mjs";
-// @ts-expect-error — правило ESLint на .mjs, типов не имеет
+// @ts-expect-error — an ESLint rule in .mjs, it has no types
 import coldReadCause from "../eslint-rules/cold-read-cause.mjs";
 
 const USAGE = `research-paper-pipeline — machine-checkable gates for a paper kept in git
@@ -110,7 +111,7 @@ read as a deprecated fallback and the run says so. \`papers\` is required; the r
   }
 `;
 
-/** Конфиг, который иначе писал бы пользователь. Данные — из `opts`, механизм — здесь. */
+/** The config the user would otherwise write by hand. The data comes from `opts`, the mechanism is here. */
 export function buildConfig(
   opts: RppConfig = {},
   texLanguage: unknown,
@@ -155,13 +156,13 @@ export function buildConfig(
       ...md,
       rules: {
         /*
-         * 🔴 УМОЛЧАНИЕ АНГЛИЙСКОЕ С 2026-09-17. Стояло «Причина:» — русское слово в пакете,
-         * интерфейс которого английский. Правило уровня `error` требовало от человека
-         * дописать в свой файл кириллицу, а поменять пометку было нечем: `causeMarker`
-         * не пробрасывался через CLI вовсе. Единственным выходом было бросить команду и
-         * собирать конфиг ESLint руками — то есть дефект выталкивал ровно на тот путь,
-         * от которого утилита избавляет.
-         * Русская пометка осталась ВЫРАЗИМОЙ, но теперь как значение, а не как умолчание.
+         * 🔴 THE DEFAULT IS ENGLISH SINCE 2026-09-17. It used to be the Russian word for "Cause:" —
+         * a Russian word in a package whose interface is English. An `error`-level rule demanded
+         * that a person put Cyrillic into their own file, and there was nothing to change the
+         * marker with: `causeMarker` was not threaded through the CLI at all. The only way out was
+         * to abandon the command and assemble the ESLint config by hand — that is, the defect
+         * pushed you onto exactly the path the utility frees you from.
+         * The Russian marker stays EXPRESSIBLE, but now as a value, not as the default.
          */
         "review/findings-cause": [
           "error",
@@ -182,8 +183,8 @@ export function buildConfig(
     },
   ];
 
-  // `.tex` только если язык загрузился: он тянет парсер LaTeX, и падать из-за него на корпусе
-  // без единого `.tex` было бы отказом в работе там, где работа возможна.
+  // `.tex` only if the language loaded: it pulls in the LaTeX parser, and dying because of it on a
+  // corpus without a single `.tex` would be refusing to work where work is possible.
   if (texLanguage)
     cfg.push({
       files: ["**/paper.tex"],
@@ -203,8 +204,8 @@ export function buildConfig(
 }
 
 export function parseArgs(argv: readonly string[]): Args {
-  // `--help` разбирается ДО того, как argv[0] станет командой: иначе `rpp --help` отвечает
-  // «unknown command `--help`» — поймано первым же прогоном утилиты.
+  // `--help` is parsed BEFORE argv[0] becomes the command: otherwise `rpp --help` answers
+  // "unknown command `--help`" — caught by the very first run of the utility.
   const out: Args = {
     cmd: null,
     paths: [],
@@ -212,18 +213,19 @@ export function parseArgs(argv: readonly string[]): Args {
     json: false,
     all: false,
     dryRun: false,
-    // -1 = предупреждения НИКОГДА не валят прогон. В этом наборе большинство находок
-    // советательные по замыслу, а гейт, падающий на совете, глушат целиком.
+    // -1 = warnings NEVER fail the run. In this set most findings are advisory by design, and a
+    // gate that fails on advice gets muted entirely.
     maxWarnings: -1,
   };
   const rest = [...argv];
   if (rest[0] && !rest[0].startsWith("-")) out.cmd = rest.shift() ?? null;
 
-  // 🔴 ФЛАГ, У КОТОРОГО ОТОБРАЛИ ЗНАЧЕНИЕ, — ОТКАЗ, А НЕ УМОЛЧАНИЕ. Нашёл это компилятор при
-  // переводе на TypeScript: `rest[++i]` за последним аргументом даёт `undefined`, и
-  // `rpp lint --config` (значение забыли, или его съела подстановка в CI) молча превращался в
-  // «конфиг не задан» — то есть уходил в автопоиск и линтовал по ЧУЖОМУ файлу, ничего не сказав.
-  // Отказ односторонний и в сторону тишины, поэтому лечится не приведением типа, а поведением.
+  // 🔴 A FLAG WHOSE VALUE WAS TAKEN AWAY IS A REFUSAL, NOT A DEFAULT. The compiler found this
+  // during the move to TypeScript: `rest[++i]` past the last argument gives `undefined`, and
+  // `rpp lint --config` (the value forgotten, or eaten by a substitution in CI) silently turned
+  // into "no config given" — that is, it went to auto-discovery and linted against SOMEONE ELSE'S
+  // file, saying nothing. The failure is one-sided and toward silence, so it is cured by
+  // behaviour, not by a type cast.
   const valueFor = (flag: string, i: number): string | undefined => {
     const v = rest[i];
     if (v === undefined) out.missingValue = flag;
@@ -308,11 +310,11 @@ export function findConfig(startDir: string): string | null {
 }
 
 /**
- * Чтение конфига, ОДНО на все команды. Вынесено из `run()` в момент, когда появилась вторая
- * команда, которой нужен тот же конфиг (`build`): две копии этого блока разъехались бы на
- * первой же правке — ровно тот класс, что уже стоил нам сторожа пустого набора в двух местах.
+ * Reading the config, ONE reader for all commands. Pulled out of `run()` the moment a second
+ * command needed the same config (`build`): two copies of this block would have drifted apart on
+ * the very first edit — exactly the class that already cost us the empty-set guard in two places.
  *
- * @returns `{ opts, configPath }` при успехе либо `{ code }` — и тогда вызывающий выходит им.
+ * @returns `{ opts, configPath }` on success, or `{ code }` — and then the caller exits with it.
  */
 export function readConfig(
   a: Args,
@@ -322,9 +324,10 @@ export function readConfig(
     cwd = process.cwd(),
   }: { log?: typeof console.log; err?: typeof console.error; cwd?: string } = {},
 ): ConfigRead {
-  // 🔴 КОНФИГ ИЩЕТСЯ САМ. Явный `--config` побеждает найденный — он назван вслух, и подмена
-  // молчаливой не бывает. Для явного пути карьер решает ИМЯ ФАЙЛА: путь здесь — значение, а не
-  // текст, о котором строят догадки, и `package.json` держит настройки под ключом.
+  // 🔴 THE CONFIG FINDS ITSELF. An explicit `--config` beats the discovered one — it was named out
+  // loud, and a substitution is never silent. For an explicit path the FILE NAME decides the
+  // carrier: the path here is a value, not a text to make guesses about, and `package.json` holds
+  // the settings under a key.
   const decl: Declaration | null = a.config
     ? { path: a.config, kind: basename(a.config) === PKG_NAME ? "package.json" : "rpp.json" }
     : findDeclaration(cwd);
@@ -344,18 +347,18 @@ export function readConfig(
       return { code: 2 };
     }
     opts = decl.kind === "package.json" ? parsed?.[CONFIG_KEY] ?? {} : parsed;
-    // Найденный конфиг НАЗЫВАЕТСЯ вслух. Иначе прогон из чужого каталога подхватывает чужой
-    // файл и об этом не говорит — а расхождение долга типографики выглядит как находка.
+    // The discovered config is NAMED out loud. Otherwise a run from someone else's directory picks
+    // up someone else's file and does not say so — and a typography-debt mismatch looks like a finding.
     //
-    // 🔴 В РЕЖИМЕ `--json` — В stderr. Машинный вывод обязан быть ОДНИМ разбираемым документом:
-    // строка перед массивом ломает любой `| jq`, а сломает она его у потребителя, не у нас.
-    // Поймано не тестом, а попыткой подключить к этому выводу собственный экшен; в харнессе
-    // я эту строку сначала ОБХОДИЛ (срезал первую строку перед JSON.parse) — то есть обход
-    // прятал дефект ровно там, где он должен был кричать.
+    // 🔴 IN `--json` MODE — TO stderr. Machine output must be ONE parsable document: a line before
+    // the array breaks any `| jq`, and it breaks it for the consumer, not for us. Caught not by a
+    // test but by an attempt to wire our own action to this output; in the harness I first WORKED
+    // AROUND this line (stripped the first line before JSON.parse) — that is, the workaround hid
+    // the defect exactly where it should have been shouting.
     (a.json ? err : log)(`config: ${relative(cwd, configPath) || CONFIG_NAME}`);
-    // 🔴 УСТАРЕВШИЙ НОСИТЕЛЬ НАЗЫВАЕТСЯ ВСЛУХ, А НЕ ПЕРЕСТАЁТ ЧИТАТЬСЯ. Хуки читают ТОЛЬКО
-    // package.json, поэтому потребитель, у которого настройки остались в rpp.json, линтует один
-    // каталог и сторожит другой — и оба состояния выглядят одинаково зелёными.
+    // 🔴 THE DEPRECATED CARRIER IS NAMED OUT LOUD, IT DOES NOT STOP BEING READ. The hooks read ONLY
+    // package.json, so a consumer whose settings stayed in rpp.json lints one directory and guards
+    // another — and both states look equally green.
     if (decl.kind === "rpp.json")
       (a.json ? err : log)(
         `  ⚠ ${CONFIG_NAME} is deprecated — move these keys under "${CONFIG_KEY}" in ${PKG_NAME}; ` +
@@ -363,9 +366,9 @@ export function readConfig(
       );
   }
 
-  // 🔴 `papers` — ОБЯЗАТЕЛЬНОЕ ПОЛЕ. Каталог статей — единственное, без чего инструмент не
-  // знает, над чем он работает, и единственное, чего нельзя угадать: умолчание "." прогоняет
-  // правила по всему чекауту и выходит зелёным по охвату, который никто не выбирал.
+  // 🔴 `papers` IS A REQUIRED FIELD. The papers directory is the one thing without which the tool
+  // does not know what it works on, and the one thing that cannot be guessed: a default of "." runs
+  // the rules over the whole checkout and exits green over a scope nobody chose.
   if (decl && !hasPapers(opts)) {
     err(
       decl.kind === "package.json"
@@ -392,44 +395,44 @@ export function toPaths(papers: unknown): string[] {
 const hasPapers = (opts: RppConfig): boolean => toPaths(opts.papers).length > 0;
 
 /**
- * `rpp hook <name>` — запустить редакторский хук. Существует ради ОДНОЙ вещи: чтобы проводка
- * не адресовала рантайм от корня проекта.
+ * `rpp hook <name>` — run an editor hook. It exists for ONE thing: so that the wiring does not
+ * address the runtime from the project root.
  *
- * 🔴 ЧТО БЫЛО И ПОЧЕМУ ЭТО ЛОМАЛОСЬ. `hooks.json` звал
+ * 🔴 WHAT IT WAS AND WHY IT BROKE. `hooks.json` called
  *     node "${CLAUDE_PROJECT_DIR}/node_modules/vigiles/dist/cli.js" hook-runtime run-program …
- * Пока `vigiles` был PEER-зависимостью, этот путь ГАРАНТИРОВАЛСЯ: peer ставит сам потребитель,
- * в свой корень. После перевода в обычные зависимости гарантии не стало, и замер это показал —
- * один тарбол, два менеджера:
- *     npm:  node_modules/vigiles/dist/cli.js   ЕСТЬ
- *     pnpm: node_modules/vigiles/dist/cli.js   НЕТ (в корне только research-paper-pipeline)
- * Цена отказа несимметрична: `|| exit 2` стоял на PreToolUse(Bash), то есть денаилась ЛЮБАЯ
- * команда, включая ту, которой чинят.
+ * While `vigiles` was a PEER dependency this path was GUARANTEED: a peer is installed by the
+ * consumer itself, into its own root. After the move to ordinary dependencies the guarantee was
+ * gone, and a measurement showed it — one tarball, two managers:
+ *     npm:  node_modules/vigiles/dist/cli.js   PRESENT
+ *     pnpm: node_modules/vigiles/dist/cli.js   ABSENT (only research-paper-pipeline in the root)
+ * The cost of the failure is asymmetric: `|| exit 2` stood on PreToolUse(Bash), that is, ANY
+ * command was denied, including the one you fix it with.
  *
- * ЧТО ТЕПЕРЬ. Проводка зовёт СВОЙ бин — `research-paper-pipeline` прямая зависимость, поэтому
- * лежит в корне у любого менеджера, — а рантайм резолвится ОТ ПОЛОЖЕНИЯ ЭТОГО ФАЙЛА через
- * `createRequire`. Где бы менеджер ни разложил дерево, резолвер найдёт то же, что нашёл бы
- * `import` изнутри пакета.
+ * WHAT IT IS NOW. The wiring calls ITS OWN bin — `research-paper-pipeline` is a direct dependency,
+ * so it lies in the root under any manager — and the runtime is resolved FROM THE POSITION OF THIS
+ * FILE via `createRequire`. Wherever the manager laid the tree out, the resolver finds the same
+ * thing an `import` from inside the package would.
  *
- * 🔴 И `|| exit 2` УБРАН ИЗ ОБОЛОЧКИ. Решение об остановке — это решение, и оно принимается
- * здесь, кодом. В shell оно означало «любая незадача = блокировать всё»: не нашёлся рантайм —
- * встала работа. Теперь ненайденный рантайм ГРОМКО жалуется и возвращает 0, а настоящий вердикт
- * хука (включая 2) проходит насквозь. Молчаливая деградация хуже явной, но блокировка всего
- * хуже обеих.
+ * 🔴 AND `|| exit 2` IS REMOVED FROM THE SHELL. The decision to stop is a decision, and it is taken
+ * here, in code. In the shell it meant "any mishap = block everything": the runtime was not found —
+ * work stopped. Now a runtime that is not found complains LOUDLY and returns 0, while the hook's
+ * real verdict (2 included) passes through. Silent degradation is worse than explicit degradation,
+ * but blocking everything is worse than both.
  */
 export function runHook(
   name: string | undefined,
   {
     err = console.error,
     run = spawnSync,
-    // Резолвер инъектируется, чтобы «рантайм не нашёлся» проверялось ассертом, а не сносом
-    // node_modules: отказ обязан быть воспроизводим, а не обставляем.
-    // 🔴 РЕЗОЛВИМ ПАКЕТ, А НЕ ФАЙЛ В НЁМ. `require.resolve("vigiles/dist/cli.js")` НЕ РАБОТАЕТ:
-    // карта `exports` пакета отдаёт только «.» и девять именованных подпутей, а `./dist/cli.js`
-    // и даже `./package.json` среди них нет —
+    // The resolver is injected so that "the runtime was not found" is checked by an assert and not
+    // by deleting node_modules: a failure must be reproducible, not staged.
+    // 🔴 WE RESOLVE THE PACKAGE, NOT A FILE INSIDE IT. `require.resolve("vigiles/dist/cli.js")`
+    // DOES NOT WORK: the package's `exports` map hands out only "." and nine named subpaths, and
+    // `./dist/cli.js` — even `./package.json` — is not among them:
     //     Package subpath './dist/cli.js' is not defined by "exports"
-    // Это не наша оплошность и не их баг: закрытая карта экспортов — нормальная практика.
-    // Поэтому резолвим корневой вход («.» → dist/test.js), берём его каталог и кладём рядом
-    // `cli.js` — тот самый файл, который сам пакет объявляет своим `bin`.
+    // This is neither our oversight nor their bug: a closed export map is normal practice. So we
+    // resolve the root entry ("." → dist/test.js), take its directory and put `cli.js` next to it —
+    // the very file the package itself declares as its `bin`.
     resolve = (spec: string): string =>
       createRequire(import.meta.url).resolve(spec),
   }: {
@@ -473,10 +476,11 @@ export function runHook(
 }
 
 /**
- * 🔴 ЦЕЛЬ НАЗЫВАЕТСЯ, «ВСЁ» — ОПЦИЯ. Так устроено у всех, у кого сборка дорогая и с побочными
- * эффектами: `make <target>`, `docker build <context>`, `latexmk paper.tex`; «весь workspace»
- * у cargo включается отдельным флагом. Умолчание «собрать всё» на корпусе из пяти статей —
- * это двадцать прогонов pdflatex вместо одного, и почти всегда не то, чего хотели.
+ * 🔴 THE TARGET IS NAMED, "EVERYTHING" IS AN OPTION. That is how it is for everyone whose build is
+ * expensive and has side effects: `make <target>`, `docker build <context>`, `latexmk paper.tex`;
+ * with cargo, "the whole workspace" is turned on by a separate flag. A default of "build
+ * everything" on a corpus of five papers is twenty pdflatex runs instead of one, and almost never
+ * what was wanted.
  */
 function runBuild(
   a: Args,
@@ -535,8 +539,9 @@ export async function run(
   }: { log?: typeof console.log; err?: typeof console.error; cwd?: string } = {},
 ): Promise<number> {
   const a = parseArgs(argv);
-  // Отказ обязан быть ПЕРВЫМ: за флагом без значения обычно стоит опечатка или подстановка в
-  // CI, схлопнувшаяся в пустоту, и любое продолжение работает не над тем, что просили.
+  // The refusal must come FIRST: behind a flag without a value there is usually a typo, or a
+  // substitution in CI that collapsed into nothing, and any continuation works on something other
+  // than what was asked for.
   if (a.missingValue) {
     err(
       `${a.missingValue} needs a value — it was given none.\n` +
@@ -588,14 +593,14 @@ export async function run(
   if (cfg.code !== undefined) return cfg.code;
   const { opts, configPath } = cfg;
 
-  // Аргумент командной строки ПЕРЕОПРЕДЕЛЯЕТ конфиг: одна статья из корпуса линтуется без
-  // правки файла.
+  // A command-line argument OVERRIDES the config: one paper out of the corpus gets linted without
+  // editing a file.
   //
-  // 🔴 Путь ИЗ КОНФИГА резолвится относительно КАТАЛОГА КОНФИГА, а не текущего. Иначе подъём
-  // вверх бессмыслен: из `papers/aisec-2026` файл нашёлся бы, а `"papers": "papers"` указал бы
-  // на `papers/aisec-2026/papers`, которого нет, — и прогон упал бы «ничего не найдено» там,
-  // где всё на месте. Аргумент командной строки остаётся относительно текущего каталога: его
-  // набрали здесь и сейчас.
+  // 🔴 A path FROM THE CONFIG is resolved relative to the CONFIG'S DIRECTORY, not the current one.
+  // Otherwise walking up is pointless: from `papers/aisec-2026` the file would be found, but
+  // `"papers": "papers"` would point at `papers/aisec-2026/papers`, which does not exist — and the
+  // run would fail with "nothing found" where everything is in place. A command-line argument stays
+  // relative to the current directory: it was typed here and now.
   const paths =
     a.paths.length > 0
       ? a.paths
@@ -608,19 +613,19 @@ export async function run(
     return 2;
   }
 
-  // 🔴 СТРУКТУРА ПРОВЕРЯЕТСЯ ДО ESLint И ОТДЕЛЬНО ОТ НЕГО. Правило вызывается для поданного
-  // файла; пропавший файл не подаётся, поэтому о пропаже не может сообщить никакое правило —
-  // каталог без `PIPELINE-STATUS.md` просто не получает ни одного правила и отчитывается
-  // чисто. Разбор, почему это не лечится плагином структуры для ESLint, — в `structure.mjs`.
+  // 🔴 STRUCTURE IS CHECKED BEFORE ESLint AND SEPARATELY FROM IT. A rule is invoked for the file
+  // handed to it; a missing file is never handed over, so no rule at all can report the absence —
+  // a directory without `PIPELINE-STATUS.md` simply gets not a single rule and reports clean. The
+  // analysis of why a structure plugin for ESLint does not cure this is in `structure.mjs`.
   const structure = checkStructure(paths, opts.structure, { cwd });
 
   let texLanguage: unknown = null;
   try {
-    // @ts-expect-error — модуль на .mjs, типов не имеет; отсутствие парсера LaTeX здесь
-    // штатный случай, оно ловится catch ниже.
+    // @ts-expect-error — the module is .mjs and has no types; a missing LaTeX parser is a normal
+    // case here, it is caught by the catch below.
     ({ texLanguage } = await import("../eslint-rules/latex-language.mjs"));
   } catch {
-    /* без парсера LaTeX работаем по markdown */
+    /* without a LaTeX parser we work over markdown */
   }
 
   const eslint = new ESLint({
@@ -628,9 +633,10 @@ export async function run(
     overrideConfig: buildConfig(opts, texLanguage) as Linter.Config[],
   });
 
-  // 🔴 ESLint БРОСАЕТ на пустом наборе (`NoFilesFoundError`) — сторож ниже до этого просто не
-  // доживал, что и показал первый же прогон по пустому каталогу: вместо внятного сообщения
-  // вылетал стек из недр eslint-helpers.js. Отказ остаётся отказом, но объяснимым.
+  // 🔴 ESLint THROWS on an empty set (`NoFilesFoundError`) — the guard below simply never got
+  // reached, which is what the very first run over an empty directory showed: instead of a clear
+  // message a stack from the depths of eslint-helpers.js flew out. A failure stays a failure, but
+  // an explicable one.
   let results: any[];
   try {
     results = await eslint.lintFiles(paths);
@@ -644,10 +650,10 @@ export async function run(
     else throw e;
   }
 
-  // 🔴 СТРАЖ ОТ ЗЕЛЁНОГО НОЛЯ, тот же, что в action.yml, и по той же причине: ESLint выходит с
-  // нулём, когда находок нет, а «находок нет» побайтово неотличимо от «ни одному правилу не
-  // досталось ни одного файла». Правило, чей глоб не совпал, не вызывается — и, не вызвавшись,
-  // физически не может об этом сообщить.
+  // 🔴 THE GUARD AGAINST A GREEN ZERO, the same one as in action.yml and for the same reason:
+  // ESLint exits zero when there are no findings, and "no findings" is byte-for-byte
+  // indistinguishable from "not a single rule got a single file". A rule whose glob did not match
+  // is not invoked — and, not being invoked, it physically cannot report that.
   if (results.length === 0) {
     err(
       `nothing was linted under ${paths.map((x) => relative(cwd, x) || x).join(", ")} — no PIPELINE-STATUS.md, paper.md/tex or reviews/ found there. A clean report over zero files is not a clean report.`,
@@ -658,8 +664,8 @@ export async function run(
   if (a.json)
     log(JSON.stringify([...asEslintResults(structure), ...results], null, 1));
   else {
-    // Пропажи печатаются ПЕРВЫМИ: они объясняют, почему отчёт ниже может быть подозрительно
-    // коротким. Обратный порядок читался бы как «всё чисто, а, и ещё вот».
+    // Missing things are printed FIRST: they explain why the report below may be suspiciously
+    // short. The reverse order would read as "all clean — oh, and also this".
     if (structure.length > 0) log(formatStructure(structure));
     const out = await (await eslint.loadFormatter("stylish")).format(results);
     log(
@@ -670,8 +676,8 @@ export async function run(
     );
   }
   if (structure.length > 0 || results.some((r) => r.errorCount > 0)) return 1;
-  // Предупреждения валят прогон только когда порог назван ЯВНО. Отрицательный порог —
-  // «не считать вовсе», и это умолчание.
+  // Warnings fail the run only when the threshold is named EXPLICITLY. A negative threshold means
+  // "do not count them at all", and that is the default.
   if (a.maxWarnings >= 0) {
     const warnings = results.reduce((n, r) => n + r.warningCount, 0);
     if (warnings > a.maxWarnings) {
@@ -684,12 +690,12 @@ export async function run(
   return 0;
 }
 
-// 🔴 `isMain`, А НЕ СРАВНЕНИЕ СТРОК. Первая редакция писала
+// 🔴 `isMain`, NOT A STRING COMPARISON. The first version wrote
 //     if (import.meta.url === `file://${process.argv[1]}`)
-// и утилита, запущенная через `node_modules/.bin/rpp`, МОЛЧА ВЫХОДИЛА С НУЛЁМ: npm ставит туда
-// СИМЛИНК, `process.argv[1]` остаётся путём симлинка, а `import.meta.url` — реальным путём, и
-// условие ложно. То есть единственный способ, которым утилиту запускает настоящий потребитель,
-// не работал вовсе — а выглядел как чистый прогон.
-// Хелпер в пакете УЖЕ БЫЛ, и его докстринг описывает ровно этот отказ дословно: «turns a CLI
-// into a no-op that exits 0». Написал руками то, что лежало готовым.
+// and the utility, launched via `node_modules/.bin/rpp`, SILENTLY EXITED WITH ZERO: npm puts a
+// SYMLINK there, `process.argv[1]` stays the symlink's path while `import.meta.url` is the real
+// path, and the condition is false. That is, the only way a real consumer launches the utility did
+// not work at all — and it looked like a clean run.
+// The helper WAS ALREADY in the package, and its docstring describes exactly this failure
+// verbatim: "turns a CLI into a no-op that exits 0". I wrote by hand what was lying there ready.
 if (isMain(import.meta.url)) process.exit(await run(process.argv.slice(2)));

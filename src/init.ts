@@ -355,11 +355,11 @@ export async function init(dir: string, opts: InitOptions = {}): Promise<number>
   const missing = missingPrograms(run);
   if (missing.length === 0) log(`  ✓ all ${String(PROGRAMS.length)} are on PATH`);
   else {
-    // 🔴 НАЗВАНИЯ И СЧЁТ ЗДЕСЬ, ПОСЛЕДСТВИЯ — В ОТЧЁТЕ doctor НИЖЕ, И ЭТО НЕ ЭКОНОМИЯ СТРОК.
-    // Первая редакция печатала здесь ту же таблицу «✗ программа — что молчит без неё», которую
-    // через двадцать строк печатает doctor. Мало того что читатель видел её дважды, — ассерт
-    // харнесса не мог отличить одну от другой и оставил мутацию, вырезавшую лекарство ИЗ init,
-    // зелёной. Один факт печатает один автор.
+    // 🔴 THE NAMES AND THE COUNT HERE, THE CONSEQUENCES — IN THE doctor REPORT BELOW, AND THIS IS
+    // NOT ABOUT SAVING LINES. The first version printed here the same "✗ program — what goes silent
+    // without it" table that doctor prints twenty lines later. Not only did the reader see it
+    // twice — the harness assert could not tell one from the other and left a mutation that cut the
+    // remedy OUT of init green. One fact is printed by one author.
     log(
       `  ✗ ${String(missing.length)} of ${String(PROGRAMS.length)} missing: ` +
         missing.map((p) => p.bin).join(", "),

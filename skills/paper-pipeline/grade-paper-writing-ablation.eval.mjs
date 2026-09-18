@@ -467,9 +467,10 @@ const PROMPTS = {
   ],
 };
 const CELLS = ["AH", "SH"];
-// Рядом лежал `CELL_LABEL = { AH: "ACTION / HIGH overlap", SH: "SITUATION / HIGH overlap" }`,
-// который не звал никто (2026-08-28). Отчёт печатает голые ключи `AH`/`SH`, то есть расшифровка
-// ячеек была написана и не подключена. Удалено; при желании подключать — в шапку таблицы ниже.
+// Next to this sat `CELL_LABEL = { AH: "ACTION / HIGH overlap", SH: "SITUATION / HIGH overlap" }`,
+// which nobody called (2026-08-28). The report prints the bare keys `AH`/`SH`, that is, the
+// expansion of the cells was written and never wired up. Deleted; to wire it up, put it in the
+// table header below.
 const allPrompts = CELLS.flatMap((k) => PROMPTS[k].map((p) => ({ cell: k, prompt: p })));
 
 // ── the baseline description, read from disk (never hardcoded — it would drift) ──
@@ -702,7 +703,7 @@ function buildArm(a) {
   // error rather than a silent no-op, because a mutation that does not apply scores
   // as a pass over a fixture nobody changed.
   const setLine = (text, key, value) => {
-    const line = new RegExp(`^${key}:.*\\n`, "m").exec(text); // kb-lint:markdown-regex-ok — правка СТРОКИ, не разбор
+    const line = new RegExp(`^${key}:.*\\n`, "m").exec(text); // kb-lint:markdown-regex-ok — editing a LINE, not parsing
     if (!line)
       throw new Error(`FIXTURE TARGET NOT FOUND: no \`${key}:\` line in ${TARGET}/SKILL.md`);
     return text.replace(line[0], `${key}: ${value}\n`);
@@ -879,7 +880,7 @@ if (MODE === "oracle") {
         `A user typed exactly this:\n\n"${prompt}"\n\n` +
         `Which ONE of the skills above should be invoked? Reply with the skill name alone, ` +
         `or the single word NONE if no skill clearly applies. No explanation.`;
-      let pick; // без инициализатора: обе ветки try/catch присваивают (2026-08-28)
+      let pick; // no initializer: both try/catch branches assign it (2026-08-28)
       try {
         const out = execFileSync("claude", ["-p", q, "--model", "sonnet"], {
           encoding: "utf-8",

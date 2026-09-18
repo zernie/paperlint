@@ -85,7 +85,7 @@ const cases = [];
 {
   const old = await on("defect.md", { sinceCreated: "2026-12-01" });
   assert.deepEqual(old, [], "перечит старше даты правила — известный долг, а не находка");
-  const other = await on("defect.md", { openSection: "^Закрыто" });
+  const other = await on("defect.md", { openSection: "^Closed" });
   assert.equal(other.length, 1, "имя секции — опция: с «Закрыто» проверяется другая таблица");
   cases.push("дата и имя секции приходят опциями, а не зашиты в механизм");
 }

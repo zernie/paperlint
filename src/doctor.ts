@@ -127,13 +127,13 @@ export function doctor({
         return undefined;
       }
     })();
-    // 🔴 ПРОПАВШАЯ ДЕКЛАРАЦИЯ — ПРЕДУПРЕЖДЕНИЕ, А НЕ ОТКАЗ, и это решение, а не недосмотр.
-    // Без неё хук берёт умолчание `papers`; если статьи там и лежат, установка РАБОТАЕТ — просто
-    // по совпадению, и сломается молча в день переезда каталога. Падать на работающей установке
-    // здесь нельзя: для проверки уровня `error` ложное срабатывание дороже пропуска, потому что
-    // чинят не её, а выключают — вместе с бинарными находками ниже, ради которых команда и
-    // написана. Настоящая поломка (корни разъехались, каталог не существует) ловится там, где
-    // она бинарна.
+    // 🔴 A MISSING DECLARATION IS A WARNING, NOT A REFUSAL, and that is a decision, not an
+    // oversight. Without it the hook takes the `papers` default; if the papers do live there, the
+    // install WORKS — just by coincidence, and it will break silently on the day the directory
+    // moves. Failing on a working install is not allowed here: for an `error`-level check a false
+    // positive costs more than a miss, because people do not fix it, they switch it off — together
+    // with the binary findings below, which the command was written for. A real breakage (the roots
+    // drifted apart, the directory does not exist) is caught where it is binary.
     out.push(
       declared === undefined
         ? `  ⚠ package.json has no "${CONFIG_KEY}": { "papers": … } — the hooks fall back to "${DEFAULT_PAPERS_ROOT}"`

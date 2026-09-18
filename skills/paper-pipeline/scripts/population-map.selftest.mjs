@@ -5,22 +5,22 @@
  * This repository has been burned three times by checkers and hooks that were green and dead, and
  * the rule that came out of it is that a checker which has never failed is not a checker.
  *
- * 🔴 СОКРАЩЁН 2026-08-26 ВМЕСТЕ С САМИМ ЧЕКЕРОМ. Девять из тринадцати случаев проверяли `untied`
- * и `undeclared` — обе находки уехали в правила ESLint (`paper/population-untied`,
- * `paper/population-undeclared`), и их случаи переехали туда же, в
- * `eslint-rules/paper-registry.harness.mjs`, где стоят рядом с прогоном на НАСТОЯЩЕЙ статье.
- * Здесь остались две находки, которые говорят про сам реестр: `stale` и `badref`.
+ * 🔴 SHRUNK 2026-08-26 TOGETHER WITH THE CHECKER ITSELF. Nine of the thirteen cases checked
+ * `untied` and `undeclared` — both findings moved into ESLint rules (`paper/population-untied`,
+ * `paper/population-undeclared`), and their cases moved there too, into
+ * `eslint-rules/paper-registry.harness.mjs`, where they sit next to a run against a REAL paper.
+ * What is left here are the two findings that speak about the registry itself: `stale` and `badref`.
  *
- * 🔴 ОДИН СЛУЧАЙ УДАЛЁН, А НЕ ПЕРЕЕХАЛ, и это стоит помнить. Он выглядел так:
+ * 🔴 ONE CASE WAS DELETED, NOT MOVED, and that is worth remembering. It looked like this:
  *
  *     check('189 does not match inside 1,189',
  *           !sentences('x 1,189 y').some((s) => /(?<![\d,.])189(?!\d|[,.]\d)/.test(s)));
  *
- * то есть прогонял по строке РУКОПИСНУЮ КОПИЮ регулярки чекера и утверждал о литерале внутри
- * самого теста. Мутация тела `printed()` такой тест не задевает по построению — что и показала
- * батарея `eslint-rules/paper-registry.mutations.mjs`, где эта мутация ВЫЖИЛА в первом прогоне.
- * Свойство теперь закреплено фикстурой, проверяющей ПОВЕДЕНИЕ, а не совпадение двух копий
- * регулярки.
+ * that is, it ran a HAND-COPIED COPY of the checker's regex over a string and asserted about a
+ * literal inside the test itself. A mutation of the body of `printed()` does not touch such a test
+ * by construction — which is exactly what the `eslint-rules/paper-registry.mutations.mjs` battery
+ * showed, where that mutation SURVIVED the first run. The property is now pinned by a fixture that
+ * checks BEHAVIOUR, not the agreement of two copies of a regex.
  */
 import { findings, bodyOf } from './population-map.mjs';
 

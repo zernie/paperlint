@@ -1,17 +1,17 @@
 ---
-title: "Перечит статьи — раунд 2"
+title: "Paper cold read — round 2"
 created: 2026-09-01
 ---
 
-## Открыто
+## Open
 
-| находка | где | разбор |
+| finding | where | analysis |
 |---|---|---|
-| абзац §3 повторяет §1 почти дословно | §3 | Cause: правило про повторы смотрит только аннотацию |
-| в таблице 2 нет единиц измерения | §5 | Cause: гейт чисел не знает про единицы, нужен отдельный чек |
+| the paragraph in §3 repeats §1 almost word for word | §3 | Cause: the repetition rule looks only at the abstract |
+| table 2 has no units | §5 | Cause: the numbers gate knows nothing about units, a separate check is needed |
 
-## Закрыто
+## Closed
 
-| находка | где | разбор |
+| finding | where | analysis |
 |---|---|---|
-| опечатка в имени автора | §1 | — |
+| typo in an author's name | §1 | — |

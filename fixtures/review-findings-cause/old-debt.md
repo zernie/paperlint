@@ -1,14 +1,14 @@
 ---
-title: "Ревью статьи — старый отчёт"
+title: "Paper review — an old report"
 created: 2026-01-01
 ---
 
-# Находки
+# Findings
 
-| # | что | где |
+| # | what | where |
 |---|---|---|
-| 1 | число не сходится | §1 |
-| 2 | ссылка на снятую работу | §4 |
-| 3 | обещание про неопубликованное | §6 |
+| 1 | the number does not match | §1 |
+| 2 | a reference to a withdrawn work | §4 |
+| 3 | a promise about something unpublished | §6 |
 
-Разбора причин здесь нет — отчёт заведён до того, как правило появилось.
+There is no analysis of causes here — the report predates the rule.

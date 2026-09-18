@@ -46,50 +46,53 @@ import { isMain } from "./consumer.mjs";
 import { consumerRoot } from "./consumer.mjs";
 const HERE = dirname(fileURLToPath(import.meta.url));
 
-// 🔴 2026-08-26 — ЗДЕСЬ БЫЛО `'..', '..'`, И ЭТО ЛОМАЛО ВЕСЬ ФАЙЛ МОЛЧА. Файл переехал 15.08 из
-// `.claude/pipeline/` в `.claude/skills/paper-pipeline/scripts/`, то есть на два уровня глубже, а
-// счётчик `..` не поменялся: `ROOT` резолвился в `.claude/skills`, и КАЖДАЯ команда из `GATES`
-// (все пути в них — от корня репо) искалась по `.claude/skills/.claude/skills/…`.
+// 🔴 2026-08-26 — THIS USED TO BE `'..', '..'`, AND IT BROKE THE WHOLE FILE SILENTLY. The file
+// moved on 15.08 from `.claude/pipeline/` to `.claude/skills/paper-pipeline/scripts/`, that is, two
+// levels deeper, while the count of `..` did not change: `ROOT` resolved to `.claude/skills`, and
+// EVERY command in `GATES` (all paths in them are from the repo root) was looked up under
+// `.claude/skills/.claude/skills/…`.
 //
-// Замер до починки, `run-mechanical.mjs <papers-root>/<paper-a>`: восемь чеков из
-// тринадцати упали с `Cannot find module '.claude/skills/.claude/skills/…'`, и ни
-// один не записался как `crashed` — `e.code === 'ENOENT'` ловит отсутствие ИНТЕРПРЕТАТОРА, а node
-// нашёлся и сам напечатал стектрейс в stderr. Режим `flags` посчитал его строки: в леджер уехало
-// **шесть строк `FINDING` с findings: 16**, где шестнадцать — это длина стектрейса. Одна из них
-// (`verify-cites`, `read: 'exit'`) вдобавок `blocking: true`, то есть прогон «нашёл факт».
+// Measurement before the fix, `run-mechanical.mjs <papers-root>/<paper-a>`: eight checks out of
+// thirteen failed with `Cannot find module '.claude/skills/.claude/skills/…'`, and not one
+// was recorded as `crashed` — `e.code === 'ENOENT'` catches a missing INTERPRETER, and node was
+// found and printed the stack trace to stderr itself. The `flags` mode counted its lines: **six
+// `FINDING` rows with findings: 16** went into the ledger, where sixteen is the height of the stack
+// trace. One of them (`verify-cites`, `read: 'exit'`) was `blocking: true` on top of that, i.e. the
+// run "found a fact".
 //
-// Это ровно класс «четыре формы ссылки» из `CLAUDE.md`: у переехавшего файла меняется ГЛУБИНА
-// `../` до корня, и грепом по пути этого не видно. Все пятнадцать соседей по каталогу
-// (`*.harness.mjs`, `*.mutations.mjs`) при расселении получили четыре `..`; этот файл — нет,
-// потому что он единственный не был тестом и его никто не прогонял.
+// This is exactly the "four forms of a reference" class from `CLAUDE.md`: a file that moves changes
+// the DEPTH of `../` to the root, and a grep over the path does not show it. All fifteen neighbours
+// in the directory (`*.harness.mjs`, `*.mutations.mjs`) got four `..` during the resettlement; this
+// file did not, because it was the only one that was not a test and nobody ran it.
 const ROOT = consumerRoot();
 
-// Имена правил структуры берутся ИЗ САМОГО МОДУЛЯ, а не переписываются сюда списком. Список,
-// написанный руками, протухает в день, когда в `paper-structure.mjs` добавят тринадцатое правило —
-// и протухает в сторону тишины: новое правило просто не попадёт в фильтр, а строка леджера
-// продолжит выглядеть работающей. `CLAUDE.md`: всё, что можно вывести, выводить.
-// Оба цитатных чекера живут в ОДНОМ месте и наводятся на build каждой статьи; копия на
-// статью — это четыре файла, которые надо держать в согласии.
-// 🔴 ОБЪЯВЛЕНИЕ, А НЕ АДРЕС. Цитатные чекеры (`report-submission.py`, `uncited_refs.py`) — это
-// python, который живёт У ПОТРЕБИТЕЛЯ: пайплайн их вызывает, но не везёт. Здесь стоял путь
-// внутрь конкретной статьи первого потребителя — в вынесенном пакете он и указывал бы в чужое
-// дерево, и называл бы чужую работу.
+// The structure rule names are taken FROM THE MODULE ITSELF, not rewritten here as a list. A list
+// written by hand rots the day a thirteenth rule is added to `paper-structure.mjs` — and it rots
+// toward silence: the new rule simply does not reach the filter, while the ledger row goes on
+// looking like it works. `CLAUDE.md`: everything that can be derived, derive.
+// Both citation checkers live in ONE place and are pointed at each paper's build; a copy per
+// paper is four files that have to be kept in agreement.
+// 🔴 A DECLARATION, NOT AN ADDRESS. The citation checkers (`report-submission.py`,
+// `uncited_refs.py`) are python that lives AT THE CONSUMER: the pipeline calls them but does not
+// ship them. What stood here was a path into one specific paper of the first consumer — in an
+// extracted package it would both point into somebody else's tree and name somebody else's work.
 //
-// ⚠️ УМОЛЧАНИЯ НЕТ СОЗНАТЕЛЬНО, и это отличает ключ от `papers`/`ledger`. Там умолчание
-// осмысленно (каталог `papers`, файл рядом); здесь любой угаданный путь был бы неверен у всех,
-// кроме одного. Не объявлено — три строки `GATES` просто не запускаются: `needs()` ниже проверяет
-// каталог на диске, то есть отсутствие читается как ABSTAINED `input-missing`, а не как падение
-// и не как чистый прогон.
+// ⚠️ THERE IS NO DEFAULT DELIBERATELY, and that is what distinguishes this key from
+// `papers`/`ledger`. There a default is meaningful (the `papers` directory, a file next to it);
+// here any guessed path would be wrong for everyone but one. Not declared — three `GATES` rows
+// simply do not run: `needs()` below checks the directory on disk, so the absence reads as
+// ABSTAINED `input-missing`, not as a crash and not as a clean run.
 const CITE_CHECKS =
   process.env.PIPELINE_CITE_CHECKS ||
   JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"))[
     "research-paper-pipeline"
   ]?.citeChecks ||
   null;
-// Каталог цитатных чекеров есть и объявлен. Стоит в `needs()` каждой строки, которая его зовёт:
-// без этого неверный или неуказанный путь падал бы стектрейсом python, а стектрейс в режиме
-// `flags` считается построчно и уезжает в леджер как FINDING с находками длиной в трассу — ровно
-// то, что уже случилось здесь 26.08 с неверной глубиной `..`.
+// The citation-checker directory exists and is declared. It sits in the `needs()` of every row
+// that calls it: without that a wrong or undeclared path would fail with a python stack trace, and
+// in `flags` mode a stack trace is counted line by line and goes into the ledger as a FINDING whose
+// count is the height of the trace — exactly what already happened here on 26.08 with the wrong
+// `..` depth.
 const hasCiteChecks = () => CITE_CHECKS !== null && existsSync(join(ROOT, CITE_CHECKS));
 // 🔴 A CHECKER THAT IS NOT INSTALLED IS `input-missing`, NEVER A RUN. Some rows shell out to
 // scripts belonging to OTHER skills of the pipeline, which a consumer may not have installed.
@@ -99,14 +102,14 @@ const hasCiteChecks = () => CITE_CHECKS !== null && existsSync(join(ROOT, CITE_C
 // one of them blocking. `needs()` is the only place where «I could not run» stays distinct from
 // «I ran and saw something».
 const hasScript = (rel) => existsSync(join(ROOT, rel));
-// Единственное различие раскладки: часть статей рендерит в `build/`, остальные собираются на месте.
+// The only layout difference: some papers render into `build/`, the rest are built in place.
 const buildOf = (d) => (existsSync(join(d, "build")) ? join(d, "build") : d);
 const hasBuilt = (d, ext) =>
   existsSync(buildOf(d)) &&
   readdirSync(buildOf(d)).some((f) => f.endsWith(ext));
-// `.body-limit` объявляет лимит страниц площадки — то есть статью, у которой есть отправка,
-// а значит и смысл в блоках про анонимность/URL/страницы. Признак лежит В САМОЙ статье, а не
-// именем в скрипте, поэтому новая статья подхватится сама.
+// `.body-limit` declares the venue's page limit — that is, a paper that has a submission, and so
+// a point to the blocks about anonymity/URLs/pages. The marker lives IN THE PAPER ITSELF, not as a
+// name in the script, so a new paper is picked up on its own.
 const hasVenue = (d) => existsSync(join(d, ".body-limit"));
 
 // 🔴 THE CONSUMER'S RULE MODULE, RESOLVED FROM THE CONSUMER ROOT — not by counting `..` from
@@ -143,9 +146,9 @@ const STRUCTURE_RULES = existsSync(STRUCTURE_RULES_FILE)
 // rules      → `read: 'eslint'` only: the rule ids this row owns. One ESLint run carries every
 //              rule that matched the file, and the rows here are per-check, so each row takes its
 //              own and leaves the rest to the row that owns them.
-// Экспортируется РАДИ ХАРНЕССА. `main()` запускается только при прямом вызове (низ файла), так
-// что импорт этого модуля побочных эффектов не имеет, а тест получает возможность взять строку и
-// прогнать ЕЁ КОМАНДУ — а не свою копию команды, которая разъедется с этой при первой правке.
+// Exported FOR THE HARNESS. `main()` runs only on a direct call (bottom of the file), so importing
+// this module has no side effects, and a test gets the ability to take a row and run ITS COMMAND —
+// not its own copy of the command, which would drift from this one at the first edit.
 export const GATES = [
   {
     skill: "render-paper",
@@ -160,10 +163,10 @@ export const GATES = [
     note: "body pages, overfull boxes, unresolved refs, dropped characters, anonymity, artifact URLs",
   },
   {
-    // Та же программа, узкий срез: у статьи без объявленного лимита площадки блоки про
-    // анонимность и URL отвечают о чужом вопросе (замер 28.08 на ПРИНЯТОЙ agenticdev: 18
-    // находок анонимности, ни одна не дефект — camera-ready деанонимизирована намеренно).
-    // Гейт, красный по причинам, которые читатель обязан игнорировать, перестают читать.
+    // The same program, a narrow slice: for a paper with no declared venue limit the anonymity
+    // and URL blocks answer somebody else's question (measured 28.08 on the ACCEPTED agenticdev: 18
+    // anonymity findings, not one of them a defect — the camera-ready is de-anonymized on purpose).
+    // A gate that is red for reasons the reader is obliged to ignore stops being read.
     skill: "render-paper",
     check: "report-submission-citations",
     cmd: (d) => [
@@ -178,26 +181,27 @@ export const GATES = [
     note: "a \\cite with no bibliography entry, from the pdflatex log",
   },
   {
-    // 🔴 2026-08-26 — ЭТА СТРОКА БЫЛА ЗЕЛЁНЫМ-И-МЁРТВЫМ ГЕЙТОМ РОВНО ОДИН ДЕНЬ, И ЭТО ЗАМЕР.
-    // Раньше здесь стоял `node .claude/skills/tighten-paper/structure.mjs --flags-only`. В тот же
-    // день все шестнадцать проверок оттуда уехали в правила ESLint (`eslint-rules/paper-structure.mjs`),
-    // и режим `--flags-only` стал МОЛЧАТЬ ВСЕГДА и выходить в 0 — намеренно, чтобы указатель
-    // «смотри eslint» не превратился в вечную ложную находку. Но `read: 'flags'` читает молчание
-    // как «находок нет», так что леджер записывал `ABSTAINED no-witness` ПО МОЛЧАНИЮ, А НЕ ПО
-    // ПРОВЕРКЕ. Замер на `<paper-a>/paper.md`: `--flags-only` — 0 строк, exit 0; те же
-    // байты через ESLint — **6 находок** (`subsection-size` ×2 · `section-lead` · `free-section-size`
-    // ×2 · `block-ungraded`). Шесть находок, о которых потребитель узнавал ноль.
+    // 🔴 2026-08-26 — THIS ROW WAS A GREEN-AND-DEAD GATE FOR EXACTLY ONE DAY, AND THAT IS MEASURED.
+    // It used to be `node .claude/skills/tighten-paper/structure.mjs --flags-only`. On the same day
+    // all sixteen checks from there moved into ESLint rules (`eslint-rules/paper-structure.mjs`),
+    // and the `--flags-only` mode started to BE SILENT ALWAYS and exit 0 — deliberately, so that the
+    // pointer "see eslint" would not turn into a permanent false finding. But `read: 'flags'` reads
+    // silence as "no findings", so the ledger recorded `ABSTAINED no-witness` BY SILENCE, NOT BY
+    // CHECKING. Measured on `<paper-a>/paper.md`: `--flags-only` — 0 lines, exit 0; the same
+    // bytes through ESLint — **6 findings** (`subsection-size` ×2 · `section-lead` ·
+    // `free-section-size` ×2 · `block-ungraded`). Six findings the consumer learned nothing about.
     //
-    // ПОЧЕМУ ПЕРЕВОД, А НЕ УДАЛЕНИЕ СТРОКИ. Для шага в CI удаление было правильным — там рядом уже
-    // стоит `npx eslint … .` по всему репо, и структурные находки печатает он. Здесь дубля нет:
-    // ESLint в леджер не пишет НИЧЕГО, а леджер — единственное место, где «структуру этой статьи
-    // на этих байтах кто-то смотрел» хранится с хешем входа. Снять строку значило бы обменять
-    // молчание на отсутствие.
+    // WHY THE ROW WAS REPOINTED AND NOT DELETED. For a CI step deleting it was the right call —
+    // there `npx eslint … .` over the whole repo already sits next to it, and it prints the
+    // structural findings. Here there is no duplicate: ESLint writes NOTHING into the ledger, and
+    // the ledger is the only place where "somebody looked at the structure of this paper on these
+    // bytes" is kept together with the hash of the input. Removing the row would trade silence for
+    // absence.
     //
-    // Фильтр по `STRUCTURE_RULES` намеренный: ESLint на этом файле даёт 30 находок, из них 24 —
-    // проза и ремесло, у которых в леджере СВОЯ строка. Без фильтра одна строка забирала бы чужие
-    // находки, а это ровно «две проверки по очереди становятся ответом», ради лечения которого
-    // ключом строки сделали `check`.
+    // The filter on `STRUCTURE_RULES` is deliberate: ESLint gives 30 findings on this file, 24 of
+    // them prose and craft, which have THEIR OWN row in the ledger. Without the filter one row
+    // would take somebody else's findings, and that is exactly "two checks in turn become the
+    // answer", to cure which `check` was made the key of a row.
     skill: "tighten-paper",
     check: "structure",
     cmd: (d) => [
@@ -209,10 +213,11 @@ export const GATES = [
       "json",
       join(d, "paper.md"),
     ],
-    // Бинарь не установлен — это `input-missing` (проверяющий инструмент есть вход прогона), а не
-    // `crashed`. Та же логика и та же форма, что у `textidote` ниже.
-    // Плюс сам модуль правил: без него `rules` пуст, а фильтр по пустому множеству оставил бы
-    // ноль находок из тридцати — уверенный зелёный прогон вместо честного «входа нет».
+    // A binary that is not installed is `input-missing` (the checking tool is an input of the
+    // run), not `crashed`. The same logic and the same shape as `textidote` below.
+    // Plus the rule module itself: without it `rules` is empty, and a filter over an empty set
+    // would leave zero findings out of thirty — a confident green run instead of an honest "no
+    // input".
     needs: () =>
       existsSync(join(ROOT, "node_modules/.bin/eslint")) && STRUCTURE_RULES.size > 0,
     read: "eslint",
@@ -479,7 +484,7 @@ function main(argv) {
       continue;
     }
 
-    // `out` без начального значения: try присваивает, catch присваивает ниже (2026-08-28)
+    // `out` with no initial value: try assigns it, catch assigns it below (2026-08-28)
     let out,
       code = 0,
       crashed = false;
@@ -508,52 +513,52 @@ function main(argv) {
       count = code === 0 ? 0 : Math.max(1, lines);
       blocking = code !== 0;
     } else if (g.read === "eslint") {
-      // Три способа, которыми ESLint может НЕ проверить файл, и все три выглядят как чистый
-      // прогон, если читать только длину отфильтрованного списка. Каждый разводится в свою
-      // строку леджера, потому что «не проверял» и «проверил, ничего не нашёл» — разные факты.
+      // Three ways in which ESLint can NOT check a file, and all three look like a clean run if
+      // you read only the length of the filtered list. Each is routed into its own ledger row,
+      // because "did not check" and "checked and found nothing" are different facts.
       let parsed;
       try {
         parsed = JSON.parse(out);
       } catch {
         parsed = null;
       }
-      // 1. не JSON вообще: сломанный конфиг, глоб без единого файла (`No files matching the
-      //    pattern … were found`, exit 2), отсутствующий бинарь. Всё это уходит в stderr.
+      // 1. not JSON at all: a broken config, a glob without a single file (`No files matching the
+      //    pattern … were found`, exit 2), a missing binary. All of that goes to stderr.
       if (!Array.isArray(parsed)) {
         abstain(
           "crashed",
-          `eslint не отдал JSON: ${(out.trim().split("\n")[0] || "(пустой вывод)").slice(0, 160)}`,
+          `eslint did not return JSON: ${(out.trim().split("\n")[0] || "(empty output)").slice(0, 160)}`,
         );
         continue;
       }
       const msgs = parsed.flatMap((f) =>
         f.messages.map((m) => ({ ...m, filePath: f.filePath })),
       );
-      // 2. правило само упало на этом файле. `fatal` приходит с `ruleId: null`, то есть после
-      //    фильтра исчезает бесследно и читается как «находок нет».
+      // 2. a rule itself crashed on this file. `fatal` arrives with `ruleId: null`, that is, after
+      //    the filter it disappears without a trace and reads as "no findings".
       const fatal = msgs.find((m) => m.fatal);
       if (fatal) {
-        abstain("crashed", `eslint упал на файле: ${fatal.message}`);
+        abstain("crashed", `eslint crashed on the file: ${fatal.message}`);
         continue;
       }
-      // 3. к файлу не применилось НИ ОДНО правило («File ignored because outside of base path» —
-      //    так выглядит фикстура во временном каталоге, «…because no matching configuration» —
-      //    файл вне глоба конфига). Ноль находок тут означает «никто не смотрел».
+      // 3. NOT A SINGLE rule applied to the file ("File ignored because outside of base path" is
+      //    how a fixture in a temporary directory looks, "…because no matching configuration" is a
+      //    file outside the config's glob). Zero findings here means "nobody looked".
       const ignored = msgs.find(
         (m) => !m.ruleId && /^File ignored/.test(m.message),
       );
       if (ignored) {
         abstain(
           "input-missing",
-          `eslint не применил к файлу ни одного правила: «${ignored.message}»`,
+          `eslint applied not a single rule to the file: "${ignored.message}"`,
         );
         continue;
       }
       const mine = msgs.filter((m) => g.rules.has(m.ruleId));
       count = mine.length;
-      // severity 2 — это правила, объявленные в `eslint.config.mjs` бинарными («ссылка либо
-      // разрешается, либо нет»), то есть FACT в словаре этого файла. Пороги, выбранные человеком,
-      // объявлены `warn` и остаются судейскими.
+      // severity 2 means the rules declared binary in `eslint.config.mjs` ("a reference either
+      // resolves or it does not"), that is, a FACT in this file's vocabulary. Thresholds chosen by
+      // a human are declared `warn` and stay judgemental.
       blocking = mine.some((m) => m.severity === 2);
       out = mine
         .map(

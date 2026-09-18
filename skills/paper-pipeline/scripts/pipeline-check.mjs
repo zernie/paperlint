@@ -5,11 +5,12 @@
  * Usage:  node pipeline-check.mjs <paper-dir> [--json] [--today=YYYY-MM-DD]
  * Exit:   always 0 (advisory). Findings go to stdout; a parse failure to stderr.
  *
- * 🔴 2026-08-26 — ШЕСТНАДЦАТЬ ПРОВЕРОК ИЗ ДВАДЦАТИ ДВУХ УЕХАЛИ В `eslint-rules/pipeline-status.mjs`.
- * Вход у них — ОДИН markdown-документ, то есть ровно предмет, для которого движок `@eslint/markdown`
- * и сделан; здесь они держались только тем, что рядом стоял свой `MarkdownIt`. Уехали:
+ * 🔴 2026-08-26 — SIXTEEN CHECKS OUT OF TWENTY-TWO MOVED INTO `eslint-rules/pipeline-status.mjs`.
+ * Their input is ONE markdown document, that is, exactly the subject the `@eslint/markdown` engine
+ * is made for; here they were held only by the fact that a private `MarkdownIt` stood next to them.
+ * What moved:
  *   unattributed-row · unreadable-row · duplicate-id  → pipeline/row-attribution · row-readable ·
- *                                                       duplicate-id      (все три `error`)
+ *                                                       duplicate-id      (all three `error`)
  *   unknown-input                                     → pipeline/unknown-input      (`error`)
  *   no-verdict                                        → pipeline/verdict-present    (`error`)
  *   gate-missing-input · gate-stale-input             → pipeline/gate-inputs
@@ -21,32 +22,35 @@
  *   weak-accept-unowned                               → pipeline/weak-accept-unowned
  *   ceiling-unplanned                                 → pipeline/ceiling-unplanned
  *   unrun-gate                                        → pipeline/unrun-gate
- * Паритет доказан ДО удаления, на настоящем корпусе (четыре живых табеля, 29 находок совпали
- * побайтово) и на 27 фикстурах «один подложенный дефект за раз». Классификация всех 22 и разбор
- * единственного расхождения, которое при этом всплыло, —
- * `the author's private research notes`.
+ * Parity was proved BEFORE the deletion, on the real corpus (four live scorecards, 29 findings
+ * matched byte for byte) and on 27 fixtures of the "one planted defect at a time" kind. The
+ * classification of all 22 and the analysis of the single discrepancy that surfaced along the way
+ * are in `the author's private research notes`.
  *
- * WHY A SCRIPT AND NOT A PARAGRAPH. Шесть оставшихся проверок соответствуют отказам, которые
- * реально случились на настоящей статье, и все шесть читают вход ИЗВНЕ этого файла — потому и
- * остались скриптом (правило «локальное по узлу — в линтер, кросс-файловое — в скрипт»):
+ * WHY A SCRIPT AND NOT A PARAGRAPH. The six remaining checks correspond to failures that actually
+ * happened on a real paper, and all six read an input from OUTSIDE this file — which is why they
+ * stayed a script (the rule "local to a node goes to the linter, cross-file goes to a script"):
  *
  *   stale-continuous   verify-citations was numbered like a one-shot step, so a
  *                      citation added after the last run counted as verified. The
  *                      project rule "we checked last cycle does not count" existed.
- *                      ВХОД ИЗВНЕ: дата последнего коммита, тронувшего текст статьи (git).
+ *                      INPUT FROM OUTSIDE: the date of the last commit that touched the paper's
+ *                      text (git).
  *   submit-access      OpenReview needs an ACTIVE profile and moderation runs up to
  *                      two weeks. Discovered at T−4 days on a finished paper, as the
  *                      sole item on the critical path.
- *                      ВХОД ИЗВНЕ: часы (`--today`). Проверка ГИБРИДНАЯ — вторая её ветка
- *                      (дедлайна в шапке нет вовсе) часов не требует, но половину проверки
- *                      в линтер не переносят: получилось бы два дома у одного факта.
+ *                      INPUT FROM OUTSIDE: the clock (`--today`). The check is HYBRID — its
+ *                      second branch (there is no deadline in the header at all) needs no clock,
+ *                      but half a check is not moved into the linter: one fact would end up with
+ *                      two homes.
  *   repeat-finding     the same worst section named pass after pass, never worked.
- *                      ВХОД ИЗВНЕ: `reviews/*.md` и их mtime.
+ *                      INPUT FROM OUTSIDE: `reviews/*.md` and their mtime.
  *   no-cold-read       nobody without context has read the current text.
  *   stale-cold-read    the cold read describes prose that no longer exists.
- *                      ВХОД ИЗВНЕ: наличие `reviews/` + дата коммита текста.
+ *                      INPUT FROM OUTSIDE: the presence of `reviews/` + the commit date of the
+ *                      text.
  *   credential-available a blocker parked on the author that the environment can clear.
- *                      ВХОД ИЗВНЕ: `process.env`.
+ *                      INPUT FROM OUTSIDE: `process.env`.
  *
  * The checks are deliberately mechanical. Judgement — is the science good, does the
  * arc hold — stays with the skills; this only refuses to let a checkable thing be
@@ -64,8 +68,8 @@
  * key space, not in a rule telling people to be careful.
  *
  * 🔴 THE SCORECARD IS PARSED AS MARKDOWN, NOT MATCHED WITH REGULAR EXPRESSIONS (rewritten 2026-08-09;
- * с 2026-08-26 разметку для перенесённых проверок разбирает уже сам ESLint, здесь остался
- * `MarkdownIt` ради секций, по которым ходят шесть оставшихся).
+ * since 2026-08-26 the markup for the moved checks is parsed by ESLint itself, and `MarkdownIt`
+ * stayed here for the sections the six remaining checks walk over).
  * Three defects were found in one morning and all three had the same cause — a regex guessing at
  * document structure — and all three were SILENT, which is the only kind that survives:
  *
@@ -111,9 +115,9 @@ import {
 } from "../../../lib/markdown.mjs";
 import { isMain } from "./consumer.mjs";
 
-// Разбор разметки — парсером (`CLAUDE.md`, 2026-08-11). Этот скрипт уже парсил таблицы через
-// свой `MarkdownIt` (ниже) — то есть половина файла жила по правилу, а половина нет. Падать,
-// а не деградировать: вывод идёт в гейт пайплайна.
+// Markup is parsed with a parser (`CLAUDE.md`, 2026-08-11). This script already parsed tables
+// through its own `MarkdownIt` (below) — that is, half the file lived by the rule and half did not.
+// Fail rather than degrade: the output goes into a pipeline gate.
 requireMarkdown();
 
 const MODERATION_WINDOW_DAYS = 21; // OpenReview says "up to two weeks"; a week of slack.
@@ -130,17 +134,18 @@ const ISO_RE = /(\d{4}-\d{2}-\d{2})/;
 /**
  * The line below which a scorecard keeps superseded snapshots. Nothing after it is current.
  *
- * 2026-08-11 — разъято надвое, потому что это были ДВА разных вопроса под одной регуляркой.
- * Фраза и HTML-комментарий — конвенция этой базы, их и ищем по строке. А `^#+\s*(History|
- * Archive)\b` был разбором разметки, и вёл себя как разбор разметки регуляркой всегда: считал
- * заголовком `#History` (в CommonMark это НЕ заголовок — нужен пробел) и не видел заголовка с
- * отступом в 1–3 пробела (а это заголовок). Плюс `\b` после латинского слова — тот же класс,
- * что трижды укусил на кириллице; заменён явным lookahead'ом.
+ * 2026-08-11 — split in two, because these were TWO different questions under one regex.
+ * The phrase and the HTML comment are a convention of this knowledge base, and those we do look for
+ * by string. But `^#+\s*(History|Archive)\b` was markup parsing, and it behaved the way markup
+ * parsing by regex always behaves: it counted `#History` as a heading (in CommonMark it is NOT one —
+ * a space is required) and did not see a heading indented by 1–3 spaces (which is a heading). Plus
+ * `\b` after a Latin word is the same class that bit three times on Cyrillic; replaced with an
+ * explicit lookahead.
  */
-// kb-lint:markdown-regex-ok — маркер строки (фраза + HTML-комментарий), разметку тут не разбираем
+// kb-lint:markdown-regex-ok — a line marker (phrase + HTML comment), we do not parse markup here
 const HISTORY_MARK_RE =
   /Всё,\s*что\s*ниже,?\s*—\s*истори|<!--\s*HISTORY\s*-->/i;
-/** Тот же маркер, но выраженный как ЗАГОЛОВОК: проверяется ТЕКСТ, уровень — любой. */
+/** The same marker, but expressed as a HEADING: the TEXT is checked, the level can be anything. */
 const HISTORY_HEADING_RE = /^(History|Archive)(?![\p{L}\p{N}_])/iu;
 
 /** The five kinds of work the template groups rows into. A heading names one or it names none. */
@@ -181,9 +186,9 @@ function sectionOf(headingText) {
  */
 function currentPart(text) {
   const lines = text.split("\n");
-  // Номера строк заголовков-маркеров берём у парсера — по той же причине, по которой их
-  // берёт `headings()`: «строка начинается с решёток» и «строка является заголовком» — не
-  // одно и то же, и расходятся они молча.
+  // The line numbers of marker headings come from the parser — for the same reason `headings()`
+  // takes them from there: "the line starts with hashes" and "the line is a heading" are not the
+  // same thing, and they diverge silently.
   const headingLines = new Set(
     mdHeadings(text)
       .filter((h) => HISTORY_HEADING_RE.test(h.text))
@@ -230,12 +235,13 @@ function readTable(toks) {
 /**
  * Parse PIPELINE-STATUS.md into `{sections: {SETUP: [row], …}, header, verdict}`.
  *
- * 🔴 `parseFindings` УЕХАЛ 2026-08-26. Три находки о самом РАЗБОРЕ (`unattributed-row`,
- * `unreadable-row`, `duplicate-id`) живут теперь правилами `pipeline/row-attribution`,
- * `pipeline/row-readable`, `pipeline/duplicate-id` в `eslint-rules/pipeline-status.mjs`, и там же
- * стали `error` — они бинарны. Здесь их НЕ ДУБЛИРУЕМ: два источника правды об одном факте
- * разъезжаются. Строка, которую нельзя прочитать, по-прежнему пропускается (`continue`), просто
- * молча — говорит о ней линтер, и с точностью до строки.
+ * 🔴 `parseFindings` MOVED OUT 2026-08-26. The three findings about the PARSE itself
+ * (`unattributed-row`, `unreadable-row`, `duplicate-id`) now live as the rules
+ * `pipeline/row-attribution`, `pipeline/row-readable`, `pipeline/duplicate-id` in
+ * `eslint-rules/pipeline-status.mjs`, and there they also became `error` — they are binary. We DO
+ * NOT DUPLICATE them here: two sources of truth about one fact drift apart. A row that cannot be
+ * read is still skipped (`continue`), just silently — the linter speaks about it, and to the
+ * precision of a line.
  */
 export function parseStatus(text) {
   const sections = {};
@@ -284,24 +290,25 @@ export function parseStatus(text) {
 
     for (const c of rows) {
       const id = cleanId(c[0] ?? "");
-      // Нечитаемая строка пропускается молча: находку о ней даёт `pipeline/row-readable`.
+      // An unreadable row is skipped silently: the finding about it comes from
+      // `pipeline/row-readable`.
       if (!id || c.length < 4) continue;
       const joined = c.join(" | ");
       const row = {
         id,
         name: c[1] ?? "",
         skill: c[2] ?? "",
-        // Колонка `Requires` здесь больше не читается: все три проверки, которые её ели
-        // (`gate-missing-input` · `gate-stale-input` · `unknown-input`) и проверка самой
-        // декларации (`undeclared-input`) уехали в `eslint-rules/pipeline-status.mjs`.
+        // The `Requires` column is no longer read here: all three checks that ate it
+        // (`gate-missing-input` · `gate-stale-input` · `unknown-input`) and the check of the
+        // declaration itself (`undeclared-input`) moved into `eslint-rules/pipeline-status.mjs`.
         status: (joined.match(STATUS_RE) ?? [""])[0],
         date: (joined.match(ISO_RE) ?? [null])[0],
         raw: joined,
         section,
         heading,
       };
-      // Строка вне секции в `sections` не попадает — её и раньше не читала ни одна проверка;
-      // находку об этом даёт `pipeline/row-attribution`.
+      // A row outside a section does not get into `sections` — no check read it before either;
+      // the finding about that comes from `pipeline/row-attribution`.
       if (section) sections[section].push(row);
     }
   }
@@ -375,23 +382,25 @@ function newestSourceDate(dir) {
 
   let newest = "";
   for (const p of sources) {
-    let when; // без инициализатора: обе ветки ниже присваивают (2026-08-28)
+    let when; // no initializer: both branches below assign it (2026-08-28)
     try {
       // Dirty file: the edit is real and uncommitted, so mtime is the honest answer.
       const dirty = execFileSync("git", ["status", "--porcelain", "--", p], {
         encoding: "utf8",
       }).trim();
-      // 🔴 ПУСТОЙ ВЫВОД `git log` — НЕ ДАТА. Команда выходит 0 и печатает НИЧЕГО, когда у пути нет
-      // истории: поверхностный клон (`actions/checkout` по умолчанию `fetch-depth: 1`), файл вне
-      // git, файл внутри `node_modules`. Раньше это пустое значение уходило дальше как `when`,
-      // весь `newestSourceDate` возвращал "", и `stale-continuous` со `stale-cold-read` молча
-      // переставали срабатывать — то есть проверка протухшести сама протухала без единого слова.
+      // 🔴 EMPTY OUTPUT FROM `git log` IS NOT A DATE. The command exits 0 and prints NOTHING when
+      // a path has no history: a shallow clone (`actions/checkout` defaults to `fetch-depth: 1`), a
+      // file outside git, a file inside `node_modules`. Previously that empty value went on as
+      // `when`, the whole `newestSourceDate` returned "", and `stale-continuous` together with
+      // `stale-cold-read` silently stopped firing — that is, the staleness check went stale itself
+      // without a single word.
       //
-      // Замер 14.09: фикстура `fixtures/dirty` живёт в этом пакете, у потребителя она под
-      // `node_modules`. Локально `git log` отдавал 2026-09-12 — дату коммита, КОТОРЫЙ ЭТОТ ПУТЬ
-      // УДАЛИЛ из дерева потребителя, то есть проверка держалась на призраке истории. В CI с
-      // поверхностным клоном призрака нет, вывод пуст, и харнесс упал на
-      // «pipeline-check reports stale-continuous on the dirty fixture» (прогон 34784079821).
+      // Measured 14.09: the `fixtures/dirty` fixture lives inside this package, and at the consumer
+      // it sits under `node_modules`. Locally `git log` returned 2026-09-12 — the date of the
+      // commit THAT DELETED THIS PATH from the consumer's tree, that is, the check rested on a
+      // ghost of history. In CI with a shallow clone there is no ghost, the output is empty, and
+      // the harness failed on "pipeline-check reports stale-continuous on the dirty fixture" (run
+      // 34784079821).
       const logged = dirty
         ? ""
         : execFileSync("git", ["log", "-1", "--format=%cs", "--", p], {
@@ -423,9 +432,9 @@ export function check({ sections, header }, { sourceDate, today, dir }) {
   // 1. A CONTINUOUS check that passed on text older than the current text.
   for (const r of sections.CONTINUOUS ?? []) {
     if (!DONE.has(r.status)) continue;
-    // `undated-continuous` (☑ без даты) уехал в правило `pipeline/undated-continuous`.
-    // Здесь остаётся ровно та половина цикла, которой нужен вход ИЗВНЕ файла — дата последнего
-    // коммита, тронувшего текст статьи.
+    // `undated-continuous` (a ☑ with no date) moved into the rule `pipeline/undated-continuous`.
+    // What stays here is exactly the half of the loop that needs an input from OUTSIDE the file —
+    // the date of the last commit that touched the paper's text.
     if (!r.date) continue;
     if (sourceDate && r.date < sourceDate) {
       add(
@@ -435,14 +444,14 @@ export function check({ sections, header }, { sourceDate, today, dir }) {
     }
   }
 
-  // ── ПЕРЕЕХАЛО 2026-08-26 в `eslint-rules/pipeline-status.mjs` ────────────────────────────
-  // Пять блоков, стоявших здесь, читали ТОЛЬКО этот документ и потому уехали в правила ESLint
-  // целиком, вместе со своими комментариями и историей:
-  //   2.      гейт без объявленного входа   → `pipeline/gate-inputs` (+ `pipeline/unknown-input`)
-  //   2a-bis. кто оправдал и одна ли семья  → `pipeline/judge-recorded`
-  //   2b.     короткая ячейка Requires      → `pipeline/undeclared-input`
-  //   3.      study ☑ при frame ☐           → `pipeline/study-before-frame`
-  // Дублировать их здесь нельзя: два источника правды об одном факте разъезжаются.
+  // ── MOVED 2026-08-26 into `eslint-rules/pipeline-status.mjs` ─────────────────────────────
+  // The five blocks that stood here read ONLY this document and therefore moved into ESLint rules
+  // in full, together with their comments and history:
+  //   2.      a gate with no declared input  → `pipeline/gate-inputs` (+ `pipeline/unknown-input`)
+  //   2a-bis. who cleared it and is it one family → `pipeline/judge-recorded`
+  //   2b.     a short Requires cell          → `pipeline/undeclared-input`
+  //   3.      study ☑ while frame ☐          → `pipeline/study-before-frame`
+  // They must not be duplicated here: two sources of truth about one fact drift apart.
 
   // 4. Can you physically submit, with enough time for someone else's queue?
   const ac = all.get("access");
@@ -466,18 +475,20 @@ export function check({ sections, header }, { sourceDate, today, dir }) {
     }
   }
 
-  // ── ПЕРЕЕХАЛО 2026-08-26 в `eslint-rules/pipeline-status.mjs` ────────────────────────────
-  //   5.  вердикт есть и он не только число → `pipeline/verdict-present` + `pipeline/scalar-verdict`
-  //   5b. Weak Accept без записанного решения → `pipeline/weak-accept-unowned`
-  //   5b. потолок без классификации прутьев   → `pipeline/ceiling-unplanned`
-  //   6.  ☐ гейты                             → `pipeline/unrun-gate`
+  // ── MOVED 2026-08-26 into `eslint-rules/pipeline-status.mjs` ─────────────────────────────
+  //   5.  a verdict exists and is not just a number → `pipeline/verdict-present` +
+  //                                                   `pipeline/scalar-verdict`
+  //   5b. Weak Accept with no recorded decision     → `pipeline/weak-accept-unowned`
+  //   5b. a ceiling with no classification of bars  → `pipeline/ceiling-unplanned`
+  //   6.  ☐ gates                                   → `pipeline/unrun-gate`
 
   // 6b. The same section named worst, pass after pass, with nothing done about it.
   //
-  // Повод — реакция человека, открывшего первую страницу собранного PDF (2026-08-05): претензия
-  // была не к содержанию, а к ЧИТАЕМОСТИ, и звучала она как «что не так с нашими правилами письма
-  // для статей — их вообще не зовут». Дословная формулировка снята при выносе пайплайна наружу;
-  // она есть в истории приватной базы. Ответ на неё: правила ЗВАЛИ. `grade-paper-writing` ran five times
+  // The trigger was the reaction of the person who opened the first page of the built PDF
+  // (2026-08-05): the complaint was not about the content but about READABILITY, and it sounded
+  // like "what is wrong with our writing rules for papers — they are never called at all". The
+  // verbatim wording was removed when the pipeline was extracted; it is in the history of the
+  // private knowledge base. The answer to it: the rules WERE called. `grade-paper-writing` ran five times
   // and named the abstract its worst section every single time; the finding was faithfully recorded
   // in the scorecard on all five occasions and was never once the next task. Recording is not
   // owning. A review loop that only appends findings converges on a paper whose defects are all
@@ -535,9 +546,10 @@ export function check({ sections, header }, { sourceDate, today, dir }) {
 
   // 7. A blocker parked on the author that the environment can already clear.
   //
-  // Повод — замечание владельца репозитория (2026-08-05): агент раз за разом забывает, что может
-  // загрузить артефакт САМ, хотя доступ к нужной переменной у него есть. Дословная формулировка
-  // снята при выносе пайплайна наружу; она есть в истории приватной базы.
+  // The trigger was a remark by the repository owner (2026-08-05): the agent forgets over and over
+  // that it can upload the artifact ITSELF, although it has access to the variable it needs. The
+  // verbatim wording was removed when the pipeline was extracted; it is in the history of the
+  // private knowledge base.
   //
   // Artifact hosting sat on the human's side of the owner-split for a day and a half; the
   // credential that clears it was in the environment the whole time. The owner-split is the most
@@ -691,8 +703,9 @@ function main(argv) {
 
   // The banner prints even with zero findings, and that is the point.
   //
-  // Замечание владельца репозитория, 2026-08-05: человеку приходится постоянно спрашивать статус
-  // статьи и направлять агента вручную. (Дословная цитата снята при выносе, есть в истории базы.)
+  // A remark by the repository owner, 2026-08-05: the human has to keep asking for the paper's
+  // status and steering the agent by hand. (The verbatim quote was removed on extraction; it is in
+  // the history of the knowledge base.)
   // The asking happened because nothing volunteered the state. A checker that is silent when clean
   // trains the session to treat silence as "no state to report", so the state only ever surfaces
   // when a human pulls it — which is exactly the work being complained about. Findings are advisory; the

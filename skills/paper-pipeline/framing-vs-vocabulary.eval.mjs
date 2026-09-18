@@ -608,7 +608,7 @@ if (MODE === "oracle") {
       `A user typed exactly this:\n\n"${prompt}"\n\n` +
       `Which ONE of the skills above should be invoked? Reply with the skill name alone, ` +
       `or the single word NONE if no skill clearly applies. No explanation.`;
-    let pick; // без инициализатора: обе ветки try/catch присваивают (2026-08-28)
+    let pick; // no initializer: both try/catch branches assign it (2026-08-28)
     try {
       const out = execFileSync("claude", ["-p", q, "--model", "sonnet"], {
         encoding: "utf-8",

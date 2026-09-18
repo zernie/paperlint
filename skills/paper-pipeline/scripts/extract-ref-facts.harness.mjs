@@ -380,7 +380,7 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
     `пустая библиография обязана давать ненулевой код, дала ${r.status}`,
   );
   assert.ok(
-    /НОЛЬ|0 записей/u.test(r.stderr),
+    /ZERO|0 entries/u.test(r.stderr),
     `в stderr нет причины: ${r.stderr}`,
   );
   assert.ok(

@@ -1,24 +1,25 @@
 #!/usr/bin/env node
 /**
- * build-e2e.mjs — `rpp build` против НАСТОЯЩЕЙ `pdflatex`, от исходника до готового PDF.
+ * build-e2e.mjs — `rpp build` against a REAL `pdflatex`, from source to finished PDF.
  *
- * 🔴 ЧЕМ ЭТО ОТЛИЧАЕТСЯ ОТ `src/build.harness.mjs`, И ПОЧЕМУ НУЖНЫ ОБА. Тот харнесс подставляет
- * вместо `spawnSync` свою функцию: он проверяет РЕШЕНИЯ — какой скрипт выбран, каким
- * интерпретатором, что вернулось при ненулевом коде. Ни один его ассерт не может сказать, что
- * на выходе получился PDF, и тем более — КАКОЙ. Здесь вторая половина: скрипт запускается
- * по-настоящему, и результат меряется инструментом, а не доверием.
+ * 🔴 HOW THIS DIFFERS FROM `src/build.harness.mjs`, AND WHY BOTH ARE NEEDED. That harness
+ * substitutes its own function for `spawnSync`: it checks DECISIONS — which script was picked,
+ * with which interpreter, what came back on a non-zero code. Not one of its assertions can say
+ * that a PDF came out at the end, let alone WHICH one. Here is the other half: the script is run
+ * for real, and the result is measured with a tool rather than taken on trust.
  *
- * 🔴 ЧТО ИМЕННО ЭТО ЛОВИТ, И ЭТО НЕ ГИПОТЕЗА. `acmart.cls` проверяет наличие `libertine.sty`,
- * `zi4.sty` и `newtxmath.sty`; не найдя ЛЮБОЙ из них, он выставляет `\@ACM@newfontsfalse` и
- * тихо набирает статью Computer Modern. Сборка при этом ЗЕЛЁНАЯ, PDF выглядит нормальным, а
- * метрика другая — значит другая пагинация. Так уехала ОТПРАВЛЕННАЯ `aisec-2026`. Зелёный код
- * возврата про это не говорит ничего: отказ живёт в содержимом артефакта, поэтому и меряется
- * содержимое.
+ * 🔴 WHAT EXACTLY THIS CATCHES, AND IT IS NOT A HYPOTHESIS. `acmart.cls` checks for the presence
+ * of `libertine.sty`, `zi4.sty` and `newtxmath.sty`; failing to find ANY of them it sets
+ * `\@ACM@newfontsfalse` and silently typesets the paper in Computer Modern. The build is GREEN,
+ * the PDF looks fine, and the metrics are different — which means different pagination. That is
+ * how the SUBMITTED `aisec-2026` went out. A green exit code says nothing about it: the failure
+ * lives in the content of the artifact, so the content is what gets measured.
  *
- * 🔴 ОТСУТСТВИЕ TeX — ОБЪЯВЛЕННЫЙ ПРОПУСК, А НЕ ТИХИЙ. У участника без TeX Live этот прогон
- * законно невозможен, и он выходит нулём — СКАЗАВ об этом. В CI то же отсутствие означает
- * сломанное окружение, и `--strict` превращает пропуск в отказ: пропущенный шаг и прошедший
- * выглядят в интерфейсе одинаково, а это ровно тот класс, против которого написан весь пакет.
+ * 🔴 A MISSING TeX IS A DECLARED SKIP, NOT A SILENT ONE. For a contributor without TeX Live this
+ * run is legitimately impossible, and it exits zero — HAVING SAID SO. In CI the same absence
+ * means a broken environment, and `--strict` turns the skip into a failure: a skipped step and a
+ * passed one look identical in the interface, and that is exactly the class this whole package is
+ * written against.
  *
  *   node scripts/build-e2e.mjs [--strict]
  */
@@ -41,24 +42,24 @@ const CLI = join(ROOT, "bin", "rpp.mjs");
 const strict = process.argv.includes("--strict");
 
 /**
- * Начертания, которыми `acmart` набирает статью, когда его шрифты НА МЕСТЕ. Список — из
- * замера на живом TeX Live 2023, а не из документации класса: `pdffonts` показывает
- * `LinLibertineT` (текст), `LinBiolinumTB` (заголовки), `LinLibertineTB` (жирный текст).
+ * The faces `acmart` typesets a paper with when its fonts ARE IN PLACE. The list comes from a
+ * measurement on a live TeX Live 2023, not from the class documentation: `pdffonts` shows
+ * `LinLibertineT` (text), `LinBiolinumTB` (headings), `LinLibertineTB` (bold text).
  */
 const ACMART_FAMILIES = /^(LinLibertine|LinBiolinum)/;
-/** Подпись молчаливой подмены: класс ушёл на шрифты по умолчанию. */
+/** The signature of the silent substitution: the class fell back to its default fonts. */
 const FALLBACK_FAMILIES = /^(CMR|CMBX|CMTI|CMTT|CMSS|LMRoman)/;
 
 const missing = ["pdflatex", "pdffonts"].filter(
   (b) => spawnSync("command", ["-v", b], { shell: true, stdio: "ignore" }).status !== 0,
 );
 if (missing.length) {
-  const say = `build-e2e: пропущено — на машине нет ${missing.join(", ")}.`;
+  const say = `build-e2e: skipped — this machine has no ${missing.join(", ")}.`;
   if (!strict) {
-    console.log(`${say}\nЭто законный пропуск для клона без TeX Live. В CI тот же случай — отказ (--strict).`);
+    console.log(`${say}\nThis is a legitimate skip for a clone without TeX Live. In CI the same case is a failure (--strict).`);
     process.exit(0);
   }
-  console.error(`${say}\nВ --strict это ОТКАЗ: в CI отсутствие инструмента есть поломка окружения,\nа пропущенная проверка неотличима от прошедшей.`);
+  console.error(`${say}\nIn --strict this is a FAILURE: in CI a missing tool is a broken environment,\nand a skipped check is indistinguishable from a passed one.`);
   process.exit(2);
 }
 
@@ -71,16 +72,16 @@ const check = (label, cond, detail = "") => {
   if (!cond) bad++;
 };
 
-// Фикстуры копируются: сборка оставляет `paper.pdf`, `paper.aux` и `build.log` рядом с
-// исходником, и в рабочем дереве это были бы неотслеживаемые файлы после каждого прогона.
+// The fixtures are copied: the build leaves `paper.pdf`, `paper.aux` and `build.log` next to the
+// source, and in the working tree those would be untracked files after every run.
 const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-build-e2e-")));
 try {
   cpSync(join(ROOT, "fixtures", "build-e2e"), join(work, "papers"), {
     recursive: true,
     verbatimSymlinks: true,
   });
-  // `--all` берёт каталог статей из конфига, а не из аргумента: охват называет ПОТРЕБИТЕЛЬ,
-  // и это тот же контракт, из-за которого у `lint` нет умолчания ".".
+  // `--all` takes the papers directory from the config, not from an argument: the CONSUMER names
+  // the scope, and that is the same contract for which `lint` has no "." default.
   writeFileSync(join(work, "rpp.json"), JSON.stringify({ papers: "papers" }, null, 2));
 
   const r = spawnSync(process.execPath, [CLI, "build", "--all"], {
@@ -91,45 +92,51 @@ try {
   console.log(out.trim().split("\n").map((l) => `  │ ${l}`).join("\n"));
   console.log();
 
-  console.log("сборка на настоящем pdflatex");
+  console.log("build on a real pdflatex");
   const acmartPdf = join(work, "papers", "acmart", "paper.pdf");
-  check("acmart: PDF существует", existsSync(acmartPdf));
+  check("acmart: the PDF exists", existsSync(acmartPdf));
   if (existsSync(acmartPdf)) {
     const f = fonts(acmartPdf);
     check(
-      "acmart: набрано СОБСТВЕННЫМИ шрифтами класса",
+      "acmart: typeset with the class's OWN fonts",
       f.length > 0 && f.every((n) => ACMART_FAMILIES.test(n)),
       f.join(", "),
     );
     check(
-      "🔴 acmart: и НИ ОДНОГО шрифта молчаливой подмены",
+      "🔴 acmart: and NOT ONE font of the silent substitution",
       !f.some((n) => FALLBACK_FAMILIES.test(n)),
       f.join(", "),
     );
   }
 
   console.log();
-  console.log("проверка шрифтов умеет краснеть");
+  console.log("the font check can go red");
   const fallbackPdf = join(work, "papers", "fallback", "paper.pdf");
-  check("подменённый PDF тоже собрался — отказ не в сборке", existsSync(fallbackPdf));
+  check("the substituted PDF built too — the failure is not in the build", existsSync(fallbackPdf));
   if (existsSync(fallbackPdf)) {
     const f = fonts(fallbackPdf);
     check(
-      "и он ОТВЕРГНУТ проверкой шрифтов, хотя сборка была зелёной",
+      "and it is REJECTED by the font check, although the build was green",
       f.some((n) => FALLBACK_FAMILIES.test(n)) && !f.every((n) => ACMART_FAMILIES.test(n)),
       f.join(", "),
     );
   }
 
   console.log();
-  console.log("остальные исходы команды");
-  check("упавшая сборка названа упавшей, с кодом", /✗ .*broken/.test(out) && /\b3\b/.test(out));
-  check("статья без скрипта названа отдельно", /NO build script/.test(out));
-  check("и прогон в целом — ОТКАЗ, раз две статьи из четырёх не собрались", r.status !== 0);
+  console.log("the command's remaining outcomes");
+  check(
+    "a failed build is named as failed, with its code",
+    /✗ .*broken/.test(out) && /\b3\b/.test(out),
+  );
+  check("a paper with no script is named separately", /NO build script/.test(out));
+  check(
+    "and the run as a whole is a FAILURE, since two papers out of four did not build",
+    r.status !== 0,
+  );
 } finally {
   rmSync(work, { recursive: true, force: true });
 }
 
 console.log();
-console.log(bad === 0 ? "✅ build e2e: всё сошлось" : `🔴 build e2e: ${bad} расхождений`);
+console.log(bad === 0 ? "✅ build e2e: everything matched" : `🔴 build e2e: ${bad} mismatch(es)`);
 process.exit(bad === 0 ? 0 : 1);

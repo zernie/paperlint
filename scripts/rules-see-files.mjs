@@ -64,11 +64,11 @@ export async function rulesSeeFiles({ cwd }) {
 }
 
 // CLI entry. Guarded so the harness can import the function without running the process exit.
-// 🔴 `isMain`, А НЕ `import.meta.url === `file://${process.argv[1]}``. Node приводит точку входа
-// к РЕАЛЬНОМУ пути для `import.meta.url`, но оставляет `process.argv[1]` как набрано, поэтому
-// через симлинк они не равны и CLI молча не исполняется — процесс выходит 0, не сделав ничего.
-// Потребитель добирается до этих скриптов именно через симлинк. Наблюдено 14.09 на прогоне
-// 34784079821: `extract-pdf-facts.mjs --strict` вернул RC=0 и не создал файл фактов.
+// 🔴 `isMain`, NOT `import.meta.url === `file://${process.argv[1]}``. Node resolves the entry
+// point to its REAL path for `import.meta.url` but leaves `process.argv[1]` as typed, so through
+// a symlink the two are not equal and the CLI silently does not run — the process exits 0 having
+// done nothing. The consumer reaches these scripts through exactly such a symlink. Observed 14.09
+// on run 34784079821: `extract-pdf-facts.mjs --strict` returned RC=0 and created no facts file.
 if (isMain(import.meta.url)) {
   const { rules, linted, blind } = await rulesSeeFiles({ cwd: process.cwd() });
   for (const { rule, files } of rules) console.log(`${String(files).padStart(4)}  ${rule}`);

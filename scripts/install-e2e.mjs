@@ -1,21 +1,22 @@
 /**
- * E2E УСТАНОВКИ: упаковать пакет и поставить его в ЧИСТОГО потребителя каждым доступным
- * менеджером, затем проверить то, что потребитель реально делает.
+ * INSTALL E2E: pack the package and install it into a CLEAN consumer with every available
+ * manager, then check what the consumer actually does.
  *
- * 🔴 ЗАЧЕМ ОТДЕЛЬНЫЙ ПРОГОН, А НЕ ЯЧЕЙКА В `npm test`. Всё, что проверяют 55 харнессов, живёт
- * ВНУТРИ репозитория, где рядом лежит и `node_modules`, и исходники, и конфиг. Потребитель
- * получает другое дерево: тарбол, распакованный менеджером ПО ЕГО ПРАВИЛАМ. Между этими двумя
- * мирами уже разъехалось одно решение — перевод `vigiles` из peer в обычные зависимости
- * работает на npm и НЕ работает на pnpm, потому что проводка хуков адресует рантайм от корня
- * проекта, а pnpm транзитивы в корень не кладёт. Найдено это было не тестом.
+ * 🔴 WHY A SEPARATE RUN AND NOT A CELL IN `npm test`. Everything the 55 harnesses check lives
+ * INSIDE the repository, where `node_modules`, the sources and the config all sit side by side.
+ * The consumer gets a different tree: a tarball unpacked by a manager BY ITS OWN RULES. One
+ * decision has already diverged between those two worlds — moving `vigiles` from peer to regular
+ * dependencies works on npm and does NOT work on pnpm, because the hook wiring addresses the
+ * runtime from the project root, and pnpm does not put transitive dependencies at the root. That
+ * was not found by a test.
  *
- * 🔴 ГЛАВНАЯ ПРОВЕРКА — КОМАНДА ХУКА ВЫПОЛНЯЕТСЯ, А НЕ СОВПАДАЕТ СО СТРОКОЙ. Грепнуть путь в
- * `hooks.json` бесполезно: строка там верна при любом менеджере, а резолвится она или нет —
- * свойство разложенного на диск дерева. Поэтому команда запускается, и вердикт выносится по
- * тому, умерла ли она на `Cannot find module`.
+ * 🔴 THE MAIN CHECK IS THAT THE HOOK COMMAND RUNS, NOT THAT IT MATCHES A STRING. Grepping the
+ * path in `hooks.json` is useless: the string there is correct under any manager, while whether
+ * it resolves is a property of the tree laid out on disk. So the command is launched, and the
+ * verdict is based on whether it died on `Cannot find module`.
  *
- * Прогон: node scripts/install-e2e.mjs [--keep]
- * Код возврата: 0 — все менеджеры прошли; 1 — хоть один не прошёл.
+ * Run: node scripts/install-e2e.mjs [--keep]
+ * Exit code: 0 — every manager passed; 1 — at least one did not.
  */
 import { execFileSync, spawnSync } from "node:child_process";
 import {
@@ -37,7 +38,7 @@ const KEEP = process.argv.includes("--keep");
 const sh = (cmd, args, opts = {}) =>
   spawnSync(cmd, args, { encoding: "utf8", ...opts });
 
-/** Менеджер считается доступным, только если он реально запускается. */
+/** A manager counts as available only if it actually launches. */
 function managers() {
   const out = [];
   for (const [name, probe, install] of [
@@ -59,7 +60,7 @@ function managers() {
   return out;
 }
 
-/** Небольшой, но НАСТОЯЩИЙ корпус: `lint` обязан пройти его начисто. */
+/** A small but REAL corpus: `lint` must pass it clean. */
 function stageCorpus(root) {
   const paper = join(root, "papers", "p1");
   mkdirSync(join(paper, "versions"), { recursive: true });
@@ -76,8 +77,8 @@ function stageCorpus(root) {
 }
 
 /**
- * Команды хуков берутся ИЗ ОПУБЛИКОВАННОГО `hooks.json`, а не из копии в репозитории:
- * проверяем то, что доехало, а не то, что мы отправляли.
+ * The hook commands are taken FROM THE PUBLISHED `hooks.json`, not from the copy in the
+ * repository: we check what arrived, not what we shipped.
  */
 function hookCommands(consumer) {
   const file = join(
@@ -89,26 +90,26 @@ function hookCommands(consumer) {
     "hooks.json",
   );
   if (!existsSync(file))
-    return { err: `plugin/hooks/hooks.json не доехал в тарболе: ${file}` };
+    return { err: `plugin/hooks/hooks.json did not arrive in the tarball: ${file}` };
   let json;
   try {
     json = JSON.parse(readFileSync(file, "utf8"));
   } catch (e) {
-    return { err: `hooks.json не разбирается: ${e.message}` };
+    return { err: `hooks.json does not parse: ${e.message}` };
   }
   const cmds = [];
   for (const entries of Object.values(json.hooks ?? {}))
     for (const entry of entries ?? [])
       for (const h of entry.hooks ?? []) if (h.command) cmds.push(h.command);
   if (cmds.length === 0)
-    return { err: "в hooks.json ноль команд — проверять нечего" };
+    return { err: "zero commands in hooks.json — there is nothing to check" };
   return { cmds };
 }
 
 const results = [];
-// realpathSync — НЕ украшение: на macOS `/var` это симлинк на `/private/var`, и путь,
-// записанный до резолва, не совпадает с тем, что вернёт процесс изнутри. Это отдельный
-// класс, уже стоивший красного npm test только на macOS (vigiles#241).
+// realpathSync is NOT decoration: on macOS `/var` is a symlink to `/private/var`, and a path
+// recorded before resolution does not match what a process returns from inside. This is a
+// separate class, and it has already cost a red npm test on macOS only (vigiles#241).
 const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-e2e-")));
 try {
   const packed = execFileSync(
@@ -123,12 +124,12 @@ try {
     .split("\n")
     .pop();
   const tgz = join(work, packed);
-  if (!existsSync(tgz)) throw new Error(`npm pack не оставил тарбол: ${tgz}`);
-  console.log(`тарбол: ${packed}\n`);
+  if (!existsSync(tgz)) throw new Error(`npm pack left no tarball: ${tgz}`);
+  console.log(`tarball: ${packed}\n`);
 
   const mgrs = managers();
   if (mgrs.length === 0)
-    throw new Error("ни одного менеджера пакетов не запускается");
+    throw new Error("not a single package manager launches");
 
   for (const m of mgrs) {
     const consumer = join(work, `consumer-${m.name}`);
@@ -149,23 +150,24 @@ try {
     console.log(`── ${m.name} ${m.version}`);
     const [cmd, args] = m.install(tgz);
     const inst = sh(cmd, args, { cwd: consumer });
-    if (inst.status === 0) ok("установка прошла");
-    else bad("установка прошла", inst.stderr || inst.stdout);
+    if (inst.status === 0) ok("the install went through");
+    else bad("the install went through", inst.stderr || inst.stdout);
 
-    // 🔴 БИН ЗАПУСКАЕТСЯ НАПРЯМУЮ, А НЕ ЧЕРЕЗ `node <путь>`. У npm в `.bin` лежит СИМЛИНК на
-    // `.mjs`, и `node` его проглатывает; у pnpm там SHELL-ОБЁРТКА, и `node` давится на первой
-    // же строке `basedir=$(dirname …)`. Первая редакция этого теста звала `node bin` и
-    // отрапортовала три ложных падения на pnpm — то есть измеряла мой способ запуска, а не
-    // пакет. Потребитель зовёт `npx rpp`, что исполняет файл, а не скармливает его ноде.
+    // 🔴 THE BIN IS LAUNCHED DIRECTLY, NOT THROUGH `node <path>`. Under npm `.bin` holds a
+    // SYMLINK to the `.mjs`, and `node` swallows it; under pnpm it holds a SHELL WRAPPER, and
+    // `node` chokes on its very first line `basedir=$(dirname …)`. The first edition of this test
+    // called `node bin` and reported three false failures on pnpm — that is, it measured my way
+    // of launching, not the package. The consumer calls `npx rpp`, which executes the file rather
+    // than feeding it to node.
     const bin = join(consumer, "node_modules", ".bin", "rpp");
     const help = sh(bin, ["--help"], { cwd: consumer });
     help.status === 0
-      ? ok("`rpp --help` отвечает нулём")
-      : bad("`rpp --help` отвечает нулём", help.stderr);
+      ? ok("`rpp --help` answers with zero")
+      : bad("`rpp --help` answers with zero", help.stderr);
 
-    // 🔴 КОРПУС СТАВИТСЯ ДО `init`, И ЭТО НЕ ПЕРЕСТАНОВКА РАДИ УДОБСТВА. `init` теперь ИЗМЕРЯЕТ
-    // каталог статей вместо того, чтобы угадывать его; запуск по пустому дереву мерил бы
-    // ветку-умолчание и молчал бы о той, ради которой команду переписали.
+    // 🔴 THE CORPUS IS STAGED BEFORE `init`, AND THIS IS NOT A REORDERING FOR CONVENIENCE. `init`
+    // now MEASURES the papers directory instead of guessing it; a run over an empty tree would
+    // measure the default branch and stay silent about the one the command was rewritten for.
     stageCorpus(consumer);
     const init = sh(bin, ["init"], { cwd: consumer });
     const declared = (() => {
@@ -174,38 +176,38 @@ try {
           "research-paper-pipeline"
         ]?.papers;
       } catch (e) {
-        return `не читается: ${e.message}`;
+        return `unreadable: ${e.message}`;
       }
     })();
     declared === "papers"
-      ? ok("`rpp init` объявил каталог статей в package.json")
+      ? ok("`rpp init` declared the papers directory in package.json")
       : bad(
-          "`rpp init` объявил каталог статей в package.json",
-          `в package.json оказалось ${JSON.stringify(declared)}\n${init.stdout ?? ""}${init.stderr ?? ""}`,
+          "`rpp init` declared the papers directory in package.json",
+          `package.json ended up with ${JSON.stringify(declared)}\n${init.stdout ?? ""}${init.stderr ?? ""}`,
         );
-    // ОДНА декларация: второй носитель не создаётся, иначе они разъедутся молча — это тот самый
-    // дефект #33, только заведённый заново собственной командой установки.
+    // ONE declaration: no second carrier is created, otherwise the two diverge silently — that is
+    // defect #33 exactly, only reintroduced by our own install command.
     !existsSync(join(consumer, "rpp.json"))
-      ? ok("и НЕ создал второй носитель rpp.json")
-      : bad("и НЕ создал второй носитель rpp.json", "rpp.json появился");
+      ? ok("and did NOT create a second carrier rpp.json")
+      : bad("and did NOT create a second carrier rpp.json", "rpp.json appeared");
     init.status === 0
-      ? ok("`rpp init` закончил нулём — doctor не нашёл расхождения")
+      ? ok("`rpp init` finished with zero — doctor found no discrepancy")
       : bad(
-          "`rpp init` закончил нулём — doctor не нашёл расхождения",
+          "`rpp init` finished with zero — doctor found no discrepancy",
           (init.stdout ?? "") + (init.stderr ?? ""),
         );
 
     const lint = sh(bin, ["lint"], { cwd: consumer });
     lint.status === 0 && /no findings/.test(lint.stdout ?? "")
-      ? ok("`rpp lint` прошёл корпус начисто")
+      ? ok("`rpp lint` passed the corpus clean")
       : bad(
-          "`rpp lint` прошёл корпус начисто",
+          "`rpp lint` passed the corpus clean",
           (lint.stdout ?? "") + (lint.stderr ?? ""),
         );
 
-    // 🔴 Несущая проверка: команды ВЫПОЛНЯЮТСЯ.
+    // 🔴 The load-bearing check: the commands ARE EXECUTED.
     const { cmds, err } = hookCommands(consumer);
-    if (err) bad("hooks.json доехал и разбирается", err);
+    if (err) bad("hooks.json arrived and parses", err);
     else {
       let resolved = 0;
       for (const command of cmds) {
@@ -215,43 +217,44 @@ try {
           env: { ...process.env, CLAUDE_PROJECT_DIR: consumer },
         });
         const out = (r.stderr ?? "") + (r.stdout ?? "");
-        // Код возврата не судим: страж вправе вернуть 2 по существу. Судим РЕЗОЛВ.
+        // The exit code is not judged: a guard may legitimately return 2 on the merits. What is
+        // judged is the RESOLVE.
         if (
-          // 🔴 `is NOT running` В СПИСКЕ — НЕСУЩЕЕ. Первая редакция искала только
-          // `Cannot find module`, а `rpp hook` при нерезолвящемся рантайме ловит исключение
-          // и жалуется ДРУГИМИ словами, возвращая 0 — и тест напечатал «все 3 команды
-          // резолвятся» при полностью неработающих хуках. Ложный зелёный ровно того класса,
-          // ради которого тест и написан: проверка искала написание, которое ПОМНИЛА, а не
-          // саму вещь.
+          // 🔴 `is NOT running` IN THE LIST IS LOAD-BEARING. The first edition looked only for
+          // `Cannot find module`, while `rpp hook` with an unresolvable runtime catches the
+          // exception and complains in DIFFERENT words, returning 0 — and the test printed "all
+          // 3 commands resolve" with the hooks completely broken. A false green of exactly the
+          // class this test is written for: the check looked for the spelling it REMEMBERED, not
+          // for the thing itself.
           /Cannot find module|MODULE_NOT_FOUND|No such file or directory|is NOT running/.test(
             out,
           )
         )
           bad(
-            `команда хука резолвится (${cmds.indexOf(command) + 1}/${cmds.length})`,
+            `the hook command resolves (${cmds.indexOf(command) + 1}/${cmds.length})`,
             out,
           );
         else resolved++;
       }
       if (resolved === cmds.length)
-        ok(`все ${cmds.length} команд(ы) хуков резолвятся`);
+        ok(`all ${cmds.length} hook command(s) resolve`);
     }
 
     results.push({ manager: `${m.name} ${m.version}`, fail });
     console.log("");
   }
 } finally {
-  if (KEEP) console.log(`(--keep) дерево осталось: ${work}`);
+  if (KEEP) console.log(`(--keep) the tree was kept: ${work}`);
   else rmSync(work, { recursive: true, force: true });
 }
 
-console.log("── итог");
+console.log("── summary");
 let red = 0;
 for (const r of results) {
   if (r.fail.length === 0) console.log(`  ✅ ${r.manager}`);
   else {
     red++;
-    console.log(`  🔴 ${r.manager} — не прошло: ${r.fail.join(" · ")}`);
+    console.log(`  🔴 ${r.manager} — did not pass: ${r.fail.join(" · ")}`);
   }
 }
 process.exit(red > 0 ? 1 : 0);

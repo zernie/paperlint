@@ -1,20 +1,20 @@
 ---
-title: "Перечит статьи — пример оформления"
+title: "Paper cold read — a formatting example"
 created: 2026-09-01
 ---
 
-## Открыто
+## Open
 
-Ниже — пример того, как секция выглядит в шаблоне:
+Below is an example of how the section looks in the template:
 
 ```markdown
-## Открыто
+## Open
 
-| находка | где | разбор |
+| finding | where | analysis |
 |---|---|---|
-| пример | §1 | — |
+| example | §1 | — |
 ```
 
-| находка | где | разбор |
+| finding | where | analysis |
 |---|---|---|
-| настоящая находка без разбора | §2 | — |
+| a real finding with no analysis | §2 | — |

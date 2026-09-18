@@ -1,38 +1,39 @@
 /**
- * `rpp lint` — половина, которую ESLint не может сделать ПО ПОСТРОЕНИЮ: проверка, что нужный
- * файл ЕСТЬ.
+ * `rpp lint` — the half ESLint cannot do BY CONSTRUCTION: checking that the required file
+ * IS THERE.
  *
- * 🔴 ПОЧЕМУ ЭТО ОТДЕЛЬНЫЙ МОДУЛЬ, А НЕ ПРАВИЛО. Правило вызывается для файла, который линтеру
- * подали. Файл, которого нет, не подаётся никогда — значит правило не вызывается и, не
- * вызвавшись, физически не может сообщить о пропаже. Каталог статьи без `PIPELINE-STATUS.md`
- * не даёт НИ ОДНОЙ находки: по нему не бежит ни одно правило пайплайна, и прогон зелёный.
- * Это ровно тот зелёный ноль, ради которого в CLI стоит сторож `nothing was linted`, только
- * на уровень ниже — не «ничего не линтовалось», а «здесь линтовалось не всё».
+ * 🔴 WHY THIS IS A SEPARATE MODULE AND NOT A RULE. A rule is invoked for a file that was handed
+ * to the linter. A file that does not exist is never handed over — so the rule is not invoked,
+ * and, not having been invoked, it physically cannot report the absence. A paper directory with
+ * no `PIPELINE-STATUS.md` yields NOT ONE finding: not a single pipeline rule runs over it, and
+ * the run is green. This is exactly the green zero the `nothing was linted` guard in the CLI
+ * stands for, only one level down — not "nothing was linted", but "not everything here was".
  *
- * ⚠️ ЭТО НЕ РАБОТА ls-lint, И ЭТО НЕ ВЗАИМОЗАМЕНЯЕМО. ls-lint судит ИМЕНА файлов, которые
- * существуют (`versions/2026-07-22-submitted.pdf` названо по схеме). Про файл, которого нет,
- * он не говорит ничего — ему нечего сопоставлять. Две половины структуры:
- *     ls-lint     — «то, что лежит, названо правильно»
- *     этот модуль — «то, что положено, лежит»
+ * ⚠️ THIS IS NOT ls-lint's JOB, AND THE TWO ARE NOT INTERCHANGEABLE. ls-lint judges the NAMES of
+ * files that exist (`versions/2026-07-22-submitted.pdf` is named to the scheme). About a file
+ * that does not exist it says nothing — it has nothing to match. The two halves of structure:
+ *     ls-lint      — "what is there is named correctly"
+ *     this module  — "what is required is there"
  *
- * 🔴 ОБНАРУЖЕНИЕ ЩЕДРОЕ, ТРЕБОВАНИЯ СТРОГИЕ — и это ради ложных срабатываний. Правило уровня
- * error, падающее на корректном дереве, не чинят, его выключают, и вместе с ним уходят
- * настоящие находки. Поэтому каталог считается статьёй, только если в нём УЖЕ лежит хоть один
- * маркер пайплайна; `research/`, `plans/` и прочие соседи по корпусу не трогаются вовсе.
+ * 🔴 DETECTION IS GENEROUS, REQUIREMENTS ARE STRICT — and this is for the sake of false positives.
+ * An error-level rule that fails on a correct tree does not get fixed, it gets turned off, and the
+ * real findings go with it. So a directory counts as a paper only if it ALREADY holds at least one
+ * pipeline marker; `research/`, `plans/` and the other neighbours in the corpus are not touched at
+ * all.
  */
 import { readdirSync, existsSync } from "node:fs";
 import { join, relative, basename } from "node:path";
 import type { StructureConfig, StructureFinding } from "./types.ts";
 
-/** Требования после наложения конфига потребителя на умолчания. */
+/** The requirements after the consumer's config is laid over the defaults. */
 type Rules = Required<StructureConfig>;
 
 /**
- * Умолчания ЗАМЕРЕНЫ по живому корпусу из пяти каталогов статей, а не выбраны по вкусу: при
- * них он проходит целиком — ноль находок. Прогнан и встречный случай: `paper.pdf`, добавленный
- * в `require`, даёт сразу две находки на статьях, с которыми всё в порядке, — две из четырёх
- * держат pdf под другим именем. Поэтому его в умолчаниях нет; объявленные pdf и без того
- * сверяются побайтово правилом `paper/stages`.
+ * The defaults are MEASURED against a live corpus of five paper directories, not picked by taste:
+ * under them it passes in full — zero findings. The counter-case was run too: `paper.pdf` added to
+ * `require` yields two findings straight away on papers that are perfectly fine — two of the four
+ * keep their pdf under a different name. That is why it is not in the defaults; declared pdfs are
+ * byte-compared by the `paper/stages` rule anyway.
  */
 export const STRUCTURE_DEFAULTS = {
   markers: ["PIPELINE-STATUS.md", "paper.tex", "paper.md", "venue.json"],
@@ -41,7 +42,7 @@ export const STRUCTURE_DEFAULTS = {
   ignore: [],
 };
 
-/** Конфиг потребителя поверх умолчаний; `structure: false` выключает проверку целиком. */
+/** The consumer's config over the defaults; `structure: false` turns the check off entirely. */
 export function structureRules(
   structure: StructureConfig | false | undefined,
 ): Rules | null {
@@ -55,13 +56,13 @@ const dirsIn = (dir: string): string[] => {
       .filter((e) => e.isDirectory() && !e.name.startsWith("."))
       .map((e) => e.name);
   } catch {
-    // Несуществующий каталог — не наша забота: об этом громко скажет сторож пустого набора.
+    // A non-existent directory is not our concern: the empty-set guard says so loudly.
     return [];
   }
 };
 
 /**
- * @returns {{file: string, message: string}[]} находки, по одной на пропавший файл.
+ * @returns {{file: string, message: string}[]} findings, one per missing file.
  */
 export function checkStructure(
   paths: readonly string[],
@@ -78,7 +79,7 @@ export function checkStructure(
       if (rules.ignore.includes(name)) continue;
       const dir = join(root, name);
 
-      // Щедрое обнаружение: без единого маркера это просто соседний каталог, а не статья.
+      // Generous detection: with not one marker this is just a neighbour directory, not a paper.
       if (!rules.markers.some((m: string) => existsSync(join(dir, m)))) continue;
 
       for (const required of rules.require)
@@ -100,9 +101,9 @@ export function checkStructure(
 }
 
 /**
- * Сообщение НАЗЫВАЕТ ПОСЛЕДСТВИЕ, а не повторяет условие. «missing PIPELINE-STATUS.md» без
- * второй половины читается как придирка к оформлению; с ней видно, что каталог не проверяется
- * вовсе, а отчёт по нему зелёный.
+ * The message NAMES THE CONSEQUENCE rather than restating the condition. "missing
+ * PIPELINE-STATUS.md" without the second half reads as nitpicking about formatting; with it you
+ * can see that the directory is not checked at all, while its report is green.
  */
 function whyMissingMatters(file: string, dirName: string): string {
   if (file === "PIPELINE-STATUS.md")
@@ -122,10 +123,10 @@ export function formatStructure(findings: readonly StructureFinding[]): string {
 }
 
 /**
- * 🔴 ОДНА СХЕМА НА ОБЕ ПОЛОВИНЫ. Находки о пропаже отдаются в ТОЙ ЖЕ форме, что и находки
- * ESLint, поэтому `--json` остаётся одним разбираемым массивом. Отдельный канал заставил бы
- * каждого потребителя писать второй парсер — и первый же, кто его не написал бы, читал бы
- * «структурных находок нет» вместо «я их не разбираю».
+ * 🔴 ONE SCHEMA FOR BOTH HALVES. Findings about absence are emitted in THE SAME shape as ESLint
+ * findings, so `--json` stays a single parseable array. A separate channel would force every
+ * consumer to write a second parser — and the first one who did not write it would read "there
+ * are no structural findings" instead of "I do not parse them".
  */
 export function asEslintResults(findings: readonly StructureFinding[]): unknown[] {
   const byDir = new Map<string, string[]>();

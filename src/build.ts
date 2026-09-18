@@ -1,40 +1,43 @@
 /**
- * `rpp build <paper>` — собрать статью ЕЁ СОБСТВЕННЫМ скриптом.
+ * `rpp build <paper>` — build a paper with ITS OWN script.
  *
- * 🔴 ПОЧЕМУ НЕ УНИВЕРСАЛЬНЫЙ ЦИКЛ. Сборка статьи не сводится к «прогнать pdflatex трижды».
- * У живого примера в преамбуле стоит `\input{}` файла, который лежит НЕ рядом со статьёй, а в
- * данных площадки, и без `TEXINPUTS` сборка падает сразу; у другого — цикл подбора позиции
- * `\balance`, где сборок два десятка. Написать «общий» цикл значит либо не уметь ни того, ни
- * другого, либо втянуть обе особенности в пакет, который про них знать не должен. Скрипт статьи
- * уже умеет своё и САМ находит свой каталог, поэтому CLI его просто запускает.
+ * 🔴 WHY NOT A UNIVERSAL LOOP. Building a paper does not reduce to "run pdflatex three times".
+ * One live example has an `\input{}` in its preamble for a file that sits NOT next to the paper
+ * but in the venue's data, and without `TEXINPUTS` the build fails immediately; another has a
+ * loop searching for the `\balance` position, where there are two dozen builds. Writing a
+ * "general" loop means either handling neither of them, or dragging both peculiarities into a
+ * package that must not know about them. The paper's script already knows its own job and finds
+ * its own directory ITSELF, so the CLI just runs it.
  *
- * 🔴 ЧТО ЭТА КОМАНДА ЧИНИТ, И ЭТО НЕ УДОБСТВО. В воркфлоу потребителя написано своей рукой:
- *   «The loop above only reaches a paper that ships `repro/build-submission.sh`, and exactly
- *    ONE of five does… So the accepted AgenticDev paper was checked by no paper job at all.»
- *   «A paper with no `.log` is SKIPPED, not failed… That is a real gap, named rather than hidden.»
- * То есть цикл искал ОДНО имя, у принятой статьи было ДРУГОЕ (`build.sh` в корне против
- * `repro/build-submission.sh`), и расхождение имён выглядело как «нечего собирать».
+ * 🔴 WHAT THIS COMMAND FIXES, AND IT IS NOT CONVENIENCE. Written by hand in the consumer's
+ * workflow:
+ *   "The loop above only reaches a paper that ships `repro/build-submission.sh`, and exactly
+ *    ONE of five does… So the accepted AgenticDev paper was checked by no paper job at all."
+ *   "A paper with no `.log` is SKIPPED, not failed… That is a real gap, named rather than hidden."
+ * That is, the loop looked for ONE name, the accepted paper had ANOTHER (`build.sh` at the root
+ * versus `repro/build-submission.sh`), and the name mismatch looked like "nothing to build".
  *
- * ⇒ Два следствия, оба намеренные:
- *   1. кандидатов НЕСКОЛЬКО и они ОБЪЯВЛЕНЫ — совпадение по имени перестаёт быть везением;
- *   2. НЕ НАЙДЕН — это ОТКАЗ, а не пропуск. Пропуск и есть тот режим, из-за которого статья
- *      уехала на площадку, не пройдя ни одного пейперного джоба.
+ * ⇒ Two consequences, both deliberate:
+ *   1. there are SEVERAL candidates and they are DECLARED — a name match stops being luck;
+ *   2. NOT FOUND is a REFUSAL, not a skip. The skip is exactly the mode that let a paper go out
+ *      to the venue without passing a single paper job.
  */
 import { existsSync, readdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join, relative, extname } from "node:path";
 import type { BuildResult } from "./types.ts";
 
-/** Что запускать и с какими преднастроенными аргументами. */
+/** What to run, and with which pre-set arguments. */
 export type Interpreter = readonly [bin: string, preArgs: readonly string[]];
 
 /**
- * Порядок ЗНАЧИМ: первый найденный и побеждает. `build.sh` в корне статьи стоит первым, потому
- * что это то, что автор видит, открыв каталог; `repro/…` — конвенция артефакта воспроизведения.
+ * The order MATTERS: the first one found wins. `build.sh` at the paper's root comes first, because
+ * that is what the author sees on opening the directory; `repro/…` is the reproduction-artifact
+ * convention.
  */
 export const BUILD_SCRIPTS = ["build.sh", "repro/build-submission.sh"];
 
-/** Каталог считается статьёй по тем же маркерам, что и в `structure.mjs` — один словарь на двоих. */
+/** A directory counts as a paper by the same markers as `structure.mjs` — one shared dictionary. */
 export const PAPER_MARKERS = [
   "PIPELINE-STATUS.md",
   "paper.tex",
@@ -54,9 +57,9 @@ export function findBuildScript(
 }
 
 /**
- * Интерпретатор выбирается по РАСШИРЕНИЮ, а не по биту исполнения: у файла в свежем клоне
- * `+x` может не быть вовсе (git хранит его, а распаковка тарбола — не всегда), и тогда прямой
- * запуск падает «Permission denied» по причине, не имеющей отношения к статье.
+ * The interpreter is chosen by EXTENSION, not by the execute bit: a file in a fresh clone may not
+ * have `+x` at all (git stores it, unpacking a tarball does not always), and then a direct run
+ * fails with "Permission denied" for a reason that has nothing to do with the paper.
  */
 export function interpreterFor(scriptPath: string): Interpreter {
   const ext = extname(scriptPath);
@@ -72,15 +75,16 @@ export function buildPaper(
     candidates = BUILD_SCRIPTS,
     run = spawnSync,
     cwd = process.cwd(),
-    // 🔴 `--dry-run` — НЕ удобство. «У какой статьи нет скрипта сборки» это ровно тот вопрос,
-    // на который корпус до сих пор отвечал тишиной, и спросить его должно быть можно за
-    // секунду, не запуская два десятка проходов pdflatex и не трогая PDF в рабочем дереве.
+    // 🔴 `--dry-run` is NOT a convenience. "Which paper has no build script" is exactly the
+    // question the corpus has answered with silence until now, and it must be possible to ask it
+    // in a second, without running two dozen pdflatex passes and without touching the PDF in the
+    // working tree.
     //
-    // ⚠️ Этот параметр появился со второго захода, и первый заход — сам по себе урок: флаг был
-    // разобран в CLI и передан сюда, а ЗДЕСЬ его не существовало. Деструктуризация опций
-    // проглатывает неизвестный ключ МОЛЧА, поэтому `--dry-run` отработал как полная сборка и
-    // переписал `paper.pdf` в рабочем дереве. Отказ выглядел как успех: вывод сборки на экране
-    // легко принять за подробный dry-run.
+    // ⚠️ This parameter arrived on the second attempt, and the first attempt is a lesson in
+    // itself: the flag was parsed in the CLI and passed down here, and HERE it did not exist.
+    // Options destructuring swallows an unknown key SILENTLY, so `--dry-run` ran as a full build
+    // and rewrote `paper.pdf` in the working tree. The failure looked like success: build output
+    // on screen is easy to mistake for a verbose dry-run.
     dryRun = false,
   }: {
     candidates?: readonly string[];
@@ -105,7 +109,7 @@ export function buildPaper(
   };
 }
 
-/** Непосредственные подкаталоги, похожие на статью. Скрытые — не статьи. */
+/** Immediate subdirectories that look like a paper. Hidden ones are not papers. */
 export function papersIn(
   root: string,
   markers: readonly string[] = PAPER_MARKERS,
@@ -131,9 +135,9 @@ export function formatResults(results: readonly BuildResult[]): string {
 }
 
 /**
- * 🔴 «Нет скрипта» СЧИТАЕТСЯ ОТКАЗОМ наравне с упавшей сборкой. Именно различение этих двух
- * случаев и порождало тихий пропуск: «нечего собирать» и «собралось» давали один и тот же
- * зелёный прогон.
+ * 🔴 "No script" COUNTS AS A REFUSAL on a par with a failed build. It was precisely the failure to
+ * distinguish these two cases that produced the silent skip: "nothing to build" and "built" gave
+ * one and the same green run.
  */
 export const anyFailed = (results: readonly BuildResult[]): boolean =>
   results.some((r) => r.status !== "built");

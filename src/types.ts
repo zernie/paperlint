@@ -1,42 +1,42 @@
 /**
- * Формы, которыми обмениваются команды CLI. До перехода на TypeScript всё это было `{}` и
- * жило в голове: опечатка в `buildScripts` читалась как «поле не задано», а не как ошибка.
+ * The shapes the CLI commands exchange. Before the move to TypeScript this was all `{}` and lived
+ * in someone's head: a typo in `buildScripts` read as "field not set", not as an error.
  */
 
-/** Содержимое `rpp.json` у потребителя. */
+/** The contents of the consumer's `rpp.json`. */
 export interface RppConfig {
-  /** 🔴 ОБЯЗАТЕЛЬНОЕ. Каталог(и) статей, относительно САМОГО rpp.json. */
+  /** 🔴 REQUIRED. The paper director(ies), relative to rpp.json ITSELF. */
   papers?: string | string[];
-  /** Команда, печатающая список авторов из .bib — своя у каждого корпуса. */
+  /** The command that prints the author list from .bib — each corpus has its own. */
   authorListCommand?: string;
-  /** Долг типографики по статьям: сколько находок уже есть и снижать можно только вниз. */
+  /** Per-paper typography debt: how many findings already exist; the number may only go down. */
   typographyDebt?: Record<string, Record<string, number>>;
-  /** Поля фронтматтера, обязательные для заметок ревью, и допустимые значения каждого. */
+  /** Frontmatter fields required for review notes, and the permitted values of each. */
   docFields?: Record<string, { values: string[] }>;
-  /** Игнорировать находки ревью старше этой даты. */
+  /** Ignore review findings older than this date. */
   reviewSince?: string;
-  /** Сколько находок должен дать холодный прочит, чтобы считаться холодным прочитом. */
+  /** How many findings a cold read must produce to count as a cold read. */
   minFindings?: number;
-  /** Слово, которым заметки ревью вводят причину. */
+  /** The word with which review notes introduce the cause. */
   causeMarker?: string;
-  /** Какие файлы обязан нести каталог статьи; `false` выключает проверку целиком. */
+  /** Which files a paper directory must carry; `false` turns the check off entirely. */
   structure?: StructureConfig | false;
-  /** Кандидаты в скрипт сборки, в порядке предпочтения. */
+  /** Build-script candidates, in order of preference. */
   buildScripts?: string[];
 }
 
 export interface StructureConfig {
-  /** По этим файлам каталог ОПОЗНАЁТСЯ как статья. Обнаружение щедрое. */
+  /** These files are what IDENTIFY a directory as a paper. Detection is generous. */
   markers?: string[];
-  /** Эти файлы обязаны быть. Требования строгие. */
+  /** These files must exist. The requirements are strict. */
   require?: string[];
-  /** Хотя бы один из каждой группы. */
+  /** At least one from each group. */
   requireOneOf?: string[][];
-  /** Каталоги, снятые с проверки поимённо. */
+  /** Directories exempted from the check by name. */
   ignore?: string[];
 }
 
-/** Разобранная командная строка. */
+/** The parsed command line. */
 export interface Args {
   cmd: string | null;
   paths: string[];
@@ -46,17 +46,17 @@ export interface Args {
   dryRun: boolean;
   maxWarnings: number;
   help?: boolean;
-  /** Флаг, за которым не оказалось значения. Непустое поле — это ОТКАЗ, а не умолчание. */
+  /** A flag that turned out to have no value. A non-empty field is a REFUSAL, not a default. */
   missingValue?: string;
 }
 
-/** Находка о ПРИСУТСТВИИ файла — то, чего правило ESLint выразить не может. */
+/** A finding about the PRESENCE of a file — what an ESLint rule cannot express. */
 export interface StructureFinding {
   file: string;
   message: string;
 }
 
-/** Исход сборки одной статьи. `no-script` — ОТКАЗ, а не пропуск. */
+/** The build outcome for one paper. `no-script` is a REFUSAL, not a skip. */
 export interface BuildResult {
   dir: string;
   status: "built" | "failed" | "no-script";
@@ -65,7 +65,7 @@ export interface BuildResult {
   dry?: boolean;
 }
 
-/** Результат чтения конфига: либо данные, либо код возврата, которым выходит вызывающий. */
+/** The result of reading the config: either data, or the exit code the caller exits with. */
 export type ConfigRead =
   | { opts: RppConfig; configPath: string | null; code?: undefined }
   | { code: number; opts?: undefined; configPath?: undefined };

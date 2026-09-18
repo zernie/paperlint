@@ -1,79 +1,83 @@
 #!/usr/bin/env node
 /**
- * 🔴 2026-08-26 — ВСЕ ШЕСТНАДЦАТЬ ПРОВЕРОК ОТСЮДА УЕХАЛИ. ЭТОТ ФАЙЛ ТЕПЕРЬ ТОЛЬКО ОПИСЬ.
+ * 🔴 2026-08-26 — ALL SIXTEEN CHECKS LEFT THIS FILE. THIS FILE IS NOW ONLY AN INVENTORY.
  *
- * Четырнадцать стали правилами `@eslint/markdown` в `eslint-rules/paper-structure.mjs`
- * (двенадцать правил — у двух по два `messageId`), две удалены как дубли уже перенесённого:
- * доля свободной половины дублировала `paper/appendix-ratio`, а «нумерованная секция без
- * `carries:`» — `paper/section-justification`, обе из `eslint-rules/paper-prose.mjs`.
- * Паритет доказан ДО вырезания: 29 входов (настоящая статья + 22 фикстуры «один дефект за
- * раз» + 6 краевых), расхождений 0, все числа совпали побайтово. Разбор и таблица
- * классификации — в приватных заметках автора
+ * Fourteen became `@eslint/markdown` rules in `eslint-rules/paper-structure.mjs`
+ * (twelve rules — two of them have two `messageId`s each), two were deleted as duplicates of things
+ * already moved: the share of the free half duplicated `paper/appendix-ratio`, and "a numbered
+ * section without `carries:`" duplicated `paper/section-justification`, both from
+ * `eslint-rules/paper-prose.mjs`.
+ * Parity was proven BEFORE the removal: 29 inputs (a real paper + 22 "one defect at a time" fixtures
+ * + 6 edge cases), 0 divergences, every number matched byte for byte. The analysis and the
+ * classification table are in the author's private notes
  * (`papers/research/2026-08-26-klassifikatsiya-structure.md`).
  *
- * ЧТО ОСТАЛОСЬ И ПОЧЕМУ ЭТО НЕ ПРОВЕРКА. Опись — таблица «own / total / share / секция» с
- * пометкой `carries:` под каждой строкой. У неё нет порога и она не производит находок: её
- * читает ЧЕЛОВЕК в скилле `tighten-paper`, чтобы сравнить вес секции с тем, что секция сама
- * о себе заявляет. Ровно это сравнение и было идеей автора («печатать заявление рядом с
- * весом»), и линтеру его не выразить — у находки нет места, куда положить всю таблицу.
+ * WHAT IS LEFT AND WHY IT IS NOT A CHECK. The inventory is a table "own / total / share / section"
+ * with a `carries:` note under each row. It has no threshold and produces no findings: it is read by
+ * a HUMAN in the `tighten-paper` skill, to compare a section's weight with what the section claims
+ * about itself. That comparison was exactly the author's idea ("print the claim next to the
+ * weight"), and a linter cannot express it — a finding has nowhere to put a whole table.
  *
- * ⚠️ `--flags-only` СОХРАНЁН, НО ВСЕГДА МОЛЧИТ И ВСЕГДА ВЫХОДИТ В 0.
+ * ⚠️ `--flags-only` IS KEPT, BUT IT ALWAYS STAYS SILENT AND ALWAYS EXITS 0.
  *
- * ── 2026-08-26, ВЕЧЕР: ОБА НАЗВАННЫХ ПОТРЕБИТЕЛЯ ЗАКРЫТЫ, И НАШЁЛСЯ ТРЕТИЙ ────────────────
+ * ── 2026-08-26, EVENING: BOTH NAMED CONSUMERS ARE CLOSED, AND A THIRD ONE TURNED UP ────────
  *
- * Абзац выше называл двух вызывающих и говорил, что пока они не переведены, леджер пишет
- * «находок нет» ПО МОЛЧАНИЮ. Это было верно и измерено: на `the reference paper/paper.md`
- * `--flags-only` печатал 0 строк, а те же байты через ESLint дают **6 находок**
+ * The paragraph above named two callers and said that until they are converted, the ledger writes
+ * "no findings" BY SILENCE. That was true and measured: on `the reference paper/paper.md`
+ * `--flags-only` printed 0 lines, while the same bytes through ESLint give **6 findings**
  * (`subsection-size` ×2 · `section-lead` · `free-section-size` ×2 · `block-ungraded`).
  *
- *   `.github/workflows/paper-gates.yml`, шаг `structure`  → УДАЛЁН. Рядом уже стоял шаг
- *       `eslint`, гоняющий те же правила по тому же глобу; замер показал побайтово тот же
- *       список файлов. Обоснование целиком — в комментарии на месте удалённого шага.
- *   `run-mechanical.mjs`, строка `tighten-paper/structure` → ПЕРЕВЕДЕНА на ESLint
- *       (`read: 'eslint'`, фильтр по правилам из `eslint-rules/paper-structure.mjs`). Не
- *       удалена: ESLint в леджер не пишет ничего, а леджер — единственное место, где факт
- *       «структуру этой статьи на этих байтах кто-то смотрел» хранится с хешем входа.
+ *   `.github/workflows/paper-gates.yml`, the `structure` step  → REMOVED. An `eslint` step already
+ *       stood next to it, running the same rules over the same glob; a measurement showed a
+ *       byte-identical list of files. The full justification is in the comment where the removed
+ *       step used to be.
+ *   `run-mechanical.mjs`, the `tighten-paper/structure` line → CONVERTED to ESLint
+ *       (`read: 'eslint'`, filtered by the rules from `eslint-rules/paper-structure.mjs`). Not
+ *       deleted: ESLint writes nothing into the ledger, and the ledger is the only place where the
+ *       fact "somebody looked at this paper's structure on these bytes" is stored with a hash of the
+ *       input.
  *
- * 🔴 ТРЕТИЙ ВЫЗЫВАЮЩИЙ, КОТОРОГО БАННЕР НЕ ЗНАЛ: `.githooks/pre-commit`. Печатал пустоту и
- * глотал код возврата через `|| true`. Урок ровно тот, что уже записан в `CLAUDE.md` про четыре
- * формы ссылки: баннер перечислял вызывающих ПО ПАМЯТИ, а полный список даёт только греп по
- * имени флага.
+ * 🔴 A THIRD CALLER THE BANNER DID NOT KNOW ABOUT: `.githooks/pre-commit`. It printed nothing and
+ * swallowed the exit code through `|| true`. The lesson is exactly the one already recorded in
+ * `CLAUDE.md` about the four forms of a reference: the banner listed the callers FROM MEMORY, while
+ * only a grep for the flag's name gives the full list.
  *
- * ✅ ЗАКРЫТ 2026-08-26. Вызов переведён на ESLint через `.githooks/structure-gate.mjs`
- * (имена правил ВЫВОДЯТСЯ из `eslint-rules/paper-structure.mjs`, а не переписаны списком),
- * `|| true` снят, коды возврата разведены: 0 — судил · 2 — НЕ судил, коммит отклоняется ·
- * 3 — нет `node_modules/.bin/eslint`, громко и не блокируя. Тест — `.githooks/structure-gate.harness.mjs`,
- * пять мутаций, у каждой доказано, что патч лёг. Замер: на тех же байтах старый вызов давал 0
- * находок и 0 байт вывода, ESLint теми же правилами — **6**.
+ * ✅ CLOSED 2026-08-26. The call was converted to ESLint through `.githooks/structure-gate.mjs`
+ * (the rule names are DERIVED from `eslint-rules/paper-structure.mjs`, not rewritten as a list),
+ * the `|| true` was removed, and the exit codes were separated: 0 — it judged · 2 — it did NOT
+ * judge, the commit is rejected · 3 — no `node_modules/.bin/eslint`, loudly and without blocking.
+ * The test is `.githooks/structure-gate.harness.mjs`, five mutations, each one with proof that the
+ * patch applied. Measured: on the same bytes the old call gave 0 findings and 0 bytes of output,
+ * ESLint with the same rules — **6**.
  *
- * ⚠️ И проверка ПОЛНОТЫ списка, которой в прошлый раз не было: в `pre-commit` идиома
- * `--flags-only … || true` встречается ЧЕТЫРЕ раза. Прогнаны все, 26.08:
- *   `prose-lint.mjs`        — жив (2 находки, exit 1)
- *   `artifact-coverage.mjs` — жив (6 находок, exit 1)
- *   `population-map.mjs`    — молчит ЗАКОННО (строка 144: в этом режиме чистый прогон не печатает
- *                             ничего; на настоящей статье реестр сходится)
- *   `structure.mjs`         — был мёртв, закрыт выше
- * Список без третьей колонки — это перечисление, а не проверка.
+ * ⚠️ And the COMPLETENESS check of the list, which was missing last time: in `pre-commit` the idiom
+ * `--flags-only … || true` occurs FOUR times. All of them were run, 26.08:
+ *   `prose-lint.mjs`        — alive (2 findings, exit 1)
+ *   `artifact-coverage.mjs` — alive (6 findings, exit 1)
+ *   `population-map.mjs`    — silent LEGITIMATELY (line 144: in this mode a clean run prints
+ *                             nothing; on a real paper the registry adds up)
+ *   `structure.mjs`         — was dead, closed above
+ * A list without the third column is an enumeration, not a check.
  *
- * ⚠️ ФЛАГ НЕ УДАЛЁН И УДАЛЯТЬ ЕГО НЕЛЬЗЯ БЕЗ ПРАВКИ ЧУЖИХ ФАЙЛОВ: его молчание закреплено
- * двумя ассертами — `eslint-rules/paper-structure.harness.mjs` (≈550) и
- * `.claude/skills/paper-pipeline/scripts/gates.harness.mjs` (блок 1). Оба падают, если этот
- * режим снова что-то напечатает ИЛИ выйдет ненулевым кодом. Печатать здесь указатель «смотри
- * eslint» по-прежнему запрещено: `read: 'flags'` у любого оставшегося потребителя превратит
- * его в вечную ложную находку.
+ * ⚠️ THE FLAG IS NOT DELETED AND MUST NOT BE DELETED WITHOUT EDITING OTHER PEOPLE'S FILES: its
+ * silence is pinned by two asserts — `eslint-rules/paper-structure.harness.mjs` (≈550) and
+ * `.claude/skills/paper-pipeline/scripts/gates.harness.mjs` (block 1). Both fail if this mode prints
+ * something again OR exits with a non-zero code. Printing a "see eslint" pointer here is still
+ * forbidden: `read: 'flags'` at any remaining consumer would turn it into a permanent false finding.
  */
 /**
  * structure.mjs — the mechanical leg of tighten-paper.
  *
  *   node structure.mjs <paper.md>              the whole paper
  *   node structure.mjs <paper.md> --section=3  one section and its subsections
- *   node structure.mjs <paper.md> --flags-only ⚠️ ВСЕГДА МОЛЧИТ (см. баннер выше)
+ *   node structure.mjs <paper.md> --flags-only ⚠️ ALWAYS SILENT (see the banner above)
  *
  * WHY THIS EXISTS, and why it is NOT in prose-lint. Prose-lint judges sentences. Structure is a
  * different question and was homeless: `tighten-paper` is a skill — a model reading and judging —
  * with no script under it, so nothing mechanical ever looked at the document's SHAPE. Author,
- * 2026-08-05: *"я думал проза это про прозу, а структура это другой вообще"*, and before that
- * *"нужно чтобы релевантный скилл делал то же самое для всей статьи по умолчанию или для секции"*.
+ * 2026-08-05: *"I thought prose was about prose, and structure is something else entirely"*, and
+ * before that *"the relevant skill needs to do the same thing for the whole paper by default, or for
+ * one section"* (both said in Russian).
  *
  * 🔴 The failure that motivated it. Asked whether the contribution was short-changed, word counts
  * answered "no" — section 3 had 38% more words than related work — and that answer was true and
@@ -89,42 +93,44 @@
 import { readFileSync } from 'node:fs';
 import { headings as mdHeadings, splitSections, stripFences, requireMarkdown, stripFrontmatter } from '../../lib/markdown.mjs';
 
-// Разбор разметки — парсером (`CLAUDE.md`, 2026-08-11). Падаем, а не деградируем: без парсера
-// в статье не нашлось бы ни одной секции, `--flags-only` вернул бы 0 находок и код 0 — то есть
-// «структура в порядке» про документ, который никто не прочитал. Этот файл ровно про то, что
-// метрика без порога и проверка без наблюдаемости молча ничего не значат; уверенный ноль тут
-// был бы третьим экземпляром той же ошибки в одном файле.
+// Markup is parsed with a PARSER (`CLAUDE.md`, 2026-08-11). We fail rather than degrade: without a
+// parser not one section would be found in the paper, `--flags-only` would return 0 findings and
+// code 0 — that is, "the structure is fine" about a document nobody read. This file is precisely
+// about the fact that a metric without a threshold and a check without observability silently mean
+// nothing; a confident zero here would be the third instance of the same error in one file.
 requireMarkdown();
 
-// Заголовки уровня 2–3 — то, что этот файл называет «секцией» и «подсекцией». Раньше это же
-// было записано как `#{2,3}`, то есть как утверждение о ЧИСЛЕ РЕШЁТОК: `#{2,3}` считал секцией
-// любую такую строку, включая строку внутри ```-блока. Статьи в этой репе цитируют чужую
-// разметку кусками, так что «лишняя секция из цитаты» — не гипотеза.
+// Headings of depth 2-3 are what this file calls a "section" and a "subsection". This used to be
+// written as `#{2,3}`, that is, as a statement about the NUMBER OF HASHES: `#{2,3}` counted any such
+// line as a section, including a line inside a ``` block. The papers in this repo quote other
+// people's markup in chunks, so "an extra section out of a quotation" is not a hypothesis.
 const SECTION_MIN = 2, SECTION_MAX = 3;
 
-// Пороги (60 слов лида · 350 слов подсекции · 100% свободной половины · 1.0 к самой тяжёлой
-// секции) уехали вместе с проверками — они живут опциями правил в `eslint-rules/paper-structure.mjs`,
-// а КАЛИБРОВКА каждого (почему именно 60 и именно 350, и на каком корпусе мерили) перенесена
-// туда же комментариями. Здесь их держать нельзя: число без порога — проза, а порог без
-// проверки — второй источник правды, который разъедется с первым.
+// The thresholds (60 words of lead · 350 words of a subsection · 100% of the free half · 1.0
+// against the heaviest section) left together with the checks — they live as rule options in
+// `eslint-rules/paper-structure.mjs`, and the CALIBRATION of each (why exactly 60 and exactly 350,
+// and on which corpus it was measured) moved there as comments. They must not be kept here: a number
+// without a threshold is prose, and a threshold without a check is a second source of truth that
+// will drift away from the first.
 
 const args = process.argv.slice(2);
 const file = args.find((a) => !a.startsWith('--'));
 if (!file) {
-  console.error('usage: node structure.mjs <paper.md> [--section=N]   (--flags-only принимается и молчит)');
+  console.error('usage: node structure.mjs <paper.md> [--section=N]   (--flags-only is accepted and stays silent)');
   process.exit(0);
 }
 const only = (args.find((a) => a.startsWith('--section=')) || '').split('=')[1] || null;
 const flagsOnly = args.includes('--flags-only');
 
 let t = readFileSync(file, 'utf8');
-// `stripFences()` вместо `/^```[\s\S]*?^```/gm`: то выражение при НЕЧЁТНОМ числе фенсов
-// склеивало конец одного блока с началом следующего и вырезало прозу между ними — а вырезанная
-// проза здесь это заниженный вес секции, то есть находка «это разделитель, а не секция» на
-// секции, с которой всё в порядке.
-// `blank: true` — строки блока становятся пустыми, а не исчезают: код-блок это граница
-// абзаца, и удаление строк склеило бы соседние абзацы. Здесь это на числа не влияет (слова
-// и заголовки считаются одинаково), но форма должна совпадать с `prose-lint`, где влияет.
+// `stripFences()` instead of `/^```[\s\S]*?^```/gm`: with an ODD number of fences that expression
+// glued the end of one block to the beginning of the next and cut out the prose between them — and
+// prose cut out here means an understated section weight, that is, a finding of "this is a divider,
+// not a section" on a section that is perfectly fine.
+// `blank: true` — the block's lines become empty rather than disappear: a code block is a paragraph
+// boundary, and removing the lines would glue neighbouring paragraphs together. Here it does not
+// affect the numbers (words and headings are counted the same either way), but the form must match
+// `prose-lint`, where it does.
 t = stripFences(
   stripFrontmatter(t)                           // frontmatter
    .replace(/<!--[\s\S]*?-->/g, ''),            // working comments
@@ -137,10 +143,11 @@ t = stripFences(
 // appendix. The author asked the question about those exact sections and the tool could not have
 // answered it. A free section is where unbudgeted prose accumulates precisely because nothing
 // prices it.
-// 2026-08-11: три границы (свободные секции · библиография · приложения) ищет парсер.
-// Соглашение `-1 / offset` и сравнения `> 0`, `< 0` сохранены как были — заголовок в самой
-// первой строке файла прежние выражения границей тоже не считали, и менять это здесь значило
-// бы завести новое поведение под видом перевода на парсер.
+// 2026-08-11: the three boundaries (free sections · bibliography · appendices) are found by the
+// parser. The `-1 / offset` convention and the `> 0`, `< 0` comparisons are kept as they were — the
+// previous expressions did not treat a heading on the very first line of the file as a boundary
+// either, and changing that here would mean introducing new behaviour under the guise of moving to a
+// parser.
 const headOffset = (re) => {
   const h = mdHeadings(t).find((x) => x.depth === 2 && re.test(x.text));
   return h ? h.offset : -1;
@@ -160,9 +167,10 @@ const wordsOf = (s) => (s.match(/[A-Za-z0-9%.'’-]+/g) || []).length;
 // Author's idea, and it is the right one: print the claim beside the weight, so "this section is
 // 564 words" and "this section claims to carry X" are read in the same glance.
 // 🔴 A justification with no SCALE and no VERDICT cannot decide anything, and for a week none of
-// these notes ever concluded "cut me". Author, 2026-08-06: *«читая статью создаётся впечатление —
-// блин, а эта секция точно нужна»*, and *«каждая секция приложения должна тоже иметь коммент с
-// оправдыванием себе и оценкой от 0 до 10 и пометкой нужно ли вырезать/перенести/сократить»*.
+// these notes ever concluded "cut me". Author, 2026-08-06 (both quotes said in Russian): *"reading
+// the paper you get the impression — damn, is this section really needed"*, and *"every appendix
+// section must also have a comment justifying itself, with a score from 0 to 10 and a note on
+// whether it should be cut / moved / shortened"*.
 //
 // The defect is structural, not laziness. A free-text note is a section arguing its own case, and a
 // section always wins that argument — there is no scale to rank it against its neighbours and no
@@ -200,18 +208,18 @@ for (const m of rawSections.matchAll(/<!--((?:(?!-->)[\s\S])*?)-->\s*\n(#{2,3}) 
   if (v) verdictFor.set(m[3].trim(), v[1].toUpperCase());
 }
 
-// Заметки жирных лид-инов приложения (`score:`/`verdict:` над `**Блок.**`) читает теперь
-// `paper/block-ungraded` · `paper/block-note` · `paper/block-verdict`. Опись их не печатает,
-// поэтому здесь их не разбирают.
+// The notes on the appendix's bold lead-ins (`score:`/`verdict:` above a `**Block.**`) are now read
+// by `paper/block-ungraded` · `paper/block-note` · `paper/block-verdict`. The inventory does not
+// print them, so they are not parsed here.
 
 const outline = [];
 for (const chunk of splitSections(body, { min: SECTION_MIN, max: SECTION_MAX })) {
-  if (!chunk.heading) continue;                  // преамбула до первого заголовка — не секция
+  if (!chunk.heading) continue;                  // the preamble before the first heading is not a section
   const title = chunk.heading.text;
   outline.push({
-    // `chunk.body` — кусок УЖЕ без строки заголовка, поэтому прежний
-    // `chunk.replace(/^#{2,3} .+$/m, '')` больше не нужен: удаление строки заголовка это часть
-    // нарезки, а не отдельная операция над текстом.
+    // `chunk.body` is the chunk ALREADY without the heading line, so the previous
+    // `chunk.replace(/^#{2,3} .+$/m, '')` is no longer needed: removing the heading line is part of
+    // the splitting, not a separate operation over the text.
     level: chunk.heading.depth, title, words: wordsOf(chunk.body),
     carries: carriesFor.get(title) ?? null,
   });
@@ -246,15 +254,16 @@ for (const chunk of splitSections(freeText || '', { min: SECTION_MIN, max: SECTI
 }
 const freeTotal = freeSections.reduce((a, r) => a + r.words, 0);
 
-// 🔴 ЗДЕСЬ БЫЛИ ШЕСТНАДЦАТЬ НАХОДОК — см. баннер в шапке. Ни одной проверки в этом файле
-// больше нет НАМЕРЕННО: два источника правды об одном факте расходятся при первой же правке,
-// и вопрос «а какой из них прав» решить нечем.
+// 🔴 THERE WERE SIXTEEN FINDINGS HERE — see the banner in the header. There is DELIBERATELY not a
+// single check left in this file: two sources of truth about one fact drift apart on the very first
+// edit, and there is nothing to settle the question of which one is right.
 
 if (flagsOnly) {
-  // Тишина и код 0 — ВСЕГДА. Ни строки в stdout/stderr намеренно: `run-mechanical.mjs` читает
-  // этот режим как `read: 'flags'`, то есть «непустой вывод = находка», и указатель «проверки
-  // переехали» превратился бы в вечную ложную находку в леджере. Ограничение режима названо
-  // в баннере шапки; чинится переводом обоих вызывающих на `npx eslint`, а не здесь.
+  // Silence and exit code 0 — ALWAYS. Deliberately not one line on stdout/stderr:
+  // `run-mechanical.mjs` reads this mode as `read: 'flags'`, that is, "non-empty output = a
+  // finding", and a pointer saying "the checks have moved" would turn into a permanent false finding
+  // in the ledger. The limitation of this mode is named in the banner at the top; it is cured by
+  // converting both callers to `npx eslint`, not here.
   process.exit(0);
 }
 
