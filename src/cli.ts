@@ -540,6 +540,16 @@ export async function run(
   }: { log?: typeof console.log; err?: typeof console.error; cwd?: string } = {},
 ): Promise<number> {
   const a = parseArgs(argv);
+  // Отказ обязан быть ПЕРВЫМ: за флагом без значения обычно стоит опечатка или подстановка в
+  // CI, схлопнувшаяся в пустоту, и любое продолжение работает не над тем, что просили.
+  if (a.missingValue) {
+    err(
+      `${a.missingValue} needs a value — it was given none.\n` +
+        `Without it the run would silently fall back to whatever config it discovers, which is ` +
+        `not what the command line said.`,
+    );
+    return 2;
+  }
   if (a.help || !a.cmd) {
     log(USAGE);
     return a.help ? 0 : 2;
