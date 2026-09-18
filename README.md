@@ -19,25 +19,44 @@ Not on npm yet — install from GitHub, pinned to a commit:
 
 ```sh
 npm i -D github:zernie/research-paper-pipeline#<commit-sha>
-npx rpp init               # writes rpp.json and prints the next steps
+npx rpp init               # sets the project up and reports its own condition
+```
+
+Then two lines inside Claude Code, which `init` prints for you — they are typed into a different
+program and nothing on disk can type them for you:
+
+```
+/plugin marketplace add zernie/research-paper-pipeline
+/plugin install research-paper-pipeline@research-paper-pipeline
+```
+
+That is the whole install: three actions. `init` **measures** rather than asks wherever it can —
+it finds the directory your papers live in by looking for one whose subdirectories carry a paper
+file, writes that as a single declaration into your `package.json`, and prints which external
+programs are missing and the command that installs each. It asks exactly one question, and only
+when stdin is a terminal: whether to write a GitHub Actions workflow. In CI, or under a script, it
+asks nothing and says which default it took. It installs nothing — see
+[`docs/install.md`](docs/install.md) for the eight tools that were measured to arrive at that
+shape.
+
+Afterwards:
+
+```sh
 npx rpp doctor             # says what is actually wired — and what only LOOKS wired
-npx rpp lint               # runs every rule over the directory rpp.json names
+npx rpp lint               # runs every rule over the declared directory
 npx rpp build <paper>      # builds one paper with ITS OWN build script
 ```
 
-🔴 **Run `npx rpp doctor` once after setting up, and believe it over the absence of errors.**
-The editor hooks read where your papers live from `package.json`; the CLI reads it from
-`rpp.json`; nothing else compares the two. When they disagree the linter checks one directory
-while `paper-edit-guard` guards another — and a guard watching an empty directory looks exactly
-like a guard that is working, because silence is its success state. `doctor` prints both
-directories side by side and exits non-zero when they are not the same. The single-declaration
-design this is being collapsed into, and the prior art behind it, are in
-[`docs/install.md`](docs/install.md); the defect is
+🔴 **`init` ends by running `doctor`, and exits with its verdict — believe that over the absence
+of errors.** There is one declaration now, but the linter and the hooks still read it separately,
+and a guard watching an empty directory looks exactly like a guard that is working, because
+silence is its success state. `doctor` prints both directories side by side and exits non-zero
+when they are not the same. The defect that made this necessary is
 [#33](https://github.com/zernie/research-paper-pipeline/issues/33).
 
-`rpp lint` finds `rpp.json` by walking up from the current directory, the way eslint and tsc find
-theirs, so it works from anywhere in the repository. Pass a path to lint something else for one
-run: `rpp lint papers/my-paper`.
+`rpp lint` finds the declaration by walking up from the current directory, the way eslint and tsc
+find theirs, so it works from anywhere in the repository. Pass a path to lint something else for
+one run: `rpp lint papers/my-paper`.
 
 The scope always comes from one of those two, never from a default. Linting `"."` would pass over
 whatever happens to be in the checkout and report green on a scope nobody chose.
@@ -193,30 +212,42 @@ A template with every row explained is in `skills/paper-pipeline/references/pipe
 Errors fail the run. Warnings print and do not. Three more rules guard the package's own code
 and do not run on your papers.
 
-## `rpp.json`
+## The declaration
 
-`rpp init` writes it. It holds the facts only this repository can supply — nothing in it is
-guessable by a package that has never seen your corpus, which is why it is a file and not a pile
-of flags.
+One key in your `package.json`, written by `rpp init`. It holds the facts only your repository can
+supply — nothing in it is guessable by a package that has never seen your corpus.
 
-`rpp lint` looks for it in the current directory and then upwards, and prints which one it found.
+It lives there rather than in a file of its own because of a count: the `package.json` key has
+**five** readers — the three editor hooks, the ESLint helper, the skill scripts — and a separate
+config file had **one**, the CLI. A hook cannot import code and cannot walk up a tree looking for
+a config; it can read a path it is able to name, and the one path it can always name is the
+project's `package.json`.
+
+`rpp lint` looks for it in the current directory and then upwards, and prints which file it found.
 `--config <file>` overrides the search.
 
 ```json
 {
-  "papers": "papers",
-  "authorListCommand": "node scripts/bib-authors.mjs",
-  "typographyDebt": { "papers/my-paper": { "sectionSign": 12 } },
-  "docFields": { "read": { "values": ["full", "abstract", "none"] } },
-  "reviewSince": "2026-08-23",
-  "minFindings": 3,
-  "causeMarker": "Cause:"
+  "research-paper-pipeline": {
+    "papers": "papers",
+    "authorListCommand": "node scripts/bib-authors.mjs",
+    "typographyDebt": { "papers/my-paper": { "sectionSign": 12 } },
+    "docFields": { "read": { "values": ["full", "abstract", "none"] } },
+    "reviewSince": "2026-08-23",
+    "minFindings": 3,
+    "causeMarker": "Cause:"
+  }
 }
 ```
 
+⚠️ **`rpp.json` is deprecated and still read.** Earlier versions of `init` created it; `init` no
+longer does, and a run that reads one says so on its first line. The hooks never read it, so
+leaving settings there is how the linter and the guard end up watching different directories —
+`rpp init` copies the value across for you.
+
 | key                 | required | what it is                                                                         |
 | ------------------- | -------- | ---------------------------------------------------------------------------------- |
-| `papers`            | **yes**  | the directory your papers live in, relative to `rpp.json`. One string or a list.   |
+| `papers`            | **yes**  | the directory your papers live in, relative to the file holding it. One string or a list. |
 | `structure`         | no       | which files every paper directory must contain — see below. `false` turns it off.  |
 | `authorListCommand` | no       | prints the author list from your `.bib`, so a rule can compare it with the PDF     |
 | `typographyDebt`    | no       | per-paper allowance of existing typography findings, so the count can only go down |
@@ -225,8 +256,10 @@ of flags.
 | `minFindings`       | no       | how many findings a cold read must produce before it counts as a cold read         |
 | `causeMarker`       | no       | the word your review notes use to introduce a cause, e.g. `Cause:`                 |
 
-`papers` is required because the directory is the one thing the tool cannot guess and must not
-default: a default of `"."` turns every run into a green report over the whole checkout.
+`papers` is required because the scope is the one thing that must not default: a default of `"."`
+turns every run into a green report over the whole checkout. `rpp init` fills it by measuring —
+and when nothing on disk looks like a papers directory, it writes the documented default and says
+in the same breath that it is a guess.
 
 ## Building a paper
 
@@ -249,7 +282,7 @@ It looks for these, in order, and the first one found wins:
 | `build.sh`                  | in the paper directory — what you see when you open it |
 | `repro/build-submission.sh` | the reproduction-artifact convention                   |
 
-Override with `"buildScripts": [...]` in `rpp.json`.
+Override with `"buildScripts": [...]` in the declaration.
 
 **A paper with no build script is a FAILURE, not a skip**, and that is the whole point of the
 command. The corpus this came from had a CI loop looking for `repro/build-submission.sh` while the
@@ -305,9 +338,9 @@ The repository ships a GitHub composite action. Add one step:
 ```
 
 The action runs `rpp lint`, so CI and your terminal execute the same code — including the
-required-files check and `rpp.json`. `paths` is required, and the job refuses to pass when zero
+required-files check and the declaration. `paths` is required, and the job refuses to pass when zero
 files were linted, so a typo in the path shows up red instead of green. Optional inputs: `config`
-(a path to `rpp.json`, only when the upward search cannot reach it), `max-warnings` (default `-1`,
+(a path to the file holding the settings, only when the upward search cannot reach it), `max-warnings` (default `-1`,
 warnings never fail the job), `texcount` (default `true`; set to `false` if you have no `texcount/*` rules of your
 own — this package ships none), `working-directory`.
 

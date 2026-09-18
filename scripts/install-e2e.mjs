@@ -163,12 +163,38 @@ try {
       ? ok("`rpp --help` отвечает нулём")
       : bad("`rpp --help` отвечает нулём", help.stderr);
 
-    const init = sh(bin, ["init"], { cwd: consumer });
-    existsSync(join(consumer, "rpp.json"))
-      ? ok("`rpp init` написал rpp.json")
-      : bad("`rpp init` написал rpp.json", init.stderr);
-
+    // 🔴 КОРПУС СТАВИТСЯ ДО `init`, И ЭТО НЕ ПЕРЕСТАНОВКА РАДИ УДОБСТВА. `init` теперь ИЗМЕРЯЕТ
+    // каталог статей вместо того, чтобы угадывать его; запуск по пустому дереву мерил бы
+    // ветку-умолчание и молчал бы о той, ради которой команду переписали.
     stageCorpus(consumer);
+    const init = sh(bin, ["init"], { cwd: consumer });
+    const declared = (() => {
+      try {
+        return JSON.parse(readFileSync(join(consumer, "package.json"), "utf8"))[
+          "research-paper-pipeline"
+        ]?.papers;
+      } catch (e) {
+        return `не читается: ${e.message}`;
+      }
+    })();
+    declared === "papers"
+      ? ok("`rpp init` объявил каталог статей в package.json")
+      : bad(
+          "`rpp init` объявил каталог статей в package.json",
+          `в package.json оказалось ${JSON.stringify(declared)}\n${init.stdout ?? ""}${init.stderr ?? ""}`,
+        );
+    // ОДНА декларация: второй носитель не создаётся, иначе они разъедутся молча — это тот самый
+    // дефект #33, только заведённый заново собственной командой установки.
+    !existsSync(join(consumer, "rpp.json"))
+      ? ok("и НЕ создал второй носитель rpp.json")
+      : bad("и НЕ создал второй носитель rpp.json", "rpp.json появился");
+    init.status === 0
+      ? ok("`rpp init` закончил нулём — doctor не нашёл расхождения")
+      : bad(
+          "`rpp init` закончил нулём — doctor не нашёл расхождения",
+          (init.stdout ?? "") + (init.stderr ?? ""),
+        );
+
     const lint = sh(bin, ["lint"], { cwd: consumer });
     lint.status === 0 && /no findings/.test(lint.stdout ?? "")
       ? ok("`rpp lint` прошёл корпус начисто")
