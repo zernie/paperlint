@@ -170,6 +170,18 @@ jobs:
       - name: mutation batteries
         run: npm run test:sabotage
 
+      # 🔴 СКВОЗНАЯ УСТАНОВКА. Всё выше судит ИСХОДНИК; этот шаг пакует тарбол и ставит его в
+      # чистого потребителя под npm и под pnpm, а потом ИСПОЛНЯЕТ команды хуков из
+      # опубликованного `hooks.json`. Ровно этот шаг ловит класс «пакет собран правильно и у
+      # потребителя не работает»: белый список `files`, который однажды уже выбрасывал `dist/`
+      # из тарбола, и путь до рантайма хуков, который на pnpm не резолвился.
+      #
+      # До 18.09 его в CI не было вовсе — гейт существовал локально и не защищал ничего, тот же
+      # класс, что чинили в #67.
+      - name: npm run test:install
+        run: npm run test:install
+        timeout-minutes: 10
+
   # ── macOS ПО МЕТКЕ, А НЕ В МАТРИЦЕ ───────────────────────────────────────────────────────────
   #
   # Issue #9: `npm test` был красным ТОЛЬКО на macOS. Причина — `/var` там симлинк на
@@ -221,3 +233,72 @@ jobs:
           '
       - name: npm test
         run: npm test
+
+  # ── СБОРКА СТАТЬИ НАСТОЯЩЕЙ pdflatex ────────────────────────────────────────────────────────
+  #
+  # 🔴 ПОЧЕМУ ОТДЕЛЬНЫМ ДЖОБОМ, А НЕ ШАГОМ В `gates`. Единственная его зависимость — TeX Live,
+  # и она же единственное, что здесь стоит минут: 230 МБ, ~2 мин вхолодную (замер записан в
+  # `skills/render-paper/ci-install-texlive.sh`). Держать её внутри общего джоба значит платить
+  # эти минуты за каждый прогон, включая правки прозы; отдельный джоб идёт параллельно и
+  # кэшируется сам по себе.
+  #
+  # 🔴 ПОЧЕМУ НЕ ПО МЕТКЕ, как macOS. Тот джоб ловит расхождение платформы, которое меняется раз
+  # в полгода. Этот ловит молчаливую подмену шрифта — класс, который УЖЕ отправил статью
+  # набранной не тем шрифтом. Метка сделала бы защиту зависящей от того, вспомнил ли человек её
+  # навесить, а вспоминают её ровно тогда, когда и так осторожны.
+  #
+  # `--strict`: отсутствие pdflatex локально — законный пропуск, здесь — поломка окружения.
+  # Без него пропущенный шаг выглядел бы в интерфейсе как прошедший.
+  build-e2e:
+    if: github.event_name != 'pull_request' || github.event.action != 'labeled'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: npm ci
+        run: npm ci
+        timeout-minutes: 5
+
+      # Первопартийный кэш взят намеренно: правильный по классу
+      # `teatimeguest/setup-texlive-action` заблокирован белым списком сторонних Actions этого
+      # аккаунта («Repository access blocked», прогон 33457399377). Разбор трёх способов с
+      # замерами — `skills/render-paper/ci-tex-toolchain-decision.md`.
+      - name: TeX Live из кэша
+        id: tex-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/texlive
+          key: texlive-${{ runner.os }}-${{ hashFiles('skills/render-paper/ci-install-texlive.sh') }}
+
+      - name: установить TeX Live (только при промахе кэша)
+        if: steps.tex-cache.outputs.cache-hit != 'true'
+        run: bash skills/render-paper/ci-install-texlive.sh
+        timeout-minutes: 12
+
+      - name: TeX в PATH
+        run: echo "$HOME/texlive/bin/x86_64-linux" >> "$GITHUB_PATH"
+
+      # 🔴 ПРИЁМКА УСТАНОВКИ, А НЕ КОД ВОЗВРАТА. `exit=0` и пустой вывод — это не «поставилось»:
+      # установщик уже однажды в этом корпусе скачал НОЛЬ пакетов и отчитался успехом. Шрифты
+      # acmart проверяются поимённо, потому что без ЛЮБОГО из них класс молча уходит на
+      # Computer Modern — то, ради чего весь этот джоб и существует.
+      - name: инструменты и шрифты РЕАЛЬНО на месте
+        run: |
+          set -euo pipefail
+          for b in pdflatex pdffonts; do command -v "$b" >/dev/null || { echo "нет $b"; exit 1; }; done
+          for f in acmart.cls libertine.sty zi4.sty newtxmath.sty; do
+            kpsewhich "$f" >/dev/null || { echo "нет $f — acmart уйдёт на Computer Modern МОЛЧА"; exit 1; }
+          done
+
+      # Зовётся напрямую, а не через npm run: флаг --strict надо пронести до скрипта,
+      # и `npm run test:build -- --strict` лишний уровень, который легко потерять при правке.
+      - name: build e2e (--strict)
+        run: node scripts/build-e2e.mjs --strict
+        timeout-minutes: 10
+
