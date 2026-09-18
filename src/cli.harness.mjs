@@ -16,6 +16,7 @@ import {
   mkdirSync,
   writeFileSync,
   readFileSync,
+  existsSync,
   rmSync,
   realpathSync,
   symlinkSync,
@@ -26,8 +27,11 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const { run, parseArgs, buildConfig, nextSteps, findConfig, toPaths, runHook } =
+const { run, parseArgs, buildConfig, nextSteps, findConfig, findDeclaration, toPaths, runHook } =
   await import(join(HERE, "cli.ts"));
+const { init, choosePapers, offerWorkflow, syncRppJson, missingPrograms, WORKFLOW_PATH } =
+  await import(join(HERE, "init.ts"));
+const { PROGRAMS } = await import(join(HERE, "doctor.ts"));
 
 let n = 0;
 const check = (label, cond) => {
@@ -142,53 +146,372 @@ check(
     r.code === 0 && /npx rpp lint/.test(r.out),
   );
 }
-// ── `init` — единственный ответ на «как это запустить» ──────────────────────────────────
+// ── ОДНА ДЕКЛАРАЦИЯ, И ЧИТАЕТ ЕЁ ТОТ ЖЕ, КТО ЕЁ ПИШЕТ ──────────────────────────────────
+//
+// 🔴 БЕЗ ЭТОГО БЛОКА ПЕРЕПИСАННЫЙ `init` ПРОИЗВОДИЛ БЫ НЕРАБОТАЮЩУЮ УСТАНОВКУ. Он пишет одну
+// декларацию — в `package.json`, тот файл, который умеют читать хуки (хук не импортирует код и
+// не умеет ходить вверх по дереву; он может прочитать путь, который в состоянии назвать).
+// Утилита же читала ТОЛЬКО `rpp.json`, поэтому сразу после `rpp init` её `lint` сказал бы
+// «nothing to lint». То есть команда установки и команда проверки смотрели бы в разные файлы —
+// ровно тот дефект, который она закрывает, только с другой стороны.
 {
-  const dir = realpathSync(mkdtempSync(join(tmpdir(), "rpp-init-")));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-carrier-")));
   try {
-    const first = await cli(["init", dir]);
-    check(
-      "init выходит нулём и называет записанный файл",
-      first.code === 0 && /wrote .*rpp\.json/.test(first.out),
+    const paper = join(root, "papers", "p1");
+    mkdirSync(join(paper, "versions"), { recursive: true });
+    writeFileSync(join(paper, "versions", "s.tex"), "abcd");
+    writeFileSync(join(paper, "versions", "2026-07-22-submitted.pdf"), "x".repeat(100));
+    writeFileSync(join(paper, "paper.md"), "# Intro\n\nRQ1: does it hold?\n");
+    writeFileSync(
+      join(paper, "PIPELINE-STATUS.md"),
+      `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: 100\n    source: versions/s.tex\n    sourceBytes: 4\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`,
     );
-    // Все три шага на месте. Третий — две строки, набираемые ВНУТРИ Claude Code: рантайм
-    // приезжает обычной зависимостью пакета, ставить руками больше нечего.
-    check(
-      "и печатает ВСЕ три следующих шага, а не только первый",
-      /rpp lint/.test(first.out) &&
-        /research-paper-pipeline@/.test(first.out) &&
-        /plugin install research-paper-pipeline/.test(first.out),
-    );
-    check(
-      "и НЕ просит ставить рантайм руками — он приезжает зависимостью",
-      !/npm i -D vigiles/.test(first.out),
-    );
-    check(
-      "файл действительно на диске и это валидный JSON",
-      JSON.parse(readFileSync(join(dir, "rpp.json"), "utf8")).minFindings === 3,
-    );
-    // 🔴 `papers` обязан быть в том, что пишет init. Иначе первая же команда после установки
-    // упирается в им же написанный конфиг: поле обязательное, а шаблон его не содержит.
-    check(
-      "и он содержит обязательное поле `papers`",
-      JSON.parse(readFileSync(join(dir, "rpp.json"), "utf8")).papers ===
-        "papers",
+    writeFileSync(
+      join(root, "package.json"),
+      JSON.stringify(
+        { name: "c", version: "1.0.0", "research-paper-pipeline": { papers: "papers" } },
+        null,
+        2,
+      ),
     );
 
-    // Вторая половина: чужой файл не трогаем. Молча затереть настройку пользователя хуже,
-    // чем не сделать ничего, поэтому отказ обязан быть ГРОМКИМ.
-    writeFileSync(join(dir, "rpp.json"), '{"mine":true}', "utf8");
-    const second = await cli(["init", dir]);
+    const r = await cli(["lint"], root);
     check(
-      "повторный init НЕ перезаписывает и говорит об этом",
-      second.code === 0 && /already there/.test(second.out),
+      "🔴 УТИЛИТА ЧИТАЕТ ДЕКЛАРАЦИЮ ИЗ package.json — иначе `rpp init` ставит то, что `rpp lint` не видит",
+      r.code === 0 && /no findings/.test(r.out),
     );
     check(
-      "и содержимое пользователя цело побайтово",
-      readFileSync(join(dir, "rpp.json"), "utf8") === '{"mine":true}',
+      "и НАЗЫВАЕТ носитель вслух — подмена настроек молчаливой не бывает",
+      /config: package\.json/.test(r.out),
+    );
+    check(
+      "у package.json нет пометки про устаревание — устарел не он",
+      !/is deprecated/.test(r.out),
+    );
+
+    // Ключ есть, `papers` внутри нет: это не «пустой конфиг», а незаконченный, и отказ обязан
+    // назвать ИМЕННО ту форму, которую надо дописать.
+    writeFileSync(
+      join(root, "package.json"),
+      JSON.stringify({ name: "c", version: "1.0.0", "research-paper-pipeline": {} }, null, 2),
+    );
+    const noPapers = await cli(["lint"], root);
+    check(
+      "ключ без `papers` — отказ, и показана форма ВНУТРИ package.json",
+      noPapers.code === 2 &&
+        /must declare `papers`/.test(noPapers.out) &&
+        /"research-paper-pipeline": \{ "papers": "papers" \}/.test(noPapers.out),
+    );
+
+    // 🔴 package.json БЕЗ ключа не останавливает подъём. Иначе поиск кончался бы на первом же
+    // проекте по пути наверх — а package.json есть у каждого, — и не находил бы ничего никогда.
+    writeFileSync(join(root, "package.json"), JSON.stringify({ name: "c", version: "1.0.0" }));
+    writeFileSync(join(root, "rpp.json"), JSON.stringify({ papers: "papers" }));
+    const viaRpp = await cli(["lint"], root);
+    check(
+      "package.json без ключа не перехватывает поиск — rpp.json по-прежнему находится",
+      viaRpp.code === 0 && /config: rpp\.json/.test(viaRpp.out),
+    );
+    check(
+      "🔴 но устаревший носитель НАЗВАН, а не просто прочитан молча",
+      /rpp\.json is deprecated/.test(viaRpp.out) &&
+        /the hooks read only that file/.test(viaRpp.out),
+    );
+
+    // Оба носителя рядом: побеждает тот, который читают ВСЕ остальные.
+    writeFileSync(
+      join(root, "package.json"),
+      JSON.stringify({
+        name: "c",
+        version: "1.0.0",
+        "research-paper-pipeline": { papers: "papers" },
+      }),
+    );
+    check(
+      "при обоих носителях выбирается package.json — это и значит «одна декларация»",
+      findDeclaration(root)?.kind === "package.json" &&
+        findDeclaration(root)?.path === join(root, "package.json"),
+    );
+    check(
+      "а findConfig по-прежнему отвечает на вопрос «в каком файле лежат настройки»",
+      findConfig(root) === join(root, "package.json"),
     );
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+// ── `init` — ТРИ ДЕЙСТВИЯ ВМЕСТО ДЕВЯТИ ────────────────────────────────────────────────
+//
+// 🔴 ДЕФЕКТ, РАДИ КОТОРОГО КОМАНДА ПЕРЕПИСАНА (issue #33, замер 18.09): init писал `rpp.json`
+// с УГАДАННЫМ `"papers": "papers"` и не трогал `package.json` — а три хука читают каталог
+// статей именно оттуда. Потребитель, сделавший всё по документации, получал
+// `paper-edit-guard`, сторожащий несуществующий каталог; снаружи это неотличимо от рабочего
+// стража, потому что молчание — его успех.
+//
+// ⚠️ Вопросы здесь НЕ ЗАДАЮТСЯ вслепую: `interactive` передаётся явно, а не берётся у stdin.
+// Харнесс, зависший на приглашении ввода, — это не красный тест, это отсутствие ответа вообще.
+{
+  const workRoot = realpathSync(mkdtempSync(join(tmpdir(), "rpp-init-")));
+  const project = (name, { pkg = { name: "consumer", version: "1.0.0" }, papers = [] } = {}) => {
+    const dir = join(workRoot, name);
+    mkdirSync(dir, { recursive: true });
+    for (const rel of papers) {
+      mkdirSync(join(dir, rel, "p1"), { recursive: true });
+      writeFileSync(join(dir, rel, "p1", "paper.tex"), "\\documentclass{article}\n");
+    }
+    if (pkg) writeFileSync(join(dir, "package.json"), JSON.stringify(pkg, null, 2) + "\n");
+    return dir;
+  };
+  const say = () => {
+    const lines = [];
+    return { lines, log: (...a) => lines.push(a.join(" ")), text: () => lines.join("\n") };
+  };
+  const declared = (dir) =>
+    JSON.parse(readFileSync(join(dir, "package.json"), "utf8"))["research-paper-pipeline"];
+  // Ни одна проверка не должна зависеть от того, что установлено НА ЭТОЙ машине: `command -v`
+  // подменяется, иначе «внешних программ нет» читалось бы как находка про init.
+  const haveAll = () => ({ status: 0 });
+  const haveNone = () => ({ status: 1 });
+
+  try {
+    // ── 1. КАТАЛОГ СТАТЕЙ ИЗМЕРЯЕТСЯ, А НЕ УГАДЫВАЕТСЯ ────────────────────────────────
+    {
+      const dir = project("detect", { papers: ["writing/drafts"] });
+      const out = say();
+      const code = await init(dir, { log: out.log, err: out.log, interactive: false, run: haveAll });
+      check(
+        "🔴 ДЕКЛАРАЦИЯ ПОЯВЛЯЕТСЯ В package.json — том файле, который читают хуки",
+        declared(dir) !== undefined && typeof declared(dir).papers === "string",
+      );
+      check(
+        "🔴 и её значение ИЗМЕРЕНО, а не взято из умолчания `papers`",
+        declared(dir).papers === "writing/drafts",
+      );
+      check(
+        "и сказано, ЧЕМ оно измерено — иначе догадка читается как факт",
+        /measured: its subdirectories carry/.test(out.text()),
+      );
+      check(
+        "🔴 `rpp.json` БОЛЬШЕ НЕ СОЗДАЁТСЯ — вторая декларация это то, что doctor и ловит",
+        !existsSync(join(dir, "rpp.json")),
+      );
+      check(
+        "init заканчивается отчётом doctor: установка САМА говорит о своём состоянии",
+        /rpp doctor — what is wired/.test(out.text()),
+      );
+      check(
+        "и на согласованной установке выходит нулём",
+        code === 0 && /the same directory/.test(out.text()),
+      );
+    }
+
+    // ── 2. УГАДАННОЕ НАЗЫВАЕТСЯ УГАДАННЫМ ─────────────────────────────────────────────
+    {
+      const dir = project("empty");
+      const out = say();
+      const code = await init(dir, { log: out.log, err: out.log, interactive: false, run: haveAll });
+      check(
+        "нечего измерять — берётся документированное умолчание",
+        declared(dir).papers === "papers",
+      );
+      check(
+        "🔴 и оно ПОМЕЧЕНО как догадка, а не подано как измерение",
+        /A GUESS/.test(out.text()) && /Nothing here looks like a papers directory/.test(out.text()),
+      );
+      check(
+        "🔴 каталога нет ⇒ doctor краснеет, и init возвращает ЕГО вердикт, а не свой успех",
+        code === 2 && /the install is NOT finished/.test(out.text()),
+      );
+    }
+
+    // ── 3. ЧУЖОЕ ЗНАЧЕНИЕ НЕ ПЕРЕЗАПИСЫВАЕТСЯ ─────────────────────────────────────────
+    {
+      const dir = project("mine", {
+        pkg: { name: "c", version: "1.0.0", "research-paper-pipeline": { papers: "mine" } },
+        papers: ["writing"],
+      });
+      const before = readFileSync(join(dir, "package.json"), "utf8");
+      const out = say();
+      await init(dir, { log: out.log, err: out.log, interactive: false, run: haveAll });
+      check(
+        "🔴 уже объявленное значение ЦЕЛО побайтово — молча заменить настройку хуже, чем не делать ничего",
+        readFileSync(join(dir, "package.json"), "utf8") === before,
+      );
+      check(
+        "и об этом сказано вслух, а не пропущено",
+        /already declares papers = "mine" — kept, nothing overwritten/.test(out.text()),
+      );
+    }
+
+    // ── 4. НЕКУДА ПИСАТЬ — ЭТО ОТКАЗ С ЛЕКАРСТВОМ ─────────────────────────────────────
+    {
+      const dir = project("nopkg", { pkg: null, papers: ["writing"] });
+      const out = say();
+      const code = await init(dir, { log: out.log, err: out.log, interactive: false, run: haveAll });
+      check(
+        "без package.json init ОТКАЗЫВАЕТ и несёт лекарство, а не диагноз",
+        code === 2 &&
+          /npm init -y/.test(out.text()) &&
+          /nowhere to put the declaration/.test(out.text()),
+      );
+      check("и ничего не создаёт взамен", !existsSync(join(dir, "package.json")));
+    }
+
+    // ── 5. СПРАШИВАЕТСЯ ТОЛЬКО НЕУГАДЫВАЕМОЕ, И ТОЛЬКО У ЧЕЛОВЕКА ─────────────────────
+    {
+      const dir = project("ci", { papers: ["writing"] });
+      const out = say();
+      await init(dir, { log: out.log, err: out.log, interactive: false, run: haveAll });
+      check(
+        "🔴 не терминал — вопрос НЕ задаётся, и взятое умолчание НАЗВАНО",
+        /stdin is not a terminal, so nothing was asked. Default taken: NO file written/.test(
+          out.text(),
+        ),
+      );
+      check(
+        "и безопасное умолчание — это отсутствие файла",
+        !existsSync(join(dir, WORKFLOW_PATH)),
+      );
+      check(
+        "а шаг для CI всё равно напечатан — его просто вставляют руками",
+        /uses: zernie\/research-paper-pipeline@/.test(out.text()) &&
+          /paths: writing/.test(out.text()),
+      );
+    }
+    {
+      const dir = project("ci-yes", { papers: ["writing"] });
+      const asked = [];
+      const wf = await offerWorkflow(dir, "writing", {
+        interactive: true,
+        ask: async (q) => {
+          asked.push(q);
+          return "y";
+        },
+      });
+      check("согласие ПИШЕТ воркфлоу", wf === "written" && existsSync(join(dir, WORKFLOW_PATH)));
+      check(
+        "и воркфлоу несёт ТОТ каталог, о котором шла речь",
+        /paths: writing/.test(readFileSync(join(dir, WORKFLOW_PATH), "utf8")),
+      );
+      check("вопрос задан ровно один", asked.length === 1);
+      const again = await offerWorkflow(dir, "writing", {
+        interactive: true,
+        ask: async () => "y",
+      });
+      check("существующий воркфлоу не перезаписывается и не переспрашивается", again === "kept");
+    }
+    {
+      const dir = project("ci-no", { papers: ["writing"] });
+      const no = await offerWorkflow(dir, "writing", { interactive: true, ask: async () => "" });
+      check(
+        "пустой ответ — это НЕТ, и файла не появляется",
+        no === "declined" && !existsSync(join(dir, WORKFLOW_PATH)),
+      );
+      // 🔴 Замер 18.09 на настоящем псевдотерминале: `readline.question()` ОТКЛОНЯЕТСЯ с
+      // `AbortError: Aborted with Ctrl+D`, и это исключение улетало наружу ПОСЛЕ того, как
+      // декларация уже записана — то есть установка одновременно удалась и выглядела падением.
+      // 🔴 `.catch` ЗДЕСЬ НЕСУЩИЙ, А НЕ ОСТОРОЖНОСТЬ. Утечка исключения — это СВОЙСТВО, которое
+      // утверждают ассертом; пойманное падением харнесса оно читается драйвером батареи как
+      // «мутация выжила», то есть настоящий дефект выглядел бы дырой в тесте.
+      const aborted = await offerWorkflow(dir, "writing", {
+        interactive: true,
+        ask: async () => {
+          throw new Error("Aborted with Ctrl+D");
+        },
+      }).catch((e) => `THREW: ${e?.message ?? e}`);
+      check("🔴 прерванный вопрос НЕ роняет команду — он означает умолчание", aborted === "declined");
+    }
+
+    // ── 6. НЕСКОЛЬКО КАНДИДАТОВ — ЕДИНСТВЕННЫЙ СЛУЧАЙ, КОГДА СПРАШИВАЮТ ───────────────
+    {
+      const dir = project("many", { papers: ["alpha", "beta"] });
+      const picked = await choosePapers(dir, { interactive: true, ask: async () => "2" });
+      check(
+        "🔴 ответ человека РЕШАЕТ, а не украшает вывод",
+        picked.how === "chosen" && picked.papers === picked.candidates[1],
+      );
+      const quiet = await choosePapers(dir, { interactive: false });
+      check(
+        "в не-терминале берётся первый, и это названо, а не выдано за выбор",
+        quiet.how === "not-asked" && quiet.papers === quiet.candidates[0],
+      );
+      const aborted = await choosePapers(dir, {
+        interactive: true,
+        ask: async () => {
+          throw new Error("Aborted with Ctrl+D");
+        },
+      }).catch((e) => ({ how: `THREW: ${e?.message ?? e}`, papers: null, candidates: [] }));
+      check(
+        "прерванный выбор — тоже умолчание, а не падение",
+        aborted.how === "no-answer" && aborted.papers === aborted.candidates[0],
+      );
+    }
+
+    // ── 7. ВНЕШНИЙ ИНСТРУМЕНТАРИЙ ДОКЛАДЫВАЕТСЯ, А НЕ СТАВИТСЯ ───────────────────────
+    //
+    // npm's own rule, цитируемая в разборе husky: «The only valid use of install or preinstall
+    // scripts is for compilation». Установка, способная тихо не состояться, хуже явного шага.
+    {
+      const dir = project("tools", { papers: ["writing"] });
+      const out = say();
+      await init(dir, { log: out.log, err: out.log, interactive: false, run: haveNone });
+      check(
+        "каждая пропажа НАЗВАНА вместе с последствием",
+        /✗ pdflatex/.test(out.text()) && /no PDF is produced/.test(out.text()),
+      );
+      check(
+        "🔴 и несёт КОМАНДУ УСТАНОВКИ — лекарство, а не диагноз",
+        /apt-get install -y texlive-latex-recommended/.test(out.text()),
+      );
+      check(
+        "и сказано прямо, что ничего не ставится за пользователя",
+        /nothing is installed for you/.test(out.text()),
+      );
+      check(
+        "а спрошенная система, в которой всё есть, не даёт ни одной пропажи",
+        missingPrograms(haveAll).length === 0,
+      );
+      check(
+        "и пустая система даёт их все — счётчик считает то же, что печатает",
+        missingPrograms(haveNone).length === PROGRAMS.length,
+      );
+    }
+
+    // ── 8. `rpp.json` У ТЕХ, У КОГО ОН УЖЕ ЕСТЬ ──────────────────────────────────────
+    {
+      const dir = project("legacy", { papers: ["writing"] });
+      writeFileSync(join(dir, "rpp.json"), JSON.stringify({ minFindings: 5 }, null, 2) + "\n");
+      const out = say();
+      await init(dir, { log: out.log, err: out.log, interactive: false, run: haveAll });
+      check(
+        "существующий rpp.json получает ТО ЖЕ значение, а не расходится молча",
+        JSON.parse(readFileSync(join(dir, "rpp.json"), "utf8")).papers === "writing",
+      );
+      check("и назван устаревшим", /rpp\.json was already here/.test(out.text()));
+
+      const own = join(workRoot, "legacy-own");
+      mkdirSync(own, { recursive: true });
+      writeFileSync(join(own, "package.json"), '{"name":"c","version":"1.0.0"}');
+      writeFileSync(join(own, "rpp.json"), '{"papers":"mine"}');
+      check(
+        "а уже объявленный в нём `papers` остаётся побайтово — это тоже чужое значение",
+        syncRppJson(own, "writing") === "kept" &&
+          readFileSync(join(own, "rpp.json"), "utf8") === '{"papers":"mine"}',
+      );
+    }
+
+    // ── 9. КОМАНДА ПОДКЛЮЧЕНА К `run`, А НЕ ТОЛЬКО ЭКСПОРТИРОВАНА ────────────────────
+    {
+      const dir = project("wired", { papers: ["writing"] });
+      const r = await cli(["init", dir]);
+      check(
+        "`rpp init` доходит до реализации и объявляет измеренный каталог",
+        declared(dir).papers === "writing" && /rpp init — each decision/.test(r.out),
+      );
+    }
+  } finally {
+    rmSync(workRoot, { recursive: true, force: true });
   }
 }
 {

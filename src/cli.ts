@@ -29,7 +29,7 @@ import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { join, dirname, resolve, relative } from "node:path";
+import { join, dirname, resolve, relative, basename } from "node:path";
 import markdown from "@eslint/markdown";
 // @ts-expect-error — хелпер живёт в .mjs-части пакета (29 833 строки правил и скриптов скиллов),
 // которую эта задача не переписывает. Типов у него нет, а поведение закреплено харнессом.
@@ -50,6 +50,12 @@ import {
   remedyFor,
 } from "./build.ts";
 import { doctor } from "./doctor.ts";
+import { init } from "./init.ts";
+// @ts-expect-error — the one source for the consumer's config key lives in the .mjs half of
+// the package: the ESLint rules and the skill scripts import it too, and they are not TypeScript.
+import { CONFIG_KEY } from "../lib/paper-config.mjs";
+export { init };
+export { nextSteps } from "./init.ts";
 
 // @ts-expect-error — правило ESLint на .mjs, типов не имеет
 import paperStages from "../eslint-rules/paper-stages.mjs";
@@ -68,7 +74,8 @@ import coldReadCause from "../eslint-rules/cold-read-cause.mjs";
 
 const USAGE = `research-paper-pipeline — machine-checkable gates for a paper kept in git
 
-  npx rpp init [dir]                  set the project up: writes rpp.json, prints what to paste
+  npx rpp init [dir]                  set the project up: detect the papers directory, declare it
+                                      in package.json, offer the CI step, report what is missing
   npx rpp lint [paths…]               run every rule over your papers
   npx rpp build <paper> | --all       build a paper with ITS OWN build script
                                       (--dry-run: name the script that WOULD run, and where none exists)
@@ -79,19 +86,20 @@ const USAGE = `research-paper-pipeline — machine-checkable gates for a paper k
 lint:
   npx rpp lint [paths…] [--config <file.json>] [--json]
 
-  <paths…>            where your papers live, e.g. papers. Optional ONLY because rpp.json
-                      declares it — one of the two must name the scope. There is no default
+  <paths…>            where your papers live, e.g. papers. Optional ONLY because the declaration
+                      names it — one of the two must name the scope. There is no default
                       of ".": linting whatever happens to be in the checkout is how a green
                       report over a scope nobody chose gets produced.
-  --config <file>     use this rpp.json instead of the discovered one
+  --config <file>     read the settings from this file instead of the discovered one
   --json              machine-readable findings on stdout, nothing else on it
   --max-warnings <n>  fail when warnings exceed n. Default -1: warnings never fail, because
                       most findings here are advisory and a gate that fails on advice gets muted
 
-rpp.json — found by walking up from the current directory, the way every other tool in the
-stack finds its config. \`papers\` is required; every other key is optional:
+settings — the \`research-paper-pipeline\` key of your package.json, found by walking up from the
+current directory, the way every other tool in the stack finds its config. \`rpp.json\` is still
+read as a deprecated fallback and the run says so. \`papers\` is required; the rest is optional:
 
-  {
+  "research-paper-pipeline": {
     "papers":            "papers",
     "authorListCommand": "node scripts/bib-authors.mjs",
     "typographyDebt":    { "papers/my-paper": { "sectionSign": 12 } },
@@ -243,24 +251,60 @@ export function parseArgs(argv: readonly string[]): Args {
 }
 
 export const CONFIG_NAME = "rpp.json";
+export const PKG_NAME = "package.json";
+
+/** Where the consumer's settings were found, and in which of the two carriers. */
+export interface Declaration {
+  readonly path: string;
+  readonly kind: "package.json" | "rpp.json";
+}
 
 /**
- * 🔴 `rpp init` ПИСАЛ КОНФИГ, КОТОРЫЙ `rpp check` НЕ ЧИТАЛ НИКОГДА. Файл появлялся, команда
- * молчала, прогон шёл на умолчаниях — то есть настройка пользователя не действовала, и узнать
- * об этом было неоткуда: отсутствие долга типографики выглядит ровно как ноль долга.
+ * 🔴 THE CLI HAD TO LEARN TO READ `package.json`, AND THAT IS NOT A SIDE ERRAND. `rpp init` now
+ * writes ONE declaration, into the `package.json` key that the three hooks and `eslint-rules`
+ * already read. Without this walker the install it produces would not work at all: `rpp lint`
+ * would find no `rpp.json`, report "nothing to lint", and the consumer would be back to
+ * declaring the same directory twice — the defect the single declaration removes (issue #33,
+ * `docs/install.md`).
  *
- * Поиск — вверх от текущего каталога до корня ФС, как это делают eslint, prettier, tsc и
- * остальные. Запуск из подкаталога статьи тогда видит тот же конфиг, что запуск из корня репо.
+ * `rpp.json` stays readable as a DEPRECATED fallback, and the read says so out loud. Silently
+ * dropping a file this command used to write would break working setups on upgrade.
+ *
+ * The walk goes up to the filesystem root, the way eslint, prettier and tsc find theirs, so a run
+ * from inside one paper sees the same settings as a run from the repository root. At each level
+ * `package.json` wins over `rpp.json`: it is the carrier every other reader uses, so preferring
+ * it is what keeps "one declaration" true rather than merely intended.
  */
-export function findConfig(startDir: string): string | null {
+export function findDeclaration(startDir: string): Declaration | null {
   let dir = resolve(startDir);
   for (;;) {
-    const candidate = join(dir, CONFIG_NAME);
-    if (existsSync(candidate)) return candidate;
+    const pkg = join(dir, PKG_NAME);
+    if (existsSync(pkg) && declaresSettings(pkg))
+      return { path: pkg, kind: "package.json" };
+    const rpp = join(dir, CONFIG_NAME);
+    if (existsSync(rpp)) return { path: rpp, kind: "rpp.json" };
     const up = dirname(dir);
     if (up === dir) return null;
     dir = up;
   }
+}
+
+/**
+ * A `package.json` WITHOUT the key is not a declaration and must not stop the walk — every
+ * project on the way up has one, so stopping there would make the search find nothing, always.
+ * An unparsable one is treated the same way here; `rpp doctor` is the command that reports it.
+ */
+const declaresSettings = (pkgPath: string): boolean => {
+  try {
+    return JSON.parse(readFileSync(pkgPath, "utf8"))?.[CONFIG_KEY] !== undefined;
+  } catch {
+    return false;
+  }
+};
+
+/** Kept as the one-line question "which file holds the settings" — callers that only need a path. */
+export function findConfig(startDir: string): string | null {
+  return findDeclaration(startDir)?.path ?? null;
 }
 
 /**
@@ -279,21 +323,27 @@ export function readConfig(
   }: { log?: typeof console.log; err?: typeof console.error; cwd?: string } = {},
 ): ConfigRead {
   // 🔴 КОНФИГ ИЩЕТСЯ САМ. Явный `--config` побеждает найденный — он назван вслух, и подмена
-  // молчаливой не бывает.
-  const configPath = a.config ?? findConfig(cwd);
+  // молчаливой не бывает. Для явного пути карьер решает ИМЯ ФАЙЛА: путь здесь — значение, а не
+  // текст, о котором строят догадки, и `package.json` держит настройки под ключом.
+  const decl: Declaration | null = a.config
+    ? { path: a.config, kind: basename(a.config) === PKG_NAME ? "package.json" : "rpp.json" }
+    : findDeclaration(cwd);
+  const configPath = decl?.path ?? null;
   if (a.config && !existsSync(a.config)) {
     err(`config file not found: ${a.config}`);
     return { code: 2 };
   }
 
   let opts: RppConfig = {};
-  if (configPath) {
+  if (decl && configPath) {
+    let parsed: any;
     try {
-      opts = JSON.parse(readFileSync(configPath, "utf8"));
+      parsed = JSON.parse(readFileSync(configPath, "utf8"));
     } catch (e) {
       err(`${configPath} is not valid JSON: ${(e as Error).message}`);
       return { code: 2 };
     }
+    opts = decl.kind === "package.json" ? parsed?.[CONFIG_KEY] ?? {} : parsed;
     // Найденный конфиг НАЗЫВАЕТСЯ вслух. Иначе прогон из чужого каталога подхватывает чужой
     // файл и об этом не говорит — а расхождение долга типографики выглядит как находка.
     //
@@ -303,89 +353,32 @@ export function readConfig(
     // я эту строку сначала ОБХОДИЛ (срезал первую строку перед JSON.parse) — то есть обход
     // прятал дефект ровно там, где он должен был кричать.
     (a.json ? err : log)(`config: ${relative(cwd, configPath) || CONFIG_NAME}`);
+    // 🔴 УСТАРЕВШИЙ НОСИТЕЛЬ НАЗЫВАЕТСЯ ВСЛУХ, А НЕ ПЕРЕСТАЁТ ЧИТАТЬСЯ. Хуки читают ТОЛЬКО
+    // package.json, поэтому потребитель, у которого настройки остались в rpp.json, линтует один
+    // каталог и сторожит другой — и оба состояния выглядят одинаково зелёными.
+    if (decl.kind === "rpp.json")
+      (a.json ? err : log)(
+        `  ⚠ ${CONFIG_NAME} is deprecated — move these keys under "${CONFIG_KEY}" in ${PKG_NAME}; ` +
+          `the hooks read only that file. \`npx rpp init\` does it for you.`,
+      );
   }
 
   // 🔴 `papers` — ОБЯЗАТЕЛЬНОЕ ПОЛЕ. Каталог статей — единственное, без чего инструмент не
   // знает, над чем он работает, и единственное, чего нельзя угадать: умолчание "." прогоняет
   // правила по всему чекауту и выходит зелёным по охвату, который никто не выбирал.
-  if (configPath && !hasPapers(opts)) {
+  if (decl && !hasPapers(opts)) {
     err(
-      `${configPath} must declare \`papers\` — the directory your papers live in, e.g.\n` +
-        `  { "papers": "papers" }\n` +
-        `It is the one thing this tool cannot guess.`,
+      decl.kind === "package.json"
+        ? `${decl.path} must declare \`papers\` — the directory your papers live in, e.g.\n` +
+            `  { "${CONFIG_KEY}": { "papers": "papers" } }\n` +
+            `It is the one thing this tool cannot guess. \`npx rpp init\` writes it for you.`
+        : `${decl.path} must declare \`papers\` — the directory your papers live in, e.g.\n` +
+            `  { "papers": "papers" }\n` +
+            `It is the one thing this tool cannot guess.`,
     );
     return { code: 2 };
   }
   return { opts, configPath };
-}
-
-/**
- * `rpp init` — единственный ответ на «а как это вообще запустить».
- *
- * 🔴 ЗАЧЕМ. До неё установка была РАССЫПАНА по README пятью кусками: поставь пакет · поставь
- * vigiles · набери две команды /plugin · вставь шаг в воркфлоу · сочини rpp.json по образцу.
- * Пять мест — это пять возможностей бросить, и ни одно из них не проверяемо.
- *
- * ⚠️ Чужие файлы НЕ ПЕРЕЗАПИСЫВАЕТ. Существующий rpp.json остаётся как есть, и команда об этом
- * говорит: молча затереть настройку пользователя хуже, чем не сделать ничего.
- */
-export const RPP_JSON = `{
-  "papers": "papers",
-  "authorListCommand": "node scripts/bib-authors.mjs",
-  "typographyDebt": {},
-  "docFields": {},
-  "minFindings": 3,
-  "causeMarker": "Cause:"
-}
-`;
-
-/**
- * Step 3 is now two lines, and both are typed inside Claude Code rather than in a terminal.
- *
- * The hook runtime (`vigiles`) arrives with this package as an ordinary dependency, so there is
- * nothing to install by hand. That replaced, in order: a copy-paste line, then a `--with-hooks`
- * flag, then a self-contained bundle — none of which were needed once the weight was measured
- * (127 MB for the whole install) and judged acceptable. The simplest thing that works was one
- * line in `dependencies`.
- */
-export function nextSteps(papersDir: string = "papers"): string {
-  const hooks = [
-    `  3. optional — the three editor hooks, typed INSIDE Claude Code`,
-    `       /plugin marketplace add zernie/research-paper-pipeline`,
-    `       /plugin install research-paper-pipeline@research-paper-pipeline`,
-    ``,
-    `     Their runtime came with this package; there is nothing else to install.`,
-    `     Skip this and everything above still works — the hooks are an in-editor guard.`,
-  ];
-  return [
-    ``,
-    `Next, in order:`,
-    ``,
-    `  1. lint your papers`,
-    `       npx rpp lint`,
-    ``,
-    `  2. same check in CI — add this step to a workflow`,
-    `       - uses: zernie/research-paper-pipeline@<commit-sha>`,
-    `         with:`,
-    `           paths: ${papersDir}`,
-    ``,
-    ...hooks,
-    ``,
-  ].join("\n");
-}
-
-export function init(dir: string, { log = console.log }: { log?: typeof console.log } = {}): number {
-  const target = join(dir, "rpp.json");
-  if (existsSync(target))
-    log(`rpp.json already there — kept as is, nothing overwritten`);
-  else {
-    writeFileSync(target, RPP_JSON, "utf8");
-    log(
-      `wrote ${target} — the three things only you can supply; every key is optional`,
-    );
-  }
-  log(nextSteps("papers"));
-  return 0;
 }
 
 /** `papers` may be one directory or several; both spellings normalise to a list. */
@@ -556,7 +549,22 @@ export async function run(
     log(USAGE);
     return a.help ? 0 : 2;
   }
-  if (a.cmd === "init") return init(a.paths[0] ?? ".", { log });
+  // `init` asks the CLI's OWN reader what it would lint, so the two sides `doctor` compares are
+  // not two implementations of the same question. A second resolver here is the defect the
+  // comparison exists to catch.
+  if (a.cmd === "init")
+    return await init(a.paths[0] ?? ".", {
+      log,
+      err,
+      cwd,
+      resolveCliPapers: (root: string): string | null => {
+        const read = readConfig(
+          { ...a, config: null },
+          { log: () => {}, err: () => {}, cwd: root },
+        );
+        return read.code === undefined ? toPaths(read.opts.papers)[0] ?? null : null;
+      },
+    });
   // `doctor` reads the config but must NOT die on a broken one — reporting that the config is
   // broken is precisely its job. So a failed read becomes "the CLI would lint nothing", which is
   // what it prints, rather than an early exit that tells the reader nothing about the hooks.
