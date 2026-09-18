@@ -10,6 +10,12 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "..");
 const CLI = join(HERE, "cli.ts");
 const HARNESS = join(HERE, "cli.harness.mjs");
+// Шим `bin/rpp.mjs` — ИСПОЛНЯЕМЫЙ файл пакета, и с переездом на TypeScript проверка «меня
+// запустили или меня импортировали» живёт именно в нём: `dist/cli.js` теперь всегда
+// импортируется, поэтому мутация в нём про симлинк ничего не доказывает. Первый прогон после
+// переезда показал это буквально — мутация ВЫЖИЛА, и выглядело это как дыра в харнессе,
+// хотя дыра была в том, куда мутация целилась.
+const SHIM = join(HERE, "..", "bin", "rpp.mjs");
 
 process.exit(
   runMutations({
@@ -25,7 +31,7 @@ process.exit(
           "у которого process.argv[1] и import.meta.url — разные пути; при сравнении строк " +
           "условие ложно и утилита МОЛЧА выходит с нулём. Прямой `node bin/rpp.mjs` при этом " +
           "работает, поэтому дефект невидим тем способом, которым его обычно проверяют",
-        edits: [[CLI, "if (isMain(import.meta.url))", "if (import.meta.url === `file://${process.argv[1]}`)"]],
+        edits: [[SHIM, "if (isMain(import.meta.url))", "if (import.meta.url === `file://${process.argv[1]}`)"]],
       },
       {
         name: "argv[0] снова становится командой безусловно",
@@ -35,7 +41,7 @@ process.exit(
           "разбор флага в позиции команды. Настоящий дефект: `rpp --help` отвечало " +
           "«unknown command `--help`» — то есть первая команда, которую набирает новый " +
           "пользователь, сообщала, что её не существует",
-        edits: [[CLI, 'if (rest[0] && !rest[0].startsWith("-")) out.cmd = rest.shift();', "out.cmd = rest.shift();"]],
+        edits: [[CLI, 'if (rest[0] && !rest[0].startsWith("-")) out.cmd = rest.shift() ?? null;', "out.cmd = rest.shift() ?? null;"]],
       },
       {
         name: "охват снова получает умолчание",
@@ -44,7 +50,7 @@ process.exit(
         disables:
           "контракт «охват называет вызывающий». С умолчанием пользователь, не подумавший про " +
           "охват, получает зелёный прогон по тому, что случайно лежит в каталоге",
-        edits: [[CLI, "if (a.paths.length === 0) {", "if (false) {"]],
+        edits: [[CLI, "if (paths.length === 0) {", "if (false) {"]],
       },
       {
         name: "СТРАЖ ОТ ЗЕЛЁНОГО НОЛЯ снимается",
@@ -63,7 +69,7 @@ process.exit(
           "объяснимость отказа. Настоящий дефект: на пустом наборе ESLint БРОСАЕТ " +
           "NoFilesFoundError, сторож до своей проверки не доживал, и вместо сообщения вылетал " +
           "стек из недр eslint-helpers.js",
-        edits: [[CLI, 'if (e?.messageTemplate === "file-not-found" || /No files matching/i.test(e?.message ?? "")) results = [];\n    else throw e;', "throw e;"]],
+        edits: [[CLI, '    if (\n      fail?.messageTemplate === "file-not-found" ||\n      /No files matching/i.test(fail?.message ?? "")\n    )\n      results = [];\n    else throw e;', "    throw e;"]],
       },
       {
         name: "данные потребителя перестают доезжать до правила",
