@@ -51,7 +51,11 @@ const paper = (name, files) => {
 try {
   const top = paper("top", {
     "PIPELINE-STATUS.md": "x",
-    "build.sh": "#!/usr/bin/env bash\ntouch RAN\n",
+    // 🔴 След пишется РЯДОМ СО СКРИПТОМ, а не в текущий каталог. Первая редакция делала
+    // `touch RAN`, то есть писала в cwd харнесса — и ассерт «следа нет в каталоге статьи»
+    // проходил ДАЖЕ КОГДА скрипт запускался. Проверка смотрела не туда; поймано по
+    // незакоммиченному `RAN`, появившемуся в корне репозитория после мутационного прогона.
+    "build.sh": '#!/usr/bin/env bash\ntouch "$(dirname "$0")/RAN"\n',
   });
   const nested = paper("nested", {
     "paper.tex": "x",
