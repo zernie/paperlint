@@ -1,0 +1,11 @@
+% СТОИТ ЗА СЛУЧАЙ «acmart молча ушёл на Computer Modern».
+%
+% Настоящий механизм подмены воспроизвести здесь нельзя: класс проверяет наличие
+% `libertine.sty`/`zi4.sty`/`newtxmath.sty` через \IfFileExists, а спрятать установленный
+% пакет от kpathsea добавлением файла невозможно — TEXINPUTS умеет дописывать пути, не убирать.
+% Поэтому фикстура даёт тот же НАБЛЮДАЕМЫЙ результат — PDF, набранный Computer Modern, —
+% и проверка шрифтов обязана его отвергнуть. Проверяется именно проверка.
+\documentclass{article}
+\begin{document}
+The body exists so the run produces a page with text on it.
+\end{document}

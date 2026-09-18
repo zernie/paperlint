@@ -29,7 +29,7 @@ import { checkHookImports } from "vigiles/hook";
 import { mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 const HOOKS = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HOOKS, "..");
