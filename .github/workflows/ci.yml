@@ -15,7 +15,7 @@
 #   npm test (12 harnesses)              11 s
 #   npm run lint (eslint over fixtures)   1 s
 #   npm run check:globs                   1 s
-#   npm run check:readme                  1 s   <- числа README сверяются с деревом
+#   npm run check:readme                  1 s   <- README numbers are verified against the tree
 #   npm run lint:skills (vigiles lint)    3 s   ← added 2026-09-12 with the first ten skills
 #   npm run test:sabotage (12 batteries)    242 s   ← 130 mutations, the expensive and load-bearing part
 #   ───────────────────────────────────────────
@@ -36,25 +36,25 @@ name: ci
 on:
   push:
     branches: [main]
-  # 🔴 `types:` ПЕРЕЧИСЛЕН ЦЕЛИКОМ, ВКЛЮЧАЯ УМОЛЧАНИЯ. Стоит объявить этот ключ — и умолчания
-  # (`opened`, `synchronize`, `reopened`) ПРОПАДАЮТ; забыть их значило бы выключить CI на пушах
-  # в PR, и заметить это можно было бы только по отсутствию прогона, то есть по тишине.
-  # `labeled` добавлен ради macOS-джоба ниже: без него метка, повешенная на открытый PR, ничего
-  # не запускает — событие просто не происходит.
+  # 🔴 `types:` FULLY ENUMERATED, INCLUDING DEFAULTS. As soon as this key is declared, the defaults
+  # (`opened`, `synchronize`, `reopened`) DISAPPEAR; forgetting them would disable CI on PR pushes,
+  # and the only way to notice would be by the absence of a run, i.e., silence.
+  # `labeled` is added for the macOS job below: without it, a label placed on an open PR triggers nothing —
+  # the event simply does not occur.
   pull_request:
     types: [opened, synchronize, reopened, labeled]
 
 # A newer push supersedes an older one on the same ref. Note this does NOT make the cancelled
 # run free — cancellation arrives after the expensive steps have already run and been billed —
 # it only stops the tail.
-# 🔴 КЛЮЧ ГРУППЫ РАЗЛИЧАЕТ СОБЫТИЕ, И ЭТО ЗАМЕР, А НЕ ПРЕДОСТОРОЖНОСТЬ (17.09.2026).
-# С одним ключом `ci-<ref>` навешивание метки `osx` на только что открытый PR УБИЛО прогон
-# гейтов: событие `labeled` попало в ту же группу и отменило идущий `pull_request/opened`.
-# Наблюдено на PR #17 — `gates` пришёл `cancelled` в прогоне 44 и `skipped` в прогоне 45, то
-# есть полного набора гейтов у PR не оказалось НИ ОДНОГО, при двух зелёных галочках рядом.
+# 🔴 THE CONCURRENCY GROUP KEY DISTINGUISHES THE EVENT, AND THIS IS A MEASUREMENT, NOT CAUTION (17.09.2026).
+# With a single key `ci-<ref>`, applying the `osx` label to a freshly opened PR KILLED the gate run:
+# the `labeled` event fell into the same group and cancelled the in-flight `pull_request/opened`.
+# Observed on PR #17 — `gates` came back `cancelled` on run 44 and `skipped` on run 45, meaning
+# the PR ended up with NO COMPLETE SET of gates, despite two green checkmarks alongside.
 #
-# Разные ключи потому, что это разные работы: прогон по КОДУ проверяет код, прогон по МЕТКЕ
-# проверяет платформу. Отменять первый вторым — терять проверку, а не экономить минуты.
+# Different keys because these are different jobs: a CODE run checks code, a LABEL run checks platform.
+# Cancelling the first with the second means losing a check, not saving minutes.
 concurrency:
   group: ci-${{ github.ref }}-${{ github.event.action == 'labeled' && 'label' || 'code' }}
   cancel-in-progress: true
@@ -64,8 +64,8 @@ permissions:
 
 jobs:
   gates:
-    # Навешивание метки — не изменение кода. Без этого условия каждый клик по метке поднимал бы
-    # весь шестиминутный набор заново, ничего нового не проверив.
+    # Label application is not a code change. Without this condition, every label click would re-run
+    # the entire six-minute suite from scratch, checking nothing new.
     if: github.event_name != 'pull_request' || github.event.action != 'labeled'
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -86,15 +86,15 @@ jobs:
 
       # Harnesses. `--min=1` is inside the script: it refuses a run where NOTHING matched.
       #
-      # 🔴 ЧТО ОНО НЕ ДЕЛАЕТ, вопреки тому, что здесь было написано до 17.09: от каталога в
-      # аргументе оно НЕ защищает. Замер: `npx vigiles test . --min=1` → `0 passed, 1 skipped`,
-      # **RC=0** — каталог существует, дискавери берёт его за файл, и он засчитывается в
-      # минимум. Прежняя редакция называла `--min=1` «load-bearing» ровно против этого случая,
-      # то есть утверждала защиту, которой нет. От этого случая защищает `--no-skip` ниже.
+      # 🔴 WHAT IT DOES NOT DO, contrary to what was written here before 17.09: it does NOT protect
+      # against a directory in the argument. Measurement: `npx vigiles test . --min=1` → `0 passed, 1 skipped`,
+      # **RC=0** — the directory exists, discovery treats it as a file, and it counts toward the
+      # minimum. The prior version called `--min=1` "load-bearing" precisely against this case,
+      # i.e., claimed a protection that does not exist. Protection against this case comes from `--no-skip` below.
       # 🔴 THE `claude` CLI IS A TEST DEPENDENCY HERE, and its absence was NOT harmless.
       # `plan-paper-timeline.effects.harness.mjs` spawns the real agent binary; without it the
-      # harness SKIPS, the skip exits 0 through `vigiles test`, and the mutation driver read that
-      # as "the mutation survived". Measured 2026-09-15 on run 34966606186: two survivors in CI,
+      # harness SKIPS, the skip exits 0 through `vigiles test`, and the mutation driver interprets
+      # that as "the mutation survived". Measured 2026-09-15 on run 34966606186: two survivors in CI,
       # zero locally, the difference being this binary and nothing about the code.
       #
       # The driver now REFUSES a battery whose harness skips (lib/mutation-driver.mjs), so the
@@ -110,17 +110,17 @@ jobs:
         run: npm i -g @anthropic-ai/claude-code
         timeout-minutes: 3
 
-      # 🔴 `--no-skip` ЗДЕСЬ, И ИМЕННО ПОСЛЕ УСТАНОВКИ ВЫШЕ. Замер 17.09: без него пропуск —
-      # зелёный, а статус `skip` получает НЕ ТОЛЬКО объявленный автором `skip()`, но и файл,
-      # который не смог ЗАГРУЗИТЬСЯ. То есть один флаг закрывает обе двери разом.
+      # 🔴 `--no-skip` HERE, AND PRECISELY AFTER THE INSTALL ABOVE. Measurement 17.09: without it,
+      # skip is green, and `skip` status is applied not only to author-declared `skip()`, but also to a file
+      # that failed to LOAD. In other words, one flag closes both doors at once.
       #
-      # ⚠️ Порядок шагов был неверен и делал установку выше почти бессмысленной: `npm test`
-      # стоял ДО неё, поэтому ярус эффектов в этом джобе пропускался всегда, а бинарь
-      # доставался только мутационным батареям. Комментарий про «its absence was NOT harmless»
-      # описывал ровно этот вред и при этом сам от него не защищал.
+      # ⚠️ The step order was incorrect and made the install above nearly pointless: `npm test`
+      # ran BEFORE it, so the effects tier in this job was always skipped, and the binary
+      # reached only the mutation batteries. The comment about "its absence was NOT harmless"
+      # described exactly this harm yet did not protect against it itself.
       #
-      # ⚠️ И флаг стоит В ШАГЕ, а не в `package.json`: джоб `macos` ниже гоняет тот же `npm test`
-      # БЕЗ установки бинаря, там пропуск законен, и общий флаг покрасил бы его напрасно.
+      # ⚠️ And the flag belongs IN THE STEP, not in `package.json`: the `macos` job below runs the same `npm test`
+      # WITHOUT installing the binary, where skips are legitimate, and a global flag would falsely color it.
       - name: npm test
         run: npm test -- --no-skip
 
@@ -157,8 +157,8 @@ jobs:
       - name: npm run check:globs
         run: npm run check:globs
 
-      # README называет числа. Этот шаг их ПРОИЗВОДИТ и сверяет — прежде он был нужен, потому
-      # что проза обещала 45 харнессов и 22 батареи при 49 и 26 на диске.
+      # README names numbers. This step PRODUCES and verifies them — once needed because
+      # the prose promised 45 harnesses and 22 batteries when the disk held 49 and 26.
       - name: npm run check:readme
         run: npm run check:readme
 
@@ -170,38 +170,38 @@ jobs:
       - name: mutation batteries
         run: npm run test:sabotage
 
-      # 🔴 СКВОЗНАЯ УСТАНОВКА. Всё выше судит ИСХОДНИК; этот шаг пакует тарбол и ставит его в
-      # чистого потребителя под npm и под pnpm, а потом ИСПОЛНЯЕТ команды хуков из
-      # опубликованного `hooks.json`. Ровно этот шаг ловит класс «пакет собран правильно и у
-      # потребителя не работает»: белый список `files`, который однажды уже выбрасывал `dist/`
-      # из тарбола, и путь до рантайма хуков, который на pnpm не резолвился.
-      #
-      # До 18.09 его в CI не было вовсе — гейт существовал локально и не защищал ничего, тот же
-      # класс, что чинили в #67.
+
+
+
+
+
+
+
+
       - name: npm run test:install
         run: npm run test:install
         timeout-minutes: 10
 
-  # ── macOS ПО МЕТКЕ, А НЕ В МАТРИЦЕ ───────────────────────────────────────────────────────────
+  # ── macOS BY LABEL, NOT IN MATRIX ───────────────────────────────────────────────────────────────
   #
-  # Issue #9: `npm test` был красным ТОЛЬКО на macOS. Причина — `/var` там симлинк на
-  # `/private/var`, поэтому `import.meta.url` резолвится в realpath, а `process.argv[1]` и любой
-  # составленный тестом путь остаются как набраны: один каталог под двумя именами. Починка
-  # (`50d6463`) закреплена правилом ESLint, но правило сторожит ИДИОМУ, а не поведение — на Linux
-  # `realpathSync` тождественна, и снятая обёртка не краснит ни один поведенческий тест. То есть
-  # единственный способ узнать, что харнессы на macOS действительно зелёные, — прогнать их там.
+  # Issue #9: `npm test` was red ONLY on macOS. Reason — `/var` there is a symlink to
+  # `/private/var`, so `import.meta.url` resolves to realpath, while `process.argv[1]` and any
+  # path constructed by the test remain as typed: one directory under two names. The fix
+  # (`50d6463`) is enforced by an ESLint rule, but the rule guards the IDIOM, not the behavior — on Linux
+  # `realpathSync` is identity, and removing the wrapper does not red any behavioral test. So
+  # the only way to know harnesses are truly green on macOS is to run them there.
   #
-  # 🔴 ПОЧЕМУ НЕ ПОСТОЯННАЯ МАТРИЦА. Раннер macOS тарифицируется с МНОЖИТЕЛЕМ 10 к Linux. Для
-  # публичного репозитория минуты не выставляются к оплате, но ставить постоянный десятикратный
-  # джоб ради платформы, на которой здесь никто не разрабатывает, — это плата за то, что меняется
-  # раз в полгода. Метка делает цену решением человека в тот момент, когда он знает, зачем.
+  # 🔴 WHY NOT A PERMANENT MATRIX. The macOS runner is billed at a 10× MULTIPLIER to Linux. For
+  # a public repository, minutes are not charged, but running a permanent tenfold job for a platform
+  # where no one develops — that is paying for something that changes once a year. A label makes
+  # cost a decision at the moment the person knows why.
   #
-  # Как пользоваться: повесить на PR метку `osx`. Событие `labeled` поднимет ЭТОТ джоб, а `gates`
-  # выше пропустится — он уже отработал на пуше.
+  # How to use: apply the `osx` label to a PR. The `labeled` event will raise THIS job, and `gates`
+  # above will skip — it already ran on the push.
   #
-  # ⚠️ Гоняется только `npm test`, и это не экономия ради экономии: предмет #9 — харнессы,
-  # читающие временный каталог. Мутационные батареи (242 с) на десятикратном раннере стоили бы
-  # сорока минут Linux-эквивалента и проверяли бы ровно то же, что уже проверено на Linux.
+  # ⚠️ Only `npm test` runs, and this is not economy for its own sake: issue #9 concerns harnesses
+  # reading temp directories. Mutation batteries (242 s) on a tenfold runner would cost
+  # forty minutes of Linux-equivalent and would verify exactly what is already checked on Linux.
   macos:
     if: >
       github.event_name == 'pull_request' &&
@@ -217,9 +217,9 @@ jobs:
       - name: npm ci
         run: npm ci
         timeout-minutes: 8
-      # Различитель, ради которого джоб и существует: печатает ОБА написания временного корня.
-      # Совпали — значит платформа не та, и зелёный ниже ничего про macOS не говорит.
-      - name: две записи одного каталога — видит ли их эта машина
+      # The distinction this job exists for: prints BOTH spellings of the temp root.
+      # If they match — platform is not the right one, and green below says nothing about macOS.
+      - name: two spellings of one directory — does this machine see them
         run: |
           node -e '
             const { mkdtempSync, realpathSync } = require("node:fs");
@@ -228,27 +228,27 @@ jobs:
             const d = mkdtempSync(join(tmpdir(), "probe-"));
             console.log("as typed :", d);
             console.log("realpath :", realpathSync(d));
-            console.log(d === realpathSync(d) ? "СОВПАЛИ — ловушки #9 на этой машине нет"
-                                              : "РАЗОШЛИСЬ — это та платформа, ради которой джоб есть");
+            console.log(d === realpathSync(d) ? "MATCH — issue #9 traps do not exist on this machine"
+                                              : "DIVERGE — this is the platform this job exists for");
           '
       - name: npm test
         run: npm test
 
-  # ── СБОРКА СТАТЬИ НАСТОЯЩЕЙ pdflatex ────────────────────────────────────────────────────────
+  # ── BUILDING THE PAPER WITH REAL pdflatex ──────────────────────────────────────────────────────
   #
-  # 🔴 ПОЧЕМУ ОТДЕЛЬНЫМ ДЖОБОМ, А НЕ ШАГОМ В `gates`. Единственная его зависимость — TeX Live,
-  # и она же единственное, что здесь стоит минут: 230 МБ, ~2 мин вхолодную (замер записан в
-  # `skills/render-paper/ci-install-texlive.sh`). Держать её внутри общего джоба значит платить
-  # эти минуты за каждый прогон, включая правки прозы; отдельный джоб идёт параллельно и
-  # кэшируется сам по себе.
+  # 🔴 WHY A SEPARATE JOB, NOT A STEP IN `gates`. Its only dependency is TeX Live,
+  # and it alone costs minutes here: 230 MB, ~2 min cold (measured and recorded in
+  # `skills/render-paper/ci-install-texlive.sh`). Keeping it inside the general job means paying
+  # those minutes for every run, including prose edits; a separate job runs in parallel and
+  # caches itself.
   #
-  # 🔴 ПОЧЕМУ НЕ ПО МЕТКЕ, как macOS. Тот джоб ловит расхождение платформы, которое меняется раз
-  # в полгода. Этот ловит молчаливую подмену шрифта — класс, который УЖЕ отправил статью
-  # набранной не тем шрифтом. Метка сделала бы защиту зависящей от того, вспомнил ли человек её
-  # навесить, а вспоминают её ровно тогда, когда и так осторожны.
+  # 🔴 WHY NOT BY LABEL, like macOS. That job catches a platform divergence that changes once
+  # a year. This one catches silent font substitution — a class that HAS ALREADY shipped a paper
+  # typeset in the wrong font. A label would make protection depend on whether a person remembered to apply it,
+  # and they remember it precisely when they are already being careful.
   #
-  # `--strict`: отсутствие pdflatex локально — законный пропуск, здесь — поломка окружения.
-  # Без него пропущенный шаг выглядел бы в интерфейсе как прошедший.
+  # `--strict`: absence of pdflatex locally is a legitimate skip; here it is an environment failure.
+  # Without it, a skipped step would look like a pass in the interface.
   build-e2e:
     if: github.event_name != 'pull_request' || github.event.action != 'labeled'
     runs-on: ubuntu-latest
@@ -265,39 +265,39 @@ jobs:
         run: npm ci
         timeout-minutes: 5
 
-      # Первопартийный кэш взят намеренно: правильный по классу
-      # `teatimeguest/setup-texlive-action` заблокирован белым списком сторонних Actions этого
-      # аккаунта («Repository access blocked», прогон 33457399377). Разбор трёх способов с
-      # замерами — `skills/render-paper/ci-tex-toolchain-decision.md`.
-      - name: TeX Live из кэша
+      # First-party cache chosen deliberately: the correct-by-class
+      # `teatimeguest/setup-texlive-action` is blocked by the allowlist of third-party Actions in this
+      # account ("Repository access blocked", run 33457399377). Analysis of three approaches with
+      # measurements — `skills/render-paper/ci-tex-toolchain-decision.md`.
+      - name: TeX Live from cache
         id: tex-cache
         uses: actions/cache@v4
         with:
           path: ~/texlive
           key: texlive-${{ runner.os }}-${{ hashFiles('skills/render-paper/ci-install-texlive.sh') }}
 
-      - name: установить TeX Live (только при промахе кэша)
+      - name: install TeX Live (only on cache miss)
         if: steps.tex-cache.outputs.cache-hit != 'true'
         run: bash skills/render-paper/ci-install-texlive.sh
         timeout-minutes: 12
 
-      - name: TeX в PATH
+      - name: TeX to PATH
         run: echo "$HOME/texlive/bin/x86_64-linux" >> "$GITHUB_PATH"
 
-      # 🔴 ПРИЁМКА УСТАНОВКИ, А НЕ КОД ВОЗВРАТА. `exit=0` и пустой вывод — это не «поставилось»:
-      # установщик уже однажды в этом корпусе скачал НОЛЬ пакетов и отчитался успехом. Шрифты
-      # acmart проверяются поимённо, потому что без ЛЮБОГО из них класс молча уходит на
-      # Computer Modern — то, ради чего весь этот джоб и существует.
-      - name: инструменты и шрифты РЕАЛЬНО на месте
+      # 🔴 VERIFY THE INSTALL, NOT THE EXIT CODE. `exit=0` and empty output mean "installed" — the
+      # installer once in this corpus downloaded ZERO packages and reported success. The
+      # acmart fonts are checked by name, because without ANY of them the class silently falls back to
+      # Computer Modern — which is precisely why this entire job exists.
+      - name: tools and fonts ACTUALLY in place
         run: |
           set -euo pipefail
-          for b in pdflatex pdffonts; do command -v "$b" >/dev/null || { echo "нет $b"; exit 1; }; done
+          for b in pdflatex pdffonts; do command -v "$b" >/dev/null || { echo "missing $b"; exit 1; }; done
           for f in acmart.cls libertine.sty zi4.sty newtxmath.sty; do
-            kpsewhich "$f" >/dev/null || { echo "нет $f — acmart уйдёт на Computer Modern МОЛЧА"; exit 1; }
+            kpsewhich "$f" >/dev/null || { echo "missing $f — acmart will SILENTLY fall back to Computer Modern"; exit 1; }
           done
 
-      # Зовётся напрямую, а не через npm run: флаг --strict надо пронести до скрипта,
-      # и `npm run test:build -- --strict` лишний уровень, который легко потерять при правке.
+      # Called directly, not through npm run: the --strict flag must reach the script,
+      # and `npm run test:build -- --strict` adds a layer easily lost in edits.
       - name: build e2e (--strict)
         run: node scripts/build-e2e.mjs --strict
         timeout-minutes: 10
