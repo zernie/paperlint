@@ -424,49 +424,18 @@ try {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // VII. THE FORCED DUPLICATION — three hooks, one contract
+  // VII. THE FORCED DUPLICATION — moved out, and why
   // ═══════════════════════════════════════════════════════════════════════════
-  // 🔴 The carrier's key and default are SPELLED OUT IN ALL THREE FILES, and they have to be: a
-  // compiled hook may import only `vigiles/hook`, so a shared module is not available to them.
-  // Duplication that cannot be removed has to be CHECKED instead.
+  // The three hooks spell out CONFIG_KEY and DEFAULT_PAPERS_ROOT because a compiled hook may
+  // import only `vigiles/hook`. That duplication is checked in `lib/paper-config.harness.mjs`,
+  // next to the module the values now come from.
   //
-  // 🔴 THE VALUES ARE IMPORTED, NOT READ OUT OF THE SOURCE TEXT. Until 2026-09-18 this block
-  // matched `/^const CONFIG_KEY = "([^"]+)";$/m` against each file — a shadow of the declaration
-  // rather than the declaration, and a shadow has SPELLINGS. Adding `export`, a change with no
-  // effect whatsoever on behaviour, turned the check red; that is how the shadow announced
-  // itself. Widening the pattern to `(?:export )?` was the first fix and it was wrong: it moves
-  // the next break one spelling away (single quotes, an indented declaration, `export {X}` at
-  // the foot of the file) instead of removing the class.
-  //
-  // The real fix was available all along, because the constraint on a compiled hook is on what it
-  // may IMPORT, not on what it may EXPORT. All three export these two values now, so this asks
-  // the module system and compares actual runtime values. No pattern is left to drift, and the
-  // check can no longer match the prose ABOUT the value instead of the value — a comment is not
-  // an export.
-  {
-    const seen = await Promise.all(
-      SHIPPED.map(async (f) => {
-        const mod = await import(pathToFileURL(join(HOOKS, f)).href);
-        return { f, key: mod.CONFIG_KEY, def: mod.DEFAULT_PAPERS_ROOT };
-      }),
-    );
-    for (const s of seen) {
-      check(`${s.f} declares CONFIG_KEY`, typeof s.key === "string" && s.key.length > 0);
-      check(`${s.f} declares DEFAULT_PAPERS_ROOT`, typeof s.def === "string" && s.def.length > 0);
-    }
-    check(
-      `all three hooks agree on CONFIG_KEY (${[...new Set(seen.map((s) => s.key))].join(" / ")})`,
-      new Set(seen.map((s) => s.key)).size === 1,
-    );
-    check(
-      `all three hooks agree on DEFAULT_PAPERS_ROOT (${[...new Set(seen.map((s) => s.def))].join(" / ")})`,
-      new Set(seen.map((s) => s.def)).size === 1,
-    );
-    check(
-      "the key they agree on is this package's name",
-      seen[0].key === JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")).name,
-    );
-  }
+  // 🔴 IT MOVED BECAUSE ITS SCOPE WAS WRONG, NOT ITS CODE. Living here, it could only ever
+  // compare hooks with hooks. Measured 2026-09-18: two more files declared the same constants —
+  // `eslint-rules/papers.mjs` and `skills/paper-pipeline/scripts/consumer.mjs`, neither of them
+  // a hook, neither of them under any import restriction, and neither of them inside the
+  // comparison. They could have drifted in silence. A check named after one part of a set
+  // cannot notice the rest of the set.
 
   // ═══════════════════════════════════════════════════════════════════════════
   // VIII. paper-status-gates.sh — a TOOL, and it must refuse to be a hook
