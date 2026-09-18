@@ -456,17 +456,22 @@ check(
       const dir = project("tools", { papers: ["writing"] });
       const out = say();
       await init(dir, { log: out.log, err: out.log, interactive: false, run: haveNone });
+      // 🔴 СУДИМ ТОЛЬКО СОБСТВЕННЫЙ ОТЧЁТ init, ДО баннера doctor. Первая редакция этих трёх
+      // ассертов смотрела на ВЕСЬ вывод — а doctor печатает и `✗ pdflatex`, и ту же команду
+      // установки. Мутация, вырезавшая лекарство ИЗ init, осталась зелёной: ассерт находил
+      // строку, напечатанную другой командой, и отчитывался о покрытии, которого не было.
+      const own = out.text().split("── rpp doctor")[0];
       check(
         "каждая пропажа НАЗВАНА вместе с последствием",
-        /✗ pdflatex/.test(out.text()) && /no PDF is produced/.test(out.text()),
+        /✗ pdflatex/.test(own) && /no PDF is produced/.test(own),
       );
       check(
         "🔴 и несёт КОМАНДУ УСТАНОВКИ — лекарство, а не диагноз",
-        /apt-get install -y texlive-latex-recommended/.test(out.text()),
+        /apt-get install -y texlive-latex-recommended/.test(own),
       );
       check(
         "и сказано прямо, что ничего не ставится за пользователя",
-        /nothing is installed for you/.test(out.text()),
+        /nothing is installed for you/.test(own),
       );
       check(
         "а спрошенная система, в которой всё есть, не даёт ни одной пропажи",

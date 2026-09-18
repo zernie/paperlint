@@ -11,7 +11,12 @@ taken from tools that already solved it, and each claim below was measured.
 command, every flag, every "now add this to your config by hand" is one action and one chance to
 stop.
 
-Counted for this package as it stands:
+🔴 **SHIPPED 2026-09-18 — the table below is now HISTORY, and it is kept because the count is
+the argument.** `rpp init` performs steps 3, 4, 5 and 8 itself and reports step 9; what is left
+is the three-row table at the bottom of this file. The nine rows stay written down because a
+target count means nothing without the count it replaced.
+
+Counted for this package **before** that change:
 
 | # | action | why it exists |
 | --- | --- | --- |
@@ -120,3 +125,21 @@ external programs are missing.
 
 Three, one of which is a paste of two lines that `init` just printed. Step 3 cannot be collapsed:
 it is typed into a different program, and nothing on disk can type it for you.
+
+### What the implementation added to this plan, and why
+
+One thing here was designed from the armchair after all, and the build found it: **the CLI itself
+could not read the single declaration.** `rpp lint` looked only for `rpp.json`, so an `init` that
+writes the `package.json` key and nothing else produces an install where the very next command
+reports "nothing to lint". Folding the declaration is not complete until the folding reader
+exists — `findDeclaration` in `src/cli.ts` now walks for either carrier, prefers `package.json`
+at each level, and says out loud when it fell back to the deprecated one.
+
+And one measurement, taken on a real pseudo-terminal rather than reasoned about: Node's
+`readline` `question()` REJECTS with `AbortError: Aborted with Ctrl+D` when the answer stream
+ends. That rejection escaped `init` as a stack trace **after** the declaration had already been
+written, so the install both succeeded and looked like a crash. An unanswered question is an
+answer; it now takes the default. Prompting itself turned out to be perfectly testable — the
+question function is injected, so the assertions never need a terminal, and the one property
+that does need a terminal (that a real prompt appears and its answer is used) was checked once
+by hand under `script`.
