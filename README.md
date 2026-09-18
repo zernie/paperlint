@@ -20,9 +20,20 @@ Not on npm yet — install from GitHub, pinned to a commit:
 ```sh
 npm i -D github:zernie/research-paper-pipeline#<commit-sha>
 npx rpp init               # writes rpp.json and prints the next steps
+npx rpp doctor             # says what is actually wired — and what only LOOKS wired
 npx rpp lint               # runs every rule over the directory rpp.json names
 npx rpp build <paper>      # builds one paper with ITS OWN build script
 ```
+
+🔴 **Run `npx rpp doctor` once after setting up, and believe it over the absence of errors.**
+The editor hooks read where your papers live from `package.json`; the CLI reads it from
+`rpp.json`; nothing else compares the two. When they disagree the linter checks one directory
+while `paper-edit-guard` guards another — and a guard watching an empty directory looks exactly
+like a guard that is working, because silence is its success state. `doctor` prints both
+directories side by side and exits non-zero when they are not the same. The single-declaration
+design this is being collapsed into, and the prior art behind it, are in
+[`docs/install.md`](docs/install.md); the defect is
+[#33](https://github.com/zernie/research-paper-pipeline/issues/33).
 
 `rpp lint` finds `rpp.json` by walking up from the current directory, the way eslint and tsc find
 theirs, so it works from anywhere in the repository. Pass a path to lint something else for one

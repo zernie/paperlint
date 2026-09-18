@@ -21,7 +21,7 @@ On top of that, each rule has a **battery**: it deletes one thing the rule depen
 demands the harness go red, at the specific assertion that thing belongs to. If nothing goes red,
 that part of the rule was never doing any work. CI refuses a rule whose battery cannot kill it.
 
-<!-- count:harnesses -->56 harnesses, <!-- count:batteries -->33 batteries.
+<!-- count:harnesses -->57 harnesses, <!-- count:batteries -->34 batteries.
 
 It caught a real one on the way in: `js-yaml` 5 stopped parsing an unquoted date as a `Date`.
 Every harness stayed green under both majors, and only the battery noticed that the rule's
