@@ -49,6 +49,7 @@ import {
   anyFailed,
   remedyFor,
 } from "./build.ts";
+import { doctor } from "./doctor.ts";
 
 // @ts-expect-error — правило ESLint на .mjs, типов не имеет
 import paperStages from "../eslint-rules/paper-stages.mjs";
@@ -71,6 +72,7 @@ const USAGE = `research-paper-pipeline — machine-checkable gates for a paper k
   npx rpp lint [paths…]               run every rule over your papers
   npx rpp build <paper> | --all       build a paper with ITS OWN build script
                                       (--dry-run: name the script that WOULD run, and where none exists)
+  npx rpp doctor                      say what is actually wired — and what only LOOKS wired
   npx rpp hook <name>                 run an editor hook (the plugin wiring calls this)
   npx rpp --help
 
@@ -555,6 +557,14 @@ export async function run(
     return a.help ? 0 : 2;
   }
   if (a.cmd === "init") return init(a.paths[0] ?? ".", { log });
+  // `doctor` reads the config but must NOT die on a broken one — reporting that the config is
+  // broken is precisely its job. So a failed read becomes "the CLI would lint nothing", which is
+  // what it prints, rather than an early exit that tells the reader nothing about the hooks.
+  if (a.cmd === "doctor") {
+    const read = readConfig(a, { log: () => {}, err: () => {}, cwd });
+    const papers = read.code === undefined ? toPaths(read.opts.papers)[0] ?? null : null;
+    return doctor({ log, cwd, projectDir: process.env["CLAUDE_PROJECT_DIR"] ?? cwd, cliPapers: papers });
+  }
   if (a.cmd === "hook") return runHook(a.paths[0], { err });
   if (a.cmd === "build") return runBuild(a, { log, err, cwd });
   if (a.cmd === "check")
