@@ -73,7 +73,7 @@ const runDoctor = (dir, { cliPapers = null, have = () => 0 } = {}) => {
 {
   const dir = consumer({ papersDir: "writing/drafts", rppJson: "writing/drafts" });
   const r = runDoctor(dir, { cliPapers: "writing/drafts" });
-  check("нет ключа в package.json — ОТКАЗ, а не бодрый отчёт", r.code === 2);
+  check("установка по документации — ОТКАЗ, а не бодрый отчёт", r.code === 2);
   check(
     "и названы ОБА каталога, чтобы расхождение было видно, а не выведено",
     /will lint\s+writing\/drafts/.test(r.out) && /will guard\s+papers/.test(r.out),
@@ -89,6 +89,24 @@ const runDoctor = (dir, { cliPapers = null, have = () => 0 } = {}) => {
   check(
     "и подсказано, где статьи ЛЕЖАТ на самом деле — измерено, а не угадано",
     /papers look like they live in: writing\/drafts/.test(r.out),
+  );
+  rmSync(dir, { recursive: true, force: true });
+}
+
+// ── II-бис. ПРОПАВШАЯ ДЕКЛАРАЦИЯ, КОТОРАЯ ПОКА НЕ ВРЕДИТ ───────────────────────────────────
+// Статьи лежат ровно там, куда указывает умолчание хука. Установка РАБОТАЕТ — по совпадению.
+// Падать тут нельзя (ложное срабатывание уровня error дороже пропуска), но и молчать нельзя.
+{
+  const dir = consumer({ papersDir: "papers", rppJson: "papers" });
+  const r = runDoctor(dir, { cliPapers: "papers" });
+  check("работающая по совпадению установка НЕ валится", r.code === 0);
+  check(
+    "но пропавшая декларация НАЗВАНА, а не пропущена",
+    /⚠ package\.json has no "research-paper-pipeline"/.test(r.out),
+  );
+  check(
+    "и сказано, чем именно это опасно — работает, пока каталог не переедет",
+    /works only while your papers happen to live there/.test(r.out),
   );
   rmSync(dir, { recursive: true, force: true });
 }

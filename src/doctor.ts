@@ -25,7 +25,7 @@ import { join, relative, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 // @ts-expect-error — the hook ships as .mjs and carries no types; see the block above for why the
 // import points at the hook itself rather than at a shared module.
-import { papersRoot, CONFIG_KEY } from "../hooks/paper-edit-guard.hook.mjs";
+import { papersRoot, CONFIG_KEY, DEFAULT_PAPERS_ROOT } from "../hooks/paper-edit-guard.hook.mjs";
 import { PAPER_MARKERS } from "./build.ts";
 
 export interface Program {
@@ -127,12 +127,22 @@ export function doctor({
         return undefined;
       }
     })();
+    // 🔴 ПРОПАВШАЯ ДЕКЛАРАЦИЯ — ПРЕДУПРЕЖДЕНИЕ, А НЕ ОТКАЗ, и это решение, а не недосмотр.
+    // Без неё хук берёт умолчание `papers`; если статьи там и лежат, установка РАБОТАЕТ — просто
+    // по совпадению, и сломается молча в день переезда каталога. Падать на работающей установке
+    // здесь нельзя: для проверки уровня `error` ложное срабатывание дороже пропуска, потому что
+    // чинят не её, а выключают — вместе с бинарными находками ниже, ради которых команда и
+    // написана. Настоящая поломка (корни разъехались, каталог не существует) ловится там, где
+    // она бинарна.
     out.push(
       declared === undefined
-        ? `  ✗ package.json has no "${CONFIG_KEY}": { "papers": … } — the hooks will fall back to a guess`
+        ? `  ⚠ package.json has no "${CONFIG_KEY}": { "papers": … } — the hooks fall back to "${DEFAULT_PAPERS_ROOT}"`
         : `  ✓ package.json → ${CONFIG_KEY}.papers = ${JSON.stringify(declared)}`,
     );
-    if (declared === undefined) bad++;
+    if (declared === undefined)
+      out.push(
+        `      it works only while your papers happen to live there; declare it and it keeps working`,
+      );
   }
   if (existsSync(join(root, "rpp.json")))
     out.push(`  ⚠ rpp.json is present — deprecated; the hooks never read it`);
