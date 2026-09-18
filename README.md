@@ -19,8 +19,9 @@ Not on npm yet — install from GitHub, pinned to a commit:
 
 ```sh
 npm i -D github:zernie/research-paper-pipeline#<commit-sha>
-npx rpp init   # writes rpp.json and prints the next steps
-npx rpp lint   # runs every rule over the directory rpp.json names
+npx rpp init               # writes rpp.json and prints the next steps
+npx rpp lint               # runs every rule over the directory rpp.json names
+npx rpp build <paper>      # builds one paper with ITS OWN build script
 ```
 
 `rpp lint` finds `rpp.json` by walking up from the current directory, the way eslint and tsc find
@@ -215,6 +216,35 @@ of flags.
 
 `papers` is required because the directory is the one thing the tool cannot guess and must not
 default: a default of `"."` turns every run into a green report over the whole checkout.
+
+## Building a paper
+
+```sh
+npx rpp build papers/my-paper     # one paper — the target is named, like `make` or `docker build`
+npx rpp build --all               # every paper under `papers`; opt-in, never the default
+npx rpp build --all --dry-run     # name the script that WOULD run, and where none exists
+```
+
+`rpp build` does not compile anything itself. It finds the paper's **own** build script and runs
+it, because building a paper is not a generic loop: one paper in the corpus this was written
+against needs `TEXINPUTS` pointing at venue files its preamble `\input`s, another runs a dozen
+compiles hunting the right position for `\balance`. A package that has never seen your paper
+cannot know either.
+
+It looks for these, in order, and the first one found wins:
+
+| path                        |                                                        |
+| --------------------------- | ------------------------------------------------------ |
+| `build.sh`                  | in the paper directory — what you see when you open it |
+| `repro/build-submission.sh` | the reproduction-artifact convention                   |
+
+Override with `"buildScripts": [...]` in `rpp.json`.
+
+**A paper with no build script is a FAILURE, not a skip**, and that is the whole point of the
+command. The corpus this came from had a CI loop looking for `repro/build-submission.sh` while the
+accepted paper shipped `build.sh`; the mismatch read as "nothing to build", and the paper reached
+its venue without a single paper job having run on it. `--dry-run` answers "which papers can
+nobody build?" in a second, without spending twenty compiles to ask.
 
 ## Required files
 

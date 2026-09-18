@@ -37,6 +37,14 @@ import {
   formatStructure,
   asEslintResults,
 } from "./structure.mjs";
+import {
+  BUILD_SCRIPTS,
+  buildPaper,
+  papersIn,
+  formatResults,
+  anyFailed,
+  remedyFor,
+} from "./build.mjs";
 
 import paperStages from "../eslint-rules/paper-stages.mjs";
 import researchQuestion from "../eslint-rules/paper-research-question.mjs";
@@ -50,6 +58,8 @@ const USAGE = `research-paper-pipeline — machine-checkable gates for a paper k
 
   npx rpp init [dir]                  set the project up: writes rpp.json, prints what to paste
   npx rpp lint [paths…]               run every rule over your papers
+  npx rpp build <paper> | --all       build a paper with ITS OWN build script
+                                      (--dry-run: name the script that WOULD run, and where none exists)
   npx rpp hook <name>                 run an editor hook (the plugin wiring calls this)
   npx rpp --help
 
@@ -176,6 +186,8 @@ export function parseArgs(argv) {
     paths: [],
     config: null,
     json: false,
+    all: false,
+    dryRun: false,
     // -1 = предупреждения НИКОГДА не валят прогон. В этом наборе большинство находок
     // советательные по замыслу, а гейт, падающий на совете, глушат целиком.
     maxWarnings: -1,
@@ -185,6 +197,8 @@ export function parseArgs(argv) {
   for (let i = 0; i < rest.length; i++) {
     const a = rest[i];
     if (a === "--json") out.json = true;
+    else if (a === "--all") out.all = true;
+    else if (a === "--dry-run") out.dryRun = true;
     // `--options` was the first spelling and is kept working. It named the wrong thing — every
     // other tool in the stack calls this file its config — but a flag in someone's CI is not
     // ours to break.
@@ -215,6 +229,58 @@ export function findConfig(startDir) {
     if (up === dir) return null;
     dir = up;
   }
+}
+
+/**
+ * Чтение конфига, ОДНО на все команды. Вынесено из `run()` в момент, когда появилась вторая
+ * команда, которой нужен тот же конфиг (`build`): две копии этого блока разъехались бы на
+ * первой же правке — ровно тот класс, что уже стоил нам сторожа пустого набора в двух местах.
+ *
+ * @returns `{ opts, configPath }` при успехе либо `{ code }` — и тогда вызывающий выходит им.
+ */
+export function readConfig(
+  a,
+  { log = console.log, err = console.error, cwd = process.cwd() } = {},
+) {
+  // 🔴 КОНФИГ ИЩЕТСЯ САМ. Явный `--config` побеждает найденный — он назван вслух, и подмена
+  // молчаливой не бывает.
+  const configPath = a.config ?? findConfig(cwd);
+  if (a.config && !existsSync(a.config)) {
+    err(`config file not found: ${a.config}`);
+    return { code: 2 };
+  }
+
+  let opts = {};
+  if (configPath) {
+    try {
+      opts = JSON.parse(readFileSync(configPath, "utf8"));
+    } catch (e) {
+      err(`${configPath} is not valid JSON: ${e.message}`);
+      return { code: 2 };
+    }
+    // Найденный конфиг НАЗЫВАЕТСЯ вслух. Иначе прогон из чужого каталога подхватывает чужой
+    // файл и об этом не говорит — а расхождение долга типографики выглядит как находка.
+    //
+    // 🔴 В РЕЖИМЕ `--json` — В stderr. Машинный вывод обязан быть ОДНИМ разбираемым документом:
+    // строка перед массивом ломает любой `| jq`, а сломает она его у потребителя, не у нас.
+    // Поймано не тестом, а попыткой подключить к этому выводу собственный экшен; в харнессе
+    // я эту строку сначала ОБХОДИЛ (срезал первую строку перед JSON.parse) — то есть обход
+    // прятал дефект ровно там, где он должен был кричать.
+    (a.json ? err : log)(`config: ${relative(cwd, configPath) || CONFIG_NAME}`);
+  }
+
+  // 🔴 `papers` — ОБЯЗАТЕЛЬНОЕ ПОЛЕ. Каталог статей — единственное, без чего инструмент не
+  // знает, над чем он работает, и единственное, чего нельзя угадать: умолчание "." прогоняет
+  // правила по всему чекауту и выходит зелёным по охвату, который никто не выбирал.
+  if (configPath && !hasPapers(opts)) {
+    err(
+      `${configPath} must declare \`papers\` — the directory your papers live in, e.g.\n` +
+        `  { "papers": "papers" }\n` +
+        `It is the one thing this tool cannot guess.`,
+    );
+    return { code: 2 };
+  }
+  return { opts, configPath };
 }
 
 /**
@@ -372,6 +438,53 @@ export function runHook(
   return r.status ?? 0;
 }
 
+/**
+ * 🔴 ЦЕЛЬ НАЗЫВАЕТСЯ, «ВСЁ» — ОПЦИЯ. Так устроено у всех, у кого сборка дорогая и с побочными
+ * эффектами: `make <target>`, `docker build <context>`, `latexmk paper.tex`; «весь workspace»
+ * у cargo включается отдельным флагом. Умолчание «собрать всё» на корпусе из пяти статей —
+ * это двадцать прогонов pdflatex вместо одного, и почти всегда не то, чего хотели.
+ */
+function runBuild(a, { log, err, cwd }) {
+  const cfg = readConfig(a, { log, err, cwd });
+  if (cfg.code !== undefined) return cfg.code;
+  const { opts, configPath } = cfg;
+  const candidates =
+    Array.isArray(opts.buildScripts) && opts.buildScripts.length
+      ? opts.buildScripts
+      : BUILD_SCRIPTS;
+  const roots = toPaths(opts.papers).map((rel) =>
+    resolve(configPath ? dirname(configPath) : cwd, rel),
+  );
+
+  let targets;
+  if (a.all) {
+    targets = roots.flatMap((r) => papersIn(r));
+    if (targets.length === 0) {
+      err(
+        `--all: ни одной статьи не нашлось под ${roots.join(", ") || "(не задано)"}`,
+      );
+      return 1;
+    }
+  } else if (a.paths.length > 0) {
+    targets = a.paths.map((p) => resolve(cwd, p));
+  } else {
+    err(
+      `\`build\` нужна цель: \`rpp build papers/my-paper\` либо \`rpp build --all\`.\n` +
+        `Умолчания «собрать всё» здесь нет намеренно — сборка дорогая и с побочными эффектами,\n` +
+        `поэтому цель называют, как у make, docker и latexmk.`,
+    );
+    return 2;
+  }
+
+  const results = targets.map((t) =>
+    buildPaper(t, { candidates, cwd, dryRun: a.dryRun }),
+  );
+  log(formatResults(results));
+  const remedy = remedyFor(results, candidates);
+  if (remedy) err(remedy);
+  return anyFailed(results) ? 1 : 0;
+}
+
 export async function run(
   argv,
   { log = console.log, err = console.error, cwd = process.cwd() } = {},
@@ -383,6 +496,7 @@ export async function run(
   }
   if (a.cmd === "init") return init(a.paths[0] ?? ".", { log });
   if (a.cmd === "hook") return runHook(a.paths[0], { err });
+  if (a.cmd === "build") return runBuild(a, { log, err, cwd });
   if (a.cmd === "check")
     err(
       `\`check\` is now \`lint\` — running it anyway. Update the call to \`rpp lint\`.`,
@@ -392,44 +506,9 @@ export async function run(
     return 2;
   }
 
-  // 🔴 КОНФИГ ИЩЕТСЯ САМ. Явный `--config` побеждает найденный — он назван вслух, и подмена
-  // молчаливой не бывает.
-  const configPath = a.config ?? findConfig(cwd);
-  if (a.config && !existsSync(a.config)) {
-    err(`config file not found: ${a.config}`);
-    return 2;
-  }
-
-  let opts = {};
-  if (configPath) {
-    try {
-      opts = JSON.parse(readFileSync(configPath, "utf8"));
-    } catch (e) {
-      err(`${configPath} is not valid JSON: ${e.message}`);
-      return 2;
-    }
-    // Найденный конфиг НАЗЫВАЕТСЯ вслух. Иначе прогон из чужого каталога подхватывает чужой
-    // файл и об этом не говорит — а расхождение долга типографики выглядит как находка.
-    //
-    // 🔴 В РЕЖИМЕ `--json` — В stderr. Машинный вывод обязан быть ОДНИМ разбираемым документом:
-    // строка перед массивом ломает любой `| jq`, а сломает она его у потребителя, не у нас.
-    // Поймано не тестом, а попыткой подключить к этому выводу собственный экшен; в харнессе
-    // я эту строку сначала ОБХОДИЛ (срезал первую строку перед JSON.parse) — то есть обход
-    // прятал дефект ровно там, где он должен был кричать.
-    (a.json ? err : log)(`config: ${relative(cwd, configPath) || CONFIG_NAME}`);
-  }
-
-  // 🔴 `papers` — ОБЯЗАТЕЛЬНОЕ ПОЛЕ. Каталог статей — единственное, без чего инструмент не
-  // знает, над чем он работает, и единственное, чего нельзя угадать: умолчание "." прогоняет
-  // правила по всему чекауту и выходит зелёным по охвату, который никто не выбирал.
-  if (configPath && !hasPapers(opts)) {
-    err(
-      `${configPath} must declare \`papers\` — the directory your papers live in, e.g.\n` +
-        `  { "papers": "papers" }\n` +
-        `It is the one thing this tool cannot guess.`,
-    );
-    return 2;
-  }
+  const cfg = readConfig(a, { log, err, cwd });
+  if (cfg.code !== undefined) return cfg.code;
+  const { opts, configPath } = cfg;
 
   // Аргумент командной строки ПЕРЕОПРЕДЕЛЯЕТ конфиг: одна статья из корпуса линтуется без
   // правки файла.
