@@ -11,7 +11,8 @@
     "check:globs": "node scripts/exclusive.mjs node scripts/rules-see-files.mjs",
     "check:content-only": "node scripts/exclusive.mjs node scripts/rules-are-content-only.mjs",
     "check:readme": "node scripts/exclusive.mjs node scripts/readme-numbers.mjs",
-    "test:sabotage": "node scripts/exclusive.mjs node scripts/run-mutations.mjs"
+    "test:sabotage": "node scripts/exclusive.mjs node scripts/run-mutations.mjs",
+    "test:install": "node scripts/exclusive.mjs node scripts/install-e2e.mjs"
   },
   "dependencies": {
     "@eslint/markdown": "^8.0.3",

@@ -26,7 +26,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const { run, parseArgs, buildConfig, nextSteps, findConfig, toPaths } =
+const { run, parseArgs, buildConfig, nextSteps, findConfig, toPaths, runHook } =
   await import(join(HERE, "rpp.mjs"));
 
 let n = 0;
@@ -518,6 +518,83 @@ check(
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+}
+
+// ── `rpp hook` — РАНТАЙМ РЕЗОЛВИТСЯ ОТ ПАКЕТА, А НЕ ОТ КОРНЯ ПРОЕКТА ────────────────────
+//
+// 🔴 Замер, породивший эту команду: один тарбол, два менеджера.
+//     npm:  node_modules/vigiles/dist/cli.js  ЕСТЬ
+//     pnpm: node_modules/vigiles/dist/cli.js  НЕТ
+// Прежняя проводка адресовала рантайм от корня проекта и на pnpm не резолвилась, а `|| exit 2`
+// на PreToolUse(Bash) превращал это в блокировку ЛЮБОЙ команды. Сквозная половина (обе
+// установки, настоящие процессы) живёт в `scripts/install-e2e.mjs`; здесь — вердикты.
+{
+  const calls = [];
+  const fake = (code) => (bin, args, opts) => {
+    calls.push({ bin, args, opts });
+    return { status: code };
+  };
+  let said = "";
+  const err = (...a) => {
+    said += a.join(" ") + "\n";
+  };
+
+  said = "";
+  check(
+    "без имени — отказ, и подсказан правильный вызов",
+    runHook(undefined, { err }) === 2 && /rpp hook paper-edit-guard/.test(said),
+  );
+
+  said = "";
+  check(
+    "неизвестный хук НАЗЫВАЕТСЯ вместе с путём, по которому его искали",
+    runHook("no-such-hook", { err }) === 2 &&
+      /unknown hook `no-such-hook`/.test(said) &&
+      /no-such-hook\.hook\.mjs/.test(said),
+  );
+
+  // 🔴 ГЛАВНЫЙ АССЕРТ. Ненайденный рантайм НЕ ИМЕЕТ ПРАВА вернуть 2: на PreToolUse это
+  // блокирует любую Bash-команду, включая ту, которой чинят. Он обязан ГРОМКО сказать и
+  // пропустить. Молчаливая деградация хуже явной, но блокировка всего хуже обеих.
+  said = "";
+  calls.length = 0;
+  const brokenResolve = () => {
+    throw new Error("Cannot find module 'vigiles/dist/cli.js'");
+  };
+  const code = runHook("paper-edit-guard", {
+    err,
+    run: fake(0),
+    resolve: brokenResolve,
+  });
+  check(
+    "рантайм не резолвится — НЕ блокируем работу (код 0, а не 2)",
+    code === 0,
+  );
+  check(
+    "и жалоба ГРОМКАЯ: назван хук, назван эффект, назано лекарство",
+    /paper-edit-guard/.test(said) &&
+      /is NOT running/.test(said) &&
+      /Reinstall this package/.test(said),
+  );
+  check("и при этом рантайм НЕ запускался", calls.length === 0);
+
+  // Настоящий вердикт хука проходит насквозь — иначе страж перестаёт быть стражем.
+  calls.length = 0;
+  check(
+    "вердикт хука проходит НАСКВОЗЬ: 2 остаётся 2",
+    runHook("paper-edit-guard", { err, run: fake(2) }) === 2,
+  );
+  check(
+    "и запускается ИМЕННО рантайм с программой этого хука",
+    calls.length === 1 &&
+      calls[0].args[1] === "hook-runtime" &&
+      calls[0].args[2] === "run-program" &&
+      /paper-edit-guard\.hook\.mjs$/.test(calls[0].args[3]),
+  );
+  check(
+    "ноль остаётся нулём",
+    runHook("paper-skills-nudge", { err, run: fake(0) }) === 0,
+  );
 }
 
 // ── ЗАПУСК ЧЕРЕЗ СИМЛИНК — единственный способ, которым утилиту зовёт потребитель ───────

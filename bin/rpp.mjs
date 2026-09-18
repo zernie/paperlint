@@ -26,6 +26,9 @@
  */
 import { ESLint } from "eslint";
 import { readFileSync, existsSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { join, dirname, resolve, relative } from "node:path";
 import markdown from "@eslint/markdown";
 import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
@@ -47,6 +50,7 @@ const USAGE = `research-paper-pipeline — machine-checkable gates for a paper k
 
   npx rpp init [dir]                  set the project up: writes rpp.json, prints what to paste
   npx rpp lint [paths…]               run every rule over your papers
+  npx rpp hook <name>                 run an editor hook (the plugin wiring calls this)
   npx rpp --help
 
 lint:
@@ -292,6 +296,82 @@ export function toPaths(papers) {
 
 const hasPapers = (opts) => toPaths(opts.papers).length > 0;
 
+/**
+ * `rpp hook <name>` — запустить редакторский хук. Существует ради ОДНОЙ вещи: чтобы проводка
+ * не адресовала рантайм от корня проекта.
+ *
+ * 🔴 ЧТО БЫЛО И ПОЧЕМУ ЭТО ЛОМАЛОСЬ. `hooks.json` звал
+ *     node "${CLAUDE_PROJECT_DIR}/node_modules/vigiles/dist/cli.js" hook-runtime run-program …
+ * Пока `vigiles` был PEER-зависимостью, этот путь ГАРАНТИРОВАЛСЯ: peer ставит сам потребитель,
+ * в свой корень. После перевода в обычные зависимости гарантии не стало, и замер это показал —
+ * один тарбол, два менеджера:
+ *     npm:  node_modules/vigiles/dist/cli.js   ЕСТЬ
+ *     pnpm: node_modules/vigiles/dist/cli.js   НЕТ (в корне только research-paper-pipeline)
+ * Цена отказа несимметрична: `|| exit 2` стоял на PreToolUse(Bash), то есть денаилась ЛЮБАЯ
+ * команда, включая ту, которой чинят.
+ *
+ * ЧТО ТЕПЕРЬ. Проводка зовёт СВОЙ бин — `research-paper-pipeline` прямая зависимость, поэтому
+ * лежит в корне у любого менеджера, — а рантайм резолвится ОТ ПОЛОЖЕНИЯ ЭТОГО ФАЙЛА через
+ * `createRequire`. Где бы менеджер ни разложил дерево, резолвер найдёт то же, что нашёл бы
+ * `import` изнутри пакета.
+ *
+ * 🔴 И `|| exit 2` УБРАН ИЗ ОБОЛОЧКИ. Решение об остановке — это решение, и оно принимается
+ * здесь, кодом. В shell оно означало «любая незадача = блокировать всё»: не нашёлся рантайм —
+ * встала работа. Теперь ненайденный рантайм ГРОМКО жалуется и возвращает 0, а настоящий вердикт
+ * хука (включая 2) проходит насквозь. Молчаливая деградация хуже явной, но блокировка всего
+ * хуже обеих.
+ */
+export function runHook(
+  name,
+  {
+    err = console.error,
+    run = spawnSync,
+    // Резолвер инъектируется, чтобы «рантайм не нашёлся» проверялось ассертом, а не сносом
+    // node_modules: отказ обязан быть воспроизводим, а не обставляем.
+    // 🔴 РЕЗОЛВИМ ПАКЕТ, А НЕ ФАЙЛ В НЁМ. `require.resolve("vigiles/dist/cli.js")` НЕ РАБОТАЕТ:
+    // карта `exports` пакета отдаёт только «.» и девять именованных подпутей, а `./dist/cli.js`
+    // и даже `./package.json` среди них нет —
+    //     Package subpath './dist/cli.js' is not defined by "exports"
+    // Это не наша оплошность и не их баг: закрытая карта экспортов — нормальная практика.
+    // Поэтому резолвим корневой вход («.» → dist/test.js), берём его каталог и кладём рядом
+    // `cli.js` — тот самый файл, который сам пакет объявляет своим `bin`.
+    resolve = (spec) => createRequire(import.meta.url).resolve(spec),
+  } = {},
+) {
+  if (!name) {
+    err(`\`hook\` needs a name, e.g. \`rpp hook paper-edit-guard\``);
+    return 2;
+  }
+  const program = fileURLToPath(
+    new URL(`../hooks/${name}.hook.mjs`, import.meta.url),
+  );
+  if (!existsSync(program)) {
+    err(`unknown hook \`${name}\` — no such program at ${program}`);
+    return 2;
+  }
+  let runtime;
+  try {
+    runtime = join(dirname(resolve("vigiles")), "cli.js");
+    if (!existsSync(runtime))
+      throw new Error(`resolved vigiles, but no cli.js beside it: ${runtime}`);
+  } catch {
+    err(
+      `rpp: the hook runtime (vigiles) is not resolvable from ${fileURLToPath(new URL(".", import.meta.url))}.\n` +
+        `The \`${name}\` hook is NOT running. Everything else — \`rpp lint\`, CI — is unaffected.\n` +
+        `Reinstall this package so its dependencies are present.`,
+    );
+    return 0;
+  }
+  const r = run(
+    process.execPath,
+    [runtime, "hook-runtime", "run-program", program],
+    {
+      stdio: "inherit",
+    },
+  );
+  return r.status ?? 0;
+}
+
 export async function run(
   argv,
   { log = console.log, err = console.error, cwd = process.cwd() } = {},
@@ -302,6 +382,7 @@ export async function run(
     return a.help ? 0 : 2;
   }
   if (a.cmd === "init") return init(a.paths[0] ?? ".", { log });
+  if (a.cmd === "hook") return runHook(a.paths[0], { err });
   if (a.cmd === "check")
     err(
       `\`check\` is now \`lint\` — running it anyway. Update the call to \`rpp lint\`.`,
