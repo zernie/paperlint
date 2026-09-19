@@ -4,7 +4,7 @@ description: Use when asking "what would the program committee decide?" / "simul
 allowed-tools: [Read, Write, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:7a702253694609da compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:9622701a349ea249 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
 
 # pc-panel-review — model the whole PC, not one reviewer
 
