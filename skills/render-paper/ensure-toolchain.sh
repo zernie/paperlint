@@ -200,7 +200,7 @@ REQUIRED_FILES=(
 # build two steps later, and the consumer looked like the guilty party.
 #   tex — must end up in the TeX Live tree after the install; CTAN_PACKAGES is responsible for that
 #   apt — arrives as a separate system package, it must not be looked for in the TeX tree
-REQUIRED_BINS=(pdflatex:tex bibtex:tex pdfinfo:apt texcount:tex)
+REQUIRED_BINS=(pdflatex:tex bibtex:tex pdfinfo:apt pdffonts:apt texcount:tex)
 
 # The name without the marker — for checks along `PATH`, to which the supplier is irrelevant.
 bin_name() { printf '%s' "${1%%:*}"; }

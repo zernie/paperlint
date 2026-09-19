@@ -284,14 +284,39 @@ jobs:
       - name: TeX to PATH
         run: echo "$HOME/texlive/bin/x86_64-linux" >> "$GITHUB_PATH"
 
+      # The `:apt` half of the toolchain. TeX Live supplies the `:tex` binaries and nothing else;
+      # `pdfinfo` and `pdffonts` ship with poppler, which apt owns. Both halves are declared in ONE
+      # place — REQUIRED_BINS in ensure-toolchain.sh — and this step reads that declaration rather
+      # than naming packages again, so a binary added there cannot be silently uninstalled here.
+      - name: install the apt-supplied tools
+        run: |
+          set -euo pipefail
+          need=$(sed -n '/^REQUIRED_BINS=(/,/)$/p' skills/render-paper/ensure-toolchain.sh \
+                 | tr ' ' '\n' | sed -e 's/^REQUIRED_BINS=(//' -e 's/)$//' \
+                 | grep ':apt$' | sed 's/:apt$//' | grep -v '^$' | tr '\n' ' ')
+          [ -n "$need" ] || { echo "REQUIRED_BINS parsed empty — the parse is broken"; exit 1; }
+          echo "apt-supplied binaries declared: $need"
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends poppler-utils
+
       # 🔴 VERIFY THE INSTALL, NOT THE EXIT CODE. `exit=0` and empty output mean "installed" — the
       # installer once in this corpus downloaded ZERO packages and reported success. The
       # acmart fonts are checked by name, because without ANY of them the class silently falls back to
       # Computer Modern — which is precisely why this entire job exists.
+      #
+      # 🔴 THE BINARY LIST IS DERIVED, NOT TYPED. It used to read `for b in pdflatex pdffonts`, and
+      # that hand-written pair had already drifted from the declaration: `pdffonts` was in the loop
+      # and NOT in REQUIRED_BINS, while the `:apt` entries were declared and never installed. The job
+      # went red on its first CI run (PR #41) demanding a binary nobody had promised to provide.
       - name: tools and fonts ACTUALLY in place
         run: |
           set -euo pipefail
-          for b in pdflatex pdffonts; do command -v "$b" >/dev/null || { echo "missing $b"; exit 1; }; done
+          need=$(sed -n '/^REQUIRED_BINS=(/,/)$/p' skills/render-paper/ensure-toolchain.sh \
+                 | tr ' ' '\n' | sed -e 's/^REQUIRED_BINS=(//' -e 's/)$//' \
+                 | grep -E ':(tex|apt)$' | sed 's/:.*$//' | grep -v '^$' | tr '\n' ' ')
+          [ -n "$need" ] || { echo "REQUIRED_BINS parsed empty — the parse is broken"; exit 1; }
+          for b in $need; do command -v "$b" >/dev/null || { echo "missing $b"; exit 1; }; done
+          echo "present: $need"
           for f in acmart.cls libertine.sty zi4.sty newtxmath.sty; do
             kpsewhich "$f" >/dev/null || { echo "missing $f — acmart will SILENTLY fall back to Computer Modern"; exit 1; }
           done
