@@ -36,30 +36,56 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const KEEP = process.argv.includes("--keep");
+// See `managers()`: a manager that will not launch is a declared skip here and a failure in CI.
+const STRICT = process.argv.includes("--strict");
 
 const sh = (cmd, args, opts = {}) =>
   spawnSync(cmd, args, { encoding: "utf8", ...opts });
 
-/** A manager counts as available only if it actually launches. */
+/**
+ * The managers this run is SUPPOSED to measure, declared as data with the reason each is here.
+ * A list, because "which managers did this run actually cover" has to be answerable from the
+ * output — not inferred from how many `──` headers scrolled past.
+ */
+const WANTED = [
+  {
+    name: "npm",
+    probe: ["npm", ["--version"]],
+    install: (tgz) => ["npm", ["install", "--silent", tgz]],
+    why: "the default; `.bin` holds a symlink to the .mjs",
+  },
+  {
+    name: "pnpm",
+    probe: ["pnpm", ["--version"]],
+    install: (tgz) => ["pnpm", ["install", "--silent", tgz]],
+    why:
+      "does NOT put transitive dependencies at the project root, and `.bin` holds a shell " +
+      "wrapper rather than a symlink — both have already broken this package",
+  },
+];
+
+/**
+ * Split WANTED into the managers that launch here and the ones that do not.
+ *
+ * 🔴 WHY THIS RETURNS THE MISSING ONES INSTEAD OF DROPPING THEM. The first edition simply
+ * skipped a manager that would not start, and only failed when NONE would. So on a machine
+ * without pnpm the run measured npm alone and said nothing about it — and pnpm is the entire
+ * reason this file exists. "pnpm passed" and "pnpm was never tried" printed identically.
+ *
+ * That is the failure class this package is written against, reproduced inside it: a skipped
+ * check and a passed one look the same. `build-e2e.mjs` already had the cure — declare the skip,
+ * and let `--strict` turn it into a failure where absence means a broken environment.
+ */
 function managers() {
-  const out = [];
-  for (const [name, probe, install] of [
-    [
-      "npm",
-      ["npm", ["--version"]],
-      (tgz) => ["npm", ["install", "--silent", tgz]],
-    ],
-    [
-      "pnpm",
-      ["pnpm", ["--version"]],
-      (tgz) => ["pnpm", ["install", "--silent", tgz]],
-    ],
-  ]) {
-    const r = sh(probe[0], probe[1]);
+  const available = [];
+  const missing = [];
+  for (const m of WANTED) {
+    const r = sh(m.probe[0], m.probe[1]);
     if (r.status === 0)
-      out.push({ name, version: (r.stdout ?? "").trim(), install });
+      available.push({ ...m, version: (r.stdout ?? "").trim() });
+    else missing.push(m);
   }
-  return out;
+  return { available, missing };
 }
 
 /**
@@ -197,11 +223,29 @@ try {
   if (!existsSync(tgz)) throw new Error(`npm pack left no tarball: ${tgz}`);
   console.log(`tarball: ${packed}\n`);
 
-  const mgrs = managers();
-  if (mgrs.length === 0)
+  const { available, missing } = managers();
+  if (available.length === 0)
     throw new Error("not a single package manager launches");
 
-  for (const m of mgrs) {
+  // A declared skip, never a silent one. In STRICT it is a failure: in CI a manager that is not
+  // installed is a broken environment, and this run's whole point is the npm/pnpm difference.
+  if (missing.length) {
+    for (const m of missing) {
+      const say = `NOT MEASURED: ${m.name} does not launch on this machine — ${m.why}`;
+      if (STRICT) console.error(`  \u{1F534} ${say}`);
+      else console.log(`  \u26A0\uFE0F  ${say} (a legitimate skip for a clone without it; --strict makes it a failure)`);
+    }
+    if (STRICT) {
+      console.error(
+        `\nIn --strict a missing manager is a FAILURE: measuring ${available.map((m) => m.name).join(", ")} ` +
+          `alone is indistinguishable, in the output, from measuring all of them.`,
+      );
+      process.exitCode = 1;
+    }
+  }
+  console.log(`measured under: ${available.map((m) => m.name).join(", ")}\n`);
+
+  for (const m of available) {
     const consumer = join(work, `consumer-${m.name}`);
     mkdirSync(consumer, { recursive: true });
     writeFileSync(

@@ -187,8 +187,20 @@ jobs:
 
 
 
-      - name: npm run test:install
-        run: npm run test:install
+      # pnpm is INSTALLED here rather than hoped for. The runner image may or may not carry it,
+      # and the npm/pnpm difference is the entire reason the install e2e exists — so leaving it
+      # to the image means the half that matters most is covered by luck. `corepack` ships with
+      # Node, so this costs a second and no network round-trip to a third-party action.
+      - name: enable pnpm
+        run: corepack enable pnpm
+        timeout-minutes: 2
+
+      # Called directly, not through `npm run`: the --strict flag must reach the script, and
+      # `npm run test:install -- --strict` adds a layer easily lost in edits. Same reasoning as
+      # the build e2e below. --strict: a manager that does not launch is a declared skip on a
+      # contributor's clone and a FAILURE here, because in CI it means a broken environment.
+      - name: install e2e (--strict)
+        run: node scripts/install-e2e.mjs --strict
         timeout-minutes: 10
 
   # ── macOS BY LABEL, NOT IN MATRIX ───────────────────────────────────────────────────────────────
