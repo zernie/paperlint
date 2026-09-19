@@ -1,0 +1,22 @@
+{
+  "$comment": [
+    "What the rules say about this article TODAY, as data rather than as a sentence in a docblock.",
+    "It is not a target and not a clean bill of health — the fixture's README says findings here",
+    "are measurements. Its job is the SILENCE half: a rule that starts reporting something new on",
+    "225 lines of real prose has almost certainly gained a false positive, and the harness beside",
+    "this file names the rule. That is not expressible on an eleven-line stub, where every line was",
+    "written by someone who already knew which rule would read it.",
+    "",
+    "Recorded 2026-09-19. Three of the five are about the scorecard being deliberately thin",
+    "(no pdf, no frozen source) rather than about the prose; paper/typography's single entry is",
+    "the 18 p-values of rpp#44, and it is expected to DROP to zero when that is fixed — a drop is",
+    "never a failure here, only growth is."
+  ],
+  "findings": {
+    "paper/stages": 2,
+    "paper/source": 1,
+    "paper/author-list": 1,
+    "paper/research-question": 1,
+    "paper/typography": 1
+  }
+}
