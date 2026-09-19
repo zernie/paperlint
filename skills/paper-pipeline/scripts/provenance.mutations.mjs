@@ -27,13 +27,13 @@ const MUTATIONS = [
   [
     "the scope gate is inverted",
     [[SRC, "if (!provenanceScope(dir).covered) return [];", "if (provenanceScope(dir).covered) return [];"]],
-    "замер покрытия обязан печататься всегда",
+    "coverage measurement must always print",
     "the in-scope/out-of-scope distinction: covered papers stop being checked and the report still prints",
   ],
   [
     "the numbers gate is removed",
     [[SRC, "return [...checkNumbersGate(dir)];", "return [];"]],
-    "замер покрытия обязан печататься всегда",
+    "coverage measurement must always print",
     "the only finding this checker can make — it becomes a script that always says clean",
   ],
 ];

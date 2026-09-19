@@ -21,13 +21,13 @@
  * as a pass; an earlier harness in this directory exported a `tests` object, nothing ran, and the
  * runner printed ✓ over `assert.equal(1, 2)`. Straight-line code that throws.
  *
- * 🔴 ЗДЕСЬ СТОЯЛО «известные-красные откладываются через `soft()` и перебрасываются внизу, поэтому
- * одна открытая находка не пропустит проверки после себя» — И ЭТО БЫЛО НЕПРАВДОЙ (найдено
- * `no-unused-vars` 2026-08-28). `soft()` был объявлен и НЕ ВЫЗЫВАЛСЯ НИ РАЗУ: `deferred` всегда
- * пуст, блок перебрасывания внизу недостижим, и первый упавший ассерт обрывает остальные — ровно
- * то поведение, которое абзац объявлял устранённым. Механизм удалён вместе с обещанием; включать
- * его обратно значит обернуть в `soft()` сами ассерты (490 строк), а это отдельная работа, не
- * побочный эффект правки линта. Дыра названа, а не заметена.
+ * 🔴 THIS CLAIMED «known-red failures are deferred via `soft()` and re-thrown at the end, so one
+ * open finding will not slip past the checks behind it» — AND THAT WAS FALSE (found via
+ * `no-unused-vars` 2026-08-28). `soft()` was declared and NEVER CALLED ONCE: `deferred` is always
+ * empty, the re-throw block at the end is unreachable, and the first failed assertion cuts off the rest —
+ * exactly the behaviour the paragraph claimed was eliminated. The mechanism was deleted along with the
+ * promise; putting it back means wrapping the assertions themselves in `soft()` (490 lines), and that is
+ * separate work, not a side effect of the lint fix. The hole is named, not swept under.
  *
  * 🔴 EVERY ASSERTION NAMES A MESSAGE, NOT ONLY A KIND. Two vacuous assertions were found in this
  * repository in one week, and one of them was exactly this: a check was deleted, a later branch

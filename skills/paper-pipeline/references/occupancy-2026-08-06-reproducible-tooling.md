@@ -391,33 +391,34 @@ table above is a wheel that already exists somewhere in this survey.
 
 ---
 
-## 🔴 Проверка запуском, 2026-08-24 — заметка исследовала 7 инструментов, внедрено 0
+## 🔴 Verified by running it, 2026-08-24 — the note surveyed 7 tools, adopted 0
 
-Замер в день проверки: `rebiber · citecheck · sciwrite-lint · fixbibtex · bibtex-tidy ·
-aclpubcheck` — **ноль упоминаний** вне этого файла (ни скилла, ни скрипта, ни хука). Сам файл
-цитируется только другими research-заметками. То есть исследование было хорошее и **ни разу не
-превратилось в решение**.
+Measured on the day of the check: `rebiber · citecheck · sciwrite-lint · fixbibtex · bibtex-tidy ·
+aclpubcheck` — **zero mentions** outside this file (no skill, no script, no hook). The file itself
+is cited only by other research notes. So the research was good and **never once turned into a
+decision**.
 
-**И три факта выше не выдержали запуска.** Это не придирка к автору заметки — это про метод:
-таблицу собирали чтением README и API, а не исполнением.
+**And three of the facts above did not survive being run.** This is not a jab at the note's
+author — it is about method: the table was built by reading READMEs and APIs, not by executing
+anything.
 
-| строка выше | что показал запуск 24.08 |
+| row above | what running it on 24.08 showed |
 |---|---|
-| `betterbib` — в таблице **отсутствует вовсе** | а он самый очевидный кандидат (`sync` против Crossref/**DBLP**/PubMed/arXiv). И он **БОЛЬШЕ НЕ OPEN-SOURCE**: `pip install` ставит компилированный бандл `.sfc` + `stonefish_license_manager`, импорт падает; сайт вендора (texworld) требует покупки лицензии. Не адоптируем — но знать это надо было до, а не после |
-| `citecheck` — «v0.1.12», «MCP server **+ TypeScript CLI**» | npm-реестр: версия **0.1.0**, опубликована 2026-04-11, единственный `bin` — `citecheck-mcp`. **CLI нет, это только MCP-сервер.** `npx … --help` печатает пустоту и выходит 0 |
-| `rebiber` — «does not verify title accuracy → No» | вердикт **верный по назначению и неверный по практике**: сам он не верифицирует, но **дифф его вывода против нашего** нашёл 24.08 два настоящих дефекта. Инструмент надо оценивать по тому, что даёт его ВЫВОД, а не по тому, как он себя рекламирует |
+| `betterbib` — **missing from the table entirely** | and it is the most obvious candidate (`sync` against Crossref/**DBLP**/PubMed/arXiv). And it is **NO LONGER OPEN-SOURCE**: `pip install` installs a compiled `.sfc` bundle + `stonefish_license_manager`, the import fails; the vendor's site (texworld) requires buying a license. Not adopting it — but this should have been known beforehand, not after |
+| `citecheck` — "v0.1.12", "MCP server **+ TypeScript CLI**" | npm registry: version **0.1.0**, published 2026-04-11, the only `bin` is `citecheck-mcp`. **There is no CLI, it is an MCP server only.** `npx … --help` prints nothing and exits 0 |
+| `rebiber` — "does not verify title accuracy → No" | the verdict is **right about its stated purpose and wrong in practice**: it does not verify by itself, but **diffing its output against ours** found two real defects on 24.08. A tool should be judged by what its OUTPUT gives you, not by how it advertises itself |
 
-⚠️ Плюс замеренная граница самого `rebiber`: его **локальный дамп** DBLP пропустил
-`raji2021benchmark`, который живой DBLP API нашёл сразу. Для сверки — обращаться к API.
+⚠️ Plus a measured limit of `rebiber` itself: its **local DBLP dump** missed
+`raji2021benchmark`, which the live DBLP API found immediately. For cross-checking, hit the API.
 
-**Что из этого следует для нашей площадки (AgenticDev @ ASE = ACM, DOI `10.1145/…`,
-ISBN `979-8-4007-…`):** офлайн-чекера сообщества для ACM нет **by design** — проверку делает
-издатель на своей стороне (формат-чекер HotCRP + TAPS), что строки 138–158 выше уже установили.
-Author-side готовый механизм для ACM-статьи — это **сам `acmart`**: 24.08 он честно печатал в
-`paper.log` три блокера camera-ready (шрифты не те → молчаливый Computer Modern; фигуры без
-`\Description`; отсутствующий CCS), и ни один не был прочитан. Подключено в
-`render-paper/check-render.sh` — двадцать строк грепа, не новый инструмент.
+**What follows from this for our venue (AgenticDev @ ASE = ACM, DOI `10.1145/…`,
+ISBN `979-8-4007-…`):** there is no community offline checker for ACM **by design** — the check is
+done publisher-side (the HotCRP format checker + TAPS), which lines 138–158 above already
+established. The ready-made author-side mechanism for an ACM paper is **`acmart` itself**: on
+24.08 it honestly printed three camera-ready blockers to `paper.log` (wrong fonts → silent
+Computer Modern; figures missing `\Description`; missing CCS), and none of them was read. Wired
+into `render-paper/check-render.sh` — twenty lines of grep, not a new tool.
 
-**Правило, ради которого этот блок дописан:** occupancy-заметка не закрыта, пока по каждой строке
-не записан вердикт **ADOPT / REJECT + причина**, и пока хотя бы ADOPT-строки не **запущены**.
-Таблица со звёздочками и версиями — это ещё не проверка занятости, это её черновик.
+**The rule this block was added for:** an occupancy note is not closed until every row has a
+recorded **ADOPT / REJECT + reason** verdict, and until at least the ADOPT rows have been **run**.
+A table of stars and version numbers is not an occupancy check yet — it is its draft.

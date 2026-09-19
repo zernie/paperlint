@@ -12,10 +12,15 @@
  * ALREADY RED BEFORE THE MUTATION. The last is why the baseline runs FIRST and its failure stops
  * the battery.
  *
- * ⚠️ Mutation 1 is the load-bearing one and it is deliberately asymmetric: it removes
- * `--no-config-lookup` from the COMMAND while leaving an occurrence inside a comment. A harness that
- * grepped the file would stay green; this one parses the YAML and addresses the step as a node, so
- * it dies. That is the whole argument for the parser, made executable.
+ * ⚠️ Mutation 1 is the load-bearing one and it is deliberately asymmetric: it sends the step back
+ * to calling `npx eslint` directly while LEAVING the words `rpp lint` in the comments above. A
+ * harness that grepped the file would stay green; this one parses the YAML and addresses the step
+ * as a node, so it dies. That is the whole argument for the parser, made executable.
+ *
+ * It replaced a mutation over `--no-config-lookup`, which stopped having a target on 2026-09-18:
+ * the flag went away with the eslint call, and the guarantee it carried moved INTO the CLI
+ * (`overrideConfigFile: true`). The bypass it protected against is the same one — a consumer's
+ * nested config deciding the rule set — so the case moved rather than disappeared.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -29,7 +34,9 @@ if (process.env.MUTATIONS_REPORT_COVERAGE) {
 
 const ACTION = "action.yml";
 const GUARD = "scripts/eslint-report-guard.mjs";
-const PRISTINE = new Map([ACTION, GUARD].map((f) => [f, readFileSync(f, "utf8")]));
+const PRISTINE = new Map(
+  [ACTION, GUARD].map((f) => [f, readFileSync(f, "utf8")]),
+);
 const restoreAll = () => {
   for (const [f, body] of PRISTINE) writeFileSync(f, body);
 };
@@ -37,17 +44,18 @@ const restoreAll = () => {
 const M = [
   [
     ACTION,
-    "`--no-config-lookup` dropped from the COMMAND (one occurrence left in a comment)",
-    "let a consumer's nested config silently decide which rules run, while a grep still finds the flag",
-    'npx eslint --no-config-lookup --config "$RPP_CONFIG"',
-    'npx eslint --config "$RPP_CONFIG"',
+    "the step goes back around the CLI to eslint (the words `rpp lint` left in the comments)",
+    "reinstate the bypass: rpp.json unread, the directory-structure check absent in CI, and a " +
+      "consumer's nested config free to decide the rule set — while a grep still finds `rpp lint`",
+    "npx rpp lint $RPP_PATHS",
+    'npx eslint --config "$RPP_CONFIG" $RPP_PATHS',
   ],
   [
     ACTION,
     "the guard is no longer called",
-    "keep the ESLint run and drop the green-zero check — the job passes loudest when it measured nothing",
+    "keep the lint run and drop the green-zero check — the job passes loudest when it measured nothing",
     'node "$GITHUB_ACTION_PATH/scripts/eslint-report-guard.mjs" \\',
-    'true # MUT \\',
+    "true # MUT \\",
   ],
   [
     ACTION,
@@ -74,14 +82,20 @@ const M = [
     GUARD,
     "an unparsable report treated as clean",
     "let a missing or corrupt report pass — nothing was measured either way",
-    '    lines.push(\n      `::error::ESLint wrote no parsable report to ${reportPath} (rc=${eslintRc}). Nothing was measured.`,\n    );\n    return { code: 1, lines };',
-    '    return { code: 0, lines }; /* MUT */',
+    "    lines.push(\n      `::error::ESLint wrote no parsable report to ${reportPath} (rc=${eslintRc}). Nothing was measured.`,\n    );\n    return { code: 1, lines };",
+    "    return { code: 0, lines }; /* MUT */",
   ],
 ];
 
 const run = () => {
   try {
-    return { ok: true, out: execFileSync("npx", ["vigiles", "test", HARNESS], { encoding: "utf8", stdio: "pipe" }) };
+    return {
+      ok: true,
+      out: execFileSync("npx", ["vigiles", "test", HARNESS], {
+        encoding: "utf8",
+        stdio: "pipe",
+      }),
+    };
   } catch (e) {
     return { ok: false, out: `${e.stdout ?? ""}${e.stderr ?? ""}` };
   }
@@ -89,7 +103,10 @@ const run = () => {
 
 const base = run();
 if (!base.ok) {
-  console.log("❌ THE HARNESS IS RED BEFORE ANY MUTATION — the battery cannot tell a killed mutation from that:\n" + base.out.slice(-1200));
+  console.log(
+    "❌ THE HARNESS IS RED BEFORE ANY MUTATION — the battery cannot tell a killed mutation from that:\n" +
+      base.out.slice(-1200),
+  );
   process.exit(1);
 }
 
@@ -101,14 +118,18 @@ for (const [file, label, what, from, to] of M) {
   const pristine = PRISTINE.get(file);
   const hits = pristine.split(from).length - 1;
   if (hits !== 1) {
-    console.log(`❌ ${label}: TARGET ${hits === 0 ? "NOT FOUND" : `NOT UNIQUE (${hits})`} in ${file}`);
+    console.log(
+      `❌ ${label}: TARGET ${hits === 0 ? "NOT FOUND" : `NOT UNIQUE (${hits})`} in ${file}`,
+    );
     bad++;
     continue;
   }
   writeFileSync(file, pristine.replace(from, to));
   const on = readFileSync(file, "utf8");
   if (!on.includes(to) || on.includes(from)) {
-    console.log(`❌ ${label}: THE MUTATION DID NOT LAND (checked by re-reading ${file})`);
+    console.log(
+      `❌ ${label}: THE MUTATION DID NOT LAND (checked by re-reading ${file})`,
+    );
     bad++;
     restoreAll();
     continue;
@@ -122,10 +143,14 @@ for (const [file, label, what, from, to] of M) {
   }
   if (!res.ok) {
     ok++;
-    const why = (res.out.match(/AssertionError[^\n]*?: ([^\n]*)/) ?? [])[1] ?? "(the harness died)";
+    const why =
+      (res.out.match(/AssertionError[^\n]*?: ([^\n]*)/) ?? [])[1] ??
+      "(the harness died)";
     rows.push([label, what, why.trim().slice(0, 100)]);
   } else {
-    console.log(`🔴 ${label}: THE HARNESS IS GREEN UNDER THE MUTATION — a finding about the TEST, not a conclusion about the defence`);
+    console.log(
+      `🔴 ${label}: THE HARNESS IS GREEN UNDER THE MUTATION — a finding about the TEST, not a conclusion about the defence`,
+    );
     bad++;
   }
 }

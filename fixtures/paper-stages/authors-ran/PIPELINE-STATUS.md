@@ -8,9 +8,9 @@ stages:
 ---
 # PIPELINE-STATUS
 
-<!-- Свидетельство прогона живёт в ПРОЗЕ ячейки-примечания — своего узла у него нет, поэтому
-     правило ищет маркер во всём табеле. Фикстура повторяет эту форму намеренно. -->
+<!-- Evidence of a run lives in the PROSE of a note cell — it has no node of its own, so the
+     rule looks for the marker across the whole scorecard. The fixture repeats that shape on purpose. -->
 
-| id | что | чем | ок | когда | примечание |
+| id | what | with | ok | when | note |
 |---|---|---|---|---|---|
-| cites | любая правка \cite | verify-citations | ☑ | 2026-08-24 | `bib-authors` прогнан: 27 записей, 1 расхождение, починено |
+| cites | any \cite edit | verify-citations | ☑ | 2026-08-24 | `bib-authors` ran: 27 entries, 1 discrepancy, fixed |

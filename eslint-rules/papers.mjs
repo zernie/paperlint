@@ -77,8 +77,11 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
-/** The default. A consumer that declares nothing is assumed to keep papers in `papers/`. */
-export const DEFAULT_PAPERS_ROOT = "papers";
+// Re-exported, not re-declared. This file is not a hook, so nothing stops it importing the one
+// source; it had its own copy for no reason, and that copy was outside the agreement check that
+// compares the three hooks — it could have drifted in silence.
+import { DEFAULT_PAPERS_ROOT } from "../lib/paper-config.mjs";
+export { DEFAULT_PAPERS_ROOT };
 
 /**
  * The declared papers root, verified to be on disk.

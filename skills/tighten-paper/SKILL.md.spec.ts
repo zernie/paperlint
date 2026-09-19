@@ -81,7 +81,7 @@ contribution, per-section word counts said no — the contribution had 38% more 
 work — and that was true and useless. The shape showed the defect: three of eight top-level sections
 owned **0, 28 and 38** words before their first subsection. Nothing in the toolchain asked that
 question, because every metric was per-sentence or per-document and none was per-section. The author's
-word for the result was *«винигрет»* — a mixed salad — and he was right while the numbers said fine.
+word for the result was a "salad" — a jumbled mix — and he was right while the numbers said fine.
 
 **What the script does NOT decide, and you must:** the ORDER, the NAMES, and whether a section earns
 its place. Those are judgement, and pretending otherwise would be the failure this whole pipeline
@@ -236,7 +236,7 @@ however tight the page count. Moving it out does not fix the overclaim, it hides
 own case, and a section always wins that argument: there is no scale to rank it against its
 neighbours, and no slot in which the answer can come out negative. Over one paper, 23 such notes were
 written and **not one ever concluded "cut me"**. Author, 2026-08-06, reading the built PDF:
-*«читая статью создаётся впечатление — блин, а эта секция точно нужна»* — the notes had asserted
+*"reading the paper gives the impression — hmm, is this section really needed"* — the notes had asserted
 value on every page and compared nothing.
 
 The pairing is the mechanism: **a low score beside a KEEP verdict is a visible contradiction**, and

@@ -1,0 +1,11 @@
+% A minimal acmart paper — exactly what ACM venues build.
+% The full affiliation is not decoration: without \country the class ABORTS the build, and
+% without it the fixture would fail for a reason unrelated to the subject of the test.
+\documentclass[sigconf,nonacm]{acmart}
+\begin{document}
+\title{A fixture that must come out in the class's own fonts}
+\author{A. Author}
+\affiliation{\institution{X University}\city{Almaty}\country{Kazakhstan}}
+\maketitle
+The body exists so the run produces a page with text on it.
+\end{document}

@@ -34,7 +34,7 @@ const MUTATIONS = [
         "export function parseMarkdownRefs(text) {\n  if (1) return [];",
       ],
     ],
-    "заголовок обязан закрывать список литературы",
+    "heading must close the reference list",
     "the markdown leg entirely — a paper whose bibliography is prose yields zero refs and no complaint",
   ],
 ];

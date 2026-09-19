@@ -1,4 +1,4 @@
 # Introduction
 
-Статья написана markdown, а не LaTeX — в этом корпусе так бывает, и правило обязано
-видеть её так же. Вопроса здесь не формулируется.
+The paper is written in markdown, not LaTeX — that happens in this corpus, and the rule must
+see it the same way. No question is stated here.

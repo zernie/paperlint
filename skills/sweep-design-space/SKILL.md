@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [WebSearch, WebFetch, Read, Write, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:f3563558163134ff compiled from skills/sweep-design-space/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:1822c8c01e352f42 compiled from skills/sweep-design-space/SKILL.md.spec.ts -->
 
 # sweep-design-space — stop circling, sweep
 
@@ -25,7 +25,7 @@ pass whichever directory the work lives in, or `.`. The ledger row is written ei
 dot is more honest than an invented path.
 
 A model asked for "a solution" returns the three designs nearest its training prior, then variations of
-those, then variations of the variations. The user experiences this as *«ты очень узко смотришь»* —
+those, then variations of the variations. The user experiences this as *"you are thinking very narrowly"* —
 and they are right. The fix is not to think harder in place; it is to **sweep named source domains on
 purpose** and filter hard.
 

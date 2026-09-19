@@ -7,11 +7,11 @@ stages:
 ---
 # PIPELINE-STATUS
 
-Надо будет прогнать `bib-authors` перед camera-ready — руки не дошли.
+Need to run `bib-authors` before camera-ready — never got round to it.
 
-Ровно тот случай, который ГРЕП не отличает от записи о прогоне: маркер в файле есть,
-а скоркард пуст. Намерение прочитано как факт.
+Exactly the case GREP cannot tell apart from a record of a run: the marker is in the file,
+but the scorecard is empty. An intention read as a fact.
 
-| id | что | ок | примечание |
+| id | what | ok | note |
 |---|---|---|---|
-| build | pdf собирается | ☑ | без замечаний |
+| build | pdf builds | ☑ | nothing to note |

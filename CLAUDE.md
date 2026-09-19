@@ -33,9 +33,9 @@ assumed. Two things that sound like limits and are not:
 
 | | |
 |---|---:|
-| ESLint rules | **6** — `latex-language` · `tex-build` · `papers` · `cold-read-cause` · `review-findings-cause` · `doc-fields` |
-| harnesses | **45** |
-| mutation batteries | **22** |
+| ESLint rules | **5** — `latex-language` · `tex-build` · `papers` · `review-findings-cause` · `doc-fields` |
+| harnesses | **57** |
+| mutation batteries | **34** |
 | skills | **24** |
 | hooks (runnable `.mjs`) | **5** |
 | repo-wide scripts | 5 |
@@ -431,9 +431,9 @@ identical, and "the bibliography was not checked" reads as "the bibliography is 
 absence throws, and the message carries the cure rather than the diagnosis:
 
 ```
-разбор .bib требует @retorquere/bibtex-parser — он объявлен ОПЦИОНАЛЬНЫМ, потому что весит 15 МБ…
-   Поставить:  npm i -D @retorquere/bibtex-parser
-   Почему не своя регулярка: замер 26.08 — регулярка давала 0 записей на обоих настоящих файлах…
+parsing .bib requires @retorquere/bibtex-parser — it is declared OPTIONAL because it weighs 15 MB…
+   Install:  npm i -D @retorquere/bibtex-parser
+   Why not our own regex: measured 26.08 — the regex gave 0 entries on both real files…
 ```
 
 🔴 **Therefore the pin here and the pin in the consumer move TOGETHER, in one pass.** A major
@@ -575,8 +575,8 @@ tests on save. Measured live, with the batteries running:
 
 ```
 $ npm test
-🔴 отказ: этот репозиторий сейчас занят прогоном, который ПРАВИТ ФАЙЛЫ НА МЕСТЕ.
-   держит: pid 6645, «node scripts/run-mutations.mjs», с 2026-09-17T05:22:28.757Z
+🔴 refused: this repository is busy with a run that EDITS FILES IN PLACE.
+   held by: pid 6645, "node scripts/run-mutations.mjs", since 2026-09-17T05:22:28.757Z
 RC=3
 ```
 

@@ -32,9 +32,9 @@ the session.
 same method:
 
 ```
-prompts that NAME the action      ("статья раздулась, что резать?")   78% EN / 60% RU
-prompts that describe a SITUATION ("текст не влезает, надо решить
-    чем пожертвовать и куда это переложить")                          25% EN / 31% RU
+prompts that NAME the action      ("paper got bloated, what to cut?")   78% EN / 60% RU
+prompts that describe a SITUATION ("text won't fit, need to decide
+    what to sacrifice and where to move it")                          25% EN / 31% RU
 ```
 
 A factor of two to three. The second set was written deliberately to share **no vocabulary** with the

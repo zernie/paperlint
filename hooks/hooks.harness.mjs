@@ -424,39 +424,18 @@ try {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // VII. THE FORCED DUPLICATION — three hooks, one contract
+  // VII. THE FORCED DUPLICATION — moved out, and why
   // ═══════════════════════════════════════════════════════════════════════════
-  // 🔴 The carrier's key and default are SPELLED OUT IN ALL THREE FILES, and they have to be: a
-  // compiled hook may import only `vigiles/hook`, so a shared module is not available to them.
-  // Duplication that cannot be removed has to be CHECKED instead, and checked by comparing the
-  // captured values against each other rather than by grepping for a literal — a substring
-  // search would find the same text in the prose ABOUT the value one line above it.
-  {
-    const seen = SHIPPED.map((f) => {
-      const src = readFileSync(join(HOOKS, f), "utf8");
-      return {
-        f,
-        key: (src.match(/^const CONFIG_KEY = "([^"]+)";$/m) ?? [])[1],
-        def: (src.match(/^const DEFAULT_PAPERS_ROOT = "([^"]+)";$/m) ?? [])[1],
-      };
-    });
-    for (const s of seen) {
-      check(`${s.f} declares CONFIG_KEY`, typeof s.key === "string" && s.key.length > 0);
-      check(`${s.f} declares DEFAULT_PAPERS_ROOT`, typeof s.def === "string" && s.def.length > 0);
-    }
-    check(
-      `all three hooks agree on CONFIG_KEY (${[...new Set(seen.map((s) => s.key))].join(" / ")})`,
-      new Set(seen.map((s) => s.key)).size === 1,
-    );
-    check(
-      `all three hooks agree on DEFAULT_PAPERS_ROOT (${[...new Set(seen.map((s) => s.def))].join(" / ")})`,
-      new Set(seen.map((s) => s.def)).size === 1,
-    );
-    check(
-      "the key they agree on is this package's name",
-      seen[0].key === JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")).name,
-    );
-  }
+  // The three hooks spell out CONFIG_KEY and DEFAULT_PAPERS_ROOT because a compiled hook may
+  // import only `vigiles/hook`. That duplication is checked in `lib/paper-config.harness.mjs`,
+  // next to the module the values now come from.
+  //
+  // 🔴 IT MOVED BECAUSE ITS SCOPE WAS WRONG, NOT ITS CODE. Living here, it could only ever
+  // compare hooks with hooks. Measured 2026-09-18: two more files declared the same constants —
+  // `eslint-rules/papers.mjs` and `skills/paper-pipeline/scripts/consumer.mjs`, neither of them
+  // a hook, neither of them under any import restriction, and neither of them inside the
+  // comparison. They could have drifted in silence. A check named after one part of a set
+  // cannot notice the rest of the set.
 
   // ═══════════════════════════════════════════════════════════════════════════
   // VIII. paper-status-gates.sh — a TOOL, and it must refuse to be a hook

@@ -4,7 +4,7 @@ description: Build or repair the paper's argument architecture — the one-sente
 allowed-tools: [Read, Write, Grep, Glob, Agent, Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*), Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)]
 ---
 
-<!-- vigiles:sha256:61a2b936745c94fc compiled from skills/argument-arc/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:05a1eaa79bb596d5 compiled from skills/argument-arc/SKILL.md.spec.ts -->
 
 # argument-arc — does the paper carry the reader to one conclusion
 
@@ -171,7 +171,7 @@ An `ABSTAINED no-witness` on a draft the author has twice called a pile is a mis
 ## Provenance
 
 Built 2026-07-30 after a full-day rewrite of `the reference paper` in which the author said the same
-thing five times — *«не проводит читателя последовательно через мысли, а просто бросает в него кучу
-разных идей, референсов, бенчмарков»* — and got five local edits in reply. The pipeline had a skill
+thing five times — *"does not guide the reader sequentially through the ideas, but simply throws a bunch of
+different ideas, references, and benchmarks at them"* — and got five local edits in reply. The pipeline had a skill
 for length, a skill for sentences and a skill for defects; the question *does this paper carry the
 reader to one conclusion* belonged to nobody, and that is the one that failed.

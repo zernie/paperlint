@@ -5,13 +5,17 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
+    "build": "tsc",
+    "prepare": "tsc",
     "test": "node scripts/exclusive.mjs vigiles test --min=1",
     "lint": "node scripts/exclusive.mjs eslint .",
     "lint:skills": "node scripts/exclusive.mjs vigiles lint",
     "check:globs": "node scripts/exclusive.mjs node scripts/rules-see-files.mjs",
     "check:content-only": "node scripts/exclusive.mjs node scripts/rules-are-content-only.mjs",
     "check:readme": "node scripts/exclusive.mjs node scripts/readme-numbers.mjs",
-    "test:sabotage": "node scripts/exclusive.mjs node scripts/run-mutations.mjs"
+    "test:sabotage": "node scripts/exclusive.mjs node scripts/run-mutations.mjs",
+    "test:install": "node scripts/exclusive.mjs node scripts/install-e2e.mjs",
+    "test:build": "node scripts/exclusive.mjs node scripts/build-e2e.mjs"
   },
   "dependencies": {
     "@eslint/markdown": "^8.0.3",
@@ -19,21 +23,19 @@
     "@unified-latex/unified-latex-util-parse": "^1.8.4",
     "eslint": "^10.9.1",
     "js-yaml": "^4.1.0",
-    "markdown-it": "^14.3.0"
+    "markdown-it": "^14.3.0",
+    "vigiles": "^27.3.0"
   },
   "devDependencies": {
     "@retorquere/bibtex-parser": "^10.0.1",
-    "vigiles": "^27.2.0"
+    "@types/node": "^26.6.1",
+    "typescript": "^5.9.3"
   },
   "peerDependencies": {
-    "@retorquere/bibtex-parser": "^10.0.1",
-    "vigiles": "^27.2.0"
+    "@retorquere/bibtex-parser": "^10.0.1"
   },
   "peerDependenciesMeta": {
     "@retorquere/bibtex-parser": {
-      "optional": true
-    },
-    "vigiles": {
       "optional": true
     }
   },
@@ -58,5 +60,28 @@
   "bin": {
     "research-paper-pipeline": "bin/rpp.mjs",
     "rpp": "bin/rpp.mjs"
-  }
+  },
+  "files": [
+    ".claude-plugin",
+    ".github",
+    ".vigiles",
+    "CLAUDE.md",
+    "CONTRIBUTING.md",
+    "action.harness.mjs",
+    "action.mutations.mjs",
+    "action.yml",
+    "bin",
+    "dist",
+    "docs",
+    "eslint-rules",
+    "eslint.config.mjs",
+    "fixtures",
+    "hooks",
+    "lib",
+    "plugin",
+    "scripts",
+    "skills",
+    "src",
+    "tsconfig.json"
+  ]
 }

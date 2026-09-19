@@ -1,22 +1,22 @@
-// Профиль формата AISec @ ACM CCS. Данные для правил `pdf/*` над `_build/paper.facts.json`.
-// Проза про площадку и треки — в `aisec.md` рядом.
+// AISec @ ACM CCS format profile. Data for the `pdf/*` rules over `_build/paper.facts.json`.
+// Prose about the venue and tracks is in `aisec.md` nearby.
 //
-// ЛИМИТЫ СТРАНИЦ — дословно с https://aisec.cc/ (проверено 2026-08-26, не по памяти):
+// PAGE LIMITS — verbatim from https://aisec.cc/ (verified 2026-08-26, not from memory):
 //   «Submitted papers must be at most 10 pages long in double-column ACM format---excluding
 //    bibliography and well-marked appendices, for which up to two additional pages can be used
 //    (hence, the paper's overall length must be of 12 pages at most).»
-// В нашей карточке до сегодня стояло «up to ~10pp» — приблизительное число, которое нельзя
-// вписывать в гейт: он либо пропустит перебор, либо покраснеет на корректной статье.
+// Our card used to say "up to ~10pp" — an approximate number that cannot be put into a gate: it
+// would either let an overage through or redden on a correct paper.
 //
-// ⚠️ Оговорка площадки, которую стоит помнить: «if ... you get a warning stating that "Too many
-// pages: the limit is 12 pages, found 13", this is OK -- as long as the 13th page contains ONLY
-// the "Generative AI paragraph"». Наш гейт этого исключения НЕ знает и на 13-й странице
-// покраснеет. Это осознанно: случай редкий, а автоматика, умеющая «иногда можно», хуже прямого
-// отказа, который человек снимает глазами.
+// ⚠️ A venue caveat worth remembering: "if ... you get a warning stating that 'Too many
+// pages: the limit is 12 pages, found 13', this is OK -- as long as the 13th page contains ONLY
+// the 'Generative AI paragraph'". Our gate does NOT know about this exception and will redden on
+// a 13th page. That's deliberate: the case is rare, and automation that knows "sometimes it's
+// fine" is worse than a plain rejection a human clears by eye.
 //
-// ГЕОМЕТРИЯ И ШРИФТЫ унаследованы от `acmart sigconf` — того же класса, что у agenticdev, и
-// замерены там же (banal + pdffonts, 26.08). AISec отсылает к «main ACM CCS'26 formatting
-// instructions», собственных чисел не публикует.
+// GEOMETRY AND FONTS are inherited from `acmart sigconf` — the same class as agenticdev, and
+// measured the same way (banal + pdffonts, 08-26). AISec points to the "main ACM CCS'26 formatting
+// instructions" and does not publish its own numbers.
 {
   "template": "acmart",
 
@@ -26,15 +26,17 @@
 
   "textblock_w_in": 7.087,
   "textblock_h_in": 9.252,
-  // ACM требует свести колонки последней страницы; 29.08 Conference Publishing вернул за это
-  // принятую статью («Please correct the last page balancing»). Допуск с запасом: замеры того
-  // дня дали 2.7 pt у сведённой версии и 321.4 у несведённой — между ними ничего не лежит.
+  // ACM requires the last page's columns to be balanced; on 08-29 Conference Publishing bounced
+  // an accepted paper for this ("Please correct the last page balancing"). The tolerance has
+  // margin: that day's measurements gave 2.7 pt for the balanced version and 321.4 for the
+  // unbalanced one — nothing sits between them.
   "last_page_balance_tol_pt": 120,
 
   "columns": 2,
 
   "body_pt": 9,
-  // banal меряет моду по отрендеренному тексту, а не объявленный кегль (замер: 9.30 при 9).
+  // banal measures the rendered text's mode, not the declared size (measured: 9.30 at a
+  // declared 9).
   "body_pt_tol": 0.5,
 
   "ref_pt_min": 7,
@@ -43,9 +45,10 @@
   "fonts_text": "LinLibertine",
   "fonts_title": "LinBiolinum",
 
-  // Четыре трека (original research · position/open-problem · SoK · benchmark) — лимиты у всех
-  // ОДИНАКОВЫЕ, площадка их не разделяет. Ключи оставлены раздельными, чтобы `venue.json`
-  // статьи называл свой трек: он нужен не для чисел, а чтобы было видно, куда она подана.
+  // Four tracks (original research · position/open-problem · SoK · benchmark) — the limits are
+  // the SAME for all of them, the venue doesn't split them. The keys are kept separate so a
+  // paper's `venue.json` can name its own track: not for the numbers, but so it's visible which
+  // track it was submitted under.
   "kinds": {
     "research":  { "body_pages_max": 10, "ref_pages_max": 2 },
     "benchmark": { "body_pages_max": 10, "ref_pages_max": 2 },

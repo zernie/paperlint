@@ -1,0 +1,11 @@
+% STANDS IN FOR THE CASE «acmart silently fell back to Computer Modern».
+%
+% The real substitution mechanism cannot be reproduced here: the class checks for
+% `libertine.sty`/`zi4.sty`/`newtxmath.sty` through \IfFileExists, and hiding an installed
+% package from kpathsea by adding a file is impossible — TEXINPUTS can append paths, not remove them.
+% So the fixture produces the same OBSERVABLE result — a PDF typeset in Computer Modern —
+% and the font check must reject it. What is being checked is the check itself.
+\documentclass{article}
+\begin{document}
+The body exists so the run produces a page with text on it.
+\end{document}

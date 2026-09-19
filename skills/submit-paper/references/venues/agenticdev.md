@@ -18,14 +18,15 @@ title: "AgenticDev @ ASE — venue card (data)"
   Up to **2 extra pages of references** on top.
 - **Format**: ACM `\documentclass[sigconf,review,anonymous]{acmart}` → **double-blind**. Build:
   `pdflatex; bibtex; pdflatex; pdflatex`; add `\microtypesetup{expansion=false}` (the #1 acmart crash).
-- **Archival**: accepted papers → **ASE workshop proceedings, DOI**. 🔴 **Поправка 2026-08-26: прежняя
-  формулировка «ACM DL / IEEE Xplore» ЛОЖНА — двойной публикации нет.** Издатель у ASE **чередуется
-  по годам**: ASEW '24 — ACM (`10.1145/3691621.*`, ISBN 979-8-4007-1249-4), ASE 2025 Workshops —
-  **IEEE** (`csdl/proceedings/asew/2025`, ISBN 979-8-3315-8503-7). Основной трек так же: '22 ACM,
-  '23 IEEE, '24 ACM, '25 IEEE. Префикс `10.5555` в ACM DL — это каталожная запись Guide, а НЕ
-  публикация ACM. По чередованию **2026 ожидается ACM**, что сходится с тем, что APC вообще
-  выставлен, — но ⚠️ дословного заявления ASE 2026 об издателе НЕ НАЙДЕНО. Если окажется IEEE,
-  вопрос про ACM-APC вообще не тот. Подтверждать у чейров до оплаты; selected papers
+- **Archival**: accepted papers → **ASE workshop proceedings, DOI**. 🔴 **Correction 2026-08-26: the
+  earlier wording "ACM DL / IEEE Xplore" is FALSE — there is no dual publication.** ASE's publisher
+  **alternates by year**: ASEW '24 — ACM (`10.1145/3691621.*`, ISBN 979-8-4007-1249-4), ASE 2025
+  Workshops — **IEEE** (`csdl/proceedings/asew/2025`, ISBN 979-8-3315-8503-7). The main track does the
+  same: '22 ACM, '23 IEEE, '24 ACM, '25 IEEE. The `10.5555` prefix in ACM DL is a Guide catalog
+  entry, NOT an ACM publication. By the alternation pattern, **ACM is expected for 2026**, which
+  lines up with an APC even being charged — but ⚠️ **no verbatim statement from ASE 2026 about the
+  publisher was found**. If it turns out to be IEEE, the ACM-APC question is moot entirely. Confirm
+  with the chairs before paying; selected papers
   invited to a **journal special issue**. This is real authorship-criterion evidence.
 - **⚠️ No supplementary-material upload field** on the HotCRP form (fields are just Title, Submission,
   Abstract, Authors, ACM corresponding, Contacts, PC conflicts). → **Host the artifact externally** (OSF
@@ -34,42 +35,45 @@ title: "AgenticDev @ ASE — venue card (data)"
   publication, not attendance. Only ask organizers about remote *after* acceptance (don't draw attention
   pre-decision under double-blind).
 
-## 🔴 Как называть площадку — что заявлять МОЖНО и чего НЕЛЬЗЯ
+## 🔴 How to name the venue — what CAN and CANNOT be claimed
 
-Вопрос всплыл 2026-08-24 и будет всплывать каждый раз (пост, сайт, резюме, заявка). Проверено по
-первоисточникам, а не по пересказу поисковика.
+The question came up on 2026-08-24 and will come up every time (a post, a site, a résumé, an
+application). Checked against primary sources, not a search-engine summary.
 
-**Факты:**
-- **ASE — CORE A\*** (высший тир), вместе с ICSE и FSE это «большая тройка» программной инженерии.
-- **AgenticDev — воркшоп ASE 2026**, официально числится на странице *Co-Located Events* самой ASE
-  (`conf.researchr.org/track/ase-2026/ase-2026-workshops`). Это не сторонняя конференция, снявшая
-  зал рядом, и не «спонсорство» — воркшоп идёт под зонтиком ASE.
-- **Труды:** принятые статьи входят в **ASE 2026 Workshop Proceedings** (ACM DL, DOI).
-- **Но это НЕ основной трек ASE.** У основного трека своя программа, свой PC и своя жёсткость
-  отбора; воркшоп рецензируется отдельно и мягче.
+**Facts:**
+- **ASE is CORE A\*** (top tier), together with ICSE and FSE it's software engineering's "big
+  three."
+- **AgenticDev is an ASE 2026 workshop**, officially listed on ASE's own *Co-Located Events* page
+  (`conf.researchr.org/track/ase-2026/ase-2026-workshops`). It is not a third-party conference
+  that rented a room nearby, and it is not "sponsorship" — the workshop runs under ASE's umbrella.
+- **Proceedings:** accepted papers go into the **ASE 2026 Workshop Proceedings** (ACM DL, DOI).
+- **But it is NOT the ASE main track.** The main track has its own program, its own PC, and its
+  own selectivity; the workshop is reviewed separately and more leniently.
 
-| ✅ так писать можно | ❌ так нельзя |
+| ✅ OK to write | ❌ NOT OK |
 |---|---|
-| «accepted at AgenticDev 2026, a workshop of ASE 2026» | «accepted at ASE 2026» |
-| «workshop paper, ASE 2026 workshop proceedings (ACM DL)» | «published at a CORE A\* conference» |
-| «ASE is CORE A\*; AgenticDev is one of its workshops» | «my paper is CORE A\*» |
+| "accepted at AgenticDev 2026, a workshop of ASE 2026" | "accepted at ASE 2026" |
+| "workshop paper, ASE 2026 workshop proceedings (ACM DL)" | "published at a CORE A\* conference" |
+| "ASE is CORE A\*; AgenticDev is one of its workshops" | "my paper is CORE A\*" |
 
-⚠️ **Почему это не занудство:** несостыковка в том, как подан нарратив, — записанная причина отказов
-у проверяющих любые заявленные заслуги. Разницу «воркшоп vs основной трек» проверяющий видит за одну
-минуту по программе конференции, а цена — доверие ко всей заявке, не к одной строке. Формула «a workshop of ASE 2026»
-не слабее: она сама несёт вес ASE и при этом точна.
+⚠️ **Why this isn't pedantry:** a mismatch in how the narrative is framed is a recorded reason
+reviewers reject any claimed credentials. A reviewer sees the "workshop vs. main track"
+distinction in one minute by checking the conference program, and the cost is trust in the whole
+application, not just one line. The phrasing "a workshop of ASE 2026" is not weaker — it carries
+ASE's weight on its own while staying accurate.
 
-## Присутствие, регистрация и труды — что на что влияет
+## Attendance, registration, and proceedings — what affects what
 
-- **Приезд на зачёт работы НЕ влияет.** Засчитывается *authorship of scholarly articles* — то есть
-  **публикация**, а не присутствие. «Выступил на конференции» в перечень зачитываемых достижений
-  вообще не входит.
-- 🔴 **Влияет другое: не станет ли оплата условием ПОПАДАНИЯ в труды.** Многие площадки требуют,
-  чтобы хотя бы один автор зарегистрировался, иначе статью снимают из proceedings. Тогда исчезает не
-  поездка, а само доказательство. Это и есть вопрос, заданный чейрам 2026-08-24, и он важнее денег.
-- Деньги на 2026: **APC $350** (ACM полностью перешёл на open access с 01.01.2026) + регистрация
-  €350 (ранний тариф до 31.08). Разбор переписки с чейрами — в приватных заметках автора
-  (`<paper>/reviews/2026-08-24-perepiska-cheyry.md`).
+- **Traveling to present does NOT affect the credit.** What counts is *authorship of scholarly
+  articles* — that is, **the publication**, not attendance. "Presented at a conference" isn't on
+  the list of countable achievements at all.
+- 🔴 **What DOES matter: whether payment becomes a condition of MAKING IT INTO proceedings.** Many
+  venues require at least one author to register, or the paper gets pulled from the proceedings.
+  In that case what disappears isn't the trip, it's the proof itself. That's the exact question
+  put to the chairs on 2026-08-24, and it matters more than the money.
+- Cost for 2026: **APC $350** (ACM went fully open-access as of 2026-01-01) + registration €350
+  (early rate through 08-31). The correspondence with the chairs is broken down in the author's
+  private notes (`<paper>/reviews/2026-08-24-perepiska-cheyry.md`).
 
 ## PC members (for the "PC conflicts" field) — 2026
 Andrea Rosani (Free U Bozen/Bolzano) · Giuseppe Di Fatta (Free U Bozen/Bolzano) · Jean Marie Mottu
@@ -93,33 +97,38 @@ anonymized artifact linked in Availability, PC-panel estimate ~85–90% accept.
 
 ## Camera-ready (2026 edition)
 
-**Механика ACM — общая, живёт этажом выше: `../publishers/acm.md`** (eRights первым, преамбула,
-copyright-блок, CCS, Source files). Здесь — только то, что своё у AgenticDev:
+**The ACM mechanics are generic and live one level up: `../publishers/acm.md`** (eRights first,
+the preamble, the copyright block, CCS, source files). Here — only what's specific to AgenticDev:
 
-- **Дедлайн camera-ready**: **28 Aug 2026, 2 PM AoE** (≈ 7 утра 29 августа при UTC+5).
+- **Camera-ready deadline**: **28 Aug 2026, 2 PM AoE** (≈ 7 AM on August 29 at UTC+5).
 - **DOI**: `10.1145/3843282.3843715` · **ACM ISBN**: `979-8-4007-2985-0/26/10`.
-- **Copyright-блок**: `AgenticDev '26, October 12–16, 2026, Munich, Germany`.
-- **Больше не double-blind.** Сабмит был `[sigconf,review,anonymous]`; в финале обе опции уходят.
-- **Page limit тот же**: тело ≤5 стр + до 2 стр только под ссылки. Шестая страница, занятая
-  библиографией, — в лимите.
-- **Смена названия разрешена** — портал прямо просит «exactly as it should appear in the ACM DL».
-  Но решать до eRights (см. публишер-карточку).
+- **Copyright block**: `AgenticDev '26, October 12–16, 2026, Munich, Germany`.
+- **No longer double-blind.** The submission used `[sigconf,review,anonymous]`; both options come
+  off for the final.
+- **Same page limit**: body ≤5 pp + up to 2 pp for references only. A sixth page taken up by the
+  bibliography still counts within the limit.
+- **Title changes are allowed** — the portal explicitly asks for it "exactly as it should appear
+  in the ACM DL." But decide before eRights (see the publisher card).
 
-## Присутствие / регистрация
+## Attendance / registration
 
-CFP молчит про удалённое участие, и **это не значит «можно не приезжать»**: у ACM нет общей
-no-show-политики, у IEEE она есть и допускает «qualified proxy» плюс исключения по обстоятельствам вне
-контроля автора. Какая применяется к воркшопу ASE — **из публичных источников не выводится**, только
-письмом чейрам.
+The CFP is silent on remote participation, and **that does not mean "you don't have to show
+up"**: ACM has no blanket no-show policy, IEEE does have one and allows a "qualified proxy" plus
+exceptions for circumstances outside the author's control. Which one applies to the ASE workshop
+**cannot be derived from public sources** — only by writing to the chairs.
 
-- Регистрация на день воркшопа (non-member): **€350** до 31.08, €410 до 20.09, €460 на месте.
-  Это **гейт публикации**, а не расходы на поездку.
-- Если для въезда нужна виза, срок на неё реален → спрашивать чейров сразу после принятия, не тянуть.
+- Workshop-day registration (non-member): **€350** through 08-31, €410 through 09-20, €460
+  on-site. This is a **publication gate**, not a travel expense.
+- If entry requires a visa, the timeline for it is real → ask the chairs right after acceptance,
+  don't delay.
 
-## 🤖 Машиночитаемый профиль формата
+## 🤖 Machine-readable format profile
 
-Читается правилами ESLint над `<paper>/_build/paper.facts.json` (факты снимает `extract-pdf-facts.mjs`). **Числа тут, а не в коде** — у площадки они свои, у следующей будут
-другие. Источник — инструкция для авторов Conference Publishing (2026-08-25) и требования ACM.
+Read by ESLint rules over `<paper>/_build/paper.facts.json` (the facts are captured by
+`extract-pdf-facts.mjs`). **The numbers live here, not in code** — this venue has its own, the
+next one will have different ones. Source: the Conference Publishing author instructions
+(2026-08-25) and ACM's requirements.
 
-**Профиль формата — в [`agenticdev.yaml`](agenticdev.yaml)** рядом. Там данные, здесь проза.
+**The format profile is in [`agenticdev.yaml`](agenticdev.yaml)** next to this file. Data lives
+there, prose lives here.
 

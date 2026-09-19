@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
-# Ставит апстримный TeX Live с ровно теми CTAN-пакетами, которые нужны статьям этой базы.
+# Installs upstream TeX Live with exactly the CTAN packages this base's papers need.
 #
-# ЗАЧЕМ ЭТО ВМЕСТО ЭКШЕНА. Правильный по классу инструмент — teatimeguest/setup-texlive-action —
-# у нас ЗАБЛОКИРОВАН белым списком сторонних Actions аккаунта («##[error]Repository access
-# blocked», прогон 33457399377). Он не отклонён, он недоступен, и если его когда-нибудь добавят
-# в белый список — переходить на него. Пока: actions/cache первопартийный и разрешён при любой
-# политике, а установку делаем сами. Полный разбор трёх способов с замерами —
-# ci-tex-toolchain-decision.md рядом.
+# WHY THIS INSTEAD OF AN ACTION. The right tool by class — teatimeguest/setup-texlive-action — is
+# BLOCKED for us by the account's allowlist of third-party Actions ("##[error]Repository access
+# blocked", run 33457399377). It is not rejected, it is unavailable, and if it is ever added to the
+# allowlist — move to it. For now: actions/cache is first-party and allowed under any policy, and we
+# do the install ourselves. The full analysis of the three approaches with measurements is in
+# ci-tex-toolchain-decision.md next door.
 #
-# ЗАМЕР 2026-09-01 (локально, контейнер сессии): 230 МБ на диске, ~2 мин вхолодную.
-# Против контейнера texlive/texlive:latest — 2700 МБ и 2m01s пула НА КАЖДОМ прогоне, потому
-# что GitHub образ джоба не кэширует ни при каких условиях. 230 МБ кэшируются.
+# MEASURED 2026-09-01 (locally, in the session container): 230 MB on disk, ~2 min from cold.
+# Against the texlive/texlive:latest container — 2700 MB and 2m01s of pull ON EVERY run, because
+# GitHub does not cache the job image under any circumstances. 230 MB do cache.
 #
-# Обе статьи базы собраны этой установкой и проверены по встроенным шрифтам:
-#   agenticdev-2026 (acmart) → LinLibertineT + Inconsolatazi4 + LibertineMathMI, 6 стр.
-#   compile-rules-2026 (acl) → NimbusRomNo9L + NimbusSanL, 0 ошибок
+# Both of the base's papers were built by this install and checked by their embedded fonts:
+#   agenticdev-2026 (acmart) → LinLibertineT + Inconsolatazi4 + LibertineMathMI, 6 pp.
+#   compile-rules-2026 (acl) → NimbusRomNo9L + NimbusSanL, 0 errors
 #
-# Usage:  bash ci-install-texlive.sh [TEXDIR]     (по умолчанию $HOME/texlive)
+# Usage:  bash ci-install-texlive.sh [TEXDIR]     (defaults to $HOME/texlive)
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -24,80 +24,81 @@ TEXDIR="${1:-$HOME/texlive}"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
-# 🔴 Список читается из ensure-toolchain.sh — там он объявлен рядом с apt-именами и с
-# контрактом REQUIRED_FILES. Вторая копия здесь воспроизвела бы ровно тот дефект, от которого
-# тот файл и защищает («a second list is how the two copies above drifted apart»).
+# 🔴 The list is read from ensure-toolchain.sh — there it is declared next to the apt names and to
+# the REQUIRED_FILES contract. A second copy here would reproduce exactly the defect that file
+# protects against ("a second list is how the two copies above drifted apart").
 mapfile -t PKGS < <(
   sed -n '/^CTAN_PACKAGES=(/,/^)/p' "$HERE/ensure-toolchain.sh" \
     | sed -e '1d' -e '$d' -e 's/#.*//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' \
     | grep -v '^$' | tr ' ' '\n' | grep -v '^$'
 )
-# Ассерт на непустоту: пустой разбор поставил бы голый scheme-basic (или ничего) и уронил бы
-# сборку позже с невнятной ошибкой про acmart вместо внятной про разбор. Скан, вернувший ноль,
-# — это либо «нечего делать», либо «я искал не там», и различить обязан код.
+# An assert on non-emptiness: an empty parse would install bare scheme-basic (or nothing) and would
+# fail the build later with an inscrutable error about acmart instead of a clear one about parsing. A
+# scan that came back with zero is either "nothing to do" or "I looked in the wrong place", and the
+# code is what must tell them apart.
 if [ "${#PKGS[@]}" -lt 20 ]; then
-  echo "🔴 CTAN_PACKAGES разобрался пустым или подозрительно коротким (${#PKGS[@]}) — сломан разбор" >&2
+  echo "🔴 CTAN_PACKAGES parsed empty or suspiciously short (${#PKGS[@]}) — the parse is broken" >&2
   printf '%s\n' "${PKGS[@]}" >&2
   exit 1
 fi
-echo "пакетов к установке: ${#PKGS[@]}"
+echo "packages to install: ${#PKGS[@]}"
 
-# В агентском контейнере этой базы исходящий HTTPS идёт через прокси со своим CA, и без
-# него curl падает «unable to get local issuer certificate». На раннере GitHub этого файла
-# нет и блок ничего не делает. Записано, потому что на этом уже дважды терялось время:
-# помнить про экспорт — не работает, пусть скрипт разбирается сам.
+# In this base's agent container, outbound HTTPS goes through a proxy with its own CA, and without
+# it curl fails with "unable to get local issuer certificate". On a GitHub runner that file does not
+# exist and the block does nothing. Written down because time has already been lost on this twice:
+# remembering to export it does not work, let the script sort it out itself.
 if [ -z "${CURL_CA_BUNDLE:-}" ] && [ -r /root/.ccr/ca-bundle.crt ]; then
   export CURL_CA_BUNDLE=/root/.ccr/ca-bundle.crt
   export SSL_CERT_FILE=/root/.ccr/ca-bundle.crt
-  echo "(локальный прокси: подставил CA-бандл)"
+  echo "(local proxy: substituted the CA bundle)"
 fi
 
 cd "$WORK"
 
-# 🔴 НЕСКОЛЬКО ЗЕРКАЛ, И ЭТО НЕ ПЕРЕСТРАХОВКА — ЗАМЕР 2026-09-02.
+# 🔴 SEVERAL MIRRORS, AND THAT IS NOT OVER-INSURANCE — MEASURED 2026-09-02.
 #
-# Первая редакция брала только `mirror.ctan.org`, и прогон 33650803245 упал так:
+# The first version took only `mirror.ctan.org`, and run 33650803245 failed like this:
 #
-#     == скачиваю install-tl ==
+#     == downloading install-tl ==
 #     curl: (60) SSL certificate problem: unable to get local issuer certificate
 #
-# Дело НЕ в CA-бандле прокси (блок выше на раннере не срабатывает, и это верно):
-# `mirror.ctan.org` — РЕДИРЕКТОР на случайное зеркало сообщества, и в тот раз он увёл
-# на зеркало с неполной цепочкой сертификатов. Повтор тут не спасает: `--retry` пойдёт
-# по тому же редиректу и может попасть на то же зеркало.
+# The cause is NOT the proxy's CA bundle (the block above does not fire on the runner, and that is
+# correct): `mirror.ctan.org` is a REDIRECTOR to a random community mirror, and that time it led to
+# a mirror with an incomplete certificate chain. Retrying does not help here: `--retry` follows the
+# same redirect and may land on the same mirror.
 #
-# ⚠️ ЧЕСТНАЯ ГРАНИЦА МОЕГО ЗАМЕРА: проверить цепочки зеркал из агентского контейнера
-# НЕЛЬЗЯ — прокси переподписывает TLS своим сертификатом, поэтому все четыре URL отдали
-# 200 независимо от того, что предъявляет само зеркало. Отсюда решение: не выбирать
-# «правильное» зеркало (нечем проверить), а пережить любое битое.
+# ⚠️ THE HONEST BOUNDARY OF MY MEASUREMENT: checking the mirrors' chains from the agent container is
+# IMPOSSIBLE — the proxy re-signs TLS with its own certificate, so all four URLs returned 200
+# regardless of what the mirror itself presents. Hence the decision: do not pick the "right" mirror
+# (there is nothing to check it with), but survive any broken one.
 #
-# Порядок: сначала редиректор (обычно ближайшее и быстрое зеркало), потом три
-# ИМЕНОВАННЫХ зеркала университетов — у них цепочки стабильные, потому что за ними
-# следят те же люди, что за самим CTAN.
+# The order: the redirector first (usually the nearest and fastest mirror), then three NAMED
+# university mirrors — their chains are stable, because they are looked after by the same people who
+# look after CTAN itself.
 TL_MIRRORS="
 https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz
 https://ctan.math.illinois.edu/systems/texlive/tlnet/install-tl-unx.tar.gz
 https://mirrors.mit.edu/CTAN/systems/texlive/tlnet/install-tl-unx.tar.gz
 https://ftp.tu-chemnitz.de/pub/tex/systems/texlive/tlnet/install-tl-unx.tar.gz
 "
-echo "== скачиваю install-tl =="
+echo "== downloading install-tl =="
 got=""
 for url in $TL_MIRRORS; do
   if curl -sSL --retry 2 --retry-delay 2 --max-time 180 -o install-tl.tar.gz "$url" 2>/tmp/tlcurl.err; then
-    # Скачанный файл проверяется РАСПАКОВКОЙ, а не размером: усечённый архив и страница
-    # ошибки зеркала оба весят «что-то», и оба прошли бы проверку на непустоту.
+    # The downloaded file is checked by UNPACKING it, not by its size: a truncated archive and a
+    # mirror's error page both weigh "something", and both would pass a non-emptiness check.
     if tar tzf install-tl.tar.gz >/dev/null 2>&1; then
       got="$url"
-      echo "   зеркало: $url"
+      echo "   mirror: $url"
       break
     fi
-    echo "   ⚠️ $url отдал не архив, пробую следующее"
+    echo "   ⚠️ $url returned something other than an archive, trying the next one"
   else
     echo "   ⚠️ $url: $(tr -d '\n' </tmp/tlcurl.err | cut -c1-120)"
   fi
 done
 if [ -z "$got" ]; then
-  echo "🔴 ни одно из зеркал CTAN не отдало install-tl. Список — TL_MIRRORS в этом файле." >&2
+  echo "🔴 not one of the CTAN mirrors returned install-tl. The list is TL_MIRRORS in this file." >&2
   exit 1
 fi
 tar xzf install-tl.tar.gz
@@ -120,49 +121,70 @@ EOF
 echo "== install-tl (scheme-basic) =="
 ./install-tl-*/install-tl --profile=tl.profile --no-interaction
 
-# Каталог бинарей зависит от архитектуры; не хардкодим x86_64-linux, а находим.
+# The binaries directory depends on the architecture; we do not hardcode x86_64-linux, we find it.
 BIN="$(find "$TEXDIR/bin" -maxdepth 1 -mindepth 1 -type d | head -1)"
-[ -n "$BIN" ] || { echo "🔴 не нашёл каталог бинарей в $TEXDIR/bin" >&2; exit 1; }
+[ -n "$BIN" ] || { echo "🔴 did not find the binaries directory in $TEXDIR/bin" >&2; exit 1; }
 export PATH="$BIN:$PATH"
 
-echo "== tlmgr install (${#PKGS[@]} пакетов) =="
-# 🔴 КОД ВОЗВРАТА tlmgr ЗДЕСЬ НЕ КРИТЕРИЙ, и это не небрежность, а замер 2026-09-01.
-# `tlmgr install` возвращает 1, если ХОТЯ БЫ ОДНО имя ему не понравилось, — и в тот же
-# единственный код сваливаются два совершенно разных случая:
-#   «package already present: acmart»          — норма, scheme-basic его уже принёс
-#   «package X not present in repository»      — настоящая ошибка, имя выдумано или устарело
-# Первый случай возникает на КАЖДОМ прогоне (профиль install-tl ставит часть списка сам),
-# поэтому `set -e` на этой строке убивал бы скрипт всегда. Проверено вживую: так и было,
-# и умирал он ДО блока проверки файлов, то есть терялась единственная честная проверка.
+echo "== tlmgr install (${#PKGS[@]} packages) =="
+# 🔴 tlmgr's EXIT CODE IS NOT THE CRITERION HERE, and that is not sloppiness but a measurement from
+# 2026-09-01. `tlmgr install` returns 1 if it disliked AT LEAST ONE name — and two completely
+# different cases fall into that same single code:
+#   "package already present: acmart"          — normal, scheme-basic already brought it in
+#   "package X not present in repository"      — a real error, the name is invented or outdated
+# The first case happens on EVERY run (the install-tl profile installs part of the list itself), so
+# `set -e` on this line would kill the script always. Verified live: that is what happened, and it
+# died BEFORE the file-checking block, that is, the one honest check was lost.
 #
-# Поэтому: код игнорируем, а в выводе ищем именно ту строку, которая означает настоящую
-# поломку. Это тот же принцип, что дальше по файлу — судить по результату, а не по коду
-# возврата установщика.
+# Therefore: we ignore the code and look in the output for exactly the line that means a real
+# breakage. This is the same principle as further down the file — judge by the result, not by the
+# installer's exit code.
 tlmgr install "${PKGS[@]}" 2>&1 | tee "$WORK/tlmgr.log" || true
 if grep -q "not present in repository" "$WORK/tlmgr.log"; then
-  echo "🔴 tlmgr не знает таких пакетов — имя выдумано или переименовано в CTAN:" >&2
+  echo "🔴 tlmgr does not know these packages — the name is invented or renamed on CTAN:" >&2
   grep "not present in repository" "$WORK/tlmgr.log" >&2
-  echo "Проверить имя:  tlmgr search --global --file <файл>  или  tlmgr info <имя>" >&2
+  echo "Check the name:  tlmgr search --global --file <file>  or  tlmgr info <name>" >&2
   exit 1
 fi
 
-# 🔴 ПРОВЕРКА ПОСЛЕ УСТАНОВКИ, А НЕ КОД ВОЗВРАТА УСТАНОВЩИКА. 2026-09-01 apt-экшен вернул
-# outcome=success, поставив НОЛЬ пакетов (404 на протухшей версии JRE), и шаг был зелёный.
-# Установщику верить нельзя — верить можно только тому, что файлы на месте.
+# 🔴 A CHECK AFTER THE INSTALL, NOT THE INSTALLER'S EXIT CODE. On 2026-09-01 the apt action returned
+# outcome=success having installed ZERO packages (a 404 on a stale JRE version), and the step was
+# green. The installer cannot be trusted — the only thing that can be trusted is that the files are
+# there.
 mapfile -t NEED < <(
   sed -n '/^REQUIRED_FILES=(/,/^)/p' "$HERE/ensure-toolchain.sh" \
     | sed -e '1d' -e '$d' -e 's/#.*//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' \
     | grep -v '^$'
 )
-[ "${#NEED[@]}" -ge 10 ] || { echo "🔴 REQUIRED_FILES разобрался пустым" >&2; exit 1; }
+[ "${#NEED[@]}" -ge 10 ] || { echo "🔴 REQUIRED_FILES parsed empty" >&2; exit 1; }
 missing=""
 for f in "${NEED[@]}"; do kpsewhich "$f" >/dev/null 2>&1 || missing="$missing $f"; done
 if [ -n "$missing" ]; then
-  echo "🔴 после установки НЕ ХВАТАЕТ:$missing" >&2
-  echo "Добавь несущий пакет в CTAN_PACKAGES ($HERE/ensure-toolchain.sh)." >&2
-  echo "Найти пакет по файлу:  tlmgr search --global --file <имя>" >&2
+  echo "🔴 MISSING after the install:$missing" >&2
+  echo "Add the package that carries it to CTAN_PACKAGES ($HERE/ensure-toolchain.sh)." >&2
+  echo "Find the package by file:  tlmgr search --global --file <name>" >&2
   exit 1
 fi
 
-echo "✅ TeX Live готов: ${#NEED[@]} требуемых файлов на месте, $(du -sh --block-size=1M "$TEXDIR" | cut -f1) МБ"
+# 🔴 AND THE BINARIES TOO, NOT ONLY THE FILES. The check above looks for `.cls`/`.sty` via
+# `kpsewhich` — as a file. `texcount` is not found as a file, it is an EXECUTABLE, so its absence
+# slipped past and surfaced two steps later, as a red paper build (measured 2026-09-17).
+# From REQUIRED_BINS we take only the ones marked `:tex` — `pdfinfo` arrives from poppler via apt,
+# and looking for it here would be a false positive.
+mapfile -t NEED_BINS < <(
+  sed -n '/^REQUIRED_BINS=(/,/)$/p' "$HERE/ensure-toolchain.sh" \
+    | tr ' ' '\n' | sed -e 's/^REQUIRED_BINS=(//' -e 's/)$//' \
+    | grep ':tex$' | sed 's/:tex$//' | grep -v '^$'
+)
+[ "${#NEED_BINS[@]}" -ge 1 ] || { echo "🔴 REQUIRED_BINS parsed empty — the parse is broken" >&2; exit 1; }
+missing_bins=""
+for b in "${NEED_BINS[@]}"; do [ -x "$BIN/$b" ] || missing_bins="$missing_bins $b"; done
+if [ -n "$missing_bins" ]; then
+  echo "🔴 BINARIES MISSING after the install:$missing_bins" >&2
+  echo "Add the package that carries it to CTAN_PACKAGES ($HERE/ensure-toolchain.sh)." >&2
+  echo "Find the package by file:  tlmgr search --global --file <name>" >&2
+  exit 1
+fi
+
+echo "✅ TeX Live is ready: ${#NEED[@]} required files and ${#NEED_BINS[@]} binaries in place, $(du -sh --block-size=1M "$TEXDIR" | cut -f1) MB"
 echo "PATH: $BIN"

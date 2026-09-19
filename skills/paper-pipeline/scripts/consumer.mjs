@@ -77,8 +77,10 @@ import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { join, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 
-/** The key every carrier of this package reads its consumer-specific settings from. */
-export const CONFIG_KEY = "research-paper-pipeline";
+// Re-exported, not re-declared — see the note in `lib/paper-config.mjs`. This file is not a hook
+// and never needed its own copy.
+import { CONFIG_KEY } from "../../../lib/paper-config.mjs";
+export { CONFIG_KEY };
 
 /**
  * True when `metaUrl` belongs to the module Node was told to execute.

@@ -1,25 +1,25 @@
 /**
- * provenance.harness.mjs — что осталось от `check-provenance.mjs` после переезда, проверено с
- * обеих сторон. `npx vigiles test .claude/skills/paper-pipeline/scripts/provenance.harness.mjs`.
+ * provenance.harness.mjs — what remains from `check-provenance.mjs` after the move, verified from
+ * both sides. `npx vigiles test .claude/skills/paper-pipeline/scripts/provenance.harness.mjs`.
  *
- * 🔴 ОБЛАСТЬ СУЖЕНА 2026-08-26. Три находки из пяти уехали в правила ESLint:
+ * 🔴 SCOPE NARROWED 2026-08-26. Three findings out of five moved to ESLint rules:
  *   arm-mismatch    → `paper/number-arm-mismatch`
  *   untraced-number → `paper/number-untraced`
  *   arm-unlabelled  → `paper/number-arm-unlabelled`
- * Их случаи (включая дословный дефект 2026-08-05 и «предложение назвало свою руку — молчим»)
- * переехали в `eslint-rules/paper-registry.harness.mjs`, где стоят рядом с прогоном на настоящей
- * статье. Здесь остались две проверки, которые НЕ ЧИТАЮТ ТЕЛО СТАТЬИ ВООБЩЕ — им дан только
- * каталог, и потому правилом о линтуемом файле они быть не могут:
+ * Their cases (including the literal defect from 2026-08-05 and "prediction named its own arm — stay quiet")
+ * moved to `eslint-rules/paper-registry.harness.mjs`, where they stand alongside runs on real
+ * papers. Two checks remain here, which do NOT READ the paper BODY AT ALL — they are given only
+ * a directory, and so cannot be lint rules:
  *
- *   no-numbers-gate   нет `repro/paper_numbers.py`;
- *   numbers-coverage  сколько величин засорсено против храповика `numbers-grandfathered.txt`.
- *                     Это НЕ находка, а замер покрытия — и он обязан печататься всегда.
+ *   no-numbers-gate   missing `repro/paper_numbers.py`;
+ *   numbers-coverage  how many quantities are sourced against the ratchet `numbers-grandfathered.txt`.
+ *                     This is NOT a finding, but a coverage measurement — and it must always print.
  *
- * 🔴 ПОЧЕМУ ГВАРДЫ ПРОВЕРЯЮТСЯ ОТДЕЛЬНО. У обеих оставшихся проверок есть два условия выхода,
- * унаследованных от удалённой половины: нет `paper.md` ⇒ молчим, нет ни одного непустого
- * провенанс-файла ⇒ молчим. После переезда они выглядят немотивированными («при чём тут проза,
- * если мы смотрим на каталог?») — и первый, кто «уберёт лишнее», изменит поведение. Ассерты
- * ниже фиксируют их как контракт.
+ * 🔴 WHY GUARDS ARE CHECKED SEPARATELY. Both remaining checks have two exit conditions,
+ * inherited from the deleted half: no `paper.md` ⇒ silent, no non-empty
+ * provenance file ⇒ silent. After the move they look unmotivated ("what does prose have to do with it
+ * if we look at a directory?") — and the first person to "remove redundancy" will change behavior. Assertions
+ * below pin them as contract.
  *
  * 🔴 Assertions run at MODULE TOP LEVEL. `vigiles test` imports the file and treats "did not throw"
  * as a pass, so a `tests` export or a describe block would report ✓ having run nothing — verified in
@@ -75,21 +75,21 @@ const NOTES = [
   "- `.all.annotated.failedContradicted` = 22 — files failing admission in the annotated arm",
 ].join("\n");
 
-// ── 1. МОЛЧИТ НА ВЕРНОМ: у статьи есть гейт и реестр — только замер покрытия, ноль находок ──
-// Сначала эта половина: проверка, кричащая на корректном входе, опаснее отсутствия проверки.
+// ── 1. QUIET ON CORRECT: paper has gate and registry — only coverage measurement, zero findings ──
+// First this half: a check that cries on correct input is worse than no check.
 {
   const d = paper("covered", {
     body: "The headline rate is **15.0%** across the corpus.",
     notes: NOTES,
     numbers: "# id\tvalue\n a\t1\n b\t2\n",
-    grandfathered: "# ещё сырые\n42\n",
+    grandfathered: "# still raw\n42\n",
   });
   const { set, out } = kinds(d);
-  assert.ok(!set.has("no-numbers-gate"), "статья с гейтом получила `no-numbers-gate`:\n" + out);
-  assert.ok(set.has("numbers-coverage"), "замер покрытия обязан печататься всегда:\n" + out);
+  assert.ok(!set.has("no-numbers-gate"), "paper with gate got `no-numbers-gate`:\n" + out);
+  assert.ok(set.has("numbers-coverage"), "coverage measurement must always print:\n" + out);
   assert.match(out, /2 quantities are sourced and guarded, 1 are still raw/,
-    "числа в замере покрытия не сошлись — считаются строки реестра и строки храповика:\n" + out);
-  assert.equal(set.size, 1, "после переезда трёх проверок этот вход обязан давать РОВНО замер покрытия:\n" + out);
+    "numbers in coverage measurement do not match — counted registry lines and ratchet lines:\n" + out);
+  assert.equal(set.size, 1, "after three checks moved, this input must give EXACTLY the coverage measurement:\n" + out);
 }
 
 // ── 2. a paper with no numbers gate at all is told so ──────────────────────────────────
@@ -99,50 +99,49 @@ const NOTES = [
   const d = paper("no-gate", { body: "Nothing bolded here.", notes: NOTES, gate: false });
   const { set, out } = kinds(d);
   assert.ok(set.has("no-numbers-gate"), "a paper with no repro/paper_numbers.py was not told:\n" + out);
-  assert.ok(!set.has("numbers-coverage"), "нет гейта — покрывать нечего, замер печататься не должен:\n" + out);
+  assert.ok(!set.has("numbers-coverage"), "no gate — nothing to cover, measurement must not print:\n" + out);
 }
 
-// ── 3. гейт есть, реестра `numbers.tsv` нет — молчание, а не нулевое покрытие ───────────
-// Разница смысловая: «гейт скопировали, но ни одна величина им ещё не заведена» это НЕ то же
-// самое, что «0 из 0 засорсено», и печатать второе значило бы отчитаться о покрытии, которого
-// никто не мерил.
+// ── 3. gate exists, no `numbers.tsv` registry — silence, not zero coverage ─────────────────
+// The distinction is semantic: «gate was copied but no quantity has been registered in it yet» is NOT the same
+// as «0 of 0 sourced», and printing the latter would mean reporting coverage that nobody measured.
 {
   const d = paper("gate-no-registry", { body: "Nothing bolded here.", notes: NOTES });
   const { set, out } = kinds(d);
-  assert.equal(set.size, 0, "гейт без реестра обязан молчать:\n" + out);
+  assert.equal(set.size, 0, "gate without registry must stay silent:\n" + out);
 }
 
-// ── 4. ГВАРДЫ, унаследованные от удалённой половины — контракт, а не рудимент ───────────
-// 🔴 После переезда обе выглядят немотивированными: проверка смотрит на каталог, при чём тут
-// проза? Но убрать их значит поменять поведение на статьях, у которых нет ни одного
-// провенанс-файла (их большинство) — и `no-numbers-gate` начнёт кричать на каждой.
+// ── 4. GUARDS inherited from the deleted half — contract, not a leftover ──────────────────
+// 🔴 After the move both look unmotivated: the check looks at a directory, what has prose to do with it?
+// But removing them means changing behaviour on papers that have no provenance file at all (most of them)
+// — and `no-numbers-gate` will start firing on each one.
 {
   const d = paper("no-prov", { body: "Nothing bolded here.", notes: undefined, gate: false });
   const { set, out } = kinds(d);
-  assert.equal(set.size, 0, "нет ни одного провенанс-файла — скрипт обязан молчать целиком:\n" + out);
-  // 🔴 Молчать — да, но НЕ голосом успеха. До 2026-08-26 оба гварда печатали `clean`, и на
-  // настоящем корпусе это давало уверенный зелёный на трёх статьях из четырёх (все три в .tex).
-  assert.match(out, /SKIPPED/, "пропуск обязан назваться пропуском, а не чистым прогоном:\n" + out);
-  assert.doesNotMatch(out, /clean/, "пропуск не смеет печатать слово `clean`:\n" + out);
+  assert.equal(set.size, 0, "no provenance file at all — script must stay completely silent:\n" + out);
+  // 🔴 Stay silent — yes, but NOT with the voice of success. Before 2026-08-26 both guards printed `clean`, and on
+  // the real corpus that gave confident green on three papers out of four (all three in .tex).
+  assert.match(out, /SKIPPED/, "skip must name itself as skip, not as a clean run:\n" + out);
+  assert.doesNotMatch(out, /clean/, "skip must not print the word `clean`:\n" + out);
 }
 {
   const d = paper("no-paper", { body: "", notes: NOTES, gate: false, noPaper: true });
   const { set, out } = kinds(d);
-  assert.equal(set.size, 0, "нет paper.md/draft.md — скрипт обязан молчать целиком:\n" + out);
-  assert.match(out, /SKIPPED/, "пропуск обязан назваться пропуском:\n" + out);
-  assert.match(out, /\.tex/, "причина обязана назвать, ЧТО именно не покрыто — иначе читатель\n" +
-    "решит, что дело в поломке:\n" + out);
-  assert.doesNotMatch(out, /clean/, "пропуск не смеет печатать слово `clean`:\n" + out);
+  assert.equal(set.size, 0, "no paper.md/draft.md — script must stay completely silent:\n" + out);
+  assert.match(out, /SKIPPED/, "skip must name itself as skip:\n" + out);
+  assert.match(out, /\.tex/, "the reason must name WHAT exactly is not covered — otherwise the reader\n" +
+    "will think it is a breakage:\n" + out);
+  assert.doesNotMatch(out, /clean/, "skip must not print the word `clean`:\n" + out);
 }
 
-// ── 5. чистый прогон ГОВОРИТ, что он чистый ────────────────────────────────────────────
-// Молчание и успех не должны выглядеть одинаково — это тот же класс, что «0 checks» против
-// «checks passed» в интерфейсе PR.
+// ── 5. clean run SPEAKS that it is clean ──────────────────────────────────────────────────
+// Silence and success must not look the same — this is the same class as «0 checks» vs
+// «checks passed» in the PR interface.
 {
   const d = paper("clean-voice", { body: "Nothing bolded here.", notes: NOTES });
   const { out } = kinds(d);
-  assert.match(out, /clean/, "чистый прогон не напечатал вердикта:\n" + out);
+  assert.match(out, /clean/, "clean run did not print a verdict:\n" + out);
 }
 
 rmSync(tmp, { recursive: true, force: true });
-console.log("✓ check-provenance: no-numbers-gate fires, покрытие считается, оба гварда закреплены, чистый прогон звучит");
+console.log("✓ check-provenance: no-numbers-gate fires, coverage is measured, both guards are pinned, clean run speaks");

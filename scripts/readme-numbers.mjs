@@ -1,22 +1,22 @@
 #!/usr/bin/env node
 /**
- * README называет числа. Здесь они ПРОИЗВОДЯТСЯ и сверяются с названными.
+ * The README names numbers. Here they are PRODUCED and checked against the named ones.
  *
- * 🔴 ЗАЧЕМ ЭТО ВООБЩЕ. `CLAUDE.md` этого репозитория говорит: «число в сообщении коммита,
- * которого не произвела ни одна команда, — это то, что репозиторий существует сделать
- * невозможным». README при этом нёс четыре таких числа, написанных РУКОЙ и вдобавок СЛОВАМИ
- * («Forty-five of those»). Замер 2026-09-17: обещано 45 харнессов и 22 батареи, на диске 49 и 27.
- * Разъехалось молча, потому что сверять было нечем — а число, написанное словом, не сравнить
- * даже грепом.
+ * 🔴 WHY THIS EXISTS AT ALL. This repository's `CLAUDE.md` says: "A number in a commit message
+ * that no command produced is the thing this repo exists to make impossible". The README
+ * meanwhile carried four such numbers, written BY HAND and, on top of that, IN WORDS
+ * ("Forty-five of those"). Measured 2026-09-17: 45 harnesses and 22 batteries promised, 49 and 27
+ * on disk. They diverged silently, because there was nothing to check them against — and a number
+ * written as a word cannot be compared even with grep.
  *
- * 🔴 И ВТОРОЕ, ИЗ-ЗА ЧЕГО СКРИПТ УСТРОЕН ИМЕННО ТАК. Первая версия счётчика правил считала
- * `default.rules` и молча записывала всё остальное в «не плагин правил». На `tex-build.mjs`,
- * который экспортирует правила ПРЯМО в `default`, она потеряла два правила и уверенно
- * напечатала 8 вместо 10. Это в точности «счётчик, который считает то, что игнорирует»:
- * пропуск ничего не обещает, а счётчик обещает покрытие.
+ * 🔴 AND THE SECOND REASON THE SCRIPT IS BUILT EXACTLY THIS WAY. The first version of the rule
+ * counter counted `default.rules` and silently filed everything else under "not a rule plugin".
+ * On `tex-build.mjs`, which exports its rules DIRECTLY in `default`, it lost two rules and
+ * confidently printed 8 instead of 10. That is precisely "a counter that counts what it ignores":
+ * a skip promises nothing, while a counter promises coverage.
  *
- * Поэтому модуль, форму которого распознать не удалось, — ОШИБКА, а не пропуск. Модули без
- * правил перечислены ПОИМЁННО ниже: новый безымянный модуль не сможет исчезнуть тихо.
+ * So a module whose shape could not be recognized is an ERROR, not a skip. The modules with no
+ * rules are listed BY NAME below: a new unnamed module will not be able to vanish quietly.
  */
 import { readdirSync, readFileSync, lstatSync } from "node:fs";
 import { join, dirname } from "node:path";
@@ -25,15 +25,15 @@ import { fileURLToPath } from "node:url";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 /**
- * Модули в `eslint-rules/`, у которых правил НЕТ по построению, с причиной. Список именно
- * поимённый: «нет правил» и «форму не распознали» обязаны различаться.
+ * Modules in `eslint-rules/` that have NO rules by construction, with the reason. The list is
+ * by name precisely because "has no rules" and "shape not recognized" must be distinguishable.
  */
 const NOT_RULE_PLUGINS = new Map([
-  ["papers.mjs", "хелперы путей: DEFAULT_PAPERS_ROOT, paperFiles, papersRoot"],
-  ["latex-language.mjs", "ЯЗЫК `tex/latex`, а не плагин правил"],
+  ["papers.mjs", "path helpers: DEFAULT_PAPERS_ROOT, paperFiles, papersRoot"],
+  ["latex-language.mjs", "the `tex/latex` LANGUAGE, not a rule plugin"],
 ]);
 
-/** Считает правила, принимая ОБЕ формы экспорта, которые есть в этом репозитории. */
+/** Counts the rules, accepting BOTH export shapes that exist in this repository. */
 export async function countRules(root = ROOT) {
   const dir = join(root, "eslint-rules");
   let total = 0;
@@ -43,7 +43,8 @@ export async function countRules(root = ROOT) {
     if (NOT_RULE_PLUGINS.has(f)) continue;
     const mod = await import(join(dir, f));
     const d = mod.default;
-    // Форма A: `{ rules: { … } }` — плагин. Форма B: `{ … }` — сами правила, как в tex-build.
+    // Shape A: `{ rules: { … } }` — a plugin. Shape B: `{ … }` — the rules themselves, as in
+    // tex-build.
     const rules = d?.rules ?? d;
     const looksLikeRules =
       rules && typeof rules === "object" && Object.values(rules).every((r) => r && typeof r.create === "function");
@@ -55,9 +56,9 @@ export async function countRules(root = ROOT) {
   }
   if (unknown.length) {
     const e = new Error(
-      `форму экспорта не удалось распознать: ${unknown.join(", ")}. ` +
-        `Это ОШИБКА, а не пропуск: молчаливый пропуск уже стоил двух правил. ` +
-        `Либо модуль экспортирует правила, либо он назван в NOT_RULE_PLUGINS с причиной.`,
+      `could not recognize the export shape: ${unknown.join(", ")}. ` +
+        `This is an ERROR, not a skip: a silent skip has already cost two rules. ` +
+        `Either the module exports rules, or it is named in NOT_RULE_PLUGINS with a reason.`,
     );
     e.unknown = unknown;
     throw e;
@@ -66,13 +67,13 @@ export async function countRules(root = ROOT) {
 }
 
 /**
- * Файлы по суффиксу, рекурсивно, мимо node_modules.
+ * Files by suffix, recursively, skipping node_modules.
  *
- * 🔴 `lstatSync`, А НЕ `statSync`, И ЭТО НЕСУЩЕЕ. `statSync` идёт ПО СИМЛИНКУ, а в этом
- * репозитории `.claude/skills/*` — двадцать четыре симлинка обратно в `skills/`. Первая версия
- * насчитала 83 харнесса вместо 49: те же файлы посчитались дважды, по одному разу на каждый
- * путь к ним. Поймано не глазом, а расхождением с двумя независимыми командами — `git ls-files`
- * и `find` дают 49 обе. Симлинк на каталог — это не новый каталог.
+ * 🔴 `lstatSync`, NOT `statSync`, AND THIS IS LOAD-BEARING. `statSync` FOLLOWS THE SYMLINK, and
+ * in this repository `.claude/skills/*` is twenty-four symlinks back into `skills/`. The first
+ * version counted 83 harnesses instead of 49: the same files were counted twice, once for each
+ * path leading to them. Caught not by eye but by a discrepancy with two independent commands —
+ * `git ls-files` and `find` both give 49. A symlink to a directory is not a new directory.
  */
 export function countFiles(root, suffix) {
   let n = 0;
@@ -100,8 +101,9 @@ export async function actualCounts(root = ROOT) {
 }
 
 /**
- * Числа, ОБЪЯВЛЕННЫЕ в README. Форма — явная пометка, а не проза: `<!-- count:rules -->10`.
- * Цифрами, а не словами, ровно потому, что «Forty-five» нечем сравнить.
+ * The numbers DECLARED in the README. The form is an explicit marker, not prose:
+ * `<!-- count:rules -->10`. In digits, not in words, precisely because there is nothing to
+ * compare "Forty-five" against.
  */
 export function declaredCounts(text) {
   const out = {};
@@ -109,35 +111,51 @@ export function declaredCounts(text) {
   return out;
 }
 
+/**
+ * 🔴 TWO FILES, NOT ONE, and this is not a relaxation. On 17.09 the README was cut down to what
+ * the user needs, and the testing methodology was moved to CONTRIBUTING.md — together with the
+ * harness and battery numbers. A check that knows one file would have answered "the README has
+ * not a single marker" and would have been FORMALLY right: the numbers did not go anywhere, they
+ * moved. The requirement stayed the same and just as strong: EVERY number on disk must be
+ * declared somewhere in these files. All that changes is where exactly.
+ */
+export const DECLARING_FILES = ["README.md", "CONTRIBUTING.md"];
+
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const readme = readFileSync(join(ROOT, "README.md"), "utf-8");
-  const declared = declaredCounts(readme);
+  const declared = {};
+  const declaredIn = {}; // so a finding sends you to fix THE file where the number is written
+  for (const f of DECLARING_FILES) {
+    for (const [k, v] of Object.entries(declaredCounts(readFileSync(join(ROOT, f), "utf-8")))) {
+      declared[k] = v;
+      declaredIn[k] = f;
+    }
+  }
   const actual = await actualCounts();
   const keys = Object.keys(actual);
 
-  // Пустой скан — это НЕ «расхождений нет». Без этого стража удаление всех пометок из README
-  // сделало бы проверку вечно зелёной.
+  // An empty scan is NOT "there are no discrepancies". Without this guard, deleting every marker
+  // from the README would make the check green forever.
   if (Object.keys(declared).length === 0) {
-    console.error("🔴 в README нет ни одной пометки `<!-- count:… -->` — сверять нечего, а значит проверка ничего не утверждает");
+    console.error(`🔴 none of ${DECLARING_FILES.join(", ")} has a \`<!-- count:… -->\` marker — there is nothing to check against, so the check asserts nothing`);
     process.exit(1);
   }
 
   const bad = [];
   for (const k of keys) {
-    if (!(k in declared)) bad.push(`  ${k}: на диске ${actual[k]}, а в README не объявлено вовсе`);
-    else if (declared[k] !== actual[k]) bad.push(`  ${k}: README обещает ${declared[k]}, на диске ${actual[k]}`);
+    if (!(k in declared)) bad.push(`  ${k}: ${actual[k]} on disk, and declared neither in README nor in CONTRIBUTING`);
+    else if (declared[k] !== actual[k]) bad.push(`  ${k}: ${declaredIn[k]} promises ${declared[k]}, ${actual[k]} on disk`);
   }
   for (const k of Object.keys(declared)) {
-    if (!keys.includes(k)) bad.push(`  ${k}: README объявляет ${declared[k]}, но такого счётчика нет`);
+    if (!keys.includes(k)) bad.push(`  ${k}: ${declared[k]} declared, but there is no such counter`);
   }
 
   if (bad.length) {
-    console.error("🔴 README называет числа, которых нет на диске:");
+    console.error("🔴 numbers are named that are not on disk:");
     for (const b of bad) console.error(b);
-    console.error("\n  Числа в README производятся этой командой, а не пишутся рукой.");
+    console.error("\n  The numbers in the README are produced by this command, not written by hand.");
     process.exit(1);
   }
   console.log(
-    `✓ README: ${keys.map((k) => `${k} ${actual[k]}`).join(" · ")} — каждое число сверено с диском`,
+    `✓ ${keys.map((k) => `${k} ${actual[k]}`).join(" · ")} — every number checked against disk`,
   );
 }

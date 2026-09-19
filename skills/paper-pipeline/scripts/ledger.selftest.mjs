@@ -1,7 +1,7 @@
 // ledger.selftest.mjs — plant each failure this thing exists to catch, and watch it catch them.
 //
 // The project's rule, written after five tools reported success while doing nothing:
-// «чекер, который ни разу не падал, не считается работающим». So this file does not check that
+// "a checker that has never failed does not count as working". So this file does not check that
 // the ledger runs. It checks that it says NO when it should, and YES when it should — both
 // directions, for every property the design claims.
 //
@@ -28,7 +28,7 @@ const check = (name, actual, expected) => {
 };
 
 try {
-  // `skillHash` убран из деструктуризации 2026-08-28 — не читался ни одной проверкой ниже.
+  // `skillHash` was dropped from the destructuring on 2026-08-28 — no check below was reading it.
   const { record, status } = await import('./ledger.mjs');
   const mk = (t) => { writeFileSync(join(paper, 'paper.md'), t); };
   const { mkdirSync } = await import('node:fs');
@@ -143,7 +143,7 @@ try {
   {
     const all = readFileSync(LEDGER_FILE, 'utf8').split('\n').filter(Boolean);
     const [abstained, finding] = all.slice(-2).map((l) => JSON.parse(l));
-    abstained.ts = '2026-01-01T00:00:00.000Z'; // заведомо старше, без зависимости от таймера
+    abstained.ts = '2026-01-01T00:00:00.000Z'; // deliberately older, with no dependence on a timer
     writeFileSync(
       LEDGER_FILE,
       [...all.slice(0, -2), JSON.stringify(finding), JSON.stringify(abstained)].join('\n') + '\n',

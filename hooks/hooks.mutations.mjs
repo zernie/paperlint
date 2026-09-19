@@ -118,44 +118,48 @@ const M = [
     "guard/the whole subtree guarded, not just sources",
     "drop the extension filter — copying a script into a paper's repro bundle is denied, which is " +
       "ordinary work being refused, and a guard that refuses ordinary work gets muted",
-    // 🔴 Цель переехала 16.09: `isPaperSource` разделена на «не снимок» И «расширение исходника»,
-    // когда `versions/` получил вырезку. Мутация метит именно в ФИЛЬТР РАСШИРЕНИЯ — снятие
-    // вырезки это другое свойство и у него своя мутация ниже.
+    // 🔴 The target moved on 09-16: `isPaperSource` was split into "not a snapshot" AND "has a
+    // source extension" once `versions/` got its carve-out. This mutation targets exactly the
+    // EXTENSION FILTER — removing the carve-out is a different property with its own mutation
+    // below.
     "const hasSourceExtension = (p) =>\n  p.endsWith(\".tex\") || /\\/(paper|draft)\\.md$/.test(p) || /^(paper|draft)\\.md$/.test(p);",
     "const hasSourceExtension = (p) => p.length > 0;",
   ],
   [
     GUARD,
-    "guard/чтение манифеста снова относительное",
-    "снять привязку к корню проекта — при дрейфе cwd чтение падает, а по правилу «нечитаемое " +
-      "объявление денаит» страж блокирует ЛЮБУЮ команду Bash, включая ту, которой чинят",
+    "guard/manifest read goes relative again",
+    "drop the anchor to the project root — the read fails once cwd drifts, and under the rule " +
+      "\"an unreadable declaration denies\" the guard blocks ANY Bash command, including the one " +
+      "that would fix it",
     "needs: [provide(\"pkg\", 'cat \"${CLAUDE_PROJECT_DIR:-.}/package.json\"')],",
     "needs: [provide(\"pkg\", \"cat package.json\")],",
   ],
   [
     "hooks/paper-skills-nudge.hook.mjs",
-    "nudge/чтение манифеста снова относительное",
-    "то же у СИБЛИНГА, и отказ там ПРОТИВОПОЛОЖНЫЙ: PostToolUse-хук не денаит, а отвечает " +
-      "`nothing()` — то есть молча перестаёт срабатывать. Тишина у нуджа и есть состояние " +
-      "успеха, поэтому мёртвый хук неотличим от работающего ничем, кроме этой мутации",
+    "nudge/manifest read goes relative again",
+    "the same defect in the SIBLING, and the failure there is the OPPOSITE one: a PostToolUse " +
+      "hook does not deny, it returns `nothing()` — i.e. it just quietly stops firing. Silence " +
+      "is exactly what a nudge's success state looks like, so a dead hook is indistinguishable " +
+      "from a working one except by this mutation",
     "needs: [provide(\"pkg\", 'cat \"${CLAUDE_PROJECT_DIR:-.}/package.json\"')],",
     "needs: [provide(\"pkg\", \"cat package.json\")],",
   ],
   [
     GUARD,
-    "guard/вырезка versions/ перестаёт освобождать",
-    "снять освобождение замороженных снимков — архивная запись в `versions/` снова запрещена, " +
-      "и восстановить исходник статьи нечем: гейт закрывает неизменяемый артефакт, оставляя " +
-      "открытым живой `paper.tex`, ради которого он и существует",
+    "guard/versions/ carve-out stops exempting",
+    "remove the exemption for frozen snapshots — an archival record under `versions/` is denied " +
+      "again, and there is nothing left to restore the paper's source from: the gate locks down " +
+      "an immutable artifact while leaving the live `paper.tex` it exists to protect open",
     "const isPaperSource = (p) => !isFrozenSnapshot(p) && hasSourceExtension(p);",
     "const isPaperSource = (p) => hasSourceExtension(p);",
   ],
   [
     GUARD,
-    "guard/вырезка versions/ становится ШИРЕ, чем надо",
-    "объявить снимком что угодно — вырезка накрывает живой `paper.tex`, и страж перестаёт " +
-      "быть стражем, продолжая выглядеть установленным. Парная к предыдущей: одна доказывает, " +
-      "что освобождение ЕСТЬ, другая — что оно не дотягивается до того, что защищают",
+    "guard/versions/ carve-out becomes WIDER than it should",
+    "declare anything a snapshot — the carve-out swallows the live `paper.tex`, and the guard " +
+      "stops being a guard while still looking installed. Paired with the previous one: one " +
+      "proves the exemption EXISTS, the other proves it does not overreach into what it " +
+      "protects",
     "const isFrozenSnapshot = (p) => /(^|\\/)versions\\/[^/]+$/.test(p);",
     "const isFrozenSnapshot = () => true;",
   ],

@@ -1,16 +1,17 @@
 /**
- * Батарея на `paper/typography` — три мутации по трём РАЗНЫМ свойствам: сам счёт, храповик и
- * его направление.
+ * Battery for `paper/typography` — three mutations over three DIFFERENT properties: the count
+ * itself, the ratchet, and its direction.
  *
- * 🔴 Почему храповику нужны ДВЕ мутации, а не одна. У него две половины, и они противоположны:
- * объявленный долг обязан МОЛЧАТЬ (иначе легаси-статья топит новую находку и правило выключают),
- * а рост обязан ГОВОРИТЬ (иначе долг превращается в разрешение). Мутация, снимающая первую,
- * оставляет вторую зелёной и наоборот — поэтому обе и нужны, и умереть они обязаны на разных
- * ассертах.
+ * 🔴 Why the ratchet needs TWO mutations, not one. It has two halves, and they're opposite:
+ * declared debt must STAY SILENT (otherwise a legacy paper drowns out a new finding and the
+ * rule gets turned off), while growth must SPEAK (otherwise debt turns into a permit). A
+ * mutation removing the first leaves the second green and vice versa — so both are needed, and
+ * they must die on different asserts.
  *
- * ⚠️ Чего батарея НЕ проверяет и почему: точность самих регулярок счёта. Их держит харнесс
- * своими фикстурами (arXiv-идентификатор не десятичная дробь, `Figure` подряд не дефект), и
- * мутация здесь доказывала бы, что фикстура существует, а не что счёт верен.
+ * ⚠️ What the battery does NOT check, and why: the accuracy of the counting regexes
+ * themselves. The harness's own fixtures hold those (an arXiv identifier is not a decimal
+ * fraction, consecutive `Figure`s are not a defect), and a mutation here would prove the
+ * fixture exists, not that the count is correct.
  */
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
@@ -27,34 +28,35 @@ process.exit(
     runner: "node",
     cases: [
       {
-        name: "храповик перестаёт ПРОПУСКАТЬ объявленный долг",
+        name: "the ratchet stops LETTING declared debt THROUGH",
         harness: HARNESS,
         expect: "known debt, unchanged, is silent",
         disables:
-          "половину «долг молчит» — легаси-статья с 246 знаками § начинает краснеть на каждом " +
-          "прогоне, и правило выключают за день вместе с новыми находками",
+          "the 'debt stays silent' half — a legacy paper with 246 § characters starts going " +
+          "red on every run, and the rule gets turned off within a day, taking new findings with it",
         edits: [[RULE, "if (n <= before) continue; // known debt, unchanged or paid down", "if (false) continue;"]],
       },
       {
-        name: "храповик перестаёт ЛОВИТЬ рост",
+        name: "the ratchet stops CATCHING growth",
         harness: HARNESS,
         expect: "growth over known debt is reported",
         disables:
-          "вторую половину — ту, ради которой долг вообще объявляют: без неё запись в файле " +
-          "долга становится бессрочным разрешением, а не отметкой сегодняшнего состояния",
-        // 🔴 НЕ `continue;` без условия: это убивает правило целиком, и харнесс умирает на первом
-        // же ассерте «срабатывает на §» — то есть находка о МУТАЦИИ, а не о защите. `before > 0`
-        // оставляет правило живым там, где долга нет, и глушит РОВНО рост над объявленным долгом.
+          "the second half — the one debt is declared for in the first place: without it a " +
+          "record in the debt file turns into a permanent permit rather than a mark of today's state",
+        // 🔴 NOT an unconditional `continue;`: that kills the rule entirely, and the harness dies
+        // on the very first "fires on §" assert — that is, a finding about the MUTATION, not
+        // about the protection. `before > 0` keeps the rule alive where there is no debt, and
+        // mutes EXACTLY growth over declared debt.
         edits: [[RULE, "if (n <= before) continue; // known debt, unchanged or paid down", "if (before > 0) continue;"]],
       },
       {
-        name: "счётчик `§` перестаёт видеть макросную форму",
+        name: "the `§` counter stops seeing the macro form",
         harness: HARNESS,
         expect: "the section sign count includes the macro form, not only the glyph",
         disables:
-          "ровно тот случай, ради которого счётчик и писался: в LaTeX знак секции набирают " +
-          "`\\S\\ref{…}`, а не глифом, и проверка, считающая только глиф, отчитывается чисто " +
-          "на дефекте, которым её вызвали к жизни",
+          "exactly the case the counter was written for: in LaTeX the section sign is typeset " +
+          "as `\\S\\ref{…}`, not as the glyph, and a check that only counts the glyph reports " +
+          "clean on the very defect it was written to catch",
         edits: [
           [
             RULE,

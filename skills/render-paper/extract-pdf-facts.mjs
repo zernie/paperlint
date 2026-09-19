@@ -1,29 +1,32 @@
 #!/usr/bin/env node
 /**
- * extract-pdf-facts.mjs — измерить готовый PDF и записать ФАКТЫ в JSON. Ничего не судит.
+ * extract-pdf-facts.mjs — measure a finished PDF and write the FACTS into JSON. It judges nothing.
  *
- * ЗАЧЕМ РАЗДЕЛЕНИЕ. До 26.08 измерение и суждение жили в одной функции (`check-geometry.mjs`),
- * то есть на пятой ступени лесенки — своим скриптом. Суждение переезжает в правила ESLint
- * (реестр, severity конфигом, подавление с причиной, позиции). Сюда остаётся сантехника.
+ * WHY THE SPLIT. Until 26.08 measuring and judging lived in one function (`check-geometry.mjs`),
+ * that is, on the fifth rung of the ladder — in a script of our own. The judging moves into ESLint
+ * rules (a registry, severity from the config, suppression with a reason, positions). What stays
+ * here is the plumbing.
  *
- * Это НЕ наша выдумка: так устроен veraPDF, единственный PDF-валидатор с пользовательскими
- * правилами — дословно «doesn't parse PDF documents directly. Instead it processes the machine
- * readable report output». Бинарь в движок правил не попадает вообще.
+ * This is NOT our invention: veraPDF, the only PDF validator with user-defined rules, is built that
+ * way — verbatim, it "doesn't parse PDF documents directly. Instead it processes the machine
+ * readable report output". The binary never reaches the rule engine at all.
  *
- * ЧЕМ МЕРЯЕМ. `banal` Эдди Колера (тот, что внутри HotCRP зовёт `checkformat.php`) — геометрия.
- * `pdffonts` — шрифты, которых banal не знает по построению (слов `type3`/`embed` в его 1901
- * строке нет ни разу). Два инструмента, две половины, ни одна не дублирует другую.
+ * WHAT WE MEASURE WITH. Eddie Kohler's `banal` (the one HotCRP's `checkformat.php` calls inside) —
+ * geometry. `pdffonts` — the fonts banal does not know about by construction (the words
+ * `type3`/`embed` do not appear once in its 1901 lines). Two tools, two halves, neither duplicating
+ * the other.
  *
- * 🔴 ПРОТУХАНИЕ. Факты — производное от PDF, а PDF в git НЕ КОММИТИТСЯ
- * (потребитель исключает собранный `paper.pdf` своим `.gitignore`). Значит и факты коммитить
- * нельзя: получился
- * бы ровно `api:check`, который читал `dist/` от предыдущей сборки и печатал «verified, no drift».
- * Поэтому файл пишется в `_build/` (gitignored) и несёт `pdf_sha256` — первое правило сверяет его
- * с файлом на диске, и протухшие факты становятся находкой, а не тишиной.
+ * 🔴 GOING STALE. The facts are derived from the PDF, and the PDF is NOT COMMITTED to git
+ * (the consumer excludes the built `paper.pdf` in its own `.gitignore`). So the facts must not be
+ * committed either: that would produce exactly `api:check`, which read a `dist/` from the previous
+ * build and printed "verified, no drift".
+ * So the file is written into `_build/` (gitignored) and carries `pdf_sha256` — the first rule
+ * checks it against the file on disk, and stale facts become a finding rather than silence.
  *
- * 🔴 ДВА РЕЖИМА ОТСУТСТВИЯ ИНСТРУМЕНТА. Локально `banal` может не стоять — это законный пропуск.
- * В CI отсутствие инструмента это ошибка ОКРУЖЕНИЯ, и молчать о ней нельзя: пропущенный шаг в
- * интерфейсе неотличим от прошедшего. Отсюда `--strict` (CI ставит его всегда).
+ * 🔴 TWO MODES OF A MISSING TOOL. Locally `banal` may not be installed — that is a legitimate skip.
+ * In CI a missing tool is an ENVIRONMENT error, and staying silent about it is not allowed: a
+ * skipped step is indistinguishable from a passing one in the interface. Hence `--strict` (CI always
+ * passes it).
  */
 import { execFileSync } from "node:child_process";
 import {
@@ -39,7 +42,7 @@ import { isMain } from "../paper-pipeline/scripts/consumer.mjs";
 
 const ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 
-/** Разбор вывода pdffonts: начертание, тип, встроенность. */
+/** Parsing the output of pdffonts: face, type, whether it is embedded. */
 export function readFonts(text) {
   const rows = text
     .split("\n")
@@ -63,31 +66,33 @@ export function sha256(path) {
 }
 
 /**
- * Высоты двух колонок ПОСЛЕДНЕЙ страницы, в пунктах, либо null. Ничего не судит — порог у правила.
+ * The heights of the two columns of the LAST page, in points, or null. It judges nothing — the
+ * threshold belongs to the rule.
  *
- * ЗАЧЕМ. 29.08 издатель (Conference Publishing) вернул ПРИНЯТУЮ статью с «Please correct the last
- * page balancing»: библиография заполняла первую колонку на 625 pt и вторую на 304. Ни один наш
- * гейт этого не видел: `banal` считает страницы и кегли, а не распределение материала по
- * колонкам, и `pdflatex` про свой вывод не знает ничего.
+ * WHY. On 29.08 the publisher (Conference Publishing) sent an ACCEPTED paper back with "Please
+ * correct the last page balancing": the bibliography filled the first column to 625 pt and the
+ * second to 304. Not one of our gates saw it: `banal` counts pages and font sizes, not the
+ * distribution of material across columns, and `pdflatex` knows nothing about its own output.
  *
- * 🔴 МЕРЯТЬ ГЕОМЕТРИЮ, А НЕ СТРОКИ. Первая версия замера в тот день считала строки из
- * `pdftotext -layout` и объявила «сбалансировано» на странице с разницей в 377 pt: раскладка
- * склеивает колонки построчно, и у обеих выходит одинаковое число строк ПО ПОСТРОЕНИЮ.
+ * 🔴 MEASURE GEOMETRY, NOT LINES. The first version of the measurement that day counted lines from
+ * `pdftotext -layout` and declared "balanced" on a page with a 377 pt difference: the layout glues
+ * the columns together line by line, and both end up with the same number of lines BY CONSTRUCTION.
  *
- * 🔴 ДЕЛИТЬ ПО СЕРЕДИНЕ СТРАНИЦЫ, А НЕ ПО КРАЯМ СЛОВ. Вторая версия брала середину между
- * крайними словами — и на странице, где заполнена только левая колонка, разрез приходился
- * внутрь неё, давая «77 / 731» там, где на бумаге шесть строк вверху слева.
+ * 🔴 SPLIT BY THE MIDDLE OF THE PAGE, NOT BY THE EDGES OF THE WORDS. The second version took the
+ * middle between the outermost words — and on a page where only the left column is filled, the cut
+ * fell inside it, giving "77 / 731" where on paper there are six lines at the top left.
  *
- * 🔴 РЕВЬЮ-СБОРКУ НЕ СУДИМ, и это не послабление. Номера строк на полях идут по ВСЕЙ высоте
- * страницы, поэтому колонка с десятком строк текста меряется как полная: замер 29.08 дал
- * «656.8 / 654.8» для страницы, у которой правая колонка заполнена на шестую часть. Балансировка
- * же требуется от camera-ready, а не от версии для рецензентов, — значит правильный ответ здесь
- * «нечего мерить», а не подогнанное число. Признак: короткие целые числа на внешних полях.
+ * 🔴 WE DO NOT JUDGE A REVIEW BUILD, and that is not a relaxation. The line numbers in the margins
+ * run down the WHOLE height of the page, so a column with a dozen lines of text measures as full: a
+ * measurement on 29.08 gave "656.8 / 654.8" for a page whose right column is filled to one sixth.
+ * Balancing, however, is required of a camera-ready, not of the version for reviewers — so the right
+ * answer here is "there is nothing to measure", not a fudged number. The tell: short integers in the
+ * outer margins.
  *
- * Третья и четвёртая эвристики (срез «подвала» по разрыву между строками) ПРОВЕРЕНЫ И ОТКЛОНЕНЫ
- * 29.08: на реальной статье разрез срабатывал на законном разрыве внутри колонки и оставлял от
- * неё 31 pt из 657. Здесь ничего подобного нет намеренно — чем меньше эвристик, тем меньше
- * способов соврать.
+ * The third and fourth heuristics (cutting off a "footer" by the gap between lines) were TRIED AND
+ * REJECTED on 29.08: on a real paper the cut fired on a legitimate gap inside a column and left 31
+ * pt of 657 of it. There is deliberately nothing of the sort here — the fewer heuristics, the fewer
+ * ways to lie.
  */
 export function lastPageColumns(pdf, npages, pageWidthPt) {
   if (!npages || npages < 1 || !pageWidthPt) return null;
@@ -102,16 +107,17 @@ export function lastPageColumns(pdf, npages, pageWidthPt) {
       },
     );
   } catch {
-    return null; // pdftotext может не стоять локально; в CI это ловит --strict у вызывающего
+    return null; // pdftotext may not be installed locally; in CI the caller's --strict catches that
   }
   return columnHeights(xml, pageWidthPt);
 }
 
 /**
- * Разбор `pdftotext -bbox` → две высоты или null. Вынесено из функции выше РАДИ ТЕСТА: за один
- * день 29.08 в этом замере было четыре ошибки подряд, и ни одну не поймал бы тест на живом PDF —
- * они все про разбор координат. Здесь нет ни одного обращения к диску, значит случаи подаются
- * рукописной разметкой, включая те, которых в корпусе сегодня нет.
+ * Parsing `pdftotext -bbox` → two heights or null. Pulled out of the function above FOR THE SAKE OF
+ * A TEST: in one day, 29.08, this measurement had four errors in a row, and a test over a live PDF
+ * would have caught none of them — they are all about parsing coordinates. There is not a single
+ * disk access here, so the cases are fed in as hand-written markup, including the ones the corpus
+ * does not contain today.
  */
 export function columnHeights(xml, pageWidthPt) {
   if (!pageWidthPt) return null;
@@ -120,7 +126,7 @@ export function columnHeights(xml, pageWidthPt) {
       /<word xMin="([\d.]+)" yMin="([\d.]+)" xMax="([\d.]+)" yMax="([\d.]+)">([^<]*)<\/word>/g,
     ),
   ].map((m) => [+m[1], +m[2], +m[3], +m[4], m[5]]);
-  if (words.length < 60) return null; // страница-огрызок: балансировать там нечего
+  if (words.length < 60) return null; // a stub of a page: there is nothing to balance there
 
   const margin = pageWidthPt * 0.08;
   const lineNumbers = words.filter(
@@ -128,7 +134,7 @@ export function columnHeights(xml, pageWidthPt) {
       /^\d{1,4}$/.test(w[4].trim()) &&
       (w[2] < margin || w[0] > pageWidthPt - margin),
   );
-  if (lineNumbers.length >= 5) return null; // сборка для рецензентов — балансировка к ней не предъявляется
+  if (lineNumbers.length >= 5) return null; // a build for reviewers — balancing is not required of it
 
   const mid = pageWidthPt / 2;
   const h = (side) => {
@@ -142,12 +148,12 @@ export function columnHeights(xml, pageWidthPt) {
 }
 
 /**
- * Собрать факты. Бросает, если инструмент недоступен — решение «пропуск или отказ» принимает
- * вызывающий, потому что оно зависит от того, локальный это прогон или CI.
+ * Collect the facts. Throws if a tool is unavailable — the decision "skip or refuse" is taken by the
+ * caller, because it depends on whether this is a local run or CI.
  */
 export function extract(pdf, { venue, kind, banalPath } = {}) {
   const bp = banalPath || process.env.BANAL || join(ROOT, "vendor/banal");
-  if (!existsSync(bp)) throw new Error(`banal не найден: ${bp}`);
+  if (!existsSync(bp)) throw new Error(`banal not found: ${bp}`);
   const banal = JSON.parse(
     execFileSync("perl", [bp, "-no-time", "-json", pdf], { encoding: "utf8" }),
   );
@@ -155,25 +161,26 @@ export function extract(pdf, { venue, kind, banalPath } = {}) {
     execFileSync("pdffonts", [pdf], { encoding: "utf8" }),
   );
 
-  // banal отдаёт papersize как [высота, ширина] в ПУНКТАХ — порядок проверен на живом выводе 26.08
+  // banal returns papersize as [height, width] in POINTS — the order was checked against live
+  // output 26.08
   const ps = Array.isArray(banal.papersize)
     ? banal.papersize.map((x) => x / 72)
     : null;
   const pages = banal.pages || [];
   const bib = pages.find((x) => x.type === "bib" && x.reffontsize != null);
 
-  // 🔴 banal ОПУСКАЕТ поле `type`, когда оно равно "body" (его строка 1022:
-  // `push ... if $page->{type} ne "body"`). Поэтому `filter(x => x.type === "body")` возвращает
-  // НОЛЬ для любой статьи на свете — и ровно так была написана первая версия гейта лимита
-  // страниц в `check-geometry.mjs`. Она печатала «0 находок» и не могла сработать ни разу:
-  // `if (bodyPages && ...)` замыкается на нуле. Тот же класс, что мёртвая проверка
-  // относительных дат в kb-lint — проверка, у которой отказ неотличим от успеха.
-  // Полный набор типов у banal: blank · cover · appendix · bib · figure · body(по умолчанию).
+  // 🔴 banal OMITS the `type` field when it equals "body" (its line 1022:
+  // `push ... if $page->{type} ne "body"`). So `filter(x => x.type === "body")` returns ZERO for any
+  // paper in the world — and that is exactly how the first version of the page-limit gate in
+  // `check-geometry.mjs` was written. It printed "0 findings" and could not fire even once:
+  // `if (bodyPages && ...)` short-circuits on zero. The same class as the dead relative-dates check
+  // in kb-lint — a check whose failure is indistinguishable from its success.
+  // banal's full set of types: blank · cover · appendix · bib · figure · body (the default).
   const byType = {};
   for (const x of pages)
     byType[x.type ?? "body"] = (byType[x.type ?? "body"] || 0) + 1;
-  // «Тело» для лимита страниц — всё, что не библиография и не приложение: cover и figure
-  // занимают место в лимите так же, как обычный текст.
+  // The "body" for the page limit is everything that is not the bibliography and not an appendix:
+  // cover and figure take up room in the limit just as ordinary text does.
   const refPages = byType.bib || 0;
   const appendixPages = byType.appendix || 0;
 
@@ -203,9 +210,9 @@ export function extract(pdf, { venue, kind, banalPath } = {}) {
 }
 
 /**
- * Куда подаётся статья — из `<paper-dir>/venue.json`. До 26.08 это не было объявлено НИГДЕ
- * машиночитаемо: комментарий в `venues/agenticdev.yaml` ссылался на `paper.yaml`, которого не
- * существует. Классический случай конструкции, описанной прозой и не построенной.
+ * Where the paper is submitted — from `<paper-dir>/venue.json`. Until 26.08 this was declared
+ * NOWHERE machine-readably: a comment in `venues/agenticdev.yaml` referred to `paper.yaml`, which
+ * does not exist. A classic case of a construction described in prose and never built.
  */
 export function declaredVenue(paperDir) {
   const f = join(paperDir, "venue.json");
@@ -217,16 +224,18 @@ export function declaredVenue(paperDir) {
 }
 
 /**
- * Принять либо путь к PDF, либо ПАПКУ СТАТЬИ — и во втором случае найти артефакт самому.
+ * Accept either a path to a PDF or a PAPER DIRECTORY — and in the second case find the artifact on
+ * its own.
  *
- * 🔴 Зачем понадобилось: у `compile-rules-2026` PDF не лежит рядом с исходником. Она пишется в
- * `paper.md` и собирается скриптом в `build/acl_latex.pdf`. Захардкодить `paper.pdf` в обходе CI
- * значило бы молча пропускать ровно эту статью — тот же класс, что пропуск `aisec-2026` из-за
- * отсутствия `venue.json`, только на шаг позже.
+ * 🔴 Why it became necessary: `compile-rules-2026` does not keep its PDF beside the source. It is
+ * written in `paper.md` and built by a script into `build/acl_latex.pdf`. Hardcoding `paper.pdf`
+ * into the CI walk would mean silently skipping exactly that paper — the same class as skipping
+ * `aisec-2026` because of a missing `venue.json`, only one step later.
  *
- * Путь объявляет сама статья полем `pdf` в `venue.json`; по умолчанию — `paper.pdf` рядом.
- * Факты при этом ВСЕГДА кладутся в `<папка статьи>/_build/`, а не рядом с PDF: иначе у этой
- * статьи они уехали бы в `build/_build/`, куда не смотрит ни glob конфига, ни человек.
+ * The path is declared by the paper itself, in the `pdf` field of `venue.json`; the default is
+ * `paper.pdf` next to it. The facts, meanwhile, ALWAYS go into `<paper directory>/_build/` and not
+ * next to the PDF: otherwise for this paper they would have gone to `build/_build/`, where neither
+ * the config's glob nor a human ever looks.
  */
 export function resolveTarget(arg) {
   const isDir = existsSync(arg) && statSync(arg).isDirectory();
@@ -236,42 +245,42 @@ export function resolveTarget(arg) {
   return { paperDir, pdf, decl: decl || {} };
 }
 
-// 🔴 `isMain`, А НЕ `import.meta.url === `file://${process.argv[1]}``. Node приводит точку входа
-// к РЕАЛЬНОМУ пути для `import.meta.url`, но оставляет `process.argv[1]` как набрано, поэтому
-// через симлинк они не равны и CLI молча не исполняется — процесс выходит 0, не сделав ничего.
-// Потребитель добирается до этих скриптов именно через симлинк. Наблюдено 14.09 на прогоне
-// 34784079821: `extract-pdf-facts.mjs --strict` вернул RC=0 и не создал файл фактов.
+// 🔴 `isMain`, NOT `import.meta.url === `file://${process.argv[1]}``. Node resolves the entry point
+// to its REAL path for `import.meta.url` but leaves `process.argv[1]` as typed, so through a symlink
+// the two are not equal and the CLI silently does not execute — the process exits 0 having done
+// nothing. The consumer reaches these scripts precisely through a symlink. Observed 14.09 on run
+// 34784079821: `extract-pdf-facts.mjs --strict` returned RC=0 and created no facts file.
 if (isMain(import.meta.url)) {
   const argv = process.argv.slice(2);
   const strict = argv.includes("--strict");
   const [target, venue, kind] = argv.filter((a) => a !== "--strict");
   if (!target) {
     console.error(
-      "usage: extract-pdf-facts.mjs <paper.pdf | папка статьи> [venue] [kind] [--strict]",
+      "usage: extract-pdf-facts.mjs <paper.pdf | paper directory> [venue] [kind] [--strict]",
     );
     process.exit(2);
   }
   if (!existsSync(target)) {
-    console.error(`🛑 нет пути ${target}`);
+    console.error(`🛑 no such path ${target}`);
     process.exit(1);
   }
   const { paperDir, pdf } = resolveTarget(target);
   if (!existsSync(pdf)) {
-    // 🔴 КОД 3, А НЕ 1 (2026-08-31, внешнее ревью). «Артефакт не собран» и «извлечение упало»
-    // — разные события, и вызывающий обязан их различать. Раньше оба давали 1, поэтому шаг CI
-    // не мог поступить иначе, чем считать ЛЮБОЙ отказ ожидаемым: он писал «не собран этим
-    // джобом» и шёл дальше. Следствие — площадка, у которой `--strict` упал по настоящей
-    // причине (нет pdffonts, битый PDF, падение разбора), молча теряла ВСЕ проверки шрифтов,
-    // геометрии и лимита страниц, а джоб выходил в ноль.
-    // Знание о том, где лежит PDF, живёт здесь (venue.json + resolveTarget), поэтому различать
-    // должен этот скрипт. Проверка существования на стороне вызывающего была бы вторым
-    // источником правды о путях.
+    // 🔴 CODE 3, NOT 1 (2026-08-31, external review). "The artifact is not built" and "extraction
+    // crashed" are different events, and the caller must tell them apart. Both used to give 1, so
+    // the CI step could not do anything other than treat ANY failure as expected: it wrote "not
+    // built by this job" and moved on. The consequence — a venue whose `--strict` failed for a real
+    // reason (no pdffonts, a broken PDF, a parse crash) silently lost ALL the font, geometry and
+    // page-limit checks, and the job exited zero.
+    // The knowledge of where the PDF lies lives here (venue.json + resolveTarget), so this script is
+    // the one that must tell them apart. An existence check on the caller's side would be a second
+    // source of truth about paths.
     console.error(
-      `🛑 нет артефакта ${pdf} — статья объявила его в venue.json, но он не собран`,
+      `🛑 no artifact ${pdf} — the paper declared it in venue.json, but it is not built`,
     );
     process.exit(3);
   }
-  // Аргументы командной строки перебивают декларацию — для разовой проверки чужого PDF.
+  // Command-line arguments override the declaration — for a one-off check of someone else's PDF.
   const decl = declaredVenue(paperDir) || {};
   const v = venue ?? decl.venue ?? null;
   const k = kind ?? decl.kind ?? null;
@@ -282,12 +291,12 @@ if (isMain(import.meta.url)) {
     const msg = e.message.split("\n")[0];
     if (strict) {
       console.error(
-        `🛑 факты не сняты: ${msg} — в CI это ошибка окружения, а не пропуск`,
+        `🛑 facts not taken: ${msg} — in CI this is an environment error, not a skip`,
       );
       process.exit(1);
     }
     console.error(
-      `⏭️  факты не сняты: ${msg} (локальный прогон, без --strict). PDF НЕ ПРОВЕРЕН`,
+      `⏭️  facts not taken: ${msg} (a local run, without --strict). THE PDF IS NOT CHECKED`,
     );
     process.exit(0);
   }
@@ -295,6 +304,6 @@ if (isMain(import.meta.url)) {
   mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, JSON.stringify(facts, null, 2) + "\n");
   console.log(
-    `✅ ${basename(pdf)} → ${out.slice(ROOT.length + 1)} (${facts.fonts.length} начертаний, ${facts.npages} стр.)`,
+    `✅ ${basename(pdf)} → ${out.slice(ROOT.length + 1)} (${facts.fonts.length} faces, ${facts.npages} pp.)`,
   );
 }

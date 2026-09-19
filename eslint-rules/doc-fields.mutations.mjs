@@ -1,9 +1,9 @@
 /**
- * Батарея на `doc/fields`: шесть мутаций, каждая снимает своё несущее свойство.
+ * Battery for `doc/fields`: six mutations, each removes its own load-bearing property.
  *
- * Две последние — про раны, которых у предшественницы не было бы видно вовсе:
- * приведение `Date` из js-yaml (иначе гейт от даты молча перестаёт работать) и
- * фейл-закрыто на отсутствующей шапке (иначе проверка обходится её удалением).
+ * The last two are about wounds the predecessor would not have shown at all:
+ * normalizing js-yaml's `Date` (otherwise the date gate silently stops working) and
+ * failing closed on a missing header (otherwise the check is bypassed by deleting it).
  */
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
@@ -20,48 +20,48 @@ process.exit(
     runner: "node",
     cases: [
       {
-        name: "отсутствующее поле перестаёт быть находкой",
+        name: "a missing field stops being a finding",
         harness: HARNESS,
-        expect: "случай 2: находка обязана называть «нет поля»",
-        disables: "сам вердикт — карточка без объявленного поля проходит молча",
+        expect: 'case 2: the finding must name "no field"',
+        disables: "the verdict itself — a card with no field declared passes silently",
         edits: [[RULE, 'if (!(name in data) || data[name] === null || data[name] === "") {', "if (false) {"]],
       },
       {
-        name: "значение перестаёт сверяться со словарём",
+        name: "the value stops being checked against the vocabulary",
         harness: HARNESS,
-        expect: "случай 3: значение вне словаря обязано давать одну находку",
-        disables: "проверку значения — `read: полностью` становится допустимым",
+        expect: "case 3: a value outside the vocabulary must produce one finding",
+        disables: "the value check — `read: fully` becomes allowed",
         edits: [[RULE, "if (!values.includes(actual))", "if (false)"]],
       },
       {
-        name: "«правило от даты» перестаёт освобождать",
+        name: "'rule from a date' stops exempting",
         harness: HARNESS,
-        expect: "известный долг, а не находка",
-        disables: "освобождение исторического корпуса — 22 старые карточки краснеют разом",
+        expect: "known debt, not a finding",
+        disables: "the exemption of the historical corpus — 22 old cards go red at once",
         edits: [
           [RULE, "if (sinceCreated && (!created || created < sinceCreated)) return;", "if (false) return;"],
         ],
       },
       {
-        name: "🔴 отсутствие фронтматтера снова освобождает",
+        name: "🔴 a missing frontmatter exempts again",
         harness: HARNESS,
-        expect: "случай 7: документ без фронтматтера обязан давать находку",
-        disables: "фейл-закрыто — гейт опять обходится удалением шапки, как у предшественницы",
+        expect: "case 7: a document with no frontmatter must produce a finding",
+        disables: "fail-closed — the gate is bypassed again by deleting the header, like the predecessor",
         edits: [[RULE, "if (seenFrontmatter) return;", "if (true) return;"]],
       },
       {
-        name: "🔴 `Date` из js-yaml перестаёт приводиться к строке",
+        name: "🔴 js-yaml's `Date` stops being normalized to a string",
         harness: HARNESS,
-        expect: "случай 8: неквотированная НОВАЯ дата обязана ВКЛЮЧАТЬ проверку",
+        expect: "case 8: an unquoted NEW date must TURN ON the check",
         disables:
-          "приведение таймстампа YAML 1.1 — сравнение Date со строкой даёт false МОЛЧА, и дата-гейт умирает незаметно",
+          "normalizing the YAML 1.1 timestamp — comparing a Date to a string SILENTLY gives false, and the date gate dies unnoticed",
         edits: [[RULE, "if (v instanceof Date) return v.toISOString().slice(0, 10);", ""]],
       },
       {
-        name: "сломанный YAML перестаёт иметь свой вердикт",
+        name: "broken YAML stops having its own verdict",
         harness: HARNESS,
-        expect: "сломанная шапка обязана иметь СВОЙ вердикт",
-        disables: "разделение причин — неразбираемая шапка становится неотличимой от тишины",
+        expect: "a broken header must have ITS OWN verdict",
+        disables: "the separation of causes — an unparseable header becomes indistinguishable from silence",
         edits: [[RULE, 'messageId: "malformed",\n                data: { why: e.reason', 'messageId: "missing",\n                data: { why: e.reason']],
       },
     ],

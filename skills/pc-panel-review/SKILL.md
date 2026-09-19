@@ -4,7 +4,7 @@ description: Use when asking "what would the program committee decide?" / "simul
 allowed-tools: [Read, Write, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:4d8736418478e564 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:7a702253694609da compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
 
 # pc-panel-review — model the whole PC, not one reviewer
 
@@ -114,8 +114,8 @@ prose-only read can.
 
 ## 🔴 The ceiling is not a sentence — it is a PLAN, and the panel writes it
 
-**The corpus owner, 2026-08-05: «weak accept нам не подходит. скилы должны предлагать что делать чтобы исправить
-ситуацию».** He is right that this was missing. Three panels in a row named the same ceiling, it was
+**The corpus owner, 2026-08-05: "weak accept doesn't work for us. skills should suggest what to do to fix
+the situation."** He is right that this was missing. Three panels in a row named the same ceiling, it was
 faithfully recorded three times, and it never once became work. The fourth panel named it again — and
 the author wrote all three of its prongs off as *"facts, not worth chasing before the deadline"*. Two
 of the three were closed by an hour of editing that same afternoon.

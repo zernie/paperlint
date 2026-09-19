@@ -1,14 +1,14 @@
 ---
-title: "Ревью статьи — раунд 3"
+title: "Paper review — round 3"
 created: 2026-09-01
 ---
 
-# Находки
+# Findings
 
-| # | что | где |
+| # | what | where |
 |---|---|---|
-| 1 | число в абстракте не сходится с таблицей 2 | §1 |
-| 2 | ссылка на снятую работу | §4 |
-| 3 | обещание в прошедшем времени про неопубликованное | §6 |
+| 1 | the number in the abstract does not match table 2 | §1 |
+| 2 | a reference to a withdrawn work | §4 |
+| 3 | a past-tense promise about something unpublished | §6 |
 
-Дальше правки по тексту.
+Text edits follow.

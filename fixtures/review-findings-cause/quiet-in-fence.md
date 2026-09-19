@@ -1,16 +1,16 @@
 ---
-title: "Заметка о формате отчёта"
+title: "A note on the report format"
 created: 2026-09-01
 ---
 
-Пример того, КАК выглядит таблица находок — сам по себе находкой не является:
+An example of WHAT a findings table looks like — not itself a finding:
 
 ```markdown
-| # | что | где |
+| # | what | where |
 |---|---|---|
-| 1 | пример | §1 |
-| 2 | пример | §2 |
-| 3 | пример | §3 |
+| 1 | example | §1 |
+| 2 | example | §2 |
+| 3 | example | §3 |
 ```
 
-Разбора причин здесь быть не должно: это описание формата, а не отчёт.
+There must be no analysis of causes here: this describes the format, it is not a report.

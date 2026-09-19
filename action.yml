@@ -1,10 +1,17 @@
-# Composite action: set up what the LaTeX rules need, then run ESLint over a consumer's corpus.
+# Composite action: set up what the LaTeX rules need, then run `rpp lint` over a consumer's corpus.
+#
+# 🔴 THIS ACTION CALLS THE PACKAGE'S OWN CLI. It used to invoke `npx eslint` directly, and that was
+# not a style question — it was a second implementation of the same job, and it had already drifted:
+# the CLI's directory-structure check (a paper directory missing PIPELINE-STATUS.md gets ZERO rules
+# and reports clean) lived only in `bin/rpp.mjs`, so the gate existed locally and was ABSENT in CI,
+# which is the one place it has to hold. The same bypass also meant `rpp.json` was never read and
+# the caller still had to keep an ESLint flat config — the exact thing the CLI exists to remove.
 #
 # WHY AN ACTION AND NOT A DOCUMENTED `run:` BLOCK. Two steps have to happen in this order and
-# neither is guessable from the outside: `texcount` must exist on PATH before ESLint starts, and
-# the ESLint invocation has to carry `--no-config-lookup` so a consumer's nested configs cannot
-# quietly change which rules are enabled. A consumer who copies only the second step gets a green
-# job over rules that silently degraded — see the `texcount` note below.
+# neither is guessable from the outside: `texcount` must exist on PATH before linting starts, and
+# the scope has to be checked before any install spends minutes on a call that was already wrong.
+# A consumer who copies only the last step gets a green job over rules that silently degraded —
+# see the `texcount` note below.
 #
 # 🔴 THE GREEN-ZERO GUARD IS PART OF THIS ACTION, NOT AN OPTIONAL EXTRA. `eslint` prints findings
 # and exits 0 when there are none — and "no findings" is byte-identical to "not one rule was handed
@@ -18,9 +25,14 @@ description: Install the toolchain the texcount/* rules need, run ESLint, and re
 
 inputs:
   config:
-    description: Path to the ESLint flat config that enables the rules.
+    description: >-
+      Path to `rpp.json`. Optional: `rpp lint` finds it by walking up from the working directory,
+      the way eslint and tsc find theirs, so most callers never set this. Pass it only when the
+      file is somewhere the walk cannot reach. ⚠️ Until 2026-09-18 this input took a path to an
+      ESLint FLAT CONFIG and defaulted to `eslint.config.mjs`; a caller still passing one will
+      fail loudly on the first run rather than lint against it.
     required: false
-    default: eslint.config.mjs
+    default: ""
   paths:
     description: >-
       What to lint, as ESLint would take it on the command line. REQUIRED, and deliberately
@@ -91,11 +103,21 @@ runs:
         }
         texcount -version | head -1
 
-    # ONE ESLint invocation, JSON to disk, exit code preserved and then handed to the guard.
-    # Running ESLint twice (once for humans, once for the machine) would lint the corpus twice and
-    # could disagree with itself. The guard lives in `scripts/eslint-report-guard.mjs` rather than
-    # inline here, because an inline `node -e` blob cannot be reached by a test.
-    - name: eslint
+    # ONE invocation, JSON to disk, exit code preserved and then handed to the guard. Linting twice
+    # (once for humans, once for the machine) would read the corpus twice and could disagree with
+    # itself. The guard lives in `scripts/eslint-report-guard.mjs` rather than inline here, because
+    # an inline `node -e` blob cannot be reached by a test.
+    #
+    # 🔴 THE REDIRECT IS ONLY SAFE BECAUSE `--json` KEEPS stdout CLEAN. `rpp lint` prints the name
+    # of the config it discovered; in `--json` mode that line goes to stderr, precisely so a pipe
+    # or a redirect receives one parsable document. That was a real defect for an hour on 18-09 —
+    # the line sat on stdout in front of the array — and it was found by wiring this step up, not
+    # by a test, because the harness had been WORKING AROUND it (slicing the first line off).
+    #
+    # `--no-config-lookup` is gone with the eslint call and is not missing: the CLI builds its
+    # config with `overrideConfigFile: true`, so a consumer's nested config cannot reach the run
+    # at all. The guarantee moved from a flag into the code.
+    - name: rpp lint
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       env:
@@ -104,13 +126,13 @@ runs:
         RPP_MAXWARN: ${{ inputs.max-warnings }}
       run: |
         # 🔴 `|| RC=$?` IS LOAD-BEARING, NOT STYLE. GitHub runs composite `shell: bash` as
-        # `bash --noprofile --norc -eo pipefail`, so a bare `npx eslint` that exits non-zero
+        # `bash --noprofile --norc -eo pipefail`, so a bare `npx rpp lint` that exits non-zero
         # ABORTS THE SCRIPT and the guard below never runs — measured, not reasoned: the line
         # after a failing command did not print. That is the whole error path of this action
-        # (a bad config, an unreadable report, a non-zero ESLint), so under `-e` the guard was
-        # reachable ONLY on success, which is the one case it was not written for.
+        # (a bad config, an unreadable report, findings), so under `-e` the guard was reachable
+        # ONLY on success, which is the one case it was not written for.
         RC=0
-        npx eslint --no-config-lookup --config "$RPP_CONFIG" \
-          --max-warnings="$RPP_MAXWARN" -f json -o "$RUNNER_TEMP/eslint.json" $RPP_PATHS || RC=$?
+        npx rpp lint $RPP_PATHS ${RPP_CONFIG:+--config "$RPP_CONFIG"} \
+          --max-warnings="$RPP_MAXWARN" --json > "$RUNNER_TEMP/rpp.json" || RC=$?
         node "$GITHUB_ACTION_PATH/scripts/eslint-report-guard.mjs" \
-          "$RUNNER_TEMP/eslint.json" "$RC" "$RPP_PATHS" "$RPP_CONFIG"
+          "$RUNNER_TEMP/rpp.json" "$RC" "$RPP_PATHS" "${RPP_CONFIG:-rpp.json}"

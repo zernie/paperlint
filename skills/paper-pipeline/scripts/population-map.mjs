@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 /**
- * population-map.mjs — держит ли реестр популяций связь с телом статьи?
+ * population-map.mjs — does the population registry keep its link to the body of the paper?
  *
- * (До 2026-08-26 файл отвечал на вопрос «может ли читатель понять, КАКОЕ МНОЖЕСТВО считает
- *  каждое число» целиком; половина ответа теперь в правилах ESLint — см. ниже.)
+ * (Before 2026-08-26 this file answered the question "can the reader tell WHICH SET each number
+ *  counts" in full; half of the answer now lives in ESLint rules — see below.)
  *
  *   node population-map.mjs <paper-dir>              report
  *   node population-map.mjs <paper-dir> --flags-only for hooks and pre-commit
  *
  * 🔴 WHY THIS EXISTS. `papers/CLAUDE.md` has carried this as writing rule #3 since 2026-08-05:
  *
- *     «Число приходит с тем, что оно считает, и из чего. […] Если два числа из разных
- *      экспериментов — сказать это В ТОМ ЖЕ ПРЕДЛОЖЕНИИ.»
+ *     "A number arrives together with what it counts, and out of what. […] If two numbers come
+ *      from different experiments — say so IN THE SAME SENTENCE."
  *
  * It was written after a cold reader gave up tracking the abstract's populations halfway through.
  * It is prose. Nothing enforced it. On 2026-08-06 the author read the finished paper and said he
@@ -24,25 +24,25 @@
  * file, with no mechanism behind it, that therefore did nothing for a year of edits. So the rule
  * gets a leg.
  *
- * 🔴 ДВЕ ИЗ ЧЕТЫРЁХ НАХОДОК УЕХАЛИ В ПРАВИЛА ESLint 2026-08-26. Здесь остались только те, что
- * говорят про САМ РЕЕСТР, а не про статью:
+ * 🔴 TWO OF THE FOUR FINDINGS MOVED INTO ESLint RULES ON 2026-08-26. What is left here is only
+ * what speaks about THE REGISTRY ITSELF, not about the paper:
  *
- *   stale    строка реестра для величины, которую тело БОЛЬШЕ НЕ ПЕЧАТАЕТ. Реестр сжимается
- *            вместе со статьёй и не гниёт.
- *   badref   строка ссылается на `related_to`, которого нет ни одной строкой.
+ *   stale    a registry row for a quantity the body NO LONGER PRINTS. The registry shrinks together
+ *            with the paper and does not rot.
+ *   badref   a row points at a `related_to` that is not a row anywhere.
  *
- * Обе неотделимы от файла `repro/populations.tsv` и НЕ ИМЕЮТ АДРЕСА В СТАТЬЕ: `stale` по
- * определению говорит про число, которого в статье нет, а `badref` — про два поля одной строки
- * TSV. Правило ESLint умеет репортить только в линтуемый файл, поэтому перенести их значило бы
- * указывать пальцем в статью и говорить про другой файл.
+ * Both are inseparable from the file `repro/populations.tsv` and HAVE NO ADDRESS IN THE PAPER:
+ * `stale` by definition speaks about a number that is not in the paper, and `badref` about two
+ * fields of one TSV row. An ESLint rule can only report into the file being linted, so moving them
+ * would mean pointing a finger at the paper while talking about a different file.
  *
- * УЕХАЛО В `eslint-rules/paper-registry.mjs` (правила `paper/population-untied` и
+ * MOVED INTO `eslint-rules/paper-registry.mjs` (the rules `paper/population-untied` and
  * `paper/population-undeclared`):
- *   untied      — популяция не названа в ОДНОМ ПРЕДЛОЖЕНИИ с той, из которой выведена;
- *   undeclared  — число напечатано в форме популяции, и ни одна строка реестра его не заявляет.
- * Обе говорят про место В СТАТЬЕ, и реестр для них — конфигурация, ровно как профиль площадки
- * для `pdf/profile`. Паритет доказан до удаления (настоящая статья + 17 фикстур), разбор —
- * `the author's private research notes`.
+ *   untied      — a population is not named IN THE SAME SENTENCE as the one it is derived from;
+ *   undeclared  — a number is printed in the shape of a population, and no registry row declares it.
+ * Both speak about a place IN THE PAPER, and for them the registry is configuration, exactly like a
+ * venue profile for `pdf/profile`. Parity was proved before the deletion (the real paper + 17
+ * fixtures), the write-up is in `the author's private research notes`.
  *
  * Advisory.
  */
@@ -51,10 +51,10 @@ import { join } from 'node:path';
 import { headings as mdHeadings, requireMarkdown } from '../../../lib/markdown.mjs';
 import { isMain } from "./consumer.mjs";
 
-// Разбор разметки — парсером (`CLAUDE.md`, 2026-08-11). Падаем, а не деградируем: без границ
-// тела статьи `bodyOf()` вернул бы пустую строку, а из пустой строки эта проверка выводит
-// «ни одно число реестра не напечатано», то есть ВСЕ строки stale — уверенный список находок
-// про статью, которой никто не читал.
+// Markup is parsed with a parser (`CLAUDE.md`, 2026-08-11). We fail rather than degrade: without
+// the body boundaries `bodyOf()` would return an empty string, and out of an empty string this
+// check concludes "not a single registry number is printed", that is, ALL rows stale — a confident
+// list of findings about a paper nobody read.
 requireMarkdown();
 
 /** The body is everything before the bibliography; appendices sit after it in this paper and are
@@ -62,9 +62,10 @@ requireMarkdown();
  *  at the References. That asymmetry is the whole point of checking the body separately. */
 export function bodyOf(md) {
   const stripped = md.replace(/<!--[\s\S]*?-->/g, '');
-  // 2026-08-11: обе границы тела берёт парсер. `/^##\s+References\s*$/m` открывало/закрывало
-  // тело по решёткам в начале строки — включая решётки внутри ```-блока, а эта статья цитирует
-  // куски чужих статей целиком. Соглашение `-1` и сравнения `< 0` оставлены как были.
+  // 2026-08-11: both body boundaries come from the parser. `/^##\s+References\s*$/m` opened and
+  // closed the body on hashes at the start of a line — including hashes inside a ```-block, and this
+  // paper quotes whole chunks of other people's papers. The `-1` convention and the `< 0`
+  // comparisons are left as they were.
   const at = (re) => {
     const h = mdHeadings(stripped).find((x) => x.depth === 2 && re.test(x.text));
     return h ? h.offset : -1;
@@ -108,8 +109,9 @@ export function findings(md, tsv) {
       continue;
     }
     if (row.relation === 'root' || row.relation === 'external') continue;
-    // Порядок сохранён из исходника: `untied` считался ПОСЛЕ этой проверки и уехал в
-    // `paper/population-untied`; висячая ссылка осталась тут, потому что она про строку TSV.
+    // The order is preserved from the original: `untied` was computed AFTER this check and moved
+    // into `paper/population-untied`; the dangling reference stayed here because it is about a TSV
+    // row.
     if (!byId.get(row.relatedTo)) out.push({ kind: 'badref', row });
   }
   return out;

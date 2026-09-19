@@ -38,7 +38,7 @@
  *      interactive-session-only step. Nothing in the file says so.
  *   2. 🔴 THE RECORDED `ToolSearch` FINDING DOES NOT REPRODUCE HERE, AND THE CORRECTION
  *      MATTERS. `.claude/lib/skill-effects-results/README.md` (2026-08-10, $0.82)
- *      recorded «модель вызвала ToolSearch … его в allowed-tools нет», with the caveat
+ *      recorded "the model called ToolSearch … it isn't in allowed-tools," with the caveat
  *      that it might be an artifact of the headless environment. It is the opposite:
  *      headless has NO ToolSearch to call. Adding `ToolSearch` to `allowed-tools` would
  *      therefore fix nothing here. The reachability of these four tools is a property of
@@ -58,12 +58,13 @@ import { observeAgentCli } from "../../lib/agent-cli-version.mjs";
 import { DEFAULT_TIMEZONE } from "../paper-pipeline/scripts/consumer.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-// 🔴 НЕ СЧИТАЕМ УРОВНИ, А ИЩЕМ. Здесь стояло `resolve(HERE, "..", "..", "..")` — верно, пока
-// файл лежал в `.claude/skills/<skill>/` у потребителя (три уровня до корня), и МОЛЧА неверно
-// после переезда в пакет, где он лежит в `skills/<skill>/` (два). Промах не падает: `resolve`
-// охотно отдаёт каталог ВЫШЕ репозитория, `pluginDir` указывает в никуда, и симптом приходит
-// как «Unknown skill» — то есть выглядит поломкой скилла, а не арифметики пути.
-// Подъём до каталога, в котором реально есть `.claude`, от глубины не зависит вовсе.
+// 🔴 DON'T COUNT LEVELS, SEARCH FOR THEM. This used to be `resolve(HERE, "..", "..", "..")` —
+// correct while the file lived at `.claude/skills/<skill>/` on the consumer (three levels to the
+// root), and SILENTLY wrong after the move into the package, where it lives at
+// `skills/<skill>/` (two). The miss doesn't crash: `resolve` happily hands back a directory
+// ABOVE the repository, `pluginDir` points into nothing, and the symptom shows up as
+// "Unknown skill" — that is, it looks like the skill is broken, not the path arithmetic.
+// Walking up to the directory that actually contains `.claude` doesn't depend on depth at all.
 const REPO = (() => {
   let dir = HERE;
   for (;;) {
@@ -71,8 +72,8 @@ const REPO = (() => {
     const up = dirname(dir);
     if (up === dir)
       throw new Error(
-        `не найден корень с каталогом .claude, начиная от ${HERE}. Без него \`pluginDir\` ` +
-          `указывал бы мимо, и прогон сообщал бы «Unknown skill» вместо «путь посчитан неверно».`,
+        `no root with a .claude directory found starting from ${HERE}. Without it, \`pluginDir\` ` +
+          `would point past it, and the run would report "Unknown skill" instead of "the path was computed wrong".`,
       );
     dir = up;
   }
@@ -240,7 +241,7 @@ const skillBody = readFileSync(join(HERE, "SKILL.md"), "utf8");
  * Parsed with markdown-it rather than a regex, deliberately: a fenced block is markup
  * structure, and "the fence after the marker" is a statement about TOKENS. A regex over
  * lines cannot tell a real fence from one quoted inside another fence, and this repo has
- * paid for that lesson four times (root CLAUDE.md, «Markdown разбираем ПАРСЕРОМ»).
+ * paid for that lesson four times (root CLAUDE.md, "Markdown is parsed WITH A PARSER").
  * A missing markdown-it must fail LOUDLY — a quiet fallback would let a degraded
  * version of this check run forever without anyone noticing.
  */

@@ -1,10 +1,10 @@
 ---
 name: research-ideate
-description: "Go / no-go по идее исследования — ДО того, как в неё вложились. Use когда идея уже на столе и вопрос в том, браться за неё или нет: потянет ли она на рецензируемую статью или это в лучшем случае пост в блог, есть ли дешёвая версия находки, которая не требует страшного результата, не распыляемся ли мы в сторону от своей линии. Даёт вердикт плюс самую острую формулировку, минимальную находку и типы площадок. Оценивает идею по тому, что реально засчитывается в корпусе работ: рецензируемая индексируемая публикация (authorship), переиспользуемый метод или бенчмарк вместо разового «инструмент X плох» (original contribution), цитирования дальше, а не звёзды на GitHub, и одна связная линия вместо россыпи тем. Стадия — замысел, до find-venue и до любого драфта. Compose with find-venue (downstream), build-benchmark, draft-paper."
+description: "Go / no-go on the research idea — BEFORE investing in it. Use when the idea is already on the table and the question is whether to pursue it or not: will it yield a peer-reviewed paper or is it at best a blog post, is there a cheap version of the finding that doesn't require a dramatic result, are we scattering from our coherent line. Gives a verdict plus the sharpest framing, minimal finding and venue types. Evaluates the idea by what actually counts in the work corpus: peer-reviewed indexed publication (authorship), reusable method or benchmark instead of a one-off \"tool X is bad\" (original contribution), citations onward, not GitHub stars, and one connected line instead of scattered topics. Stage — conception, before find-venue and before any draft. Compose with find-venue (downstream), build-benchmark, draft-paper."
 allowed-tools: [Read, Write, Grep, Glob, Agent, Skill, Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*), Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)]
 ---
 
-<!-- vigiles:sha256:605d9d86c1fd8cfc compiled from skills/research-ideate/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:2a5e302cfb0117fe compiled from skills/research-ideate/SKILL.md.spec.ts -->
 
 # research-ideate — is this idea worth a paper, and does the paper earn authorship credit?
 

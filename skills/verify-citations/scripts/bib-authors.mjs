@@ -70,15 +70,15 @@ const DBLP = "https://dblp.org/search/publ/api";
  * those names in would invent co-authors that the first work does not have.
  */
 export function parseMarkdownRefs(text) {
-  // 🔴 Заголовок берём У ПАРСЕРА, а не регуляркой (правило базы «markdown разбираем парсером»).
-  // Прежнее `text.search(/^#+\s*References\s*$/m)` открывало библиографию на строке
-  // `## References`, ПРОЦИТИРОВАННОЙ внутри ```-ограды, — а статьи в этой репе цитируют
-  // собственную разметку кусками. Ровно этот ассерт уже стоит у соседа
-  // (`paper-pipeline/scripts/extract-ref-facts.harness.mjs`: «заголовок внутри ```-блока не
-  // заголовок»), то есть класс известен и здесь воспроизводился заново.
-  // `requireMarkdown()` — чтобы отсутствие markdown-it падало ГРОМКО: `headings()` при пустом
-  // парсере возвращает [], и гейт бы отчитался «ссылок нет» вместо отказа. Это тот же обмен
-  // одного тихого отказа на другой, против которого правило и написано.
+  // 🔴 The heading comes FROM THE PARSER, not from a regex (the base's rule "parse markdown with a
+  // parser"). The previous `text.search(/^#+\s*References\s*$/m)` opened the bibliography on a
+  // `## References` line QUOTED inside a ``` fence — and the papers in this repo quote their own
+  // markup in chunks. Exactly this assert already stands at a neighbour
+  // (`paper-pipeline/scripts/extract-ref-facts.harness.mjs`: "a heading inside a ``` block is not a
+  // heading"), that is, the class was known and was being reproduced here again.
+  // `requireMarkdown()` — so that a missing markdown-it fails LOUDLY: with an empty parser
+  // `headings()` returns [], and the gate would report "no references" instead of refusing. That is
+  // the same trade of one silent failure for another that the rule was written against.
   requireMarkdown();
   const h = mdHeadings(text).find((x) => /^References\s*$/u.test(x.text));
   if (!h) return [];
@@ -121,28 +121,28 @@ function bibTextFrom(target) {
   if (!existsSync(file)) die(`no such path: ${file}`);
   if (!extname(file)) {
     const names = readdirSync(file);
-    // 🔴 КАНОНИЧЕСКОЕ ИМЯ ПЕРВЫМ, потом — единственный кандидат, и никогда
-    // «первый попавшийся» (ревью #189). Было `names.find(f => f.endsWith(".tex"))`,
-    // то есть первый по порядку каталога. Замер: у одной из статей корпуса
-    // лежит ПЯТЬ черновиков (paper-CONSTRUCTIVE-…, paper-FOLDED-…, paper-SAFE-…),
-    // а PIPELINE-STATUS.md называет поданным исходником `paper.tex`. Проверка
-    // авторов уходила в устаревший черновик и печатала вердикт про НЕ ТУ
-    // библиографию — гейт, проверяющий не тот файл, хуже отсутствующего, потому
-    // что он говорит «проверено».
+    // 🔴 THE CANONICAL NAME FIRST, then the only candidate, and never "whichever
+    // turns up first" (review #189). It used to be `names.find(f => f.endsWith(".tex"))`,
+    // that is, the first in directory order. Measured: one of the papers in the corpus
+    // has FIVE drafts lying around (paper-CONSTRUCTIVE-…, paper-FOLDED-…, paper-SAFE-…),
+    // while PIPELINE-STATUS.md names `paper.tex` as the submitted source. The author
+    // check went off into a stale draft and printed a verdict about the WRONG
+    // bibliography — a gate that checks the wrong file is worse than a missing one,
+    // because it says "checked".
     const pick = (ext) => {
       const canon = names.find((f) => f === `paper${ext}`);
       if (canon) return canon;
       const all = names.filter((f) => f.endsWith(ext)).sort();
       if (all.length === 1) return all[0];
       if (all.length > 1) {
-        // Не падаем: новая проверка тут завела бы ещё одну поверхность, а её дом
-        // определяет лесенка из `CLAUDE.md` рядом со статьями, не этот скрипт
-        // (храповик `frozen-checks` это и стережёт). Достаточно СКАЗАТЬ вслух и
-        // выбрать ДЕТЕРМИНИРОВАННО — заголовок ниже всё равно печатает, какой
-        // файл проверен, так что читатель видит выбор.
+        // We do not fail: a new check here would set up one more surface, and its
+        // home is decided by the ladder in the `CLAUDE.md` next to the papers, not by
+        // this script (the `frozen-checks` ratchet is what guards that). It is enough
+        // to SAY it out loud and to choose DETERMINISTICALLY — the header below prints
+        // which file was checked anyway, so the reader sees the choice.
         console.error(
-          `⚠️ в ${file} несколько ${ext}-файлов и нет канонического paper${ext}: ` +
-            `${all.join(", ")} — взят ${all[0]}. Если это не тот, укажите файл явно.`,
+          `⚠️ ${file} holds several ${ext} files and no canonical paper${ext}: ` +
+            `${all.join(", ")} — took ${all[0]}. If that is the wrong one, name the file explicitly.`,
         );
         return all[0];
       }
@@ -316,7 +316,7 @@ async function main() {
   const unchecked = []; // we FAILED to check — must never be reported as a pass
 
   for (const e of parsed.filter((x) => x.unparsed)) {
-    skipped.push({ key: e.key, why: "нет автора/заголовка — ссылка на софт или датасет, DBLP неприменим" });
+    skipped.push({ key: e.key, why: "no author/title — a reference to software or a dataset, DBLP does not apply" });
   }
 
   for (const e of entries) {
@@ -355,7 +355,7 @@ async function main() {
     if (d.missing.length || d.extra.length || d.orderDiffers) {
       findings.push({ key: e.key, venue: `${rec.venue} ${rec.year}`.trim(), ours, theirs, ...d });
     }
-    // Тело в скобках, а не сокращённая стрелка — см. `no-promise-executor-return` (2026-08-28).
+    // A braced body rather than a concise arrow — see `no-promise-executor-return` (2026-08-28).
     await new Promise((r) => { setTimeout(r, 900); }); // DBLP asks for gentle clients; 350 ms drew 429s
   }
 
@@ -387,20 +387,20 @@ async function main() {
           : "PASS: no author-list disagreement.",
     );
   }
-  // 🔴 НЕПРОВЕРЕННОЕ — ТОЖЕ НЕ УСПЕХ (ревью #189). Код возврата зависел только
-  // от findings, поэтому прогон, где DBLP не ответил НИ РАЗУ (таймаут, серия 429),
-  // выходил в 0 — и вызывающий читал НЕВЫПОЛНЕННЫЙ аудит авторов как пройденный.
-  // Текст рядом уже говорил «this is NOT a pass», но текст читает человек, а код
-  // возврата читает CI. Расхождение между тем, что скрипт ГОВОРИТ, и тем, что он
-  // СООБЩАЕТ вызывающему, — тот же класс, что «гейт проверил не тот файл».
-  // Разные коды, чтобы вызывающий мог различить: 1 — есть расхождения, 2 — аудит
-  // неполон.
+  // 🔴 THE UNCHECKED IS NOT A PASS EITHER (review #189). The exit code depended only
+  // on findings, so a run where DBLP did not answer EVEN ONCE (a timeout, a series of
+  // 429s) exited 0 — and the caller read an author audit THAT NEVER RAN as passed.
+  // The text next to it already said "this is NOT a pass", but a human reads the text
+  // while CI reads the exit code. A divergence between what the script SAYS and what it
+  // REPORTS to its caller is the same class as "the gate checked the wrong file".
+  // Different codes so the caller can tell them apart: 1 — there are disagreements,
+  // 2 — the audit is incomplete.
   process.exit(findings.length ? 1 : unchecked.length ? 2 : 0);
 }
 
-// 🔴 `isMain`, А НЕ `import.meta.url === `file://${process.argv[1]}``. Node приводит точку входа
-// к РЕАЛЬНОМУ пути для `import.meta.url`, но оставляет `process.argv[1]` как набрано, поэтому
-// через симлинк они не равны и CLI молча не исполняется — процесс выходит 0, не сделав ничего.
-// Потребитель добирается до этих скриптов именно через симлинк. Наблюдено 14.09 на прогоне
-// 34784079821: `extract-pdf-facts.mjs --strict` вернул RC=0 и не создал файл фактов.
+// 🔴 `isMain`, NOT `import.meta.url === `file://${process.argv[1]}``. Node resolves the entry point
+// to its REAL path for `import.meta.url` but leaves `process.argv[1]` as typed, so through a symlink
+// the two are not equal and the CLI silently does not execute — the process exits 0 having done
+// nothing. The consumer reaches these scripts precisely through a symlink. Observed 14.09 on run
+// 34784079821: `extract-pdf-facts.mjs --strict` returned RC=0 and created no facts file.
 if (isMain(import.meta.url)) await main();

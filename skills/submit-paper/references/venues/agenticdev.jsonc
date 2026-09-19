@@ -1,13 +1,14 @@
-// Профиль формата площадки — ДАННЫЕ, которые читает правило `pdf/profile` в
-// eslint-rules/pdf-facts.mjs. Проза про площадку — в agenticdev.md рядом.
-// Источник чисел: инструкция для авторов Conference Publishing 2026-08-25 + требования ACM.
+// Venue format profile — DATA read by the `pdf/profile` rule in eslint-rules/pdf-facts.mjs.
+// Prose about the venue is in agenticdev.md nearby.
+// Source for the numbers: the Conference Publishing author instructions 2026-08-25 + ACM's
+// requirements.
 //
-// 🔴 Почему JSONC, а не YAML (решение 26.08). Я держал это в YAML, объясняя тем, что
-// «в JSON нет комментариев, а у каждого числа тут цитата из инструкции». Возражение оказалось
-// ложным: @eslint/json везёт три языка — json, jsonc, json5, — и jsonc это ровно JSON с
-// комментариями. Значит цитаты остаются на месте, файл читается настоящим парсером
-// (@humanwhocodes/momoa, уже стоит транзитивно), И его линтует тот же движок, что и всё
-// остальное. Одна лишняя зависимость (js-yaml на этом пути) отпадает.
+// 🔴 Why JSONC and not YAML (decided 08-26). I had this in YAML, justifying it with "JSON has no
+// comments, and every number here carries a quote from the instructions." That objection turned
+// out to be false: @eslint/json ships three languages — json, jsonc, json5 — and jsonc is exactly
+// JSON with comments. So the quotes stay in place, the file is read by a real parser
+// (@humanwhocodes/momoa, already a transitive dependency), AND it's linted by the same engine as
+// everything else. One extra dependency (js-yaml on this path) goes away.
 {
   "template": "acmart",
 
@@ -20,17 +21,18 @@
   "textblock_w_in": 7.087,
   // «text height must not exceed 23.5 cm»
   "textblock_h_in": 9.252,
-  // ACM требует свести колонки последней страницы; 29.08 Conference Publishing вернул за это
-  // принятую статью («Please correct the last page balancing»). Допуск с запасом: замеры того
-  // дня дали 2.7 pt у сведённой версии и 321.4 у несведённой — между ними ничего не лежит.
+  // ACM requires the last page's columns to be balanced; on 08-29 Conference Publishing bounced an
+  // accepted paper for this ("Please correct the last page balancing"). The tolerance has margin:
+  // that day's measurements gave 2.7 pt for the balanced version and 321.4 for the unbalanced one
+  // — nothing sits between them.
   "last_page_balance_tol_pt": 120,
 
   "columns": 2,
 
   // «font size is 9 pt for all body text»
   "body_pt": 9,
-  // banal меряет МОДУ по отрендеренному тексту, а не объявленный кегль (замер 26.08: 9.30 при
-  // acmart-овских 9). Отсюда допуск — и отсюда же то, что кегль тела остаётся нуджем, а не гейтом.
+  // banal measures the MODE of the rendered text, not the declared size (measured 08-26: 9.30 at
+  // acmart's declared 9). Hence the tolerance — and hence why body size stays a nudge, not a gate.
   "body_pt_tol": 0.5,
 
   // «font size of the references can be from 7 pt to 9 pt»
@@ -42,8 +44,8 @@
   // «The title must be in sans-serif font (Biolinum)»
   "fonts_title": "LinBiolinum",
 
-  // Лимиты — свойство ТИПА статьи у этой площадки, а не самой площадки.
-  // Какой тип у конкретной статьи, говорит её <paper-dir>/venue.json.
+  // The limits are a property of the paper's TYPE at this venue, not of the venue itself.
+  // A given paper's type is stated in its <paper-dir>/venue.json.
   "kinds": {
     "short": {
       "body_pages_max": 5,

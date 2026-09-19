@@ -96,12 +96,12 @@ t("a proceedings entry IS in scope", () => {
   assert.equal(claimsPublished({ booktitle: "NeurIPS Datasets and Benchmarks Track", journal: "" }), true);
 });
 
-console.log("bib-authors — где начинается библиография");
+console.log("bib-authors — where the bibliography begins");
 
-// Обе половины. «Молчит на ограде» без «находит настоящий» неотличимо от сломанного разбора.
-t("настоящий ## References разбирается", () => {
+// Both halves. "Silent on a fence" without "finds the real one" is indistinguishable from a broken parse.
+t("a real ## References is parsed", () => {
   const md = [
-    "# Paper", "текст", "", "## References", "",
+    "# Paper", "text", "", "## References", "",
     "1. A. Author. *A title*. In NeurIPS, 2023.",
   ].join("\n");
   const refs = parseMarkdownRefs(md);
@@ -109,14 +109,14 @@ t("настоящий ## References разбирается", () => {
   assert.match(refs[0].title, /A title/);
 });
 
-t("## References внутри ```-ограды НЕ открывает библиографию", () => {
+t("a ## References inside a ``` fence does NOT open the bibliography", () => {
   const md = [
-    "# Paper", "", "Раздел оформляется так:", "", "```markdown", "## References", "",
-    "1. Z. Ghost. *Не ссылка, а пример разметки*. In Nowhere, 2020.", "```", "",
-    "Конец.",
+    "# Paper", "", "The section is written like this:", "", "```markdown", "## References", "",
+    "1. Z. Ghost. *Not a reference, but a markup example*. In Nowhere, 2020.", "```", "",
+    "The end.",
   ].join("\n");
   assert.deepEqual(parseMarkdownRefs(md), [],
-    "процитированная разметка не библиография — регулярка ^#+ считала её заголовком");
+    "quoted markup is not a bibliography — the ^#+ regex counted it as a heading");
 });
 
 console.log(`\n${n} assertions passed.`);

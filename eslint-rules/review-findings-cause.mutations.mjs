@@ -1,6 +1,7 @@
 /**
- * Батарея на `review/findings-cause`. Три мутации, три разных ассерта: правило должно
- * СРАБАТЫВАТЬ, должно МОЛЧАТЬ при разборе причин, и порог должен приходить опцией.
+ * Battery for `review/findings-cause`. Three mutations, three different asserts: the rule
+ * must FIRE, must STAY SILENT when there's a cause analysis, and the threshold must come
+ * in as an option.
  */
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
@@ -17,31 +18,31 @@ process.exit(
     runner: "node",
     cases: [
       {
-        name: "правило перестаёт репортить",
+        name: "the rule stops reporting",
         harness: HARNESS,
-        expect: "ожидалась одна находка",
-        disables: "сам вердикт — отчёт без разбора причин проходит молча",
+        expect: "one finding was expected",
+        disables: "the verdict itself — a report without a cause analysis passes silently",
         edits: [[RULE, "if (hasCause || findings < minFindings) return;", "if (true) return;"]],
       },
       {
-        name: "пометка «Причина:» перестаёт замечаться",
+        name: 'the "Cause:" marker stops being noticed',
         harness: HARNESS,
-        expect: "правило обязано молчать",
-        disables: "освобождение — отчёт С разбором причин начинает краснеть",
+        expect: "the rule must stay silent",
+        disables: "the exemption — a report WITH a cause analysis starts going red",
         edits: [[RULE, "if (node.value.includes(causeMarker)) hasCause = true;", "void node;"]],
       },
       {
-        name: "«правило от даты» перестаёт освобождать",
+        name: '"rule from a date" stops exempting',
         harness: HARNESS,
-        expect: "долг, а не находка",
-        disables: "освобождение исторического корпуса — правило открывается стеной находок",
+        expect: "debt, not a finding",
+        disables: "exemption of the historical corpus — the rule opens with a wall of findings",
         edits: [[RULE, "if (sinceCreated && (!created || created < sinceCreated)) return;", "if (false) return;"]],
       },
       {
-        name: "порог перестаёт быть опцией",
+        name: "the threshold stops being an option",
         harness: HARNESS,
-        expect: "порог это данные",
-        disables: "передачу порога снаружи — механизм присваивает данные себе",
+        expect: "the threshold is data",
+        disables: "passing the threshold in from outside — the mechanism claims the data for itself",
         edits: [[RULE, "context.options[0] ?? {}", "{}"]],
       },
     ],

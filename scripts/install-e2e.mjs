@@ -1,0 +1,260 @@
+/**
+ * INSTALL E2E: pack the package and install it into a CLEAN consumer with every available
+ * manager, then check what the consumer actually does.
+ *
+ * 🔴 WHY A SEPARATE RUN AND NOT A CELL IN `npm test`. Everything the 55 harnesses check lives
+ * INSIDE the repository, where `node_modules`, the sources and the config all sit side by side.
+ * The consumer gets a different tree: a tarball unpacked by a manager BY ITS OWN RULES. One
+ * decision has already diverged between those two worlds — moving `vigiles` from peer to regular
+ * dependencies works on npm and does NOT work on pnpm, because the hook wiring addresses the
+ * runtime from the project root, and pnpm does not put transitive dependencies at the root. That
+ * was not found by a test.
+ *
+ * 🔴 THE MAIN CHECK IS THAT THE HOOK COMMAND RUNS, NOT THAT IT MATCHES A STRING. Grepping the
+ * path in `hooks.json` is useless: the string there is correct under any manager, while whether
+ * it resolves is a property of the tree laid out on disk. So the command is launched, and the
+ * verdict is based on whether it died on `Cannot find module`.
+ *
+ * Run: node scripts/install-e2e.mjs [--keep]
+ * Exit code: 0 — every manager passed; 1 — at least one did not.
+ */
+import { execFileSync, spawnSync } from "node:child_process";
+import {
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  rmSync,
+  existsSync,
+  readFileSync,
+  realpathSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
+const KEEP = process.argv.includes("--keep");
+
+const sh = (cmd, args, opts = {}) =>
+  spawnSync(cmd, args, { encoding: "utf8", ...opts });
+
+/** A manager counts as available only if it actually launches. */
+function managers() {
+  const out = [];
+  for (const [name, probe, install] of [
+    [
+      "npm",
+      ["npm", ["--version"]],
+      (tgz) => ["npm", ["install", "--silent", tgz]],
+    ],
+    [
+      "pnpm",
+      ["pnpm", ["--version"]],
+      (tgz) => ["pnpm", ["install", "--silent", tgz]],
+    ],
+  ]) {
+    const r = sh(probe[0], probe[1]);
+    if (r.status === 0)
+      out.push({ name, version: (r.stdout ?? "").trim(), install });
+  }
+  return out;
+}
+
+/** A small but REAL corpus: `lint` must pass it clean. */
+function stageCorpus(root) {
+  const paper = join(root, "papers", "p1");
+  mkdirSync(join(paper, "versions"), { recursive: true });
+  writeFileSync(join(paper, "versions", "s.tex"), "abcd");
+  writeFileSync(
+    join(paper, "versions", "2026-07-22-submitted.pdf"),
+    "x".repeat(100),
+  );
+  writeFileSync(join(paper, "paper.md"), "# Intro\n\nRQ1: does it hold?\n");
+  writeFileSync(
+    join(paper, "PIPELINE-STATUS.md"),
+    `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: 100\n    source: versions/s.tex\n    sourceBytes: 4\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`,
+  );
+}
+
+/**
+ * The hook commands are taken FROM THE PUBLISHED `hooks.json`, not from the copy in the
+ * repository: we check what arrived, not what we shipped.
+ */
+function hookCommands(consumer) {
+  const file = join(
+    consumer,
+    "node_modules",
+    "research-paper-pipeline",
+    "plugin",
+    "hooks",
+    "hooks.json",
+  );
+  if (!existsSync(file))
+    return { err: `plugin/hooks/hooks.json did not arrive in the tarball: ${file}` };
+  let json;
+  try {
+    json = JSON.parse(readFileSync(file, "utf8"));
+  } catch (e) {
+    return { err: `hooks.json does not parse: ${e.message}` };
+  }
+  const cmds = [];
+  for (const entries of Object.values(json.hooks ?? {}))
+    for (const entry of entries ?? [])
+      for (const h of entry.hooks ?? []) if (h.command) cmds.push(h.command);
+  if (cmds.length === 0)
+    return { err: "zero commands in hooks.json — there is nothing to check" };
+  return { cmds };
+}
+
+const results = [];
+// realpathSync is NOT decoration: on macOS `/var` is a symlink to `/private/var`, and a path
+// recorded before resolution does not match what a process returns from inside. This is a
+// separate class, and it has already cost a red npm test on macOS only (vigiles#241).
+const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-e2e-")));
+try {
+  const packed = execFileSync(
+    "npm",
+    ["pack", "--silent", "--pack-destination", work],
+    {
+      cwd: ROOT,
+      encoding: "utf8",
+    },
+  )
+    .trim()
+    .split("\n")
+    .pop();
+  const tgz = join(work, packed);
+  if (!existsSync(tgz)) throw new Error(`npm pack left no tarball: ${tgz}`);
+  console.log(`tarball: ${packed}\n`);
+
+  const mgrs = managers();
+  if (mgrs.length === 0)
+    throw new Error("not a single package manager launches");
+
+  for (const m of mgrs) {
+    const consumer = join(work, `consumer-${m.name}`);
+    mkdirSync(consumer, { recursive: true });
+    writeFileSync(
+      join(consumer, "package.json"),
+      '{"name":"c","version":"1.0.0","private":true}',
+    );
+    const fail = [];
+    const ok = (label) => console.log(`  ✓ ${label}`);
+    const bad = (label, detail) => {
+      fail.push(label);
+      console.log(
+        `  ✗ ${label}${detail ? `\n      ${String(detail).trim().split("\n").slice(0, 3).join("\n      ")}` : ""}`,
+      );
+    };
+
+    console.log(`── ${m.name} ${m.version}`);
+    const [cmd, args] = m.install(tgz);
+    const inst = sh(cmd, args, { cwd: consumer });
+    if (inst.status === 0) ok("the install went through");
+    else bad("the install went through", inst.stderr || inst.stdout);
+
+    // 🔴 THE BIN IS LAUNCHED DIRECTLY, NOT THROUGH `node <path>`. Under npm `.bin` holds a
+    // SYMLINK to the `.mjs`, and `node` swallows it; under pnpm it holds a SHELL WRAPPER, and
+    // `node` chokes on its very first line `basedir=$(dirname …)`. The first edition of this test
+    // called `node bin` and reported three false failures on pnpm — that is, it measured my way
+    // of launching, not the package. The consumer calls `npx rpp`, which executes the file rather
+    // than feeding it to node.
+    const bin = join(consumer, "node_modules", ".bin", "rpp");
+    const help = sh(bin, ["--help"], { cwd: consumer });
+    help.status === 0
+      ? ok("`rpp --help` answers with zero")
+      : bad("`rpp --help` answers with zero", help.stderr);
+
+    // 🔴 THE CORPUS IS STAGED BEFORE `init`, AND THIS IS NOT A REORDERING FOR CONVENIENCE. `init`
+    // now MEASURES the papers directory instead of guessing it; a run over an empty tree would
+    // measure the default branch and stay silent about the one the command was rewritten for.
+    stageCorpus(consumer);
+    const init = sh(bin, ["init"], { cwd: consumer });
+    const declared = (() => {
+      try {
+        return JSON.parse(readFileSync(join(consumer, "package.json"), "utf8"))[
+          "research-paper-pipeline"
+        ]?.papers;
+      } catch (e) {
+        return `unreadable: ${e.message}`;
+      }
+    })();
+    declared === "papers"
+      ? ok("`rpp init` declared the papers directory in package.json")
+      : bad(
+          "`rpp init` declared the papers directory in package.json",
+          `package.json ended up with ${JSON.stringify(declared)}\n${init.stdout ?? ""}${init.stderr ?? ""}`,
+        );
+    // ONE declaration: no second carrier is created, otherwise the two diverge silently — that is
+    // defect #33 exactly, only reintroduced by our own install command.
+    !existsSync(join(consumer, "rpp.json"))
+      ? ok("and did NOT create a second carrier rpp.json")
+      : bad("and did NOT create a second carrier rpp.json", "rpp.json appeared");
+    init.status === 0
+      ? ok("`rpp init` finished with zero — doctor found no discrepancy")
+      : bad(
+          "`rpp init` finished with zero — doctor found no discrepancy",
+          (init.stdout ?? "") + (init.stderr ?? ""),
+        );
+
+    const lint = sh(bin, ["lint"], { cwd: consumer });
+    lint.status === 0 && /no findings/.test(lint.stdout ?? "")
+      ? ok("`rpp lint` passed the corpus clean")
+      : bad(
+          "`rpp lint` passed the corpus clean",
+          (lint.stdout ?? "") + (lint.stderr ?? ""),
+        );
+
+    // 🔴 The load-bearing check: the commands ARE EXECUTED.
+    const { cmds, err } = hookCommands(consumer);
+    if (err) bad("hooks.json arrived and parses", err);
+    else {
+      let resolved = 0;
+      for (const command of cmds) {
+        const r = sh("bash", ["-c", command], {
+          cwd: consumer,
+          input: "{}",
+          env: { ...process.env, CLAUDE_PROJECT_DIR: consumer },
+        });
+        const out = (r.stderr ?? "") + (r.stdout ?? "");
+        // The exit code is not judged: a guard may legitimately return 2 on the merits. What is
+        // judged is the RESOLVE.
+        if (
+          // 🔴 `is NOT running` IN THE LIST IS LOAD-BEARING. The first edition looked only for
+          // `Cannot find module`, while `rpp hook` with an unresolvable runtime catches the
+          // exception and complains in DIFFERENT words, returning 0 — and the test printed "all
+          // 3 commands resolve" with the hooks completely broken. A false green of exactly the
+          // class this test is written for: the check looked for the spelling it REMEMBERED, not
+          // for the thing itself.
+          /Cannot find module|MODULE_NOT_FOUND|No such file or directory|is NOT running/.test(
+            out,
+          )
+        )
+          bad(
+            `the hook command resolves (${cmds.indexOf(command) + 1}/${cmds.length})`,
+            out,
+          );
+        else resolved++;
+      }
+      if (resolved === cmds.length)
+        ok(`all ${cmds.length} hook command(s) resolve`);
+    }
+
+    results.push({ manager: `${m.name} ${m.version}`, fail });
+    console.log("");
+  }
+} finally {
+  if (KEEP) console.log(`(--keep) the tree was kept: ${work}`);
+  else rmSync(work, { recursive: true, force: true });
+}
+
+console.log("── summary");
+let red = 0;
+for (const r of results) {
+  if (r.fail.length === 0) console.log(`  ✅ ${r.manager}`);
+  else {
+    red++;
+    console.log(`  🔴 ${r.manager} — did not pass: ${r.fail.join(" · ")}`);
+  }
+}
+process.exit(red > 0 ? 1 : 0);

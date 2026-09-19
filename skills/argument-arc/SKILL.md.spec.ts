@@ -176,8 +176,8 @@ An \`ABSTAINED no-witness\` on a draft the author has twice called a pile is a m
 ## Provenance
 
 Built 2026-07-30 after a full-day rewrite of \`the reference paper\` in which the author said the same
-thing five times — *«не проводит читателя последовательно через мысли, а просто бросает в него кучу
-разных идей, референсов, бенчмарков»* — and got five local edits in reply. The pipeline had a skill
+thing five times — *"does not guide the reader sequentially through the ideas, but simply throws a bunch of
+different ideas, references, and benchmarks at them"* — and got five local edits in reply. The pipeline had a skill
 for length, a skill for sentences and a skill for defects; the question *does this paper carry the
 reader to one conclusion* belonged to nobody, and that is the one that failed.`,
 });

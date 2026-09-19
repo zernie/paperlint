@@ -1,56 +1,58 @@
 /**
- * `doc/fields` — документ обязан объявлять ПОЛЯ, а не намекать на них вёрсткой.
+ * `doc/fields` — a document must declare its FIELDS, not hint at them through markup.
  *
- * ── ЗАЧЕМ ──────────────────────────────────────────────────────────────────────
- * Конвенция вида «в карточке должна стоять пометка `**Прочитано:**`» описывает не
- * данные, а ОФОРМЛЕНИЕ. Жирный текст в markdown означает «жирный текст»; то, что
- * автор имел в виду поле, — наша догадка. Правило требует настоящее поле во
- * фронтматтере и сверяет его значение со списком допустимых.
+ * ── WHY ──────────────────────────────────────────────────────────────────────
+ * A convention like "a card must carry the mark `**Read:**`" describes not data
+ * but PRESENTATION. Bold text in markdown means "bold text"; that the author meant
+ * a field is our guess. The rule requires a real frontmatter field and checks its
+ * value against a list of allowed ones.
  *
- * ── ЧТО ЭТО ЗА ФАЙЛ ────────────────────────────────────────────────────────────
- * Единица 3 шага 9 выноса, и первая, которая НЕ является портом предшественницы.
- * Две предыдущие (`review/findings-cause`, `review/cold-read-cause`) переносили
- * механизм как есть; здесь механизм заменён, потому что предшественница искала
- * подстроку `**Прочитано:**` в сыром тексте, и замер показал промахи в обе стороны:
+ * ── WHAT THIS FILE IS ────────────────────────────────────────────────────────────
+ * Unit 3 of step 9 of the extraction, and the first one that is NOT a port of the
+ * predecessor. The previous two (`review/findings-cause`, `review/cold-read-cause`)
+ * carried the mechanism over as-is; here the mechanism is replaced, because the
+ * predecessor searched for the substring `**Read:**` in the raw text, and a
+ * measurement showed misses in both directions:
  *
- *   | вход                                        | подстрока |
- *   |---------------------------------------------|-----------|
- *   | `**Прочитано**: всё` (двоеточие снаружи)     | ❌ отказ   |
- *   | `__Прочитано:__ всё` (подчёркивания)         | ❌ отказ   |
- *   | ```-ограда с примером внутри                  | ✅ засчёт  |
- *   | `не хватает **Прочитано:** — я не читал`      | ✅ засчёт  |
+ *   | input                                        | substring |
+ *   |-----------------------------------------------|-----------|
+ *   | `**Read**: everything` (colon outside)         | ❌ rejected|
+ *   | `__Read:__ everything` (underscores)            | ❌ rejected|
+ *   | a ```-fence with an example inside              | ✅ counted |
+ *   | `missing **Read:** — I have not read it`        | ✅ counted |
  *
- * Последняя строка — суть дела: проверка ПОЛНОТЫ засчитывала прямое признание в
- * неполноте, потому что смотрела на символы, а не на утверждение.
+ * The last row is the heart of the matter: a completeness check counted a direct
+ * admission of incompleteness, because it looked at characters, not at the claim.
  *
- * 🔴 И ОЧЕВИДНАЯ ПОЧИНКА СДЕЛАЛА БЫ ХУЖЕ. Наивный перевод на AST — «есть узел
- * `strong`, чей текст начинается с „Прочитано“» — засчитал бы живую карточку
- * `**Прочитано только на уровне абстракта.** Полный текст обязателен до сабмита`,
- * то есть принял бы известный долг за выполненную работу. Регулярка её отвергала
- * СЛУЧАЙНО — требовала двоеточие сразу после слова. Поле снимает спор целиком:
- * `read: abstract` — законное значение, а не неудачное написание.
+ * 🔴 AND THE OBVIOUS FIX WOULD HAVE MADE IT WORSE. A naive port to the AST — "there
+ * is a `strong` node whose text starts with 'Read'" — would have counted a live
+ * card reading `**Read only at the abstract level.** Full text required before
+ * submission`, i.e. it would have accepted known debt as completed work. The regex
+ * rejected that card BY ACCIDENT — it required a colon right after the word. A
+ * field removes the argument entirely: `read: abstract` is a legitimate value, not
+ * a bad spelling.
  *
- * ── ЧЕГО ЭТО ПРАВИЛО НЕ ДЕЛАЕТ, И ЭТО РЕШЕНИЕ ──────────────────────────────────
- * Оно не заменяет собой проверки СОДЕРЖИМОГО. Поле — это утверждение автора о
- * себе, и проверить его нельзя: `refs_diffed: true` ставится галочкой, не сделав
- * работы. Поэтому требование «в карточке есть секция с разбором библиографии»
- * остаётся отдельной заголовочной проверкой у потребителя. Полем становится только
- * то, что и так является утверждением (что именно прочитано), а не артефактом.
+ * ── WHAT THIS RULE DOES NOT DO, AND THIS IS A DECISION ──────────────────────────
+ * It does not replace CONTENT checks. A field is the author's claim about
+ * themselves, and it cannot be verified: `refs_diffed: true` gets ticked without
+ * the work being done. So the requirement "the card has a section analyzing the
+ * bibliography" stays a separate heading-level check at the consumer. Only what
+ * is already a claim (exactly what was read) becomes a field — not an artefact.
  *
- * ── ГРАНИЦЫ ────────────────────────────────────────────────────────────────────
- * · Отсутствие фронтматтера — НАХОДКА, а не освобождение. Иначе гейт обходится
- *   удалением шапки; такая дыра в предшественнице этого семейства уже была
- *   (файл без `created` выпадал из проверки целиком).
- * · `sinceCreated` сравнивает строки ISO — это законно, потому что формат
- *   фиксирован и лексикографический порядок совпадает с хронологическим.
+ * ── BOUNDARIES ────────────────────────────────────────────────────────────────────
+ * · A missing frontmatter is a FINDING, not an exemption. Otherwise the gate is
+ *   bypassed by deleting the header; this family's predecessor already had that
+ *   hole (a file with no `created` fell out of the check entirely).
+ * · `sinceCreated` compares ISO strings — this is legitimate because the format is
+ *   fixed and lexicographic order matches chronological order.
  */
 import { load } from "js-yaml";
 
 /**
- * `created` из YAML приезжает либо строкой, либо ДАТОЙ — js-yaml по умолчанию
- * распознаёт таймстампы YAML 1.1, и `created: 2026-07-29` без кавычек становится
- * объектом `Date`. Сравнение `Date < "2026-07-29"` даёт `false` молча, то есть
- * гейт от даты перестал бы работать и никто бы не заметил. Приводим к `YYYY-MM-DD`.
+ * `created` from YAML arrives either as a string or as a DATE — js-yaml recognizes
+ * YAML 1.1 timestamps by default, and `created: 2026-07-29` without quotes becomes
+ * a `Date` object. Comparing `Date < "2026-07-29"` silently gives `false`, meaning
+ * the date gate would stop working and nobody would notice. Normalize to `YYYY-MM-DD`.
  */
 function isoDate(v) {
   if (v instanceof Date) return v.toISOString().slice(0, 10);
@@ -126,8 +128,8 @@ export default {
               });
               return;
             }
-            // Гейт от даты стоит ЗДЕСЬ, а не в `root:exit`: документ без шапки не имеет
-            // `created`, то есть под гейт не подпадает и обязан быть находкой (см. ГРАНИЦЫ).
+            // The date gate stands HERE, not in `root:exit`: a document with no header has no
+            // `created`, so it does not fall under the gate and must be a finding (see BOUNDARIES).
             const created = isoDate(data.created);
             if (sinceCreated && (!created || created < sinceCreated)) return;
 

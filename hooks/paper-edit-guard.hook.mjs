@@ -102,9 +102,9 @@
 import { experimental_defineHook, tools, provide, allow, deny } from "vigiles/hook";
 
 /** The key every carrier of this package reads its consumer-specific settings from. */
-const CONFIG_KEY = "research-paper-pipeline";
+export const CONFIG_KEY = "research-paper-pipeline";
 /** The default. A consumer that declares nothing is assumed to keep papers in `papers/`. */
-const DEFAULT_PAPERS_ROOT = "papers";
+export const DEFAULT_PAPERS_ROOT = "papers";
 
 /**
  * The declared papers root, or a `deny` explaining why there is not one.
@@ -117,7 +117,15 @@ const DEFAULT_PAPERS_ROOT = "papers";
  * was declared" and silently substitutes the default, i.e. treats a typed keystroke as an
  * absence. The same distinction is made by every other carrier in this package.
  */
-const papersRoot = (rawPkg) => {
+/**
+ * EXPORTED ON PURPOSE — this is the only way to cross-check without a second copy of the logic.
+ * `rpp doctor` has to say which directory THIS hook will guard, not what a retelling of it
+ * would guard. The compiled hook is forbidden to IMPORT anything but `vigiles/hook`
+ * (that's what `checkHookImports` enforces), so a shared module is impossible — but that ban
+ * doesn't restrict exporting outward, and the reverse direction, CLI → hook, is free.
+ * Returns the root string, or a rejection object: the caller tells them apart by `typeof`.
+ */
+export const papersRoot = (rawPkg) => {
   let pkg;
   try {
     pkg = JSON.parse(rawPkg);

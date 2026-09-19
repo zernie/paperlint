@@ -1,3 +1,3 @@
 # PIPELINE-STATUS
 
-Черновик, никуда не подавался.
+A draft, never submitted anywhere.

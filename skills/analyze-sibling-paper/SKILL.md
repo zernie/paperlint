@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [WebSearch, WebFetch, Read, Write, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:c78f01bbf33e00d6 compiled from skills/analyze-sibling-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:19d00fe70002d3fa compiled from skills/analyze-sibling-paper/SKILL.md.spec.ts -->
 
 # analyze-sibling-paper — settle "isn't this just X?" before a reviewer does
 
@@ -45,7 +45,7 @@ far below the cost of a "novelty concern" reject.
    that matters. Try the fetch routes in order — `arxiv.org/abs/<id>` for metadata, `arxiv.org/html/<id>v1`,
    `ar5iv.labs.arxiv.org/html/<id>`, then the PDF — and **a 403/404 on one route is not "inaccessible"**;
    switch channel before concluding. **Record what you actually read** in the card as a
-   `**Прочитано:**` line naming the sections you covered and the ones you could not — an abstract-only
+   `**Read:**` line naming the sections you covered and the ones you could not — an abstract-only
    verdict is PROVISIONAL and must say so in that same line.
    🔴 **Verify the abstract's numbers against the body.** They disagree more often than you would expect,
    and a disagreement is itself a finding worth recording.
@@ -90,10 +90,10 @@ far below the cost of a "novelty concern" reject.
 The card is not free-form. Two of its parts are checked by `.claude/hooks/paper-lint.mjs`
 (`checkSiblingCards`) and a card missing either is reported as an unfinished analysis:
 
-- **`**Прочитано:**`** — one line naming what of the full text you actually read and what you could
+- **`**Read:**`** — one line naming what of the full text you actually read and what you could
   not. This exists because "I read the paper" is the single easiest thing to skip while producing a
   card that looks complete.
-- **`## Ссылки соседа`** — their bibliography mined and diffed against yours (step 2), with the
+- **`## Sibling's References`** — their bibliography mined and diffed against yours (step 2), with the
   MUST CITE / SHOULD CONSIDER / NOT RELEVANT verdicts.
 
 Enforced only for cards dated on or after 2026-07-29; older cards get one summary nudge instead of
@@ -136,7 +136,7 @@ would have overwritten one another.
 
 ## Rules
 - **Read the paper, not the abstract.** An abstract-only "delta" is not a verdict — and the card must
-  say, in its `**Прочитано:**` line, which parts you actually read.
+  say, in its `**Read:**` line, which parts you actually read.
 - **Mine their references.** A sibling analysis that never opened the sibling's bibliography is half done;
   the scoop you missed is more likely to be in their reference list than in their results.
 - **Classify by contribution type** before judging overlap — it's the difference between a shared concept and a collision.

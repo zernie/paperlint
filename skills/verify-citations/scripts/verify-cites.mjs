@@ -865,20 +865,21 @@ async function nvdCheck(citation) {
 /**
  * Verify ONE citation live (with caching). Returns the reduceVerdict result.
  *
- * 🔴 КОНТРАКТ: ВЫЗЫВАТЬ ПОСЛЕДОВАТЕЛЬНО. Общий `cache` читается ДО `await` и пишется ПОСЛЕ него
- * (три места ниже), поэтому два одновременных вызова с одним и тем же `cache` оба промахнутся
- * мимо записи и оба сходят в сеть. Данные от этого не портятся — резольверы детерминированы, и
- * второй пишет эквивалентное значение, — но это лишние запросы к CrossRef / OpenAlex / Semantic
- * Scholar / arXiv / NVD, то есть прямой путь к 429, ради ухода от которого в соседнем
- * `bib-authors.mjs` стоят паузы по 900 мс.
+ * 🔴 CONTRACT: CALL SEQUENTIALLY. The shared `cache` is read BEFORE the `await` and written AFTER
+ * it (three places below), so two concurrent calls sharing the same `cache` will both miss the
+ * write and both fall through to the network. This doesn't corrupt the data — the resolvers are
+ * deterministic, and the second call writes an equivalent value — but it's extra requests to
+ * CrossRef / OpenAlex / Semantic Scholar / arXiv / NVD, i.e. a direct route to a 429, which is
+ * exactly why the neighboring `bib-authors.mjs` has 900ms pauses.
  *
- * Сегодня контракт СОБЛЮДЁН: единственный вызывающий — `main()` в этом же файле (последовательный
- * `for … of` с `await`), поэтому чередования, о котором предупреждает `require-atomic-updates`,
- * не существует. Правило оставлено на `warn` именно поэтому: оно судит о форме, а не о факте.
- * Но функция ЭКСПОРТИРУЕТСЯ и берёт общий кэш — это ровно то, что распараллеливают через
- * `Promise.all`, поэтому предупреждение оставлено видимым, а не подавлено. Настоящее снятие
- * ограничения — хранить в кэше НЕЗАВЕРШЁННЫЕ промисы (дедупликация in-flight), а не значения;
- * оно несовместимо с текущим `saveCache()` в JSON и потому не сделано (замер 2026-08-28).
+ * Today the contract IS HONORED: the only caller is `main()` in this same file (a sequential
+ * `for … of` with `await`), so the interleaving `require-atomic-updates` warns about does not
+ * exist. The rule is deliberately left at `warn` for that reason: it judges the SHAPE, not the
+ * fact of it. But the function IS EXPORTED and takes a shared cache — exactly what gets
+ * parallelized via `Promise.all` — so the warning is left visible rather than suppressed. The real
+ * fix would be caching UNRESOLVED promises in the cache (in-flight deduplication) rather than
+ * values; that's incompatible with the current JSON-based `saveCache()` and so hasn't been done
+ * (measured 2026-08-28).
  */
 export async function verifyCitationLive(citation, { cache = {}, offline = false } = {}) {
   citation = normalizeIdentifiers(citation); // clean doi:/arXiv: prefixes + trailing punct first

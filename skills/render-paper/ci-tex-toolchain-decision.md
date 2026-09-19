@@ -1,72 +1,74 @@
 ---
-title: "Откуда CI берёт TeX Live: три способа, замеры, что выбрано и почему"
+title: "Where CI gets TeX Live from: three methods, measurements, what was chosen and why"
 created: 2026-09-01
 updated: 2026-09-01
 tags: [ci, texlive, render-paper, resheno-i-otkloneno, zamery]
 ---
 
-# Чем ставить TeX в CI — разбор с замерами
+# What to install TeX with in CI — a measured breakdown
 
-**Зачем этот файл.** За одну ночь 2026-09-01 способ установки TeX в джобе `build` менялся
-**трижды**, каждая смена стоила прогона CI, и два из трёх способов провалились по причинам, которых
-не видно в документации. Без этой записи следующий заход начнётся с той же первой попытки.
+**Why this file exists.** Over one night on 2026-09-01 the method for installing TeX in the
+`build` job changed **three times**, each change cost a CI run, and two of the three methods
+failed for reasons invisible in the documentation. Without this record, the next attempt would
+start from the same first try.
 
-Вопрос владельца корпуса, из-за которого файл появился: *«запиши почему мы выбрали один экшен, а не другой»*.
+The corpus owner's question that prompted the file: *"write down why we chose one action over
+another"*.
 
-Колокейтед с [`ensure-toolchain.sh`](ensure-toolchain.sh) намеренно: там объявлен `REQUIRED_FILES` —
-контракт, который обязан выполнить любой из способов ниже.
+Colocated with [`ensure-toolchain.sh`](ensure-toolchain.sh) on purpose: that file declares
+`REQUIRED_FILES` — the contract any of the methods below has to satisfy.
 
 ---
 
-## Сводка
+## Summary
 
-| способ | размер | холодная установка | кэшируется | вердикт |
+| method | size | cold install | cacheable | verdict |
 |---|---|---|---|---|
-| контейнер `texlive/texlive:latest` | **2700 МБ** | 2 м 01 с **каждый** прогон | ❌ никогда | 🟡 работает, дорого |
-| контейнер `texlive/texlive:latest-medium` | 940 МБ | зависание 14 мин | ❌ | 🔴 отклонён |
-| apt + `awalsh128/cache-apt-pkgs-action` | 2100 МБ | поставил **ноль** | ✅ | 🔴 отклонён |
-| tlmgr + `teatimeguest/setup-texlive-action` | ~250 МБ | — | ✅ | 🔴 **заблокирован** |
-| tlmgr + `actions/cache` (свой скрипт) | ~250 МБ | 77 с + доустановка | ✅ | 🟢 кандидат |
+| `texlive/texlive:latest` container | **2700 MB** | 2 m 01 s **every** run | ❌ never | 🟡 works, expensive |
+| `texlive/texlive:latest-medium` container | 940 MB | hangs 14 min | ❌ | 🔴 rejected |
+| apt + `awalsh128/cache-apt-pkgs-action` | 2100 MB | installed **zero** | ✅ | 🔴 rejected |
+| tlmgr + `teatimeguest/setup-texlive-action` | ~250 MB | — | ✅ | 🔴 **blocked** |
+| tlmgr + `actions/cache` (own script) | ~250 MB | 77 s + follow-up installs | ✅ | 🟢 candidate |
 
 ---
 
-## 1. Контейнер `texlive/texlive:latest` — то, что работало
+## 1. `texlive/texlive:latest` container — what worked
 
-**Как:** `container: image: texlive/texlive:latest` на джобе.
+**How:** `container: image: texlive/texlive:latest` on the job.
 
-**Цена, замеренная 2026-09-01** (прогон `33455680908`): шаг «Initialize containers» —
-**2 минуты 01 секунда**, и так **на каждом прогоне**. GitHub **не кэширует образ джоба** ни при
-каких условиях; самодельный кэш через `docker save`/`load` для многогигабайтного образа стоит
-дороже пула, который заменяет.
+**Cost, measured 2026-09-01** (run `33455680908`): the "Initialize containers" step —
+**2 minutes 01 seconds**, and that **on every run**. GitHub does **not cache the job container
+image** under any circumstances; a homemade cache via `docker save`/`load` for a multi-gigabyte
+image costs more than the pool time it would replace.
 
-Из этих 2,7 ГБ наши статьи трогают **71 МБ шрифтов**:
+Of that 2.7 GB, our papers touch **71 MB of fonts**:
 
-| семейство | размер | зачем |
+| family | size | what it's for |
 |---|---|---|
-| libertine | 29 МБ | основной шрифт acmart |
-| inconsolata (`zi4`) | 23 МБ | моноширинный |
-| newtx | 19 МБ | математика |
+| libertine | 29 MB | acmart's main typeface |
+| inconsolata (`zi4`) | 23 MB | monospace |
+| newtx | 19 MB | math |
 
-То есть overhead ~97%. Осознанный, а не незамеченный.
+So overhead is ~97%. A conscious tradeoff, not an unnoticed one.
 
-## 2. `latest-medium` — отклонён 2026-09-01
+## 2. `latest-medium` — rejected 2026-09-01
 
-**Идея:** образ 940 МБ вместо 2700, недостающее доставить `tlmgr`.
+**Idea:** a 940 MB image instead of 2700, with the gap filled in by `tlmgr`.
 
-**Что вышло:** шаг доустановки классов провисел **14 минут** (ходил в CTAN), был срезан бондом
-джоба, джоб `cancelled`, гейт не отработал вовсе. Размен «экономим 2 минуты пула» обошёлся в
-пятнадцать и в незакрытый гейт.
+**What happened:** the follow-up class-install step hung for **14 minutes** (reaching out to
+CTAN), got cut off by the job's bond, the job came back `cancelled`, and the gate never ran at
+all. The trade of "save 2 minutes of pool time" cost fifteen minutes and an unrun gate.
 
-**Урок не про образ, а про бонды:** у шага, который ходит в сеть, обязан быть **свой**
-`timeout-minutes`. Бонд джоба не отличает «шаг заклинило» от «набор медленный» и потому отдаёт
-зависанию весь джоб.
+**The lesson isn't about the image, it's about bonds:** any step that reaches the network needs
+its **own** `timeout-minutes`. A job-level bond doesn't distinguish "the step is stuck" from "the
+set is slow" and hands the whole job over to the hang.
 
-## 3. apt + `awalsh128/cache-apt-pkgs-action` — отклонён, и отклонён ТИХО
+## 3. apt + `awalsh128/cache-apt-pkgs-action` — rejected, and rejected QUIETLY
 
-**Идея:** `.deb` GitHub кэширует, в отличие от образа. Ставить девять пакетов из `PACKAGES` в
-`ensure-toolchain.sh`.
+**Idea:** GitHub caches `.deb` files, unlike a container image. Install the nine packages from
+`PACKAGES` in `ensure-toolchain.sh`.
 
-**Что вышло** (прогон `33456559102`, джоб `99697684739`):
+**What happened** (run `33456559102`, job `99697684739`):
 
 ```
 E: Failed to fetch mirror+file:/etc/apt/apt-mirrors.txt/pool/main/o/openjdk-21/
@@ -77,37 +79,40 @@ Skipped all manifest write. No packages to install.
 ##[end-action …;outcome=success;conclusion=success]
 ```
 
-`texlive-latex-extra` тянет по зависимостям JRE, её версия в индексе раннера протухла, зеркало
-отдало 404 — и apt не поставил **ничего**.
+`texlive-latex-extra` pulls in JRE via its dependencies, its version in the runner's index had
+gone stale, the mirror returned 404 — and apt installed **nothing**.
 
-🔴 **Главное здесь не 404, а то, что шаг был ЗЕЛЁНЫЙ.** Экшен отчитался `outcome=success`,
-закэшировал 32 КБ и пошёл дальше. Поймала это только отдельная проверка `kpsewhich` следующим
-шагом, напечатав все 14 требуемых файлов как отсутствующие. Это третий в базе экземпляр правила
-**«`exit=0` и пустой вывод — это НЕ „чисто“»**, и он же обосновывает, зачем проверка после
-установки живёт отдельным шагом: **установщику верить нельзя**.
+🔴 **The main point here isn't the 404, it's that the step was GREEN.** The action reported
+`outcome=success`, cached 32 KB, and moved on. Only a separate `kpsewhich` check in the next step
+caught it, printing all 14 required files as missing. This is the third instance in the knowledge
+base of the rule **"`exit=0` and empty output is NOT 'clean'"**, and it's also the reason the
+post-install check lives in its own separate step: **you cannot trust the installer**.
 
-**Вторая причина отклонения, независимая от 404 — зернистость.** У apt минимальная единица это
-дистрибутивный пакет: ради трёх шрифтовых стилей он тянет `texlive-fonts-extra` **целиком**.
+**The second reason for rejecting it, independent of the 404 — granularity.** apt's minimal unit
+is the distribution package: for three font styles it pulls in the **whole** of
+`texlive-fonts-extra`.
 
 | | |
 |---|---|
-| нужно | 71 МБ (три семейства) |
-| ставится | **1691 МБ** (`texlive-fonts-extra`) |
-| доля мусора | **96%** |
+| needed | 71 MB (three families) |
+| installed | **1691 MB** (`texlive-fonts-extra`) |
+| waste share | **96%** |
 
-Мельче apt не умеет — в Debian эти три семейства не разнесены по пакетам.
+apt can't go finer than that — in Debian these three families aren't split into separate
+packages.
 
-⚠️ **Побочно вскрылась протухшая запись в нашем же файле.** Обосновывая переезд, я процитировал
-комментарий из `ensure-toolchain.sh`: «172 MB fetched, 482 MB on disk». Замер датирован 17.08, а
-`texlive-fonts-extra` дописали в список **24.08** — то есть комментарий старше половины набора.
-Перемерено: **2,1 ГБ**. Комментарий в нашем файле не является проверенным замером.
+⚠️ **A side effect: a stale note surfaced in our own file.** While justifying the move, I quoted a
+comment from `ensure-toolchain.sh`: "172 MB fetched, 482 MB on disk." That measurement is dated
+17.08, and `texlive-fonts-extra` was added to the list on **24.08** — meaning the comment predates
+half the set. Remeasured: **2.1 GB**. A comment in our own file is not a verified measurement.
 
-## 4. `teatimeguest/setup-texlive-action` — ЗАБЛОКИРОВАН, не отклонён
+## 4. `teatimeguest/setup-texlive-action` — BLOCKED, not rejected
 
-**Идея:** правильный по классу инструмент. Ставит **апстримный** TeX Live по списку CTAN-пакетов,
-кэш встроен. Стандартный ответ LaTeX-экосистемы на «мне нужны три шрифта, а не два гигабайта».
+**Idea:** the right class of tool. Installs the **upstream** TeX Live from a list of CTAN
+packages, cache built in. The LaTeX ecosystem's standard answer to "I need three fonts, not two
+gigabytes."
 
-**Что вышло** (прогон `33457399377`): джоб умер на шаге **«Set up job»** за 2 секунды.
+**What happened** (run `33457399377`): the job died at the **"Set up job"** step in 2 seconds.
 
 ```
 Prepare all required actions
@@ -115,99 +120,104 @@ Getting action download info
 ##[error]Repository access blocked
 ```
 
-У аккаунта включён **белый список сторонних GitHub Actions**, и этого экшена в нём нет.
-Подтверждение рядом: `awalsh128/cache-apt-pkgs-action@v1` и `zernie/vigiles@v20.0.0` в том же
-файле стартуют нормально.
+The account has a **third-party GitHub Actions allowlist** turned on, and this action isn't on
+it. Confirmed alongside it: `awalsh128/cache-apt-pkgs-action@v1` and `zernie/vigiles@v20.0.0` in
+the same file start up normally.
 
-🔴 **Чинится НЕ кодом:** Settings → Actions → General → Allow specified actions. Из сессии это
-недоступно — проверено, не предположено:
+🔴 **Fixed NOT by code:** Settings → Actions → General → Allow specified actions. Not reachable
+from the session — checked, not assumed:
 
-| канал | результат |
+| channel | result |
 |---|---|
-| `GH_TOKEN` в окружении | есть, и он верный (`GET /user` → `zernie`) |
-| голый `curl` к api.github.com | **403 на всё**, включая `GET /repos/<owner>/<private-repo>`: `Access to this GitHub Actions path is not permitted through this proxy` |
-| GitHub MCP | единственный доступный канал, инструмента настроек репозитория в нём **нет** |
+| `GH_TOKEN` in the environment | present, and valid (`GET /user` → `zernie`) |
+| bare `curl` to api.github.com | **403 on everything**, including `GET /repos/<owner>/<private-repo>`: `Access to this GitHub Actions path is not permitted through this proxy` |
+| GitHub MCP | the only reachable channel, and it has **no** repository-settings tool |
 
-**Статус: не отклонён, а недоступен.** Если экшен когда-нибудь добавят в белый список — это лучший
-вариант, и код для него лежит в истории ветки `claude/article-deadline-check-0unptg`
-(коммит `be6f33ec8`), возвращается одним коммитом.
+**Status: not rejected, unreachable.** If the action ever gets allowlisted, it's the best option,
+and the code for it sits in the history of the `claude/article-deadline-check-0unptg` branch
+(commit `be6f33ec8`), restorable in one commit.
 
-### Почему сравнение экшенов вообще было в мою пользу неправильным
+### Why comparing the actions was, in itself, the wrong move
 
-Я взял `cache-apt-pkgs-action` **первым**, потому что искал «как закэшировать установку», и общий
-инструмент под общий запрос нашёлся сразу. Правильный вопрос был другой: **«чем в этой экосистеме
-принято ставить именно TeX»**. Экшены под LaTeX существуют, и их три:
+I picked `cache-apt-pkgs-action` **first** because I searched for "how to cache an install," and a
+generic tool for a generic query turned up immediately. The right question was different:
+**"what does this ecosystem actually use to install TeX specifically."** LaTeX-specific actions
+exist, and there are three of them:
 
-| экшен | что делает | почему не он |
+| action | what it does | why not this one |
 |---|---|---|
-| **`teatimeguest/setup-texlive-action`** | апстримный TL по списку пакетов, кэш встроен | ✅ лучший по существу, заблокирован белым списком |
-| `xu-cheng/latex-action` | популярнее всех | внутри тот же `texlive/texlive` **образ** — та же цена пула, ничего не решает |
-| `zauguin/install-texlive` | то же, что первый | менее живой, преимуществ нет |
+| **`teatimeguest/setup-texlive-action`** | upstream TL from a package list, cache built in | ✅ best on the merits, blocked by the allowlist |
+| `xu-cheng/latex-action` | the most popular of all | wraps the same `texlive/texlive` **image** underneath — same pool cost, solves nothing |
+| `zauguin/install-texlive` | same idea as the first | less maintained, no advantage |
 
-**Урок:** прежде чем брать инструмент общего назначения, спросить, нет ли специального под этот
-предмет. Общий даёт зернистость своего домена (apt → дистрибутивный пакет), специальный — своего
-(tlmgr → CTAN-пакет), и разница здесь в **двенадцать раз** по весу.
+**Lesson:** before reaching for a general-purpose tool, ask whether a specialized one exists for
+this exact subject. The general one gives you its own domain's granularity (apt → distribution
+package), the specialized one gives you its own (tlmgr → CTAN package), and here the difference
+is **twelvefold** by weight.
 
-## 5. tlmgr + `actions/cache` своим скриптом — кандидат
+## 5. tlmgr + `actions/cache` with our own script — candidate
 
-**Идея:** обойти белый список целиком. `actions/cache` первопартийный (`actions/*`), разрешён при
-любой политике «Allow select actions», и мы им **уже** кэшируем 224-мегабайтный jar TeXtidote.
+**Idea:** bypass the allowlist entirely. `actions/cache` is first-party (`actions/*`), allowed
+under any "Allow select actions" policy, and we **already** use it to cache TeXtidote's
+224-megabyte jar.
 
-**Замер, прогнанный ЛОКАЛЬНО в контейнере сессии 2026-09-01** (а не на CI — в этом весь смысл):
+**Measurement, run LOCALLY in the session container on 2026-09-01** (not on CI — that's the whole
+point):
 
-| шаг | результат |
+| step | result |
 |---|---|
-| `install-tl-unx.tar.gz` | 5,3 МБ |
-| `scheme-basic` по профилю | **147 МБ, 65 секунд** |
-| `tlmgr install` 19 пакетов | +75 МБ, 12 секунд |
-| **итого до первой сборки** | **222 МБ, 77 секунд** |
-| каталог бинарей | `texlive/bin/x86_64-linux` |
-| `kpsewhich` по `REQUIRED_FILES` | **14 из 14** ✅ |
+| `install-tl-unx.tar.gz` | 5.3 MB |
+| `scheme-basic` per profile | **147 MB, 65 seconds** |
+| `tlmgr install` 19 packages | +75 MB, 12 seconds |
+| **total before the first build** | **222 MB, 77 seconds** |
+| binary directory | `texlive/bin/x86_64-linux` |
+| `kpsewhich` against `REQUIRED_FILES` | **14 of 14** ✅ |
 
-⚠️ **`--cacert` обязателен:** в этом контейнере `curl` к CTAN падает на проверке сертификата
-(прокси), лечится `CURL_CA_BUNDLE=/root/.ccr/ca-bundle.crt`. На раннере GitHub этого не нужно —
-записано, чтобы следующий спайк не потерял на этом десять минут.
+⚠️ **`--cacert` is mandatory:** in this container `curl` to CTAN fails certificate verification
+(the proxy), fixed with `CURL_CA_BUNDLE=/root/.ccr/ca-bundle.crt`. Not needed on a GitHub runner —
+written down so the next spike doesn't lose ten minutes to it.
 
-### 🔴 И вот здесь `kpsewhich` соврал — а сборка нет
+### 🔴 And this is where `kpsewhich` lied — and the build didn't
 
-14 из 14 файлов резолвились, а `pdflatex` на настоящей статье упал:
+14 of 14 files resolved, and `pdflatex` failed on the real paper:
 
 ```
 ! LaTeX Error: File `xstring.sty' not found.
 !  ==> Fatal error occurred, no output PDF file produced!
 ```
 
-`xstring` тянет `acmart`, и его нет ни в списке пакетов, ни в `REQUIRED_FILES`. Дальше пошла
-знакомая по этой базе **очередь без конца**: `xstring` → `everyshi` → `hyperxmp` → `ncctools` →
-`cmap` → `float` → `comment` → `upquote` → `doclicense` → …
+`xstring` is pulled in by `acmart`, and it's in neither the package list nor `REQUIRED_FILES`.
+What followed was the knowledge base's familiar **endless queue**: `xstring` → `everyshi` →
+`hyperxmp` → `ncctools` → `cmap` → `float` → `comment` → `upquote` → `doclicense` → …
 
-**Это ровно тот случай, ради которого в `CLAUDE.md` записано «ставить КОЛЛЕКЦИЯМИ, а не именами».**
-Но там же названа и причина: *«имена всплывают по одному, и каждое стоит полного прогона CI
-(~25 мин квоты)»*.
+**This is exactly the case that `CLAUDE.md`'s "install by COLLECTION, not by name" rule is for.**
+But that same rule also names the reason: *"names surface one at a time, and each one costs a full
+CI run (~25 min of quota)"*.
 
-🔑 **Здесь эта причина исчезает.** Очередь прогоняется **локально**, циклом
-«собрать → выдернуть недостающий файл → `tlmgr search --global --file` → поставить → повторить»,
-и стоит **ноль минут квоты**. Меняется не факт очереди, а её цена — а вывод «перечислять имена
-нельзя» стоял именно на цене.
+🔑 **Here that reason disappears.** The queue is run **locally**, in a loop of "build → pull out
+the missing file → `tlmgr search --global --file` → install → repeat," and it costs **zero
+minutes of quota**. What changes is not the fact of the queue, but its cost — and the conclusion
+"names can't be listed one at a time" rested precisely on that cost.
 
-**Правило, которое из этого следует и которое шире TeX:** прежде чем принимать «перечислять
-нельзя, только оптом», проверить, **нельзя ли сделать итерацию бесплатной**. Дорогая итерация —
-это свойство места, где её гоняют, а не свойство задачи.
+**The rule this implies, and it's broader than TeX:** before accepting "must list only in bulk,
+never one at a time," check **whether the iteration itself can be made free.** An expensive
+iteration is a property of where it's run, not a property of the task.
 
-⚠️ **Цена точного списка, названная честно:** новая статья, подключившая новый пакет, уронит CI с
-именем файла. Это приемлемо, потому что проверка `REQUIRED_FILES` печатает лечение прямо в логе, и
-потому что альтернатива — тянуть `collection-latexextra` целиком, то есть вернуться к тем же
-сотням мегабайт мусора, от которых уходили.
+⚠️ **The honest cost of an exact list:** a new paper pulling in a new package will break CI with a
+missing filename. That's acceptable, because the `REQUIRED_FILES` check prints the fix straight
+into the log, and because the alternative — pulling in the whole of `collection-latexextra` —
+means going back to the same hundreds of megabytes of waste this move was meant to escape.
 
 ---
 
-## Что проверять при следующем заходе
+## What to check on the next attempt
 
-1. **Собрать настоящую статью, а не только `kpsewhich`.** Разрешение имён файлов и успешная
-   сборка — **разные утверждения**, и здесь второе оказалось строже первого на девять пакетов.
-2. **Смотреть `Class acmart Warning` в `paper.log`.** Отсутствие libertine/zi4/newtxmath acmart
-   **не** роняет — он молча уходит на Computer Modern, PDF собирается и выглядит нормальным, но
-   набран не тем шрифтом, а другая метрика даёт другую пагинацию.
-3. **После установки проверять результат, а не код возврата установщика.** См. §3.
-4. **Гонять итерации локально.** Спайк выше стоил ноль минут квоты и снял три ошибки, каждая из
-   которых на CI стоила бы прогона.
+1. **Build a real paper, not just `kpsewhich`.** Filename resolution and a successful build are
+   **different claims**, and here the second turned out to be stricter than the first by nine
+   packages.
+2. **Watch for `Class acmart Warning` in `paper.log`.** Missing libertine/zi4/newtxmath does
+   **not** crash acmart — it silently falls back to Computer Modern, the PDF builds and looks
+   normal, but is typeset in the wrong font, and a different metric gives a different pagination.
+3. **After installing, check the result, not the installer's exit code.** See §3.
+4. **Run iterations locally.** The spike above cost zero minutes of quota and caught three errors,
+   each of which would have cost a CI run.

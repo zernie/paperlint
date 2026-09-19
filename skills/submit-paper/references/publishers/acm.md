@@ -1,86 +1,92 @@
 ---
-title: "ACM — механика camera-ready, общая для ВСЕХ ACM-площадок"
+title: "ACM — camera-ready mechanics, shared across ALL ACM venues"
 created: 2026-08-24
 updated: 2026-08-24
 tags: [publisher, acm, camera-ready, erights, ccs]
 ---
 
-# ACM: что требует camera-ready
+# ACM: what camera-ready requires
 
-> Это уровень **издателя**, не площадки. Одинаково для AgenticDev@ASE, AISec@CCS и любой другой
-> ACM-конференции. Венью-карточка (`../venues/<venue>.md`) держит только своё: даты, page limit,
-> свой DOI/ISBN, blind-модель.
+> This is the **publisher** level, not the venue level. Identical for AgenticDev@ASE, AISec@CCS,
+> and any other ACM conference. The venue card (`../venues/<venue>.md`) holds only what's its own:
+> dates, page limit, its own DOI/ISBN, blind model.
 >
-> Снято 2026-08-24 с живой формы HotCRP AgenticDev #20 — пополе, не по памяти.
+> Captured 2026-08-24 from the live AgenticDev #20 HotCRP form — field by field, not from memory.
 
-## 🔴 Порядок обязателен, и первый шаг ломает всё остальное
+## 🔴 Order is mandatory, and the first step breaks everything else
 
-**eRights заполняется ПЕРВЫМ и требует ФИНАЛЬНЫЙ заголовок и список авторов.** Значит любое решение
-о смене названия должно быть принято **до** него — иначе copyright-блок выпишут на старое имя.
+**eRights is filled in FIRST and requires the FINAL title and author list.** So any decision about
+a title change has to be made **before** it — otherwise the copyright block gets issued under the
+old name.
 
-1. **ACM eRights** — форма от ACM, приходит ссылкой в HotCRP. Без неё финальную версию не принимают.
-2. Обновить **Title** в портале, если он менялся (там остаётся сабмит-версия).
-3. Перевести преамбулу в camera-ready (таблица ниже).
-4. Вставить copyright-блок, который вернул eRights.
-5. Собрать PDF → прогнать формат-чекер портала.
-6. Загрузить **Final version** (PDF) **и Source files** — оба обязательны.
-7. References: удобнее всего залить `.bbl` + `.aux`.
-8. Заполнить **ACM keywords** и **CCS-коды**.
+1. **ACM eRights** — a form from ACM, arrives as a link in HotCRP. The final version isn't
+   accepted without it.
+2. Update **Title** on the portal if it changed (it still holds the submission version).
+3. Convert the preamble to camera-ready (table below).
+4. Insert the copyright block that eRights returned.
+5. Build the PDF → run the portal's format checker.
+6. Upload the **Final version** (PDF) **and Source files** — both are mandatory.
+7. References: easiest is uploading `.bbl` + `.aux`.
+8. Fill in **ACM keywords** and **CCS codes**.
 9. `Save and resubmit`.
 
-## Преамбула: режим сабмита ≠ camera-ready
+## Preamble: submission mode ≠ camera-ready
 
-Типичная сабмит-преамбула **неверна** для финала. Что менять:
+The typical submission preamble is **wrong** for the final. What to change:
 
-| в сабмите | в camera-ready | почему |
+| in the submission | in camera-ready | why |
 |---|---|---|
-| `\settopmatter{printacmref=false}` | убрать | ссылку ACM печатать надо |
-| `\setcopyright{none}` | значение из eRights | иначе блок не тот |
-| `\pagestyle{plain}` | убрать | форма прямо пишет **«Do not include page numbers»** |
-| опция `review` в `\documentclass` | убрать | она даёт номера строк |
+| `\settopmatter{printacmref=false}` | remove | the ACM reference line has to print |
+| `\setcopyright{none}` | the value from eRights | otherwise the block is wrong |
+| `\pagestyle{plain}` | remove | the form explicitly says **"Do not include page numbers"** |
+| the `review` option on `\documentclass` | remove | it adds line numbers |
 
-Плюс: **все шрифты обязаны быть встроены** в PDF.
+Plus: **all fonts must be embedded** in the PDF.
 
-**Copyright-блок** идёт в **левый нижний угол первой страницы**, вид зависит от выбора в eRights:
+The **copyright block** goes in the **bottom-left corner of the first page**, its exact form
+depends on the choice made in eRights:
 
 ```
-<Venue> '<YY>, <даты>, <город>, <страна>
-© <год>
+<Venue> '<YY>, <dates>, <city>, <country>
+© <year>
 ACM ISBN <ISBN>
 https://doi.org/<DOI>
 ```
 
-⚠️ **DOI и ISBN назначаются заранее** и видны в форме до загрузки — их не надо ждать и не надо
-выдумывать.
+⚠️ **DOI and ISBN are assigned in advance** and are visible on the form before upload — there's no
+need to wait for them or make them up.
 
-## Поля портала
+## Portal fields
 
-| Поле | Обяз. | Что важно знать |
+| Field | Req. | What matters |
 |---|---|---|
-| **ACM eRights** | ✱ | до всего остального; финальный заголовок + авторы |
-| **Title** | ✱ | «exactly as it should appear in the ACM Digital Library» |
-| **Final version** | ✱ | PDF, до 600 MB |
-| **Abstract** | ✱ | markdown + LaTeX-математика, есть Preview |
-| **Source files** | ✱ | **ВСЕ** файлы сборки: `.tex`, `.bib`, рисунки. Лучше одним `.zip` |
-| **ACM keywords** | — | по одному **на строку** |
-| **CCS** | — | термины из **2012 CCS** через CCS Browser: Assign concepts → View your CCS Concept → Generate Code → вставить XML |
-| **References** | — | загрузить `.bbl` + `.aux`, либо текстом по одной на строку |
-| **Supplements** | — | **неотъемлемая** часть работы (доказательство, онлайн-приложение) |
-| **Auxiliary material** | — | НЕ неотъемлемое, но попадёт в ACM DL: **датасет/код**. ACM не претендует на копирайт, но получает право раздачи |
+| **ACM eRights** | ✱ | before everything else; final title + authors |
+| **Title** | ✱ | "exactly as it should appear in the ACM Digital Library" |
+| **Final version** | ✱ | PDF, up to 600 MB |
+| **Abstract** | ✱ | markdown + LaTeX math, has a Preview |
+| **Source files** | ✱ | **ALL** build files: `.tex`, `.bib`, figures. Best as a single `.zip` |
+| **ACM keywords** | — | one **per line** |
+| **CCS** | — | terms from **2012 CCS** via the CCS Browser: Assign concepts → View your CCS Concept → Generate Code → paste the XML |
+| **References** | — | upload `.bbl` + `.aux`, or as text one per line |
+| **Supplements** | — | an **integral** part of the work (proof, online appendix) |
+| **Auxiliary material** | — | NOT integral, but still lands in ACM DL: **dataset/code**. ACM does not claim copyright, but gets distribution rights |
 
-## Что решать осознанно
+## What to decide deliberately
 
-- **Auxiliary material.** Класть ли артефакт в ACM DL дополнительно к OSF/GitHub. Плюс — постоянство и
-  лишняя точка находимости; минус — ACM получает право раздачи. Решение на статью, не на площадку.
-- **APC.** Если площадка их берёт — платить только **после** author-kit от ACM, там сумма и порядок.
+- **Auxiliary material.** Whether to also put the artifact in ACM DL alongside OSF/GitHub. Upside —
+  permanence and an extra findability point; downside — ACM gets distribution rights. Decide per
+  paper, not per venue.
+- **APC.** If the venue charges one — pay only **after** ACM's author kit, which has the amount and
+  the process.
 
-## Замороженная версия
+## The frozen version
 
-Camera-ready — это отдельная **стадия** в смысле `versions/` (см. `checkFrozenVersions()` в
-`paper-lint.mjs`): загруженный PDF кладётся как `versions/<дата>-camera-ready.pdf`, а коммит его
-исходника записывается в `PIPELINE-STATUS.md` словом `commit <хеш>`.
+Camera-ready is a separate **stage** in the sense of `versions/` (see `checkFrozenVersions()` in
+`paper-lint.mjs`): the uploaded PDF is stored as `versions/<date>-camera-ready.pdf`, and the commit
+of its source is recorded in `PIPELINE-STATUS.md` as `commit <hash>`.
 
-**Почему это не формальность:** против camera-ready потом диффят arXiv-постинг и extension-статья,
-а рецензентские ссылки на строки разрешаются только против того рендера, который человек читал.
-🔴 Отказ, из-за которого правило появилось: у `agenticdev-2026` месяц лежал не тот сабмит-PDF
-(340 952 Б против 352 357 Б), и когда рецензент сослался на `L. 166`, сверять было не с чем.
+**Why this isn't a formality:** the arXiv posting and the extension paper get diffed against
+camera-ready later, and reviewer references to line numbers only resolve against the exact render
+a human read. 🔴 The failure that made this rule exist: `agenticdev-2026` had the wrong submission
+PDF sitting there for a month (340,952 B vs 352,357 B), and when a reviewer cited `L. 166`, there
+was nothing to check it against.

@@ -121,7 +121,7 @@ console.log("\n(4) title-only, found nowhere → unresolvable (the narrowed-fals
 {
   const cite = {
     id: "regional1998",
-    title: "Управление водными ресурсами Прибалхашья",
+    title: "Water Resource Management of the Balkhash Region",
     year: 1998,
   };
   // Title searches across all four DBs come back empty (unindexed regional work).

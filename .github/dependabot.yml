@@ -1,55 +1,54 @@
-# Обновления зависимостей ботом, а не глазами.
+# Dependency updates by bot, not by hand.
 #
-# ЗАЧЕМ ИМЕННО БОТ, а не проверка версии в рантайме: обновление — это ДЕЙСТВИЕ,
-# и бот выдаёт pull request, на который можно нажать. Строка в терминале
-# «вышло новее» действием не является, её глушат за день. Локальный гейт
-# `npm ls vigiles` в потребителе решает ДРУГУЮ задачу — «установленное не
-# соответствует манифесту» — и про свежесть относительно реестра не знает
-# ничего: замер 2026-09-16 — манифест `^27.1.4` при установленной 27.1.6 и
-# 27.2.0 в реестре даёт RC=0, диапазон-то удовлетворён.
+# WHY A BOT AT ALL, not runtime version checks: an update IS AN ACTION,
+# and the bot creates a pull request you can press. A terminal line
+# saying "something newer exists" is not an action; it gets forgotten in a day. The local gate
+# `npm ls vigiles` in the consumer solves a DIFFERENT problem — "installed does not match manifest" —
+# and knows nothing about freshness against the registry: measurement 2026-09-16 — manifest `^27.1.4`
+# with 27.1.6 and 27.2.0 in the registry gives RC=0, the range is satisfied.
 #
-# ПОЧЕМУ ЭТО МОЖНО ЗДЕСЬ, хотя в соседнем репозитории бота выключали: там
-# репозиторий ПРИВАТНЫЙ, и его прогоны ели общую квоту Actions. Этот —
-# публичный, минуты у публичных бесплатны, поэтому то возражение сюда не
-# переносится. Станет приватным — правило меняется вместе с ним.
+# WHY THIS IS ALLOWED HERE, though the bot is off in a neighboring repository: that one is
+# PRIVATE, and its runs ate the shared Actions quota. This one is
+# public, free-tier minutes are free, so that objection does not apply here. If it becomes private,
+# the rule changes with it.
 #
-# 🔴 ЧЕМ ЭТОТ ФАЙЛ НЕ УПРАВЛЯЕТ, и на этом уже наступали: он задаёт только
-# version updates. SECURITY-обновления — отдельный механизм и отдельная
-# НАСТРОЙКА РЕПОЗИТОРИЯ (Settings → Advanced Security), их частоту и
-# группировку отсюда не изменить. Если посыплются одиночные PR по indirect-
-# зависимостям — искать рычаг там, а не править этот файл.
+# 🔴 WHAT THIS FILE DOES NOT GOVERN, and we have tripped on this: it controls only
+# version updates. SECURITY updates are a separate mechanism and a separate
+# REPOSITORY SETTING (Settings → Advanced Security), their frequency and
+# grouping cannot be changed from here. If single PRs for indirect
+# dependencies start appearing — look for the lever there, not in this file.
 version: 2
 updates:
   - package-ecosystem: "npm"
     directory: "/"
-    # ЕЖЕДНЕВНО, и это осознанно дороже недельного ровно ни на сколько: репозиторий
-    # публичный (минуты Actions бесплатны), PR сгруппирован в один, потолок 2 — то
-    # есть «чаще» здесь означает только меньшее окно, а не больше шума.
+    # DAILY, and this is consciously no more expensive than weekly: the repository
+    # is public (Actions minutes are free), the PR is grouped into one, ceiling 2 — so
+    # "more frequently" here means only a smaller window, not more noise.
     #
-    # 🔴 РАСПИСАНИЕ — НЕ ЕДИНСТВЕННАЯ ЗАДЕРЖКА, и вторую легко не заметить: у
-    # version updates есть COOLDOWN, по умолчанию 3 дня — «a new version is not
-    # considered for a version update until 3 days after its release». Он НЕ
-    # снят намеренно: три дня это защита от только что отозванного релиза, а
-    # мы и так узнаём о своих версиях раньше бота (vigiles — наш пакет, его
-    # бампают в том же проходе, где мёржат PR). Итоговое окно ~3-4 дня.
+    # 🔴 SCHEDULE IS NOT THE ONLY DELAY, and the second one is easy to miss: version
+    # updates have a COOLDOWN, defaulting to 3 days — "a new version is not
+    # considered for a version update until 3 days after its release". It is NOT
+    # removed deliberately: three days is protection against a just-revoked release, and
+    # we learn about our own versions before the bot anyway (vigiles is our package, bumped
+    # in the same pass where we merge PRs). Net window ~3-4 days.
     #
-    # ⚠️ Публикация в реестр бота НЕ будит — он ходит только по расписанию.
-    # Нужно немедленно: Insights -> Dependency graph -> Dependabot -> Check for updates.
+    # ⚠️ Publishing to the registry does not wake the bot — it runs on schedule only.
+    # For immediate check: Insights -> Dependency graph -> Dependabot -> Check for updates.
     schedule:
       interval: "daily"
       time: "06:00"
       timezone: "Asia/Almaty"
-    # 🔴 СВОЙ ПАКЕТ ОСВОБОЖДЁН ОТ COOLDOWN, и это ответ на конкретное возражение:
-    # мы можем выпустить несколько версий vigiles за один день, а трёхдневная
-    # выдержка по умолчанию означала бы, что бот предлагает позавчерашнюю.
-    # Выдержка существует как защита от только что отозванного релиза — для
-    # ЧУЖОГО пакета это верно, для своего бессмысленно: мы сами его и отзовём.
+    # 🔴 OUR OWN PACKAGE IS EXEMPT FROM COOLDOWN, answering a specific objection:
+    # we can release multiple vigiles versions in a day, and a three-day
+    # default wait would mean the bot offers yesterday's.
+    # The wait exists as protection against a just-revoked release — for
+    # SOMEONE ELSE'S package that is sound; for our own, it is pointless: we will revoke it ourselves.
     cooldown:
       default-days: 3
       exclude: ["vigiles"]
 
-    # Один PR на всё дерево разработки вместо PR на пакет. Без этого первая же
-    # неделя даёт четыре отдельных прогона CI и четыре ревью на одну работу.
+    # One PR for the whole dev tree instead of a PR per package. Without this, the first
+    # week yields four separate CI runs and four reviews for one piece of work.
     groups:
       dev-dependencies:
         patterns: ["*"]
@@ -58,8 +57,8 @@ updates:
       prefix: "deps"
     labels: ["dependencies"]
 
-  # Версии самих GitHub-экшенов протухают молча и заметны только когда
-  # runner выкидывает предупреждение об устаревшем Node.
+  # Versions of GitHub Actions themselves go stale silently and are only noticed when
+  # the runner drops a warning about old Node.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
