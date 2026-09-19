@@ -1,8 +1,8 @@
 /**
  * pipeline-check.harness.mjs — one planted defect at a time, on an otherwise-clean scorecard.
  *
- * 🔴 С 2026-08-26 ЗДЕСЬ ШЕСТЬ ПРОВЕРОК, А НЕ ДВАДЦАТЬ ДВЕ. Шестнадцать, чей вход — сам документ,
- * уехали в `eslint-rules/pipeline-status.mjs`, и их случаи — в `eslint-rules/pipeline-status.harness.mjs`.
+ * 🔴 Since 2026-08-26 HERE ARE SIX CHECKS, NOT TWENTY-TWO. Sixteen, whose input is the document itself,
+ * moved to `eslint-rules/pipeline-status.mjs`, and their cases — to `eslint-rules/pipeline-status.harness.mjs`.
  * `npx vigiles test .claude/skills/paper-pipeline/scripts/pipeline-check.harness.mjs`.
  *
  * WHY THIS EXISTS ALONGSIDE THE FIXTURE TEST IN hooks.harness.mjs. That one runs the checker over
@@ -27,6 +27,7 @@
  * Fixtures are throwaways in a temp dir; no real scorecard is read or written.
  */
 import assert from "node:assert/strict";
+import { parseStatus } from "./pipeline-check.mjs";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -130,12 +131,12 @@ const expect = (name, over, want, today = TODAY) =>
   assert.deepEqual(kinds(name, over, today), [...want].sort(), `${name}: wrong finding set`);
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
-// 🔴 2026-08-26 — ШЕСТНАДЦАТЬ СЛУЧАЕВ ОТСЮДА УЕХАЛИ ВМЕСТЕ СО СВОИМИ ПРОВЕРКАМИ.
+// 🔴 2026-08-26 — SIXTEEN CASES MOVED OUT ALONG WITH THEIR CHECKS.
 //
-// Проверки, чей вход — ОДИН markdown-документ, переехали в `eslint-rules/pipeline-status.mjs`,
-// и их случаи — в колоцированный `eslint-rules/pipeline-status.harness.mjs`. Здесь их НЕ
-// оставили даже «на всякий случай»: тест, гоняющий проверку, которой в файле нет, зелен всегда
-// и потому врёт сильнее, чем его отсутствие.
+// Checks whose input is ONE markdown document moved to `eslint-rules/pipeline-status.mjs`,
+// and their cases — to the colocated `eslint-rules/pipeline-status.harness.mjs`. They were NOT
+// left behind even "just in case": a test running a check that is not in the file is always green
+// and therefore lies worse than its absence.
 //
 //   undated-continuous · gate-missing-input · gate-stale-input · unknown-input ·
 //   unattributed-verdict · single-family-jury (+ mixed-family / non-judging / widened) ·
@@ -143,16 +144,16 @@ const expect = (name, over, want, today = TODAY) =>
 //   unrun-gate · no-verdict · weak-accept-unowned · ceiling-unplanned ·
 //   unattributed-row · unreadable-row · duplicate-id
 //
-// Осталось шесть проверок, и все шесть читают вход ИЗВНЕ файла: git, часы, `reviews/`,
-// `process.env`. Ровно они и проверяются ниже.
+// Six checks remain, and all six read input FROM OUTSIDE the file: git, clock, `reviews/`,
+// `process.env`. Exactly those are checked below.
 //
-// ⚠️ ДВА СЛУЧАЯ ПРО РАЗБОР ПЕРЕПИСАНЫ, А НЕ УДАЛЕНЫ, и это важнее самого их сохранения.
-// «Заголовок с хвостовым текстом» и «строка `| Id |`» — регрессии парсера, найденные живыми
-// 2026-08-09, и раньше они наблюдались через `unrun-gate`, которого здесь больше нет. Если бы
-// их просто оставили с ожиданием `[]`, они стали бы зелёными ПО ПОСТРОЕНИЮ: пустой набор
-// находок получается и когда парсер прав, и когда он молча съел таблицу. Поэтому обе
-// переписаны так, чтобы наблюдаться через `stale-continuous` — проверку, которая тут осталась:
-// парсер не увидел секцию ⇒ строки нет ⇒ находки нет ⇒ ассерт красный.
+// ⚠️ TWO CASES ABOUT PARSING WERE REWRITTEN, NOT DELETED, and this is more important than keeping them.
+// "Heading with trailing text" and "line `| Id |`" — parser regressions, found live
+// on 2026-08-09, and before they were observed through `unrun-gate`, which no longer exists here. If they
+// had simply been left expecting `[]`, they would have turned green BY CONSTRUCTION: empty set
+// of findings appears both when the parser is right and when it silently ate the table. So both
+// were rewritten to be observed through `stale-continuous` — the check that stayed here:
+// parser did not see section ⇒ no line ⇒ no finding ⇒ assertion is red.
 // ═══════════════════════════════════════════════════════════════════════════════════════
 
 // ── 0. the baseline says nothing ───────────────────────────────────────────────────────
@@ -164,13 +165,13 @@ expect("clean", {}, []);
 // ── 1. stale-continuous — a ☑ about text that has since been rewritten ─────────────────
 // verify-citations was numbered like a one-shot step, so a citation added after the last run counted
 // as verified. The project rule "we checked last cycle does not count" was already written down.
-// ВХОД ИЗВНЕ ФАЙЛА: дата последнего коммита, тронувшего текст статьи — поэтому проверка осталась.
+// INPUT FROM OUTSIDE THE FILE: the date of the last commit that touched the paper's text — that is why the check stayed.
 expect("stale-continuous", { cites: { date: "2020-01-01" } }, ["stale-continuous"]);
 
 // ── 2. submit-access — no portal account inside somebody else's moderation window ──────
 // Found at T−4 days on a finished paper, as the sole item on the critical path: OpenReview profiles
 // are moderated for up to two weeks and there is no expedite route without an institutional email.
-// ВХОД ИЗВНЕ ФАЙЛА: часы.
+// INPUT FROM OUTSIDE THE FILE: the clock.
 expect("submit-access", { access: { status: "☐" }, deadline: "2026-09-01" }, ["submit-access"], "2026-08-20");
 
 // ── 3. …and a far deadline with the same blank row is NOT urgent ───────────────────────
@@ -180,11 +181,11 @@ expect("submit-access-not-yet", { access: { status: "☐" } }, []);
 // A superseded 2026-08-02 row saying the artifact was unhosted re-triggered the credential check on
 // 2026-08-05, hours after the artifact went up. This project appends rather than rewrites, so every
 // scorecard accumulates old rows, and parsing them makes every past state live again.
-// Наблюдается через `stale-continuous`: строка в истории датирована 2020 годом, и если бы срез
-// «истории» не работал, она бы её и дала.
+// Observed through `stale-continuous`: a row in history is dated 2020, and if the history
+// slice did not work, it would have given it.
 expect(
   "history-is-not-status",
-  { tail: ["<!-- HISTORY -->", "", "### CONTINUOUS", ...PLAIN_HEAD, "| cites | any cite | verify-citations | ☑ | 2020-01-01 | old | — |"].join("\n") },
+  { tail: ["## History", "", "### CONTINUOUS", ...PLAIN_HEAD, "| cites | any cite | verify-citations | ☑ | 2020-01-01 | old | — |"].join("\n") },
   [],
 );
 
@@ -252,4 +253,49 @@ for (const fname of ["2026-08-24-cold-read-report.md", "2026-08-24-coldread-work
 }
 
 rmSync(tmp, { recursive: true, force: true });
-console.log("✓ pipeline-check: 6 случаев + два спеллинга отчёта холодного чтения — по одному подложенному дефекту за раз, на шесть проверок, чей вход ВНЕ файла (git · часы · reviews/ · env). Остальные шестнадцать уехали в eslint-rules/pipeline-status.harness.mjs");
+console.log("✓ pipeline-check: 6 cases + two spellings of the cold-read report — one planted defect at a time, on six checks whose input is OUTSIDE the file (git · clock · reviews/ · env). The other sixteen moved to eslint-rules/pipeline-status.harness.mjs");
+
+// ── THE HISTORY CUT ──────────────────────────────────────────────────────────
+// Added 2026-09-19, and the reason it was added is the finding: `currentPart` had NO test at
+// all. The word "History" appeared nowhere in this file, so the function that decides which
+// half of a scorecard counts as current was running unwatched.
+//
+// 🔴 That is also why the cleanup it guards was unsafe until now. `HISTORY_MARK_RE` — a regex
+// over the raw sentence «Всё, что ниже, — история» — was deleted in favour of the heading path
+// alone, and neither the old branch nor the new one could be shown to work. Two attempts at a
+// discriminator through the CLI returned the same answer for both inputs, which says nothing
+// about the subject: same answer for different inputs means the probe is measuring itself.
+// Going through the exported parser instead separates them in one call.
+//
+// Both halves: the buried row is gone under a marker heading, and PRESENT under one that is not
+// a marker. Without the second, a parser that dropped every second section would pass.
+{
+  const body = (heading) => `# Scorecard
+
+### CONTINUOUS
+| id | Trigger | Skill | Status | Date | Result | Open |
+|----|---------|-------|--------|------|--------|------|
+| live | x | s | ☑ | 2026-09-01 | current | — |
+
+## ${heading}
+
+### CONTINUOUS
+| id | Trigger | Skill | Status | Date | Result | Open |
+|----|---------|-------|--------|------|--------|------|
+| buried | x | s | ☑ | 2001-01-01 | superseded snapshot | — |
+`;
+  const ids = (t) => Object.values(parseStatus(t).sections).flat().map((r) => r.id);
+
+  for (const marker of ["History", "Archive", "history", "Archive of superseded rows"]) {
+    const got = ids(body(marker));
+    assert.deepEqual(got, ["live"],
+      `a row under the «${marker}» marker is still counted as current — a superseded snapshot ` +
+      `reads as today's status, which is the exact failure the cut exists to prevent: ${JSON.stringify(got)}`);
+  }
+
+  // The other half. A heading that merely mentions neither word must NOT cut, or the check
+  // silently stops seeing whole sections and reports a clean scorecard it never read.
+  const kept = ids(body("Notes"));
+  assert.deepEqual(kept, ["live", "buried"],
+    `an ordinary heading cut the document — sections after it vanish unnoticed: ${JSON.stringify(kept)}`);
+}

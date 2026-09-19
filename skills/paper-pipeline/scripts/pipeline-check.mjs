@@ -132,20 +132,17 @@ const cleanId = (s) => s.replace(/\*\*/g, "").replace(/[^\w]/g, "").trim();
 const STATUS_RE = /(☑|◐|☐|⚠|n\/a)/;
 const ISO_RE = /(\d{4}-\d{2}-\d{2})/;
 /**
- * The line below which a scorecard keeps superseded snapshots. Nothing after it is current.
+ * Where a scorecard stops being current. The marker is a HEADING, and it is found as a heading
+ * NODE in the parsed document — the level is free, the text is what is checked.
  *
- * 2026-08-11 — split in two, because these were TWO different questions under one regex.
- * The phrase and the HTML comment are a convention of this knowledge base, and those we do look for
- * by string. But `^#+\s*(History|Archive)\b` was markup parsing, and it behaved the way markup
- * parsing by regex always behaves: it counted `#History` as a heading (in CommonMark it is NOT one —
- * a space is required) and did not see a heading indented by 1–3 spaces (which is a heading). Plus
- * `\b` after a Latin word is the same class that bit three times on Cyrillic; replaced with an
- * explicit lookahead.
+ * 🔴 There used to be a second way in, and removing it is the point of this comment. A
+ * `HISTORY_MARK_RE` matched the raw line `Всё, что ниже, — история` — a sentence — with `,?`,
+ * `\s*` and the truncated stem `истори` bolted on so it would survive the author's mood and the
+ * word's declension. Four hedges in one pattern is four admissions that the thing being matched
+ * has no fixed form. Measured 2026-09-19: of the four status files the checker reads, ONE carried
+ * that sentence; its `<!-- HISTORY -->` alternative had ZERO users and had never had any. The one
+ * file now carries a `## History` heading instead, so both branches went.
  */
-// kb-lint:markdown-regex-ok — a line marker (phrase + HTML comment), we do not parse markup here
-const HISTORY_MARK_RE =
-  /Всё,\s*что\s*ниже,?\s*—\s*истори|<!--\s*HISTORY\s*-->/i;
-/** The same marker, but expressed as a HEADING: the TEXT is checked, the level can be anything. */
 const HISTORY_HEADING_RE = /^(History|Archive)(?![\p{L}\p{N}_])/iu;
 
 /** The five kinds of work the template groups rows into. A heading names one or it names none. */
@@ -194,9 +191,7 @@ function currentPart(text) {
       .filter((h) => HISTORY_HEADING_RE.test(h.text))
       .map((h) => h.line),
   );
-  const cut = lines.findIndex(
-    (l, i) => headingLines.has(i) || HISTORY_MARK_RE.test(l),
-  );
+  const cut = lines.findIndex((_l, i) => headingLines.has(i));
   return (cut === -1 ? lines : lines.slice(0, cut)).join("\n");
 }
 
