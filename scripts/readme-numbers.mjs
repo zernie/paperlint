@@ -96,6 +96,11 @@ export async function actualCounts(root = ROOT) {
     rules: await countRules(root),
     harnesses: countFiles(root, ".harness.mjs"),
     batteries: countFiles(root, ".mutations.mjs"),
+    // The end-to-end runs, counted from disk by the suffix that names them. `docs/e2e.md`
+    // describes them one by one, and a description that outlives the thing it describes is the
+    // reason this counter exists at all: add a third `*-e2e.mjs` and the doc goes red until it
+    // says what the third one proves.
+    e2e: countFiles(join(root, "scripts"), "-e2e.mjs"),
     skills: readdirSync(join(root, "skills")).filter((d) => lstatSync(join(root, "skills", d)).isDirectory()).length,
   };
 }
@@ -127,7 +132,13 @@ export function declaredCounts(text) {
  */
 export function countDeclarations(text) {
   const out = [];
-  for (const m of text.matchAll(/<!--\s*count:([a-z]+)\s*-->\s*(\d+)/g))
+  // 🔴 `[a-z0-9]`, NOT `[a-z]`. Measured 2026-09-19: the counter `e2e` was declared in
+  // `docs/e2e.md` and the check reported it as "declared nowhere" — `[a-z]+` matched `e`, then
+  // wanted `-->` and found `2`. The charset was an undeclared convention about what a counter
+  // may be called, and it silently disagreed with the counters that actually exist. The key set
+  // is defined by `actualCounts`, and a name outside it is already an error below; the pattern
+  // has no business being the second, narrower, unstated definition.
+  for (const m of text.matchAll(/<!--\s*count:([a-z][a-z0-9]*)\s*-->\s*(\d+)/g))
     out.push({ key: m[1], value: Number(m[2]) });
   return out;
 }
@@ -140,7 +151,7 @@ export function countDeclarations(text) {
  * moved. The requirement stayed the same and just as strong: EVERY number on disk must be
  * declared somewhere in these files. All that changes is where exactly.
  */
-export const DECLARING_FILES = ["README.md", "CONTRIBUTING.md"];
+export const DECLARING_FILES = ["README.md", "CONTRIBUTING.md", "docs/e2e.md"];
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   // Every occurrence is kept, because judging only the last one is how this check went hollow.

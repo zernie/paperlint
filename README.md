@@ -246,6 +246,7 @@ files were linted, so a typo in the path shows up red instead of green. Optional
 | [`docs/configuration.md`](docs/configuration.md) | every setting, the required-files block, build-script lookup, using the rules from your own ESLint config |
 | [`docs/install.md`](docs/install.md) | why the install is shaped this way, and why the plugin ships no code — a decision record, measured |
 | [`docs/prior-art/`](docs/prior-art/README.md) | how comparable tools are shaped, with the URLs that were checked |
+| [`docs/e2e.md`](docs/e2e.md) | the end-to-end runs: what each proves, what they do not cover, and when a change owes one |
 | [`docs/incidents.md`](docs/incidents.md) | what broke, measured |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | layout, test commands, how to add a rule or a skill |
 

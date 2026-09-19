@@ -23,6 +23,12 @@ that part of the rule was never doing any work. CI refuses a rule whose battery 
 
 <!-- count:harnesses -->59 harnesses, <!-- count:batteries -->36 batteries.
 
+A harness runs in this tree, against this working copy. That is the wrong shape for a defect that
+only exists once somebody else has installed the package — a path written inside a skill, a file
+that never made it into the tarball, a PDF whose content is wrong while the exit code is zero.
+Those are covered by the end-to-end runs, and [`docs/e2e.md`](docs/e2e.md) says which question
+belongs to which tier, and **when a change owes a new e2e rather than a harness**.
+
 It caught a real one on the way in: `js-yaml` 5 stopped parsing an unquoted date as a `Date`.
 Every harness stayed green under both majors, and only the battery noticed that the rule's
 date coercion had become dead code.
@@ -33,8 +39,8 @@ date coercion had become dead code.
 npm run check
 ```
 
-That is the whole instruction. It runs every gate in order — build, lint, the 58 harnesses, the
-34 mutation batteries, the install e2e under npm and pnpm, and a real `pdflatex` build — and ends
+That is the whole instruction. It runs every gate in order — build, lint, the <!-- count:harnesses -->59 harnesses, the
+<!-- count:batteries -->36 mutation batteries, the install e2e under npm and pnpm, and a real `pdflatex` build — and ends
 by printing **which CI jobs it does not reproduce, and why**.
 
 🔴 **There is no `--fast` flag, and that is the point.** On 2026-09-19 a rule change was pushed
@@ -67,6 +73,7 @@ docs/           evidence that would otherwise bloat CLAUDE.md:
                   prior-art/  how comparable tools are shaped, and why this one is shaped so
                   incidents.md  what broke, measured
                   install.md  the install contract
+                  e2e.md  the end-to-end runs, and when a change owes one
 ```
 
 ## Working on this package

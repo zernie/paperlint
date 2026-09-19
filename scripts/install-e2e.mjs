@@ -2,7 +2,7 @@
  * INSTALL E2E: pack the package and install it into a CLEAN consumer with every available
  * manager, then check what the consumer actually does.
  *
- * 🔴 WHY A SEPARATE RUN AND NOT A CELL IN `npm test`. Everything the 55 harnesses check lives
+ * 🔴 WHY A SEPARATE RUN AND NOT A CELL IN `npm test`. Everything the harnesses check lives
  * INSIDE the repository, where `node_modules`, the sources and the config all sit side by side.
  * The consumer gets a different tree: a tarball unpacked by a manager BY ITS OWN RULES. One
  * decision has already diverged between those two worlds — moving `vigiles` from peer to regular
