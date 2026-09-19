@@ -4,15 +4,15 @@ Four files record paper-pipeline skill runs and compute the status view that rep
 hand-maintained `PIPELINE-STATUS.md` table. Alongside them live the harnesses that plant a defect in
 each mechanical gate and check the gate says no (see **Harnesses**, added 2026-08-07).
 
-> **📍 Переехало сюда 2026-08-15 из `.claude/pipeline/`.** Каталог верхнего уровня был расселён:
-> всё, у чего есть один владелец, уехало к нему. Здесь это семейство «пайплайн статьи» —
-> `ledger` · `announce` · `status` · `run-mechanical` плюс девять чекеров, которые уже лежали
-> тут, и **их тесты, которые до этого дня лежали в другом каталоге верхнего уровня**. То есть
-> колокации не было ровно там, где мы её проповедуем: чекер в скилле, его харнесс — снаружи.
+> **📍 Moved here 2026-08-15 from `.claude/pipeline/`.** The top-level directory was distributed:
+> everything with one owner went to it. Here this is the paper-pipeline family —
+> `ledger` · `announce` · `status` · `run-mechanical` plus nine checkers that already lay
+> here, and **their tests, which until that day lay in another top-level directory**. That is,
+> colocation was missing precisely where we preach it: checker in the skill, its harness — outside.
 >
-> Что осталось без владельца (общая библиотека 24 скиллов, `markdown.mjs`, движок мутаций) —
-> в [`.claude/lib/`](../../../lib/README.md), там же разбор четырёх форм ссылки, из которых
-> поиск по пути видит только одну.
+> What remained without an owner (shared library of 24 skills, `markdown.mjs`, mutations engine) —
+> in [`.claude/lib/`](../../../lib/README.md), also there the breakdown of four forms of reference, from which
+> path-based search sees only one.
 
 | file | what it is for |
 |---|---|
@@ -170,7 +170,7 @@ that fires on correct text is muted within a day, which is worse than one that m
 | `provenance.harness.mjs` | `check-provenance.mjs` | a number from the `annotated` arm cited as "exactly as committed" · a bolded figure with no provenance row |
 | `artifact-coverage.harness.mjs` | `artifact-coverage.mjs` | a bundle with no data for the section the abstract leads with · an index promising a path that is not shipped · and, in the REVERSE direction, **a result that exists on disk and that neither the paper nor the released index mentions** — plus the ignore set that decides which of those count: an allowance applied, an allowance printed with its reason, a `ships-as:` claim whose bundle path has gone, a row naming a directory that no longer exists, and **the whole ignore ledger printed on a run with no findings** |
 | `generated-code.harness.mjs` | `generated-code.mjs` | an analysis script that draws randomness and never seeds it · one that hard-codes an absolute path · one that reads and then overwrites its own input (literal and `argv` forms). Plus every quiet case, which is where this checker lives or dies: a seed threaded through `--seed`, a lowercase Express route, a third party's relative path, a read-here-write-there script, a variable name reused across two loops — and the released bundle, which `check-anon.sh` cat. 5 owns and this one must not enter |
-| `pipeline-check.harness.mjs` | `pipeline-check.mjs` | six defects, **one at a time**, asserting the exact finding set. 🔴 С 2026-08-26 здесь только проверки, чей вход ВНЕ файла (git · часы · `reviews/` · `process.env`); шестнадцать остальных уехали в `eslint-rules/pipeline-status.mjs` и проверяются `eslint-rules/pipeline-status.harness.mjs` |
+| `pipeline-check.harness.mjs` | `pipeline-check.mjs` | six defects, **one at a time**, asserting the exact finding set. 🔴 Since 2026-08-26 here only checks whose input is OUTSIDE the file (git · clock · `reviews/` · `process.env`); sixteen others moved to `eslint-rules/pipeline-status.mjs` and are checked by `eslint-rules/pipeline-status.harness.mjs` |
 | `paper-lint.harness.mjs` | `paper-lint.mjs` | text moving under an unchanged scorecard · appendix outweighing the body · a shaved passage |
 | `round-diff.harness.mjs` | `paper-pipeline/scripts/round-diff.mjs` | a section changed outside the round's declaration (and one added, and one **removed**) · a cite and a bare bibliography entry arriving mid-round · a numeric literal arriving mid-round, with restating an existing one asserted FREE · the body over its budget · **three rounds compounding past the sum of their budgets while the open round is inside its own** · hedge density rising · a `touches:` list covering the paper · a base that does not resolve · edits with every round closed. Plus the clean case: a legal round must produce total silence |
 | `delivered-pdf.harness.mjs` | `repro/delivered_pdf.py` | a quantity deleted from the built page · **a superscript minus lost in typesetting, compiled and read back** · a value moved away from its claim · an occurrence whose prose the extractor lost · a missing, unreadable and stale PDF · and all six normalisation rules, one assertion each |
@@ -196,10 +196,10 @@ refactor across both `gates.harness.mjs` and `skill-checks.mjs`), `artifact-cove
 `uncited-refs.mutations.mjs` (8 rows). They are run by
 hand, not in CI, because each one rewrites a source file dozens of times and takes minutes.
 
-> **2026-08-26 — `verify-refs.mjs` уехал в движок и удалён отсюда** (вместе со своими харнессом и
-> мутациями). Замер библиографии теперь `extract-ref-facts.mjs` в этой же папке, суждение — двенадцать
-> правил `refs/*` в `eslint-rules/ref-facts.mjs`, мутации — `eslint-rules/ref-facts.mutations.mjs`
-> (21 строка). Разбор — `the author's private research notes`.
+> **2026-08-26 — `verify-refs.mjs` moved to the engine and deleted from here** (along with its harness and
+> mutations). Bibliography measurement now `extract-ref-facts.mjs` in the same folder, judgment — twelve
+> rules `refs/*` in `eslint-rules/ref-facts.mjs`, mutations — `eslint-rules/ref-facts.mutations.mjs`
+> (21 rows). Analysis — `the author's private research notes`.
 
 **2026-08-14 — the engine was split out into `mutation-driver.mjs`; the tables stayed.** Each file
 now holds only its cases (which defect, which bytes, which message — data about ITS checker) and

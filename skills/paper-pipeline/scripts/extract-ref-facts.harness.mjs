@@ -1,24 +1,24 @@
 /**
- * Колоцированный тест извлекателя `extract-ref-facts.mjs`.
- * Прогон: `npx vigiles test .claude/skills/paper-pipeline/scripts/extract-ref-facts.harness.mjs`
+ * Colocated test of the `extract-ref-facts.mjs` extractor.
+ * Run: `npx vigiles test .claude/skills/paper-pipeline/scripts/extract-ref-facts.harness.mjs`
  *
- * ПОРЯДОК НЕСУЩИЙ: сначала доказывается, что на ВЕРНОМ входе извлекатель отдаёт факты, какие
- * обещает, и только потом — что на сломанном он отказывается писать. Извлекатель, который тихо
- * пишет пустые факты, страшнее отсутствующего: пустая библиография читается как чистая.
+ * ORDER IS LOAD-BEARING: first we prove that on CORRECT input the extractor returns the facts it
+ * promises, and only then — that on broken input it refuses to write. An extractor that silently
+ * writes empty facts is scarier than a missing one: empty bibliography reads as clean.
  *
- * 🔴 ТРИ ЗАМЕРА ЗДЕСЬ — ЭТО ТРИ ДЕФЕКТА, КОТОРЫЕ ПРОЖИЛИ ВСЮ ЖИЗНЬ ПРЕДШЕСТВЕННИКА. Каждый
- * закреплён ассертом на НАСТОЯЩЕМ файле репозитория, а не на фикстуре, потому что все три
- * держались ровно на том, что настоящий файл никто не подавал:
- *   1. `refs.bib` не было в списке источников (`resolveSource`);
- *   2. регулярка `.bib` требовала `}` на отдельной строке и давала 0 записей на обоих наших файлах;
- *   3. в `.bib` автор пишется «Фамилия, Имя», а сравнение брало последний токен.
+ * 🔴 THREE MEASUREMENTS HERE — THESE ARE THREE DEFECTS THAT LIVED THE ENTIRE LIFE OF THE PREDECESSOR. Each
+ * is pinned by an assertion on a REAL repository file, not a fixture, because all three
+ * held exactly because nobody ever passed the real file:
+ *   1. `refs.bib` was not in the list of sources (`resolveSource`);
+ *   2. the regex `.bib` required `}` on a separate line and gave 0 entries on both our files;
+ *   3. in `.bib` an author is written "LastName, FirstName", but comparison took the last token.
  *
- * 🔴 БЕЗ СЕТИ. Ответы реестров — фикстуры в файле кеша, читаемые тем же кодом, что пишет
- * настоящий запрос. Тест, которому нужен интернет, пропускают в CI, а пропущенная проверка
- * неотличима от прошедшей.
+ * 🔴 NO NETWORK. Registry answers — fixtures in a cache file, read by the same code that writes
+ * a real request. A test that needs the internet is skipped in CI, and a skipped check
+ * is indistinguishable from one that passed.
  *
- * 🔴 Ассерты — НА ВЕРХНЕМ УРОВНЕ МОДУЛЯ: `vigiles test` импортирует файл и считает «не бросил»
- * успехом, поэтому экспортированный объект тестов отчитался бы ✓, не прогнав ничего.
+ * 🔴 Assertions — AT MODULE TOP LEVEL: `vigiles test` imports the file and counts "did not throw"
+ * as success, so an exported test object would report ✓ without running anything.
  */
 import assert from "node:assert/strict";
 import {
@@ -41,20 +41,20 @@ const ROOT =
   consumerRoot();
 const X = await import(join(HERE, "extract-ref-facts.mjs"));
 
-// 🔴 КОРЕНЬ СТАТЕЙ — ИЗ ОБЪЯВЛЕНИЯ, А НЕ ИМЕНЕМ КАТАЛОГА ПЕРВОГО ПОТРЕБИТЕЛЯ (12.09.2026).
-// `package.json` → `research-paper-pipeline.papers`, умолчание `papers`. Тот же ключ читают
-// конфиг ESLint, хук и скиллы — механизм вынесен в пакет на шаге 2, и второй способ узнать
-// то же самое был бы второй правдой.
+// 🔴 PAPERS ROOT — FROM THE DECLARATION, NOT BY THE FIRST CONSUMER'S DIRECTORY NAME (12.09.2026).
+// `package.json` → `research-paper-pipeline.papers`, default `papers`. The same key is read by
+// ESLint config, hook and skills — the mechanism was moved into the package at step 2, and a second way to know
+// the same thing would be a second truth.
 //
-// Настоящие статьи потребителя — ДОБАВКА к фикстуре, «если они есть — проверить и на них».
-// Отсутствие законно и молча пропускается; сам тест несёт фикстура, и её отсутствие ловится
-// громким нулём ниже.
+// Real consumer papers — ADDITION to fixture, "if they exist — check against them too".
+// Absence is lawful and silently skipped; the test itself is carried by the fixture, and its absence is caught
+// with a loud zero below.
 //
-// 🔴 ЧИТАЮТСЯ С ДИСКА, А НЕ ПЕРЕЧИСЛЯЮТСЯ ИМЕНАМИ (12.09.2026). Здесь стоял список из двух имён
-// статей первого потребителя. Список имён в ПАКЕТЕ неверен дважды: у другого потребителя таких
-// каталогов нет, то есть цикл не делает ни одной итерации и печатает успех, проверив ноль
-// файлов; и он называет чужие неопубликованные работы в репозитории, который читают все.
-// Каталог на диске отвечает на тот же вопрос, не зная ни одного имени заранее.
+// 🔴 READ FROM DISK, NOT LISTED BY NAME (12.09.2026). There used to be a list of two
+// paper names of the first consumer. A list of names in the PACKAGE is wrong twice: a different consumer has no such
+// directories, meaning the loop makes no iteration and prints success having checked zero
+// files; and it names others' unpublished works in a repository everyone reads.
+// A directory on disk answers the same question without knowing any name in advance.
 const PAPERS_ROOT = join(
   ROOT,
   JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"))[
@@ -68,30 +68,29 @@ const REAL_PAPERS = existsSync(PAPERS_ROOT)
   : [];
 
 const TMP = realpathSync(mkdtempSync(join(tmpdir(), "extract-ref-facts-")));
-// Уборка вешается СРАЗУ: ассерты бросают, и «rmSync внизу файла» не выполняется ровно в тех
-// прогонах, которые красные.
+// Cleanup is attached IMMEDIATELY: assertions throw, and "rmSync at end of file" does not execute precisely in those
+// runs that are red.
 process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
 
-// ── 1. ДЕФЕКТ №1: `refs.bib` обязан быть в списке источников ─────────────────
+// ── 1. DEFECT #1: `refs.bib` must be in the list of sources ─────────────────
 {
   assert.ok(
     X.SOURCE_ORDER.includes("refs.bib"),
-    `в SOURCE_ORDER нет refs.bib — это дефект, из-за которого .bib-нога не открывалась ни разу: ${X.SOURCE_ORDER.join(", ")}`,
+    `refs.bib missing from SOURCE_ORDER — this is the defect that kept the .bib leg from ever opening: ${X.SOURCE_ORDER.join(", ")}`,
   );
-  // 🔴 ПРЕДМЕТ — ФИКСТУРА, а настоящие статьи ДОБАВКА (12.09.2026). Здесь стоял только цикл по
-  // двум нашим статьям с `continue`, если файла нет. В этом репозитории они есть, и тест зелёный;
-  // в вынесенном пайплайне их каталогов НЕ БУДЕТ — оба цикла не сделают ни одной итерации, и
-  // харнесс напечатает успех, проверив ноль файлов. «Зелёный над пустотой», класс, за который в
-  // этой базе плачено трижды. Фикстура делает пустой прогон НЕВЫРАЗИМЫМ: она лежит рядом всегда.
+  // 🔴 SUBJECT — FIXTURE, real papers ADDITION (12.09.2026). There used to be only a loop over
+  // our two papers with `continue` if file doesn't exist. In this repo they exist, and test is green;
+  // in the extracted pipeline their directories WON'T EXIST — both loops make no iteration, and
+  // harness prints success having checked zero files. "Green over void", a class this base has paid for thrice. Fixture makes an empty run INEXPRESSIBLE: it always lies nearby.
   //
-  // ⚠️ Каталог, а не файл: `resolveSource` возвращает сам путь, если это ФАЙЛ, и только для
-  // каталога спускается по `SOURCE_ORDER`. Фикстура-файл проверяла бы не ту ветку.
+  // ⚠️ Directory, not file: `resolveSource` returns the path itself if it IS A FILE, and only for
+  // a directory descends the `SOURCE_ORDER`. A fixture-file would check the wrong branch.
   {
     const dir = join(HERE, "fixtures", "real-bib");
     assert.equal(
       X.resolveSource(dir),
       join(dir, "refs.bib"),
-      "resolveSource не находит замороженный настоящий .bib — .bib-нога снова мертва",
+      "resolveSource cannot find the frozen real .bib — .bib leg is dead again",
     );
   }
   for (const paper of REAL_PAPERS) {
@@ -100,23 +99,23 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
     assert.equal(
       X.resolveSource(dir),
       join(dir, "refs.bib"),
-      `resolveSource не находит настоящий refs.bib у ${paper} — .bib-нога снова мертва`,
+      `resolveSource cannot find real refs.bib for ${paper} — .bib leg is dead again`,
     );
   }
 }
 
-// ── 2. ДЕФЕКТ №2: настоящий .bib разбирается, и число записей сходится ───────
+// ── 2. DEFECT #2: real .bib parses, and entry count matches ───────
 //
-// Именно НАСТОЯЩИЕ файлы, а не фикстура: прежний парсер падал на форме `}}` в конце последнего
-// поля, а фикстура, написанная руками, почти наверняка закрыла бы запись на своей строке — то
-// есть тест прошёл бы, а корпус нет. Ожидаемое число берётся из самого файла (`^@`), а не
-// вписывается константой: константа устареет при первой же дописанной записи.
+// REAL files, not fixture: the old parser failed on the form `}}` at the end of the last
+// field, and a hand-written fixture almost certainly would close the entry on its own line — that is,
+// the test would pass but the corpus would not. The expected count comes from the file itself (`^@`), not
+// hardcoded: a constant grows stale on the first added entry.
 {
-  // Счётчик прогнанных источников, и он проверяется после цикла: проверка, печатающая «прошло»
-  // и не сказавшая СКОЛЬКО файлов открыла, — это счётчик, считающий то, что игнорирует.
+  // Counter of parsed sources, checked after the loop: a check that prints "passed"
+  // but says nothing about HOW MANY files it opened — this is a counter that counts what it ignores.
   let parsed = 0;
   const sources = [
-    join(HERE, "fixtures", "real-bib", "refs.bib"), // лежит рядом всегда
+    join(HERE, "fixtures", "real-bib", "refs.bib"), // always lies nearby
     ...REAL_PAPERS.map((p) => join(PAPERS_ROOT, p, "refs.bib")),
   ];
   for (const f of sources) {
@@ -130,38 +129,38 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
     const got = await X.parseBib(text);
     assert.ok(
       want > 0,
-      `${paper}/refs.bib: в файле нет ни одной записи @… — фикстура сломана`,
+      `${paper}/refs.bib: no @… entries in file — fixture is broken`,
     );
     assert.equal(
       got.length,
       want,
-      `${paper}/refs.bib: разобрано ${got.length} записей из ${want}`,
+      `${paper}/refs.bib: parsed ${got.length} entries out of ${want}`,
     );
     for (const e of got) {
-      assert.ok(e.title, `${paper}: у записи ${e.key} нет заголовка`);
+      assert.ok(e.title, `${paper}: entry ${e.key} has no title`);
       assert.ok(
         e.line > 0,
-        `${paper}: у записи ${e.key} нет строки источника — находку некуда адресовать`,
+        `${paper}: entry ${e.key} has no source line — nowhere to report the finding`,
       );
     }
   }
-  // Громкий ноль. Фикстура делает его недостижимым сегодня — и именно поэтому ассерт стоит: он
-  // ловит не отсутствие статей (это законно), а исчезновение самой фикстуры, после которого цикл
-  // снова начнёт печатать успех, не открыв ни одного файла.
+  // Loud zero. Fixture makes it unreachable today — and precisely why the assertion stands: it
+  // catches not absence of papers (that is lawful), but disappearance of the fixture itself, after which the loop
+  // will start printing success without opening any file.
   assert.ok(
     parsed > 0,
-    "разобрано НОЛЬ .bib-файлов. Это не «нечего проверять», а «проверка не нашла свой предмет»: " +
-      "замороженная фикстура fixtures/real-bib/refs.bib обязана лежать в репозитории всегда.",
+    "parsed ZERO .bib files. This is not 'nothing to check', but 'check did not find its subject': " +
+      "the frozen fixture fixtures/real-bib/refs.bib must always lie in the repository.",
   );
 }
 
-// ── 3b. ИНСТИТУЦИЯ НЕ ИСЧЕЗАЕТ ──────────────────────────────────────────────
+// ── 3b. INSTITUTION DOES NOT DISAPPEAR ──────────────────────────────────────────────
 //
-// `author={{Adversa AI}}` — двойная скобка означает «одно имя целиком, не разбирать». Парсер
-// отдаёт такое как `{name}`, БЕЗ `lastName`, и это верно: у организации фамилии нет.
-// Замер 17.09 на настоящем aisec-2026: одиннадцать записей из пятидесяти одной приходили с
-// `authors = []`, потому что joinName эту форму не знал. Отказ в сторону ТИШИНЫ — сверка по
-// таким записям не находила ничего и выглядела пройденной.
+// `author={{Adversa AI}}` — double brace means "one name whole, do not parse". Parser
+// returns such as `{name}`, WITHOUT `lastName`, and this is correct: an organization has no surname.
+// Measurement 17.09 on real aisec-2026: eleven entries out of fifty-one came back
+// with `authors = []`, because joinName didn't know this form. Failure toward SILENCE — checking against
+// such entries found nothing and looked like passing.
 {
   const bib = `@misc{inst,
   author={{Adversa AI}},
@@ -173,26 +172,26 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
   assert.deepEqual(
     es.map((e) => e.authors),
     [["Adversa AI"], ["sh-guard contributors"]],
-    `институция потеряна или разобрана на части: ${JSON.stringify(es.map((e) => e.authors))}`,
+    `institution lost or torn apart: ${JSON.stringify(es.map((e) => e.authors))}`,
   );
-  assert.equal(es[0].truncated, false, "институция — это не `and others`");
+  assert.equal(es[0].truncated, false, "institution is not `and others`");
 }
 
-// ── 3c. …И ОДИНАРНАЯ СКОБКА ПО-ПРЕЖНЕМУ РАЗБИРАЕТСЯ КАК ЧЕЛОВЕК ─────────────
+// ── 3c. …AND SINGLE BRACE STILL PARSES AS PERSON ─────────────
 //
-// Вторая половина. Без неё починка выше неотличима от «перестали разбирать имена вообще»:
-// одинарная скобка — обычный автор, и порядок «Фамилия, Имя» обязан быть развёрнут.
+// Second half. Without it the fix above is indistinguishable from "stopped parsing names at all":
+// single brace — ordinary author, and order "LastName, FirstName" must be unwound.
 {
   const bib = `@misc{human, author={Adversa, Alice}, title={T}, year={2026}}`;
   const [e] = await X.parseBib(bib);
   assert.deepEqual(e.authors, ["Alice Adversa"],
-    `одинарная скобка обязана разбираться как человек: ${JSON.stringify(e.authors)}`);
+    `single brace must parse as person: ${JSON.stringify(e.authors)}`);
 }
 
-// ── 3. ДЕФЕКТ №3: имя из .bib приводится к порядку «Имя Фамилия» ─────────────
+// ── 3. DEFECT #3: name from .bib is converted to order "FirstName LastName" ─────────────
 //
-// В BibTeX пишут `Jimenez, Carlos E.`, и «последний алфавитный токен» такой строки — `e`.
-// Правило сравнивает именно последний токен, поэтому порядок обязан быть развёрнут ЗДЕСЬ.
+// In BibTeX they write `Jimenez, Carlos E.`, and the "last alphabetic token" of such a string is `e`.
+// The rule compares exactly the last token, so order must be unwound HERE.
 {
   const bib = `@inproceedings{k1,
   author={Jimenez, Carlos E. and Di Penta, Massimiliano and others},
@@ -201,21 +200,21 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
   assert.deepEqual(
     e.authors,
     ["Carlos E. Jimenez", "Massimiliano Di Penta"],
-    `порядок имени не развёрнут: ${JSON.stringify(e.authors)}`,
+    `name order not unwound: ${JSON.stringify(e.authors)}`,
   );
   assert.equal(
     e.truncated,
     true,
-    "`and others` — это et al. формата BibTeX, и он обязан быть снят как усечение",
+    "`and others` is et al. in BibTeX format, and it must be marked as truncation",
   );
   assert.deepEqual(X.extractIds(e), { arxiv: ["2310.06770"], doi: [] });
 }
 
-// ── 4. arXiv-DOI идёт в arXiv, а НЕ в CrossRef ───────────────────────────────
+// ── 4. arXiv-DOI goes to arXiv, NOT to CrossRef ───────────────────────────────
 //
-// Замер 26.08: `api.crossref.org/works/10.48550%2FarXiv.2107.03374` → HTTP 404 «Resource not
-// found» на совершенно настоящем DOI, который стоит в <paper-b>/refs.bib. Спросив CrossRef,
-// гейт `id-resolves` объявил бы корректную запись битой.
+// Measurement 26.08: `api.crossref.org/works/10.48550%2FarXiv.2107.03374` → HTTP 404 "Resource not
+// found" on a completely real DOI in <paper-b>/refs.bib. Asking CrossRef,
+// gate `id-resolves` would declare the correct entry broken.
 {
   assert.equal(X.routeOf("doi:10.48550/arXiv.2107.03374").registry, "arxiv");
   assert.ok(
@@ -225,11 +224,11 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
   assert.equal(X.routeOf("arxiv:2310.06770").registry, "arxiv");
 }
 
-// ── 5. читатели реестров работают на СЫРЫХ телах ─────────────────────────────
+// ── 5. registry readers work on RAW bodies ─────────────────────────────
 //
-// Кеш хранит сырые ответы именно ради этого: каждый сфабрикованный заголовок, который эта база
-// отгружала, найден чтением ответа реестра. Кеш разобранных записей оставил бы читателей
-// непокрытыми, выглядя покрытым.
+// Cache stores raw responses precisely for this: every fabricated title this base
+// shipped was found by reading the registry's response. A cache of parsed entries would leave readers
+// uncovered, appearing covered.
 {
   const atom = `<?xml version='1.0' encoding='UTF-8'?>
 <feed xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
@@ -243,7 +242,7 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
   </entry>
 </feed>`;
   const a = X.readArxiv(atom);
-  assert.equal(a.title, "A & B: A Study", "XML-сущности не раскрыты");
+  assert.equal(a.title, "A & B: A Study", "XML entities not decoded");
   assert.deepEqual(a.authors, ["Ada Lovelace", "Grace Hopper"]);
   assert.equal(a.year, "2025");
   assert.equal(a.journalRef, "Proc. ICSE 2025");
@@ -251,11 +250,11 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
   assert.equal(
     X.readArxiv(`<feed xmlns="http://www.w3.org/2005/Atom"></feed>`),
     null,
-    "фид без <entry> обязан дать null",
+    "feed without <entry> must return null",
   );
 
-  // CrossRef кладёт подзаголовок после двоеточия в ОТДЕЛЬНОЕ поле; склейка обязана его вернуть,
-  // иначе корректная запись получает схожесть 0.69 и объявляется выдуманной.
+  // CrossRef puts subtitle after colon in SEPARATE field; joining must return it,
+  // otherwise correct entry gets similarity 0.69 and is declared fabricated.
   const cr = JSON.stringify({
     message: {
       title: ["Variability-Aware Static Analysis at Scale"],
@@ -274,7 +273,7 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
   assert.deepEqual(c.authors, ["Liebig", "von Rhein"]);
 }
 
-// ── 6. запись фактов: ответ реестра → запись, и НЕразобранный ответ тоже факт ─
+// ── 6. recording facts: registry response → record, and UNparsed response is also a fact ─
 {
   const key = "arxiv:2310.06770";
   const ok = X.recordFrom(key, {
@@ -286,25 +285,25 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
   assert.equal(
     X.recordFrom(key, { httpStatus: 404, body: "" }).found,
     undefined,
-    "не-200 не должен объявляться найденным",
+    "non-200 must not be declared found",
   );
   assert.equal(
     X.recordFrom(key, undefined).cached,
     false,
-    "отсутствующий ответ — это факт «не запрашивали», а не «нет записи»",
+    "missing response is a fact 'never asked', not 'no entry'",
   );
   const broken = X.recordFrom("doi:10.1145/x", {
     httpStatus: 200,
-    body: "{не json",
+    body: "{not json",
   });
   assert.equal(broken.found, false);
   assert.ok(
     broken.parse_error,
-    "нечитаемый ответ обязан оставить причину, а не тихо исчезнуть",
+    "unreadable response must leave reason, not silently disappear",
   );
 }
 
-// ── 7. markdown: список литературы, строки источника, `et al.`, приложение ───
+// ── 7. markdown: reference list, source lines, `et al.`, appendix ───
 {
   const md = [
     "# Paper",
@@ -327,22 +326,22 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
   assert.equal(
     es.length,
     2,
-    `заголовок обязан закрывать список литературы, разобрано ${es.length}`,
+    `heading must close the reference list, parsed ${es.length}`,
   );
   assert.equal(
     es[0].line,
     9,
-    `строка первой записи ${es[0].line}, а она девятая в файле`,
+    `line of first entry is ${es[0].line}, but it is ninth in file`,
   );
   assert.equal(es[0].title, "KNighter: Transforming Static Analysis");
-  assert.equal(es[1].truncated, true, "`et al.` обязан быть снят как усечение");
+  assert.equal(es[1].truncated, true, "`et al.` must be marked as truncation");
   assert.deepEqual(es[1].authors, ["Z. Xiang"]);
   assert.equal(es[1].year, "2024");
 }
 
-// ── 8. `## References` внутри ```-блока НЕ открывает список ──────────────────
-// Статьи этой репы цитируют собственную разметку кусками; прежний `split` на этом открывал
-// библиографию посреди примера кода.
+// ── 8. `## References` inside ```-block does NOT open list ──────────────────
+// Papers in this repo cite their own markup in pieces; the old `split` would open
+// bibliography in the middle of a code example.
 {
   const md = [
     "# P",
@@ -359,16 +358,16 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
   assert.deepEqual(
     X.parseMarkdownRefs(md),
     [],
-    "заголовок внутри ```-блока не заголовок",
+    "heading inside ```-block is not a heading",
   );
 }
 
-// ── 9. CLI: НОЛЬ ЗАПИСЕЙ — ОТКАЗ, а не пустые факты ─────────────────────────
+// ── 9. CLI: ZERO ENTRIES — REFUSAL, not empty facts ─────────────────────────
 {
   const { spawnSync } = await import("node:child_process");
   const dir = join(TMP, "empty");
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, "paper.md"), "# P\n\nНи одной ссылки.\n");
+  writeFileSync(join(dir, "paper.md"), "# P\n\nNo links at all.\n");
   const r = spawnSync(
     "node",
     [join(HERE, "extract-ref-facts.mjs"), dir, "--offline"],
@@ -377,19 +376,19 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
   assert.equal(
     r.status,
     1,
-    `пустая библиография обязана давать ненулевой код, дала ${r.status}`,
+    `empty bibliography must return non-zero code, returned ${r.status}`,
   );
   assert.ok(
     /ZERO|0 entries/u.test(r.stderr),
-    `в stderr нет причины: ${r.stderr}`,
+    `no reason in stderr: ${r.stderr}`,
   );
   assert.ok(
     !existsSync(join(dir, "_build", "refs.facts.json")),
-    "факты с пустым списком записаны на диск — их прочитали бы как чистую библиографию",
+    "facts with empty list written to disk — would be read as clean bibliography",
   );
 }
 
-// ── 10. CLI: нет источника — тоже отказ, а не тишина ─────────────────────────
+// ── 10. CLI: no source — also refusal, not silence ─────────────────────────
 {
   const { spawnSync } = await import("node:child_process");
   const dir = join(TMP, "nosrc");
@@ -402,11 +401,11 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
   assert.equal(r.status, 1);
   assert.ok(
     /refs\.bib/u.test(r.stderr),
-    "сообщение обязано перечислять источники, включая refs.bib",
+    "message must list sources, including refs.bib",
   );
 }
 
-// ── 11. сквозняк: настоящая статья → факты, свежесть считается ───────────────
+// ── 11. end-to-end: real paper → facts, freshness is computed ───────────────
 {
   const { spawnSync } = await import("node:child_process");
   const dir = join(TMP, "e2e");
@@ -445,11 +444,11 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
   assert.equal(
     facts.source_sha256,
     createHash("sha256").update(paper).digest("hex"),
-    "sha256 источника не сходится — правило `fresh` не смогло бы поймать протухшие факты",
+    "source sha256 does not match — rule `fresh` could not catch stale facts",
   );
 }
 
 console.log(
-  "✓ extract-ref-facts: refs.bib в источниках, оба настоящих .bib разбираются целиком, порядок имени развёрнут, " +
-    "arXiv-DOI не идёт в CrossRef, читатели реестров прогнаны на сырых телах, ноль записей = отказ",
+  "✓ extract-ref-facts: refs.bib in sources, both real .bib parse completely, name order unwound, " +
+    "arXiv-DOI does not go to CrossRef, registry readers run on raw bodies, zero entries = refusal",
 );

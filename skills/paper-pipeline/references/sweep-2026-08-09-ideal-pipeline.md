@@ -1,54 +1,60 @@
 ---
-title: "Sweep — как пайплайн должен выглядеть в идеале (конструкция, не оправдание markdown)"
+title: "Sweep — what the pipeline should ideally look like (a construction, not a justification for markdown)"
 created: 2026-08-09
 updated: 2026-08-09
 tags: [paper-pipeline, design-space, sweep, mechanisms, unrepresentable, claims, provenance]
 findings: 8
 ---
 
-# Sweep — идеальная конструкция пайплайна
+# Sweep — the ideal pipeline construction
 
-**Вопрос автора:** «то, что пайплайн использует markdown, само по себе не значит ничего — вопрос в том,
-как он должен выглядеть **в идеале**».
+**The author's question:** "the fact that the pipeline uses markdown doesn't mean anything by
+itself — the question is what it should look like **ideally**."
 
-**Дефект-состояние, которое должно стать невыразимым:** рукопись уходит на рецензию, неся утверждение,
-которое не подтверждено тем, на что ссылается.
-
----
-
-## Короткий ответ (по-русски, 10 строк)
-
-1. **Форма уже правильная, и это не наше мнение — к ней независимо пришли двое других в 2026.**
-   `arXiv:2606.09500` (MedSci Skills, 8 июня) — «разложить работу на **скиллы**, гейтить каждый переход
-   с **halt-on-failure**, решать каждый вопрос **самым дешёвым достаточным механизмом**: детерминированная
-   перепроверка где хватает, прозаический зонд только где интерпретация неизбежна». Это дословно наш
-   раскол fact-gate / judgement-gate из `run-mechanical.mjs`, опубликованный на два месяца раньше.
-   `arXiv:2605.28282` (ResearchLoop, 27 мая) — «claim ledgers», «paper bindings», «claim-admission
-   algorithm». Это наш `CLAIMS.md` + `ledger.mjs`. **Архитектуру как новизну заявлять больше нельзя.**
-2. **Идеал ≠ «ни одного непривязанного утверждения».** Отказ без замены = удаление на шаг раньше;
-   framing-проза — самое ценное в файле. Невыразимым должно стать не *содержание*, а **заявление о
-   силе** — то есть претензия «это подтверждено», когда подтверждения нет.
-3. **Замер, который меняет разговор: привязано 46 чисел, «дедовщиной» освобождено 264.** Гейт чисел
-   покрывает примерно треть жирных чисел статьи, и у освобождения **нет срока годности**. Это не
-   гипотетический пробел, это `wc -l` по `repro/numbers-grandfathered.txt`.
-4. **Главная конструктивная находка:** механизм привязки существует **ровно для одного носителя** —
-   для чисел. Те же три строки кода закрывают ещё два: **цитаты** (предложение утверждает, что работа X
-   говорит Y) и **заявления новизны** (строка `CLAIMS.md`, которая может быть снята). Идеальный
-   пайплайн — это **один механизм связывания на три носителя**, а не три разных проверки.
-
-Ниже — как это получено, что убито и чем именно.
+**The defect-state that should become unrepresentable:** a manuscript goes out for review carrying
+a claim that is not backed by what it cites.
 
 ---
 
-## 0. Три находки, которые важнее любого отдельного кандидата
+## The short answer (originally written in Russian, 10 lines)
 
-### 0.1 🔴 Архитектура ЗАНЯТА — дважды, в 2026, и обе работы репозиторию неизвестны
+1. **The form is already right, and that's not our opinion — two other groups independently arrived
+   at it in 2026.**
+   `arXiv:2606.09500` (MedSci Skills, June 8) — "decompose the work into **skills**, gate every
+   transition with **halt-on-failure**, resolve each question with the **cheapest sufficient
+   mechanism**: a deterministic recheck where that suffices, a prose-level probe only where
+   interpretation is unavoidable." This is, word for word, our fact-gate / judgement-gate split from
+   `run-mechanical.mjs`, published two months earlier.
+   `arXiv:2605.28282` (ResearchLoop, May 27) — "claim ledgers", "paper bindings", "claim-admission
+   algorithm". This is our `CLAIMS.md` + `ledger.mjs`. **The architecture can no longer be claimed as
+   novel.**
+2. **Ideal ≠ "not a single unbound claim".** Refusal without a replacement is deletion one step
+   earlier; framing prose is the most valuable thing in the file. What should become unrepresentable
+   is not the *content* but the **claim of strength** — i.e. the assertion "this is backed" when it
+   isn't.
+3. **The measurement that changes the conversation: 46 numbers are bound, 264 are exempted by
+   "grandfathering".** The numbers gate covers roughly a third of the paper's bolded numbers, and the
+   exemption has **no expiration date**. This is not a hypothetical gap, it is `wc -l` on
+   `repro/numbers-grandfathered.txt`.
+4. **The main constructive finding:** the binding mechanism exists for **exactly one carrier** —
+   numbers. The same three lines of code close two more: **citations** (a sentence claims that work X
+   says Y) and **novelty claims** (a `CLAIMS.md` line that can be retracted). The ideal pipeline is
+   **one binding mechanism across three carriers**, not three separate checks.
 
-`grep` по всему репо: `2606.09500`, `2605.28282`, `MedSci`, `ResearchLoop` — **ноль вхождений**.
-Проход занятости 2026-08-06 (`occupancy-2026-08-06-*`) проверял **инструменты** (knitr, Quarto,
-showyourwork, Vale, aclpubcheck) и не поймал две arXiv-работы про **саму архитектуру**.
+Below is how this was arrived at, what got killed, and by what.
 
-**[B] Абстракт дословно, `arXiv:2606.09500`, Nam, Jeong, Kim, подан 2026-06-08, ревизия 06-14:**
+---
+
+## 0. Three findings that matter more than any single candidate
+
+### 0.1 🔴 The architecture is OCCUPIED — twice, in 2026, and the repository knew about neither work
+
+A `grep` across the whole repo: `2606.09500`, `2605.28282`, `MedSci`, `ResearchLoop` — **zero
+hits**. The 2026-08-06 occupancy pass (`occupancy-2026-08-06-*`) checked **tools** (knitr, Quarto,
+showyourwork, Vale, aclpubcheck) and missed two arXiv papers about **the architecture itself**.
+
+**[B] Abstract verbatim, `arXiv:2606.09500`, Nam, Jeong, Kim, submitted 2026-06-08, revision
+06-14:**
 
 > «We describe an architecture pairing generation with verification, resting on three principles:
 > decompose the workflow into self-contained skills, gate every stage transition with halt-on-failure,
@@ -62,37 +68,39 @@ showyourwork, Vale, aclpubcheck) и не поймал две arXiv-работы 
 > detected 11, its misses in code, bibliography, and style defects the prose hides. […] MedSci Skills
 > is MIT-licensed and archived (v3.8.0).»
 
-Соответствия строка-в-строку с нашим:
+Line-by-line correspondences with ours:
 
-| их | наше |
+| theirs | ours |
 |---|---|
-| «self-contained skills» | 22 paper-скилла |
-| «gate every stage transition with halt-on-failure» | `run-mechanical.mjs`, exit-код худшего гейта |
-| «deterministic check where one suffices, prose-level probe only where interpretation is unavoidable» | раскол FACT-гейт / JUDGEMENT-гейт, `verdict: 'exit'` vs `verdict: 'flags'` |
-| «seeded-defect ablation», 27 внедрённых дефектов | `*.harness.mjs` + `skills.mutations.mjs`, 21 посаженный дефект |
-| «21-detector deterministic tier» | ~8 механических чекеров |
+| «self-contained skills» | 22 paper skills |
+| «gate every stage transition with halt-on-failure» | `run-mechanical.mjs`, exit code of the worst gate |
+| «deterministic check where one suffices, prose-level probe only where interpretation is unavoidable» | the FACT-gate / JUDGEMENT-gate split, `verdict: 'exit'` vs `verdict: 'flags'` |
+| «seeded-defect ablation», 27 injected defects | `*.harness.mjs` + `skills.mutations.mjs`, 21 planted defect |
+| «21-detector deterministic tier» | ~8 mechanical checkers |
 
-**[B] Абстракт дословно, `arXiv:2605.28282`, Xia, Wang, подан 2026-05-27:**
+**[B] Abstract verbatim, `arXiv:2605.28282`, Xia, Wang, submitted 2026-05-27:**
 
 > «ResearchLoop treats research questions, task contracts, evidence objects, **claim ledgers**,
 > closeouts, and **paper bindings** as durable project state, realized here as a repository-backed
 > runtime. This technical report provides the complete protocol specification, state model, transition
 > rules, **claim-admission algorithm**, and insight-compounding mechanism.»
 
-⚠️ **Уровень доказательства честно:** абстракты прочитаны дословно **[B]**. Полные PDF читались
-маленькой моделью через WebFetch и её пересказы — **[D], доверять нельзя**: по 2606.09500 она сказала
-«reports rather than blocks», а абстракт говорит `halt-on-failure`; по ResearchLoop её ответ на вопрос
-о «unrepresentable claims» стилистически похож на конфабуляцию («Standard metrics for such systems
-would measure…»). **P0: прочитать оба PDF целиком глазами.**
+⚠️ **Being honest about the evidence level:** the abstracts were read verbatim, **[B]**. The full
+PDFs were read by a small model via WebFetch, and its summaries are **[D], not to be trusted**: for
+2606.09500 it said "reports rather than blocks", while the abstract says `halt-on-failure`; for
+ResearchLoop its answer to the question about "unrepresentable claims" reads stylistically like
+confabulation ("Standard metrics for such systems would measure…"). **P0: read both PDFs in full,
+with human eyes.**
 
-**Что из этого следует практически.** Не «мы опоздали». Следует три вещи:
-- заявление «мы построили архитектуру верификации рукописи» **мертво** — но его никто и не делал;
-- **их 21 детерминированный детектор — донорский список**, лучше ARIS (см. §2.4);
-- **их число 27/27 против 11/27 — наша цитата** в пользу запрета модели-решателя. Это опубликованный,
-  измеренный аргумент за фильтр «никакой модели в контуре решения», который у нас пока держится на
-  собственном замере 84–96%.
+**What follows from this, practically.** Not "we're too late." Three things follow:
+- the claim "we built a manuscript-verification architecture" is **dead** — but nobody was making it
+  anyway;
+- **their 21 deterministic detectors are a donor list**, better than ARIS (see §2.4);
+- **their 27/27-vs-11/27 number is our citation** in favor of banning a decision-making model. It is
+  a published, measured argument for the filter "no model in the decision loop", which for us is
+  still resting on our own 84–96% measurement.
 
-### 0.2 🔴 Замер покрытия: 46 привязано, 264 освобождено, срока нет
+### 0.2 🔴 Coverage measurement: 46 bound, 264 exempted, no expiration
 
 ```
 grep -o '{{[a-zA-Z0-9_.]*}}' paper.md | wc -l          →  46
@@ -100,327 +108,361 @@ grep -oE '\*\*[^*]*[0-9][^*]*\*\*' paper.md | wc -l     → 113
 grep -vc '^\s*#\|^\s*$' repro/numbers-grandfathered.txt → 264
 ```
 
-`numbers-grandfathered.txt` описывает себя честно — *«их присутствие здесь это признание, а не
-освобождение»* — но признание без срока годности это и есть **lex imperfecta**, ровно та категория,
-которую статья автора изучает у других. Авиационный MEL, откуда взята сама идея «дефект допустим с
-компенсирующей процедурой», **вторую половину даёт обязательно: срок ремонта по категории, истекает
-автоматически.** У нас взята первая половина без второй.
+`numbers-grandfathered.txt` describes itself honestly — *"their presence here is an admission, not
+an exemption"* — but an admission with no expiration date is exactly **lex imperfecta**, precisely
+the category the author's paper studies in others. Aviation's MEL, where the idea "a defect is
+tolerable with a compensating procedure" comes from in the first place, **always supplies the second
+half: a repair deadline by category, that expires automatically.** We took the first half without the
+second.
 
-### 0.3 🔴 Закон замещения: невыразимой должна стать СИЛА утверждения, не содержание
+### 0.3 🔴 The substitution law: it is the STRENGTH of a claim that must become unrepresentable, not its content
 
-Унаследовано из `compile-rules-2026/research/2026-08-02-mechanism-sweep-2.md` §0.1 и здесь бьёт ещё сильнее: у рукописи
-framing-проза (то, ради чего статью читают) **не может** быть привязана к данным, и не должна.
-Механизм, который отказывается принимать непривязанное предложение, производит то же состояние, что и
-удаление: автор хотел сказать — ему отказали — файл молчит.
+Inherited from `compile-rules-2026/research/2026-08-02-mechanism-sweep-2.md` §0.1, and it lands
+even harder here: a manuscript's framing prose (the reason anyone reads the paper) **cannot** be
+bound to data, and should not be. A mechanism that refuses to accept an unbound sentence produces the
+same state as deletion: the author wanted to say something — got refused — the file stays silent.
 
-> **Закон.** Невыразимость безопасна только тогда, когда отказ **в том же авторском действии**
-> возвращает принятую замену.
+> **Law.** Unrepresentability is safe only when the refusal, **in that same authoring action**,
+> returns an accepted substitute.
 
-Отсюда форма ответа: **градуальная типизация**, а не флаг-день. Привязанное и непривязанное сосуществуют,
-**граница объявлена**, доля измеряется и печатается. Это ancestor из группы I, и он выбран не по вкусу,
-а по фильтру «один автор, миграция должна окупаться».
+Hence the form of the answer: **gradual typing**, not a flag-day cutover. Bound and unbound coexist,
+**the boundary is declared**, and the ratio is measured and printed. This is the ancestor from group
+I, and it was picked not by taste but by the filter "one author, the migration has to pay for
+itself."
 
 ---
 
-## 1. Дефект разложен на пять классов, дальше — на четыре свойства
+## 1. The defect broken down into five classes, then into four properties
 
-| # | Наблюдённый экземпляр | Что на самом деле отказало | Закрыто? |
+| # | Observed instance | What actually failed | Closed? |
 |---|---|---|---|
-| 1 | 22 совпадало с файлом идеально, но стояло в предложении про **другую руку** | дефект живёт **в джойне** предложения и пути к полю; каждая проверка смотрит на одну сторону | частично: `paper_numbers.py` `requires`/`forbids` — но это **списки фраз по открытой прозе** |
-| 2 | 11 нечитаемых пассажей пережили 6 проходов, все в порогах | **прокси подставлен вместо свойства** и отчитывается так, будто решает его | 🔴 **нет** |
-| 3 | гейт помечен пройденным, вход отсутствовал/новее | несвежесть **объявлялась**, а не вычислялась | ✅ `ledger.mjs`, контент-адресный ключ + хеш самого чекера |
-| 4 | проверка, ни разу не сказавшая «нет», считалась работающей | **вакуозность** | частично: `everSaidNo` **детектирует**, но не запрещает |
-| 5 | все судьи цепочки — модели одного семейства | **независимость ансамбля предполагается, а не установлена** | 🔴 **нет** |
+| 1 | 22 matched the file perfectly, but sat in a sentence about **a different arm** | the defect lives **in the join** between the sentence and the field path; each check looks at only one side | partial: `paper_numbers.py` `requires`/`forbids` — but that is **a list of phrases matched against open prose** |
+| 2 | 11 unreadable passages survived 6 passes, all within threshold | **a proxy was substituted for the property** and reports as though it settled it | 🔴 **no** |
+| 3 | gate marked passed, input missing/newer | staleness was **declared**, not computed | ✅ `ledger.mjs`, content-addressed key + hash of the checker itself |
+| 4 | a check that never once said "no" was counted as working | **vacuousness** | partial: `everSaidNo` **detects** it but does not forbid it |
+| 5 | every judge in the chain is a model from the same family | **ensemble independence is assumed, not established** | 🔴 **no** |
 
-Четыре свойства идеального пайплайна:
+Four properties of the ideal pipeline:
 
-- **P1 · Джойн.** Утверждение и его опора — **один объект**, а не две вещи, которые человек сводит глазами.
-- **P2 · Честность прокси.** Гейт либо решает свойство, либо **объявляет**, что меряет прокси.
-- **P3 · Актуальность.** Опора доказуемо про **эти** байты и **этот** чекер. ✅ сделано.
-- **P4 · Невакуозность и независимость.** Гейт доказал способность сказать «нет»; корреляция судей
-  не выдаётся за подтверждение.
-
----
-
-## 2. Атака на отвергнутые варианты (одна причина опровергнута, одна исправлена, один новый донор)
-
-Скилл требует атаковать причины, а не хранить запрет. Итог: **из четырёх retired-причин две неверны.**
-
-### 2.1 «Переезд на LaTeX-исходник — потеряем 31 прозаическую проверку» → **остаётся, причина усилена**
-Причина верна, но сформулирована слабо. Сильная формулировка: **джойн представим только в исходнике.**
-`{{annotated.failedContradicted}}` в отрендеренном `.tex` — это уже `22`, и рука невосстановима.
-Косвенно подтверждено 2606.09500: их детерминированный ярус тоже сидит **до** рендера.
-
-### 2.2 «DVC/make/snakemake — второе объявление рядом с прозой» → **причина ИСПРАВЛЕНА**
-Возражение «второе объявление» умерло в тот день, когда появился `status.mjs`: там **ничего не
-объявляется**, всё выводится. Значит держать их снаружи надо по **другой** причине, и она уже записана
-в `ledger.mjs`: они ключуются по timestamp'ам и **не знают, что рецепт изменился** — а это ровно наш баг.
-Держать retired, но с правильной причиной, иначе следующая сессия переоткроет вопрос и получит
-неубедительный ответ.
-
-### 2.3 «JSON внутри markdown — теряется читаемость прозы» → **причина ОПРОВЕРГНУТА**
-Опровергается собственным шипнутым кодом. `{{annotated.failedContradicted}}` **читабельнее**, чем `22`,
-которое оно заменило: имя называет руку, цифра не называла ничего. Разрушает читаемость не структура в
-прозе, а **неразрешённая** структура.
-
-> **Исправленное правило:** структура в прозе допустима ровно тогда, когда она **разрешается в прозу
-> на рендере**. Сайдкар-таблица утверждений рядом с файлом — по-прежнему нет (§3.F3, урок AOP).
-
-### 2.4 «ARIS — LaTeX-исходник + 46/83 скиллов требуют Codex MCP» → **остаётся, но появился донор лучше**
-**MedSci Skills** (2606.09500): MIT, скилловая декомпозиция, **21 детерминированный детектор**,
-зависимости Codex нет, домен — клинические рукописи (STARD/PRISMA/STROBE). Форма ближе нашей, чем ARIS.
-**P1-действие:** выкачать список 21 детектора и сделать диф против наших восьми — что у них есть, чего у
-нас нет. Это дешевле любой генерации.
+- **P1 · Join.** A claim and its backing are **one object**, not two things a human reconciles by eye.
+- **P2 · Proxy honesty.** A gate either settles the property, or **declares** that it is measuring a proxy.
+- **P3 · Freshness.** The backing is provably about **these** bytes and **this** checker. ✅ done.
+- **P4 · Non-vacuousness and independence.** The gate has proven it can say "no"; judge correlation
+  is not passed off as confirmation.
 
 ---
 
-## 3. Свип по каталогу (что выжило и что убито)
+## 2. An attack on the rejected options (one reason refuted, one fixed, one new donor)
 
-Генерация велась от **названных конструкций** каталога, не из головы. Честная оговорка о методе — §6.
+The skill requires attacking the reasons, not just keeping the ban on file. Bottom line: **of four
+retired reasons, two are wrong.**
 
-### A. Системы типов
-- **A1 · smart constructor: литерала нет в исходнике.** ✅ **УЖЕ ШИПНУТО** (`{{name}}` + jinja2).
-  Отличие от knitr — knitr *разрешает* оба способа; здесь литерал **запрещён** (`check_bypass`).
-- **A2 · typestate: рука объявлена блоком.** 🟢 **ВЫЖИЛ, S2.** Сейчас рука ловится списками фраз
-  (`requires`/`forbids`) по открытой прозе — синоним не из списка проходит. Строго сильнее: `::: {.arm
-  name=strict}` — и `{{annotated.x}}` внутри такого блока это **ошибка сборки по равенству строк** на
-  **закрытом словаре** (руки твоего же эксперимента, их пять). Модель прозу не читает вообще.
-- **A3 · аффинные типы: улика расходуется.** 🟢 **ВЫЖИЛ, S7** (см. H6 — та же идея из медицины).
-- **A4 · instance resolution как гейт.** ❌ то же, что A2, но в чужом синтаксисе. Убит как дубль механизма.
+### 2.1 "Moving to a LaTeX source — we'd lose 31 prose checks" → **stands, the reason is now stronger**
+The reason is correct but weakly stated. The strong form: **the join is only representable in the
+source.** `{{annotated.failedContradicted}}` inside the rendered `.tex` is already just `22`, and the
+arm is unrecoverable. Indirectly confirmed by 2606.09500: their deterministic tier also sits
+**before** rendering.
 
-### B. Формальная верификация
-- **B1 · вакуозность как критерий допуска.** 🟢 **ВЫЖИЛ, S4.** `everSaidNo` **детектирует** вакуозный
-  гейт. Сильнее: гейт **нельзя зарегистрировать** в `EXPECTED_GATES` без харнесс-кейса, который сажает
-  его дефект и наблюдает срабатывание. `skills.harness.mjs` уже читает `EXPECTED_GATES` — правка мелкая.
-  Прецедент опубликован: их seeded-defect ablation, 27/27 против 11/27.
-- **B2 · refinement: рукопись уточняет `CLAIMS.md`.** 🟢 **ВЫЖИЛ, часть S1.** Сегодня `CLAIMS.md`
-  и `paper.md` **механически не связаны ничем** — а `CLAIMS.md` уже содержит СНЯТЫЕ формулировки
-  («две формулировки МЕРТВЫ, использовать нельзя»). Ничто не мешает снятой формулировке уехать в PDF.
-- **B3 · TLA+/Alloy на процесс.** ❌ **НЕГАТИВНЫЙ РЕЗУЛЬТАТ.** Инвариант «нет достижимого submit со
-  стухшим гейтом» уже **вычисляется** `status.mjs`. Модель добавит церемонию, не безопасность.
-- **B4 · blame на границе.** 🟢 частично, поглощён S6 + §0.3 (граница объявлена, вина на том, кто её расширил).
+### 2.2 "DVC/make/snakemake — a second declaration alongside the prose" → **reason CORRECTED**
+The "second declaration" objection died the day `status.mjs` showed up: there, **nothing is
+declared**, everything is derived. So keeping them out has to rest on a **different** reason, and it
+is already written down in `ledger.mjs`: they key off timestamps and **do not know the recipe
+changed** — which is exactly our own bug. Keep it retired, but with the right reason, or the next
+session reopens the question and gets an unconvincing answer.
 
-### C. Функциональное программирование
-- **C2 · решётка силы утверждения** (`measured < observed < suggests < shows`), абстракт ≤ джойна тела.
-  ❌ **УБИТ ЗАНЯТОСТЬЮ.** Это literature про **spin в абстрактах**, и она большая: 97% испытаний в одном
-  обзоре содержат spin, 84% в другом; LLM-детекторы уже меряны (GPT-o1, F1 0,932–0,98). Наш вариант был
-  бы «без модели, на закрытом словаре хеджей» — но заявлять это как новое нельзя, а как инструмент оно
-  слабее шипнутого. Записать в занятое.
-- **C3 · session types на порядок гейтов.** ❌ **НЕГАТИВНЫЙ.** Поглощено контент-адресной несвежестью.
-- **C4 · один AST, много интерпретаторов.** 🟡 **уже наполовину есть и это ключ.** `md2submission.py`
-  парсит `paper.md` и эмитит `.tex` + `.bib`. Значит **точка полного посредничества уже существует** —
-  каждый символ, доходящий до рецензента, проходит через неё. Сегодня она используется только для
-  форматирования. Сильная форма (markdown как чистая проекция claim-таблицы) ❌ убита фильтром миграции.
+### 2.3 "JSON inside markdown — prose readability is lost" → **reason REFUTED**
+Refuted by our own shipped code. `{{annotated.failedContradicted}}` is **more readable** than the
+`22` it replaced: the name names the arm, the digit named nothing. What destroys readability is not
+structure inside prose, but **unresolved** structure.
 
-### D. Способности
-- **D1 · гранты вместо запретов.** 🟡 поглощено S7: эксперимент выпускает «цитируемые» ячейки, статья их
-  тратит; непотраченные = неотчитанное, перерасход = неподтверждённое.
-- **D2 · reference monitor, абзац только через CLI.** ❌ **УБИТ** фильтром «замена в том же действии»:
-  трение уничтожает framing-прозу, ради которой статью читают.
-- **D3 · наименьшие полномочия для судей.** 🟢 **ВЫЖИЛ, S5.** Корреляция судей — это не только общие
-  веса, это **общий контекст**. Дать каждому судье только его секцию + объявленную опору дешевле, чем
-  найти второго вендора, и снижает корреляцию по той оси, которая нам доступна.
+> **Corrected rule:** structure inside prose is admissible exactly when it **resolves into prose
+> at render time**. A sidecar table of claims next to the file is still a no (§3.F3, the AOP lesson).
 
-### E. Спецификация примером
-- **E2 · golden-файл на утверждение.** 🟡 частично покрыто провенансом.
-- **E3 · извлечение утверждения холодным читателем и сверка с ОБЪЯВЛЕННЫМ ID.** 🟡 **условно жив.**
-  Единственное место, где модель допустима: она **не решает**, она предлагает метку из **закрытого**
-  множества, а решение — равенство с авторским объявлением. Расхождение чинит автор. Риск честно:
-  модель может угадать объявленный ID и дать ложно-отрицательный. Держать advisory, не гейтом.
-- **E4 · метаморфные отношения: подменить руку и пересобрать.** 🟢 **ВЫЖИЛ, S7-adjacent.** Если поменять
-  местами `annotated` и `strict` и **все гейты по-прежнему зелёные** — предложения не привязаны к руке,
-  и это доказательство без единого объявления от автора. Занятость: метаморфное тестирование научного
-  софта — большая область, но применения **к рукописи против её же данных** поиск не показал.
-
-### F. Целостность данных
-- **F1 · `ADD CONSTRAINT` валидирует существующие строки / `NOT VALID`.** ✅ **ШИПНУТО** —
-  и **без срока**, см. §0.2 → это S3.
-- **F2 · внешний ключ `ON DELETE RESTRICT`.** 🟡 дешёвый довесок к S1: удалить строку данных, на которую
-  ссылается предложение, должно падать.
-- **F3 · хранить утверждение как данные, `.md` — вью.** ❌ **УБИТ уроком AOP** (см. I6): читая `paper.md`,
-  ты перестаёшь видеть, что подтверждено. Допустим только вместе с S8 (маркер в точке использования).
-
-### G. Авторский UX
-- **G1 · асимметричная цена:** «we show» требует ID опоры, «мы наблюдали, неформально» — бесплатно.
-  🟢 поглощено S1+S6.
-- **G2 · менять ДЕФОЛТ, а не добавлять гейт.** 🟢 **ВЫЖИЛ, S8 — самое дешёвое в свипе.** Автор смотрит
-  на PDF десятки раз. Пусть непривязанные числа **рендерятся с маркером** в черновой сборке (не в
-  submission-сборке). Ноль новой дисциплины, обратная связь падает в артефакт, который и так читают.
-- **G3 · единственная точка входа:** `claim add --from aggregate.json:path`. 🟡 хорошо, но после S1.
-
-### H. Другие профессии
-- **H1 · авиационный MEL: срок ремонта по категории, истекает сам.** 🟢 **ВЫЖИЛ, вошёл в S3.**
-- **H2 · SOX: design effectiveness ≠ operating effectiveness.** ✅ **уже заимствовано** осознанно
-  (пара `requires`/`forbids`). Недоиспользовано: у таблицы гейтов должно быть **три** состояния, а не
-  одно — «контроль есть / спроектирован верно / отработал в этом периоде».
-- **H3 · MISRA: метка decidable/undecidable на каждое правило.** 🟢 **ВЫЖИЛ, S6.** Единственный честный
-  ответ на экземпляр №2: гейт объявляет, решает он свойство или прокси. Стоимость — ноль, это поле.
-- **H4 · DO-178C DAL / ISO 26262 ASIL: уровни доверия.** 🟢 вошёл в S3 (уровень по **позиции**, см. ниже).
-- **H5 · lex imperfecta.** 🟡 рамка, не механизм; §0.2 — её применение к нам самим.
-- **H6 · CONSORT: учёт всех участников на каждом этапе.** 🟢 **ВЫЖИЛ, S7.** Каждая ячейка сетки
-  (рука × метрика) либо процитирована утверждением, либо **явно помечена неотчитываемой**. Ловит
-  противоположное направление дефекта — **измерено и не отчитано** (черри-пикинг), которое сегодня не
-  видит ничто, и о котором рецензент спрашивает.
-
-### I. Исторические предки в SE
-- **I1 · градуальная типизация.** 🟢 **форма всего ответа** (§0.3). Прижилась на огромной базе именно
-  потому, что **не требовала миграции** — единственный фильтр, который здесь по-настоящему кусается.
-- **I2 · SPARK stone→bronze→silver→gold→platinum.** 🟢 лестница для S3, ступени уже механические и
-  опубликованные — не изобретать свои.
-- **I3 · lint (1978).** ✅ это и есть текущая конструкция.
-- **I5 · requirements engineering: *testable requirement* как категория + матрица трассируемости.**
-  🟢 `CLAIMS.md` — это матрица трассируемости без механической ноги. S1 приделывает ногу.
-- **I6 · AOP и ПОЧЕМУ ОН ПРОВАЛИЛСЯ.** 🔴 самый полезный негатив свипа: сквозные объявления, вынесенные
-  из кода, сделали код нечитаемым — глядя на него, нельзя сказать, что к нему применяется. **Прямой
-  запрет на сайдкар-таблицу утверждений** (F3), и объяснение, почему S8 обязателен рядом с любым
-  вынесением: проекция должна быть видна **в точке использования**.
-
-### J. Миграция
-Strangler fig · `NOT VALID` со сроком · advisory-then-enforcing · opt-in ярусы. Это **форма выкатки**
-для всего выбранного, а не отдельный механизм.
+### 2.4 "ARIS — a LaTeX source + 46/83 skills require the Codex MCP" → **stands, but a better donor has appeared**
+**MedSci Skills** (2606.09500): MIT, skill-based decomposition, **21 deterministic detectors**, no
+Codex dependency, domain is clinical manuscripts (STARD/PRISMA/STROBE). Its form is closer to ours
+than ARIS's. **P1 action:** pull the list of 21 detectors and diff it against our eight — what they
+have that we don't. That is cheaper than any generation.
 
 ---
 
-## 4. Идеальная конструкция — пять законов
+## 3. A sweep of the catalog (what survived and what was killed)
 
-Не «новый пайплайн». Именование того, к чему конструкция уже сошлась, плюс то, чего в ней недостаёт.
+Generation proceeded from the catalog's **named constructions**, not from thin air. An honest
+caveat about method is in §6.
 
-> **Закон 1 · Полное посредничество на конвертере.** Всё, что доходит до рецензента, проходит через
-> `md2submission.py`. Проверять надо **там**, потому что это единственное место, где «рукопись
-> невозможно произвести» — достижимое состояние, а «проверка пожаловалась» — нет.
->
-> **Закон 2 · Один механизм связывания, три носителя.** Числа, **цитаты**, **заявления новизны** — это
-> один и тот же джойн «предложение ↔ запись-опора». Сегодня механизм есть только для чисел.
->
-> **Закон 3 · Невыразима сила, а не содержание.** Непривязанная проза — первоклассная, дешёвая,
-> объявленная категория. Измеряется и печатается её **доля**, а не запрещается её существование.
->
-> **Закон 4 · Прокси объявляет себя прокси.** Гейт несёт метку decidable/undecidable. Гейт, меряющий
-> прокси, не имеет права отчитываться как решивший свойство.
->
-> **Закон 5 · Гейт без убитого мутанта не существует.** Регистрация требует свидетеля. Согласие N судей
-> одного семейства считается **одним** свидетелем.
+### A. Type systems
+- **A1 · smart constructor: no literal in the source.** ✅ **ALREADY SHIPPED** (`{{name}}` +
+  jinja2). Difference from knitr — knitr *allows* both ways; here the literal is **forbidden**
+  (`check_bypass`).
+- **A2 · typestate: the arm declared by a block.** 🟢 **SURVIVED, S2.** Right now the arm is caught
+  by phrase lists (`requires`/`forbids`) matched against open prose — a synonym not on the list gets
+  through. Strictly stronger: `::: {.arm name=strict}` — and `{{annotated.x}}` inside such a block is
+  a **build error by string equality** against a **closed vocabulary** (the arms of your own
+  experiment, five of them). No model reads the prose at all.
+- **A3 · affine types: evidence is consumed.** 🟢 **SURVIVED, S7** (see H6 — the same idea from
+  medicine).
+- **A4 · instance resolution as a gate.** ❌ the same thing as A2, in someone else's syntax. Killed
+  as a mechanism duplicate.
 
-**О чём конструкция МОЛЧИТ (объявляем, а не умалчиваем):**
-- Гейтится только `paper.md → PDF`. **Rebuttal, artifact README, cover letter, блог-пост** несут те же
-  утверждения и не гейтятся ничем.
-- Ничто не проверяет, что процитированная работа **говорит то**, что ей приписывают (S1 делает связь
-  представимой, но заполняет её человек).
-- Framing-проза не проверяется и не должна — это цена Закона 3, принятая осознанно.
-- Метрика, которую вообще не считали, не появится ни в одном учёте (S7 видит только сетку посчитанного).
+### B. Formal verification
+- **B1 · vacuousness as an admission criterion.** 🟢 **SURVIVED, S4.** `everSaidNo` **detects** a
+  vacuous gate. Stronger: a gate **cannot be registered** in `EXPECTED_GATES` without a harness case
+  that plants its defect and observes it firing. `skills.harness.mjs` already reads
+  `EXPECTED_GATES` — the change is small. There is a published precedent: their seeded-defect
+  ablation, 27/27 against 11/27.
+- **B2 · refinement: the manuscript refines `CLAIMS.md`.** 🟢 **SURVIVED, part of S1.** Today
+  `CLAIMS.md` and `paper.md` are **mechanically connected by nothing at all** — and `CLAIMS.md`
+  already holds RETRACTED wordings ("two wordings are DEAD, must not be used"). Nothing stops a
+  retracted wording from ending up in the PDF.
+- **B3 · TLA+/Alloy on the process.** ❌ **NEGATIVE RESULT.** The invariant "no reachable submit
+  with a stale gate" is already **computed** by `status.mjs`. A model here would add ceremony, not
+  safety.
+- **B4 · blame at the boundary.** 🟢 partial, absorbed into S6 + §0.3 (the boundary is declared,
+  blame falls on whoever widened it).
+
+### C. Functional programming
+- **C2 · a claim-strength lattice** (`measured < observed < suggests < shows`), abstract ≤ the join
+  of the body. ❌ **KILLED BY OCCUPANCY.** This is the literature on **spin in abstracts**, and it is
+  large: 97% of trials in one review contain spin, 84% in another; LLM detectors have already been
+  measured (GPT-o1, F1 0.932–0.98). Our version would be "no model, on a closed hedge vocabulary" —
+  but it can't be claimed as new, and as a tool it's weaker than what's already shipped. File under
+  occupied.
+- **C3 · session types on gate ordering.** ❌ **NEGATIVE.** Absorbed by content-addressed
+  staleness.
+- **C4 · one AST, many interpreters.** 🟡 **already half exists, and it is the key.**
+  `md2submission.py` parses `paper.md` and emits `.tex` + `.bib`. So **a point of complete mediation
+  already exists** — every character reaching the reviewer passes through it. Today it's used only
+  for formatting. The strong form (markdown as a pure projection of a claim table) ❌ killed by the
+  migration filter.
+
+### D. Capabilities
+- **D1 · grants instead of bans.** 🟡 absorbed into S7: the experiment issues "citable" cells, the
+  paper spends them; unspent = unreported, overspent = unbacked.
+- **D2 · a reference monitor, a paragraph only through the CLI.** ❌ **KILLED** by the
+  "substitution in the same action" filter: friction destroys the framing prose that is the reason
+  anyone reads the paper.
+- **D3 · least privilege for judges.** 🟢 **SURVIVED, S5.** Judge correlation is not just shared
+  weights, it is **shared context**. Giving each judge only its own section + the declared backing is
+  cheaper than sourcing a second vendor, and it lowers correlation on the one axis available to us.
+
+### E. Specification by example
+- **E2 · a golden file per claim.** 🟡 partially covered by provenance.
+- **E3 · extracting a claim with a cold reader and checking it against a DECLARED ID.** 🟡
+  **conditionally alive.** The one place a model is admissible: it **does not decide**, it proposes a
+  label from a **closed** set, and the decision is equality against the author's declaration. The
+  author fixes a mismatch. Risk, stated honestly: the model can guess the declared ID and produce a
+  false negative. Keep it advisory, not a gate.
+- **E4 · metamorphic relations: swap the arm and rebuild.** 🟢 **SURVIVED, S7-adjacent.** If you
+  swap `annotated` and `strict` and **every gate is still green** — the sentences are not bound to the
+  arm, and that is proof without a single declaration from the author. Occupancy: metamorphic testing
+  of scientific software is a large field, but the search found no application **to a manuscript
+  against its own data**.
+
+### F. Data integrity
+- **F1 · `ADD CONSTRAINT` validates existing rows / `NOT VALID`.** ✅ **SHIPPED** — and
+  **with no expiration**, see §0.2 → that is S3.
+- **F2 · a foreign key `ON DELETE RESTRICT`.** 🟡 a cheap add-on to S1: deleting a data row that a
+  sentence references should fail.
+- **F3 · store the claim as data, `.md` is a view.** ❌ **KILLED by the AOP lesson** (see I6):
+  reading `paper.md`, you stop being able to see what's backed. Admissible only together with S8
+  (a marker at the point of use).
+
+### G. Author UX
+- **G1 · asymmetric cost:** "we show" requires a backing ID, "we observed, informally" is free.
+  🟢 absorbed into S1+S6.
+- **G2 · change the DEFAULT, don't add a gate.** 🟢 **SURVIVED, S8 — the cheapest thing in the
+  sweep.** The author looks at the PDF dozens of times. Let unbound numbers **render with a marker**
+  in the draft build (not the submission build). Zero new discipline, feedback lands in the artifact
+  people already read.
+- **G3 · a single entry point:** `claim add --from aggregate.json:path`. 🟡 good, but after S1.
+
+### H. Other professions
+- **H1 · aviation's MEL: a repair deadline by category, expires on its own.** 🟢 **SURVIVED, folded
+  into S3.**
+- **H2 · SOX: design effectiveness ≠ operating effectiveness.** ✅ **already borrowed**
+  deliberately (the `requires`/`forbids` pair). Under-used: the gate table should have **three**
+  states, not one — "the control exists / it's designed correctly / it operated in this period."
+- **H3 · MISRA: a decidable/undecidable label on every rule.** 🟢 **SURVIVED, S6.** The only honest
+  answer to instance #2: the gate declares whether it settles the property or a proxy. Cost: zero,
+  it's a field.
+- **H4 · DO-178C DAL / ISO 26262 ASIL: assurance levels.** 🟢 folded into S3 (level by **position**,
+  see below).
+- **H5 · lex imperfecta.** 🟡 a frame, not a mechanism; §0.2 is its application to ourselves.
+- **H6 · CONSORT: accounting for every participant at every stage.** 🟢 **SURVIVED, S7.** Every
+  cell of the grid (arm × metric) is either cited by a claim, or **explicitly marked as not
+  reported**. This catches the opposite direction of the defect — **measured and not reported**
+  (cherry-picking), which nothing catches today and which a reviewer will ask about.
+
+### I. Historical ancestors in software engineering
+- **I1 · gradual typing.** 🟢 **the form of the whole answer** (§0.3). It caught on across a huge
+  installed base precisely because it **required no migration** — the one filter that actually bites
+  here.
+- **I2 · SPARK's stone→bronze→silver→gold→platinum.** 🟢 the ladder for S3, the rungs are already
+  mechanical and published — don't invent our own.
+- **I3 · lint (1978).** ✅ this is the current construction.
+- **I5 · requirements engineering: *testable requirement* as a category + a traceability matrix.**
+  🟢 `CLAIMS.md` is a traceability matrix with no mechanical leg. S1 attaches the leg.
+- **I6 · AOP, and WHY IT FAILED.** 🔴 the most useful negative in the sweep: cross-cutting
+  declarations, pulled out of the code, made the code unreadable — looking at it, you can't tell what
+  applies to it. **A direct ban on a sidecar table of claims** (F3), and the reason S8 is mandatory
+  next to any such extraction: the projection has to be visible **at the point of use**.
+
+### J. Migration
+Strangler fig · `NOT VALID` with a deadline · advisory-then-enforcing · opt-in tiers. This is the
+**rollout form** for everything selected, not a separate mechanism.
 
 ---
 
-## 5. Восемь выживших, ранжировано по (цена → что убивает)
+## 4. The ideal construction — five laws
 
-| # | Механизм | Убивает | Цена | Занятость |
+Not "a new pipeline." Naming what the construction has already converged on, plus what it's still
+missing.
+
+> **Law 1 · Complete mediation at the converter.** Everything that reaches the reviewer passes
+> through `md2submission.py`. That is **where** to check, because it is the one place where "the
+> manuscript cannot be produced" is a reachable state, while "the checker complained" is not.
+>
+> **Law 2 · One binding mechanism, three carriers.** Numbers, **citations**, **novelty claims** are
+> the same join, "sentence ↔ backing record." Today the mechanism exists only for numbers.
+>
+> **Law 3 · Strength is unrepresentable, not content.** Unbound prose is a first-class, cheap,
+> declared category. Its **share** is measured and printed, not its existence forbidden.
+>
+> **Law 4 · A proxy declares itself a proxy.** A gate carries a decidable/undecidable label. A gate
+> measuring a proxy has no right to report as though it settled the property.
+>
+> **Law 5 · A gate without a killed mutant does not exist.** Registration requires a witness.
+> Agreement among N judges of the same family counts as **one** witness.
+
+**What the construction stays SILENT on (declared, not concealed):**
+- Only `paper.md → PDF` is gated. **The rebuttal, the artifact README, the cover letter, a blog
+  post** carry the same claims and are gated by nothing.
+- Nothing checks that the cited work **actually says** what it's credited with saying (S1 makes the
+  link representable, but a human fills it in).
+- Framing prose is not checked and should not be — that is the price of Law 3, accepted knowingly.
+- A metric that was never computed at all will not show up in any accounting (S7 only sees the grid
+  of what was computed).
+
+---
+
+## 5. Eight survivors, ranked by (cost → what it kills)
+
+| # | Mechanism | Kills | Cost | Occupancy |
 |---|---|---|---|---|
-| **S8** | непривязанные числа **рендерятся с маркером** в черновой сборке | 264 освобождённых самоликвидируются | ~5 строк в `md2submission.py` | свободно |
-| **S4** | гейт **не регистрируется** без убитого мутанта | экз. №4 (вакуозность) | ~20 строк в `skills.harness.mjs` | опубликовано как ablation, механизм свободен |
-| **S6** | метка **decidable/undecidable** на гейт | экз. №2 (прокси как свойство) | поле + колонка | MISRA, брать как есть |
-| **S5** | судьи с наименьшими полномочиями; N одного семейства = **1** свидетель | экз. №5 (корреляция) | поле в леджере + сужение промпта | свободно |
-| **S2** | **объявленная рука блоком** вместо списков фраз | экз. №1, без эвристик по прозе | атрибут блока + равенство строк | не найдено занятости |
-| **S1** | **одно связывание, три носителя** (числа + цитаты + `CLAIMS.md`) | снятое утверждение уезжает в PDF | средняя, резолвер есть | ResearchLoop называет «paper bindings» — **проверить PDF** |
-| **S3** | лестница по **позиции** (абстракт/начало секции = обязана привязка; приложение — можно) + срок | 264 без срока годности | средняя | SPARK/DO-178C, брать форму |
-| **S7** | учёт **рука × метрика**: каждая ячейка процитирована или явно не отчитывается | измерено-и-не-отчитано (черри-пикинг) | скрипт-разность | CONSORT — форма; применение к нам не найдено |
+| **S8** | unbound numbers **render with a marker** in the draft build | the 264 exempted self-liquidate | ~5 lines in `md2submission.py` | unoccupied |
+| **S4** | a gate **cannot be registered** without a killed mutant | instance #4 (vacuousness) | ~20 lines in `skills.harness.mjs` | published as an ablation, the mechanism itself is unoccupied |
+| **S6** | a **decidable/undecidable** label on the gate | instance #2 (proxy as property) | a field + a column | MISRA, take as-is |
+| **S5** | least-privilege judges; N of the same family = **1** witness | instance #5 (correlation) | a ledger field + a narrowed prompt | unoccupied |
+| **S2** | **arm declared by a block** instead of phrase lists | instance #1, no prose heuristics | a block attribute + string equality | no occupancy found |
+| **S1** | **one binding, three carriers** (numbers + citations + `CLAIMS.md`) | a retracted claim ends up in the PDF | medium, a resolver exists | ResearchLoop calls it "paper bindings" — **check the PDF** |
+| **S3** | a ladder by **position** (abstract/section-lead-in = binding required; appendix = optional) + a deadline | the 264 with no expiration | medium | SPARK/DO-178C, take the form |
+| **S7** | **arm × metric** accounting: every cell is either cited or explicitly marked not reported | measured-and-not-reported (cherry-picking) | a diff script | CONSORT — the form; no application found for our case |
 
-**Почему лестница по ПОЗИЦИИ, а не глобальный срок:** у непривязанного числа в абстракте и в приложении
-B радиус поражения различается на порядок. Один автор не конвертирует 264 позиции; он конвертирует те,
-которые рецензент процитирует. Это DO-178C-ход (уровень доверия по последствиям отказа), а не MEL-ход
-(единый срок), и он честнее для реального бюджета.
-
----
-
-## 6. Отрицательные результаты и честность метода
-
-**Группы, не давшие ничего** (не свипать заново): **B3** (TLA+/Alloy на процесс — инвариант уже
-вычисляется), **C3** (session types на порядок — поглощено несвежестью), **C2** (решётка силы
-утверждения — занято литературой про spin), **D2** (полное посредничество на уровне абзаца — убито
-трением), **F3** (сайдкар утверждений — убит уроком AOP), **A4** (instance resolution — дубль A2),
-**C4-сильная форма** (markdown как чистая проекция — убита ценой миграции).
-
-**🔴 Отступление от процедуры скилла, называю прямо.** Скилл требует генерировать кандидатов
-**субагентом без контекста треда**. В этом окружении инструмента порождения субагентов нет
-(`Task` недоступен; есть только межсессионные `SendMessage`/`create_session`, асинхронные). Генерация
-велась мной же, с дисциплиной «от названных конструкций каталога», **после** чтения пайплайна — то есть
-якорь треда снят **не был**. Практическое следствие: раздел §3 надо считать полным по группам, но,
-возможно, неполным по «неочевидным» кандидатам — ровно тот класс, который в прошлый раз дал три лучших
-идеи. Компенсировано тем, на что бюджет и ушёл: **проверкой занятости**, которая якорем не лечится и
-которая здесь развернула картину (§0.1).
-
-**Уровни доказательства:** [A] прочитано в первоисточнике целиком · [B] абстракт дословно ·
-[C] поисковая выдача · [D] пересказ PDF маленькой моделью, **не доверять**.
+**Why a ladder by POSITION and not a global deadline:** an unbound number in the abstract and one
+in appendix B differ by an order of magnitude in blast radius. A single author does not convert 264
+positions; they convert the ones a reviewer will quote. This is the DO-178C move (assurance level by
+consequence of failure), not the MEL move (a single deadline), and it is more honest about a real
+budget.
 
 ---
 
-## 7. Что делать (по убыванию цены выгоды к цене)
+## 6. Negative results and honesty about method
 
-1. **P0 · Прочитать оба PDF целиком** (2606.09500, 2605.28282). Пересказы — [D]. От их содержания
-   зависит, сколько из S1/S4/S7 остаётся нашим.
-2. **P0 · Перепроверить утверждение в докстринге `paper_numbers.py`** — *«Not one of them has a hook
+**Groups that gave nothing** (don't re-sweep these): **B3** (TLA+/Alloy on the process — the
+invariant is already computed), **C3** (session types on ordering — absorbed by staleness), **C2**
+(claim-strength lattice — occupied by the spin literature), **D2** (complete mediation at the
+paragraph level — killed by friction), **F3** (sidecar claims — killed by the AOP lesson), **A4**
+(instance resolution — a duplicate of A2), **C4's strong form** (markdown as a pure projection —
+killed by migration cost).
+
+**🔴 Departure from the skill's procedure, stated plainly.** The skill requires generating
+candidates via **a subagent with no thread context**. In this environment there is no
+subagent-spawning tool (`Task` is unavailable; there is only cross-session, asynchronous
+`SendMessage`/`create_session`). Generation was done by me, under the discipline "from the catalog's
+named constructions," **after** reading the pipeline — meaning the thread anchor was **not**
+removed. Practical consequence: §3 should be considered complete by group, but possibly incomplete on
+the "non-obvious" candidates — exactly the class that produced the three best ideas last time.
+Compensated by where the budget actually went: **the occupancy check**, which no anchor fixes and
+which is what turned the picture around here (§0.1).
+
+**Evidence levels:** [A] read in full at the primary source · [B] abstract verbatim ·
+[C] search results · [D] a PDF summarized by a small model, **do not trust**.
+
+---
+
+## 7. What to do (ranked by benefit-to-cost, descending)
+
+1. **P0 · Read both PDFs in full** (2606.09500, 2605.28282). Summaries are [D]. How much of
+   S1/S4/S7 remains ours depends on their content.
+2. **P0 · Re-check the claim in the `paper_numbers.py` docstring** — *"Not one of them has a hook
    where you could say the sentence around this number must say counterfactual and must not say as
-   committed»* — против **21 детектора MedSci**. Утверждение писалось до того, как эта работа была
-   известна; если оно ложно, оно ложно **в шипнутом коде и в рассуждениях о новизне**.
-3. **P1 · Сделать S8 и S4** — вместе это меньше полусотни строк и закрывает два из пяти экземпляров.
-4. **P1 · Диф наших восьми чекеров против их 21** — дешевле любой генерации.
-5. **P2 · S2 и S1** — конструктивная часть; S1 это и есть ответ на «как должно быть в идеале».
-6. **P3 · S3 и S7** — требуют бюджета, делать после сабмита.
+   committed"* — against **MedSci's 21 detectors**. The claim was written before this work was known
+   about; if it's false, it's false **both in shipped code and in the novelty reasoning**.
+3. **P1 · Build S8 and S4** — together that is under fifty lines and closes two of the five
+   instances.
+4. **P1 · Diff our eight checkers against their 21** — cheaper than any generation.
+5. **P2 · S2 and S1** — the constructive part; S1 is itself the answer to "how it should be
+   ideally."
+6. **P3 · S3 and S7** — require budget, do after submission.
 
 ---
 
-# 8. Второй проход НА ОПРОВЕРЖЕНИЕ (2026-08-09, дозапись)
+# 8. Second pass, FOR REFUTATION (2026-08-09, addendum)
 
-Отдельный прогон `sweep-design-space`. Цель — не повторить свип, а атаковать его самую
-несущую часть. §0.1 убивает заявление о новизне архитектуры, помечен **[B]** и сам себя
-предупреждает о конфабуляции («стилистически похоже на конфабуляцию»). По правилу базы
-(«вывод меняет решение → второй проход на опровержение») это обязано быть перепроверено
-до того, как на него сошлются как на факт.
+A separate `sweep-design-space` run. The goal is not to redo the sweep but to attack its single
+most load-bearing part. §0.1 kills the architecture-novelty claim, is marked **[B]**, and warns
+about confabulation about itself ("stylistically resembles confabulation"). Per the base's own rule
+("a conclusion that changes a decision → a second pass for refutation"), this must be re-checked
+before it is cited as fact.
 
-**Метод: модель из контура решения убрана.** Прошлый проход читал PDF через WebFetch, где
-ответ синтезирует маленькая модель — ровно тот механизм, который здесь и подозревался.
-Вместо этого: сырой XML из arXiv API (`export.arxiv.org/api/query?id_list=…`) и **клон
-исходного репозитория**. Ни одного пересказа моделью в цепочке. Уровень поднимается до **[A]**.
+**Method: the model is removed from the decision loop.** The previous pass read the PDF through
+WebFetch, where a small model synthesizes the answer — exactly the mechanism under suspicion here.
+Instead: raw XML from the arXiv API (`export.arxiv.org/api/query?id_list=…`) and **a clone of the
+source repository**. Not a single model summary in the chain. The level rises to **[A]**.
 
-## 8.1 ✅ §0.1 ВЫСТОЯЛ — обе работы реальны, цитаты дословны
+## 8.1 ✅ §0.1 HELD — both works are real, quotes are verbatim
 
-| поле | 2606.09500 | 2605.28282 |
+| field | 2606.09500 | 2605.28282 |
 |---|---|---|
 | `totalResults` | 1 | 1 |
-| версия | **v4** | v1 |
+| version | **v4** | v1 |
 | `published` | **2026-06-08T13:51:04Z** | **2026-05-27T10:29:00Z** |
 | `updated` | 2026-06-14T00:06:13Z | 2026-05-27T10:29:00Z |
-| авторы | Yoojin **Nam**, Jinhoon **Jeong**, Namkug **Kim** | Yihan **Xia**, Taotao **Wang** |
-| категория | cs.AI (+cs.DL) | cs.AI |
+| authors | Yoojin **Nam**, Jinhoon **Jeong**, Namkug **Kim** | Yihan **Xia**, Taotao **Wang** |
+| category | cs.AI (+cs.DL) | cs.AI |
 
-Заголовок 2606.09500 (в §0.1 не приводился): *«Deterministic Integrity Gates for LLM-Assisted
+The title of 2606.09500 (not given in §0.1): *«Deterministic Integrity Gates for LLM-Assisted
 Clinical Manuscript Preparation: An Auditable Biomedical Informatics Architecture»*.
-Оба абзаца-абстракта в §0.1 сверены посимвольно с выдачей API — **расхождений нет**.
-Занятость архитектуры подтверждена. Заявление «мы построили архитектуру верификации
-рукописи» остаётся мёртвым, и теперь это [A], а не [B].
+Both abstract paragraphs in §0.1 were checked character-by-character against the API output —
+**no discrepancies**. The architecture's occupancy is confirmed. The claim "we built a
+manuscript-verification architecture" remains dead, and it is now [A] rather than [B].
 
-Из комментария arXiv (в §0.1 отсутствовал, а он и есть ключ ко всему ниже):
+From the arXiv comment (absent from §0.1, and it is the key to everything below):
 > Software (MIT): `https://github.com/Aperivue/medsci-skills` . Archived on Zenodo: concept DOI
 > `10.5281/zenodo.20155321` and version DOI (v3.8.0) `10.5281/zenodo.20582972`
 
-## 8.2 🔴 S4 ЗАНЯТ — и его владелец уже опубликовал, ПОЧЕМУ ЭТОГО НЕ ХВАТАЕТ
+## 8.2 🔴 S4 IS OCCUPIED — and its owner has already published it — WHY THAT IS NOT ENOUGH
 
-Репозиторий склонирован и проверен по идентичности:
-`aperivue/medsci-skills`, HEAD `b2c120e667d5a329add8ae5bc3371411f739bd60`, origin сверен.
+The repository was cloned and checked for identity:
+`aperivue/medsci-skills`, HEAD `b2c120e667d5a329add8ae5bc3371411f739bd60`, origin verified.
 
-**S4 в таблице §5** стоял вторым по цене/выгоде: *«гейт не регистрируется без убитого мутанта,
-~20 строк в `skills.harness.mjs`»*, занятость — *«опубликовано как ablation, механизм свободен»*.
+**S4 in the §5 table** ranked second by cost/benefit: *"a gate cannot be registered without a
+killed mutant, ~20 lines in `skills.harness.mjs`"*, occupancy — *"published as an ablation, the
+mechanism is unoccupied"*.
 
-**Механизм НЕ свободен. Он шипнут, под MIT, на 85 детекторах.** Дословно, `paper.md:23`:
+**The mechanism is NOT unoccupied. It has been shipped, under MIT, across 85 detectors.**
+Verbatim, `paper.md:23`:
 
 > «Each detector ships a synthetic **challenge card** — a positive case and a negative control —
 > that runs in continuous integration, so **a clean result is meaningful** and a flagged defect is
 > reproducible.»
 
-«so a clean result is meaningful» — это ровно наш аргумент против вакуозности, в их прозе.
-Сверх карточки у них есть вторая нога — `check_detector_crossfire.py` (детектор обязан **молчать**
-на чистых демо-рукописях).
+"so a clean result is meaningful" — that is exactly our anti-vacuousness argument, in their prose.
+On top of the card, they have a second leg — `check_detector_crossfire.py` (a detector must **stay
+silent** on clean demo manuscripts).
 
-**И это ещё не главное.** `reverse_engineer/HELDOUT.md:3–17`, дословно:
+**And that is not even the main thing.** `reverse_engineer/HELDOUT.md:3–17`, verbatim:
 
 > «Every detector in this repo is tested against fixtures authored alongside it: a challenge card
 > proving it fires on a planted defect, and `check_detector_crossfire.py` proving it stays silent on
@@ -434,25 +476,25 @@ Clinical Manuscript Preparation: An Auditable Biomedical Informatics Architectur
 > a set of cases the gates were never allowed to learn from, scored periodically, whose trend can
 > contradict us.»
 
-Их замена — held-out корпус с обязательным полем `frozen_at`:
+Their replacement is a held-out corpus with a mandatory `frozen_at` field:
 > «`frozen_at` is required on every held-out record, because the claim is chronological: a freeze
 > date that **precedes the detector** is what makes it checkable rather than asserted.»
 
-**Следствие для S4 — переписать, не выкидывать.** Харнесс-кейс, посаженный автором гейта, даёт
-train-accuracy 100%. Это по-прежнему строго лучше, чем ничего (ловит экземпляр №4 — гейт, ни разу
-не сказавший «нет»), но **заявлять его как достаточный нельзя**, и как новизну — тем более.
-Честная форма S4: две ступени, где вторая и есть настоящая — (а) карточка автора = допуск,
-train; (б) корпус, замороженный **до** написания гейта = единственное измерение, которому можно
-верить. У нас (б) нет ни в каком виде.
+**Consequence for S4 — rewrite, don't discard.** A harness case planted by the gate's own author
+gives 100% training accuracy. That is still strictly better than nothing (it catches instance #4 —
+a gate that never once said "no"), but **it cannot be claimed as sufficient**, and even less so as
+novel. The honest form of S4 is two tiers, where the second is the real one — (a) the author's card =
+admission, training; (b) a corpus frozen **before** the gate was written = the one measurement worth
+trusting. We have (b) in no form at all.
 
-Оговорка честно: их HELDOUT.md сам фиксирует, что правило **было нарушено 2026-07-31** (три агента
-дошли до `_corpus/heldout/`, один прогнал детектор по корпусу). Находка была помещена в карантин и
-не применена. Это не ослабляет механизм — это показывает его цену.
+To be honest about the caveat: their own HELDOUT.md records that the rule **was violated on
+2026-07-31** (three agents reached `_corpus/heldout/`, one ran a detector against the corpus). The
+finding was quarantined and not applied. This does not weaken the mechanism — it shows its cost.
 
-## 8.3 🔴 Число «21 детектор» устарело — их **85**, и каталог машинный
+## 8.3 🔴 The "21 detectors" number is stale — theirs is **85**, and the catalog is machine-generated
 
-`metadata/detectors_catalog.json`, поле `detector_count` = **85** (не 21; 21 — цифра июньского
-пейпера, репо ушёл вперёд). Разбивка по семействам, дословно из каталога:
+`metadata/detectors_catalog.json`, field `detector_count` = **85** (not 21; 21 is the June paper's
+number, the repo has moved on). Breakdown by family, verbatim from the catalog:
 
 | n | family_label |
 |---|---|
@@ -463,50 +505,54 @@ train; (б) корпус, замороженный **до** написания �
 | 9 | Citation & reference integrity |
 | 7 | Confounding, scope & estimand contracts |
 
-Сам каталог — **AUTO-GENERATED** (`scripts/gen_detectors_catalog_json.py` по глобу
-`skills/*/scripts/`, CI-гейт на расхождение). То есть реестр у них **выводится, а не объявляется** —
-та же дисциплина, что наш `status.mjs`, и подтверждение, что §2.2 (retired-причина про «второе
-объявление») закрыта правильно.
+The catalog itself is **AUTO-GENERATED** (`scripts/gen_detectors_catalog_json.py` globbing
+`skills/*/scripts/`, with a CI gate on drift). So their registry is **derived, not declared** — the
+same discipline as our `status.mjs`, and confirmation that §2.2 (the retired reason about "a second
+declaration") was closed correctly.
 
-**P1 #4 из §7 переформулирован:** диф не «наши 8 против их 21», а **наши 7 против их 85**
-(в `run-mechanical.mjs` ровно 7 гейтов, не 8 — пересчитано). Дифить по семействам: наши семь
-целиком ложатся в «Numerical» + «Style», и **три их семейства у нас не представлены ничем** —
-Reporting compliance, Data preparation, Confounding/estimand. Для нашей темы прямо релевантно
-«Citation & reference integrity» (9 детекторов) — это носитель №2 из Закона 2 (цитаты), который
-в §5/S1 у нас числится как ненаписанный.
+**P1 #4 from §7 is reformulated:** the diff is not "our 8 against their 21" but **our 7 against
+their 85** (there are exactly 7 gates in `run-mechanical.mjs`, not 8 — recounted). Diffing by
+family: our seven fall entirely inside "Numerical" + "Style", and **three of their families are
+represented by nothing of ours** — Reporting compliance, Data preparation, Confounding/estimand.
+Directly relevant to our topic is "Citation & reference integrity" (9 detectors) — that is carrier
+#2 from Law 2 (citations), which is listed in our §5/S1 as unwritten.
 
-## 8.4 🔴 Атака на рамку всего свипа
+## 8.4 🔴 An attack on the frame of the whole sweep
 
-Предложение *«The counterweight is not another gate. Adding gates is what produces the drift»*
-бьёт не по одному кандидату, а по форме ответа: §5 — это список из восьми **новых гейтов**.
-Оно не отменяет S1–S8 (наши экземпляры №1–№5 реальны и наблюдены), но добавляет фильтр, которого
-в §2 не было и который надо занести в скилл:
+The sentence *«The counterweight is not another gate. Adding gates is what produces the drift»*
+hits not one candidate but the shape of the whole answer: §5 is a list of eight **new gates**. It
+does not invalidate S1–S8 (our instances #1–#5 are real and observed), but it adds a filter that
+wasn't in §2 and that needs to be recorded in the skill:
 
-> **Фильтр: чем измеряется, что новый гейт помог?** Гейт, чей эффект наблюдаем только теми же
-> гейтами, повышает измеренное качество и ничего не говорит о неизмеренном.
+> **Filter: what measures whether a new gate actually helped?** A gate whose effect is observable
+> only through the same gates raises measured quality and says nothing about the unmeasured kind.
 
-По этому фильтру S8 (маркер в черновой сборке) выглядит **лучше** всех остальных: его обратная
-связь падает человеку в PDF, а не в гейт-таблицу. Ранг S8 = №1 в §5 подтверждается независимо.
+By this filter, S8 (the marker in the draft build) looks **better** than all the rest: its
+feedback lands on the human, in the PDF, not in a gate table. S8's rank of #1 in §5 is confirmed
+independently.
 
-## 8.5 Что осталось свободным (проверено грепом по их репо)
+## 8.5 What is still unoccupied (checked by grepping their repo)
 
-- **S6** (метка `decidable/undecidable` на гейт) — у них есть `family`, но метки честности прокси
-  **нет**: `grep -ri undecidable` по репо → **ноль вхождений**. Свободно, остаётся.
-- **S3** (лестница + срок годности освобождения) — `grep -ri grandfather` → **ноль**. Свободно.
-- **S1/S2/S7** — прямых совпадений не найдено, но проверено только грепом по ключевым словам,
-  не чтением 85 детекторов. Уровень **[C]**, не [A].
+- **S6** (a `decidable/undecidable` label on the gate) — they have `family`, but there is **no**
+  proxy-honesty label: `grep -ri undecidable` over the repo → **zero hits**. Unoccupied, stands.
+- **S3** (the ladder + an expiration date on exemptions) — `grep -ri grandfather` → **zero**.
+  Unoccupied.
+- **S1/S2/S7** — no direct matches found, but this was only checked by grepping keywords, not by
+  reading all 85 detectors. Level **[C]**, not [A].
 
-## 8.6 Занятость шире, чем две работы
+## 8.6 Occupancy is wider than two papers
 
-`paper.md` в их репо — **третий** артефакт: отдельный software-пейпер, который ссылается на
-2606.09500 как на компаньона (`[@nam2026gates]`, *«conducted on an earlier release of the toolkit»*).
-То есть это не «две работы», а линия работ с 2026-05 по 2026-08, активно развивающаяся.
-Прошлый проход занятости этого не видел.
+`paper.md` in their repo is a **third** artifact: a separate software paper that cites 2606.09500
+as a companion (`[@nam2026gates]`, *«conducted on an earlier release of the toolkit»*). So this is
+not "two papers" but an actively developing line of work from 2026-05 to 2026-08. The previous
+occupancy pass did not see this.
 
-## 8.7 Чего этот проход НЕ сделал
+## 8.7 What this pass did NOT do
 
-- **P0 #1 (прочитать оба PDF целиком) — по-прежнему НЕ закрыт.** Проверены абстракты [A] и
-  шипнутый код [A]; тела статей не читались. Всё, что §0.1 выводит из тел, остаётся [B]/[D].
-- Генерация новых кандидатов не велась — проход был верификационный. Пробел §6 (генерация без
-  контекста треда) **остаётся открытым**; в этом окружении `Task` по-прежнему недоступен.
-- S1/S2/S7 против их 85 детекторов проверены грепом, не чтением — [C].
+- **P0 #1 (read both PDFs in full) — still NOT closed.** The abstracts [A] and shipped code [A]
+  were checked; the bodies of the papers were not read. Everything §0.1 derives from the bodies
+  remains [B]/[D].
+- No generation of new candidates was done — this pass was a verification pass. The gap from §6
+  (generation without thread context) **remains open**; `Task` is still unavailable in this
+  environment.
+- S1/S2/S7 against their 85 detectors were checked by grepping, not by reading — [C].

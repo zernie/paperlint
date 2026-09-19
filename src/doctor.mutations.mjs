@@ -1,9 +1,9 @@
 /**
- * Батарея на `rpp doctor`.
+ * Battery for `rpp doctor`.
  *
- * Предмет здесь необычный и потому уязвимый: doctor — проверка ПРО ПРОВЕРКУ. Сломанная, она
- * печатает столбик галочек и выходит нулём, то есть отказывает ровно тем способом, ради поимки
- * которого написана. Каждый случай ниже возвращает один из этих тихих отказов.
+ * The subject here is unusual and therefore fragile: doctor is a check ABOUT A CHECK. Broken,
+ * it prints a column of checkmarks and exits zero — i.e. it fails in exactly the way it was
+ * written to catch. Every case below reintroduces one of those silent failures.
  */
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
@@ -20,13 +20,13 @@ process.exit(
     runner: "node",
     cases: [
       {
-        name: "сверка двух корней перестаёт что-либо значить",
+        name: "comparing the two roots stops meaning anything",
         harness: HARNESS,
-        expect: "записи проходят мимо сторожа",
+        expect: "writes pass the guard unseen",
         disables:
-          "единственную причину, по которой команда существует. Расхождение между тем, что " +
-          "линтует CLI, и тем, что сторожит хук, — это тихая дыра: обе стороны выглядят " +
-          "установленными и зелёными, а записи в настоящие статьи идут мимо гейта",
+          "the only reason this command exists. A mismatch between what the CLI lints and what " +
+          "the hook guards is a silent hole: both sides look installed and green, while writes " +
+          "into real papers pass the gate unseen",
         edits: [
           [
             SRC,
@@ -36,13 +36,13 @@ process.exit(
         ],
       },
       {
-        name: "корень хука пересказывается вместо того, чтобы спрашиваться",
+        name: "the hook's root is retold instead of asked for",
         harness: HARNESS,
-        expect: "doctor печатает РОВНО то, что вернул хук",
+        expect: "doctor prints EXACTLY what the hook returned",
         disables:
-          "защиту от ВТОРОЙ КОПИИ ЛОГИКИ — ровно того дефекта, о котором команда и сообщает. " +
-          "Пересказ расходится с оригиналом молча и печатает уверенный неверный ответ: здесь " +
-          "он теряет срезание хвостового слеша, которое хук делает намеренно",
+          "the defense against a SECOND COPY OF THE LOGIC — exactly the defect this command " +
+          "exists to report. A retelling drifts from the original silently and prints a " +
+          "confident wrong answer: here it loses the trailing-slash trim the hook does on purpose",
         edits: [
           [
             SRC,
@@ -52,13 +52,13 @@ process.exit(
         ],
       },
       {
-        name: "отсутствующая внешняя программа начинает валить прогон",
+        name: "a missing external program starts failing the run",
         harness: HARNESS,
-        expect: "отсутствующий tex НЕ валит прогон",
+        expect: "a missing tex install does NOT fail the run",
         disables:
-          "различие между фактом и вердиктом. Какие программы нужны — зависит от того, какими " +
-          "скиллами пользуешься; команда, падающая на совете, попадает в `|| true` или в " +
-          "/dev/null целиком, вместе с бинарными находками, ради которых написана",
+          "the distinction between a fact and a verdict. Which programs are needed depends on " +
+          "which skills you use; a command that fails on advice gets piped into `|| true` or " +
+          "/dev/null entirely, taking the real binary findings it was written for down with it",
         edits: [
           [
             SRC,
@@ -68,12 +68,12 @@ process.exit(
         ],
       },
       {
-        name: "обнаружение теряет корень и возвращает сами статьи",
+        name: "detection loses the root and returns the papers themselves",
         harness: HARNESS,
-        expect: "находит корень по маркеру внутри подкаталога",
+        expect: "finds the root by a marker inside a subdirectory",
         disables:
-          "смысл подсказки. Конфиг, указывающий на ОДИН документ вместо каталога, проходит " +
-          "все проверки и линтует одну статью из десяти — причём отчитывается чисто",
+          "the whole point of the hint. A config pointing at ONE document instead of a " +
+          "directory passes every check and lints one paper out of ten — while reporting clean",
         edits: [
           [
             SRC,
@@ -83,13 +83,13 @@ process.exit(
         ],
       },
       {
-        name: "к найденному корню подмешиваются сами статьи",
+        name: "the papers themselves get mixed into the found root",
         harness: HARNESS,
-        expect: "это КОРЕНЬ, а не сама статья",
+        expect: "it is the ROOT, not the paper itself",
         disables:
-          "различие между каталогом статей и статьёй. Корень при этом остаётся в списке, поэтому " +
-          "соседняя проверка «нашёл по маркеру» ничего не замечает — а конфиг, собранный по такой " +
-          "подсказке, указывает на один документ и линтует одну статью из десяти, отчитываясь чисто",
+          "the distinction between a papers directory and a paper. The root stays in the list, " +
+          "so the neighboring \"found by marker\" check notices nothing — while a config built " +
+          "from such a hint points at one document and lints one paper out of ten, reporting clean",
         edits: [
           [
             SRC,
@@ -99,12 +99,13 @@ process.exit(
         ],
       },
       {
-        name: "обход перестаёт пропускать node_modules",
+        name: "the walk stops skipping node_modules",
         harness: HARNESS,
-        expect: "node_modules не обыскивается",
+        expect: "node_modules is not searched",
         disables:
-          "границу между своими статьями и чужими. Любая установленная зависимость с примерами " +
-          "статей выдаётся за каталог потребителя, и подсказка уводит конфиг в node_modules",
+          "the boundary between your own papers and someone else's. Any installed dependency " +
+          "carrying paper examples gets mistaken for the consumer's directory, and the hint " +
+          "points the config into node_modules",
         edits: [
           [
             SRC,
@@ -114,13 +115,13 @@ process.exit(
         ],
       },
       {
-        name: "пропавшая декларация рапортуется как порядок",
+        name: "a missing declaration is reported as all-clear",
         harness: HARNESS,
-        expect: "пропавшая декларация НАЗВАНА, а не пропущена",
+        expect: "the missing declaration is NAMED, not skipped",
         disables:
-          "единственный след issue #33, остающийся на установке, которая ПОКА работает: `rpp init` " +
-          "пишет один файл, хук читает другой, и совпадение каталогов держится на умолчании. " +
-          "Бодрая галочка вместо предупреждения превращает совпадение в подтверждение",
+          "the only trace of issue #33 left on an install that STILL works: `rpp init` writes " +
+          "one file, the hook reads another, and the directories matching up rests on the " +
+          "default. A cheerful checkmark instead of a warning turns a coincidence into a confirmation",
         edits: [
           [
             SRC,

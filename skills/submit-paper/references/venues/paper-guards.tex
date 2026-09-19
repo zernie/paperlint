@@ -1,34 +1,34 @@
-% paper-guards.tex — стражи, которые превращают дефект статьи в ОТКАЗ СБОРКИ.
+% paper-guards.tex — guards that turn a paper defect into a BUILD FAILURE.
 %
-% Подключается из преамбулы статьи: \input{paper-guards}
-% Находится по TEXINPUTS, который выставляет check-render.sh (каталог `references/venues/`).
+% Included from the paper's preamble: \input{paper-guards}
+% Found via TEXINPUTS, which check-render.sh sets (the `references/venues/` directory).
 %
-% ПОЧЕМУ ОТДЕЛЬНЫЙ ФАЙЛ, А НЕ КОПИЯ В КАЖДОЙ СТАТЬЕ. Первая редакция стража (26.08) жила
-% инлайном в `agenticdev-2026/paper.tex`, и замер тем же вечером показал цену: из трёх статей
-% в LaTeX страж был ровно у ОДНОЙ. То есть грепу по логу в `check-render.sh` он дублем не
-% являлся — для двух других он был единственной проверкой. Копия на статью деградирует ровно
-% так же, как деградирует любая конвенция, которую только пишут.
+% WHY A SEPARATE FILE, NOT A COPY IN EVERY PAPER. The first edition of the guard (08-26) lived
+% inline in `agenticdev-2026/paper.tex`, and a measurement that same evening showed the cost: of
+% three papers in LaTeX, the guard existed in exactly ONE. So grepping the log in
+% `check-render.sh` was not redundant with it — for the other two it was the only check at all. A
+% per-paper copy degrades exactly the way any convention that only gets written down degrades.
 %
-% 🔴 ОБЕ ПОЛОВИНЫ ДОКАЗАНЫ ЗАМЕРОМ, И ПОРЯДОК ИМЕННО ЭТОТ (правило `papers/CLAUDE.md`):
-% сначала «молчит на верном». На чистом `agenticdev-2026/paper.tex`: 0 ошибок, PDF 621 325 байт.
-% На подсаженном `\ref{ghost-xyz}`: `! Package paper Error: undefined references`.
-% На подсаженном `\cite{ghost-xyz}`: `! Package paper Error: undefined citations (natbib)`.
+% 🔴 BOTH HALVES ARE PROVEN BY MEASUREMENT, AND THE ORDER IS EXACTLY THIS (the `papers/CLAUDE.md`
+% rule): first, "silent on the correct case." On a clean `agenticdev-2026/paper.tex`: 0 errors, PDF
+% 621,325 bytes. With a planted `\ref{ghost-xyz}`: `! Package paper Error: undefined references`.
+% With a planted `\cite{ghost-xyz}`: `! Package paper Error: undefined citations (natbib)`.
 %
-% 🔴 GATED ON \finalpass, И ЭТО НЕСУЩЕЕ. На первом проходе `.aux` пуст, поэтому НЕОПРЕДЕЛЕНЫ
-% ВСЕ ссылки по построению. Замер 26.08 с безусловной формой: проход 1 падает ⇒ `.aux` никогда
-% не дописывается ⇒ проход 2 падает на том же ⇒ цикл НЕ СХОДИТСЯ и PDF не появляется вообще.
-% Финальный проход получает `\def\finalpass{}` в командной строке (см. `check-render.sh`),
-% обычные проходы молчат.
+% 🔴 GATED ON \finalpass, AND THIS IS LOAD-BEARING. On the first pass `.aux` is empty, so ALL
+% references are UNDEFINED by construction. Measured 08-26 with the unconditional form: pass 1
+% fails ⇒ `.aux` never gets written ⇒ pass 2 fails on the same thing ⇒ the cycle NEVER CONVERGES
+% and no PDF appears at all. The final pass gets `\def\finalpass{}` on the command line (see
+% `check-render.sh`), ordinary passes stay silent.
 %
-% 🔴 ДВА ФЛАГА, А НЕ ОДИН, И ЭТО ТОЖЕ ЗАМЕР. Первая версия смотрела только на `\@refundefined`
-% ядра LaTeX, и подсаженный `\cite{ghost}` прошёл насквозь: `acmart` грузит NATBIB, который
-% печатает СВОЁ предупреждение и флага ядра не трогает. Флаг natbib —
+% 🔴 TWO FLAGS, NOT ONE, AND THIS IS ALSO A MEASUREMENT. The first version only looked at LaTeX
+% core's `\@refundefined`, and a planted `\cite{ghost}` sailed right through: `acmart` loads
+% NATBIB, which prints ITS OWN warning and never touches the core flag. natbib's flag is
 % `\NAT@undefined` (`\newcommand\NAT@citeundefined{\gdef\NAT@undefined{...}}`, natbib.sty:1095).
-% Поймано подсадкой дефекта, а не чтением кода: страж рапортовал «чисто» о статье, в чьём логе
-% стояло `Package natbib Warning: Citation 'ghost' on page 6 undefined`.
+% Caught by planting the defect, not by reading the code: the guard reported "clean" on a paper
+% whose log contained `Package natbib Warning: Citation 'ghost' on page 6 undefined`.
 %
-% ⚠️ Файл намеренно НЕ содержит ничего, кроме стражей ссылок. Проверки геометрии и лимита
-% страниц у каждой площадки свои и живут в её `<venue>.tex`.
+% ⚠️ The file deliberately contains nothing besides the reference guards. Geometry and page-limit
+% checks are venue-specific and live in each venue's own `<venue>.tex`.
 \makeatletter
 \AtEndDocument{%
   \ifdefined\finalpass

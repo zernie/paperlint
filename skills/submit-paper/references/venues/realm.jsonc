@@ -1,12 +1,12 @@
-// Профиль формата REALM @ EMNLP 2026 — семейство ACL, НЕ ACM. Проза — в `realm.md` рядом,
-// общие правила семейства — в `paper-pipeline/references/acl-venue-rules.md`.
+// REALM @ EMNLP 2026 format profile — ACL family, NOT ACM. Prose is in `realm.md` nearby,
+// the family's shared rules are in `paper-pipeline/references/acl-venue-rules.md`.
 //
-// 🔴 ЧИСЛА ГЕОМЕТРИИ ЗАМЕРЕНЫ, А НЕ СКОПИРОВАНЫ. Прогон banal по собственной сборке
+// 🔴 THE GEOMETRY NUMBERS ARE MEASURED, NOT COPIED. banal run against our own build
 // (`repro/build-submission.sh` → `build/acl_latex.pdf`, 2026-08-26):
-//   A4 8.26 x 11.69 in (595 x 842 pt) · 2 колонки · кегль тела 11.3 · интерлиньяж 13.6 ·
-//   кегль библиографии 10.3 · поля [72, 67, 66, 68] pt · 0 шрифтов Type 3
-// С acmart (letter 8.5x11, кегль 9, Libertine) общего нет НИЧЕГО — копирование чисел из
-// `agenticdev.jsonc` дало бы гейт, краснеющий на корректной статье.
+//   A4 8.26 x 11.69 in (595 x 842 pt) · 2 columns · body size 11.3 · leading 13.6 ·
+//   reference size 10.3 · margins [72, 67, 66, 68] pt · 0 Type 3 fonts
+// acmart (letter 8.5x11, size 9, Libertine) shares NOTHING with this — copying the numbers from
+// `agenticdev.jsonc` would give a gate that reddens on a correct paper.
 {
   "template": "acl",
 
@@ -16,43 +16,44 @@
 
   "columns": 2,
 
-  // Объявленный ACL кегль — 11pt; banal меряет моду по рендеру и даёт 11.3.
+  // ACL's stated body size is 11pt; banal measures the render's mode and gives 11.3.
   "body_pt": 11,
   "body_pt_tol": 0.5,
 
-  // ⚠️ Диапазон выведен из ОДНОГО замера (10.3), а не из спецификации ACL — её числа по кеглю
-  // библиографии я не нашёл. Поэтому взят широко: для правила уровня `error` ложное
-  // срабатывание хуже пропуска. Сузить, когда найдётся первоисточник.
+  // ⚠️ The range is derived from a SINGLE measurement (10.3), not from ACL's spec — I could not
+  // find ACL's own numbers for the reference size. So it's set wide: for an `error`-level rule, a
+  // false positive is worse than a miss. Narrow it once a primary source turns up.
   "ref_pt_min": 9,
   "ref_pt_max": 11,
 
-  // Times-клон из ACL-шаблона. Заголовки НЕ гейтим: в сборке присутствует и NimbusSanL-Bold,
-  // но чем именно набран заголовок, замером `pdffonts` не установить — он говорит, что
-  // начертание в файле ЕСТЬ, а не где оно применено.
+  // The Times clone from the ACL template. Headings are NOT gated: the build also contains
+  // NimbusSanL-Bold, but a `pdffonts` measurement can't establish exactly what the heading is set
+  // in — it only says a typeface IS present in the file, not where it's applied.
   "fonts_text": "NimbusRomNo9L",
 
-  // 🔴 ЛИМИТЫ СТРАНИЦ ЗДЕСЬ НЕ ГЕЙТЯТСЯ, И ЭТО ЗАМЕР, А НЕ ЛЕНЬ.
+  // 🔴 PAGE LIMITS ARE NOT GATED HERE, AND THAT IS A MEASUREMENT, NOT LAZINESS.
   //
-  // banal классифицирует страницы по содержимому и относит Limitations и Ethics к ТЕЛУ.
-  // ACL их из лимита исключает. Замер 26.08 на нашей же статье: banal сказал «body 13»,
-  // собственный счётчик сборки — «body pages: 9», и правы оба, просто считают разное
-  // (тело кончается Conclusion на стр. 9; стр. 10-13 — Limitations/Ethics; с 14 — библиография).
+  // banal classifies pages by content and counts Limitations and Ethics as part of the BODY.
+  // ACL excludes them from the limit. Measured 08-26 on our own paper: banal said "body 13," the
+  // build's own counter said "body pages: 9," and both are right — they're just counting
+  // different things (the body ends at Conclusion on p.9; pp.10-13 are Limitations/Ethics; the
+  // bibliography starts at 14).
   //
-  // Гейт на числе banal дал бы 13 против лимита 8 и покраснел бы на статье, которая в лимит
-  // укладывается. Для правила уровня `error` это худший исход. Лимит остаётся за счётчиком
-  // внутри `build-submission.sh`: он читает markdown-исходник и потому ЗНАЕТ, где кончается
-  // тело, а PDF этого не знает.
+  // A gate on banal's number would give 13 against a limit of 8 and would redden on a paper that
+  // is within the limit. For an `error`-level rule that is the worst outcome. The limit stays
+  // owned by the counter inside `build-submission.sh`: it reads the markdown source and therefore
+  // KNOWS where the body ends, which the PDF does not.
   //
-  // Числа ниже — ДАННЫЕ для того счётчика и для человека, не вход правила. Источник:
-  // `realm.md`, выверено прямым фетчем CFP 2026-08-02/03.
+  // The numbers below are DATA for that counter and for humans, not an input to the rule. Source:
+  // `realm.md`, verified by directly fetching the 2026-08-02/03 CFP.
   "page_limits_not_gated": {
-    "_": "8 при подаче, 9 в camera-ready (+1 страница). Оба числа СЕЙЧАС зашиты в build-submission.sh — в шапке 8, в прогоне 9, и это читается как расхождение, хотя это разные СТАДИИ. Скрипту стоит брать их отсюда.",
+    "_": "8 at submission, 9 at camera-ready (+1 page). Both numbers are CURRENTLY hardcoded in build-submission.sh — 8 in the header, 9 in the run — which reads like a mismatch even though these are different STAGES. The script should pull them from here instead.",
     "long_submission": 8,
     "long_camera_ready": 9,
     "short_submission": 4,
     "short_camera_ready": 5,
     "refs_and_appendices": "unlimited",
-    "limitations_and_ethics": "не считаются (правило ACL)"
+    "limitations_and_ethics": "not counted (ACL rule)"
   },
 
   "kinds": {

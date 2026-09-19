@@ -1,7 +1,7 @@
 /**
  * `port/md-install-path` and `port/js-install-path` — both halves on real ESLint.
  *
- * 🔴 NO RATCHET HERE, AND THAT IS THE POINT (Эрни, 2026-09-17). The first draft of this file
+ * 🔴 NO RATCHET HERE, AND THAT IS THE POINT (Erni, 2026-09-17). The first draft of this file
  * froze the corpus at 76 findings and `lib/` at 2, so the debt could not grow. That reads like
  * caution and is not: a ratchet does not say "correct", it says "at least not worse", and this
  * repository's own rule calls it debt rather than a fix. Freezing a number the same day the

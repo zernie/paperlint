@@ -1,68 +1,71 @@
 ---
-title: "Карта пайплайна статьи — что где запускается"
+title: "Paper pipeline map — what runs where"
 created: 2026-08-26
 updated: 2026-08-26
-tags: [paper-pipeline, ci, hooks, карта]
+tags: [paper-pipeline, ci, hooks, map]
 ---
 
-# Что где запускается: карта пайплайна
+# What runs where: the pipeline map
 
-Собрано 2026-08-26 **из фактов** — `.claude/settings.json` и `.github/workflows/paper-gates.yml`,
-а не по памяти. Повод: «я в душе не ебу, как сейчас пайплайн работает».
+Assembled 2026-08-26 **from facts** — `.claude/settings.json` and
+`.github/workflows/paper-gates.yml` — not from memory. Occasion (translated from Russian): "I have
+no fucking idea how the pipeline works right now."
 
 
-> ⭐ **Как строить проверки** (лестница, занятость по 14 инструментам, замеры) —
-> в приватных заметках автора: `<papers-root>/research/2026-08-26-sessiya-arhitektura-payplayna.md`
+> ⭐ **How to build checks** (the ladder, occupancy across 14 tools, measurements) —
+> in the author's private notes: `<papers-root>/research/2026-08-26-sessiya-arhitektura-payplayna.md`
 
-## Четыре яруса, и они срабатывают в разное время
+## Four tiers, and they fire at different times
 
 ```
-┌─ ЯРУС 1: ПОКА ПИШЕШЬ ─────────────────────── мгновенно, в сессии ───┐
+┌─ TIER 1: WHILE WRITING ────────────────────── instant, in-session ──┐
 │                                                                      │
-│  правишь paper.md / paper.tex                                        │
+│  you edit paper.md / paper.tex                                      │
 │         │                                                            │
-│         ├─ PreToolUse   → paper-lint pre      🛑 ЕДИНСТВЕННЫЙ БЛОК   │
-│         │                  абзац >200 слов · ≥9 чисел · предл. >55   │
-│         │                  не пускает вставку вообще                 │
+│         ├─ PreToolUse   → paper-lint pre      🛑 THE ONLY BLOCKER   │
+│         │                  paragraph >200 words · ≥9 numbers ·      │
+│         │                  sentence >55 words · refuses the edit    │
+│         │                  outright                                 │
 │         │                                                            │
-│         ├─ PreToolUse   → paper-edit-guard    🛑 запись из Bash      │
-│         │                  (обход PostToolUse-гейтов) → deny         │
+│         ├─ PreToolUse   → paper-edit-guard    🛑 a write from Bash  │
+│         │                  (bypassing PostToolUse gates) → deny     │
 │         │                                                            │
-│         └─ PostToolUse  → paper-lint post     ⚠️ только нуджит       │
-│                            plain-language · carries: · SHAVE         │
-│                            prose-lint · гейт чисел                   │
+│         └─ PostToolUse  → paper-lint post     ⚠️ nudges only        │
+│                            plain-language · carries: · SHAVE        │
+│                            prose-lint · the numbers gate             │
 │                                                                      │
-│  конец ответа → Stop → paper-lint stop  (троттл 1 час)               │
-│                        15 проверок по всем статьям                   │
-│                        + kb-lint stop: 12 проверок по всей базе      │
+│  end of response → Stop → paper-lint stop  (throttled to 1 hour)    │
+│                        15 checks across all papers                   │
+│                        + kb-lint stop: 12 checks across the base    │
 └──────────────────────────────────────────────────────────────────────┘
                                    │
                                    ▼
-┌─ ЯРУС 2: СБОРКА ──────────────────── когда гонишь pdflatex ─────────┐
+┌─ TIER 2: BUILD ───────────────────── when you run pdflatex ─────────┐
 │                                                                      │
 │   paper.tex                                                          │
 │      │                                                               │
 │      ▼                                                               │
-│   pdflatex ──┬─→ ВНУТРИ работает acmart (класс документа)            │
-│              │   он же ругается в лог: нет CCS · нет libertine ·     │
+│   pdflatex ──┬─→ INSIDE, acmart runs (the document class)            │
+│              │   it's the same thing that complains in the log:      │
+│              │   no CCS · no libertine ·                              │
 │              │   «ACM reference format is mandatory»                 │
 │              │                                                       │
-│              ├─→ paper.pdf   ← финальный артефакт, шрифты ВШИТЫ      │
-│              ├─→ paper.log   ← сюда acmart пишет предупреждения      │
-│              └─→ paper.blg   ← сюда bibtex пишет ошибки библиографии │
+│              ├─→ paper.pdf   ← the final artifact, fonts EMBEDDED    │
+│              ├─→ paper.log   ← acmart writes its warnings here       │
+│              └─→ paper.blg   ← bibtex writes bibliography errors here│
 │                                                                      │
-│   check-render.sh читает ВСЕ ТРИ:                                    │
-│      log → overfull · undefined refs · предупреждения класса         │
-│      blg → выброшенные записи · cited-but-absent                     │
-│      pdf → шрифты (LinLibertine/LinBiolinum) ← добавлено 25.08       │
-│      + chktex по .tex, если установлен (advisory)                    │
+│   check-render.sh reads ALL THREE:                                   │
+│      log → overfull · undefined refs · class warnings                │
+│      blg → dropped entries · cited-but-absent                        │
+│      pdf → fonts (LinLibertine/LinBiolinum) ← added 25.08            │
+│      + chktex on the .tex, if installed (advisory)                   │
 └──────────────────────────────────────────────────────────────────────┘
                                    │
                                    ▼
-┌─ ЯРУС 3: CI ──────────────── на push/PR, 7 джобов ──────────────────┐
+┌─ TIER 3: CI ─────────────── on push/PR, 7 jobs ──────────────────────┐
 │                                                                      │
-│  changes ──┐ классификатор путей, ~10 с, БЕЗ checkout                │
-│            │ решает, какие джобы вообще запускать                    │
+│  changes ──┐ a path classifier, ~10s, WITHOUT a checkout             │
+│            │ decides which jobs even run                            │
 │            ▼                                                         │
 │  ┌─────────────────────────────────────────────────────────────┐    │
 │  │ prose      eslint(md) · paper-lint --gate 🛑 · bib-authors  │    │
@@ -70,127 +73,135 @@ tags: [paper-pipeline, ci, hooks, карта]
 │  │            structure · provenance · verify-cites · scorecard│    │
 │  ├─────────────────────────────────────────────────────────────┤    │
 │  │ numbers    paper_numbers selftest → gate                    │    │
-│  │            artifact/reproduce.py ← подключено 26.08          │    │
+│  │            artifact/reproduce.py ← wired in 26.08            │    │
 │  ├─────────────────────────────────────────────────────────────┤    │
-│  │ anonymity  check-anon по бандлу + все *.selftest.{sh,mjs}   │    │
+│  │ anonymity  check-anon over the bundle + every *.selftest.{sh,mjs} │
 │  ├─────────────────────────────────────────────────────────────┤    │
-│  │ build      контейнер texlive/texlive:latest ← ШРИФТЫ ЗДЕСЬ  │    │
-│  │            aclpubcheck (optional) · собирает · check-render │    │
+│  │ build      texlive/texlive:latest container ← FONTS LIVE HERE│    │
+│  │            aclpubcheck (optional) · builds · check-render    │    │
 │  ├─────────────────────────────────────────────────────────────┤    │
-│  │ hooks      vigiles lint 🛑 · все харнессы на диске          │    │
-│  │            TeXtidote (pinned jar) · ledger selftest         │    │
+│  │ hooks      vigiles lint 🛑 · every harness on disk           │    │
+│  │            TeXtidote (pinned jar) · ledger selftest          │    │
 │  ├─────────────────────────────────────────────────────────────┤    │
-│  │ skill-firing   раз в неделю, реальная модель                │    │
+│  │ skill-firing   once a week, a real model                    │    │
 │  └─────────────────────────────────────────────────────────────┘    │
 └──────────────────────────────────────────────────────────────────────┘
                                    │
                                    ▼
-┌─ ЯРУС 4: ПЛОЩАДКА ─────────── единственный вердикт, который решает ─┐
+┌─ TIER 4: THE VENUE ──────── the one verdict that actually decides ──┐
 │                                                                      │
-│   eRights (ACM) ──→ выдаёт блок copyright-команд                     │
-│         │              ↓ вставить в paper.tex, ПЕРЕСОБРАТЬ           │
+│   eRights (ACM) ──→ issues a block of copyright commands             │
+│         │              ↓ paste into paper.tex, REBUILD               │
 │         ▼                                                            │
-│   загрузка В ДВА МЕСТА:                                              │
-│      • conference-publishing.com  ← идёт в вёрстку и ACM DL          │
-│      • HotCRP paper/20/edit       ← копия для чейров воркшопа        │
+│   upload goes to TWO PLACES:                                         │
+│      • conference-publishing.com  ← goes to typesetting and ACM DL   │
+│      • HotCRP paper/20/edit       ← a copy for the workshop chairs   │
 │         │                                                            │
 │         ▼                                                            │
-│   их чекер (TAPS / формат-чекер портала) — код закрыт                │
+│   their checker (TAPS / the portal's format checker) — closed-source │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-## Что запускается только руками
+## What only runs by hand
 
-Скиллы (`grade-paper-writing`, `tighten-paper`, `pc-panel-review`, `cold-read-diff`,
-`verify-citations`, `argument-arc`, `harden-paper`…) — **никаким событием не вызываются**.
-Их зовёт человек. Это и есть слой суждения; механику из него надо вычищать вниз, в ярусы 1–3.
+Skills (`grade-paper-writing`, `tighten-paper`, `pc-panel-review`, `cold-read-diff`,
+`verify-citations`, `argument-arc`, `harden-paper`…) are **not invoked by any event**. A human calls
+them. This is the judgment layer; its mechanical parts should keep getting pushed down into tiers
+1–3.
 
-## Где какой ярус ловит одно и то же
+## Where each tier catches the same thing
 
-| дефект | ловится |
+| defect | caught by |
 |---|---|
-| абзац-стена при вставке | ярус 1, блокирует |
-| число не сходится с данными | ярус 1 (post) и ярус 3 (numbers) |
-| ссылка выброшена bibtex'ом | ярус 2 (`.blg`) → ярус 3 (build) |
-| **шрифт не тот** | ярус 2 (`pdffonts`) — а ПРЕДОТВРАЩАЕТСЯ ярусом 3 (контейнер) |
-| стадия объявлена без PDF | ярус 3, `paper-lint --gate` 🛑 |
-| соответствие формату ACM | **ярус 4, и только он** |
+| a wall-of-text paragraph on insertion | tier 1, blocks |
+| a number that doesn't match the data | tier 1 (post) and tier 3 (numbers) |
+| a reference dropped by bibtex | tier 2 (`.blg`) → tier 3 (build) |
+| **wrong font** | tier 2 (`pdffonts`) — but it's PREVENTED by tier 3 (the container) |
+| a stage declared with no PDF | tier 3, `paper-lint --gate` 🛑 |
+| ACM format compliance | **tier 4, and only tier 4** |
 
 ---
 
-# 🗺️ Роадмап: что НЕ построено
+# 🗺️ Roadmap: what is NOT built
 
-## 1. 🔴 Требование как ОТКАЗ СБОРКИ, а не как проверка после (идея автора, 26.08)
+## 1. 🔴 A requirement as a BUILD FAILURE, not a check afterward (the author's idea, 26.08)
 
-Сейчас почти всё ловится **после** сборки. Но `acmart` уже умеет ронять сборку — он делает это на
-отсутствующих CCS-концептах (*«CCS concepts are mandatory for papers over two pages»*). То есть
-механизм есть, и мы им не пользуемся.
+Right now almost everything is caught **after** the build. But `acmart` already knows how to fail
+the build — it does exactly that on missing CCS concepts (*"CCS concepts are mandatory for papers
+over two pages"*). So the mechanism exists, and we're not using it.
 
-**Ступень 2 лесенки вместо третьей:** то, чего нельзя собрать, нечего проверять.
+**Rung 2 of the ladder instead of rung 3:** there's nothing to check in something that can't even be
+built.
 
-| требование | как сделать отказом сборки |
+| requirement | how to turn it into a build failure |
 |---|---|
-| **шрифты** | `fontspec` + шрифт по пути → файла нет → сборка падает вместо тихого отката на Computer Modern |
-| лимит страниц | `\AtEndDocument` + проверка `\thepage` → `\PackageError` |
-| размеры текстового блока | класс их задаёт; ловить факт переопределения |
-| нет номеров страниц | проверить `\thepage` в выводе |
+| **fonts** | `fontspec` + a font by path → file missing → the build fails instead of silently falling back to Computer Modern |
+| page limit | `\AtEndDocument` + a check on `\thepage` → `\PackageError` |
+| text-block dimensions | the class sets these; catch the fact that they were overridden |
+| no page numbers | check `\thepage` in the output |
 
-🔴 **ЗАМЕРЕНО 2026-08-26, а не предположено: `fontspec` с `pdflatex` НЕ РАБОТАЕТ.** Минимальный
-документ, прогон `pdflatex`, код возврата 1, дословно из лога:
+🔴 **MEASURED on 2026-08-26, not assumed: `fontspec` with `pdflatex` DOES NOT WORK.** A minimal
+document, a `pdflatex` run, exit code 1, verbatim from the log:
 
 ```
 Package: fontspec  Font selection for XeLaTeX and LuaLaTeX
 ! Fatal Package fontspec Error: The fontspec package requires either XeTeX or LuaTeX.
 ```
 
-⇒ Цепочка целиком: грузить шрифт по пути умеет только `fontspec` → `fontspec` требует XeLaTeX или
-LuaLaTeX → у нас `pdflatex` → **конструкция требует СМЕНЫ ДВИЖКА СБОРКИ**, а не добавления пакета.
-Это переводит пункт из «дописать строку» в «поменять программу, которой собирается статья».
+⇒ The whole chain: only `fontspec` can load a font by path → `fontspec` requires XeLaTeX or LuaLaTeX
+→ we run `pdflatex` → **the construction requires SWITCHING THE BUILD ENGINE**, not adding a
+package. That moves the item from "add a line" to "change the program that builds the paper."
 
-⚠️ **Три непроверенных, которые решают выполнимость первой строки** (это неизвестные, а не
-возражения): `fontspec` требует XeLaTeX/LuaLaTeX вместо pdflatex · `acmart` сам назначает шрифты и
-может конфликтовать · примет ли конвейер TAPS LuaLaTeX-исходник. Плюс риск: смена движка меняет
-обработку microtype, а запаса по страницам нет.
+⚠️ **Three unverified things that decide whether the first row is even feasible** (these are
+unknowns, not objections): `fontspec` requires XeLaTeX/LuaLaTeX instead of pdflatex · `acmart`
+assigns its own fonts and might conflict · whether the TAPS pipeline will even accept a LuaLaTeX
+source. Plus a risk: switching engines changes how microtype is handled, and there's no page-count
+slack.
 
-**Проверяется дешёвым спайком** — собрать копию в scratch, посмотреть, воюет ли класс и поехала ли
-вёрстка. Делать ПОСЛЕ подачи 29.08.
+**Checked by a cheap spike** — build a copy in scratch, see whether the class fights back and
+whether the layout shifts. Do this AFTER the 29.08 submission.
 
-## 2. Механическое соответствие camera-ready — проверяется 1 требование из ~25
+## 2. Mechanical camera-ready compliance — 1 requirement out of ~25 is checked
 
-Инструкция ACM перечисляет ~25 механических требований. Проверяются: шрифты. Остальное —
-геометрия текстового блока, кегль 9 pt / 8 pt, баланс колонок, DOI у ссылок, подписи над таблицами
-и под рисунками, капитализация, порядок секций — **не проверяет ничего**.
+ACM's instructions list ~25 mechanical requirements. Checked: fonts. The rest — text-block geometry,
+9pt/8pt type size, column balance, DOIs on references, captions above tables and below figures,
+capitalization, section ordering — **nothing checks any of it**.
 
-**Конструкция найдена и проверена по исходникам (26.08):**
+**A construction found and verified against source (26.08):**
 
 ```
 banal -json  +  pdffonts   →   paper.facts.json   →   @eslint/json
-(геометрия)    (шрифты)        (обычный JSON)         (официальный плагин)
+(geometry)     (fonts)         (plain JSON)           (the official plugin)
 ```
 
 - **`banal`** — [kohler/hotcrp/src/banal](https://github.com/kohler/hotcrp/blob/master/src/banal),
-  1901 строка Perl, зависимости — ядро Perl + `pdftohtml`. Standalone, живой (коммиты 03.08.2026).
-  Даёт `papersize`, `margin`, `bodyfontsize`, `leading`, `columns`, `npages`, `reffontsize`.
-  Шрифтов **не знает по построению** — слов `type3`/`embed` в файле нет ни разу.
-- **Спецификацию banal не принимает** — сравнение живёт в `checkformat.php`, грамматика профиля
-  `papersize;pagelimit;columns;textblock;bodyfontsize;bodylineheight`. Для ACM ≈ `letter;;2;18x23.5cm;9`.
-- **Почему через JSON, а не языковым плагином ESLint:** `fileType: "binary"` в ESLint **не
-  реализован**, документация дословно — *«should be "text" (in the future, we will also support
-  "binary")»*, и рантайм читает файл безусловно как UTF-8 (`eslint-helpers.js:1281`), байты PDF
-  бьются в U+FFFD необратимо. Хак возможен (`parse()` читает диск сам), но ломает `--fix`, кеш и
-  `eslint-disable` — писать директиву внутри PDF негде.
-- **Так же устроен veraPDF** — единственный PDF-валидатор с пользовательскими правилами:
-  *«doesn't parse PDF documents directly. Instead it processes the machine readable report output»*.
-  Совпадение архитектуры с промышленным инструментом — признак, что конструкция верная.
+  1901 lines of Perl, dependencies are core Perl + `pdftohtml`. Standalone, alive (commits on
+  03.08.2026). Gives you `papersize`, `margin`, `bodyfontsize`, `leading`, `columns`, `npages`,
+  `reffontsize`. It **doesn't know about fonts by construction** — the words `type3`/`embed` don't
+  appear in the file at all.
+- **banal does not accept a spec** — the comparison lives in `checkformat.php`, the profile grammar
+  is `papersize;pagelimit;columns;textblock;bodyfontsize;bodylineheight`. For ACM ≈
+  `letter;;2;18x23.5cm;9`.
+- **Why through JSON and not an ESLint language plugin:** `fileType: "binary"` in ESLint is **not
+  implemented**, the docs say verbatim — *"should be 'text' (in the future, we will also support
+  'binary')"*, and the runtime reads the file unconditionally as UTF-8 (`eslint-helpers.js:1281`),
+  irreversibly mangling PDF bytes into U+FFFD. A hack is possible (`parse()` reads the disk itself),
+  but it breaks `--fix`, the cache, and `eslint-disable` — there's nowhere to put a directive inside
+  a PDF.
+- **veraPDF is built the same way** — the one PDF validator with user-defined rules: *"doesn't parse
+  PDF documents directly. Instead it processes the machine readable report output"*. Matching the
+  architecture of an industrial tool is a sign the construction is right.
 
-**Занятость проверена:** `eslint-plugin-pdf` → E404 · `textlint` свой формат принимает, но требует
-конвертации в текст (прецедент `textlint-plugin-pptx`) · `Vale` своего парсера не берёт ·
-`MegaLinter`/`super-linter`/`reviewdog` — оркестраторы, реестра правил для нашего формата не дадут.
+**Occupancy checked:** `eslint-plugin-pdf` → E404 · `textlint` accepts its own format but requires
+conversion to text first (precedent: `textlint-plugin-pptx`) · `Vale` won't take a custom parser ·
+`MegaLinter`/`super-linter`/`reviewdog` are orchestrators, they won't give us a rule registry for our
+format.
 
-## 3. Константы площадки — в карточку, а не в код
+## 3. Venue constants belong in a card, not in code
 
-Сейчас `LinLibertine`, `LinBiolinum`, `acmart` зашиты в `check-render.sh`. Это **данные площадки**,
-и им место в `.claude/skills/submit-paper/references/venues/<venue>.md`:
+Right now `LinLibertine`, `LinBiolinum`, `acmart` are hardcoded into `check-render.sh`. This is
+**venue data**, and it belongs in
+`.claude/skills/submit-paper/references/venues/<venue>.md`:
 
 ```yaml
 venue:
@@ -203,148 +214,154 @@ venue:
   extra_ref_pages: 2
 ```
 
-Второй пользователь этого блока — сравнение с выводом `banal` (шесть чисел). Первый — лимит страниц,
-который сейчас существует в **четырёх копиях** и они уже разошлись (`venues/realm.md` говорит 8,
-`build-submission.sh` захардкодил 8, `PIPELINE-STATUS` пишет «тело 8/8», а сборка печатает 9).
+The second consumer of this block is the comparison against `banal`'s output (six numbers). The
+first is the page limit, which currently exists in **four copies**, and they have already drifted
+apart (`venues/realm.md` says 8, `build-submission.sh` hardcodes 8, `PIPELINE-STATUS` writes "body
+8/8," and the build prints 9).
 
-## 4. `check-render.sh` — 244 строки bash с грепами
+## 4. `check-render.sh` — 244 lines of bash full of greps
 
-Место верное (ничто другое не читает артефакты сборки, офлайн-чекера ACM не существует), **форма —
-нет**: нет реестра проверок, нет конфига, нет severity, пороги зашиты. Дописывать туда 25 новых
-грепов — путь, с которого мы слезаем. Разбирать вместе с п.2 и п.3.
+The place is right (nothing else reads the build artifacts, and no offline ACM checker exists),
+**the form isn't**: no check registry, no config, no severity, thresholds are hardcoded. Bolting 25
+more greps onto it is the path we're getting off of. Deal with it together with items 2 and 3.
 
-## 5. Занятость проверять ДО написания — правило есть, ступень 4
+## 5. Check occupancy BEFORE writing — the rule exists, it's rung 4
 
-Записано дважды (05.08, 24.08), существует скилл `sweep-design-space`. **За ночь 25/26.08 нарушено
-трижды** — значит проза и скилл не работают, оба четвёртая ступень.
+Written down twice (05.08, 24.08), and the `sweep-design-space` skill exists. **It was violated
+three times overnight on 25/26.08** — meaning prose and a skill don't work, both are rung 4.
 
-**Предложенная конструкция:** новый файл-проверка обязан нести строку `occupancy:` — что искали и
-почему не подошло; линтер требует её наличия. Форма та же, что у `carries:` для секций и `Причина:`
-для находок перечита. Честно: это ступень 3, не 2 — пропустить поиск она не мешает, но делает
-**отсутствие доказательства видимым**.
-
----
-
-# 🧊 ЗАМОРОЗКА текущего ad hoc (решение автора, 2026-08-26)
-
-Дословно: *«текущий пайплайн надо правилом пометить говном, не расширять как есть, а только
-разрешить новое нормальное»*.
-
-> **Исправления — да. Новые проверки — нет.**
-> Новая проверка идёт только в новой форме — но **только там, где новая форма уже существует.**
-
-Без второй половины правило несогласованно, и я на нём поскользнулся в тот же вечер: объявил
-заморозку и через две реплики предложил дописать проверку в `paper-lint`.
-
-| категория проверки | новая форма | куда идёт новая |
-|---|---|---|
-| один документ: markdown, JS | **есть** — ESLint | 🛑 в старое нельзя |
-| артефакт: PDF | **есть** — профиль площадки + чекер | 🛑 в старое нельзя |
-| кросс-файл, форма файловой системы | **нет и не предвидится** | остаётся скриптом, это граница правила, а не обход |
-
-**Энфорс:** в `paper-lint.mjs` сейчас ровно **18** функций-проверок. Тест «их 18» падает на
-девятнадцатой и заставляет ответить «а почему не в новой форме». Маленький и читаемый, в отличие от
-базы долга на 27 записей, которую заглушили бы за день.
-
-🔴 **Порядок обязателен: заморозка ПОСЛЕ того, как в новой форме окажется хотя бы половина.**
-Сейчас там одно правило из пятнадцати. Заморозить раньше, чем новая форма станет удобнее старой, —
-значит получить обход и мёртвое правило. Это уже случалось в этой репе трижды.
+**Proposed construction:** a new check-file must carry an `occupancy:` line — what was searched and
+why it didn't fit; the linter requires its presence. Same form as `carries:` for sections and
+`Cause:` for re-check findings. To be honest: this is rung 3, not 2 — it doesn't stop you from
+skipping the search, but it makes **the absence of evidence visible**.
 
 ---
 
-# 📋 Очередь работ, от дешёвого к дорогому
+# 🧊 FREEZE on the current ad hoc state (the author's decision, 2026-08-26)
 
-## 1. Маркер вместо чёрного списка — одна строка
+Verbatim (translated from Russian): *"mark the current pipeline as shit by rule — don't expand it as
+it is, only allow new, proper stuff."*
 
-`paperDirs()` сейчас: `.filter((e) => e.name !== "research" && e.name !== "drafts")`. Рукописный
-список из двух имён; всё остальное под `papers/` автоматически считается статьёй.
+> **Fixes — yes. New checks — no.**
+> A new check goes only in the new form — but **only where the new form already exists.**
 
-**Замерено 2026-08-26:**
+Without the second half the rule is incoherent, and I slipped on it that same evening: announced the
+freeze and, two messages later, proposed bolting a check onto `paper-lint`.
 
-| папка | `PIPELINE-STATUS.md` | считается статьёй сейчас |
+| check category | new form | where a new one goes |
 |---|---|---|
-| `agenticdev-2026` `aisec-2026` `compile-rules-2026` | ✅ | ✅ верно |
-| `scored-2026` | — | 🔴 **да, ошибочно** |
-| `extension-shell-ifc` | — | 🔴 **да, ошибочно** |
-| `research` `drafts` | — | нет (в чёрном списке) |
+| a single document: markdown, JS | **exists** — ESLint | 🛑 not allowed into the old form |
+| an artifact: PDF | **exists** — venue profile + checker | 🛑 not allowed into the old form |
+| cross-file, filesystem-shaped | **doesn't exist and isn't expected to** | stays a script — that is the rule's boundary, not a workaround |
 
-**Маркер: папка со статьёй — та, где лежит `PIPELINE-STATUS.md`.** Это уже наша конвенция с
-22.07 («каждый пейпер несёт PIPELINE-STATUS.md»), код её просто не использует. Самообъявление
-вместо списка: новая статья попадает в проверки в день, когда заводит scorecard.
+**Enforcement:** `paper-lint.mjs` currently has exactly **18** check functions. The "there are 18"
+test fails on the nineteenth and forces an answer to "why isn't this in the new form." Small and
+readable, unlike a 27-entry debt ledger that would get muted within a day.
 
-⚠️ **Переносить три статьи в отдельную подпапку НЕ надо.** Маркер решает ту же задачу за строку, а
-перенос ломает все формы ссылок — при расселении `.claude/pipeline/` литеральных было 134, и этого
-не хватило (собранные из сегментов, относительные импорты, пути в регулярках).
+🔴 **The order is mandatory: freeze AFTER at least half is in the new form.** Right now it's one
+rule out of fifteen. Freezing before the new form becomes more convenient than the old one means
+getting a workaround and a dead rule. That has already happened in this repo three times.
 
-## 2. Одна точка входа сборки на все статьи, а не по одной на каждую
+---
 
-**Дыра:** у `compile-rules` есть `repro/build-submission.sh`, который зовёт `ensure-toolchain.sh`.
-**У `agenticdev` точки входа нет вообще** — его собирают руками `pdflatex`, и ничто не гарантирует
-шрифты, кроме контейнера CI. Так уехал отправленный `aisec`.
+# 📋 Work queue, cheapest to most expensive
 
-**Решение — обобщить существующий скрипт на любую папку статьи**, а не заводить Makefile каждой.
-Как собирать, он определит по файлам: есть `paper.tex` → `pdflatex`, есть `paper.md` → конвейер
-через jinja2. Три Makefile разъехались бы так же, как разъехались четыре копии лимита страниц и
-пять копий списка пакетов.
+## 1. A marker instead of a blocklist — one line
 
-**Слои не путать:**
+`paperDirs()` today: `.filter((e) => e.name !== "research" && e.name !== "drafts")`. A hand-written
+list of two names; everything else under `papers/` is automatically counted as a paper.
+
+**Measured 2026-08-26:**
+
+| folder | `PIPELINE-STATUS.md` | counted as a paper today |
+|---|---|---|
+| `agenticdev-2026` `aisec-2026` `compile-rules-2026` | ✅ | ✅ correctly |
+| `scored-2026` | — | 🔴 **yes, wrongly** |
+| `extension-shell-ifc` | — | 🔴 **yes, wrongly** |
+| `research` `drafts` | — | no (on the blocklist) |
+
+**The marker: a paper folder is one that has a `PIPELINE-STATUS.md`.** This has already been our
+convention since 22.07 ("every paper carries a PIPELINE-STATUS.md"), the code just doesn't use it.
+Self-declaration instead of a list: a new paper enters the checks the day it gets a scorecard.
+
+⚠️ **Do NOT move the three papers into a separate subfolder.** The marker solves the same problem in
+one line, while a move breaks every form of reference — when `.claude/pipeline/` was resettled there
+were 134 literal ones, and that wasn't even the whole count (paths built from segments, relative
+imports, paths inside regexes).
+
+## 2. One build entry point for all papers, not one per paper
+
+**The hole:** `compile-rules` has `repro/build-submission.sh`, which calls `ensure-toolchain.sh`.
+**`agenticdev` has no entry point at all** — it's built by hand with `pdflatex`, and nothing
+guarantees the fonts except the CI container. That's how the submitted `aisec` went out wrong.
+
+**The fix — generalize the existing script to any paper folder**, instead of giving each one its own
+Makefile. It decides how to build from the files present: `paper.tex` exists → `pdflatex`;
+`paper.md` exists → the jinja2 pipeline. Three Makefiles would drift apart the same way the four
+copies of the page limit and the five copies of the package list already have.
+
+**Don't conflate the layers:**
 
 ```
-пакеты и шрифты есть      ← контейнер texlive  или  ensure-toolchain.sh (apt)
-цикл компиляции           ← latexmk (в тулчейн не входит, добавить)
-падать, если шрифтов нет  ← \IfFileExists в paper.tex (сделано 26.08)
+packages and fonts exist   ← the texlive container  or  ensure-toolchain.sh (apt)
+the compile cycle          ← latexmk (not in the toolchain yet, add it)
+fail if fonts are missing  ← \IfFileExists in paper.tex (done 26.08)
 ```
 
-`latexmk` заменяет **только средний слой** — шрифты он не ставит.
+`latexmk` replaces **only the middle layer** — it does not install fonts.
 
-**Проверять «есть ли у папки Makefile» тогда не нужно** — точка входа одна и общая. Проверять нечего.
+**There's then no need to check "does this folder have a Makefile"** — there's one shared entry
+point. Nothing to check.
 
-## 3. Убрать дубли констант
+## 3. Remove duplicated constants
 
-| факт | сколько копий | где расходятся |
+| fact | how many copies | where they diverge |
 |---|---|---|
-| лимит страниц | **4** | `venues/realm.md` 8 · `build-submission.sh` 8 · `PIPELINE-STATUS` «8/8» · сборка печатает **9** |
-| список пакетов TeX | **5** | `ensure-toolchain.sh` (исполняемый) · `SKILL.md` · `render-paper.harness.mjs` (пинит ✅) · `build-submission.sh` · `PIPELINE-STATUS` |
+| page limit | **4** | `venues/realm.md` 8 · `build-submission.sh` 8 · `PIPELINE-STATUS` "8/8" · the build prints **9** |
+| the TeX package list | **5** | `ensure-toolchain.sh` (executable) · `SKILL.md` · `render-paper.harness.mjs` (pins it ✅) · `build-submission.sh` · `PIPELINE-STATUS` |
 
-Канон — карточка площадки (`venues/<venue>.md`, блок `<!-- venue-profile -->`) для формата и
-`ensure-toolchain.sh` для пакетов. Остальное — ссылки.
+The canonical source is the venue card (`venues/<venue>.md`, the `<!-- venue-profile -->` block) for
+format, and `ensure-toolchain.sh` for packages. Everything else is a pointer.
 
-## 3-тер. Снять гейт шрифтов из `check-render.sh`, когда правила поедут в CI
+## 3-ter. Drop the font gate from `check-render.sh` once the rules run in CI
 
-Блок `pdffonts` добавлен в `check-render.sh` 25.08, и после переезда суждения в правила он
-становится **вторым источником правды о тех же шрифтах**. Убирать его — сокращение frozen-скрипта,
-а не расширение, то есть заморозку не нарушает.
+The `pdffonts` block was added to `check-render.sh` on 25.08, and once the judgment moves into rules
+it becomes **a second source of truth about the same fonts**. Removing it shrinks the frozen script
+rather than extending it, so it does not break the freeze.
 
-⚠️ **Но не раньше, чем правила реально гоняются в CI.** Сегодня `check-render.sh` — единственное,
-что вообще смотрит на `agenticdev-2026` в CI (джоб `build` собирает только статьи с
-`repro/build-submission.sh`, а это одна из пяти). Снять его до того, как встанет замена, значит
-обменять дубль на дыру.
+⚠️ **But not before the rules are actually running in CI.** Today `check-render.sh` is the only
+thing in CI that even looks at `agenticdev-2026` (the `build` job only builds papers that have
+`repro/build-submission.sh`, and that's one out of five). Removing it before the replacement is in
+place means trading a duplicate for a hole.
 
-## 3-бис. 🔴 Дубль профиля площадки снять ГЕНЕРАЦИЕЙ, а не сторожить ассертом
+## 3-bis. 🔴 Remove the venue-profile duplicate by GENERATING it, not guarding it with an assert
 
-Числа площадки лежат дважды: `<venue>.yaml` (читают правила) и `<venue>.tex` (читает сам LaTeX,
-он не умеет YAML). 26.08 расхождение сторожил `texMismatch()` внутри `check-geometry.mjs` —
-**скрипт снесён 26.08 вместе с ним**, потому что весь он был ступенью 5.
+The venue numbers live in two places: `<venue>.yaml` (read by the rules) and `<venue>.tex` (read by
+LaTeX itself, which can't do YAML). On 26.08 `texMismatch()` inside `check-geometry.mjs` guarded
+against the drift — **the script was torn out on 26.08, along with it**, because the whole thing was
+rung 5.
 
-**Ассерт был неправильным ответом с самого начала.** Он охраняет дубль вместо того, чтобы дубля не
-было. Правильная форма — та же, к которой пришли для фактов о PDF: **`<venue>.tex` ПОРОЖДАЕТСЯ из
-`<venue>.yaml` в том же шаге, где собирается статья**, лежит в `_build/`, в git не попадает.
-Тогда расхождение невыразимо, и сторожить нечего — ступень 1, а не 5.
+**The assert was the wrong answer from the start.** It guards a duplicate instead of there being no
+duplicate. The right form is the same one we arrived at for the PDF facts: **`<venue>.tex` IS
+GENERATED from `<venue>.yaml` in the same step that builds the paper**, lives in `_build/`, and
+never enters git. Then the drift is unrepresentable, and there's nothing to guard — rung 1, not rung
+5.
 
-⚠️ Возражение «сгенерированный файл протухает молча» здесь **не действует**, и это важно различать:
-протухает тот, что закоммичен и перегенерируется когда-нибудь. Этот перегенерируется на каждой
-сборке, как факты. Молчаливое протухание требует, чтобы кто-то мог прочитать СТАРУЮ копию — а её
-негде взять.
+⚠️ The objection "a generated file goes stale silently" **does not apply** here, and the distinction
+matters: what goes stale is a file that's committed and regenerated only occasionally. This one
+regenerates on every build, like the PDF facts do. Silent staleness requires that someone be able to
+read the OLD copy — and there is nowhere to get one.
 
-**Пока не сделано — дубль не сторожит НИКТО.** Записано осознанно: цена — расхождение между
-стражами преамбулы и правилами; вероятность — правки профиля идут раз в площадку.
+**Until this is done, NOBODY guards the duplicate.** Recorded deliberately: the cost is a mismatch
+between the preamble guards and the rules; the odds are low — profile edits happen about once per
+venue.
 
-## 4. Инструменты: что проверено и решено
+## 4. Tools: what's been checked and decided
 
-| | вердикт |
+| | verdict |
 |---|---|
-| **`eslint-plugin-project-structure`** | **умеет** условное «если A, то B» (`enforceExistence`, через настоящий `fs.existsSync`), и везёт фиктивный парсер + `files: ["**"]`, поэтому видит папки без единого JS. **Но OR-семантики нет** — «Makefile ИЛИ justfile» невыразимо. Нам после п.2 не нужен; кандидат на другие правила формы |
-| **`steiger`** | ❌ отпал — собственный README: *«not extendable with more rules»*, плюс он про FSD в JS |
-| **конфиг ESLint в папке статьи** | ❌ **не годится в этом репозитории**: конфигов тут **233**, наших из них **2** — остальные 231 лежат в `compile-rules-2026/repro/` (выкачанные чужие репозитории). Вложенный поиск подхватит их все, поэтому мы и гоняем с `--no-config-lookup`. То же достигается секцией `files: ["<papers-root>/<paper>/**"]` в корневом конфиге |
-| **`banal`** | ✅ принят, вложен в `vendor/`, зовётся из `extract-pdf-facts.mjs` (только измерение; судят правила ESLint) |
-| **`latexmk`** | добавить в `ensure-toolchain.sh` |
+| **`eslint-plugin-project-structure`** | **can do** conditional "if A then B" (`enforceExistence`, via a real `fs.existsSync`), and it ships a dummy parser + `files: ["**"]`, so it sees folders with not a single JS file. **But there's no OR semantics** — "Makefile OR justfile" is not expressible. We don't need it after item 2; a candidate for other structural rules |
+| **`steiger`** | ❌ dropped — its own README says *"not extendable with more rules"*, plus it's about FSD in JS |
+| **an ESLint config inside a paper folder** | ❌ **doesn't work in this repository**: there are **233** configs here, **2** of them ours — the other 231 sit inside `compile-rules-2026/repro/` (other people's repos, pulled in). A nested lookup would pick up every one of them, which is exactly why we run with `--no-config-lookup`. The same result comes from a `files: ["<papers-root>/<paper>/**"]` section in the root config |
+| **`banal`** | ✅ adopted, vendored under `vendor/`, called from `extract-pdf-facts.mjs` (measurement only; the ESLint rules do the judging) |
+| **`latexmk`** | add it to `ensure-toolchain.sh` |

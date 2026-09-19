@@ -1,15 +1,15 @@
 /**
- * Обе половины для `paper/research-question`, плюс две, про которые тест забывает чаще всего:
- * ОБЛАСТЬ и ЯЗЫК.
+ * Both halves for `paper/research-question`, plus two that a test forgets most often: SCOPE
+ * and LANGUAGE.
  *
- * Область здесь несущая. Правило спрашивает не «есть ли вопрос», а «есть ли вопрос У ТОГО, КТО
- * УЖЕ ОТГРУЖЕН». Уберите гейт по стадии — и правило начнёт ругать каждый черновик в корпусе,
- * после чего его выключат за неделю. Поэтому «молчит на черновике» проверяется отдельным
- * ассертом, а не считается частным случаем «молчит».
+ * The scope is load-bearing here. The rule does not ask "is there a question", it asks "is there
+ * a question FOR SOMETHING THAT HAS ALREADY SHIPPED". Remove the stage gate and the rule starts
+ * scolding every draft in the corpus, and gets turned off within a week. So "silent on a draft"
+ * is checked by its own assert, not treated as a special case of "silent".
  *
- * Язык — вторая забытая половина: статья в этом корпусе бывает и LaTeX, и markdown. Правило,
- * закреплённое только на `.tex`, ПОТЕРЯЛО БЫ `compile-rules-2026`, где статья написана markdown
- * и вопрос не формулируется — одну из двух настоящих находок на живом корпусе.
+ * Language is the second forgotten half: a paper in this corpus can be either LaTeX or markdown.
+ * A rule pinned to `.tex` only would LOSE `compile-rules-2026`, where the paper is written in
+ * markdown and states no question — one of the two real findings on the live corpus.
  */
 import assert from "node:assert/strict";
 import { join, dirname } from "node:path";
@@ -32,7 +32,7 @@ const check = (label, cond) => {
 
 const linter = new Linter();
 
-/** Прогон одной фикстуры. Язык выбирается по расширению — ровно как в конфиге потребителя. */
+/** Run against one fixture. The language is picked by extension — exactly like the consumer's config. */
 function lint(dir, file, opts = {}) {
   const path = join(FIX, dir, file);
   const tex = file.endsWith(".tex");
@@ -43,9 +43,9 @@ function lint(dir, file, opts = {}) {
         language: "tex/latex",
       }
     : {
-        // `files` обязателен, а не косметика: без него плоский конфиг откатывается к
-        // JS-расширениям, и фикстура возвращается как «No matching configuration found» —
-        // сообщение, которое читается ровно как чистый прогон.
+        // `files` is required, not cosmetic: without it flat config falls back to JS
+        // extensions, and the fixture comes back as "No matching configuration found" — a
+        // message that reads exactly like a clean run.
         files: ["**/*.md"],
         plugins: { markdown, paper: rq },
         language: "markdown/gfm",
@@ -58,40 +58,42 @@ function lint(dir, file, opts = {}) {
   return msgs.map((m) => m.message);
 }
 
-// ── срабатывает на подложенном дефекте ──────────────────────────────────────────────────
+// ── fires on a planted defect ───────────────────────────────────────────────────────────
 const fires = lint("shipped-no-rq", "paper.tex");
-check("отгружена и вопроса нет — находка", fires.length === 1);
-// 🔴 Сообщение обязано назвать, ОТКУДА требование. Без этого оно читается как вкус
-// линтера, а требование пришло от живого рецензента площадки.
-check("и оно ссылается на рецензента, а не выдаёт это за вкус линтера",
+check("shipped and no question — a finding", fires.length === 1);
+// 🔴 The message must name WHERE the requirement comes from. Without this it reads as the
+// linter's taste, but the requirement came from a real venue reviewer.
+check("and it cites the reviewer, rather than passing this off as the linter's taste",
       /reviewer/i.test(fires[0]));
-// Стадии в тексте — из ПОЛЯ. Предшественница выводила их регуляркой по прозе табеля и на
-// agenticdev печатала `submitted` там, где объявлено `submitted, camera-ready`.
-check("список стадий в сообщении взят из поля и несёт ОБЕ",
+// The stages in the text come from the FIELD. The predecessor derived them with a regex over
+// the scorecard's prose and on agenticdev printed `submitted` where `submitted, camera-ready`
+// was declared.
+check("the stage list in the message comes from the field and carries BOTH",
       /submitted\/camera-ready/.test(fires[0]));
 
-// markdown — вторая половина ЯЗЫКА, без неё теряется одна из двух настоящих находок
-check("статья в markdown проверяется так же", lint("markdown-no-rq", "paper.md").length === 1);
+// markdown — the second half of LANGUAGE, without it one of the two real findings is lost
+check("a paper in markdown is checked the same way", lint("markdown-no-rq", "paper.md").length === 1);
 
-// ── молчит там, где обязано ─────────────────────────────────────────────────────────────
-check("вопрос сформулирован — молчит", lint("shipped-with-rq", "paper.tex").length === 0);
-// Гейт по стадии: черновик ничего не должен, потому что никого не просил себя читать.
-check("черновик (стадий нет) — молчит, хотя вопроса в нём тоже нет",
+// ── stays silent where it must ──────────────────────────────────────────────────────────
+check("the question is stated — silent", lint("shipped-with-rq", "paper.tex").length === 0);
+// The stage gate: a draft owes nothing, because it never asked anyone to read it.
+check("a draft (no stages) — silent, even though it has no question either",
       lint("draft", "paper.tex").length === 0);
-// И различитель к предыдущему: тот же черновик с ПОДМЕНЁННЫМ именем табеля тоже молчит —
-// то есть тишина там не от того, что файл не нашёлся, а от пустого списка стадий.
-check("а с несуществующим табелем молчит и отгруженная — гейт по стадии несущий",
-      lint("shipped-no-rq", "paper.tex", { statusFile: "НЕТ-ТАКОГО.md" }).length === 0);
+// And the distinguisher against the previous case: the same draft with a SWAPPED scorecard
+// name is also silent — so the silence there is not because the file went unfound, it's
+// because the stage list is empty.
+check("and with a nonexistent scorecard a shipped paper is also silent — the stage gate is load-bearing",
+      lint("shipped-no-rq", "paper.tex", { statusFile: "NO-SUCH-FILE.md" }).length === 0);
 
-// ── названная дыра, закреплённая ассертом ───────────────────────────────────────────────
-// Правило читает СЫРОЙ текст, поэтому упоминание в комментарии LaTeX его усыпляет. Замер
-// 2026-09-17 по всем четырём статьям корпуса: таких случаев ноль, дыра ЛАТЕНТНАЯ. Ассерт
-// стоит здесь, чтобы её закрытие было осознанным решением, а не случайной находкой.
-check("упоминание ТОЛЬКО в комментарии LaTeX усыпляет правило — дыра названа, не забыта",
+// ── a named hole, pinned down by an assert ──────────────────────────────────────────────
+// The rule reads RAW text, so a mention inside a LaTeX comment puts it to sleep. Measured
+// 2026-09-17 across all four papers in the corpus: zero such cases, the hole is LATENT. The
+// assert stands here so that closing it is a deliberate decision, not an accidental find.
+check("a mention ONLY inside a LaTeX comment puts the rule to sleep — the hole is named, not forgotten",
       lint("comment-only", "paper.tex").length === 0);
 
-// ── имя табеля — данные потребителя ─────────────────────────────────────────────────────
-check("имя табеля приходит опцией",
+// ── the scorecard's name is consumer data ───────────────────────────────────────────────
+check("the scorecard's name comes in as an option",
       lint("shipped-no-rq", "paper.tex", { statusFile: "PIPELINE-STATUS.md" }).length === 1);
 
-console.log(`✓ ${String(n)} assertions passed — paper/research-question, долг отгруженной статьи`);
+console.log(`✓ ${String(n)} assertions passed — paper/research-question, the debt of a shipped paper`);

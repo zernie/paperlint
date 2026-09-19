@@ -1,8 +1,8 @@
 /**
- * Батарея на `check:readme` — четыре мутации, и три из них возвращают ДЕФЕКТЫ, которые этот
- * скрипт уже совершал. Батарея здесь не формальность: проверка чисел, которая сама считает
- * неверно, печатает зелёную галочку под неправильным числом — то есть ровно то, что она
- * существует предотвращать.
+ * Battery for `check:readme` — four mutations, three of which return DEFECTS this
+ * script already committed. A battery here is not formality: a number check that itself
+ * counts wrong prints a green checkmark under the wrong number — exactly what it
+ * exists to prevent.
  */
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
@@ -19,18 +19,18 @@ process.exit(
     runner: "node",
     cases: [
       {
-        // 🔴 ПЕРВАЯ РЕДАКЦИЯ ЭТОЙ МУТАЦИИ ВЫЖИЛА, и это была находка о ХАРНЕССЕ. Она снимала
-        // страж `isSymbolicLink()` и ждала, что удвоится счёт по ссылке на КАТАЛОГ — а он не
-        // удваивается и без стража: `lstat` не считает ссылку каталогом, так что обход в неё
-        // не заходит. Несущее там — `lstatSync` вместо `statSync`, и мутация теперь бьёт
-        // именно туда, двумя правками сразу (импорт и вызов).
-        name: "обход снова идёт ПО СИМЛИНКАМ (statSync вместо lstatSync)",
+        // 🔴 THE FIRST VERSION OF THIS MUTATION SURVIVED, and it was a finding ABOUT THE HARNESS. It removed
+        // the `isSymbolicLink()` guard and expected the count to double for a DIRECTORY link — but it does not
+        // double even without the guard: `lstat` does not call a link a directory, so the walk does not enter it.
+        // What matters is `lstatSync` instead of `statSync`, and the mutation now hits exactly that spot,
+        // with two edits at once (import and call).
+        name: "walk follows SYMLINKS AGAIN (statSync instead of lstatSync)",
         harness: HARNESS,
-        expect: "СИМЛИНК на каталог не удваивает счёт — это не новый каталог",
+        expect: "SYMLINK to directory does not double the count — it is not a new directory",
         disables:
-          "различение «каталог» и «ссылка на каталог». Настоящий дефект: 24 ссылки " +
-          "`.claude/skills/*` → `skills/*` давали 83 харнесса вместо 49, и число выглядело " +
-          "просто большим, а не неверным",
+          "distinction between 'directory' and 'link to directory'. Real defect: 24 links " +
+          "`.claude/skills/*` → `skills/*` gave 83 harnesses instead of 49, and the number " +
+          "just looked large, not wrong",
         edits: [
           [SRC, 'import { readdirSync, readFileSync, lstatSync } from "node:fs";',
                 'import { readdirSync, readFileSync, lstatSync, statSync } from "node:fs";'],
@@ -38,43 +38,43 @@ process.exit(
         ],
       },
       {
-        name: "страж ссылки на ФАЙЛ снимается",
+        name: "guard for FILE link is removed",
         harness: HARNESS,
-        expect: "СИМЛИНК на файл-харнесс тоже не удваивает счёт",
+        expect: "SYMLINK to a harness file also does not double the count",
         disables:
-          "вторую половину, которую первая редакция батареи пропустила: ссылка на файл с " +
-          "подходящим суффиксом проходит `endsWith` и считается вторым файлом. Пара с " +
-          "предыдущей мутацией доказывает, что оба стража живые, а не один из них — мёртвый код",
+          "the second half the first battery version missed: a link to a file with " +
+          "the right suffix passes `endsWith` and counts as a second file. Paired with " +
+          "the previous mutation proves both guards are live, not one dead code",
         edits: [[SRC, "if (st.isSymbolicLink()) continue;", ""]],
       },
       {
-        name: "неизвестная форма модуля снова ПРОПУСКАЕТСЯ молча",
+        name: "unknown module form is SILENTLY SKIPPED AGAIN",
         harness: HARNESS,
-        expect: "модуль неизвестной формы — ОШИБКА, а не тихий пропуск",
+        expect: "an unknown-form module is an ERROR, not a silent skip",
         disables:
-          "решение, что непонятый модуль — ошибка. Настоящий дефект: `tex-build.mjs` " +
-          "экспортирует правила прямо в `default`, попал в «не плагин» и унёс два правила — " +
-          "счётчик уверенно напечатал 8 вместо 10",
+          "the verdict that an unknown module is an error. Real defect: `tex-build.mjs` " +
+          "exports rules directly to `default`, ended up in 'not a plugin' and took two rules — " +
+          "the counter confidently printed 8 instead of 10",
         edits: [[SRC, "if (unknown.length) {", "if (false) {"]],
       },
       {
-        name: "суффикс батареи перестаёт требовать точку",
+        name: "battery suffix stops requiring a dot",
         harness: HARNESS,
-        expect: "`run-mutations.mjs` не батарея — суффикс требует точку",
+        expect: "`run-mutations.mjs` is not a battery — suffix requires a dot",
         disables:
-          "различение батареи и ДРАЙВЕРА батарей. `scripts/run-mutations.mjs` кончается на " +
-          "`mutations.mjs`, и без точки он считается батареей — так `git grep` давал 27 вместо 26",
+          "distinction between battery and BATTERY DRIVER. `scripts/run-mutations.mjs` ends in " +
+          "`mutations.mjs`, and without the dot it counts as a battery — this is how `git grep` gave 27 instead of 26",
         edits: [[SRC, 'else if (e.endsWith(suffix)) n++;', 'else if (e.includes(suffix.slice(1))) n++;']],
       },
       {
-        name: "число СЛОВОМ снова считается объявлением",
+        name: "a number AS A WORD is counted as a declaration AGAIN",
         harness: HARNESS,
-        expect: "число словом объявлением не считается",
+        expect: "a number as a word is not a declaration",
         disables:
-          "то, ради чего пометки вообще введены. README нёс «Forty-five of those» — форму, " +
-          "которую нечем сравнить, поэтому расхождение 45 против 49 прожило незамеченным. " +
-          "Мутация принимает любое слово за объявление, и проверка снова перестаёт что-либо " +
-          "утверждать",
+          "what the marks were introduced for. README had 'Forty-five of those' — a form " +
+          "with nothing to compare it to, so the 45 vs 49 mismatch lived unseen. " +
+          "The mutation accepts any word as a declaration, and the check stops asserting " +
+          "anything again",
         edits: [
           [
             SRC,

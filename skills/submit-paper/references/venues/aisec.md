@@ -88,10 +88,11 @@ so verify the shipped files, not just the PDF.
 
 ## Camera-ready
 
-AISec — тоже **ACM** (воркшоп CCS), поэтому механика финала общая и живёт в **`../publishers/acm.md`**:
-eRights заполняется ПЕРВЫМ и требует финальный заголовок; преамбула переводится из режима сабмита
-(`printacmref=false` / `setcopyright{none}` / `pagestyle{plain}` / опция `review` — всё убирается);
-Source files обязательны наравне с PDF; CCS-коды берутся из CCS Browser 2012.
+AISec is also **ACM** (a CCS workshop), so the final's mechanics are generic and live in
+**`../publishers/acm.md`**: eRights is filled in FIRST and requires the final title; the preamble
+is converted out of submission mode (`printacmref=false` / `setcopyright{none}` /
+`pagestyle{plain}` / the `review` option — all of it removed); Source files are mandatory
+alongside the PDF; CCS codes come from the 2012 CCS Browser.
 
-Своё у AISec — свой DOI/ISBN, своя строка venue в copyright-блоке и свои даты: их подставлять сюда,
-когда придут (карточка заполняется по факту, не по памяти).
+What's AISec's own — its own DOI/ISBN, its own venue line in the copyright block, and its own
+dates: fill those in here once they arrive (the card gets filled in from fact, not from memory).

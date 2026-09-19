@@ -2,11 +2,11 @@
  * population-map.harness.mjs — the population gate, made visible to the metric, plus the layer
  * its own self-test cannot reach. `npx vigiles test .claude/skills/paper-pipeline/scripts/population-map.harness.mjs`.
  *
- * 🔴 ОБЛАСТЬ СУЖЕНА 2026-08-26. Две находки из четырёх (`untied`, `undeclared`) уехали в правила
- * ESLint — `paper/population-untied` и `paper/population-undeclared`, тесты к ним в
- * `eslint-rules/paper-registry.harness.mjs`. Здесь остались `stale` и `badref`: обе говорят про
- * САМ РЕЕСТР (`repro/populations.tsv`), у обеих нет адреса в статье, и потому правилом ESLint,
- * который репортит только в линтуемый файл, они невыразимы.
+ * 🔴 SCOPE NARROWED 2026-08-26. Two findings out of four (`untied`, `undeclared`) moved to ESLint
+ * rules — `paper/population-untied` and `paper/population-undeclared`, tests for them in
+ * `eslint-rules/paper-registry.harness.mjs`. Two remain here: `stale` and `badref`, both are about
+ * THE REGISTRY ITSELF (`repro/populations.tsv`), both have no address in the paper, and so cannot be expressed by ESLint,
+ * which reports only to the linted file.
  *
  * WHY THIS FILE AND NOT MORE CASES IN THE SELF-TEST. `population-map.selftest.mjs` is thorough —
  * 7 planted cases, both directions. Nothing here duplicates it. Two things were wrong with it
@@ -80,17 +80,17 @@ const REG = [
   assert.ok(m, "the self-test printed no result line — it may have exited before running:\n" + r.out);
   // A self-test that runs ZERO cases also prints "0 failed" and exits 0. That shape is exactly how
   // this repo's earlier harness reported ✓ on `assert.equal(1, 2)`, so the count is asserted too.
-  // Порог опущен 13 → 7 вместе с переносом двух находок в ESLint. Ассерт на ЧИСЛО оставлен:
-  // самотест, прогнавший ноль случаев, тоже печатает «0 failed» и выходит нулём.
+  // Threshold lowered 13 → 7 along with the move of two findings to ESLint. The assertion on COUNT is kept:
+  // a self-test that ran zero cases also prints «0 failed» and exits zero.
   assert.ok(Number(m[1]) >= 7, `the self-test ran only ${m[1]} case(s) — cases have gone missing`);
   assert.equal(Number(m[2]), 0, "the self-test reported failures:\n" + r.out);
 }
 
 // ── 2. the CLI finds the paper and the registry, and fires on a stale registry row ─────
-// 🔴 ФИКСТУРА ПЕРЕПИСАНА 2026-08-26. До этого она подкладывала НЕСВЯЗАННУЮ ПОПУЛЯЦИЮ, а эта
-// находка уехала в `paper/population-untied` — то есть прежний «грязный» вход стал чистым, и
-// блок молча перестал бы проверять проводку argv → findings(), оставаясь зелёным. Ровно тот
-// класс отказа, ради которого этот файл и написан.
+// 🔴 FIXTURE REWRITTEN 2026-08-26. Before that it planted an UNLINKED POPULATION, and that
+// finding moved to `paper/population-untied` — meaning the old «dirty» input became clean, and
+// the block would silently stop checking the argv → findings() wiring while staying green. Exactly that
+// class of failure this file was written for.
 {
   const dirty = paper(
     "cli-stale",

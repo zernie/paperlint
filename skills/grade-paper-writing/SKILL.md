@@ -4,7 +4,7 @@ description: Use when asking "does this paper read well?" / "is the writing any 
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill, Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*), Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)]
 ---
 
-<!-- vigiles:sha256:6093cca0b422d0b0 compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:374531c7f64e998e compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
 
 # grade-paper-writing — grade how the paper READS, then fix it sentence by sentence
 
@@ -175,20 +175,20 @@ is what happened.
    A number printed without a threshold is prose; that is this project's own thesis, and the linter
    was violating it.
 
-6a. 🔴 **`prose-lint.mjs` БОЛЬШЕ НЕ ОДИН — семь из его двенадцати гейтящих метрик уехали
-   2026-08-26 в правила ESLint, и запустив только его, вы увидите пять двенадцатых.** Второй
-   прогон, без него шаг 6 неполон:
+6a. 🔴 **`prose-lint.mjs` IS NO LONGER ALONE — seven of its twelve gating metrics moved
+   on 2026-08-26 into ESLint rules, and running only it shows you five twelfths.** A second
+   run is mandatory; without it, step 6 is incomplete:
 
    ```
    npx eslint "papers/*/paper.md" "papers/*/draft.md"
    ```
 
-   Оттуда приходят: `paper/citation-density` · `paper/unexplained-jargon` ·
+   From there come: `paper/citation-density` · `paper/unexplained-jargon` ·
    `paper/multi-claim-sentence` · `paper/conceits` · `paper/hedge-density` ·
-   `paper/discourse-subject` · `paper/undefined-coinage` (файл — `eslint-rules/paper-craft.mjs`).
-   Приобретение переезда — `file:line:col` на каждой находке: раньше отчёт печатал голову
-   предложения, и его приходилось искать в статье глазами. Всё, что говорит шаг 6b про
-   регрессию смысла, относится к ним ровно так же: это диагностика, а не цель.
+   `paper/discourse-subject` · `paper/undefined-coinage` (file — `eslint-rules/paper-craft.mjs`).
+   Gain from the move — `file:line:col` on each finding: the old report printed the sentence head,
+   and you had to find it in the article by eye. Everything step 6b says about
+   meaning regression applies to them just the same: this is diagnosis, not objective.
 
 6b. 🔴 **A lint fix that costs meaning is a REGRESSION, and no linter can see it.** The metrics above
    are diagnostics, never objectives. Optimising one directly is how a sentence gets worse while the

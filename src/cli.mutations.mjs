@@ -1,6 +1,7 @@
 /**
- * Батарея на утилиту. Три из пяти мутаций возвращают дефекты, которые она УЖЕ имела и которые
- * нашлись первым прогоном, а не чтением — значит без этих ассертов регрессия была бы тихой.
+ * Battery for the utility. Three of the first five mutations reintroduce defects it ALREADY
+ * had, found by the first run rather than by reading — so without these assertions the
+ * regression would be silent.
  */
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
@@ -10,14 +11,14 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "..");
 const CLI = join(HERE, "cli.ts");
 const HARNESS = join(HERE, "cli.harness.mjs");
-// Шим `bin/rpp.mjs` — ИСПОЛНЯЕМЫЙ файл пакета, и с переездом на TypeScript проверка «меня
-// запустили или меня импортировали» живёт именно в нём: `dist/cli.js` теперь всегда
-// импортируется, поэтому мутация в нём про симлинк ничего не доказывает. Первый прогон после
-// переезда показал это буквально — мутация ВЫЖИЛА, и выглядело это как дыра в харнессе,
-// хотя дыра была в том, куда мутация целилась.
+// The `bin/rpp.mjs` shim — the package's EXECUTABLE file, and after the move to TypeScript the
+// "was I run or was I imported" check lives right there: `dist/cli.js` is now always imported,
+// so a mutation in it about the symlink proves nothing. The first run after the move showed
+// this literally — the mutation SURVIVED, and it looked like a hole in the harness, when the
+// hole was in what the mutation was aimed at.
 const SHIM = join(HERE, "..", "bin", "rpp.mjs");
-// `init` перестал быть двадцатью строками внутри `cli.ts` и стал своим модулем: у него четыре
-// решения, и каждое обязано уметь сломаться так, чтобы это заметил ИМЕННО свой ассерт.
+// `init` stopped being twenty lines inside `cli.ts` and became its own module: it has four
+// decisions, and each must be able to break in a way that EXACTLY its own assertion notices.
 const INIT = join(HERE, "init.ts");
 
 process.exit(
@@ -26,196 +27,202 @@ process.exit(
     runner: "node",
     cases: [
       {
-        name: "проверка главного модуля снова сравнивает СТРОКИ",
+        name: "the main-module check goes back to comparing STRINGS",
         harness: HARNESS,
-        expect: "через СИМЛИНК утилита работает, а не выходит молча нулём",
+        expect: "through a SYMLINK the utility works, rather than silently exiting zero",
         disables:
-          "единственный способ, которым утилиту зовёт потребитель. npm кладёт в .bin СИМЛИНК, " +
-          "у которого process.argv[1] и import.meta.url — разные пути; при сравнении строк " +
-          "условие ложно и утилита МОЛЧА выходит с нулём. Прямой `node bin/rpp.mjs` при этом " +
-          "работает, поэтому дефект невидим тем способом, которым его обычно проверяют",
+          "the only way a consumer ever calls the utility. npm puts a SYMLINK in .bin, for " +
+          "which process.argv[1] and import.meta.url are different paths; comparing strings " +
+          "makes the condition false and the utility SILENTLY exits zero. A direct " +
+          "`node bin/rpp.mjs` still works, meanwhile, so the defect is invisible in exactly the " +
+          "way it is normally checked",
         edits: [[SHIM, "if (isMain(import.meta.url))", "if (import.meta.url === `file://${process.argv[1]}`)"]],
       },
       {
-        name: "argv[0] снова становится командой безусловно",
+        name: "argv[0] unconditionally becomes the command again",
         harness: HARNESS,
-        expect: "`--help` первым аргументом — это ФЛАГ, а не команда",
+        expect: "`--help` as the first argument — is a FLAG, not a command",
         disables:
-          "разбор флага в позиции команды. Настоящий дефект: `rpp --help` отвечало " +
-          "«unknown command `--help`» — то есть первая команда, которую набирает новый " +
-          "пользователь, сообщала, что её не существует",
+          "parsing a flag in the command position. The real defect: `rpp --help` used to " +
+          "answer \"unknown command `--help`\" — i.e. the very first command a new user types " +
+          "told them it did not exist",
         edits: [[CLI, 'if (rest[0] && !rest[0].startsWith("-")) out.cmd = rest.shift() ?? null;', "out.cmd = rest.shift() ?? null;"]],
       },
       {
-        name: "флаг без значения снова молча превращается в умолчание",
+        name: "a valueless flag silently turns into a default again",
         harness: HARNESS,
-        expect: "флаг без значения — ОТКАЗ, а не тихое умолчание",
+        expect: "a flag with no value — a FAILURE, not a silent default",
         disables:
-          "различие между «конфиг не задан» и «конфиг задан, но значение потерялось». Второе " +
-          "случается от опечатки и от подстановки в CI, схлопнувшейся в пустоту, и без отказа " +
-          "прогон уходит в автопоиск и линтует ЧУЖОЙ файл, ничего об этом не сказав",
+          "the distinction between \"no config was set\" and \"a config was set, but its value " +
+          "got lost\". The latter happens from a typo and from a CI substitution collapsing to " +
+          "empty, and without a failure the run falls into autodiscovery and lints the WRONG " +
+          "file without saying a word about it",
         edits: [[CLI, "  if (a.missingValue) {", "  if (false) {"]],
       },
       {
-        name: "охват снова получает умолчание",
+        name: "scope gets a default again",
         harness: HARNESS,
-        expect: "`lint` без пути И без конфига отказывает и называет ОБА выхода",
+        expect: "`lint` with NO path AND no config refuses and names BOTH ways out",
         disables:
-          "контракт «охват называет вызывающий». С умолчанием пользователь, не подумавший про " +
-          "охват, получает зелёный прогон по тому, что случайно лежит в каталоге",
+          "the \"scope is named by the caller\" contract. With a default, a user who never " +
+          "thought about scope gets a green run over whatever happens to be lying in the directory",
         edits: [[CLI, "if (paths.length === 0) {", "if (false) {"]],
       },
       {
-        name: "СТРАЖ ОТ ЗЕЛЁНОГО НОЛЯ снимается",
+        name: "the GUARD AGAINST A GREEN ZERO is removed",
         harness: HARNESS,
-        expect: "пустой набор — ОТКАЗ, а не зелёный ноль",
+        expect: "an empty set — a FAILURE, not a green zero",
         disables:
-          "различение «находок нет» и «ни одному правилу не досталось ни одного файла». Эти два " +
-          "состояния побайтово одинаковы на выходе, и второе читается как успех",
+          "the distinction between \"no findings\" and \"not one rule got a single file\". These " +
+          "two states are byte-for-byte identical in the output, and the second reads as success",
         edits: [[CLI, "if (results.length === 0) {", "if (false) {"]],
       },
       {
-        name: "исключение ESLint снова не ловится",
+        name: "ESLint's exception stops being caught again",
         harness: HARNESS,
-        expect: "утилита НЕ выпускает исключение наружу — отказ объявляется кодом возврата",
+        expect: "the utility does NOT let an exception escape — a failure is declared by the exit code",
         disables:
-          "объяснимость отказа. Настоящий дефект: на пустом наборе ESLint БРОСАЕТ " +
-          "NoFilesFoundError, сторож до своей проверки не доживал, и вместо сообщения вылетал " +
-          "стек из недр eslint-helpers.js",
+          "the explainability of a failure. The real defect: on an empty set ESLint THROWS a " +
+          "NoFilesFoundError, the guard never lived long enough to reach its own check, and " +
+          "instead of a message a stack trace flew out of the depths of eslint-helpers.js",
         edits: [[CLI, '    if (\n      fail?.messageTemplate === "file-not-found" ||\n      /No files matching/i.test(fail?.message ?? "")\n    )\n      results = [];\n    else throw e;', "    throw e;"]],
       },
       {
-        name: "декларация снова не доезжает до package.json",
+        name: "the declaration stops reaching package.json again",
         harness: HARNESS,
-        expect: "🔴 ДЕКЛАРАЦИЯ ПОЯВЛЯЕТСЯ В package.json — том файле, который читают хуки",
+        expect: "🔴 THE DECLARATION SHOWS UP IN package.json — the file the hooks read",
         disables:
-          "то, ради чего команда переписана (#33). Хук не импортирует код и не ходит вверх по " +
-          "дереву — он читает путь, который в состоянии назвать, и это package.json. Без записи " +
-          "туда установка выглядит удавшейся, а `paper-edit-guard` сторожит умолчание",
+          "the whole reason this command was rewritten (#33). A hook does not import code and " +
+          "cannot walk up the tree — it reads a path it is able to name, and that path is " +
+          "package.json. Without writing there, the install looks like it succeeded, while " +
+          "`paper-edit-guard` guards the default",
         edits: [[INIT, '  writeFileSync(path, JSON.stringify(pkg, null, 2) + (raw.endsWith("\\n") ? "\\n" : ""), "utf8");', "  void pkg;"]],
       },
       {
-        name: "каталог статей снова УГАДЫВАЕТСЯ, а не измеряется",
+        name: "the papers directory is GUESSED again instead of measured",
         harness: HARNESS,
-        expect: "🔴 и её значение ИЗМЕРЕНО, а не взято из умолчания `papers`",
+        expect: "🔴 and its value is MEASURED, not taken from the `papers` default",
         disables:
-          "замер вместо догадки. Декларация при этом ПИШЕТСЯ — то есть отказ односторонний и в " +
-          "сторону уверенного неверного ответа: в файле стоит `papers`, статьи лежат в другом " +
-          "месте, и обе команды об этом молчат",
+          "measuring instead of guessing. The declaration still gets WRITTEN — i.e. the failure " +
+          "is one-sided and points toward a confident wrong answer: the file says `papers`, the " +
+          "papers live somewhere else, and both commands stay silent about it",
         edits: [[INIT, "  const candidates = detectPapers(root);", "  const candidates = [];"]],
       },
       {
-        name: "чужое значение в декларации снова перезаписывается",
+        name: "someone else's value in the declaration gets overwritten again",
         harness: HARNESS,
         expect:
-          "🔴 уже объявленное значение ЦЕЛО побайтово — молча заменить настройку хуже, чем не делать ничего",
+          "🔴 an already-declared value stays intact byte for byte — silently replacing a setting is worse than doing nothing",
         disables:
-          "запрет на тихую замену настройки потребителя. Он продолжает верить прежнему значению, " +
-          "потому что об изменении ему не сказали",
+          "the ban on silently replacing a consumer's setting. They keep trusting the old " +
+          "value, because nobody told them it changed",
         edits: [[INIT, "  if (existing !== undefined) return { status: \"kept\", path, papers: existing };", "  if (false) return { status: \"kept\", path, papers: existing };"]],
       },
       {
-        name: "init снова СОЗДАЁТ второй носитель rpp.json",
+        name: "init CREATES the second rpp.json carrier again",
         harness: HARNESS,
-        expect: "🔴 `rpp.json` БОЛЬШЕ НЕ СОЗДАЁТСЯ — вторая декларация это то, что doctor и ловит",
+        expect: "🔴 `rpp.json` IS NO LONGER CREATED — a second declaration is what doctor exists to catch",
         disables:
-          "«одна декларация». Два носителя расходятся молча — это дефект #33, заведённый заново " +
-          "собственной командой установки",
+          "\"one declaration\". Two carriers drift apart silently — this is defect #33, " +
+          "reintroduced by the very install command meant to fix it",
         edits: [[INIT, '  if (!existsSync(path)) return "absent";', '  if (!existsSync(path)) writeFileSync(path, "{}\\n", "utf8");']],
       },
       {
-        name: "взятое умолчание перестаёт называться",
+        name: "the default that was taken stops being named",
         harness: HARNESS,
-        expect: "🔴 не терминал — вопрос НЕ задаётся, и взятое умолчание НАЗВАНО",
+        expect: "🔴 not a terminal — the question is NOT asked, and the default taken is NAMED",
         disables:
-          "половину правила «в CI не спрашивать»: не спрашивать мало, надо сказать, КАКОЕ " +
-          "умолчание взято. Молчаливый пропуск читается как «вопроса и не было»",
+          "half the \"don't ask in CI\" rule: not asking is not enough, it must say WHICH " +
+          "default was taken. A silent skip reads as \"there was never a question\"",
         edits: [[INIT, '  else log(`  · stdin is not a terminal, so nothing was asked. Default taken: NO file written.`);', "  else log(`  · skipped`);"]],
       },
       {
-        name: "ответ на вопрос игнорируется",
+        name: "the answer to the question is ignored",
         harness: HARNESS,
-        expect: "🔴 ответ человека РЕШАЕТ, а не украшает вывод",
+        expect: "🔴 the human's answer DECIDES, it does not just decorate the output",
         disables:
-          "смысл единственного заданного вопроса. Приглашение печатается, ответ читается и " +
-          "выбрасывается — то есть интерфейс есть, а решения за ним нет",
+          "the point of the one question that gets asked. The prompt is printed, the answer is " +
+          "read and discarded — i.e. there is an interface with no decision behind it",
         edits: [[INIT, '  const picked = candidates[Number((answer ?? "").trim()) - 1];', "  const picked = candidates[0];"]],
       },
       {
-        name: "прерванный вопрос снова роняет команду",
+        name: "an interrupted question crashes the command again",
         harness: HARNESS,
-        expect: "🔴 прерванный вопрос НЕ роняет команду — он означает умолчание",
+        expect: "🔴 an interrupted question does NOT crash the command — it means the default",
         disables:
-          "обработку Ctrl+D. ЗАМЕР 18.09 на настоящем псевдотерминале: readline `question()` " +
-          "ОТКЛОНЯЕТСЯ с `AbortError: Aborted with Ctrl+D`, и исключение улетало наружу ПОСЛЕ " +
-          "записи декларации — установка одновременно удавалась и выглядела падением",
+          "handling Ctrl+D. MEASURED 09-18 on a real pseudo-terminal: readline's `question()` " +
+          "REJECTS with `AbortError: Aborted with Ctrl+D`, and the exception used to escape " +
+          "AFTER the declaration had been written — the install both succeeded and looked like " +
+          "a crash",
         edits: [[INIT, "  try {\n    return await ask(question);\n  } catch {\n    return null;\n  }", "  return await ask(question);"]],
       },
       {
-        name: "init перестаёт заканчиваться doctor'ом",
+        name: "init stops ending with doctor",
         harness: HARNESS,
-        expect: "init заканчивается отчётом doctor: установка САМА говорит о своём состоянии",
+        expect: "init ends with doctor's report: the install vouches for its OWN state",
         disables:
-          "единственное, что отличает «установлено» от «защищает»: `paper-edit-guard` молчит и " +
-          "когда работает, и когда сторожит пустоту. Без финального doctor init отчитывается " +
-          "бодро о состоянии, которого не измерял",
+          "the one thing that distinguishes \"installed\" from \"actually guarding\": " +
+          "`paper-edit-guard` is silent both when it works and when it guards nothing. Without " +
+          "the final doctor, init reports cheerfully on a state it never measured",
         edits: [[INIT, "  const code = doctor({ log, cwd: root, projectDir: root, run, cliPapers });", "  const code = 0;"]],
       },
       {
-        name: "отсутствие package.json перестаёт быть отказом",
+        name: "a missing package.json stops being a failure",
         harness: HARNESS,
-        expect: "без package.json init ОТКАЗЫВАЕТ и несёт лекарство, а не диагноз",
+        expect: "without package.json init FAILS and carries a remedy, not just a diagnosis",
         disables:
-          "громкость отказа там, где писать НЕКУДА. Тихий ноль здесь — это установка, которая " +
-          "не произошла и отчиталась успехом",
+          "the loudness of a failure where there is NOWHERE to write. A silent zero here is an " +
+          "install that never happened and reported success",
         edits: [[INIT, "    err(`      package.json. Run \\`npm init -y\\` here, then \\`npx rpp init\\` again.`);\n    return 2;", "    return 0;"]],
       },
       {
-        name: "пропавшая программа называется без лекарства",
+        name: "a missing program is named with no remedy",
         harness: HARNESS,
-        expect: "🔴 и несёт КОМАНДУ УСТАНОВКИ — лекарство, а не диагноз",
+        expect: "🔴 and it carries the INSTALL COMMAND — a remedy, not just a diagnosis",
         disables:
-          "вторую половину правила «ничего не ставим за пользователя». Диагноз без лекарства " +
-          "оставляет человека ровно там же, где он стоял: программы нет, а что набрать — неизвестно",
+          "the second half of the \"install nothing on the user's behalf\" rule. A diagnosis " +
+          "with no remedy leaves the person exactly where they stood: the program is missing, " +
+          "and what to type is unknown",
         edits: [[INIT, "    for (const cmd of [...new Set(missing.map((p) => p.install))]) log(`        ${cmd}`);", "    void missing;"]],
       },
       {
-        name: "пропажи перестают называться поимённо",
+        name: "absences stop being named by name",
         harness: HARNESS,
-        expect: "каждая пропажа НАЗВАНА, и их посчитано столько же, сколько названо",
+        expect: "every absence is NAMED, and the count matches the names",
         disables:
-          "связь между ЧИСЛОМ и ИМЕНАМИ в одной строке. «Не хватает программ» без имён требует " +
-          "идти искать их в другом отчёте, а счётчик без имён — это ровно тот счётчик, который " +
-          "обещает покрытие и не выносит вердикта",
+          "the link between the NUMBER and the NAMES in one line. \"Programs are missing\" with " +
+          "no names means going to hunt for them in another report, and a counter with no names " +
+          "is exactly the counter that promises coverage and renders no verdict",
         edits: [[INIT, "    log(\n      `  ✗ ${String(missing.length)} of ${String(PROGRAMS.length)} missing: ` +\n        missing.map((p) => p.bin).join(\", \"),\n    );", "    log(`  ✗ some programs are missing`);"]],
       },
       {
-        name: "утилита снова читает только rpp.json",
+        name: "the utility goes back to reading only rpp.json",
         harness: HARNESS,
         expect:
-          "🔴 УТИЛИТА ЧИТАЕТ ДЕКЛАРАЦИЮ ИЗ package.json — иначе `rpp init` ставит то, что `rpp lint` не видит",
+          "🔴 THE UTILITY READS THE DECLARATION FROM package.json — otherwise `rpp init` sets up something `rpp lint` cannot see",
         disables:
-          "смычку между командой установки и командой проверки. `init` пишет одну декларацию в " +
-          "package.json, а `lint` ищет её в rpp.json — сразу после установки прогон отвечает " +
-          "«nothing to lint» по корпусу, который на месте",
+          "the link between the install command and the check command. `init` writes one " +
+          "declaration into package.json, while `lint` looks for it in rpp.json — right after " +
+          "install the run answers \"nothing to lint\" over a corpus that is right there",
         edits: [[CLI, '    const pkg = join(dir, PKG_NAME);\n    if (existsSync(pkg) && declaresSettings(pkg))\n      return { path: pkg, kind: "package.json" };', "    const pkg = join(dir, PKG_NAME);"]],
       },
       {
-        name: "устаревший носитель читается молча",
+        name: "a deprecated carrier gets read silently",
         harness: HARNESS,
-        expect: "🔴 но устаревший носитель НАЗВАН, а не просто прочитан молча",
+        expect: "🔴 but a deprecated carrier is NAMED, not just silently read",
         disables:
-          "предупреждение о том, что настройки лежат там, куда хуки не смотрят. Прогон зелёный, " +
-          "линтуется один каталог, сторожится другой — и оба состояния выглядят одинаково",
+          "the warning that settings live where the hooks do not look. The run is green, one " +
+          "directory is linted, a different one is guarded — and both states look the same",
         edits: [[CLI, '    if (decl.kind === "rpp.json")', "    if (false)"]],
       },
       {
-        name: "данные потребителя перестают доезжать до правила",
+        name: "consumer data stops reaching the rule",
         harness: HARNESS,
-        expect: "команда из опций доезжает до правила",
+        expect: "the command from options gets through to the rule",
         disables:
-          "границу «механизм в пакете, данные у потребителя»: опция `authorListCommand` " +
-          "игнорируется, и находка снова не говорит, ЧЕМ прогнать сверку",
+          "the \"mechanism in the package, data with the consumer\" boundary: the " +
+          "`authorListCommand` option is ignored, and the finding again fails to say WHAT to " +
+          "run the check with",
         edits: [[CLI, "opts.authorListCommand ? { command: opts.authorListCommand } : {},", "{},"]],
       },
     ],

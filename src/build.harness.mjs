@@ -1,10 +1,10 @@
 /**
- * Обе половины для `build.mjs` — модуля, который решает, ЧЕМ собирается статья.
+ * Both halves for `build.mjs` — the module that decides WHAT a paper is built with.
  *
- * 🔴 ГЛАВНОЕ, ЧТО ЗДЕСЬ ЗАКРЕПЛЕНО: «скрипта нет» — это ОТКАЗ, а не пропуск. Именно
- * неразличение этих двух случаев и стоило корпусу тихой дыры: цикл в CI искал
- * `repro/build-submission.sh`, у принятой статьи лежал `build.sh`, и «не нашли, чем собирать»
- * выглядело как «нечего собирать» — зелёный прогон над статьёй, которую не проверил никто.
+ * 🔴 THE MAIN THING PINNED DOWN HERE: "there is no script" is a FAILURE, not a skip. Exactly
+ * this confusion cost the corpus a silent hole: the CI loop looked for
+ * `repro/build-submission.sh`, the accepted paper had `build.sh`, and "couldn't find what to
+ * build with" looked like "nothing to build" — a green run over a paper nobody checked.
  */
 import assert from "node:assert/strict";
 import {
@@ -51,10 +51,10 @@ const paper = (name, files) => {
 try {
   const top = paper("top", {
     "PIPELINE-STATUS.md": "x",
-    // 🔴 След пишется РЯДОМ СО СКРИПТОМ, а не в текущий каталог. Первая редакция делала
-    // `touch RAN`, то есть писала в cwd харнесса — и ассерт «следа нет в каталоге статьи»
-    // проходил ДАЖЕ КОГДА скрипт запускался. Проверка смотрела не туда; поймано по
-    // незакоммиченному `RAN`, появившемуся в корне репозитория после мутационного прогона.
+    // 🔴 The trace is written NEXT TO THE SCRIPT, not into the current directory. The first
+    // version did `touch RAN`, i.e. wrote into the harness's cwd — and the assertion "no trace
+    // in the paper's directory" passed EVEN WHEN the script ran. The check was looking in the
+    // wrong place; caught by an uncommitted `RAN` showing up at the repo root after a mutation run.
     "build.sh": '#!/usr/bin/env bash\ntouch "$(dirname "$0")/RAN"\n',
   });
   const nested = paper("nested", {
@@ -68,135 +68,135 @@ try {
   });
   const bare = paper("bare", { "paper.md": "# x" });
   paper("not-a-paper", { "NOTES.md": "x" });
-  // Скрытый каталог с настоящим маркером: без него мутация «считать скрытые статьями» выживает,
-  // то есть проверка отсутствует ровно там, где выглядит присутствующей.
+  // A hidden directory with a real marker: without it the mutation "treat hidden directories as
+  // papers" survives, i.e. the check is absent exactly where it looks present.
   paper(".hidden-paper", { "PIPELINE-STATUS.md": "x" });
 
-  // ── поиск скрипта ────────────────────────────────────────────────────────────────────
+  // ── finding the script ────────────────────────────────────────────────────────────────
   check(
-    "находит build.sh в корне статьи",
+    "finds build.sh at the paper's root",
     findBuildScript(top)?.rel === "build.sh",
   );
   check(
-    "находит repro/build-submission.sh — ВТОРУЮ конвенцию, из-за расхождения с которой всё и началось",
+    "finds repro/build-submission.sh — the SECOND convention, whose divergence started all this",
     findBuildScript(nested)?.rel === "repro/build-submission.sh",
   );
   check(
-    "порядок значим: при обоих побеждает build.sh — то, что автор видит, открыв каталог",
+    "order matters: with both present, build.sh wins — it's what the author sees on opening the directory",
     findBuildScript(both)?.rel === "build.sh",
   );
-  check("нет ни одного — честный null", findBuildScript(bare) === null);
+  check("none at all — an honest null", findBuildScript(bare) === null);
   check(
-    "список кандидатов ОБЪЯВЛЕН, а не зашит в одну строку",
+    "the candidate list is DECLARED, not baked into one line",
     Array.isArray(BUILD_SCRIPTS) && BUILD_SCRIPTS.length >= 2,
   );
 
-  // ── интерпретатор по расширению, а не по биту исполнения ─────────────────────────────
+  // ── interpreter by extension, not by the executable bit ─────────────────────────────
   check("shell", interpreterFor("/x/build.sh")[0] === "bash");
   check("node", interpreterFor("/x/build.mjs")[0] === process.execPath);
   check("python", interpreterFor("/x/build.py")[0] === "python3");
   check(
-    "неизвестное расширение — bash, а не отказ: у скриптов сборки его часто нет вовсе",
+    "an unknown extension — bash, not a failure: build scripts often have no extension at all",
     interpreterFor("/x/build")[0] === "bash",
   );
 
-  // ── ОТКАЗ, А НЕ ПРОПУСК ──────────────────────────────────────────────────────────────
+  // ── A FAILURE, NOT A SKIP ──────────────────────────────────────────────────────────────
   const noScript = buildPaper(bare, { cwd: root });
   check(
-    "статья без скрипта — статус no-script",
+    "a paper with no script — status no-script",
     noScript.status === "no-script",
   );
   check(
-    "🔴 и это СЧИТАЕТСЯ ОТКАЗОМ наравне с упавшей сборкой",
+    "🔴 and this COUNTS AS A FAILURE on equal footing with a failed build",
     anyFailed([noScript]) === true,
   );
   check(
-    "лекарство называет ОБА пути, по которым искали",
+    "the remedy names BOTH paths that were searched",
     /build\.sh/.test(remedyFor([noScript])) &&
       /repro\/build-submission\.sh/.test(remedyFor([noScript])),
   );
   check(
-    "и говорит, что это НЕ «нечего собирать» — иначе читается как норма",
+    "and says this is NOT \"nothing to build\" — otherwise it reads as normal",
     /NOT "nothing to build"/.test(remedyFor([noScript])),
   );
   check(
-    "при полном успехе лекарства НЕТ — пустая строка, а не бодрый абзац",
+    "on full success there is NO remedy — an empty string, not a cheerful paragraph",
     remedyFor([{ dir: "d", status: "built", script: "build.sh" }]) === "",
   );
 
-  // ── код возврата скрипта проходит насквозь ───────────────────────────────────────────
+  // ── the script's exit code passes through ───────────────────────────────────────────
   const calls = [];
   const fake = (code) => (bin, args, opts) => {
     calls.push({ bin, args, opts });
     return { status: code };
   };
   check(
-    "ноль — собрано",
+    "zero — built",
     buildPaper(top, { cwd: root, run: fake(0) }).status === "built",
   );
   check(
-    "ненулевой — упало, и код НАЗВАН",
+    "nonzero — failed, and the code is NAMED",
     (() => {
       const r = buildPaper(top, { cwd: root, run: fake(7) });
       return r.status === "failed" && r.code === 7;
     })(),
   );
   check(
-    "и запускается ИМЕННО найденный скрипт нужным интерпретатором",
+    "and EXACTLY the script that was found is run, with the right interpreter",
     calls.at(-1).bin === "bash" &&
       /\/build\.sh$/.test(calls.at(-1).args.at(-1)),
   );
   check(
-    "вывод скрипта идёт НАСКВОЗЬ к человеку (stdio inherit), а не копится в буфер",
+    "the script's output goes STRAIGHT THROUGH to the human (stdio inherit), not buffered",
     calls.at(-1).opts.stdio === "inherit",
   );
 
-  // ── 🔴 --dry-run НЕ ЗАПУСКАЕТ. Проверяется ЭФФЕКТОМ на диске, а не возвращённым объектом
+  // ── 🔴 --dry-run DOES NOT RUN ANYTHING. Checked by its EFFECT on disk, not the returned object
   //
-  // Первая редакция этого флага была разобрана в CLI и передана сюда, где его НЕ СУЩЕСТВОВАЛО:
-  // деструктуризация опций проглотила неизвестный ключ молча, сборка отработала полностью и
-  // переписала PDF в рабочем дереве. Ассерт над возвращённым объектом этого бы не поймал —
-  // ловит только отсутствие файла, который создаёт настоящий скрипт.
+  // The first version of this flag was parsed in the CLI and passed down here, where it DID NOT
+  // EXIST: destructuring the options silently swallowed the unknown key, the build ran to
+  // completion and overwrote the PDF in the working tree. An assertion over the returned object
+  // would not have caught this — only the absence of the file the real script creates does.
   const dry = buildPaper(top, { cwd: root, dryRun: true });
   check(
-    "--dry-run: статус built и пометка dry",
+    "--dry-run: status built and the dry flag",
     dry.status === "built" && dry.dry === true,
   );
   check(
-    "--dry-run: скрипт НАЗВАН, иначе аудит бесполезен",
+    "--dry-run: the script is NAMED, otherwise an audit is useless",
     dry.script === "build.sh",
   );
   check(
-    "🔴 --dry-run: скрипт НЕ ЗАПУСКАЛСЯ — на диске нет следа, который он оставляет",
+    "🔴 --dry-run: the script was NOT RUN — no trace on disk of what it leaves behind",
     !existsSync(join(top, "RAN")),
   );
   check(
-    "и в отчёте это видно словами, а не молча",
+    "and the report shows it in words, not silently",
     /--dry-run/.test(formatResults([dry])),
   );
 
-  // ── обход корпуса ────────────────────────────────────────────────────────────────────
+  // ── walking the corpus ────────────────────────────────────────────────────────────────
   const found = papersIn(join(root, "papers"))
     .map((d) => d.split("/").pop())
     .sort();
   check(
-    "каталог без маркеров статьёй не считается",
+    "a directory with no markers does not count as a paper",
     !found.includes("not-a-paper"),
   );
   check(
-    "а все четыре настоящих — считаются",
+    "and all four real ones do count",
     ["bare", "both", "nested", "top"].every((x) => found.includes(x)),
   );
   check(
-    "скрытый каталог статьёй не считается, даже с настоящим маркером внутри",
+    "a hidden directory does not count as a paper, even with a real marker inside",
     !found.includes(".hidden-paper"),
   );
   check(
-    "несуществующий корень не роняет",
+    "a nonexistent root does not crash it",
     papersIn(join(root, "nope")).length === 0,
   );
 
-  // ── формат отчёта ────────────────────────────────────────────────────────────────────
+  // ── report format ────────────────────────────────────────────────────────────────────
   const mixed = [
     { dir: "a", status: "built", script: "build.sh" },
     { dir: "b", status: "failed", script: "build.sh", code: 3 },
@@ -204,12 +204,12 @@ try {
   ];
   const out = formatResults(mixed);
   check(
-    "успех, падение и отсутствие скрипта РАЗЛИЧИМЫ в отчёте",
+    "success, failure and no-script are DISTINGUISHABLE in the report",
     /✓ a/.test(out) && /✗ b/.test(out) && /✗ c/.test(out),
   );
-  check("у падения назван код", /code 3/.test(out));
+  check("a failure names the code", /code 3/.test(out));
   check(
-    "у отсутствия — сказано, чего именно нет",
+    "a no-script says exactly what is missing",
     /NO build script/.test(out),
   );
 } finally {
@@ -217,5 +217,5 @@ try {
 }
 
 console.log(
-  `✓ ${String(n)} assertions passed — build: «нет скрипта» это ОТКАЗ, а не пропуск`,
+  `✓ ${String(n)} assertions passed — build: "no script" is a FAILURE, not a skip`,
 );

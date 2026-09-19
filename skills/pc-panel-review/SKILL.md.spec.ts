@@ -119,8 +119,8 @@ prose-only read can.
 
 ## 🔴 The ceiling is not a sentence — it is a PLAN, and the panel writes it
 
-**The corpus owner, 2026-08-05: «weak accept нам не подходит. скилы должны предлагать что делать чтобы исправить
-ситуацию».** He is right that this was missing. Three panels in a row named the same ceiling, it was
+**The corpus owner, 2026-08-05: "weak accept doesn't work for us. skills should suggest what to do to fix
+the situation."** He is right that this was missing. Three panels in a row named the same ceiling, it was
 faithfully recorded three times, and it never once became work. The fourth panel named it again — and
 the author wrote all three of its prongs off as *"facts, not worth chasing before the deadline"*. Two
 of the three were closed by an hour of editing that same afternoon.

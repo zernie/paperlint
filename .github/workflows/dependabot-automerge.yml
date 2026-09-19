@@ -1,29 +1,29 @@
-# СЛИТЬ ОБНОВЛЕНИЕ ПО ФАКТУ ЗЕЛЁНОГО ПРОГОНА.
+# MERGE THE UPDATE UPON A GREEN RUN.
 #
-# 🔴 ПОЧЕМУ НЕ `gh pr merge --auto`, хотя владелец включил «Allow auto-merge» и защиту ветки.
-# Штатный авто-мёрдж ждёт ровно те проверки, что объявлены ОБЯЗАТЕЛЬНЫМИ в защите ветки. Это
-# настройка в интерфейсе, которую отсюда не видно и которая может разъехаться с `ci.yml` при
-# любом переименовании джоба — и разъедется МОЛЧА, потому что PR тогда просто сольётся быстрее.
-# Замер 2026-09-16 показал ровно эту цену: до защиты `main` стоял `"protected": false`, и
-# `--auto` слил бы PR НЕМЕДЛЕННО, выглядя при этом как «мёрдж по зелёному».
+# 🔴 WHY NOT `gh pr merge --auto`, even though the owner enabled "Allow auto-merge" and branch protection.
+# Standard auto-merge waits for precisely the checks declared REQUIRED in the branch protection. That
+# is a setting in the interface, invisible from here, and it can drift from `ci.yml` on any job rename —
+# and it WILL drift silently, because the PR will simply merge faster.
+# Measurement 2026-09-16 showed exactly this cost: before protection, `main` had `"protected": false`, and
+# `--auto` would have merged the PR IMMEDIATELY, looking like "merge on green" while doing the opposite.
 #
-# Этот воркфлоу запускается ОТ СОБЫТИЯ ЗАВЕРШЕНИЯ `ci` и читает его `conclusion`. Тот же класс
-# рассуждения, что во всех проверках этого репозитория: спрашиваем ВЕЩЬ (вердикт прогона), а не
-# её тень (настройку, которая обещает, что вердикт будет учтён).
+# This workflow fires FROM THE COMPLETION EVENT of `ci` and reads its `conclusion`. The same reasoning
+# as all checks in this repository: we ask for the THING (run verdict), not its shadow (a setting
+# that promises the verdict will be considered).
 #
-# ⚠️ Защита ветки при этом не лишняя — она закрывает ДРУГУЮ дыру: человека или бота, который
-# сольёт PR мимо CI вручную. Два механизма, разные предметы.
+# ⚠️ Branch protection is not redundant — it closes a DIFFERENT hole: a person or bot merging
+# a PR outside CI manually. Two mechanisms, two concerns.
 #
-# 🔴 ПОЧЕМУ МЁРДЖИМ ЛЮБОЙ БАМП, включая мажорный, а не только patch/minor.
-# Semver — УТВЕРЖДЕНИЕ ИЗДАТЕЛЯ о своём релизе; `ci` — ЗАМЕР на нашем корпусе (полный набор
-# харнессов, мутации, гейты «правила видят свои файлы» и «правила не ходят в git»). Мажорный
-# бамп, который нас ломает, красит прогон и не сливается; минорный, который нас ломает, — тоже.
-# Фильтр по номеру версии добавил бы ручной шаг там, где измерение уже есть, и пропустил бы
-# ровно тот класс, ради которого его обычно и ставят.
+# 🔴 WHY WE MERGE ANY BUMP, INCLUDING MAJOR, not just patch/minor.
+# Semver is a PUBLISHER'S CLAIM about their release; `ci` is a MEASUREMENT on our corpus (full harness suite,
+# mutations, gates for "rules see their files" and "rules don't touch git"). A major bump that breaks us
+# reds the run and does not merge; a minor one that breaks us does the same.
+# A version-number filter adds a manual step where measurement already exists, and would miss
+# exactly the class for which version filters are typically used.
 #
-# ⚠️ ЧЕГО ЭТО НЕ ДАЁТ, названо прямо: зелёный `ci` значит «наши харнессы не заметили разницы»,
-# а не «разницы нет». Непокрытое поведение проедет молча — как проехала схема vigiles 19 → 27
-# через хук, читавший пустое поле восемь релизов подряд.
+# ⚠️ WHAT THIS DOES NOT GIVE, stated plainly: green `ci` means "our harnesses detected no difference,"
+# not "no difference exists." Uncovered behavior passes silently — as vigiles schema 19 → 27 passed
+# through a hook reading an empty field for eight releases in a row.
 name: dependabot auto-merge
 
 on:
@@ -31,15 +31,15 @@ on:
     workflows: ["ci"]
     types: [completed]
 
-# Слить и удалить ветку — больше этому воркфлоу не нужно ничего.
+# Merge and delete branch — nothing else this workflow needs.
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
   merge:
-    # Три условия, и каждое отсекает своё: прогон был по PR (а не по push в main) ·
-    # прогон ЗЕЛЁНЫЙ · автор — бот, а не человек. Убери любое — и смысл меняется.
+    # Three conditions, each blocking a case: the run was for a PR (not a push to main) ·
+    # the run is GREEN · the author is a bot, not a person. Remove any one and meaning changes.
     if: >
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion == 'success' &&
@@ -47,21 +47,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: слить PR, который только что позеленел
+      - name: merge the PR that just turned green
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
           RUN_ID: ${{ github.event.workflow_run.id }}
-          # 🔴 Номер берётся ИЗ СОБЫТИЯ, а не поиском по имени ветки. Поиск нашёл бы PR, но не
-          # доказал бы, что зелёный прогон принадлежит именно ему.
+          # 🔴 The number comes FROM THE EVENT, not from a search by branch name. A search would find the PR
+          # but would not prove the green run belongs to it.
           PR: ${{ github.event.workflow_run.pull_requests[0].number }}
         run: |
           set -euo pipefail
-          # Пустой номер — это НЕ «нечего делать»: у форковых PR массив приходит пустым, и
-          # молчаливый выход читался бы как успешный мёрдж. Падаем с причиной.
+          # An empty number is NOT "nothing to do": fork PRs come with an empty array, and
+          # silent exit would look like a successful merge. Fail with a reason.
           if [ -z "${PR}" ]; then
-            echo "::error::прогон ci не принёс номера PR (форк?) — ничего не слито, разобрать руками"
+            echo "::error::ci run did not yield a PR number (fork?) — nothing merged, resolve manually"
             exit 1
           fi
           gh pr merge "${PR}" --repo "${REPO}" --squash --delete-branch
-          echo "слит PR #${PR} по зелёному прогону ci ${RUN_ID}"
+          echo "merged PR #${PR} on green ci run ${RUN_ID}"

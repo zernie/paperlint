@@ -14,7 +14,7 @@ _build/
 # `git check-ignore -v` named this line for every one of them.
 !skills/paper-pipeline/repro/*.log
 
-# Замок взаимного исключения прогонов (scripts/exclusive.mjs) — живёт только на время прогона.
+# Mutex for run exclusivity (scripts/exclusive.mjs) — exists only during a run.
 .vigiles/exclusive.lock/
 dist/
 

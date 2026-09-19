@@ -1,13 +1,14 @@
 /**
- * Батарея на `paper/research-question` — пять мутаций, каждая снимает СВОЁ несущее свойство.
+ * Battery for `paper/research-question` — five mutations, each removes ITS OWN load-bearing
+ * property.
  *
- * 🔴 Зачем батарея именно здесь. Состояние успеха у правила — ТИШИНА, а на живом корпусе оно
- * даёт всего две находки из четырёх статей. «Прошло» и «не может сработать» снаружи выглядят
- * одинаково, и различает их только это.
+ * 🔴 Why the battery matters here specifically. The rule's success state is SILENCE, and on the
+ * live corpus it only produces two findings out of four papers. "It passed" and "it cannot fire"
+ * look identical from the outside, and only this tells them apart.
  *
- * Две мутации целятся не в находку, а в ОБЛАСТЬ и в ЯЗЫК — половины, которые тест забывает.
- * Без гейта по стадии правило ругает каждый черновик; без markdown оно теряет `compile-rules`,
- * то есть половину настоящих находок, оставаясь при этом зелёным.
+ * Two mutations do not target the finding but the SCOPE and the LANGUAGE — the halves a test
+ * forgets. Without the stage gate the rule scolds every draft; without markdown it loses
+ * `compile-rules`, i.e. half of the real findings, while staying green.
  */
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
@@ -24,35 +25,35 @@ process.exit(
     runner: "node",
     cases: [
       {
-        name: "правило перестаёт замечать отсутствие вопроса",
+        name: "the rule stops noticing the absence of a question",
         harness: HARNESS,
-        expect: "отгружена и вопроса нет — находка",
+        expect: "shipped and no question — a finding",
         disables:
-          "сам предмет: правило молчит на всём корпусе, а тишина у него и есть состояние " +
-          "успеха — снаружи выключённое правило неотличимо от чистой статьи",
+          "the subject itself: the rule stays silent across the whole corpus, and silence is " +
+          "its success state — from the outside a disabled rule is indistinguishable from a clean paper",
         edits: [[RULE, "if (RQ_RE.test(raw)) return;", "return;"]],
       },
       {
-        name: "ГЕЙТ ПО СТАДИИ снимается — ругаем и черновики",
+        name: "the STAGE GATE is removed — drafts get scolded too",
         harness: HARNESS,
-        expect: "черновик (стадий нет) — молчит, хотя вопроса в нём тоже нет",
+        expect: "a draft (no stages) — silent, even though it has no question either",
         disables:
-          "область. Правило спрашивает не «есть ли вопрос», а «есть ли вопрос У ОТГРУЖЕННОГО». " +
-          "Без гейта находку получает каждый черновик — а правило, ругающее черновики, " +
-          "выключают за неделю, и тогда пропадают обе настоящие находки тоже",
+          "the scope. The rule does not ask 'is there a question', it asks 'is there a question " +
+          "FOR SOMETHING SHIPPED'. Without the gate every draft gets a finding — and a rule that " +
+          "scolds drafts gets turned off within a week, at which point both real findings disappear too",
         edits: [
-          [RULE, "if (stages.length === 0) return; // не отгружена — ничего не должна", ""],
+          [RULE, "if (stages.length === 0) return; // not shipped — owes nothing", ""],
         ],
       },
       {
-        name: "ЯЗЫК сужается до LaTeX — markdown-статья становится невидимой",
+        name: "the LANGUAGE narrows to LaTeX — a markdown paper becomes invisible",
         harness: HARNESS,
-        expect: "статья в markdown проверяется так же",
+        expect: "a paper in markdown is checked the same way",
         disables:
-          "вторую половину языка. У языка `tex/latex` текст лежит в `raw`, у markdown — в " +
-          "`text`. Мутация оставляет только первое, и `compile-rules-2026` (статья написана " +
-          "markdown, вопроса нет) перестаёт находиться — ПОЛОВИНА находок живого корпуса " +
-          "пропадает молча, прогон остаётся зелёным",
+          "the second half of the language. For the `tex/latex` language the text sits in `raw`, " +
+          "for markdown it sits in `text`. The mutation keeps only the first, and " +
+          "`compile-rules-2026` (paper written in markdown, no question) stops being found — HALF " +
+          "of the live corpus's findings disappear silently, and the run stays green",
         edits: [
           [
             RULE,
@@ -62,23 +63,23 @@ process.exit(
         ],
       },
       {
-        name: "список стадий снова берётся НЕ из поля",
+        name: "the stage list is taken from somewhere OTHER than the field again",
         harness: HARNESS,
-        expect: "список стадий в сообщении взят из поля и несёт ОБЕ",
+        expect: "the stage list in the message comes from the field and carries BOTH",
         disables:
-          "то, ради чего делался перенос. Предшественница выводила стадию регуляркой по прозе " +
-          "табеля и на agenticdev печатала `submitted` там, где объявлено `submitted, " +
-          "camera-ready`. Набор находок мутация не меняет — врёт только ТЕКСТ, и без своего " +
-          "ассерта регрессия прошла бы молча",
+          "the whole reason the move was made. The predecessor derived the stage with a regex " +
+          "over the scorecard's prose and on agenticdev printed `submitted` where `submitted, " +
+          "camera-ready` was declared. The mutation does not change the set of findings — only " +
+          "the TEXT lies, and without its own assert the regression would have passed silently",
         edits: [[RULE, 'data: { stages: stages.join("/") }', 'data: { stages: "submitted" }']],
       },
       {
-        name: "имя табеля перестаёт приходить опцией",
+        name: "the scorecard's name stops arriving as an option",
         harness: HARNESS,
-        expect: "а с несуществующим табелем молчит и отгруженная — гейт по стадии несущий",
+        expect: "and with a nonexistent scorecard a shipped paper is also silent — the stage gate is load-bearing",
         disables:
-          "границу «механизм в пакете, данные у потребителя». `PIPELINE-STATUS.md` — конвенция " +
-          "ОДНОГО репозитория, и захардкоженная она делает правило непригодным всем остальным",
+          "the boundary 'the mechanism goes in the package, the data stays with the consumer'. " +
+          "`PIPELINE-STATUS.md` is ONE repository's convention, and hardcoding it makes the rule unusable for everyone else",
         edits: [
           [
             RULE,

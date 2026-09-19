@@ -1,21 +1,21 @@
 /**
- * `local/temp-root-realpath` — обе половины на настоящем ESLint, плюс сам корпус.
+ * `local/temp-root-realpath` — both halves on real ESLint, plus the corpus itself.
  *
- * 🔴 ПОЧЕМУ ЭТОТ ХАРНЕСС ВООБЩЕ СУЩЕСТВУЕТ, а не ограничились двадцатью четырьмя правками.
- * Дефект (issue #9) ВОСПРОИЗВОДИТСЯ ТОЛЬКО НА macOS: там `/var` — симлинк на `/private/var`,
- * и один каталог получает два написания. На Linux `realpathSync` — тождество, поэтому ни
- * один поведенческий тест не может отличить починенный корень от непочиненного: снятая
- * обёртка оставляет прогон ЗЕЛЁНЫМ. Единственная проверка, которая на Linux вообще способна
- * покраснеть, — структурная: спросить у AST, разрешается ли корень в месте его создания.
- * Ровно поэтому она и написана правилом линтера, а не ассертом внутри чьего-то харнесса.
+ * 🔴 WHY THIS HARNESS EXISTS AT ALL, rather than stopping at the twenty-four fixes. The
+ * defect (issue #9) ONLY REPRODUCES ON macOS: there `/var` is a symlink to `/private/var`,
+ * and one directory gets two spellings. On Linux `realpathSync` is the identity, so no
+ * behavioral test can tell a fixed root apart from a broken one: removing the wrapper leaves
+ * the run GREEN. The only check that can even go red on Linux is structural: ask the AST
+ * whether the root is resolved at the point it's created. That is exactly why it is written
+ * as a linter rule and not an assert inside someone's harness.
  *
- * ⚠️ И граница, чтобы харнесс не приняли за большее: он утверждает, что ИДИОМА на месте,
- * а не что на macOS теперь зелено. Второе проверяется только на macOS, и в CI здесь один
- * `ubuntu-latest` — это записано как известный предел, а не замазано.
+ * ⚠️ And a boundary, so the harness isn't mistaken for more: it asserts that the IDIOM is in
+ * place, not that macOS is now green. The latter is only checked on macOS, and CI here is one
+ * `ubuntu-latest` — recorded as a known limit, not papered over.
  *
- * Фикстуры — строками через `lintText`, а не файлами на диске: файл-дефект под
- * `fixtures/` попал бы под блок `**\/*.mjs` самого конфига и сделал бы `npx eslint .`
- * красным на здоровом чекауте. Это тот же довод, по которому .tex-фикстуры стоят на `warn`.
+ * Fixtures are strings through `lintText`, not files on disk: a defect file under `fixtures/`
+ * would fall under the config's own `**\/*.mjs` block and would make `npx eslint .` red on a
+ * healthy checkout. This is the same reason the `.tex` fixtures sit on `warn`.
  */
 import assert from "node:assert/strict";
 import { ESLint } from "eslint";
@@ -43,63 +43,65 @@ const HEAD = 'import { mkdtempSync, realpathSync } from "node:fs";\n' +
 
 const cases = [];
 
-// ── 1. СРАБАТЫВАЕТ: корень из `tmpdir()` без резолва — ровно форма из issue #9.
+// ── 1. FIRES: a root from `tmpdir()` with no resolve — exactly the shape from issue #9.
 {
   const m = await on(`${HEAD}const TMP = mkdtempSync(join(tmpdir(), "probe-"));\n`);
-  assert.equal(m.length, 1, `ожидалась одна находка, пришло ${m.length}: ${JSON.stringify(m)}`);
+  assert.equal(m.length, 1, `one finding was expected, got ${m.length}: ${JSON.stringify(m)}`);
   assert.equal(m[0].ruleId, "local/temp-root-realpath");
-  assert.match(m[0].message, /realpathSync\(mkdtempSync/, "сообщение обязано нести ЛЕКАРСТВО, а не только диагноз");
-  assert.match(m[0].message, /private\/var/, "и называть причину — почему один каталог получает два имени");
-  cases.push("mkdtempSync(join(tmpdir(), …)) без резолва → находка, в сообщении лекарство");
+  assert.match(m[0].message, /realpathSync\(mkdtempSync/, "the message must carry the FIX, not just the diagnosis");
+  assert.match(m[0].message, /private\/var/, "and name the cause — why one directory gets two names");
+  cases.push("mkdtempSync(join(tmpdir(), …)) with no resolve → a finding, the fix is in the message");
 }
 
-// ── 2. МОЛЧИТ на исправленной форме. Без этой половины правило неотличимо от того,
-//      которое кричит на каждый `mkdtempSync`.
+// ── 2. STAYS SILENT on the fixed form. Without this half the rule is indistinguishable
+//      from one that screams at every `mkdtempSync`.
 {
   const m = await on(`${HEAD}const TMP = realpathSync(mkdtempSync(join(tmpdir(), "probe-")));\n`);
-  assert.deepEqual(m, [], `на разрешённом корне правило обязано молчать, пришло: ${JSON.stringify(m)}`);
-  cases.push("realpathSync(mkdtempSync(join(tmpdir(), …))) → тишина");
+  assert.deepEqual(m, [], `the rule must stay silent on a resolved root, got: ${JSON.stringify(m)}`);
+  cases.push("realpathSync(mkdtempSync(join(tmpdir(), …))) → silence");
 }
 
-// ── 3. 🔴 МОЛЧИТ НА ВЛОЖЕННОМ КОРНЕ, и это несущий случай, а не послабление. В корпусе
-//      таких пять (`mkdtempSync(join(TMP, "repo-"))`); они наследуют написание от `TMP`,
-//      который ловится на СВОЁМ месте. Правило, кричащее и здесь, потребовало бы двойного
-//      резолва — а для `error`-правила ложное срабатывание хуже пропуска: его выключают.
+// ── 3. 🔴 STAYS SILENT ON A NESTED ROOT, and this is load-bearing, not a concession. The
+//      corpus has five of these (`mkdtempSync(join(TMP, "repo-"))`); they inherit their
+//      spelling from `TMP`, which is caught at ITS OWN spot. A rule that screamed here too
+//      would demand a double resolve — and for an `error`-level rule a false positive is
+//      worse than a miss: it gets turned off.
 {
   const m = await on(
     `${HEAD}const TMP = realpathSync(mkdtempSync(join(tmpdir(), "probe-")));\n` +
       `const sub = mkdtempSync(join(TMP, "repo-"));\nvoid sub;\n`,
   );
-  assert.deepEqual(m, [], `вложенный корень наследует написание от родителя; пришло: ${JSON.stringify(m)}`);
-  cases.push("вложенный mkdtempSync(join(TMP, …)) → тишина (родитель уже разрешён)");
+  assert.deepEqual(m, [], `a nested root inherits its spelling from the parent; got: ${JSON.stringify(m)}`);
+  cases.push("a nested mkdtempSync(join(TMP, …)) → silence (the parent is already resolved)");
 }
 
-// ── 4. КОММЕНТАРИЙ И СТРОКА — НЕ ВЫЗОВ. Ради этого правило и разбирает AST: текстовый
-//      страж, ищущий «mkdtempSync(join(tmpdir()», нашёл бы сам этот файл и был бы вынужден
-//      исключать себя — класс, из-за которого проверки строкой здесь запрещены.
+// ── 4. A COMMENT AND A STRING ARE NOT A CALL. This is exactly why the rule parses the AST: a
+//      text-based guard looking for "mkdtempSync(join(tmpdir()" would find this very file and
+//      would have to exclude itself — the class of check string-based checks are banned for here.
 {
   const m = await on(
     `${HEAD}// mkdtempSync(join(tmpdir(), "in-a-comment-"))\n` +
       `const doc = 'mkdtempSync(join(tmpdir(), "in-a-string-"))';\nvoid doc;\n`,
   );
-  assert.deepEqual(m, [], `текст О вызове вызовом не является; пришло: ${JSON.stringify(m)}`);
-  cases.push("та же последовательность в комментарии и в строке → тишина");
+  assert.deepEqual(m, [], `text ABOUT a call is not a call; got: ${JSON.stringify(m)}`);
+  cases.push("the same sequence in a comment and a string → silence");
 }
 
-// ── 5. `fs.mkdtempSync` / `os.tmpdir()` через namespace — та же вещь под другим написанием.
+// ── 5. `fs.mkdtempSync` / `os.tmpdir()` through a namespace — the same thing under a
+//      different spelling.
 {
   const ns = 'import * as fs from "node:fs";\nimport * as os from "node:os";\nimport { join } from "node:path";\n';
   const bad = await on(`${ns}const TMP = fs.mkdtempSync(join(os.tmpdir(), "probe-"));\n`);
-  assert.equal(bad.length, 1, `namespace-написание обязано ловиться; пришло: ${JSON.stringify(bad)}`);
+  assert.equal(bad.length, 1, `the namespaced spelling must be caught; got: ${JSON.stringify(bad)}`);
   const good = await on(`${ns}const TMP = fs.realpathSync(fs.mkdtempSync(join(os.tmpdir(), "probe-")));\n`);
-  assert.deepEqual(good, [], `и разрешаться тоже; пришло: ${JSON.stringify(good)}`);
-  cases.push("fs.mkdtempSync(join(os.tmpdir(), …)) ловится, fs.realpathSync(…) освобождает");
+  assert.deepEqual(good, [], `and it must be exempted too; got: ${JSON.stringify(good)}`);
+  cases.push("fs.mkdtempSync(join(os.tmpdir(), …)) is caught, fs.realpathSync(…) exempts it");
 }
 
-// ── 6. 🔴 САМ КОРПУС ЧИСТ. Половина «молчит» на выдуманной строке ничего не говорит про
-//      репозиторий: правило может молчать и потому, что ни одного файла ему не подали
-//      (записанный класс — `scripts/rules-see-files.mjs`). Поэтому проверка гоняет ПРАВИЛО
-//      ПО НАСТОЯЩЕМУ ДЕРЕВУ и требует, чтобы файлов было много, а находок ноль.
+// ── 6. 🔴 THE CORPUS ITSELF IS CLEAN. The "silent" half on a made-up string says nothing
+//      about the repository: the rule could also be silent because it was never handed a
+//      single file (the recorded class — `scripts/rules-see-files.mjs`). So this check runs
+//      THE RULE OVER THE REAL TREE and requires many files, zero findings.
 {
   const corpus = new ESLint({ cwd: new URL("..", import.meta.url).pathname });
   const results = await corpus.lintFiles(["."]);
@@ -108,15 +110,15 @@ const cases = [];
       .filter((msg) => msg.ruleId === "local/temp-root-realpath")
       .map((msg) => `${r.filePath}:${msg.line}`),
   );
-  assert.deepEqual(hits, [], `корпус обязан быть чист от неразрешённых корней:\n${hits.join("\n")}`);
+  assert.deepEqual(hits, [], `the corpus must be clean of unresolved roots:\n${hits.join("\n")}`);
   const linted = results.filter((r) => r.filePath.endsWith(".mjs")).length;
   assert.ok(
     linted > 50,
-    `правилу подали всего ${linted} файлов .mjs — ноль находок при пустом входе это НЕ чистота`,
+    `the rule was only handed ${linted} .mjs files — zero findings on an empty input is NOT cleanliness`,
   );
-  cases.push(`корпус: ${linted} файлов .mjs, ноль неразрешённых корней`);
+  cases.push(`corpus: ${linted} .mjs files, zero unresolved roots`);
 }
 
 recordCheck(cases.length);
-console.log(`local/temp-root-realpath: ${cases.length} случаев:`);
+console.log(`local/temp-root-realpath: ${cases.length} cases:`);
 for (const c of cases) console.log(`  ok  ${c}`);

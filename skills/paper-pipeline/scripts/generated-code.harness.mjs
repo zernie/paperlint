@@ -381,9 +381,9 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
 // directory. A guard that tests for a filename rather than for the job; the same class the
 // `numbers` CI job documents about itself and the same class as the skipped `artifact/reproduce.py`.
 {
-  // Фикстура нейтральна НАМЕРЕННО: здесь стоял `/home/example/x.tsv` и метка `typed-shell/repro` —
-  // домашний каталог с именем владельца и имя нашей статьи в тестовых данных. Проверка от этого не
-  // зависит: ей нужен ЛЮБОЙ абсолютный путь.
+  // Fixture is neutral ON PURPOSE: `/home/example/x.tsv` and the label `typed-shell/repro` stood here —
+  // the owner's home directory and our paper's name in test data. The check does not depend on this:
+  // it needs ANY absolute path.
   const r = run(
     fixture({
       at: "some-paper/repro",

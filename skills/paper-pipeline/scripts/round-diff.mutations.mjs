@@ -4,7 +4,7 @@
  *
  * This is not a test. It is the evidence behind the claim that the tests test something.
  *
- * WHY IT EXISTS. The house rule is «чекер, который ни разу не падал, не считается работающим», and
+ * WHY IT EXISTS. The house rule is «a checker that has never failed once is not considered working», and
  * it has been broken repeatedly here: three hooks dead on arrival, a statistics script that printed
  * "All recomputed values match paper.md" without opening paper.md. A green harness proves the
  * CHECKER fires on planted defects. It does not prove the HARNESS would notice if a check were

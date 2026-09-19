@@ -6,10 +6,11 @@ into those skills — link it, the way they link `review-ratchet.md`.
 
 ## Why this file exists
 
-There was no rule. There was taste, and taste loses to a page limit every time. Author, 2026-08-06:
+There was no rule. There was taste, and taste loses to a page limit every time. Author, 2026-08-06
+(translated from Russian):
 
-> *«я не понимаю, какое правило по компилятору и синтезу правил — оно идёт больше в тело или в
-> приложение. я думал, что больше в тело, а какие-то подробности в приложение, но хз»*
+> *"I don't get it — the rule about the compiler-and-rule-synthesis paper, does that go mostly in
+> the body or in the appendix. I figured mostly body, with some details in the appendix, but IDK."*
 
 Without a rule the page limit does the deciding, and it decides badly: it evicts whatever was
 written last, which is usually the honest qualification nobody had room for. On `compile-rules-2026`

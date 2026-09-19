@@ -1,23 +1,23 @@
 /**
- * Батарея на этажную проверку «правило не ходит в git», `scripts/rules-are-content-only.mjs`.
+ * Battery for the "rule does not touch git" gate, `scripts/rules-are-content-only.mjs`.
  *
- * 🔴 Ей батарея нужна острее, чем правилу. Состояние успеха у неё — ПУСТОЙ СПИСОК, то есть ровно
- * то состояние, которому она сама учит не доверять. Проверка, которую видели только молчащей,
- * неотличима от проверки, которая не смотрит.
+ * 🔴 This battery needs to be sharper than the rule. Its success state is an EMPTY LIST, which is
+ * exactly the state it teaches not to trust. A check seen only silent is indistinguishable from
+ * one that never looks.
  *
- * ОБА НАПРАВЛЕНИЯ, и они обязаны умереть на РАЗНЫХ ассертах:
- *   - `недобор` — перестаёт находить что-либо вообще. Половина «молчит на чистом» остаётся
- *     зелёной; упасть обязана половина «срабатывает».
- *   - `перебор` — объявляет находкой любой вызов. Половина «срабатывает» остаётся зелёной
- *     (она по-прежнему видит `git`), упасть обязана половина «молчит на чистом». ЗАМЕРЕНО, что
- *     рушится она на ЖИВОМ КОРПУСЕ (6 находок в собственных правилах пакета) раньше, чем на
- *     подложенной фикстуре с `texcount` — и это сильнее, а не слабее: настоящие данные.
- * Батарея, где обе мутации умирают на одном ассерте, доказывает существование ОДНОЙ половины.
+ * BOTH DIRECTIONS, and they must die on DIFFERENT assertions:
+ *   - `undercatch` — stops finding anything. The "quiet on clean" half stays green;
+ *     the "fires" half must fail.
+ *   - `overcatch` — calls any spawner a finding. The "fires" half stays green
+ *     (it still sees `git`), the "quiet on clean" half must fail. MEASURED: it breaks on
+ *     LIVE CORPUS (6 findings in the package's own rules) before a planted fixture with
+ *     `texcount` — and that is stronger, not weaker: real data.
+ * A battery where both mutations die on one assertion proves ONE half exists.
  *
- * ⚠️ Вторая мутация воспроизводит РЕАЛЬНОЕ ложное срабатывание: первая редакция проверки
- * ключевалась на импорте `child_process` и в первый же час объявила находкой `paper-texcount.mjs`
- * у потребителя — тот зовёт `texcount`, чтобы считать слова. На `error`-гейте это хуже пропуска:
- * гейт, который нельзя пройти, выключают. Мутация держит эту границу на месте.
+ * ⚠️ The second mutation reproduces a REAL false positive: the first version of the check
+ * was keyed on the `child_process` import and in the first hour called `paper-texcount.mjs`
+ * a finding in the consumer — it calls `texcount` to count words. On an `error` gate this is
+ * worse than a miss: a gate you cannot pass gets turned off. The mutation holds this line.
  */
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
@@ -34,12 +34,12 @@ process.exit(
     runner: "node",
     cases: [
       {
-        name: "недобор — проверка перестаёт находить",
+        name: "undercatch — check stops finding",
         harness: HARNESS,
         expect: "FIRES on execFileSync with a git argv",
         disables:
-          "сам вердикт: проверка становится тем самым уверенным зелёным нулём, ради которого " +
-          "она и написана — сканирует, считает файлы и не выносит решения",
+          "the verdict itself: the check becomes that very confident green zero it was written " +
+          "to spot — it scans, counts files and renders no judgment",
         edits: [
           [
             GUARD,
@@ -49,16 +49,16 @@ process.exit(
         ],
       },
       {
-        name: "перебор — находкой становится любой вызов спавнера",
+        name: "overcatch — any spawner call becomes a finding",
         harness: HARNESS,
-        // Падает на ЖИВОМ КОРПУСЕ, а не на фикстуре с texcount, и это замер: под этой мутацией
-        // собственные правила пакета дают 6 находок, то есть половина «молчит на чистом» рушится
-        // раньше, чем доходит очередь до подложенного случая. Сигнал сильнее фикстурного — он на
-        // настоящих данных, — поэтому назван он, а не тот, который я ожидал увидеть.
+        // Fails on LIVE CORPUS, not on the texcount fixture, and this is measured: under this mutation
+        // the package's own rules yield 6 findings, meaning the "quiet on clean" half breaks
+        // before we reach the planted case. Live signal is stronger than fixture — it is real data — so
+        // it is named, not the one I expected to see.
         expect: "quiet on the real corpus",
         disables:
-          "границу предиката «зовёт git» против «порождает процесс» — ту самую, что была " +
-          "поставлена после ложного срабатывания на texcount у потребителя",
+          "the boundary of the predicate 'calls git' vs 'spawns a process' — the one that was " +
+          "set after the texcount false positive in the consumer",
         edits: [
           [
             GUARD,
@@ -68,12 +68,12 @@ process.exit(
         ],
       },
       {
-        name: "сторож пустого скана перестаёт падать",
+        name: "guard for empty scan stops failing",
         harness: HARNESS,
         expect: "scanned something",
         disables:
-          "ответ на вопрос «а смотрела ли ты вообще»: ноль найденных исходников снова становится " +
-          "тихим успехом, неотличимым от чистого прогона",
+          "the answer to 'did you even look': zero found sources become silent success again, " +
+          "indistinguishable from a clean run",
         edits: [[GUARD, "f.endsWith(\".mjs\") &&", "false &&"]],
       },
     ],

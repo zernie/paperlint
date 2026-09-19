@@ -1,46 +1,48 @@
 /**
- * `review/findings-cause` — отчёт ревью с находками и без разбора ПРИЧИН.
+ * `review/findings-cause` — a review report with findings and no analysis of the ROOT CAUSE.
  *
- * ── ЧТО ЭТО ЗА ПРАВИЛО ──────────────────────────────────────────────────────────
- * Конвенция пайплайна: ревью статьи заканчивается не списком находок, а ответом на
- * вопрос «что в ПАЙПЛАЙНЕ это пропустило» — дефект скилла, отсутствующий скилл, хук,
- * правило. Иначе правится текст статьи, а инструмент, который её пропустил, остаётся
- * прежним, и следующая статья приезжает с тем же дефектом.
+ * ── WHAT THIS RULE IS ──────────────────────────────────────────────────────────
+ * Pipeline convention: a paper review does not end with a list of findings, it ends
+ * with an answer to "what in the PIPELINE let this through" — a defective skill, a
+ * missing skill, a hook, a rule. Otherwise the paper text gets fixed while the tool
+ * that missed it stays the same, and the next paper arrives with the same defect.
  *
- * ── ПОЧЕМУ ЭТО ПЕРЕЕЗД, А НЕ НОВОЕ ПРАВИЛО ──────────────────────────────────────
- * Первая единица шага 9 выноса: до 2026-09-15 проверка жила в потребителе как
- * `checkReviewFindingsCause` в `.claude/hooks/paper-lint.mjs` — обход каталога плюс
- * три регулярки по тексту.
+ * ── WHY THIS IS A MOVE, NOT A NEW RULE ──────────────────────────────────────────
+ * First unit of step 9 of the extraction: until 2026-09-15 the check lived in the
+ * consumer as `checkReviewFindingsCause` in `.claude/hooks/paper-lint.mjs` — a
+ * directory walk plus three regexes over the text.
  *
- * 🔴 И ПЕРЕЕЗД ЗДЕСЬ НЕ КОПИЯ, А СНЯТИЕ ЦЕЛОГО КЛАССА ОШИБОК. Старая версия считала
- * находки так:
+ * 🔴 AND THE MOVE HERE IS NOT A COPY, IT REMOVES A WHOLE CLASS OF BUGS. The old
+ * version counted findings like this:
  *
- *     tableRows  ←  ^\|\s*\d+\s*\|            строка, начинающаяся «| <число> |»
- *     boldItems  ←  ^\s*[-*]\s+\*\*             пункт списка с полужирным началом
+ *     tableRows  ←  ^\|\s*\d+\s*\|            a line starting with "| <number> |"
+ *     boldItems  ←  ^\s*[-*]\s+\*\*             a list item starting bold
  *
- * (регулярки приведены БЕЗ завершающих слэшей и флагов намеренно: последовательность
- * «звёздочка-слэш» внутри блочного комментария закрывает его — я споткнулся об это
- * дважды за час, второй раз здесь же.)
+ * (the regexes are given WITHOUT trailing slashes and flags on purpose: an
+ * "asterisk-slash" sequence inside a block comment closes it — I tripped on this
+ * twice in one hour, the second time right here.)
  *
- * То есть «строка таблицы» опознавалась по написанию, а не по разметке: та же строка
- * внутри ```-ограды считалась находкой, ведущий пробел в ячейке ломал счёт, а `*` и `-`
- * приходилось перечислять вручную. У AST строка таблицы — это узел `tableRow`, и все три
- * промаха становятся невыразимыми. Ровно правило базы «markdown разбираем ПАРСЕРОМ».
+ * That is, a "table row" was recognized by how it's written, not by its markup: the
+ * same line inside a ``` fence counted as a finding, a leading space in the cell
+ * broke the count, and `*` and `-` had to be listed by hand. In the AST a table row
+ * is a `tableRow` node, and all three misses become inexpressible. This is exactly
+ * the base rule "parse markdown with a PARSER".
  *
- * ── ЧТО ОСТАЁТСЯ ДАННЫМИ ПОТРЕБИТЕЛЯ ───────────────────────────────────────────
- * Порог находок — опция. «Правило от даты» (отчёты старше такой-то даты — известный долг,
- * а не находка) СЮДА НЕ ЕДЕТ вовсе: это факт о корпусе одного потребителя, и место ему в
- * его конфиге через `ignores`, а не в механизме. Механизм — в пакет, данные — у потребителя.
+ * ── WHAT STAYS AS CONSUMER DATA ───────────────────────────────────────────────
+ * The findings threshold is an option. The "rule from a date" (reports older than a
+ * given date are known debt, not a finding) DOES NOT MOVE HERE AT ALL: it's a fact
+ * about one consumer's corpus, and its home is that consumer's config via `ignores`,
+ * not the mechanism. The mechanism goes in the package, the data stays with the consumer.
  */
 
-/** Ячейка-номер: первая колонка строки таблицы, в которой стоит одно число. */
+/** Numbered cell: the first column of a table row holding a single number. */
 const isNumbered = (row) => {
   const first = row.children?.[0];
   const text = (first?.children ?? []).map((c) => c.value ?? "").join("").trim();
   return /^\d+$/.test(text);
 };
 
-/** Пункт-находка: элемент списка, начинающийся с полужирного — заголовка находки. */
+/** Finding item: a list element starting with bold text — the finding's heading. */
 const isBoldItem = (item) => {
   const para = item.children?.find((c) => c.type === "paragraph");
   return para?.children?.[0]?.type === "strong";
@@ -78,14 +80,15 @@ export default {
         let created = "";
 
         return {
-          // 🔴 «ПРАВИЛО ОТ ДАТЫ» — МЕХАНИЗМ, ДАТА — ДАННЫЕ. Новая проверка, открывающаяся
-          // стеной находок на историческом корпусе, глушится в тот же день; поэтому у
-          // потребителя должен быть способ сказать «до такого-то числа это известный долг,
-          // а не находка». Замер в первом потребителе: 84 отчёта, сработало бы 0 новых и
-          // 49 старых — без этой опции правило открылось бы сорока девятью находками.
-          // Дата НЕ зашита: она приходит опцией, читается из `created` во фронтматтере, и
-          // документ без даты трактуется как СТАРЫЙ только когда опция задана — иначе
-          // отсутствие фронтматтера стало бы способом обойти правило.
+          // 🔴 "RULE FROM A DATE" — MECHANISM, DATE — DATA. A new check that opens with a
+          // wall of findings on a historical corpus gets muted the same day; so the
+          // consumer needs a way to say "before such-and-such date this is known debt,
+          // not a finding". Measured on the first consumer: 84 reports, 0 new would fire
+          // and 49 old — without this option the rule would have opened with forty-nine
+          // findings. The date is NOT hardcoded: it comes in as an option, read from
+          // `created` in the frontmatter, and a document with no date is treated as OLD
+          // only when the option is set — otherwise a missing frontmatter would become a
+          // way to dodge the rule.
           yaml(node) {
             created = /^created:\s*(\d{4}-\d{2}-\d{2})/m.exec(node.value ?? "")?.[1] ?? "";
           },
@@ -101,8 +104,8 @@ export default {
           "root:exit"(node) {
             if (hasCause || findings < minFindings) return;
             if (sinceCreated && (!created || created < sinceCreated)) return;
-            // Находка про ФАЙЛ, а не про строку: отсутствует то, чего нигде нет. Поэтому
-            // позиция — начало документа, единственное честное место для «здесь не хватает».
+            // A finding about the FILE, not a line: what's missing isn't anywhere. So the
+            // position is the start of the document, the only honest place for "this is missing".
             context.report({
               loc: { start: { line: 1, column: 0 }, end: { line: 1, column: 1 } },
               messageId: "noCause",

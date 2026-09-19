@@ -182,10 +182,10 @@ for (const bad of ["", null, 0, false, [], {}, 42])
 // name; it may appear ONLY in this file (as the value under test) and in prose that documents
 // the decision.
 {
-  // ⚠️ ЕДИНСТВЕННОЕ законное вхождение этого слова в пакете, и оно здесь по необходимости:
-  // это ПРЕДМЕТ ассерта. Фикстуры выше намеренно используют нейтральные пути
-  // (`writing/drafts`) — до 12.09.2026 они писали настоящее имя каталога потребителя, и
-  // аудит перед публикацией показал одиннадцать вхождений там, где по смыслу нужно одно.
+  // ⚠️ THE ONLY LEGITIMATE OCCURRENCE OF THIS WORD IN THE PACKAGE, and it is here out of
+  // necessity: it is the SUBJECT of the assert. The fixtures above deliberately use neutral
+  // paths (`writing/drafts`) — until 2026-09-12 they carried the consumer's real directory name,
+  // and the pre-publication audit found eleven occurrences where the meaning called for one.
   // ⚠️ THIS LIST HOLDS PATH TOKENS ONLY, AND THE PERSONAL NAMES ARE DELIBERATELY ABSENT.
   // Extending it to the owner's name was tried on 2026-09-12 and reverted the same hour by the
   // consumer-side audit that reads this repository before it is published: to GUARD against a

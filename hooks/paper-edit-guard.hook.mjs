@@ -118,12 +118,12 @@ export const DEFAULT_PAPERS_ROOT = "papers";
  * absence. The same distinction is made by every other carrier in this package.
  */
 /**
- * ЭКСПОРТИРУЕТСЯ НАМЕРЕННО, и это единственный способ сверки без второй копии логики.
- * `rpp doctor` обязан сказать, какой каталог будет сторожить ЭТОТ хук, а не какой сторожил бы
- * его пересказ. Компилируемому хуку запрещено ИМПОРТИРОВАТЬ что-либо кроме `vigiles/hook`
- * (это держит `checkHookImports`), поэтому общий модуль невозможен — но экспорт наружу запрет
- * не нарушает, и обратное направление, CLI → хук, свободно.
- * Возвращает строку-корень либо объект отказа: у вызывающего это различается `typeof`.
+ * EXPORTED ON PURPOSE — this is the only way to cross-check without a second copy of the logic.
+ * `rpp doctor` has to say which directory THIS hook will guard, not what a retelling of it
+ * would guard. The compiled hook is forbidden to IMPORT anything but `vigiles/hook`
+ * (that's what `checkHookImports` enforces), so a shared module is impossible — but that ban
+ * doesn't restrict exporting outward, and the reverse direction, CLI → hook, is free.
+ * Returns the root string, or a rejection object: the caller tells them apart by `typeof`.
  */
 export const papersRoot = (rawPkg) => {
   let pkg;

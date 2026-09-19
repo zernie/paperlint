@@ -8,7 +8,7 @@ import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({
   name: "paper-status",
-  description: "Answer \"what's the status of the paper?\" in one pass — MEASURE what is measurable (page count from the real build, git state, which gates were run against the CURRENT text), then read the judgement rows, then print blockers worst-first split into mine and the author's. Use whenever the author asks «что по статье / статус / что осталось / готово ли», at the start of a session touching a paper, or before deciding what to work on next. Not a review skill — it reports state, it does not grade, cut, or fix.",
+  description: "Answer \"what's the status of the paper?\" in one pass — MEASURE what is measurable (page count from the real build, git state, which gates were run against the CURRENT text), then read the judgement rows, then print blockers worst-first split into mine and the author's. Use whenever the author asks \"what's up with the paper / status / what's left / is it ready\", at the start of a session touching a paper, or before deciding what to work on next. Not a review skill — it reports state, it does not grade, cut, or fix.",
   tools: ["Bash", "Read", "Grep", "Glob"],
   body: `
 # paper-status — state, measured before it is narrated
@@ -24,7 +24,7 @@ node .claude/skills/paper-pipeline/scripts/announce.mjs paper-status <paper-dir>
 An advisory pass cannot be observed failing — silence is both its error state and its normal
 state — so starting is an event, and events get written down.
 
-The author asks «что там по статусу?» constantly, and the answer keeps coming from the wrong place: my
+The author asks "what's the status there?" constantly, and the answer keeps coming from the wrong place: my
 memory of the session, which drifts, or a 200-line scorecard he cannot skim. Both fail the same way —
 **they narrate state instead of measuring it.**
 
@@ -41,8 +41,7 @@ about the past; the build is the present.
 
 ## 🔴 The second rule: status is PUSHED, never waited for
 
-The corpus owner, 2026-08-05: *«мне приходится постоянно спрашивать статус статьи и тебя направлять, чтобы ты мне
-говорил, что мы можем делать дальше»*. Building a skill that answers when asked fixed the wrong half —
+The corpus owner, 2026-08-05: *"I have to constantly ask for the paper's status and direct you so you tell me what we can do next"*. Building a skill that answers when asked fixed the wrong half —
 the work he was complaining about is **the asking**, and a pull-only skill leaves all of it with him.
 
 So on any turn that touched a paper, the reply ends with **three lines, unprompted**:
@@ -165,8 +164,7 @@ conclusion from an empty blocker list they can see.
   threshold of 2" not "readable enough".
 - **Say what is NOT known.** A gate never run is a real answer and more useful than an optimistic one.
 - 🔴 **Send the built PDF with the report, every time, without being asked** (\`SendUserFile\`, from the
-  outdir the report's page count came from — never an older copy). The corpus owner, 2026-08-05: *«и пдф отдавать
-  я часто прошу»*. He reads the paper, not the scorecard; a status report that makes him ask for the
+  outdir the report's page count came from — never an older copy). The corpus owner, 2026-08-05: *"and I often ask for the PDF to be delivered"*. He reads the paper, not the scorecard; a status report that makes him ask for the
   artifact costs a round trip for nothing. The caption states the build time and the page count, so
   the file cannot be mistaken for an earlier one.
 - 🔴 **Never let "the gates are stale" be heard as "the measurements are stale."** They are different
@@ -186,7 +184,6 @@ conclusion from an empty blocker list they can see.
 ## Provenance
 
 Built 2026-08-04, the day before the \`compile-rules-2026\` deadline, after the author asked for paper status
-for the fourth time in one session and pointed out it should be a command: *«я так часто это
-спрашиваю… должен быть скилл»*. He was right, and the two things the skill measures first are the two
+for the fourth time in one session and pointed out it should be a command: *"I ask this so often... there should be a skill"*. He was right, and the two things the skill measures first are the two
 things chat had most recently gotten wrong.`,
 });

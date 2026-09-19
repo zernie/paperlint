@@ -1,11 +1,12 @@
 /**
- * Батарея на `build.ts` — модуль, решающий, ЧЕМ собирается статья.
+ * Battery for `build.ts` — the module that decides WHAT a paper is built with.
  *
- * Заведена вместе с самим модулем и по требованию гейта `test:sabotage`, который отказался
- * принимать харнесс, который ничто не умеет убить: зелёный харнесс сам по себе не отличает
- * «проверка прошла» от «проверка не может упасть». Случай про `--dry-run` возвращает дефект,
- * который модуль РЕАЛЬНО имел в первой редакции и который переписал `paper.pdf` в рабочем
- * дереве, — то есть без этого ассерта регрессия была бы тихой и разрушительной.
+ * Set up together with the module itself and at the request of the `test:sabotage` gate, which
+ * refused to accept a harness that nothing could kill: a green harness by itself does not tell
+ * "the check passed" apart from "the check cannot fail". The `--dry-run` case reintroduces a
+ * defect the module REALLY had in its first version, one that overwrote `paper.pdf` in the
+ * working tree — i.e. without this assertion the regression would have been silent and
+ * destructive.
  */
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
@@ -22,21 +23,21 @@ process.exit(
     runner: "node",
     cases: [
       {
-        name: "`--dry-run` снова проглатывается молча",
+        name: "`--dry-run` is swallowed silently again",
         harness: HARNESS,
-        expect: "--dry-run: скрипт НЕ ЗАПУСКАЛСЯ — на диске нет следа",
+        expect: "--dry-run: the script was NOT RUN — no trace on disk",
         disables:
-          "единственную половину, которую нельзя проверить по возвращённому объекту. " +
-          "Настоящий дефект: флаг был разобран в CLI и передан сюда, а здесь его не " +
-          "существовало — деструктуризация опций проглатывает неизвестный ключ МОЛЧА. " +
-          "Сухой прогон отработал как полная сборка и переписал paper.pdf в рабочем дереве, " +
-          "причём вывод pdflatex на экране легко принять за подробный dry-run",
-        // 🔴 МУТАЦИЯ СОХРАНЯЕТ ФОРМУ ОТВЕТА И ЛОМАЕТ ТОЛЬКО ЭФФЕКТ. Очевидный ход — выбросить
-        // ветку целиком — убивает соседнюю ассерцию (статус и пометка `dry`) и до проверки
-        // «на диске нет следа» не доходит вовсе, потому что assert обрывается на первом
-        // отказе. Тогда ассерция про диск осталась бы декоративной: её нечем убить, а
-        // выглядела бы она проверенной. Здесь сухой прогон честно возвращает dry-ответ и при
-        // этом ЗАПУСКАЕТ скрипт — то есть ровно тот дефект, который у модуля и был.
+          "the one half that cannot be checked from the returned object. The real defect: the " +
+          "flag was parsed in the CLI and passed down here, where it did not exist — " +
+          "destructuring the options SILENTLY swallows an unknown key. The dry run ran to " +
+          "completion like a full build and overwrote paper.pdf in the working tree, and " +
+          "pdflatex's output on screen is easy to mistake for a verbose dry-run",
+        // 🔴 THE MUTATION KEEPS THE SHAPE OF THE RESPONSE AND BREAKS ONLY THE EFFECT. The obvious
+        // move — drop the branch entirely — kills the neighboring assertion (status and the `dry`
+        // flag) and never reaches the "no trace on disk" check at all, because assert aborts at
+        // the first failure. The disk assertion would then stay decorative: nothing could kill
+        // it, yet it would look tested. Here the dry run honestly returns a dry response while
+        // ALSO RUNNING the script — exactly the defect the module actually had.
         edits: [
           [
             SRC,
@@ -46,13 +47,13 @@ process.exit(
         ],
       },
       {
-        name: "порядок кандидатов переставлен",
+        name: "the candidate order is swapped",
         harness: HARNESS,
-        expect: "порядок значим: при обоих побеждает build.sh",
+        expect: "order matters: with both present, build.sh wins",
         disables:
-          "решение о приоритете. `build.sh` стоит первым не по алфавиту, а потому что это " +
-          "то, что автор видит, открыв каталог; молчаливый уход на repro/ собрал бы не тот " +
-          "артефакт и не сказал бы об этом",
+          "the priority decision. `build.sh` comes first not alphabetically but because it is " +
+          "what the author sees on opening the directory; silently falling through to repro/ " +
+          "would build the wrong artifact and say nothing about it",
         edits: [
           [
             SRC,
@@ -62,23 +63,23 @@ process.exit(
         ],
       },
       {
-        name: "интерпретатор для .py больше не выбирается",
+        name: "the interpreter for .py stops being chosen",
         harness: HARNESS,
         expect: "python",
         disables:
-          "выбор интерпретатора по расширению. Он сделан по расширению, а не по биту " +
-          "исполнения, именно чтобы свежий клон без +x не падал «Permission denied» по " +
-          "причине, не имеющей отношения к статье",
+          "choosing the interpreter by extension. It is done by extension rather than the " +
+          "executable bit precisely so a fresh clone without +x does not fail with " +
+          "\"Permission denied\" for a reason that has nothing to do with the paper",
         edits: [[SRC, '  if (ext === ".py") return ["python3", []];\n', ""]],
       },
       {
-        name: "отсутствие скрипта перестало быть отдельным статусом",
+        name: "a missing script stops being its own status",
         harness: HARNESS,
-        expect: "статья без скрипта — статус no-script",
+        expect: "a paper with no script — status no-script",
         disables:
-          "ровно тот вопрос, ради которого команда и писалась: у какой статьи вообще нет " +
-          "скрипта сборки. Корпус отвечал на него тишиной — две статьи из четырёх оказались " +
-          "без скрипта, и узналось это первым же сухим прогоном",
+          "exactly the question this command was written to answer: which paper has no build " +
+          "script at all. The corpus was answering it with silence — two papers out of four " +
+          "turned out to have none, and the first dry run is what found that out",
         edits: [
           [
             SRC,
@@ -88,12 +89,12 @@ process.exit(
         ],
       },
       {
-        name: "ненулевой код возврата больше не читается как падение",
+        name: "a nonzero exit code stops reading as a failure",
         harness: HARNESS,
-        expect: "ненулевой — упало, и код НАЗВАН",
+        expect: "nonzero — failed, and the code is NAMED",
         disables:
-          "различие между собранным и упавшим. Сборка, отчитавшаяся успехом при красном " +
-          "pdflatex, — это статья, которую отправят несобранной",
+          "the distinction between built and failed. A build that reports success while " +
+          "pdflatex went red is a paper that gets submitted unbuilt",
         edits: [[SRC, 'status: code === 0 ? "built" : "failed",', 'status: "built",']],
       },
     ],

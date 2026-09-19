@@ -1,50 +1,51 @@
 /**
- * `local/temp-root-realpath` — временный корень из `tmpdir()`, не разрешённый в realpath.
+ * `local/temp-root-realpath` — a temp root taken from `tmpdir()` that is not resolved to its
+ * realpath.
  *
- * ── ДЕФЕКТ, РАДИ КОТОРОГО ПРАВИЛО НАПИСАНО (замер из issue #9) ──────────────────
- * На macOS `os.tmpdir()` отдаёт путь под `/var/folders/…`, а `/var` сам по себе симлинк
- * на `/private/var`. Node резолвит `import.meta.url` модуля в РЕАЛЬНЫЙ путь, а
- * `process.argv[1]` и любой путь, составленный тестом из корня «как набрано», остаются
- * в старом написании. Один и тот же каталог получает два имени, и всякое сравнение
- * путей начинает врать:
+ * ── THE DEFECT THIS RULE WAS WRITTEN FOR (measured from issue #9) ──────────────────
+ * On macOS `os.tmpdir()` returns a path under `/var/folders/…`, and `/var` is itself a symlink
+ * to `/private/var`. Node resolves a module's `import.meta.url` to the REAL path, while
+ * `process.argv[1]` and any path a test composes from the root "as typed" keep the old
+ * spelling. The same directory gets two names, and every path comparison starts lying:
  *
  *     meta: "file:///private/var/folders/…/probe.mjs"
  *     argv:            "/var/folders/…/probe.mjs"
  *
- * На `ubuntu-latest` `/tmp` — настоящий каталог, два написания совпадают, и те же самые
- * ассерты проходят. Три харнесса падали на macOS на ЧИСТОМ чекауте, а CI гонял только
- * Linux, поэтому зелёный там был утверждением про Linux и ни про что больше.
+ * On `ubuntu-latest` `/tmp` is a real directory, the two spellings coincide, and the same
+ * asserts pass. Three harnesses failed on macOS on a CLEAN checkout, while CI only ran Linux,
+ * so green there was a statement about Linux and nothing else.
  *
- * 🔴 ПОЧЕМУ ЭТО ПРАВИЛО, А НЕ ТРИ ПРАВКИ. Автор issue починил три названных им файла и
- * честно написал, что остальные не аудировал. Корень заводят ПЯТНАДЦАТЬ файлов этого
- * репозитория; каждый следующий харнесс заводит шестнадцатый. Правка чинит сегодняшний
- * список, правило чинит форму — и, главное, оно КРАСНОЕ НА LINUX, где сам дефект
- * невоспроизводим. Без него единственный сторож — мак в руках у кого-то.
+ * 🔴 WHY A RULE, NOT THREE FIXES. The issue's author fixed the three files they named and
+ * honestly wrote that they had not audited the rest. FIFTEEN files in this repository set up a
+ * root; every next harness sets up a sixteenth. A fix patches today's list, a rule fixes the
+ * shape — and, crucially, it is RED ON LINUX, where the defect itself cannot be reproduced.
+ * Without it the only guard is a Mac in someone's hands.
  *
- * ── ПРЕДИКАТ, И ПОЧЕМУ ОН РОВНО ТАКОЙ ──────────────────────────────────────────
- * Находка: вызов `mkdtempSync`, в АРГУМЕНТАХ которого есть вызов `tmpdir()`, и который
- * сам не является единственным аргументом `realpathSync(…)`.
+ * ── THE PREDICATE, AND WHY IT IS EXACTLY THIS ──────────────────────────────────────
+ * Finding: a call to `mkdtempSync` whose ARGUMENTS contain a call to `tmpdir()`, and which is
+ * not itself the sole argument of `realpathSync(…)`.
  *
- * ⚠️ `tmpdir()` в аргументах — несущая часть, а не украшение. Вложенный корень вида
- * `mkdtempSync(join(TMP, "repo-"))` НЕ флагается: он наследует написание от `TMP`, а
- * `TMP` ловится на своём собственном месте создания. Так «разрешить каждый временный
- * корень ОДИН раз при создании» из issue становится проверяемым посимвольно, а не
- * оценочно: правило не пытается угадать, разрешена ли переменная, — оно требует, чтобы
- * разрешалось ровно то место, где платформенный путь входит в программу.
+ * ⚠️ `tmpdir()` in the arguments is the load-bearing part, not decoration. A nested root of the
+ * shape `mkdtempSync(join(TMP, "repo-"))` is NOT flagged: it inherits its spelling from `TMP`,
+ * and `TMP` is caught at its own point of creation. This turns the issue's "resolve each temp
+ * root ONCE at creation" into something checkable character by character rather than by
+ * judgment: the rule does not try to guess whether a variable is resolved — it demands that
+ * exactly the spot where a platform path enters the program is resolved.
  *
- * ⚠️ ЧЕГО ПРАВИЛО НЕ ЛОВИТ, названо вслух, чтобы его не приняли за большее. Корень,
- * собранный в обход (`const t = tmpdir(); const d = mkdtempSync(t + "/x")`), пройдёт:
- * в аргументах `mkdtempSync` вызова `tmpdir()` нет. Форма дефекта на этом корпусе ровно
- * одна — `mkdtempSync(join(tmpdir(), …))`, — а предикат пошире пришлось бы строить на
- * межпроцедурном анализе, цена которого больше пользы при пятнадцати площадках.
+ * ⚠️ WHAT THE RULE DOES NOT CATCH, named out loud so it is not mistaken for more. A root
+ * assembled around it (`const t = tmpdir(); const d = mkdtempSync(t + "/x")`) will pass: there
+ * is no call to `tmpdir()` in `mkdtempSync`'s arguments. On this corpus the defect has exactly
+ * one shape — `mkdtempSync(join(tmpdir(), …))` — and a wider predicate would have to be built
+ * on interprocedural analysis, whose cost outweighs the benefit across fifteen sites.
  *
- * 🔴 И ЧТО ПРАВИЛО НАМЕРЕННО НЕ ТРОГАЕТ: `symlinkSync`. Симлинк, созданный ТЕСТОМ внутри
- * уже разрешённого корня, — это и есть предмет проверки у трёх харнессов, и резолв корня
- * его не отменяет, а делает единственным симлинком в кадре. До правки их было два:
- * поставленный тестом и подложенный платформой, — и утверждение теста было про их сумму.
+ * 🔴 AND WHAT THE RULE DELIBERATELY LEAVES ALONE: `symlinkSync`. A symlink created BY A TEST
+ * inside an already-resolved root is exactly the subject three harnesses test, and resolving
+ * the root does not cancel that, it makes it the only symlink in the frame. Before the fix
+ * there were two: the one the test placed and the one the platform planted — and the test's
+ * assertion was about their sum.
  */
 
-/** Имя вызываемой функции: `f()` и `mod.f()` — одно и то же имя для наших целей. */
+/** The called function's name: `f()` and `mod.f()` count as the same name for our purposes. */
 const calleeName = (node) => {
   if (node?.type !== "CallExpression") return "";
   const c = node.callee;
@@ -55,10 +56,10 @@ const calleeName = (node) => {
 };
 
 /**
- * Есть ли в поддереве вызов `tmpdir()`. Обход по узлам, а не поиск подстроки: слово
- * `tmpdir` в комментарии или в строковом литерале рядом вызовом не является, и текстовый
- * страж был бы вынужден исключать сам себя — ровно тот класс, из-за которого проверки
- * строкой в этом репозитории запрещены.
+ * Whether the subtree contains a call to `tmpdir()`. A walk over nodes, not a substring
+ * search: the word `tmpdir` in a comment or a string literal nearby is not a call, and a
+ * text-based guard would be forced to exclude itself — exactly the class of check string-based
+ * checks are banned for in this repository.
  */
 const mentionsTmpdir = (node) => {
   if (node === null || typeof node !== "object") return false;
@@ -72,12 +73,12 @@ const mentionsTmpdir = (node) => {
   return false;
 };
 
-/** `realpathSync(x)` и `realpathSync.native(x)` — оба разрешают путь, оба засчитываются. */
+/** `realpathSync(x)` and `realpathSync.native(x)` — both resolve the path, both count. */
 const isRealpathCall = (node) => {
   if (node?.type !== "CallExpression") return false;
   const name = calleeName(node);
   if (name === "realpathSync") return true;
-  // `realpathSync.native(…)`: имя вызова — `native`, а объект — сам `realpathSync`.
+  // `realpathSync.native(…)`: the call's name is `native`, and the object is `realpathSync` itself.
   if (name !== "native") return false;
   const obj = node.callee.type === "MemberExpression" ? node.callee.object : null;
   if (obj?.type === "Identifier") return obj.name === "realpathSync";

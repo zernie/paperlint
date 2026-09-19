@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Тест РАЗБОРА координат `pdftotext -bbox` — той половины замера балансировки, где 29.08 за один
- * день было четыре ошибки подряд. Ни одну из них не поймал бы тест на живом PDF: они все про то,
- * как читаются координаты, а не про то, собралась ли статья.
+ * A test of PARSING `pdftotext -bbox` coordinates — the half of the balancing measurement where
+ * 08-29 saw four errors in a row in one day. A test against a live PDF would have caught none of
+ * them: they're all about how the coordinates are read, not about whether the paper builds.
  *
- * Каждый случай ниже — воспроизведение конкретной ошибки того дня, а не выдуманная ситуация.
- * Разметка пишется руками, потому что нужны страницы, которых в корпусе сегодня нет.
+ * Each case below reproduces a specific error from that day, not an invented situation. The
+ * markup is written by hand because it needs pages that don't exist in the corpus today.
  */
 import assert from "node:assert/strict";
 import { dirname, join } from "node:path";
@@ -14,13 +14,13 @@ import { fileURLToPath } from "node:url";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { columnHeights } = await import(join(HERE, "extract-pdf-facts.mjs"));
 
-const W = 612; // letter, пункты
+const W = 612; // letter, points
 
-/** Собрать разметку: строки задаются как {x, yTop, yBot, n, text}. */
+/** Assemble markup: lines are given as {x, yTop, yBot, n, text}. */
 const page = (rows) =>
   "<page>" +
   rows
-    .flatMap(({ x, yTop, yBot, n = 1, text = "слово", step = 0 }) =>
+    .flatMap(({ x, yTop, yBot, n = 1, text = "word", step = 0 }) =>
       Array.from({ length: n }, (_, i) => {
         const y = yTop + i * step;
         const b = yBot + i * step;
@@ -30,7 +30,7 @@ const page = (rows) =>
     .join("") +
   "</page>";
 
-// ── 1. Сведённые колонки: обе кончаются на одной высоте ──────────────────────
+// ── 1. Balanced columns: both end at the same height ─────────────────────────
 {
   const xml = page([
     { x: 54, yTop: 60, yBot: 70, n: 40, step: 10 },
@@ -40,72 +40,73 @@ const page = (rows) =>
   assert.deepEqual(
     c,
     [400, 400],
-    "две одинаковые колонки обязаны дать одинаковые высоты",
+    "two identical columns must produce identical heights",
   );
 }
 
-// ── 2. Несведённые: ровно тот дефект, за который издатель вернул статью 29.08 ─
+// ── 2. Unbalanced: exactly the defect the publisher bounced the paper for on 08-29 ─
 {
   const xml = page([
     { x: 54, yTop: 60, yBot: 70, n: 60, step: 10 },
     { x: 320, yTop: 60, yBot: 70, n: 30, step: 10 },
   ]);
   const c = columnHeights(xml, W);
-  assert.equal(c[0] - c[1], 300, "перекос обязан быть виден как разница высот");
+  assert.equal(c[0] - c[1], 300, "the imbalance must show up as a height difference");
 }
 
-// ── 3. 🔴 РАЗДЕЛ ПО СЕРЕДИНЕ СТРАНИЦЫ, А НЕ ПО КРАЯМ СЛОВ ─────────────────────
-// Ошибка №2 того дня. Середина бралась между крайними словами — и на странице, где заполнена
-// ТОЛЬКО левая колонка, а внизу по центру стоит номер страницы, такой разрез приходится ВНУТРЬ
-// левой колонки: часть её строк уезжает в «правую». Замер выдал «77 / 731» странице, на которой
-// шесть строк вверху слева.
+// ── 3. 🔴 SPLIT ON THE PAGE'S MIDPOINT, NOT ON THE WORDS' EDGES ───────────────
+// Error #2 of that day. The midpoint was taken between the outermost words — and on a page where
+// ONLY the left column is filled, with a centered page number at the bottom, that split lands
+// INSIDE the left column: part of its lines get shoved into the "right" one. The measurement gave
+// "77 / 731" for a page with six lines at the top left.
 //
-// Случай воспроизводит именно это: строка занимает всю ширину колонки (54…290), а не одну точку.
-// Середина страницы — 306, середина по краям слов — около 172, то есть внутри строки.
+// The case reproduces exactly this: a line spans the column's whole width (54…290), not a single
+// point. The page's midpoint is 306, the words' edge-based midpoint is around 172 — that is,
+// inside the line.
 {
   const rows = [];
   for (let i = 0; i < 20; i += 1) {
     for (const x of [54, 110, 170, 230, 280])
       rows.push({ x, yTop: 60 + i * 10, yBot: 70 + i * 10 });
   }
-  rows.push({ x: 300, yTop: 700, yBot: 708, text: "24" }); // номер страницы по центру
+  rows.push({ x: 300, yTop: 700, yBot: 708, text: "24" }); // centered page number
   const c = columnHeights(page(rows), W);
   assert.equal(
     c[1],
     0,
-    `правая колонка пуста — обязан выйти 0, получено ${String(c[1])}`,
+    `the right column is empty — must come out 0, got ${String(c[1])}`,
   );
   assert.ok(
     c[0] > 600,
-    `левая колонка должна остаться целой, получено ${String(c[0])}`,
+    `the left column should stay whole, got ${String(c[0])}`,
   );
 }
 
-// ── 4. 🔴 СБОРКА ДЛЯ РЕЦЕНЗЕНТОВ НЕ СУДИТСЯ ──────────────────────────────────
-// Номера строк на полях идут по ВСЕЙ высоте страницы, поэтому колонка с десятком строк текста
-// меряется как полная: замер 29.08 дал «656.8 / 654.8» странице, чья правая колонка заполнена
-// на шестую часть. Балансировка требуется от camera-ready, значит правильный ответ — «нечего
-// мерить», а не подогнанное число.
+// ── 4. 🔴 A REVIEWER BUILD IS NOT JUDGED ──────────────────────────────────────
+// Line numbers in the margin run down the WHOLE height of the page, so a column with a dozen
+// lines of text measures as full: the 08-29 measurement gave "656.8 / 654.8" for a page whose
+// right column was one-sixth filled. Balancing is only required of camera-ready, so the correct
+// answer is "nothing to measure," not a fudged number.
 {
   const rows = [
     { x: 54, yTop: 60, yBot: 70, n: 60, step: 10 },
     { x: 320, yTop: 60, yBot: 70, n: 10, step: 10 },
-    { x: 20, yTop: 60, yBot: 68, n: 60, step: 10, text: "101" }, // номера строк на левом поле
+    { x: 20, yTop: 60, yBot: 68, n: 60, step: 10, text: "101" }, // line numbers in the left margin
   ];
   assert.equal(
     columnHeights(page(rows), W),
     null,
-    "ревью-сборку судить нельзя",
+    "a reviewer build cannot be judged",
   );
-  // без номеров та же страница судится — иначе тест выше проходил бы по любой причине
+  // without the line numbers, the same page IS judged — otherwise the test above would pass for any reason
   assert.notEqual(
     columnHeights(page(rows.slice(0, 2)), W),
     null,
-    "без номеров строк страница судится",
+    "without line numbers, the page is judged",
   );
 }
 
-// Номера на ПРАВОМ поле ловятся так же — у ACL-шаблона они с обеих сторон.
+// Line numbers in the RIGHT margin are caught the same way — the ACL template has them on both sides.
 {
   const xml = page([
     { x: 54, yTop: 60, yBot: 70, n: 60, step: 10 },
@@ -115,12 +116,12 @@ const page = (rows) =>
   assert.equal(
     columnHeights(xml, W),
     null,
-    "номера на правом поле — тоже ревью-сборка",
+    "numbers in the right margin are also a reviewer build",
   );
 }
 
-// Число ВНУТРИ текста номером строки не является: иначе библиография с годами ловилась бы
-// как ревью-сборка, и правило молчало бы ровно на той странице, ради которой заведено.
+// A number INSIDE the text is not a line number: otherwise a bibliography with years would be
+// caught as a reviewer build, and the rule would go silent on exactly the page it was written for.
 {
   const xml = page([
     { x: 54, yTop: 60, yBot: 70, n: 40, step: 10, text: "2024" },
@@ -129,25 +130,25 @@ const page = (rows) =>
   assert.deepEqual(
     columnHeights(xml, W),
     [400, 400],
-    "годы в тексте — не номера строк",
+    "years in the text are not line numbers",
   );
 }
 
-// ── 5. Страница-огрызок ──────────────────────────────────────────────────────
-// Хвост из шести строк — не дефект вёрстки, и подогнанное число там хуже молчания.
+// ── 5. A stub page ────────────────────────────────────────────────────────────
+// A tail of six lines is not a layout defect, and a fudged number there is worse than silence.
 {
   const xml = page([{ x: 54, yTop: 60, yBot: 70, n: 6, step: 10 }]);
-  assert.equal(columnHeights(xml, W), null, "почти пустая страница не судится");
+  assert.equal(columnHeights(xml, W), null, "a near-empty page is not judged");
 }
 
-// ── 6. Отсутствующая ширина страницы — null, а не деление на неизвестно что ──
+// ── 6. Missing page width — null, not a division by who-knows-what ───────────
 {
   const xml = page([{ x: 54, yTop: 60, yBot: 70, n: 70, step: 10 }]);
   assert.equal(
     columnHeights(xml, null),
     null,
-    "без ширины страницы разрез провести не по чему",
+    "with no page width, there is nothing to split against",
   );
 }
 
-console.log("extract-pdf-facts: разбор координат — все проверки прошли");
+console.log("extract-pdf-facts: coordinate parsing — all checks passed");

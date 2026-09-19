@@ -91,7 +91,7 @@ export default {
           {
             type: "object",
             properties: {
-              // { "<путь к каталогу статьи от корня>": { sectionSign: 54, unreachable: 18 } }
+              // { "<path to the paper directory from repo root>": { sectionSign: 54, unreachable: 18 } }
               debt: { type: "object", additionalProperties: true },
             },
             additionalProperties: false,

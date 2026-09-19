@@ -1,26 +1,25 @@
 #!/usr/bin/env node
 /**
- * ШИМ. Настоящий CLI живёт в `src/*.ts` и собирается в `dist/`; этот файл остаётся на месте и
- * остаётся JavaScript намеренно.
+ * SHIM. The real CLI lives in `src/*.ts` and builds to `dist/`; this file stays put and
+ * remains JavaScript deliberately.
  *
- * 🔴 ПОЧЕМУ НЕ ПЕРЕНЕСТИ `bin` НА `dist/cli.js`. Этот путь — ПУБЛИЧНЫЙ КОНТРАКТ, и у него уже
- * два потребителя вне пакета:
- *   1. `plugin/hooks/hooks.json` зовёт
+ * 🔴 WHY NOT MOVE `bin` TO `dist/cli.js`. This path is a PUBLIC CONTRACT, and it already has
+ * two consumers outside the package:
+ *   1. `plugin/hooks/hooks.json` calls
  *        node "${CLAUDE_PROJECT_DIR}/node_modules/research-paper-pipeline/bin/rpp.mjs" hook <name>
- *      — проводку хуков чинили ровно от того, что она адресовала файл, которого у потребителя
- *      не оказалось; менять её на следующий день было бы тем же классом ошибки;
- *   2. README документирует `import { buildConfig } from "research-paper-pipeline/bin/rpp.mjs"`.
- * Переезд стоил бы обоим, а выигрыш — ноль: имя файла ничего не говорит о том, на чём он написан.
+ *      — the hook wiring was fixed exactly because it addressed a file the consumer did not have;
+ *      changing it the next day would be the same class of error;
+ *   2. README documents `import { buildConfig } from "research-paper-pipeline/bin/rpp.mjs"`.
+ * A move would cost both, and yield zero: a file name says nothing about what language it is in.
  *
- * 🔴 И ПОЧЕМУ ОТКАЗ ЗДЕСЬ ГРОМКИЙ. У потребителя, поставившего пакет из реестра, `dist/` лежит
- * в тарболе готовым — это ЗАМЕРЕНО (`npm pack --dry-run`: 16 файлов `dist/*`), и держится оно
- * белым списком `files` в манифесте. Список там не для красоты: поля `files` не было, npm брал
- * за список исключений `.gitignore`, и строка `dist/` в нём выкидывала сборку из пакета —
- * 376 файлов превращались в 360, а потребитель получал именно этот отказ. Проверка остаётся
- * для двух случаев, где `dist/` действительно может не оказаться: клон репозитория до
- * `npm run build` и установка пакета как git-зависимости с `--ignore-scripts` (тогда `prepare`
- * не запускается). Без неё в обоих был бы `ERR_MODULE_NOT_FOUND` из недр загрузчика: сообщение
- * про файл, которого потребитель не писал, и ни слова о том, что делать.
+ * 🔴 AND WHY THE FAILURE HERE IS LOUD. A consumer who installed the package from the registry
+ * has `dist/` in the tarball ready — this IS MEASURED (`npm pack --dry-run`: 16 files `dist/*`), and
+ * it is kept by the `files` allowlist in the manifest. The list is not for show: without the `files` field,
+ * npm used `.gitignore` as the exclusion list, and `dist/` in it would eject the build from the package —
+ * 376 files became 360, and the consumer got exactly this refusal. The check stays for two cases where
+ * `dist/` can genuinely be missing: a clone before `npm run build` and installing the package as a git
+ * dependency with `--ignore-scripts` (so `prepare` does not run). Without it, both would yield `ERR_MODULE_NOT_FOUND`
+ * from deep in the loader: a message about a file the consumer did not write, and no hint what to do.
  */
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -28,17 +27,17 @@ import { fileURLToPath } from "node:url";
 const dist = new URL("../dist/cli.js", import.meta.url);
 if (!existsSync(fileURLToPath(dist))) {
   process.stderr.write(
-    `research-paper-pipeline: не собрано — ${fileURLToPath(dist)} отсутствует.\n` +
-      `Пакет пишется на TypeScript; в тарболе из реестра \`dist/\` уже лежит собранным, поэтому\n` +
-      `сюда приходят из клона репозитория либо из git-зависимости, поставленной с\n` +
-      `\`--ignore-scripts\` (тогда шаг \`prepare\` пропускается).\n` +
-      `В клоне: \`npm run build\`. Для git-зависимости: переустановить без \`--ignore-scripts\`.\n`,
+    `research-paper-pipeline: not built — ${fileURLToPath(dist)} missing.\n` +
+      `The package is written in TypeScript; in the registry tarball \`dist/\` already lies built, so\n` +
+      `you reach here from a repository clone or a git dependency installed with\n` +
+      `\`--ignore-scripts\` (so the \`prepare\` step is skipped).\n` +
+      `In a clone: \`npm run build\`. For a git dependency: reinstall without \`--ignore-scripts\`.\n`,
   );
   process.exit(2);
 }
 export * from "../dist/cli.js";
 const { run, isMain } = await import("../dist/cli.js");
-// Вопрос задаётся про ЭТОТ файл, а не про `dist/cli.js`: в `bin` смотрит симлинк из
-// `node_modules/.bin`, и `isMain` умеет сравнивать его с реальным путём. Для самого `cli.js`
-// ответ теперь всегда «нет» — его импортируют, а не запускают.
+// The question is about THIS file, not `dist/cli.js`: `bin` is the target of a symlink from
+// `node_modules/.bin`, and `isMain` can compare it to the real path. For `cli.js` itself
+// the answer is now always "no" — it is imported, not invoked.
 if (isMain(import.meta.url)) process.exit(await run(process.argv.slice(2)));

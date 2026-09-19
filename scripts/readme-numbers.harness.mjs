@@ -1,14 +1,14 @@
 /**
- * Обе половины для `check:readme`, и третья, без которой проверка чисел бессмысленна: она сама
- * обязана уметь СЧИТАТЬ ВЕРНО.
+ * Both halves of `check:readme`, plus a third that makes the number check meaningful: it must
+ * know how to COUNT CORRECTLY itself.
  *
- * 🔴 Два бага этого скрипта были пойманы не глазом, а расхождением с независимыми командами, и
- * оба закреплены здесь ассертами:
- *   1. счёт правил принимал только форму `{ rules: {…} }` и МОЛЧА записывал `tex-build.mjs`
- *      (правила прямо в `default`) в «не плагин» — уверенное 8 вместо 10;
- *   2. обход дерева шёл `statSync`, то есть ПО СИМЛИНКАМ, и 24 ссылки `.claude/skills/*` →
- *      `skills/*` дали 83 харнесса вместо 49.
- * Оба — «счётчик, который считает то, что игнорирует»: пропуск ничего не обещает, счётчик обещает.
+ * 🔴 Two bugs in this script were caught not by eye, but by divergence from independent commands, and
+ * both are nailed down here as assertions:
+ *   1. rule counting accepted only the form `{ rules: {…} }` and SILENTLY dropped `tex-build.mjs`
+ *      (rules directly in `default`) into "not a plugin" — confident 8 instead of 10;
+ *   2. tree walk used `statSync`, meaning VIA SYMLINKS, and 24 links `.claude/skills/*` →
+ *      `skills/*` gave 83 harnesses instead of 49.
+ * Both are "a counter counting what it ignores": a miss says nothing, a counter does.
  */
 import assert from "node:assert/strict";
 import { mkdtempSync, mkdirSync, writeFileSync, symlinkSync, rmSync, realpathSync } from "node:fs";
@@ -27,56 +27,56 @@ const check = (label, cond) => {
   n++;
 };
 
-// ── пометки в прозе ─────────────────────────────────────────────────────────────────────
-const d = declaredCounts("текст <!-- count:rules -->10 и ещё <!--count:skills-->24 хвост");
-check("пометки читаются, пробелы внутри не обязательны", d.rules === 10 && d.skills === 24);
-// Число СЛОВОМ сравнить нечем — ровно из-за этого README и разъехался. Ассерт фиксирует, что
-// такая форма НЕ считается объявлением.
-check("число словом объявлением не считается",
+// ── marks in prose ───────────────────────────────────────────────────────────────────────────
+const d = declaredCounts("text <!-- count:rules -->10 and also <!--count:skills-->24 tail");
+check("marks are read, spaces inside are not required", d.rules === 10 && d.skills === 24);
+// A number AS A WORD cannot be compared — exactly why README diverged. The assertion fixes that
+// such form does NOT count as a declaration.
+check("a number as a word is not a declaration",
       Object.keys(declaredCounts("Forty-five of those.")).length === 0);
-check("текст без пометок даёт пустой набор — CLI на этом выходит с кодом 1",
-      Object.keys(declaredCounts("# README\n\nникаких чисел")).length === 0);
+check("text without marks gives an empty set — CLI exits with code 1 on this",
+      Object.keys(declaredCounts("# README\n\nno numbers")).length === 0);
 
-// ── обход дерева не идёт по симлинкам ───────────────────────────────────────────────────
+// ── tree walk does not follow symlinks ───────────────────────────────────────────────────────
 {
-  // 🔴 `realpathSync` вокруг `mkdtempSync`: на macOS `/var` сам симлинк на `/private/var`, и без
-  // этого сравнение путей ловит два написания одного каталога. Этот класс уже стоит отдельным
-  // issue (#9) на трёх харнессах репозитория — здесь он не воспроизводится намеренно.
+  // 🔴 `realpathSync` around `mkdtempSync`: on macOS `/var` itself is a symlink to `/private/var`, and without
+  // it, path comparison catches two spellings of one directory. This case already sits as a separate
+  // issue (#9) on three repository harnesses — here it is intentionally not reproduced.
   const root = realpathSync(mkdtempSync(join(tmpdir(), "readme-nums-")));
   try {
     mkdirSync(join(root, "real"), { recursive: true });
     writeFileSync(join(root, "real", "a.harness.mjs"), "");
     writeFileSync(join(root, "real", "b.harness.mjs"), "");
-    check("считает настоящие файлы", countFiles(root, ".harness.mjs") === 2);
+    check("counts real files", countFiles(root, ".harness.mjs") === 2);
 
     symlinkSync(join(root, "real"), join(root, "mirror"), "dir");
-    check("СИМЛИНК на каталог не удваивает счёт — это не новый каталог",
+    check("SYMLINK to directory does not double the count — it is not a new directory",
           countFiles(root, ".harness.mjs") === 2);
 
-    // 🔴 ВТОРОЙ вид ссылки, и его здесь не было — поймала мутация, а не я. Ссылка на КАТАЛОГ
-    // отсекается уже тем, что `lstat` не считает её каталогом; отдельный страж
-    // `isSymbolicLink()` нужен ради ссылки на ФАЙЛ с подходящим суффиксом — она прошла бы
-    // проверку `endsWith` и удвоила счёт. Без этого ассерта страж выглядел бы мёртвым кодом.
+    // 🔴 SECOND TYPE of link, and it was not here — a mutation caught it, not me. A link to a DIRECTORY
+    // is filtered by the fact that `lstat` does not call it a directory; a separate guard
+    // `isSymbolicLink()` is needed for a link to a FILE with the right suffix — it would pass
+    // the `endsWith` check and double the count. Without this assertion the guard looks like dead code.
     symlinkSync(join(root, "real", "a.harness.mjs"), join(root, "link.harness.mjs"));
-    check("СИМЛИНК на файл-харнесс тоже не удваивает счёт",
+    check("SYMLINK to a harness file also does not double the count",
           countFiles(root, ".harness.mjs") === 2);
 
     mkdirSync(join(root, "node_modules", "pkg"), { recursive: true });
     writeFileSync(join(root, "node_modules", "pkg", "c.harness.mjs"), "");
-    check("node_modules не считается", countFiles(root, ".harness.mjs") === 2);
+    check("node_modules is not counted", countFiles(root, ".harness.mjs") === 2);
 
-    // Драйвер `run-mutations.mjs` кончается на `mutations.mjs`, но батареей не является:
-    // суффикс проверяется С ТОЧКОЙ. Именно на этом ошибался `git grep`, давая 27 вместо 26.
+    // The driver `run-mutations.mjs` ends in `mutations.mjs` but is not a battery:
+    // the suffix is checked WITH A DOT. This is what `git grep` got wrong, giving 27 instead of 26.
     writeFileSync(join(root, "real", "run-mutations.mjs"), "");
     writeFileSync(join(root, "real", "x.mutations.mjs"), "");
-    check("`run-mutations.mjs` не батарея — суффикс требует точку",
+    check("`run-mutations.mjs` is not a battery — suffix requires a dot",
           countFiles(root, ".mutations.mjs") === 1);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
 }
 
-// ── счёт правил принимает обе формы и НЕ молчит о третьей ───────────────────────────────
+// ── rule count accepts both forms and DOES NOT stay silent about a third ────────────────────
 {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "readme-rules-")));
   try {
@@ -85,24 +85,24 @@ check("текст без пометок даёт пустой набор — CLI
     const rule = '{ meta: { schema: [] }, create() { return {}; } }';
     writeFileSync(join(dir, "plugin-shape.mjs"), `export default { rules: { a: ${rule}, b: ${rule} } };`);
     writeFileSync(join(dir, "bare-shape.mjs"), `export default { c: ${rule} };`);
-    check("обе формы экспорта считаются — плагин и голые правила",
+    check("both export forms are counted — plugin and bare rules",
           (await countRules(root)) === 3);
 
-    // Третья форма — та, на которой скрипт уже ошибся молча. Теперь это ОШИБКА.
+    // The third form — the one the script already failed on silently. Now it is an ERROR.
     writeFileSync(join(dir, "helpers.mjs"), "export const helper = () => 1;");
     let threw = null;
     try { await countRules(root); } catch (e) { threw = e; }
-    check("модуль неизвестной формы — ОШИБКА, а не тихий пропуск", threw !== null);
-    check("и ошибка НАЗЫВАЕТ файл, а не жалуется вообще",
+    check("an unknown-form module is an ERROR, not a silent skip", threw !== null);
+    check("and the error NAMES the file, not just complains",
           threw && /helpers\.mjs/.test(threw.message));
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
 }
 
-// ── на живом дереве числа положительны и правдоподобны ──────────────────────────────────
+// ── on a live tree the numbers are positive and plausible ────────────────────────────────────
 const live = await actualCounts();
-check("на живом дереве все четыре счётчика больше нуля",
+check("on a live tree all four counters are greater than zero",
       Object.values(live).every((v) => Number.isInteger(v) && v > 0));
 
-console.log(`✓ ${String(n)} assertions passed — check:readme, числа производятся, а не пишутся`);
+console.log(`✓ ${String(n)} assertions passed — check:readme, numbers are produced, not written`);

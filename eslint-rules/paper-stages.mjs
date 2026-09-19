@@ -110,7 +110,7 @@ export default {
       },
       create(context) {
         const dir = dirname(context.filename);
-        let declared = null; // null = фронтматтера не было вовсе
+        let declared = null; // null = there was no frontmatter at all
 
         return {
           yaml(node) {
@@ -232,40 +232,43 @@ export default {
      * bytes are gone. Failing a build over unrecoverable history is a gate nobody can clear.
      */
     /**
-     * `paper/author-list` — отгруженная статья ДОЛЖНА СЕБЕ прогон сверки списков авторов.
+     * `paper/author-list` — a shipped paper OWES ITSELF a run of the author-list cross-check.
      *
-     * Класс, который ловит эта сверка, невидим для проверки существования ссылок: ссылка есть,
-     * идентификатор резолвится, а авторы взяты от ПРЕПРИНТА при объявленной конференции. На живом
-     * корпусе так нашлось семь записей в трёх статьях, включая ВЫБРОШЕННОГО ЖИВОГО ЧЕЛОВЕКА
-     * (`schick2023toolformer` — пропущен Eric Hambro; у версии NeurIPS девять авторов, у препринта
-     * восемь). Две из семи найдены на УЖЕ ОТПРАВЛЕННОЙ статье.
+     * The class this cross-check catches is invisible to an existence check on citations: the
+     * citation exists, the identifier resolves, and the authors are taken from the PREPRINT
+     * while the entry declares a conference. On the live corpus this turned up seven records
+     * across three papers, including a DROPPED LIVING PERSON (`schick2023toolformer` — Eric
+     * Hambro is missing; the NeurIPS version has nine authors, the preprint has eight). Two of
+     * the seven were found on a paper ALREADY SUBMITTED.
      *
-     * 🔴 ЧТО ИСПРАВЛЕНО ПЕРЕНОСОМ, и это замер, а не вкус. Предшественница выводила объявленную
-     * стадию РЕГУЛЯРКОЙ ПО ПРОЗЕ того же файла. Перезамер 2026-09-17 на живом корпусе: у
-     * `agenticdev-2026` проза видит `submitted`, фронтматтер объявляет `submitted, camera-ready` —
-     * шаблон `/camera-ready (?:uploaded|submitted|отгружен)/i` не ловит ту форму, которой стадия
-     * записана. Набор находок сегодня от этого не менялся (обе проверки спрашивали лишь «есть ли
-     * ХОТЬ ОДНА стадия»), но СООБЩЕНИЕ печатало неверный список стадий. Здесь предмет — то же
-     * поле `stages`, которое `paper/stages` уже сверяет с байтами в обе стороны.
+     * 🔴 WHAT THE MOVE FIXED, and this is a measurement, not taste. The predecessor derived the
+     * declared stage with a REGEX OVER THE PROSE of that same file. Remeasured 2026-09-17 on the
+     * live corpus: for `agenticdev-2026` the prose reads `submitted`, the frontmatter declares
+     * `submitted, camera-ready` — the pattern `/camera-ready (?:uploaded|submitted|shipped)/i`
+     * does not catch the form the stage is actually recorded in. Today's set of findings did not
+     * change from this (both checks only asked "is there ANY stage at all"), but the MESSAGE
+     * printed the wrong list of stages. The subject here is the same `stages` field that
+     * `paper/stages` already checks against the bytes in both directions.
      *
-     * 🔴 МАРКЕР ИЩЕТСЯ В ЯЧЕЙКАХ ТАБЛИЦЫ, А НЕ ГРЕПОМ ПО ФАЙЛУ. Первая редакция делала
-     * `context.sourceCode.text.includes(marker)` и оправдывалась комментарием «у ячейки-примечания
-     * нет своего узла». Это оказалось ПРОСТО НЕВЕРНО — замер 2026-09-17 показал, что парсер
-     * markdown отдаёт `table`, `tableRow` и `tableCell` (двенадцать ячеек на трёхстрочной
-     * таблице). Правило базы говорит дословно: «markdown разбираем парсером».
+     * 🔴 THE MARKER IS LOOKED FOR IN TABLE CELLS, NOT GREPPED OVER THE FILE. The first draft did
+     * `context.sourceCode.text.includes(marker)` and justified it with a comment saying "a
+     * footnote cell has no node of its own". That turned out to be SIMPLY WRONG — a 2026-09-17
+     * measurement showed the markdown parser hands back `table`, `tableRow` and `tableCell`
+     * (twelve cells on a three-row table). The base rule says, word for word, "parse markdown
+     * with a parser".
      *
-     * Разбор к тому же СТРОЖЕ грепа, и разница содержательная: маркер, упомянутый в прозе за
-     * пределами скоркарда — в заголовке, в абзаце «надо будет прогнать bib-authors», в чужой
-     * цитате, — больше не засчитывается как запись о прогоне. Грепу эти три случая неотличимы от
-     * настоящей записи.
+     * Parsing is also STRICTER than grep, and the difference is real: a marker mentioned in
+     * prose outside the scorecard — in a heading, in a paragraph saying "still need to run
+     * bib-authors", in a quote from someone else — no longer counts as a record of a run. To
+     * grep, those three cases are indistinguishable from a genuine record.
      *
-     * ⚠️ ЧЕГО ЭТО ВСЁ ЕЩЁ НЕ ЧИНИТ: внутри ячейки свидетельство остаётся ПРОЗОЙ, и прогон,
-     * сформулированный другими словами, правило не увидит. Настоящее лекарство — поле во
-     * фронтматтере (`gates.cites.ran`), а не более умный поиск по тексту; это отдельная работа,
-     * задевающая четыре живых табеля.
+     * ⚠️ WHAT THIS STILL DOES NOT FIX: inside the cell the evidence is still PROSE, and a run
+     * phrased in different words will not be seen by the rule. The real fix is a frontmatter
+     * field (`gates.cites.ran`), not a smarter text search; that's separate work, touching four
+     * live scorecards.
      *
-     * Поэтому severity назначает ПОТРЕБИТЕЛЬ, и по умолчанию это не `error`: доказательство
-     * прогона — проза, а ложное срабатывание на блокирующем уровне дороже пропуска.
+     * So severity is set by the CONSUMER, and the default is not `error`: the proof of a run is
+     * prose, and a false positive at a blocking level costs more than a miss.
      */
     "author-list": {
       meta: {
@@ -278,12 +281,12 @@ export default {
           {
             type: "object",
             properties: {
-              // Маркер прогона в табеле. Данные — у потребителя: как ИМЕННО он записывает, что
-              // сверка состоялась, пакет знать не может.
+              // The run marker in the scorecard. This is consumer data: the package cannot
+              // know EXACTLY how a given consumer records that the cross-check happened.
               marker: { type: "string" },
-              // Чем прогнать. Это АДРЕС ПОТРЕБИТЕЛЯ, и в публичном пакете его быть не должно:
-              // предшественница зашивала `.claude/skills/verify-citations/scripts/bib-authors.mjs`
-              // прямо в текст сообщения.
+              // What to run. This is a CONSUMER-SPECIFIC PATH, and it has no place in a public
+              // package: the predecessor hardcoded
+              // `.claude/skills/verify-citations/scripts/bib-authors.mjs` right into the message text.
               command: { type: "string" },
             },
             additionalProperties: false,
@@ -299,8 +302,9 @@ export default {
         const marker = opts.marker ?? "bib-authors";
         const command = opts.command ?? "";
 
-        // Решение откладывается до конца файла: узел фронтматтера приходит ПЕРВЫМ, а таблица
-        // после него. Отчитаться на `yaml` значит вынести вердикт, не увидев скоркарда.
+        // The verdict is deferred to the end of the file: the frontmatter node arrives FIRST,
+        // and the table comes after it. Reporting on `yaml` would mean a verdict rendered
+        // without ever seeing the scorecard.
         let declaredAt = null;
         let stages = [];
         let recorded = false;
@@ -311,20 +315,20 @@ export default {
             try {
               data = load(node.value ?? "");
             } catch {
-              return; // о нечитаемом YAML уже отчиталось `paper/stages`
+              return; // `paper/stages` has already reported the unreadable YAML
             }
             const raw = data?.stages;
             if (!Array.isArray(raw)) return;
             stages = raw.map((r) => r?.stage).filter(Boolean);
-            // Один страж, а не два: `raw.length === 0` был бы ЧАСТНЫМ случаем этого же условия,
-            // и мутация по нему оказалась бы неубиваемой — второй страж её глушит. Здесь же
-            // покрыт и случай непустого списка из записей без поля `stage`.
-            if (stages.length === 0) return; // не отгружено — ничего не должно
+            // One guard, not two: `raw.length === 0` would be a SPECIAL CASE of this same
+            // condition, and a mutation against it would turn out unkillable — the second guard
+            // mutes it. This also covers a non-empty list made of records with no `stage` field.
+            if (stages.length === 0) return; // nothing shipped — nothing is owed
             declaredAt = node;
           },
 
-          // Свидетельство — ЯЧЕЙКА СКОРКАРДА, а не любое вхождение строки в файл. Узел у неё
-          // есть; первая редакция утверждала обратное и грепала весь текст.
+          // The evidence is a SCORECARD CELL, not any occurrence of the string in the file. It
+          // has a node of its own; the first draft claimed otherwise and grepped the whole text.
           tableCell(node) {
             if (recorded) return;
             if (context.sourceCode.getText(node).includes(marker)) recorded = true;
@@ -373,7 +377,7 @@ export default {
             try {
               data = load(node.value ?? "");
             } catch {
-              return; // `paper/stages` уже отчиталось о нечитаемом YAML
+              return; // `paper/stages` has already reported the unreadable YAML
             }
             const raw = data?.stages;
             if (!Array.isArray(raw)) return;
@@ -382,8 +386,8 @@ export default {
               if (!STAGES.includes(stage)) continue;
               const date = isoDate(rec?.date);
 
-              // Признание утраты — ЗАПИСЬ, а не освобождение: правило продолжает говорить,
-              // потому что состояние остаётся дефектным, просто неисправимым сегодня.
+              // Acknowledging the loss is a RECORD, not an exemption: the rule keeps speaking,
+              // because the state stays defective, just unfixable today.
               if (rec?.sourceLost === true) {
                 context.report({ node, messageId: "lostAcknowledged", data: { stage, date } });
                 continue;

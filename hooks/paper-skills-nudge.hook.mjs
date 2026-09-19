@@ -93,16 +93,18 @@ RULES earned the hard way:
 export default experimental_defineReact({
   on: "PostToolUse",
   match: tools("Edit", "Write", "MultiEdit"),
-  // 🔴 ПУТЬ ПРИВЯЗАН К КОРНЮ ПРОЕКТА, и это не косметика. vigiles исполняет провайдер «via
-  // execSync in the hook's cwd», а cwd процесса хука задаёт проводка потребителя — строка,
-  // которой этот хук не видит. Голое `cat package.json` поэтому читается от того каталога,
-  // куда в последний раз ушёл инструмент Bash, и `cd` в подкаталог без манифеста ломает чтение.
+  // 🔴 THE PATH IS ANCHORED TO THE PROJECT ROOT, and that is not decoration. vigiles runs the
+  // provider "via execSync in the hook's cwd", and the hook process's cwd is the consumer's
+  // own wiring — a string this hook cannot see. A bare `cat package.json` therefore reads from
+  // whatever directory the Bash tool last moved to, and a `cd` into a subdirectory with no
+  // manifest breaks the read.
   //
-  // ⚠️ ОТКАЗ ЗДЕСЬ ТИХИЙ, и потому опаснее, чем у соседа. `paper-edit-guard` на PreToolUse при
-  // нечитаемом объявлении ДЕНАИТ — громко и заметно. Этот хук на PostToolUse возвращает
-  // `nothing()`, то есть просто перестаёт срабатывать: цепочка `cat` падает → пустая строка →
-  // `JSON.parse("")` бросает → `papersRoot` отдаёт null → тишина. А тишина у нуджа и есть
-  // состояние успеха, поэтому мёртвый хук неотличим от работающего.
+  // ⚠️ THE FAILURE HERE IS SILENT, which makes it more dangerous than its neighbor's.
+  // `paper-edit-guard` on PreToolUse DENIES loudly and visibly when the declaration is
+  // unreadable. This hook on PostToolUse just returns `nothing()`, i.e. simply stops firing:
+  // the `cat` chain fails → empty string → `JSON.parse("")` throws → `papersRoot` returns null
+  // → silence. And silence is exactly what a nudge's success state looks like, so a dead hook
+  // is indistinguishable from a working one.
   needs: [provide("pkg", 'cat "${CLAUDE_PROJECT_DIR:-.}/package.json"')],
   react: (e) => {
     const root = papersRoot(e.ctx.pkg);

@@ -82,17 +82,18 @@ const ANNOUNCERS = [
   ["submit-paper", "paper-pipeline"],
 ];
 
-// 🔴 «Каждый сиблинг различен» — это УТВЕРЖДЕНИЕ, а не пожелание в комментарии. Список пишется
-// руками, и ровно такой список уже протухал молча. Если два случая мутируют в одно и то же имя,
-// они могут пройти на одной общей случайности, и батарея перестаёт различать их провалы.
+// 🔴 "Every sibling is distinct" is an ASSERTION, not a wish stated in a comment. The list is
+// written by hand, and exactly this kind of list has already rotted silently before. If two cases
+// mutate into the same name, they can pass on one shared accident, and the battery stops being
+// able to tell their failures apart.
 {
   const seen = new Set();
   for (const [skill, sibling] of ANNOUNCERS) {
-    if (skill === sibling) throw new Error(`${skill}: сиблинг обязан ОТЛИЧАТЬСЯ от самого скилла`);
+    if (skill === sibling) throw new Error(`${skill}: the sibling must be DIFFERENT from the skill itself`);
     if (seen.has(sibling))
       throw new Error(
-        `сиблинг "${sibling}" назван дважды — случаи перестали быть независимыми. ` +
-          `Каждому случаю нужен свой, иначе два из них могут пройти на одной случайности.`,
+        `sibling "${sibling}" is named twice — the cases stopped being independent. ` +
+          `Each case needs its own, otherwise two of them can pass on one shared accident.`,
       );
     seen.add(sibling);
   }

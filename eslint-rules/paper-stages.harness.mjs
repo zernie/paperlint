@@ -26,10 +26,11 @@ const check = (label, cond) => {
   n++;
 };
 
-// 🔴 Счётчик `n` СКВОЗНОЙ, поэтому печатать его под заголовком одного правила — значит
-// приписывать этому правилу чужие ассерты. Так и было: строка про `paper/source` сообщала
-// семнадцать, из которых десять проверяли `paper/stages`. `since()` отдаёт дельту своего
-// блока, и число снова описывает то, что названо рядом.
+// 🔴 The `n` counter is RUNNING TOTAL across the whole file, so printing it under one rule's
+// heading would credit that rule with someone else's asserts. That's exactly what happened: the
+// line about `paper/source` reported seventeen, of which ten were actually checking
+// `paper/stages`. `since()` hands back the delta for its own block, so the number describes what
+// stands next to it again.
 let mark = 0;
 const since = () => {
   const d = n - mark;
@@ -105,11 +106,12 @@ console.log(`✓ ${String(since())} assertions passed — paper/stages, both dir
 {
   const { mkdtempSync, writeFileSync, mkdirSync, rmSync } = await import("node:fs");
   const root = mkdtempSync(join(FIX, "..", ".tmp-stages-src-"));
-  // 🔴 try/finally, а НЕ уборка в конце блока. Наблюдено 16.09: под каждой мутацией ассерт
-  // бросает — то есть ровно тогда, когда харнесс делает свою работу, — и уборка на счастливом
-  // пути не выполняется. За один прогон батареи в репозитории осталось ВОСЕМЬ каталогов
-  // `.tmp-stages-src-*`, по числу намеренно убитых мутаций. Мусор здесь не косметика: драйвер
-  // мутаций отказывается работать на грязном дереве, то есть харнесс ломал бы следующий прогон.
+  // 🔴 try/finally, NOT cleanup at the end of the block. Observed 09-16: under every mutation
+  // the assert throws — that is, precisely when the harness is doing its job — and cleanup on
+  // the happy path never runs. One run of the battery left EIGHT `.tmp-stages-src-*` directories
+  // in the repository, one for each mutation deliberately killed. The litter here is not
+  // cosmetic: the mutation driver refuses to run on a dirty tree, so the harness would break
+  // the next run.
   try {
   const paper = join(root, "one");
   mkdirSync(join(paper, "versions"), { recursive: true });
@@ -161,11 +163,11 @@ console.log(`✓ ${String(since())} assertions passed — paper/stages, both dir
 
 console.log(`✓ ${String(since())} assertions passed — paper/source, frozen bytes instead of a sha`);
 
-// ── `paper/author-list`: отгруженная статья должна себе прогон сверки списков авторов ────
+// ── `paper/author-list`: a shipped paper owes itself a run of the author-list cross-check ────
 //
-// Предмет у этого правила ДРУГОЙ, чем у двух соседей выше: те сверяют объявление с байтами,
-// это — объявление с записью о прогоне. Общий у них ровно один вход, поле `stages`, и ради
-// него правило и живёт в этом модуле.
+// This rule's subject is DIFFERENT from its two neighbors above: those check the declaration
+// against the bytes, this one checks the declaration against a record of a run. What they share
+// is exactly one input, the `stages` field, and that's why the rule lives in this module.
 {
   const lintAuthors = (name, opts = {}) => {
     const file = join(FIX, name, "PIPELINE-STATUS.md");
@@ -180,59 +182,61 @@ console.log(`✓ ${String(since())} assertions passed — paper/source, frozen b
     return msgs.map((m) => m.message);
   };
 
-  // ── молчит там, где обязано ──
-  check("прогон записан в табеле — молчит",
+  // ── stays silent where it must ──
+  check("a run is recorded in the scorecard — silent",
         lintAuthors("authors-ran").length === 0);
-  // Черновик никого не просил себя читать, поэтому ничего и не должен. Это не послабление:
-  // предмет правила — ДОЛГ отгруженной статьи, а у неотгруженной долга нет.
-  check("стадия не объявлена вовсе — молчит, черновик ничего не должен",
+  // A draft never asked anyone to read it, so it owes nothing. This is not a carve-out: the
+  // rule's subject is the DEBT of a shipped paper, and an unshipped one has no debt.
+  check("no stage declared at all — silent, a draft owes nothing",
         lintAuthors("nothing").length === 0);
-  // Пустой список — это не «стадия есть»: запись `stages: []` встречается у статьи, которую
-  // завели, но никуда не подали.
-  check("пустой список стадий — молчит",
+  // An empty list is not "a stage exists": the record `stages: []` shows up on a paper that was
+  // set up but never submitted anywhere.
+  check("an empty stage list — silent",
         linter.verify("---\nstages: []\n---\n# S\n", [{
           files: ["**/*.md"], plugins: { markdown, paper: stages },
           language: "markdown/gfm", languageOptions: { frontmatter: "yaml" },
           rules: { "paper/author-list": "error" },
         }], join(FIX, "x", "PIPELINE-STATUS.md")).length === 0);
 
-  // ── срабатывает на подложенном дефекте ──
+  // ── fires on a planted defect ──
   const owed = lintAuthors("ok");
-  check("стадия объявлена, прогона нет — находка", owed.length === 1);
-  // 🔴 Сообщение обязано назвать КЛАСС, а не только факт пропуска: иначе читатель принимает
-  // его за дубль проверки существования ссылок и закрывает как шум. Класс — авторы препринта
-  // при объявленной конференции, и он невидим для проверки, что ссылка резолвится.
-  check("и оно называет класс, который ловит сверка, а не только пропуск",
+  check("a stage is declared, no run — a finding", owed.length === 1);
+  // 🔴 The message must name the CLASS, not just the fact of a miss: otherwise the reader takes
+  // it for a duplicate of the citation-existence check and closes it as noise. The class is
+  // preprint authors under a declared conference, and it is invisible to a check that a
+  // citation merely resolves.
+  check("and it names the class the cross-check catches, not just the miss",
         /PREPRINT/.test(owed[0]));
 
-  // ── то, ради чего перенос и делался ──
-  // Предшественница выводила стадию РЕГУЛЯРКОЙ ПО ПРОЗЕ табеля. Перезамер 17.09: у
-  // `agenticdev-2026` проза видит `submitted`, а фронтматтер — `submitted, camera-ready`.
-  // Здесь список берётся из поля, поэтому обе стадии попадают в текст находки.
+  // ── the whole reason the move was made ──
+  // The predecessor derived the stage with a REGEX OVER THE SCORECARD'S PROSE. Remeasured
+  // 09-17: for `agenticdev-2026` the prose reads `submitted`, while the frontmatter reads
+  // `submitted, camera-ready`. Here the list comes from the field, so both stages land in the
+  // finding's text.
   const two = lintAuthors("twice");
-  check("список стадий в сообщении взят из ПОЛЯ и несёт их все",
+  check("the stage list in the message comes from the FIELD and carries all of them",
         two.length === 1 && /submitted\/submitted/.test(two[0]));
 
-  // ── данные потребителя остаются у потребителя ──
-  // Предшественница зашивала в текст сообщения путь `.claude/skills/verify-citations/...` —
-  // адрес ОДНОГО репозитория внутри публичного пакета.
-  const withCmd = lintAuthors("ok", { command: "node scripts/bib-authors.mjs <статья>" });
-  check("команда прогона приходит опцией и попадает в сообщение",
+  // ── consumer data stays with the consumer ──
+  // The predecessor hardcoded the path `.claude/skills/verify-citations/...` into the message
+  // text — the address of ONE repository inside a public package.
+  const withCmd = lintAuthors("ok", { command: "node scripts/bib-authors.mjs <paper>" });
+  check("the run command comes in as an option and lands in the message",
         /scripts\/bib-authors\.mjs/.test(withCmd[0]));
-  check("а без опции сообщение не выдумывает путь",
+  check("and without the option the message does not invent a path",
         !/bib-authors\.mjs/.test(owed[0]));
-  // Маркер тоже данные: пакет не может знать, как ИМЕННО потребитель записывает прогон.
-  check("маркер настраивается — с другим маркером та же статья становится должником",
+  // The marker is also data: the package cannot know EXACTLY how a given consumer records a run.
+  check("the marker is configurable — with a different marker the same paper becomes a debtor",
         lintAuthors("authors-ran", { marker: "no-such-marker" }).length === 1);
 
-  // ── разбор против грепа: единственный случай, где они расходятся ──
-  // 🔴 Этот ассерт и есть доказательство перехода на парсер. Все фикстуры выше проходят
-  // ОДИНАКОВО при обоих способах, потому что маркер в них лежит в ячейке. Здесь он лежит в
-  // ПРОЗЕ — «надо будет прогнать bib-authors», намерение, а не запись, — и греп прочитал бы
-  // его как свидетельство прогона. Свидетельство обязано стоять в скоркарде.
-  check("маркер в прозе ВНЕ таблицы записью о прогоне не является",
+  // ── parsing versus grep: the one case where they diverge ──
+  // 🔴 This assert is the proof of the move to a parser. All the fixtures above pass IDENTICALLY
+  // either way, because their marker sits in a cell. Here it sits in PROSE — "still need to run
+  // bib-authors", an intention, not a record — and grep would read it as evidence of a run. The
+  // evidence must sit in the scorecard.
+  check("a marker in prose OUTSIDE the table is not a record of a run",
         lintAuthors("marker-in-prose").length === 1);
 }
-console.log(`✓ ${String(since())} assertions passed — paper/author-list, долг отгруженной статьи`);
+console.log(`✓ ${String(since())} assertions passed — paper/author-list, the debt of a shipped paper`);
 
 console.log(`✓ ${String(n)} assertions passed in total`);

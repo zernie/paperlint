@@ -30,7 +30,7 @@ pass whichever directory the work lives in, or \`.\`. The ledger row is written 
 dot is more honest than an invented path.
 
 A model asked for "a solution" returns the three designs nearest its training prior, then variations of
-those, then variations of the variations. The user experiences this as *«ты очень узко смотришь»* —
+those, then variations of the variations. The user experiences this as *"you are thinking very narrowly"* —
 and they are right. The fix is not to think harder in place; it is to **sweep named source domains on
 purpose** and filter hard.
 

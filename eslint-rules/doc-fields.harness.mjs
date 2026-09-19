@@ -1,8 +1,8 @@
 /**
- * Харнесс `doc/fields`. Обе половины у каждого случая: срабатывает на подложенном
- * дефекте И молчит на верном соседе — иначе «молчит» неотличимо от «мертво».
+ * Harness for `doc/fields`. Both halves for every case: fires on a planted defect AND
+ * stays silent on a correct neighbor — otherwise "silent" is indistinguishable from "dead".
  *
- * Батарея мутаций рядом: `doc-fields.mutations.mjs`.
+ * The mutation battery sits alongside it: `doc-fields.mutations.mjs`.
  */
 import assert from "node:assert/strict";
 import { Linter } from "eslint";
@@ -17,7 +17,7 @@ const OPTS = {
   sinceCreated: "2026-07-29",
 };
 
-/** Прогон правила по одному документу. Возвращает находки. */
+/** Run the rule against one document. Returns the findings. */
 function run(src, options = OPTS) {
   return linter.verify(src, {
     plugins: { markdown, doc: docFields },
@@ -28,135 +28,136 @@ function run(src, options = OPTS) {
 }
 
 const fm = (body, extra = "") =>
-  ["---", "title: сосед", 'created: "2026-08-01"', extra, "---", "", body].filter(Boolean).join("\n");
+  ["---", "title: neighbor", 'created: "2026-08-01"', extra, "---", "", body].filter(Boolean).join("\n");
 
-// ── 1. МОЛЧИТ, когда поле объявлено и значение допустимо ────────────────────────
+// ── 1. STAYS SILENT when the field is declared and the value is allowed ────────────────
 {
   for (const v of ["full", "abstract", "none"]) {
-    const m = run(fm("Разбор.", `read: ${v}`));
-    assert.deepEqual(m, [], `read: ${v} — допустимое значение, ожидалась тишина: ${JSON.stringify(m)}`);
+    const m = run(fm("Analysis.", `read: ${v}`));
+    assert.deepEqual(m, [], `read: ${v} — an allowed value, silence was expected: ${JSON.stringify(m)}`);
   }
-  recordCheck("три допустимых значения поля не дают находок");
+  recordCheck("the three allowed field values produce no findings");
 }
 
-// ── 2. СРАБАТЫВАЕТ, когда поля нет ──────────────────────────────────────────────
+// ── 2. FIRES when the field is missing ──────────────────────────────────────────
 {
-  const m = run(fm("Разбор без объявленного поля."));
-  assert.equal(m.length, 1, `случай 2: отсутствующее поле обязано давать РОВНО одну находку, пришло ${m.length}`);
-  assert.match(m[0].message, /no `read` field/, `случай 2: находка обязана называть «нет поля», пришла: ${m[0].message}`);
-  assert.match(m[0].message, /what exactly was read/, "подсказка из опции обязана доехать до текста");
-  recordCheck("отсутствующее поле — находка, с подсказкой из опции");
+  const m = run(fm("Analysis with no field declared."));
+  assert.equal(m.length, 1, `case 2: a missing field must produce EXACTLY one finding, got ${m.length}`);
+  assert.match(m[0].message, /no `read` field/, `case 2: the finding must name "no field", got: ${m[0].message}`);
+  assert.match(m[0].message, /what exactly was read/, "the hint from the option must reach the text");
+  recordCheck("a missing field is a finding, with the hint from the option");
 }
 
-// ── 3. СРАБАТЫВАЕТ на значении не из списка ─────────────────────────────────────
+// ── 3. FIRES on a value outside the list ─────────────────────────────────────
 {
-  const m = run(fm("Разбор.", "read: полностью"));
-  assert.equal(m.length, 1, `случай 3: значение вне словаря обязано давать одну находку, пришло ${m.length}`);
-  assert.match(m[0].message, /`read: полностью` — value is not in the list/,
-    `значение вне словаря обязано быть НАЗВАНО значением вне словаря — пришло: ${m[0].message}`);
-  recordCheck("значение вне словаря — находка, и она называет пришедшее значение");
+  const m = run(fm("Analysis.", "read: fully"));
+  assert.equal(m.length, 1, `case 3: a value outside the vocabulary must produce one finding, got ${m.length}`);
+  assert.match(m[0].message, /`read: fully` — value is not in the list/,
+    `a value outside the vocabulary must be NAMED as the value outside the vocabulary — got: ${m[0].message}`);
+  recordCheck("a value outside the vocabulary is a finding, and it names the value that arrived");
 }
 
-// ── 4. 🔴 ГЛАВНЫЙ СЛУЧАЙ: ПРОЗА С ТЕМ ЖЕ СЛОВОМ ПОЛЕМ НЕ ЯВЛЯЕТСЯ ───────────────
-// Предшественница искала подстроку `**Прочитано:**` и засчитывала ЛЮБОЕ её появление
-// — включая признание в неполноте. Здесь текст не влияет на вердикт вообще.
+// ── 4. 🔴 THE MAIN CASE: PROSE WITH THE SAME WORD IS NOT A FIELD ───────────────
+// The predecessor searched for the substring `**Read:**` and counted ANY occurrence of
+// it — including an admission of incompleteness. Here the text has no effect on the verdict at all.
 {
   const confession = fm(
-    "⚠️ **Прочитано только на уровне абстракта.** Полный текст обязателен до сабмита.",
+    "⚠️ **Read only at the abstract level.** The full text is required before submission.",
   );
   const m = run(confession);
-  assert.equal(m.length, 1, "жирная проза со словом «Прочитано» не объявляет поля — ожидалась находка");
-  assert.match(m[0].message, /no `read` field/, `пропущенное поле обязано быть НАЗВАНО (случай 1) — пришло: ${m[0].message}`);
+  assert.equal(m.length, 1, "bold prose containing the word 'Read' does not declare a field — a finding was expected");
+  assert.match(m[0].message, /no `read` field/, `a missing field must be NAMED (case 1) — got: ${m[0].message}`);
 
-  // и обратная половина: то же признание, объявленное ПОЛЕМ, законно и молчит
-  const declared = fm("Полный текст обязателен до сабмита.", "read: abstract");
-  assert.deepEqual(run(declared), [], "read: abstract — законное состояние, а не провал");
-  recordCheck("проза со словом «Прочитано» не засчитывается; то же состояние полем — засчитывается");
+  // and the reverse half: the same admission, declared as a FIELD, is legitimate and silent
+  const declared = fm("The full text is required before submission.", "read: abstract");
+  assert.deepEqual(run(declared), [], "read: abstract — a legitimate state, not a failure");
+  recordCheck("prose with the word 'Read' does not count; the same state as a field does");
 }
 
-// ── 5. МАРКЕР ВНУТРИ ОГРАДЫ КОДА И В ЦИТАТЕ — не влияет ─────────────────────────
-// Подстрочный поиск засчитывал оба. Для правила это просто текст документа.
+// ── 5. A MARKER INSIDE A CODE FENCE AND IN A QUOTE — has no effect ─────────────────
+// A substring search counted both. To the rule this is just document text.
 {
-  const fenced = fm(["```", "**Прочитано:** пример из чужой карточки", "```"].join("\n"));
-  assert.equal(run(fenced).length, 1, "маркер внутри ```-ограды не объявляет поля");
-  const quoted = fm("> **Прочитано:** цитата чужой карточки");
-  assert.equal(run(quoted).length, 1, "маркер в цитате не объявляет поля");
-  recordCheck("ограда кода и цитата поля не создают");
+  const fenced = fm(["```", "**Read:** an example from someone else's card", "```"].join("\n"));
+  assert.equal(run(fenced).length, 1, "a marker inside a ``` fence does not declare a field");
+  const quoted = fm("> **Read:** a quote from someone else's card");
+  assert.equal(run(quoted).length, 1, "a marker in a quote does not declare a field");
+  recordCheck("a code fence and a quote do not create a field");
 }
 
-// ── 6. «Правило от даты» — данные потребителя ───────────────────────────────────
+// ── 6. "Rule from a date" — consumer data ───────────────────────────────────
 {
-  // Даты ЗДЕСЬ в кавычках намеренно: случай про ГЕЙТ, а не про разбор типа. Неквотированные
-  // живут только в случае 8, иначе мутация «не приводить Date» убивает этот случай раньше.
+  // Dates are quoted HERE on purpose: this case is about the GATE, not about type parsing.
+  // Unquoted dates live only in case 8, otherwise the "don't normalize Date" mutation would
+  // kill this case first.
   const old = [
-    "---", "title: старая карточка", 'created: "2026-07-01"', "---", "", "Разбор без поля.",
+    "---", "title: an old card", 'created: "2026-07-01"', "---", "", "Analysis with no field.",
   ].join("\n");
-  assert.deepEqual(run(old), [], "карточка старше даты правила — известный долг, а не находка");
+  assert.deepEqual(run(old), [], "a card older than the rule's date — known debt, not a finding");
 
   const onTheDay = [
-    "---", "title: в день правила", 'created: "2026-07-29"', "---", "", "Разбор без поля.",
+    "---", "title: on the rule's day", 'created: "2026-07-29"', "---", "", "Analysis with no field.",
   ].join("\n");
-  assert.equal(run(onTheDay).length, 1, "граница включающая: `created == sinceCreated` проверяется");
-  recordCheck("дата правила освобождает прошлое и включает свой собственный день");
+  assert.equal(run(onTheDay).length, 1, "the boundary is inclusive: `created == sinceCreated` is checked");
+  recordCheck("the rule's date exempts the past and includes its own day");
 }
 
-// ── 7. 🔴 ОТСУТСТВИЕ ФРОНТМАТТЕРА — НАХОДКА, А НЕ ОСВОБОЖДЕНИЕ ──────────────────
-// У предшественницы этого семейства файл без `created` выпадал из проверки целиком,
-// то есть гейт обходился удалением шапки. Здесь фейлит закрыто.
+// ── 7. 🔴 A MISSING FRONTMATTER IS A FINDING, NOT AN EXEMPTION ──────────────────
+// This family's predecessor let a file with no `created` fall out of the check entirely,
+// meaning the gate was bypassed by deleting the header. Here that hole is closed.
 {
-  const bare = "# Сосед\n\nРазбор без всякой шапки.\n";
+  const bare = "# Neighbor\n\nAnalysis with no header at all.\n";
   const m = run(bare);
-  assert.equal(m.length, 1, `случай 7: документ без фронтматтера обязан давать находку, пришло ${m.length}`);
+  assert.equal(m.length, 1, `case 7: a document with no frontmatter must produce a finding, got ${m.length}`);
   assert.match(m[0].message, /no frontmatter/,
-    `отсутствие шапки обязано иметь СВОЙ вердикт — пришло: ${m[0].message}`);
-  recordCheck("документ без фронтматтера не освобождается — иначе гейт обходится удалением шапки");
+    `a missing header must have ITS OWN verdict — got: ${m[0].message}`);
+  recordCheck("a document with no frontmatter is not exempted — otherwise the gate is bypassed by deleting the header");
 }
 
-// ── 8. 🔴 `created` БЕЗ КАВЫЧЕК ПРИЕЗЖАЕТ ОБЪЕКТОМ Date ─────────────────────────
-// js-yaml распознаёт таймстампы YAML 1.1. Сравнение `Date < "2026-07-29"` даёт false
-// МОЛЧА, то есть гейт от даты перестал бы работать и это выглядело бы как тишина.
-// Случай проверяет обе стороны границы на неквотированной дате.
+// ── 8. 🔴 AN UNQUOTED `created` ARRIVES AS A Date OBJECT ─────────────────────────
+// js-yaml recognizes YAML 1.1 timestamps. Comparing `Date < "2026-07-29"` SILENTLY gives
+// false, meaning the date gate would stop working and it would look like silence.
+// This case checks both sides of the boundary on an unquoted date.
 {
-  const oldUnquoted = ["---", "created: 2026-07-01", "---", "", "Без поля."].join("\n");
-  assert.deepEqual(run(oldUnquoted), [], "случай 8: неквотированная СТАРАЯ дата обязана освобождать");
+  const oldUnquoted = ["---", "created: 2026-07-01", "---", "", "No field."].join("\n");
+  assert.deepEqual(run(oldUnquoted), [], "case 8: an unquoted OLD date must exempt");
 
-  const newUnquoted = ["---", "created: 2026-08-01", "---", "", "Без поля."].join("\n");
-  assert.equal(run(newUnquoted).length, 1, "случай 8: неквотированная НОВАЯ дата обязана ВКЛЮЧАТЬ проверку");
+  const newUnquoted = ["---", "created: 2026-08-01", "---", "", "No field."].join("\n");
+  assert.equal(run(newUnquoted).length, 1, "case 8: an unquoted NEW date must TURN ON the check");
 
-  const quoted = ["---", 'created: "2026-08-01"', "---", "", "Без поля."].join("\n");
-  assert.equal(run(quoted).length, 1, "квотированная дата ведёт себя так же, как неквотированная");
-  recordCheck("дата как Date и дата как строка дают одинаковый вердикт по обе стороны границы");
+  const quoted = ["---", 'created: "2026-08-01"', "---", "", "No field."].join("\n");
+  assert.equal(run(quoted).length, 1, "a quoted date behaves the same as an unquoted one");
+  recordCheck("a date as a Date and a date as a string give the same verdict on both sides of the boundary");
 }
 
-// ── 9. Сломанный YAML — свой отдельный вердикт, а не тишина ─────────────────────
+// ── 9. Broken YAML — its own separate verdict, not silence ─────────────────────
 {
-  const broken = ["---", "title: [нет закрывающей", "created: 2026-08-01", "---", "", "Тело."].join("\n");
+  const broken = ["---", "title: [no closing", "created: 2026-08-01", "---", "", "Body."].join("\n");
   const m = run(broken);
-  assert.equal(m.length, 1, `случай 9: сломанный YAML обязан давать одну находку, пришло ${m.length}`);
+  assert.equal(m.length, 1, `case 9: broken YAML must produce one finding, got ${m.length}`);
   assert.match(m[0].message, /does not parse as YAML/,
-    `сломанная шапка обязана иметь СВОЙ вердикт — пришло: ${m[0].message}`);
-  recordCheck("неразбираемая шапка — отдельное сообщение, а не молчание и не «поля нет»");
+    `a broken header must have ITS OWN verdict — got: ${m[0].message}`);
+  recordCheck("an unparseable header is its own message, not silence and not 'no field'");
 }
 
-// ── 10. Пустое значение считается отсутствующим ────────────────────────────────
-// `frontmatterField` потребителя на пустом значении возвращала ЗАКРЫВАЮЩУЮ ОГРАДУ
-// `---` и та проходила бы как значение. Здесь пусто — значит нет.
+// ── 10. An empty value counts as missing ────────────────────────────────
+// The consumer's `frontmatterField` returned the CLOSING FENCE `---` on an empty value, and
+// that would pass as a value. Here empty means absent.
 {
-  const empty = ["---", "created: 2026-08-01", "read:", "---", "", "Тело."].join("\n");
+  const empty = ["---", "created: 2026-08-01", "read:", "---", "", "Body."].join("\n");
   const m = run(empty);
-  assert.equal(m.length, 1, `случай 10: пустое значение обязано читаться как отсутствующее, пришло ${m.length}`);
-  assert.match(m[0].message, /no `read` field/, `пропущенное поле обязано быть НАЗВАНО (случай 2) — пришло: ${m[0].message}`);
-  recordCheck("пустое значение поля = отсутствующее, а не «значение ---»");
+  assert.equal(m.length, 1, `case 10: an empty value must read as absent, got ${m.length}`);
+  assert.match(m[0].message, /no `read` field/, `a missing field must be NAMED (case 2) — got: ${m[0].message}`);
+  recordCheck("an empty field value = absent, not 'the value ---'");
 }
 
-// ── 11. Находка стоит НА ФРОНТМАТТЕРЕ, а не на первой строке тела ──────────────
+// ── 11. The finding sits ON THE FRONTMATTER, not on the first line of the body ──────────
 {
-  const m = run(fm("Тело начинается тут."));
-  assert.equal(m[0].line, 1, `находка обязана указывать на шапку, пришла строка ${m[0].line}`);
-  recordCheck("адрес находки — фронтматтер");
+  const m = run(fm("The body starts here."));
+  assert.equal(m[0].line, 1, `the finding must point at the header, got line ${m[0].line}`);
+  recordCheck("the finding's address is the frontmatter");
 }
 
-// ── 12. Два поля сразу — по находке на каждое, а не одна на документ ───────────
+// ── 12. Two fields at once — one finding per field, not one per document ───────────
 {
   const two = {
     fields: {
@@ -165,18 +166,18 @@ const fm = (body, extra = "") =>
     },
     sinceCreated: "2026-07-29",
   };
-  const m = run(fm("Тело."), two);
-  assert.equal(m.length, 2, `два отсутствующих поля — две находки, пришло ${m.length}`);
+  const m = run(fm("Body."), two);
+  assert.equal(m.length, 2, `two missing fields — two findings, got ${m.length}`);
   assert.deepEqual(
     m.map((x) => /no `(\w+)` field/.exec(x.message)?.[1]).sort(),
     ["read", "venue_checked"],
-    "обе находки обязаны называть СВОЁ поле",
+    "both findings must name THEIR OWN field",
   );
-  recordCheck("каждое недостающее поле получает свою находку");
+  recordCheck("each missing field gets its own finding");
 }
 
 console.log(
-  "✓ doc/fields: объявленное поле молчит, отсутствующее и негодное — находки; проза с тем же " +
-    "словом полем не считается; дата-гейт, отсутствие шапки, сломанный YAML, Date из js-yaml и " +
-    "пустое значение — каждый со своим вердиктом",
+  "✓ doc/fields: a declared field is silent, a missing or bad one is a finding; prose with the " +
+    "same word does not count; the date gate, a missing header, broken YAML, a js-yaml Date, and " +
+    "an empty value — each with its own verdict",
 );

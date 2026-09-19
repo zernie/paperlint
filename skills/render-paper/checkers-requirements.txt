@@ -1,43 +1,45 @@
-# Python-зависимости пайплайна статьи. Ставятся ОДНОЙ командой, ручных шагов нет:
+# Python dependencies for the paper pipeline. Installed with ONE command, no manual steps:
 #
 #   pip install -r node_modules/research-paper-pipeline/skills/render-paper/checkers-requirements.txt
 #
-# Инструменты, которым нужен не-Python (jar TeXtidote), ставит ensure-checkers.sh рядом —
-# он же ПРОВЕРЯЕТ, что каждый чекер реально запускается, а не только «установлен».
+# Tools that need something other than Python (the TeXtidote jar) are installed by
+# ensure-checkers.sh nearby — which also VERIFIES that each checker actually runs, not just that
+# it's "installed."
 
-jinja2>=3.0                  # {{macro}}-подстановка в paper_numbers.py
+jinja2>=3.0                  # {{macro}} substitution in paper_numbers.py
 
-# 🔴 ПИН НЕСУЩИЙ, не косметика. aclpubcheck тянет bibtexparser; ветка 2.x — бета
-# (2.0.0b9) с другим API, а sdist ветки 1.4.x не собирается под setuptools 68+.
-# У 1.3.0 есть готовая СБОРКА (bibtexparser-1.3.0-py3-none-any.whl), поэтому
-# `<2` разрешается в него и собирать нечего. Проверено 2026-09-04 в чистом venv:
-# установка выходит в 0, `python -m aclpubcheck.formatchecker --help` запускается.
+# 🔴 THIS PIN IS LOAD-BEARING, not cosmetic. aclpubcheck pulls in bibtexparser; the 2.x branch is
+# beta (2.0.0b9) with a different API, and the 1.4.x branch's sdist does not build under
+# setuptools 68+. 1.3.0 has a prebuilt WHEEL (bibtexparser-1.3.0-py3-none-any.whl), so `<2`
+# resolves to it and there's nothing to build. Verified 2026-09-04 in a clean venv: install exits
+# 0, `python -m aclpubcheck.formatchecker --help` runs.
 bibtexparser<2
 
-# 🔴 aclpubcheck СТАВИТСЯ ОТДЕЛЬНО, С `--no-deps`, И ЕГО ЗДЕСЬ НЕТ НАМЕРЕННО.
-# Замер 2026-09-17: он объявляет `tsv>=1.2,<2.0`, у которого НЕТ НИ ОДНОЙ ГОТОВОЙ СБОРКИ
-# (`pip download --only-binary :all: tsv` → «from versions: none»), а его исходник не
-# собирается современным setuptools:
+# 🔴 aclpubcheck IS INSTALLED SEPARATELY, WITH `--no-deps`, AND IT IS DELIBERATELY NOT LISTED HERE.
+# Measured 2026-09-17: it declares `tsv>=1.2,<2.0`, which has NO PREBUILT WHEEL AT ALL
+# (`pip download --only-binary :all: tsv` → "from versions: none"), and its source does not build
+# under a modern setuptools:
 #     AttributeError: install_layout. Did you mean: 'install_platlib'?
-# Из-за одной этой строки падала установка ВСЕГО файла, и потому статья месяц уезжала
-# без официальной проверки формата.
-# Проверено, а не предположено: `tsv` в исходниках aclpubcheck не импортируется НИ РАЗУ
-# (grep по `import tsv|from tsv` — 0 хитов), и без него
-# `python3 -m aclpubcheck.formatchecker --help` печатает usage и выходит нулём.
-# Поэтому ниже перечислены ЕГО СОБСТВЕННЫЕ зависимости, дословно из метаданных пакета,
-# минус tsv. Список, а не `aclpubcheck` одной строкой, — чтобы следующая невыразимая
-# зависимость читалась как отсутствующая строка, а не как непроверенное допущение.
-# 🔴 ВЕРХНИЕ ГРАНИЦЫ СНЯТЫ, И ЭТО ЗАМЕР, А НЕ НЕБРЕЖНОСТЬ. Первая редакция этого списка
-# копировала ограничения aclpubcheck дословно — и покраснела на CI, где Python новее:
+# That one line alone made installing the WHOLE file fail, and that's why the paper went a month
+# without an official format check.
+# Verified, not assumed: `tsv` is imported NOWHERE in aclpubcheck's source (grep for
+# `import tsv|from tsv` — 0 hits), and without it
+# `python3 -m aclpubcheck.formatchecker --help` prints usage and exits zero.
+# So what follows is aclpubcheck's OWN dependencies, taken verbatim from the package's metadata,
+# minus tsv. A list, rather than `aclpubcheck` on one line, so the next unrepresentable dependency
+# reads as a missing line rather than an unverified assumption.
+# 🔴 THE UPPER BOUNDS ARE REMOVED, AND THAT IS A MEASUREMENT, NOT CARELESSNESS. The first edition
+# of this list copied aclpubcheck's bounds verbatim — and turned red on CI, where Python is newer:
 #     ERROR: Could not find a version that satisfies the requirement pandas<2.0.0,>=1.5.0
 #            (from versions: 2.1.1, 2.1.2, … 3.0.5)
-# То есть верхняя граница пакета протухла: pandas 1.x под тот интерпретатор не издаётся вовсе.
-# Проверено прогоном по НАСТОЯЩЕМУ PDF (aisec-2026/paper.pdf) на numpy 2.4.6 + pandas 3.0.5:
-# чекер отработал и выдал 9 находок формата (A4, шрифт). Нижние границы оставлены — они
-# отсекают заведомо древнее; верхних нет, потому что ни одна из них не проверена, а
-# непроверенная граница ломает установку ровно тогда, когда окружение обновят.
-# ⚠️ `--help` доказательством НЕ является: он печатает usage и выходит нулём даже когда
-# pandas в этом же интерпретаторе не импортируется. Проверено 17.09, поймано на себе.
+# In other words, the package's upper bound had gone stale: pandas 1.x is not published for that
+# interpreter at all. Verified by running against a REAL PDF (aisec-2026/paper.pdf) on numpy 2.4.6
+# + pandas 3.0.5: the checker ran and reported 9 format findings (A4, font). The lower bounds stay
+# — they rule out things that are known to be too old; there are no upper bounds because none of
+# them has been verified, and an unverified bound breaks the install exactly when the environment
+# gets updated.
+# ⚠️ `--help` is NOT proof of anything: it prints usage and exits zero even when pandas cannot be
+# imported in that same interpreter. Verified 09-17, caught the hard way.
 Unidecode>=1.3.6
 pandas>=1.5.0
 pdfplumber>=0.7.5
@@ -46,8 +48,8 @@ pylatexenc>=2.10
 termcolor>=2.0.1
 tqdm>=4.64.1
 
-rebiber>=1.1.3               # зависимость aclpubcheck И наш собственный инструмент
+rebiber>=1.1.3               # an aclpubcheck dependency AND our own tool
 
-# ⚠️ Вызывать ТОЛЬКО как `python3 -m aclpubcheck.formatchecker`. У пакета нет
-# __main__.py, и форма `python3 -m aclpubcheck` падает с «cannot be directly
-# executed» — именно так этот шаг однажды прожил всю жизнь не запускаясь.
+# ⚠️ Call ONLY as `python3 -m aclpubcheck.formatchecker`. The package has no __main__.py, and the
+# form `python3 -m aclpubcheck` fails with "cannot be directly executed" — that's exactly how this
+# step once lived its whole life without ever running.

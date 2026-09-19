@@ -1,15 +1,16 @@
 /**
- * Батарея на `paper/stages` и `paper/source` — четыре мутации, и выбраны они так, чтобы каждая
- * снимала СВОЁ несущее свойство, а не просто ломала файл.
+ * Battery for `paper/stages` and `paper/source` — four mutations, chosen so that each one
+ * removes ITS OWN load-bearing property, rather than just breaking the file.
  *
- * 🔴 Зачем батарея именно здесь. У обоих правил состояние успеха — ТИШИНА, а харнесс ловит их
- * на фикстурах, которые сам же и раскладывает. «Прошло» и «не может упасть» снаружи выглядят
- * одинаково; батарея — единственное, что их различает.
+ * 🔴 Why the battery matters here specifically. For both rules the success state is SILENCE, and
+ * the harness catches them on fixtures that it lays out itself. "It passed" and "it cannot fail"
+ * look identical from the outside; the battery is the only thing that tells them apart.
  *
- * Две первые мутации бьют по ДВУМ НАПРАВЛЕНИЯМ `paper/stages`, и это не симметрия ради красоты:
- * без второго направления правило выключается удалением фронтматтера — объявлений нет, значит и
- * расхождений нет, значит зелено. Мутация `объявлено-без-байтов` и мутация `байты-без-объявления`
- * обязаны умереть на РАЗНЫХ ассертах, иначе доказана лишь одна половина.
+ * The first two mutations hit the TWO DIRECTIONS of `paper/stages`, and this is not symmetry for
+ * its own sake: without the second direction the rule turns itself off by deleting the
+ * frontmatter — no declarations, so no mismatches, so green. The `declared-without-bytes`
+ * mutation and the `bytes-without-declaration` mutation must die on DIFFERENT asserts, or only
+ * one half is proven.
  */
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
@@ -26,21 +27,21 @@ process.exit(
     runner: "node",
     cases: [
       {
-        name: "направление ОБЪЯВЛЕНО→БАЙТЫ перестаёт сверять",
+        name: "the DECLARED→BYTES direction stops checking",
         harness: HARNESS,
         expect: "wrong byte count is reported",
         disables:
-          "сверку объявленного `bytes` с файлом на диске — стадия может объявить любое число, " +
-          "и pdf под ней окажется каким угодно",
+          "the check of declared `bytes` against the file on disk — a stage could declare any " +
+          "number, and the pdf underneath it could be anything",
         edits: [[RULE, "if (got !== Number(rec.bytes)) {", "if (false) {"]],
       },
       {
-        name: "направление БАЙТЫ→ОБЪЯВЛЕНО перестаёт сверять",
+        name: "the BYTES→DECLARED direction stops checking",
         harness: HARNESS,
         expect: "a frozen version nobody declared is reported",
         disables:
-          "вторую половину — ту, без которой правило глушится удалением фронтматтера: " +
-          "объявлений нет ⇒ расхождений нет ⇒ зелено",
+          "the second half — the one without which the rule is muted by deleting the " +
+          "frontmatter: no declarations ⇒ no mismatches ⇒ green",
         edits: [
           [
             RULE,
@@ -50,80 +51,84 @@ process.exit(
         ],
       },
       {
-        name: "`paper/source` перестаёт сверять размер исходника",
+        name: "`paper/source` stops checking the source's size",
         harness: HARNESS,
         expect: "a byte mismatch on the source is reported",
         disables:
-          "проверку ТОЖДЕСТВА замороженного исходника: `existsSync` отвечает «файл есть», " +
-          "и только размер отвечает «это тот самый файл»",
+          "the IDENTITY check on a frozen source: `existsSync` answers 'a file exists', " +
+          "and only the size answers 'this is that exact file'",
         edits: [[RULE, "if (Number.isFinite(want) && got !== want)", "if (false)"]],
       },
       {
-        name: "признание утраты начинает ОСВОБОЖДАТЬ, а не записывать",
+        name: "acknowledging a loss starts EXEMPTING instead of recording",
         harness: HARNESS,
         expect: "an acknowledged loss is still reported, not silenced",
         disables:
-          "решение, что `sourceLost` — это ЗАПИСЬ, а не индульгенция: правило обязано продолжать " +
-          "говорить, потому что состояние остаётся дефектным, просто неисправимым сегодня",
+          "the decision that `sourceLost` is a RECORD, not an indulgence: the rule must keep " +
+          "speaking, because the state is still defective, merely unfixable today",
         edits: [[RULE, "if (rec?.sourceLost === true) {", "if (rec?.sourceLost === true && false) {"]],
       },
       {
-        // 🔴 ВОЗВРАТ К ГРЕПУ. Первая редакция правила делала ровно это и оправдывалась тем, что
-        // «у ячейки-примечания нет своего узла» — замер показал обратное: парсер отдаёт
-        // `tableCell`. Мутация ловится ОДНОЙ фикстурой из шести: в остальных маркер и так лежит
-        // в ячейке, поэтому греп и разбор неразличимы. Без `marker-in-prose` этот возврат
-        // прошёл бы молча, и правило снова читало бы намерение как факт.
-        name: "свидетельство снова ищется ГРЕПОМ по всему файлу",
+        // 🔴 A REGRESSION BACK TO GREP. The rule's first draft did exactly this and justified it
+        // by saying "a footnote cell has no node of its own" — a measurement showed the
+        // opposite: the parser hands back `tableCell`. The mutation is caught by ONE fixture out
+        // of six: in the rest the marker already sits in a cell, so grep and parsing are
+        // indistinguishable. Without `marker-in-prose` this regression would have passed
+        // silently, and the rule would again read an intention as a fact.
+        name: "the evidence is grepped over the WHOLE FILE again",
         harness: HARNESS,
-        expect: "маркер в прозе ВНЕ таблицы записью о прогоне не является",
+        expect: "a marker in prose OUTSIDE the table is not a record of a run",
         disables:
-          "разбор в пользу поиска строки: «надо будет прогнать bib-authors» — намерение, а не " +
-          "запись — снова засчитывается как прогон, и статья молча перестаёт быть должником",
+          "parsing in favor of a string search: 'still need to run bib-authors' — an intention, " +
+          "not a record — counts as a run again, and the paper silently stops being a debtor",
         edits: [
           [RULE, "if (context.sourceCode.getText(node).includes(marker)) recorded = true;",
                  "if (context.sourceCode.text.includes(marker)) recorded = true;"],
         ],
       },
       {
-        name: "правило перестаёт требовать прогон сверки авторов",
+        name: "the rule stops requiring an author cross-check run",
         harness: HARNESS,
-        expect: "стадия объявлена, прогона нет — находка",
+        expect: "a stage is declared, no run — a finding",
         disables:
-          "сам долг: отгруженная статья больше ничего не должна, и правило молчит на всём " +
-          "корпусе — тишина у него и есть состояние успеха, так что снаружи это неотличимо",
-        // Цель перенацелена 17.09: прежняя строка исчезла при переводе правила на разбор, и
-        // драйвер честно сказал UNUSABLE — «патч не лёг», а не «тест слаб». Теперь мутация
-        // объявляет прогон записанным ещё до чтения файла.
+          "the debt itself: a shipped paper no longer owes anything, and the rule stays silent " +
+          "across the whole corpus — silence is its success state, so from the outside this is " +
+          "indistinguishable",
+        // Target retargeted 09-17: the old line disappeared when the rule moved to parsing, and
+        // the driver honestly said UNUSABLE — "the patch did not land", not "the test is weak".
+        // Now the mutation declares the run recorded before the file is even read.
         edits: [[RULE, "let recorded = false;", "let recorded = true;"]],
       },
       {
-        name: "освобождение неотгруженного становится ШИРЕ, чем надо",
+        name: "the exemption for an unshipped paper becomes WIDER than it should",
         harness: HARNESS,
-        expect: "пустой список стадий — молчит",
+        expect: "an empty stage list — silent",
         disables:
-          "различение «стадий нет» и «стадии есть»: черновик начинает получать находку, а " +
-          "правило, которое ругает черновики, выключают за неделю",
-        edits: [[RULE, "if (stages.length === 0) return; // не отгружено — ничего не должно", ""]],
+          "the distinction between 'no stages' and 'there are stages': a draft starts getting a " +
+          "finding, and a rule that scolds drafts gets turned off within a week",
+        edits: [[RULE, "if (stages.length === 0) return; // nothing shipped — nothing is owed", ""]],
       },
       {
-        name: "список стадий снова берётся НЕ из поля",
+        name: "the stage list is taken from somewhere OTHER than the field again",
         harness: HARNESS,
-        expect: "список стадий в сообщении взят из ПОЛЯ и несёт их все",
+        expect: "the stage list in the message comes from the FIELD and carries all of them",
         disables:
-          "ровно то, ради чего делался перенос. Предшественница выводила стадию регуляркой по " +
-          "прозе и на agenticdev печатала `submitted` там, где объявлено `submitted, " +
-          "camera-ready`. Мутация возвращает захардкоженный список — набор находок не меняется, " +
-          "врёт только ТЕКСТ, и без этого ассерта регрессия прошла бы молча",
+          "the exact reason the move was made. The predecessor derived the stage with a regex " +
+          "over the prose, and on agenticdev printed `submitted` where `submitted, " +
+          "camera-ready` was declared. The mutation brings back a hardcoded list — the set of " +
+          "findings does not change, only the TEXT lies, and without this assert the regression " +
+          "would have passed silently",
         edits: [[RULE, "stages: stages.join(\"/\"),", "stages: \"submitted\","]],
       },
       {
-        name: "адрес потребителя возвращается в текст пакета",
+        name: "a consumer-specific path comes back into the package's text",
         harness: HARNESS,
-        expect: "команда прогона приходит опцией и попадает в сообщение",
+        expect: "the run command comes in as an option and lands in the message",
         disables:
-          "границу «механизм в пакете, данные у потребителя»: команда перестаёт приходить " +
-          "опцией. Предшественница зашивала `.claude/skills/verify-citations/...` — путь одного " +
-          "приватного репозитория — прямо в сообщение публичного правила",
+          "the boundary 'the mechanism goes in the package, the data stays with the consumer': " +
+          "the command stops arriving as an option. The predecessor hardcoded " +
+          "`.claude/skills/verify-citations/...` — the path of one private repository — right " +
+          "into a public rule's message",
         edits: [[RULE, "const command = opts.command ?? \"\";", "const command = \"\";"]],
       },
     ],

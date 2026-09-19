@@ -1,14 +1,15 @@
 /**
- * Обе половины для `rpp doctor` — команды, чей предмет СОСТОЯНИЕ УСТАНОВКИ, а не файл.
+ * Both halves for `rpp doctor` — a command whose subject is the STATE OF THE INSTALL, not a
+ * file.
  *
- * 🔴 ПОЧЕМУ У НЕЁ ОСОБЕННО ВАЖЕН ТЕСТ. Doctor существует ровно потому, что `paper-edit-guard`
- * не умеет сказать «я сторожу пустоту»: молчание — его успех. Сломанный doctor обладает ровно
- * тем же свойством — он напечатает бодрый список галочек и не заметит расхождения. То есть
- * проверка на тихий отказ сама отказывает тихо, и отличить одно от другого может только этот
- * файл.
+ * 🔴 WHY A TEST MATTERS ESPECIALLY MUCH HERE. Doctor exists precisely because
+ * `paper-edit-guard` cannot say "I am guarding nothing": silence is its success state. A broken
+ * doctor has exactly the same property — it will print a cheerful list of checkmarks and never
+ * notice a mismatch. That is, the check for a silent failure can itself fail silently, and only
+ * this file can tell the two apart.
  *
- * Прогон:   npx vigiles test src/doctor.harness.mjs
- * Убивается: src/doctor.mutations.mjs
+ * Run:    npx vigiles test src/doctor.harness.mjs
+ * Killed by: src/doctor.mutations.mjs
  */
 import assert from "node:assert/strict";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from "node:fs";
@@ -28,7 +29,7 @@ const check = (label, cond) => {
   assert.ok(cond, label);
 };
 
-/** Потребитель на диске: каталог статей, объявления в одном или обоих местах. */
+/** A consumer on disk: a papers directory, declarations in one or both places. */
 function consumer({ papersDir, pkgKey, rppJson, makeDir = true }) {
   const dir = realpathSync(mkdtempSync(join(tmpdir(), "rpp-doctor-")));
   if (makeDir && papersDir) {
@@ -43,7 +44,7 @@ function consumer({ papersDir, pkgKey, rppJson, makeDir = true }) {
   return dir;
 }
 
-/** Запуск doctor в памяти: весь вывод собирается, программы подменяются, чтобы не зависеть от машины. */
+/** Runs doctor in memory: all output is collected, external programs are faked so it does not depend on the machine. */
 const runDoctor = (dir, { cliPapers = null, have = () => 0 } = {}) => {
   const lines = [];
   const code = doctor({
@@ -56,121 +57,124 @@ const runDoctor = (dir, { cliPapers = null, have = () => 0 } = {}) => {
   return { code, out: lines.join("\n") };
 };
 
-// ── I. СОГЛАСОВАННАЯ УСТАНОВКА МОЛЧИТ ───────────────────────────────────────────────────────
+// ── I. A CONSISTENT INSTALL IS SILENT ───────────────────────────────────────────────────────
 {
   const dir = consumer({ papersDir: "papers", pkgKey: "papers" });
   const r = runDoctor(dir, { cliPapers: "papers" });
-  check("согласованная установка — выход НОЛЬ", r.code === 0);
+  check("a consistent install — exit ZERO", r.code === 0);
   check(
-    "и сказано прямо, что линтуется то же, что сторожится",
+    "and it says outright that the guarded directory is the linted one",
     /the same directory/.test(r.out),
   );
   rmSync(dir, { recursive: true, force: true });
 }
 
-// ── II. ТОТ САМЫЙ ДЕФЕКТ: УСТАНОВКА ПО ДОКУМЕНТАЦИИ ─────────────────────────────────────────
-// `rpp init` пишет rpp.json и не трогает package.json; хук читает package.json. Замер 18.09.
+// ── II. THE VERY DEFECT: AN INSTALL FOLLOWING THE DOCS ─────────────────────────────────────
+// `rpp init` writes rpp.json and does not touch package.json; the hook reads package.json.
+// Measured 09-18.
 {
   const dir = consumer({ papersDir: "writing/drafts", rppJson: "writing/drafts" });
   const r = runDoctor(dir, { cliPapers: "writing/drafts" });
-  check("установка по документации — ОТКАЗ, а не бодрый отчёт", r.code === 2);
+  check("an install that follows the docs — a FAILURE, not a cheerful report", r.code === 2);
   check(
-    "и названы ОБА каталога, чтобы расхождение было видно, а не выведено",
+    "and BOTH directories are named, so the mismatch is visible rather than inferred",
     /will lint\s+writing\/drafts/.test(r.out) && /will guard\s+papers/.test(r.out),
   );
   check(
-    "🔴 и сказано ПОСЛЕДСТВИЕ: записи проходят мимо сторожа",
+    "🔴 and the CONSEQUENCE is stated: writes pass the guard unseen",
     /passes the guard unseen/.test(r.out),
   );
   check(
-    "каталог, которого нет, назван пустым сторожем",
+    "the directory that does not exist is named as a guard watching nothing",
     /watching nothing/.test(r.out),
   );
   check(
-    "и подсказано, где статьи ЛЕЖАТ на самом деле — измерено, а не угадано",
+    "and it hints where the papers ACTUALLY live — measured, not guessed",
     /papers look like they live in: writing\/drafts/.test(r.out),
   );
   rmSync(dir, { recursive: true, force: true });
 }
 
-// ── II-бис. ПРОПАВШАЯ ДЕКЛАРАЦИЯ, КОТОРАЯ ПОКА НЕ ВРЕДИТ ───────────────────────────────────
-// Статьи лежат ровно там, куда указывает умолчание хука. Установка РАБОТАЕТ — по совпадению.
-// Падать тут нельзя (ложное срабатывание уровня error дороже пропуска), но и молчать нельзя.
+// ── II-bis. A MISSING DECLARATION THAT DOES NO HARM YET ────────────────────────────────────
+// The papers live exactly where the hook's default points. The install WORKS — by coincidence.
+// It must not fail here (an error-level false positive costs more than a miss), but it must
+// not stay silent either.
 {
   const dir = consumer({ papersDir: "papers", rppJson: "papers" });
   const r = runDoctor(dir, { cliPapers: "papers" });
-  check("работающая по совпадению установка НЕ валится", r.code === 0);
+  check("an install that works by coincidence does NOT crash", r.code === 0);
   check(
-    "но пропавшая декларация НАЗВАНА, а не пропущена",
+    "but the missing declaration is NAMED, not skipped",
     /⚠ package\.json has no "research-paper-pipeline"/.test(r.out),
   );
   check(
-    "и сказано, чем именно это опасно — работает, пока каталог не переедет",
+    "and it says exactly why that is risky — it works only until the directory moves",
     /works only while your papers happen to live there/.test(r.out),
   );
   rmSync(dir, { recursive: true, force: true });
 }
 
-// ── III. ДВЕ ДЕКЛАРАЦИИ РАЗЪЕХАЛИСЬ ─────────────────────────────────────────────────────────
+// ── III. TWO DECLARATIONS HAVE DRIFTED APART ────────────────────────────────────────────────
 {
   const dir = consumer({ papersDir: "writing/drafts", pkgKey: "papers", rppJson: "writing/drafts" });
   mkdirSync(join(dir, "papers"), { recursive: true });
   const r = runDoctor(dir, { cliPapers: "writing/drafts" });
-  check("обе декларации на месте, но разные — ОТКАЗ", r.code === 2);
-  check("⚠ про устаревший rpp.json сказано", /rpp\.json is present/.test(r.out));
+  check("both declarations exist, but differ — a FAILURE", r.code === 2);
+  check("the stale rpp.json is called out ⚠", /rpp\.json is present/.test(r.out));
   rmSync(dir, { recursive: true, force: true });
 }
 
-// ── IV. КОРЕНЬ БЕРЁТСЯ У САМОГО ХУКА, А НЕ ПЕРЕСКАЗЫВАЕТСЯ ─────────────────────────────────
-// Это несущее: копия логики разошлась бы молча и печатала бы уверенный неверный ответ.
+// ── IV. THE ROOT IS ASKED FOR FROM THE HOOK ITSELF, NOT RETOLD ─────────────────────────────
+// This is load-bearing: a copy of the logic would drift silently and print a confident wrong
+// answer.
 {
   const dir = consumer({ papersDir: "docs/papers", pkgKey: "docs/papers/" });
   const r = runDoctor(dir, { cliPapers: "docs/papers" });
   const fromHook = papersRoot(
     JSON.stringify({ "research-paper-pipeline": { papers: "docs/papers/" } }),
   );
-  check("хук сам срезает хвостовой слеш", fromHook === "docs/papers");
+  check("the hook itself trims the trailing slash", fromHook === "docs/papers");
   check(
-    "и doctor печатает РОВНО то, что вернул хук, а не своё прочтение",
+    "and doctor prints EXACTLY what the hook returned, not its own reading",
     new RegExp(`will guard\\s+${fromHook}$`, "m").test(r.out),
   );
-  check("хвостовой слеш не делает установку расходящейся", r.code === 0);
+  check("a trailing slash does not make the install look inconsistent", r.code === 0);
   rmSync(dir, { recursive: true, force: true });
 }
 
-// ── V. ОТКАЗ ХУКА ПЕРЕДАЁТСЯ, А НЕ ПРЕВРАЩАЕТСЯ В КАТАЛОГ ──────────────────────────────────
+// ── V. THE HOOK'S REFUSAL IS PASSED ALONG, NOT TURNED INTO A DIRECTORY ─────────────────────
 {
   const dir = consumer({ papersDir: "papers", pkgKey: "" });
   const r = runDoctor(dir, { cliPapers: "papers" });
   check(
-    "пустая строка в декларации — хук отказывает, и doctor это НАЗЫВАЕТ",
+    "an empty string in the declaration — the hook refuses, and doctor NAMES it",
     /the guard refuses/.test(r.out),
   );
   rmSync(dir, { recursive: true, force: true });
 }
 
-// ── VI. ВНЕШНИЕ ПРОГРАММЫ — ФАКТ, А НЕ ВЕРДИКТ ─────────────────────────────────────────────
+// ── VI. EXTERNAL PROGRAMS ARE A FACT, NOT A VERDICT ─────────────────────────────────────────
 {
   const dir = consumer({ papersDir: "papers", pkgKey: "papers" });
   const none = runDoctor(dir, { cliPapers: "papers", have: () => 1 });
   check(
-    "🔴 отсутствующий tex НЕ валит прогон — гейт на совете глушат целиком",
+    "🔴 a missing tex install does NOT fail the run — a gate on advice would mute the whole thing",
     none.code === 0,
   );
-  check("но каждая пропажа НАЗВАНА", /✗ pdflatex/.test(none.out));
+  check("but every absence is NAMED", /✗ pdflatex/.test(none.out));
   check(
-    "и несёт ЛЕКАРСТВО, а не только диагноз",
+    "and it carries a REMEDY, not just a diagnosis",
     /apt-get install -y texlive-latex-recommended/.test(none.out),
   );
   check(
-    "и последствие: без чего какие проверки молча не идут",
+    "and the consequence: which checks silently don't run without it",
     /nothing else spell-checks the text/.test(none.out),
   );
-  check("список программ ОБЪЯВЛЕН, а не зашит в печать", PROGRAMS.length >= 7);
+  check("the program list is DECLARED, not baked into the printing", PROGRAMS.length >= 7);
   rmSync(dir, { recursive: true, force: true });
 }
 
-// ── VII. ОБНАРУЖЕНИЕ КАТАЛОГА СТАТЕЙ ───────────────────────────────────────────────────────
+// ── VII. DETECTING THE PAPERS DIRECTORY ─────────────────────────────────────────────────────
 {
   const dir = realpathSync(mkdtempSync(join(tmpdir(), "rpp-detect-")));
   mkdirSync(join(dir, "writing", "drafts", "p1"), { recursive: true });
@@ -178,25 +182,25 @@ const runDoctor = (dir, { cliPapers = null, have = () => 0 } = {}) => {
   mkdirSync(join(dir, "node_modules", "pkg", "papers", "p"), { recursive: true });
   writeFileSync(join(dir, "node_modules", "pkg", "papers", "p", "paper.tex"), "x");
   const hits = detectPapers(dir);
-  check("находит корень по маркеру внутри подкаталога", hits.includes("writing/drafts"));
+  check("finds the root by a marker inside a subdirectory", hits.includes("writing/drafts"));
   check(
-    "🔴 и это КОРЕНЬ, а не сама статья — иначе конфиг указал бы на один документ",
+    "🔴 and it is the ROOT, not the paper itself — otherwise the config would point at one document",
     !hits.includes("writing/drafts/p1"),
   );
   check(
-    "node_modules не обыскивается — чужие статьи не наши",
+    "node_modules is not searched — someone else's papers are not ours",
     !hits.some((h) => h.startsWith("node_modules")),
   );
   rmSync(dir, { recursive: true, force: true });
 }
 
-// ── VIII. `found` СПРАШИВАЕТ СИСТЕМУ, А НЕ УГАДЫВАЕТ ПО ИМЕНИ ──────────────────────────────
+// ── VIII. `found` ASKS THE SYSTEM, IT DOES NOT GUESS BY NAME ────────────────────────────────
 {
-  check("реально существующая программа найдена", found("node") === true);
+  check("a program that really exists is found", found("node") === true);
   check(
-    "выдуманная — нет (иначе проверка отвечает на форму, а не на предмет)",
+    "a made-up one is not (otherwise the check answers the form, not the subject)",
     found("rpp-definitely-not-a-real-binary-xyz") === false,
   );
 }
 
-console.log(`✓ ${n} assertions passed — rpp doctor, установка отвечает за себя сама`);
+console.log(`✓ ${n} assertions passed — rpp doctor: an install can vouch for itself`);

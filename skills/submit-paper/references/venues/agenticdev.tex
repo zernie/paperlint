@@ -1,15 +1,16 @@
-% agenticdev.tex — числа площадки для стражей В ПРЕАМБУЛЕ. LaTeX не читает YAML, поэтому
-% значения продублированы из venues/agenticdev.jsonc (источник правды — его читает правило
-% `pdf/profile`, см. eslint-rules/pdf-facts.mjs:128). in — дюймы.
+% agenticdev.tex — venue numbers for the guards IN THE PREAMBLE. LaTeX doesn't read YAML, so the
+% values are duplicated from venues/agenticdev.jsonc (the source of truth — read by the
+% `pdf/profile` rule, see eslint-rules/pdf-facts.mjs:128). in = inches.
 %
-% 🔴 ЗДЕСЬ СТОЯЛО `venues/agenticdev.yaml`, И ТАКОГО ФАЙЛА НЕТ (поправлено 12.09.2026). Ссылка
-% повисла при переходе YAML → JSONC 26.08 и пережила его, потому что комментарий ничем не
-% проверяется: «источник правды» назывался файлом, которого нет, а настоящий лежал рядом.
-% ⚠️ И дубль держится РУКАМИ. Сверка 12.09: 7.087 / 9.252 / 2 / 9 / 5 / 2 совпадают с .jsonc —
-% сегодня. Механизма, который бы это гарантировал, нет; кандидат — генерировать этот файл из
-% .jsonc одной строкой сборки, тогда расхождение станет невыразимым (см.
+% 🔴 THIS USED TO SAY `venues/agenticdev.yaml`, AND NO SUCH FILE EXISTS (fixed 2026-09-12). The
+% link went stale during the YAML → JSONC move on 08-26 and survived it, because a comment isn't
+% checked by anything: the "source of truth" named a file that doesn't exist, while the real one
+% sat right next to it.
+% ⚠️ And the duplicate is kept in sync BY HAND. Checked 09-12: 7.087 / 9.252 / 2 / 9 / 5 / 2 match
+% the .jsonc — as of today. There is no mechanism guaranteeing this; a candidate is generating this
+% file from the .jsonc with one build step, which would make the drift unrepresentable (see
 % idei/paper-pipeline-extraction/10-latex-carriers-2026-09-12.md).
-% ⚠️ w/h — ПОТОЛКИ («text width must not exceed 18 cm»), не цели: acmart ставит меньше.
+% ⚠️ w/h are CEILINGS ("text width must not exceed 18 cm"), not targets: acmart sets them smaller.
 \def\venuetextblockw{7.087}
 \def\venuetextblockh{9.252}
 \def\venuecolumns{2}

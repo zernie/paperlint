@@ -1,9 +1,9 @@
 /**
- * Батарея на `structure.ts` — единственную проверку пакета, предмет которой ОТСУТСТВИЕ файла.
+ * Battery for `structure.ts` — the package's only check whose subject is a file's ABSENCE.
  *
- * Такая проверка особенно уязвима к тихому отказу: она сообщает о том, чего нет, поэтому
- * сломанная выглядит ровно как чистый корпус. Батарея заведена по требованию `test:sabotage`,
- * который отказался принимать харнесс, который ничто не умеет убить.
+ * A check like this is especially vulnerable to silent failure: it reports on what is missing,
+ * so a broken one looks exactly like a clean corpus. This battery exists because `test:sabotage`
+ * refused to accept a harness that nothing could kill.
  */
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
@@ -20,13 +20,13 @@ process.exit(
     runner: "node",
     cases: [
       {
-        name: "щедрое обнаружение отменено — статьёй считается любой каталог",
+        name: "generous detection is removed — any directory counts as a paper",
         harness: HARNESS,
-        expect: "каталог БЕЗ единого маркера пайплайна не трогается вовсе",
+        expect: "a directory WITHOUT a single pipeline marker is left alone entirely",
         disables:
-          "условие, по которому проверка вообще решает, что перед ней статья. Без него " +
-          "находки посыпались бы на `data/`, `figures/` и любой соседний каталог — а правило, " +
-          "ругающееся на невиновных, выключают целиком, вместе с настоящими находками",
+          "the condition the check uses at all to decide it is looking at a paper. Without it, " +
+          "findings would rain down on `data/`, `figures/` and any neighboring directory — and a " +
+          "rule that yells at the innocent gets turned off entirely, real findings and all",
         edits: [
           [
             SRC,
@@ -36,35 +36,35 @@ process.exit(
         ],
       },
       {
-        name: "`ignore` перестал сниматься",
+        name: "`ignore` stops exempting",
         harness: HARNESS,
-        expect: "`ignore` снимает каталог поимённо",
+        expect: "`ignore` exempts a directory by name",
         disables:
-          "единственный способ потребителя сказать «этот каталог — не статья». Без него " +
-          "исключение приходится выражать переименованием каталога",
+          "the consumer's only way to say \"this directory is not a paper\". Without it, an " +
+          "exemption has to be expressed by renaming the directory",
         edits: [
           [SRC, "      if (rules.ignore.includes(name)) continue;\n", ""],
         ],
       },
       {
-        name: "вторая принимаемая форма исходника выпала из умолчаний",
+        name: "the second accepted source form falls out of the defaults",
         harness: HARNESS,
-        expect: "`paper.md` засчитывается наравне с `paper.tex`",
+        expect: "`paper.md` counts on equal footing with `paper.tex`",
         disables:
-          "вторую форму исходника, которую держит живой корпус. Статья на `paper.md` стала " +
-          "бы находкой «нет исходника» при исходнике на месте — то есть проверка ругалась бы " +
-          "на невиновных, а такие правила выключают целиком, вместе с настоящими находками",
+          "the second source form the live corpus keeps. A paper on `paper.md` would become a " +
+          "\"no source\" finding while its source is right there — i.e. the check would yell at " +
+          "the innocent, and such rules get turned off entirely, real findings and all",
         edits: [
           [SRC, 'requireOneOf: [["paper.tex", "paper.md"]]', 'requireOneOf: [["paper.tex"]]'],
         ],
       },
       {
-        name: "путь в находке снова абсолютный",
+        name: "the path in a finding goes absolute again",
         harness: HARNESS,
-        expect: "и путь ОТНОСИТЕЛЬНЫЙ",
+        expect: "and the path is RELATIVE",
         disables:
-          "читаемость находки. Абсолютный путь временного каталога прогона читателю не " +
-          "говорит ничего и вдобавок делает вывод непригодным для сравнения между машинами",
+          "the readability of the finding. An absolute path to the run's temp directory tells " +
+          "the reader nothing and on top of that makes the output useless for comparing across machines",
         edits: [
           [
             SRC,

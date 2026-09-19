@@ -4,7 +4,7 @@ description: The orchestrator for writing a research paper end-to-end, from idea
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:44c7eeeb586661e9 compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:6ec7cc1d25db0a0f compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
 
 # paper-pipeline — the conductor for the whole organism
 
@@ -56,17 +56,17 @@ their grade/result, what's open,* and a one-line **submit-ready verdict**. Rules
   parts are compiled. *Added 2026-08-03, the day three hooks in this repo were found to have been dead
   for weeks: an advisory that is never exercised is indistinguishable from one that works.*
 
-  🔴 **С 2026-08-26 этот файл читают ДВОЕ.** Шестнадцать проверок над ним живут правилами
-  `@eslint/markdown` в `eslint-rules/pipeline-status.mjs` (прогон:
-  `npx eslint <paper-dir>/PIPELINE-STATUS.md`; пять из них — `error`), а
-  `scripts/pipeline-check.mjs` держит шесть, чей вход ВНЕ файла — git, часы, каталог
-  `reviews/`, `process.env`. Классификация всех 22 — в
-  приватных заметках автора (`<papers-root>/research/2026-08-26-klassifikatsiya-pipeline-check.md`).
+  🔴 **As of 2026-08-26, this file is read by TWO things.** Sixteen checks over it live as
+  `@eslint/markdown` rules in `eslint-rules/pipeline-status.mjs` (run:
+  `npx eslint <paper-dir>/PIPELINE-STATUS.md`; five of them are `error`), while
+  `scripts/pipeline-check.mjs` holds six whose input lies OUTSIDE the file — git, the clock, the
+  `reviews/` directory, `process.env`. The classification of all 22 lives in the
+  author's private notes (`<papers-root>/research/2026-08-26-klassifikatsiya-pipeline-check.md`).
 
-  ⚠️ Абзац выше прожил сутки НЕ ЗДЕСЬ, а прямо в `SKILL.md` — то есть в порождаемом файле. Его
-  съел первый же `vigiles compile` (27.08), и заметил это не человек, а агент, у которого
-  компиляция стёрла чужую правку. **Правка `SKILL.md` без `.spec.ts` — это правка, у которой
-  назначен срок годности до следующей компиляции.**
+  ⚠️ The paragraph above lived for a day NOT HERE but directly in `SKILL.md` — i.e. in the
+  generated file. The very first `vigiles compile` (27.08) ate it, and it was not a human who
+  noticed but an agent whose compile had just erased someone else's edit. **An edit to `SKILL.md`
+  without `.spec.ts` is an edit with an expiration date: the next compile.**
 
 ## 🗺️ Where every check actually runs — and where it can be walked around
 
@@ -268,8 +268,8 @@ the artifact each round. Stop when the panel converges to accept and the artifac
 
 ## 📝 Text pass vs evidence pass — two independent axes, ask which one you want
 
-The author, 2026-08-05: *«мы можем запустить гейт просто на текст? мы только что проверяли цифры, мне сейчас
-хочется оценить текст, допустим, что цифры нормальные»*. He is right that these are separable, and
+The author, 2026-08-05 (translated from Russian): *"can we just run the gate on the text? we just
+checked the numbers, and now I want to grade the text — assume the numbers are fine."* He is right that these are separable, and
 running both when only one is wanted burns an hour for nothing.
 
 Every gate belongs to exactly one axis. **Sort by what invalidates it**, not by what it reads:
@@ -400,7 +400,7 @@ still growing.
 **The trigger to catch yourself:** you just added something, ran the page count, saw it over, and
 started looking for words to remove **in the section you were just editing**. That is the failure, in
 progress. The page count is information for the end of the work, not an alarm during it. (The author's
-own words on catching it: *«ты режешь текст сразу же, хз нужно ли прям сразу это делать»*.)
+own words on catching it, translated from Russian: *"you're cutting the text right away — dunno if that really needs doing immediately."*)
 
 **What is still continuous:** rendering, and looking at pages 1–2. Seeing the number is fine. Acting
 on it is what waits.
@@ -429,8 +429,8 @@ has been silently stale ever since. That is the shape of every failure this pipe
 
 ## ⏱️ What each stage actually costs — MEASURED, not estimated
 
-The author, 2026-08-05, watching a run he could not size: *«стоит проблему тайминг записать в пайплайн
-скил?»*. Yes — because the project already forbids guessing here. The rule in the papers tree's own `CLAUDE.md`
+The author, 2026-08-05, watching a run he could not size (translated from Russian): *"is it worth
+writing the timing problem into the pipeline skill?"*. Yes — because the project already forbids guessing here. The rule in the papers tree's own `CLAUDE.md`
 says an estimate must be decomposed into labour / calendar / result-risk / access and **spiked
 rather than guessed**, and the same session it was written I still launched an experiment with no
 upper bound and had to cut it four hours later.

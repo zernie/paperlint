@@ -96,9 +96,9 @@ const stubbedStepRun = (stubRc) => {
   const bin = realpathSync(mkdtempSync(join(tmpdir(), "rpp-bin-")));
   writeFileSync(
     join(bin, "npx"),
-    // Заглушка печатает отчёт В STDOUT, а не в файл по флагу `-o`: шаг больше не передаёт
-    // `-o`, он РЕДИРЕКТИТ вывод. Значит заглушка проверяет заодно и сам редирект — если он
-    // пропадёт из шага, файл останется пустым и страж скажет «nothing was measured».
+    // Stub prints the report TO STDOUT, not to a file by the `-o` flag: the step no longer passes
+    // `-o`, it REDIRECTS output. So the stub also checks the redirect itself — if it disappears
+    // from the step, the file stays empty and the guard says "nothing was measured".
     `#!/usr/bin/env bash\n` +
       `printf '%s' "$REPORT_JSON"\n` +
       `exit "$STUB_RC"\n`,
@@ -196,8 +196,8 @@ assert.match(
   /exit 1/,
   "the `paths` guard must FAIL, not warn — a declaration nobody checks is documentation",
 );
-// И оно обязано стоять ПЕРВЫМ: проверка охвата после установки texlive стоила бы минуты apt
-// ради заведомо неверного вызова.
+// And it must come FIRST: checking scope after texlive setup would burn apt minutes
+// for a call already wrong.
 assert.equal(
   action.runs.steps[0].name,
   pathsGuard.name,

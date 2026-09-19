@@ -1,14 +1,15 @@
 /**
- * Обе половины для утилиты `research-paper-pipeline lint`, и отдельно — отказы, каждый из
- * которых обязан быть ОБЪЯСНИМЫМ, а не просто ненулевым.
+ * Both halves for the `research-paper-pipeline lint` utility, and separately — failures, each
+ * of which must be EXPLAINABLE, not just nonzero.
  *
- * 🔴 Два из проверяемых здесь дефектов утилита уже имела, и оба нашлись ПЕРВЫМ ЖЕ прогоном,
- * а не чтением:
- *   1. `rpp --help` отвечало «unknown command `--help`» — argv[0] становился командой
- *      безусловно;
- *   2. на пустом наборе ESLint БРОСАЕТ `NoFilesFoundError`, и сторож от зелёного ноля до своей
- *      проверки не доживал: вместо сообщения вылетал стек из недр eslint-helpers.
- * Оба закреплены ассертами ниже, чтобы вернуться назад было нельзя.
+ * 🔴 Two of the defects checked here the utility already had, and both were found by the
+ * FIRST run, not by reading:
+ *   1. `rpp --help` used to answer "unknown command `--help`" — argv[0] unconditionally became
+ *      the command;
+ *   2. on an empty set ESLint THROWS `NoFilesFoundError`, and the guard against a false green
+ *      zero never lived long enough to reach its own check: instead of a message, a stack trace
+ *      leaked out of the depths of eslint-helpers.
+ * Both are pinned down by the assertions below so there is no going back.
  */
 import assert from "node:assert/strict";
 import {
@@ -39,13 +40,14 @@ const check = (label, cond) => {
   n++;
 };
 
-/** Прогон утилиты с перехватом вывода — тише и быстрее, чем поднимать процесс. */
+/** Runs the utility with output captured — quieter and faster than spawning a process. */
 async function cli(args, cwd) {
-  // 🔴 ПОТОКИ РАЗВЕДЕНЫ, И ЭТО НЕСУЩЕЕ. Пока харнесс складывал log и err в один массив, он
-  // физически не мог увидеть, что строка `config: …` уезжает в stdout ПЕРЕД JSON и ломает
-  // любой парсер у потребителя. Дефект нашёлся не тестом, а попыткой подключить к этому
-  // выводу собственный экшен — то есть тест был слеп ровно к тому, что обязан был ловить.
-  // `out` остаётся склейкой для ассертов про текст; `stdout` — то, что уйдёт в пайп.
+  // 🔴 THE STREAMS ARE SPLIT, AND THAT IS LOAD-BEARING. As long as the harness dumped log and
+  // err into one array, it physically could not see that the `config: …` line was leaking into
+  // stdout BEFORE the JSON and breaking any consumer's parser. The defect was not found by a
+  // test but by trying to hook a real action to this output — i.e. the test was blind to
+  // exactly what it was supposed to catch.
+  // `out` stays a merged string for text assertions; `stdout` is what actually goes down a pipe.
   const stdout = [];
   const stderr = [];
   const prev = process.cwd();
@@ -62,10 +64,11 @@ async function cli(args, cwd) {
       stderr: stderr.join("\n"),
     };
   } catch (e) {
-    // 🔴 УТЕЧКА ИСКЛЮЧЕНИЯ — ЭТО СВОЙСТВО, КОТОРОЕ НАДО УТВЕРЖДАТЬ АССЕРТОМ, А НЕ ЛОВИТЬ
-    // ПАДЕНИЕМ. Мутация, снимающая catch вокруг ESLint, роняла харнесс СТЕКОМ, и драйвер — по
-    // своему строгому правилу «убито только на СВОЁМ ассерте» — отказывался считать это
-    // убийством и печатал «survived». То есть настоящий дефект выглядел как слабый тест.
+    // 🔴 A LEAKED EXCEPTION IS A PROPERTY THAT MUST BE ASSERTED, NOT CAUGHT BY LETTING THE
+    // HARNESS CRASH. The mutation that removes the catch around ESLint used to bring the
+    // harness down with a stack trace, and the driver — under its own strict rule "killed only
+    // by ITS OWN assertion" — refused to count that as a kill and printed "survived". I.e. the
+    // real defect looked like a weak test.
     return {
       code: 99,
       out: `THREW: ${e?.message ?? e}`,
@@ -77,14 +80,14 @@ async function cli(args, cwd) {
   }
 }
 
-// ── разбор аргументов ───────────────────────────────────────────────────────────────────
+// ── argument parsing ───────────────────────────────────────────────────────────────────
 check(
-  "`--help` первым аргументом — это ФЛАГ, а не команда",
+  "`--help` as the first argument — is a FLAG, not a command",
   parseArgs(["--help"]).help === true,
 );
-check("и команда при этом не выдумывается", parseArgs(["--help"]).cmd === null);
+check("and a command is not invented in the process", parseArgs(["--help"]).cmd === null);
 check(
-  "путь и конфиг разбираются",
+  "the path and config are parsed",
   (() => {
     const a = parseArgs(["lint", "papers", "--config", "o.json", "--json"]);
     return (
@@ -96,64 +99,64 @@ check(
   })(),
 );
 check(
-  "порог предупреждений по умолчанию ОТРИЦАТЕЛЬНЫЙ — совет не валит прогон",
+  "the default warning threshold is NEGATIVE — advice does not fail the run",
   parseArgs(["lint"]).maxWarnings === -1,
 );
 check(
-  "и разбирается, когда назван явно",
+  "and it is parsed when named explicitly",
   parseArgs(["lint", "--max-warnings", "0"]).maxWarnings === 0,
 );
 check(
-  "прежнее написание `--options` продолжает работать — флаг в чужом CI не наш, чтобы его ломать",
+  "the old `--options` spelling keeps working — a flag in someone else's CI is not ours to break",
   parseArgs(["lint", "--options", "o.json"]).config === "o.json",
 );
 check(
-  "`papers` строкой и списком нормализуются одинаково",
+  "`papers` as a string and as a list normalize the same way",
   toPaths("papers")[0] === "papers" &&
     toPaths(["a", "b"]).length === 2 &&
     toPaths(undefined).length === 0 &&
     toPaths("  ").length === 0,
 );
 
-// ── конфиг собирается, и данные потребителя доезжают ────────────────────────────────────
+// ── config is assembled, and consumer data gets through ────────────────────────────────────
 {
   const cfg = buildConfig(
     { typographyDebt: { x: { sectionSign: 3 } }, authorListCommand: "run-me" },
     null,
   );
   check(
-    "без языка LaTeX конфиг всё равно собирается — корпус без .tex не повод отказывать",
+    "without a LaTeX language the config still gets built — a corpus with no .tex is not a reason to refuse",
     Array.isArray(cfg) && cfg.length === 3,
   );
   check(
-    "с языком LaTeX добавляется четвёртый блок",
+    "with a LaTeX language a fourth block is added",
     buildConfig({}, {}).length === 4,
   );
   const status = cfg.find((c) =>
     c.files.some((f) => f.includes("PIPELINE-STATUS")),
   );
   check(
-    "команда из опций доезжает до правила",
+    "the command from options gets through to the rule",
     status.rules["paper/author-list"][1].command === "run-me",
   );
 }
 
-// ── отказы обязаны быть ОБЪЯСНИМЫМИ ─────────────────────────────────────────────────────
+// ── failures must be EXPLAINABLE ─────────────────────────────────────────────────────────
 {
   const r = await cli(["--help"]);
   check(
-    "`--help` печатает usage и выходит нулём",
+    "`--help` prints usage and exits zero",
     r.code === 0 && /npx rpp lint/.test(r.out),
   );
 }
-// ── ОДНА ДЕКЛАРАЦИЯ, И ЧИТАЕТ ЕЁ ТОТ ЖЕ, КТО ЕЁ ПИШЕТ ──────────────────────────────────
+// ── ONE DECLARATION, READ BY THE SAME THING THAT WRITES IT ─────────────────────────────
 //
-// 🔴 БЕЗ ЭТОГО БЛОКА ПЕРЕПИСАННЫЙ `init` ПРОИЗВОДИЛ БЫ НЕРАБОТАЮЩУЮ УСТАНОВКУ. Он пишет одну
-// декларацию — в `package.json`, тот файл, который умеют читать хуки (хук не импортирует код и
-// не умеет ходить вверх по дереву; он может прочитать путь, который в состоянии назвать).
-// Утилита же читала ТОЛЬКО `rpp.json`, поэтому сразу после `rpp init` её `lint` сказал бы
-// «nothing to lint». То есть команда установки и команда проверки смотрели бы в разные файлы —
-// ровно тот дефект, который она закрывает, только с другой стороны.
+// 🔴 WITHOUT THIS BLOCK THE REWRITTEN `init` WOULD PRODUCE A BROKEN INSTALL. It writes one
+// declaration — into `package.json`, the file the hooks know how to read (a hook does not
+// import code and cannot walk up the tree; it can only read a path it is able to name). The
+// utility, though, read ONLY `rpp.json`, so right after `rpp init` its `lint` would say
+// "nothing to lint". I.e. the install command and the check command would be looking at
+// different files — exactly the defect it exists to close, just from the other side.
 {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-carrier-")));
   try {
@@ -177,48 +180,49 @@ check(
 
     const r = await cli(["lint"], root);
     check(
-      "🔴 УТИЛИТА ЧИТАЕТ ДЕКЛАРАЦИЮ ИЗ package.json — иначе `rpp init` ставит то, что `rpp lint` не видит",
+      "🔴 THE UTILITY READS THE DECLARATION FROM package.json — otherwise `rpp init` sets up something `rpp lint` cannot see",
       r.code === 0 && /no findings/.test(r.out),
     );
     check(
-      "и НАЗЫВАЕТ носитель вслух — подмена настроек молчаливой не бывает",
+      "and NAMES the carrier out loud — swapping settings is never silent",
       /config: package\.json/.test(r.out),
     );
     check(
-      "у package.json нет пометки про устаревание — устарел не он",
+      "package.json carries no deprecation notice — it is not the one that is deprecated",
       !/is deprecated/.test(r.out),
     );
 
-    // Ключ есть, `papers` внутри нет: это не «пустой конфиг», а незаконченный, и отказ обязан
-    // назвать ИМЕННО ту форму, которую надо дописать.
+    // The key is present, `papers` inside it is not: this is not an "empty config" but an
+    // unfinished one, and the failure must name the EXACT shape that needs adding.
     writeFileSync(
       join(root, "package.json"),
       JSON.stringify({ name: "c", version: "1.0.0", "research-paper-pipeline": {} }, null, 2),
     );
     const noPapers = await cli(["lint"], root);
     check(
-      "ключ без `papers` — отказ, и показана форма ВНУТРИ package.json",
+      "a key with no `papers` — a failure, and the shape is shown INSIDE package.json",
       noPapers.code === 2 &&
         /must declare `papers`/.test(noPapers.out) &&
         /"research-paper-pipeline": \{ "papers": "papers" \}/.test(noPapers.out),
     );
 
-    // 🔴 package.json БЕЗ ключа не останавливает подъём. Иначе поиск кончался бы на первом же
-    // проекте по пути наверх — а package.json есть у каждого, — и не находил бы ничего никогда.
+    // 🔴 A package.json WITHOUT the key does not stop the walk upward. Otherwise the search
+    // would end at the first project going up the tree — and every project has a package.json —
+    // and would never find anything, ever.
     writeFileSync(join(root, "package.json"), JSON.stringify({ name: "c", version: "1.0.0" }));
     writeFileSync(join(root, "rpp.json"), JSON.stringify({ papers: "papers" }));
     const viaRpp = await cli(["lint"], root);
     check(
-      "package.json без ключа не перехватывает поиск — rpp.json по-прежнему находится",
+      "a keyless package.json does not intercept the search — rpp.json is still found",
       viaRpp.code === 0 && /config: rpp\.json/.test(viaRpp.out),
     );
     check(
-      "🔴 но устаревший носитель НАЗВАН, а не просто прочитан молча",
+      "🔴 but a deprecated carrier is NAMED, not just silently read",
       /rpp\.json is deprecated/.test(viaRpp.out) &&
         /the hooks read only that file/.test(viaRpp.out),
     );
 
-    // Оба носителя рядом: побеждает тот, который читают ВСЕ остальные.
+    // Both carriers side by side: the one everything ELSE reads wins.
     writeFileSync(
       join(root, "package.json"),
       JSON.stringify({
@@ -228,12 +232,12 @@ check(
       }),
     );
     check(
-      "при обоих носителях выбирается package.json — это и значит «одна декларация»",
+      "with both carriers present package.json is chosen — that is what \"one declaration\" means",
       findDeclaration(root)?.kind === "package.json" &&
         findDeclaration(root)?.path === join(root, "package.json"),
     );
     check(
-      "а findConfig по-прежнему отвечает на вопрос «в каком файле лежат настройки»",
+      "and findConfig still answers the question \"which file holds the settings\"",
       findConfig(root) === join(root, "package.json"),
     );
   } finally {
@@ -241,16 +245,17 @@ check(
   }
 }
 
-// ── `init` — ТРИ ДЕЙСТВИЯ ВМЕСТО ДЕВЯТИ ────────────────────────────────────────────────
+// ── `init` — THREE ACTIONS INSTEAD OF NINE ────────────────────────────────────────────────
 //
-// 🔴 ДЕФЕКТ, РАДИ КОТОРОГО КОМАНДА ПЕРЕПИСАНА (issue #33, замер 18.09): init писал `rpp.json`
-// с УГАДАННЫМ `"papers": "papers"` и не трогал `package.json` — а три хука читают каталог
-// статей именно оттуда. Потребитель, сделавший всё по документации, получал
-// `paper-edit-guard`, сторожащий несуществующий каталог; снаружи это неотличимо от рабочего
-// стража, потому что молчание — его успех.
+// 🔴 THE DEFECT THIS COMMAND WAS REWRITTEN FOR (issue #33, measured 09-18): init wrote
+// `rpp.json` with a GUESSED `"papers": "papers"` and never touched `package.json` — while the
+// three hooks read the papers directory from exactly there. A consumer who did everything by
+// the book got a `paper-edit-guard` guarding a directory that did not exist; from outside that
+// is indistinguishable from a working guard, because silence is its success state.
 //
-// ⚠️ Вопросы здесь НЕ ЗАДАЮТСЯ вслепую: `interactive` передаётся явно, а не берётся у stdin.
-// Харнесс, зависший на приглашении ввода, — это не красный тест, это отсутствие ответа вообще.
+// ⚠️ Questions here are NOT ASKED blind: `interactive` is passed explicitly, never read from
+// stdin. A harness stuck at an input prompt is not a red test, it is the absence of any answer
+// at all.
 {
   const workRoot = realpathSync(mkdtempSync(join(tmpdir(), "rpp-init-")));
   const project = (name, { pkg = { name: "consumer", version: "1.0.0" }, papers = [] } = {}) => {
@@ -269,63 +274,63 @@ check(
   };
   const declared = (dir) =>
     JSON.parse(readFileSync(join(dir, "package.json"), "utf8"))["research-paper-pipeline"];
-  // Ни одна проверка не должна зависеть от того, что установлено НА ЭТОЙ машине: `command -v`
-  // подменяется, иначе «внешних программ нет» читалось бы как находка про init.
+  // No check should depend on what is installed ON THIS MACHINE: `command -v` is faked,
+  // otherwise "no external programs" would read as a finding about init.
   const haveAll = () => ({ status: 0 });
   const haveNone = () => ({ status: 1 });
 
   try {
-    // ── 1. КАТАЛОГ СТАТЕЙ ИЗМЕРЯЕТСЯ, А НЕ УГАДЫВАЕТСЯ ────────────────────────────────
+    // ── 1. THE PAPERS DIRECTORY IS MEASURED, NOT GUESSED ────────────────────────────
     {
       const dir = project("detect", { papers: ["writing/drafts"] });
       const out = say();
       const code = await init(dir, { log: out.log, err: out.log, interactive: false, run: haveAll });
       check(
-        "🔴 ДЕКЛАРАЦИЯ ПОЯВЛЯЕТСЯ В package.json — том файле, который читают хуки",
+        "🔴 THE DECLARATION SHOWS UP IN package.json — the file the hooks read",
         declared(dir) !== undefined && typeof declared(dir).papers === "string",
       );
       check(
-        "🔴 и её значение ИЗМЕРЕНО, а не взято из умолчания `papers`",
+        "🔴 and its value is MEASURED, not taken from the `papers` default",
         declared(dir).papers === "writing/drafts",
       );
       check(
-        "и сказано, ЧЕМ оно измерено — иначе догадка читается как факт",
+        "and it says HOW it was measured — otherwise a guess reads as a fact",
         /measured: its subdirectories carry/.test(out.text()),
       );
       check(
-        "🔴 `rpp.json` БОЛЬШЕ НЕ СОЗДАЁТСЯ — вторая декларация это то, что doctor и ловит",
+        "🔴 `rpp.json` IS NO LONGER CREATED — a second declaration is what doctor exists to catch",
         !existsSync(join(dir, "rpp.json")),
       );
       check(
-        "init заканчивается отчётом doctor: установка САМА говорит о своём состоянии",
+        "init ends with doctor's report: the install vouches for its OWN state",
         /rpp doctor — what is wired/.test(out.text()),
       );
       check(
-        "и на согласованной установке выходит нулём",
+        "and exits zero on a consistent install",
         code === 0 && /the same directory/.test(out.text()),
       );
     }
 
-    // ── 2. УГАДАННОЕ НАЗЫВАЕТСЯ УГАДАННЫМ ─────────────────────────────────────────────
+    // ── 2. A GUESS IS CALLED A GUESS ───────────────────────────────────────────────
     {
       const dir = project("empty");
       const out = say();
       const code = await init(dir, { log: out.log, err: out.log, interactive: false, run: haveAll });
       check(
-        "нечего измерять — берётся документированное умолчание",
+        "nothing to measure — the documented default is taken",
         declared(dir).papers === "papers",
       );
       check(
-        "🔴 и оно ПОМЕЧЕНО как догадка, а не подано как измерение",
+        "🔴 and it is MARKED as a guess, not presented as a measurement",
         /A GUESS/.test(out.text()) && /Nothing here looks like a papers directory/.test(out.text()),
       );
       check(
-        "🔴 каталога нет ⇒ doctor краснеет, и init возвращает ЕГО вердикт, а не свой успех",
+        "🔴 no directory ⇒ doctor goes red, and init returns ITS verdict, not its own success",
         code === 2 && /the install is NOT finished/.test(out.text()),
       );
     }
 
-    // ── 3. ЧУЖОЕ ЗНАЧЕНИЕ НЕ ПЕРЕЗАПИСЫВАЕТСЯ ─────────────────────────────────────────
+    // ── 3. SOMEONE ELSE'S VALUE DOES NOT GET OVERWRITTEN ─────────────────────────────
     {
       const dir = project("mine", {
         pkg: { name: "c", version: "1.0.0", "research-paper-pipeline": { papers: "mine" } },
@@ -335,46 +340,46 @@ check(
       const out = say();
       await init(dir, { log: out.log, err: out.log, interactive: false, run: haveAll });
       check(
-        "🔴 уже объявленное значение ЦЕЛО побайтово — молча заменить настройку хуже, чем не делать ничего",
+        "🔴 an already-declared value stays intact byte for byte — silently replacing a setting is worse than doing nothing",
         readFileSync(join(dir, "package.json"), "utf8") === before,
       );
       check(
-        "и об этом сказано вслух, а не пропущено",
+        "and it says so out loud, rather than skipping it",
         /already declares papers = "mine" — kept, nothing overwritten/.test(out.text()),
       );
     }
 
-    // ── 4. НЕКУДА ПИСАТЬ — ЭТО ОТКАЗ С ЛЕКАРСТВОМ ─────────────────────────────────────
+    // ── 4. NOWHERE TO WRITE — A FAILURE WITH A REMEDY ─────────────────────────────
     {
       const dir = project("nopkg", { pkg: null, papers: ["writing"] });
       const out = say();
       const code = await init(dir, { log: out.log, err: out.log, interactive: false, run: haveAll });
       check(
-        "без package.json init ОТКАЗЫВАЕТ и несёт лекарство, а не диагноз",
+        "without package.json init FAILS and carries a remedy, not just a diagnosis",
         code === 2 &&
           /npm init -y/.test(out.text()) &&
           /nowhere to put the declaration/.test(out.text()),
       );
-      check("и ничего не создаёт взамен", !existsSync(join(dir, "package.json")));
+      check("and creates nothing in its place", !existsSync(join(dir, "package.json")));
     }
 
-    // ── 5. СПРАШИВАЕТСЯ ТОЛЬКО НЕУГАДЫВАЕМОЕ, И ТОЛЬКО У ЧЕЛОВЕКА ─────────────────────
+    // ── 5. ONLY WHAT CANNOT BE GUESSED IS ASKED, AND ONLY OF A HUMAN ─────────────────
     {
       const dir = project("ci", { papers: ["writing"] });
       const out = say();
       await init(dir, { log: out.log, err: out.log, interactive: false, run: haveAll });
       check(
-        "🔴 не терминал — вопрос НЕ задаётся, и взятое умолчание НАЗВАНО",
+        "🔴 not a terminal — the question is NOT asked, and the default taken is NAMED",
         /stdin is not a terminal, so nothing was asked. Default taken: NO file written/.test(
           out.text(),
         ),
       );
       check(
-        "и безопасное умолчание — это отсутствие файла",
+        "and the safe default is the absence of a file",
         !existsSync(join(dir, WORKFLOW_PATH)),
       );
       check(
-        "а шаг для CI всё равно напечатан — его просто вставляют руками",
+        "and the CI step is still printed — it just gets pasted in by hand",
         /uses: zernie\/research-paper-pipeline@/.test(out.text()) &&
           /paths: writing/.test(out.text()),
       );
@@ -389,51 +394,52 @@ check(
           return "y";
         },
       });
-      check("согласие ПИШЕТ воркфлоу", wf === "written" && existsSync(join(dir, WORKFLOW_PATH)));
+      check("saying yes WRITES the workflow", wf === "written" && existsSync(join(dir, WORKFLOW_PATH)));
       check(
-        "и воркфлоу несёт ТОТ каталог, о котором шла речь",
+        "and the workflow carries THE directory that was actually discussed",
         /paths: writing/.test(readFileSync(join(dir, WORKFLOW_PATH), "utf8")),
       );
-      check("вопрос задан ровно один", asked.length === 1);
+      check("the question is asked exactly once", asked.length === 1);
       const again = await offerWorkflow(dir, "writing", {
         interactive: true,
         ask: async () => "y",
       });
-      check("существующий воркфлоу не перезаписывается и не переспрашивается", again === "kept");
+      check("an existing workflow is neither overwritten nor asked about again", again === "kept");
     }
     {
       const dir = project("ci-no", { papers: ["writing"] });
       const no = await offerWorkflow(dir, "writing", { interactive: true, ask: async () => "" });
       check(
-        "пустой ответ — это НЕТ, и файла не появляется",
+        "an empty answer is a NO, and no file appears",
         no === "declined" && !existsSync(join(dir, WORKFLOW_PATH)),
       );
-      // 🔴 Замер 18.09 на настоящем псевдотерминале: `readline.question()` ОТКЛОНЯЕТСЯ с
-      // `AbortError: Aborted with Ctrl+D`, и это исключение улетало наружу ПОСЛЕ того, как
-      // декларация уже записана — то есть установка одновременно удалась и выглядела падением.
-      // 🔴 `.catch` ЗДЕСЬ НЕСУЩИЙ, А НЕ ОСТОРОЖНОСТЬ. Утечка исключения — это СВОЙСТВО, которое
-      // утверждают ассертом; пойманное падением харнесса оно читается драйвером батареи как
-      // «мутация выжила», то есть настоящий дефект выглядел бы дырой в тесте.
+      // 🔴 Measured 09-18 on a real pseudo-terminal: `readline.question()` REJECTS with
+      // `AbortError: Aborted with Ctrl+D`, and this exception used to escape AFTER the
+      // declaration had already been written — i.e. the install both succeeded and looked like
+      // a crash.
+      // 🔴 THE `.catch` HERE IS LOAD-BEARING, NOT CAUTION. A leaked exception is a PROPERTY that
+      // gets asserted; caught by letting the harness crash it reads to the battery's driver as
+      // "the mutation survived", i.e. the real defect would look like a hole in the test.
       const aborted = await offerWorkflow(dir, "writing", {
         interactive: true,
         ask: async () => {
           throw new Error("Aborted with Ctrl+D");
         },
       }).catch((e) => `THREW: ${e?.message ?? e}`);
-      check("🔴 прерванный вопрос НЕ роняет команду — он означает умолчание", aborted === "declined");
+      check("🔴 an interrupted question does NOT crash the command — it means the default", aborted === "declined");
     }
 
-    // ── 6. НЕСКОЛЬКО КАНДИДАТОВ — ЕДИНСТВЕННЫЙ СЛУЧАЙ, КОГДА СПРАШИВАЮТ ───────────────
+    // ── 6. SEVERAL CANDIDATES — THE ONLY CASE WHERE A QUESTION IS ASKED ───────────────
     {
       const dir = project("many", { papers: ["alpha", "beta"] });
       const picked = await choosePapers(dir, { interactive: true, ask: async () => "2" });
       check(
-        "🔴 ответ человека РЕШАЕТ, а не украшает вывод",
+        "🔴 the human's answer DECIDES, it does not just decorate the output",
         picked.how === "chosen" && picked.papers === picked.candidates[1],
       );
       const quiet = await choosePapers(dir, { interactive: false });
       check(
-        "в не-терминале берётся первый, и это названо, а не выдано за выбор",
+        "outside a terminal the first one is taken, and this is NAMED, not passed off as a choice",
         quiet.how === "not-asked" && quiet.papers === quiet.candidates[0],
       );
       const aborted = await choosePapers(dir, {
@@ -443,81 +449,84 @@ check(
         },
       }).catch((e) => ({ how: `THREW: ${e?.message ?? e}`, papers: null, candidates: [] }));
       check(
-        "прерванный выбор — тоже умолчание, а не падение",
+        "an interrupted choice is also a default, not a crash",
         aborted.how === "no-answer" && aborted.papers === aborted.candidates[0],
       );
     }
 
-    // ── 7. ВНЕШНИЙ ИНСТРУМЕНТАРИЙ ДОКЛАДЫВАЕТСЯ, А НЕ СТАВИТСЯ ───────────────────────
+    // ── 7. EXTERNAL TOOLING IS REPORTED, NOT INSTALLED ───────────────────────────────
     //
-    // npm's own rule, цитируемая в разборе husky: «The only valid use of install or preinstall
-    // scripts is for compilation». Установка, способная тихо не состояться, хуже явного шага.
+    // npm's own rule, quoted in the analysis of husky: "The only valid use of install or
+    // preinstall scripts is for compilation". An install that can silently fail to happen is
+    // worse than an explicit step.
     {
       const dir = project("tools", { papers: ["writing"] });
       const out = say();
       await init(dir, { log: out.log, err: out.log, interactive: false, run: haveNone });
-      // 🔴 СУДИМ ТОЛЬКО СОБСТВЕННЫЙ ОТЧЁТ init, ДО баннера doctor. Первая редакция этих трёх
-      // ассертов смотрела на ВЕСЬ вывод — а doctor печатает и `✗ pdflatex`, и ту же команду
-      // установки. Мутация, вырезавшая лекарство ИЗ init, осталась зелёной: ассерт находил
-      // строку, напечатанную другой командой, и отчитывался о покрытии, которого не было.
+      // 🔴 JUDGE ONLY init's OWN REPORT, BEFORE doctor's banner. The first version of these
+      // three assertions looked at the WHOLE output — and doctor also prints `✗ pdflatex` and
+      // the same install command. The mutation that stripped the remedy OUT of init stayed
+      // green: the assertion found a line printed by a different command and reported coverage
+      // that did not exist.
       const own = out.text().split("── rpp doctor")[0];
       check(
-        "каждая пропажа НАЗВАНА, и их посчитано столько же, сколько названо",
+        "every absence is NAMED, and the count matches the names",
         /✗ 7 of 7 missing: pdflatex, bibtex/.test(own),
       );
       check(
-        "🔴 и несёт КОМАНДУ УСТАНОВКИ — лекарство, а не диагноз",
+        "🔴 and it carries the INSTALL COMMAND — a remedy, not just a diagnosis",
         /apt-get install -y texlive-latex-recommended/.test(own),
       );
       check(
-        "и сказано прямо, что ничего не ставится за пользователя",
+        "and it says outright that nothing is installed on the user's behalf",
         /Nothing is installed for you/.test(own),
       );
-      // Один факт — один автор: последствия каждой пропажи печатает doctor, и печатает их РАЗ.
+      // One fact, one author: the consequence of each absence is printed by doctor, and printed
+      // ONCE.
       check(
-        "и init НЕ повторяет таблицу doctor двадцатью строками выше неё",
+        "and init does NOT repeat doctor's table twenty lines above it",
         !/no PDF is produced/.test(own) &&
           /no PDF is produced/.test(out.text().split("── rpp doctor")[1] ?? ""),
       );
       check(
-        "а спрошенная система, в которой всё есть, не даёт ни одной пропажи",
+        "and asking a system that has everything gives zero absences",
         missingPrograms(haveAll).length === 0,
       );
       check(
-        "и пустая система даёт их все — счётчик считает то же, что печатает",
+        "and an empty system gives all of them — the counter counts the same thing it prints",
         missingPrograms(haveNone).length === PROGRAMS.length,
       );
     }
 
-    // ── 8. `rpp.json` У ТЕХ, У КОГО ОН УЖЕ ЕСТЬ ──────────────────────────────────────
+    // ── 8. `rpp.json` FOR THOSE WHO ALREADY HAVE ONE ──────────────────────────────────
     {
       const dir = project("legacy", { papers: ["writing"] });
       writeFileSync(join(dir, "rpp.json"), JSON.stringify({ minFindings: 5 }, null, 2) + "\n");
       const out = say();
       await init(dir, { log: out.log, err: out.log, interactive: false, run: haveAll });
       check(
-        "существующий rpp.json получает ТО ЖЕ значение, а не расходится молча",
+        "an existing rpp.json gets the SAME value, rather than drifting silently",
         JSON.parse(readFileSync(join(dir, "rpp.json"), "utf8")).papers === "writing",
       );
-      check("и назван устаревшим", /rpp\.json was already here/.test(out.text()));
+      check("and is named deprecated", /rpp\.json was already here/.test(out.text()));
 
       const own = join(workRoot, "legacy-own");
       mkdirSync(own, { recursive: true });
       writeFileSync(join(own, "package.json"), '{"name":"c","version":"1.0.0"}');
       writeFileSync(join(own, "rpp.json"), '{"papers":"mine"}');
       check(
-        "а уже объявленный в нём `papers` остаётся побайтово — это тоже чужое значение",
+        "and the `papers` value it already declares stays byte for byte — this too is someone else's value",
         syncRppJson(own, "writing") === "kept" &&
           readFileSync(join(own, "rpp.json"), "utf8") === '{"papers":"mine"}',
       );
     }
 
-    // ── 9. КОМАНДА ПОДКЛЮЧЕНА К `run`, А НЕ ТОЛЬКО ЭКСПОРТИРОВАНА ────────────────────
+    // ── 9. THE COMMAND IS WIRED TO `run`, NOT MERELY EXPORTED ────────────────────────
     {
       const dir = project("wired", { papers: ["writing"] });
       const r = await cli(["init", dir]);
       check(
-        "`rpp init` доходит до реализации и объявляет измеренный каталог",
+        "`rpp init` reaches the implementation and declares the measured directory",
         declared(dir).papers === "writing" && /rpp init — each decision/.test(r.out),
       );
     }
@@ -528,28 +537,29 @@ check(
 {
   const r = await cli(["frobnicate"]);
   check(
-    "неизвестная команда НАЗЫВАЕТСЯ",
+    "an unknown command is NAMED",
     r.code === 2 && /unknown command `frobnicate`/.test(r.out),
   );
 }
 {
-  // Флаг без значения. Дефект найден компилятором при переводе на TypeScript: `rest[++i]` за
-  // последним аргументом даёт undefined, и `--config` без значения молча означал «конфига не
-  // задано» — то есть автопоиск по чужому файлу вместо названного.
+  // A flag with no value. The defect was found by the compiler while porting to TypeScript:
+  // `rest[++i]` past the last argument gives undefined, and `--config` with no value silently
+  // meant "no config was set" — i.e. an autodiscovered file instead of the named one.
   const r = await cli(["lint", "--config"]);
   check(
-    "флаг без значения — ОТКАЗ, а не тихое умолчание",
+    "a flag with no value — a FAILURE, not a silent default",
     r.code === 2 && /--config needs a value/.test(r.out),
   );
 }
 {
-  // Умолчание "." дало бы зелёный прогон по случайному содержимому — тот же контракт, что у
-  // экшена, и та же причина. Пустой каталог без конфига — ровно этот случай.
+  // A "." default would give a green run over whatever happens to be lying around — the same
+  // contract as the action, and the same reason. An empty directory with no config is exactly
+  // that case.
   const bare = realpathSync(mkdtempSync(join(tmpdir(), "rpp-bare-")));
   try {
     const r = await cli(["lint"], bare);
     check(
-      "`lint` без пути И без конфига отказывает и называет ОБА выхода",
+      "`lint` with NO path AND no config refuses and names BOTH ways out",
       r.code === 2 &&
         /nothing to lint/.test(r.out) &&
         /rpp init/.test(r.out) &&
@@ -560,7 +570,7 @@ check(
   }
 }
 
-// ── на живых файлах: обе половины ───────────────────────────────────────────────────────
+// ── on live files: both halves ───────────────────────────────────────────────────────
 {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-cli-")));
   try {
@@ -578,21 +588,21 @@ check(
     writeFileSync(join(paper, "PIPELINE-STATUS.md"), status(100));
     const clean = await cli(["lint", "papers"], root);
     check(
-      "на чистом корпусе — ноль и внятный отчёт",
+      "on a clean corpus — zero and a legible report",
       clean.code === 0 && /no findings/.test(clean.out),
     );
 
     writeFileSync(join(paper, "PIPELINE-STATUS.md"), status(999));
     const dirty = await cli(["lint", "papers"], root);
-    check("подложенное расхождение байтов — находка и код 1", dirty.code === 1);
+    check("a planted byte mismatch — a finding and code 1", dirty.code === 1);
     check(
-      "и находка называет ОБА числа",
+      "and the finding names BOTH numbers",
       /999/.test(dirty.out) && /100/.test(dirty.out),
     );
 
     const json = await cli(["lint", "papers", "--json"], root);
     check(
-      "`--json` отдаёт разбираемый JSON",
+      "`--json` gives back parseable JSON",
       (() => {
         try {
           return Array.isArray(JSON.parse(json.stdout));
@@ -602,17 +612,17 @@ check(
       })(),
     );
 
-    // 🔴 Сторож от зелёного ноля: ESLint бросает на пустом наборе, и до починки здесь вылетал
-    // стек вместо объяснения.
+    // 🔴 The guard against a false green zero: ESLint throws on an empty set, and before the
+    // fix a stack trace flew out here instead of an explanation.
     mkdirSync(join(root, "nothing"), { recursive: true });
     const empty = await cli(["lint", "nothing"], root);
     check(
-      "утилита НЕ выпускает исключение наружу — отказ объявляется кодом возврата",
+      "the utility does NOT let an exception escape — a failure is declared by the exit code",
       empty.code !== 99,
     );
-    check("пустой набор — ОТКАЗ, а не зелёный ноль", empty.code === 1);
+    check("an empty set — a FAILURE, not a green zero", empty.code === 1);
     check(
-      "и отказ объясняет, что именно не нашлось",
+      "and the failure explains exactly what was not found",
       /nothing was linted/.test(empty.out) &&
         /not a clean report/.test(empty.out),
     );
@@ -620,20 +630,21 @@ check(
     writeFileSync(join(root, "bad.json"), "{ not json");
     const bad = await cli(["lint", "papers", "--config", "bad.json"], root);
     check(
-      "битый конфиг НАЗЫВАЕТСЯ, а не роняет стек",
+      "a broken config is NAMED, not a dropped stack trace",
       bad.code === 2 && /not valid JSON/.test(bad.out),
     );
 
     const noFile = await cli(["lint", "papers", "--config", "nope.json"], root);
     check(
-      "отсутствующий конфиг тоже назван",
+      "a missing config is also named",
       noFile.code === 2 && /config file not found/.test(noFile.out),
     );
 
-    // `check` остаётся псевдонимом: чужой воркфлоу не ломаем, но говорим, чем заменено.
+    // `check` stays an alias: someone else's workflow is not broken, but they are told what it
+    // was replaced by.
     const alias = await cli(["check", "papers"], root);
     check(
-      "`check` ещё работает и печатает, чем он заменён",
+      "`check` still works and prints what replaced it",
       alias.code === 1 && /`check` is now `lint`/.test(alias.out),
     );
   } finally {
@@ -641,12 +652,12 @@ check(
   }
 }
 
-// ── КОНФИГ НАХОДИТСЯ САМ, И КАТАЛОГ СТАТЕЙ ОБЪЯВЛЕН В НЁМ ──────────────────────────────
+// ── THE CONFIG FINDS ITSELF, AND THE PAPERS DIRECTORY IS DECLARED IN IT ──────────────────
 //
-// 🔴 ДЕФЕКТ, РАДИ КОТОРОГО ЭТОТ БЛОК СУЩЕСТВУЕТ: `rpp init` писал `rpp.json`, а `rpp check`
-// читал его ТОЛЬКО по явному `--options`. То есть файл, который утилита сама же и создала,
-// на прогон не влиял — и узнать об этом было неоткуда: нулевой долг типографики выглядит
-// ровно как ненайденный конфиг.
+// 🔴 THE DEFECT THIS BLOCK EXISTS FOR: `rpp init` wrote `rpp.json`, and `rpp check` only read
+// it via an explicit `--options`. I.e. the file the utility itself created had no effect on the
+// run — and there was no way to find that out: zero typography debt looks exactly like a
+// config that was never found.
 {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-cfg-")));
   try {
@@ -662,71 +673,73 @@ check(
       `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: ${bytes}\n    source: versions/s.tex\n    sourceBytes: 4\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`;
     writeFileSync(join(paper, "PIPELINE-STATUS.md"), status(100));
 
-    // findConfig — отдельно от прогона, чтобы отказ был различим
+    // findConfig — kept separate from the run so the failure is distinguishable
     writeFileSync(join(root, "rpp.json"), JSON.stringify({ papers: "papers" }));
     check(
-      "findConfig поднимается вверх из подкаталога и находит файл в корне",
+      "findConfig walks up from a subdirectory and finds the file at the root",
       findConfig(paper) === join(root, "rpp.json"),
     );
-    // Тавтологии здесь быть не может: соседнее дерево НЕ должно подхватывать наш файл.
-    // Утверждать `=== null` на живой ФС нельзя — выше по цепочке может лежать чужой rpp.json,
-    // поэтому утверждается то, что проверяемо: наш конфиг оттуда не виден.
+    // There can be no tautology here: a neighboring tree must NOT pick up our file. Asserting
+    // `=== null` against a live filesystem is not safe — someone else's rpp.json may sit further
+    // up the chain — so what is asserted is what is actually checkable: our config is not
+    // visible from there.
     const sibling = realpathSync(mkdtempSync(join(tmpdir(), "rpp-other-")));
     check(
-      "конфиг НЕ утекает в соседнее дерево — поиск идёт вверх, а не вширь",
+      "the config does NOT leak into a neighboring tree — the search goes up, not sideways",
       findConfig(sibling) !== join(root, "rpp.json"),
     );
     rmSync(sibling, { recursive: true, force: true });
 
     const found = await cli(["lint"], root);
     check(
-      "конфиг НАЙДЕН сам: `lint` без единого аргумента отрабатывает",
+      "the config is FOUND on its own: `lint` with no argument at all runs",
       found.code === 0 && /no findings/.test(found.out),
     );
     check(
-      "и найденный файл НАЗВАН вслух — молчаливая подмена настроек недопустима",
+      "and the found file is NAMED out loud — swapping settings silently is not acceptable",
       /config: rpp\.json/.test(found.out),
     );
 
-    // 🔴 РАЗЛИЧИТЕЛЬ РЕЗОЛВА. Запуск ИЗ каталога статьи: конфиг тот же, а `"papers": "papers"`,
-    // разрешённый относительно ТЕКУЩЕГО каталога, указал бы на `papers/p1/papers` — такого нет,
-    // и прогон упал бы «nothing was linted» там, где весь корпус на месте.
+    // 🔴 THE RESOLUTION DISCRIMINATOR. Run FROM the paper's directory: same config, and
+    // `"papers": "papers"` resolved relative to the CURRENT directory would point at
+    // `papers/p1/papers` — which does not exist, and the run would fail with "nothing was
+    // linted" right where the whole corpus is present.
     const fromSub = await cli(["lint"], paper);
     check(
-      "путь из конфига резолвится относительно КАТАЛОГА КОНФИГА, а не текущего",
+      "the path from the config resolves relative to the CONFIG'S DIRECTORY, not the current one",
       fromSub.code === 0 && /no findings/.test(fromSub.out),
     );
 
-    // Данные потребителя из найденного конфига реально доезжают до правил, а не просто читаются.
+    // Consumer data from the found config actually reaches the rules, not just gets read.
     writeFileSync(join(paper, "PIPELINE-STATUS.md"), status(999));
     const dirty = await cli(["lint"], root);
     check(
-      "найденный конфиг не отменяет находок — расхождение по-прежнему ловится",
+      "a found config does not cancel findings — the mismatch is still caught",
       dirty.code === 1 && /999/.test(dirty.out),
     );
     writeFileSync(join(paper, "PIPELINE-STATUS.md"), status(100));
 
-    // Аргумент ПЕРЕОПРЕДЕЛЯЕТ конфиг: одна статья вместо корпуса, без правки файла.
+    // An argument OVERRIDES the config: one paper instead of the corpus, with no file edit.
     mkdirSync(join(root, "elsewhere"), { recursive: true });
     const override = await cli(["lint", "elsewhere"], root);
     check(
-      "аргумент командной строки ПЕРЕОПРЕДЕЛЯЕТ `papers` из конфига",
+      "a command-line argument OVERRIDES `papers` from the config",
       override.code === 1 &&
         /nothing was linted under elsewhere/.test(override.out),
     );
 
-    // 🔴 `papers` — ОБЯЗАТЕЛЬНОЕ ПОЛЕ. Конфиг без него не «пустой конфиг», а незаконченный:
-    // молча уехать на умолчание "." значит прогнать правила по всему чекауту.
+    // 🔴 `papers` — A REQUIRED FIELD. A config without it is not an "empty config" but an
+    // unfinished one: silently falling back to "." means running the rules over the whole checkout.
     writeFileSync(join(root, "rpp.json"), JSON.stringify({ minFindings: 3 }));
     const noPapers = await cli(["lint"], root);
     check(
-      "конфиг БЕЗ `papers` — отказ, и поле названо поимённо",
+      "a config WITHOUT `papers` — a failure, and the field is named by name",
       noPapers.code === 2 &&
         /must declare `papers`/.test(noPapers.out) &&
         /cannot guess/.test(noPapers.out),
     );
     check(
-      'пустая строка в `papers` считается отсутствующей, а не каталогом ""',
+      'an empty string in `papers` counts as absent, not as the directory ""',
       (
         await (async () => {
           writeFileSync(join(root, "rpp.json"), JSON.stringify({ papers: "" }));
@@ -739,11 +752,11 @@ check(
   }
 }
 
-// ── ПОРОГ ПРЕДУПРЕЖДЕНИЙ ───────────────────────────────────────────────────────────────
+// ── THE WARNING THRESHOLD ───────────────────────────────────────────────────────────────
 //
-// Вход `max-warnings` есть у экшена, и когда экшен перестал звать eslint напрямую, порог
-// обязан был появиться здесь — иначе он потерялся бы МОЛЧА: прогон остался бы зелёным, а
-// настройка потребителя перестала бы что-либо значить.
+// The action has a `max-warnings` input, and once the action stopped calling eslint directly,
+// the threshold had to show up here too — otherwise it would have been lost SILENTLY: the run
+// would stay green, and the consumer's setting would stop meaning anything.
 {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-warn-")));
   try {
@@ -754,7 +767,7 @@ check(
       join(paper, "versions", "2026-07-22-submitted.pdf"),
       "x".repeat(100),
     );
-    // Три знака § — правило `paper/typography`, уровень warn и только warn.
+    // Three § signs — the `paper/typography` rule, warn level and only warn.
     writeFileSync(
       join(paper, "paper.md"),
       "# Intro\n\nRQ1: does it hold?\n\nSee \u00a7 5 and \u00a7 6 and \u00a7 7.\n",
@@ -767,21 +780,21 @@ check(
 
     const lax = await cli(["lint"], root);
     check(
-      "предупреждение БЕЗ порога прогон не валит — иначе гейт на советах глушат целиком",
+      "a warning WITH NO threshold does not fail the run — otherwise a gate on advice would be muted entirely",
       lax.code === 0,
     );
     const strict = await cli(["lint", "--max-warnings", "0"], root);
     check(
-      "а с порогом 0 — валит, и это ровно то же предупреждение",
+      "and with a threshold of 0 it fails, and it's the very same warning",
       strict.code === 1,
     );
     check(
-      "и отказ называет ЧИСЛО и ПОРОГ, а не просто «слишком много»",
+      "and the failure names the NUMBER and the THRESHOLD, not just \"too many\"",
       /1 warning\(s\) exceed the --max-warnings limit of 0/.test(strict.out),
     );
     const generous = await cli(["lint", "--max-warnings", "5"], root);
     check(
-      "порог ВЫШЕ числа находок молчит — проверка про порог, а не про наличие warn",
+      "a threshold ABOVE the finding count stays quiet — the check is about the threshold, not about a warning existing",
       generous.code === 0,
     );
   } finally {
@@ -789,39 +802,39 @@ check(
   }
 }
 
-// ── СТРУКТУРА ДОЕЗЖАЕТ ДО КОМАНДЫ ──────────────────────────────────────────────────────
+// ── STRUCTURE GETS THROUGH TO THE COMMAND ──────────────────────────────────────────────
 //
-// `structure.mjs` проверен отдельно и целиком (`structure.harness.mjs`). Здесь — ровно один
-// факт, которого тот харнесс знать не может: что модуль ПОДКЛЮЧЁН. Корректный модуль, забытый
-// в `run()`, даёт ноль находок и выглядит как чистый корпус.
+// `structure.mjs` is checked separately and in full (`structure.harness.mjs`). Here — exactly
+// one fact that harness cannot know: that the module is WIRED IN. A correct module forgotten in
+// `run()` gives zero findings and looks like a clean corpus.
 {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-wired-")));
   try {
     const paper = join(root, "papers", "orphan");
     mkdirSync(paper, { recursive: true });
-    // Маркер есть, табеля нет: НИ ОДНО правило пайплайна по этому каталогу не бежит.
+    // The marker is present, the scorecard is not: NOT ONE pipeline rule runs over this directory.
     writeFileSync(join(paper, "paper.tex"), "\\documentclass{article}\n");
     writeFileSync(join(root, "rpp.json"), JSON.stringify({ papers: "papers" }));
 
     const r = await cli(["lint"], root);
     check(
-      "каталог без табеля — НЕ зелёный ноль: команда выходит единицей",
+      "a directory with no scorecard is NOT a green zero: the command exits one",
       r.code === 1,
     );
     check(
-      "и находка напечатана до отчёта ESLint, с последствием",
+      "and the finding is printed before the ESLint report, with its consequence",
       /missing `PIPELINE-STATUS\.md`/.test(r.out) && /ZERO rules/.test(r.out),
     );
     check(
-      "и НЕ печатает «no findings» поверх найденного",
+      "and it does NOT print \"no findings\" over something that was found",
       !/no findings/.test(r.out),
     );
 
     const j = await cli(["lint", "--json"], root);
-    // 🔴 Дефект, ради которого потоки разведены: строка `config: …` в stdout перед массивом
-    // ломает `| jq` у потребителя. Обе половины — stdout чист, и строка при этом НЕ ПОТЕРЯНА.
+    // 🔴 The defect the streams were split for: a `config: …` line in stdout before the array
+    // breaks `| jq` for a consumer. Both halves — stdout is clean, and the line is NOT LOST.
     check(
-      "`--json`: stdout — чистый JSON, ни одной служебной строки перед ним",
+      "`--json`: stdout is clean JSON, not one incidental line before it",
       (() => {
         try {
           JSON.parse(j.stdout);
@@ -832,11 +845,11 @@ check(
       })(),
     );
     check(
-      "и строка про найденный конфиг не потеряна — она ушла в stderr",
+      "and the line about the found config is not lost — it went to stderr",
       /config: rpp\.json/.test(j.stderr) && !/config:/.test(j.stdout),
     );
     check(
-      "`--json` отдаёт ОДИН массив, в котором находка о пропаже лежит рядом с находками правил",
+      "`--json` gives back ONE array, where the missing-file finding sits next to the rule findings",
       (() => {
         try {
           const parsed = JSON.parse(j.stdout);
@@ -849,14 +862,14 @@ check(
       })(),
     );
 
-    // Парная половина ЗДЕСЬ ЖЕ: дописали табель — проверка замолчала.
+    // The paired half RIGHT HERE: the scorecard is added — the check falls silent.
     writeFileSync(
       join(paper, "PIPELINE-STATUS.md"),
       "---\nstages: []\n---\n# S\n",
     );
     const after = await cli(["lint"], root);
     check(
-      "дописали табель — жалоба на структуру ушла",
+      "the scorecard was added — the structural complaint is gone",
       !/missing `PIPELINE-STATUS\.md`/.test(after.out),
     );
   } finally {
@@ -864,14 +877,14 @@ check(
   }
 }
 
-// ── `rpp hook` — РАНТАЙМ РЕЗОЛВИТСЯ ОТ ПАКЕТА, А НЕ ОТ КОРНЯ ПРОЕКТА ────────────────────
+// ── `rpp hook` — THE RUNTIME RESOLVES FROM THE PACKAGE, NOT FROM THE PROJECT ROOT ────────
 //
-// 🔴 Замер, породивший эту команду: один тарбол, два менеджера.
-//     npm:  node_modules/vigiles/dist/cli.js  ЕСТЬ
-//     pnpm: node_modules/vigiles/dist/cli.js  НЕТ
-// Прежняя проводка адресовала рантайм от корня проекта и на pnpm не резолвилась, а `|| exit 2`
-// на PreToolUse(Bash) превращал это в блокировку ЛЮБОЙ команды. Сквозная половина (обе
-// установки, настоящие процессы) живёт в `scripts/install-e2e.mjs`; здесь — вердикты.
+// 🔴 The measurement that gave rise to this command: one tarball, two package managers.
+//     npm:  node_modules/vigiles/dist/cli.js  EXISTS
+//     pnpm: node_modules/vigiles/dist/cli.js  DOES NOT
+// The old wiring addressed the runtime from the project root and did not resolve under pnpm,
+// and `|| exit 2` on PreToolUse(Bash) turned that into a block on ANY command. The end-to-end
+// half (both installs, real processes) lives in `scripts/install-e2e.mjs`; here — the verdicts.
 {
   const calls = [];
   const fake = (code) => (bin, args, opts) => {
@@ -885,21 +898,22 @@ check(
 
   said = "";
   check(
-    "без имени — отказ, и подсказан правильный вызов",
+    "no name — a failure, and the right invocation is suggested",
     runHook(undefined, { err }) === 2 && /rpp hook paper-edit-guard/.test(said),
   );
 
   said = "";
   check(
-    "неизвестный хук НАЗЫВАЕТСЯ вместе с путём, по которому его искали",
+    "an unknown hook is NAMED together with the path it was looked for at",
     runHook("no-such-hook", { err }) === 2 &&
       /unknown hook `no-such-hook`/.test(said) &&
       /no-such-hook\.hook\.mjs/.test(said),
   );
 
-  // 🔴 ГЛАВНЫЙ АССЕРТ. Ненайденный рантайм НЕ ИМЕЕТ ПРАВА вернуть 2: на PreToolUse это
-  // блокирует любую Bash-команду, включая ту, которой чинят. Он обязан ГРОМКО сказать и
-  // пропустить. Молчаливая деградация хуже явной, но блокировка всего хуже обеих.
+  // 🔴 THE MAIN ASSERTION. A runtime that cannot be found HAS NO RIGHT to return 2: on
+  // PreToolUse that blocks any Bash command, including the one that would fix it. It must say
+  // so LOUDLY and let it through. Silent degradation is worse than an explicit one, but blocking
+  // everything is worse than both.
   said = "";
   calls.length = 0;
   const brokenResolve = () => {
@@ -911,42 +925,42 @@ check(
     resolve: brokenResolve,
   });
   check(
-    "рантайм не резолвится — НЕ блокируем работу (код 0, а не 2)",
+    "the runtime does not resolve — work is NOT blocked (code 0, not 2)",
     code === 0,
   );
   check(
-    "и жалоба ГРОМКАЯ: назван хук, назван эффект, назано лекарство",
+    "and the complaint is LOUD: the hook is named, the effect is named, the remedy is named",
     /paper-edit-guard/.test(said) &&
       /is NOT running/.test(said) &&
       /Reinstall this package/.test(said),
   );
-  check("и при этом рантайм НЕ запускался", calls.length === 0);
+  check("and the runtime was NOT started in the process", calls.length === 0);
 
-  // Настоящий вердикт хука проходит насквозь — иначе страж перестаёт быть стражем.
+  // The hook's real verdict passes through — otherwise the guard stops being a guard.
   calls.length = 0;
   check(
-    "вердикт хука проходит НАСКВОЗЬ: 2 остаётся 2",
+    "the hook's verdict passes STRAIGHT THROUGH: 2 stays 2",
     runHook("paper-edit-guard", { err, run: fake(2) }) === 2,
   );
   check(
-    "и запускается ИМЕННО рантайм с программой этого хука",
+    "and EXACTLY the runtime with this hook's program is run",
     calls.length === 1 &&
       calls[0].args[1] === "hook-runtime" &&
       calls[0].args[2] === "run-program" &&
       /paper-edit-guard\.hook\.mjs$/.test(calls[0].args[3]),
   );
   check(
-    "ноль остаётся нулём",
+    "zero stays zero",
     runHook("paper-skills-nudge", { err, run: fake(0) }) === 0,
   );
 }
 
-// ── ЗАПУСК ЧЕРЕЗ СИМЛИНК — единственный способ, которым утилиту зовёт потребитель ───────
+// ── RUNNING THROUGH A SYMLINK — the only way a consumer ever calls the utility ───────
 //
-// 🔴 npm кладёт в `node_modules/.bin/` СИМЛИНК. Первая редакция сравнивала `import.meta.url` с
-// `file://${process.argv[1]}`: у симлинка эти два пути РАЗНЫЕ, условие ложно, и утилита молча
-// выходила с нулём. Прямой `node bin/rpp.mjs` при этом работал — то есть дефект был невидим
-// ровно тем способом, которым его проверяют.
+// 🔴 npm puts a SYMLINK in `node_modules/.bin/`. The first version compared `import.meta.url`
+// against `file://${process.argv[1]}`: for a symlink those two paths are DIFFERENT, the
+// condition is false, and the utility silently exited zero. A direct `node bin/rpp.mjs` worked
+// fine, meanwhile — i.e. the defect was invisible in exactly the way it is normally checked.
 {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-link-")));
   try {
@@ -964,17 +978,17 @@ check(
     });
     const out = (r.stdout ?? "") + (r.stderr ?? "");
     check(
-      "через СИМЛИНК утилита работает, а не выходит молча нулём",
+      "through a SYMLINK the utility works, rather than silently exiting zero",
       r.status === 1,
     );
-    check("и печатает находки", /paper\/stages/.test(out));
+    check("and prints findings", /paper\/stages/.test(out));
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
 }
 
 console.log(
-  `✓ ${String(n)} assertions passed — rpp lint, одна команда вместо конфига руками`,
+  `✓ ${String(n)} assertions passed — rpp lint, one command instead of hand-rolled config`,
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
