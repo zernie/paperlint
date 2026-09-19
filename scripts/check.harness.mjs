@@ -1,0 +1,87 @@
+/**
+ * Both halves for `npm run check` — and the half that matters is not "does it run the gates",
+ * it is "does its list still describe the CI it claims to mirror".
+ *
+ * 🔴 A HANDWRITTEN LIST OF GATES IS A FOSSIL THE DAY AFTER IT IS WRITTEN. That is measured, not
+ * feared: on 2026-09-19 eleven scripts existed with no aggregate, a subset was run from memory,
+ * and a suite-breaking change was pushed. Writing the subset down in a doc would have produced
+ * the same outcome one release later — the list would simply have been wrong instead of absent.
+ *
+ * So the assertions below do not check that `check.mjs` contains the right strings. They pull
+ * the job names OUT OF `.github/workflows/ci.yml` and require every one to be accounted for.
+ * Add a job to CI and this goes red the same day, naming the job nobody covered.
+ *
+ * ⚠️ Assertions at the TOP LEVEL: `vigiles test` imports the file and counts "did not throw"
+ * as a pass.
+ */
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { load } from "js-yaml";
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const ROOT = dirname(HERE);
+
+const { GATES, NOT_COVERED } = await import("./check.mjs");
+
+let n = 0;
+const check = (label, cond) => {
+  n++;
+  assert.ok(cond, label);
+};
+
+// ── the workflow is the ORACLE, not a copy of it ───────────────────────────────────────────
+const wf = load(readFileSync(join(ROOT, ".github/workflows/ci.yml"), "utf-8"));
+const ciJobs = Object.keys(wf.jobs ?? {});
+check("the workflow parses and declares jobs — without this every assertion below is vacuous",
+      ciJobs.length > 0);
+
+// ── HALF ONE: every CI job is accounted for ────────────────────────────────────────────────
+const covered = new Set(GATES.map((g) => g.job).filter(Boolean));
+for (const job of ciJobs) {
+  check(
+    `CI job «${job}» is either reproduced by a gate or named in NOT_COVERED with a reason — ` +
+      `an unexplained gap is indistinguishable from an oversight`,
+    covered.has(job) || typeof NOT_COVERED[job] === "string",
+  );
+}
+
+// ── HALF TWO: the list names nothing that does not exist ───────────────────────────────────
+// A dead job name is worse than a missing one: it reads as coverage and delivers nothing.
+for (const g of GATES) {
+  if (g.job === null) continue;
+  check(`gate «${g.name}» names a job that really exists in the workflow (${g.job})`,
+        ciJobs.includes(g.job));
+}
+for (const job of Object.keys(NOT_COVERED)) {
+  check(`NOT_COVERED names a job that really exists in the workflow (${job})`,
+        ciJobs.includes(job));
+}
+
+// ── HALF THREE: every gate is runnable ─────────────────────────────────────────────────────
+// A gate whose script was renamed fails at the moment someone runs it — which is exactly the
+// moment they are trusting it. Catch it here instead.
+const scripts = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf-8")).scripts ?? {};
+for (const g of GATES) {
+  check(`gate «${g.name}» maps to a script that exists (npm run ${g.script})`,
+        typeof scripts[g.script] === "string");
+}
+check("`check` itself is wired as a script, or nobody can run any of this",
+      typeof scripts.check === "string");
+
+// ── HALF FOUR: a local-only gate must say WHY ──────────────────────────────────────────────
+// Without this, `job: null` becomes the quiet way to drop something out of CI.
+for (const g of GATES.filter((g) => g.job === null)) {
+  check(`local-only gate «${g.name}» carries a reason`,
+        typeof g.reason === "string" && g.reason.length > 20);
+}
+
+// ── and the tail is not optional ───────────────────────────────────────────────────────────
+check("NOT_COVERED is non-empty — if it ever is, either CI shrank or someone silenced the tail",
+      Object.keys(NOT_COVERED).length > 0);
+
+console.log(
+  `✓ ${String(n)} assertions passed — npm run check: ${GATES.length} gates, ` +
+    `${ciJobs.length} CI job(s) all accounted for`,
+);

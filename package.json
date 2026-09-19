@@ -16,7 +16,8 @@
     "test:sabotage": "node scripts/exclusive.mjs node scripts/run-mutations.mjs",
     "test:install": "node scripts/exclusive.mjs node scripts/install-e2e.mjs",
     "test:build": "node scripts/exclusive.mjs node scripts/build-e2e.mjs",
-    "check:marketplace": "node scripts/exclusive.mjs node scripts/marketplace-shape.mjs"
+    "check:marketplace": "node scripts/exclusive.mjs node scripts/marketplace-shape.mjs",
+    "check": "node scripts/check.mjs"
   },
   "dependencies": {
     "@eslint/markdown": "^8.0.3",
