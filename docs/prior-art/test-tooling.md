@@ -107,6 +107,16 @@ table-driven test. The answer then is `node:test`, never vitest, and it must run
 `node_modules` directory at all. Adding a third `managers()` row for it would be a red test, not a
 feature. Yarn *classic* is one row away if support is ever claimed.
 
+➕ **Correction, 2026-09-19 — the conclusion holds, the reason above is incomplete.** Measured
+against a real Yarn 4.9.2 PnP consumer (`repro/claim4-yarn-pnp.mjs`): the CLI itself **runs** under
+PnP (`yarn rpp --help` answers), so the package is not PnP-incompatible; the literal path in
+`hooks.json` is the *movable* blocker, since Claude Code exposes `${CLAUDE_PLUGIN_ROOT}` for
+exactly it. The immovable blocker is one this note does not name — PnP resolves to a path **inside
+a zip**, and the outside process gets `existsSync: false` for the very path PnP handed it, so the
+e2e's `existsSync`/`readdirSync`/`readFileSync` inspection reads nothing whatever API produced the
+path. Supporting PnP means re-executing the inspection under `yarn node`, not swapping a string.
+Full run and the three corrections: [`package-location.md`](package-location.md) § 8.
+
 ---
 
 ## Status

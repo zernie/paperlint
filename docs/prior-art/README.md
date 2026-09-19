@@ -15,6 +15,7 @@ be citable for each one separately.
 | [`nondeterministic-checks.md`](nondeterministic-checks.md) | may a check read the clock, an mtime, or a diff? | yes, but make it opt-in, never blocking — and prefer a **recorded fact** to an inferred one, which dissolves most of them |
 | [`content-delivery.md`](content-delivery.md) | how is installable content (skills, styles, extensions) delivered? | the **config declares it and a command fetches it**; content that hard-codes its own install path is betting on one channel |
 | [`test-tooling.md`](test-tooling.md) | what do we test with — a framework? a local registry? | **change nothing**: a runner buys a reporter and a second exit code; a registry is what MULTI-package repos need. Both have named triggers |
+| [`package-location.md`](package-location.md) | how does a package find its own installed files, and its own bin? | resolve the package dir **once** from `<pkg>/package.json`; **keep** the `.bin` launch — it is the only check that observes the manager's own work. Yarn PnP stays out, for a harder reason than previously recorded |
 
 ## Tools examined, and for what
 
@@ -50,6 +51,10 @@ academic skill suites". Different question, deliberately not merged.
 `../package-shape-options.md` § "Premise corrections" rests on — the `${CLAUDE_SKILL_DIR}`
 substitution table, the five marketplace shapes with their real exit codes, and the dependency
 closure scan. They are kept so a verdict here can be disagreed with by running a program.
+
+It also holds the CLAIM 4–6 probes behind [`package-location.md`](package-location.md): the
+resolution matrix under npm and pnpm, the Yarn PnP zip-path measurement, the four ways to launch
+an installed bin, and the `exports`-map mutation that is the entire case for changing anything.
 
 ## Status
 
