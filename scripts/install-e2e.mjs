@@ -30,9 +30,14 @@ import {
   readFileSync,
   realpathSync,
 } from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import {
+  compareToBaseline,
+  countByRule,
+} from "../fixtures/real-markdown-paper/baseline.mjs";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const KEEP = process.argv.includes("--keep");
@@ -160,18 +165,46 @@ function stageCorpus(root) {
 }
 
 /**
+ * WHERE THE PACKAGE LANDED, asked of Node rather than spelled out (docs/prior-art/package-location.md).
+ *
+ * The spelling `node_modules/research-paper-pipeline` is not wrong under npm or pnpm. What
+ * resolution adds is a second claim the hardcode cannot see: the package is REACHABLE BY NAME
+ * from the consumer. Measured there with a closed `exports` map — the directory still exists, every
+ * `existsSync` stays green, and the documented public import is broken. `createRequire`, not
+ * `findPackageJSON`: the latter answers past a broken map, which makes it the better locator and
+ * the worse canary.
+ */
+function locateInstalled(consumer) {
+  const req = createRequire(pathToFileURL(join(consumer, "__consumer__.js")).href);
+  try {
+    const file = req.resolve("research-paper-pipeline/package.json");
+    return { dir: dirname(file), manifest: JSON.parse(readFileSync(file, "utf8")) };
+  } catch (e) {
+    return { err: `${e.code ?? "error"}: ${e.message}` };
+  }
+}
+
+/**
+ * The skills directory as the package DECLARES it (`.claude-plugin/plugin.json`, `"skills"`),
+ * not as this script remembers it. A root without the declaration is an error, not a fallback:
+ * a default here would make a missing declaration look like a correct one.
+ */
+function skillsDir(root) {
+  const file = join(root, ".claude-plugin", "plugin.json");
+  const declared = existsSync(file)
+    ? JSON.parse(readFileSync(file, "utf8")).skills
+    : undefined;
+  if (typeof declared !== "string")
+    throw new Error(`no "skills" declared in ${file}`);
+  return join(root, declared);
+}
+
+/**
  * The hook commands are taken FROM THE PUBLISHED `hooks.json`, not from the copy in the
  * repository: we check what arrived, not what we shipped.
  */
-function hookCommands(consumer) {
-  const file = join(
-    consumer,
-    "node_modules",
-    "research-paper-pipeline",
-    "plugin",
-    "hooks",
-    "hooks.json",
-  );
+function hookCommands(installed) {
+  const file = join(installed, "plugin", "hooks", "hooks.json");
   if (!existsSync(file))
     return { err: `plugin/hooks/hooks.json did not arrive in the tarball: ${file}` };
   let json;
@@ -202,10 +235,9 @@ function hookCommands(consumer) {
  * which only resolves from one working directory. That path is correct in the repository and
  * absent in the consumer, which is why reading the prose never finds it.
  */
-function contentDelivery(consumer) {
-  const installed = join(consumer, "node_modules", "research-paper-pipeline");
+function contentDelivery(installed) {
   const listSkills = (root) => {
-    const dir = join(root, "skills");
+    const dir = skillsDir(root);
     if (!existsSync(dir)) return [];
     return readdirSync(dir, { withFileTypes: true })
       .filter((d) => d.isDirectory() && existsSync(join(dir, d.name, "SKILL.md")))
@@ -219,16 +251,20 @@ function contentDelivery(consumer) {
   const unresolved = [];
   let refs = 0;
   for (const name of there) {
-    const body = readFileSync(join(installed, "skills", name, "SKILL.md"), "utf8");
+    const skills = skillsDir(installed);
+    const body = readFileSync(join(skills, name, "SKILL.md"), "utf8");
     for (const m of body.matchAll(/([\w./-]*scripts\/[\w-]+\.mjs)/g)) {
       refs++;
       const raw = m[1];
+      // TWO bases, and both are the declared skills directory. A third — the package root — was
+      // measured dead (0 of 104 references, docs/prior-art/package-location.md § 9) and is gone:
+      // a candidate nothing uses can only ever hide a wrong-base reference, never find one.
       const candidates = [
-        join(installed, raw),
-        join(installed, "skills", name, raw),
-        // The install-path spelling the port rule exists to retire; counted as resolvable only
-        // if the file is genuinely there under `skills/`.
-        join(installed, raw.replace(/^\.claude\/skills\//, "skills/")),
+        // skill-relative: `scripts/x.mjs`, `../other/scripts/x.mjs`
+        join(skills, name, raw),
+        // the install-path spelling the port rule exists to retire (rpp#19); counted as resolvable
+        // only if the file is genuinely there under the declared skills directory
+        join(skills, raw.replace(/^\.claude\/skills\//, "")),
       ];
       if (!candidates.some(existsSync)) unresolved.push(`${name}: ${raw}`);
     }
@@ -301,6 +337,18 @@ try {
     if (inst.status === 0) ok("the install went through");
     else bad("the install went through", inst.stderr || inst.stdout);
 
+    const located = locateInstalled(consumer);
+    if (located.err) {
+      bad("the package resolves BY NAME from the consumer", located.err);
+      // Nothing below can be measured against a package Node cannot find; say so and move on
+      // rather than guess a path and report on the guess.
+      results.push({ manager: `${m.name} ${m.version}`, fail });
+      console.log("");
+      continue;
+    }
+    ok("the package resolves BY NAME from the consumer");
+    const installed = located.dir;
+
     // The pinned defect, if this manager declares one: the plain install — the command a
     // reader of the README would type — must still fail the way we recorded. Green here means
     // the world moved and the accommodation above is now dead weight.
@@ -335,6 +383,18 @@ try {
     help.status === 0
       ? ok("`rpp --help` answers with zero")
       : bad("`rpp --help` answers with zero", help.stderr);
+    // The shim above proves the MANAGER did its part. This proves the file the manifest PROMISES
+    // exists and runs — the real file under both managers, so `node <it>` is uniform where
+    // `node <shim>` is not (pnpm writes a shell wrapper).
+    const binField = located.manifest.bin;
+    const binRel = typeof binField === "string" ? binField : binField?.rpp;
+    if (!binRel) bad("the manifest declares the `rpp` bin", JSON.stringify(binField));
+    else {
+      const real = sh(process.execPath, [join(installed, binRel), "--help"], { cwd: consumer });
+      real.status === 0
+        ? ok(`the manifest's bin (${binRel}) runs under node`)
+        : bad(`the manifest's bin (${binRel}) runs under node`, real.stderr);
+    }
 
     // 🔴 THE CORPUS IS STAGED BEFORE `init`, AND THIS IS NOT A REORDERING FOR CONVENIENCE. `init`
     // now MEASURES the papers directory instead of guessing it; a run over an empty tree would
@@ -376,8 +436,44 @@ try {
           (lint.stdout ?? "") + (lint.stderr ?? ""),
         );
 
+    // 🔴 THE REAL ARTICLE, AND IT IS NOT EXPECTED TO BE CLEAN. The two papers above were written
+    // for the rules; this one was published before the rules existed, so it is the only input on
+    // which a false positive can show up. It is added AFTER the clean run, so the clean corpus
+    // contributes nothing and every finding below is the article's. The verdict is the recorded
+    // baseline — growth fails, a full vanish fails, a partial drop does not — read through the
+    // same module the in-repo harness uses, so the installed binary and the repository's own are
+    // held to one recording.
+    cpSync(
+      join(ROOT, "fixtures", "real-markdown-paper"),
+      join(consumer, "papers", "real-article"),
+      { recursive: true, verbatimSymlinks: true },
+    );
+    const realLint = sh(bin, ["lint", "--json"], { cwd: consumer });
+    let found = null;
+    try {
+      found = countByRule(realLint.stdout ?? "");
+    } catch (e) {
+      bad("`rpp lint --json` on the real article parses", `${e.message}\n${realLint.stderr ?? ""}`);
+    }
+    if (found) {
+      const { grew, vanished } = compareToBaseline(found);
+      grew.length === 0 && vanished.length === 0
+        ? ok(
+            `the real article matches its baseline (${Object.entries(found)
+              .map(([r, n]) => `${r} ${n}`)
+              .join(", ")})`,
+          )
+        : bad(
+            "the real article matches its baseline",
+            [
+              ...grew.map((g) => `grew: ${g.rule} ${g.now} > recorded ${g.recorded}`),
+              ...vanished.map((r) => `vanished: ${r}`),
+            ].join("\n"),
+          );
+    }
+
     // 🔴 The load-bearing check: the commands ARE EXECUTED.
-    const { cmds, err } = hookCommands(consumer);
+    const { cmds, err } = hookCommands(installed);
     if (err) bad("hooks.json arrived and parses", err);
     else {
       let resolved = 0;
@@ -412,7 +508,7 @@ try {
     }
 
     // Content delivery: the skills, and the paths inside them.
-    const d = contentDelivery(consumer);
+    const d = contentDelivery(installed);
     d.missing.length === 0 && d.there === d.here
       ? ok(`all ${d.here} skill(s) arrived`)
       : bad(

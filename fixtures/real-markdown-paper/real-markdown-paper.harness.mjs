@@ -31,6 +31,7 @@ import { cpSync, mkdtempSync, readFileSync, writeFileSync, rmSync, mkdirSync, re
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { compareToBaseline, countByRule, recordedFindings } from "./baseline.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(dirname(HERE));
@@ -66,12 +67,8 @@ function findings(patch) {
     if (patch) patch(join(work, "papers", "article"));
 
     const r = spawnSync(process.execPath, [BIN, "lint", "--json"], { cwd: work, encoding: "utf8" });
-    const out = {};
-    // 🔴 If the output does not parse, that is a FAILURE, not an empty finding set. An empty set
-    // read as "clean" is how this repository's checks have gone hollow before.
-    const parsed = JSON.parse(r.stdout);
-    for (const file of parsed) for (const m of file.messages ?? []) out[m.ruleId] = (out[m.ruleId] ?? 0) + 1;
-    return out;
+    // Throws on output that does not parse — see baseline.mjs.
+    return countByRule(r.stdout);
   } finally {
     rmSync(work, { recursive: true, force: true });
   }
@@ -88,23 +85,22 @@ const edit = (dir, file, from, to) => {
 
 // ── HALF ONE: the baseline, as data ────────────────────────────────────────────────────────
 const base = findings(null);
-const recorded = JSON.parse(readFileSync(join(HERE, "baseline.json"), "utf8")).findings;
+const recorded = recordedFindings();
+const { grew, vanished } = compareToBaseline(base, recorded);
 
 check("the article produces findings at all — a silent corpus would make every assertion vacuous",
       Object.keys(base).length > 0);
 
-for (const [rule, count] of Object.entries(base)) {
-  const was = recorded[rule] ?? 0;
+for (const g of grew)
   check(
-    `«${rule}» says no MORE about the real article than recorded (${count} now, ${was} recorded) — ` +
+    `«${g.rule}» says no MORE about the real article than recorded (${g.now} now, ${g.recorded} recorded) — ` +
       `growth on real prose is a false positive until proven otherwise; fix the rule or re-record ` +
       `with a reason in baseline.json`,
-    count <= was,
+    false,
   );
-}
-check("no rule that was recorded has vanished entirely without the baseline being updated — " +
-      "a rule going quiet is how a check dies unnoticed",
-      Object.keys(recorded).every((r) => r in base || recorded[r] === 0));
+check(`no rule that was recorded has vanished entirely without the baseline being updated — ` +
+      `a rule going quiet is how a check dies unnoticed (vanished: ${vanished.join(", ") || "none"})`,
+      vanished.length === 0);
 
 // ── HALF TWO: variations, one planted defect each ──────────────────────────────────────────
 

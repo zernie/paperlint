@@ -78,6 +78,8 @@
     "eslint-rules",
     "eslint.config.mjs",
     "fixtures",
+    "!fixtures/real-markdown-paper",
+    "fixtures/real-markdown-paper/baseline.*",
     "hooks",
     "lib",
     "plugin",
