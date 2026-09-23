@@ -358,11 +358,19 @@ export async function offerHooks(
     if (answer === "n" || answer === "no") return { status: "declined" };
   }
   try {
-    const m =
-      merge ??
-      (await import("vigiles/claude-code")).claudeCodeHookProtocol
-        .mergeRegistrations;
-    return wireHooks(root, m as Merge, shippedWiring());
+    // Called THROUGH the protocol object rather than as a detached method: the port is an
+    // object, and an implementation that one day reads `this` must not break here.
+    let m = merge;
+    if (!m) {
+      const { claudeCodeHookProtocol } = await import("vigiles/claude-code");
+      m = (existing, compiled, managedBy) =>
+        claudeCodeHookProtocol.mergeRegistrations(
+          existing,
+          compiled,
+          managedBy,
+        );
+    }
+    return wireHooks(root, m, shippedWiring());
   } catch (e) {
     return { status: "failed", reason: (e as Error).message };
   }
