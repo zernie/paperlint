@@ -26,7 +26,13 @@ const HARNESS = join(HERE, "provenance.harness.mjs");
 const MUTATIONS = [
   [
     "the scope gate is inverted",
-    [[SRC, "if (!provenanceScope(dir).covered) return [];", "if (provenanceScope(dir).covered) return [];"]],
+    [
+      [
+        SRC,
+        "if (!provenanceScope(dir).covered) return [];",
+        "if (provenanceScope(dir).covered) return [];",
+      ],
+    ],
     "coverage measurement must always print",
     "the in-scope/out-of-scope distinction: covered papers stop being checked and the report still prints",
   ],
@@ -42,6 +48,12 @@ process.exit(
   runMutations({
     root: consumerRoot(),
     runner: "vigiles",
-    cases: MUTATIONS.map(([name, edits, expect, disables]) => ({ name, disables, edits, harness: HARNESS, expect })),
+    cases: MUTATIONS.map(([name, edits, expect, disables]) => ({
+      name,
+      disables,
+      edits,
+      harness: HARNESS,
+      expect,
+    })),
   }),
 );

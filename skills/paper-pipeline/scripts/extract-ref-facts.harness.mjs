@@ -37,8 +37,7 @@ import { fileURLToPath } from "node:url";
 import { consumerRoot } from "./consumer.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const ROOT =
-  consumerRoot();
+const ROOT = consumerRoot();
 const X = await import(join(HERE, "extract-ref-facts.mjs"));
 
 // 🔴 PAPERS ROOT — FROM THE DECLARATION, NOT BY THE FIRST CONSUMER'S DIRECTORY NAME (12.09.2026).
@@ -184,8 +183,11 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
 {
   const bib = `@misc{human, author={Adversa, Alice}, title={T}, year={2026}}`;
   const [e] = await X.parseBib(bib);
-  assert.deepEqual(e.authors, ["Alice Adversa"],
-    `single brace must parse as person: ${JSON.stringify(e.authors)}`);
+  assert.deepEqual(
+    e.authors,
+    ["Alice Adversa"],
+    `single brace must parse as person: ${JSON.stringify(e.authors)}`,
+  );
 }
 
 // ── 3. DEFECT #3: name from .bib is converted to order "FirstName LastName" ─────────────

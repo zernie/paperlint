@@ -8,8 +8,19 @@ import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({
   name: "pc-panel-review",
-  description: "Use when asking \"what would the program committee decide?\" / \"simulate the reviewers\" / \"what's this paper's accept probability?\" on a drafted paper + artifact. Spawns N independent reviewers with DISTINCT lenses (one actually RUNS the artifact), then synthesizes a PC-chair meta-review into an accept/reject decision, a calibrated probability, and consensus must-fixes. Requires grade-paper-writing's persona stall inventory + tighten-paper's structural verdict as inputs (blocked until they exist — the panel cannot feel reader fatigue on its own). Also has a lightweight single-reviewer VENUE-FIT MODE for a quick CFP-fit spot-check. NOT a single fast defect hunt (paper-adversarial-review), a writing grade (grade-paper-writing), or the full pre-submit gate (harden-paper, which calls this) — this models the PC decision itself.",
-  tools: ["Read", "Write", "Grep", "Glob", "Bash", "WebSearch", "WebFetch", "Agent", "Skill"],
+  description:
+    'Use when asking "what would the program committee decide?" / "simulate the reviewers" / "what\'s this paper\'s accept probability?" on a drafted paper + artifact. Spawns N independent reviewers with DISTINCT lenses (one actually RUNS the artifact), then synthesizes a PC-chair meta-review into an accept/reject decision, a calibrated probability, and consensus must-fixes. Requires grade-paper-writing\'s persona stall inventory + tighten-paper\'s structural verdict as inputs (blocked until they exist — the panel cannot feel reader fatigue on its own). Also has a lightweight single-reviewer VENUE-FIT MODE for a quick CFP-fit spot-check. NOT a single fast defect hunt (paper-adversarial-review), a writing grade (grade-paper-writing), or the full pre-submit gate (harden-paper, which calls this) — this models the PC decision itself.',
+  tools: [
+    "Read",
+    "Write",
+    "Grep",
+    "Glob",
+    "Bash",
+    "WebSearch",
+    "WebFetch",
+    "Agent",
+    "Skill",
+  ],
   body: `
 # pc-panel-review — model the whole PC, not one reviewer
 

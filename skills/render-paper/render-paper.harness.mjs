@@ -35,7 +35,10 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { checkSkill } from "../../lib/skill-checks.mjs";
 import { papersRoot } from "../../eslint-rules/papers.mjs";
-import { consumerPkg, consumerRoot } from "../paper-pipeline/scripts/consumer.mjs";
+import {
+  consumerPkg,
+  consumerRoot,
+} from "../paper-pipeline/scripts/consumer.mjs";
 
 await checkSkill("render-paper");
 
@@ -102,7 +105,14 @@ for (const pkg of ["texlive-fonts-extra", "texlive-plain-generic"]) {
     // rung 1 — the package
     join(HERE, "..", "..", "venues", "paper-guards.tex"),
     // rung 2 — the skill directory at the consumer
-    join(HERE, "..", "submit-paper", "references", "venues", "paper-guards.tex"),
+    join(
+      HERE,
+      "..",
+      "submit-paper",
+      "references",
+      "venues",
+      "paper-guards.tex",
+    ),
   ].filter((c) => existsSync(c));
 
   const ok = run(["--print-venues"]);
@@ -186,7 +196,11 @@ for (const pkg of ["texlive-fonts-extra", "texlive-plain-generic"]) {
     cwd: empty, // outside a git tree ⇒ the package doesn't resolve
     env: { ...process.env, CLAUDE_PROJECT_DIR: empty },
   });
-  assert.equal(none.status, 2, "no venues anywhere ⇒ exit 2, not a silent success");
+  assert.equal(
+    none.status,
+    2,
+    "no venues anywhere ⇒ exit 2, not a silent success",
+  );
   assert.match(
     none.stderr,
     /paper-guards\.tex/,
@@ -296,9 +310,16 @@ for (const pkg of ["texlive-fonts-extra", "texlive-plain-generic"]) {
 
   // ── First half: fixtures. Both sides, otherwise "silent" is indistinguishable from "dead."
   const fx = join(HERE, "..", "..", "fixtures", "render-paper");
-  assertLadder(readFileSync(join(fx, "build-clean.sh"), "utf8"), "fixture build-clean.sh");
+  assertLadder(
+    readFileSync(join(fx, "build-clean.sh"), "utf8"),
+    "fixture build-clean.sh",
+  );
   assert.throws(
-    () => assertLadder(readFileSync(join(fx, "build-defect.sh"), "utf8"), "fixture build-defect.sh"),
+    () =>
+      assertLadder(
+        readFileSync(join(fx, "build-defect.sh"), "utf8"),
+        "fixture build-defect.sh",
+      ),
     /TEXINPUTS/,
     "the defective fixture must fail the check — otherwise the check isn't checking anything",
   );
@@ -323,13 +344,18 @@ for (const pkg of ["texlive-fonts-extra", "texlive-plain-generic"]) {
       const script = join(base, entry.name, "build.sh");
       if (!existsSync(script)) continue;
       // The count grows TOGETHER WITH the verdict, not ahead of it.
-      assertLadder(readFileSync(script, "utf8"), `${root}/${entry.name}/build.sh`);
+      assertLadder(
+        readFileSync(script, "utf8"),
+        `${root}/${entry.name}/build.sh`,
+      );
       checked += 1;
     }
   }
 
   console.log(
     `  build.sh ladder: 2 fixture(s) + ${checked} consumer script(s)` +
-      (root === null ? " (no papers root on disk — package checkout)" : ` under ${root}/`),
+      (root === null
+        ? " (no papers root on disk — package checkout)"
+        : ` under ${root}/`),
   );
 }

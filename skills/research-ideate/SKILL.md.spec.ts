@@ -9,8 +9,17 @@ import { experimental_skill } from "vigiles/spec";
 export default experimental_skill({
   name: "research-ideate",
   description:
-    "Go / no-go on the research idea — BEFORE investing in it. Use when the idea is already on the table and the question is whether to pursue it or not: will it yield a peer-reviewed paper or is it at best a blog post, is there a cheap version of the finding that doesn't require a dramatic result, are we scattering from our coherent line. Gives a verdict plus the sharpest framing, minimal finding and venue types. Evaluates the idea by what actually counts in the work corpus: peer-reviewed indexed publication (authorship), reusable method or benchmark instead of a one-off \"tool X is bad\" (original contribution), citations onward, not GitHub stars, and one connected line instead of scattered topics. Stage — conception, before find-venue and before any draft. Compose with find-venue (downstream), build-benchmark, draft-paper.",
-  tools: ["Read", "Write", "Grep", "Glob", "Agent", "Skill", "Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*)", "Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)"],
+    'Go / no-go on the research idea — BEFORE investing in it. Use when the idea is already on the table and the question is whether to pursue it or not: will it yield a peer-reviewed paper or is it at best a blog post, is there a cheap version of the finding that doesn\'t require a dramatic result, are we scattering from our coherent line. Gives a verdict plus the sharpest framing, minimal finding and venue types. Evaluates the idea by what actually counts in the work corpus: peer-reviewed indexed publication (authorship), reusable method or benchmark instead of a one-off "tool X is bad" (original contribution), citations onward, not GitHub stars, and one connected line instead of scattered topics. Stage — conception, before find-venue and before any draft. Compose with find-venue (downstream), build-benchmark, draft-paper.',
+  tools: [
+    "Read",
+    "Write",
+    "Grep",
+    "Glob",
+    "Agent",
+    "Skill",
+    "Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*)",
+    "Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)",
+  ],
   body: `
 # research-ideate — is this idea worth a paper, and does the paper earn authorship credit?
 

@@ -184,14 +184,6 @@ jobs:
       - name: mutation batteries
         run: npm run test:sabotage
 
-
-
-
-
-
-
-
-
       # pnpm is INSTALLED here rather than hoped for. The runner image may or may not carry it,
       # and the npm/pnpm difference is the entire reason the install e2e exists — so leaving it
       # to the image means the half that matters most is covered by luck. `corepack` ships with
@@ -352,4 +344,3 @@ jobs:
       - name: build e2e (--strict)
         run: node scripts/build-e2e.mjs --strict
         timeout-minutes: 10
-

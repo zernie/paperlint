@@ -8,8 +8,19 @@ import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({
   name: "grade-paper-writing",
-  description: "Use when asking \"does this paper read well?\" / \"is the writing any good?\" / \"it reads like a wall of text and jargon\" / \"grade the writing\" on a draft. Grades WRITING CRAFT only — nine dimensions 1–5 (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking) against how the best-written papers read (Peyton Jones, McEnerney, Gopen & Swan; exemplars Trusting Trust, Carlini, Greshake), naming the offending sentence and the fix for each. Runs the PERSONA cold-read stall pass (a committed non-academic persona subagent, per-section) whose stall inventory — not the rubric number — is the readability gate other skills consume (pc-panel-review, paper-adversarial-review, harden-paper). Defaults to a blind multi-grader panel; after fixes, mandates the claims-preservation diff (row `claims`). NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT venue-bar content strength (study-accepted-papers). Compose with harden-paper (which calls it), draft-paper (generative counterpart), render-paper.",
-  tools: ["Read", "Write", "Edit", "Grep", "Glob", "Agent", "Skill", "Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*)", "Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)"],
+  description:
+    'Use when asking "does this paper read well?" / "is the writing any good?" / "it reads like a wall of text and jargon" / "grade the writing" on a draft. Grades WRITING CRAFT only — nine dimensions 1–5 (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking) against how the best-written papers read (Peyton Jones, McEnerney, Gopen & Swan; exemplars Trusting Trust, Carlini, Greshake), naming the offending sentence and the fix for each. Runs the PERSONA cold-read stall pass (a committed non-academic persona subagent, per-section) whose stall inventory — not the rubric number — is the readability gate other skills consume (pc-panel-review, paper-adversarial-review, harden-paper). Defaults to a blind multi-grader panel; after fixes, mandates the claims-preservation diff (row `claims`). NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT venue-bar content strength (study-accepted-papers). Compose with harden-paper (which calls it), draft-paper (generative counterpart), render-paper.',
+  tools: [
+    "Read",
+    "Write",
+    "Edit",
+    "Grep",
+    "Glob",
+    "Agent",
+    "Skill",
+    "Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*)",
+    "Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)",
+  ],
   body: `
 # grade-paper-writing — grade how the paper READS, then fix it sentence by sentence
 

@@ -32,7 +32,13 @@ process.exit(
         name: "columnHeights: the stub-page floor is removed",
         disables:
           "the refusal to judge a page with too few words — a stub page starts reporting heights",
-        edits: [[join(HERE, "extract-pdf-facts.mjs"), "words.length < 60", "words.length < 0"]],
+        edits: [
+          [
+            join(HERE, "extract-pdf-facts.mjs"),
+            "words.length < 60",
+            "words.length < 0",
+          ],
+        ],
         harness: join(HERE, "extract-pdf-facts.harness.mjs"),
         expect: "a near-empty page is not judged",
       },

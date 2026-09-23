@@ -8,8 +8,20 @@ import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({
   name: "paper-pipeline",
-  description: "The orchestrator for writing a research paper end-to-end, from idea to accepted-and-extended, with every stage graded for the credit it earns a body of work. START HERE when writing/hardening a paper (AgenticDev, AISec, and future ones) and want the whole lifecycle driven, not one step. Routes to the stage skills — research-ideate, find-venue, plan-paper-timeline, build-benchmark, draft-paper, render-paper, verify-citations, the review skills, submit-paper (+ venue cards), camera-ready, extend-paper — and owns the shared references.",
-  tools: ["Read", "Write", "Edit", "Grep", "Glob", "Bash", "WebSearch", "WebFetch", "Agent", "Skill"],
+  description:
+    "The orchestrator for writing a research paper end-to-end, from idea to accepted-and-extended, with every stage graded for the credit it earns a body of work. START HERE when writing/hardening a paper (AgenticDev, AISec, and future ones) and want the whole lifecycle driven, not one step. Routes to the stage skills — research-ideate, find-venue, plan-paper-timeline, build-benchmark, draft-paper, render-paper, verify-citations, the review skills, submit-paper (+ venue cards), camera-ready, extend-paper — and owns the shared references.",
+  tools: [
+    "Read",
+    "Write",
+    "Edit",
+    "Grep",
+    "Glob",
+    "Bash",
+    "WebSearch",
+    "WebFetch",
+    "Agent",
+    "Skill",
+  ],
   body: `
 # paper-pipeline — the conductor for the whole organism
 

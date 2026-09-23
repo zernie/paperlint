@@ -62,10 +62,19 @@
  * registry's response, not by a comparison. If the cache kept parsed entries, those readers would
  * stay uncovered while looking covered.
  */
-import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from "node:fs";
+import {
+  readFileSync,
+  writeFileSync,
+  existsSync,
+  mkdirSync,
+  statSync,
+} from "node:fs";
 import { createHash } from "node:crypto";
 import { join, resolve, dirname, basename } from "node:path";
-import { headings as mdHeadings, requireMarkdown } from "../../../lib/markdown.mjs";
+import {
+  headings as mdHeadings,
+  requireMarkdown,
+} from "../../../lib/markdown.mjs";
 import { isMain } from "./consumer.mjs";
 
 // Markup is parsed with a parser (`CLAUDE.md`, 2026-08-11). We fail rather than degrade: without
@@ -78,7 +87,8 @@ const CROSSREF = "https://api.crossref.org/works/";
 const ARXIV = "https://export.arxiv.org/api/query?id_list=";
 // CrossRef asks for a contact in the User-Agent and gives the polite pool in return. No account
 // and no key — it is a courtesy, the anonymous pool is rate-limited.
-const UA = "extract-ref-facts/1.0 (https://github.com/; paper-pipeline citation facts)";
+const UA =
+  "extract-ref-facts/1.0 (https://github.com/; paper-pipeline citation facts)";
 
 export const SCHEMA = 1;
 
@@ -96,14 +106,21 @@ export function parseMarkdownRefs(text) {
   // The section is cut by the parser. The former `text.split(/^## References\s*$/m)[1]` opened the
   // reference list on a `## References` quoted inside a ```-block — and in this repo papers quote
   // their own markup in chunks.
-  const refsHs = mdHeadings(text).filter((h) => h.depth === 2 && /^References\s*$/u.test(h.text));
+  const refsHs = mdHeadings(text).filter(
+    (h) => h.depth === 2 && /^References\s*$/u.test(h.text),
+  );
   if (refsHs.length === 0) return [];
   const nl = text.indexOf("\n", refsHs[0].offset);
-  const body = text.slice(nl === -1 ? text.length : nl, refsHs[1] ? refsHs[1].offset : text.length);
+  const body = text.slice(
+    nl === -1 ? text.length : nl,
+    refsHs[1] ? refsHs[1].offset : text.length,
+  );
   // The line where the body starts in the source file — so that an entry has an ADDRESS in
   // `paper.md` and not just a number in a list. The rule prints it in the message: the facts file
   // lives in `_build/`, and without the source line a finding would have to be hunted for by eye.
-  const bodyLine = text.slice(0, nl === -1 ? text.length : nl).split("\n").length;
+  const bodyLine = text
+    .slice(0, nl === -1 ? text.length : nl)
+    .split("\n").length;
   // A heading closes the list — appendices come AFTER the bibliography, and without this their
   // numbered prose would be parsed as references. The line numbers come from the parser:
   // `/^#{1,6}\s/` also counted a hash inside a ```-block as a heading.
@@ -114,7 +131,11 @@ export function parseMarkdownRefs(text) {
   let curLine = 0;
   const flush = () => {
     if (cur !== null)
-      entries.push({ n: cur, line: curLine, raw: buf.join(" ").replace(BRACKET_NOTE, "").trim() });
+      entries.push({
+        n: cur,
+        line: curLine,
+        raw: buf.join(" ").replace(BRACKET_NOTE, "").trim(),
+      });
     cur = null;
     buf = [];
   };
@@ -139,18 +160,42 @@ export function parseMarkdownRefs(text) {
 function splitEntry(e) {
   const base = { n: e.n, line: e.line, key: null, raw: e.raw };
   const mt = /\*(.+?)\*/.exec(e.raw);
-  if (!mt) return { ...base, authors: [], truncated: false, title: null, year: yearIn(e.raw), venue_text: e.raw };
+  if (!mt)
+    return {
+      ...base,
+      authors: [],
+      truncated: false,
+      title: null,
+      year: yearIn(e.raw),
+      venue_text: e.raw,
+    };
   const title = mt[1].trim().replace(/\.$/, "");
   const rawAuthors = splitAuthors(e.raw.slice(0, mt.index));
-  const note = e.raw.slice(mt.index + mt[0].length).trim().replace(/^,\s*/, "");
+  const note = e.raw
+    .slice(mt.index + mt[0].length)
+    .trim()
+    .replace(/^,\s*/, "");
   const { authors, truncated } = dropEtAl(rawAuthors);
-  return { ...base, authors, truncated, title, year: yearIn(note) ?? yearIn(e.raw), venue_text: note };
+  return {
+    ...base,
+    authors,
+    truncated,
+    title,
+    year: yearIn(note) ?? yearIn(e.raw),
+    venue_text: note,
+  };
 }
 
 function splitAuthors(a) {
-  const s = a.trim().replace(/\.\s*$/, "").trim();
+  const s = a
+    .trim()
+    .replace(/\.\s*$/, "")
+    .trim();
   if (!s) return [];
-  return s.split(",").map((p) => p.trim()).filter(Boolean);
+  return s
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
 }
 
 /**
@@ -192,7 +237,11 @@ const yearIn = (s) => (/\b(19|20)\d{2}\b/.exec(s ?? "") ?? [null])[0];
  * line, whereas with a `??` chain over arbitrary fields it would dissolve again.
  */
 const joinName = (a) =>
-  a.name ?? [a.firstName, a.prefix, a.lastName, a.suffix].filter(Boolean).join(" ").trim();
+  a.name ??
+  [a.firstName, a.prefix, a.lastName, a.suffix]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
 
 /**
  * 🔴 THE .bib PARSER IS AN OPTIONAL DEPENDENCY, AND THE FAILURE MUST BE LOUD AND CARRY THE CURE.
@@ -236,16 +285,36 @@ export async function parseBib(text) {
     // `and others` is BibTeX's `et al.`. The parser returns it as an author with no first name.
     const isOthers = (a) => !a.firstName && /^others$/i.test(a.lastName ?? "");
     const truncated = names.some(isOthers);
-    const authors = names.filter((a) => !isOthers(a)).map(joinName).filter(Boolean);
-    const str = (v) => (Array.isArray(v) ? v.join(" ") : typeof v === "string" ? v : v == null ? "" : String(v));
-    const venueText = [f.booktitle, f.journal, f.note, f.howpublished].map(str).filter(Boolean).join(" ");
+    const authors = names
+      .filter((a) => !isOthers(a))
+      .map(joinName)
+      .filter(Boolean);
+    const str = (v) =>
+      Array.isArray(v)
+        ? v.join(" ")
+        : typeof v === "string"
+          ? v
+          : v == null
+            ? ""
+            : String(v);
+    const venueText = [f.booktitle, f.journal, f.note, f.howpublished]
+      .map(str)
+      .filter(Boolean)
+      .join(" ");
     return {
       n: i + 1,
       line: lineOfKey(e.key),
       key: e.key,
       // `raw` is where identifiers are looked for: they hide in `note`, in `journal`
       // (`arXiv preprint arXiv:2107.03374`), and in a separate `doi` field.
-      raw: [str(f.author && authors.join(" and ")), str(f.title), venueText, str(f.doi), str(f.url), str(f.year)]
+      raw: [
+        str(f.author && authors.join(" and ")),
+        str(f.title),
+        venueText,
+        str(f.doi),
+        str(f.url),
+        str(f.year),
+      ]
         .filter(Boolean)
         .join(" "),
       authors,
@@ -300,14 +369,22 @@ export const ARXIV_DOI = /^10\.48550\/arxiv\.(\d{4}\.\d{4,5})(v\d+)?$/i;
 
 /** The record the title/authors/year are judged against: the DOI, if there is one. */
 export const primaryOf = (ids) =>
-  ids.doi.length ? `doi:${ids.doi[0]}` : ids.arxiv.length ? `arxiv:${ids.arxiv[0]}` : null;
-export const allKeys = (ids) => [...ids.doi.map((d) => `doi:${d}`), ...ids.arxiv.map((a) => `arxiv:${a}`)];
+  ids.doi.length
+    ? `doi:${ids.doi[0]}`
+    : ids.arxiv.length
+      ? `arxiv:${ids.arxiv[0]}`
+      : null;
+export const allKeys = (ids) => [
+  ...ids.doi.map((d) => `doi:${d}`),
+  ...ids.arxiv.map((a) => `arxiv:${a}`),
+];
 
 /** Where to go for a key and with which id. Decided BEFORE the network — parsing depends on it. */
 export function routeOf(key) {
   const kind = key.slice(0, key.indexOf(":"));
   const id = key.slice(key.indexOf(":") + 1);
-  if (kind === "arxiv") return { registry: "arxiv", url: ARXIV + encodeURIComponent(id) };
+  if (kind === "arxiv")
+    return { registry: "arxiv", url: ARXIV + encodeURIComponent(id) };
   const m = ARXIV_DOI.exec(id);
   if (m) return { registry: "arxiv", url: ARXIV + encodeURIComponent(m[1]) };
   return { registry: "crossref", url: CROSSREF + encodeURIComponent(id) };
@@ -331,13 +408,19 @@ export function readCrossref(body) {
   // A checker that fires on correct entries gets muted — and then it is not a checker.
   const parts = [
     ...(Array.isArray(m.title) ? m.title : [m.title]),
-    ...(Array.isArray(m.subtitle) ? m.subtitle : m.subtitle ? [m.subtitle] : []),
+    ...(Array.isArray(m.subtitle)
+      ? m.subtitle
+      : m.subtitle
+        ? [m.subtitle]
+        : []),
   ];
   return {
     title: parts.filter(Boolean).join(": "),
     authors: (m.author ?? []).map((a) => a.family ?? a.name ?? ""),
     year: dp ? String(dp) : null,
-    venue: Array.isArray(m["container-title"]) ? m["container-title"][0] : m["container-title"],
+    venue: Array.isArray(m["container-title"])
+      ? m["container-title"][0]
+      : m["container-title"],
     journalRef: null,
     doi: null,
     error: false,
@@ -353,9 +436,11 @@ export function readArxiv(body) {
     const m = new RegExp(`<${name}[^>]*>([\\s\\S]*?)</${name}>`).exec(e);
     return m ? unescapeXml(m[1]).replace(/\s+/g, " ").trim() : null;
   };
-  const authors = [...e.matchAll(/<author>[\s\S]*?<name>([\s\S]*?)<\/name>[\s\S]*?<\/author>/g)].map((m) =>
-    unescapeXml(m[1]).replace(/\s+/g, " ").trim(),
-  );
+  const authors = [
+    ...e.matchAll(
+      /<author>[\s\S]*?<name>([\s\S]*?)<\/name>[\s\S]*?<\/author>/g,
+    ),
+  ].map((m) => unescapeXml(m[1]).replace(/\s+/g, " ").trim());
   const published = tag("published");
   return {
     title: tag("title"),
@@ -400,7 +485,11 @@ function saveCache(path, cache) {
 async function fetchKey(key) {
   const { url } = routeOf(key);
   const r = await fetch(url, { headers: { "User-Agent": UA } });
-  return { httpStatus: r.status, body: await r.text(), fetched: new Date().toISOString().slice(0, 10) };
+  return {
+    httpStatus: r.status,
+    body: await r.text(),
+    fetched: new Date().toISOString().slice(0, 10),
+  };
 }
 
 /**
@@ -410,13 +499,25 @@ async function fetchKey(key) {
 export function recordFrom(key, cached) {
   if (!cached) return { cached: false };
   const { registry } = routeOf(key);
-  const base = { cached: true, registry, httpStatus: cached.httpStatus ?? null, fetched: cached.fetched ?? null };
+  const base = {
+    cached: true,
+    registry,
+    httpStatus: cached.httpStatus ?? null,
+    fetched: cached.fetched ?? null,
+  };
   if (cached.httpStatus !== 200) return base;
   let rec; // no initializer: try assigns it, catch returns (2026-08-28)
   try {
-    rec = registry === "crossref" ? readCrossref(cached.body) : readArxiv(cached.body);
+    rec =
+      registry === "crossref"
+        ? readCrossref(cached.body)
+        : readArxiv(cached.body);
   } catch (e) {
-    return { ...base, found: false, parse_error: String(e.message).split("\n")[0] };
+    return {
+      ...base,
+      found: false,
+      parse_error: String(e.message).split("\n")[0],
+    };
   }
   if (!rec) return { ...base, found: false };
   return { ...base, found: !rec.error, ...rec };
@@ -425,7 +526,12 @@ export function recordFrom(key, cached) {
 // ── assembling the facts ─────────────────────────────────────────────────────
 
 /** `paper.md` → `draft.md` → `refs.bib` → `build/custom.bib`. `refs.bib` ADDED 26.08 (defect #1). */
-export const SOURCE_ORDER = ["paper.md", "draft.md", "refs.bib", "build/custom.bib"];
+export const SOURCE_ORDER = [
+  "paper.md",
+  "draft.md",
+  "refs.bib",
+  "build/custom.bib",
+];
 
 export function resolveSource(target) {
   const t = resolve(target);
@@ -457,7 +563,9 @@ export function buildFacts({ source, text, entries, cache, cachePath }) {
     return { ...e, ids, primary: primaryOf(ids), keys: allKeys(ids) };
   });
   const records = {};
-  for (const e of withIds) for (const k of e.keys) if (!(k in records)) records[k] = recordFrom(k, cache[k]);
+  for (const e of withIds)
+    for (const k of e.keys)
+      if (!(k in records)) records[k] = recordFrom(k, cache[k]);
   return {
     schema: SCHEMA,
     source: rel(source),
@@ -478,23 +586,37 @@ async function main(argv) {
   const offline = args.includes("--offline");
   const refresh = args.includes("--refresh");
   const quiet = args.includes("--quiet");
-  const opt = (name) => (args.find((a) => a.startsWith(`--${name}=`)) ?? "").split("=").slice(1).join("=");
+  const opt = (name) =>
+    (args.find((a) => a.startsWith(`--${name}=`)) ?? "")
+      .split("=")
+      .slice(1)
+      .join("=");
 
   const src = resolveSource(target);
   if (!src) {
-    console.error(`🛑 no ${SOURCE_ORDER.join(", ")} under ${resolve(target)} — nowhere to take a bibliography from.`);
+    console.error(
+      `🛑 no ${SOURCE_ORDER.join(", ")} under ${resolve(target)} — nowhere to take a bibliography from.`,
+    );
     return 1;
   }
-  const paperDir = statSync(resolve(target)).isFile() ? dirname(src) : resolve(target);
-  const cachePath = opt("cache") ? resolve(opt("cache")) : join(paperDir, "repro", "refs-cache.json");
-  const out = opt("out") ? resolve(opt("out")) : join(paperDir, "_build", "refs.facts.json");
+  const paperDir = statSync(resolve(target)).isFile()
+    ? dirname(src)
+    : resolve(target);
+  const cachePath = opt("cache")
+    ? resolve(opt("cache"))
+    : join(paperDir, "repro", "refs-cache.json");
+  const out = opt("out")
+    ? resolve(opt("out"))
+    : join(paperDir, "_build", "refs.facts.json");
 
   const text = readFileSync(src, "utf8");
   const entries = await loadEntries(src);
   if (!entries.length) {
     // 🔴 Zero entries is a suspect, not a success. Facts with an empty list would look like a
     // clean bibliography, so we do not write them at all and exit with a non-zero code.
-    console.error(`🛑 parsed 0 entries out of ${rel(src)}. Silence here would look like a clean bibliography.`);
+    console.error(
+      `🛑 parsed 0 entries out of ${rel(src)}. Silence here would look like a clean bibliography.`,
+    );
     return 1;
   }
 
@@ -513,7 +635,9 @@ async function main(argv) {
       }
       // A braced body: a concise arrow returns the Timeout out of the promise executor, where
       // nobody reads it (`no-promise-executor-return`, 2026-08-28). The behaviour is the same.
-      await new Promise((r) => { setTimeout(r, 250); }); // both registries ask for a polite pace
+      await new Promise((r) => {
+        setTimeout(r, 250);
+      }); // both registries ask for a polite pace
     }
     if (fetched) saveCache(cachePath, cache);
   }

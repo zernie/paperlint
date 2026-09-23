@@ -102,7 +102,9 @@ function scorecard(dir, statusName) {
     return none; // the unreadable YAML is already reported by `paper/stages`, on its own file
   }
   const raw = data?.stages;
-  const stages = Array.isArray(raw) ? raw.map((r) => r?.stage).filter(Boolean) : [];
+  const stages = Array.isArray(raw)
+    ? raw.map((r) => r?.stage).filter(Boolean)
+    : [];
   const q = data?.researchQuestion;
   return { stages, question: typeof q === "string" ? q : "" };
 }
@@ -136,7 +138,8 @@ export default {
         },
       },
       create(context) {
-        const statusName = context.options?.[0]?.statusFile ?? "PIPELINE-STATUS.md";
+        const statusName =
+          context.options?.[0]?.statusFile ?? "PIPELINE-STATUS.md";
         return {
           // `root:exit` exists for both markdown and the `tex/latex` language — the same place
           // `paper/typography` lives, and for the same reason: a paper in this corpus can be
@@ -144,7 +147,10 @@ export default {
           "root:exit"(node) {
             const raw = context.sourceCode.raw ?? context.sourceCode.text;
             if (typeof raw !== "string") return;
-            const { stages, question } = scorecard(dirname(context.filename), statusName);
+            const { stages, question } = scorecard(
+              dirname(context.filename),
+              statusName,
+            );
             if (stages.length === 0) return; // not shipped — owes nothing
 
             // Step 1 — is it written down? A field, not a phrase hunted for in prose.

@@ -8,7 +8,8 @@ import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({
   name: "paper-status",
-  description: "Answer \"what's the status of the paper?\" in one pass — MEASURE what is measurable (page count from the real build, git state, which gates were run against the CURRENT text), then read the judgement rows, then print blockers worst-first split into mine and the author's. Use whenever the author asks \"what's up with the paper / status / what's left / is it ready\", at the start of a session touching a paper, or before deciding what to work on next. Not a review skill — it reports state, it does not grade, cut, or fix.",
+  description:
+    "Answer \"what's the status of the paper?\" in one pass — MEASURE what is measurable (page count from the real build, git state, which gates were run against the CURRENT text), then read the judgement rows, then print blockers worst-first split into mine and the author's. Use whenever the author asks \"what's up with the paper / status / what's left / is it ready\", at the start of a session touching a paper, or before deciding what to work on next. Not a review skill — it reports state, it does not grade, cut, or fix.",
   tools: ["Bash", "Read", "Grep", "Glob"],
   body: `
 # paper-status — state, measured before it is narrated

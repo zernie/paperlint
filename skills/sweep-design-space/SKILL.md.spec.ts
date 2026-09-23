@@ -8,9 +8,19 @@ import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({
   name: "sweep-design-space",
-  description: "Find a real MECHANISM for a problem — sweep the design space across type systems, formal verification, functional programming, capabilities, specification-by-example, data integrity, authoring UX, other professions (aviation/law/audit), and historical ancestors in SE — instead of circling the same two or three obvious options. Use when the deliverable needs a solution rather than a measurement, when the last few proposals all rhymed with each other, or when the user says \"your options are stale / you're thinking narrowly / think fresh\". Encodes the hard filters that kill most candidates (does it re-require the thing already measured as unworkable? is it occupied? who writes the formalization? does it demand a new format? unrepresentable or merely detectable?) and the ladder pattern for when one mechanism can't cover the range. Distinct from research-ideate (validates ONE idea you already have), map-prior-work (finds competitors for a claim), and analyze-sibling-paper (deep-reads one rival) — this one GENERATES candidate mechanisms and filters them.",
+  description:
+    "Find a real MECHANISM for a problem — sweep the design space across type systems, formal verification, functional programming, capabilities, specification-by-example, data integrity, authoring UX, other professions (aviation/law/audit), and historical ancestors in SE — instead of circling the same two or three obvious options. Use when the deliverable needs a solution rather than a measurement, when the last few proposals all rhymed with each other, or when the user says \"your options are stale / you're thinking narrowly / think fresh\". Encodes the hard filters that kill most candidates (does it re-require the thing already measured as unworkable? is it occupied? who writes the formalization? does it demand a new format? unrepresentable or merely detectable?) and the ladder pattern for when one mechanism can't cover the range. Distinct from research-ideate (validates ONE idea you already have), map-prior-work (finds competitors for a claim), and analyze-sibling-paper (deep-reads one rival) — this one GENERATES candidate mechanisms and filters them.",
   context: "fork",
-  tools: ["WebSearch", "WebFetch", "Read", "Write", "Grep", "Glob", "Bash", "Agent"],
+  tools: [
+    "WebSearch",
+    "WebFetch",
+    "Read",
+    "Write",
+    "Grep",
+    "Glob",
+    "Bash",
+    "Agent",
+  ],
   body: `
 # sweep-design-space — stop circling, sweep
 

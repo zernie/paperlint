@@ -26,13 +26,25 @@ const HARNESS = join(HERE, "population-map.harness.mjs");
 const MUTATIONS = [
   [
     "findings() goes blind",
-    [[SRC, "export function findings(md, tsv) {", "export function findings(md, tsv) {\n  if (1) return [];"]],
+    [
+      [
+        SRC,
+        "export function findings(md, tsv) {",
+        "export function findings(md, tsv) {\n  if (1) return [];",
+      ],
+    ],
     "population-map.selftest.mjs failed",
     "the whole checker: a registry map that reports nothing reads exactly like a clean paper",
   ],
   [
     "the registry is never parsed",
-    [[SRC, "export function parseRegistry(tsv) {", "export function parseRegistry(tsv) {\n  if (1) return [];"]],
+    [
+      [
+        SRC,
+        "export function parseRegistry(tsv) {",
+        "export function parseRegistry(tsv) {\n  if (1) return [];",
+      ],
+    ],
     "population-map.selftest.mjs failed",
     "every row-level finding — an empty registry makes stale rows and dangling refs unrepresentable",
   ],
@@ -42,6 +54,12 @@ process.exit(
   runMutations({
     root: consumerRoot(),
     runner: "vigiles",
-    cases: MUTATIONS.map(([name, edits, expect, disables]) => ({ name, disables, edits, harness: HARNESS, expect })),
+    cases: MUTATIONS.map(([name, edits, expect, disables]) => ({
+      name,
+      disables,
+      edits,
+      harness: HARNESS,
+      expect,
+    })),
   }),
 );

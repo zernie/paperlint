@@ -133,7 +133,8 @@ export function titlesMatch(a, b, threshold = TITLE_THRESHOLD) {
  *  gate's own parser must never manufacture a false `false`). */
 export function normalizeDoi(doi) {
   if (!doi) return doi;
-  return String(doi).trim()
+  return String(doi)
+    .trim()
     .replace(/^doi:\s*/i, "")
     .replace(/^https?:\/\/(dx\.)?doi\.org\//i, "")
     .replace(/[.,;:]+$/, "")
@@ -145,7 +146,8 @@ export function normalizeDoi(doi) {
  *  returns an entry-less feed → authoritative not-found → a wrong `false`). */
 export function normalizeArxiv(arxiv) {
   if (!arxiv) return arxiv;
-  return String(arxiv).trim()
+  return String(arxiv)
+    .trim()
     .replace(/^arxiv:\s*/i, "")
     .replace(/[.,;:]+$/, "")
     .trim();
@@ -163,8 +165,28 @@ export function normalizeIdentifiers(citation) {
 
 // Short function words that carry no discriminative signal for token-overlap.
 const STOP_TOKENS = new Set([
-  "the", "a", "an", "of", "and", "for", "to", "in", "on", "is", "are", "with",
-  "via", "using", "from", "by", "at", "as", "or", "be", "we", "our",
+  "the",
+  "a",
+  "an",
+  "of",
+  "and",
+  "for",
+  "to",
+  "in",
+  "on",
+  "is",
+  "are",
+  "with",
+  "via",
+  "using",
+  "from",
+  "by",
+  "at",
+  "as",
+  "or",
+  "be",
+  "we",
+  "our",
 ]);
 
 /** Content tokens of a normalized title (drop stopwords + 1-char noise). */
@@ -227,7 +249,8 @@ export function titleRelation(a, b) {
   // the two share no script, we cannot assert 'different' → incomparable.
   const sa = scriptsOf(na);
   const sb = scriptsOf(nb);
-  if (sa.size && sb.size && ![...sa].some((x) => sb.has(x))) return "incomparable";
+  if (sa.size && sb.size && ![...sa].some((x) => sb.has(x)))
+    return "incomparable";
   const sim = 1 - levenshtein(na, nb) / Math.max(na.length, nb.length);
   if (sim >= TITLE_THRESHOLD) return "match";
   const A = contentTokens(na);
@@ -323,9 +346,16 @@ export function classifyResolver(citation, response) {
     // 'match', and a non-Latin-vs-Latin (or otherwise un-normalizable) pair →
     // 'incomparable' → we do NOT assert misdirection (M2/M3).
     if (citation.title) {
-      const rel = bestTitleRelation(citation.title, candidateTitles(response.record));
+      const rel = bestTitleRelation(
+        citation.title,
+        candidateTitles(response.record),
+      );
       if (rel === "different") {
-        return { db, status: "doi_mismatch", foundTitle: response.record.title };
+        return {
+          db,
+          status: "doi_mismatch",
+          foundTitle: response.record.title,
+        };
       }
     }
     return {
@@ -371,7 +401,8 @@ export function classifyResolver(citation, response) {
  */
 export function classifyDoiAuthority(response) {
   const db = "doi_authority";
-  if (!response || response.transport === "error") return { db, status: "unreachable" };
+  if (!response || response.transport === "error")
+    return { db, status: "unreachable" };
   if (response.responseCode === 1) return { db, status: "authority_present" };
   if (response.responseCode === 100) return { db, status: "authority_absent" };
   return { db, status: "unreachable" }; // unknown code — cannot disprove
@@ -474,12 +505,19 @@ export function reduceVerdict(citation, evidence, commitFlags = []) {
   //   • CVE  → NVD authoritatively has no such id
   const authorityAbsent = ev.find((e) => e.status === "authority_absent");
   const authorityPresent = ev.find((e) => e.status === "authority_present");
-  const doiIdMiss = ev.find((e) => e.status === "id_unmatched" && e.query === "doi");
-  const arxivAuthMiss = ev.find(
-    (e) => e.status === "id_unmatched" && e.query === "arxiv" && e.authoritative,
+  const doiIdMiss = ev.find(
+    (e) => e.status === "id_unmatched" && e.query === "doi",
   );
-  const arxivAnyMiss = ev.find((e) => e.status === "id_unmatched" && e.query === "arxiv");
-  const cveMiss = ev.find((e) => e.status === "id_unmatched" && e.query === "cve");
+  const arxivAuthMiss = ev.find(
+    (e) =>
+      e.status === "id_unmatched" && e.query === "arxiv" && e.authoritative,
+  );
+  const arxivAnyMiss = ev.find(
+    (e) => e.status === "id_unmatched" && e.query === "arxiv",
+  );
+  const cveMiss = ev.find(
+    (e) => e.status === "id_unmatched" && e.query === "cve",
+  );
 
   if (authorityAbsent) {
     return out(
@@ -548,12 +586,18 @@ function bibField(body, name) {
         if (depth === 0) break;
       }
     }
-    return body.slice(i + 1, j).replace(/\s+/g, " ").trim();
+    return body
+      .slice(i + 1, j)
+      .replace(/\s+/g, " ")
+      .trim();
   }
   if (ch === '"') {
     let j = i + 1;
     while (j < body.length && body[j] !== '"') j++;
-    return body.slice(i + 1, j).replace(/\s+/g, " ").trim();
+    return body
+      .slice(i + 1, j)
+      .replace(/\s+/g, " ")
+      .trim();
   }
   // bare value (e.g. year = 2017,) — up to the next comma / newline / close brace
   let j = i;
@@ -571,7 +615,8 @@ export function parseBib(text) {
   let m;
   while ((m = headRe.exec(text)) !== null) {
     const type = m[1].toLowerCase();
-    if (type === "comment" || type === "string" || type === "preamble") continue;
+    if (type === "comment" || type === "string" || type === "preamble")
+      continue;
     const key = m[2].trim();
     // Balanced scan from just after the key's comma to the entry's closing brace.
     let depth = 1; // the entry's opening `{` was already consumed by headRe
@@ -589,18 +634,21 @@ export function parseBib(text) {
     const year = bibField(body, "year");
     const author = bibField(body, "author");
     const eprint = bibField(body, "eprint");
-    const archive = bibField(body, "archiveprefix") || bibField(body, "eprinttype");
+    const archive =
+      bibField(body, "archiveprefix") || bibField(body, "eprinttype");
     if (doi) c.doi = normalizeDoi(doi);
     if (title) c.title = title.replace(/[{}]/g, "");
     if (year) c.year = year;
     if (author) c.authors = author;
-    if (eprint && (!archive || /arxiv/i.test(archive))) c.arxiv = normalizeArxiv(eprint);
+    if (eprint && (!archive || /arxiv/i.test(archive)))
+      c.arxiv = normalizeArxiv(eprint);
     cites.push(c);
   }
   if (cites.length > 0) return cites;
 
   // Fallback: \bibitem — grab arXiv ids / DOIs out of each block, best-effort.
-  const itemRe = /\\bibitem(?:\[[^\]]*\])?\{([^}]+)\}([\s\S]*?)(?=\\bibitem|\\end\{thebibliography\}|$)/g;
+  const itemRe =
+    /\\bibitem(?:\[[^\]]*\])?\{([^}]+)\}([\s\S]*?)(?=\\bibitem|\\end\{thebibliography\}|$)/g;
   while ((m = itemRe.exec(text)) !== null) {
     const key = m[1].trim();
     const block = m[2];
@@ -629,7 +677,8 @@ export function parseBib(text) {
 
 function loadCache() {
   try {
-    if (existsSync(CACHE_PATH)) return JSON.parse(readFileSync(CACHE_PATH, "utf8"));
+    if (existsSync(CACHE_PATH))
+      return JSON.parse(readFileSync(CACHE_PATH, "utf8"));
   } catch {
     /* corrupt cache → start fresh */
   }
@@ -644,7 +693,10 @@ function saveCache(cache) {
 }
 
 function titleHash(t) {
-  return createHash("sha1").update(normalizeTitle(t)).digest("hex").slice(0, 16);
+  return createHash("sha1")
+    .update(normalizeTitle(t))
+    .digest("hex")
+    .slice(0, 16);
 }
 function cacheKey(kind, val) {
   return `${kind}:${val}`;
@@ -655,7 +707,10 @@ async function httpGet(url, { json = true } = {}) {
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
     const res = await fetch(url, {
-      headers: { "User-Agent": USER_AGENT, Accept: json ? "application/json" : "*/*" },
+      headers: {
+        "User-Agent": USER_AGENT,
+        Accept: json ? "application/json" : "*/*",
+      },
       signal: ctrl.signal,
     });
     if (res.status === 429 || res.status >= 500) {
@@ -666,7 +721,10 @@ async function httpGet(url, { json = true } = {}) {
     const data = json ? await res.json() : await res.text();
     return { ok: true, data };
   } catch (e) {
-    return { ok: false, reason: e.name === "AbortError" ? "timeout" : String(e) };
+    return {
+      ok: false,
+      reason: e.name === "AbortError" ? "timeout" : String(e),
+    };
   } finally {
     clearTimeout(timer);
   }
@@ -678,7 +736,9 @@ async function httpGet(url, { json = true } = {}) {
 async function crossrefResolve(citation) {
   const db = "crossref";
   if (citation.doi) {
-    const r = await httpGet(`https://api.crossref.org/works/${encodeURIComponent(citation.doi)}`);
+    const r = await httpGet(
+      `https://api.crossref.org/works/${encodeURIComponent(citation.doi)}`,
+    );
     if (!r.ok) return { db, transport: "error" };
     if (r.notFound) return { db, transport: "ok", query: "doi", record: null };
     const w = r.data?.message;
@@ -708,7 +768,10 @@ async function crossrefResolve(citation) {
       db,
       transport: "ok",
       query: "title",
-      records: items.map((w) => ({ title: (w.title || [])[0] || "", year: crYear(w) })),
+      records: items.map((w) => ({
+        title: (w.title || [])[0] || "",
+        year: crYear(w),
+      })),
     };
   }
   return null;
@@ -724,7 +787,9 @@ function crYear(w) {
 async function openalexResolve(citation) {
   const db = "openalex";
   if (citation.doi) {
-    const r = await httpGet(`https://api.openalex.org/works/doi:${encodeURIComponent(citation.doi)}`);
+    const r = await httpGet(
+      `https://api.openalex.org/works/doi:${encodeURIComponent(citation.doi)}`,
+    );
     if (!r.ok) return { db, transport: "error" };
     if (r.notFound) return { db, transport: "ok", query: "doi", record: null };
     const w = r.data;
@@ -732,7 +797,9 @@ async function openalexResolve(citation) {
       db,
       transport: "ok",
       query: "doi",
-      record: w?.id ? { title: w.display_name || "", year: w.publication_year } : null,
+      record: w?.id
+        ? { title: w.display_name || "", year: w.publication_year }
+        : null,
     };
   }
   if (citation.title) {
@@ -745,7 +812,10 @@ async function openalexResolve(citation) {
       db,
       transport: "ok",
       query: "title",
-      records: items.map((w) => ({ title: w.display_name || "", year: w.publication_year })),
+      records: items.map((w) => ({
+        title: w.display_name || "",
+        year: w.publication_year,
+      })),
     };
   }
   return null;
@@ -756,9 +826,17 @@ async function semanticScholarResolve(citation) {
   const base = "https://api.semanticscholar.org/graph/v1/paper";
   if (citation.doi || citation.arxiv) {
     const id = citation.doi ? `DOI:${citation.doi}` : `arXiv:${citation.arxiv}`;
-    const r = await httpGet(`${base}/${encodeURIComponent(id)}?fields=title,year`);
+    const r = await httpGet(
+      `${base}/${encodeURIComponent(id)}?fields=title,year`,
+    );
     if (!r.ok) return { db, transport: "error" };
-    if (r.notFound) return { db, transport: "ok", query: citation.doi ? "doi" : "arxiv", record: null };
+    if (r.notFound)
+      return {
+        db,
+        transport: "ok",
+        query: citation.doi ? "doi" : "arxiv",
+        record: null,
+      };
     const w = r.data;
     return {
       db,
@@ -803,7 +881,12 @@ async function arxivResolve(citation) {
       { json: false },
     );
     if (!r.ok) return { db, transport: "error" };
-    return { db, transport: "ok", query: "title", records: parseArxivFeed(r.data) };
+    return {
+      db,
+      transport: "ok",
+      query: "title",
+      records: parseArxivFeed(r.data),
+    };
   }
   return null;
 }
@@ -842,7 +925,10 @@ async function doiAuthorityCheck(citation) {
   if (r.notFound) return { transport: "ok", responseCode: 100 }; // 404 = not found
   if (!r.ok) return { transport: "error" };
   const code = r.data?.responseCode;
-  return { transport: "ok", responseCode: typeof code === "number" ? code : undefined };
+  return {
+    transport: "ok",
+    responseCode: typeof code === "number" ? code : undefined,
+  };
 }
 
 async function nvdCheck(citation) {
@@ -881,7 +967,10 @@ async function nvdCheck(citation) {
  * values; that's incompatible with the current JSON-based `saveCache()` and so hasn't been done
  * (measured 2026-08-28).
  */
-export async function verifyCitationLive(citation, { cache = {}, offline = false } = {}) {
+export async function verifyCitationLive(
+  citation,
+  { cache = {}, offline = false } = {},
+) {
   citation = normalizeIdentifiers(citation); // clean doi:/arXiv: prefixes + trailing punct first
   const commitFlags = checkCommit(citation);
 
@@ -929,7 +1018,8 @@ export async function verifyCitationLive(citation, { cache = {}, offline = false
         auth = await doiAuthorityCheck(citation);
         // Cache only POSITIVE existence; never cache authority-absent (100), so a
         // freshly-minted DOI checked pre-propagation isn't pinned to `false` on re-run.
-        if (auth && auth.transport === "ok" && auth.responseCode !== 100) cache[ck] = auth;
+        if (auth && auth.transport === "ok" && auth.responseCode !== 100)
+          cache[ck] = auth;
       }
       if (auth) evidence.push(classifyDoiAuthority(auth));
     }
@@ -957,9 +1047,7 @@ export async function verifyCitationLive(citation, { cache = {}, offline = false
 function loadInput(argv) {
   const path = argv.find((a) => !a.startsWith("-"));
   const raw =
-    path && path !== "-"
-      ? readFileSync(path, "utf8")
-      : readFileSync(0, "utf8"); // stdin
+    path && path !== "-" ? readFileSync(path, "utf8") : readFileSync(0, "utf8"); // stdin
   if (path && extname(path).toLowerCase() === ".bib") return parseBib(raw);
   const parsed = JSON.parse(raw);
   return Array.isArray(parsed) ? parsed : [parsed];
@@ -987,7 +1075,12 @@ async function main() {
   const results = [];
   for (const c of cites) {
     if (!c || !c.id) {
-      results.push({ id: c?.id ?? null, verdict: "unresolvable", reason: "citation has no id", matched_db: null });
+      results.push({
+        id: c?.id ?? null,
+        verdict: "unresolvable",
+        reason: "citation has no id",
+        matched_db: null,
+      });
       continue;
     }
     results.push(await verifyCitationLive(c, { cache, offline }));

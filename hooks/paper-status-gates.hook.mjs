@@ -55,7 +55,13 @@
  * and a consumer-side thin spec importing this logic is refused by `vigiles compile` and can
  * never be re-stamped. Both halves measured there.
  */
-import { experimental_defineReact, tools, provide, run, nothing } from "vigiles/hook";
+import {
+  experimental_defineReact,
+  tools,
+  provide,
+  run,
+  nothing,
+} from "vigiles/hook";
 
 /** The key every carrier of this package reads its consumer-specific settings from. */
 export const CONFIG_KEY = "research-paper-pipeline";

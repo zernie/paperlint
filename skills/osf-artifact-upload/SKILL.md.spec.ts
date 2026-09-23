@@ -8,7 +8,8 @@ import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({
   name: "osf-artifact-upload",
-  description: "Upload or replace a paper's reproduction artifact file on an OSF project via the OSF API — for anonymized/view-only artifacts hosted for peer review (AISec/AgenticDev etc.). Use when a paper's OSF-hosted artifact needs a file added or a new version pushed (e.g. after fixing the artifact README or regenerating artifact.zip), and the OSF web UI is inconvenient. Composes with submit-paper / submit-paper-<venue>.",
+  description:
+    "Upload or replace a paper's reproduction artifact file on an OSF project via the OSF API — for anonymized/view-only artifacts hosted for peer review (AISec/AgenticDev etc.). Use when a paper's OSF-hosted artifact needs a file added or a new version pushed (e.g. after fixing the artifact README or regenerating artifact.zip), and the OSF web UI is inconvenient. Composes with submit-paper / submit-paper-<venue>.",
   tools: ["Read", "Write", "Grep", "Glob", "Bash"],
   body: `
 # osf-artifact-upload — push/replace a file on an OSF project via API

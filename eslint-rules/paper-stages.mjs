@@ -98,12 +98,16 @@ export default {
         schema: [],
         messages: {
           badYaml: "the frontmatter does not parse as YAML: {{reason}}",
-          notAList: "`stages` must be a LIST of entries, not {{got}} — a paper can reach the same stage twice",
+          notAList:
+            "`stages` must be a LIST of entries, not {{got}} — a paper can reach the same stage twice",
           badStage: "unknown stage «{{stage}}» — the vocabulary is: {{known}}",
           missingKey: "the «{{stage}}» entry has no `{{key}}` field",
-          badDate: "the date «{{date}}» in the «{{stage}}» entry is not YYYY-MM-DD",
-          declaredNoFile: "stage «{{stage}}» ({{date}}) is declared, but `{{pdf}}` is not on disk",
-          bytesDiffer: "«{{stage}}» ({{date}}): {{want}} bytes declared, {{got}} on disk — this is NOT that file",
+          badDate:
+            "the date «{{date}}» in the «{{stage}}» entry is not YYYY-MM-DD",
+          declaredNoFile:
+            "stage «{{stage}}» ({{date}}) is declared, but `{{pdf}}` is not on disk",
+          bytesDiffer:
+            "«{{stage}}» ({{date}}): {{want}} bytes declared, {{got}} on disk — this is NOT that file",
           fileNotDeclared:
             "`versions/{{file}}` is frozen, but no «{{stage}}» stage on {{date}} is declared in `stages` — the artefact ran ahead of the declaration",
         },
@@ -118,7 +122,11 @@ export default {
             try {
               data = load(node.value ?? "");
             } catch (e) {
-              context.report({ node, messageId: "badYaml", data: { reason: String(e.message) } });
+              context.report({
+                node,
+                messageId: "badYaml",
+                data: { reason: String(e.message) },
+              });
               return;
             }
             const raw = data?.stages;
@@ -145,7 +153,11 @@ export default {
               let complete = true;
               for (const key of ["date", "pdf", "bytes"]) {
                 if (rec[key] === undefined) {
-                  context.report({ node, messageId: "missingKey", data: { stage, key } });
+                  context.report({
+                    node,
+                    messageId: "missingKey",
+                    data: { stage, key },
+                  });
                   complete = false;
                 }
               }
@@ -159,7 +171,12 @@ export default {
                 });
                 continue;
               }
-              declared.push({ stage, date, pdf: String(rec.pdf), bytes: Number(rec.bytes) });
+              declared.push({
+                stage,
+                date,
+                pdf: String(rec.pdf),
+                bytes: Number(rec.bytes),
+              });
 
               // ── direction one: a claim owes its bytes ────────────────────────────────
               const abs = join(dir, String(rec.pdf));
@@ -176,7 +193,12 @@ export default {
                 context.report({
                   node,
                   messageId: "bytesDiffer",
-                  data: { stage, date, want: String(rec.bytes), got: String(got) },
+                  data: {
+                    stage,
+                    date,
+                    want: String(rec.bytes),
+                    got: String(got),
+                  },
                 });
               }
             }
@@ -188,7 +210,8 @@ export default {
           "root:exit"(node) {
             const records = declared ?? [];
             for (const f of frozenPdfs(join(dir, "versions"))) {
-              if (records.some((r) => r.stage === f.stage && r.date === f.date)) continue;
+              if (records.some((r) => r.stage === f.stage && r.date === f.date))
+                continue;
               context.report({
                 node,
                 messageId: "fileNotDeclared",
@@ -331,7 +354,8 @@ export default {
           // has a node of its own; the first draft claimed otherwise and grepped the whole text.
           tableCell(node) {
             if (recorded) return;
-            if (context.sourceCode.getText(node).includes(marker)) recorded = true;
+            if (context.sourceCode.getText(node).includes(marker))
+              recorded = true;
           },
 
           "root:exit"() {
@@ -389,17 +413,29 @@ export default {
               // Acknowledging the loss is a RECORD, not an exemption: the rule keeps speaking,
               // because the state stays defective, just unfixable today.
               if (rec?.sourceLost === true) {
-                context.report({ node, messageId: "lostAcknowledged", data: { stage, date } });
+                context.report({
+                  node,
+                  messageId: "lostAcknowledged",
+                  data: { stage, date },
+                });
                 continue;
               }
               const src = rec?.source === undefined ? "" : String(rec.source);
               if (src === "") {
-                context.report({ node, messageId: "noSource", data: { stage, date } });
+                context.report({
+                  node,
+                  messageId: "noSource",
+                  data: { stage, date },
+                });
                 continue;
               }
               const abs = join(dir, src);
               if (!existsSync(abs)) {
-                context.report({ node, messageId: "sourceMissing", data: { stage, date, src } });
+                context.report({
+                  node,
+                  messageId: "sourceMissing",
+                  data: { stage, date, src },
+                });
                 continue;
               }
               const got = statSync(abs).size;

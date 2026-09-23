@@ -17,12 +17,12 @@ the same family as "a paper declares a submitted stage but no frozen PDF is on d
 
 Its levels are not a severity field — they are **four separate functions**:
 
-| function | effect |
-| --- | --- |
-| `fail()` | declares a CI-blocking error |
-| `warn()` | reports, does not block |
-| `message()` | adds a row to the table |
-| `markdown()` | free-form output |
+| function     | effect                       |
+| ------------ | ---------------------------- |
+| `fail()`     | declares a CI-blocking error |
+| `warn()`     | reports, does not block      |
+| `message()`  | adds a row to the table      |
+| `markdown()` | free-form output             |
 
 So the author of a check chooses the level **at the call site**, and the level is structural
 rather than a string somebody parses later.

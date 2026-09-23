@@ -17,7 +17,15 @@
  * not throw" as success; an exported `tests` object is run by nothing.
  */
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, realpathSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  realpathSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -102,7 +110,9 @@ for (const declared of ["papers", "docs/papers", "writing/drafts", "a/b/c/d"]) {
     (e) =>
       /does not exist/.test(e.message) &&
       /Nothing was declared/.test(e.message) &&
-      e.message.includes('"research-paper-pipeline": { "papers": "path/to/papers" }'),
+      e.message.includes(
+        '"research-paper-pipeline": { "papers": "path/to/papers" }',
+      ),
     "a missing root reached by DEFAULTING must say so and show the declaration to add",
   );
 }
@@ -125,8 +135,16 @@ for (const bad of ["", null, 0, false, [], {}, 42])
 {
   const repo = repoWith("writing/drafts");
   const got = papersRoot(declaring("writing/drafts"), repo);
-  assert.equal(isAbsolute(got), false, "the root must be returned relative, not resolved");
-  assert.equal(got.includes(repo), false, "the root must not carry the base directory");
+  assert.equal(
+    isAbsolute(got),
+    false,
+    "the root must be returned relative, not resolved",
+  );
+  assert.equal(
+    got.includes(repo),
+    false,
+    "the root must not carry the base directory",
+  );
 }
 
 // 🔴 `baseDir` DECIDES, NOT `process.cwd()`. This is the assertion that pins the reason the
@@ -158,9 +176,15 @@ for (const bad of ["", null, 0, false, [], {}, 42])
       "dropped key is a block that silently lints nothing",
   );
   for (const [name, globs] of Object.entries(sets)) {
-    assert.ok(Array.isArray(globs) && globs.length > 0, `${name}: must be a non-empty array`);
+    assert.ok(
+      Array.isArray(globs) && globs.length > 0,
+      `${name}: must be a non-empty array`,
+    );
     for (const g of globs)
-      assert.ok(g.startsWith("R/"), `${name}: glob "${g}" does not start at the given root`);
+      assert.ok(
+        g.startsWith("R/"),
+        `${name}: glob "${g}" does not start at the given root`,
+      );
   }
   // Two roots must produce two disjoint sets — proof the root is interpolated everywhere and
   // not merely present in the first glob of each list.

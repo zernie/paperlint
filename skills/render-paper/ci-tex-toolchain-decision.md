@@ -12,8 +12,8 @@ tags: [ci, texlive, render-paper, resheno-i-otkloneno, zamery]
 failed for reasons invisible in the documentation. Without this record, the next attempt would
 start from the same first try.
 
-The corpus owner's question that prompted the file: *"write down why we chose one action over
-another"*.
+The corpus owner's question that prompted the file: _"write down why we chose one action over
+another"_.
 
 Colocated with [`ensure-toolchain.sh`](ensure-toolchain.sh) on purpose: that file declares
 `REQUIRED_FILES` — the contract any of the methods below has to satisfy.
@@ -22,13 +22,13 @@ Colocated with [`ensure-toolchain.sh`](ensure-toolchain.sh) on purpose: that fil
 
 ## Summary
 
-| method | size | cold install | cacheable | verdict |
-|---|---|---|---|---|
-| `texlive/texlive:latest` container | **2700 MB** | 2 m 01 s **every** run | ❌ never | 🟡 works, expensive |
-| `texlive/texlive:latest-medium` container | 940 MB | hangs 14 min | ❌ | 🔴 rejected |
-| apt + `awalsh128/cache-apt-pkgs-action` | 2100 MB | installed **zero** | ✅ | 🔴 rejected |
-| tlmgr + `teatimeguest/setup-texlive-action` | ~250 MB | — | ✅ | 🔴 **blocked** |
-| tlmgr + `actions/cache` (own script) | ~250 MB | 77 s + follow-up installs | ✅ | 🟢 candidate |
+| method                                      | size        | cold install              | cacheable | verdict             |
+| ------------------------------------------- | ----------- | ------------------------- | --------- | ------------------- |
+| `texlive/texlive:latest` container          | **2700 MB** | 2 m 01 s **every** run    | ❌ never  | 🟡 works, expensive |
+| `texlive/texlive:latest-medium` container   | 940 MB      | hangs 14 min              | ❌        | 🔴 rejected         |
+| apt + `awalsh128/cache-apt-pkgs-action`     | 2100 MB     | installed **zero**        | ✅        | 🔴 rejected         |
+| tlmgr + `teatimeguest/setup-texlive-action` | ~250 MB     | —                         | ✅        | 🔴 **blocked**      |
+| tlmgr + `actions/cache` (own script)        | ~250 MB     | 77 s + follow-up installs | ✅        | 🟢 candidate        |
 
 ---
 
@@ -43,11 +43,11 @@ image costs more than the pool time it would replace.
 
 Of that 2.7 GB, our papers touch **71 MB of fonts**:
 
-| family | size | what it's for |
-|---|---|---|
-| libertine | 29 MB | acmart's main typeface |
-| inconsolata (`zi4`) | 23 MB | monospace |
-| newtx | 19 MB | math |
+| family              | size  | what it's for          |
+| ------------------- | ----- | ---------------------- |
+| libertine           | 29 MB | acmart's main typeface |
+| inconsolata (`zi4`) | 23 MB | monospace              |
+| newtx               | 19 MB | math                   |
 
 So overhead is ~97%. A conscious tradeoff, not an unnoticed one.
 
@@ -92,11 +92,11 @@ post-install check lives in its own separate step: **you cannot trust the instal
 is the distribution package: for three font styles it pulls in the **whole** of
 `texlive-fonts-extra`.
 
-| | |
-|---|---|
-| needed | 71 MB (three families) |
-| installed | **1691 MB** (`texlive-fonts-extra`) |
-| waste share | **96%** |
+|             |                                     |
+| ----------- | ----------------------------------- |
+| needed      | 71 MB (three families)              |
+| installed   | **1691 MB** (`texlive-fonts-extra`) |
+| waste share | **96%**                             |
 
 apt can't go finer than that — in Debian these three families aren't split into separate
 packages.
@@ -127,11 +127,11 @@ the same file start up normally.
 🔴 **Fixed NOT by code:** Settings → Actions → General → Allow specified actions. Not reachable
 from the session — checked, not assumed:
 
-| channel | result |
-|---|---|
-| `GH_TOKEN` in the environment | present, and valid (`GET /user` → `zernie`) |
+| channel                       | result                                                                                                                                         |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GH_TOKEN` in the environment | present, and valid (`GET /user` → `zernie`)                                                                                                    |
 | bare `curl` to api.github.com | **403 on everything**, including `GET /repos/<owner>/<private-repo>`: `Access to this GitHub Actions path is not permitted through this proxy` |
-| GitHub MCP | the only reachable channel, and it has **no** repository-settings tool |
+| GitHub MCP                    | the only reachable channel, and it has **no** repository-settings tool                                                                         |
 
 **Status: not rejected, unreachable.** If the action ever gets allowlisted, it's the best option,
 and the code for it sits in the history of the `claude/article-deadline-check-0unptg` branch
@@ -144,11 +144,11 @@ generic tool for a generic query turned up immediately. The right question was d
 **"what does this ecosystem actually use to install TeX specifically."** LaTeX-specific actions
 exist, and there are three of them:
 
-| action | what it does | why not this one |
-|---|---|---|
-| **`teatimeguest/setup-texlive-action`** | upstream TL from a package list, cache built in | ✅ best on the merits, blocked by the allowlist |
-| `xu-cheng/latex-action` | the most popular of all | wraps the same `texlive/texlive` **image** underneath — same pool cost, solves nothing |
-| `zauguin/install-texlive` | same idea as the first | less maintained, no advantage |
+| action                                  | what it does                                    | why not this one                                                                       |
+| --------------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------- |
+| **`teatimeguest/setup-texlive-action`** | upstream TL from a package list, cache built in | ✅ best on the merits, blocked by the allowlist                                        |
+| `xu-cheng/latex-action`                 | the most popular of all                         | wraps the same `texlive/texlive` **image** underneath — same pool cost, solves nothing |
+| `zauguin/install-texlive`               | same idea as the first                          | less maintained, no advantage                                                          |
 
 **Lesson:** before reaching for a general-purpose tool, ask whether a specialized one exists for
 this exact subject. The general one gives you its own domain's granularity (apt → distribution
@@ -164,14 +164,14 @@ under any "Allow select actions" policy, and we **already** use it to cache TeXt
 **Measurement, run LOCALLY in the session container on 2026-09-01** (not on CI — that's the whole
 point):
 
-| step | result |
-|---|---|
-| `install-tl-unx.tar.gz` | 5.3 MB |
-| `scheme-basic` per profile | **147 MB, 65 seconds** |
-| `tlmgr install` 19 packages | +75 MB, 12 seconds |
-| **total before the first build** | **222 MB, 77 seconds** |
-| binary directory | `texlive/bin/x86_64-linux` |
-| `kpsewhich` against `REQUIRED_FILES` | **14 of 14** ✅ |
+| step                                 | result                     |
+| ------------------------------------ | -------------------------- |
+| `install-tl-unx.tar.gz`              | 5.3 MB                     |
+| `scheme-basic` per profile           | **147 MB, 65 seconds**     |
+| `tlmgr install` 19 packages          | +75 MB, 12 seconds         |
+| **total before the first build**     | **222 MB, 77 seconds**     |
+| binary directory                     | `texlive/bin/x86_64-linux` |
+| `kpsewhich` against `REQUIRED_FILES` | **14 of 14** ✅            |
 
 ⚠️ **`--cacert` is mandatory:** in this container `curl` to CTAN fails certificate verification
 (the proxy), fixed with `CURL_CA_BUNDLE=/root/.ccr/ca-bundle.crt`. Not needed on a GitHub runner —
@@ -191,8 +191,8 @@ What followed was the knowledge base's familiar **endless queue**: `xstring` →
 `hyperxmp` → `ncctools` → `cmap` → `float` → `comment` → `upquote` → `doclicense` → …
 
 **This is exactly the case that `CLAUDE.md`'s "install by COLLECTION, not by name" rule is for.**
-But that same rule also names the reason: *"names surface one at a time, and each one costs a full
-CI run (~25 min of quota)"*.
+But that same rule also names the reason: _"names surface one at a time, and each one costs a full
+CI run (~25 min of quota)"_.
 
 🔑 **Here that reason disappears.** The queue is run **locally**, in a loop of "build → pull out
 the missing file → `tlmgr search --global --file` → install → repeat," and it costs **zero

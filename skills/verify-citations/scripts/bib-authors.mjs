@@ -46,7 +46,10 @@
  */
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join, extname } from "node:path";
-import { headings as mdHeadings, requireMarkdown } from "../../../lib/markdown.mjs";
+import {
+  headings as mdHeadings,
+  requireMarkdown,
+} from "../../../lib/markdown.mjs";
 import { isMain } from "../../paper-pipeline/scripts/consumer.mjs";
 
 const DBLP = "https://dblp.org/search/publ/api";
@@ -99,15 +102,29 @@ export function parseMarkdownRefs(text) {
       // (npm packages, repos). Nothing for DBLP to disagree with. They are surfaced as
       // not-applicable rather than dropped: an entry that silently vanishes between the file
       // and the report is indistinguishable from an entry that passed.
-      out.push({ type: "mdref", key: `ref${m[1]}`, unparsed: true, author: "", title: "", booktitle: "", journal: "" });
+      out.push({
+        type: "mdref",
+        key: `ref${m[1]}`,
+        unparsed: true,
+        author: "",
+        title: "",
+        booktitle: "",
+        journal: "",
+      });
       continue;
     }
-    const authorPart = entry.slice(0, entry.indexOf("*")).trim().replace(/[.,;]\s*$/, "");
+    const authorPart = entry
+      .slice(0, entry.indexOf("*"))
+      .trim()
+      .replace(/[.,;]\s*$/, "");
     const rest = entry.slice(entry.indexOf(t[0]) + t[0].length);
     out.push({
       type: "mdref",
       key: `ref${m[1]}`,
-      author: authorPart.split(/,\s*|\s+and\s+/).filter(Boolean).join(" and "),
+      author: authorPart
+        .split(/,\s*|\s+and\s+/)
+        .filter(Boolean)
+        .join(" and "),
       title: t[1].replace(/\.$/, "").trim(),
       booktitle: rest.trim(),
       journal: "",
@@ -159,11 +176,16 @@ function bibTextFrom(target) {
   if (file.endsWith(".md")) return { text, file, markdown: true };
   if (file.endsWith(".bib")) return { text, file };
   // A .tex may carry the bibliography inline via filecontents — that is how our papers do it.
-  const m = text.match(/\\begin\{filecontents\*?\}(?:\[[^\]]*\])?\{[^}]*\.bib\}\r?\n([\s\S]*?)\\end\{filecontents\*?\}/);
+  const m = text.match(
+    /\\begin\{filecontents\*?\}(?:\[[^\]]*\])?\{[^}]*\.bib\}\r?\n([\s\S]*?)\\end\{filecontents\*?\}/,
+  );
   if (m) return { text: m[1], file };
   const sibling = join(file, "..", "refs.bib");
-  if (existsSync(sibling)) return { text: readFileSync(sibling, "utf-8"), file: sibling };
-  die(`no bibliography found in ${file} (no filecontents block, no refs.bib beside it)`);
+  if (existsSync(sibling))
+    return { text: readFileSync(sibling, "utf-8"), file: sibling };
+  die(
+    `no bibliography found in ${file} (no filecontents block, no refs.bib beside it)`,
+  );
 }
 
 /* ---------- a deliberately small bib reader ----------
@@ -213,7 +235,12 @@ function fields(body) {
     const j = body.indexOf(",", i);
     return body.slice(i, j === -1 ? undefined : j);
   };
-  return { author: get("author"), title: get("title"), booktitle: get("booktitle"), journal: get("journal") };
+  return {
+    author: get("author"),
+    title: get("title"),
+    booktitle: get("booktitle"),
+    journal: get("journal"),
+  };
 }
 
 /* ---------- normalisation: surnames only, in order ---------- */
@@ -243,7 +270,10 @@ export function surnames(authorField) {
       // consistently in both orders".
       const familyPart = p.includes(",") ? p.split(",")[0] : p;
       const last = familyPart.trim().split(/\s+/).slice(-1)[0] || "";
-      return last.trim().toLowerCase().replace(/[.\s-]+$/, "");
+      return last
+        .trim()
+        .toLowerCase()
+        .replace(/[.\s-]+$/, "");
     })
     .filter((s) => s && s !== "others");
 }
@@ -268,7 +298,8 @@ async function dblpHits(title) {
     headers: { "User-Agent": "bib-authors/1.0 (paper QA)" },
     signal: AbortSignal.timeout(15_000),
   });
-  if (res.status === 429) throw Object.assign(new Error("DBLP 429"), { retryable: true });
+  if (res.status === 429)
+    throw Object.assign(new Error("DBLP 429"), { retryable: true });
   if (!res.ok) throw new Error(`DBLP ${res.status}`);
   const hits = (await res.json())?.result?.hits?.hit ?? [];
   return hits.map((h) => {
@@ -285,8 +316,12 @@ async function dblpHits(title) {
   });
 }
 
-const isPreprintRecord = (h) => /^corr$/i.test(h.venue) || /informal/i.test(h.type);
-const looseTitle = (s) => DEACCENT(s).toLowerCase().replace(/[^a-z0-9]+/g, "");
+const isPreprintRecord = (h) =>
+  /^corr$/i.test(h.venue) || /informal/i.test(h.type);
+const looseTitle = (s) =>
+  DEACCENT(s)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
 
 /* ---------- the comparison ---------- */
 
@@ -294,7 +329,9 @@ export function compare(ourSurnames, theirSurnames) {
   const missing = theirSurnames.filter((x) => !ourSurnames.includes(x));
   const extra = ourSurnames.filter((x) => !theirSurnames.includes(x));
   const orderDiffers =
-    missing.length === 0 && extra.length === 0 && ourSurnames.join("|") !== theirSurnames.join("|");
+    missing.length === 0 &&
+    extra.length === 0 &&
+    ourSurnames.join("|") !== theirSurnames.join("|");
   return { missing, extra, orderDiffers };
 }
 
@@ -306,7 +343,8 @@ function die(msg) {
 async function main() {
   const args = process.argv.slice(2).filter((a) => a !== "--json");
   const asJson = process.argv.includes("--json");
-  if (!args[0]) die("usage: bib-authors.mjs <paper-dir|file.bib|file.tex> [--json]");
+  if (!args[0])
+    die("usage: bib-authors.mjs <paper-dir|file.bib|file.tex> [--json]");
 
   const { text, file, markdown } = bibTextFrom(args[0]);
   const parsed = markdown ? parseMarkdownRefs(text) : parseBib(text);
@@ -316,13 +354,19 @@ async function main() {
   const unchecked = []; // we FAILED to check — must never be reported as a pass
 
   for (const e of parsed.filter((x) => x.unparsed)) {
-    skipped.push({ key: e.key, why: "no author/title — a reference to software or a dataset, DBLP does not apply" });
+    skipped.push({
+      key: e.key,
+      why: "no author/title — a reference to software or a dataset, DBLP does not apply",
+    });
   }
 
   for (const e of entries) {
     if (!claimsPublished(e)) continue; // a preprint entry is allowed to carry preprint metadata
     if (truncated(e.author)) {
-      skipped.push({ key: e.key, why: "author list ends in `and others` — completeness not checkable" });
+      skipped.push({
+        key: e.key,
+        why: "author list ends in `and others` — completeness not checkable",
+      });
       continue;
     }
     // 🔴 A failed lookup is NOT a skip. Measured 2026-08-24: the first run reported
@@ -336,8 +380,15 @@ async function main() {
         hits = await dblpHits(e.title.replace(/[{}]/g, ""));
       } catch (err) {
         const last = attempt === 2;
-        if (last) unchecked.push({ key: e.key, why: `DBLP lookup failed: ${err.message}` });
-        else await new Promise((r) => { setTimeout(r, 1500 * (attempt + 1)); });
+        if (last)
+          unchecked.push({
+            key: e.key,
+            why: `DBLP lookup failed: ${err.message}`,
+          });
+        else
+          await new Promise((r) => {
+            setTimeout(r, 1500 * (attempt + 1));
+          });
       }
     }
     if (hits === null) continue;
@@ -346,27 +397,48 @@ async function main() {
     // We claim the published version, so compare against the published record, never CoRR.
     const rec = same.find((h) => !isPreprintRecord(h));
     if (!rec) {
-      skipped.push({ key: e.key, why: same.length ? "only a preprint record on DBLP" : "no DBLP title match" });
+      skipped.push({
+        key: e.key,
+        why: same.length
+          ? "only a preprint record on DBLP"
+          : "no DBLP title match",
+      });
       continue;
     }
     const ours = surnames(e.author);
     const theirs = surnames(rec.authors.join(" and "));
     const d = compare(ours, theirs);
     if (d.missing.length || d.extra.length || d.orderDiffers) {
-      findings.push({ key: e.key, venue: `${rec.venue} ${rec.year}`.trim(), ours, theirs, ...d });
+      findings.push({
+        key: e.key,
+        venue: `${rec.venue} ${rec.year}`.trim(),
+        ours,
+        theirs,
+        ...d,
+      });
     }
     // A braced body rather than a concise arrow — see `no-promise-executor-return` (2026-08-28).
-    await new Promise((r) => { setTimeout(r, 900); }); // DBLP asks for gentle clients; 350 ms drew 429s
+    await new Promise((r) => {
+      setTimeout(r, 900);
+    }); // DBLP asks for gentle clients; 350 ms drew 429s
   }
 
   if (asJson) {
-    console.log(JSON.stringify({ file, entries: entries.length, findings, skipped, unchecked }, null, 2));
+    console.log(
+      JSON.stringify(
+        { file, entries: entries.length, findings, skipped, unchecked },
+        null,
+        2,
+      ),
+    );
   } else {
     console.log(`== bib-authors: ${file} ==`);
     for (const f of findings) {
       console.log(`\n  🔴 ${f.key}  (DBLP: ${f.venue})`);
-      if (f.missing.length) console.log(`     MISSING from ours : ${f.missing.join(", ")}`);
-      if (f.extra.length) console.log(`     EXTRA in ours     : ${f.extra.join(", ")}`);
+      if (f.missing.length)
+        console.log(`     MISSING from ours : ${f.missing.join(", ")}`);
+      if (f.extra.length)
+        console.log(`     EXTRA in ours     : ${f.extra.join(", ")}`);
       if (f.orderDiffers) {
         console.log(`     ORDER differs`);
         console.log(`       ours : ${f.ours.join(" > ")}`);
@@ -374,7 +446,8 @@ async function main() {
       }
     }
     for (const s of skipped) console.log(`  · n/a ${s.key} — ${s.why}`);
-    for (const u of unchecked) console.log(`  ⚠️ NOT CHECKED ${u.key} — ${u.why}`);
+    for (const u of unchecked)
+      console.log(`  ⚠️ NOT CHECKED ${u.key} — ${u.why}`);
     console.log(
       `\n-- ${entries.length} entries · ${findings.length} difference(s) · ` +
         `${skipped.length} not applicable · ${unchecked.length} NOT CHECKED`,

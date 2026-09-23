@@ -93,7 +93,8 @@ const CITE_CHECKS =
 // in `flags` mode a stack trace is counted line by line and goes into the ledger as a FINDING whose
 // count is the height of the trace — exactly what already happened here on 26.08 with the wrong
 // `..` depth.
-const hasCiteChecks = () => CITE_CHECKS !== null && existsSync(join(ROOT, CITE_CHECKS));
+const hasCiteChecks = () =>
+  CITE_CHECKS !== null && existsSync(join(ROOT, CITE_CHECKS));
 // 🔴 A CHECKER THAT IS NOT INSTALLED IS `input-missing`, NEVER A RUN. Some rows shell out to
 // scripts belonging to OTHER skills of the pipeline, which a consumer may not have installed.
 // Without this the command fails, node prints a stack trace, and `read: "flags"` COUNTS ITS LINES
@@ -125,9 +126,9 @@ const hasVenue = (d) => existsSync(join(d, ".body-limit"));
 const STRUCTURE_RULES_FILE = join(ROOT, "eslint-rules", "paper-structure.mjs");
 const STRUCTURE_RULES = existsSync(STRUCTURE_RULES_FILE)
   ? new Set(
-      Object.keys((await import(pathToFileURL(STRUCTURE_RULES_FILE).href)).default).map(
-        (r) => `paper/${r}`,
-      ),
+      Object.keys(
+        (await import(pathToFileURL(STRUCTURE_RULES_FILE).href)).default,
+      ).map((r) => `paper/${r}`),
     )
   : new Set();
 
@@ -219,7 +220,8 @@ export const GATES = [
     // would leave zero findings out of thirty — a confident green run instead of an honest "no
     // input".
     needs: () =>
-      existsSync(join(ROOT, "node_modules/.bin/eslint")) && STRUCTURE_RULES.size > 0,
+      existsSync(join(ROOT, "node_modules/.bin/eslint")) &&
+      STRUCTURE_RULES.size > 0,
     read: "eslint",
     rules: STRUCTURE_RULES,
     note: "section weights, the free half vs the half under a page limit, unjustified blocks",
@@ -244,29 +246,24 @@ export const GATES = [
       "node",
       ".claude/skills/verify-citations/scripts/verify-cites.test.mjs",
     ],
-    needs: () => hasScript(".claude/skills/verify-citations/scripts/verify-cites.test.mjs"),
+    needs: () =>
+      hasScript(
+        ".claude/skills/verify-citations/scripts/verify-cites.test.mjs",
+      ),
     read: "exit",
     note: "the mechanical half only — the fetching half needs the network and a reader",
   },
   {
     skill: "harden-paper",
     check: "artifact-coverage",
-    cmd: (d) => [
-      "node",
-      join(HERE, "artifact-coverage.mjs"),
-      d,
-    ],
+    cmd: (d) => ["node", join(HERE, "artifact-coverage.mjs"), d],
     read: "flags",
     note: "does the released bundle hold data for what the paper points at",
   },
   {
     skill: "build-benchmark",
     check: "check-provenance",
-    cmd: (d) => [
-      "node",
-      join(HERE, "check-provenance.mjs"),
-      d,
-    ],
+    cmd: (d) => ["node", join(HERE, "check-provenance.mjs"), d],
     read: "flags",
     note: "bolded figures with no row in any provenance file",
   },
@@ -320,11 +317,7 @@ export const GATES = [
     // exclusion is printed in the check's own ignore ledger rather than hidden in a glob.
     skill: "build-benchmark",
     check: "generated-code",
-    cmd: (d) => [
-      "node",
-      join(HERE, "generated-code.mjs"),
-      d,
-    ],
+    cmd: (d) => ["node", join(HERE, "generated-code.mjs"), d],
     read: "flags",
     note: "analysis scripts that never seed randomness, hard-code an absolute path, or clobber their own input",
   },
@@ -382,11 +375,7 @@ export const GATES = [
   {
     skill: "draft-paper",
     check: "population-map",
-    cmd: (d) => [
-      "node",
-      join(HERE, "population-map.mjs"),
-      d,
-    ],
+    cmd: (d) => ["node", join(HERE, "population-map.mjs"), d],
     read: "flags",
     note: "can the reader tell WHICH SET each number counts",
   },
@@ -398,12 +387,7 @@ export const GATES = [
     // function of what happened to be edited degrades silently, which is documented upstairs.
     skill: "tighten-paper",
     check: "round-diff",
-    cmd: (d) => [
-      "node",
-      join(HERE, "round-diff.mjs"),
-      d,
-      "--json",
-    ],
+    cmd: (d) => ["node", join(HERE, "round-diff.mjs"), d, "--json"],
     needs: (d) => existsSync(join(d, "rounds")),
     read: "json",
     note: "a review round may only change what it declared; the whole body is weighed every round",
@@ -647,5 +631,4 @@ function main(argv) {
   return worst;
 }
 
-if (isMain(import.meta.url))
-  process.exit(main(process.argv));
+if (isMain(import.meta.url)) process.exit(main(process.argv));

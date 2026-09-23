@@ -41,11 +41,7 @@ import { CONFIG_KEY, DEFAULT_PAPERS_ROOT } from "../lib/paper-config.mjs";
 
 /** How the papers directory was arrived at. Printed, because a guess must not read as a fact. */
 export type PapersHow =
-  | "detected"
-  | "chosen"
-  | "not-asked"
-  | "no-answer"
-  | "guessed";
+  "detected" | "chosen" | "not-asked" | "no-answer" | "guessed";
 
 /**
  * 🔴 A QUESTION CAN FAIL, AND ITS FAILURE MUST NOT BE THE COMMAND'S. Measured 2026-09-18 on a
@@ -92,7 +88,9 @@ export async function choosePapers(
   if (!interactive || !ask)
     return { papers: first, how: "not-asked", candidates };
 
-  const menu = candidates.map((c, i) => `    ${String(i + 1)}) ${c}`).join("\n");
+  const menu = candidates
+    .map((c, i) => `    ${String(i + 1)}) ${c}`)
+    .join("\n");
   const answer = await askOrDefault(
     ask,
     `  several directories look like papers roots:\n${menu}\n  which one? [1] `,
@@ -104,9 +102,17 @@ export async function choosePapers(
 }
 
 export type DeclarationResult =
-  | { readonly status: "written"; readonly path: string; readonly papers: string }
+  | {
+      readonly status: "written";
+      readonly path: string;
+      readonly papers: string;
+    }
   | { readonly status: "kept"; readonly path: string; readonly papers: unknown }
-  | { readonly status: "unparsable"; readonly path: string; readonly reason: string }
+  | {
+      readonly status: "unparsable";
+      readonly path: string;
+      readonly reason: string;
+    }
   | { readonly status: "absent"; readonly path: string };
 
 /**
@@ -136,7 +142,11 @@ export function declarePapers(root: string, papers: string): DeclarationResult {
   pkg[CONFIG_KEY] = { ...(pkg[CONFIG_KEY] ?? {}), papers };
   // Two-space indent and the file's own trailing newline: a declaration is not a licence to
   // reformat somebody else's file, and a one-line diff is a diff a consumer will actually read.
-  writeFileSync(path, JSON.stringify(pkg, null, 2) + (raw.endsWith("\n") ? "\n" : ""), "utf8");
+  writeFileSync(
+    path,
+    JSON.stringify(pkg, null, 2) + (raw.endsWith("\n") ? "\n" : ""),
+    "utf8",
+  );
   return { status: "written", path, papers };
 }
 
@@ -160,7 +170,11 @@ export function syncRppJson(root: string, papers: string): RppJsonResult {
   }
   if (cfg?.papers !== undefined) return "kept";
   cfg.papers = papers;
-  writeFileSync(path, JSON.stringify(cfg, null, 2) + (raw.endsWith("\n") ? "\n" : ""), "utf8");
+  writeFileSync(
+    path,
+    JSON.stringify(cfg, null, 2) + (raw.endsWith("\n") ? "\n" : ""),
+    "utf8",
+  );
   return "filled";
 }
 
@@ -202,7 +216,10 @@ export async function offerWorkflow(
   if (existsSync(path)) return "kept";
   if (!interactive || !ask) return "not-asked";
   const answer = (
-    await askOrDefault(ask, `  add a GitHub Actions workflow that runs this in CI? [y/N] `)
+    await askOrDefault(
+      ask,
+      `  add a GitHub Actions workflow that runs this in CI? [y/N] `,
+    )
   )
     ?.trim()
     .toLowerCase();
@@ -218,7 +235,9 @@ export async function offerWorkflow(
  * without it, which is the only reason the list is worth printing: a missing checker and a
  * passing checker produce the same silence.
  */
-export function missingPrograms(run = spawnSync): readonly (typeof PROGRAMS)[number][] {
+export function missingPrograms(
+  run = spawnSync,
+): readonly (typeof PROGRAMS)[number][] {
   return PROGRAMS.filter((p) => !found(p.bin, run));
 }
 
@@ -251,11 +270,19 @@ export function nextSteps(papersDir: string = DEFAULT_PAPERS_ROOT): string {
  * was left alone. A skipped entry does not fail init: the name is taken by something the consumer
  * made, replacing it would be worse than not linking, and doctor's report below repeats the gap.
  */
-export function reportSkillLinks(report: LinkReport, here: (p: string) => string): string[] {
-  const out: string[] = [``, `skills (Claude Code finds project skills in ${SKILLS_HOME}/, not in node_modules)`];
+export function reportSkillLinks(
+  report: LinkReport,
+  here: (p: string) => string,
+): string[] {
+  const out: string[] = [
+    ``,
+    `skills (Claude Code finds project skills in ${SKILLS_HOME}/, not in node_modules)`,
+  ];
   if (!report.ok) {
     out.push(`  ⚠ nothing linked — ${report.error}`);
-    out.push(`      install the package into this project (\`npm i -D …\`), then \`npx rpp init\` again`);
+    out.push(
+      `      install the package into this project (\`npm i -D …\`), then \`npx rpp init\` again`,
+    );
     return out;
   }
   const by = (s: string) => report.links.filter((l) => l.status === s);
@@ -271,11 +298,18 @@ export function reportSkillLinks(report: LinkReport, here: (p: string) => string
       (missing.length ? `, ${String(missing.length)} NOT linked` : ``),
   );
   if (report.example !== null)
-    out.push(`      ${join(here(report.home), "<name>")} → ${join(dirname(report.example), "<name>")}`);
+    out.push(
+      `      ${join(here(report.home), "<name>")} → ${join(dirname(report.example), "<name>")}`,
+    );
   if (skipped.length) {
-    out.push(`      left untouched — the name is taken by something rpp did not make:`);
-    for (const l of skipped) out.push(`        ${l.name} — ${l.reason ?? "occupied"}`);
-    out.push(`      those skills are NOT available in Claude Code until the entry is moved or removed`);
+    out.push(
+      `      left untouched — the name is taken by something rpp did not make:`,
+    );
+    for (const l of skipped)
+      out.push(`        ${l.name} — ${l.reason ?? "occupied"}`);
+    out.push(
+      `      those skills are NOT available in Claude Code until the entry is moved or removed`,
+    );
   }
   return out;
 }
@@ -309,7 +343,10 @@ async function askOnTerminal(question: string): Promise<string> {
   }
 }
 
-export async function init(dir: string, opts: InitOptions = {}): Promise<number> {
+export async function init(
+  dir: string,
+  opts: InitOptions = {},
+): Promise<number> {
   const {
     log = console.log,
     err = console.error,
@@ -331,9 +368,13 @@ export async function init(dir: string, opts: InitOptions = {}): Promise<number>
   log(``);
   log(`papers directory`);
   if (choice.how === "detected")
-    log(`  ✓ ${choice.papers} — measured: its subdirectories carry ${PAPER_MARKERS.join(" / ")}`);
+    log(
+      `  ✓ ${choice.papers} — measured: its subdirectories carry ${PAPER_MARKERS.join(" / ")}`,
+    );
   else if (choice.how === "chosen")
-    log(`  ✓ ${choice.papers} — you picked it out of ${String(choice.candidates.length)} candidates`);
+    log(
+      `  ✓ ${choice.papers} — you picked it out of ${String(choice.candidates.length)} candidates`,
+    );
   else if (choice.how === "not-asked" || choice.how === "no-answer") {
     log(
       `  ✓ ${choice.papers} — ${String(choice.candidates.length)} candidates, ` +
@@ -341,10 +382,16 @@ export async function init(dir: string, opts: InitOptions = {}): Promise<number>
           ? `stdin is not a terminal so nothing was asked`
           : `no answer was given, so the first one was taken`),
     );
-    log(`      the others: ${choice.candidates.slice(1).join(", ")} — change it in package.json if this is the wrong one`);
+    log(
+      `      the others: ${choice.candidates.slice(1).join(", ")} — change it in package.json if this is the wrong one`,
+    );
   } else {
-    log(`  ⚠ ${choice.papers} — A GUESS. Nothing here looks like a papers directory yet.`);
-    log(`      Nothing on disk was measured, so this is the documented default and not a finding.`);
+    log(
+      `  ⚠ ${choice.papers} — A GUESS. Nothing here looks like a papers directory yet.`,
+    );
+    log(
+      `      Nothing on disk was measured, so this is the documented default and not a finding.`,
+    );
   }
 
   // ── 2. one declaration, in package.json ───────────────────────────────────────────────
@@ -352,28 +399,50 @@ export async function init(dir: string, opts: InitOptions = {}): Promise<number>
   log(`declaration`);
   const decl = declarePapers(root, choice.papers);
   if (decl.status === "written")
-    log(`  ✓ ${here(decl.path)} → "${CONFIG_KEY}": { "papers": ${JSON.stringify(decl.papers)} }`);
+    log(
+      `  ✓ ${here(decl.path)} → "${CONFIG_KEY}": { "papers": ${JSON.stringify(decl.papers)} }`,
+    );
   else if (decl.status === "kept")
-    log(`  ✓ ${here(decl.path)} already declares papers = ${JSON.stringify(decl.papers)} — kept, nothing overwritten`);
+    log(
+      `  ✓ ${here(decl.path)} already declares papers = ${JSON.stringify(decl.papers)} — kept, nothing overwritten`,
+    );
   else if (decl.status === "unparsable") {
     err(`  ✗ ${here(decl.path)} is not valid JSON: ${decl.reason}`);
-    err(`      nothing was written. The hooks read their papers directory from this file and`);
-    err(`      refuse every Bash command while it cannot be parsed — fix the JSON first.`);
+    err(
+      `      nothing was written. The hooks read their papers directory from this file and`,
+    );
+    err(
+      `      refuse every Bash command while it cannot be parsed — fix the JSON first.`,
+    );
     return 2;
   } else {
-    err(`  ✗ no package.json at ${here(root)} — there is nowhere to put the declaration.`);
-    err(`      The hooks can only read a path they are able to name, and that path is`);
-    err(`      package.json. Run \`npm init -y\` here, then \`npx rpp init\` again.`);
+    err(
+      `  ✗ no package.json at ${here(root)} — there is nowhere to put the declaration.`,
+    );
+    err(
+      `      The hooks can only read a path they are able to name, and that path is`,
+    );
+    err(
+      `      package.json. Run \`npm init -y\` here, then \`npx rpp init\` again.`,
+    );
     return 2;
   }
-  log(`      one declaration — the hooks, the rules and the CLI all read this one key`);
+  log(
+    `      one declaration — the hooks, the rules and the CLI all read this one key`,
+  );
   const rpp = syncRppJson(root, choice.papers);
   if (rpp === "filled")
-    log(`  ⚠ rpp.json was already here — gave it the same papers value; it is deprecated`);
+    log(
+      `  ⚠ rpp.json was already here — gave it the same papers value; it is deprecated`,
+    );
   else if (rpp === "kept")
-    log(`  ⚠ rpp.json was already here and already declares papers — left untouched; it is deprecated`);
+    log(
+      `  ⚠ rpp.json was already here and already declares papers — left untouched; it is deprecated`,
+    );
   else if (rpp === "unparsable")
-    log(`  ⚠ rpp.json is here and does not parse — left untouched; it is deprecated, delete it`);
+    log(
+      `  ⚠ rpp.json is here and does not parse — left untouched; it is deprecated, delete it`,
+    );
 
   // ── 3. the skills, linked where Claude Code looks for them ─────────────────────────────
   for (const line of reportSkillLinks(link(root), here)) log(line);
@@ -382,10 +451,15 @@ export async function init(dir: string, opts: InitOptions = {}): Promise<number>
   log(``);
   log(`CI`);
   const wf = await offerWorkflow(root, choice.papers, { ask, interactive });
-  if (wf === "written") log(`  ✓ wrote ${WORKFLOW_PATH} — pin <commit-sha> before pushing it`);
-  else if (wf === "kept") log(`  ✓ ${WORKFLOW_PATH} is already there — kept, nothing overwritten`);
+  if (wf === "written")
+    log(`  ✓ wrote ${WORKFLOW_PATH} — pin <commit-sha> before pushing it`);
+  else if (wf === "kept")
+    log(`  ✓ ${WORKFLOW_PATH} is already there — kept, nothing overwritten`);
   else if (wf === "declined") log(`  · declined — nothing written`);
-  else log(`  · stdin is not a terminal, so nothing was asked. Default taken: NO file written.`);
+  else
+    log(
+      `  · stdin is not a terminal, so nothing was asked. Default taken: NO file written.`,
+    );
   if (wf !== "written" && wf !== "kept") {
     log(`      to run the same checks in CI, add this step to a workflow:`);
     log(`        - uses: zernie/research-paper-pipeline@<commit-sha>`);
@@ -395,9 +469,12 @@ export async function init(dir: string, opts: InitOptions = {}): Promise<number>
 
   // ── 5. the toolchain is reported, never installed ─────────────────────────────────────
   log(``);
-  log(`external programs (the skills shell out to these; \`rpp lint\` needs none of them)`);
+  log(
+    `external programs (the skills shell out to these; \`rpp lint\` needs none of them)`,
+  );
   const missing = missingPrograms(run);
-  if (missing.length === 0) log(`  ✓ all ${String(PROGRAMS.length)} are on PATH`);
+  if (missing.length === 0)
+    log(`  ✓ all ${String(PROGRAMS.length)} are on PATH`);
   else {
     // 🔴 THE NAMES AND THE COUNT HERE, THE CONSEQUENCES — IN THE doctor REPORT BELOW, AND THIS IS
     // NOT ABOUT SAVING LINES. The first version printed here the same "✗ program — what goes silent
@@ -408,9 +485,14 @@ export async function init(dir: string, opts: InitOptions = {}): Promise<number>
       `  ✗ ${String(missing.length)} of ${String(PROGRAMS.length)} missing: ` +
         missing.map((p) => p.bin).join(", "),
     );
-    log(`      what each one is for is in the doctor report below. Nothing is installed for you —`);
-    log(`      an install that can fail quietly is worse than a step that says what it needs:`);
-    for (const cmd of [...new Set(missing.map((p) => p.install))]) log(`        ${cmd}`);
+    log(
+      `      what each one is for is in the doctor report below. Nothing is installed for you —`,
+    );
+    log(
+      `      an install that can fail quietly is worse than a step that says what it needs:`,
+    );
+    for (const cmd of [...new Set(missing.map((p) => p.install))])
+      log(`        ${cmd}`);
   }
 
   log(nextSteps(choice.papers));

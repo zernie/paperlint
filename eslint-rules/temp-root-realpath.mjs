@@ -50,7 +50,11 @@ const calleeName = (node) => {
   if (node?.type !== "CallExpression") return "";
   const c = node.callee;
   if (c.type === "Identifier") return c.name;
-  if (c.type === "MemberExpression" && !c.computed && c.property.type === "Identifier")
+  if (
+    c.type === "MemberExpression" &&
+    !c.computed &&
+    c.property.type === "Identifier"
+  )
     return c.property.name;
   return "";
 };
@@ -68,7 +72,8 @@ const mentionsTmpdir = (node) => {
   if (calleeName(node) === "tmpdir") return true;
   for (const [key, value] of Object.entries(node)) {
     if (key === "parent" || key === "loc" || key === "range") continue;
-    if (value !== null && typeof value === "object" && mentionsTmpdir(value)) return true;
+    if (value !== null && typeof value === "object" && mentionsTmpdir(value))
+      return true;
   }
   return false;
 };
@@ -80,9 +85,14 @@ const isRealpathCall = (node) => {
   if (name === "realpathSync") return true;
   // `realpathSync.native(…)`: the call's name is `native`, and the object is `realpathSync` itself.
   if (name !== "native") return false;
-  const obj = node.callee.type === "MemberExpression" ? node.callee.object : null;
+  const obj =
+    node.callee.type === "MemberExpression" ? node.callee.object : null;
   if (obj?.type === "Identifier") return obj.name === "realpathSync";
-  return obj?.type === "MemberExpression" && !obj.computed && obj.property.name === "realpathSync";
+  return (
+    obj?.type === "MemberExpression" &&
+    !obj.computed &&
+    obj.property.name === "realpathSync"
+  );
 };
 
 export default {

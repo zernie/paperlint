@@ -8,8 +8,19 @@ import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({
   name: "submit-paper",
-  description: "End-to-end playbook for submitting a peer-reviewed paper to a double-blind venue (HotCRP workshops/conferences) — from a hardened draft to \"ready for review.\" Covers building and anonymously hosting a reproduction artifact, HotCRP profile + form mechanics, double-blind hygiene, and the authorship/credential angles for an independent researcher. Use when the paper is drafted and reviewed and it's time to actually submit. Compose with pc-panel-review / paper-adversarial-review (harden first), and with the venue data card (references/venues/<venue>.md) for venue specifics.",
-  tools: ["Read", "Write", "Edit", "Grep", "Glob", "Bash", "WebSearch", "WebFetch", "Skill"],
+  description:
+    'End-to-end playbook for submitting a peer-reviewed paper to a double-blind venue (HotCRP workshops/conferences) — from a hardened draft to "ready for review." Covers building and anonymously hosting a reproduction artifact, HotCRP profile + form mechanics, double-blind hygiene, and the authorship/credential angles for an independent researcher. Use when the paper is drafted and reviewed and it\'s time to actually submit. Compose with pc-panel-review / paper-adversarial-review (harden first), and with the venue data card (references/venues/<venue>.md) for venue specifics.',
+  tools: [
+    "Read",
+    "Write",
+    "Edit",
+    "Grep",
+    "Glob",
+    "Bash",
+    "WebSearch",
+    "WebFetch",
+    "Skill",
+  ],
   body: `
 # submit-paper — get a reviewed paper from "done" to "ready for review"
 

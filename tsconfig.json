@@ -3,9 +3,7 @@
     "target": "ES2023",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "lib": [
-      "ES2023"
-    ],
+    "lib": ["ES2023"],
     "outDir": "dist",
     "rootDir": "src",
     "declaration": true,
@@ -16,13 +14,9 @@
     "exactOptionalPropertyTypes": false,
     "skipLibCheck": true,
     "verbatimModuleSyntax": false,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true
   },
-  "include": [
-    "src/**/*.ts"
-  ]
+  "include": ["src/**/*.ts"]
 }

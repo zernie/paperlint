@@ -32,14 +32,14 @@ Two defaults are the whole lesson:
 And the shape of the rest of the rule is the real argument. Of its six conditions, **five are
 over declared data** and only one is over the clock:
 
-| condition | example | deterministic? |
-| --- | --- | --- |
-| package version | `[>1]` | yes — reads `package.json` |
-| engine version | `[engine:node@>8]` | yes |
-| dependency present / absent | `[+package]` · `[-package]` | yes |
-| dependency version | `[package@>1]` | yes |
-| peer dependency version | `[peer:eslint@>9]` | yes |
-| **expiry date** | `[2018-05-01]` | **no** |
+| condition                   | example                     | deterministic?             |
+| --------------------------- | --------------------------- | -------------------------- |
+| package version             | `[>1]`                      | yes — reads `package.json` |
+| engine version              | `[engine:node@>8]`          | yes                        |
+| dependency present / absent | `[+package]` · `[-package]` | yes                        |
+| dependency version          | `[package@>1]`              | yes                        |
+| peer dependency version     | `[peer:eslint@>9]`          | yes                        |
+| **expiry date**             | `[2018-05-01]`              | **no**                     |
 
 There is a standing issue titled "failing the lint on a date may be inconvenient", which is the
 community arriving at the same discomfort from the other direction.
@@ -50,13 +50,13 @@ Sources:
 
 ## Shape 2: the before/after pair — Semgrep `--baseline-commit`
 
-A check that wants to see what a change *did* seems to need an event. It does not.
+A check that wants to see what a change _did_ seems to need an event. It does not.
 
 > A diff-aware scan runs on your code before and after some "baseline" and only reports findings
 > that are newly introduced in the commits after that baseline.
 
 The same deterministic analysis is run on two revisions and the results are subtracted. Nothing
-in the rule knows about events; the *runner* supplies two inputs.
+in the rule knows about events; the _runner_ supplies two inputs.
 
 The cost is that the second input comes from git history, which brings its own constraint: a CI
 checkout that fetches one commit cannot produce a baseline. That is a property of the pipeline,
@@ -80,7 +80,7 @@ the source alongside the artefact, and the question "is this build stale?" becom
 ## What this means for this package
 
 1. **Prefer a recorded fact to an inferred one.** Wherever a check currently reasons about
-   *when* something happened, ask whether the paper can simply declare *what* it was built from.
+   _when_ something happened, ask whether the paper can simply declare _what_ it was built from.
    A stage that records `source_sha256` turns two separate staleness checks into byte
    comparisons.
 

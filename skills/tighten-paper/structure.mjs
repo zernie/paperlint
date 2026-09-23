@@ -90,8 +90,14 @@
  * the right order, does this heading name a thing, does this section earn its place — stays with the
  * skill, because it is judgement. Only the mechanically decidable part is compiled.
  */
-import { readFileSync } from 'node:fs';
-import { headings as mdHeadings, splitSections, stripFences, requireMarkdown, stripFrontmatter } from '../../lib/markdown.mjs';
+import { readFileSync } from "node:fs";
+import {
+  headings as mdHeadings,
+  splitSections,
+  stripFences,
+  requireMarkdown,
+  stripFrontmatter,
+} from "../../lib/markdown.mjs";
 
 // Markup is parsed with a PARSER (`CLAUDE.md`, 2026-08-11). We fail rather than degrade: without a
 // parser not one section would be found in the paper, `--flags-only` would return 0 findings and
@@ -104,7 +110,8 @@ requireMarkdown();
 // written as `#{2,3}`, that is, as a statement about the NUMBER OF HASHES: `#{2,3}` counted any such
 // line as a section, including a line inside a ``` block. The papers in this repo quote other
 // people's markup in chunks, so "an extra section out of a quotation" is not a hypothesis.
-const SECTION_MIN = 2, SECTION_MAX = 3;
+const SECTION_MIN = 2,
+  SECTION_MAX = 3;
 
 // The thresholds (60 words of lead · 350 words of a subsection · 100% of the free half · 1.0
 // against the heaviest section) left together with the checks — they live as rule options in
@@ -114,15 +121,18 @@ const SECTION_MIN = 2, SECTION_MAX = 3;
 // will drift away from the first.
 
 const args = process.argv.slice(2);
-const file = args.find((a) => !a.startsWith('--'));
+const file = args.find((a) => !a.startsWith("--"));
 if (!file) {
-  console.error('usage: node structure.mjs <paper.md> [--section=N]   (--flags-only is accepted and stays silent)');
+  console.error(
+    "usage: node structure.mjs <paper.md> [--section=N]   (--flags-only is accepted and stays silent)",
+  );
   process.exit(0);
 }
-const only = (args.find((a) => a.startsWith('--section=')) || '').split('=')[1] || null;
-const flagsOnly = args.includes('--flags-only');
+const only =
+  (args.find((a) => a.startsWith("--section=")) || "").split("=")[1] || null;
+const flagsOnly = args.includes("--flags-only");
 
-let t = readFileSync(file, 'utf8');
+let t = readFileSync(file, "utf8");
 // `stripFences()` instead of `/^```[\s\S]*?^```/gm`: with an ODD number of fences that expression
 // glued the end of one block to the beginning of the next and cut out the prose between them — and
 // prose cut out here means an understated section weight, that is, a finding of "this is a divider,
@@ -132,8 +142,8 @@ let t = readFileSync(file, 'utf8');
 // affect the numbers (words and headings are counted the same either way), but the form must match
 // `prose-lint`, where it does.
 t = stripFences(
-  stripFrontmatter(t)                           // frontmatter
-   .replace(/<!--[\s\S]*?-->/g, ''),            // working comments
+  stripFrontmatter(t) // frontmatter
+    .replace(/<!--[\s\S]*?-->/g, ""), // working comments
   { blank: true },
 );
 // Body and FREE SECTIONS are measured separately. They hold different bars — the body has a page
@@ -156,7 +166,12 @@ const cut = headOffset(/^(Limitations|References|Ethical)/u);
 const body = cut > 0 ? t.slice(0, cut) : t;
 const refs = headOffset(/^References/u);
 const appx = headOffset(/^Appendix/u);
-const freeText = cut > 0 ? (refs > cut ? t.slice(cut, refs) + t.slice(appx < 0 ? t.length : appx) : t.slice(cut)) : '';
+const freeText =
+  cut > 0
+    ? refs > cut
+      ? t.slice(cut, refs) + t.slice(appx < 0 ? t.length : appx)
+      : t.slice(cut)
+    : "";
 
 const wordsOf = (s) => (s.match(/[A-Za-z0-9%.'’-]+/g) || []).length;
 
@@ -190,7 +205,7 @@ const wordsOf = (s) => (s.match(/[A-Za-z0-9%.'’-]+/g) || []).length;
 const NOTE_RE = /score:?\s*(\d{1,2})\s*(?:\/\s*10)?/i;
 const VERDICT_RE = /verdict:\s*(KEEP|SHORTEN|MOVE|MERGE|CUT)\b/i;
 
-const rawSections = stripFrontmatter(readFileSync(file, 'utf8'));
+const rawSections = stripFrontmatter(readFileSync(file, "utf8"));
 const carriesFor = new Map();
 const scoreFor = new Map();
 const verdictFor = new Map();
@@ -198,9 +213,13 @@ const verdictFor = new Map();
 // when the comment it belongs to is not followed by a heading, swallowing the next comment whole and
 // attributing its note to the wrong section. Caught 2026-08-05 within a minute of the check existing,
 // which is the same reason the check exists.
-for (const m of rawSections.matchAll(/<!--((?:(?!-->)[\s\S])*?)-->\s*\n(#{2,3}) (.+)/g)) {
-  const note = m[1].replace(/\s+/g, ' ');
-  const c = note.match(/carries:\s*(.+?)(?:·|justified:|note:|costs:|verdict:|because:|-->|$)/i);
+for (const m of rawSections.matchAll(
+  /<!--((?:(?!-->)[\s\S])*?)-->\s*\n(#{2,3}) (.+)/g,
+)) {
+  const note = m[1].replace(/\s+/g, " ");
+  const c = note.match(
+    /carries:\s*(.+?)(?:·|justified:|note:|costs:|verdict:|because:|-->|$)/i,
+  );
   if (c) carriesFor.set(m[3].trim(), c[1].trim());
   const s = note.match(NOTE_RE);
   if (s) scoreFor.set(m[3].trim(), Number(s[1]));
@@ -213,14 +232,19 @@ for (const m of rawSections.matchAll(/<!--((?:(?!-->)[\s\S])*?)-->\s*\n(#{2,3}) 
 // print them, so they are not parsed here.
 
 const outline = [];
-for (const chunk of splitSections(body, { min: SECTION_MIN, max: SECTION_MAX })) {
-  if (!chunk.heading) continue;                  // the preamble before the first heading is not a section
+for (const chunk of splitSections(body, {
+  min: SECTION_MIN,
+  max: SECTION_MAX,
+})) {
+  if (!chunk.heading) continue; // the preamble before the first heading is not a section
   const title = chunk.heading.text;
   outline.push({
     // `chunk.body` is the chunk ALREADY without the heading line, so the previous
     // `chunk.replace(/^#{2,3} .+$/m, '')` is no longer needed: removing the heading line is part of
     // the splitting, not a separate operation over the text.
-    level: chunk.heading.depth, title, words: wordsOf(chunk.body),
+    level: chunk.heading.depth,
+    title,
+    words: wordsOf(chunk.body),
     carries: carriesFor.get(title) ?? null,
   });
 }
@@ -229,7 +253,8 @@ for (const chunk of splitSections(body, { min: SECTION_MIN, max: SECTION_MAX }))
 for (let i = 0; i < outline.length; i++) {
   let total = outline[i].words;
   if (outline[i].level === 2)
-    for (let j = i + 1; j < outline.length && outline[j].level === 3; j++) total += outline[j].words;
+    for (let j = i + 1; j < outline.length && outline[j].level === 3; j++)
+      total += outline[j].words;
   outline[i].total = total;
 }
 
@@ -237,20 +262,30 @@ const inScope = (row, i) => {
   if (!only) return true;
   const num = (s) => (s.match(/^(\d+)/) || [])[1];
   if (row.level === 2) return num(row.title) === only;
-  for (let j = i; j >= 0; j--) if (outline[j].level === 2) return num(outline[j].title) === only;
+  for (let j = i; j >= 0; j--)
+    if (outline[j].level === 2) return num(outline[j].title) === only;
   return false;
 };
 
-const bodyTotal = outline.filter((r) => r.level === 2).reduce((a, r) => a + r.total, 0);
+const bodyTotal = outline
+  .filter((r) => r.level === 2)
+  .reduce((a, r) => a + r.total, 0);
 
 // The free sections are inventoried HERE, above the findings loop, and not down in the printing
 // block where they used to live. That placement was the whole defect: measured in a branch that
 // only the human-readable mode reaches, the ratio could never become a finding, so `--flags-only`
 // — the mode hooks and CI run — reported a clean document while the unpriced half stood at 165%.
 const freeSections = [];
-for (const chunk of splitSections(freeText || '', { min: SECTION_MIN, max: SECTION_MAX })) {
+for (const chunk of splitSections(freeText || "", {
+  min: SECTION_MIN,
+  max: SECTION_MAX,
+})) {
   if (!chunk.heading) continue;
-  freeSections.push({ level: chunk.heading.depth, title: chunk.heading.text, words: wordsOf(chunk.body) });
+  freeSections.push({
+    level: chunk.heading.depth,
+    title: chunk.heading.text,
+    words: wordsOf(chunk.body),
+  });
 }
 const freeTotal = freeSections.reduce((a, r) => a + r.words, 0);
 
@@ -267,44 +302,70 @@ if (flagsOnly) {
   process.exit(0);
 }
 
-console.log(`\n=== ${file.split('/').pop()} — outline, in order ===`);
-console.log(`${'own'.padStart(6)} ${'total'.padStart(6)} ${'share'.padStart(6)}  section`);
+console.log(`\n=== ${file.split("/").pop()} — outline, in order ===`);
+console.log(
+  `${"own".padStart(6)} ${"total".padStart(6)} ${"share".padStart(6)}  section`,
+);
 for (const [i, r] of outline.entries()) {
   if (!inScope(r, i)) continue;
-  const share = r.level === 2 ? `${(100 * r.total / bodyTotal).toFixed(1)}%`.padStart(6) : ' '.repeat(6);
+  const share =
+    r.level === 2
+      ? `${((100 * r.total) / bodyTotal).toFixed(1)}%`.padStart(6)
+      : " ".repeat(6);
   console.log(
-    `${String(r.words).padStart(6)} ${String(r.level === 2 ? r.total : '').padStart(6)} ${share}  ` +
-      `${r.level === 3 ? '    ' : ''}${r.title}`);
+    `${String(r.words).padStart(6)} ${String(r.level === 2 ? r.total : "").padStart(6)} ${share}  ` +
+      `${r.level === 3 ? "    " : ""}${r.title}`,
+  );
   // The section's own claim about itself, printed where its weight is read. A section whose note
   // does not survive being read next to its size is a section to cut, and that comparison was
   // impossible to make until both appeared in one place.
   if (r.carries) {
-    const s = scoreFor.get(r.title), v = verdictFor.get(r.title);
-    const tag = s === undefined && !v ? '' : `[${s ?? '?'}/10 ${v ?? 'NO VERDICT'}] `;
-    console.log(`${' '.repeat(21)}${r.level === 3 ? '    ' : ''}↳ ${tag}carries: ${r.carries.slice(0, 80)}`);
-  }
-  else if (/^\d/.test(r.title)) console.log(`${' '.repeat(21)}${r.level === 3 ? '    ' : ''}↳ 🔴 no carries: note — nobody has said why this section is here`);
+    const s = scoreFor.get(r.title),
+      v = verdictFor.get(r.title);
+    const tag =
+      s === undefined && !v ? "" : `[${s ?? "?"}/10 ${v ?? "NO VERDICT"}] `;
+    console.log(
+      `${" ".repeat(21)}${r.level === 3 ? "    " : ""}↳ ${tag}carries: ${r.carries.slice(0, 80)}`,
+    );
+  } else if (/^\d/.test(r.title))
+    console.log(
+      `${" ".repeat(21)}${r.level === 3 ? "    " : ""}↳ 🔴 no carries: note — nobody has said why this section is here`,
+    );
 }
-console.log(`\nbody total ${bodyTotal} words across ${outline.filter((r) => r.level === 2).length} sections`);
+console.log(
+  `\nbody total ${bodyTotal} words across ${outline.filter((r) => r.level === 2).length} sections`,
+);
 
 // The free sections, measured against the body they hang off. A paper whose unbudgeted prose
 // outweighs its budgeted prose is telling you where its author was allowed to keep writing.
 if (freeSections.length) {
   console.log(`\n=== outside the page limit ===`);
   for (const f of freeSections) {
-    console.log(`${String(f.words).padStart(6)} ${' '.repeat(14)}${f.level === 3 ? '    ' : ''}${f.title}`);
+    console.log(
+      `${String(f.words).padStart(6)} ${" ".repeat(14)}${f.level === 3 ? "    " : ""}${f.title}`,
+    );
     const c = carriesFor.get(f.title);
-    if (c) console.log(`${' '.repeat(21)}${f.level === 3 ? '    ' : ''}↳ carries: ${c.slice(0, 96)}`);
+    if (c)
+      console.log(
+        `${" ".repeat(21)}${f.level === 3 ? "    " : ""}↳ carries: ${c.slice(0, 96)}`,
+      );
     else if (f.level === 2)
-      console.log(`${' '.repeat(21)}↳ 🔴 no carries: note — and no page limit forcing the question`);
+      console.log(
+        `${" ".repeat(21)}↳ 🔴 no carries: note — and no page limit forcing the question`,
+      );
   }
-  console.log(`\nfree total ${freeTotal} words = ${(100 * freeTotal / bodyTotal).toFixed(0)}% of the body`);
+  console.log(
+    `\nfree total ${freeTotal} words = ${((100 * freeTotal) / bodyTotal).toFixed(0)}% of the body`,
+  );
   if (freeTotal > bodyTotal)
-    console.log(`🔴 The unbudgeted half is LARGER than the paper. Nothing prices these sections, which\n` +
-                `   is exactly why prose settles here. Ask of each: would a reviewer miss it?`);
+    console.log(
+      `🔴 The unbudgeted half is LARGER than the paper. Nothing prices these sections, which\n` +
+        `   is exactly why prose settles here. Ask of each: would a reviewer miss it?`,
+    );
 }
 
 console.log(
-  '\nThe rest is judgement and stays with the skill: is this the ORDER a stranger needs, does each\n' +
-  'heading name a thing, and does each section earn its place. Read the headings as a set — a\n' +
-  'stranger should be able to reconstruct the argument from them alone.');
+  "\nThe rest is judgement and stays with the skill: is this the ORDER a stranger needs, does each\n" +
+    "heading name a thing, and does each section earn its place. Read the headings as a set — a\n" +
+    "stranger should be able to reconstruct the argument from them alone.",
+);

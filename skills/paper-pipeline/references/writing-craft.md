@@ -2,61 +2,68 @@
 
 Grounding for `grade-paper-writing`, `draft-paper`, and `harden-paper`. Distilled from the canonical
 craft sources + an honest dissection of exemplar papers (writing craft only, not scientific impact).
-The point: grade a draft's *prose and structure* against how the best-written papers do it, not against
+The point: grade a draft's _prose and structure_ against how the best-written papers do it, not against
 taste. Especially for the failure mode "a wall of text and jargon that doesn't drive home how crazy the
 situation is."
 
 ## The three moves that make a human care (the core finding)
-The most-cited papers are NOT uniformly the best-written — *Attention Is All You Need* is famous-but-terse
+
+The most-cited papers are NOT uniformly the best-written — _Attention Is All You Need_ is famous-but-terse
 and wins only because its audience already cared. The papers that actually **make a reader care** —
-*Reflections on Trusting Trust*, indirect-prompt-injection (Greshake), training-data-extraction (Carlini)
+_Reflections on Trusting Trust_, indirect-prompt-injection (Greshake), training-data-extraction (Carlini)
 — all share three moves. This trio is the direct cure for "wall of text":
+
 1. **Open on a problem/assumption the reader already holds** (not background, not a topic tour).
 2. **Break it with the single most visceral concrete instance** (not an aggregate statistic).
 3. **Land one repeatable sentence** the reader will quote to a colleague.
 
 ## Canonical craft rules
 
-### Simon Peyton Jones — *How to Write a Great Research Paper*
+### Simon Peyton Jones — _How to Write a Great Research Paper_
+
 - **One key idea.** The reader should be able to state it in a sentence. Don't dilute with five half-ideas.
-- **Tell a story — the intro arc:** *problem → it's an interesting problem → it's an unsolved problem →
-  here is my idea → my idea works.* This is the canonical intro skeleton.
+- **Tell a story — the intro arc:** _problem → it's an interesting problem → it's an unsolved problem →
+  here is my idea → my idea works._ This is the canonical intro skeleton.
 - **Intro ≈ one page**, doing two things fast: (1) the problem via a concrete example in ~sentence 1;
   (2) contributions as a **bulleted list with forward references** ("we do X (§3)").
 - **Contributions are "molecules, not atoms"** — refutable, specific claims, not vague ("we studied X").
 - **Do NOT write "the rest of this paper is organized as follows."** The forward-referenced bullets do it better.
 - **Related work goes at the END**, not after the intro — early, it's a wall before the reader knows why to care, and reads as defensive.
 - **The reader is the only person who matters.** Convey the idea; don't recite what you did.
-Sources: simon.peytonjones.org/great-research-paper · microsoft.com/en-us/research/academic-program/write-great-research-paper
+  Sources: simon.peytonjones.org/great-research-paper · microsoft.com/en-us/research/academic-program/write-great-research-paper
 
-### Larry McEnerney — *The Craft of Writing Effectively*
+### Larry McEnerney — _The Craft of Writing Effectively_
+
 - **Writing creates VALUE for a community of readers — it is not a record of your thinking.** The job is to
   change what the reader believes about the world, not to explain what you did.
 - **Clear ≠ good.** "Clear and useless = useless." Value first; clarity only matters in service of value.
 - **The reader is expensive to move** — busy, skeptical experts. Every sentence must earn the next.
-- **The "so what / who cares" test** — before a claim earns space, it must resolve an instability *this
-  community* cares about.
+- **The "so what / who cares" test** — before a claim earns space, it must resolve an instability _this
+  community_ cares about.
 - **Frame around a problem/instability, not a foundation.** Reject the martini-glass (broad→narrow→broad)
   and the topic-then-background opening; open by exposing a problem the reader already feels, and create tension.
 - **Use the community's code-words** deliberately (for security-measurement: "threat model," "attack
   surface," "false-negative," "real-world," "at scale") — they signal "this is for you."
-Sources: robincussol.com/the-craft-of-writing-effectively-summary · singjupost.com transcript
+  Sources: robincussol.com/the-craft-of-writing-effectively-summary · singjupost.com transcript
 
-### Gopen & Swan — *The Science of Scientific Writing* (sentence mechanics)
+### Gopen & Swan — _The Science of Scientific Writing_ (sentence mechanics)
+
 - "The meaning of prose is not what the writer intends, but what readers interpret." Put info where readers expect it.
 - **Topic position (sentence start) = old/linking info + context. Stress position (sentence end) = the new
   payload you want emphasized.** Put the important word last.
 - **Keep subject and verb close.** Long clauses jammed between them make readers hold their breath.
 - One sentence = one point. Don't put two new ideas in two stress positions.
-Source: usenix.org/sites/default/files/gopen_and_swan_science_of_scientific_writing.pdf
+  Source: usenix.org/sites/default/files/gopen_and_swan_science_of_scientific_writing.pdf
 
 ### Strong-abstract structure (Zobel / 4-sentence)
+
 Operational template to check an abstract against: **Context (1 sentence) → Gap/problem (1) → Approach (1)
 → Result with ONE memorable number/instance (1) → Meaning/so-what (1).** A stat-wall abstract fails this
 because it stacks numbers with no gap and no "so what." (The tight "4-sentence abstract" is commonly
 attributed to Kent Beck — treat as widely-cited, not primary-verified.)
 
 ## Exemplar lessons (writing craft only; grades = craft judgment, 1–5)
+
 - **Attention Is All You Need** — Title 5, Abstract 4, Prose **2**. Imitate: six-word thesis-title, one
   killer figure, one memorable number (28.4 BLEU). **Do NOT imitate** the dense, contribution-less prose —
   it works only because the audience already cared. This IS the "wall of jargon" trap.
@@ -64,15 +71,16 @@ attributed to Kent Beck — treat as widely-cited, not primary-verified.)
   opens on a question the reader already feels ("to what extent should one trust…"), lands one unforgettable
   moral ("You can't trust code that you did not totally create yourself"). The antidote.
 - **Not What You've Signed Up For** (indirect prompt injection, AISec) — the **security-audience** model.
-  Abstract pivots on a rhetorical question — *"But, what if it is not the user prompting?"* — that makes a
+  Abstract pivots on a rhetorical question — _"But, what if it is not the user prompting?"_ — that makes a
   human sit up harder than any statistic. Surface the assumption everyone holds, then break it.
 - **Extracting Training Data from LLMs** (Carlini) — the **measurement-paper** model. Every abstraction is
   cashed out in a visceral concrete example ("128-bit UUID… appearing in just one document"). The fix for
   "doesn't drive home how crazy it is" is the concrete instance, NOT more numbers.
-- **MapReduce** — "Simplified" in the title = the reader's *benefit* as the promise; clean topic sentences;
+- **MapReduce** — "Simplified" in the title = the reader's _benefit_ as the promise; clean topic sentences;
   motivating example before mechanism.
 
 ## The gradeable rubric — 9 dimensions, score 1–5 (anchors), most-severe first
+
 For the "wall of jargon" failure mode, **weight #5 Prose, #6 Jargon, #7 Landing-the-point ×2.** Score each,
 name the offending sentence/section, write the fix.
 
@@ -91,7 +99,7 @@ name the offending sentence/section, write the fix.
    passive. 5 = one idea/sentence, subject next to verb, payload in the stress position, active by default.
 6. **Jargon discipline (graded for the NON-ACADEMIC target reader, not for you the expert).** 1 = undefined
    acronyms/in-group terms stacked to sound rigorous, OR standard field-jargon (`Bonferroni`, `construct
-   validity`, `null`, `coarse`, coined handles) used with no plain-words gloss — the LLM-grader trap: you know
+validity`, `null`, `coarse`, coined handles) used with no plain-words gloss — the LLM-grader trap: you know
    them so you don't stall, but the reader does. 5 = every term earns its place and is glossed in plain language
    at first use; analogy before term; a strong engineer who is not a researcher never hits a wall. **Hard-capped
    by stall density (see the stall pass): > 1 stall/page ⇒ ≤ 2 here.**
@@ -109,13 +117,14 @@ name the offending sentence/section, write the fix.
    wall. 5 = explicit "what we do NOT claim," one clean threats-to-validity move, related work at the end as context.
 
 ## Scoring calibration — how to avoid an inflated grade (read before scoring)
-A writing grade is worthless if it's inflated, and the default failure mode is a single grader — *especially
-one that just wrote, rewrote, or verified the paper* — scoring on optimism and anchoring on "it got better."
+
+A writing grade is worthless if it's inflated, and the default failure mode is a single grader — _especially
+one that just wrote, rewrote, or verified the paper_ — scoring on optimism and anchoring on "it got better."
 
 **⚠️ The blind panel does NOT fix the expertise blind spot.** LLM graders share a vocabulary: all three know
-`Bonferroni`, `construct validity`, `null`, `coarse` — so a blind 3-grader panel can *converge* on 44/60 and
+`Bonferroni`, `construct validity`, `null`, `coarse` — so a blind 3-grader panel can _converge_ on 44/60 and
 all be wrong the same way (this happened; the human target reader then found the paper unreadable). The panel
-fixes *optimism/anchoring*, not *"the graders are experts and the reader isn't."* Defenses: (1) every grader
+fixes _optimism/anchoring_, not _"the graders are experts and the reader isn't."_ Defenses: (1) every grader
 runs the stall pass with expertise DEMOTED to the target reader (above); (2) **if the human target reader
 stalls where the panel didn't, the human wins — they ARE the reader the grade is for.** A panel consensus that
 contradicts the actual reader's "I was bored / lost" is a mis-grade, not a tie.
@@ -123,13 +132,14 @@ contradicts the actual reader's "I was bored / lost" is a mis-grade, not a tie.
 Two disciplines are mandatory:
 
 **1. Absolute scale, not relative.** Grade against the whole field, NEVER against the previous draft.
+
 - **5** = the best-written papers in existence (Trusting-Trust tier: a non-expert reads it willingly, one
   unforgettable line). Vanishingly rare — almost no real paper earns a 5 on most dimensions.
 - **4** = clearly above average, a pleasure to read.
 - **3** = competent and publishable but a slog in places — **the DEFAULT for a solid accepted paper.**
 - **2** = a real weakness a reviewer gripes about. **1** = bad.
-Most dimensions of most accepted papers are **2–3**. A row of 4s and 5s means you are being lenient —
-recheck. "It improved from the last draft" is not evidence of a 4; grade only what is on the page today.
+  Most dimensions of most accepted papers are **2–3**. A row of 4s and 5s means you are being lenient —
+  recheck. "It improved from the last draft" is not evidence of a 4; grade only what is on the page today.
 
 **2. One grade is not trustworthy — run a blind panel when the number matters.** Spawn **≥3 independent
 graders**, each blind to (a) any prior score, (b) each other, and (c) the "we improved X" framing — give
@@ -139,17 +149,19 @@ panel confirms it; if graders disagree by >1 on a dimension, that dimension is g
 (This is the writing-axis analogue of `pc-panel-review`'s N-independent-reviewers design.)
 
 ## The cold-read stall pass (the "wait, what does that even mean?" axis)
-The rubric's Prose, Jargon, and Figure dimensions are scored holistically — but the most *actionable* signal
+
+The rubric's Prose, Jargon, and Figure dimensions are scored holistically — but the most _actionable_ signal
 is localized: the exact spots where a reader who did NOT write the paper stops and thinks "what does that even
-mean?" Those stalls are what make a paper *feel* like a wall, and **authors are blind to them because they
+mean?" Those stalls are what make a paper _feel_ like a wall, and **authors are blind to them because they
 already know what everything means.** This is the pass most worth delegating to a cold grader (a fresh
 subagent with no context on the work), because the author literally cannot run it honestly on themselves.
 
 **Run it as a PERSONA subagent, not as yourself "demoting expertise."** This is the fix for why the pass
 under-fires: telling a frontier model to "imagine you don't know the terms" is an abstract instruction it glides
 past — it still knows everything, so it glances over the jargon a real reader would trip on. A subagent
-*committed to a specific persona* flags authentically, because it is answering AS someone who genuinely lacks the
+_committed to a specific persona_ flags authentically, because it is answering AS someone who genuinely lacks the
 vocabulary. Spawn a fresh subagent with a prompt like:
+
 > You are Sam, a senior software engineer — 10 years building production web backends, sharp, but you have NEVER
 > read an academic paper in this subfield and you do NOT know its vocabulary. Read this start to finish, linearly.
 > EVERY time you hit a word, symbol, table cell, or sentence you would not use in a normal code review — STOP and
@@ -168,7 +180,7 @@ a full paper skims the middle: this session a whole-paper sweep scored 44/60 and
 persona reads (intro, method, results) each caught immediately. Chunk it to 2–3pp / one section per subagent, so
 the reader's attention doesn't degrade across the length.
 
-**This persona-proxy technique generalizes.** Any skill that needs the LLM to stand in for a *limited* human —
+**This persona-proxy technique generalizes.** Any skill that needs the LLM to stand in for a _limited_ human —
 a naive first-time-user docs walkthrough, a "can a newcomer follow this setup," a non-native-speaker read, a
 "would a busy exec get the point in 10s" test — hits the same wall: the model's omniscience makes it a bad proxy.
 The fix is always the same: **give it a committed persona (and/or a weaker model), don't ask it to "imagine" the
@@ -176,8 +188,8 @@ limitation.** When adding a skill that simulates a human constraint, reach for a
 
 **Read as the paper's ACTUAL target reader — a strong practitioner/engineer who is NOT an academic in this
 subfield — NOT as "a smart non-author."** This is the fix for the failure that let a jargon-dense paper score
-"above average": *you, the LLM grader, know what `Bonferroni`, `construct validity`, `coarse`, `null`, `TOST`,
-`ablation`, `orthogonal` mean — the target reader does not.* An LLM's default failure is never stalling because
+"above average": _you, the LLM grader, know what `Bonferroni`, `construct validity`, `coarse`, `null`, `TOST`,
+`ablation`, `orthogonal` mean — the target reader does not._ An LLM's default failure is never stalling because
 it knows every term. **Deliberately demote your own expertise** and flag every term, notation, or construction
 the target reader wouldn't get in ~5 seconds. If a strong engineer who is not a researcher would type "fuck
 does that even mean" — it is a stall, no matter how standard the term is in the field. That "fuck does that mean"
@@ -185,29 +197,30 @@ reflex is the FLAG pass (catch broadly); the **Register calibration** below is t
 gloss/cut methodology shorthand, rename coinages) — run both, in that order.
 
 ### Register calibration — which terms to KEEP vs kill (the hard balance)
+
 "Flag every term the reader wouldn't get in 5 seconds" is too blunt on its own: applied literally it strips the
 **field-native vocabulary that makes a paper read as competent to its reviewers**, and glossing those reads as
-naïve. The reader is a strong engineer *in the paper's own field* — **not a layperson and not a cross-field
+naïve. The reader is a strong engineer _in the paper's own field_ — **not a layperson and not a cross-field
 methodologist.** Sort every candidate term into three buckets:
 
 1. **KEEP — field-native terms a reviewer at THIS venue uses without thinking.** Glossing them wastes words and
-   signals you don't know the field. *Security venue:* `exfiltrate`, `PreToolUse`, `AST`, `false positive`,
-   `supply-chain`. *Benchmark venue:* `held-out`, `baseline`, `ablation`. Test: **would a reviewer at
+   signals you don't know the field. _Security venue:_ `exfiltrate`, `PreToolUse`, `AST`, `false positive`,
+   `supply-chain`. _Benchmark venue:_ `held-out`, `baseline`, `ablation`. Test: **would a reviewer at
    this venue type this word in their own review?** If yes, keep it (gloss at most once if borderline, then move on).
    **Bucket-1 is NARROW — be strict, when in doubt it's bucket 2.** The failure mode (real: `fnmatch` slipped through
    this list as a "keep" and the author stalled on it) is calling a **library/function/POSIX name** field-native
-   because it's *plausibly* known. Test harder: not "might a reviewer know it?" but "would they type it *unglossed*
+   because it's _plausibly_ known. Test harder: not "might a reviewer know it?" but "would they type it _unglossed_
    in prose?" A libc function (`fnmatch`), a specific syscall, a niche flag — usually **NO**; it's artifact/detail,
    so gloss-or-cut (often just cut the name: "matches the glob" beats "an `fnmatch` bound"). **The AUTHOR's stall is
    authoritative:** if the author — a strong engineer — stalls on a term, it is NOT bucket-1, no matter how
    field-native it looks to you. Your "a reviewer probably knows it" does not override a real reader's "wtf is that."
 2. **GLOSS-ONCE-OR-CUT — methodology / stats / philosophy-of-measurement shorthand foreign to the paper's field.**
-   The LLM grader waves these through because *it* knows them, but they aren't native to the venue's reviewers as
+   The LLM grader waves these through because _it_ knows them, but they aren't native to the venue's reviewers as
    prose: `construct validity`, `existence result`, `declared scope`, `orthogonal`, `null` (=no effect), `TOST`,
    `coarse`, `net-cancel`, `re-derivation`, `modal` (=most common), `Bonferroni`. Gloss in plain words at first
    use, or cut.
 3. **RENAME — labels the authors COINED that brand instead of describe** (sound like marketing, mean nothing to the
-   reader): `robust coverage` → *coverage under evasion*; `honest residue` → *what still gets through*; a "corner"
+   reader): `robust coverage` → _coverage under evasion_; `honest residue` → _what still gets through_; a "corner"
    / "split" / "axis" used before it's shown. Test: **did we invent this label, and does it describe the thing or
    just brand it?** If it brands, make it say the thing.
 
@@ -217,11 +230,11 @@ the enumeration — e.g. a guard described as "resolves quoting, reduces the int
 backslash head, canonicalizes flag aliases, expands \$HOME…" instead of "it strips the disguises so every spelling
 of `rm -rf` collapses to one"), a triple-nested-em-dash sentence you parse twice, or a dutiful flat paragraph.
 **Fix by leading with the plain story in 1–2 sentences, THEN the precise mechanism/term — never the reverse.**
-(the author's rule: don't open on the spec sheet.) When unsure which bucket a term is in, ask: *would a reviewer at THIS
-venue use it, or is it imported from stats/philosophy/our own coinage?*
+(the author's rule: don't open on the spec sheet.) When unsure which bucket a term is in, ask: _would a reviewer at THIS
+venue use it, or is it imported from stats/philosophy/our own coinage?_
 
 **De-jargon is RE-VOICING the sentence, not swapping the word.** Replacing a coined term with a plainer noun inside
-an otherwise stiff academic sentence leaves the sentence academic — the reader still stalls on the *register*, not
+an otherwise stiff academic sentence leaves the sentence academic — the reader still stalls on the _register_, not
 just the word (GateBench 2026-07-25: a term-level de-jargon pass cleared the flagged words but the author still hit
 sections "way too academicy for 0 reason"). The fix: rewrite the whole SENTENCE the way you'd say it to a colleague
 at a whiteboard — subject–verb–object, active voice, one clause, contractions fine, no nominalizations ("performs
@@ -240,12 +253,13 @@ re-discover terms a grep already finds. **A hyphenated coinage or a listed avoid
 final draft unglossed is a FAIL of this pass, full stop — not a "minor" left for later.**
 
 **Run it as a linear cold read**, start to finish. Every time that reader would stop, log a stall. Trigger on:
+
 - **Gloss-or-die: any academic/technical term used without a plain-words gloss at first use.** These are the
   ones LLM graders wave through because they know them — flag every one: `Bonferroni`, `construct validity`,
   `null` (meaning "no effect"), `ablation`, `TOST`, `coarse`, `orthogonal`, `monotone`, `a priori`,
   `first-class` (as jargon), an unexpanded acronym (`MCP`, `CI` on first use), or a **coined handle used before
   it's defined** ("the corner", "the split", "output-share bound", "the input-dominance fact our audit
-  presupposes"). Rule: **gloss in plain words at first use, or cut.** A coined handle is fine *once glossed*.
+  presupposes"). Rule: **gloss in plain words at first use, or cut.** A coined handle is fine _once glossed_.
 - a **bare number with no source on the page** — "where did 31.7% come from?", a naked p-value;
 - **"what am I looking at?"** — a table cell needing a dagger legend, a figure whose caption isn't self-contained;
 - a **sentence you had to read twice** to parse (usually an em-dash-nested composite);
@@ -264,6 +278,7 @@ a fix pass.
 
 **Stall density HARD-CAPS the score (mechanical, not "considered").** A paper the target reader stalls on every
 paragraph is NOT "above average," however correct or clean-sentenced. Apply as a ceiling:
+
 - **> 1 stall/page → Jargon (#6) ≤ 2.**
 - **> 2 stalls/page → Jargon ≤ 2, Prose (#5) ≤ 2, and Landing (#7) ≤ 3.**
 - **A row of 4s on a paper with > 2 stalls/page is a MIS-GRADE — you read as an expert, not the target
@@ -274,8 +289,9 @@ paragraph is NOT "above average," however correct or clean-sentenced. Apply as a
 blind panel scored it 44/60 and called the remaining walls "minor," yet the author — a real non-expert reading
 linearly — hit ~15 WTF stalls it had waved through (`exfiltrate`-adjacent terms, `robust coverage`, `honest
 residue`, `held-out`, a spec-sheet mechanism paragraph, `construct validity`, `existence result`). **Root cause:
-a frontier LLM cannot authentically stall — it knows every term, so "did *I* stop and go 'what's that'?"
+a frontier LLM cannot authentically stall — it knows every term, so "did _I_ stop and go 'what's that'?"
 systematically under-counts. "Demote your expertise" only half-works.** Remedies:
+
 - **Count stalls MECHANICALLY, not by felt confusion.** Auto-stall regardless of whether you understand it:
   (1) any bucket-2 methodology term unglossed at first use; (2) any bucket-3 coined label — a metric or heading
   name the authors invented (`robust coverage`, `honest residue`); (3) any **comma-list of ≥3 mechanism steps**
@@ -290,11 +306,12 @@ systematically under-counts. "Demote your expertise" only half-works.** Remedies
   terms back into the Register-calibration buckets so the next paper never ships them.
 
 ## The claim-preservation diff (`claims`) — mandatory after EVERY rewrite
+
 **Owner of the `claims` scorecard row.** A rewrite/de-jargon/readability pass is NOT done until an
 adversarial claim-preservation diff clears it. Rewording is a claim-integrity RISK, not a cosmetic
-edit: it silently drops hedges, flips "no *detectable* change" into proven-zero, restates a bounded
+edit: it silently drops hedges, flips "no _detectable_ change" into proven-zero, restates a bounded
 result as an absolute, and re-breaks numbers. A real Fable diff-check caught three that readability
-passes *introduced* — a heading ("Deny-globs that never match") contradicting its own body ("rarely
+passes _introduced_ — a heading ("Deny-globs that never match") contradicting its own body ("rarely
 match, median 1/10"); "both estimates point to no saving **at all**" (proven-zero overclaim); and
 "with correctness **held fixed**" (overstating a gate the paper itself calls shallow).
 
@@ -306,9 +323,11 @@ check; the pass isn't complete without it, and the `claims` row in `PIPELINE-STA
 (claims-honest gate).
 
 ## The wall-of-text check (visual density — distinct from stall density)
+
 Stall density is about COMPREHENSION (unglossed terms, sourceless numbers). This is about the EYE: a
 paragraph so long and unbroken the reader slides off it before reading a word. The classic offender is a
 Related-work or Discussion section dumped as one 30+-line block covering a dozen works. Rules:
+
 - **A paragraph running >~15 source lines / ~150 words, or covering >3 distinct sub-points, is a wall —
   break it.** Split into 2–4 chunks, each led by a **bold or italic run-in sub-head** that names its theme
   (`\textbf{Denylist fragility.}`, `\emph{Syntax vs.\ intent.}`), exactly as the section's other paragraph
@@ -324,15 +343,16 @@ Related-work or Discussion section dumped as one 30+-line block covering a dozen
   scannable at zero length cost.
 
 ## The conclusion & quotability check (the two surfaces authors under-invest)
+
 The **abstract** and the **conclusion** are the two most-read, most-quoted surfaces of a paper — and the
 conclusion is the one authors most often leave as a limp restatement. Grade both explicitly; this is the
 axis that catches "the conclusion isn't strong enough."
 
 - **Conclusion — does it PAY OFF, or just summarize?** A 5 conclusion (a) states the finding in the plainest
   possible language (a non-researcher gets it), (b) names the real-world stakes / who should care, (c) points
-  *past* the result — the uncomfortable implication or the better direction (framed as a call, not an
+  _past_ the result — the uncomfortable implication or the better direction (framed as a call, not an
   unproven claim), and (d) **gives the reader something to DO** — a concrete directive/takeaway, not "we
-  release X." A conclusion that only recaps results is a **2**. Ask: what should the reader *do differently*
+  release X." A conclusion that only recaps results is a **2**. Ask: what should the reader _do differently_
   on Monday after reading this?
 - **Quotability — is there a line that travels?** The abstract needs one extractable sentence; the conclusion
   needs one. Test: could a reader paste it onto a talk slide or into a post and it still lands, standing
@@ -341,8 +361,8 @@ axis that catches "the conclusion isn't strong enough."
 - **The money-line must be the LAST sentence, ISOLATED, and liftable VERBATIM.** "Is there a quotable line
   somewhere" is not enough — the commonest real miss is a genuinely quotable CORE buried inside a clause-heavy
   closer with a preamble, so a reader can't copy it without trimming. Session example (GateBench 2026-07-25, the
-  author had to hand-extract it): *"For unattended agents at scale, enterprises most of all, a copied
-  string-matcher is not a safety layer but a liability shaped like one"* — the core ("a copied string-matcher is
+  author had to hand-extract it): _"For unattended agents at scale, enterprises most of all, a copied
+  string-matcher is not a safety layer but a liability shaped like one"_ — the core ("a copied string-matcher is
   a liability shaped like one, not a safety layer") is strong but not liftable as-is. **Mechanical rule: the
   paper must END on ONE short standalone sentence** — no leading "For X, Y most of all," preamble, no
   comma-spliced second idea — that a reader copies onto a slide unedited, sitting on **its own line (its own
@@ -351,14 +371,15 @@ axis that catches "the conclusion isn't strong enough."
 - **Session-earned example:** the GateBench conclusion went from a weak results-recap to: the plain theater
   call-out ("checking spelling, not meaning"), a coined verdict a reader can quote ("a copied string-matcher
   is not a safety layer but a liability shaped like one"), a direction past the result ("cannot be
-  *expressed*, not merely caught after the fact"), and a reader directive ("before you trust a hook to guard
+  _expressed_, not merely caught after the fact"), and a reader directive ("before you trust a hook to guard
   an unattended agent, make it clear more than one disaster").
 
 ## The avoid-list — words that read as slop or stall a human (flag every hit)
+
 The north star: **a paper should be engaging and human-readable — write for a smart non-specialist who will
 read it willingly, not to sound academic.** The test (the author's 10-second rule): would a strong engineer who is
 NOT a researcher get this sentence in 10 seconds? If not, it's too dense. The jargon dimension (#6) and the
-stall pass are the judgment; the list below is the *checkable* part (prose isn't policy — compile what's
+stall pass are the judgment; the list below is the _checkable_ part (prose isn't policy — compile what's
 mechanical). These are **scrutinize-words, not absolute bans** (some are legit in context — "significant" for
 a real stat, "method"); on every hit, ask "does this earn its place, or is it slop / hype / a reader-stall?"
 and cut or replace. During grading, **grep for these and report hits with line numbers.**
@@ -368,7 +389,7 @@ and cut or replace. During grading, **grep for these and report hits with line n
   → say the plain thing (`listicle` → `list`).
 - **Empty academic filler — cut or shrink:** `it is important/worth noting that`, `it should be noted`,
   `in order to`→`to`, `utilize`→`use`, `a plethora/myriad of`→`many`, `facilitate`→`let/help`,
-  `due to the fact that`→`because`, `the fact that`, `methodology`→`method` (unless you mean the study *of*
+  `due to the fact that`→`because`, `the fact that`, `methodology`→`method` (unless you mean the study _of_
   methods), `in this work we…` opening every paragraph.
 - **Hype / vague intensifiers — delete unless earned:** `very`, `really`, `quite`, `vast`, `massive`,
   `seamless`, `powerful`, `cutting-edge` / `state-of-the-art` as filler, `robust` (overused),
@@ -390,25 +411,28 @@ and cut or replace. During grading, **grep for these and report hits with line n
   then rule each hit in or out — the grep is the floor, the persona adds what the regex can't see.
 
 When adding a new coined handle of your own (a good thing — citability), that is NOT slop: it's earned jargon
-IF glossed in plain language at first use. The line is *glossed-for-the-reader* vs *stacked-to-sound-rigorous*.
+IF glossed in plain language at first use. The line is _glossed-for-the-reader_ vs _stacked-to-sound-rigorous_.
 (A coined handle used as the paper's headline term — `GateBench`, `keyword theater` — is fine; a coined
-*compound-adjective sprinkled through the prose* — `operation-targeting`, `scope-bounded` — is the slop.)
+_compound-adjective sprinkled through the prose_ — `operation-targeting`, `scope-bounded` — is the slop.)
 
 ## Paper vs artifact — where numbers live (the concrete fix for stat-density)
+
 A measurement paper drowns the reader when every secondary result is inline. The artifact reproduces every
 number, so the paper does not have to print them all — divide the labor:
+
 - **In the paper:** the handful of HEADLINE numbers the thesis rests on, plus the inferential stat that
-  backs each HEADLINE claim (a security/measurement reviewer wants the key p-value / CI / effect size *on
-  the page* — moving those out reads as hiding). Exactly ONE memorable number in the abstract.
+  backs each HEADLINE claim (a security/measurement reviewer wants the key p-value / CI / effect size _on
+  the page_ — moving those out reads as hiding). Exactly ONE memorable number in the abstract.
 - **In the artifact:** the exhaustive tables — per-item breakdowns, full sweep grids, ablation cells,
   secondary p-values — cited as "the artifact reports X (Table Y)." A number that supports only a
-  *secondary* point lives there, not inline.
+  _secondary_ point lives there, not inline.
 - **Test:** if a sentence carries 3+ numbers and only one is load-bearing, push the rest to the artifact.
   This is the concrete fix when Abstract / Prose / Figure score low for stat-density — it is not hiding
   (the artifact is public and recomputes them), it is letting the reader see the point.
-Cross-ref: `build-benchmark` (the artifact that holds the numbers) · `draft-paper` (the drafting decision).
+  Cross-ref: `build-benchmark` (the artifact that holds the numbers) · `draft-paper` (the drafting decision).
 
 ## The 5 highest-leverage do/don'ts
+
 1. **DO lead with the concrete crazy instance, not the aggregate stat** (Carlini's UUID).
 2. **DO manufacture the "wait, what?" pivot** — surface the held assumption, then break it (Greshake).
 3. **DO write the intro as the SPJ arc + a bulleted, forward-referenced contributions list**; kill the "organized as follows" roadmap.
@@ -417,6 +441,7 @@ Cross-ref: `build-benchmark` (the artifact that holds the numbers) · `draft-pap
    precise scope sentence; land one repeatable moral (Trusting Trust).
 
 ## Sources
+
 Peyton Jones (great-research-paper) · McEnerney (Craft of Writing Effectively) · Gopen & Swan (Science of
 Scientific Writing) · Zobel (Writing for Computer Science) · exemplars: Attention Is All You Need
 (arXiv 1706.03762), Reflections on Trusting Trust (Thompson 1984), indirect prompt injection

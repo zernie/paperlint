@@ -69,7 +69,7 @@ process.exit(
         disables:
           "choosing the interpreter by extension. It is done by extension rather than the " +
           "executable bit precisely so a fresh clone without +x does not fail with " +
-          "\"Permission denied\" for a reason that has nothing to do with the paper",
+          '"Permission denied" for a reason that has nothing to do with the paper',
         edits: [[SRC, '  if (ext === ".py") return ["python3", []];\n', ""]],
       },
       {
@@ -95,7 +95,9 @@ process.exit(
         disables:
           "the distinction between built and failed. A build that reports success while " +
           "pdflatex went red is a paper that gets submitted unbuilt",
-        edits: [[SRC, 'status: code === 0 ? "built" : "failed",', 'status: "built",']],
+        edits: [
+          [SRC, 'status: code === 0 ? "built" : "failed",', 'status: "built",'],
+        ],
       },
     ],
   }),

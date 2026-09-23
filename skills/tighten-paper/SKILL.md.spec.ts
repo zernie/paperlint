@@ -8,8 +8,18 @@ import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({
   name: "tighten-paper",
-  description: "Use when a paper \"feels long / bloated / overly complex / hard to read / doesn't deliver its point / the middle drags\" — or after review rounds deposited hedge-mass. The developmental / editorial pass on a DRAFTED paper: what a real human editor thinks reading it cover to cover — the ONE point, does every section earn its place, can it be SKIMMED, is it too long for its contribution, which sections are TMI that belong in the artifact/appendix, does the conclusion pay off the intro's promise. Produces a structural verdict + a concrete cut / fold / merge / reorder plan — NOT sentence fixes. Its verdict is a required INPUT to pc-panel-review and a hard gate in harden-paper. NOT sentence craft or a writing grade (grade-paper-writing), NOT jargon stalls (the persona stall pass), NOT scientific defects (pc-panel-review / paper-adversarial-review). Run it BEFORE those on a bloated draft — no point polishing sentences in a section that should be cut.",
-  tools: ["Read", "Write", "Edit", "Grep", "Glob", "Agent", "Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*)", "Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)"],
+  description:
+    "Use when a paper \"feels long / bloated / overly complex / hard to read / doesn't deliver its point / the middle drags\" — or after review rounds deposited hedge-mass. The developmental / editorial pass on a DRAFTED paper: what a real human editor thinks reading it cover to cover — the ONE point, does every section earn its place, can it be SKIMMED, is it too long for its contribution, which sections are TMI that belong in the artifact/appendix, does the conclusion pay off the intro's promise. Produces a structural verdict + a concrete cut / fold / merge / reorder plan — NOT sentence fixes. Its verdict is a required INPUT to pc-panel-review and a hard gate in harden-paper. NOT sentence craft or a writing grade (grade-paper-writing), NOT jargon stalls (the persona stall pass), NOT scientific defects (pc-panel-review / paper-adversarial-review). Run it BEFORE those on a bloated draft — no point polishing sentences in a section that should be cut.",
+  tools: [
+    "Read",
+    "Write",
+    "Edit",
+    "Grep",
+    "Glob",
+    "Agent",
+    "Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*)",
+    "Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)",
+  ],
   body: `
 # tighten-paper — the developmental edit
 

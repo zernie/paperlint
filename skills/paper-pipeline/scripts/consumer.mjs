@@ -148,7 +148,10 @@ export function insideNodeModules(dir) {
  * @param hereDir  the directory of the module that owns the ledger — pass `import.meta.dirname`.
  * @returns an absolute path. Never a path inside `node_modules`.
  */
-export function ledgerPath(hereDir, { env = process.env, cwd = process.cwd() } = {}) {
+export function ledgerPath(
+  hereDir,
+  { env = process.env, cwd = process.cwd() } = {},
+) {
   // Rung 1 — the environment. Deliberately first: harnesses redirect the ledger BEFORE importing
   // it, and a declaration on disk that could override that would put fixture rows in real history.
   if (env.PIPELINE_LEDGER) return resolve(env.PIPELINE_LEDGER);
@@ -322,7 +325,10 @@ export const DEFAULT_TIMEZONE = "UTC";
  * @returns the zone as DECLARED, e.g. `"Europe/Berlin"` — suitable for a calendar API's
  *          `timeZone` field and for `Intl` options.
  */
-export function consumerTimezone({ env = process.env, cwd = process.cwd() } = {}) {
+export function consumerTimezone({
+  env = process.env,
+  cwd = process.cwd(),
+} = {}) {
   const declared = consumerPkg({ env, cwd })?.[CONFIG_KEY]?.timezone;
   // 🔴 `declared === undefined`, NOT `declared ?? DEFAULT` — the same distinction every carrier
   // above makes: `"timezone": null` is a keystroke, not an absence.
@@ -371,7 +377,10 @@ export function consumerTimezone({ env = process.env, cwd = process.cwd() } = {}
  *
  * @returns the declared address, or `null` — callers omit the `mailto:` fragment on `null`.
  */
-export function consumerContactEmail({ env = process.env, cwd = process.cwd() } = {}) {
+export function consumerContactEmail({
+  env = process.env,
+  cwd = process.cwd(),
+} = {}) {
   const declared = consumerPkg({ env, cwd })?.[CONFIG_KEY]?.contactEmail;
   if (declared === undefined || declared === null) return null;
   if (typeof declared !== "string" || !declared.includes("@"))

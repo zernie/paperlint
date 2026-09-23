@@ -27,13 +27,20 @@ process.exit(
       {
         name: "a CI job stops being accounted for — the tail goes quiet about its own boundary",
         harness: HARNESS,
-        expect: "CI job «macos» is either reproduced by a gate or named in NOT_COVERED with a reason",
+        expect:
+          "CI job «macos» is either reproduced by a gate or named in NOT_COVERED with a reason",
         disables:
           "the reason this command is not just a shell alias. Emptying NOT_COVERED removes the " +
           "one sentence that tells a reader what the green does NOT mean — and a check silent " +
           "about its boundary reads as complete, which is the counter-that-counts-what-it-ignores " +
           "class this repository keeps re-finding",
-        edits: [[CHECK, "export const NOT_COVERED = {", "export const NOT_COVERED = { }; const _unused = {"]],
+        edits: [
+          [
+            CHECK,
+            "export const NOT_COVERED = {",
+            "export const NOT_COVERED = { }; const _unused = {",
+          ],
+        ],
       },
       {
         name: "a gate names a CI job that does not exist — coverage on paper, none in fact",
@@ -63,7 +70,13 @@ process.exit(
         disables:
           "the guarantee that every listed gate is runnable. A renamed script fails at the exact " +
           "moment someone is trusting the list — which is the worst possible moment to find out",
-        edits: [[CHECK, 'script: "check:marketplace"', 'script: "check:marketplace-renamed"']],
+        edits: [
+          [
+            CHECK,
+            'script: "check:marketplace"',
+            'script: "check:marketplace-renamed"',
+          ],
+        ],
       },
       {
         name: "a gate drops out of CI silently, with no reason given",
@@ -73,7 +86,13 @@ process.exit(
           "the cost of removing something from CI. Without this, `job: null` is the quiet way to " +
           "take a check out of the pipeline: the local run still shows it green and nothing says " +
           "it stopped being enforced anywhere else",
-        edits: [[CHECK, 'reason: "source-only property', 'reasonRemoved: "source-only property']],
+        edits: [
+          [
+            CHECK,
+            'reason: "source-only property',
+            'reasonRemoved: "source-only property',
+          ],
+        ],
       },
     ],
   }),

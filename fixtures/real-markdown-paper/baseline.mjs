@@ -23,7 +23,8 @@ export function recordedFindings() {
 export function countByRule(stdout) {
   const out = {};
   for (const file of JSON.parse(stdout))
-    for (const m of file.messages ?? []) out[m.ruleId] = (out[m.ruleId] ?? 0) + 1;
+    for (const m of file.messages ?? [])
+      out[m.ruleId] = (out[m.ruleId] ?? 0) + 1;
   return out;
 }
 
@@ -40,6 +41,8 @@ export function compareToBaseline(found, recorded = recordedFindings()) {
   const grew = Object.entries(found)
     .filter(([rule, n]) => n > (recorded[rule] ?? 0))
     .map(([rule, n]) => ({ rule, now: n, recorded: recorded[rule] ?? 0 }));
-  const vanished = Object.keys(recorded).filter((r) => recorded[r] > 0 && !(r in found));
+  const vanished = Object.keys(recorded).filter(
+    (r) => recorded[r] > 0 && !(r in found),
+  );
   return { grew, vanished };
 }

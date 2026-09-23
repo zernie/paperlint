@@ -80,13 +80,21 @@ for (const f of [CLEAN_FIXTURE, DEFECT_FIXTURE])
 // else — and, worse, lies plausibly: the line exists, it is just not the right one.
 function assertProjection(label, src) {
   const { text } = texToMdast(src);
-  assert.equal(text.length, src.length, `${label}: projection length drifted from the source`);
+  assert.equal(
+    text.length,
+    src.length,
+    `${label}: projection length drifted from the source`,
+  );
   const nl = (s) => {
     const out = [];
     for (let i = 0; i < s.length; i++) if (s[i] === "\n") out.push(i);
     return out;
   };
-  assert.deepEqual(nl(text), nl(src), `${label}: projection newlines moved relative to the source`);
+  assert.deepEqual(
+    nl(text),
+    nl(src),
+    `${label}: projection newlines moved relative to the source`,
+  );
   return text;
 }
 /** Reads a fixture, checks the invariant on it, and returns `{src, text, root}`. */
@@ -144,10 +152,20 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
   // source corpus 2026-08-26 — none of the three real papers had a `Limitations` /
   // `References` / `Appendix` heading, so without synthesis the "free half" of a paper is
   // empty and seven downstream rules are silent by construction.
-  assert.ok(titles.includes("Abstract"), `no synthesised Abstract heading; got ${titles.join(" | ")}`);
-  assert.ok(titles.includes("References"), `no synthesised References heading; got ${titles.join(" | ")}`);
+  assert.ok(
+    titles.includes("Abstract"),
+    `no synthesised Abstract heading; got ${titles.join(" | ")}`,
+  );
+  assert.ok(
+    titles.includes("References"),
+    `no synthesised References heading; got ${titles.join(" | ")}`,
+  );
   assert.equal(titles[0], "Abstract", "Abstract is not the first heading");
-  assert.equal(titles[titles.length - 1], "References", "References is not the last heading");
+  assert.equal(
+    titles[titles.length - 1],
+    "References",
+    "References is not the last heading",
+  );
   // Real `\section{}` headings arrived as well — otherwise "the LaTeX was read" is a claim
   // about two synthetic nodes.
   assert.deepEqual(
@@ -205,7 +223,8 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
       "heading landing before the introduction the whole document reads as its own free half",
   );
   assert.ok(
-    headings(root).find((h) => h.title === "References").position.start.line > 8,
+    headings(root).find((h) => h.title === "References").position.start.line >
+      8,
     "References was synthesised in the preamble rather than at the document's bibliography",
   );
 }
@@ -213,7 +232,8 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
 {
   // THE PREAMBLE IS BLANKED. Everything before `\begin{document}` is markup, and if it stays
   // visible the package list and the author macros become prose.
-  const preEnd = CLEAN_SRC.indexOf("\\begin{document}") + "\\begin{document}".length;
+  const preEnd =
+    CLEAN_SRC.indexOf("\\begin{document}") + "\\begin{document}".length;
   assert.equal(
     clean.text.slice(0, preEnd).trim(),
     "",
@@ -233,11 +253,15 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
   // corpus: 11 blocks / 384 words of author English that no check could see, of which 253 in
   // one paper agree with `texcount`'s own "Words outside text" count.
   assert.ok(
-    clean.text.includes("Deterministic audit of ten files, reported exactly as they were counted."),
+    clean.text.includes(
+      "Deterministic audit of ten files, reported exactly as they were counted.",
+    ),
     "the caption inside `table` was swallowed — prose rules are blind to captions again",
   );
   assert.ok(
-    clean.text.includes("Both\nruns used the same machine and the same working directory, in that order."),
+    clean.text.includes(
+      "Both\nruns used the same machine and the same working directory, in that order.",
+    ),
     "the footnote text was swallowed",
   );
   // 🔴 AND THE OTHER HALF, without which the one above invites the naive fix of dropping
@@ -262,7 +286,8 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
       `opaque macro content «${token}» leaked into the prose projection`,
     );
   assert.ok(
-    CLEAN_SRC.includes("\\cite{someone2020}") && CLEAN_SRC.includes("\\label{sec:intro}"),
+    CLEAN_SRC.includes("\\cite{someone2020}") &&
+      CLEAN_SRC.includes("\\label{sec:intro}"),
     "the fixture lost its opaque macros — the assertion above no longer has a subject",
   );
 }
@@ -270,8 +295,14 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
 {
   // MATH IS BLANKED — inline and display alike. A formula is not a sentence, and a word counter
   // that eats `E = m c^2` reports prose that was never written.
-  assert.ok(!clean.text.includes("m c^2"), "display math leaked into the prose projection");
-  assert.ok(!clean.text.includes("n = 10"), "inline math leaked into the prose projection");
+  assert.ok(
+    !clean.text.includes("m c^2"),
+    "display math leaked into the prose projection",
+  );
+  assert.ok(
+    !clean.text.includes("n = 10"),
+    "inline math leaked into the prose projection",
+  );
   assert.ok(
     CLEAN_SRC.includes("E = m c^2") && CLEAN_SRC.includes("$n = 10$"),
     "the fixture lost its math — the assertion above no longer has a subject",
@@ -303,7 +334,11 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
   ].join("\n");
   const { text, root } = project("strong-lead", src);
   const strong = root.children.filter((c) => c.type === "strong");
-  assert.equal(strong.length, 1, "a `\\textbf{}` in column 1 did not become a strong node");
+  assert.equal(
+    strong.length,
+    1,
+    "a `\\textbf{}` in column 1 did not become a strong node",
+  );
   assert.equal(strong[0].children[0].value, "Sample size.");
   assert.ok(
     text.split("\n").some((l) => l.startsWith("**")),
@@ -356,7 +391,10 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
 // it — the projection's own both-halves are part II, asserted directly.
 {
   const ms = await lintTex(DEFECT_FIXTURE);
-  assert.ok(ms.length >= 1, "fixtures/latex-language/defect.tex produced no findings at all");
+  assert.ok(
+    ms.length >= 1,
+    "fixtures/latex-language/defect.tex produced no findings at all",
+  );
   assert.deepEqual(
     ms.map((m) => `${m.line}:${m.text}`),
     ["30:will be released"],
@@ -391,14 +429,18 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
   );
   assert.ok(
     text.includes("We cut 95   of it, costing   5 and A  B."),
-    "the projection of escaped characters changed — rewrite boundary 2 in the language header:\n" + text,
+    "the projection of escaped characters changed — rewrite boundary 2 in the language header:\n" +
+      text,
   );
 }
 {
   // BOUNDARY 4: `\input{}` — the contents of the included file are invisible.
   const dir = join(TMP, "input-boundary");
   mkdirSync(join(dir, "sections"), { recursive: true });
-  writeFileSync(join(dir, "sections/method.tex"), "The solver walks the syntax tree.\n");
+  writeFileSync(
+    join(dir, "sections/method.tex"),
+    "The solver walks the syntax tree.\n",
+  );
   const src = [
     "\\documentclass{article}",
     "\\begin{document}",
@@ -444,7 +486,10 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
     const src = `\\documentclass{article}\n\\begin{document}\nWe saw it \\${macro}{keyABC} here.\n\\end{document}\n`;
     return project(`opaque-${macro}`, src).text.split("\n")[2];
   };
-  assert.ok(!keyed("cite").includes("keyABC"), "`\\cite{}` started leaking its key");
+  assert.ok(
+    !keyed("cite").includes("keyABC"),
+    "`\\cite{}` started leaking its key",
+  );
   assert.ok(
     keyed("citep").includes("keyABC"),
     "`\\citep{}` stopped leaking its key — boundary 13 was fixed; rewrite it in the language " +
@@ -469,7 +514,9 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
     overrideConfig: [
       {
         files: ["**/*.tex"],
-        plugins: { tex: { languages: { latex: texLanguage }, rules: texBuild } },
+        plugins: {
+          tex: { languages: { latex: texLanguage }, rules: texBuild },
+        },
         language: "tex/latex",
         rules: { "tex/future-promise": "warn" },
       },
@@ -488,7 +535,10 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
   // Both halves: the same line fires without the directive, and is suppressed with it. A
   // suppression test that never saw the finding proves nothing.
   const withoutDirective = join(dir, "without.tex");
-  writeFileSync(withoutDirective, body.filter((l) => l !== "PLACEHOLDER").join("\n"));
+  writeFileSync(
+    withoutDirective,
+    body.filter((l) => l !== "PLACEHOLDER").join("\n"),
+  );
   const [bare] = await local.lintFiles([withoutDirective]);
   assert.deepEqual(
     bare.messages.map((m) => m.ruleId),
@@ -521,7 +571,10 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
 {
   const config = (await import(join(ROOT, "eslint.config.mjs"))).default;
   const tex = config.find((b) => b.language === "tex/latex");
-  assert.ok(tex, "eslint.config.mjs declares no block using the `tex/latex` language");
+  assert.ok(
+    tex,
+    "eslint.config.mjs declares no block using the `tex/latex` language",
+  );
   assert.ok(
     tex.plugins?.tex?.languages?.latex === texLanguage,
     "the `.tex` block no longer wires up `latex-language.mjs` — the language stopped executing",
@@ -537,7 +590,10 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
     .filter((f) => f.endsWith(".tex"));
   assert.ok(
     seen.length >= 4,
-    "the `.tex` glob of eslint.config.mjs matched " + seen.length + " files; the fixtures alone " +
-      "are four, so the language was invoked on less than its own test data: " + seen.join(", "),
+    "the `.tex` glob of eslint.config.mjs matched " +
+      seen.length +
+      " files; the fixtures alone " +
+      "are four, so the language was invoked on less than its own test data: " +
+      seen.join(", "),
   );
 }

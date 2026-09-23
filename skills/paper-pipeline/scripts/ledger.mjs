@@ -86,10 +86,17 @@
 // single check). `check-provenance`, `arm-permutation` and `delivered-pdf` all belong to
 // `build-benchmark` and now hold three separate rows that cannot overwrite one another.
 
-import { createHash } from 'node:crypto';
-import { readFileSync, appendFileSync, existsSync, mkdirSync, statSync, readdirSync } from 'node:fs';
-import { join, dirname, resolve, basename } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { createHash } from "node:crypto";
+import {
+  readFileSync,
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  statSync,
+  readdirSync,
+} from "node:fs";
+import { join, dirname, resolve, basename } from "node:path";
+import { fileURLToPath } from "node:url";
 import { consumerSkillsDir, isMain, ledgerPath } from "./consumer.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -131,7 +138,7 @@ const SKILLS = consumerSkillsDir();
  * in `skill-checks.mjs` (assertion 10), because it cannot be observed at runtime until the gate
  * has run, and by then a paper has shipped.
  */
-export const KINDS = ['FINDING', 'ABSTAINED'];
+export const KINDS = ["FINDING", "ABSTAINED"];
 
 /**
  * Why a run produced no finding. CLOSED, because the whole point of deleting `PASS` is to stop
@@ -145,27 +152,46 @@ export const KINDS = ['FINDING', 'ABSTAINED'];
  * "passed".
  */
 export const ABSTENTIONS = new Map([
-  ['started', 'the run has begun and has not reported yet (written by announce.mjs)'],
-  ['no-witness', 'ran to completion, produced no finding — NOT a claim that nothing is wrong'],
-  ['input-missing', 'could not run: the thing it reads is not there'],
-  ['blocked', 'a required upstream gate has not produced its input'],
-  ['crashed', 'the check itself errored out'],
+  [
+    "started",
+    "the run has begun and has not reported yet (written by announce.mjs)",
+  ],
+  [
+    "no-witness",
+    "ran to completion, produced no finding — NOT a claim that nothing is wrong",
+  ],
+  ["input-missing", "could not run: the thing it reads is not there"],
+  ["blocked", "a required upstream gate has not produced its input"],
+  ["crashed", "the check itself errored out"],
 ]);
 
 /** The retired vocabulary, kept BY NAME so a caller reaching for it gets an explanation. */
 export const RETIRED = new Map([
-  ['PASS', 'deleted: it stored "nothing was wrong" as a value. Record ABSTAINED `no-witness`, and let the reader derive cleanliness from the absence of findings.'],
-  ['FINDINGS', 'renamed FINDING (one row is one check, and it either found something or it did not).'],
-  ['FAIL', 'is a FINDING. Blockingness is a property of the finding — pass `blocking: true` — not a second constructor.'],
-  ['ABSENT', 'is ABSTAINED with reason `input-missing`.'],
-  ['ERROR', 'is ABSTAINED with reason `crashed` (or `started`, for an announce row).'],
+  [
+    "PASS",
+    'deleted: it stored "nothing was wrong" as a value. Record ABSTAINED `no-witness`, and let the reader derive cleanliness from the absence of findings.',
+  ],
+  [
+    "FINDINGS",
+    "renamed FINDING (one row is one check, and it either found something or it did not).",
+  ],
+  [
+    "FAIL",
+    "is a FINDING. Blockingness is a property of the finding — pass `blocking: true` — not a second constructor.",
+  ],
+  ["ABSENT", "is ABSTAINED with reason `input-missing`."],
+  [
+    "ERROR",
+    "is ABSTAINED with reason `crashed` (or `started`, for an announce row).",
+  ],
 ]);
 
-const sha = (buf) => createHash('sha256').update(buf).digest('hex').slice(0, 16);
+const sha = (buf) =>
+  createHash("sha256").update(buf).digest("hex").slice(0, 16);
 
 /** Hash of the document under test. Missing file is not an error — it is a distinct state. */
 export function inputHash(paperDir) {
-  const p = join(paperDir, 'paper.md');
+  const p = join(paperDir, "paper.md");
   if (!existsSync(p)) return null;
   return sha(readFileSync(p));
 }
@@ -183,12 +209,14 @@ export function skillHash(skill) {
     for (const e of readdirSorted(d)) {
       const full = join(d, e);
       const st = statSync(full);
-      if (st.isDirectory()) { if (e !== 'fixtures' && e !== 'node_modules') walk(full); }
-      else if (/\.(md|mjs|js|sh|py|ts)$/.test(e)) parts.push(e + ':' + sha(readFileSync(full)));
+      if (st.isDirectory()) {
+        if (e !== "fixtures" && e !== "node_modules") walk(full);
+      } else if (/\.(md|mjs|js|sh|py|ts)$/.test(e))
+        parts.push(e + ":" + sha(readFileSync(full)));
     }
   };
   walk(dir);
-  return sha(parts.join('\n'));
+  return sha(parts.join("\n"));
 }
 
 function readdirSorted(d) {
@@ -200,11 +228,12 @@ function readdirSorted(d) {
 // ── the key ───────────────────────────────────────────────────────────────────────────────────
 
 /** The row key of a ledger row: `skill` for a single-check skill, `skill/check` otherwise. */
-export const rowKey = (r) => (r.check && r.check !== r.skill ? `${r.skill}/${r.check}` : r.skill);
+export const rowKey = (r) =>
+  r.check && r.check !== r.skill ? `${r.skill}/${r.check}` : r.skill;
 
 /** Split a gate identifier (`skill` or `skill/check`) into its parts. Inverse of `rowKey`. */
 export function parseGate(g) {
-  const [skill, check] = String(g).split('/');
+  const [skill, check] = String(g).split("/");
   return { key: String(g), skill, check: check || skill };
 }
 
@@ -217,28 +246,40 @@ export function parseGate(g) {
  * a malformed call), and AFTER writing when a FINDING's evidence is missing (the finding must
  * survive; see the CLI comment). An error thrown after the write carries `err.recorded`.
  */
-export function record({ skill, check = skill, paper, kind, findings = 0, report = null, reason = null, note = null, blocking = false }) {
+export function record({
+  skill,
+  check = skill,
+  paper,
+  kind,
+  findings = 0,
+  report = null,
+  reason = null,
+  note = null,
+  blocking = false,
+}) {
   if (RETIRED.has(kind)) {
     throw new Error(
       `"${kind}" is not a verdict any more — ${RETIRED.get(kind)}\n` +
-      `  Record one of ${KINDS.join('|')}. Reasons for ABSTAINED: ${[...ABSTENTIONS.keys()].join('|')}.`
+        `  Record one of ${KINDS.join("|")}. Reasons for ABSTAINED: ${[...ABSTENTIONS.keys()].join("|")}.`,
     );
   }
   if (!KINDS.includes(kind)) {
-    throw new Error(`kind must be one of ${KINDS.join('|')}, got ${JSON.stringify(kind)}`);
-  }
-  if (kind === 'ABSTAINED' && !ABSTENTIONS.has(reason)) {
     throw new Error(
-      `ABSTAINED needs a reason from ${[...ABSTENTIONS.keys()].join('|')}, got ${JSON.stringify(reason)}.\n` +
-      `  A free-text reason is "PASS" with more characters: the point of the closed set is that\n` +
-      `  "ran and found nothing" and "could not run" stop being the same row.`
+      `kind must be one of ${KINDS.join("|")}, got ${JSON.stringify(kind)}`,
     );
   }
-  if (kind === 'FINDING' && !(Number(findings) >= 1)) {
+  if (kind === "ABSTAINED" && !ABSTENTIONS.has(reason)) {
+    throw new Error(
+      `ABSTAINED needs a reason from ${[...ABSTENTIONS.keys()].join("|")}, got ${JSON.stringify(reason)}.\n` +
+        `  A free-text reason is "PASS" with more characters: the point of the closed set is that\n` +
+        `  "ran and found nothing" and "could not run" stop being the same row.`,
+    );
+  }
+  if (kind === "FINDING" && !(Number(findings) >= 1)) {
     throw new Error(
       `FINDING with findings=${JSON.stringify(findings)}. A finding of nothing is an abstention:\n` +
-      `  record ABSTAINED no-witness instead. Nothing is lost by refusing here — there is no\n` +
-      `  evidence in a count of zero.`
+        `  record ABSTAINED no-witness instead. Nothing is lost by refusing here — there is no\n` +
+        `  evidence in a count of zero.`,
     );
   }
 
@@ -251,16 +292,16 @@ export function record({ skill, check = skill, paper, kind, findings = 0, report
     inputSha: inputHash(paperDir),
     skillSha: skillHash(skill),
     kind,
-    findings: kind === 'FINDING' ? Number(findings) : 0,
-    blocking: kind === 'FINDING' ? Boolean(blocking) : false,
+    findings: kind === "FINDING" ? Number(findings) : 0,
+    blocking: kind === "FINDING" ? Boolean(blocking) : false,
     reason,
     report,
     note,
   };
   mkdirSync(dirname(LEDGER), { recursive: true });
-  appendFileSync(LEDGER, JSON.stringify(row) + '\n');
+  appendFileSync(LEDGER, JSON.stringify(row) + "\n");
 
-  if (kind === 'FINDING') {
+  if (kind === "FINDING") {
     const problem = evidenceProblem(row, paperDir);
     if (problem) {
       const e = new Error(problem);
@@ -309,12 +350,14 @@ function evidenceProblem(row, paperDir) {
       `   evidence and the next reader follows it into a 404. Write the report, then record.`
     );
   }
-  const stated = /^findings:\s*(\d+)\s*$/m.exec(readFileSync(reportPath, 'utf8'));
+  const stated = /^findings:\s*(\d+)\s*$/m.exec(
+    readFileSync(reportPath, "utf8"),
+  );
   if (!stated) {
     console.error(
       `\n⚠️  ${row.skill}: ${row.report} does not state its own finding count.\n` +
-      `   Add \`findings: ${row.findings}\` to its frontmatter and the ledger and the report can\n` +
-      `   be checked against each other. Without it, the count here is unverifiable prose.`
+        `   Add \`findings: ${row.findings}\` to its frontmatter and the ledger and the report can\n` +
+        `   be checked against each other. Without it, the count here is unverifiable prose.`,
     );
     return null;
   }
@@ -352,7 +395,7 @@ function evidenceProblem(row, paperDir) {
  *   • a legacy `PASS`/`ABSENT`/`ERROR` row carries nothing forward. It is displayed as what it
  *     is — a word from a vocabulary we retired — and satisfies nothing.
  */
-export const LEGACY_KIND = 'LEGACY';
+export const LEGACY_KIND = "LEGACY";
 
 function normalise(row) {
   if (row.kind) return { ...row, check: row.check || row.skill };
@@ -362,22 +405,33 @@ function normalise(row) {
     kind: LEGACY_KIND,
     legacyVerdict: row.verdict ?? null,
     // Only the two negatives carried anything. Everything else is a word, not a fact.
-    findings: row.verdict === 'FINDINGS' || row.verdict === 'FAIL' ? Number(row.findings ?? 0) : 0,
-    blocking: row.verdict === 'FAIL',
+    findings:
+      row.verdict === "FINDINGS" || row.verdict === "FAIL"
+        ? Number(row.findings ?? 0)
+        : 0,
+    blocking: row.verdict === "FAIL",
     reason: null,
   };
 }
 
 /** Does this row assert that something is wrong? Legacy negatives count; legacy `PASS` does not. */
 export const isFinding = (r) =>
-  r.kind === 'FINDING' || (r.kind === LEGACY_KIND && (r.legacyVerdict === 'FINDINGS' || r.legacyVerdict === 'FAIL'));
+  r.kind === "FINDING" ||
+  (r.kind === LEGACY_KIND &&
+    (r.legacyVerdict === "FINDINGS" || r.legacyVerdict === "FAIL"));
 
 export function readLedger() {
   if (!existsSync(LEDGER)) return [];
-  return readFileSync(LEDGER, 'utf8')
-    .split('\n')
+  return readFileSync(LEDGER, "utf8")
+    .split("\n")
     .filter(Boolean)
-    .map((l) => { try { return normalise(JSON.parse(l)); } catch { return null; } })
+    .map((l) => {
+      try {
+        return normalise(JSON.parse(l));
+      } catch {
+        return null;
+      }
+    })
     .filter(Boolean);
 }
 
@@ -417,12 +471,23 @@ function latestRun(runs) {
   let best = null;
   let bestTime = null;
   for (const r of runs) {
-    const t = Date.parse(r.ts ?? '');
+    const t = Date.parse(r.ts ?? "");
     const time = Number.isFinite(t) ? t : null;
-    if (best === null) { best = r; bestTime = time; continue; }
-    if (time === null && bestTime === null) { best = r; bestTime = time; continue; }
+    if (best === null) {
+      best = r;
+      bestTime = time;
+      continue;
+    }
+    if (time === null && bestTime === null) {
+      best = r;
+      bestTime = time;
+      continue;
+    }
     if (time === null) continue;
-    if (bestTime === null || time >= bestTime) { best = r; bestTime = time; }
+    if (bestTime === null || time >= bestTime) {
+      best = r;
+      bestTime = time;
+    }
   }
   return best;
 }
@@ -450,10 +515,10 @@ export function status(paperDir, { gates } = {}) {
     const nowSkill = skillHash(skill);
 
     let state;
-    if (!last) state = 'NEVER-RUN';
-    else if (last.inputSha !== nowInput) state = 'STALE-PAPER';
-    else if (last.skillSha !== nowSkill) state = 'STALE-SKILL';
-    else state = 'FRESH';
+    if (!last) state = "NEVER-RUN";
+    else if (last.inputSha !== nowInput) state = "STALE-PAPER";
+    else if (last.skillSha !== nowSkill) state = "STALE-SKILL";
+    else state = "FRESH";
 
     const found = last && isFinding(last);
     return {
@@ -466,8 +531,11 @@ export function status(paperDir, { gates } = {}) {
       // not, and must never be rendered as, a claim that the paper is clean.
       findings: found ? Number(last.findings ?? 0) : 0,
       blocking: found ? Boolean(last.blocking) : false,
-      report: found ? last.report ?? null : null,
-      abstained: last && last.kind === 'ABSTAINED' ? { reason: last.reason, note: last.note } : null,
+      report: found ? (last.report ?? null) : null,
+      abstained:
+        last && last.kind === "ABSTAINED"
+          ? { reason: last.reason, note: last.note }
+          : null,
       legacy: last && last.kind === LEGACY_KIND ? last.legacyVerdict : null,
       ts: last?.ts ?? null,
       // Mutation-testing borrow: a check with runs and no finding has never demonstrated it is
@@ -480,16 +548,16 @@ export function status(paperDir, { gates } = {}) {
 // ── CLI ───────────────────────────────────────────────────────────────────────────────────────
 
 const USAGE = [
-  'usage: ledger.mjs record <skill> <paperDir> FINDING   <count> <report-path> [--check=<id>] [--blocking]',
-  '       ledger.mjs record <skill> <paperDir> ABSTAINED <reason> [note]       [--check=<id>]',
-  '       ledger.mjs status <paperDir>',
-  '',
-  `  reasons: ${[...ABSTENTIONS.keys()].join(' | ')}`,
-  '  --blocking marks a finding that must stop the pass (a fact is wrong, a required predecessor',
-  '  does not exist). It is a PROPERTY of the finding, not a second constructor: the old `FAIL`.',
-  '  there is no PASS: a clean run is `ABSTAINED no-witness`, and cleanliness is derived by the',
-  '  reader from the absence of findings, never stored as a value.',
-].join('\n');
+  "usage: ledger.mjs record <skill> <paperDir> FINDING   <count> <report-path> [--check=<id>] [--blocking]",
+  "       ledger.mjs record <skill> <paperDir> ABSTAINED <reason> [note]       [--check=<id>]",
+  "       ledger.mjs status <paperDir>",
+  "",
+  `  reasons: ${[...ABSTENTIONS.keys()].join(" | ")}`,
+  "  --blocking marks a finding that must stop the pass (a fact is wrong, a required predecessor",
+  "  does not exist). It is a PROPERTY of the finding, not a second constructor: the old `FAIL`.",
+  "  there is no PASS: a clean run is `ABSTAINED no-witness`, and cleanliness is derived by the",
+  "  reader from the absence of findings, never stored as a value.",
+].join("\n");
 
 if (isMain(import.meta.url)) {
   // 🔴 EVERY FLAG THE USAGE TEXT ADVERTISES IS PARSED HERE, and that sentence is load-bearing
@@ -502,15 +570,21 @@ if (isMain(import.meta.url)) {
   // the flag from the outside, which is the only form of this that cannot rot.
   const argv = process.argv.slice(2);
   const flag = (name) => argv.some((a) => a === `--${name}`);
-  const valued = (name) => argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3);
-  const [cmd, ...rest] = argv.filter((a) => !a.startsWith('--'));
+  const valued = (name) =>
+    argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3);
+  const [cmd, ...rest] = argv.filter((a) => !a.startsWith("--"));
 
-  if (cmd === 'record') {
+  if (cmd === "record") {
     const [skill, paper, kind, a4, a5] = rest;
-    const check = valued('check') || skill;
+    const check = valued("check") || skill;
     const args =
-      kind === 'FINDING'
-        ? { kind, findings: Number(a4 || 0), report: a5 || null, blocking: flag('blocking') }
+      kind === "FINDING"
+        ? {
+            kind,
+            findings: Number(a4 || 0),
+            report: a5 || null,
+            blocking: flag("blocking"),
+          }
         : { kind, reason: a4 || null, note: a5 || null };
 
     // 🔴 A FINDING WITH BROKEN EVIDENCE IS RECORDED, AND THEN THE COMMAND FAILS.
@@ -540,8 +614,8 @@ if (isMain(import.meta.url)) {
       process.exit(2);
     }
     console.log(JSON.stringify(row));
-  } else if (cmd === 'status') {
-    console.log(JSON.stringify(status(rest[0] || '.'), null, 2));
+  } else if (cmd === "status") {
+    console.log(JSON.stringify(status(rest[0] || "."), null, 2));
   } else {
     console.error(USAGE);
     process.exit(2);

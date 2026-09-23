@@ -8,8 +8,20 @@ import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({
   name: "harden-paper",
-  description: "Use when asking \"is this paper actually ready to submit?\" / \"what's still missing before I upload?\" / \"run the pre-submission gate\" on a DRAFTED paper. The multi-axis hardening orchestrator — it runs the review skills AND closes the axes they miss (structure via tighten-paper, threat-model + ethics/dual-use, reproducibility artifact, double-blind hygiene, page/word-fit, citability), and its verdict is a VECTOR of gates reported worst-gate-first — any failing gate (readability, structure, claims, citations, nearest-neighbor scoop, mechanical) caps \"ready\" regardless of a high accept-probability. NOT for grading how the prose reads (grade-paper-writing), a structural cut plan alone (tighten-paper), or a single hostile review (paper-adversarial-review) — this calls all of those and makes the submit/no-submit decision. Composes with pc-panel-review / verify-citations (it calls them) and submit-paper (downstream).",
-  tools: ["Read", "Write", "Edit", "Grep", "Glob", "Bash", "WebSearch", "WebFetch", "Agent", "Skill"],
+  description:
+    'Use when asking "is this paper actually ready to submit?" / "what\'s still missing before I upload?" / "run the pre-submission gate" on a DRAFTED paper. The multi-axis hardening orchestrator — it runs the review skills AND closes the axes they miss (structure via tighten-paper, threat-model + ethics/dual-use, reproducibility artifact, double-blind hygiene, page/word-fit, citability), and its verdict is a VECTOR of gates reported worst-gate-first — any failing gate (readability, structure, claims, citations, nearest-neighbor scoop, mechanical) caps "ready" regardless of a high accept-probability. NOT for grading how the prose reads (grade-paper-writing), a structural cut plan alone (tighten-paper), or a single hostile review (paper-adversarial-review) — this calls all of those and makes the submit/no-submit decision. Composes with pc-panel-review / verify-citations (it calls them) and submit-paper (downstream).',
+  tools: [
+    "Read",
+    "Write",
+    "Edit",
+    "Grep",
+    "Glob",
+    "Bash",
+    "WebSearch",
+    "WebFetch",
+    "Agent",
+    "Skill",
+  ],
   body: `
 # harden-paper — the multi-axis pre-submit gate
 

@@ -111,8 +111,14 @@ $ claude plugin validate <"source": "nosuchsourcetype">          --strict   # RC
 ```
 
 ```json
-{ "name": "research-paper-pipeline",
-  "source": { "source": "npm", "package": "research-paper-pipeline", "version": "^0.1.0" } }
+{
+  "name": "research-paper-pipeline",
+  "source": {
+    "source": "npm",
+    "package": "research-paper-pipeline",
+    "version": "^0.1.0"
+  }
+}
 ```
 
 `version` is optional and accepts an exact version or a range. Because the wrong shape fails
@@ -157,7 +163,7 @@ matters.
 ### A — "A linter, full stop"
 
 rpp is Ruff for papers. Skills and hooks leave the package entirely and become a separate,
-self-contained Claude Code plugin that *calls* rpp when present and says so loudly when absent.
+self-contained Claude Code plugin that _calls_ rpp when present and says so loudly when absent.
 
 ```
 rpp — lint and build for a paper kept in git
@@ -194,7 +200,7 @@ rpp — machine-checkable gates for a paper kept in git
   `rpp hook <name>` exists for the plugin wiring and is not for typing.
 ```
 
-`doctor` survives here *because* this option puts two copies of the package on disk (plugin cache
+`doctor` survives here _because_ this option puts two copies of the package on disk (plugin cache
 and `node_modules`) and something must say whether their versions agree.
 
 **Buys:** the plugin and the npm package cannot ship different skills — there is one tarball, so

@@ -2,7 +2,16 @@
 title: "Sweep — what the pipeline should ideally look like (a construction, not a justification for markdown)"
 created: 2026-08-09
 updated: 2026-08-09
-tags: [paper-pipeline, design-space, sweep, mechanisms, unrepresentable, claims, provenance]
+tags:
+  [
+    paper-pipeline,
+    design-space,
+    sweep,
+    mechanisms,
+    unrepresentable,
+    claims,
+    provenance,
+  ]
 findings: 8
 ---
 
@@ -30,7 +39,7 @@ a claim that is not backed by what it cites.
    novel.**
 2. **Ideal ≠ "not a single unbound claim".** Refusal without a replacement is deletion one step
    earlier; framing prose is the most valuable thing in the file. What should become unrepresentable
-   is not the *content* but the **claim of strength** — i.e. the assertion "this is backed" when it
+   is not the _content_ but the **claim of strength** — i.e. the assertion "this is backed" when it
    isn't.
 3. **The measurement that changes the conversation: 46 numbers are bound, 264 are exempted by
    "grandfathering".** The numbers gate covers roughly a third of the paper's bolded numbers, and the
@@ -70,13 +79,13 @@ showyourwork, Vale, aclpubcheck) and missed two arXiv papers about **the archite
 
 Line-by-line correspondences with ours:
 
-| theirs | ours |
-|---|---|
-| «self-contained skills» | 22 paper skills |
-| «gate every stage transition with halt-on-failure» | `run-mechanical.mjs`, exit code of the worst gate |
+| theirs                                                                                               | ours                                                                          |
+| ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| «self-contained skills»                                                                              | 22 paper skills                                                               |
+| «gate every stage transition with halt-on-failure»                                                   | `run-mechanical.mjs`, exit code of the worst gate                             |
 | «deterministic check where one suffices, prose-level probe only where interpretation is unavoidable» | the FACT-gate / JUDGEMENT-gate split, `verdict: 'exit'` vs `verdict: 'flags'` |
-| «seeded-defect ablation», 27 injected defects | `*.harness.mjs` + `skills.mutations.mjs`, 21 planted defect |
-| «21-detector deterministic tier» | ~8 mechanical checkers |
+| «seeded-defect ablation», 27 injected defects                                                        | `*.harness.mjs` + `skills.mutations.mjs`, 21 planted defect                   |
+| «21-detector deterministic tier»                                                                     | ~8 mechanical checkers                                                        |
 
 **[B] Abstract verbatim, `arXiv:2605.28282`, Xia, Wang, submitted 2026-05-27:**
 
@@ -93,6 +102,7 @@ confabulation ("Standard metrics for such systems would measure…"). **P0: read
 with human eyes.**
 
 **What follows from this, practically.** Not "we're too late." Three things follow:
+
 - the claim "we built a manuscript-verification architecture" is **dead** — but nobody was making it
   anyway;
 - **their 21 deterministic detectors are a donor list**, better than ARIS (see §2.4);
@@ -108,8 +118,8 @@ grep -oE '\*\*[^*]*[0-9][^*]*\*\*' paper.md | wc -l     → 113
 grep -vc '^\s*#\|^\s*$' repro/numbers-grandfathered.txt → 264
 ```
 
-`numbers-grandfathered.txt` describes itself honestly — *"their presence here is an admission, not
-an exemption"* — but an admission with no expiration date is exactly **lex imperfecta**, precisely
+`numbers-grandfathered.txt` describes itself honestly — _"their presence here is an admission, not
+an exemption"_ — but an admission with no expiration date is exactly **lex imperfecta**, precisely
 the category the author's paper studies in others. Aviation's MEL, where the idea "a defect is
 tolerable with a compensating procedure" comes from in the first place, **always supplies the second
 half: a repair deadline by category, that expires automatically.** We took the first half without the
@@ -134,13 +144,13 @@ itself."
 
 ## 1. The defect broken down into five classes, then into four properties
 
-| # | Observed instance | What actually failed | Closed? |
-|---|---|---|---|
-| 1 | 22 matched the file perfectly, but sat in a sentence about **a different arm** | the defect lives **in the join** between the sentence and the field path; each check looks at only one side | partial: `paper_numbers.py` `requires`/`forbids` — but that is **a list of phrases matched against open prose** |
-| 2 | 11 unreadable passages survived 6 passes, all within threshold | **a proxy was substituted for the property** and reports as though it settled it | 🔴 **no** |
-| 3 | gate marked passed, input missing/newer | staleness was **declared**, not computed | ✅ `ledger.mjs`, content-addressed key + hash of the checker itself |
-| 4 | a check that never once said "no" was counted as working | **vacuousness** | partial: `everSaidNo` **detects** it but does not forbid it |
-| 5 | every judge in the chain is a model from the same family | **ensemble independence is assumed, not established** | 🔴 **no** |
+| #   | Observed instance                                                              | What actually failed                                                                                        | Closed?                                                                                                         |
+| --- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| 1   | 22 matched the file perfectly, but sat in a sentence about **a different arm** | the defect lives **in the join** between the sentence and the field path; each check looks at only one side | partial: `paper_numbers.py` `requires`/`forbids` — but that is **a list of phrases matched against open prose** |
+| 2   | 11 unreadable passages survived 6 passes, all within threshold                 | **a proxy was substituted for the property** and reports as though it settled it                            | 🔴 **no**                                                                                                       |
+| 3   | gate marked passed, input missing/newer                                        | staleness was **declared**, not computed                                                                    | ✅ `ledger.mjs`, content-addressed key + hash of the checker itself                                             |
+| 4   | a check that never once said "no" was counted as working                       | **vacuousness**                                                                                             | partial: `everSaidNo` **detects** it but does not forbid it                                                     |
+| 5   | every judge in the chain is a model from the same family                       | **ensemble independence is assumed, not established**                                                       | 🔴 **no**                                                                                                       |
 
 Four properties of the ideal pipeline:
 
@@ -158,12 +168,14 @@ The skill requires attacking the reasons, not just keeping the ban on file. Bott
 retired reasons, two are wrong.**
 
 ### 2.1 "Moving to a LaTeX source — we'd lose 31 prose checks" → **stands, the reason is now stronger**
+
 The reason is correct but weakly stated. The strong form: **the join is only representable in the
 source.** `{{annotated.failedContradicted}}` inside the rendered `.tex` is already just `22`, and the
 arm is unrecoverable. Indirectly confirmed by 2606.09500: their deterministic tier also sits
 **before** rendering.
 
 ### 2.2 "DVC/make/snakemake — a second declaration alongside the prose" → **reason CORRECTED**
+
 The "second declaration" objection died the day `status.mjs` showed up: there, **nothing is
 declared**, everything is derived. So keeping them out has to rest on a **different** reason, and it
 is already written down in `ledger.mjs`: they key off timestamps and **do not know the recipe
@@ -171,6 +183,7 @@ changed** — which is exactly our own bug. Keep it retired, but with the right 
 session reopens the question and gets an unconvincing answer.
 
 ### 2.3 "JSON inside markdown — prose readability is lost" → **reason REFUTED**
+
 Refuted by our own shipped code. `{{annotated.failedContradicted}}` is **more readable** than the
 `22` it replaced: the name names the arm, the digit named nothing. What destroys readability is not
 structure inside prose, but **unresolved** structure.
@@ -179,6 +192,7 @@ structure inside prose, but **unresolved** structure.
 > at render time**. A sidecar table of claims next to the file is still a no (§3.F3, the AOP lesson).
 
 ### 2.4 "ARIS — a LaTeX source + 46/83 skills require the Codex MCP" → **stands, but a better donor has appeared**
+
 **MedSci Skills** (2606.09500): MIT, skill-based decomposition, **21 deterministic detectors**, no
 Codex dependency, domain is clinical manuscripts (STARD/PRISMA/STROBE). Its form is closer to ours
 than ARIS's. **P1 action:** pull the list of 21 detectors and diff it against our eight — what they
@@ -192,8 +206,9 @@ Generation proceeded from the catalog's **named constructions**, not from thin a
 caveat about method is in §6.
 
 ### A. Type systems
+
 - **A1 · smart constructor: no literal in the source.** ✅ **ALREADY SHIPPED** (`{{name}}` +
-  jinja2). Difference from knitr — knitr *allows* both ways; here the literal is **forbidden**
+  jinja2). Difference from knitr — knitr _allows_ both ways; here the literal is **forbidden**
   (`check_bypass`).
 - **A2 · typestate: the arm declared by a block.** 🟢 **SURVIVED, S2.** Right now the arm is caught
   by phrase lists (`requires`/`forbids`) matched against open prose — a synonym not on the list gets
@@ -206,6 +221,7 @@ caveat about method is in §6.
   as a mechanism duplicate.
 
 ### B. Formal verification
+
 - **B1 · vacuousness as an admission criterion.** 🟢 **SURVIVED, S4.** `everSaidNo` **detects** a
   vacuous gate. Stronger: a gate **cannot be registered** in `EXPECTED_GATES` without a harness case
   that plants its defect and observes it firing. `skills.harness.mjs` already reads
@@ -222,6 +238,7 @@ caveat about method is in §6.
   blame falls on whoever widened it).
 
 ### C. Functional programming
+
 - **C2 · a claim-strength lattice** (`measured < observed < suggests < shows`), abstract ≤ the join
   of the body. ❌ **KILLED BY OCCUPANCY.** This is the literature on **spin in abstracts**, and it is
   large: 97% of trials in one review contain spin, 84% in another; LLM detectors have already been
@@ -237,6 +254,7 @@ caveat about method is in §6.
   migration filter.
 
 ### D. Capabilities
+
 - **D1 · grants instead of bans.** 🟡 absorbed into S7: the experiment issues "citable" cells, the
   paper spends them; unspent = unreported, overspent = unbacked.
 - **D2 · a reference monitor, a paragraph only through the CLI.** ❌ **KILLED** by the
@@ -247,6 +265,7 @@ caveat about method is in §6.
   cheaper than sourcing a second vendor, and it lowers correlation on the one axis available to us.
 
 ### E. Specification by example
+
 - **E2 · a golden file per claim.** 🟡 partially covered by provenance.
 - **E3 · extracting a claim with a cold reader and checking it against a DECLARED ID.** 🟡
   **conditionally alive.** The one place a model is admissible: it **does not decide**, it proposes a
@@ -260,6 +279,7 @@ caveat about method is in §6.
   against its own data**.
 
 ### F. Data integrity
+
 - **F1 · `ADD CONSTRAINT` validates existing rows / `NOT VALID`.** ✅ **SHIPPED** — and
   **with no expiration**, see §0.2 → that is S3.
 - **F2 · a foreign key `ON DELETE RESTRICT`.** 🟡 a cheap add-on to S1: deleting a data row that a
@@ -269,6 +289,7 @@ caveat about method is in §6.
   (a marker at the point of use).
 
 ### G. Author UX
+
 - **G1 · asymmetric cost:** "we show" requires a backing ID, "we observed, informally" is free.
   🟢 absorbed into S1+S6.
 - **G2 · change the DEFAULT, don't add a gate.** 🟢 **SURVIVED, S8 — the cheapest thing in the
@@ -278,6 +299,7 @@ caveat about method is in §6.
 - **G3 · a single entry point:** `claim add --from aggregate.json:path`. 🟡 good, but after S1.
 
 ### H. Other professions
+
 - **H1 · aviation's MEL: a repair deadline by category, expires on its own.** 🟢 **SURVIVED, folded
   into S3.**
 - **H2 · SOX: design effectiveness ≠ operating effectiveness.** ✅ **already borrowed**
@@ -295,13 +317,14 @@ caveat about method is in §6.
   (cherry-picking), which nothing catches today and which a reviewer will ask about.
 
 ### I. Historical ancestors in software engineering
+
 - **I1 · gradual typing.** 🟢 **the form of the whole answer** (§0.3). It caught on across a huge
   installed base precisely because it **required no migration** — the one filter that actually bites
   here.
 - **I2 · SPARK's stone→bronze→silver→gold→platinum.** 🟢 the ladder for S3, the rungs are already
   mechanical and published — don't invent our own.
 - **I3 · lint (1978).** ✅ this is the current construction.
-- **I5 · requirements engineering: *testable requirement* as a category + a traceability matrix.**
+- **I5 · requirements engineering: _testable requirement_ as a category + a traceability matrix.**
   🟢 `CLAIMS.md` is a traceability matrix with no mechanical leg. S1 attaches the leg.
 - **I6 · AOP, and WHY IT FAILED.** 🔴 the most useful negative in the sweep: cross-cutting
   declarations, pulled out of the code, made the code unreadable — looking at it, you can't tell what
@@ -309,6 +332,7 @@ caveat about method is in §6.
   next to any such extraction: the projection has to be visible **at the point of use**.
 
 ### J. Migration
+
 Strangler fig · `NOT VALID` with a deadline · advisory-then-enforcing · opt-in tiers. This is the
 **rollout form** for everything selected, not a separate mechanism.
 
@@ -336,6 +360,7 @@ missing.
 > Agreement among N judges of the same family counts as **one** witness.
 
 **What the construction stays SILENT on (declared, not concealed):**
+
 - Only `paper.md → PDF` is gated. **The rebuttal, the artifact README, the cover letter, a blog
   post** carry the same claims and are gated by nothing.
 - Nothing checks that the cited work **actually says** what it's credited with saying (S1 makes the
@@ -348,16 +373,16 @@ missing.
 
 ## 5. Eight survivors, ranked by (cost → what it kills)
 
-| # | Mechanism | Kills | Cost | Occupancy |
-|---|---|---|---|---|
-| **S8** | unbound numbers **render with a marker** in the draft build | the 264 exempted self-liquidate | ~5 lines in `md2submission.py` | unoccupied |
-| **S4** | a gate **cannot be registered** without a killed mutant | instance #4 (vacuousness) | ~20 lines in `skills.harness.mjs` | published as an ablation, the mechanism itself is unoccupied |
-| **S6** | a **decidable/undecidable** label on the gate | instance #2 (proxy as property) | a field + a column | MISRA, take as-is |
-| **S5** | least-privilege judges; N of the same family = **1** witness | instance #5 (correlation) | a ledger field + a narrowed prompt | unoccupied |
-| **S2** | **arm declared by a block** instead of phrase lists | instance #1, no prose heuristics | a block attribute + string equality | no occupancy found |
-| **S1** | **one binding, three carriers** (numbers + citations + `CLAIMS.md`) | a retracted claim ends up in the PDF | medium, a resolver exists | ResearchLoop calls it "paper bindings" — **check the PDF** |
-| **S3** | a ladder by **position** (abstract/section-lead-in = binding required; appendix = optional) + a deadline | the 264 with no expiration | medium | SPARK/DO-178C, take the form |
-| **S7** | **arm × metric** accounting: every cell is either cited or explicitly marked not reported | measured-and-not-reported (cherry-picking) | a diff script | CONSORT — the form; no application found for our case |
+| #      | Mechanism                                                                                                | Kills                                      | Cost                                | Occupancy                                                    |
+| ------ | -------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ----------------------------------- | ------------------------------------------------------------ |
+| **S8** | unbound numbers **render with a marker** in the draft build                                              | the 264 exempted self-liquidate            | ~5 lines in `md2submission.py`      | unoccupied                                                   |
+| **S4** | a gate **cannot be registered** without a killed mutant                                                  | instance #4 (vacuousness)                  | ~20 lines in `skills.harness.mjs`   | published as an ablation, the mechanism itself is unoccupied |
+| **S6** | a **decidable/undecidable** label on the gate                                                            | instance #2 (proxy as property)            | a field + a column                  | MISRA, take as-is                                            |
+| **S5** | least-privilege judges; N of the same family = **1** witness                                             | instance #5 (correlation)                  | a ledger field + a narrowed prompt  | unoccupied                                                   |
+| **S2** | **arm declared by a block** instead of phrase lists                                                      | instance #1, no prose heuristics           | a block attribute + string equality | no occupancy found                                           |
+| **S1** | **one binding, three carriers** (numbers + citations + `CLAIMS.md`)                                      | a retracted claim ends up in the PDF       | medium, a resolver exists           | ResearchLoop calls it "paper bindings" — **check the PDF**   |
+| **S3** | a ladder by **position** (abstract/section-lead-in = binding required; appendix = optional) + a deadline | the 264 with no expiration                 | medium                              | SPARK/DO-178C, take the form                                 |
+| **S7** | **arm × metric** accounting: every cell is either cited or explicitly marked not reported                | measured-and-not-reported (cherry-picking) | a diff script                       | CONSORT — the form; no application found for our case        |
 
 **Why a ladder by POSITION and not a global deadline:** an unbound number in the abstract and one
 in appendix B differ by an order of magnitude in blast radius. A single author does not convert 264
@@ -395,9 +420,9 @@ which is what turned the picture around here (§0.1).
 
 1. **P0 · Read both PDFs in full** (2606.09500, 2605.28282). Summaries are [D]. How much of
    S1/S4/S7 remains ours depends on their content.
-2. **P0 · Re-check the claim in the `paper_numbers.py` docstring** — *"Not one of them has a hook
+2. **P0 · Re-check the claim in the `paper_numbers.py` docstring** — _"Not one of them has a hook
    where you could say the sentence around this number must say counterfactual and must not say as
-   committed"* — against **MedSci's 21 detectors**. The claim was written before this work was known
+   committed"_ — against **MedSci's 21 detectors**. The claim was written before this work was known
    about; if it's false, it's false **both in shipped code and in the novelty reasoning**.
 3. **P1 · Build S8 and S4** — together that is under fifty lines and closes two of the five
    instances.
@@ -423,22 +448,23 @@ source repository**. Not a single model summary in the chain. The level rises to
 
 ## 8.1 ✅ §0.1 HELD — both works are real, quotes are verbatim
 
-| field | 2606.09500 | 2605.28282 |
-|---|---|---|
-| `totalResults` | 1 | 1 |
-| version | **v4** | v1 |
-| `published` | **2026-06-08T13:51:04Z** | **2026-05-27T10:29:00Z** |
-| `updated` | 2026-06-14T00:06:13Z | 2026-05-27T10:29:00Z |
-| authors | Yoojin **Nam**, Jinhoon **Jeong**, Namkug **Kim** | Yihan **Xia**, Taotao **Wang** |
-| category | cs.AI (+cs.DL) | cs.AI |
+| field          | 2606.09500                                        | 2605.28282                     |
+| -------------- | ------------------------------------------------- | ------------------------------ |
+| `totalResults` | 1                                                 | 1                              |
+| version        | **v4**                                            | v1                             |
+| `published`    | **2026-06-08T13:51:04Z**                          | **2026-05-27T10:29:00Z**       |
+| `updated`      | 2026-06-14T00:06:13Z                              | 2026-05-27T10:29:00Z           |
+| authors        | Yoojin **Nam**, Jinhoon **Jeong**, Namkug **Kim** | Yihan **Xia**, Taotao **Wang** |
+| category       | cs.AI (+cs.DL)                                    | cs.AI                          |
 
-The title of 2606.09500 (not given in §0.1): *«Deterministic Integrity Gates for LLM-Assisted
-Clinical Manuscript Preparation: An Auditable Biomedical Informatics Architecture»*.
+The title of 2606.09500 (not given in §0.1): _«Deterministic Integrity Gates for LLM-Assisted
+Clinical Manuscript Preparation: An Auditable Biomedical Informatics Architecture»_.
 Both abstract paragraphs in §0.1 were checked character-by-character against the API output —
 **no discrepancies**. The architecture's occupancy is confirmed. The claim "we built a
 manuscript-verification architecture" remains dead, and it is now [A] rather than [B].
 
 From the arXiv comment (absent from §0.1, and it is the key to everything below):
+
 > Software (MIT): `https://github.com/Aperivue/medsci-skills` . Archived on Zenodo: concept DOI
 > `10.5281/zenodo.20155321` and version DOI (v3.8.0) `10.5281/zenodo.20582972`
 
@@ -447,9 +473,9 @@ From the arXiv comment (absent from §0.1, and it is the key to everything below
 The repository was cloned and checked for identity:
 `aperivue/medsci-skills`, HEAD `b2c120e667d5a329add8ae5bc3371411f739bd60`, origin verified.
 
-**S4 in the §5 table** ranked second by cost/benefit: *"a gate cannot be registered without a
-killed mutant, ~20 lines in `skills.harness.mjs`"*, occupancy — *"published as an ablation, the
-mechanism is unoccupied"*.
+**S4 in the §5 table** ranked second by cost/benefit: _"a gate cannot be registered without a
+killed mutant, ~20 lines in `skills.harness.mjs`"_, occupancy — _"published as an ablation, the
+mechanism is unoccupied"_.
 
 **The mechanism is NOT unoccupied. It has been shipped, under MIT, across 85 detectors.**
 Verbatim, `paper.md:23`:
@@ -477,6 +503,7 @@ silent** on clean demo manuscripts).
 > contradict us.»
 
 Their replacement is a held-out corpus with a mandatory `frozen_at` field:
+
 > «`frozen_at` is required on every held-out record, because the claim is chronological: a freeze
 > date that **precedes the detector** is what makes it checkable rather than asserted.»
 
@@ -496,14 +523,14 @@ finding was quarantined and not applied. This does not weaken the mechanism — 
 `metadata/detectors_catalog.json`, field `detector_count` = **85** (not 21; 21 is the June paper's
 number, the repo has moved on). Breakdown by family, verbatim from the catalog:
 
-| n | family_label |
-|---|---|
-| 24 | Style & review-process integrity |
-| 17 | Data preparation & validation |
-| 17 | Reporting compliance |
-| 11 | Numerical, cohort & pool arithmetic |
-| 9 | Citation & reference integrity |
-| 7 | Confounding, scope & estimand contracts |
+| n   | family_label                            |
+| --- | --------------------------------------- |
+| 24  | Style & review-process integrity        |
+| 17  | Data preparation & validation           |
+| 17  | Reporting compliance                    |
+| 11  | Numerical, cohort & pool arithmetic     |
+| 9   | Citation & reference integrity          |
+| 7   | Confounding, scope & estimand contracts |
 
 The catalog itself is **AUTO-GENERATED** (`scripts/gen_detectors_catalog_json.py` globbing
 `skills/*/scripts/`, with a CI gate on drift). So their registry is **derived, not declared** — the
@@ -519,7 +546,7 @@ Directly relevant to our topic is "Citation & reference integrity" (9 detectors)
 
 ## 8.4 🔴 An attack on the frame of the whole sweep
 
-The sentence *«The counterweight is not another gate. Adding gates is what produces the drift»*
+The sentence _«The counterweight is not another gate. Adding gates is what produces the drift»_
 hits not one candidate but the shape of the whole answer: §5 is a list of eight **new gates**. It
 does not invalidate S1–S8 (our instances #1–#5 are real and observed), but it adds a filter that
 wasn't in §2 and that needs to be recorded in the skill:
@@ -543,7 +570,7 @@ independently.
 ## 8.6 Occupancy is wider than two papers
 
 `paper.md` in their repo is a **third** artifact: a separate software paper that cites 2606.09500
-as a companion (`[@nam2026gates]`, *«conducted on an earlier release of the toolkit»*). So this is
+as a companion (`[@nam2026gates]`, _«conducted on an earlier release of the toolkit»_). So this is
 not "two papers" but an actively developing line of work from 2026-05 to 2026-08. The previous
 occupancy pass did not see this.
 

@@ -76,7 +76,12 @@ export function checkStructure(
   // absolute path, not a ladder of `../../../` that has to be counted to be read.
   const say = (p: string): string => {
     const rel = relative(cwd, p);
-    return rel && rel !== ".." && !rel.startsWith(`..${sep}`) && !isAbsolute(rel) ? rel : p;
+    return rel &&
+      rel !== ".." &&
+      !rel.startsWith(`..${sep}`) &&
+      !isAbsolute(rel)
+      ? rel
+      : p;
   };
 
   for (const root of paths) {
@@ -85,7 +90,8 @@ export function checkStructure(
       const dir = join(root, name);
 
       // Generous detection: with not one marker this is just a neighbour directory, not a paper.
-      if (!rules.markers.some((m: string) => existsSync(join(dir, m)))) continue;
+      if (!rules.markers.some((m: string) => existsSync(join(dir, m))))
+        continue;
 
       for (const required of rules.require)
         if (!existsSync(join(dir, required)))
@@ -122,9 +128,7 @@ export function formatStructure(findings: readonly StructureFinding[]): string {
   for (const f of findings)
     byDir.set(f.file, [...(byDir.get(f.file) ?? []), f.message]);
   return [...byDir]
-    .map(([dir, msgs]) =>
-      [dir, ...msgs.map((m) => `  error  ${m}`)].join("\n"),
-    )
+    .map(([dir, msgs]) => [dir, ...msgs.map((m) => `  error  ${m}`)].join("\n"))
     .join("\n\n");
 }
 
@@ -134,7 +138,9 @@ export function formatStructure(findings: readonly StructureFinding[]): string {
  * consumer to write a second parser — and the first one who did not write it would read "there
  * are no structural findings" instead of "I do not parse them".
  */
-export function asEslintResults(findings: readonly StructureFinding[]): unknown[] {
+export function asEslintResults(
+  findings: readonly StructureFinding[],
+): unknown[] {
   const byDir = new Map<string, string[]>();
   for (const f of findings)
     byDir.set(f.file, [...(byDir.get(f.file) ?? []), f.message]);

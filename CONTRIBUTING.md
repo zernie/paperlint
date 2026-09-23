@@ -41,6 +41,7 @@ npm run check
 
 That is the whole instruction. It runs every gate in order — build, lint, the <!-- count:harnesses -->60 harnesses, the
 <!-- count:batteries -->37 mutation batteries, the install e2e under npm and pnpm, and a real `pdflatex` build — and ends
+
 by printing **which CI jobs it does not reproduce, and why**.
 
 🔴 **There is no `--fast` flag, and that is the point.** On 2026-09-19 a rule change was pushed
@@ -48,7 +49,7 @@ that broke the suite: the gates were run afterwards and were green, but `npm tes
 `test:install` were not among them, because there were eleven separate scripts and the only way
 to run them all was from memory. A subset flag re-creates exactly that — the cheap half gets run
 and reported as "the gates". If a step genuinely cannot run here, it says so out loud rather than
-being skipped quietly: an e2e that finds no TeX or no pnpm exits 77 *having stated* why, and
+being skipped quietly: an e2e that finds no TeX or no pnpm exits 77 _having stated_ why, and
 `npm run check` lists it as skipped instead of counting it as passed.
 
 The individual scripts still exist and are the right thing to call while iterating on one rule.

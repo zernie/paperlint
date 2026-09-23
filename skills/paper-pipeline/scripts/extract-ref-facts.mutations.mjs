@@ -43,6 +43,12 @@ process.exit(
   runMutations({
     root: consumerRoot(),
     runner: "vigiles",
-    cases: MUTATIONS.map(([name, edits, expect, disables]) => ({ name, disables, edits, harness: HARNESS, expect })),
+    cases: MUTATIONS.map(([name, edits, expect, disables]) => ({
+      name,
+      disables,
+      edits,
+      harness: HARNESS,
+      expect,
+    })),
   }),
 );

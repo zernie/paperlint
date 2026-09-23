@@ -16,13 +16,13 @@ imports the module directly. Every path resolves, every dependency is already in
 file it reads is the file in `git`. An end-to-end run exists because all three of those are
 assumptions that stop holding the moment somebody else installs the package.
 
-| question | answered by |
-|---|---|
-| does this rule find this defect, and stay quiet otherwise | harness |
-| does the CLI pick the right script, with the right interpreter | harness (`src/build.harness.mjs` substitutes `spawnSync`) |
-| does the tarball, installed into a tree that is not this one, contain what it claims | **e2e** |
-| do the paths written inside a skill resolve where the package actually lands | **e2e** |
-| did a PDF come out, and is it typeset in the fonts the venue requires | **e2e** |
+| question                                                                             | answered by                                               |
+| ------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| does this rule find this defect, and stay quiet otherwise                            | harness                                                   |
+| does the CLI pick the right script, with the right interpreter                       | harness (`src/build.harness.mjs` substitutes `spawnSync`) |
+| does the tarball, installed into a tree that is not this one, contain what it claims | **e2e**                                                   |
+| do the paths written inside a skill resolve where the package actually lands         | **e2e**                                                   |
+| did a PDF come out, and is it typeset in the fonts the venue requires                | **e2e**                                                   |
 
 The third and fourth rows are the ones a harness cannot reach even in principle: the defect only
 exists once the code is somewhere else.
@@ -34,7 +34,7 @@ temporary tree, **under npm and under pnpm separately**, and drives the installe
 
 - the install itself finishes
 - `rpp --help` answers with zero
-- `rpp init` declares the papers directory in `package.json`, and does *not* leave a second
+- `rpp init` declares the papers directory in `package.json`, and does _not_ leave a second
   carrier `rpp.json` behind
 - `rpp init` finishes with zero — its doctor found no discrepancy
 - `rpp lint` passes the staged corpus
@@ -55,12 +55,12 @@ pnpm a shell wrapper, and calling `node bin` measures the caller's habit instead
 `scripts/build-e2e.mjs`. It copies `fixtures/build-e2e/` — four papers — into a temporary tree,
 points a config at it, and runs `rpp build --all`. Then it measures the artifacts with `pdffonts`:
 
-| fixture | what it is there to prove |
-|---|---|
-| `acmart` | a real `\documentclass{acmart}` source builds, and the PDF carries the class's **own** font families — not one family of the silent substitution |
-| `fallback` | the same document with the fonts missing still **builds green**, and is **rejected** by the font check. The failure is in the artifact, not in the exit code |
-| `no-script` | a paper with no build script is named separately, not silently counted as built |
-| `broken` | a failing build is reported as failed, with its exit code, and the run as a whole is a failure |
+| fixture     | what it is there to prove                                                                                                                                    |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `acmart`    | a real `\documentclass{acmart}` source builds, and the PDF carries the class's **own** font families — not one family of the silent substitution             |
+| `fallback`  | the same document with the fonts missing still **builds green**, and is **rejected** by the font check. The failure is in the artifact, not in the exit code |
+| `no-script` | a paper with no build script is named separately, not silently counted as built                                                                              |
+| `broken`    | a failing build is reported as failed, with its exit code, and the run as a whole is a failure                                                               |
 
 The `fallback` row is the point of the whole file. `acmart.cls` checks for `libertine.sty`,
 `zi4.sty` and `newtxmath.sty`, and failing to find any of them sets `\@ACM@newfontsfalse` and

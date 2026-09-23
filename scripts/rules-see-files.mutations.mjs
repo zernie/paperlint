@@ -61,7 +61,8 @@ const runHarness = () => {
   if (base.failed) {
     console.log(
       "❌ THE HARNESS IS RED BEFORE ANY MUTATION — the battery cannot tell a killed mutation " +
-        "from that:\n" + base.out.slice(-1500),
+        "from that:\n" +
+        base.out.slice(-1500),
     );
     process.exit(1);
   }
@@ -73,14 +74,18 @@ const rows = [];
 for (const [label, what, from, to] of M) {
   const hits = PRISTINE.split(from).length - 1;
   if (hits !== 1) {
-    console.log(`❌ ${label}: TARGET ${hits === 0 ? "NOT FOUND" : `NOT UNIQUE (${hits})`} — ${from.slice(0, 70)}`);
+    console.log(
+      `❌ ${label}: TARGET ${hits === 0 ? "NOT FOUND" : `NOT UNIQUE (${hits})`} — ${from.slice(0, 70)}`,
+    );
     bad++;
     continue;
   }
   writeFileSync(GUARD, PRISTINE.replace(from, to));
   const on = readFileSync(GUARD, "utf8");
   if (!on.includes(to) || on.includes(from)) {
-    console.log(`❌ ${label}: THE MUTATION DID NOT LAND (checked by re-reading the file)`);
+    console.log(
+      `❌ ${label}: THE MUTATION DID NOT LAND (checked by re-reading the file)`,
+    );
     bad++;
     writeFileSync(GUARD, PRISTINE);
     continue;
@@ -96,19 +101,30 @@ for (const [label, what, from, to] of M) {
   const msg = (out.match(/AssertionError[^:]*: ([^\n]+)/) ?? [])[1] ?? "";
   if (failed) {
     ok++;
-    rows.push([label, what, ((at ? `harness:${at} · ` : "") + msg).trim().slice(0, 130)]);
+    rows.push([
+      label,
+      what,
+      ((at ? `harness:${at} · ` : "") + msg).trim().slice(0, 130),
+    ]);
   } else {
-    console.log(`🔴 ${label}: THE HARNESS IS GREEN UNDER THE MUTATION — a finding about the TEST, not a conclusion about the guard`);
+    console.log(
+      `🔴 ${label}: THE HARNESS IS GREEN UNDER THE MUTATION — a finding about the TEST, not a conclusion about the guard`,
+    );
     bad++;
   }
 }
 console.log("\n| direction | mutation | what the harness died on |");
 console.log("|---|---|---|");
-for (const [a, b, c] of rows) console.log(`| \`${a}\` | ${b} | ${c.replace(/\|/g, "\\|")} |`);
+for (const [a, b, c] of rows)
+  console.log(`| \`${a}\` | ${b} | ${c.replace(/\|/g, "\\|")} |`);
 // The two must die on DIFFERENT lines, or only one half of the guard is actually tested.
-const lines = rows.map(([, , where]) => (where.match(/harness:(\d+)/) ?? [])[1]);
+const lines = rows.map(
+  ([, , where]) => (where.match(/harness:(\d+)/) ?? [])[1],
+);
 if (rows.length === 2 && lines[0] && lines[0] === lines[1]) {
-  console.log("\n🔴 BOTH mutations died on the SAME assertion — only one half of the guard is tested");
+  console.log(
+    "\n🔴 BOTH mutations died on the SAME assertion — only one half of the guard is tested",
+  );
   bad++;
 }
 console.log(`\n${ok} mutation(s) killed, ${bad} problem(s)`);

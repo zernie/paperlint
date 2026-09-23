@@ -82,7 +82,8 @@ export const GATES = [
     // hiding: the check is about a property of the rules' source, which cannot change between
     // a developer's tree and the runner's. Running it twice buys nothing; NOT running it
     // locally buys a defect that reaches review.
-    reason: "source-only property — identical in every environment, so CI adds nothing",
+    reason:
+      "source-only property — identical in every environment, so CI adds nothing",
     script: "check:content-only",
   },
   {
@@ -161,7 +162,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     // 2026-09-16.
     const o = outcome(r.status);
     if (o === "pass") continue;
-    if (o === "skip") skipped.push(`${g.name}  (npm run ${g.script} → ${SKIP_EXIT})`);
+    if (o === "skip")
+      skipped.push(`${g.name}  (npm run ${g.script} → ${SKIP_EXIT})`);
     else failed.push(`${g.name}  (npm run ${g.script} → ${r.status})`);
   }
 
@@ -171,7 +173,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     for (const f of failed) console.error(`   ${f}`);
   } else {
     const passed = GATES.length - skipped.length;
-    console.log(`✓ ${passed} gate(s) passed${skipped.length ? `, ${skipped.length} SKIPPED — not run, not passed` : ""}`);
+    console.log(
+      `✓ ${passed} gate(s) passed${skipped.length ? `, ${skipped.length} SKIPPED — not run, not passed` : ""}`,
+    );
   }
   if (skipped.length) for (const s of skipped) console.log(`⏳ skipped: ${s}`);
 

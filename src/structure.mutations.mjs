@@ -22,7 +22,8 @@ process.exit(
       {
         name: "generous detection is removed — any directory counts as a paper",
         harness: HARNESS,
-        expect: "a directory WITHOUT a single pipeline marker is left alone entirely",
+        expect:
+          "a directory WITHOUT a single pipeline marker is left alone entirely",
         disables:
           "the condition the check uses at all to decide it is looking at a paper. Without it, " +
           "findings would rain down on `data/`, `figures/` and any neighboring directory — and a " +
@@ -40,7 +41,7 @@ process.exit(
         harness: HARNESS,
         expect: "`ignore` exempts a directory by name",
         disables:
-          "the consumer's only way to say \"this directory is not a paper\". Without it, an " +
+          'the consumer\'s only way to say "this directory is not a paper". Without it, an ' +
           "exemption has to be expressed by renaming the directory",
         edits: [
           [SRC, "      if (rules.ignore.includes(name)) continue;\n", ""],
@@ -52,10 +53,14 @@ process.exit(
         expect: "`paper.md` counts on equal footing with `paper.tex`",
         disables:
           "the second source form the live corpus keeps. A paper on `paper.md` would become a " +
-          "\"no source\" finding while its source is right there — i.e. the check would yell at " +
+          '"no source" finding while its source is right there — i.e. the check would yell at ' +
           "the innocent, and such rules get turned off entirely, real findings and all",
         edits: [
-          [SRC, 'requireOneOf: [["paper.tex", "paper.md"]]', 'requireOneOf: [["paper.tex"]]'],
+          [
+            SRC,
+            'requireOneOf: [["paper.tex", "paper.md"]]',
+            'requireOneOf: [["paper.tex"]]',
+          ],
         ],
       },
       {
@@ -68,7 +73,7 @@ process.exit(
         edits: [
           [
             SRC,
-            "    return rel && rel !== \"..\" && !rel.startsWith(`..${sep}`) && !isAbsolute(rel) ? rel : p;",
+            '    return rel && rel !== ".." && !rel.startsWith(`..${sep}`) && !isAbsolute(rel) ? rel : p;',
             "    return p;",
           ],
         ],

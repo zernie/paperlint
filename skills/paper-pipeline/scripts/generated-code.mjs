@@ -45,13 +45,16 @@
  * `repro/generated-code-grandfathered.txt` prints every row and every reason, on every run,
  * findings or none. Same reasoning as `check_grandfather` in `repro/paper_numbers.py`.
  */
-import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
+import { join, relative } from "node:path";
 
 const args = process.argv.slice(2);
-const dir = args.find((a) => !a.startsWith('--'));
-const flagsOnly = args.includes('--flags-only');
-if (!dir) { console.error('usage: node generated-code.mjs <paper-dir> [--flags-only]'); process.exit(0); }
+const dir = args.find((a) => !a.startsWith("--"));
+const flagsOnly = args.includes("--flags-only");
+if (!dir) {
+  console.error("usage: node generated-code.mjs <paper-dir> [--flags-only]");
+  process.exit(0);
+}
 
 // ── WHERE repro/ IS ────────────────────────────────────────────────────────────────────────────
 // 🔴 `repro/` is NOT always directly under the paper directory. `<paper-e>` keeps it at
@@ -68,15 +71,22 @@ if (!dir) { console.error('usage: node generated-code.mjs <paper-dir> [--flags-o
 // "scanned and clean", never "did not look".
 const nested = existsSync(dir)
   ? readdirSync(dir, { withFileTypes: true })
-      .filter((e) => e.isDirectory() && !e.name.startsWith('.') && e.name !== 'node_modules')
-      .map((e) => join(dir, e.name, 'repro'))
+      .filter(
+        (e) =>
+          e.isDirectory() &&
+          !e.name.startsWith(".") &&
+          e.name !== "node_modules",
+      )
+      .map((e) => join(dir, e.name, "repro"))
       .filter(existsSync)
   : [];
-const roots = [join(dir, 'repro'), ...nested].filter(existsSync);
+const roots = [join(dir, "repro"), ...nested].filter(existsSync);
 if (!roots.length) {
   if (!flagsOnly)
-    console.log(`🧪 generated-code — 0 finding(s) in ${dir}\n   NOTHING WAS SCANNED: no repro/ here or one level below. ` +
-      'That is not the same as clean, and this line exists because the silent exit that used to stand here hid 18 findings');
+    console.log(
+      `🧪 generated-code — 0 finding(s) in ${dir}\n   NOTHING WAS SCANNED: no repro/ here or one level below. ` +
+        "That is not the same as clean, and this line exists because the silent exit that used to stand here hid 18 findings",
+    );
   process.exit(0);
 }
 const repro = roots[0];
@@ -90,66 +100,103 @@ const repro = roots[0];
 const EXT = /\.(py|mjs|cjs|js)$/;
 const MAX_DEPTH = 3;
 const swallowed = new Map([
-  ['the released bundle — `check-anon.sh` cat. 5 owns it, and it asks a different question there ' +
-   '(does it leak an identity, not will it run elsewhere)', []],
-  ['dependency, VCS and build trees (node_modules, .git, __pycache__, dot-directories)', []],
-  [`nested deeper than ${MAX_DEPTH} levels under repro/ — fixtures, working clones, raw transcripts`, []],
+  [
+    "the released bundle — `check-anon.sh` cat. 5 owns it, and it asks a different question there " +
+      "(does it leak an identity, not will it run elsewhere)",
+    [],
+  ],
+  [
+    "dependency, VCS and build trees (node_modules, .git, __pycache__, dot-directories)",
+    [],
+  ],
+  [
+    `nested deeper than ${MAX_DEPTH} levels under repro/ — fixtures, working clones, raw transcripts`,
+    [],
+  ],
   // The allow file is per repro root, so this check reads ONE. A paper carrying two would have the
   // second read by nobody, and an unread tree has to be a name you can count, not an absence.
-  ['a SECOND repro/ root under this paper directory — this check reads one, and the allow file is ' +
-   'scoped to it; run the check against that directory to cover the other', []],
+  [
+    "a SECOND repro/ root under this paper directory — this check reads one, and the allow file is " +
+      "scoped to it; run the check against that directory to cover the other",
+    [],
+  ],
 ]);
 const RULE = [...swallowed.keys()];
-for (const other of roots.slice(1)) swallowed.get(RULE[3]).push(relative(dir, other));
-const bundleName = ['artifact-anon', 'artifact'].find((b) => existsSync(join(repro, b)));
+for (const other of roots.slice(1))
+  swallowed.get(RULE[3]).push(relative(dir, other));
+const bundleName = ["artifact-anon", "artifact"].find((b) =>
+  existsSync(join(repro, b)),
+);
 
 const files = [];
 (function walk(abs, depth) {
   for (const name of readdirSync(abs)) {
     const p = join(abs, name);
     let st;
-    try { st = statSync(p); } catch { continue; }
+    try {
+      st = statSync(p);
+    } catch {
+      continue;
+    }
     if (st.isDirectory()) {
-      if (depth === 1 && name === bundleName) { swallowed.get(RULE[0]).push(name); continue; }
-      if (name.startsWith('.') || name === 'node_modules' || name === '__pycache__') {
-        swallowed.get(RULE[1]).push(relative(repro, p)); continue;
+      if (depth === 1 && name === bundleName) {
+        swallowed.get(RULE[0]).push(name);
+        continue;
       }
-      if (depth >= MAX_DEPTH) { swallowed.get(RULE[2]).push(relative(repro, p)); continue; }
+      if (
+        name.startsWith(".") ||
+        name === "node_modules" ||
+        name === "__pycache__"
+      ) {
+        swallowed.get(RULE[1]).push(relative(repro, p));
+        continue;
+      }
+      if (depth >= MAX_DEPTH) {
+        swallowed.get(RULE[2]).push(relative(repro, p));
+        continue;
+      }
       walk(p, depth + 1);
     } else if (EXT.test(name)) files.push(p);
   }
 })(repro, 1);
 
 // ── the allow file ─────────────────────────────────────────────────────────────────────────────
-const allowPath = join(repro, 'generated-code-grandfathered.txt');
+const allowPath = join(repro, "generated-code-grandfathered.txt");
 const allowed = new Map();
 if (existsSync(allowPath)) {
-  for (const line of readFileSync(allowPath, 'utf8').split('\n')) {
-    const row = line.split('#')[0].trimEnd();
+  for (const line of readFileSync(allowPath, "utf8").split("\n")) {
+    const row = line.split("#")[0].trimEnd();
     if (!row.trim()) continue;
     // The key is TWO fields, path and kind. The first draft took only the first field, so every
     // row silenced nothing and the two real allowances came back as findings AND as stale rows —
     // caught because the run printed both at once, which is the argument for printing the ledger.
-    const [path, kind, ...rest] = row.split('\t').map((c) => c.trim());
-    if (path && kind) allowed.set(`${path}\t${kind}`, rest.filter(Boolean).join(' — ') || '(NO REASON GIVEN)');
+    const [path, kind, ...rest] = row.split("\t").map((c) => c.trim());
+    if (path && kind)
+      allowed.set(
+        `${path}\t${kind}`,
+        rest.filter(Boolean).join(" — ") || "(NO REASON GIVEN)",
+      );
   }
 }
 
 // ── the three rules ────────────────────────────────────────────────────────────────────────────
 // Whole-line comments are stripped first. Not inline ones: `p = "/home/me/x"  # fixme` is still a
 // hard-coded path, and a rule that lets a trailing comment disarm it is worse than no rule.
-const strip = (s) => s.replace(/^\s*#.*$/gm, '').replace(/^\s*\/\/.*$/gm, '');
+const strip = (s) => s.replace(/^\s*#.*$/gm, "").replace(/^\s*\/\/.*$/gm, "");
 
-const DRAWS = /(?:\brandom\.(?:random|sample|shuffle|choice|choices|randint|randrange|uniform)|\bnp\.random\.|\bnumpy\.random\.|\bMath\.random\s*\(|\brandom_state\b|\bcrypto\.randomBytes\s*\()/;
+const DRAWS =
+  /(?:\brandom\.(?:random|sample|shuffle|choice|choices|randint|randrange|uniform)|\bnp\.random\.|\bnumpy\.random\.|\bMath\.random\s*\(|\brandom_state\b|\bcrypto\.randomBytes\s*\()/;
 // 🔴 NO LEADING \b ON THIS ALTERNATION. The first draft opened with `\b(?:…|--seed|…)`, and `\b`
 // before a hyphen never matches after a quote — so `"--seed"` in an argparse call was invisible and
 // `spotcheck-census.py`, which seeds properly and takes `--seed` on the command line, was reported.
 // Found by reading the one file the rule accused, which is the only way this class is ever found.
-const SEEDS = /(?:random\.seed|np\.random\.seed|numpy\.random\.seed|default_rng\s*\(\s*\d|\bseed\s*=\s*\d|--seed|\bSEED\b|Random\s*\(\s*[\w.]+\s*\)|seedrandom|mulberry32|splitmix)/;
+const SEEDS =
+  /(?:random\.seed|np\.random\.seed|numpy\.random\.seed|default_rng\s*\(\s*\d|\bseed\s*=\s*\d|--seed|\bSEED\b|Random\s*\(\s*[\w.]+\s*\)|seedrandom|mulberry32|splitmix)/;
 // Anchored and case-sensitive, for the reasons check-anon.sh cat. 5 documents at length: without
 // the anchor a third party's relative `src/workspace/x` matches, and without case-sensitivity an
 // Express route `/users/export` matches `/Users/`.
-const ABS = /(?<![\w./-])(?:\/home\/|\/Users\/|\/workspace\/|\/root\/|[A-Z]:\\\\?[A-Za-z])/;
+const ABS =
+  /(?<![\w./-])(?:\/home\/|\/Users\/|\/workspace\/|\/root\/|[A-Z]:\\\\?[A-Za-z])/;
 
 // IN_PLACE is deliberately LITERAL — the same quoted path, or the same argv element, read and then
 // written. It is a textual check and not dataflow: a path held in a variable is invisible to it.
@@ -181,84 +228,111 @@ const ignored = [];
 const hitFiles = new Set();
 for (const f of files.sort()) {
   const rel = relative(dir, f);
-  const src = readFileSync(f, 'utf8');
+  const src = readFileSync(f, "utf8");
   const code = strip(src);
   const raise = (kind, detail) => {
     const key = `${relative(repro, f)}\t${kind}`;
     // An allow row is per FILE AND KIND: silencing `ABS_PATH` in a script must not also silence a
     // missing seed in it. A bare filename row silences the file entirely and is spelled that way.
     const reason = allowed.get(key) ?? allowed.get(`${relative(repro, f)}\t*`);
-    if (reason !== undefined) { ignored.push([`${relative(repro, f)} · ${kind}`, reason]); return; }
+    if (reason !== undefined) {
+      ignored.push([`${relative(repro, f)} · ${kind}`, reason]);
+      return;
+    }
     hitFiles.add(rel);
     findings.push(`${kind.padEnd(9)} ${rel} — ${detail}`);
   };
 
   if (DRAWS.test(code) && !SEEDS.test(src))
-    raise('NO_SEED', `draws randomness (\`${code.match(DRAWS)[0]}\`) and never seeds it: two runs, two answers, ` +
-      'and the number in the paper came from one of them');
+    raise(
+      "NO_SEED",
+      `draws randomness (\`${code.match(DRAWS)[0]}\`) and never seeds it: two runs, two answers, ` +
+        "and the number in the paper came from one of them",
+    );
 
   // 🔴 `ABS.flags`, not a literal 'g'. The first version passed 'g' alone, which silently DROPPED
   // the case-sensitivity that keeps an Express route `/users/export` from matching `/Users/` —
   // so the property the harness asserts lived nowhere the harness could reach it. Found by the
   // mutations file: adding an `i` to ABS changed no verdict, i.e. a mutation that did not mutate.
-  const abs = code.match(new RegExp(ABS.source + '[^\\s\'"`)\\],]*', ABS.flags + 'g'));
+  const abs = code.match(
+    new RegExp(ABS.source + "[^\\s'\"`)\\],]*", ABS.flags + "g"),
+  );
   if (abs)
-    raise('ABS_PATH', `hard-codes ${abs.length} absolute path(s), e.g. \`${abs[0]}\` — it runs on one machine. ` +
-      'Distinct from check-anon cat. 5, which asks whether the SHIPPED bundle leaks a layout');
+    raise(
+      "ABS_PATH",
+      `hard-codes ${abs.length} absolute path(s), e.g. \`${abs[0]}\` — it runs on one machine. ` +
+        "Distinct from check-anon cat. 5, which asks whether the SHIPPED bundle leaks a layout",
+    );
 
-  const both = [...operands(code, READS)].filter((p) => operands(code, WRITES).has(p));
+  const both = [...operands(code, READS)].filter((p) =>
+    operands(code, WRITES).has(p),
+  );
   if (both.length)
-    raise('IN_PLACE', `reads and then overwrites \`${both.join('`, `')}\` — after one run the input is gone and ` +
-      'a re-run is computing on its own output');
+    raise(
+      "IN_PLACE",
+      `reads and then overwrites \`${both.join("`, `")}\` — after one run the input is gone and ` +
+        "a re-run is computing on its own output",
+    );
 }
 
 // stale allowances, the same property `check_grandfather` keeps: a list that never shrinks is a list
 // nobody reads.
 const live = new Set();
-for (const f of files) for (const k of ['NO_SEED', 'ABS_PATH', 'IN_PLACE', '*']) live.add(`${relative(repro, f)}\t${k}`);
+for (const f of files)
+  for (const k of ["NO_SEED", "ABS_PATH", "IN_PLACE", "*"])
+    live.add(`${relative(repro, f)}\t${k}`);
 for (const key of allowed.keys())
   if (!live.has(key))
-    findings.push(`STALE_ALLOW  the allow row \`${key.replace('\t', ' · ')}\` names no script under repro/ — ` +
-      'retire it rather than leave it to rot');
+    findings.push(
+      `STALE_ALLOW  the allow row \`${key.replace("\t", " · ")}\` names no script under repro/ — ` +
+        "retire it rather than leave it to rot",
+    );
 
 // ── output ─────────────────────────────────────────────────────────────────────────────────────
 const ledger = [
-  '',
+  "",
   `   ── what this check ignored, in full (${files.length} scripts scanned under repro/) ──`,
-  '   Printed on every run, findings or none. An ignore set nobody sees turns a check into a green',
-  '   light; the uncovered set has to be a list you can count. Same discipline as check_grandfather',
-  '   in repro/paper_numbers.py.',
+  "   Printed on every run, findings or none. An ignore set nobody sees turns a check into a green",
+  "   light; the uncovered set has to be a list you can count. Same discipline as check_grandfather",
+  "   in repro/paper_numbers.py.",
 ];
 for (const [rule, names] of swallowed) {
   ledger.push(`   • ${names.length} tree(s) not entered — ${rule}`);
-  if (names.length) ledger.push(`       ${names.slice(0, 8).join(', ')}${names.length > 8 ? ` … and ${names.length - 8} more` : ''}`);
+  if (names.length)
+    ledger.push(
+      `       ${names.slice(0, 8).join(", ")}${names.length > 8 ? ` … and ${names.length - 8} more` : ""}`,
+    );
 }
-ledger.push(`   • ${ignored.length} row(s) in repro/generated-code-grandfathered.txt — every row, every reason:`);
+ledger.push(
+  `   • ${ignored.length} row(s) in repro/generated-code-grandfathered.txt — every row, every reason:`,
+);
 for (const [key, reason] of ignored) ledger.push(`       ${key}  →  ${reason}`);
-if (!ignored.length) ledger.push('       (nothing is being waved through)');
+if (!ignored.length) ledger.push("       (nothing is being waved through)");
 ledger.push(
   `   • ${hitFiles.size} script(s) reported above.`,
-  '',
-  '   🔴 WHAT THIS CHECK IS SILENT ABOUT:',
+  "",
+  "   🔴 WHAT THIS CHECK IS SILENT ABOUT:",
   '   — a path held in a VARIABLE. IN_PLACE matches literals and argv elements only; `p = f"{d}/x";',
   '     open(p); open(p, "w")` passes. Dataflow would catch it and would also have produced seventeen',
-  '     false positives on this repository, which is why it is not here.',
-  '   — a seed that is set but not RECORDED. A script can seed from the clock and satisfy NO_SEED.',
-  '   — anything below the depth limit, and any language that is not Python or JavaScript.',
-  '   — WHETHER THE SCRIPT IS CORRECT. Every rule here is about whether it runs the same way twice,',
-  '     which is a different and much weaker question.',
+  "     false positives on this repository, which is why it is not here.",
+  "   — a seed that is set but not RECORDED. A script can seed from the clock and satisfy NO_SEED.",
+  "   — anything below the depth limit, and any language that is not Python or JavaScript.",
+  "   — WHETHER THE SCRIPT IS CORRECT. Every rule here is about whether it runs the same way twice,",
+  "     which is a different and much weaker question.",
 );
 
 const header = `🧪 generated-code — ${findings.length} finding(s) in ${dir}`;
 if (findings.length) {
   const out = flagsOnly ? console.error : console.log;
   out(header);
-  findings.forEach((f) => out('   ' + f));
+  findings.forEach((f) => out("   " + f));
   ledger.forEach((l) => out(l));
   process.exit(1);
 }
 if (!flagsOnly) {
   console.log(header);
-  console.log('   every analysis script seeds its randomness, names only relative paths, and does not clobber its input');
+  console.log(
+    "   every analysis script seeds its randomness, names only relative paths, and does not clobber its input",
+  );
   ledger.forEach((l) => console.log(l));
 }

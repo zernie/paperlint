@@ -30,7 +30,13 @@
  * measurements, is in that file's header; the capability surface of this one is asserted by
  * `hooks.harness.mjs` running `checkHookImports` over the shipped artifact.
  */
-import { experimental_defineReact, tools, provide, notice, nothing } from "vigiles/hook";
+import {
+  experimental_defineReact,
+  tools,
+  provide,
+  notice,
+  nothing,
+} from "vigiles/hook";
 
 /** The key every carrier of this package reads its consumer-specific settings from. */
 export const CONFIG_KEY = "research-paper-pipeline";
@@ -72,7 +78,8 @@ const papersRoot = (rawPkg) => {
 };
 
 /** A paper SOURCE — a `.tex`, or a markdown-drafted `paper.md` / `draft.md`. Not every note or README. */
-const isPaperSource = (p) => p.endsWith(".tex") || /\/(paper|draft)\.md$/.test(p);
+const isPaperSource = (p) =>
+  p.endsWith(".tex") || /\/(paper|draft)\.md$/.test(p);
 
 const CHECKLIST = `📄 Editing a paper — drive it with the \`paper-pipeline\` skill, don't wing the review.
   → Update <paper-dir>/PIPELINE-STATUS.md: mark the row for any stage you (re)ran, and read its
@@ -109,6 +116,8 @@ export default experimental_defineReact({
   react: (e) => {
     const root = papersRoot(e.ctx.pkg);
     if (root === null) return nothing();
-    return e.path.under([root]) && isPaperSource(e.path.raw) ? notice(CHECKLIST) : nothing();
+    return e.path.under([root]) && isPaperSource(e.path.raw)
+      ? notice(CHECKLIST)
+      : nothing();
   },
 });

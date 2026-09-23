@@ -77,13 +77,47 @@ import { isMain } from "./consumer.mjs";
 // making one. `Limitations` sections legitimately carry these, which is why the metric is a DENSITY
 // over the whole body and why the round declares a budget instead of the checker guessing one.
 const HEDGES = [
-  "may", "might", "could", "would appear", "appears to", "appear to", "seems to", "seem to",
-  "suggests", "suggest that", "arguably", "presumably", "possibly", "perhaps", "somewhat",
-  "relatively", "largely", "broadly", "generally", "typically", "usually", "often", "in some cases",
-  "to some extent", "not necessarily", "we believe", "we think", "it is possible", "it may be",
-  "tends to", "tend to", "roughly", "approximately", "more or less", "at least in part", "partly",
+  "may",
+  "might",
+  "could",
+  "would appear",
+  "appears to",
+  "appear to",
+  "seems to",
+  "seem to",
+  "suggests",
+  "suggest that",
+  "arguably",
+  "presumably",
+  "possibly",
+  "perhaps",
+  "somewhat",
+  "relatively",
+  "largely",
+  "broadly",
+  "generally",
+  "typically",
+  "usually",
+  "often",
+  "in some cases",
+  "to some extent",
+  "not necessarily",
+  "we believe",
+  "we think",
+  "it is possible",
+  "it may be",
+  "tends to",
+  "tend to",
+  "roughly",
+  "approximately",
+  "more or less",
+  "at least in part",
+  "partly",
 ];
-const HEDGE_RE = new RegExp(`\\b(?:${HEDGES.map((h) => h.replace(/ /g, "\\s+")).join("|")})\\b`, "gi");
+const HEDGE_RE = new RegExp(
+  `\\b(?:${HEDGES.map((h) => h.replace(/ /g, "\\s+")).join("|")})\\b`,
+  "gi",
+);
 
 /** Operations a round must declare before it may perform them. Mirrors ARIS `forbidden_operations`. */
 const OPS = ["new-citation", "new-number"];
@@ -116,7 +150,9 @@ export function sections(md) {
  *  rule 4, "never pay by shaving a neighbouring sentence"), so an appendix must not count as growth. */
 export function split(secs) {
   const i = secs.findIndex((s) => /^references\b/i.test(s.heading));
-  return i === -1 ? { body: secs, appendix: [] } : { body: secs.slice(0, i), appendix: secs.slice(i) };
+  return i === -1
+    ? { body: secs, appendix: [] }
+    : { body: secs.slice(0, i), appendix: secs.slice(i) };
 }
 
 const words = (s) => (s.match(/\S+/g) ?? []).length;
@@ -138,10 +174,16 @@ export function census(md) {
 /** Citation markers `[12]` in prose, plus numbered entries in the References list. */
 export function citations(md) {
   const { body, appendix } = split(sections(md));
-  const inProse = [...stripComments(body.map((s) => s.text).join("\n")).matchAll(/\[(\d{1,3})\]/g)].map((m) => m[1]);
+  const inProse = [
+    ...stripComments(body.map((s) => s.text).join("\n")).matchAll(
+      /\[(\d{1,3})\]/g,
+    ),
+  ].map((m) => m[1]);
   const refs = appendix
     .filter((s) => /^references\b/i.test(s.heading))
-    .flatMap((s) => [...s.text.matchAll(/^\s*(\d{1,3})\.\s+\S/gm)].map((m) => m[1]));
+    .flatMap((s) =>
+      [...s.text.matchAll(/^\s*(\d{1,3})\.\s+\S/gm)].map((m) => m[1]),
+    );
   return new Set([...inProse, ...refs]);
 }
 
@@ -159,8 +201,11 @@ export function numbers(md) {
   const { body } = split(sections(md));
   const out = new Set();
   for (const s of body) {
-    const t = s.text.replace(/\{\{[^}]*\}\}/g, " ").replace(/\[\d{1,3}\]/g, " ");
-    for (const m of t.matchAll(/(?<![\w.])\d+(?:[.,]\d+)*\s*%?/g)) out.add(m[0].replace(/\s+/g, ""));
+    const t = s.text
+      .replace(/\{\{[^}]*\}\}/g, " ")
+      .replace(/\[\d{1,3}\]/g, " ");
+    for (const m of t.matchAll(/(?<![\w.])\d+(?:[.,]\d+)*\s*%?/g))
+      out.add(m[0].replace(/\s+/g, ""));
   }
   return out;
 }
@@ -184,20 +229,39 @@ export function parseManifest(src, path) {
     const line = raw.replace(/\s+#.*$/, "");
     if (!line.trim()) continue;
     const item = /^\s*-\s+(.*\S)\s*$/.exec(line);
-    if (item && key) { out[key].push(unquote(item[1])); continue; }
+    if (item && key) {
+      out[key].push(unquote(item[1]));
+      continue;
+    }
     const kv = /^([a-zA-Z][\w-]*)\s*:\s*(.*)$/.exec(line);
     if (!kv) continue;
     const [, k, v] = kv;
-    if (v.trim() === "") { key = k; out[k] = out[k] ?? []; continue; }
+    if (v.trim() === "") {
+      key = k;
+      out[k] = out[k] ?? [];
+      continue;
+    }
     key = null;
     const inline = /^\[(.*)\]$/.exec(v.trim());
     out[k] = inline
-      ? inline[1].split(",").map((x) => unquote(x.trim())).filter(Boolean)
+      ? inline[1]
+          .split(",")
+          .map((x) => unquote(x.trim()))
+          .filter(Boolean)
       : unquote(v.trim());
   }
-  if (!out.base) return { error: "no `base:` — a round with no revision to compare against cannot be checked", path };
+  if (!out.base)
+    return {
+      error:
+        "no `base:` — a round with no revision to compare against cannot be checked",
+      path,
+    };
   if (!Array.isArray(out.touches) || out.touches.length === 0) {
-    return { error: "no `touches:` list — a round that declares nothing authorises nothing", path };
+    return {
+      error:
+        "no `touches:` list — a round that declares nothing authorises nothing",
+      path,
+    };
   }
   return out;
 }
@@ -218,15 +282,24 @@ export function covers(entry, heading) {
   const e = String(entry).trim().toLowerCase();
   const h = heading.trim().toLowerCase();
   const num = /^(\d+(?:\.\d+)*)\.?\s/.exec(h)?.[1];
-  if (/^\d+(\.\d+)*$/.test(e)) return !!num && (num === e || num.startsWith(e + "."));
+  if (/^\d+(\.\d+)*$/.test(e))
+    return !!num && (num === e || num.startsWith(e + "."));
   return h.includes(e);
 }
 
 // ── git ──────────────────────────────────────────────────────────────────────────────────────
 
 function git(root, ...args) {
-  const r = spawnSync("git", args, { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
-  return { ok: r.status === 0, out: r.stdout ?? "", err: (r.stderr ?? "").trim() };
+  const r = spawnSync("git", args, {
+    cwd: root,
+    encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  return {
+    ok: r.status === 0,
+    out: r.stdout ?? "",
+    err: (r.stderr ?? "").trim(),
+  };
 }
 
 // ── the check ────────────────────────────────────────────────────────────────────────────────
@@ -235,7 +308,8 @@ export function check(dir, { since } = {}) {
   const findings = [];
   const add = (kind, msg) => findings.push({ kind, msg });
   const paperPath = join(dir, "paper.md");
-  if (!existsSync(paperPath)) return { findings, census: null, notes: [`no paper.md in ${dir}`] };
+  if (!existsSync(paperPath))
+    return { findings, census: null, notes: [`no paper.md in ${dir}`] };
 
   const now = readFileSync(paperPath, "utf8");
   const nowC = census(now);
@@ -244,46 +318,67 @@ export function check(dir, { since } = {}) {
   const at = (rev) => {
     if (!repo) return { ok: false, err: "not a git repository" };
     const r = git(repo, "show", `${rev}:${rel}`);
-    return r.ok ? { ok: true, src: r.out } : { ok: false, err: r.err || `git show ${rev}:${rel} failed` };
+    return r.ok
+      ? { ok: true, src: r.out }
+      : { ok: false, err: r.err || `git show ${rev}:${rel} failed` };
   };
 
   // ── which round authorises the current state ──
   const roundsDir = join(dir, "rounds");
   const files = existsSync(roundsDir)
-    ? readdirSync(roundsDir).filter((f) => f.endsWith(".md") && f !== "README.md").sort()
+    ? readdirSync(roundsDir)
+        .filter((f) => f.endsWith(".md") && f !== "README.md")
+        .sort()
     : [];
 
   const manifests = [];
   for (const f of files) {
     const p = join(roundsDir, f);
     const man = parseManifest(readFileSync(p, "utf8"), p);
-    if (man.error) { add("unreadable-manifest", `${relOf(dir, p)}: ${man.error}`); continue; }
+    if (man.error) {
+      add("unreadable-manifest", `${relOf(dir, p)}: ${man.error}`);
+      continue;
+    }
     manifests.push(man);
   }
   manifests.sort((a, b) => Number(a.round ?? 0) - Number(b.round ?? 0));
   const open = manifests.filter((m) => !m.closed);
 
   if (!since && manifests.length === 0) {
-    add("no-round-ledger", `no readable round manifest under ${relOf(dir, roundsDir)} — review rounds on this paper are unrecorded, so the ratchet (${nowC.bodyWords} body words, ${nowC.hedgeDensity.toFixed(1)} hedges per 1000) is measured against nothing. Open a round before the next review pass.`);
+    add(
+      "no-round-ledger",
+      `no readable round manifest under ${relOf(dir, roundsDir)} — review rounds on this paper are unrecorded, so the ratchet (${nowC.bodyWords} body words, ${nowC.hedgeDensity.toFixed(1)} hedges per 1000) is measured against nothing. Open a round before the next review pass.`,
+    );
   }
   if (open.length > 1) {
-    add("two-open-rounds", `${open.length} manifests have no \`closed:\` (${open.map((m) => `round ${m.round}`).join(", ")}) — with two open rounds every budget below is checked against the wrong base.`);
+    add(
+      "two-open-rounds",
+      `${open.length} manifests have no \`closed:\` (${open.map((m) => `round ${m.round}`).join(", ")}) — with two open rounds every budget below is checked against the wrong base.`,
+    );
   }
   if (!since && manifests.length > 0 && open.length === 0) {
-    const dirty = repo && git(repo, "diff", "--quiet", "HEAD", "--", rel).ok === false;
+    const dirty =
+      repo && git(repo, "diff", "--quiet", "HEAD", "--", rel).ok === false;
     if (dirty) {
-      add("no-open-round", `paper.md differs from HEAD and every round manifest is closed — these edits are authorised by nothing. This is the state that deposited a page of hedging in one session.`);
+      add(
+        "no-open-round",
+        `paper.md differs from HEAD and every round manifest is closed — these edits are authorised by nothing. This is the state that deposited a page of hedging in one session.`,
+      );
     }
   }
 
   // ── pick the base ──
-  const active = open[open.length - 1] ?? manifests[manifests.length - 1] ?? null;
+  const active =
+    open[open.length - 1] ?? manifests[manifests.length - 1] ?? null;
   const baseRev = since ?? active?.base;
   if (!baseRev) return { findings, census: nowC, notes: [], active: null };
 
   const got = at(baseRev);
   if (!got.ok) {
-    add("unresolvable-base", `cannot read paper.md at \`${baseRev}\`: ${got.err}. A round whose base does not resolve is a round with no gate, and it must not read as a clean run.`);
+    add(
+      "unresolvable-base",
+      `cannot read paper.md at \`${baseRev}\`: ${got.err}. A round whose base does not resolve is a round with no gate, and it must not read as a clean run.`,
+    );
     return { findings, census: nowC, notes: [], active };
   }
   const base = got.src;
@@ -293,7 +388,10 @@ export function check(dir, { since } = {}) {
   const budget = num(active?.budget, 0);
   const grew = nowC.bodyWords - baseC.bodyWords;
   if (grew > budget) {
-    add("ratchet", `the body grew ${sign(grew)} words against a declared budget of ${sign(budget)} (${baseC.bodyWords} → ${nowC.bodyWords}); the appendix moved ${sign(nowC.appendixWords - baseC.appendixWords)}. Pay it back with tighten-paper or raise the budget in the manifest before the round, not after.`);
+    add(
+      "ratchet",
+      `the body grew ${sign(grew)} words against a declared budget of ${sign(budget)} (${baseC.bodyWords} → ${nowC.bodyWords}); the appendix moved ${sign(nowC.appendixWords - baseC.appendixWords)}. Pay it back with tighten-paper or raise the budget in the manifest before the round, not after.`,
+    );
   }
 
   // ── 2. whole-document, and blind to this round: the compounding case ──
@@ -310,10 +408,16 @@ export function check(dir, { since } = {}) {
       const total = manifests.reduce((a, m) => a + num(m.budget, 0), 0);
       const cum = nowC.bodyWords - c0.bodyWords;
       if (cum > total) {
-        add("ratchet-cumulative", `across ${manifests.length} rounds the body grew ${sign(cum)} words against ${sign(total)} of declared budget (${c0.bodyWords} → ${nowC.bodyWords}, from round ${first.round}'s base \`${first.base}\`). Every individual round may have been inside its own budget; this is the drift they compound into.`);
+        add(
+          "ratchet-cumulative",
+          `across ${manifests.length} rounds the body grew ${sign(cum)} words against ${sign(total)} of declared budget (${c0.bodyWords} → ${nowC.bodyWords}, from round ${first.round}'s base \`${first.base}\`). Every individual round may have been inside its own budget; this is the drift they compound into.`,
+        );
       }
     } else {
-      add("unresolvable-base", `round ${first.round}'s base \`${first.base}\` does not resolve (${g0.err}), so cumulative drift across ${manifests.length} rounds is UNMEASURED — not zero.`);
+      add(
+        "unresolvable-base",
+        `round ${first.round}'s base \`${first.base}\` does not resolve (${g0.err}), so cumulative drift across ${manifests.length} rounds is UNMEASURED — not zero.`,
+      );
     }
   }
 
@@ -321,15 +425,26 @@ export function check(dir, { since } = {}) {
   const hb = num(active?.["hedge-budget"], 0);
   const dh = nowC.hedgeDensity - baseC.hedgeDensity;
   if (dh > hb + 1e-9) {
-    add("hedge-mass", `hedge density rose ${dh.toFixed(2)} per 1000 body words against a budget of ${hb.toFixed(2)} (${baseC.hedgeDensity.toFixed(2)} → ${nowC.hedgeDensity.toFixed(2)}; ${baseC.hedges} → ${nowC.hedges} hedges). The ratchet fix order is TIGHTEN → CUT → Threats → inline hedge; if the round reached step four, say so in \`hedge-budget\`.`);
+    add(
+      "hedge-mass",
+      `hedge density rose ${dh.toFixed(2)} per 1000 body words against a budget of ${hb.toFixed(2)} (${baseC.hedgeDensity.toFixed(2)} → ${nowC.hedgeDensity.toFixed(2)}; ${baseC.hedges} → ${nowC.hedges} hedges). The ratchet fix order is TIGHTEN → CUT → Threats → inline hedge; if the round reached step four, say so in \`hedge-budget\`.`,
+    );
   }
 
   // ── 4. whole-document: is the declaration a declaration ──
   if (active && !since) {
-    const all = [...split(sections(now)).body, ...split(sections(now)).appendix];
-    const covered = all.filter((s) => active.touches.some((t) => covers(t, s.heading)));
+    const all = [
+      ...split(sections(now)).body,
+      ...split(sections(now)).appendix,
+    ];
+    const covered = all.filter((s) =>
+      active.touches.some((t) => covers(t, s.heading)),
+    );
     if (all.length && covered.length * 2 > all.length) {
-      add("overbroad-scope", `\`touches:\` covers ${covered.length} of ${all.length} sections — a round that may change most of the paper has declared nothing. Split it into rounds, or state plainly that this is a rewrite and not a review round.`);
+      add(
+        "overbroad-scope",
+        `\`touches:\` covers ${covered.length} of ${all.length} sections — a round that may change most of the paper has declared nothing. Split it into rounds, or state plainly that this is a rewrite and not a review round.`,
+      );
     }
   }
 
@@ -340,42 +455,72 @@ export function check(dir, { since } = {}) {
       const was = before.get(s.heading);
       if (was === s.text) continue;
       if (active.touches.some((t) => covers(t, s.heading))) continue;
-      const how = was === undefined ? "is new" : `changed (${sign(words(s.text) - words(was))} words)`;
-      add("undeclared-section", `"${s.heading}" ${how}, and no entry in \`touches:\` covers it (declared: ${active.touches.join(", ")}).`);
+      const how =
+        was === undefined
+          ? "is new"
+          : `changed (${sign(words(s.text) - words(was))} words)`;
+      add(
+        "undeclared-section",
+        `"${s.heading}" ${how}, and no entry in \`touches:\` covers it (declared: ${active.touches.join(", ")}).`,
+      );
     }
     for (const h of before.keys()) {
       if (sections(now).some((s) => s.heading === h)) continue;
       if (active.touches.some((t) => covers(t, h))) continue;
-      add("undeclared-section", `"${h}" was removed, and no entry in \`touches:\` covers it (declared: ${active.touches.join(", ")}).`);
+      add(
+        "undeclared-section",
+        `"${h}" was removed, and no entry in \`touches:\` covers it (declared: ${active.touches.join(", ")}).`,
+      );
     }
   }
 
   // ── 6. forbidden operations ──
-  const allows = new Set((active?.allows ?? []).map((a) => String(a).trim().toLowerCase()));
+  const allows = new Set(
+    (active?.allows ?? []).map((a) => String(a).trim().toLowerCase()),
+  );
   for (const op of allows) {
-    if (!OPS.includes(op)) add("unknown-op", `\`allows: ${op}\` is not an operation this gate knows (${OPS.join(", ")}) — a permission nothing reads is not a permission.`);
+    if (!OPS.includes(op))
+      add(
+        "unknown-op",
+        `\`allows: ${op}\` is not an operation this gate knows (${OPS.join(", ")}) — a permission nothing reads is not a permission.`,
+      );
   }
 
   if (!allows.has("new-citation")) {
     const wasCites = citations(base);
     const added = [...citations(now)].filter((c) => !wasCites.has(c));
     if (added.length) {
-      add("unauthorised-citation", `${added.length} citation(s) appeared this round (${added.sort((a, b) => a - b).join(", ")}) and the manifest does not list \`new-citation\`. Every added cite must clear verify-citations before it is in the text; a round that adds one without declaring it skips that queue.`);
+      add(
+        "unauthorised-citation",
+        `${added.length} citation(s) appeared this round (${added.sort((a, b) => a - b).join(", ")}) and the manifest does not list \`new-citation\`. Every added cite must clear verify-citations before it is in the text; a round that adds one without declaring it skips that queue.`,
+      );
     }
   }
   if (!allows.has("new-number")) {
     const wasNums = numbers(base);
     const added = [...numbers(now)].filter((n) => !wasNums.has(n));
     if (added.length) {
-      const show = added.slice(0, 8).join(", ") + (added.length > 8 ? `, …` : "");
-      add("unauthorised-number", `${added.length} numeric literal(s) new to the body this round (${show}) and the manifest does not list \`new-number\`. A number that entered during a review round has no provenance row and no registry key — this is the shape of the 2026-08-05 defect, arriving under cover of a hedge fix.`);
+      const show =
+        added.slice(0, 8).join(", ") + (added.length > 8 ? `, …` : "");
+      add(
+        "unauthorised-number",
+        `${added.length} numeric literal(s) new to the body this round (${show}) and the manifest does not list \`new-number\`. A number that entered during a review round has no provenance row and no registry key — this is the shape of the 2026-08-05 defect, arriving under cover of a hedge fix.`,
+      );
     }
   }
 
-  return { findings, census: nowC, base: baseC, active, baseRev, rounds: manifests.length };
+  return {
+    findings,
+    census: nowC,
+    base: baseC,
+    active,
+    baseRev,
+    rounds: manifests.length,
+  };
 }
 
-const num = (v, d) => (v === undefined || v === null || v === "" || isNaN(Number(v)) ? d : Number(v));
+const num = (v, d) =>
+  v === undefined || v === null || v === "" || isNaN(Number(v)) ? d : Number(v);
 const sign = (n) => (n > 0 ? `+${n}` : String(n));
 const relOf = (dir, p) => relative(resolve(dir, ".."), p) || p;
 
@@ -385,25 +530,44 @@ function main(argv) {
   const args = argv.slice(2);
   const dir = resolve(args.find((a) => !a.startsWith("--")) ?? ".");
   const asJson = args.includes("--json");
-  const since = (args.find((a) => a.startsWith("--since=")) ?? "").split("=")[1] || undefined;
+  const since =
+    (args.find((a) => a.startsWith("--since=")) ?? "").split("=")[1] ||
+    undefined;
 
   const r = check(dir, { since });
-  if (asJson) { console.log(JSON.stringify(r.findings, null, 2)); return 0; }
+  if (asJson) {
+    console.log(JSON.stringify(r.findings, null, 2));
+    return 0;
+  }
 
   if (r.census) {
-    const c = r.census, b = r.base;
-    console.log(`📏 round-diff — ${dir.split("/").filter(Boolean).pop()}${r.baseRev ? ` against ${r.baseRev}` : ""}`);
-    console.log(`   body ${c.bodyWords}w${b ? ` (${sign(c.bodyWords - b.bodyWords)})` : ""} · appendix ${c.appendixWords}w${b ? ` (${sign(c.appendixWords - b.appendixWords)})` : ""} · hedges ${c.hedgeDensity.toFixed(2)}/1000${b ? ` (${sign(+(c.hedgeDensity - b.hedgeDensity).toFixed(2))})` : ""} · ${c.sections} sections · ${r.rounds ?? 0} round(s) on file`);
+    const c = r.census,
+      b = r.base;
+    console.log(
+      `📏 round-diff — ${dir.split("/").filter(Boolean).pop()}${r.baseRev ? ` against ${r.baseRev}` : ""}`,
+    );
+    console.log(
+      `   body ${c.bodyWords}w${b ? ` (${sign(c.bodyWords - b.bodyWords)})` : ""} · appendix ${c.appendixWords}w${b ? ` (${sign(c.appendixWords - b.appendixWords)})` : ""} · hedges ${c.hedgeDensity.toFixed(2)}/1000${b ? ` (${sign(+(c.hedgeDensity - b.hedgeDensity).toFixed(2))})` : ""} · ${c.sections} sections · ${r.rounds ?? 0} round(s) on file`,
+    );
   }
   for (const n of r.notes ?? []) console.log(`   ${n}`);
 
   // Always printed, findings or none. A check that speaks only when it fires teaches the reader to
   // hear silence as coverage, and this one has four blind spots big enough to name.
-  console.log(`   SILENT ABOUT: a claim whose strength changed at constant length (that is the claims diff);`);
-  console.log(`                 edits made and reverted inside one round; whether a hedge deserved its place;`);
-  console.log(`                 every file other than paper.md; and prose inside HTML comments, which is stripped.`);
+  console.log(
+    `   SILENT ABOUT: a claim whose strength changed at constant length (that is the claims diff);`,
+  );
+  console.log(
+    `                 edits made and reverted inside one round; whether a hedge deserved its place;`,
+  );
+  console.log(
+    `                 every file other than paper.md; and prose inside HTML comments, which is stripped.`,
+  );
 
-  if (!r.findings.length) { console.log(`   ✅ no finding`); return 0; }
+  if (!r.findings.length) {
+    console.log(`   ✅ no finding`);
+    return 0;
+  }
   console.log(`⚠️ round-diff — ${r.findings.length} finding(s):`);
   for (const f of r.findings) console.log(`   [${f.kind}] ${f.msg}`);
   return 0;

@@ -58,10 +58,14 @@ export type Located =
 export function locatePackage(project: string): Located {
   let manifest: string;
   try {
-    const req = createRequire(pathToFileURL(join(project, "__rpp_locate__.js")).href);
+    const req = createRequire(
+      pathToFileURL(join(project, "__rpp_locate__.js")).href,
+    );
     manifest = req.resolve(`${PACKAGE_NAME}/package.json`);
   } catch (e) {
-    return { error: `${(e as NodeJS.ErrnoException).code ?? "error"}: ${(e as Error).message.split("\n")[0]}` };
+    return {
+      error: `${(e as NodeJS.ErrnoException).code ?? "error"}: ${(e as Error).message.split("\n")[0]}`,
+    };
   }
   const dir = realpathSync(dirname(manifest));
   // Node's own walk, without its realpath step: the first `node_modules/<name>` up the tree that
@@ -81,7 +85,9 @@ export function locatePackage(project: string): Located {
 /** The skills the package ships, read from the directory its plugin manifest declares. */
 export function shippedSkills(
   pkgDir: string,
-): { readonly skillsDir: string; readonly names: readonly string[] } | { readonly error: string } {
+):
+  | { readonly skillsDir: string; readonly names: readonly string[] }
+  | { readonly error: string } {
   const manifest = join(pkgDir, ".claude-plugin", "plugin.json");
   let declared: unknown;
   try {
@@ -91,11 +97,15 @@ export function shippedSkills(
   }
   // A missing declaration is an error, not a fallback to `skills/`: a default here would make a
   // package that stopped declaring its skills look exactly like one that still does.
-  if (typeof declared !== "string") return { error: `${manifest} declares no "skills" directory` };
+  if (typeof declared !== "string")
+    return { error: `${manifest} declares no "skills" directory` };
   const skillsDir = join(pkgDir, declared);
-  if (!existsSync(skillsDir)) return { error: `the declared skills directory is missing: ${skillsDir}` };
+  if (!existsSync(skillsDir))
+    return { error: `the declared skills directory is missing: ${skillsDir}` };
   const names = readdirSync(skillsDir, { withFileTypes: true })
-    .filter((e) => e.isDirectory() && existsSync(join(skillsDir, e.name, "SKILL.md")))
+    .filter(
+      (e) => e.isDirectory() && existsSync(join(skillsDir, e.name, "SKILL.md")),
+    )
     .map((e) => e.name)
     .sort();
   return { skillsDir, names };
@@ -121,7 +131,10 @@ export type LinkReport =
   | { readonly ok: false; readonly error: string };
 
 /** What occupies `entry`, judged against the directory it should lead to. */
-function inspect(entry: string, want: string): { status: "present" | "missing" | "foreign"; reason?: string } {
+function inspect(
+  entry: string,
+  want: string,
+): { status: "present" | "missing" | "foreign"; reason?: string } {
   let st;
   try {
     st = lstatSync(entry);
@@ -132,11 +145,18 @@ function inspect(entry: string, want: string): { status: "present" | "missing" |
     if (realpathSync(entry) === want) return { status: "present" };
   } catch {
     return st.isSymbolicLink()
-      ? { status: "foreign", reason: `a dangling link to ${readlinkSync(entry)}` }
+      ? {
+          status: "foreign",
+          reason: `a dangling link to ${readlinkSync(entry)}`,
+        }
       : { status: "foreign", reason: "an entry that cannot be resolved" };
   }
-  if (st.isSymbolicLink()) return { status: "foreign", reason: `a link to ${readlinkSync(entry)}` };
-  return { status: "foreign", reason: st.isDirectory() ? "a directory" : "a file" };
+  if (st.isSymbolicLink())
+    return { status: "foreign", reason: `a link to ${readlinkSync(entry)}` };
+  return {
+    status: "foreign",
+    reason: st.isDirectory() ? "a directory" : "a file",
+  };
 }
 
 /**
@@ -145,11 +165,17 @@ function inspect(entry: string, want: string): { status: "present" | "missing" |
  */
 export function linkSkills(
   project: string,
-  { write = true, locate = locatePackage }: { write?: boolean; locate?: (p: string) => Located } = {},
+  {
+    write = true,
+    locate = locatePackage,
+  }: { write?: boolean; locate?: (p: string) => Located } = {},
 ): LinkReport {
   const pkg = locate(project);
   if ("error" in pkg)
-    return { ok: false, error: `${PACKAGE_NAME} does not resolve from ${project} (${pkg.error})` };
+    return {
+      ok: false,
+      error: `${PACKAGE_NAME} does not resolve from ${project} (${pkg.error})`,
+    };
   const shipped = shippedSkills(pkg.dir);
   if ("error" in shipped) return { ok: false, error: shipped.error };
   // The same directory, as the project spells it: the real skills dir re-rooted on `spelled`.
@@ -160,7 +186,10 @@ export function linkSkills(
     try {
       mkdirSync(home, { recursive: true });
     } catch (e) {
-      return { ok: false, error: `cannot create ${home}: ${(e as Error).message}` };
+      return {
+        ok: false,
+        error: `cannot create ${home}: ${(e as Error).message}`,
+      };
     }
   }
   // A relative target resolves against the directory that PHYSICALLY holds the link, so it is
@@ -174,12 +203,18 @@ export function linkSkills(
     example ??= target;
     const seen = inspect(entry, realpathSync(join(shipped.skillsDir, name)));
     if (seen.status !== "missing" || !write)
-      return seen.reason ? { name, status: seen.status, reason: seen.reason } : { name, status: seen.status };
+      return seen.reason
+        ? { name, status: seen.status, reason: seen.reason }
+        : { name, status: seen.status };
     try {
       symlinkSync(target, entry, "dir");
       return { name, status: "created" };
     } catch (e) {
-      return { name, status: "foreign", reason: `could not create the link: ${(e as Error).message}` };
+      return {
+        name,
+        status: "foreign",
+        reason: `could not create the link: ${(e as Error).message}`,
+      };
     }
   });
   return { ok: true, home, example, links };

@@ -8,7 +8,8 @@ import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({
   name: "render-paper",
-  description: "Compile a LaTeX paper (ACM/IEEE/arXiv) to PDF and render its pages to high-DPI PNGs for mobile/on-screen review. Use whenever asked to \"render / compile / show / screenshot\" a .tex paper, or to produce phone-readable page images of a draft (e.g. ACM/IEEE workshop submissions). Encodes the toolchain + the gotchas already hit (font-expansion crash, filecontents bib, bibtex cycle).",
+  description:
+    'Compile a LaTeX paper (ACM/IEEE/arXiv) to PDF and render its pages to high-DPI PNGs for mobile/on-screen review. Use whenever asked to "render / compile / show / screenshot" a .tex paper, or to produce phone-readable page images of a draft (e.g. ACM/IEEE workshop submissions). Encodes the toolchain + the gotchas already hit (font-expansion crash, filecontents bib, bibtex cycle).',
   tools: ["Read", "Write", "Edit", "Grep", "Glob", "Bash", "SendUserFile"],
   body: `
 # render-paper — .tex → PDF → readable page PNGs

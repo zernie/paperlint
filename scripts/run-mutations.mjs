@@ -55,7 +55,8 @@ function collect(dir, found = { harness: [], mutations: [] }) {
       continue;
     }
     if (entry.endsWith(".harness.mjs")) found.harness.push(relative(ROOT, p));
-    else if (entry.endsWith(".mutations.mjs")) found.mutations.push(relative(ROOT, p));
+    else if (entry.endsWith(".mutations.mjs"))
+      found.mutations.push(relative(ROOT, p));
   }
   return found;
 }
@@ -67,7 +68,9 @@ mutations.sort();
 // Guard 1 — the green zero, applied to this script itself.
 if (mutations.length === 0) {
   console.error(
-    "❌ NO mutation batteries found under " + ROOT + ".\n" +
+    "❌ NO mutation batteries found under " +
+      ROOT +
+      ".\n" +
       "   This is an error rather than an empty success: a run that discovers nothing and exits " +
       "0\n   is indistinguishable from a run where every battery passed.",
   );
@@ -97,7 +100,8 @@ for (const m of mutations) {
   }
   for (const line of (r.stdout ?? "").split("\n")) {
     const [tag, path] = line.split("\t");
-    if (tag === "MUTATION-COVERS" && path) covered.add(relative(ROOT, resolve(ROOT, path.trim())));
+    if (tag === "MUTATION-COVERS" && path)
+      covered.add(relative(ROOT, resolve(ROOT, path.trim())));
   }
 }
 // A battery that reports nothing is itself the green zero, one level down.
@@ -123,7 +127,9 @@ if (orphans.length > 0) {
   process.exit(1);
 }
 
-console.log(`Running ${mutations.length} mutation batter${mutations.length === 1 ? "y" : "ies"}:\n`);
+console.log(
+  `Running ${mutations.length} mutation batter${mutations.length === 1 ? "y" : "ies"}:\n`,
+);
 const failed = [];
 for (const m of mutations) {
   console.log(`──────── ${m}`);

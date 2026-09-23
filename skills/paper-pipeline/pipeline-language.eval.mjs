@@ -127,7 +127,13 @@
  *    Good enough to act on inside this repo; not good enough to publish.
  */
 
-import { assertPromptDiversity, skillResolved, readBaseline, writeBaseline, skip } from "vigiles";
+import {
+  assertPromptDiversity,
+  skillResolved,
+  readBaseline,
+  writeBaseline,
+  skip,
+} from "vigiles";
 import { paid_measureTriggerRate as measureTriggerRate } from "vigiles/eval";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -149,7 +155,11 @@ import { execFileSync } from "node:child_process";
 
 const ROOT = process.env.CLAUDE_PROJECT_DIR ?? process.cwd();
 const SKILLS_DIR = join(ROOT, ".claude", "skills");
-const BASELINE = join(SKILLS_DIR, "paper-pipeline", "pipeline-language.baseline.json");
+const BASELINE = join(
+  SKILLS_DIR,
+  "paper-pipeline",
+  "pipeline-language.baseline.json",
+);
 
 /** The namespace `packageSkillsDir` installs a LOOSE skills dir under. Same as the sibling eval. */
 const NS = "vigiles-loose-skills";
@@ -162,7 +172,10 @@ const val = (name, dflt) => {
   const i = argv.indexOf(`--${name}`);
   return i >= 0 && argv[i + 1] ? argv[i + 1] : dflt;
 };
-const onlys = argv.reduce((acc, a, i) => (a === "--only" && argv[i + 1] ? [...acc, argv[i + 1]] : acc), []);
+const onlys = argv.reduce(
+  (acc, a, i) => (a === "--only" && argv[i + 1] ? [...acc, argv[i + 1]] : acc),
+  [],
+);
 const TRIALS = Number(val("trials", "3"));
 const CONCURRENCY = Number(val("concurrency", "3"));
 
@@ -222,112 +235,208 @@ const CASES = [
     skill: "tighten-paper",
     why: "structural bloat — cut/fold/merge, NOT sentence craft",
     pairs: [
-      { origin: "ru", ru: "статья раздулась, середина провисает — что резать?",
-        en: "the paper has bloated and the middle sags — what do I cut?" },
-      { origin: "en", en: "this draft is 14 pages against a 9 page limit, what goes",
-        ru: "в черновике 14 страниц при лимите 9, что убираем" },
-      { origin: "ru", ru: "после трёх раундов ревью там одна вода и хеджи, нужен план сокращения",
-        en: "after three review rounds it is all filler and hedges, I need a cut plan" },
-      { origin: "en", en: "sections 4 and 5 say the same thing twice, and nobody would skim any of it",
-        ru: "секции 4 и 5 говорят одно и то же дважды, и это невозможно пролистать" },
+      {
+        origin: "ru",
+        ru: "статья раздулась, середина провисает — что резать?",
+        en: "the paper has bloated and the middle sags — what do I cut?",
+      },
+      {
+        origin: "en",
+        en: "this draft is 14 pages against a 9 page limit, what goes",
+        ru: "в черновике 14 страниц при лимите 9, что убираем",
+      },
+      {
+        origin: "ru",
+        ru: "после трёх раундов ревью там одна вода и хеджи, нужен план сокращения",
+        en: "after three review rounds it is all filler and hedges, I need a cut plan",
+      },
+      {
+        origin: "en",
+        en: "sections 4 and 5 say the same thing twice, and nobody would skim any of it",
+        ru: "секции 4 и 5 говорят одно и то же дважды, и это невозможно пролистать",
+      },
     ],
   },
   {
     skill: "grade-paper-writing",
     why: "prose craft — the sentence is the unit, NOT the section",
     pairs: [
-      { origin: "ru", ru: "оцени как написано — читается как стена жаргона",
-        en: "grade how it is written — it reads like a wall of jargon" },
-      { origin: "en", en: "is the writing any good or does it read like shit",
-        ru: "текст вообще нормальный или читается как дерьмо" },
-      { origin: "ru", ru: "abstract звучит криво хотя по смыслу всё на месте, дай оценку прозе",
-        en: "the abstract sounds clumsy even though the substance is fine, grade the prose" },
-      { origin: "en", en: "grade the craft: title, abstract, sentence clarity, hedge stacking",
-        ru: "оцени ремесло: заголовок, аннотация, ясность предложений, нагромождение хеджей" },
+      {
+        origin: "ru",
+        ru: "оцени как написано — читается как стена жаргона",
+        en: "grade how it is written — it reads like a wall of jargon",
+      },
+      {
+        origin: "en",
+        en: "is the writing any good or does it read like shit",
+        ru: "текст вообще нормальный или читается как дерьмо",
+      },
+      {
+        origin: "ru",
+        ru: "abstract звучит криво хотя по смыслу всё на месте, дай оценку прозе",
+        en: "the abstract sounds clumsy even though the substance is fine, grade the prose",
+      },
+      {
+        origin: "en",
+        en: "grade the craft: title, abstract, sentence clarity, hedge stacking",
+        ru: "оцени ремесло: заголовок, аннотация, ясность предложений, нагромождение хеджей",
+      },
     ],
   },
   {
     skill: "argument-arc",
     why: "argument architecture — does one conclusion become inevitable",
     pairs: [
-      { origin: "ru", ru: "ревьюер второй раз пишет что мы кидаем в него идеи без связи",
-        en: "a reviewer has now said twice that we throw disconnected ideas at him" },
-      { origin: "en", en: "does the paper actually carry a reader to one conclusion or just list stuff",
-        ru: "статья реально ведёт читателя к одному выводу или просто перечисляет" },
-      { origin: "ru", ru: "мы вводим пять именованных штук и три числа — по-моему это перебор",
-        en: "we introduce five named things and three numbers — that feels like too much" },
-      { origin: "en", en: "before the big rewrite I want one sentence per section, bottom up",
-        ru: "перед большой переписью хочу по одному предложению на секцию, снизу вверх" },
+      {
+        origin: "ru",
+        ru: "ревьюер второй раз пишет что мы кидаем в него идеи без связи",
+        en: "a reviewer has now said twice that we throw disconnected ideas at him",
+      },
+      {
+        origin: "en",
+        en: "does the paper actually carry a reader to one conclusion or just list stuff",
+        ru: "статья реально ведёт читателя к одному выводу или просто перечисляет",
+      },
+      {
+        origin: "ru",
+        ru: "мы вводим пять именованных штук и три числа — по-моему это перебор",
+        en: "we introduce five named things and three numbers — that feels like too much",
+      },
+      {
+        origin: "en",
+        en: "before the big rewrite I want one sentence per section, bottom up",
+        ru: "перед большой переписью хочу по одному предложению на секцию, снизу вверх",
+      },
     ],
   },
   {
     skill: "paper-adversarial-review",
     why: "ONE hostile reviewer, fast",
     pairs: [
-      { origin: "ru", ru: "red-team эту статью, чем будет бить reviewer 2",
-        en: "red-team this paper, what will reviewer 2 hit it with" },
-      { origin: "en", en: "would reviewer 2 buy this claim about the hook finding",
-        ru: "купится ли reviewer 2 на это утверждение про находку с хуком" },
-      { origin: "ru", ru: "найди слабые места до сабмита — один злой но честный рецензент",
-        en: "find the weak spots before submission — one hostile but fair reviewer" },
-      { origin: "en", en: "what is our desk reject risk and where do we overclaim",
-        ru: "какой у нас риск desk reject и где мы переобещаем" },
+      {
+        origin: "ru",
+        ru: "red-team эту статью, чем будет бить reviewer 2",
+        en: "red-team this paper, what will reviewer 2 hit it with",
+      },
+      {
+        origin: "en",
+        en: "would reviewer 2 buy this claim about the hook finding",
+        ru: "купится ли reviewer 2 на это утверждение про находку с хуком",
+      },
+      {
+        origin: "ru",
+        ru: "найди слабые места до сабмита — один злой но честный рецензент",
+        en: "find the weak spots before submission — one hostile but fair reviewer",
+      },
+      {
+        origin: "en",
+        en: "what is our desk reject risk and where do we overclaim",
+        ru: "какой у нас риск desk reject и где мы переобещаем",
+      },
     ],
   },
   {
     skill: "pc-panel-review",
     why: "the WHOLE committee + an accept probability, not one reviewer",
     pairs: [
-      { origin: "ru", ru: "какая вероятность принятия у этой статьи, если честно",
-        en: "honestly, what is the acceptance probability for this paper" },
-      { origin: "en", en: "simulate the whole program committee, not one reviewer",
-        ru: "смоделируй весь программный комитет, а не одного рецензента" },
-      { origin: "ru", ru: "что решат на PC discussion — accept или reject",
-        en: "what will the PC discussion decide — accept or reject" },
-      { origin: "ru", ru: "нужно несколько независимых ревьюеров с разными линзами плюс мета-ревью от чейра",
-        en: "I need several independent reviewers with different lenses plus a meta-review from the chair" },
+      {
+        origin: "ru",
+        ru: "какая вероятность принятия у этой статьи, если честно",
+        en: "honestly, what is the acceptance probability for this paper",
+      },
+      {
+        origin: "en",
+        en: "simulate the whole program committee, not one reviewer",
+        ru: "смоделируй весь программный комитет, а не одного рецензента",
+      },
+      {
+        origin: "ru",
+        ru: "что решат на PC discussion — accept или reject",
+        en: "what will the PC discussion decide — accept or reject",
+      },
+      {
+        origin: "ru",
+        ru: "нужно несколько независимых ревьюеров с разными линзами плюс мета-ревью от чейра",
+        en: "I need several independent reviewers with different lenses plus a meta-review from the chair",
+      },
     ],
   },
   {
     skill: "cold-read-diff",
     why: "fires AFTER a prose edit — the reader with no context",
     pairs: [
-      { origin: "ru", ru: "я переписал третий абзац intro — проверь что предложения вообще что-то значат",
-        en: "I rewrote the third paragraph of the intro — check the sentences actually mean anything" },
-      { origin: "en", en: "just edited the threats section, would a reader with no context get it",
-        ru: "только что правил секцию threats, поймёт ли её читатель без контекста" },
-      { origin: "ru", ru: "поправил формулировки в 4.2, прогони свежим читателем до того как я закрою правку",
-        en: "I fixed the wording in 4.2, run a fresh reader over it before I close the edit" },
-      { origin: "ru", ru: "эти предложения короткие, правдивые и всё равно непонятно что они утверждают",
-        en: "these sentences are short, true, and it is still unclear what they claim" },
+      {
+        origin: "ru",
+        ru: "я переписал третий абзац intro — проверь что предложения вообще что-то значат",
+        en: "I rewrote the third paragraph of the intro — check the sentences actually mean anything",
+      },
+      {
+        origin: "en",
+        en: "just edited the threats section, would a reader with no context get it",
+        ru: "только что правил секцию threats, поймёт ли её читатель без контекста",
+      },
+      {
+        origin: "ru",
+        ru: "поправил формулировки в 4.2, прогони свежим читателем до того как я закрою правку",
+        en: "I fixed the wording in 4.2, run a fresh reader over it before I close the edit",
+      },
+      {
+        origin: "ru",
+        ru: "эти предложения короткие, правдивые и всё равно непонятно что они утверждают",
+        en: "these sentences are short, true, and it is still unclear what they claim",
+      },
     ],
   },
   {
     skill: "verify-citations",
     why: "are the cites REAL — a pre-submit metadata gate",
     pairs: [
-      { origin: "ru", ru: "проверь что все цитаты настоящие перед сабмитом",
-        en: "check that every citation is real before submission" },
-      { origin: "en", en: "did we hallucinate any of these refs",
-        ru: "мы не выдумали какие-нибудь из этих ссылок" },
-      { origin: "ru", ru: "сверь метаданные по каждому cite — год, венью, авторы, doi",
-        en: "verify the metadata on every cite — year, venue, authors, doi" },
-      { origin: "en", en: "one bibtex entry looks invented to me, check the whole bibliography",
-        ru: "одна bibtex-запись выглядит выдуманной, проверь всю библиографию" },
+      {
+        origin: "ru",
+        ru: "проверь что все цитаты настоящие перед сабмитом",
+        en: "check that every citation is real before submission",
+      },
+      {
+        origin: "en",
+        en: "did we hallucinate any of these refs",
+        ru: "мы не выдумали какие-нибудь из этих ссылок",
+      },
+      {
+        origin: "ru",
+        ru: "сверь метаданные по каждому cite — год, венью, авторы, doi",
+        en: "verify the metadata on every cite — year, venue, authors, doi",
+      },
+      {
+        origin: "en",
+        en: "one bibtex entry looks invented to me, check the whole bibliography",
+        ru: "одна bibtex-запись выглядит выдуманной, проверь всю библиографию",
+      },
     ],
   },
   {
     skill: "map-prior-work",
     why: "who already did this — BEFORE drafting, reshapes the contribution",
     pairs: [
-      { origin: "ru", ru: "кто уже это сделал до нас — хочу знать до того как начну писать",
-        en: "who has already done this before us — I want to know before I start writing" },
-      { origin: "en", en: "sweep the landscape: everyone working on this, prior versus concurrent",
-        ru: "прочеши ландшафт: все кто работает над этим, prior против concurrent" },
-      { origin: "ru", ru: "нужен скелет related work и вердикт что мы ещё можем клеймить своим",
-        en: "I need a related-work skeleton and a verdict on what we can still claim as ours" },
-      { origin: "en", en: "find every competing group in this space and date them against our submission",
-        ru: "найди все конкурирующие группы в этой области и датируй их относительно нашего сабмита" },
+      {
+        origin: "ru",
+        ru: "кто уже это сделал до нас — хочу знать до того как начну писать",
+        en: "who has already done this before us — I want to know before I start writing",
+      },
+      {
+        origin: "en",
+        en: "sweep the landscape: everyone working on this, prior versus concurrent",
+        ru: "прочеши ландшафт: все кто работает над этим, prior против concurrent",
+      },
+      {
+        origin: "ru",
+        ru: "нужен скелет related work и вердикт что мы ещё можем клеймить своим",
+        en: "I need a related-work skeleton and a verdict on what we can still claim as ours",
+      },
+      {
+        origin: "en",
+        en: "find every competing group in this space and date them against our submission",
+        ru: "найди все конкурирующие группы в этой области и датируй их относительно нашего сабмита",
+      },
     ],
   },
 ];
@@ -337,10 +446,14 @@ const CASES = [
 // every `fired` predicate permanently false, and the run then reports a wall of confident 0.00s as
 // though eight descriptions had simultaneously died.
 function assertSkillIdsExist() {
-  if (!existsSync(SKILLS_DIR)) throw new Error(`no skills dir at ${SKILLS_DIR}`);
+  if (!existsSync(SKILLS_DIR))
+    throw new Error(`no skills dir at ${SKILLS_DIR}`);
   const installed = new Set(
     readdirSync(SKILLS_DIR, { withFileTypes: true })
-      .filter((e) => e.isDirectory() && existsSync(join(SKILLS_DIR, e.name, "SKILL.md")))
+      .filter(
+        (e) =>
+          e.isDirectory() && existsSync(join(SKILLS_DIR, e.name, "SKILL.md")),
+      )
       .map((e) => e.name),
   );
   const missing = CASES.map((c) => c.skill).filter((s) => !installed.has(s));
@@ -353,7 +466,9 @@ function assertSkillIdsExist() {
     const fm = readFileSync(join(SKILLS_DIR, c.skill, "SKILL.md"), "utf-8");
     const declared = declaredName(fm);
     if (declared && declared !== c.skill)
-      throw new Error(`${c.skill}/SKILL.md declares name: ${declared} — id mismatch, fix one of them`);
+      throw new Error(
+        `${c.skill}/SKILL.md declares name: ${declared} — id mismatch, fix one of them`,
+      );
   }
   return installed.size;
 }
@@ -363,10 +478,18 @@ function assertSkillIdsExist() {
 // were written by hand.
 for (const c of CASES) {
   for (const p of c.pairs) {
-    if (!p.en?.trim() || !p.ru?.trim()) throw new Error(`${c.skill}: a pair is missing a side: ${JSON.stringify(p)}`);
-    if (p.en.trim() === p.ru.trim()) throw new Error(`${c.skill}: both sides of a pair are identical: ${p.en}`);
-    if (!/[а-яё]/i.test(p.ru)) throw new Error(`${c.skill}: the "ru" side has no Cyrillic: ${p.ru}`);
-    if (p.origin !== "en" && p.origin !== "ru") throw new Error(`${c.skill}: origin must be "en" or "ru"`);
+    if (!p.en?.trim() || !p.ru?.trim())
+      throw new Error(
+        `${c.skill}: a pair is missing a side: ${JSON.stringify(p)}`,
+      );
+    if (p.en.trim() === p.ru.trim())
+      throw new Error(
+        `${c.skill}: both sides of a pair are identical: ${p.en}`,
+      );
+    if (!/[а-яё]/i.test(p.ru))
+      throw new Error(`${c.skill}: the "ru" side has no Cyrillic: ${p.ru}`);
+    if (p.origin !== "en" && p.origin !== "ru")
+      throw new Error(`${c.skill}: origin must be "en" or "ru"`);
   }
 }
 
@@ -395,11 +518,18 @@ console.log(
 try {
   execFileSync("claude", ["--version"], { stdio: "ignore" });
 } catch {
-  skip("`claude` CLI not on PATH — the eval tier drives the real harness and cannot be faked");
+  skip(
+    "`claude` CLI not on PATH — the eval tier drives the real harness and cannot be faked",
+  );
 }
 
-const selected = onlys.length ? CASES.filter((c) => onlys.includes(c.skill)) : CASES;
-if (selected.length === 0) throw new Error(`--only matched nothing. Known: ${CASES.map((c) => c.skill).join(", ")}`);
+const selected = onlys.length
+  ? CASES.filter((c) => onlys.includes(c.skill))
+  : CASES;
+if (selected.length === 0)
+  throw new Error(
+    `--only matched nothing. Known: ${CASES.map((c) => c.skill).join(", ")}`,
+  );
 
 // ── the measurement ──────────────────────────────────────────────────────────
 // One `measureTriggerRate` per (case, language). Everything except the prompt strings is held
@@ -431,7 +561,9 @@ for (const c of selected) {
     const r = perLang[lang];
     console.log(`  ${lang}: ${(r.rate * 100).toFixed(0)}% (${r.n} runs)`);
     r.perPrompt.forEach((p, i) =>
-      console.log(`    ${(p.fired / p.trials).toFixed(2)}  [${c.pairs[i].origin}] ${p.prompt.slice(0, 66)}`),
+      console.log(
+        `    ${(p.fired / p.trials).toFixed(2)}  [${c.pairs[i].origin}] ${p.prompt.slice(0, 66)}`,
+      ),
     );
   }
 }
@@ -471,7 +603,9 @@ console.log(
 // is the natural text and the English is the translation) as well as among en-original pairs, then
 // it is about language. If it exists only where the Russian was translated, it is about translation
 // — a real finding, a different one, and NOT the one the lead claimed.
-console.log(`\nSPLIT BY ORIGIN — is the gap about language, or about which side was translated?`);
+console.log(
+  `\nSPLIT BY ORIGIN — is the gap about language, or about which side was translated?`,
+);
 console.log(`${"origin".padEnd(12)}    en     ru    delta`);
 for (const o of ["en", "ru"]) {
   const e = tally("en", o);
@@ -507,15 +641,33 @@ const snapshot = {
   arms: {
     en: { runs: EN.n, metrics: { recall: EN.rate } },
     ru: { runs: RU.n, metrics: { recall: RU.rate } },
-    "en:en-original": { runs: tally("en", "en").n, metrics: { recall: tally("en", "en").rate } },
-    "ru:en-original": { runs: tally("ru", "en").n, metrics: { recall: tally("ru", "en").rate } },
-    "en:ru-original": { runs: tally("en", "ru").n, metrics: { recall: tally("en", "ru").rate } },
-    "ru:ru-original": { runs: tally("ru", "ru").n, metrics: { recall: tally("ru", "ru").rate } },
+    "en:en-original": {
+      runs: tally("en", "en").n,
+      metrics: { recall: tally("en", "en").rate },
+    },
+    "ru:en-original": {
+      runs: tally("ru", "en").n,
+      metrics: { recall: tally("ru", "en").rate },
+    },
+    "en:ru-original": {
+      runs: tally("en", "ru").n,
+      metrics: { recall: tally("en", "ru").rate },
+    },
+    "ru:ru-original": {
+      runs: tally("ru", "ru").n,
+      metrics: { recall: tally("ru", "ru").rate },
+    },
   },
-  totalCostUsd: rows.reduce((s, x) => s + x.perLang.en.usage.totalCostUsd + x.perLang.ru.usage.totalCostUsd, 0),
+  totalCostUsd: rows.reduce(
+    (s, x) =>
+      s + x.perLang.en.usage.totalCostUsd + x.perLang.ru.usage.totalCostUsd,
+    0,
+  ),
   aborted: false,
 };
-console.log(`\ntotal spend: $${snapshot.totalCostUsd.toFixed(2)} API-equivalent`);
+console.log(
+  `\ntotal spend: $${snapshot.totalCostUsd.toFixed(2)} API-equivalent`,
+);
 
 if (flag("update-baseline")) {
   writeBaseline(BASELINE, [snapshot]);

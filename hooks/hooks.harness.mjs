@@ -26,7 +26,16 @@
 import assert from "node:assert/strict";
 import { runHook } from "vigiles";
 import { checkHookImports } from "vigiles/hook";
-import { mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync, realpathSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+  realpathSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -66,7 +75,9 @@ const consumer = (block, { papers = "docs/papers", paper = "alpha" } = {}) => {
   symlinkSync(ROOT, join(nm, "research-paper-pipeline"));
   writeFileSync(
     join(dir, "package.json"),
-    block === null ? '{"name":"c","type":"module"}\n' : JSON.stringify({ name: "c", type: "module", ...block }) + "\n",
+    block === null
+      ? '{"name":"c","type":"module"}\n'
+      : JSON.stringify({ name: "c", type: "module", ...block }) + "\n",
   );
   if (papers !== null) {
     mkdirSync(join(dir, papers, paper), { recursive: true });
@@ -112,7 +123,10 @@ const at = (dir, name, input) =>
  * the hook's cwd».
  */
 const adrift = (dir, name, input) =>
-  runHook(program(name), input, { cwd: realpathSync(mkdtempSync(join(tmpdir(), "drift-"))), env: { CLAUDE_PROJECT_DIR: dir } });
+  runHook(program(name), input, {
+    cwd: realpathSync(mkdtempSync(join(tmpdir(), "drift-"))),
+    env: { CLAUDE_PROJECT_DIR: dir },
+  });
 
 /** An injected notice, as the model would receive it — not the returned reaction. */
 const injected = (r) => {
@@ -165,7 +179,9 @@ try {
   // failure, so a diagnostic written at the END only ever prints when nothing else is broken,
   // which is when it diagnoses nothing.
   {
-    const dir = fixture({ "research-paper-pipeline": { papers: "docs/papers" } });
+    const dir = fixture({
+      "research-paper-pipeline": { papers: "docs/papers" },
+    });
     for (const f of SHIPPED) {
       const name = f.replace(/\.hook\.mjs$/, "");
       const r = at(dir, name, STOP);
@@ -180,17 +196,28 @@ try {
   // III. paper-edit-guard — the blocking half and the allowing half
   // ═══════════════════════════════════════════════════════════════════════════
   {
-    const dir = fixture({ "research-paper-pipeline": { papers: "docs/papers" } });
+    const dir = fixture({
+      "research-paper-pipeline": { papers: "docs/papers" },
+    });
     const P = "docs/papers/alpha/paper.md";
     const T = "docs/papers/alpha/paper.tex";
     const deny = (label, cmd) => {
       const r = at(dir, "paper-edit-guard", onBash(cmd));
-      check(`guard BLOCKS ${label} (rc=${r.exitCode})`, r.exitCode === 2 && r.blocked);
-      check(`guard's refusal of ${label} says what to do instead`, /Use Edit or Write/.test(r.stderr));
+      check(
+        `guard BLOCKS ${label} (rc=${r.exitCode})`,
+        r.exitCode === 2 && r.blocked,
+      );
+      check(
+        `guard's refusal of ${label} says what to do instead`,
+        /Use Edit or Write/.test(r.stderr),
+      );
     };
     const allow = (label, cmd) => {
       const r = at(dir, "paper-edit-guard", onBash(cmd));
-      check(`guard ALLOWS ${label} (rc=${r.exitCode}, ${r.stderr.length}b err)`, r.exitCode === 0 && !r.blocked);
+      check(
+        `guard ALLOWS ${label} (rc=${r.exitCode}, ${r.stderr.length}b err)`,
+        r.exitCode === 0 && !r.blocked,
+      );
     };
 
     // The two cases `touches` alone MISSES: a redirection target is not an argv token.
@@ -208,22 +235,40 @@ try {
     allow("an unrelated command", "echo hi");
     allow("an unrelated write", `echo x ${GT} /tmp/unrelated.txt`);
     // The false positives that blocked real work: a bundle copy is data, and a grep is a read.
-    allow("a copy into a paper's repro bundle", `cp h.mjs docs/papers/alpha/repro/anon/h.mjs`);
+    allow(
+      "a copy into a paper's repro bundle",
+      `cp h.mjs docs/papers/alpha/repro/anon/h.mjs`,
+    );
     // A FROZEN SNAPSHOT is archival, not the live source: `versions/` is immutable by
     // construction and `paper/stages` gates it by bytes, which is stricter than anything the
     // PostToolUse checks this guard protects would say about it.
-    allow("freezing a snapshot into versions/", `cp /tmp/frozen.tex docs/papers/alpha/versions/2026-08-29-camera-ready.tex`);
-    allow("a redirect into versions/", `echo x ${GT} docs/papers/alpha/versions/a.tex`);
+    allow(
+      "freezing a snapshot into versions/",
+      `cp /tmp/frozen.tex docs/papers/alpha/versions/2026-08-29-camera-ready.tex`,
+    );
+    allow(
+      "a redirect into versions/",
+      `echo x ${GT} docs/papers/alpha/versions/a.tex`,
+    );
     // ⚠️ NOT exempt, and deliberately asserted so the limit is recorded rather than discovered:
     // with the LIVE source as the copy's argument, `namesPaperSource` hits on that token, and
     // argv carries no direction — `cp a b` and `cp b a` are the same shape. Freezing therefore
     // goes through a temp file, which is what the refusal already tells the caller to do.
-    deny("a copy whose SOURCE argument is the live paper", `cp ${T} docs/papers/alpha/versions/a.tex`);
+    deny(
+      "a copy whose SOURCE argument is the live paper",
+      `cp ${T} docs/papers/alpha/versions/a.tex`,
+    );
     // 🔴 The other half: the carve-out must not reach the LIVE source, which keeps the same
     // extension. Without this assert the exemption could be widened to `.tex` and stay green.
     deny("sed -i on the live source beside versions/", `sed -i s/a/b/ ${T}`);
-    deny("a write to a .tex that merely MENTIONS versions", `cp /tmp/versions/a.tex ${T}`);
-    allow("a grep of a status file", `grep -c x docs/papers/alpha/PIPELINE-STATUS.md 2${GT}/dev/null`);
+    deny(
+      "a write to a .tex that merely MENTIONS versions",
+      `cp /tmp/versions/a.tex ${T}`,
+    );
+    allow(
+      "a grep of a status file",
+      `grep -c x docs/papers/alpha/PIPELINE-STATUS.md 2${GT}/dev/null`,
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -240,21 +285,48 @@ try {
   // block anything — it turns them OFF. Silence is a nudge's success state, so a dead nudge and a
   // working one produce identical output. The lockout announces itself; this does not.
   {
-    const dir = fixture({ "research-paper-pipeline": { papers: "docs/papers" } });
+    const dir = fixture({
+      "research-paper-pipeline": { papers: "docs/papers" },
+    });
 
     // paper-edit-guard: still GUARDS from a foreign cwd, rather than denying everything.
-    const write = at(dir, "paper-edit-guard", onBash(`sed -i s/a/b/ docs/papers/alpha/paper.tex`));
+    const write = at(
+      dir,
+      "paper-edit-guard",
+      onBash(`sed -i s/a/b/ docs/papers/alpha/paper.tex`),
+    );
     check("drift · guard still blocks a paper write", write.exitCode === 2);
     const idle = adrift(dir, "paper-edit-guard", onBash("echo hi"));
-    check(`drift · guard does NOT deny an unrelated command (rc=${idle.exitCode})`, idle.exitCode === 0);
-    const guarded = adrift(dir, "paper-edit-guard", onBash(`sed -i s/a/b/ docs/papers/alpha/paper.tex`));
-    check("drift · guard STILL blocks the paper write it exists for", guarded.exitCode === 2);
+    check(
+      `drift · guard does NOT deny an unrelated command (rc=${idle.exitCode})`,
+      idle.exitCode === 0,
+    );
+    const guarded = adrift(
+      dir,
+      "paper-edit-guard",
+      onBash(`sed -i s/a/b/ docs/papers/alpha/paper.tex`),
+    );
+    check(
+      "drift · guard STILL blocks the paper write it exists for",
+      guarded.exitCode === 2,
+    );
 
     // The two PostToolUse hooks: still SPEAK from a foreign cwd.
-    const nudge = adrift(dir, "paper-skills-nudge", onEdit(`${dir}/docs/papers/alpha/paper.tex`));
+    const nudge = adrift(
+      dir,
+      "paper-skills-nudge",
+      onEdit(`${dir}/docs/papers/alpha/paper.tex`),
+    );
     check("drift · the skills nudge still fires", injected(nudge).length > 0);
-    const gates = adrift(dir, "paper-status-gates", onEdit(`${dir}/docs/papers/alpha/PIPELINE-STATUS.md`));
-    check(`drift · the status-gates hook still runs (rc=${gates.exitCode})`, gates.exitCode === 0);
+    const gates = adrift(
+      dir,
+      "paper-status-gates",
+      onEdit(`${dir}/docs/papers/alpha/PIPELINE-STATUS.md`),
+    );
+    check(
+      `drift · the status-gates hook still runs (rc=${gates.exitCode})`,
+      gates.exitCode === 0,
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -280,13 +352,22 @@ try {
 
     // (a) a declared root is used AS DECLARED — and the default is NOT.
     {
-      const dir = fixture({ "research-paper-pipeline": { papers: DECLARED } }, { papers: DECLARED });
-      check("carrier: a DECLARED root is honoured", at(dir, "paper-edit-guard", declaredWrite).exitCode === 2);
+      const dir = fixture(
+        { "research-paper-pipeline": { papers: DECLARED } },
+        { papers: DECLARED },
+      );
+      check(
+        "carrier: a DECLARED root is honoured",
+        at(dir, "paper-edit-guard", declaredWrite).exitCode === 2,
+      );
       check(
         "carrier: …and the DEFAULT root is not guarded once something else is declared",
         at(dir, "paper-edit-guard", defaultWrite).exitCode === 0,
       );
-      check("carrier: and it still allows an unrelated command", at(dir, "paper-edit-guard", harmless).exitCode === 0);
+      check(
+        "carrier: and it still allows an unrelated command",
+        at(dir, "paper-edit-guard", harmless).exitCode === 0,
+      );
     }
     // (b) no key at all → the documented default, and the converse of (a).
     {
@@ -305,31 +386,53 @@ try {
     {
       const dir = fixture({ "research-paper-pipeline": { papers: null } });
       const r = at(dir, "paper-edit-guard", harmless);
-      check(`carrier: "papers": null REFUSES (rc=${r.exitCode})`, r.exitCode === 2);
-      check("carrier: …and the refusal names the offending value", /got null/.test(r.stderr));
+      check(
+        `carrier: "papers": null REFUSES (rc=${r.exitCode})`,
+        r.exitCode === 2,
+      );
+      check(
+        "carrier: …and the refusal names the offending value",
+        /got null/.test(r.stderr),
+      );
     }
     // (d) the empty string — the value that makes every prefix test vacuously true.
     {
       const dir = fixture({ "research-paper-pipeline": { papers: "" } });
       const r = at(dir, "paper-edit-guard", harmless);
-      check(`carrier: "papers": "" REFUSES (rc=${r.exitCode})`, r.exitCode === 2);
-      check("carrier: …and explains that an empty prefix matches nothing", /matches nothing/.test(r.stderr));
+      check(
+        `carrier: "papers": "" REFUSES (rc=${r.exitCode})`,
+        r.exitCode === 2,
+      );
+      check(
+        "carrier: …and explains that an empty prefix matches nothing",
+        /matches nothing/.test(r.stderr),
+      );
     }
     // (e) an unreadable package.json — the case that arrives by itself, mid-merge.
     {
-      const dir = fixture({ "research-paper-pipeline": { papers: DECLARED } }, { papers: DECLARED });
+      const dir = fixture(
+        { "research-paper-pipeline": { papers: DECLARED } },
+        { papers: DECLARED },
+      );
       writeFileSync(join(dir, "package.json"), '{ "name": "c" <<<<<<< HEAD\n');
       const r = at(dir, "paper-edit-guard", harmless);
-      check(`carrier: an unparseable package.json REFUSES (rc=${r.exitCode})`, r.exitCode === 2);
+      check(
+        `carrier: an unparseable package.json REFUSES (rc=${r.exitCode})`,
+        r.exitCode === 2,
+      );
       check(
         "carrier: …and the refusal carries the way OUT (a file write, not a command)",
-        /Edit or Write/.test(r.stderr) && /do not pass through this gate/.test(r.stderr),
+        /Edit or Write/.test(r.stderr) &&
+          /do not pass through this gate/.test(r.stderr),
       );
     }
     // (f) a trailing slash the consumer typed — `prefix + "/"` would become `//`, matching
     //     nothing. This defect made an earlier version of the guard a silent no-op.
     {
-      const dir = fixture({ "research-paper-pipeline": { papers: DECLARED + "/" } }, { papers: DECLARED });
+      const dir = fixture(
+        { "research-paper-pipeline": { papers: DECLARED + "/" } },
+        { papers: DECLARED },
+      );
       check(
         "carrier: a TRAILING SLASH in the declaration still guards",
         at(dir, "paper-edit-guard", declaredWrite).exitCode === 2,
@@ -341,18 +444,28 @@ try {
   // V. paper-skills-nudge — it must LAND, not merely fire
   // ═══════════════════════════════════════════════════════════════════════════
   {
-    const dir = fixture({ "research-paper-pipeline": { papers: "docs/papers" } });
+    const dir = fixture({
+      "research-paper-pipeline": { papers: "docs/papers" },
+    });
     const lands = (label, p) => {
       const r = at(dir, "paper-skills-nudge", onEdit(p));
       const ctx = injected(r);
-      check(`nudge LANDS on ${label} (${r.stdout.length}b stdout)`, ctx.length > 0);
-      check(`nudge's text on ${label} is the checklist`, /Pre-submit checklist/.test(ctx));
+      check(
+        `nudge LANDS on ${label} (${r.stdout.length}b stdout)`,
+        ctx.length > 0,
+      );
+      check(
+        `nudge's text on ${label} is the checklist`,
+        /Pre-submit checklist/.test(ctx),
+      );
       check(`nudge on ${label} exits 0`, r.exitCode === 0);
     };
     const silent = (label, p) => {
       const r = at(dir, "paper-skills-nudge", onEdit(p));
-      check(`nudge SILENT on ${label} (${r.stdout.length}b stdout, ${r.stderr.length}b stderr)`,
-        r.stdout.length === 0 && r.stderr.length === 0 && r.exitCode === 0);
+      check(
+        `nudge SILENT on ${label} (${r.stdout.length}b stdout, ${r.stderr.length}b stderr)`,
+        r.stdout.length === 0 && r.stderr.length === 0 && r.exitCode === 0,
+      );
     };
     lands("a relative paper.md", "docs/papers/alpha/paper.md");
     lands("a .tex", "docs/papers/alpha/paper.tex");
@@ -363,14 +476,28 @@ try {
     silent("a file outside the papers root", "README.md");
     // The advisory's own asymmetry: it goes quiet where the gate refuses.
     {
-      const broken = fixture({ "research-paper-pipeline": { papers: null } }, { papers: "papers" });
-      const r = at(broken, "paper-skills-nudge", onEdit("docs/papers/alpha/paper.md"));
-      check("nudge is SILENT (not blocking) on an unusable declaration", r.exitCode === 0 && r.stdout.length === 0);
+      const broken = fixture(
+        { "research-paper-pipeline": { papers: null } },
+        { papers: "papers" },
+      );
+      const r = at(
+        broken,
+        "paper-skills-nudge",
+        onEdit("docs/papers/alpha/paper.md"),
+      );
+      check(
+        "nudge is SILENT (not blocking) on an unusable declaration",
+        r.exitCode === 0 && r.stdout.length === 0,
+      );
       // 🔴 AND SILENT ON THE DEFAULT ROOT TOO — this is the half that catches `??`. With
       // `declared ?? DEFAULT` an explicit `null` is read as «nothing was declared», the prefix
       // becomes `papers/`, and the nudge starts firing about a tree the consumer never named.
       // Without this case that mutation survives, because the assertion above passes either way.
-      const d = at(broken, "paper-skills-nudge", onEdit("papers/alpha/paper.md"));
+      const d = at(
+        broken,
+        "paper-skills-nudge",
+        onEdit("papers/alpha/paper.md"),
+      );
       check(
         "nudge: an explicit null is NOT read as an absence (no fallback to the default root)",
         d.stdout.length === 0,
@@ -382,15 +509,23 @@ try {
   // VI. paper-status-gates — the tool runs, and only for a validated directory
   // ═══════════════════════════════════════════════════════════════════════════
   {
-    const dir = fixture({ "research-paper-pipeline": { papers: "docs/papers" } });
+    const dir = fixture({
+      "research-paper-pipeline": { papers: "docs/papers" },
+    });
     const fires = (label, p) => {
       const r = at(dir, "paper-status-gates", onEdit(p));
-      check(`gates FIRES on ${label} (${r.stderr.length}b stderr)`, /fixture verdict line/.test(r.stderr));
+      check(
+        `gates FIRES on ${label} (${r.stderr.length}b stderr)`,
+        /fixture verdict line/.test(r.stderr),
+      );
       check(`gates on ${label} exits 0`, r.exitCode === 0);
     };
     const silent = (label, p) => {
       const r = at(dir, "paper-status-gates", onEdit(p));
-      check(`gates SILENT on ${label}`, r.stdout.length === 0 && r.stderr.length === 0 && r.exitCode === 0);
+      check(
+        `gates SILENT on ${label}`,
+        r.stdout.length === 0 && r.stderr.length === 0 && r.exitCode === 0,
+      );
     };
     fires("a relative paper.md", "docs/papers/alpha/paper.md");
     fires("an ABSOLUTE paper.md", join(dir, "docs/papers/alpha/paper.md"));
@@ -398,27 +533,50 @@ try {
     silent("a file outside the papers root", "README.md");
     // 🔴 THE BOUNDARY IN `(?:^|/)`: a directory merely ENDING in the root's last segment must
     // not smuggle a match. Without the boundary this is a hit.
-    silent("a look-alike root (`notdocs/papers/…`)", "notdocs/papers/alpha/paper.md");
+    silent(
+      "a look-alike root (`notdocs/papers/…`)",
+      "notdocs/papers/alpha/paper.md",
+    );
     // A `.tex` whose directory name carries a shell metacharacter cannot reach a command.
-    silent("a directory name with a shell metacharacter", "docs/papers/al;pha/paper.tex");
+    silent(
+      "a directory name with a shell metacharacter",
+      "docs/papers/al;pha/paper.tex",
+    );
     // 🔴 The `??` discriminator again, for this hook's own copy of the carrier.
     {
-      const broken = fixture({ "research-paper-pipeline": { papers: null } }, { papers: "papers" });
+      const broken = fixture(
+        { "research-paper-pipeline": { papers: null } },
+        { papers: "papers" },
+      );
       check(
         "gates: an explicit null is NOT read as an absence (no fallback to the default root)",
-        at(broken, "paper-status-gates", onEdit("papers/alpha/paper.md")).stderr.length === 0,
+        at(broken, "paper-status-gates", onEdit("papers/alpha/paper.md")).stderr
+          .length === 0,
       );
     }
     // The declared root is regex-ESCAPED: `.` in a root must not act as a wildcard.
     {
-      const dotted = fixture({ "research-paper-pipeline": { papers: "docs.v2/papers" } }, { papers: "docs.v2/papers" });
+      const dotted = fixture(
+        { "research-paper-pipeline": { papers: "docs.v2/papers" } },
+        { papers: "docs.v2/papers" },
+      );
       check(
         "gates: a root with a dot matches ITSELF",
-        /fixture verdict line/.test(at(dotted, "paper-status-gates", onEdit("docs.v2/papers/alpha/paper.md")).stderr),
+        /fixture verdict line/.test(
+          at(
+            dotted,
+            "paper-status-gates",
+            onEdit("docs.v2/papers/alpha/paper.md"),
+          ).stderr,
+        ),
       );
       check(
         "gates: …and the dot is NOT a wildcard",
-        at(dotted, "paper-status-gates", onEdit("docsXv2/papers/alpha/paper.md")).stderr.length === 0,
+        at(
+          dotted,
+          "paper-status-gates",
+          onEdit("docsXv2/papers/alpha/paper.md"),
+        ).stderr.length === 0,
       );
     }
   }
@@ -441,20 +599,38 @@ try {
   // VIII. paper-status-gates.sh — a TOOL, and it must refuse to be a hook
   // ═══════════════════════════════════════════════════════════════════════════
   {
-    const dir = fixture({ "research-paper-pipeline": { papers: "docs/papers" } });
+    const dir = fixture({
+      "research-paper-pipeline": { papers: "docs/papers" },
+    });
     const sh = (args) =>
-      runHook(`bash ${JSON.stringify(join(HOOKS, "paper-status-gates.sh"))} ${args}`, STOP, {
-        cwd: dir,
-        env: { CLAUDE_PROJECT_DIR: dir },
-      });
+      runHook(
+        `bash ${JSON.stringify(join(HOOKS, "paper-status-gates.sh"))} ${args}`,
+        STOP,
+        {
+          cwd: dir,
+          env: { CLAUDE_PROJECT_DIR: dir },
+        },
+      );
     const usage = sh("");
-    check("the .sh called with no --surface says it is a tool", /a tool, not a hook/.test(usage.stderr));
+    check(
+      "the .sh called with no --surface says it is a tool",
+      /a tool, not a hook/.test(usage.stderr),
+    );
     check("…and still exits 0 (it must never block)", usage.exitCode === 0);
     const good = sh("--surface alpha");
-    check("the .sh surfaces the verdict for a real paper", /fixture verdict line/.test(good.stderr));
-    check("…and reads the papers root from the DECLARATION", good.exitCode === 0);
+    check(
+      "the .sh surfaces the verdict for a real paper",
+      /fixture verdict line/.test(good.stderr),
+    );
+    check(
+      "…and reads the papers root from the DECLARATION",
+      good.exitCode === 0,
+    );
     const missing = sh("--surface nosuchpaper");
-    check("the .sh is silent for a directory with no status file", missing.stderr.length === 0);
+    check(
+      "the .sh is silent for a directory with no status file",
+      missing.stderr.length === 0,
+    );
     // 🔴 THE NASTY NAME NEEDS A REAL DIRECTORY BEHIND IT, or the assertion cannot fail. First
     // draft just passed `a;b` and checked for silence — but a name that names nothing is silent
     // anyway, for want of a status file, so the mutation that DELETES the name check survived

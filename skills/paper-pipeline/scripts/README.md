@@ -14,12 +14,12 @@ each mechanical gate and check the gate says no (see **Harnesses**, added 2026-0
 > in [`.claude/lib/`](../../../lib/README.md), also there the breakdown of four forms of reference, from which
 > path-based search sees only one.
 
-| file | what it is for |
-|---|---|
-| `ledger.mjs` | The append-only run ledger. `record()` writes one JSON line carrying a FINDING or an ABSTENTION **plus a hash of the paper and a hash of the skill's own source**. `status()` derives FRESH / STALE-PAPER / STALE-SKILL / NEVER-RUN from those hashes against the bytes on disk. Everything else is derived from this file. |
-| `announce.mjs` | `node .claude/skills/paper-pipeline/scripts/announce.mjs <skill> <paper-dir>` — prints a two-line banner to stderr and writes an `ABSTAINED started` row. Called by a skill as its first step. |
-| `status.mjs` | The computed status view. No field here can be set by a human. |
-| `runs.jsonl` | The ledger itself. Append-only; do not edit by hand. |
+| file           | what it is for                                                                                                                                                                                                                                                                                                              |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ledger.mjs`   | The append-only run ledger. `record()` writes one JSON line carrying a FINDING or an ABSTENTION **plus a hash of the paper and a hash of the skill's own source**. `status()` derives FRESH / STALE-PAPER / STALE-SKILL / NEVER-RUN from those hashes against the bytes on disk. Everything else is derived from this file. |
+| `announce.mjs` | `node .claude/skills/paper-pipeline/scripts/announce.mjs <skill> <paper-dir>` — prints a two-line banner to stderr and writes an `ABSTAINED started` row. Called by a skill as its first step.                                                                                                                              |
+| `status.mjs`   | The computed status view. No field here can be set by a human.                                                                                                                                                                                                                                                              |
+| `runs.jsonl`   | The ledger itself. Append-only; do not edit by hand.                                                                                                                                                                                                                                                                        |
 
 ## The one command
 
@@ -47,14 +47,14 @@ than of any manuscript, and they are one fact wearing three coats:
 2. a check that had never once returned a negative counted as a working check;
 3. five model reviewers from one vendor agreeing was recorded as an acquittal.
 
-Each is a stored value meaning *nothing was wrong*, written by a process with no evidence for it and
+Each is a stored value meaning _nothing was wrong_, written by a process with no evidence for it and
 thereafter indistinguishable from one that had some. So the value is gone. **A run records exactly
 two things:**
 
-| constructor | must carry | means |
-|---|---|---|
-| `FINDING` | a `<count> ≥ 1` **and a report path that exists** (`--blocking` if it stops the pass) | something is wrong, and here is where to read about it |
-| `ABSTAINED` | a `<reason>` from a closed set | no judgement was produced, and here is why |
+| constructor | must carry                                                                            | means                                                  |
+| ----------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `FINDING`   | a `<count> ≥ 1` **and a report path that exists** (`--blocking` if it stops the pass) | something is wrong, and here is where to read about it |
+| `ABSTAINED` | a `<reason>` from a closed set                                                        | no judgement was produced, and here is why             |
 
 Reasons: `started` · `no-witness` · `input-missing` · `blocked` · `crashed`.
 
@@ -65,15 +65,15 @@ has **no witness** for the negative answer.
 
 ### Prior art, both halves of it
 
-- **SARIF** (OASIS Standard 2.1.0, §3.27.9) defines `kind: "pass"` verbatim as *"The rule … was
-  evaluated, and no problem was found"*, and the only REQUIRED property of a `result` is `message` —
+- **SARIF** (OASIS Standard 2.1.0, §3.27.9) defines `kind: "pass"` verbatim as _"The rule … was
+  evaluated, and no problem was found"_, and the only REQUIRED property of a `result` is `message` —
   `locations` is optional, so a conformant acquittal can name no place, no span and no artifact.
   🔴 **Do not write that industry lacks abstention.** `kind: "open"` sits in the same paragraph
-  (*"insufficient information to decide whether a problem exists"*) and its NOTE 1 draws exactly our
+  (_"insufficient information to decide whether a problem exists"_) and its NOTE 1 draws exactly our
   trichotomy. Our position is **"delete pass"**, never "add abstain". Established `[A]` against the
   OASIS text and its JSON schema in
   `the author's private research notes` §5.
-- **Certifying algorithms** — McConnell, Mehlhorn, Näher & Schweitzer, *Computer Science Review*
+- **Certifying algorithms** — McConnell, Mehlhorn, Näher & Schweitzer, _Computer Science Review_
   5(2):119–161, 2011 — is the ancestor: BOTH answers carry a witness ("bipartite" → a 2-colouring,
   "not bipartite" → an odd cycle). 🔴 **Our discipline is strictly WEAKER than theirs and must say
   so rather than borrow the credit:** we witness only the finding. `no-witness` is the honest name
@@ -97,7 +97,7 @@ So a legacy row keeps a kind of its own, `LEGACY`, and its original word verbati
   broken `FINDING` row before failing the run);
 - a legacy `PASS`/`ABSENT`/`ERROR` row carries **nothing** forward. The status view prints it as
   `legacy:PASS` under a heading that says so. Note that real PASS rows sometimes carry a count
-  (`sweep-design-space`, `findings: 8`) and that count meant *survivors*, not defects — it is not
+  (`sweep-design-space`, `findings: 8`) and that count meant _survivors_, not defects — it is not
   read as a finding count. Re-run the check to get an answer in a live vocabulary.
 
 ## 🔴 One check, one row (2026-08-10)
@@ -158,27 +158,27 @@ finished. Neither row present means it did not run, whatever any status file cla
 
 ## Harnesses (2026-08-07)
 
-Property 3 above says a gate that has never returned a negative verdict is *suspect*. These turn
+Property 3 above says a gate that has never returned a negative verdict is _suspect_. These turn
 that suspicion into evidence or into a bug report: each one plants the exact defect a gate claims to
 catch, asserts the gate fires, and asserts it stays **quiet on the clean case** — because a checker
 that fires on correct text is muted within a day, which is worse than one that misses.
 
-| harness | gate under test | what is planted |
-|---|---|---|
-| `gates.harness.mjs` | `structure.mjs`, `prose-lint.mjs`, `ledger.mjs`, `status.mjs`, `run-mechanical.mjs` | unjustified section · a sentence carrying five independent claims · an answer about a rewritten paper · a gate that records nothing · **`PASS` reaching the ledger** · an abstention with a free-text reason · a finding with no evidence, dead evidence, or evidence whose count disagrees · **a sibling check's clean run erasing a finding** · two checks sharing one row key · a status view that prints ✅ or the word PASS · a retired-vocabulary row read as a current answer · **a CLI flag that is advertised and unparsed** |
-| `population-map.harness.mjs` | `population-map.mjs` | owns its self-test (13 cases, run as a **subprocess**) + the CLI wiring the self-test never touches |
-| `provenance.harness.mjs` | `check-provenance.mjs` | a number from the `annotated` arm cited as "exactly as committed" · a bolded figure with no provenance row |
-| `artifact-coverage.harness.mjs` | `artifact-coverage.mjs` | a bundle with no data for the section the abstract leads with · an index promising a path that is not shipped · and, in the REVERSE direction, **a result that exists on disk and that neither the paper nor the released index mentions** — plus the ignore set that decides which of those count: an allowance applied, an allowance printed with its reason, a `ships-as:` claim whose bundle path has gone, a row naming a directory that no longer exists, and **the whole ignore ledger printed on a run with no findings** |
-| `generated-code.harness.mjs` | `generated-code.mjs` | an analysis script that draws randomness and never seeds it · one that hard-codes an absolute path · one that reads and then overwrites its own input (literal and `argv` forms). Plus every quiet case, which is where this checker lives or dies: a seed threaded through `--seed`, a lowercase Express route, a third party's relative path, a read-here-write-there script, a variable name reused across two loops — and the released bundle, which `check-anon.sh` cat. 5 owns and this one must not enter |
-| `pipeline-check.harness.mjs` | `pipeline-check.mjs` | six defects, **one at a time**, asserting the exact finding set. 🔴 Since 2026-08-26 here only checks whose input is OUTSIDE the file (git · clock · `reviews/` · `process.env`); sixteen others moved to `eslint-rules/pipeline-status.mjs` and are checked by `eslint-rules/pipeline-status.harness.mjs` |
-| `paper-lint.harness.mjs` | `paper-lint.mjs` | text moving under an unchanged scorecard · appendix outweighing the body · a shaved passage |
-| `round-diff.harness.mjs` | `paper-pipeline/scripts/round-diff.mjs` | a section changed outside the round's declaration (and one added, and one **removed**) · a cite and a bare bibliography entry arriving mid-round · a numeric literal arriving mid-round, with restating an existing one asserted FREE · the body over its budget · **three rounds compounding past the sum of their budgets while the open round is inside its own** · hedge density rising · a `touches:` list covering the paper · a base that does not resolve · edits with every round closed. Plus the clean case: a legal round must produce total silence |
-| `delivered-pdf.harness.mjs` | `repro/delivered_pdf.py` | a quantity deleted from the built page · **a superscript minus lost in typesetting, compiled and read back** · a value moved away from its claim · an occurrence whose prose the extractor lost · a missing, unreadable and stale PDF · and all six normalisation rules, one assertion each |
-| `bound-numbers.harness.mjs` | `repro/paper_numbers.py`, `md2submission.py`, `latex-build.sh` | a digit in a `\newcommand` name · two registry keys mangling to one macro · an unescaped `%` in the generated values · a converter handling the digits again · a missing `\input` · an unbound name that must stop the build with **no PDF** · a failing pass that leaves its PDF on disk. Plus the CONTROL: a hand-typed literal still compiles, **asserted** so nobody writes that this makes a wrong number unrepresentable |
-| `textidote.harness.mjs` | `repro/textidote_check.py` (TeXtidote v0.9) | a misspelling planted into real prose from the paper, live through the pinned jar · a coinage with a committed row staying silent in the same run · the flagged span truncated by one letter · the caret row leaking into the message · each of the three exclusions (`{{macro}}`, `` `code` ``, the reference list) · **an appendix AFTER `## References` still being judged** · a key that stops discriminating by rule, by word, or by case · a tolerated row moved 40 lines down and indented · the tolerated set, its reasons and the stale rows going unprinted · a missing jar or JRE answering with an empty findings array |
-| `uncited-refs.harness.mjs` | `repro/uncited_refs.py` (`checkcites`) | a bibliography entry no `\cite` points at, planted into a copy of the real build · a finding that names only the bibtex key and not the work · **`checkcites` absent, asserted against the same fixture that DOES report a finding when it is present** · a paper that was never built · a bibliography that could not be read becoming a finding named after the missing file |
-| `<skill>/<skill>.harness.mjs` (×22, colocated) | **one SKILL.md each**, via `skill-checks.mjs` | frontmatter that is not YAML · a `name:` disagreeing with its directory · a wired block naming a script that is not there · a block filing under a **sibling's** name · a Bash command its own `allowed-tools` forbids · a ledger-only skill regressed to bare `Bash` · **a block that documents no FINDING** · a block still instructing a retired constructor · an `ABSTAINED` with no named reason |
-| `pipeline-corpus.harness.mjs` | the **SET** of skills | a gate row pointing at a directory that does not exist · a duplicate key in `EXPECTED_GATES` · a wired skill absent from the gate table · an exclusion that has rotted (skill gone, or no longer wired) |
+| harness                                        | gate under test                                                                     | what is planted                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `gates.harness.mjs`                            | `structure.mjs`, `prose-lint.mjs`, `ledger.mjs`, `status.mjs`, `run-mechanical.mjs` | unjustified section · a sentence carrying five independent claims · an answer about a rewritten paper · a gate that records nothing · **`PASS` reaching the ledger** · an abstention with a free-text reason · a finding with no evidence, dead evidence, or evidence whose count disagrees · **a sibling check's clean run erasing a finding** · two checks sharing one row key · a status view that prints ✅ or the word PASS · a retired-vocabulary row read as a current answer · **a CLI flag that is advertised and unparsed**                                                                                               |
+| `population-map.harness.mjs`                   | `population-map.mjs`                                                                | owns its self-test (13 cases, run as a **subprocess**) + the CLI wiring the self-test never touches                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `provenance.harness.mjs`                       | `check-provenance.mjs`                                                              | a number from the `annotated` arm cited as "exactly as committed" · a bolded figure with no provenance row                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `artifact-coverage.harness.mjs`                | `artifact-coverage.mjs`                                                             | a bundle with no data for the section the abstract leads with · an index promising a path that is not shipped · and, in the REVERSE direction, **a result that exists on disk and that neither the paper nor the released index mentions** — plus the ignore set that decides which of those count: an allowance applied, an allowance printed with its reason, a `ships-as:` claim whose bundle path has gone, a row naming a directory that no longer exists, and **the whole ignore ledger printed on a run with no findings**                                                                                                   |
+| `generated-code.harness.mjs`                   | `generated-code.mjs`                                                                | an analysis script that draws randomness and never seeds it · one that hard-codes an absolute path · one that reads and then overwrites its own input (literal and `argv` forms). Plus every quiet case, which is where this checker lives or dies: a seed threaded through `--seed`, a lowercase Express route, a third party's relative path, a read-here-write-there script, a variable name reused across two loops — and the released bundle, which `check-anon.sh` cat. 5 owns and this one must not enter                                                                                                                    |
+| `pipeline-check.harness.mjs`                   | `pipeline-check.mjs`                                                                | six defects, **one at a time**, asserting the exact finding set. 🔴 Since 2026-08-26 here only checks whose input is OUTSIDE the file (git · clock · `reviews/` · `process.env`); sixteen others moved to `eslint-rules/pipeline-status.mjs` and are checked by `eslint-rules/pipeline-status.harness.mjs`                                                                                                                                                                                                                                                                                                                          |
+| `paper-lint.harness.mjs`                       | `paper-lint.mjs`                                                                    | text moving under an unchanged scorecard · appendix outweighing the body · a shaved passage                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `round-diff.harness.mjs`                       | `paper-pipeline/scripts/round-diff.mjs`                                             | a section changed outside the round's declaration (and one added, and one **removed**) · a cite and a bare bibliography entry arriving mid-round · a numeric literal arriving mid-round, with restating an existing one asserted FREE · the body over its budget · **three rounds compounding past the sum of their budgets while the open round is inside its own** · hedge density rising · a `touches:` list covering the paper · a base that does not resolve · edits with every round closed. Plus the clean case: a legal round must produce total silence                                                                    |
+| `delivered-pdf.harness.mjs`                    | `repro/delivered_pdf.py`                                                            | a quantity deleted from the built page · **a superscript minus lost in typesetting, compiled and read back** · a value moved away from its claim · an occurrence whose prose the extractor lost · a missing, unreadable and stale PDF · and all six normalisation rules, one assertion each                                                                                                                                                                                                                                                                                                                                         |
+| `bound-numbers.harness.mjs`                    | `repro/paper_numbers.py`, `md2submission.py`, `latex-build.sh`                      | a digit in a `\newcommand` name · two registry keys mangling to one macro · an unescaped `%` in the generated values · a converter handling the digits again · a missing `\input` · an unbound name that must stop the build with **no PDF** · a failing pass that leaves its PDF on disk. Plus the CONTROL: a hand-typed literal still compiles, **asserted** so nobody writes that this makes a wrong number unrepresentable                                                                                                                                                                                                      |
+| `textidote.harness.mjs`                        | `repro/textidote_check.py` (TeXtidote v0.9)                                         | a misspelling planted into real prose from the paper, live through the pinned jar · a coinage with a committed row staying silent in the same run · the flagged span truncated by one letter · the caret row leaking into the message · each of the three exclusions (`{{macro}}`, `` `code` ``, the reference list) · **an appendix AFTER `## References` still being judged** · a key that stops discriminating by rule, by word, or by case · a tolerated row moved 40 lines down and indented · the tolerated set, its reasons and the stale rows going unprinted · a missing jar or JRE answering with an empty findings array |
+| `uncited-refs.harness.mjs`                     | `repro/uncited_refs.py` (`checkcites`)                                              | a bibliography entry no `\cite` points at, planted into a copy of the real build · a finding that names only the bibtex key and not the work · **`checkcites` absent, asserted against the same fixture that DOES report a finding when it is present** · a paper that was never built · a bibliography that could not be read becoming a finding named after the missing file                                                                                                                                                                                                                                                      |
+| `<skill>/<skill>.harness.mjs` (×22, colocated) | **one SKILL.md each**, via `skill-checks.mjs`                                       | frontmatter that is not YAML · a `name:` disagreeing with its directory · a wired block naming a script that is not there · a block filing under a **sibling's** name · a Bash command its own `allowed-tools` forbids · a ledger-only skill regressed to bare `Bash` · **a block that documents no FINDING** · a block still instructing a retired constructor · an `ABSTAINED` with no named reason                                                                                                                                                                                                                               |
+| `pipeline-corpus.harness.mjs`                  | the **SET** of skills                                                               | a gate row pointing at a directory that does not exist · a duplicate key in `EXPECTED_GATES` · a wired skill absent from the gate table · an exclusion that has rotted (skill gone, or no longer wired)                                                                                                                                                                                                                                                                                                                                                                                                                             |
 
 These two are the only ones aimed at the **skills** rather than the scripts they call, which
 is what `vigiles audit`'s `Tested` metric actually counts — "34 surfaces with no vigiles test/eval"
@@ -186,7 +186,7 @@ was never about `structure.mjs`. It also fails differently: a script with a bad 
 **skill** with a bad path is read by a model that quietly does something adjacent and reports success.
 Its non-vacuity proof is a separate file, `skills.mutations.mjs` — 21 planted defects, one per
 assertion class, each on a throwaway copy of `.claude/`, plus a control asserting the clean corpus
-produces *only* the four known-red YAML findings so no case can pass on noise. Run it by hand after
+produces _only_ the four known-red YAML findings so no case can pass on noise. Run it by hand after
 touching the harness (`node .claude/skills/paper-pipeline/scripts/skills.mutations.mjs`, ~3 s); CI runs it too.
 
 Nine harnesses now carry a mutations file of their own — `delivered-pdf.mutations.mjs` (25 rows), `bound-numbers.mutations.mjs` (12 rows),
@@ -207,7 +207,7 @@ calls `runMutations()`. The reason is not line count: the ten copies of the driv
 the protections lived in whichever file happened to earn them. Counted against the committed
 versions — the no-op guard (a replacement equal to the original leaves a green harness proving
 nothing) was in **4 of 10**; the retry-once on a non-kill was in **1 of 10**; the strict rule that a
-mutation must be killed by its OWN named assertion, not merely by *something* going red, was in
+mutation must be killed by its OWN named assertion, not merely by _something_ going red, was in
 **1 of 10**. All ten now have all three. Two dead-path defects were closed on the way: six `ledger`
 cases named `skills.harness.mjs`, deleted by the 2026-08-11 colocation, and `vigiles test` on a path
 matching nothing exits 0 — so those six reported SURVIVED on every run since (they now go red at
@@ -243,8 +243,8 @@ than in a test. `generated-code`'s first run left **three survivors**:
 
 - **A quiet case that was quiet for the wrong reason.** The fixture proving `--seed` in an argparse
   call is recognised drew with `rnd.sample(...)` off a local `random.Random(...)`, which the
-  draw pattern does not recognise as a draw at all. So the case passed because *nothing was
-  detected*, not because the seed was — neutering the seed rule changed no verdict. This is the
+  draw pattern does not recognise as a draw at all. So the case passed because _nothing was
+  detected_, not because the seed was — neutering the seed rule changed no verdict. This is the
   same shape as `delivered-pdf`'s window assertion satisfied by ordering, and it is invisible on
   inspection: the fixture reads like a correct script, because it is one.
 - **🔴 A dead flag in the checker.** The absolute-path rule is written case-sensitive on purpose —
@@ -276,7 +276,7 @@ it is now whole-token with a minimum length.
 checker rather than in the test: disabling the number-prefix rule in `covers()` changed **no**
 verdict, because a substring fallback had been silently doing its work — which also meant
 `touches: ["2"]` covered "Section 12" and every heading containing a 2, so a one-character
-declaration authorised most of the paper while `overbroad-scope` stayed quiet because the *list* was
+declaration authorised most of the paper while `overbroad-scope` stayed quiet because the _list_ was
 short. Two more rows were the test's own fault in the two documented ways: a `find` string written
 in its already-mutated form (a mutation that did not mutate), and a fixture that MOVED text between
 body and appendix — which keeps the total constant and therefore cannot test the boundary at all.
@@ -299,7 +299,7 @@ test defect: it shipped **documented in the usage text and in all 22 SKILL.md fi
 the CLI parsed it**. Every skill instructing `--blocking` for its desk-reject case would have
 recorded an ordinary advisory finding. That is the repository's oldest failure — a documented
 mechanism nothing implements, the same shape as three hooks dead on arrival and a nudge dead for
-twelve days — arriving *inside* the refactor written to end it. Block 14 of `gates.harness.mjs` now
+twelve days — arriving _inside_ the refactor written to end it. Block 14 of `gates.harness.mjs` now
 asserts every advertised flag from outside the process, in both directions.
 
 ⚠️ A mutations file refuses to start on a dirty working tree, because it rewrites the source it is
@@ -312,7 +312,7 @@ Five rules, each learned by getting it wrong here:
 1. **Assertions run at module top level.** `vigiles test` imports the file and treats "did not
    throw" as a pass. An exported `tests` object runs nothing and prints ✓ — verified on a file whose
    only assertion was `assert.equal(1, 2)`.
-2. **Fixtures live in a temp dir, and the ledger is redirected** with `PIPELINE_LEDGER` *before*
+2. **Fixtures live in a temp dir, and the ledger is redirected** with `PIPELINE_LEDGER` _before_
    importing `ledger.mjs`. Save-and-restore is not isolation; it loses the race on the first crash.
 3. **Run them by explicit path.** `npx vigiles test` with no arguments finds **nothing** here: its
    glob does not descend into dot-directories. Every harness is therefore named explicitly in

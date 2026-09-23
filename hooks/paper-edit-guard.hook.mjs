@@ -99,7 +99,13 @@
 // and a PreToolUse hook that does not load refuses EVERY Bash command — including the one that
 // would fix it. Observed in the first consumer on 2026-09-10 after a 25.1.0 → 27.1.4 bump; the
 // repository had to be recovered with a file write. Pin this package's vigiles to the consumer's.
-import { experimental_defineHook, tools, provide, allow, deny } from "vigiles/hook";
+import {
+  experimental_defineHook,
+  tools,
+  provide,
+  allow,
+  deny,
+} from "vigiles/hook";
 
 /** The key every carrier of this package reads its consumer-specific settings from. */
 export const CONFIG_KEY = "research-paper-pipeline";
@@ -279,7 +285,9 @@ const redirectsInto = (raw, prefixes) =>
       // does not reach the argv leg's carve-outs either — noted, not widened, because loosening
       // a guard beyond the case at hand is how gates stop holding.
       !isFrozenSnapshot(t) &&
-      prefixes.some((p) => t === p || t.startsWith(p + "/") || t.includes("/" + p + "/")),
+      prefixes.some(
+        (p) => t === p || t.startsWith(p + "/") || t.includes("/" + p + "/"),
+      ),
   );
 
 /**
@@ -291,7 +299,16 @@ const redirectsInto = (raw, prefixes) =>
  * side-effecting, touched a paper path, and was blocked — a plain read, refused. Coarse enough
  * to be useless as a discriminator, and it fired on real work twice within the hour.
  */
-const MUTATORS = ["sed -i", "cp", "mv", "tee", "dd", "truncate", "install", "shred"];
+const MUTATORS = [
+  "sed -i",
+  "cp",
+  "mv",
+  "tee",
+  "dd",
+  "truncate",
+  "install",
+  "shred",
+];
 
 /**
  * Does the command RUN a mutator?
@@ -341,7 +358,9 @@ const runsMutator = (cmd) => MUTATORS.some((m) => cmd.runs(m));
 const isPaperSource = (p) => !isFrozenSnapshot(p) && hasSourceExtension(p);
 
 const hasSourceExtension = (p) =>
-  p.endsWith(".tex") || /\/(paper|draft)\.md$/.test(p) || /^(paper|draft)\.md$/.test(p);
+  p.endsWith(".tex") ||
+  /\/(paper|draft)\.md$/.test(p) ||
+  /^(paper|draft)\.md$/.test(p);
 
 /**
  * A FROZEN SNAPSHOT — a file under a paper's `versions/`, which is the same carve-out as the
@@ -368,7 +387,9 @@ const namesPaperSource = (raw, prefixes) =>
     .some(
       (tok) =>
         isPaperSource(tok) &&
-        prefixes.some((p) => tok.startsWith(p + "/") || tok.includes("/" + p + "/")),
+        prefixes.some(
+          (p) => tok.startsWith(p + "/") || tok.includes("/" + p + "/"),
+        ),
     );
 
 export default experimental_defineHook({

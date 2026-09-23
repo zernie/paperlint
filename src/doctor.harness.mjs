@@ -12,13 +12,21 @@
  * Killed by: src/doctor.mutations.mjs
  */
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  rmSync,
+  realpathSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const { doctor, detectPapers, PROGRAMS, found } = await import(join(HERE, "doctor.ts"));
+const { doctor, detectPapers, PROGRAMS, found } = await import(
+  join(HERE, "doctor.ts")
+);
 const { papersRoot } = await import(
   join(HERE, "..", "hooks", "paper-edit-guard.hook.mjs")
 );
@@ -34,18 +42,27 @@ function consumer({ papersDir, pkgKey, rppJson, makeDir = true }) {
   const dir = realpathSync(mkdtempSync(join(tmpdir(), "rpp-doctor-")));
   if (makeDir && papersDir) {
     mkdirSync(join(dir, papersDir, "some-paper"), { recursive: true });
-    writeFileSync(join(dir, papersDir, "some-paper", "PIPELINE-STATUS.md"), "# s\n");
+    writeFileSync(
+      join(dir, papersDir, "some-paper", "PIPELINE-STATUS.md"),
+      "# s\n",
+    );
   }
   const pkg = { name: "consumer", version: "1.0.0" };
   if (pkgKey !== undefined) pkg["research-paper-pipeline"] = { papers: pkgKey };
   writeFileSync(join(dir, "package.json"), JSON.stringify(pkg, null, 2));
   if (rppJson !== undefined)
-    writeFileSync(join(dir, "rpp.json"), JSON.stringify({ papers: rppJson }, null, 2));
+    writeFileSync(
+      join(dir, "rpp.json"),
+      JSON.stringify({ papers: rppJson }, null, 2),
+    );
   return dir;
 }
 
 /** Runs doctor in memory: all output is collected, external programs are faked so it does not depend on the machine. */
-const runDoctor = (dir, { cliPapers = null, have = () => 0, skillLinks } = {}) => {
+const runDoctor = (
+  dir,
+  { cliPapers = null, have = () => 0, skillLinks } = {},
+) => {
   const lines = [];
   const code = doctor({
     log: (...a) => lines.push(a.join(" ")),
@@ -74,12 +91,19 @@ const runDoctor = (dir, { cliPapers = null, have = () => 0, skillLinks } = {}) =
 // `rpp init` writes rpp.json and does not touch package.json; the hook reads package.json.
 // Measured 09-18.
 {
-  const dir = consumer({ papersDir: "writing/drafts", rppJson: "writing/drafts" });
+  const dir = consumer({
+    papersDir: "writing/drafts",
+    rppJson: "writing/drafts",
+  });
   const r = runDoctor(dir, { cliPapers: "writing/drafts" });
-  check("an install that follows the docs — a FAILURE, not a cheerful report", r.code === 2);
+  check(
+    "an install that follows the docs — a FAILURE, not a cheerful report",
+    r.code === 2,
+  );
   check(
     "and BOTH directories are named, so the mismatch is visible rather than inferred",
-    /will lint\s+writing\/drafts/.test(r.out) && /will guard\s+papers/.test(r.out),
+    /will lint\s+writing\/drafts/.test(r.out) &&
+      /will guard\s+papers/.test(r.out),
   );
   check(
     "🔴 and the CONSEQUENCE is stated: writes pass the guard unseen",
@@ -117,11 +141,18 @@ const runDoctor = (dir, { cliPapers = null, have = () => 0, skillLinks } = {}) =
 
 // ── III. TWO DECLARATIONS HAVE DRIFTED APART ────────────────────────────────────────────────
 {
-  const dir = consumer({ papersDir: "writing/drafts", pkgKey: "papers", rppJson: "writing/drafts" });
+  const dir = consumer({
+    papersDir: "writing/drafts",
+    pkgKey: "papers",
+    rppJson: "writing/drafts",
+  });
   mkdirSync(join(dir, "papers"), { recursive: true });
   const r = runDoctor(dir, { cliPapers: "writing/drafts" });
   check("both declarations exist, but differ — a FAILURE", r.code === 2);
-  check("the stale rpp.json is called out ⚠", /rpp\.json is present/.test(r.out));
+  check(
+    "the stale rpp.json is called out ⚠",
+    /rpp\.json is present/.test(r.out),
+  );
   rmSync(dir, { recursive: true, force: true });
 }
 
@@ -139,7 +170,10 @@ const runDoctor = (dir, { cliPapers = null, have = () => 0, skillLinks } = {}) =
     "and doctor prints EXACTLY what the hook returned, not its own reading",
     new RegExp(`will guard\\s+${fromHook}$`, "m").test(r.out),
   );
-  check("a trailing slash does not make the install look inconsistent", r.code === 0);
+  check(
+    "a trailing slash does not make the install look inconsistent",
+    r.code === 0,
+  );
   rmSync(dir, { recursive: true, force: true });
 }
 
@@ -171,7 +205,10 @@ const runDoctor = (dir, { cliPapers = null, have = () => 0, skillLinks } = {}) =
     "and the consequence: which checks silently don't run without it",
     /nothing else spell-checks the text/.test(none.out),
   );
-  check("the program list is DECLARED, not baked into the printing", PROGRAMS.length >= 7);
+  check(
+    "the program list is DECLARED, not baked into the printing",
+    PROGRAMS.length >= 7,
+  );
   rmSync(dir, { recursive: true, force: true });
 }
 
@@ -180,10 +217,18 @@ const runDoctor = (dir, { cliPapers = null, have = () => 0, skillLinks } = {}) =
   const dir = realpathSync(mkdtempSync(join(tmpdir(), "rpp-detect-")));
   mkdirSync(join(dir, "writing", "drafts", "p1"), { recursive: true });
   writeFileSync(join(dir, "writing", "drafts", "p1", "paper.tex"), "x");
-  mkdirSync(join(dir, "node_modules", "pkg", "papers", "p"), { recursive: true });
-  writeFileSync(join(dir, "node_modules", "pkg", "papers", "p", "paper.tex"), "x");
+  mkdirSync(join(dir, "node_modules", "pkg", "papers", "p"), {
+    recursive: true,
+  });
+  writeFileSync(
+    join(dir, "node_modules", "pkg", "papers", "p", "paper.tex"),
+    "x",
+  );
   const hits = detectPapers(dir);
-  check("finds the root by a marker inside a subdirectory", hits.includes("writing/drafts"));
+  check(
+    "finds the root by a marker inside a subdirectory",
+    hits.includes("writing/drafts"),
+  );
   check(
     "🔴 and it is the ROOT, not the paper itself — otherwise the config would point at one document",
     !hits.includes("writing/drafts/p1"),
@@ -214,7 +259,8 @@ const runDoctor = (dir, { cliPapers = null, have = () => 0, skillLinks } = {}) =
   const r = runDoctor(dir, { cliPapers: "papers", skillLinks: () => state });
   check(
     "an unlinked skill is NAMED, not summed into a checkmark",
-    /2 of 3 shipped skills are NOT reachable/.test(r.out) && /\bb — not linked/.test(r.out),
+    /2 of 3 shipped skills are NOT reachable/.test(r.out) &&
+      /\bb — not linked/.test(r.out),
   );
   check(
     "a name taken by something else says WHAT is there",
@@ -228,7 +274,10 @@ const runDoctor = (dir, { cliPapers = null, have = () => 0, skillLinks } = {}) =
     cliPapers: "papers",
     skillLinks: () => ({ ...state, links: [{ name: "a", status: "present" }] }),
   });
-  check("every skill linked — one line says so", /✓ all 1 shipped skills are reachable/.test(all.out));
+  check(
+    "every skill linked — one line says so",
+    /✓ all 1 shipped skills are reachable/.test(all.out),
+  );
   rmSync(dir, { recursive: true, force: true });
 }
 
@@ -241,4 +290,6 @@ const runDoctor = (dir, { cliPapers = null, have = () => 0, skillLinks } = {}) =
   );
 }
 
-console.log(`✓ ${n} assertions passed — rpp doctor: an install can vouch for itself`);
+console.log(
+  `✓ ${n} assertions passed — rpp doctor: an install can vouch for itself`,
+);

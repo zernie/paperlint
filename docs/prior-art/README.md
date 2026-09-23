@@ -8,27 +8,27 @@ that already solved the same problem, with the URL that was checked.
 **Files are split by QUESTION, not by tool** — Quarto answers two different questions and has to
 be citable for each one separately.
 
-| file | the question | the verdict in one line |
-| --- | --- | --- |
-| [`multi-mode-tools.md`](multi-mode-tools.md) | how do linter + builder + extension host live in one CLI? | small-feeling tools have fewer **nouns**, not fewer capabilities — the project config supplies what would be an argument |
-| [`blocking-vs-advisory.md`](blocking-vs-advisory.md) | who decides to fail the run — the rule or the runner? | severity is **data on the finding**; failing is the **runner's** decision, and the default is not to fail |
-| [`nondeterministic-checks.md`](nondeterministic-checks.md) | may a check read the clock, an mtime, or a diff? | yes, but make it opt-in, never blocking — and prefer a **recorded fact** to an inferred one, which dissolves most of them |
-| [`content-delivery.md`](content-delivery.md) | how is installable content (skills, styles, extensions) delivered? | the **config declares it and a command fetches it**; content that hard-codes its own install path is betting on one channel |
-| [`test-tooling.md`](test-tooling.md) | what do we test with — a framework? a local registry? | **change nothing**: a runner buys a reporter and a second exit code; a registry is what MULTI-package repos need. Both have named triggers |
-| [`package-location.md`](package-location.md) | how does a package find its own installed files, and its own bin? | resolve the package dir **once** from `<pkg>/package.json`; **keep** the `.bin` launch — it is the only check that observes the manager's own work. Yarn PnP stays out, for a harder reason than previously recorded |
+| file                                                       | the question                                                       | the verdict in one line                                                                                                                                                                                              |
+| ---------------------------------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`multi-mode-tools.md`](multi-mode-tools.md)               | how do linter + builder + extension host live in one CLI?          | small-feeling tools have fewer **nouns**, not fewer capabilities — the project config supplies what would be an argument                                                                                             |
+| [`blocking-vs-advisory.md`](blocking-vs-advisory.md)       | who decides to fail the run — the rule or the runner?              | severity is **data on the finding**; failing is the **runner's** decision, and the default is not to fail                                                                                                            |
+| [`nondeterministic-checks.md`](nondeterministic-checks.md) | may a check read the clock, an mtime, or a diff?                   | yes, but make it opt-in, never blocking — and prefer a **recorded fact** to an inferred one, which dissolves most of them                                                                                            |
+| [`content-delivery.md`](content-delivery.md)               | how is installable content (skills, styles, extensions) delivered? | the **config declares it and a command fetches it**; content that hard-codes its own install path is betting on one channel                                                                                          |
+| [`test-tooling.md`](test-tooling.md)                       | what do we test with — a framework? a local registry?              | **change nothing**: a runner buys a reporter and a second exit code; a registry is what MULTI-package repos need. Both have named triggers                                                                           |
+| [`package-location.md`](package-location.md)               | how does a package find its own installed files, and its own bin?  | resolve the package dir **once** from `<pkg>/package.json`; **keep** the `.bin` launch — it is the only check that observes the manager's own work. Yarn PnP stays out, for a harder reason than previously recorded |
 
 ## Tools examined, and for what
 
-| tool | why it is here |
-| --- | --- |
-| **Quarto** | the domain analogue — scientific publishing with `render` / `check` / `publish` and extensions |
-| **Vale** | the content analogue — a prose linter whose styles are declared in config and fetched by `vale sync` |
-| **Biome** | the "one tool, one config, one command" position, stated by its own authors |
-| **Danger JS** | a linter for the PROCESS rather than the code; levels as separate functions |
-| **reviewdog** | non-blocking by default; failing is a flag on the runner |
-| **eslint-plugin-unicorn** (`expiring-todo-comments`) | proof that a time-dependent lint rule is respectable — and how its author contained it |
-| **Semgrep** (`--baseline-commit`) | a before/after check without an event: same analysis, two revisions, subtract |
-| **ESLint**, **Clippy**, **pre-commit** | severity as config data; content declared, fetched and pinned |
+| tool                                                 | why it is here                                                                                       |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **Quarto**                                           | the domain analogue — scientific publishing with `render` / `check` / `publish` and extensions       |
+| **Vale**                                             | the content analogue — a prose linter whose styles are declared in config and fetched by `vale sync` |
+| **Biome**                                            | the "one tool, one config, one command" position, stated by its own authors                          |
+| **Danger JS**                                        | a linter for the PROCESS rather than the code; levels as separate functions                          |
+| **reviewdog**                                        | non-blocking by default; failing is a flag on the runner                                             |
+| **eslint-plugin-unicorn** (`expiring-todo-comments`) | proof that a time-dependent lint rule is respectable — and how its author contained it               |
+| **Semgrep** (`--baseline-commit`)                    | a before/after check without an event: same analysis, two revisions, subtract                        |
+| **ESLint**, **Clippy**, **pre-commit**               | severity as config data; content declared, fetched and pinned                                        |
 
 ## How to use this folder
 

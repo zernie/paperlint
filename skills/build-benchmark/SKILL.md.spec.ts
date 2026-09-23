@@ -8,7 +8,8 @@ import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({
   name: "build-benchmark",
-  description: "Design and run the empirical study behind a measurement paper, and ship a reviewer-proof reproduction artifact. Covers the study design (invert the pitfall you're critiquing), honest statistics (paired/Welch t, CIs, Bonferroni, small-n spread as a result, not noise), a structural bound that outlives the specific artifacts tested, and a self-checking artifact that recomputes every headline number and exits non-zero on drift. Use when the paper's contribution is a way to MEASURE something and you're building the evidence + the thing reviewers will run. Compose with research-ideate (upstream), draft-paper, pc-panel-review (its artifact-runner executes this), submit-paper.",
+  description:
+    "Design and run the empirical study behind a measurement paper, and ship a reviewer-proof reproduction artifact. Covers the study design (invert the pitfall you're critiquing), honest statistics (paired/Welch t, CIs, Bonferroni, small-n spread as a result, not noise), a structural bound that outlives the specific artifacts tested, and a self-checking artifact that recomputes every headline number and exits non-zero on drift. Use when the paper's contribution is a way to MEASURE something and you're building the evidence + the thing reviewers will run. Compose with research-ideate (upstream), draft-paper, pc-panel-review (its artifact-runner executes this), submit-paper.",
   context: "fork",
   tools: ["Read", "Write", "Edit", "Grep", "Glob", "Bash", "Agent"],
   body: `

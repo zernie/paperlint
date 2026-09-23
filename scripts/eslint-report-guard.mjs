@@ -23,7 +23,11 @@
 import { readFileSync } from "node:fs";
 
 /** @returns {{ code: number, lines: string[] }} — never throws, so the caller decides how to exit. */
-export function guard(reportPath, eslintRc, { paths = ".", config = "eslint.config.mjs" } = {}) {
+export function guard(
+  reportPath,
+  eslintRc,
+  { paths = ".", config = "eslint.config.mjs" } = {},
+) {
   const lines = [];
   let res;
   try {
@@ -35,7 +39,9 @@ export function guard(reportPath, eslintRc, { paths = ".", config = "eslint.conf
     return { code: 1, lines };
   }
   if (!Array.isArray(res)) {
-    lines.push(`::error::The report at ${reportPath} is not an ESLint result array. Nothing was measured.`);
+    lines.push(
+      `::error::The report at ${reportPath} is not an ESLint result array. Nothing was measured.`,
+    );
     return { code: 1, lines };
   }
   // THE GUARD. Not "were there findings" — "was anything linted at all".
@@ -64,7 +70,11 @@ export function guard(reportPath, eslintRc, { paths = ".", config = "eslint.conf
 // Guarded by realpath, not by `import.meta.url === \`file://${process.argv[1]}\``: through a symlink
 // `import.meta.url` is the REALPATH while `argv[1]` is the link, so that idiom compares false and the
 // CLI silently does nothing. Consumers reach this package through a symlinked tree.
-if (process.argv[1] && (await import("node:fs")).realpathSync(process.argv[1]) === (await import("node:url")).fileURLToPath(import.meta.url)) {
+if (
+  process.argv[1] &&
+  (await import("node:fs")).realpathSync(process.argv[1]) ===
+    (await import("node:url")).fileURLToPath(import.meta.url)
+) {
   const [report, rc, paths, config] = process.argv.slice(2);
   const { code, lines } = guard(report, Number(rc), { paths, config });
   for (const l of lines) console.log(l);

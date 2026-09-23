@@ -46,9 +46,12 @@
  *
  * Advisory.
  */
-import { readFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { headings as mdHeadings, requireMarkdown } from '../../../lib/markdown.mjs';
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
+import {
+  headings as mdHeadings,
+  requireMarkdown,
+} from "../../../lib/markdown.mjs";
 import { isMain } from "./consumer.mjs";
 
 // Markup is parsed with a parser (`CLAUDE.md`, 2026-08-11). We fail rather than degrade: without
@@ -61,13 +64,15 @@ requireMarkdown();
  *  not under the page limit, so a relation stated only there does not reach the reader who stops
  *  at the References. That asymmetry is the whole point of checking the body separately. */
 export function bodyOf(md) {
-  const stripped = md.replace(/<!--[\s\S]*?-->/g, '');
+  const stripped = md.replace(/<!--[\s\S]*?-->/g, "");
   // 2026-08-11: both body boundaries come from the parser. `/^##\s+References\s*$/m` opened and
   // closed the body on hashes at the start of a line — including hashes inside a ```-block, and this
   // paper quotes whole chunks of other people's papers. The `-1` convention and the `< 0`
   // comparisons are left as they were.
   const at = (re) => {
-    const h = mdHeadings(stripped).find((x) => x.depth === 2 && re.test(x.text));
+    const h = mdHeadings(stripped).find(
+      (x) => x.depth === 2 && re.test(x.text),
+    );
     return h ? h.offset : -1;
   };
   const cut = at(/^References$/u);
@@ -75,7 +80,7 @@ export function bodyOf(md) {
   return stripped.slice(start < 0 ? 0 : start, cut < 0 ? stripped.length : cut);
 }
 
-const asLiteral = (n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const asLiteral = (n) => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 /** A printed quantity, not a substring of a longer one: 189 must not match inside 1,189 or 1893.
  *  The trailing guard must still allow ORDINARY PUNCTUATION after the number — "of the 1,921, we
  *  could enumerate 189" and a sentence-final "...over all 1,921." are both the number being
@@ -85,10 +90,12 @@ const printed = (n) => new RegExp(`(?<![\\d,.])${asLiteral(n)}(?!\\d|[,.]\\d)`);
 
 export function parseRegistry(tsv) {
   const rows = [];
-  for (const line of tsv.split('\n')) {
-    if (!line.trim() || line.startsWith('#')) continue;
-    const [id, print, relation, relatedTo, gloss] = line.split('\t').map((c) => (c ?? '').trim());
-    if (!id || id === 'id') continue;
+  for (const line of tsv.split("\n")) {
+    if (!line.trim() || line.startsWith("#")) continue;
+    const [id, print, relation, relatedTo, gloss] = line
+      .split("\t")
+      .map((c) => (c ?? "").trim());
+    if (!id || id === "id") continue;
     rows.push({ id, print, relation, relatedTo, gloss });
   }
   return rows;
@@ -105,14 +112,14 @@ export function findings(md, tsv) {
     if (!appears) {
       // A registry row for a quantity the body no longer prints. Same discipline as the
       // grandfathered numbers list: the registry shrinks when the paper does, and never rots.
-      if (row.relation !== 'retired') out.push({ kind: 'stale', row });
+      if (row.relation !== "retired") out.push({ kind: "stale", row });
       continue;
     }
-    if (row.relation === 'root' || row.relation === 'external') continue;
+    if (row.relation === "root" || row.relation === "external") continue;
     // The order is preserved from the original: `untied` was computed AFTER this check and moved
     // into `paper/population-untied`; the dangling reference stayed here because it is about a TSV
     // row.
-    if (!byId.get(row.relatedTo)) out.push({ kind: 'badref', row });
+    if (!byId.get(row.relatedTo)) out.push({ kind: "badref", row });
   }
   return out;
 }
@@ -124,36 +131,51 @@ if (!isMain(import.meta.url)) {
 } else main();
 
 function main() {
-const args = process.argv.slice(2);
-const dir = args.find((a) => !a.startsWith('--'));
-const flagsOnly = args.includes('--flags-only');
-if (!dir) { console.error('usage: node population-map.mjs <paper-dir> [--flags-only]'); process.exit(0); }
-
-const paperPath = ['paper.md', 'draft.md'].map((f) => join(dir, f)).find(existsSync);
-const regPath = join(dir, 'repro', 'populations.tsv');
-// Same silent-skip class as artifact-coverage.mjs — see the note there (measured 2026-08-25).
-if (!paperPath || !existsSync(regPath)) {
-  const why = !paperPath
-    ? 'no paper.md/draft.md — this checker reads markdown only, a .tex paper is NOT covered'
-    : `no registry at ${regPath}`;
-  console.error(`⏭️  population map SKIPPED for ${dir} — ${why}.`);
-  process.exit(0);
-}
-
-const found = findings(readFileSync(paperPath, 'utf8'), readFileSync(regPath, 'utf8'));
-
-if (!found.length) {
-  if (!flagsOnly) console.log('population map: the registry matches the body — no stale rows, no dangling related_to.');
-  process.exit(0);
-}
-
-console.log(`population map — ${found.length} finding(s) in ${paperPath}`);
-for (const f of found) {
-  if (f.kind === 'stale') {
-    console.log(`  ·  ${f.row.print} (${f.row.id}) is declared and the body no longer prints it — drop the row or mark it retired`);
-  } else if (f.kind === 'badref') {
-    console.log(`  🔴 ${f.row.id} says it relates to "${f.row.relatedTo}", which is not a row in populations.tsv`);
+  const args = process.argv.slice(2);
+  const dir = args.find((a) => !a.startsWith("--"));
+  const flagsOnly = args.includes("--flags-only");
+  if (!dir) {
+    console.error("usage: node population-map.mjs <paper-dir> [--flags-only]");
+    process.exit(0);
   }
-}
-process.exit(0);
+
+  const paperPath = ["paper.md", "draft.md"]
+    .map((f) => join(dir, f))
+    .find(existsSync);
+  const regPath = join(dir, "repro", "populations.tsv");
+  // Same silent-skip class as artifact-coverage.mjs — see the note there (measured 2026-08-25).
+  if (!paperPath || !existsSync(regPath)) {
+    const why = !paperPath
+      ? "no paper.md/draft.md — this checker reads markdown only, a .tex paper is NOT covered"
+      : `no registry at ${regPath}`;
+    console.error(`⏭️  population map SKIPPED for ${dir} — ${why}.`);
+    process.exit(0);
+  }
+
+  const found = findings(
+    readFileSync(paperPath, "utf8"),
+    readFileSync(regPath, "utf8"),
+  );
+
+  if (!found.length) {
+    if (!flagsOnly)
+      console.log(
+        "population map: the registry matches the body — no stale rows, no dangling related_to.",
+      );
+    process.exit(0);
+  }
+
+  console.log(`population map — ${found.length} finding(s) in ${paperPath}`);
+  for (const f of found) {
+    if (f.kind === "stale") {
+      console.log(
+        `  ·  ${f.row.print} (${f.row.id}) is declared and the body no longer prints it — drop the row or mark it retired`,
+      );
+    } else if (f.kind === "badref") {
+      console.log(
+        `  🔴 ${f.row.id} says it relates to "${f.row.relatedTo}", which is not a row in populations.tsv`,
+      );
+    }
+  }
+  process.exit(0);
 }

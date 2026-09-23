@@ -66,7 +66,12 @@
  *
  * Advisory: it prints findings; `--flags-only` exits with code 1 if anything was found.
  */
-import { headings as mdHeadings, stripFences, requireMarkdown, stripFrontmatter } from '../../lib/markdown.mjs';
+import {
+  headings as mdHeadings,
+  stripFences,
+  requireMarkdown,
+  stripFrontmatter,
+} from "../../lib/markdown.mjs";
 
 // Markup is parsed with a PARSER (`CLAUDE.md`, 2026-08-11). We fail rather than degrade, even
 // though this file is advisory: without a parser the paper's body would collapse to empty, and from
@@ -80,13 +85,28 @@ const THRESHOLDS = {
   // `paper/metadiscourse` (the `density` finding), together with Hyland's provenance and the
   // threshold of 10. The FRAME_MARKERS dictionary below STAYS: it is a term in
   // metadiscourseTotalPer1000.
-  metadiscourseTotalPer1000: { warn: 90, src: 'Hyland 2005 Table 5.1 total 64.9/1000; Table 7.1 totals 60.0-73.6/1000. Warn ~1.4x.' },
+  metadiscourseTotalPer1000: {
+    warn: 90,
+    src: "Hyland 2005 Table 5.1 total 64.9/1000; Table 7.1 totals 60.0-73.6/1000. Warn ~1.4x.",
+  },
   // pureFrameSentencePct / propositionsPerSentence — moved into `eslint-rules/paper-craft.mjs`
   // as `discourse-subject` and `multi-claim-sentence` (2026-08-26).
-  firstMentionDefinites: { warn: 3, src: 'No published rate. Operationalises Pinker\'s curse of knowledge: "the X" on first mention presupposes shared knowledge.' },
-  negatedMainClausePct: { warn: 50, src: 'No published rate for negation. Related: Boggia 2026 (arXiv 2607.21498) measures the "not X, but Y" family per 10,000 words; human academic abstracts 3.6, LLM 7.8 (p=0.28, n.s.).' },
-  topicChainBreaksPct: { warn: 75, src: 'Gopen & Swan 1990 principles 3-4: "We cannot tell whose story the passage is" when the topic position changes every sentence.' },
-  stressPositionWaste: { warn: 0, src: 'Gopen & Swan 1990 principle 2: put the new information you want emphasised in the stress position. A trailing citation/cross-reference/hedge wastes it.' },
+  firstMentionDefinites: {
+    warn: 3,
+    src: 'No published rate. Operationalises Pinker\'s curse of knowledge: "the X" on first mention presupposes shared knowledge.',
+  },
+  negatedMainClausePct: {
+    warn: 50,
+    src: 'No published rate for negation. Related: Boggia 2026 (arXiv 2607.21498) measures the "not X, but Y" family per 10,000 words; human academic abstracts 3.6, LLM 7.8 (p=0.28, n.s.).',
+  },
+  topicChainBreaksPct: {
+    warn: 75,
+    src: 'Gopen & Swan 1990 principles 3-4: "We cannot tell whose story the passage is" when the topic position changes every sentence.',
+  },
+  stressPositionWaste: {
+    warn: 0,
+    src: "Gopen & Swan 1990 principle 2: put the new information you want emphasised in the stress position. A trailing citation/cross-reference/hedge wastes it.",
+  },
   // hedgeWordPct — moved into `eslint-rules/paper-craft.mjs` as `hedge-density` (2026-08-26).
   // The HEDGES lexicon STAYS here: it is a term in metadiscourseTotalPer1000 and in the wasted
   // stress-position detector. Deleting it would silently understate both metrics.
@@ -99,7 +119,10 @@ const THRESHOLDS = {
   // checking" — moved into the rule's header: it explains why a metric must have a threshold and not
   // only a number.
 
-  contrastivePer10k: { warn: 25, src: 'ours. "rather than" is an ordinary connective; a pile of them is a register problem, but it is NOT the construction Boggia measured and must not borrow that baseline.' },
+  contrastivePer10k: {
+    warn: 25,
+    src: 'ours. "rather than" is an ordinary connective; a pile of them is a register problem, but it is NOT the construction Boggia measured and must not borrow that baseline.',
+  },
   // conceitsPer10k — moved into `eslint-rules/paper-craft.mjs` as `conceits` (2026-08-26).
 
   // Abstract length, as a multiple of the TARGET VENUE's own median. The corpus owner, 2026-08-05:
@@ -117,8 +140,14 @@ const THRESHOLDS = {
   // gate was blind to them by construction. Found 2026-08-05 when a reader hit a 136-word caption
   // containing a 54-word sentence — one word under the limit that would have blocked the same
   // sentence had it been typed into the paper. An entire text surface, unchecked.
-  captionSentenceWords: { warn: 40, src: 'ours, from this paper\'s own four captions: longest sentences 21, 31, 41 and 54 words. A caption is read in one pass with the figure, so it tolerates less than body prose, where the limit is 55.' },
-  captionWords: { warn: 100, src: 'ours, same four captions: 67, 97, 135, 148. ACL captions in the venue corpus run far shorter; past ~100 words a caption is a section that happens to sit under a picture.' },
+  captionSentenceWords: {
+    warn: 40,
+    src: "ours, from this paper's own four captions: longest sentences 21, 31, 41 and 54 words. A caption is read in one pass with the figure, so it tolerates less than body prose, where the limit is 55.",
+  },
+  captionWords: {
+    warn: 100,
+    src: "ours, same four captions: 67, 97, 135, 148. ACL captions in the venue corpus run far shorter; past ~100 words a caption is a section that happens to sit under a picture.",
+  },
 };
 
 // CONCEITS — moved into `eslint-rules/paper-craft.mjs` (the `conceits` rule, 2026-08-26)
@@ -135,22 +164,127 @@ const THRESHOLDS = {
 // metric that has no test here, and making it under the guise of a move would change a number
 // without showing that it changed.
 const FRAME_MARKERS = [
-  /\bcomes? first\b/gi, /\bfirst(ly)?\b(?=[ ,])/gi, /\bsecond(ly)?\b(?=[ ,])/gi, /\bthird(ly)?\b(?=[ ,])/gi,
-  /\bfinally\b/gi, /\bto (conclude|summari[sz]e|begin( with)?|start)\b/gi, /\bin (conclusion|summary|what follows|this (paper|section|article))\b/gi,
-  /\bwe (begin|start|turn|now turn|conclude|proceed)\b/gi, /\b(my|our) (purpose|aim|goal) is\b/gi,
-  /\bthe (rest|remainder) of (this|the)\b/gi, /\bbefore (we|turning|proceeding)\b/gi,
-  /\bhere we (show|present|report|argue)\b/gi, /\bwe (report|present) (it|them|this) as\b/gi,
-  /\bcome(s)? (first|before)\b/gi, /\bthis (paper|section) (is organi[sz]ed|proceeds)\b/gi,
-  /\bwhat follows\b/gi, /\bthe (first|second|two|three) (finding|result|point|thing)s?\b/gi,
+  /\bcomes? first\b/gi,
+  /\bfirst(ly)?\b(?=[ ,])/gi,
+  /\bsecond(ly)?\b(?=[ ,])/gi,
+  /\bthird(ly)?\b(?=[ ,])/gi,
+  /\bfinally\b/gi,
+  /\bto (conclude|summari[sz]e|begin( with)?|start)\b/gi,
+  /\bin (conclusion|summary|what follows|this (paper|section|article))\b/gi,
+  /\bwe (begin|start|turn|now turn|conclude|proceed)\b/gi,
+  /\b(my|our) (purpose|aim|goal) is\b/gi,
+  /\bthe (rest|remainder) of (this|the)\b/gi,
+  /\bbefore (we|turning|proceeding)\b/gi,
+  /\bhere we (show|present|report|argue)\b/gi,
+  /\bwe (report|present) (it|them|this) as\b/gi,
+  /\bcome(s)? (first|before)\b/gi,
+  /\bthis (paper|section) (is organi[sz]ed|proceeds)\b/gi,
+  /\bwhat follows\b/gi,
+  /\bthe (first|second|two|three) (finding|result|point|thing)s?\b/gi,
 ];
-const TRANSITIONS = [/\bhowever\b/gi,/\bmoreover\b/gi,/\bfurthermore\b/gi,/\btherefore\b/gi,/\bthus\b/gi,/\bhence\b/gi,/\bin addition\b/gi,/\bnevertheless\b/gi,/\bconsequently\b/gi,/\bwhile\b/gi,/\bwhereas\b/gi,/\balthough\b/gi,/\bthough\b/gi,/\bbut\b/gi,/\bso\b/gi,/\byet\b/gi,/\beither\b/gi,/\bas well as\b/gi,/\bin contrast\b/gi,/\bon the other hand\b/gi];
-const ENDOPHORIC = [/\b(see|cf\.?) (Fig|Table|Section|Appendix|§)/gi, /\((Appendix|Fig\.?|Table|Section|§)[^)]*\)/gi, /\b(noted|discussed|shown|described) (above|below|earlier|previously)\b/gi, /\bin (Section|Table|Figure|Appendix) \S+/gi];
-const CODE_GLOSSES = [/\bnamely\b/gi,/\be\.g\.,?/gi,/\bi\.e\.,?/gi,/\bsuch as\b/gi,/\bin other words\b/gi,/\bthat is\b/gi,/\bwhich means\b/gi];
-const HEDGES = [/\bmight\b/gi,/\bmay\b/gi,/\bcould\b/gi,/\bperhaps\b/gi,/\bpossibl[ey]\b/gi,/\bprobabl[ey]\b/gi,/\bsuggest(s|ive|ed)?\b/gi,/\bappear(s|ed)?\b/gi,/\bseem(s|ed)?\b/gi,/\bindicate(s|d)?\b/gi,/\brelatively\b/gi,/\bsomewhat\b/gi,/\bapparently\b/gi,/\bnearly\b/gi,/\btend(s|ed)? to\b/gi,/\blargely\b/gi,/\bgenerally\b/gi,/\btypically\b/gi,/\bin part\b/gi,/\bto some extent\b/gi,/\bassume(s|d)?\b/gi];
-const BOOSTERS = [/\bclearly\b/gi,/\bobviously\b/gi,/\bdefinitely\b/gi,/\bin fact\b/gi,/\bit is clear that\b/gi,/\bof course\b/gi,/\bmust\b/gi,/\bcannot\b/gi,/\bno\b(?= \w+ (can|could|will|would|is|are))/gi,/\bnever\b/gi,/\balways\b/gi,/\bshow(s|ed)? that\b/gi,/\bdemonstrate(s|d)?\b/gi];
-const SELF_MENTION = [/\bwe\b/gi,/\bour\b/gi,/\bus\b/gi,/\bI\b/g,/\bmy\b/gi];
-const ENGAGEMENT = [/\byou(r)?\b/gi,/\bconsider\b/gi,/\bnote that\b/gi,/\bimagine\b/gi,/\blet us\b/gi,/\brecall\b/gi];
-const NEGATORS = [/\bnot\b/gi,/\bno\b/gi,/\bnone\b/gi,/\bnever\b/gi,/\bcannot\b/gi,/\bn't\b/gi,/\bneither\b/gi,/\bnor\b/gi,/\bwithout\b/gi,/\bfail(s|ed)? to\b/gi,/\bunable\b/gi];
+const TRANSITIONS = [
+  /\bhowever\b/gi,
+  /\bmoreover\b/gi,
+  /\bfurthermore\b/gi,
+  /\btherefore\b/gi,
+  /\bthus\b/gi,
+  /\bhence\b/gi,
+  /\bin addition\b/gi,
+  /\bnevertheless\b/gi,
+  /\bconsequently\b/gi,
+  /\bwhile\b/gi,
+  /\bwhereas\b/gi,
+  /\balthough\b/gi,
+  /\bthough\b/gi,
+  /\bbut\b/gi,
+  /\bso\b/gi,
+  /\byet\b/gi,
+  /\beither\b/gi,
+  /\bas well as\b/gi,
+  /\bin contrast\b/gi,
+  /\bon the other hand\b/gi,
+];
+const ENDOPHORIC = [
+  /\b(see|cf\.?) (Fig|Table|Section|Appendix|§)/gi,
+  /\((Appendix|Fig\.?|Table|Section|§)[^)]*\)/gi,
+  /\b(noted|discussed|shown|described) (above|below|earlier|previously)\b/gi,
+  /\bin (Section|Table|Figure|Appendix) \S+/gi,
+];
+const CODE_GLOSSES = [
+  /\bnamely\b/gi,
+  /\be\.g\.,?/gi,
+  /\bi\.e\.,?/gi,
+  /\bsuch as\b/gi,
+  /\bin other words\b/gi,
+  /\bthat is\b/gi,
+  /\bwhich means\b/gi,
+];
+const HEDGES = [
+  /\bmight\b/gi,
+  /\bmay\b/gi,
+  /\bcould\b/gi,
+  /\bperhaps\b/gi,
+  /\bpossibl[ey]\b/gi,
+  /\bprobabl[ey]\b/gi,
+  /\bsuggest(s|ive|ed)?\b/gi,
+  /\bappear(s|ed)?\b/gi,
+  /\bseem(s|ed)?\b/gi,
+  /\bindicate(s|d)?\b/gi,
+  /\brelatively\b/gi,
+  /\bsomewhat\b/gi,
+  /\bapparently\b/gi,
+  /\bnearly\b/gi,
+  /\btend(s|ed)? to\b/gi,
+  /\blargely\b/gi,
+  /\bgenerally\b/gi,
+  /\btypically\b/gi,
+  /\bin part\b/gi,
+  /\bto some extent\b/gi,
+  /\bassume(s|d)?\b/gi,
+];
+const BOOSTERS = [
+  /\bclearly\b/gi,
+  /\bobviously\b/gi,
+  /\bdefinitely\b/gi,
+  /\bin fact\b/gi,
+  /\bit is clear that\b/gi,
+  /\bof course\b/gi,
+  /\bmust\b/gi,
+  /\bcannot\b/gi,
+  /\bno\b(?= \w+ (can|could|will|would|is|are))/gi,
+  /\bnever\b/gi,
+  /\balways\b/gi,
+  /\bshow(s|ed)? that\b/gi,
+  /\bdemonstrate(s|d)?\b/gi,
+];
+const SELF_MENTION = [
+  /\bwe\b/gi,
+  /\bour\b/gi,
+  /\bus\b/gi,
+  /\bI\b/g,
+  /\bmy\b/gi,
+];
+const ENGAGEMENT = [
+  /\byou(r)?\b/gi,
+  /\bconsider\b/gi,
+  /\bnote that\b/gi,
+  /\bimagine\b/gi,
+  /\blet us\b/gi,
+  /\brecall\b/gi,
+];
+const NEGATORS = [
+  /\bnot\b/gi,
+  /\bno\b/gi,
+  /\bnone\b/gi,
+  /\bnever\b/gi,
+  /\bcannot\b/gi,
+  /\bn't\b/gi,
+  /\bneither\b/gi,
+  /\bnor\b/gi,
+  /\bwithout\b/gi,
+  /\bfail(s|ed)? to\b/gi,
+  /\bunable\b/gi,
+];
 // EPANORTHOSIS — moved 2026-09-06 into `eslint-rules/paper-prose.mjs` (the `paper/ai-tells` rule)
 // together with all four forms and with their history, including the one that turned the list into a
 // list: the appositive "Admission, not translation", which reaches as far as HEADINGS.
@@ -169,13 +303,21 @@ const NEGATORS = [/\bnot\b/gi,/\bno\b/gi,/\bnone\b/gi,/\bnever\b/gi,/\bcannot\b/
  * just is not epanorthosis and must not borrow epanorthosis's baseline. No published baseline exists
  * for it, so the threshold is ours and generous.
  */
-const CONTRASTIVE = [/\brather than\b/gi, /\binstead of\b/gi, /\bas opposed to\b/gi];
+const CONTRASTIVE = [
+  /\brather than\b/gi,
+  /\binstead of\b/gi,
+  /\bas opposed to\b/gi,
+];
 // nominalisations: -tion/-sion/-ment/-ance/-ence/-ity/-ness/-ing used as head noun (approximate)
 const NOMINAL = /\b\w{4,}(tion|sion|ment|ance|ence|ity|ness)s?\b/gi;
 
 // JARGON — moved into `eslint-rules/paper-craft.mjs` (the `unexplained-jargon` rule, 2026-08-26).
 
-const count = (t, pats) => (Array.isArray(pats) ? pats : [pats]).reduce((n, p) => n + (t.match(p) || []).length, 0);
+const count = (t, pats) =>
+  (Array.isArray(pats) ? pats : [pats]).reduce(
+    (n, p) => n + (t.match(p) || []).length,
+    0,
+  );
 // 🔴 Next to this lived `listHits(t, pats)` — the same walk, but returning THE MATCHES THEMSELVES
 // rather than their count. Nobody called it (`no-unused-vars`, 2026-08-28), and that is not a
 // trifle: the paragraph below explains that a metric was ignored precisely because it could not NAME
@@ -199,33 +341,52 @@ const count = (t, pats) => (Array.isArray(pats) ? pats : [pats]).reduce((n, p) =
 // the same.
 function stripHeadingLines(t) {
   const drop = new Set(mdHeadings(t).map((h) => h.line));
-  return drop.size === 0 ? t : t.split('\n').filter((_, i) => !drop.has(i)).join('\n');
+  return drop.size === 0
+    ? t
+    : t
+        .split("\n")
+        .filter((_, i) => !drop.has(i))
+        .join("\n");
 }
 function splitSentences(t) {
-  return stripHeadingLines(t)
-    .split(/\n\s*\n/)                                  // paragraphs never run together
-    // A list item is its own unit. Without this the last sentence of one bullet ran into the first
-    // of the next and the claim counter blamed the pair for the merge.
-    .flatMap((p) => p.split(/\n(?=\s*(?:[-*]\s|\d+\.\s))/))
-    .flatMap((p) => p.split('\n').join(' ')            // headings are already struck out, see above
-      .replace(/\s+/g, ' ')
-      .split(/(?<=[.!?])\s+(?=[A-Z“"(*`])/))
-    .map((s) => s.trim()).filter(Boolean);
+  return (
+    stripHeadingLines(t)
+      .split(/\n\s*\n/) // paragraphs never run together
+      // A list item is its own unit. Without this the last sentence of one bullet ran into the first
+      // of the next and the claim counter blamed the pair for the merge.
+      .flatMap((p) => p.split(/\n(?=\s*(?:[-*]\s|\d+\.\s))/))
+      .flatMap((p) =>
+        p
+          .split("\n")
+          .join(" ") // headings are already struck out, see above
+          .replace(/\s+/g, " ")
+          .split(/(?<=[.!?])\s+(?=[A-Z“"(*`])/),
+      )
+      .map((s) => s.trim())
+      .filter(Boolean)
+  );
 }
-const words = t => (t.match(/[A-Za-z0-9%.'’-]+/g) || []).length;
+const words = (t) => (t.match(/[A-Za-z0-9%.'’-]+/g) || []).length;
 
 function analyse(text) {
-  const W = words(text), per1k = n => +(n / W * 1000).toFixed(1);
+  const W = words(text),
+    per1k = (n) => +((n / W) * 1000).toFixed(1);
   const sents = splitSentences(text);
   const lens = sents.map(words);
   const mean = lens.reduce((a, b) => a + b, 0) / (lens.length || 1);
-  const sd = Math.sqrt(lens.reduce((a, b) => a + (b - mean) ** 2, 0) / (lens.length || 1));
+  const sd = Math.sqrt(
+    lens.reduce((a, b) => a + (b - mean) ** 2, 0) / (lens.length || 1),
+  );
 
   const cats = {
-    frameMarkers: count(text, FRAME_MARKERS), transitions: count(text, TRANSITIONS),
-    endophoric: count(text, ENDOPHORIC), codeGlosses: count(text, CODE_GLOSSES),
-    hedges: count(text, HEDGES), boosters: count(text, BOOSTERS),
-    selfMention: count(text, SELF_MENTION), engagement: count(text, ENGAGEMENT),
+    frameMarkers: count(text, FRAME_MARKERS),
+    transitions: count(text, TRANSITIONS),
+    endophoric: count(text, ENDOPHORIC),
+    codeGlosses: count(text, CODE_GLOSSES),
+    hedges: count(text, HEDGES),
+    boosters: count(text, BOOSTERS),
+    selfMention: count(text, SELF_MENTION),
+    engagement: count(text, ENGAGEMENT),
   };
   const mdTotal = Object.values(cats).reduce((a, b) => a + b, 0);
 
@@ -234,37 +395,63 @@ function analyse(text) {
   // `eslint-rules/paper-craft.mjs` — the rules `multi-claim-sentence` and `discourse-subject`
   // (2026-08-26). What stayed here is the wasted stress position, negation and the topic position:
   // they had no thresholds in the gate and still have none, they are printed by the report.
-  const perSent = sents.map(s => {
+  const perSent = sents.map((s) => {
     const sw = words(s);
     const frame = count(s, FRAME_MARKERS);
     // stress position: last ~8 words
-    const tail = s.split(/\s+/).slice(-8).join(' ');
-    const wastedStress = /\((Appendix|Fig|Table|Section|§)[^)]*\)\.?$/i.test(s.trim())
-      || /\[\d+([,–-]\s*\d+)*\]\.?$/.test(s.trim())
+    const tail = s.split(/\s+/).slice(-8).join(" ");
+    const wastedStress =
+      /\((Appendix|Fig|Table|Section|§)[^)]*\)\.?$/i.test(s.trim()) ||
+      /\[\d+([,–-]\s*\d+)*\]\.?$/.test(s.trim()) ||
       // a RESULT number = %, or a digit that is not part of a section/appendix/figure pointer
-      || (count(tail, HEDGES) > 0
-          && /%|\b\d+(\.\d+)?\b/.test(s.replace(/\b(Appendix|Fig\.?|Table|Section|§)\s*[A-Z]?\.?\d+(\.\d+)*/gi, ''))
-          && !/%|\b\d+(\.\d+)?\b/.test(tail.replace(/\b(Appendix|Fig\.?|Table|Section|§)\s*[A-Z]?\.?\d+(\.\d+)*/gi, '')));
+      (count(tail, HEDGES) > 0 &&
+        /%|\b\d+(\.\d+)?\b/.test(
+          s.replace(
+            /\b(Appendix|Fig\.?|Table|Section|§)\s*[A-Z]?\.?\d+(\.\d+)*/gi,
+            "",
+          ),
+        ) &&
+        !/%|\b\d+(\.\d+)?\b/.test(
+          tail.replace(
+            /\b(Appendix|Fig\.?|Table|Section|§)\s*[A-Z]?\.?\d+(\.\d+)*/gi,
+            "",
+          ),
+        ));
     const negMain = count(s, NEGATORS) > 0;
     // topic position = first 5 words
-    const topic = s.split(/\s+/).slice(0, 5).join(' ').toLowerCase();
-    return { s, sw, frame, wastedStress, negMain, topic,
-             hedges: count(s, HEDGES), definites: (s.match(/\bthe [a-z][a-z-]*(\s+[a-z][a-z-]*)?\b/g) || []) };
+    const topic = s.split(/\s+/).slice(0, 5).join(" ").toLowerCase();
+    return {
+      s,
+      sw,
+      frame,
+      wastedStress,
+      negMain,
+      topic,
+      hedges: count(s, HEDGES),
+      definites: s.match(/\bthe [a-z][a-z-]*(\s+[a-z][a-z-]*)?\b/g) || [],
+    };
   });
 
-  const negPct = Math.round(perSent.filter(p => p.negMain).length / sents.length * 100);
+  const negPct = Math.round(
+    (perSent.filter((p) => p.negMain).length / sents.length) * 100,
+  );
   return {
-    words: W, sentences: sents.length,
-    sentenceLens: lens, meanLen: +mean.toFixed(1), sdLen: +sd.toFixed(1),
+    words: W,
+    sentences: sents.length,
+    sentenceLens: lens,
+    meanLen: +mean.toFixed(1),
+    sdLen: +sd.toFixed(1),
     cv: +(sd / mean).toFixed(2),
-    per1k: Object.fromEntries(Object.entries(cats).map(([k, v]) => [k, per1k(v)])),
+    per1k: Object.fromEntries(
+      Object.entries(cats).map(([k, v]) => [k, per1k(v)]),
+    ),
     raw: cats,
     metadiscoursePer1000: per1k(mdTotal),
     nominalisationsPer1000: per1k((text.match(NOMINAL) || []).length),
     contrastivePer10k: +((count(text, CONTRASTIVE) / W) * 10000).toFixed(1),
-    wastedStress: perSent.filter(p => p.wastedStress).map(p => p.s),
+    wastedStress: perSent.filter((p) => p.wastedStress).map((p) => p.s),
     negatedSentencePct: negPct,
-    topics: perSent.map(p => p.topic),
+    topics: perSent.map((p) => p.topic),
   };
 }
 
@@ -292,7 +479,9 @@ function structure(body) {
   // headings" silently mixed them with quotations of someone else's markup. The parser hands back
   // the heading text already trimmed at the edges — the previous `.replace(/^#+\s*/, '')` left
   // trailing spaces.
-  const headings = mdHeadings(body).filter((h) => h.depth >= 2 && h.depth <= 4).map((h) => h.text);
+  const headings = mdHeadings(body)
+    .filter((h) => h.depth >= 2 && h.depth <= 4)
+    .map((h) => h.text);
 
   // 🔴 The document's SHAPE — outline, order, section weights — deliberately does NOT live here.
   // It was written here first and the author drew the line correctly: "I thought prose was about
@@ -305,25 +494,40 @@ function structure(body) {
 
 /** Captions from figures/*.tex beside the paper — the text surface nothing was reading. */
 function captions(paperPath, fs, path) {
-  const dir = path.join(path.dirname(paperPath), 'figures');
+  const dir = path.join(path.dirname(paperPath), "figures");
   let files; // no initialiser: the catch branch returns, only try assigns (2026-08-28)
-  try { files = fs.readdirSync(dir).filter((f) => f.endsWith('.tex')); } catch { return []; }
+  try {
+    files = fs.readdirSync(dir).filter((f) => f.endsWith(".tex"));
+  } catch {
+    return [];
+  }
   const out = [];
   for (const f of files) {
-    const s = fs.readFileSync(path.join(dir, f), 'utf8');
+    const s = fs.readFileSync(path.join(dir, f), "utf8");
     for (const m of s.matchAll(/\\caption\{/g)) {
-      let i = m.index + m[0].length, depth = 1, j = i;
-      while (j < s.length && depth) { if (s[j] === '{') depth++; else if (s[j] === '}') depth--; j++; }
-      const text = s.slice(i, j - 1)
-        .replace(/\\[a-zA-Z]+\s*/g, ' ').replace(/[{}]/g, ' ').replace(/---/g, ' ')
-        .replace(/\s+/g, ' ').trim();
+      let i = m.index + m[0].length,
+        depth = 1,
+        j = i;
+      while (j < s.length && depth) {
+        if (s[j] === "{") depth++;
+        else if (s[j] === "}") depth--;
+        j++;
+      }
+      const text = s
+        .slice(i, j - 1)
+        .replace(/\\[a-zA-Z]+\s*/g, " ")
+        .replace(/[{}]/g, " ")
+        .replace(/---/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
       if (!text) continue;
       const sents = splitSentences(text);
       out.push({
         file: f,
         words: words(text),
         longest: Math.max(0, ...sents.map(words)),
-        longestSentence: sents.slice().sort((a, b) => words(b) - words(a))[0] ?? '',
+        longestSentence:
+          sents.slice().sort((a, b) => words(b) - words(a))[0] ?? "",
       });
     }
   }
@@ -331,29 +535,44 @@ function captions(paperPath, fs, path) {
 }
 
 function report(name, r) {
-  const flag = (ok) => ok ? 'ok  ' : 'FLAG';
+  const flag = (ok) => (ok ? "ok  " : "FLAG");
   console.log(`\n=== ${name} — ${r.words} words, ${r.sentences} sentences ===`);
-  console.log(`sentence lengths ${JSON.stringify(r.sentenceLens)}  mean ${r.meanLen}  sd ${r.sdLen}  CV ${r.cv}`);
-  console.log(`${flag(r.metadiscoursePer1000 <= THRESHOLDS.metadiscourseTotalPer1000.warn)} all metadiscourse/1000w  ${r.metadiscoursePer1000}   (Hyland RA baseline 64.9, warn >${THRESHOLDS.metadiscourseTotalPer1000.warn})`);
+  console.log(
+    `sentence lengths ${JSON.stringify(r.sentenceLens)}  mean ${r.meanLen}  sd ${r.sdLen}  CV ${r.cv}`,
+  );
+  console.log(
+    `${flag(r.metadiscoursePer1000 <= THRESHOLDS.metadiscourseTotalPer1000.warn)} all metadiscourse/1000w  ${r.metadiscoursePer1000}   (Hyland RA baseline 64.9, warn >${THRESHOLDS.metadiscourseTotalPer1000.warn})`,
+  );
   console.log(`     nominalisations/1000w    ${r.nominalisationsPer1000}`);
   // "not X, but Y" and the frame-marker density were printed from here until 2026-09-06. Both moved
   // into `eslint-rules/paper-prose.mjs`, where a finding has a `file:line:col`; printing them here a
   // second time would set up a second source of truth:
   //   npx eslint papers/*/paper.md papers/*/paper.tex
-  console.log(`${flag(r.contrastivePer10k <= THRESHOLDS.contrastivePer10k.warn)} "rather than"/instead-of/10,000w  ${r.contrastivePer10k}   (warn >${THRESHOLDS.contrastivePer10k.warn}; not epanorthosis, no published baseline)`);
+  console.log(
+    `${flag(r.contrastivePer10k <= THRESHOLDS.contrastivePer10k.warn)} "rather than"/instead-of/10,000w  ${r.contrastivePer10k}   (warn >${THRESHOLDS.contrastivePer10k.warn}; not epanorthosis, no published baseline)`,
+  );
   // Conceits, coined terms, sentences about the text and multi-proposition sentences were printed
   // from here until 2026-08-26. They moved into `eslint-rules/paper-craft.mjs`, where every finding
   // has a `file:line:col` — whereas this report printed their heads and made you hunt for the
   // sentence by eye. Printing them here a second time would set up a second source of truth:
   // `npx eslint papers/*/paper.md`.
-  console.log(`${flag(r.wastedStress.length === 0)} sentences ending on a cross-ref/citation/hedge (wasted stress position): ${r.wastedStress.length}`);
-  r.wastedStress.forEach(s => console.log(`       > …${s.slice(-70)}`));
-  console.log(`${flag(r.negatedSentencePct <= THRESHOLDS.negatedMainClausePct.warn)} sentences whose main claim is a negation: ${r.negatedSentencePct}%`);
-  console.log(`     topic positions (whose story is this?): ${r.topics.map(t => `"${t}"`).join(' | ')}`);
+  console.log(
+    `${flag(r.wastedStress.length === 0)} sentences ending on a cross-ref/citation/hedge (wasted stress position): ${r.wastedStress.length}`,
+  );
+  r.wastedStress.forEach((s) => console.log(`       > …${s.slice(-70)}`));
+  console.log(
+    `${flag(r.negatedSentencePct <= THRESHOLDS.negatedMainClausePct.warn)} sentences whose main claim is a negation: ${r.negatedSentencePct}%`,
+  );
+  console.log(
+    `     topic positions (whose story is this?): ${r.topics.map((t) => `"${t}"`).join(" | ")}`,
+  );
 }
 
 const args = process.argv.slice(2);
-if (args.length === 0) { console.error('usage: node prose-lint.mjs <file.md|file.txt> [more files]'); process.exit(0); }
+if (args.length === 0) {
+  console.error("usage: node prose-lint.mjs <file.md|file.txt> [more files]");
+  process.exit(0);
+}
 
 // 🔴 REFUSE RATHER THAN PRINT A CONFIDENT WRONG NUMBER. The analysis is in the file header: there is
 // not one line of LaTeX stripping here, so on `.tex` the preamble, the `%` comments and the
@@ -361,16 +580,22 @@ if (args.length === 0) { console.error('usage: node prose-lint.mjs <file.md|file
 // "words" against ~4636 real ones), and every metric printed `ok`. Silent degradation here reads as
 // "the prose is clean" — exactly the class of failure for which this file calls `requireMarkdown()`
 // above.
-const tex = args.filter((a) => !a.startsWith('--') && a.endsWith('.tex'));
+const tex = args.filter((a) => !a.startsWith("--") && a.endsWith(".tex"));
 if (tex.length) {
-  console.error(`prose-lint reads markdown, not LaTeX: ${tex.join(', ')}`);
-  console.error('There is no .tex stripping here — the word count would include the preamble and the .bib,');
-  console.error('and every metric (they are all fractions of the word count) would be understated by roughly half.');
-  console.error('What to cover prose in .tex with — papers/research/2026-08-26-proza-v-latex-zanyatost.md');
+  console.error(`prose-lint reads markdown, not LaTeX: ${tex.join(", ")}`);
+  console.error(
+    "There is no .tex stripping here — the word count would include the preamble and the .bib,",
+  );
+  console.error(
+    "and every metric (they are all fractions of the word count) would be understated by roughly half.",
+  );
+  console.error(
+    "What to cover prose in .tex with — papers/research/2026-08-26-proza-v-latex-zanyatost.md",
+  );
   process.exit(2);
 }
-const fs = await import('node:fs');
-const path = await import('node:path');
+const fs = await import("node:fs");
+const path = await import("node:path");
 
 // 🔴 The paper's own working notes are not the paper. Without this, the linter scored TIGHTEN
 // comments, the YAML frontmatter and the keyword block as prose -- and its loudest complaints were
@@ -387,9 +612,9 @@ function pdfTextOnly(t) {
   const cut = t.search(/^\s*References\s*$/m);
   if (cut > 0) t = t.slice(0, cut);
   return t
-    .replace(/^\s*\d+\s*$/gm, '')          // page numbers
-    .replace(/(\w)-\n(\w)/g, '$1$2')       // hyphenation introduced by the two-column set
-    .replace(/\f/g, '\n\n');
+    .replace(/^\s*\d+\s*$/gm, "") // page numbers
+    .replace(/(\w)-\n(\w)/g, "$1$2") // hyphenation introduced by the two-column set
+    .replace(/\f/g, "\n\n");
 }
 
 // 2026-08-11: code blocks are cut out by `stripFences()`, and the parser finds the body boundary.
@@ -398,20 +623,21 @@ function pdfTextOnly(t) {
 // understated density for every metric, that is, a clean verdict over a dirty paper. And
 // `/^## (References|Limitations)/m` cut the body at hashes INSIDE such a block.
 function bodyOnly(t) {
-  t = stripFrontmatter(t);                     // YAML frontmatter
-  t = t.replace(/<!--[\s\S]*?-->/g, '');          // working comments, incl. TIGHTEN letters
+  t = stripFrontmatter(t); // YAML frontmatter
+  t = t.replace(/<!--[\s\S]*?-->/g, ""); // working comments, incl. TIGHTEN letters
   // `blank: true` — the block's lines become empty rather than disappear. Otherwise the paragraph
   // before the block gets glued to the paragraph after it, and this file is precisely about
   // "Paragraph and heading boundaries END a sentence" (see the comment at `splitSentences`). The
   // measurement is in the `stripFences` docstring: on `aisec-2026/README.md` removing the lines gave
   // 81 sentences instead of 82, merging the lead paragraph with the text after the block.
-  t = stripFences(t, { blank: true });            // code blocks
-  t = t.replace(/^\|.*\|$/gm, '');                // table rows: data, not prose
-  const freeH = mdHeadings(t).find((h) => h.depth === 2 && /^(References|Limitations)/u.test(h.text));
-  const cut = freeH ? freeH.offset : -1;          // the `-1` convention and the `> 0` comparison — as before
-  return cut > 0 ? t.slice(0, cut) : t;           // body only; free sections hold a different bar
+  t = stripFences(t, { blank: true }); // code blocks
+  t = t.replace(/^\|.*\|$/gm, ""); // table rows: data, not prose
+  const freeH = mdHeadings(t).find(
+    (h) => h.depth === 2 && /^(References|Limitations)/u.test(h.text),
+  );
+  const cut = freeH ? freeH.offset : -1; // the `-1` convention and the `> 0` comparison — as before
+  return cut > 0 ? t.slice(0, cut) : t; // body only; free sections hold a different bar
 }
-
 
 // 🔴 `--flags-only` and a NON-ZERO EXIT, added 2026-08-05, are what let anything downstream act.
 // Until today this file printed a wall of numbers and always exited 0, and it was wired to no hook
@@ -420,11 +646,11 @@ function bodyOnly(t) {
 // once flagged, because it had no threshold. The corpus owner found the tic by eye in a single reading and
 // asked why the tooling had not. It had not because it was measuring, and measuring is not checking
 // — which is, word for word, this paper's own thesis running loose inside its own toolchain.
-const flagsOnly = args.includes('--flags-only');
+const flagsOnly = args.includes("--flags-only");
 let flagged = 0;
-for (const f of args.filter((a) => !a.startsWith('--'))) {
-  const raw = fs.readFileSync(f, 'utf8');
-  const isPdfText = f.endsWith('.txt');
+for (const f of args.filter((a) => !a.startsWith("--"))) {
+  const raw = fs.readFileSync(f, "utf8");
+  const isPdfText = f.endsWith(".txt");
   const prep = isPdfText ? pdfTextOnly : bodyOnly;
   const r = analyse(prep(raw));
   if (flagsOnly) {
@@ -433,9 +659,13 @@ for (const f of args.filter((a) => !a.startsWith('--'))) {
     // `eslint-rules/paper-craft.mjs` (`citation-density`, `unexplained-jargon`).
     for (const c of captions(f, fs, path)) {
       if (c.longest > THRESHOLDS.captionSentenceWords.warn)
-        lines.push(`   figures/${c.file}: caption sentence of ${c.longest} words (warn >${THRESHOLDS.captionSentenceWords.warn}) — "${c.longestSentence.slice(0, 110)}…"`);
+        lines.push(
+          `   figures/${c.file}: caption sentence of ${c.longest} words (warn >${THRESHOLDS.captionSentenceWords.warn}) — "${c.longestSentence.slice(0, 110)}…"`,
+        );
       if (c.words > THRESHOLDS.captionWords.warn)
-        lines.push(`   figures/${c.file}: caption is ${c.words} words (warn >${THRESHOLDS.captionWords.warn}) — a caption this long is a section under a picture`);
+        lines.push(
+          `   figures/${c.file}: caption is ${c.words} words (warn >${THRESHOLDS.captionWords.warn}) — a caption this long is a section under a picture`,
+        );
     }
     // Sentences carrying more than two claims moved to the same place — the rule
     // `multi-claim-sentence`, together with the "five worst" slice (now the `maxReported` option).
@@ -448,25 +678,36 @@ for (const f of args.filter((a) => !a.startsWith('--'))) {
     // `hedge-density`, `discourse-subject`, `undefined-coinage`.
     if (lines.length) {
       flagged += lines.length;
-      console.error(`✍️  prose-lint — ${f.split('/').pop()}:`);
+      console.error(`✍️  prose-lint — ${f.split("/").pop()}:`);
       lines.forEach((l) => console.error(l));
-      console.error('   run `node .claude/skills/grade-paper-writing/prose-lint.mjs <file>` for the sentences');
+      console.error(
+        "   run `node .claude/skills/grade-paper-writing/prose-lint.mjs <file>` for the sentences",
+      );
     }
-  } else if (args.includes('--headings')) {
+  } else if (args.includes("--headings")) {
     // The whole-document question, printed as one list. Not a gate: "does this heading name a
     // concrete noun" is judgement and pretending otherwise would be the exact failure this file
     // exists to stop. What was missing is cheaper and was the real cause — nobody had ever seen the
     // headings AS A SET. Two that a reader called "VAGUE AF" and "why not mention the linter??"
     // survived six passes because every pass looked only at the section it was editing.
-    console.log(`\n=== ${f.split('/').pop()} — every heading, in order ===`);
-    structure(prep(raw)).headings.forEach((h, i) => console.log(`${String(i + 1).padStart(3)}. ${h}`));
-    console.log('\nRead these as a stranger who will read nothing else. Each should name a thing:');
-    console.log('a linter, a configuration, a repository, a rule — not "answers", "kinds", "moves".');
+    console.log(`\n=== ${f.split("/").pop()} — every heading, in order ===`);
+    structure(prep(raw)).headings.forEach((h, i) =>
+      console.log(`${String(i + 1).padStart(3)}. ${h}`),
+    );
+    console.log(
+      "\nRead these as a stranger who will read nothing else. Each should name a thing:",
+    );
+    console.log(
+      'a linter, a configuration, a repository, a rule — not "answers", "kinds", "moves".',
+    );
   } else {
-    report(f.split('/').pop(), r);
+    report(f.split("/").pop(), r);
   }
 }
-if (!flagsOnly) console.log('\n(thresholds and their sources are in THRESHOLDS at the top of this file)');
+if (!flagsOnly)
+  console.log(
+    "\n(thresholds and their sources are in THRESHOLDS at the top of this file)",
+  );
 // Exit 1 on a flag so a caller can branch. Hooks stay advisory by swallowing it themselves; the
 // point is that the information now EXISTS at the exit code, where it was previously unreachable.
 process.exit(flagged ? 1 : 0);

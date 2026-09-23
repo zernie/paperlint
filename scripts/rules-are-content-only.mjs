@@ -46,19 +46,32 @@ import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
  * the contrived form would have to claim every spawn, which is the false positive above.
  */
 const SPAWNERS = new Set([
-  "exec", "execSync", "execFile", "execFileSync", "spawn", "spawnSync", "fork",
+  "exec",
+  "execSync",
+  "execFile",
+  "execFileSync",
+  "spawn",
+  "spawnSync",
+  "fork",
 ]);
 
 /** `"git"` as the program, or `"git …"` as the head of a shell line handed to `exec`. */
-const isGit = (v) => typeof v === "string" && (v === "git" || v.startsWith("git "));
+const isGit = (v) =>
+  typeof v === "string" && (v === "git" || v.startsWith("git "));
 
 /** Rule sources only: a mutation file plants defects on purpose, a harness asserts about them. */
 const isRuleSource = (f) =>
-  f.endsWith(".mjs") && !f.endsWith(".mutations.mjs") && !f.endsWith(".harness.mjs");
+  f.endsWith(".mjs") &&
+  !f.endsWith(".mutations.mjs") &&
+  !f.endsWith(".harness.mjs");
 
 /** @param {string} src @returns {string[]} the git invocations this source makes */
 export function processImports(src) {
-  const ast = parse(src, { ecmaVersion: "latest", sourceType: "module", range: false });
+  const ast = parse(src, {
+    ecmaVersion: "latest",
+    sourceType: "module",
+    range: false,
+  });
   const found = [];
   const walk = (n) => {
     if (n === null || typeof n !== "object") return;
@@ -67,7 +80,10 @@ export function processImports(src) {
     // `cp.execFileSync(…)` after a namespace import. Listed, not described — the node types a
     // check walks are the only honest statement of its coverage.
     if (n.type === "CallExpression") {
-      const name = n.callee?.type === "MemberExpression" ? n.callee.property?.name : n.callee?.name;
+      const name =
+        n.callee?.type === "MemberExpression"
+          ? n.callee.property?.name
+          : n.callee?.name;
       if (SPAWNERS.has(String(name)) && isGit(n.arguments?.[0]?.value))
         found.push(String(n.arguments[0].value));
     }

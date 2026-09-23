@@ -26,7 +26,7 @@ $ biome check --write .  # and fix what is fixable
 ```
 
 Formatting and linting remain available separately, but the advertised path is one command.
-Note what this costs: `check` is doing three jobs, so its *output* has to be legible enough to
+Note what this costs: `check` is doing three jobs, so its _output_ has to be legible enough to
 tell them apart. Merging verbs pushes the burden onto the report.
 
 Sources: <https://biomejs.dev/> · <https://github.com/biomejs/biome>
@@ -56,11 +56,11 @@ Source: <https://quarto.org/docs/reference/>
 
 ## What the small-surface tools have in common
 
-| tool | verbs a user types weekly | where the nouns went |
-| --- | --- | --- |
-| Biome | `check` (and `--write`) | config declares includes/excludes |
-| Quarto | `render`, `preview` | `_quarto.yml` declares the project |
-| Vale | `vale <paths>`, `vale sync` | `.vale.ini` declares styles and scope |
+| tool   | verbs a user types weekly   | where the nouns went                  |
+| ------ | --------------------------- | ------------------------------------- |
+| Biome  | `check` (and `--write`)     | config declares includes/excludes     |
+| Quarto | `render`, `preview`         | `_quarto.yml` declares the project    |
+| Vale   | `vale <paths>`, `vale sync` | `.vale.ini` declares styles and scope |
 
 And the recurring shape: **one verb for the routine loop, one verb for "make my environment
 match the declaration", and everything else rare.** Vale's `sync`, Quarto's `add`, and a

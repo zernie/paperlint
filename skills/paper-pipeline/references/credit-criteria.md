@@ -12,9 +12,10 @@ notes, not in a shared pipeline. And it is not a promise: what follows is how re
 have been observed to score, which is a prior, not a guarantee.
 
 ## The criteria a paper feeds (a paper is a HUB — one effort, several criteria)
-- **Authorship of scholarly articles** — the paper itself. The test is a *scholarly article* in a
-  *professional / major-trade / major-media* outlet. **Peer-review + indexing is the operative bar, NOT
-  venue prestige**; peer-reviewed conference and workshop *proceedings* qualify. Publishing
+
+- **Authorship of scholarly articles** — the paper itself. The test is a _scholarly article_ in a
+  _professional / major-trade / major-media_ outlet. **Peer-review + indexing is the operative bar, NOT
+  venue prestige**; peer-reviewed conference and workshop _proceedings_ qualify. Publishing
   "**regardless of the caliber**" satisfies the plain criterion at the first step. There is **no
   approved-venue list** — "a venue with proven acceptance" is not a thing, and anyone who offers you one
   is selling something.
@@ -23,26 +24,28 @@ have been observed to score, which is a prior, not a guarantee.
   what is looked for is work "highly cited relative to others". This is the riskiest criterion for an
   independent researcher, and the paper's downstream impact — not its existence — is what feeds it.
 - **Judging the work of others** — reviewing / PC service (the organizer **review-offer email** that
-  arrives after submission). It must be *genuine* peer review, and you need proof you *completed* a
+  arrives after submission). It must be _genuine_ peer review, and you need proof you _completed_ a
   review, not merely that you were invited.
-- **Published material about you** — press or coverage *about* the work. Distinct from authorship, and it
+- **Published material about you** — press or coverage _about_ the work. Distinct from authorship, and it
   needs its own evidence (a front-page aggregator thread, a trade-press write-up).
 
 ## Where venue quality actually bites (and where it does not)
+
 - **The plain criterion (first step) is venue-agnostic on prestige and newness.** A first-edition workshop
   with indexed proceedings clears it. In decided cases this criterion is granted in a sentence, with
   journals and conference proceedings counted interchangeably.
 - **The merits stage (second step — "sustained standing at the top of the field") is where prestige,
-  citations and recency matter.** A fresh venue does not *subtract*; it simply does not *add* standing
+  citations and recency matter.** A fresh venue does not _subtract_; it simply does not _add_ standing
   yet — cured by citations, expert letters, and a **body of work**. Recency cuts both ways: a burst of
   publications immediately before a filing undercuts "sustained" (a real refusal ground — papers all
   dated to the year of filing), and stale work with declining citations fails from the other side. Target
   a **steady cadence**.
 
 ## Decisions this forces on the pipeline
+
 1. **Body of work > one trophy.** Several peer-reviewed papers in one coherent lane beat one paper at a
    fancy venue. Keep the corpus connected.
-2. **Idea validation** (`research-ideate`): favor ideas that yield a *reusable method or benchmark* (it
+2. **Idea validation** (`research-ideate`): favor ideas that yield a _reusable method or benchmark_ (it
    survives review) over a one-off "tool X is bad" result (it reads as a blog post), and that plausibly
    earn downstream citations.
 3. **Venue choice** (`find-venue`): a peer-reviewed, **indexed** venue is the whole game; workshop newness
@@ -60,6 +63,7 @@ have been observed to score, which is a prior, not a guarantee.
    author's own business and belongs in the author's own notes, never in a shared or public repository.
 
 ## Provenance
+
 Two papers were run on exactly this logic: **AgenticDev 2026 @ ASE** ("Measuring the Wrong Number") and
 **AISec 2026 @ ACM CCS** ("Safety Theater") — one coherent lane, both peer-reviewed and indexed, both with
 an extension path for prestige.

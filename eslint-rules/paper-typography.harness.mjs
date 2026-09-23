@@ -21,7 +21,8 @@ const ROOT = join(HERE, "..");
 const FIX = join(ROOT, "fixtures", "paper-typography");
 
 const { texLanguage } = await import(join(HERE, "latex-language.mjs"));
-const typographyPlugin = (await import(join(HERE, "paper-typography.mjs"))).default;
+const typographyPlugin = (await import(join(HERE, "paper-typography.mjs")))
+  .default;
 
 let n = 0;
 const check = (label, cond) => {
@@ -43,7 +44,10 @@ const lint = async (file, debt) => {
     overrideConfig: [
       {
         files: ["**/*.tex"],
-        plugins: { tex: { languages: { latex: texLanguage } }, paper: typographyPlugin },
+        plugins: {
+          tex: { languages: { latex: texLanguage } },
+          paper: typographyPlugin,
+        },
         language: "tex/latex",
         rules: { "paper/typography": ["warn", { debt }] },
       },
@@ -63,46 +67,83 @@ const MESSY = join(FIX, "messy-paper", "paper.tex");
 
 // ── half one: it FIRES, and on each of the four independently ──────────────────────────────
 const fresh = await lint(MESSY, {});
-check("fires on the section sign", fresh.some((m) => m.includes("§")));
-check("fires on the bare decimal", fresh.some((m) => m.includes("leading zero")));
-check("fires on mixed Fig./Figure", fresh.some((m) => m.includes("mixed in one document")));
-check("fires on unreachable bibliography entries", fresh.some((m) => m.includes("bibliography entries")));
+check(
+  "fires on the section sign",
+  fresh.some((m) => m.includes("§")),
+);
+check(
+  "fires on the bare decimal",
+  fresh.some((m) => m.includes("leading zero")),
+);
+check(
+  "fires on mixed Fig./Figure",
+  fresh.some((m) => m.includes("mixed in one document")),
+);
+check(
+  "fires on unreachable bibliography entries",
+  fresh.some((m) => m.includes("bibliography entries")),
+);
 check("four sub-checks, four findings", fresh.length === 4);
 
 // 🔴 The MACRO form is counted, not just the glyph. This is the half that was missing when the
 // check first shipped: it returned zero on the very paper the reviewer wrote about.
 const signs = fresh.find((m) => m.includes("§"));
-check("the section sign count includes the macro form, not only the glyph",
-      /^3 ×/.test(signs));
+check(
+  "the section sign count includes the macro form, not only the glyph",
+  /^3 ×/.test(signs),
+);
 
 // ── half two: it STAYS QUIET on clean input, including the near-misses ─────────────────────
 const clean = await lint(CLEAN, {});
 check("silent on a clean paper", clean.length === 0);
 // Each near-miss is in the clean fixture on purpose; naming them keeps the reason alive.
-check("an arXiv id is not a bare decimal", !clean.some((m) => m.includes("leading zero")));
-check("`Figure` used consistently is not a defect", !clean.some((m) => m.includes("mixed in one document")));
-check("url and arXiv id count as reachable, not only doi",
-      !clean.some((m) => m.includes("bibliography entries")));
+check(
+  "an arXiv id is not a bare decimal",
+  !clean.some((m) => m.includes("leading zero")),
+);
+check(
+  "`Figure` used consistently is not a defect",
+  !clean.some((m) => m.includes("mixed in one document")),
+);
+check(
+  "url and arXiv id count as reachable, not only doi",
+  !clean.some((m) => m.includes("bibliography entries")),
+);
 
 // ── the RATCHET: three halves, because this is what decides if a human ever sees it ────────
 const KEY = "messy-paper";
 
 // (a) debt equal to the count → silence. Old sin, already recorded.
-const paid = await lint(MESSY, { [KEY]: { sectionSign: 3, bareDecimal: 2, figMixed: 1, unreachable: 2 } });
+const paid = await lint(MESSY, {
+  [KEY]: { sectionSign: 3, bareDecimal: 2, figMixed: 1, unreachable: 2 },
+});
 check("known debt, unchanged, is silent", paid.length === 0);
 
 // (b) debt ABOVE the count → still silent, and it does not re-baseline noisily. Lowering is free.
-const lowered = await lint(MESSY, { [KEY]: { sectionSign: 99, bareDecimal: 99, figMixed: 99, unreachable: 99 } });
+const lowered = await lint(MESSY, {
+  [KEY]: { sectionSign: 99, bareDecimal: 99, figMixed: 99, unreachable: 99 },
+});
 check("paying debt down is silent", lowered.length === 0);
 
 // (c) debt BELOW the count → speaks, and says both numbers. A bare "3 ×" would not tell a
 // reader whether anything changed, which is the entire point of the ratchet.
-const grew = await lint(MESSY, { [KEY]: { sectionSign: 1, bareDecimal: 99, figMixed: 99, unreachable: 99 } });
+const grew = await lint(MESSY, {
+  [KEY]: { sectionSign: 1, bareDecimal: 99, figMixed: 99, unreachable: 99 },
+});
 check("growth over known debt is reported", grew.length === 1);
 check("growth names the before and after", grew[0].includes("was 1, now 3"));
 
 // (d) debt for ANOTHER paper must not silence this one — the key is the paper's own directory.
-const wrongKey = await lint(MESSY, { "clean-paper": { sectionSign: 99, bareDecimal: 99, figMixed: 99, unreachable: 99 } });
+const wrongKey = await lint(MESSY, {
+  "clean-paper": {
+    sectionSign: 99,
+    bareDecimal: 99,
+    figMixed: 99,
+    unreachable: 99,
+  },
+});
 check("debt is keyed per paper, not shared", wrongKey.length === 4);
 
-console.log(`✓ ${String(n)} assertions passed — paper/typography, both halves and the ratchet`);
+console.log(
+  `✓ ${String(n)} assertions passed — paper/typography, both halves and the ratchet`,
+);

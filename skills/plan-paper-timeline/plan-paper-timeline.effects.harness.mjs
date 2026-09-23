@@ -49,7 +49,13 @@
  *
  * Cost: $0 (scripted mock model, no API key). Wall clock ~30-60s for one CLI spawn.
  */
-import { existsSync, mkdtempSync, readFileSync, rmSync, realpathSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  realpathSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -119,16 +125,26 @@ const r = await runHarnessTest({
     // verdict below would be a broken run, not a finding.
     { tool: "Read", input: { file_path: "cfp.md" } },
     // READ-ONLY calendar probe. Never create_event / update_event — see header.
-    { tool: "mcp__Google_Calendar__list_events", input: { calendarId: "primary" } },
+    {
+      tool: "mcp__Google_Calendar__list_events",
+      input: { calendarId: "primary" },
+    },
     // The tool the 2026-08-10 sweep said was missing from the declaration.
-    { tool: "ToolSearch", input: { query: "select:mcp__Google_Calendar__create_event", max_results: 1 } },
+    {
+      tool: "ToolSearch",
+      input: {
+        query: "select:mcp__Google_Calendar__create_event",
+        max_results: 1,
+      },
+    },
     { text: "done" },
   ],
 });
 
 try {
   const call = (name) => r.toolCalls.find((c) => c.name === name);
-  const absent = (c) => c !== undefined && c.isError && /No such tool available/.test(c.resultText);
+  const absent = (c) =>
+    c !== undefined && c.isError && /No such tool available/.test(c.resultText);
 
   // ── 1. The run actually happened and the skill actually loaded ──────────────────
   // Asserted FIRST and separately from everything below. A confident "nothing was
@@ -312,7 +328,9 @@ try {
   });
 
   try {
-    const call = b.toolCalls.find((c) => c.name === "mcp__Google_Calendar__create_event");
+    const call = b.toolCalls.find(
+      (c) => c.name === "mcp__Google_Calendar__create_event",
+    );
     if (!call)
       throw new Error(
         `the prescribed \`create_event\` call was never recorded. The stand-in was not reached — ` +
@@ -329,7 +347,11 @@ try {
     // mutation run to notice (2026-08-17). The log is written on both paths, so a
     // non-empty log means our server handled the call, whatever it decided.
     const logged = existsSync(callLog)
-      ? readFileSync(callLog, "utf8").trim().split("\n").filter(Boolean).map((l) => JSON.parse(l))
+      ? readFileSync(callLog, "utf8")
+          .trim()
+          .split("\n")
+          .filter(Boolean)
+          .map((l) => JSON.parse(l))
       : [];
     if (logged.length === 0)
       throw new Error(

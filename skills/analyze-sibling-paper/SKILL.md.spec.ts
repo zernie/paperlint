@@ -8,9 +8,19 @@ import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({
   name: "analyze-sibling-paper",
-  description: "Deep-analyze a specific related / competing / concurrent paper — reading the ACTUAL paper, not its abstract — to decide the \"isn't this just X?\" question before a reviewer asks it: what it really does, whether it's prior or concurrent work, the strongest scoop a reviewer could claim, whether your delta is REAL or merely cosmetic, and the exact cite + positioning clause (or a scoop escalation) to apply. Saves the analysis to the paper's research folder and surfaces action points. Use whenever a paper close enough to yours surfaces — via verify-citations' nearest-neighbor, a reviewer's \"this was already done\", your own lit search, or an arXiv alert. Distinct from verify-citations (confirms a cite is real + one-line delta) and study-accepted-papers (mines a venue's accepted corpus for levers); this one does the deep per-competitor overlap/scoop analysis. Compose with verify-citations (feeds it neighbors), harden-paper (its nearest-neighbor-scoop axis calls this), and extend-paper (a scooped angle can become the extension's pivot).",
+  description:
+    "Deep-analyze a specific related / competing / concurrent paper — reading the ACTUAL paper, not its abstract — to decide the \"isn't this just X?\" question before a reviewer asks it: what it really does, whether it's prior or concurrent work, the strongest scoop a reviewer could claim, whether your delta is REAL or merely cosmetic, and the exact cite + positioning clause (or a scoop escalation) to apply. Saves the analysis to the paper's research folder and surfaces action points. Use whenever a paper close enough to yours surfaces — via verify-citations' nearest-neighbor, a reviewer's \"this was already done\", your own lit search, or an arXiv alert. Distinct from verify-citations (confirms a cite is real + one-line delta) and study-accepted-papers (mines a venue's accepted corpus for levers); this one does the deep per-competitor overlap/scoop analysis. Compose with verify-citations (feeds it neighbors), harden-paper (its nearest-neighbor-scoop axis calls this), and extend-paper (a scooped angle can become the extension's pivot).",
   context: "fork",
-  tools: ["WebSearch", "WebFetch", "Read", "Write", "Grep", "Glob", "Bash", "Agent"],
+  tools: [
+    "WebSearch",
+    "WebFetch",
+    "Read",
+    "Write",
+    "Grep",
+    "Glob",
+    "Bash",
+    "Agent",
+  ],
   body: `
 # analyze-sibling-paper — settle "isn't this just X?" before a reviewer does
 

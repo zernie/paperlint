@@ -13,7 +13,12 @@
  * Run: node .claude/skills/verify-citations/scripts/bib-authors.test.mjs
  */
 import assert from "node:assert/strict";
-import { surnames, compare, claimsPublished, parseMarkdownRefs } from "./bib-authors.mjs";
+import {
+  surnames,
+  compare,
+  claimsPublished,
+  parseMarkdownRefs,
+} from "./bib-authors.mjs";
 
 let n = 0;
 const t = (name, fn) => {
@@ -36,18 +41,27 @@ t("accents and TeX braces do not create a difference", () => {
 });
 
 t("`and others` is dropped, not treated as a surname", () => {
-  assert.deepEqual(surnames("Zheng, Lianmin and Yin, Liangsheng and others"), ["zheng", "yin"]);
+  assert.deepEqual(surnames("Zheng, Lianmin and Yin, Liangsheng and others"), [
+    "zheng",
+    "yin",
+  ]);
 });
 
-t("a multi-token surname keeps its last token, consistently in both orders", () => {
-  assert.deepEqual(surnames("van der Berg, Jan"), surnames("Jan van der Berg"));
-});
+t(
+  "a multi-token surname keeps its last token, consistently in both orders",
+  () => {
+    assert.deepEqual(
+      surnames("van der Berg, Jan"),
+      surnames("Jan van der Berg"),
+    );
+  },
+);
 
 console.log("bib-authors — comparison");
 
 t("identical sequences produce nothing", () => {
   const d = compare(["raji", "denton"], ["raji", "denton"]);
-    assert.deepEqual(d, { missing: [], extra: [], orderDiffers: false });
+  assert.deepEqual(d, { missing: [], extra: [], orderDiffers: false });
 });
 
 t("REGRESSION — Toolformer: a dropped author is reported as MISSING", () => {
@@ -66,20 +80,38 @@ t("REGRESSION — Toolformer: a dropped author is reported as MISSING", () => {
   assert.deepEqual(d.extra, []);
 });
 
-t("REGRESSION — Efficiency Misnomer: same people, preprint ORDER, reported as order", () => {
-  const ours = surnames("Dehghani, Mostafa and Arnab, Anurag and Beyer, Lucas and Vaswani, Ashish and Tay, Yi");
-  const iclr = surnames("Mostafa Dehghani and Yi Tay and Anurag Arnab and Lucas Beyer and Ashish Vaswani");
-  const d = compare(ours, iclr);
-  assert.equal(d.orderDiffers, true, "an order-only difference must still be a finding");
-  assert.deepEqual(d.missing, []);
-  assert.deepEqual(d.extra, []);
-});
+t(
+  "REGRESSION — Efficiency Misnomer: same people, preprint ORDER, reported as order",
+  () => {
+    const ours = surnames(
+      "Dehghani, Mostafa and Arnab, Anurag and Beyer, Lucas and Vaswani, Ashish and Tay, Yi",
+    );
+    const iclr = surnames(
+      "Mostafa Dehghani and Yi Tay and Anurag Arnab and Lucas Beyer and Ashish Vaswani",
+    );
+    const d = compare(ours, iclr);
+    assert.equal(
+      d.orderDiffers,
+      true,
+      "an order-only difference must still be a finding",
+    );
+    assert.deepEqual(d.missing, []);
+    assert.deepEqual(d.extra, []);
+  },
+);
 
-t("REGRESSION — Raji: order-only, found by the script itself after the other two were fixed", () => {
-  const ours = surnames("Raji, Inioluwa Deborah and Bender, Emily M. and Paullada, Amandalynne and Denton, Emily and Hanna, Alex");
-  const neurips = surnames("Inioluwa Deborah Raji and Emily Denton and Emily M. Bender and Alex Hanna and Amandalynne Paullada");
-  assert.equal(compare(ours, neurips).orderDiffers, true);
-});
+t(
+  "REGRESSION — Raji: order-only, found by the script itself after the other two were fixed",
+  () => {
+    const ours = surnames(
+      "Raji, Inioluwa Deborah and Bender, Emily M. and Paullada, Amandalynne and Denton, Emily and Hanna, Alex",
+    );
+    const neurips = surnames(
+      "Inioluwa Deborah Raji and Emily Denton and Emily M. Bender and Alex Hanna and Amandalynne Paullada",
+    );
+    assert.equal(compare(ours, neurips).orderDiffers, true);
+  },
+);
 
 t("an author we invented would be reported as EXTRA", () => {
   assert.deepEqual(compare(["raji", "ghost"], ["raji"]).extra, ["ghost"]);
@@ -88,12 +120,24 @@ t("an author we invented would be reported as EXTRA", () => {
 console.log("bib-authors — scope");
 
 t("a preprint entry is NOT held to a published author list", () => {
-  assert.equal(claimsPublished({ booktitle: "", journal: "arXiv preprint arXiv:2604.22750" }), false);
+  assert.equal(
+    claimsPublished({
+      booktitle: "",
+      journal: "arXiv preprint arXiv:2604.22750",
+    }),
+    false,
+  );
   assert.equal(claimsPublished({ booktitle: "", journal: "CoRR" }), false);
 });
 
 t("a proceedings entry IS in scope", () => {
-  assert.equal(claimsPublished({ booktitle: "NeurIPS Datasets and Benchmarks Track", journal: "" }), true);
+  assert.equal(
+    claimsPublished({
+      booktitle: "NeurIPS Datasets and Benchmarks Track",
+      journal: "",
+    }),
+    true,
+  );
 });
 
 console.log("bib-authors — where the bibliography begins");
@@ -101,7 +145,11 @@ console.log("bib-authors — where the bibliography begins");
 // Both halves. "Silent on a fence" without "finds the real one" is indistinguishable from a broken parse.
 t("a real ## References is parsed", () => {
   const md = [
-    "# Paper", "text", "", "## References", "",
+    "# Paper",
+    "text",
+    "",
+    "## References",
+    "",
     "1. A. Author. *A title*. In NeurIPS, 2023.",
   ].join("\n");
   const refs = parseMarkdownRefs(md);
@@ -111,12 +159,23 @@ t("a real ## References is parsed", () => {
 
 t("a ## References inside a ``` fence does NOT open the bibliography", () => {
   const md = [
-    "# Paper", "", "The section is written like this:", "", "```markdown", "## References", "",
-    "1. Z. Ghost. *Not a reference, but a markup example*. In Nowhere, 2020.", "```", "",
+    "# Paper",
+    "",
+    "The section is written like this:",
+    "",
+    "```markdown",
+    "## References",
+    "",
+    "1. Z. Ghost. *Not a reference, but a markup example*. In Nowhere, 2020.",
+    "```",
+    "",
     "The end.",
   ].join("\n");
-  assert.deepEqual(parseMarkdownRefs(md), [],
-    "quoted markup is not a bibliography — the ^#+ regex counted it as a heading");
+  assert.deepEqual(
+    parseMarkdownRefs(md),
+    [],
+    "quoted markup is not a bibliography — the ^#+ regex counted it as a heading",
+  );
 });
 
 console.log(`\n${n} assertions passed.`);

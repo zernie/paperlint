@@ -6,7 +6,7 @@ The package has three parts:
 
 - **<!-- count:rules -->12 ESLint rules** that check a paper against itself — nine of them run on your papers.
 - **<!-- count:skills -->24 skills**: instruction files an AI coding agent (Claude Code) reads, one
-  per stage of writing a paper. The skills are what *do* the work and write down what they did;
+  per stage of writing a paper. The skills are what _do_ the work and write down what they did;
   the rules check that record against the files.
 - **3 hooks** for Claude Code: one blocks an edit that would skip the checks, two are reminders.
 
@@ -20,7 +20,7 @@ What the rules catch, in plain language:
 
 - You declared the paper submitted on a date, and the PDF named in that record is not on disk —
   or it is, but it is not the same file any more.
-- Your camera-ready still says *we will release our code* after you released it.
+- Your camera-ready still says _we will release our code_ after you released it.
 - You marked a paper submitted and never wrote down that you checked the author list against
   the bibliography.
 
@@ -36,17 +36,17 @@ Reminders that only print are called reminders, not gates.
 **Nine of the rules run on your papers**, listed here; the other three lint
 this package's own source and never see your files.
 
-| Rule | Level | Reads | Fails when |
-| ---- | ----- | ----- | ---------- |
-| `paper/stages` | error | `PIPELINE-STATUS.md` | a declared stage's PDF is missing, or the `bytes:` it names does not match the file's real size, or a frozen PDF exists that no stage declares |
-| `paper/source` | error | `PIPELINE-STATUS.md` | a declared stage has no frozen `.tex` beside its PDF (a commit hash does not count — squash and gc destroy it) |
-| `paper/author-list` | warn | `PIPELINE-STATUS.md` | a stage is declared and **no cell of the scorecard's table contains the run marker** (default `bib-authors`). It checks that you recorded the cross-check; it does not read your `.bib`. What to run is your own `authorListCommand`, empty by default |
-| `paper/research-question` | warn | `paper.tex`, `paper.md`, `PIPELINE-STATUS.md` | a stage is declared and either the scorecard has no `researchQuestion` field, or it has one the paper does not contain. The declared sentence is compared against the source with whitespace collapsed — your words, not a pattern. Advisory, because nothing here can judge whether what you declared *is* a research question |
-| `paper/typography` | warn | `paper.tex`, `paper.md` | any of four counts rises above the per-paper allowance you set: `§` or `\S\ref` instead of "Section"; a decimal with no leading zero (`.05`); `Fig.` and `Figure` mixed in one document; bibliography entries with no doi, url or arXiv id. Existing debt is tolerated, growth is not |
-| `tex/future-promise` | warn | `paper.tex` | a camera-ready build still says "will be released" about something already handed over |
-| `tex/acm-frontmatter-override` | error | `paper.tex` | an `acmart` build overrides ACM's front-matter commands and drops template elements from page 1 |
-| `review/findings-cause` | error | `reviews/*.md` | a review lists at least `minFindings` (default 3) findings and no cell introduces a cause with the marker (default `Cause:`) |
-| `doc/fields` | warn | `reviews/*.md` | a front-matter field is missing or holds a value outside the list you configured. Off entirely unless you configure `docFields` |
+| Rule                           | Level | Reads                                         | Fails when                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------ | ----- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `paper/stages`                 | error | `PIPELINE-STATUS.md`                          | a declared stage's PDF is missing, or the `bytes:` it names does not match the file's real size, or a frozen PDF exists that no stage declares                                                                                                                                                                                  |
+| `paper/source`                 | error | `PIPELINE-STATUS.md`                          | a declared stage has no frozen `.tex` beside its PDF (a commit hash does not count — squash and gc destroy it)                                                                                                                                                                                                                  |
+| `paper/author-list`            | warn  | `PIPELINE-STATUS.md`                          | a stage is declared and **no cell of the scorecard's table contains the run marker** (default `bib-authors`). It checks that you recorded the cross-check; it does not read your `.bib`. What to run is your own `authorListCommand`, empty by default                                                                          |
+| `paper/research-question`      | warn  | `paper.tex`, `paper.md`, `PIPELINE-STATUS.md` | a stage is declared and either the scorecard has no `researchQuestion` field, or it has one the paper does not contain. The declared sentence is compared against the source with whitespace collapsed — your words, not a pattern. Advisory, because nothing here can judge whether what you declared _is_ a research question |
+| `paper/typography`             | warn  | `paper.tex`, `paper.md`                       | any of four counts rises above the per-paper allowance you set: `§` or `\S\ref` instead of "Section"; a decimal with no leading zero (`.05`); `Fig.` and `Figure` mixed in one document; bibliography entries with no doi, url or arXiv id. Existing debt is tolerated, growth is not                                           |
+| `tex/future-promise`           | warn  | `paper.tex`                                   | a camera-ready build still says "will be released" about something already handed over                                                                                                                                                                                                                                          |
+| `tex/acm-frontmatter-override` | error | `paper.tex`                                   | an `acmart` build overrides ACM's front-matter commands and drops template elements from page 1                                                                                                                                                                                                                                 |
+| `review/findings-cause`        | error | `reviews/*.md`                                | a review lists at least `minFindings` (default 3) findings and no cell introduces a cause with the marker (default `Cause:`)                                                                                                                                                                                                    |
+| `doc/fields`                   | warn  | `reviews/*.md`                                | a front-matter field is missing or holds a value outside the list you configured. Off entirely unless you configure `docFields`                                                                                                                                                                                                 |
 
 Errors fail the run; warnings print and do not.
 
@@ -72,10 +72,10 @@ as incomplete, and the three rules that read it — `paper/stages`, `paper/sourc
 
 **`rpp init` writes to your repository.** Exactly:
 
-| what | where | when |
-| --- | --- | --- |
-| a `research-paper-pipeline` key naming your papers directory | your `package.json` | always |
-| a GitHub Actions workflow | `.github/workflows/` | only if you say yes; it asks once, and only when stdin is a terminal |
+| what                                                               | where                   | when                                                                                                                                          |
+| ------------------------------------------------------------------ | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| a `research-paper-pipeline` key naming your papers directory       | your `package.json`     | always                                                                                                                                        |
+| a GitHub Actions workflow                                          | `.github/workflows/`    | only if you say yes; it asks once, and only when stdin is a terminal                                                                          |
 | one relative symlink per shipped skill, into the installed package | `.claude/skills/<name>` | always — except where that name is already taken (a directory, a file, a link elsewhere): that entry is left as it is and named in the report |
 
 It installs no software and touches nothing else.
@@ -119,14 +119,14 @@ Node 22.13 or newer. The CLI is called `rpp`.
 Measured 2026-09-23 on a clean project with npm 10.9.7 (`npm i <tarball>`, production
 dependencies only):
 
-| | size |
-| --- | ---: |
-| tarball | 1.2 MB |
-| this package, unpacked | 3.7 MB |
-| **`node_modules` in total** | **136 MB** |
-| of which `@ast-grep/*` (via `vigiles`) | 51 MB |
-| of which `typescript` (via `vigiles`) | 23 MB |
-| of which `vigiles` itself | 6 MB |
+|                                        |       size |
+| -------------------------------------- | ---------: |
+| tarball                                |     1.2 MB |
+| this package, unpacked                 |     3.7 MB |
+| **`node_modules` in total**            | **136 MB** |
+| of which `@ast-grep/*` (via `vigiles`) |      51 MB |
+| of which `typescript` (via `vigiles`)  |      23 MB |
+| of which `vigiles` itself              |       6 MB |
 
 Neither `rpp lint` nor any of the three hooks loads `@ast-grep` or `typescript` — measured by
 tracing every module they resolve; `vigiles` itself is loaded. Those two are there for `vigiles`'
@@ -163,7 +163,7 @@ so it works from anywhere in the repository. The scope comes from that key or fr
 pass — never from a default. Linting `"."` would pass over whatever happens to be in the checkout
 and report green on a scope nobody chose.
 
-The exit code is `1` when any rule reports an error, and also `1` when *nothing* was linted — a
+The exit code is `1` when any rule reports an error, and also `1` when _nothing_ was linted — a
 clean report over zero files is not a clean report. `--json` prints machine-readable findings.
 
 ## The scorecard
@@ -227,11 +227,11 @@ Claude Code give you the hooks:
 
 **One of the three is a gate; the other two only print.**
 
-| Hook | Blocks? | When | What it does |
-| ---- | ------- | ---- | ------------ |
-| `paper-edit-guard` | **yes** — denies the command | before a Bash command | refuses a Bash write to a paper source, because it would skip every check that hangs on Edit/Write. Also denies while the settings key is unparseable |
-| `paper-skills-nudge` | no — always exits 0 | after an Edit/Write on a paper | puts the pre-submit checklist in front of the agent (about 1.3 KB of context on a paper edit, nothing on any other file) |
-| `paper-status-gates` | no — always exits 0 | after an Edit/Write on a paper | reads that paper's scorecard and lists the stages that have not run yet |
+| Hook                 | Blocks?                      | When                           | What it does                                                                                                                                          |
+| -------------------- | ---------------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `paper-edit-guard`   | **yes** — denies the command | before a Bash command          | refuses a Bash write to a paper source, because it would skip every check that hangs on Edit/Write. Also denies while the settings key is unparseable |
+| `paper-skills-nudge` | no — always exits 0          | after an Edit/Write on a paper | puts the pre-submit checklist in front of the agent (about 1.3 KB of context on a paper edit, nothing on any other file)                              |
+| `paper-status-gates` | no — always exits 0          | after an Edit/Write on a paper | reads that paper's scorecard and lists the stages that have not run yet                                                                               |
 
 The two reminders are `react` hooks, whose type has no way to deny at all — they cannot block even
 by mistake.
@@ -270,15 +270,15 @@ files were linted, so a typo in the path shows up red instead of green. Optional
 
 ## Documentation
 
-| file | what is in it |
-| --- | --- |
-| [`docs/toolchain.md`](docs/toolchain.md) | the external programs the skills call, and how to install TeX Live by package name |
+| file                                             | what is in it                                                                                             |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| [`docs/toolchain.md`](docs/toolchain.md)         | the external programs the skills call, and how to install TeX Live by package name                        |
 | [`docs/configuration.md`](docs/configuration.md) | every setting, the required-files block, build-script lookup, using the rules from your own ESLint config |
-| [`docs/install.md`](docs/install.md) | why the install is shaped this way, and why the plugin ships no code — a decision record, measured |
-| [`docs/prior-art/`](docs/prior-art/README.md) | how comparable tools are shaped, with the URLs that were checked |
-| [`docs/e2e.md`](docs/e2e.md) | the end-to-end runs: what each proves, what they do not cover, and when a change owes one |
-| [`docs/incidents.md`](docs/incidents.md) | what broke, measured |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md) | layout, test commands, how to add a rule or a skill |
+| [`docs/install.md`](docs/install.md)             | why the install is shaped this way, and why the plugin ships no code — a decision record, measured        |
+| [`docs/prior-art/`](docs/prior-art/README.md)    | how comparable tools are shaped, with the URLs that were checked                                          |
+| [`docs/e2e.md`](docs/e2e.md)                     | the end-to-end runs: what each proves, what they do not cover, and when a change owes one                 |
+| [`docs/incidents.md`](docs/incidents.md)         | what broke, measured                                                                                      |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)             | layout, test commands, how to add a rule or a skill                                                       |
 
 ## License
 

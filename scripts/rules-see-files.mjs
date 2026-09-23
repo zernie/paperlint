@@ -38,7 +38,10 @@ const isOff = (v) => {
  * @returns {Promise<{rules: {rule: string, files: number}[], linted: number, blind: string[]}>}
  */
 export async function rulesSeeFiles({ cwd }) {
-  const configPath = new URL("eslint.config.mjs", `file://${cwd.endsWith("/") ? cwd : cwd + "/"}`);
+  const configPath = new URL(
+    "eslint.config.mjs",
+    `file://${cwd.endsWith("/") ? cwd : cwd + "/"}`,
+  );
   const config = (await import(configPath.href)).default;
 
   const declared = new Set();
@@ -56,11 +59,18 @@ export async function rulesSeeFiles({ cwd }) {
   for (const result of results) {
     const effective = await eslint.calculateConfigForFile(result.filePath);
     for (const id of declared)
-      if (effective.rules?.[id] && !isOff(effective.rules[id])) seen.set(id, seen.get(id) + 1);
+      if (effective.rules?.[id] && !isOff(effective.rules[id]))
+        seen.set(id, seen.get(id) + 1);
   }
 
-  const rules = [...seen].map(([rule, files]) => ({ rule, files })).sort((a, b) => a.rule.localeCompare(b.rule));
-  return { rules, linted: results.length, blind: rules.filter((r) => r.files === 0).map((r) => r.rule) };
+  const rules = [...seen]
+    .map(([rule, files]) => ({ rule, files }))
+    .sort((a, b) => a.rule.localeCompare(b.rule));
+  return {
+    rules,
+    linted: results.length,
+    blind: rules.filter((r) => r.files === 0).map((r) => r.rule),
+  };
 }
 
 // CLI entry. Guarded so the harness can import the function without running the process exit.
@@ -71,7 +81,8 @@ export async function rulesSeeFiles({ cwd }) {
 // on run 34784079821: `extract-pdf-facts.mjs --strict` returned RC=0 and created no facts file.
 if (isMain(import.meta.url)) {
   const { rules, linted, blind } = await rulesSeeFiles({ cwd: process.cwd() });
-  for (const { rule, files } of rules) console.log(`${String(files).padStart(4)}  ${rule}`);
+  for (const { rule, files } of rules)
+    console.log(`${String(files).padStart(4)}  ${rule}`);
   console.log(`\n${rules.length} rule(s) declared, ${linted} file(s) linted.`);
   if (blind.length) {
     console.log(
@@ -82,5 +93,7 @@ if (isMain(import.meta.url)) {
     );
     process.exit(1);
   }
-  console.log("✓ every declared rule was enabled for at least one file on disk.");
+  console.log(
+    "✓ every declared rule was enabled for at least one file on disk.",
+  );
 }
