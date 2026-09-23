@@ -122,6 +122,22 @@ export const NOT_COVERED = {
     "command can stand in for a different kernel.",
 };
 
+/**
+ * Exit 77 means "declared skip" — the same code vigiles' runner uses (`SKIP_EXIT_CODE`), and the
+ * one lib/mutation-driver.mjs already recognizes. The e2e steps exit 77 when a tool they need is
+ * absent and --strict is off. Anything else nonzero is a failure.
+ *
+ * 🔴 A SKIP IS A THIRD OUTCOME. Until the Codex review on #45 the e2e steps exited 0 on a skip,
+ * this loop counted that as a pass, and `skipped` below was declared and never filled: a machine
+ * without pnpm or TeX printed "all gates passed" for runs that never happened.
+ */
+export const SKIP_EXIT = 77;
+export function outcome(status) {
+  if (status === 0) return "pass";
+  if (status === SKIP_EXIT) return "skip";
+  return "fail";
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   const failed = [];
   const skipped = [];
@@ -136,10 +152,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     // 🔴 The exit code is read from npm, never from a pipe. `cmd | tail && …` reports the
     // FILTER's status, which is almost always zero — that is how a red harness shipped on
     // 2026-09-16.
-    if (r.status === 0) continue;
-    // A declared skip is the slow steps' contract: build-e2e exits 0 having SAID it had no TeX.
-    // Anything nonzero is a failure, and is reported as one.
-    failed.push(`${g.name}  (npm run ${g.script} → ${r.status})`);
+    const o = outcome(r.status);
+    if (o === "pass") continue;
+    if (o === "skip") skipped.push(`${g.name}  (npm run ${g.script} → ${SKIP_EXIT})`);
+    else failed.push(`${g.name}  (npm run ${g.script} → ${r.status})`);
   }
 
   console.log("");
@@ -147,7 +163,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.error("🔴 gates failed:");
     for (const f of failed) console.error(`   ${f}`);
   } else {
-    console.log(`✓ ${GATES.length} gate(s) passed`);
+    const passed = GATES.length - skipped.length;
+    console.log(`✓ ${passed} gate(s) passed${skipped.length ? `, ${skipped.length} SKIPPED — not run, not passed` : ""}`);
   }
   if (skipped.length) for (const s of skipped) console.log(`⏳ skipped: ${s}`);
 

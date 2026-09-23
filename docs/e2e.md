@@ -70,8 +70,10 @@ see it, so the content of the artifact is what gets measured.**
 
 ## Skips are declared, never silent
 
-A clone without TeX Live genuinely cannot run the build e2e. It exits zero **having said so**. In
-CI the same absence means a broken environment, so `--strict` turns that skip into a failure.
+A clone without TeX Live genuinely cannot run the build e2e; a machine without pnpm cannot run
+half of the install e2e. Each says so and exits **77** — the skip code vigiles' own runner uses —
+not zero, and `npm run check` reports it as `SKIPPED — not run, not passed`. In CI the same absence
+means a broken environment, so `--strict` turns the skip into a failure.
 
 A skipped step and a passed one look identical in a CI interface. That is the class this whole
 package is written against, so it is not allowed to happen inside it either.

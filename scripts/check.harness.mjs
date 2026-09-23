@@ -23,7 +23,7 @@ import { load } from "js-yaml";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(HERE);
 
-const { GATES, NOT_COVERED } = await import("./check.mjs");
+const { GATES, NOT_COVERED, outcome, SKIP_EXIT } = await import("./check.mjs");
 
 let n = 0;
 const check = (label, cond) => {
@@ -32,6 +32,15 @@ const check = (label, cond) => {
 };
 
 // ── the workflow is the ORACLE, not a copy of it ───────────────────────────────────────────
+// A declared skip is a THIRD outcome. Folding it into "pass" printed "all gates passed" on a
+// machine where the e2e never ran (Codex review on #45); folding it into "fail" would make the
+// command red for anyone without pnpm or TeX, and it would be ignored.
+check("exit 0 is a pass", outcome(0) === "pass");
+check(`exit ${SKIP_EXIT} is a skip — neither a pass nor a failure`, outcome(SKIP_EXIT) === "skip");
+check("the skip code is the one vigiles' runner uses (77)", SKIP_EXIT === 77);
+check("any other nonzero exit is a failure", outcome(1) === "fail" && outcome(2) === "fail");
+check("a process killed by a signal (status null) is a failure, not a skip", outcome(null) === "fail");
+
 const wf = load(readFileSync(join(ROOT, ".github/workflows/ci.yml"), "utf-8"));
 const ciJobs = Object.keys(wf.jobs ?? {});
 check("the workflow parses and declares jobs — without this every assertion below is vacuous",

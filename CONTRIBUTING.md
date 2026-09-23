@@ -48,7 +48,8 @@ that broke the suite: the gates were run afterwards and were green, but `npm tes
 `test:install` were not among them, because there were eleven separate scripts and the only way
 to run them all was from memory. A subset flag re-creates exactly that — the cheap half gets run
 and reported as "the gates". If a step genuinely cannot run here, it says so out loud rather than
-being skipped quietly; the build e2e exits zero *having stated* it found no TeX.
+being skipped quietly: an e2e that finds no TeX or no pnpm exits 77 *having stated* why, and
+`npm run check` lists it as skipped instead of counting it as passed.
 
 The individual scripts still exist and are the right thing to call while iterating on one rule.
 They are not what you run before pushing.

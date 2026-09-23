@@ -57,7 +57,8 @@ if (missing.length) {
   const say = `build-e2e: skipped — this machine has no ${missing.join(", ")}.`;
   if (!strict) {
     console.log(`${say}\nThis is a legitimate skip for a clone without TeX Live. In CI the same case is a failure (--strict).`);
-    process.exit(0);
+    // 77, not 0: a skip is not a pass (scripts/check.mjs, SKIP_EXIT).
+    process.exit(77);
   }
   console.error(`${say}\nIn --strict this is a FAILURE: in CI a missing tool is a broken environment,\nand a skipped check is indistinguishable from a passed one.`);
   process.exit(2);

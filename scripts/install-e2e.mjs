@@ -277,6 +277,9 @@ const results = [];
 // set on the side: the unconditional `process.exit(…)` at the bottom overwrites exitCode, so a
 // strict run without pnpm used to print 🔴 and exit 0 (measured, Codex review on #45).
 let strictMissing = [];
+// Managers that did not launch WITHOUT --strict: a declared skip, reported with exit 77 so
+// `npm run check` can tell "measured under npm only" from "measured under both".
+let skippedManagers = [];
 // realpathSync is NOT decoration: on macOS `/var` is a symlink to `/private/var`, and a path
 // recorded before resolution does not match what a process returns from inside. This is a
 // separate class, and it has already cost a red npm test on macOS only (vigiles#241).
@@ -315,7 +318,7 @@ try {
           `alone is indistinguishable, in the output, from measuring all of them.`,
       );
       strictMissing = missing.map((m) => m.name);
-    }
+    } else skippedManagers = missing.map((m) => m.name);
   }
   console.log(`measured under: ${available.map((m) => m.name).join(", ")}\n`);
 
@@ -545,4 +548,5 @@ for (const r of results) {
 }
 for (const name of strictMissing)
   console.log(`  🔴 ${name} — NOT MEASURED, and --strict makes that a failure`);
-process.exit(red > 0 || strictMissing.length > 0 ? 1 : 0);
+for (const name of skippedManagers) console.log(`  ⏳ ${name} — NOT MEASURED (declared skip, exit 77)`);
+process.exit(red > 0 || strictMissing.length > 0 ? 1 : skippedManagers.length > 0 ? 77 : 0);
