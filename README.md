@@ -66,7 +66,9 @@ Not a read-only checker you point at an existing repository. Before you install,
 **You write and maintain a `PIPELINE-STATUS.md` in every paper directory.** It does not appear by
 itself. Nothing generates it and no command refreshes it — you copy the template from
 `skills/paper-pipeline/references/pipeline-status-template.md` and keep it current, or the agent
-does it for you as it runs the stages. Without that file a paper directory gets zero rules.
+does it for you as it runs the stages. Without that file `rpp lint` reports the paper directory
+as incomplete, and the three rules that read it — `paper/stages`, `paper/source`,
+`paper/author-list` — have nothing to check. The rules over `paper.md` / `paper.tex` still run.
 
 **`rpp init` writes to your repository.** Exactly:
 

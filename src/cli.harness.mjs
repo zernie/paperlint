@@ -862,7 +862,7 @@ check(
     );
     check(
       "and the finding is printed before the ESLint report, with its consequence",
-      /missing `PIPELINE-STATUS\.md`/.test(r.out) && /ZERO rules/.test(r.out),
+      /missing `PIPELINE-STATUS\.md`/.test(r.out) && /is checked/.test(r.out),
     );
     check(
       "and it does NOT print \"no findings\" over something that was found",
