@@ -17,27 +17,50 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const { rulesAreContentOnly, processImports } = await import(join(HERE, "rules-are-content-only.mjs"));
+const { rulesAreContentOnly, processImports } = await import(
+  join(HERE, "rules-are-content-only.mjs")
+);
 
 let n = 0;
-const check = (label, ok) => { n++; assert.equal(ok, true, label); };
+const check = (label, ok) => {
+  n++;
+  assert.equal(ok, true, label);
+};
 
 // ── I. quiet on the real corpus, and it actually looked ───────────────────────
 {
   const { checked, findings } = rulesAreContentOnly({ cwd: join(HERE, "..") });
-  check(`scanned something (${checked.length} rule sources)`, checked.length > 0);
-  check(`quiet on the real corpus (${findings.length} findings)`, findings.length === 0);
-  check("mutation files are not scanned as rules", !checked.some((f) => f.endsWith(".mutations.mjs")));
+  check(
+    `scanned something (${checked.length} rule sources)`,
+    checked.length > 0,
+  );
+  check(
+    `quiet on the real corpus (${findings.length} findings)`,
+    findings.length === 0,
+  );
+  check(
+    "mutation files are not scanned as rules",
+    !checked.some((f) => f.endsWith(".mutations.mjs")),
+  );
 }
 
 // ── II. fires on every form the defect has taken ────────────────────────────
 for (const [label, src] of [
-  ["execFileSync with a git argv", `import { execFileSync } from "node:child_process";
-     execFileSync("git", ["cat-file", "-e", sha]);`],
-  ["a namespaced call", `import cp from "node:child_process";
-     cp.spawnSync("git", ["rev-parse", ref]);`],
-  ["execSync with a git shell line", `import { execSync } from "child_process";
-     execSync("git log --oneline -1");`],
+  [
+    "execFileSync with a git argv",
+    `import { execFileSync } from "node:child_process";
+     execFileSync("git", ["cat-file", "-e", sha]);`,
+  ],
+  [
+    "a namespaced call",
+    `import cp from "node:child_process";
+     cp.spawnSync("git", ["rev-parse", ref]);`,
+  ],
+  [
+    "execSync with a git shell line",
+    `import { execSync } from "child_process";
+     execSync("git log --oneline -1");`,
+  ],
   ["exec, async form", `exec("git rev-list --all", cb);`],
 ]) {
   check(`FIRES on ${label}`, processImports(src).length === 1);
@@ -49,22 +72,40 @@ for (const [label, src] of [
 // rule on its first run — a false positive on an `error` gate, which is worse than a miss
 // because the gate that cannot be cleared gets switched off rather than fixed.
 for (const [label, src] of [
-  ["a rule spawning texcount", `import { execFileSync } from "node:child_process";
-     execFileSync("texcount", ["-brief", file]);`],
-  ["a rule spawning pdflatex", `import { spawnSync } from "node:child_process";
-     spawnSync("pdflatex", [tex]);`],
-  ["importing child_process without running git", `import { execFileSync } from "node:child_process";
-     export default {};`],
+  [
+    "a rule spawning texcount",
+    `import { execFileSync } from "node:child_process";
+     execFileSync("texcount", ["-brief", file]);`,
+  ],
+  [
+    "a rule spawning pdflatex",
+    `import { spawnSync } from "node:child_process";
+     spawnSync("pdflatex", [tex]);`,
+  ],
+  [
+    "importing child_process without running git",
+    `import { execFileSync } from "node:child_process";
+     export default {};`,
+  ],
 ]) {
   check(`quiet on ${label}`, processImports(src).length === 0);
 }
 
 // ── IV. quiet on sources that only MENTION it — what a grep cannot do ───────
 for (const [label, src] of [
-  ["a comment naming git", `// never reach for git cat-file here\nexport default {};`],
+  [
+    "a comment naming git",
+    `// never reach for git cat-file here\nexport default {};`,
+  ],
   ["a string literal", `export const why = "git cat-file is banned in rules";`],
-  ["a reported message", `export default { meta: { messages: { m: "run git cat-file? no" } } };`],
-  ["a program merely NAMED git-something", `execFileSync("git-lfs-helper", []);`],
+  [
+    "a reported message",
+    `export default { meta: { messages: { m: "run git cat-file? no" } } };`,
+  ],
+  [
+    "a program merely NAMED git-something",
+    `execFileSync("git-lfs-helper", []);`,
+  ],
 ]) {
   check(`quiet on ${label}`, processImports(src).length === 0);
 }

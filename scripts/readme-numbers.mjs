@@ -47,7 +47,9 @@ export async function countRules(root = ROOT) {
     // tex-build.
     const rules = d?.rules ?? d;
     const looksLikeRules =
-      rules && typeof rules === "object" && Object.values(rules).every((r) => r && typeof r.create === "function");
+      rules &&
+      typeof rules === "object" &&
+      Object.values(rules).every((r) => r && typeof r.create === "function");
     if (!looksLikeRules) {
       unknown.push(f);
       continue;
@@ -96,12 +98,14 @@ export async function actualCounts(root = ROOT) {
     rules: await countRules(root),
     harnesses: countFiles(root, ".harness.mjs"),
     batteries: countFiles(root, ".mutations.mjs"),
-    // The end-to-end runs, counted from disk by the suffix that names them. `docs/e2e.md`
+    // The end-to-end runs, counted from disk: every file in `test/e2e/` is one. `docs/e2e.md`
     // describes them one by one, and a description that outlives the thing it describes is the
-    // reason this counter exists at all: add a third `*-e2e.mjs` and the doc goes red until it
+    // reason this counter exists at all: add a third file to `test/e2e/` and the doc goes red until it
     // says what the third one proves.
-    e2e: countFiles(join(root, "scripts"), "-e2e.mjs"),
-    skills: readdirSync(join(root, "skills")).filter((d) => lstatSync(join(root, "skills", d)).isDirectory()).length,
+    e2e: countFiles(join(root, "test", "e2e"), ".mjs"),
+    skills: readdirSync(join(root, "skills")).filter((d) =>
+      lstatSync(join(root, "skills", d)).isDirectory(),
+    ).length,
   };
 }
 
@@ -157,7 +161,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   // Every occurrence is kept, because judging only the last one is how this check went hollow.
   const occurrences = {}; // counter -> [{ file, value }], in file then document order
   for (const f of DECLARING_FILES) {
-    for (const { key, value } of countDeclarations(readFileSync(join(ROOT, f), "utf-8"))) {
+    for (const { key, value } of countDeclarations(
+      readFileSync(join(ROOT, f), "utf-8"),
+    )) {
       (occurrences[key] ??= []).push({ file: f, value });
     }
   }
@@ -170,31 +176,43 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   // An empty scan is NOT "there are no discrepancies". Without this guard, deleting every marker
   // from the README would make the check green forever.
   if (Object.keys(declared).length === 0) {
-    console.error(`🔴 none of ${DECLARING_FILES.join(", ")} has a \`<!-- count:… -->\` marker — there is nothing to check against, so the check asserts nothing`);
+    console.error(
+      `🔴 none of ${DECLARING_FILES.join(", ")} has a \`<!-- count:… -->\` marker — there is nothing to check against, so the check asserts nothing`,
+    );
     process.exit(1);
   }
 
   const bad = [];
   for (const k of keys) {
     if (!(k in occurrences)) {
-      bad.push(`  ${k}: ${actual[k]} on disk, and declared neither in README nor in CONTRIBUTING`);
+      bad.push(
+        `  ${k}: ${actual[k]} on disk, and declared neither in README nor in CONTRIBUTING`,
+      );
       continue;
     }
     // EVERY copy is compared. A duplicate that disagrees is a finding wherever it sits.
     occurrences[k].forEach(({ file, value }, i) => {
       if (value === actual[k]) return;
-      const which = occurrences[k].length > 1 ? ` (copy ${i + 1} of ${occurrences[k].length})` : "";
-      bad.push(`  ${k}: ${file}${which} promises ${value}, ${actual[k]} on disk`);
+      const which =
+        occurrences[k].length > 1
+          ? ` (copy ${i + 1} of ${occurrences[k].length})`
+          : "";
+      bad.push(
+        `  ${k}: ${file}${which} promises ${value}, ${actual[k]} on disk`,
+      );
     });
   }
   for (const k of Object.keys(declared)) {
-    if (!keys.includes(k)) bad.push(`  ${k}: ${declared[k]} declared, but there is no such counter`);
+    if (!keys.includes(k))
+      bad.push(`  ${k}: ${declared[k]} declared, but there is no such counter`);
   }
 
   if (bad.length) {
     console.error("🔴 numbers are named that are not on disk:");
     for (const b of bad) console.error(b);
-    console.error("\n  The numbers in the README are produced by this command, not written by hand.");
+    console.error(
+      "\n  The numbers in the README are produced by this command, not written by hand.",
+    );
     process.exit(1);
   }
   console.log(

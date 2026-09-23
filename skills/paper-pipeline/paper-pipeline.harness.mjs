@@ -37,7 +37,8 @@ const SKILLS_DIR = join(HERE, "..");
 const SELF = "paper-pipeline";
 
 /** Same contract `skill-checks.mjs` derives membership from: a skill announces ITSELF. */
-const PIPELINE_MARKER = /^\s*node\s+\.claude\/skills\/paper-pipeline\/scripts\/announce\.mjs\s+([a-z0-9-]+)/m;
+const PIPELINE_MARKER =
+  /^\s*node\s+\.claude\/skills\/paper-pipeline\/scripts\/announce\.mjs\s+([a-z0-9-]+)/m;
 
 const dirs = readdirSync(SKILLS_DIR).filter((d) =>
   existsSync(join(SKILLS_DIR, d, "SKILL.md")),
@@ -59,7 +60,9 @@ const src = read(SELF);
  * skill reference".
  */
 const routed = new Set(
-  [...src.matchAll(/`([a-z0-9-]+)`/g)].map((m) => m[1]).filter((n) => dirs.includes(n)),
+  [...src.matchAll(/`([a-z0-9-]+)`/g)]
+    .map((m) => m[1])
+    .filter((n) => dirs.includes(n)),
 );
 
 // ── forward: a bolded backticked token in a routing table must be a real skill ──
@@ -67,7 +70,10 @@ const routed = new Set(
 // about a skill and not about `pdflatex` or `jinja2` (plain backticks, correctly
 // out of scope).
 const asserted = [...src.matchAll(/\*\*`([a-z0-9-]+)`\*\*/g)].map((m) => m[1]);
-assert.ok(asserted.length > 0, "found no routed skills at all — the extraction broke, not the map");
+assert.ok(
+  asserted.length > 0,
+  "found no routed skills at all — the extraction broke, not the map",
+);
 for (const name of new Set(asserted)) {
   assert.ok(
     dirs.includes(name),
@@ -84,9 +90,18 @@ for (const name of new Set(asserted)) {
  * the same argument `skill-checks.mjs` makes about its own EXCLUDED map.
  */
 const MISSING = new Map([
-  ["cold-read-diff", "2026-08-11 — absent from the MAP but NOT unreachable: it is in EXPECTED_GATES and `grade-paper-writing` routes to it, so a run gets there. Belongs in the map for discoverability; not added here because the pipeline is being reworked in parallel"],
-  ["sweep-design-space", "2026-08-11 — same shape: in EXPECTED_GATES, reached via `argument-arc`, missing only from the map. Deferred to the rework"],
-  ["paper-status", "reports ON the pipeline rather than being a stage in it — the conductor has nothing to route to it"],
+  [
+    "cold-read-diff",
+    "2026-08-11 — absent from the MAP but NOT unreachable: it is in EXPECTED_GATES and `grade-paper-writing` routes to it, so a run gets there. Belongs in the map for discoverability; not added here because the pipeline is being reworked in parallel",
+  ],
+  [
+    "sweep-design-space",
+    "2026-08-11 — same shape: in EXPECTED_GATES, reached via `argument-arc`, missing only from the map. Deferred to the rework",
+  ],
+  [
+    "paper-status",
+    "reports ON the pipeline rather than being a stage in it — the conductor has nothing to route to it",
+  ],
 ]);
 
 for (const name of wired) {

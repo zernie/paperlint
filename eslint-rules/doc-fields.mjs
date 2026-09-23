@@ -78,14 +78,21 @@ export default {
                 additionalProperties: {
                   type: "object",
                   properties: {
-                    values: { type: "array", items: { type: "string" }, minItems: 1 },
+                    values: {
+                      type: "array",
+                      items: { type: "string" },
+                      minItems: 1,
+                    },
                     hint: { type: "string" },
                   },
                   additionalProperties: false,
                 },
                 minProperties: 1,
               },
-              sinceCreated: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+              sinceCreated: {
+                type: "string",
+                pattern: "^\\d{4}-\\d{2}-\\d{2}$",
+              },
             },
             required: ["fields"],
             additionalProperties: false,
@@ -94,7 +101,8 @@ export default {
         messages: {
           noFrontmatter:
             "no frontmatter — a document of this class must declare the fields {{names}}. A missing header is not an exemption: otherwise the check is bypassed by deleting it.",
-          malformed: "the frontmatter does not parse as YAML ({{why}}) — there is nothing to read the fields {{names}} from.",
+          malformed:
+            "the frontmatter does not parse as YAML ({{why}}) — there is nothing to read the fields {{names}} from.",
           missing:
             "the frontmatter has no `{{name}}` field{{hint}}. Allowed values: {{values}}. A note in the body is not a field: markup describes presentation, not data.",
           badValue:
@@ -116,15 +124,25 @@ export default {
               context.report({
                 node,
                 messageId: "malformed",
-                data: { why: e.reason ?? e.message ?? "unparseable", names: names.join(", ") },
+                data: {
+                  why: e.reason ?? e.message ?? "unparseable",
+                  names: names.join(", "),
+                },
               });
               return;
             }
-            if (data === null || typeof data !== "object" || Array.isArray(data)) {
+            if (
+              data === null ||
+              typeof data !== "object" ||
+              Array.isArray(data)
+            ) {
               context.report({
                 node,
                 messageId: "malformed",
-                data: { why: "the header is not a key-value mapping", names: names.join(", ") },
+                data: {
+                  why: "the header is not a key-value mapping",
+                  names: names.join(", "),
+                },
               });
               return;
             }
@@ -155,7 +173,11 @@ export default {
           },
           "root:exit"(node) {
             if (seenFrontmatter) return;
-            context.report({ node, messageId: "noFrontmatter", data: { names: names.join(", ") } });
+            context.report({
+              node,
+              messageId: "noFrontmatter",
+              data: { names: names.join(", ") },
+            });
           },
         };
       },

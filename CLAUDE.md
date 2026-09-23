@@ -22,24 +22,24 @@ That last clause is the whole direction, and it is the part that keeps being for
 only when the engine genuinely cannot express the check — and "cannot" means MEASURED, not
 assumed. Two things that sound like limits and are not:
 
-- *"ESLint only sees one file"* — true of its AST, false of the rule: a rule is an ordinary
+- _"ESLint only sees one file"_ — true of its AST, false of the rule: a rule is an ordinary
   JS module and may call `execFileSync("git", …)` or read a sibling file. If the reason to
   stay a script is "it needs git", that reason is weak; measure the real cost before using it.
-- *"this runs programs, not lints files"* — that is a real limit, and the answer is the seam
+- _"this runs programs, not lints files"_ — that is a real limit, and the answer is the seam
   already proven here: **a script PRODUCES facts into a JSON file, and ESLint JUDGES that
   file.** The verdict lands in the engine even though the work did not.
 
 ## 📊 STATE — measured 2026-09-16 (re-measure, never cite)
 
-| | |
-|---|---:|
-| ESLint rules | **5** — `latex-language` · `tex-build` · `papers` · `review-findings-cause` · `doc-fields` |
-| harnesses | **57** |
-| mutation batteries | **34** |
-| skills | **24** |
-| hooks (runnable `.mjs`) | **5** |
-| repo-wide scripts | 5 |
-| files tracked / commits | 308 / 43 |
+|                         |                                                                                            |
+| ----------------------- | -----------------------------------------------------------------------------------------: |
+| ESLint rules            | **5** — `latex-language` · `tex-build` · `papers` · `review-findings-cause` · `doc-fields` |
+| harnesses               |                                                                                     **57** |
+| mutation batteries      |                                                                                     **34** |
+| skills                  |                                                                                     **24** |
+| hooks (runnable `.mjs`) |                                                                                      **5** |
+| repo-wide scripts       |                                                                                          5 |
+| files tracked / commits |                                                                                   308 / 43 |
 
 **A real consumer dogfoods this package on every CI run**, so a breaking change here turns a
 paper pipeline red somewhere else the same day. That is deliberate — it is the only thing
@@ -65,7 +65,7 @@ in ways that look like broken code rather than a missing install.
 **1. Mechanism goes to vigiles, data stays here.** A file that names nothing local — no rule
 of ours, no fixture of ours — is machinery, and machinery belongs in
 [vigiles](https://github.com/zernie/vigiles). Ask it in two steps: is this mechanism or data?
-If mechanism — does it know about *this* domain? If not, it is not ours.
+If mechanism — does it know about _this_ domain? If not, it is not ours.
 
 **2. A check over an AST is a LINT RULE, not a script.** If it walks `.ts`/`.js`/`.tex` and
 looks at declarations, names or nodes, write an ESLint rule: it fires in the editor on save,
@@ -86,11 +86,11 @@ fresh clone yields RC=0, 652 findings, zero errors — because 19 rules saw no f
 **5. "It can't be done in the engine" must be MEASURED, not assumed.** Every one of these was
 stated confidently on 2026-09-16 and every one fell to a single command:
 
-| the claim | what one command showed |
-|---|---|
+| the claim                                                   | what one command showed                                                                                                                                                                 |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | "a lint rule can't know a git date, so this stays a script" | a rule is plain JS; `execFileSync("git", …)` is legal in it. The real costs (per-file invocation, `--cache` keyed on content) are solvable, so this was a preference dressed as a limit |
-| "we need our own glob expander" | `fs.globSync` ships in Node 22 and returned the identical set. 31 hand-written lines of regex existed for nothing |
-| "the tool can't run a file that config excludes" | it can, and says so: `matches exclude … — running because you named it` |
+| "we need our own glob expander"                             | `fs.globSync` ships in Node 22 and returned the identical set. 31 hand-written lines of regex existed for nothing                                                                       |
+| "the tool can't run a file that config excludes"            | it can, and says so: `matches exclude … — running because you named it`                                                                                                                 |
 
 ⇒ Before writing machinery, **run the thing you are about to replace and paste its output.**
 "I couldn't get it to work" is data about the attempt, not about the tool.
@@ -99,7 +99,7 @@ stated confidently on 2026-09-16 and every one fell to a single command:
 2026-09-16: three hooks here read their config as `provide("pkg", "cat package.json")`. The
 consumer's session changed directory into a subfolder for unrelated reasons, `cat` failed, and
 the Bash gate — which fails closed, correctly — denied **every command in that session**,
-including the one that would undo it. The nudges next to it would have failed *silently*,
+including the one that would undo it. The nudges next to it would have failed _silently_,
 which is worse.
 
 Resolve paths from the repository root (`git rev-parse --show-toplevel`) or from the module's
@@ -125,11 +125,11 @@ This is not a hypothetical and not a rare slip. **It fired four times in a singl
 2026-09-16** — three in the consumer, once here — and each time the diagnosis cost minutes
 because `SyntaxError: Unexpected token '.'` says nothing about comments.
 
-| instead of | write |
-|---|---|
-| a glob with an asterisk and slash | spell it: "every folder under papers" |
-| a regex with an asterisk before a slash | describe what it matched, in words |
-| an example needing both | put it in a line comment (two slashes), never a block |
+| instead of                              | write                                                 |
+| --------------------------------------- | ----------------------------------------------------- |
+| a glob with an asterisk and slash       | spell it: "every folder under papers"                 |
+| a regex with an asterisk before a slash | describe what it matched, in words                    |
+| an example needing both                 | put it in a line comment (two slashes), never a block |
 
 ⇒ **In a block comment, prose describes the pattern; it never quotes it.** If the exact
 characters matter, they belong in the code or in a line comment beside it.
@@ -143,7 +143,7 @@ Rule 5 is about the tool you are replacing; this one is about the order of work.
    · path resolution. More than one is a conversation, not a commit.
 3. **An adversarial second pass is encouraged, and it is not free.** Spend it on a fork in the
    road, on anything that goes outward, and on a conclusion you are about to act on.
-4. **A quick fix is almost never quick** — it is quick to *propose* precisely because nothing
+4. **A quick fix is almost never quick** — it is quick to _propose_ precisely because nothing
    was opened.
 
 Four proposals were made and withdrawn in one session on 2026-09-17 for exactly this reason —
@@ -152,7 +152,7 @@ Four proposals were made and withdrawn in one session on 2026-09-17 for exactly 
 **10. The only impure thing in this package is WHERE IT IS INSTALLED — and it lives in ONE
 module.** Rule 6 generalised: the caller's cwd is one case of it. Checking logic — lint rules,
 skills, hooks — must not know its own location, nor its distance from anything else. Every
-answer to *where* comes from `lib/consumer.mjs`, which adapts per channel: own checkout ·
+answer to _where_ comes from `lib/consumer.mjs`, which adapts per channel: own checkout ·
 `node_modules` · plugin cache · CI. A skill naming a script by an install-specific path in its
 own prose walks around that door, and 208 such literals across 190 lines do exactly that.
 
@@ -162,7 +162,7 @@ would be ceremony with no subject. One thing here is impure, so one thing gets a
 
 ⏳ **The mechanical half is owed and is the point**: a lint rule that makes an install-specific
 path literal outside the port a finding. Prose will not hold this class — four silent breakages
-happened *while* comments explaining the hazard sat directly above the code
+happened _while_ comments explaining the hazard sat directly above the code
 ([`docs/incidents.md`](docs/incidents.md)).
 
 ## Before changing the command surface or a delivery channel — read the prior art
@@ -194,21 +194,21 @@ Scanning linters and project files...
 ```
 
 It **generates artifacts by measuring the repo it lands in** — TypeScript types for the rules
-*that project* actually has. That is work no template can do, so a command is the only way to do it.
+_that project_ actually has. That is work no template can do, so a command is the only way to do it.
 
 **This repo has nothing of that shape yet.** Five rules, no per-project configuration, nothing to
 derive from the host repo. An `init` here would copy files — and copying files is exactly what the
 two standard channels already do, for free:
 
-| what ships | channel | user's side |
-|---|---|---|
-| **all code** — rules, skills, hooks, scripts | an npm package | `npm i -D research-paper-pipeline` |
-| **hook wiring only** | the plugin in `plugin/` | `/plugin marketplace add <owner>/<repo>` then `/plugin install` |
+| what ships                                   | channel                 | user's side                                                     |
+| -------------------------------------------- | ----------------------- | --------------------------------------------------------------- |
+| **all code** — rules, skills, hooks, scripts | an npm package          | `npm i -D research-paper-pipeline`                              |
+| **hook wiring only**                         | the plugin in `plugin/` | `/plugin marketplace add <owner>/<repo>` then `/plugin install` |
 
 🔴 **THE PLUGIN CARRIES NO CODE, AND THAT IS THE DESIGN — measured 2026-09-17.** Claude Code runs
-`npm ci --ignore-scripts` for a plugin *"only when the plugin's root directory contains both a
-package.json and a supported lockfile"*, with a 60-second timeout, and *"a failed or skipped
-install never blocks the plugin"*. Until today the marketplace pointed at `"source": "./"` — the
+`npm ci --ignore-scripts` for a plugin _"only when the plugin's root directory contains both a
+package.json and a supported lockfile"_, with a 60-second timeout, and _"a failed or skipped
+install never blocks the plugin"_. Until today the marketplace pointed at `"source": "./"` — the
 repository root — which holds a lockfile of **251 packages**, there for the ESLint rules and of no
 use to a hook. A slow network therefore produced a plugin that loaded with a partial tree and hooks
 that failed with `cannot find module vigiles`, silently.
@@ -255,7 +255,7 @@ honest instruction is the table above: install both.
 Both are measured, not assumed: `vigiles` and `Imbad0202/academic-research-skills` (47k stars) both
 ship `.claude-plugin/marketplace.json`, and ARS advertises install as two commands.
 
-🔴 **The condition that would flip this decision:** the moment something must be *derived* from the
+🔴 **The condition that would flip this decision:** the moment something must be _derived_ from the
 host repo — detecting the venue/format of the paper and enabling the matching rule set, or reading
 an existing `.tex` to decide what to check. That is generation by measurement, and it is what a
 command is for. Until then, a hand-written `init` is work that npm and the plugin marketplace are
@@ -304,12 +304,12 @@ loads at startup, deterministically. Measured both ways on claude 2.1.268.
 Measured on a fixture — one hook, four locations, both halves (an input that must be denied
 and one that must pass), exit code taken without a pipe:
 
-| hook location | deny input | allow input |
-|---|---|---|
-| `node_modules/<pkg>/.claude/hooks/probe.hook.**mjs**` | RC=2, fires | RC=0, silent |
-| symlink into `node_modules`, `.mjs` | RC=2, fires | RC=0, silent |
-| local control, `.mjs` | RC=2, fires | RC=0, silent |
-| `node_modules/<pkg>/.claude/hooks/probe.hook.**ts**` | RC=2 `cannot be loaded` | **RC=2 `cannot be loaded`** |
+| hook location                                         | deny input              | allow input                 |
+| ----------------------------------------------------- | ----------------------- | --------------------------- |
+| `node_modules/<pkg>/.claude/hooks/probe.hook.**mjs**` | RC=2, fires             | RC=0, silent                |
+| symlink into `node_modules`, `.mjs`                   | RC=2, fires             | RC=0, silent                |
+| local control, `.mjs`                                 | RC=2, fires             | RC=0, silent                |
+| `node_modules/<pkg>/.claude/hooks/probe.hook.**ts**`  | RC=2 `cannot be loaded` | **RC=2 `cannot be loaded`** |
 
 The last row is not "it blocks the dangerous thing" — it fails to load and therefore blocks
 **everything**, including `echo hi`. A consumer in that state cannot run any Bash command,
@@ -317,9 +317,9 @@ and the one command that would repair it is also Bash.
 
 ⇒ **The package ships `.mjs`** — the consumer gets something that loads.
 
-(Not established: *why* the TypeScript loader refuses a path inside `node_modules`. The real
+(Not established: _why_ the TypeScript loader refuses a path inside `node_modules`. The real
 cause is swallowed by a `catch` in vigiles' `hook-runtime.js`, and calling `loadHookProgram`
-directly measures a different load path — it fails even on the control. Knowing *that* is
+directly measures a different load path — it fails even on the control. Knowing _that_ is
 enough to choose the carrier.)
 
 #### 🔴 CORRECTED 2026-09-12, when the first three hooks actually moved: THERE IS NO `.hook.ts` TWIN
@@ -330,7 +330,7 @@ reason is worth keeping: **a twin can drift from its build, and nothing would no
 cannot.
 
 What the twin was for was the CAPABILITY CHECK — `vigiles compile` refuses a hook that imports
-anything but `vigiles/hook`, because the import list *is* the capability surface. That check is a
+anything but `vigiles/hook`, because the import list _is_ the capability surface. That check is a
 function, `checkHookImports`, and `hooks/hooks.harness.mjs` runs it over every shipped
 `.hook.mjs` directly. Same check, applied to the artifact that actually executes, with no second
 file to keep in step. What is lost is `tsc` on the hook body and the typed `e.ctx` — named here
@@ -374,15 +374,17 @@ tree without the next install reverting it.
 no compile step on the consumer's side:
 
 ```json
-{ "type": "command",
-  "command": "node \"$CLAUDE_PROJECT_DIR/node_modules/vigiles/dist/cli.js\" hook-runtime run-program \"$CLAUDE_PROJECT_DIR/node_modules/research-paper-pipeline/hooks/paper-edit-guard.hook.mjs\"" }
+{
+  "type": "command",
+  "command": "node \"$CLAUDE_PROJECT_DIR/node_modules/vigiles/dist/cli.js\" hook-runtime run-program \"$CLAUDE_PROJECT_DIR/node_modules/research-paper-pipeline/hooks/paper-edit-guard.hook.mjs\""
+}
 ```
 
 ⚠️ **A shipped hook cannot import a sibling module of this package** — capability closure being
 the point — so the papers-root resolver is spelled out in all three hook files. Duplication that
 cannot be removed is CHECKED instead: part VII of the harness compares the captured values
 against each other, rather than grepping for a literal (a substring search finds the same text in
-the prose *about* the value one line above it).
+the prose _about_ the value one line above it).
 
 ### `vigiles` is a devDependency, and its pin is TIED to the consumer's
 
@@ -403,16 +405,16 @@ drift — two runtimes, two sets of stamps and state.
 **npm 7+ installs peers automatically**. So every consumer got it anyway, together with its
 transitive weight. `npm pack`, then install the tarball into an empty project:
 
-| | packages | `du -sm node_modules` |
-|---|---:|---:|
-| peer as declared before | 188 | **142 MB** |
-| `peerDependenciesMeta: { vigiles: { optional: true } }` | 164 | **56 MB** |
+|                                                         | packages | `du -sm node_modules` |
+| ------------------------------------------------------- | -------: | --------------------: |
+| peer as declared before                                 |      188 |            **142 MB** |
+| `peerDependenciesMeta: { vigiles: { optional: true } }` |      164 |             **56 MB** |
 
 The 86 MB are `@ast-grep/napi` (51 MB) and `typescript` (23 MB), pulled through `vigiles` — and
 paid for by a consumer who only wants the ESLint rules and never loads a hook.
 
 `optional: true` is the entry that matches what this section already argues: the consumer brings
-its own `vigiles` *when it uses the hooks*, and npm stops deciding that for them. Both halves
+its own `vigiles` _when it uses the hooks_, and npm stops deciding that for them. Both halves
 measured on the 56 MB tree: `eslint-rules/latex-language.mjs` and
 `skills/paper-pipeline/scripts/pipeline-check.mjs` load and run (RC=0), while
 `hooks/paper-edit-guard.hook.mjs` fails with `ERR_MODULE_NOT_FOUND` — which is this contract
@@ -429,12 +431,12 @@ working, not a defect, exactly as argued below.
 `wink-eng-lite-web-model` (4 MB, an English NLP model) and `unicode2latex` (2 MB). That is 27%
 of the install for one call that only a consumer extracting bibliography facts ever makes.
 
-| | packages | `du -sm node_modules` |
-|---|---:|---:|
-| after the `vigiles` peer was made optional | 164 | 56 MB |
-| parser moved to an optional peer as well | 149 | **39 MB** |
+|                                            | packages | `du -sm node_modules` |
+| ------------------------------------------ | -------: | --------------------: |
+| after the `vigiles` peer was made optional |      164 |                 56 MB |
+| parser moved to an optional peer as well   |      149 |             **39 MB** |
 
-🔴 **`optionalDependencies` is the wrong entry and was tried first** — npm *installs* those and
+🔴 **`optionalDependencies` is the wrong entry and was tried first** — npm _installs_ those and
 only tolerates failure, so the weight stays. What makes a dependency genuinely opt-in is
 `peerDependencies` + `peerDependenciesMeta: { optional: true }`, the same pair used for `vigiles`.
 It stays in `devDependencies` too, because this package's own harnesses parse `.bib`.
@@ -475,10 +477,10 @@ travel. If this repo is ever made private, revisit the file along with it.
 🔴 **A new release does NOT wake the bot.** Two delays add up, and the second one is invisible
 until you read the reference:
 
-| | default | what the docs say |
-|---|---:|---|
-| `schedule.interval` | — | the check runs on the schedule and only on the schedule |
-| **`cooldown`** | **3 days** | *"a new version is not considered for a version update until 3 days after its release"* |
+|                     |    default | what the docs say                                                                       |
+| ------------------- | ---------: | --------------------------------------------------------------------------------------- |
+| `schedule.interval` |          — | the check runs on the schedule and only on the schedule                                 |
+| **`cooldown`**      | **3 days** | _"a new version is not considered for a version update until 3 days after its release"_ |
 
 With the weekly schedule this file shipped with first, the window was **3–10 days**. It is now
 `daily`, and `vigiles` is listed in `cooldown.exclude`, so for THIS package the window is one
@@ -496,7 +498,7 @@ the same pass. The bot is the backstop for the case that actually bit us: the ru
 consumer while there were two, and this repo sat forgotten on `^27.1.4`.
 
 ⚠️ **What the file does not control**, recorded because the sibling repo already lost a day to
-it: `dependabot.yml` configures *version* updates only. **Security** updates are a separate
+it: `dependabot.yml` configures _version_ updates only. **Security** updates are a separate
 mechanism driven by advisories and a repository SETTING; their cadence cannot be changed from
 this file, and deleting the file would not stop them.
 
@@ -518,7 +520,7 @@ block whose glob is empty while a different block is busy, so "some glob matched
 not evidence about the rule you care about. Both halves are tested
 (`scripts/rules-see-files.harness.mjs`) and both directions are mutated
 (`scripts/rules-see-files.mutations.mjs` — under-reporting and over-reporting must die on
-*different* assertions, or only one half of the guard is really tested).
+_different_ assertions, or only one half of the guard is really tested).
 
 ## Mutations
 
@@ -539,7 +541,7 @@ defence. Each battery prints the harness line and the assertion text its mutatio
 🔴 **This paragraph said the exact opposite until now, and the correction is the lesson, not the
 fact.** It read «This is a **private** repository … Until then there is no CI here, and that is
 deliberate» — both halves false, and false in the file an agent loads FIRST. The flip to public
-happened on 2026-09-12 and *was* recorded, at `.github/workflows/ci.yml:8-9`, which is a file
+happened on 2026-09-12 and _was_ recorded, at `.github/workflows/ci.yml:8-9`, which is a file
 nobody opens before deciding whether there is any CI to check. Reported as issue #6.
 
 ⚠️ So the rule this leaves behind is about WHERE a correction lands: a measurement written into
@@ -579,7 +581,7 @@ deliberate (see `lib/mutation-driver.mjs` — copying the repo per mutation cost
 of seconds), and its one cost is that any parallel reader sees a source file mid-mutation. The
 resulting failure is **false, non-deterministic, and blames the wrong file**: it reports a broken
 assertion, not a mutation, and it reads as "the suite is flaky". That has already cost a wrong
-conclusion here — two runs in a row produced *different* error messages and the diagnosis "I broke
+conclusion here — two runs in a row produced _different_ error messages and the diagnosis "I broke
 round-diff" was incorrect.
 
 A prose instruction "don't run them at the same time" existed and did not work: prose does not
@@ -613,11 +615,11 @@ itself.
 
 🔴 **Two ways this command lies if written differently, both measured 2026-09-11:**
 
-| form | what happens | exit |
-|---|---|---|
-| `vigiles test .` | `.` is read as a FILE — `ERR_UNSUPPORTED_DIR_IMPORT`, uncaught, runner dies | **0** |
-| `vigiles test` | `No **/*.harness.{mjs,cjs,js,mts,cts,ts} files found.` | **0** |
-| `vigiles test --min=1` | names the empty match and fails | **1** |
+| form                   | what happens                                                                | exit  |
+| ---------------------- | --------------------------------------------------------------------------- | ----- |
+| `vigiles test .`       | `.` is read as a FILE — `ERR_UNSUPPORTED_DIR_IMPORT`, uncaught, runner dies | **0** |
+| `vigiles test`         | `No **/*.harness.{mjs,cjs,js,mts,cts,ts} files found.`                      | **0** |
+| `vigiles test --min=1` | names the empty match and fails                                             | **1** |
 
 The first row is the worse one: the runner crashed with a stack trace and still reported
 success. `package.json` shipped `vigiles test .` from the initial scaffold until this was

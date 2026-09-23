@@ -1,8 +1,8 @@
 # Adversarial cold-repro protocol — reviewer-side reproduction of a measurement paper
 
-**Purpose.** Before submitting a measurement paper that ships an artifact, reproduce it *as a hostile
-evaluator*. Default stance is **SKEPTIC**: your job is to **refute** the paper, not to confirm it. Rate a
-claim **CONFIRMED** only if a cold reproduction *forces* you to. "The prose says so" and "results.json says
+**Purpose.** Before submitting a measurement paper that ships an artifact, reproduce it _as a hostile
+evaluator_. Default stance is **SKEPTIC**: your job is to **refute** the paper, not to confirm it. Rate a
+claim **CONFIRMED** only if a cold reproduction _forces_ you to. "The prose says so" and "results.json says
 so" are **not** sufficient evidence — both were written by the author you're trying to catch.
 
 Run this once the paper + artifact are drafted, before `submit-paper`. One honest **REFUTED** beats ten
@@ -10,7 +10,7 @@ hand-wavy **CONFIRMED**s.
 
 ## Protocol
 
-1. **Reproduce cold.** Run the evaluator(s) from a *clean checkout*, capturing output **without reading the
+1. **Reproduce cold.** Run the evaluator(s) from a _clean checkout_, capturing output **without reading the
    committed results first**. THEN diff your fresh output against the committed JSON. Never overwrite the
    committed outputs — always run to stdout or a temp file. (Reading the committed numbers first biases you
    into pattern-matching them instead of independently deriving them.)
@@ -19,7 +19,7 @@ hand-wavy **CONFIRMED**s.
    UNVERIFIED.** Unzip the exact `artifact.zip` (or `git clone` fresh) into a scratch dir and follow the
    artifact's own README step-by-step; every self-check must exit 0 and print numbers matching the paper.
    The trap that hides until a reviewer hits it: **missing/uninstalled dependencies** — a harness that
-   needs `npm install` / `pip install` / a build step the *release script* doesn't run, so it crashes with
+   needs `npm install` / `pip install` / a build step the _release script_ doesn't run, so it crashes with
    `MODULE_NOT_FOUND` on a fresh unzip even though it "passes" in the author's dirty tree (where
    `node_modules` lingers). Fix: make the release/self-check script install deps itself, and make the
    README's quick-start the exact commands you just ran clean. A "functional artifact" that isn't
@@ -44,10 +44,10 @@ hand-wavy **CONFIRMED**s.
      was it carried by one datapoint?
 
 4. **Attack the arms reviewers hit hardest.**
-   - **Nondeterministic / LLM components** — is any claimed instability *real*, and is the paper careful to
-     claim only the *shape* (e.g. "unstable," "median 2/10, range 0–5") rather than exact per-cell values a
+   - **Nondeterministic / LLM components** — is any claimed instability _real_, and is the paper careful to
+     claim only the _shape_ (e.g. "unstable," "median 2/10, range 0–5") rather than exact per-cell values a
      re-run can't reproduce?
-   - **By-construction / "always/never" claims** — are they scoped to a *declared scope*, not stated as
+   - **By-construction / "always/never" claims** — are they scoped to a _declared scope_, not stated as
      unconditional absolutes?
 
 5. **Transcription integrity.** If the evaluator transcribes third-party logic (regexes, predicates, rules)

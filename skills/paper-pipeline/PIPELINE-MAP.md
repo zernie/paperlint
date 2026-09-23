@@ -11,7 +11,6 @@ Assembled 2026-08-26 **from facts** — `.claude/settings.json` and
 `.github/workflows/paper-gates.yml` — not from memory. Occasion (translated from Russian): "I have
 no fucking idea how the pipeline works right now."
 
-
 > ⭐ **How to build checks** (the ladder, occupancy across 14 tools, measurements) —
 > in the author's private notes: `<papers-root>/research/2026-08-26-sessiya-arhitektura-payplayna.md`
 
@@ -111,14 +110,14 @@ them. This is the judgment layer; its mechanical parts should keep getting pushe
 
 ## Where each tier catches the same thing
 
-| defect | caught by |
-|---|---|
-| a wall-of-text paragraph on insertion | tier 1, blocks |
-| a number that doesn't match the data | tier 1 (post) and tier 3 (numbers) |
-| a reference dropped by bibtex | tier 2 (`.blg`) → tier 3 (build) |
-| **wrong font** | tier 2 (`pdffonts`) — but it's PREVENTED by tier 3 (the container) |
-| a stage declared with no PDF | tier 3, `paper-lint --gate` 🛑 |
-| ACM format compliance | **tier 4, and only tier 4** |
+| defect                                | caught by                                                          |
+| ------------------------------------- | ------------------------------------------------------------------ |
+| a wall-of-text paragraph on insertion | tier 1, blocks                                                     |
+| a number that doesn't match the data  | tier 1 (post) and tier 3 (numbers)                                 |
+| a reference dropped by bibtex         | tier 2 (`.blg`) → tier 3 (build)                                   |
+| **wrong font**                        | tier 2 (`pdffonts`) — but it's PREVENTED by tier 3 (the container) |
+| a stage declared with no PDF          | tier 3, `paper-lint --gate` 🛑                                     |
+| ACM format compliance                 | **tier 4, and only tier 4**                                        |
 
 ---
 
@@ -127,18 +126,18 @@ them. This is the judgment layer; its mechanical parts should keep getting pushe
 ## 1. 🔴 A requirement as a BUILD FAILURE, not a check afterward (the author's idea, 26.08)
 
 Right now almost everything is caught **after** the build. But `acmart` already knows how to fail
-the build — it does exactly that on missing CCS concepts (*"CCS concepts are mandatory for papers
-over two pages"*). So the mechanism exists, and we're not using it.
+the build — it does exactly that on missing CCS concepts (_"CCS concepts are mandatory for papers
+over two pages"_). So the mechanism exists, and we're not using it.
 
 **Rung 2 of the ladder instead of rung 3:** there's nothing to check in something that can't even be
 built.
 
-| requirement | how to turn it into a build failure |
-|---|---|
-| **fonts** | `fontspec` + a font by path → file missing → the build fails instead of silently falling back to Computer Modern |
-| page limit | `\AtEndDocument` + a check on `\thepage` → `\PackageError` |
-| text-block dimensions | the class sets these; catch the fact that they were overridden |
-| no page numbers | check `\thepage` in the output |
+| requirement           | how to turn it into a build failure                                                                              |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **fonts**             | `fontspec` + a font by path → file missing → the build fails instead of silently falling back to Computer Modern |
+| page limit            | `\AtEndDocument` + a check on `\thepage` → `\PackageError`                                                       |
+| text-block dimensions | the class sets these; catch the fact that they were overridden                                                   |
+| no page numbers       | check `\thepage` in the output                                                                                   |
 
 🔴 **MEASURED on 2026-08-26, not assumed: `fontspec` with `pdflatex` DOES NOT WORK.** A minimal
 document, a `pdflatex` run, exit code 1, verbatim from the log:
@@ -183,13 +182,13 @@ banal -json  +  pdffonts   →   paper.facts.json   →   @eslint/json
   is `papersize;pagelimit;columns;textblock;bodyfontsize;bodylineheight`. For ACM ≈
   `letter;;2;18x23.5cm;9`.
 - **Why through JSON and not an ESLint language plugin:** `fileType: "binary"` in ESLint is **not
-  implemented**, the docs say verbatim — *"should be 'text' (in the future, we will also support
-  'binary')"*, and the runtime reads the file unconditionally as UTF-8 (`eslint-helpers.js:1281`),
+  implemented**, the docs say verbatim — _"should be 'text' (in the future, we will also support
+  'binary')"_, and the runtime reads the file unconditionally as UTF-8 (`eslint-helpers.js:1281`),
   irreversibly mangling PDF bytes into U+FFFD. A hack is possible (`parse()` reads the disk itself),
   but it breaks `--fix`, the cache, and `eslint-disable` — there's nowhere to put a directive inside
   a PDF.
-- **veraPDF is built the same way** — the one PDF validator with user-defined rules: *"doesn't parse
-  PDF documents directly. Instead it processes the machine readable report output"*. Matching the
+- **veraPDF is built the same way** — the one PDF validator with user-defined rules: _"doesn't parse
+  PDF documents directly. Instead it processes the machine readable report output"_. Matching the
   architecture of an industrial tool is a sign the construction is right.
 
 **Occupancy checked:** `eslint-plugin-pdf` → E404 · `textlint` accepts its own format but requires
@@ -239,8 +238,8 @@ skipping the search, but it makes **the absence of evidence visible**.
 
 # 🧊 FREEZE on the current ad hoc state (the author's decision, 2026-08-26)
 
-Verbatim (translated from Russian): *"mark the current pipeline as shit by rule — don't expand it as
-it is, only allow new, proper stuff."*
+Verbatim (translated from Russian): _"mark the current pipeline as shit by rule — don't expand it as
+it is, only allow new, proper stuff."_
 
 > **Fixes — yes. New checks — no.**
 > A new check goes only in the new form — but **only where the new form already exists.**
@@ -248,11 +247,11 @@ it is, only allow new, proper stuff."*
 Without the second half the rule is incoherent, and I slipped on it that same evening: announced the
 freeze and, two messages later, proposed bolting a check onto `paper-lint`.
 
-| check category | new form | where a new one goes |
-|---|---|---|
-| a single document: markdown, JS | **exists** — ESLint | 🛑 not allowed into the old form |
-| an artifact: PDF | **exists** — venue profile + checker | 🛑 not allowed into the old form |
-| cross-file, filesystem-shaped | **doesn't exist and isn't expected to** | stays a script — that is the rule's boundary, not a workaround |
+| check category                  | new form                                | where a new one goes                                           |
+| ------------------------------- | --------------------------------------- | -------------------------------------------------------------- |
+| a single document: markdown, JS | **exists** — ESLint                     | 🛑 not allowed into the old form                               |
+| an artifact: PDF                | **exists** — venue profile + checker    | 🛑 not allowed into the old form                               |
+| cross-file, filesystem-shaped   | **doesn't exist and isn't expected to** | stays a script — that is the rule's boundary, not a workaround |
 
 **Enforcement:** `paper-lint.mjs` currently has exactly **18** check functions. The "there are 18"
 test fails on the nineteenth and forces an answer to "why isn't this in the new form." Small and
@@ -273,12 +272,12 @@ list of two names; everything else under `papers/` is automatically counted as a
 
 **Measured 2026-08-26:**
 
-| folder | `PIPELINE-STATUS.md` | counted as a paper today |
-|---|---|---|
-| `agenticdev-2026` `aisec-2026` `compile-rules-2026` | ✅ | ✅ correctly |
-| `scored-2026` | — | 🔴 **yes, wrongly** |
-| `extension-shell-ifc` | — | 🔴 **yes, wrongly** |
-| `research` `drafts` | — | no (on the blocklist) |
+| folder                                              | `PIPELINE-STATUS.md` | counted as a paper today |
+| --------------------------------------------------- | -------------------- | ------------------------ |
+| `agenticdev-2026` `aisec-2026` `compile-rules-2026` | ✅                   | ✅ correctly             |
+| `scored-2026`                                       | —                    | 🔴 **yes, wrongly**      |
+| `extension-shell-ifc`                               | —                    | 🔴 **yes, wrongly**      |
+| `research` `drafts`                                 | —                    | no (on the blocklist)    |
 
 **The marker: a paper folder is one that has a `PIPELINE-STATUS.md`.** This has already been our
 convention since 22.07 ("every paper carries a PIPELINE-STATUS.md"), the code just doesn't use it.
@@ -315,10 +314,10 @@ point. Nothing to check.
 
 ## 3. Remove duplicated constants
 
-| fact | how many copies | where they diverge |
-|---|---|---|
-| page limit | **4** | `venues/realm.md` 8 · `build-submission.sh` 8 · `PIPELINE-STATUS` "8/8" · the build prints **9** |
-| the TeX package list | **5** | `ensure-toolchain.sh` (executable) · `SKILL.md` · `render-paper.harness.mjs` (pins it ✅) · `build-submission.sh` · `PIPELINE-STATUS` |
+| fact                 | how many copies | where they diverge                                                                                                                    |
+| -------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| page limit           | **4**           | `venues/realm.md` 8 · `build-submission.sh` 8 · `PIPELINE-STATUS` "8/8" · the build prints **9**                                      |
+| the TeX package list | **5**           | `ensure-toolchain.sh` (executable) · `SKILL.md` · `render-paper.harness.mjs` (pins it ✅) · `build-submission.sh` · `PIPELINE-STATUS` |
 
 The canonical source is the venue card (`venues/<venue>.md`, the `<!-- venue-profile -->` block) for
 format, and `ensure-toolchain.sh` for packages. Everything else is a pointer.
@@ -344,8 +343,7 @@ rung 5.
 **The assert was the wrong answer from the start.** It guards a duplicate instead of there being no
 duplicate. The right form is the same one we arrived at for the PDF facts: **`<venue>.tex` IS
 GENERATED from `<venue>.yaml` in the same step that builds the paper**, lives in `_build/`, and
-never enters git. Then the drift is unrepresentable, and there's nothing to guard — rung 1, not rung
-5.
+never enters git. Then the drift is unrepresentable, and there's nothing to guard — rung 1, not rung 5.
 
 ⚠️ The objection "a generated file goes stale silently" **does not apply** here, and the distinction
 matters: what goes stale is a file that's committed and regenerated only occasionally. This one
@@ -358,10 +356,10 @@ venue.
 
 ## 4. Tools: what's been checked and decided
 
-| | verdict |
-|---|---|
-| **`eslint-plugin-project-structure`** | **can do** conditional "if A then B" (`enforceExistence`, via a real `fs.existsSync`), and it ships a dummy parser + `files: ["**"]`, so it sees folders with not a single JS file. **But there's no OR semantics** — "Makefile OR justfile" is not expressible. We don't need it after item 2; a candidate for other structural rules |
-| **`steiger`** | ❌ dropped — its own README says *"not extendable with more rules"*, plus it's about FSD in JS |
+|                                            | verdict                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **`eslint-plugin-project-structure`**      | **can do** conditional "if A then B" (`enforceExistence`, via a real `fs.existsSync`), and it ships a dummy parser + `files: ["**"]`, so it sees folders with not a single JS file. **But there's no OR semantics** — "Makefile OR justfile" is not expressible. We don't need it after item 2; a candidate for other structural rules                                                     |
+| **`steiger`**                              | ❌ dropped — its own README says _"not extendable with more rules"_, plus it's about FSD in JS                                                                                                                                                                                                                                                                                             |
 | **an ESLint config inside a paper folder** | ❌ **doesn't work in this repository**: there are **233** configs here, **2** of them ours — the other 231 sit inside `compile-rules-2026/repro/` (other people's repos, pulled in). A nested lookup would pick up every one of them, which is exactly why we run with `--no-config-lookup`. The same result comes from a `files: ["<papers-root>/<paper>/**"]` section in the root config |
-| **`banal`** | ✅ adopted, vendored under `vendor/`, called from `extract-pdf-facts.mjs` (measurement only; the ESLint rules do the judging) |
-| **`latexmk`** | add it to `ensure-toolchain.sh` |
+| **`banal`**                                | ✅ adopted, vendored under `vendor/`, called from `extract-pdf-facts.mjs` (measurement only; the ESLint rules do the judging)                                                                                                                                                                                                                                                              |
+| **`latexmk`**                              | add it to `ensure-toolchain.sh`                                                                                                                                                                                                                                                                                                                                                            |

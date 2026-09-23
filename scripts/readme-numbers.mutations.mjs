@@ -26,14 +26,18 @@ process.exit(
         // with two edits at once (import and call).
         name: "walk follows SYMLINKS AGAIN (statSync instead of lstatSync)",
         harness: HARNESS,
-        expect: "SYMLINK to directory does not double the count — it is not a new directory",
+        expect:
+          "SYMLINK to directory does not double the count — it is not a new directory",
         disables:
           "distinction between 'directory' and 'link to directory'. Real defect: 24 links " +
           "`.claude/skills/*` → `skills/*` gave 83 harnesses instead of 49, and the number " +
           "just looked large, not wrong",
         edits: [
-          [SRC, 'import { readdirSync, readFileSync, lstatSync } from "node:fs";',
-                'import { readdirSync, readFileSync, lstatSync, statSync } from "node:fs";'],
+          [
+            SRC,
+            'import { readdirSync, readFileSync, lstatSync } from "node:fs";',
+            'import { readdirSync, readFileSync, lstatSync, statSync } from "node:fs";',
+          ],
           [SRC, "const st = lstatSync(p);", "const st = statSync(p);"],
         ],
       },
@@ -64,7 +68,13 @@ process.exit(
         disables:
           "distinction between battery and BATTERY DRIVER. `scripts/run-mutations.mjs` ends in " +
           "`mutations.mjs`, and without the dot it counts as a battery — this is how `git grep` gave 27 instead of 26",
-        edits: [[SRC, 'else if (e.endsWith(suffix)) n++;', 'else if (e.includes(suffix.slice(1))) n++;']],
+        edits: [
+          [
+            SRC,
+            "else if (e.endsWith(suffix)) n++;",
+            "else if (e.includes(suffix.slice(1))) n++;",
+          ],
+        ],
       },
       {
         name: "a number AS A WORD is counted as a declaration AGAIN",
@@ -92,7 +102,13 @@ process.exit(
           "`actualCounts`; under `[a-z]+` the match stops at `e` and the declaration in " +
           "`docs/e2e.md` reads as absent — the check then says the number is declared nowhere " +
           "while it is right there on line 3",
-        edits: [[SRC, "/<!--\\s*count:([a-z][a-z0-9]*)\\s*-->\\s*(\\d+)/g", "/<!--\\s*count:([a-z]+)\\s*-->\\s*(\\d+)/g"]],
+        edits: [
+          [
+            SRC,
+            "/<!--\\s*count:([a-z][a-z0-9]*)\\s*-->\\s*(\\d+)/g",
+            "/<!--\\s*count:([a-z]+)\\s*-->\\s*(\\d+)/g",
+          ],
+        ],
       },
     ],
   }),

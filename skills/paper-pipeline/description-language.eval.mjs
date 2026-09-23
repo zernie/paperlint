@@ -111,7 +111,9 @@ const val = (n, d) => {
 const ARM = val("arm", "");
 const TRIALS = Number(val("trials", "3"));
 if (ARM !== "before" && ARM !== "after")
-  throw new Error("--arm must be `before` (English-only descriptions) or `after` (Russian added)");
+  throw new Error(
+    "--arm must be `before` (English-only descriptions) or `after` (Russian added)",
+  );
 
 // Byte-identical to the other two evals. If these drift, a difference between runs stops being
 // attributable to the descriptions.
@@ -167,42 +169,66 @@ const CASES = [
     skill: "grade-paper-writing",
     gapPp: -42,
     prompts: [
-      { ru: "у меня ощущение, что вступление написано тяжело, но я не понимаю чем именно",
-        en: "the introduction feels heavy to me and I cannot tell what exactly makes it so" },
-      { ru: "рецензент назвал текст многословным — согласен ли ты и где конкретно",
-        en: "a reviewer called the text wordy — do you agree, and where exactly" },
-      { ru: "нужен разбор по пунктам: заголовок, первый абзац, подача выводов",
-        en: "I want a point-by-point breakdown: the title, the opening paragraph, how findings are delivered" },
-      { ru: "сравни как это написано с тем, как пишут сильные статьи в этой области",
-        en: "compare how this is written against how strong papers in this field are written" },
+      {
+        ru: "у меня ощущение, что вступление написано тяжело, но я не понимаю чем именно",
+        en: "the introduction feels heavy to me and I cannot tell what exactly makes it so",
+      },
+      {
+        ru: "рецензент назвал текст многословным — согласен ли ты и где конкретно",
+        en: "a reviewer called the text wordy — do you agree, and where exactly",
+      },
+      {
+        ru: "нужен разбор по пунктам: заголовок, первый абзац, подача выводов",
+        en: "I want a point-by-point breakdown: the title, the opening paragraph, how findings are delivered",
+      },
+      {
+        ru: "сравни как это написано с тем, как пишут сильные статьи в этой области",
+        en: "compare how this is written against how strong papers in this field are written",
+      },
     ],
   },
   {
     skill: "argument-arc",
     gapPp: -33,
     prompts: [
-      { ru: "я сам путаюсь, зачем в статье нужна четвёртая секция",
-        en: "I am myself unsure what the fourth section is even for" },
-      { ru: "хочу проверить, что каждая часть работает на итоговое утверждение",
-        en: "I want to check that every part works toward the final claim" },
-      { ru: "если убрать середину, изменится ли что-нибудь для вывода",
-        en: "if the middle came out, would anything change for the conclusion" },
-      { ru: "у нас слишком много терминов, которые читателю придётся запоминать",
-        en: "there are too many terms the reader will have to keep in their head" },
+      {
+        ru: "я сам путаюсь, зачем в статье нужна четвёртая секция",
+        en: "I am myself unsure what the fourth section is even for",
+      },
+      {
+        ru: "хочу проверить, что каждая часть работает на итоговое утверждение",
+        en: "I want to check that every part works toward the final claim",
+      },
+      {
+        ru: "если убрать середину, изменится ли что-нибудь для вывода",
+        en: "if the middle came out, would anything change for the conclusion",
+      },
+      {
+        ru: "у нас слишком много терминов, которые читателю придётся запоминать",
+        en: "there are too many terms the reader will have to keep in their head",
+      },
     ],
   },
   {
     skill: "tighten-paper",
     gapPp: -25,
     prompts: [
-      { ru: "текст не влезает, надо решить чем пожертвовать и куда это переложить",
-        en: "the text does not fit; decide what to sacrifice and where to move it" },
-      { ru: "какие куски спокойно уедут в приложение без потери для рецензента",
-        en: "which chunks can move to an appendix without costing the reviewer anything" },
-      { ru: "мне кажется, третья и пятая части дублируют друг друга — так ли это",
-        en: "I suspect parts three and five duplicate each other — is that so" },
-      { ru: "нужен план, что убрать, чтобы статья стала на страницу короче",
-        en: "I need a plan for what to remove to make the paper one page shorter" },
+      {
+        ru: "текст не влезает, надо решить чем пожертвовать и куда это переложить",
+        en: "the text does not fit; decide what to sacrifice and where to move it",
+      },
+      {
+        ru: "какие куски спокойно уедут в приложение без потери для рецензента",
+        en: "which chunks can move to an appendix without costing the reviewer anything",
+      },
+      {
+        ru: "мне кажется, третья и пятая части дублируют друг друга — так ли это",
+        en: "I suspect parts three and five duplicate each other — is that so",
+      },
+      {
+        ru: "нужен план, что убрать, чтобы статья стала на страницу короче",
+        en: "I need a plan for what to remove to make the paper one page shorter",
+      },
     ],
   },
 ];
@@ -211,14 +237,19 @@ const CASES = [
 // false, and the run then reports a wall of confident 0.00s as though the descriptions were dead.
 const installed = new Set(
   readdirSync(SKILLS_DIR, { withFileTypes: true })
-    .filter((e) => e.isDirectory() && existsSync(join(SKILLS_DIR, e.name, "SKILL.md")))
+    .filter(
+      (e) =>
+        e.isDirectory() && existsSync(join(SKILLS_DIR, e.name, "SKILL.md")),
+    )
     .map((e) => e.name),
 );
 for (const c of CASES) {
-  if (!installed.has(c.skill)) throw new Error(`${c.skill} is not installed under ${SKILLS_DIR}`);
+  if (!installed.has(c.skill))
+    throw new Error(`${c.skill} is not installed under ${SKILLS_DIR}`);
   const fm = readFileSync(join(SKILLS_DIR, c.skill, "SKILL.md"), "utf-8");
   const declared = declaredName(fm);
-  if (declared && declared !== c.skill) throw new Error(`${c.skill}/SKILL.md declares name: ${declared}`);
+  if (declared && declared !== c.skill)
+    throw new Error(`${c.skill}/SKILL.md declares name: ${declared}`);
 }
 
 // 🔴 The guard that makes the `after` arm honest: no prompt here may appear in the sibling evals.
@@ -240,14 +271,21 @@ for (const c of CASES)
 
 for (const c of CASES)
   for (const lang of ["ru", "en"])
-    assertPromptDiversity(c.prompts.map((p) => p[lang]), {
-      minPrompts: 4, minDistance: 0.3, label: `${c.skill}:${lang}`,
-    });
+    assertPromptDiversity(
+      c.prompts.map((p) => p[lang]),
+      {
+        minPrompts: 4,
+        minDistance: 0.3,
+        label: `${c.skill}:${lang}`,
+      },
+    );
 
 try {
   execFileSync("claude", ["--version"], { stdio: "ignore" });
 } catch {
-  skip("`claude` CLI not on PATH — the eval tier drives the real harness and cannot be faked");
+  skip(
+    "`claude` CLI not on PATH — the eval tier drives the real harness and cannot be faked",
+  );
 }
 
 console.log(
@@ -279,22 +317,31 @@ for (const c of CASES) {
   for (const lang of ["ru", "en"]) {
     console.log(`  ${lang}: ${(per[lang].rate * 100).toFixed(0)}%`);
     per[lang].perPrompt.forEach((p) =>
-      console.log(`    ${(p.fired / p.trials).toFixed(2)}  ${p.prompt.slice(0, 68)}`));
+      console.log(
+        `    ${(p.fired / p.trials).toFixed(2)}  ${p.prompt.slice(0, 68)}`,
+      ),
+    );
   }
 }
 
 const tally = (lang) =>
   rows.reduce(
     (a, r) => {
-      r.per[lang].perPrompt.forEach((p) => { a.f += p.fired; a.n += p.trials; });
+      r.per[lang].perPrompt.forEach((p) => {
+        a.f += p.fired;
+        a.n += p.trials;
+      });
       return a;
     },
     { f: 0, n: 0 },
   );
-const RU = tally("ru"), EN = tally("en");
+const RU = tally("ru"),
+  EN = tally("en");
 console.log(`\n${"skill".padEnd(24)}   ru     en`);
 for (const { case: c, per } of rows)
-  console.log(`${c.skill.padEnd(24)} ${`${(per.ru.rate * 100).toFixed(0)}%`.padStart(4)}  ${`${(per.en.rate * 100).toFixed(0)}%`.padStart(4)}`);
+  console.log(
+    `${c.skill.padEnd(24)} ${`${(per.ru.rate * 100).toFixed(0)}%`.padStart(4)}  ${`${(per.en.rate * 100).toFixed(0)}%`.padStart(4)}`,
+  );
 console.log(
   `\nARM=${ARM}   RU ${RU.f}/${RU.n} (${((RU.f / RU.n) * 100).toFixed(0)}%)   ` +
     `EN ${EN.f}/${EN.n} (${((EN.f / EN.n) * 100).toFixed(0)}%)   gap ${(((RU.f - EN.f) / RU.n) * 100).toFixed(0)}pp`,

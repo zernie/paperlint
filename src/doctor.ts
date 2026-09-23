@@ -23,9 +23,13 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
-// @ts-expect-error — the hook ships as .mjs and carries no types; see the block above for why the
-// import points at the hook itself rather than at a shared module.
-import { papersRoot, CONFIG_KEY, DEFAULT_PAPERS_ROOT } from "../hooks/paper-edit-guard.hook.mjs";
+// Types come from `paper-edit-guard.hook.d.mts`; see the block above for why the import points at
+// the hook itself rather than at a shared module.
+import {
+  papersRoot,
+  CONFIG_KEY,
+  DEFAULT_PAPERS_ROOT,
+} from "../hooks/paper-edit-guard.hook.mjs";
 import { PAPER_MARKERS } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
 
@@ -42,13 +46,48 @@ export interface Program {
  * checker and a passing checker produce the same silence.
  */
 export const PROGRAMS: readonly Program[] = [
-  { bin: "pdflatex", from: "TeX Live", without: "no PDF is produced", install: "apt-get install -y texlive-latex-recommended" },
-  { bin: "bibtex", from: "TeX Live", without: "the bibliography is not resolved", install: "apt-get install -y texlive-binaries" },
-  { bin: "pdfinfo", from: "poppler-utils", without: "checks that read the built PDF cannot run", install: "apt-get install -y poppler-utils" },
-  { bin: "pdftotext", from: "poppler-utils", without: "the PDF text checks cannot run", install: "apt-get install -y poppler-utils" },
-  { bin: "texcount", from: "TeX Live (texlive-extra-utils)", without: "the length checks cannot run", install: "apt-get install -y texlive-extra-utils" },
-  { bin: "java", from: "any JRE", without: "TeXtidote does not run, and nothing else spell-checks the text", install: "apt-get install -y default-jre-headless" },
-  { bin: "python3", from: "your system", without: "the analysis and report scripts do not start", install: "apt-get install -y python3" },
+  {
+    bin: "pdflatex",
+    from: "TeX Live",
+    without: "no PDF is produced",
+    install: "apt-get install -y texlive-latex-recommended",
+  },
+  {
+    bin: "bibtex",
+    from: "TeX Live",
+    without: "the bibliography is not resolved",
+    install: "apt-get install -y texlive-binaries",
+  },
+  {
+    bin: "pdfinfo",
+    from: "poppler-utils",
+    without: "checks that read the built PDF cannot run",
+    install: "apt-get install -y poppler-utils",
+  },
+  {
+    bin: "pdftotext",
+    from: "poppler-utils",
+    without: "the PDF text checks cannot run",
+    install: "apt-get install -y poppler-utils",
+  },
+  {
+    bin: "texcount",
+    from: "TeX Live (texlive-extra-utils)",
+    without: "the length checks cannot run",
+    install: "apt-get install -y texlive-extra-utils",
+  },
+  {
+    bin: "java",
+    from: "any JRE",
+    without: "TeXtidote does not run, and nothing else spell-checks the text",
+    install: "apt-get install -y default-jre-headless",
+  },
+  {
+    bin: "python3",
+    from: "your system",
+    without: "the analysis and report scripts do not start",
+    install: "apt-get install -y python3",
+  },
 ];
 
 export const found = (bin: string, run = spawnSync): boolean =>
@@ -66,7 +105,8 @@ export function detectPapers(cwd: string, depth = 2): string[] {
       return;
     }
     for (const e of entries) {
-      if (!e.isDirectory() || e.name.startsWith(".") || skip.has(e.name)) continue;
+      if (!e.isDirectory() || e.name.startsWith(".") || skip.has(e.name))
+        continue;
       const here = join(dir, e.name);
       // A directory whose CHILDREN look like papers is the papers root — not the paper itself.
       let children;
@@ -76,7 +116,9 @@ export function detectPapers(cwd: string, depth = 2): string[] {
         continue;
       }
       const isPapersRoot = children.some(
-        (c) => c.isDirectory() && PAPER_MARKERS.some((m) => existsSync(join(here, c.name, m))),
+        (c) =>
+          c.isDirectory() &&
+          PAPER_MARKERS.some((m) => existsSync(join(here, c.name, m))),
       );
       if (isPapersRoot) hits.push(relative(cwd, here));
       else if (left > 0) walk(here, left - 1);
@@ -114,14 +156,20 @@ export function doctor({
 }: DoctorOptions = {}): number {
   const root = projectDir ?? cwd;
   const pkgPath = join(root, "package.json");
-  const out: string[] = ["", "rpp doctor — what is wired, and what only looks wired", ""];
+  const out: string[] = [
+    "",
+    "rpp doctor — what is wired, and what only looks wired",
+    "",
+  ];
   let bad = 0;
 
   out.push("declaration");
   const rawPkg = existsSync(pkgPath) ? readFileSync(pkgPath, "utf8") : "";
   if (!rawPkg) {
     out.push(`  ✗ no package.json at ${root}`);
-    out.push(`      the hooks read their papers directory from there and refuse without it`);
+    out.push(
+      `      the hooks read their papers directory from there and refuse without it`,
+    );
     bad++;
   } else {
     const declared = (() => {
@@ -154,7 +202,9 @@ export function doctor({
   out.push("", "papers directory");
   const hookRoot = rawPkg ? papersRoot(rawPkg) : null;
   const hookSays = typeof hookRoot === "string" ? hookRoot : null;
-  out.push(`  the CLI will lint    ${cliPapers ?? "(nothing — no declaration found)"}`);
+  out.push(
+    `  the CLI will lint    ${cliPapers ?? "(nothing — no declaration found)"}`,
+  );
   out.push(
     `  the hooks will guard ${hookSays ?? "(nothing — the guard refuses and says why on first use)"}`,
   );
@@ -179,23 +229,37 @@ export function doctor({
   // work without it, and an entry of the same name that `init` refused to replace is the
   // consumer's own decision. What this section removes is the silence — before it, a consumer
   // without links had no `/paper-pipeline` and nothing anywhere said so.
-  out.push("", `skills (Claude Code finds project skills only in ${SKILLS_HOME}/)`);
+  out.push(
+    "",
+    `skills (Claude Code finds project skills only in ${SKILLS_HOME}/)`,
+  );
   const links = skillLinks(root);
   if (!links.ok) out.push(`  ⚠ not checked — ${links.error}`);
   else {
     const gaps = links.links.filter((l) => l.status !== "present");
     const total = String(links.links.length);
     if (gaps.length === 0)
-      out.push(`  ✓ all ${total} shipped skills are reachable as ${join(SKILLS_HOME, "<name>")}`);
+      out.push(
+        `  ✓ all ${total} shipped skills are reachable as ${join(SKILLS_HOME, "<name>")}`,
+      );
     else {
-      out.push(`  ⚠ ${String(gaps.length)} of ${total} shipped skills are NOT reachable as ${join(SKILLS_HOME, "<name>")}:`);
+      out.push(
+        `  ⚠ ${String(gaps.length)} of ${total} shipped skills are NOT reachable as ${join(SKILLS_HOME, "<name>")}:`,
+      );
       for (const g of gaps)
-        out.push(`      ${g.name} — ${g.status === "missing" ? "not linked" : `${g.reason ?? "occupied"}, not the shipped skill`}`);
-      out.push(`      \`npx rpp init\` links the missing ones; it never replaces an entry it did not make`);
+        out.push(
+          `      ${g.name} — ${g.status === "missing" ? "not linked" : `${g.reason ?? "occupied"}, not the shipped skill`}`,
+        );
+      out.push(
+        `      \`npx rpp init\` links the missing ones; it never replaces an entry it did not make`,
+      );
     }
   }
 
-  out.push("", "external programs (the skills shell out to these; `rpp lint` needs none of them)");
+  out.push(
+    "",
+    "external programs (the skills shell out to these; `rpp lint` needs none of them)",
+  );
   for (const p of PROGRAMS) {
     if (found(p.bin, run)) out.push(`  ✓ ${p.bin.padEnd(10)} ${p.from}`);
     else {

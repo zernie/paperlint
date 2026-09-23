@@ -15,7 +15,13 @@
  */
 import assert from "node:assert/strict";
 import { ESLint } from "eslint";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync, realpathSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+  realpathSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -38,8 +44,14 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
     "a rule declared in eslint.config.mjs was enabled for zero files on disk — it is never " +
       "invoked, and its zero findings mean nothing",
   );
-  assert.ok(rules.length > 0, "no rules were found in eslint.config.mjs — the guard has no subject");
-  assert.ok(linted > 0, "ESLint linted no files at all — the guard cannot distinguish anything");
+  assert.ok(
+    rules.length > 0,
+    "no rules were found in eslint.config.mjs — the guard has no subject",
+  );
+  assert.ok(
+    linted > 0,
+    "ESLint linted no files at all — the guard cannot distinguish anything",
+  );
   // Not just "not blind": the count has to be the fixtures it should be seeing. A rule that saw
   // one file when four exist is a narrower defect of the same family.
   const tex = rules.find((r) => r.rule === "tex/future-promise");
@@ -65,14 +77,14 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
       "export default [",
       "  {",
       '    files: ["**/*.js"],',
-      '    plugins: { probe: { rules: { alive: noop, dead: noop } } },',
+      "    plugins: { probe: { rules: { alive: noop, dead: noop } } },",
       '    rules: { "probe/alive": "warn" },',
       "  },",
       "  {",
       // Nothing in this project has that extension. The block is valid, the rule is valid,
       // and it will never be called.
       '    files: ["**/*.nosuchextension"],',
-      '    plugins: { probe: { rules: { alive: noop, dead: noop } } },',
+      "    plugins: { probe: { rules: { alive: noop, dead: noop } } },",
       '    rules: { "probe/dead": "warn" },',
       "  },",
       "];",

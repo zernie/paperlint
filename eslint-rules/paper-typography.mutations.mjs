@@ -34,7 +34,13 @@ process.exit(
         disables:
           "the 'debt stays silent' half — a legacy paper with 246 § characters starts going " +
           "red on every run, and the rule gets turned off within a day, taking new findings with it",
-        edits: [[RULE, "if (n <= before) continue; // known debt, unchanged or paid down", "if (false) continue;"]],
+        edits: [
+          [
+            RULE,
+            "if (n <= before) continue; // known debt, unchanged or paid down",
+            "if (false) continue;",
+          ],
+        ],
       },
       {
         name: "the ratchet stops CATCHING growth",
@@ -47,12 +53,19 @@ process.exit(
         // on the very first "fires on §" assert — that is, a finding about the MUTATION, not
         // about the protection. `before > 0` keeps the rule alive where there is no debt, and
         // mutes EXACTLY growth over declared debt.
-        edits: [[RULE, "if (n <= before) continue; // known debt, unchanged or paid down", "if (before > 0) continue;"]],
+        edits: [
+          [
+            RULE,
+            "if (n <= before) continue; // known debt, unchanged or paid down",
+            "if (before > 0) continue;",
+          ],
+        ],
       },
       {
         name: "the `§` counter stops seeing the macro form",
         harness: HARNESS,
-        expect: "the section sign count includes the macro form, not only the glyph",
+        expect:
+          "the section sign count includes the macro form, not only the glyph",
         disables:
           "exactly the case the counter was written for: in LaTeX the section sign is typeset " +
           "as `\\S\\ref{…}`, not as the glyph, and a check that only counts the glyph reports " +
@@ -60,7 +73,7 @@ process.exit(
         edits: [
           [
             RULE,
-            "(body.match(/§/g) || []).length + (body.match(/\\\\S(?=\\s*\\\\ref|~\\\\ref|\\d)/g) || []).length",
+            "(body.match(/§/g) || []).length +\n    (body.match(/\\\\S(?=\\s*\\\\ref|~\\\\ref|\\d)/g) || []).length",
             "(body.match(/§/g) || []).length",
           ],
         ],

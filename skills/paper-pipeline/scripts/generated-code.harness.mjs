@@ -25,15 +25,20 @@
  */
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  rmSync,
+  realpathSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { consumerRoot } from "./consumer.mjs";
 const HERE = dirname(fileURLToPath(import.meta.url));
 
-const ROOT =
-  consumerRoot();
+const ROOT = consumerRoot();
 const SCRIPT = join(HERE, "generated-code.mjs");
 const tmp = realpathSync(mkdtempSync(join(tmpdir(), "genrated-code-harness-")));
 let n = 0;

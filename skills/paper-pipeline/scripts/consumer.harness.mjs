@@ -18,7 +18,14 @@
  * matches nothing and every check built on it reports zero findings.
  */
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync, realpathSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+  realpathSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -44,13 +51,22 @@ function fakeConsumer(block) {
   const root = mkdtempSync(join(TMP, "repo-"));
   writeFileSync(
     join(root, "package.json"),
-    JSON.stringify(block === undefined ? { name: "x" } : { name: "x", [CONFIG_KEY]: block }),
+    JSON.stringify(
+      block === undefined ? { name: "x" } : { name: "x", [CONFIG_KEY]: block },
+    ),
   );
   return root;
 }
 /** A directory that looks like an installed copy of this package. */
 function installedDir(root) {
-  const d = join(root, "node_modules", "research-paper-pipeline", "skills", "pp", "scripts");
+  const d = join(
+    root,
+    "node_modules",
+    "research-paper-pipeline",
+    "skills",
+    "pp",
+    "scripts",
+  );
   mkdirSync(d, { recursive: true });
   return d;
 }
@@ -87,13 +103,21 @@ function installedDir(root) {
   // 🔴 `null` is a keystroke, not an absence. `?? DEFAULT` would read it as "nothing declared"
   // and silently use another file — the same distinction `papersRoot()` makes.
   assert.throws(
-    () => ledgerPath(installedDir(root), { env: {}, cwd: fakeConsumer({ ledger: null }) }),
+    () =>
+      ledgerPath(installedDir(root), {
+        env: {},
+        cwd: fakeConsumer({ ledger: null }),
+      }),
     /must be a non-empty string/,
     'a `"ledger": null` was accepted. Anything written down must be usable; only ABSENCE may ' +
       "fall through to the next rung.",
   );
   assert.throws(
-    () => ledgerPath(installedDir(root), { env: {}, cwd: fakeConsumer({ ledger: "" }) }),
+    () =>
+      ledgerPath(installedDir(root), {
+        env: {},
+        cwd: fakeConsumer({ ledger: "" }),
+      }),
     /must be a non-empty string/,
     "an empty declared ledger was accepted; it resolves to the consumer root itself",
   );
@@ -136,14 +160,22 @@ function installedDir(root) {
 }
 
 // ── IV. `insideNodeModules` is SEGMENT-WISE, not a substring ──────────────────────────────────
-assert.equal(insideNodeModules(join("a", "node_modules", "b")), true, "a real install went undetected");
+assert.equal(
+  insideNodeModules(join("a", "node_modules", "b")),
+  true,
+  "a real install went undetected",
+);
 assert.equal(
   insideNodeModules(join("a", "my-node_modules-inspector", "b")),
   false,
   "a directory whose NAME merely contains `node_modules` was treated as an install — that " +
     "consumer would be refused its own ledger for a naming coincidence",
 );
-assert.equal(insideNodeModules(join("a", "b")), false, "a plain path was reported as installed");
+assert.equal(
+  insideNodeModules(join("a", "b")),
+  false,
+  "a plain path was reported as installed",
+);
 
 // ── V. `consumerRoot` prefers the harness-provided root over the cwd ──────────────────────────
 assert.equal(
@@ -180,7 +212,7 @@ assert.equal(
     probe,
     `import { isMain } from ${JSON.stringify(join(HERE, "consumer.mjs"))};\n` +
       "const legacy = import.meta.url === `file://${process.argv[1]}`;\n" +
-      'console.log(JSON.stringify({ isMain: isMain(import.meta.url), legacy }));\n',
+      "console.log(JSON.stringify({ isMain: isMain(import.meta.url), legacy }));\n",
   );
 
   const read = (p) => {
@@ -192,7 +224,11 @@ assert.equal(
   const direct = read(probe);
   const viaLink = read(join(link, "probe.mjs"));
 
-  assert.equal(direct.isMain, true, "isMain was false when the file WAS run directly");
+  assert.equal(
+    direct.isMain,
+    true,
+    "isMain was false when the file WAS run directly",
+  );
   assert.equal(
     viaLink.isMain,
     true,
@@ -208,7 +244,11 @@ assert.equal(
     "the legacy `file://${argv[1]}` guard now WORKS through a symlink. Node's behaviour changed; " +
       "re-measure before keeping isMain, because its whole reason to exist was this line.",
   );
-  assert.equal(direct.legacy, true, "the legacy guard failed even directly — the probe is wrong");
+  assert.equal(
+    direct.legacy,
+    true,
+    "the legacy guard failed even directly — the probe is wrong",
+  );
 }
 
 // ── VII. imported, not executed ───────────────────────────────────────────────────────────────
@@ -258,7 +298,10 @@ assert.equal(
   // CLAUDE_PROJECT_DIR outranks the cwd here too, for the reason it does in consumerRoot: a hook
   // or an editor starts the process wherever it likes.
   assert.equal(
-    scriptsRoot({ env: { CLAUDE_PROJECT_DIR: declaredRoot }, cwd: defaultRoot }),
+    scriptsRoot({
+      env: { CLAUDE_PROJECT_DIR: declaredRoot },
+      cwd: defaultRoot,
+    }),
     "tools/pipeline",
     "the declaration must be read from CLAUDE_PROJECT_DIR when it is set, not from the cwd",
   );
@@ -269,10 +312,22 @@ assert.equal(
   // 1. A value that resolves inside node_modules. This is the tempting wrong fix after the move,
   //    and it is how the DEFAULT fails as well: with the process started inside the installed
   //    package and CLAUDE_PROJECT_DIR unset, the consumer root is itself under node_modules.
-  const root = fakeConsumer({ scripts: "node_modules/research-paper-pipeline/skills/pp/scripts" });
-  mkdirSync(join(root, "node_modules", "research-paper-pipeline", "skills", "pp", "scripts"), {
-    recursive: true,
+  const root = fakeConsumer({
+    scripts: "node_modules/research-paper-pipeline/skills/pp/scripts",
   });
+  mkdirSync(
+    join(
+      root,
+      "node_modules",
+      "research-paper-pipeline",
+      "skills",
+      "pp",
+      "scripts",
+    ),
+    {
+      recursive: true,
+    },
+  );
   let err;
   try {
     scriptsRoot({ env: {}, cwd: root });
@@ -285,7 +340,11 @@ assert.equal(
       "else would have complained. `npm ci` deletes that tree, and a skill's prose would name a " +
       "path the repository does not track.",
   );
-  assert.match(err.message, /node_modules/, "the refusal must say what is wrong with the path");
+  assert.match(
+    err.message,
+    /node_modules/,
+    "the refusal must say what is wrong with the path",
+  );
   assert.match(
     err.message,
     /symlink/,
@@ -316,8 +375,16 @@ assert.equal(
       "matches no instruction, so every check reports zero findings and exits 0 — byte-identical " +
       "to a corpus that was examined and passed.",
   );
-  assert.match(missing.message, /"scripts"/, "the refusal must name the key to fix");
-  assert.match(missing.message, /package\.json/, "the refusal must name the file the key goes in");
+  assert.match(
+    missing.message,
+    /"scripts"/,
+    "the refusal must name the key to fix",
+  );
+  assert.match(
+    missing.message,
+    /package\.json/,
+    "the refusal must name the file the key goes in",
+  );
 
   // And the default's version of that message must say the default was used — otherwise someone
   // who declared nothing goes looking in package.json for a line that is not there.
@@ -358,7 +425,11 @@ assert.equal(
     "the prefix matched a sibling directory sharing the root's name — drop the trailing slash " +
       "and every such path is mistaken for a pipeline script",
   );
-  assert.equal("a/b/ledger.mjs".startsWith(s.prefix), true, "the prefix failed on a real member");
+  assert.equal(
+    "a/b/ledger.mjs".startsWith(s.prefix),
+    true,
+    "the prefix failed on a real member",
+  );
   assert.equal(s.prefix, "a/b/", "prefix must end in a separator");
   assert.equal(s.announce, "a/b/announce.mjs");
   assert.equal(s.ledger, "a/b/ledger.mjs");
@@ -373,7 +444,11 @@ assert.equal(
     'a declared trailing slash doubled the separator. `"scripts": "tools/pipeline/"` is a normal ' +
       "thing to write, and the doubled prefix matches no instruction at all.",
   );
-  assert.equal(typedSlash.ledger, "a/b/ledger.mjs", "the script paths doubled the separator too");
+  assert.equal(
+    typedSlash.ledger,
+    "a/b/ledger.mjs",
+    "the script paths doubled the separator too",
+  );
 }
 
 console.log(

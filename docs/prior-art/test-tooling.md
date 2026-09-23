@@ -33,7 +33,7 @@ would break two things that have nothing to do with running tests.
 
 ## Why the install e2e stays a script
 
-`scripts/install-e2e.mjs` is one linear scenario per package manager with strictly dependent steps
+`test/e2e/install.mjs` is one linear scenario per package manager with strictly dependent steps
 — install, bin, `init`, `lint`, hook commands, content delivery — and a summary. A runner adds
 named subtests and a reporter; the script already prints per-check `✓`/`✗` and a per-manager
 verdict. The pack-and-install work stays in our code under any host, so the host buys only the
@@ -52,11 +52,11 @@ is smaller than it looks, and the reason is mechanical:
 So "what lands on disk" is faithful by construction. What the shortcut genuinely misses, and the
 status of each here:
 
-| missed | status in this package |
-| --- | --- |
-| `prepublishOnly`, `publishConfig` — they run/apply only on `npm publish` | neither is declared, so the gap is zero today |
-| a cold `npx <name>` in an empty directory: packument fetch, `latest`, bin resolution by name | the documented install is `npm i`, not `npx` |
-| a dependency on a sibling package not yet published, referenced by semver range | none today; would appear if the hook runtime is split out (see `../package-shape-options.md` §2) |
+| missed                                                                                       | status in this package                                                                           |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `prepublishOnly`, `publishConfig` — they run/apply only on `npm publish`                     | neither is declared, so the gap is zero today                                                    |
+| a cold `npx <name>` in an empty directory: packument fetch, `latest`, bin resolution by name | the documented install is `npm i`, not `npx`                                                     |
+| a dependency on a sibling package not yet published, referenced by semver range              | none today; would appear if the hook runtime is split out (see `../package-shape-options.md` §2) |
 
 **Not missed, so not arguments for a registry:** the published file list, `bundleDependencies`,
 `engines`, peer auto-install (npm ≥7 and pnpm ≥8 are both exercised for real), and `prepare`.
@@ -105,12 +105,12 @@ table-driven test. The answer then is `node:test`, never vitest, and it must run
 **Yarn Berry (PnP) cannot be supported as things stand.** `plugin/hooks/hooks.json` addresses
 `${CLAUDE_PROJECT_DIR}/node_modules/research-paper-pipeline/bin/rpp.mjs` literally, and PnP has no
 `node_modules` directory at all. Adding a third `managers()` row for it would be a red test, not a
-feature. Yarn *classic* is one row away if support is ever claimed.
+feature. Yarn _classic_ is one row away if support is ever claimed.
 
 ➕ **Correction, 2026-09-19 — the conclusion holds, the reason above is incomplete.** Measured
 against a real Yarn 4.9.2 PnP consumer (`repro/claim4-yarn-pnp.mjs`): the CLI itself **runs** under
 PnP (`yarn rpp --help` answers), so the package is not PnP-incompatible; the literal path in
-`hooks.json` is the *movable* blocker, since Claude Code exposes `${CLAUDE_PLUGIN_ROOT}` for
+`hooks.json` is the _movable_ blocker, since Claude Code exposes `${CLAUDE_PLUGIN_ROOT}` for
 exactly it. The immovable blocker is one this note does not name — PnP resolves to a path **inside
 a zip**, and the outside process gets `existsSync: false` for the very path PnP handed it, so the
 e2e's `existsSync`/`readdirSync`/`readFileSync` inspection reads nothing whatever API produced the

@@ -18,12 +18,12 @@ Entries are append-only and dated. A superseded entry is marked, not deleted.
 Each was proposed before the defect it claimed to fix had been exhibited, and each fell to a
 single command:
 
-| proposed | what one command showed instead |
-|---|---|
-| a new `skip` API in the test runner | the existing classification had never been shown to be wrong |
-| a `link` subcommand as the single install path | this package is consumed three ways, and a plugin cannot serve two of them |
-| "one delivery channel instead of two" | the channels carry different things: eight ESLint imports and a composite action on one side, skills and hooks on the other |
-| "symlinked skills are our own invention" | the documentation describes them, and third-party repositories install exactly that way |
+| proposed                                       | what one command showed instead                                                                                             |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| a new `skip` API in the test runner            | the existing classification had never been shown to be wrong                                                                |
+| a `link` subcommand as the single install path | this package is consumed three ways, and a plugin cannot serve two of them                                                  |
+| "one delivery channel instead of two"          | the channels carry different things: eight ESLint imports and a composite action on one side, skills and hooks on the other |
+| "symlinked skills are our own invention"       | the documentation describes them, and third-party repositories install exactly that way                                     |
 
 Two of the four were demolished by an adversarial second pass **before** either was built. A
 third pass over six claims about the plugin channel corrected four of them — including a count
@@ -35,15 +35,15 @@ Cost of the pattern: the four proposals took more of the session than the work t
 
 ## 2026-09-17 — the install-location class, four silent breakages (rule 10)
 
-One class — *code that knows where it is on disk* — has broken this repository four times, and
+One class — _code that knows where it is on disk_ — has broken this repository four times, and
 not one of the four announced itself:
 
-| when | what was assumed | how it failed |
-|---|---|---|
-| until 2026-08-15 | `resolve(HERE, "..", "skills")`, correct while the code lived beside the skills | a hash over a missing directory is stable, so every verdict read FRESH forever, with no error |
-| 2026-09-12 | the same walk, after the move into a package | broke the same way, in the same silent direction |
-| 2026-09-12 | the ledger defaults to a file beside its own module | inside `node_modules`, which `npm ci` deletes: appending SUCCEEDS, so rows look recorded until the next install removes them |
-| 2026-09-17 | skills name their scripts by an install-specific path — 208 literals across 190 lines, in bodies and in `allowed-tools` | resolves through a symlink for one consumer and does not exist for another |
+| when             | what was assumed                                                                                                        | how it failed                                                                                                                |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| until 2026-08-15 | `resolve(HERE, "..", "skills")`, correct while the code lived beside the skills                                         | a hash over a missing directory is stable, so every verdict read FRESH forever, with no error                                |
+| 2026-09-12       | the same walk, after the move into a package                                                                            | broke the same way, in the same silent direction                                                                             |
+| 2026-09-12       | the ledger defaults to a file beside its own module                                                                     | inside `node_modules`, which `npm ci` deletes: appending SUCCEEDS, so rows look recorded until the next install removes them |
+| 2026-09-17       | skills name their scripts by an install-specific path — 208 literals across 190 lines, in bodies and in `allowed-tools` | resolves through a symlink for one consumer and does not exist for another                                                   |
 
 The first three are documented in the code they broke, and that is where the detail stays:
 `skills/paper-pipeline/scripts/ledger.mjs` (the three rungs) and `lib/consumer.mjs`

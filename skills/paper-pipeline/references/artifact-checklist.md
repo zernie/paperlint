@@ -7,6 +7,7 @@ the 140-run `reproduce.py` (AgenticDev) and the 46-guard `evaluate.py`/`mutate.p
 `ablation.mjs` (AISec).
 
 ## Non-negotiables
+
 - **Self-checking.** A script that **recomputes every headline number from the raw data and exits
   non-zero if any cell drifts** — PASS/FAIL per number, not "eyeball this table." A reviewer sees a
   green run or a red one.
@@ -25,6 +26,7 @@ the 140-run `reproduce.py` (AgenticDev) and the 46-guard `evaluate.py`/`mutate.p
   Reproduced, and scope Reproduced to the analysis layer if generation needs keys/models).
 
 ## Contents (mirror this file map)
+
 - `reproduce.py` / the harness scripts — self-check, print `RESULT: PASS`, exit non-zero on drift.
 - `data/…` — the raw measurements the numbers derive from.
 - `README.md` — a **"what reproduces which paper number"** table (paper location → the line that prints
@@ -35,6 +37,7 @@ the 140-run `reproduce.py` (AgenticDev) and the 46-guard `evaluate.py`/`mutate.p
   total-spend figure).
 
 ## Before shipping
+
 - Run it once on a clean checkout → `PASS`, exit 0.
 - De-anon scan the whole tree (see `anonymization.md`).
 - Zip **only** the artifact dir (never sibling internal dirs). A release-gate script that greps for
@@ -43,6 +46,7 @@ the 140-run `reproduce.py` (AgenticDev) and the 46-guard `evaluate.py`/`mutate.p
 - Host it anonymized for double-blind review — see `submit-paper` §hosting and `osf-artifact-upload`.
 
 ## Provenance
+
 AgenticDev `reproduce.py`: recomputes Table 1, Bonferroni survivors, pooled bill + paired-t CI, the
 0.6%/20%/13% structural bound — all `PASS`, hand-verified by a reviewer to 7 digits. AISec: four
 self-asserting harnesses; a reviewer re-ran them and stress-tested the release gate (planted a leak → the
@@ -59,10 +63,11 @@ mismatches, and everything present still runs.
 
 Observed: a paper's released bundle contained **no data at all** for the section its abstract leads
 with. Six `harden-paper` passes and five review panels had not noticed. It surfaced because the
-author asked a plain question — *"did we ever actually run the artifact?"*
+author asked a plain question — _"did we ever actually run the artifact?"_
 
 **Run `paper-pipeline/scripts/artifact-coverage.mjs <paper-dir>` — wired into pre-commit and CI.**
 Two checks, deliberately dumb:
+
 1. every body section that prints a figure is named in the bundle's index (`NUMBERS.md`);
 2. every path the index names exists in the bundle.
 

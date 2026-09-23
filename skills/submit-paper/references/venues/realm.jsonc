@@ -53,11 +53,11 @@
     "short_submission": 4,
     "short_camera_ready": 5,
     "refs_and_appendices": "unlimited",
-    "limitations_and_ethics": "not counted (ACL rule)"
+    "limitations_and_ethics": "not counted (ACL rule)",
   },
 
   "kinds": {
     "long": {},
-    "short": {}
-  }
+    "short": {},
+  },
 }

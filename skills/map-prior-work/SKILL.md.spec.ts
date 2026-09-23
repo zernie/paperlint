@@ -8,9 +8,19 @@ import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({
   name: "map-prior-work",
-  description: "Sweep the competitive landscape for a paper idea BEFORE drafting — find everyone already working on it, date each against your submission (prior vs concurrent is a five-month question, not a vibe), triage by whether they threaten your claimed contribution, deep-read the ones that do, and emit a verdict on WHAT YOU CAN STILL CLAIM plus a related-work skeleton. Saves the full map, not a summary. Use right after research-ideate and before draft-paper, and re-run as a cheap delta pass before submit (hot fields move). Distinct from analyze-sibling-paper (one known competitor, deep) — this one FINDS the competitors and decides which deserve that treatment; distinct from verify-citations (checks cites you already wrote, too late to reshape a contribution); distinct from study-accepted-papers (mines a venue's bar, not your rivals). Compose with research-ideate (upstream), analyze-sibling-paper (it hands off), draft-paper and find-venue (downstream).",
+  description:
+    "Sweep the competitive landscape for a paper idea BEFORE drafting — find everyone already working on it, date each against your submission (prior vs concurrent is a five-month question, not a vibe), triage by whether they threaten your claimed contribution, deep-read the ones that do, and emit a verdict on WHAT YOU CAN STILL CLAIM plus a related-work skeleton. Saves the full map, not a summary. Use right after research-ideate and before draft-paper, and re-run as a cheap delta pass before submit (hot fields move). Distinct from analyze-sibling-paper (one known competitor, deep) — this one FINDS the competitors and decides which deserve that treatment; distinct from verify-citations (checks cites you already wrote, too late to reshape a contribution); distinct from study-accepted-papers (mines a venue's bar, not your rivals). Compose with research-ideate (upstream), analyze-sibling-paper (it hands off), draft-paper and find-venue (downstream).",
   context: "fork",
-  tools: ["WebSearch", "WebFetch", "Read", "Write", "Grep", "Glob", "Bash", "Agent"],
+  tools: [
+    "WebSearch",
+    "WebFetch",
+    "Read",
+    "Write",
+    "Grep",
+    "Glob",
+    "Bash",
+    "Agent",
+  ],
   body: `
 # map-prior-work — find out who already did it, while you can still change course
 

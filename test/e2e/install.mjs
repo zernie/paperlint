@@ -15,7 +15,7 @@
  * it resolves is a property of the tree laid out on disk. So the command is launched, and the
  * verdict is based on whether it died on `Cannot find module`.
  *
- * Run: node scripts/install-e2e.mjs [--keep]
+ * Run: node test/e2e/install.mjs [--keep]
  * Exit code: 0 — every manager passed; 1 — at least one did not.
  */
 import { execFileSync, spawnSync } from "node:child_process";
@@ -38,9 +38,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   compareToBaseline,
   countByRule,
-} from "../fixtures/real-markdown-paper/baseline.mjs";
+} from "../../fixtures/real-markdown-paper/baseline.mjs";
 
-const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
+const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const KEEP = process.argv.includes("--keep");
 // See `managers()`: a manager that will not launch is a declared skip here and a failure in CI.
 const STRICT = process.argv.includes("--strict");
@@ -63,41 +63,13 @@ const WANTED = [
   {
     name: "pnpm",
     probe: ["pnpm", ["--version"]],
-    // 🔴 THE THREE `--allow-build` FLAGS ARE NOT A WORKAROUND FOR pnpm — they are this
-    // package's own dependency chain showing through. Since v10 pnpm refuses to run a
-    // dependency's lifecycle scripts unless the consumer approves them, by design, as a
-    // supply-chain measure. Three packages in our tree have one:
-    //
-    //   research-paper-pipeline → vigiles → @ast-grep/lang-{python,ruby,rust}  (postinstall)
-    //
-    // so a bare `pnpm install` of our tarball exits 1 with ERR_PNPM_IGNORED_BUILDS. Measured
-    // 2026-09-20 on pnpm 12.5.1: the three declarative forms (`pnpm.onlyBuiltDependencies`
-    // and `pnpm.ignoredBuiltDependencies` in package.json, and either key in
-    // pnpm-workspace.yaml) did NOT silence it; only these flags did.
-    //
-    // ⚠️ The builds themselves are not needed here — the packages ship `prebuilds/`, and with
-    // the scripts skipped both `@ast-grep/napi` and `@ast-grep/lang-python` load fine. So this
-    // is a policy collision, not a broken install, which is exactly why it must not be silent:
-    // the `defect` block below keeps the bare failure under assertion.
-    install: (tgz) => [
-      "pnpm",
-      [
-        "install",
-        "--silent",
-        "--allow-build=@ast-grep/lang-python",
-        "--allow-build=@ast-grep/lang-ruby",
-        "--allow-build=@ast-grep/lang-rust",
-        tgz,
-      ],
-    ],
-    // The state of the world this run ASSUMES. Pinned so it cannot change unnoticed: the day
-    // the dependency drops those packages (or pnpm changes the policy), this goes red and the
-    // flags above come out. A pin that only fires on good news is still a pin.
-    defect: {
-      id: "vigiles pulls @ast-grep/lang-{python,ruby,rust}, each with a postinstall",
-      bare: (tgz) => ["pnpm", ["install", "--silent", tgz]],
-      marker: "ERR_PNPM_IGNORED_BUILDS",
-    },
+    // The BARE command a reader of the README types, with no flags. Until vigiles 31.0.0 this
+    // needed three `--allow-build` flags: vigiles pulled @ast-grep/lang-{python,ruby,rust}, each
+    // with a postinstall, and pnpm 10+ exits 1 (ERR_PNPM_IGNORED_BUILDS) on an unapproved
+    // dependency script. vigiles 31 parses those languages with bundled WASM grammars and has no
+    // install scripts (zernie/vigiles#280), so the flags and the pin that watched for this day
+    // are gone. A dependency that brings a postinstall back turns this install red.
+    install: (tgz) => ["pnpm", ["install", "--silent", tgz]],
     why:
       "does NOT put transitive dependencies at the project root, and `.bin` holds a shell " +
       "wrapper rather than a symlink — both have already broken this package",
@@ -113,7 +85,7 @@ const WANTED = [
  * reason this file exists. "pnpm passed" and "pnpm was never tried" printed identically.
  *
  * That is the failure class this package is written against, reproduced inside it: a skipped
- * check and a passed one look the same. `build-e2e.mjs` already had the cure — declare the skip,
+ * check and a passed one look the same. `test/e2e/build.mjs` already had the cure — declare the skip,
  * and let `--strict` turn it into a failure where absence means a broken environment.
  */
 function managers() {
@@ -176,10 +148,15 @@ function stageCorpus(root) {
  * the worse canary.
  */
 function locateInstalled(consumer) {
-  const req = createRequire(pathToFileURL(join(consumer, "__consumer__.js")).href);
+  const req = createRequire(
+    pathToFileURL(join(consumer, "__consumer__.js")).href,
+  );
   try {
     const file = req.resolve("research-paper-pipeline/package.json");
-    return { dir: dirname(file), manifest: JSON.parse(readFileSync(file, "utf8")) };
+    return {
+      dir: dirname(file),
+      manifest: JSON.parse(readFileSync(file, "utf8")),
+    };
   } catch (e) {
     return { err: `${e.code ?? "error"}: ${e.message}` };
   }
@@ -207,7 +184,9 @@ function skillsDir(root) {
 function hookCommands(installed) {
   const file = join(installed, "plugin", "hooks", "hooks.json");
   if (!existsSync(file))
-    return { err: `plugin/hooks/hooks.json did not arrive in the tarball: ${file}` };
+    return {
+      err: `plugin/hooks/hooks.json did not arrive in the tarball: ${file}`,
+    };
   let json;
   try {
     json = JSON.parse(readFileSync(file, "utf8"));
@@ -241,7 +220,9 @@ function contentDelivery(installed) {
     const dir = skillsDir(root);
     if (!existsSync(dir)) return [];
     return readdirSync(dir, { withFileTypes: true })
-      .filter((d) => d.isDirectory() && existsSync(join(dir, d.name, "SKILL.md")))
+      .filter(
+        (d) => d.isDirectory() && existsSync(join(dir, d.name, "SKILL.md")),
+      )
       .map((d) => d.name);
   };
   const here = listSkills(ROOT);
@@ -360,7 +341,10 @@ try {
     for (const m of missing) {
       const say = `NOT MEASURED: ${m.name} does not launch on this machine — ${m.why}`;
       if (STRICT) console.error(`  \u{1F534} ${say}`);
-      else console.log(`  \u26A0\uFE0F  ${say} (a legitimate skip for a clone without it; --strict makes it a failure)`);
+      else
+        console.log(
+          `  \u26A0\uFE0F  ${say} (a legitimate skip for a clone without it; --strict makes it a failure)`,
+        );
     }
     if (STRICT) {
       console.error(
@@ -406,29 +390,6 @@ try {
     ok("the package resolves BY NAME from the consumer");
     const installed = located.dir;
 
-    // The pinned defect, if this manager declares one: the plain install — the command a
-    // reader of the README would type — must still fail the way we recorded. Green here means
-    // the world moved and the accommodation above is now dead weight.
-    if (m.defect) {
-      const probe = join(work, `defect-${m.name}`);
-      mkdirSync(probe, { recursive: true });
-      writeFileSync(
-        join(probe, "package.json"),
-        '{"name":"d","version":"1.0.0","private":true}',
-      );
-      const [bcmd, bargs] = m.defect.bare(tgz);
-      const bare = sh(bcmd, bargs, { cwd: probe });
-      const out = `${bare.stdout ?? ""}${bare.stderr ?? ""}`;
-      if (bare.status !== 0 && out.includes(m.defect.marker))
-        ok(`the pinned defect still reproduces (${m.defect.marker})`);
-      else
-        bad(
-          `the pinned defect still reproduces (${m.defect.marker})`,
-          `a BARE install now exits ${String(bare.status)} — ${m.defect.id}. ` +
-            `If this is fixed upstream, drop the accommodation in WANTED and this pin with it.`,
-        );
-    }
-
     // 🔴 THE BIN IS LAUNCHED DIRECTLY, NOT THROUGH `node <path>`. Under npm `.bin` holds a
     // SYMLINK to the `.mjs`, and `node` swallows it; under pnpm it holds a SHELL WRAPPER, and
     // `node` chokes on its very first line `basedir=$(dirname …)`. The first edition of this test
@@ -445,9 +406,12 @@ try {
     // `node <shim>` is not (pnpm writes a shell wrapper).
     const binField = located.manifest.bin;
     const binRel = typeof binField === "string" ? binField : binField?.rpp;
-    if (!binRel) bad("the manifest declares the `rpp` bin", JSON.stringify(binField));
+    if (!binRel)
+      bad("the manifest declares the `rpp` bin", JSON.stringify(binField));
     else {
-      const real = sh(process.execPath, [join(installed, binRel), "--help"], { cwd: consumer });
+      const real = sh(process.execPath, [join(installed, binRel), "--help"], {
+        cwd: consumer,
+      });
       real.status === 0
         ? ok(`the manifest's bin (${binRel}) runs under node`)
         : bad(`the manifest's bin (${binRel}) runs under node`, real.stderr);
@@ -477,7 +441,10 @@ try {
     // defect #33 exactly, only reintroduced by our own install command.
     !existsSync(join(consumer, "rpp.json"))
       ? ok("and did NOT create a second carrier rpp.json")
-      : bad("and did NOT create a second carrier rpp.json", "rpp.json appeared");
+      : bad(
+          "and did NOT create a second carrier rpp.json",
+          "rpp.json appeared",
+        );
     init.status === 0
       ? ok("`rpp init` finished with zero — doctor found no discrepancy")
       : bad(
@@ -488,7 +455,9 @@ try {
     // The skills, as Claude Code will look for them: in the consumer, not in node_modules.
     const view = consumerSkillView(consumer, installed);
     view.names.length > 0 && view.unreachable.length === 0
-      ? ok(`all ${view.names.length} shipped skill(s) are reachable as .claude/skills/<name>/SKILL.md`)
+      ? ok(
+          `all ${view.names.length} shipped skill(s) are reachable as .claude/skills/<name>/SKILL.md`,
+        )
       : bad(
           `all ${view.names.length} shipped skill(s) are reachable as .claude/skills/<name>/SKILL.md`,
           `not reachable: ${view.unreachable.join(", ") || "(the package declares zero skills)"}\n${init.stdout ?? ""}`,
@@ -498,16 +467,21 @@ try {
       ? ok("each is a RELATIVE symlink, not a copy")
       : bad(
           "each is a RELATIVE symlink, not a copy",
-          `not links: ${view.notLinks.join(", ") || "-"}; absolute: ${Object.entries(view.links)
-            .filter(([, t]) => t.startsWith("/"))
-            .map(([n]) => n)
-            .join(", ") || "-"}`,
+          `not links: ${view.notLinks.join(", ") || "-"}; absolute: ${
+            Object.entries(view.links)
+              .filter(([, t]) => t.startsWith("/"))
+              .map(([n]) => n)
+              .join(", ") || "-"
+          }`,
         );
     view.rootRefs > 0 && view.unresolved.length === 0
-      ? ok(`all ${view.refs} script path(s) resolve FROM THE CONSUMER ROOT (${view.rootRefs} project-root-relative)`)
+      ? ok(
+          `all ${view.refs} script path(s) resolve FROM THE CONSUMER ROOT (${view.rootRefs} project-root-relative)`,
+        )
       : bad(
           `all ${view.refs} script path(s) resolve FROM THE CONSUMER ROOT (${view.rootRefs} project-root-relative)`,
-          view.unresolved.slice(0, 5).join("\n") || "zero project-root-relative references — nothing was checked",
+          view.unresolved.slice(0, 5).join("\n") ||
+            "zero project-root-relative references — nothing was checked",
         );
 
     // A second `init` is a re-run, not a clash: nothing fails, no link moves.
@@ -515,11 +489,16 @@ try {
     const after = consumerSkillView(consumer, installed);
     again.status === 0 &&
     view.names.every((n) => after.links[n] === view.links[n]) &&
-    new RegExp(`0 linked now, ${view.names.length} already linked, 0 skipped`).test(again.stdout ?? "")
+    new RegExp(
+      `0 linked now, ${view.names.length} already linked, 0 skipped`,
+    ).test(again.stdout ?? "")
       ? ok("a second `rpp init` exits zero and leaves every link as it was")
       : bad(
           "a second `rpp init` exits zero and leaves every link as it was",
-          `exit ${String(again.status)}\n${(again.stdout ?? "").split("\n").filter((l) => /shipped|skills/.test(l)).join("\n")}${again.stderr ?? ""}`,
+          `exit ${String(again.status)}\n${(again.stdout ?? "")
+            .split("\n")
+            .filter((l) => /shipped|skills/.test(l))
+            .join("\n")}${again.stderr ?? ""}`,
         );
 
     const lint = sh(bin, ["lint"], { cwd: consumer });
@@ -547,7 +526,10 @@ try {
     try {
       found = countByRule(realLint.stdout ?? "");
     } catch (e) {
-      bad("`rpp lint --json` on the real article parses", `${e.message}\n${realLint.stderr ?? ""}`);
+      bad(
+        "`rpp lint --json` on the real article parses",
+        `${e.message}\n${realLint.stderr ?? ""}`,
+      );
     }
     if (found) {
       const { grew, vanished } = compareToBaseline(found);
@@ -560,7 +542,9 @@ try {
         : bad(
             "the real article matches its baseline",
             [
-              ...grew.map((g) => `grew: ${g.rule} ${g.now} > recorded ${g.recorded}`),
+              ...grew.map(
+                (g) => `grew: ${g.rule} ${g.now} > recorded ${g.recorded}`,
+              ),
               ...vanished.map((r) => `vanished: ${r}`),
             ].join("\n"),
           );
@@ -610,7 +594,9 @@ try {
           `${d.there} arrived; missing: ${d.missing.join(", ") || "(count differs without a named gap)"}`,
         );
     d.unresolved.length === 0
-      ? ok(`all ${d.refs} script path(s) named by skills resolve in the consumer`)
+      ? ok(
+          `all ${d.refs} script path(s) named by skills resolve in the consumer`,
+        )
       : bad(
           `all ${d.refs} script path(s) named by skills resolve in the consumer`,
           [...new Set(d.unresolved)].slice(0, 5).join("\n"),
@@ -628,13 +614,22 @@ try {
       mkdirSync(join(home, taken), { recursive: true });
       writeFileSync(join(home, taken, "SKILL.md"), "the consumer's own\n");
       mkdirSync(join(home, "consumers-own-skill"), { recursive: true });
-      writeFileSync(join(home, "consumers-own-skill", "SKILL.md"), "untouched\n");
+      writeFileSync(
+        join(home, "consumers-own-skill", "SKILL.md"),
+        "untouched\n",
+      );
       const third = sh(bin, ["init"], { cwd: consumer });
       const kept =
-        readFileSync(join(home, taken, "SKILL.md"), "utf8") === "the consumer's own\n" &&
-        readFileSync(join(home, "consumers-own-skill", "SKILL.md"), "utf8") === "untouched\n";
-      kept && third.status === 0 && new RegExp(`${taken} — a directory`).test(third.stdout ?? "")
-        ? ok(`a foreign .claude/skills/${taken} is left untouched, named, and init still exits zero`)
+        readFileSync(join(home, taken, "SKILL.md"), "utf8") ===
+          "the consumer's own\n" &&
+        readFileSync(join(home, "consumers-own-skill", "SKILL.md"), "utf8") ===
+          "untouched\n";
+      kept &&
+      third.status === 0 &&
+      new RegExp(`${taken} — a directory`).test(third.stdout ?? "")
+        ? ok(
+            `a foreign .claude/skills/${taken} is left untouched, named, and init still exits zero`,
+          )
         : bad(
             `a foreign .claude/skills/${taken} is left untouched, named, and init still exits zero`,
             `kept=${String(kept)} exit=${String(third.status)}\n${third.stdout ?? ""}`,
@@ -660,5 +655,8 @@ for (const r of results) {
 }
 for (const name of strictMissing)
   console.log(`  🔴 ${name} — NOT MEASURED, and --strict makes that a failure`);
-for (const name of skippedManagers) console.log(`  ⏳ ${name} — NOT MEASURED (declared skip, exit 77)`);
-process.exit(red > 0 || strictMissing.length > 0 ? 1 : skippedManagers.length > 0 ? 77 : 0);
+for (const name of skippedManagers)
+  console.log(`  ⏳ ${name} — NOT MEASURED (declared skip, exit 77)`);
+process.exit(
+  red > 0 || strictMissing.length > 0 ? 1 : skippedManagers.length > 0 ? 77 : 0,
+);

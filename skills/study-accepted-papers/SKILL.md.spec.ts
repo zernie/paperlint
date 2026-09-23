@@ -8,9 +8,20 @@ import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({
   name: "study-accepted-papers",
-  description: "Mine a target venue's ACCEPTED-paper corpus to learn what makes papers STRONG there, then turn that into concrete strengthening levers for your own draft — the move from a plain \"Accept\" toward \"Strong Accept\". Fetch 8-12 real recently-accepted papers at the venue (ACM DL / IEEE Xplore / venue program pages / arXiv), prioritizing the same paper-type and topic as yours (measurement/benchmark/SoK/security-critique), and for each extract WHAT MADE IT STRONG (adaptive evaluation, explicit threat model, reusable released artifact, real-world grounding, a memorable framing/coined handle, a released dataset, honest limitations). Cross-read the venue CFP + PC-chair research tastes + any best-paper criteria. Then diff your draft against those patterns and emit ranked levers split into CHEAP (framing/prose/citation, safe before a deadline) vs EXPENSIVE (new experiments/data). Use when a paper is drafted and you want venue-specific polish grounded in what actually lands there — NOT generic writing advice. Distinct from find-venue (picks WHERE), research-ideate (validates the idea), and pc-panel-review / paper-adversarial-review (red-team YOUR draft): this one studies the VENUE's own bar. Compose with those + harden-paper + verify-citations + extend-paper.",
+  description:
+    'Mine a target venue\'s ACCEPTED-paper corpus to learn what makes papers STRONG there, then turn that into concrete strengthening levers for your own draft — the move from a plain "Accept" toward "Strong Accept". Fetch 8-12 real recently-accepted papers at the venue (ACM DL / IEEE Xplore / venue program pages / arXiv), prioritizing the same paper-type and topic as yours (measurement/benchmark/SoK/security-critique), and for each extract WHAT MADE IT STRONG (adaptive evaluation, explicit threat model, reusable released artifact, real-world grounding, a memorable framing/coined handle, a released dataset, honest limitations). Cross-read the venue CFP + PC-chair research tastes + any best-paper criteria. Then diff your draft against those patterns and emit ranked levers split into CHEAP (framing/prose/citation, safe before a deadline) vs EXPENSIVE (new experiments/data). Use when a paper is drafted and you want venue-specific polish grounded in what actually lands there — NOT generic writing advice. Distinct from find-venue (picks WHERE), research-ideate (validates the idea), and pc-panel-review / paper-adversarial-review (red-team YOUR draft): this one studies the VENUE\'s own bar. Compose with those + harden-paper + verify-citations + extend-paper.',
   context: "fork",
-  tools: ["Read", "Write", "Edit", "Grep", "Glob", "Bash", "WebSearch", "WebFetch", "Agent"],
+  tools: [
+    "Read",
+    "Write",
+    "Edit",
+    "Grep",
+    "Glob",
+    "Bash",
+    "WebSearch",
+    "WebFetch",
+    "Agent",
+  ],
   body: `
 # study-accepted-papers — learn the venue's bar from its own accepted corpus, then lever your draft up
 

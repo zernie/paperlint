@@ -59,10 +59,10 @@ const M = [
   [
     GUARD,
     "guard carrier/null read as absence",
-    "go back to `??` — an explicit `\"papers\": null` is read as «nothing was declared» and " +
+    'go back to `??` — an explicit `"papers": null` is read as «nothing was declared» and ' +
       "silently falls back to the default, i.e. a typed keystroke treated as an absence",
-    "  const root = declared === undefined ? DEFAULT_PAPERS_ROOT : declared;\n  if (typeof root !== \"string\" || root.length === 0)\n    return deny(",
-    "  const root = declared ?? DEFAULT_PAPERS_ROOT;\n  if (typeof root !== \"string\" || root.length === 0)\n    return deny(",
+    '  const root = declared === undefined ? DEFAULT_PAPERS_ROOT : declared;\n  if (typeof root !== "string" || root.length === 0)\n    return deny(',
+    '  const root = declared ?? DEFAULT_PAPERS_ROOT;\n  if (typeof root !== "string" || root.length === 0)\n    return deny(',
   ],
   [
     GUARD,
@@ -83,7 +83,7 @@ const M = [
   [
     GUARD,
     "guard carrier/trailing slash not normalised",
-    "keep the slash the consumer typed — `prefix + \"/\"` becomes `//`, which matches NOTHING, " +
+    'keep the slash the consumer typed — `prefix + "/"` becomes `//`, which matches NOTHING, ' +
       "and the gate is a silent no-op (this exact defect shipped once)",
     '  return root.replace(/\\/+$/, "");\n};',
     "  return root;\n};",
@@ -110,8 +110,8 @@ const M = [
     "guard/the mutator list loses `sed -i`",
     "drop the commonest in-place editor from MUTATORS — the write is no longer recognised as a " +
       "write, so `sed -i` on a paper sails past the gate that exists for it",
-    'const MUTATORS = ["sed -i", ',
-    'const MUTATORS = [',
+    'const MUTATORS = [\n  "sed -i",\n',
+    "const MUTATORS = [\n",
   ],
   [
     GUARD,
@@ -122,17 +122,17 @@ const M = [
     // source extension" once `versions/` got its carve-out. This mutation targets exactly the
     // EXTENSION FILTER — removing the carve-out is a different property with its own mutation
     // below.
-    "const hasSourceExtension = (p) =>\n  p.endsWith(\".tex\") || /\\/(paper|draft)\\.md$/.test(p) || /^(paper|draft)\\.md$/.test(p);",
+    'const hasSourceExtension = (p) =>\n  p.endsWith(".tex") ||\n  /\\/(paper|draft)\\.md$/.test(p) ||\n  /^(paper|draft)\\.md$/.test(p);',
     "const hasSourceExtension = (p) => p.length > 0;",
   ],
   [
     GUARD,
     "guard/manifest read goes relative again",
     "drop the anchor to the project root — the read fails once cwd drifts, and under the rule " +
-      "\"an unreadable declaration denies\" the guard blocks ANY Bash command, including the one " +
+      '"an unreadable declaration denies" the guard blocks ANY Bash command, including the one ' +
       "that would fix it",
-    "needs: [provide(\"pkg\", 'cat \"${CLAUDE_PROJECT_DIR:-.}/package.json\"')],",
-    "needs: [provide(\"pkg\", \"cat package.json\")],",
+    'needs: [provide("pkg", \'cat "${CLAUDE_PROJECT_DIR:-.}/package.json"\')],',
+    'needs: [provide("pkg", "cat package.json")],',
   ],
   [
     "hooks/paper-skills-nudge.hook.mjs",
@@ -141,8 +141,8 @@ const M = [
       "hook does not deny, it returns `nothing()` — i.e. it just quietly stops firing. Silence " +
       "is exactly what a nudge's success state looks like, so a dead hook is indistinguishable " +
       "from a working one except by this mutation",
-    "needs: [provide(\"pkg\", 'cat \"${CLAUDE_PROJECT_DIR:-.}/package.json\"')],",
-    "needs: [provide(\"pkg\", \"cat package.json\")],",
+    'needs: [provide("pkg", \'cat "${CLAUDE_PROJECT_DIR:-.}/package.json"\')],',
+    'needs: [provide("pkg", "cat package.json")],',
   ],
   [
     GUARD,
@@ -177,7 +177,7 @@ const M = [
     "nudge/fires on everything",
     "drop the path test — the checklist lands on every Edit anywhere, which is how an advisory " +
       "hook gets muted and then stays muted when it matters",
-    "    return e.path.under([root]) && isPaperSource(e.path.raw) ? notice(CHECKLIST) : nothing();",
+    "    return e.path.under([root]) && isPaperSource(e.path.raw)\n      ? notice(CHECKLIST)\n      : nothing();",
     "    return notice(CHECKLIST);",
   ],
   [
@@ -185,16 +185,16 @@ const M = [
     "nudge/every file under the root is a paper",
     "drop the source-shape test — a README or a note under the papers root gets the pre-submit " +
       "checklist",
-    "    return e.path.under([root]) && isPaperSource(e.path.raw) ? notice(CHECKLIST) : nothing();",
-    "    return e.path.under([root]) ? notice(CHECKLIST) : nothing();",
+    "    return e.path.under([root]) && isPaperSource(e.path.raw)\n      ? notice(CHECKLIST)\n      : nothing();",
+    "    return e.path.under([root])\n      ? notice(CHECKLIST)\n      : nothing();",
   ],
   [
     NUDGE,
     "nudge carrier/null read as absence",
     "`??` again, in this hook's own copy of the carrier — the nudge starts firing about the " +
       "default tree the consumer never named",
-    "  const root = declared === undefined ? DEFAULT_PAPERS_ROOT : declared;\n  if (typeof root !== \"string\" || root.length === 0) return null;",
-    "  const root = declared ?? DEFAULT_PAPERS_ROOT;\n  if (typeof root !== \"string\" || root.length === 0) return null;",
+    '  const root = declared === undefined ? DEFAULT_PAPERS_ROOT : declared;\n  if (typeof root !== "string" || root.length === 0) return null;',
+    '  const root = declared ?? DEFAULT_PAPERS_ROOT;\n  if (typeof root !== "string" || root.length === 0) return null;',
   ],
   // ── the gates hook: anchors, escaping, and the name that reaches a shell ────
   [
@@ -202,7 +202,7 @@ const M = [
     "gates/the root is not regex-escaped",
     "interpolate the declared root raw — a `.` in it becomes a wildcard, so the hook fires about " +
       "a sibling tree whose name merely resembles the declared one",
-    "`(?:^|/)${root.replace(/[.*+?^${}()|[\\]\\\\]/g, \"\\\\$&\")}/([A-Za-z0-9._-]+)/",
+    '`(?:^|/)${root.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}/([A-Za-z0-9._-]+)/',
     "`(?:^|/)${root}/([A-Za-z0-9._-]+)/",
   ],
   [
@@ -210,8 +210,8 @@ const M = [
     "gates/the `(?:^|/)` boundary removed",
     "anchor with a bare `^` — the live harness sends ABSOLUTE paths, so the hook would be dead in " +
       "production and green in any test that builds relative ones",
-    '    `(?:^|/)${root.replace(',
-    '    `^${root.replace(',
+    "    `(?:^|/)${root.replace(",
+    "    `^${root.replace(",
   ],
   [
     GATES,
@@ -225,8 +225,8 @@ const M = [
     GATES,
     "gates carrier/null read as absence",
     "`??` in the third copy of the carrier — the hook surfaces a status file from the default tree",
-    "  const root = declared === undefined ? DEFAULT_PAPERS_ROOT : declared;\n  if (typeof root !== \"string\" || root.length === 0) return null;",
-    "  const root = declared ?? DEFAULT_PAPERS_ROOT;\n  if (typeof root !== \"string\" || root.length === 0) return null;",
+    '  const root = declared === undefined ? DEFAULT_PAPERS_ROOT : declared;\n  if (typeof root !== "string" || root.length === 0) return null;',
+    '  const root = declared ?? DEFAULT_PAPERS_ROOT;\n  if (typeof root !== "string" || root.length === 0) return null;',
   ],
   // ── the tool ───────────────────────────────────────────────────────────────
   [
@@ -242,7 +242,7 @@ const M = [
     "sh/the defence-in-depth name check removed",
     "trust the hook's validation — the file stops being safe to call directly, and it is a " +
       "documented entry point",
-    "  *[!A-Za-z0-9._-]* | \"\" | . | ..) exit 0 ;;",
+    '  *[!A-Za-z0-9._-]* | "" | . | ..) exit 0 ;;',
     '  "") exit 0 ;;',
   ],
   [
@@ -274,7 +274,8 @@ const runHarness = () => {
   if (base.failed) {
     console.log(
       "❌ THE HARNESS IS RED BEFORE ANY MUTATION — the battery cannot tell a killed mutation " +
-        "from that:\n" + base.out.slice(-1500),
+        "from that:\n" +
+        base.out.slice(-1500),
     );
     process.exit(1);
   }
@@ -296,7 +297,9 @@ for (const [file, label, what, from, to] of M) {
   writeFileSync(file, pristine.replace(from, to));
   const on = readFileSync(file, "utf8");
   if (!on.includes(to) || on.includes(from)) {
-    console.log(`❌ ${label}: THE MUTATION DID NOT LAND (checked by re-reading ${file})`);
+    console.log(
+      `❌ ${label}: THE MUTATION DID NOT LAND (checked by re-reading ${file})`,
+    );
     bad++;
     writeFileSync(file, pristine);
     continue;
@@ -328,6 +331,7 @@ for (const [file, label, what, from, to] of M) {
 }
 console.log("\n| property | mutation | what the harness died on |");
 console.log("|---|---|---|");
-for (const [a, b, c] of rows) console.log(`| \`${a}\` | ${b} | ${c.replace(/\|/g, "\\|")} |`);
+for (const [a, b, c] of rows)
+  console.log(`| \`${a}\` | ${b} | ${c.replace(/\|/g, "\\|")} |`);
 console.log(`\n${ok} mutation(s) killed, ${bad} problem(s)`);
 process.exit(bad ? 1 : 0);

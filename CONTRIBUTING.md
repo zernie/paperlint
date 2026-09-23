@@ -41,6 +41,7 @@ npm run check
 
 That is the whole instruction. It runs every gate in order — build, lint, the <!-- count:harnesses -->60 harnesses, the
 <!-- count:batteries -->37 mutation batteries, the install e2e under npm and pnpm, and a real `pdflatex` build — and ends
+
 by printing **which CI jobs it does not reproduce, and why**.
 
 🔴 **There is no `--fast` flag, and that is the point.** On 2026-09-19 a rule change was pushed
@@ -48,7 +49,7 @@ that broke the suite: the gates were run afterwards and were green, but `npm tes
 `test:install` were not among them, because there were eleven separate scripts and the only way
 to run them all was from memory. A subset flag re-creates exactly that — the cheap half gets run
 and reported as "the gates". If a step genuinely cannot run here, it says so out loud rather than
-being skipped quietly: an e2e that finds no TeX or no pnpm exits 77 *having stated* why, and
+being skipped quietly: an e2e that finds no TeX or no pnpm exits 77 _having stated_ why, and
 `npm run check` lists it as skipped instead of counting it as passed.
 
 The individual scripts still exist and are the right thing to call while iterating on one rule.
@@ -76,6 +77,24 @@ docs/           evidence that would otherwise bloat CLAUDE.md:
                   install.md  the install contract
                   e2e.md  the end-to-end runs, and when a change owes one
 ```
+
+The package has <!-- count:rules -->12 rules. Nine run on users' papers and are described for users in
+[`docs/rules.md`](docs/rules.md); the other three lint this package's own source and never see a
+user's files.
+
+## Maintainer docs
+
+The README links only what a user needs. These are for people changing the package:
+
+- [`docs/prior-art/`](docs/prior-art/README.md) — how comparable tools are shaped, with the URLs
+  that were checked
+- [`docs/install.md`](docs/install.md) — why the install is shaped this way; a decision record,
+  measured
+- [`docs/e2e.md`](docs/e2e.md) — the end-to-end runs: what each proves, what they do not cover,
+  and when a change owes one
+- [`docs/incidents.md`](docs/incidents.md) — what broke, measured
+- [`docs/package-shape-options.md`](docs/package-shape-options.md) — the options for the
+  package's shape, and the ranking
 
 ## Working on this package
 

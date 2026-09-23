@@ -50,16 +50,16 @@
     "short": {
       "body_pages_max": 5,
       // «up to 2 extra pages of references»
-      "ref_pages_max": 2
+      "ref_pages_max": 2,
     },
     "full": {
       // «Full ≤10pp (mature)»
       "body_pages_max": 10,
-      "ref_pages_max": 2
+      "ref_pages_max": 2,
     },
     "demo": {
       "body_pages_max": 5,
-      "ref_pages_max": 2
-    }
-  }
+      "ref_pages_max": 2,
+    },
+  },
 }

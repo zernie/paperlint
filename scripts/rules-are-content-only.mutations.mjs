@@ -74,7 +74,7 @@ process.exit(
         disables:
           "the answer to 'did you even look': zero found sources become silent success again, " +
           "indistinguishable from a clean run",
-        edits: [[GUARD, "f.endsWith(\".mjs\") &&", "false &&"]],
+        edits: [[GUARD, 'f.endsWith(".mjs") &&', "false &&"]],
       },
     ],
   }),

@@ -1,6 +1,6 @@
 /**
  * ONE reader of `baseline.json`, shared by the two runs that compare against it: the harness
- * beside this file (the repository's own `bin/rpp.mjs`) and `scripts/install-e2e.mjs` (the binary
+ * beside this file (the repository's own `bin/rpp.mjs`) and `test/e2e/install.mjs` (the binary
  * a consumer actually got). Two copies of "growth fails, a drop never does" would drift the first
  * time one of them is tightened, and the two runs would then disagree about the same article.
  */
@@ -23,7 +23,8 @@ export function recordedFindings() {
 export function countByRule(stdout) {
   const out = {};
   for (const file of JSON.parse(stdout))
-    for (const m of file.messages ?? []) out[m.ruleId] = (out[m.ruleId] ?? 0) + 1;
+    for (const m of file.messages ?? [])
+      out[m.ruleId] = (out[m.ruleId] ?? 0) + 1;
   return out;
 }
 
@@ -40,6 +41,8 @@ export function compareToBaseline(found, recorded = recordedFindings()) {
   const grew = Object.entries(found)
     .filter(([rule, n]) => n > (recorded[rule] ?? 0))
     .map(([rule, n]) => ({ rule, now: n, recorded: recorded[rule] ?? 0 }));
-  const vanished = Object.keys(recorded).filter((r) => recorded[r] > 0 && !(r in found));
+  const vanished = Object.keys(recorded).filter(
+    (r) => recorded[r] > 0 && !(r in found),
+  );
   return { grew, vanished };
 }

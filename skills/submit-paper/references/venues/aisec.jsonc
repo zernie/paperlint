@@ -50,9 +50,9 @@
   // paper's `venue.json` can name its own track: not for the numbers, but so it's visible which
   // track it was submitted under.
   "kinds": {
-    "research":  { "body_pages_max": 10, "ref_pages_max": 2 },
+    "research": { "body_pages_max": 10, "ref_pages_max": 2 },
     "benchmark": { "body_pages_max": 10, "ref_pages_max": 2 },
-    "position":  { "body_pages_max": 10, "ref_pages_max": 2 },
-    "sok":       { "body_pages_max": 10, "ref_pages_max": 2 }
-  }
+    "position": { "body_pages_max": 10, "ref_pages_max": 2 },
+    "sok": { "body_pages_max": 10, "ref_pages_max": 2 },
+  },
 }

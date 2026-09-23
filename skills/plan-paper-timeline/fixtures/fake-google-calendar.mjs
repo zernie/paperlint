@@ -39,7 +39,9 @@ const LOG = process.env.FAKE_MCP_LOG;
 if (!LOG) {
   // Failing closed matters more than it looks: with no log there is nothing to assert
   // on, and a test that asserts on an empty list passes for the wrong reason.
-  process.stderr.write("fake-google-calendar: FAKE_MCP_LOG is unset; refusing to run blind\n");
+  process.stderr.write(
+    "fake-google-calendar: FAKE_MCP_LOG is unset; refusing to run blind\n",
+  );
   process.exit(1);
 }
 
@@ -52,11 +54,27 @@ const TOOLS = {
     description: "Creates an event on the given calendar.",
     required: ["summary", "startTime", "endTime"],
     known: [
-      "summary", "startTime", "endTime", "timeZone", "allDay", "calendarId",
-      "description", "location", "colorId", "visibility", "availability",
-      "eventType", "attendees", "attachments", "recurrenceData",
-      "overrideReminders", "notificationLevel", "addGoogleMeetUrl",
-      "googleMeetUrl", "guestPermissions", "workingLocationProperties",
+      "summary",
+      "startTime",
+      "endTime",
+      "timeZone",
+      "allDay",
+      "calendarId",
+      "description",
+      "location",
+      "colorId",
+      "visibility",
+      "availability",
+      "eventType",
+      "attendees",
+      "attachments",
+      "recurrenceData",
+      "overrideReminders",
+      "notificationLevel",
+      "addGoogleMeetUrl",
+      "googleMeetUrl",
+      "guestPermissions",
+      "workingLocationProperties",
       "attendeeEmails",
     ],
   },
@@ -64,26 +82,59 @@ const TOOLS = {
     description: "Updates an event on the given calendar.",
     required: ["eventId"],
     known: [
-      "eventId", "summary", "startTime", "endTime", "timeZone", "allDay",
-      "calendarId", "description", "location", "colorId", "visibility",
-      "availability", "addedAttendees", "removedAttendeeEmails",
-      "addedAttachments", "removedAttachmentFileUrls", "overrideReminders",
-      "notificationLevel", "addGoogleMeetUrl", "googleMeetUrl", "guestPermissions",
+      "eventId",
+      "summary",
+      "startTime",
+      "endTime",
+      "timeZone",
+      "allDay",
+      "calendarId",
+      "description",
+      "location",
+      "colorId",
+      "visibility",
+      "availability",
+      "addedAttendees",
+      "removedAttendeeEmails",
+      "addedAttachments",
+      "removedAttachmentFileUrls",
+      "overrideReminders",
+      "notificationLevel",
+      "addGoogleMeetUrl",
+      "googleMeetUrl",
+      "guestPermissions",
       "addedAttendeeEmails",
     ],
   },
   list_events: {
-    description: "Returns events on the given calendar matching all specified constraints.",
+    description:
+      "Returns events on the given calendar matching all specified constraints.",
     required: [],
     known: [
-      "calendarId", "startTime", "endTime", "timeZone", "orderBy", "pageSize",
-      "pageToken", "fullText", "eventType", "eventTypeFilter",
+      "calendarId",
+      "startTime",
+      "endTime",
+      "timeZone",
+      "orderBy",
+      "pageSize",
+      "pageToken",
+      "fullText",
+      "eventType",
+      "eventTypeFilter",
     ],
   },
   search_events: {
     description: "Searches events on the primary calendar by keyword or topic.",
     required: ["query"],
-    known: ["query", "calendarId", "startTime", "endTime", "timeZone", "pageSize", "pageToken"],
+    known: [
+      "query",
+      "calendarId",
+      "startTime",
+      "endTime",
+      "timeZone",
+      "pageSize",
+      "pageToken",
+    ],
   },
 };
 
@@ -100,7 +151,9 @@ function reject(name, args) {
   const spec = TOOLS[name];
   if (!spec) return `no such tool: ${name}`;
   const a = args ?? {};
-  const missing = spec.required.filter((k) => a[k] === undefined || a[k] === "");
+  const missing = spec.required.filter(
+    (k) => a[k] === undefined || a[k] === "",
+  );
   if (missing.length)
     return `missing required argument(s): ${missing.join(", ")} — the real Google Calendar API rejects this call`;
   const unknown = Object.keys(a).filter((k) => !spec.known.includes(k));
@@ -124,7 +177,9 @@ process.stdin.on("data", (chunk) => {
       continue;
     }
     const send = (payload) =>
-      process.stdout.write(JSON.stringify({ jsonrpc: "2.0", id: msg.id, ...payload }) + "\n");
+      process.stdout.write(
+        JSON.stringify({ jsonrpc: "2.0", id: msg.id, ...payload }) + "\n",
+      );
 
     if (msg.method === "initialize") {
       send({
@@ -150,9 +205,17 @@ process.stdin.on("data", (chunk) => {
       const why = reject(name, args);
       // Every call is logged, accepted or not. A rejected call that left no trace
       // would be indistinguishable from a call that never happened.
-      appendFileSync(LOG, JSON.stringify({ name, args, ok: why === null, why }) + "\n");
+      appendFileSync(
+        LOG,
+        JSON.stringify({ name, args, ok: why === null, why }) + "\n",
+      );
       if (why) {
-        send({ result: { isError: true, content: [{ type: "text", text: `INVALID CALL: ${why}` }] } });
+        send({
+          result: {
+            isError: true,
+            content: [{ type: "text", text: `INVALID CALL: ${why}` }],
+          },
+        });
       } else {
         created += 1;
         send({
@@ -160,7 +223,10 @@ process.stdin.on("data", (chunk) => {
             content: [
               {
                 type: "text",
-                text: JSON.stringify({ id: `evt_fake_${String(created)}`, status: "confirmed" }),
+                text: JSON.stringify({
+                  id: `evt_fake_${String(created)}`,
+                  status: "confirmed",
+                }),
               },
             ],
           },

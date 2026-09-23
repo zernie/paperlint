@@ -248,7 +248,13 @@
 
 import { assertPromptDiversity, skip } from "vigiles";
 import { paid_measureTriggerRate as measureTriggerRate } from "vigiles/eval";
-import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import {
+  existsSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+  mkdirSync,
+} from "node:fs";
 import { join } from "node:path";
 import { frontmatterBlock } from "../../lib/markdown.mjs";
 import { parseFm } from "../../lib/skill-corpus.mjs";
@@ -433,21 +439,33 @@ const CELL_LABEL = {
 
 // 1. the skills exist and declare the names we test against
 const installed = readdirSync(SKILLS_DIR, { withFileTypes: true })
-  .filter((e) => e.isDirectory() && existsSync(join(SKILLS_DIR, e.name, "SKILL.md")))
+  .filter(
+    (e) => e.isDirectory() && existsSync(join(SKILLS_DIR, e.name, "SKILL.md")),
+  )
   .map((e) => e.name);
 const installedSet = new Set(installed);
 for (const c of CASES) {
-  if (!installedSet.has(c.skill)) throw new Error(`${c.skill} is not installed under ${SKILLS_DIR}`);
+  if (!installedSet.has(c.skill))
+    throw new Error(`${c.skill} is not installed under ${SKILLS_DIR}`);
   const fm = readFileSync(join(SKILLS_DIR, c.skill, "SKILL.md"), "utf-8");
   const declared = declaredName(fm);
-  if (declared && declared !== c.skill) throw new Error(`${c.skill}/SKILL.md declares name: ${declared}`);
+  if (declared && declared !== c.skill)
+    throw new Error(`${c.skill}/SKILL.md declares name: ${declared}`);
 }
 
-const allPrompts = CASES.flatMap((c) => CELLS.flatMap((k) => c.cells[k].map((p) => ({ skill: c.skill, cell: k, prompt: p }))));
+const allPrompts = CASES.flatMap((c) =>
+  CELLS.flatMap((k) =>
+    c.cells[k].map((p) => ({ skill: c.skill, cell: k, prompt: p })),
+  ),
+);
 
 // 2. HELD OUT from both siblings — copied from description-language.eval.mjs, extended to cover the
 //    third sibling too. A prompt shared with a run that MOTIVATED this question is not held out.
-const siblingText = ["pipeline-language.eval.mjs", "pipeline-firing.eval.mjs", "description-language.eval.mjs"]
+const siblingText = [
+  "pipeline-language.eval.mjs",
+  "pipeline-firing.eval.mjs",
+  "description-language.eval.mjs",
+]
   .map((f) => join(SKILLS_DIR, "paper-pipeline", f))
   .filter(existsSync)
   .map((f) => readFileSync(f, "utf-8"))
@@ -462,14 +480,19 @@ for (const { prompt } of allPrompts)
 // 3. no prompt reused across cells (a duplicate would silently merge two cells)
 const seen = new Set();
 for (const { prompt } of allPrompts) {
-  if (seen.has(prompt)) throw new Error(`duplicate prompt across cells: "${prompt}"`);
+  if (seen.has(prompt))
+    throw new Error(`duplicate prompt across cells: "${prompt}"`);
   seen.add(prompt);
 }
 
 // 4. diversity, per cell
 for (const c of CASES)
   for (const k of CELLS)
-    assertPromptDiversity(c.cells[k], { minPrompts: 4, minDistance: 0.3, label: `${c.skill}:${k}` });
+    assertPromptDiversity(c.cells[k], {
+      minPrompts: 4,
+      minDistance: 0.3,
+      label: `${c.skill}:${k}`,
+    });
 
 // 5. 🔴 THE VOCABULARY FACTOR, CHECKED MECHANICALLY rather than asserted.
 // Content-word overlap of a prompt with a skill description: stemmed, stopworded, prompt-normalised
@@ -478,16 +501,20 @@ for (const c of CASES)
 // ⚠ It is therefore biased toward LONG descriptions, which matters only for the argmax reported
 // below, not for the HIGH/LOW contrast (that compares prompts against ONE fixed description).
 const STOP = new Set(
-  ("a an the and or but if then than that this these those there here it its is are was were be been being am " +
+  (
+    "a an the and or but if then than that this these those there here it its is are was were be been being am " +
     "do does did doing done have has had having i me my we our you your he she they them their of in on at to " +
     "for with by from as into over under about after before between out up down off again more most some any " +
     "no not nor only own same so too very can will just should now what which who whom whose when where why how " +
     "me myself yourself each both few other such all one two three back keep still even yet get got give given " +
-    "make made want need know knew cannot could would might must let us like also because while against would")
-    .split(/\s+/),
+    "make made want need know knew cannot could would might must let us like also because while against would"
+  ).split(/\s+/),
 );
 const stem = (w) =>
-  w.replace(/(ies)$/, "y").replace(/(sses|shes|ches|xes)$/, (m) => m.slice(0, -2)).replace(/(ing|ed|ly|s)$/, "");
+  w
+    .replace(/(ies)$/, "y")
+    .replace(/(sses|shes|ches|xes)$/, (m) => m.slice(0, -2))
+    .replace(/(ing|ed|ly|s)$/, "");
 const words = (s) =>
   new Set(
     s
@@ -512,7 +539,9 @@ for (const name of installed) {
     .replace(/\s+/g, " ")
     .trim();
 }
-const descWords = Object.fromEntries(Object.entries(descriptions).map(([k, v]) => [k, words(v)]));
+const descWords = Object.fromEntries(
+  Object.entries(descriptions).map(([k, v]) => [k, words(v)]),
+);
 
 const overlap = (prompt, skill) => {
   const p = words(prompt);
@@ -531,7 +560,8 @@ const cellOverlap = {};
 for (const c of CASES)
   for (const k of CELLS)
     cellOverlap[`${c.skill}:${k}`] =
-      c.cells[k].reduce((a, p) => a + overlap(p, c.skill), 0) / c.cells[k].length;
+      c.cells[k].reduce((a, p) => a + overlap(p, c.skill), 0) /
+      c.cells[k].length;
 
 const MIN_CONTRAST = 0.15;
 for (const c of CASES) {
@@ -553,9 +583,11 @@ const REQUEST =
   /^(produce|tell|give|decide|rank|grade|run|score|mark|rate|assign|build|repair|check|make|count|lay|reorder|merge|cut|fold|list|show|find|write|explain)\b|\bi want\b|\bgive me\b|\btell me\b/i;
 for (const c of CASES) {
   for (const p of [...c.cells.AH, ...c.cells.AL])
-    if (!REQUEST.test(p)) throw new Error(`ACTION cell prompt carries no request form: "${p}"`);
+    if (!REQUEST.test(p))
+      throw new Error(`ACTION cell prompt carries no request form: "${p}"`);
   for (const p of [...c.cells.SH, ...c.cells.SL])
-    if (REQUEST.test(p)) throw new Error(`SITUATION cell prompt reads as a request: "${p}"`);
+    if (REQUEST.test(p))
+      throw new Error(`SITUATION cell prompt reads as a request: "${p}"`);
 }
 
 // 7. the harness itself
@@ -563,14 +595,22 @@ if (MODE !== "preflight") {
   try {
     execFileSync("claude", ["--version"], { stdio: "ignore" });
   } catch {
-    skip("`claude` CLI not on PATH — the eval tier drives the real harness and cannot be faked");
+    skip(
+      "`claude` CLI not on PATH — the eval tier drives the real harness and cannot be faked",
+    );
   }
 }
 
 // ── the labelling matrix, printed every run so the factors are auditable ──────
-console.log(`\n${installed.length} skills installed → ${installed.length - 1} competitors per run`);
-console.log(`\nMEASURED VOCABULARY OVERLAP (prompt content-words found in the target description)`);
-console.log(`${"skill".padEnd(22)} ${CELLS.map((k) => k.padStart(6)).join("")}   HIGH-LOW`);
+console.log(
+  `\n${installed.length} skills installed → ${installed.length - 1} competitors per run`,
+);
+console.log(
+  `\nMEASURED VOCABULARY OVERLAP (prompt content-words found in the target description)`,
+);
+console.log(
+  `${"skill".padEnd(22)} ${CELLS.map((k) => k.padStart(6)).join("")}   HIGH-LOW`,
+);
 for (const c of CASES) {
   const hi = (cellOverlap[`${c.skill}:AH`] + cellOverlap[`${c.skill}:SH`]) / 2;
   const lo = (cellOverlap[`${c.skill}:AL`] + cellOverlap[`${c.skill}:SL`]) / 2;
@@ -581,7 +621,9 @@ for (const c of CASES) {
 }
 
 if (MODE === "preflight") {
-  console.log(`\nper-prompt overlap, and the skill each prompt most resembles lexically:`);
+  console.log(
+    `\nper-prompt overlap, and the skill each prompt most resembles lexically:`,
+  );
   for (const c of CASES) {
     console.log(`\n### ${c.skill}`);
     for (const k of CELLS)
@@ -593,7 +635,9 @@ if (MODE === "preflight") {
         );
       }
   }
-  console.log(`\nALL PREFLIGHT GUARDS PASSED. No tokens spent. Run --mode main next.`);
+  console.log(
+    `\nALL PREFLIGHT GUARDS PASSED. No tokens spent. Run --mode main next.`,
+  );
   process.exit(0);
 }
 
@@ -601,7 +645,9 @@ if (MODE === "preflight") {
 if (MODE === "oracle") {
   const roster = installed.map((s) => `- ${s}: ${descriptions[s]}`).join("\n");
   const rows = [];
-  console.log(`\noracle: ${allPrompts.length} closed-book picks over ${installed.length} descriptions\n`);
+  console.log(
+    `\noracle: ${allPrompts.length} closed-book picks over ${installed.length} descriptions\n`,
+  );
   for (const { skill, cell, prompt } of allPrompts) {
     const q =
       `Below is a list of agent skills, each with the description its author wrote.\n\n${roster}\n\n` +
@@ -615,25 +661,43 @@ if (MODE === "oracle") {
         timeout: 180000,
         maxBuffer: 1 << 24,
       });
-      const t = out.trim().split("\n").pop().trim().replace(/[.`"']/g, "");
-      pick = installedSet.has(t) ? t : /^none$/i.test(t) ? "NONE" : `?${t.slice(0, 40)}`;
+      const t = out
+        .trim()
+        .split("\n")
+        .pop()
+        .trim()
+        .replace(/[.`"']/g, "");
+      pick = installedSet.has(t)
+        ? t
+        : /^none$/i.test(t)
+          ? "NONE"
+          : `?${t.slice(0, 40)}`;
     } catch (e) {
       pick = `ERROR:${String(e.message).slice(0, 60)}`;
     }
     const ok = pick === skill;
     rows.push({ skill, cell, prompt, pick, ok });
-    console.log(`  ${cell}  ${ok ? "HIT " : "miss"}  ${pick.padEnd(24)}  ${prompt.slice(0, 62)}`);
+    console.log(
+      `  ${cell}  ${ok ? "HIT " : "miss"}  ${pick.padEnd(24)}  ${prompt.slice(0, 62)}`,
+    );
   }
-  console.log(`\nORACLE ACCURACY BY CELL (closed book, 37 descriptions in context, 1 pick each)`);
+  console.log(
+    `\nORACLE ACCURACY BY CELL (closed book, 37 descriptions in context, 1 pick each)`,
+  );
   console.log(`${"cell".padEnd(26)}  hit   none  wrong`);
   for (const k of CELLS) {
     const r = rows.filter((x) => x.cell === k);
     const hit = r.filter((x) => x.ok).length;
     const none = r.filter((x) => x.pick === "NONE").length;
-    console.log(`${CELL_LABEL[k].padEnd(26)}  ${String(hit).padStart(2)}/${r.length}  ${String(none).padStart(4)}  ${String(r.length - hit - none).padStart(5)}`);
+    console.log(
+      `${CELL_LABEL[k].padEnd(26)}  ${String(hit).padStart(2)}/${r.length}  ${String(none).padStart(4)}  ${String(r.length - hit - none).padStart(5)}`,
+    );
   }
   mkdirSync(REPRO, { recursive: true });
-  writeFileSync(join(REPRO, "2026-08-08-framing-vs-vocabulary-oracle.json"), JSON.stringify(rows, null, 2));
+  writeFileSync(
+    join(REPRO, "2026-08-08-framing-vs-vocabulary-oracle.json"),
+    JSON.stringify(rows, null, 2),
+  );
   console.log(`\nrows → repro/2026-08-08-framing-vs-vocabulary-oracle.json`);
   console.log(
     `\nREAD THIS AS AN UPPER BOUND, NOT A HUMAN. The oracle's task is strictly easier than the ` +
@@ -653,7 +717,12 @@ if (MODE === "oracle") {
 const firedSkills = (t) => [
   ...new Set(
     t.toolCalls
-      .filter((c) => c.name === "Skill" && !c.isError && typeof c.input?.skill === "string")
+      .filter(
+        (c) =>
+          c.name === "Skill" &&
+          !c.isError &&
+          typeof c.input?.skill === "string",
+      )
       .map((c) => c.input.skill),
   ),
 ];
@@ -688,9 +757,16 @@ for (const c of CASES) {
       });
       // TARGET / OTHER / SILENT, per trial.
       const bucket = observed.map((set) =>
-        set.includes(id(c.skill)) ? "TARGET" : set.length > 0 ? "OTHER" : "SILENT",
+        set.includes(id(c.skill))
+          ? "TARGET"
+          : set.length > 0
+            ? "OTHER"
+            : "SILENT",
       );
-      const others = observed.flat().filter((s) => s !== id(c.skill)).map((s) => s.replace(`${NS}:`, ""));
+      const others = observed
+        .flat()
+        .filter((s) => s !== id(c.skill))
+        .map((s) => s.replace(`${NS}:`, ""));
       results.push({
         skill: c.skill,
         cell: k,
@@ -707,7 +783,9 @@ for (const c of CASES) {
       console.log(
         `  ${rep.rate.toFixed(2)}  T${tally("TARGET")} O${tally("OTHER")} S${tally("SILENT")}` +
           `  ov=${overlap(prompt, c.skill).toFixed(2)}  ${prompt.slice(0, 56)}` +
-          (others.length ? `\n         instead: ${[...new Set(others)].join(", ")}` : ""),
+          (others.length
+            ? `\n         instead: ${[...new Set(others)].join(", ")}`
+            : ""),
       );
     }
   }
@@ -716,7 +794,9 @@ for (const c of CASES) {
 // ── report ───────────────────────────────────────────────────────────────────
 const erroredTotal = results.reduce((a, r) => a + r.errored, 0);
 const cellStat = (k, skill) => {
-  const rs = results.filter((r) => r.cell === k && (!skill || r.skill === skill));
+  const rs = results.filter(
+    (r) => r.cell === k && (!skill || r.skill === skill),
+  );
   const b = rs.flatMap((r) => r.buckets);
   return {
     n: b.length,
@@ -727,9 +807,15 @@ const cellStat = (k, skill) => {
 };
 
 console.log(`\n${"=".repeat(78)}\nTHE 2x2 — target trigger rate\n`);
-console.log(`${"".padEnd(22)}${"HIGH overlap".padStart(16)}${"LOW overlap".padStart(16)}`);
-for (const [row, hk, lk] of [["ACTION", "AH", "AL"], ["SITUATION", "SH", "SL"]]) {
-  const h = cellStat(hk), l = cellStat(lk);
+console.log(
+  `${"".padEnd(22)}${"HIGH overlap".padStart(16)}${"LOW overlap".padStart(16)}`,
+);
+for (const [row, hk, lk] of [
+  ["ACTION", "AH", "AL"],
+  ["SITUATION", "SH", "SL"],
+]) {
+  const h = cellStat(hk),
+    l = cellStat(lk);
   console.log(
     `${row.padEnd(22)}` +
       `${`${((h.target / h.n) * 100).toFixed(0)}% (${h.target}/${h.n})`.padStart(16)}` +
@@ -740,11 +826,11 @@ const M = Object.fromEntries(CELLS.map((k) => [k, cellStat(k)]));
 const r = (k) => M[k].target / M[k].n;
 console.log(
   `\nmain effect of FRAMING   (AH+AL) - (SH+SL) = ` +
-    `${((((M.AH.target + M.AL.target) / (M.AH.n + M.AL.n)) - ((M.SH.target + M.SL.target) / (M.SH.n + M.SL.n))) * 100).toFixed(0)}pp`,
+    `${(((M.AH.target + M.AL.target) / (M.AH.n + M.AL.n) - (M.SH.target + M.SL.target) / (M.SH.n + M.SL.n)) * 100).toFixed(0)}pp`,
 );
 console.log(
   `main effect of VOCABULARY (AH+SH) - (AL+SL) = ` +
-    `${((((M.AH.target + M.SH.target) / (M.AH.n + M.SH.n)) - ((M.AL.target + M.SL.target) / (M.AL.n + M.SL.n))) * 100).toFixed(0)}pp`,
+    `${(((M.AH.target + M.SH.target) / (M.AH.n + M.SH.n) - (M.AL.target + M.SL.target) / (M.AL.n + M.SL.n)) * 100).toFixed(0)}pp`,
 );
 console.log(
   `\n  A (lexical) predicts   AH high, SH high, AL low,  SL low\n` +
@@ -758,7 +844,9 @@ console.log(`${"cell".padEnd(26)}  target   other   silent`);
 for (const k of CELLS) {
   const s = M[k];
   const p = (x) => `${((x / s.n) * 100).toFixed(0)}%`.padStart(6);
-  console.log(`${CELL_LABEL[k].padEnd(26)}  ${p(s.target)}  ${p(s.other)}  ${p(s.silent)}`);
+  console.log(
+    `${CELL_LABEL[k].padEnd(26)}  ${p(s.target)}  ${p(s.other)}  ${p(s.silent)}`,
+  );
 }
 console.log(
   `\n  OTHER  = a competitor was selected and the target was not. The prompt routed somewhere;\n` +
@@ -769,8 +857,11 @@ console.log(
 );
 
 const misfires = {};
-for (const rr of results) for (const o of rr.othersFired) misfires[o] = (misfires[o] ?? 0) + 1;
-const top = Object.entries(misfires).sort((a, b) => b[1] - a[1]).slice(0, 12);
+for (const rr of results)
+  for (const o of rr.othersFired) misfires[o] = (misfires[o] ?? 0) + 1;
+const top = Object.entries(misfires)
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 12);
 if (top.length) {
   console.log(`\nWHICH competitors took the runs (all cells):`);
   for (const [s, n] of top) console.log(`  ${String(n).padStart(3)}  ${s}`);
@@ -787,12 +878,19 @@ for (const c of CASES)
       }).join(""),
   );
 
-if (erroredTotal > 0) console.log(`\n⚠ ${erroredTotal} run(s) ERRORED and are excluded — the rates above are over fewer trials than planned.`);
+if (erroredTotal > 0)
+  console.log(
+    `\n⚠ ${erroredTotal} run(s) ERRORED and are excluded — the rates above are over fewer trials than planned.`,
+  );
 
 mkdirSync(REPRO, { recursive: true });
 writeFileSync(
   join(REPRO, "2026-08-08-framing-vs-vocabulary.json"),
-  JSON.stringify({ trials: TRIALS, competitors: installed.length - 1, results }, null, 2),
+  JSON.stringify(
+    { trials: TRIALS, competitors: installed.length - 1, results },
+    null,
+    2,
+  ),
 );
 console.log(`\nper-run rows → repro/2026-08-08-framing-vs-vocabulary.json`);
 console.log(

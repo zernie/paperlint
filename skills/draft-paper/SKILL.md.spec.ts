@@ -8,8 +8,19 @@ import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({
   name: "draft-paper",
-  description: "Use when the numbers exist and it's time to WRITE the paper — \"draft the paper\", \"turn these findings into a submission\", \"write the abstract/intro/threats\". Gives the section skeleton of a measurement/benchmark paper plus what gets it accepted AND cited — precise claim-sizing (including an explicit \"what we do NOT claim\"), a construct-validity frame, an honest threats-to-validity section that turns limitations in your favor, and one memorable stat that travels. Encodes the two theses that carried real measurement papers (\"measuring the wrong number\", \"safety theater\"). NOT for grading finished prose (grade-paper-writing) or structural editing (tighten-paper) — this is the generative counterpart. Compose with build-benchmark (numbers), grade-paper-writing (prose QA), render-paper, verify-citations, then the review skills.",
-  tools: ["Read", "Write", "Edit", "Grep", "Glob", "Agent", "Skill", "Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*)", "Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)"],
+  description:
+    'Use when the numbers exist and it\'s time to WRITE the paper — "draft the paper", "turn these findings into a submission", "write the abstract/intro/threats". Gives the section skeleton of a measurement/benchmark paper plus what gets it accepted AND cited — precise claim-sizing (including an explicit "what we do NOT claim"), a construct-validity frame, an honest threats-to-validity section that turns limitations in your favor, and one memorable stat that travels. Encodes the two theses that carried real measurement papers ("measuring the wrong number", "safety theater"). NOT for grading finished prose (grade-paper-writing) or structural editing (tighten-paper) — this is the generative counterpart. Compose with build-benchmark (numbers), grade-paper-writing (prose QA), render-paper, verify-citations, then the review skills.',
+  tools: [
+    "Read",
+    "Write",
+    "Edit",
+    "Grep",
+    "Glob",
+    "Agent",
+    "Skill",
+    "Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*)",
+    "Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)",
+  ],
   body: `
 # draft-paper — prose that survives review and gets cited
 

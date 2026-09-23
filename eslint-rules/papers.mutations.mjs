@@ -51,7 +51,7 @@ const M = [
   ],
   [
     "declared === undefined/null read as absence",
-    "go back to `??` — an explicit `\"papers\": null` is read as «nothing was declared» and " +
+    'go back to `??` — an explicit `"papers": null` is read as «nothing was declared» and ' +
       "silently falls back to the default, i.e. a typed keystroke treated as an absence",
     "  const root = declared === undefined ? DEFAULT_PAPERS_ROOT : declared;",
     "  const root = declared ?? DEFAULT_PAPERS_ROOT;",
@@ -60,8 +60,8 @@ const M = [
     "type guard/empty string",
     "accept any string, including the empty one — every glob becomes `/*/paper.tex`, rooted at " +
       "the filesystem, matching nothing, silently",
-    "  if (typeof root !== \"string\" || root.length === 0)",
-    "  if (typeof root !== \"string\")",
+    '  if (typeof root !== "string" || root.length === 0)',
+    '  if (typeof root !== "string")',
   ],
   [
     "return shape/absolute path",
@@ -117,7 +117,8 @@ const runHarness = () => {
   if (base.failed) {
     console.log(
       "❌ THE HARNESS IS RED BEFORE ANY MUTATION — the battery cannot tell a killed mutation " +
-        "from that:\n" + base.out.slice(-1500),
+        "from that:\n" +
+        base.out.slice(-1500),
     );
     process.exit(1);
   }
@@ -138,7 +139,9 @@ for (const [label, what, from, to] of M) {
   writeFileSync(RULES, PRISTINE.replace(from, to));
   const on = readFileSync(RULES, "utf8");
   if (!on.includes(to) || on.includes(from)) {
-    console.log(`❌ ${label}: THE MUTATION DID NOT LAND (checked by re-reading the file)`);
+    console.log(
+      `❌ ${label}: THE MUTATION DID NOT LAND (checked by re-reading the file)`,
+    );
     bad++;
     writeFileSync(RULES, PRISTINE);
     continue;
@@ -160,19 +163,24 @@ for (const [label, what, from, to] of M) {
     // would come out EMPTY — "killed by something unknown", which is the half-answer this
     // battery forbids.
     (out.match(/((?:Error|ENOENT)[^\n]*)/) ?? [])[1] ??
-    (out.match(/([^\n]*(?:must|the wrong|drifted|was lost|did not fire)[^\n]*)/) ?? [])[1] ??
+    (out.match(
+      /([^\n]*(?:must|the wrong|drifted|was lost|did not fire)[^\n]*)/,
+    ) ?? [])[1] ??
     "";
   const where = (at ? `harness:${at} · ` : "") + msg;
   if (failed) {
     ok++;
     rows.push([label, what, where.trim().slice(0, 130)]);
   } else {
-    console.log(`🔴 ${label}: THE HARNESS IS GREEN UNDER THE MUTATION — a finding about the TEST, not a conclusion about the defence`);
+    console.log(
+      `🔴 ${label}: THE HARNESS IS GREEN UNDER THE MUTATION — a finding about the TEST, not a conclusion about the defence`,
+    );
     bad++;
   }
 }
 console.log("\n| property | mutation | what the harness died on |");
 console.log("|---|---|---|");
-for (const [a, b, c] of rows) console.log(`| \`${a}\` | ${b} | ${c.replace(/\|/g, "\\|")} |`);
+for (const [a, b, c] of rows)
+  console.log(`| \`${a}\` | ${b} | ${c.replace(/\|/g, "\\|")} |`);
 console.log(`\n${ok} mutation(s) killed, ${bad} problem(s)`);
 process.exit(bad ? 1 : 0);

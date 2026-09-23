@@ -26,7 +26,13 @@ process.exit(
         disables:
           "the declaration as the one source. The day the package moves its skills, a linker " +
           "that remembers `skills/` links nothing — and reports a clean run over zero skills",
-        edits: [[SRC, "  const skillsDir = join(pkgDir, declared);", '  const skillsDir = join(pkgDir, "skills");']],
+        edits: [
+          [
+            SRC,
+            "  const skillsDir = join(pkgDir, declared);",
+            '  const skillsDir = join(pkgDir, "skills");',
+          ],
+        ],
       },
       {
         name: "any directory counts as a skill",
@@ -38,7 +44,7 @@ process.exit(
         edits: [
           [
             SRC,
-            '    .filter((e) => e.isDirectory() && existsSync(join(skillsDir, e.name, "SKILL.md")))',
+            '    .filter(\n      (e) => e.isDirectory() && existsSync(join(skillsDir, e.name, "SKILL.md")),\n    )',
             "    .filter((e) => e.isDirectory())",
           ],
         ],
@@ -50,7 +56,13 @@ process.exit(
         disables:
           "portability of the checkout. An absolute link works on the machine that ran init and " +
           "dangles in every other clone, container and CI runner",
-        edits: [[SRC, '      symlinkSync(target, entry, "dir");', '      symlinkSync(resolve(physicalHome, target), entry, "dir");']],
+        edits: [
+          [
+            SRC,
+            '      symlinkSync(target, entry, "dir");',
+            '      symlinkSync(resolve(physicalHome, target), entry, "dir");',
+          ],
+        ],
       },
       {
         name: "an existing correct link is not recognised",
@@ -59,7 +71,13 @@ process.exit(
         disables:
           "idempotency. Every re-run of init would report its own links as someone else's " +
           "and tell the consumer to move them",
-        edits: [[SRC, "    if (realpathSync(entry) === want) return { status: \"present\" };", "    if (realpathSync(entry) === \"\") return { status: \"present\" };"]],
+        edits: [
+          [
+            SRC,
+            '    if (realpathSync(entry) === want) return { status: "present" };',
+            '    if (realpathSync(entry) === "") return { status: "present" };',
+          ],
+        ],
       },
       {
         name: "a foreign entry is replaced instead of reported",
@@ -69,8 +87,16 @@ process.exit(
           "the one promise that makes init safe to run on a real project: a consumer's own skill " +
           "of the same name, or a link they aimed elsewhere, is deleted without a word",
         edits: [
-          [SRC, "  symlinkSync,\n} from \"node:fs\";", "  symlinkSync,\n  rmSync,\n} from \"node:fs\";"],
-          [SRC, '    if (seen.status !== "missing" || !write)', '    if (seen.status === "present" || !write)'],
+          [
+            SRC,
+            '  symlinkSync,\n} from "node:fs";',
+            '  symlinkSync,\n  rmSync,\n} from "node:fs";',
+          ],
+          [
+            SRC,
+            '    if (seen.status !== "missing" || !write)',
+            '    if (seen.status === "present" || !write)',
+          ],
           [
             SRC,
             '      symlinkSync(target, entry, "dir");',
@@ -81,22 +107,38 @@ process.exit(
       {
         name: "the resolved store path is linked instead of the project's own spelling",
         harness: HARNESS,
-        expect: "under pnpm the link goes through node_modules/research-paper-pipeline",
+        expect:
+          "under pnpm the link goes through node_modules/research-paper-pipeline",
         disables:
           "the link surviving an upgrade under pnpm. The store directory carries the version in " +
           "its name; the next install removes it and every skill link dangles until init is re-run",
-        edits: [[SRC, "      if (realpathSync(candidate) === dir) return { dir, spelled: candidate };", "      if (realpathSync(candidate) === \"\") return { dir, spelled: candidate };"]],
+        edits: [
+          [
+            SRC,
+            "      if (realpathSync(candidate) === dir) return { dir, spelled: candidate };",
+            '      if (realpathSync(candidate) === "") return { dir, spelled: candidate };',
+          ],
+        ],
       },
       {
         name: "doctor's read-only call writes links",
         harness: HARNESS,
-        expect: "write:false reports every skill as missing and creates nothing",
+        expect:
+          "write:false reports every skill as missing and creates nothing",
         disables:
           "the difference between looking and changing. `rpp doctor` would quietly repair the " +
           "state it is supposed to report, so the report can never show the gap",
         edits: [
-          [SRC, '    if (seen.status !== "missing" || !write)', '    if (seen.status !== "missing")'],
-          [SRC, "  if (write && shipped.names.length > 0) {", "  if (shipped.names.length > 0) {"],
+          [
+            SRC,
+            '    if (seen.status !== "missing" || !write)',
+            '    if (seen.status !== "missing")',
+          ],
+          [
+            SRC,
+            "  if (write && shipped.names.length > 0) {",
+            "  if (shipped.names.length > 0) {",
+          ],
         ],
       },
     ],

@@ -56,7 +56,7 @@ $ claude plugin validate /tmp/m --strict; echo "RC=$?"
 ## The CLAIM 4–6 probes — where an installed package is, and how to find it
 
 These back [`../package-location.md`](../package-location.md). They measure the two hardcodes in
-`scripts/install-e2e.mjs` (`node_modules/<name>` and `node_modules/.bin/rpp`) against the
+`test/e2e/install.mjs` (`node_modules/<name>` and `node_modules/.bin/rpp`) against the
 resolution APIs Node actually offers, under npm, pnpm and Yarn Berry (PnP).
 
 Build the consumer trees once — it packs this repository and installs the SAME tarball twice:

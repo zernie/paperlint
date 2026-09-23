@@ -14,10 +14,12 @@
     "check:content-only": "node scripts/exclusive.mjs node scripts/rules-are-content-only.mjs",
     "check:readme": "node scripts/exclusive.mjs node scripts/readme-numbers.mjs",
     "test:sabotage": "node scripts/exclusive.mjs node scripts/run-mutations.mjs",
-    "test:install": "node scripts/exclusive.mjs node scripts/install-e2e.mjs",
-    "test:build": "node scripts/exclusive.mjs node scripts/build-e2e.mjs",
+    "test:install": "node scripts/exclusive.mjs node test/e2e/install.mjs",
+    "test:build": "node scripts/exclusive.mjs node test/e2e/build.mjs",
     "check:marketplace": "node scripts/exclusive.mjs node scripts/marketplace-shape.mjs",
-    "check": "node scripts/check.mjs"
+    "check": "node scripts/check.mjs",
+    "fmt": "prettier --write .",
+    "fmt:check": "prettier --check ."
   },
   "dependencies": {
     "@eslint/markdown": "^8.0.3",
@@ -26,11 +28,12 @@
     "eslint": "^10.9.1",
     "js-yaml": "^4.1.0",
     "markdown-it": "^14.3.0",
-    "vigiles": "^30.0.2"
+    "vigiles": "^31.0.0"
   },
   "devDependencies": {
     "@retorquere/bibtex-parser": "^10.0.1",
     "@types/node": "^26.6.1",
+    "prettier": "^3.8.1",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {

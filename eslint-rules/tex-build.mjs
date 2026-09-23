@@ -87,7 +87,8 @@ const FRONTMATTER_OVERRIDES = [
   },
   {
     re: /\\renewcommand\s*\*?\s*\{?\s*\\footnotetextcopyrightpermission/g,
-    removes: "the permission/copyright footnote block on page 1 (acmart.cls:2180)",
+    removes:
+      "the permission/copyright footnote block on page 1 (acmart.cls:2180)",
   },
   {
     re: /\\(?:this)?pagestyle\s*\{\s*(?:plain|empty)\s*\}/g,

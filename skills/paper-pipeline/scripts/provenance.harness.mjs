@@ -29,7 +29,13 @@
  */
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  rmSync,
+  realpathSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -44,11 +50,18 @@ const tmp = realpathSync(mkdtempSync(join(tmpdir(), "prov-harness-")));
 function kinds(dir) {
   let out;
   try {
-    out = execFileSync("node", [SCRIPT, dir], { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    out = execFileSync("node", [SCRIPT, dir], {
+      cwd: ROOT,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
   } catch (e) {
     out = (e.stdout || "") + (e.stderr || "");
   }
-  return { set: new Set([...out.matchAll(/^\s*\[([a-z-]+)\]/gm)].map((m) => m[1])), out };
+  return {
+    set: new Set([...out.matchAll(/^\s*\[([a-z-]+)\]/gm)].map((m) => m[1])),
+    out,
+  };
 }
 
 /**
@@ -56,14 +69,27 @@ function kinds(dir) {
  * The gate file must exist or `no-numbers-gate` fires on every fixture and drowns the signal — which
  * is itself a finding worth having, and is asserted on its own below.
  */
-function paper(name, { body, notes, gate = true, numbers, grandfathered, noPaper = false }) {
+function paper(
+  name,
+  { body, notes, gate = true, numbers, grandfathered, noPaper = false },
+) {
   const d = join(tmp, name);
   mkdirSync(join(d, "repro"), { recursive: true });
-  if (!noPaper) writeFileSync(join(d, "paper.md"), `## Abstract\n\n${body}\n\n## References\n\n[1] x.\n`);
+  if (!noPaper)
+    writeFileSync(
+      join(d, "paper.md"),
+      `## Abstract\n\n${body}\n\n## References\n\n[1] x.\n`,
+    );
   if (notes !== undefined) writeFileSync(join(d, "NOTES.md"), notes);
-  if (gate) writeFileSync(join(d, "repro", "paper_numbers.py"), "# the per-paper numbers gate\n");
-  if (numbers !== undefined) writeFileSync(join(d, "repro", "numbers.tsv"), numbers);
-  if (grandfathered !== undefined) writeFileSync(join(d, "repro", "numbers-grandfathered.txt"), grandfathered);
+  if (gate)
+    writeFileSync(
+      join(d, "repro", "paper_numbers.py"),
+      "# the per-paper numbers gate\n",
+    );
+  if (numbers !== undefined)
+    writeFileSync(join(d, "repro", "numbers.tsv"), numbers);
+  if (grandfathered !== undefined)
+    writeFileSync(join(d, "repro", "numbers-grandfathered.txt"), grandfathered);
   return d;
 }
 
@@ -85,28 +111,56 @@ const NOTES = [
     grandfathered: "# still raw\n42\n",
   });
   const { set, out } = kinds(d);
-  assert.ok(!set.has("no-numbers-gate"), "paper with gate got `no-numbers-gate`:\n" + out);
-  assert.ok(set.has("numbers-coverage"), "coverage measurement must always print:\n" + out);
-  assert.match(out, /2 quantities are sourced and guarded, 1 are still raw/,
-    "numbers in coverage measurement do not match — counted registry lines and ratchet lines:\n" + out);
-  assert.equal(set.size, 1, "after three checks moved, this input must give EXACTLY the coverage measurement:\n" + out);
+  assert.ok(
+    !set.has("no-numbers-gate"),
+    "paper with gate got `no-numbers-gate`:\n" + out,
+  );
+  assert.ok(
+    set.has("numbers-coverage"),
+    "coverage measurement must always print:\n" + out,
+  );
+  assert.match(
+    out,
+    /2 quantities are sourced and guarded, 1 are still raw/,
+    "numbers in coverage measurement do not match — counted registry lines and ratchet lines:\n" +
+      out,
+  );
+  assert.equal(
+    set.size,
+    1,
+    "after three checks moved, this input must give EXACTLY the coverage measurement:\n" +
+      out,
+  );
 }
 
 // ── 2. a paper with no numbers gate at all is told so ──────────────────────────────────
 // The coverage question, not a defect in the prose: without `repro/paper_numbers.py` every printed
 // figure is a hand-typed digit whose only link to its data file is somebody's memory.
 {
-  const d = paper("no-gate", { body: "Nothing bolded here.", notes: NOTES, gate: false });
+  const d = paper("no-gate", {
+    body: "Nothing bolded here.",
+    notes: NOTES,
+    gate: false,
+  });
   const { set, out } = kinds(d);
-  assert.ok(set.has("no-numbers-gate"), "a paper with no repro/paper_numbers.py was not told:\n" + out);
-  assert.ok(!set.has("numbers-coverage"), "no gate — nothing to cover, measurement must not print:\n" + out);
+  assert.ok(
+    set.has("no-numbers-gate"),
+    "a paper with no repro/paper_numbers.py was not told:\n" + out,
+  );
+  assert.ok(
+    !set.has("numbers-coverage"),
+    "no gate — nothing to cover, measurement must not print:\n" + out,
+  );
 }
 
 // ── 3. gate exists, no `numbers.tsv` registry — silence, not zero coverage ─────────────────
 // The distinction is semantic: «gate was copied but no quantity has been registered in it yet» is NOT the same
 // as «0 of 0 sourced», and printing the latter would mean reporting coverage that nobody measured.
 {
-  const d = paper("gate-no-registry", { body: "Nothing bolded here.", notes: NOTES });
+  const d = paper("gate-no-registry", {
+    body: "Nothing bolded here.",
+    notes: NOTES,
+  });
   const { set, out } = kinds(d);
   assert.equal(set.size, 0, "gate without registry must stay silent:\n" + out);
 }
@@ -116,32 +170,71 @@ const NOTES = [
 // But removing them means changing behaviour on papers that have no provenance file at all (most of them)
 // — and `no-numbers-gate` will start firing on each one.
 {
-  const d = paper("no-prov", { body: "Nothing bolded here.", notes: undefined, gate: false });
+  const d = paper("no-prov", {
+    body: "Nothing bolded here.",
+    notes: undefined,
+    gate: false,
+  });
   const { set, out } = kinds(d);
-  assert.equal(set.size, 0, "no provenance file at all — script must stay completely silent:\n" + out);
+  assert.equal(
+    set.size,
+    0,
+    "no provenance file at all — script must stay completely silent:\n" + out,
+  );
   // 🔴 Stay silent — yes, but NOT with the voice of success. Before 2026-08-26 both guards printed `clean`, and on
   // the real corpus that gave confident green on three papers out of four (all three in .tex).
-  assert.match(out, /SKIPPED/, "skip must name itself as skip, not as a clean run:\n" + out);
-  assert.doesNotMatch(out, /clean/, "skip must not print the word `clean`:\n" + out);
+  assert.match(
+    out,
+    /SKIPPED/,
+    "skip must name itself as skip, not as a clean run:\n" + out,
+  );
+  assert.doesNotMatch(
+    out,
+    /clean/,
+    "skip must not print the word `clean`:\n" + out,
+  );
 }
 {
-  const d = paper("no-paper", { body: "", notes: NOTES, gate: false, noPaper: true });
+  const d = paper("no-paper", {
+    body: "",
+    notes: NOTES,
+    gate: false,
+    noPaper: true,
+  });
   const { set, out } = kinds(d);
-  assert.equal(set.size, 0, "no paper.md/draft.md — script must stay completely silent:\n" + out);
+  assert.equal(
+    set.size,
+    0,
+    "no paper.md/draft.md — script must stay completely silent:\n" + out,
+  );
   assert.match(out, /SKIPPED/, "skip must name itself as skip:\n" + out);
-  assert.match(out, /\.tex/, "the reason must name WHAT exactly is not covered — otherwise the reader\n" +
-    "will think it is a breakage:\n" + out);
-  assert.doesNotMatch(out, /clean/, "skip must not print the word `clean`:\n" + out);
+  assert.match(
+    out,
+    /\.tex/,
+    "the reason must name WHAT exactly is not covered — otherwise the reader\n" +
+      "will think it is a breakage:\n" +
+      out,
+  );
+  assert.doesNotMatch(
+    out,
+    /clean/,
+    "skip must not print the word `clean`:\n" + out,
+  );
 }
 
 // ── 5. clean run SPEAKS that it is clean ──────────────────────────────────────────────────
 // Silence and success must not look the same — this is the same class as «0 checks» vs
 // «checks passed» in the PR interface.
 {
-  const d = paper("clean-voice", { body: "Nothing bolded here.", notes: NOTES });
+  const d = paper("clean-voice", {
+    body: "Nothing bolded here.",
+    notes: NOTES,
+  });
   const { out } = kinds(d);
   assert.match(out, /clean/, "clean run did not print a verdict:\n" + out);
 }
 
 rmSync(tmp, { recursive: true, force: true });
-console.log("✓ check-provenance: no-numbers-gate fires, coverage is measured, both guards are pinned, clean run speaks");
+console.log(
+  "✓ check-provenance: no-numbers-gate fires, coverage is measured, both guards are pinned, clean run speaks",
+);

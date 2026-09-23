@@ -38,26 +38,49 @@ const eslint = new ESLint({
 const on = async (code) =>
   (await eslint.lintText(code, { filePath: "probe.mjs" }))[0].messages;
 
-const HEAD = 'import { mkdtempSync, realpathSync } from "node:fs";\n' +
+const HEAD =
+  'import { mkdtempSync, realpathSync } from "node:fs";\n' +
   'import { tmpdir } from "node:os";\nimport { join } from "node:path";\n';
 
 const cases = [];
 
 // ── 1. FIRES: a root from `tmpdir()` with no resolve — exactly the shape from issue #9.
 {
-  const m = await on(`${HEAD}const TMP = mkdtempSync(join(tmpdir(), "probe-"));\n`);
-  assert.equal(m.length, 1, `one finding was expected, got ${m.length}: ${JSON.stringify(m)}`);
+  const m = await on(
+    `${HEAD}const TMP = mkdtempSync(join(tmpdir(), "probe-"));\n`,
+  );
+  assert.equal(
+    m.length,
+    1,
+    `one finding was expected, got ${m.length}: ${JSON.stringify(m)}`,
+  );
   assert.equal(m[0].ruleId, "local/temp-root-realpath");
-  assert.match(m[0].message, /realpathSync\(mkdtempSync/, "the message must carry the FIX, not just the diagnosis");
-  assert.match(m[0].message, /private\/var/, "and name the cause — why one directory gets two names");
-  cases.push("mkdtempSync(join(tmpdir(), …)) with no resolve → a finding, the fix is in the message");
+  assert.match(
+    m[0].message,
+    /realpathSync\(mkdtempSync/,
+    "the message must carry the FIX, not just the diagnosis",
+  );
+  assert.match(
+    m[0].message,
+    /private\/var/,
+    "and name the cause — why one directory gets two names",
+  );
+  cases.push(
+    "mkdtempSync(join(tmpdir(), …)) with no resolve → a finding, the fix is in the message",
+  );
 }
 
 // ── 2. STAYS SILENT on the fixed form. Without this half the rule is indistinguishable
 //      from one that screams at every `mkdtempSync`.
 {
-  const m = await on(`${HEAD}const TMP = realpathSync(mkdtempSync(join(tmpdir(), "probe-")));\n`);
-  assert.deepEqual(m, [], `the rule must stay silent on a resolved root, got: ${JSON.stringify(m)}`);
+  const m = await on(
+    `${HEAD}const TMP = realpathSync(mkdtempSync(join(tmpdir(), "probe-")));\n`,
+  );
+  assert.deepEqual(
+    m,
+    [],
+    `the rule must stay silent on a resolved root, got: ${JSON.stringify(m)}`,
+  );
   cases.push("realpathSync(mkdtempSync(join(tmpdir(), …))) → silence");
 }
 
@@ -71,8 +94,14 @@ const cases = [];
     `${HEAD}const TMP = realpathSync(mkdtempSync(join(tmpdir(), "probe-")));\n` +
       `const sub = mkdtempSync(join(TMP, "repo-"));\nvoid sub;\n`,
   );
-  assert.deepEqual(m, [], `a nested root inherits its spelling from the parent; got: ${JSON.stringify(m)}`);
-  cases.push("a nested mkdtempSync(join(TMP, …)) → silence (the parent is already resolved)");
+  assert.deepEqual(
+    m,
+    [],
+    `a nested root inherits its spelling from the parent; got: ${JSON.stringify(m)}`,
+  );
+  cases.push(
+    "a nested mkdtempSync(join(TMP, …)) → silence (the parent is already resolved)",
+  );
 }
 
 // ── 4. A COMMENT AND A STRING ARE NOT A CALL. This is exactly why the rule parses the AST: a
@@ -83,19 +112,38 @@ const cases = [];
     `${HEAD}// mkdtempSync(join(tmpdir(), "in-a-comment-"))\n` +
       `const doc = 'mkdtempSync(join(tmpdir(), "in-a-string-"))';\nvoid doc;\n`,
   );
-  assert.deepEqual(m, [], `text ABOUT a call is not a call; got: ${JSON.stringify(m)}`);
+  assert.deepEqual(
+    m,
+    [],
+    `text ABOUT a call is not a call; got: ${JSON.stringify(m)}`,
+  );
   cases.push("the same sequence in a comment and a string → silence");
 }
 
 // ── 5. `fs.mkdtempSync` / `os.tmpdir()` through a namespace — the same thing under a
 //      different spelling.
 {
-  const ns = 'import * as fs from "node:fs";\nimport * as os from "node:os";\nimport { join } from "node:path";\n';
-  const bad = await on(`${ns}const TMP = fs.mkdtempSync(join(os.tmpdir(), "probe-"));\n`);
-  assert.equal(bad.length, 1, `the namespaced spelling must be caught; got: ${JSON.stringify(bad)}`);
-  const good = await on(`${ns}const TMP = fs.realpathSync(fs.mkdtempSync(join(os.tmpdir(), "probe-")));\n`);
-  assert.deepEqual(good, [], `and it must be exempted too; got: ${JSON.stringify(good)}`);
-  cases.push("fs.mkdtempSync(join(os.tmpdir(), …)) is caught, fs.realpathSync(…) exempts it");
+  const ns =
+    'import * as fs from "node:fs";\nimport * as os from "node:os";\nimport { join } from "node:path";\n';
+  const bad = await on(
+    `${ns}const TMP = fs.mkdtempSync(join(os.tmpdir(), "probe-"));\n`,
+  );
+  assert.equal(
+    bad.length,
+    1,
+    `the namespaced spelling must be caught; got: ${JSON.stringify(bad)}`,
+  );
+  const good = await on(
+    `${ns}const TMP = fs.realpathSync(fs.mkdtempSync(join(os.tmpdir(), "probe-")));\n`,
+  );
+  assert.deepEqual(
+    good,
+    [],
+    `and it must be exempted too; got: ${JSON.stringify(good)}`,
+  );
+  cases.push(
+    "fs.mkdtempSync(join(os.tmpdir(), …)) is caught, fs.realpathSync(…) exempts it",
+  );
 }
 
 // ── 6. 🔴 THE CORPUS ITSELF IS CLEAN. The "silent" half on a made-up string says nothing
@@ -110,7 +158,11 @@ const cases = [];
       .filter((msg) => msg.ruleId === "local/temp-root-realpath")
       .map((msg) => `${r.filePath}:${msg.line}`),
   );
-  assert.deepEqual(hits, [], `the corpus must be clean of unresolved roots:\n${hits.join("\n")}`);
+  assert.deepEqual(
+    hits,
+    [],
+    `the corpus must be clean of unresolved roots:\n${hits.join("\n")}`,
+  );
   const linted = results.filter((r) => r.filePath.endsWith(".mjs")).length;
   assert.ok(
     linted > 50,

@@ -17,7 +17,12 @@ import { Linter } from "eslint";
 import markdown from "@eslint/markdown";
 import stages from "./paper-stages.mjs";
 
-const FIX = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "paper-stages");
+const FIX = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "fixtures",
+  "paper-stages",
+);
 const linter = new Linter();
 
 let n = 0;
@@ -38,29 +43,45 @@ const since = () => {
   return d;
 };
 
-assert.deepEqual(Object.keys(stages.rules).sort(), ["author-list", "source", "stages"], "rule set changed");
+assert.deepEqual(
+  Object.keys(stages.rules).sort(),
+  ["author-list", "source", "stages"],
+  "rule set changed",
+);
 
 /** Findings for one fixture paper, as plain message strings. */
 function lint(name) {
   const file = join(FIX, name, "PIPELINE-STATUS.md");
-  const msgs = linter.verify(readFileSync(file, "utf-8"), [{
-    // `files` is required here rather than cosmetic: without it flat config falls back to the
-    // JS extensions and every fixture comes back as "No matching configuration found" — a
-    // message that reads exactly like a clean run.
-    files: ["**/*.md"],
-    plugins: { markdown, paper: stages },
-    language: "markdown/gfm",
-    languageOptions: { frontmatter: "yaml" },
-    rules: { "paper/stages": "error" },
-  }], file);
-  assert.deepEqual(msgs.filter((m) => m.fatal), [], `${name}: the rule threw`);
+  const msgs = linter.verify(
+    readFileSync(file, "utf-8"),
+    [
+      {
+        // `files` is required here rather than cosmetic: without it flat config falls back to the
+        // JS extensions and every fixture comes back as "No matching configuration found" — a
+        // message that reads exactly like a clean run.
+        files: ["**/*.md"],
+        plugins: { markdown, paper: stages },
+        language: "markdown/gfm",
+        languageOptions: { frontmatter: "yaml" },
+        rules: { "paper/stages": "error" },
+      },
+    ],
+    file,
+  );
+  assert.deepEqual(
+    msgs.filter((m) => m.fatal),
+    [],
+    `${name}: the rule threw`,
+  );
   return msgs.map((m) => m.message);
 }
 
 // ── silent where it must be silent ──────────────────────────────────────────────────────
 check("declared and frozen correctly — silent", lint("ok").length === 0);
-check("nothing shipped, nothing declared — silent, a draft owes nothing",
-      lint("nothing").length === 0);
+check(
+  "nothing shipped, nothing declared — silent, a draft owes nothing",
+  lint("nothing").length === 0,
+);
 // A withdrawn version is a deliberate RECORD of a mistake; demanding a declaration for it
 // would turn that record into a finding.
 check("a STALE version needs no declaration", lint("stale").length === 0);
@@ -68,34 +89,47 @@ check("a STALE version needs no declaration", lint("stale").length === 0);
 // ── direction one: a claim owes its bytes ───────────────────────────────────────────────
 const wrong = lint("wrongsize");
 check("wrong byte count is reported", wrong.length === 1);
-check("and it names BOTH numbers, not just 'mismatch'",
-      /352357/.test(wrong[0]) && /100/.test(wrong[0]));
+check(
+  "and it names BOTH numbers, not just 'mismatch'",
+  /352357/.test(wrong[0]) && /100/.test(wrong[0]),
+);
 
 const missing = lint("nofile");
-check("a declared stage with no file on disk is reported",
-      missing.length === 1 && /not on disk/.test(missing[0]));
+check(
+  "a declared stage with no file on disk is reported",
+  missing.length === 1 && /not on disk/.test(missing[0]),
+);
 
 // ── direction two: bytes owe their declaration ──────────────────────────────────────────
 // 🔴 The live case this rule was written for: a camera-ready pdf sat frozen for 16 days while
 // the predecessor's pattern for that stage matched zero times anywhere in the file.
 const undeclared = lint("undeclared");
 check("a frozen version nobody declared is reported", undeclared.length === 1);
-check("and it names the file and the stage",
-      /2026-08-29-camera-ready\.pdf/.test(undeclared[0]) && /camera-ready/.test(undeclared[0]));
+check(
+  "and it names the file and the stage",
+  /2026-08-29-camera-ready\.pdf/.test(undeclared[0]) &&
+    /camera-ready/.test(undeclared[0]),
+);
 
 // 🔴 THE ESCAPE HATCH. Without this half the whole rule is switched off by deleting the
 // frontmatter — which is the cheapest edit in the file.
 const noheader = lint("noheader");
-check("deleting the frontmatter does NOT silence the rule when bytes exist",
-      noheader.length === 1 && /ran ahead of the declaration/.test(noheader[0]));
+check(
+  "deleting the frontmatter does NOT silence the rule when bytes exist",
+  noheader.length === 1 && /ran ahead of the declaration/.test(noheader[0]),
+);
 
 // ── a LIST, not a map: the same stage twice ─────────────────────────────────────────────
 // One paper in the source corpus was submitted to one venue, rejected, and resubmitted to
 // another. A map keyed by stage name holds one of those; the filenames already hold both.
-check("the same stage declared twice with different dates is accepted",
-      lint("twice").length === 0);
+check(
+  "the same stage declared twice with different dates is accepted",
+  lint("twice").length === 0,
+);
 
-console.log(`✓ ${String(since())} assertions passed — paper/stages, both directions`);
+console.log(
+  `✓ ${String(since())} assertions passed — paper/stages, both directions`,
+);
 
 // ── `paper/source`: the SOURCE is frozen on disk, and the bytes are compared ────────────
 // 🔴 This block replaced a git-based one on 2026-09-16, and the reason is a measurement, not
@@ -104,7 +138,8 @@ console.log(`✓ ${String(since())} assertions passed — paper/stages, both dir
 // commits, `gc` collected them — and three of the four declared stages in the live corpus had
 // lost their source entirely. A sha is a pointer to a pointer; the outer one evaporates.
 {
-  const { mkdtempSync, writeFileSync, mkdirSync, rmSync } = await import("node:fs");
+  const { mkdtempSync, writeFileSync, mkdirSync, rmSync } =
+    await import("node:fs");
   const root = mkdtempSync(join(FIX, "..", ".tmp-stages-src-"));
   // 🔴 try/finally, NOT cleanup at the end of the block. Observed 09-16: under every mutation
   // the assert throws — that is, precisely when the harness is doing its job — and cleanup on
@@ -113,55 +148,94 @@ console.log(`✓ ${String(since())} assertions passed — paper/stages, both dir
   // cosmetic: the mutation driver refuses to run on a dirty tree, so the harness would break
   // the next run.
   try {
-  const paper = join(root, "one");
-  mkdirSync(join(paper, "versions"), { recursive: true });
-  writeFileSync(join(paper, "versions", "2026-07-22-submitted.tex"), "x".repeat(120));
+    const paper = join(root, "one");
+    mkdirSync(join(paper, "versions"), { recursive: true });
+    writeFileSync(
+      join(paper, "versions", "2026-07-22-submitted.tex"),
+      "x".repeat(120),
+    );
 
-  const lintIn = (body) => {
-    const file = join(paper, "PIPELINE-STATUS.md");
-    writeFileSync(file, body);
-    const msgs = linter.verify(body, [{
-      files: ["**/*.md"],
-      plugins: { markdown, paper: stages },
-      language: "markdown/gfm",
-      languageOptions: { frontmatter: "yaml" },
-      rules: { "paper/source": "error" },
-    }], file);
-    assert.deepEqual(msgs.filter((m) => m.fatal), [], "the rule threw");
-    return msgs.map((m) => m.message);
-  };
-  const rec = (extra) =>
-    `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/x.pdf\n    bytes: 1\n${extra}---\n# S\n`;
+    const lintIn = (body) => {
+      const file = join(paper, "PIPELINE-STATUS.md");
+      writeFileSync(file, body);
+      const msgs = linter.verify(
+        body,
+        [
+          {
+            files: ["**/*.md"],
+            plugins: { markdown, paper: stages },
+            language: "markdown/gfm",
+            languageOptions: { frontmatter: "yaml" },
+            rules: { "paper/source": "error" },
+          },
+        ],
+        file,
+      );
+      assert.deepEqual(
+        msgs.filter((m) => m.fatal),
+        [],
+        "the rule threw",
+      );
+      return msgs.map((m) => m.message);
+    };
+    const rec = (extra) =>
+      `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/x.pdf\n    bytes: 1\n${extra}---\n# S\n`;
 
-  check("a frozen source with matching bytes is accepted",
-        lintIn(rec("    source: versions/2026-07-22-submitted.tex\n    sourceBytes: 120\n")).length === 0);
+    check(
+      "a frozen source with matching bytes is accepted",
+      lintIn(
+        rec(
+          "    source: versions/2026-07-22-submitted.tex\n    sourceBytes: 120\n",
+        ),
+      ).length === 0,
+    );
 
-  const wrong = lintIn(rec("    source: versions/2026-07-22-submitted.tex\n    sourceBytes: 999\n"));
-  check("a byte mismatch on the source is reported", wrong.length === 1);
-  check("and it names both numbers", /999/.test(wrong[0]) && /120/.test(wrong[0]));
+    const wrong = lintIn(
+      rec(
+        "    source: versions/2026-07-22-submitted.tex\n    sourceBytes: 999\n",
+      ),
+    );
+    check("a byte mismatch on the source is reported", wrong.length === 1);
+    check(
+      "and it names both numbers",
+      /999/.test(wrong[0]) && /120/.test(wrong[0]),
+    );
 
-  const gone = lintIn(rec("    source: versions/nope.tex\n    sourceBytes: 1\n"));
-  check("a declared source that is not on disk is reported",
-        gone.length === 1 && /not on disk/.test(gone[0]));
+    const gone = lintIn(
+      rec("    source: versions/nope.tex\n    sourceBytes: 1\n"),
+    );
+    check(
+      "a declared source that is not on disk is reported",
+      gone.length === 1 && /not on disk/.test(gone[0]),
+    );
 
-  const none = lintIn(rec(""));
-  check("a stage with no frozen source at all is reported", none.length === 1);
-  // 🔴 The message must say WHY a commit reference is not an acceptable substitute — otherwise
-  // the next author reaches for the thing that already failed here.
-  check("and it says a commit reference will not do", /squash and gc/.test(none[0]));
+    const none = lintIn(rec(""));
+    check(
+      "a stage with no frozen source at all is reported",
+      none.length === 1,
+    );
+    // 🔴 The message must say WHY a commit reference is not an acceptable substitute — otherwise
+    // the next author reaches for the thing that already failed here.
+    check(
+      "and it says a commit reference will not do",
+      /squash and gc/.test(none[0]),
+    );
 
-  // Acknowledging the loss is a RECORD, not an exemption: the rule keeps speaking, because the
-  // state is still defective — merely unfixable today.
-  const lost = lintIn(rec("    sourceLost: true\n"));
-  check("an acknowledged loss is still reported, not silenced",
-        lost.length === 1 && /declared LOST/.test(lost[0]));
-
+    // Acknowledging the loss is a RECORD, not an exemption: the rule keeps speaking, because the
+    // state is still defective — merely unfixable today.
+    const lost = lintIn(rec("    sourceLost: true\n"));
+    check(
+      "an acknowledged loss is still reported, not silenced",
+      lost.length === 1 && /declared LOST/.test(lost[0]),
+    );
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
 }
 
-console.log(`✓ ${String(since())} assertions passed — paper/source, frozen bytes instead of a sha`);
+console.log(
+  `✓ ${String(since())} assertions passed — paper/source, frozen bytes instead of a sha`,
+);
 
 // ── `paper/author-list`: a shipped paper owes itself a run of the author-list cross-check ────
 //
@@ -171,32 +245,56 @@ console.log(`✓ ${String(since())} assertions passed — paper/source, frozen b
 {
   const lintAuthors = (name, opts = {}) => {
     const file = join(FIX, name, "PIPELINE-STATUS.md");
-    const msgs = linter.verify(readFileSync(file, "utf-8"), [{
-      files: ["**/*.md"],
-      plugins: { markdown, paper: stages },
-      language: "markdown/gfm",
-      languageOptions: { frontmatter: "yaml" },
-      rules: { "paper/author-list": ["error", opts] },
-    }], file);
-    assert.deepEqual(msgs.filter((m) => m.fatal), [], `${name}: the rule threw`);
+    const msgs = linter.verify(
+      readFileSync(file, "utf-8"),
+      [
+        {
+          files: ["**/*.md"],
+          plugins: { markdown, paper: stages },
+          language: "markdown/gfm",
+          languageOptions: { frontmatter: "yaml" },
+          rules: { "paper/author-list": ["error", opts] },
+        },
+      ],
+      file,
+    );
+    assert.deepEqual(
+      msgs.filter((m) => m.fatal),
+      [],
+      `${name}: the rule threw`,
+    );
     return msgs.map((m) => m.message);
   };
 
   // ── stays silent where it must ──
-  check("a run is recorded in the scorecard — silent",
-        lintAuthors("authors-ran").length === 0);
+  check(
+    "a run is recorded in the scorecard — silent",
+    lintAuthors("authors-ran").length === 0,
+  );
   // A draft never asked anyone to read it, so it owes nothing. This is not a carve-out: the
   // rule's subject is the DEBT of a shipped paper, and an unshipped one has no debt.
-  check("no stage declared at all — silent, a draft owes nothing",
-        lintAuthors("nothing").length === 0);
+  check(
+    "no stage declared at all — silent, a draft owes nothing",
+    lintAuthors("nothing").length === 0,
+  );
   // An empty list is not "a stage exists": the record `stages: []` shows up on a paper that was
   // set up but never submitted anywhere.
-  check("an empty stage list — silent",
-        linter.verify("---\nstages: []\n---\n# S\n", [{
-          files: ["**/*.md"], plugins: { markdown, paper: stages },
-          language: "markdown/gfm", languageOptions: { frontmatter: "yaml" },
+  check(
+    "an empty stage list — silent",
+    linter.verify(
+      "---\nstages: []\n---\n# S\n",
+      [
+        {
+          files: ["**/*.md"],
+          plugins: { markdown, paper: stages },
+          language: "markdown/gfm",
+          languageOptions: { frontmatter: "yaml" },
           rules: { "paper/author-list": "error" },
-        }], join(FIX, "x", "PIPELINE-STATUS.md")).length === 0);
+        },
+      ],
+      join(FIX, "x", "PIPELINE-STATUS.md"),
+    ).length === 0,
+  );
 
   // ── fires on a planted defect ──
   const owed = lintAuthors("ok");
@@ -205,8 +303,10 @@ console.log(`✓ ${String(since())} assertions passed — paper/source, frozen b
   // it for a duplicate of the citation-existence check and closes it as noise. The class is
   // preprint authors under a declared conference, and it is invisible to a check that a
   // citation merely resolves.
-  check("and it names the class the cross-check catches, not just the miss",
-        /PREPRINT/.test(owed[0]));
+  check(
+    "and it names the class the cross-check catches, not just the miss",
+    /PREPRINT/.test(owed[0]),
+  );
 
   // ── the whole reason the move was made ──
   // The predecessor derived the stage with a REGEX OVER THE SCORECARD'S PROSE. Remeasured
@@ -214,29 +314,43 @@ console.log(`✓ ${String(since())} assertions passed — paper/source, frozen b
   // `submitted, camera-ready`. Here the list comes from the field, so both stages land in the
   // finding's text.
   const two = lintAuthors("twice");
-  check("the stage list in the message comes from the FIELD and carries all of them",
-        two.length === 1 && /submitted\/submitted/.test(two[0]));
+  check(
+    "the stage list in the message comes from the FIELD and carries all of them",
+    two.length === 1 && /submitted\/submitted/.test(two[0]),
+  );
 
   // ── consumer data stays with the consumer ──
   // The predecessor hardcoded the path `.claude/skills/verify-citations/...` into the message
   // text — the address of ONE repository inside a public package.
-  const withCmd = lintAuthors("ok", { command: "node scripts/bib-authors.mjs <paper>" });
-  check("the run command comes in as an option and lands in the message",
-        /scripts\/bib-authors\.mjs/.test(withCmd[0]));
-  check("and without the option the message does not invent a path",
-        !/bib-authors\.mjs/.test(owed[0]));
+  const withCmd = lintAuthors("ok", {
+    command: "node scripts/bib-authors.mjs <paper>",
+  });
+  check(
+    "the run command comes in as an option and lands in the message",
+    /scripts\/bib-authors\.mjs/.test(withCmd[0]),
+  );
+  check(
+    "and without the option the message does not invent a path",
+    !/bib-authors\.mjs/.test(owed[0]),
+  );
   // The marker is also data: the package cannot know EXACTLY how a given consumer records a run.
-  check("the marker is configurable — with a different marker the same paper becomes a debtor",
-        lintAuthors("authors-ran", { marker: "no-such-marker" }).length === 1);
+  check(
+    "the marker is configurable — with a different marker the same paper becomes a debtor",
+    lintAuthors("authors-ran", { marker: "no-such-marker" }).length === 1,
+  );
 
   // ── parsing versus grep: the one case where they diverge ──
   // 🔴 This assert is the proof of the move to a parser. All the fixtures above pass IDENTICALLY
   // either way, because their marker sits in a cell. Here it sits in PROSE — "still need to run
   // bib-authors", an intention, not a record — and grep would read it as evidence of a run. The
   // evidence must sit in the scorecard.
-  check("a marker in prose OUTSIDE the table is not a record of a run",
-        lintAuthors("marker-in-prose").length === 1);
+  check(
+    "a marker in prose OUTSIDE the table is not a record of a run",
+    lintAuthors("marker-in-prose").length === 1,
+  );
 }
-console.log(`✓ ${String(since())} assertions passed — paper/author-list, the debt of a shipped paper`);
+console.log(
+  `✓ ${String(since())} assertions passed — paper/author-list, the debt of a shipped paper`,
+);
 
 console.log(`✓ ${String(n)} assertions passed in total`);

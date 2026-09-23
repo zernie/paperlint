@@ -28,10 +28,24 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const { run, parseArgs, buildConfig, nextSteps, findConfig, findDeclaration, toPaths, runHook } =
-  await import(join(HERE, "cli.ts"));
-const { init, choosePapers, offerWorkflow, syncRppJson, missingPrograms, WORKFLOW_PATH } =
-  await import(join(HERE, "init.ts"));
+const {
+  run,
+  parseArgs,
+  buildConfig,
+  nextSteps,
+  findConfig,
+  findDeclaration,
+  toPaths,
+  runHook,
+} = await import(join(HERE, "cli.ts"));
+const {
+  init,
+  choosePapers,
+  offerWorkflow,
+  syncRppJson,
+  missingPrograms,
+  WORKFLOW_PATH,
+} = await import(join(HERE, "init.ts"));
 const { PROGRAMS } = await import(join(HERE, "doctor.ts"));
 
 let n = 0;
@@ -85,7 +99,10 @@ check(
   "`--help` as the first argument — is a FLAG, not a command",
   parseArgs(["--help"]).help === true,
 );
-check("and a command is not invented in the process", parseArgs(["--help"]).cmd === null);
+check(
+  "and a command is not invented in the process",
+  parseArgs(["--help"]).cmd === null,
+);
 check(
   "the path and config are parsed",
   (() => {
@@ -163,7 +180,10 @@ check(
     const paper = join(root, "papers", "p1");
     mkdirSync(join(paper, "versions"), { recursive: true });
     writeFileSync(join(paper, "versions", "s.tex"), "abcd");
-    writeFileSync(join(paper, "versions", "2026-07-22-submitted.pdf"), "x".repeat(100));
+    writeFileSync(
+      join(paper, "versions", "2026-07-22-submitted.pdf"),
+      "x".repeat(100),
+    );
     writeFileSync(join(paper, "paper.md"), "# Intro\n\nRQ1: does it hold?\n");
     writeFileSync(
       join(paper, "PIPELINE-STATUS.md"),
@@ -172,7 +192,11 @@ check(
     writeFileSync(
       join(root, "package.json"),
       JSON.stringify(
-        { name: "c", version: "1.0.0", "research-paper-pipeline": { papers: "papers" } },
+        {
+          name: "c",
+          version: "1.0.0",
+          "research-paper-pipeline": { papers: "papers" },
+        },
         null,
         2,
       ),
@@ -196,20 +220,29 @@ check(
     // unfinished one, and the failure must name the EXACT shape that needs adding.
     writeFileSync(
       join(root, "package.json"),
-      JSON.stringify({ name: "c", version: "1.0.0", "research-paper-pipeline": {} }, null, 2),
+      JSON.stringify(
+        { name: "c", version: "1.0.0", "research-paper-pipeline": {} },
+        null,
+        2,
+      ),
     );
     const noPapers = await cli(["lint"], root);
     check(
       "a key with no `papers` — a failure, and the shape is shown INSIDE package.json",
       noPapers.code === 2 &&
         /must declare `papers`/.test(noPapers.out) &&
-        /"research-paper-pipeline": \{ "papers": "papers" \}/.test(noPapers.out),
+        /"research-paper-pipeline": \{ "papers": "papers" \}/.test(
+          noPapers.out,
+        ),
     );
 
     // 🔴 A package.json WITHOUT the key does not stop the walk upward. Otherwise the search
     // would end at the first project going up the tree — and every project has a package.json —
     // and would never find anything, ever.
-    writeFileSync(join(root, "package.json"), JSON.stringify({ name: "c", version: "1.0.0" }));
+    writeFileSync(
+      join(root, "package.json"),
+      JSON.stringify({ name: "c", version: "1.0.0" }),
+    );
     writeFileSync(join(root, "rpp.json"), JSON.stringify({ papers: "papers" }));
     const viaRpp = await cli(["lint"], root);
     check(
@@ -232,12 +265,12 @@ check(
       }),
     );
     check(
-      "with both carriers present package.json is chosen — that is what \"one declaration\" means",
+      'with both carriers present package.json is chosen — that is what "one declaration" means',
       findDeclaration(root)?.kind === "package.json" &&
         findDeclaration(root)?.path === join(root, "package.json"),
     );
     check(
-      "and findConfig still answers the question \"which file holds the settings\"",
+      'and findConfig still answers the question "which file holds the settings"',
       findConfig(root) === join(root, "package.json"),
     );
   } finally {
@@ -258,22 +291,38 @@ check(
 // at all.
 {
   const workRoot = realpathSync(mkdtempSync(join(tmpdir(), "rpp-init-")));
-  const project = (name, { pkg = { name: "consumer", version: "1.0.0" }, papers = [] } = {}) => {
+  const project = (
+    name,
+    { pkg = { name: "consumer", version: "1.0.0" }, papers = [] } = {},
+  ) => {
     const dir = join(workRoot, name);
     mkdirSync(dir, { recursive: true });
     for (const rel of papers) {
       mkdirSync(join(dir, rel, "p1"), { recursive: true });
-      writeFileSync(join(dir, rel, "p1", "paper.tex"), "\\documentclass{article}\n");
+      writeFileSync(
+        join(dir, rel, "p1", "paper.tex"),
+        "\\documentclass{article}\n",
+      );
     }
-    if (pkg) writeFileSync(join(dir, "package.json"), JSON.stringify(pkg, null, 2) + "\n");
+    if (pkg)
+      writeFileSync(
+        join(dir, "package.json"),
+        JSON.stringify(pkg, null, 2) + "\n",
+      );
     return dir;
   };
   const say = () => {
     const lines = [];
-    return { lines, log: (...a) => lines.push(a.join(" ")), text: () => lines.join("\n") };
+    return {
+      lines,
+      log: (...a) => lines.push(a.join(" ")),
+      text: () => lines.join("\n"),
+    };
   };
   const declared = (dir) =>
-    JSON.parse(readFileSync(join(dir, "package.json"), "utf8"))["research-paper-pipeline"];
+    JSON.parse(readFileSync(join(dir, "package.json"), "utf8"))[
+      "research-paper-pipeline"
+    ];
   // No check should depend on what is installed ON THIS MACHINE: `command -v` is faked,
   // otherwise "no external programs" would read as a finding about init.
   const haveAll = () => ({ status: 0 });
@@ -284,7 +333,12 @@ check(
     {
       const dir = project("detect", { papers: ["writing/drafts"] });
       const out = say();
-      const code = await init(dir, { log: out.log, err: out.log, interactive: false, run: haveAll });
+      const code = await init(dir, {
+        log: out.log,
+        err: out.log,
+        interactive: false,
+        run: haveAll,
+      });
       check(
         "🔴 THE DECLARATION SHOWS UP IN package.json — the file the hooks read",
         declared(dir) !== undefined && typeof declared(dir).papers === "string",
@@ -315,14 +369,20 @@ check(
     {
       const dir = project("empty");
       const out = say();
-      const code = await init(dir, { log: out.log, err: out.log, interactive: false, run: haveAll });
+      const code = await init(dir, {
+        log: out.log,
+        err: out.log,
+        interactive: false,
+        run: haveAll,
+      });
       check(
         "nothing to measure — the documented default is taken",
         declared(dir).papers === "papers",
       );
       check(
         "🔴 and it is MARKED as a guess, not presented as a measurement",
-        /A GUESS/.test(out.text()) && /Nothing here looks like a papers directory/.test(out.text()),
+        /A GUESS/.test(out.text()) &&
+          /Nothing here looks like a papers directory/.test(out.text()),
       );
       check(
         "🔴 no directory ⇒ doctor goes red, and init returns ITS verdict, not its own success",
@@ -333,19 +393,30 @@ check(
     // ── 3. SOMEONE ELSE'S VALUE DOES NOT GET OVERWRITTEN ─────────────────────────────
     {
       const dir = project("mine", {
-        pkg: { name: "c", version: "1.0.0", "research-paper-pipeline": { papers: "mine" } },
+        pkg: {
+          name: "c",
+          version: "1.0.0",
+          "research-paper-pipeline": { papers: "mine" },
+        },
         papers: ["writing"],
       });
       const before = readFileSync(join(dir, "package.json"), "utf8");
       const out = say();
-      await init(dir, { log: out.log, err: out.log, interactive: false, run: haveAll });
+      await init(dir, {
+        log: out.log,
+        err: out.log,
+        interactive: false,
+        run: haveAll,
+      });
       check(
         "🔴 an already-declared value stays intact byte for byte — silently replacing a setting is worse than doing nothing",
         readFileSync(join(dir, "package.json"), "utf8") === before,
       );
       check(
         "and it says so out loud, rather than skipping it",
-        /already declares papers = "mine" — kept, nothing overwritten/.test(out.text()),
+        /already declares papers = "mine" — kept, nothing overwritten/.test(
+          out.text(),
+        ),
       );
     }
 
@@ -353,21 +424,34 @@ check(
     {
       const dir = project("nopkg", { pkg: null, papers: ["writing"] });
       const out = say();
-      const code = await init(dir, { log: out.log, err: out.log, interactive: false, run: haveAll });
+      const code = await init(dir, {
+        log: out.log,
+        err: out.log,
+        interactive: false,
+        run: haveAll,
+      });
       check(
         "without package.json init FAILS and carries a remedy, not just a diagnosis",
         code === 2 &&
           /npm init -y/.test(out.text()) &&
           /nowhere to put the declaration/.test(out.text()),
       );
-      check("and creates nothing in its place", !existsSync(join(dir, "package.json")));
+      check(
+        "and creates nothing in its place",
+        !existsSync(join(dir, "package.json")),
+      );
     }
 
     // ── 5. ONLY WHAT CANNOT BE GUESSED IS ASKED, AND ONLY OF A HUMAN ─────────────────
     {
       const dir = project("ci", { papers: ["writing"] });
       const out = say();
-      await init(dir, { log: out.log, err: out.log, interactive: false, run: haveAll });
+      await init(dir, {
+        log: out.log,
+        err: out.log,
+        interactive: false,
+        run: haveAll,
+      });
       check(
         "🔴 not a terminal — the question is NOT asked, and the default taken is NAMED",
         /stdin is not a terminal, so nothing was asked. Default taken: NO file written/.test(
@@ -394,7 +478,10 @@ check(
           return "y";
         },
       });
-      check("saying yes WRITES the workflow", wf === "written" && existsSync(join(dir, WORKFLOW_PATH)));
+      check(
+        "saying yes WRITES the workflow",
+        wf === "written" && existsSync(join(dir, WORKFLOW_PATH)),
+      );
       check(
         "and the workflow carries THE directory that was actually discussed",
         /paths: writing/.test(readFileSync(join(dir, WORKFLOW_PATH), "utf8")),
@@ -404,11 +491,17 @@ check(
         interactive: true,
         ask: async () => "y",
       });
-      check("an existing workflow is neither overwritten nor asked about again", again === "kept");
+      check(
+        "an existing workflow is neither overwritten nor asked about again",
+        again === "kept",
+      );
     }
     {
       const dir = project("ci-no", { papers: ["writing"] });
-      const no = await offerWorkflow(dir, "writing", { interactive: true, ask: async () => "" });
+      const no = await offerWorkflow(dir, "writing", {
+        interactive: true,
+        ask: async () => "",
+      });
       check(
         "an empty answer is a NO, and no file appears",
         no === "declined" && !existsSync(join(dir, WORKFLOW_PATH)),
@@ -426,13 +519,19 @@ check(
           throw new Error("Aborted with Ctrl+D");
         },
       }).catch((e) => `THREW: ${e?.message ?? e}`);
-      check("🔴 an interrupted question does NOT crash the command — it means the default", aborted === "declined");
+      check(
+        "🔴 an interrupted question does NOT crash the command — it means the default",
+        aborted === "declined",
+      );
     }
 
     // ── 6. SEVERAL CANDIDATES — THE ONLY CASE WHERE A QUESTION IS ASKED ───────────────
     {
       const dir = project("many", { papers: ["alpha", "beta"] });
-      const picked = await choosePapers(dir, { interactive: true, ask: async () => "2" });
+      const picked = await choosePapers(dir, {
+        interactive: true,
+        ask: async () => "2",
+      });
       check(
         "🔴 the human's answer DECIDES, it does not just decorate the output",
         picked.how === "chosen" && picked.papers === picked.candidates[1],
@@ -447,7 +546,11 @@ check(
         ask: async () => {
           throw new Error("Aborted with Ctrl+D");
         },
-      }).catch((e) => ({ how: `THREW: ${e?.message ?? e}`, papers: null, candidates: [] }));
+      }).catch((e) => ({
+        how: `THREW: ${e?.message ?? e}`,
+        papers: null,
+        candidates: [],
+      }));
       check(
         "an interrupted choice is also a default, not a crash",
         aborted.how === "no-answer" && aborted.papers === aborted.candidates[0],
@@ -462,7 +565,12 @@ check(
     {
       const dir = project("tools", { papers: ["writing"] });
       const out = say();
-      await init(dir, { log: out.log, err: out.log, interactive: false, run: haveNone });
+      await init(dir, {
+        log: out.log,
+        err: out.log,
+        interactive: false,
+        run: haveNone,
+      });
       // 🔴 JUDGE ONLY init's OWN REPORT, BEFORE doctor's banner. The first version of these
       // three assertions looked at the WHOLE output — and doctor also prints `✗ pdflatex` and
       // the same install command. The mutation that stripped the remedy OUT of init stayed
@@ -529,7 +637,8 @@ check(
       );
       check(
         "🔴 a skipped skill is NAMED with what occupies it — not folded into a count",
-        /gamma — a directory/.test(own) && /NOT available in Claude Code/.test(own),
+        /gamma — a directory/.test(own) &&
+          /NOT available in Claude Code/.test(own),
       );
       check(
         "and a name init refused to take does not fail the install",
@@ -540,18 +649,33 @@ check(
     // ── 8. `rpp.json` FOR THOSE WHO ALREADY HAVE ONE ──────────────────────────────────
     {
       const dir = project("legacy", { papers: ["writing"] });
-      writeFileSync(join(dir, "rpp.json"), JSON.stringify({ minFindings: 5 }, null, 2) + "\n");
+      writeFileSync(
+        join(dir, "rpp.json"),
+        JSON.stringify({ minFindings: 5 }, null, 2) + "\n",
+      );
       const out = say();
-      await init(dir, { log: out.log, err: out.log, interactive: false, run: haveAll });
+      await init(dir, {
+        log: out.log,
+        err: out.log,
+        interactive: false,
+        run: haveAll,
+      });
       check(
         "an existing rpp.json gets the SAME value, rather than drifting silently",
-        JSON.parse(readFileSync(join(dir, "rpp.json"), "utf8")).papers === "writing",
+        JSON.parse(readFileSync(join(dir, "rpp.json"), "utf8")).papers ===
+          "writing",
       );
-      check("and is named deprecated", /rpp\.json was already here/.test(out.text()));
+      check(
+        "and is named deprecated",
+        /rpp\.json was already here/.test(out.text()),
+      );
 
       const own = join(workRoot, "legacy-own");
       mkdirSync(own, { recursive: true });
-      writeFileSync(join(own, "package.json"), '{"name":"c","version":"1.0.0"}');
+      writeFileSync(
+        join(own, "package.json"),
+        '{"name":"c","version":"1.0.0"}',
+      );
       writeFileSync(join(own, "rpp.json"), '{"papers":"mine"}');
       check(
         "and the `papers` value it already declares stays byte for byte — this too is someone else's value",
@@ -566,7 +690,8 @@ check(
       const r = await cli(["init", dir]);
       check(
         "`rpp init` reaches the implementation and declares the measured directory",
-        declared(dir).papers === "writing" && /rpp init — each decision/.test(r.out),
+        declared(dir).papers === "writing" &&
+          /rpp init — each decision/.test(r.out),
       );
     }
   } finally {
@@ -828,7 +953,7 @@ check(
       strict.code === 1,
     );
     check(
-      "and the failure names the NUMBER and the THRESHOLD, not just \"too many\"",
+      'and the failure names the NUMBER and the THRESHOLD, not just "too many"',
       /1 warning\(s\) exceed the --max-warnings limit of 0/.test(strict.out),
     );
     const generous = await cli(["lint", "--max-warnings", "5"], root);
@@ -865,7 +990,7 @@ check(
       /missing `PIPELINE-STATUS\.md`/.test(r.out) && /is checked/.test(r.out),
     );
     check(
-      "and it does NOT print \"no findings\" over something that was found",
+      'and it does NOT print "no findings" over something that was found',
       !/no findings/.test(r.out),
     );
 
@@ -946,10 +1071,14 @@ check(
     writeFileSync(join(paper, "paper.md"), "# T\n\nSee § 3 and §4.\n");
 
     const inside = await cli(["lint", "--json", "papers"], tree);
-    const outside = await cli(["lint", "--json", join(tree, "papers")], elsewhere);
+    const outside = await cli(
+      ["lint", "--json", join(tree, "papers")],
+      elsewhere,
+    );
     check(
       "linting a tree OUTSIDE the current directory does not throw",
-      outside.code !== 99 && !/all-matched-files-ignored|THREW/.test(outside.out),
+      outside.code !== 99 &&
+        !/all-matched-files-ignored|THREW/.test(outside.out),
     );
     check(
       "the inside run is the reference: it has both a structure and a rule finding",
@@ -974,7 +1103,8 @@ check(
       }),
     );
     const debtHonoured = (r) =>
-      r.code !== 99 && !findings(r).some((f) => f.startsWith("paper/typography"));
+      r.code !== 99 &&
+      !findings(r).some((f) => f.startsWith("paper/typography"));
     check(
       "from the config's own directory the declared debt silences the `§` finding",
       debtHonoured(await cli(["lint", "--json"], tree)),
@@ -986,7 +1116,10 @@ check(
     check(
       "and with `--config` from an unrelated directory it applies too",
       debtHonoured(
-        await cli(["lint", "--json", "--config", join(tree, "package.json")], elsewhere),
+        await cli(
+          ["lint", "--json", "--config", join(tree, "package.json")],
+          elsewhere,
+        ),
       ),
     );
     // A RELATIVE `--config` stays relative in `configPath`, while every paper path is absolute:
@@ -994,7 +1127,9 @@ check(
     // no longer match, and the declared debt comes back as new warnings (Codex on #45).
     check(
       "and with a RELATIVE `--config package.json` it applies too",
-      debtHonoured(await cli(["lint", "--json", "--config", "package.json"], tree)),
+      debtHonoured(
+        await cli(["lint", "--json", "--config", "package.json"], tree),
+      ),
     );
   } finally {
     rmSync(tree, { recursive: true, force: true });
@@ -1009,7 +1144,7 @@ check(
 //     pnpm: node_modules/vigiles/dist/cli.js  DOES NOT
 // The old wiring addressed the runtime from the project root and did not resolve under pnpm,
 // and `|| exit 2` on PreToolUse(Bash) turned that into a block on ANY command. The end-to-end
-// half (both installs, real processes) lives in `scripts/install-e2e.mjs`; here — the verdicts.
+// half (both installs, real processes) lives in `test/e2e/install.mjs`; here — the verdicts.
 {
   const calls = [];
   const fake = (code) => (bin, args, opts) => {

@@ -1,10 +1,10 @@
 ---
 name: research-ideate
-description: "Go / no-go on the research idea — BEFORE investing in it. Use when the idea is already on the table and the question is whether to pursue it or not: will it yield a peer-reviewed paper or is it at best a blog post, is there a cheap version of the finding that doesn't require a dramatic result, are we scattering from our coherent line. Gives a verdict plus the sharpest framing, minimal finding and venue types. Evaluates the idea by what actually counts in the work corpus: peer-reviewed indexed publication (authorship), reusable method or benchmark instead of a one-off \"tool X is bad\" (original contribution), citations onward, not GitHub stars, and one connected line instead of scattered topics. Stage — conception, before find-venue and before any draft. Compose with find-venue (downstream), build-benchmark, draft-paper."
+description: "Decide whether a research idea is worth doing at all — before any work goes into it. Use when someone has an idea and asks: is this worth pursuing, should we take it on, is it a paper or just a blog post, is there a quick minimal result that doesn't need a dramatic finding, will it pull us away from our main line of work. Returns a go / no-go verdict with the sharpest framing, the minimal finding and the kinds of venue that would take it. Judges the idea by what counts in a body of work: a peer-reviewed indexed publication, a reusable method or benchmark rather than a one-off \"tool X is bad\", onward citations rather than GitHub stars, and one connected line rather than scattered topics. Stage: conception, before find-venue and before any draft; hands off to find-venue, build-benchmark, draft-paper."
 allowed-tools: [Read, Write, Grep, Glob, Agent, Skill, Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*), Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)]
 ---
 
-<!-- vigiles:sha256:2a5e302cfb0117fe compiled from skills/research-ideate/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:f0ccfb74162bca40 compiled from skills/research-ideate/SKILL.md.spec.ts -->
 
 # research-ideate — is this idea worth a paper, and does the paper earn authorship credit?
 

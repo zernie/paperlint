@@ -88,7 +88,7 @@ process.exit(
         expect: "it is the ROOT, not the paper itself",
         disables:
           "the distinction between a papers directory and a paper. The root stays in the list, " +
-          "so the neighboring \"found by marker\" check notices nothing — while a config built " +
+          'so the neighboring "found by marker" check notices nothing — while a config built ' +
           "from such a hint points at one document and lints one paper out of ten, reporting clean",
         edits: [
           [
@@ -126,7 +126,7 @@ process.exit(
           [
             SRC,
             '        ? `  ⚠ package.json has no "${CONFIG_KEY}": { "papers": … } — the hooks fall back to "${DEFAULT_PAPERS_ROOT}"`',
-            '        ? `  ✓ package.json`',
+            "        ? `  ✓ package.json`",
           ],
         ],
       },
@@ -155,8 +155,8 @@ process.exit(
         edits: [
           [
             SRC,
-            "      out.push(`      \\`npx rpp init\\` links the missing ones; it never replaces an entry it did not make`);",
-            "      out.push(`      \\`npx rpp init\\` links the missing ones; it never replaces an entry it did not make`);\n      bad++;",
+            "      out.push(\n        `      \\`npx rpp init\\` links the missing ones; it never replaces an entry it did not make`,\n      );",
+            "      out.push(\n        `      \\`npx rpp init\\` links the missing ones; it never replaces an entry it did not make`,\n      );\n      bad++;",
           ],
         ],
       },

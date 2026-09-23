@@ -8,8 +8,18 @@ import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({
   name: "camera-ready",
-  description: "On acceptance, turn the anonymized-for-review paper into the de-anonymized camera-ready that actually enters the proceedings (ACM DL / IEEE Xplore). Reverses double-blind anonymization, swaps the OSF view-only artifact for a real public repo + an archival DOI, and — for security papers — completes responsible disclosure BEFORE any de-anonymized public release. Use after a notification email says Accept and the venue gives a camera-ready deadline. Compose with submit-paper (upstream) and extend-paper (next).",
-  tools: ["Read", "Write", "Edit", "Grep", "Glob", "Bash", "WebSearch", "WebFetch"],
+  description:
+    "On acceptance, turn the anonymized-for-review paper into the de-anonymized camera-ready that actually enters the proceedings (ACM DL / IEEE Xplore). Reverses double-blind anonymization, swaps the OSF view-only artifact for a real public repo + an archival DOI, and — for security papers — completes responsible disclosure BEFORE any de-anonymized public release. Use after a notification email says Accept and the venue gives a camera-ready deadline. Compose with submit-paper (upstream) and extend-paper (next).",
+  tools: [
+    "Read",
+    "Write",
+    "Edit",
+    "Grep",
+    "Glob",
+    "Bash",
+    "WebSearch",
+    "WebFetch",
+  ],
   body: `
 # camera-ready — de-anonymize an accepted paper into the final proceedings version
 

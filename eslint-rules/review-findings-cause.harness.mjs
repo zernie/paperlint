@@ -34,25 +34,48 @@ const eslint = new ESLint({
   ],
 });
 
-const on = async (file) => (await eslint.lintFiles([join(FIX, file)]))[0].messages;
+const on = async (file) =>
+  (await eslint.lintFiles([join(FIX, file)]))[0].messages;
 const cases = [];
 
 // ── 1. FIRES: three findings, no cause analysis.
 {
   const m = await on("defect.md");
-  assert.equal(m.length, 1, `one finding was expected, got ${m.length}: ${JSON.stringify(m)}`);
+  assert.equal(
+    m.length,
+    1,
+    `one finding was expected, got ${m.length}: ${JSON.stringify(m)}`,
+  );
   assert.equal(m[0].ruleId, "review/findings-cause");
-  assert.match(m[0].message, /3 findings/, "the message must name the NUMBER of findings");
-  assert.match(m[0].message, /PIPELINE/, "and say the tool needs fixing, not the paragraph");
-  assert.equal(m[0].line, 1, "the finding is about the FILE, so the position is the start of the document");
-  cases.push("a report with findings and no cause analysis → a finding, the count is named");
+  assert.match(
+    m[0].message,
+    /3 findings/,
+    "the message must name the NUMBER of findings",
+  );
+  assert.match(
+    m[0].message,
+    /PIPELINE/,
+    "and say the tool needs fixing, not the paragraph",
+  );
+  assert.equal(
+    m[0].line,
+    1,
+    "the finding is about the FILE, so the position is the start of the document",
+  );
+  cases.push(
+    "a report with findings and no cause analysis → a finding, the count is named",
+  );
 }
 
 // ── 2. STAYS SILENT on a report with an analysis. Without this half the rule is
 //      indistinguishable from one that always screams.
 {
   const m = await on("clean.md");
-  assert.deepEqual(m, [], `on a report with "Cause:" the rule must stay silent, got: ${JSON.stringify(m)}`);
+  assert.deepEqual(
+    m,
+    [],
+    `on a report with "Cause:" the rule must stay silent, got: ${JSON.stringify(m)}`,
+  );
   cases.push("the same report with a cause analysis → silence");
 }
 
@@ -61,11 +84,14 @@ const cases = [];
 {
   const m = await on("quiet-in-fence.md");
   assert.deepEqual(
-    m, [],
+    m,
+    [],
     `a table inside a \`\`\` fence is an EXAMPLE of the format, not a report; the text-based ` +
       `counter counted it, the AST must not. Got: ${JSON.stringify(m)}`,
   );
-  cases.push("a table inside a fence → silence (the text-based version got this wrong)");
+  cases.push(
+    "a table inside a fence → silence (the text-based version got this wrong)",
+  );
 }
 
 // ── 4. THRESHOLD — a consumer option, not a mechanism constant.
@@ -83,8 +109,14 @@ const cases = [];
     ],
   });
   const m = (await strict.lintFiles([join(FIX, "defect.md")]))[0].messages;
-  assert.deepEqual(m, [], "with a threshold above the finding count the rule must stay silent — the threshold is data");
-  cases.push("the threshold is passed as an option → with minFindings: 99, silence on the same file");
+  assert.deepEqual(
+    m,
+    [],
+    "with a threshold above the finding count the rule must stay silent — the threshold is data",
+  );
+  cases.push(
+    "the threshold is passed as an option → with minFindings: 99, silence on the same file",
+  );
 }
 
 // ── 5. 🔴 "RULE FROM A DATE": an old report is known debt, not a finding. Without this
@@ -99,18 +131,30 @@ const cases = [];
         plugins: { markdown, review: reviewRules },
         language: "markdown/gfm",
         languageOptions: { frontmatter: "yaml" },
-        rules: { "review/findings-cause": ["error", { sinceCreated: "2026-08-23" }] },
+        rules: {
+          "review/findings-cause": ["error", { sinceCreated: "2026-08-23" }],
+        },
       },
     ],
   });
   const old = (await dated.lintFiles([join(FIX, "old-debt.md")]))[0].messages;
-  assert.deepEqual(old, [], `a report older than the rule's date — debt, not a finding; got: ${JSON.stringify(old)}`);
+  assert.deepEqual(
+    old,
+    [],
+    `a report older than the rule's date — debt, not a finding; got: ${JSON.stringify(old)}`,
+  );
 
   // AND THE SECOND HALF OF THE OPTION: on a fresh report it must NOT exempt anything, or
   // "rule from a date" turns into an off switch.
   const fresh = (await dated.lintFiles([join(FIX, "defect.md")]))[0].messages;
-  assert.equal(fresh.length, 1, `a report AFTER the rule's date must be caught; got: ${JSON.stringify(fresh)}`);
-  cases.push("a report older than the rule's date → silence; a fresh one of the same shape → a finding");
+  assert.equal(
+    fresh.length,
+    1,
+    `a report AFTER the rule's date must be caught; got: ${JSON.stringify(fresh)}`,
+  );
+  cases.push(
+    "a report older than the rule's date → silence; a fresh one of the same shape → a finding",
+  );
 }
 
 recordCheck(cases.length);
@@ -131,10 +175,18 @@ for (const c of cases) console.log(`  ok  ${c}`);
 // one`, the rule never fired, and BOTH halves passed vacuously.
 {
   const body = [
-    "---", "created: 2026-09-01", "---", "",
-    "| # | what | where |", "|---|---|---|",
-    "| 1 | a | §1 |", "| 2 | b | §2 |", "| 3 | c | §3 |", "",
-    "Причина: the pipeline step that let them through.", "",
+    "---",
+    "created: 2026-09-01",
+    "---",
+    "",
+    "| # | what | where |",
+    "|---|---|---|",
+    "| 1 | a | §1 |",
+    "| 2 | b | §2 |",
+    "| 3 | c | §3 |",
+    "",
+    "Причина: the pipeline step that let them through.",
+    "",
   ].join("\n");
 
   const lintWith = async (options) => {
@@ -150,16 +202,27 @@ for (const c of cases) console.log(`  ok  ${c}`);
         },
       ],
     });
-    return (await e.lintText(body, { filePath: join(FIX, "option-probe.md") }))[0].messages;
+    return (
+      await e.lintText(body, { filePath: join(FIX, "option-probe.md") })
+    )[0].messages;
   };
 
   const withOpt = await lintWith({ minFindings: 3, causeMarker: "Причина:" });
-  assert.deepEqual(withOpt, [],
-    `the marker from the options must be accepted, got: ${JSON.stringify(withOpt)}`);
+  assert.deepEqual(
+    withOpt,
+    [],
+    `the marker from the options must be accepted, got: ${JSON.stringify(withOpt)}`,
+  );
 
   const withoutOpt = await lintWith({ minFindings: 3 });
-  assert.equal(withoutOpt.length, 1,
-    "without the option the same marker is NOT counted as a cause — otherwise the option decides nothing");
-  assert.match(withoutOpt[0].message, /Cause:/,
-    "and the finding's text carries the ENGLISH default, not something absent from the file");
+  assert.equal(
+    withoutOpt.length,
+    1,
+    "without the option the same marker is NOT counted as a cause — otherwise the option decides nothing",
+  );
+  assert.match(
+    withoutOpt[0].message,
+    /Cause:/,
+    "and the finding's text carries the ENGLISH default, not something absent from the file",
+  );
 }

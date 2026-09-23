@@ -51,7 +51,11 @@ const page = (rows) =>
     { x: 320, yTop: 60, yBot: 70, n: 30, step: 10 },
   ]);
   const c = columnHeights(xml, W);
-  assert.equal(c[0] - c[1], 300, "the imbalance must show up as a height difference");
+  assert.equal(
+    c[0] - c[1],
+    300,
+    "the imbalance must show up as a height difference",
+  );
 }
 
 // ── 3. 🔴 SPLIT ON THE PAGE'S MIDPOINT, NOT ON THE WORDS' EDGES ───────────────

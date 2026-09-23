@@ -10,7 +10,7 @@
  * So the rule reports and nothing freezes. The debt is an issue with an owner, not a constant
  * in a test; the count lives in `docs/incidents.md` as a measurement with a date, where it can
  * go stale honestly instead of looking maintained.
- */import assert from "node:assert/strict";
+ */ import assert from "node:assert/strict";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ESLint } from "eslint";
@@ -44,7 +44,9 @@ const mdLinter = new ESLint({
 const jsLinter = new ESLint({
   cwd: ROOT,
   overrideConfigFile: true,
-  overrideConfig: [{ files: ["**/*.mjs"], plugins: { port }, rules: { [RULE_JS]: "error" } }],
+  overrideConfig: [
+    { files: ["**/*.mjs"], plugins: { port }, rules: { [RULE_JS]: "error" } },
+  ],
 });
 
 const findings = async (linter, target, ruleId) => {
@@ -59,10 +61,17 @@ const cases = [];
 {
   const m = await findings(mdLinter, join(FIX, "defect.md"), RULE_MD);
   assert.ok(m.length >= 3, `expected at least three findings, got ${m.length}`);
-  assert.match(m[0].message, /INSTALLED/, "the message must name what is wrong");
+  assert.match(
+    m[0].message,
+    /INSTALLED/,
+    "the message must name what is wrong",
+  );
   assert.match(m[0].message, /consumer\.mjs/, "and where the answer belongs");
   const prefixes = new Set(m.map((x) => x.message.match(/'([^']+)'/)?.[1]));
-  assert.ok(prefixes.has(".claude/skills/"), "the symlink channel must be named");
+  assert.ok(
+    prefixes.has(".claude/skills/"),
+    "the symlink channel must be named",
+  );
   assert.ok(prefixes.has("node_modules/"), "the npm channel must be named");
   cases.push("md fires on frontmatter, fenced command and inline mention");
 }
@@ -71,7 +80,11 @@ const cases = [];
 //      repository-relative path that is identical in every channel.
 {
   const m = await findings(mdLinter, join(FIX, "clean.md"), RULE_MD);
-  assert.equal(m.length, 0, `clean fixture must be silent, got ${JSON.stringify(m)}`);
+  assert.equal(
+    m.length,
+    0,
+    `clean fixture must be silent, got ${JSON.stringify(m)}`,
+  );
   cases.push("md quiet on a skill that uses the substitution");
 }
 
@@ -79,14 +92,22 @@ const cases = [];
 //      assembled from a template is still a path, and reading only `Literal` would miss it.
 {
   const m = await findings(jsLinter, join(FIX, "defect.fixture.mjs"), RULE_JS);
-  assert.equal(m.length, 2, `expected one plain and one template finding, got ${m.length}`);
+  assert.equal(
+    m.length,
+    2,
+    `expected one plain and one template finding, got ${m.length}`,
+  );
   cases.push("js fires on a plain literal AND on a template quasi");
 }
 
 // ── 4. JAVASCRIPT STAYS QUIET when the module asks the port.
 {
   const m = await findings(jsLinter, join(FIX, "clean.fixture.mjs"), RULE_JS);
-  assert.equal(m.length, 0, `clean module must be silent, got ${JSON.stringify(m)}`);
+  assert.equal(
+    m.length,
+    0,
+    `clean module must be silent, got ${JSON.stringify(m)}`,
+  );
   cases.push("js quiet on a module that asks the port");
 }
 

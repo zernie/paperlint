@@ -34,12 +34,12 @@ old name.
 
 The typical submission preamble is **wrong** for the final. What to change:
 
-| in the submission | in camera-ready | why |
-|---|---|---|
-| `\settopmatter{printacmref=false}` | remove | the ACM reference line has to print |
-| `\setcopyright{none}` | the value from eRights | otherwise the block is wrong |
-| `\pagestyle{plain}` | remove | the form explicitly says **"Do not include page numbers"** |
-| the `review` option on `\documentclass` | remove | it adds line numbers |
+| in the submission                       | in camera-ready        | why                                                        |
+| --------------------------------------- | ---------------------- | ---------------------------------------------------------- |
+| `\settopmatter{printacmref=false}`      | remove                 | the ACM reference line has to print                        |
+| `\setcopyright{none}`                   | the value from eRights | otherwise the block is wrong                               |
+| `\pagestyle{plain}`                     | remove                 | the form explicitly says **"Do not include page numbers"** |
+| the `review` option on `\documentclass` | remove                 | it adds line numbers                                       |
 
 Plus: **all fonts must be embedded** in the PDF.
 
@@ -58,18 +58,18 @@ need to wait for them or make them up.
 
 ## Portal fields
 
-| Field | Req. | What matters |
-|---|---|---|
-| **ACM eRights** | ✱ | before everything else; final title + authors |
-| **Title** | ✱ | "exactly as it should appear in the ACM Digital Library" |
-| **Final version** | ✱ | PDF, up to 600 MB |
-| **Abstract** | ✱ | markdown + LaTeX math, has a Preview |
-| **Source files** | ✱ | **ALL** build files: `.tex`, `.bib`, figures. Best as a single `.zip` |
-| **ACM keywords** | — | one **per line** |
-| **CCS** | — | terms from **2012 CCS** via the CCS Browser: Assign concepts → View your CCS Concept → Generate Code → paste the XML |
-| **References** | — | upload `.bbl` + `.aux`, or as text one per line |
-| **Supplements** | — | an **integral** part of the work (proof, online appendix) |
-| **Auxiliary material** | — | NOT integral, but still lands in ACM DL: **dataset/code**. ACM does not claim copyright, but gets distribution rights |
+| Field                  | Req. | What matters                                                                                                          |
+| ---------------------- | ---- | --------------------------------------------------------------------------------------------------------------------- |
+| **ACM eRights**        | ✱    | before everything else; final title + authors                                                                         |
+| **Title**              | ✱    | "exactly as it should appear in the ACM Digital Library"                                                              |
+| **Final version**      | ✱    | PDF, up to 600 MB                                                                                                     |
+| **Abstract**           | ✱    | markdown + LaTeX math, has a Preview                                                                                  |
+| **Source files**       | ✱    | **ALL** build files: `.tex`, `.bib`, figures. Best as a single `.zip`                                                 |
+| **ACM keywords**       | —    | one **per line**                                                                                                      |
+| **CCS**                | —    | terms from **2012 CCS** via the CCS Browser: Assign concepts → View your CCS Concept → Generate Code → paste the XML  |
+| **References**         | —    | upload `.bbl` + `.aux`, or as text one per line                                                                       |
+| **Supplements**        | —    | an **integral** part of the work (proof, online appendix)                                                             |
+| **Auxiliary material** | —    | NOT integral, but still lands in ACM DL: **dataset/code**. ACM does not claim copyright, but gets distribution rights |
 
 ## What to decide deliberately
 

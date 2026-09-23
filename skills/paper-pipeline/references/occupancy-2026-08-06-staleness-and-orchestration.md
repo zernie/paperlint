@@ -1,7 +1,15 @@
 ---
 title: "Occupancy research — staleness tracking / build-graph machinery for the paper QA pipeline"
 created: 2026-08-06
-tags: [occupancy-research, paper-pipeline, build-systems, staleness, provenance, mutation-testing]
+tags:
+  [
+    occupancy-research,
+    paper-pipeline,
+    build-systems,
+    staleness,
+    provenance,
+    mutation-testing,
+  ]
 ---
 
 # Occupancy: "what ran against what, and what is stale now"
@@ -9,8 +17,8 @@ tags: [occupancy-research, paper-pipeline, build-systems, staleness, provenance,
 **The problem restated.** A hand-maintained `PIPELINE-STATUS.md` marks ~20 quality checks (some
 cheap scripts, some expensive LLM agent runs) as ✅/❌ against a document. It lies: a check stays ✅
 after the text it checked has been rewritten, because nothing recomputes the mark. Requirement in
-his own words: *"I want stuff to be visible immediately... timestamps, and/or hashes, marks for when
-was what skill ran last time inline... preference should be to deterministic checks."*
+his own words: _"I want stuff to be visible immediately... timestamps, and/or hashes, marks for when
+was what skill ran last time inline... preference should be to deterministic checks."_
 
 **Hypothesis under test:** this is a solved problem — a content-addressed build graph — and the
 status table is a hand-rolled, lying build cache. Below is what was actually fetched and quoted, not
@@ -24,7 +32,7 @@ recalled from memory. Scope is narrowly "what ran against what, is it stale" —
 timestamp comparison.
 
 **Alive?** Yes (GNU make, still maintained), but irrelevant as a mechanism question — it's the
-*reference failure mode*, not a candidate.
+_reference failure mode_, not a candidate.
 
 **Exactly what it gives, and what it doesn't.** Fetched `bug-make` mailing list discussion and two
 independent blog write-ups (John Graham-Cumming; Oli Pratt) confirming the same architectural fact:
@@ -36,7 +44,7 @@ independent blog write-ups (John Graham-Cumming; Oli Pratt) confirming the same 
 Consequence documented in the same sources: a `git checkout` that restores byte-identical content
 still bumps mtimes, so make reruns things that didn't change (false positive staleness) — and,
 worse for this use case, **make has no notion of the recipe itself changing**. If you edit the
-*checker's own logic* (its shell command) but don't touch any file listed as a prerequisite, make
+_checker's own logic_ (its shell command) but don't touch any file listed as a prerequisite, make
 will not know the recipe changed and will report the target up to date. That is precisely the
 failure mode in `PIPELINE-STATUS.md`: a check's own definition (prompt, script, model version)
 changes and nothing notices.
@@ -107,17 +115,17 @@ Nix Pills and the official manual summary:
 > inputs to the derivation, changes to the builder script directly affect the derivation hash."
 
 This is a **direct, unambiguous yes** to "does changing the checker's own source invalidate the
-cached result?" — a Nix derivation's identity *is* the hash of its build script plus its declared
+cached result?" — a Nix derivation's identity _is_ the hash of its build script plus its declared
 inputs; edit the script by one character (even a comment) and the store path changes, so the cached
 result at the old path is simply never looked up again. There's no separate bookkeeping step to
 forget to run — it's structurally impossible to get a stale hit.
 
 Nix also has an experimental content-addressed mode (CA derivations) layered on top, where the
-*output's* store path is additionally keyed by output content rather than only by input — orthogonal
+_output's_ store path is additionally keyed by output content rather than only by input — orthogonal
 improvement, not needed here.
 
 Cost to adopt: high for what it's for. Nix is a whole packaging/build language with a steep learning
-curve, a daemon, and a store (`/nix/store`) model. Using it *only* to hash "did the checker's prompt
+curve, a daemon, and a store (`/nix/store`) model. Using it _only_ to hash "did the checker's prompt
 or the target text change" is using a freight train to cross a room — the property is real, the
 vehicle is oversized.
 
@@ -154,7 +162,7 @@ over a handful of markdown files, run by one person."
 
 **What it gives.** Docs + GitHub issues confirm: "Turborepo creates two hashes: a global hash and a
 task hash, and if either changes, the task will miss cache." `turbo run --dry-run=json` shows the
-computed hash and predicted hit/miss *without executing*, and `--summarize` produces a JSON diff of
+computed hash and predicted hit/miss _without executing_, and `--summarize` produces a JSON diff of
 "what changed" when a miss happens — this is close to the "immediately visible" status view he
 wants, and it's inspectable per-task rather than a hand-written table. Caveat found directly in
 GitHub issues (#9044, #2004): dry-run's predicted cache state and the real run's cache state have
@@ -177,7 +185,7 @@ which projects/tasks are touched by a change and is explicitly designed as the "
 view — closer to a dashboard than Turborepo's raw dry-run JSON. Same caveat class found in issue
 #16153: hash computed by `nx print-affected` has been reported to diverge from the hash computed at
 actual run time (dynamic inputs like a version field breaking reproducibility) — a reminder that
-*inputs must be fully declared* for any of these systems, not a flaw unique to Nx.
+_inputs must be fully declared_ for any of these systems, not a flaw unique to Nx.
 
 Cost to adopt: same as Turborepo — an Nx workspace (`nx.json`, project graph) is a JS/TS monorepo
 tool. Not a natural fit for markdown+script checks unless the whole repo is restructured around it.
@@ -186,11 +194,10 @@ Sources: [How Caching Works | Nx](https://nx.dev/docs/concepts/how-caching-works
 
 ### moon (moonrepo)
 
-**Alive, actively releasing** — found four 2026 releases in sequence (v2.2 Apr, v2.3 Jun, v2.4 Jul
-2026) via moonrepo.dev/blog, including a notable v2.2 feature: "a new **debug-task** AI skill to help
+**Alive, actively releasing** — found four 2026 releases in sequence (v2.2 Apr, v2.3 Jun, v2.4 Jul 2026) via moonrepo.dev/blog, including a notable v2.2 feature: "a new **debug-task** AI skill to help
 diagnose cache and hashing issues" — moon's own team recognized "why is this stale/not stale" is
 hard enough to need a dedicated debug tool, which is telling. v2.3 added "native file hashing and a
-local CAS" as *experimental* layers, meaning full content-addressed caching is still stabilizing
+local CAS" as _experimental_ layers, meaning full content-addressed caching is still stabilizing
 even in a purpose-built 2026 tool.
 
 **What it gives.** Rust-based, framework-agnostic (less JS-locked than Nx/Turborepo), same hash→
@@ -225,7 +232,7 @@ one release (v3.44.0) — a live tool, so verify current behavior before relying
 is sound and the closest "make, but hashed" tool surfaced in this research.
 
 **This is the best-fit adoption candidate of the entire task-runner category**: single YAML file,
-per-task `sources:` list (which could include the checker script *and* the document, so editing
+per-task `sources:` list (which could include the checker script _and_ the document, so editing
 either invalidates the checksum), no new language, no daemon.
 
 Sources: [Taskfile Guide](https://taskfile.dev/docs/guide), [Task checksum bug report #2294](https://github.com/go-task/task/issues/2294)
@@ -245,7 +252,7 @@ Sources: [Taskfile Guide](https://taskfile.dev/docs/guide), [Task checksum bug r
 > execution metadata like the used software stack (e.g. conda env or container image), the non-file
 > parameters, the set of input files, **and the code of the rule**."
 
-That last clause is the load-bearing one: Snakemake explicitly tracks the *rule's own code* as a
+That last clause is the load-bearing one: Snakemake explicitly tracks the _rule's own code_ as a
 rerun trigger, separate from mtimes — this is the same property Bazel/Nix give, but in a tool built
 for exactly this shape of problem (a DAG of heterogeneous checks over files, cheap and expensive
 mixed, run by a single researcher — Snakemake's actual target audience, it underlies `showyourwork`
@@ -318,10 +325,10 @@ Source: [CWL v1.1 Workflow spec](https://www.commonwl.org/v1.1/Workflow.html), [
 > but the asset hasn't been materialized since then to incorporate those changes. Any asset that
 > depends on a stale asset is also stale."
 
-`op_versions`/`observation_fns` let you version an asset's *code*, and staleness is computed from
+`op_versions`/`observation_fns` let you version an asset's _code_, and staleness is computed from
 whether upstream versions changed — again, exactly the "did the checker's own logic change" property
 — surfaced in a UI (Dagit) with states PASS/WARN/FAIL/UNKNOWN per a `FreshnessPolicy`. This is the
-best *dashboard* answer found (better visual "immediately visible" story than Snakemake's CLI text),
+best _dashboard_ answer found (better visual "immediately visible" story than Snakemake's CLI text),
 at real cost: Dagster is a full orchestration platform (daemon/webserver, Python-decorator asset
 graph, optional Dagster Cloud) — adopting it to track 20 document checks is materially heavier than
 Snakemake for the same property.
@@ -350,6 +357,7 @@ directly:
 
 > "`_changed deps_` or `_changed outs_` means that there are changes in dependencies or outputs
 > tracked by the stage." Example output:
+>
 > ```
 > matrix-train.p:
 >     changed deps:
@@ -357,7 +365,7 @@ directly:
 > ```
 
 **This is the single clearest piece of evidence in the whole survey that a check's own script
-counts as a "dep."** `code/featurization.py` — the *code*, not just data — is listed as a tracked
+counts as a "dep."** `code/featurization.py` — the _code_, not just data — is listed as a tracked
 dependency in DVC's own official example, and its modification is what `dvc status` reports. That is
 exactly "the checker's source changed, therefore stale," reported by name, with zero custom
 tooling — DVC computes it from `dvc.yaml` stage definitions (`deps:`/`outs:`) plus content hashing
@@ -367,11 +375,12 @@ tooling — DVC computes it from `dvc.yaml` stage definitions (`deps:`/`outs:`) 
 itself show live/stale status, that's `dvc status`'s job, they're complementary not overlapping).
 
 Cost to adopt: low-to-moderate. One `dvc.yaml` with a `stage:` per check (`cmd:`, `deps:` = [document
-+ checker script], `outs:` = [check's result file]). No daemon. `dvc status` becomes the single
-command that answers "what's stale" instead of a human-maintained table. The DVC-specific overhead
-(designed for large binary data + Git-LFS-style remote storage, `.dvc` files, `dvc add`) is mostly
-avoidable if only the pipeline/stage feature (not the data-versioning/remote-storage feature) is
-used — worth confirming stage-only usage doesn't force the storage layer on.
+
+- checker script], `outs:` = [check's result file]). No daemon. `dvc status` becomes the single
+  command that answers "what's stale" instead of a human-maintained table. The DVC-specific overhead
+  (designed for large binary data + Git-LFS-style remote storage, `.dvc` files, `dvc add`) is mostly
+  avoidable if only the pipeline/stage feature (not the data-versioning/remote-storage feature) is
+  used — worth confirming stage-only usage doesn't force the storage layer on.
 
 **Verdict: DVC's `dvc status` is confirmed, by direct fetch, to be extremely close to what he wants** —
 tied with Snakemake as the two strongest candidates, and DVC's output format (a literal
@@ -399,6 +408,7 @@ category entirely, ruled out correctly rather than by omission.
 **Alive** (pre-commit.com, active).
 
 **What it gives.** Confirmed via fetch of pre-commit.com root docs:
+
 - `files:` — regex filter for which files a hook applies to.
 - `always_run: true` — hook runs even with no matching files (needed for hooks that don't operate
   file-by-file, e.g. post-rewrite hooks).
@@ -479,7 +489,7 @@ for checks that never fire," and it's cheaper than mutation testing (no test exe
 agent-run prose check** (e.g., "does the citation-verification skill actually catch a fabricated
 citation, or does it rubber-stamp everything?"). That would have to be hand-built: deliberately
 corrupt the document (inject a fake citation, break a citation's page number, flip a claim) and
-confirm the specific check flags it — the same *idea* as mutation testing, applied manually because
+confirm the specific check flags it — the same _idea_ as mutation testing, applied manually because
 no tool ships this for prose/LLM checks. This is the one property in the whole survey that is
 **genuinely empty** as a shipped tool, not merely heavy to adopt.
 
@@ -495,7 +505,7 @@ the `--strict-markers` command-line flag is passed, any unknown marks applied wi
 avoid the error. Also confirmed a **currently-open regression** (issue #14442, pytest 9): "The
 `OverrideIniAction` compatibility code added in pytest 9 does not play nicely with `addopts`, and
 strictness options configured that way now get silently ignored" — a sharp, on-topic irony: the
-*strictness-enforcement flag itself* was found silently not enforcing, in the exact "check that
+_strictness-enforcement flag itself_ was found silently not enforcing, in the exact "check that
 looks like it's protecting you but isn't" shape this whole research is about.
 
 **mypy `--strict`, ESLint `--max-warnings 0`, `cargo deny`** — not independently re-fetched (well
@@ -519,13 +529,14 @@ chained so a consumer can verify the full step sequence occurred as declared. SL
 
 **Verdict on fit — confirmed by direct search, not assumed: enterprise/supply-chain scale, not
 single-user-document scale.** Two independent points found:
+
 1. Adoption-barrier research (a qualitative study of 1,523 GitHub issues across 233 repos, cited by
    a fetched search result) found practitioners cite "complex implementation" and "unclear
    communication" as the dominant SLSA adoption barriers — i.e., real projects with CI teams find it
    heavy, which is a strong signal it's disproportionate for one person and twenty markdown checks.
 2. A direct critique surfaced: "SigStore creates a transparency log that makes build information
    public, but enterprise software is closed-source and built for self-use, and disclosing its build
-   information to the general public cannot be tolerated" — the mismatch runs in *both* directions
+   information to the general public cannot be tolerated" — the mismatch runs in _both_ directions
    (too heavy for solo use; also structurally wrong for private documents, since sigstore's default
    posture publishes attestations to a public log — the opposite of what a private paper pipeline
    wants).
@@ -533,10 +544,10 @@ single-user-document scale.** Two independent points found:
 **This is a genuinely empty fit** for this problem, correctly ruled out rather than under-researched:
 the property "step X ran on input hash H, producing output hash H′, signed" is real and exists, but
 every shipped implementation is scaled and hardened for adversarial multi-party software supply
-chains (verifying a *stranger's* build didn't get tampered with), not for one person tracking their
+chains (verifying a _stranger's_ build didn't get tampered with), not for one person tracking their
 own document-check pipeline where the trust model is "do I, myself, trust my own hash computation."
-Borrowing only the *idea* (a signed/hashed record chaining input→check→output) is sound; borrowing
-the *tooling* is not.
+Borrowing only the _idea_ (a signed/hashed record chaining input→check→output) is sound; borrowing
+the _tooling_ is not.
 
 Sources: [SLSA Provenance Part 3: Adoption Challenges](https://www.legitsecurity.com/blog/slsa-provenance-blog-series-part3-challenges-of-adopting-slsa-provenance), [in-toto/attestation README](https://github.com/in-toto/attestation/blob/main/README.md)
 
@@ -544,19 +555,19 @@ Sources: [SLSA Provenance Part 3: Adoption Challenges](https://www.legitsecurity
 
 ## Ranked table
 
-| Property we need | Shipped thing that provides it | Adoption cost | Verdict |
-|---|---|---|---|
-| Content hash (not timestamp) of the **document** as a dependency | DVC (`deps:`), Snakemake (`input:`), Task (`sources:`, `method: checksum`), Bazel/Nix/Buck2 (action/derivation inputs), Nx/Turborepo/moon (task inputs) | Low (Task) → very high (Nix) | **ADOPT** — trivially available in the low-cost tier |
-| Hash of the **checker's own script/prompt itself**, so editing the check invalidates its own cached result | Confirmed explicitly: Nix (`.drv` hash includes builder script — even a comment changes the store path), Bazel (action key includes "the command to be executed"), Snakemake (FAQ: rerun triggers include "the code of the rule"), DVC (own docs example literally lists `code/featurization.py` as a `changed dep`) | Low (DVC, Snakemake) → very high (Nix, Bazel) | **ADOPT** — DVC or Snakemake gives this without a build-system migration |
-| At-a-glance "what's stale and why," readable by a human, no digging | Snakemake `--dry-run --reason` (prose reasons per rule); DVC `dvc status` (`changed deps: modified: <path>` — arguably the single closest match to "marks... inline"); Dagster UI (PASS/WARN/FAIL/UNKNOWN per asset, richest visual, heaviest platform) | Low (DVC/Snakemake CLI text) → high (Dagster full platform) | **ADOPT** — DVC's output format is close to literally what was asked for |
-| Fast preview without running anything (`--dry-run`-equivalent) | Snakemake `--dry-run`; Turborepo `--dry=json` (confirmed to sometimes disagree with real run — issue #9038/#9044); Nx `print-affected` (confirmed to sometimes diverge from run-time hash — issue #16153); Task's checksum-based skip is itself near-instant | Low–moderate | **ADOPT-PARTIAL** — the preview exists everywhere but two of three JS tools have open bug reports about the preview lying, ironically the same disease being solved for |
-| Routing: which checks apply to which files, cheap vs. expensive tiering | `pre-commit` `files:`/`stages:`/`always_run` | Low (already YAML-shaped, easy to add) | **ADOPT-PARTIAL** — good for routing, contributes nothing to staleness itself (confirmed no run history/log exists) |
-| "Declared-but-never-fires" audit of the checks themselves | falsegreen (static, code-only), mutmut/cosmic-ray/Stryker/PIT/pytest-gremlins (mutation, code-only) | Low (falsegreen, if checks were pytest) | **ADOPT-PARTIAL** — real and cheap, but only reaches the subset of checks that are code with assertions; the LLM-agent prose checks are out of scope for every one of these tools |
-| Mutation-style "does this specific prose/LLM check actually catch a real defect" audit | — | — (would be hand-built: seed a known defect into the doc, confirm the check flags it) | **GENUINELY EMPTY** — no shipped tool found; this is the one place the hypothesis "solved problem" does not fully hold |
-| Unregistered-thing-is-an-error strictness pattern | `pytest --strict-markers`, `mypy --strict`, `eslint --max-warnings 0` (pattern only; also caught pytest 9 silently *breaking* this exact flag — issue #14442) | N/A — a policy shape, not a separate tool | **ADOPT** as a design principle inside whichever runner is chosen, not as a separate dependency |
-| Cryptographic step-provenance (input hash → step → output hash, signed) | in-toto / SLSA / sigstore | Very high, and wrong trust model (publishes to a public log) for a private paper pipeline | **GENUINELY EMPTY** for this scale — correctly ruled out, not under-researched |
-| ML-experiment "which run used which data/params" | MLflow / W&B | N/A | **GENUINELY EMPTY** — wrong tool category, confirmed by direct research (no cache-invalidation or staleness feature exists in either) |
-| Time/schedule-based DAG orchestration | Airflow | N/A | **GENUINELY EMPTY** for this property — Airflow schedules; it does not compute content-hash staleness by design |
+| Property we need                                                                                           | Shipped thing that provides it                                                                                                                                                                                                                                                                                       | Adoption cost                                                                             | Verdict                                                                                                                                                                           |
+| ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Content hash (not timestamp) of the **document** as a dependency                                           | DVC (`deps:`), Snakemake (`input:`), Task (`sources:`, `method: checksum`), Bazel/Nix/Buck2 (action/derivation inputs), Nx/Turborepo/moon (task inputs)                                                                                                                                                              | Low (Task) → very high (Nix)                                                              | **ADOPT** — trivially available in the low-cost tier                                                                                                                              |
+| Hash of the **checker's own script/prompt itself**, so editing the check invalidates its own cached result | Confirmed explicitly: Nix (`.drv` hash includes builder script — even a comment changes the store path), Bazel (action key includes "the command to be executed"), Snakemake (FAQ: rerun triggers include "the code of the rule"), DVC (own docs example literally lists `code/featurization.py` as a `changed dep`) | Low (DVC, Snakemake) → very high (Nix, Bazel)                                             | **ADOPT** — DVC or Snakemake gives this without a build-system migration                                                                                                          |
+| At-a-glance "what's stale and why," readable by a human, no digging                                        | Snakemake `--dry-run --reason` (prose reasons per rule); DVC `dvc status` (`changed deps: modified: <path>` — arguably the single closest match to "marks... inline"); Dagster UI (PASS/WARN/FAIL/UNKNOWN per asset, richest visual, heaviest platform)                                                              | Low (DVC/Snakemake CLI text) → high (Dagster full platform)                               | **ADOPT** — DVC's output format is close to literally what was asked for                                                                                                          |
+| Fast preview without running anything (`--dry-run`-equivalent)                                             | Snakemake `--dry-run`; Turborepo `--dry=json` (confirmed to sometimes disagree with real run — issue #9038/#9044); Nx `print-affected` (confirmed to sometimes diverge from run-time hash — issue #16153); Task's checksum-based skip is itself near-instant                                                         | Low–moderate                                                                              | **ADOPT-PARTIAL** — the preview exists everywhere but two of three JS tools have open bug reports about the preview lying, ironically the same disease being solved for           |
+| Routing: which checks apply to which files, cheap vs. expensive tiering                                    | `pre-commit` `files:`/`stages:`/`always_run`                                                                                                                                                                                                                                                                         | Low (already YAML-shaped, easy to add)                                                    | **ADOPT-PARTIAL** — good for routing, contributes nothing to staleness itself (confirmed no run history/log exists)                                                               |
+| "Declared-but-never-fires" audit of the checks themselves                                                  | falsegreen (static, code-only), mutmut/cosmic-ray/Stryker/PIT/pytest-gremlins (mutation, code-only)                                                                                                                                                                                                                  | Low (falsegreen, if checks were pytest)                                                   | **ADOPT-PARTIAL** — real and cheap, but only reaches the subset of checks that are code with assertions; the LLM-agent prose checks are out of scope for every one of these tools |
+| Mutation-style "does this specific prose/LLM check actually catch a real defect" audit                     | —                                                                                                                                                                                                                                                                                                                    | — (would be hand-built: seed a known defect into the doc, confirm the check flags it)     | **GENUINELY EMPTY** — no shipped tool found; this is the one place the hypothesis "solved problem" does not fully hold                                                            |
+| Unregistered-thing-is-an-error strictness pattern                                                          | `pytest --strict-markers`, `mypy --strict`, `eslint --max-warnings 0` (pattern only; also caught pytest 9 silently _breaking_ this exact flag — issue #14442)                                                                                                                                                        | N/A — a policy shape, not a separate tool                                                 | **ADOPT** as a design principle inside whichever runner is chosen, not as a separate dependency                                                                                   |
+| Cryptographic step-provenance (input hash → step → output hash, signed)                                    | in-toto / SLSA / sigstore                                                                                                                                                                                                                                                                                            | Very high, and wrong trust model (publishes to a public log) for a private paper pipeline | **GENUINELY EMPTY** for this scale — correctly ruled out, not under-researched                                                                                                    |
+| ML-experiment "which run used which data/params"                                                           | MLflow / W&B                                                                                                                                                                                                                                                                                                         | N/A                                                                                       | **GENUINELY EMPTY** — wrong tool category, confirmed by direct research (no cache-invalidation or staleness feature exists in either)                                             |
+| Time/schedule-based DAG orchestration                                                                      | Airflow                                                                                                                                                                                                                                                                                                              | N/A                                                                                       | **GENUINELY EMPTY** for this property — Airflow schedules; it does not compute content-hash staleness by design                                                                   |
 
 ---
 
@@ -565,17 +576,17 @@ Sources: [SLSA Provenance Part 3: Adoption Challenges](https://www.legitsecurity
 **DVC's pipeline feature (`dvc.yaml` + `dvc status`), used for its stage-hashing alone, is the
 smallest adoption that fully replaces `PIPELINE-STATUS.md` with a computed answer.** Define one
 `dvc.yaml` stage per check: `cmd:` is the check's actual command (script or LLM-agent invocation),
-`deps:` lists both the target document(s) *and* the checker's own script/prompt file, `outs:` is
+`deps:` lists both the target document(s) _and_ the checker's own script/prompt file, `outs:` is
 wherever the check writes its verdict. From that point, "is check N stale" is never declared by a
 human again — `dvc status` computes it from content hashes of everything in `deps:`, and its own
 docs example already demonstrates exactly the wanted case (editing the checker's code shows up as
 `changed deps: modified: <checker-script>`, indistinguishable in the tool's eyes from editing the
 document itself). No daemon, no new language, no monorepo restructuring, and DVC's heavier
 data-versioning/remote-storage machinery can be ignored entirely if only the pipeline/stage feature
-is used. Snakemake is the close second choice and arguably the better long-term fit *if* the pipeline
+is used. Snakemake is the close second choice and arguably the better long-term fit _if_ the pipeline
 grows real DAG structure between checks (some checks depending on others' outputs) or needs the
 prose-level `--reason` explanation text rather than DVC's terser diff-list — but for the immediate
 goal of "kill the lying table with the least new surface area," DVC's stage-and-status pair is the
 smaller, faster adoption. Note explicitly what neither tool solves: whether an LLM-agent-run check is
-actually *testing* anything (the vacuous-check problem) is not addressed by hashing — that remains
+actually _testing_ anything (the vacuous-check problem) is not addressed by hashing — that remains
 the one genuinely unsolved piece, requiring a hand-built mutation-style probe per check type.

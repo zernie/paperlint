@@ -1,7 +1,7 @@
 # PIPELINE-STATUS template — the per-paper readiness scorecard
 
 Copy this into `<paper-dir>/PIPELINE-STATUS.md` for each paper. It is the **durable, colocated,
-markdown source-of-truth** for *which pipeline work has run, its result, and what is still open* — so
+markdown source-of-truth** for _which pipeline work has run, its result, and what is still open_ — so
 "did everything run?" is a checked fact, not a memory. Chat evaporates; this file rides with the paper
 to camera-ready.
 
@@ -44,33 +44,33 @@ The `id` cell is the **join key** — the same string appears in this template, 
 scorecard, in `Requires` cells, in `../scripts/pipeline-edges.mjs` and in the skills' own prose. So
 the scorecard explains itself where it lives:
 
-| id | section | what it is | run by |
-|----|---------|------------|--------|
-| `idea` | SETUP | is the idea worth a paper? | `research-ideate` |
-| `priorwork` | SETUP | full competitor sweep, before drafting | `map-prior-work` |
-| `venue` | SETUP | pick where it goes | `find-venue` |
-| `venuebar` | SETUP | what this venue rewards; strengthening levers | `study-accepted-papers` |
-| `access` | SETUP | 🔴 *can you physically upload?* — account, ACTIVE profile, portal, form | `plan-paper-timeline` |
-| `schedule` | SETUP | the backwards plan and its calendar events | `plan-paper-timeline` |
-| `frame` | SETUP | the claim, stated **before** the runs | `argument-arc` (frame mode) |
-| `study` | LOOP | the empirical study + reproduction artifact | `build-benchmark` |
-| `draft` | LOOP | the paper itself | `draft-paper` |
-| `arc` | LOOP | does the argument carry end to end? | `argument-arc` |
-| `cites` | CONTINUOUS | every `\cite` is real, and the delta over the nearest neighbour is stated | `verify-citations` |
-| `siblings` | CONTINUOUS | deep read of a competing/concurrent paper | `analyze-sibling-paper` |
-| `priordelta` | CONTINUOUS | re-sweep restricted to work posted since | `map-prior-work` (delta) |
-| `render` | CONTINUOUS | build the PDF; the page count everything else is blocked on | `render-paper` |
-| `numbers` | CONTINUOUS | every printed quantity traces to committed data | the paper's own numbers gate |
-| `structure` | GATES | the developmental/editorial verdict + cut plan | `tighten-paper` |
-| `writing` | GATES | writing craft + the persona stall inventory | `grade-paper-writing` |
-| `panel` | GATES | the simulated PC decision | `pc-panel-review` |
-| `artifact` | GATES | defects found by **executing** the artifact | `pc-panel-review` §C |
-| `claims` | GATES | claim-preservation diff after every rewrite | Fable diff (`writing-craft.md`) |
-| `harden` | GATES | the multi-axis pre-submit gate | `harden-paper` |
-| `submit` | GATES | the upload itself | `submit-paper` |
-| `coldread` | GATES | a reader with no context on the changed prose | `cold-read-diff` |
-| `cameraready` | AFTER | de-anonymize, disclose, archive | `camera-ready` |
-| `extend` | AFTER | the ≥30%-new follow-on at a stronger venue | `extend-paper` |
+| id            | section    | what it is                                                                | run by                          |
+| ------------- | ---------- | ------------------------------------------------------------------------- | ------------------------------- |
+| `idea`        | SETUP      | is the idea worth a paper?                                                | `research-ideate`               |
+| `priorwork`   | SETUP      | full competitor sweep, before drafting                                    | `map-prior-work`                |
+| `venue`       | SETUP      | pick where it goes                                                        | `find-venue`                    |
+| `venuebar`    | SETUP      | what this venue rewards; strengthening levers                             | `study-accepted-papers`         |
+| `access`      | SETUP      | 🔴 _can you physically upload?_ — account, ACTIVE profile, portal, form   | `plan-paper-timeline`           |
+| `schedule`    | SETUP      | the backwards plan and its calendar events                                | `plan-paper-timeline`           |
+| `frame`       | SETUP      | the claim, stated **before** the runs                                     | `argument-arc` (frame mode)     |
+| `study`       | LOOP       | the empirical study + reproduction artifact                               | `build-benchmark`               |
+| `draft`       | LOOP       | the paper itself                                                          | `draft-paper`                   |
+| `arc`         | LOOP       | does the argument carry end to end?                                       | `argument-arc`                  |
+| `cites`       | CONTINUOUS | every `\cite` is real, and the delta over the nearest neighbour is stated | `verify-citations`              |
+| `siblings`    | CONTINUOUS | deep read of a competing/concurrent paper                                 | `analyze-sibling-paper`         |
+| `priordelta`  | CONTINUOUS | re-sweep restricted to work posted since                                  | `map-prior-work` (delta)        |
+| `render`      | CONTINUOUS | build the PDF; the page count everything else is blocked on               | `render-paper`                  |
+| `numbers`     | CONTINUOUS | every printed quantity traces to committed data                           | the paper's own numbers gate    |
+| `structure`   | GATES      | the developmental/editorial verdict + cut plan                            | `tighten-paper`                 |
+| `writing`     | GATES      | writing craft + the persona stall inventory                               | `grade-paper-writing`           |
+| `panel`       | GATES      | the simulated PC decision                                                 | `pc-panel-review`               |
+| `artifact`    | GATES      | defects found by **executing** the artifact                               | `pc-panel-review` §C            |
+| `claims`      | GATES      | claim-preservation diff after every rewrite                               | Fable diff (`writing-craft.md`) |
+| `harden`      | GATES      | the multi-axis pre-submit gate                                            | `harden-paper`                  |
+| `submit`      | GATES      | the upload itself                                                         | `submit-paper`                  |
+| `coldread`    | GATES      | a reader with no context on the changed prose                             | `cold-read-diff`                |
+| `cameraready` | AFTER      | de-anonymize, disclose, archive                                           | `camera-ready`                  |
+| `extend`      | AFTER      | the ≥30%-new follow-on at a stronger venue                                | `extend-paper`                  |
 
 🔴 **Ids are WORDS, and that is load-bearing** (renamed 2026-08-09 from two-letter codes). Two
 letters had run out and had already collided twice, both live in this repo: `Cr` was
@@ -106,7 +106,7 @@ them:
   result + open findings + a link to the durable artifact (`siblings/`, a saved grader report).
 - **Four sections, because the four kinds fail differently** (see `paper-pipeline` → "There is no
   stage 7"). SETUP is done-or-not. LOOP iterates. **CONTINUOUS is never done** — its date is compared
-  against the paper's own mtime, and a `☑` older than the text is a *stale pass*, which reads as
+  against the paper's own mtime, and a `☑` older than the text is a _stale pass_, which reads as
   green and is not. GATES are blocked on named inputs.
 - 🔴 **The `Requires` cells above are not free-form — do not thin them.** The canonical edge set lives
   in `../scripts/pipeline-edges.mjs`, with the sentence from each skill's own SKILL.md that admitted
@@ -116,19 +116,19 @@ them:
   them — including `arc`, which argument-arc's SKILL.md says must precede `tighten-paper`. A dropped
   edge is invisible: `gate-missing-input` can only enforce what the cell says. Adding an input the
   table does not know about is fine and reports nothing.
-- 🔴 **Row `access` is the one that is not about the paper, and it is the one that bites.** *Can you
-  physically upload?* — account exists, profile is **ACTIVE** rather than "pending moderation", the
+- 🔴 **Row `access` is the one that is not about the paper, and it is the one that bites.** _Can you
+  physically upload?_ — account exists, profile is **ACTIVE** rather than "pending moderation", the
   portal is reachable, you know the form's fields and its artifact-hosting requirement. On
   `compile-rules-2026` this was the sole critical-path item at T−4 days: the paper was finished and
   there was nowhere to put it, because OpenReview requires an active profile to submit and moderation
   runs **up to two weeks**. Turn it green in the first week, not the last. Record the date it went
   ACTIVE, not just the tick.
-- **Row `frame` costs one paragraph and saves a study.** State what the paper will claim *before* the
+- **Row `frame` costs one paragraph and saves a study.** State what the paper will claim _before_ the
   runs. Reframing after the data is collected is how experiments get thrown away — observed on
   `compile-rules-2026`, and the reason `argument-arc` has a rebuild mode at all.
 - **Status legend:** `☑` done/pass · `◐` partial (say what's missing) · `☐` not run · `⚠` ran, findings
   open · `n/a` not applicable to this paper/venue.
-- **Never inflate.** A unit that didn't run *this* cycle is `☐` — do not borrow credit from a prior
+- **Never inflate.** A unit that didn't run _this_ cycle is `☐` — do not borrow credit from a prior
   submission you can't point to. Approximate or from-memory grades get `≈`.
 - **The verdict line leads WORST-GATE-FIRST.** One sentence: submit-ready or not, and the single thing
   blocking. "Ready" is a vector (science/defects, readability, structure, claims-honest, mechanical) —
@@ -136,12 +136,13 @@ them:
   an ~88% panel number once masked failing readability and structure on a paper a human found
   exhausting, and the checker now refuses a verdict line that is only a percentage.
 - **Distinct from `SUBMIT-CHECKLIST.md`** (venue-format compliance: page limit, blind model, portal).
-  This tracks *quality completeness*. Both green before upload.
+  This tracks _quality completeness_. Both green before upload.
 
 ---
 
 ```markdown
 # PIPELINE-STATUS — <paper short name>
+
 Venue: <venue> · Deadline: <ISO date, AoE converted to the author's own zone> · Blind: <double/single> · State: <drafting/submitted #N/accepted>
 Updated: <ISO>
 
@@ -151,51 +152,56 @@ gate caps "ready"; an accept probability alone is not a verdict.>
 **Gates at a glance (worst first — mark any failing gate ✗):** readability(persona stalls) <density/verdict> · structure(tighten-paper) <verdict> · claims-honest(claims) <clean?> · defects(panel) <accept-prob/decision> · writing <NN/60> · content(venue bar) <run?/levers>
 
 ### SETUP
-| id | Work | Skill | Status | Date | Result | Open |
-|----|------|-------|--------|------|--------|------|
-| idea | Validate idea | research-ideate | ☐ | — | — | — |
-| priorwork | Map competitors | map-prior-work | ☐ | — | — | siblings/ |
-| venue | Pick venue | find-venue | ☐ | — | — | — |
-| venuebar | Venue bar / levers | study-accepted-papers | ☐ | — | — | — |
-| **access** | 🔴 **Can you physically submit?** | plan-paper-timeline | ☐ | — | account · profile ACTIVE since <ISO> · portal reachable · form fields known · artifact host known | — |
-| schedule | Schedule + calendar | plan-paper-timeline | ☐ | — | — | — |
-| **frame** | **Claim stated before the runs** | argument-arc (frame) | ☐ | — | one paragraph: what will this paper claim? | — |
+
+| id         | Work                              | Skill                 | Status | Date | Result                                                                                            | Open      |
+| ---------- | --------------------------------- | --------------------- | ------ | ---- | ------------------------------------------------------------------------------------------------- | --------- |
+| idea       | Validate idea                     | research-ideate       | ☐      | —    | —                                                                                                 | —         |
+| priorwork  | Map competitors                   | map-prior-work        | ☐      | —    | —                                                                                                 | siblings/ |
+| venue      | Pick venue                        | find-venue            | ☐      | —    | —                                                                                                 | —         |
+| venuebar   | Venue bar / levers                | study-accepted-papers | ☐      | —    | —                                                                                                 | —         |
+| **access** | 🔴 **Can you physically submit?** | plan-paper-timeline   | ☐      | —    | account · profile ACTIVE since <ISO> · portal reachable · form fields known · artifact host known | —         |
+| schedule   | Schedule + calendar               | plan-paper-timeline   | ☐      | —    | —                                                                                                 | —         |
+| **frame**  | **Claim stated before the runs**  | argument-arc (frame)  | ☐      | —    | one paragraph: what will this paper claim?                                                        | —         |
 
 ### LOOP
-| id | Work | Skill | Status | Date | Result | Open |
-|----|------|-------|--------|------|--------|------|
-| study | Study + artifact | build-benchmark | ☐ | — | — | — |
-| draft | Draft | draft-paper | ☐ | — | — | — |
-| arc | Argument arc | argument-arc | ☐ | — | — | — |
+
+| id    | Work             | Skill           | Status | Date | Result | Open |
+| ----- | ---------------- | --------------- | ------ | ---- | ------ | ---- |
+| study | Study + artifact | build-benchmark | ☐      | —    | —      | —    |
+| draft | Draft            | draft-paper     | ☐      | —    | —      | —    |
+| arc   | Argument arc     | argument-arc    | ☐      | —    | —      | —    |
 
 ### CONTINUOUS
+
 Date = when it last ran. If that predates the current text, the pass is stale — the checker says so.
 
-| id | Trigger | Skill | Status | Date | Result | Open |
-|----|---------|-------|--------|------|--------|------|
-| cites | any \cite added/moved | verify-citations | ☐ | — | — | — |
-| siblings | a sibling surfaces | analyze-sibling-paper | ☐ | — | — | siblings/ |
-| priordelta | framing moved | map-prior-work (delta) | ☐ | — | — | — |
-| render | any source edit | render-paper + page count | ☐ | — | <N> pages / limit <M> | — |
+| id         | Trigger               | Skill                     | Status | Date | Result                | Open      |
+| ---------- | --------------------- | ------------------------- | ------ | ---- | --------------------- | --------- |
+| cites      | any \cite added/moved | verify-citations          | ☐      | —    | —                     | —         |
+| siblings   | a sibling surfaces    | analyze-sibling-paper     | ☐      | —    | —                     | siblings/ |
+| priordelta | framing moved         | map-prior-work (delta)    | ☐      | —    | —                     | —         |
+| render     | any source edit       | render-paper + page count | ☐      | —    | <N> pages / limit <M> | —         |
 
 ### GATES
-| id | Gate | Skill | Requires | Status | Date | Result | Open |
-|----|------|-------|----------|--------|------|--------|------|
-| structure | Structure | tighten-paper | render, arc | ☐ | — | — | — |
-| writing | Writing craft | grade-paper-writing | draft, arc, structure | ☐ | — | — | — |
-| panel | Review decision | pc-panel-review | structure, writing | ☐ | — | — | — |
-| claims | Claim preservation | Fable diff | draft, writing | ☐ | — | — | — |
-| harden | Harden (all axes) | harden-paper | panel, structure, writing, cites, priordelta | ☐ | — | — | — |
-| submit | Submit | submit-paper | harden, access | ☐ | — | — | — |
+
+| id        | Gate               | Skill               | Requires                                     | Status | Date | Result | Open |
+| --------- | ------------------ | ------------------- | -------------------------------------------- | ------ | ---- | ------ | ---- |
+| structure | Structure          | tighten-paper       | render, arc                                  | ☐      | —    | —      | —    |
+| writing   | Writing craft      | grade-paper-writing | draft, arc, structure                        | ☐      | —    | —      | —    |
+| panel     | Review decision    | pc-panel-review     | structure, writing                           | ☐      | —    | —      | —    |
+| claims    | Claim preservation | Fable diff          | draft, writing                               | ☐      | —    | —      | —    |
+| harden    | Harden (all axes)  | harden-paper        | panel, structure, writing, cites, priordelta | ☐      | —    | —      | —    |
+| submit    | Submit             | submit-paper        | harden, access                               | ☐      | —    | —      | —    |
 
 **Harden sub-axes** (`harden` is an orchestrator — track its axes so `◐` is legible):
 structure(=structure) ☐ · threat-model ☐ · ethics/dual-use ☐ · page/word-fit ☐ · de-anon hygiene ☐ · citability ☐ · artifact-runs-clean ☐ · writing(=writing) ☐
 
 ### AFTER
-| id | Work | Skill | Status | Date | Result | Open |
-|----|------|-------|--------|------|--------|------|
-| cameraready | Camera-ready | camera-ready | n/a | — | pre-acceptance | — |
-| extend | Extend | extend-paper | n/a | — | post-acceptance | — |
+
+| id          | Work         | Skill        | Status | Date | Result          | Open |
+| ----------- | ------------ | ------------ | ------ | ---- | --------------- | ---- |
+| cameraready | Camera-ready | camera-ready | n/a    | —    | pre-acceptance  | —    |
+| extend      | Extend       | extend-paper | n/a    | —    | post-acceptance | —    |
 ```
 
 ---

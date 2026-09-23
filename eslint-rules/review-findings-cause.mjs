@@ -38,7 +38,10 @@
 /** Numbered cell: the first column of a table row holding a single number. */
 const isNumbered = (row) => {
   const first = row.children?.[0];
-  const text = (first?.children ?? []).map((c) => c.value ?? "").join("").trim();
+  const text = (first?.children ?? [])
+    .map((c) => c.value ?? "")
+    .join("")
+    .trim();
   return /^\d+$/.test(text);
 };
 
@@ -63,7 +66,10 @@ export default {
             properties: {
               minFindings: { type: "integer", minimum: 1 },
               causeMarker: { type: "string" },
-              sinceCreated: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+              sinceCreated: {
+                type: "string",
+                pattern: "^\\d{4}-\\d{2}-\\d{2}$",
+              },
             },
             additionalProperties: false,
           },
@@ -74,7 +80,11 @@ export default {
         },
       },
       create(context) {
-        const { minFindings = 3, causeMarker = "Cause:", sinceCreated } = context.options[0] ?? {};
+        const {
+          minFindings = 3,
+          causeMarker = "Cause:",
+          sinceCreated,
+        } = context.options[0] ?? {};
         let findings = 0;
         let hasCause = false;
         let created = "";
@@ -90,7 +100,9 @@ export default {
           // only when the option is set — otherwise a missing frontmatter would become a
           // way to dodge the rule.
           yaml(node) {
-            created = /^created:\s*(\d{4}-\d{2}-\d{2})/m.exec(node.value ?? "")?.[1] ?? "";
+            created =
+              /^created:\s*(\d{4}-\d{2}-\d{2})/m.exec(node.value ?? "")?.[1] ??
+              "";
           },
           tableRow(node) {
             if (isNumbered(node)) findings++;
@@ -107,7 +119,10 @@ export default {
             // A finding about the FILE, not a line: what's missing isn't anywhere. So the
             // position is the start of the document, the only honest place for "this is missing".
             context.report({
-              loc: { start: { line: 1, column: 0 }, end: { line: 1, column: 1 } },
+              loc: {
+                start: { line: 1, column: 0 },
+                end: { line: 1, column: 1 },
+              },
               messageId: "noCause",
               data: { count: String(findings), marker: causeMarker },
               node,

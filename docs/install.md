@@ -18,17 +18,17 @@ target count means nothing without the count it replaced.
 
 Counted for this package **before** that change:
 
-| # | action | why it exists |
-| --- | --- | --- |
-| 1 | look up a commit sha | not on npm yet |
-| 2 | `npm i -D github:zernie/research-paper-pipeline#<sha>` | |
-| 3 | `npx rpp init` | writes `rpp.json` |
-| 4 | edit `rpp.json` so `papers` points at your papers | the default is a guess |
-| 5 | **edit `package.json` to declare `papers` a second time** | the hooks read that file, not `rpp.json` |
-| 6 | `/plugin marketplace add …` inside Claude Code | |
-| 7 | `/plugin install …` inside Claude Code | |
-| 8 | hand-add the CI step, with a sha | |
-| 9 | install TeX Live, poppler, a JRE, python3 | the skills shell out to them |
+| #   | action                                                    | why it exists                            |
+| --- | --------------------------------------------------------- | ---------------------------------------- |
+| 1   | look up a commit sha                                      | not on npm yet                           |
+| 2   | `npm i -D github:zernie/research-paper-pipeline#<sha>`    |                                          |
+| 3   | `npx rpp init`                                            | writes `rpp.json`                        |
+| 4   | edit `rpp.json` so `papers` points at your papers         | the default is a guess                   |
+| 5   | **edit `package.json` to declare `papers` a second time** | the hooks read that file, not `rpp.json` |
+| 6   | `/plugin marketplace add …` inside Claude Code            |                                          |
+| 7   | `/plugin install …` inside Claude Code                    |                                          |
+| 8   | hand-add the CI step, with a sha                          |                                          |
+| 9   | install TeX Live, poppler, a JRE, python3                 | the skills shell out to them             |
 
 Nine, three of which are hand-edits to files, and one of which — step 5 — is undocumented enough
 that skipping it leaves `paper-edit-guard` **silently watching a directory that does not exist**
@@ -39,27 +39,27 @@ that skipping it leaves `paper-edit-guard` **silently watching a directory that 
 Measured 2026-09-18 by reading published tarballs, not docs, with `esbuild` as a known-positive
 control for the probe.
 
-| tool | commands to working state | writes config? | wires hooks/CI? | install-time script? |
-| --- | --- | --- | --- | --- |
-| ESLint | **1** — `npm init @eslint/config@latest`, installs deps too | yes, `eslint.config.js` | no | none |
-| Playwright | **1** — `npm init playwright@latest` | yes | **yes — GH Actions workflow + browsers, both asked inside init** | **removed in 1.38.0** |
-| Biome | 2 — install, `biome init` | yes, zero prompts | no | none (platform binaries via optionalDependencies) |
-| husky | 2 — install, `husky init` | yes — edits `package.json`, writes `.husky/`, sets `core.hooksPath` | yes, git hooks | **removed in 5.0.0** |
-| changesets | 2 — install, `changeset init` | yes | no | none |
-| Tailwind v4 | 3 + hand edits | **no — `init` deleted, the package has no `bin` at all** | no | none |
-| Prettier | 3 — config created by shelling out to `node --eval` | **no init command exists** | no | none |
-| lint-staged | 4+, all manual | no | no, delegates to husky | none |
+| tool        | commands to working state                                   | writes config?                                                      | wires hooks/CI?                                                  | install-time script?                              |
+| ----------- | ----------------------------------------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------- |
+| ESLint      | **1** — `npm init @eslint/config@latest`, installs deps too | yes, `eslint.config.js`                                             | no                                                               | none                                              |
+| Playwright  | **1** — `npm init playwright@latest`                        | yes                                                                 | **yes — GH Actions workflow + browsers, both asked inside init** | **removed in 1.38.0**                             |
+| Biome       | 2 — install, `biome init`                                   | yes, zero prompts                                                   | no                                                               | none (platform binaries via optionalDependencies) |
+| husky       | 2 — install, `husky init`                                   | yes — edits `package.json`, writes `.husky/`, sets `core.hooksPath` | yes, git hooks                                                   | **removed in 5.0.0**                              |
+| changesets  | 2 — install, `changeset init`                               | yes                                                                 | no                                                               | none                                              |
+| Tailwind v4 | 3 + hand edits                                              | **no — `init` deleted, the package has no `bin` at all**            | no                                                               | none                                              |
+| Prettier    | 3 — config created by shelling out to `node --eval`         | **no init command exists**                                          | no                                                               | none                                              |
+| lint-staged | 4+, all manual                                              | no                                                                  | no, delegates to husky                                           | none                                              |
 
 Three findings carry over here.
 
 **Nobody installs anything at postinstall time, and the two who used to say why they stopped.**
-npm's own rule, quoted in husky's write-up: *"The only valid use of install or preinstall scripts
-is for compilation."* Yarn 2: *"postinstall scripts are not a viable solution."* husky adds two
-concrete failure modes — the package manager's cache makes a failed install unrepeatable (*"if
-Husky 4 failed to install the first time, re-running `npm install` won't work due to the cache"*),
-and package managers suppress the output, which matters *"for a tool with a big side effect
-(changing Git hooks)"*. Playwright's v1.38.0 notes: *"we recommend to explicitly download browsers
-via `npx playwright install` command."*
+npm's own rule, quoted in husky's write-up: _"The only valid use of install or preinstall scripts
+is for compilation."_ Yarn 2: _"postinstall scripts are not a viable solution."_ husky adds two
+concrete failure modes — the package manager's cache makes a failed install unrepeatable (_"if
+Husky 4 failed to install the first time, re-running `npm install` won't work due to the cache"_),
+and package managers suppress the output, which matters _"for a tool with a big side effect
+(changing Git hooks)"_. Playwright's v1.38.0 notes: _"we recommend to explicitly download browsers
+via `npx playwright install` command."_
 
 This settles a question this package asked twice: an automatic install that can quietly fail is
 worse than an explicit step that says what it needs.
@@ -117,11 +117,11 @@ external programs are missing.
 
 ## The target count
 
-| # | action |
-| --- | --- |
-| 1 | `npm i -D github:zernie/research-paper-pipeline#<sha>` |
-| 2 | `npx rpp init` — detects the papers directory, writes the declaration, links the skills into `.claude/skills/`, offers the CI workflow, prints the two plugin lines and any missing programs |
-| 3 | the two `/plugin` lines inside Claude Code |
+| #   | action                                                                                                                                                                                       |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `npm i -D github:zernie/research-paper-pipeline#<sha>`                                                                                                                                       |
+| 2   | `npx rpp init` — detects the papers directory, writes the declaration, links the skills into `.claude/skills/`, offers the CI workflow, prints the two plugin lines and any missing programs |
+| 3   | the two `/plugin` lines inside Claude Code                                                                                                                                                   |
 
 Three, one of which is a paste of two lines that `init` just printed. Step 3 cannot be collapsed:
 it is typed into a different program, and nothing on disk can type it for you.
@@ -218,3 +218,34 @@ consumer at all.
 reachable as `<consumer>/.claude/skills/<name>/SKILL.md`, every script path resolving from the
 consumer root, a second `init` changing nothing, and a foreign directory under a shipped name
 surviving untouched.
+
+## What `rpp init` writes
+
+Moved out of the README on 2026-09-23. Exactly:
+
+| what                                                               | where                   | when                                                                                                                                          |
+| ------------------------------------------------------------------ | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| a `research-paper-pipeline` key naming your papers directory       | your `package.json`     | always                                                                                                                                        |
+| a GitHub Actions workflow                                          | `.github/workflows/`    | only if you say yes; it asks once, and only when stdin is a terminal                                                                          |
+| one relative symlink per shipped skill, into the installed package | `.claude/skills/<name>` | always — except where that name is already taken (a directory, a file, a link elsewhere): that entry is left as it is and named in the report |
+
+It installs no software and touches nothing else. It ends by running `rpp doctor` and exits with
+its verdict.
+
+## Install size
+
+Measured 2026-09-23 on a clean project with npm 10.9.7 (`npm i <tarball>`, production
+dependencies only), **before** zernie/vigiles#280 made the `vigiles` grammars optional — so the
+`@ast-grep/*` and `typescript` rows below are expected to shrink; re-measure before quoting them.
+
+|                                        |       size |
+| -------------------------------------- | ---------: |
+| tarball                                |     1.2 MB |
+| this package, unpacked                 |     3.7 MB |
+| **`node_modules` in total**            | **136 MB** |
+| of which `@ast-grep/*` (via `vigiles`) |      51 MB |
+| of which `typescript` (via `vigiles`)  |      23 MB |
+| of which `vigiles` itself              |       6 MB |
+
+Neither `rpp lint` nor any of the three hooks loads `@ast-grep` or `typescript` — measured by
+tracing every module they resolve; `vigiles` itself is loaded.

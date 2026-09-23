@@ -98,10 +98,16 @@
  *     of behaviour rather than a move, and it wants its own measurement on a real corpus.
  */
 import { getParser } from "@unified-latex/unified-latex-util-parse";
-import { TextSourceCodeBase, VisitNodeStep, ConfigCommentParser, Directive } from "@eslint/plugin-kit";
+import {
+  TextSourceCodeBase,
+  VisitNodeStep,
+  ConfigCommentParser,
+  Directive,
+} from "@eslint/plugin-kit";
 
 const HEADING = { part: 1, section: 2, subsection: 3, subsubsection: 4 };
-const CODEISH = /^(verbatim|lstlisting|minted|figure|figure\*|table|table\*|tabular|algorithm|algorithmic|thebibliography|tikzpicture|filecontents\*?)$/;
+const CODEISH =
+  /^(verbatim|lstlisting|minted|figure|figure\*|table|table\*|tabular|algorithm|algorithmic|thebibliography|tikzpicture|filecontents\*?)$/;
 // Prose that a CODEISH environment has NO right to swallow together with the markup.
 // A figure/table caption and a footnote are English sentences: the author writes them and the
 // reviewer reads them. Everything else inside a float (`&`, `\\`, the column specification,
@@ -110,7 +116,8 @@ const CODEISH = /^(verbatim|lstlisting|minted|figure|figure\*|table|table\*|tabu
 // paper agree with `texcount`'s "Words outside text".
 const FLOAT_PROSE = /^(caption|footnote)$/;
 // Macros whose NAME and ARGUMENT are both non-prose.
-const OPAQUE = /^(label|ref|autoref|eqref|cite|citep|citet|input|include|usepackage|documentclass|bibliography|bibliographystyle|acmISBN|acmDOI|acmConference|setcopyright|ccsdesc|keywords|orcid|affiliation|email|author|copyrightyear|acmYear|acmBooktitle|acmPrice|settopmatter|definecolor|includegraphics|newcommand|renewcommand|def|let|makeatletter|makeatother|hypersetup|pagestyle|thispagestyle|vspace|hspace)$/;
+const OPAQUE =
+  /^(label|ref|autoref|eqref|cite|citep|citet|input|include|usepackage|documentclass|bibliography|bibliographystyle|acmISBN|acmDOI|acmConference|setcopyright|ccsdesc|keywords|orcid|affiliation|email|author|copyrightyear|acmYear|acmBooktitle|acmPrice|settopmatter|definecolor|includegraphics|newcommand|renewcommand|def|let|makeatletter|makeatother|hypersetup|pagestyle|thispagestyle|vspace|hspace)$/;
 
 const P = (n) => n?.position;
 
@@ -119,27 +126,39 @@ function plain(nodes) {
   for (const n of nodes || []) {
     if (n.type === "string") out += n.content;
     else if (n.type === "whitespace") out += " ";
-    else if (n.type === "group" || n.type === "argument") out += plain(n.content);
-    else if (n.type === "macro" && n.args) out += plain(n.args.flatMap((a) => a.content || []));
+    else if (n.type === "group" || n.type === "argument")
+      out += plain(n.content);
+    else if (n.type === "macro" && n.args)
+      out += plain(n.args.flatMap((a) => a.content || []));
   }
   return out.trim();
 }
 const argEnd = (node) => {
   let end = P(node).end;
   for (const a of node.args || [])
-    for (const c of a.content || []) if (P(c) && P(c).end.offset > end.offset) end = P(c).end;
+    for (const c of a.content || [])
+      if (P(c) && P(c).end.offset > end.offset) end = P(c).end;
   return end;
 };
 
 export function texToMdast(src) {
   const ast = getParser().parse(src);
   const chars = src.split("");
-  const blank = (from, to) => { for (let i = from; i < to && i < chars.length; i++) if (chars[i] !== "\n") chars[i] = " "; };
+  const blank = (from, to) => {
+    for (let i = from; i < to && i < chars.length; i++)
+      if (chars[i] !== "\n") chars[i] = " ";
+  };
   const lineStarts = [0];
-  for (let i = 0; i < src.length; i++) if (src[i] === "\n") lineStarts.push(i + 1);
+  for (let i = 0; i < src.length; i++)
+    if (src[i] === "\n") lineStarts.push(i + 1);
   const loc = (off) => {
-    let lo = 0, hi = lineStarts.length - 1;
-    while (lo < hi) { const m = (lo + hi + 1) >> 1; if (lineStarts[m] <= off) lo = m; else hi = m - 1; }
+    let lo = 0,
+      hi = lineStarts.length - 1;
+    while (lo < hi) {
+      const m = (lo + hi + 1) >> 1;
+      if (lineStarts[m] <= off) lo = m;
+      else hi = m - 1;
+    }
     return { line: lo + 1, column: off - lineStarts[lo] + 1, offset: off };
   };
   const children = [];
@@ -153,22 +172,40 @@ export function texToMdast(src) {
   /** A synthetic heading: the ATX marker is written at the START of the span, the tail is blanked. */
   const synthHeading = (from, to, title, depth = 2) => {
     const label = "#".repeat(depth) + " " + title;
-    if (label.length > to - from) return null;      // does not fit — do not invent one silently
+    if (label.length > to - from) return null; // does not fit — do not invent one silently
     blank(from, to);
     for (let i = 0; i < label.length; i++) chars[from + i] = label[i];
     const node = {
-      type: "heading", depth, title,
-      children: [{ type: "text", value: title, position: { start: loc(from + depth + 1), end: loc(from + label.length) } }],
+      type: "heading",
+      depth,
+      title,
+      children: [
+        {
+          type: "text",
+          value: title,
+          position: {
+            start: loc(from + depth + 1),
+            end: loc(from + label.length),
+          },
+        },
+      ],
       position: { start: loc(from), end: loc(from + label.length) },
     };
     children.push(node);
     return node;
   };
 
-
   const beginDoc = src.indexOf("\\begin{document}");
   const preEnd = beginDoc > 0 ? beginDoc + "\\begin{document}".length : 0;
-  if (preEnd) { blank(0, preEnd); children.push({ type: "code", lang: "latex", value: "", position: { start: loc(0), end: loc(preEnd) } }); }
+  if (preEnd) {
+    blank(0, preEnd);
+    children.push({
+      type: "code",
+      lang: "latex",
+      value: "",
+      position: { start: loc(0), end: loc(preEnd) },
+    });
+  }
 
   (function walk(node) {
     if (Array.isArray(node)) return node.forEach((n) => walk(n));
@@ -178,7 +215,10 @@ export function texToMdast(src) {
     // `\renewcommand{\bibliography}`) is a node of the document. Without this cut-off, one real
     // paper got a FALSE `## References` on line 178 — i.e. its bibliography "began" before the
     // introduction, and the whole paper fell into the free half.
-    if (pos && pos.start.offset < preEnd) { for (const k of ["content", "args"]) if (node[k]) walk(node[k]); return; }
+    if (pos && pos.start.offset < preEnd) {
+      for (const k of ["content", "args"]) if (node[k]) walk(node[k]);
+      return;
+    }
 
     if (node.type === "environment") {
       const env = typeof node.env === "string" ? node.env : plain(node.env);
@@ -187,14 +227,30 @@ export function texToMdast(src) {
       // ENVIRONMENT and a macro rather than by a heading, so without synthesis `freeRanges`
       // is empty and seven rules are silent by construction.
       if (env === "abstract" && pos) {
-        synthHeading(pos.start.offset, pos.start.offset + "\\begin{abstract}".length, "Abstract");
+        synthHeading(
+          pos.start.offset,
+          pos.start.offset + "\\begin{abstract}".length,
+          "Abstract",
+        );
         for (const k of ["content", "args"]) if (node[k]) walk(node[k]);
         return;
       }
       if (env === "thebibliography" && pos) {
-        const h = synthHeading(pos.start.offset, pos.start.offset + "\\begin{thebibliography}".length, "References");
-        blank(pos.start.offset + (h ? "## References".length : 0), pos.end.offset);
-        children.push({ type: "code", lang: env, value: "", position: { start: loc(pos.start.offset + 14), end: pos.end } });
+        const h = synthHeading(
+          pos.start.offset,
+          pos.start.offset + "\\begin{thebibliography}".length,
+          "References",
+        );
+        blank(
+          pos.start.offset + (h ? "## References".length : 0),
+          pos.end.offset,
+        );
+        children.push({
+          type: "code",
+          lang: env,
+          value: "",
+          position: { start: loc(pos.start.offset + 14), end: pos.end },
+        });
         return;
       }
       if (CODEISH.test(env) && pos) {
@@ -211,18 +267,27 @@ export function texToMdast(src) {
           if (Array.isArray(n)) return n.forEach(findProse);
           if (!n || typeof n !== "object") return;
           if (n.type === "macro" && FLOAT_PROSE.test(n.content)) {
-            const cs = (n.args || []).flatMap((a) => a.content || []).filter((c) => P(c));
+            const cs = (n.args || [])
+              .flatMap((a) => a.content || [])
+              .filter((c) => P(c));
             // Keep exactly the CONTENT of the argument: `\caption` itself and the braces
             // stay in the blanked part, so the macro name never becomes prose.
             if (cs.length)
-              keep.push({ node: n, s: P(cs[0]).start.offset, e: P(cs[cs.length - 1]).end.offset });
+              keep.push({
+                node: n,
+                s: P(cs[0]).start.offset,
+                e: P(cs[cs.length - 1]).end.offset,
+              });
             return; // do not look for a caption inside a caption
           }
           for (const k of ["content", "args"]) if (n[k]) findProse(n[k]);
         })(node.content);
         keep.sort((a, b) => a.s - b.s);
         let cur = pos.start.offset;
-        for (const k of keep) { blank(cur, k.s); cur = Math.max(cur, k.e); }
+        for (const k of keep) {
+          blank(cur, k.s);
+          cur = Math.max(cur, k.e);
+        }
         blank(cur, pos.end.offset);
         // 🔴 The code node is emitted LINE BY LINE, stepping around the caption lines. A
         // document splitter drops from its clean text every line a `code` node TOUCHES, so one
@@ -230,7 +295,12 @@ export function texToMdast(src) {
         // the projection had saved it.
         const proseLines = new Set();
         for (const k of keep)
-          for (let l = loc(k.s).line; l <= loc(Math.max(k.s, k.e - 1)).line; l++) proseLines.add(l);
+          for (
+            let l = loc(k.s).line;
+            l <= loc(Math.max(k.s, k.e - 1)).line;
+            l++
+          )
+            proseLines.add(l);
         const L0 = loc(pos.start.offset).line;
         const L1 = loc(Math.max(pos.start.offset, pos.end.offset - 1)).line;
         for (let l = L0; l <= L1; l++) {
@@ -239,7 +309,12 @@ export function texToMdast(src) {
           while (r + 1 <= L1 && !proseLines.has(r + 1)) r++;
           const s0 = lineStarts[l - 1];
           const e0 = r < lineStarts.length ? lineStarts[r] - 1 : src.length;
-          children.push({ type: "code", lang: env, value: "", position: { start: loc(s0), end: loc(e0) } });
+          children.push({
+            type: "code",
+            lang: env,
+            value: "",
+            position: { start: loc(s0), end: loc(e0) },
+          });
           l = r;
         }
         // We walk into the caption itself the ordinary way: `\label`, `\cite` and math inside
@@ -253,8 +328,14 @@ export function texToMdast(src) {
         blank(Math.max(0, pos.end.offset - env.length - 6), pos.end.offset);
       }
     }
-    if ((node.type === "inlinemath" || node.type === "displaymath" || node.type === "verbatim") && pos) {
-      blank(pos.start.offset, pos.end.offset); return;
+    if (
+      (node.type === "inlinemath" ||
+        node.type === "displaymath" ||
+        node.type === "verbatim") &&
+      pos
+    ) {
+      blank(pos.start.offset, pos.end.offset);
+      return;
     }
     if (node.type === "comment" && pos) {
       // 🔴 unified-latex includes the TRAILING newline in a comment; mdast does not. A rule
@@ -262,7 +343,11 @@ export function texToMdast(src) {
       // the comment and the heading; with the `\n` swallowed the gap is empty and the note is
       // never found.
       let ce = pos.end.offset;
-      while (ce > pos.start.offset && (src[ce - 1] === "\n" || src[ce - 1] === "\r")) ce--;
+      while (
+        ce > pos.start.offset &&
+        (src[ce - 1] === "\n" || src[ce - 1] === "\r")
+      )
+        ce--;
       // 🔴 AND SYMMETRICALLY ON THE LEFT (found by a run on 2026-08-27, not by reading). A
       // comment that follows a line of text directly, rather than a blank line, comes back from
       // unified-latex with a position starting at the PREVIOUS newline instead of at `%`.
@@ -273,11 +358,11 @@ export function texToMdast(src) {
       let cs = pos.start.offset;
       while (cs < ce && src[cs] !== "%") cs++;
       children.push({
-        type: "html", value: node.content,
+        type: "html",
+        value: node.content,
         position: { start: loc(cs), end: loc(ce) },
       });
       return; // blanking is the document splitter's job — it also takes the note body
-
     }
     if (node.type === "macro" && pos) {
       const depth = HEADING[node.content];
@@ -291,9 +376,14 @@ export function texToMdast(src) {
         for (let i = 0; i < title.length; i++) chars[tStart + i] = title[i];
         const tPos = { start: loc(tStart), end: loc(end.offset) };
         children.push({
-          type: "heading", depth, title,
+          type: "heading",
+          depth,
+          title,
           children: [{ type: "text", value: title, position: tPos }],
-          position: { start: pos.start, end: { ...end, offset: end.offset + 1, column: end.column + 1 } },
+          position: {
+            start: pos.start,
+            end: { ...end, offset: end.offset + 1, column: end.column + 1 },
+          },
         });
         return;
       }
@@ -301,27 +391,49 @@ export function texToMdast(src) {
         synthHeading(pos.start.offset, argEnd(node).offset + 1, "References");
         return;
       }
-      if (OPAQUE.test(node.content)) { blank(pos.start.offset, argEnd(node).offset + 1); return; }
+      if (OPAQUE.test(node.content)) {
+        blank(pos.start.offset, argEnd(node).offset + 1);
+        return;
+      }
       // `\texttt{X}` → `` `X` ``: exactly the same character count, so offsets do not move.
       // This is the only markdown markup the projection can reproduce without shifting: `**`
       // needs TWO characters after the content, and there is only `}`.
       if (node.content === "texttt" || node.content === "lstinline") {
         const e = argEnd(node);
-        const cs = (node.args || []).flatMap((a) => a.content || []).filter((c) => P(c));
+        const cs = (node.args || [])
+          .flatMap((a) => a.content || [])
+          .filter((c) => P(c));
         if (cs.length) {
           const s0 = P(cs[0]).start.offset;
           blank(pos.start.offset, s0 - 1);
-          chars[s0 - 1] = "`"; chars[e.offset] = "`";
+          chars[s0 - 1] = "`";
+          chars[e.offset] = "`";
           return;
         }
       }
-      if ((node.content === "textbf" || node.content === "emph") && pos.start.column === 1 && !inCaption) {
+      if (
+        (node.content === "textbf" || node.content === "emph") &&
+        pos.start.column === 1 &&
+        !inCaption
+      ) {
         const end = argEnd(node);
         const sv = plain(node.args?.flatMap((a) => a.content || []));
         children.push({
           type: "strong",
-          children: [{ type: "text", value: sv, position: { start: loc(end.offset - sv.length), end: loc(end.offset) } }],
-          position: { start: pos.start, end: { ...end, offset: end.offset + 1, column: end.column + 1 } },
+          children: [
+            {
+              type: "text",
+              value: sv,
+              position: {
+                start: loc(end.offset - sv.length),
+                end: loc(end.offset),
+              },
+            },
+          ],
+          position: {
+            start: pos.start,
+            end: { ...end, offset: end.offset + 1, column: end.column + 1 },
+          },
         });
         // 🔴 The `**` are written IN PLACE OF `\\te`, not before the content: a block-note rule
         // locates a lead-in by the OFFSET of the line's first non-space character. Leave spaces
@@ -331,11 +443,16 @@ export function texToMdast(src) {
       }
       // an ordinary macro: blank the NAME (`\emph`) and the argument's BRACES; the content is prose
       blank(pos.start.offset, pos.end.offset);
-      while (pendingStrong.length) { const o = pendingStrong.pop(); chars[o] = "*"; chars[o + 1] = "*"; }
+      while (pendingStrong.length) {
+        const o = pendingStrong.pop();
+        chars[o] = "*";
+        chars[o + 1] = "*";
+      }
       for (const a of node.args || []) {
         const cs = (a.content || []).filter((c) => P(c));
         if (!cs.length) continue;
-        const s0 = P(cs[0]).start.offset, e0 = P(cs[cs.length - 1]).end.offset;
+        const s0 = P(cs[0]).start.offset,
+          e0 = P(cs[cs.length - 1]).end.offset;
         if (a.openMark) blank(s0 - a.openMark.length, s0);
         if (a.closeMark) blank(e0, e0 + a.closeMark.length);
       }
@@ -350,14 +467,25 @@ export function texToMdast(src) {
   })(ast.content);
 
   children.sort((a, b) => a.position.start.offset - b.position.start.offset);
-  return { root: { type: "root", children, position: { start: loc(0), end: loc(src.length) } }, text: chars.join("") };
+  return {
+    root: {
+      type: "root",
+      children,
+      position: { start: loc(0), end: loc(src.length) },
+    },
+    text: chars.join(""),
+  };
 }
 
 const commentParser = new ConfigCommentParser();
-const directiveStart = /^\s*eslint(?:-enable|-disable(?:(?:-next)?-line)?)?(?:\s|$)/u;
+const directiveStart =
+  /^\s*eslint(?:-enable|-disable(?:(?:-next)?-line)?)?(?:\s|$)/u;
 
 class TexSourceCode extends TextSourceCodeBase {
-  #steps; #parents = new WeakMap(); #comments = []; #inline;
+  #steps;
+  #parents = new WeakMap();
+  #comments = [];
+  #inline;
   ast;
   /**
    * `raw` is the UNPROJECTED `.tex`, and it is here because the projection is lossy by design:
@@ -376,31 +504,58 @@ class TexSourceCode extends TextSourceCodeBase {
     this.raw = raw ?? text;
     this.traverse();
   }
-  getParent(node) { return this.#parents.get(node); }
+  getParent(node) {
+    return this.#parents.get(node);
+  }
   getInlineConfigNodes() {
     if (!this.#inline)
-      this.#inline = this.#comments.filter((c) => directiveStart.test(c.value)).map((c) => ({ value: c.value.trim(), position: c.position }));
+      this.#inline = this.#comments
+        .filter((c) => directiveStart.test(c.value))
+        .map((c) => ({ value: c.value.trim(), position: c.position }));
     return this.#inline;
   }
   getDisableDirectives() {
     const directives = [];
     for (const comment of this.getInlineConfigNodes()) {
-      const { label, value, justification } = commentParser.parseDirective(comment.value);
-      if (["eslint-disable", "eslint-enable", "eslint-disable-next-line", "eslint-disable-line"].includes(label))
-        directives.push(new Directive({ type: label.slice(7), node: comment, value, justification }));
+      const { label, value, justification } = commentParser.parseDirective(
+        comment.value,
+      );
+      if (
+        [
+          "eslint-disable",
+          "eslint-enable",
+          "eslint-disable-next-line",
+          "eslint-disable-line",
+        ].includes(label)
+      )
+        directives.push(
+          new Directive({
+            type: label.slice(7),
+            node: comment,
+            value,
+            justification,
+          }),
+        );
     }
     return { problems: [], directives };
   }
-  applyInlineConfig() { return { configs: [], problems: [] }; }
+  applyInlineConfig() {
+    return { configs: [], problems: [] };
+  }
   traverse() {
     if (this.#steps) return this.#steps.values();
     const steps = (this.#steps = []);
     const visit = (node, parent) => {
       this.#parents.set(node, parent);
-      steps.push(new VisitNodeStep({ target: node, phase: 1, args: [node, parent] }));
-      if (node.type === "html") this.#comments.push({ value: node.value, position: node.position });
+      steps.push(
+        new VisitNodeStep({ target: node, phase: 1, args: [node, parent] }),
+      );
+      if (node.type === "html")
+        this.#comments.push({ value: node.value, position: node.position });
       for (const c of node.children || []) visit(c, node);
-      steps.push(new VisitNodeStep({ target: node, phase: 2, args: [node, parent] }));
+      steps.push(
+        new VisitNodeStep({ target: node, phase: 2, args: [node, parent] }),
+      );
     };
     visit(this.ast);
     return steps.values();
@@ -408,15 +563,20 @@ class TexSourceCode extends TextSourceCodeBase {
 }
 
 export const texLanguage = {
-  fileType: "text", lineStart: 1, columnStart: 1, nodeTypeKey: "type",
-  defaultLanguageOptions: {}, validateLanguageOptions() {},
+  fileType: "text",
+  lineStart: 1,
+  columnStart: 1,
+  nodeTypeKey: "type",
+  defaultLanguageOptions: {},
+  validateLanguageOptions() {},
   parse(file) {
     try {
       const raw = String(file.body);
       const { root, text } = texToMdast(raw);
       return { ok: true, ast: root, projected: text, raw };
+    } catch (ex) {
+      return { ok: false, errors: [ex] };
     }
-    catch (ex) { return { ok: false, errors: [ex] }; }
   },
   createSourceCode(file, parseResult) {
     // 🔴 LOAD-BEARING: the SourceCode receives the PROJECTION, not the source. Lengths and

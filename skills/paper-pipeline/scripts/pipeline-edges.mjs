@@ -49,47 +49,61 @@ export const CANONICAL_INPUTS = {
   structure: {
     skill: "tighten-paper",
     requires: {
-      render: 'render-paper/SKILL.md: "that page count is the hard input the `tighten-paper` structure gate is blocked on"',
+      render:
+        'render-paper/SKILL.md: "that page count is the hard input the `tighten-paper` structure gate is blocked on"',
       arc: 'argument-arc/SKILL.md: "Run it *before* them" (them = tighten-paper, grade-paper-writing) — "cutting words inside a broken arc is how a session burns a day"',
     },
   },
   writing: {
     skill: "grade-paper-writing",
     requires: {
-      draft: "the template's own cell: the writing grade reads the current draft",
+      draft:
+        "the template's own cell: the writing grade reads the current draft",
       arc: 'argument-arc/SKILL.md: "Before `tighten-paper` / `grade-paper-writing` / `pc-panel-review` on any draft whose thesis has changed since those gates last ran"',
-      structure: 'tighten-paper/SKILL.md: "Run it BEFORE those on a bloated draft — no point polishing sentences in a section that should be cut"; harden-paper/SKILL.md: "Order matters: STRUCTURE before SENTENCES. Run axis 0 FIRST."',
+      structure:
+        'tighten-paper/SKILL.md: "Run it BEFORE those on a bloated draft — no point polishing sentences in a section that should be cut"; harden-paper/SKILL.md: "Order matters: STRUCTURE before SENTENCES. Run axis 0 FIRST."',
     },
   },
   panel: {
     skill: "pc-panel-review",
     requires: {
-      structure: 'pc-panel-review/SKILL.md: "there must exist for THIS draft … the **structural verdict** from `tighten-paper` … If either doesn\'t exist yet, STOP and run those skills first."',
-      writing: 'pc-panel-review/SKILL.md: "there must exist for THIS draft: (a) the **persona stall inventory** from `grade-paper-writing`"',
+      structure:
+        'pc-panel-review/SKILL.md: "there must exist for THIS draft … the **structural verdict** from `tighten-paper` … If either doesn\'t exist yet, STOP and run those skills first."',
+      writing:
+        'pc-panel-review/SKILL.md: "there must exist for THIS draft: (a) the **persona stall inventory** from `grade-paper-writing`"',
     },
   },
   claims: {
     skill: "Fable diff",
     requires: {
-      draft: "the template's own cell: the diff is against the pre-pass draft baseline",
-      writing: 'grade-paper-writing/SKILL.md: "**After applying sentence fixes, run the `claims` claim-preservation diff** … This step is mandatory after EVERY rewrite, not optional."',
+      draft:
+        "the template's own cell: the diff is against the pre-pass draft baseline",
+      writing:
+        'grade-paper-writing/SKILL.md: "**After applying sentence fixes, run the `claims` claim-preservation diff** … This step is mandatory after EVERY rewrite, not optional."',
     },
   },
   harden: {
     skill: "harden-paper",
     requires: {
-      panel: 'harden-paper/SKILL.md axis 1: "run `paper-adversarial-review` (quick) and, as the final decision gate, `pc-panel-review`"',
-      structure: 'harden-paper/SKILL.md axis 0: "**Structure / editorial (run FIRST)** — run **`tighten-paper`**"; paper-pipeline/SKILL.md: "Its structure and writing axes are the **re-run/confirm** pass, not the first invocation."',
-      writing: 'harden-paper/SKILL.md axis 8: "run **`grade-paper-writing`** … Without it this axis silently does not run"',
-      cites: 'harden-paper/SKILL.md axis 4: "**Citations** — run `verify-citations`" under "## The axes (run all; each is a gate)"',
-      priordelta: 'map-prior-work/SKILL.md, the `priordelta` row: "**Whenever the contribution\'s framing moves**, and again before `harden-paper`."',
+      panel:
+        'harden-paper/SKILL.md axis 1: "run `paper-adversarial-review` (quick) and, as the final decision gate, `pc-panel-review`"',
+      structure:
+        'harden-paper/SKILL.md axis 0: "**Structure / editorial (run FIRST)** — run **`tighten-paper`**"; paper-pipeline/SKILL.md: "Its structure and writing axes are the **re-run/confirm** pass, not the first invocation."',
+      writing:
+        'harden-paper/SKILL.md axis 8: "run **`grade-paper-writing`** … Without it this axis silently does not run"',
+      cites:
+        'harden-paper/SKILL.md axis 4: "**Citations** — run `verify-citations`" under "## The axes (run all; each is a gate)"',
+      priordelta:
+        'map-prior-work/SKILL.md, the `priordelta` row: "**Whenever the contribution\'s framing moves**, and again before `harden-paper`."',
     },
   },
   submit: {
     skill: "submit-paper",
     requires: {
-      harden: 'submit-paper/SKILL.md: "Harden first: `pc-panel-review` (incl. its venue-fit mode), `paper-adversarial-review`, `render-paper`."',
-      access: 'paper-pipeline/SKILL.md GATES table, Submit: "🔴 **The `access` row green.**"',
+      harden:
+        'submit-paper/SKILL.md: "Harden first: `pc-panel-review` (incl. its venue-fit mode), `paper-adversarial-review`, `render-paper`."',
+      access:
+        'paper-pipeline/SKILL.md GATES table, Submit: "🔴 **The `access` row green.**"',
     },
   },
 };
@@ -100,10 +114,22 @@ export const CANONICAL_INPUTS = {
  * them and then invents a column for them.
  */
 export const UNEXPRESSED = [
-  ['schedule ← venue', 'plan-paper-timeline/SKILL.md: "`find-venue` — the source of the four CFP dates this skill consumes; run it first."'],
-  ['access ← venue', "same sentence: the portal and its form are venue facts, so the venue is picked first."],
-  ['draft ← study', 'draft-paper/SKILL.md: "**FAIL** — it declined to draft because a required input was missing: no numbers from build-benchmark"'],
-  ['priorwork ← idea', 'paper-pipeline/SKILL.md SETUP: map-prior-work runs "right after `research-ideate` says go"'],
+  [
+    "schedule ← venue",
+    'plan-paper-timeline/SKILL.md: "`find-venue` — the source of the four CFP dates this skill consumes; run it first."',
+  ],
+  [
+    "access ← venue",
+    "same sentence: the portal and its form are venue facts, so the venue is picked first.",
+  ],
+  [
+    "draft ← study",
+    'draft-paper/SKILL.md: "**FAIL** — it declined to draft because a required input was missing: no numbers from build-benchmark"',
+  ],
+  [
+    "priorwork ← idea",
+    'paper-pipeline/SKILL.md SETUP: map-prior-work runs "right after `research-ideate` says go"',
+  ],
 ];
 
 /**
@@ -112,18 +138,32 @@ export const UNEXPRESSED = [
  * indistinguishable afterwards, and the first is only worth anything if it is written down.
  */
 export const NOT_EDGES = [
-  ['panel ← arc',
-   'argument-arc/SKILL.md: "Before `tighten-paper` / `grade-paper-writing` / `pc-panel-review` **on any draft whose thesis has changed since those gates last ran**." — conditional, and panel already requires structure and writing, which both require arc, so declaring it adds no enforcement.'],
-  ['writing ← render',
-   'grade-paper-writing/SKILL.md: "`render-paper` — build the PDF/PNGs first so you grade what the reviewer will actually see." — it is an entry in the `## Compose with` list and about fidelity of grading, not a block. `tighten-paper` states its render dependency in normative prose; this one does not.'],
-  ['harden ← siblings',
-   'harden-paper/SKILL.md axis 3: "For every genuine sibling found, run **`analyze-sibling-paper`**" — conditional on a sibling existing, and `siblings` is itself a trigger row that is n/a on a paper with no close neighbour.'],
-  ['harden ← venuebar',
-   'study-accepted-papers/SKILL.md: "`harden-paper` — the multi-axis pre-submit gate; this skill **feeds it** the venue-specific axis" — a compose-with, and harden\'s own axis list never calls it.'],
-  ['harden ← siblings (via analyze-sibling-paper)',
-   'analyze-sibling-paper/SKILL.md: "Compose with … harden-paper (its nearest-neighbor-scoop axis calls this)" — a compose-with sentence in a description, mirrored by the conditional above.'],
-  ['structure ← draft',
-   'tighten-paper/SKILL.md description: "The developmental / editorial pass on a **DRAFTED** paper" — states a precondition on the object, not on a scorecard row, and no sentence orders it against `draft`.'],
-  ['writing ← panel / claims ← panel / harden ← claims (the chain read off the GATES table order)',
-   'paper-pipeline/SKILL.md: "Ordered, and the order is real: every one refuses to run without the output of the one before it." — the same table\'s own `Requires (hard)` column contradicts it (Writing craft requires "The current draft", not the structure verdict). Rhetoric about the table, not a declaration; the column is the declaration.'],
+  [
+    "panel ← arc",
+    'argument-arc/SKILL.md: "Before `tighten-paper` / `grade-paper-writing` / `pc-panel-review` **on any draft whose thesis has changed since those gates last ran**." — conditional, and panel already requires structure and writing, which both require arc, so declaring it adds no enforcement.',
+  ],
+  [
+    "writing ← render",
+    'grade-paper-writing/SKILL.md: "`render-paper` — build the PDF/PNGs first so you grade what the reviewer will actually see." — it is an entry in the `## Compose with` list and about fidelity of grading, not a block. `tighten-paper` states its render dependency in normative prose; this one does not.',
+  ],
+  [
+    "harden ← siblings",
+    'harden-paper/SKILL.md axis 3: "For every genuine sibling found, run **`analyze-sibling-paper`**" — conditional on a sibling existing, and `siblings` is itself a trigger row that is n/a on a paper with no close neighbour.',
+  ],
+  [
+    "harden ← venuebar",
+    'study-accepted-papers/SKILL.md: "`harden-paper` — the multi-axis pre-submit gate; this skill **feeds it** the venue-specific axis" — a compose-with, and harden\'s own axis list never calls it.',
+  ],
+  [
+    "harden ← siblings (via analyze-sibling-paper)",
+    'analyze-sibling-paper/SKILL.md: "Compose with … harden-paper (its nearest-neighbor-scoop axis calls this)" — a compose-with sentence in a description, mirrored by the conditional above.',
+  ],
+  [
+    "structure ← draft",
+    'tighten-paper/SKILL.md description: "The developmental / editorial pass on a **DRAFTED** paper" — states a precondition on the object, not on a scorecard row, and no sentence orders it against `draft`.',
+  ],
+  [
+    "writing ← panel / claims ← panel / harden ← claims (the chain read off the GATES table order)",
+    'paper-pipeline/SKILL.md: "Ordered, and the order is real: every one refuses to run without the output of the one before it." — the same table\'s own `Requires (hard)` column contradicts it (Writing craft requires "The current draft", not the structure verdict). Rhetoric about the table, not a declaration; the column is the declaration.',
+  ],
 ];

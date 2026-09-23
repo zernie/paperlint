@@ -384,7 +384,11 @@ import { createHash } from "node:crypto";
 const ROOT = process.env.CLAUDE_PROJECT_DIR ?? process.cwd();
 const SKILLS_DIR = join(ROOT, ".claude", "skills");
 const REPRO = join(SKILLS_DIR, "paper-pipeline", "repro");
-const PARENT = join(SKILLS_DIR, "paper-pipeline", "framing-vs-vocabulary.eval.mjs");
+const PARENT = join(
+  SKILLS_DIR,
+  "paper-pipeline",
+  "framing-vs-vocabulary.eval.mjs",
+);
 const SCRATCH =
   process.env.ABLATION_SCRATCH ??
   "/tmp/claude-0/-home-user-mine/8268acb1-66a2-55ac-858e-2b9e3c81f84e/scratchpad/gpw-ablation";
@@ -399,7 +403,10 @@ const val = (n, d) => {
 };
 const MODE = val("mode", "main");
 const TRIALS = Number(val("trials", "3"));
-const ONLY = (val("arms", "") || "").split(",").map((s) => s.trim()).filter(Boolean);
+const ONLY = (val("arms", "") || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
 if (!["main", "oracle", "preflight", "setupdiff"].includes(MODE))
   throw new Error("--mode must be main | oracle | preflight | setupdiff");
 
@@ -471,7 +478,9 @@ const CELLS = ["AH", "SH"];
 // which nobody called (2026-08-28). The report prints the bare keys `AH`/`SH`, that is, the
 // expansion of the cells was written and never wired up. Deleted; to wire it up, put it in the
 // table header below.
-const allPrompts = CELLS.flatMap((k) => PROMPTS[k].map((p) => ({ cell: k, prompt: p })));
+const allPrompts = CELLS.flatMap((k) =>
+  PROMPTS[k].map((p) => ({ cell: k, prompt: p })),
+);
 
 // ── the baseline description, read from disk (never hardcoded — it would drift) ──
 if (!existsSync(join(SKILLS_DIR, TARGET, "SKILL.md")))
@@ -485,7 +494,10 @@ const fmOf = (md) => {
   const block = frontmatterBlock(md);
   return block === null ? {} : parseFm(block, "ablation fixture");
 };
-const parseDesc = (md) => String(fmOf(md).description ?? "").replace(/\s+/g, " ").trim();
+const parseDesc = (md) =>
+  String(fmOf(md).description ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
 const parseName = (md) => fmOf(md).name;
 const BASE_MD = readFileSync(join(SKILLS_DIR, TARGET, "SKILL.md"), "utf-8");
 const A0 = parseDesc(BASE_MD);
@@ -519,7 +531,10 @@ const D_MACHINERY = [
 const applyCuts = (s, cuts) => {
   let out = s;
   for (const c of cuts) {
-    if (!out.includes(c)) throw new Error(`deletion string not found in description: ${c.slice(0, 60)}…`);
+    if (!out.includes(c))
+      throw new Error(
+        `deletion string not found in description: ${c.slice(0, 60)}…`,
+      );
     out = out.replace(c, "");
   }
   return out.replace(/\s+/g, " ").trim();
@@ -547,8 +562,17 @@ const ARMS = [
   { id: "A2", label: "no-subordination", desc: applyCuts(A0, D_SUBORDINATION) },
   { id: "A3", label: "no-negation", desc: applyCuts(A0, D_NEGATION) },
   { id: "A4", label: "no-machinery", desc: applyCuts(A0, D_MACHINERY) },
-  { id: "A5", label: "renamed (description identical)", desc: A0, rename: "paper-readability-review" },
-  { id: "A6", label: "persona-only (A1's mirror)", desc: applyCuts(A0, D_PERSONA_ONLY) },
+  {
+    id: "A5",
+    label: "renamed (description identical)",
+    desc: A0,
+    rename: "paper-readability-review",
+  },
+  {
+    id: "A6",
+    label: "persona-only (A1's mirror)",
+    desc: applyCuts(A0, D_PERSONA_ONLY),
+  },
 ];
 for (const a of ARMS) a.skill = a.rename ?? TARGET;
 const RUN_ARMS = ONLY.length ? ARMS.filter((a) => ONLY.includes(a.id)) : ARMS;
@@ -562,11 +586,15 @@ if (ONLY.length && RUN_ARMS.length !== ONLY.length)
 
 // 1. the roster is what the parent measured
 const installed = readdirSync(SKILLS_DIR, { withFileTypes: true })
-  .filter((e) => e.isDirectory() && existsSync(join(SKILLS_DIR, e.name, "SKILL.md")))
+  .filter(
+    (e) => e.isDirectory() && existsSync(join(SKILLS_DIR, e.name, "SKILL.md")),
+  )
   .map((e) => e.name);
 const installedSet = new Set(installed);
 if (installedSet.has(ARMS[5].rename))
-  throw new Error(`A5's rename target ${ARMS[5].rename} already exists — it would collide`);
+  throw new Error(
+    `A5's rename target ${ARMS[5].rename} already exists — it would collide`,
+  );
 
 // 2. 🔴 THE PROMPTS ARE THE PARENT'S, PROVEN BY SUBSTRING. The whole comparability of this run to the
 //    12% rests on it, and "I copied them carefully" is not a check.
@@ -584,7 +612,11 @@ for (const { prompt } of allPrompts) {
   seen.add(prompt);
 }
 for (const k of CELLS)
-  assertPromptDiversity(PROMPTS[k], { minPrompts: 4, minDistance: 0.3, label: `${TARGET}:${k}` });
+  assertPromptDiversity(PROMPTS[k], {
+    minPrompts: 4,
+    minDistance: 0.3,
+    label: `${TARGET}:${k}`,
+  });
 
 // 3. the fixture is the parent's, byte for byte
 for (const [path, body] of Object.entries(FIXTURE))
@@ -596,16 +628,20 @@ for (const [path, body] of Object.entries(FIXTURE))
 // independent stemmer would mean the subset guard and the parent's overlap numbers measure different
 // things while looking like the same metric.
 const STOP = new Set(
-  ("a an the and or but if then than that this these those there here it its is are was were be been being am " +
+  (
+    "a an the and or but if then than that this these those there here it its is are was were be been being am " +
     "do does did doing done have has had having i me my we our you your he she they them their of in on at to " +
     "for with by from as into over under about after before between out up down off again more most some any " +
     "no not nor only own same so too very can will just should now what which who whom whose when where why how " +
     "me myself yourself each both few other such all one two three back keep still even yet get got give given " +
-    "make made want need know knew cannot could would might must let us like also because while against would")
-    .split(/\s+/),
+    "make made want need know knew cannot could would might must let us like also because while against would"
+  ).split(/\s+/),
 );
 const stem = (w) =>
-  w.replace(/(ies)$/, "y").replace(/(sses|shes|ches|xes)$/, (m) => m.slice(0, -2)).replace(/(ing|ed|ly|s)$/, "");
+  w
+    .replace(/(ies)$/, "y")
+    .replace(/(sses|shes|ches|xes)$/, (m) => m.slice(0, -2))
+    .replace(/(ing|ed|ly|s)$/, "");
 const words = (s) =>
   new Set(
     s
@@ -618,7 +654,10 @@ const words = (s) =>
   );
 
 const descriptions = {}; // baseline roster; per-arm rosters swap the one entry (oracle mode)
-for (const name of installed) descriptions[name] = parseDesc(readFileSync(join(SKILLS_DIR, name, "SKILL.md"), "utf-8"));
+for (const name of installed)
+  descriptions[name] = parseDesc(
+    readFileSync(join(SKILLS_DIR, name, "SKILL.md"), "utf-8"),
+  );
 
 // 4. THE MACHINERY IS THE PARENT'S, PROVEN BY COMPARING BOTH SOURCES
 const MARK_A = "const STOP = new Set(";
@@ -658,13 +697,17 @@ for (const a of ARMS) {
   const removed = [...W0].filter((x) => !w.has(x));
   deltas[a.id] = { size: w.size, added, removed };
   if (a.id === "A0") {
-    if (added.length || removed.length) throw new Error("A0 is not the baseline — it differs from A0");
+    if (added.length || removed.length)
+      throw new Error("A0 is not the baseline — it differs from A0");
     continue;
   }
   if (a.id === "A5") {
-    if (a.desc !== A0) throw new Error("A5's description must be BYTE-IDENTICAL to A0");
+    if (a.desc !== A0)
+      throw new Error("A5's description must be BYTE-IDENTICAL to A0");
     if (added.length || removed.length)
-      throw new Error(`A5's word set must EQUAL A0's (+${added.length}/-${removed.length})`);
+      throw new Error(
+        `A5's word set must EQUAL A0's (+${added.length}/-${removed.length})`,
+      );
     continue;
   }
   if (added.length)
@@ -673,7 +716,8 @@ for (const a of ARMS) {
         `measure added vocabulary, which is the parent's 35pp factor and a known-working fix — not the ` +
         `question. Mutations must be pure deletions.`,
     );
-  if (!removed.length) throw new Error(`ARM ${a.id} removes nothing — it is a duplicate of A0`);
+  if (!removed.length)
+    throw new Error(`ARM ${a.id} removes nothing — it is a duplicate of A0`);
 }
 // A1's specific claim: a literal prefix of A0.
 if (!A0.startsWith(ARMS[1].desc)) throw new Error("A1 is not a prefix of A0");
@@ -683,7 +727,9 @@ if (MODE !== "preflight") {
   try {
     execFileSync("claude", ["--version"], { stdio: "ignore" });
   } catch {
-    skip("`claude` CLI not on PATH — the eval tier drives the real harness and cannot be faked");
+    skip(
+      "`claude` CLI not on PATH — the eval tier drives the real harness and cannot be faked",
+    );
   }
 }
 
@@ -705,7 +751,9 @@ function buildArm(a) {
   const setLine = (text, key, value) => {
     const line = new RegExp(`^${key}:.*\\n`, "m").exec(text); // kb-lint:markdown-regex-ok — editing a LINE, not parsing
     if (!line)
-      throw new Error(`FIXTURE TARGET NOT FOUND: no \`${key}:\` line in ${TARGET}/SKILL.md`);
+      throw new Error(
+        `FIXTURE TARGET NOT FOUND: no \`${key}:\` line in ${TARGET}/SKILL.md`,
+      );
     return text.replace(line[0], `${key}: ${value}\n`);
   };
   md = setLine(md, "description", a.desc);
@@ -716,22 +764,38 @@ function buildArm(a) {
   writeFileSync(join(outDir, "SKILL.md"), md);
   // verify what landed on disk, not what we meant to write
   const back = readFileSync(join(outDir, "SKILL.md"), "utf-8");
-  if (parseDesc(back) !== a.desc) throw new Error(`arm ${a.id}: description did not round-trip through SKILL.md`);
-  if (parseName(back) !== a.skill) throw new Error(`arm ${a.id}: name is ${parseName(back)}, expected ${a.skill}`);
+  if (parseDesc(back) !== a.desc)
+    throw new Error(
+      `arm ${a.id}: description did not round-trip through SKILL.md`,
+    );
+  if (parseName(back) !== a.skill)
+    throw new Error(
+      `arm ${a.id}: name is ${parseName(back)}, expected ${a.skill}`,
+    );
   const n = readdirSync(dir, { withFileTypes: true }).filter(
     (e) => e.isDirectory() && existsSync(join(dir, e.name, "SKILL.md")),
   ).length;
-  if (n !== installed.length) throw new Error(`arm ${a.id}: ${n} skills installed, baseline has ${installed.length}`);
+  if (n !== installed.length)
+    throw new Error(
+      `arm ${a.id}: ${n} skills installed, baseline has ${installed.length}`,
+    );
   return dir;
 }
 
 // ── the labelling matrix, printed every run so the arms are auditable ────────
-console.log(`\n${installed.length} skills installed → ${installed.length - 1} competitors per run`);
-console.log(`\nARMS — description length, word-set delta vs A0, mean prompt overlap`);
-console.log(`${"arm".padEnd(4)}${"label".padEnd(34)}${"chars".padStart(7)}${"words".padStart(7)}${"−".padStart(6)}${"+".padStart(4)}${"ovAH".padStart(7)}${"ovSH".padStart(7)}`);
+console.log(
+  `\n${installed.length} skills installed → ${installed.length - 1} competitors per run`,
+);
+console.log(
+  `\nARMS — description length, word-set delta vs A0, mean prompt overlap`,
+);
+console.log(
+  `${"arm".padEnd(4)}${"label".padEnd(34)}${"chars".padStart(7)}${"words".padStart(7)}${"−".padStart(6)}${"+".padStart(4)}${"ovAH".padStart(7)}${"ovSH".padStart(7)}`,
+);
 for (const a of ARMS) {
   const d = deltas[a.id];
-  const ov = (k) => PROMPTS[k].reduce((s, p) => s + overlap(p, a.desc), 0) / PROMPTS[k].length;
+  const ov = (k) =>
+    PROMPTS[k].reduce((s, p) => s + overlap(p, a.desc), 0) / PROMPTS[k].length;
   console.log(
     `${a.id.padEnd(4)}${a.label.padEnd(34)}${String(a.desc.length).padStart(7)}${String(d.size).padStart(7)}` +
       `${String(d.removed.length).padStart(6)}${String(d.added.length).padStart(4)}` +
@@ -755,43 +819,82 @@ console.log(
 //      PROMPT — a disagreement concentrated in one prompt means something different from one spread
 //      evenly across eight.
 if (MODE === "setupdiff") {
-  const OPTS = ["allowedTools", "trials", "concurrency", "spacingSec", "timeoutMs", "minPrompts", "fixture", "skillsDir"];
+  const OPTS = [
+    "allowedTools",
+    "trials",
+    "concurrency",
+    "spacingSec",
+    "timeoutMs",
+    "minPrompts",
+    "fixture",
+    "skillsDir",
+  ];
   const grab = (src, key) => {
     const m = new RegExp(`\\b${key}:\\s*([^,\\n]+)`).exec(src);
     return m ? m[1].trim() : "—";
   };
-  console.log(`\nHARNESS OPTIONS — this file vs the parent (extracted from both sources)`);
+  console.log(
+    `\nHARNESS OPTIONS — this file vs the parent (extracted from both sources)`,
+  );
   console.log(`${"option".padEnd(14)}${"ablation".padEnd(34)}parent`);
   for (const k of OPTS)
-    console.log(`${k.padEnd(14)}${grab(mySrc, k).slice(0, 32).padEnd(34)}${grab(parentSrc, k).slice(0, 40)}`);
-  const fxHash = (s) => createHash("sha256").update(JSON.stringify(s)).digest("hex").slice(0, 16);
+    console.log(
+      `${k.padEnd(14)}${grab(mySrc, k).slice(0, 32).padEnd(34)}${grab(parentSrc, k).slice(0, 40)}`,
+    );
+  const fxHash = (s) =>
+    createHash("sha256").update(JSON.stringify(s)).digest("hex").slice(0, 16);
   console.log(`\nfixture sha256/16   ablation ${fxHash(FIXTURE)}`);
   const pf = /const FIXTURE = \{[\s\S]*?\n\};/.exec(parentSrc)[0];
   const mf = /const FIXTURE = \{[\s\S]*?\n\};/.exec(mySrc)[0];
-  console.log(`FIXTURE source block identical to the parent's: ${pf === mf ? "YES" : "🔴 NO"}`);
+  console.log(
+    `FIXTURE source block identical to the parent's: ${pf === mf ? "YES" : "🔴 NO"}`,
+  );
   // Normalise indentation AND the one expression that must differ (the id each matches), then compare.
-  const norm = (s) => s.replace(/id\(c\.skill\)|wanted/g, "X").replace(/\s+/g, " ").trim();
-  const grabFired = (src) => (/fired: \(t\) => \{[\s\S]*?\},\s*\n\s*fixture:/.exec(src)?.[0] ?? "").replace(/fixture:$/, "");
+  const norm = (s) =>
+    s
+      .replace(/id\(c\.skill\)|wanted/g, "X")
+      .replace(/\s+/g, " ")
+      .trim();
+  const grabFired = (src) =>
+    (
+      /fired: \(t\) => \{[\s\S]*?\},\s*\n\s*fixture:/.exec(src)?.[0] ?? ""
+    ).replace(/fixture:$/, "");
   const pFired = grabFired(parentSrc);
   const mFired = grabFired(mySrc);
   const same = pFired && norm(pFired) === norm(mFired);
-  console.log(`fired predicate identical (modulo the id it matches): ${same ? "YES" : "🔴 NO"}`);
-  if (!same) console.log(`  parent: ${norm(pFired)}\n  mine  : ${norm(mFired)}`);
+  console.log(
+    `fired predicate identical (modulo the id it matches): ${same ? "YES" : "🔴 NO"}`,
+  );
+  if (!same)
+    console.log(`  parent: ${norm(pFired)}\n  mine  : ${norm(mFired)}`);
   // ^-anchored: an unanchored match would find this very check line before the definition.
-  const grabHelper = (src) => /^const firedSkills = \(t\) => \[[\s\S]*?\n\];/m.exec(src)?.[0] ?? "";
+  const grabHelper = (src) =>
+    /^const firedSkills = \(t\) => \[[\s\S]*?\n\];/m.exec(src)?.[0] ?? "";
   console.log(
     `firedSkills() helper identical: ${
-      grabHelper(parentSrc) && grabHelper(parentSrc) === grabHelper(mySrc) ? "YES" : "🔴 NO"
+      grabHelper(parentSrc) && grabHelper(parentSrc) === grabHelper(mySrc)
+        ? "YES"
+        : "🔴 NO"
     }`,
   );
 
-  console.log(`\nARM DIR INTEGRITY — sha256/16 of each SKILL.md frontmatter vs the real .claude/skills`);
-  const fmHash = (p) => createHash("sha256").update(/^---\n[\s\S]*?\n---/.exec(readFileSync(p, "utf-8"))?.[0] ?? "").digest("hex").slice(0, 16);
-  const realFm = Object.fromEntries(installed.map((n) => [n, fmHash(join(SKILLS_DIR, n, "SKILL.md"))]));
+  console.log(
+    `\nARM DIR INTEGRITY — sha256/16 of each SKILL.md frontmatter vs the real .claude/skills`,
+  );
+  const fmHash = (p) =>
+    createHash("sha256")
+      .update(/^---\n[\s\S]*?\n---/.exec(readFileSync(p, "utf-8"))?.[0] ?? "")
+      .digest("hex")
+      .slice(0, 16);
+  const realFm = Object.fromEntries(
+    installed.map((n) => [n, fmHash(join(SKILLS_DIR, n, "SKILL.md"))]),
+  );
   for (const a of ARMS) {
     const dir = buildArm(a);
     const names = readdirSync(dir, { withFileTypes: true })
-      .filter((e) => e.isDirectory() && existsSync(join(dir, e.name, "SKILL.md")))
+      .filter(
+        (e) => e.isDirectory() && existsSync(join(dir, e.name, "SKILL.md")),
+      )
       .map((e) => e.name);
     const diffs = [];
     for (const n of names) {
@@ -809,51 +912,82 @@ if (MODE === "setupdiff") {
   const mineP = join(REPRO, `${STEM}.json`);
   const parentP = join(REPRO, "2026-08-08-framing-vs-vocabulary.json");
   if (existsSync(mineP) && existsSync(parentP)) {
-    const mine = JSON.parse(readFileSync(mineP, "utf-8")).results.filter((r) => r.arm === "A0");
+    const mine = JSON.parse(readFileSync(mineP, "utf-8")).results.filter(
+      (r) => r.arm === "A0",
+    );
     const par = JSON.parse(readFileSync(parentP, "utf-8")).results.filter(
       (r) => r.skill === TARGET && (r.cell === "AH" || r.cell === "SH"),
     );
-    console.log(`\nROW BY ROW — parent (${par.length} prompts) vs this file's A0 (${mine.length} prompts)`);
-    console.log(`${"cell".padEnd(5)}${"parent".padStart(8)}${"A0".padStart(8)}${"Δ".padStart(7)}   prompt`);
-    let pT = 0, mT = 0;
+    console.log(
+      `\nROW BY ROW — parent (${par.length} prompts) vs this file's A0 (${mine.length} prompts)`,
+    );
+    console.log(
+      `${"cell".padEnd(5)}${"parent".padStart(8)}${"A0".padStart(8)}${"Δ".padStart(7)}   prompt`,
+    );
+    let pT = 0,
+      mT = 0;
     for (const p of par) {
       const m = mine.find((x) => x.prompt === p.prompt);
       const pt = p.buckets.filter((b) => b === "TARGET").length;
       const mt = m ? m.buckets.filter((b) => b === "TARGET").length : NaN;
-      pT += pt; mT += mt;
+      pT += pt;
+      mT += mt;
       console.log(
         `${p.cell.padEnd(5)}${`${pt}/3`.padStart(8)}${`${mt}/3`.padStart(8)}${`${mt - pt > 0 ? "+" : ""}${mt - pt}`.padStart(7)}   ${p.prompt.slice(0, 54)}`,
       );
     }
-    console.log(`${"".padEnd(5)}${`${pT}/24`.padStart(8)}${`${mT}/24`.padStart(8)}${`+${mT - pT}`.padStart(7)}   TOTAL`);
+    console.log(
+      `${"".padEnd(5)}${`${pT}/24`.padStart(8)}${`${mT}/24`.padStart(8)}${`+${mT - pT}`.padStart(7)}   TOTAL`,
+    );
     const moved = par.filter((p) => {
       const m = mine.find((x) => x.prompt === p.prompt);
-      return m && Math.abs(m.buckets.filter((b) => b === "TARGET").length - p.buckets.filter((b) => b === "TARGET").length) >= 2;
+      return (
+        m &&
+        Math.abs(
+          m.buckets.filter((b) => b === "TARGET").length -
+            p.buckets.filter((b) => b === "TARGET").length,
+        ) >= 2
+      );
     }).length;
     console.log(
       `\n  ${moved} of 8 prompts moved by ≥2 of 3 trials. Spread across many prompts ⇒ a global shift\n` +
         `  (session, load, model routing). Concentrated in one or two ⇒ something prompt-specific.`,
     );
   } else {
-    console.log(`\n(row-by-row skipped: need both ${STEM}.json and the parent's json)`);
+    console.log(
+      `\n(row-by-row skipped: need both ${STEM}.json and the parent's json)`,
+    );
   }
   console.log(`\nSETUPDIFF COMPLETE. No tokens spent.`);
   process.exit(0);
 }
 
 if (MODE === "preflight") {
-  console.log(`\nWORD-SET DELTAS (stemmed content words removed from A0 — none may be added)`);
+  console.log(
+    `\nWORD-SET DELTAS (stemmed content words removed from A0 — none may be added)`,
+  );
   for (const a of ARMS) {
     const d = deltas[a.id];
     console.log(`\n  ${a.id} ${a.label}`);
-    console.log(`     removed (${d.removed.length}): ${d.removed.join(" ") || "—"}`);
-    console.log(`     added   (${d.added.length}): ${d.added.join(" ") || "—"}`);
+    console.log(
+      `     removed (${d.removed.length}): ${d.removed.join(" ") || "—"}`,
+    );
+    console.log(
+      `     added   (${d.added.length}): ${d.added.join(" ") || "—"}`,
+    );
   }
   console.log(`\nRESULTING DESCRIPTIONS`);
-  for (const a of ARMS) console.log(`\n  ── ${a.id} (${a.skill}, ${a.desc.length} chars)\n  ${a.desc}`);
-  console.log(`\nbuilding each arm's skills dir under ${SCRATCH} (no real file is written) …`);
+  for (const a of ARMS)
+    console.log(
+      `\n  ── ${a.id} (${a.skill}, ${a.desc.length} chars)\n  ${a.desc}`,
+    );
+  console.log(
+    `\nbuilding each arm's skills dir under ${SCRATCH} (no real file is written) …`,
+  );
   for (const a of ARMS) console.log(`  ${a.id} → ${buildArm(a)}`);
-  console.log(`\nALL PREFLIGHT GUARDS PASSED. No tokens spent. Run --mode main next.`);
+  console.log(
+    `\nALL PREFLIGHT GUARDS PASSED. No tokens spent. Run --mode main next.`,
+  );
   process.exit(0);
 }
 
@@ -863,12 +997,19 @@ if (MODE === "preflight") {
 if (MODE === "oracle") {
   const oraclePath = join(REPRO, `${STEM}-oracle.json`);
   // MERGE, never clobber: an arm added later must not cost a re-run of the arms already paid for.
-  const rows = ONLY.length && existsSync(oraclePath)
-    ? JSON.parse(readFileSync(oraclePath, "utf-8")).filter((r) => !ONLY.includes(r.arm))
-    : [];
-  console.log(`\noracle: ${RUN_ARMS.length} arm(s) x ${allPrompts.length} closed-book picks over ${installed.length} descriptions\n`);
+  const rows =
+    ONLY.length && existsSync(oraclePath)
+      ? JSON.parse(readFileSync(oraclePath, "utf-8")).filter(
+          (r) => !ONLY.includes(r.arm),
+        )
+      : [];
+  console.log(
+    `\noracle: ${RUN_ARMS.length} arm(s) x ${allPrompts.length} closed-book picks over ${installed.length} descriptions\n`,
+  );
   for (const a of RUN_ARMS) {
-    const names = a.rename ? installed.map((s) => (s === TARGET ? a.rename : s)) : installed;
+    const names = a.rename
+      ? installed.map((s) => (s === TARGET ? a.rename : s))
+      : installed;
     const nameSet = new Set(names);
     const desc = { ...descriptions, [a.skill]: a.desc };
     if (a.rename) delete desc[TARGET];
@@ -887,18 +1028,33 @@ if (MODE === "oracle") {
           timeout: 180000,
           maxBuffer: 1 << 24,
         });
-        const t = out.trim().split("\n").pop().trim().replace(/[.`"']/g, "");
-        pick = nameSet.has(t) ? t : /^none$/i.test(t) ? "NONE" : `?${t.slice(0, 40)}`;
+        const t = out
+          .trim()
+          .split("\n")
+          .pop()
+          .trim()
+          .replace(/[.`"']/g, "");
+        pick = nameSet.has(t)
+          ? t
+          : /^none$/i.test(t)
+            ? "NONE"
+            : `?${t.slice(0, 40)}`;
       } catch (e) {
         pick = `ERROR:${String(e.message).slice(0, 60)}`;
       }
       const ok = pick === a.skill;
       rows.push({ arm: a.id, label: a.label, cell, prompt, pick, ok });
-      console.log(`  ${cell}  ${ok ? "HIT " : "miss"}  ${pick.padEnd(26)}  ${prompt.slice(0, 58)}`);
+      console.log(
+        `  ${cell}  ${ok ? "HIT " : "miss"}  ${pick.padEnd(26)}  ${prompt.slice(0, 58)}`,
+      );
     }
   }
-  console.log(`\nORACLE ACCURACY BY ARM (closed book, ${installed.length} descriptions in context, 1 pick each)`);
-  console.log(`${"arm".padEnd(4)}${"label".padEnd(34)}  hit    AH    SH   none  wrong`);
+  console.log(
+    `\nORACLE ACCURACY BY ARM (closed book, ${installed.length} descriptions in context, 1 pick each)`,
+  );
+  console.log(
+    `${"arm".padEnd(4)}${"label".padEnd(34)}  hit    AH    SH   none  wrong`,
+  );
   for (const a of ARMS.filter((a) => rows.some((r) => r.arm === a.id))) {
     const r = rows.filter((x) => x.arm === a.id);
     const c = (k) => r.filter((x) => x.cell === k);
@@ -927,7 +1083,12 @@ if (MODE === "oracle") {
 const firedSkills = (t) => [
   ...new Set(
     t.toolCalls
-      .filter((c) => c.name === "Skill" && !c.isError && typeof c.input?.skill === "string")
+      .filter(
+        (c) =>
+          c.name === "Skill" &&
+          !c.isError &&
+          typeof c.input?.skill === "string",
+      )
       .map((c) => c.input.skill),
   ),
 ];
@@ -939,13 +1100,18 @@ console.log(
 
 const mainPath = join(REPRO, `${STEM}.json`);
 // MERGE, never clobber — same rule as the oracle.
-const results = ONLY.length && existsSync(mainPath)
-  ? JSON.parse(readFileSync(mainPath, "utf-8")).results.filter((r) => !ONLY.includes(r.arm))
-  : [];
+const results =
+  ONLY.length && existsSync(mainPath)
+    ? JSON.parse(readFileSync(mainPath, "utf-8")).results.filter(
+        (r) => !ONLY.includes(r.arm),
+      )
+    : [];
 for (const a of RUN_ARMS) {
   const dir = buildArm(a);
   const wanted = `${NS}:${a.skill}`;
-  console.log(`\n${"=".repeat(78)}\n=== ${a.id} ${a.label}  (${a.desc.length} chars, id ${wanted})`);
+  console.log(
+    `\n${"=".repeat(78)}\n=== ${a.id} ${a.label}  (${a.desc.length} chars, id ${wanted})`,
+  );
   for (const { cell, prompt } of allPrompts) {
     const observed = [];
     const rep = await measureTriggerRate({
@@ -965,8 +1131,13 @@ for (const a of RUN_ARMS) {
       spacingSec: 2,
       timeoutMs: 180000,
     });
-    const bucket = observed.map((set) => (set.includes(wanted) ? "TARGET" : set.length > 0 ? "OTHER" : "SILENT"));
-    const others = observed.flat().filter((s) => s !== wanted).map((s) => s.replace(`${NS}:`, ""));
+    const bucket = observed.map((set) =>
+      set.includes(wanted) ? "TARGET" : set.length > 0 ? "OTHER" : "SILENT",
+    );
+    const others = observed
+      .flat()
+      .filter((s) => s !== wanted)
+      .map((s) => s.replace(`${NS}:`, ""));
     results.push({
       arm: a.id,
       label: a.label,
@@ -985,7 +1156,9 @@ for (const a of RUN_ARMS) {
     console.log(
       `  ${cell}  ${rep.rate.toFixed(2)}  T${tally("TARGET")} O${tally("OTHER")} S${tally("SILENT")}` +
         `  ov=${overlap(prompt, a.desc).toFixed(2)}  ${prompt.slice(0, 56)}` +
-        (others.length ? `\n         instead: ${[...new Set(others)].join(", ")}` : ""),
+        (others.length
+          ? `\n         instead: ${[...new Set(others)].join(", ")}`
+          : ""),
     );
   }
 }
@@ -993,7 +1166,9 @@ for (const a of RUN_ARMS) {
 // ── report ───────────────────────────────────────────────────────────────────
 const erroredTotal = results.reduce((x, r) => x + r.errored, 0);
 const stat = (arm, cell) => {
-  const b = results.filter((r) => r.arm === arm && (!cell || r.cell === cell)).flatMap((r) => r.buckets);
+  const b = results
+    .filter((r) => r.arm === arm && (!cell || r.cell === cell))
+    .flatMap((r) => r.buckets);
   return {
     n: b.length,
     target: b.filter((x) => x === "TARGET").length,
@@ -1003,7 +1178,9 @@ const stat = (arm, cell) => {
 };
 
 console.log(`\n${"=".repeat(78)}\nTHE ABLATION — target trigger rate by arm\n`);
-console.log(`${"arm".padEnd(4)}${"label".padEnd(34)}${"chars".padStart(7)}${"fired".padStart(12)}${"AH".padStart(8)}${"SH".padStart(8)}${"Δ vs A0".padStart(10)}`);
+console.log(
+  `${"arm".padEnd(4)}${"label".padEnd(34)}${"chars".padStart(7)}${"fired".padStart(12)}${"AH".padStart(8)}${"SH".padStart(8)}${"Δ vs A0".padStart(10)}`,
+);
 const base = stat("A0");
 const REPORTED = ARMS.filter((a) => results.some((r) => r.arm === a.id));
 for (const a of REPORTED) {
@@ -1017,12 +1194,16 @@ for (const a of REPORTED) {
   );
 }
 
-console.log(`\n${"=".repeat(78)}\nTARGET / OTHER / SILENT — the parent's discriminator\n`);
+console.log(
+  `\n${"=".repeat(78)}\nTARGET / OTHER / SILENT — the parent's discriminator\n`,
+);
 console.log(`${"arm".padEnd(4)}${"label".padEnd(34)}  target   other  silent`);
 for (const a of REPORTED) {
   const s = stat(a.id);
   const p = (x) => `${((x / s.n) * 100).toFixed(0)}%`.padStart(7);
-  console.log(`${a.id.padEnd(4)}${a.label.padEnd(34)}  ${p(s.target)} ${p(s.other)} ${p(s.silent)}`);
+  console.log(
+    `${a.id.padEnd(4)}${a.label.padEnd(34)}  ${p(s.target)} ${p(s.other)} ${p(s.silent)}`,
+  );
 }
 console.log(
   `\n  OTHER  = a competitor was selected and the target was not. The parent saw ONE in 144 runs.\n` +
@@ -1031,8 +1212,11 @@ console.log(
 );
 
 const misfires = {};
-for (const r of results) for (const o of r.othersFired) misfires[o] = (misfires[o] ?? 0) + 1;
-const top = Object.entries(misfires).sort((x, y) => y[1] - x[1]).slice(0, 12);
+for (const r of results)
+  for (const o of r.othersFired) misfires[o] = (misfires[o] ?? 0) + 1;
+const top = Object.entries(misfires)
+  .sort((x, y) => y[1] - x[1])
+  .slice(0, 12);
 if (top.length) {
   console.log(`\nWHICH competitors took the runs (all arms):`);
   for (const [s, n] of top) console.log(`  ${String(n).padStart(3)}  ${s}`);
@@ -1044,13 +1228,26 @@ console.log(
     `   cause is NOT IN THE DESCRIPTION TEXT — report that, do not pick the largest number.`,
 );
 if (erroredTotal > 0)
-  console.log(`\n⚠ ${erroredTotal} run(s) ERRORED and are excluded — rates are over fewer trials than planned.`);
+  console.log(
+    `\n⚠ ${erroredTotal} run(s) ERRORED and are excluded — rates are over fewer trials than planned.`,
+  );
 
 mkdirSync(REPRO, { recursive: true });
 results.sort((x, y) => x.arm.localeCompare(y.arm));
 writeFileSync(
   mainPath,
-  JSON.stringify({ trials: TRIALS, competitors: installed.length - 1, baselineDescChars: A0.length, results }, null, 2),
+  JSON.stringify(
+    {
+      trials: TRIALS,
+      competitors: installed.length - 1,
+      baselineDescChars: A0.length,
+      results,
+    },
+    null,
+    2,
+  ),
 );
 console.log(`\nper-run rows → repro/${STEM}.json`);
-console.log(`\nRun --mode oracle before reading any arm as a mechanism: a harness move with a matching oracle\nmove is a change in what the TEXT supports, not in what the harness does with it.`);
+console.log(
+  `\nRun --mode oracle before reading any arm as a mechanism: a harness move with a matching oracle\nmove is a change in what the TEXT supports, not in what the harness does with it.`,
+);

@@ -8,8 +8,19 @@ import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({
   name: "verify-citations",
-  description: "Verify every citation is a real work with correct metadata, and that the paper states its delta over the NEAREST prior work explicitly — before submit. For each \\cite, confirm the work exists (arXiv id / DOI / venue+year) and that author/title/venue/year are right (WebSearch/WebFetch); never fabricate — mark VERIFY on anything uncertain and flag invented-looking cites; make sure the paper says what it adds over its closest neighbor, and that the one obviously-expected citation a reviewer will miss if absent is present. Use as a pre-submission gate. Compose with draft-paper, map-prior-work, pc-panel-review.",
-  tools: ["Read", "Write", "Edit", "Grep", "Glob", "Bash", "WebSearch", "WebFetch", "Agent"],
+  description:
+    "Verify every citation is a real work with correct metadata, and that the paper states its delta over the NEAREST prior work explicitly — before submit. For each \\cite, confirm the work exists (arXiv id / DOI / venue+year) and that author/title/venue/year are right (WebSearch/WebFetch); never fabricate — mark VERIFY on anything uncertain and flag invented-looking cites; make sure the paper says what it adds over its closest neighbor, and that the one obviously-expected citation a reviewer will miss if absent is present. Use as a pre-submission gate. Compose with draft-paper, map-prior-work, pc-panel-review.",
+  tools: [
+    "Read",
+    "Write",
+    "Edit",
+    "Grep",
+    "Glob",
+    "Bash",
+    "WebSearch",
+    "WebFetch",
+    "Agent",
+  ],
   body: `
 # verify-citations — every cite real, the delta explicit
 

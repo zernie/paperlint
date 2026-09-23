@@ -24,19 +24,37 @@ const HARNESS = join(HERE, "consumer.harness.mjs");
 const MUTATIONS = [
   [
     "a declared `null` is read as an absence",
-    [[SRC, "if (declared !== undefined) {", "if (declared !== undefined && declared !== null) {"]],
+    [
+      [
+        SRC,
+        "if (declared !== undefined) {",
+        "if (declared !== undefined && declared !== null) {",
+      ],
+    ],
     'a `"ledger": null` was accepted',
     "the absence/keystroke distinction — a typed null silently picks a different file",
   ],
   [
     "`node_modules` is detected by substring instead of by path segment",
-    [[SRC, 'return dir.split(sep).includes("node_modules");', 'return dir.includes("node_modules");']],
+    [
+      [
+        SRC,
+        'return dir.split(sep).includes("node_modules");',
+        'return dir.includes("node_modules");',
+      ],
+    ],
     "naming coincidence",
     "a consumer whose own directory merely contains the word is refused its ledger",
   ],
   [
     "the ledger default inside node_modules is no longer refused",
-    [[SRC, "  if (insideNodeModules(hereDir))", "  if (false && insideNodeModules(hereDir))"]],
+    [
+      [
+        SRC,
+        "  if (insideNodeModules(hereDir))",
+        "  if (false && insideNodeModules(hereDir))",
+      ],
+    ],
     "ledgerPath RETURNED A PATH INSIDE node_modules",
     "the one guard against silent data loss: appends succeed until `npm ci` deletes them",
   ],
@@ -64,7 +82,13 @@ const MUTATIONS = [
   ],
   [
     "a scripts path inside node_modules is no longer refused",
-    [[SRC, "  if (insideNodeModules(abs))", "  if (false && insideNodeModules(abs))"]],
+    [
+      [
+        SRC,
+        "  if (insideNodeModules(abs))",
+        "  if (false && insideNodeModules(abs))",
+      ],
+    ],
     "scriptsRoot ACCEPTED a path inside node_modules",
     "the guard against naming a path `npm ci` deletes and git does not track",
   ],

@@ -8,8 +8,20 @@ import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({
   name: "plan-paper-timeline",
-  description: "Turn a venue's CFP dates into a scheduled, buffered plan on the Google Calendar — build the timeline backwards from the AoE submission deadline (harden + panel-review + artifact + anonymized host all land BEFORE it), create calendar events in the author's own time zone for submit-day / deadline / camera-ready, and apply the FILING-SPACING rule so multiple papers don't cluster in the month before a planned external filing. Use right after find-venue hands you real deadlines and before you start drafting. Compose with find-venue (deadline source) and submit-paper.",
-  tools: ["Read", "Write", "Grep", "Glob", "mcp__Google_Calendar__list_events", "mcp__Google_Calendar__search_events", "mcp__Google_Calendar__create_event", "mcp__Google_Calendar__update_event", "Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*)", "Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)"],
+  description:
+    "Turn a venue's CFP dates into a scheduled, buffered plan on the Google Calendar — build the timeline backwards from the AoE submission deadline (harden + panel-review + artifact + anonymized host all land BEFORE it), create calendar events in the author's own time zone for submit-day / deadline / camera-ready, and apply the FILING-SPACING rule so multiple papers don't cluster in the month before a planned external filing. Use right after find-venue hands you real deadlines and before you start drafting. Compose with find-venue (deadline source) and submit-paper.",
+  tools: [
+    "Read",
+    "Write",
+    "Grep",
+    "Glob",
+    "mcp__Google_Calendar__list_events",
+    "mcp__Google_Calendar__search_events",
+    "mcp__Google_Calendar__create_event",
+    "mcp__Google_Calendar__update_event",
+    "Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*)",
+    "Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)",
+  ],
   body: `
 # plan-paper-timeline — CFP dates → a buffered, filing-aware schedule
 

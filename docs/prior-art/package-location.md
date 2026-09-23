@@ -1,6 +1,6 @@
 # How a package finds its own installed files, and its own bin
 
-**Question this file answers:** `scripts/install-e2e.mjs` inspects the tree it just installed by
+**Question this file answers:** `test/e2e/install.mjs` inspects the tree it just installed by
 spelling the layout out — `node_modules/research-paper-pipeline` (line 172),
 `node_modules/.bin/rpp` (line 276), and `node_modules/.../plugin/hooks/hooks.json` (line 135).
 `contentDelivery()` separately tries THREE candidate base directories for a path written as prose
@@ -10,13 +10,13 @@ inside a skill. Both are guesses. What is the supported way, and does using it b
 
 1. **The package directory: replace the three spellings with ONE resolved anchor** —
    `dirname(createRequire(pathToFileURL(join(consumer, "__placeholder__.js")).href)
-   .resolve("research-paper-pipeline/package.json"))`. Not because the hardcode is currently
-   wrong: it is not, under either manager measured. Because resolution additionally *asserts the
-   package is reachable by name from the consumer*, which is what the README's documented import
+.resolve("research-paper-pipeline/package.json"))`. Not because the hardcode is currently
+   wrong: it is not, under either manager measured. Because resolution additionally _asserts the
+   package is reachable by name from the consumer_, which is what the README's documented import
    depends on and which `existsSync` cannot see — demonstrated by a mutation below.
 2. **The `.bin` launch: keep it.** `node_modules/.bin/rpp` is not the script guessing where a
    file is; it is the script checking that the manager created the shim, which is a real property
-   of the install and the one thing resolution cannot tell you. Read the bin's *real* path from
+   of the install and the one thing resolution cannot tell you. Read the bin's _real_ path from
    the resolved manifest as well, and launch both — they answer different questions.
 
 **Yarn PnP is unaffected by any of this**, and for a harder reason than
@@ -36,13 +36,13 @@ corepack. Scripts: [`repro/`](repro/README.md), CLAIM 4–6.
 
 ## 1. The three APIs, and which one this script can use
 
-| API | available on Node 22 | anchored at | our package | `exports`-closed package |
-| --- | --- | --- | --- | --- |
-| `createRequire(url).resolve("<pkg>/package.json")` | yes, since v12.2.0, stable | **the URL you pass** | ✅ npm + pnpm | ❌ `ERR_PACKAGE_PATH_NOT_EXPORTED` |
-| `require.resolve(spec, { paths: [dir] })` | yes, stable | the `paths` array | ✅ npm + pnpm | ❌ same |
-| `import.meta.resolve(spec)` | yes — sync and unflagged since v20.6.0/v18.19.0, Stability **1.2 Release candidate** | **the calling file, always** | ✅ only if the caller sits in the consumer | ❌ same |
-| `import.meta.resolve(spec, parent)` | **flagged** — `--experimental-import-meta-resolve` | the `parent` you pass | — | — |
-| `module.findPackageJSON(spec, base)` | v22.14.0, Stability **1.1 Active development** | the `base` you pass | ✅ npm + pnpm | ✅ **ignores `exports`** |
+| API                                                | available on Node 22                                                                 | anchored at                  | our package                                | `exports`-closed package           |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------ | ---------------------------- | ------------------------------------------ | ---------------------------------- |
+| `createRequire(url).resolve("<pkg>/package.json")` | yes, since v12.2.0, stable                                                           | **the URL you pass**         | ✅ npm + pnpm                              | ❌ `ERR_PACKAGE_PATH_NOT_EXPORTED` |
+| `require.resolve(spec, { paths: [dir] })`          | yes, stable                                                                          | the `paths` array            | ✅ npm + pnpm                              | ❌ same                            |
+| `import.meta.resolve(spec)`                        | yes — sync and unflagged since v20.6.0/v18.19.0, Stability **1.2 Release candidate** | **the calling file, always** | ✅ only if the caller sits in the consumer | ❌ same                            |
+| `import.meta.resolve(spec, parent)`                | **flagged** — `--experimental-import-meta-resolve`                                   | the `parent` you pass        | —                                          | —                                  |
+| `module.findPackageJSON(spec, base)`               | v22.14.0, Stability **1.1 Active development**                                       | the `base` you pass          | ✅ npm + pnpm                              | ✅ **ignores `exports`**           |
 
 Sources for the version and stability columns, fetched 2026-09-19:
 <https://nodejs.org/docs/latest-v22.x/api/module.html> ·
@@ -54,7 +54,7 @@ argument of `import.meta.resolve` is the non-standard part:
 
 ### 🔴 `import.meta.resolve` is the wrong tool here, and it fails SILENTLY
 
-`install-e2e.mjs` runs from the repository and inspects a consumer somewhere in `os.tmpdir()`.
+`test/e2e/install.mjs` runs from the repository and inspects a consumer somewhere in `os.tmpdir()`.
 `import.meta.resolve` always resolves from **the file that calls it** — `cwd` is irrelevant and
 the `parent` argument is ignored without the flag rather than rejected:
 
@@ -68,7 +68,7 @@ running from: file:///home/user/research-paper-pipeline/docs/prior-art/repro/cla
 ```
 
 Note the second line: the parent URL pointed at the consumer, and the error still names the
-*script's own path*. With the flag, the same line answers correctly:
+_script's own path_. With the flag, the same line answers correctly:
 
 ```console
 $ node --experimental-import-meta-resolve docs/prior-art/repro/claim4-parent-arg.mjs <WORK>/consumer-npm
@@ -165,7 +165,7 @@ literal node_modules/ : <WORK>/consumer-pnpm/node_modules/research-paper-pipelin
 Under pnpm the hardcode addresses the **symlink** and resolution addresses the **store realpath**
 (Node realpaths by default; `--preserve-symlinks` flips it, and `resolve-package-path` carries
 `lib/should-preserve-symlinks.js` for exactly that). `realpathSync` of one equals the other, so
-every `existsSync` / `readdirSync` / `readFileSync` in `install-e2e.mjs` gives the same answer
+every `existsSync` / `readdirSync` / `readFileSync` in `test/e2e/install.mjs` gives the same answer
 either way. Two interesting asymmetries, both measured:
 
 - `module.findPackageJSON` returns the **symlink** path under pnpm, not the store path — the
@@ -199,7 +199,7 @@ public contract. Row 1 is the current test: green. Row 2 is the contract: broken
 proposed replacement: red, for the right reason.
 
 ⚠️ **Row 4 is the honest caveat on the recommendation.** `findPackageJSON` is the better locator
-and the *worse* canary: it answers past a broken map. Use `createRequire` for the gate.
+and the _worse_ canary: it answers past a broken map. Use `createRequire` for the gate.
 
 **This is the whole case for the change.** Without this mutation the swap is cosmetic, and this
 repository's rule is that a working tool is replaced when it is shown not to work, not when it
@@ -221,17 +221,17 @@ Under npm the shim is a symlink (`.bin/rpp -> ../research-paper-pipeline/bin/rpp
 pnpm it is a `#!/bin/sh` wrapper, and `node` chokes on its second line. But the `bin` value in the
 resolved manifest is the **real file under both**, so `node <that>` works everywhere.
 
-| way to get the bin | uniform across npm/pnpm? | cost | what it proves |
-| --- | --- | --- | --- |
-| `join(consumer, "node_modules/.bin", "rpp")` — today | yes (both managers write it) | none | **the manager created the shim** |
-| `join(installed, manifest.bin.rpp)` | yes | one JSON read already being done | the file the manifest promises exists and runs |
-| `npx --no-install <name>` | yes | ~0.5 s, one process | resolution by name through npm |
-| `npm exec` / `pnpm exec` / `yarn bin` | per-manager commands | ~0.3–0.5 s each | nothing extra |
-| `npm bin` | **gone** — `Unknown command: "bin"` on npm 10.9.7 | — | — |
-| `npm ls <name> --parseable` | prints the path but exits `ELSPROBLEMS` on a pnpm tree | one process | npm's view only |
+| way to get the bin                                   | uniform across npm/pnpm?                               | cost                             | what it proves                                 |
+| ---------------------------------------------------- | ------------------------------------------------------ | -------------------------------- | ---------------------------------------------- |
+| `join(consumer, "node_modules/.bin", "rpp")` — today | yes (both managers write it)                           | none                             | **the manager created the shim**               |
+| `join(installed, manifest.bin.rpp)`                  | yes                                                    | one JSON read already being done | the file the manifest promises exists and runs |
+| `npx --no-install <name>`                            | yes                                                    | ~0.5 s, one process              | resolution by name through npm                 |
+| `npm exec` / `pnpm exec` / `yarn bin`                | per-manager commands                                   | ~0.3–0.5 s each                  | nothing extra                                  |
+| `npm bin`                                            | **gone** — `Unknown command: "bin"` on npm 10.9.7      | —                                | —                                              |
+| `npm ls <name> --parseable`                          | prints the path but exits `ELSPROBLEMS` on a pnpm tree | one process                      | npm's view only                                |
 
 So the shim is not a guess to be removed; it is the only row that observes the manager's own
-work. **What the manifest buys is the second row, free**, plus independence from the bin's *name*
+work. **What the manifest buys is the second row, free**, plus independence from the bin's _name_
 (`rpp` versus `research-paper-pipeline`, and `.cmd` on Windows — a suffix `netlify/cli` has to
 spell out and this script would not).
 
@@ -239,16 +239,16 @@ spell out and this script would not).
 
 ### Does exactly this
 
-| project | file | mechanism |
-| --- | --- | --- |
-| **Playwright** | `playwright/lib/util.js:73` | `path.dirname(require.resolve("playwright-core/package.json"))` — the literal recommendation, in a shipped product |
-| **ESLint** | `lib/shared/relative-module-resolver.js:24` | `createRequire(relativeToPath).resolve(moduleName)`, documented as *"This must be a file rather than a directory, but the file need not actually exist"*; the caller is `getPlaceholderPath(cwd) => path.join(cwd, "__placeholder__.js")` (`lib/eslint/eslint-helpers.js:648`) |
-| **resolve-pkg 3.0.1** | `index.js:24–51` | the three-tier ladder: `resolve("<pkg>/package.json")`, else `resolve("<pkg>")` and walk **up** until the directory ends with `node_modules/<pkg>` or its manifest `name` matches, else `findUpSync("node_modules/<pkg>/package.json")`. The ladder exists *because* tier 1 dies on a closed `exports` map |
-| **resolve-from 4.0.0** | `index.js:27` | the same placeholder trick, spelled `noop.js`, via `Module._resolveFilename` |
-| **lint-staged 17.5.1** | `lib/resolveConfig.js:7` | `createRequire(import.meta.url)` with the comment *"require() does not exist for ESM, so we must create it to use require.resolve()"* |
-| **resolve-package-path 4.0.3** | `lib/index.js:93` | `pnp ? pnp.resolveToUnqualified(target + "/package.json", baseDir) : …` — the only one of these that handles PnP, and it does so by `require("pnpapi")`, which only exists inside a PnP process |
+| project                        | file                                        | mechanism                                                                                                                                                                                                                                                                                                  |
+| ------------------------------ | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Playwright**                 | `playwright/lib/util.js:73`                 | `path.dirname(require.resolve("playwright-core/package.json"))` — the literal recommendation, in a shipped product                                                                                                                                                                                         |
+| **ESLint**                     | `lib/shared/relative-module-resolver.js:24` | `createRequire(relativeToPath).resolve(moduleName)`, documented as _"This must be a file rather than a directory, but the file need not actually exist"_; the caller is `getPlaceholderPath(cwd) => path.join(cwd, "__placeholder__.js")` (`lib/eslint/eslint-helpers.js:648`)                             |
+| **resolve-pkg 3.0.1**          | `index.js:24–51`                            | the three-tier ladder: `resolve("<pkg>/package.json")`, else `resolve("<pkg>")` and walk **up** until the directory ends with `node_modules/<pkg>` or its manifest `name` matches, else `findUpSync("node_modules/<pkg>/package.json")`. The ladder exists _because_ tier 1 dies on a closed `exports` map |
+| **resolve-from 4.0.0**         | `index.js:27`                               | the same placeholder trick, spelled `noop.js`, via `Module._resolveFilename`                                                                                                                                                                                                                               |
+| **lint-staged 17.5.1**         | `lib/resolveConfig.js:7`                    | `createRequire(import.meta.url)` with the comment _"require() does not exist for ESM, so we must create it to use require.resolve()"_                                                                                                                                                                      |
+| **resolve-package-path 4.0.3** | `lib/index.js:93`                           | `pnp ? pnp.resolveToUnqualified(target + "/package.json", baseDir) : …` — the only one of these that handles PnP, and it does so by `require("pnpapi")`, which only exists inside a PnP process                                                                                                            |
 
-### Adjacent — finds *a* package root, not *that* package
+### Adjacent — finds _a_ package root, not _that_ package
 
 `pkg-dir` (4.2.0 and 8.0.0) and `read-package-up` are both one line of `findUp("package.json")`
 plus `dirname`. They answer "which package am I inside", walking **up** from a directory. The
@@ -260,7 +260,7 @@ question; neither is a candidate.
 **husky 9.1.7**, `index.js:21`:
 
 ```js
-f.copyFileSync(new URL('husky', import.meta.url), _('h'))
+f.copyFileSync(new URL("husky", import.meta.url), _("h"));
 ```
 
 husky's git hooks never address `node_modules/husky/…`. On install it **copies its runtime out of
@@ -282,13 +282,18 @@ resolve.
 - **netlify/cli**, `e2e/install.e2e.ts:256` — publishes to a local registry, installs under npm,
   pnpm and yarn (classic), then:
   ```ts
-  const binary = path.resolve(path.join(cwd, `./node_modules/.bin/netlify${platform() === 'win32' ? '.cmd' : ''}`))
+  const binary = path.resolve(
+    path.join(
+      cwd,
+      `./node_modules/.bin/netlify${platform() === "win32" ? ".cmd" : ""}`,
+    ),
+  );
   ```
   Same three-manager matrix as `WANTED`, same `.bin` hardcode, plus the Windows suffix.
   <https://github.com/netlify/cli/blob/main/e2e/install.e2e.ts>
 - **nestjs/terminus**, `tools/pack-check.mjs:32` — `npm pack` → install into `mkdtempSync` →
   ```js
-  const installed = join(dir, 'node_modules', '@nestjs', 'terminus');
+  const installed = join(dir, "node_modules", "@nestjs", "terminus");
   ```
   and it verifies the public surface by running `node --input-type=module -e "import …"` **with
   `cwd` set to the consumer**, letting Node resolve. That is the resolution check recommended in
@@ -335,15 +340,15 @@ node_modules present? NO
 1. 🔴 **The package is not PnP-incompatible — line 5 runs the CLI under PnP and it answers.** The
    note reads as if the package could not work there; what cannot work is one wiring file.
 2. 🔴 **The blocker the note names is the MOVABLE one.** Claude Code exposes
-   `${CLAUDE_PLUGIN_ROOT}` — *"Absolute path to the plugin's installation directory … Use it for
-   scripts, binaries, and config files bundled with the plugin"*, exported to hook processes
+   `${CLAUDE_PLUGIN_ROOT}` — _"Absolute path to the plugin's installation directory … Use it for
+   scripts, binaries, and config files bundled with the plugin"_, exported to hook processes
    (<https://code.claude.com/docs/en/plugins-reference>). Rewriting the hook command with it
-   removes the literal `node_modules` from `hooks.json`. Whether that is *desirable* is a separate
+   removes the literal `node_modules` from `hooks.json`. Whether that is _desirable_ is a separate
    question — the variable is only set when the package is loaded through the plugin channel, and
    today the npm channel is the one that delivers the runnable code — but it is not impossible.
 3. 🔴 **The blocker the note does NOT name is the immovable one, and no resolution API fixes it.**
    PnP resolves to a path **inside a zip**. Line 3: the outside process gets `existsSync: false`
-   for the very path PnP just handed it; only PnP's patched `fs` can open it. `install-e2e.mjs`
+   for the very path PnP just handed it; only PnP's patched `fs` can open it. `test/e2e/install.mjs`
    inspects the installed tree with `existsSync`, `readdirSync` and `readFileSync` **from its own
    process**. Under PnP those read nothing, whatever API produced the path — and `yarn bin rpp`
    (line 4) hands back the same unreadable path, so the supported bin lookup does not help either.
@@ -354,7 +359,7 @@ and it should be recorded as such rather than as "PnP has no node_modules".
 
 ## 9. The second guess: the base directory for a path written in prose
 
-`contentDelivery()` (`scripts/install-e2e.mjs:192–198`) tries three bases per reference.
+`contentDelivery()` (in `test/e2e/install.mjs`) tries three bases per reference.
 Measured over the real corpus with `claim6-doc-path-candidates.mjs`:
 
 ```console
@@ -386,12 +391,12 @@ There is essentially one pattern, and it is not a ladder of candidates.
 
 - **remark-validate-links 13.1.0** resolves every link against the **file's own directory** —
   `lib/index.js:282`, `base: absolute ? path.dirname(absolute) : file.cwd` — and takes the one
-  thing it cannot derive as an explicit option: `root` *("path to Git root folder; if both `root`
-  and `repository` are nullish, the Git root is detected")*. Detection is a single documented
+  thing it cannot derive as an explicit option: `root` _("path to Git root folder; if both `root`
+  and `repository` are nullish, the Git root is detected")_. Detection is a single documented
   fallback with a stated failure mode, not a list of guesses.
   <https://github.com/remarkjs/remark-validate-links>
-- **Claude Code plugins** declare it: *"All paths must be relative to the plugin root and start
-  with `./`"*, plus `${CLAUDE_PLUGIN_ROOT}` for scripts.
+- **Claude Code plugins** declare it: _"All paths must be relative to the plugin root and start
+  with `./`"_, plus `${CLAUDE_PLUGIN_ROOT}` for scripts.
   <https://code.claude.com/docs/en/plugins-reference>
 - **This package already declares it once** — `.claude-plugin/plugin.json`:
   `"skills": "./skills/"`.
@@ -413,5 +418,5 @@ or a quotation from the URL named beside it. Nothing here is recalled.
 **What is NOT measured, and so not claimed:** behaviour on Windows (the `.cmd` shim, the pnpm
 `.ps1`/`.cmd` wrappers); npm workspaces, where a hoisted install would put the package at the
 workspace root rather than in the consumer — the e2e builds a standalone temp project, so this is
-untested and merely plausible; yarn *classic*, which has a `node_modules` layout and is one
+untested and merely plausible; yarn _classic_, which has a `node_modules` layout and is one
 `managers()` row away but was not run.

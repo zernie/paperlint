@@ -37,7 +37,9 @@ function splitPaperText(text) {
   const m = text.match(
     /\\begin\{filecontents\*?\}(?:\[[^\]]*\])?\{[^}]*\.bib\}\r?\n([\s\S]*?)\\end\{filecontents\*?\}/,
   );
-  return m ? { body: text.replace(m[0], ""), bib: m[1] } : { body: text, bib: "" };
+  return m
+    ? { body: text.replace(m[0], ""), bib: m[1] }
+    : { body: text, bib: "" };
 }
 
 function typographyCounts(text) {
@@ -49,7 +51,8 @@ function typographyCounts(text) {
   // submitted build: source hits 0, rendered PDF hits 10. A source-level check calibrated
   // against a rendered complaint reports clean on the exact defect it was written for.
   const sectionSign =
-    (body.match(/§/g) || []).length + (body.match(/\\S(?=\s*\\ref|~\\ref|\d)/g) || []).length;
+    (body.match(/§/g) || []).length +
+    (body.match(/\\S(?=\s*\\ref|~\\ref|\d)/g) || []).length;
 
   // A decimal with no leading zero. The lookbehind keeps arXiv ids (2310.05736) out — there
   // the dot is preceded by a digit.
@@ -59,23 +62,27 @@ function typographyCounts(text) {
   // this counts only when both appear; an absolute rule here would be taste, not a defect.
   const figShort = (body.match(/\bFig\.~?\\(?:ref|autoref)/g) || []).length;
   const figLong = (body.match(/\bFigure~?\\(?:ref|autoref)/g) || []).length;
-  const figMixed = figShort > 0 && figLong > 0 ? Math.min(figShort, figLong) : 0;
+  const figMixed =
+    figShort > 0 && figLong > 0 ? Math.min(figShort, figLong) : 0;
 
   // A bibliography entry a reader cannot follow: no doi, no url, no arXiv id.
   // ⚠️ NOT "no doi". Measured 2026-08-24: ICLR/NeurIPS/TMLR issue no DOIs at all, so a
   // doi-only rule would demand something that does not exist and get muted for lying.
   let unreachable = 0;
   for (const e of bib.split(/^@/m).slice(1)) {
-    if (!/\b(doi|url)\s*=/.test(e) && !/arxiv[:\s]*\d{4}\.\d{4,5}/i.test(e)) unreachable++;
+    if (!/\b(doi|url)\s*=/.test(e) && !/arxiv[:\s]*\d{4}\.\d{4,5}/i.test(e))
+      unreachable++;
   }
   return { sectionSign, bareDecimal, figMixed, unreachable };
 }
 
 const LABEL = {
   sectionSign: "`§` instead of «Section» (reviewer B)",
-  bareDecimal: "a decimal without a leading zero, `.05` instead of `0.05` (reviewer B)",
+  bareDecimal:
+    "a decimal without a leading zero, `.05` instead of `0.05` (reviewer B)",
   figMixed: "`Fig.` and `Figure` mixed in one document",
-  unreachable: "bibliography entries with no doi/url/arXiv id — a reader has nothing to follow (reviewer A)",
+  unreachable:
+    "bibliography entries with no doi/url/arXiv id — a reader has nothing to follow (reviewer A)",
 };
 
 export default {
@@ -125,7 +132,10 @@ export default {
                 data: {
                   n: String(n),
                   label: LABEL[field],
-                  grew: before > 0 ? ` (was ${String(before)}, now ${String(n)})` : "",
+                  grew:
+                    before > 0
+                      ? ` (was ${String(before)}, now ${String(n)})`
+                      : "",
                 },
               });
             }

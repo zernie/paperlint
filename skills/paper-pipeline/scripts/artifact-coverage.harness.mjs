@@ -21,7 +21,13 @@
  */
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  rmSync,
+  realpathSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -35,7 +41,11 @@ const tmp = realpathSync(mkdtempSync(join(tmpdir(), "artifact-harness-")));
 function run(dir, flagsOnly = true) {
   const argv = flagsOnly ? [SCRIPT, dir, "--flags-only"] : [SCRIPT, dir];
   try {
-    const out = execFileSync("node", argv, { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    const out = execFileSync("node", argv, {
+      cwd: ROOT,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
     return { code: 0, out };
   } catch (e) {
     return { code: e.status ?? 1, out: (e.stdout || "") + (e.stderr || "") };
@@ -46,18 +56,46 @@ function run(dir, flagsOnly = true) {
  * A paper whose §4.2 reports a figure, plus a bundle. `index` is NUMBERS.md's content (null means
  * the bundle ships no index at all); `files` are paths created inside the bundle.
  */
-function fixture(name, { index, files = [], bundle = true, paperExtra = "", readme = null, runs = [], allow = null, bundleFiles = [] }) {
+function fixture(
+  name,
+  {
+    index,
+    files = [],
+    bundle = true,
+    paperExtra = "",
+    readme = null,
+    runs = [],
+    allow = null,
+    bundleFiles = [],
+  },
+) {
   const d = join(tmp, name);
   mkdirSync(d, { recursive: true });
   writeFileSync(
     join(d, "paper.md"),
     [
-      "## Abstract", "", "Prose.", "",
-      "## 4. Results", "", "Lead-in prose for the section.", "",
-      "### 4.1 Setup", "", "Nothing numeric here.", "",
-      "### 4.2 Gated runs", "", "The agent stopped and asked a human in **34 of 48** gated runs.", "",
-      paperExtra, "",
-      "## References", "", "[1] x.", "",
+      "## Abstract",
+      "",
+      "Prose.",
+      "",
+      "## 4. Results",
+      "",
+      "Lead-in prose for the section.",
+      "",
+      "### 4.1 Setup",
+      "",
+      "Nothing numeric here.",
+      "",
+      "### 4.2 Gated runs",
+      "",
+      "The agent stopped and asked a human in **34 of 48** gated runs.",
+      "",
+      paperExtra,
+      "",
+      "## References",
+      "",
+      "[1] x.",
+      "",
     ].join("\n"),
   );
   const b = join(d, "repro", "artifact-anon");
@@ -80,7 +118,8 @@ function fixture(name, { index, files = [], bundle = true, paperExtra = "", read
     mkdirSync(join(d, "repro", rname), { recursive: true });
     for (const h of heads) writeFileSync(join(d, "repro", rname, h), "x\n");
   }
-  if (allow !== null) writeFileSync(join(d, "repro", "unreported-grandfathered.txt"), allow);
+  if (allow !== null)
+    writeFileSync(join(d, "repro", "unreported-grandfathered.txt"), allow);
   return d;
 }
 
@@ -88,13 +127,17 @@ function fixture(name, { index, files = [], bundle = true, paperExtra = "", read
 // §4.2 reports a figure and the index has never heard of it: the released bundle may hold nothing
 // for the one experiment the abstract leads with. This is the 2026-08-06 defect, reproduced.
 {
-  const d = fixture("unindexed-section", { index: "# numbers → data\n- §4.1: `setup/config.json`\n", files: ["setup/config.json"] });
+  const d = fixture("unindexed-section", {
+    index: "# numbers → data\n- §4.1: `setup/config.json`\n",
+    files: ["setup/config.json"],
+  });
   const r = run(d);
   assert.match(
     r.out,
     /§4\.2 reports 1 bolded figure\(s\) and is named NOWHERE/,
     "artifact-coverage passed a bundle whose index never mentions the section carrying the paper's " +
-      "headline number — absence is invisible to every other gate, which is why this one exists:\n" + r.out,
+      "headline number — absence is invisible to every other gate, which is why this one exists:\n" +
+      r.out,
   );
   assert.equal(r.code, 1, "it reported the finding and still exited 0");
 }
@@ -102,16 +145,26 @@ function fixture(name, { index, files = [], bundle = true, paperExtra = "", read
 // ── 2. the index promises a path the bundle does not ship ──────────────────────────────
 // A promise to a file that is not there is worse than no promise: it reads as released.
 {
-  const d = fixture("dangling-path", { index: "# numbers → data\n- §4.2: the gated runs are in `runs/gated.tsv`\n" });
+  const d = fixture("dangling-path", {
+    index: "# numbers → data\n- §4.2: the gated runs are in `runs/gated.tsv`\n",
+  });
   const r = run(d);
-  assert.match(r.out, /the index names `runs\/gated\.tsv` and `runs` is not in the bundle/, r.out);
+  assert.match(
+    r.out,
+    /the index names `runs\/gated\.tsv` and `runs` is not in the bundle/,
+    r.out,
+  );
 }
 
 // ── 3. a bundle with no index at all ───────────────────────────────────────────────────
 {
   const d = fixture("no-index", { index: null });
   const r = run(d);
-  assert.match(r.out, /no NUMBERS\.md and no README\.md/, "a bundle that maps nothing to anything was accepted:\n" + r.out);
+  assert.match(
+    r.out,
+    /no NUMBERS\.md and no README\.md/,
+    "a bundle that maps nothing to anything was accepted:\n" + r.out,
+  );
   assert.equal(r.code, 1, "it reported the finding and still exited 0");
 }
 
@@ -127,14 +180,22 @@ function fixture(name, { index, files = [], bundle = true, paperExtra = "", read
 // testing nothing. Caught by deleting the guard and watching this file stay green.
 {
   const d = fixture("clean", {
-    index: "# numbers → data\n- §4.1: `setup/config.json`\n- §4.2: `runs/gated.tsv`, drawn from `saleor/apps`\n",
+    index:
+      "# numbers → data\n- §4.1: `setup/config.json`\n- §4.2: `runs/gated.tsv`, drawn from `saleor/apps`\n",
     files: ["setup/config.json", "runs/gated.tsv"],
   });
   const r = run(d);
   assert.equal(r.code, 0, "a complete bundle was failed:\n" + r.out);
-  assert.equal(r.out.trim(), "", "--flags-only printed something about a complete bundle:\n" + r.out);
+  assert.equal(
+    r.out.trim(),
+    "",
+    "--flags-only printed something about a complete bundle:\n" + r.out,
+  );
   // …and in report mode it says so out loud, because silence and success must not look alike.
-  assert.match(run(d, false).out, /every number-reporting section is indexed, every named path exists/);
+  assert.match(
+    run(d, false).out,
+    /every number-reporting section is indexed, every named path exists/,
+  );
 }
 
 // ── 5. KNOWN GAP, asserted so it stays visible ─────────────────────────────────────────
@@ -146,8 +207,16 @@ function fixture(name, { index, files = [], bundle = true, paperExtra = "", read
 {
   const d = fixture("no-bundle", { index: null, bundle: false });
   const r = run(d);
-  assert.equal(r.code, 0, "artifact-coverage now speaks up about a paper with no bundle — good; update this assertion");
-  assert.equal(r.out.trim(), "", "artifact-coverage now speaks up about a paper with no bundle — good; update this assertion");
+  assert.equal(
+    r.code,
+    0,
+    "artifact-coverage now speaks up about a paper with no bundle — good; update this assertion",
+  );
+  assert.equal(
+    r.out.trim(),
+    "",
+    "artifact-coverage now speaks up about a paper with no bundle — good; update this assertion",
+  );
 }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════════
@@ -159,13 +228,15 @@ function fixture(name, { index, files = [], bundle = true, paperExtra = "", read
 // as the detector does.
 // ══════════════════════════════════════════════════════════════════════════════════════════════
 
-const CLEAN_INDEX = "# numbers → data\n- §4.1: `setup/config.json`\n- §4.2: `runs/gated.tsv`\n";
+const CLEAN_INDEX =
+  "# numbers → data\n- §4.1: `setup/config.json`\n- §4.2: `runs/gated.tsv`\n";
 const CLEAN_FILES = ["setup/config.json", "runs/gated.tsv"];
 
 // ── 6. an experiment that ran, wrote up a result, and is named nowhere ──────────────────────────
 {
   const d = fixture("disk-unreported", {
-    index: CLEAN_INDEX, files: CLEAN_FILES,
+    index: CLEAN_INDEX,
+    files: CLEAN_FILES,
     runs: [["burial-curve-2026-07-28", ["RESULTS.md"]]],
   });
   const r = run(d);
@@ -173,7 +244,8 @@ const CLEAN_FILES = ["setup/config.json", "runs/gated.tsv"];
     r.out,
     /DISK_UNREPORTED\s+repro\/burial-curve-2026-07-28\/ holds RESULTS\.md and is named neither in the paper nor in the released index/,
     "an analysis ran, wrote up its result and is reachable from nothing the reviewer sees — that is the\n" +
-      "cherry-picking case this leg was ported for, and it passed:\n" + r.out,
+      "cherry-picking case this leg was ported for, and it passed:\n" +
+      r.out,
   );
   assert.equal(r.code, 1, "it reported DISK_UNREPORTED and still exited 0");
 }
@@ -181,12 +253,19 @@ const CLEAN_FILES = ["setup/config.json", "runs/gated.tsv"];
 // ── 7. named in the PAPER → quiet ───────────────────────────────────────────────────────────────
 {
   const d = fixture("named-in-paper", {
-    index: CLEAN_INDEX, files: CLEAN_FILES,
-    paperExtra: "The burial curve run (`burial-curve-2026-07-28`) found no third point.",
+    index: CLEAN_INDEX,
+    files: CLEAN_FILES,
+    paperExtra:
+      "The burial curve run (`burial-curve-2026-07-28`) found no third point.",
     runs: [["burial-curve-2026-07-28", ["RESULTS.md"]]],
   });
   const r = run(d);
-  assert.equal(r.code, 0, "an experiment the paper discusses by name was reported as unmentioned:\n" + r.out);
+  assert.equal(
+    r.code,
+    0,
+    "an experiment the paper discusses by name was reported as unmentioned:\n" +
+      r.out,
+  );
   assert.equal(r.out.trim(), "", "…and it said so out loud:\n" + r.out);
 }
 
@@ -199,27 +278,38 @@ const CLEAN_FILES = ["setup/config.json", "runs/gated.tsv"];
 // happens twice.
 {
   const d = fixture("named-in-readme-only", {
-    index: CLEAN_INDEX, files: CLEAN_FILES,
-    readme: "## What is deliberately not in this bundle\n\n| `ladder-prototype-2026-07-29` | not needed |\n",
+    index: CLEAN_INDEX,
+    files: CLEAN_FILES,
+    readme:
+      "## What is deliberately not in this bundle\n\n| `ladder-prototype-2026-07-29` | not needed |\n",
     runs: [["ladder-prototype-2026-07-29", ["RESULTS.md"]]],
   });
   const r = run(d);
   assert.equal(
-    r.code, 0,
+    r.code,
+    0,
     "an analysis named in the bundle's README.md and nowhere else was reported as unmentioned — the leg is\n" +
-      "reading one index file instead of all of them, which is exactly the false positive that mutes it:\n" + r.out,
+      "reading one index file instead of all of them, which is exactly the false positive that mutes it:\n" +
+      r.out,
   );
   // …and the same, matched by the DATE-STRIPPED slug: the bundle is rebuilt with the dates dropped,
   // so `enforcement-surface-2026-07-29` on disk is `enforcement-surface` in the index.
-  const e = run(fixture("named-by-slug", {
-    index: CLEAN_INDEX, files: CLEAN_FILES,
-    readme: "See `enforcement-surface/` for the surface scan.\n",
-    runs: [["enforcement-surface-2026-07-29", ["RESULTS.md"]]],
-  }));
-  assert.equal(e.code, 0,
+  const e = run(
+    fixture("named-by-slug", {
+      index: CLEAN_INDEX,
+      files: CLEAN_FILES,
+      readme: "See `enforcement-surface/` for the surface scan.\n",
+      runs: [["enforcement-surface-2026-07-29", ["RESULTS.md"]]],
+    }),
+  );
+  assert.equal(
+    e.code,
+    0,
     "an analysis the index names without its date suffix was reported as unmentioned. Every directory in\n" +
       "this project carries a -YYYY-MM-DD the rebuild drops, so without slug matching the leg accuses the\n" +
-      "bundle of hiding most of what it ships:\n" + e.out);
+      "bundle of hiding most of what it ships:\n" +
+      e.out,
+  );
 }
 
 // ── 9. an allow row silences it, AND the ledger prints the row with its reason ──────────────────
@@ -227,17 +317,25 @@ const CLEAN_FILES = ["setup/config.json", "runs/gated.tsv"];
 // applied invisibly turns this detector into the thing it exists to catch.
 {
   const d = fixture("allowed-row", {
-    index: CLEAN_INDEX, files: CLEAN_FILES, bundleFiles: ["seeded-probe/RESULTS.md"],
+    index: CLEAN_INDEX,
+    files: CLEAN_FILES,
+    bundleFiles: ["seeded-probe/RESULTS.md"],
     runs: [["seeded-probe-fixtures-2026-07-31", ["RESULTS.md"]]],
-    allow: "seeded-probe-fixtures-2026-07-31\tships-as:seeded-probe\ttranslated at anonymisation\n",
+    allow:
+      "seeded-probe-fixtures-2026-07-31\tships-as:seeded-probe\ttranslated at anonymisation\n",
   });
   const r = run(d, false);
-  assert.equal(r.code, 0, "an allowed row still counted as a finding:\n" + r.out);
+  assert.equal(
+    r.code,
+    0,
+    "an allowed row still counted as a finding:\n" + r.out,
+  );
   assert.match(
     r.out,
     /seeded-probe-fixtures-2026-07-31\s+→\s+ships-as:seeded-probe — translated at anonymisation/,
     "the ignore row was applied and NOT printed. A hidden ignore list is how a cherry-picking detector\n" +
-      "becomes a cherry-pick; the whole design turns on this line being in the output:\n" + r.out,
+      "becomes a cherry-pick; the whole design turns on this line being in the output:\n" +
+      r.out,
   );
 }
 
@@ -246,23 +344,27 @@ const CLEAN_FILES = ["setup/config.json", "runs/gated.tsv"];
 // is re-checked every run. An allowance that has rotted is hiding a real absence.
 {
   const d = fixture("rotted-allowance", {
-    index: CLEAN_INDEX, files: CLEAN_FILES,
+    index: CLEAN_INDEX,
+    files: CLEAN_FILES,
     runs: [["seeded-probe-fixtures-2026-07-31", ["RESULTS.md"]]],
-    allow: "seeded-probe-fixtures-2026-07-31\tships-as:seeded-probe\ttranslated at anonymisation\n",
+    allow:
+      "seeded-probe-fixtures-2026-07-31\tships-as:seeded-probe\ttranslated at anonymisation\n",
   });
   const r = run(d);
   assert.match(
     r.out,
     /claims it ships as `seeded-probe`, and that path is not in the bundle — the allowance has rotted/,
     "the allow row promised the analysis ships under another name, the bundle no longer has it, and the\n" +
-      "check believed the row anyway:\n" + r.out,
+      "check believed the row anyway:\n" +
+      r.out,
   );
 }
 
 // ── 11. an allow row naming nothing on disk is reported, so the list shrinks ────────────────────
 {
   const d = fixture("stale-row", {
-    index: CLEAN_INDEX, files: CLEAN_FILES,
+    index: CLEAN_INDEX,
+    files: CLEAN_FILES,
     allow: "deleted-experiment-2026-01-01\tships-as:nowhere\tgone\n",
   });
   const r = run(d);
@@ -270,7 +372,8 @@ const CLEAN_FILES = ["setup/config.json", "runs/gated.tsv"];
     r.out,
     /the ignore row for `deleted-experiment-2026-01-01` names no directory under repro\/ that holds a headline result/,
     "a row for a directory that no longer exists sat in the ignore file unreported — which is how the\n" +
-      "list stops shrinking and starts being scenery:\n" + r.out,
+      "list stops shrinking and starts being scenery:\n" +
+      r.out,
   );
 }
 
@@ -280,19 +383,33 @@ const CLEAN_FILES = ["setup/config.json", "runs/gated.tsv"];
 // `check_grandfather` in repro/paper_numbers.py exists to block.
 {
   const d = fixture("ledger-on-clean", {
-    index: CLEAN_INDEX, files: CLEAN_FILES,
-    paperExtra: "The burial curve run (`burial-curve-2026-07-28`) is discussed in §4.",
+    index: CLEAN_INDEX,
+    files: CLEAN_FILES,
+    paperExtra:
+      "The burial curve run (`burial-curve-2026-07-28`) is discussed in §4.",
     runs: [["burial-curve-2026-07-28", ["RESULTS.md"]]],
     allow: "# nothing here\n",
   });
   const r = run(d, false);
   assert.equal(r.code, 0, "the clean fixture is not clean:\n" + r.out);
-  assert.match(r.out, /what the reverse check ignored, in full \(1 candidate analyses under repro\/\)/,
-    "a run with no findings printed no ignore ledger — silence then reads as coverage:\n" + r.out);
-  assert.match(r.out, /Ratio: 0 reported as unreported, 0 deliberately ignored, 1 reachable/,
-    "the ledger printed no ratio, so nobody can tell whether this check is still doing anything:\n" + r.out);
-  assert.match(r.out, /\(the file is empty — nothing is being waved through\)/,
-    "an empty allow file printed nothing at all, which is indistinguishable from not reading it:\n" + r.out);
+  assert.match(
+    r.out,
+    /what the reverse check ignored, in full \(1 candidate analyses under repro\/\)/,
+    "a run with no findings printed no ignore ledger — silence then reads as coverage:\n" +
+      r.out,
+  );
+  assert.match(
+    r.out,
+    /Ratio: 0 reported as unreported, 0 deliberately ignored, 1 reachable/,
+    "the ledger printed no ratio, so nobody can tell whether this check is still doing anything:\n" +
+      r.out,
+  );
+  assert.match(
+    r.out,
+    /\(the file is empty — nothing is being waved through\)/,
+    "an empty allow file printed nothing at all, which is indistinguishable from not reading it:\n" +
+      r.out,
+  );
 }
 
 // ── 13. the header states the finding COUNT, because run-mechanical.mjs parses it ───────────────
@@ -302,16 +419,33 @@ const CLEAN_FILES = ["setup/config.json", "runs/gated.tsv"];
 // invisible in the check's own output and only shows up in the ledger, which is why it is asserted
 // here, from outside, in both directions.
 {
-  const clean = run(fixture("count-clean", { index: CLEAN_INDEX, files: CLEAN_FILES }), false);
-  assert.match(clean.out, /—\s*0\s+finding\(s\)/,
+  const clean = run(
+    fixture("count-clean", { index: CLEAN_INDEX, files: CLEAN_FILES }),
+    false,
+  );
+  assert.match(
+    clean.out,
+    /—\s*0\s+finding\(s\)/,
     "a clean run does not state `— 0 finding(s)`, so run-mechanical falls back to counting the ledger's\n" +
-      "lines and records a clean paper as a dozen findings:\n" + clean.out);
-  const dirty = run(fixture("count-dirty", {
-    index: CLEAN_INDEX, files: CLEAN_FILES,
-    runs: [["a-2026-01-01", ["RESULTS.md"]], ["b-2026-01-01", ["SUMMARY.json"]]],
-  }), false);
-  assert.match(dirty.out, /—\s*2\s+finding\(s\)/,
-    "the header does not state the real finding count:\n" + dirty.out);
+      "lines and records a clean paper as a dozen findings:\n" +
+      clean.out,
+  );
+  const dirty = run(
+    fixture("count-dirty", {
+      index: CLEAN_INDEX,
+      files: CLEAN_FILES,
+      runs: [
+        ["a-2026-01-01", ["RESULTS.md"]],
+        ["b-2026-01-01", ["SUMMARY.json"]],
+      ],
+    }),
+    false,
+  );
+  assert.match(
+    dirty.out,
+    /—\s*2\s+finding\(s\)/,
+    "the header does not state the real finding count:\n" + dirty.out,
+  );
 }
 
 // ── 14. KNOWN GAPS of the reverse leg, asserted so they stay visible ────────────────────────────
@@ -321,20 +455,42 @@ const CLEAN_FILES = ["setup/config.json", "runs/gated.tsv"];
   // (a) a directory with no write-up is invisible. Deleting RESULTS.md is a one-command way past
   //     this check, and nothing here can tell that from an experiment nobody finished.
   const d = fixture("no-writeup", {
-    index: CLEAN_INDEX, files: CLEAN_FILES,
+    index: CLEAN_INDEX,
+    files: CLEAN_FILES,
     runs: [["silent-run-2026-01-01", ["data.tsv"]]],
   });
   const r = run(d);
-  assert.equal(r.code, 0, "the reverse leg now sees a run with no write-up — good; update this assertion");
+  assert.equal(
+    r.code,
+    0,
+    "the reverse leg now sees a run with no write-up — good; update this assertion",
+  );
   // (b) the bundle is not itself a candidate: it is the shipped copy of these same analyses, so
   //     counting it would report every one of them twice.
-  const e = run(fixture("bundle-not-candidate", { index: CLEAN_INDEX, files: [...CLEAN_FILES, "RESULTS.md"] }), false);
-  assert.match(e.out, /the released bundle itself \(artifact-anon\/\)/,
-    "the structural ignore that skips the bundle is not named in the ledger:\n" + e.out);
-  assert.match(e.out, /—\s*0\s+finding\(s\)/, "the bundle's own RESULTS.md was counted as an unreported analysis:\n" + e.out);
+  const e = run(
+    fixture("bundle-not-candidate", {
+      index: CLEAN_INDEX,
+      files: [...CLEAN_FILES, "RESULTS.md"],
+    }),
+    false,
+  );
+  assert.match(
+    e.out,
+    /the released bundle itself \(artifact-anon\/\)/,
+    "the structural ignore that skips the bundle is not named in the ledger:\n" +
+      e.out,
+  );
+  assert.match(
+    e.out,
+    /—\s*0\s+finding\(s\)/,
+    "the bundle's own RESULTS.md was counted as an unreported analysis:\n" +
+      e.out,
+  );
 }
 
 rmSync(tmp, { recursive: true, force: true });
-console.log("✓ artifact-coverage: unindexed section, dangling path and missing index all fire; a complete bundle is silent; " +
-  "the reverse leg fires on a result nobody reports, stays quiet on one named in the paper or in EITHER index file, " +
-  "reports rotted and stale allowances, prints its whole ignore set on a clean run, and states its count; 3 known gaps recorded");
+console.log(
+  "✓ artifact-coverage: unindexed section, dangling path and missing index all fire; a complete bundle is silent; " +
+    "the reverse leg fires on a result nobody reports, stays quiet on one named in the paper or in EITHER index file, " +
+    "reports rotted and stale allowances, prints its whole ignore set on a clean run, and states its count; 3 known gaps recorded",
+);

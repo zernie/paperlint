@@ -64,6 +64,13 @@ export const GATES = [
     script: "lint:skills",
   },
   {
+    name: "formatting",
+    job: "gates",
+    script: "fmt:check",
+    // Prettier defaults, the same config as vigiles. What it must not touch — compiled
+    // SKILL.md, fixture data, raw runs — is listed in `.prettierignore` with the reason.
+  },
+  {
     name: "every declared rule is enabled for a file on disk",
     job: "gates",
     script: "check:globs",
@@ -75,7 +82,8 @@ export const GATES = [
     // hiding: the check is about a property of the rules' source, which cannot change between
     // a developer's tree and the runner's. Running it twice buys nothing; NOT running it
     // locally buys a defect that reaches review.
-    reason: "source-only property — identical in every environment, so CI adds nothing",
+    reason:
+      "source-only property — identical in every environment, so CI adds nothing",
     script: "check:content-only",
   },
   {
@@ -120,6 +128,9 @@ export const NOT_COVERED = {
     "exists because a defect was found that appeared on macOS alone (vigiles#241: /var is a " +
     "symlink to /private/var, so a path recorded before resolution did not match). No local " +
     "command can stand in for a different kernel.",
+  merge:
+    "dependabot-automerge.yml merges the bot's own pull requests once CI is green. It checks " +
+    "nothing itself; there is no local equivalent because it acts on GitHub, not on the tree.",
 };
 
 /**
@@ -154,7 +165,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     // 2026-09-16.
     const o = outcome(r.status);
     if (o === "pass") continue;
-    if (o === "skip") skipped.push(`${g.name}  (npm run ${g.script} → ${SKIP_EXIT})`);
+    if (o === "skip")
+      skipped.push(`${g.name}  (npm run ${g.script} → ${SKIP_EXIT})`);
     else failed.push(`${g.name}  (npm run ${g.script} → ${r.status})`);
   }
 
@@ -164,7 +176,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     for (const f of failed) console.error(`   ${f}`);
   } else {
     const passed = GATES.length - skipped.length;
-    console.log(`✓ ${passed} gate(s) passed${skipped.length ? `, ${skipped.length} SKIPPED — not run, not passed` : ""}`);
+    console.log(
+      `✓ ${passed} gate(s) passed${skipped.length ? `, ${skipped.length} SKIPPED — not run, not passed` : ""}`,
+    );
   }
   if (skipped.length) for (const s of skipped) console.log(`⏳ skipped: ${s}`);
 

@@ -1,0 +1,82 @@
+# Platform cells: the checks that need ANOTHER OPERATING SYSTEM and cost the most per minute.
+#
+# 🔴 WHEN THEY RUN — ONCE, WHEN A PULL REQUEST IS OFFERED FOR MERGE. The trigger list is
+# `opened` + `ready_for_review` and deliberately NOT `synchronize`. A draft pays nothing; marking
+# it ready runs this once. A push AFTER that gives the new head commit no platform check at all,
+# and the branch ruleset requires this check on the latest commit ("Checks from earlier commits
+# don't satisfy the requirement"), so the PR is blocked until the check is re-run on purpose:
+# `workflow_dispatch` on the branch, or draft → ready again.
+#
+# 🔴 WHY NOT A LABEL (it used to be `osx`). A label stays on the PR, so every later push re-fired
+# the job: PR #17 ran macOS 5× on 17.09 and 3× on 23.09. And any OTHER label fired `labeled` too,
+# the job's `if:` skipped, a skipped job reports Success, and a required check was satisfied with
+# the platform never run. `ready_for_review` fires once per transition and cannot produce a
+# green by skipping.
+#
+# There is no merge queue to hang this on: merge queues exist only for organization-owned
+# repositories, and this one belongs to a personal account.
+name: platform
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+  workflow_dispatch:
+
+concurrency:
+  group: platform-${{ github.event.pull_request.number || github.ref }}
+  # A cancelled run is a failed check, so cancelling still blocks the merge; it only saves minutes.
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ── macOS ─────────────────────────────────────────────────────────────────────────────────────
+  #
+  # Issue #9: `npm test` was red ONLY on macOS. Reason — `/var` there is a symlink to
+  # `/private/var`, so `import.meta.url` resolves to realpath, while `process.argv[1]` and any
+  # path constructed by the test remain as typed: one directory under two names. The fix
+  # (`50d6463`) is enforced by an ESLint rule, but the rule guards the IDIOM, not the behavior — on
+  # Linux `realpathSync` is identity, and removing the wrapper does not red any behavioral test. So
+  # the only way to know harnesses are truly green on macOS is to run them there.
+  #
+  # The macOS runner is billed at a 10× multiplier to Linux, which is why this runs once per PR
+  # and not on every push.
+  #
+  # ⚠️ Only `npm test` runs, and this is not economy for its own sake: issue #9 concerns harnesses
+  # reading temp directories. Mutation batteries (242 s) on a tenfold runner would cost forty
+  # minutes of Linux-equivalent and would verify exactly what is already checked on Linux.
+  #
+  # Dependabot opens non-draft PRs daily and merges them itself (dependabot-automerge.yml); a
+  # dependency bump does not change what this job measures, so it is skipped for the bot on purpose.
+  macos:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.draft == false && github.actor != 'dependabot[bot]')
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: npm ci
+        run: npm ci
+        timeout-minutes: 8
+      # The distinction this job exists for: prints BOTH spellings of the temp root.
+      # If they match — platform is not the right one, and green below says nothing about macOS.
+      - name: two spellings of one directory — does this machine see them
+        run: |
+          node -e '
+            const { mkdtempSync, realpathSync } = require("node:fs");
+            const { tmpdir } = require("node:os");
+            const { join } = require("node:path");
+            const d = mkdtempSync(join(tmpdir(), "probe-"));
+            console.log("as typed :", d);
+            console.log("realpath :", realpathSync(d));
+            console.log(d === realpathSync(d) ? "MATCH — issue #9 traps do not exist on this machine"
+                                              : "DIVERGE — this is the platform this job exists for");
+          '
+      - name: npm test
+        run: npm test

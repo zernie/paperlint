@@ -203,12 +203,15 @@ export function buildConfig(
  * directory. So: the deepest directory holding the config's directory and every path. With the
  * papers inside the config's directory, that is the config's directory itself.
  */
-const lintRoot = (home: string, paths: readonly string[]): string => commonDir([home, ...paths]);
+const lintRoot = (home: string, paths: readonly string[]): string =>
+  commonDir([home, ...paths]);
 
 /** The longest shared leading run of path segments. */
 const commonDir = (paths: readonly string[]): string => {
   const [first = [], ...rest] = paths.map((p) => p.split(sep));
-  const end = first.findIndex((part, i) => rest.some((other) => other[i] !== part));
+  const end = first.findIndex((part, i) =>
+    rest.some((other) => other[i] !== part),
+  );
   return first.slice(0, end === -1 ? undefined : end).join(sep) || sep;
 };
 
@@ -307,7 +310,9 @@ export function findDeclaration(startDir: string): Declaration | null {
  */
 const declaresSettings = (pkgPath: string): boolean => {
   try {
-    return JSON.parse(readFileSync(pkgPath, "utf8"))?.[CONFIG_KEY] !== undefined;
+    return (
+      JSON.parse(readFileSync(pkgPath, "utf8"))?.[CONFIG_KEY] !== undefined
+    );
   } catch {
     return false;
   }
@@ -331,14 +336,21 @@ export function readConfig(
     log = console.log,
     err = console.error,
     cwd = process.cwd(),
-  }: { log?: typeof console.log; err?: typeof console.error; cwd?: string } = {},
+  }: {
+    log?: typeof console.log;
+    err?: typeof console.error;
+    cwd?: string;
+  } = {},
 ): ConfigRead {
   // 🔴 THE CONFIG FINDS ITSELF. An explicit `--config` beats the discovered one — it was named out
   // loud, and a substitution is never silent. For an explicit path the FILE NAME decides the
   // carrier: the path here is a value, not a text to make guesses about, and `package.json` holds
   // the settings under a key.
   const decl: Declaration | null = a.config
-    ? { path: a.config, kind: basename(a.config) === PKG_NAME ? "package.json" : "rpp.json" }
+    ? {
+        path: a.config,
+        kind: basename(a.config) === PKG_NAME ? "package.json" : "rpp.json",
+      }
     : findDeclaration(cwd);
   const configPath = decl?.path ?? null;
   if (a.config && !existsSync(a.config)) {
@@ -355,7 +367,7 @@ export function readConfig(
       err(`${configPath} is not valid JSON: ${(e as Error).message}`);
       return { code: 2 };
     }
-    opts = decl.kind === "package.json" ? parsed?.[CONFIG_KEY] ?? {} : parsed;
+    opts = decl.kind === "package.json" ? (parsed?.[CONFIG_KEY] ?? {}) : parsed;
     // The discovered config is NAMED out loud. Otherwise a run from someone else's directory picks
     // up someone else's file and does not say so — and a typography-debt mismatch looks like a finding.
     //
@@ -545,7 +557,11 @@ export async function run(
     log = console.log,
     err = console.error,
     cwd = process.cwd(),
-  }: { log?: typeof console.log; err?: typeof console.error; cwd?: string } = {},
+  }: {
+    log?: typeof console.log;
+    err?: typeof console.error;
+    cwd?: string;
+  } = {},
 ): Promise<number> {
   const a = parseArgs(argv);
   // The refusal must come FIRST: behind a flag without a value there is usually a typo, or a
@@ -576,7 +592,9 @@ export async function run(
           { ...a, config: null },
           { log: () => {}, err: () => {}, cwd: root },
         );
-        return read.code === undefined ? toPaths(read.opts.papers)[0] ?? null : null;
+        return read.code === undefined
+          ? (toPaths(read.opts.papers)[0] ?? null)
+          : null;
       },
     });
   // `doctor` reads the config but must NOT die on a broken one — reporting that the config is
@@ -584,8 +602,14 @@ export async function run(
   // what it prints, rather than an early exit that tells the reader nothing about the hooks.
   if (a.cmd === "doctor") {
     const read = readConfig(a, { log: () => {}, err: () => {}, cwd });
-    const papers = read.code === undefined ? toPaths(read.opts.papers)[0] ?? null : null;
-    return doctor({ log, cwd, projectDir: process.env["CLAUDE_PROJECT_DIR"] ?? cwd, cliPapers: papers });
+    const papers =
+      read.code === undefined ? (toPaths(read.opts.papers)[0] ?? null) : null;
+    return doctor({
+      log,
+      cwd,
+      projectDir: process.env["CLAUDE_PROJECT_DIR"] ?? cwd,
+      cliPapers: papers,
+    });
   }
   if (a.cmd === "hook") return runHook(a.paths[0], { err });
   if (a.cmd === "build") return runBuild(a, { log, err, cwd });
@@ -616,7 +640,9 @@ export async function run(
   const paths =
     a.paths.length > 0
       ? a.paths.map((p) => resolve(cwd, p))
-      : toPaths(opts.papers).map((rel) => resolve(dirname(configPath ?? cwd), rel));
+      : toPaths(opts.papers).map((rel) =>
+          resolve(dirname(configPath ?? cwd), rel),
+        );
   if (paths.length === 0) {
     err(
       `nothing to lint: no path was given and no ${CONFIG_NAME} was found.\n` +

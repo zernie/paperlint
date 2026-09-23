@@ -33,7 +33,9 @@ import { dirname, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const { linkSkills, locatePackage, shippedSkills } = await import(join(HERE, "link-skills.ts"));
+const { linkSkills, locatePackage, shippedSkills } = await import(
+  join(HERE, "link-skills.ts")
+);
 
 let n = 0;
 const check = (label, cond) => {
@@ -47,8 +49,14 @@ const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-link-skills-")));
 /** A package as a manager would unpack it: manifest, plugin declaration, skills, one non-skill. */
 function writePackage(dir) {
   mkdirSync(join(dir, ".claude-plugin"), { recursive: true });
-  writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "research-paper-pipeline", version: "1.0.0" }));
-  writeFileSync(join(dir, ".claude-plugin", "plugin.json"), JSON.stringify({ skills: "./ships/" }));
+  writeFileSync(
+    join(dir, "package.json"),
+    JSON.stringify({ name: "research-paper-pipeline", version: "1.0.0" }),
+  );
+  writeFileSync(
+    join(dir, ".claude-plugin", "plugin.json"),
+    JSON.stringify({ skills: "./ships/" }),
+  );
   for (const s of SKILLS) {
     mkdirSync(join(dir, "ships", s, "scripts"), { recursive: true });
     writeFileSync(join(dir, "ships", s, "SKILL.md"), `---\nname: ${s}\n---\n`);
@@ -63,12 +71,31 @@ function writePackage(dir) {
 function consumer(name, manager = "npm") {
   const dir = join(work, name);
   mkdirSync(join(dir, "node_modules"), { recursive: true });
-  writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "c", version: "1.0.0" }));
-  if (manager === "npm") writePackage(join(dir, "node_modules", "research-paper-pipeline"));
+  writeFileSync(
+    join(dir, "package.json"),
+    JSON.stringify({ name: "c", version: "1.0.0" }),
+  );
+  if (manager === "npm")
+    writePackage(join(dir, "node_modules", "research-paper-pipeline"));
   else if (manager === "pnpm") {
-    const store = join("node_modules", ".pnpm", "research-paper-pipeline@1.0.0", "node_modules", "research-paper-pipeline");
+    const store = join(
+      "node_modules",
+      ".pnpm",
+      "research-paper-pipeline@1.0.0",
+      "node_modules",
+      "research-paper-pipeline",
+    );
     writePackage(join(dir, store));
-    symlinkSync(join(".pnpm", "research-paper-pipeline@1.0.0", "node_modules", "research-paper-pipeline"), join(dir, "node_modules", "research-paper-pipeline"), "dir");
+    symlinkSync(
+      join(
+        ".pnpm",
+        "research-paper-pipeline@1.0.0",
+        "node_modules",
+        "research-paper-pipeline",
+      ),
+      join(dir, "node_modules", "research-paper-pipeline"),
+      "dir",
+    );
   }
   return dir;
 }
@@ -87,7 +114,8 @@ try {
     );
     check(
       "and nothing that is not a skill — a directory without SKILL.md is not one",
-      r.links.length === SKILLS.length && !existsSync(join(home(dir), "shared")),
+      r.links.length === SKILLS.length &&
+        !existsSync(join(home(dir), "shared")),
     );
     check(
       "🔴 SKILL.md is reachable THROUGH the link, where Claude Code looks",
@@ -100,7 +128,16 @@ try {
     const target = readlinkSync(join(home(dir), "alpha"));
     check(
       "🔴 the link is RELATIVE — an absolute one breaks the moment the checkout moves",
-      !isAbsolute(target) && target === join("..", "..", "node_modules", "research-paper-pipeline", "ships", "alpha"),
+      !isAbsolute(target) &&
+        target ===
+          join(
+            "..",
+            "..",
+            "node_modules",
+            "research-paper-pipeline",
+            "ships",
+            "alpha",
+          ),
     );
   }
 
@@ -155,12 +192,22 @@ try {
     const located = locatePackage(dir);
     check(
       "Node resolves the package to the version-stamped store directory",
-      !("error" in located) && located.dir.includes(join(".pnpm", "research-paper-pipeline@1.0.0")),
+      !("error" in located) &&
+        located.dir.includes(join(".pnpm", "research-paper-pipeline@1.0.0")),
     );
     const r = linkSkills(dir);
     check(
       "🔴 under pnpm the link goes through node_modules/research-paper-pipeline, not the .pnpm store — that one dangles on the next upgrade",
-      r.ok && readlinkSync(join(home(dir), "alpha")) === join("..", "..", "node_modules", "research-paper-pipeline", "ships", "alpha"),
+      r.ok &&
+        readlinkSync(join(home(dir), "alpha")) ===
+          join(
+            "..",
+            "..",
+            "node_modules",
+            "research-paper-pipeline",
+            "ships",
+            "alpha",
+          ),
     );
     check(
       "and SKILL.md is reachable through both hops",
@@ -185,7 +232,9 @@ try {
     const r = linkSkills(dir, { write: false });
     check(
       "🔴 write:false reports every skill as missing and creates nothing — doctor only looks",
-      r.ok && SKILLS.every((s) => status(r, s)?.status === "missing") && !existsSync(home(dir)),
+      r.ok &&
+        SKILLS.every((s) => status(r, s)?.status === "missing") &&
+        !existsSync(home(dir)),
     );
   }
 
@@ -195,10 +244,15 @@ try {
     writePackage(pkg);
     writeFileSync(join(pkg, ".claude-plugin", "plugin.json"), "{}");
     const s = shippedSkills(pkg);
-    check("no \"skills\" in plugin.json — an error that names the file", "error" in s && /declares no "skills"/.test(s.error));
+    check(
+      'no "skills" in plugin.json — an error that names the file',
+      "error" in s && /declares no "skills"/.test(s.error),
+    );
   }
 } finally {
   rmSync(work, { recursive: true, force: true });
 }
 
-console.log(`✓ ${n} assertions passed — link-skills: the skills are where Claude Code looks`);
+console.log(
+  `✓ ${n} assertions passed — link-skills: the skills are where Claude Code looks`,
+);

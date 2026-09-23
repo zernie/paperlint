@@ -1,7 +1,20 @@
 ---
 title: "Occupancy research — deterministic prose/readability checkers vs. semantically-opaque-but-simple prose"
 created: 2026-08-06
-tags: [occupancy-research, prose-linting, readability, paper-pipeline, cold-read, vale, textlint, retext, proselint, coh-metrix, coreference]
+tags:
+  [
+    occupancy-research,
+    prose-linting,
+    readability,
+    paper-pipeline,
+    cold-read,
+    vale,
+    textlint,
+    retext,
+    proselint,
+    coh-metrix,
+    coreference,
+  ]
 ---
 
 # Occupancy research: does any shipped checker catch "short, grammatical, correct — parseable only if you already know the idea"?
@@ -23,7 +36,7 @@ reader without your mental model cannot parse it."**
 I verified this empirically, not just by reading docs — I ran the actual tools (proselint,
 write-good, retext-readability via textstat/npm, all installed and executed in this session)
 against the six sentences below. Results are in the table at the end. The one mechanical thing
-that *does* fire — sentence-length/clause-count thresholds — only catches sentence 6 (the long,
+that _does_ fire — sentence-length/clause-count thresholds — only catches sentence 6 (the long,
 syntactically loaded one). Sentences 1–5, the ones a human immediately called "wtf" / "what" /
 "VAGUE AF", passed every tool at every reasonable threshold. The only way one of them lit up at
 all was setting retext-readability's target age to 6 years old — at which point it also flags
@@ -40,28 +53,28 @@ persona-stall pattern already in this pipeline, not a metric.
 
 ## The test set (verbatim, as given)
 
-1. *"The state to remove is therefore not the rule but its claim about itself"* — reaction: "wtf"
-2. *"these files are filled with constructions nobody built"* — "wtf"
-3. *"Three answers, all of them after the fact"* (section heading) — "VAGUE AF"
-4. *"§4.4 invites the suspicion that the resolver guesses"* — "what"
-5. *"The only part that reads English is the one not allowed to decide anything. It proposes; the other two dispose."* — "needs full rewrite confusing af"
+1. _"The state to remove is therefore not the rule but its claim about itself"_ — reaction: "wtf"
+2. _"these files are filled with constructions nobody built"_ — "wtf"
+3. _"Three answers, all of them after the fact"_ (section heading) — "VAGUE AF"
+4. _"§4.4 invites the suspicion that the resolver guesses"_ — "what"
+5. _"The only part that reads English is the one not allowed to decide anything. It proposes; the other two dispose."_ — "needs full rewrite confusing af"
 6. A sentence carrying six separate factual claims joined by dashes/semicolons (exact original
    text not given to me — I constructed a representative stand-in of the same shape for testing:
-   *"The audit found six problems: the config was stale, the hook silently no-ops on error, the
+   _"The audit found six problems: the config was stale, the hook silently no-ops on error, the
    guard reads a variable the harness never sets, the fallback path was never tested, the log
-   rotates before anyone reads it, and the alert fires into a channel nobody watches."* — this is
+   rotates before anyone reads it, and the alert fires into a channel nobody watches."_ — this is
    a **reconstruction**, not the original, flagged so it isn't mistaken for a quote later.)
 
 ### Empirical readability numbers (textstat 0.7.13, run locally)
 
-| # | words | Flesch reading ease | FK grade | Gunning Fog | Coleman-Liau | ARI | Dale-Chall |
-|---|---|---|---|---|---|---|---|
-| 1 | 14 | 83.9 (easy) | 5.0 | 5.6 | 6.5 | 5.8 | 6.6 |
-| 2 | 8 | 71.8 (fairly easy) | 5.2 | 8.2 | 14.6 | 10.8 | 10.0 |
-| 3 | 8 | 93.0 (very easy) | 2.3 | 3.2 | 4.4 | 3.2 | 6.0 |
-| 4 | 9 | 56.7 (fairly difficult) | 7.6 | 8.0 | 13.1 | 10.3 | 14.6 |
-| 5 | 20 (2 sent.) | 69.8 (fairly easy) | 6.0 | 6.0 | 7.1 | 5.2 | 7.3 |
-| 6 | 46 | 29.6 (difficult) | **20.6** | **20.1** | 10.2 | **24.0** | 12.1 |
+| #   | words        | Flesch reading ease     | FK grade | Gunning Fog | Coleman-Liau | ARI      | Dale-Chall |
+| --- | ------------ | ----------------------- | -------- | ----------- | ------------ | -------- | ---------- |
+| 1   | 14           | 83.9 (easy)             | 5.0      | 5.6         | 6.5          | 5.8      | 6.6        |
+| 2   | 8            | 71.8 (fairly easy)      | 5.2      | 8.2         | 14.6         | 10.8     | 10.0       |
+| 3   | 8            | 93.0 (very easy)        | 2.3      | 3.2         | 4.4          | 3.2      | 6.0        |
+| 4   | 9            | 56.7 (fairly difficult) | 7.6      | 8.0         | 13.1         | 10.3     | 14.6       |
+| 5   | 20 (2 sent.) | 69.8 (fairly easy)      | 6.0      | 6.0         | 7.1          | 5.2      | 7.3        |
+| 6   | 46           | 29.6 (difficult)        | **20.6** | **20.1**    | 10.2         | **24.0** | 12.1       |
 
 Every published deterministic tool's threshold for "flag this" lives in the FK-grade-8-to-12 /
 Flesch-under-50 range. On that basis: sentences 1, 2, 3, 5 are **invisible** to every formula in
@@ -88,9 +101,10 @@ release cadence through 2024 and 5.7k GitHub stars; no signs of abandonment as o
 "N semicolons in one sentence" or "3+ commas in one sentence" as a proxy for clause count — but
 this is a **structural/punctuation proxy**, not a semantic one, and I found no shipped Vale style
 (Microsoft, Google, Red Hat, write-good port, Joblint) that actually ships such a rule. Someone
-*could* author one; nobody has.
+_could_ author one; nobody has.
 
 **Does it ship a readability rule?** Yes — `extends: readability`, config example:
+
 ```yaml
 extends: readability
 message: "Content must be readable at 6th grade level (current: %s)"
@@ -100,6 +114,7 @@ metrics:
   - Flesch-Kincaid
   - Coleman-Liau
 ```
+
 It supports Flesch-Kincaid, Coleman-Liau, and other classic formulas (implementations live in
 [github.com/errata-ai/readability](https://github.com/errata-ai/readability)), averaging across
 whichever metrics you list. **Critical limitation for this exact problem: the rule is scoped to
@@ -143,11 +158,12 @@ if the source is Markdown. `retext-textlint` bridges the two.
 **retext-readability** — actually tested, not just read about.
 [github.com/retextjs/retext-readability](https://github.com/retextjs/retext-readability), v8.0.0.
 Applies 7 formulas (Dale–Chall, Automated Readability, Coleman-Liau, Flesch, Gunning-Fog, SMOG,
-Spache) **per sentence** (unlike Vale, this one *is* sentence-scoped) and fires when a
+Spache) **per sentence** (unlike Vale, this one _is_ sentence-scoped) and fires when a
 configurable fraction agree ("threshold," default `4/7`) the sentence is hard for a configurable
 target `age` (default 16).
 
 **Ran it live, two configs:**
+
 - **Default** (age 16, minWords 5, threshold 4/7 — i.e. realistic adult-audience settings): flags
   **only sentence 6** ("5 out of 7 algorithms"). Sentences 1–5 all report "no issues found."
 - **Maximally strict** (age 6, minWords 1, threshold 1/7 — i.e. "flag anything a first-grader
@@ -155,7 +171,7 @@ target `age` (default 16).
   at "all 7." This setting is unusable in practice — it would also flag nearly all ordinary adult
   technical or literary prose, because the formulas are keyed to vocabulary/syllable difficulty
   for a 6-year-old, not to "does this presuppose an idea the reader doesn't have." It's not
-  detecting the target defect; it's detecting *any* adult-level word choice.
+  detecting the target defect; it's detecting _any_ adult-level word choice.
 
 This is the cleanest empirical proof of the headline finding: there is no threshold setting
 between "misses everything real" and "flags everything indiscriminately" that isolates the actual
@@ -209,6 +225,7 @@ words (from a fixed list — "many," "various," "fairly," etc.), weakening adver
 
 **Ran it live** (npm, current version): flagged something on 4 of 6 sentences, all trivial
 style nits, none related to the actual defect:
+
 - #1 "therefore" → wordy
 - #2 "are filled" → possible passive voice
 - #3 "all of" → wordy
@@ -322,7 +339,7 @@ built around a fixed "familiar word" list from 1948, later revised).
   world-knowledge, and discourse variables the classic formulas ignore entirely.
 - textstat's own numbers above make the critique concrete: sentence 4 (genuinely one of the
   more confusing ones — "§4.4 invites the suspicion that the resolver guesses" personifies a
-  document section and uses "invites the suspicion" idiomatically) scores *worse* by Dale-Chall
+  document section and uses "invites the suspicion" idiomatically) scores _worse_ by Dale-Chall
   (14.6, "difficult") than sentence 6 does by that same formula (12.1) — the formula is
   responding to unfamiliar-word-list hits ("resolver," "suspicion"), not to the actual
   comprehension problem, which is structural/referential, not lexical.
@@ -347,11 +364,11 @@ It genuinely targets "does this text hang together for a reader" rather than "ar
 short." **But: it is a research instrument, not a pass/fail linter.** Two free web versions
 exist (Coh-Metrix 3.0 at the University of Memphis's hosted tool, and a "CohMetrixCore Web"
 instance — [iis.memphis.edu/static/cohmetrix](https://iis.memphis.edu/static/cohmetrix/)) but it
-outputs ~100+ numeric indices for a *whole document*, calibrated against corpora of student/
+outputs ~100+ numeric indices for a _whole document_, calibrated against corpora of student/
 textbook writing — no accept/reject threshold, no per-sentence flag, no CI integration, and one
 cited limitation notes findings "could be generalized only to a specific genre of texts"
 (academic prose corpora it was validated on). Nobody runs Coh-Metrix as a pre-commit hook. It is
-the right *idea* — cohesion over word length — with none of the packaging that would make it
+the right _idea_ — cohesion over word length — with none of the packaging that would make it
 adoptable tomorrow.
 
 ---
@@ -363,15 +380,15 @@ usable shipped tool.** What exists:
 
 - **Entity-grid coherence models** (Barzilay & Lapata, 2008) — represent a document as a grid of
   which entities appear in which grammatical role (subject/object/other) across sentences, and
-  score coherence by the entity-transition patterns. This is genuinely the right *shape* of idea
-  for "this term was never introduced" / "this pronoun floats" — but it scores *documents* as
+  score coherence by the entity-transition patterns. This is genuinely the right _shape_ of idea
+  for "this term was never introduced" / "this pronoun floats" — but it scores _documents_ as
   more-or-less-coherent relative to a shuffled-sentence baseline, it does not point at a specific
   sentence and say "this one presupposes a referent the reader doesn't have."
 - **"Cohere" toolkit** — a research implementation bundling the classic entity-grid model, a
   graph-based coherence metric (Guinaudeau & Strube 2013), and a syntax-augmented model
   (Louis & Nenkova 2012), built explicitly for benchmarking against shuffled-sentence corpora in
   papers, not for linting a draft. [lrec-conf.org paper](http://www.lrec-conf.org/proceedings/lrec2016/pdf/923_Paper.pdf)
-- **spaCy coreference / coreferee** — general-purpose coreference *resolution* libraries (find
+- **spaCy coreference / coreferee** — general-purpose coreference _resolution_ libraries (find
   what "it"/"they" points to across a document). These resolve references that CAN be resolved;
   they do not flag references that CANNOT be resolved from context, and even where they attempt
   novelty-detection, that's a research topic (Winograd-schema-style ambiguity), not a shipped
@@ -379,8 +396,8 @@ usable shipped tool.** What exists:
 - **Grammarly's vague-pronoun-reference marketing claim** is the single closest-sounding shipped
   consumer feature — see above, unverified in this research, worth testing directly.
 
-Net: coreference resolution as a *library capability* exists and is mature (spaCy, coreferee).
-Coreference *checking* — the inverse, "flag when resolution fails or is ambiguous, as a prose
+Net: coreference resolution as a _library capability_ exists and is mature (spaCy, coreferee).
+Coreference _checking_ — the inverse, "flag when resolution fails or is ambiguous, as a prose
 defect" — exists only in academic evaluation harnesses (Cohere, entity-grid papers), never
 packaged as something you point at a manuscript and get pass/fail on.
 
@@ -395,7 +412,7 @@ inside LaTeX, and only for acronyms/defined-terms, not general concept-presuppos
   undefined glossary term produce build warnings (undefined-reference class of error).
 - **`acronym` package** (Oetiker): Explicitly ships an **`error` option** — "lets it throw compile
   errors instead of warnings in case of undefined acronyms" — confirmed from the package's own
-  documentation/forum discussion found in this research. This means a LaTeX build *can* be
+  documentation/forum discussion found in this research. This means a LaTeX build _can_ be
   configured to hard-fail if an acronym is used before `\acrodef`ining it. This is real,
   adoptable, and directly on-point for "acronym used before defined" — just not for "concept used
   before its meaning was established," which is the harder, prose-level version of the same
@@ -406,11 +423,11 @@ inside LaTeX, and only for acronyms/defined-terms, not general concept-presuppos
   word difficulty. **TechScribe ships a customized LanguageTool instance specifically to check
   ASD-STE100 compliance** — a real, existing checker
   ([simplified-english.co.uk](https://www.simplified-english.co.uk/glossary.html)). This is the
-  closest *shipped, checkable* thing to "sentence structure that forces one clear idea per
+  closest _shipped, checkable_ thing to "sentence structure that forces one clear idea per
   sentence" found anywhere in this research — worth a closer look if the goal generalizes beyond
   papers to any technical writing, though it's built for aerospace maintenance manuals, not
   academic argumentation, and its "clarity" is about avoiding ambiguous grammar constructions
-  (e.g., banning strings of nouns, restricting verb forms), not about tracking whether a *claim*
+  (e.g., banning strings of nouns, restricting verb forms), not about tracking whether a _claim_
   presupposes context.
 
 ---
@@ -419,7 +436,7 @@ inside LaTeX, and only for acronyms/defined-terms, not general concept-presuppos
 
 - **Writefull:** Language-fluency assistant trained on published journal articles (phrasing,
   paraphrasing, abstract/title generation), integrates with Word/Overleaf. Targets non-native-
-  English fluency, not semantic clarity for a general reader — a *more* fluent-sounding sentence
+  English fluency, not semantic clarity for a general reader — a _more_ fluent-sounding sentence
   from Writefull could easily still be one only an insider parses.
   [writefull.com](https://www.writefull.com/)
 - **Penelope.ai / Penelope.ci:** Automated manuscript-completeness checker — ethics statements,
@@ -427,7 +444,7 @@ inside LaTeX, and only for acronyms/defined-terms, not general concept-presuppos
   formatting. Explicitly **does not evaluate intellectual quality** of the writing — confirmed
   directly from search results describing it as "highly effective for formal completeness" but
   not content quality.
-- **SciScore:** Scores *methods sections* specifically — reagent/resource identifiability, bias
+- **SciScore:** Scores _methods sections_ specifically — reagent/resource identifiability, bias
   controls, sample-size/randomization/blinding reporting — a reproducibility-and-rigor checklist
   tool, not a prose-clarity tool at all.
 - **StatReviewer:** Statistical-methodology checker — flags wrong test choice, missing info
@@ -446,14 +463,14 @@ onto submission" category.
 tool categorically out of scope (not a readability/clarity tool). Blank cells for tools not
 directly tested are inferred from documented mechanics, marked accordingly.
 
-| # | proselint (tested) | write-good (tested) | retext-readability @default (tested) | retext-readability @age-6 strict (tested) | textstat/Hemingway-style grade-level | Vale readability (doc-scoped, inferred) | LanguageTool Picky (inferred) | Coh-Metrix (inferred — no threshold exists) | Grammarly vague-pronoun (unverified) |
-|---|---|---|---|---|---|---|---|---|---|
-| 1 | ✗ | ✓ "therefore" wordy (irrelevant) | ✗ | ✓ (6/7, age-6 only) | grade 5 — too low to trip | ✗ | ✗ | would score low cohesion if computed, but no pass/fail exists | untested |
-| 2 | ✗ | ✓ "are filled" passive (irrelevant) | ✗ | ✓ (6/7, age-6 only) | grade 5 | ✗ | ✗ | same | untested |
-| 3 | ✗ | ✓ "all of" wordy (irrelevant) | ✗ | ✓ (6/7, age-6 only) | grade 2 | ✗ (also: headings often excluded from scope entirely) | ✗ | same | untested |
-| 4 | ✗ | ✗ (zero flags) | ✗ | ✓ (6/7, age-6 only) | grade 7.6 — borderline on strict configs | possible, borderline | possible, borderline | same | untested |
-| 5 | ✗ | ✓ "only" weakening adverb (irrelevant) | ✗ | ✓ (6/7, age-6 only) | grade 6 | ✗ | ✗ | this is the sentence coreference-checking would target ("It", "the other two") — no tool does it | **plausible target** if the feature is real |
-| 6 | ✗ | ✓ "silently" weakening adverb (coincidental) | **✓ (5/7, default settings — real hit)** | ✓ (7/7) | grade 20.6 | **would flag if scoped per-sentence** | likely flags on length | n/a | n/a |
+| #   | proselint (tested) | write-good (tested)                          | retext-readability @default (tested)     | retext-readability @age-6 strict (tested) | textstat/Hemingway-style grade-level     | Vale readability (doc-scoped, inferred)               | LanguageTool Picky (inferred) | Coh-Metrix (inferred — no threshold exists)                                                      | Grammarly vague-pronoun (unverified)        |
+| --- | ------------------ | -------------------------------------------- | ---------------------------------------- | ----------------------------------------- | ---------------------------------------- | ----------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------- |
+| 1   | ✗                  | ✓ "therefore" wordy (irrelevant)             | ✗                                        | ✓ (6/7, age-6 only)                       | grade 5 — too low to trip                | ✗                                                     | ✗                             | would score low cohesion if computed, but no pass/fail exists                                    | untested                                    |
+| 2   | ✗                  | ✓ "are filled" passive (irrelevant)          | ✗                                        | ✓ (6/7, age-6 only)                       | grade 5                                  | ✗                                                     | ✗                             | same                                                                                             | untested                                    |
+| 3   | ✗                  | ✓ "all of" wordy (irrelevant)                | ✗                                        | ✓ (6/7, age-6 only)                       | grade 2                                  | ✗ (also: headings often excluded from scope entirely) | ✗                             | same                                                                                             | untested                                    |
+| 4   | ✗                  | ✗ (zero flags)                               | ✗                                        | ✓ (6/7, age-6 only)                       | grade 7.6 — borderline on strict configs | possible, borderline                                  | possible, borderline          | same                                                                                             | untested                                    |
+| 5   | ✗                  | ✓ "only" weakening adverb (irrelevant)       | ✗                                        | ✓ (6/7, age-6 only)                       | grade 6                                  | ✗                                                     | ✗                             | this is the sentence coreference-checking would target ("It", "the other two") — no tool does it | **plausible target** if the feature is real |
+| 6   | ✗                  | ✓ "silently" weakening adverb (coincidental) | **✓ (5/7, default settings — real hit)** | ✓ (7/7)                                   | grade 20.6                               | **would flag if scoped per-sentence**                 | likely flags on length        | n/a                                                                                              | n/a                                         |
 
 **Reading the table honestly:** the only cell that is a genuine, non-degenerate detection is
 retext-readability on sentence 6 at default settings — and it fired because the sentence is long,
@@ -500,7 +517,7 @@ the one feature that sounds relevant — vague pronoun reference — is unverifi
 ## (c) What remains irreducibly non-deterministic
 
 The defect in all five "wtf"-tier sentences is the same shape: each sentence is a valid,
-economical compression of an idea the *writer* holds fully formed, and the compression relies on
+economical compression of an idea the _writer_ holds fully formed, and the compression relies on
 the reader having already built the same mental model — which term of art "the rule" and "its
 claim about itself" refer to (sentence 1), what "these files" and "constructions nobody built"
 cash out to concretely (sentence 2), what the antecedent of "three answers" even is without the
@@ -510,7 +527,7 @@ picks up from two clauses earlier. This is **not a property of any individual se
 which is exactly why every tool surveyed here comes up empty: they all operate on the document (or
 one sentence) in isolation, scoring vocabulary/length/word-choice, with no model of what the
 reader brought into the room. Coh-Metrix gets closest by modeling cross-sentence referential
-overlap, but even that is a statistical proxy for cohesion within the *document itself*, not a
+overlap, but even that is a statistical proxy for cohesion within the _document itself_, not a
 model of a specific reader's background knowledge — a term can have perfect referential overlap
 with its own prior use three paragraphs up and still be opaque to a reader meeting the paper cold.
 Detecting that gap requires actually simulating a reader who does not have the writer's context —

@@ -734,5 +734,4 @@ function main(argv) {
   return 0;
 }
 
-if (isMain(import.meta.url))
-  process.exit(main(process.argv));
+if (isMain(import.meta.url)) process.exit(main(process.argv));

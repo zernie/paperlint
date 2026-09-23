@@ -63,14 +63,14 @@ const M = [
   [
     "comments/blanking",
     "stop cutting LaTeX comments — an author note `% camera-ready blocker` becomes a finding",
-    "          .map((l) => l.replace(/(^|[^\\\\])%.*$/, \"$1\"));\n        lines.forEach((line, i) => {",
+    '          .map((l) => l.replace(/(^|[^\\\\])%.*$/, "$1"));\n        lines.forEach((line, i) => {',
     "          .map((l) => l); /* MUT */\n        lines.forEach((line, i) => {",
   ],
   [
     "comments/escaped percent",
     "treat `\\%` as the start of a comment — the rest of the line behind the percent goes invisible",
-    "          .map((l) => l.replace(/(^|[^\\\\])%.*$/, \"$1\"));\n        lines.forEach((line, i) => {",
-    "          .map((l) => l.replace(/%.*$/, \"\")); /* MUT */\n        lines.forEach((line, i) => {",
+    '          .map((l) => l.replace(/(^|[^\\\\])%.*$/, "$1"));\n        lines.forEach((line, i) => {',
+    '          .map((l) => l.replace(/%.*$/, "")); /* MUT */\n        lines.forEach((line, i) => {',
   ],
   [
     "address/line",
@@ -135,8 +135,8 @@ const M = [
     "frontmatter/comment blanking",
     "stop cutting LaTeX comments — the accepted sibling paper's COMMENTED record of its old " +
       "preamble becomes three findings, and the arming `\\documentclass` may come from a comment too",
-    "          .map((l) => l.replace(/(^|[^\\\\])%.*$/, \"$1\"));\n        const code = lines.join(\"\\n\");",
-    "          .map((l) => l);\n        const code = lines.join(\"\\n\"); /* MUT */",
+    '          .map((l) => l.replace(/(^|[^\\\\])%.*$/, "$1"));\n        const code = lines.join("\\n");',
+    '          .map((l) => l);\n        const code = lines.join("\\n"); /* MUT */',
   ],
   // ⚠️ `frontmatter/lastIndex reset` STOOD HERE AND WAS REMOVED, not silenced. It mutated away
   // an explicit `re.lastIndex = 0` and the harness stayed GREEN — which by this file's own
@@ -165,8 +165,8 @@ const M = [
   [
     "disk read/quiet instead of throwing",
     "remove the `try/catch` around the read — the rule THROWS on a stdin run where there is no file",
-    "        try {\n          text = readFileSync(context.filename, \"utf8\");\n        } catch {\n          return;\n        }\n        if (REVIEW_MODE_RE.test(text)) return;",
-    "        text = readFileSync(context.filename, \"utf8\"); /* MUT */\n        if (REVIEW_MODE_RE.test(text)) return;",
+    '        try {\n          text = readFileSync(context.filename, "utf8");\n        } catch {\n          return;\n        }\n        if (REVIEW_MODE_RE.test(text)) return;',
+    '        text = readFileSync(context.filename, "utf8"); /* MUT */\n        if (REVIEW_MODE_RE.test(text)) return;',
   ],
 ];
 
@@ -189,7 +189,8 @@ const runHarness = () => {
   if (base.failed) {
     console.log(
       "❌ THE HARNESS IS RED BEFORE ANY MUTATION — the battery cannot tell a killed mutation " +
-        "from that:\n" + base.out.slice(-1500),
+        "from that:\n" +
+        base.out.slice(-1500),
     );
     process.exit(1);
   }
@@ -210,7 +211,9 @@ for (const [label, what, from, to] of M) {
   writeFileSync(RULES, PRISTINE.replace(from, to));
   const on = readFileSync(RULES, "utf8");
   if (!on.includes(to) || on.includes(from)) {
-    console.log(`❌ ${label}: THE MUTATION DID NOT LAND (checked by re-reading the file)`);
+    console.log(
+      `❌ ${label}: THE MUTATION DID NOT LAND (checked by re-reading the file)`,
+    );
     bad++;
     writeFileSync(RULES, PRISTINE);
     continue;
@@ -232,19 +235,24 @@ for (const [label, what, from, to] of M) {
     // would come out EMPTY — "killed by something unknown", which is the half-answer this
     // battery forbids.
     (out.match(/((?:Error|ENOENT)[^\n]*)/) ?? [])[1] ??
-    (out.match(/([^\n]*(?:must|the wrong|drifted|was lost|did not fire)[^\n]*)/) ?? [])[1] ??
+    (out.match(
+      /([^\n]*(?:must|the wrong|drifted|was lost|did not fire)[^\n]*)/,
+    ) ?? [])[1] ??
     "";
   const where = (at ? `harness:${at} · ` : "") + msg;
   if (failed) {
     ok++;
     rows.push([label, what, where.trim().slice(0, 130)]);
   } else {
-    console.log(`🔴 ${label}: THE HARNESS IS GREEN UNDER THE MUTATION — a finding about the TEST, not a conclusion about the defence`);
+    console.log(
+      `🔴 ${label}: THE HARNESS IS GREEN UNDER THE MUTATION — a finding about the TEST, not a conclusion about the defence`,
+    );
     bad++;
   }
 }
 console.log("\n| property | mutation | what the harness died on |");
 console.log("|---|---|---|");
-for (const [a, b, c] of rows) console.log(`| \`${a}\` | ${b} | ${c.replace(/\|/g, "\\|")} |`);
+for (const [a, b, c] of rows)
+  console.log(`| \`${a}\` | ${b} | ${c.replace(/\|/g, "\\|")} |`);
 console.log(`\n${ok} mutation(s) killed, ${bad} problem(s)`);
 process.exit(bad ? 1 : 0);

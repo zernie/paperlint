@@ -39,24 +39,36 @@ process.exit(
         // the strength of the first — which is how a two-step check quietly becomes a one-step one.
         name: "the CONTENT check is dropped — a declaration nobody carries passes",
         harness: HARNESS,
-        expect: "declared but absent from the paper — a finding, where the old pattern was silent",
+        expect:
+          "declared but absent from the paper — a finding, where the old pattern was silent",
         disables:
           "step two. The scorecard would only have to SAY a question exists, never to have it in " +
           "the paper — which is the checklist the `bytes` field exists to not be. The predecessor " +
           "failed the same way from the other side: it matched «we leave the research question to " +
           "future work» and reported a paper that states no question as clean",
-        edits: [[RULE, "if (flatten(raw).includes(flatten(question))) return;", "return;"]],
+        edits: [
+          [
+            RULE,
+            "if (flatten(raw).includes(flatten(question))) return;",
+            "return;",
+          ],
+        ],
       },
       {
         name: "the STAGE GATE is removed — drafts get scolded too",
         harness: HARNESS,
-        expect: "a draft (no stages) — silent, even though it has no question either",
+        expect:
+          "a draft (no stages) — silent, even though it has no question either",
         disables:
           "the scope. The rule does not ask 'is there a question', it asks 'is there a question " +
           "FOR SOMETHING SHIPPED'. Without the gate every draft gets a finding — and a rule that " +
           "scolds drafts gets turned off within a week, at which point both real findings disappear too",
         edits: [
-          [RULE, "if (stages.length === 0) return; // not shipped — owes nothing", ""],
+          [
+            RULE,
+            "if (stages.length === 0) return; // not shipped — owes nothing",
+            "",
+          ],
         ],
       },
       {
@@ -79,26 +91,34 @@ process.exit(
       {
         name: "the stage list is taken from somewhere OTHER than the field again",
         harness: HARNESS,
-        expect: "the stage list in the message comes from the field and carries BOTH",
+        expect:
+          "the stage list in the message comes from the field and carries BOTH",
         disables:
           "the whole reason the move was made. The predecessor derived the stage with a regex " +
           "over the scorecard's prose and on agenticdev printed `submitted` where `submitted, " +
           "camera-ready` was declared. The mutation does not change the set of findings — only " +
           "the TEXT lies, and without its own assert the regression would have passed silently",
-        edits: [[RULE, 'data: { stages: stages.join("/") }', 'data: { stages: "submitted" }']],
+        edits: [
+          [
+            RULE,
+            'data: { stages: stages.join("/") }',
+            'data: { stages: "submitted" }',
+          ],
+        ],
       },
       {
         name: "the scorecard's name stops arriving as an option",
         harness: HARNESS,
-        expect: "and with a nonexistent scorecard a shipped paper is also silent — the stage gate is load-bearing",
+        expect:
+          "and with a nonexistent scorecard a shipped paper is also silent — the stage gate is load-bearing",
         disables:
           "the boundary 'the mechanism goes in the package, the data stays with the consumer'. " +
           "`PIPELINE-STATUS.md` is ONE repository's convention, and hardcoding it makes the rule unusable for everyone else",
         edits: [
           [
             RULE,
-            'const statusName = context.options?.[0]?.statusFile ?? "PIPELINE-STATUS.md";',
-            'const statusName = "PIPELINE-STATUS.md";',
+            'const statusName =\n          context.options?.[0]?.statusFile ?? "PIPELINE-STATUS.md";',
+            'const statusName =\n          "PIPELINE-STATUS.md";',
           ],
         ],
       },

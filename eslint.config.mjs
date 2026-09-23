@@ -31,7 +31,13 @@ export default [
   // run, so that a verdict in the design notes can be re-measured rather than argued with. Linting
   // them invites the next reader to tidy an unused import — and then the file on disk is no longer
   // the file that produced the number it backs.
-  { ignores: [".tmp-stages-src-*/", "fixtures/.tmp-*/", "docs/prior-art/repro/"] },
+  {
+    ignores: [
+      ".tmp-stages-src-*/",
+      "fixtures/.tmp-*/",
+      "docs/prior-art/repro/",
+    ],
+  },
   /**
    * 🔴 THIS BLOCK COVERS THE PACKAGE ITSELF, and before 2026-09-15 it was not here: the config held only
    * one block for `.tex` (I don't quote the glob inside this comment: the sequence

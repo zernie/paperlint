@@ -6,12 +6,6 @@
     "name": "zernie"
   },
   "repository": "https://github.com/zernie/research-paper-pipeline",
-  "keywords": [
-    "latex",
-    "academic-writing",
-    "eslint",
-    "linting",
-    "ci"
-  ],
+  "keywords": ["latex", "academic-writing", "eslint", "linting", "ci"],
   "skills": "./skills/"
 }

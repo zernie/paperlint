@@ -89,7 +89,10 @@ const ANNOUNCERS = [
 {
   const seen = new Set();
   for (const [skill, sibling] of ANNOUNCERS) {
-    if (skill === sibling) throw new Error(`${skill}: the sibling must be DIFFERENT from the skill itself`);
+    if (skill === sibling)
+      throw new Error(
+        `${skill}: the sibling must be DIFFERENT from the skill itself`,
+      );
     if (seen.has(sibling))
       throw new Error(
         `sibling "${sibling}" is named twice — the cases stopped being independent. ` +
@@ -101,7 +104,8 @@ const ANNOUNCERS = [
 
 const CASES = ANNOUNCERS.map(([skill, sibling]) => ({
   name: `${skill}: announces as ${sibling}`,
-  disables: "the identity check — a run recorded under a sibling's gate, which then reads FRESH",
+  disables:
+    "the identity check — a run recorded under a sibling's gate, which then reads FRESH",
   edits: [[md(skill), `announce.mjs ${skill} `, `announce.mjs ${sibling} `]],
   harness: harness(skill),
   expect: "its announce command files under",
@@ -109,7 +113,8 @@ const CASES = ANNOUNCERS.map(([skill, sibling]) => ({
 
 CASES.push({
   name: "osf-artifact-upload: one curl loses -g",
-  disables: "the globbing rule this skill states in its own §gotchas, three paragraphs above the command",
+  disables:
+    "the globbing rule this skill states in its own §gotchas, three paragraphs above the command",
   // 🔴 ANCHORED ON THE ONE CALL THAT IS UNIQUE, not on the shared prefix. `curl -g -s --retry 3`
   // appears three times, and the driver refuses an ambiguous target rather than guessing — which
   // is how the first version of this case reported AMBIGUOUS instead of quietly mutating one of
@@ -137,8 +142,11 @@ CASES.push({
 // stalls there. `**\`camera-ready\`**` occurs exactly once, so the edit cannot be ambiguous.
 CASES.push({
   name: "paper-pipeline: the map routes to a skill that does not exist",
-  disables: "forward routing integrity — the conductor pointing at a name with no SKILL.md behind it",
-  edits: [[md("paper-pipeline"), "**`camera-ready`**", "**`camera-ready-v2`**"]],
+  disables:
+    "forward routing integrity — the conductor pointing at a name with no SKILL.md behind it",
+  edits: [
+    [md("paper-pipeline"), "**`camera-ready`**", "**`camera-ready-v2`**"],
+  ],
   harness: harness("paper-pipeline"),
   expect: "no .claude/skills/camera-ready-v2/SKILL.md exists",
 });
@@ -166,4 +174,6 @@ if (missing.length)
       `test nothing can kill — green and silent whether or not it still checks anything.`,
   );
 
-process.exit(runMutations({ root: consumerRoot(), runner: "vigiles", cases: CASES }));
+process.exit(
+  runMutations({ root: consumerRoot(), runner: "vigiles", cases: CASES }),
+);

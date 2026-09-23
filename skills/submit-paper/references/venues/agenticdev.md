@@ -10,6 +10,7 @@ title: "AgenticDev @ ASE — venue card (data)"
 > CFP each year** (`conf.researchr.org/home/ase-2026/agenticdev-2026`).
 
 ## The facts (2026 edition)
+
 - **Venue**: Workshop on Agentic AI for Next-Generation Software Development, co-located with **ASE**
   (Automated Software Engineering), Munich, Oct 2026.
 - **HotCRP**: `https://agenticdev2026.hotcrp.com/paper/new`.
@@ -32,7 +33,7 @@ title: "AgenticDev @ ASE — venue card (data)"
   Abstract, Authors, ACM corresponding, Contacts, PC conflicts). → **Host the artifact externally** (OSF
   anonymized view-only link) and `\url{}` it in the paper's Availability. See `submit-paper` §2.
 - **Remote presentation**: CFP doesn't state a policy; what counts is the indexed
-  publication, not attendance. Only ask organizers about remote *after* acceptance (don't draw attention
+  publication, not attendance. Only ask organizers about remote _after_ acceptance (don't draw attention
   pre-decision under double-blind).
 
 ## 🔴 How to name the venue — what CAN and CANNOT be claimed
@@ -41,20 +42,21 @@ The question came up on 2026-08-24 and will come up every time (a post, a site, 
 application). Checked against primary sources, not a search-engine summary.
 
 **Facts:**
+
 - **ASE is CORE A\*** (top tier), together with ICSE and FSE it's software engineering's "big
   three."
-- **AgenticDev is an ASE 2026 workshop**, officially listed on ASE's own *Co-Located Events* page
+- **AgenticDev is an ASE 2026 workshop**, officially listed on ASE's own _Co-Located Events_ page
   (`conf.researchr.org/track/ase-2026/ase-2026-workshops`). It is not a third-party conference
   that rented a room nearby, and it is not "sponsorship" — the workshop runs under ASE's umbrella.
 - **Proceedings:** accepted papers go into the **ASE 2026 Workshop Proceedings** (ACM DL, DOI).
 - **But it is NOT the ASE main track.** The main track has its own program, its own PC, and its
   own selectivity; the workshop is reviewed separately and more leniently.
 
-| ✅ OK to write | ❌ NOT OK |
-|---|---|
-| "accepted at AgenticDev 2026, a workshop of ASE 2026" | "accepted at ASE 2026" |
+| ✅ OK to write                                           | ❌ NOT OK                            |
+| -------------------------------------------------------- | ------------------------------------ |
+| "accepted at AgenticDev 2026, a workshop of ASE 2026"    | "accepted at ASE 2026"               |
 | "workshop paper, ASE 2026 workshop proceedings (ACM DL)" | "published at a CORE A\* conference" |
-| "ASE is CORE A\*; AgenticDev is one of its workshops" | "my paper is CORE A\*" |
+| "ASE is CORE A\*; AgenticDev is one of its workshops"    | "my paper is CORE A\*"               |
 
 ⚠️ **Why this isn't pedantry:** a mismatch in how the narrative is framed is a recorded reason
 reviewers reject any claimed credentials. A reviewer sees the "workshop vs. main track"
@@ -64,8 +66,8 @@ ASE's weight on its own while staying accurate.
 
 ## Attendance, registration, and proceedings — what affects what
 
-- **Traveling to present does NOT affect the credit.** What counts is *authorship of scholarly
-  articles* — that is, **the publication**, not attendance. "Presented at a conference" isn't on
+- **Traveling to present does NOT affect the credit.** What counts is _authorship of scholarly
+  articles_ — that is, **the publication**, not attendance. "Presented at a conference" isn't on
   the list of countable achievements at all.
 - 🔴 **What DOES matter: whether payment becomes a condition of MAKING IT INTO proceedings.** Many
   venues require at least one author to register, or the paper gets pulled from the proceedings.
@@ -76,22 +78,26 @@ ASE's weight on its own while staying accurate.
   private notes (`<paper>/reviews/2026-08-24-perepiska-cheyry.md`).
 
 ## PC members (for the "PC conflicts" field) — 2026
+
 Andrea Rosani (Free U Bozen/Bolzano) · Giuseppe Di Fatta (Free U Bozen/Bolzano) · Jean Marie Mottu
 (Nantes U) · Paolo Papotti (Eurecom) · Simos Gerasimou (Cyprus U of Technology). An independent author
 with no ties to any of them checks **none**. (List grows year to year — read the current PC page.)
 
 ## Topic fit (foreground these in the framing)
+
 Trustworthiness / verification / validation of AI agents; benchmarking & empirical evaluation;
 integration into developer workflows; agent-based coding/testing. A cost-aware, correctness-gated
-*validation* paper is dead-center — name those keywords in the abstract/intro.
+_validation_ paper is dead-center — name those keywords in the abstract/intro.
 
 ## After acceptance — the prestige upgrade
+
 AgenticDev is a workshop (lightest authorship tier, but it counts). Extend the accepted paper (≥30% new
 material) into a higher-prestige indexed venue as a **second** publication: **MSR 2027** (deadline
 ~Oct 23, 2026) or **NeurIPS 2027 Evaluations & Datasets** (~May 2027). AgenticDev explicitly invites
 journal extensions. Don't dual-submit the same paper — extend it.
 
 ## Provenance
+
 "Measuring the Wrong Number" submitted here 2026-07-13 (#20, ready-for-review), 4pp short paper, OSF
 anonymized artifact linked in Availability, PC-panel estimate ~85–90% accept.
 
@@ -131,4 +137,3 @@ next one will have different ones. Source: the Conference Publishing author inst
 
 **The format profile is in [`agenticdev.yaml`](agenticdev.yaml)** next to this file. Data lives
 there, prose lives here.
-

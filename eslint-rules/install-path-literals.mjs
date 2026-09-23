@@ -59,7 +59,8 @@ const mdInstallPath = {
   create(context) {
     const check = (node) => {
       const prefix = channelPrefixIn(node.value);
-      if (prefix) context.report({ node, messageId: "installPath", data: { prefix } });
+      if (prefix)
+        context.report({ node, messageId: "installPath", data: { prefix } });
     };
     // `yaml` is the frontmatter block, which is where `allowed-tools` lives; the other three
     // are the ways a command can appear in the body.
@@ -96,5 +97,7 @@ const jsInstallPath = {
   },
 };
 
-export default { rules: { "md-install-path": mdInstallPath, "js-install-path": jsInstallPath } };
+export default {
+  rules: { "md-install-path": mdInstallPath, "js-install-path": jsInstallPath },
+};
 export { channelPrefixIn, CHANNEL_PREFIXES };

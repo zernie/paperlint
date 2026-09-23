@@ -12,7 +12,7 @@ and none of them rely on the user's file layout matching a path the content hard
 
 ## Vale — the closest analogue, because its content IS the product
 
-Vale is a prose linter whose rules are not compiled in: a *style* is a folder of YAML rules, and
+Vale is a prose linter whose rules are not compiled in: a _style_ is a folder of YAML rules, and
 published styles (Google, Microsoft, Red Hat) are installed rather than vendored.
 
 The declaration lives in `.vale.ini`:
@@ -46,7 +46,7 @@ Sources: <https://vale.sh/> · <https://github.com/vale-cli/vale>
 
 ## Quarto — extensions as a first-class verb pair
 
-Quarto is the closest *domain* analogue (scientific publishing: `render`, `preview`, `check`,
+Quarto is the closest _domain_ analogue (scientific publishing: `render`, `preview`, `check`,
 `publish`, `create`). For content it uses two verbs:
 
 - `quarto add <extension>` — install an extension into the project
@@ -95,7 +95,7 @@ Read against the four tools above, those are one problem, not two:
    do not know `StylesPath`; an ESLint shareable config does not know the consumer's directory.
    A path inside the content is a bet on one installation channel, and there are two.
 
-2. **There is no declared-and-fetched step.** Today the content arrives by being *inside* the
+2. **There is no declared-and-fetched step.** Today the content arrives by being _inside_ the
    package (npm) or by not arriving at all (plugin). Neither is `vale sync`: a line in the
    config plus one command.
 

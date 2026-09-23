@@ -30,7 +30,13 @@
  * The lock is released in `finally` AND on signals — for exactly the same reason the mutation
  * driver restores the sources on SIGINT/SIGTERM.
  */
-import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from "node:fs";
+import {
+  mkdirSync,
+  writeFileSync,
+  readFileSync,
+  rmSync,
+  existsSync,
+} from "node:fs";
 import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -86,13 +92,22 @@ function acquire() {
     }
     console.error(
       `⚠️  the lock was left behind by a run that no longer exists` +
-        (holder ? ` (pid ${holder.pid}, "${holder.cmd}")` : " (description unreadable)") +
+        (holder
+          ? ` (pid ${holder.pid}, "${holder.cmd}")`
+          : " (description unreadable)") +
         ` — taking it over.`,
     );
     rmSync(LOCK, { recursive: true, force: true });
     mkdirSync(LOCK, { recursive: false });
   }
-  writeFileSync(INFO, JSON.stringify({ pid: process.pid, cmd: argv.join(" "), at: new Date().toISOString() }, null, 2));
+  writeFileSync(
+    INFO,
+    JSON.stringify(
+      { pid: process.pid, cmd: argv.join(" "), at: new Date().toISOString() },
+      null,
+      2,
+    ),
+  );
 }
 
 const release = () => {

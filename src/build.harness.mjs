@@ -116,7 +116,7 @@ try {
       /repro\/build-submission\.sh/.test(remedyFor([noScript])),
   );
   check(
-    "and says this is NOT \"nothing to build\" — otherwise it reads as normal",
+    'and says this is NOT "nothing to build" — otherwise it reads as normal',
     /NOT "nothing to build"/.test(remedyFor([noScript])),
   );
   check(

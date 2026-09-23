@@ -27,12 +27,19 @@ process.exit(
       {
         name: "typography stops counting bare decimals — it goes quiet on the real article",
         harness: HARNESS,
-        expect: "no rule that was recorded has vanished entirely without the baseline being updated",
+        expect:
+          "no rule that was recorded has vanished entirely without the baseline being updated",
         disables:
           "the baseline's OTHER direction. Growth is the loud failure and everyone watches for it; " +
           "a rule that silently stops saying anything looks like progress — the number went down — " +
           "and that is exactly how a check dies unnoticed",
-        edits: [[TYPO, "const bareDecimal = (body.match(", "const bareDecimal = 0 * (body.match("]],
+        edits: [
+          [
+            TYPO,
+            "const bareDecimal = (body.match(",
+            "const bareDecimal = 0 * (body.match(",
+          ],
+        ],
       },
       {
         name: "the § counter stops counting — the planted defect no longer moves its rule",
@@ -47,12 +54,19 @@ process.exit(
       {
         name: "research-question stops comparing the declaration against the paper",
         harness: HARNESS,
-        expect: "a question declared but ABSENT from the article is reported as absent",
+        expect:
+          "a question declared but ABSENT from the article is reported as absent",
         disables:
           "the half added when the regex was retired earlier the same day. Without it the scorecard " +
           "only has to SAY a question exists, never to carry it — the checklist the whole design " +
           "moved away from",
-        edits: [[RQ, "if (flatten(raw).includes(flatten(question))) return;", "return;"]],
+        edits: [
+          [
+            RQ,
+            "if (flatten(raw).includes(flatten(question))) return;",
+            "return;",
+          ],
+        ],
       },
       {
         name: "the author-list marker stops being read — recording the run changes nothing",
@@ -61,7 +75,13 @@ process.exit(
         disables:
           "the only way a consumer can ever clear this finding. A rule that cannot be satisfied is " +
           "worse than one that never fires: it trains the reader to ignore the whole report",
-        edits: [[STAGES, 'const marker = opts.marker ?? "bib-authors";', 'const marker = "\\u0000never-matches";']],
+        edits: [
+          [
+            STAGES,
+            'const marker = opts.marker ?? "bib-authors";',
+            'const marker = "\\u0000never-matches";',
+          ],
+        ],
       },
     ],
   }),

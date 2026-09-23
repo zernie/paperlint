@@ -164,7 +164,19 @@
  *    variable — and it costs about the same as one full run above. Until then this is a lead.
  */
 
-import { assertTriggerRate, assertPromptDiversity, checkPromptDiversity, formatTriggerRateReport, skillResolved, readBaseline, writeBaseline, diffReports, formatBaselineDiff, assertNoRegression, skip } from "vigiles";
+import {
+  assertTriggerRate,
+  assertPromptDiversity,
+  checkPromptDiversity,
+  formatTriggerRateReport,
+  skillResolved,
+  readBaseline,
+  writeBaseline,
+  diffReports,
+  formatBaselineDiff,
+  assertNoRegression,
+  skip,
+} from "vigiles";
 import { paid_measureTriggerRate as measureTriggerRate } from "vigiles/eval";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -186,7 +198,11 @@ import { execFileSync } from "node:child_process";
 
 const ROOT = process.env.CLAUDE_PROJECT_DIR ?? process.cwd();
 const SKILLS_DIR = join(ROOT, ".claude", "skills");
-const BASELINE = join(SKILLS_DIR, "paper-pipeline", "pipeline-firing.baseline.json");
+const BASELINE = join(
+  SKILLS_DIR,
+  "paper-pipeline",
+  "pipeline-firing.baseline.json",
+);
 
 /** The namespace `packageSkillsDir` installs a LOOSE skills dir under. Not a guess — see eval.js. */
 const NS = "vigiles-loose-skills";
@@ -199,7 +215,10 @@ const val = (name, dflt) => {
   const i = argv.indexOf(`--${name}`);
   return i >= 0 && argv[i + 1] ? argv[i + 1] : dflt;
 };
-const onlys = argv.reduce((acc, a, i) => (a === "--only" && argv[i + 1] ? [...acc, argv[i + 1]] : acc), []);
+const onlys = argv.reduce(
+  (acc, a, i) => (a === "--only" && argv[i + 1] ? [...acc, argv[i + 1]] : acc),
+  [],
+);
 const TRIALS = Number(val("trials", "1"));
 const CONCURRENCY = Number(val("concurrency", "3"));
 const STRICT = flag("strict");
@@ -375,10 +394,14 @@ const irrelevantFor = (c) => {
 // Lie #2's shape, transplanted. A misspelled skill or a changed namespace makes every `fired`
 // predicate permanently false, and the run then reports a wall of confident 0.00s.
 function assertSkillIdsExist() {
-  if (!existsSync(SKILLS_DIR)) throw new Error(`no skills dir at ${SKILLS_DIR}`);
+  if (!existsSync(SKILLS_DIR))
+    throw new Error(`no skills dir at ${SKILLS_DIR}`);
   const installed = new Set(
     readdirSync(SKILLS_DIR, { withFileTypes: true })
-      .filter((e) => e.isDirectory() && existsSync(join(SKILLS_DIR, e.name, "SKILL.md")))
+      .filter(
+        (e) =>
+          e.isDirectory() && existsSync(join(SKILLS_DIR, e.name, "SKILL.md")),
+      )
       .map((e) => e.name),
   );
   const missing = CASES.map((c) => c.skill).filter((s) => !installed.has(s));
@@ -393,7 +416,9 @@ function assertSkillIdsExist() {
     const fm = readFileSync(join(SKILLS_DIR, c.skill, "SKILL.md"), "utf-8");
     const declared = declaredName(fm);
     if (declared && declared !== c.skill)
-      throw new Error(`${c.skill}/SKILL.md declares name: ${declared} — id mismatch, fix one of them`);
+      throw new Error(
+        `${c.skill}/SKILL.md declares name: ${declared} — id mismatch, fix one of them`,
+      );
   }
   return installed.size;
 }
@@ -404,7 +429,11 @@ const installedCount = assertSkillIdsExist();
 // `measureTriggerRate` uses internally. A prompt set that all reads the same way makes a high
 // trigger rate meaningless: the model would be answering one question four times.
 for (const c of CASES) {
-  assertPromptDiversity(c.prompts, { minPrompts: 4, minDistance: 0.3, label: `${c.skill}:should-fire` });
+  assertPromptDiversity(c.prompts, {
+    minPrompts: 4,
+    minDistance: 0.3,
+    label: `${c.skill}:should-fire`,
+  });
   assertPromptDiversity(irrelevantFor(c), {
     minPrompts: 4,
     minDistance: 0.3,
@@ -414,11 +443,14 @@ for (const c of CASES) {
 // Cross-set too: two cases whose should-fire sets are near-identical are not two measurements.
 for (let i = 0; i < CASES.length; i++)
   for (let j = i + 1; j < CASES.length; j++) {
-    const issues = checkPromptDiversity([...CASES[i].prompts, ...CASES[j].prompts], {
-      minPrompts: 8,
-      minDistance: 0.25,
-      label: `${CASES[i].skill} × ${CASES[j].skill}`,
-    });
+    const issues = checkPromptDiversity(
+      [...CASES[i].prompts, ...CASES[j].prompts],
+      {
+        minPrompts: 8,
+        minDistance: 0.25,
+        label: `${CASES[i].skill} × ${CASES[j].skill}`,
+      },
+    );
     if (issues.length) throw new Error(issues.map((x) => x.message).join("\n"));
   }
 
@@ -431,11 +463,18 @@ console.log(
 try {
   execFileSync("claude", ["--version"], { stdio: "ignore" });
 } catch {
-  skip("`claude` CLI not on PATH — the eval tier drives the real harness and cannot be faked");
+  skip(
+    "`claude` CLI not on PATH — the eval tier drives the real harness and cannot be faked",
+  );
 }
 
-const selected = onlys.length ? CASES.filter((c) => onlys.includes(c.skill)) : CASES;
-if (selected.length === 0) throw new Error(`--only matched nothing. Known: ${CASES.map((c) => c.skill).join(", ")}`);
+const selected = onlys.length
+  ? CASES.filter((c) => onlys.includes(c.skill))
+  : CASES;
+if (selected.length === 0)
+  throw new Error(
+    `--only matched nothing. Known: ${CASES.map((c) => c.skill).join(", ")}`,
+  );
 
 // ── the measurement ──────────────────────────────────────────────────────────
 const results = [];
@@ -451,7 +490,9 @@ for (const c of selected) {
     // In strict mode a run counts as fired only if the right skill fired AND every colliding
     // sibling stayed silent — "the wrong one did NOT fire", read off the trace's skill list.
     fired: STRICT
-      ? (t) => skillResolved(t, id(c.skill)) && !colliderIds.some((x) => skillResolved(t, x))
+      ? (t) =>
+          skillResolved(t, id(c.skill)) &&
+          !colliderIds.some((x) => skillResolved(t, x))
       : (t) => skillResolved(t, id(c.skill)),
     fixture: FIXTURE,
     // 4, not the default 10: these are deliberately narrow skills and the grid is already 64 runs.
@@ -477,7 +518,8 @@ for (const c of selected) {
 }
 
 // ── read the result ──────────────────────────────────────────────────────────
-const pct = (x) => (x === undefined ? "  —  " : `${(x * 100).toFixed(0)}%`.padStart(5));
+const pct = (x) =>
+  x === undefined ? "  —  " : `${(x * 100).toFixed(0)}%`.padStart(5);
 console.log(`\n${"skill".padEnd(26)} recall  FP-rate  precision   n   cost`);
 for (const { case: c, report: r } of results)
   console.log(
@@ -485,7 +527,9 @@ for (const { case: c, report: r } of results)
       `${String(r.n).padStart(3)}   $${r.usage.totalCostUsd.toFixed(2)}`,
   );
 const spend = results.reduce((s, x) => s + x.report.usage.totalCostUsd, 0);
-console.log(`${"".padEnd(26)}                              total  $${spend.toFixed(2)}`);
+console.log(
+  `${"".padEnd(26)}                              total  $${spend.toFixed(2)}`,
+);
 
 // 🔴 DID A MEASUREMENT HAPPEN AT ALL? This has to be answered BEFORE the floor gate below,
 // because the two failures look identical from the outside and mean opposite things.
@@ -531,7 +575,13 @@ if (results.length > 1 && results.every((x) => x.report.rate === 0))
 const bernoulli = (successes, n) => {
   const mean = n > 0 ? successes / n : 0;
   const std = n > 1 ? Math.sqrt((mean * (1 - mean) * n) / (n - 1)) : 0;
-  return { mean, std, se: n > 0 ? std / Math.sqrt(n) : 0, n, passK: n > 0 && successes === n ? 1 : 0 };
+  return {
+    mean,
+    std,
+    se: n > 0 ? std / Math.sqrt(n) : 0,
+    n,
+    passK: n > 0 && successes === n ? 1 : 0,
+  };
 };
 const asEvalReport = () => {
   const arms = {};
@@ -564,18 +614,30 @@ if (flag("update-baseline")) {
 } else {
   const prior = readBaseline(BASELINE);
   if (!prior) {
-    console.log(`\nno baseline at ${BASELINE} — record one with --update-baseline`);
+    console.log(
+      `\nno baseline at ${BASELINE} — record one with --update-baseline`,
+    );
   } else if (onlys.length) {
-    console.log("\n--only run: skipping the regression diff (a partial run is not comparable)");
+    console.log(
+      "\n--only run: skipping the regression diff (a partial run is not comparable)",
+    );
   } else {
-    const diff = diffReports(prior, current, { lowerIsBetter: ["falsePositiveRate"] });
+    const diff = diffReports(prior, current, {
+      lowerIsBetter: ["falsePositiveRate"],
+    });
     console.log(`\nvs baseline recorded ${prior.recordedAt}:`);
     console.log(formatBaselineDiff(diff));
     // 🔴 READ THIS BEFORE TRUSTING THE GATE. Welch on 4 Bernoulli trials per metric has almost no
     // power: a drop from 100% to 50% is not significant at n=4, so this gate catches only a
     // COLLAPSE. Raise --trials (3 trials ⇒ n=12) for a gate that catches drift rather than death.
-    if (GATE && TRIALS >= 3) assertNoRegression(current, prior, { lowerIsBetter: ["falsePositiveRate"] });
-    else if (GATE) console.log("  (regression gate not enforced: needs --trials 3 or more to have power)");
+    if (GATE && TRIALS >= 3)
+      assertNoRegression(current, prior, {
+        lowerIsBetter: ["falsePositiveRate"],
+      });
+    else if (GATE)
+      console.log(
+        "  (regression gate not enforced: needs --trials 3 or more to have power)",
+      );
   }
 }
 
@@ -599,6 +661,9 @@ if (GATE) {
       failures.push(`${c.skill}: ${e.message}`);
     }
   }
-  if (failures.length) throw new Error(`trigger floor breached:\n  ${failures.join("\n  ")}`);
-  console.log(`\nfloor OK: every case ≥ ${FLOOR.min * 100}% recall, ≤ ${FLOOR.maxFalsePositive * 100}% false positives`);
+  if (failures.length)
+    throw new Error(`trigger floor breached:\n  ${failures.join("\n  ")}`);
+  console.log(
+    `\nfloor OK: every case ≥ ${FLOOR.min * 100}% recall, ≤ ${FLOOR.maxFalsePositive * 100}% false positives`,
+  );
 }

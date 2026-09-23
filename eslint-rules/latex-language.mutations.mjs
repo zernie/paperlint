@@ -41,42 +41,78 @@ const LANG = "eslint-rules/latex-language.mjs";
 const PRISTINE = readFileSync(LANG, "utf8");
 
 const M = [
-  ["synthesis of `## References` from `\\bibliography{}`", "stop declaring the bibliography a heading",
+  [
+    "synthesis of `## References` from `\\bibliography{}`",
+    "stop declaring the bibliography a heading",
     '      if (node.content === "bibliography" && pos) {',
-    '      if (false && pos) { /* MUT */'],
-  ["synthesis of `## Abstract` from the environment", "stop declaring the abstract a heading",
+    "      if (false && pos) { /* MUT */",
+  ],
+  [
+    "synthesis of `## Abstract` from the environment",
+    "stop declaring the abstract a heading",
     '      if (env === "abstract" && pos) {',
-    '      if (false && pos) { /* MUT */'],
-  ["preamble cut-off during synthesis", "treat preamble constructs (e.g. `\\AtBeginDocument{\\bibliography{}}`) as nodes of the document",
-    "    if (pos && pos.start.offset < preEnd) { for (const k of [\"content\", \"args\"]) if (node[k]) walk(node[k]); return; }",
-    "    if (false) { return; } /* MUT */"],
-  ["preamble blanking", "leave the preamble (package list, author macros) visible as prose",
-    '  if (preEnd) { blank(0, preEnd);',
-    '  if (preEnd) { void 0; /* MUT */'],
-  ["comment/RIGHT edge trim", "leave the trailing `\\n` inside the comment node",
-    '      while (ce > pos.start.offset && (src[ce - 1] === "\\n" || src[ce - 1] === "\\r")) ce--;',
-    '      /* MUT */'],
-  ["comment/LEFT edge trim", "leave the preceding `\\n` inside the comment node",
+    "      if (false && pos) { /* MUT */",
+  ],
+  [
+    "preamble cut-off during synthesis",
+    "treat preamble constructs (e.g. `\\AtBeginDocument{\\bibliography{}}`) as nodes of the document",
+    '    if (pos && pos.start.offset < preEnd) {\n      for (const k of ["content", "args"]) if (node[k]) walk(node[k]);\n      return;\n    }',
+    "    if (false) { return; } /* MUT */",
+  ],
+  [
+    "preamble blanking",
+    "leave the preamble (package list, author macros) visible as prose",
+    "  if (preEnd) {\n    blank(0, preEnd);",
+    "  if (preEnd) {\n    void 0; /* MUT */",
+  ],
+  [
+    "comment/RIGHT edge trim",
+    "leave the trailing `\\n` inside the comment node",
+    '      while (\n        ce > pos.start.offset &&\n        (src[ce - 1] === "\\n" || src[ce - 1] === "\\r")\n      )\n        ce--;',
+    "      /* MUT */",
+  ],
+  [
+    "comment/LEFT edge trim",
+    "leave the preceding `\\n` inside the comment node",
     '      while (cs < ce && src[cs] !== "%") cs++;',
-    '      /* MUT */'],
-  ["`**` written in place of `\\te`", "write the `**` before the content, leaving the line to start with spaces",
-    "      while (pendingStrong.length) { const o = pendingStrong.pop(); chars[o] = \"*\"; chars[o + 1] = \"*\"; }",
-    "      while (pendingStrong.length) { pendingStrong.pop(); } /* MUT */"],
-  ["`\\texttt{X}` → `` `X` ``", "stop reproducing the one markdown markup the projection can express",
+    "      /* MUT */",
+  ],
+  [
+    "`**` written in place of `\\te`",
+    "write the `**` before the content, leaving the line to start with spaces",
+    '      while (pendingStrong.length) {\n        const o = pendingStrong.pop();\n        chars[o] = "*";\n        chars[o + 1] = "*";\n      }',
+    "      while (pendingStrong.length) { pendingStrong.pop(); } /* MUT */",
+  ],
+  [
+    "`\\texttt{X}` → `` `X` ``",
+    "stop reproducing the one markdown markup the projection can express",
     '      if (node.content === "texttt" || node.content === "lstinline") {',
-    '      if (false) { /* MUT */'],
-  ["heading projected to ATX", "stop writing `#` where `\\section` was",
-    "        for (let i = 0; i < depth; i++) chars[pos.start.offset + i] = \"#\";",
-    "        for (let i = 0; i < 0; i++) chars[pos.start.offset + i] = \"#\"; /* MUT */"],
-  ["OPAQUE macro blanking", "leave `\\cite` / `\\label` / `\\input` as prose",
-    "      if (OPAQUE.test(node.content)) { blank(pos.start.offset, argEnd(node).offset + 1); return; }",
-    "      if (false) { return; } /* MUT */"],
-  ["math blanking", "leave formulas as prose",
-    '    if ((node.type === "inlinemath" || node.type === "displaymath" || node.type === "verbatim") && pos) {',
-    "    if (false) { /* MUT */"],
-  ["float prose kept (caption / footnote)", "swallow the caption together with the float again — the double lock returns",
+    "      if (false) { /* MUT */",
+  ],
+  [
+    "heading projected to ATX",
+    "stop writing `#` where `\\section` was",
+    '        for (let i = 0; i < depth; i++) chars[pos.start.offset + i] = "#";',
+    '        for (let i = 0; i < 0; i++) chars[pos.start.offset + i] = "#"; /* MUT */',
+  ],
+  [
+    "OPAQUE macro blanking",
+    "leave `\\cite` / `\\label` / `\\input` as prose",
+    "      if (OPAQUE.test(node.content)) {\n        blank(pos.start.offset, argEnd(node).offset + 1);\n        return;\n      }",
+    "      if (false) { return; } /* MUT */",
+  ],
+  [
+    "math blanking",
+    "leave formulas as prose",
+    '    if (\n      (node.type === "inlinemath" ||\n        node.type === "displaymath" ||\n        node.type === "verbatim") &&\n      pos\n    ) {',
+    "    if (false) { /* MUT */",
+  ],
+  [
+    "float prose kept (caption / footnote)",
+    "swallow the caption together with the float again — the double lock returns",
     "const FLOAT_PROSE = /^(caption|footnote)$/;",
-    "const FLOAT_PROSE = /^(?!)$/; /* MUT */"],
+    "const FLOAT_PROSE = /^(?!)$/; /* MUT */",
+  ],
 ];
 
 const runHarness = () => {
@@ -97,7 +133,8 @@ const runHarness = () => {
   if (base.failed) {
     console.log(
       "❌ THE HARNESS IS RED BEFORE ANY MUTATION — the battery cannot tell a killed mutation " +
-        "from that:\n" + base.out.slice(-1500),
+        "from that:\n" +
+        base.out.slice(-1500),
     );
     process.exit(1);
   }
@@ -109,14 +146,18 @@ const rows = [];
 for (const [label, what, from, to] of M) {
   const hits = PRISTINE.split(from).length - 1;
   if (hits !== 1) {
-    console.log(`❌ ${label}: TARGET ${hits === 0 ? "NOT FOUND" : `NOT UNIQUE (${hits})`} — ${from.slice(0, 70)}`);
+    console.log(
+      `❌ ${label}: TARGET ${hits === 0 ? "NOT FOUND" : `NOT UNIQUE (${hits})`} — ${from.slice(0, 70)}`,
+    );
     bad++;
     continue;
   }
   writeFileSync(LANG, PRISTINE.replace(from, to));
   const on = readFileSync(LANG, "utf8");
   if (!on.includes(to) || on.includes(from)) {
-    console.log(`❌ ${label}: THE MUTATION DID NOT LAND (checked by re-reading the file)`);
+    console.log(
+      `❌ ${label}: THE MUTATION DID NOT LAND (checked by re-reading the file)`,
+    );
     bad++;
     writeFileSync(LANG, PRISTINE);
     continue;
@@ -132,19 +173,24 @@ for (const [label, what, from, to] of M) {
   const msg =
     (out.match(/AssertionError[^:]*: ([^\n]+)/) ?? [])[1] ??
     (out.match(/((?:Error|ENOENT)[^\n]*)/) ?? [])[1] ??
-    (out.match(/([^\n]*(?:must|drifted|was lost|is stale|leaked|swallowed)[^\n]*)/) ?? [])[1] ??
+    (out.match(
+      /([^\n]*(?:must|drifted|was lost|is stale|leaked|swallowed)[^\n]*)/,
+    ) ?? [])[1] ??
     "";
   const where = (at ? `harness:${at} · ` : "") + msg;
   if (failed) {
     ok++;
     rows.push([label, what, where.trim().slice(0, 130)]);
   } else {
-    console.log(`🔴 ${label}: THE HARNESS IS GREEN UNDER THE MUTATION — a finding about the TEST, not a conclusion about the defence`);
+    console.log(
+      `🔴 ${label}: THE HARNESS IS GREEN UNDER THE MUTATION — a finding about the TEST, not a conclusion about the defence`,
+    );
     bad++;
   }
 }
 console.log("\n| property | mutation | what the harness died on |");
 console.log("|---|---|---|");
-for (const [a, b, c] of rows) console.log(`| \`${a}\` | ${b} | ${c.replace(/\|/g, "\\|")} |`);
+for (const [a, b, c] of rows)
+  console.log(`| \`${a}\` | ${b} | ${c.replace(/\|/g, "\\|")} |`);
 console.log(`\n${ok} mutation(s) killed, ${bad} problem(s)`);
 process.exit(bad ? 1 : 0);

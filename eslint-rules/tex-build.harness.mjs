@@ -95,7 +95,9 @@ const makeEslint = (cwd) =>
     overrideConfig: [
       {
         files: ["**/*.tex"],
-        plugins: { tex: { languages: { latex: texLanguage }, rules: texBuild } },
+        plugins: {
+          tex: { languages: { latex: texLanguage }, rules: texBuild },
+        },
         language: "tex/latex",
         rules: { "tex/future-promise": "warn" },
       },
@@ -131,8 +133,19 @@ async function findings(name, text) {
 }
 
 /** A minimal build: NOT review mode, with somewhere to put prose. */
-const build = (body, { cls = "\\documentclass[sigconf,screen]{acmart}" } = {}) =>
-  [cls, "\\begin{document}", "\\begin{abstract}", body, "\\end{abstract}", "\\end{document}", ""].join("\n");
+const build = (
+  body,
+  { cls = "\\documentclass[sigconf,screen]{acmart}" } = {},
+) =>
+  [
+    cls,
+    "\\begin{document}",
+    "\\begin{abstract}",
+    body,
+    "\\end{abstract}",
+    "\\end{document}",
+    "",
+  ].join("\n");
 
 // ═════════════════════════════════════════════════════════════════════════════
 // I. FIXTURES ON DISK, THROUGH THE REPOSITORY'S OWN CONFIG
@@ -172,8 +185,18 @@ assert.doesNotMatch(
 assert.deepEqual(
   await lintTex(real, DEFECT_FIXTURE),
   [
-    { rule: "tex/future-promise", line: 15, column: 59, text: "at camera-ready" },
-    { rule: "tex/future-promise", line: 22, column: 52, text: "will be made publicly available" },
+    {
+      rule: "tex/future-promise",
+      line: 15,
+      column: 59,
+      text: "at camera-ready",
+    },
+    {
+      rule: "tex/future-promise",
+      line: 22,
+      column: 52,
+      text: "will be made publicly available",
+    },
   ],
   "fixtures/tex-build/defect.tex: the finding set drifted from the frozen measurement",
 );
@@ -191,10 +214,16 @@ assert.deepEqual(
 // subject: the defect is only a promise that outlived its own delivery.
 for (const [label, cls] of [
   ["review option", "\\documentclass[sigconf,review]{acmart}"],
-  ["printacmref=false", "\\documentclass[sigconf]{acmart}\n\\settopmatter{printacmref=false}"],
+  [
+    "printacmref=false",
+    "\\documentclass[sigconf]{acmart}\n\\settopmatter{printacmref=false}",
+  ],
 ])
   assert.deepEqual(
-    await findings(`review-${label}`, build("The harness ships at camera-ready.", { cls })),
+    await findings(
+      `review-${label}`,
+      build("The harness ships at camera-ready.", { cls }),
+    ),
     [],
     `${label}: a review build must be exempt`,
   );
@@ -203,7 +232,10 @@ for (const [label, cls] of [
 // `% camera-ready blocker` live in real sources, and a finding on them would be exactly the
 // false positive that kills a check.
 assert.deepEqual(
-  await findings("promise-in-comment", build("% blocker: the harness ships at camera-ready.")),
+  await findings(
+    "promise-in-comment",
+    build("% blocker: the harness ships at camera-ready."),
+  ),
   [],
   "a promise inside a LaTeX comment is not a finding",
 );
@@ -223,7 +255,11 @@ assert.deepEqual(
   assert.equal(ms[0].text, "at camera-ready", "the wrong substring was caught");
   // The address is what the move to a lint rule bought, so it is checked rather than declared:
   // line 4 of the fixture, and a column at the start of the match, not at the start of the line.
-  assert.equal(ms[0].line, 4, "the finding must point at the line carrying the promise");
+  assert.equal(
+    ms[0].line,
+    4,
+    "the finding must point at the line carrying the promise",
+  );
   assert.equal(
     ms[0].column,
     "We report the finding (full harness ".length + 1,
@@ -240,21 +276,34 @@ for (const [sentence, want] of [
   ["On acceptance we open the repository.", "On acceptance"],
   ["The harness will be released later.", "will be released"],
   ["The harness will be published later.", "will be published"],
-  ["The data will be made publicly available.", "will be made publicly available"],
+  [
+    "The data will be made publicly available.",
+    "will be made publicly available",
+  ],
   ["The data will be made available.", "will be made available"],
   ["The harness will be public.", "will be public"],
   ["The harness will be open-sourced.", "will be open-sourced"],
 ]) {
   const ms = await findings(`vocab-${want}`, build(sentence));
-  assert.equal(ms.length, 1, `vocabulary branch «${want}» did not fire on «${sentence}»`);
-  assert.equal(ms[0].text, want, `vocabulary branch «${want}» caught the wrong substring`);
+  assert.equal(
+    ms.length,
+    1,
+    `vocabulary branch «${want}» did not fire on «${sentence}»`,
+  );
+  assert.equal(
+    ms[0].text,
+    want,
+    `vocabulary branch «${want}» caught the wrong substring`,
+  );
 }
 
 // Two promises on different lines do not collapse into one (the rule reports EVERY place).
 {
   const ms = await findings(
     "two-lines",
-    build("Upon acceptance we ship.\nThe data will be made publicly available."),
+    build(
+      "Upon acceptance we ship.\nThe data will be made publicly available.",
+    ),
   );
   assert.deepEqual(
     ms.map((m) => `${m.line}:${m.text}`),
@@ -295,7 +344,11 @@ for (const [sentence, want] of [
     "escaped-percent",
     build("We cover 95\\% of cases and the harness will be published later."),
   );
-  assert.equal(ms.length, 1, "`\\%` ate the rest of the line — the promise behind it went invisible");
+  assert.equal(
+    ms.length,
+    1,
+    "`\\%` ate the rest of the line — the promise behind it went invisible",
+  );
   assert.equal(ms[0].text, "will be published");
 }
 
@@ -325,7 +378,10 @@ for (const [sentence, want] of [
 {
   const config = (await import(join(ROOT, "eslint.config.mjs"))).default;
   const tex = config.find((b) => b.rules?.["tex/future-promise"]);
-  assert.ok(tex, "eslint.config.mjs declares no block carrying `tex/future-promise`");
+  assert.ok(
+    tex,
+    "eslint.config.mjs declares no block carrying `tex/future-promise`",
+  );
   assert.equal(
     tex.rules["tex/future-promise"],
     "warn",
@@ -345,12 +401,15 @@ for (const [sentence, want] of [
   // zero findings — byte-identical to a rule that passed. See `scripts/rules-see-files.mjs`,
   // which checks this for every declared rule; the assertion here is the cheap local copy so
   // that this rule's own wiring fails in this rule's own test.
-  const seen = (await real.lintFiles(["."])).map((r) => relative(ROOT, r.filePath));
+  const seen = (await real.lintFiles(["."])).map((r) =>
+    relative(ROOT, r.filePath),
+  );
   const texSeen = seen.filter((f) => f.endsWith(".tex"));
   assert.ok(
     texSeen.length > 0,
     "the `.tex` glob of eslint.config.mjs matched NO files on disk — the rule was never " +
-      "invoked, and this run's zero findings mean nothing. Files linted: " + seen.join(", "),
+      "invoked, and this run's zero findings mean nothing. Files linted: " +
+      seen.join(", "),
   );
 }
 
@@ -367,7 +426,9 @@ const makeEslintFm = (cwd) =>
     overrideConfig: [
       {
         files: ["**/*.tex"],
-        plugins: { tex: { languages: { latex: texLanguage }, rules: texBuild } },
+        plugins: {
+          tex: { languages: { latex: texLanguage }, rules: texBuild },
+        },
         language: "tex/latex",
         rules: { "tex/acm-frontmatter-override": "warn" },
       },
@@ -384,7 +445,10 @@ async function fmFindings(name, text) {
 }
 
 /** A minimal acmart preamble plus a body, so the language has something to parse. */
-const acm = (preambleTail, { cls = "\\documentclass[sigconf,screen]{acmart}" } = {}) =>
+const acm = (
+  preambleTail,
+  { cls = "\\documentclass[sigconf,screen]{acmart}" } = {},
+) =>
   [
     cls,
     preambleTail,
@@ -445,14 +509,24 @@ assert.deepEqual(
 assert.deepEqual(
   await lintTex(real, FM_DEFECT),
   [
-    { rule: "tex/acm-frontmatter-override", line: 10, column: 1, text: "\\setcopyright{none}" },
+    {
+      rule: "tex/acm-frontmatter-override",
+      line: 10,
+      column: 1,
+      text: "\\setcopyright{none}",
+    },
     {
       rule: "tex/acm-frontmatter-override",
       line: 11,
       column: 1,
       text: "\\renewcommand\\footnotetextcopyrightpermission",
     },
-    { rule: "tex/acm-frontmatter-override", line: 12, column: 1, text: "\\pagestyle{plain}" },
+    {
+      rule: "tex/acm-frontmatter-override",
+      line: 12,
+      column: 1,
+      text: "\\pagestyle{plain}",
+    },
   ],
   "fixtures/tex-build/frontmatter-defect.tex: the finding set drifted from the frozen measurement",
 );
@@ -473,7 +547,10 @@ for (const cls of [
   "\\documentclass[conference]{IEEEtran}",
 ])
   assert.deepEqual(
-    await fmFindings(`non-acmart-${cls.slice(-12)}`, acm("\\pagestyle{plain}", { cls })),
+    await fmFindings(
+      `non-acmart-${cls.slice(-12)}`,
+      acm("\\pagestyle{plain}", { cls }),
+    ),
     [],
     `${cls}: the macros only mean something inside acmart — outside it the rule must not fire`,
   );
@@ -487,7 +564,10 @@ for (const cls of [
   "\\documentclass[nonacm,screen]{acmart}",
 ])
   assert.deepEqual(
-    await fmFindings(`nonacm-${cls.length}`, acm("\\setcopyright{none}\n\\pagestyle{plain}", { cls })),
+    await fmFindings(
+      `nonacm-${cls.length}`,
+      acm("\\setcopyright{none}\n\\pagestyle{plain}", { cls }),
+    ),
     [],
     `${cls}: a declared non-ACM build must be exempt`,
   );
@@ -524,8 +604,14 @@ assert.deepEqual(
 for (const [line, want] of [
   ["\\setcopyright{none}", "\\setcopyright{none}"],
   ["\\setcopyright{ none }", "\\setcopyright{ none }"],
-  ["\\renewcommand\\footnotetextcopyrightpermission[1]{}", "\\renewcommand\\footnotetextcopyrightpermission"],
-  ["\\renewcommand{\\footnotetextcopyrightpermission}[1]{}", "\\renewcommand{\\footnotetextcopyrightpermission"],
+  [
+    "\\renewcommand\\footnotetextcopyrightpermission[1]{}",
+    "\\renewcommand\\footnotetextcopyrightpermission",
+  ],
+  [
+    "\\renewcommand{\\footnotetextcopyrightpermission}[1]{}",
+    "\\renewcommand{\\footnotetextcopyrightpermission",
+  ],
   ["\\pagestyle{plain}", "\\pagestyle{plain}"],
   ["\\pagestyle{empty}", "\\pagestyle{empty}"],
   ["\\thispagestyle{empty}", "\\thispagestyle{empty}"],
@@ -550,7 +636,12 @@ for (const cls of [
   "\\documentclass[manuscript]{acmart}",
 ])
   assert.deepEqual(
-    (await fmFindings(`stage-${cls.length}`, acm("\\setcopyright{none}", { cls }))).map((f) => f.text),
+    (
+      await fmFindings(
+        `stage-${cls.length}`,
+        acm("\\setcopyright{none}", { cls }),
+      )
+    ).map((f) => f.text),
     ["\\setcopyright{none}"],
     `${cls}: the finding must not depend on the build stage — the overrides strip the same ` +
       "furniture in every mode, and in a camera-ready that is worse, because that is the " +
@@ -564,8 +655,12 @@ for (const cls of [
 // the exact class of defect that made the previous implementation read the wrong `.tex`. Two
 // runs of the same input through the same process must agree.
 {
-  const once = (await fmFindings("lastindex-a", acm("\\setcopyright{none}"))).map((f) => f.text);
-  const twice = (await fmFindings("lastindex-b", acm("\\setcopyright{none}"))).map((f) => f.text);
+  const once = (
+    await fmFindings("lastindex-a", acm("\\setcopyright{none}"))
+  ).map((f) => f.text);
+  const twice = (
+    await fmFindings("lastindex-b", acm("\\setcopyright{none}"))
+  ).map((f) => f.text);
   assert.deepEqual(
     [once, twice],
     [["\\setcopyright{none}"], ["\\setcopyright{none}"]],
@@ -577,7 +672,10 @@ for (const cls of [
 // TWO OVERRIDES ON ONE LINE are two findings, at two columns. A rule reporting once per line
 // would silently under-count a compacted preamble.
 {
-  const got = await fmFindings("two-on-one-line", acm("\\setcopyright{none}\\pagestyle{plain}"));
+  const got = await fmFindings(
+    "two-on-one-line",
+    acm("\\setcopyright{none}\\pagestyle{plain}"),
+  );
   assert.deepEqual(
     got.map((f) => [f.line, f.column, f.text]),
     [
@@ -618,9 +716,15 @@ for (const cls of [
   writeFileSync(file, acm("\\setcopyright{none}"));
   const eslint = makeEslintFm(TMP);
   const before = (await lintTex(eslint, file)).length;
-  assert.equal(before, 1, "setup failed: the file should fire before it is removed");
+  assert.equal(
+    before,
+    1,
+    "setup failed: the file should fire before it is removed",
+  );
   rmSync(file);
-  const [res] = await eslint.lintText(acm("\\setcopyright{none}"), { filePath: file });
+  const [res] = await eslint.lintText(acm("\\setcopyright{none}"), {
+    filePath: file,
+  });
   assert.deepEqual(
     res.messages.filter((m) => m.fatal),
     [],

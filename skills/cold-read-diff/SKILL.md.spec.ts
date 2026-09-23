@@ -7,7 +7,8 @@ import { experimental_skill } from "vigiles/spec";
 
 export default experimental_skill({
   name: "cold-read-diff",
-  description: "Send just-changed paper prose to a reader with NO context and ask what each sentence claims — the only check that catches a sentence which is short, true, jargon-free and still meaningless to anyone who does not already know the idea. Run after every prose edit to a paper, before calling the edit done, and before reporting a section as fixed. Scoped to the diff, so it is cheap enough to run every time. Not a writing grade (grade-paper-writing), not a structural pass (tighten-paper), not a defect review.",
+  description:
+    "Send just-changed paper prose to a reader with NO context and ask what each sentence claims — the only check that catches a sentence which is short, true, jargon-free and still meaningless to anyone who does not already know the idea. Run after every prose edit to a paper, before calling the edit done, and before reporting a section as fixed. Scoped to the diff, so it is cheap enough to run every time. Not a writing grade (grade-paper-writing), not a structural pass (tighten-paper), not a defect review.",
   context: "fork",
   tools: ["Bash", "Read", "Agent"],
   body: `

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * build-e2e.mjs — `rpp build` against a REAL `pdflatex`, from source to finished PDF.
+ * test/e2e/build.mjs — `rpp build` against a REAL `pdflatex`, from source to finished PDF.
  *
  * 🔴 HOW THIS DIFFERS FROM `src/build.harness.mjs`, AND WHY BOTH ARE NEEDED. That harness
  * substitutes its own function for `spawnSync`: it checks DECISIONS — which script was picked,
@@ -21,7 +21,7 @@
  * passed one look identical in the interface, and that is exactly the class this whole package is
  * written against.
  *
- *   node scripts/build-e2e.mjs [--strict]
+ *   node test/e2e/build.mjs [--strict]
  */
 import { execFileSync, spawnSync } from "node:child_process";
 import {
@@ -35,9 +35,9 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readFonts } from "../skills/render-paper/extract-pdf-facts.mjs";
+import { readFonts } from "../../skills/render-paper/extract-pdf-facts.mjs";
 
-const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
+const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const CLI = join(ROOT, "bin", "rpp.mjs");
 const strict = process.argv.includes("--strict");
 
@@ -51,25 +51,35 @@ const ACMART_FAMILIES = /^(LinLibertine|LinBiolinum)/;
 const FALLBACK_FAMILIES = /^(CMR|CMBX|CMTI|CMTT|CMSS|LMRoman)/;
 
 const missing = ["pdflatex", "pdffonts"].filter(
-  (b) => spawnSync("command", ["-v", b], { shell: true, stdio: "ignore" }).status !== 0,
+  (b) =>
+    spawnSync("command", ["-v", b], { shell: true, stdio: "ignore" }).status !==
+    0,
 );
 if (missing.length) {
   const say = `build-e2e: skipped — this machine has no ${missing.join(", ")}.`;
   if (!strict) {
-    console.log(`${say}\nThis is a legitimate skip for a clone without TeX Live. In CI the same case is a failure (--strict).`);
+    console.log(
+      `${say}\nThis is a legitimate skip for a clone without TeX Live. In CI the same case is a failure (--strict).`,
+    );
     // 77, not 0: a skip is not a pass (scripts/check.mjs, SKIP_EXIT).
     process.exit(77);
   }
-  console.error(`${say}\nIn --strict this is a FAILURE: in CI a missing tool is a broken environment,\nand a skipped check is indistinguishable from a passed one.`);
+  console.error(
+    `${say}\nIn --strict this is a FAILURE: in CI a missing tool is a broken environment,\nand a skipped check is indistinguishable from a passed one.`,
+  );
   process.exit(2);
 }
 
 const fonts = (pdf) =>
-  readFonts(execFileSync("pdffonts", [pdf], { encoding: "utf8" })).map((f) => f.name);
+  readFonts(execFileSync("pdffonts", [pdf], { encoding: "utf8" })).map(
+    (f) => f.name,
+  );
 
 let bad = 0;
 const check = (label, cond, detail = "") => {
-  console.log(`  ${cond ? "✓" : "✗"} ${label}${detail && !cond ? ` — ${detail}` : ""}`);
+  console.log(
+    `  ${cond ? "✓" : "✗"} ${label}${detail && !cond ? ` — ${detail}` : ""}`,
+  );
   if (!cond) bad++;
 };
 
@@ -83,14 +93,23 @@ try {
   });
   // `--all` takes the papers directory from the config, not from an argument: the CONSUMER names
   // the scope, and that is the same contract for which `lint` has no "." default.
-  writeFileSync(join(work, "rpp.json"), JSON.stringify({ papers: "papers" }, null, 2));
+  writeFileSync(
+    join(work, "rpp.json"),
+    JSON.stringify({ papers: "papers" }, null, 2),
+  );
 
   const r = spawnSync(process.execPath, [CLI, "build", "--all"], {
     cwd: work,
     encoding: "utf8",
   });
   const out = (r.stdout || "") + (r.stderr || "");
-  console.log(out.trim().split("\n").map((l) => `  │ ${l}`).join("\n"));
+  console.log(
+    out
+      .trim()
+      .split("\n")
+      .map((l) => `  │ ${l}`)
+      .join("\n"),
+  );
   console.log();
 
   console.log("build on a real pdflatex");
@@ -113,12 +132,16 @@ try {
   console.log();
   console.log("the font check can go red");
   const fallbackPdf = join(work, "papers", "fallback", "paper.pdf");
-  check("the substituted PDF built too — the failure is not in the build", existsSync(fallbackPdf));
+  check(
+    "the substituted PDF built too — the failure is not in the build",
+    existsSync(fallbackPdf),
+  );
   if (existsSync(fallbackPdf)) {
     const f = fonts(fallbackPdf);
     check(
       "and it is REJECTED by the font check, although the build was green",
-      f.some((n) => FALLBACK_FAMILIES.test(n)) && !f.every((n) => ACMART_FAMILIES.test(n)),
+      f.some((n) => FALLBACK_FAMILIES.test(n)) &&
+        !f.every((n) => ACMART_FAMILIES.test(n)),
       f.join(", "),
     );
   }
@@ -129,7 +152,10 @@ try {
     "a failed build is named as failed, with its code",
     /✗ .*broken/.test(out) && /\b3\b/.test(out),
   );
-  check("a paper with no script is named separately", /NO build script/.test(out));
+  check(
+    "a paper with no script is named separately",
+    /NO build script/.test(out),
+  );
   check(
     "and the run as a whole is a FAILURE, since two papers out of four did not build",
     r.status !== 0,
@@ -139,5 +165,9 @@ try {
 }
 
 console.log();
-console.log(bad === 0 ? "✅ build e2e: everything matched" : `🔴 build e2e: ${bad} mismatch(es)`);
+console.log(
+  bad === 0
+    ? "✅ build e2e: everything matched"
+    : `🔴 build e2e: ${bad} mismatch(es)`,
+);
 process.exit(bad === 0 ? 0 : 1);

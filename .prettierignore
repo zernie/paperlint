@@ -1,0 +1,22 @@
+# Same config as zernie/vigiles: Prettier defaults, no config file. This list names
+# only what a tool writes or what is kept as exact bytes; everything else is formatted.
+
+# Every skills/*/SKILL.md is COMPILED from its SKILL.md.spec.ts by `vigiles compile`,
+# which owns the exact bytes and stamps an integrity hash over them. Prettier would
+# re-escape markdown and desync the hash, so the two gates would fight forever.
+# The spec (SKILL.md.spec.ts) IS formatted.
+skills/*/SKILL.md
+
+# Test inputs: the rules under test read these bytes, and some are judged against a
+# recorded baseline. Reflowing a fixture changes what the test measures. The fixture
+# CODE (harnesses, the baseline reader) is formatted. `**/` because fixtures also live
+# beside the skill they test (skills/*/fixtures/, skills/paper-pipeline/scripts/fixtures/).
+**/fixtures/**
+!**/fixtures/**/
+!**/fixtures/**/*.mjs
+
+# Raw runs kept exactly as they ran — the evidence behind a written number. Their
+# bytes are the record (same class as vigiles' docs/design/probes/).
+docs/prior-art/repro/
+skills/paper-pipeline/repro/
+skills/paper-pipeline/references/occupancy-2026-08-06-probe/

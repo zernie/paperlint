@@ -38,7 +38,11 @@ const r = spawnSync("claude", ["plugin", "validate", ROOT, "--strict"], {
 const out = (r.stdout ?? "") + (r.stderr ?? "");
 process.stdout.write(out);
 if (r.status !== 0) {
-  console.error(`\n✗ marketplace manifest rejected by claude ${probe.stdout.trim()}`);
+  console.error(
+    `\n✗ marketplace manifest rejected by claude ${probe.stdout.trim()}`,
+  );
   process.exit(1);
 }
-console.log(`✓ marketplace manifest accepted by claude ${probe.stdout.trim()} (--strict)`);
+console.log(
+  `✓ marketplace manifest accepted by claude ${probe.stdout.trim()} (--strict)`,
+);

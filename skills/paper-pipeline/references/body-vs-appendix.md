@@ -9,8 +9,8 @@ into those skills — link it, the way they link `review-ratchet.md`.
 There was no rule. There was taste, and taste loses to a page limit every time. Author, 2026-08-06
 (translated from Russian):
 
-> *"I don't get it — the rule about the compiler-and-rule-synthesis paper, does that go mostly in
-> the body or in the appendix. I figured mostly body, with some details in the appendix, but IDK."*
+> _"I don't get it — the rule about the compiler-and-rule-synthesis paper, does that go mostly in
+> the body or in the appendix. I figured mostly body, with some details in the appendix, but IDK."_
 
 Without a rule the page limit does the deciding, and it decides badly: it evicts whatever was
 written last, which is usually the honest qualification nobody had room for. On `compile-rules-2026`
@@ -29,32 +29,32 @@ way to learn it existed.
 This is not our invention; it is the ACL/ARR rule stated positively. What the venues actually
 require, quoted:
 
-- ACL formatting guidelines: appendices *"are not required to fit within these page limits"*, they
-  come *"after the references"*, and *"it is optional for reviewers to look at appendices"*.
-- ARR author guidelines: *"the main text of the paper must be self-contained, and reviewers are not
-  expected to read the supplementary materials."*
-- ARR reviewer guidelines: *"any details important for understanding the key aspects of the work
-  should be in the paper rather than in appendices."*
-- ARR, and this one is a desk-reject: putting *"substantive parts of related work"* only in an
-  appendix *"will be viewed as an attempt to circumvent the content page count."*
+- ACL formatting guidelines: appendices _"are not required to fit within these page limits"_, they
+  come _"after the references"_, and _"it is optional for reviewers to look at appendices"_.
+- ARR author guidelines: _"the main text of the paper must be self-contained, and reviewers are not
+  expected to read the supplementary materials."_
+- ARR reviewer guidelines: _"any details important for understanding the key aspects of the work
+  should be in the paper rather than in appendices."_
+- ARR, and this one is a desk-reject: putting _"substantive parts of related work"_ only in an
+  appendix _"will be viewed as an attempt to circumvent the content page count."_
 
 **There is no size rule anywhere, and no tool checks appendix length** — `aclpubcheck` structurally
 stops at the appendix boundary. So "the appendix is too long" is never the finding. The finding is
-always *"a decision-relevant thing is not in the body"* or *"nothing in the body sends the reader
-to this."*
+always _"a decision-relevant thing is not in the body"_ or _"nothing in the body sends the reader
+to this."_
 
 ## Sorting test, applied per block
 
 Ask one question: **if a reviewer read only the body, would they be missing something they need to
 decide?**
 
-| goes in the BODY | goes in the APPENDIX | goes in the ARTIFACT |
-|---|---|---|
-| what the thing does, on what input, what it outputs | the full protocol behind a body result | run logs, fixtures, raw per-row data |
-| the claim, and the evidence the claim rests on | per-item tables a reader might audit | scoring code and its self-tests |
-| **the price** — what the construction costs, where it stops working | comparisons you ran but do not lean on | prompts, seeds, model versions |
-| **every bound that narrows a headline number** | your own tools' failures, at length | anything regenerable from the above |
-| the nearest competitor and your delta over it | the long form of a bound stated briefly in the body | |
+| goes in the BODY                                                    | goes in the APPENDIX                                | goes in the ARTIFACT                 |
+| ------------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------ |
+| what the thing does, on what input, what it outputs                 | the full protocol behind a body result              | run logs, fixtures, raw per-row data |
+| the claim, and the evidence the claim rests on                      | per-item tables a reader might audit                | scoring code and its self-tests      |
+| **the price** — what the construction costs, where it stops working | comparisons you ran but do not lean on              | prompts, seeds, model versions       |
+| **every bound that narrows a headline number**                      | your own tools' failures, at length                 | anything regenerable from the above  |
+| the nearest competitor and your delta over it                       | the long form of a bound stated briefly in the body |                                      |
 
 🔴 **The asymmetric one, and the reason for this file: a qualification that narrows a number in the
 body belongs in the body, however tight the page count.** A number stated without the bound that
@@ -87,11 +87,11 @@ that gave 19 of 35 blocks reached — and **two thirds of the unreached mass was
 material the body half-promised and never sent anyone to find. The fix for those is a pointer, not
 a deletion; when the body has no room for pointers, build an index at the head of the appendix.
 
-Only what stays unreached *and* unwanted is surplus, and its destination is the artifact.
+Only what stays unreached _and_ unwanted is surplus, and its destination is the artifact.
 
 ## Provenance
 
 Written 2026-08-06 for `compile-rules-2026`, from a fetch of the ACL/ARR guidelines (all quotes
 above verified against the source pages) plus a reachability audit of one 3,480-word appendix. The
 prompting failure: the body sat at exactly its limit for two weeks, every cut in that time came out
-of the body, and nobody had written down what the body was *for*.
+of the body, and nobody had written down what the body was _for_.

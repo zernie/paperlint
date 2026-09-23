@@ -45,8 +45,8 @@ process.exit(
         edits: [
           [
             RULE,
-            "if (records.some((r) => r.stage === f.stage && r.date === f.date)) continue;",
-            "if (true) continue;",
+            "if (records.some((r) => r.stage === f.stage && r.date === f.date))\n                continue;",
+            "if (true)\n                continue;",
           ],
         ],
       },
@@ -57,7 +57,9 @@ process.exit(
         disables:
           "the IDENTITY check on a frozen source: `existsSync` answers 'a file exists', " +
           "and only the size answers 'this is that exact file'",
-        edits: [[RULE, "if (Number.isFinite(want) && got !== want)", "if (false)"]],
+        edits: [
+          [RULE, "if (Number.isFinite(want) && got !== want)", "if (false)"],
+        ],
       },
       {
         name: "acknowledging a loss starts EXEMPTING instead of recording",
@@ -66,7 +68,13 @@ process.exit(
         disables:
           "the decision that `sourceLost` is a RECORD, not an indulgence: the rule must keep " +
           "speaking, because the state is still defective, merely unfixable today",
-        edits: [[RULE, "if (rec?.sourceLost === true) {", "if (rec?.sourceLost === true && false) {"]],
+        edits: [
+          [
+            RULE,
+            "if (rec?.sourceLost === true) {",
+            "if (rec?.sourceLost === true && false) {",
+          ],
+        ],
       },
       {
         // 🔴 A REGRESSION BACK TO GREP. The rule's first draft did exactly this and justified it
@@ -82,8 +90,11 @@ process.exit(
           "parsing in favor of a string search: 'still need to run bib-authors' — an intention, " +
           "not a record — counts as a run again, and the paper silently stops being a debtor",
         edits: [
-          [RULE, "if (context.sourceCode.getText(node).includes(marker)) recorded = true;",
-                 "if (context.sourceCode.text.includes(marker)) recorded = true;"],
+          [
+            RULE,
+            "if (context.sourceCode.getText(node).includes(marker))\n              recorded = true;",
+            "if (context.sourceCode.text.includes(marker))\n              recorded = true;",
+          ],
         ],
       },
       {
@@ -106,30 +117,40 @@ process.exit(
         disables:
           "the distinction between 'no stages' and 'there are stages': a draft starts getting a " +
           "finding, and a rule that scolds drafts gets turned off within a week",
-        edits: [[RULE, "if (stages.length === 0) return; // nothing shipped — nothing is owed", ""]],
+        edits: [
+          [
+            RULE,
+            "if (stages.length === 0) return; // nothing shipped — nothing is owed",
+            "",
+          ],
+        ],
       },
       {
         name: "the stage list is taken from somewhere OTHER than the field again",
         harness: HARNESS,
-        expect: "the stage list in the message comes from the FIELD and carries all of them",
+        expect:
+          "the stage list in the message comes from the FIELD and carries all of them",
         disables:
           "the exact reason the move was made. The predecessor derived the stage with a regex " +
           "over the prose, and on agenticdev printed `submitted` where `submitted, " +
           "camera-ready` was declared. The mutation brings back a hardcoded list — the set of " +
           "findings does not change, only the TEXT lies, and without this assert the regression " +
           "would have passed silently",
-        edits: [[RULE, "stages: stages.join(\"/\"),", "stages: \"submitted\","]],
+        edits: [[RULE, 'stages: stages.join("/"),', 'stages: "submitted",']],
       },
       {
         name: "a consumer-specific path comes back into the package's text",
         harness: HARNESS,
-        expect: "the run command comes in as an option and lands in the message",
+        expect:
+          "the run command comes in as an option and lands in the message",
         disables:
           "the boundary 'the mechanism goes in the package, the data stays with the consumer': " +
           "the command stops arriving as an option. The predecessor hardcoded " +
           "`.claude/skills/verify-citations/...` — the path of one private repository — right " +
           "into a public rule's message",
-        edits: [[RULE, "const command = opts.command ?? \"\";", "const command = \"\";"]],
+        edits: [
+          [RULE, 'const command = opts.command ?? "";', 'const command = "";'],
+        ],
       },
     ],
   }),
