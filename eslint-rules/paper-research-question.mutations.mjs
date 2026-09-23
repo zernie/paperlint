@@ -117,8 +117,8 @@ process.exit(
         edits: [
           [
             RULE,
-            'const statusName = context.options?.[0]?.statusFile ?? "PIPELINE-STATUS.md";',
-            'const statusName = "PIPELINE-STATUS.md";',
+            'const statusName =\n          context.options?.[0]?.statusFile ?? "PIPELINE-STATUS.md";',
+            'const statusName =\n          "PIPELINE-STATUS.md";',
           ],
         ],
       },

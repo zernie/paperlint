@@ -31,7 +31,7 @@ process.exit(
         edits: [
           [
             SRC,
-            "      if (!rules.markers.some((m: string) => existsSync(join(dir, m)))) continue;",
+            "      if (!rules.markers.some((m: string) => existsSync(join(dir, m))))\n        continue;",
             "      if (false) continue;",
           ],
         ],
@@ -73,7 +73,7 @@ process.exit(
         edits: [
           [
             SRC,
-            '    return rel && rel !== ".." && !rel.startsWith(`..${sep}`) && !isAbsolute(rel) ? rel : p;',
+            '    return rel &&\n      rel !== ".." &&\n      !rel.startsWith(`..${sep}`) &&\n      !isAbsolute(rel)\n      ? rel\n      : p;',
             "    return p;",
           ],
         ],

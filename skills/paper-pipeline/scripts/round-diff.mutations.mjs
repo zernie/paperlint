@@ -70,7 +70,7 @@ const MUTATIONS = [
   [
     "unresolvable-base",
     "reporting a base revision that does not resolve",
-    'add("unresolvable-base", `cannot read paper.md at',
+    'add(\n      "unresolvable-base",\n      `cannot read paper.md at',
     "a round whose base does not resolve is a round with no gate",
   ],
   [
@@ -123,22 +123,22 @@ const MUTATIONS = [
   [
     "undeclared/changed",
     "reporting a changed section nobody declared",
-    'add("undeclared-section", `"${s.heading}" ${how}',
-    'false && add("undeclared-section", `"${s.heading}" ${how}',
+    'add(\n        "undeclared-section",\n        `"${s.heading}" ${how}',
+    'false && add(\n        "undeclared-section",\n        `"${s.heading}" ${how}',
     "a change to Limitations under a manifest declaring only §3",
   ],
   [
     "undeclared/removed",
     "reporting a REMOVED section nobody declared",
-    'add("undeclared-section", `"${h}" was removed',
-    'false && add("undeclared-section", `"${h}" was removed',
+    'add(\n        "undeclared-section",\n        `"${h}" was removed',
+    'false && add(\n        "undeclared-section",\n        `"${h}" was removed',
     "a REMOVED section must be caught",
   ],
   [
     "cite/push",
     "reporting a citation added mid-round",
-    'add("unauthorised-citation",',
-    'false && add("unauthorised-citation",',
+    'add(\n        "unauthorised-citation",',
+    'false && add(\n        "unauthorised-citation",',
     "a cite added mid-round is ARIS's `new_cite`",
   ],
   [
@@ -151,15 +151,15 @@ const MUTATIONS = [
   [
     "cite/bibitem",
     "scanning the References list (prose markers only)",
-    ".map((m) => m[1]));",
-    ".map(() => null)).filter(Boolean);",
+    "/gm)].map((m) => m[1]),\n    );",
+    "/gm)].map(() => null),\n    ).filter(Boolean);",
     "a bibliography entry with NO inline marker",
   ],
   [
     "number/push",
     "reporting a numeric literal added mid-round",
-    'add("unauthorised-number",',
-    'false && add("unauthorised-number",',
+    'add(\n        "unauthorised-number",',
+    'false && add(\n        "unauthorised-number",',
     "a figure that appears during a revision round",
   ],
   [
@@ -188,15 +188,15 @@ const MUTATIONS = [
   [
     "unknown-op",
     "reporting an `allows:` entry this gate does not implement",
-    'add("unknown-op",',
-    'false && add("unknown-op",',
+    'add(\n        "unknown-op",',
+    'false && add(\n        "unknown-op",',
     "must be reported. ARIS carries `new_theorem_env`",
   ],
   [
     "manifest/base",
     "rejecting a manifest with no `base:`",
-    "if (!out.base) return { error:",
-    "if (false) return { error:",
+    "if (!out.base)\n    return {\n      error:",
+    "if (false)\n    return {\n      error:",
     "a manifest with no base must be reported, not skipped",
   ],
   [
@@ -246,7 +246,7 @@ const MUTATIONS = [
   [
     "since/mode",
     "`--since` running without a manifest",
-    'const since = (args.find((a) => a.startsWith("--since=")) ?? "").split("=")[1] || undefined;',
+    'const since =\n    (args.find((a) => a.startsWith("--since=")) ?? "").split("=")[1] ||\n    undefined;',
     "const since = undefined;",
     "`--since` must still measure",
   ],

@@ -50,8 +50,8 @@ const MUTATIONS = [
   [
     "abs/rule",
     "the hard-coded-absolute-path rule",
-    "  const abs = code.match(new RegExp(ABS.source",
-    "  const abs = false && code.match(new RegExp(ABS.source",
+    "  const abs = code.match(\n    new RegExp(ABS.source",
+    "  const abs = false && code.match(\n    new RegExp(ABS.source",
     "a script that only runs on its author's laptop",
   ],
   [
@@ -64,7 +64,7 @@ const MUTATIONS = [
   [
     "inplace/rule",
     "the in-place-overwrite rule",
-    "  const both = [...operands(code, READS)].filter((p) => operands(code, WRITES).has(p));",
+    "  const both = [...operands(code, READS)].filter((p) =>\n    operands(code, WRITES).has(p),\n  );",
     "  const both = [];",
     "a script that clobbers its own input passed",
   ],
@@ -97,8 +97,8 @@ const MUTATIONS = [
   [
     "quiet/abs-anchor",
     "the left anchor that keeps a RELATIVE third-party path out",
-    "const ABS = /(?<![\\w./-])(?:",
-    "const ABS = /(?:",
+    "const ABS =\n  /(?<![\\w./-])(?:",
+    "const ABS =\n  /(?:",
     "reported as absolute local paths",
   ],
   [
@@ -131,15 +131,15 @@ const MUTATIONS = [
   [
     "bundle/excluded",
     "excluding the released bundle, which check-anon.sh cat. 5 owns",
-    "      if (depth === 1 && name === bundleName) { swallowed.get(RULE[0]).push(name); continue; }",
-    "      if (false) { swallowed.get(RULE[0]).push(name); continue; }",
+    "      if (depth === 1 && name === bundleName) {\n        swallowed.get(RULE[0]).push(name);\n        continue;\n      }",
+    "      if (false) {\n        swallowed.get(RULE[0]).push(name);\n        continue;\n      }",
     "reported an absolute path inside the RELEASED bundle",
   ], // case 8, its own assertion
   [
     "bundle/named-in-ledger",
     "naming that exclusion in the ledger",
-    "  ['the released bundle — `check-anon.sh` cat. 5 owns it, and it asks a different question there ' +\n   '(does it leak an identity, not will it run elsewhere)', []],",
-    "  ['a tree we do not enter', []],",
+    '  [\n    "the released bundle — `check-anon.sh` cat. 5 owns it, and it asks a different question there " +\n      "(does it leak an identity, not will it run elsewhere)",\n    [],\n  ],',
+    '  [\n    "a tree we do not enter",\n    [],\n  ],',
     "the boundary invisible",
   ],
 
@@ -147,8 +147,8 @@ const MUTATIONS = [
   [
     "allow/applied",
     "applying an allow row at all",
-    "    if (reason !== undefined) { ignored.push(",
-    "    if (false) { ignored.push(",
+    "    if (reason !== undefined) {\n      ignored.push(",
+    "    if (false) {\n      ignored.push(",
     "the allowed kind still fired",
   ],
   [
@@ -175,8 +175,8 @@ const MUTATIONS = [
   [
     "allow/empty-said",
     "saying so when nothing is being waved through",
-    "if (!ignored.length) ledger.push('       (nothing is being waved through)');",
-    "if (false) ledger.push('       (nothing is being waved through)');",
+    'if (!ignored.length) ledger.push("       (nothing is being waved through)");',
+    'if (false) ledger.push("       (nothing is being waved through)");',
     "an empty allow file printed nothing",
   ],
 
@@ -188,22 +188,22 @@ const MUTATIONS = [
   [
     "scope/nested-root",
     "looking for repro/ one level below the paper directory",
-    "      .map((e) => join(dir, e.name, 'repro'))",
-    "      .map((e) => join(dir, e.name, 'nope'))",
+    '      .map((e) => join(dir, e.name, "repro"))',
+    '      .map((e) => join(dir, e.name, "nope"))',
     "a repro/ one level below the paper directory was not scanned",
   ],
   [
     "scope/loud-empty",
     "saying so when there is no repro/ to scan (silence would read as clean)",
-    "  if (!flagsOnly)\n    console.log(`🧪 generated-code — 0 finding(s) in ${dir}\\n   NOTHING WAS SCANNED:",
-    "  if (false)\n    console.log(`🧪 generated-code — 0 finding(s) in ${dir}\\n   NOTHING WAS SCANNED:",
+    "  if (!flagsOnly)\n    console.log(\n      `🧪 generated-code — 0 finding(s) in ${dir}\\n   NOTHING WAS SCANNED:",
+    "  if (false)\n    console.log(\n      `🧪 generated-code — 0 finding(s) in ${dir}\\n   NOTHING WAS SCANNED:",
     "produced no output at all",
   ],
   [
     "scope/second-root-named",
     "naming a SECOND repro/ root in the ledger instead of dropping it",
-    "for (const other of roots.slice(1)) swallowed.get(RULE[3]).push(relative(dir, other));",
-    "for (const other of []) swallowed.get(RULE[3]).push(relative(dir, other));",
+    "for (const other of roots.slice(1))\n  swallowed.get(RULE[3]).push(relative(dir, other));",
+    "for (const other of [])\n  swallowed.get(RULE[3]).push(relative(dir, other));",
     "was dropped without being named",
   ],
 
@@ -218,8 +218,8 @@ const MUTATIONS = [
   [
     "out/ledger-on-clean",
     "printing the ignore ledger when there are no findings",
-    "  console.log('   every analysis script seeds its randomness, names only relative paths, and does not clobber its input');\n  ledger.forEach((l) => console.log(l));",
-    "  console.log('   every analysis script seeds its randomness, names only relative paths, and does not clobber its input');",
+    '  console.log(\n    "   every analysis script seeds its randomness, names only relative paths, and does not clobber its input",\n  );\n  ledger.forEach((l) => console.log(l));',
+    '  console.log(\n    "   every analysis script seeds its randomness, names only relative paths, and does not clobber its input",\n  );',
     // Killed by case 8's ledger assertion rather than case 11's: case 8 is also a 0-finding
     // report-mode run and it runs first. Both assert the property; the row records WHICH one caught
     // it so this is not misread as an off-target kill.

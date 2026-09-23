@@ -89,8 +89,8 @@ process.exit(
         edits: [
           [
             CHECK,
-            'reason: "source-only property',
-            'reasonRemoved: "source-only property',
+            'reason:\n      "source-only property',
+            'reasonRemoved:\n      "source-only property',
           ],
         ],
       },

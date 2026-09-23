@@ -44,7 +44,7 @@ process.exit(
         edits: [
           [
             SRC,
-            '    .filter((e) => e.isDirectory() && existsSync(join(skillsDir, e.name, "SKILL.md")))',
+            '    .filter(\n      (e) => e.isDirectory() && existsSync(join(skillsDir, e.name, "SKILL.md")),\n    )',
             "    .filter((e) => e.isDirectory())",
           ],
         ],

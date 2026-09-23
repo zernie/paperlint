@@ -39,8 +39,8 @@ const M = [
   [
     "over-report",
     "call every rule blind — the guard becomes noise, and noise gets switched off within a day",
-    "      if (effective.rules?.[id] && !isOff(effective.rules[id])) seen.set(id, seen.get(id) + 1);",
-    "      if (false) seen.set(id, seen.get(id) + 1); /* MUT */",
+    "      if (effective.rules?.[id] && !isOff(effective.rules[id]))\n        seen.set(id, seen.get(id) + 1);",
+    "      if (false)\n        seen.set(id, seen.get(id) + 1); /* MUT */",
   ],
 ];
 

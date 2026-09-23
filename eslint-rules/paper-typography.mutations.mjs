@@ -73,7 +73,7 @@ process.exit(
         edits: [
           [
             RULE,
-            "(body.match(/§/g) || []).length + (body.match(/\\\\S(?=\\s*\\\\ref|~\\\\ref|\\d)/g) || []).length",
+            "(body.match(/§/g) || []).length +\n    (body.match(/\\\\S(?=\\s*\\\\ref|~\\\\ref|\\d)/g) || []).length",
             "(body.match(/§/g) || []).length",
           ],
         ],

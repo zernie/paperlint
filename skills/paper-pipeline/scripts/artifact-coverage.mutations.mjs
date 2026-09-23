@@ -101,22 +101,22 @@ const MUTATIONS = [
   [
     "rev/date-slug",
     "stripping the -YYYY-MM-DD suffix before matching",
-    "const slug = c.name.replace(/-\\d{4}-\\d{2}-\\d{2}$/, '');",
+    'const slug = c.name.replace(/-\\d{4}-\\d{2}-\\d{2}$/, "");',
     "const slug = c.name;",
     "names without its date suffix",
   ],
   [
     "rev/whole-token",
     "whole-token matching (reverts to substring `includes`)",
-    "const mentions = (t, s) => s.length >= 4 && new RegExp(`(?<![\\\\w-])${esc(s)}(?![\\\\w-])`).test(t);",
+    "const mentions = (t, s) =>\n    s.length >= 4 && new RegExp(`(?<![\\\\w-])${esc(s)}(?![\\\\w-])`).test(t);",
     "const mentions = (t, s) => t.includes(s);",
     "the header does not state the real finding count",
   ],
   [
     "rev/bundle-skipped",
     "the structural ignore that skips the released bundle",
-    "    if (name === bundleName) { swallowed.get([...swallowed.keys()][0]).push(name); continue; }",
-    "    if (false) { swallowed.get([...swallowed.keys()][0]).push(name); continue; }",
+    "    if (name === bundleName) {\n      swallowed.get([...swallowed.keys()][0]).push(name);\n      continue;\n    }",
+    "    if (false) {\n      swallowed.get([...swallowed.keys()][0]).push(name);\n      continue;\n    }",
     "the bundle's own RESULTS.md was counted",
   ],
 
@@ -131,8 +131,8 @@ const MUTATIONS = [
   [
     "ign/rows-parsed",
     "parsing the allow file",
-    "      if (name) allowed.set(name,",
-    "      if (false) allowed.set(name,",
+    "      if (name)\n        allowed.set(",
+    "      if (false)\n        allowed.set(",
     "an allowed row still counted as a finding",
   ],
   [
@@ -152,8 +152,8 @@ const MUTATIONS = [
   [
     "ign/printed-on-clean",
     "printing the ledger when there are no findings",
-    "  console.log('   every number-reporting section is indexed, every named path exists');\n  ledger.forEach((l) => console.log(l));",
-    "  console.log('   every number-reporting section is indexed, every named path exists');",
+    '  console.log(\n    "   every number-reporting section is indexed, every named path exists",\n  );\n  ledger.forEach((l) => console.log(l));',
+    '  console.log(\n    "   every number-reporting section is indexed, every named path exists",\n  );',
     // Killed by case 9 rather than case 12: case 9 is also a 0-finding report-mode run and asserts
     // the same line, and it runs first. Both cases assert the property; the row records WHICH one
     // catches it so a future reader does not mistake this for an off-target kill.
@@ -162,15 +162,15 @@ const MUTATIONS = [
   [
     "ign/reasons-printed",
     "printing each allow row's reason",
-    "  for (const [name, reason] of ignored) ledger.push(`       ${name}  →  ${reason}`);",
-    "  for (const [name, reason] of ignored) ledger.push(`       ${name}`);",
+    "  for (const [name, reason] of ignored)\n    ledger.push(`       ${name}  →  ${reason}`);",
+    "  for (const [name, reason] of ignored)\n    ledger.push(`       ${name}`);",
     "was applied and NOT printed",
   ],
   [
     "ign/empty-file-said",
     "saying so when nothing is being waved through",
-    "  if (!ignored.length) ledger.push('       (the file is empty — nothing is being waved through)');",
-    "  if (false) ledger.push('       (the file is empty — nothing is being waved through)');",
+    '  if (!ignored.length)\n    ledger.push("       (the file is empty — nothing is being waved through)");',
+    '  if (false)\n    ledger.push("       (the file is empty — nothing is being waved through)");',
     "an empty allow file printed nothing at all",
   ],
   [

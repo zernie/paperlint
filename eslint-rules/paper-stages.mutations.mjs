@@ -45,8 +45,8 @@ process.exit(
         edits: [
           [
             RULE,
-            "if (records.some((r) => r.stage === f.stage && r.date === f.date)) continue;",
-            "if (true) continue;",
+            "if (records.some((r) => r.stage === f.stage && r.date === f.date))\n                continue;",
+            "if (true)\n                continue;",
           ],
         ],
       },
@@ -92,8 +92,8 @@ process.exit(
         edits: [
           [
             RULE,
-            "if (context.sourceCode.getText(node).includes(marker)) recorded = true;",
-            "if (context.sourceCode.text.includes(marker)) recorded = true;",
+            "if (context.sourceCode.getText(node).includes(marker))\n              recorded = true;",
+            "if (context.sourceCode.text.includes(marker))\n              recorded = true;",
           ],
         ],
       },

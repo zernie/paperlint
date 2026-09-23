@@ -86,8 +86,8 @@ process.exit(
         edits: [
           [
             RULE,
-            'messageId: "malformed",\n                data: { why: e.reason',
-            'messageId: "missing",\n                data: { why: e.reason',
+            'messageId: "malformed",\n                data: {\n                  why: e.reason',
+            'messageId: "missing",\n                data: {\n                  why: e.reason',
           ],
         ],
       },

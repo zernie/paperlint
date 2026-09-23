@@ -75,7 +75,7 @@ process.exit(
         edits: [
           [
             RULE,
-            'if (c.type === "MemberExpression" && !c.computed && c.property.type === "Identifier")\n    return c.property.name;',
+            'if (\n    c.type === "MemberExpression" &&\n    !c.computed &&\n    c.property.type === "Identifier"\n  )\n    return c.property.name;',
             'if (false) return "";',
           ],
         ],

@@ -155,8 +155,8 @@ process.exit(
         edits: [
           [
             SRC,
-            "      out.push(`      \\`npx rpp init\\` links the missing ones; it never replaces an entry it did not make`);",
-            "      out.push(`      \\`npx rpp init\\` links the missing ones; it never replaces an entry it did not make`);\n      bad++;",
+            "      out.push(\n        `      \\`npx rpp init\\` links the missing ones; it never replaces an entry it did not make`,\n      );",
+            "      out.push(\n        `      \\`npx rpp init\\` links the missing ones; it never replaces an entry it did not make`,\n      );\n      bad++;",
           ],
         ],
       },

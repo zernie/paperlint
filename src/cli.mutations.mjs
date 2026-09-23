@@ -121,7 +121,7 @@ process.exit(
         edits: [
           [
             INIT,
-            '  writeFileSync(path, JSON.stringify(pkg, null, 2) + (raw.endsWith("\\n") ? "\\n" : ""), "utf8");',
+            '  writeFileSync(\n    path,\n    JSON.stringify(pkg, null, 2) + (raw.endsWith("\\n") ? "\\n" : ""),\n    "utf8",\n  );',
             "  void pkg;",
           ],
         ],
@@ -186,7 +186,7 @@ process.exit(
         edits: [
           [
             INIT,
-            "  else log(`  · stdin is not a terminal, so nothing was asked. Default taken: NO file written.`);",
+            "  else\n    log(\n      `  · stdin is not a terminal, so nothing was asked. Default taken: NO file written.`,\n    );",
             "  else log(`  · skipped`);",
           ],
         ],
@@ -253,7 +253,7 @@ process.exit(
         edits: [
           [
             INIT,
-            "    err(`      package.json. Run \\`npm init -y\\` here, then \\`npx rpp init\\` again.`);\n    return 2;",
+            "    err(\n      `      package.json. Run \\`npm init -y\\` here, then \\`npx rpp init\\` again.`,\n    );\n    return 2;",
             "    return 0;",
           ],
         ],
@@ -270,7 +270,7 @@ process.exit(
         edits: [
           [
             INIT,
-            "    for (const cmd of [...new Set(missing.map((p) => p.install))]) log(`        ${cmd}`);",
+            "    for (const cmd of [...new Set(missing.map((p) => p.install))])\n      log(`        ${cmd}`);",
             "    void missing;",
           ],
         ],
@@ -343,7 +343,7 @@ process.exit(
         edits: [
           [
             INIT,
-            '    for (const l of skipped) out.push(`        ${l.name} — ${l.reason ?? "occupied"}`);',
+            '    for (const l of skipped)\n      out.push(`        ${l.name} — ${l.reason ?? "occupied"}`);',
             "",
           ],
         ],

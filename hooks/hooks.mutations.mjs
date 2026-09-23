@@ -110,8 +110,8 @@ const M = [
     "guard/the mutator list loses `sed -i`",
     "drop the commonest in-place editor from MUTATORS — the write is no longer recognised as a " +
       "write, so `sed -i` on a paper sails past the gate that exists for it",
-    'const MUTATORS = ["sed -i", ',
-    "const MUTATORS = [",
+    'const MUTATORS = [\n  "sed -i",\n',
+    "const MUTATORS = [\n",
   ],
   [
     GUARD,
@@ -122,7 +122,7 @@ const M = [
     // source extension" once `versions/` got its carve-out. This mutation targets exactly the
     // EXTENSION FILTER — removing the carve-out is a different property with its own mutation
     // below.
-    'const hasSourceExtension = (p) =>\n  p.endsWith(".tex") || /\\/(paper|draft)\\.md$/.test(p) || /^(paper|draft)\\.md$/.test(p);',
+    'const hasSourceExtension = (p) =>\n  p.endsWith(".tex") ||\n  /\\/(paper|draft)\\.md$/.test(p) ||\n  /^(paper|draft)\\.md$/.test(p);',
     "const hasSourceExtension = (p) => p.length > 0;",
   ],
   [
@@ -177,7 +177,7 @@ const M = [
     "nudge/fires on everything",
     "drop the path test — the checklist lands on every Edit anywhere, which is how an advisory " +
       "hook gets muted and then stays muted when it matters",
-    "    return e.path.under([root]) && isPaperSource(e.path.raw) ? notice(CHECKLIST) : nothing();",
+    "    return e.path.under([root]) && isPaperSource(e.path.raw)\n      ? notice(CHECKLIST)\n      : nothing();",
     "    return notice(CHECKLIST);",
   ],
   [
@@ -185,8 +185,8 @@ const M = [
     "nudge/every file under the root is a paper",
     "drop the source-shape test — a README or a note under the papers root gets the pre-submit " +
       "checklist",
-    "    return e.path.under([root]) && isPaperSource(e.path.raw) ? notice(CHECKLIST) : nothing();",
-    "    return e.path.under([root]) ? notice(CHECKLIST) : nothing();",
+    "    return e.path.under([root]) && isPaperSource(e.path.raw)\n      ? notice(CHECKLIST)\n      : nothing();",
+    "    return e.path.under([root])\n      ? notice(CHECKLIST)\n      : nothing();",
   ],
   [
     NUDGE,

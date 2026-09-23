@@ -56,19 +56,19 @@ const M = [
   [
     "preamble cut-off during synthesis",
     "treat preamble constructs (e.g. `\\AtBeginDocument{\\bibliography{}}`) as nodes of the document",
-    '    if (pos && pos.start.offset < preEnd) { for (const k of ["content", "args"]) if (node[k]) walk(node[k]); return; }',
+    '    if (pos && pos.start.offset < preEnd) {\n      for (const k of ["content", "args"]) if (node[k]) walk(node[k]);\n      return;\n    }',
     "    if (false) { return; } /* MUT */",
   ],
   [
     "preamble blanking",
     "leave the preamble (package list, author macros) visible as prose",
-    "  if (preEnd) { blank(0, preEnd);",
-    "  if (preEnd) { void 0; /* MUT */",
+    "  if (preEnd) {\n    blank(0, preEnd);",
+    "  if (preEnd) {\n    void 0; /* MUT */",
   ],
   [
     "comment/RIGHT edge trim",
     "leave the trailing `\\n` inside the comment node",
-    '      while (ce > pos.start.offset && (src[ce - 1] === "\\n" || src[ce - 1] === "\\r")) ce--;',
+    '      while (\n        ce > pos.start.offset &&\n        (src[ce - 1] === "\\n" || src[ce - 1] === "\\r")\n      )\n        ce--;',
     "      /* MUT */",
   ],
   [
@@ -80,7 +80,7 @@ const M = [
   [
     "`**` written in place of `\\te`",
     "write the `**` before the content, leaving the line to start with spaces",
-    '      while (pendingStrong.length) { const o = pendingStrong.pop(); chars[o] = "*"; chars[o + 1] = "*"; }',
+    '      while (pendingStrong.length) {\n        const o = pendingStrong.pop();\n        chars[o] = "*";\n        chars[o + 1] = "*";\n      }',
     "      while (pendingStrong.length) { pendingStrong.pop(); } /* MUT */",
   ],
   [
@@ -98,13 +98,13 @@ const M = [
   [
     "OPAQUE macro blanking",
     "leave `\\cite` / `\\label` / `\\input` as prose",
-    "      if (OPAQUE.test(node.content)) { blank(pos.start.offset, argEnd(node).offset + 1); return; }",
+    "      if (OPAQUE.test(node.content)) {\n        blank(pos.start.offset, argEnd(node).offset + 1);\n        return;\n      }",
     "      if (false) { return; } /* MUT */",
   ],
   [
     "math blanking",
     "leave formulas as prose",
-    '    if ((node.type === "inlinemath" || node.type === "displaymath" || node.type === "verbatim") && pos) {',
+    '    if (\n      (node.type === "inlinemath" ||\n        node.type === "displaymath" ||\n        node.type === "verbatim") &&\n      pos\n    ) {',
     "    if (false) { /* MUT */",
   ],
   [
