@@ -9,10 +9,11 @@ skills/*/SKILL.md
 
 # Test inputs: the rules under test read these bytes, and some are judged against a
 # recorded baseline. Reflowing a fixture changes what the test measures. The fixture
-# CODE (harnesses, the baseline reader) is formatted.
-fixtures/**
-!fixtures/**/
-!fixtures/**/*.mjs
+# CODE (harnesses, the baseline reader) is formatted. `**/` because fixtures also live
+# beside the skill they test (skills/*/fixtures/, skills/paper-pipeline/scripts/fixtures/).
+**/fixtures/**
+!**/fixtures/**/
+!**/fixtures/**/*.mjs
 
 # Raw runs kept exactly as they ran — the evidence behind a written number. Their
 # bytes are the record (same class as vigiles' docs/design/probes/).

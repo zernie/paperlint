@@ -38,7 +38,6 @@ Our method reduces false positives by 6% over the strongest baseline.
 <!-- MUST NOT FLAG (S5): genuine own result, "our method" is the subject -->
 
 2. Prior detectors silently miss most adversarial inputs.
-
 <!-- MUST FLAG (S10): ordered-list marker "2." must not be a false boundary / stray number; the claim itself still flags -->
 
 [^1]: Some prior study, 2021.
