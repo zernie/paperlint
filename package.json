@@ -15,7 +15,9 @@
     "check:readme": "node scripts/exclusive.mjs node scripts/readme-numbers.mjs",
     "test:sabotage": "node scripts/exclusive.mjs node scripts/run-mutations.mjs",
     "test:install": "node scripts/exclusive.mjs node scripts/install-e2e.mjs",
-    "test:build": "node scripts/exclusive.mjs node scripts/build-e2e.mjs"
+    "test:build": "node scripts/exclusive.mjs node scripts/build-e2e.mjs",
+    "check:marketplace": "node scripts/exclusive.mjs node scripts/marketplace-shape.mjs",
+    "check": "node scripts/check.mjs"
   },
   "dependencies": {
     "@eslint/markdown": "^8.0.3",
@@ -24,7 +26,7 @@
     "eslint": "^10.9.1",
     "js-yaml": "^4.1.0",
     "markdown-it": "^14.3.0",
-    "vigiles": "^27.3.0"
+    "vigiles": "^30.0.2"
   },
   "devDependencies": {
     "@retorquere/bibtex-parser": "^10.0.1",
@@ -64,7 +66,6 @@
   "files": [
     ".claude-plugin",
     ".github",
-    ".vigiles",
     "CLAUDE.md",
     "CONTRIBUTING.md",
     "action.harness.mjs",
@@ -76,6 +77,8 @@
     "eslint-rules",
     "eslint.config.mjs",
     "fixtures",
+    "!fixtures/real-markdown-paper",
+    "fixtures/real-markdown-paper/baseline.*",
     "hooks",
     "lib",
     "plugin",

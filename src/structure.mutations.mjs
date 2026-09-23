@@ -68,8 +68,8 @@ process.exit(
         edits: [
           [
             SRC,
-            "  const say = (p: string): string => relative(cwd, p) || p;",
-            "  const say = (p: string): string => p;",
+            "    return rel && rel !== \"..\" && !rel.startsWith(`..${sep}`) && !isAbsolute(rel) ? rel : p;",
+            "    return p;",
           ],
         ],
       },

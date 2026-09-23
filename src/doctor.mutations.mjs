@@ -130,6 +130,36 @@ process.exit(
           ],
         ],
       },
+      {
+        name: "an unlinked skill is folded into the checkmark",
+        harness: HARNESS,
+        expect: "an unlinked skill is NAMED",
+        disables:
+          "the one place a consumer learns that `/paper-pipeline` is missing. Claude Code does not " +
+          "look in node_modules, so an install without links has no skills at all and says nothing",
+        edits: [
+          [
+            SRC,
+            '    const gaps = links.links.filter((l) => l.status !== "present");',
+            '    const gaps = links.links.filter((l) => l.status === "foreign");',
+          ],
+        ],
+      },
+      {
+        name: "an unlinked skill starts failing the run",
+        harness: HARNESS,
+        expect: "an unlinked skill does NOT fail the run",
+        disables:
+          "the line between a fact and a verdict. A consumer who keeps their own skill under the " +
+          "same name would get a red doctor — and a red `init` — for a decision init itself respected",
+        edits: [
+          [
+            SRC,
+            "      out.push(`      \\`npx rpp init\\` links the missing ones; it never replaces an entry it did not make`);",
+            "      out.push(`      \\`npx rpp init\\` links the missing ones; it never replaces an entry it did not make`);\n      bad++;",
+          ],
+        ],
+      },
     ],
   }),
 );

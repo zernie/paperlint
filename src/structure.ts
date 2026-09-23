@@ -22,7 +22,7 @@
  * all.
  */
 import { readdirSync, existsSync } from "node:fs";
-import { join, relative, basename } from "node:path";
+import { join, relative, basename, isAbsolute, sep } from "node:path";
 import type { StructureConfig, StructureFinding } from "./types.ts";
 
 /** The requirements after the consumer's config is laid over the defaults. */
@@ -72,7 +72,12 @@ export function checkStructure(
   const rules = structureRules(structure);
   if (!rules) return [];
   const findings: StructureFinding[] = [];
-  const say = (p: string): string => relative(cwd, p) || p;
+  // Relative to where the command was typed — unless the paper lives outside it (#48): then the
+  // absolute path, not a ladder of `../../../` that has to be counted to be read.
+  const say = (p: string): string => {
+    const rel = relative(cwd, p);
+    return rel && rel !== ".." && !rel.startsWith(`..${sep}`) && !isAbsolute(rel) ? rel : p;
+  };
 
   for (const root of paths) {
     for (const name of dirsIn(root)) {
@@ -103,11 +108,12 @@ export function checkStructure(
 /**
  * The message NAMES THE CONSEQUENCE rather than restating the condition. "missing
  * PIPELINE-STATUS.md" without the second half reads as nitpicking about formatting; with it you
- * can see that the directory is not checked at all, while its report is green.
+ * can see which checks the directory silently loses — the rules that read the scorecard; the rules
+ * over `paper.md` / `paper.tex` still run.
  */
 function whyMissingMatters(file: string, dirName: string): string {
   if (file === "PIPELINE-STATUS.md")
-    return `every pipeline rule keys off this file, so \`${dirName}\` currently gets ZERO rules and reports clean`;
+    return `\`paper/stages\`, \`paper/source\` and \`paper/author-list\` read this file, so nothing \`${dirName}\` declares about its stages, sources or authors is checked`;
   return `declared as required by your \`structure\` configuration`;
 }
 

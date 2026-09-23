@@ -45,6 +45,12 @@ if (argv.length === 0) {
   process.exit(2);
 }
 
+// The PARENT is created recursively; only the lock itself must be a non-recursive mkdir, because
+// that is the atomic step. Nothing else guarantees `.vigiles/` exists: once
+// `.vigiles/coverage.json` stopped being tracked, a fresh checkout has no such directory, and the
+// lock's mkdir failed with ENOENT before any gate ran (CI on e389916).
+mkdirSync(dirname(LOCK), { recursive: true });
+
 /** Is the process alive. `kill(pid, 0)` sends nothing — it only checks existence and rights. */
 function alive(pid) {
   try {

@@ -4,7 +4,7 @@ description: Use when asking "what would the program committee decide?" / "simul
 allowed-tools: [Read, Write, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:7a702253694609da compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:9622701a349ea249 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
 
 # pc-panel-review — model the whole PC, not one reviewer
 
@@ -145,7 +145,7 @@ the claim falsifiable: *TEXT* invites "then write it", and *IMMOVABLE* invites "
 🔴 **A deadline is a constraint on how much you rework, never an argument for the current form.** If
 the author invokes it against a TEXT prong, that is the failure this section exists to catch.
 
-**Enforced** by `paper-pipeline/scripts/pipeline-check.mjs` → `ceiling-unplanned`: a ceiling recorded
+**Enforced** by `../paper-pipeline/scripts/pipeline-check.mjs` → `ceiling-unplanned`: a ceiling recorded
 in the scorecard whose prongs carry none of the three labels is a finding.
 
 ## Record the verdict

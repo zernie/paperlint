@@ -167,7 +167,7 @@ check(
     writeFileSync(join(paper, "paper.md"), "# Intro\n\nRQ1: does it hold?\n");
     writeFileSync(
       join(paper, "PIPELINE-STATUS.md"),
-      `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: 100\n    source: versions/s.tex\n    sourceBytes: 4\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`,
+      `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: 100\n    source: versions/s.tex\n    sourceBytes: 4\nresearchQuestion: "does it hold?"\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`,
     );
     writeFileSync(
       join(root, "package.json"),
@@ -498,6 +498,45 @@ check(
       );
     }
 
+    // ── 7-bis. THE SKILLS: WHAT WAS LINKED, AND WHAT WAS LEFT ALONE, BY NAME ────────────
+    //
+    // The links themselves are `link-skills.harness.mjs`'s subject. Here: init REPORTS them, and
+    // a name it refused to take does not turn a working install red. The state is handed in so
+    // this block does not depend on a package being installed next to the temp project.
+    {
+      const dir = project("skills", { papers: ["writing"] });
+      const out = say();
+      const code = await init(dir, {
+        log: out.log,
+        err: out.log,
+        interactive: false,
+        run: haveAll,
+        link: (root) => ({
+          ok: true,
+          home: join(root, ".claude", "skills"),
+          example: "../../node_modules/research-paper-pipeline/skills/alpha",
+          links: [
+            { name: "alpha", status: "created" },
+            { name: "beta", status: "present" },
+            { name: "gamma", status: "foreign", reason: "a directory" },
+          ],
+        }),
+      });
+      const own = out.text().split("── rpp doctor")[0];
+      check(
+        "init counts what it did with the skills: created, already there, skipped",
+        /3 shipped: 1 linked now, 1 already linked, 1 skipped/.test(own),
+      );
+      check(
+        "🔴 a skipped skill is NAMED with what occupies it — not folded into a count",
+        /gamma — a directory/.test(own) && /NOT available in Claude Code/.test(own),
+      );
+      check(
+        "and a name init refused to take does not fail the install",
+        code === 0,
+      );
+    }
+
     // ── 8. `rpp.json` FOR THOSE WHO ALREADY HAVE ONE ──────────────────────────────────
     {
       const dir = project("legacy", { papers: ["writing"] });
@@ -581,7 +620,7 @@ check(
       "x".repeat(100),
     );
     const status = (bytes) =>
-      `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: ${bytes}\n    source: versions/s.tex\n    sourceBytes: 4\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`;
+      `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: ${bytes}\n    source: versions/s.tex\n    sourceBytes: 4\nresearchQuestion: "does it hold?"\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`;
     writeFileSync(join(paper, "versions", "s.tex"), "abcd");
     writeFileSync(join(paper, "paper.md"), "# Intro\n\nRQ1: does it hold?\n");
 
@@ -670,7 +709,7 @@ check(
     );
     writeFileSync(join(paper, "paper.md"), "# Intro\n\nRQ1: does it hold?\n");
     const status = (bytes) =>
-      `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: ${bytes}\n    source: versions/s.tex\n    sourceBytes: 4\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`;
+      `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: ${bytes}\n    source: versions/s.tex\n    sourceBytes: 4\nresearchQuestion: "does it hold?"\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`;
     writeFileSync(join(paper, "PIPELINE-STATUS.md"), status(100));
 
     // findConfig — kept separate from the run so the failure is distinguishable
@@ -774,7 +813,7 @@ check(
     );
     writeFileSync(
       join(paper, "PIPELINE-STATUS.md"),
-      `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: 100\n    source: versions/s.tex\n    sourceBytes: 4\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`,
+      `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: 100\n    source: versions/s.tex\n    sourceBytes: 4\nresearchQuestion: "does it hold?"\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`,
     );
     writeFileSync(join(root, "rpp.json"), JSON.stringify({ papers: "papers" }));
 
@@ -823,7 +862,7 @@ check(
     );
     check(
       "and the finding is printed before the ESLint report, with its consequence",
-      /missing `PIPELINE-STATUS\.md`/.test(r.out) && /ZERO rules/.test(r.out),
+      /missing `PIPELINE-STATUS\.md`/.test(r.out) && /is checked/.test(r.out),
     );
     check(
       "and it does NOT print \"no findings\" over something that was found",
@@ -874,6 +913,92 @@ check(
     );
   } finally {
     rmSync(root, { recursive: true, force: true });
+  }
+}
+
+// ── THE PAPERS DO NOT HAVE TO LIVE UNDER THE CURRENT DIRECTORY (#48) ─────────────────────
+//
+// 🔴 ESLint IGNORES EVERY FILE OUTSIDE ITS `cwd`. With `cwd` left at the default, `rpp lint
+// /some/other/papers` threw `all-matched-files-ignored` and leaked a raw stack trace, while the
+// same tree linted fine from inside. The property is not "does not crash" — a catch would give
+// that — but "the SAME findings wherever the command is typed", so the assertion compares the
+// two runs finding by finding, ignoring only the path each run prints.
+//
+// Second half: the typography debt is keyed by the paper's path FROM THE CONFIG'S DIRECTORY
+// (`"papers/p"`). Keys are computed against ESLint's `cwd`, so a run started from a
+// subdirectory, or with `--config` from elsewhere, silently stopped honouring the debt.
+{
+  const findings = (r) => {
+    try {
+      return JSON.parse(r.stdout)
+        .flatMap((x) => x.messages.map((m) => `${m.ruleId}: ${m.message}`))
+        .sort();
+    } catch {
+      return [`UNPARSABLE: ${r.out}`];
+    }
+  };
+  const tree = realpathSync(mkdtempSync(join(tmpdir(), "rpp-outside-")));
+  const elsewhere = realpathSync(mkdtempSync(join(tmpdir(), "rpp-elsewhere-")));
+  try {
+    const paper = join(tree, "papers", "p");
+    mkdirSync(paper, { recursive: true });
+    // Two findings of different kinds: a structural one (no scorecard) and a rule one (`§`).
+    writeFileSync(join(paper, "paper.md"), "# T\n\nSee § 3 and §4.\n");
+
+    const inside = await cli(["lint", "--json", "papers"], tree);
+    const outside = await cli(["lint", "--json", join(tree, "papers")], elsewhere);
+    check(
+      "linting a tree OUTSIDE the current directory does not throw",
+      outside.code !== 99 && !/all-matched-files-ignored|THREW/.test(outside.out),
+    );
+    check(
+      "the inside run is the reference: it has both a structure and a rule finding",
+      findings(inside).some((f) => f.startsWith("structure/required-file")) &&
+        findings(inside).some((f) => f.startsWith("paper/typography")),
+    );
+    check(
+      "and from outside it reports the SAME findings with the SAME exit code",
+      JSON.stringify(findings(outside)) === JSON.stringify(findings(inside)) &&
+        outside.code === inside.code,
+    );
+
+    // The debt, keyed from the config's directory, covers the two `§`.
+    writeFileSync(
+      join(tree, "package.json"),
+      JSON.stringify({
+        name: "x",
+        "research-paper-pipeline": {
+          papers: "papers",
+          typographyDebt: { "papers/p": { sectionSign: 2 } },
+        },
+      }),
+    );
+    const debtHonoured = (r) =>
+      r.code !== 99 && !findings(r).some((f) => f.startsWith("paper/typography"));
+    check(
+      "from the config's own directory the declared debt silences the `§` finding",
+      debtHonoured(await cli(["lint", "--json"], tree)),
+    );
+    check(
+      "from a SUBDIRECTORY (config found by walking up) the same debt still applies",
+      debtHonoured(await cli(["lint", "--json"], join(tree, "papers"))),
+    );
+    check(
+      "and with `--config` from an unrelated directory it applies too",
+      debtHonoured(
+        await cli(["lint", "--json", "--config", join(tree, "package.json")], elsewhere),
+      ),
+    );
+    // A RELATIVE `--config` stays relative in `configPath`, while every paper path is absolute:
+    // without resolving it first, the common root of `.` and `/tmp/…` is `/`, the debt keys
+    // no longer match, and the declared debt comes back as new warnings (Codex on #45).
+    check(
+      "and with a RELATIVE `--config package.json` it applies too",
+      debtHonoured(await cli(["lint", "--json", "--config", "package.json"], tree)),
+    );
+  } finally {
+    rmSync(tree, { recursive: true, force: true });
+    rmSync(elsewhere, { recursive: true, force: true });
   }
 }
 

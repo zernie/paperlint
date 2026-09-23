@@ -27,6 +27,7 @@ import { spawnSync } from "node:child_process";
 // import points at the hook itself rather than at a shared module.
 import { papersRoot, CONFIG_KEY, DEFAULT_PAPERS_ROOT } from "../hooks/paper-edit-guard.hook.mjs";
 import { PAPER_MARKERS } from "./build.ts";
+import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
 
 export interface Program {
   readonly bin: string;
@@ -93,6 +94,8 @@ export interface DoctorOptions {
   run?: typeof spawnSync;
   /** The directory the CLI resolved from its own config, so both sides can be compared. */
   cliPapers?: string | null;
+  /** Reads the skill links without writing any. Injected only so a test can fake the install. */
+  skillLinks?: (root: string) => LinkReport;
 }
 
 /**
@@ -107,6 +110,7 @@ export function doctor({
   projectDir,
   run = spawnSync,
   cliPapers = null,
+  skillLinks = (r: string) => linkSkills(r, { write: false }),
 }: DoctorOptions = {}): number {
   const root = projectDir ?? cwd;
   const pkgPath = join(root, "package.json");
@@ -171,6 +175,26 @@ export function doctor({
       out.push(`      papers look like they live in: ${guesses.join(", ")}`);
   }
 
+  // A skill that is not linked is ADVISORY, like a missing program: `rpp lint`, the hooks and CI
+  // work without it, and an entry of the same name that `init` refused to replace is the
+  // consumer's own decision. What this section removes is the silence — before it, a consumer
+  // without links had no `/paper-pipeline` and nothing anywhere said so.
+  out.push("", `skills (Claude Code finds project skills only in ${SKILLS_HOME}/)`);
+  const links = skillLinks(root);
+  if (!links.ok) out.push(`  ⚠ not checked — ${links.error}`);
+  else {
+    const gaps = links.links.filter((l) => l.status !== "present");
+    const total = String(links.links.length);
+    if (gaps.length === 0)
+      out.push(`  ✓ all ${total} shipped skills are reachable as ${join(SKILLS_HOME, "<name>")}`);
+    else {
+      out.push(`  ⚠ ${String(gaps.length)} of ${total} shipped skills are NOT reachable as ${join(SKILLS_HOME, "<name>")}:`);
+      for (const g of gaps)
+        out.push(`      ${g.name} — ${g.status === "missing" ? "not linked" : `${g.reason ?? "occupied"}, not the shipped skill`}`);
+      out.push(`      \`npx rpp init\` links the missing ones; it never replaces an entry it did not make`);
+    }
+  }
+
   out.push("", "external programs (the skills shell out to these; `rpp lint` needs none of them)");
   for (const p of PROGRAMS) {
     if (found(p.bin, run)) out.push(`  ✓ ${p.bin.padEnd(10)} ${p.from}`);
@@ -182,7 +206,7 @@ export function doctor({
 
   out.push(
     "",
-    "the plugin (skills and hooks inside Claude Code) cannot be checked from a terminal —",
+    "the plugin (the hooks inside Claude Code) cannot be checked from a terminal —",
     "type /plugin inside Claude Code to see whether it is installed.",
     "",
   );
