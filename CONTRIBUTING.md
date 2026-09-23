@@ -78,6 +78,24 @@ docs/           evidence that would otherwise bloat CLAUDE.md:
                   e2e.md  the end-to-end runs, and when a change owes one
 ```
 
+The package has <!-- count:rules -->12 rules. Nine run on users' papers and are described for users in
+[`docs/rules.md`](docs/rules.md); the other three lint this package's own source and never see a
+user's files.
+
+## Maintainer docs
+
+The README links only what a user needs. These are for people changing the package:
+
+- [`docs/prior-art/`](docs/prior-art/README.md) — how comparable tools are shaped, with the URLs
+  that were checked
+- [`docs/install.md`](docs/install.md) — why the install is shaped this way; a decision record,
+  measured
+- [`docs/e2e.md`](docs/e2e.md) — the end-to-end runs: what each proves, what they do not cover,
+  and when a change owes one
+- [`docs/incidents.md`](docs/incidents.md) — what broke, measured
+- [`docs/package-shape-options.md`](docs/package-shape-options.md) — the options for the
+  package's shape, and the ranking
+
 ## Working on this package
 
 ```bash
