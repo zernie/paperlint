@@ -359,7 +359,7 @@ and it should be recorded as such rather than as "PnP has no node_modules".
 
 ## 9. The second guess: the base directory for a path written in prose
 
-`contentDelivery()` (`scripts/install-e2e.mjs:192–198`) tries three bases per reference.
+`contentDelivery()` (in `scripts/install-e2e.mjs`) tries three bases per reference.
 Measured over the real corpus with `claim6-doc-path-candidates.mjs`:
 
 ```console
