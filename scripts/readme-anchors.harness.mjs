@@ -34,11 +34,11 @@ const check = (label, cond) => {
 
 // ── the anchors are GitHub's, not a guess ─────────────────────────────────────────────────
 const anchors = anchorsOf(
-  "# Top\n\n## Install and set up\n\n## What `rpp init` writes\n\n## Commands\n\n### Commands\n",
+  "# Top\n\n## Install, and set up (npm)\n\n## What `rpp init` writes\n\n## Commands\n\n### Commands\n",
 );
 check(
   "headings become GitHub's anchors — inline code keeps its text, punctuation goes",
-  anchors.includes("install-and-set-up") &&
+  anchors.includes("install-and-set-up-npm") &&
     anchors.includes("what-rpp-init-writes"),
 );
 check(

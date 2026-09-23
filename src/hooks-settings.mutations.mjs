@@ -20,12 +20,15 @@ process.exit(
     runner: "node",
     cases: [
       {
-        name: "every spelling counts as ours",
+        name: "every spelling of the bin counts as ours",
         harness: HARNESS,
-        expect: "a hook wired by hand under another spelling",
+        // The spelling truth table is the first owner: `npx rpp hook …` must read as NOT ours,
+        // and that row is where it goes red.
+        expect: '→ {"name":"paper-skills-nudge","ours":false}',
         disables:
-          "the duplicate guard. A hook wired by hand through `vigiles … run-program` reads as " +
-          "ours, the merge adds its own copy beside it, and paper-edit-guard runs twice per command",
+          "the duplicate guard for every bin spelling but ours. A hook wired by hand as " +
+          "`npx rpp hook …` or through an absolute rpp.mjs path reads as ours, init merges its own " +
+          "copy beside it, and the hook runs twice per event",
         edits: [
           [
             SRC,
@@ -45,8 +48,8 @@ process.exit(
       {
         name: "the settings file is rewritten even when nothing changed",
         harness: HARNESS,
-        expect:
-          "wired already → nothing is rewritten, not even to our indentation",
+        // The fresh project's second run is the first place a rewrite shows: `written` twice.
+        expect: "a second run changes NOTHING",
         disables:
           "idempotency as the user sees it. Every init would reformat a committed file the user " +
           "wrote, and the diff would say nothing happened while showing that everything did",

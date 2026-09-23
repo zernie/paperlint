@@ -38,7 +38,8 @@ process.exit(
       {
         name: "a second source is added beside an existing one",
         harness: HARNESS,
-        expect: "only the scorecard",
+        // The first owner is the re-run on a .tex paper asked for md: it must add no paper.md.
+        expect: "adds no second source",
         disables:
           "the migration of an old folder: a paper written in Markdown gains a stub paper.tex, " +
           "and every tex rule starts linting a file the author never wrote",
