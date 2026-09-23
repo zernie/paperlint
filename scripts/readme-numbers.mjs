@@ -98,11 +98,11 @@ export async function actualCounts(root = ROOT) {
     rules: await countRules(root),
     harnesses: countFiles(root, ".harness.mjs"),
     batteries: countFiles(root, ".mutations.mjs"),
-    // The end-to-end runs, counted from disk by the suffix that names them. `docs/e2e.md`
+    // The end-to-end runs, counted from disk: every file in `test/e2e/` is one. `docs/e2e.md`
     // describes them one by one, and a description that outlives the thing it describes is the
-    // reason this counter exists at all: add a third `*-e2e.mjs` and the doc goes red until it
+    // reason this counter exists at all: add a third file to `test/e2e/` and the doc goes red until it
     // says what the third one proves.
-    e2e: countFiles(join(root, "scripts"), "-e2e.mjs"),
+    e2e: countFiles(join(root, "test", "e2e"), ".mjs"),
     skills: readdirSync(join(root, "skills")).filter((d) =>
       lstatSync(join(root, "skills", d)).isDirectory(),
     ).length,

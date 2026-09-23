@@ -33,7 +33,7 @@ would break two things that have nothing to do with running tests.
 
 ## Why the install e2e stays a script
 
-`scripts/install-e2e.mjs` is one linear scenario per package manager with strictly dependent steps
+`test/e2e/install.mjs` is one linear scenario per package manager with strictly dependent steps
 — install, bin, `init`, `lint`, hook commands, content delivery — and a summary. A runner adds
 named subtests and a reporter; the script already prints per-check `✓`/`✗` and a per-manager
 verdict. The pack-and-install work stays in our code under any host, so the host buys only the

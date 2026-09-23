@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * build-e2e.mjs — `rpp build` against a REAL `pdflatex`, from source to finished PDF.
+ * test/e2e/build.mjs — `rpp build` against a REAL `pdflatex`, from source to finished PDF.
  *
  * 🔴 HOW THIS DIFFERS FROM `src/build.harness.mjs`, AND WHY BOTH ARE NEEDED. That harness
  * substitutes its own function for `spawnSync`: it checks DECISIONS — which script was picked,
@@ -21,7 +21,7 @@
  * passed one look identical in the interface, and that is exactly the class this whole package is
  * written against.
  *
- *   node scripts/build-e2e.mjs [--strict]
+ *   node test/e2e/build.mjs [--strict]
  */
 import { execFileSync, spawnSync } from "node:child_process";
 import {
@@ -35,9 +35,9 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readFonts } from "../skills/render-paper/extract-pdf-facts.mjs";
+import { readFonts } from "../../skills/render-paper/extract-pdf-facts.mjs";
 
-const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
+const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const CLI = join(ROOT, "bin", "rpp.mjs");
 const strict = process.argv.includes("--strict");
 

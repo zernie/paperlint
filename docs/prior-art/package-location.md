@@ -1,6 +1,6 @@
 # How a package finds its own installed files, and its own bin
 
-**Question this file answers:** `scripts/install-e2e.mjs` inspects the tree it just installed by
+**Question this file answers:** `test/e2e/install.mjs` inspects the tree it just installed by
 spelling the layout out — `node_modules/research-paper-pipeline` (line 172),
 `node_modules/.bin/rpp` (line 276), and `node_modules/.../plugin/hooks/hooks.json` (line 135).
 `contentDelivery()` separately tries THREE candidate base directories for a path written as prose
@@ -54,7 +54,7 @@ argument of `import.meta.resolve` is the non-standard part:
 
 ### 🔴 `import.meta.resolve` is the wrong tool here, and it fails SILENTLY
 
-`install-e2e.mjs` runs from the repository and inspects a consumer somewhere in `os.tmpdir()`.
+`test/e2e/install.mjs` runs from the repository and inspects a consumer somewhere in `os.tmpdir()`.
 `import.meta.resolve` always resolves from **the file that calls it** — `cwd` is irrelevant and
 the `parent` argument is ignored without the flag rather than rejected:
 
@@ -165,7 +165,7 @@ literal node_modules/ : <WORK>/consumer-pnpm/node_modules/research-paper-pipelin
 Under pnpm the hardcode addresses the **symlink** and resolution addresses the **store realpath**
 (Node realpaths by default; `--preserve-symlinks` flips it, and `resolve-package-path` carries
 `lib/should-preserve-symlinks.js` for exactly that). `realpathSync` of one equals the other, so
-every `existsSync` / `readdirSync` / `readFileSync` in `install-e2e.mjs` gives the same answer
+every `existsSync` / `readdirSync` / `readFileSync` in `test/e2e/install.mjs` gives the same answer
 either way. Two interesting asymmetries, both measured:
 
 - `module.findPackageJSON` returns the **symlink** path under pnpm, not the store path — the
@@ -348,7 +348,7 @@ node_modules present? NO
    today the npm channel is the one that delivers the runnable code — but it is not impossible.
 3. 🔴 **The blocker the note does NOT name is the immovable one, and no resolution API fixes it.**
    PnP resolves to a path **inside a zip**. Line 3: the outside process gets `existsSync: false`
-   for the very path PnP just handed it; only PnP's patched `fs` can open it. `install-e2e.mjs`
+   for the very path PnP just handed it; only PnP's patched `fs` can open it. `test/e2e/install.mjs`
    inspects the installed tree with `existsSync`, `readdirSync` and `readFileSync` **from its own
    process**. Under PnP those read nothing, whatever API produced the path — and `yarn bin rpp`
    (line 4) hands back the same unreadable path, so the supported bin lookup does not help either.
@@ -359,7 +359,7 @@ and it should be recorded as such rather than as "PnP has no node_modules".
 
 ## 9. The second guess: the base directory for a path written in prose
 
-`contentDelivery()` (in `scripts/install-e2e.mjs`) tries three bases per reference.
+`contentDelivery()` (in `test/e2e/install.mjs`) tries three bases per reference.
 Measured over the real corpus with `claim6-doc-path-candidates.mjs`:
 
 ```console

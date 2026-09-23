@@ -29,7 +29,7 @@ exists once the code is somewhere else.
 
 ## `npm run test:install` — the package, installed
 
-`scripts/install-e2e.mjs`. It runs `npm pack`, then installs the resulting tarball into a fresh
+`test/e2e/install.mjs`. It runs `npm pack`, then installs the resulting tarball into a fresh
 temporary tree, **under npm and under pnpm separately**, and drives the installed binary:
 
 - the install itself finishes
@@ -52,7 +52,7 @@ pnpm a shell wrapper, and calling `node bin` measures the caller's habit instead
 
 ## `npm run test:build` — a real `pdflatex`
 
-`scripts/build-e2e.mjs`. It copies `fixtures/build-e2e/` — four papers — into a temporary tree,
+`test/e2e/build.mjs`. It copies `fixtures/build-e2e/` — four papers — into a temporary tree,
 points a config at it, and runs `rpp build --all`. Then it measures the artifacts with `pdffonts`:
 
 | fixture     | what it is there to prove                                                                                                                                    |
@@ -111,7 +111,7 @@ everything.
 
 ## The corpus
 
-`stageCorpus()` in `scripts/install-e2e.mjs` writes a small paper by hand — a declared stage, its
+`stageCorpus()` in `test/e2e/install.mjs` writes a small paper by hand — a declared stage, its
 PDF, its byte counts, the cross-check between them — and copies `fixtures/build-e2e/acmart` beside
 it so the LaTeX rules see LaTeX rather than a placeholder.
 

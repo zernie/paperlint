@@ -15,7 +15,7 @@
  * it resolves is a property of the tree laid out on disk. So the command is launched, and the
  * verdict is based on whether it died on `Cannot find module`.
  *
- * Run: node scripts/install-e2e.mjs [--keep]
+ * Run: node test/e2e/install.mjs [--keep]
  * Exit code: 0 — every manager passed; 1 — at least one did not.
  */
 import { execFileSync, spawnSync } from "node:child_process";
@@ -38,9 +38,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   compareToBaseline,
   countByRule,
-} from "../fixtures/real-markdown-paper/baseline.mjs";
+} from "../../fixtures/real-markdown-paper/baseline.mjs";
 
-const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
+const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const KEEP = process.argv.includes("--keep");
 // See `managers()`: a manager that will not launch is a declared skip here and a failure in CI.
 const STRICT = process.argv.includes("--strict");
@@ -113,7 +113,7 @@ const WANTED = [
  * reason this file exists. "pnpm passed" and "pnpm was never tried" printed identically.
  *
  * That is the failure class this package is written against, reproduced inside it: a skipped
- * check and a passed one look the same. `build-e2e.mjs` already had the cure — declare the skip,
+ * check and a passed one look the same. `test/e2e/build.mjs` already had the cure — declare the skip,
  * and let `--strict` turn it into a failure where absence means a broken environment.
  */
 function managers() {

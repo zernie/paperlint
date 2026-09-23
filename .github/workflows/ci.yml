@@ -197,7 +197,7 @@ jobs:
       # the build e2e below. --strict: a manager that does not launch is a declared skip on a
       # contributor's clone and a FAILURE here, because in CI it means a broken environment.
       - name: install e2e (--strict)
-        run: node scripts/install-e2e.mjs --strict
+        run: node test/e2e/install.mjs --strict
         timeout-minutes: 10
 
   # ── macOS BY LABEL, NOT IN MATRIX ───────────────────────────────────────────────────────────────
@@ -342,5 +342,5 @@ jobs:
       # Called directly, not through npm run: the --strict flag must reach the script,
       # and `npm run test:build -- --strict` adds a layer easily lost in edits.
       - name: build e2e (--strict)
-        run: node scripts/build-e2e.mjs --strict
+        run: node test/e2e/build.mjs --strict
         timeout-minutes: 10
