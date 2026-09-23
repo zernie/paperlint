@@ -112,19 +112,28 @@ them has a guard whose success state is silence.
 This package does. `paper-edit-guard` reports nothing when it is working and reports nothing when
 it is watching an empty directory, so "installed" and "protecting you" are indistinguishable from
 outside. `doctor` is what tells them apart: it prints the papers directory the CLI resolved, the
-one the hook will resolve, whether they are the same, whether the plugin is installed, and which
-external programs are missing.
+one the hook will resolve, whether they are the same, whether the hooks are wired in
+`.claude/settings.json` (once, twice, or not at all — and whether the project also enables the
+old plugin), and which external programs are missing. A plugin installed at user scope is outside
+what it can read, and it says so.
 
 ## The target count
 
-| #   | action                                                                                                                                                                                       |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | `npm i -D github:zernie/research-paper-pipeline#<sha>`                                                                                                                                       |
-| 2   | `npx rpp init` — detects the papers directory, writes the declaration, links the skills into `.claude/skills/`, offers the CI workflow, prints the two plugin lines and any missing programs |
-| 3   | the two `/plugin` lines inside Claude Code                                                                                                                                                   |
+| #   | action                                                                                                                                                                                                              |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `npm i -D github:zernie/research-paper-pipeline#<sha>`                                                                                                                                                              |
+| 2   | `npx rpp init` — detects the papers directory, writes the declaration, links the skills into `.claude/skills/`, writes the hooks into `.claude/settings.json`, offers the CI workflow, reports any missing programs |
 
-Three, one of which is a paste of two lines that `init` just printed. Step 3 cannot be collapsed:
-it is typed into a different program, and nothing on disk can type it for you.
+Two, both in the same terminal.
+
+🔴 **CORRECTED 2026-09-23 — this section used to say three, and that "step 3 cannot be collapsed:
+it is typed into a different program, and nothing on disk can type it for you."** Step 3 was the two
+`/plugin` lines typed inside Claude Code. The premise was that hooks reach Claude Code only through
+a plugin. They also reach it through a file on disk: `.claude/settings.json`, which Claude Code
+documents as the way to share hooks with a team and which `init` can write. The plugin route also
+could not be run by an agent, could not be checked by `rpp doctor`, and — as a plugin the
+repository declares — is not installed in a cloud session. The decision and its sources:
+[`prior-art/paper-folder-scaffolding.md`](prior-art/paper-folder-scaffolding.md) § 5.
 
 ### What the implementation added to this plan, and why
 
@@ -169,6 +178,13 @@ there is no `node_modules` directory for that path to resolve against. Supportin
 different way of answering "where is the runtime", not a flag.
 
 ## Why the plugin ships no code
+
+⚠️ **Since 2026-09-23 the plugin is no longer how the hooks are installed** — `rpp init` writes the
+same commands into `.claude/settings.json` (see "The target count" above). `plugin/hooks/hooks.json`
+stays, as the one source `init` reads the wiring from, and the marketplace entry stays for one
+release so existing plugin users are not broken; `init` and `doctor` tell a project that enables
+the plugin to uninstall it, because plugin + settings would run every hook twice. The reasoning
+below is still why the plugin never carried code.
 
 The plugin carries the hook wiring only — a manifest and `plugin/hooks/hooks.json`. That split is
 deliberate, and it is also forced.
@@ -223,11 +239,13 @@ surviving untouched.
 
 Moved out of the README on 2026-09-23. Exactly:
 
-| what                                                               | where                   | when                                                                                                                                          |
-| ------------------------------------------------------------------ | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| a `research-paper-pipeline` key naming your papers directory       | your `package.json`     | always                                                                                                                                        |
-| a GitHub Actions workflow                                          | `.github/workflows/`    | only if you say yes; it asks once, and only when stdin is a terminal                                                                          |
-| one relative symlink per shipped skill, into the installed package | `.claude/skills/<name>` | always — except where that name is already taken (a directory, a file, a link elsewhere): that entry is left as it is and named in the report |
+| what                                                               | where                   | when                                                                                                                                                                              |
+| ------------------------------------------------------------------ | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| a `research-paper-pipeline` key naming your papers directory       | your `package.json`     | always                                                                                                                                                                            |
+| the three hook commands, merged in beside your own entries         | `.claude/settings.json` | by default. A human at a terminal is asked [Y/n]; an agent, CI or `--yes` gets YES; `--no-hooks` skips. Hand-wired under another spelling: nothing written, so nothing runs twice |
+| a GitHub Actions workflow                                          | `.github/workflows/`    | only if you say yes; it asks once, and only when a human is at a terminal (stdin and stdout, no `CI`, no `--yes`)                                                                 |
+| a first paper, via `rpp new`                                       | `<papers>/<name>/`      | only when the papers directory holds none: asked of a human at a terminal, otherwise only with `--paper <name>`                                                                   |
+| one relative symlink per shipped skill, into the installed package | `.claude/skills/<name>` | always — except where that name is already taken (a directory, a file, a link elsewhere): that entry is left as it is and named in the report                                     |
 
 It installs no software and touches nothing else. It ends by running `rpp doctor` and exits with
 its verdict.

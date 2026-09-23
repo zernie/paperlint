@@ -12,6 +12,7 @@
  * Both are pinned down by the assertions below so there is no going back.
  */
 import assert from "node:assert/strict";
+import { recordCheck } from "vigiles";
 import {
   mkdtempSync,
   mkdirSync,
@@ -49,8 +50,11 @@ const {
 const { PROGRAMS } = await import(join(HERE, "doctor.ts"));
 
 let n = 0;
+// Counted by vigiles too: `init` now loads `vigiles/claude-code` for its merge, and a harness that
+// loads vigiles without recording a check is reported as having verified nothing.
 const check = (label, cond) => {
   assert.ok(cond, label);
+  recordCheck(label);
   n++;
 };
 
@@ -141,15 +145,26 @@ check(
     { typographyDebt: { x: { sectionSign: 3 } }, authorListCommand: "run-me" },
     null,
   );
+  // Blocks with `files` — the global `ignores` block below is not a rule block.
+  const ruleBlocks = (c) => c.filter((b) => Array.isArray(b.files));
   check(
     "without a LaTeX language the config still gets built — a corpus with no .tex is not a reason to refuse",
-    Array.isArray(cfg) && cfg.length === 3,
+    Array.isArray(cfg) && ruleBlocks(cfg).length === 3,
   );
   check(
     "with a LaTeX language a fourth block is added",
-    buildConfig({}, {}).length === 4,
+    ruleBlocks(buildConfig({}, {})).length === 4,
   );
-  const status = cfg.find((c) =>
+  check(
+    "🔴 the project's paper TEMPLATE directory is ignored — flat config does not skip dot-directories",
+    cfg.some(
+      (b) =>
+        Object.keys(b).length === 1 &&
+        Array.isArray(b.ignores) &&
+        b.ignores.includes("**/.template/"),
+    ),
+  );
+  const status = ruleBlocks(cfg).find((c) =>
     c.files.some((f) => f.includes("PIPELINE-STATUS")),
   );
   check(
@@ -1252,26 +1267,359 @@ console.log(
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Step 3 has ONE shape now: two lines typed inside Claude Code.
-//
-// 🔴 It must never ask for a manual runtime install again. That instruction went through three
-// forms — a copy-paste line, a `--with-hooks` flag, a self-contained bundle — and all three were
-// wrong for the same reason: the runtime is an ordinary dependency, so there is nothing to do.
+// What is left after init is typed in THE SAME TERMINAL. The two `/plugin` lines are gone: the
+// hooks are written into `.claude/settings.json` by init itself (hooks-settings.harness.mjs).
 
 {
   const steps = nextSteps("papers");
   check(
-    "step 3 gives the two /plugin lines",
-    steps.includes("/plugin marketplace add") &&
-      steps.includes("/plugin install research-paper-pipeline"),
+    "🔴 no /plugin line is left — nothing is typed into another program any more",
+    !steps.includes("/plugin"),
   );
   check("and asks for NO manual install", !/npm i -D vigiles/.test(steps));
   check(
-    "and says the runtime already came along",
-    /runtime came with this package/.test(steps),
-  );
-  check(
-    "skipping it is still safe, and says so",
-    /everything above still works/.test(steps),
+    "it names the two commands that ARE left: new and lint",
+    /npx rpp new <name>/.test(steps) && /npx rpp lint/.test(steps),
   );
 }
+
+// ── the mode decision: a human is at the other end only when EVERY signal says so ──────────
+{
+  const { interactivity } = await import(join(HERE, "init.ts"));
+  const tty = { stdinTTY: true, stdoutTTY: true, env: {}, yes: false };
+  check(
+    "a terminal on stdin AND stdout, no CI, no --yes → interactive",
+    interactivity(tty).interactive === true,
+  );
+  for (const [label, over, why] of [
+    ["--yes", { yes: true }, "--yes was given"],
+    ["CI set", { env: { CI: "true" } }, "CI is set"],
+    ["stdin piped", { stdinTTY: false }, "stdin is not a terminal"],
+    [
+      "🔴 stdout piped — an agent reading the output would never see the question",
+      { stdoutTTY: false },
+      "stdout is not a terminal",
+    ],
+  ]) {
+    const m = interactivity({ ...tty, ...over });
+    check(
+      `${label} → NOT interactive, and the reason is named`,
+      m.interactive === false && m.why === why,
+    );
+  }
+  check(
+    "an empty CI variable is not CI",
+    interactivity({ ...tty, env: { CI: "" } }).interactive === true,
+  );
+}
+
+// ── the new flags parse, and none of them becomes the directory argument ─────────────────
+{
+  const a = parseArgs([
+    "init",
+    "--yes",
+    "--no-hooks",
+    "--paper",
+    "demo",
+    "--format",
+    "md",
+  ]);
+  check(
+    "init flags parse into fields, not into paths",
+    a.yes &&
+      a.noHooks &&
+      a.paper === "demo" &&
+      a.format === "md" &&
+      a.paths.length === 0,
+  );
+  check("-y is --yes", parseArgs(["init", "-y"]).yes === true);
+  check(
+    "`--paper` with its value taken away is a refusal, not a default",
+    parseArgs(["init", "--paper"]).missingValue === "--paper",
+  );
+  const r = await cli(["init", "--hooks=local"]);
+  check(
+    "🔴 --hooks=local is NOT implemented, and it is refused by name rather than read as a path",
+    r.code === 2 && /--hooks=local is not implemented/.test(r.out),
+  );
+  const f = await cli(["init", "--format", "pdf"]);
+  check(
+    "an unknown --format is refused before anything is written",
+    f.code === 2 && /--format must be one of tex, md/.test(f.out),
+  );
+}
+
+// ── init wires the hooks, and a human can say no ─────────────────────────────────────────
+{
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-init-hooks-")));
+  const mk = (name) => {
+    const dir = join(root, name);
+    mkdirSync(join(dir, "papers", "p1"), { recursive: true });
+    writeFileSync(join(dir, "papers", "p1", "paper.md"), "# P\n");
+    writeFileSync(
+      join(dir, "papers", "p1", "PIPELINE-STATUS.md"),
+      "---\n---\n",
+    );
+    writeFileSync(
+      join(dir, "package.json"),
+      '{"name":"c","version":"1.0.0"}\n',
+    );
+    return dir;
+  };
+  const settings = (dir) => join(dir, ".claude", "settings.json");
+  const quiet = { log: () => {}, err: () => {}, run: () => ({ status: 0 }) };
+  try {
+    {
+      const dir = mk("default-yes");
+      const lines = [];
+      await init(dir, {
+        ...quiet,
+        log: (...a) => lines.push(a.join(" ")),
+        interactive: false,
+      });
+      const text = lines.join("\n");
+      check(
+        "🔴 without a human the hooks default to YES — settings.json is written",
+        existsSync(settings(dir)) &&
+          /hook paper-edit-guard/.test(readFileSync(settings(dir), "utf8")),
+      );
+      check(
+        "and the default names the flag that changes it",
+        /default taken: YES — stdin is not a terminal, so nothing was asked\. `--no-hooks` skips this/.test(
+          text,
+        ),
+      );
+      check(
+        "🔴 and says that the commands cannot run in a fresh clone before `npm install`",
+        /in a fresh clone they cannot run until `npm install` has run there/.test(
+          text,
+        ),
+      );
+      check(
+        "the /plugin lines are gone from init's output too",
+        !/\/plugin (marketplace|install)/.test(text),
+      );
+    }
+    {
+      const dir = mk("no-hooks");
+      await init(dir, { ...quiet, interactive: false, hooks: false });
+      check("--no-hooks writes nothing", !existsSync(settings(dir)));
+    }
+    {
+      const dir = mk("asked-no");
+      const asked = [];
+      await init(dir, {
+        ...quiet,
+        interactive: true,
+        ask: async (q) => {
+          asked.push(q);
+          return /\[Y\/n\]/.test(q) ? "n" : "";
+        },
+      });
+      check(
+        "a human is asked [Y/n] for the hooks",
+        asked.some((q) => /wire the paper hooks .*\[Y\/n\]/.test(q)),
+      );
+      check("and a no is respected", !existsSync(settings(dir)));
+    }
+    {
+      const dir = mk("asked-enter");
+      await init(dir, {
+        ...quiet,
+        interactive: true,
+        ask: async () => "",
+      });
+      check(
+        "an empty answer is the stated default, YES",
+        existsSync(settings(dir)),
+      );
+    }
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+// ── init offers a first paper only where there is none, and only to a human ─────────────
+{
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-init-paper-")));
+  const bare = (name) => {
+    const dir = join(root, name);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(
+      join(dir, "package.json"),
+      '{"name":"c","version":"1.0.0"}\n',
+    );
+    return dir;
+  };
+  const base = { err: () => {}, run: () => ({ status: 0 }), hooks: false };
+  try {
+    {
+      const dir = bare("human");
+      const asked = [];
+      const made = [];
+      await init(dir, {
+        ...base,
+        log: () => {},
+        interactive: true,
+        ask: async (q) => {
+          asked.push(q);
+          if (/create a first paper/.test(q)) return "first";
+          if (/format:/.test(q)) return "md";
+          return "";
+        },
+        createPaper: async (papersRoot, name, format) => {
+          made.push({ papersRoot, name, format });
+          return 0;
+        },
+      });
+      check(
+        "a human with no paper is offered one, and the answer and format reach `rpp new`'s routine",
+        made.length === 1 &&
+          made[0].name === "first" &&
+          made[0].format === "md" &&
+          made[0].papersRoot === join(dir, "papers"),
+      );
+    }
+    {
+      const dir = bare("agent");
+      const made = [];
+      const lines = [];
+      await init(dir, {
+        ...base,
+        log: (...a) => lines.push(a.join(" ")),
+        interactive: false,
+        createPaper: async (...a) => (made.push(a), 0),
+      });
+      check(
+        "🔴 without a human nothing is created, and the flag that would is named",
+        made.length === 0 &&
+          /`--paper <name>` creates one/.test(lines.join("\n")),
+      );
+    }
+    {
+      const dir = bare("flag");
+      const made = [];
+      await init(dir, {
+        ...base,
+        log: () => {},
+        interactive: false,
+        paper: "given",
+        createPaper: async (papersRoot, name, format) => (
+          made.push({ name, format }),
+          0
+        ),
+      });
+      check(
+        "--paper creates it without a human, in the default format",
+        made.length === 1 &&
+          made[0].name === "given" &&
+          made[0].format === "tex",
+      );
+    }
+    {
+      const dir = bare("has-one");
+      mkdirSync(join(dir, "papers", "p1"), { recursive: true });
+      writeFileSync(join(dir, "papers", "p1", "paper.md"), "# P\n");
+      const asked = [];
+      await init(dir, {
+        ...base,
+        log: () => {},
+        interactive: true,
+        ask: async (q) => (asked.push(q), ""),
+        createPaper: async () => 0,
+      });
+      check(
+        "a papers directory that already holds a paper is not offered another",
+        !asked.some((q) => /create a first paper/.test(q)),
+      );
+    }
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+// ── `rpp lint` does not sweep the project's paper TEMPLATE as a paper ────────────────────
+{
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-template-")));
+  try {
+    writeFileSync(
+      join(root, "package.json"),
+      '{"research-paper-pipeline":{"papers":"papers"}}\n',
+    );
+    mkdirSync(join(root, "papers", "p1"), { recursive: true });
+    writeFileSync(join(root, "papers", "p1", "paper.md"), "# P\n");
+    writeFileSync(
+      join(root, "papers", "p1", "PIPELINE-STATUS.md"),
+      "---\n---\n",
+    );
+    // A template that WOULD fail if linted: a stage whose pdf does not exist.
+    mkdirSync(join(root, "papers", ".template"), { recursive: true });
+    writeFileSync(
+      join(root, "papers", ".template", "PIPELINE-STATUS.md"),
+      "---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/none.pdf\n    bytes: 1\n---\n",
+    );
+    const r = await cli(["lint"], root);
+    check(
+      "🔴 a defective <papers>/.template/ does not fail the run — it is not a paper",
+      r.code === 0 && !/\.template/.test(r.out),
+    );
+    // The other half: the same file in a real paper folder IS linted and fails.
+    mkdirSync(join(root, "papers", "p2"), { recursive: true });
+    writeFileSync(
+      join(root, "papers", "p2", "PIPELINE-STATUS.md"),
+      readFileSync(join(root, "papers", ".template", "PIPELINE-STATUS.md")),
+    );
+    writeFileSync(join(root, "papers", "p2", "paper.md"), "# P\n");
+    const r2 = await cli(["lint"], root);
+    check(
+      "and the same scorecard in a real paper folder fails — the ignore is scoped, not a blind spot",
+      r2.code === 1 && /paper\/stages/.test(r2.out),
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+// ── `rpp new` through the CLI: the papers directory comes from the one declaration ────────
+{
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-new-cli-")));
+  try {
+    const none = await cli(["new", "demo"], root);
+    check(
+      "without a declaration there is nowhere to put a paper — refused, with the remedy",
+      none.code === 2 && /Run `npx rpp init` first/.test(none.out),
+    );
+    writeFileSync(
+      join(root, "package.json"),
+      '{"research-paper-pipeline":{"papers":"writing"}}\n',
+    );
+    const r = await cli(["new", "demo"], root);
+    check(
+      "🔴 `rpp new demo` creates writing/demo/ and its lint is the verdict — exit 0, no findings",
+      r.code === 0 &&
+        existsSync(join(root, "writing", "demo", "PIPELINE-STATUS.md")) &&
+        existsSync(join(root, "writing", "demo", "paper.tex")) &&
+        /no findings/.test(r.out),
+    );
+    const again = await cli(["new", "demo", "--format", "md"], root);
+    check(
+      "a second run on the same folder adds nothing — the tex source already stands",
+      again.code === 0 &&
+        !existsSync(join(root, "writing", "demo", "paper.md")) &&
+        /kept — never overwritten/.test(again.out),
+    );
+    const bad = await cli(["new", "Demo"], root);
+    check(
+      "an invalid name is refused with exit 2",
+      bad.code === 2 && !existsSync(join(root, "writing", "Demo")),
+    );
+    const two = await cli(["new", "a", "b"], root);
+    check("one paper at a time", two.code === 2);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+console.log(
+  `✓ ${String(n)} assertions in total, including init's hooks and rpp new`,
+);

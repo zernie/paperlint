@@ -51,7 +51,15 @@ import {
   remedyFor,
 } from "./build.ts";
 import { doctor } from "./doctor.ts";
-import { init } from "./init.ts";
+import { init, processInteractivity, askOnTerminal } from "./init.ts";
+import {
+  DEFAULT_FORMAT,
+  FORMATS,
+  isFormat,
+  newPaper,
+  reportNewPaper,
+  type PaperFormat,
+} from "./new-paper.ts";
 // @ts-expect-error — the one source for the consumer's config key lives in the .mjs half of
 // the package: the ESLint rules and the skill scripts import it too, and they are not TypeScript.
 import { CONFIG_KEY } from "../lib/paper-config.mjs";
@@ -74,13 +82,24 @@ import findingsCause from "../eslint-rules/review-findings-cause.mjs";
 const USAGE = `research-paper-pipeline — machine-checkable gates for a paper kept in git
 
   npx rpp init [dir]                  set the project up: detect the papers directory, declare it
-                                      in package.json, offer the CI step, report what is missing
+                                      in package.json, link the skills, wire the hooks into
+                                      .claude/settings.json, offer the CI step, report what is missing
+  npx rpp new <name> [--format tex|md]
+                                      create <papers>/<name>/ from the template; never overwrites,
+                                      on an existing folder adds only the missing files, then lints it
   npx rpp lint [paths…]               run every rule over your papers
   npx rpp build <paper> | --all       build a paper with ITS OWN build script
                                       (--dry-run: name the script that WOULD run, and where none exists)
   npx rpp doctor                      say what is actually wired — and what only LOOKS wired
-  npx rpp hook <name>                 run an editor hook (the plugin wiring calls this)
+  npx rpp hook <name>                 run an editor hook (.claude/settings.json calls this)
   npx rpp --help
+
+init:
+  --yes, -y           ask nothing, take every default. Without a terminal on stdin AND stdout,
+                      or with CI set, nothing is asked either
+  --no-hooks          do not wire the hooks (the default without a human is to wire them)
+  --paper <name>      create this paper too (without a human, the only way init creates one)
+  --format tex|md     the new paper's source format; default tex
 
 lint:
   npx rpp lint [paths…] [--config <file.json>] [--json]
@@ -122,6 +141,11 @@ export function buildConfig(
   };
 
   const cfg: any[] = [
+    // 🔴 THE PROJECT'S PAPER TEMPLATE IS NOT A PAPER. `rpp new` reads `<papers>/.template/`, and
+    // its files carry every marker a paper does. Flat config does NOT ignore dot-directories by
+    // default (only `node_modules/` and `.git/`), so without this block `rpp lint` would lint the
+    // template as a paper — and a richer template with placeholder stages would fail the run.
+    { ignores: ["**/.template/"] },
     {
       files: ["**/PIPELINE-STATUS.md"],
       plugins: { markdown, paper: paperStages },
@@ -225,6 +249,11 @@ export function parseArgs(argv: readonly string[]): Args {
     json: false,
     all: false,
     dryRun: false,
+    yes: false,
+    noHooks: false,
+    paper: null,
+    format: null,
+    hooksMode: null,
     // -1 = warnings NEVER fail the run. In this set most findings are advisory by design, and a
     // gate that fails on advice gets muted entirely.
     maxWarnings: -1,
@@ -250,6 +279,12 @@ export function parseArgs(argv: readonly string[]): Args {
     if (a === "--json") out.json = true;
     else if (a === "--all") out.all = true;
     else if (a === "--dry-run") out.dryRun = true;
+    else if (a === "--yes" || a === "-y") out.yes = true;
+    else if (a === "--no-hooks") out.noHooks = true;
+    else if (a.startsWith("--hooks="))
+      out.hooksMode = a.slice("--hooks=".length);
+    else if (a === "--paper") out.paper = valueFor(a, ++i) ?? null;
+    else if (a === "--format") out.format = valueFor(a, ++i) ?? null;
     // `--options` was the first spelling and is kept working. It named the wrong thing — every
     // other tool in the stack calls this file its config — but a flag in someone's CI is not
     // ours to break.
@@ -497,6 +532,89 @@ export function runHook(
 }
 
 /**
+ * Create one paper and lint it — shared by `rpp new` and `rpp init --paper`, so the two cannot
+ * become two implementations. The lint runs on THAT folder, so the first thing printed after the
+ * file list is its verdict rather than the old "missing PIPELINE-STATUS.md".
+ */
+export async function createPaperAt(
+  papersRoot: string,
+  name: string,
+  format: PaperFormat,
+  {
+    log,
+    err,
+    cwd,
+  }: { log: typeof console.log; err: typeof console.error; cwd: string },
+): Promise<number> {
+  const result = newPaper(papersRoot, name, format);
+  const here = (p: string): string => relative(cwd, p) || p;
+  for (const line of reportNewPaper(result, here)) log(line);
+  if (!result.ok) return 2;
+  log(``);
+  return run(["lint", result.dir], { log, err, cwd });
+}
+
+/**
+ * `rpp new <name>` — the papers directory comes from the same declaration every other command
+ * reads; there is no second way to name it. See `new-paper.ts` for what it writes and why.
+ */
+async function runNew(
+  a: Args,
+  {
+    log,
+    err,
+    cwd,
+    ask = askOnTerminal,
+  }: {
+    log: typeof console.log;
+    err: typeof console.error;
+    cwd: string;
+    ask?: (q: string) => Promise<string>;
+  },
+): Promise<number> {
+  const [name, ...extra] = a.paths;
+  if (!name || extra.length > 0) {
+    err(
+      `\`new\` takes exactly one paper name: \`rpp new my-paper [--format tex|md]\``,
+    );
+    return 2;
+  }
+  let format: PaperFormat = DEFAULT_FORMAT;
+  if (a.format !== null) {
+    if (!isFormat(a.format)) {
+      err(
+        `--format must be one of ${FORMATS.join(", ")} — got \`${a.format}\``,
+      );
+      return 2;
+    }
+    format = a.format;
+  } else if (processInteractivity(a.yes).interactive) {
+    const f = await ask(`format: tex / md [${DEFAULT_FORMAT}] `).catch(
+      () => "",
+    );
+    if (isFormat(f.trim())) format = f.trim() as PaperFormat;
+  }
+  const cfg = readConfig({ ...a, json: false }, { log: () => {}, err, cwd });
+  if (cfg.code !== undefined) return cfg.code;
+  const roots = toPaths(cfg.opts.papers).map((rel) =>
+    resolve(dirname(cfg.configPath ?? cwd), rel),
+  );
+  const papersRoot = roots[0];
+  if (!cfg.configPath || papersRoot === undefined) {
+    err(
+      `no papers directory is declared, so there is nowhere to put \`${name}\`.\n` +
+        `Run \`npx rpp init\` first — it declares the directory in package.json.`,
+    );
+    return 2;
+  }
+  if (roots.length > 1)
+    log(
+      `several papers directories are declared — using the first: ${relative(cwd, papersRoot) || papersRoot}`,
+    );
+  return createPaperAt(papersRoot, name, format, { log, err, cwd });
+}
+
+/**
  * 🔴 THE TARGET IS NAMED, "EVERYTHING" IS AN OPTION. That is how it is for everyone whose build is
  * expensive and has side effects: `make <target>`, `docker build <context>`, `latexmk paper.tex`;
  * with cargo, "the whole workspace" is turned on by a separate flag. A default of "build
@@ -582,11 +700,31 @@ export async function run(
   // `init` asks the CLI's OWN reader what it would lint, so the two sides `doctor` compares are
   // not two implementations of the same question. A second resolver here is the defect the
   // comparison exists to catch.
-  if (a.cmd === "init")
+  if (a.cmd === "init") {
+    // Deferred, not implemented: named and refused, rather than read as the directory argument.
+    if (a.hooksMode !== null) {
+      err(
+        `--hooks=${a.hooksMode} is not implemented. init writes the hooks into .claude/settings.json ` +
+          `(shared, committed) or, with --no-hooks, nowhere.`,
+      );
+      return 2;
+    }
+    if (a.format !== null && !isFormat(a.format)) {
+      err(
+        `--format must be one of ${FORMATS.join(", ")} — got \`${a.format}\``,
+      );
+      return 2;
+    }
     return await init(a.paths[0] ?? ".", {
       log,
       err,
       cwd,
+      yes: a.yes,
+      hooks: !a.noHooks,
+      paper: a.paper,
+      format: isFormat(a.format) ? a.format : null,
+      createPaper: (papersRoot, name, format) =>
+        createPaperAt(papersRoot, name, format, { log, err, cwd }),
       resolveCliPapers: (root: string): string | null => {
         const read = readConfig(
           { ...a, config: null },
@@ -597,6 +735,7 @@ export async function run(
           : null;
       },
     });
+  }
   // `doctor` reads the config but must NOT die on a broken one — reporting that the config is
   // broken is precisely its job. So a failed read becomes "the CLI would lint nothing", which is
   // what it prints, rather than an early exit that tells the reader nothing about the hooks.
@@ -612,6 +751,7 @@ export async function run(
     });
   }
   if (a.cmd === "hook") return runHook(a.paths[0], { err });
+  if (a.cmd === "new") return runNew(a, { log, err, cwd });
   if (a.cmd === "build") return runBuild(a, { log, err, cwd });
   if (a.cmd === "check")
     err(

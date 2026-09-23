@@ -205,6 +205,13 @@ two standard channels already do, for free:
 | **all code** — rules, skills, hooks, scripts | an npm package          | `npm i -D research-paper-pipeline`                              |
 | **hook wiring only**                         | the plugin in `plugin/` | `/plugin marketplace add <owner>/<repo>` then `/plugin install` |
 
+🔴 **SUPERSEDED 2026-09-23 — `rpp init` exists, and the hook row above no longer describes the
+install.** `init` writes the hook commands into the consumer's `.claude/settings.json` (vigiles'
+`mergeRegistrations`, reading `plugin/hooks/hooks.json` as the one source), and `rpp doctor` reads
+them back. The plugin stops being the hook carrier; its marketplace entry stays for one release.
+Why, with sources: `docs/prior-art/paper-folder-scaffolding.md` § 5. The table is kept because the
+paragraphs below still explain why the plugin never carried code.
+
 🔴 **THE PLUGIN CARRIES NO CODE, AND THAT IS THE DESIGN — measured 2026-09-17.** Claude Code runs
 `npm ci --ignore-scripts` for a plugin _"only when the plugin's root directory contains both a
 package.json and a supported lockfile"_, with a 60-second timeout, and _"a failed or skipped

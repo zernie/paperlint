@@ -45,6 +45,16 @@ export interface Args {
   all: boolean;
   dryRun: boolean;
   maxWarnings: number;
+  /** `--yes` / `-y`: take every default, ask nothing. */
+  yes: boolean;
+  /** `--no-hooks`: `init` does not touch `.claude/settings.json`. */
+  noHooks: boolean;
+  /** `--paper <name>`: `init` creates this paper. */
+  paper: string | null;
+  /** `--format tex|md` for `new` and `init --paper`. Validated by the command, not here. */
+  format: string | null;
+  /** `--hooks=<mode>` — parsed only so it can be REFUSED by name rather than read as a path. */
+  hooksMode: string | null;
   help?: boolean;
   /** A flag that turned out to have no value. A non-empty field is a REFUSAL, not a default. */
   missingValue?: string;

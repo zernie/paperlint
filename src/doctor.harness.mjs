@@ -237,6 +237,14 @@ const runDoctor = (
     "node_modules is not searched — someone else's papers are not ours",
     !hits.some((h) => h.startsWith("node_modules")),
   );
+  // A folder holding only the project's paper TEMPLATE (`rpp new` reads `<papers>/.template/`)
+  // carries every marker, and is still not a papers root: discovery skips dot-directories.
+  mkdirSync(join(dir, "only-template", ".template"), { recursive: true });
+  writeFileSync(join(dir, "only-template", ".template", "paper.tex"), "x");
+  check(
+    "🔴 a directory whose only marked child is .template/ is NOT a papers root",
+    !detectPapers(dir).includes("only-template"),
+  );
   rmSync(dir, { recursive: true, force: true });
 }
 

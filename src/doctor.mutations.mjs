@@ -160,6 +160,16 @@ process.exit(
           ],
         ],
       },
+      {
+        name: "a .template child makes a papers root",
+        harness: HARNESS,
+        expect:
+          "a directory whose only marked child is .template/ is NOT a papers root",
+        disables:
+          "the override slot being invisible to discovery. `rpp init` in a project that has only " +
+          "a house template would declare the template's parent as the papers directory, measured",
+        edits: [[SRC, '          !c.name.startsWith(".") &&\n', ""]],
+      },
     ],
   }),
 );

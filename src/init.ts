@@ -1,5 +1,5 @@
 /**
- * `rpp init` — the whole install except the two lines that must be typed into another program.
+ * `rpp init` — the whole install, in the terminal it was typed in.
  *
  * 🔴 WHAT THIS COMMAND USED TO DO, AND WHY THAT WAS A DEFECT RATHER THAN A SHORTFALL. It wrote
  * `rpp.json` with a GUESSED `"papers": "papers"` and never touched `package.json`. The three hooks
@@ -11,7 +11,7 @@
  * and "it works". It was nine, three of them hand-edits to files. The two that this command removes
  * are the two hand-edits that were not even documented as being the same fact twice.
  *
- * ── THE FIVE DECISIONS, AND HOW EACH ONE IS MADE ────────────────────────────
+ * ── THE DECISIONS, AND HOW EACH ONE IS MADE ─────────────────────────────────
  *   papers directory   MEASURED — `detectPapers` walks the repo for a directory whose CHILDREN
  *                      carry a paper marker. Several hits is the only case a human is asked about.
  *   declaration        WRITTEN into `package.json`, merged, never overwriting a value that is
@@ -20,21 +20,43 @@
  *   skills             LINKED — one relative symlink per shipped skill into `.claude/skills/`, the
  *                      only place Claude Code looks for project skills (`link-skills.ts`). An
  *                      entry of the same name that rpp did not make is reported, never replaced.
+ *   hooks              WRITTEN into `.claude/settings.json` by vigiles' merge (`hooks-settings.ts`);
+ *                      asked [Y/n] of a human, YES without one — the guard is what the package is
+ *                      for, and the edit is idempotent and visible in `git diff`. `--no-hooks` skips.
  *   CI workflow        ASKED, because writing a file into `.github/` is not guessable and not
  *                      cheap to undo. Prior art: Playwright's initializer asks exactly this.
+ *                      Without a human: NO.
+ *   first paper        OFFERED only to a human and only when the papers directory holds none;
+ *                      without a human only `--paper <name>` creates one (`new-paper.ts`).
  *   external toolchain REPORTED, never installed. npm's own rule, quoted in husky's write-up:
  *                      "The only valid use of install or preinstall scripts is for compilation."
  *
- * 🔴 NOTHING IS ASKED WHEN STDIN IS NOT A TERMINAL. A question in CI is not a question, it is a
- * hang — or, with a closed stdin, an answer nobody gave. So the non-interactive path takes the
- * safe default (write no file) and SAYS which default it took, rather than pretending it asked.
+ * 🔴 NOTHING IS ASKED WITHOUT A HUMAN — stdin AND stdout a terminal, `CI` unset, no `--yes`
+ * (`interactivity`). A question in CI is not a question, it is a hang — or, with a closed stdin,
+ * an answer nobody gave. So the non-interactive path takes the stated default and SAYS which
+ * default it took and why nothing was asked, rather than pretending it asked.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { dirname, join, relative, resolve } from "node:path";
 import { doctor, detectPapers, found, PROGRAMS } from "./doctor.ts";
-import { PAPER_MARKERS } from "./build.ts";
+import { PAPER_MARKERS, papersIn } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
+import {
+  FRESH_CLONE_NOTE,
+  SETTINGS_PATH,
+  UNINSTALL_PLUGIN,
+  shippedWiring,
+  wireHooks,
+  type Merge,
+  type WireResult,
+} from "./hooks-settings.ts";
+import {
+  DEFAULT_FORMAT,
+  isFormat,
+  nameProblem,
+  type PaperFormat,
+} from "./new-paper.ts";
 // @ts-expect-error — the one source for the consumer's config key lives in the .mjs half of the
 // package, because the ESLint rules and the skill scripts import it too and they are not TypeScript.
 import { CONFIG_KEY, DEFAULT_PAPERS_ROOT } from "../lib/paper-config.mjs";
@@ -60,6 +82,43 @@ async function askOrDefault(
     return null;
   }
 }
+
+/**
+ * WHETHER A HUMAN IS AT THE OTHER END — one decision, made once, with its reason kept, because
+ * every default `init` takes is printed together with WHY nothing was asked.
+ *
+ * clig.dev: "Only use prompts or interactive elements if stdin is an interactive terminal".
+ * stdin alone is not enough: an agent that pipes the output has a TTY-less STDOUT and would
+ * never see the question it is being asked. `CI` covers runners that allocate a pseudo-terminal,
+ * and `--yes` is npm's and create-next-app's way to say "take the defaults" from a terminal.
+ */
+export function interactivity({
+  stdinTTY,
+  stdoutTTY,
+  env,
+  yes,
+}: {
+  stdinTTY: boolean;
+  stdoutTTY: boolean;
+  env: Readonly<Record<string, string | undefined>>;
+  yes: boolean;
+}): { readonly interactive: boolean; readonly why: string } {
+  if (yes) return { interactive: false, why: "--yes was given" };
+  if (env["CI"]) return { interactive: false, why: "CI is set" };
+  if (!stdinTTY) return { interactive: false, why: "stdin is not a terminal" };
+  if (!stdoutTTY)
+    return { interactive: false, why: "stdout is not a terminal" };
+  return { interactive: true, why: "a terminal on both ends" };
+}
+
+/** The mode of THIS process — the one place `process` is read for it. */
+export const processInteractivity = (yes: boolean) =>
+  interactivity({
+    stdinTTY: Boolean(process.stdin.isTTY),
+    stdoutTTY: Boolean(process.stdout.isTTY),
+    env: process.env,
+    yes,
+  });
 
 export interface PapersChoice {
   readonly papers: string;
@@ -242,27 +301,130 @@ export function missingPrograms(
 }
 
 /**
- * Step 3 has ONE shape: two lines typed inside Claude Code. It cannot be collapsed — it is typed
- * into a different program, and nothing on disk can type it for you.
+ * What is left after `init` — commands only, all typed in the same terminal.
  *
- * The hook runtime (`vigiles`) arrives with this package as an ordinary dependency, so there is
- * nothing to install by hand. That replaced, in order: a copy-paste line, then a `--with-hooks`
- * flag, then a self-contained bundle — none of which were needed once the weight was measured.
+ * 🔴 THE TWO `/plugin` LINES ARE GONE, AND THAT WAS THE POINT. They were the one step "that cannot
+ * be done from a terminal": typed into another program, invisible to `rpp doctor`, impossible for
+ * an agent installing this package, and (as a repository-declared plugin) not installed in a cloud
+ * session at all. `init` now writes the same three hook commands into `.claude/settings.json`
+ * itself (`hooks-settings.ts`), so there is nothing left to type anywhere but here.
  */
 export function nextSteps(papersDir: string = DEFAULT_PAPERS_ROOT): string {
   return [
     ``,
-    `still to do, and it cannot be done from a terminal:`,
-    ``,
-    `  /plugin marketplace add zernie/research-paper-pipeline`,
-    `  /plugin install research-paper-pipeline@research-paper-pipeline`,
-    ``,
-    `  Their runtime came with this package; there is nothing else to install.`,
-    `  Skip this and everything above still works — the hooks are an in-editor guard.`,
-    ``,
-    `then:  npx rpp lint       # runs every rule over ${papersDir}`,
+    `next:  npx rpp new <name>   # start a paper in ${papersDir}/ from the template`,
+    `       npx rpp lint         # runs every rule over ${papersDir}`,
     ``,
   ].join("\n");
+}
+
+export type HooksOutcome =
+  | WireResult
+  | { readonly status: "skipped" }
+  | { readonly status: "declined" }
+  | { readonly status: "failed"; readonly reason: string };
+
+/**
+ * The hooks step: decide, then wire. `hooks: false` is `--no-hooks`. The default without a human
+ * is YES — installing a package whose purpose includes an edit guard makes "yes" guessable, and
+ * the edit is idempotent and shows up in `git diff` (the rule `docs/install.md` took from
+ * Playwright: ask only about what cannot be guessed or is expensive).
+ */
+export async function offerHooks(
+  root: string,
+  {
+    hooks,
+    interactive,
+    ask,
+    merge,
+  }: {
+    hooks: boolean;
+    interactive: boolean;
+    ask?: (q: string) => Promise<string>;
+    merge?: Merge;
+  },
+): Promise<HooksOutcome> {
+  if (!hooks) return { status: "skipped" };
+  if (interactive && ask) {
+    const answer = (
+      await askOrDefault(
+        ask,
+        `  wire the paper hooks into ${SETTINGS_PATH} (committed, shared with every clone)? [Y/n] `,
+      )
+    )
+      ?.trim()
+      .toLowerCase();
+    // An empty line or a stream that ended is the stated default, which here is YES.
+    if (answer === "n" || answer === "no") return { status: "declined" };
+  }
+  try {
+    const m =
+      merge ??
+      (await import("vigiles/claude-code")).claudeCodeHookProtocol
+        .mergeRegistrations;
+    return wireHooks(root, m as Merge, shippedWiring());
+  } catch (e) {
+    return { status: "failed", reason: (e as Error).message };
+  }
+}
+
+/** The hooks section of init's report. Every default names the flag that changes it. */
+export function reportHooks(
+  outcome: HooksOutcome,
+  { how, here }: { how: string; here: (p: string) => string },
+): string[] {
+  const out: string[] = [];
+  if (outcome.status === "skipped") {
+    out.push(`  · --no-hooks — nothing written`);
+    return out;
+  }
+  if (outcome.status === "declined") {
+    out.push(
+      `  · declined — nothing written. \`npx rpp init\` again wires them later`,
+    );
+    return out;
+  }
+  if (outcome.status === "failed") {
+    out.push(`  ✗ not wired — ${outcome.reason}`);
+    out.push(
+      `      the hooks need vigiles to run at all; reinstall this package, then \`npx rpp init\``,
+    );
+    return out;
+  }
+  if (outcome.status === "unparsable") {
+    out.push(
+      `  ✗ ${here(outcome.path)} does not parse — nothing written: ${outcome.reason}`,
+    );
+    return out;
+  }
+  if (outcome.status === "foreign") {
+    out.push(
+      `  ✓ already wired under another spelling in ${here(outcome.path)} — nothing written, so nothing runs twice:`,
+    );
+    for (const f of outcome.found) out.push(`      ${f.name}: ${f.command}`);
+    if (outcome.missing.length > 0)
+      out.push(
+        `  ⚠ and NOT wired in any form: ${outcome.missing.join(", ")} — add them in that same form`,
+      );
+    out.push(
+      `      to switch to the form init writes, delete those commands and run \`npx rpp init\` again`,
+    );
+  } else {
+    out.push(
+      outcome.status === "written"
+        ? `  ✓ wired ${outcome.names.join(", ")} into ${here(outcome.path)}`
+        : `  ✓ already wired in ${here(outcome.path)} — nothing changed`,
+    );
+    out.push(`      ${how}`);
+    out.push(`      ${FRESH_CLONE_NOTE}`);
+  }
+  if (outcome.plugin.length > 0)
+    out.push(
+      `  ⚠ this project also enables the plugin (${outcome.plugin.join(", ")}) — with it every hook runs twice.`,
+      `      the plugin no longer carries the hooks: ${UNINSTALL_PLUGIN}`,
+      `      and remove it from "enabledPlugins" in ${SETTINGS_PATH}`,
+    );
+  return out;
 }
 
 /**
@@ -320,8 +482,30 @@ export interface InitOptions {
   cwd?: string;
   /** Asks one question. Injected so the prompt is assertable without a pseudo-terminal. */
   ask?: (question: string) => Promise<string>;
-  /** Whether a human is at the other end. Defaults to what stdin says, and CI says no. */
+  /**
+   * Whether a human is at the other end. Defaults to `interactivity()` over this process: stdin
+   * AND stdout are terminals, `CI` is unset, and no `--yes`.
+   */
   interactive?: boolean;
+  /** `--yes`: take every default without asking. */
+  yes?: boolean;
+  /** `false` is `--no-hooks`. */
+  hooks?: boolean;
+  /** vigiles' merge. Injected only so a test can observe or replace it. */
+  merge?: Merge;
+  /** `--paper <name>`: create this paper, even without a terminal. */
+  paper?: string | null;
+  /** `--format tex|md` for that paper. */
+  format?: PaperFormat | null;
+  /**
+   * Creates one paper and lints it — `rpp new`'s own routine, passed in by the CLI so `init` and
+   * `new` cannot drift into two implementations.
+   */
+  createPaper?: (
+    papersRoot: string,
+    name: string,
+    format: PaperFormat,
+  ) => Promise<number>;
   run?: typeof spawnSync;
   /**
    * What `rpp lint` would resolve from the declaration, asked of the CLI's OWN reader. A second
@@ -333,7 +517,7 @@ export interface InitOptions {
 }
 
 /** Reads one line from a real terminal. Kept out of `init` so the command stays testable. */
-async function askOnTerminal(question: string): Promise<string> {
+export async function askOnTerminal(question: string): Promise<string> {
   const { createInterface } = await import("node:readline/promises");
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   try {
@@ -343,6 +527,7 @@ async function askOnTerminal(question: string): Promise<string> {
   }
 }
 
+// Documented in README.md#install-and-set-up — update it when this changes.
 export async function init(
   dir: string,
   opts: InitOptions = {},
@@ -352,11 +537,26 @@ export async function init(
     err = console.error,
     cwd = process.cwd(),
     ask = askOnTerminal,
-    interactive = Boolean(process.stdin.isTTY),
+    yes = false,
+    hooks = true,
+    merge,
+    paper = null,
+    format = null,
+    createPaper,
     run = spawnSync,
     resolveCliPapers,
     link = (r: string) => linkSkills(r),
   } = opts;
+  // An injected `interactive` is a test standing in for a terminal; its reason is the classic one.
+  const { interactive, why } =
+    opts.interactive === undefined
+      ? processInteractivity(yes)
+      : {
+          interactive: opts.interactive,
+          why: opts.interactive
+            ? "a terminal on both ends"
+            : "stdin is not a terminal",
+        };
   const root = resolve(cwd, dir);
   const here = (p: string): string => relative(cwd, p) || p;
 
@@ -379,7 +579,7 @@ export async function init(
     log(
       `  ✓ ${choice.papers} — ${String(choice.candidates.length)} candidates, ` +
         (choice.how === "not-asked"
-          ? `stdin is not a terminal so nothing was asked`
+          ? `${why} so nothing was asked`
           : `no answer was given, so the first one was taken`),
     );
     log(
@@ -447,7 +647,21 @@ export async function init(
   // ── 3. the skills, linked where Claude Code looks for them ─────────────────────────────
   for (const line of reportSkillLinks(link(root), here)) log(line);
 
-  // ── 4. the one expensive, unguessable thing ───────────────────────────────────────────
+  // ── 4. the hooks, wired where Claude Code reads them ───────────────────────────────────
+  log(``);
+  log(
+    `hooks (Claude Code runs them from ${SETTINGS_PATH} — committed, shared with every clone)`,
+  );
+  const hooked = await offerHooks(root, { hooks, interactive, ask, merge });
+  for (const line of reportHooks(hooked, {
+    here,
+    how: interactive
+      ? `you were asked; \`--no-hooks\` skips this next time`
+      : `default taken: YES — ${why}, so nothing was asked. \`--no-hooks\` skips this`,
+  }))
+    log(line);
+
+  // ── 5. the one expensive, unguessable thing ───────────────────────────────────────────
   log(``);
   log(`CI`);
   const wf = await offerWorkflow(root, choice.papers, { ask, interactive });
@@ -456,10 +670,7 @@ export async function init(
   else if (wf === "kept")
     log(`  ✓ ${WORKFLOW_PATH} is already there — kept, nothing overwritten`);
   else if (wf === "declined") log(`  · declined — nothing written`);
-  else
-    log(
-      `  · stdin is not a terminal, so nothing was asked. Default taken: NO file written.`,
-    );
+  else log(`  · ${why}, so nothing was asked. Default taken: NO file written.`);
   if (wf !== "written" && wf !== "kept") {
     log(`      to run the same checks in CI, add this step to a workflow:`);
     log(`        - uses: zernie/research-paper-pipeline@<commit-sha>`);
@@ -467,7 +678,40 @@ export async function init(
     log(`            paths: ${choice.papers}`);
   }
 
-  // ── 5. the toolchain is reported, never installed ─────────────────────────────────────
+  // ── 6. a first paper — offered only where there is none, and only to a human ──────────
+  log(``);
+  log(`first paper`);
+  const papersAbs = resolve(root, choice.papers);
+  const hasPaper = papersIn(papersAbs).length > 0;
+  let wanted: string | null = paper;
+  if (wanted === null && !hasPaper && interactive && createPaper) {
+    const answer = (
+      await askOrDefault(ask, `  create a first paper? name: [skip] `)
+    )?.trim();
+    wanted = answer ? answer : null;
+  }
+  if (wanted !== null && createPaper) {
+    const problem = nameProblem(wanted);
+    let fmt: PaperFormat = format ?? DEFAULT_FORMAT;
+    if (!problem && format === null && interactive) {
+      const f = (
+        await askOrDefault(ask, `  format: tex / md [${DEFAULT_FORMAT}] `)
+      )?.trim();
+      if (isFormat(f)) fmt = f;
+    }
+    if (problem) log(`  ✗ ${problem} — no paper created`);
+    else {
+      const code = await createPaper(papersAbs, wanted, fmt);
+      if (code !== 0)
+        log(`  ⚠ the new paper's lint exited ${String(code)} — see above`);
+    }
+  } else if (hasPaper) log(`  ✓ ${choice.papers} already holds a paper`);
+  else
+    log(
+      `  · none yet${interactive ? "" : ` — ${why}, so nothing was asked`}. \`npx rpp new <name>\` or \`--paper <name>\` creates one`,
+    );
+
+  // ── 7. the toolchain is reported, never installed ─────────────────────────────────────
   log(``);
   log(
     `external programs (the skills shell out to these; \`rpp lint\` needs none of them)`,
@@ -497,7 +741,7 @@ export async function init(
 
   log(nextSteps(choice.papers));
 
-  // ── 6. the install states its own condition ───────────────────────────────────────────
+  // ── 8. the install states its own condition ───────────────────────────────────────────
   log(`── rpp doctor ${"─".repeat(56)}`);
   const cliPapers = resolveCliPapers ? resolveCliPapers(root) : choice.papers;
   const code = doctor({ log, cwd: root, projectDir: root, run, cliPapers });

@@ -32,6 +32,7 @@ import {
 } from "../hooks/paper-edit-guard.hook.mjs";
 import { PAPER_MARKERS } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
+import { doctorHooks } from "./hooks-settings.ts";
 
 export interface Program {
   readonly bin: string;
@@ -115,9 +116,12 @@ export function detectPapers(cwd: string, depth = 2): string[] {
       } catch {
         continue;
       }
+      // A dot-child is not a paper: `<papers>/.template/` holds the project's paper TEMPLATE,
+      // markers and all, and a folder holding only that is not a papers root yet.
       const isPapersRoot = children.some(
         (c) =>
           c.isDirectory() &&
+          !c.name.startsWith(".") &&
           PAPER_MARKERS.some((m) => existsSync(join(here, c.name, m))),
       );
       if (isPapersRoot) hits.push(relative(cwd, here));
@@ -268,12 +272,16 @@ export function doctor({
     }
   }
 
-  out.push(
-    "",
-    "the plugin (the hooks inside Claude Code) cannot be checked from a terminal —",
-    "type /plugin inside Claude Code to see whether it is installed.",
-    "",
-  );
+  // 🔴 THE HOOKS ARE READ FROM THE FILE THAT CARRIES THEM. Until `init` wrote them into
+  // `.claude/settings.json`, the only carrier was a plugin and this section said "cannot be
+  // checked from a terminal". Advisory, like the skills: `--no-hooks` is a choice, not a fault.
+  out.push("");
+  try {
+    out.push(...doctorHooks(root));
+  } catch (e) {
+    out.push(`hooks`, `  ⚠ not checked — ${(e as Error).message}`);
+  }
+  out.push("");
   log(out.join("\n"));
   return bad > 0 ? 2 : 0;
 }

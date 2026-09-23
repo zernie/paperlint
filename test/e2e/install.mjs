@@ -484,8 +484,55 @@ try {
             "zero project-root-relative references — nothing was checked",
         );
 
+    // 🔴 THE HOOKS ARE WIRED WHERE CLAUDE CODE READS THEM, BY init ITSELF. No `/plugin` line is
+    // typed anywhere: `init` without a terminal takes the YES default and writes the three
+    // commands into `.claude/settings.json` — the same commands `plugin/hooks/hooks.json`
+    // publishes, once each. Whether they RESOLVE is judged below, by running them.
+    const settingsPath = join(consumer, ".claude", "settings.json");
+    const wiredCommands = (() => {
+      try {
+        const json = JSON.parse(readFileSync(settingsPath, "utf8"));
+        return Object.values(json.hooks ?? {}).flatMap((entries) =>
+          (entries ?? []).flatMap((e) => (e.hooks ?? []).map((h) => h.command)),
+        );
+      } catch (e) {
+        return { err: e.message };
+      }
+    })();
+    const published = hookCommands(installed);
+    Array.isArray(wiredCommands) &&
+    !published.err &&
+    wiredCommands.length === published.cmds.length &&
+    published.cmds.every(
+      (c) => wiredCommands.filter((w) => w === c).length === 1,
+    )
+      ? ok(
+          `\`rpp init\` wired all ${wiredCommands.length} hook command(s) into .claude/settings.json, once each`,
+        )
+      : bad(
+          "`rpp init` wired the hooks into .claude/settings.json, once each",
+          `${JSON.stringify(wiredCommands).slice(0, 300)}\n${init.stdout ?? ""}`,
+        );
+    /in a fresh clone they cannot run until `npm install`/.test(
+      init.stdout ?? "",
+    )
+      ? ok("and it says the hook commands need `npm install` in a fresh clone")
+      : bad(
+          "and it says the hook commands need `npm install` in a fresh clone",
+          init.stdout,
+        );
+    const settingsBefore = existsSync(settingsPath)
+      ? readFileSync(settingsPath)
+      : null;
+
     // A second `init` is a re-run, not a clash: nothing fails, no link moves.
     const again = sh(bin, ["init"], { cwd: consumer });
+    settingsBefore !== null && readFileSync(settingsPath).equals(settingsBefore)
+      ? ok("a second `rpp init` leaves .claude/settings.json byte-identical")
+      : bad(
+          "a second `rpp init` leaves .claude/settings.json byte-identical",
+          again.stdout,
+        );
     const after = consumerSkillView(consumer, installed);
     again.status === 0 &&
     view.names.every((n) => after.links[n] === view.links[n]) &&
@@ -507,6 +554,29 @@ try {
       : bad(
           "`rpp lint` passed the corpus clean",
           (lint.stdout ?? "") + (lint.stderr ?? ""),
+        );
+
+    // `rpp new` from the INSTALLED package: the templates must have shipped in the tarball, and
+    // what they scaffold must be what `rpp lint` accepts — the first run green, not "missing
+    // PIPELINE-STATUS.md". Then the whole corpus is linted again, now with the new paper in it.
+    const fresh = sh(bin, ["new", "demo"], { cwd: consumer });
+    fresh.status === 0 &&
+    existsSync(join(consumer, "papers", "demo", "PIPELINE-STATUS.md")) &&
+    existsSync(join(consumer, "papers", "demo", "paper.tex")) &&
+    /no findings/.test(fresh.stdout ?? "")
+      ? ok(
+          "`rpp new demo` scaffolds papers/demo from the shipped templates, and its lint is clean",
+        )
+      : bad(
+          "`rpp new demo` scaffolds papers/demo from the shipped templates, and its lint is clean",
+          (fresh.stdout ?? "") + (fresh.stderr ?? ""),
+        );
+    const withDemo = sh(bin, ["lint"], { cwd: consumer });
+    withDemo.status === 0 && /no findings/.test(withDemo.stdout ?? "")
+      ? ok("`rpp lint` still passes the corpus clean with the new paper in it")
+      : bad(
+          "`rpp lint` still passes the corpus clean with the new paper in it",
+          (withDemo.stdout ?? "") + (withDemo.stderr ?? ""),
         );
 
     // 🔴 THE REAL ARTICLE, AND IT IS NOT EXPECTED TO BE CLEAN. The two papers above were written

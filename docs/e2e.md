@@ -37,7 +37,12 @@ temporary tree, **under npm and under pnpm separately**, and drives the installe
 - `rpp init` declares the papers directory in `package.json`, and does _not_ leave a second
   carrier `rpp.json` behind
 - `rpp init` finishes with zero — its doctor found no discrepancy
+- `rpp init` wires the hooks into `.claude/settings.json` — the same commands `hooks.json`
+  publishes, once each — and says they need `npm install` in a fresh clone; a second `init`
+  leaves that file byte-identical
 - `rpp lint` passes the staged corpus
+- `rpp new demo` scaffolds a paper from the templates that shipped in the tarball, its own lint is
+  clean, and `rpp lint` stays clean with it in the corpus
 - `hooks.json` arrived and parses, and every hook command named in it resolves to a file
 - every skill arrived, and every script path named inside a skill resolves **in the consumer**
 

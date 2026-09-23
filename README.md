@@ -45,11 +45,21 @@ Pick `<commit-sha>` from the default branch. An npm release (`npm i -D research-
 is coming; until then, install from GitHub. Run `npx rpp` only after this install — `rpp` on the
 public npm registry is a different, unrelated package.
 
-`rpp init` does three things and installs nothing else:
+`rpp init` installs nothing else. It:
 
 - adds a `research-paper-pipeline` key to your `package.json`, naming your papers directory;
 - links the Claude Code skills into `.claude/skills/`;
-- offers to add a CI workflow (it asks first).
+- writes the three Claude Code hooks into `.claude/settings.json`, keeping your own entries;
+- offers to add a CI workflow;
+- offers to create a first paper if you have none.
+
+It asks only when you run it in a terminal. Anywhere else (an agent, CI, or with `--yes`) it asks
+nothing: it writes the hooks and skips the workflow and the paper. `--no-hooks` skips the hooks,
+`--paper <name>` creates the paper. Every default it takes is printed with the flag that changes
+it.
+
+Commit `.claude/settings.json`: then every clone gets the hooks. The hook commands run files
+inside `node_modules`, so in a fresh clone they work only after `npm install`.
 
 It finishes by running `rpp doctor`, which checks the setup and exits non-zero if something is
 miswired. Details: [`docs/install.md`](docs/install.md#what-rpp-init-writes).
@@ -72,7 +82,7 @@ Optional inputs: `config`, `max-warnings` (default `-1`), `texcount` (default `t
 npx rpp lint
 ```
 
-On a new paper that has `paper.md` and nothing else, the output is:
+On a paper folder made by hand, with `paper.md` and nothing else, the output is:
 
 ```
 config: package.json
@@ -88,7 +98,8 @@ papers/my-paper
 (Captured by running the command; only the file path is shortened.) Each finding names the file,
 the line and column, the level, what is wrong, and at the end the check that found it.
 
-The run exits `1` because of the missing scorecard. After adding one and fixing the two warnings:
+The run exits `1` because of the missing scorecard. `npx rpp new my-paper` adds it and leaves
+`paper.md` alone. After that and fixing the two warnings:
 
 ```
 config: package.json
@@ -97,22 +108,15 @@ config: package.json
 
 and the exit code is `0`.
 
-**The scorecard, today.** `rpp` does not create `PIPELINE-STATUS.md`: you write it, or the Claude
-Code skills write it as they run. The smallest valid one is:
-
-```markdown
----
-stages: []
----
-```
-
-When the paper reaches a stage, you add an entry under `stages:` with the date, the path of the
-frozen PDF (`pdf:`) and its size in bytes (`bytes:`) —
+**The scorecard.** `rpp new` writes `PIPELINE-STATUS.md` from a template; after that you, or the
+Claude Code skills, keep it up to date. When the paper reaches a stage, you add an entry under
+`stages:` with the date, the path of the frozen PDF (`pdf:`) and its size in bytes (`bytes:`) —
 [example](docs/rules.md#the-scorecards-bytes-and-sourcebytes).
 
 ## Commands
 
 ```sh
+npx rpp new my-paper             # start a paper from the template
 npx rpp lint                     # check every paper
 npx rpp lint papers/my-paper     # check one paper
 npx rpp build papers/my-paper    # build one paper with its own build script
@@ -128,6 +132,31 @@ npx rpp --help                   # every command and flag
 
 Warnings never fail the run unless you pass `--max-warnings <n>`. `--json` prints the findings as
 JSON.
+
+### Starting a paper
+
+```sh
+npx rpp new my-paper
+```
+
+```
+  ✓ created papers/my-paper
+      + PIPELINE-STATUS.md  (from the package template)
+      + paper.tex  (from the package template)
+
+config: package.json
+✓ 2 file(s) checked, no findings
+```
+
+It creates the folder inside your papers directory with a scorecard and a LaTeX stub, then
+checks it. `--format md` makes a Markdown stub instead. The name may use `a-z`, `0-9`, `.`, `_`
+and `-`.
+
+It never overwrites a file. On a folder that already exists it adds only what is missing, so it
+also fixes an old folder that has no scorecard.
+
+To use your own templates, put files with the same names in `papers/.template/`. Those win over
+the built-in ones. `{{name}}` in a template becomes the paper's name.
 
 ## What the checks catch
 
@@ -155,18 +184,18 @@ idea, through drafting and review, to submission and camera-ready. `rpp init` al
 into `.claude/skills/`. Start with `/paper-pipeline`; it routes to the rest. The skills call
 external programs (TeX Live, poppler, Java, Python) — see [`docs/toolchain.md`](docs/toolchain.md).
 
-**Hooks.** Type these two lines inside Claude Code (`rpp init` prints them too):
-
-```
-/plugin marketplace add zernie/research-paper-pipeline
-/plugin install research-paper-pipeline@research-paper-pipeline
-```
+**Hooks.** `rpp init` writes them into `.claude/settings.json`. `rpp doctor` says whether they
+are there, and whether any runs twice.
 
 | hook                 | blocks? | what it does                                                     |
 | -------------------- | ------- | ---------------------------------------------------------------- |
 | `paper-edit-guard`   | yes     | stops a shell command from writing to a paper file               |
 | `paper-skills-nudge` | no      | after a paper edit, shows the agent the pre-submission checklist |
 | `paper-status-gates` | no      | after a paper edit, lists the stages that have not run yet       |
+
+If you installed the hooks earlier as a Claude Code plugin, remove it
+(`/plugin uninstall research-paper-pipeline@research-paper-pipeline`). With both, every hook runs
+twice.
 
 **Know this about `paper-edit-guard`:** if the `research-paper-pipeline` key in `package.json`
 cannot be read (the file is missing, or has merge-conflict markers), it blocks **every** shell

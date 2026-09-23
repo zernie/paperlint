@@ -186,7 +186,7 @@ process.exit(
         edits: [
           [
             INIT,
-            "  else\n    log(\n      `  · stdin is not a terminal, so nothing was asked. Default taken: NO file written.`,\n    );",
+            "  else log(`  · ${why}, so nothing was asked. Default taken: NO file written.`);",
             "  else log(`  · skipped`);",
           ],
         ],
@@ -362,6 +362,92 @@ process.exit(
             '  const linked = link(root);\n  for (const line of reportSkillLinks(linked, here)) log(line);\n  if (linked.ok && linked.links.some((l) => l.status === "foreign")) return 2;',
           ],
         ],
+      },
+
+      {
+        name: "CI stops counting as 'no human'",
+        harness: HARNESS,
+        expect: "CI set → NOT interactive",
+        disables:
+          "the one signal a CI runner with a pseudo-terminal gives. init would print a question " +
+          "into a log nobody reads and wait for an answer that never comes",
+        edits: [
+          [
+            INIT,
+            '  if (env["CI"]) return { interactive: false, why: "CI is set" };\n',
+            "",
+          ],
+        ],
+      },
+      {
+        name: "stdout is no longer consulted",
+        harness: HARNESS,
+        expect: "stdout piped",
+        disables:
+          "the agent case. An agent piping init's output has a terminal-less stdout; with only " +
+          "stdin checked it is asked a question it will never see",
+        edits: [
+          [
+            INIT,
+            '  if (!stdoutTTY)\n    return { interactive: false, why: "stdout is not a terminal" };\n',
+            "",
+          ],
+        ],
+      },
+      {
+        name: "without a human the hooks default to NO",
+        harness: HARNESS,
+        expect: "without a human the hooks default to YES",
+        disables:
+          "the install an agent performs. The agent cannot type /plugin and is never asked, so a " +
+          "NO default leaves every agent-made install without the edit guard, silently",
+        edits: [
+          [
+            INIT,
+            '  if (!hooks) return { status: "skipped" };',
+            '  if (!hooks || !interactive) return { status: "skipped" };',
+          ],
+        ],
+      },
+      {
+        name: "a human's no is ignored",
+        harness: HARNESS,
+        expect: "and a no is respected",
+        disables:
+          "the question itself. A prompt whose answer does not decide anything is decoration, " +
+          "and the file is written into a repository whose owner said no",
+        edits: [
+          [
+            INIT,
+            '    if (answer === "n" || answer === "no") return { status: "declined" };',
+            '    if (false) return { status: "declined" };',
+          ],
+        ],
+      },
+      {
+        name: "a first paper is offered where one already exists",
+        harness: HARNESS,
+        expect:
+          "a papers directory that already holds a paper is not offered another",
+        disables:
+          "the condition that makes the offer an offer. Every re-run of init on a working project " +
+          "would ask for a new paper",
+        edits: [
+          [
+            INIT,
+            "  if (wanted === null && !hasPaper && interactive && createPaper) {",
+            "  if (wanted === null && interactive && createPaper) {",
+          ],
+        ],
+      },
+      {
+        name: "the project's paper template is linted as a paper",
+        harness: HARNESS,
+        expect: "the project's paper TEMPLATE directory is ignored",
+        disables:
+          "the override slot `rpp new` reads. Flat config does not skip dot-directories, so a " +
+          "richer house template — placeholder stages and all — would fail every `rpp lint`",
+        edits: [[CLI, '    { ignores: ["**/.template/"] },\n', ""]],
       },
     ],
   }),
