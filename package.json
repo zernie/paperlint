@@ -13,6 +13,7 @@
     "check:globs": "node scripts/exclusive.mjs node scripts/rules-see-files.mjs",
     "check:content-only": "node scripts/exclusive.mjs node scripts/rules-are-content-only.mjs",
     "check:readme": "node scripts/exclusive.mjs node scripts/readme-numbers.mjs",
+    "check:anchors": "node scripts/exclusive.mjs node scripts/readme-anchors.mjs",
     "test:sabotage": "node scripts/exclusive.mjs node scripts/run-mutations.mjs",
     "test:install": "node scripts/exclusive.mjs node test/e2e/install.mjs",
     "test:build": "node scripts/exclusive.mjs node test/e2e/build.mjs",
@@ -33,6 +34,7 @@
   "devDependencies": {
     "@retorquere/bibtex-parser": "^10.0.1",
     "@types/node": "^26.6.1",
+    "github-slugger": "^2.0.0",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3"
   },

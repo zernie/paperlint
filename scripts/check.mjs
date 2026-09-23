@@ -92,12 +92,17 @@ export const GATES = [
     script: "check:readme",
   },
   {
+    name: "every README.md#anchor named in a code comment is a real heading",
+    job: "gates",
+    script: "check:anchors",
+  },
+  {
     name: "the marketplace manifest is accepted by the host's own validator",
     job: "gates",
     script: "check:marketplace",
   },
   {
-    name: "57 harnesses",
+    name: "every harness (npm test)",
     job: "gates",
     script: "test",
   },

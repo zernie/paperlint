@@ -171,6 +171,11 @@ jobs:
       - name: npm run check:readme
         run: npm run check:readme
 
+      # The code that implements what the README documents points back at its heading
+      # ("Documented in README.md#…"). A renamed heading leaves that pointer leading nowhere.
+      - name: npm run check:anchors
+        run: npm run check:anchors
+
       # 45 mutations across 4 batteries. This is what makes the green above mean something: a
       # harness that cannot fail and a harness that passed look identical from outside. The
       # runner DISCOVERS batteries rather than listing them, errors on finding zero, and errors
