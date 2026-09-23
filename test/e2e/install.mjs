@@ -63,41 +63,13 @@ const WANTED = [
   {
     name: "pnpm",
     probe: ["pnpm", ["--version"]],
-    // 🔴 THE THREE `--allow-build` FLAGS ARE NOT A WORKAROUND FOR pnpm — they are this
-    // package's own dependency chain showing through. Since v10 pnpm refuses to run a
-    // dependency's lifecycle scripts unless the consumer approves them, by design, as a
-    // supply-chain measure. Three packages in our tree have one:
-    //
-    //   research-paper-pipeline → vigiles → @ast-grep/lang-{python,ruby,rust}  (postinstall)
-    //
-    // so a bare `pnpm install` of our tarball exits 1 with ERR_PNPM_IGNORED_BUILDS. Measured
-    // 2026-09-20 on pnpm 12.5.1: the three declarative forms (`pnpm.onlyBuiltDependencies`
-    // and `pnpm.ignoredBuiltDependencies` in package.json, and either key in
-    // pnpm-workspace.yaml) did NOT silence it; only these flags did.
-    //
-    // ⚠️ The builds themselves are not needed here — the packages ship `prebuilds/`, and with
-    // the scripts skipped both `@ast-grep/napi` and `@ast-grep/lang-python` load fine. So this
-    // is a policy collision, not a broken install, which is exactly why it must not be silent:
-    // the `defect` block below keeps the bare failure under assertion.
-    install: (tgz) => [
-      "pnpm",
-      [
-        "install",
-        "--silent",
-        "--allow-build=@ast-grep/lang-python",
-        "--allow-build=@ast-grep/lang-ruby",
-        "--allow-build=@ast-grep/lang-rust",
-        tgz,
-      ],
-    ],
-    // The state of the world this run ASSUMES. Pinned so it cannot change unnoticed: the day
-    // the dependency drops those packages (or pnpm changes the policy), this goes red and the
-    // flags above come out. A pin that only fires on good news is still a pin.
-    defect: {
-      id: "vigiles pulls @ast-grep/lang-{python,ruby,rust}, each with a postinstall",
-      bare: (tgz) => ["pnpm", ["install", "--silent", tgz]],
-      marker: "ERR_PNPM_IGNORED_BUILDS",
-    },
+    // The BARE command a reader of the README types, with no flags. Until vigiles 31.0.0 this
+    // needed three `--allow-build` flags: vigiles pulled @ast-grep/lang-{python,ruby,rust}, each
+    // with a postinstall, and pnpm 10+ exits 1 (ERR_PNPM_IGNORED_BUILDS) on an unapproved
+    // dependency script. vigiles 31 parses those languages with bundled WASM grammars and has no
+    // install scripts (zernie/vigiles#280), so the flags and the pin that watched for this day
+    // are gone. A dependency that brings a postinstall back turns this install red.
+    install: (tgz) => ["pnpm", ["install", "--silent", tgz]],
     why:
       "does NOT put transitive dependencies at the project root, and `.bin` holds a shell " +
       "wrapper rather than a symlink — both have already broken this package",
@@ -417,29 +389,6 @@ try {
     }
     ok("the package resolves BY NAME from the consumer");
     const installed = located.dir;
-
-    // The pinned defect, if this manager declares one: the plain install — the command a
-    // reader of the README would type — must still fail the way we recorded. Green here means
-    // the world moved and the accommodation above is now dead weight.
-    if (m.defect) {
-      const probe = join(work, `defect-${m.name}`);
-      mkdirSync(probe, { recursive: true });
-      writeFileSync(
-        join(probe, "package.json"),
-        '{"name":"d","version":"1.0.0","private":true}',
-      );
-      const [bcmd, bargs] = m.defect.bare(tgz);
-      const bare = sh(bcmd, bargs, { cwd: probe });
-      const out = `${bare.stdout ?? ""}${bare.stderr ?? ""}`;
-      if (bare.status !== 0 && out.includes(m.defect.marker))
-        ok(`the pinned defect still reproduces (${m.defect.marker})`);
-      else
-        bad(
-          `the pinned defect still reproduces (${m.defect.marker})`,
-          `a BARE install now exits ${String(bare.status)} — ${m.defect.id}. ` +
-            `If this is fixed upstream, drop the accommodation in WANTED and this pin with it.`,
-        );
-    }
 
     // 🔴 THE BIN IS LAUNCHED DIRECTLY, NOT THROUGH `node <path>`. Under npm `.bin` holds a
     // SYMLINK to the `.mjs`, and `node` swallows it; under pnpm it holds a SHELL WRAPPER, and
