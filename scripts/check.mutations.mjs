@@ -27,8 +27,10 @@ process.exit(
       {
         name: "a CI job stops being accounted for — the tail goes quiet about its own boundary",
         harness: HARNESS,
+        // No job name here: the harness reads every workflow in directory order, so which job
+        // fails first depends on file names, not on what this mutation proves.
         expect:
-          "CI job «macos» is either reproduced by a gate or named in NOT_COVERED with a reason",
+          "is either reproduced by a gate or named in NOT_COVERED with a reason",
         disables:
           "the reason this command is not just a shell alias. Emptying NOT_COVERED removes the " +
           "one sentence that tells a reader what the green does NOT mean — and a check silent " +
@@ -45,7 +47,7 @@ process.exit(
       {
         name: "a gate names a CI job that does not exist — coverage on paper, none in fact",
         harness: HARNESS,
-        expect: "names a job that really exists in the workflow",
+        expect: "names a job that really exists in a workflow",
         disables:
           "the link between the list and the workflow. A dead job name is WORSE than a missing " +
           "one: it reads as coverage and delivers nothing, and nothing else in the repository " +

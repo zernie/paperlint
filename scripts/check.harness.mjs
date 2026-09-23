@@ -15,7 +15,7 @@
  * as a pass.
  */
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { load } from "js-yaml";
@@ -50,11 +50,39 @@ check(
   outcome(null) === "fail",
 );
 
-const wf = load(readFileSync(join(ROOT, ".github/workflows/ci.yml"), "utf-8"));
-const ciJobs = Object.keys(wf.jobs ?? {});
+// Every workflow, not just ci.yml: the platform cells (macOS) live in platform.yml since
+// 2026-09-23, and a harness reading one file would have stopped seeing them without a sound.
+const WF_DIR = join(ROOT, ".github", "workflows");
+const workflows = Object.fromEntries(
+  readdirSync(WF_DIR)
+    .filter((f) => f.endsWith(".yml"))
+    .map((f) => [f, load(readFileSync(join(WF_DIR, f), "utf-8"))]),
+);
+const ciJobs = Object.values(workflows).flatMap((wf) =>
+  Object.keys(wf.jobs ?? {}),
+);
 check(
-  "the workflow parses and declares jobs — without this every assertion below is vacuous",
-  ciJobs.length > 0,
+  "the workflows parse and declare jobs — without this every assertion below is vacuous",
+  ciJobs.length > 0 && "ci.yml" in workflows && "platform.yml" in workflows,
+);
+
+// ── THE PLATFORM TRIGGER: once per PR, never per push ──────────────────────────────────────
+// These three lines ARE the cost and safety design (see the header of platform.yml): with
+// `synchronize` the 10x job runs on every push; with a label it runs on every push AND a
+// foreign label can satisfy the required check by skipping.
+const prTypes = (wf) => wf.on?.pull_request?.types ?? [];
+check(
+  "platform.yml runs on opened + ready_for_review only — `synchronize` would bill macOS on every push",
+  JSON.stringify(prTypes(workflows["platform.yml"])) ===
+    JSON.stringify(["opened", "ready_for_review"]),
+);
+check(
+  "no workflow listens to `labeled` — a label trigger re-fires on every push and can pass by skipping",
+  Object.values(workflows).every((wf) => !prTypes(wf).includes("labeled")),
+);
+check(
+  "ci.yml listens to ready_for_review — otherwise marking a draft ready runs NOTHING",
+  prTypes(workflows["ci.yml"]).includes("ready_for_review"),
 );
 
 // ── HALF ONE: every CI job is accounted for ────────────────────────────────────────────────
@@ -72,13 +100,13 @@ for (const job of ciJobs) {
 for (const g of GATES) {
   if (g.job === null) continue;
   check(
-    `gate «${g.name}» names a job that really exists in the workflow (${g.job})`,
+    `gate «${g.name}» names a job that really exists in a workflow (${g.job})`,
     ciJobs.includes(g.job),
   );
 }
 for (const job of Object.keys(NOT_COVERED)) {
   check(
-    `NOT_COVERED names a job that really exists in the workflow (${job})`,
+    `NOT_COVERED names a job that really exists in a workflow (${job})`,
     ciJobs.includes(job),
   );
 }

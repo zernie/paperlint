@@ -39,24 +39,18 @@ on:
   # 🔴 `types:` FULLY ENUMERATED, INCLUDING DEFAULTS. As soon as this key is declared, the defaults
   # (`opened`, `synchronize`, `reopened`) DISAPPEAR; forgetting them would disable CI on PR pushes,
   # and the only way to notice would be by the absence of a run, i.e., silence.
-  # `labeled` is added for the macOS job below: without it, a label placed on an open PR triggers nothing —
-  # the event simply does not occur.
+  # `ready_for_review` is not a default either, and without it the draft gate below would work only
+  # halfway: marking a draft ready is none of the defaults, so the PR would reach the merge button
+  # with zero checks. Platform cells (macOS) live in platform.yml, not here.
   pull_request:
-    types: [opened, synchronize, reopened, labeled]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 # A newer push supersedes an older one on the same ref. Note this does NOT make the cancelled
 # run free — cancellation arrives after the expensive steps have already run and been billed —
-# it only stops the tail.
-# 🔴 THE CONCURRENCY GROUP KEY DISTINGUISHES THE EVENT, AND THIS IS A MEASUREMENT, NOT CAUTION (17.09.2026).
-# With a single key `ci-<ref>`, applying the `osx` label to a freshly opened PR KILLED the gate run:
-# the `labeled` event fell into the same group and cancelled the in-flight `pull_request/opened`.
-# Observed on PR #17 — `gates` came back `cancelled` on run 44 and `skipped` on run 45, meaning
-# the PR ended up with NO COMPLETE SET of gates, despite two green checkmarks alongside.
-#
-# Different keys because these are different jobs: a CODE run checks code, a LABEL run checks platform.
-# Cancelling the first with the second means losing a check, not saving minutes.
+# it only stops the tail. (Until 2026-09-23 the key also split on `labeled` events, because a
+# label click used to cancel the code run; with no `labeled` trigger that split has nothing to do.)
 concurrency:
-  group: ci-${{ github.ref }}-${{ github.event.action == 'labeled' && 'label' || 'code' }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -64,9 +58,10 @@ permissions:
 
 jobs:
   gates:
-    # Label application is not a code change. Without this condition, every label click would re-run
-    # the entire six-minute suite from scratch, checking nothing new.
-    if: github.event_name != 'pull_request' || github.event.action != 'labeled'
+    # 🔴 A DRAFT PULL REQUEST PAYS NOTHING (same gate as vigiles and the knowledge base). Written as
+    # `event_name != 'pull_request' || draft == false`, not `draft == false` alone: on a push to main
+    # there is no pull_request object, and a bare `.draft` would be missing and kill every check there.
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -128,7 +123,7 @@ jobs:
       # reached only the mutation batteries. The comment about "its absence was NOT harmless"
       # described exactly this harm yet did not protect against it itself.
       #
-      # ⚠️ And the flag belongs IN THE STEP, not in `package.json`: the `macos` job below runs the same `npm test`
+      # ⚠️ And the flag belongs IN THE STEP, not in `package.json`: the `macos` job in platform.yml runs the same `npm test`
       # WITHOUT installing the binary, where skips are legitimate, and a global flag would falsely color it.
       - name: npm test
         run: npm test -- --no-skip
@@ -200,58 +195,6 @@ jobs:
         run: node test/e2e/install.mjs --strict
         timeout-minutes: 10
 
-  # ── macOS BY LABEL, NOT IN MATRIX ───────────────────────────────────────────────────────────────
-  #
-  # Issue #9: `npm test` was red ONLY on macOS. Reason — `/var` there is a symlink to
-  # `/private/var`, so `import.meta.url` resolves to realpath, while `process.argv[1]` and any
-  # path constructed by the test remain as typed: one directory under two names. The fix
-  # (`50d6463`) is enforced by an ESLint rule, but the rule guards the IDIOM, not the behavior — on Linux
-  # `realpathSync` is identity, and removing the wrapper does not red any behavioral test. So
-  # the only way to know harnesses are truly green on macOS is to run them there.
-  #
-  # 🔴 WHY NOT A PERMANENT MATRIX. The macOS runner is billed at a 10× MULTIPLIER to Linux. For
-  # a public repository, minutes are not charged, but running a permanent tenfold job for a platform
-  # where no one develops — that is paying for something that changes once a year. A label makes
-  # cost a decision at the moment the person knows why.
-  #
-  # How to use: apply the `osx` label to a PR. The `labeled` event will raise THIS job, and `gates`
-  # above will skip — it already ran on the push.
-  #
-  # ⚠️ Only `npm test` runs, and this is not economy for its own sake: issue #9 concerns harnesses
-  # reading temp directories. Mutation batteries (242 s) on a tenfold runner would cost
-  # forty minutes of Linux-equivalent and would verify exactly what is already checked on Linux.
-  macos:
-    if: >
-      github.event_name == 'pull_request' &&
-      contains(github.event.pull_request.labels.*.name, 'osx')
-    runs-on: macos-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - name: npm ci
-        run: npm ci
-        timeout-minutes: 8
-      # The distinction this job exists for: prints BOTH spellings of the temp root.
-      # If they match — platform is not the right one, and green below says nothing about macOS.
-      - name: two spellings of one directory — does this machine see them
-        run: |
-          node -e '
-            const { mkdtempSync, realpathSync } = require("node:fs");
-            const { tmpdir } = require("node:os");
-            const { join } = require("node:path");
-            const d = mkdtempSync(join(tmpdir(), "probe-"));
-            console.log("as typed :", d);
-            console.log("realpath :", realpathSync(d));
-            console.log(d === realpathSync(d) ? "MATCH — issue #9 traps do not exist on this machine"
-                                              : "DIVERGE — this is the platform this job exists for");
-          '
-      - name: npm test
-        run: npm test
-
   # ── BUILDING THE PAPER WITH REAL pdflatex ──────────────────────────────────────────────────────
   #
   # 🔴 WHY A SEPARATE JOB, NOT A STEP IN `gates`. Its only dependency is TeX Live,
@@ -260,7 +203,7 @@ jobs:
   # those minutes for every run, including prose edits; a separate job runs in parallel and
   # caches itself.
   #
-  # 🔴 WHY NOT BY LABEL, like macOS. That job catches a platform divergence that changes once
+  # 🔴 WHY NOT ONCE PER PR, like macOS in platform.yml. That job catches a platform divergence that changes once
   # a year. This one catches silent font substitution — a class that HAS ALREADY shipped a paper
   # typeset in the wrong font. A label would make protection depend on whether a person remembered to apply it,
   # and they remember it precisely when they are already being careful.
@@ -268,7 +211,7 @@ jobs:
   # `--strict`: absence of pdflatex locally is a legitimate skip; here it is an environment failure.
   # Without it, a skipped step would look like a pass in the interface.
   build-e2e:
-    if: github.event_name != 'pull_request' || github.event.action != 'labeled'
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

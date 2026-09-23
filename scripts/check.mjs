@@ -128,6 +128,9 @@ export const NOT_COVERED = {
     "exists because a defect was found that appeared on macOS alone (vigiles#241: /var is a " +
     "symlink to /private/var, so a path recorded before resolution did not match). No local " +
     "command can stand in for a different kernel.",
+  merge:
+    "dependabot-automerge.yml merges the bot's own pull requests once CI is green. It checks " +
+    "nothing itself; there is no local equivalent because it acts on GitHub, not on the tree.",
 };
 
 /**
