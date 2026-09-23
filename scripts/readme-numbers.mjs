@@ -96,6 +96,11 @@ export async function actualCounts(root = ROOT) {
     rules: await countRules(root),
     harnesses: countFiles(root, ".harness.mjs"),
     batteries: countFiles(root, ".mutations.mjs"),
+    // The end-to-end runs, counted from disk by the suffix that names them. `docs/e2e.md`
+    // describes them one by one, and a description that outlives the thing it describes is the
+    // reason this counter exists at all: add a third `*-e2e.mjs` and the doc goes red until it
+    // says what the third one proves.
+    e2e: countFiles(join(root, "scripts"), "-e2e.mjs"),
     skills: readdirSync(join(root, "skills")).filter((d) => lstatSync(join(root, "skills", d)).isDirectory()).length,
   };
 }
@@ -107,7 +112,34 @@ export async function actualCounts(root = ROOT) {
  */
 export function declaredCounts(text) {
   const out = {};
-  for (const m of text.matchAll(/<!--\s*count:([a-z]+)\s*-->\s*(\d+)/g)) out[m[1]] = Number(m[2]);
+  for (const { key, value } of countDeclarations(text)) out[key] = value;
+  return out;
+}
+
+/**
+ * EVERY occurrence, in order — not a map keyed by counter name.
+ *
+ * 🔴 WHY THIS EXISTS, AND IT IS A MEASURED HOLE IN THIS VERY CHECK (2026-09-19). `declaredCounts`
+ * assigns into an object, so a second `<!-- count:rules -->` in the same file SILENTLY REPLACES
+ * the first and the first is never compared against anything. Proven by mutation: a duplicate
+ * marker was added to the README's intro and set to `11` against `12` on disk, and this check
+ * stayed GREEN at exit 0. Two markers read as twice the coverage and delivered less than one.
+ *
+ * That is the exact class this repository keeps re-finding: a counter that counts what it
+ * ignores. The verdict loop below now judges every occurrence, so a wrong copy is a finding no
+ * matter where it sits — and the same applies across DECLARING_FILES, where `declared[k] = v`
+ * used to let CONTRIBUTING.md's value shadow the README's.
+ */
+export function countDeclarations(text) {
+  const out = [];
+  // 🔴 `[a-z0-9]`, NOT `[a-z]`. Measured 2026-09-19: the counter `e2e` was declared in
+  // `docs/e2e.md` and the check reported it as "declared nowhere" — `[a-z]+` matched `e`, then
+  // wanted `-->` and found `2`. The charset was an undeclared convention about what a counter
+  // may be called, and it silently disagreed with the counters that actually exist. The key set
+  // is defined by `actualCounts`, and a name outside it is already an error below; the pattern
+  // has no business being the second, narrower, unstated definition.
+  for (const m of text.matchAll(/<!--\s*count:([a-z][a-z0-9]*)\s*-->\s*(\d+)/g))
+    out.push({ key: m[1], value: Number(m[2]) });
   return out;
 }
 
@@ -119,17 +151,19 @@ export function declaredCounts(text) {
  * moved. The requirement stayed the same and just as strong: EVERY number on disk must be
  * declared somewhere in these files. All that changes is where exactly.
  */
-export const DECLARING_FILES = ["README.md", "CONTRIBUTING.md"];
+export const DECLARING_FILES = ["README.md", "CONTRIBUTING.md", "docs/e2e.md"];
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const declared = {};
-  const declaredIn = {}; // so a finding sends you to fix THE file where the number is written
+  // Every occurrence is kept, because judging only the last one is how this check went hollow.
+  const occurrences = {}; // counter -> [{ file, value }], in file then document order
   for (const f of DECLARING_FILES) {
-    for (const [k, v] of Object.entries(declaredCounts(readFileSync(join(ROOT, f), "utf-8")))) {
-      declared[k] = v;
-      declaredIn[k] = f;
+    for (const { key, value } of countDeclarations(readFileSync(join(ROOT, f), "utf-8"))) {
+      (occurrences[key] ??= []).push({ file: f, value });
     }
   }
+  const declared = Object.fromEntries(
+    Object.entries(occurrences).map(([k, list]) => [k, list[0].value]),
+  );
   const actual = await actualCounts();
   const keys = Object.keys(actual);
 
@@ -142,8 +176,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   const bad = [];
   for (const k of keys) {
-    if (!(k in declared)) bad.push(`  ${k}: ${actual[k]} on disk, and declared neither in README nor in CONTRIBUTING`);
-    else if (declared[k] !== actual[k]) bad.push(`  ${k}: ${declaredIn[k]} promises ${declared[k]}, ${actual[k]} on disk`);
+    if (!(k in occurrences)) {
+      bad.push(`  ${k}: ${actual[k]} on disk, and declared neither in README nor in CONTRIBUTING`);
+      continue;
+    }
+    // EVERY copy is compared. A duplicate that disagrees is a finding wherever it sits.
+    occurrences[k].forEach(({ file, value }, i) => {
+      if (value === actual[k]) return;
+      const which = occurrences[k].length > 1 ? ` (copy ${i + 1} of ${occurrences[k].length})` : "";
+      bad.push(`  ${k}: ${file}${which} promises ${value}, ${actual[k]} on disk`);
+    });
   }
   for (const k of Object.keys(declared)) {
     if (!keys.includes(k)) bad.push(`  ${k}: ${declared[k]} declared, but there is no such counter`);

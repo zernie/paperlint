@@ -2,7 +2,7 @@
  * INSTALL E2E: pack the package and install it into a CLEAN consumer with every available
  * manager, then check what the consumer actually does.
  *
- * 🔴 WHY A SEPARATE RUN AND NOT A CELL IN `npm test`. Everything the 55 harnesses check lives
+ * 🔴 WHY A SEPARATE RUN AND NOT A CELL IN `npm test`. Everything the harnesses check lives
  * INSIDE the repository, where `node_modules`, the sources and the config all sit side by side.
  * The consumer gets a different tree: a tarball unpacked by a manager BY ITS OWN RULES. One
  * decision has already diverged between those two worlds — moving `vigiles` from peer to regular
@@ -22,45 +22,126 @@ import { execFileSync, spawnSync } from "node:child_process";
 import {
   mkdtempSync,
   mkdirSync,
+  cpSync,
+  readdirSync,
   writeFileSync,
   rmSync,
   existsSync,
   readFileSync,
+  readlinkSync,
   realpathSync,
 } from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import {
+  compareToBaseline,
+  countByRule,
+} from "../fixtures/real-markdown-paper/baseline.mjs";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const KEEP = process.argv.includes("--keep");
+// See `managers()`: a manager that will not launch is a declared skip here and a failure in CI.
+const STRICT = process.argv.includes("--strict");
 
 const sh = (cmd, args, opts = {}) =>
   spawnSync(cmd, args, { encoding: "utf8", ...opts });
 
-/** A manager counts as available only if it actually launches. */
-function managers() {
-  const out = [];
-  for (const [name, probe, install] of [
-    [
-      "npm",
-      ["npm", ["--version"]],
-      (tgz) => ["npm", ["install", "--silent", tgz]],
-    ],
-    [
+/**
+ * The managers this run is SUPPOSED to measure, declared as data with the reason each is here.
+ * A list, because "which managers did this run actually cover" has to be answerable from the
+ * output — not inferred from how many `──` headers scrolled past.
+ */
+const WANTED = [
+  {
+    name: "npm",
+    probe: ["npm", ["--version"]],
+    install: (tgz) => ["npm", ["install", "--silent", tgz]],
+    why: "the default; `.bin` holds a symlink to the .mjs",
+  },
+  {
+    name: "pnpm",
+    probe: ["pnpm", ["--version"]],
+    // 🔴 THE THREE `--allow-build` FLAGS ARE NOT A WORKAROUND FOR pnpm — they are this
+    // package's own dependency chain showing through. Since v10 pnpm refuses to run a
+    // dependency's lifecycle scripts unless the consumer approves them, by design, as a
+    // supply-chain measure. Three packages in our tree have one:
+    //
+    //   research-paper-pipeline → vigiles → @ast-grep/lang-{python,ruby,rust}  (postinstall)
+    //
+    // so a bare `pnpm install` of our tarball exits 1 with ERR_PNPM_IGNORED_BUILDS. Measured
+    // 2026-09-20 on pnpm 12.5.1: the three declarative forms (`pnpm.onlyBuiltDependencies`
+    // and `pnpm.ignoredBuiltDependencies` in package.json, and either key in
+    // pnpm-workspace.yaml) did NOT silence it; only these flags did.
+    //
+    // ⚠️ The builds themselves are not needed here — the packages ship `prebuilds/`, and with
+    // the scripts skipped both `@ast-grep/napi` and `@ast-grep/lang-python` load fine. So this
+    // is a policy collision, not a broken install, which is exactly why it must not be silent:
+    // the `defect` block below keeps the bare failure under assertion.
+    install: (tgz) => [
       "pnpm",
-      ["pnpm", ["--version"]],
-      (tgz) => ["pnpm", ["install", "--silent", tgz]],
+      [
+        "install",
+        "--silent",
+        "--allow-build=@ast-grep/lang-python",
+        "--allow-build=@ast-grep/lang-ruby",
+        "--allow-build=@ast-grep/lang-rust",
+        tgz,
+      ],
     ],
-  ]) {
-    const r = sh(probe[0], probe[1]);
+    // The state of the world this run ASSUMES. Pinned so it cannot change unnoticed: the day
+    // the dependency drops those packages (or pnpm changes the policy), this goes red and the
+    // flags above come out. A pin that only fires on good news is still a pin.
+    defect: {
+      id: "vigiles pulls @ast-grep/lang-{python,ruby,rust}, each with a postinstall",
+      bare: (tgz) => ["pnpm", ["install", "--silent", tgz]],
+      marker: "ERR_PNPM_IGNORED_BUILDS",
+    },
+    why:
+      "does NOT put transitive dependencies at the project root, and `.bin` holds a shell " +
+      "wrapper rather than a symlink — both have already broken this package",
+  },
+];
+
+/**
+ * Split WANTED into the managers that launch here and the ones that do not.
+ *
+ * 🔴 WHY THIS RETURNS THE MISSING ONES INSTEAD OF DROPPING THEM. The first edition simply
+ * skipped a manager that would not start, and only failed when NONE would. So on a machine
+ * without pnpm the run measured npm alone and said nothing about it — and pnpm is the entire
+ * reason this file exists. "pnpm passed" and "pnpm was never tried" printed identically.
+ *
+ * That is the failure class this package is written against, reproduced inside it: a skipped
+ * check and a passed one look the same. `build-e2e.mjs` already had the cure — declare the skip,
+ * and let `--strict` turn it into a failure where absence means a broken environment.
+ */
+function managers() {
+  const available = [];
+  const missing = [];
+  for (const m of WANTED) {
+    const r = sh(m.probe[0], m.probe[1]);
     if (r.status === 0)
-      out.push({ name, version: (r.stdout ?? "").trim(), install });
+      available.push({ ...m, version: (r.stdout ?? "").trim() });
+    else missing.push(m);
   }
-  return out;
+  return { available, missing };
 }
 
-/** A small but REAL corpus: `lint` must pass it clean. */
+/**
+ * The corpus `lint` must pass clean. TWO papers, and they are different ON PURPOSE.
+ *
+ * ⚠️ The comment here used to call this "a small but REAL corpus". It was not: the source was the
+ * four bytes `abcd` and the PDF was a hundred `x`. That is enough to drive the STAGE machinery —
+ * a declared stage, its pdf, its byte counts, the cross-check between them — and it is the reason
+ * those stubs stay. But calling it real overstated what the run proves, and a label that
+ * overstates is how a test stops being read.
+ *
+ * So the stub paper keeps the stage rules honest, and `fixtures/build-e2e/acmart` — an actual
+ * `\documentclass{acmart}` source, the same one the build e2e compiles with a real `pdflatex` —
+ * makes sure the LaTeX rules see LaTeX rather than a placeholder. Neither covers the other:
+ * measured 2026-09-19, the acmart fixture alone linted 2 files, the stub alone drives the stages.
+ */
 function stageCorpus(root) {
   const paper = join(root, "papers", "p1");
   mkdirSync(join(paper, "versions"), { recursive: true });
@@ -72,23 +153,59 @@ function stageCorpus(root) {
   writeFileSync(join(paper, "paper.md"), "# Intro\n\nRQ1: does it hold?\n");
   writeFileSync(
     join(paper, "PIPELINE-STATUS.md"),
-    `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: 100\n    source: versions/s.tex\n    sourceBytes: 4\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`,
+    `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: 100\n    source: versions/s.tex\n    sourceBytes: 4\nresearchQuestion: "does it hold?"\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`,
   );
+  // The real LaTeX half. Copied from this repository's own fixture rather than written inline:
+  // a second inline copy of an acmart preamble would drift from the one the build e2e compiles,
+  // and then the two tests would disagree about what a paper looks like.
+  cpSync(
+    join(ROOT, "fixtures", "build-e2e", "acmart"),
+    join(root, "papers", "acmart"),
+    { recursive: true },
+  );
+}
+
+/**
+ * WHERE THE PACKAGE LANDED, asked of Node rather than spelled out (docs/prior-art/package-location.md).
+ *
+ * The spelling `node_modules/research-paper-pipeline` is not wrong under npm or pnpm. What
+ * resolution adds is a second claim the hardcode cannot see: the package is REACHABLE BY NAME
+ * from the consumer. Measured there with a closed `exports` map — the directory still exists, every
+ * `existsSync` stays green, and the documented public import is broken. `createRequire`, not
+ * `findPackageJSON`: the latter answers past a broken map, which makes it the better locator and
+ * the worse canary.
+ */
+function locateInstalled(consumer) {
+  const req = createRequire(pathToFileURL(join(consumer, "__consumer__.js")).href);
+  try {
+    const file = req.resolve("research-paper-pipeline/package.json");
+    return { dir: dirname(file), manifest: JSON.parse(readFileSync(file, "utf8")) };
+  } catch (e) {
+    return { err: `${e.code ?? "error"}: ${e.message}` };
+  }
+}
+
+/**
+ * The skills directory as the package DECLARES it (`.claude-plugin/plugin.json`, `"skills"`),
+ * not as this script remembers it. A root without the declaration is an error, not a fallback:
+ * a default here would make a missing declaration look like a correct one.
+ */
+function skillsDir(root) {
+  const file = join(root, ".claude-plugin", "plugin.json");
+  const declared = existsSync(file)
+    ? JSON.parse(readFileSync(file, "utf8")).skills
+    : undefined;
+  if (typeof declared !== "string")
+    throw new Error(`no "skills" declared in ${file}`);
+  return join(root, declared);
 }
 
 /**
  * The hook commands are taken FROM THE PUBLISHED `hooks.json`, not from the copy in the
  * repository: we check what arrived, not what we shipped.
  */
-function hookCommands(consumer) {
-  const file = join(
-    consumer,
-    "node_modules",
-    "research-paper-pipeline",
-    "plugin",
-    "hooks",
-    "hooks.json",
-  );
+function hookCommands(installed) {
+  const file = join(installed, "plugin", "hooks", "hooks.json");
   if (!existsSync(file))
     return { err: `plugin/hooks/hooks.json did not arrive in the tarball: ${file}` };
   let json;
@@ -106,7 +223,113 @@ function hookCommands(consumer) {
   return { cmds };
 }
 
+/**
+ * 🔴 WHAT ARRIVED, COUNTED AGAINST WHAT EXISTS — not against a number written here.
+ *
+ * The README claims the install brings the skills. Until now nothing checked it: the only
+ * delivery assertion was that `plugin/hooks/hooks.json` reached the tarball, so a package that
+ * shipped ZERO skills would have passed a test written for exactly that defect. A hardcoded
+ * count would be no better — it would go stale the first time a skill is added, and the staleness
+ * would read as a pass.
+ *
+ * The second half is the one that catches the real class: a skill that names a script by a path
+ * which only resolves from one working directory. That path is correct in the repository and
+ * absent in the consumer, which is why reading the prose never finds it.
+ */
+function contentDelivery(installed) {
+  const listSkills = (root) => {
+    const dir = skillsDir(root);
+    if (!existsSync(dir)) return [];
+    return readdirSync(dir, { withFileTypes: true })
+      .filter((d) => d.isDirectory() && existsSync(join(dir, d.name, "SKILL.md")))
+      .map((d) => d.name);
+  };
+  const here = listSkills(ROOT);
+  const there = listSkills(installed);
+  const missing = here.filter((n) => !there.includes(n));
+
+  // Resolve every script a delivered SKILL.md names, from the consumer's tree.
+  const unresolved = [];
+  let refs = 0;
+  for (const name of there) {
+    const skills = skillsDir(installed);
+    const body = readFileSync(join(skills, name, "SKILL.md"), "utf8");
+    for (const m of body.matchAll(/([\w./-]*scripts\/[\w-]+\.mjs)/g)) {
+      refs++;
+      const raw = m[1];
+      // TWO bases, and both are the declared skills directory. A third — the package root — was
+      // measured dead (0 of 104 references, docs/prior-art/package-location.md § 9) and is gone:
+      // a candidate nothing uses can only ever hide a wrong-base reference, never find one.
+      const candidates = [
+        // skill-relative: `scripts/x.mjs`, `../other/scripts/x.mjs`
+        join(skills, name, raw),
+        // the install-path spelling the port rule exists to retire (rpp#19); counted as resolvable
+        // only if the file is genuinely there under the declared skills directory
+        join(skills, raw.replace(/^\.claude\/skills\//, "")),
+      ];
+      if (!candidates.some(existsSync)) unresolved.push(`${name}: ${raw}`);
+    }
+  }
+  return { here: here.length, there: there.length, missing, refs, unresolved };
+}
+
+/**
+ * 🔴 THE CONSUMER'S VIEW OF THE SKILLS — what Claude Code actually reads. `contentDelivery` above
+ * proves the skills reached `node_modules`; that is necessary and NOT sufficient, because Claude
+ * Code discovers project skills only in `<project>/.claude/skills/<name>/SKILL.md` and never looks
+ * inside `node_modules`. The README claimed otherwise until Codex caught it on #45, and a consumer
+ * who followed it had no `/paper-pipeline` — while every check here stayed green, because every
+ * check looked at the package directory.
+ *
+ * So this walks the SAME list — every skill the installed package declares — from the consumer
+ * root, through the links `rpp init` made, and resolves the script paths the skills name the way
+ * the agent will: `.claude/skills/<skill>/scripts/x.mjs` from the project root, `scripts/x.mjs`
+ * from the skill's own directory as the project sees it.
+ */
+function consumerSkillView(consumer, installed) {
+  const dir = skillsDir(installed);
+  const names = readdirSync(dir, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && existsSync(join(dir, d.name, "SKILL.md")))
+    .map((d) => d.name);
+  const home = join(consumer, ".claude", "skills");
+  const unreachable = [];
+  const notLinks = [];
+  const links = {};
+  const unresolved = [];
+  let rootRefs = 0;
+  let refs = 0;
+  for (const name of names) {
+    const entry = join(home, name);
+    if (!existsSync(join(entry, "SKILL.md"))) {
+      unreachable.push(name);
+      continue;
+    }
+    try {
+      links[name] = readlinkSync(entry);
+    } catch {
+      notLinks.push(name);
+    }
+    const body = readFileSync(join(entry, "SKILL.md"), "utf8");
+    for (const m of body.matchAll(/([\w./-]*scripts\/[\w-]+\.mjs)/g)) {
+      refs++;
+      const raw = m[1];
+      const fromRoot = raw.startsWith(".claude/skills/");
+      if (fromRoot) rootRefs++;
+      const at = fromRoot ? join(consumer, raw) : join(entry, raw);
+      if (!existsSync(at)) unresolved.push(`${name}: ${raw}`);
+    }
+  }
+  return { names, unreachable, notLinks, links, refs, rootRefs, unresolved };
+}
+
 const results = [];
+// Managers that did not launch under --strict. Part of the FINAL verdict, not a `process.exitCode`
+// set on the side: the unconditional `process.exit(…)` at the bottom overwrites exitCode, so a
+// strict run without pnpm used to print 🔴 and exit 0 (measured, Codex review on #45).
+let strictMissing = [];
+// Managers that did not launch WITHOUT --strict: a declared skip, reported with exit 77 so
+// `npm run check` can tell "measured under npm only" from "measured under both".
+let skippedManagers = [];
 // realpathSync is NOT decoration: on macOS `/var` is a symlink to `/private/var`, and a path
 // recorded before resolution does not match what a process returns from inside. This is a
 // separate class, and it has already cost a red npm test on macOS only (vigiles#241).
@@ -127,11 +350,29 @@ try {
   if (!existsSync(tgz)) throw new Error(`npm pack left no tarball: ${tgz}`);
   console.log(`tarball: ${packed}\n`);
 
-  const mgrs = managers();
-  if (mgrs.length === 0)
+  const { available, missing } = managers();
+  if (available.length === 0)
     throw new Error("not a single package manager launches");
 
-  for (const m of mgrs) {
+  // A declared skip, never a silent one. In STRICT it is a failure: in CI a manager that is not
+  // installed is a broken environment, and this run's whole point is the npm/pnpm difference.
+  if (missing.length) {
+    for (const m of missing) {
+      const say = `NOT MEASURED: ${m.name} does not launch on this machine — ${m.why}`;
+      if (STRICT) console.error(`  \u{1F534} ${say}`);
+      else console.log(`  \u26A0\uFE0F  ${say} (a legitimate skip for a clone without it; --strict makes it a failure)`);
+    }
+    if (STRICT) {
+      console.error(
+        `\nIn --strict a missing manager is a FAILURE: measuring ${available.map((m) => m.name).join(", ")} ` +
+          `alone is indistinguishable, in the output, from measuring all of them.`,
+      );
+      strictMissing = missing.map((m) => m.name);
+    } else skippedManagers = missing.map((m) => m.name);
+  }
+  console.log(`measured under: ${available.map((m) => m.name).join(", ")}\n`);
+
+  for (const m of available) {
     const consumer = join(work, `consumer-${m.name}`);
     mkdirSync(consumer, { recursive: true });
     writeFileSync(
@@ -153,6 +394,41 @@ try {
     if (inst.status === 0) ok("the install went through");
     else bad("the install went through", inst.stderr || inst.stdout);
 
+    const located = locateInstalled(consumer);
+    if (located.err) {
+      bad("the package resolves BY NAME from the consumer", located.err);
+      // Nothing below can be measured against a package Node cannot find; say so and move on
+      // rather than guess a path and report on the guess.
+      results.push({ manager: `${m.name} ${m.version}`, fail });
+      console.log("");
+      continue;
+    }
+    ok("the package resolves BY NAME from the consumer");
+    const installed = located.dir;
+
+    // The pinned defect, if this manager declares one: the plain install — the command a
+    // reader of the README would type — must still fail the way we recorded. Green here means
+    // the world moved and the accommodation above is now dead weight.
+    if (m.defect) {
+      const probe = join(work, `defect-${m.name}`);
+      mkdirSync(probe, { recursive: true });
+      writeFileSync(
+        join(probe, "package.json"),
+        '{"name":"d","version":"1.0.0","private":true}',
+      );
+      const [bcmd, bargs] = m.defect.bare(tgz);
+      const bare = sh(bcmd, bargs, { cwd: probe });
+      const out = `${bare.stdout ?? ""}${bare.stderr ?? ""}`;
+      if (bare.status !== 0 && out.includes(m.defect.marker))
+        ok(`the pinned defect still reproduces (${m.defect.marker})`);
+      else
+        bad(
+          `the pinned defect still reproduces (${m.defect.marker})`,
+          `a BARE install now exits ${String(bare.status)} — ${m.defect.id}. ` +
+            `If this is fixed upstream, drop the accommodation in WANTED and this pin with it.`,
+        );
+    }
+
     // 🔴 THE BIN IS LAUNCHED DIRECTLY, NOT THROUGH `node <path>`. Under npm `.bin` holds a
     // SYMLINK to the `.mjs`, and `node` swallows it; under pnpm it holds a SHELL WRAPPER, and
     // `node` chokes on its very first line `basedir=$(dirname …)`. The first edition of this test
@@ -164,6 +440,18 @@ try {
     help.status === 0
       ? ok("`rpp --help` answers with zero")
       : bad("`rpp --help` answers with zero", help.stderr);
+    // The shim above proves the MANAGER did its part. This proves the file the manifest PROMISES
+    // exists and runs — the real file under both managers, so `node <it>` is uniform where
+    // `node <shim>` is not (pnpm writes a shell wrapper).
+    const binField = located.manifest.bin;
+    const binRel = typeof binField === "string" ? binField : binField?.rpp;
+    if (!binRel) bad("the manifest declares the `rpp` bin", JSON.stringify(binField));
+    else {
+      const real = sh(process.execPath, [join(installed, binRel), "--help"], { cwd: consumer });
+      real.status === 0
+        ? ok(`the manifest's bin (${binRel}) runs under node`)
+        : bad(`the manifest's bin (${binRel}) runs under node`, real.stderr);
+    }
 
     // 🔴 THE CORPUS IS STAGED BEFORE `init`, AND THIS IS NOT A REORDERING FOR CONVENIENCE. `init`
     // now MEASURES the papers directory instead of guessing it; a run over an empty tree would
@@ -197,6 +485,43 @@ try {
           (init.stdout ?? "") + (init.stderr ?? ""),
         );
 
+    // The skills, as Claude Code will look for them: in the consumer, not in node_modules.
+    const view = consumerSkillView(consumer, installed);
+    view.names.length > 0 && view.unreachable.length === 0
+      ? ok(`all ${view.names.length} shipped skill(s) are reachable as .claude/skills/<name>/SKILL.md`)
+      : bad(
+          `all ${view.names.length} shipped skill(s) are reachable as .claude/skills/<name>/SKILL.md`,
+          `not reachable: ${view.unreachable.join(", ") || "(the package declares zero skills)"}\n${init.stdout ?? ""}`,
+        );
+    view.notLinks.length === 0 &&
+    Object.values(view.links).every((t) => !t.startsWith("/"))
+      ? ok("each is a RELATIVE symlink, not a copy")
+      : bad(
+          "each is a RELATIVE symlink, not a copy",
+          `not links: ${view.notLinks.join(", ") || "-"}; absolute: ${Object.entries(view.links)
+            .filter(([, t]) => t.startsWith("/"))
+            .map(([n]) => n)
+            .join(", ") || "-"}`,
+        );
+    view.rootRefs > 0 && view.unresolved.length === 0
+      ? ok(`all ${view.refs} script path(s) resolve FROM THE CONSUMER ROOT (${view.rootRefs} project-root-relative)`)
+      : bad(
+          `all ${view.refs} script path(s) resolve FROM THE CONSUMER ROOT (${view.rootRefs} project-root-relative)`,
+          view.unresolved.slice(0, 5).join("\n") || "zero project-root-relative references — nothing was checked",
+        );
+
+    // A second `init` is a re-run, not a clash: nothing fails, no link moves.
+    const again = sh(bin, ["init"], { cwd: consumer });
+    const after = consumerSkillView(consumer, installed);
+    again.status === 0 &&
+    view.names.every((n) => after.links[n] === view.links[n]) &&
+    new RegExp(`0 linked now, ${view.names.length} already linked, 0 skipped`).test(again.stdout ?? "")
+      ? ok("a second `rpp init` exits zero and leaves every link as it was")
+      : bad(
+          "a second `rpp init` exits zero and leaves every link as it was",
+          `exit ${String(again.status)}\n${(again.stdout ?? "").split("\n").filter((l) => /shipped|skills/.test(l)).join("\n")}${again.stderr ?? ""}`,
+        );
+
     const lint = sh(bin, ["lint"], { cwd: consumer });
     lint.status === 0 && /no findings/.test(lint.stdout ?? "")
       ? ok("`rpp lint` passed the corpus clean")
@@ -205,8 +530,44 @@ try {
           (lint.stdout ?? "") + (lint.stderr ?? ""),
         );
 
+    // 🔴 THE REAL ARTICLE, AND IT IS NOT EXPECTED TO BE CLEAN. The two papers above were written
+    // for the rules; this one was published before the rules existed, so it is the only input on
+    // which a false positive can show up. It is added AFTER the clean run, so the clean corpus
+    // contributes nothing and every finding below is the article's. The verdict is the recorded
+    // baseline — growth fails, a full vanish fails, a partial drop does not — read through the
+    // same module the in-repo harness uses, so the installed binary and the repository's own are
+    // held to one recording.
+    cpSync(
+      join(ROOT, "fixtures", "real-markdown-paper"),
+      join(consumer, "papers", "real-article"),
+      { recursive: true, verbatimSymlinks: true },
+    );
+    const realLint = sh(bin, ["lint", "--json"], { cwd: consumer });
+    let found = null;
+    try {
+      found = countByRule(realLint.stdout ?? "");
+    } catch (e) {
+      bad("`rpp lint --json` on the real article parses", `${e.message}\n${realLint.stderr ?? ""}`);
+    }
+    if (found) {
+      const { grew, vanished } = compareToBaseline(found);
+      grew.length === 0 && vanished.length === 0
+        ? ok(
+            `the real article matches its baseline (${Object.entries(found)
+              .map(([r, n]) => `${r} ${n}`)
+              .join(", ")})`,
+          )
+        : bad(
+            "the real article matches its baseline",
+            [
+              ...grew.map((g) => `grew: ${g.rule} ${g.now} > recorded ${g.recorded}`),
+              ...vanished.map((r) => `vanished: ${r}`),
+            ].join("\n"),
+          );
+    }
+
     // 🔴 The load-bearing check: the commands ARE EXECUTED.
-    const { cmds, err } = hookCommands(consumer);
+    const { cmds, err } = hookCommands(installed);
     if (err) bad("hooks.json arrived and parses", err);
     else {
       let resolved = 0;
@@ -240,6 +601,46 @@ try {
         ok(`all ${cmds.length} hook command(s) resolve`);
     }
 
+    // Content delivery: the skills, and the paths inside them.
+    const d = contentDelivery(installed);
+    d.missing.length === 0 && d.there === d.here
+      ? ok(`all ${d.here} skill(s) arrived`)
+      : bad(
+          `all ${d.here} skill(s) arrived`,
+          `${d.there} arrived; missing: ${d.missing.join(", ") || "(count differs without a named gap)"}`,
+        );
+    d.unresolved.length === 0
+      ? ok(`all ${d.refs} script path(s) named by skills resolve in the consumer`)
+      : bad(
+          `all ${d.refs} script path(s) named by skills resolve in the consumer`,
+          [...new Set(d.unresolved)].slice(0, 5).join("\n"),
+        );
+
+    // 🔴 A NAME THAT IS ALREADY TAKEN STAYS TAKEN. Last, because it deliberately breaks one
+    // skill's link: the consumer's own directory under a shipped skill's name, plus one under a
+    // name nobody ships. `init` must leave both byte for byte, say which skill it skipped, and
+    // still exit zero — refusing to overwrite is not a failure of the install.
+    const home = join(consumer, ".claude", "skills");
+    const taken = view.names[0];
+    if (taken) {
+      // `force` + `recursive`: when init linked nothing, the entry is absent — say so below, do not crash here.
+      rmSync(join(home, taken), { force: true });
+      mkdirSync(join(home, taken), { recursive: true });
+      writeFileSync(join(home, taken, "SKILL.md"), "the consumer's own\n");
+      mkdirSync(join(home, "consumers-own-skill"), { recursive: true });
+      writeFileSync(join(home, "consumers-own-skill", "SKILL.md"), "untouched\n");
+      const third = sh(bin, ["init"], { cwd: consumer });
+      const kept =
+        readFileSync(join(home, taken, "SKILL.md"), "utf8") === "the consumer's own\n" &&
+        readFileSync(join(home, "consumers-own-skill", "SKILL.md"), "utf8") === "untouched\n";
+      kept && third.status === 0 && new RegExp(`${taken} — a directory`).test(third.stdout ?? "")
+        ? ok(`a foreign .claude/skills/${taken} is left untouched, named, and init still exits zero`)
+        : bad(
+            `a foreign .claude/skills/${taken} is left untouched, named, and init still exits zero`,
+            `kept=${String(kept)} exit=${String(third.status)}\n${third.stdout ?? ""}`,
+          );
+    }
+
     results.push({ manager: `${m.name} ${m.version}`, fail });
     console.log("");
   }
@@ -257,4 +658,7 @@ for (const r of results) {
     console.log(`  🔴 ${r.manager} — did not pass: ${r.fail.join(" · ")}`);
   }
 }
-process.exit(red > 0 ? 1 : 0);
+for (const name of strictMissing)
+  console.log(`  🔴 ${name} — NOT MEASURED, and --strict makes that a failure`);
+for (const name of skippedManagers) console.log(`  ⏳ ${name} — NOT MEASURED (declared skip, exit 77)`);
+process.exit(red > 0 || strictMissing.length > 0 ? 1 : skippedManagers.length > 0 ? 77 : 0);

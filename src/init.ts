@@ -11,12 +11,15 @@
  * and "it works". It was nine, three of them hand-edits to files. The two that this command removes
  * are the two hand-edits that were not even documented as being the same fact twice.
  *
- * ── THE FOUR DECISIONS, AND HOW EACH ONE IS MADE ────────────────────────────
+ * ── THE FIVE DECISIONS, AND HOW EACH ONE IS MADE ────────────────────────────
  *   papers directory   MEASURED — `detectPapers` walks the repo for a directory whose CHILDREN
  *                      carry a paper marker. Several hits is the only case a human is asked about.
  *   declaration        WRITTEN into `package.json`, merged, never overwriting a value that is
  *                      already there. Prior art: husky's `init` edits the consumer's package.json
  *                      to add `prepare`. `rpp.json` is no longer created at all.
+ *   skills             LINKED — one relative symlink per shipped skill into `.claude/skills/`, the
+ *                      only place Claude Code looks for project skills (`link-skills.ts`). An
+ *                      entry of the same name that rpp did not make is reported, never replaced.
  *   CI workflow        ASKED, because writing a file into `.github/` is not guessable and not
  *                      cheap to undo. Prior art: Playwright's initializer asks exactly this.
  *   external toolchain REPORTED, never installed. npm's own rule, quoted in husky's write-up:
@@ -31,6 +34,7 @@ import { spawnSync } from "node:child_process";
 import { dirname, join, relative, resolve } from "node:path";
 import { doctor, detectPapers, found, PROGRAMS } from "./doctor.ts";
 import { PAPER_MARKERS } from "./build.ts";
+import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
 // @ts-expect-error — the one source for the consumer's config key lives in the .mjs half of the
 // package, because the ESLint rules and the skill scripts import it too and they are not TypeScript.
 import { CONFIG_KEY, DEFAULT_PAPERS_ROOT } from "../lib/paper-config.mjs";
@@ -242,6 +246,40 @@ export function nextSteps(papersDir: string = DEFAULT_PAPERS_ROOT): string {
   ].join("\n");
 }
 
+/**
+ * The skills section of init's report: what was linked, what already was, and — BY NAME — what
+ * was left alone. A skipped entry does not fail init: the name is taken by something the consumer
+ * made, replacing it would be worse than not linking, and doctor's report below repeats the gap.
+ */
+export function reportSkillLinks(report: LinkReport, here: (p: string) => string): string[] {
+  const out: string[] = [``, `skills (Claude Code finds project skills in ${SKILLS_HOME}/, not in node_modules)`];
+  if (!report.ok) {
+    out.push(`  ⚠ nothing linked — ${report.error}`);
+    out.push(`      install the package into this project (\`npm i -D …\`), then \`npx rpp init\` again`);
+    return out;
+  }
+  const by = (s: string) => report.links.filter((l) => l.status === s);
+  const created = by("created");
+  const present = by("present");
+  const skipped = by("foreign");
+  // Only a read-only call leaves anything `missing`; counted anyway, so the sum always adds up.
+  const missing = by("missing");
+  const mark = skipped.length || missing.length ? "⚠" : "✓";
+  out.push(
+    `  ${mark} ${String(report.links.length)} shipped: ${String(created.length)} linked now, ` +
+      `${String(present.length)} already linked, ${String(skipped.length)} skipped` +
+      (missing.length ? `, ${String(missing.length)} NOT linked` : ``),
+  );
+  if (report.example !== null)
+    out.push(`      ${join(here(report.home), "<name>")} → ${join(dirname(report.example), "<name>")}`);
+  if (skipped.length) {
+    out.push(`      left untouched — the name is taken by something rpp did not make:`);
+    for (const l of skipped) out.push(`        ${l.name} — ${l.reason ?? "occupied"}`);
+    out.push(`      those skills are NOT available in Claude Code until the entry is moved or removed`);
+  }
+  return out;
+}
+
 export interface InitOptions {
   log?: typeof console.log;
   err?: typeof console.error;
@@ -256,6 +294,8 @@ export interface InitOptions {
    * implementation here would be a second source of truth — the very defect `doctor` reports.
    */
   resolveCliPapers?: (root: string) => string | null;
+  /** Links the skills. Injected only so a test can stand in for the installed package. */
+  link?: (root: string) => LinkReport;
 }
 
 /** Reads one line from a real terminal. Kept out of `init` so the command stays testable. */
@@ -278,6 +318,7 @@ export async function init(dir: string, opts: InitOptions = {}): Promise<number>
     interactive = Boolean(process.stdin.isTTY),
     run = spawnSync,
     resolveCliPapers,
+    link = (r: string) => linkSkills(r),
   } = opts;
   const root = resolve(cwd, dir);
   const here = (p: string): string => relative(cwd, p) || p;
@@ -334,7 +375,10 @@ export async function init(dir: string, opts: InitOptions = {}): Promise<number>
   else if (rpp === "unparsable")
     log(`  ⚠ rpp.json is here and does not parse — left untouched; it is deprecated, delete it`);
 
-  // ── 3. the one expensive, unguessable thing ───────────────────────────────────────────
+  // ── 3. the skills, linked where Claude Code looks for them ─────────────────────────────
+  for (const line of reportSkillLinks(link(root), here)) log(line);
+
+  // ── 4. the one expensive, unguessable thing ───────────────────────────────────────────
   log(``);
   log(`CI`);
   const wf = await offerWorkflow(root, choice.papers, { ask, interactive });
@@ -349,7 +393,7 @@ export async function init(dir: string, opts: InitOptions = {}): Promise<number>
     log(`            paths: ${choice.papers}`);
   }
 
-  // ── 4. the toolchain is reported, never installed ─────────────────────────────────────
+  // ── 5. the toolchain is reported, never installed ─────────────────────────────────────
   log(``);
   log(`external programs (the skills shell out to these; \`rpp lint\` needs none of them)`);
   const missing = missingPrograms(run);
@@ -371,7 +415,7 @@ export async function init(dir: string, opts: InitOptions = {}): Promise<number>
 
   log(nextSteps(choice.papers));
 
-  // ── 5. the install states its own condition ───────────────────────────────────────────
+  // ── 6. the install states its own condition ───────────────────────────────────────────
   log(`── rpp doctor ${"─".repeat(56)}`);
   const cliPapers = resolveCliPapers ? resolveCliPapers(root) : choice.papers;
   const code = doctor({ log, cwd: root, projectDir: root, run, cliPapers });

@@ -30,7 +30,7 @@ import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { join, dirname, resolve, relative, basename } from "node:path";
+import { join, dirname, resolve, relative, basename, sep } from "node:path";
 import markdown from "@eslint/markdown";
 // @ts-expect-error — the helper lives in the .mjs half of the package (29 833 lines of rules and
 // skill scripts), which this task does not rewrite. It has no types, and a harness pins its behaviour.
@@ -196,6 +196,21 @@ export function buildConfig(
     });
   return cfg;
 }
+
+/**
+ * The directory ESLint runs from. ESLint ignores every file outside it (#48), and
+ * `paper/typography` reads its debt keys relative to it — keys the config writes from its own
+ * directory. So: the deepest directory holding the config's directory and every path. With the
+ * papers inside the config's directory, that is the config's directory itself.
+ */
+const lintRoot = (home: string, paths: readonly string[]): string => commonDir([home, ...paths]);
+
+/** The longest shared leading run of path segments. */
+const commonDir = (paths: readonly string[]): string => {
+  const [first = [], ...rest] = paths.map((p) => p.split(sep));
+  const end = first.findIndex((part, i) => rest.some((other) => other[i] !== part));
+  return first.slice(0, end === -1 ? undefined : end).join(sep) || sep;
+};
 
 export function parseArgs(argv: readonly string[]): Args {
   // `--help` is parsed BEFORE argv[0] becomes the command: otherwise `rpp --help` answers
@@ -595,9 +610,12 @@ export async function run(
   // `"papers": "papers"` would point at `papers/aisec-2026/papers`, which does not exist — and the
   // run would fail with "nothing found" where everything is in place. A command-line argument stays
   // relative to the current directory: it was typed here and now.
+  //
+  // Both kinds end up ABSOLUTE: ESLint below runs from `lintRoot`, not from here, and would resolve a
+  // relative argument against the wrong directory.
   const paths =
     a.paths.length > 0
-      ? a.paths
+      ? a.paths.map((p) => resolve(cwd, p))
       : toPaths(opts.papers).map((rel) => resolve(dirname(configPath ?? cwd), rel));
   if (paths.length === 0) {
     err(
@@ -623,6 +641,7 @@ export async function run(
   }
 
   const eslint = new ESLint({
+    cwd: lintRoot(configPath ? dirname(resolve(cwd, configPath)) : cwd, paths),
     overrideConfigFile: true,
     overrideConfig: buildConfig(opts, texLanguage) as Linter.Config[],
   });

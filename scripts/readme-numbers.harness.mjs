@@ -36,6 +36,12 @@ check("a number as a word is not a declaration",
       Object.keys(declaredCounts("Forty-five of those.")).length === 0);
 check("text without marks gives an empty set — CLI exits with code 1 on this",
       Object.keys(declaredCounts("# README\n\nno numbers")).length === 0);
+// 🔴 A COUNTER NAME MAY CARRY A DIGIT, and this is not cosmetic. `e2e` is the name of a real
+// counter in `actualCounts`; under `[a-z]+` the pattern matched `e`, then wanted `-->` and found
+// `2`, so `docs/e2e.md` declared the number and the check reported it as declared NOWHERE. The
+// charset was a second, narrower, unstated definition of what a counter may be called.
+check("a counter whose name carries a digit is read",
+      declaredCounts("there are <!-- count:e2e -->2 of them").e2e === 2);
 
 // ── tree walk does not follow symlinks ───────────────────────────────────────────────────────
 {

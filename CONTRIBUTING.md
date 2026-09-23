@@ -21,11 +21,43 @@ On top of that, each rule has a **battery**: it deletes one thing the rule depen
 demands the harness go red, at the specific assertion that thing belongs to. If nothing goes red,
 that part of the rule was never doing any work. CI refuses a rule whose battery cannot kill it.
 
-<!-- count:harnesses -->57 harnesses, <!-- count:batteries -->34 batteries.
+<!-- count:harnesses -->60 harnesses, <!-- count:batteries -->37 batteries.
+
+A harness runs in this tree, against this working copy. That is the wrong shape for a defect that
+only exists once somebody else has installed the package — a path written inside a skill, a file
+that never made it into the tarball, a PDF whose content is wrong while the exit code is zero.
+Those are covered by the end-to-end runs, and [`docs/e2e.md`](docs/e2e.md) says which question
+belongs to which tier, and **when a change owes a new e2e rather than a harness**.
 
 It caught a real one on the way in: `js-yaml` 5 stopped parsing an unquoted date as a `Date`.
 Every harness stayed green under both majors, and only the battery noticed that the rule's
 date coercion had become dead code.
+
+## Running the checks: one command
+
+```sh
+npm run check
+```
+
+That is the whole instruction. It runs every gate in order — build, lint, the <!-- count:harnesses -->60 harnesses, the
+<!-- count:batteries -->37 mutation batteries, the install e2e under npm and pnpm, and a real `pdflatex` build — and ends
+by printing **which CI jobs it does not reproduce, and why**.
+
+🔴 **There is no `--fast` flag, and that is the point.** On 2026-09-19 a rule change was pushed
+that broke the suite: the gates were run afterwards and were green, but `npm test` and
+`test:install` were not among them, because there were eleven separate scripts and the only way
+to run them all was from memory. A subset flag re-creates exactly that — the cheap half gets run
+and reported as "the gates". If a step genuinely cannot run here, it says so out loud rather than
+being skipped quietly: an e2e that finds no TeX or no pnpm exits 77 *having stated* why, and
+`npm run check` lists it as skipped instead of counting it as passed.
+
+The individual scripts still exist and are the right thing to call while iterating on one rule.
+They are not what you run before pushing.
+
+**The list of gates cannot quietly fall behind CI.** `scripts/check.harness.mjs` pulls the job
+names out of `.github/workflows/ci.yml` and requires each to be either reproduced by a gate or
+named with a reason for why it cannot be. Add a job and it goes red the same day, naming the job
+nobody covered — verified by adding a `windows` job and watching it fail.
 
 ## Layout
 
@@ -38,6 +70,11 @@ skills/         24 stage skills
 scripts/        this repo's own gates
 action.yml      the CI composite action
 fixtures/       inputs the harnesses lint
+docs/           evidence that would otherwise bloat CLAUDE.md:
+                  prior-art/  how comparable tools are shaped, and why this one is shaped so
+                  incidents.md  what broke, measured
+                  install.md  the install contract
+                  e2e.md  the end-to-end runs, and when a change owes one
 ```
 
 ## Working on this package

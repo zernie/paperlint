@@ -120,7 +120,7 @@ external programs are missing.
 | # | action |
 | --- | --- |
 | 1 | `npm i -D github:zernie/research-paper-pipeline#<sha>` |
-| 2 | `npx rpp init` — detects the papers directory, writes the declaration, offers the CI workflow, prints the two plugin lines and any missing programs |
+| 2 | `npx rpp init` — detects the papers directory, writes the declaration, links the skills into `.claude/skills/`, offers the CI workflow, prints the two plugin lines and any missing programs |
 | 3 | the two `/plugin` lines inside Claude Code |
 
 Three, one of which is a paste of two lines that `init` just printed. Step 3 cannot be collapsed:
@@ -143,3 +143,78 @@ answer; it now takes the default. Prompting itself turned out to be perfectly te
 question function is injected, so the assertions never need a terminal, and the one property
 that does need a terminal (that a real prompt appears and its answer is used) was checked once
 by hand under `script`.
+
+## Which package managers are covered, and why Yarn PnP is not
+
+Moved out of the README on 2026-09-19: a reader deciding whether to try the tool needs the
+verdict, not the forensics. The verdict is that npm and pnpm are covered and Yarn Plug'n'Play is
+not supported.
+
+`npm run test:install` packs the tarball, installs it into a clean consumer project with each
+manager that is actually present on the machine (`npm --version`, `pnpm --version` — a manager
+that does not launch is not counted), and then **runs the hook command** to see whether it
+resolves. The check is deliberately not a grep over `hooks.json`: the string there is correct
+under any manager, while whether it resolves is a property of the tree the manager laid out on
+disk. The verdict is whether the command died on `Cannot find module`.
+
+This matters because one decision has already diverged between the repository's own tree and a
+consumer's: moving `vigiles` from peer to regular dependencies works on npm and does not work on
+pnpm, because the hook wiring addresses the runtime from the project root and pnpm does not put
+transitive dependencies at the root. No test found that.
+
+**Yarn Plug'n'Play is excluded by construction, not by omission.** The hook commands in
+`plugin/hooks/hooks.json` name
+`${CLAUDE_PROJECT_DIR}/node_modules/research-paper-pipeline/bin/rpp.mjs` literally, and under PnP
+there is no `node_modules` directory for that path to resolve against. Supporting it would mean a
+different way of answering "where is the runtime", not a flag.
+
+## Why the plugin ships no code
+
+The plugin carries the hook wiring only — a manifest and `plugin/hooks/hooks.json`. That split is
+deliberate, and it is also forced.
+
+A plugin fetched from npm gets **no** `node_modules` at all, and gets them silently: `npm pack`
+strips `package-lock.json` unconditionally, and the host runs `npm ci` only when a lockfile is
+present in the fetched copy. Measured 2026-09-19; the probes are in
+[`prior-art/repro/`](prior-art/repro/README.md). A plugin that carried the skills would therefore
+carry scripts it could not run — the failure arriving as `Cannot find module` at hook time, on a
+plugin that installed cleanly.
+
+So the skills ride with the npm package, where a real install has happened, and the plugin stays
+empty enough that it cannot have this problem.
+
+### The npm package is not where Claude Code looks — `rpp init` links the skills
+
+Riding with the npm package gets the skills onto disk, not into Claude Code. Claude Code discovers
+project skills in `.claude/skills/<name>/SKILL.md` (plus user and plugin skills) and never inside
+`node_modules`. Until 2026-09-23 the README said the skills "sit in
+`node_modules/research-paper-pipeline/skills/` and Claude Code reads them from there"; that was
+false, and a consumer who followed it had no `/paper-pipeline` (Codex review on #45). Every test
+stayed green meanwhile, because every test looked at the package directory, not at the project.
+
+The one consumer where the skills did work had made the links by hand, one per skill:
+
+```
+.claude/skills/<name> -> ../../node_modules/research-paper-pipeline/skills/<name>
+```
+
+`rpp init` now makes exactly those links (`src/link-skills.ts`). They are also what makes the
+project-root-relative script paths inside the skills (`.claude/skills/paper-pipeline/scripts/x.mjs`,
+89 of 104 script references on 2026-09-23; the install e2e prints the live count) resolve in a
+consumer at all.
+
+- **What is linked** is read from the package's own declaration — `.claude-plugin/plugin.json`,
+  `"skills"` — every subdirectory holding a `SKILL.md`. No list and no count is written down.
+- **Where the link points** is the package as it resolves by name from the project, spelled
+  through the project's own `node_modules/research-paper-pipeline`. Under pnpm the resolved path
+  is the version-stamped `.pnpm/…` store directory; a link spelled that way would dangle after the
+  next upgrade, one through `node_modules/research-paper-pipeline` does not.
+- **What it never does** is replace an entry it did not make. A directory, a file, a link
+  elsewhere or a dangling link under a shipped skill's name is reported by name and left alone,
+  and that does not fail `init`: refusing to overwrite is the correct outcome, not a broken install.
+  `rpp doctor` repeats the gap as a warning, with the same reasoning as a missing external program.
+
+`npm run test:install` checks it from the consumer's side under npm and pnpm: every shipped skill
+reachable as `<consumer>/.claude/skills/<name>/SKILL.md`, every script path resolving from the
+consumer root, a second `init` changing nothing, and a foreign directory under a shipped name
+surviving untouched.

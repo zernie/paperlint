@@ -78,10 +78,21 @@ process.exit(
         edits: [
           [
             SRC,
-            "/<!--\\s*count:([a-z]+)\\s*-->\\s*(\\d+)/g",
-            "/(?:<!--\\s*count:([a-z]+)\\s*-->\\s*(\\d+)|(Forty)-(five))/g",
+            "/<!--\\s*count:([a-z][a-z0-9]*)\\s*-->\\s*(\\d+)/g",
+            "/(?:<!--\\s*count:([a-z][a-z0-9]*)\\s*-->\\s*(\\d+)|(Forty)-(five))/g",
           ],
         ],
+      },
+      {
+        name: "counter names are narrowed back to letters only",
+        harness: HARNESS,
+        expect: "a counter whose name carries a digit is read",
+        disables:
+          "the charset agreeing with the counters that actually exist. `e2e` is a real key in " +
+          "`actualCounts`; under `[a-z]+` the match stops at `e` and the declaration in " +
+          "`docs/e2e.md` reads as absent — the check then says the number is declared nowhere " +
+          "while it is right there on line 3",
+        edits: [[SRC, "/<!--\\s*count:([a-z][a-z0-9]*)\\s*-->\\s*(\\d+)/g", "/<!--\\s*count:([a-z]+)\\s*-->\\s*(\\d+)/g"]],
       },
     ],
   }),
