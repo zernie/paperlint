@@ -139,6 +139,11 @@ jobs:
       - name: npm run lint
         run: npm run lint
 
+      # Prettier defaults, the same config as vigiles; `.prettierignore` names what it must not
+      # reflow (compiled SKILL.md, fixture data, raw runs) and why.
+      - name: npm run fmt:check
+        run: npm run fmt:check
+
       # 🔴 THE ONLY GATE THAT LOOKS AT THE SKILLS THEMSELVES — declared in package.json since
       # this repository had a `lint:skills` script and NOT WIRED HERE. That cost nothing while the
       # package shipped rules only; the first skill arrived 2026-09-12 and made it the one check

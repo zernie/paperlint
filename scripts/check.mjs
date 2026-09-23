@@ -64,6 +64,13 @@ export const GATES = [
     script: "lint:skills",
   },
   {
+    name: "formatting",
+    job: "gates",
+    script: "fmt:check",
+    // Prettier defaults, the same config as vigiles. What it must not touch — compiled
+    // SKILL.md, fixture data, raw runs — is listed in `.prettierignore` with the reason.
+  },
+  {
     name: "every declared rule is enabled for a file on disk",
     job: "gates",
     script: "check:globs",
