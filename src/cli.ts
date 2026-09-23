@@ -641,7 +641,7 @@ export async function run(
   }
 
   const eslint = new ESLint({
-    cwd: lintRoot(configPath ? dirname(configPath) : cwd, paths),
+    cwd: lintRoot(configPath ? dirname(resolve(cwd, configPath)) : cwd, paths),
     overrideConfigFile: true,
     overrideConfig: buildConfig(opts, texLanguage) as Linter.Config[],
   });

@@ -190,6 +190,7 @@ stages:
     bytes: 305412
     source: versions/2026-07-22-submitted.tex
     sourceBytes: 57210
+researchQuestion: "Does pruning the state space reduce review cost?"
 ---
 ```
 

@@ -989,6 +989,13 @@ check(
         await cli(["lint", "--json", "--config", join(tree, "package.json")], elsewhere),
       ),
     );
+    // A RELATIVE `--config` stays relative in `configPath`, while every paper path is absolute:
+    // without resolving it first, the common root of `.` and `/tmp/…` is `/`, the debt keys
+    // no longer match, and the declared debt comes back as new warnings (Codex on #45).
+    check(
+      "and with a RELATIVE `--config package.json` it applies too",
+      debtHonoured(await cli(["lint", "--json", "--config", "package.json"], tree)),
+    );
   } finally {
     rmSync(tree, { recursive: true, force: true });
     rmSync(elsewhere, { recursive: true, force: true });
