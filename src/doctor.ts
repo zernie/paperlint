@@ -23,8 +23,8 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
-// @ts-expect-error — the hook ships as .mjs and carries no types; see the block above for why the
-// import points at the hook itself rather than at a shared module.
+// Types come from `paper-edit-guard.hook.d.mts`; see the block above for why the import points at
+// the hook itself rather than at a shared module.
 import {
   papersRoot,
   CONFIG_KEY,
