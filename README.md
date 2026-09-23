@@ -27,8 +27,6 @@ What the rules catch, in plain language:
 That last one is a record check, not a bibliography check — see the table below for exactly what
 each rule reads.
 
-Node 22.13 or newer. CLI name: `rpp`.
-
 **A word used precisely in this document:** a **gate** is a check that can block — it fails a run
 or refuses a command. A **stage** is a point a paper has reached (`submitted`, `camera-ready`).
 Reminders that only print are called reminders, not gates.
@@ -110,6 +108,27 @@ measurements behind both, and behind the package/plugin split, are in
 
 The skills — not the linter — call external programs such as TeX Live, poppler and a JRE. See
 [`docs/toolchain.md`](docs/toolchain.md).
+
+### Requirements and install size
+
+Node 22.13 or newer. The CLI is called `rpp`.
+
+Measured 2026-09-23 on a clean project with npm 10.9.7 (`npm i <tarball>`, production
+dependencies only):
+
+| | size |
+| --- | ---: |
+| tarball | 1.2 MB |
+| this package, unpacked | 3.7 MB |
+| **`node_modules` in total** | **136 MB** |
+| of which `@ast-grep/*` (via `vigiles`) | 51 MB |
+| of which `typescript` (via `vigiles`) | 23 MB |
+| of which `vigiles` itself | 6 MB |
+
+Neither `rpp lint` nor any of the three hooks loads `@ast-grep` or `typescript` — measured by
+tracing every module they resolve; `vigiles` itself is loaded. Those two are there for `vigiles`'
+other features, which this package does not call. Making the ast-grep grammars opt-in is upstream work,
+[zernie/vigiles#257](https://github.com/zernie/vigiles/issues/257).
 
 ## Usage
 
