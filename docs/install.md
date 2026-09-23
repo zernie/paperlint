@@ -120,7 +120,7 @@ external programs are missing.
 | # | action |
 | --- | --- |
 | 1 | `npm i -D github:zernie/research-paper-pipeline#<sha>` |
-| 2 | `npx rpp init` — detects the papers directory, writes the declaration, offers the CI workflow, prints the two plugin lines and any missing programs |
+| 2 | `npx rpp init` — detects the papers directory, writes the declaration, links the skills into `.claude/skills/`, offers the CI workflow, prints the two plugin lines and any missing programs |
 | 3 | the two `/plugin` lines inside Claude Code |
 
 Three, one of which is a paste of two lines that `init` just printed. Step 3 cannot be collapsed:
@@ -182,3 +182,39 @@ plugin that installed cleanly.
 
 So the skills ride with the npm package, where a real install has happened, and the plugin stays
 empty enough that it cannot have this problem.
+
+### The npm package is not where Claude Code looks — `rpp init` links the skills
+
+Riding with the npm package gets the skills onto disk, not into Claude Code. Claude Code discovers
+project skills in `.claude/skills/<name>/SKILL.md` (plus user and plugin skills) and never inside
+`node_modules`. Until 2026-09-23 the README said the skills "sit in
+`node_modules/research-paper-pipeline/skills/` and Claude Code reads them from there"; that was
+false, and a consumer who followed it had no `/paper-pipeline` (Codex review on #45). Every test
+stayed green meanwhile, because every test looked at the package directory, not at the project.
+
+The one consumer where the skills did work had made the links by hand, one per skill:
+
+```
+.claude/skills/<name> -> ../../node_modules/research-paper-pipeline/skills/<name>
+```
+
+`rpp init` now makes exactly those links (`src/link-skills.ts`). They are also what makes the
+project-root-relative script paths inside the skills (`.claude/skills/paper-pipeline/scripts/x.mjs`,
+89 of 104 script references on 2026-09-23; the install e2e prints the live count) resolve in a
+consumer at all.
+
+- **What is linked** is read from the package's own declaration — `.claude-plugin/plugin.json`,
+  `"skills"` — every subdirectory holding a `SKILL.md`. No list and no count is written down.
+- **Where the link points** is the package as it resolves by name from the project, spelled
+  through the project's own `node_modules/research-paper-pipeline`. Under pnpm the resolved path
+  is the version-stamped `.pnpm/…` store directory; a link spelled that way would dangle after the
+  next upgrade, one through `node_modules/research-paper-pipeline` does not.
+- **What it never does** is replace an entry it did not make. A directory, a file, a link
+  elsewhere or a dangling link under a shipped skill's name is reported by name and left alone,
+  and that does not fail `init`: refusing to overwrite is the correct outcome, not a broken install.
+  `rpp doctor` repeats the gap as a warning, with the same reasoning as a missing external program.
+
+`npm run test:install` checks it from the consumer's side under npm and pnpm: every shipped skill
+reachable as `<consumer>/.claude/skills/<name>/SKILL.md`, every script path resolving from the
+consumer root, a second `init` changing nothing, and a foreign directory under a shipped name
+surviving untouched.

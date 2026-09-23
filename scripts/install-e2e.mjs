@@ -28,6 +28,7 @@ import {
   rmSync,
   existsSync,
   readFileSync,
+  readlinkSync,
   realpathSync,
 } from "node:fs";
 import { createRequire } from "node:module";
@@ -272,6 +273,55 @@ function contentDelivery(installed) {
   return { here: here.length, there: there.length, missing, refs, unresolved };
 }
 
+/**
+ * 🔴 THE CONSUMER'S VIEW OF THE SKILLS — what Claude Code actually reads. `contentDelivery` above
+ * proves the skills reached `node_modules`; that is necessary and NOT sufficient, because Claude
+ * Code discovers project skills only in `<project>/.claude/skills/<name>/SKILL.md` and never looks
+ * inside `node_modules`. The README claimed otherwise until Codex caught it on #45, and a consumer
+ * who followed it had no `/paper-pipeline` — while every check here stayed green, because every
+ * check looked at the package directory.
+ *
+ * So this walks the SAME list — every skill the installed package declares — from the consumer
+ * root, through the links `rpp init` made, and resolves the script paths the skills name the way
+ * the agent will: `.claude/skills/<skill>/scripts/x.mjs` from the project root, `scripts/x.mjs`
+ * from the skill's own directory as the project sees it.
+ */
+function consumerSkillView(consumer, installed) {
+  const dir = skillsDir(installed);
+  const names = readdirSync(dir, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && existsSync(join(dir, d.name, "SKILL.md")))
+    .map((d) => d.name);
+  const home = join(consumer, ".claude", "skills");
+  const unreachable = [];
+  const notLinks = [];
+  const links = {};
+  const unresolved = [];
+  let rootRefs = 0;
+  let refs = 0;
+  for (const name of names) {
+    const entry = join(home, name);
+    if (!existsSync(join(entry, "SKILL.md"))) {
+      unreachable.push(name);
+      continue;
+    }
+    try {
+      links[name] = readlinkSync(entry);
+    } catch {
+      notLinks.push(name);
+    }
+    const body = readFileSync(join(entry, "SKILL.md"), "utf8");
+    for (const m of body.matchAll(/([\w./-]*scripts\/[\w-]+\.mjs)/g)) {
+      refs++;
+      const raw = m[1];
+      const fromRoot = raw.startsWith(".claude/skills/");
+      if (fromRoot) rootRefs++;
+      const at = fromRoot ? join(consumer, raw) : join(entry, raw);
+      if (!existsSync(at)) unresolved.push(`${name}: ${raw}`);
+    }
+  }
+  return { names, unreachable, notLinks, links, refs, rootRefs, unresolved };
+}
+
 const results = [];
 // Managers that did not launch under --strict. Part of the FINAL verdict, not a `process.exitCode`
 // set on the side: the unconditional `process.exit(…)` at the bottom overwrites exitCode, so a
@@ -435,6 +485,43 @@ try {
           (init.stdout ?? "") + (init.stderr ?? ""),
         );
 
+    // The skills, as Claude Code will look for them: in the consumer, not in node_modules.
+    const view = consumerSkillView(consumer, installed);
+    view.names.length > 0 && view.unreachable.length === 0
+      ? ok(`all ${view.names.length} shipped skill(s) are reachable as .claude/skills/<name>/SKILL.md`)
+      : bad(
+          `all ${view.names.length} shipped skill(s) are reachable as .claude/skills/<name>/SKILL.md`,
+          `not reachable: ${view.unreachable.join(", ") || "(the package declares zero skills)"}\n${init.stdout ?? ""}`,
+        );
+    view.notLinks.length === 0 &&
+    Object.values(view.links).every((t) => !t.startsWith("/"))
+      ? ok("each is a RELATIVE symlink, not a copy")
+      : bad(
+          "each is a RELATIVE symlink, not a copy",
+          `not links: ${view.notLinks.join(", ") || "-"}; absolute: ${Object.entries(view.links)
+            .filter(([, t]) => t.startsWith("/"))
+            .map(([n]) => n)
+            .join(", ") || "-"}`,
+        );
+    view.rootRefs > 0 && view.unresolved.length === 0
+      ? ok(`all ${view.refs} script path(s) resolve FROM THE CONSUMER ROOT (${view.rootRefs} project-root-relative)`)
+      : bad(
+          `all ${view.refs} script path(s) resolve FROM THE CONSUMER ROOT (${view.rootRefs} project-root-relative)`,
+          view.unresolved.slice(0, 5).join("\n") || "zero project-root-relative references — nothing was checked",
+        );
+
+    // A second `init` is a re-run, not a clash: nothing fails, no link moves.
+    const again = sh(bin, ["init"], { cwd: consumer });
+    const after = consumerSkillView(consumer, installed);
+    again.status === 0 &&
+    view.names.every((n) => after.links[n] === view.links[n]) &&
+    new RegExp(`0 linked now, ${view.names.length} already linked, 0 skipped`).test(again.stdout ?? "")
+      ? ok("a second `rpp init` exits zero and leaves every link as it was")
+      : bad(
+          "a second `rpp init` exits zero and leaves every link as it was",
+          `exit ${String(again.status)}\n${(again.stdout ?? "").split("\n").filter((l) => /shipped|skills/.test(l)).join("\n")}${again.stderr ?? ""}`,
+        );
+
     const lint = sh(bin, ["lint"], { cwd: consumer });
     lint.status === 0 && /no findings/.test(lint.stdout ?? "")
       ? ok("`rpp lint` passed the corpus clean")
@@ -528,6 +615,31 @@ try {
           `all ${d.refs} script path(s) named by skills resolve in the consumer`,
           [...new Set(d.unresolved)].slice(0, 5).join("\n"),
         );
+
+    // 🔴 A NAME THAT IS ALREADY TAKEN STAYS TAKEN. Last, because it deliberately breaks one
+    // skill's link: the consumer's own directory under a shipped skill's name, plus one under a
+    // name nobody ships. `init` must leave both byte for byte, say which skill it skipped, and
+    // still exit zero — refusing to overwrite is not a failure of the install.
+    const home = join(consumer, ".claude", "skills");
+    const taken = view.names[0];
+    if (taken) {
+      // `force` + `recursive`: when init linked nothing, the entry is absent — say so below, do not crash here.
+      rmSync(join(home, taken), { force: true });
+      mkdirSync(join(home, taken), { recursive: true });
+      writeFileSync(join(home, taken, "SKILL.md"), "the consumer's own\n");
+      mkdirSync(join(home, "consumers-own-skill"), { recursive: true });
+      writeFileSync(join(home, "consumers-own-skill", "SKILL.md"), "untouched\n");
+      const third = sh(bin, ["init"], { cwd: consumer });
+      const kept =
+        readFileSync(join(home, taken, "SKILL.md"), "utf8") === "the consumer's own\n" &&
+        readFileSync(join(home, "consumers-own-skill", "SKILL.md"), "utf8") === "untouched\n";
+      kept && third.status === 0 && new RegExp(`${taken} — a directory`).test(third.stdout ?? "")
+        ? ok(`a foreign .claude/skills/${taken} is left untouched, named, and init still exits zero`)
+        : bad(
+            `a foreign .claude/skills/${taken} is left untouched, named, and init still exits zero`,
+            `kept=${String(kept)} exit=${String(third.status)}\n${third.stdout ?? ""}`,
+          );
+    }
 
     results.push({ manager: `${m.name} ${m.version}`, fail });
     console.log("");

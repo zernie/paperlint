@@ -74,6 +74,7 @@ does it for you as it runs the stages. Without that file a paper directory gets 
 | --- | --- | --- |
 | a `research-paper-pipeline` key naming your papers directory | your `package.json` | always |
 | a GitHub Actions workflow | `.github/workflows/` | only if you say yes; it asks once, and only when stdin is a terminal |
+| one relative symlink per shipped skill, into the installed package | `.claude/skills/<name>` | always — except where that name is already taken (a directory, a file, a link elsewhere): that entry is left as it is and named in the report |
 
 It installs no software and touches nothing else.
 
@@ -199,15 +200,22 @@ genuinely re-froze a stage, update the number in the same commit.
 ## Claude Code: skills and hooks
 
 **The two doors deliver different things.** The skills arrive with the
-**npm package** — they sit in `node_modules/research-paper-pipeline/skills/` and Claude Code reads
-them from there. `/paper-pipeline` is the entry point; it routes to the rest. The **plugin**
-carries the hook wiring and nothing else: no code, a manifest and one file,
+**npm package**, in `node_modules/research-paper-pipeline/skills/` — but Claude Code does not look
+there. It finds project skills only in `.claude/skills/<name>/SKILL.md`, so **`npx rpp init` links
+each shipped skill into `.claude/skills/`**, one relative symlink per skill, pointing back into the
+installed package. If `.claude/skills/<name>` already exists and is not that link — your own skill
+directory, a file, a link somewhere else — `init` leaves it exactly as it is and names it in its
+report; that one skill is then not available until you move the entry. Re-running `init` is safe:
+links that are already right are left alone. `rpp doctor` lists any shipped skill that is not
+reachable. `/paper-pipeline` is the entry point; it routes to the rest.
+
+The **plugin** carries the hook wiring and nothing else: no code, a manifest and one file,
 `plugin/hooks/hooks.json`. The hooks call the runtime the npm install already put in your project,
 which is why the plugin can stay empty. (Why it has to be this way — measured — is in
 [`docs/install.md`](docs/install.md).)
 
-So `npm i` gives you the skills, the rules and the CLI; two lines inside Claude Code give you the
-hooks:
+So `npm i` plus `npx rpp init` gives you the skills, the rules and the CLI; two lines inside
+Claude Code give you the hooks:
 
 ```
 /plugin marketplace add zernie/research-paper-pipeline

@@ -498,6 +498,45 @@ check(
       );
     }
 
+    // ── 7-bis. THE SKILLS: WHAT WAS LINKED, AND WHAT WAS LEFT ALONE, BY NAME ────────────
+    //
+    // The links themselves are `link-skills.harness.mjs`'s subject. Here: init REPORTS them, and
+    // a name it refused to take does not turn a working install red. The state is handed in so
+    // this block does not depend on a package being installed next to the temp project.
+    {
+      const dir = project("skills", { papers: ["writing"] });
+      const out = say();
+      const code = await init(dir, {
+        log: out.log,
+        err: out.log,
+        interactive: false,
+        run: haveAll,
+        link: (root) => ({
+          ok: true,
+          home: join(root, ".claude", "skills"),
+          example: "../../node_modules/research-paper-pipeline/skills/alpha",
+          links: [
+            { name: "alpha", status: "created" },
+            { name: "beta", status: "present" },
+            { name: "gamma", status: "foreign", reason: "a directory" },
+          ],
+        }),
+      });
+      const own = out.text().split("── rpp doctor")[0];
+      check(
+        "init counts what it did with the skills: created, already there, skipped",
+        /3 shipped: 1 linked now, 1 already linked, 1 skipped/.test(own),
+      );
+      check(
+        "🔴 a skipped skill is NAMED with what occupies it — not folded into a count",
+        /gamma — a directory/.test(own) && /NOT available in Claude Code/.test(own),
+      );
+      check(
+        "and a name init refused to take does not fail the install",
+        code === 0,
+      );
+    }
+
     // ── 8. `rpp.json` FOR THOSE WHO ALREADY HAVE ONE ──────────────────────────────────
     {
       const dir = project("legacy", { papers: ["writing"] });

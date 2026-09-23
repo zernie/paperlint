@@ -225,6 +225,30 @@ process.exit(
           "run the check with",
         edits: [[CLI, "opts.authorListCommand ? { command: opts.authorListCommand } : {},", "{},"]],
       },
+      {
+        name: "init stops naming the skills it skipped",
+        harness: HARNESS,
+        expect: "a skipped skill is NAMED with what occupies it",
+        disables:
+          "the only way a consumer learns WHICH skill is missing from Claude Code. A count of " +
+          "skipped entries says something is wrong and not what, so nobody goes to fix it",
+        edits: [[INIT, "    for (const l of skipped) out.push(`        ${l.name} — ${l.reason ?? \"occupied\"}`);", ""]],
+      },
+      {
+        name: "a skipped skill link fails init",
+        harness: HARNESS,
+        expect: "a name init refused to take does not fail the install",
+        disables:
+          "init being safe to run on a real project. A consumer who keeps their own skill under " +
+          "the same name would get a red install for a decision init itself respected",
+        edits: [
+          [
+            INIT,
+            "  for (const line of reportSkillLinks(link(root), here)) log(line);",
+            "  const linked = link(root);\n  for (const line of reportSkillLinks(linked, here)) log(line);\n  if (linked.ok && linked.links.some((l) => l.status === \"foreign\")) return 2;",
+          ],
+        ],
+      },
     ],
   }),
 );

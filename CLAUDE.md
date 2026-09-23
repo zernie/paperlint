@@ -285,7 +285,7 @@ top of the market is entirely on `skills/`: `@vitejs/devtools-kit` (330 896 down
 The same files under `./skills` produce a real finding. That is rule 4 of this file
 (`exit 0` with empty output is not "clean") landing in someone else's tool.
 
-**The consumer's side is a symlink per skill:**
+**The consumer's side is a symlink per skill, made by `rpp init` (`src/link-skills.ts`):**
 
 ```
 <consumer>/.claude/skills/<name>  ->  node_modules/research-paper-pipeline/skills/<name>

@@ -45,7 +45,7 @@ function consumer({ papersDir, pkgKey, rppJson, makeDir = true }) {
 }
 
 /** Runs doctor in memory: all output is collected, external programs are faked so it does not depend on the machine. */
-const runDoctor = (dir, { cliPapers = null, have = () => 0 } = {}) => {
+const runDoctor = (dir, { cliPapers = null, have = () => 0, skillLinks } = {}) => {
   const lines = [];
   const code = doctor({
     log: (...a) => lines.push(a.join(" ")),
@@ -53,6 +53,7 @@ const runDoctor = (dir, { cliPapers = null, have = () => 0 } = {}) => {
     projectDir: dir,
     cliPapers,
     run: (_bin, _args) => ({ status: have(_args?.[1]) }),
+    ...(skillLinks ? { skillLinks } : {}),
   });
   return { code, out: lines.join("\n") };
 };
@@ -191,6 +192,43 @@ const runDoctor = (dir, { cliPapers = null, have = () => 0 } = {}) => {
     "node_modules is not searched — someone else's papers are not ours",
     !hits.some((h) => h.startsWith("node_modules")),
   );
+  rmSync(dir, { recursive: true, force: true });
+}
+
+// ── VII-bis. SKILLS THAT ARE NOT LINKED ARE NAMED — AND DO NOT FAIL THE RUN ─────────────────
+// Before this section a consumer without `.claude/skills/` links had no `/paper-pipeline`, and
+// nothing anywhere said so. The link state itself is `link-skills.harness.mjs`'s subject; here
+// only doctor's REPORTING of it is judged, so the state is handed in rather than built on disk.
+{
+  const dir = consumer({ papersDir: "papers", pkgKey: "papers" });
+  const state = {
+    ok: true,
+    home: join(dir, ".claude", "skills"),
+    example: "../../node_modules/research-paper-pipeline/skills/a",
+    links: [
+      { name: "a", status: "present" },
+      { name: "b", status: "missing" },
+      { name: "c", status: "foreign", reason: "a directory" },
+    ],
+  };
+  const r = runDoctor(dir, { cliPapers: "papers", skillLinks: () => state });
+  check(
+    "an unlinked skill is NAMED, not summed into a checkmark",
+    /2 of 3 shipped skills are NOT reachable/.test(r.out) && /\bb — not linked/.test(r.out),
+  );
+  check(
+    "a name taken by something else says WHAT is there",
+    /\bc — a directory, not the shipped skill/.test(r.out),
+  );
+  check(
+    "🔴 an unlinked skill does NOT fail the run — lint, hooks and CI work without it",
+    r.code === 0,
+  );
+  const all = runDoctor(dir, {
+    cliPapers: "papers",
+    skillLinks: () => ({ ...state, links: [{ name: "a", status: "present" }] }),
+  });
+  check("every skill linked — one line says so", /✓ all 1 shipped skills are reachable/.test(all.out));
   rmSync(dir, { recursive: true, force: true });
 }
 
