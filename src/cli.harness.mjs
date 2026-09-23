@@ -916,6 +916,85 @@ check(
   }
 }
 
+// ── THE PAPERS DO NOT HAVE TO LIVE UNDER THE CURRENT DIRECTORY (#48) ─────────────────────
+//
+// 🔴 ESLint IGNORES EVERY FILE OUTSIDE ITS `cwd`. With `cwd` left at the default, `rpp lint
+// /some/other/papers` threw `all-matched-files-ignored` and leaked a raw stack trace, while the
+// same tree linted fine from inside. The property is not "does not crash" — a catch would give
+// that — but "the SAME findings wherever the command is typed", so the assertion compares the
+// two runs finding by finding, ignoring only the path each run prints.
+//
+// Second half: the typography debt is keyed by the paper's path FROM THE CONFIG'S DIRECTORY
+// (`"papers/p"`). Keys are computed against ESLint's `cwd`, so a run started from a
+// subdirectory, or with `--config` from elsewhere, silently stopped honouring the debt.
+{
+  const findings = (r) => {
+    try {
+      return JSON.parse(r.stdout)
+        .flatMap((x) => x.messages.map((m) => `${m.ruleId}: ${m.message}`))
+        .sort();
+    } catch {
+      return [`UNPARSABLE: ${r.out}`];
+    }
+  };
+  const tree = realpathSync(mkdtempSync(join(tmpdir(), "rpp-outside-")));
+  const elsewhere = realpathSync(mkdtempSync(join(tmpdir(), "rpp-elsewhere-")));
+  try {
+    const paper = join(tree, "papers", "p");
+    mkdirSync(paper, { recursive: true });
+    // Two findings of different kinds: a structural one (no scorecard) and a rule one (`§`).
+    writeFileSync(join(paper, "paper.md"), "# T\n\nSee § 3 and §4.\n");
+
+    const inside = await cli(["lint", "--json", "papers"], tree);
+    const outside = await cli(["lint", "--json", join(tree, "papers")], elsewhere);
+    check(
+      "linting a tree OUTSIDE the current directory does not throw",
+      outside.code !== 99 && !/all-matched-files-ignored|THREW/.test(outside.out),
+    );
+    check(
+      "the inside run is the reference: it has both a structure and a rule finding",
+      findings(inside).some((f) => f.startsWith("structure/required-file")) &&
+        findings(inside).some((f) => f.startsWith("paper/typography")),
+    );
+    check(
+      "and from outside it reports the SAME findings with the SAME exit code",
+      JSON.stringify(findings(outside)) === JSON.stringify(findings(inside)) &&
+        outside.code === inside.code,
+    );
+
+    // The debt, keyed from the config's directory, covers the two `§`.
+    writeFileSync(
+      join(tree, "package.json"),
+      JSON.stringify({
+        name: "x",
+        "research-paper-pipeline": {
+          papers: "papers",
+          typographyDebt: { "papers/p": { sectionSign: 2 } },
+        },
+      }),
+    );
+    const debtHonoured = (r) =>
+      r.code !== 99 && !findings(r).some((f) => f.startsWith("paper/typography"));
+    check(
+      "from the config's own directory the declared debt silences the `§` finding",
+      debtHonoured(await cli(["lint", "--json"], tree)),
+    );
+    check(
+      "from a SUBDIRECTORY (config found by walking up) the same debt still applies",
+      debtHonoured(await cli(["lint", "--json"], join(tree, "papers"))),
+    );
+    check(
+      "and with `--config` from an unrelated directory it applies too",
+      debtHonoured(
+        await cli(["lint", "--json", "--config", join(tree, "package.json")], elsewhere),
+      ),
+    );
+  } finally {
+    rmSync(tree, { recursive: true, force: true });
+    rmSync(elsewhere, { recursive: true, force: true });
+  }
+}
+
 // ── `rpp hook` — THE RUNTIME RESOLVES FROM THE PACKAGE, NOT FROM THE PROJECT ROOT ────────
 //
 // 🔴 The measurement that gave rise to this command: one tarball, two package managers.

@@ -30,7 +30,7 @@ import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { join, dirname, resolve, relative, basename } from "node:path";
+import { join, dirname, resolve, relative, basename, isAbsolute, sep } from "node:path";
 import markdown from "@eslint/markdown";
 // @ts-expect-error — the helper lives in the .mjs half of the package (29 833 lines of rules and
 // skill scripts), which this task does not rewrite. It has no types, and a harness pins its behaviour.
@@ -195,6 +195,34 @@ export function buildConfig(
       },
     });
   return cfg;
+}
+
+/**
+ * The directory ESLint runs FROM — its `cwd`. Two things hang on it, and neither is cosmetic:
+ *
+ * - ESLint ignores every file outside its `cwd`. Left at the process's directory, `rpp lint
+ *   /elsewhere/papers` threw `all-matched-files-ignored` (#48).
+ * - `paper/typography` keys the debt by the paper's path relative to this directory, and the
+ *   config writes those keys from ITS OWN directory (`"papers/my-paper"`). So a run started from
+ *   a subdirectory, or with `--config` from elsewhere, silently stopped honouring the debt.
+ *
+ * Hence: the config's directory when there is a config and it contains every path; otherwise the
+ * current directory if it contains them (the old behaviour, unchanged); otherwise the nearest
+ * common ancestor of the paths. Every `files:` glob starts with a globstar, so it matches under
+ * any of these roots.
+ */
+function lintRoot(paths: readonly string[], configPath: string | null, cwd: string): string {
+  const contains = (dir: string, p: string): boolean => {
+    const rel = relative(dir, p);
+    return rel !== ".." && !rel.startsWith(`..${sep}`) && !isAbsolute(rel);
+  };
+  const base = configPath ? dirname(resolve(cwd, configPath)) : cwd;
+  if (paths.every((p) => contains(base, p))) return base;
+  if (paths.every((p) => contains(cwd, p))) return cwd;
+  // A path may name a file, so start from its parent: ESLint's `cwd` must be a directory.
+  let root = dirname(paths[0]!);
+  while (!paths.every((p) => contains(root, p)) && dirname(root) !== root) root = dirname(root);
+  return root;
 }
 
 export function parseArgs(argv: readonly string[]): Args {
@@ -595,9 +623,12 @@ export async function run(
   // `"papers": "papers"` would point at `papers/aisec-2026/papers`, which does not exist — and the
   // run would fail with "nothing found" where everything is in place. A command-line argument stays
   // relative to the current directory: it was typed here and now.
+  //
+  // Both kinds end up ABSOLUTE: ESLint below runs from `lintRoot`, not from here, and would resolve a
+  // relative argument against the wrong directory.
   const paths =
     a.paths.length > 0
-      ? a.paths
+      ? a.paths.map((p) => resolve(cwd, p))
       : toPaths(opts.papers).map((rel) => resolve(dirname(configPath ?? cwd), rel));
   if (paths.length === 0) {
     err(
@@ -623,6 +654,7 @@ export async function run(
   }
 
   const eslint = new ESLint({
+    cwd: lintRoot(paths, configPath, cwd),
     overrideConfigFile: true,
     overrideConfig: buildConfig(opts, texLanguage) as Linter.Config[],
   });

@@ -22,7 +22,7 @@
  * all.
  */
 import { readdirSync, existsSync } from "node:fs";
-import { join, relative, basename } from "node:path";
+import { join, relative, basename, isAbsolute, sep } from "node:path";
 import type { StructureConfig, StructureFinding } from "./types.ts";
 
 /** The requirements after the consumer's config is laid over the defaults. */
@@ -72,7 +72,12 @@ export function checkStructure(
   const rules = structureRules(structure);
   if (!rules) return [];
   const findings: StructureFinding[] = [];
-  const say = (p: string): string => relative(cwd, p) || p;
+  // Relative to where the command was typed — unless the paper lives outside it (#48): then the
+  // absolute path, not a ladder of `../../../` that has to be counted to be read.
+  const say = (p: string): string => {
+    const rel = relative(cwd, p);
+    return rel && rel !== ".." && !rel.startsWith(`..${sep}`) && !isAbsolute(rel) ? rel : p;
+  };
 
   for (const root of paths) {
     for (const name of dirsIn(root)) {
