@@ -99,7 +99,7 @@ The README links only what a user needs. These are for people changing the packa
 ```bash
 npm install
 npm test                 # every harness
-node scripts/run-mutations.mjs   # break each rule on purpose; a harness nothing can kill is not a harness
+node scripts/run-mutations.mjs   # run the existing batteries: each must kill every mutant it plants
 ```
 
 None of these are needed to USE the tool — they are here because the gates are part of the
