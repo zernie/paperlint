@@ -47,8 +47,17 @@ import {
   formatResult,
   anyFailed,
   remedyFor,
+  readFacts,
+  MAIN,
 } from "./build.ts";
+import { prepareEngine } from "./build-engine.ts";
 import { runToolchain } from "./toolchain.ts";
+import {
+  mergeRequirements,
+  requirementsFor,
+  NO_REQUIREMENTS,
+  type TexRequirements,
+} from "./tex-requirements.ts";
 import { doctor } from "./doctor.ts";
 import { init, processInteractivity, askOnTerminal } from "./init.ts";
 import {
@@ -93,7 +102,10 @@ const USAGE = `research-paper-pipeline — machine-checkable gates for a paper k
   npx rpp lint [paths…]               run every rule over your papers
   npx rpp build <paper> | --all       compile paper.tex to paper.pdf: pdflatex and bibtex, rerun until
                                       the references settle. Prints the plan first; a build.sh in the
-                                      paper directory is ignored (--dry-run: print the plan only)
+                                      paper directory is ignored (--dry-run: print the plan only).
+                                      Compiles with rpp's TeX Live, else one on PATH that has every
+                                      package the venue declares; on a terminal it offers to install
+                                      one, without a terminal it stops and names \`npx rpp toolchain\`
   npx rpp toolchain [--check]         install TeX Live with every package the venue profiles declare
                                       into ~/.cache/rpp/texlive (RPP_TEXLIVE_DIR overrides); a second
                                       run does nothing. --check: report what is missing, change nothing
@@ -691,14 +703,53 @@ async function runBuild(
     return 2;
   }
 
+  const env = await engineEnv(targets, a, { log, err });
+  if (env === null) return 1;
   const results = targets.map((t) => {
-    const r = buildPaper(t, { cwd, dryRun: a.dryRun, log });
+    const r = buildPaper(t, { cwd, dryRun: a.dryRun, log, env });
     log(formatResult(r));
     return r;
   });
   const remedy = remedyFor(results);
   if (remedy) err(remedy);
   return anyFailed(results) ? 1 : 0;
+}
+
+/** What one paper needs from TeX Live; a venue.json that does not parse is the build's to report. */
+function paperRequirements(dir: string): TexRequirements {
+  let venue: string | null = null;
+  try {
+    venue = readFacts(dir).venue;
+  } catch {
+    venue = null;
+  }
+  return requirementsFor(venue).tex;
+}
+
+/**
+ * The environment the builds run in — PATH led by a TeX Live that has every package the targeted
+ * papers' venues declare — or null when there is none and none was installed (the reason is
+ * already printed). Papers without `paper.tex` need no engine: they are refused by the build.
+ */
+async function engineEnv(
+  targets: readonly string[],
+  a: Args,
+  { log, err }: { log: typeof console.log; err: typeof console.error },
+): Promise<NodeJS.ProcessEnv | null> {
+  const latex = targets.filter((t) => existsSync(join(t, MAIN)));
+  if (latex.length === 0) return process.env;
+  const tex = latex
+    .map(paperRequirements)
+    .reduce(mergeRequirements, NO_REQUIREMENTS);
+  const out = await prepareEngine({
+    tex,
+    dryRun: a.dryRun,
+    interactive: processInteractivity(false).interactive,
+    ask: askOnTerminal,
+    log,
+    err,
+  });
+  return out.ok ? out.env : null;
 }
 
 /** Commands that take the parsed arguments and the output streams, and nothing else. */
