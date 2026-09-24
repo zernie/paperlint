@@ -153,11 +153,7 @@ process.exit(
           "bibtex regenerates the .bbl, and the \\balance just inserted is erased before any page " +
           "sees it — every position then measures as the unbalanced build",
         edits: [
-          [
-            SRC,
-            "      const c = compile(ctx, seed);",
-            "      const c = compile(ctx);",
-          ],
+          [SRC, "  const c = compile(ctx, seed);", "  const c = compile(ctx);"],
         ],
       },
       {
@@ -170,8 +166,8 @@ process.exit(
         edits: [
           [
             SRC,
-            "        restore(ctx.paperDir, snap);\n        return {\n          ok: false,\n          lines: describeFailedScan(",
-            "        restore(ctx.paperDir, snap);\n        return {\n          ok: true,\n          lines: describeFailedScan(",
+            "      restore(scan.ctx.paperDir, scan.snap);\n      return {\n        ok: false,\n        lines: describeFailedScan(",
+            "      restore(scan.ctx.paperDir, scan.snap);\n      return {\n        ok: true,\n        lines: describeFailedScan(",
           ],
         ],
       },
@@ -185,8 +181,8 @@ process.exit(
         edits: [
           [
             SRC,
-            '      if (step.kind === "none") {\n        restore(ctx.paperDir, snap);\n',
-            '      if (step.kind === "none") {\n',
+            '    if (step.kind === "none") {\n      restore(scan.ctx.paperDir, scan.snap);\n',
+            '    if (step.kind === "none") {\n',
           ],
         ],
       },

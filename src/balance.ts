@@ -200,14 +200,27 @@ export function lastPdfPage(bboxXml: string): PdfLastPage | null {
 
 // ── the bibliography ────────────────────────────────────────────────────────────────────
 
+/**
+ * unified-latex's own AST types, reached through the parser this package declares. The types
+ * package behind it is a transitive dependency, and importing it by name would be depending on it
+ * without declaring it.
+ */
+export type LatexRoot = ReturnType<ReturnType<typeof getParser>["parse"]>;
+export type LatexNode = LatexRoot["content"][number];
+export type LatexArgument = NonNullable<
+  Extract<LatexNode, { type: "macro" }>["args"]
+>[number];
+
 /** Depth-first, in document order: every node of a unified-latex AST. */
-export function* latexNodes(node: any): Generator<any> {
-  if (!node || typeof node !== "object") return;
+export function* latexNodes(
+  node: LatexNode | LatexArgument | null,
+): Generator<LatexNode | LatexArgument> {
+  if (!node) return;
   yield node;
-  for (const child of Array.isArray(node.content) ? node.content : [])
-    yield* latexNodes(child);
-  for (const arg of Array.isArray(node.args) ? node.args : [])
-    yield* latexNodes(arg);
+  if ("content" in node && Array.isArray(node.content))
+    for (const child of node.content) yield* latexNodes(child);
+  if ("args" in node && Array.isArray(node.args))
+    for (const arg of node.args) yield* latexNodes(arg);
 }
 
 /**
@@ -406,6 +419,34 @@ const REJECTION_TEXT: Record<Rejection, string> = {
   overfull: "added an overfull box",
 };
 
+/** The closest miss as one line — none when no attempt left a measurable last page. */
+function closestLine(
+  attempts: readonly Attempt[],
+  base: Baseline,
+  tol: number,
+): string[] {
+  const near = nearMiss(attempts);
+  if (!near?.columns) return [];
+  const why = REJECTION_TEXT[rejection(near, base, tol) ?? "unbalanced"];
+  return [
+    `closest: before \\bibitem #${near.position + 1} — ${formatColumns(near.columns)} (${why})`,
+  ];
+}
+
+/** Every attempt's position, grouped by why it was rejected, in the order the reasons appear. */
+function byRejection(
+  attempts: readonly Attempt[],
+  base: Baseline,
+  tol: number,
+): Map<Rejection, number[]> {
+  const by = new Map<Rejection, number[]>();
+  for (const a of attempts) {
+    const r = rejection(a, base, tol);
+    if (r) by.set(r, [...(by.get(r) ?? []), a.position]);
+  }
+  return by;
+}
+
 /**
  * What a failed scan tells the author: what was tried, the unbalanced baseline, the closest miss,
  * and every position grouped by why it was rejected — so the next move (edit the bibliography,
@@ -417,22 +458,15 @@ export function describeFailedScan(
   count: number,
   tol: number = BALANCE_TOL_PT,
 ): string[] {
+  const by = byRejection(attempts, base, tol);
   const lines = [
     `no position of \\balance balances the last page — tried ${attempts.length} of ${count} \\bibitem positions`,
     `unbalanced build: ${formatColumns(base.columns)}, tolerance ${tol} pt`,
+    ...closestLine(attempts, base, tol),
+    ...[...by].map(
+      ([r, ps]) => `\\bibitem #${formatPositions(ps)}: ${REJECTION_TEXT[r]}`,
+    ),
   ];
-  const near = nearMiss(attempts);
-  if (near?.columns)
-    lines.push(
-      `closest: before \\bibitem #${near.position + 1} — ${formatColumns(near.columns)} (${REJECTION_TEXT[rejection(near, base, tol) ?? "unbalanced"]})`,
-    );
-  const by = new Map<Rejection, number[]>();
-  for (const a of attempts) {
-    const r = rejection(a, base, tol);
-    if (r) by.set(r, [...(by.get(r) ?? []), a.position]);
-  }
-  for (const [r, ps] of by)
-    lines.push(`\\bibitem #${formatPositions(ps)}: ${REJECTION_TEXT[r]}`);
   if (by.get("second-column")?.length === attempts.length)
     lines.push(
       `every position fell in the second column: the bibliography does not reach the first column of the last page, so \\balance belongs in the body text there — by hand`,

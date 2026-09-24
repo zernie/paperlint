@@ -80,8 +80,8 @@ process.exit(
         edits: [
           [
             SRC,
-            "      const nested = readInput(input);",
-            "      const nested = null;",
+            "  const nested = walk.readInput(input);",
+            "  const nested = null;",
           ],
         ],
       },

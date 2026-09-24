@@ -65,6 +65,9 @@ import {
   nextBalanceStep,
   BALANCE_TOL_PT,
   type Attempt,
+  type LatexArgument,
+  type LatexNode,
+  type LatexRoot,
   type Baseline,
   type Columns,
 } from "./balance.ts";
@@ -150,17 +153,25 @@ export interface BuildStep {
 
 // ── facts ───────────────────────────────────────────────────────────────────────────────
 
+type LatexMacro = Extract<LatexNode, { type: "macro" }>;
+
+/** `node` is a call of the macro `\name`. */
+const isMacro = (
+  node: LatexNode | LatexArgument,
+  name: string,
+): node is LatexMacro => node.type === "macro" && node.content === name;
+
 /** The concatenated text of a unified-latex argument node. */
-function argText(arg: any): string {
+function argText(arg: LatexArgument | undefined): string {
   return (arg?.content ?? [])
-    .map((n: any) =>
+    .map((n) =>
       n.type === "string" ? n.content : n.type === "whitespace" ? " " : "",
     )
     .join("");
 }
 
 /** A unified-latex AST, or null when the text does not parse. */
-function parseTex(tex: string): any {
+function parseTex(tex: string): LatexRoot | null {
   try {
     return getParser().parse(tex);
   } catch {
@@ -185,23 +196,22 @@ export function hasBibliography(tex: string): boolean {
   return bibliographyOf(parseTex(tex));
 }
 
-function bibliographyOf(ast: any): boolean {
+function bibliographyOf(ast: LatexRoot | null): boolean {
   for (const n of latexNodes(ast))
     if (
-      n.type === "macro" &&
-      n.content === "bibliography" &&
-      argText((n.args ?? []).find((a: any) => a.openMark === "{")).trim()
+      isMacro(n, "bibliography") &&
+      argText(n.args?.find((a) => a.openMark === "{")).trim()
     )
       return true;
   return false;
 }
 
-function documentclassOf(ast: any): PaperFacts["documentclass"] {
-  const node = (ast?.content ?? []).find(
-    (n: any) => n.type === "macro" && n.content === "documentclass",
+function documentclassOf(ast: LatexRoot | null): PaperFacts["documentclass"] {
+  const node = (ast?.content ?? []).find((n): n is LatexMacro =>
+    isMacro(n, "documentclass"),
   );
   if (!node) return null;
-  const args: any[] = node.args ?? [];
+  const args = node.args ?? [];
   const name = argText(args.find((a) => a.openMark === "{")).trim();
   if (!name) return null;
   const options = argText(args.find((a) => a.openMark === "["))
@@ -315,6 +325,69 @@ const fromLatin1 = (s: string): string =>
 
 type Terminal = Extract<Step, { kind: "done" } | { kind: "fail" }>;
 
+/** How every pass is spawned: in the paper directory, output read byte for byte (`fromLatin1`). */
+function spawnOptions(ctx: BuildContext) {
+  return {
+    cwd: ctx.paperDir,
+    env: ctx.env,
+    stdio: ["ignore", "pipe", "pipe"] as ["ignore", "pipe", "pipe"],
+    encoding: "latin1" as const,
+    maxBuffer: 64 * 1024 * 1024,
+  };
+}
+
+type SpawnOptions = ReturnType<typeof spawnOptions>;
+
+const cannotStart = (step: "latex" | "bibtex"): Terminal => ({
+  kind: "fail",
+  step,
+  cause: { kind: "exit", code: 127 },
+  lines: notInstalled(step === "latex" ? "pdflatex" : "bibtex"),
+});
+
+/** One pdflatex pass and what it left behind, or null when pdflatex could not be started. */
+function latexPass(
+  ctx: BuildContext,
+  final: boolean,
+  opts: SpawnOptions,
+): Observation | null {
+  const before = hashes(ctx.paperDir);
+  const r = ctx.run("pdflatex", pdflatexArgs(final), opts);
+  if (r.error) return null;
+  const exitCode = r.status ?? 1;
+  const log = unwrapLog(
+    readOr(join(ctx.paperDir, `${JOB}.log`), "latin1") ?? "",
+  );
+  return {
+    step: "latex",
+    final,
+    exitCode,
+    before,
+    after: hashes(ctx.paperDir),
+    markers: logMarkers(log),
+    bib: bibInput(ctx.paperDir),
+    errorLines: exitCode === 0 ? [] : errorExcerpt(log).map(fromLatin1),
+  };
+}
+
+/** One bibtex run, on the input the `.aux` names BEFORE it runs, or null when it could not start. */
+function bibtexPass(ctx: BuildContext, opts: SpawnOptions): Observation | null {
+  const before = hashes(ctx.paperDir);
+  const bib = bibInput(ctx.paperDir);
+  const r = ctx.run("bibtex", [JOB], opts);
+  if (r.error) return null;
+  const exitCode = r.status ?? 1;
+  return {
+    step: "bibtex",
+    exitCode,
+    before,
+    after: hashes(ctx.paperDir),
+    bib,
+    errorLines:
+      exitCode === 0 ? [] : bibtexExcerpt(fromLatin1(String(r.stdout ?? ""))),
+  };
+}
+
 /**
  * Run the loop until `nextStep` says done or fail. `seed` is history the loop did not observe
  * itself — the balance step passes the `.bbl` rewrite there, so the loop knows the bibliography
@@ -329,62 +402,19 @@ export function compile(
   bibtex: number;
 } {
   const history: Observation[] = [...seed];
-  const opts = {
-    cwd: ctx.paperDir,
-    env: ctx.env,
-    stdio: ["ignore", "pipe", "pipe"] as ["ignore", "pipe", "pipe"],
-    encoding: "latin1" as const,
-    maxBuffer: 64 * 1024 * 1024,
-  };
-  const cannotStart = (step: "latex" | "bibtex"): Terminal => ({
-    kind: "fail",
-    step,
-    cause: { kind: "exit", code: 127 },
-    lines: notInstalled(step === "latex" ? "pdflatex" : "bibtex"),
-  });
-  let latex = 0;
-  let bibtex = 0;
+  const opts = spawnOptions(ctx);
+  const runs = { latex: 0, bibtex: 0 };
   for (;;) {
     const step = nextStep(summarize(history));
     if (step.kind === "done" || step.kind === "fail")
-      return { end: step, latex, bibtex };
-    const before = hashes(ctx.paperDir);
-    if (step.kind === "latex") {
-      latex++;
-      const r = ctx.run("pdflatex", pdflatexArgs(step.final), opts);
-      if (r.error) return { end: cannotStart("latex"), latex, bibtex };
-      const exitCode = r.status ?? 1;
-      const log = unwrapLog(
-        readOr(join(ctx.paperDir, `${JOB}.log`), "latin1") ?? "",
-      );
-      history.push({
-        step: "latex",
-        final: step.final,
-        exitCode,
-        before,
-        after: hashes(ctx.paperDir),
-        markers: logMarkers(log),
-        bib: bibInput(ctx.paperDir),
-        errorLines: exitCode === 0 ? [] : errorExcerpt(log).map(fromLatin1),
-      });
-    } else {
-      bibtex++;
-      const bib = bibInput(ctx.paperDir);
-      const r = ctx.run("bibtex", [JOB], opts);
-      if (r.error) return { end: cannotStart("bibtex"), latex, bibtex };
-      const exitCode = r.status ?? 1;
-      history.push({
-        step: "bibtex",
-        exitCode,
-        before,
-        after: hashes(ctx.paperDir),
-        bib,
-        errorLines:
-          exitCode === 0
-            ? []
-            : bibtexExcerpt(fromLatin1(String(r.stdout ?? ""))),
-      });
-    }
+      return { end: step, ...runs };
+    runs[step.kind]++;
+    const seen =
+      step.kind === "latex"
+        ? latexPass(ctx, step.final, opts)
+        : bibtexPass(ctx, opts);
+    if (seen === null) return { end: cannotStart(step.kind), ...runs };
+    history.push(seen);
   }
 }
 
@@ -529,6 +559,131 @@ function restore(paperDir: string, snap: Snapshot): void {
 const count = (n: number, one: string, many: string): string =>
   `${n} ${n === 1 ? one : many}`;
 
+/** What one scan works over: the build as compiled, and the `.bbl` each attempt inserts into. */
+interface Scan {
+  readonly ctx: BuildContext;
+  readonly base: Baseline;
+  readonly tol: number;
+  readonly snap: Snapshot;
+  readonly bblPath: string;
+  readonly bbl: string;
+  readonly offsets: readonly number[];
+}
+
+/** One position tried: the attempt, or a measurement failure that ends the step. */
+type Tried = { readonly latex: number } & (
+  | { readonly attempt: Attempt }
+  | { readonly abort: { ok: false; lines: string[] } }
+);
+
+/**
+ * Try `\balance` before one `\bibitem`: restore the compiled build, insert, compile seeded with
+ * the rewrite, measure. A measurement failure restores the build before it ends the step.
+ */
+function tryPosition(scan: Scan, position: number): Tried {
+  const { ctx, snap, bblPath, bbl, offsets } = scan;
+  ctx.progress?.(
+    `  balance: trying \\bibitem #${position + 1} of ${offsets.length}…`,
+  );
+  restore(ctx.paperDir, snap);
+  const before = hashes(ctx.paperDir);
+  writeFileSync(bblPath, injectBalance(bbl, offsets, position));
+  // The rewrite stands in for the bibtex run whose output it edits: it produced the .bbl the
+  // next pass must read, for exactly the citations the aux names.
+  const seed: Observation[] = [
+    {
+      step: "bibtex",
+      exitCode: 0,
+      before,
+      after: hashes(ctx.paperDir),
+      bib: bibInput(ctx.paperDir),
+      errorLines: [],
+    },
+  ];
+  const c = compile(ctx, seed);
+  if (c.end.kind === "fail")
+    return {
+      latex: c.latex,
+      attempt: { position, kind: "failed", lines: c.end.lines },
+    };
+  const m = measure(ctx);
+  if (!m.ok) {
+    restore(ctx.paperDir, snap);
+    return { latex: c.latex, abort: m };
+  }
+  return { latex: c.latex, attempt: { position, kind: "built", ...m.m } };
+}
+
+/** The step's result once `nextBalanceStep` chose a position — which must be the build on disk. */
+function chosenOutcome(
+  scan: Scan,
+  position: number,
+  attempts: readonly Attempt[],
+  latex: number,
+): StepOutcome {
+  // The scan stops at the first acceptable attempt, so the build on disk IS that attempt.
+  const last = attempts.at(-1);
+  if (last?.position !== position || last.kind !== "built")
+    throw new Error(
+      `balance: chose #${position + 1}, but the build on disk is from another attempt`,
+    );
+  return {
+    ok: true,
+    note:
+      `balance: \\balance before \\bibitem #${position + 1} of ${scan.offsets.length}, ` +
+      `last page ${last.columns ? formatColumns(last.columns) : "?"} (was ${formatColumns(scan.base.columns)}); ` +
+      `${count(attempts.length, "position", "positions")} tried, ${count(latex, "pdflatex pass", "pdflatex passes")}`,
+  };
+}
+
+/** Try positions in the order `nextBalanceStep` gives them, until one is chosen or none is left. */
+function scanPositions(scan: Scan): StepOutcome {
+  const positions = balancePositions(scan.offsets.length);
+  const attempts: Attempt[] = [];
+  let latex = 0;
+  for (;;) {
+    const step = nextBalanceStep(positions, attempts, scan.base, scan.tol);
+    if (step.kind === "none") {
+      restore(scan.ctx.paperDir, scan.snap);
+      return {
+        ok: false,
+        lines: describeFailedScan(
+          attempts,
+          scan.base,
+          scan.offsets.length,
+          scan.tol,
+        ),
+      };
+    }
+    if (step.kind === "chosen")
+      return chosenOutcome(scan, step.position, attempts, latex);
+    const tried = tryPosition(scan, step.position);
+    latex += tried.latex;
+    if ("abort" in tried) return tried.abort;
+    attempts.push(tried.attempt);
+  }
+}
+
+/** An unbalanced build: find its bibitems, snapshot the build, and scan. */
+function startScan(
+  ctx: BuildContext,
+  base: Baseline,
+  tol: number,
+): StepOutcome {
+  const bblPath = join(ctx.paperDir, `${JOB}.bbl`);
+  const bbl = readOr(bblPath, "utf8");
+  const offsets = bbl === null ? [] : bibitemOffsets(bbl);
+  if (bbl === null || offsets.length === 0)
+    return {
+      ok: false,
+      lines: [
+        `the last page is unbalanced (${formatColumns(base.columns)}), and ${JOB}.bbl holds no \\bibitem to place \\balance before`,
+      ],
+    };
+  const snap = snapshot(ctx.paperDir);
+  return scanPositions({ ctx, base, tol, snap, bblPath, bbl, offsets });
+}
+
 /**
  * Balance the last page by placing `\balance` in the bibliography — the decision is `balance.ts`,
  * this is the shell around it.
@@ -564,86 +719,12 @@ export const balanceStep: BuildStep = {
         ok: true,
         note: `balance: already balanced, ${formatColumns(built.columns)}`,
       };
-
-    const bblPath = join(ctx.paperDir, `${JOB}.bbl`);
-    const bbl = readOr(bblPath, "utf8");
-    const offsets = bbl === null ? [] : bibitemOffsets(bbl);
-    if (bbl === null || offsets.length === 0)
-      return {
-        ok: false,
-        lines: [
-          `the last page is unbalanced (${formatColumns(built.columns)}), and ${JOB}.bbl holds no \\bibitem to place \\balance before`,
-        ],
-      };
-
     const base: Baseline = {
       pages: built.pages,
       columns: built.columns,
       overfull: built.overfull,
     };
-    const snap = snapshot(ctx.paperDir);
-    const positions = balancePositions(offsets.length);
-    const attempts: Attempt[] = [];
-    let latex = 0;
-    for (;;) {
-      const step = nextBalanceStep(positions, attempts, base, tol);
-      if (step.kind === "none") {
-        restore(ctx.paperDir, snap);
-        return {
-          ok: false,
-          lines: describeFailedScan(attempts, base, offsets.length, tol),
-        };
-      }
-      if (step.kind === "chosen") {
-        // The scan stops at the first acceptable attempt, so the build on disk IS that attempt.
-        const last = attempts.at(-1);
-        if (last?.position !== step.position || last.kind !== "built")
-          throw new Error(
-            `balance: chose #${step.position + 1}, but the build on disk is from another attempt`,
-          );
-        return {
-          ok: true,
-          note:
-            `balance: \\balance before \\bibitem #${step.position + 1} of ${offsets.length}, ` +
-            `last page ${last.columns ? formatColumns(last.columns) : "?"} (was ${formatColumns(base.columns)}); ` +
-            `${count(attempts.length, "position", "positions")} tried, ${count(latex, "pdflatex pass", "pdflatex passes")}`,
-        };
-      }
-      ctx.progress?.(
-        `  balance: trying \\bibitem #${step.position + 1} of ${offsets.length}…`,
-      );
-      restore(ctx.paperDir, snap);
-      const before = hashes(ctx.paperDir);
-      writeFileSync(bblPath, injectBalance(bbl, offsets, step.position));
-      // The rewrite stands in for the bibtex run whose output it edits: it produced the .bbl the
-      // next pass must read, for exactly the citations the aux names.
-      const seed: Observation[] = [
-        {
-          step: "bibtex",
-          exitCode: 0,
-          before,
-          after: hashes(ctx.paperDir),
-          bib: bibInput(ctx.paperDir),
-          errorLines: [],
-        },
-      ];
-      const c = compile(ctx, seed);
-      latex += c.latex;
-      if (c.end.kind === "fail") {
-        attempts.push({
-          position: step.position,
-          kind: "failed",
-          lines: c.end.lines,
-        });
-        continue;
-      }
-      const m = measure(ctx);
-      if (!m.ok) {
-        restore(ctx.paperDir, snap);
-        return m;
-      }
-      attempts.push({ position: step.position, kind: "built", ...m.m });
-    }
+    return startScan(ctx, base, tol);
   },
 };
 
@@ -695,29 +776,69 @@ function removePdf(paperDir: string): void {
   rmSync(join(paperDir, `${JOB}.pdf`), { force: true });
 }
 
+export interface BuildOptions {
+  run?: Runner;
+  cwd?: string;
+  env?: NodeJS.ProcessEnv;
+  steps?: readonly BuildStep[];
+  log?: (line: string) => void;
+  progress?: (line: string) => void;
+  dryRun?: boolean;
+}
+
+/**
+ * The options with their defaults. Destructuring defaults and not a spread over a defaults object:
+ * an option passed as `undefined` (the CLI passes `dryRun: a.dryRun`) must still get its default.
+ */
+function withDefaults({
+  run = spawnSync,
+  cwd = process.cwd(),
+  env = process.env,
+  steps = STEPS,
+  log = console.log,
+  progress = ttyProgress(),
+  // 🔴 `--dry-run` must be a DECLARED option here, not only in the CLI: options destructuring
+  // swallows an unknown key silently, and the first version of this flag ran a full build and
+  // rewrote paper.pdf while looking like a verbose dry run.
+  dryRun = false,
+}: BuildOptions): Required<BuildOptions> {
+  return { run, cwd, env, steps, log, progress, dryRun };
+}
+
+/** Run the applicable steps in order, each on the environment the steps before it left. */
+function runSteps(
+  paperDir: string,
+  dir: string,
+  plan: PlanLine[],
+  { run, env, steps, progress }: Required<BuildOptions>,
+): BuildResult {
+  let stepEnv = env;
+  const notes: string[] = [];
+  for (const [i, step] of steps.entries()) {
+    if (!plan[i]?.applies) continue;
+    const out = step.run({ paperDir, env: stepEnv, run, progress });
+    progress("");
+    if (!out.ok) {
+      removePdf(paperDir);
+      return {
+        dir,
+        status: "failed",
+        plan,
+        failure: { step: step.name, lines: [...out.lines] },
+      };
+    }
+    if (out.env) stepEnv = out.env;
+    if (out.note) notes.push(out.note);
+  }
+  return { dir, status: "built", plan, ...(notes.length ? { notes } : {}) };
+}
+
 export function buildPaper(
   paperDir: string,
-  {
-    run = spawnSync,
-    cwd = process.cwd(),
-    env = process.env,
-    steps = STEPS,
-    log = console.log,
-    progress = ttyProgress(),
-    // 🔴 `--dry-run` must be a DECLARED option here, not only in the CLI: options destructuring
-    // swallows an unknown key silently, and the first version of this flag ran a full build and
-    // rewrote paper.pdf while looking like a verbose dry run.
-    dryRun = false,
-  }: {
-    run?: Runner;
-    cwd?: string;
-    env?: NodeJS.ProcessEnv;
-    steps?: readonly BuildStep[];
-    log?: (line: string) => void;
-    progress?: (line: string) => void;
-    dryRun?: boolean;
-  } = {},
+  options: BuildOptions = {},
 ): BuildResult {
+  const o = withDefaults(options);
+  const { cwd, steps, log, dryRun } = o;
   const dir = relative(cwd, paperDir) || paperDir;
   log(dir);
   let facts: PaperFacts;
@@ -740,26 +861,7 @@ export function buildPaper(
   if (plan.some((p) => !p.applies && p.required))
     return { dir, status: "no-source", plan };
   if (dryRun) return { dir, status: "built", plan, dry: true };
-
-  let stepEnv = env;
-  const notes: string[] = [];
-  for (const [i, step] of steps.entries()) {
-    if (!plan[i]?.applies) continue;
-    const out = step.run({ paperDir, env: stepEnv, run, progress });
-    progress("");
-    if (!out.ok) {
-      removePdf(paperDir);
-      return {
-        dir,
-        status: "failed",
-        plan,
-        failure: { step: step.name, lines: [...out.lines] },
-      };
-    }
-    if (out.env) stepEnv = out.env;
-    if (out.note) notes.push(out.note);
-  }
-  return { dir, status: "built", plan, ...(notes.length ? { notes } : {}) };
+  return runSteps(paperDir, dir, plan, o);
 }
 
 /** Immediate subdirectories that look like a paper. Hidden ones are not papers. */

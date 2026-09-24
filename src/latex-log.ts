@@ -175,6 +175,44 @@ const list = (arg: string): string[] =>
     .map((s) => s.trim())
     .filter(Boolean);
 
+/** What one walk over an `.aux` tree has gathered so far. Lines are read IN ORDER: see below. */
+interface AuxAcc {
+  readonly citations: Set<string>;
+  readonly databases: string[];
+  style: string | null;
+}
+
+/** How a walk reaches nested aux files, and which it has already followed (a cycle ends there). */
+interface AuxWalk {
+  readonly readInput: (name: string) => string | null;
+  readonly seen: Set<string>;
+}
+
+/**
+ * Fold one aux line into the walk. Order is load-bearing: a nested aux's databases land where
+ * its `\@input` stands, and its style counts only while no `\bibstyle` has been read yet — a
+ * later one in the parent still overrides it.
+ */
+function readAuxLine(line: string, acc: AuxAcc, walk: AuxWalk): void {
+  for (const k of list(argOf(line, "citation") ?? "")) acc.citations.add(k);
+  acc.databases.push(...list(argOf(line, "bibdata") ?? ""));
+  const st = argOf(line, "bibstyle");
+  if (st !== null) acc.style = st.trim();
+  followInput(argOf(line, "@input"), acc, walk);
+}
+
+/** Merge an `\@input` aux into the walk — once per name, and only when it exists. */
+function followInput(input: string | null, acc: AuxAcc, walk: AuxWalk): void {
+  if (input === null || walk.seen.has(input)) return;
+  walk.seen.add(input);
+  const nested = walk.readInput(input);
+  if (nested === null) return;
+  const sub = auxBib(nested, walk.readInput, walk.seen);
+  for (const k of sub.citations) acc.citations.add(k);
+  acc.databases.push(...sub.databases);
+  acc.style ??= sub.style;
+}
+
 /**
  * Read `\citation`, `\bibdata` and `\bibstyle` out of an `.aux`, following `\@input{sub.aux}` —
  * `\include` writes each chapter's citations into its own aux file, and bibtex follows them too.
@@ -185,30 +223,14 @@ export function auxBib(
   readInput: (name: string) => string | null = () => null,
   seen: Set<string> = new Set(),
 ): AuxBib {
-  const citations = new Set<string>();
-  const databases: string[] = [];
-  let style: string | null = null;
-  for (const raw of text.split(/\r?\n/)) {
-    const line = raw.trim();
-    const cite = argOf(line, "citation");
-    if (cite !== null) for (const k of list(cite)) citations.add(k);
-    const data = argOf(line, "bibdata");
-    if (data !== null) databases.push(...list(data));
-    const st = argOf(line, "bibstyle");
-    if (st !== null) style = st.trim();
-    const input = argOf(line, "@input");
-    if (input !== null && !seen.has(input)) {
-      seen.add(input);
-      const nested = readInput(input);
-      if (nested !== null) {
-        const sub = auxBib(nested, readInput, seen);
-        for (const k of sub.citations) citations.add(k);
-        databases.push(...sub.databases);
-        style ??= sub.style;
-      }
-    }
-  }
-  return { citations: [...citations].sort(), databases, style };
+  const acc: AuxAcc = { citations: new Set(), databases: [], style: null };
+  for (const raw of text.split(/\r?\n/))
+    readAuxLine(raw.trim(), acc, { readInput, seen });
+  return {
+    citations: [...acc.citations].sort(),
+    databases: acc.databases,
+    style: acc.style,
+  };
 }
 
 /**
