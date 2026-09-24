@@ -622,11 +622,17 @@ export async function init(
     log(
       `  ✓ ${here(decl.path)} → "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": ${JSON.stringify(decl.papers)} }`,
     );
-  else if (decl.status === "kept")
+  else if (decl.status === "kept") {
+    if (typeof decl.papers !== "string") {
+      err(
+        `  ✗ ${here(decl.path)} declares ${PAPERS_DIR_FIELD} = ${JSON.stringify(decl.papers)} — it must be a directory path (a string)`,
+      );
+      return 2;
+    }
     log(
       `  ✓ ${here(decl.path)} already declares ${PAPERS_DIR_FIELD} = ${JSON.stringify(decl.papers)} — kept, nothing overwritten`,
     );
-  else if (decl.status === "renamed") {
+  } else if (decl.status === "renamed") {
     err(`  ✗ ${decl.message}`);
     err(
       `      nothing was written. Rename the field in ${here(decl.path)}, then run init again.`,
@@ -656,7 +662,12 @@ export async function init(
   log(
     `      one declaration — the hooks, the rules and the CLI all read this one key`,
   );
-  const rpp = syncRppJson(root, choice.papers);
+  // Every step below uses the DECLARED directory. A kept declaration outranks what init
+  // measured or guessed: otherwise the first paper, the workflow and rpp.json would land in the
+  // guessed directory while lint and the hooks keep reading the declared one.
+  const papersDir =
+    decl.status === "kept" ? (decl.papers as string) : choice.papers;
+  const rpp = syncRppJson(root, papersDir);
   if (rpp === "filled")
     log(
       `  ⚠ rpp.json was already here — gave it the same ${PAPERS_DIR_FIELD} value; it is deprecated`,
@@ -690,7 +701,7 @@ export async function init(
   // ── 5. the one expensive, unguessable thing ───────────────────────────────────────────
   log(``);
   log(`CI`);
-  const wf = await offerWorkflow(root, choice.papers, { ask, interactive });
+  const wf = await offerWorkflow(root, papersDir, { ask, interactive });
   if (wf === "written")
     log(`  ✓ wrote ${WORKFLOW_PATH} — pin <commit-sha> before pushing it`);
   else if (wf === "kept")
@@ -701,15 +712,18 @@ export async function init(
     log(`      to run the same checks in CI, add this step to a workflow:`);
     log(`        - uses: zernie/research-paper-pipeline@<commit-sha>`);
     log(`          with:`);
-    log(`            paths: ${choice.papers}`);
+    log(`            paths: ${papersDir}`);
   }
 
   // ── 6. a first paper — offered only where there is none, and only to a human ──────────
   log(``);
   log(`first paper`);
-  const papersAbs = resolve(root, choice.papers);
+  const papersAbs = resolve(root, papersDir);
   const hasPaper = papersIn(papersAbs).length > 0;
   let wanted: string | null = paper;
+  // A paper that was asked for and not delivered decides the exit code (below): the doctor's
+  // code can be 0, and automation would read an unfulfilled `--paper` as done.
+  let paperCode = 0;
   if (wanted === null && !hasPaper && interactive && createPaper) {
     const answer = (
       await askOrDefault(ask, `  create a first paper? name: [skip] `)
@@ -725,13 +739,17 @@ export async function init(
       )?.trim();
       if (isFormat(f)) fmt = f;
     }
-    if (problem) log(`  ✗ ${problem} — no paper created`);
-    else {
+    if (problem) {
+      log(`  ✗ ${problem} — no paper created`);
+      paperCode = 2;
+    } else {
       const code = await createPaper(papersAbs, wanted, fmt);
-      if (code !== 0)
+      if (code !== 0) {
         log(`  ⚠ the new paper's lint exited ${String(code)} — see above`);
+        paperCode = code;
+      }
     }
-  } else if (hasPaper) log(`  ✓ ${choice.papers} already holds a paper`);
+  } else if (hasPaper) log(`  ✓ ${papersDir} already holds a paper`);
   else
     log(
       `  · none yet${interactive ? "" : ` — ${why}, so nothing was asked`}. \`npx rpp new <name>\` or \`--paper <name>\` creates one`,
@@ -765,16 +783,16 @@ export async function init(
       log(`        ${cmd}`);
   }
 
-  log(nextSteps(choice.papers));
+  log(nextSteps(papersDir));
 
   // ── 8. the install states its own condition ───────────────────────────────────────────
   log(`── rpp doctor ${"─".repeat(56)}`);
-  const cliPapers = resolveCliPapers ? resolveCliPapers(root) : choice.papers;
+  const cliPapers = resolveCliPapers ? resolveCliPapers(root) : papersDir;
   const code = doctor({ log, cwd: root, projectDir: root, run, cliPapers });
   if (code !== 0)
     log(
       `doctor exits ${String(code)} — the install is NOT finished. The lines marked ✗ above say what is\n` +
         `left; re-run \`npx rpp doctor\` once you have done them.`,
     );
-  return code;
+  return paperCode !== 0 ? paperCode : code;
 }

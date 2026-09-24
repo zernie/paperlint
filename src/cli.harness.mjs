@@ -1590,6 +1590,66 @@ console.log(
         !asked.some((q) => /create a first paper/.test(q)),
       );
     }
+    {
+      // Codex on #55: a DECLARED papersDir with no paper in it yet is kept by the declaration
+      // step, and every later step must use the kept value, not the directory init guessed.
+      const dir = bare("declared");
+      writeFileSync(
+        join(dir, "package.json"),
+        `{"name":"c","version":"1.0.0","research-paper-pipeline":{"${PAPERS_DIR_FIELD}":"writing"}}\n`,
+      );
+      const made = [];
+      await init(dir, {
+        ...base,
+        log: () => {},
+        interactive: false,
+        paper: "first",
+        createPaper: async (papersRoot, name) => (
+          made.push({ papersRoot, name }),
+          0
+        ),
+      });
+      check(
+        "🔴 with papersDir already declared, --paper creates the paper IN the declared directory, not the guess",
+        made.length === 1 && made[0].papersRoot === join(dir, "writing"),
+      );
+    }
+    {
+      // Codex on #55: an explicit --paper that is refused or whose lint fails must not end in
+      // the doctor's exit code, which can be 0 — automation would read "done".
+      // The doctor's own exit code is not injectable and is non-zero in a bare temp project, so
+      // "non-zero" would pass on the old code too. The lint failure therefore returns a code the
+      // doctor never produces (7), and the invalid name is compared against a baseline run.
+      const baseline = await init(bare("baseline"), {
+        ...base,
+        log: () => {},
+        interactive: false,
+        paper: "fine",
+        createPaper: async () => 0,
+      });
+      const failed = await init(bare("lint-fails"), {
+        ...base,
+        log: () => {},
+        interactive: false,
+        paper: "ok",
+        createPaper: async () => 7,
+      });
+      check(
+        "🔴 `init --paper <name>` whose lint fails exits with THAT code, not the doctor's",
+        failed === 7,
+      );
+      const refused = await init(bare("refused"), {
+        ...base,
+        log: () => {},
+        interactive: false,
+        paper: "Bad",
+        createPaper: async () => 0,
+      });
+      check(
+        `🔴 \`init --paper <invalid name>\` exits 2 (the same project with a valid name exits ${String(baseline)})`,
+        refused === 2,
+      );
+    }
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
