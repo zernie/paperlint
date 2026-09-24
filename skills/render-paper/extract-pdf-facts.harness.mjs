@@ -1,158 +1,134 @@
 #!/usr/bin/env node
 /**
- * A test of PARSING `pdftotext -bbox` coordinates — the half of the balancing measurement where
- * 08-29 saw four errors in a row in one day. A test against a live PDF would have caught none of
- * them: they're all about how the coordinates are read, not about whether the paper builds.
+ * `extract-pdf-facts.mjs` — the command-line shim over `writeFacts`, run as a process the way CI
+ * runs it, on a real committed PDF.
  *
- * Each case below reproduces a specific error from that day, not an invented situation. The
- * markup is written by hand because it needs pages that don't exist in the corpus today.
+ * What is pinned here is the CONTRACT callers branch on — the exit codes and where the file lands —
+ * plus the one defect of the poppler reader this shim used to carry: it read `yes` anywhere in a
+ * `pdffonts` row, so a font printed `no no yes` (not embedded, not subset, has a ToUnicode map)
+ * came out embedded. `fixtures/pdf-facts/t3-mixed.pdf` carries exactly such a font.
+ *
+ * The shim imports the compiled package (`dist/`), so `npm run build` runs before this.
  */
 import assert from "node:assert/strict";
-import { dirname, join } from "node:path";
+import { spawnSync } from "node:child_process";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const { columnHeights } = await import(join(HERE, "extract-pdf-facts.mjs"));
+const SHIM = join(HERE, "extract-pdf-facts.mjs");
+const FIX = resolve(HERE, "..", "..", "fixtures", "pdf-facts");
 
-const W = 612; // letter, points
+let n = 0;
+const check = (label, cond, detail = "") => {
+  assert.ok(cond, detail ? `${label} — ${detail}` : label);
+  n++;
+};
 
-/** Assemble markup: lines are given as {x, yTop, yBot, n, text}. */
-const page = (rows) =>
-  "<page>" +
-  rows
-    .flatMap(({ x, yTop, yBot, n = 1, text = "word", step = 0 }) =>
-      Array.from({ length: n }, (_, i) => {
-        const y = yTop + i * step;
-        const b = yBot + i * step;
-        return `<word xMin="${x}" yMin="${y}" xMax="${x + 20}" yMax="${b}">${text}</word>`;
-      }),
-    )
-    .join("") +
-  "</page>";
+const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-extract-")));
+/** Run the shim from `root`, with no banal anywhere unless `env` names one. */
+const shim = (args, env = {}) =>
+  spawnSync(process.execPath, [SHIM, ...args], {
+    cwd: root,
+    encoding: "utf8",
+    env: { PATH: process.env.PATH, CLAUDE_PROJECT_DIR: root, ...env },
+  });
+const said = (r) => `${r.stdout}${r.stderr}`;
 
-// ── 1. Balanced columns: both end at the same height ─────────────────────────
-{
-  const xml = page([
-    { x: 54, yTop: 60, yBot: 70, n: 40, step: 10 },
-    { x: 320, yTop: 60, yBot: 70, n: 40, step: 10 },
-  ]);
-  const c = columnHeights(xml, W);
-  assert.deepEqual(
-    c,
-    [400, 400],
-    "two identical columns must produce identical heights",
+try {
+  const paper = join(root, "papers", "mixed");
+  mkdirSync(paper, { recursive: true });
+  cpSync(join(FIX, "t3-mixed.pdf"), join(paper, "paper.pdf"));
+  writeFileSync(
+    join(paper, "venue.json"),
+    JSON.stringify({ venue: "agenticdev", kind: "short" }),
   );
+  const factsFile = join(paper, "_build", "paper.facts.json");
+
+  check("usage: no target is exit 2", shim([]).status === 2);
+  check("no such path is exit 1", shim([join(root, "nope")]).status === 1);
+
+  const strict = shim([paper, "--strict"]);
+  check(
+    "🔴 --strict with no banal: exit 1, named as an environment error, and nothing written",
+    strict.status === 1 &&
+      /banal not found/.test(said(strict)) &&
+      /environment error/.test(said(strict)) &&
+      !existsSync(factsFile),
+    said(strict),
+  );
+
+  const local = shim([paper]);
+  check(
+    "without --strict and no banal: exit 0, facts written, the missing geometry said out loud",
+    local.status === 0 &&
+      existsSync(factsFile) &&
+      /banal not found/.test(local.stderr),
+    said(local),
+  );
+  const facts = JSON.parse(readFileSync(factsFile, "utf8"));
+  check(
+    "the facts are schema 2, about paper.pdf, for the venue venue.json declares",
+    facts.schema === 2 &&
+      facts.pdf === "paper.pdf" &&
+      facts.venue === "agenticdev" &&
+      facts.kind === "short",
+    JSON.stringify(facts).slice(0, 200),
+  );
+  check(
+    "a text PDF has fonts",
+    Array.isArray(facts.fonts) && facts.fonts.length === 4,
+    JSON.stringify(facts.fonts),
+  );
+  const times = facts.fonts.find((f) => f.name === "Times-Roman");
+  check(
+    "🔴 Times-Roman — pdffonts `Type 1 Custom no no yes` — is embedded: false (the old reader said true)",
+    times?.embedded === false && times.type === "Type 1",
+    JSON.stringify(times),
+  );
+  check(
+    "the Type 3 font keeps poppler's type spelling, which consumers match on",
+    facts.fonts.some((f) => f.type === "Type 3"),
+  );
+
+  const fake = join(root, "banal.pl");
+  writeFileSync(
+    fake,
+    `print '{"papersize":[792,612],"columns":2,"bodyfontsize":9,"pages":[{}]}';\n`,
+  );
+  const withBanal = shim([paper, "--strict"], { BANAL: fake });
+  const g = JSON.parse(readFileSync(factsFile, "utf8"));
+  check(
+    "--strict with banal ($BANAL): exit 0, and the geometry is banal's",
+    withBanal.status === 0 && g.geometry_source === "banal" && g.columns === 2,
+    said(withBanal),
+  );
+
+  writeFileSync(
+    join(paper, "venue.json"),
+    JSON.stringify({ venue: "x", pdf: "build/other.pdf" }),
+  );
+  const missing = shim([paper, "--strict"], { BANAL: fake });
+  check(
+    "a declared artifact that is not built is exit 3, not 1",
+    missing.status === 3 && /not built/.test(said(missing)),
+    said(missing),
+  );
+} finally {
+  rmSync(root, { recursive: true, force: true });
 }
 
-// ── 2. Unbalanced: exactly the defect the publisher bounced the paper for on 08-29 ─
-{
-  const xml = page([
-    { x: 54, yTop: 60, yBot: 70, n: 60, step: 10 },
-    { x: 320, yTop: 60, yBot: 70, n: 30, step: 10 },
-  ]);
-  const c = columnHeights(xml, W);
-  assert.equal(
-    c[0] - c[1],
-    300,
-    "the imbalance must show up as a height difference",
-  );
-}
-
-// ── 3. 🔴 SPLIT ON THE PAGE'S MIDPOINT, NOT ON THE WORDS' EDGES ───────────────
-// Error #2 of that day. The midpoint was taken between the outermost words — and on a page where
-// ONLY the left column is filled, with a centered page number at the bottom, that split lands
-// INSIDE the left column: part of its lines get shoved into the "right" one. The measurement gave
-// "77 / 731" for a page with six lines at the top left.
-//
-// The case reproduces exactly this: a line spans the column's whole width (54…290), not a single
-// point. The page's midpoint is 306, the words' edge-based midpoint is around 172 — that is,
-// inside the line.
-{
-  const rows = [];
-  for (let i = 0; i < 20; i += 1) {
-    for (const x of [54, 110, 170, 230, 280])
-      rows.push({ x, yTop: 60 + i * 10, yBot: 70 + i * 10 });
-  }
-  rows.push({ x: 300, yTop: 700, yBot: 708, text: "24" }); // centered page number
-  const c = columnHeights(page(rows), W);
-  assert.equal(
-    c[1],
-    0,
-    `the right column is empty — must come out 0, got ${String(c[1])}`,
-  );
-  assert.ok(
-    c[0] > 600,
-    `the left column should stay whole, got ${String(c[0])}`,
-  );
-}
-
-// ── 4. 🔴 A REVIEWER BUILD IS NOT JUDGED ──────────────────────────────────────
-// Line numbers in the margin run down the WHOLE height of the page, so a column with a dozen
-// lines of text measures as full: the 08-29 measurement gave "656.8 / 654.8" for a page whose
-// right column was one-sixth filled. Balancing is only required of camera-ready, so the correct
-// answer is "nothing to measure," not a fudged number.
-{
-  const rows = [
-    { x: 54, yTop: 60, yBot: 70, n: 60, step: 10 },
-    { x: 320, yTop: 60, yBot: 70, n: 10, step: 10 },
-    { x: 20, yTop: 60, yBot: 68, n: 60, step: 10, text: "101" }, // line numbers in the left margin
-  ];
-  assert.equal(
-    columnHeights(page(rows), W),
-    null,
-    "a reviewer build cannot be judged",
-  );
-  // without the line numbers, the same page IS judged — otherwise the test above would pass for any reason
-  assert.notEqual(
-    columnHeights(page(rows.slice(0, 2)), W),
-    null,
-    "without line numbers, the page is judged",
-  );
-}
-
-// Line numbers in the RIGHT margin are caught the same way — the ACL template has them on both sides.
-{
-  const xml = page([
-    { x: 54, yTop: 60, yBot: 70, n: 60, step: 10 },
-    { x: 320, yTop: 60, yBot: 70, n: 10, step: 10 },
-    { x: 585, yTop: 60, yBot: 68, n: 60, step: 10, text: "2167" },
-  ]);
-  assert.equal(
-    columnHeights(xml, W),
-    null,
-    "numbers in the right margin are also a reviewer build",
-  );
-}
-
-// A number INSIDE the text is not a line number: otherwise a bibliography with years would be
-// caught as a reviewer build, and the rule would go silent on exactly the page it was written for.
-{
-  const xml = page([
-    { x: 54, yTop: 60, yBot: 70, n: 40, step: 10, text: "2024" },
-    { x: 320, yTop: 60, yBot: 70, n: 40, step: 10, text: "2025" },
-  ]);
-  assert.deepEqual(
-    columnHeights(xml, W),
-    [400, 400],
-    "years in the text are not line numbers",
-  );
-}
-
-// ── 5. A stub page ────────────────────────────────────────────────────────────
-// A tail of six lines is not a layout defect, and a fudged number there is worse than silence.
-{
-  const xml = page([{ x: 54, yTop: 60, yBot: 70, n: 6, step: 10 }]);
-  assert.equal(columnHeights(xml, W), null, "a near-empty page is not judged");
-}
-
-// ── 6. Missing page width — null, not a division by who-knows-what ───────────
-{
-  const xml = page([{ x: 54, yTop: 60, yBot: 70, n: 70, step: 10 }]);
-  assert.equal(
-    columnHeights(xml, null),
-    null,
-    "with no page width, there is nothing to split against",
-  );
-}
-
-console.log("extract-pdf-facts: coordinate parsing — all checks passed");
+console.log(
+  `✓ ${String(n)} assertions passed — extract-pdf-facts: the exit-code contract, schema 2, and the no-no-yes font`,
+);

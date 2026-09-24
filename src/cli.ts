@@ -26,7 +26,7 @@
  * replaced it: silently breaking someone else's workflow is worse than asking them to fix a line.
  */
 import { ESLint, type Linter } from "eslint";
-import { readFileSync, existsSync, writeFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -42,13 +42,21 @@ import {
   asEslintResults,
 } from "./structure.ts";
 import {
-  BUILD_SCRIPTS,
-  buildPaper,
+  buildPapers,
   papersIn,
-  formatResults,
   anyFailed,
   remedyFor,
+  readFacts,
+  MAIN,
 } from "./build.ts";
+import { prepareEngine } from "./build-engine.ts";
+import { runToolchain } from "./toolchain.ts";
+import {
+  mergeRequirements,
+  requirementsFor,
+  NO_REQUIREMENTS,
+  type TexRequirements,
+} from "./tex-requirements.ts";
 import { doctor } from "./doctor.ts";
 import { init, processInteractivity, askOnTerminal } from "./init.ts";
 import {
@@ -64,8 +72,15 @@ import {
 import {
   CONFIG_KEY,
   PAPERS_DIR_FIELD,
+  SETTINGS_KEYS,
   renamedFieldMessage,
 } from "../lib/paper-config.mjs";
+import {
+  parseRuleBlocks,
+  shippedRuleIds,
+  unknownKeys,
+  type Parsed,
+} from "./rules-config.ts";
 export { init };
 export { nextSteps } from "./init.ts";
 
@@ -81,6 +96,8 @@ import texBuild from "../eslint-rules/tex-build.mjs";
 import docFields from "../eslint-rules/doc-fields.mjs";
 // @ts-expect-error — an ESLint rule in .mjs, it has no types
 import findingsCause from "../eslint-rules/review-findings-cause.mjs";
+// @ts-expect-error — an ESLint rule in .mjs, it has no types
+import pdfRules from "../eslint-rules/pdf-last-page-balance.mjs";
 
 const USAGE = `research-paper-pipeline — machine-checkable gates for a paper kept in git
 
@@ -91,8 +108,15 @@ const USAGE = `research-paper-pipeline — machine-checkable gates for a paper k
                                       create <papers>/<name>/ from the template; never overwrites,
                                       on an existing folder adds only the missing files, then lints it
   npx rpp lint [paths…]               run every rule over your papers
-  npx rpp build <paper> | --all       build a paper with ITS OWN build script
-                                      (--dry-run: name the script that WOULD run, and where none exists)
+  npx rpp build <paper> | --all       compile paper.tex to paper.pdf: pdflatex and bibtex, rerun until
+                                      the references settle. Prints the plan first; a build.sh in the
+                                      paper directory is ignored (--dry-run: print the plan only).
+                                      Compiles with rpp's TeX Live, else one on PATH that has every
+                                      package the venue declares; on a terminal it offers to install
+                                      one, without a terminal it stops and names \`npx rpp toolchain\`
+  npx rpp toolchain [--check]         install TeX Live with every package the venue profiles declare
+                                      into ~/.cache/rpp/texlive (RPP_TEXLIVE_DIR overrides); a second
+                                      run does nothing. --check: report what is missing, change nothing
   npx rpp doctor                      say what is actually wired — and what only LOOKS wired
   npx rpp hook <name>                 run an editor hook (.claude/settings.json calls this)
   npx rpp --help
@@ -127,8 +151,14 @@ read as a deprecated fallback and the run says so. \`papersDir\` is required; th
     "docFields":         { "read": { "values": ["full", "abstract", "none"] } },
     "reviewSince":       "2026-08-23",
     "minFindings":       3,
-    "causeMarker":       "Cause:"
+    "causeMarker":       "Cause:",
+    "rules": [ { "files": ["papers/my-paper/**"],
+                 "rules": { "pdf/last-page-balance": "error" } } ]
   }
+
+  "rules" takes ESLint flat-config blocks (files, ignores, rules), appended after rpp's own, with
+  files relative to the file holding the settings. Optional rules (off unless turned on there):
+  pdf/last-page-balance. An unknown key, anywhere in the settings, is an error.
 `;
 
 /** The config the user would otherwise write by hand. The data comes from `opts`, the mechanism is here. */
@@ -143,12 +173,18 @@ export function buildConfig(
     languageOptions: { frontmatter: "yaml" },
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
   const cfg: any[] = [
     // 🔴 THE PROJECT'S PAPER TEMPLATE IS NOT A PAPER. `rpp new` reads `<papers>/.template/`, and
     // its files carry every marker a paper does. Flat config does NOT ignore dot-directories by
     // default (only `node_modules/` and `.git/`), so without this block `rpp lint` would lint the
     // template as a paper — and a richer template with placeholder stages would fail the run.
     { ignores: ["**/.template/"] },
+    // The `pdf` plugin is registered for EVERY file, and its rule is on for none. A consumer's
+    // block (`rules`, appended below) turns it on for a glob that also matches markdown files;
+    // with the plugin defined only beside `paper.tex`, ESLint would refuse those files with
+    // "could not find plugin". The rule itself acts on `paper.tex` only.
+    { plugins: { pdf: pdfRules } },
     {
       files: ["**/PIPELINE-STATUS.md"],
       plugins: { markdown, paper: paperStages },
@@ -221,7 +257,90 @@ export function buildConfig(
         "tex/acm-frontmatter-override": "error",
       },
     });
+  // The consumer's own blocks, LAST, so a later block wins — ESLint's rule. Parsed by
+  // `readConfig`; each carries the settings file's directory as its `basePath`.
+  cfg.push(...(opts.rules ?? []));
   return cfg;
+}
+
+/**
+ * The rule ids a consumer may name in `rules`: every rule rpp's own config defines, read off that
+ * config rather than listed again. `@eslint/markdown` is a dependency's plugin, not rpp's.
+ */
+export const SHIPPED_RULES: ReadonlySet<string> = shippedRuleIds(
+  buildConfig({}, { sentinel: "tex language" }),
+  [markdown],
+);
+
+/** Whether a rule entry (`"error"`, `2`, `["warn", {…}]`) turns the rule on. */
+const isOn = (entry: unknown): boolean => {
+  const sev = Array.isArray(entry) ? entry[0] : entry;
+  return sev !== undefined && sev !== "off" && sev !== 0;
+};
+
+/**
+ * Rules rpp ships and turns on for no file itself — the ones a consumer opts into with `rules`.
+ * Derived: every shipped rule that no block of rpp's own config names.
+ */
+export const OPTIONAL_RULES: ReadonlySet<string> = new Set(
+  [...SHIPPED_RULES].filter(
+    (id) =>
+      !buildConfig({}, { sentinel: "tex language" }).some((b) =>
+        isOn((b as { rules?: Record<string, unknown> }).rules?.[id]),
+      ),
+  ),
+);
+
+/**
+ * 🔴 AN OPTIONAL RULE THAT IS ON AND REACHES NO PAPER IS A GREEN ZERO. A `files` glob that matches
+ * nothing — a typo, a path relative to the wrong directory — leaves the rule never invoked, and a
+ * rule that never runs reports exactly like a rule that passed. So for every optional rule the
+ * consumer turned on, some linted `paper.tex` must actually have it enabled; the ones none has are
+ * returned, for the caller to refuse.
+ */
+export async function silentOptionalRules(
+  eslint: ESLint,
+  lintedFiles: readonly string[],
+  opts: RppConfig,
+): Promise<string[]> {
+  const turnedOn = new Set(
+    (opts.rules ?? []).flatMap((b) =>
+      Object.entries(b.rules)
+        .filter(([id, e]) => OPTIONAL_RULES.has(id) && isOn(e))
+        .map(([id]) => id),
+    ),
+  );
+  const reached = new Set<string>();
+  for (const f of lintedFiles.filter((p) => basename(p) === MAIN)) {
+    const cfg = (await eslint.calculateConfigForFile(f)) as {
+      rules?: Record<string, unknown>;
+    };
+    for (const id of turnedOn) if (isOn(cfg.rules?.[id])) reached.add(id);
+  }
+  return [...turnedOn].filter((id) => !reached.has(id));
+}
+
+/**
+ * The settings after the boundary: an unknown key is refused by name, and `rules` becomes parsed
+ * config blocks. Nothing after this sees the raw object.
+ */
+export function parseSettings(
+  opts: RppConfig,
+  where: string,
+  baseDir: string,
+): Parsed<RppConfig> {
+  const raw = opts as Record<string, unknown>;
+  const unknown = unknownKeys(raw);
+  if (unknown.length > 0)
+    return {
+      ok: false,
+      error:
+        `${where}: unknown key${unknown.length > 1 ? "s" : ""} ${unknown.map((k) => `"${k}"`).join(", ")} — ` +
+        `a typo would otherwise read as "not set". Known keys: ${Object.keys(SETTINGS_KEYS).join(", ")}`,
+    };
+  const rules = parseRuleBlocks(raw["rules"], where, SHIPPED_RULES, baseDir);
+  if (!rules.ok) return rules;
+  return { ok: true, value: { ...opts, rules: rules.value } };
 }
 
 /**
@@ -252,6 +371,7 @@ export function parseArgs(argv: readonly string[]): Args {
     json: false,
     all: false,
     dryRun: false,
+    check: false,
     yes: false,
     noHooks: false,
     paper: null,
@@ -282,6 +402,7 @@ export function parseArgs(argv: readonly string[]): Args {
     if (a === "--json") out.json = true;
     else if (a === "--all") out.all = true;
     else if (a === "--dry-run") out.dryRun = true;
+    else if (a === "--check") out.check = true;
     else if (a === "--yes" || a === "-y") out.yes = true;
     else if (a === "--no-hooks") out.noHooks = true;
     else if (a.startsWith("--hooks="))
@@ -398,6 +519,7 @@ export function readConfig(
 
   let opts: RppConfig = {};
   if (decl && configPath) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
     let parsed: any;
     try {
       parsed = JSON.parse(readFileSync(configPath, "utf8"));
@@ -435,6 +557,18 @@ export function readConfig(
   if (renamed) {
     err(renamed);
     return { code: 2 };
+  }
+  if (decl && configPath) {
+    const parsed = parseSettings(
+      opts,
+      where,
+      dirname(resolve(cwd, configPath)),
+    );
+    if (!parsed.ok) {
+      err(parsed.error);
+      return { code: 2 };
+    }
+    opts = parsed.value;
   }
 
   // 🔴 THE PAPERS DIRECTORY IS A REQUIRED FIELD. The papers directory is the one thing without which the tool
@@ -642,21 +776,23 @@ async function runNew(
  * everything" on a corpus of five papers is twenty pdflatex runs instead of one, and almost never
  * what was wanted.
  */
-function runBuild(
+async function runBuild(
   a: Args,
   {
     log,
     err,
     cwd,
   }: { log: typeof console.log; err: typeof console.error; cwd: string },
-): number {
+): Promise<number> {
   const cfg = readConfig(a, { log, err, cwd });
   if (cfg.code !== undefined) return cfg.code;
   const { opts, configPath } = cfg;
-  const candidates =
-    Array.isArray(opts.buildScripts) && opts.buildScripts.length
-      ? opts.buildScripts
-      : BUILD_SCRIPTS;
+  // The key that used to name the scripts to run. It is read by nothing now; saying so beats a
+  // setting that silently stopped doing anything.
+  if (opts.buildScripts !== undefined)
+    log(
+      `note: "buildScripts" in ${relative(cwd, configPath ?? "") || "the settings"} is ignored — rpp builds the paper itself`,
+    );
   const roots = toPaths(papersDirOf(opts)).map((rel) =>
     resolve(configPath ? dirname(configPath) : cwd, rel),
   );
@@ -681,14 +817,72 @@ function runBuild(
     return 2;
   }
 
-  const results = targets.map((t) =>
-    buildPaper(t, { candidates, cwd, dryRun: a.dryRun }),
-  );
-  log(formatResults(results));
-  const remedy = remedyFor(results, candidates);
+  // The engine is resolved INSIDE buildPapers, after it has removed the stale PDFs: a run that
+  // stops for want of a TeX Live must not leave an old paper.pdf looking current either.
+  const out = await buildPapers(targets, {
+    cwd,
+    dryRun: a.dryRun,
+    log,
+    engine: () => engineEnv(targets, a, { log, err }),
+  });
+  if (out.kind === "no-engine") return 1;
+  const remedy = remedyFor(out.results);
   if (remedy) err(remedy);
-  return anyFailed(results) ? 1 : 0;
+  return anyFailed(out.results) ? 1 : 0;
 }
+
+/** What one paper needs from TeX Live; a venue.json that does not parse is the build's to report. */
+function paperRequirements(dir: string): TexRequirements {
+  let venue: string | null = null;
+  try {
+    venue = readFacts(dir).venue;
+  } catch {
+    venue = null;
+  }
+  return requirementsFor(venue).tex;
+}
+
+/**
+ * The environment the builds run in — PATH led by a TeX Live that has every package the targeted
+ * papers' venues declare — or null when there is none and none was installed (the reason is
+ * already printed). Papers without `paper.tex` need no engine: they are refused by the build.
+ */
+async function engineEnv(
+  targets: readonly string[],
+  a: Args,
+  { log, err }: { log: typeof console.log; err: typeof console.error },
+): Promise<NodeJS.ProcessEnv | null> {
+  const latex = targets.filter((t) => existsSync(join(t, MAIN)));
+  if (latex.length === 0) return process.env;
+  const tex = latex
+    .map(paperRequirements)
+    .reduce(mergeRequirements, NO_REQUIREMENTS);
+  const out = await prepareEngine({
+    tex,
+    dryRun: a.dryRun,
+    interactive: processInteractivity(false).interactive,
+    ask: askOnTerminal,
+    log,
+    err,
+  });
+  return out.ok ? out.env : null;
+}
+
+/** Commands that take the parsed arguments and the output streams, and nothing else. */
+const SIMPLE: Readonly<
+  Record<
+    string,
+    (
+      a: Args,
+      io: { log: typeof console.log; err: typeof console.error; cwd: string },
+    ) => number | Promise<number>
+  >
+> = {
+  hook: (a, { err }) => runHook(a.paths[0], { err }),
+  new: (a, io) => runNew(a, io),
+  build: (a, io) => runBuild(a, io),
+  toolchain: (a, { log, err }) => runToolchain({ check: a.check, log, err }),
+};
 
 export async function run(
   argv: readonly string[],
@@ -773,9 +967,8 @@ export async function run(
       cliPapers: papers,
     });
   }
-  if (a.cmd === "hook") return runHook(a.paths[0], { err });
-  if (a.cmd === "new") return runNew(a, { log, err, cwd });
-  if (a.cmd === "build") return runBuild(a, { log, err, cwd });
+  const simple = SIMPLE[a.cmd];
+  if (simple) return await simple(a, { log, err, cwd });
   if (a.cmd === "check")
     err(
       `\`check\` is now \`lint\` — running it anyway. Update the call to \`rpp lint\`.`,
@@ -839,6 +1032,7 @@ export async function run(
   // reached, which is what the very first run over an empty directory showed: instead of a clear
   // message a stack from the depths of eslint-helpers.js flew out. A failure stays a failure, but
   // an explicable one.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
   let results: any[];
   try {
     results = await eslint.lintFiles(paths);
@@ -859,6 +1053,51 @@ export async function run(
   if (results.length === 0) {
     err(
       `nothing was linted under ${paths.map((x) => relative(cwd, x) || x).join(", ")} — no PIPELINE-STATUS.md, paper.md/tex or reviews/ found there. A clean report over zero files is not a clean report.`,
+    );
+    return 1;
+  }
+
+  return await reportLint(eslint, results, structure, {
+    a,
+    log,
+    err,
+    where: relative(cwd, dirname(resolve(cwd, configPath ?? "."))) || ".",
+    opts,
+  });
+}
+
+/**
+ * The end of `rpp lint`: refuse an optional rule that reached no paper, print the findings, and
+ * decide the exit code. Pulled out of `run` so each question has its own function.
+ */
+async function reportLint(
+  eslint: ESLint,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
+  results: any[],
+  structure: ReturnType<typeof checkStructure>,
+  {
+    a,
+    log,
+    err,
+    where,
+    opts,
+  }: {
+    a: Args;
+    log: typeof console.log;
+    err: typeof console.error;
+    where: string;
+    opts: RppConfig;
+  },
+): Promise<number> {
+  const silent = await silentOptionalRules(
+    eslint,
+    results.map((r) => r.filePath),
+    opts,
+  );
+  if (silent.length > 0) {
+    err(
+      `${silent.join(", ")} is turned on in "rules", but no linted paper.tex gets it — check the block's ` +
+        `"files" (relative to ${where}). A rule that never runs reports exactly like a rule that passed.`,
     );
     return 1;
   }

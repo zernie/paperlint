@@ -1,0 +1,9 @@
+\pdfmapfile{-cm-super-t1.map}
+\pdfmapline{=ptmr8r Times-Roman "TeXBase1Encoding ReEncodeFont" <8r.enc}
+\documentclass{article}
+\newcommand\para{The quick brown fox jumps over the lazy dog, measuring fonts in portable documents. }\newcommand\lipsum[1]{\para\para\para\para\para\para\para\para\par}
+\begin{document}
+\section{Mixed fonts}
+\lipsum[1] {\fontencoding{T1}\selectfont Some T1 bitmap text here that goes Type 3.}
+{\fontfamily{ptm}\selectfont Times text, not embedded on purpose.}
+\end{document}

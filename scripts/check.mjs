@@ -24,8 +24,8 @@
  * job to CI and the harness goes red the same day — the list cannot quietly fall behind.
  *
  * ── WHY IT DOES NOT REPLACE THE CI JOBS ────────────────────────────────────────────────────
- * The jobs solve a different problem: a different environment (TeX exists only in `build-e2e`,
- * macOS only in `macos`) and a named culprit per bond. One command cannot do that and should
+ * The jobs solve a different problem: a different environment (TeX Live exists only in
+ * `build-e2e`, and macOS only in its second matrix cell) and a named culprit per bond. One command cannot do that and should
  * not try. This is about a human being able to check themselves BEFORE the push.
  *
  * ── NO `--fast` FLAG, ON PURPOSE ───────────────────────────────────────────────────────────
@@ -99,11 +99,6 @@ export const GATES = [
     run: locked("node", "scripts/rules-are-content-only.mjs"),
   },
   {
-    name: "every number in the README matches disk",
-    job: "gates",
-    run: locked("node", "scripts/readme-numbers.mjs"),
-  },
-  {
     name: "the marketplace manifest is accepted by the host's own validator",
     job: "gates",
     run: locked("node", "scripts/marketplace-shape.mjs"),
@@ -112,6 +107,11 @@ export const GATES = [
     name: "every harness (npm test)",
     job: "gates",
     script: "test",
+  },
+  {
+    name: "mutation batteries are frozen — none new, none grown (#52)",
+    job: "gates",
+    run: locked("node", "scripts/mutation-batteries-frozen.mjs"),
   },
   {
     name: "mutation batteries — every guard is killed by its own assertion",
@@ -128,6 +128,11 @@ export const GATES = [
     job: "build-e2e",
     run: locked("node", "test/e2e/build.mjs"),
   },
+  {
+    name: "toolchain e2e — real TeX Live into $RPP_TEXLIVE_DIR, then a build with only it on PATH",
+    job: "build-e2e",
+    run: locked("node", "test/e2e/toolchain.mjs"),
+  },
 ];
 
 /** The command line a gate runs, as an argument list. */
@@ -140,11 +145,8 @@ export function commandOf(gate) {
  * unexplained gap is indistinguishable from an oversight — which is what the harness enforces.
  */
 export const NOT_COVERED = {
-  macos:
-    "a second operating system. `npm test` here runs on this machine only, and the macOS job " +
-    "exists because a defect was found that appeared on macOS alone (vigiles#241: /var is a " +
-    "symlink to /private/var, so a path recorded before resolution did not match). No local " +
-    "command can stand in for a different kernel.",
+  // build-e2e's macOS cell is the one part of a covered job no local command can stand in for:
+  // it exists because issue #9 appeared on macOS alone (/var is a symlink to /private/var).
   merge:
     "dependabot-automerge.yml merges the bot's own pull requests once CI is green. It checks " +
     "nothing itself; there is no local equivalent because it acts on GitHub, not on the tree.",

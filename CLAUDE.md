@@ -169,6 +169,16 @@ path literal outside the port a finding. Prose will not hold this class — four
 happened _while_ comments explaining the hazard sat directly above the code
 ([`docs/incidents.md`](docs/incidents.md)).
 
+**11. Installing and using rpp must be as smooth as possible.** Count the actions between "I
+want this" and "it works": every command to copy, flag to pass or file to edit is one more place
+to give up. The target is `npm i` plus one command. A per-paper script, a manual TeX install or a
+"now add this to your config" step is a defect in rpp, not a user task. The only exception is a
+choice that really belongs to the user (irreversible, paid, privacy), and then it is named at the
+moment it is asked. The converse holds too: an automatic step that can fail silently is worse
+than an explicit one — it works, or it says loudly that it did not. Measured example of the
+converse: Tectonic installs as one file but silently replaced Times with Latin Modern on a plain
+`article` paper and still exited 0 (#35, #59).
+
 ## Before changing the command surface or a delivery channel — read the prior art
 
 [`docs/prior-art/`](docs/prior-art/README.md) records how comparable tools solved the same
@@ -533,15 +543,22 @@ not evidence about the rule you care about. Both halves are tested
 (`scripts/rules-see-files.mutations.mjs` — under-reporting and over-reporting must die on
 _different_ assertions, or only one half of the guard is really tested).
 
-## Mutations
+## Mutations — hand-written batteries are deprecated (#52)
 
-```bash
-node scripts/run-mutations.mjs    # 12 + 11 + 2, each with a "the patch landed" assertion
-```
+The `*.mutations.mjs` batteries (string replacements of source lines, run through
+`lib/mutation-driver.mjs`) are being removed. The idea stays — a test must be seen going red
+when the code breaks — but the vehicle is not this one.
 
-A green harness under a mutation is a finding about the TEST, not a conclusion about the
-defence. Each battery prints the harness line and the assertion text its mutation died on;
-"killed" without saying by what is half an answer.
+- **Do not create a new `*.mutations.mjs`**, and **do not add cases to an existing one.**
+- **Record what a test guards as a comment directly above its assertion** (`// Guards: …`).
+- The rule is enforced, not asked for: `scripts/mutation-batteries-frozen.mjs` (part of
+  `npm run check` and CI) fails on a battery missing from `scripts/mutation-batteries.frozen.json`,
+  on a listed battery with more or fewer cases than recorded, and on a listed file that is gone.
+  The list may only shrink — delete a battery or a case, then delete or lower its entry.
+- The intended replacement is a real mutation-testing tool (StrykerJS) or nothing; that is
+  decided in #52, not in a pull request that happens to touch a battery.
+
+The batteries that remain still run (`node scripts/run-mutations.mjs`) until #52 retires them.
 
 ## Cost
 

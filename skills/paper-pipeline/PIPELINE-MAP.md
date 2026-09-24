@@ -110,14 +110,14 @@ them. This is the judgment layer; its mechanical parts should keep getting pushe
 
 ## Where each tier catches the same thing
 
-| defect                                | caught by                                                          |
-| ------------------------------------- | ------------------------------------------------------------------ |
-| a wall-of-text paragraph on insertion | tier 1, blocks                                                     |
-| a number that doesn't match the data  | tier 1 (post) and tier 3 (numbers)                                 |
-| a reference dropped by bibtex         | tier 2 (`.blg`) → tier 3 (build)                                   |
-| **wrong font**                        | tier 2 (`pdffonts`) — but it's PREVENTED by tier 3 (the container) |
-| a stage declared with no PDF          | tier 3, `paper-lint --gate` 🛑                                     |
-| ACM format compliance                 | **tier 4, and only tier 4**                                        |
+| defect                                | caught by                                                                    |
+| ------------------------------------- | ---------------------------------------------------------------------------- |
+| a wall-of-text paragraph on insertion | tier 1, blocks                                                               |
+| a number that doesn't match the data  | tier 1 (post) and tier 3 (numbers)                                           |
+| a reference dropped by bibtex         | tier 2 (`.blg`) → tier 3 (build)                                             |
+| **wrong font**                        | tier 2 (the facts' font list) — but it's PREVENTED by tier 3 (the container) |
+| a stage declared with no PDF          | tier 3, `paper-lint --gate` 🛑                                               |
+| ACM format compliance                 | **tier 4, and only tier 4**                                                  |
 
 ---
 
@@ -169,7 +169,7 @@ capitalization, section ordering — **nothing checks any of it**.
 **A construction found and verified against source (26.08):**
 
 ```
-banal -json  +  pdffonts   →   paper.facts.json   →   @eslint/json
+banal -json  +  pdf.js     →   paper.facts.json   →   @eslint/json
 (geometry)     (fonts)         (plain JSON)           (the official plugin)
 ```
 
@@ -290,6 +290,10 @@ imports, paths inside regexes).
 
 ## 2. One build entry point for all papers, not one per paper
 
+> **Done (#59, 2026-09-24).** `rpp build <paper>` is the entry point, and `rpp toolchain` installs
+> TeX Live with the packages the venue profiles declare; `ensure-toolchain.sh` and
+> `ci-install-texlive.sh` are deleted. What follows is the plan as it was written.
+
 **The hole:** `compile-rules` has `repro/build-submission.sh`, which calls `ensure-toolchain.sh`.
 **`agenticdev` has no entry point at all** — it's built by hand with `pdflatex`, and nothing
 guarantees the fonts except the CI container. That's how the submitted `aisec` went out wrong.
@@ -320,7 +324,8 @@ point. Nothing to check.
 | the TeX package list | **5**           | `ensure-toolchain.sh` (executable) · `SKILL.md` · `render-paper.harness.mjs` (pins it ✅) · `build-submission.sh` · `PIPELINE-STATUS` |
 
 The canonical source is the venue card (`venues/<venue>.md`, the `<!-- venue-profile -->` block) for
-format, and `ensure-toolchain.sh` for packages. Everything else is a pointer.
+format, and — since 2026-09-24 — the `tex` block of `venues/<venue>.jsonc` (plus `tex-base.jsonc`)
+for packages; `ensure-toolchain.sh` held them until then. Everything else is a pointer.
 
 ## 3-ter. Drop the font gate from `check-render.sh` once the rules run in CI
 
@@ -362,4 +367,4 @@ venue.
 | **`steiger`**                              | ❌ dropped — its own README says _"not extendable with more rules"_, plus it's about FSD in JS                                                                                                                                                                                                                                                                                             |
 | **an ESLint config inside a paper folder** | ❌ **doesn't work in this repository**: there are **233** configs here, **2** of them ours — the other 231 sit inside `compile-rules-2026/repro/` (other people's repos, pulled in). A nested lookup would pick up every one of them, which is exactly why we run with `--no-config-lookup`. The same result comes from a `files: ["<papers-root>/<paper>/**"]` section in the root config |
 | **`banal`**                                | ✅ adopted, vendored under `vendor/`, called from `extract-pdf-facts.mjs` (measurement only; the ESLint rules do the judging)                                                                                                                                                                                                                                                              |
-| **`latexmk`**                              | add it to `ensure-toolchain.sh`                                                                                                                                                                                                                                                                                                                                                            |
+| **`latexmk`**                              | superseded: `rpp build` runs its own loop (`src/latex-loop.ts`)                                                                                                                                                                                                                                                                                                                            |

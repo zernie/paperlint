@@ -1,0 +1,10 @@
+% The bibtex path: a \cite needs pdflatex, bibtex, pdflatex before the citation resolves, and a
+% \ref needs one more pass. The PDF must carry "[1]", not "[?]".
+% The build.sh next to this file must NOT run: it would leave RAN behind and exit 1.
+\documentclass{article}
+\begin{document}
+\section{Intro}\label{sec:intro}
+Section~\ref{sec:intro} cites \cite{knuth84}.
+\bibliographystyle{plain}
+\bibliography{refs}
+\end{document}

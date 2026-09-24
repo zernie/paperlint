@@ -4,7 +4,7 @@ description: Compile a LaTeX paper (ACM/IEEE/arXiv) to PDF and render its pages 
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, SendUserFile]
 ---
 
-<!-- vigiles:sha256:cc520ad1a2dfb92c compiled from skills/render-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:cbf13bc99392d1e4 compiled from skills/render-paper/SKILL.md.spec.ts -->
 
 # render-paper — .tex → PDF → readable page PNGs
 
@@ -36,38 +36,35 @@ this.
 That list was replaced on 2026-08-03; nothing about the toolchain below changed.*
 
 ## Toolchain (one command, not a checklist)
-- **Compiler:** run this and stop thinking about it — it checks what is present, installs only if
-  something is missing, and verifies afterwards that the binaries it came for actually appeared:
+- **Compiler:** TeX Live, installed by rpp with exactly the packages the venue profiles declare:
   ```
-  bash .claude/skills/render-paper/ensure-toolchain.sh          # pdflatex, bibtex, pdfinfo
-  bash .claude/skills/render-paper/ensure-toolchain.sh --acm    # + acmart.cls for ACM venues
+  npx rpp toolchain            # into ~/.cache/rpp/texlive (RPP_TEXLIVE_DIR overrides); idempotent
+  npx rpp toolchain --check    # report what is missing, change nothing
   ```
-  Measured 2026-08-17: 172 MB fetched, 482 MB on disk, ~1 min, and only on a session that renders.
-  It installs **only** as root with apt (a disposable container); anywhere else it prints the
-  command and exits 1, because half a gigabyte of unasked system packages is fine in a container
-  and rude on a laptop. `AUTO_INSTALL_TEX=0` forces the report-only path.
+  Measured 2026-09-24: 3 min from an empty directory, 269 MB, TeX Live 2026, 47 packages verified
+  by `kpsewhich` against the files each profile names. The last line it prints is `bin: <dir>` —
+  put that directory first on PATH before calling `pdflatex` or `check-render.sh` by hand.
 
-  🔴 The package list lives **only** in that script. It used to be written out here AND in
-  `compile-rules-2026/repro/build-submission.sh`, and the two had already drifted: this one had no
-  `poppler-utils` (so `pdfinfo` was missing and the page-count gate could not run), that one had no
-  `texlive-publishers` (so `acmart.cls` was missing and an ACM paper did not compile). Each was
-  correct for its own file and wrong for the other. Do not restate it a third time.
-
-  Still true and still the reason it is apt: `curl|sh` installers are blocked (the sandbox refuses
-  piping remote scripts) and `tectonic` is not on this image — and would not be a drop-in anyway,
-  since the build calls `bibtex` and `pdfinfo` as binaries and tectonic ships neither.
+  🔴 The package list lives in the venue profiles (`submit-paper/references/venues/*.jsonc`, the
+  `tex` block; `tex-base.jsonc` for every paper) and nowhere else. A new venue that needs a new
+  package gets it there — never in a script, never here. A TeX Live without `libertine` builds an
+  acmart paper GREEN in Computer Modern; that is why the files are checked, not the exit code.
+- **Reading the PDF** needs nothing installed: `rpp build` and `extract-pdf-facts.mjs` use pdf.js,
+  which comes with rpp. Poppler is not required.
 - **Renderer:** `pip install --quiet pymupdf` (poppler `pdftoppm`/ghostscript are often missing or
   404 on apt here; pymupdf is reliable). No `playwright install`, no external fetches.
 
 ## Compile (full bibtex cycle — needed or citations show as `[?]`)
 ```
-cd <paper-dir>
-pdflatex -interaction=nonstopmode paper.tex
-bibtex paper
-pdflatex -interaction=nonstopmode paper.tex
-pdflatex -interaction=nonstopmode paper.tex   # twice more resolves refs + citations
+npx rpp build <paper-dir>
 ```
-Check the last log: `grep -iE "Fatal|Output written" ` and
+It picks a TeX Live that has every package the venue declares (rpp's own, else one on PATH),
+runs pdflatex and bibtex until the references settle, fails on an undefined `\ref`/`\cite`
+through `paper-guards.tex`, then measures the PDF into `_build/paper.facts.json` (fonts, Type 3,
+the last page's column heights). It judges nothing: a venue that needs a balanced last page turns
+on the optional lint rule `pdf/last-page-balance` (see `docs/optional-rules.md` in the package). Without a
+terminal and without a qualifying TeX Live it stops with one line naming `npx rpp toolchain`.
+Check the last log anyway: `grep -iE "Fatal|Output written" ` and
 `grep -ciE "Undefined control|Citation.*undefined|Reference.*undefined"` (must be 0).
 
 ### MECHANICAL RENDER GATE (run this — do not just eyeball)

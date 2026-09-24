@@ -42,27 +42,10 @@ import {
 
 await checkSkill("render-paper");
 
-// LOCAL assert, deliberately not pushed into the shared module: this fact is about THIS
-// skill's installer, and 21 other skills have no installer to make it true or false.
-//
-// Why it exists at all — both packages fail INVISIBLY, in opposite directions, and both were
-// measured on a real camera-ready build 2026-08-24:
-//   texlive-fonts-extra missing   -> acmart warns and silently uses Computer Modern. The PDF
-//                                    compiles clean and is typeset in the wrong fonts.
-//   texlive-plain-generic missing -> newtx cannot find binhex.tex: hard emergency stop. So
-//                                    adding ONLY the first package breaks a working build.
-// A list nobody reads back drifts; deleting either line now fails here.
-const toolchain = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), "ensure-toolchain.sh"),
-  "utf8",
-);
-for (const pkg of ["texlive-fonts-extra", "texlive-plain-generic"]) {
-  assert.match(
-    toolchain,
-    new RegExp(`^\\s*${pkg}\\b`, "m"),
-    `ensure-toolchain.sh must install ${pkg} — see the comment above this assert`,
-  );
-}
+// The TeX package pins that stood here (texlive-fonts-extra, texlive-plain-generic in
+// ensure-toolchain.sh) moved with the list itself: the venue profiles declare the packages, and
+// src/tex-requirements.harness.mjs asserts that every acmart venue declares libertine, inconsolata,
+// newtx, kastrup (binhex.tex) and fancyhdr — each proved by the file whose absence broke a build.
 
 // ── TEXINPUTS: WHERE THE SCRIPTS LOOK FOR `paper-guards.tex` ─────────────────
 //

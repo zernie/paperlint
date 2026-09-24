@@ -15,7 +15,6 @@
 #   npm test (12 harnesses)              11 s
 #   npm run lint (eslint over fixtures)   1 s
 #   rules-see-files.mjs                   1 s
-#   readme-numbers.mjs                    1 s   <- README numbers are verified against the tree
 #   vigiles lint                          3 s   ← added 2026-09-12 with the first ten skills
 #   run-mutations.mjs (12 batteries)    242 s   ← 130 mutations, the expensive and load-bearing part
 #   ───────────────────────────────────────────
@@ -41,7 +40,7 @@ on:
   # and the only way to notice would be by the absence of a run, i.e., silence.
   # `ready_for_review` is not a default either, and without it the draft gate below would work only
   # halfway: marking a draft ready is none of the defaults, so the PR would reach the merge button
-  # with zero checks. Platform cells (macOS) live in platform.yml, not here.
+  # with zero checks. macOS is a cell of the build-e2e matrix below.
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
 
@@ -69,6 +68,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
+          # The floor: engines.node is >=22.13, so the gates run on 22. build-e2e runs 24.
           node-version: 22
           cache: npm
 
@@ -123,7 +123,7 @@ jobs:
       # reached only the mutation batteries. The comment about "its absence was NOT harmless"
       # described exactly this harm yet did not protect against it itself.
       #
-      # ⚠️ And the flag belongs IN THE STEP, not in `package.json`: the `macos` job in platform.yml runs the same `npm test`
+      # ⚠️ And the flag belongs IN THE STEP, not in `package.json`: the macOS cell of build-e2e runs the same `npm test`
       # WITHOUT installing the binary, where skips are legitimate, and a global flag would falsely color it.
       - name: npm test
         run: npm test -- --no-skip
@@ -170,16 +170,14 @@ jobs:
       - name: every rule sees a file
         run: node scripts/rules-see-files.mjs
 
-      # README names numbers. This step PRODUCES and verifies them — once needed because
-      # the prose promised 45 harnesses and 22 batteries when the disk held 49 and 26.
-      - name: README numbers match disk
-        run: node scripts/readme-numbers.mjs
+      # Hand-written mutation batteries are being removed (#52): the frozen list may only
+      # shrink — no new battery, no new case in an existing one.
+      - name: mutation batteries are frozen
+        run: node scripts/mutation-batteries-frozen.mjs
 
-      # 45 mutations across 4 batteries. This is what makes the green above mean something: a
-      # harness that cannot fail and a harness that passed look identical from outside. The
-      # runner DISCOVERS batteries rather than listing them, errors on finding zero, and errors
-      # on any harness that has no battery — see scripts/run-mutations.mjs for why (the hand
-      # list it replaced had already gone stale by one file, silently).
+      # The batteries that remain still run until #52 replaces or removes them. The runner
+      # DISCOVERS batteries rather than listing them and errors on finding zero — see
+      # scripts/run-mutations.mjs for why (the hand list it replaced had gone stale, silently).
       - name: mutation batteries
         run: node scripts/run-mutations.mjs
 
@@ -197,94 +195,95 @@ jobs:
         run: node test/e2e/install.mjs --strict
         timeout-minutes: 10
 
-  # ── BUILDING THE PAPER WITH REAL pdflatex ──────────────────────────────────────────────────────
+  # ── BUILDING THE PAPER WITH REAL pdflatex, ON LINUX AND macOS ──────────────────────────────────
   #
-  # 🔴 WHY A SEPARATE JOB, NOT A STEP IN `gates`. Its only dependency is TeX Live,
-  # and it alone costs minutes here: 230 MB, ~2 min cold (measured and recorded in
-  # `skills/render-paper/ci-install-texlive.sh`). Keeping it inside the general job means paying
-  # those minutes for every run, including prose edits; a separate job runs in parallel and
-  # caches itself.
+  # 🔴 ONE JOB, TWO OPERATING SYSTEMS. TeX Live comes from `rpp toolchain` — the same command a user
+  # runs — so the job tests the install path users get, not a CI-only script. It used to be a bash
+  # installer here and a separate macOS workflow (platform.yml) there; both are gone. macOS matters
+  # twice: install-tl-unx has to work on it, and issue #9 (`/var` is a symlink to `/private/var`)
+  # exists only there, so the macOS cell also runs `npm test` and the temp-dir probe.
   #
-  # 🔴 WHY NOT ONCE PER PR, like macOS in platform.yml. That job catches a platform divergence that changes once
-  # a year. This one catches silent font substitution — a class that HAS ALREADY shipped a paper
-  # typeset in the wrong font. A label would make protection depend on whether a person remembered to apply it,
-  # and they remember it precisely when they are already being careful.
+  # 🔴 WHY A SEPARATE JOB, NOT A STEP IN `gates`. Its only dependency is TeX Live, and it alone costs
+  # minutes: ~270 MB, ~3 min cold (measured 2026-09-24 with `rpp toolchain`). A separate job runs in
+  # parallel and caches itself.
   #
-  # `--strict`: absence of pdflatex locally is a legitimate skip; here it is an environment failure.
-  # Without it, a skipped step would look like a pass in the interface.
+  # 🔴 WHY ON EVERY PUSH. It catches silent font substitution — a class that HAS ALREADY shipped a
+  # paper typeset in the wrong font. This repository is public, so the macOS minutes are free.
+  #
+  # `--strict`: absence of TeX locally is a legitimate skip; here it is an environment failure.
   build-e2e:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          # The latest LTS; the gates job covers the 22 floor, so no job runs twice.
+          node-version: 24
           cache: npm
 
       - name: npm ci
         run: npm ci
-        timeout-minutes: 5
+        timeout-minutes: 8
 
-      # First-party cache chosen deliberately: the correct-by-class
-      # `teatimeguest/setup-texlive-action` is blocked by the allowlist of third-party Actions in this
-      # account ("Repository access blocked", run 33457399377). Analysis of three approaches with
-      # measurements — `skills/render-paper/ci-tex-toolchain-decision.md`.
+      # Issue #9's distinction: prints BOTH spellings of the temp root. If they match, this machine
+      # is not the platform the macOS cell exists for, and green below says nothing about it.
+      - name: two spellings of one directory — does this machine see them
+        if: runner.os == 'macOS'
+        run: |
+          node -e '
+            const { mkdtempSync, realpathSync } = require("node:fs");
+            const { tmpdir } = require("node:os");
+            const { join } = require("node:path");
+            const d = mkdtempSync(join(tmpdir(), "probe-"));
+            console.log("as typed :", d);
+            console.log("realpath :", realpathSync(d));
+            console.log(d === realpathSync(d) ? "MATCH — issue #9 traps do not exist on this machine"
+                                              : "DIVERGE — this is the platform this job exists for");
+          '
+
+      # Issue #9: `npm test` was red ONLY on macOS. Only `npm test`, not the mutation batteries:
+      # they would verify on macOS exactly what the gates job verifies on Linux.
+      - name: npm test (macOS)
+        if: runner.os == 'macOS'
+        run: npm test
+        timeout-minutes: 10
+
+      # The cache key is what the install depends on: the runner and the declared packages (every
+      # venue profile, the base set included). NOT the TeX Live year, and not the calendar year that
+      # used to stand in for it: the calendar says nothing about CTAN's release, and a restored tree
+      # from an older year is safe — `rpp toolchain` verifies every declared file on it, leaves it
+      # alone when it is complete, and when a newly declared package makes tlmgr refuse it across
+      # releases, installs the new year beside it (src/toolchain.ts, `newRelease`).
+      # No `restore-keys`, deliberately: a partial restore would carry the old year's tree into the
+      # new entry, and the old tree is never deleted, so the cache would grow by a whole TeX Live.
+      - name: where TeX Live is cached
+        run: echo "RPP_TEXLIVE_DIR=$HOME/.cache/rpp-texlive" >> "$GITHUB_ENV"
+
       - name: TeX Live from cache
-        id: tex-cache
         uses: actions/cache@v6
         with:
-          path: ~/texlive
-          key: texlive-${{ runner.os }}-${{ hashFiles('skills/render-paper/ci-install-texlive.sh') }}
+          path: ~/.cache/rpp-texlive
+          key: texlive-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('skills/submit-paper/references/venues/*.jsonc') }}
 
-      - name: install TeX Live (only on cache miss)
-        if: steps.tex-cache.outputs.cache-hit != 'true'
-        run: bash skills/render-paper/ci-install-texlive.sh
-        timeout-minutes: 12
-
-      - name: TeX to PATH
-        run: echo "$HOME/texlive/bin/x86_64-linux" >> "$GITHUB_PATH"
-
-      # The `:apt` half of the toolchain. TeX Live supplies the `:tex` binaries and nothing else;
-      # `pdfinfo` and `pdffonts` ship with poppler, which apt owns. Both halves are declared in ONE
-      # place — REQUIRED_BINS in ensure-toolchain.sh — and this step reads that declaration rather
-      # than naming packages again, so a binary added there cannot be silently uninstalled here.
-      - name: install the apt-supplied tools
-        run: |
-          set -euo pipefail
-          need=$(sed -n '/^REQUIRED_BINS=(/,/)$/p' skills/render-paper/ensure-toolchain.sh \
-                 | tr ' ' '\n' | sed -e 's/^REQUIRED_BINS=(//' -e 's/)$//' \
-                 | grep ':apt$' | sed 's/:apt$//' | grep -v '^$' | tr '\n' ' ')
-          [ -n "$need" ] || { echo "REQUIRED_BINS parsed empty — the parse is broken"; exit 1; }
-          echo "apt-supplied binaries declared: $need"
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends poppler-utils
-
-      # 🔴 VERIFY THE INSTALL, NOT THE EXIT CODE. `exit=0` and empty output mean "installed" — the
-      # installer once in this corpus downloaded ZERO packages and reported success. The
-      # acmart fonts are checked by name, because without ANY of them the class silently falls back to
-      # Computer Modern — which is precisely why this entire job exists.
-      #
-      # 🔴 THE BINARY LIST IS DERIVED, NOT TYPED. It used to read `for b in pdflatex pdffonts`, and
-      # that hand-written pair had already drifted from the declaration: `pdffonts` was in the loop
-      # and NOT in REQUIRED_BINS, while the `:apt` entries were declared and never installed. The job
-      # went red on its first CI run (PR #41) demanding a binary nobody had promised to provide.
-      - name: tools and fonts ACTUALLY in place
-        run: |
-          set -euo pipefail
-          need=$(sed -n '/^REQUIRED_BINS=(/,/)$/p' skills/render-paper/ensure-toolchain.sh \
-                 | tr ' ' '\n' | sed -e 's/^REQUIRED_BINS=(//' -e 's/)$//' \
-                 | grep -E ':(tex|apt)$' | sed 's/:.*$//' | grep -v '^$' | tr '\n' ' ')
-          [ -n "$need" ] || { echo "REQUIRED_BINS parsed empty — the parse is broken"; exit 1; }
-          for b in $need; do command -v "$b" >/dev/null || { echo "missing $b"; exit 1; }; done
-          echo "present: $need"
-          for f in acmart.cls libertine.sty zi4.sty newtxmath.sty; do
-            kpsewhich "$f" >/dev/null || { echo "missing $f — acmart will SILENTLY fall back to Computer Modern"; exit 1; }
-          done
+      # The same command a user runs. On a cache hit it verifies and says "nothing to do"; on a miss
+      # it installs from an empty directory and verifies every declared file with kpsewhich.
+      # `node bin/rpp.mjs`, not `npx rpp`: inside this repository npx would look the name up on npm.
+      - name: rpp toolchain
+        run: node bin/rpp.mjs toolchain
+        timeout-minutes: 15
 
       # Called directly with --strict (see the install e2e step in the `gates` job).
       - name: build e2e (--strict)
         run: node test/e2e/build.mjs --strict
+        timeout-minutes: 10
+
+      - name: toolchain e2e (--strict)
+        run: node test/e2e/toolchain.mjs --strict
         timeout-minutes: 10

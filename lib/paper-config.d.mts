@@ -15,3 +15,6 @@ export declare function renamedFieldMessage(
   settings: unknown,
   where?: string,
 ): string | null;
+
+/** Every key the settings object may hold, mapped to who reads it. */
+export declare const SETTINGS_KEYS: Readonly<Record<string, string>>;

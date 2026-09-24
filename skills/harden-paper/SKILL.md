@@ -4,7 +4,7 @@ description: Use when asking "is this paper actually ready to submit?" / "what's
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:dc56e635b6b40b37 compiled from skills/harden-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:7fb5e8709eb4c363 compiled from skills/harden-paper/SKILL.md.spec.ts -->
 
 # harden-paper — the multi-axis pre-submit gate
 
@@ -254,7 +254,7 @@ ready"** — the gates are orthogonal axes and do not average out. **Ready ⇔ A
   rubric number);
 - **Structure + length** — `tighten-paper`'s structural verdict (right length, no sag, no TMI);
 - **Claims-honest** — the Hn claim-preservation diff clean after every rewrite;
-- **Citations** — `verify-citations` clean: no cite that fails to resolve, nothing marked VERIFY
+- **Citations** — `verify-citations` clean: no \cite that fails to resolve, nothing marked VERIFY
   left unresolved;
 - **Nearest-neighbor scoop** — axis 3 answered: the closest sibling found and either distinguished
   or escalated (`analyze-sibling-paper`);

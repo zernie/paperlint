@@ -17,11 +17,13 @@ The second run is the one people skip, and it is the one that matters. A rule th
 finds nothing passes the first kind of test by accident — from outside, "there is nothing wrong
 here" and "this check never ran" look exactly the same.
 
-On top of that, each rule has a **battery**: it deletes one thing the rule depends on and then
-demands the harness go red, at the specific assertion that thing belongs to. If nothing goes red,
-that part of the rule was never doing any work. CI refuses a rule whose battery cannot kill it.
-
-<!-- count:harnesses -->62 harnesses, <!-- count:batteries -->39 batteries.
+Older rules also have a **battery** (`*.mutations.mjs`): it deletes one thing the rule depends on
+and then demands the harness go red, at the specific assertion that thing belongs to. **These
+hand-written batteries are deprecated and being removed (#52).** Do not write a new one and do
+not add cases to an existing one; instead, say what an assertion guards in a comment directly
+above it (`// Guards: …`). `npm run check` fails on a new or grown battery — the frozen list in
+`scripts/mutation-batteries.frozen.json` may only shrink. Whether a real mutation-testing tool
+replaces them is decided in #52.
 
 A harness runs in this tree, against this working copy. That is the wrong shape for a defect that
 only exists once somebody else has installed the package — a path written inside a skill, a file
@@ -39,8 +41,8 @@ date coercion had become dead code.
 npm run check
 ```
 
-That is the whole instruction. It runs every gate in order — build, lint, the <!-- count:harnesses -->62 harnesses, the
-<!-- count:batteries -->39 mutation batteries, the install e2e under npm and pnpm, and a real `pdflatex` build — and ends
+That is the whole instruction. It runs every gate in order — build, lint, every harness, every
+mutation battery, the install e2e under npm and pnpm, and a real `pdflatex` build — and ends
 
 by printing **which CI jobs it does not reproduce, and why**.
 
@@ -63,7 +65,7 @@ nobody covered — verified by adding a `windows` job and watching it fail.
 ## Layout
 
 ```
-eslint-rules/   the rules, each with its .harness.mjs and .mutations.mjs beside it
+eslint-rules/   the rules, each with its .harness.mjs beside it (older ones also a .mutations.mjs)
 lib/            shared readers — markdown, skill corpus, the mutation driver
 hooks/          three hooks for vigiles — the code
 plugin/         the Claude Code plugin: wiring for those hooks, no code, no package.json
@@ -78,9 +80,9 @@ docs/           evidence that would otherwise bloat CLAUDE.md:
                   e2e.md  the end-to-end runs, and when a change owes one
 ```
 
-The package has <!-- count:rules -->12 rules. Nine run on users' papers and are described for users in
-[`docs/rules.md`](docs/rules.md); the other three lint this package's own source and never see a
-user's files.
+Most of the package's rules run on users' papers and are described for users in
+[`docs/rules.md`](docs/rules.md); the rest lint this package's own source and never see a user's
+files.
 
 ## Maintainer docs
 
@@ -101,8 +103,7 @@ The README links only what a user needs. These are for people changing the packa
 ```bash
 npm install
 npm test                 # every harness
-node scripts/run-mutations.mjs   # break each rule on purpose; a harness nothing can kill is not a harness
-node scripts/readme-numbers.mjs  # the counts above are recounted from the tree, not typed by hand
+node scripts/run-mutations.mjs   # run the remaining batteries (deprecated, #52 — do not add to them)
 ```
 
 None of these are needed to USE the tool — they are here because the gates are part of the
@@ -128,11 +129,12 @@ Licensing differs too: that suite is CC BY-NC 4.0, this is MIT.
 - **scorecard** — `PIPELINE-STATUS.md`, the file above. One per paper.
 - **frozen** — a copy of the exact PDF or `.tex` that was sent, kept in `versions/`. Bytes, not a
   commit reference: squash and `gc` destroy commit references, and did.
-- **harness** — the test beside a rule. **battery** — a set of edits that try to break a harness.
+- **harness** — the test beside a rule. **battery** — a set of edits that try to break a harness
+  (deprecated, being removed in #52).
 
 ## Also in the box
 
-**The <!-- count:skills -->24 skills** are markdown, one directory each, and they name the scripts
+**The skills** are markdown, one directory each, and they name the scripts
 they run. Point your agent at `skills/` and ask it for a stage by name. The stages that need taste
 stay taste and say so — `paper-adversarial-review` does not pretend to be a checker.
 

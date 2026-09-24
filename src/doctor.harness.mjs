@@ -227,7 +227,7 @@ const runDoctor = (
   check("but every absence is NAMED", /✗ pdflatex/.test(none.out));
   check(
     "and it carries a REMEDY, not just a diagnosis",
-    /apt-get install -y texlive-latex-recommended/.test(none.out),
+    /npx rpp toolchain/.test(none.out),
   );
   check(
     "and the consequence: which checks silently don't run without it",
@@ -235,7 +235,12 @@ const runDoctor = (
   );
   check(
     "the program list is DECLARED, not baked into the printing",
-    PROGRAMS.length >= 7,
+    PROGRAMS.length >= 5,
+  );
+  check(
+    "no poppler row: rpp reads PDFs with pdf.js, which it installs itself",
+    !PROGRAMS.some((p) => /^pdf(info|fonts|totext)$/.test(p.bin)) &&
+      !/poppler/.test(none.out),
   );
   rmSync(dir, { recursive: true, force: true });
 }

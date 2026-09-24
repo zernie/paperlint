@@ -82,7 +82,7 @@ import {
   statSync,
 } from "node:fs";
 import { join, resolve, sep } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 // Re-exported, not re-declared — see the note in `lib/paper-config.mjs`. This file is not a hook
 // and never needed its own copy.
@@ -121,6 +121,20 @@ export function isMain(metaUrl) {
  */
 export function consumerRoot({ env = process.env, cwd = process.cwd() } = {}) {
   return env.CLAUDE_PROJECT_DIR || cwd;
+}
+
+/**
+ * The directory of venue TeX files THIS PACKAGE ships — `paper-guards.tex` and each venue's
+ * `<venue>.tex` — which a paper's preamble `\input`s and `rpp build` puts on `TEXINPUTS`.
+ *
+ * Resolved from this file's own location, never from the caller's cwd: the directory travels
+ * with the package, wherever the package is installed (own checkout, `node_modules`, a plugin
+ * cache). `import.meta.url` is the realpath, so a symlinked skills directory changes nothing.
+ */
+export function packageVenuesDir() {
+  return fileURLToPath(
+    new URL("../../submit-paper/references/venues", import.meta.url),
+  );
 }
 
 /** The consumer's skills directory — the fixed Claude Code layout, under its root. */

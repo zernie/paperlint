@@ -1,0 +1,10 @@
+% `\input{paper-guards}` resolves with NO configuration: rpp puts its own venues directory on
+% TEXINPUTS. The guards fire only on the final pass (\finalpass), so a clean paper with a
+% forward \ref must still build.
+\documentclass{article}
+\input{paper-guards}
+\begin{document}
+See Section~\ref{sec:later}.
+\section{Later}\label{sec:later}
+Text.
+\end{document}

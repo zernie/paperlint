@@ -30,6 +30,10 @@ Counted for this package **before** that change:
 | 8   | hand-add the CI step, with a sha                          |                                          |
 | 9   | install TeX Live, poppler, a JRE, python3                 | the skills shell out to them             |
 
+(Row 9 is the state on 2026-09-18. Since 2026-09-24 TeX Live is `npx rpp toolchain`, or a
+`[Y/n]` inside `rpp build`, and poppler is gone — rpp reads PDFs with pdf.js, shipped as a
+dependency. A JRE and python3 are still the user's.)
+
 Nine, three of which are hand-edits to files, and one of which — step 5 — is undocumented enough
 that skipping it leaves `paper-edit-guard` **silently watching a directory that does not exist**
 (measured; issue #33).

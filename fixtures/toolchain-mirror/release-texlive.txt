@@ -1,0 +1,3 @@
+TeX Live (https://tug.org/texlive) version 2026
+
+This file is public domain.

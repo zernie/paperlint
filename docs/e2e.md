@@ -1,8 +1,8 @@
 # End-to-end tests
 
-There are <!-- count:e2e -->2 of them: `test/e2e/install.mjs` and `test/e2e/build.mjs`. Both are
-part of `npm run check`, so nobody has to remember to call them. `npm run test:e2e` runs just the
-two of them, install first; if the install e2e fails or is skipped, the build e2e does not run.
+They are `test/e2e/install.mjs` and `test/e2e/build.mjs`. Both are
+part of `npm run check`, so nobody has to remember to call them. `npm run test:e2e` runs just
+these, install first; if the install e2e fails or is skipped, the build e2e does not run.
 
 This page says what they prove, what they deliberately do not, and when a change owes a new one.
 
@@ -58,21 +58,43 @@ pnpm a shell wrapper, and calling `node bin` measures the caller's habit instead
 
 ## `test/e2e/build.mjs` — a real `pdflatex`
 
-`test/e2e/build.mjs`. It copies `fixtures/build-e2e/` — four papers — into a temporary tree,
-points a config at it, and runs `rpp build --all`. Then it measures the artifacts with `pdffonts`:
+`test/e2e/build.mjs`. It copies `fixtures/build-e2e/` — eight papers, none with a build script rpp
+would run — into a temporary tree, points a config at it, and runs `rpp build --all`. rpp compiles
+each paper itself with the real `pdflatex` and `bibtex`; the artifacts are then measured with
+rpp's own pdf.js reader from `dist/`, and the fonts are cross-checked against the list of
+programs pdfTeX writes into `paper.log`:
 
-| fixture     | what it is there to prove                                                                                                                                    |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `acmart`    | a real `\documentclass{acmart}` source builds, and the PDF carries the class's **own** font families — not one family of the silent substitution             |
-| `fallback`  | the same document with the fonts missing still **builds green**, and is **rejected** by the font check. The failure is in the artifact, not in the exit code |
-| `no-script` | a paper with no build script is named separately, not silently counted as built                                                                              |
-| `broken`    | a failing build is reported as failed, with its exit code, and the run as a whole is a failure                                                               |
+| fixture      | what it is there to prove                                                                                                                                                                                                                                                                  |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `acmart`     | a real `\documentclass{acmart}` source builds, and the PDF carries the class's **own** font families — not one family of the silent substitution                                                                                                                                           |
+| `fallback`   | the same document with the fonts missing still **builds green**, and is **rejected** by the font check. The failure is in the artifact, not in the exit code                                                                                                                               |
+| `cite`       | the bibtex path: the PDF shows `[1]`, not `[?]`, and no `??`. Its `build.sh` would leave a trace if run — it must not run, and the run must say it is ignored                                                                                                                              |
+| `guards`     | `\input{paper-guards}` resolves with no configuration, because rpp puts its own venues directory on `TEXINPUTS`                                                                                                                                                                            |
+| `unbalanced` | a two-column acmart paper whose last page comes out 621.5 / 264.8 pt builds **green** — the build does not judge the layout and rewrites nothing — while `_build/paper.facts.json` records both heights, and `rpp lint` with `pdf/last-page-balance` turned on in `rules` reports the page |
+| `broken`     | a failing build names pdflatex and its exit code, quotes the error line and its `l.NNN` context, and deletes the stale `paper.pdf` planted before the run                                                                                                                                  |
+| `no-source`  | a paper with no `paper.tex` is named separately, and the run as a whole is a failure                                                                                                                                                                                                       |
 
 The `fallback` row is the point of the whole file. `acmart.cls` checks for `libertine.sty`,
 `zi4.sty` and `newtxmath.sty`, and failing to find any of them sets `\@ACM@newfontsfalse` and
 typesets the paper in Computer Modern. The build is green, the PDF looks fine, the metrics differ,
 and therefore so does the pagination. A submitted paper went out that way. **An exit code cannot
 see it, so the content of the artifact is what gets measured.**
+
+Before the fixtures, the run proves the refusal with no TeX at all: PATH holds `node` alone, the
+cache directory is empty and `CI` is set, and `rpp build` must exit 1 with one line naming
+`npx rpp toolchain` and the venue's packages, print no plan and create no PDF and no cache. It then
+asks `rpp build --dry-run` which TeX Live the real run will use; under `--strict` (CI) that must be
+rpp's own cache, because the runner has no other.
+
+## `test/e2e/toolchain.mjs` — real TeX Live, and only it
+
+`rpp toolchain` into `$RPP_TEXLIVE_DIR` against real CTAN; a second run must say "nothing to do"
+within seconds; `--check` must exit 0; then the `acmart` fixture is built with PATH holding `node`
+only, so no other TeX Live and no PDF tool can stand in, and the PDF must carry Libertine and Biolinum
+and no Computer Modern face. Without `RPP_TEXLIVE_DIR` it is a declared skip: installing ~270 MB
+into a home directory as a side effect of `npm run check` is the unasked install rule 11 forbids.
+`src/toolchain.harness.mjs` covers the installer's logic (mirror fallback, archive check, time
+limit, verification, idempotence) against a fake mirror on disk, without the network.
 
 ## Skips are declared, never silent
 
@@ -103,8 +125,9 @@ would only make the suite slower without making it stricter.
 Named here on purpose: a test suite that does not say where it stops is read as covering
 everything.
 
-- **macOS and Windows.** Both runs are Linux-only here. `npm run check` prints the CI jobs it
-  cannot reproduce, and `macos` is one of them.
+- **macOS and Windows.** Locally these run on whatever machine you have. In CI `build-e2e` is a
+  matrix over `ubuntu-latest` and `macos-latest`; Windows is not run anywhere, and `rpp toolchain`
+  refuses it.
 - **The rules, on a real document.** `fixtures/real-markdown-paper/` holds a published article and
   a recorded baseline of what the rules say about it. That is a **lint** fixture, driven by a
   harness — it does not go through the installed package. Wiring it into the install corpus is

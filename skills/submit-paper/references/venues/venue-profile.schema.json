@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/zernie/research-paper-pipeline/venue-profile.schema.json",
+  "title": "Venue profile",
+  "description": "One venue's format profile (venues/<venue>.jsonc) and the TeX base set (venues/tex-base.jsonc). The format numbers are read by the consumer's pdf/profile rule; `tex` is read by `rpp toolchain` and `rpp build`.",
+  "type": "object",
+  "required": ["tex"],
+  "additionalProperties": false,
+  "properties": {
+    "tex": { "$ref": "#/definitions/tex" },
+    "template": {
+      "description": "The \\documentclass the venue's template uses.",
+      "type": "string",
+      "minLength": 1
+    },
+    "page_size": { "type": "string", "enum": ["letter", "a4"] },
+    "page_w_in": { "type": "number", "exclusiveMinimum": 0 },
+    "page_h_in": { "type": "number", "exclusiveMinimum": 0 },
+    "textblock_w_in": { "type": "number", "exclusiveMinimum": 0 },
+    "textblock_h_in": { "type": "number", "exclusiveMinimum": 0 },
+    "columns": { "type": "integer", "minimum": 1 },
+    "body_pt": { "type": "number", "exclusiveMinimum": 0 },
+    "body_pt_tol": { "type": "number", "minimum": 0 },
+    "ref_pt_min": { "type": "number", "exclusiveMinimum": 0 },
+    "ref_pt_max": { "type": "number", "exclusiveMinimum": 0 },
+    "fonts_text": { "type": "string", "minLength": 1 },
+    "fonts_title": { "type": "string", "minLength": 1 },
+    "page_limits_not_gated": { "type": "object" },
+    "kinds": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "body_pages_max": { "type": "integer", "minimum": 1 },
+          "ref_pages_max": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ctanName": {
+      "description": "A package name as tlmgr knows it (CTAN / TeX Live), not a distribution package name.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9.-]*$"
+    },
+    "proofs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "pattern": "^[^/\\s]+$" }
+    },
+    "tex": {
+      "description": "The TeX Live packages this template needs. Each package maps to the files that PROVE it is present: `kpsewhich` must find every one after an install, or the install failed and says which package.",
+      "type": "object",
+      "required": ["packages"],
+      "additionalProperties": false,
+      "properties": {
+        "packages": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": { "$ref": "#/definitions/ctanName" },
+          "additionalProperties": { "$ref": "#/definitions/proofs" }
+        },
+        "tools": {
+          "description": "Packages that ship a PROGRAM rather than a file LaTeX loads. Proved by an executable of that name in TeX Live's bin directory, not by kpsewhich.",
+          "type": "object",
+          "propertyNames": { "$ref": "#/definitions/ctanName" },
+          "additionalProperties": { "$ref": "#/definitions/proofs" }
+        }
+      }
+    }
+  }
+}

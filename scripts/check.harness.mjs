@@ -51,8 +51,9 @@ check(
   outcome(null) === "fail",
 );
 
-// Every workflow, not just ci.yml: the platform cells (macOS) live in platform.yml since
-// 2026-09-23, and a harness reading one file would have stopped seeing them without a sound.
+// Every workflow, not just ci.yml: a harness reading one file would stop seeing a job added to
+// another without a sound. (macOS lived in platform.yml from 2026-09-23 to 2026-09-24; it is now
+// a cell of ci.yml's build-e2e matrix.)
 const WF_DIR = join(ROOT, ".github", "workflows");
 const workflows = Object.fromEntries(
   readdirSync(WF_DIR)
@@ -64,18 +65,19 @@ const ciJobs = Object.values(workflows).flatMap((wf) =>
 );
 check(
   "the workflows parse and declare jobs — without this every assertion below is vacuous",
-  ciJobs.length > 0 && "ci.yml" in workflows && "platform.yml" in workflows,
+  ciJobs.length > 0 && "ci.yml" in workflows,
 );
 
-// ── THE PLATFORM TRIGGER: once per PR, never per push ──────────────────────────────────────
-// These three lines ARE the cost and safety design (see the header of platform.yml): with
-// `synchronize` the 10x job runs on every push; with a label it runs on every push AND a
-// foreign label can satisfy the required check by skipping.
+// ── macOS: a cell of the TeX job, on every push ─────────────────────────────────────────
+// install-tl-unx must work there, and issue #9 appears there alone. The trigger used to be a
+// separate once-per-PR workflow; the repository is public, so the minutes are free.
 const prTypes = (wf) => wf.on?.pull_request?.types ?? [];
+const buildOs =
+  workflows["ci.yml"]?.jobs?.["build-e2e"]?.strategy?.matrix?.os ?? [];
 check(
-  "platform.yml runs on opened + ready_for_review only — `synchronize` would bill macOS on every push",
-  JSON.stringify(prTypes(workflows["platform.yml"])) ===
-    JSON.stringify(["opened", "ready_for_review"]),
+  "build-e2e runs on Linux AND macOS — one job, two operating systems",
+  buildOs.includes("ubuntu-latest") && buildOs.includes("macos-latest"),
+  JSON.stringify(buildOs),
 );
 check(
   "no workflow listens to `labeled` — a label trigger re-fires on every push and can pass by skipping",

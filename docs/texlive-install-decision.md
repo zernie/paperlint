@@ -1,7 +1,7 @@
 ---
 title: "Where CI gets TeX Live from: three methods, measurements, what was chosen and why"
 created: 2026-09-01
-updated: 2026-09-01
+updated: 2026-09-24
 tags: [ci, texlive, render-paper, resheno-i-otkloneno, zamery]
 ---
 
@@ -15,8 +15,13 @@ start from the same first try.
 The corpus owner's question that prompted the file: _"write down why we chose one action over
 another"_.
 
-Colocated with [`ensure-toolchain.sh`](ensure-toolchain.sh) on purpose: that file declares
-`REQUIRED_FILES` — the contract any of the methods below has to satisfy.
+> **Where this ended up (2026-09-24).** Method 5 below won, and it is no longer a CI script: it is
+> `rpp toolchain` (`src/toolchain.ts`), the command users run and the `build-e2e` job runs on Linux
+> and macOS. The package list and the file contract (`REQUIRED_FILES` in the deleted
+> `ensure-toolchain.sh`) moved into the venue profiles — each `skills/submit-paper/references/venues/*.jsonc`
+> declares a `tex` block of CTAN package → proof files, and `tex-base.jsonc` the set every paper
+> gets. This file stays as the record of why tlmgr and not apt or a container; the scripts it names
+> (`ensure-toolchain.sh`, `ci-install-texlive.sh`) were deleted in the same change.
 
 ---
 
@@ -41,15 +46,17 @@ Colocated with [`ensure-toolchain.sh`](ensure-toolchain.sh) on purpose: that fil
 image** under any circumstances; a homemade cache via `docker save`/`load` for a multi-gigabyte
 image costs more than the pool time it would replace.
 
-Of that 2.7 GB, our papers touch **71 MB of fonts**:
+Of that 2.7 GB, our papers touch **47 MB of fonts** — the runtime subset of three families,
+without `doc/` and `source/` (issue #37; this line said "71 MB" until 2026-09-24, which counted the
+documentation and sources too):
 
-| family              | size  | what it's for          |
-| ------------------- | ----- | ---------------------- |
-| libertine           | 29 MB | acmart's main typeface |
-| inconsolata (`zi4`) | 23 MB | monospace              |
-| newtx               | 19 MB | math                   |
+| family              | size, with doc/ and source/ | what it's for          |
+| ------------------- | --------------------------- | ---------------------- |
+| libertine           | 29 MB                       | acmart's main typeface |
+| inconsolata (`zi4`) | 23 MB                       | monospace              |
+| newtx               | 19 MB                       | math                   |
 
-So overhead is ~97%. A conscious tradeoff, not an unnoticed one.
+So overhead is ~98%. A conscious tradeoff, not an unnoticed one.
 
 ## 2. `latest-medium` — rejected 2026-09-01
 
@@ -92,11 +99,11 @@ post-install check lives in its own separate step: **you cannot trust the instal
 is the distribution package: for three font styles it pulls in the **whole** of
 `texlive-fonts-extra`.
 
-|             |                                     |
-| ----------- | ----------------------------------- |
-| needed      | 71 MB (three families)              |
-| installed   | **1691 MB** (`texlive-fonts-extra`) |
-| waste share | **96%**                             |
+|             |                                      |
+| ----------- | ------------------------------------ |
+| needed      | 47 MB (three families, runtime; #37) |
+| installed   | **1691 MB** (`texlive-fonts-extra`)  |
+| waste share | **97%**                              |
 
 apt can't go finer than that — in Debian these three families aren't split into separate
 packages.

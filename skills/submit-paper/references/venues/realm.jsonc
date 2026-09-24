@@ -10,6 +10,24 @@
 {
   "template": "acl",
 
+  // TeX Live packages the ACL template needs ON TOP OF tex-base.jsonc (the shape is
+  // venue-profile.schema.json). acl.sty itself travels with the paper; these are what it loads.
+  //   times · helvetic · courier · symbol · zapfding — without them "Font ptmr8t not loadable" and
+  //     no PDF at all. The proof is a font metric file, because that is what failed.
+  //   `urw-base35` once stood in this list and was INVENTED: tlmgr answers "package urw-base35 not
+  //     present in repository". The five names above are enough.
+  "tex": {
+    "packages": {
+      "lineno": ["lineno.sty"],
+      "psnfss": ["times.sty"],
+      "times": ["ptmr8t.tfm"],
+      "helvetic": ["phvr8t.tfm"],
+      "courier": ["pcrr8t.tfm"],
+      "symbol": ["psyr.tfm"],
+      "zapfding": ["uzdr.tfm"],
+    },
+  },
+
   "page_size": "a4",
   "page_w_in": 8.27,
   "page_h_in": 11.69,

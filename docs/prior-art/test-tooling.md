@@ -28,8 +28,8 @@ So the genuinely agent-facing harnesses are three: `hooks/hooks.harness.mjs` (`r
 contract checks. Everything else is ordinary Node testing that happens to carry the suffix.
 
 ⚠️ **The suffix is a CONTRACT, not a style choice.** `lib/mutation-driver.mjs` pairs batteries to
-harnesses by it, and `scripts/readme-numbers.mjs` counts by it. Renaming files for a new runner
-would break two things that have nothing to do with running tests.
+harnesses by it. Renaming files for a new runner would break that, which has nothing to do with
+running tests.
 
 ## Why the install e2e stays a script
 

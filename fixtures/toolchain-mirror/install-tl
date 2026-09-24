@@ -1,0 +1,27 @@
+#!/bin/sh
+# STANDS IN FOR install-tl in src/toolchain.harness.mjs. It reads TEXDIR from the profile rpp
+# wrote and lays out a tree whose kpsewhich and tlmgr are the stubs shipped beside it, so the
+# harness drives rpp's real download, unpack, install and verify logic without the network.
+set -eu
+here=$(cd "$(dirname "$0")" && pwd)
+profile=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -profile) profile=$2; shift 2 ;;
+    *) shift ;;
+  esac
+done
+dir=$(sed -n 's/^TEXDIR //p' "$profile")
+if [ -n "${FAKE_INSTALL_TL_FAIL:-}" ]; then
+  echo "install-tl: simulated failure"
+  exit 1
+fi
+mkdir -p "$dir/bin/x86_64-linux"
+for t in pdflatex kpsewhich tlmgr; do
+  cp "$here/stub-$t" "$dir/bin/x86_64-linux/$t"
+  chmod +x "$dir/bin/x86_64-linux/$t"
+done
+: > "$dir/files.txt"
+# The real install-tl leaves release-texlive.txt at TEXDIR; stub-tlmgr reads the tree's year there.
+cp "$here/release-texlive.txt" "$dir/release-texlive.txt"
+echo "fake install-tl: scheme-basic into $dir"

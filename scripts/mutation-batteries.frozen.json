@@ -1,0 +1,117 @@
+{
+  "issue": "https://github.com/zernie/research-paper-pipeline/issues/52",
+  "why": "Hand-written *.mutations.mjs batteries are being removed (#52). This list may only shrink: no new batteries, no new cases in existing ones. Delete a battery or a case, then delete its entry or lower its count here. Checked by scripts/mutation-batteries-frozen.mjs, part of npm run check.",
+  "batteries": {
+    "action.mutations.mjs": {
+      "cases": 6
+    },
+    "eslint-rules/doc-fields.mutations.mjs": {
+      "cases": 6
+    },
+    "eslint-rules/install-path-literals.mutations.mjs": {
+      "cases": 3
+    },
+    "eslint-rules/latex-language.mutations.mjs": {
+      "cases": 12
+    },
+    "eslint-rules/paper-research-question.mutations.mjs": {
+      "cases": 6
+    },
+    "eslint-rules/paper-stages.mutations.mjs": {
+      "cases": 9
+    },
+    "eslint-rules/paper-typography.mutations.mjs": {
+      "cases": 6
+    },
+    "eslint-rules/papers.mutations.mjs": {
+      "cases": 10
+    },
+    "eslint-rules/review-findings-cause.mutations.mjs": {
+      "cases": 4
+    },
+    "eslint-rules/temp-root-realpath.mutations.mjs": {
+      "cases": 5
+    },
+    "eslint-rules/tex-build.mutations.mjs": {
+      "cases": 21
+    },
+    "fixtures/real-markdown-paper/real-markdown-paper.mutations.mjs": {
+      "cases": 4
+    },
+    "hooks/hooks.mutations.mjs": {
+      "cases": 23
+    },
+    "lib/agent-cli-version.mutations.mjs": {
+      "cases": 6
+    },
+    "lib/mutation-driver.mutations.mjs": {
+      "cases": 3
+    },
+    "lib/paper-config.mutations.mjs": {
+      "cases": 7
+    },
+    "lib/skill-trigger-cases.mutations.mjs": {
+      "cases": 3
+    },
+    "scripts/check.mutations.mjs": {
+      "cases": 5
+    },
+    "scripts/rules-are-content-only.mutations.mjs": {
+      "cases": 3
+    },
+    "scripts/rules-see-files.mutations.mjs": {
+      "cases": 2
+    },
+    "skills/paper-pipeline/scripts/artifact-coverage.mutations.mjs": {
+      "cases": 22
+    },
+    "skills/paper-pipeline/scripts/consumer.mutations.mjs": {
+      "cases": 14
+    },
+    "skills/paper-pipeline/scripts/extract-ref-facts.mutations.mjs": {
+      "cases": 1
+    },
+    "skills/paper-pipeline/scripts/generated-code.mutations.mjs": {
+      "cases": 25
+    },
+    "skills/paper-pipeline/scripts/pipeline-check.mutations.mjs": {
+      "cases": 1
+    },
+    "skills/paper-pipeline/scripts/population-map.mutations.mjs": {
+      "cases": 2
+    },
+    "skills/paper-pipeline/scripts/provenance.mutations.mjs": {
+      "cases": 2
+    },
+    "skills/paper-pipeline/scripts/round-diff.mutations.mjs": {
+      "cases": 28
+    },
+    "skills/plan-paper-timeline/plan-paper-timeline.effects.mutations.mjs": {
+      "cases": 2
+    },
+    "skills/skill-contract.mutations.mjs": {
+      "cases": 22
+    },
+    "src/build.mutations.mjs": {
+      "cases": 11
+    },
+    "src/cli.mutations.mjs": {
+      "cases": 28
+    },
+    "src/doctor.mutations.mjs": {
+      "cases": 10
+    },
+    "src/hooks-settings.mutations.mjs": {
+      "cases": 7
+    },
+    "src/link-skills.mutations.mjs": {
+      "cases": 7
+    },
+    "src/new-paper.mutations.mjs": {
+      "cases": 4
+    },
+    "src/structure.mutations.mjs": {
+      "cases": 4
+    }
+  }
+}

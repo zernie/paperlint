@@ -1,0 +1,6 @@
+% A document with no pages. pdflatex prints "No pages of output." and exits 0, writing NO PDF.
+% `rpp build` must report that as a failure — never a green paper.pdf — and must not let a
+% paper.pdf from an earlier build stand in for the one this run did not write.
+\documentclass{article}
+\begin{document}
+\end{document}

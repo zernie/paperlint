@@ -271,7 +271,7 @@ ready"** — the gates are orthogonal axes and do not average out. **Ready ⇔ A
   rubric number);
 - **Structure + length** — \`tighten-paper\`'s structural verdict (right length, no sag, no TMI);
 - **Claims-honest** — the Hn claim-preservation diff clean after every rewrite;
-- **Citations** — \`verify-citations\` clean: no \cite that fails to resolve, nothing marked VERIFY
+- **Citations** — \`verify-citations\` clean: no \\cite that fails to resolve, nothing marked VERIFY
   left unresolved;
 - **Nearest-neighbor scoop** — axis 3 answered: the closest sibling found and either distinguished
   or escalated (\`analyze-sibling-paper\`);

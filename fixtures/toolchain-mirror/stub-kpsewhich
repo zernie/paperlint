@@ -1,0 +1,8 @@
+#!/bin/sh
+# Answers like kpsewhich: one path per name it finds, nothing for the rest. "Installed" files
+# are the lines of files.txt at the tree root, which stub-tlmgr appends to.
+tree=$(cd "$(dirname "$0")/../.." && pwd)
+for f in "$@"; do
+  if grep -qx "$f" "$tree/files.txt"; then echo "$tree/texmf-dist/$f"; fi
+done
+exit 0

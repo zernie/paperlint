@@ -1,6 +1,8 @@
+import type { RuleBlock } from "./rules-config.ts";
+
 /**
  * The shapes the CLI commands exchange. Before the move to TypeScript this was all `{}` and lived
- * in someone's head: a typo in `buildScripts` read as "field not set", not as an error.
+ * in someone's head: a typo in a config key read as "field not set", not as an error.
  */
 
 /** The contents of the consumer's `rpp.json`. */
@@ -22,8 +24,10 @@ export interface RppConfig {
   causeMarker?: string;
   /** Which files a paper directory must carry; `false` turns the check off entirely. */
   structure?: StructureConfig | false;
-  /** Build-script candidates, in order of preference. */
-  buildScripts?: string[];
+  /** REMOVED — `rpp build` compiles the paper itself. Still typed so a leftover key can be named. */
+  buildScripts?: unknown;
+  /** ESLint config blocks appended after rpp's own — PARSED by `parseSettings` in cli.ts. */
+  rules?: readonly RuleBlock[];
 }
 
 export interface StructureConfig {
@@ -45,6 +49,8 @@ export interface Args {
   json: boolean;
   all: boolean;
   dryRun: boolean;
+  /** `--check`: `toolchain` reports what is missing and changes nothing. */
+  check: boolean;
   maxWarnings: number;
   /** `--yes` / `-y`: take every default, ask nothing. */
   yes: boolean;
@@ -67,13 +73,31 @@ export interface StructureFinding {
   message: string;
 }
 
-/** The build outcome for one paper. `no-script` is a REFUSAL, not a skip. */
+/** One line of a build plan: a step, whether it applies to this paper, and why. */
+export interface PlanLine {
+  step: string;
+  applies: boolean;
+  /** A required step that does not apply refuses the build instead of being skipped. */
+  required: boolean;
+  why: string;
+}
+
+/**
+ * The build outcome for one paper. `no-source` — there is no `paper.tex` to compile — is a
+ * REFUSAL, not a skip: "nothing to build" and "built" must never look alike.
+ */
 export interface BuildResult {
   dir: string;
-  status: "built" | "failed" | "no-script";
-  script?: string;
-  code?: number;
+  status: "built" | "failed" | "no-source";
+  plan: PlanLine[];
+  /** `--dry-run`: the plan was printed and nothing ran. */
   dry?: boolean;
+  /** The step that failed and what to show for it. */
+  failure?: { step: string; lines: string[] };
+  /** What the steps reported on success: pass counts, undefined-reference warnings. */
+  notes?: string[];
+  /** A paper.pdf from an earlier run was on disk and `buildPapers` removed it before building. */
+  staleRemoved?: boolean;
 }
 
 /** The result of reading the config: either data, or the exit code the caller exits with. */
