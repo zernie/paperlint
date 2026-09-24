@@ -80,10 +80,11 @@
 
 import { assertPromptDiversity, skillResolved, skip } from "vigiles";
 import { paid_measureTriggerRate as measureTriggerRate } from "vigiles/eval";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { frontmatterBlock } from "../../lib/markdown.mjs";
 import { parseFm } from "../../lib/skill-corpus.mjs";
+import { installedSkills } from "./scripts/consumer.mjs";
 
 // The name a SKILL.md DECLARES, parsed rather than matched. The old expression took
 // `(\S+)` after `name:`, which silently truncates a quoted name and cannot see one
@@ -235,14 +236,8 @@ const CASES = [
 
 // Preflight: a misspelled skill or a changed namespace makes every `fired` predicate permanently
 // false, and the run then reports a wall of confident 0.00s as though the descriptions were dead.
-const installed = new Set(
-  readdirSync(SKILLS_DIR, { withFileTypes: true })
-    .filter(
-      (e) =>
-        e.isDirectory() && existsSync(join(SKILLS_DIR, e.name, "SKILL.md")),
-    )
-    .map((e) => e.name),
-);
+// Through `installedSkills`, which follows the links `rpp init` makes (rpp#62).
+const installed = new Set(installedSkills(SKILLS_DIR));
 for (const c of CASES) {
   if (!installed.has(c.skill))
     throw new Error(`${c.skill} is not installed under ${SKILLS_DIR}`);

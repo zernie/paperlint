@@ -73,7 +73,14 @@
  * consumer's own directory names are absent by the same rule `papers.harness.mjs` part IV
  * enforces for `papers.mjs`: a package that spells out one user's private tree has one user.
  */
-import { existsSync, readFileSync, realpathSync } from "node:fs";
+import {
+  existsSync,
+  readFileSync,
+  readdirSync,
+  readlinkSync,
+  realpathSync,
+  statSync,
+} from "node:fs";
 import { join, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -119,6 +126,81 @@ export function consumerRoot({ env = process.env, cwd = process.cwd() } = {}) {
 /** The consumer's skills directory — the fixed Claude Code layout, under its root. */
 export function consumerSkillsDir(opts) {
   return join(consumerRoot(opts), ".claude", "skills");
+}
+
+/**
+ * The skills installed in `dir`: every entry that LEADS TO a directory holding a `SKILL.md`,
+ * sorted by name. The one answer to "which skills are here" — for the consumer's
+ * `.claude/skills/`, for this package's own declared skills directory, and for a copy of either.
+ *
+ * 🔴 IT FOLLOWS SYMLINKS, AND THAT IS THE WHOLE POINT (rpp#62). `rpp init` (`src/link-skills.ts`)
+ * installs every skill as a link `.claude/skills/<name> -> …/skills/<name>`. A `Dirent` from
+ * `readdirSync(dir, { withFileTypes: true })` describes the entry itself, so `isDirectory()` is
+ * false for every link: five eval preflights asked the question that way, saw zero skills in
+ * every consumer, and refused to start. The writer of those links imports this function too, so
+ * the code that makes the fact and the code that reads it back cannot disagree about its shape.
+ *
+ * 🔴 A LINK THAT DOES NOT RESOLVE IS REFUSED — not skipped, not counted. Skipped, it reads as a
+ * skill that was never installed and sends the reader after the wrong cause; counted, it hands the
+ * caller a skill whose `SKILL.md` cannot be opened. Every caller is a check or a preflight, for
+ * which a broken install is an answer to report, not a detail to paper over. The error carries
+ * `code: "DANGLING_SKILL_LINK"` and `dangling: [{ name, target, cause }]` for a caller that
+ * formats its own report.
+ *
+ * ⚠️ Why this lives here and not in `src/link-skills.ts` beside the writer: the readers include
+ * `.mjs` scripts that run from `node_modules` in a consumer, and Node refuses to strip types
+ * there (`ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING`, measured on Node 22.22). Importing the
+ * built `dist/` instead would make every eval depend on a build being current. So the fact lives
+ * in the port and the TypeScript writer imports it, as `src/cli.ts` already does for `isMain`.
+ *
+ * @param dir  the directory to list. A missing directory throws `ENOENT` from `readdirSync`.
+ * @returns the skill names, sorted.
+ */
+export function installedSkills(dir) {
+  const names = [];
+  const dangling = [];
+  for (const name of readdirSync(dir)) {
+    const entry = join(dir, name);
+    let st;
+    try {
+      st = statSync(entry); // FOLLOWS the link — the question is where the entry LEADS
+    } catch (e) {
+      // The entry was listed a moment ago, so a failed stat is a link that leads nowhere
+      // (ENOENT) or in a circle (ELOOP) — not an absence.
+      dangling.push({
+        name,
+        target: readlinkOr(entry),
+        cause: e.code ?? "error",
+      });
+      continue;
+    }
+    if (st.isDirectory() && existsSync(join(entry, "SKILL.md")))
+      names.push(name);
+  }
+  if (dangling.length) {
+    const err = new Error(
+      `${dangling.length} skill link(s) in ${dir} lead nowhere:\n` +
+        dangling
+          .map((d) => `  ${d.name} -> ${d.target} (${d.cause})`)
+          .join("\n") +
+        `\nRe-run \`rpp init\` if the package moved, or remove the link if the skill was ` +
+        `retired. This is refused rather than skipped: a skipped link reads as a skill that ` +
+        `was never installed.`,
+    );
+    err.code = "DANGLING_SKILL_LINK";
+    err.dangling = dangling;
+    throw err;
+  }
+  return names.sort();
+}
+
+/** Where a link points, for the message — or a placeholder when it is not a link at all. */
+function readlinkOr(entry) {
+  try {
+    return readlinkSync(entry);
+  } catch {
+    return "(not a link)";
+  }
 }
 
 /** The consumer's parsed `package.json`, or `null` when there is none or it does not parse. */

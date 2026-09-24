@@ -366,17 +366,18 @@ import { assertPromptDiversity, skip } from "vigiles";
 import { paid_measureTriggerRate as measureTriggerRate } from "vigiles/eval";
 import {
   existsSync,
-  readdirSync,
   readFileSync,
   writeFileSync,
   mkdirSync,
   cpSync,
   rmSync,
   renameSync,
+  realpathSync,
 } from "node:fs";
 import { join } from "node:path";
 import { frontmatterBlock } from "../../lib/markdown.mjs";
 import { parseFm } from "../../lib/skill-corpus.mjs";
+import { installedSkills } from "./scripts/consumer.mjs";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
@@ -585,11 +586,8 @@ if (ONLY.length && RUN_ARMS.length !== ONLY.length)
 // a wall of confident 0.00s that read like a finding.
 
 // 1. the roster is what the parent measured
-const installed = readdirSync(SKILLS_DIR, { withFileTypes: true })
-  .filter(
-    (e) => e.isDirectory() && existsSync(join(SKILLS_DIR, e.name, "SKILL.md")),
-  )
-  .map((e) => e.name);
+// Through `installedSkills`, which follows the links `rpp init` makes (rpp#62).
+const installed = installedSkills(SKILLS_DIR);
 const installedSet = new Set(installed);
 if (installedSet.has(ARMS[5].rename))
   throw new Error(
@@ -737,8 +735,17 @@ if (MODE !== "preflight") {
 function buildArm(a) {
   const dir = join(SCRATCH, `arm-${a.id}`);
   rmSync(dir, { recursive: true, force: true });
-  mkdirSync(SCRATCH, { recursive: true });
-  cpSync(SKILLS_DIR, dir, { recursive: true });
+  mkdirSync(dir, { recursive: true });
+  // 🔴 ONE SKILL AT A TIME, FROM ITS REALPATH — not `cpSync(SKILLS_DIR, dir, { recursive })`.
+  // In a consumer every entry of SKILLS_DIR is a link `rpp init` made (rpp#62), and `cpSync` copies
+  // a link as a link, rewritten to an ABSOLUTE path into the original; `dereference: true` does not
+  // change that for nested entries (measured, Node 22.22). The arm's `writeFileSync` below would
+  // then land in the real SKILL.md — "the real one is never written" would be false in exactly the
+  // setup this eval exists for. Copying each skill's resolved directory makes the arm a real copy.
+  for (const name of installed)
+    cpSync(realpathSync(join(SKILLS_DIR, name)), join(dir, name), {
+      recursive: true,
+    });
   const srcDir = join(dir, TARGET);
   const outDir = a.rename ? join(dir, a.rename) : srcDir;
   let md = readFileSync(join(srcDir, "SKILL.md"), "utf-8");
@@ -772,9 +779,7 @@ function buildArm(a) {
     throw new Error(
       `arm ${a.id}: name is ${parseName(back)}, expected ${a.skill}`,
     );
-  const n = readdirSync(dir, { withFileTypes: true }).filter(
-    (e) => e.isDirectory() && existsSync(join(dir, e.name, "SKILL.md")),
-  ).length;
+  const n = installedSkills(dir).length;
   if (n !== installed.length)
     throw new Error(
       `arm ${a.id}: ${n} skills installed, baseline has ${installed.length}`,
@@ -891,11 +896,7 @@ if (MODE === "setupdiff") {
   );
   for (const a of ARMS) {
     const dir = buildArm(a);
-    const names = readdirSync(dir, { withFileTypes: true })
-      .filter(
-        (e) => e.isDirectory() && existsSync(join(dir, e.name, "SKILL.md")),
-      )
-      .map((e) => e.name);
+    const names = installedSkills(dir);
     const diffs = [];
     for (const n of names) {
       const h = fmHash(join(dir, n, "SKILL.md"));

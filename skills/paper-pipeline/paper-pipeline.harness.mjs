@@ -27,10 +27,11 @@
  * skill was the live example of that gap in our own corpus.
  */
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { recordCheck } from "vigiles";
+import { installedSkills } from "./scripts/consumer.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SKILLS_DIR = join(HERE, "..");
@@ -40,9 +41,7 @@ const SELF = "paper-pipeline";
 const PIPELINE_MARKER =
   /^\s*node\s+\.claude\/skills\/paper-pipeline\/scripts\/announce\.mjs\s+([a-z0-9-]+)/m;
 
-const dirs = readdirSync(SKILLS_DIR).filter((d) =>
-  existsSync(join(SKILLS_DIR, d, "SKILL.md")),
-);
+const dirs = installedSkills(SKILLS_DIR);
 const read = (d) => readFileSync(join(SKILLS_DIR, d, "SKILL.md"), "utf-8");
 const wired = dirs.filter((d) => PIPELINE_MARKER.test(read(d)));
 

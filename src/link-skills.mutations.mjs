@@ -13,6 +13,13 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "..");
 const SRC = join(HERE, "link-skills.ts");
 const HARNESS = join(HERE, "link-skills.harness.mjs");
+const CONSUMER = join(
+  ROOT,
+  "skills",
+  "paper-pipeline",
+  "scripts",
+  "consumer.mjs",
+);
 
 process.exit(
   runMutations({
@@ -35,6 +42,9 @@ process.exit(
         ],
       },
       {
+        // The definition lives in the port since rpp#62 (`installedSkills` in consumer.mjs), so
+        // the defect is planted THERE and must still die in THIS harness — the evidence that the
+        // linker reads it through the shared function rather than through a copy of its own.
         name: "any directory counts as a skill",
         harness: HARNESS,
         expect: "a directory without SKILL.md is not one",
@@ -43,9 +53,9 @@ process.exit(
           "Code lists an entry with no SKILL.md behind it",
         edits: [
           [
-            SRC,
-            '    .filter(\n      (e) => e.isDirectory() && existsSync(join(skillsDir, e.name, "SKILL.md")),\n    )',
-            "    .filter((e) => e.isDirectory())",
+            CONSUMER,
+            '    if (st.isDirectory() && existsSync(join(entry, "SKILL.md")))\n      names.push(name);',
+            "    if (st.isDirectory())\n      names.push(name);",
           ],
         ],
       },

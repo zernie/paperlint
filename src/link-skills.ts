@@ -31,7 +31,6 @@ import {
   lstatSync,
   mkdirSync,
   readFileSync,
-  readdirSync,
   readlinkSync,
   realpathSync,
   symlinkSync,
@@ -39,6 +38,7 @@ import {
 import { createRequire } from "node:module";
 import { dirname, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { installedSkills } from "../skills/paper-pipeline/scripts/consumer.mjs";
 
 export const PACKAGE_NAME = "research-paper-pipeline";
 /** Where Claude Code looks for project skills, relative to the project root. */
@@ -102,13 +102,13 @@ export function shippedSkills(
   const skillsDir = join(pkgDir, declared);
   if (!existsSync(skillsDir))
     return { error: `the declared skills directory is missing: ${skillsDir}` };
-  const names = readdirSync(skillsDir, { withFileTypes: true })
-    .filter(
-      (e) => e.isDirectory() && existsSync(join(skillsDir, e.name, "SKILL.md")),
-    )
-    .map((e) => e.name)
-    .sort();
-  return { skillsDir, names };
+  // The same function every reader of an installed skills directory calls (rpp#62): the writer
+  // and the readers of this fact share one definition of "a skill is here", links included.
+  try {
+    return { skillsDir, names: installedSkills(skillsDir) };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
 }
 
 export type LinkStatus = "created" | "present" | "missing" | "foreign";

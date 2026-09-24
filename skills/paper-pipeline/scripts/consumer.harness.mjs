@@ -36,6 +36,7 @@ import {
   consumerRoot,
   consumerSkillsDir,
   insideNodeModules,
+  installedSkills,
   isMain,
   ledgerPath,
   pipelineScripts,
@@ -451,7 +452,91 @@ assert.equal(
   );
 }
 
+// ── XI. WHICH SKILLS ARE INSTALLED — a link counts, a dangling link is REFUSED (rpp#62) ────────
+// `rpp init` installs every skill as a SYMLINK `.claude/skills/<name> -> …/skills/<name>`. A
+// `Dirent` from `readdirSync(…, { withFileTypes: true })` describes the entry ITSELF and does not
+// follow links, so `e.isDirectory()` is false for every one of them: the eval preflights that
+// asked this question that way saw ZERO installed skills in every consumer and refused to start.
+// The tree below is built on disk, not faked — the property under test is how the filesystem
+// answers, and a stub would test the stub.
+{
+  const home = join(TMP, "skills-home");
+  const store = join(TMP, "skills-store");
+  const skill = (dir, name) => {
+    mkdirSync(join(dir, name), { recursive: true });
+    writeFileSync(join(dir, name, "SKILL.md"), `---\nname: ${name}\n---\n`);
+  };
+  mkdirSync(home, { recursive: true });
+  skill(home, "real-dir"); //                        an ordinary directory
+  skill(store, "linked"); //                         the shape `rpp init` makes: a RELATIVE link
+  symlinkSync(
+    join("..", "skills-store", "linked"),
+    join(home, "linked"),
+    "dir",
+  );
+  mkdirSync(join(home, "not-a-skill")); //           a directory without SKILL.md
+  mkdirSync(join(store, "linked-not-a-skill"));
+  symlinkSync(
+    join(store, "linked-not-a-skill"),
+    join(home, "linked-not-a-skill"),
+    "dir",
+  );
+  writeFileSync(join(home, "README.md"), "a file, not a skill\n");
+
+  const names = installedSkills(home);
+  assert.ok(
+    names.includes("linked"),
+    "a SYMLINKED skill was not counted as installed. This is rpp#62: `rpp init` installs every " +
+      "skill as a link, so a reader that does not follow links sees none of them in any consumer.",
+  );
+  assert.deepEqual(
+    names,
+    ["linked", "real-dir"],
+    "installedSkills must return exactly the entries that lead to a directory holding SKILL.md, " +
+      "sorted — a directory or link without SKILL.md, or a plain file, is not a skill",
+  );
+
+  // 🔴 The dangling link: its target is gone (a skill dropped by an upgrade, a moved store). It is
+  // neither skipped — that would read as "not installed", sending the reader after the wrong
+  // cause — nor counted, which would hand a caller a skill whose SKILL.md cannot be opened.
+  symlinkSync(join("..", "skills-store", "gone"), join(home, "gone"), "dir");
+  let err;
+  try {
+    installedSkills(home);
+  } catch (e) {
+    err = e;
+  }
+  assert.ok(
+    err,
+    "a DANGLING skill link was silently accepted. It must be refused by name — skipped, it reads " +
+      "as a skill that was never installed; counted, it is a skill whose SKILL.md cannot be read.",
+  );
+  assert.equal(err.code, "DANGLING_SKILL_LINK", `wrong error: ${err.message}`);
+  assert.deepEqual(
+    err.dangling.map((d) => d.name),
+    ["gone"],
+    "the refusal must name exactly the dangling entries",
+  );
+  assert.match(
+    err.message,
+    /gone -> \.\.[/\\]skills-store[/\\]gone/,
+    "the refusal must say where the dangling link points — that is the cure's first half",
+  );
+  // The other direction: remove it and the same directory answers again.
+  rmSync(join(home, "gone"));
+  assert.deepEqual(installedSkills(home), ["linked", "real-dir"]);
+
+  // A link that cannot be resolved for another reason (a loop) is refused the same way.
+  symlinkSync("loop", join(home, "loop"));
+  assert.throws(
+    () => installedSkills(home),
+    (e) => e.code === "DANGLING_SKILL_LINK" && /loop/.test(e.message),
+    "a link that cannot be resolved (ELOOP) was not refused",
+  );
+  rmSync(join(home, "loop"));
+}
+
 console.log(
   "✓ consumer: three rungs each proved in both directions, node_modules refused, symlinked main guard held, " +
-    "scripts root declared/default/refused",
+    "scripts root declared/default/refused, installed skills follow links and refuse dangling ones",
 );

@@ -20,11 +20,11 @@
  */
 import { execFileSync, spawnSync } from "node:child_process";
 import { PAPERS_DIR_FIELD } from "../../lib/paper-config.mjs";
+import { installedSkills } from "../../skills/paper-pipeline/scripts/consumer.mjs";
 import {
   mkdtempSync,
   mkdirSync,
   cpSync,
-  readdirSync,
   writeFileSync,
   rmSync,
   existsSync,
@@ -220,11 +220,7 @@ function contentDelivery(installed) {
   const listSkills = (root) => {
     const dir = skillsDir(root);
     if (!existsSync(dir)) return [];
-    return readdirSync(dir, { withFileTypes: true })
-      .filter(
-        (d) => d.isDirectory() && existsSync(join(dir, d.name, "SKILL.md")),
-      )
-      .map((d) => d.name);
+    return installedSkills(dir);
   };
   const here = listSkills(ROOT);
   const there = listSkills(installed);
@@ -270,9 +266,7 @@ function contentDelivery(installed) {
  */
 function consumerSkillView(consumer, installed) {
   const dir = skillsDir(installed);
-  const names = readdirSync(dir, { withFileTypes: true })
-    .filter((d) => d.isDirectory() && existsSync(join(dir, d.name, "SKILL.md")))
-    .map((d) => d.name);
+  const names = installedSkills(dir);
   const home = join(consumer, ".claude", "skills");
   const unreachable = [];
   const notLinks = [];

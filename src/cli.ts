@@ -32,8 +32,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join, dirname, resolve, relative, basename, sep } from "node:path";
 import markdown from "@eslint/markdown";
-// @ts-expect-error — the helper lives in the .mjs half of the package (29 833 lines of rules and
-// skill scripts), which this task does not rewrite. It has no types, and a harness pins its behaviour.
+// Types come from consumer.d.mts beside it, the same arrangement as lib/paper-config.d.mts.
 import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
 export { isMain };
 import type { Args, RppConfig, ConfigRead } from "./types.ts";
