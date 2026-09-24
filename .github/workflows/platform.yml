@@ -59,7 +59,8 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          # The latest LTS, as build-e2e; ci.yml's gates job covers the 22 floor on Linux.
+          node-version: 24
           cache: npm
       - name: npm ci
         run: npm ci

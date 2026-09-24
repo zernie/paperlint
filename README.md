@@ -35,7 +35,7 @@ A **stage** is a point the paper has reached, such as `submitted` or `camera-rea
 
 <!-- `vigiles:symbol src/init.ts#init` — `npm run check` fails if this function is renamed or removed. -->
 
-You need Node 22.13 or newer.
+You need Node <!-- node:min -->22.13 or newer (tested on <!-- node:tested -->22 and <!-- node:tested -->24).
 
 ```sh
 npm i -D github:zernie/research-paper-pipeline#<commit-sha>

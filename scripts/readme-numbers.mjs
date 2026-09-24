@@ -2,6 +2,9 @@
 /**
  * The README names numbers. Here they are PRODUCED and checked against the named ones.
  *
+ * Two families of marks: `count:` (rules, harnesses, … counted on disk) and `node:` (the minimum
+ * Node from `engines.node`, the tested versions from the workflows' setup-node steps).
+ *
  * 🔴 WHY THIS EXISTS AT ALL. This repository's `CLAUDE.md` says: "A number in a commit message
  * that no command produced is the thing this repo exists to make impossible". The README
  * meanwhile carried four such numbers, written BY HAND and, on top of that, IN WORDS
@@ -21,6 +24,7 @@
 import { readdirSync, readFileSync, lstatSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import yaml from "js-yaml";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -148,6 +152,79 @@ export function countDeclarations(text) {
 }
 
 /**
+ * THE NODE VERSIONS the README names, read from where they are decided rather than from prose:
+ * the minimum is `engines.node` in package.json, the tested list is every `node-version` a
+ * workflow step passes to setup-node. Both files are parsed (JSON.parse, js-yaml), never searched.
+ *
+ * Only a plain floor (`>=X`) is understood. Anything else — a caret, a union — throws, because the
+ * README's wording "X or newer" would then be false, and a check that guessed would say it is not.
+ */
+export function actualNode(root = ROOT) {
+  const range = JSON.parse(readFileSync(join(root, "package.json"), "utf8"))
+    .engines?.node;
+  const min =
+    typeof range === "string" && range.startsWith(">=")
+      ? range.slice(2).trim()
+      : null;
+  if (!min || !/^\d+(\.\d+)*$/.test(min))
+    throw new Error(
+      `engines.node is ${JSON.stringify(range)}; the README says "X or newer", which only a plain ">=X" floor makes true`,
+    );
+  const tested = new Set();
+  const dir = join(root, ".github", "workflows");
+  for (const f of readdirSync(dir)
+    .filter((f) => /\.ya?ml$/.test(f))
+    .sort()) {
+    const doc = yaml.load(readFileSync(join(dir, f), "utf8"));
+    for (const job of Object.values(doc?.jobs ?? {}))
+      for (const step of job?.steps ?? []) {
+        const v = step?.with?.["node-version"];
+        if (v !== undefined) tested.add(String(v));
+      }
+  }
+  return { min, tested: [...tested].sort((a, b) => Number(a) - Number(b)) };
+}
+
+/** `<!-- node:min -->22.13` and `<!-- node:tested -->24`, every occurrence, in order. */
+export function declaredNode(text) {
+  const out = { min: [], tested: [] };
+  for (const m of text.matchAll(
+    /<!--\s*node:(min|tested)\s*-->\s*(\d+(?:\.\d+)*)/g,
+  ))
+    out[m[1]].push(m[2]);
+  return out;
+}
+
+/** What is wrong between the declared and the actual versions; empty when nothing is. */
+export function nodeFindings(declared, actual) {
+  const bad = [];
+  if (declared.min.length === 0)
+    bad.push(
+      `  node:min: engines.node says ${actual.min}, and no document declares it`,
+    );
+  for (const v of declared.min)
+    if (v !== actual.min)
+      bad.push(
+        `  node:min: a document says Node ${v} or newer, engines.node says >=${actual.min}`,
+      );
+  for (const v of actual.tested)
+    if (!declared.tested.includes(v))
+      bad.push(
+        `  node:tested: a workflow runs Node ${v}, and the "tested on" list omits it`,
+      );
+  for (const v of declared.tested)
+    if (!actual.tested.includes(v))
+      bad.push(
+        `  node:tested: a document says tested on Node ${v}, and no workflow runs it`,
+      );
+  if (!actual.tested.includes(actual.min.split(".")[0]))
+    bad.push(
+      `  node:tested: no workflow runs the floor's major (${actual.min.split(".")[0]}), so the minimum is untested`,
+    );
+  return bad;
+}
+
+/**
  * 🔴 TWO FILES, NOT ONE, and this is not a relaxation. On 17.09 the README was cut down to what
  * the user needs, and the testing methodology was moved to CONTRIBUTING.md — together with the
  * harness and battery numbers. A check that knows one file would have answered "the README has
@@ -207,6 +284,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       bad.push(`  ${k}: ${declared[k]} declared, but there is no such counter`);
   }
 
+  const declaredNodes = { min: [], tested: [] };
+  for (const f of DECLARING_FILES) {
+    const d = declaredNode(readFileSync(join(ROOT, f), "utf-8"));
+    declaredNodes.min.push(...d.min);
+    declaredNodes.tested.push(...d.tested);
+  }
+  const node = actualNode();
+  bad.push(...nodeFindings(declaredNodes, node));
+
   if (bad.length) {
     console.error("🔴 numbers are named that are not on disk:");
     for (const b of bad) console.error(b);
@@ -216,6 +302,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(1);
   }
   console.log(
-    `✓ ${keys.map((k) => `${k} ${actual[k]}`).join(" · ")} — every number checked against disk`,
+    `✓ ${keys.map((k) => `${k} ${actual[k]}`).join(" · ")} · node >=${node.min}, tested on ${node.tested.join(", ")} — every number checked against disk`,
   );
 }

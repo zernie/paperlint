@@ -69,6 +69,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
+          # The floor: engines.node is >=22.13, so the gates run on 22. build-e2e and macos run 24.
           node-version: 22
           cache: npm
 
@@ -221,7 +222,8 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          # The latest LTS; the gates job covers the 22 floor, so no job runs twice.
+          node-version: 24
           cache: npm
 
       - name: npm ci

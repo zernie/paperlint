@@ -110,6 +110,71 @@ process.exit(
           ],
         ],
       },
+      {
+        name: "the README minimum is no longer compared with engines.node",
+        harness: HARNESS,
+        expect: "fires: a README minimum that differs from engines.node",
+        disables:
+          'the claim a user acts on first: "You need Node X or newer". Raise engines.node and ' +
+          "the README keeps promising the old floor to someone whose install then refuses",
+        edits: [[SRC, "    if (v !== actual.min)", "    if (false)"]],
+      },
+      {
+        name: "a workflow's Node version may be missing from the tested list",
+        harness: HARNESS,
+        expect: "fires: a workflow version missing from the tested list",
+        disables:
+          "one direction of the tested list: CI moves to a new Node and the README never says so",
+        edits: [
+          [SRC, "    if (!declared.tested.includes(v))", "    if (false)"],
+        ],
+      },
+      {
+        name: "the README may claim a Node version no workflow runs",
+        harness: HARNESS,
+        expect: "fires: a tested version no workflow runs",
+        disables:
+          "the other direction: a job drops a version and the README still says it is tested",
+        edits: [[SRC, "    if (!actual.tested.includes(v))", "    if (false)"]],
+      },
+      {
+        name: "the floor's major may go untested",
+        harness: HARNESS,
+        expect: "fires: no workflow runs the floor's major",
+        disables:
+          "the reason the gates job stays on 22: move it to 24 and the list and README agree " +
+          "with each other while nothing runs the minimum the package promises",
+        edits: [
+          [
+            SRC,
+            '  if (!actual.tested.includes(actual.min.split(".")[0]))',
+            "  if (false)",
+          ],
+        ],
+      },
+      {
+        name: "only the first workflow file is read",
+        harness: HARNESS,
+        expect: "actualNode reads every workflow's node-version",
+        disables:
+          "the macOS job in platform.yml: a version set there would be invisible to the check",
+        edits: [[SRC, "    .sort()) {", "    .sort()\n    .slice(0, 1)) {"]],
+      },
+      {
+        name: "any engines range is read as a floor",
+        harness: HARNESS,
+        expect: "a caret range is refused",
+        disables:
+          'the refusal of a range the README\'s wording does not describe. "^22.13" excludes 23 ' +
+          'and up, and the README would still say "or newer"',
+        edits: [
+          [
+            SRC,
+            'typeof range === "string" && range.startsWith(">=")',
+            'typeof range === "string" && true',
+          ],
+        ],
+      },
     ],
   }),
 );

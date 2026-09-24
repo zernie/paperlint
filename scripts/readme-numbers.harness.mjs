@@ -14,6 +14,7 @@ import assert from "node:assert/strict";
 import {
   mkdtempSync,
   mkdirSync,
+  readFileSync,
   writeFileSync,
   symlinkSync,
   rmSync,
@@ -24,9 +25,16 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const { countFiles, countRules, declaredCounts, actualCounts } = await import(
-  join(HERE, "readme-numbers.mjs")
-);
+const {
+  countFiles,
+  countRules,
+  declaredCounts,
+  actualCounts,
+  actualNode,
+  declaredNode,
+  nodeFindings,
+  DECLARING_FILES,
+} = await import(join(HERE, "readme-numbers.mjs"));
 
 let n = 0;
 const check = (label, cond) => {
@@ -151,6 +159,112 @@ check(
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+}
+
+// ── the Node versions: engines.node and the workflows against the README ─────────────────
+{
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "readme-node-")));
+  try {
+    const wf = join(root, ".github", "workflows");
+    mkdirSync(wf, { recursive: true });
+    const pkg = (range) =>
+      writeFileSync(
+        join(root, "package.json"),
+        JSON.stringify({ engines: { node: range } }),
+      );
+    pkg(">=22.13");
+    writeFileSync(
+      join(wf, "ci.yml"),
+      "jobs:\n  gates:\n    steps:\n      - uses: actions/checkout@v7\n      - uses: actions/setup-node@v7\n        with:\n          node-version: 22\n",
+    );
+    writeFileSync(
+      join(wf, "platform.yml"),
+      "jobs:\n  macos:\n    steps:\n      - uses: actions/setup-node@v7\n        with:\n          node-version: '24'\n",
+    );
+    writeFileSync(join(wf, "other.yaml"), "on: push\njobs: {}\n");
+    const got = actualNode(root);
+    check(
+      "actualNode reads the floor out of engines.node",
+      got.min === "22.13",
+    );
+    check(
+      "actualNode reads every workflow's node-version, numeric or quoted, sorted",
+      JSON.stringify(got.tested) === JSON.stringify(["22", "24"]),
+    );
+
+    pkg("^22.13");
+    let threw = null;
+    try {
+      actualNode(root);
+    } catch (e) {
+      threw = e;
+    }
+    check(
+      'a caret range is refused — "X or newer" would be false for it',
+      threw !== null && threw.message.includes("^22.13"),
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+check(
+  "declaredNode reads every node:min and node:tested mark",
+  JSON.stringify(
+    declaredNode(
+      "Node <!-- node:min -->22.13 or newer (tested on <!--node:tested-->22 and <!-- node:tested -->24).",
+    ),
+  ) === JSON.stringify({ min: ["22.13"], tested: ["22", "24"] }),
+);
+{
+  const actual = { min: "22.13", tested: ["22", "24"] };
+  const ok = { min: ["22.13"], tested: ["22", "24"] };
+  check(
+    "nodeFindings is silent when the marks match",
+    nodeFindings(ok, actual).length === 0,
+  );
+  check(
+    "fires: a README minimum that differs from engines.node",
+    nodeFindings({ ...ok, min: ["22.12"] }, actual).some((b) =>
+      b.includes("22.12"),
+    ),
+  );
+  check(
+    "fires: no document declares the minimum at all",
+    nodeFindings({ ...ok, min: [] }, actual).length === 1,
+  );
+  check(
+    "fires: a workflow version missing from the tested list",
+    nodeFindings({ ...ok, tested: ["22"] }, actual).some((b) =>
+      b.includes("runs Node 24"),
+    ),
+  );
+  check(
+    "fires: a tested version no workflow runs",
+    nodeFindings({ ...ok, tested: ["22", "24", "26"] }, actual).some((b) =>
+      b.includes("tested on Node 26"),
+    ),
+  );
+  check(
+    "fires: no workflow runs the floor's major",
+    nodeFindings(
+      { min: ["22.13"], tested: ["24"] },
+      { min: "22.13", tested: ["24"] },
+    ).some((b) => b.includes("minimum is untested")),
+  );
+}
+{
+  // The other half: the real repository is silent.
+  const declared = { min: [], tested: [] };
+  for (const f of DECLARING_FILES) {
+    const d = declaredNode(readFileSync(join(HERE, "..", f), "utf8"));
+    declared.min.push(...d.min);
+    declared.tested.push(...d.tested);
+  }
+  const findings = nodeFindings(declared, actualNode());
+  check(
+    `silent on the real repository (got: ${findings.join(" | ") || "nothing"})`,
+    findings.length === 0,
+  );
 }
 
 // ── on a live tree the numbers are positive and plausible ────────────────────────────────────
