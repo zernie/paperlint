@@ -109,6 +109,11 @@ export const GATES = [
     script: "test",
   },
   {
+    name: "mutation batteries are frozen — none new, none grown (#52)",
+    job: "gates",
+    run: locked("node", "scripts/mutation-batteries-frozen.mjs"),
+  },
+  {
     name: "mutation batteries — every guard is killed by its own assertion",
     job: "gates",
     run: locked("node", "scripts/run-mutations.mjs"),

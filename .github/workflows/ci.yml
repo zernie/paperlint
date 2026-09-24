@@ -170,11 +170,14 @@ jobs:
       - name: every rule sees a file
         run: node scripts/rules-see-files.mjs
 
-      # 45 mutations across 4 batteries. This is what makes the green above mean something: a
-      # harness that cannot fail and a harness that passed look identical from outside. The
-      # runner DISCOVERS batteries rather than listing them, errors on finding zero, and errors
-      # on any harness that has no battery — see scripts/run-mutations.mjs for why (the hand
-      # list it replaced had already gone stale by one file, silently).
+      # Hand-written mutation batteries are being removed (#52): the frozen list may only
+      # shrink — no new battery, no new case in an existing one.
+      - name: mutation batteries are frozen
+        run: node scripts/mutation-batteries-frozen.mjs
+
+      # The batteries that remain still run until #52 replaces or removes them. The runner
+      # DISCOVERS batteries rather than listing them and errors on finding zero — see
+      # scripts/run-mutations.mjs for why (the hand list it replaced had gone stale, silently).
       - name: mutation batteries
         run: node scripts/run-mutations.mjs
 
