@@ -315,6 +315,30 @@ try {
       existsSync(join(work, "papers", "unbalanced", "paper.pdf")),
     unb,
   );
+  const unbFacts = join(
+    work,
+    "papers",
+    "unbalanced",
+    "_build",
+    "paper.facts.json",
+  );
+  const uf = existsSync(unbFacts)
+    ? JSON.parse(readFileSync(unbFacts, "utf8"))
+    : null;
+  check(
+    "🔴 unbalanced: the build MEASURED it — _build/paper.facts.json, schema 2, both heights (unbalanced: ~621.5 / 264.8 pt)",
+    uf?.schema === 2 &&
+      uf.last_page?.kind === "measured" &&
+      Math.abs(uf.last_page.columns_pt[0] - uf.last_page.columns_pt[1]) > 120,
+    JSON.stringify(uf?.last_page),
+  );
+  check(
+    "unbalanced: and the result line reports the heights without judging them",
+    /facts: _build\/paper\.facts\.json, last page [\d.]+ \/ [\d.]+ pt/.test(
+      unb,
+    ),
+    unb,
+  );
   check(
     "🔴 unbalanced: the plan has no balance step, and nothing rewrote the bibliography",
     !/^ {2}balance:/m.test(out) &&

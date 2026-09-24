@@ -97,6 +97,37 @@ function fakeTex({
   return { run, calls };
 }
 const quiet = () => {};
+
+/**
+ * pdf.js's port, faked: the build's measure step reads the PDF the fake TeX wrote (`%PDF-fake`),
+ * which a real reader would refuse. Every call is recorded; `fail` makes the read fail.
+ */
+const reads = [];
+const lastPage = {
+  widthPt: 612,
+  heightPt: 792,
+  words: Array.from({ length: 80 }, (_, i) => ({
+    x0: i < 40 ? 54 : 320,
+    y0: 60 + (i % 40) * 10,
+    x1: i < 40 ? 74 : 340,
+    y1: 70 + (i % 40) * 10,
+    text: "w",
+  })),
+};
+const fakeRead = async (pdf) => {
+  reads.push(pdf);
+  return {
+    ok: true,
+    facts: {
+      pages: 1,
+      fonts: {
+        kind: "drawn",
+        list: [{ kind: "embedded", name: "CMR10", program: "Type1" }],
+      },
+      last: lastPage,
+    },
+  };
+};
 const CLEAN_TEX = "\\documentclass{article}\\begin{document}x\\end{document}";
 
 try {
@@ -183,8 +214,9 @@ try {
   });
   const events = [];
   const tex = fakeTex();
-  const r = buildPaper(clean, {
+  const r = await buildPaper(clean, {
     cwd: root,
+    readPdf: fakeRead,
     run: (...a) => {
       events.push("run");
       return tex.run(...a);
@@ -226,6 +258,56 @@ try {
     tex.calls.every((c) => c.texinputs === `${venues}${delimiter}`),
   );
 
+  // ── the measure step: facts for the lint rules ────────────────────────────────────────
+  const factsFile = join(clean, "_build", "paper.facts.json");
+  check(
+    "measure: the plan's last step writes the facts, and says it judges nothing",
+    r.plan.at(-1)?.step === "measure" &&
+      /pdf\.js → _build\/paper\.facts\.json/.test(r.plan.at(-1)?.why ?? "") &&
+      /nothing is judged/.test(r.plan.at(-1)?.why ?? ""),
+  );
+  check(
+    "🔴 measure: a green build wrote _build/paper.facts.json through the readPdf port, on paper.pdf",
+    existsSync(factsFile) && reads.includes(join(clean, "paper.pdf")),
+  );
+  if (existsSync(factsFile)) {
+    const f = JSON.parse(readFileSync(factsFile, "utf8"));
+    check(
+      "measure: the facts are schema 2, about paper.pdf, with the last page's heights",
+      f.schema === 2 &&
+        f.pdf === "paper.pdf" &&
+        JSON.stringify(f.last_page_cols_pt) === "[400,400]",
+    );
+  }
+  check(
+    "measure: the result line reports the facts file and the heights — a measurement, no verdict",
+    (r.notes ?? []).some(
+      (x) =>
+        x.includes("facts: _build/paper.facts.json") &&
+        x.includes("last page 400.0 / 400.0 pt"),
+    ),
+  );
+  const unread = paper("unreadable-pdf", { "paper.tex": CLEAN_TEX });
+  const ur = await buildPaper(unread, {
+    cwd: root,
+    readPdf: async () => ({
+      ok: false,
+      reason: "unreadable",
+      detail: "InvalidPDFException: Invalid PDF structure.",
+    }),
+    run: fakeTex().run,
+    env: {},
+    log: quiet,
+  });
+  check(
+    "🔴 measure: a PDF pdf.js cannot read FAILS the build at `measure`, and the PDF goes",
+    ur.status === "failed" &&
+      ur.failure?.step === "measure" &&
+      /could not read .*pdf\.js \(unreadable\)/.test(ur.failure.lines[0]) &&
+      !existsSync(join(unread, "paper.pdf")) &&
+      !existsSync(join(unread, "_build", "paper.facts.json")),
+  );
+
   // ── the bibtex path ───────────────────────────────────────────────────────────────────
   const cited = paper("cited", {
     "paper.tex": CLEAN_TEX,
@@ -234,8 +316,9 @@ try {
   const btex = fakeTex({
     aux: "\\relax\n\\citation{k}\n\\bibstyle{plain}\n\\bibdata{refs}\n",
   });
-  const rb = buildPaper(cited, {
+  const rb = await buildPaper(cited, {
     cwd: root,
+    readPdf: fakeRead,
     run: btex.run,
     env: {},
     log: quiet,
@@ -268,8 +351,9 @@ try {
       "Here is how much of TeX's memory you used:",
     ].join("\n"),
   });
-  const rf = buildPaper(broken, {
+  const rf = await buildPaper(broken, {
     cwd: root,
+    readPdf: fakeRead,
     run: ftex.run,
     env: {},
     log: quiet,
@@ -297,8 +381,9 @@ try {
   check("a failed pass is not retried", ftex.calls.length === 1);
 
   // ── pdflatex not installed ────────────────────────────────────────────────────────────
-  const rm = buildPaper(clean, {
+  const rm = await buildPaper(clean, {
     cwd: root,
+    readPdf: fakeRead,
     run: fakeTex({ missing: true }).run,
     env: {},
     log: quiet,
@@ -316,8 +401,9 @@ try {
   });
   const dtex = fakeTex();
   const dryLog = [];
-  const dry = buildPaper(dryDir, {
+  const dry = await buildPaper(dryDir, {
     cwd: root,
+    readPdf: fakeRead,
     run: dtex.run,
     env: {},
     dryRun: true,
@@ -329,6 +415,11 @@ try {
     readFileSync(join(dryDir, "paper.pdf"), "utf8") === "%PDF-untouched",
   );
   check(
+    "--dry-run: nothing was measured and no facts were written",
+    !reads.includes(join(dryDir, "paper.pdf")) &&
+      !existsSync(join(dryDir, "_build")),
+  );
+  check(
     "--dry-run: the plan is printed, and the result says it did not run",
     dryLog.some((l) => l.startsWith("  compile: paper.tex")) &&
       dry.dry === true &&
@@ -338,8 +429,9 @@ try {
   // ── no paper.tex: a REFUSAL, not a skip ───────────────────────────────────────────────
   const bare = paper("bare", { "paper.md": "# x" });
   const ntex = fakeTex();
-  const nr = buildPaper(bare, {
+  const nr = await buildPaper(bare, {
     cwd: root,
+    readPdf: fakeRead,
     run: ntex.run,
     env: {},
     log: quiet,
@@ -375,6 +467,7 @@ try {
   let pdfWhenEngineAsked = null;
   const ne = await buildPapers([noEng], {
     cwd: root,
+    readPdf: fakeRead,
     run: neTex.run,
     env: {},
     log: (l) => neLog.push(l),
@@ -405,6 +498,7 @@ try {
   const bsLog = [];
   const bs = await buildPapers([bareStale, bare], {
     cwd: root,
+    readPdf: fakeRead,
     run: bsTex.run,
     env: {},
     log: (l) => bsLog.push(l),
@@ -434,6 +528,7 @@ try {
   const dsTex = fakeTex();
   const ds = await buildPapers([dryStale], {
     cwd: root,
+    readPdf: fakeRead,
     run: dsTex.run,
     env: {},
     dryRun: true,
@@ -458,6 +553,7 @@ try {
   const frLog = [];
   const fr = await buildPapers([fresh], {
     cwd: root,
+    readPdf: fakeRead,
     run: fakeTex().run,
     env: {},
     log: (l) => frLog.push(l),
@@ -478,6 +574,7 @@ try {
   const emLog = [];
   const em = await buildPapers([empty], {
     cwd: root,
+    readPdf: fakeRead,
     run: fakeTex({ noPdf: true }).run,
     env: {},
     log: (l) => emLog.push(l),

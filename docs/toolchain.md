@@ -78,6 +78,10 @@ with, the last page's words — with **pdf.js**, which arrives with rpp as the n
 found pdf.js equal on page counts and Type 3 fonts, and the last page's column heights within
 0.2 pt except on an all-Type-3 page (7.2 pt). Poppler is no longer needed by anything rpp runs.
 
+The one exception is optional and yours: **banal**, the page-geometry script HotCRP's format
+checker runs, calls poppler's `pdftohtml` itself. rpp uses banal only when a project vendors it
+(`vendor/banal` or `$BANAL`), and without it the geometry fields of the facts file are `null`.
+
 pdf.js needs **Node 22.13 or later**, which rpp requires anyway: on Node 20 it opens the same PDFs
 and reports zero fonts without an error, and rpp refuses such a read instead of reporting a
 clean font list.

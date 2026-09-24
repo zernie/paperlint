@@ -98,7 +98,8 @@ write. It prints its plan first, one line per step, then runs it:
 papers/my-paper
   inputs: TEXINPUTS += <rpp>/skills/submit-paper/references/venues
   compile: paper.tex (\documentclass[sigconf,screen]{acmart}, venue agenticdev)
-  ✓ paper.pdf — 3 pdflatex passes, 1 bibtex run
+  measure: pdf.js → _build/paper.facts.json (facts for the lint rules; nothing is judged here)
+  ✓ paper.pdf — 4 pdflatex passes, 1 bibtex run; facts: _build/paper.facts.json, last page 621.5 / 264.8 pt
 ```
 
 - **inputs** — rpp's own venue files (`paper-guards.tex`, `<venue>.tex`) are put on `TEXINPUTS`,
@@ -111,6 +112,16 @@ papers/my-paper
   the reference guards in `paper-guards.tex`: an undefined `\ref` or `\cite` fails the build
   there instead of printing `??`. A document that still changes after five passes fails, naming
   the file that kept changing.
+- **measure** — after a green compile, the PDF is read with pdf.js and what it measures is written
+  to `_build/paper.facts.json`: the page count, every font the pages draw text with (and whether
+  its program is embedded, and whether it is Type 3), and the heights of the last page's two
+  columns — or why they were not measured (a stub page of a few lines, or a review build with
+  numbered lines). If the project vendors [banal](https://github.com/kohler/hotcrp/blob/master/src/banal)
+  at `vendor/banal` (or names it in `$BANAL`), its page size, column count and font sizes are
+  added; otherwise those fields are `null`. A PDF pdf.js cannot read fails the build. The file is
+  written by one function, which `skills/render-paper/extract-pdf-facts.mjs` also calls for PDFs
+  rpp did not build. Keep `_build/` out of git: the facts carry the PDF's SHA-256, and a rule
+  refuses facts about a different PDF than the one on disk.
 
 The build does **not** judge the layout. A balanced last page, a page limit, the fonts a venue
 wants — those are verdicts about the finished PDF, and they belong to lint rules that can be

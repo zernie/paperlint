@@ -16,6 +16,12 @@
  * flag. `rpp build` prints that plan before running anything, and `--dry-run` prints only the
  * plan. Adding a step is one entry in `STEPS`.
  *
+ * ── AFTER A GREEN COMPILE, THE PDF IS MEASURED ──────────────────────────────
+ * The `measure` step writes `_build/paper.facts.json` — page count, fonts, the last page's columns —
+ * through `writeFacts` (`facts-file.ts`), the one writer of that file. It judges nothing; the lint
+ * rules read the file. The PDF is read with pdf.js through the `readPdf` port, so a test hands the
+ * build any outcome and nothing needs poppler.
+ *
  * ── WHAT THE BUILD DOES NOT DO: JUDGE THE LAYOUT ───────────────────────────
  * Until 2026-09-24 a third step searched for a `\balance` position that evened out the last page's
  * columns, rebuilding once per `\bibitem`, and failed the build (deleting the PDF) when none worked.
@@ -36,7 +42,15 @@ import { createHash } from "node:crypto";
 import { delimiter, join, relative } from "node:path";
 import { getParser } from "@unified-latex/unified-latex-util-parse";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
-import { declaredVenue } from "./facts-file.ts";
+import {
+  declaredVenue,
+  factsPath,
+  writeFacts,
+  FACTS_DIR,
+  FACTS_FILE,
+  type FactsDocument,
+} from "./facts-file.ts";
+import { readPdf as pdfjsReader, type PdfReader } from "./pdf-facts.ts";
 import {
   auxBib,
   bibtexExcerpt,
@@ -102,6 +116,10 @@ export interface BuildContext {
   readonly paperDir: string;
   readonly env: NodeJS.ProcessEnv;
   readonly run: Runner;
+  /** Reads a finished PDF — pdf.js by default; the harness passes a fake. */
+  readonly readPdf: PdfReader;
+  /** Where the facts writer looks for the consumer's vendored `banal`. */
+  readonly projectRoot: string;
 }
 
 export type StepOutcome =
@@ -117,7 +135,7 @@ export interface BuildStep {
   /** A required step REFUSES the build when it does not apply; an optional one is skipped. */
   readonly required: boolean;
   applies(facts: PaperFacts): { yes: boolean; why: string };
-  run(ctx: BuildContext): StepOutcome;
+  run(ctx: BuildContext): StepOutcome | Promise<StepOutcome>;
 }
 
 // ── facts ───────────────────────────────────────────────────────────────────────────────
@@ -434,8 +452,58 @@ export const compileStep: BuildStep = {
   },
 };
 
+// ── step: measure ───────────────────────────────────────────────────────────────────────
+
+const columnsNote = (f: FactsDocument): string => {
+  const p = f.last_page;
+  if (p.kind === "measured")
+    return `last page ${p.columns_pt[0].toFixed(1)} / ${p.columns_pt[1].toFixed(1)} pt`;
+  return p.kind === "review"
+    ? "last page has numbered lines (a review build), not measured"
+    : `last page has ${plural(p.words, "word", "words")}, too few to measure`;
+};
+
+/**
+ * Measure the PDF the compile step wrote and write `_build/paper.facts.json`. A PDF pdf.js cannot
+ * read fails the build: a PDF nothing can measure is not one to hand in. banal (page geometry) is
+ * optional here — used when the project vendors it — and a banal that is found and then FAILS is
+ * named in the note; one that is simply not there is not, because most projects do not have it.
+ */
+export const measureStep: BuildStep = {
+  name: "measure",
+  required: false,
+  applies: (facts) =>
+    facts.main
+      ? {
+          yes: true,
+          why: `pdf.js → ${FACTS_DIR}/${FACTS_FILE} (facts for the lint rules; nothing is judged here)`,
+        }
+      : { yes: false, why: "nothing is compiled" },
+  run: async (ctx) => {
+    const r = await writeFacts(ctx.paperDir, join(ctx.paperDir, `${JOB}.pdf`), {
+      readPdf: ctx.readPdf,
+      banal: "optional",
+      env: ctx.env,
+      projectRoot: ctx.projectRoot,
+    });
+    if (!r.ok) return { ok: false, lines: [...r.lines] };
+    const banal =
+      r.geometryMissing && !r.geometryMissing.startsWith("banal not found")
+        ? `; ${r.geometryMissing}`
+        : "";
+    return {
+      ok: true,
+      note: `facts: ${relative(ctx.paperDir, factsPath(ctx.paperDir))}, ${columnsNote(r.facts)}${banal}`,
+    };
+  },
+};
+
 /** The build, in order. A new step is one entry here. */
-export const STEPS: readonly BuildStep[] = [inputsStep, compileStep];
+export const STEPS: readonly BuildStep[] = [
+  inputsStep,
+  compileStep,
+  measureStep,
+];
 
 // ── the command ─────────────────────────────────────────────────────────────────────────
 
@@ -476,6 +544,9 @@ export interface BuildOptions {
   steps?: readonly BuildStep[];
   log?: (line: string) => void;
   dryRun?: boolean;
+  readPdf?: PdfReader;
+  /** Where `vendor/banal` is looked for. Default: `$CLAUDE_PROJECT_DIR`, else `cwd`. */
+  projectRoot?: string;
 }
 
 /**
@@ -492,22 +563,30 @@ function withDefaults({
   // swallows an unknown key silently, and the first version of this flag ran a full build and
   // rewrote paper.pdf while looking like a verbose dry run.
   dryRun = false,
+  readPdf = pdfjsReader,
+  projectRoot = env["CLAUDE_PROJECT_DIR"] || cwd,
 }: BuildOptions): Required<BuildOptions> {
-  return { run, cwd, env, steps, log, dryRun };
+  return { run, cwd, env, steps, log, dryRun, readPdf, projectRoot };
 }
 
 /** Run the applicable steps in order, each on the environment the steps before it left. */
-function runSteps(
+async function runSteps(
   paperDir: string,
   dir: string,
   plan: PlanLine[],
-  { run, env, steps }: Required<BuildOptions>,
-): BuildResult {
+  { run, env, steps, readPdf, projectRoot }: Required<BuildOptions>,
+): Promise<BuildResult> {
   let stepEnv = env;
   const notes: string[] = [];
   for (const [i, step] of steps.entries()) {
     if (!plan[i]?.applies) continue;
-    const out = step.run({ paperDir, env: stepEnv, run });
+    const out = await step.run({
+      paperDir,
+      env: stepEnv,
+      run,
+      readPdf,
+      projectRoot,
+    });
     if (!out.ok) {
       // The PDF THIS run wrote and the step then rejected (a partial pass).
       // A PDF from an earlier run is already gone — `buildPapers` removed it before anything ran.
@@ -525,10 +604,10 @@ function runSteps(
   return { dir, status: "built", plan, ...(notes.length ? { notes } : {}) };
 }
 
-export function buildPaper(
+export async function buildPaper(
   paperDir: string,
   options: BuildOptions = {},
-): BuildResult {
+): Promise<BuildResult> {
   const o = withDefaults(options);
   const { cwd, steps, log, dryRun } = o;
   const dir = relative(cwd, paperDir) || paperDir;
@@ -583,14 +662,15 @@ export async function buildPapers(
     for (const t of stale) log(`${relative(cwd, t) || t}: ${PDF_REMOVED}`);
     return { kind: "no-engine" };
   }
-  const results = targets.map((t) => {
+  const results: BuildResult[] = [];
+  for (const t of targets) {
     const r = {
-      ...buildPaper(t, { ...options, env }),
+      ...(await buildPaper(t, { ...options, env })),
       staleRemoved: stale.has(t),
     };
     log(formatResult(r));
-    return r;
-  });
+    results.push(r);
+  }
   return { kind: "ran", results };
 }
 
