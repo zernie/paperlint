@@ -126,9 +126,19 @@ papers/my-paper
 The class and its options and the venue in `venue.json` are read from the paper and shown in the
 plan; later steps decide from them whether they apply.
 
+**`paper.pdf` is deleted before anything runs**, for every targeted paper — before the TeX Live is
+chosen and before the first step. So no outcome leaves an old PDF looking current: not a failed
+build, not a run that stops because there is no TeX Live with the packages the papers need, not a
+paper with no `paper.tex`. A green `✓ paper.pdf` therefore always means this run wrote it, and a
+pdflatex that exits 0 without writing one (a document with no pages) is a failure:
+
+```
+  ✗ compile: pdflatex exited 0 but wrote no paper.pdf — does the document have any pages?
+```
+
 **On failure** the command names the program that failed, quotes the first error line from the log
-with its `l.NNN` source context, and **deletes `paper.pdf`**, so an old PDF cannot pass for the
-failed build:
+with its `l.NNN` source context, and says the PDF is gone — the same line on every path that ends
+without a new one:
 
 ```
   ✗ compile: pdflatex exited with 1
@@ -143,7 +153,7 @@ failed build:
 look alike: the corpus this came from once let a paper reach its venue without a single paper job
 having run on it, because a missing build read as nothing to do.
 
-`--dry-run` prints the plan and runs nothing.
+`--dry-run` prints the plan and runs nothing — and deletes nothing, `paper.pdf` included.
 
 ⚠️ **A `build.sh` or `repro/build-submission.sh` in the paper directory is IGNORED.** Earlier
 versions ran it; `rpp build` now says one line — `build.sh is ignored — rpp builds the paper

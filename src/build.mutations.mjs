@@ -47,8 +47,54 @@ process.exit(
         edits: [
           [
             SRC,
-            "  rmSync(join(paperDir, `${JOB}.pdf`), { force: true });\n",
-            "",
+            '      removePdf(paperDir);\n      return {\n        dir,\n        status: "failed",',
+            '      return {\n        dir,\n        status: "failed",',
+          ],
+        ],
+      },
+      {
+        name: "the stale PDF is no longer removed before the engine is resolved",
+        harness: HARNESS,
+        expect:
+          "no engine: the stale paper.pdf is removed BEFORE the engine is resolved",
+        disables:
+          "the one up-front removal. Without it every path that ends before a step — no " +
+          "qualifying TeX Live, no paper.tex — leaves yesterday's PDF looking like today's",
+        edits: [
+          [
+            SRC,
+            "  const stale = new Set(dryRun ? [] : targets.filter(removePdf));",
+            "  const stale = new Set<string>();",
+          ],
+        ],
+      },
+      {
+        name: "`--dry-run` removes the stale PDF too",
+        harness: HARNESS,
+        expect: "buildPapers --dry-run: the PDF on disk is untouched",
+        disables:
+          "the dry-run guard on the up-front removal. A plan that deletes the author's PDF is " +
+          "not a plan",
+        edits: [
+          [
+            SRC,
+            "  const stale = new Set(dryRun ? [] : targets.filter(removePdf));",
+            "  const stale = new Set(targets.filter(removePdf));",
+          ],
+        ],
+      },
+      {
+        name: "pdflatex exit 0 with no PDF counts as built",
+        harness: HARNESS,
+        expect: "empty document: pdflatex exit 0 with no PDF FAILS the build",
+        disables:
+          "the existence check. An empty document compiles with exit 0 and no output, and the " +
+          "result line would print a green paper.pdf that does not exist",
+        edits: [
+          [
+            SRC,
+            "    if (!existsSync(join(ctx.paperDir, `${JOB}.pdf`)))",
+            "    if (false)",
           ],
         ],
       },

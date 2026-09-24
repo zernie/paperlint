@@ -418,6 +418,8 @@ export function compile(
   }
 }
 
+const NO_PDF = `pdflatex exited 0 but wrote no ${JOB}.pdf — does the document have any pages?`;
+
 const plural = (n: number, one: string, many: string): string =>
   `${n} ${n === 1 ? one : many}`;
 
@@ -460,6 +462,16 @@ export const compileStep: BuildStep = {
         ],
       };
     }
+    // 🔴 EXIT 0 IS NOT A PDF. pdflatex on a document with no pages prints "No pages of output."
+    // and exits 0. Existence is enough to know THIS run wrote it: `buildPapers` deleted paper.pdf
+    // before anything ran, so no timestamp comparison is needed. Checked here and not after the
+    // last step, because the balance step reads the PDF and would fail with pdftotext's complaint
+    // instead of this one.
+    if (!existsSync(join(ctx.paperDir, `${JOB}.pdf`)))
+      return {
+        ok: false,
+        lines: [NO_PDF, `full log: ${join(ctx.paperDir, `${JOB}.log`)}`],
+      };
     const warn = end.warnings.length
       ? ` — ⚠️ the final log still reports ${end.warnings.join(", ")}`
       : "";
@@ -770,11 +782,17 @@ export function ttyProgress(
 
 /**
  * 🔴 A FAILED BUILD LEAVES NO PDF. An old paper.pdf beside a red build looks current, and "the PDF
- * is there" is exactly what a human checks first.
+ * is there" is exactly what a human checks first. Returns whether there was one.
  */
-function removePdf(paperDir: string): void {
-  rmSync(join(paperDir, `${JOB}.pdf`), { force: true });
+function removePdf(paperDir: string): boolean {
+  const pdf = join(paperDir, `${JOB}.pdf`);
+  const was = existsSync(pdf);
+  rmSync(pdf, { force: true });
+  return was;
 }
+
+/** The one wording for "the PDF is gone", on every path that ends without a new one. */
+export const PDF_REMOVED = `${JOB}.pdf removed — a stale PDF must not pass for this build`;
 
 export interface BuildOptions {
   run?: Runner;
@@ -819,6 +837,8 @@ function runSteps(
     const out = step.run({ paperDir, env: stepEnv, run, progress });
     progress("");
     if (!out.ok) {
+      // The PDF THIS run wrote and the step then rejected (a partial pass, an unbalanced page).
+      // A PDF from an earlier run is already gone — `buildPapers` removed it before anything ran.
       removePdf(paperDir);
       return {
         dir,
@@ -845,7 +865,6 @@ export function buildPaper(
   try {
     facts = readFacts(paperDir);
   } catch (e) {
-    removePdf(paperDir);
     return {
       dir,
       status: "failed",
@@ -862,6 +881,45 @@ export function buildPaper(
     return { dir, status: "no-source", plan };
   if (dryRun) return { dir, status: "built", plan, dry: true };
   return runSteps(paperDir, dir, plan, o);
+}
+
+/** A command's run over its targets: stopped before any paper for want of an engine, or ran. */
+export type BuildRun =
+  | { readonly kind: "no-engine" }
+  | { readonly kind: "ran"; readonly results: readonly BuildResult[] };
+
+/**
+ * `rpp build` over its targets — the ONE path every outcome goes through.
+ *
+ * 🔴 A STALE PDF IS REMOVED HERE, FIRST, AND NOWHERE ELSE. Before the engine is resolved and before
+ * any step, every targeted paper's paper.pdf goes. Then no outcome can leave an old PDF looking
+ * current, including the ones that never reach a step: no qualifying TeX Live, no paper.tex, facts
+ * that do not parse. Removing it per failure path instead is how three of those paths once kept it.
+ * `--dry-run` removes nothing: a plan has no side effects.
+ */
+export async function buildPapers(
+  targets: readonly string[],
+  {
+    engine,
+    ...options
+  }: BuildOptions & { engine: () => Promise<NodeJS.ProcessEnv | null> },
+): Promise<BuildRun> {
+  const { cwd, log, dryRun } = withDefaults(options);
+  const stale = new Set(dryRun ? [] : targets.filter(removePdf));
+  const env = await engine();
+  if (env === null) {
+    for (const t of stale) log(`${relative(cwd, t) || t}: ${PDF_REMOVED}`);
+    return { kind: "no-engine" };
+  }
+  const results = targets.map((t) => {
+    const r = {
+      ...buildPaper(t, { ...options, env }),
+      staleRemoved: stale.has(t),
+    };
+    log(formatResult(r));
+    return r;
+  });
+  return { kind: "ran", results };
 }
 
 /** Immediate subdirectories that look like a paper. Hidden ones are not papers. */
@@ -894,15 +952,23 @@ export function formatResult(r: BuildResult): string {
     return r.dry
       ? `  – not run (--dry-run)`
       : `  ✓ ${JOB}.pdf${r.notes?.length ? ` — ${r.notes.join("; ")}` : ""}`;
-  if (r.status === "failed") {
-    const [head, ...rest] = r.failure?.lines ?? ["failed"];
-    return [
-      `  ✗ ${r.failure?.step ?? "build"}: ${head}`,
-      ...rest.map((l) => `      ${l}`),
-      `      ${JOB}.pdf removed — a stale PDF must not pass for this build`,
-    ].join("\n");
-  }
-  return `  ✗ nothing to compile: no ${MAIN}`;
+  return r.status === "failed" ? formatFailure(r) : formatRefusal(r);
+}
+
+/** Always says the PDF is gone: this run may have written one and rejected it. */
+function formatFailure(r: BuildResult): string {
+  const [head, ...rest] = r.failure?.lines ?? ["failed"];
+  return [
+    `  ✗ ${r.failure?.step ?? "build"}: ${head}`,
+    ...rest.map((l) => `      ${l}`),
+    `      ${PDF_REMOVED}`,
+  ].join("\n");
+}
+
+/** Says the PDF is gone only when there was one — a paper with no paper.tex usually has none. */
+function formatRefusal(r: BuildResult): string {
+  const refused = `  ✗ nothing to compile: no ${MAIN}`;
+  return r.staleRemoved ? `${refused}\n      ${PDF_REMOVED}` : refused;
 }
 
 export function formatResults(results: readonly BuildResult[]): string {

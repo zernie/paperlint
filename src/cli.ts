@@ -42,9 +42,8 @@ import {
   asEslintResults,
 } from "./structure.ts";
 import {
-  buildPaper,
+  buildPapers,
   papersIn,
-  formatResult,
   anyFailed,
   remedyFor,
   readFacts,
@@ -703,16 +702,18 @@ async function runBuild(
     return 2;
   }
 
-  const env = await engineEnv(targets, a, { log, err });
-  if (env === null) return 1;
-  const results = targets.map((t) => {
-    const r = buildPaper(t, { cwd, dryRun: a.dryRun, log, env });
-    log(formatResult(r));
-    return r;
+  // The engine is resolved INSIDE buildPapers, after it has removed the stale PDFs: a run that
+  // stops for want of a TeX Live must not leave an old paper.pdf looking current either.
+  const out = await buildPapers(targets, {
+    cwd,
+    dryRun: a.dryRun,
+    log,
+    engine: () => engineEnv(targets, a, { log, err }),
   });
-  const remedy = remedyFor(results);
+  if (out.kind === "no-engine") return 1;
+  const remedy = remedyFor(out.results);
   if (remedy) err(remedy);
-  return anyFailed(results) ? 1 : 0;
+  return anyFailed(out.results) ? 1 : 0;
 }
 
 /** What one paper needs from TeX Live; a venue.json that does not parse is the build's to report. */

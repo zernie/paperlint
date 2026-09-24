@@ -27,6 +27,7 @@ import { fileURLToPath } from "node:url";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const {
   buildPaper,
+  buildPapers,
   papersIn,
   formatResult,
   anyFailed,
@@ -70,6 +71,7 @@ function fakeTex({
   exitCode = 0,
   log = "",
   missing = false,
+  noPdf = false,
 } = {}) {
   const calls = [];
   const run = (bin, args, opts) => {
@@ -82,7 +84,8 @@ function fakeTex({
     if (bin === "pdflatex") {
       writeFileSync(join(opts.cwd, "paper.aux"), aux);
       writeFileSync(join(opts.cwd, "paper.log"), log);
-      if (exitCode === 0)
+      // `noPdf`: what real pdflatex does on a document with no pages — "No pages of output.", exit 0.
+      if (exitCode === 0 && !noPdf)
         writeFileSync(join(opts.cwd, "paper.pdf"), "%PDF-fake");
       return { status: exitCode, stdout: "", stderr: "" };
     }
@@ -356,6 +359,144 @@ try {
       /paper\.tex/.test(remedyFor([nr])),
   );
   check("on full success there is no remedy", remedyFor([r]) === "");
+
+  // ── 🔴 A STALE PDF NEVER SURVIVES A RUN THAT DID NOT REPLACE IT — every path of buildPapers ──
+  // The order matters for the battery: the up-front removal is killed by the no-engine case, the
+  // existence check by the empty document, and neither case depends on the other defence.
+  const REMOVED =
+    "paper.pdf removed — a stale PDF must not pass for this build";
+
+  // (b) no qualifying engine: the command stops before any paper is built.
+  const noEng = paper("no-engine", {
+    "paper.tex": CLEAN_TEX,
+    "paper.pdf": "%PDF-stale-from-yesterday",
+  });
+  const neTex = fakeTex();
+  const neLog = [];
+  let pdfWhenEngineAsked = null;
+  const ne = await buildPapers([noEng], {
+    cwd: root,
+    run: neTex.run,
+    env: {},
+    log: (l) => neLog.push(l),
+    engine: async () => {
+      pdfWhenEngineAsked = existsSync(join(noEng, "paper.pdf"));
+      return null;
+    },
+  });
+  check(
+    "🔴 no engine: the stale paper.pdf is removed BEFORE the engine is resolved",
+    pdfWhenEngineAsked === false && !existsSync(join(noEng, "paper.pdf")),
+  );
+  check(
+    "no engine: the run stops — nothing compiled, no results",
+    ne.kind === "no-engine" && neTex.calls.length === 0,
+  );
+  check(
+    "no engine: the run says so, with the line a failed build prints",
+    neLog.includes(`papers/no-engine: ${REMOVED}`),
+  );
+
+  // (c) no paper.tex: refused, and a PDF left from some earlier build goes too.
+  const bareStale = paper("bare-stale", {
+    "paper.md": "# x",
+    "paper.pdf": "%PDF-stale-from-yesterday",
+  });
+  const bsTex = fakeTex();
+  const bsLog = [];
+  const bs = await buildPapers([bareStale, bare], {
+    cwd: root,
+    run: bsTex.run,
+    env: {},
+    log: (l) => bsLog.push(l),
+    engine: async () => ({}),
+  });
+  check(
+    "🔴 no-source: the stale paper.pdf is GONE",
+    bs.kind === "ran" &&
+      bs.results[0].status === "no-source" &&
+      !existsSync(join(bareStale, "paper.pdf")),
+  );
+  check(
+    "no-source: the refusal says the PDF was removed…",
+    bsLog.includes(`  ✗ nothing to compile: no paper.tex\n      ${REMOVED}`),
+  );
+  check(
+    "…and a paper that had no PDF is not told one was removed",
+    bsLog.includes("  ✗ nothing to compile: no paper.tex") &&
+      bs.results[1].staleRemoved === false,
+  );
+
+  // (d) --dry-run: no side effect, including this one.
+  const dryStale = paper("dry-stale", {
+    "paper.tex": CLEAN_TEX,
+    "paper.pdf": "%PDF-untouched",
+  });
+  const dsTex = fakeTex();
+  const ds = await buildPapers([dryStale], {
+    cwd: root,
+    run: dsTex.run,
+    env: {},
+    dryRun: true,
+    log: quiet,
+    engine: async () => ({}),
+  });
+  check(
+    "🔴 buildPapers --dry-run: the PDF on disk is untouched, and nothing ran",
+    readFileSync(join(dryStale, "paper.pdf"), "utf8") === "%PDF-untouched" &&
+      dsTex.calls.length === 0 &&
+      ds.kind === "ran" &&
+      ds.results[0].dry === true,
+  );
+
+  // A success replaces the stale PDF and says nothing about removing it.
+  const fresh = paper("fresh", {
+    "paper.tex": CLEAN_TEX,
+    "paper.pdf": "%PDF-stale-from-yesterday",
+  });
+  const frLog = [];
+  const fr = await buildPapers([fresh], {
+    cwd: root,
+    run: fakeTex().run,
+    env: {},
+    log: (l) => frLog.push(l),
+    engine: async () => ({}),
+  });
+  check(
+    "a success: the PDF on disk is the one this run wrote, and nothing says 'removed'",
+    fr.kind === "ran" &&
+      fr.results[0].status === "built" &&
+      readFileSync(join(fresh, "paper.pdf"), "utf8") === "%PDF-fake" &&
+      !frLog.some((l) => l.includes("removed")),
+  );
+
+  // (a) pdflatex exits 0 and writes no PDF — an empty document.
+  const empty = paper("empty", {
+    "paper.tex": "\\documentclass{article}\\begin{document}\\end{document}",
+  });
+  const emLog = [];
+  const em = await buildPapers([empty], {
+    cwd: root,
+    run: fakeTex({ noPdf: true }).run,
+    env: {},
+    log: (l) => emLog.push(l),
+    engine: async () => ({}),
+  });
+  check(
+    "🔴 empty document: pdflatex exit 0 with no PDF FAILS the build",
+    em.kind === "ran" &&
+      em.results[0].status === "failed" &&
+      em.results[0].failure.step === "compile" &&
+      anyFailed(em.results),
+  );
+  const emShown = emLog.join("\n");
+  check(
+    "empty document: no ✓, and the failure says what happened and asks the question",
+    !emShown.includes("✓") &&
+      emShown.includes(
+        "✗ compile: pdflatex exited 0 but wrote no paper.pdf — does the document have any pages?",
+      ),
+  );
 
   // ── the balance step ──────────────────────────────────────────────────────────────────
   check(

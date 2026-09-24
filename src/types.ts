@@ -92,6 +92,8 @@ export interface BuildResult {
   failure?: { step: string; lines: string[] };
   /** What the steps reported on success: pass counts, undefined-reference warnings. */
   notes?: string[];
+  /** A paper.pdf from an earlier run was on disk and `buildPapers` removed it before building. */
+  staleRemoved?: boolean;
 }
 
 /** The result of reading the config: either data, or the exit code the caller exits with. */
