@@ -69,11 +69,70 @@ process.exit(
         expect: "second run: exit 0 and says there is nothing to do",
         disables:
           "idempotence: the second run must not touch the network or say it did work",
+        edits: [[SRC, "  if (tree && complete(tree)) {", "  if (false) {"]],
+      },
+      {
+        name: "a stale mirror reads as a new release",
+        harness: HARNESS,
+        expect:
+          "releaseGap: a STALE mirror (repository older than the tree) is not a new release",
+        disables:
+          "the direction of the year check: an outdated mirror would trigger a whole new install",
         edits: [
           [
             SRC,
-            "  if (tree && noGaps(gapsOf(tree, o.tex, o.run))) {",
-            "  if (false) {",
+            "  return local && remote && Number(remote) > Number(local)",
+            "  return local && remote && remote !== local",
+          ],
+        ],
+      },
+      {
+        name: "the newest tree is used even when incomplete",
+        harness: HARNESS,
+        expect: "usableTree: the newest COMPLETE tree, not simply the newest",
+        disables:
+          "the complete-tree preference: an interrupted new-year install would be built with",
+        edits: [
+          [
+            SRC,
+            "  return trees.find(complete) ?? trees[0] ?? null;",
+            "  return trees[0] ?? null;",
+          ],
+        ],
+      },
+      {
+        name: "tlmgr's release refusal is not recognised",
+        harness: HARNESS,
+        expect: "🔴 years: a new package on a 2027 mirror",
+        disables:
+          "the recovery: a new TeX Live year would fail every newly declared package, loudly and forever",
+        edits: [[SRC, "    if (newer) return { ok: false, newer };", ""]],
+      },
+      {
+        name: "the old tree is not named",
+        harness: HARNESS,
+        expect: "years: the old tree is left in place",
+        disables:
+          "the notice: a superseded 300 MB tree would sit in the cache with nothing saying so",
+        edits: [
+          [
+            SRC,
+            "  if (used !== tree.value) o.log(leftInPlace(tree.value));",
+            "",
+          ],
+        ],
+      },
+      {
+        name: "the installer's year is not compared with the refused tree",
+        harness: HARNESS,
+        expect: "🔴 years: mirrors that disagree about the release fail",
+        disables:
+          "the guard: install-tl for the SAME year would run over the tree that is already there",
+        edits: [
+          [
+            SRC,
+            "    if (newerThan && Number(year) <= Number(newerThan))",
+            "    if (false)",
           ],
         ],
       },

@@ -252,22 +252,22 @@ jobs:
         run: npm test
         timeout-minutes: 10
 
-      # The cache key is what the install depends on: the declared packages (every venue profile)
-      # and the TeX Live year. The year is the calendar year — CTAN's release is known only after
-      # downloading the installer; a key that is a few weeks early or late around the spring
-      # release costs one cold install, never a wrong tree, because `rpp toolchain` verifies every
-      # declared file on a restored tree too.
+      # The cache key is what the install depends on: the runner and the declared packages (every
+      # venue profile, the base set included). NOT the TeX Live year, and not the calendar year that
+      # used to stand in for it: the calendar says nothing about CTAN's release, and a restored tree
+      # from an older year is safe — `rpp toolchain` verifies every declared file on it, leaves it
+      # alone when it is complete, and when a newly declared package makes tlmgr refuse it across
+      # releases, installs the new year beside it (src/toolchain.ts, `newRelease`).
+      # No `restore-keys`, deliberately: a partial restore would carry the old year's tree into the
+      # new entry, and the old tree is never deleted, so the cache would grow by a whole TeX Live.
       - name: where TeX Live is cached
-        id: tl
-        run: |
-          echo "RPP_TEXLIVE_DIR=$HOME/.cache/rpp-texlive" >> "$GITHUB_ENV"
-          echo "year=$(date -u +%Y)" >> "$GITHUB_OUTPUT"
+        run: echo "RPP_TEXLIVE_DIR=$HOME/.cache/rpp-texlive" >> "$GITHUB_ENV"
 
       - name: TeX Live from cache
         uses: actions/cache@v6
         with:
           path: ~/.cache/rpp-texlive
-          key: texlive-${{ runner.os }}-${{ runner.arch }}-${{ steps.tl.outputs.year }}-${{ hashFiles('skills/submit-paper/references/venues/*.jsonc') }}
+          key: texlive-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('skills/submit-paper/references/venues/*.jsonc') }}
 
       # The same command a user runs. On a cache hit it verifies and says "nothing to do"; on a miss
       # it installs from an empty directory and verifies every declared file with kpsewhich.

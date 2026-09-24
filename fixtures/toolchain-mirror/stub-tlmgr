@@ -14,6 +14,18 @@ while [ $# -gt 0 ]; do
 done
 echo "$repo $*" >> "$tree/tlmgr.log"
 catalog="${repo#file://}/catalog.txt"
+# A repository for a NEWER TeX Live than the tree: tlmgr refuses before installing anything, in
+# the wording of tlmgr.pl (TeX Live 2026, lines 7644-7648). The repository's year is the file
+# release-year beside catalog.txt; a mirror without one is not checked.
+remote=$(cat "${repo#file://}/release-year" 2>/dev/null || true)
+local=$(sed -n '1s/.*version \([0-9]\{4\}\).*/\1/p' "$tree/release-texlive.txt")
+if [ -n "$remote" ] && [ "$remote" -gt "$local" ]; then
+  echo "tlmgr: Local TeX Live ($local) is older than remote repository ($remote)."
+  echo "Cross release updates are only supported with"
+  echo "  update-tlmgr-latest(.sh/.exe) -- --upgrade"
+  echo "See https://tug.org/texlive/upgrade.html for details."
+  exit 1
+fi
 status=0
 for p in "$@"; do
   line=$(grep "^$p " "$catalog" || true)

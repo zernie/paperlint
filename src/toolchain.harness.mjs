@@ -94,6 +94,46 @@ check(
 );
 check("formatDuration", T.formatDuration(118_400) === "1m58s");
 
+// tlmgr's two wordings for "the repository is another TeX Live year" (tlmgr.pl 7644-7648, 7655-7663).
+const OLDER =
+  "tlmgr: Local TeX Live (2026) is older than remote repository (2027).\n" +
+  "Cross release updates are only supported with\n" +
+  "  update-tlmgr-latest(.sh/.exe) -- --upgrade\n";
+const INCOMPAT = (local, remote) =>
+  "tlmgr: The TeX Live versions of the local installation\n" +
+  "and the repository are not compatible:\n" +
+  `      local: ${local}\n` +
+  ` repository: ${remote} (https://m/tlnet)\n` +
+  "Perhaps that particular CTAN mirror is outdated? Just a guess.\n";
+check(
+  "releaseGap: 'Local TeX Live (Y) is older than remote repository (Y)' — both years",
+  JSON.stringify(T.releaseGap(OLDER)) === '{"local":"2026","remote":"2027"}',
+);
+check(
+  "releaseGap: the 'not compatible' wording with a NEWER repository",
+  JSON.stringify(T.releaseGap(INCOMPAT("2026", "2027"))) ===
+    '{"local":"2026","remote":"2027"}',
+);
+check(
+  "releaseGap: a STALE mirror (repository older than the tree) is not a new release",
+  T.releaseGap(INCOMPAT("2027", "2026")) === null,
+);
+check(
+  "releaseGap: ordinary tlmgr output is not a release gap",
+  T.releaseGap(
+    "tlmgr install: package urw-base35 not present in repository.\n",
+  ) === null,
+);
+check(
+  "usableTree: the newest COMPLETE tree, not simply the newest",
+  T.usableTree(["2027", "2026", "2025"], (y) => y !== "2027") === "2026",
+);
+check(
+  "usableTree: nothing complete — the newest, so packages go where the next build will look",
+  T.usableTree(["2027", "2026"], () => false) === "2027",
+);
+check("usableTree: an empty cache", T.usableTree([], () => true) === null);
+
 // ── the fake mirror ────────────────────────────────────────────────────────────────────
 const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-toolchain-h-")));
 const good = join(work, "good");
@@ -128,6 +168,7 @@ spawnSync(
   { stdio: "inherit" },
 );
 copyFileSync(join(FIXTURE, "catalog.txt"), join(good, "catalog.txt"));
+copyFileSync(join(FIXTURE, "release-year"), join(good, "release-year"));
 writeFileSync(
   join(garbage, "install-tl-unx.tar.gz"),
   "<html>503 Service Unavailable</html>",
@@ -386,6 +427,129 @@ const cmd = (over = {}) => {
     r.code === 1 &&
       r.err.includes("no CTAN mirror returned install-tl") &&
       r.err.includes("RPP_CTAN_MIRROR"),
+    r.err,
+  );
+}
+
+// ── 4. a new TeX Live year on CTAN ─────────────────────────────────────────────────────
+/**
+ * A mirror serving the TeX Live `year` release: an install-tl archive whose release-texlive.txt
+ * says `installerYear`, the catalog, and the repository's `release-year`. The two differ only for
+ * the case where the mirrors disagree.
+ */
+const mirrorFor = (name, year, installerYear = year) => {
+  const dir = join(work, name);
+  const stage = join(
+    work,
+    `staging-${name}`,
+    `install-tl-${installerYear}0401`,
+  );
+  mkdirSync(dir, { recursive: true });
+  mkdirSync(stage, { recursive: true });
+  for (const f of [
+    "install-tl",
+    "stub-pdflatex",
+    "stub-kpsewhich",
+    "stub-tlmgr",
+  ])
+    copyFileSync(join(staging, f), join(stage, f));
+  writeFileSync(
+    join(stage, "release-texlive.txt"),
+    `TeX Live (https://tug.org/texlive) version ${installerYear}\n`,
+  );
+  spawnSync("tar", [
+    "czf",
+    join(dir, "install-tl-unx.tar.gz"),
+    "-C",
+    dirname(stage),
+    `install-tl-${installerYear}0401`,
+  ]);
+  copyFileSync(join(FIXTURE, "catalog.txt"), join(dir, "catalog.txt"));
+  writeFileSync(join(dir, "release-year"), `${year}\n`);
+  return url(dir);
+};
+const next = mirrorFor("good2027", "2027");
+const years = join(work, "cache-years");
+const withLibertine = {
+  ...TEX,
+  packages: { ...TEX.packages, libertine: ["libertine.sty"] },
+};
+const inYears = (mirror, over = {}) =>
+  cmd({
+    env: { ...env, RPP_TEXLIVE_DIR: years, RPP_CTAN_MIRROR: mirror },
+    ...over,
+  });
+check(
+  "years: a 2026 tree to start from",
+  inYears(url(good)).code === 0 && existsSync(join(years, "2026")),
+);
+{
+  const r = inYears(next);
+  check(
+    "🔴 years: a complete 2026 tree and a 2027 mirror, nothing new declared — NO upgrade",
+    r.code === 0 &&
+      r.out.includes("TeX Live 2026") &&
+      r.out.includes("nothing to do") &&
+      !existsSync(join(years, "2027")) &&
+      !r.calls.some((c) => c.cmd === "curl" || c.cmd.endsWith("tlmgr")),
+    `${r.out}\n${JSON.stringify(r.calls.map((c) => c.cmd))}`,
+  );
+}
+{
+  const r = inYears(next, { tex: withLibertine });
+  check(
+    "🔴 years: a new package on a 2027 mirror — tlmgr's refusal installs a 2027 tree beside the old one",
+    r.code === 0 &&
+      r.out.includes(
+        "tlmgr refused: the repository is TeX Live 2027, the tree in",
+      ) &&
+      r.out.includes("✓ TeX Live 2027 is ready in") &&
+      existsSync(join(years, "2027", "bin", "x86_64-linux", "pdflatex")),
+    `${r.out}\n${r.err}`,
+  );
+  check(
+    "years: the new tree got EVERY declared package, not only the new one",
+    readFileSync(join(years, "2027", "tlmgr.log"), "utf8").trim() ===
+      `${next} acmart latex libertine texcount`,
+  );
+  check(
+    "years: the old tree is left in place, said so with its size and never deleted",
+    existsSync(join(years, "2026", "bin", "x86_64-linux", "pdflatex")) &&
+      r.out.includes(
+        `TeX Live 2026 in ${join(years, "2026")} is left in place and no longer used (`,
+      ) &&
+      r.out.includes("MB); delete that directory to free the space"),
+    r.out,
+  );
+}
+{
+  const r = inYears(next, { tex: withLibertine });
+  check(
+    "years: the next run uses 2027 and does nothing",
+    r.code === 0 &&
+      r.out.includes(
+        `TeX Live 2027 in ${join(years, "2027")} already has all 4`,
+      ),
+    r.out,
+  );
+}
+{
+  // tlmgr says 2027, but the installer the mirrors hand out is still 2026.
+  const split = join(work, "cache-split");
+  cmd({ env: { ...env, RPP_TEXLIVE_DIR: split } });
+  const r = cmd({
+    env: {
+      ...env,
+      RPP_TEXLIVE_DIR: split,
+      RPP_CTAN_MIRROR: mirrorFor("split2027", "2027", "2026"),
+    },
+    tex: withLibertine,
+  });
+  check(
+    "🔴 years: mirrors that disagree about the release fail, and install-tl is not run over the old tree",
+    r.code === 1 &&
+      r.err.includes("the mirrors disagree about the current release") &&
+      !r.calls.some((c) => c.cmd.endsWith("install-tl")),
     r.err,
   );
 }

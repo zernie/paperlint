@@ -105,18 +105,37 @@ function binDirOf(tree: string): string | null {
   return arch ? join(bins, arch) : null;
 }
 
-/** The newest year in the cache that holds a working tree, or null. */
-export function cachedTree(root: string): CachedTree | null {
-  if (!existsSync(root)) return null;
-  const years = readdirSync(root)
+/** Every year in the cache that holds a tree with a pdflatex, newest first. */
+export function cachedTrees(root: string): CachedTree[] {
+  if (!existsSync(root)) return [];
+  return readdirSync(root)
     .filter((y) => /^\d{4}$/.test(y))
     .sort()
-    .reverse();
-  for (const year of years) {
-    const bin = binDirOf(join(root, year));
-    if (bin) return { dir: join(root, year), year, bin };
-  }
-  return null;
+    .reverse()
+    .map((year) => ({
+      dir: join(root, year),
+      year,
+      bin: binDirOf(join(root, year)),
+    }))
+    .filter((t): t is CachedTree => t.bin !== null);
+}
+
+/** The newest tree in the cache, complete or not — where packages are added. */
+export function cachedTree(root: string): CachedTree | null {
+  return cachedTrees(root)[0] ?? null;
+}
+
+/**
+ * The tree to USE: the newest one that is complete, else the newest one. 🔴 NOT simply the newest:
+ * a new year's install interrupted after install-tl has a pdflatex and none of the venue's
+ * packages, and building with it would be the silent font substitution this package exists to
+ * refuse — while the complete older tree beside it builds correctly.
+ */
+export function usableTree<T>(
+  trees: readonly T[],
+  complete: (t: T) => boolean,
+): T | null {
+  return trees.find(complete) ?? trees[0] ?? null;
 }
 
 export function mirrorsFrom(env: NodeJS.ProcessEnv): readonly string[] {
@@ -158,6 +177,53 @@ export function unknownPackages(tlmgrOutput: string): string[] {
     .filter((l) => l.includes("not present in repository"))
     .map((l) => /package (\S+) not present/.exec(l)?.[1])
     .filter((n): n is string => Boolean(n));
+}
+
+/** The two release years tlmgr refused to bridge. */
+export interface ReleaseGap {
+  readonly local: string;
+  readonly remote: string;
+}
+
+/**
+ * tlmgr's refusal to install into a tree OLDER than the repository, or null. tlmgr has no
+ * machine-readable form for it (`--machine-readable` adds only `fail load <location>`), so the two
+ * years are read from its two documented wordings (tlmgr.pl, TeX Live 2026, lines 7644-7648 and
+ * 7655-7663; `tldie` prefixes the program name) — the years are the structured part, the prose
+ * around them is not relied on:
+ *
+ *   tlmgr: Local TeX Live (2025) is older than remote repository (2026).
+ *
+ *   tlmgr: The TeX Live versions of the local installation
+ *   and the repository are not compatible:
+ *         local: 2025
+ *    repository: 2026 (https://…)
+ *
+ * The second wording also covers a STALE mirror (repository older than the tree); that is not a
+ * new release, so only `remote > local` counts.
+ */
+export function releaseGap(tlmgrOutput: string): ReleaseGap | null {
+  const lines = tlmgrOutput.split("\n").map((l) => l.trim());
+  const older = lines
+    .map((l) =>
+      /\bLocal TeX Live \((\d{4})\) is older than remote repository \((\d{4})\)/.exec(
+        l,
+      ),
+    )
+    .find(Boolean);
+  const local = older?.[1] ?? yearAfter(lines, "local:");
+  const remote = older?.[2] ?? yearAfter(lines, "repository:");
+  return local && remote && Number(remote) > Number(local)
+    ? { local, remote }
+    : null;
+}
+
+/** The year at the start of the value of the first `label value` line, e.g. `local: 2025`. */
+function yearAfter(lines: readonly string[], label: string): string | null {
+  const line = lines.find((l) => l.startsWith(label));
+  return line
+    ? (/^(\d{4})\b/.exec(line.slice(label.length).trim())?.[1] ?? null)
+    : null;
 }
 
 /** What a tree lacks: packages by `kpsewhich`, tools by executable. */
@@ -275,6 +341,7 @@ export function installBase(
   io: ToolchainIO,
   root: string,
   mirrors: readonly string[],
+  newerThan: string | null = null,
 ): Step<{ tree: CachedTree; mirror: string }> {
   const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-install-tl-")));
   try {
@@ -303,6 +370,15 @@ export function installBase(
         ok: false,
         lines: [
           `the archive from ${mirror} does not hold an install-tl with a release-texlive.txt`,
+        ],
+      };
+    // 🔴 Installing the SAME year again would run install-tl over the tree that is already there.
+    if (newerThan && Number(year) <= Number(newerThan))
+      return {
+        ok: false,
+        lines: [
+          `tlmgr reported a newer TeX Live than ${newerThan}, but install-tl from ${mirror} is ${year} — the mirrors disagree about the current release`,
+          `set ${MIRROR_ENV}=<a tlnet URL> to one that serves the new release`,
         ],
       };
     return runInstallTl(io, { installer, root, year, mirror, work });
@@ -353,12 +429,17 @@ function runInstallTl(
  * GAPS AFTERWARDS, not by tlmgr's exit code (it exits 1 on "already present"). An unknown package
  * name fails at once: another mirror will not know it either.
  */
+export type AddStep =
+  | { readonly ok: true; readonly value: { gaps: Gaps; tail: string[] } }
+  | { readonly ok: false; readonly lines: string[] }
+  | { readonly ok: false; readonly newer: ReleaseGap };
+
 export function installPackages(
   io: ToolchainIO,
   tree: CachedTree,
   tex: TexRequirements,
   mirrors: readonly string[],
-): Step<{ gaps: Gaps; tail: string[] }> {
+): AddStep {
   let gaps = gapsOf(tree, tex, io.run);
   let last: string[] = [];
   for (const mirror of mirrors) {
@@ -370,9 +451,11 @@ export function installPackages(
       ["--repository", mirror, "install", ...want],
       quiet(io, TLMGR_MS),
     );
-    const unknown = unknownPackages(
-      `${String(r.stdout ?? "")}\n${String(r.stderr ?? "")}`,
-    );
+    const output = `${String(r.stdout ?? "")}\n${String(r.stderr ?? "")}`;
+    // A new release: every mirror serves it, so trying the next one only repeats the refusal.
+    const newer = releaseGap(output);
+    if (newer) return { ok: false, newer };
+    const unknown = unknownPackages(output);
     if (unknown.length)
       return {
         ok: false,
@@ -426,31 +509,108 @@ export function ensureTexLive(
   const root = cacheRoot(o.env, o.home);
   const mirrors = mirrorsFrom(o.env);
   const started = o.now();
-  let tree = cachedTree(root);
-  if (!tree) {
-    const base = installBase(io, root, mirrors);
-    if (!base.ok) return fail(o.err, base.lines);
-    tree = base.value.tree;
+  const existing = cachedTree(root);
+  const tree: Step<CachedTree> = existing
+    ? { ok: true, value: existing }
+    : installFresh(io, root, mirrors, null);
+  if (!tree.ok) return fail(o.err, tree.lines);
+  let added = installPackages(io, tree.value, tex, mirrors);
+  let used = tree.value;
+  if (!added.ok && "newer" in added) {
+    const next = newRelease(io, {
+      root,
+      mirrors,
+      old: tree.value,
+      gap: added.newer,
+    });
+    if (!next.ok) return fail(o.err, next.lines);
+    used = next.value;
+    added = installPackages(io, used, tex, mirrors);
   }
-  const added = installPackages(io, tree, tex, mirrors);
-  if (!added.ok) return fail(o.err, added.lines);
-  if (!noGaps(added.value.gaps))
-    return fail(o.err, [
-      `TeX Live ${tree.year} in ${tree.dir} still lacks, after tlmgr: ${describeGaps(added.value.gaps, tex)}`,
-      `add the package that carries the file to the venue profile; find it with: tlmgr search --global --file <file>`,
-      ...(added.value.tail.length
-        ? [`tlmgr's last lines:`, ...added.value.tail]
-        : []),
-    ]);
-  const files = new Set(Object.values(tex.packages).flat()).size;
+  const verified = verify(added, used, tex);
+  if (!verified.ok) return fail(o.err, verified.lines);
   o.log(
-    `✓ TeX Live ${tree.year} is ready in ${tree.dir}: ${packageNames(tex).length} packages verified ` +
-      `(${files} files found by kpsewhich, ${Object.keys(tex.tools).length} tools), ` +
-      `${sizeMB(tree.dir)} MB, ${formatDuration(o.now() - started)}`,
+    `✓ TeX Live ${used.year} is ready in ${used.dir}: ${verified.value} ` +
+      `${sizeMB(used.dir)} MB, ${formatDuration(o.now() - started)}`,
   );
-  o.log(binLine(tree));
-  return { ok: true, tree };
+  o.log(binLine(used));
+  if (used !== tree.value) o.log(leftInPlace(tree.value));
+  return { ok: true, tree: used };
 }
+
+/** A fresh scheme-basic tree, as a plain Step. */
+function installFresh(
+  io: ToolchainIO,
+  root: string,
+  mirrors: readonly string[],
+  newerThan: string | null,
+): Step<CachedTree> {
+  const base = installBase(io, root, mirrors, newerThan);
+  return base.ok ? { ok: true, value: base.value.tree } : base;
+}
+
+/**
+ * 🔴 tlmgr refused: the mirrors serve a newer TeX Live than the cached tree, and tlmgr does not
+ * add packages across releases. The cure is a FRESH tree for the new year in its own directory —
+ * the same install an empty cache gets — not `update-tlmgr-latest --upgrade` in place: that
+ * rewrites a working tree, and an interrupted upgrade leaves no working tree at all. The old one
+ * stays until the new one has verified, and after that too: deleting a user's directory is not
+ * this command's decision.
+ */
+function newRelease(
+  io: ToolchainIO,
+  a: {
+    root: string;
+    mirrors: readonly string[];
+    old: CachedTree;
+    gap: ReleaseGap;
+  },
+): Step<CachedTree> {
+  io.log(
+    `  tlmgr refused: the repository is TeX Live ${a.gap.remote}, the tree in ${a.old.dir} is ${a.gap.local}, ` +
+      `and tlmgr does not install across releases — installing TeX Live ${a.gap.remote} beside it`,
+  );
+  return installFresh(io, a.root, a.mirrors, a.old.year);
+}
+
+/** Accept by result: what the tree still lacks after tlmgr decides, not tlmgr's exit code. */
+function verify(
+  added: AddStep,
+  tree: CachedTree,
+  tex: TexRequirements,
+): Step<string> {
+  if ("newer" in added)
+    return {
+      ok: false,
+      lines: [
+        `tlmgr still refuses: the repository is TeX Live ${added.newer.remote} and the new tree in ${tree.dir} is ${added.newer.local}`,
+      ],
+    };
+  if (!added.ok) return added;
+  if (!noGaps(added.value.gaps))
+    return {
+      ok: false,
+      lines: [
+        `TeX Live ${tree.year} in ${tree.dir} still lacks, after tlmgr: ${describeGaps(added.value.gaps, tex)}`,
+        `add the package that carries the file to the venue profile; find it with: tlmgr search --global --file <file>`,
+        ...(added.value.tail.length
+          ? [`tlmgr's last lines:`, ...added.value.tail]
+          : []),
+      ],
+    };
+  const files = new Set(Object.values(tex.packages).flat()).size;
+  return {
+    ok: true,
+    value:
+      `${packageNames(tex).length} packages verified ` +
+      `(${files} files found by kpsewhich, ${Object.keys(tex.tools).length} tools),`,
+  };
+}
+
+/** The superseded tree is named, with the space it holds — and left alone. */
+export const leftInPlace = (old: CachedTree): string =>
+  `  TeX Live ${old.year} in ${old.dir} is left in place and no longer used (${sizeMB(old.dir)} MB); ` +
+  `delete that directory to free the space`;
 
 /**
  * `rpp build` finds the tree itself; a script that calls `pdflatex` directly needs this directory
@@ -522,10 +682,13 @@ export function runToolchain(options: ToolchainOptions = {}): number {
     o.err(`✗ rpp toolchain: ${UNSUPPORTED}`);
     return 1;
   }
-  const tree = cachedTree(cacheRoot(o.env, o.home));
+  const complete = (t: CachedTree) => noGaps(gapsOf(t, o.tex, o.run));
+  const tree = usableTree(cachedTrees(cacheRoot(o.env, o.home)), complete);
   if (o.check) return report(o, tree);
   const n = packageNames(o.tex).length;
-  if (tree && noGaps(gapsOf(tree, o.tex, o.run))) {
+  // 🔴 A complete tree is left alone even when CTAN has moved to a newer year: a new release is
+  // reason to install only when tlmgr refuses to add a newly declared package to the old tree.
+  if (tree && complete(tree)) {
     o.log(
       `✓ TeX Live ${tree.year} in ${tree.dir} already has all ${n} declared packages — nothing to do`,
     );

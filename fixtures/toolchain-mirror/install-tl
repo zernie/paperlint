@@ -22,4 +22,6 @@ for t in pdflatex kpsewhich tlmgr; do
   chmod +x "$dir/bin/x86_64-linux/$t"
 done
 : > "$dir/files.txt"
+# The real install-tl leaves release-texlive.txt at TEXDIR; stub-tlmgr reads the tree's year there.
+cp "$here/release-texlive.txt" "$dir/release-texlive.txt"
 echo "fake install-tl: scheme-basic into $dir"

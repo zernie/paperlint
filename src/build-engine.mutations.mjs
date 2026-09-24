@@ -81,6 +81,21 @@ process.exit(
           ],
         ],
       },
+      {
+        name: "the newest cached year wins even when incomplete",
+        harness: HARNESS,
+        expect:
+          "🔴 two years, the newer incomplete: the newest COMPLETE one builds",
+        disables:
+          "the year choice: an interrupted new-year install would stand in for a complete older one",
+        edits: [
+          [
+            SRC,
+            "  const cache = usableTree(probes, (p) => p.missing.length === 0);",
+            "  const cache = probes[0] ?? null;",
+          ],
+        ],
+      },
     ],
   }),
 );

@@ -154,6 +154,32 @@ const envWith = (cacheRoot, path) => ({
   );
 }
 {
+  // Two TeX Live years in the cache: a 2027 install that stopped after install-tl, and 2026.
+  const years = join(work, "years");
+  const old = texAt(join(years, "2026", "bin", "x86_64-linux"));
+  const cut = texAt(join(years, "2027", "bin", "x86_64-linux"));
+  const x = await go({
+    env: envWith(years, emptyBin),
+    run: fakeRun({ [old]: ALL, [cut]: "" }),
+  });
+  check(
+    "🔴 two years, the newer incomplete: the newest COMPLETE one builds",
+    x.r.ok &&
+      x.out.includes("engine: TeX Live 2026 — rpp cache") &&
+      x.r.env.PATH.split(delimiter)[0] === old,
+    x.out,
+  );
+  const y = await go({
+    env: envWith(years, emptyBin),
+    run: fakeRun({ [old]: ALL, [cut]: ALL }),
+  });
+  check(
+    "two years, both complete: the newer one",
+    y.r.ok && y.r.env.PATH.split(delimiter)[0] === cut,
+    y.out,
+  );
+}
+{
   const x = await go({
     env: envWith(join(work, "cache"), sysBin),
     run: fakeRun({ [cacheBin]: "/t/acmart.cls\n", [sysBin]: ALL }),

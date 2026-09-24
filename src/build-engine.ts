@@ -22,8 +22,9 @@ import {
 import {
   UNSUPPORTED,
   cacheRoot,
-  cachedTree,
+  cachedTrees,
   ensureTexLive,
+  usableTree,
   type InstallResult,
 } from "./toolchain.ts";
 import { declaredUnion, type TexRequirements } from "./tex-requirements.ts";
@@ -80,14 +81,20 @@ function withDefaults(o: EngineOptions): Resolved {
   };
 }
 
-/** The facts `resolveEngine` decides on: rpp's cache and the PATH's TeX Live, each probed. */
+/**
+ * The facts `resolveEngine` decides on: rpp's cache and the PATH's TeX Live, each probed. The cache
+ * may hold one tree per TeX Live year; the one reported is the newest COMPLETE one, else the newest
+ * (so a new year whose install was interrupted never wins over a complete older year).
+ */
 export function gatherFacts(o: Resolved): EngineFacts {
-  const tree = cachedTree(cacheRoot(o.env, o.home));
-  const cache: TreeProbe | null = tree && {
-    label: `TeX Live ${tree.year} — rpp cache (${tree.dir})`,
-    bin: tree.bin,
-    missing: probeTree(tree.bin, o.tex.packages, o.run),
-  };
+  const probes = cachedTrees(cacheRoot(o.env, o.home)).map(
+    (tree): TreeProbe => ({
+      label: `TeX Live ${tree.year} — rpp cache (${tree.dir})`,
+      bin: tree.bin,
+      missing: probeTree(tree.bin, o.tex.packages, o.run),
+    }),
+  );
+  const cache = usableTree(probes, (p) => p.missing.length === 0);
   const dir = whichOnPath("pdflatex", o.env["PATH"]);
   const system: TreeProbe | null = dir
     ? {

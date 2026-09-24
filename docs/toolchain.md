@@ -43,6 +43,16 @@ fails the command and names the package and its file. Linux and macOS; on Window
 Measured 2026-09-24 from an empty directory: **3 min 04 s, 269 MB** (du: 298 MB), TeX Live 2026, 47
 packages verified (46 files, 2 tools). The second run: 0.55 s, "nothing to do".
 
+**When CTAN moves to a new TeX Live year.** A complete tree is left alone: a new release on CTAN is
+not by itself a reason to download 270 MB. It matters only when a venue declares a package the
+tree lacks — tlmgr then refuses to install into an older year (`Local TeX Live (2026) is older
+than remote repository (2027)`). `rpp toolchain` reads the two years from that refusal, installs
+a fresh tree for the new year into its own `<TeX Live year>` directory, installs every declared
+package there and verifies it, and from then on that tree is used. The old tree is not deleted;
+the run names it with its size, and removing it is your call. `rpp build` uses the newest tree
+that has every declared package, so a new-year install that was interrupted never replaces a
+complete older one.
+
 **Where the package list lives:** in the venue profiles, not here and not in a script.
 `skills/submit-paper/references/venues/<venue>.jsonc` carries a `tex` block — CTAN package → the
 files that prove it is installed — and `tex-base.jsonc` carries what every paper gets, and all a
