@@ -1,7 +1,7 @@
 /**
  * Battery for `build.ts` — the module that decides WHAT a paper is built with.
  *
- * Set up together with the module itself and at the request of the `test:sabotage` gate, which
+ * Set up together with the module itself and at the request of the mutation gate, which
  * refused to accept a harness that nothing could kill: a green harness by itself does not tell
  * "the check passed" apart from "the check cannot fail". The `--dry-run` case reintroduces a
  * defect the module REALLY had in its first version, one that overwrote `paper.pdf` in the

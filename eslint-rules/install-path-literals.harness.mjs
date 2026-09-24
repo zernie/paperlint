@@ -11,12 +11,13 @@
  * in a test; the count lives in `docs/incidents.md` as a measurement with a date, where it can
  * go stale honestly instead of looking maintained.
  */ import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ESLint } from "eslint";
 import markdown from "@eslint/markdown";
 import { recordCheck } from "vigiles";
-import port from "./install-path-literals.mjs";
+import port, { PORT } from "./install-path-literals.mjs";
 
 // Resolved from THIS file, never from the caller's cwd — rule 6, and the mistake this very
 // class of bug is about.
@@ -66,7 +67,13 @@ const cases = [];
     /INSTALLED/,
     "the message must name what is wrong",
   );
-  assert.match(m[0].message, /consumer\.mjs/, "and where the answer belongs");
+  // Where the answer belongs — and it must be a file that EXISTS. Until #67 the message sent
+  // people to a module that was never in any commit, and a pattern match on the name was green.
+  assert.ok(m[0].message.includes(PORT), "and where the answer belongs");
+  assert.ok(
+    existsSync(join(ROOT, PORT)),
+    `the port ${PORT} must exist on disk`,
+  );
   const prefixes = new Set(m.map((x) => x.message.match(/'([^']+)'/)?.[1]));
   assert.ok(
     prefixes.has(".claude/skills/"),

@@ -31,7 +31,7 @@ esac
 # This file used to hard-code both of these paths, which made it a tool with exactly one possible
 # user. Both now come from the one declaration every other carrier of this package reads:
 #
-#   "research-paper-pipeline": { "papers": "docs/papers", "scripts": "tools/pipeline" }
+#   "research-paper-pipeline": { "papersDir": "docs/papers", "scripts": "tools/pipeline" }
 #
 # ⚠️ `node -p` RATHER THAN grep/sed ON package.json. A JSON value is not a line of text: it can
 # be quoted, escaped, or spread across lines, and a pattern that gets it right today gets it
@@ -42,7 +42,10 @@ read_key() { # $1 = key, $2 = default
   node -p "(require('$ROOT_DIR/package.json')['research-paper-pipeline']||{})['$1'] ?? '$2'" \
     2>/dev/null || echo "$2"
 }
-papers_root="$(read_key papers papers)"
+# The field used to be called "papers". Every other reader refuses the old name; this script only
+# gives advice, so it stays silent instead of falling back to the default directory.
+[ -z "$(read_key papers '')" ] || exit 0
+papers_root="$(read_key papersDir papers)"
 scripts_root="$(read_key scripts .claude/skills/paper-pipeline/scripts)"
 
 # 🔴 AN UNUSABLE ROOT EXITS, IT DOES NOT BUILD A PATH FROM IT. `node -p` prints `undefined` for a

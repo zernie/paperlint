@@ -152,9 +152,13 @@ Four proposals were made and withdrawn in one session on 2026-09-17 for exactly 
 **10. The only impure thing in this package is WHERE IT IS INSTALLED — and it lives in ONE
 module.** Rule 6 generalised: the caller's cwd is one case of it. Checking logic — lint rules,
 skills, hooks — must not know its own location, nor its distance from anything else. Every
-answer to _where_ comes from `lib/consumer.mjs`, which adapts per channel: own checkout ·
-`node_modules` · plugin cache · CI. A skill naming a script by an install-specific path in its
-own prose walks around that door, and 208 such literals across 190 lines do exactly that.
+answer to _where_ comes from `skills/paper-pipeline/scripts/consumer.mjs`, which adapts per
+channel: own checkout · `node_modules` · plugin cache · CI. A skill naming a script by an
+install-specific path in its own prose walks around that door, and 208 such literals across 190
+lines do exactly that.
+
+<!-- The port's path above is resolved by `npm run check` (vigiles lint), since #67. -->
+<!-- vigiles:file skills/paper-pipeline/scripts/consumer.mjs -->
 
 ⚠️ Deliberately NOT full hexagonal architecture, and that is a decision: there is no database or
 service to swap, and the lint rules are already pure functions over an AST, so ports around them
@@ -204,6 +208,13 @@ two standard channels already do, for free:
 | -------------------------------------------- | ----------------------- | --------------------------------------------------------------- |
 | **all code** — rules, skills, hooks, scripts | an npm package          | `npm i -D research-paper-pipeline`                              |
 | **hook wiring only**                         | the plugin in `plugin/` | `/plugin marketplace add <owner>/<repo>` then `/plugin install` |
+
+🔴 **SUPERSEDED 2026-09-23 — `rpp init` exists, and the hook row above no longer describes the
+install.** `init` writes the hook commands into the consumer's `.claude/settings.json` (vigiles'
+`mergeRegistrations`, reading `plugin/hooks/hooks.json` as the one source), and `rpp doctor` reads
+them back. The plugin stops being the hook carrier; its marketplace entry stays for one release.
+Why, with sources: `docs/prior-art/paper-folder-scaffolding.md` § 5. The table is kept because the
+paragraphs below still explain why the plugin never carried code.
 
 🔴 **THE PLUGIN CARRIES NO CODE, AND THAT IS THE DESIGN — measured 2026-09-17.** Claude Code runs
 `npm ci --ignore-scripts` for a plugin _"only when the plugin's root directory contains both a
@@ -512,7 +523,7 @@ lints the repository, and asks ESLint for the effective config of every linted f
 enabled for **zero** files is named and the script exits 1.
 
 ```bash
-npm run check:globs
+node scripts/rules-see-files.mjs   # also part of npm run check
 ```
 
 It is per RULE, not per glob, and that distinction is the point: a rule can be enabled in one
@@ -525,7 +536,7 @@ _different_ assertions, or only one half of the guard is really tested).
 ## Mutations
 
 ```bash
-npm run test:sabotage    # 12 + 11 + 2, each with a "the patch landed" assertion
+node scripts/run-mutations.mjs    # 12 + 11 + 2, each with a "the patch landed" assertion
 ```
 
 A green harness under a mutation is a finding about the TEST, not a conclusion about the
@@ -576,7 +587,7 @@ confident, byte-identical "clean" verdicts for three different skills that had n
 `.vigiles/exclusive.lock` for the duration. A second gate started while one is running does not
 queue and does not race — it **refuses**, names the holder, and exits 3.
 
-🔴 **The reason is that `test:sabotage` edits the working tree in place.** That strategy is
+🔴 **The reason is that the mutation batteries edit the working tree in place.** That strategy is
 deliberate (see `lib/mutation-driver.mjs` — copying the repo per mutation costs minutes instead
 of seconds), and its one cost is that any parallel reader sees a source file mid-mutation. The
 resulting failure is **false, non-deterministic, and blames the wrong file**: it reports a broken

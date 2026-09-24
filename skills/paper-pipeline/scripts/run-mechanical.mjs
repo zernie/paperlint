@@ -78,7 +78,7 @@ const ROOT = consumerRoot();
 // extracted package it would both point into somebody else's tree and name somebody else's work.
 //
 // ⚠️ THERE IS NO DEFAULT DELIBERATELY, and that is what distinguishes this key from
-// `papers`/`ledger`. There a default is meaningful (the `papers` directory, a file next to it);
+// `papersDir`/`ledger`. There a default is meaningful (the `papers` directory, a file next to it);
 // here any guessed path would be wrong for everyone but one. Not declared — three `GATES` rows
 // simply do not run: `needs()` below checks the directory on disk, so the absence reads as
 // ABSTAINED `input-missing`, not as a crash and not as a clean run.

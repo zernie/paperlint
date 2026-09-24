@@ -47,7 +47,7 @@ process.exit(
           [
             SRC,
             "  const hookRoot = rawPkg ? papersRoot(rawPkg) : null;",
-            '  const hookRoot = rawPkg ? (JSON.parse(rawPkg)?.["research-paper-pipeline"]?.papers ?? "papers") : null;',
+            '  const hookRoot = rawPkg ? (JSON.parse(rawPkg)?.["research-paper-pipeline"]?.papersDir ?? "papers") : null;',
           ],
         ],
       },
@@ -125,8 +125,8 @@ process.exit(
         edits: [
           [
             SRC,
-            '        ? `  ⚠ package.json has no "${CONFIG_KEY}": { "papers": … } — the hooks fall back to "${DEFAULT_PAPERS_ROOT}"`',
-            "        ? `  ✓ package.json`",
+            '          ? `  ⚠ package.json has no "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": … } — the hooks fall back to "${DEFAULT_PAPERS_ROOT}"`',
+            "          ? `  ✓ package.json`",
           ],
         ],
       },
@@ -159,6 +159,16 @@ process.exit(
             "      out.push(\n        `      \\`npx rpp init\\` links the missing ones; it never replaces an entry it did not make`,\n      );\n      bad++;",
           ],
         ],
+      },
+      {
+        name: "a .template child makes a papers root",
+        harness: HARNESS,
+        expect:
+          "a directory whose only marked child is .template/ is NOT a papers root",
+        disables:
+          "the override slot being invisible to discovery. `rpp init` in a project that has only " +
+          "a house template would declare the template's parent as the papers directory, measured",
+        edits: [[SRC, '          !c.name.startsWith(".") &&\n', ""]],
       },
     ],
   }),

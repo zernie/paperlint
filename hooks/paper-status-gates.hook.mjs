@@ -67,6 +67,13 @@ import {
 export const CONFIG_KEY = "research-paper-pipeline";
 /** The default. A consumer that declares nothing is assumed to keep papers in `papers/`. */
 export const DEFAULT_PAPERS_ROOT = "papers";
+/**
+ * The field under CONFIG_KEY that names the papers directory, and its old name. A copy of the
+ * constants in `lib/paper-config.mjs` (a hook may import nothing but `vigiles/hook`);
+ * `lib/paper-config.harness.mjs` checks that the copies match.
+ */
+export const PAPERS_DIR_FIELD = "papersDir";
+export const OLD_PAPERS_DIR_FIELD = "papers";
 
 /**
  * The declared papers root, or `null` when it is unusable.
@@ -76,13 +83,16 @@ export const DEFAULT_PAPERS_ROOT = "papers";
  * the one that must refuse on an unreadable declaration, because there a silent default would
  * pass the very writes it exists to stop.
  *
- * 🔴 `declared === undefined`, NOT `declared ?? DEFAULT` — `"papers": null` is a keystroke, not
+ * 🔴 `declared === undefined`, NOT `declared ?? DEFAULT` — `"papersDir": null` is a keystroke, not
  * an absence.
  */
 const papersRoot = (rawPkg) => {
   let declared;
   try {
-    declared = JSON.parse(rawPkg)?.[CONFIG_KEY]?.papers;
+    const settings = JSON.parse(rawPkg)?.[CONFIG_KEY];
+    // Old field name: stay silent rather than fall back to the default directory.
+    if (settings && Object.hasOwn(settings, OLD_PAPERS_DIR_FIELD)) return null;
+    declared = settings?.[PAPERS_DIR_FIELD];
   } catch {
     return null;
   }

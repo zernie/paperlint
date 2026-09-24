@@ -21,7 +21,7 @@ On top of that, each rule has a **battery**: it deletes one thing the rule depen
 demands the harness go red, at the specific assertion that thing belongs to. If nothing goes red,
 that part of the rule was never doing any work. CI refuses a rule whose battery cannot kill it.
 
-<!-- count:harnesses -->60 harnesses, <!-- count:batteries -->37 batteries.
+<!-- count:harnesses -->62 harnesses, <!-- count:batteries -->39 batteries.
 
 A harness runs in this tree, against this working copy. That is the wrong shape for a defect that
 only exists once somebody else has installed the package — a path written inside a skill, a file
@@ -39,8 +39,8 @@ date coercion had become dead code.
 npm run check
 ```
 
-That is the whole instruction. It runs every gate in order — build, lint, the <!-- count:harnesses -->60 harnesses, the
-<!-- count:batteries -->37 mutation batteries, the install e2e under npm and pnpm, and a real `pdflatex` build — and ends
+That is the whole instruction. It runs every gate in order — build, lint, the <!-- count:harnesses -->62 harnesses, the
+<!-- count:batteries -->39 mutation batteries, the install e2e under npm and pnpm, and a real `pdflatex` build — and ends
 
 by printing **which CI jobs it does not reproduce, and why**.
 
@@ -52,8 +52,8 @@ and reported as "the gates". If a step genuinely cannot run here, it says so out
 being skipped quietly: an e2e that finds no TeX or no pnpm exits 77 _having stated_ why, and
 `npm run check` lists it as skipped instead of counting it as passed.
 
-The individual scripts still exist and are the right thing to call while iterating on one rule.
-They are not what you run before pushing.
+Each gate's command is listed in `scripts/check.mjs`; run one of them directly while iterating on
+one rule. They are not what you run before pushing.
 
 **The list of gates cannot quietly fall behind CI.** `scripts/check.harness.mjs` pulls the job
 names out of `.github/workflows/ci.yml` and requires each to be either reproduced by a gate or
@@ -101,8 +101,8 @@ The README links only what a user needs. These are for people changing the packa
 ```bash
 npm install
 npm test                 # every harness
-npm run test:sabotage    # break each rule on purpose; a harness nothing can kill is not a harness
-npm run check:readme     # the counts above are recounted from the tree, not typed by hand
+node scripts/run-mutations.mjs   # break each rule on purpose; a harness nothing can kill is not a harness
+node scripts/readme-numbers.mjs  # the counts above are recounted from the tree, not typed by hand
 ```
 
 None of these are needed to USE the tool — they are here because the gates are part of the

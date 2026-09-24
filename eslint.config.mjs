@@ -17,6 +17,7 @@ import markdown from "@eslint/markdown";
 import reviewRules from "./eslint-rules/review-findings-cause.mjs";
 import localRules from "./eslint-rules/temp-root-realpath.mjs";
 import portRules from "./eslint-rules/install-path-literals.mjs";
+import n from "eslint-plugin-n";
 
 export default [
   // 🔴 TRANSIENT DIRECTORIES ARE NOT THE CORPUS, and leaving them in is a RACE, not sloppiness.
@@ -103,6 +104,27 @@ export default [
       "no-misleading-character-class": "error",
       "no-prototype-builtins": "error",
     },
+  },
+  /**
+   * 🔴 AN IMPORT THAT RESOLVES TO NOTHING IS NOT A STYLE FINDING — it is a module that throws on
+   * load. Nothing here noticed one for a week (#67): a fixture imported `lib/consumer.mjs`, a file
+   * that has never existed in any commit, and no harness ever loads that fixture — the harness
+   * only LINTS it, and the port rule reads string literals, not whether they resolve. The same
+   * run found a second, older one: `lib/skill-eval-kit.mjs` dynamically imported
+   * `vigiles/testing`, a subpath vigiles stopped exporting in v16, on a branch no caller had
+   * taken yet.
+   *
+   * `n/no-missing-import` is the standard rule for this and covers relative AND package
+   * specifiers, static and dynamic, against the real resolver. Its own block so the one
+   * exception below does not leak into the other rules: the occupancy probe is EVIDENCE, kept
+   * exactly as it was run in a scratch environment where `retext-*` was installed — the same
+   * reason `docs/prior-art/repro/` is ignored globally above.
+   */
+  {
+    files: ["**/*.mjs"],
+    ignores: ["skills/paper-pipeline/references/occupancy-2026-08-06-probe/**"],
+    plugins: { n },
+    rules: { "n/no-missing-import": "error" },
   },
   /**
    * The package's first markdown rule — unit 1 of step 9 (moved from the consumer).

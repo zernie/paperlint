@@ -8,7 +8,7 @@
  *
  * WHAT IT DOES AND DOES NOT CLAIM. It answers one question that needs no knowledge of the caller's
  * config: *was anything linted at all*. It does NOT audit per-rule coverage — a run can lint a
- * thousand files while one rule still sees none. That is `npm run check:globs`, which reads this
+ * thousand files while one rule still sees none. That is `scripts/rules-see-files.mjs`, which reads this
  * package's own config and cannot read yours.
  *
  * 🔴 IT LIVES IN A FILE, NOT INSIDE `action.yml`. An inline `node -e` blob in a composite step is

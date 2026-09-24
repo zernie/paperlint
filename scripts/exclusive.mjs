@@ -3,7 +3,7 @@
  * MUTUAL EXCLUSION FOR RUNS THAT TOUCH THE SAME FILES.
  *
  * ── WHY ──────────────────────────────────────────────────────────────────────────────────────
- * `test:sabotage` edits the sources IN PLACE — a deliberate strategy, explained in the header of
+ * The mutation batteries (`scripts/run-mutations.mjs`) edit the sources IN PLACE — a deliberate strategy, explained in the header of
  * `lib/mutation-driver.mjs`: nine cases rewrite the real file, and copying the whole repository
  * per mutation would mean minutes instead of seconds.
  *

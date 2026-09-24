@@ -248,16 +248,11 @@
 
 import { assertPromptDiversity, skip } from "vigiles";
 import { paid_measureTriggerRate as measureTriggerRate } from "vigiles/eval";
-import {
-  existsSync,
-  readdirSync,
-  readFileSync,
-  writeFileSync,
-  mkdirSync,
-} from "node:fs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { frontmatterBlock } from "../../lib/markdown.mjs";
 import { parseFm } from "../../lib/skill-corpus.mjs";
+import { installedSkills } from "./scripts/consumer.mjs";
 
 // The name a SKILL.md DECLARES, parsed rather than matched. The old expression took
 // `(\S+)` after `name:`, which silently truncates a quoted name and cannot see one
@@ -438,11 +433,8 @@ const CELL_LABEL = {
 // as though the descriptions were dead. That is the failure mode this block exists to prevent.
 
 // 1. the skills exist and declare the names we test against
-const installed = readdirSync(SKILLS_DIR, { withFileTypes: true })
-  .filter(
-    (e) => e.isDirectory() && existsSync(join(SKILLS_DIR, e.name, "SKILL.md")),
-  )
-  .map((e) => e.name);
+// Through `installedSkills`, which follows the links `rpp init` makes (rpp#62).
+const installed = installedSkills(SKILLS_DIR);
 const installedSet = new Set(installed);
 for (const c of CASES) {
   if (!installedSet.has(c.skill))

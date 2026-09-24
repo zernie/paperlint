@@ -116,6 +116,63 @@ const MUTATIONS = [
     "the prefix matched a sibling directory sharing the root's name",
     "the boundary between the pipeline's scripts and a directory merely named like them",
   ],
+
+  // ── `installedSkills` (rpp#62). Its defects fail toward a WRONG ROSTER, not an error: a reader
+  // that does not follow links sees zero skills in every consumer; one that skips a dangling link
+  // reports a broken install as "not installed"; one that counts it hands out an unreadable skill.
+  [
+    "installed skills are listed by `Dirent.isDirectory()` again, which does not follow links",
+    [
+      [
+        SRC,
+        "  for (const name of readdirSync(dir)) {",
+        "  for (const dirent of readdirSync(dir, { withFileTypes: true })) {\n    const name = dirent.name;",
+      ],
+      [
+        SRC,
+        '    if (st.isDirectory() && existsSync(join(entry, "SKILL.md")))',
+        '    if (dirent.isDirectory() && existsSync(join(entry, "SKILL.md")))',
+      ],
+    ],
+    "a SYMLINKED skill was not counted as installed",
+    "every installed skill in every consumer — `rpp init` makes links, and the evals refuse to start",
+  ],
+  [
+    "a dangling skill link is skipped silently",
+    [
+      [
+        SRC,
+        '      dangling.push({\n        name,\n        target: readlinkOr(entry),\n        cause: e.code ?? "error",\n      });',
+        "",
+      ],
+    ],
+    "a DANGLING skill link was silently accepted",
+    "the report of a broken install — a retired skill's stale link reads as one never installed",
+  ],
+  [
+    "a dangling skill link is counted as installed",
+    [
+      [
+        SRC,
+        '      dangling.push({\n        name,\n        target: readlinkOr(entry),\n        cause: e.code ?? "error",\n      });',
+        "      names.push(name);",
+      ],
+    ],
+    "a DANGLING skill link was silently accepted",
+    "the guarantee that every name returned has a SKILL.md a caller can open",
+  ],
+  [
+    "any directory counts as an installed skill",
+    [
+      [
+        SRC,
+        '    if (st.isDirectory() && existsSync(join(entry, "SKILL.md")))',
+        "    if (st.isDirectory())",
+      ],
+    ],
+    "installedSkills must return exactly the entries that lead to a directory holding SKILL.md",
+    "the definition of a skill — a helper directory beside the skills joins the roster",
+  ],
 ];
 
 process.exit(

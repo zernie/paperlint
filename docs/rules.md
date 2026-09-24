@@ -19,12 +19,15 @@ Besides these rules, `rpp lint` reports a paper directory that is missing a requ
 default `PIPELINE-STATUS.md`) as an error. Which files are required is configurable — see
 [`configuration.md`](configuration.md#required-files).
 
-## LaTeX or Markdown
+## The paper is LaTeX
 
-The paper body is `paper.tex` or `paper.md` (`draft.md` is read like `paper.md`). The scorecard
-and the review notes are always Markdown, so their five rules apply either way. For the body it
-is not symmetrical: a `.tex` body gets four rules, a `.md` body gets two —
-`tex/future-promise` and `tex/acm-frontmatter-override` are LaTeX-only.
+The paper body is `paper.tex`, and it gets four rules: `paper/research-question`,
+`paper/typography`, `tex/future-promise` and `tex/acm-frontmatter-override`. The scorecard and
+the review notes are Markdown files, and the other five rules read those.
+
+A Markdown body (`paper.md`, or `draft.md`) is still read today and gets only the two `paper/`
+rules, which is why they list it above. Markdown papers are deprecated and being removed
+([#57](https://github.com/zernie/research-paper-pipeline/issues/57)); do not start a new one.
 
 ## The scorecard's `bytes:` and `sourceBytes:`
 

@@ -11,4 +11,4 @@ Record the verdict:
 node .claude/skills/paper-pipeline/scripts/ledger.mjs record planted . FINDING 1 report.md
 ```
 
-The module lives at `node_modules/research-paper-pipeline/lib/consumer.mjs`.
+The module lives at `node_modules/research-paper-pipeline/skills/paper-pipeline/scripts/consumer.mjs`.

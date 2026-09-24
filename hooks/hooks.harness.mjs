@@ -39,6 +39,10 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  OLD_PAPERS_DIR_FIELD,
+  PAPERS_DIR_FIELD,
+} from "../lib/paper-config.mjs";
 
 const HOOKS = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HOOKS, "..");
@@ -180,7 +184,7 @@ try {
   // which is when it diagnoses nothing.
   {
     const dir = fixture({
-      "research-paper-pipeline": { papers: "docs/papers" },
+      "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "docs/papers" },
     });
     for (const f of SHIPPED) {
       const name = f.replace(/\.hook\.mjs$/, "");
@@ -197,7 +201,7 @@ try {
   // ═══════════════════════════════════════════════════════════════════════════
   {
     const dir = fixture({
-      "research-paper-pipeline": { papers: "docs/papers" },
+      "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "docs/papers" },
     });
     const P = "docs/papers/alpha/paper.md";
     const T = "docs/papers/alpha/paper.tex";
@@ -286,7 +290,7 @@ try {
   // working one produce identical output. The lockout announces itself; this does not.
   {
     const dir = fixture({
-      "research-paper-pipeline": { papers: "docs/papers" },
+      "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "docs/papers" },
     });
 
     // paper-edit-guard: still GUARDS from a foreign cwd, rather than denying everything.
@@ -353,7 +357,7 @@ try {
     // (a) a declared root is used AS DECLARED — and the default is NOT.
     {
       const dir = fixture(
-        { "research-paper-pipeline": { papers: DECLARED } },
+        { "research-paper-pipeline": { [PAPERS_DIR_FIELD]: DECLARED } },
         { papers: DECLARED },
       );
       check(
@@ -384,10 +388,12 @@ try {
     // (c) an explicit `null` is a KEYSTROKE, not an absence. `??` would read it as "undeclared"
     //     and silently substitute the default.
     {
-      const dir = fixture({ "research-paper-pipeline": { papers: null } });
+      const dir = fixture({
+        "research-paper-pipeline": { [PAPERS_DIR_FIELD]: null },
+      });
       const r = at(dir, "paper-edit-guard", harmless);
       check(
-        `carrier: "papers": null REFUSES (rc=${r.exitCode})`,
+        `carrier: "${PAPERS_DIR_FIELD}": null REFUSES (rc=${r.exitCode})`,
         r.exitCode === 2,
       );
       check(
@@ -397,10 +403,12 @@ try {
     }
     // (d) the empty string — the value that makes every prefix test vacuously true.
     {
-      const dir = fixture({ "research-paper-pipeline": { papers: "" } });
+      const dir = fixture({
+        "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "" },
+      });
       const r = at(dir, "paper-edit-guard", harmless);
       check(
-        `carrier: "papers": "" REFUSES (rc=${r.exitCode})`,
+        `carrier: "${PAPERS_DIR_FIELD}": "" REFUSES (rc=${r.exitCode})`,
         r.exitCode === 2,
       );
       check(
@@ -408,10 +416,28 @@ try {
         /matches nothing/.test(r.stderr),
       );
     }
+    // (d2) the field's OLD name is refused and named — never read as a fallback, never ignored
+    //      in favour of the default directory.
+    {
+      const dir = fixture({
+        "research-paper-pipeline": { [OLD_PAPERS_DIR_FIELD]: "writing/drafts" },
+      });
+      const r = at(dir, "paper-edit-guard", harmless);
+      check(
+        `carrier: the old field name "${OLD_PAPERS_DIR_FIELD}" REFUSES (rc=${r.exitCode})`,
+        r.exitCode === 2,
+      );
+      check(
+        "carrier: …and the refusal says what it was renamed to",
+        r.stderr.includes(
+          `"${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "research-paper-pipeline"`,
+        ),
+      );
+    }
     // (e) an unreadable package.json — the case that arrives by itself, mid-merge.
     {
       const dir = fixture(
-        { "research-paper-pipeline": { papers: DECLARED } },
+        { "research-paper-pipeline": { [PAPERS_DIR_FIELD]: DECLARED } },
         { papers: DECLARED },
       );
       writeFileSync(join(dir, "package.json"), '{ "name": "c" <<<<<<< HEAD\n');
@@ -430,7 +456,7 @@ try {
     //     nothing. This defect made an earlier version of the guard a silent no-op.
     {
       const dir = fixture(
-        { "research-paper-pipeline": { papers: DECLARED + "/" } },
+        { "research-paper-pipeline": { [PAPERS_DIR_FIELD]: DECLARED + "/" } },
         { papers: DECLARED },
       );
       check(
@@ -445,7 +471,7 @@ try {
   // ═══════════════════════════════════════════════════════════════════════════
   {
     const dir = fixture({
-      "research-paper-pipeline": { papers: "docs/papers" },
+      "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "docs/papers" },
     });
     const lands = (label, p) => {
       const r = at(dir, "paper-skills-nudge", onEdit(p));
@@ -477,7 +503,7 @@ try {
     // The advisory's own asymmetry: it goes quiet where the gate refuses.
     {
       const broken = fixture(
-        { "research-paper-pipeline": { papers: null } },
+        { "research-paper-pipeline": { [PAPERS_DIR_FIELD]: null } },
         { papers: "papers" },
       );
       const r = at(
@@ -510,7 +536,7 @@ try {
   // ═══════════════════════════════════════════════════════════════════════════
   {
     const dir = fixture({
-      "research-paper-pipeline": { papers: "docs/papers" },
+      "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "docs/papers" },
     });
     const fires = (label, p) => {
       const r = at(dir, "paper-status-gates", onEdit(p));
@@ -545,7 +571,7 @@ try {
     // 🔴 The `??` discriminator again, for this hook's own copy of the carrier.
     {
       const broken = fixture(
-        { "research-paper-pipeline": { papers: null } },
+        { "research-paper-pipeline": { [PAPERS_DIR_FIELD]: null } },
         { papers: "papers" },
       );
       check(
@@ -557,7 +583,7 @@ try {
     // The declared root is regex-ESCAPED: `.` in a root must not act as a wildcard.
     {
       const dotted = fixture(
-        { "research-paper-pipeline": { papers: "docs.v2/papers" } },
+        { "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "docs.v2/papers" } },
         { papers: "docs.v2/papers" },
       );
       check(
@@ -600,7 +626,7 @@ try {
   // ═══════════════════════════════════════════════════════════════════════════
   {
     const dir = fixture({
-      "research-paper-pipeline": { papers: "docs/papers" },
+      "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "docs/papers" },
     });
     const sh = (args) =>
       runHook(

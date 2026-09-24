@@ -9,15 +9,8 @@
     "prepare": "tsc",
     "test": "node scripts/exclusive.mjs vigiles test --min=1",
     "lint": "node scripts/exclusive.mjs eslint .",
-    "lint:skills": "node scripts/exclusive.mjs vigiles lint",
-    "check:globs": "node scripts/exclusive.mjs node scripts/rules-see-files.mjs",
-    "check:content-only": "node scripts/exclusive.mjs node scripts/rules-are-content-only.mjs",
-    "check:readme": "node scripts/exclusive.mjs node scripts/readme-numbers.mjs",
-    "test:sabotage": "node scripts/exclusive.mjs node scripts/run-mutations.mjs",
-    "test:install": "node scripts/exclusive.mjs node test/e2e/install.mjs",
-    "test:build": "node scripts/exclusive.mjs node test/e2e/build.mjs",
-    "check:marketplace": "node scripts/exclusive.mjs node scripts/marketplace-shape.mjs",
     "check": "node scripts/check.mjs",
+    "test:e2e": "node scripts/exclusive.mjs node test/e2e/install.mjs && node scripts/exclusive.mjs node test/e2e/build.mjs",
     "fmt": "prettier --write .",
     "fmt:check": "prettier --check ."
   },
@@ -28,11 +21,12 @@
     "eslint": "^10.9.1",
     "js-yaml": "^4.1.0",
     "markdown-it": "^14.3.0",
-    "vigiles": "^31.0.0"
+    "vigiles": "^31.0.1"
   },
   "devDependencies": {
     "@retorquere/bibtex-parser": "^10.0.1",
     "@types/node": "^26.6.1",
+    "eslint-plugin-n": "^18.3.0",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3"
   },
@@ -88,6 +82,7 @@
     "scripts",
     "skills",
     "src",
+    "templates",
     "tsconfig.json"
   ]
 }

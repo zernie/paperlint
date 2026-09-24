@@ -13,6 +13,10 @@
  */
 import assert from "node:assert/strict";
 import {
+  OLD_PAPERS_DIR_FIELD,
+  PAPERS_DIR_FIELD,
+} from "../lib/paper-config.mjs";
+import {
   mkdtempSync,
   mkdirSync,
   writeFileSync,
@@ -48,12 +52,13 @@ function consumer({ papersDir, pkgKey, rppJson, makeDir = true }) {
     );
   }
   const pkg = { name: "consumer", version: "1.0.0" };
-  if (pkgKey !== undefined) pkg["research-paper-pipeline"] = { papers: pkgKey };
+  if (pkgKey !== undefined)
+    pkg["research-paper-pipeline"] = { [PAPERS_DIR_FIELD]: pkgKey };
   writeFileSync(join(dir, "package.json"), JSON.stringify(pkg, null, 2));
   if (rppJson !== undefined)
     writeFileSync(
       join(dir, "rpp.json"),
-      JSON.stringify({ papers: rppJson }, null, 2),
+      JSON.stringify({ [PAPERS_DIR_FIELD]: rppJson }, null, 2),
     );
   return dir;
 }
@@ -83,6 +88,27 @@ const runDoctor = (
   check(
     "and it says outright that the guarded directory is the linted one",
     /the same directory/.test(r.out),
+  );
+  rmSync(dir, { recursive: true, force: true });
+}
+
+// ── I½. THE OLD FIELD NAME IS A FAILURE, NAMED ─────────────────────────────────────────────
+{
+  const dir = consumer({ papersDir: "papers", pkgKey: "papers" });
+  writeFileSync(
+    join(dir, "package.json"),
+    JSON.stringify({
+      name: "consumer",
+      "research-paper-pipeline": { [OLD_PAPERS_DIR_FIELD]: "papers" },
+    }),
+  );
+  const r = runDoctor(dir, { cliPapers: null });
+  check("the old field name — exit NON-zero", r.code !== 0);
+  check(
+    "and doctor says what the field was renamed to",
+    r.out.includes(
+      `"${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "research-paper-pipeline"`,
+    ),
   );
   rmSync(dir, { recursive: true, force: true });
 }
@@ -163,7 +189,9 @@ const runDoctor = (
   const dir = consumer({ papersDir: "docs/papers", pkgKey: "docs/papers/" });
   const r = runDoctor(dir, { cliPapers: "docs/papers" });
   const fromHook = papersRoot(
-    JSON.stringify({ "research-paper-pipeline": { papers: "docs/papers/" } }),
+    JSON.stringify({
+      "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "docs/papers/" },
+    }),
   );
   check("the hook itself trims the trailing slash", fromHook === "docs/papers");
   check(
@@ -236,6 +264,14 @@ const runDoctor = (
   check(
     "node_modules is not searched — someone else's papers are not ours",
     !hits.some((h) => h.startsWith("node_modules")),
+  );
+  // A folder holding only the project's paper TEMPLATE (`rpp new` reads `<papers>/.template/`)
+  // carries every marker, and is still not a papers root: discovery skips dot-directories.
+  mkdirSync(join(dir, "only-template", ".template"), { recursive: true });
+  writeFileSync(join(dir, "only-template", ".template", "paper.tex"), "x");
+  check(
+    "🔴 a directory whose only marked child is .template/ is NOT a papers root",
+    !detectPapers(dir).includes("only-template"),
   );
   rmSync(dir, { recursive: true, force: true });
 }

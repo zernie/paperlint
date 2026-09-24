@@ -51,7 +51,7 @@ const M = [
   ],
   [
     "declared === undefined/null read as absence",
-    'go back to `??` — an explicit `"papers": null` is read as «nothing was declared» and ' +
+    'go back to `??` — an explicit `"papersDir": null` is read as «nothing was declared» and ' +
       "silently falls back to the default, i.e. a typed keystroke treated as an absence",
     "  const root = declared === undefined ? DEFAULT_PAPERS_ROOT : declared;",
     "  const root = declared ?? DEFAULT_PAPERS_ROOT;",

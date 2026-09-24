@@ -135,10 +135,11 @@ import {
   skip,
 } from "vigiles";
 import { paid_measureTriggerRate as measureTriggerRate } from "vigiles/eval";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { frontmatterBlock } from "../../lib/markdown.mjs";
 import { parseFm } from "../../lib/skill-corpus.mjs";
+import { installedSkills } from "./scripts/consumer.mjs";
 
 // The name a SKILL.md DECLARES, parsed rather than matched. The old expression took
 // `(\S+)` after `name:`, which silently truncates a quoted name and cannot see one
@@ -448,14 +449,8 @@ const CASES = [
 function assertSkillIdsExist() {
   if (!existsSync(SKILLS_DIR))
     throw new Error(`no skills dir at ${SKILLS_DIR}`);
-  const installed = new Set(
-    readdirSync(SKILLS_DIR, { withFileTypes: true })
-      .filter(
-        (e) =>
-          e.isDirectory() && existsSync(join(SKILLS_DIR, e.name, "SKILL.md")),
-      )
-      .map((e) => e.name),
-  );
+  // Through `installedSkills`, which follows the links `rpp init` makes (rpp#62).
+  const installed = new Set(installedSkills(SKILLS_DIR));
   const missing = CASES.map((c) => c.skill).filter((s) => !installed.has(s));
   if (missing.length)
     throw new Error(

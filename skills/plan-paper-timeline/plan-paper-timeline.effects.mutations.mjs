@@ -54,7 +54,7 @@ process.exit(
           [
             SKILL,
             "require('./package.json')['research-paper-pipeline']?.timezone ?? 'UTC'",
-            "require('./package.json')['research-paper-pipeline']?.papers ?? 'papers'",
+            "require('./package.json')['research-paper-pipeline']?.papersDir ?? 'papers'",
           ],
         ],
         harness: HARNESS,

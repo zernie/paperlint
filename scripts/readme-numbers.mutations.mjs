@@ -1,5 +1,5 @@
 /**
- * Battery for `check:readme` — four mutations, three of which return DEFECTS this
+ * Battery for `scripts/readme-numbers.mjs` — four mutations, three of which return DEFECTS this
  * script already committed. A battery here is not formality: a number check that itself
  * counts wrong prints a green checkmark under the wrong number — exactly what it
  * exists to prevent.
