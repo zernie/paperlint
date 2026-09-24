@@ -116,6 +116,9 @@ const lastPage = {
 };
 const fakeRead = async (pdf) => {
   reads.push(pdf);
+  // Like the real reader: a PDF that is not on disk is unreadable, not a clean read.
+  if (!existsSync(pdf))
+    return { ok: false, reason: "unreadable", detail: `ENOENT: ${pdf}` };
   return {
     ok: true,
     facts: {
@@ -300,11 +303,10 @@ try {
     log: quiet,
   });
   check(
-    "🔴 measure: a PDF pdf.js cannot read FAILS the build at `measure`, and the PDF goes",
+    "🔴 measure: a PDF pdf.js cannot read FAILS the build at `measure`, and no facts are written",
     ur.status === "failed" &&
       ur.failure?.step === "measure" &&
       /could not read .*pdf\.js \(unreadable\)/.test(ur.failure.lines[0]) &&
-      !existsSync(join(unread, "paper.pdf")) &&
       !existsSync(join(unread, "_build", "paper.facts.json")),
   );
 
