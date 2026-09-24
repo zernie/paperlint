@@ -152,9 +152,13 @@ Four proposals were made and withdrawn in one session on 2026-09-17 for exactly 
 **10. The only impure thing in this package is WHERE IT IS INSTALLED — and it lives in ONE
 module.** Rule 6 generalised: the caller's cwd is one case of it. Checking logic — lint rules,
 skills, hooks — must not know its own location, nor its distance from anything else. Every
-answer to _where_ comes from `lib/consumer.mjs`, which adapts per channel: own checkout ·
-`node_modules` · plugin cache · CI. A skill naming a script by an install-specific path in its
-own prose walks around that door, and 208 such literals across 190 lines do exactly that.
+answer to _where_ comes from `skills/paper-pipeline/scripts/consumer.mjs`, which adapts per
+channel: own checkout · `node_modules` · plugin cache · CI. A skill naming a script by an
+install-specific path in its own prose walks around that door, and 208 such literals across 190
+lines do exactly that.
+
+<!-- The port's path above is resolved by `npm run check` (vigiles lint), since #67. -->
+<!-- vigiles:file skills/paper-pipeline/scripts/consumer.mjs -->
 
 ⚠️ Deliberately NOT full hexagonal architecture, and that is a decision: there is no database or
 service to swap, and the lint rules are already pure functions over an AST, so ports around them

@@ -68,7 +68,7 @@ export const GATES = [
     script: "lint",
   },
   {
-    name: "skills lint, and the vigiles:symbol marks in README.md",
+    name: "skills lint, and the vigiles marks in README.md and CLAUDE.md",
     job: "gates",
     run: locked("vigiles", "lint", ".", "README.md"),
     // README.md is passed to `vigiles lint` by name: it is not an instruction file, so vigiles

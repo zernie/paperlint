@@ -46,8 +46,8 @@ not one of the four announced itself:
 | 2026-09-17       | skills name their scripts by an install-specific path — 208 literals across 190 lines, in bodies and in `allowed-tools` | resolves through a symlink for one consumer and does not exist for another                                                   |
 
 The first three are documented in the code they broke, and that is where the detail stays:
-`skills/paper-pipeline/scripts/ledger.mjs` (the three rungs) and `lib/consumer.mjs`
-(`ledgerPath`, three steps).
+`skills/paper-pipeline/scripts/ledger.mjs` (the three rungs) and
+`skills/paper-pipeline/scripts/consumer.mjs` (`ledgerPath`, three steps).
 
 🔴 The load-bearing observation is not the count. All four repetitions happened **while
 comments explaining the exact hazard sat directly above the code** — which is why rule 10 owes

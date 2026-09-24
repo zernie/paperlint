@@ -37,11 +37,16 @@ function channelPrefixIn(s) {
   return null;
 }
 
+// The port, named by its path INSIDE this package — the same in every channel, so naming it
+// is not the bet this rule forbids. One constant, because the advice below was once a file
+// that never existed (#67) and read fine for a week: the harness now requires it on disk.
+const PORT = "skills/paper-pipeline/scripts/consumer.mjs";
+
 const MESSAGES = {
   installPath:
     "This names a file by where it is INSTALLED ('{{prefix}}'), so it resolves in one " +
     "delivery channel and does not exist in another. Rule 10: every answer to *where* comes " +
-    "from lib/consumer.mjs. In a skill, use the substitution the harness performs " +
+    `from the port, ${PORT}. In a skill, use the substitution the harness performs ` +
     "(CLAUDE_SKILL_DIR / CLAUDE_PLUGIN_ROOT); in a module, ask the port.",
 };
 
@@ -100,4 +105,4 @@ const jsInstallPath = {
 export default {
   rules: { "md-install-path": mdInstallPath, "js-install-path": jsInstallPath },
 };
-export { channelPrefixIn, CHANNEL_PREFIXES };
+export { channelPrefixIn, CHANNEL_PREFIXES, PORT };
