@@ -105,8 +105,10 @@ try {
     recursive: true,
     verbatimSymlinks: true,
   });
-  // A PDF "from an earlier build" beside the broken paper: a failed build must remove it.
-  writeFileSync(join(work, "papers", "broken", "paper.pdf"), "%PDF-stale");
+  // PDFs "from an earlier build": none of these papers may end the run with one it did not write.
+  // broken fails at pdflatex; empty has no pages (exit 0, no PDF); no-source has no paper.tex.
+  for (const p of ["broken", "empty", "no-source"])
+    writeFileSync(join(work, "papers", p, "paper.pdf"), "%PDF-stale");
   // `--all` takes the papers directory from the config, not from an argument: the CONSUMER names
   // the scope, and that is the same contract for which `lint` has no "." default.
   writeFileSync(
@@ -119,6 +121,9 @@ try {
   // This is what an agent or a CI job without `rpp toolchain` sees.
   console.log("no TeX Live and no terminal");
   const bare = realpathSync(mkdtempSync(join(tmpdir(), "rpp-bare-")));
+  // A PDF from an earlier build beside the paper the refusal stops at: it must not survive either.
+  const acmartStale = join(work, "papers", "acmart", "paper.pdf");
+  writeFileSync(acmartStale, "%PDF-stale");
   try {
     mkdirSync(join(bare, "bin"));
     symlinkSync(process.execPath, join(bare, "bin", "node"));
@@ -151,10 +156,16 @@ try {
       said,
     );
     check(
-      "refused BEFORE compiling: no plan line, no PDF, nothing installed",
-      !said.includes("compile:") &&
-        !existsSync(join(work, "papers", "acmart", "paper.pdf")) &&
-        !existsSync(join(bare, "cache")),
+      "refused BEFORE compiling: no plan line, nothing installed",
+      !said.includes("compile:") && !existsSync(join(bare, "cache")),
+      said,
+    );
+    check(
+      "🔴 refused: the stale paper.pdf is GONE, and the run says so",
+      !existsSync(acmartStale) &&
+        said.includes(
+          "papers/acmart: paper.pdf removed — a stale PDF must not pass for this build",
+        ),
       said,
     );
   } finally {
@@ -373,17 +384,40 @@ try {
   );
 
   console.log();
+  console.log("a document with no pages — pdflatex exits 0 and writes no PDF");
+  const empty = block("empty");
+  check(
+    "🔴 empty: a FAILURE at compile, not a green paper.pdf",
+    empty.includes(
+      "✗ compile: pdflatex exited 0 but wrote no paper.pdf — does the document have any pages?",
+    ) && !empty.includes("✓"),
+    empty,
+  );
+  check(
+    "🔴 empty: the stale paper.pdf planted before the run is GONE — it cannot pass for this build",
+    !existsSync(join(work, "papers", "empty", "paper.pdf")),
+  );
+
+  console.log();
   console.log("the command's remaining outcomes");
   check(
     "no-source: a paper with no paper.tex is a refusal, named separately",
     /✗ nothing to compile: no paper\.tex/.test(out),
   );
   check(
+    "🔴 no-source: the stale paper.pdf is GONE, and the refusal says so",
+    !existsSync(join(work, "papers", "no-source", "paper.pdf")) &&
+      block("no-source").includes(
+        "paper.pdf removed — a stale PDF must not pass for this build",
+      ),
+    block("no-source"),
+  );
+  check(
     "the plan is printed: one line per step",
     /  inputs: TEXINPUTS \+= /.test(out) && /  compile: paper\.tex/.test(out),
   );
   check(
-    "and the run as a whole is a FAILURE, since two papers did not build",
+    "and the run as a whole is a FAILURE, since three papers did not build",
     r.status !== 0,
   );
 } finally {
