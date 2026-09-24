@@ -1,6 +1,6 @@
 /**
- * Battery for `paper/typography` — three mutations over three DIFFERENT properties: the count
- * itself, the ratchet, and its direction.
+ * Battery for `paper/typography` — mutations over DIFFERENT properties: the `§` count, the
+ * ratchet and its direction, and what the bare-decimal count is allowed to read.
  *
  * 🔴 Why the ratchet needs TWO mutations, not one. It has two halves, and they're opposite:
  * declared debt must STAY SILENT (otherwise a legacy paper drowns out a new finding and the
@@ -12,6 +12,11 @@
  * themselves. The harness's own fixtures hold those (an arXiv identifier is not a decimal
  * fraction, consecutive `Figure`s are not a defect), and a mutation here would prove the
  * fixture exists, not that the count is correct.
+ *
+ * The bare-decimal count is the exception, because what it gets wrong is not the lexeme but the
+ * INPUT: rpp#44 was a correct regex run over the wrong text. So two cases below change what it
+ * reads — back to the raw source (the SILENT half must die), and with math dropped from the walk
+ * (the CAUGHT half must die, since math is where p-values live).
  */
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
@@ -75,6 +80,49 @@ process.exit(
             RULE,
             "(body.match(/§/g) || []).length +\n    (body.match(/\\\\S(?=\\s*\\\\ref|~\\\\ref|\\d)/g) || []).length",
             "(body.match(/§/g) || []).length",
+          ],
+        ],
+      },
+      {
+        name: "bareDecimal reads the RAW source again (the #44 defect)",
+        harness: HARNESS,
+        expect: "LaTeX SILENT: a figure width option",
+        disables:
+          "the reason the count walks the tree: over raw source the regex fires on option values, " +
+          "column specs, comments, listings and tikz coordinates — 22 findings, 0 real, on the " +
+          "corpus that prompted #44",
+        edits: [[RULE, "visibleRuns(context.sourceCode),", "[raw],"]],
+      },
+      {
+        name: "arguments unified-latex did not attach are read as prose again",
+        harness: HARNESS,
+        expect: "LaTeX SILENT: a macro definition body",
+        disables:
+          "the second path to the #44 defect: for `\\def`, an author's macro, `subfigure` or " +
+          "`longtable` the parser returns the arguments as sibling nodes, and a tree walk that " +
+          "trusts the tree reads `{.48\\textwidth}` as prose",
+        edits: [
+          [
+            RULE,
+            '  while (nodes[j]?.type === "group") j++;\n  return j - 1;',
+            "  return i;",
+          ],
+        ],
+      },
+      {
+        name: "the tree walk stops entering math",
+        harness: HARNESS,
+        // The messy fixture's two decimals are both in math, so the first assertion to die is the
+        // plain "fires" one — which is the point: without math there is no bare decimal left.
+        expect: "fires on the bare decimal",
+        disables:
+          "the half the projection could never give: math is blanked there, and math is where " +
+          "`$p < .05$` lives — the exact form the reviewer flagged",
+        edits: [
+          [
+            RULE,
+            'n.type === "mathenv"\n    )\n      texRuns(n.content, true, out);',
+            'n.type === "mathenv"\n    )\n      void 0;',
           ],
         ],
       },

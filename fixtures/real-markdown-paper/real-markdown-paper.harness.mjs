@@ -6,9 +6,12 @@
  * 2026-09-19: "все проверки зелёные — что странно для теста, мб вариации, с ошибками вариации".
  * Correct, with one refinement measured the same evening: the clean article is NOT green, and its
  * silence is the valuable half precisely because it is the only fixture big enough for a false
- * positive to show up. On its first run it produced eighteen of them — every p-value in the paper
- * read as a missing leading zero (rpp#44). That is unreachable on an eleven-line stub, where every
- * line was written by someone who already knew which rule would read it.
+ * positive to show up. On its first run it flagged eighteen p-values as missing a leading zero
+ * (rpp#44). They are real findings: the rule measures against IEEE / ISO 80000-1 style, and this
+ * is a blog post written for a general audience, not for an IEEE venue. All eighteen sit in prose
+ * and table cells, so counting from the parsed tree rather than the raw text keeps every one —
+ * and deciding that is exactly what an eleven-line stub, where every line was written by someone
+ * who knew which rule would read it, cannot do.
  *
  * So:
  *   SILENCE — the recorded baseline in `baseline.json`. A rule that starts saying something NEW

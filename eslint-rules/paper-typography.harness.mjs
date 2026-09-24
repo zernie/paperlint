@@ -15,6 +15,7 @@ import assert from "node:assert/strict";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ESLint } from "eslint";
+import markdown from "@eslint/markdown";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
@@ -108,6 +109,147 @@ check(
 check(
   "url and arXiv id count as reachable, not only doi",
   !clean.some((m) => m.includes("bibliography entries")),
+);
+
+// ── bareDecimal counts what the READER sees, and nothing else ─────────────────────────────
+// The count used to be a regex over the raw source. On a real corpus it found 22 decimals and
+// none was a defect: every one sat in markup (an option, a column spec, a comment, a listing, a
+// tikz coordinate). The cases below pin both directions with EXACT counts — "some finding" would
+// pass a counter that reads markup AND prose, which is precisely the old defect.
+const INLINE = join(FIX, "inline-paper");
+const lintSource = async (text, file) => {
+  const eslint = new ESLint({
+    cwd: FIX,
+    overrideConfigFile: true,
+    overrideConfig: [
+      {
+        files: ["**/*.tex"],
+        plugins: {
+          tex: { languages: { latex: texLanguage } },
+          paper: typographyPlugin,
+        },
+        language: "tex/latex",
+        rules: { "paper/typography": ["warn", { debt: {} }] },
+      },
+      {
+        files: ["**/*.md"],
+        plugins: { markdown, paper: typographyPlugin },
+        language: "markdown/gfm",
+        languageOptions: { frontmatter: "yaml" },
+        rules: { "paper/typography": ["warn", { debt: {} }] },
+      },
+    ],
+  });
+  const [res] = await eslint.lintText(text, { filePath: join(INLINE, file) });
+  assert.deepEqual(
+    res.messages.filter((m) => m.fatal || !m.ruleId),
+    [],
+    `${file}: the language failed to parse or the rule threw on ${JSON.stringify(text)}`,
+  );
+  return res.messages.map((m) => m.message);
+};
+/** The bare-decimal count for one source, 0 when the rule is silent about it. */
+const bare = async (text, file = "paper.tex") => {
+  const hit = (await lintSource(text, file)).find((m) =>
+    m.includes("leading zero"),
+  );
+  return hit ? Number(/^(\d+) ×/.exec(hit)[1]) : 0;
+};
+const doc = (body) =>
+  `\\documentclass{acmart}\n\\begin{document}\n${body}\n\\end{document}\n`;
+
+// CAUGHT — prose, inline math (where p-values live) and a table cell. One each, exactly.
+const caughtTex = [
+  ["a p-value in inline math", "We call an effect significant at $p < .05$."],
+  ["a p-value after other math", "(bugfix $-31\\%$, $p=.002$)"],
+  [
+    "a table cell",
+    "\\begin{tabular}{ll}\ntask & p \\\\\nbugfix & .037 \\\\\n\\end{tabular}",
+  ],
+  ["plain prose", "We use a threshold of .05 throughout."],
+];
+for (const [what, body] of caughtTex)
+  check(`LaTeX CAUGHT, exactly one: ${what}`, (await bare(doc(body))) === 1);
+check(
+  "LaTeX CAUGHT: all four in one document count four",
+  (await bare(doc(caughtTex.map(([, b]) => b).join("\n\n")))) === 4,
+);
+
+// SILENT — markup the reader never sees as a number. Each alone must count ZERO.
+const silentTex = [
+  ["a figure width option", "\\includegraphics[width=.48\\columnwidth]{f}"],
+  [
+    "a tabular column spec",
+    "\\begin{tabular}{p{.25\\linewidth}l}\na & b \\\\\n\\end{tabular}",
+  ],
+  ["a comment", "Text.\n% p<.01 in the old draft\nMore text."],
+  ["a listing", "\\begin{lstlisting}\nx = .25\n\\end{lstlisting}"],
+  ["inline listing", "Call \\lstinline{.25} here."],
+  ["a length argument", "A\\hspace{.3em}B\\hspace{.35em}C"],
+  ["a macro definition body", "\\def\\x{.85}"],
+  [
+    "tikz coordinates",
+    "\\begin{tikzpicture}\\draw (.35,.65);\\end{tikzpicture}",
+  ],
+  ["an arXiv id", "See arXiv 2310.05736 for details."],
+  // unified-latex has no signature for these, so their arguments arrive as sibling nodes.
+  [
+    "an unsigned environment's width",
+    "\\begin{subfigure}[b]{.48\\textwidth}\nPanel.\n\\end{subfigure}",
+  ],
+  [
+    "an unsigned table's column spec",
+    "\\begin{longtable}{p{.25\\linewidth}l}\na & b \\\\\n\\end{longtable}",
+  ],
+  [
+    "an unknown macro's options",
+    "\\adjustbox{width=.48\\linewidth}{x} \\foo[scale=.75]{y}",
+  ],
+];
+for (const [what, body] of silentTex)
+  check(`LaTeX SILENT: ${what}`, (await bare(doc(body))) === 0);
+check(
+  "LaTeX SILENT: the preamble and the inline bibliography are not the reader's text",
+  (await bare(
+    "\\documentclass{acmart}\n\\renewcommand{\\arraystretch}{.85}\n" +
+      "\\begin{filecontents*}{refs.bib}\n@misc{k, note = {p = .05}, url = {https://x.org}}\n" +
+      "\\end{filecontents*}\n\\begin{document}\nNothing here.\n\\end{document}\n",
+  )) === 0,
+);
+check(
+  "LaTeX: every silent case plus one real p-value counts exactly one",
+  (await bare(
+    doc(
+      silentTex.map(([, b]) => b).join("\n\n") +
+        "\n\nThe effect held at $p=.002$.",
+    ),
+  )) === 1,
+);
+
+check(
+  "LaTeX CAUGHT: the body of an unsigned environment is still read",
+  (await bare(
+    doc(
+      "\\begin{subfigure}{.48\\textwidth}\nHeld at $p=.05$.\n\\end{subfigure}",
+    ),
+  )) === 1,
+);
+
+// Markdown, on the markdown AST: text nodes including table cells; code, html and front matter
+// are not prose.
+check(
+  "Markdown CAUGHT: a p-value in prose and one in a table cell count two",
+  (await bare(
+    "We call it significant at p<.05.\n\n| task | p |\n| --- | --- |\n| bugfix | .002 |\n",
+    "paper.md",
+  )) === 2,
+);
+check(
+  "Markdown SILENT: fenced code, inline code, html and front matter count zero",
+  (await bare(
+    "---\nthreshold: .05\n---\n\nRun `.25` here.\n\n```py\nx = .25\n```\n\n<!-- p<.01 -->\n",
+    "paper.md",
+  )) === 0,
 );
 
 // ── the RATCHET: three halves, because this is what decides if a human ever sees it ────────

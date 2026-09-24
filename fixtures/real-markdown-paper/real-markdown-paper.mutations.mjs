@@ -36,8 +36,8 @@ process.exit(
         edits: [
           [
             TYPO,
-            "const bareDecimal = (body.match(",
-            "const bareDecimal = 0 * (body.match(",
+            "const bareDecimal = countBareDecimals(",
+            "const bareDecimal = 0 * countBareDecimals(",
           ],
         ],
       },

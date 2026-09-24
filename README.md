@@ -91,8 +91,8 @@ config: package.json
 papers/my-paper
   error  missing `PIPELINE-STATUS.md` — `paper/stages`, `paper/source` and `paper/author-list` read this file, so nothing `my-paper` declares about its stages, sources or authors is checked
 …/my-papers/papers/my-paper/paper.tex
-  1:1  warning  1 × `§` instead of «Section» (reviewer B). Paying the debt down is silent; growth is reported                                   paper/typography
-  1:1  warning  1 × a decimal without a leading zero, `.05` instead of `0.05` (reviewer B). Paying the debt down is silent; growth is reported  paper/typography
+  1:1  warning  1 × `§` instead of «Section» (reviewer B). Paying the debt down is silent; growth is reported                                                 paper/typography
+  1:1  warning  1 × a decimal without a leading zero, `.05` instead of `0.05` (IEEE / ISO 80000-1 style). Paying the debt down is silent; growth is reported  paper/typography
 
 ✖ 2 problems (0 errors, 2 warnings)
 ```
