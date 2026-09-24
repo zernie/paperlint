@@ -27,6 +27,7 @@
   "tex": {
     "packages": {
       "acmart": ["acmart.cls"],
+      "amscls": ["amsart.cls"],
       "libertine": ["libertine.sty"],
       "inconsolata": ["zi4.sty"],
       "newtx": ["newtxmath.sty"],
