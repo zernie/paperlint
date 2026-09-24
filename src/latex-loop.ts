@@ -21,11 +21,18 @@
  * and only the loop knows it. The price is one extra pdflatex run per build, paid for turning
  * "?? in the PDF" into a red build.
  *
- * 🔴 WHY A CAP. A document can rewrite its own inputs on every pass — `filecontents*` with
- * `[overwrite]`, a counter that moves a float which moves a label — and then the aux never
+ * 🔴 WHY A CAP. A document can keep changing its own aux on every pass — the textbook case is a
+ * page reference whose own wording moves its target to the other page, and back — and the aux never
  * settles. Without a cap the loop runs forever; with a silent cap it stops and ships an
  * unconverged PDF with wrong cross-references. It stops, and it FAILS, naming the file that kept
  * changing.
+ *
+ * ⚠️ `filecontents` with `[overwrite]` is NOT such a case, though this comment said so until
+ * 2026-09-24. The environment body is verbatim, so every pass writes the same bytes, and the loop
+ * compares CONTENT digests, not modification times. Measured with `rpp build` on TeX Live 2026: a
+ * real acmart paper embedding its `refs.bib` that way converged in 3 pdflatex passes, and an
+ * `article` with an overwritten `\input` file carrying `\label`/`\ref`, a `\tableofcontents` and
+ * an overwritten `.bib` converged in 4.
  */
 
 /** Files a pdflatex pass writes and the next pass reads. A change means the output is stale. */
@@ -146,9 +153,8 @@ const noConvergence = (unsettled: readonly string[]): Step => ({
   cause: { kind: "no-convergence", unsettled },
   lines: [
     `the build does not converge: after ${MAX_PASSES} pdflatex passes, the last one still changed or asked to rerun: ${unsettled.join(", ")}.`,
-    `A document that rewrites its own inputs on every pass (filecontents* with [overwrite], a`,
-    `float that moves the label it depends on) never settles; stopping here instead of shipping`,
-    `a PDF with stale cross-references.`,
+    `A document whose aux keeps changing on every pass never settles; stopping here instead of`,
+    `shipping a PDF with stale cross-references.`,
   ],
 });
 
