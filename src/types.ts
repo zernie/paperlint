@@ -5,8 +5,9 @@
 
 /** The contents of the consumer's `rpp.json`. */
 export interface RppConfig {
-  /** 🔴 REQUIRED. The paper director(ies), relative to rpp.json ITSELF. */
-  papers?: string | string[];
+  /** 🔴 REQUIRED. The paper director(ies), relative to the config file ITSELF. The field name is
+   * `PAPERS_DIR_FIELD` in lib/paper-config.mjs; code reads it through `papersDirOf()` in cli.ts. */
+  papersDir?: string | string[];
   /** The command that prints the author list from .bib — each corpus has its own. */
   authorListCommand?: string;
   /** Per-paper typography debt: how many findings already exist; the number may only go down. */

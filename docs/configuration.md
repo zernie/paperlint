@@ -9,7 +9,7 @@ The README carries the minimal version of this. Everything below is the full sur
 ```json
 {
   "research-paper-pipeline": {
-    "papers": "papers",
+    "papersDir": "papers",
     "authorListCommand": "node scripts/bib-authors.mjs",
     "typographyDebt": { "papers/my-paper": { "sectionSign": 12 } },
     "docFields": { "read": { "values": ["full", "abstract", "none"] } },
@@ -22,7 +22,7 @@ The README carries the minimal version of this. Everything below is the full sur
 
 | key                 | required | what it is                                                                                |
 | ------------------- | -------- | ----------------------------------------------------------------------------------------- |
-| `papers`            | **yes**  | the directory your papers live in, relative to the file holding it. One string or a list. |
+| `papersDir`         | **yes**  | the directory your papers live in, relative to the file holding it. One string or a list. |
 | `structure`         | no       | which files every paper directory must contain — see below. `false` turns it off.         |
 | `authorListCommand` | no       | the command `paper/author-list` tells you to run when the check is missing                |
 | `typographyDebt`    | no       | per-paper allowance of existing typography findings, so the count can only go down        |
@@ -32,10 +32,16 @@ The README carries the minimal version of this. Everything below is the full sur
 | `causeMarker`       | no       | the phrase a review uses to introduce a cause (default `Cause:`), in any language         |
 | `buildScripts`      | no       | override the build-script lookup order below                                              |
 
-`papers` is required because the scope is the one thing that must not default: a default of `"."`
+`papersDir` is required because the scope is the one thing that must not default: a default of `"."`
 turns every run into a green report over the whole checkout. `rpp init` fills it by measuring —
 and when nothing on disk looks like a papers directory, it writes the documented default and says
 in the same breath that it is a guess.
+
+Until 2026-09-24 this field was called `papers`. The old name is not read as a fallback: `rpp lint`,
+`rpp init`, `rpp doctor`, the ESLint helper and the edit guard all stop with
+`"papers" was renamed to "papersDir" in package.json → "research-paper-pipeline"`. The two advisory
+hooks stay silent instead. The name is defined once, as `PAPERS_DIR_FIELD` in
+`lib/paper-config.mjs`.
 
 ## Why the key lives in `package.json`
 

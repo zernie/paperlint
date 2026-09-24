@@ -13,14 +13,15 @@
  * ── THE DECISION (2026-09-11) ───────────────────────────────────────────────
  * ONE declaration, in the consumer's `package.json`, with a default:
  *
- *     "research-paper-pipeline": { "papers": "docs/papers" }
+ *     "research-paper-pipeline": { "papersDir": "docs/papers" }
  *
+ * (The field was called `papers` until 2026-09-24; the old name is now refused.)
  * No key → `papers`. Every carrier then reads that one value with its OWN standard mechanism:
  *
  *   ESLint  →  `import pkg from "./package.json" with { type: "json" }` + this module
  *   hook    →  `needs: [provide("pkg", "cat package.json")]`, JSON.parse inside `decide`
  *   prose   →  the skill names a COMMAND, not a path:
- *              `node -p "require('./package.json')['research-paper-pipeline']?.papers ?? 'papers'"`
+ *              `node -p "require('./package.json')['research-paper-pipeline']?.papersDir ?? 'papers'"`
  *   LaTeX   →  `TEXINPUTS` built FROM THE SCRIPT (`$(dirname "$0")/../tex//:`), so the
  *              consumer declares nothing at all for this carrier
  *
@@ -80,7 +81,12 @@ import { resolve } from "node:path";
 // Re-exported, not re-declared. This file is not a hook, so nothing stops it importing the one
 // source; it had its own copy for no reason, and that copy was outside the agreement check that
 // compares the three hooks — it could have drifted in silence.
-import { DEFAULT_PAPERS_ROOT } from "../lib/paper-config.mjs";
+import {
+  CONFIG_KEY,
+  DEFAULT_PAPERS_ROOT,
+  PAPERS_DIR_FIELD,
+  renamedFieldMessage,
+} from "../lib/paper-config.mjs";
 export { DEFAULT_PAPERS_ROOT };
 
 /**
@@ -97,9 +103,11 @@ export { DEFAULT_PAPERS_ROOT };
  *          would change their meaning.
  */
 export function papersRoot(pkg, baseDir = process.cwd()) {
-  const declared = pkg?.["research-paper-pipeline"]?.papers;
+  const renamed = renamedFieldMessage(pkg?.[CONFIG_KEY]);
+  if (renamed) throw new TypeError(renamed);
+  const declared = pkg?.[CONFIG_KEY]?.[PAPERS_DIR_FIELD];
   // 🔴 `declared === undefined`, NOT `declared ?? DEFAULT`. The two differ on exactly one
-  // input — `"papers": null` — and the difference is the whole point: `??` reads an explicit
+  // input — `"papersDir": null` — and the difference is the whole point: `??` reads an explicit
   // `null` as "nothing was declared" and silently uses the default, which is a typed keystroke
   // being treated as an absence. Caught by the harness on 2026-09-11, where the first draft of
   // this line used `??` and let `null` through. Absence means default; anything written down
@@ -107,7 +115,7 @@ export function papersRoot(pkg, baseDir = process.cwd()) {
   const root = declared === undefined ? DEFAULT_PAPERS_ROOT : declared;
   if (typeof root !== "string" || root.length === 0)
     throw new TypeError(
-      `research-paper-pipeline: "papers" must be a non-empty string, got ${JSON.stringify(root)}`,
+      `${CONFIG_KEY}: "${PAPERS_DIR_FIELD}" must be a non-empty string, got ${JSON.stringify(root)}`,
     );
   if (!existsSync(resolve(baseDir, root)))
     throw new Error(
@@ -115,7 +123,7 @@ export function papersRoot(pkg, baseDir = process.cwd()) {
         (declared === undefined
           ? `Nothing was declared, so the default "${DEFAULT_PAPERS_ROOT}" was used. Declare the ` +
             `real location in package.json:\n` +
-            `  "research-paper-pipeline": { "papers": "path/to/papers" }`
+            `  "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": "path/to/papers" }`
           : `It is declared in package.json as "${declared}". Fix it there, or create the ` +
             `directory.`) +
         `\nThis is thrown rather than ignored on purpose: a papers root that matches nothing ` +

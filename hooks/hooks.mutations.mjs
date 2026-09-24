@@ -59,7 +59,7 @@ const M = [
   [
     GUARD,
     "guard carrier/null read as absence",
-    'go back to `??` — an explicit `"papers": null` is read as «nothing was declared» and ' +
+    'go back to `??` — an explicit `"papersDir": null` is read as «nothing was declared» and ' +
       "silently falls back to the default, i.e. a typed keystroke treated as an absence",
     '  const root = declared === undefined ? DEFAULT_PAPERS_ROOT : declared;\n  if (typeof root !== "string" || root.length === 0)\n    return deny(',
     '  const root = declared ?? DEFAULT_PAPERS_ROOT;\n  if (typeof root !== "string" || root.length === 0)\n    return deny(',
@@ -234,7 +234,7 @@ const M = [
     "sh/the papers root hard-coded again",
     "put the literal back — the tool serves exactly one consumer's layout, which is the thing the " +
       "extraction exists to undo",
-    'papers_root="$(read_key papers papers)"',
+    'papers_root="$(read_key papersDir papers)"',
     'papers_root="papers"',
   ],
   [

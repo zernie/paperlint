@@ -27,6 +27,10 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  OLD_PAPERS_DIR_FIELD,
+  PAPERS_DIR_FIELD,
+} from "../lib/paper-config.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const {
@@ -132,7 +136,7 @@ check(
   parseArgs(["lint", "--options", "o.json"]).config === "o.json",
 );
 check(
-  "`papers` as a string and as a list normalize the same way",
+  "the papers directory as a string and as a list normalize the same way",
   toPaths("papers")[0] === "papers" &&
     toPaths(["a", "b"]).length === 2 &&
     toPaths(undefined).length === 0 &&
@@ -210,7 +214,7 @@ check(
         {
           name: "c",
           version: "1.0.0",
-          "research-paper-pipeline": { papers: "papers" },
+          "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "papers" },
         },
         null,
         2,
@@ -231,7 +235,7 @@ check(
       !/is deprecated/.test(r.out),
     );
 
-    // The key is present, `papers` inside it is not: this is not an "empty config" but an
+    // The key is present, the papers-directory field inside it is not: this is not an "empty config" but an
     // unfinished one, and the failure must name the EXACT shape that needs adding.
     writeFileSync(
       join(root, "package.json"),
@@ -243,12 +247,46 @@ check(
     );
     const noPapers = await cli(["lint"], root);
     check(
-      "a key with no `papers` — a failure, and the shape is shown INSIDE package.json",
+      `a key with no \`${PAPERS_DIR_FIELD}\` — a failure, and the shape is shown INSIDE package.json`,
       noPapers.code === 2 &&
-        /must declare `papers`/.test(noPapers.out) &&
-        /"research-paper-pipeline": \{ "papers": "papers" \}/.test(
-          noPapers.out,
+        noPapers.out.includes(`must declare \`${PAPERS_DIR_FIELD}\``) &&
+        noPapers.out.includes(
+          `"research-paper-pipeline": { "${PAPERS_DIR_FIELD}": "papers" }`,
         ),
+    );
+
+    // The field's OLD name is refused with one clear sentence, not read as a fallback. The
+    // new name sits beside it here on purpose: even then the leftover old name is an error.
+    writeFileSync(
+      join(root, "package.json"),
+      JSON.stringify({
+        name: "c",
+        version: "1.0.0",
+        "research-paper-pipeline": {
+          [OLD_PAPERS_DIR_FIELD]: "papers",
+          [PAPERS_DIR_FIELD]: "papers",
+        },
+      }),
+    );
+    const oldName = await cli(["lint"], root);
+    check(
+      `the old field name "${OLD_PAPERS_DIR_FIELD}" fails with a message that names the new one`,
+      oldName.code === 2 &&
+        oldName.out.includes(
+          `"${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "research-paper-pipeline"`,
+        ),
+    );
+    writeFileSync(
+      join(root, "package.json"),
+      JSON.stringify({
+        name: "c",
+        version: "1.0.0",
+        "research-paper-pipeline": { [OLD_PAPERS_DIR_FIELD]: "papers" },
+      }),
+    );
+    check(
+      "the old field name alone fails the same way — it is never used as the papers directory",
+      (await cli(["lint"], root)).code === 2,
     );
 
     // 🔴 A package.json WITHOUT the key does not stop the walk upward. Otherwise the search
@@ -258,7 +296,10 @@ check(
       join(root, "package.json"),
       JSON.stringify({ name: "c", version: "1.0.0" }),
     );
-    writeFileSync(join(root, "rpp.json"), JSON.stringify({ papers: "papers" }));
+    writeFileSync(
+      join(root, "rpp.json"),
+      JSON.stringify({ [PAPERS_DIR_FIELD]: "papers" }),
+    );
     const viaRpp = await cli(["lint"], root);
     check(
       "a keyless package.json does not intercept the search — rpp.json is still found",
@@ -276,7 +317,7 @@ check(
       JSON.stringify({
         name: "c",
         version: "1.0.0",
-        "research-paper-pipeline": { papers: "papers" },
+        "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "papers" },
       }),
     );
     check(
@@ -356,11 +397,12 @@ check(
       });
       check(
         "🔴 THE DECLARATION SHOWS UP IN package.json — the file the hooks read",
-        declared(dir) !== undefined && typeof declared(dir).papers === "string",
+        declared(dir) !== undefined &&
+          typeof declared(dir)[PAPERS_DIR_FIELD] === "string",
       );
       check(
         "🔴 and its value is MEASURED, not taken from the `papers` default",
-        declared(dir).papers === "writing/drafts",
+        declared(dir)[PAPERS_DIR_FIELD] === "writing/drafts",
       );
       check(
         "and it says HOW it was measured — otherwise a guess reads as a fact",
@@ -392,7 +434,7 @@ check(
       });
       check(
         "nothing to measure — the documented default is taken",
-        declared(dir).papers === "papers",
+        declared(dir)[PAPERS_DIR_FIELD] === "papers",
       );
       check(
         "🔴 and it is MARKED as a guess, not presented as a measurement",
@@ -411,7 +453,7 @@ check(
         pkg: {
           name: "c",
           version: "1.0.0",
-          "research-paper-pipeline": { papers: "mine" },
+          "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "mine" },
         },
         papers: ["writing"],
       });
@@ -429,9 +471,9 @@ check(
       );
       check(
         "and it says so out loud, rather than skipping it",
-        /already declares papers = "mine" — kept, nothing overwritten/.test(
-          out.text(),
-        ),
+        new RegExp(
+          `already declares ${PAPERS_DIR_FIELD} = "mine" — kept, nothing overwritten`,
+        ).test(out.text()),
       );
     }
 
@@ -677,8 +719,9 @@ check(
       });
       check(
         "an existing rpp.json gets the SAME value, rather than drifting silently",
-        JSON.parse(readFileSync(join(dir, "rpp.json"), "utf8")).papers ===
-          "writing",
+        JSON.parse(readFileSync(join(dir, "rpp.json"), "utf8"))[
+          PAPERS_DIR_FIELD
+        ] === "writing",
       );
       check(
         "and is named deprecated",
@@ -691,11 +734,12 @@ check(
         join(own, "package.json"),
         '{"name":"c","version":"1.0.0"}',
       );
-      writeFileSync(join(own, "rpp.json"), '{"papers":"mine"}');
+      writeFileSync(join(own, "rpp.json"), `{"${PAPERS_DIR_FIELD}":"mine"}`);
       check(
-        "and the `papers` value it already declares stays byte for byte — this too is someone else's value",
+        "and the papers-directory value it already declares stays byte for byte — this too is someone else's value",
         syncRppJson(own, "writing") === "kept" &&
-          readFileSync(join(own, "rpp.json"), "utf8") === '{"papers":"mine"}',
+          readFileSync(join(own, "rpp.json"), "utf8") ===
+            `{"${PAPERS_DIR_FIELD}":"mine"}`,
       );
     }
 
@@ -705,7 +749,7 @@ check(
       const r = await cli(["init", dir]);
       check(
         "`rpp init` reaches the implementation and declares the measured directory",
-        declared(dir).papers === "writing" &&
+        declared(dir)[PAPERS_DIR_FIELD] === "writing" &&
           /rpp init — each decision/.test(r.out),
       );
     }
@@ -853,7 +897,10 @@ check(
     writeFileSync(join(paper, "PIPELINE-STATUS.md"), status(100));
 
     // findConfig — kept separate from the run so the failure is distinguishable
-    writeFileSync(join(root, "rpp.json"), JSON.stringify({ papers: "papers" }));
+    writeFileSync(
+      join(root, "rpp.json"),
+      JSON.stringify({ [PAPERS_DIR_FIELD]: "papers" }),
+    );
     check(
       "findConfig walks up from a subdirectory and finds the file at the root",
       findConfig(paper) === join(root, "rpp.json"),
@@ -902,26 +949,29 @@ check(
     mkdirSync(join(root, "elsewhere"), { recursive: true });
     const override = await cli(["lint", "elsewhere"], root);
     check(
-      "a command-line argument OVERRIDES `papers` from the config",
+      "a command-line argument OVERRIDES the papers directory from the config",
       override.code === 1 &&
         /nothing was linted under elsewhere/.test(override.out),
     );
 
-    // 🔴 `papers` — A REQUIRED FIELD. A config without it is not an "empty config" but an
+    // 🔴 THE PAPERS DIRECTORY — A REQUIRED FIELD. A config without it is not an "empty config" but an
     // unfinished one: silently falling back to "." means running the rules over the whole checkout.
     writeFileSync(join(root, "rpp.json"), JSON.stringify({ minFindings: 3 }));
     const noPapers = await cli(["lint"], root);
     check(
-      "a config WITHOUT `papers` — a failure, and the field is named by name",
+      "a config WITHOUT the papers-directory field — a failure, and the field is named by name",
       noPapers.code === 2 &&
-        /must declare `papers`/.test(noPapers.out) &&
+        noPapers.out.includes(`must declare \`${PAPERS_DIR_FIELD}\``) &&
         /cannot guess/.test(noPapers.out),
     );
     check(
-      'an empty string in `papers` counts as absent, not as the directory ""',
+      'an empty string as the papers directory counts as absent, not as the directory ""',
       (
         await (async () => {
-          writeFileSync(join(root, "rpp.json"), JSON.stringify({ papers: "" }));
+          writeFileSync(
+            join(root, "rpp.json"),
+            JSON.stringify({ [PAPERS_DIR_FIELD]: "" }),
+          );
           return await cli(["lint"], root);
         })()
       ).code === 2,
@@ -955,7 +1005,10 @@ check(
       join(paper, "PIPELINE-STATUS.md"),
       `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: 100\n    source: versions/s.tex\n    sourceBytes: 4\nresearchQuestion: "does it hold?"\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`,
     );
-    writeFileSync(join(root, "rpp.json"), JSON.stringify({ papers: "papers" }));
+    writeFileSync(
+      join(root, "rpp.json"),
+      JSON.stringify({ [PAPERS_DIR_FIELD]: "papers" }),
+    );
 
     const lax = await cli(["lint"], root);
     check(
@@ -993,7 +1046,10 @@ check(
     mkdirSync(paper, { recursive: true });
     // The marker is present, the scorecard is not: NOT ONE pipeline rule runs over this directory.
     writeFileSync(join(paper, "paper.tex"), "\\documentclass{article}\n");
-    writeFileSync(join(root, "rpp.json"), JSON.stringify({ papers: "papers" }));
+    writeFileSync(
+      join(root, "rpp.json"),
+      JSON.stringify({ [PAPERS_DIR_FIELD]: "papers" }),
+    );
 
     const r = await cli(["lint"], root);
     check(
@@ -1112,7 +1168,7 @@ check(
       JSON.stringify({
         name: "x",
         "research-paper-pipeline": {
-          papers: "papers",
+          [PAPERS_DIR_FIELD]: "papers",
           typographyDebt: { "papers/p": { sectionSign: 2 } },
         },
       }),
@@ -1544,7 +1600,7 @@ console.log(
   try {
     writeFileSync(
       join(root, "package.json"),
-      '{"research-paper-pipeline":{"papers":"papers"}}\n',
+      `{"research-paper-pipeline":{"${PAPERS_DIR_FIELD}":"papers"}}\n`,
     );
     mkdirSync(join(root, "papers", "p1"), { recursive: true });
     writeFileSync(join(root, "papers", "p1", "paper.md"), "# P\n");
@@ -1591,7 +1647,7 @@ console.log(
     );
     writeFileSync(
       join(root, "package.json"),
-      '{"research-paper-pipeline":{"papers":"writing"}}\n',
+      `{"research-paper-pipeline":{"${PAPERS_DIR_FIELD}":"writing"}}\n`,
     );
     const r = await cli(["new", "demo"], root);
     check(

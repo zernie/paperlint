@@ -19,6 +19,7 @@
  * Exit code: 0 — every manager passed; 1 — at least one did not.
  */
 import { execFileSync, spawnSync } from "node:child_process";
+import { PAPERS_DIR_FIELD } from "../../lib/paper-config.mjs";
 import {
   mkdtempSync,
   mkdirSync,
@@ -426,7 +427,7 @@ try {
       try {
         return JSON.parse(readFileSync(join(consumer, "package.json"), "utf8"))[
           "research-paper-pipeline"
-        ]?.papers;
+        ]?.[PAPERS_DIR_FIELD];
       } catch (e) {
         return `unreadable: ${e.message}`;
       }

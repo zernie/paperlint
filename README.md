@@ -213,15 +213,17 @@ with a normal file edit — those are not blocked.
 ```json
 {
   "research-paper-pipeline": {
-    "papers": "papers"
+    "papersDir": "papers"
   }
 }
 ```
 
-`papers` is the directory your papers live in. It has no default on purpose, so the tool never
-checks a folder you did not choose. The optional settings (typography allowance, review fields,
-build-script names and more) are in [`docs/configuration.md`](docs/configuration.md), which also
-shows how to use the checks inside your own lint setup.
+`papersDir` is the directory your papers live in. It has no default on purpose, so the tool never
+checks a folder you did not choose. It was called `papers` before 2026-09-24; a config that still
+uses the old name is refused with a message saying so. The optional settings (typography
+allowance, review fields, build-script names and more) are in
+[`docs/configuration.md`](docs/configuration.md), which also shows how to use the checks inside
+your own lint setup.
 
 ## License
 

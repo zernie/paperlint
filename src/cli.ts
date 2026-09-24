@@ -60,9 +60,13 @@ import {
   reportNewPaper,
   type PaperFormat,
 } from "./new-paper.ts";
-// @ts-expect-error — the one source for the consumer's config key lives in the .mjs half of
-// the package: the ESLint rules and the skill scripts import it too, and they are not TypeScript.
-import { CONFIG_KEY } from "../lib/paper-config.mjs";
+// The one source for the consumer's config key lives in the .mjs half of the package (the ESLint
+// rules and the skill scripts import it too); its types are in lib/paper-config.d.mts.
+import {
+  CONFIG_KEY,
+  PAPERS_DIR_FIELD,
+  renamedFieldMessage,
+} from "../lib/paper-config.mjs";
 export { init };
 export { nextSteps } from "./init.ts";
 
@@ -115,10 +119,10 @@ lint:
 
 settings — the \`research-paper-pipeline\` key of your package.json, found by walking up from the
 current directory, the way every other tool in the stack finds its config. \`rpp.json\` is still
-read as a deprecated fallback and the run says so. \`papers\` is required; the rest is optional:
+read as a deprecated fallback and the run says so. \`papersDir\` is required; the rest is optional:
 
   "research-paper-pipeline": {
-    "papers":            "papers",
+    "papersDir":         "papers",
     "authorListCommand": "node scripts/bib-authors.mjs",
     "typographyDebt":    { "papers/my-paper": { "sectionSign": 12 } },
     "docFields":         { "read": { "values": ["full", "abstract", "none"] } },
@@ -422,17 +426,29 @@ export function readConfig(
       );
   }
 
-  // 🔴 `papers` IS A REQUIRED FIELD. The papers directory is the one thing without which the tool
+  // The old field name is refused before anything else is read from the settings: falling back
+  // to it would keep it working forever, and this package has no released users to migrate.
+  const where =
+    decl?.kind === "package.json"
+      ? `${PKG_NAME} → "${CONFIG_KEY}"`
+      : (decl?.path ?? CONFIG_NAME);
+  const renamed = decl ? renamedFieldMessage(opts, where) : null;
+  if (renamed) {
+    err(renamed);
+    return { code: 2 };
+  }
+
+  // 🔴 THE PAPERS DIRECTORY IS A REQUIRED FIELD. The papers directory is the one thing without which the tool
   // does not know what it works on, and the one thing that cannot be guessed: a default of "." runs
   // the rules over the whole checkout and exits green over a scope nobody chose.
   if (decl && !hasPapers(opts)) {
     err(
       decl.kind === "package.json"
-        ? `${decl.path} must declare \`papers\` — the directory your papers live in, e.g.\n` +
-            `  { "${CONFIG_KEY}": { "papers": "papers" } }\n` +
+        ? `${decl.path} must declare \`${PAPERS_DIR_FIELD}\` — the directory your papers live in, e.g.\n` +
+            `  { "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": "papers" } }\n` +
             `It is the one thing this tool cannot guess. \`npx rpp init\` writes it for you.`
-        : `${decl.path} must declare \`papers\` — the directory your papers live in, e.g.\n` +
-            `  { "papers": "papers" }\n` +
+        : `${decl.path} must declare \`${PAPERS_DIR_FIELD}\` — the directory your papers live in, e.g.\n` +
+            `  { "${PAPERS_DIR_FIELD}": "papers" }\n` +
             `It is the one thing this tool cannot guess.`,
     );
     return { code: 2 };
@@ -440,7 +456,12 @@ export function readConfig(
   return { opts, configPath };
 }
 
-/** `papers` may be one directory or several; both spellings normalise to a list. */
+/** The papers directory field of the settings, read by its one declared name. */
+export function papersDirOf(opts: RppConfig): unknown {
+  return (opts as Record<string, unknown>)[PAPERS_DIR_FIELD];
+}
+
+/** The papers directory may be one directory or several; both spellings normalise to a list. */
 export function toPaths(papers: unknown): string[] {
   if (typeof papers === "string") return papers.trim() ? [papers.trim()] : [];
   if (Array.isArray(papers))
@@ -448,7 +469,8 @@ export function toPaths(papers: unknown): string[] {
   return [];
 }
 
-const hasPapers = (opts: RppConfig): boolean => toPaths(opts.papers).length > 0;
+const hasPapers = (opts: RppConfig): boolean =>
+  toPaths(papersDirOf(opts)).length > 0;
 
 /**
  * `rpp hook <name>` — run an editor hook. It exists for ONE thing: so that the wiring does not
@@ -596,7 +618,7 @@ async function runNew(
   }
   const cfg = readConfig({ ...a, json: false }, { log: () => {}, err, cwd });
   if (cfg.code !== undefined) return cfg.code;
-  const roots = toPaths(cfg.opts.papers).map((rel) =>
+  const roots = toPaths(papersDirOf(cfg.opts)).map((rel) =>
     resolve(dirname(cfg.configPath ?? cwd), rel),
   );
   const papersRoot = roots[0];
@@ -636,7 +658,7 @@ function runBuild(
     Array.isArray(opts.buildScripts) && opts.buildScripts.length
       ? opts.buildScripts
       : BUILD_SCRIPTS;
-  const roots = toPaths(opts.papers).map((rel) =>
+  const roots = toPaths(papersDirOf(opts)).map((rel) =>
     resolve(configPath ? dirname(configPath) : cwd, rel),
   );
 
@@ -731,7 +753,7 @@ export async function run(
           { log: () => {}, err: () => {}, cwd: root },
         );
         return read.code === undefined
-          ? (toPaths(read.opts.papers)[0] ?? null)
+          ? (toPaths(papersDirOf(read.opts))[0] ?? null)
           : null;
       },
     });
@@ -742,7 +764,9 @@ export async function run(
   if (a.cmd === "doctor") {
     const read = readConfig(a, { log: () => {}, err: () => {}, cwd });
     const papers =
-      read.code === undefined ? (toPaths(read.opts.papers)[0] ?? null) : null;
+      read.code === undefined
+        ? (toPaths(papersDirOf(read.opts))[0] ?? null)
+        : null;
     return doctor({
       log,
       cwd,
@@ -771,7 +795,7 @@ export async function run(
   //
   // 🔴 A path FROM THE CONFIG is resolved relative to the CONFIG'S DIRECTORY, not the current one.
   // Otherwise walking up is pointless: from `papers/aisec-2026` the file would be found, but
-  // `"papers": "papers"` would point at `papers/aisec-2026/papers`, which does not exist — and the
+  // `"papersDir": "papers"` would point at `papers/aisec-2026/papers`, which does not exist — and the
   // run would fail with "nothing found" where everything is in place. A command-line argument stays
   // relative to the current directory: it was typed here and now.
   //
@@ -780,7 +804,7 @@ export async function run(
   const paths =
     a.paths.length > 0
       ? a.paths.map((p) => resolve(cwd, p))
-      : toPaths(opts.papers).map((rel) =>
+      : toPaths(papersDirOf(opts)).map((rel) =>
           resolve(dirname(configPath ?? cwd), rel),
         );
   if (paths.length === 0) {

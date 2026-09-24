@@ -47,7 +47,7 @@ process.exit(
           [
             SRC,
             "  const hookRoot = rawPkg ? papersRoot(rawPkg) : null;",
-            '  const hookRoot = rawPkg ? (JSON.parse(rawPkg)?.["research-paper-pipeline"]?.papers ?? "papers") : null;',
+            '  const hookRoot = rawPkg ? (JSON.parse(rawPkg)?.["research-paper-pipeline"]?.papersDir ?? "papers") : null;',
           ],
         ],
       },
@@ -125,8 +125,8 @@ process.exit(
         edits: [
           [
             SRC,
-            '        ? `  ⚠ package.json has no "${CONFIG_KEY}": { "papers": … } — the hooks fall back to "${DEFAULT_PAPERS_ROOT}"`',
-            "        ? `  ✓ package.json`",
+            '          ? `  ⚠ package.json has no "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": … } — the hooks fall back to "${DEFAULT_PAPERS_ROOT}"`',
+            "          ? `  ✓ package.json`",
           ],
         ],
       },

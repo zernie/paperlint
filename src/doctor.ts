@@ -29,6 +29,8 @@ import {
   papersRoot,
   CONFIG_KEY,
   DEFAULT_PAPERS_ROOT,
+  PAPERS_DIR_FIELD,
+  OLD_PAPERS_DIR_FIELD,
 } from "../hooks/paper-edit-guard.hook.mjs";
 import { PAPER_MARKERS } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
@@ -176,13 +178,22 @@ export function doctor({
     );
     bad++;
   } else {
-    const declared = (() => {
+    const settings = (() => {
       try {
-        return JSON.parse(rawPkg)?.[CONFIG_KEY]?.papers;
+        return JSON.parse(rawPkg)?.[CONFIG_KEY];
       } catch {
         return undefined;
       }
     })();
+    const declared = settings?.[PAPERS_DIR_FIELD];
+    // The old field name is a failure, not a warning: every reader refuses it.
+    const renamed = settings && Object.hasOwn(settings, OLD_PAPERS_DIR_FIELD);
+    if (renamed) {
+      out.push(
+        `  ✗ "${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "${CONFIG_KEY}"`,
+      );
+      bad++;
+    }
     // 🔴 A MISSING DECLARATION IS A WARNING, NOT A REFUSAL, and that is a decision, not an
     // oversight. Without it the hook takes the `papers` default; if the papers do live there, the
     // install WORKS — just by coincidence, and it will break silently on the day the directory
@@ -190,12 +201,14 @@ export function doctor({
     // positive costs more than a miss, because people do not fix it, they switch it off — together
     // with the binary findings below, which the command was written for. A real breakage (the roots
     // drifted apart, the directory does not exist) is caught where it is binary.
-    out.push(
-      declared === undefined
-        ? `  ⚠ package.json has no "${CONFIG_KEY}": { "papers": … } — the hooks fall back to "${DEFAULT_PAPERS_ROOT}"`
-        : `  ✓ package.json → ${CONFIG_KEY}.papers = ${JSON.stringify(declared)}`,
-    );
-    if (declared === undefined)
+    // When the old name is present, the ✗ line pushed above already says what is wrong.
+    if (!renamed)
+      out.push(
+        declared === undefined
+          ? `  ⚠ package.json has no "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": … } — the hooks fall back to "${DEFAULT_PAPERS_ROOT}"`
+          : `  ✓ package.json → ${CONFIG_KEY}.${PAPERS_DIR_FIELD} = ${JSON.stringify(declared)}`,
+      );
+    if (declared === undefined && !renamed)
       out.push(
         `      it works only while your papers happen to live there; declare it and it keeps working`,
       );

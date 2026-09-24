@@ -51,7 +51,7 @@ changes, no migration.
 
 ### How rpp finds papers
 
-- **One key in the consumer's `package.json`**, `research-paper-pipeline.papers`, default `papers`
+- **One key in the consumer's `package.json`**, `research-paper-pipeline.papers` (renamed `papersDir` on 2026-09-24), default `papers`
   (`lib/paper-config.mjs:24`, `:27`). `rpp.json` is still read as a deprecated fallback
   (`src/cli.ts` `findDeclaration`, and `docs/configuration.md` § "Why the key lives in
   `package.json`").

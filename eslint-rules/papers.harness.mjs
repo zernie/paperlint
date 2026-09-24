@@ -17,6 +17,7 @@
  * not throw" as success; an exported `tests` object is run by nothing.
  */
 import assert from "node:assert/strict";
+import { PAPERS_DIR_FIELD } from "../lib/paper-config.mjs";
 import {
   mkdirSync,
   mkdtempSync,
@@ -46,7 +47,9 @@ const repoWith = (...dirs) => {
   for (const d of dirs) mkdirSync(join(base, d), { recursive: true });
   return base;
 };
-const declaring = (papers) => ({ "research-paper-pipeline": { papers } });
+const declaring = (papers) => ({
+  "research-paper-pipeline": { [PAPERS_DIR_FIELD]: papers },
+});
 
 // ═════════════════════════════════════════════════════════════════════════════
 // I. THE DEFAULT AND THE DECLARATION
@@ -111,7 +114,7 @@ for (const declared of ["papers", "docs/papers", "writing/drafts", "a/b/c/d"]) {
       /does not exist/.test(e.message) &&
       /Nothing was declared/.test(e.message) &&
       e.message.includes(
-        '"research-paper-pipeline": { "papers": "path/to/papers" }',
+        `"research-paper-pipeline": { "${PAPERS_DIR_FIELD}": "path/to/papers" }`,
       ),
     "a missing root reached by DEFAULTING must say so and show the declaration to add",
   );

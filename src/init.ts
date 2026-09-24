@@ -57,9 +57,14 @@ import {
   nameProblem,
   type PaperFormat,
 } from "./new-paper.ts";
-// @ts-expect-error — the one source for the consumer's config key lives in the .mjs half of the
-// package, because the ESLint rules and the skill scripts import it too and they are not TypeScript.
-import { CONFIG_KEY, DEFAULT_PAPERS_ROOT } from "../lib/paper-config.mjs";
+// The one source for the consumer's config key lives in the .mjs half of the package (the ESLint
+// rules and the skill scripts import it too); its types are in lib/paper-config.d.mts.
+import {
+  CONFIG_KEY,
+  DEFAULT_PAPERS_ROOT,
+  PAPERS_DIR_FIELD,
+  renamedFieldMessage,
+} from "../lib/paper-config.mjs";
 
 /** How the papers directory was arrived at. Printed, because a guess must not read as a fact. */
 export type PapersHow =
@@ -172,7 +177,12 @@ export type DeclarationResult =
       readonly path: string;
       readonly reason: string;
     }
-  | { readonly status: "absent"; readonly path: string };
+  | { readonly status: "absent"; readonly path: string }
+  | {
+      readonly status: "renamed";
+      readonly path: string;
+      readonly message: string;
+    };
 
 /**
  * Writes ONE declaration, into the file every channel can already name.
@@ -196,9 +206,11 @@ export function declarePapers(root: string, papers: string): DeclarationResult {
   } catch (e) {
     return { status: "unparsable", path, reason: (e as Error).message };
   }
-  const existing = pkg?.[CONFIG_KEY]?.papers;
+  const message = renamedFieldMessage(pkg?.[CONFIG_KEY]);
+  if (message) return { status: "renamed", path, message };
+  const existing = pkg?.[CONFIG_KEY]?.[PAPERS_DIR_FIELD];
   if (existing !== undefined) return { status: "kept", path, papers: existing };
-  pkg[CONFIG_KEY] = { ...(pkg[CONFIG_KEY] ?? {}), papers };
+  pkg[CONFIG_KEY] = { ...(pkg[CONFIG_KEY] ?? {}), [PAPERS_DIR_FIELD]: papers };
   // Two-space indent and the file's own trailing newline: a declaration is not a licence to
   // reformat somebody else's file, and a one-line diff is a diff a consumer will actually read.
   writeFileSync(
@@ -227,8 +239,8 @@ export function syncRppJson(root: string, papers: string): RppJsonResult {
   } catch {
     return "unparsable";
   }
-  if (cfg?.papers !== undefined) return "kept";
-  cfg.papers = papers;
+  if (cfg?.[PAPERS_DIR_FIELD] !== undefined) return "kept";
+  cfg[PAPERS_DIR_FIELD] = papers;
   writeFileSync(
     path,
     JSON.stringify(cfg, null, 2) + (raw.endsWith("\n") ? "\n" : ""),
@@ -608,13 +620,19 @@ export async function init(
   const decl = declarePapers(root, choice.papers);
   if (decl.status === "written")
     log(
-      `  ✓ ${here(decl.path)} → "${CONFIG_KEY}": { "papers": ${JSON.stringify(decl.papers)} }`,
+      `  ✓ ${here(decl.path)} → "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": ${JSON.stringify(decl.papers)} }`,
     );
   else if (decl.status === "kept")
     log(
-      `  ✓ ${here(decl.path)} already declares papers = ${JSON.stringify(decl.papers)} — kept, nothing overwritten`,
+      `  ✓ ${here(decl.path)} already declares ${PAPERS_DIR_FIELD} = ${JSON.stringify(decl.papers)} — kept, nothing overwritten`,
     );
-  else if (decl.status === "unparsable") {
+  else if (decl.status === "renamed") {
+    err(`  ✗ ${decl.message}`);
+    err(
+      `      nothing was written. Rename the field in ${here(decl.path)}, then run init again.`,
+    );
+    return 2;
+  } else if (decl.status === "unparsable") {
     err(`  ✗ ${here(decl.path)} is not valid JSON: ${decl.reason}`);
     err(
       `      nothing was written. The hooks read their papers directory from this file and`,
@@ -641,11 +659,11 @@ export async function init(
   const rpp = syncRppJson(root, choice.papers);
   if (rpp === "filled")
     log(
-      `  ⚠ rpp.json was already here — gave it the same papers value; it is deprecated`,
+      `  ⚠ rpp.json was already here — gave it the same ${PAPERS_DIR_FIELD} value; it is deprecated`,
     );
   else if (rpp === "kept")
     log(
-      `  ⚠ rpp.json was already here and already declares papers — left untouched; it is deprecated`,
+      `  ⚠ rpp.json was already here and already declares ${PAPERS_DIR_FIELD} — left untouched; it is deprecated`,
     );
   else if (rpp === "unparsable")
     log(

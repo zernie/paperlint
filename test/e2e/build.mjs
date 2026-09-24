@@ -24,6 +24,7 @@
  *   node test/e2e/build.mjs [--strict]
  */
 import { execFileSync, spawnSync } from "node:child_process";
+import { PAPERS_DIR_FIELD } from "../../lib/paper-config.mjs";
 import {
   cpSync,
   existsSync,
@@ -95,7 +96,7 @@ try {
   // the scope, and that is the same contract for which `lint` has no "." default.
   writeFileSync(
     join(work, "rpp.json"),
-    JSON.stringify({ papers: "papers" }, null, 2),
+    JSON.stringify({ [PAPERS_DIR_FIELD]: "papers" }, null, 2),
   );
 
   const r = spawnSync(process.execPath, [CLI, "build", "--all"], {
