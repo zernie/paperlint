@@ -169,6 +169,16 @@ path literal outside the port a finding. Prose will not hold this class — four
 happened _while_ comments explaining the hazard sat directly above the code
 ([`docs/incidents.md`](docs/incidents.md)).
 
+**11. Installing and using rpp must be as smooth as possible.** Count the actions between "I
+want this" and "it works": every command to copy, flag to pass or file to edit is one more place
+to give up. The target is `npm i` plus one command. A per-paper script, a manual TeX install or a
+"now add this to your config" step is a defect in rpp, not a user task. The only exception is a
+choice that really belongs to the user (irreversible, paid, privacy), and then it is named at the
+moment it is asked. The converse holds too: an automatic step that can fail silently is worse
+than an explicit one — it works, or it says loudly that it did not. Measured example of the
+converse: Tectonic installs as one file but silently replaced Times with Latin Modern on a plain
+`article` paper and still exited 0 (#35, #59).
+
 ## Before changing the command surface or a delivery channel — read the prior art
 
 [`docs/prior-art/`](docs/prior-art/README.md) records how comparable tools solved the same
