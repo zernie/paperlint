@@ -155,6 +155,10 @@ jobs:
       # `disallowed-tools:` fences). What fails it is severity `error` — a malformed frontmatter
       # or a pointer to a file that does not exist. Bond is 3 × the measured 3 s, floored at the
       # 1-minute granularity GitHub bills in.
+      #
+      # README.md is linted too, by name (see the script in package.json). Its
+      # `vigiles:symbol` marks name the functions behind `rpp init` and `rpp new`; if one is
+      # renamed or removed, this step fails and names README.md.
       - name: npm run lint:skills
         run: npm run lint:skills
         timeout-minutes: 2
@@ -170,11 +174,6 @@ jobs:
       # the prose promised 45 harnesses and 22 batteries when the disk held 49 and 26.
       - name: npm run check:readme
         run: npm run check:readme
-
-      # The code that implements what the README documents points back at its heading
-      # ("Documented in README.md#…"). A renamed heading leaves that pointer leading nowhere.
-      - name: npm run check:anchors
-        run: npm run check:anchors
 
       # 45 mutations across 4 batteries. This is what makes the green above mean something: a
       # harness that cannot fail and a harness that passed look identical from outside. The

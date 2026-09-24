@@ -59,9 +59,12 @@ export const GATES = [
     script: "lint",
   },
   {
-    name: "skills lint",
+    name: "skills lint, and the vigiles:symbol marks in README.md",
     job: "gates",
     script: "lint:skills",
+    // README.md is passed to `vigiles lint` by name: it is not an instruction file, so vigiles
+    // would not open it on its own. The marks tie the `rpp init` and `rpp new` sections to the
+    // functions that implement them, and the lint fails when either function is renamed.
   },
   {
     name: "formatting",
@@ -90,11 +93,6 @@ export const GATES = [
     name: "every number in the README matches disk",
     job: "gates",
     script: "check:readme",
-  },
-  {
-    name: "every README.md#anchor named in a code comment is a real heading",
-    job: "gates",
-    script: "check:anchors",
   },
   {
     name: "the marketplace manifest is accepted by the host's own validator",

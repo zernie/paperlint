@@ -60,8 +60,8 @@ process.exit(
         edits: [
           [
             CHECK,
-            'name: "skills lint",\n    job: "gates",',
-            'name: "skills lint",\n    job: "gates-renamed-in-ci",',
+            'script: "lint:skills",',
+            'script: "lint:skills",\n    job: "gates-renamed-in-ci",',
           ],
         ],
       },

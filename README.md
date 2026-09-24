@@ -34,6 +34,8 @@ A **stage** is a point the paper has reached, such as `submitted` or `camera-rea
 
 ## Install and set up
 
+<!-- `vigiles:symbol src/init.ts#init` — `npm run check` fails if this function is renamed or removed. -->
+
 You need Node 22.13 or newer.
 
 ```sh
@@ -134,6 +136,8 @@ Warnings never fail the run unless you pass `--max-warnings <n>`. `--json` print
 JSON.
 
 ### Starting a paper
+
+<!-- `vigiles:symbol src/new-paper.ts#newPaper` — `npm run check` fails if this function is renamed or removed. -->
 
 ```sh
 npx rpp new my-paper
