@@ -1,5 +1,5 @@
 /**
- * Both halves of `check:readme`, plus a third that makes the number check meaningful: it must
+ * Both halves of `scripts/readme-numbers.mjs`, plus a third that makes the number check meaningful: it must
  * know how to COUNT CORRECTLY itself.
  *
  * 🔴 Two bugs in this script were caught not by eye, but by divergence from independent commands, and
@@ -161,5 +161,5 @@ check(
 );
 
 console.log(
-  `✓ ${String(n)} assertions passed — check:readme, numbers are produced, not written`,
+  `✓ ${String(n)} assertions passed — readme-numbers, numbers are produced, not written`,
 );

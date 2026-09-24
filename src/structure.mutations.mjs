@@ -2,7 +2,7 @@
  * Battery for `structure.ts` — the package's only check whose subject is a file's ABSENCE.
  *
  * A check like this is especially vulnerable to silent failure: it reports on what is missing,
- * so a broken one looks exactly like a clean corpus. This battery exists because `test:sabotage`
+ * so a broken one looks exactly like a clean corpus. This battery exists because the mutation gate
  * refused to accept a harness that nothing could kill.
  */
 import { fileURLToPath } from "node:url";

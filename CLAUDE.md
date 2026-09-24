@@ -519,7 +519,7 @@ lints the repository, and asks ESLint for the effective config of every linted f
 enabled for **zero** files is named and the script exits 1.
 
 ```bash
-npm run check:globs
+node scripts/rules-see-files.mjs   # also part of npm run check
 ```
 
 It is per RULE, not per glob, and that distinction is the point: a rule can be enabled in one
@@ -532,7 +532,7 @@ _different_ assertions, or only one half of the guard is really tested).
 ## Mutations
 
 ```bash
-npm run test:sabotage    # 12 + 11 + 2, each with a "the patch landed" assertion
+node scripts/run-mutations.mjs    # 12 + 11 + 2, each with a "the patch landed" assertion
 ```
 
 A green harness under a mutation is a finding about the TEST, not a conclusion about the
@@ -583,7 +583,7 @@ confident, byte-identical "clean" verdicts for three different skills that had n
 `.vigiles/exclusive.lock` for the duration. A second gate started while one is running does not
 queue and does not race — it **refuses**, names the holder, and exits 3.
 
-🔴 **The reason is that `test:sabotage` edits the working tree in place.** That strategy is
+🔴 **The reason is that the mutation batteries edit the working tree in place.** That strategy is
 deliberate (see `lib/mutation-driver.mjs` — copying the repo per mutation costs minutes instead
 of seconds), and its one cost is that any parallel reader sees a source file mid-mutation. The
 resulting failure is **false, non-deterministic, and blames the wrong file**: it reports a broken

@@ -35,7 +35,7 @@
  */
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -44,7 +44,16 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
  * Every local gate, in the order a human wants them: cheapest and most likely to fail first,
  * so a typo does not cost eight minutes. `job` names the CI job this step reproduces, and the
  * harness checks those names against the real workflow.
+ *
+ * Each gate says how it runs in one of two ways:
+ *   - `script` — an npm script that people also run by hand (`build`, `lint`, `fmt:check`, `test`);
+ *   - `run` — the command itself, for checks that have no npm script of their own. Keeping these
+ *     out of package.json keeps its script list short; this file is the one place they are listed.
+ * Programs installed by npm (`vigiles`, `eslint`) are found because `node_modules/.bin` is put
+ * first on PATH below, the same way `npm run` does it.
  */
+const locked = (...cmd) => ["node", "scripts/exclusive.mjs", ...cmd];
+
 export const GATES = [
   {
     name: "the package compiles",
@@ -61,7 +70,7 @@ export const GATES = [
   {
     name: "skills lint, and the vigiles:symbol marks in README.md",
     job: "gates",
-    script: "lint:skills",
+    run: locked("vigiles", "lint", ".", "README.md"),
     // README.md is passed to `vigiles lint` by name: it is not an instruction file, so vigiles
     // would not open it on its own. The marks tie the `rpp init` and `rpp new` sections to the
     // functions that implement them, and the lint fails when either function is renamed.
@@ -76,7 +85,7 @@ export const GATES = [
   {
     name: "every declared rule is enabled for a file on disk",
     job: "gates",
-    script: "check:globs",
+    run: locked("node", "scripts/rules-see-files.mjs"),
   },
   {
     name: "rules read content, not the filesystem",
@@ -87,17 +96,17 @@ export const GATES = [
     // locally buys a defect that reaches review.
     reason:
       "source-only property — identical in every environment, so CI adds nothing",
-    script: "check:content-only",
+    run: locked("node", "scripts/rules-are-content-only.mjs"),
   },
   {
     name: "every number in the README matches disk",
     job: "gates",
-    script: "check:readme",
+    run: locked("node", "scripts/readme-numbers.mjs"),
   },
   {
     name: "the marketplace manifest is accepted by the host's own validator",
     job: "gates",
-    script: "check:marketplace",
+    run: locked("node", "scripts/marketplace-shape.mjs"),
   },
   {
     name: "every harness (npm test)",
@@ -107,19 +116,24 @@ export const GATES = [
   {
     name: "mutation batteries — every guard is killed by its own assertion",
     job: "gates",
-    script: "test:sabotage",
+    run: locked("node", "scripts/run-mutations.mjs"),
   },
   {
     name: "install e2e — pack, install under npm and pnpm, run the binary",
     job: "gates",
-    script: "test:install",
+    run: locked("node", "test/e2e/install.mjs"),
   },
   {
     name: "build e2e — a real pdflatex, and the PDF's fonts are measured",
     job: "build-e2e",
-    script: "test:build",
+    run: locked("node", "test/e2e/build.mjs"),
   },
 ];
+
+/** The command line a gate runs, as an argument list. */
+export function commandOf(gate) {
+  return gate.script ? ["npm", "run", "-s", gate.script] : gate.run;
+}
 
 /**
  * CI jobs this command does NOT reproduce. Each needs a reason a reader can check, because an
@@ -153,24 +167,29 @@ export function outcome(status) {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
+  const BIN_FIRST_PATH = [join(ROOT, "node_modules", ".bin"), process.env.PATH]
+    .filter(Boolean)
+    .join(delimiter);
   const failed = [];
   const skipped = [];
 
   for (const g of GATES) {
     process.stdout.write(`── ${g.name}\n`);
-    const r = spawnSync("npm", ["run", "-s", g.script], {
+    const [cmd, ...args] = commandOf(g);
+    const r = spawnSync(cmd, args, {
       cwd: ROOT,
       stdio: "inherit",
       encoding: "utf8",
+      env: { ...process.env, PATH: BIN_FIRST_PATH },
     });
-    // 🔴 The exit code is read from npm, never from a pipe. `cmd | tail && …` reports the
-    // FILTER's status, which is almost always zero — that is how a red harness shipped on
-    // 2026-09-16.
+    // 🔴 The exit code is read from the command itself, never from a pipe. `cmd | tail && …`
+    // reports the FILTER's status, which is almost always zero — that is how a red harness
+    // shipped on 2026-09-16.
     const o = outcome(r.status);
     if (o === "pass") continue;
-    if (o === "skip")
-      skipped.push(`${g.name}  (npm run ${g.script} → ${SKIP_EXIT})`);
-    else failed.push(`${g.name}  (npm run ${g.script} → ${r.status})`);
+    const shown = commandOf(g).join(" ");
+    if (o === "skip") skipped.push(`${g.name}  (${shown} → ${SKIP_EXIT})`);
+    else failed.push(`${g.name}  (${shown} → ${r.status})`);
   }
 
   console.log("");

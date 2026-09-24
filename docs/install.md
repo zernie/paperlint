@@ -159,7 +159,7 @@ Moved out of the README on 2026-09-19: a reader deciding whether to try the tool
 verdict, not the forensics. The verdict is that npm and pnpm are covered and Yarn Plug'n'Play is
 not supported.
 
-`npm run test:install` packs the tarball, installs it into a clean consumer project with each
+`test/e2e/install.mjs` packs the tarball, installs it into a clean consumer project with each
 manager that is actually present on the machine (`npm --version`, `pnpm --version` — a manager
 that does not launch is not counted), and then **runs the hook command** to see whether it
 resolves. The check is deliberately not a grep over `hooks.json`: the string there is correct
@@ -179,9 +179,11 @@ different way of answering "where is the runtime", not a flag.
 
 ## Why the plugin ships no code
 
-⚠️ **Since 2026-09-23 the plugin is no longer how the hooks are installed** — `rpp init` writes the
-same commands into `.claude/settings.json` (see "The target count" above). `plugin/hooks/hooks.json`
-stays, as the one source `init` reads the wiring from, and the marketplace entry stays for one
+⚠️ **Since 2026-09-23 the plugin is no longer how anything is installed.** `rpp init` installs both
+halves itself: it writes the hook commands into `.claude/settings.json` (see "The target count"
+above), and it links every skill into `.claude/skills/<name>` as a symlink (see "The npm package is
+not where Claude Code looks" below). `plugin/hooks/hooks.json` stays, as the one source `init`
+reads the hook wiring from, and the marketplace entry stays for one
 release so existing plugin users are not broken; `init` and `doctor` tell a project that enables
 the plugin to uninstall it, because plugin + settings would run every hook twice. The reasoning
 below is still why the plugin never carried code.
@@ -230,7 +232,7 @@ consumer at all.
   and that does not fail `init`: refusing to overwrite is the correct outcome, not a broken install.
   `rpp doctor` repeats the gap as a warning, with the same reasoning as a missing external program.
 
-`npm run test:install` checks it from the consumer's side under npm and pnpm: every shipped skill
+`test/e2e/install.mjs` checks it from the consumer's side under npm and pnpm: every shipped skill
 reachable as `<consumer>/.claude/skills/<name>/SKILL.md`, every script path resolving from the
 consumer root, a second `init` changing nothing, and a foreign directory under a shipped name
 surviving untouched.

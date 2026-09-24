@@ -14,10 +14,10 @@
 # ── THE MEASUREMENT THE BONDS COME FROM (local, 2026-09-12) ─────────────────
 #   npm test (12 harnesses)              11 s
 #   npm run lint (eslint over fixtures)   1 s
-#   npm run check:globs                   1 s
-#   npm run check:readme                  1 s   <- README numbers are verified against the tree
-#   npm run lint:skills (vigiles lint)    3 s   ← added 2026-09-12 with the first ten skills
-#   npm run test:sabotage (12 batteries)    242 s   ← 130 mutations, the expensive and load-bearing part
+#   rules-see-files.mjs                   1 s
+#   readme-numbers.mjs                    1 s   <- README numbers are verified against the tree
+#   vigiles lint                          3 s   ← added 2026-09-12 with the first ten skills
+#   run-mutations.mjs (12 batteries)    242 s   ← 130 mutations, the expensive and load-bearing part
 #   ───────────────────────────────────────────
 #   total work                          ~255 s, plus checkout + install
 #
@@ -110,8 +110,8 @@ jobs:
       # accepted one nests `source` as an object. Since the wrong shape exits nonzero, a gate makes
       # it unshippable. Placed right after the install because the script FAILS when the binary is
       # missing rather than skipping — a gate that passes without its tool is a false green.
-      - name: npm run check:marketplace
-        run: npm run check:marketplace
+      - name: the marketplace manifest
+        run: node scripts/marketplace-shape.mjs
         timeout-minutes: 2
 
       # 🔴 `--no-skip` HERE, AND PRECISELY AFTER THE INSTALL ABOVE. Measurement 17.09: without it,
@@ -139,9 +139,9 @@ jobs:
       - name: npm run fmt:check
         run: npm run fmt:check
 
-      # 🔴 THE ONLY GATE THAT LOOKS AT THE SKILLS THEMSELVES — declared in package.json since
-      # this repository had a `lint:skills` script and NOT WIRED HERE. That cost nothing while the
-      # package shipped rules only; the first skill arrived 2026-09-12 and made it the one check
+      # 🔴 THE ONLY GATE THAT LOOKS AT THE SKILLS THEMSELVES — it existed as a package.json
+      # script (`lint:skills`, removed 2026-09-24) long before it was WIRED HERE. That cost
+      # nothing while the package shipped rules only; the first skill arrived 2026-09-12 and made it the one check
       # covering frontmatter, `allowed-tools` contracts, dangling pointers and name collisions.
       # `npm run lint` above is ESLint over .tex/.md fixtures and never opens a SKILL.md.
       #
@@ -156,24 +156,24 @@ jobs:
       # or a pointer to a file that does not exist. Bond is 3 × the measured 3 s, floored at the
       # 1-minute granularity GitHub bills in.
       #
-      # README.md is linted too, by name (see the script in package.json). Its
+      # README.md is linted too, by name (see the same gate in scripts/check.mjs). Its
       # `vigiles:symbol` marks name the functions behind `rpp init` and `rpp new`; if one is
       # renamed or removed, this step fails and names README.md.
-      - name: npm run lint:skills
-        run: npm run lint:skills
+      - name: vigiles lint (skills + README.md)
+        run: npx vigiles lint . README.md
         timeout-minutes: 2
 
       # 🔴 THE GREEN-ZERO GUARD. A rule whose glob matches no file is never invoked, and a run
       # with no findings is byte-identical to a run that examined everything and passed. This
       # asks ESLint for the effective config of every linted file and names any rule that saw
       # none. In the source corpus it once found NINETEEN blind rules on a green run.
-      - name: npm run check:globs
-        run: npm run check:globs
+      - name: every rule sees a file
+        run: node scripts/rules-see-files.mjs
 
       # README names numbers. This step PRODUCES and verifies them — once needed because
       # the prose promised 45 harnesses and 22 batteries when the disk held 49 and 26.
-      - name: npm run check:readme
-        run: npm run check:readme
+      - name: README numbers match disk
+        run: node scripts/readme-numbers.mjs
 
       # 45 mutations across 4 batteries. This is what makes the green above mean something: a
       # harness that cannot fail and a harness that passed look identical from outside. The
@@ -181,7 +181,7 @@ jobs:
       # on any harness that has no battery — see scripts/run-mutations.mjs for why (the hand
       # list it replaced had already gone stale by one file, silently).
       - name: mutation batteries
-        run: npm run test:sabotage
+        run: node scripts/run-mutations.mjs
 
       # pnpm is INSTALLED here rather than hoped for. The runner image may or may not carry it,
       # and the npm/pnpm difference is the entire reason the install e2e exists — so leaving it
@@ -191,9 +191,7 @@ jobs:
         run: corepack enable pnpm
         timeout-minutes: 2
 
-      # Called directly, not through `npm run`: the --strict flag must reach the script, and
-      # `npm run test:install -- --strict` adds a layer easily lost in edits. Same reasoning as
-      # the build e2e below. --strict: a manager that does not launch is a declared skip on a
+      # Called directly with --strict, the same as the build e2e below. --strict: a manager that does not launch is a declared skip on a
       # contributor's clone and a FAILURE here, because in CI it means a broken environment.
       - name: install e2e (--strict)
         run: node test/e2e/install.mjs --strict
@@ -286,8 +284,7 @@ jobs:
             kpsewhich "$f" >/dev/null || { echo "missing $f — acmart will SILENTLY fall back to Computer Modern"; exit 1; }
           done
 
-      # Called directly, not through npm run: the --strict flag must reach the script,
-      # and `npm run test:build -- --strict` adds a layer easily lost in edits.
+      # Called directly with --strict (see the install e2e step in the `gates` job).
       - name: build e2e (--strict)
         run: node test/e2e/build.mjs --strict
         timeout-minutes: 10

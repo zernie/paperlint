@@ -1,5 +1,5 @@
 /**
- * Battery for `npm run check` — and the thing under test is NOT "does it run eleven scripts".
+ * Battery for `npm run check` — and the thing under test is NOT "does it run every gate".
  * That part is visible: you watch it happen. What is invisible, and therefore what this kills,
  * is whether the harness beside it can still tell when the gate list has fallen behind CI.
  *
@@ -60,23 +60,32 @@ process.exit(
         edits: [
           [
             CHECK,
-            'script: "lint:skills",',
-            'script: "lint:skills",\n    job: "gates-renamed-in-ci",',
+            'job: "gates",\n    run: locked("vigiles", "lint"',
+            'job: "gates-renamed-in-ci",\n    run: locked("vigiles", "lint"',
           ],
         ],
       },
       {
-        name: "a gate points at a script nobody can run",
+        name: "a gate points at an npm script nobody can run",
         harness: HARNESS,
         expect: "maps to a script that exists",
         disables:
           "the guarantee that every listed gate is runnable. A renamed script fails at the exact " +
           "moment someone is trusting the list — which is the worst possible moment to find out",
+        edits: [[CHECK, 'script: "fmt:check"', 'script: "fmt:check-renamed"']],
+      },
+      {
+        name: "a gate runs a file that is not on disk",
+        harness: HARNESS,
+        expect: "runs files that exist",
+        disables:
+          "the same guarantee for gates that name their command directly instead of an npm " +
+          "script. A moved or renamed file would only show up when someone runs the whole list",
         edits: [
           [
             CHECK,
-            'script: "check:marketplace"',
-            'script: "check:marketplace-renamed"',
+            '"scripts/marketplace-shape.mjs"',
+            '"scripts/marketplace-shape-renamed.mjs"',
           ],
         ],
       },

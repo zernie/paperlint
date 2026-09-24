@@ -15,7 +15,7 @@
  * as a pass.
  */
 import assert from "node:assert/strict";
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { load } from "js-yaml";
@@ -23,7 +23,8 @@ import { load } from "js-yaml";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(HERE);
 
-const { GATES, NOT_COVERED, outcome, SKIP_EXIT } = await import("./check.mjs");
+const { GATES, NOT_COVERED, outcome, SKIP_EXIT, commandOf } =
+  await import("./check.mjs");
 
 let n = 0;
 const check = (label, cond) => {
@@ -112,14 +113,38 @@ for (const job of Object.keys(NOT_COVERED)) {
 }
 
 // ── HALF THREE: every gate is runnable ─────────────────────────────────────────────────────
-// A gate whose script was renamed fails at the moment someone runs it — which is exactly the
-// moment they are trusting it. Catch it here instead.
+// A gate whose script or file was renamed fails at the moment someone runs it — which is
+// exactly the moment they are trusting it. Catch it here instead.
 const scripts =
   JSON.parse(readFileSync(join(ROOT, "package.json"), "utf-8")).scripts ?? {};
 for (const g of GATES) {
   check(
-    `gate «${g.name}» maps to a script that exists (npm run ${g.script})`,
-    typeof scripts[g.script] === "string",
+    `gate «${g.name}» says how to run it in exactly one way (script or run)`,
+    Boolean(g.script) !== Array.isArray(g.run),
+  );
+  if (g.script) {
+    check(
+      `gate «${g.name}» maps to a script that exists (npm run ${g.script})`,
+      typeof scripts[g.script] === "string",
+    );
+    continue;
+  }
+  // A `run` gate names files and programs directly. Every file it names must be on disk, and
+  // every program other than `node` must be installed in node_modules/.bin.
+  const argv = commandOf(g);
+  const files = argv.filter((a) => /\.m?js$/.test(a));
+  check(
+    `gate «${g.name}» runs files that exist (${files.join(", ")})`,
+    files.length > 0 && files.every((f) => existsSync(join(ROOT, f))),
+  );
+  const programs = argv.filter(
+    (a, i) => i === 0 || argv[i - 1] === "scripts/exclusive.mjs",
+  );
+  check(
+    `gate «${g.name}» runs programs that are installed (${programs.join(", ")})`,
+    programs.every(
+      (p) => p === "node" || existsSync(join(ROOT, "node_modules", ".bin", p)),
+    ),
   );
 }
 check(

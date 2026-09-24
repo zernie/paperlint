@@ -18,7 +18,7 @@
 # a single file". A rule whose glob matched nothing is never invoked, and a rule that is never
 # invoked physically cannot report that. So this action asserts that ESLint linted at least one
 # file and fails loudly when it did not. This does NOT replace a per-rule glob audit (the package's
-# own `npm run check:globs` does that, and it reads the package's config, not yours) — it closes the
+# own `scripts/rules-see-files.mjs` does that, and it reads the package's config, not yours) — it closes the
 # one failure mode that needs no config knowledge: nothing was linted at all.
 name: research-paper-pipeline — LaTeX prose gate
 description: Install the toolchain the texcount/* rules need, run ESLint, and refuse to pass on an empty run.

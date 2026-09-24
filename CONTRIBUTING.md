@@ -52,8 +52,8 @@ and reported as "the gates". If a step genuinely cannot run here, it says so out
 being skipped quietly: an e2e that finds no TeX or no pnpm exits 77 _having stated_ why, and
 `npm run check` lists it as skipped instead of counting it as passed.
 
-The individual scripts still exist and are the right thing to call while iterating on one rule.
-They are not what you run before pushing.
+Each gate's command is listed in `scripts/check.mjs`; run one of them directly while iterating on
+one rule. They are not what you run before pushing.
 
 **The list of gates cannot quietly fall behind CI.** `scripts/check.harness.mjs` pulls the job
 names out of `.github/workflows/ci.yml` and requires each to be either reproduced by a gate or
@@ -101,8 +101,8 @@ The README links only what a user needs. These are for people changing the packa
 ```bash
 npm install
 npm test                 # every harness
-npm run test:sabotage    # break each rule on purpose; a harness nothing can kill is not a harness
-npm run check:readme     # the counts above are recounted from the tree, not typed by hand
+node scripts/run-mutations.mjs   # break each rule on purpose; a harness nothing can kill is not a harness
+node scripts/readme-numbers.mjs  # the counts above are recounted from the tree, not typed by hand
 ```
 
 None of these are needed to USE the tool — they are here because the gates are part of the

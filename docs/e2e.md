@@ -1,7 +1,8 @@
 # End-to-end tests
 
-There are <!-- count:e2e -->2 of them: `npm run test:install` and `npm run test:build`. Both are
-part of `npm run check`, so nobody has to remember to call them.
+There are <!-- count:e2e -->2 of them: `test/e2e/install.mjs` and `test/e2e/build.mjs`. Both are
+part of `npm run check`, so nobody has to remember to call them. `npm run test:e2e` runs just the
+two of them, install first; if the install e2e fails or is skipped, the build e2e does not run.
 
 This page says what they prove, what they deliberately do not, and when a change owes a new one.
 
@@ -27,7 +28,7 @@ assumptions that stop holding the moment somebody else installs the package.
 The third and fourth rows are the ones a harness cannot reach even in principle: the defect only
 exists once the code is somewhere else.
 
-## `npm run test:install` — the package, installed
+## `test/e2e/install.mjs` — the package, installed
 
 `test/e2e/install.mjs`. It runs `npm pack`, then installs the resulting tarball into a fresh
 temporary tree, **under npm and under pnpm separately**, and drives the installed binary:
@@ -55,7 +56,7 @@ that works under npm can be dead under pnpm with no error anywhere. The same run
 binary **directly** rather than through `node <path>`: under npm `.bin` holds a symlink, under
 pnpm a shell wrapper, and calling `node bin` measures the caller's habit instead of the package.
 
-## `npm run test:build` — a real `pdflatex`
+## `test/e2e/build.mjs` — a real `pdflatex`
 
 `test/e2e/build.mjs`. It copies `fixtures/build-e2e/` — four papers — into a temporary tree,
 points a config at it, and runs `rpp build --all`. Then it measures the artifacts with `pdffonts`:
