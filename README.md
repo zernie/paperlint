@@ -71,8 +71,8 @@ npx rpp toolchain          # upstream TeX Live + the packages the venue profiles
 
 It installs into `~/.cache/rpp/texlive` (`RPP_TEXLIVE_DIR` changes that), verifies every declared
 file with `kpsewhich`, and a second run does nothing. Linux and macOS; on Windows, install TeX Live
-yourself. poppler (`pdftotext`, `pdffonts`) comes from your package manager:
-[`docs/toolchain.md`](docs/toolchain.md).
+yourself. Reading the built PDF needs nothing else installed: rpp reads it with pdf.js, which
+comes with the package ([`docs/toolchain.md`](docs/toolchain.md)).
 
 Commit `.claude/settings.json`: then every clone gets the hooks. The hook commands run files
 inside `node_modules`, so in a fresh clone they work only after `npm install`.
@@ -201,7 +201,7 @@ Errors fail the run; warnings only print. Exactly what each check reads:
 **Skills.** One skill per stage of writing a paper — from checking the
 idea, through drafting and review, to submission and camera-ready. `rpp init` already linked them
 into `.claude/skills/`. Start with `/paper-pipeline`; it routes to the rest. The skills call
-external programs (TeX Live, poppler, Java, Python) — see [`docs/toolchain.md`](docs/toolchain.md).
+external programs (TeX Live, Java, Python) — see [`docs/toolchain.md`](docs/toolchain.md).
 
 **Hooks.** `rpp init` writes them into `.claude/settings.json`. `rpp doctor` says whether they
 are there, and whether any runs twice.

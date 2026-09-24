@@ -4,7 +4,7 @@ description: Compile a LaTeX paper (ACM/IEEE/arXiv) to PDF and render its pages 
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, SendUserFile]
 ---
 
-<!-- vigiles:sha256:efdbe453e9cadec2 compiled from skills/render-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:ae015af73a4c8f73 compiled from skills/render-paper/SKILL.md.spec.ts -->
 
 # render-paper — .tex → PDF → readable page PNGs
 
@@ -49,8 +49,8 @@ That list was replaced on 2026-08-03; nothing about the toolchain below changed.
   `tex` block; `tex-base.jsonc` for every paper) and nowhere else. A new venue that needs a new
   package gets it there — never in a script, never here. A TeX Live without `libertine` builds an
   acmart paper GREEN in Computer Modern; that is why the files are checked, not the exit code.
-- **poppler** (`pdftotext`, `pdffonts`, `pdfinfo`) is not TeX Live: `apt-get install -y poppler-utils`
-  or `brew install poppler`.
+- **Reading the PDF** needs nothing installed: `rpp build` and `extract-pdf-facts.mjs` use pdf.js,
+  which comes with rpp. Poppler is not required.
 - **Renderer:** `pip install --quiet pymupdf` (poppler `pdftoppm`/ghostscript are often missing or
   404 on apt here; pymupdf is reliable). No `playwright install`, no external fetches.
 

@@ -10,15 +10,14 @@ after deciding to use the tool, not before.
 
 ## The programs
 
-| program                | comes from                 | which skills call it                     | what happens without it                                                                   |
-| ---------------------- | -------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `pdflatex`, `bibtex`   | TeX Live (`rpp toolchain`) | render-paper, submit-paper, camera-ready | no PDF is produced — loud                                                                 |
-| `pdfinfo`, `pdftotext` | poppler-utils              | `rpp build`, render-paper, submit-paper  | `rpp build` fails on a two-column acmart paper; other checks report that they did not run |
-| `texcount`             | TeX Live (`rpp toolchain`) | render-paper, grade-paper-writing        | the length checks cannot run                                                              |
-| `checkcites`           | TeX Live (`rpp toolchain`) | render-paper                             | nothing asks whether a bibliography entry is uncited                                      |
-| `java`                 | any JRE (21 works)         | render-paper                             | TeXtidote does not run, and **nothing else spell-checks the text**                        |
-| `python3`              | your system                | the analysis and report scripts          | those scripts do not start                                                                |
-| `tlmgr`                | TeX Live                   | the TeX installer itself                 | you cannot add a TeX package                                                              |
+| program              | comes from                 | which skills call it                     | what happens without it                                            |
+| -------------------- | -------------------------- | ---------------------------------------- | ------------------------------------------------------------------ |
+| `pdflatex`, `bibtex` | TeX Live (`rpp toolchain`) | render-paper, submit-paper, camera-ready | no PDF is produced — loud                                          |
+| `texcount`           | TeX Live (`rpp toolchain`) | render-paper, grade-paper-writing        | the length checks cannot run                                       |
+| `checkcites`         | TeX Live (`rpp toolchain`) | render-paper                             | nothing asks whether a bibliography entry is uncited               |
+| `java`               | any JRE (21 works)         | render-paper                             | TeXtidote does not run, and **nothing else spell-checks the text** |
+| `python3`            | your system                | the analysis and report scripts          | those scripts do not start                                         |
+| `tlmgr`              | TeX Live                   | the TeX installer itself                 | you cannot add a TeX package                                       |
 
 🔴 **Most of these fail QUIETLY**, which is why they are listed rather than left to be discovered.
 A missing checker and a passing checker look identical from outside, so every script here states in
@@ -70,8 +69,18 @@ alone is **1691 MB**, and acmart papers use **47 MB** of it — apt cannot insta
 comparison of every method tried (containers, apt, a GitHub Action, this) is
 [`texlive-install-decision.md`](texlive-install-decision.md).
 
-**poppler** (`pdfinfo`, `pdftotext`, `pdffonts`) is not part of TeX Live:
-`apt-get install -y poppler-utils`, or `brew install poppler` on macOS.
+## Reading the PDF: nothing to install
+
+`rpp build` and `extract-pdf-facts.mjs` read the finished PDF — page count, the fonts it draws text
+with, the last page's words — with **pdf.js**, which arrives with rpp as the npm dependency
+[`unpdf`](https://www.npmjs.com/package/unpdf). Until 2026-09-24 this took three poppler programs
+(`pdfinfo`, `pdffonts`, `pdftotext`) from the system package manager; a measurement on 25 PDFs
+found pdf.js equal on page counts and Type 3 fonts, and the last page's column heights within
+0.2 pt except on an all-Type-3 page (7.2 pt). Poppler is no longer needed by anything rpp runs.
+
+pdf.js needs **Node 22.13 or later**, which rpp requires anyway: on Node 20 it opens the same PDFs
+and reports zero fonts without an error, and rpp refuses such a read instead of reporting a
+clean font list.
 
 ## The external checkers
 

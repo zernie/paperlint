@@ -36,11 +36,7 @@ import { createHash } from "node:crypto";
 import { delimiter, join, relative } from "node:path";
 import { getParser } from "@unified-latex/unified-latex-util-parse";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
-// `declaredVenue` is the one reader of venue.json.
-import {
-  declaredVenue,
-  // @ts-expect-error — a plain .mjs script, untyped
-} from "../skills/render-paper/extract-pdf-facts.mjs";
+import { declaredVenue } from "./facts-file.ts";
 import {
   auxBib,
   bibtexExcerpt,
@@ -189,7 +185,7 @@ function documentclassOf(ast: LatexRoot | null): PaperFacts["documentclass"] {
 export function readFacts(paperDir: string): PaperFacts {
   const mainPath = join(paperDir, MAIN);
   const main = existsSync(mainPath) ? MAIN : null;
-  const venue = declaredVenue(paperDir) as { venue?: string } | null;
+  const venue = declaredVenue(paperDir);
   const ast = main ? parseTex(readFileSync(mainPath, "utf8")) : null;
   return {
     main,

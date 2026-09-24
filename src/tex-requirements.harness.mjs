@@ -71,7 +71,7 @@ check(
   "cm-super" in base.packages,
 );
 
-// The whole profile, parsed the way the balance harness reads these files — never a line of text.
+// The whole profile, parsed the way the other harnesses read these files — never a line of text.
 const templateOf = (v) =>
   ts.parseConfigFileTextToJson(
     v,

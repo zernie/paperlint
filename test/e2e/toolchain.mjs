@@ -12,9 +12,9 @@
  *      (CI restores one; the run prints which it was);
  *   2. a SECOND run exits 0, says "nothing to do", and touches nothing (it finishes in seconds);
  *   3. `rpp toolchain --check` exits 0;
- *   4. `rpp build` of the acmart fixture with PATH holding node and poppler ONLY — no system TeX
- *      Live can stand in — names rpp's cache as the engine, and the PDF carries Libertine and
- *      Biolinum and not one Computer Modern face.
+ *   4. `rpp build` of the acmart fixture with PATH holding node ONLY — no system TeX Live can
+ *      stand in, and no PDF tool either — names rpp's cache as the engine, and the PDF carries
+ *      Libertine and Biolinum and not one Computer Modern face (read with rpp's own pdf.js reader).
  *
  * It needs `RPP_TEXLIVE_DIR`: installing ~270 MB into a developer's home as a side effect of
  * `npm run check` would be exactly the unasked install rule 11 forbids. Without it the run is a
@@ -22,7 +22,7 @@
  *
  *   RPP_TEXLIVE_DIR=/some/dir node test/e2e/toolchain.mjs [--strict]
  */
-import { execFileSync, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import {
   cpSync,
   existsSync,
@@ -36,24 +36,15 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readFonts } from "../../skills/render-paper/extract-pdf-facts.mjs";
+import { fontNames, readBuilt } from "./read-pdf.mjs";
 
 const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const CLI = join(ROOT, "bin", "rpp.mjs");
 const strict = process.argv.includes("--strict");
 const dir = process.env.RPP_TEXLIVE_DIR;
 
-const which = (b) => {
-  const r = spawnSync("command", ["-v", b], { shell: true, encoding: "utf8" });
-  return r.status === 0 ? r.stdout.trim() : null;
-};
-const need = ["pdffonts", "pdftotext", "pdfinfo"];
-const absent = [
-  ...(dir ? [] : ["RPP_TEXLIVE_DIR"]),
-  ...need.filter((b) => !which(b)),
-];
-if (absent.length) {
-  const say = `toolchain-e2e: skipped — not set or not installed: ${absent.join(", ")}.`;
+if (!dir) {
+  const say = `toolchain-e2e: skipped — RPP_TEXLIVE_DIR is not set.`;
   if (!strict) {
     console.log(
       `${say}\nIt installs real TeX Live (~270 MB) and only into a directory you name.`,
@@ -122,7 +113,6 @@ try {
   const bin = join(work, "bin");
   mkdirSync(bin);
   symlinkSync(process.execPath, join(bin, "node"));
-  for (const b of need) symlinkSync(which(b), join(bin, b));
   cpSync(
     join(ROOT, "fixtures", "build-e2e", "acmart"),
     join(work, "papers", "acmart"),
@@ -147,9 +137,7 @@ try {
   const pdf = join(work, "papers", "acmart", "paper.pdf");
   check("the PDF exists", existsSync(pdf));
   if (existsSync(pdf)) {
-    const f = readFonts(
-      execFileSync("pdffonts", [pdf], { encoding: "utf8" }),
-    ).map((x) => x.name);
+    const f = fontNames(await readBuilt(pdf));
     check(
       "🔴 typeset in Libertine/Biolinum, and not one Computer Modern face",
       f.length > 0 &&

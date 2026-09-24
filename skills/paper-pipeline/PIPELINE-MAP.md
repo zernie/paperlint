@@ -110,14 +110,14 @@ them. This is the judgment layer; its mechanical parts should keep getting pushe
 
 ## Where each tier catches the same thing
 
-| defect                                | caught by                                                          |
-| ------------------------------------- | ------------------------------------------------------------------ |
-| a wall-of-text paragraph on insertion | tier 1, blocks                                                     |
-| a number that doesn't match the data  | tier 1 (post) and tier 3 (numbers)                                 |
-| a reference dropped by bibtex         | tier 2 (`.blg`) → tier 3 (build)                                   |
-| **wrong font**                        | tier 2 (`pdffonts`) — but it's PREVENTED by tier 3 (the container) |
-| a stage declared with no PDF          | tier 3, `paper-lint --gate` 🛑                                     |
-| ACM format compliance                 | **tier 4, and only tier 4**                                        |
+| defect                                | caught by                                                                    |
+| ------------------------------------- | ---------------------------------------------------------------------------- |
+| a wall-of-text paragraph on insertion | tier 1, blocks                                                               |
+| a number that doesn't match the data  | tier 1 (post) and tier 3 (numbers)                                           |
+| a reference dropped by bibtex         | tier 2 (`.blg`) → tier 3 (build)                                             |
+| **wrong font**                        | tier 2 (the facts' font list) — but it's PREVENTED by tier 3 (the container) |
+| a stage declared with no PDF          | tier 3, `paper-lint --gate` 🛑                                               |
+| ACM format compliance                 | **tier 4, and only tier 4**                                                  |
 
 ---
 
@@ -169,7 +169,7 @@ capitalization, section ordering — **nothing checks any of it**.
 **A construction found and verified against source (26.08):**
 
 ```
-banal -json  +  pdffonts   →   paper.facts.json   →   @eslint/json
+banal -json  +  pdf.js     →   paper.facts.json   →   @eslint/json
 (geometry)     (fonts)         (plain JSON)           (the official plugin)
 ```
 

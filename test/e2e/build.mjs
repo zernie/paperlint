@@ -30,7 +30,7 @@
  *
  *   node test/e2e/build.mjs [--strict]
  */
-import { execFileSync, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { PAPERS_DIR_FIELD } from "../../lib/paper-config.mjs";
 import {
   cpSync,
@@ -46,7 +46,14 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readFonts } from "../../skills/render-paper/extract-pdf-facts.mjs";
+import {
+  embeddedNames,
+  fontNames,
+  lastPageText,
+  logEmbedded,
+  readBuilt,
+  sameFonts,
+} from "./read-pdf.mjs";
 
 const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const CLI = join(ROOT, "bin", "rpp.mjs");
@@ -54,7 +61,7 @@ const strict = process.argv.includes("--strict");
 
 /**
  * The faces `acmart` typesets a paper with when its fonts ARE IN PLACE. The list comes from a
- * measurement on a live TeX Live 2023, not from the class documentation: `pdffonts` shows
+ * measurement on a live TeX Live 2023, not from the class documentation: the PDF carries
  * `LinLibertineT` (text), `LinBiolinumTB` (headings), `LinLibertineTB` (bold text).
  */
 const ACMART_FAMILIES = /^(LinLibertine|LinBiolinum)/;
@@ -80,11 +87,6 @@ function skipOrFail(say) {
   );
   process.exit(2);
 }
-
-const fonts = (pdf) =>
-  readFonts(execFileSync("pdffonts", [pdf], { encoding: "utf8" })).map(
-    (f) => f.name,
-  );
 
 let bad = 0;
 const check = (label, cond, detail = "") => {
@@ -171,15 +173,6 @@ try {
   console.log();
 
   // ── the engine the real build will use ────────────────────────────────────────────────
-  const noPoppler = ["pdffonts", "pdftotext"].filter(
-    (b) =>
-      spawnSync("command", ["-v", b], { shell: true, stdio: "ignore" })
-        .status !== 0,
-  );
-  if (noPoppler.length)
-    skipOrFail(
-      `build-e2e: skipped — this machine has no ${noPoppler.join(", ")} (poppler).`,
-    );
   const plan = spawnSync(
     process.execPath,
     [CLI, "build", "--all", "--dry-run"],
@@ -223,7 +216,8 @@ try {
   const acmartPdf = join(work, "papers", "acmart", "paper.pdf");
   check("acmart: the PDF exists", existsSync(acmartPdf));
   if (existsSync(acmartPdf)) {
-    const f = fonts(acmartPdf);
+    const facts = await readBuilt(acmartPdf);
+    const f = fontNames(facts);
     check(
       "acmart: typeset with the class's OWN fonts",
       f.length > 0 && f.every((n) => ACMART_FAMILIES.test(n)),
@@ -233,6 +227,13 @@ try {
       "🔴 acmart: and NOT ONE font of the silent substitution",
       !f.some((n) => FALLBACK_FAMILIES.test(n)),
       f.join(", "),
+    );
+    // The producer's list against the artifact's: pdfTeX names every program it embedded.
+    const logged = logEmbedded(join(work, "papers", "acmart", "paper.log"));
+    check(
+      "🔴 acmart: pdf.js's embedded fonts are exactly the ones pdfTeX logged as embedded",
+      logged.length > 0 && sameFonts(logged, embeddedNames(facts)),
+      `log: ${logged.join(", ")} · pdf.js: ${embeddedNames(facts).join(", ")}`,
     );
   }
 
@@ -244,12 +245,19 @@ try {
     existsSync(fallbackPdf),
   );
   if (existsSync(fallbackPdf)) {
-    const f = fonts(fallbackPdf);
+    const facts = await readBuilt(fallbackPdf);
+    const f = fontNames(facts);
     check(
       "and it is REJECTED by the font check, although the build was green",
       f.some((n) => FALLBACK_FAMILIES.test(n)) &&
         !f.every((n) => ACMART_FAMILIES.test(n)),
       f.join(", "),
+    );
+    const logged = logEmbedded(join(work, "papers", "fallback", "paper.log"));
+    check(
+      "fallback: and the cross-check agrees there too — pdfTeX embedded Computer Modern",
+      logged.length > 0 && sameFonts(logged, embeddedNames(facts)),
+      `log: ${logged.join(", ")} · pdf.js: ${embeddedNames(facts).join(", ")}`,
     );
   }
 
@@ -259,9 +267,10 @@ try {
   const citePdf = join(citeDir, "paper.pdf");
   check("cite: the PDF exists", existsSync(citePdf));
   if (existsSync(citePdf)) {
-    const text = execFileSync("pdftotext", [citePdf, "-"], {
-      encoding: "utf8",
-    });
+    // The cite fixture is one page, so its last page is all of its text.
+    const facts = await readBuilt(citePdf);
+    const text = lastPageText(facts);
+    check("cite: one page", facts.pages === 1, String(facts.pages));
     check(
       "cite: the citation resolved — [1] in the PDF, not [?]",
       text.includes("[1]") && !text.includes("[?]"),

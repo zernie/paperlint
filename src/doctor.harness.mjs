@@ -235,7 +235,12 @@ const runDoctor = (
   );
   check(
     "the program list is DECLARED, not baked into the printing",
-    PROGRAMS.length >= 7,
+    PROGRAMS.length >= 5,
+  );
+  check(
+    "no poppler row: rpp reads PDFs with pdf.js, which it installs itself",
+    !PROGRAMS.some((p) => /^pdf(info|fonts|totext)$/.test(p.bin)) &&
+      !/poppler/.test(none.out),
   );
   rmSync(dir, { recursive: true, force: true });
 }

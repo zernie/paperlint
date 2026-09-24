@@ -70,18 +70,6 @@ export const PROGRAMS: readonly Program[] = [
     install: TEX_INSTALL,
   },
   {
-    bin: "pdfinfo",
-    from: "poppler-utils",
-    without: "checks that read the built PDF cannot run",
-    install: "apt-get install -y poppler-utils   (macOS: brew install poppler)",
-  },
-  {
-    bin: "pdftotext",
-    from: "poppler-utils",
-    without: "the PDF text checks cannot run",
-    install: "apt-get install -y poppler-utils   (macOS: brew install poppler)",
-  },
-  {
     bin: "texcount",
     from: "TeX Live",
     without: "the length checks cannot run",

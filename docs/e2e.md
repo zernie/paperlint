@@ -61,7 +61,8 @@ pnpm a shell wrapper, and calling `node bin` measures the caller's habit instead
 `test/e2e/build.mjs`. It copies `fixtures/build-e2e/` — eight papers, none with a build script rpp
 would run — into a temporary tree, points a config at it, and runs `rpp build --all`. rpp compiles
 each paper itself with the real `pdflatex` and `bibtex`; the artifacts are then measured with
-`pdffonts` and `pdftotext`:
+rpp's own pdf.js reader from `dist/`, and the fonts are cross-checked against the list of
+programs pdfTeX writes into `paper.log`:
 
 | fixture      | what it is there to prove                                                                                                                                         |
 | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -89,7 +90,7 @@ rpp's own cache, because the runner has no other.
 
 `rpp toolchain` into `$RPP_TEXLIVE_DIR` against real CTAN; a second run must say "nothing to do"
 within seconds; `--check` must exit 0; then the `acmart` fixture is built with PATH holding `node`
-and poppler only, so no other TeX Live can stand in, and the PDF must carry Libertine and Biolinum
+only, so no other TeX Live and no PDF tool can stand in, and the PDF must carry Libertine and Biolinum
 and no Computer Modern face. Without `RPP_TEXLIVE_DIR` it is a declared skip: installing ~270 MB
 into a home directory as a side effect of `npm run check` is the unasked install rule 11 forbids.
 `src/toolchain.harness.mjs` covers the installer's logic (mirror fallback, archive check, time

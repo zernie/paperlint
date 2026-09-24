@@ -276,18 +276,6 @@ jobs:
         run: node bin/rpp.mjs toolchain
         timeout-minutes: 15
 
-      # poppler is not TeX Live: pdffonts, pdftotext and pdfinfo come from the system's package
-      # manager, and `rpp build` needs pdftotext to measure the last page of a two-column paper.
-      - name: poppler
-        run: |
-          if [ "$RUNNER_OS" = macOS ]; then
-            brew install poppler
-          else
-            sudo apt-get update -qq
-            sudo apt-get install -y --no-install-recommends poppler-utils
-          fi
-        timeout-minutes: 8
-
       # Called directly with --strict (see the install e2e step in the `gates` job).
       - name: build e2e (--strict)
         run: node test/e2e/build.mjs --strict
