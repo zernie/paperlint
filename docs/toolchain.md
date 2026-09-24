@@ -10,15 +10,15 @@ after deciding to use the tool, not before.
 
 ## The programs
 
-| program                | comes from                       | which skills call it                     | what happens without it                                            |
-| ---------------------- | -------------------------------- | ---------------------------------------- | ------------------------------------------------------------------ |
-| `pdflatex`, `bibtex`   | TeX Live                         | render-paper, submit-paper, camera-ready | no PDF is produced — loud                                          |
-| `pdfinfo`, `pdftotext` | poppler-utils                    | render-paper, submit-paper               | checks that read the built PDF report that they did not run        |
-| `texcount`             | TeX Live (`texlive-extra-utils`) | render-paper, grade-paper-writing        | the length checks cannot run                                       |
-| `checkcites`           | TeX Live                         | render-paper                             | nothing asks whether a bibliography entry is uncited               |
-| `java`                 | any JRE (21 works)               | render-paper                             | TeXtidote does not run, and **nothing else spell-checks the text** |
-| `python3`              | your system                      | the analysis and report scripts          | those scripts do not start                                         |
-| `tlmgr`                | TeX Live                         | the TeX installer itself                 | you cannot add a TeX package                                       |
+| program                | comes from                       | which skills call it                     | what happens without it                                                                   |
+| ---------------------- | -------------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `pdflatex`, `bibtex`   | TeX Live                         | render-paper, submit-paper, camera-ready | no PDF is produced — loud                                                                 |
+| `pdfinfo`, `pdftotext` | poppler-utils                    | `rpp build`, render-paper, submit-paper  | `rpp build` fails on a two-column acmart paper; other checks report that they did not run |
+| `texcount`             | TeX Live (`texlive-extra-utils`) | render-paper, grade-paper-writing        | the length checks cannot run                                                              |
+| `checkcites`           | TeX Live                         | render-paper                             | nothing asks whether a bibliography entry is uncited                                      |
+| `java`                 | any JRE (21 works)               | render-paper                             | TeXtidote does not run, and **nothing else spell-checks the text**                        |
+| `python3`              | your system                      | the analysis and report scripts          | those scripts do not start                                                                |
+| `tlmgr`                | TeX Live                         | the TeX installer itself                 | you cannot add a TeX package                                                              |
 
 🔴 **Most of these fail QUIETLY**, which is why they are listed rather than left to be discovered.
 A missing checker and a passing checker look identical from outside, so every script here states in

@@ -14,7 +14,7 @@
  * Each step says whether it applies to THIS paper and why — decided from FACTS parsed out of the
  * paper (its `\documentclass` and options, the venue named in `venue.json`), never from a config
  * flag. `rpp build` prints that plan before running anything, and `--dry-run` prints only the
- * plan. Adding a step (the `\balance` search is next) is one entry in `STEPS`.
+ * plan. Adding a step is one entry in `STEPS`; `balance` (the `\balance` search) is the third.
  *
  * ── WHAT IS PURE AND WHAT IS NOT ─────────────────────────────────────────────
  * The decision of the LaTeX loop is `latex-loop.ts`, reading the log is `latex-log.ts`; both are
@@ -22,21 +22,52 @@
  * `spawnSync` by default) and reads the files a pass left behind. Where rpp's own files live is
  * answered by `consumer.mjs`, the one module allowed to know it (rule 10).
  */
-import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import {
+  existsSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { delimiter, join, relative } from "node:path";
 import { getParser } from "@unified-latex/unified-latex-util-parse";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
-// @ts-expect-error — a plain .mjs script, untyped; `declaredVenue` is the one reader of venue.json
-import { declaredVenue } from "../skills/render-paper/extract-pdf-facts.mjs";
+// `declaredVenue` is the one reader of venue.json; `columnHeights` is the one measurement of a last
+// page's columns — the CI rule judges its output and the balance step below searches with it, so
+// the two cannot disagree about what they measured.
+import {
+  columnHeights,
+  declaredVenue,
+  // @ts-expect-error — a plain .mjs script, untyped
+} from "../skills/render-paper/extract-pdf-facts.mjs";
 import {
   auxBib,
+  balanceInSecondColumn,
   bibtexExcerpt,
   errorExcerpt,
   logMarkers,
+  overfullBoxes,
   unwrapLog,
 } from "./latex-log.ts";
+import {
+  balanceApplies,
+  balancePositions,
+  bibitemOffsets,
+  breaksLayout,
+  describeFailedScan,
+  formatColumns,
+  injectBalance,
+  isBalanced,
+  lastPdfPage,
+  latexNodes,
+  nextBalanceStep,
+  BALANCE_TOL_PT,
+  type Attempt,
+  type Baseline,
+  type Columns,
+} from "./balance.ts";
 import {
   nextStep,
   TRACKED,
@@ -80,6 +111,8 @@ export interface PaperFacts {
     readonly name: string;
     readonly options: readonly string[];
   } | null;
+  /** `\bibliography{…}` with a non-empty argument appears in `paper.tex` (parsed, not grepped). */
+  readonly bibliography: boolean;
   /** The `venue` field of `venue.json`, or null. */
   readonly venue: string | null;
   /** Paper-supplied build scripts found on disk — reported as ignored. */
@@ -94,6 +127,8 @@ export interface BuildContext {
   readonly paperDir: string;
   readonly env: NodeJS.ProcessEnv;
   readonly run: Runner;
+  /** One line of progress for a long step, REPLACING the previous one; "" clears it. */
+  readonly progress?: (line: string) => void;
 }
 
 export type StepOutcome =
@@ -123,17 +158,44 @@ function argText(arg: any): string {
     .join("");
 }
 
+/** A unified-latex AST, or null when the text does not parse. */
+function parseTex(tex: string): any {
+  try {
+    return getParser().parse(tex);
+  } catch {
+    return null;
+  }
+}
+
 /**
  * `\documentclass[opts]{name}`, read by the unified-latex parser the lint rules already use —
  * so a `\documentclass` inside a comment is a comment, not a class.
  */
 export function parseDocumentclass(tex: string): PaperFacts["documentclass"] {
-  let ast: any;
-  try {
-    ast = getParser().parse(tex);
-  } catch {
-    return null;
-  }
+  return documentclassOf(parseTex(tex));
+}
+
+/**
+ * Whether the paper calls `\bibliography{…}`. The argument must be non-empty text: a paper that
+ * redefines the command (`\let\x\bibliography`, `\renewcommand{\bibliography}`) mentions the
+ * macro without calling it, and the parser attaches no text argument to those.
+ */
+export function hasBibliography(tex: string): boolean {
+  return bibliographyOf(parseTex(tex));
+}
+
+function bibliographyOf(ast: any): boolean {
+  for (const n of latexNodes(ast))
+    if (
+      n.type === "macro" &&
+      n.content === "bibliography" &&
+      argText((n.args ?? []).find((a: any) => a.openMark === "{")).trim()
+    )
+      return true;
+  return false;
+}
+
+function documentclassOf(ast: any): PaperFacts["documentclass"] {
   const node = (ast?.content ?? []).find(
     (n: any) => n.type === "macro" && n.content === "documentclass",
   );
@@ -152,11 +214,11 @@ export function readFacts(paperDir: string): PaperFacts {
   const mainPath = join(paperDir, MAIN);
   const main = existsSync(mainPath) ? MAIN : null;
   const venue = declaredVenue(paperDir) as { venue?: string } | null;
+  const ast = main ? parseTex(readFileSync(mainPath, "utf8")) : null;
   return {
     main,
-    documentclass: main
-      ? parseDocumentclass(readFileSync(mainPath, "utf8"))
-      : null,
+    documentclass: documentclassOf(ast),
+    bibliography: bibliographyOf(ast),
     venue: venue?.venue ?? null,
     ignoredScripts: IGNORED_SCRIPTS.filter((s) =>
       existsSync(join(paperDir, s)),
@@ -252,13 +314,20 @@ const fromLatin1 = (s: string): string =>
 
 type Terminal = Extract<Step, { kind: "done" } | { kind: "fail" }>;
 
-/** Run the loop until `nextStep` says done or fail. */
-export function compile(ctx: BuildContext): {
+/**
+ * Run the loop until `nextStep` says done or fail. `seed` is history the loop did not observe
+ * itself — the balance step passes the `.bbl` rewrite there, so the loop knows the bibliography
+ * is already produced and must be read, not regenerated.
+ */
+export function compile(
+  ctx: BuildContext,
+  seed: readonly Observation[] = [],
+): {
   end: Terminal;
   latex: number;
   bibtex: number;
 } {
-  const history: Observation[] = [];
+  const history: Observation[] = [...seed];
   const opts = {
     cwd: ctx.paperDir,
     env: ctx.env,
@@ -370,8 +439,219 @@ export const compileStep: BuildStep = {
   },
 };
 
+// ── step: balance ───────────────────────────────────────────────────────────────────────
+
+/** What the balance step reads off a finished build. */
+interface Measured {
+  readonly pages: number;
+  readonly columns: Columns | null;
+  /** Layout-breaking overfull boxes in the log of the final pass. */
+  readonly overfull: number;
+  readonly secondColumn: boolean;
+}
+
+/**
+ * Measure the PDF and the log a build left: the page count and the last page's columns from ONE
+ * `pdftotext -bbox` call, the overfull boxes and balance.sty's warning from `paper.log`.
+ *
+ * 🔴 A missing pdftotext is a FAILURE here, not a skip. `lastPageColumns` in extract-pdf-facts
+ * returns null when the tool is absent, which is right for a fact extractor whose caller decides;
+ * this step IS the caller, and "could not measure" must not read as "balanced".
+ */
+function measure(
+  ctx: BuildContext,
+): { ok: true; m: Measured } | { ok: false; lines: string[] } {
+  const r = ctx.run("pdftotext", ["-bbox", `${JOB}.pdf`, "-"], {
+    cwd: ctx.paperDir,
+    env: ctx.env,
+    stdio: ["ignore", "pipe", "pipe"],
+    encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  if (r.error)
+    return {
+      ok: false,
+      lines: [
+        "pdftotext could not be started — it is not installed, or not on PATH.",
+        "rpp measures the last page's columns with poppler's pdftotext (poppler-utils): see docs/toolchain.md.",
+      ],
+    };
+  if (r.status !== 0)
+    return {
+      ok: false,
+      lines: [
+        `pdftotext exited with ${String(r.status)} on ${JOB}.pdf`,
+        ...String(r.stderr ?? "")
+          .split("\n")
+          .filter((l) => l.trim())
+          .slice(0, 5),
+      ],
+    };
+  const page = lastPdfPage(String(r.stdout ?? ""));
+  const log = unwrapLog(
+    readOr(join(ctx.paperDir, `${JOB}.log`), "latin1") ?? "",
+  );
+  return {
+    ok: true,
+    m: {
+      pages: page?.pages ?? 0,
+      columns: page
+        ? (columnHeights(page.xml, page.widthPt) as Columns | null)
+        : null,
+      overfull: overfullBoxes(log).filter(breaksLayout).length,
+      secondColumn: balanceInSecondColumn(log),
+    },
+  };
+}
+
+/** The files a pass reads back, byte for byte — so every attempt starts from the same build. */
+type Snapshot = { readonly [K in (typeof TRACKED)[number]]: Buffer | null };
+
+function snapshot(paperDir: string): Snapshot {
+  return Object.fromEntries(
+    TRACKED.map((t) => {
+      const p = join(paperDir, `${JOB}.${t}`);
+      return [t, existsSync(p) ? readFileSync(p) : null];
+    }),
+  ) as unknown as Snapshot;
+}
+
+function restore(paperDir: string, snap: Snapshot): void {
+  for (const t of TRACKED) {
+    const p = join(paperDir, `${JOB}.${t}`);
+    const body = snap[t];
+    if (body === null) rmSync(p, { force: true });
+    else writeFileSync(p, body);
+  }
+}
+
+const count = (n: number, one: string, many: string): string =>
+  `${n} ${n === 1 ? one : many}`;
+
+/**
+ * Balance the last page by placing `\balance` in the bibliography — the decision is `balance.ts`,
+ * this is the shell around it.
+ *
+ * Each attempt restores the compiled build (aux, bbl, toc, out), inserts `\balance` before one
+ * `\bibitem`, and runs the SAME loop as the compile step, seeded with the rewrite as the
+ * observation that produced the `.bbl`. Seeded that way the loop does not run bibtex (which would
+ * erase the insertion), reruns pdflatex until the aux settles — two passes when it settles at once
+ * — and ends on the `\finalpass` pass, so paper-guards judges the balanced build too.
+ *
+ * 🔴 NO POSITION WORKS ⇒ THE BUILD FAILS, and the PDF is removed with it. An unbalanced last page
+ * is the defect a publisher already returned a paper for; a green build with an unbalanced PDF
+ * would be exactly the success that hides it, and the compile step already deletes a PDF it could
+ * not stand behind. The `.bbl` is restored to what bibtex wrote, so no stray `\balance` is left.
+ * On success the `.bbl` keeps the insertion: the files on disk are the ones that made the PDF.
+ */
+export const balanceStep: BuildStep = {
+  name: "balance",
+  required: false,
+  applies: (facts) => balanceApplies(facts),
+  run: (ctx) => {
+    const tol = BALANCE_TOL_PT;
+    const first = measure(ctx);
+    if (!first.ok) return first;
+    const built = first.m;
+    if (built.columns === null)
+      return {
+        ok: true,
+        note: "balance: nothing to measure on the last page (under 60 words, or numbered lines) — left as built",
+      };
+    if (isBalanced(built.columns, tol))
+      return {
+        ok: true,
+        note: `balance: already balanced, ${formatColumns(built.columns)}`,
+      };
+
+    const bblPath = join(ctx.paperDir, `${JOB}.bbl`);
+    const bbl = readOr(bblPath, "utf8");
+    const offsets = bbl === null ? [] : bibitemOffsets(bbl);
+    if (bbl === null || offsets.length === 0)
+      return {
+        ok: false,
+        lines: [
+          `the last page is unbalanced (${formatColumns(built.columns)}), and ${JOB}.bbl holds no \\bibitem to place \\balance before`,
+        ],
+      };
+
+    const base: Baseline = {
+      pages: built.pages,
+      columns: built.columns,
+      overfull: built.overfull,
+    };
+    const snap = snapshot(ctx.paperDir);
+    const positions = balancePositions(offsets.length);
+    const attempts: Attempt[] = [];
+    let latex = 0;
+    for (;;) {
+      const step = nextBalanceStep(positions, attempts, base, tol);
+      if (step.kind === "none") {
+        restore(ctx.paperDir, snap);
+        return {
+          ok: false,
+          lines: describeFailedScan(attempts, base, offsets.length, tol),
+        };
+      }
+      if (step.kind === "chosen") {
+        // The scan stops at the first acceptable attempt, so the build on disk IS that attempt.
+        const last = attempts.at(-1);
+        if (last?.position !== step.position || last.kind !== "built")
+          throw new Error(
+            `balance: chose #${step.position + 1}, but the build on disk is from another attempt`,
+          );
+        return {
+          ok: true,
+          note:
+            `balance: \\balance before \\bibitem #${step.position + 1} of ${offsets.length}, ` +
+            `last page ${last.columns ? formatColumns(last.columns) : "?"} (was ${formatColumns(base.columns)}); ` +
+            `${count(attempts.length, "position", "positions")} tried, ${count(latex, "pdflatex pass", "pdflatex passes")}`,
+        };
+      }
+      ctx.progress?.(
+        `  balance: trying \\bibitem #${step.position + 1} of ${offsets.length}…`,
+      );
+      restore(ctx.paperDir, snap);
+      const before = hashes(ctx.paperDir);
+      writeFileSync(bblPath, injectBalance(bbl, offsets, step.position));
+      // The rewrite stands in for the bibtex run whose output it edits: it produced the .bbl the
+      // next pass must read, for exactly the citations the aux names.
+      const seed: Observation[] = [
+        {
+          step: "bibtex",
+          exitCode: 0,
+          before,
+          after: hashes(ctx.paperDir),
+          bib: bibInput(ctx.paperDir),
+          errorLines: [],
+        },
+      ];
+      const c = compile(ctx, seed);
+      latex += c.latex;
+      if (c.end.kind === "fail") {
+        attempts.push({
+          position: step.position,
+          kind: "failed",
+          lines: c.end.lines,
+        });
+        continue;
+      }
+      const m = measure(ctx);
+      if (!m.ok) {
+        restore(ctx.paperDir, snap);
+        return m;
+      }
+      attempts.push({ position: step.position, kind: "built", ...m.m });
+    }
+  },
+};
+
 /** The build, in order. A new step is one entry here. */
-export const STEPS: readonly BuildStep[] = [inputsStep, compileStep];
+export const STEPS: readonly BuildStep[] = [
+  inputsStep,
+  compileStep,
+  balanceStep,
+];
 
 // ── the command ─────────────────────────────────────────────────────────────────────────
 
@@ -392,6 +672,21 @@ export function formatPlan(plan: readonly PlanLine[]): string[] {
 }
 
 /**
+ * Progress on a terminal: one line, rewritten in place and cleared at the end of the step, so a
+ * scan over 27 positions prints one line and not 27. Off a terminal (CI, a pipe) it prints
+ * nothing — a log full of carriage returns is worse than silence, and the result line reports
+ * how many positions were tried.
+ */
+export function ttyProgress(
+  stream: NodeJS.WriteStream = process.stderr,
+): (line: string) => void {
+  if (!stream.isTTY) return () => {};
+  return (line) => {
+    stream.write(`\r\x1b[K${line}`);
+  };
+}
+
+/**
  * 🔴 A FAILED BUILD LEAVES NO PDF. An old paper.pdf beside a red build looks current, and "the PDF
  * is there" is exactly what a human checks first.
  */
@@ -407,6 +702,7 @@ export function buildPaper(
     env = process.env,
     steps = STEPS,
     log = console.log,
+    progress = ttyProgress(),
     // 🔴 `--dry-run` must be a DECLARED option here, not only in the CLI: options destructuring
     // swallows an unknown key silently, and the first version of this flag ran a full build and
     // rewrote paper.pdf while looking like a verbose dry run.
@@ -417,6 +713,7 @@ export function buildPaper(
     env?: NodeJS.ProcessEnv;
     steps?: readonly BuildStep[];
     log?: (line: string) => void;
+    progress?: (line: string) => void;
     dryRun?: boolean;
   } = {},
 ): BuildResult {
@@ -447,7 +744,8 @@ export function buildPaper(
   const notes: string[] = [];
   for (const [i, step] of steps.entries()) {
     if (!plan[i]?.applies) continue;
-    const out = step.run({ paperDir, env: stepEnv, run });
+    const out = step.run({ paperDir, env: stepEnv, run, progress });
+    progress("");
     if (!out.ok) {
       removePdf(paperDir);
       return {

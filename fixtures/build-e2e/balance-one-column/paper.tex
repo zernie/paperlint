@@ -1,0 +1,13 @@
+% acmart in a ONE-column format, with a bibliography: the balance step must be SKIPPED, and the plan
+% must say why. acmsmall sets its title with \box\mktitle@bx\par and never opens \twocolumn
+% (acmart.cls v2.03), so there is no second column to balance against.
+\documentclass[acmsmall,nonacm]{acmart}
+\begin{document}
+\title{A one-column fixture}
+\author{A. Author}
+\affiliation{\institution{X University}\city{Almaty}\country{Kazakhstan}}
+\maketitle
+One column only, citing \cite{ref01}.
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{refs}
+\end{document}
