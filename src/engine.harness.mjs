@@ -112,12 +112,8 @@ const PKGS = {
 };
 check(
   "missingPackages: matched by FILE NAME of each printed path, sorted",
-  JSON.stringify(
-    missingPackages(
-      PKGS,
-      "/t/tex/latex/acmart/acmart.cls\n/t/tex/latex/base/latex.ltx\n",
-    ),
-  ) === '["latex","libertine"]',
+  JSON.stringify(missingPackages(PKGS, "/t/tex/latex/acmart/acmart.cls\n")) ===
+    '["latex","libertine"]',
 );
 check(
   "missingPackages: one proof of two missing is enough to count the package missing",
