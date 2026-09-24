@@ -441,9 +441,11 @@ try {
     log: quiet,
     engine: async () => ({}),
   });
+  // Read only if present: a deleted file must fail THIS assertion, not throw ENOENT before it.
+  const bodyOf = (p) => (existsSync(p) ? readFileSync(p, "utf8") : null);
   check(
     "🔴 buildPapers --dry-run: the PDF on disk is untouched, and nothing ran",
-    readFileSync(join(dryStale, "paper.pdf"), "utf8") === "%PDF-untouched" &&
+    bodyOf(join(dryStale, "paper.pdf")) === "%PDF-untouched" &&
       dsTex.calls.length === 0 &&
       ds.kind === "ran" &&
       ds.results[0].dry === true,
@@ -466,7 +468,7 @@ try {
     "a success: the PDF on disk is the one this run wrote, and nothing says 'removed'",
     fr.kind === "ran" &&
       fr.results[0].status === "built" &&
-      readFileSync(join(fresh, "paper.pdf"), "utf8") === "%PDF-fake" &&
+      bodyOf(join(fresh, "paper.pdf")) === "%PDF-fake" &&
       !frLog.some((l) => l.includes("removed")),
   );
 
