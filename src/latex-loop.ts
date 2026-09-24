@@ -2,18 +2,16 @@
  * THE DECISION of the LaTeX build loop: given what the runs so far observed, what runs next.
  *
  * PURE. No disk, no process, no clock. The shell in `build.ts` runs a step, records what it saw
- * as an `Observation`, appends it to the history and asks again. Every branch of the loop is
- * therefore a row in a table test (`latex-loop.harness.mjs`), not a scenario that needs TeX.
+ * as an `Observation`, appends it to the history and asks `nextStep(summarize(history))` again.
+ * Both halves are table tests (`latex-loop.harness.mjs`), not scenarios that need TeX.
  *
- * ── THE LOOP, in the order `nextStep` checks it ─────────────────────────────
- *   1. nothing ran yet                                  → latex
- *   2. the last run exited non-zero                     → fail, naming that step
- *   3. the last run was the FINAL latex pass            → done
- *   4. the aux names a bibliography, and bibtex has not
- *      yet run on exactly these citations + databases   → bibtex
- *   5. the last run changed a tracked file, or the log
- *      asked for a rerun                                → latex (fail once the cap is spent)
- *   6. otherwise the document has converged             → latex, FINAL
+ * ── THE LOOP: `summarize` reduces the history to a `State`, and `nextStep` asks four questions ──
+ *   1. did the last program fail?                          → fail, with its error lines
+ *   2. did the citations, a .bib or the style change since
+ *      bibtex last ran?                                    → bibtex
+ *   3. did the last pass change a tracked file, or did the
+ *      log ask for a rerun?                                → latex (fail after MAX_PASSES)
+ *   4. otherwise                                           → one FINAL latex pass, then done
  *
  * 🔴 WHY A FINAL PASS AFTER CONVERGENCE. `paper-guards.tex`, shipped by this package, turns an
  * undefined `\ref` or `\cite` into a BUILD FAILURE — but only on a pass that defines
@@ -92,14 +90,9 @@ export type Observation =
       readonly errorLines: readonly string[];
     };
 
-/** Why another pass is needed: a tracked file changed, or the log asked for it. */
-export type RerunReason =
-  | { readonly kind: "changed"; readonly files: readonly Tracked[] }
-  | { readonly kind: "marker"; readonly markers: readonly LogMarker[] };
-
 export type FailCause =
   | { readonly kind: "exit"; readonly code: number }
-  | { readonly kind: "no-convergence"; readonly reason: RerunReason };
+  | { readonly kind: "no-convergence"; readonly unsettled: readonly string[] };
 
 export type Step =
   | { readonly kind: "latex"; readonly final: boolean }
@@ -120,6 +113,45 @@ export type Step =
 /** Non-final pdflatex passes allowed before the build is declared non-converging. */
 export const MAX_PASSES = 5;
 
+/** The history, reduced to the four questions `nextStep` asks. */
+export type State = {
+  readonly failed: {
+    readonly step: "latex" | "bibtex";
+    readonly cause: FailCause;
+    readonly lines: readonly string[];
+  } | null;
+  /** Citations, databases, style or `.bib` content changed since bibtex last ran. */
+  readonly bibOutdated: boolean;
+  /** Tracked files the last pass changed (`paper.aux`), or the rerun markers its log printed. */
+  readonly unsettled: readonly string[];
+  /** Non-final pdflatex passes so far. */
+  readonly latexPasses: number;
+  readonly finalDone: boolean;
+  /** Undefined-reference summaries in the log of the final pass. */
+  readonly warnings: readonly LogMarker[];
+};
+
+export function nextStep(s: State): Step {
+  if (s.failed) return { kind: "fail", ...s.failed };
+  if (s.finalDone) return { kind: "done", warnings: s.warnings };
+  if (s.bibOutdated) return { kind: "bibtex" };
+  if (s.unsettled.length === 0) return { kind: "latex", final: true };
+  if (s.latexPasses < MAX_PASSES) return { kind: "latex", final: false };
+  return noConvergence(s.unsettled);
+}
+
+const noConvergence = (unsettled: readonly string[]): Step => ({
+  kind: "fail",
+  step: "latex",
+  cause: { kind: "no-convergence", unsettled },
+  lines: [
+    `the build does not converge: after ${MAX_PASSES} pdflatex passes, the last one still changed or asked to rerun: ${unsettled.join(", ")}.`,
+    `A document that rewrites its own inputs on every pass (filecontents* with [overwrite], a`,
+    `float that moves the label it depends on) never settles; stopping here instead of shipping`,
+    `a PDF with stale cross-references.`,
+  ],
+});
+
 /** The tracked files whose digest differs between two snapshots. */
 export function changedFiles(before: Hashes, after: Hashes): Tracked[] {
   return TRACKED.filter((f) => before[f] !== after[f]);
@@ -129,79 +161,45 @@ const sameBib = (a: BibInput, b: BibInput): boolean =>
   JSON.stringify(a) === JSON.stringify(b);
 
 /**
- * Why the last run leaves the document stale, or null when it does not.
- *
- * After a latex pass: any tracked file it changed, else any rerun marker in its log. After a
- * bibtex run: a changed `.bbl` (the next pass must read it). An unchanged `.bbl` changes
- * nothing, and the verdict of the latex pass before it stands.
+ * What the last run left unsettled. Walking back: a run that changed a tracked file answers with
+ * those files; a latex pass that changed none answers with the rerun markers in its log. A bibtex
+ * run that left the `.bbl` byte-identical changes nothing, so the pass before it answers.
  */
-export function rerunReason(
-  history: readonly Observation[],
-): RerunReason | null {
-  for (let i = history.length - 1; i >= 0; i--) {
-    const o = history[i];
-    if (!o) break;
+function unsettledBy(history: readonly Observation[]): string[] {
+  if (history.length === 0) return ["paper.aux"]; // no pass has written it yet
+  for (const o of history.toReversed()) {
     const files = changedFiles(o.before, o.after);
-    if (files.length > 0) return { kind: "changed", files };
-    if (o.step === "latex") {
-      const markers = o.markers.filter((m) => RERUN.includes(m));
-      return markers.length > 0 ? { kind: "marker", markers } : null;
-    }
+    if (files.length > 0) return files.map((f) => `paper.${f}`);
+    if (o.step === "latex") return o.markers.filter((m) => RERUN.includes(m));
   }
-  return null;
+  return [];
 }
 
-export function describeReason(reason: RerunReason): string {
-  return reason.kind === "changed"
-    ? `paper.${reason.files.join(", paper.")} still changes on every pass`
-    : `the log still asks for a rerun (${reason.markers.join(", ")})`;
-}
-
-export function nextStep(history: readonly Observation[]): Step {
+export function summarize(history: readonly Observation[]): State {
   const last = history.at(-1);
-  if (!last) return { kind: "latex", final: false };
-
-  if (last.exitCode !== 0)
-    return {
-      kind: "fail",
-      step: last.step,
-      cause: { kind: "exit", code: last.exitCode },
-      lines: last.errorLines,
-    };
-
-  if (last.step === "latex" && last.final)
-    return {
-      kind: "done",
-      warnings: last.markers.filter(
-        (m) => m === "undefined-references" || m === "undefined-citations",
-      ),
-    };
-
   const latexRuns = history.filter((o) => o.step === "latex");
   const lastLatex = latexRuns.at(-1);
   const lastBibtex = history.filter((o) => o.step === "bibtex").at(-1);
-  if (
-    lastLatex &&
-    lastLatex.bib.kind === "needed" &&
-    (!lastBibtex || !sameBib(lastBibtex.bib, lastLatex.bib))
-  )
-    return { kind: "bibtex" };
-
-  const reason = rerunReason(history);
-  if (reason) {
-    if (latexRuns.length >= MAX_PASSES)
-      return {
-        kind: "fail",
-        step: "latex",
-        cause: { kind: "no-convergence", reason },
-        lines: [
-          `the build does not converge: after ${MAX_PASSES} pdflatex passes ${describeReason(reason)}.`,
-          `A document that rewrites its own inputs on every pass (filecontents* with [overwrite], a`,
-          `float that moves the label it depends on) never settles; stopping here instead of shipping`,
-          `a PDF with stale cross-references.`,
-        ],
-      };
-    return { kind: "latex", final: false };
-  }
-  return { kind: "latex", final: true };
+  return {
+    failed:
+      last && last.exitCode !== 0
+        ? {
+            step: last.step,
+            cause: { kind: "exit", code: last.exitCode },
+            lines: last.errorLines,
+          }
+        : null,
+    bibOutdated:
+      lastLatex?.bib.kind === "needed" &&
+      !(lastBibtex && sameBib(lastBibtex.bib, lastLatex.bib)),
+    unsettled: unsettledBy(history),
+    latexPasses: latexRuns.filter((o) => !o.final).length,
+    finalDone: last?.step === "latex" && last.final,
+    warnings:
+      last?.step === "latex"
+        ? last.markers.filter(
+            (m) => m === "undefined-references" || m === "undefined-citations",
+          )
+        : [],
+  };
 }

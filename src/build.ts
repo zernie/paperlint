@@ -70,6 +70,7 @@ import {
 } from "./balance.ts";
 import {
   nextStep,
+  summarize,
   TRACKED,
   type BibInput,
   type Hashes,
@@ -344,7 +345,7 @@ export function compile(
   let latex = 0;
   let bibtex = 0;
   for (;;) {
-    const step = nextStep(history);
+    const step = nextStep(summarize(history));
     if (step.kind === "done" || step.kind === "fail")
       return { end: step, latex, bibtex };
     const before = hashes(ctx.paperDir);
