@@ -63,16 +63,15 @@ would run — into a temporary tree, points a config at it, and runs `rpp build 
 each paper itself with the real `pdflatex` and `bibtex`; the artifacts are then measured with
 `pdffonts` and `pdftotext`:
 
-| fixture              | what it is there to prove                                                                                                                                                                                     |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `acmart`             | a real `\documentclass{acmart}` source builds, and the PDF carries the class's **own** font families — not one family of the silent substitution                                                              |
-| `fallback`           | the same document with the fonts missing still **builds green**, and is **rejected** by the font check. The failure is in the artifact, not in the exit code                                                  |
-| `cite`               | the bibtex path: the PDF shows `[1]`, not `[?]`, and no `??`. Its `build.sh` would leave a trace if run — it must not run, and the run must say it is ignored                                                 |
-| `guards`             | `\input{paper-guards}` resolves with no configuration, because rpp puts its own venues directory on `TEXINPUTS`                                                                                               |
-| `balance`            | a two-column acmart paper whose last page comes out 621.5 / 264.8 pt: the balance step finds a `\balance` position, the PDF's last page is **measured** balanced, and the final pass was the `\finalpass` one |
-| `balance-one-column` | acmart `acmsmall` with a bibliography: the balance step is skipped, and the plan says it is one-column                                                                                                        |
-| `broken`             | a failing build names pdflatex and its exit code, quotes the error line and its `l.NNN` context, and deletes the stale `paper.pdf` planted before the run                                                     |
-| `no-source`          | a paper with no `paper.tex` is named separately, and the run as a whole is a failure                                                                                                                          |
+| fixture      | what it is there to prove                                                                                                                                         |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `acmart`     | a real `\documentclass{acmart}` source builds, and the PDF carries the class's **own** font families — not one family of the silent substitution                  |
+| `fallback`   | the same document with the fonts missing still **builds green**, and is **rejected** by the font check. The failure is in the artifact, not in the exit code      |
+| `cite`       | the bibtex path: the PDF shows `[1]`, not `[?]`, and no `??`. Its `build.sh` would leave a trace if run — it must not run, and the run must say it is ignored     |
+| `guards`     | `\input{paper-guards}` resolves with no configuration, because rpp puts its own venues directory on `TEXINPUTS`                                                   |
+| `unbalanced` | a two-column acmart paper whose last page comes out 621.5 / 264.8 pt builds **green**: the build does not judge the layout, and nothing rewrites its bibliography |
+| `broken`     | a failing build names pdflatex and its exit code, quotes the error line and its `l.NNN` context, and deletes the stale `paper.pdf` planted before the run         |
+| `no-source`  | a paper with no `paper.tex` is named separately, and the run as a whole is a failure                                                                              |
 
 The `fallback` row is the point of the whole file. `acmart.cls` checks for `libertine.sty`,
 `zi4.sty` and `newtxmath.sty`, and failing to find any of them sets `\@ACM@newfontsfalse` and

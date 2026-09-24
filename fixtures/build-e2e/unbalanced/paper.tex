@@ -1,20 +1,17 @@
-% A two-column acmart paper whose last page needs balancing. Measured 2026-09-24 on TeX Live 2023:
-% built plainly, the last page ends at 621.5 / 264.8 pt; with \balance before any of the first
-% seventeen \bibitem's it ends at 421.2 / 454.4. So the balance step must find a position, and the
-% e2e measures the PDF it leaves rather than trusting the step's own report.
+% A two-column acmart paper whose last page comes out UNBALANCED. Measured 2026-09-24 on TeX Live
+% 2023: the last page ends at 621.5 / 264.8 pt. rpp build does not touch that (it no longer judges
+% layout); the e2e checks the build leaves it as TeX set it, and that the optional lint rule
+% pdf/last-page-balance reports it once a consumer turns the rule on.
 % Tuned by length: one section fewer leaves the right column nearly empty, one more pushes the
 % bibliography onto a third page. Change the text and re-measure before trusting the numbers above.
 \documentclass[sigconf,nonacm]{acmart}
 \input{paper-guards}
-% The e2e reads this line in the log of the LAST pdflatex run: the balanced build must still end on
-% the \finalpass pass that arms paper-guards.
-\AtEndDocument{\ifdefined\finalpass\typeout{rpp-e2e: final pass}\fi}
 \newcommand{\sentence}{Balancing the columns of the last page is a requirement of the publisher, and
   the class option that promises it does nothing, because it calls the balancing macro from the
   second column. }
 \newcommand{\para}{\sentence\sentence\sentence\sentence\sentence\sentence}
 \begin{document}
-\title{A fixture whose last page needs balancing}
+\title{A fixture whose last page is unbalanced}
 \author{A. Author}
 \affiliation{\institution{X University}\city{Almaty}\country{Kazakhstan}}
 \maketitle

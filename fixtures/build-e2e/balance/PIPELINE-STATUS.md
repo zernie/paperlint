@@ -1,3 +1,0 @@
-# Fixture
-
-Stage: draft

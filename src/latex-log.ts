@@ -232,39 +232,3 @@ export function auxBib(
     style: acc.style,
   };
 }
-
-/**
- * Every overfull box a log reports, with its size. TeX's own two spellings, word for word from
- * TeX Live 2023 logs (2026-09-24):
- *
- *   Overfull \hbox (1.2pt too wide) in paragraph at lines 10--12
- *   Overfull \vbox (1.503pt too high) has occurred while \output is active []
- *
- * Whether a box BREAKS the layout is a judgement and lives with the step that makes it
- * (`breaksLayout` in `balance.ts`); this reads the facts.
- */
-export function overfullBoxes(
-  lines: readonly string[],
-): { box: "hbox" | "vbox"; pt: number }[] {
-  const out: { box: "hbox" | "vbox"; pt: number }[] = [];
-  for (const line of lines) {
-    const m = /^Overfull \\([hv])box \(([\d.]+)pt too (?:wide|high)\)/.exec(
-      line,
-    );
-    if (m) out.push({ box: m[1] === "h" ? "hbox" : "vbox", pt: Number(m[2]) });
-  }
-  return out;
-}
-
-/**
- * balance.sty's warning that `\balance` ran in the second column, where it has no effect:
- *
- *   Package balance Warning: You have called \balance in second column
- *   (balance)                Columns might not be balanced.
- */
-export const balanceInSecondColumn = (lines: readonly string[]): boolean =>
-  lines.some((l) =>
-    l.startsWith(
-      "Package balance Warning: You have called \\balance in second column",
-    ),
-  );

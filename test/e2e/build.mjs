@@ -46,10 +46,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  columnHeights,
-  readFonts,
-} from "../../skills/render-paper/extract-pdf-facts.mjs";
+import { readFonts } from "../../skills/render-paper/extract-pdf-facts.mjs";
 
 const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const CLI = join(ROOT, "bin", "rpp.mjs");
@@ -293,7 +290,7 @@ try {
   );
 
   console.log();
-  console.log("the last page of a two-column acmart paper is balanced");
+  console.log("the build does not judge the layout");
   // The plan and result lines of ONE paper: its name, then the indented lines under it.
   const block = (name) => {
     const lines = out.split("\n");
@@ -302,65 +299,21 @@ try {
     const end = lines.findIndex((l, i) => i > at && !l.startsWith(" "));
     return lines.slice(at, end < 0 ? undefined : end).join("\n");
   };
-  const bal = block("balance");
+  const unb = block("unbalanced");
   check(
-    "balance: the plan says the step applies, and why",
-    bal.includes(
-      "  balance: acmart sigconf is two-column — will place \\balance in the bibliography",
-    ),
-    bal,
+    "unbalanced: a two-column acmart paper with an unbalanced last page builds GREEN",
+    unb.includes("✓ paper.pdf") &&
+      existsSync(join(work, "papers", "unbalanced", "paper.pdf")),
+    unb,
   );
   check(
-    "balance: the result names the chosen position and both heights",
-    /balance: \\balance before \\bibitem #\d+ of 30, last page [\d.]+ \/ [\d.]+ pt \(was [\d.]+ \/ [\d.]+ pt\)/.test(
-      bal,
-    ),
-    bal,
-  );
-  const balPdf = join(work, "papers", "balance", "paper.pdf");
-  check("balance: the PDF exists", existsSync(balPdf));
-  if (existsSync(balPdf)) {
-    // Measured HERE, with the tool, not taken from the step's own report: the last page of the
-    // bbox output, split by the middle of the page — the same function the CI rule uses.
-    const xml = execFileSync("pdftotext", ["-bbox", balPdf, "-"], {
-      encoding: "utf8",
-    });
-    const pages = [
-      ...xml.matchAll(
-        /<page width="([\d.]+)" height="[\d.]+">([\s\S]*?)<\/page>/g,
-      ),
-    ];
-    const last = pages.at(-1);
-    const cols = last ? columnHeights(last[2], Number(last[1])) : null;
-    check(
-      "🔴 balance: the PDF's last page IS balanced — columns within 120 pt (unbalanced it is 621.5 / 264.8)",
-      cols !== null && Math.abs(cols[0] - cols[1]) <= 120,
-      JSON.stringify(cols),
-    );
-  }
-  check(
-    "🔴 balance: the balanced build ended on the \\finalpass pass (paper-guards armed)",
-    existsSync(join(work, "papers", "balance", "paper.log")) &&
-      readFileSync(
-        join(work, "papers", "balance", "paper.log"),
-        "latin1",
-      ).includes("rpp-e2e: final pass"),
-  );
-  const one = block("balance-one-column");
-  check(
-    "one-column acmart with a bibliography: the step is SKIPPED, and the plan says why",
-    one.includes(
-      "  balance: skipped — acmart acmsmall is one-column; there is no last page to balance",
-    ),
-    one,
-  );
-  check(
-    "one-column: and the paper still builds",
-    existsSync(join(work, "papers", "balance-one-column", "paper.pdf")),
-  );
-  check(
-    "article (cite): skipped as not acmart",
-    block("cite").includes("  balance: skipped — article is not acmart"),
+    "🔴 unbalanced: the plan has no balance step, and nothing rewrote the bibliography",
+    !/^ {2}balance:/m.test(out) &&
+      !readFileSync(
+        join(work, "papers", "unbalanced", "paper.bbl"),
+        "utf8",
+      ).includes("\\balance"),
+    unb,
   );
 
   console.log();

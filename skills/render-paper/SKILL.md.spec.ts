@@ -66,7 +66,8 @@ npx rpp build <paper-dir>
 \`\`\`
 It picks a TeX Live that has every package the venue declares (rpp's own, else one on PATH),
 runs pdflatex and bibtex until the references settle, fails on an undefined \`\\ref\`/\`\\cite\`
-through \`paper-guards.tex\`, and balances the last page of a two-column acmart paper. Without a
+through \`paper-guards.tex\`. It does not judge the layout: a balanced last page is not its
+business. Without a
 terminal and without a qualifying TeX Live it stops with one line naming \`npx rpp toolchain\`.
 Check the last log anyway: \`grep -iE "Fatal|Output written" \` and
 \`grep -ciE "Undefined control|Citation.*undefined|Reference.*undefined"\` (must be 0).

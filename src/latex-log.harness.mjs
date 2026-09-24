@@ -17,8 +17,6 @@ const {
   isErrorLine,
   bibtexExcerpt,
   auxBib,
-  overfullBoxes,
-  balanceInSecondColumn,
   MAX_PRINT_LINE,
 } = await import(join(HERE, "latex-log.ts"));
 
@@ -208,39 +206,6 @@ check(
   "a self-including aux does not loop forever",
   auxBib("\\@input{paper.aux}\n\\citation{x}", () => "\\@input{paper.aux}")
     .citations.length === 1,
-);
-
-// ── overfull boxes and balance.sty's warning ───────────────────────────────────────────
-// Both lines copied from TeX Live 2023 logs (2026-09-24): the vbox one from the real paper at a
-// balanced position, the hbox one in TeX's standard paragraph form.
-const boxes = overfullBoxes([
-  "Overfull \\hbox (12.34pt too wide) in paragraph at lines 10--12",
-  "Overfull \\vbox (1.503pt too high) has occurred while \\output is active []",
-  "Underfull \\hbox (badness 10000) in paragraph at lines 3--4",
-  "an Overfull \\hbox (9pt too wide) quoted mid-line is not TeX speaking",
-]);
-check(
-  "overfull: both kinds, with their sizes — underfull and mid-line quotes are not counted",
-  JSON.stringify(boxes) ===
-    JSON.stringify([
-      { box: "hbox", pt: 12.34 },
-      { box: "vbox", pt: 1.503 },
-    ]),
-);
-check(
-  "a clean log has no overfull box",
-  overfullBoxes(["(./paper.tex)"]).length === 0,
-);
-check(
-  "balance.sty's second-column warning is read",
-  balanceInSecondColumn([
-    "Package balance Warning: You have called \\balance in second column",
-    "(balance)                Columns might not be balanced.",
-  ]),
-);
-check(
-  "…and a log without it is not",
-  !balanceInSecondColumn(["Package natbib Warning: Citation `x' undefined"]),
 );
 
 console.log(

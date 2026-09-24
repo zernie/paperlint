@@ -14,7 +14,15 @@
  * Each step says whether it applies to THIS paper and why — decided from FACTS parsed out of the
  * paper (its `\documentclass` and options, the venue named in `venue.json`), never from a config
  * flag. `rpp build` prints that plan before running anything, and `--dry-run` prints only the
- * plan. Adding a step is one entry in `STEPS`; `balance` (the `\balance` search) is the third.
+ * plan. Adding a step is one entry in `STEPS`.
+ *
+ * ── WHAT THE BUILD DOES NOT DO: JUDGE THE LAYOUT ───────────────────────────
+ * Until 2026-09-24 a third step searched for a `\balance` position that evened out the last page's
+ * columns, rebuilding once per `\bibitem`, and failed the build (deleting the PDF) when none worked.
+ * It was removed: only some venues require a balanced last page, every mechanism for producing one
+ * is documented by its own authors as unreliable, and a build step has no severity, no suppression
+ * and no per-venue switch. Balance is now an optional lint rule over the facts this build writes
+ * (`pdf/last-page-balance`, off unless the consumer turns it on).
  *
  * ── WHAT IS PURE AND WHAT IS NOT ─────────────────────────────────────────────
  * The decision of the LaTeX loop is `latex-loop.ts`, reading the log is `latex-log.ts`; both are
@@ -22,55 +30,24 @@
  * `spawnSync` by default) and reads the files a pass left behind. Where rpp's own files live is
  * answered by `consumer.mjs`, the one module allowed to know it (rule 10).
  */
-import {
-  existsSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { delimiter, join, relative } from "node:path";
 import { getParser } from "@unified-latex/unified-latex-util-parse";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
-// `declaredVenue` is the one reader of venue.json; `columnHeights` is the one measurement of a last
-// page's columns — the CI rule judges its output and the balance step below searches with it, so
-// the two cannot disagree about what they measured.
+// `declaredVenue` is the one reader of venue.json.
 import {
-  columnHeights,
   declaredVenue,
   // @ts-expect-error — a plain .mjs script, untyped
 } from "../skills/render-paper/extract-pdf-facts.mjs";
 import {
   auxBib,
-  balanceInSecondColumn,
   bibtexExcerpt,
   errorExcerpt,
   logMarkers,
-  overfullBoxes,
   unwrapLog,
 } from "./latex-log.ts";
-import {
-  balanceApplies,
-  balancePositions,
-  bibitemOffsets,
-  breaksLayout,
-  describeFailedScan,
-  formatColumns,
-  injectBalance,
-  isBalanced,
-  lastPdfPage,
-  latexNodes,
-  nextBalanceStep,
-  BALANCE_TOL_PT,
-  type Attempt,
-  type LatexArgument,
-  type LatexNode,
-  type LatexRoot,
-  type Baseline,
-  type Columns,
-} from "./balance.ts";
 import {
   nextStep,
   summarize,
@@ -115,8 +92,6 @@ export interface PaperFacts {
     readonly name: string;
     readonly options: readonly string[];
   } | null;
-  /** `\bibliography{…}` with a non-empty argument appears in `paper.tex` (parsed, not grepped). */
-  readonly bibliography: boolean;
   /** The `venue` field of `venue.json`, or null. */
   readonly venue: string | null;
   /** Paper-supplied build scripts found on disk — reported as ignored. */
@@ -131,8 +106,6 @@ export interface BuildContext {
   readonly paperDir: string;
   readonly env: NodeJS.ProcessEnv;
   readonly run: Runner;
-  /** One line of progress for a long step, REPLACING the previous one; "" clears it. */
-  readonly progress?: (line: string) => void;
 }
 
 export type StepOutcome =
@@ -152,6 +125,17 @@ export interface BuildStep {
 }
 
 // ── facts ───────────────────────────────────────────────────────────────────────────────
+
+/**
+ * unified-latex's own AST types, reached through the parser this package declares. The types
+ * package behind it is a transitive dependency, and importing it by name would be depending on it
+ * without declaring it.
+ */
+type LatexRoot = ReturnType<ReturnType<typeof getParser>["parse"]>;
+type LatexNode = LatexRoot["content"][number];
+type LatexArgument = NonNullable<
+  Extract<LatexNode, { type: "macro" }>["args"]
+>[number];
 
 type LatexMacro = Extract<LatexNode, { type: "macro" }>;
 
@@ -187,25 +171,6 @@ export function parseDocumentclass(tex: string): PaperFacts["documentclass"] {
   return documentclassOf(parseTex(tex));
 }
 
-/**
- * Whether the paper calls `\bibliography{…}`. The argument must be non-empty text: a paper that
- * redefines the command (`\let\x\bibliography`, `\renewcommand{\bibliography}`) mentions the
- * macro without calling it, and the parser attaches no text argument to those.
- */
-export function hasBibliography(tex: string): boolean {
-  return bibliographyOf(parseTex(tex));
-}
-
-function bibliographyOf(ast: LatexRoot | null): boolean {
-  for (const n of latexNodes(ast))
-    if (
-      isMacro(n, "bibliography") &&
-      argText(n.args?.find((a) => a.openMark === "{")).trim()
-    )
-      return true;
-  return false;
-}
-
 function documentclassOf(ast: LatexRoot | null): PaperFacts["documentclass"] {
   const node = (ast?.content ?? []).find((n): n is LatexMacro =>
     isMacro(n, "documentclass"),
@@ -229,7 +194,6 @@ export function readFacts(paperDir: string): PaperFacts {
   return {
     main,
     documentclass: documentclassOf(ast),
-    bibliography: bibliographyOf(ast),
     venue: venue?.venue ?? null,
     ignoredScripts: IGNORED_SCRIPTS.filter((s) =>
       existsSync(join(paperDir, s)),
@@ -388,20 +352,13 @@ function bibtexPass(ctx: BuildContext, opts: SpawnOptions): Observation | null {
   };
 }
 
-/**
- * Run the loop until `nextStep` says done or fail. `seed` is history the loop did not observe
- * itself — the balance step passes the `.bbl` rewrite there, so the loop knows the bibliography
- * is already produced and must be read, not regenerated.
- */
-export function compile(
-  ctx: BuildContext,
-  seed: readonly Observation[] = [],
-): {
+/** Run the loop until `nextStep` says done or fail. */
+export function compile(ctx: BuildContext): {
   end: Terminal;
   latex: number;
   bibtex: number;
 } {
-  const history: Observation[] = [...seed];
+  const history: Observation[] = [];
   const opts = spawnOptions(ctx);
   const runs = { latex: 0, bibtex: 0 };
   for (;;) {
@@ -464,9 +421,8 @@ export const compileStep: BuildStep = {
     }
     // 🔴 EXIT 0 IS NOT A PDF. pdflatex on a document with no pages prints "No pages of output."
     // and exits 0. Existence is enough to know THIS run wrote it: `buildPapers` deleted paper.pdf
-    // before anything ran, so no timestamp comparison is needed. Checked here and not after the
-    // last step, because the balance step reads the PDF and would fail with pdftotext's complaint
-    // instead of this one.
+    // before anything ran, so no timestamp comparison is needed. Checked here, in the step that
+    // wrote it, so a later step that reads the PDF never sees this case as its own failure.
     if (!existsSync(join(ctx.paperDir, `${JOB}.pdf`)))
       return {
         ok: false,
@@ -482,270 +438,8 @@ export const compileStep: BuildStep = {
   },
 };
 
-// ── step: balance ───────────────────────────────────────────────────────────────────────
-
-/** What the balance step reads off a finished build. */
-interface Measured {
-  readonly pages: number;
-  readonly columns: Columns | null;
-  /** Layout-breaking overfull boxes in the log of the final pass. */
-  readonly overfull: number;
-  readonly secondColumn: boolean;
-}
-
-/**
- * Measure the PDF and the log a build left: the page count and the last page's columns from ONE
- * `pdftotext -bbox` call, the overfull boxes and balance.sty's warning from `paper.log`.
- *
- * 🔴 A missing pdftotext is a FAILURE here, not a skip. `lastPageColumns` in extract-pdf-facts
- * returns null when the tool is absent, which is right for a fact extractor whose caller decides;
- * this step IS the caller, and "could not measure" must not read as "balanced".
- */
-function measure(
-  ctx: BuildContext,
-): { ok: true; m: Measured } | { ok: false; lines: string[] } {
-  const r = ctx.run("pdftotext", ["-bbox", `${JOB}.pdf`, "-"], {
-    cwd: ctx.paperDir,
-    env: ctx.env,
-    stdio: ["ignore", "pipe", "pipe"],
-    encoding: "utf8",
-    maxBuffer: 64 * 1024 * 1024,
-  });
-  if (r.error)
-    return {
-      ok: false,
-      lines: [
-        "pdftotext could not be started — it is not installed, or not on PATH.",
-        "rpp measures the last page's columns with poppler's pdftotext (poppler-utils): see docs/toolchain.md.",
-      ],
-    };
-  if (r.status !== 0)
-    return {
-      ok: false,
-      lines: [
-        `pdftotext exited with ${String(r.status)} on ${JOB}.pdf`,
-        ...String(r.stderr ?? "")
-          .split("\n")
-          .filter((l) => l.trim())
-          .slice(0, 5),
-      ],
-    };
-  const page = lastPdfPage(String(r.stdout ?? ""));
-  const log = unwrapLog(
-    readOr(join(ctx.paperDir, `${JOB}.log`), "latin1") ?? "",
-  );
-  return {
-    ok: true,
-    m: {
-      pages: page?.pages ?? 0,
-      columns: page
-        ? (columnHeights(page.xml, page.widthPt) as Columns | null)
-        : null,
-      overfull: overfullBoxes(log).filter(breaksLayout).length,
-      secondColumn: balanceInSecondColumn(log),
-    },
-  };
-}
-
-/** The files a pass reads back, byte for byte — so every attempt starts from the same build. */
-type Snapshot = { readonly [K in (typeof TRACKED)[number]]: Buffer | null };
-
-function snapshot(paperDir: string): Snapshot {
-  return Object.fromEntries(
-    TRACKED.map((t) => {
-      const p = join(paperDir, `${JOB}.${t}`);
-      return [t, existsSync(p) ? readFileSync(p) : null];
-    }),
-  ) as unknown as Snapshot;
-}
-
-function restore(paperDir: string, snap: Snapshot): void {
-  for (const t of TRACKED) {
-    const p = join(paperDir, `${JOB}.${t}`);
-    const body = snap[t];
-    if (body === null) rmSync(p, { force: true });
-    else writeFileSync(p, body);
-  }
-}
-
-const count = (n: number, one: string, many: string): string =>
-  `${n} ${n === 1 ? one : many}`;
-
-/** What one scan works over: the build as compiled, and the `.bbl` each attempt inserts into. */
-interface Scan {
-  readonly ctx: BuildContext;
-  readonly base: Baseline;
-  readonly tol: number;
-  readonly snap: Snapshot;
-  readonly bblPath: string;
-  readonly bbl: string;
-  readonly offsets: readonly number[];
-}
-
-/** One position tried: the attempt, or a measurement failure that ends the step. */
-type Tried = { readonly latex: number } & (
-  | { readonly attempt: Attempt }
-  | { readonly abort: { ok: false; lines: string[] } }
-);
-
-/**
- * Try `\balance` before one `\bibitem`: restore the compiled build, insert, compile seeded with
- * the rewrite, measure. A measurement failure restores the build before it ends the step.
- */
-function tryPosition(scan: Scan, position: number): Tried {
-  const { ctx, snap, bblPath, bbl, offsets } = scan;
-  ctx.progress?.(
-    `  balance: trying \\bibitem #${position + 1} of ${offsets.length}…`,
-  );
-  restore(ctx.paperDir, snap);
-  const before = hashes(ctx.paperDir);
-  writeFileSync(bblPath, injectBalance(bbl, offsets, position));
-  // The rewrite stands in for the bibtex run whose output it edits: it produced the .bbl the
-  // next pass must read, for exactly the citations the aux names.
-  const seed: Observation[] = [
-    {
-      step: "bibtex",
-      exitCode: 0,
-      before,
-      after: hashes(ctx.paperDir),
-      bib: bibInput(ctx.paperDir),
-      errorLines: [],
-    },
-  ];
-  const c = compile(ctx, seed);
-  if (c.end.kind === "fail")
-    return {
-      latex: c.latex,
-      attempt: { position, kind: "failed", lines: c.end.lines },
-    };
-  const m = measure(ctx);
-  if (!m.ok) {
-    restore(ctx.paperDir, snap);
-    return { latex: c.latex, abort: m };
-  }
-  return { latex: c.latex, attempt: { position, kind: "built", ...m.m } };
-}
-
-/** The step's result once `nextBalanceStep` chose a position — which must be the build on disk. */
-function chosenOutcome(
-  scan: Scan,
-  position: number,
-  attempts: readonly Attempt[],
-  latex: number,
-): StepOutcome {
-  // The scan stops at the first acceptable attempt, so the build on disk IS that attempt.
-  const last = attempts.at(-1);
-  if (last?.position !== position || last.kind !== "built")
-    throw new Error(
-      `balance: chose #${position + 1}, but the build on disk is from another attempt`,
-    );
-  return {
-    ok: true,
-    note:
-      `balance: \\balance before \\bibitem #${position + 1} of ${scan.offsets.length}, ` +
-      `last page ${last.columns ? formatColumns(last.columns) : "?"} (was ${formatColumns(scan.base.columns)}); ` +
-      `${count(attempts.length, "position", "positions")} tried, ${count(latex, "pdflatex pass", "pdflatex passes")}`,
-  };
-}
-
-/** Try positions in the order `nextBalanceStep` gives them, until one is chosen or none is left. */
-function scanPositions(scan: Scan): StepOutcome {
-  const positions = balancePositions(scan.offsets.length);
-  const attempts: Attempt[] = [];
-  let latex = 0;
-  for (;;) {
-    const step = nextBalanceStep(positions, attempts, scan.base, scan.tol);
-    if (step.kind === "none") {
-      restore(scan.ctx.paperDir, scan.snap);
-      return {
-        ok: false,
-        lines: describeFailedScan(
-          attempts,
-          scan.base,
-          scan.offsets.length,
-          scan.tol,
-        ),
-      };
-    }
-    if (step.kind === "chosen")
-      return chosenOutcome(scan, step.position, attempts, latex);
-    const tried = tryPosition(scan, step.position);
-    latex += tried.latex;
-    if ("abort" in tried) return tried.abort;
-    attempts.push(tried.attempt);
-  }
-}
-
-/** An unbalanced build: find its bibitems, snapshot the build, and scan. */
-function startScan(
-  ctx: BuildContext,
-  base: Baseline,
-  tol: number,
-): StepOutcome {
-  const bblPath = join(ctx.paperDir, `${JOB}.bbl`);
-  const bbl = readOr(bblPath, "utf8");
-  const offsets = bbl === null ? [] : bibitemOffsets(bbl);
-  if (bbl === null || offsets.length === 0)
-    return {
-      ok: false,
-      lines: [
-        `the last page is unbalanced (${formatColumns(base.columns)}), and ${JOB}.bbl holds no \\bibitem to place \\balance before`,
-      ],
-    };
-  const snap = snapshot(ctx.paperDir);
-  return scanPositions({ ctx, base, tol, snap, bblPath, bbl, offsets });
-}
-
-/**
- * Balance the last page by placing `\balance` in the bibliography — the decision is `balance.ts`,
- * this is the shell around it.
- *
- * Each attempt restores the compiled build (aux, bbl, toc, out), inserts `\balance` before one
- * `\bibitem`, and runs the SAME loop as the compile step, seeded with the rewrite as the
- * observation that produced the `.bbl`. Seeded that way the loop does not run bibtex (which would
- * erase the insertion), reruns pdflatex until the aux settles — two passes when it settles at once
- * — and ends on the `\finalpass` pass, so paper-guards judges the balanced build too.
- *
- * 🔴 NO POSITION WORKS ⇒ THE BUILD FAILS, and the PDF is removed with it. An unbalanced last page
- * is the defect a publisher already returned a paper for; a green build with an unbalanced PDF
- * would be exactly the success that hides it, and the compile step already deletes a PDF it could
- * not stand behind. The `.bbl` is restored to what bibtex wrote, so no stray `\balance` is left.
- * On success the `.bbl` keeps the insertion: the files on disk are the ones that made the PDF.
- */
-export const balanceStep: BuildStep = {
-  name: "balance",
-  required: false,
-  applies: (facts) => balanceApplies(facts),
-  run: (ctx) => {
-    const tol = BALANCE_TOL_PT;
-    const first = measure(ctx);
-    if (!first.ok) return first;
-    const built = first.m;
-    if (built.columns === null)
-      return {
-        ok: true,
-        note: "balance: nothing to measure on the last page (under 60 words, or numbered lines) — left as built",
-      };
-    if (isBalanced(built.columns, tol))
-      return {
-        ok: true,
-        note: `balance: already balanced, ${formatColumns(built.columns)}`,
-      };
-    const base: Baseline = {
-      pages: built.pages,
-      columns: built.columns,
-      overfull: built.overfull,
-    };
-    return startScan(ctx, base, tol);
-  },
-};
-
 /** The build, in order. A new step is one entry here. */
-export const STEPS: readonly BuildStep[] = [
-  inputsStep,
-  compileStep,
-  balanceStep,
-];
+export const STEPS: readonly BuildStep[] = [inputsStep, compileStep];
 
 // ── the command ─────────────────────────────────────────────────────────────────────────
 
@@ -763,21 +457,6 @@ export function formatPlan(plan: readonly PlanLine[]): string[] {
   const state = (p: PlanLine): string =>
     p.applies ? "" : p.required ? "refused — " : "skipped — ";
   return plan.map((p) => `  ${p.step}: ${state(p)}${p.why}`);
-}
-
-/**
- * Progress on a terminal: one line, rewritten in place and cleared at the end of the step, so a
- * scan over 27 positions prints one line and not 27. Off a terminal (CI, a pipe) it prints
- * nothing — a log full of carriage returns is worse than silence, and the result line reports
- * how many positions were tried.
- */
-export function ttyProgress(
-  stream: NodeJS.WriteStream = process.stderr,
-): (line: string) => void {
-  if (!stream.isTTY) return () => {};
-  return (line) => {
-    stream.write(`\r\x1b[K${line}`);
-  };
 }
 
 /**
@@ -800,7 +479,6 @@ export interface BuildOptions {
   env?: NodeJS.ProcessEnv;
   steps?: readonly BuildStep[];
   log?: (line: string) => void;
-  progress?: (line: string) => void;
   dryRun?: boolean;
 }
 
@@ -814,13 +492,12 @@ function withDefaults({
   env = process.env,
   steps = STEPS,
   log = console.log,
-  progress = ttyProgress(),
   // 🔴 `--dry-run` must be a DECLARED option here, not only in the CLI: options destructuring
   // swallows an unknown key silently, and the first version of this flag ran a full build and
   // rewrote paper.pdf while looking like a verbose dry run.
   dryRun = false,
 }: BuildOptions): Required<BuildOptions> {
-  return { run, cwd, env, steps, log, progress, dryRun };
+  return { run, cwd, env, steps, log, dryRun };
 }
 
 /** Run the applicable steps in order, each on the environment the steps before it left. */
@@ -828,16 +505,15 @@ function runSteps(
   paperDir: string,
   dir: string,
   plan: PlanLine[],
-  { run, env, steps, progress }: Required<BuildOptions>,
+  { run, env, steps }: Required<BuildOptions>,
 ): BuildResult {
   let stepEnv = env;
   const notes: string[] = [];
   for (const [i, step] of steps.entries()) {
     if (!plan[i]?.applies) continue;
-    const out = step.run({ paperDir, env: stepEnv, run, progress });
-    progress("");
+    const out = step.run({ paperDir, env: stepEnv, run });
     if (!out.ok) {
-      // The PDF THIS run wrote and the step then rejected (a partial pass, an unbalanced page).
+      // The PDF THIS run wrote and the step then rejected (a partial pass).
       // A PDF from an earlier run is already gone — `buildPapers` removed it before anything ran.
       removePdf(paperDir);
       return {

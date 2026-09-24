@@ -98,8 +98,7 @@ write. It prints its plan first, one line per step, then runs it:
 papers/my-paper
   inputs: TEXINPUTS += <rpp>/skills/submit-paper/references/venues
   compile: paper.tex (\documentclass[sigconf,screen]{acmart}, venue agenticdev)
-  balance: acmart sigconf is two-column — will place \balance in the bibliography
-  ✓ paper.pdf — 4 pdflatex passes, 1 bibtex run; balance: \balance before \bibitem #2 of 27, last page 464.2 / 461.5 pt (was 625.2 / 303.8 pt); 2 positions tried, 4 pdflatex passes
+  ✓ paper.pdf — 3 pdflatex passes, 1 bibtex run
 ```
 
 - **inputs** — rpp's own venue files (`paper-guards.tex`, `<venue>.tex`) are put on `TEXINPUTS`,
@@ -112,16 +111,12 @@ papers/my-paper
   the reference guards in `paper-guards.tex`: an undefined `\ref` or `\cite` fails the build
   there instead of printing `??`. A document that still changes after five passes fails, naming
   the file that kept changing.
-- **balance** — only for acmart in a two-column format (acmtog, sigconf, siggraph, sigplan, sigchi,
-  acmengage) with a `\bibliography`, and not with `review`. ACM requires the last page's columns to
-  end at about the same height; acmart's own `balance` option calls `\balance` from the second
-  column, where it does nothing. rpp measures the last page with `pdftotext -bbox`; if the columns
-  differ by more than 120 pt it inserts `\balance` into the generated `paper.bbl` before one
-  `\bibitem` at a time, first to last, and rebuilds (two pdflatex passes when the `.aux` settles at
-  once, the last one the `\finalpass` pass). It keeps the first position whose PDF has balanced
-  columns, the same page count, no second-column warning from balance.sty and no new overfull box.
-  **If no position works the build fails**, lists every position with the reason it was rejected
-  and the closest miss, deletes `paper.pdf` and puts bibtex's `paper.bbl` back.
+
+The build does **not** judge the layout. A balanced last page, a page limit, the fonts a venue
+wants — those are verdicts about the finished PDF, and they belong to lint rules that can be
+turned on per venue, given a severity and suppressed with a reason. rpp once searched for a
+`\balance` position itself and failed the build when none worked; that was removed on
+2026-09-24.
 
 The class and its options and the venue in `venue.json` are read from the paper and shown in the
 plan; later steps decide from them whether they apply.
