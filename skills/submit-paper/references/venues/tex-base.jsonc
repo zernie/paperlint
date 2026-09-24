@@ -1,0 +1,50 @@
+// The TeX Live packages EVERY paper gets — and ALL a paper gets when its venue is unknown (no
+// venue.json, or a venue.json naming a venue with no profile here). A venue's own `tex.packages`
+// is added on top of this set, never instead of it.
+//
+// Read by `rpp toolchain` (it installs this set plus every venue's) and by `rpp build` (it checks
+// that the TeX Live it is about to use has this set plus the paper's venue's). Validated against
+// venue-profile.schema.json next door.
+//
+// 🔴 THE CONTRACT IS THE FILES, NOT THE NAMES. A package name is what tlmgr is asked for; the
+// files listed under it are what `kpsewhich` must find afterwards. An installer's exit code is not
+// the criterion — on 2026-09-01 an apt step reported success having installed zero packages.
+//
+// What the base set is FOR: a plain `article` paper with the usual tools, typeset in Type 1 fonts.
+//   cm-super — without it pdflatex silently RASTERIZES Computer Modern in some contexts (a Type 3
+//     bitmap font in the PDF; measured 2026-09-01 on an ACL paper: 1 Type 3 font before, 0 after).
+//     ACM and ACL both reject such a PDF, and the build does not complain.
+{
+  "tex": {
+    "packages": {
+      "latex": ["latex.ltx", "article.cls"],
+      "bibtex": ["plain.bst"],
+      "hyperref": ["hyperref.sty"],
+      "geometry": ["geometry.sty"],
+      "graphics": ["graphicx.sty"],
+      "tools": ["array.sty"],
+      "amsmath": ["amsmath.sty"],
+      "amsfonts": ["amssymb.sty"],
+      "url": ["url.sty"],
+      "xcolor": ["xcolor.sty"],
+      "booktabs": ["booktabs.sty"],
+      "natbib": ["natbib.sty"],
+      "microtype": ["microtype.sty"],
+      "caption": ["caption.sty"],
+      "enumitem": ["enumitem.sty"],
+      "xurl": ["xurl.sty"],
+      "pgf": ["tikz.sty"],
+      "seqsplit": ["seqsplit.sty"],
+      "cm-super": ["sfrm1000.pfb"],
+    },
+    // Programs the skills run over a paper, installed WITH TeX Live because they ARE TeX Live
+    // packages. The build does not need them, so a system TeX Live without them still builds.
+    //   texcount   — the word count a paper's length is measured by. Added to the old CTAN list on
+    //                2026-09-17 after a consumer's CI went red on a cache miss without it.
+    //   checkcites — asks whether a bibliography entry is uncited.
+    "tools": {
+      "texcount": ["texcount"],
+      "checkcites": ["checkcites"],
+    },
+  },
+}
