@@ -26,7 +26,7 @@
  * replaced it: silently breaking someone else's workflow is worse than asking them to fix a line.
  */
 import { ESLint, type Linter } from "eslint";
-import { readFileSync, existsSync, writeFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -143,6 +143,7 @@ export function buildConfig(
     languageOptions: { frontmatter: "yaml" },
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
   const cfg: any[] = [
     // 🔴 THE PROJECT'S PAPER TEMPLATE IS NOT A PAPER. `rpp new` reads `<papers>/.template/`, and
     // its files carry every marker a paper does. Flat config does NOT ignore dot-directories by
@@ -398,6 +399,7 @@ export function readConfig(
 
   let opts: RppConfig = {};
   if (decl && configPath) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
     let parsed: any;
     try {
       parsed = JSON.parse(readFileSync(configPath, "utf8"));
@@ -842,6 +844,7 @@ export async function run(
   // reached, which is what the very first run over an empty directory showed: instead of a clear
   // message a stack from the depths of eslint-helpers.js flew out. A failure stays a failure, but
   // an explicable one.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
   let results: any[];
   try {
     results = await eslint.lintFiles(paths);

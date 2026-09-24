@@ -18,6 +18,31 @@ import reviewRules from "./eslint-rules/review-findings-cause.mjs";
 import localRules from "./eslint-rules/temp-root-realpath.mjs";
 import portRules from "./eslint-rules/install-path-literals.mjs";
 import n from "eslint-plugin-n";
+import tseslint from "typescript-eslint";
+
+// The complexity set, shared by the TypeScript block and the ratchet below. Every function
+// measured over these limits on 2026-09-24 was either refactored under them (the #59 build code)
+// or pinned at its current maximum in RATCHET.
+const MAX_LINES = { max: 60, skipComments: true, skipBlankLines: true };
+
+// 🔴 A CEILING, NOT A PERMISSION: each number is the file's measured maximum on 2026-09-24, so a
+// function in these files can get simpler and cannot get worse. Lower a number when a refactor
+// lowers the maximum; never raise one. Follow-up: "Pay down the complexity ratchet on the pre-#59
+// CLI files" (to be filed; tracked under #49 until then). A file leaves this table when it passes
+// the shared limits.
+const RATCHET = {
+  "src/init.ts": { complexity: 59, "max-lines-per-function": 219 },
+  "src/cli.ts": { complexity: 45, "max-lines-per-function": 153 },
+  "src/doctor.ts": { complexity: 38, "max-lines-per-function": 125 },
+  "src/hooks-settings.ts": { complexity: 12, "max-depth": 4 },
+  "src/structure.ts": { complexity: 12, "max-depth": 4 },
+  "src/new-paper.ts": { complexity: 11 },
+};
+
+const ceiling = (rule, n) =>
+  rule === "max-lines-per-function"
+    ? ["error", { ...MAX_LINES, max: n }]
+    : ["error", n];
 
 export default [
   // 🔴 TRANSIENT DIRECTORIES ARE NOT THE CORPUS, and leaving them in is a RACE, not sloppiness.
@@ -32,13 +57,76 @@ export default [
   // run, so that a verdict in the design notes can be re-measured rather than argued with. Linting
   // them invites the next reader to tidy an unused import — and then the file on disk is no longer
   // the file that produced the number it backs.
+  // `dist/` is tsc's OUTPUT (gitignored): its declaration files are generated from `src/`, so
+  // linting them would report every finding twice and blame a file nobody edits.
   {
     ignores: [
       ".tmp-stages-src-*/",
       "fixtures/.tmp-*/",
       "docs/prior-art/repro/",
+      "dist/",
     ],
   },
+  // 🔴 THE PACKAGE'S TYPESCRIPT, and before 2026-09-24 no block matched it — the same silent
+  // ignore the `.mjs` block below was written against, recurring for `.ts` (#49). `src/` is the
+  // CLI and the build; the skill specs compile into the SKILL.md files the package ships; the
+  // three hand-written `.d.mts` type the `.mjs` modules `src/` imports. All tracked TypeScript.
+  //
+  // Measured on the first run (41727cd): 44 findings in 9 of 39 files, all in `src/`, plus one
+  // `no-useless-escape` in a spec that had dropped a backslash from its compiled SKILL.md. The
+  // #59 build files were refactored clean; the older CLI files sit in RATCHET, one block below.
+  //
+  // NOT TYPE-AWARE, deliberately: no rule here needs type information, and `npm run build`
+  // (tsc, strict) already type-checks `src/` as the first gate of `npm run check`.
+  //
+  // NOT HERE: `port/js-install-path` (43 findings, 41 of them the specs' `.claude/skills/`
+  // literals — issue #19's debt, `warn` for `.mjs` for the same reason; 2 in hooks-settings.ts,
+  // which writes the consumer's settings and must name the install) and `n/no-missing-import`
+  // (tsc already fails on an unresolved import in `src/`).
+  {
+    files: ["**/*.ts", "**/*.mts"],
+    languageOptions: { parser: tseslint.parser },
+    plugins: { "@typescript-eslint": tseslint.plugin, local: localRules },
+    rules: {
+      // The same macOS-only defect as in the `.mjs` block; clean here, so it opens at `error`.
+      "local/temp-root-realpath": "error",
+      // A dead import is a sign of an incomplete edit. The TypeScript variant, because the core
+      // rule does not understand type-only positions.
+      "@typescript-eslint/no-unused-vars": "error",
+      // `any` switches the checker off for everything it flows into — the gate that makes `src/`
+      // TypeScript at all. Five older sites are pinned inline and named in #49.
+      "@typescript-eslint/no-explicit-any": "error",
+      // The behaviour rules of the `.mjs` block, for the same reasons: each changes what the code
+      // DOES, not how it looks, and a regex that escapes the wrong thing searches for the wrong thing.
+      "no-empty": "error",
+      "no-constant-condition": "error",
+      "no-dupe-keys": "error",
+      "no-unreachable": "error",
+      "no-fallthrough": "error",
+      "no-useless-escape": "error",
+      "no-control-regex": "error",
+      "no-misleading-character-class": "error",
+      "no-prototype-builtins": "error",
+      // Branches per function. Ten is the rule's long-standing default; the worst function
+      // measured was 59, and one that size cannot be read, only re-run.
+      complexity: ["error", 10],
+      // Nesting beyond three blocks is where a step belongs in its own named function.
+      "max-depth": ["error", 3],
+      // Five positional parameters are a record without field names; pass an object instead.
+      "max-params": ["error", 4],
+      // A function longer than a screen is read in pieces, and its pieces then want names.
+      "max-lines-per-function": ["error", MAX_LINES],
+      // Three levels of callbacks is the ceiling before a promise chain or a named step is due.
+      "max-nested-callbacks": ["error", 3],
+    },
+  },
+  // The ratchet: per-file ceilings for the files written before the limits existed. See RATCHET.
+  ...Object.entries(RATCHET).map(([file, max]) => ({
+    files: [file],
+    rules: Object.fromEntries(
+      Object.entries(max).map(([rule, n]) => [rule, ceiling(rule, n)]),
+    ),
+  })),
   /**
    * 🔴 THIS BLOCK COVERS THE PACKAGE ITSELF, and before 2026-09-15 it was not here: the config held only
    * one block for `.tex` (I don't quote the glob inside this comment: the sequence

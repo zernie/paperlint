@@ -200,6 +200,7 @@ export function declarePapers(root: string, papers: string): DeclarationResult {
   const path = join(root, "package.json");
   if (!existsSync(path)) return { status: "absent", path };
   const raw = readFileSync(path, "utf8");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
   let pkg: Record<string, any>;
   try {
     pkg = JSON.parse(raw);
@@ -232,6 +233,7 @@ export type RppJsonResult = "absent" | "kept" | "filled" | "unparsable";
 export function syncRppJson(root: string, papers: string): RppJsonResult {
   const path = join(root, "rpp.json");
   if (!existsSync(path)) return "absent";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
   let cfg: Record<string, any>;
   const raw = readFileSync(path, "utf8");
   try {
