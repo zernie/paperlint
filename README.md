@@ -17,7 +17,6 @@ papers/
     PIPELINE-STATUS.md        Markdown: the scorecard — which stages the paper reached
     reviews/*.md              Markdown: review notes (optional)
     versions/                 the exact PDF and source you sent at each stage, frozen
-    build.sh                  your own script that builds the PDF (optional)
 ```
 
 A **stage** is a point the paper has reached, such as `submitted` or `camera-ready`.
@@ -27,10 +26,10 @@ A **stage** is a point the paper has reached, such as `submitted` or `camera-rea
   ([#57](https://github.com/zernie/research-paper-pipeline/issues/57)); do not start a new one.
 - **The other files the tool reads** — the scorecard and the review notes — are Markdown. You (or
   the Claude Code skills) write them; `rpp` only reads them.
-- **The PDF** is built by your paper's own script: `rpp build papers/my-paper` runs `build.sh` or
-  `repro/build-submission.sh` from the paper's directory. This package does not ship a LaTeX
-  compiler, so you need TeX Live ([`docs/toolchain.md`](docs/toolchain.md)). Built-in compilation
-  is tracked in [#59](https://github.com/zernie/research-paper-pipeline/issues/59).
+- **The PDF** is built by rpp: `rpp build papers/my-paper` runs pdflatex and bibtex until the
+  references settle and writes `paper.pdf`. It uses TeX Live's `pdflatex`, which you need installed
+  ([`docs/toolchain.md`](docs/toolchain.md)). There is no build script to write; one left in the
+  paper directory is ignored ([`docs/configuration.md`](docs/configuration.md)).
 
 ## Install and set up
 

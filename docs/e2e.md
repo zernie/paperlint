@@ -58,15 +58,19 @@ pnpm a shell wrapper, and calling `node bin` measures the caller's habit instead
 
 ## `test/e2e/build.mjs` — a real `pdflatex`
 
-`test/e2e/build.mjs`. It copies `fixtures/build-e2e/` — four papers — into a temporary tree,
-points a config at it, and runs `rpp build --all`. Then it measures the artifacts with `pdffonts`:
+`test/e2e/build.mjs`. It copies `fixtures/build-e2e/` — six papers, none with a build script rpp
+would run — into a temporary tree, points a config at it, and runs `rpp build --all`. rpp compiles
+each paper itself with the real `pdflatex` and `bibtex`; the artifacts are then measured with
+`pdffonts` and `pdftotext`:
 
-| fixture     | what it is there to prove                                                                                                                                    |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `acmart`    | a real `\documentclass{acmart}` source builds, and the PDF carries the class's **own** font families — not one family of the silent substitution             |
-| `fallback`  | the same document with the fonts missing still **builds green**, and is **rejected** by the font check. The failure is in the artifact, not in the exit code |
-| `no-script` | a paper with no build script is named separately, not silently counted as built                                                                              |
-| `broken`    | a failing build is reported as failed, with its exit code, and the run as a whole is a failure                                                               |
+| fixture     | what it is there to prove                                                                                                                                     |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `acmart`    | a real `\documentclass{acmart}` source builds, and the PDF carries the class's **own** font families — not one family of the silent substitution              |
+| `fallback`  | the same document with the fonts missing still **builds green**, and is **rejected** by the font check. The failure is in the artifact, not in the exit code  |
+| `cite`      | the bibtex path: the PDF shows `[1]`, not `[?]`, and no `??`. Its `build.sh` would leave a trace if run — it must not run, and the run must say it is ignored |
+| `guards`    | `\input{paper-guards}` resolves with no configuration, because rpp puts its own venues directory on `TEXINPUTS`                                               |
+| `broken`    | a failing build names pdflatex and its exit code, quotes the error line and its `l.NNN` context, and deletes the stale `paper.pdf` planted before the run     |
+| `no-source` | a paper with no `paper.tex` is named separately, and the run as a whole is a failure                                                                          |
 
 The `fallback` row is the point of the whole file. `acmart.cls` checks for `libertine.sty`,
 `zi4.sty` and `newtxmath.sty`, and failing to find any of them sets `\@ACM@newfontsfalse` and

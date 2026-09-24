@@ -1,0 +1,7 @@
+% A paper that does not compile: an undefined control sequence on line 6.
+% `rpp build` must name pdflatex, quote the error line and its `l.6` context from the log, and
+% DELETE any paper.pdf left from an earlier build, so a red build cannot leave a PDF that looks current.
+\documentclass{article}
+\begin{document}
+Text before, then \undefinedmacro{} after.
+\end{document}

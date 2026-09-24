@@ -42,10 +42,9 @@ import {
   asEslintResults,
 } from "./structure.ts";
 import {
-  BUILD_SCRIPTS,
   buildPaper,
   papersIn,
-  formatResults,
+  formatResult,
   anyFailed,
   remedyFor,
 } from "./build.ts";
@@ -91,8 +90,9 @@ const USAGE = `research-paper-pipeline — machine-checkable gates for a paper k
                                       create <papers>/<name>/ from the template; never overwrites,
                                       on an existing folder adds only the missing files, then lints it
   npx rpp lint [paths…]               run every rule over your papers
-  npx rpp build <paper> | --all       build a paper with ITS OWN build script
-                                      (--dry-run: name the script that WOULD run, and where none exists)
+  npx rpp build <paper> | --all       compile paper.tex to paper.pdf: pdflatex and bibtex, rerun until
+                                      the references settle. Prints the plan first; a build.sh in the
+                                      paper directory is ignored (--dry-run: print the plan only)
   npx rpp doctor                      say what is actually wired — and what only LOOKS wired
   npx rpp hook <name>                 run an editor hook (.claude/settings.json calls this)
   npx rpp --help
@@ -653,10 +653,12 @@ function runBuild(
   const cfg = readConfig(a, { log, err, cwd });
   if (cfg.code !== undefined) return cfg.code;
   const { opts, configPath } = cfg;
-  const candidates =
-    Array.isArray(opts.buildScripts) && opts.buildScripts.length
-      ? opts.buildScripts
-      : BUILD_SCRIPTS;
+  // The key that used to name the scripts to run. It is read by nothing now; saying so beats a
+  // setting that silently stopped doing anything.
+  if (opts.buildScripts !== undefined)
+    log(
+      `note: "buildScripts" in ${relative(cwd, configPath ?? "") || "the settings"} is ignored — rpp builds the paper itself`,
+    );
   const roots = toPaths(papersDirOf(opts)).map((rel) =>
     resolve(configPath ? dirname(configPath) : cwd, rel),
   );
@@ -681,11 +683,12 @@ function runBuild(
     return 2;
   }
 
-  const results = targets.map((t) =>
-    buildPaper(t, { candidates, cwd, dryRun: a.dryRun }),
-  );
-  log(formatResults(results));
-  const remedy = remedyFor(results, candidates);
+  const results = targets.map((t) => {
+    const r = buildPaper(t, { cwd, dryRun: a.dryRun, log });
+    log(formatResult(r));
+    return r;
+  });
+  const remedy = remedyFor(results);
   if (remedy) err(remedy);
   return anyFailed(results) ? 1 : 0;
 }

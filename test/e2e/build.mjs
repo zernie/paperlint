@@ -3,10 +3,12 @@
  * test/e2e/build.mjs — `rpp build` against a REAL `pdflatex`, from source to finished PDF.
  *
  * 🔴 HOW THIS DIFFERS FROM `src/build.harness.mjs`, AND WHY BOTH ARE NEEDED. That harness
- * substitutes its own function for `spawnSync`: it checks DECISIONS — which script was picked,
- * with which interpreter, what came back on a non-zero code. Not one of its assertions can say
- * that a PDF came out at the end, let alone WHICH one. Here is the other half: the script is run
- * for real, and the result is measured with a tool rather than taken on trust.
+ * substitutes a fake TeX for `spawnSync`: it checks the shell's DECISIONS — what runs, in which
+ * order, with which TEXINPUTS, and what is left on disk. Not one of its assertions can say that a
+ * PDF came out at the end, let alone WHICH one. Here is the other half: rpp compiles each fixture
+ * with the real pdflatex and bibtex, and the result is measured with a tool rather than taken on
+ * trust. No fixture carries a build script that rpp would run: `cite/build.sh` exists only to
+ * prove it is NOT run.
  *
  * 🔴 WHAT EXACTLY THIS CATCHES, AND IT IS NOT A HYPOTHESIS. `acmart.cls` checks for the presence
  * of `libertine.sty`, `zi4.sty` and `newtxmath.sty`; failing to find ANY of them it sets
@@ -51,7 +53,7 @@ const ACMART_FAMILIES = /^(LinLibertine|LinBiolinum)/;
 /** The signature of the silent substitution: the class fell back to its default fonts. */
 const FALLBACK_FAMILIES = /^(CMR|CMBX|CMTI|CMTT|CMSS|LMRoman)/;
 
-const missing = ["pdflatex", "pdffonts"].filter(
+const missing = ["pdflatex", "bibtex", "pdffonts", "pdftotext"].filter(
   (b) =>
     spawnSync("command", ["-v", b], { shell: true, stdio: "ignore" }).status !==
     0,
@@ -84,7 +86,7 @@ const check = (label, cond, detail = "") => {
   if (!cond) bad++;
 };
 
-// The fixtures are copied: the build leaves `paper.pdf`, `paper.aux` and `build.log` next to the
+// The fixtures are copied: the build leaves `paper.pdf`, `paper.aux` and `paper.log` next to the
 // source, and in the working tree those would be untracked files after every run.
 const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-build-e2e-")));
 try {
@@ -92,6 +94,8 @@ try {
     recursive: true,
     verbatimSymlinks: true,
   });
+  // A PDF "from an earlier build" beside the broken paper: a failed build must remove it.
+  writeFileSync(join(work, "papers", "broken", "paper.pdf"), "%PDF-stale");
   // `--all` takes the papers directory from the config, not from an argument: the CONSUMER names
   // the scope, and that is the same contract for which `lint` has no "." default.
   writeFileSync(
@@ -148,17 +152,73 @@ try {
   }
 
   console.log();
+  console.log("the bibtex path, and a leftover build.sh");
+  const citeDir = join(work, "papers", "cite");
+  const citePdf = join(citeDir, "paper.pdf");
+  check("cite: the PDF exists", existsSync(citePdf));
+  if (existsSync(citePdf)) {
+    const text = execFileSync("pdftotext", [citePdf, "-"], {
+      encoding: "utf8",
+    });
+    check(
+      "cite: the citation resolved — [1] in the PDF, not [?]",
+      text.includes("[1]") && !text.includes("[?]"),
+      text.replace(/\s+/g, " ").slice(0, 120),
+    );
+    check("cite: the \\ref resolved — no ?? in the PDF", !text.includes("??"));
+  }
+  check(
+    "cite: bibtex ran (paper.bbl exists)",
+    existsSync(join(citeDir, "paper.bbl")),
+  );
+  check(
+    "🔴 cite: the leftover build.sh did NOT run — no RAN on disk",
+    !existsSync(join(citeDir, "RAN")),
+  );
+  check(
+    "cite: and the run said it was ignored",
+    /build\.sh is ignored — rpp builds the paper itself/.test(out),
+  );
+
+  console.log();
+  console.log("paper-guards resolves with no configuration");
+  check(
+    "guards: \\input{paper-guards} built — rpp's venues directory is on TEXINPUTS",
+    existsSync(join(work, "papers", "guards", "paper.pdf")),
+  );
+
+  console.log();
+  console.log("a failed build");
+  const brokenDir = join(work, "papers", "broken");
+  check(
+    "broken: named as failed at pdflatex, with its exit code",
+    /✗ compile: pdflatex exited with 1/.test(out),
+  );
+  check(
+    "broken: the first error line from the log is quoted",
+    /\.\/paper\.tex:6: Undefined control sequence\./.test(out),
+  );
+  check(
+    "broken: and its l.6 source context",
+    /l\.6 Text before, then \\undefinedmacro/.test(out),
+  );
+  check(
+    "🔴 broken: the stale paper.pdf planted before the run is GONE",
+    !existsSync(join(brokenDir, "paper.pdf")),
+  );
+
+  console.log();
   console.log("the command's remaining outcomes");
   check(
-    "a failed build is named as failed, with its code",
-    /✗ .*broken/.test(out) && /\b3\b/.test(out),
+    "no-source: a paper with no paper.tex is a refusal, named separately",
+    /✗ nothing to compile: no paper\.tex/.test(out),
   );
   check(
-    "a paper with no script is named separately",
-    /NO build script/.test(out),
+    "the plan is printed: one line per step",
+    /  inputs: TEXINPUTS \+= /.test(out) && /  compile: paper\.tex/.test(out),
   );
   check(
-    "and the run as a whole is a FAILURE, since two papers out of four did not build",
+    "and the run as a whole is a FAILURE, since two papers did not build",
     r.status !== 0,
   );
 } finally {

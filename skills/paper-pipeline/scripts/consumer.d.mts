@@ -24,3 +24,6 @@ export interface DanglingSkillLink {
  * `dangling: DanglingSkillLink[]` property when any entry is a link that does not resolve.
  */
 export declare function installedSkills(dir: string): string[];
+
+/** The directory of venue TeX files this package ships; `rpp build` prepends it to TEXINPUTS. */
+export declare function packageVenuesDir(): string;

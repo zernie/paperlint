@@ -30,7 +30,6 @@ The README carries the minimal version of this. Everything below is the full sur
 | `reviewSince`       | no       | only review files created on or after this date are checked                               |
 | `minFindings`       | no       | a review with fewer findings than this is not required to name causes                     |
 | `causeMarker`       | no       | the phrase a review uses to introduce a cause (default `Cause:`), in any language         |
-| `buildScripts`      | no       | override the build-script lookup order below                                              |
 
 `papersDir` is required because the scope is the one thing that must not default: a default of `"."`
 turns every run into a green report over the whole checkout. `rpp init` fills it by measuring —
@@ -89,31 +88,56 @@ This is the half [ls-lint](https://ls-lint.org/) cannot do. ls-lint judges the *
 that exist; it has nothing to compare against for a file that does not. Use both: ls-lint for
 "what is there is named right", this for "what must be there is there".
 
-## How `rpp build` finds a build script
+## How `rpp build` compiles a paper
 
-`rpp build` does not compile anything itself. It finds the paper's **own** build script and runs
-it, because building a paper is not a generic loop: one paper in the corpus this was written
-against needs `TEXINPUTS` pointing at venue files its preamble `\input`s, another runs a dozen
-compiles hunting the right position for `\balance`. A package that has never seen your paper
-cannot know either.
+`rpp build <paper>` compiles `paper.tex` to `paper.pdf` itself, with TeX Live's `pdflatex` and
+`bibtex` ([`docs/toolchain.md`](toolchain.md)). There is nothing to configure and no script to
+write. It prints its plan first, one line per step, then runs it:
 
-It looks for these, in order, and the first one found wins:
+```
+papers/my-paper
+  inputs: TEXINPUTS += <rpp>/skills/submit-paper/references/venues
+  compile: paper.tex (\documentclass[sigconf]{acmart}, venue agenticdev)
+  ✓ paper.pdf — 4 pdflatex passes, 1 bibtex run
+```
 
-| path                        |                                                        |
-| --------------------------- | ------------------------------------------------------ |
-| `build.sh`                  | in the paper directory — what you see when you open it |
-| `repro/build-submission.sh` | the reproduction-artifact convention                   |
+- **inputs** — rpp's own venue files (`paper-guards.tex`, `<venue>.tex`) are put on `TEXINPUTS`,
+  so `\input{paper-guards}` in a preamble resolves with no setup. The system tree still resolves
+  after them.
+- **compile** — `pdflatex -interaction=nonstopmode -halt-on-error -file-line-error`, then `bibtex`
+  when the `.aux` names a bibliography, then pdflatex again until the `.aux`, `.toc`, `.out` and
+  `.bbl` stop changing and the log stops asking for a rerun. bibtex runs again only when the cited
+  keys or a `.bib` file changed. After that, one **final** pass defines `\finalpass`, which arms
+  the reference guards in `paper-guards.tex`: an undefined `\ref` or `\cite` fails the build
+  there instead of printing `??`. A document that still changes after five passes fails, naming
+  the file that kept changing.
 
-Override with `"buildScripts": [...]`.
+The class and its options and the venue in `venue.json` are read from the paper and shown in the
+plan; later steps decide from them whether they apply.
 
-**A paper with no build script is a FAILURE, not a skip**, and that is the whole point of the
-command. The corpus this came from had a CI loop looking for `repro/build-submission.sh` while the
-accepted paper shipped `build.sh`; the mismatch read as "nothing to build", and the paper reached
-its venue without a single paper job having run on it. `--dry-run` answers "which papers can
-nobody build?" in a second, without spending twenty compiles to ask.
+**On failure** the command names the program that failed, quotes the first error line from the log
+with its `l.NNN` source context, and **deletes `paper.pdf`**, so an old PDF cannot pass for the
+failed build:
 
-Built-in compilation, with `build.sh` as an optional override, is tracked in
-[#59](https://github.com/zernie/research-paper-pipeline/issues/59).
+```
+  ✗ compile: pdflatex exited with 1
+      ./paper.tex:6: Undefined control sequence.
+      l.6 Text before, then \undefinedmacro
+                                           {} after.
+      full log: papers/my-paper/paper.log
+      paper.pdf removed — a stale PDF must not pass for this build
+```
+
+**A paper with no `paper.tex` is a FAILURE, not a skip.** "Nothing to build" and "built" must never
+look alike: the corpus this came from once let a paper reach its venue without a single paper job
+having run on it, because a missing build read as nothing to do.
+
+`--dry-run` prints the plan and runs nothing.
+
+⚠️ **A `build.sh` or `repro/build-submission.sh` in the paper directory is IGNORED.** Earlier
+versions ran it; `rpp build` now says one line — `build.sh is ignored — rpp builds the paper
+itself` — and builds the paper itself. The `buildScripts` key is ignored the same way.
+Why: [#59](https://github.com/zernie/research-paper-pipeline/issues/59).
 
 ## Using the rules from an existing ESLint config
 

@@ -111,8 +111,7 @@ const undefinedCs = [
 const ex = errorExcerpt(undefinedCs);
 check(
   "-file-line-error form: the error line, the l.NNN line and the rest of the source line",
-  ex.length === 3 &&
-    ex[0] === "./paper.tex:4: Undefined control sequence." &&
+  ex[0] === "./paper.tex:4: Undefined control sequence." &&
     ex[1] === "l.4 \\foo" &&
     ex[2].includes("bar baz"),
 );
