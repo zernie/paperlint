@@ -10,6 +10,7 @@
  */
 import assert from "node:assert/strict";
 import {
+  chmodSync,
   mkdirSync,
   mkdtempSync,
   realpathSync,
@@ -91,10 +92,14 @@ const TEX = {
   tools: {},
 };
 const ALL = "/t/acmart.cls\n/t/libertine.sty\n";
-/** A TeX Live on disk: a bin directory with a pdflatex file. */
+/**
+ * A TeX Live on disk: a bin directory with a RUNNABLE pdflatex file. The execute bit is load-bearing:
+ * a pdflatex that cannot be started is not a TeX Live (`isExecutable` in engine.ts).
+ */
 const texAt = (dir) => {
   mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, "pdflatex"), "");
+  chmodSync(join(dir, "pdflatex"), 0o755);
   return dir;
 };
 const cacheBin = texAt(join(work, "cache", "2026", "bin", "x86_64-linux"));

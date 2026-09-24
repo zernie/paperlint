@@ -19,7 +19,7 @@
  * `build.ts` already uses) and acts on the decision.
  */
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { accessSync, constants, statSync } from "node:fs";
 import { basename, delimiter, join } from "node:path";
 import type { TexRequirements } from "./tex-requirements.ts";
 
@@ -102,11 +102,34 @@ export function missingPackages(
     .sort();
 }
 
+/**
+ * `path` is a program that can be started: a REGULAR FILE, and on POSIX one this process may
+ * execute. `existsSync` is not the question — it says yes to a directory and to a file without
+ * the execute bit, and `rpp toolchain --check` then reported a verified tree whose `texcount`
+ * could not run.
+ *
+ * On win32 `X_OK` means nothing (Node documents it as behaving like `F_OK` there): whether a file
+ * runs is decided by its extension, not a permission bit. So on win32 the check is "exists and is
+ * a regular file", which is all the platform can answer.
+ */
+export function isExecutable(
+  path: string,
+  platform: NodeJS.Platform = process.platform,
+): boolean {
+  try {
+    if (!statSync(path).isFile()) return false;
+    if (platform !== "win32") accessSync(path, constants.X_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** The declared tools (programs) that have no executable in `bin`. */
 export function missingTools(
   tools: TexRequirements["tools"],
   bin: string,
-  exists: (path: string) => boolean = existsSync,
+  exists: (path: string) => boolean = isExecutable,
 ): string[] {
   return Object.entries(tools)
     .filter(([, bins]) => bins.some((b) => !exists(join(bin, b))))
@@ -138,11 +161,11 @@ export function probeTree(
   return missingPackages(packages, String(r.stdout ?? ""));
 }
 
-/** The first directory on `path` holding `name` — what a shell would run. */
+/** The first directory on `path` holding a runnable `name` — what a shell would run. */
 export function whichOnPath(
   name: string,
   path: string | undefined,
-  exists: (p: string) => boolean = existsSync,
+  exists: (p: string) => boolean = isExecutable,
 ): string | null {
   for (const dir of (path ?? "").split(delimiter))
     if (dir && exists(join(dir, name))) return dir;

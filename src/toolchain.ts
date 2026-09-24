@@ -38,6 +38,7 @@ import {
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+  isExecutable,
   missingTools,
   probeTree,
   supportedPlatform,
@@ -95,12 +96,15 @@ export function cacheRoot(
   return join(env["XDG_CACHE_HOME"] || join(home, ".cache"), "rpp", "texlive");
 }
 
-/** The platform directory under `<tree>/bin` that holds pdflatex — found, not guessed per arch. */
+/**
+ * The platform directory under `<tree>/bin` that holds a RUNNABLE pdflatex — found, not guessed per
+ * arch. Runnable, not merely present: the same `isExecutable` that `missingTools` asks.
+ */
 function binDirOf(tree: string): string | null {
   const bins = join(tree, "bin");
   if (!existsSync(bins)) return null;
   const arch = readdirSync(bins).find((a) =>
-    existsSync(join(bins, a, "pdflatex")),
+    isExecutable(join(bins, a, "pdflatex")),
   );
   return arch ? join(bins, arch) : null;
 }

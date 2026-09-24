@@ -8,6 +8,15 @@
  * All pure or port-driven: no TeX needed. The real-TeX half is `test/e2e/build.mjs`.
  */
 import assert from "node:assert/strict";
+import {
+  chmodSync,
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -17,6 +26,7 @@ const {
   missingPackages,
   missingTools,
   whichOnPath,
+  isExecutable,
   probeTree,
   supportedPlatform,
 } = await import(join(HERE, "engine.ts"));
@@ -174,5 +184,57 @@ check(
     probeTree("/none", PKGS, () => ({ error: new Error("ENOENT") })),
   ) === '["acmart","latex","libertine"]',
 );
+
+// ── 3. "installed" means a regular file that can be run — on a REAL filesystem ─────────────
+// 🔴 `existsSync` says yes to a directory and to a file without the execute bit; both then fail
+// to start, while `rpp toolchain --check` reported the tree verified. Checked on disk, not
+// through an injected predicate, because the predicate is exactly what was wrong.
+{
+  const bin = realpathSync(mkdtempSync(join(tmpdir(), "rpp-engine-bin-")));
+  try {
+    mkdirSync(join(bin, "texcount"));
+    writeFileSync(join(bin, "checkcites"), "#!/bin/sh\n");
+    chmodSync(join(bin, "checkcites"), 0o644);
+    writeFileSync(join(bin, "pdflatex"), "#!/bin/sh\n");
+    chmodSync(join(bin, "pdflatex"), 0o755);
+    const tools = {
+      texcount: ["texcount"],
+      checkcites: ["checkcites"],
+      pdflatex: ["pdflatex"],
+    };
+    const missing = missingTools(tools, bin);
+    check(
+      "🔴 missingTools: a DIRECTORY named like the tool is missing",
+      missing.includes("texcount"),
+      JSON.stringify(missing),
+    );
+    check(
+      "🔴 missingTools: a regular file WITHOUT the execute bit is missing",
+      missing.includes("checkcites"),
+      JSON.stringify(missing),
+    );
+    check(
+      "missingTools: an executable regular file is present",
+      !missing.includes("pdflatex"),
+      JSON.stringify(missing),
+    );
+    check(
+      "whichOnPath: a directory without a runnable pdflatex is passed over",
+      whichOnPath("texcount", bin) === null &&
+        whichOnPath("pdflatex", bin) === bin,
+    );
+    check(
+      "isExecutable: a path that does not exist is not executable",
+      !isExecutable(join(bin, "nope")),
+    );
+    check(
+      "isExecutable on win32: no execute bit to ask — a regular file counts, a directory does not",
+      isExecutable(join(bin, "checkcites"), "win32") &&
+        !isExecutable(join(bin, "texcount"), "win32"),
+    );
+  } finally {
+    rmSync(bin, { recursive: true, force: true });
+  }
+}
 
 console.log(`engine: ${n} checks passed`);

@@ -89,6 +89,37 @@ process.exit(
           ],
         ],
       },
+      {
+        name: "a tool counts as installed when its path merely exists",
+        harness: HARNESS,
+        expect: "🔴 missingTools: a DIRECTORY named like the tool is missing",
+        disables:
+          "the runnable-file check. `existsSync` says yes to a directory and to a file without the " +
+          "execute bit, and `rpp toolchain --check` reported a verified tree whose texcount could not start",
+        edits: [
+          [
+            SRC,
+            '    if (!statSync(path).isFile()) return false;\n    if (platform !== "win32") accessSync(path, constants.X_OK);\n',
+            "    statSync(path);\n",
+          ],
+        ],
+      },
+      {
+        name: "a regular file without the execute bit counts as installed",
+        harness: HARNESS,
+        expect:
+          "🔴 missingTools: a regular file WITHOUT the execute bit is missing",
+        disables:
+          "the POSIX permission half. A file the installer left at 0644 fails to start, and must not " +
+          "read as present",
+        edits: [
+          [
+            SRC,
+            '    if (platform !== "win32") accessSync(path, constants.X_OK);\n',
+            "",
+          ],
+        ],
+      },
     ],
   }),
 );
