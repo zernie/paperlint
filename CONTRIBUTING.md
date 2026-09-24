@@ -21,7 +21,7 @@ On top of that, each rule has a **battery**: it deletes one thing the rule depen
 demands the harness go red, at the specific assertion that thing belongs to. If nothing goes red,
 that part of the rule was never doing any work. CI refuses a rule whose battery cannot kill it.
 
-<!-- count:harnesses -->62 harnesses, <!-- count:batteries -->39 batteries.
+<!-- count:harnesses -->64 harnesses, <!-- count:batteries -->41 batteries.
 
 A harness runs in this tree, against this working copy. That is the wrong shape for a defect that
 only exists once somebody else has installed the package — a path written inside a skill, a file
@@ -39,8 +39,8 @@ date coercion had become dead code.
 npm run check
 ```
 
-That is the whole instruction. It runs every gate in order — build, lint, the <!-- count:harnesses -->62 harnesses, the
-<!-- count:batteries -->39 mutation batteries, the install e2e under npm and pnpm, and a real `pdflatex` build — and ends
+That is the whole instruction. It runs every gate in order — build, lint, the <!-- count:harnesses -->64 harnesses, the
+<!-- count:batteries -->41 mutation batteries, the install e2e under npm and pnpm, and a real `pdflatex` build — and ends
 
 by printing **which CI jobs it does not reproduce, and why**.
 
