@@ -17,6 +17,11 @@
  * how the SUBMITTED `aisec-2026` went out. A green exit code says nothing about it: the failure
  * lives in the content of the artifact, so the content is what gets measured.
  *
+ * 🔴 THE ENGINE IS rpp's OWN DECISION. The run first proves the refusal — no TeX Live and no terminal
+ * gives one line naming `npx rpp toolchain` and nothing built — which needs no TeX at all. Then it
+ * asks `rpp build --dry-run` which TeX Live the real run would use; under --strict (CI) that must
+ * be rpp's cache, the one `rpp toolchain` installed in the step before.
+ *
  * 🔴 A MISSING TeX IS A DECLARED SKIP, NOT A SILENT ONE. For a contributor without TeX Live this
  * run is legitimately impossible, and it exits zero — HAVING SAID SO. In CI the same absence
  * means a broken environment, and `--strict` turns the skip into a failure: a skipped step and a
@@ -30,10 +35,12 @@ import { PAPERS_DIR_FIELD } from "../../lib/paper-config.mjs";
 import {
   cpSync,
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
   realpathSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -57,16 +64,16 @@ const ACMART_FAMILIES = /^(LinLibertine|LinBiolinum)/;
 /** The signature of the silent substitution: the class fell back to its default fonts. */
 const FALLBACK_FAMILIES = /^(CMR|CMBX|CMTI|CMTT|CMSS|LMRoman)/;
 
-const missing = ["pdflatex", "bibtex", "pdffonts", "pdftotext"].filter(
-  (b) =>
-    spawnSync("command", ["-v", b], { shell: true, stdio: "ignore" }).status !==
-    0,
-);
-if (missing.length) {
-  const say = `build-e2e: skipped — this machine has no ${missing.join(", ")}.`;
+/** Declared skip (77) on a contributor's machine, a failure under --strict (CI). */
+function skipOrFail(say) {
+  // The checks that ran before the skip are not waived by it.
+  if (bad > 0) {
+    console.error(`${say}\n🔴 and ${bad} check(s) above already failed`);
+    process.exit(1);
+  }
   if (!strict) {
     console.log(
-      `${say}\nThis is a legitimate skip for a clone without TeX Live. In CI the same case is a failure (--strict).`,
+      `${say}\nThis is a legitimate skip on a machine without it. In CI the same case is a failure (--strict).`,
     );
     // 77, not 0: a skip is not a pass (scripts/check.mjs, SKIP_EXIT).
     process.exit(77);
@@ -106,6 +113,89 @@ try {
     join(work, "rpp.json"),
     JSON.stringify({ [PAPERS_DIR_FIELD]: "papers" }, null, 2),
   );
+
+  // ── NO TeX LIVE, NO TERMINAL: one line, and nothing is built ─────────────────────────────
+  // Runs FIRST and needs no TeX: PATH holds node alone, the cache directory is empty, CI is set.
+  // This is what an agent or a CI job without `rpp toolchain` sees.
+  console.log("no TeX Live and no terminal");
+  const bare = realpathSync(mkdtempSync(join(tmpdir(), "rpp-bare-")));
+  try {
+    mkdirSync(join(bare, "bin"));
+    symlinkSync(process.execPath, join(bare, "bin", "node"));
+    const refused = spawnSync(
+      process.execPath,
+      [CLI, "build", join("papers", "acmart")],
+      {
+        cwd: work,
+        encoding: "utf8",
+        env: {
+          HOME: bare,
+          PATH: join(bare, "bin"),
+          CI: "1",
+          RPP_TEXLIVE_DIR: join(bare, "cache"),
+        },
+      },
+    );
+    const said = `${refused.stdout}${refused.stderr}`;
+    check("refused: exit 1", refused.status === 1, said);
+    check(
+      "refused: ONE line naming `npx rpp toolchain` and the venue's packages",
+      said
+        .split("\n")
+        .some(
+          (l) =>
+            l.includes("run `npx rpp toolchain`") &&
+            l.includes("acmart") &&
+            l.includes("libertine"),
+        ),
+      said,
+    );
+    check(
+      "refused BEFORE compiling: no plan line, no PDF, nothing installed",
+      !said.includes("compile:") &&
+        !existsSync(join(work, "papers", "acmart", "paper.pdf")) &&
+        !existsSync(join(bare, "cache")),
+      said,
+    );
+  } finally {
+    rmSync(bare, { recursive: true, force: true });
+  }
+  console.log();
+
+  // ── the engine the real build will use ────────────────────────────────────────────────
+  const noPoppler = ["pdffonts", "pdftotext"].filter(
+    (b) =>
+      spawnSync("command", ["-v", b], { shell: true, stdio: "ignore" })
+        .status !== 0,
+  );
+  if (noPoppler.length)
+    skipOrFail(
+      `build-e2e: skipped — this machine has no ${noPoppler.join(", ")} (poppler).`,
+    );
+  const plan = spawnSync(
+    process.execPath,
+    [CLI, "build", "--all", "--dry-run"],
+    {
+      cwd: work,
+      encoding: "utf8",
+      env: { ...process.env, CI: "1" },
+    },
+  );
+  const engine =
+    `${plan.stdout}`.split("\n").find((l) => l.startsWith("engine: ")) ?? "";
+  if (!engine || engine.startsWith("engine: none"))
+    skipOrFail(
+      `build-e2e: skipped — no TeX Live with every declared package (${engine || "no engine line"}).\n` +
+        `Install one with \`node bin/rpp.mjs toolchain\` (RPP_TEXLIVE_DIR picks the directory).`,
+    );
+  console.log(engine);
+  // 🔴 In CI the build must run on the TeX Live `rpp toolchain` installed — the runner has no other.
+  if (strict)
+    check(
+      "strict: the engine is rpp's own cache",
+      engine.includes("rpp cache"),
+      engine,
+    );
 
   const r = spawnSync(process.execPath, [CLI, "build", "--all"], {
     cwd: work,
