@@ -641,7 +641,7 @@ check(
       );
       check(
         "🔴 and it carries the INSTALL COMMAND — a remedy, not just a diagnosis",
-        /apt-get install -y texlive-latex-recommended/.test(own),
+        /npx rpp toolchain/.test(own),
       );
       check(
         "and it says outright that nothing is installed on the user's behalf",

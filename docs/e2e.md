@@ -80,6 +80,22 @@ typesets the paper in Computer Modern. The build is green, the PDF looks fine, t
 and therefore so does the pagination. A submitted paper went out that way. **An exit code cannot
 see it, so the content of the artifact is what gets measured.**
 
+Before the fixtures, the run proves the refusal with no TeX at all: PATH holds `node` alone, the
+cache directory is empty and `CI` is set, and `rpp build` must exit 1 with one line naming
+`npx rpp toolchain` and the venue's packages, print no plan and create no PDF and no cache. It then
+asks `rpp build --dry-run` which TeX Live the real run will use; under `--strict` (CI) that must be
+rpp's own cache, because the runner has no other.
+
+## `test/e2e/toolchain.mjs` — real TeX Live, and only it
+
+`rpp toolchain` into `$RPP_TEXLIVE_DIR` against real CTAN; a second run must say "nothing to do"
+within seconds; `--check` must exit 0; then the `acmart` fixture is built with PATH holding `node`
+and poppler only, so no other TeX Live can stand in, and the PDF must carry Libertine and Biolinum
+and no Computer Modern face. Without `RPP_TEXLIVE_DIR` it is a declared skip: installing ~270 MB
+into a home directory as a side effect of `npm run check` is the unasked install rule 11 forbids.
+`src/toolchain.harness.mjs` covers the installer's logic (mirror fallback, archive check, time
+limit, verification, idempotence) against a fake mirror on disk, without the network.
+
 ## Skips are declared, never silent
 
 A clone without TeX Live genuinely cannot run the build e2e; a machine without pnpm cannot run
@@ -109,8 +125,9 @@ would only make the suite slower without making it stricter.
 Named here on purpose: a test suite that does not say where it stops is read as covering
 everything.
 
-- **macOS and Windows.** Both runs are Linux-only here. `npm run check` prints the CI jobs it
-  cannot reproduce, and `macos` is one of them.
+- **macOS and Windows.** Locally these run on whatever machine you have. In CI `build-e2e` is a
+  matrix over `ubuntu-latest` and `macos-latest`; Windows is not run anywhere, and `rpp toolchain`
+  refuses it.
 - **The rules, on a real document.** `fixtures/real-markdown-paper/` holds a published article and
   a recorded baseline of what the rules say about it. That is a **lint** fixture, driven by a
   harness — it does not go through the installed package. Wiring it into the install corpus is

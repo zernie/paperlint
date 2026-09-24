@@ -227,7 +227,7 @@ const runDoctor = (
   check("but every absence is NAMED", /✗ pdflatex/.test(none.out));
   check(
     "and it carries a REMEDY, not just a diagnosis",
-    /apt-get install -y texlive-latex-recommended/.test(none.out),
+    /npx rpp toolchain/.test(none.out),
   );
   check(
     "and the consequence: which checks silently don't run without it",

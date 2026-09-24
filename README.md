@@ -27,9 +27,10 @@ A **stage** is a point the paper has reached, such as `submitted` or `camera-rea
 - **The other files the tool reads** — the scorecard and the review notes — are Markdown. You (or
   the Claude Code skills) write them; `rpp` only reads them.
 - **The PDF** is built by rpp: `rpp build papers/my-paper` runs pdflatex and bibtex until the
-  references settle and writes `paper.pdf`. It uses TeX Live's `pdflatex`, which you need installed
-  ([`docs/toolchain.md`](docs/toolchain.md)). There is no build script to write; one left in the
-  paper directory is ignored ([`docs/configuration.md`](docs/configuration.md)).
+  references settle and writes `paper.pdf`. It uses TeX Live's `pdflatex` with every package your
+  venue declares — its own copy, or one already on your machine that has them. There is no build
+  script to write; one left in the paper directory is ignored
+  ([`docs/configuration.md`](docs/configuration.md)).
 
 ## Install and set up
 
@@ -58,6 +59,20 @@ It asks only when you run it in a terminal. Anywhere else (an agent, CI, or with
 nothing: it writes the hooks and skips the workflow and the paper. `--no-hooks` skips the hooks,
 `--paper <name>` creates the paper. Every default it takes is printed with the flag that changes
 it.
+
+**TeX Live** is installed by rpp too, the first time you need it. In a terminal, `rpp build` asks
+once — `TeX Live is not installed (needed to compile paper.tex, ~230 MB, ~2 min). Install it now
+into ~/.cache/rpp/texlive? [Y/n]` — and continues. Without a terminal (CI, an agent) it stops and
+says to run:
+
+```sh
+npx rpp toolchain          # upstream TeX Live + the packages the venue profiles declare
+```
+
+It installs into `~/.cache/rpp/texlive` (`RPP_TEXLIVE_DIR` changes that), verifies every declared
+file with `kpsewhich`, and a second run does nothing. Linux and macOS; on Windows, install TeX Live
+yourself. poppler (`pdftotext`, `pdffonts`) comes from your package manager:
+[`docs/toolchain.md`](docs/toolchain.md).
 
 Commit `.claude/settings.json`: then every clone gets the hooks. The hook commands run files
 inside `node_modules`, so in a fresh clone they work only after `npm install`.

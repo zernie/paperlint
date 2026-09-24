@@ -48,36 +48,44 @@ export interface Program {
  * Every one of these fails quietly, which is the only reason the list is worth printing: a missing
  * checker and a passing checker produce the same silence.
  */
+/**
+ * TeX Live is installed by rpp itself, with every package the venue profiles declare. `rpp build`
+ * uses that tree even when its `pdflatex` is not on PATH, so a ✗ here with the cache installed
+ * only means the skills' own shell calls will not find it.
+ */
+export const TEX_INSTALL =
+  "npx rpp toolchain   (rpp build uses its TeX Live without PATH; the skills need its bin on PATH)";
+
 export const PROGRAMS: readonly Program[] = [
   {
     bin: "pdflatex",
     from: "TeX Live",
     without: "no PDF is produced",
-    install: "apt-get install -y texlive-latex-recommended",
+    install: TEX_INSTALL,
   },
   {
     bin: "bibtex",
     from: "TeX Live",
     without: "the bibliography is not resolved",
-    install: "apt-get install -y texlive-binaries",
+    install: TEX_INSTALL,
   },
   {
     bin: "pdfinfo",
     from: "poppler-utils",
     without: "checks that read the built PDF cannot run",
-    install: "apt-get install -y poppler-utils",
+    install: "apt-get install -y poppler-utils   (macOS: brew install poppler)",
   },
   {
     bin: "pdftotext",
     from: "poppler-utils",
     without: "the PDF text checks cannot run",
-    install: "apt-get install -y poppler-utils",
+    install: "apt-get install -y poppler-utils   (macOS: brew install poppler)",
   },
   {
     bin: "texcount",
-    from: "TeX Live (texlive-extra-utils)",
+    from: "TeX Live",
     without: "the length checks cannot run",
-    install: "apt-get install -y texlive-extra-utils",
+    install: TEX_INSTALL,
   },
   {
     bin: "java",
