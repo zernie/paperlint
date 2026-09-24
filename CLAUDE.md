@@ -543,15 +543,22 @@ not evidence about the rule you care about. Both halves are tested
 (`scripts/rules-see-files.mutations.mjs` — under-reporting and over-reporting must die on
 _different_ assertions, or only one half of the guard is really tested).
 
-## Mutations
+## Mutations — hand-written batteries are deprecated (#52)
 
-```bash
-node scripts/run-mutations.mjs    # 12 + 11 + 2, each with a "the patch landed" assertion
-```
+The `*.mutations.mjs` batteries (string replacements of source lines, run through
+`lib/mutation-driver.mjs`) are being removed. The idea stays — a test must be seen going red
+when the code breaks — but the vehicle is not this one.
 
-A green harness under a mutation is a finding about the TEST, not a conclusion about the
-defence. Each battery prints the harness line and the assertion text its mutation died on;
-"killed" without saying by what is half an answer.
+- **Do not create a new `*.mutations.mjs`**, and **do not add cases to an existing one.**
+- **Record what a test guards as a comment directly above its assertion** (`// Guards: …`).
+- The rule is enforced, not asked for: `scripts/mutation-batteries-frozen.mjs` (part of
+  `npm run check` and CI) fails on a battery missing from `scripts/mutation-batteries.frozen.json`,
+  on a listed battery with more or fewer cases than recorded, and on a listed file that is gone.
+  The list may only shrink — delete a battery or a case, then delete or lower its entry.
+- The intended replacement is a real mutation-testing tool (StrykerJS) or nothing; that is
+  decided in #52, not in a pull request that happens to touch a battery.
+
+The batteries that remain still run (`node scripts/run-mutations.mjs`) until #52 retires them.
 
 ## Cost
 

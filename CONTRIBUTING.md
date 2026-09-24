@@ -17,9 +17,13 @@ The second run is the one people skip, and it is the one that matters. A rule th
 finds nothing passes the first kind of test by accident — from outside, "there is nothing wrong
 here" and "this check never ran" look exactly the same.
 
-On top of that, each rule has a **battery**: it deletes one thing the rule depends on and then
-demands the harness go red, at the specific assertion that thing belongs to. If nothing goes red,
-that part of the rule was never doing any work. CI refuses a rule whose battery cannot kill it.
+Older rules also have a **battery** (`*.mutations.mjs`): it deletes one thing the rule depends on
+and then demands the harness go red, at the specific assertion that thing belongs to. **These
+hand-written batteries are deprecated and being removed (#52).** Do not write a new one and do
+not add cases to an existing one; instead, say what an assertion guards in a comment directly
+above it (`// Guards: …`). `npm run check` fails on a new or grown battery — the frozen list in
+`scripts/mutation-batteries.frozen.json` may only shrink. Whether a real mutation-testing tool
+replaces them is decided in #52.
 
 A harness runs in this tree, against this working copy. That is the wrong shape for a defect that
 only exists once somebody else has installed the package — a path written inside a skill, a file
@@ -99,7 +103,7 @@ The README links only what a user needs. These are for people changing the packa
 ```bash
 npm install
 npm test                 # every harness
-node scripts/run-mutations.mjs   # run the existing batteries: each must kill every mutant it plants
+node scripts/run-mutations.mjs   # run the remaining batteries (deprecated, #52 — do not add to them)
 ```
 
 None of these are needed to USE the tool — they are here because the gates are part of the
@@ -125,7 +129,8 @@ Licensing differs too: that suite is CC BY-NC 4.0, this is MIT.
 - **scorecard** — `PIPELINE-STATUS.md`, the file above. One per paper.
 - **frozen** — a copy of the exact PDF or `.tex` that was sent, kept in `versions/`. Bytes, not a
   commit reference: squash and `gc` destroy commit references, and did.
-- **harness** — the test beside a rule. **battery** — a set of edits that try to break a harness.
+- **harness** — the test beside a rule. **battery** — a set of edits that try to break a harness
+  (deprecated, being removed in #52).
 
 ## Also in the box
 
