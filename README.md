@@ -3,8 +3,8 @@
 A command-line checker for a research paper kept in git: it compares what you say about the paper
 ("submitted on this date, as this PDF") with the files that are actually there.
 
-It is for people who write a paper in LaTeX or Markdown inside a git repository — on their own,
-or with Claude Code, for which it also ships optional skills and hooks. The command is `rpp`.
+It is for people who write a paper in LaTeX inside a git repository — on their own, or with
+Claude Code, for which it also ships optional skills and hooks. The command is `rpp`.
 
 ## What goes where
 
@@ -13,24 +13,24 @@ One directory per paper:
 ```
 papers/
   my-paper/
-    paper.tex  or  paper.md   the paper itself: LaTeX or Markdown, you choose
-    PIPELINE-STATUS.md        always Markdown: the scorecard — which stages the paper reached
-    reviews/*.md              always Markdown: review notes (optional)
+    paper.tex                 the paper itself, in LaTeX
+    PIPELINE-STATUS.md        Markdown: the scorecard — which stages the paper reached
+    reviews/*.md              Markdown: review notes (optional)
     versions/                 the exact PDF and source you sent at each stage, frozen
     build.sh                  your own script that builds the PDF (optional)
 ```
 
 A **stage** is a point the paper has reached, such as `submitted` or `camera-ready`.
 
-- **The paper** can be LaTeX or Markdown. A LaTeX paper gets four checks, a Markdown paper two;
-  the two extra LaTeX checks look at LaTeX-only things (see [the checks](#what-the-checks-catch)).
-- **The other files the tool reads** — the scorecard and the review notes — are always Markdown,
-  whatever your paper is written in. You (or the Claude Code skills) write them; `rpp` only reads
-  them.
+- **The paper** is LaTeX, in `paper.tex`. A paper written in Markdown (`paper.md`) is still
+  read today, but that is deprecated and being removed
+  ([#57](https://github.com/zernie/research-paper-pipeline/issues/57)); do not start a new one.
+- **The other files the tool reads** — the scorecard and the review notes — are Markdown. You (or
+  the Claude Code skills) write them; `rpp` only reads them.
 - **The PDF** is built by your paper's own script: `rpp build papers/my-paper` runs `build.sh` or
-  `repro/build-submission.sh` from the paper's directory. This package does not ship a LaTeX or
-  Markdown compiler. For LaTeX you need TeX Live ([`docs/toolchain.md`](docs/toolchain.md)). For a
-  Markdown paper there is no built-in way to make a PDF — your `build.sh` has to do it.
+  `repro/build-submission.sh` from the paper's directory. This package does not ship a LaTeX
+  compiler, so you need TeX Live ([`docs/toolchain.md`](docs/toolchain.md)). Built-in compilation
+  is tracked in [#59](https://github.com/zernie/research-paper-pipeline/issues/59).
 
 ## Install and set up
 
@@ -84,13 +84,13 @@ Optional inputs: `config`, `max-warnings` (default `-1`), `texcount` (default `t
 npx rpp lint
 ```
 
-On a paper folder made by hand, with `paper.md` and nothing else, the output is:
+On a paper folder made by hand, with `paper.tex` and nothing else, the output is:
 
 ```
 config: package.json
 papers/my-paper
   error  missing `PIPELINE-STATUS.md` — `paper/stages`, `paper/source` and `paper/author-list` read this file, so nothing `my-paper` declares about its stages, sources or authors is checked
-…/my-papers/papers/my-paper/paper.md
+…/my-papers/papers/my-paper/paper.tex
   1:1  warning  1 × `§` instead of «Section» (reviewer B). Paying the debt down is silent; growth is reported                                   paper/typography
   1:1  warning  1 × a decimal without a leading zero, `.05` instead of `0.05` (reviewer B). Paying the debt down is silent; growth is reported  paper/typography
 
@@ -101,7 +101,7 @@ papers/my-paper
 the line and column, the level, what is wrong, and at the end the check that found it.
 
 The run exits `1` because of the missing scorecard. `npx rpp new my-paper` adds it and leaves
-`paper.md` alone. After that and fixing the two warnings:
+`paper.tex` alone. After that and fixing the two warnings:
 
 ```
 config: package.json
@@ -153,8 +153,9 @@ config: package.json
 ```
 
 It creates the folder inside your papers directory with a scorecard and a LaTeX stub, then
-checks it. `--format md` makes a Markdown stub instead. The name may use `a-z`, `0-9`, `.`, `_`
-and `-`.
+checks it. The name may use `a-z`, `0-9`, `.`, `_` and `-`. (`--format md` still makes a
+Markdown stub; Markdown papers are deprecated, see
+[#57](https://github.com/zernie/research-paper-pipeline/issues/57).)
 
 It never overwrites a file. On a folder that already exists it adds only what is missing, so it
 also fixes an old folder that has no scorecard.

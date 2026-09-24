@@ -16,6 +16,10 @@ still left to a human copying something by hand?**
 > - `--hooks=local` is **deferred, not implemented**; `init` refuses it by name.
 >
 > Where the build differed from this text, it is listed at the end, in § 8.
+>
+> **Later, 2026-09-24:** Markdown papers are deprecated and being removed
+> ([#57](https://github.com/zernie/research-paper-pipeline/issues/57)). Where this record mentions
+> `paper.md` or `--format md`, it describes the tool as it was when written.
 
 1. A paper folder needs a `PIPELINE-STATUS.md`, and today nothing makes it — you copy a template.
    Should there be a command, and where should per-paper settings live: in a file in every paper

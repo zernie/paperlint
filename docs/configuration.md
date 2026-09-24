@@ -78,7 +78,9 @@ and the real findings leave with it.
 }
 ```
 
-Those are the defaults; you only write the block to change them. They were measured against a
+Those are the defaults; you only write the block to change them. `paper.md` is still in them
+because Markdown papers are deprecated but not yet removed
+([#57](https://github.com/zernie/research-paper-pipeline/issues/57)). They were measured against a
 real five-paper corpus rather than chosen — it passes with zero findings, while adding
 `paper.pdf` to `require` produces two findings on papers that are perfectly fine, which is why it
 is not there.
@@ -109,6 +111,9 @@ command. The corpus this came from had a CI loop looking for `repro/build-submis
 accepted paper shipped `build.sh`; the mismatch read as "nothing to build", and the paper reached
 its venue without a single paper job having run on it. `--dry-run` answers "which papers can
 nobody build?" in a second, without spending twenty compiles to ask.
+
+Built-in compilation, with `build.sh` as an optional override, is tracked in
+[#59](https://github.com/zernie/research-paper-pipeline/issues/59).
 
 ## Using the rules from an existing ESLint config
 
