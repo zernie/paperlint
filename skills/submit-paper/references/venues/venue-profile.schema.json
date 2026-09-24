@@ -18,7 +18,6 @@
     "page_h_in": { "type": "number", "exclusiveMinimum": 0 },
     "textblock_w_in": { "type": "number", "exclusiveMinimum": 0 },
     "textblock_h_in": { "type": "number", "exclusiveMinimum": 0 },
-    "last_page_balance_tol_pt": { "type": "number", "exclusiveMinimum": 0 },
     "columns": { "type": "integer", "minimum": 1 },
     "body_pt": { "type": "number", "exclusiveMinimum": 0 },
     "body_pt_tol": { "type": "number", "minimum": 0 },

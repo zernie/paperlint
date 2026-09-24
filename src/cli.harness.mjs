@@ -637,7 +637,7 @@ check(
       const own = out.text().split("── rpp doctor")[0];
       check(
         "every absence is NAMED, and the count matches the names",
-        /✗ 7 of 7 missing: pdflatex, bibtex/.test(own),
+        /✗ 5 of 5 missing: pdflatex, bibtex/.test(own),
       );
       check(
         "🔴 and it carries the INSTALL COMMAND — a remedy, not just a diagnosis",
@@ -1736,6 +1736,123 @@ console.log(
     );
     const two = await cli(["new", "a", "b"], root);
     check("one paper at a time", two.code === 2);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+// ── the settings are parsed at the boundary: unknown keys, `rules` blocks ─────────────────
+{
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-settings-")));
+  try {
+    const dir = join(root, "papers", "p");
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(
+      join(dir, "PIPELINE-STATUS.md"),
+      "# Status\n\nStage: draft\n",
+    );
+    writeFileSync(
+      join(dir, "paper.tex"),
+      "\\documentclass{article}\n\\begin{document}x\\end{document}\n",
+    );
+    const settings = (rpp) =>
+      writeFileSync(
+        join(root, "package.json"),
+        JSON.stringify({
+          name: "c",
+          version: "1.0.0",
+          "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "papers", ...rpp },
+        }),
+      );
+    const balanceOn = (files) => ({
+      rules: [{ files, rules: { "pdf/last-page-balance": "error" } }],
+    });
+
+    settings({ typographyDept: {} });
+    const typo = await cli(["lint"], root);
+    check(
+      "🔴 an unknown key is REFUSED by name — a typo must not read as 'not set'",
+      typo.code === 2 &&
+        typo.out.includes(
+          'package.json → "research-paper-pipeline": unknown key "typographyDept"',
+        ),
+    );
+    settings({
+      ledger: "x.jsonl",
+      citeChecks: "c",
+      timezone: "UTC",
+      contactEmail: "a@b.c",
+      triggerCases: "t.mjs",
+      scripts: "s",
+    });
+    check(
+      "the keys the skill scripts read are known keys, not typos",
+      (await cli(["lint"], root)).code !== 2,
+    );
+    settings({ rules: { "pdf/last-page-balance": "error" } });
+    check(
+      "`rules` that is not a list is refused, naming the key",
+      /\.rules must be a list of blocks/.test((await cli(["lint"], root)).out),
+    );
+    settings({
+      rules: [{ files: ["papers/**"], rules: { "pdf/nope": "error" } }],
+    });
+    const unknownRule = await cli(["lint"], root);
+    check(
+      "a rule rpp does not ship is refused, naming the block and the rule",
+      unknownRule.code === 2 &&
+        unknownRule.out.includes(
+          '.rules[0].rules: "pdf/nope" is not a rule rpp ships',
+        ),
+    );
+    settings({
+      rules: [
+        { files: ["papers/**"], rules: { "pdf/last-page-balance": "fatal" } },
+      ],
+    });
+    check(
+      "a bad severity is refused, naming the rule",
+      /rules\["pdf\/last-page-balance"\]: "fatal" is not a severity/.test(
+        (await cli(["lint"], root)).out,
+      ),
+    );
+    settings({
+      rules: [{ files: ["papers/**"], plugins: {}, rules: {} }],
+    });
+    check(
+      "a block key other than files/ignores/rules is refused",
+      /rules\[0\]: unknown key "plugins"/.test((await cli(["lint"], root)).out),
+    );
+
+    settings(balanceOn(["papers/p/**"]));
+    const on = await cli(["lint"], root);
+    check(
+      "🔴 an optional rule turned on by a `rules` block RUNS — here it asks for the build's facts",
+      on.code === 1 &&
+        /pdf\/last-page-balance/.test(on.out) &&
+        /rpp build/.test(on.out),
+    );
+    const fromInside = await cli(["lint"], dir);
+    check(
+      "`files` is relative to the file holding the settings, not to where lint runs",
+      fromInside.code === 1 && /pdf\/last-page-balance/.test(fromInside.out),
+    );
+    settings(balanceOn(["paperz/**"]));
+    const silent = await cli(["lint"], root);
+    check(
+      "🔴 an optional rule turned on for a glob that reaches no paper.tex FAILS the run — not a green zero",
+      silent.code === 1 &&
+        silent.out.includes(
+          'pdf/last-page-balance is turned on in "rules", but no linted paper.tex gets it',
+        ),
+    );
+    settings({
+      rules: [{ files: ["papers/**"], rules: { "paper/typography": "off" } }],
+    });
+    check(
+      "a built-in rule's severity can be changed the same way",
+      (await cli(["lint"], root)).code === 0,
+    );
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

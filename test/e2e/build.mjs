@@ -350,6 +350,59 @@ try {
   );
 
   console.log();
+  console.log("the optional balance rule judges what the build measured");
+  // The consumer turns pdf/last-page-balance on for two papers, in the settings' `rules` key —
+  // ESLint's own block shape, `files` relative to the settings file.
+  writeFileSync(
+    join(work, "rpp.json"),
+    JSON.stringify(
+      {
+        [PAPERS_DIR_FIELD]: "papers",
+        rules: [
+          {
+            files: ["papers/unbalanced/**", "papers/acmart/**"],
+            rules: { "pdf/last-page-balance": "error" },
+          },
+        ],
+      },
+      null,
+      2,
+    ),
+  );
+  const linted = spawnSync(
+    process.execPath,
+    [CLI, "lint", "papers/unbalanced", "papers/acmart", "--json"],
+    { cwd: work, encoding: "utf8" },
+  );
+  let findings = [];
+  try {
+    findings = JSON.parse(linted.stdout).flatMap((r) =>
+      r.messages
+        .filter((m) => m.ruleId === "pdf/last-page-balance")
+        .map((m) => ({ file: r.filePath, message: m.message })),
+    );
+  } catch {
+    findings = [
+      { file: "(unparsable)", message: linted.stdout + linted.stderr },
+    ];
+  }
+  check(
+    "🔴 unbalanced: `rpp lint` reports the last page — 621.5 and 264.8 pt, with the fix by hand",
+    findings.some(
+      (f) =>
+        f.file.endsWith(join("unbalanced", "paper.tex")) &&
+        /621\.5 and 264\.8 pt/.test(f.message) &&
+        /pbalance/.test(f.message),
+    ),
+    JSON.stringify(findings),
+  );
+  check(
+    "acmart: its one-page stub of a last page is not judged",
+    !findings.some((f) => f.file.includes(join("acmart", "paper.tex"))),
+    JSON.stringify(findings),
+  );
+
+  console.log();
   console.log("a failed build");
   const brokenDir = join(work, "papers", "broken");
   check(

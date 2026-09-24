@@ -72,8 +72,15 @@ import {
 import {
   CONFIG_KEY,
   PAPERS_DIR_FIELD,
+  SETTINGS_KEYS,
   renamedFieldMessage,
 } from "../lib/paper-config.mjs";
+import {
+  parseRuleBlocks,
+  shippedRuleIds,
+  unknownKeys,
+  type Parsed,
+} from "./rules-config.ts";
 export { init };
 export { nextSteps } from "./init.ts";
 
@@ -89,6 +96,8 @@ import texBuild from "../eslint-rules/tex-build.mjs";
 import docFields from "../eslint-rules/doc-fields.mjs";
 // @ts-expect-error — an ESLint rule in .mjs, it has no types
 import findingsCause from "../eslint-rules/review-findings-cause.mjs";
+// @ts-expect-error — an ESLint rule in .mjs, it has no types
+import pdfRules from "../eslint-rules/pdf-last-page-balance.mjs";
 
 const USAGE = `research-paper-pipeline — machine-checkable gates for a paper kept in git
 
@@ -142,8 +151,14 @@ read as a deprecated fallback and the run says so. \`papersDir\` is required; th
     "docFields":         { "read": { "values": ["full", "abstract", "none"] } },
     "reviewSince":       "2026-08-23",
     "minFindings":       3,
-    "causeMarker":       "Cause:"
+    "causeMarker":       "Cause:",
+    "rules": [ { "files": ["papers/my-paper/**"],
+                 "rules": { "pdf/last-page-balance": "error" } } ]
   }
+
+  "rules" takes ESLint flat-config blocks (files, ignores, rules), appended after rpp's own, with
+  files relative to the file holding the settings. Optional rules (off unless turned on there):
+  pdf/last-page-balance. An unknown key, anywhere in the settings, is an error.
 `;
 
 /** The config the user would otherwise write by hand. The data comes from `opts`, the mechanism is here. */
@@ -165,6 +180,11 @@ export function buildConfig(
     // default (only `node_modules/` and `.git/`), so without this block `rpp lint` would lint the
     // template as a paper — and a richer template with placeholder stages would fail the run.
     { ignores: ["**/.template/"] },
+    // The `pdf` plugin is registered for EVERY file, and its rule is on for none. A consumer's
+    // block (`rules`, appended below) turns it on for a glob that also matches markdown files;
+    // with the plugin defined only beside `paper.tex`, ESLint would refuse those files with
+    // "could not find plugin". The rule itself acts on `paper.tex` only.
+    { plugins: { pdf: pdfRules } },
     {
       files: ["**/PIPELINE-STATUS.md"],
       plugins: { markdown, paper: paperStages },
@@ -237,7 +257,90 @@ export function buildConfig(
         "tex/acm-frontmatter-override": "error",
       },
     });
+  // The consumer's own blocks, LAST, so a later block wins — ESLint's rule. Parsed by
+  // `readConfig`; each carries the settings file's directory as its `basePath`.
+  cfg.push(...(opts.rules ?? []));
   return cfg;
+}
+
+/**
+ * The rule ids a consumer may name in `rules`: every rule rpp's own config defines, read off that
+ * config rather than listed again. `@eslint/markdown` is a dependency's plugin, not rpp's.
+ */
+export const SHIPPED_RULES: ReadonlySet<string> = shippedRuleIds(
+  buildConfig({}, { sentinel: "tex language" }),
+  [markdown],
+);
+
+/** Whether a rule entry (`"error"`, `2`, `["warn", {…}]`) turns the rule on. */
+const isOn = (entry: unknown): boolean => {
+  const sev = Array.isArray(entry) ? entry[0] : entry;
+  return sev !== undefined && sev !== "off" && sev !== 0;
+};
+
+/**
+ * Rules rpp ships and turns on for no file itself — the ones a consumer opts into with `rules`.
+ * Derived: every shipped rule that no block of rpp's own config names.
+ */
+export const OPTIONAL_RULES: ReadonlySet<string> = new Set(
+  [...SHIPPED_RULES].filter(
+    (id) =>
+      !buildConfig({}, { sentinel: "tex language" }).some((b) =>
+        isOn((b as { rules?: Record<string, unknown> }).rules?.[id]),
+      ),
+  ),
+);
+
+/**
+ * 🔴 AN OPTIONAL RULE THAT IS ON AND REACHES NO PAPER IS A GREEN ZERO. A `files` glob that matches
+ * nothing — a typo, a path relative to the wrong directory — leaves the rule never invoked, and a
+ * rule that never runs reports exactly like a rule that passed. So for every optional rule the
+ * consumer turned on, some linted `paper.tex` must actually have it enabled; the ones none has are
+ * returned, for the caller to refuse.
+ */
+export async function silentOptionalRules(
+  eslint: ESLint,
+  lintedFiles: readonly string[],
+  opts: RppConfig,
+): Promise<string[]> {
+  const turnedOn = new Set(
+    (opts.rules ?? []).flatMap((b) =>
+      Object.entries(b.rules)
+        .filter(([id, e]) => OPTIONAL_RULES.has(id) && isOn(e))
+        .map(([id]) => id),
+    ),
+  );
+  const reached = new Set<string>();
+  for (const f of lintedFiles.filter((p) => basename(p) === MAIN)) {
+    const cfg = (await eslint.calculateConfigForFile(f)) as {
+      rules?: Record<string, unknown>;
+    };
+    for (const id of turnedOn) if (isOn(cfg.rules?.[id])) reached.add(id);
+  }
+  return [...turnedOn].filter((id) => !reached.has(id));
+}
+
+/**
+ * The settings after the boundary: an unknown key is refused by name, and `rules` becomes parsed
+ * config blocks. Nothing after this sees the raw object.
+ */
+export function parseSettings(
+  opts: RppConfig,
+  where: string,
+  baseDir: string,
+): Parsed<RppConfig> {
+  const raw = opts as Record<string, unknown>;
+  const unknown = unknownKeys(raw);
+  if (unknown.length > 0)
+    return {
+      ok: false,
+      error:
+        `${where}: unknown key${unknown.length > 1 ? "s" : ""} ${unknown.map((k) => `"${k}"`).join(", ")} — ` +
+        `a typo would otherwise read as "not set". Known keys: ${Object.keys(SETTINGS_KEYS).join(", ")}`,
+    };
+  const rules = parseRuleBlocks(raw["rules"], where, SHIPPED_RULES, baseDir);
+  if (!rules.ok) return rules;
+  return { ok: true, value: { ...opts, rules: rules.value } };
 }
 
 /**
@@ -454,6 +557,18 @@ export function readConfig(
   if (renamed) {
     err(renamed);
     return { code: 2 };
+  }
+  if (decl && configPath) {
+    const parsed = parseSettings(
+      opts,
+      where,
+      dirname(resolve(cwd, configPath)),
+    );
+    if (!parsed.ok) {
+      err(parsed.error);
+      return { code: 2 };
+    }
+    opts = parsed.value;
   }
 
   // 🔴 THE PAPERS DIRECTORY IS A REQUIRED FIELD. The papers directory is the one thing without which the tool
@@ -938,6 +1053,51 @@ export async function run(
   if (results.length === 0) {
     err(
       `nothing was linted under ${paths.map((x) => relative(cwd, x) || x).join(", ")} — no PIPELINE-STATUS.md, paper.md/tex or reviews/ found there. A clean report over zero files is not a clean report.`,
+    );
+    return 1;
+  }
+
+  return await reportLint(eslint, results, structure, {
+    a,
+    log,
+    err,
+    where: relative(cwd, dirname(resolve(cwd, configPath ?? "."))) || ".",
+    opts,
+  });
+}
+
+/**
+ * The end of `rpp lint`: refuse an optional rule that reached no paper, print the findings, and
+ * decide the exit code. Pulled out of `run` so each question has its own function.
+ */
+async function reportLint(
+  eslint: ESLint,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
+  results: any[],
+  structure: ReturnType<typeof checkStructure>,
+  {
+    a,
+    log,
+    err,
+    where,
+    opts,
+  }: {
+    a: Args;
+    log: typeof console.log;
+    err: typeof console.error;
+    where: string;
+    opts: RppConfig;
+  },
+): Promise<number> {
+  const silent = await silentOptionalRules(
+    eslint,
+    results.map((r) => r.filePath),
+    opts,
+  );
+  if (silent.length > 0) {
+    err(
+      `${silent.join(", ")} is turned on in "rules", but no linted paper.tex gets it — check the block's ` +
+        `"files" (relative to ${where}). A rule that never runs reports exactly like a rule that passed.`,
     );
     return 1;
   }

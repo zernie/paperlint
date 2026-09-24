@@ -63,11 +63,10 @@
 
   "textblock_w_in": 7.087,
   "textblock_h_in": 9.252,
-  // ACM requires the last page's columns to be balanced; on 08-29 Conference Publishing bounced
-  // an accepted paper for this ("Please correct the last page balancing"). The tolerance has
-  // margin: that day's measurements gave 2.7 pt for the balanced version and 321.4 for the
-  // unbalanced one — nothing sits between them.
-  "last_page_balance_tol_pt": 120,
+  // Last-page balance is NOT a profile field. It is the optional lint rule pdf/last-page-balance,
+  // which a consumer turns on for the papers whose publisher asks (Conference Publishing bounced
+  // an accepted paper for it on 08-29: "Please correct the last page balancing") — see
+  // docs/optional-rules.md.
 
   "columns": 2,
 

@@ -1,3 +1,5 @@
+import type { RuleBlock } from "./rules-config.ts";
+
 /**
  * The shapes the CLI commands exchange. Before the move to TypeScript this was all `{}` and lived
  * in someone's head: a typo in a config key read as "field not set", not as an error.
@@ -24,6 +26,8 @@ export interface RppConfig {
   structure?: StructureConfig | false;
   /** REMOVED — `rpp build` compiles the paper itself. Still typed so a leftover key can be named. */
   buildScripts?: unknown;
+  /** ESLint config blocks appended after rpp's own — PARSED by `parseSettings` in cli.ts. */
+  rules?: readonly RuleBlock[];
 }
 
 export interface StructureConfig {
