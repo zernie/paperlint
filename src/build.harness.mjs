@@ -506,6 +506,10 @@ try {
       "  balance: acmart sigconf is two-column — will place \\balance in the bibliography",
     ) && bal.plan.map((p) => p.step).join(",") === "inputs,compile,balance",
   );
+  check(
+    "🔴 balance: bibtex ran ONCE, in the compile step — an attempt never regenerates (and erases) the insertion",
+    bt.calls.filter((c) => c.bin === "bibtex").length === 1,
+  );
   check("balance: a paper that CAN be balanced builds", bal.status === "built");
   const tries = bt.calls.filter((c) => c.bin === "pdflatex" && c.position >= 0);
   check(
@@ -515,10 +519,6 @@ try {
   check(
     "🔴 balance: every pass saw EXACTLY ONE \\balance — each attempt starts from bibtex's .bbl",
     tries.every((c) => c.count === 1),
-  );
-  check(
-    "🔴 balance: bibtex ran ONCE, in the compile step — an attempt never regenerates (and erases) the insertion",
-    bt.calls.filter((c) => c.bin === "bibtex").length === 1,
   );
   check(
     "balance: an attempt whose aux settles at once is two pdflatex passes",
