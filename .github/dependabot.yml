@@ -21,9 +21,9 @@ version: 2
 updates:
   - package-ecosystem: "npm"
     directory: "/"
-    # DAILY, and this is consciously no more expensive than weekly: the repository
-    # is public (Actions minutes are free), the PR is grouped into one, ceiling 2 — so
-    # "more frequently" here means only a smaller window, not more noise.
+    # MONTHLY. It used to be daily so that new vigiles releases arrived fast, but we bump
+    # vigiles by hand in the same pass that merges a vigiles PR, so the bot was only ever
+    # catching up with what we had already done. Once a month is the pace someone reads.
     #
     # 🔴 SCHEDULE IS NOT THE ONLY DELAY, and the second one is easy to miss: version
     # updates have a COOLDOWN, defaulting to 3 days — "a new version is not
@@ -35,7 +35,7 @@ updates:
     # ⚠️ Publishing to the registry does not wake the bot — it runs on schedule only.
     # For immediate check: Insights -> Dependency graph -> Dependabot -> Check for updates.
     schedule:
-      interval: "daily"
+      interval: "monthly"
       time: "06:00"
       timezone: "Asia/Almaty"
     # 🔴 OUR OWN PACKAGE IS EXEMPT FROM COOLDOWN, answering a specific objection:
