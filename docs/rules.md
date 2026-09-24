@@ -15,6 +15,10 @@ reads and when it fails. Errors fail `rpp lint`; warnings print and do not.
 | `review/findings-cause`        | error | `reviews/*.md`                                | a review lists at least `minFindings` (default 3) findings and no cell introduces a cause with the marker (default `Cause:`)                                                                                                                                                                                                                                                                                                                                    |
 | `doc/fields`                   | warn  | `reviews/*.md`                                | a front-matter field is missing or holds a value outside the list you configured. Off entirely unless you configure `docFields`                                                                                                                                                                                                                                                                                                                                 |
 
+Optional rules — off unless you turn them on in the `rules` setting, because only some venues need
+them — are on their own page: [`optional-rules.md`](optional-rules.md). Today there is one,
+`pdf/last-page-balance`.
+
 Besides these rules, `rpp lint` reports a paper directory that is missing a required file (by
 default `PIPELINE-STATUS.md`) as an error. Which files are required is configurable — see
 [`configuration.md`](configuration.md#required-files).

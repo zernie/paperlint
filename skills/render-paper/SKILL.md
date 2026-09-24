@@ -4,7 +4,7 @@ description: Compile a LaTeX paper (ACM/IEEE/arXiv) to PDF and render its pages 
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, SendUserFile]
 ---
 
-<!-- vigiles:sha256:ae015af73a4c8f73 compiled from skills/render-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:cbf13bc99392d1e4 compiled from skills/render-paper/SKILL.md.spec.ts -->
 
 # render-paper — .tex → PDF → readable page PNGs
 
@@ -60,8 +60,9 @@ npx rpp build <paper-dir>
 ```
 It picks a TeX Live that has every package the venue declares (rpp's own, else one on PATH),
 runs pdflatex and bibtex until the references settle, fails on an undefined `\ref`/`\cite`
-through `paper-guards.tex`. It does not judge the layout: a balanced last page is not its
-business. Without a
+through `paper-guards.tex`, then measures the PDF into `_build/paper.facts.json` (fonts, Type 3,
+the last page's column heights). It judges nothing: a venue that needs a balanced last page turns
+on the optional lint rule `pdf/last-page-balance` (see `docs/optional-rules.md` in the package). Without a
 terminal and without a qualifying TeX Live it stops with one line naming `npx rpp toolchain`.
 Check the last log anyway: `grep -iE "Fatal|Output written" ` and
 `grep -ciE "Undefined control|Citation.*undefined|Reference.*undefined"` (must be 0).

@@ -15,7 +15,13 @@ The README carries the minimal version of this. Everything below is the full sur
     "docFields": { "read": { "values": ["full", "abstract", "none"] } },
     "reviewSince": "2026-08-23",
     "minFindings": 3,
-    "causeMarker": "Cause:"
+    "causeMarker": "Cause:",
+    "rules": [
+      {
+        "files": ["papers/agenticdev-2026/**"],
+        "rules": { "pdf/last-page-balance": ["error", { "tolerancePt": 120 }] }
+      }
+    ]
   }
 }
 ```
@@ -30,6 +36,15 @@ The README carries the minimal version of this. Everything below is the full sur
 | `reviewSince`       | no       | only review files created on or after this date are checked                               |
 | `minFindings`       | no       | a review with fewer findings than this is not required to name causes                     |
 | `causeMarker`       | no       | the phrase a review uses to introduce a cause (default `Cause:`), in any language         |
+| `rules`             | no       | extra ESLint config blocks: turn optional rules on, change a rule's severity — see below  |
+
+The skill scripts read a few more keys of the same object — `ledger`, `scripts`, `timezone`,
+`contactEmail`, `citeChecks`, `triggerCases` — documented with the skills that use them.
+
+**Any other key is an error**, named in the message: `package.json → "research-paper-pipeline":
+unknown key "typographyDept"`. A misspelt key would otherwise read as "not set", and the setting
+you meant would silently do nothing. The list of known keys is `SETTINGS_KEYS` in
+`lib/paper-config.mjs`.
 
 `papersDir` is required because the scope is the one thing that must not default: a default of `"."`
 turns every run into a green report over the whole checkout. `rpp init` fills it by measuring —
@@ -56,6 +71,41 @@ theirs, and prints which file it found. `--config <file>` overrides the search.
 longer does, and a run that reads one says so on its first line. The hooks never read it, so
 leaving settings there is how the linter and the guard end up watching different directories —
 `rpp init` copies the value across for you.
+
+## The `rules` key: turning rules on and off
+
+`rules` is a list of blocks in ESLint's own
+[flat-config shape](https://eslint.org/docs/latest/use/configure/configuration-files), limited to
+the three keys that make sense in JSON — `files`, `ignores` and `rules`. rpp appends the blocks
+**after** its own configuration, so, as in ESLint, a later block wins: a block can turn on a rule
+that is off by default, or change the severity of one that is on.
+
+```json
+"rules": [
+  {
+    "files": ["papers/agenticdev-2026/**"],
+    "rules": { "pdf/last-page-balance": ["error", { "tolerancePt": 120 }] }
+  },
+  {
+    "files": ["papers/old-draft/**"],
+    "rules": { "paper/typography": "off" }
+  }
+]
+```
+
+- **`files` and `ignores` are globs relative to the file that holds the settings** — the
+  directory of your `package.json` — exactly as ESLint resolves them relative to its config file,
+  whatever directory you run `rpp lint` from. A block without `files` applies to every linted file.
+  A pattern ending in `/**` is the usual way to name one paper.
+- **A rule entry** is a severity (`"off"`, `"warn"`, `"error"`, or `0`/`1`/`2`), or a list whose
+  first element is a severity and the rest are the rule's options.
+- **Only rules rpp ships can be named** — the ones in [`docs/rules.md`](rules.md) and
+  [`docs/optional-rules.md`](optional-rules.md). A rule id rpp does not ship, a bad severity, a
+  `rules` that is not a list, or a block key other than `files`, `ignores` and `rules` stops the run
+  with a message naming the exact key, before anything is linted.
+- **An optional rule you turned on must reach a paper.** If no linted `paper.tex` gets the rule —
+  usually a `files` glob with a typo — `rpp lint` fails and says so: a rule that never runs
+  reports exactly like one that passed.
 
 ## Required files
 

@@ -61,7 +61,7 @@ nobody covered — verified by adding a `windows` job and watching it fail.
 ## Layout
 
 ```
-eslint-rules/   the rules, each with its .harness.mjs and .mutations.mjs beside it
+eslint-rules/   the rules, each with its .harness.mjs beside it (older ones also a .mutations.mjs)
 lib/            shared readers — markdown, skill corpus, the mutation driver
 hooks/          three hooks for vigiles — the code
 plugin/         the Claude Code plugin: wiring for those hooks, no code, no package.json
