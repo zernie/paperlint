@@ -70,7 +70,7 @@ process.exit(
       {
         name: "the refusal does not name the command",
         harness: HARNESS,
-        expect: "🔴 no human, nothing qualifies",
+        expect: "refusal: ONE line naming `npx rpp toolchain`",
         disables:
           "the one line a CI log shows: without `npx rpp toolchain` in it, the reader does not know the cure",
         edits: [
