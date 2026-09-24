@@ -1,5 +1,5 @@
 /**
- * Tests for `readme-anchors.mjs` — the check that every `README.md#section` link written in a
+ * Tests for `readme-anchors.mjs` — the check that every link to a README heading written in a
  * code comment points at a heading that really exists in README.md.
  *
  * What is tested:
