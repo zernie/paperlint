@@ -1,8 +1,8 @@
 # End-to-end tests
 
-There are <!-- count:e2e -->2 of them: `test/e2e/install.mjs` and `test/e2e/build.mjs`. Both are
-part of `npm run check`, so nobody has to remember to call them. `npm run test:e2e` runs just the
-two of them, install first; if the install e2e fails or is skipped, the build e2e does not run.
+They are `test/e2e/install.mjs` and `test/e2e/build.mjs`. Both are
+part of `npm run check`, so nobody has to remember to call them. `npm run test:e2e` runs just
+these, install first; if the install e2e fails or is skipped, the build e2e does not run.
 
 This page says what they prove, what they deliberately do not, and when a change owes a new one.
 

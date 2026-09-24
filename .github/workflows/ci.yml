@@ -15,7 +15,6 @@
 #   npm test (12 harnesses)              11 s
 #   npm run lint (eslint over fixtures)   1 s
 #   rules-see-files.mjs                   1 s
-#   readme-numbers.mjs                    1 s   <- README numbers are verified against the tree
 #   vigiles lint                          3 s   ← added 2026-09-12 with the first ten skills
 #   run-mutations.mjs (12 batteries)    242 s   ← 130 mutations, the expensive and load-bearing part
 #   ───────────────────────────────────────────
@@ -170,11 +169,6 @@ jobs:
       # none. In the source corpus it once found NINETEEN blind rules on a green run.
       - name: every rule sees a file
         run: node scripts/rules-see-files.mjs
-
-      # README names numbers. This step PRODUCES and verifies them — once needed because
-      # the prose promised 45 harnesses and 22 batteries when the disk held 49 and 26.
-      - name: README numbers match disk
-        run: node scripts/readme-numbers.mjs
 
       # 45 mutations across 4 batteries. This is what makes the green above mean something: a
       # harness that cannot fail and a harness that passed look identical from outside. The

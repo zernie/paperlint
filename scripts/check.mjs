@@ -99,11 +99,6 @@ export const GATES = [
     run: locked("node", "scripts/rules-are-content-only.mjs"),
   },
   {
-    name: "every number in the README matches disk",
-    job: "gates",
-    run: locked("node", "scripts/readme-numbers.mjs"),
-  },
-  {
     name: "the marketplace manifest is accepted by the host's own validator",
     job: "gates",
     run: locked("node", "scripts/marketplace-shape.mjs"),

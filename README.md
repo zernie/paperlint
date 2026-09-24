@@ -35,7 +35,7 @@ A **stage** is a point the paper has reached, such as `submitted` or `camera-rea
 
 <!-- `vigiles:symbol src/init.ts#init` — `npm run check` fails if this function is renamed or removed. -->
 
-You need Node <!-- node:min -->22.13 or newer (tested on <!-- node:tested -->22 and <!-- node:tested -->24).
+![Node version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fzernie%2Fresearch-paper-pipeline%2Fmain%2Fpackage.json&query=%24.engines.node&label=node)
 
 ```sh
 npm i -D github:zernie/research-paper-pipeline#<commit-sha>
@@ -183,7 +183,7 @@ Errors fail the run; warnings only print. Exactly what each check reads:
 
 `rpp lint` needs only Node. The Claude Code half is extra.
 
-**Skills.** <!-- count:skills -->24 skills, one per stage of writing a paper — from checking the
+**Skills.** One skill per stage of writing a paper — from checking the
 idea, through drafting and review, to submission and camera-ready. `rpp init` already linked them
 into `.claude/skills/`. Start with `/paper-pipeline`; it routes to the rest. The skills call
 external programs (TeX Live, poppler, Java, Python) — see [`docs/toolchain.md`](docs/toolchain.md).
