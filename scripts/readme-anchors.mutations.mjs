@@ -1,6 +1,7 @@
 /**
- * Battery for `readme-anchors.mjs`. Each case turns the pointer check into one that reports
- * green while a pointer leads nowhere — the only way this check can fail its purpose.
+ * Mutation tests for `readme-anchors.mjs`. Each case breaks the check on purpose (for example,
+ * makes it stop reporting broken links) and expects `readme-anchors.harness.mjs` to fail. If the
+ * harness still passes while the check is broken, the harness is not really testing it.
  */
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";

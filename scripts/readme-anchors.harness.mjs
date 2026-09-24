@@ -1,11 +1,16 @@
 /**
- * Both halves for `readme-anchors.mjs`: it FIRES on a planted pointer to a heading that does not
- * exist, and stays QUIET on the real tree — plus the two ways it could go hollow: a string
- * literal counted as a pointer (a test planting a bad anchor in a string would turn the gate red
- * for nothing), and zero pointers read as a pass.
+ * Tests for `readme-anchors.mjs` — the check that every `README.md#section` link written in a
+ * code comment points at a heading that really exists in README.md.
  *
- * ⚠️ Assertions at the TOP LEVEL: `vigiles test` imports the file and counts "did not throw"
- * as a pass.
+ * What is tested:
+ *   - a link to a heading that does not exist makes the check fail;
+ *   - the real repository passes;
+ *   - text inside a string (not a comment) is ignored, so a test that writes a fake link in a
+ *     string cannot break the check;
+ *   - finding no links at all is a failure, not a pass.
+ *
+ * The assertions run at the top level of the file, because `vigiles test` only sees a failure
+ * when importing the file throws.
  */
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
