@@ -160,11 +160,6 @@ check(
 );
 
 // ── the PDF's last page ───────────────────────────────────────────────────────────────────
-const words = (x, count, top, height) =>
-  Array.from({ length: count }, (_, i) => {
-    const y = top + (height * i) / (count - 1);
-    return `<word xMin="${x}" yMin="${y.toFixed(1)}" xMax="${x + 20}" yMax="${(y + 8).toFixed(1)}">w</word>`;
-  }).join("\n");
 const page = (body, w = 612) =>
   `<page width="${w}.000000" height="792.000000">\n${body}\n</page>`;
 const bbox = (...pages) => `<doc>\n${pages.join("\n")}\n</doc>`;
