@@ -8,7 +8,7 @@
  * install and verify logic — the part that decides success — and what is faked is only TeX.
  * The real TeX Live half is `test/e2e/toolchain.mjs`.
  *
- * Tables, in the order the mutation battery relies on:
+ * Tables, in order:
  *   1. the pure pieces (year, profile, tlmgr's unknown names, cache location);
  *   2. the download: mirror fallback, archive check, the time limit;
  *   3. the command: fresh install, second run is a no-op, --check, partial add, and the three
@@ -114,6 +114,7 @@ check(
   JSON.stringify(T.releaseGap(INCOMPAT("2026", "2027"))) ===
     '{"local":"2026","remote":"2027"}',
 );
+// Guards: the direction of the year check — an outdated mirror would trigger a whole new install.
 check(
   "releaseGap: a STALE mirror (repository older than the tree) is not a new release",
   T.releaseGap(INCOMPAT("2027", "2026")) === null,
@@ -124,6 +125,8 @@ check(
     "tlmgr install: package urw-base35 not present in repository.\n",
   ) === null,
 );
+// Guards: the complete-tree preference — an interrupted new-year install would otherwise be the
+// tree the build uses.
 check(
   "usableTree: the newest COMPLETE tree, not simply the newest",
   T.usableTree(["2027", "2026", "2025"], (y) => y !== "2027") === "2026",
@@ -196,6 +199,7 @@ const recorder = () => {
     [MISSING, url(garbage), url(good)],
     dest,
   );
+  // Guards: the archive check — a mirror's error page would be unpacked as install-tl.
   check(
     "download: falls through a missing mirror and a non-archive to the good one",
     got === url(good),
@@ -209,6 +213,7 @@ const recorder = () => {
     lines.join("\n"),
   );
   const curls = calls.filter((c) => c.cmd === "curl");
+  // Guards: the per-download bond — a hung mirror would hold the job until the job's own timeout.
   check(
     "download: every curl carries its own time limit",
     curls.length === 3 &&
@@ -306,6 +311,7 @@ const cmd = (over = {}) => {
 }
 {
   const r = cmd();
+  // Guards: idempotence — the second run must not touch the network or say it did work.
   check(
     "second run: exit 0 and says there is nothing to do",
     r.code === 0 &&
@@ -361,6 +367,8 @@ const cmd = (over = {}) => {
   const r = cmd({
     tex: { ...TEX, packages: { ...TEX.packages, bogus: ["bogus.sty"] } },
   });
+  // Guards: the diagnosis — an invented package name would read as a missing file, not as a wrong
+  // name.
   check(
     "🔴 an unknown package name fails and is NAMED",
     r.code === 1 && r.err.includes("tlmgr does not know: bogus"),
@@ -371,6 +379,8 @@ const cmd = (over = {}) => {
   const r = cmd({
     tex: { ...TEX, packages: { ...TEX.packages, liar: ["liar.sty"] } },
   });
+  // Guards: acceptance by result — tlmgr's exit code must not stand for the files; that is how an
+  // apt step once 'installed' nothing.
   check(
     "🔴 tlmgr 'installs' it but the proof file is absent: FAIL, package and file named",
     r.code === 1 && r.err.includes("still lacks, after tlmgr: liar (liar.sty)"),
@@ -497,6 +507,8 @@ check(
 }
 {
   const r = inYears(next, { tex: withLibertine });
+  // Guards: the recovery — a new TeX Live year would fail every newly declared package, loudly and
+  // forever.
   check(
     "🔴 years: a new package on a 2027 mirror — tlmgr's refusal installs a 2027 tree beside the old one",
     r.code === 0 &&
@@ -512,6 +524,7 @@ check(
     readFileSync(join(years, "2027", "tlmgr.log"), "utf8").trim() ===
       `${next} acmart latex libertine texcount`,
   );
+  // Guards: the notice — a superseded 300 MB tree would sit in the cache with nothing saying so.
   check(
     "years: the old tree is left in place, said so with its size and never deleted",
     existsSync(join(years, "2026", "bin", "x86_64-linux", "pdflatex")) &&
@@ -545,6 +558,8 @@ check(
     },
     tex: withLibertine,
   });
+  // Guards: the year guard — install-tl for the SAME year would run over the tree that is already
+  // there.
   check(
     "🔴 years: mirrors that disagree about the release fail, and install-tl is not run over the old tree",
     r.code === 1 &&

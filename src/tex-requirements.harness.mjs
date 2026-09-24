@@ -1,7 +1,7 @@
 /**
  * `tex-requirements.ts` — the TeX packages the venue profiles declare, parsed at the boundary.
  *
- * Tables, in the order the mutation battery relies on:
+ * Tables, in order:
  *   1. the SHIPPED data: every profile passes the schema, and the facts that have already cost a
  *      paper (the acmart fonts, binhex, fancyhdr) are declared;
  *   2. the schema REJECTS what it must — each bad profile names the offending path;
@@ -49,6 +49,7 @@ const read = (f) =>
 
 // ── 1. the shipped data ─────────────────────────────────────────────────────────────────
 const venues = R.venueNames(VENUES);
+// Guards: keeping tex-base out of the venue list — it would be offered as a venue named tex-base.
 check(
   "venueNames: the .jsonc profiles, without the base set",
   venues.length >= 3 && !venues.includes("tex-base"),
@@ -91,6 +92,8 @@ for (const v of acm) {
     ["inconsolata", "zi4.sty"],
     ["newtx", "newtxmath.sty"],
     ["kastrup", "binhex.tex"],
+    // Guards: #37 — fancyhdr was held up by an accident of the base image and is absent on a
+    // minimal one.
     ["fancyhdr", "fancyhdr.sty"],
     ["acmart", "acmart.cls"],
   ])
@@ -118,6 +121,7 @@ copyFileSync(join(VENUES, R.SCHEMA_FILE), join(tmp, R.SCHEMA_FILE));
 const bad = (text) => throws(() => R.parseProfile(text, "bad.jsonc", tmp));
 const BAD = [
   ["no `tex` block at all", `{ "template": "acmart" }`, "tex"],
+  // Guards: typo detection — `templat` would be accepted and the field silently unread.
   [
     "an unknown top-level key (a typo)",
     `{ "tex": { "packages": { "a": ["a.sty"] } }, "templat": "x" }`,
@@ -167,6 +171,7 @@ rmSync(tmp, { recursive: true, force: true });
 // ── 3. what a paper gets ────────────────────────────────────────────────────────────────
 {
   const r = R.requirementsFor(null, VENUES);
+  // Guards: saying WHY a paper runs on the base set.
   check(
     "no venue.json → the base set, and the source says so",
     r.source.includes("no venue.json") &&
@@ -204,6 +209,7 @@ check(
     { packages: { a: ["a.sty"] }, tools: {} },
     { packages: { a: ["a2.sty"], b: ["b.sty"] }, tools: { t: ["t"] } },
   );
+  // Guards: the union — two venues proving one package by different files would lose one proof.
   check(
     "mergeRequirements: a package declared twice keeps every proof of both",
     JSON.stringify(m) ===

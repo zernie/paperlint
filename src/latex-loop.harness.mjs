@@ -1,9 +1,9 @@
 /**
- * `latex-loop.ts` — three tables, in the order the mutation battery relies on:
+ * `latex-loop.ts` — three tables, in order:
  *   1. `nextStep` over a `State`: one row per question, plus the cap;
  *   2. `summarize` over histories: one row per field;
  *   3. the two composed, over the histories the loop really sees — the behaviour the build has.
- * A mutation of `nextStep` dies in table 1, one of `summarize` in table 2, before table 3 runs.
+ * A defect in `nextStep` fails in table 1, one in `summarize` in table 2, before table 3 runs.
  *
  * The decision is pure, so none of this needs TeX. The real-pdflatex half lives in
  * `test/e2e/build.mjs`.
@@ -72,6 +72,8 @@ const exitFail = {
   lines: ["I couldn't open database file nope.bib"],
 };
 const STATES = [
+  // Guards: the only moment paper-guards can speak — its error comes on the final pass, so testing
+  // 'final' before 'exit code' would ship the undefined reference green.
   [
     "Q1 the last program failed — fail, whatever else holds",
     S({
@@ -83,6 +85,8 @@ const STATES = [
     "fail",
   ],
   ["the final pass ran clean — done", S({ finalDone: true }), "done"],
+  // Guards: running bibtex at all — the first pass writes the \citation list; without this question
+  // the loop reruns pdflatex, never produces a .bbl, and every \cite stays undefined.
   [
     "Q2 the bibliography input moved since bibtex ran — bibtex, before any rerun",
     S({ bibOutdated: true, unsettled: ["paper.aux"] }),
@@ -93,11 +97,15 @@ const STATES = [
     S({ unsettled: ["paper.aux"] }),
     "latex",
   ],
+  // Guards: the stop on a document that never settles — without it the loop runs forever; with a
+  // silent cap it ships a PDF with stale cross-references.
   [
     `Q3 cap: ${MAX_PASSES} passes and still unsettled — fail`,
     S({ unsettled: ["paper.aux"], latexPasses: MAX_PASSES }),
     "fail",
   ],
+  // Guards: the \finalpass run that arms paper-guards.tex — skipping it saves one pdflatex run and
+  // turns every undefined \ref and \cite back into a green build.
   [
     "Q4 nothing unsettled — the FINAL pass (even at the cap)",
     S({ latexPasses: MAX_PASSES }),
@@ -141,6 +149,8 @@ check(
       warnings: [],
     }),
 );
+// Guards: failing on a failed pass — -halt-on-error stops pdflatex at the first error, and a loop
+// reading the half-written aux as progress would rerun it or call it converged.
 check(
   "summarize: a non-zero exit is `failed`, naming the step, the code and the log excerpt",
   (() => {
@@ -162,6 +172,8 @@ check(
   "summarize: bibOutdated is false once bibtex ran on exactly that input",
   sum([latex({ bib: bib(["k"]) }), bibtex()]).bibOutdated === false,
 );
+// Guards: the .bib hash as an input — a corrected author or year in refs.bib would keep the old
+// .bbl, and the PDF would print the entry as it was before the fix.
 check(
   "summarize: the .bib content changed since bibtex ran — bibOutdated",
   sum([latex({ bib: bib(["k"]) }), bibtex(), latex({ bib: bib(["k"], "b2") })])
@@ -177,11 +189,15 @@ check(
     sum([latex({ before: H("a1", "t1"), after: H("a2", "t2") })]).unsettled,
   ) === JSON.stringify(["paper.aux", "paper.toc"]),
 );
+// Guards: the log's own request for another pass — a package that keeps state outside the tracked
+// files (longtable widths, hyperref outlines) speaks only through this line.
 check(
   "summarize: marker: Rerun to get — unsettled names the rerun marker even with identical files",
   JSON.stringify(sum([latex({ markers: ["rerun-requested"] })]).unsettled) ===
     JSON.stringify(["rerun-requested"]),
 );
+// Guards: 'not settled yet' vs 'this key does not exist' — on stable files an undefined reference
+// never resolves, so rerunning for it burns the cap and reports no-convergence for a typo.
 check(
   "summarize: undefined references ALONE leave nothing unsettled — on stable files they are a real bad key",
   sum([latex({ markers: ["undefined-references"] })]).unsettled.length === 0,
@@ -191,6 +207,8 @@ check(
   JSON.stringify(sum([latex({ bib: bib(["k"]) }), bibtex()]).unsettled) ===
     JSON.stringify(["paper.bbl"]),
 );
+// Guards: reading bibtex's effect from the .bbl — a byte-identical .bbl changes nothing the next
+// pass would read.
 check(
   "summarize: bibtex left the .bbl byte-identical — the pass before it answers",
   sum([latex({ bib: bib(["k"]) }), bibtex({ after: H("a1") })]).unsettled

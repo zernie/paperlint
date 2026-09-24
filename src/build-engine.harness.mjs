@@ -3,7 +3,7 @@
  * the decision acted on. The TeX Lives here are directories with a `pdflatex` file and a fake
  * runner standing in for their `kpsewhich`; the question and the install are injected.
  *
- * Tables, in the order the mutation battery relies on:
+ * Tables, in order:
  *   1. the pure texts: the question, the refusal line, what counts as "yes";
  *   2. prepareEngine: use the cache · use the system · refuse without a human · ask, decline,
  *      accept and install · dry-run never asks or installs.
@@ -58,6 +58,8 @@ const refused = E.refusal(
     system: { label: "s", bin: "/usr/bin", missing: ["cm-super"] },
   },
 );
+// Guards: the one line a CI log shows — without `npx rpp toolchain` in it, the reader does not know
+// the cure.
 check(
   "refusal: ONE line naming `npx rpp toolchain`, the missing packages, and why the system TeX was passed over",
   !refused.includes("\n") &&
@@ -74,6 +76,7 @@ check(
   ).includes("Windows is not supported"),
 );
 for (const [a, yes] of [
+  // Guards: the default answer — [Y/n] promises that Enter installs.
   ["", true],
   ["y", true],
   ["YES", true],
@@ -150,6 +153,8 @@ const envWith = (cacheRoot, path) => ({
     env: envWith(join(work, "cache"), sysBin),
     run: fakeRun({ [cacheBin]: ALL, [sysBin]: ALL }),
   });
+  // Guards: the cache being USED — without its bin first on PATH, the build runs whatever pdflatex
+  // the machine has.
   check(
     "a complete cache: used, named, and PATH starts with its bin",
     x.r.ok &&
@@ -167,6 +172,8 @@ const envWith = (cacheRoot, path) => ({
     env: envWith(years, emptyBin),
     run: fakeRun({ [old]: ALL, [cut]: "" }),
   });
+  // Guards: the year choice — an interrupted new-year install must not stand in for a complete
+  // older one.
   check(
     "🔴 two years, the newer incomplete: the newest COMPLETE one builds",
     x.r.ok &&
@@ -205,6 +212,8 @@ const envWith = (cacheRoot, path) => ({
     run: fakeRun({ [sysBin]: "/t/acmart.cls\n" }),
     interactive: false,
   });
+  // Guards: refusing without a terminal — CI and agents would otherwise block on a question nobody
+  // can answer.
   check(
     "🔴 no human, nothing qualifies: refused in one line, NOTHING asked, NOTHING installed",
     !x.r.ok &&
@@ -290,6 +299,7 @@ const x_run = { found: {} };
     interactive: true,
     dryRun: true,
   });
+  // Guards: --dry-run as a plan without side effects.
   check(
     "--dry-run: prints what would stop the build, never asks, never installs",
     x.r.ok &&

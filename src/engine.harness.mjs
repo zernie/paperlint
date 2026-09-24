@@ -1,7 +1,7 @@
 /**
  * `engine.ts` — which TeX Live `rpp build` compiles with.
  *
- * Tables, in the order the mutation battery relies on:
+ * Tables, in order:
  *   1. `resolveEngine` over `EngineFacts` — one row per branch of the order;
  *   2. the fact readers: `missingPackages` over kpsewhich output, `missingTools`, `whichOnPath`,
  *      `probeTree` through a fake runner.
@@ -53,6 +53,8 @@ const facts = (o) => ({
   ...o,
 });
 const ROWS = [
+  // Guards: the order — rpp's own verified cache first, so a build does not depend on whatever TeX
+  // Live the machine happens to carry.
   [
     "a complete cache wins, even over a complete system TeX",
     facts({ cache: COMPLETE_CACHE, system: COMPLETE_SYS }),
@@ -68,6 +70,8 @@ const ROWS = [
     facts({ system: COMPLETE_SYS }),
     { kind: "use-system", tree: COMPLETE_SYS },
   ],
+  // Guards: the whole point of #26 — a TeX Live without libertine would build an acmart paper
+  // GREEN, in Computer Modern.
   [
     "🔴 a system TeX that LACKS a declared package is NOT used — not even non-interactively",
     facts({ system: PARTIAL_SYS }),
@@ -78,6 +82,8 @@ const ROWS = [
     facts({ interactive: true, system: PARTIAL_SYS }),
     { kind: "ask", missing: REQUIRED },
   ],
+  // Guards: installing only what the cache lacks — a partial cache must not be offered a full
+  // reinstall.
   [
     "nothing qualifies, a terminal, a partial cache: ask for the cache's gaps only",
     facts({ interactive: true, cache: PARTIAL_CACHE }),
@@ -125,6 +131,7 @@ check(
   JSON.stringify(missingPackages(PKGS, "/t/tex/latex/acmart/acmart.cls\n")) ===
     '["latex","libertine"]',
 );
+// Guards: a package counts as present only when EVERY file that proves it resolves.
 check(
   "missingPackages: one proof of two missing is enough to count the package missing",
   missingPackages(
@@ -178,6 +185,7 @@ check(
     JSON.stringify(missing) === '["latex","libertine"]',
   );
 }
+// Guards: "could not ask" must never read as "nothing missing" — a broken tree would be used.
 check(
   "🔴 probeTree: a kpsewhich that cannot start finds NOTHING — never 'all present'",
   JSON.stringify(
@@ -203,11 +211,15 @@ check(
       pdflatex: ["pdflatex"],
     };
     const missing = missingTools(tools, bin);
+    // Guards: the runnable-file check — `existsSync` says yes to a directory, and `rpp toolchain
+    // --check` once reported a verified tree whose texcount could not start.
     check(
       "🔴 missingTools: a DIRECTORY named like the tool is missing",
       missing.includes("texcount"),
       JSON.stringify(missing),
     );
+    // Guards: the POSIX permission half — a file the installer left at 0644 fails to start and must
+    // not read as present.
     check(
       "🔴 missingTools: a regular file WITHOUT the execute bit is missing",
       missing.includes("checkcites"),

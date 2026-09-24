@@ -39,6 +39,8 @@ check(
   at79.length === 79 && !at79.includes("Rerun to get") && rest.length > 0,
 );
 const wrappedLog = ["(./paper.aux)", "", at79, rest, ""].join("\n");
+// Guards: rejoining the lines TeX broke — a 'Rerun to get' split across the break is on no line at
+// all, and the loop would stop one pass early.
 check(
   "🔴 a marker broken at column 79 is rejoined and found",
   logMarkers(unwrapLog(wrappedLog)).includes("rerun-requested"),
@@ -95,6 +97,7 @@ check(
     "Output written on paper.pdf (1 page, 1234 bytes).",
   ]).length === 0,
 );
+// Guards: matching the documented summary line rather than the word 'undefined'.
 check(
   "a single reference warning is not the end-of-run summary",
   !logMarkers([firstPass[0]]).includes("undefined-references"),
@@ -109,12 +112,16 @@ const undefinedCs = [
   "Here is how much of TeX's memory you used:",
 ];
 const ex = errorExcerpt(undefinedCs);
+// Guards: the spelling rpp's own flags produce for most errors — with only the `!` form recognised,
+// an undefined control sequence fails with no error line quoted.
 check(
   "-file-line-error form: the error line, the l.NNN line and the rest of the source line",
   ex[0] === "./paper.tex:4: Undefined control sequence." &&
     ex[1] === "l.4 \\foo" &&
     ex[2].includes("bar baz"),
 );
+// Guards: the end of the excerpt — without it the excerpt runs into TeX's memory statistics and
+// buries the line the author needs.
 check(
   "the excerpt stops at the context — the memory statistics are not quoted",
   !ex.some((l) => l.startsWith("Here is how much")),
@@ -154,6 +161,8 @@ check(
     "LaTeX Warning: Citation `k' on page 1 undefined on input line 4.",
   ),
 );
+// Guards: the requirement that the prefix look like a path — without it, the first such line in a
+// package's info output is quoted as 'the error'.
 check(
   "a path-less `word:12: ` is not an error line either",
   !isErrorLine("Chapter:12: something"),
@@ -170,6 +179,8 @@ const bibOut = [
   "(There were 2 error messages)",
 ].join("\n");
 const bx = bibtexExcerpt(bibOut);
+// Guards: filtering bibtex's fixed preamble — a failure would open with 'This is BibTeX, Version
+// 0.99d' and push the real reason down.
 check(
   "bibtex: the banner is dropped, the explanation kept",
   bx[0] === "I couldn't open database file nope.bib" &&
@@ -188,6 +199,8 @@ const aux = [
 ].join("\n");
 const sub = "\\citation{c}\n\\citation{a}\n";
 const parsed = auxBib(aux, (name) => (name === "chap1.aux" ? sub : null));
+// Guards: citations from \include'd chapters — a \cite added in a chapter would not change the
+// citation set, and bibtex would not rerun for it.
 check(
   "citations: sorted, unique, including the ones in an \\@input aux",
   JSON.stringify(parsed.citations) ===
