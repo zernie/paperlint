@@ -108,6 +108,37 @@ process.exit(
           ],
         ],
       },
+      {
+        name: "an overfull vbox is read as an hbox",
+        harness: HARNESS,
+        expect: "overfull: both kinds, with their sizes",
+        disables:
+          "telling the two apart. An hbox always breaks the layout and balance.sty's 1.5 pt vbox " +
+          "never does, so reading one as the other rejects every balanced page",
+        edits: [[SRC, 'box: m[1] === "h" ? "hbox" : "vbox"', 'box: "hbox"']],
+      },
+      {
+        name: "an overfull line quoted mid-line counts as TeX's",
+        harness: HARNESS,
+        expect: "overfull: both kinds, with their sizes",
+        disables:
+          "the anchor: TeX starts the line with the message, and a quote of it elsewhere is not a box",
+        edits: [[SRC, "/^Overfull \\\\([hv])box", "/Overfull \\\\([hv])box"]],
+      },
+      {
+        name: "any package warning reads as balance.sty's second-column one",
+        harness: HARNESS,
+        expect: "…and a log without it is not",
+        disables:
+          "reading the one documented line. Every other warning would reject a good position",
+        edits: [
+          [
+            SRC,
+            '      "Package balance Warning: You have called \\\\balance in second column",',
+            '      "Package",',
+          ],
+        ],
+      },
     ],
   }),
 );
