@@ -448,8 +448,15 @@ export function ensureTexLive(
       `(${files} files found by kpsewhich, ${Object.keys(tex.tools).length} tools), ` +
       `${sizeMB(tree.dir)} MB, ${formatDuration(o.now() - started)}`,
   );
+  o.log(binLine(tree));
   return { ok: true, tree };
 }
+
+/**
+ * `rpp build` finds the tree itself; a script that calls `pdflatex` directly needs this directory
+ * first on PATH, so every success says where it is.
+ */
+export const binLine = (tree: CachedTree): string => `  bin: ${tree.bin}`;
 
 function fail(
   err: (line: string) => void,
@@ -497,6 +504,7 @@ function report(
     o.log(
       `✓ TeX Live ${tree.year} in ${tree.dir} has all ${n} declared packages`,
     );
+    o.log(binLine(tree));
     return 0;
   }
   const count = gaps.packages.length + gaps.tools.length;
@@ -521,6 +529,7 @@ export function runToolchain(options: ToolchainOptions = {}): number {
     o.log(
       `✓ TeX Live ${tree.year} in ${tree.dir} already has all ${n} declared packages — nothing to do`,
     );
+    o.log(binLine(tree));
     return 0;
   }
   o.log(

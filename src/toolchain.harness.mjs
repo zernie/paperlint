@@ -272,6 +272,11 @@ const cmd = (over = {}) => {
     r.out,
   );
   check(
+    "second run: names the bin directory a script puts on PATH",
+    r.out.includes(`  bin: ${join(root, "2026", "bin", "x86_64-linux")}`),
+    r.out,
+  );
+  check(
     "second run: downloads nothing and installs nothing",
     !r.calls.some((c) => c.cmd === "curl" || c.cmd.endsWith("tlmgr")),
     JSON.stringify(r.calls.map((c) => c.cmd)),
