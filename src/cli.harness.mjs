@@ -22,6 +22,7 @@ import {
   rmSync,
   realpathSync,
   symlinkSync,
+  readdirSync,
 } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
@@ -1665,9 +1666,13 @@ console.log(
         /kept — never overwritten/.test(again.out),
     );
     const bad = await cli(["new", "Demo"], root);
+    check("an invalid name is refused with exit 2", bad.code === 2);
+    // Compared by exact name, not existsSync: on a case-insensitive filesystem (macOS default)
+    // `writing/Demo` "exists" because `writing/demo` does, so existsSync cannot tell them apart.
     check(
-      "an invalid name is refused with exit 2",
-      bad.code === 2 && !existsSync(join(root, "writing", "Demo")),
+      "a refused name creates nothing — writing/ still holds only demo",
+      JSON.stringify(readdirSync(join(root, "writing")).sort()) ===
+        JSON.stringify(["demo"]),
     );
     const two = await cli(["new", "a", "b"], root);
     check("one paper at a time", two.code === 2);
