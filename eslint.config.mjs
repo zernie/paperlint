@@ -27,9 +27,8 @@ const MAX_LINES = { max: 60, skipComments: true, skipBlankLines: true };
 
 // 🔴 A CEILING, NOT A PERMISSION: each number is the file's measured maximum on 2026-09-24, so a
 // function in these files can get simpler and cannot get worse. Lower a number when a refactor
-// lowers the maximum; never raise one. Follow-up: "Pay down the complexity ratchet on the pre-#59
-// CLI files" (to be filed; tracked under #49 until then). A file leaves this table when it passes
-// the shared limits.
+// lowers the maximum; never raise one. Paying the debt down is issue #72. A file leaves this table
+// when it passes the shared limits.
 const RATCHET = {
   "src/init.ts": { complexity: 59, "max-lines-per-function": 219 },
   "src/cli.ts": { complexity: 43, "max-lines-per-function": 152 },
