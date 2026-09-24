@@ -48,6 +48,7 @@ import {
   anyFailed,
   remedyFor,
 } from "./build.ts";
+import { runToolchain } from "./toolchain.ts";
 import { doctor } from "./doctor.ts";
 import { init, processInteractivity, askOnTerminal } from "./init.ts";
 import {
@@ -93,6 +94,9 @@ const USAGE = `research-paper-pipeline — machine-checkable gates for a paper k
   npx rpp build <paper> | --all       compile paper.tex to paper.pdf: pdflatex and bibtex, rerun until
                                       the references settle. Prints the plan first; a build.sh in the
                                       paper directory is ignored (--dry-run: print the plan only)
+  npx rpp toolchain [--check]         install TeX Live with every package the venue profiles declare
+                                      into ~/.cache/rpp/texlive (RPP_TEXLIVE_DIR overrides); a second
+                                      run does nothing. --check: report what is missing, change nothing
   npx rpp doctor                      say what is actually wired — and what only LOOKS wired
   npx rpp hook <name>                 run an editor hook (.claude/settings.json calls this)
   npx rpp --help
@@ -253,6 +257,7 @@ export function parseArgs(argv: readonly string[]): Args {
     json: false,
     all: false,
     dryRun: false,
+    check: false,
     yes: false,
     noHooks: false,
     paper: null,
@@ -283,6 +288,7 @@ export function parseArgs(argv: readonly string[]): Args {
     if (a === "--json") out.json = true;
     else if (a === "--all") out.all = true;
     else if (a === "--dry-run") out.dryRun = true;
+    else if (a === "--check") out.check = true;
     else if (a === "--yes" || a === "-y") out.yes = true;
     else if (a === "--no-hooks") out.noHooks = true;
     else if (a.startsWith("--hooks="))
@@ -644,14 +650,14 @@ async function runNew(
  * everything" on a corpus of five papers is twenty pdflatex runs instead of one, and almost never
  * what was wanted.
  */
-function runBuild(
+async function runBuild(
   a: Args,
   {
     log,
     err,
     cwd,
   }: { log: typeof console.log; err: typeof console.error; cwd: string },
-): number {
+): Promise<number> {
   const cfg = readConfig(a, { log, err, cwd });
   if (cfg.code !== undefined) return cfg.code;
   const { opts, configPath } = cfg;
@@ -694,6 +700,22 @@ function runBuild(
   if (remedy) err(remedy);
   return anyFailed(results) ? 1 : 0;
 }
+
+/** Commands that take the parsed arguments and the output streams, and nothing else. */
+const SIMPLE: Readonly<
+  Record<
+    string,
+    (
+      a: Args,
+      io: { log: typeof console.log; err: typeof console.error; cwd: string },
+    ) => number | Promise<number>
+  >
+> = {
+  hook: (a, { err }) => runHook(a.paths[0], { err }),
+  new: (a, io) => runNew(a, io),
+  build: (a, io) => runBuild(a, io),
+  toolchain: (a, { log, err }) => runToolchain({ check: a.check, log, err }),
+};
 
 export async function run(
   argv: readonly string[],
@@ -778,9 +800,8 @@ export async function run(
       cliPapers: papers,
     });
   }
-  if (a.cmd === "hook") return runHook(a.paths[0], { err });
-  if (a.cmd === "new") return runNew(a, { log, err, cwd });
-  if (a.cmd === "build") return runBuild(a, { log, err, cwd });
+  const simple = SIMPLE[a.cmd];
+  if (simple) return await simple(a, { log, err, cwd });
   if (a.cmd === "check")
     err(
       `\`check\` is now \`lint\` — running it anyway. Update the call to \`rpp lint\`.`,

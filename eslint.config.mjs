@@ -32,7 +32,7 @@ const MAX_LINES = { max: 60, skipComments: true, skipBlankLines: true };
 // the shared limits.
 const RATCHET = {
   "src/init.ts": { complexity: 59, "max-lines-per-function": 219 },
-  "src/cli.ts": { complexity: 45, "max-lines-per-function": 153 },
+  "src/cli.ts": { complexity: 43, "max-lines-per-function": 152 },
   "src/doctor.ts": { complexity: 38, "max-lines-per-function": 125 },
   "src/hooks-settings.ts": { complexity: 12, "max-depth": 4 },
   "src/structure.ts": { complexity: 12, "max-depth": 4 },

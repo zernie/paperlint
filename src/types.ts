@@ -45,6 +45,8 @@ export interface Args {
   json: boolean;
   all: boolean;
   dryRun: boolean;
+  /** `--check`: `toolchain` reports what is missing and changes nothing. */
+  check: boolean;
   maxWarnings: number;
   /** `--yes` / `-y`: take every default, ask nothing. */
   yes: boolean;
