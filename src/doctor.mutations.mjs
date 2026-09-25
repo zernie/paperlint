@@ -125,8 +125,8 @@ process.exit(
         edits: [
           [
             SRC,
-            '          ? `  ⚠ package.json has no "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": … } — the hooks fall back to "${DEFAULT_PAPERS_ROOT}"`',
-            "          ? `  ✓ package.json`",
+            '      `  ⚠ package.json has no "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": … } — the hooks fall back to "${DEFAULT_PAPERS_ROOT}"`,',
+            "      `  ✓ package.json`,",
           ],
         ],
       },
