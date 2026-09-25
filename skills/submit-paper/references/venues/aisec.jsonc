@@ -90,7 +90,7 @@
 
   // Four tracks (original research · position/open-problem · SoK · benchmark) — the limits are
   // the SAME for all of them, the venue doesn't split them. The keys are kept separate so a
-  // paper's `venue.json` can name its own track: not for the numbers, but so it's visible which
+  // paper's `paperlint.json` can name its own track: not for the numbers, but so it's visible which
   // track it was submitted under.
   "kinds": {
     "research": { "body_pages_max": 10, "ref_pages_max": 2 },

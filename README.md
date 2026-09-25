@@ -12,7 +12,7 @@ source paginates differently on a machine with another version of the template. 
 gets overwritten a week later and nobody can say what was sent. You find out from a reviewer or a
 publisher, or never. paperlint checks for these on your machine and in CI:
 
-- **Checks against your venue.** Name the venue in the paper's `venue.json`, build, lint: the
+- **Checks against your venue.** Name the venue in the paper's `paperlint.json`, build, lint: the
   page limit for your kind of paper, embedded fonts and the template's font families, the paper
   size and column count, and the font sizes, as the venue's call for papers sets them. Profiles
   ship for three venues today — AgenticDev and AISec (ACM `acmart` sigconf) and REALM (ACL); adding
@@ -92,9 +92,21 @@ papers/
   my-paper/
     paper.tex                 the paper, in LaTeX
     PIPELINE-STATUS.md        the paper's record: its research question and the stages it reached
+    paperlint.json            this paper's settings: its venue and kind (optional, see below)
     reviews/*.md              review notes (optional)
     versions/                 the exact PDF and source you sent at each stage, never edited
 ```
+
+To have the paper checked against its venue, write its `paperlint.json`:
+
+```json
+{ "venue": "aisec", "kind": "research" }
+```
+
+Settings come in three levels, each named after the tool: the `paperlint` key in `package.json`
+for the project, `<paper>/paperlint.json` for one paper, and the venue profiles paperlint ships
+([`docs/configuration.md`](docs/configuration.md#three-levels-of-settings)).
+`paperlint.json` replaces `venue.json` (2.1.0); `npx paperlint init` moves it.
 
 A **stage** is a point the paper has reached, such as `submitted` or `camera-ready` (the final
 version for the proceedings). The name may use `a-z`, `0-9`, `.`, `_` and `-`. On a folder that
@@ -187,11 +199,11 @@ shows up red. Optional inputs: `config`, `max-warnings` (default `-1`, no limit)
 | `pdf/fonts`                    | error   | a Type 3 or unembedded font, or the venue template's fonts are missing (a silent Computer Modern fallback)       |
 | `pdf/geometry`                 | error   | the paper size or column count differs from the venue's                                                          |
 | `pdf/body-size`                | warning | the body font size is off the venue's                                                                            |
-| `pdf/profile`                  | error   | `venue.json` names a venue paperlint has no profile for (a typo), or a kind of paper the venue does not have     |
+| `pdf/profile`                  | error   | `paperlint.json` names a venue paperlint has no profile for (a typo), or a kind of paper the venue does not have |
 | `pdf/fresh`                    | error   | the build facts describe an earlier PDF than the one on disk                                                     |
 | `pdf/measured`                 | warning | the paper names a venue but was not built, so the venue checks did not run                                       |
 
-The `pdf/` checks run only for a paper whose `venue.json` names a venue, and they judge the PDF
+The `pdf/` checks run only for a paper whose `paperlint.json` names a venue, and they judge the PDF
 `paperlint build` made: build, then lint. Errors fail the run; warnings only print. What each check
 reads: [`docs/rules.md`](docs/rules.md).
 Checks that only some venues need are off until you turn them on:

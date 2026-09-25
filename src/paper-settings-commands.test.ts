@@ -8,6 +8,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  realpathSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -25,7 +26,7 @@ afterEach(() => {
 
 /** A project with two papers, `a` and `b`, each with paper.tex and PIPELINE-STATUS.md. */
 function project(files: Record<string, string> = {}): string {
-  const root = mkdtempSync(join(tmpdir(), "paperlint-settings-"));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-settings-")));
   dirs.push(root);
   const all: Record<string, string> = {
     "package.json": JSON.stringify({

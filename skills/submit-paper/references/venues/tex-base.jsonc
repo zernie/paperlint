@@ -1,5 +1,5 @@
 // The TeX Live packages EVERY paper gets — and ALL a paper gets when its venue is unknown (no
-// venue.json, or a venue.json naming a venue with no profile here). A venue's own `tex.packages`
+// paperlint.json, or a paperlint.json naming a venue with no profile here). A venue's own `tex.packages`
 // is added on top of this set, never instead of it.
 //
 // Read by `paperlint toolchain` (it installs this set plus every venue's) and by `paperlint build` (it checks

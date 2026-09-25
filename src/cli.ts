@@ -175,7 +175,14 @@ another file of the same shape. \`papersDir\` is required; the rest is optional:
   files relative to the file holding the settings. Optional rules (off unless turned on there):
   pdf/last-page-balance. The venue rules (pdf/fresh, pdf/profile, pdf/fonts, pdf/geometry,
   pdf/limits, pdf/body-size, pdf/measured) are on for every paper whose paperlint.json names a venue;
-  set one to "off" there to skip it. An unknown key, anywhere in the settings, is an error.
+  set one to "off" there to skip it.
+
+per paper — <paper>/paperlint.json (it was venue.json before 2.1.0; \`npx paperlint init\` moves it):
+
+  { "venue": "aisec", "kind": "research", "rules": { "pdf/last-page-balance": "error" } }
+
+  "rules" there applies to that paper alone, before the project's "rules" blocks. An unknown key,
+  anywhere in the settings or in a paperlint.json, is an error.
 `;
 
 /** The config the user would otherwise write by hand. The data comes from `opts`, the mechanism is here. */

@@ -15,7 +15,7 @@ reads and when it fails. Errors fail `paperlint lint`; warnings print and do not
 | `review/findings-cause`        | error | `reviews/*.md`                                | a review lists at least `minFindings` (default 3) findings and no cell introduces a cause with the marker (default `Cause:`)                                                                                                                                                                                                                                                                                                                                    |
 | `doc/fields`                   | warn  | `reviews/*.md`                                | a front-matter field is missing or holds a value outside the list you configured. Off entirely unless you configure `docFields`                                                                                                                                                                                                                                                                                                                                 |
 | `pdf/fresh`                    | error | `paper.tex` → `_build/paper.facts.json`       | the paper names a venue and the facts cannot be judged: not JSON, a schema other than 2, or they describe a PDF that is gone or differs from the one on disk (its SHA-256)                                                                                                                                                                                                                                                                                      |
-| `pdf/profile`                  | error | `paper.tex` → `venue.json`                    | `venue.json` is not JSON, names a venue paperlint has no profile for, names no `kind` while the venue has kinds, or names a kind the venue does not have                                                                                                                                                                                                                                                                                                        |
+| `pdf/profile`                  | error | `paper.tex` → `paperlint.json`                | `paperlint.json` is not JSON or has an unknown key, only a pre-2.1.0 `venue.json` is there (`npx paperlint init` moves it), it names a venue paperlint has no profile for, names no `kind` while the venue has kinds, or names a kind the venue does not have                                                                                                                                                                                                   |
 | `pdf/fonts`                    | error | `paper.tex` → `_build/paper.facts.json`       | a font the pages draw is Type 3 or not embedded, or no font starts with the family the venue profile names for body text (`fonts_text`) or headings (`fonts_title`)                                                                                                                                                                                                                                                                                             |
 | `pdf/geometry`                 | error | `paper.tex` → `_build/paper.facts.json`       | the page width or height is more than `dimTol` (default 0.05 in) off the profile's, or the column count differs                                                                                                                                                                                                                                                                                                                                                 |
 | `pdf/limits`                   | error | `paper.tex` → `_build/paper.facts.json`       | body or reference pages exceed the limit of the paper's kind, or the reference font size is outside the profile's range widened by `body_pt_tol`                                                                                                                                                                                                                                                                                                                |
@@ -32,7 +32,8 @@ default `PIPELINE-STATUS.md`) as an error. Which files are required is configura
 
 ## Checks against the venue
 
-A paper says where it is submitted in a `venue.json` beside `paper.tex`:
+A paper says where it is submitted in a `paperlint.json` beside `paper.tex`
+([`configuration.md`](configuration.md#three-levels-of-settings)):
 
 ```json
 { "venue": "aisec", "kind": "research" }
@@ -63,14 +64,14 @@ and the split into body and reference pages. They report on the paper's `paper.t
 
 | the paper                                                       | what you get                                                                                                                 |
 | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| has no `venue.json`, or it names no venue                       | nothing — you asked for no venue checks                                                                                      |
+| has no `paperlint.json`, or it names no venue                   | nothing — you asked for no venue checks                                                                                      |
 | names a venue with no profile (a typo, or an unsupported venue) | `pdf/profile` error, listing the profiles that exist                                                                         |
 | has not been built (no facts file)                              | `pdf/measured` warning — it does not fail the run, because lint often runs where nothing is built (the CI action only lints) |
 | was built without banal                                         | `pdf/measured` warning; fonts are still checked, the rest is not                                                             |
 | has facts about another PDF than the one on disk                | `pdf/fresh` error, and nothing else is judged                                                                                |
 | names no `kind`, or a kind the venue lacks                      | `pdf/profile` error; everything but the page limit is still checked                                                          |
 
-The venue comes from `venue.json`, not from the facts, so changing the venue needs no rebuild: the
+The venue comes from `paperlint.json`, not from the facts, so changing the venue needs no rebuild: the
 measurements do not depend on it.
 
 To skip a check for a paper — a venue without a profile, or a finding you accept — set it to

@@ -1,7 +1,9 @@
 # Optional rules
 
 Some checks matter only for some venues. paperlint ships them **off**, and you turn them on for the
-papers that need them, in the `rules` setting of your `package.json`
+papers that need them, in each paper's `paperlint.json`
+([`configuration.md`](configuration.md#three-levels-of-settings)). Use the `rules` setting of your
+`package.json` only to override that, or to turn a rule on for many papers at once
 ([`configuration.md`](configuration.md#the-rules-key-turning-rules-on-and-off)).
 
 | rule                    | what it checks                                                | who needs it                                              |
@@ -12,21 +14,17 @@ papers that need them, in the `rules` setting of your `package.json`
 
 ### Turning it on
 
+In the paper's `papers/my-paper/paperlint.json`:
+
 ```json
 {
-  "paperlint": {
-    "papersDir": "papers",
-    "rules": [
-      {
-        "files": ["papers/agenticdev-2026/**"],
-        "rules": { "pdf/last-page-balance": ["error", { "tolerancePt": 120 }] }
-      }
-    ]
-  }
+  "venue": "agenticdev",
+  "kind": "short",
+  "rules": { "pdf/last-page-balance": ["error", { "tolerancePt": 120 }] }
 }
 ```
 
-`files` is relative to the `package.json`. `tolerancePt` is how far apart, in points, the two
+It applies to that paper alone. `tolerancePt` is how far apart, in points, the two
 columns may end; it defaults to 120. On a real accepted paper the balanced build ended 2.7 pt apart
 and the one the publisher sent back 321.4 pt apart — nothing in between — so the default leaves a
 wide margin on both sides.
@@ -47,8 +45,9 @@ So: **build, then lint.**
 | a last page of a few lines                          | nothing — there is no layout to balance                                                                                       |
 | a review build with numbered lines                  | nothing — the numbers run down the whole page, so both columns measure full height, and balance is a camera-ready requirement |
 
-If you turn the rule on with a `files` glob that reaches no `paper.tex`, `paperlint lint` fails and says
-so, rather than reporting a clean run for a rule that never ran.
+If you turn the rule on — in a `paperlint.json` beside no `paper.tex`, or with a `files` glob in
+`package.json` that reaches none — `paperlint lint` fails and says so, rather than reporting a clean
+run for a rule that never ran.
 
 ### Which venues need it
 

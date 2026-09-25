@@ -88,7 +88,7 @@
   "fonts_title": "LinBiolinum",
 
   // The limits are a property of the paper's TYPE at this venue, not of the venue itself.
-  // A given paper's type is stated in its <paper-dir>/venue.json.
+  // A given paper's type is stated in its <paper-dir>/paperlint.json (`kind`).
   "kinds": {
     "short": {
       "body_pages_max": 5,
