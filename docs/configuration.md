@@ -161,12 +161,12 @@ override what a paper says:
 - **`files` and `ignores` are globs relative to the file that holds the settings** — the
   directory of your `package.json` — exactly as ESLint resolves them relative to its config file,
   whatever directory you run `paperlint lint` from. A block without `files` applies to every linted file.
-- **Each rule reaches only the files it is written for.** `{ "files": ["papers/**"], "rules":
-{ "paper/source": "warn" } }` turns `paper/source` on for every `PIPELINE-STATUS.md` under `papers/`,
-  and `paper/typography` in the same block would land on every `paper.md`, `draft.md` and `paper.tex`. You do not
-  need to know which file a rule reads; your `files` narrow where it runs, never widen it. The
-  [rule tables](rules.md) name each rule's file.
   A pattern ending in `/**` is the usual way to name one paper.
+- **Each rule reaches only the files it is written for.** A block with `"files": ["papers/**"]` and
+  `"rules": { "paper/source": "warn" }` turns `paper/source` on for every `PIPELINE-STATUS.md` under
+  `papers/`; `paper/typography` in the same block lands on every `paper.md`, `draft.md` and
+  `paper.tex`. You do not need to know which file a rule reads: your `files` narrow where it runs,
+  never widen it. The [rule tables](rules.md) name each rule's file.
 - **A rule entry** is a severity (`"off"`, `"warn"`, `"error"`, or `0`/`1`/`2`), or a list whose
   first element is a severity and the rest are the rule's options.
 - **Only rules paperlint ships can be named** — the ones in [`docs/rules.md`](rules.md) and
