@@ -542,8 +542,28 @@ try {
             .join("\n")}${again.stderr ?? ""}`,
         );
 
-    const lint = sh(bin, ["lint"], { cwd: consumer });
-    lint.status === 0 && /no findings/.test(lint.stdout ?? "")
+    // 🔴 "CLEAN" MEANS: EXIT 0, AND THE ONE WARNING AN UNBUILT VENUE PAPER MUST CARRY. The acmart
+    // paper names agenticdev in its venue.json and is not built here, so the venue rules could not
+    // run — and `pdf/measured` says so, as a warning. Its absence would be the green zero; any other
+    // finding is a false positive on a correct corpus.
+    const onlyUnbuilt = (r) => {
+      try {
+        const ms = JSON.parse(r.stdout ?? "").flatMap((f) =>
+          f.messages.map((m) => ({ ...m, file: f.filePath })),
+        );
+        return (
+          r.status === 0 &&
+          ms.length === 1 &&
+          ms[0].ruleId === "pdf/measured" &&
+          ms[0].severity === 1 &&
+          ms[0].file.endsWith(join("acmart", "paper.tex"))
+        );
+      } catch {
+        return false;
+      }
+    };
+    const lint = sh(bin, ["lint", "--json"], { cwd: consumer });
+    onlyUnbuilt(lint)
       ? ok("`paperlint lint` passed the corpus clean")
       : bad(
           "`paperlint lint` passed the corpus clean",
@@ -565,8 +585,8 @@ try {
           "`paperlint new demo` scaffolds papers/demo from the shipped templates, and its lint is clean",
           (fresh.stdout ?? "") + (fresh.stderr ?? ""),
         );
-    const withDemo = sh(bin, ["lint"], { cwd: consumer });
-    withDemo.status === 0 && /no findings/.test(withDemo.stdout ?? "")
+    const withDemo = sh(bin, ["lint", "--json"], { cwd: consumer });
+    onlyUnbuilt(withDemo)
       ? ok(
           "`paperlint lint` still passes the corpus clean with the new paper in it",
         )
@@ -577,8 +597,8 @@ try {
 
     // 🔴 THE REAL ARTICLE, AND IT IS NOT EXPECTED TO BE CLEAN. The two papers above were written
     // for the rules; this one was published before the rules existed, so it is the only input on
-    // which a false positive can show up. It is added AFTER the clean run, so the clean corpus
-    // contributes nothing and every finding below is the article's. The verdict is the recorded
+    // which a false positive can show up. It is added AFTER the clean run, and only its own files
+    // are counted, so every finding below is the article's. The verdict is the recorded
     // baseline — growth fails, a full vanish fails, a partial drop does not — read through the
     // same module the in-repo harness uses, so the installed binary and the repository's own are
     // held to one recording.
@@ -590,7 +610,14 @@ try {
     const realLint = sh(bin, ["lint", "--json"], { cwd: consumer });
     let found = null;
     try {
-      found = countByRule(realLint.stdout ?? "");
+      // Only the article's own files: the rest of the corpus is judged above.
+      found = countByRule(
+        JSON.stringify(
+          JSON.parse(realLint.stdout ?? "").filter((f) =>
+            f.filePath.includes(join("papers", "real-article")),
+          ),
+        ),
+      );
     } catch (e) {
       bad(
         "`paperlint lint --json` on the real article parses",
