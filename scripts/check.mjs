@@ -129,6 +129,11 @@ export const GATES = [
     run: locked("node", "test/e2e/build.mjs"),
   },
   {
+    name: "banal e2e — the real banal on pdf.js-written XML gives banal-on-pdftohtml's numbers",
+    job: "build-e2e",
+    run: locked("node", "test/e2e/banal.mjs"),
+  },
+  {
     name: "toolchain e2e — real TeX Live into $RPP_TEXLIVE_DIR, then a build with only it on PATH",
     job: "build-e2e",
     run: locked("node", "test/e2e/toolchain.mjs"),

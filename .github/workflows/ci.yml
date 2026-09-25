@@ -275,9 +275,18 @@ jobs:
       # The same command a user runs. On a cache hit it verifies and says "nothing to do"; on a miss
       # it installs from an empty directory and verifies every declared file with kpsewhich.
       # `node bin/rpp.mjs`, not `npx rpp`: inside this repository npx would look the name up on npm.
+      # It also fetches banal (HotCRP's page-geometry script, ~90 KB, not cached) at its pinned commit,
+      # checks the sha256 and runs it on a probe page — perl comes with both runner images.
       - name: rpp toolchain
         run: node bin/rpp.mjs toolchain
         timeout-minutes: 15
+
+      # 🔴 NO POPPLER ON THIS RUNNER, AND NONE IS INSTALLED: the real banal measures the committed
+      # fixtures through pdf.js-written XML, with a PATH holding perl alone, and must give the numbers
+      # banal gave on real pdftohtml (recorded in the test). Seconds, so no cache and a small bond.
+      - name: banal e2e (--strict)
+        run: node test/e2e/banal.mjs --strict
+        timeout-minutes: 3
 
       # Called directly with --strict (see the install e2e step in the `gates` job).
       - name: build e2e (--strict)
