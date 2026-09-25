@@ -1,9 +1,21 @@
 import assert from "node:assert/strict";
-import { test } from "vitest";
-import type { AbsolutePath } from "../../domain/ports.ts";
+import { spawnSync } from "node:child_process";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterAll as after, test } from "vitest";
+import { nodeAdapters } from "../node/index.ts";
+import type { AbsolutePath } from "../../domain/paths.ts";
 import {
   banalCommand,
   shQuote,
+  stage,
   stageBanalInput,
   type StagedInput,
 } from "./invocation.ts";
@@ -36,4 +48,27 @@ test("banalCommand: perl runs banal on the staged .xml, with $PDFTOHTML quoted",
 
 test("shQuote survives a single quote", () => {
   assert.equal(shQuote("it's"), `'it'"'"'s'`);
+});
+
+const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-stage-test-")));
+after(() => rmSync(root, { recursive: true, force: true }));
+
+test("🔴 stage: on a real scratch directory the stub answers `-v` through the shell, from a path with a space and a quote", () => {
+  const awkward = join(root, "it's a dir");
+  mkdirSync(awkward);
+  const { workspace } = nodeAdapters({ tmpDir: awkward });
+  workspace.within("rpp-banal-", (s) => {
+    const staged = stage(s, stageBanalInput([]));
+    assert.ok(existsSync(staged.xml));
+    // Guards: banal runs `$PDFTOHTML -v 2>&1 |` through /bin/sh, unquoted.
+    const v = spawnSync("/bin/sh", ["-c", `${shQuote(staged.stub)} -v 2>&1`], {
+      encoding: "utf8",
+    });
+    assert.equal(v.stdout.trim(), "pdftohtml version 24.02.0");
+    const convert = spawnSync(staged.stub, ["-xml", "paper.pdf", "out"], {
+      encoding: "utf8",
+    });
+    assert.equal(convert.status, 1);
+    assert.match(convert.stderr, /only answers -v/);
+  });
 });

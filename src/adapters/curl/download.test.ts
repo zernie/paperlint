@@ -15,9 +15,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterAll as after, test } from "vitest";
-import type { AbsolutePath } from "../../domain/ports.ts";
+import type { AbsolutePath } from "../../domain/paths.ts";
 import { curlDownload } from "./download.io.ts";
-import { spawnProcess } from "./process.io.ts";
+import { spawnProcess } from "../node/index.ts";
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-download-test-")));
 after(() => rmSync(root, { recursive: true, force: true }));

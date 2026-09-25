@@ -2,13 +2,10 @@
  * The install decisions, on bytes: is what is on disk the pin, and may downloaded bytes be kept.
  * One predicate for `rpp toolchain` and `rpp toolchain --check`, so the two cannot disagree.
  */
-import { createHash } from "node:crypto";
 import type { Opaque } from "ts-essentials";
 import { err, ok, type Result } from "../../domain/result.ts";
-import type { BanalSource, Sha256 } from "./pin.ts";
-
-export const sha256Hex = (bytes: Uint8Array): Sha256 =>
-  createHash("sha256").update(bytes).digest("hex") as Sha256;
+import { sha256Hex, type Sha256 } from "../../domain/sha256.ts";
+import type { BanalSource } from "./pin.ts";
 
 /** Bytes that hash to the pin. Minted by `verifyPin` only; the installer writes nothing else. */
 export type PinnedBytes = Opaque<Uint8Array, "PinnedBytes">;

@@ -4,15 +4,8 @@
  * composition root picks which. Four kinds of outside world are touched, so there are four ports:
  * processes, files, a scratch directory with a lifetime, and the network. See `src/CLAUDE.md`.
  */
-import type { Opaque } from "ts-essentials";
+import type { AbsolutePath } from "./paths.ts";
 import type { Result } from "./result.ts";
-import type {
-  BanalStaging,
-  StagedInput,
-} from "../adapters/banal/invocation.ts";
-
-/** An absolute path. Minted at the composition root (`abs`), so the core never resolves a cwd. */
-export type AbsolutePath = Opaque<string, "AbsolutePath">;
 
 /** A program to run, as data. `env` is the child's WHOLE environment, never merged in by the adapter. */
 export interface Command {
@@ -78,8 +71,8 @@ export type NotAPromise<T> = T extends PromiseLike<unknown> ? never : T;
 /** A scratch directory that exists only inside `Workspace.within`. */
 export interface Scratch {
   readonly dir: AbsolutePath;
-  /** Write both files of a staging into `dir`, the stub executable. The only minter of `StagedInput`. */
-  stage(s: BanalStaging): StagedInput;
+  /** Write one file into `dir`; `exec` also sets its execute bit. Returns the file's path. */
+  write(name: string, content: string, mode: "read" | "exec"): AbsolutePath;
 }
 
 /**

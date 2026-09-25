@@ -23,10 +23,11 @@ import {
   type MeasureOptions,
 } from "./facts-file.ts";
 import { whyNoGeometry, type Geometry } from "./adapters/banal/geometry.ts";
-import { sha256Hex } from "./adapters/banal/install.ts";
+import { sha256Hex } from "./domain/sha256.ts";
 import { geometryOf } from "./adapters/banal/output.ts";
 import { parseBanalSettings } from "./adapters/banal/settings.ts";
-import type { AbsolutePath, Io, ProcessExit } from "./domain/ports.ts";
+import type { AbsolutePath } from "./domain/paths.ts";
+import type { Io, ProcessExit } from "./domain/ports.ts";
 import type { BanalCandidate } from "./adapters/banal/locate.ts";
 import type { Fonts, PageText } from "./pdf-geometry.ts";
 import type { PdfReader } from "./pdf-facts.ts";

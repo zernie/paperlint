@@ -24,11 +24,17 @@
  * imports nothing from `node:*` that touches the outside world. The composition root hands it an
  * `Io` and the parsed `BanalSettings`.
  */
-import type { AbsolutePath, Io } from "../../domain/ports.ts";
+import type { AbsolutePath } from "../../domain/paths.ts";
+import type { Io } from "../../domain/ports.ts";
 import { andThen, err, ok, type Result } from "../../domain/result.ts";
 import type { BanalFailure } from "./failure.ts";
 import type { Geometry } from "./geometry.ts";
-import { banalCommand, BANAL_RUN_MS, stageBanalInput } from "./invocation.ts";
+import {
+  banalCommand,
+  BANAL_RUN_MS,
+  stage,
+  stageBanalInput,
+} from "./invocation.ts";
 import { installedState, verifyPin } from "./install.ts";
 import {
   installedBanal,
@@ -63,7 +69,7 @@ function runBanal(
       io.run.run(
         banalCommand(
           banal,
-          scratch.stage(stageBanalInput(pages)),
+          stage(scratch, stageBanalInput(pages)),
           s.processEnv,
         ),
       ),

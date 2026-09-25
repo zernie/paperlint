@@ -5,6 +5,7 @@
  * document — and `pages`, one entry per page, where a page's `type` is OMITTED when it is "body".
  */
 import { z } from "zod";
+import { firstLine } from "../../domain/text.ts";
 import type { ProcessExit } from "../../domain/ports.ts";
 import { andThen, err, ok, type Result } from "../../domain/result.ts";
 import type { BanalFailure } from "./failure.ts";
@@ -27,13 +28,6 @@ export const measurementSchema = z.looseObject({
 
 /** A measurement banal printed. banal's `{"error": true}` object cannot be one: it is refused first. */
 export type BanalMeasurement = z.infer<typeof measurementSchema>;
-
-/** The first non-blank line of a stream — what a failure shows. */
-export const firstLine = (s: string): string =>
-  s
-    .split("\n")
-    .map((l) => l.trim())
-    .find(Boolean) ?? "";
 
 interface Streams {
   readonly stdout: string;

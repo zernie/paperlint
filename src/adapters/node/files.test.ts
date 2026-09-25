@@ -4,7 +4,7 @@ import { existsSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll as after, test } from "vitest";
-import type { AbsolutePath } from "../../domain/ports.ts";
+import type { AbsolutePath } from "../../domain/paths.ts";
 import { nodeFiles } from "./files.io.ts";
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-files-test-")));

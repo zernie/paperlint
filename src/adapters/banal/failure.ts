@@ -2,6 +2,7 @@
  * Every way getting a measurement from banal can fail, as ONE union — and `describe`, the only
  * place a sentence about it is written. Callers branch on `kind`; nobody parses a message.
  */
+import type { Lines } from "../../domain/text.ts";
 import type { BanalMissing } from "./locate.ts";
 
 export type { BanalMissing } from "./locate.ts";
@@ -55,9 +56,6 @@ function missing(m: BanalMissing): string {
     ? `banal not found: $BANAL names ${m.path}, which does not exist`
     : `banal not found: ${m.installed} — \`npx rpp toolchain\` installs it`;
 }
-
-/** What `describe` returns: the first line says what happened, any further lines are detail. */
-export type Lines = readonly [string, ...string[]];
 
 type Kind = BanalFailure["kind"];
 /** One sentence-writer per variant. A mapped type over `kind`, so a new variant without one is a compile error. */

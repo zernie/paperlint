@@ -1,27 +1,34 @@
-/** The real `Io`: what a composition root hands the app layer. */
-import type { Io } from "../../domain/ports.ts";
-import { curlDownload } from "./download.io.ts";
+/**
+ * Node's implementations of the generic ports: processes, files, scratch directories. What a
+ * composition root builds and hands to the adapters that need them (banal's, for one).
+ */
+import type { Files, RunProcess, Workspace } from "../../domain/ports.ts";
 import { nodeFiles } from "./files.io.ts";
 import { spawnProcess, type SpawnSync } from "./process.io.ts";
 import { tmpWorkspace } from "./workspace.io.ts";
 
 export interface NodeAdapterOptions {
-  /** Scratch directories and downloads go here. */
+  /** Scratch directories go here. */
   readonly tmpDir: string;
-  /** curl's environment (the proxy variables). */
-  readonly env: Readonly<Record<string, string>>;
   /** `spawnSync` or a stand-in with its shape. */
   readonly spawn?: SpawnSync;
 }
 
-export function nodeAdapters(o: NodeAdapterOptions): Io {
-  const run = spawnProcess(o.spawn);
+/** The node ports, built once at the root. */
+export interface NodePorts {
+  readonly run: RunProcess;
+  readonly files: Files;
+  readonly workspace: Workspace;
+}
+
+export function nodeAdapters(o: NodeAdapterOptions): NodePorts {
   return {
-    run,
+    run: spawnProcess(o.spawn),
     files: nodeFiles,
     workspace: tmpWorkspace(o.tmpDir),
-    download: curlDownload({ run, env: o.env, tmpDir: o.tmpDir }),
   };
 }
 
-export { spawnProcess } from "./process.io.ts";
+export { nodeFiles } from "./files.io.ts";
+export { spawnProcess, type SpawnSync } from "./process.io.ts";
+export { hostDirs } from "./host.io.ts";

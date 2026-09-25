@@ -8,7 +8,8 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname } from "node:path";
-import type { AbsolutePath, Files } from "../../domain/ports.ts";
+import type { AbsolutePath } from "../../domain/paths.ts";
+import type { Files } from "../../domain/ports.ts";
 
 const code = (e: unknown): unknown =>
   e instanceof Error ? (e as NodeJS.ErrnoException).code : undefined;

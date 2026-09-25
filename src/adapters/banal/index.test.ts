@@ -15,10 +15,11 @@ import {
   scriptedProcess,
 } from "../memory/index.ts";
 import { checkBanal, ensureBanal, measureGeometry } from "./index.ts";
-import { sha256Hex } from "./install.ts";
+import { sha256Hex } from "../../domain/sha256.ts";
 import { installedBanal } from "./locate.ts";
 import { parseBanalSettings } from "./settings.ts";
-import type { AbsolutePath, Command, ProcessExit } from "../../domain/ports.ts";
+import type { AbsolutePath } from "../../domain/paths.ts";
+import type { Command, ProcessExit } from "../../domain/ports.ts";
 
 const s = parseBanalSettings(
   { BANAL: "/own/banal", PATH: "/bin" },
@@ -49,7 +50,13 @@ test("measureGeometry: perl runs the found banal on the staged XML, and the geom
   assert.equal(c?.file, "perl");
   assert.equal(c?.args.at(-1), "/scratch/paper.xml");
   // Guards: both files staged, once, and the scratch scope ended normally (cleanup ran).
-  assert.equal(workspace.staged.length, 1);
+  assert.deepEqual(
+    workspace.written.map((w) => [w.name, w.mode]),
+    [
+      ["paper.xml", "read"],
+      ["pdftohtml", "exec"],
+    ],
+  );
   assert.deepEqual(workspace.ended, ["returned"]);
 });
 

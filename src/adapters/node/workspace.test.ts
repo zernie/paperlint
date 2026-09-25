@@ -1,7 +1,7 @@
 /**
  * The `Workspace` contract against a real temp directory: the directory exists inside the scope and
- * is gone after it, whether the scope returned or threw; `stage` writes both files, the stub
- * executable, and the stub answers `-v` through the same shell banal uses.
+ * is gone after it, whether the scope returned or threw; `write` puts a file in it, runnable when
+ * asked. What banal stages through it is `src/adapters/banal/invocation.test.ts`.
  */
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -9,13 +9,14 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   realpathSync,
   rmSync,
+  statSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll as after, test } from "vitest";
-import { shQuote, stageBanalInput } from "../banal/invocation.ts";
 import { tmpWorkspace } from "./workspace.io.ts";
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-ws-test-")));
@@ -42,21 +43,16 @@ test("the directory is gone after a throw too", () => {
   assert.equal(existsSync(seen), false);
 });
 
-test("🔴 stage: the stub answers `-v` through the shell, from a path with a space and a quote", () => {
+test("🔴 write: the file lands in the scope's directory, and `exec` makes it runnable — from a path with a space and a quote", () => {
   const awkward = join(root, "it's a dir");
   mkdirSync(awkward);
-  tmpWorkspace(awkward).within("rpp-banal-", (s) => {
-    const staged = s.stage(stageBanalInput([]));
-    assert.ok(existsSync(staged.xml));
-    // Guards: banal runs `$PDFTOHTML -v 2>&1 |` through /bin/sh, unquoted.
-    const v = spawnSync("/bin/sh", ["-c", `${shQuote(staged.stub)} -v 2>&1`], {
-      encoding: "utf8",
-    });
-    assert.equal(v.stdout.trim(), "pdftohtml version 24.02.0");
-    const convert = spawnSync(staged.stub, ["-xml", "paper.pdf", "out"], {
-      encoding: "utf8",
-    });
-    assert.equal(convert.status, 1);
-    assert.match(convert.stderr, /only answers -v/);
+  tmpWorkspace(awkward).within("rpp-ws-", (s) => {
+    const plain = s.write("data.txt", "hello", "read");
+    assert.equal(readFileSync(plain, "utf8"), "hello");
+    const script = s.write("run", "#!/bin/sh\necho ran\n", "exec");
+    // Guards: the exec bit — banal runs the staged stub as a program, and a 0644 file is refused.
+    const r = spawnSync(script, [], { encoding: "utf8" });
+    assert.equal(r.stdout, "ran\n");
+    assert.equal(statSync(plain).mode & 0o111, 0);
   });
 });

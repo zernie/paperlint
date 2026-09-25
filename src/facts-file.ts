@@ -42,9 +42,10 @@ import {
   type FactsGeometryFields,
   type Geometry,
 } from "./adapters/banal/geometry.ts";
-import { sha256Hex } from "./adapters/banal/install.ts";
+import { sha256Hex } from "./domain/sha256.ts";
 import type { BanalRuntime } from "./adapters/banal/settings.ts";
-import type { AbsolutePath, Files } from "./domain/ports.ts";
+import type { AbsolutePath } from "./domain/paths.ts";
+import type { Files } from "./domain/ports.ts";
 import { err, ok, type Result } from "./domain/result.ts";
 
 export const FACTS_SCHEMA = 2;

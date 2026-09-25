@@ -10,7 +10,8 @@
  * refuses anything else. `test/e2e/banal.mjs` shows both failures with the real banal.
  */
 import type { Opaque } from "ts-essentials";
-import type { AbsolutePath, Command } from "../../domain/ports.ts";
+import type { AbsolutePath } from "../../domain/paths.ts";
+import type { Command, Scratch } from "../../domain/ports.ts";
 import type { LocatedBanal } from "./locate.ts";
 import type { PageLayout } from "../../domain/page-layout.ts";
 import { pdf2xml, XML_DIALECT } from "./xml.ts";
@@ -62,11 +63,20 @@ export const stageBanalInput = (
   ],
 });
 
-/** The staging written to disk. A `Workspace`'s scratch directory mints it; the core cannot. */
+/** The staging written to disk. Minted by `stage` only: both files written, or nothing returned. */
 export type StagedInput = Opaque<
   { readonly xml: AbsolutePath; readonly stub: AbsolutePath },
   "StagedInput"
 >;
+
+/** Write a staging into a scratch directory, the stub executable. The only minter of `StagedInput`. */
+export function stage(s: Scratch, staging: BanalStaging): StagedInput {
+  const [xml, stub] = staging.files;
+  return {
+    xml: s.write(xml.name, xml.content, xml.mode),
+    stub: s.write(stub.name, stub.content, stub.mode),
+  } as StagedInput;
+}
 
 /** `perl banal -no-time -json <xml>`, with `$PDFTOHTML` quoted by construction. */
 export function banalCommand(

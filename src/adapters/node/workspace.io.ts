@@ -10,24 +10,17 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
-import type { BanalStaging, StagedInput } from "../banal/invocation.ts";
-import type {
-  AbsolutePath,
-  NotAPromise,
-  Scratch,
-  Workspace,
-} from "../../domain/ports.ts";
+import type { AbsolutePath } from "../../domain/paths.ts";
+import type { NotAPromise, Scratch, Workspace } from "../../domain/ports.ts";
 
 function scratchIn(dir: AbsolutePath): Scratch {
   return {
     dir,
-    stage(s: BanalStaging): StagedInput {
-      const [xml, stub] = s.files;
-      const at = (name: string) => join(dir, name) as AbsolutePath;
-      writeFileSync(at(xml.name), xml.content);
-      writeFileSync(at(stub.name), stub.content);
-      chmodSync(at(stub.name), 0o755);
-      return { xml: at(xml.name), stub: at(stub.name) } as StagedInput;
+    write(name, content, mode): AbsolutePath {
+      const at = join(dir, name) as AbsolutePath;
+      writeFileSync(at, content);
+      if (mode === "exec") chmodSync(at, 0o755);
+      return at;
     },
   };
 }

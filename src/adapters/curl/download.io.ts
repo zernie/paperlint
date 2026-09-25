@@ -6,7 +6,7 @@
  */
 import { mkdtempSync, readFileSync, realpathSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { firstLine } from "../banal/output.ts";
+import { firstLine } from "../../domain/text.ts";
 import type { Download, ProcessExit, RunProcess } from "../../domain/ports.ts";
 import { err, ok } from "../../domain/result.ts";
 

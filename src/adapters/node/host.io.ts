@@ -10,6 +10,7 @@ import {
   type Environment,
   type HostDirs,
 } from "../banal/settings.ts";
+import { curlDownload } from "../curl/index.ts";
 import { nodeAdapters } from "./index.ts";
 import type { SpawnSync } from "./process.io.ts";
 
@@ -35,12 +36,14 @@ export function nodeBanalRuntime(
   o: RuntimeOptions = {},
 ): BanalRuntime {
   const settings = parseBanalSettings(env, hostDirs(o.dirs));
-  return {
-    settings,
-    io: nodeAdapters({
-      tmpDir: settings.tmpDir,
-      env: settings.processEnv,
-      ...(o.spawn ? { spawn: o.spawn } : {}),
-    }),
-  };
+  const ports = nodeAdapters({
+    tmpDir: settings.tmpDir,
+    ...(o.spawn ? { spawn: o.spawn } : {}),
+  });
+  const download = curlDownload({
+    run: ports.run,
+    env: settings.processEnv,
+    tmpDir: settings.tmpDir,
+  });
+  return { settings, io: { ...ports, download } };
 }

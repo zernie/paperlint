@@ -2,19 +2,7 @@
  * The banal rpp runs: HotCRP at one commit, one file, one sha256. The licence boundary is in
  * `./index.ts`: rpp downloads and runs banal, it never contains it.
  */
-import type { Opaque } from "ts-essentials";
-
-/** 64 lowercase hex digits. Minted by `parseSha256` (a literal) or `sha256Hex` (bytes) only. */
-export type Sha256 = Opaque<string, "Sha256">;
-
-const SHA256 = /^[0-9a-f]{64}$/;
-
-/** A sha256 written down as text — a pin, an option — checked where it is written, not where it is used. */
-export function parseSha256(s: string): Sha256 {
-  if (!SHA256.test(s))
-    throw new Error(`not a sha256 (64 lowercase hex digits): ${s}`);
-  return s as Sha256;
-}
+import { parseSha256, type Sha256 } from "../../domain/sha256.ts";
 
 /** Where to download banal from, and the bytes to accept. The pin by default; a test passes a local file. */
 export interface BanalSource {

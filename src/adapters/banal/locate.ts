@@ -5,7 +5,7 @@
  */
 import { join } from "node:path";
 import type { Opaque } from "ts-essentials";
-import type { AbsolutePath } from "../../domain/ports.ts";
+import type { AbsolutePath } from "../../domain/paths.ts";
 import { err, ok, type Result } from "../../domain/result.ts";
 import { BANAL_PIN } from "./pin.ts";
 import type { BanalSettings } from "./settings.ts";

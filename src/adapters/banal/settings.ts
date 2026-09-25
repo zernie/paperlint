@@ -4,7 +4,8 @@
  * signature carries `env` or `home`.
  */
 import { join, resolve } from "node:path";
-import type { AbsolutePath, Io } from "../../domain/ports.ts";
+import type { AbsolutePath } from "../../domain/paths.ts";
+import type { Io } from "../../domain/ports.ts";
 
 /** An explicit banal to use instead of rpp's (a path to the script). */
 export const BANAL_ENV = "BANAL";

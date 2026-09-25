@@ -2,9 +2,8 @@
  * In-memory adapters for the app layer's tests: every port, no disk, no processes, no network.
  * Each one RECORDS what it was asked, so a test asserts on the calls instead of on side effects.
  */
-import type { BanalStaging, StagedInput } from "../banal/invocation.ts";
+import type { AbsolutePath } from "../../domain/paths.ts";
 import type {
-  AbsolutePath,
   Command,
   Download,
   Files,
@@ -64,28 +63,28 @@ export function memoryFiles(
 }
 
 export interface MemoryWorkspace extends Workspace {
-  /** Every staging `stage()` was given, in order. */
-  readonly staged: BanalStaging[];
+  /** Every file written into a scratch directory, in order. */
+  readonly written: {
+    readonly name: string;
+    readonly content: string;
+    readonly mode: "read" | "exec";
+  }[];
   /** How each `within` ended. */
   readonly ended: ("returned" | "threw")[];
 }
 
 export function memoryWorkspace(dir = "/scratch"): MemoryWorkspace {
-  const staged: BanalStaging[] = [];
+  const written: MemoryWorkspace["written"] = [];
   const ended: ("returned" | "threw")[] = [];
   const scratch: Scratch = {
     dir: dir as AbsolutePath,
-    stage(s): StagedInput {
-      staged.push(s);
-      const [xml, stub] = s.files;
-      return {
-        xml: `${dir}/${xml.name}`,
-        stub: `${dir}/${stub.name}`,
-      } as StagedInput;
+    write(name, content, mode) {
+      written.push({ name, content, mode });
+      return `${dir}/${name}` as AbsolutePath;
     },
   };
   return {
-    staged,
+    written,
     ended,
     within<T>(_prefix: string, use: (s: Scratch) => NotAPromise<T>): T {
       try {
