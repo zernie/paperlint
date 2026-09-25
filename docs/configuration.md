@@ -166,9 +166,11 @@ papers/my-paper
   to `_build/paper.facts.json`: the page count, every font the pages draw text with (and whether
   its program is embedded, and whether it is Type 3), and the heights of the last page's two
   columns — or why they were not measured (a stub page of a few lines, or a review build with
-  numbered lines). If the project vendors [banal](https://github.com/kohler/hotcrp/blob/master/src/banal)
-  at `vendor/banal` (or names it in `$BANAL`), its page size, column count and font sizes are
-  added; otherwise those fields are `null`. A PDF pdf.js cannot read fails the build. The file is
+  numbered lines). [banal](https://github.com/kohler/hotcrp/blob/master/src/banal) — installed by
+  `rpp toolchain`, or a project's own `vendor/banal` or `$BANAL` — adds the page size, column count
+  and font sizes, measured from the same pdf.js read (no poppler; see
+  [`toolchain.md`](toolchain.md#page-geometry-banal-without-poppler)); without banal those fields
+  are `null` and the build says so. A PDF pdf.js cannot read fails the build. The file is
   written by one function, which `skills/render-paper/extract-pdf-facts.mjs` also calls for PDFs
   rpp did not build. Keep `_build/` out of git: the facts carry the PDF's SHA-256, and a rule
   refuses facts about a different PDF than the one on disk.

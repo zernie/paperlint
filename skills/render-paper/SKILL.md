@@ -4,7 +4,7 @@ description: Compile a LaTeX paper (ACM/IEEE/arXiv) to PDF and render its pages 
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, SendUserFile]
 ---
 
-<!-- vigiles:sha256:cbf13bc99392d1e4 compiled from skills/render-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:91a67846cf6cb74b compiled from skills/render-paper/SKILL.md.spec.ts -->
 
 # render-paper — .tex → PDF → readable page PNGs
 
@@ -50,8 +50,10 @@ That list was replaced on 2026-08-03; nothing about the toolchain below changed.
   package gets it there — never in a script, never here. A TeX Live without `libertine` builds an
   acmart paper GREEN in Computer Modern; that is why the files are checked, not the exit code.
 - **Reading the PDF** needs nothing installed: `rpp build` and `extract-pdf-facts.mjs` use pdf.js,
-  which comes with rpp. Poppler is not required.
-- **Renderer:** `pip install --quiet pymupdf` (poppler `pdftoppm`/ghostscript are often missing or
+  which comes with rpp. Page size, columns and font sizes come from banal (HotCRP's page-geometry
+  script), which `npx rpp toolchain` installs and which runs on pdf.js output — it needs `perl`,
+  and no poppler. Without banal those facts are `null` and the build says so.
+- **Renderer:** `pip install --quiet pymupdf` (system rasterizers and ghostscript are often missing or
   404 on apt here; pymupdf is reliable). No `playwright install`, no external fetches.
 
 ## Compile (full bibtex cycle — needed or citations show as `[?]`)
