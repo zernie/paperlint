@@ -56,11 +56,13 @@ import {
 } from "./facts-file.ts";
 import { readPdf as pdfjsReader, type PdfReader } from "./pdf-facts.ts";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
-import { nodeBanalRuntime } from "./adapters/node/host.io.ts";
+import { banalMeasurer, parseBanalSettings } from "./adapters/banal/index.ts";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
-import { nodeFiles } from "./adapters/node/files.io.ts";
-import { whyNoGeometry } from "./adapters/banal/geometry.ts";
-import type { BanalRuntime } from "./adapters/banal/settings.ts";
+import { hostDirs, nodeAdapters, nodeFiles } from "./adapters/node/index.ts";
+import { whyNoGeometry } from "./domain/geometry.ts";
+import type { AbsolutePath } from "./domain/paths.ts";
+import type { Files } from "./domain/ports.ts";
+import type { MeasureGeometry } from "./ports/measure-geometry.ts";
 import {
   auxBib,
   bibtexExcerpt,
@@ -128,10 +130,10 @@ export interface BuildContext {
   readonly run: Runner;
   /** Reads a finished PDF — pdf.js by default; the harness passes a fake. */
   readonly readPdf: PdfReader;
-  /** Where the facts writer looks for a project's own `vendor/banal` (`adapters/banal/locate.ts`). */
-  readonly projectRoot: string;
-  /** The ports and settings banal runs with. */
-  readonly banal: BanalRuntime;
+  /** The page-geometry measurer the facts writer uses. */
+  readonly measure: MeasureGeometry;
+  /** Where the facts file is written. */
+  readonly files: Files;
 }
 
 export type StepOutcome =
@@ -500,15 +502,15 @@ export const measureStep: BuildStep = {
       join(ctx.paperDir, `${JOB}.pdf`),
       {
         readPdf: ctx.readPdf,
-        runtime: ctx.banal,
-        projectRoot: ctx.projectRoot,
+        measure: ctx.measure,
+        files: ctx.files,
       },
     );
     if (!m.ok) return { ok: false, lines: [m.error] };
-    writeFactsFile(ctx.banal.io.files, ctx.paperDir, m.value.facts);
+    writeFactsFile(ctx.files, ctx.paperDir, m.value.facts);
     const g = m.value.geometry;
     const banal =
-      g.source === "none"
+      g.kind === "unmeasured"
         ? `; page geometry not measured — ${whyNoGeometry(g)}`
         : "";
     return {
@@ -567,8 +569,10 @@ export interface BuildOptions {
   readPdf?: PdfReader;
   /** Where a project's `vendor/banal` is looked for. Default: `$CLAUDE_PROJECT_DIR`, else `cwd`. */
   projectRoot?: string;
-  /** The ports and settings banal runs with. Default: the real ones, from `env`. */
-  banal?: BanalRuntime;
+  /** The page-geometry measurer. Default: banal, as `env` and `projectRoot` configure it. */
+  measure?: MeasureGeometry;
+  /** Where the facts file is written. Default: the disk. */
+  files?: Files;
 }
 
 /**
@@ -589,16 +593,27 @@ function baseDefaults({
   dryRun = false,
   readPdf = pdfjsReader,
   projectRoot = env["CLAUDE_PROJECT_DIR"] || cwd,
-}: BuildOptions): Required<Omit<BuildOptions, "banal">> {
+}: BuildOptions): Required<Omit<BuildOptions, "measure" | "files">> {
   return { run, cwd, env, steps, log, dryRun, readPdf, projectRoot };
 }
 
-/** `baseDefaults`, plus banal's runtime — the real one, from the environment, unless one is passed. */
+/** banal as the measurer, wired from the build's environment: the one piece of root work left here (#76). */
+function defaultMeasurer(
+  b: Required<Omit<BuildOptions, "measure" | "files">>,
+): MeasureGeometry {
+  const dirs = hostDirs({ cwd: b.cwd });
+  return banalMeasurer(
+    nodeAdapters({ tmpDir: dirs.tmp }),
+    parseBanalSettings(b.env, dirs),
+    b.projectRoot as AbsolutePath,
+  );
+}
+
+/** `baseDefaults`, plus the measurer and the files — the real ones, from the environment, unless passed. */
 function withDefaults(o: BuildOptions): Required<BuildOptions> {
   const base = baseDefaults(o);
-  const banal =
-    o.banal ?? nodeBanalRuntime(base.env, { dirs: { cwd: base.cwd } });
-  return { ...base, banal };
+  const measure = o.measure ?? defaultMeasurer(base);
+  return { ...base, measure, files: o.files ?? nodeFiles };
 }
 
 /** Run the applicable steps in order, each on the environment the steps before it left. */
@@ -606,7 +621,7 @@ async function runSteps(
   paperDir: string,
   dir: string,
   plan: PlanLine[],
-  { run, env, steps, readPdf, projectRoot, banal }: Required<BuildOptions>,
+  { run, env, steps, readPdf, measure, files }: Required<BuildOptions>,
 ): Promise<BuildResult> {
   let stepEnv = env;
   const notes: string[] = [];
@@ -617,8 +632,8 @@ async function runSteps(
       env: stepEnv,
       run,
       readPdf,
-      projectRoot,
-      banal,
+      measure,
+      files,
     });
     if (!out.ok) {
       // The PDF THIS run wrote and the step then rejected (a partial pass).

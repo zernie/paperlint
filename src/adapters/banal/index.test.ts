@@ -1,191 +1,112 @@
 /**
- * `adapters/banal/index.ts` — banal's adapter, on in-memory ports: which `Command` it builds, what it stages,
- * what it downloads and writes, and what it concludes. No perl, no disk, no network: the adapters
- * record, and each assertion reads the record. Real perl and the real banal are `test/e2e/banal.mjs`;
- * the adapters' own behaviour is `src/adapters/node/*.test.ts`.
+ * `adapters/banal/index.ts` — banal as the two ports the app sees. What `run.test.ts` checks in
+ * banal's own terms is checked here as the domain receives it: a `Geometry` whose provenance names
+ * banal and the rule that found it, a reason that is one line of text, a `Ready` that says what was
+ * verified. In-memory ports throughout; the real banal is `test/e2e/banal.mjs`.
  */
 import assert from "node:assert/strict";
 import { test } from "vitest";
+import { whyNoGeometry } from "../../domain/geometry.ts";
+import type { AbsolutePath } from "../../domain/paths.ts";
+import type { ProcessExit } from "../../domain/ports.ts";
+import { sha256Hex } from "../../domain/sha256.ts";
 import {
   exitedWith,
   fixedDownload,
   memoryFiles,
   memoryIo,
-  memoryWorkspace,
   scriptedProcess,
 } from "../memory/index.ts";
-import { checkBanal, ensureBanal, measureGeometry } from "./index.ts";
-import { sha256Hex } from "../../domain/sha256.ts";
-import { installedBanal } from "./locate.ts";
-import { parseBanalSettings } from "./settings.ts";
-import type { AbsolutePath } from "../../domain/paths.ts";
-import type { Command, ProcessExit } from "../../domain/ports.ts";
+import { banalInstaller, banalMeasurer, parseBanalSettings } from "./index.ts";
 
-const s = parseBanalSettings(
-  { BANAL: "/own/banal", PATH: "/bin" },
-  { home: "/h", tmp: "/t", cwd: "/w" },
-);
-const noExplicit = parseBanalSettings(
-  { PATH: "/bin" },
-  { home: "/h", tmp: "/t", cwd: "/w" },
-);
-const project = "/p" as AbsolutePath;
-/** What banal prints for the one-page probe. */
-const MEASURED = '{"bodyfontsize": 10.3, "columns": 1, "pages": [{}]}';
-const banalAnswers = (e: ProcessExit) =>
-  scriptedProcess((c: Command) => (c.args[0] === "-e" ? exitedWith("") : e));
+const dirs = { home: "/h", tmp: "/t", cwd: "/r" };
+const project = "/r" as AbsolutePath;
+const MEASURED =
+  '{"papersize":[792,612],"columns":2,"bodyfontsize":9,"pages":[{},{"type":"bib","reffontsize":7}]}';
 
-test("measureGeometry: perl runs the found banal on the staged XML, and the geometry comes back", () => {
-  const run = banalAnswers(exitedWith(MEASURED));
-  const workspace = memoryWorkspace();
-  const io = memoryIo({
-    run,
-    workspace,
-    files: memoryFiles({ "/own/banal": "" }),
-  });
-  const g = measureGeometry(io, s, project, []);
-  assert.equal(g.source, "banal");
-  assert.equal(g.source === "banal" && g.geometry.body_pt, 10.3);
-  const [c] = run.calls;
-  assert.equal(c?.file, "perl");
-  assert.equal(c?.args.at(-1), "/scratch/paper.xml");
-  // Guards: both files staged, once, and the scratch scope ended normally (cleanup ran).
-  assert.deepEqual(
-    workspace.written.map((w) => [w.name, w.mode]),
-    [
-      ["paper.xml", "read"],
-      ["pdftohtml", "exec"],
-    ],
+/** banal's measurer over in-memory ports: `/own/banal` on "disk", banal answering `exit`. */
+function measurer(env: Record<string, string>, exit?: ProcessExit) {
+  const run = scriptedProcess(() => exit ?? exitedWith(MEASURED));
+  const io = memoryIo({ run, files: memoryFiles({ "/own/banal": "" }) });
+  return { run, m: banalMeasurer(io, parseBanalSettings(env, dirs), project) };
+}
+
+test("no banal anywhere: unmeasured, and the reason says banal was not found", () => {
+  const g = measurer({}).m.measure([]);
+  assert.match(
+    g.kind === "unmeasured" ? whyNoGeometry(g) : "",
+    /^banal not found: /,
   );
-  assert.deepEqual(workspace.ended, ["returned"]);
 });
 
-test("measureGeometry: no banal anywhere is `banal-missing`, and nothing runs", () => {
-  const run = banalAnswers(exitedWith(MEASURED));
-  const g = measureGeometry(memoryIo({ run }), noExplicit, project, []);
-  assert.equal(g.source === "none" && g.why.kind, "banal-missing");
-  assert.equal(run.calls.length, 0);
-});
-
-test("🔴 measureGeometry: perl not found is `perl-missing`, naming the banal that was tried", () => {
-  const io = memoryIo({
-    run: scriptedProcess(() => ({ kind: "not-found", file: "perl" })),
-    files: memoryFiles({ "/own/banal": "" }),
+test("with $BANAL: banal gets the .xml and a quoted $PDFTOHTML, and the geometry is the domain's", () => {
+  const { m, run } = measurer({ BANAL: "/own/banal" });
+  const g = m.measure([]);
+  assert.equal(g.kind, "measured");
+  assert.deepEqual(g.kind === "measured" && g.by, {
+    tool: "banal",
+    path: "/own/banal",
+    how: "$BANAL",
   });
-  const g = measureGeometry(io, s, project, []);
-  assert.equal(g.source === "none" && g.why.kind, "perl-missing");
-  assert.equal(g.source === "none" && g.tried?.path, "/own/banal");
+  assert.deepEqual(
+    g.kind === "measured" && [g.geometry.columns, g.geometry.bodyPages],
+    [2, 1],
+  );
+  const c = run.calls[0];
+  // Guards: the poppler-free path — banal is handed rpp's XML, never the PDF.
+  assert.match(c?.args.at(-1) ?? "", /\.xml$/);
+  assert.match(c?.env["PDFTOHTML"] ?? "", /^'.*pdftohtml'$/);
 });
 
-test("measureGeometry: banal exiting 3 is `process-failed`", () => {
-  const io = memoryIo({
-    run: banalAnswers({
-      kind: "exited",
-      status: 3,
-      stdout: "",
-      stderr: "boom",
-    }),
-    files: memoryFiles({ "/own/banal": "" }),
-  });
-  const g = measureGeometry(io, s, project, []);
-  assert.equal(g.source === "none" && g.why.kind, "process-failed");
+test("a failing banal: unmeasured, and the reason names exit, message and source", () => {
+  const { m } = measurer(
+    { BANAL: "/own/banal" },
+    { kind: "exited", status: 3, stdout: "", stderr: "boom\n" },
+  );
+  const g = m.measure([]);
+  // Guards: a banal that runs and fails is not reported as "not found".
+  assert.match(
+    g.kind === "unmeasured" ? whyNoGeometry(g) : "",
+    /^banal failed \(exit 3\): boom \(banal from \$BANAL: \/own\/banal\)$/,
+  );
 });
 
-// ── installing ──────────────────────────────────────────────────────────────────────────
+// ── the installer ───────────────────────────────────────────────────────────────────────
 const BODY = "print qq(...);\n";
+/** What banal prints for the one-page probe — what acceptance requires. */
+const PROBE = '{"bodyfontsize": 10.3, "columns": 1, "pages": [{}]}';
 const source = {
   url: "https://example.test/banal",
   sha256: sha256Hex(new TextEncoder().encode(BODY)),
 };
-const dest = installedBanal(noExplicit);
 
-test("ensureBanal: downloads, verifies, writes and probes — fresh; a second run downloads nothing", () => {
-  const files = memoryFiles();
-  const download = fixedDownload(BODY);
+test("installer: ensure reports the download, and Ready says where and what was verified", () => {
   const io = memoryIo({
-    run: banalAnswers(exitedWith(MEASURED)),
-    files,
-    download,
-  });
-  const first = ensureBanal(io, noExplicit, { source });
-  assert.equal(first.ok && first.value.banal.path, dest);
-  assert.equal(first.ok && first.value.fresh, true);
-  assert.ok(files.map.has(dest));
-  // Guards: idempotence — an installed, matching banal is not downloaded again.
-  const second = ensureBanal(io, noExplicit, { source });
-  assert.equal(second.ok && second.value.fresh, false);
-  assert.equal(download.urls.length, 1);
-});
-
-test("🔴 ensureBanal: bytes with another sha256 are refused, and nothing is written", () => {
-  const files = memoryFiles();
-  const io = memoryIo({
-    run: banalAnswers(exitedWith(MEASURED)),
-    files,
-    download: fixedDownload("something else"),
-  });
-  const r = ensureBanal(io, noExplicit, { source });
-  // Guards: the sha256 pin — a changed upstream file (or a proxy's error page) is never installed.
-  assert.equal(!r.ok && r.error.kind, "sha-mismatch");
-  assert.equal(files.map.size, 0);
-});
-
-test("ensureBanal: a failed download names the URL", () => {
-  const io = memoryIo({
-    run: banalAnswers(exitedWith(MEASURED)),
-    download: fixedDownload({ detail: "curl exited 22" }),
-  });
-  const r = ensureBanal(io, noExplicit, { source });
-  assert.deepEqual(!r.ok && r.error, {
-    kind: "download-failed",
-    url: source.url,
-    detail: "curl exited 22",
-  });
-});
-
-test("🔴 ensureBanal: a banal that downloads fine but measures nothing fails, saying why", () => {
-  const io = memoryIo({
-    run: banalAnswers(exitedWith("not json")),
+    run: scriptedProcess((c) =>
+      c.args[0] === "-e" ? exitedWith("") : exitedWith(PROBE),
+    ),
     download: fixedDownload(BODY),
   });
-  const r = ensureBanal(io, noExplicit, { source });
-  // Guards: acceptance by a run, not by the download.
-  assert.equal(!r.ok && r.error.kind, "does-not-run");
+  const i = banalInstaller(io, parseBanalSettings({}, dirs), source);
+  assert.match(i.label, /^banal \d/);
+  const told: string[] = [];
+  const r = i.ensure((l) => told.push(l));
+  assert.ok(r.ok);
+  assert.equal(r.value.fresh, true);
+  assert.match(r.value.where, /\/banal$/);
   assert.equal(
-    !r.ok && r.error.kind === "does-not-run" && r.error.why.kind,
-    "no-json",
+    r.value.verified,
+    "sha256 verified, and it measured a probe page",
   );
+  assert.equal(told.length, 1);
+  assert.equal(i.check().ok, true);
 });
 
-test("🔴 ensureBanal and checkBanal without perl: `perl-missing`, and nothing downloaded", () => {
-  const download = fixedDownload(BODY);
+test("installer: a failure is lines of text, the first saying what happened", () => {
   const io = memoryIo({
     run: scriptedProcess(() => ({ kind: "not-found", file: "perl" })),
-    download,
   });
-  const r = ensureBanal(io, noExplicit, { source });
-  // Guards: perl first — no download when the program that would run it is missing.
-  assert.equal(!r.ok && r.error.kind, "perl-missing");
-  assert.equal(download.urls.length, 0);
-  const c = checkBanal(io, noExplicit, source);
-  assert.equal(!c.ok && c.error.kind, "perl-missing");
-});
-
-test("checkBanal: absent, other bytes, pinned-and-running", () => {
-  const run = banalAnswers(exitedWith(MEASURED));
-  const absent = checkBanal(memoryIo({ run }), noExplicit, source);
-  assert.equal(!absent.ok && absent.error.kind, "banal-missing");
-  // Guards: the pin is checked on every run — a changed file is reported, not trusted.
-  const tampered = checkBanal(
-    memoryIo({ run, files: memoryFiles({ [dest]: "tampered" }) }),
-    noExplicit,
-    source,
-  );
-  assert.equal(!tampered.ok && tampered.error.kind, "not-pinned");
-  const good = checkBanal(
-    memoryIo({ run, files: memoryFiles({ [dest]: BODY }) }),
-    noExplicit,
-    source,
-  );
-  assert.equal(good.ok, true);
+  const r = banalInstaller(io, parseBanalSettings({}, dirs), source).check();
+  assert.ok(!r.ok);
+  assert.match(r.error[0], /perl/);
 });

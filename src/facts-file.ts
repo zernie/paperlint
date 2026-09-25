@@ -10,7 +10,8 @@
  *
  * ── WHERE THE FACTS COME FROM ──────────────────────────────────────────────────
  * - pdf.js (`pdf-facts.ts`) — page count, the fonts the pages draw text with, the last page. Always.
- * - banal (Eddie Kohler's page-geometry tool, the one HotCRP's format checker runs) — paper size,
+ * - a page-geometry measurer, through the `MeasureGeometry` port (`ports/measure-geometry.ts`) —
+ *   today banal (Eddie Kohler's page-geometry tool, the one HotCRP's format checker runs) — paper size,
  *   columns, body and reference font sizes, page types. It runs on pdftohtml-style XML that rpp
  *   writes from the same pdf.js read (`adapters/banal/xml.ts`), so poppler is not needed (`adapters/banal/`).
  *   OPTIONAL: banal is GPL and rpp does not ship it — `rpp toolchain` fetches it. Found ⇒ its fields
@@ -36,14 +37,13 @@ import {
   type LastPage,
 } from "./pdf-geometry.ts";
 import { describeFailure, type PdfFacts, type PdfReader } from "./pdf-facts.ts";
-import { measureGeometry } from "./adapters/banal/index.ts";
 import {
   flatGeometry,
   type FactsGeometryFields,
   type Geometry,
-} from "./adapters/banal/geometry.ts";
+} from "./domain/geometry.ts";
 import { sha256Hex } from "./domain/sha256.ts";
-import type { BanalRuntime } from "./adapters/banal/settings.ts";
+import type { MeasureGeometry } from "./ports/measure-geometry.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
 import type { Files } from "./domain/ports.ts";
 import { err, ok, type Result } from "./domain/result.ts";
@@ -182,10 +182,10 @@ export interface MeasureOptions {
   readonly readPdf: PdfReader;
   readonly venue?: string | null;
   readonly kind?: string | null;
-  /** The real or in-memory ports, and the banal settings the composition root parsed. */
-  readonly runtime: BanalRuntime;
-  /** Where `vendor/banal` is looked for (`adapters/banal/locate.ts`). */
-  readonly projectRoot: string;
+  /** The page-geometry measurer (banal, as the composition root wired it). */
+  readonly measure: MeasureGeometry;
+  /** Where the PDF and `venue.json` are read from. */
+  readonly files: Files;
 }
 
 /** The document, and the geometry it was projected from — a caller decides what "no geometry" means. */
@@ -208,16 +208,10 @@ export async function measurePaper(
 ): Promise<Result<Measured, string>> {
   const r = await o.readPdf(pdf);
   if (!r.ok) return err(describeFailure(r, pdf));
-  const bytes = o.runtime.io.files.readBytes(at(pdf));
+  const bytes = o.files.readBytes(at(pdf));
   if (bytes === null) return err(`${pdf}: gone after pdf.js read it`);
-  const { io, settings } = o.runtime;
-  const geometry = measureGeometry(
-    io,
-    settings,
-    at(o.projectRoot),
-    r.facts.layout,
-  );
-  const decl = declaredVenue(io.files, paperDir);
+  const geometry = o.measure.measure(r.facts.layout);
+  const decl = declaredVenue(o.files, paperDir);
   const facts = factsDocument({
     pdf: posix(relative(paperDir, pdf)),
     sha: sha256Hex(bytes),

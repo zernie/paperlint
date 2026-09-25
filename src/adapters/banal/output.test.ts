@@ -115,10 +115,10 @@ test("geometryOf: a page without a type IS a body page", () => {
     }),
   );
   assert.deepEqual(
-    [g.body_pages, g.ref_pages, g.appendix_pages, g.ref_pt],
+    [g.bodyPages, g.refPages, g.appendixPages, g.refPt],
     [3, 1, 1, 8.5],
   );
-  assert.deepEqual(g.pages_by_type, { body: 3, bib: 1, appendix: 1 });
+  assert.deepEqual(g.pagesByType, { body: 3, bib: 1, appendix: 1 });
 });
 
 test("geometryOf: papersize is [height, width] in points → inches", () => {
@@ -126,7 +126,7 @@ test("geometryOf: papersize is [height, width] in points → inches", () => {
     M({ papersize: [792, 612], columns: 2, bodyfontsize: 10 }),
   );
   assert.deepEqual(
-    [g.page_w_in, g.page_h_in, g.columns, g.body_pt],
+    [g.pageWidthIn, g.pageHeightIn, g.columns, g.bodyPt],
     [8.5, 11, 2, 10],
   );
 });
@@ -134,7 +134,7 @@ test("geometryOf: papersize is [height, width] in points → inches", () => {
 test("geometryOf: an empty measurement is nulls and zeros, not a crash", () => {
   const g = geometryOf(M({ bodyfontsize: null }));
   assert.deepEqual(
-    [g.page_w_in, g.columns, g.body_pt, g.ref_pt, g.body_pages],
+    [g.pageWidthIn, g.columns, g.bodyPt, g.refPt, g.bodyPages],
     [null, null, null, null, 0],
   );
 });

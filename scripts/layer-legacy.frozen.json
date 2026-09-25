@@ -32,7 +32,7 @@
       "boundaries/dependencies": 1
     },
     "src/pdf-facts.ts": {
-      "boundaries/dependencies": 2,
+      "boundaries/dependencies": 3,
       "no-restricted-globals": 1
     },
     "src/structure.ts": {
@@ -43,7 +43,7 @@
       "boundaries/dependencies": 2
     },
     "src/toolchain.ts": {
-      "boundaries/dependencies": 4,
+      "boundaries/dependencies": 3,
       "no-restricted-globals": 2
     }
   }

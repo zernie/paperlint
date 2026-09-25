@@ -51,6 +51,10 @@ import {
 } from "./build.ts";
 import { prepareEngine } from "./build-engine.ts";
 import { runToolchain } from "./toolchain.ts";
+import { banalInstaller, parseBanalSettings } from "./adapters/banal/index.ts";
+import { curlDownload } from "./adapters/curl/index.ts";
+import { hostDirs, nodeAdapters } from "./adapters/node/index.ts";
+import type { ToolInstaller } from "./ports/tool-installer.ts";
 import {
   mergeRequirements,
   requirementsFor,
@@ -881,8 +885,21 @@ const SIMPLE: Readonly<
   hook: (a, { err }) => runHook(a.paths[0], { err }),
   new: (a, io) => runNew(a, io),
   build: (a, io) => runBuild(a, io),
-  toolchain: (a, { log, err }) => runToolchain({ check: a.check, log, err }),
+  toolchain: (a, { log, err }) =>
+    runToolchain({ check: a.check, log, err, banal: hostBanalInstaller() }),
 };
+
+/** banal's installer, wired from this process's environment: the composition root's work. */
+function hostBanalInstaller(): ToolInstaller {
+  const s = parseBanalSettings(process.env, hostDirs());
+  const ports = nodeAdapters({ tmpDir: s.tmpDir });
+  const download = curlDownload({
+    run: ports.run,
+    env: s.processEnv,
+    tmpDir: s.tmpDir,
+  });
+  return banalInstaller({ ...ports, download }, s);
+}
 
 export async function run(
   argv: readonly string[],

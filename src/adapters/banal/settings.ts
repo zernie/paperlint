@@ -1,11 +1,15 @@
 /**
- * The environment, as a VALUE. The composition root reads `process.env`, the home and the temp
- * directory once and parses them here; nothing below it reads the environment again, so no
- * signature carries `env` or `home`.
+ * banal's settings, parsed from the environment VALUE the composition root read once
+ * (`domain/host.ts`): which banal the user named, where `rpp toolchain` keeps it, where scratch
+ * directories go, and the environment perl and curl get. Nothing here reads the host itself.
  */
 import { join, resolve } from "node:path";
+import {
+  childEnv,
+  type Environment,
+  type HostDirs,
+} from "../../domain/host.ts";
 import type { AbsolutePath } from "../../domain/paths.ts";
-import type { Io } from "../../domain/ports.ts";
 
 /** An explicit banal to use instead of rpp's (a path to the script). */
 export const BANAL_ENV = "BANAL";
@@ -22,24 +26,6 @@ export interface BanalSettings {
   /** The environment a child process (perl, curl) gets: every value a string, none undefined. */
   readonly processEnv: Readonly<Record<string, string>>;
 }
-
-/** The three directories the host knows and the environment does not say. All absolute. */
-export interface HostDirs {
-  readonly home: string;
-  readonly tmp: string;
-  /** What a relative `$BANAL` or `$RPP_BANAL_DIR` is relative to. */
-  readonly cwd: string;
-}
-
-export type Environment = Readonly<Record<string, string | undefined>>;
-
-/** An environment as a child process gets it: every value a string, none undefined. */
-export const childEnv = (env: Environment): Record<string, string> =>
-  Object.fromEntries(
-    Object.entries(env).filter(
-      (e): e is [string, string] => e[1] !== undefined,
-    ),
-  );
 
 /** `resolve` with an absolute base never consults the process's cwd. */
 const absolute = (cwd: string, p: string): AbsolutePath =>
@@ -66,10 +52,4 @@ export function parseBanalSettings(
     tmpDir: absolute(dirs.cwd, dirs.tmp),
     processEnv: childEnv(env),
   };
-}
-
-/** Everything the banal app functions take besides their own arguments: the ports and the settings. */
-export interface BanalRuntime {
-  readonly io: Io;
-  readonly settings: BanalSettings;
 }

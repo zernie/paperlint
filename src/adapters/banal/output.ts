@@ -5,6 +5,7 @@
  * document — and `pages`, one entry per page, where a page's `type` is OMITTED when it is "body".
  */
 import { z } from "zod";
+import type { PageGeometry } from "../../domain/geometry.ts";
 import { firstLine } from "../../domain/text.ts";
 import type { ProcessExit } from "../../domain/ports.ts";
 import { andThen, err, ok, type Result } from "../../domain/result.ts";
@@ -95,19 +96,6 @@ export const parseBanalOutput = (
 ): Result<BanalMeasurement, BanalFailure> =>
   andThen(streamsOf(r), measurementOf);
 
-/** The geometry banal measures, in the facts file's field names. */
-export interface BanalGeometry {
-  readonly page_w_in: number | null;
-  readonly page_h_in: number | null;
-  readonly columns: number | null;
-  readonly body_pt: number | null;
-  readonly ref_pt: number | null;
-  readonly body_pages: number;
-  readonly ref_pages: number;
-  readonly appendix_pages: number;
-  readonly pages_by_type: Readonly<Record<string, number>>;
-}
-
 const inches = (pt: number | undefined): number | null =>
   pt === undefined ? null : Number((pt / 72).toFixed(3));
 
@@ -133,21 +121,21 @@ const refFontSize = (pages: readonly Page[]): number | null =>
   pages.find((p) => p.type === "bib" && p.reffontsize != null)?.reffontsize ??
   null;
 
-/** The measurement → the geometry fields. */
-export function geometryOf(m: BanalMeasurement): BanalGeometry {
+/** The measurement → the domain's page geometry. */
+export function geometryOf(m: BanalMeasurement): PageGeometry {
   const byType = countByType(m.pages);
   const refPages = byType["bib"] ?? 0;
   const appendixPages = byType["appendix"] ?? 0;
   return {
     // banal gives papersize as [height, width] in points — checked against live output 2026-08-26.
-    page_w_in: inches(m.papersize?.[1]),
-    page_h_in: inches(m.papersize?.[0]),
+    pageWidthIn: inches(m.papersize?.[1]),
+    pageHeightIn: inches(m.papersize?.[0]),
     columns: m.columns ?? null,
-    body_pt: m.bodyfontsize ?? null,
-    ref_pt: refFontSize(m.pages),
-    body_pages: m.pages.length - refPages - appendixPages,
-    ref_pages: refPages,
-    appendix_pages: appendixPages,
-    pages_by_type: byType,
+    bodyPt: m.bodyfontsize ?? null,
+    refPt: refFontSize(m.pages),
+    bodyPages: m.pages.length - refPages - appendixPages,
+    refPages,
+    appendixPages,
+    pagesByType: byType,
   };
 }

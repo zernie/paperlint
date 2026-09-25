@@ -49,12 +49,7 @@ import {
   supportedPlatform,
   type Runner,
 } from "./engine.ts";
-import { checkBanal, ensureBanal } from "./adapters/banal/index.ts";
-import { describe } from "./adapters/banal/failure.ts";
-import { pinLabel, type BanalSource } from "./adapters/banal/pin.ts";
-import type { PinnedBanal } from "./adapters/banal/locate.ts";
-// eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
-import { nodeBanalRuntime } from "./adapters/node/host.io.ts";
+import type { Ready, ToolInstaller } from "./ports/tool-installer.ts";
 import {
   declaredUnion,
   packageNames,
@@ -506,8 +501,8 @@ export interface ToolchainOptions {
   /** The requirements to install — every profile's union by default. */
   readonly tex?: TexRequirements;
   readonly now?: () => number;
-  /** Where banal is downloaded from — the pin by default; the harness passes a local file. */
-  readonly banal?: BanalSource;
+  /** banal's installer. The composition root wires it (`cli.ts`); the harness passes its own. */
+  readonly banal: ToolInstaller;
 }
 
 export type InstallResult =
@@ -645,9 +640,8 @@ function fail(
   return { ok: false };
 }
 
-/** The options with defaults filled in; `banal` stays optional — `ensureBanal` defaults it to the pin. */
-type Resolved = Required<Omit<ToolchainOptions, "banal">> &
-  Pick<ToolchainOptions, "banal">;
+/** The options with defaults filled in. */
+type Resolved = Required<ToolchainOptions>;
 
 function withDefaults(o: ToolchainOptions): Resolved {
   return {
@@ -696,39 +690,32 @@ function report(o: Resolved, tree: CachedTree | null): number {
   return 1;
 }
 
-/** The banal half, installed or checked. True when banal is ready. */
+/** The banal half, installed or checked, through its installer. True when banal is ready. */
 function banalPart(o: Resolved): boolean {
-  const { io, settings } = nodeBanalRuntime(o.env, {
-    dirs: { home: o.home },
-    spawn: o.run,
-  });
-  const pinned = pinLabel();
+  const tool = o.banal;
   if (o.check) {
-    const r = checkBanal(io, settings, o.banal);
-    if (r.ok) o.log(`✓ ${pinned} is installed and runs`);
+    const r = tool.check();
+    if (r.ok) o.log(`✓ ${tool.label} is installed and runs`);
     else {
-      o.log(`✗ ${pinned}: ${describe(r.error).join("; ")}`);
+      o.log(`✗ ${tool.label}: ${r.error.join("; ")}`);
       o.log("  run `npx rpp toolchain` to install it");
     }
     return r.ok;
   }
-  const r = ensureBanal(io, settings, {
-    ...(o.banal ? { source: o.banal } : {}),
-    onDownload: o.log,
-  });
+  const r = tool.ensure(o.log);
   if (!r.ok) {
-    fail(o.err, describe(r.error));
+    fail(o.err, r.error);
     return false;
   }
-  o.log(readyLine(r.value.banal, r.value.fresh));
+  o.log(readyLine(tool.label, r.value));
   return true;
 }
 
-/** The ready line takes a `PinnedBanal`: it cannot be printed for bytes that were not verified and run. */
-export function readyLine(banal: PinnedBanal, fresh: boolean): string {
-  return fresh
-    ? `✓ ${pinLabel()} is ready in ${banal.path}: sha256 verified, and it measured a probe page`
-    : `✓ ${pinLabel()} in ${banal.path} is verified and runs — nothing to do`;
+/** The ready line takes a `Ready`: only an installer mints one, so it cannot be printed for a tool that was not verified and run. */
+export function readyLine(label: string, r: Ready): string {
+  return r.fresh
+    ? `✓ ${label} is ready in ${r.where}: ${r.verified}`
+    : `✓ ${label} in ${r.where} is verified and runs — nothing to do`;
 }
 
 /** The TeX Live half: 0 when every declared package is present (or now installed). */
@@ -756,7 +743,7 @@ function texPart(o: Resolved): number {
  * `rpp toolchain [--check]`. Both halves always run, so one failure does not hide the other; the
  * exit code is 0 only when both are ready.
  */
-export function runToolchain(options: ToolchainOptions = {}): number {
+export function runToolchain(options: ToolchainOptions): number {
   const o = withDefaults(options);
   if (!supportedPlatform(o.platform)) {
     o.err(`✗ rpp toolchain: ${UNSUPPORTED}`);

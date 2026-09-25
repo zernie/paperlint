@@ -37,6 +37,11 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIXTURE = join(HERE, "..", "fixtures", "toolchain-mirror");
 const T = await import(join(HERE, "toolchain.ts"));
+// The harness is its own composition root for banal: `runToolchain` takes an installer, it does
+// not build one.
+const B = await import(join(HERE, "adapters", "banal", "index.ts"));
+const N = await import(join(HERE, "adapters", "node", "index.ts"));
+const C = await import(join(HERE, "adapters", "curl", "index.ts"));
 
 let n = 0;
 const check = (label, cond, detail = "") => {
@@ -273,7 +278,18 @@ const BANAL = {
   url: url(fakeBanal),
   sha256: createHash("sha256").update(readFileSync(fakeBanal)).digest("hex"),
 };
-const cmd = (over = {}) => {
+/** banal's installer over the real ports, every process going through the recorder. */
+const installer = (e, source, run) => {
+  const s = B.parseBanalSettings(e, N.hostDirs());
+  const ports = N.nodeAdapters({ tmpDir: s.tmpDir, spawn: run });
+  const download = C.curlDownload({
+    run: ports.run,
+    env: s.processEnv,
+    tmpDir: s.tmpDir,
+  });
+  return B.banalInstaller({ ...ports, download }, s, source);
+};
+const cmd = ({ banal = BANAL, ...over } = {}) => {
   const out = [];
   const err = [];
   const rec = recorder();
@@ -284,7 +300,7 @@ const cmd = (over = {}) => {
     run: rec.run,
     platform: "linux",
     tex: TEX,
-    banal: BANAL,
+    banal: installer(over.env ?? env, banal, rec.run),
     now: (() => {
       let t = 0;
       return () => (t += 1000);

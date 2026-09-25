@@ -36,9 +36,16 @@ import {
   writeFactsFile,
 } from "../../dist/facts-file.js";
 import { readPdf } from "../../dist/pdf-facts.js";
-import { nodeBanalRuntime } from "../../dist/adapters/node/host.io.js";
-import { nodeFiles } from "../../dist/adapters/node/files.io.js";
-import { whyNoGeometry } from "../../dist/adapters/banal/geometry.js";
+import {
+  banalMeasurer,
+  parseBanalSettings,
+} from "../../dist/adapters/banal/index.js";
+import {
+  hostDirs,
+  nodeAdapters,
+  nodeFiles,
+} from "../../dist/adapters/node/index.js";
+import { whyNoGeometry } from "../../dist/domain/geometry.js";
 import { exitCodeFor } from "../../dist/exit-code.js";
 
 /** The paper's `venue.json`, read from disk. */
@@ -106,20 +113,26 @@ if (isMain(import.meta.url)) {
       strict,
       `🛑 no artifact ${pdf} — the paper declared it in venue.json, but it is not built`,
     );
-  const runtime = nodeBanalRuntime(process.env);
+  // The composition root: banal as the measurer, wired from this process's environment.
+  const settings = parseBanalSettings(process.env, hostDirs());
+  const measure = banalMeasurer(
+    nodeAdapters({ tmpDir: settings.tmpDir }),
+    settings,
+    ROOT,
+  );
   // Command-line arguments override the declaration — for a one-off check of someone else's PDF.
   const m = await measurePaper(paperDir, pdf, {
     readPdf,
     venue: venue ?? null,
     kind: kind ?? null,
-    runtime,
-    projectRoot: ROOT,
+    measure,
+    files: nodeFiles,
   });
   if (!m.ok) finish("unreadable", strict, refusal(m.error, strict));
   const { facts, geometry } = m.value;
-  const why = geometry.source === "none" ? whyNoGeometry(geometry) : null;
+  const why = geometry.kind === "unmeasured" ? whyNoGeometry(geometry) : null;
   if (why && strict) finish("no-geometry", strict, refusal(why, strict));
-  const out = writeFactsFile(runtime.io.files, paperDir, facts);
+  const out = writeFactsFile(nodeFiles, paperDir, facts);
   if (why)
     console.error(
       `⚠️  ${why} — page size, columns and font sizes are null in the facts (run with --strict to require them)`,

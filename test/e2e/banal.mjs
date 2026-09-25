@@ -44,11 +44,11 @@ const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const FIX = join(ROOT, "fixtures", "pdf-facts");
 const strict = process.argv.includes("--strict");
 // The third composition root: the real adapters, the settings parsed from the environment here.
-const { measureGeometry } = await import(
+const { banalMeasurer, parseBanalSettings } = await import(
   join(ROOT, "dist", "adapters", "banal", "index.js")
 );
-const { nodeBanalRuntime } = await import(
-  join(ROOT, "dist", "adapters", "node", "host.io.js")
+const { hostDirs, nodeAdapters, nodeFiles } = await import(
+  join(ROOT, "dist", "adapters", "node", "index.js")
 );
 const { lookupOrder, pickBanal } = await import(
   join(ROOT, "dist", "adapters", "banal", "locate.js")
@@ -56,8 +56,8 @@ const { lookupOrder, pickBanal } = await import(
 const { describeLine } = await import(
   join(ROOT, "dist", "adapters", "banal", "failure.js")
 );
-const { whyNoGeometry } = await import(
-  join(ROOT, "dist", "adapters", "banal", "geometry.js")
+const { flatGeometry, whyNoGeometry } = await import(
+  join(ROOT, "dist", "domain", "geometry.js")
 );
 const { pdf2xml } = await import(
   join(ROOT, "dist", "adapters", "banal", "xml.js")
@@ -123,9 +123,9 @@ const EXPECTED = {
   },
 };
 
-const host = nodeBanalRuntime(process.env);
-const found = pickBanal(lookupOrder(host.settings, ROOT), (p) =>
-  host.io.files.isFile(p),
+const found = pickBanal(
+  lookupOrder(parseBanalSettings(process.env, hostDirs()), ROOT),
+  (p) => nodeFiles.isFile(p),
 );
 if (!found.ok) {
   const say = `banal-e2e: skipped — ${describeLine({ kind: "banal-missing", missing: found.error })}`;
@@ -160,10 +160,22 @@ try {
   symlinkSync(perl, join(bin, "perl"));
   const env = { PATH: bin, HOME: work };
   // The banal found above, run with a PATH holding perl only.
-  const { io, settings } = nodeBanalRuntime({ ...env, BANAL: where.path });
+  const settings = parseBanalSettings(
+    { ...env, BANAL: where.path },
+    hostDirs(),
+  );
+  const measurer = banalMeasurer(
+    nodeAdapters({ tmpDir: settings.tmpDir }),
+    settings,
+    ROOT,
+  );
+  // The geometry as the facts file spells it (the recorded numbers are in its field names).
   const measure = (pages) => {
-    const g = measureGeometry(io, settings, ROOT, pages);
-    return g.source === "banal" ? g.geometry : whyNoGeometry(g);
+    const g = measurer.measure(pages);
+    if (g.kind === "unmeasured") return whyNoGeometry(g);
+    const flat = { ...flatGeometry(g) };
+    delete flat.geometry_source;
+    return flat;
   };
 
   console.log(

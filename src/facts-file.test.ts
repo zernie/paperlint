@@ -2,18 +2,14 @@
  * `facts-file.ts` — the one writer of `_build/paper.facts.json`.
  *
  * The document is assembled from hand-made measurements (pure), and `measurePaper` runs on
- * in-memory adapters with a FAKE pdf.js reader and a scripted banal, so each outcome — read failed,
- * banal missing, banal failing, banal measuring — is chosen rather than hoped for. Reading real PDFs
- * is `pdf-facts.harness.mjs`'s job; the real banal is `test/e2e/banal.mjs`.
+ * in-memory files with a FAKE pdf.js reader and a FAKE measurer, so each outcome — read failed, not
+ * measured, measured — is chosen rather than hoped for. Reading real PDFs is
+ * `pdf-facts.harness.mjs`'s job; banal as the measurer is `adapters/banal/index.test.ts`, and the
+ * real banal is `test/e2e/banal.mjs`.
  */
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import {
-  exitedWith,
-  memoryFiles,
-  memoryIo,
-  scriptedProcess,
-} from "./adapters/memory/index.ts";
+import { memoryFiles } from "./adapters/memory/index.ts";
 import {
   declaredVenue,
   factsDocument,
@@ -22,13 +18,8 @@ import {
   writeFactsFile,
   type MeasureOptions,
 } from "./facts-file.ts";
-import { whyNoGeometry, type Geometry } from "./adapters/banal/geometry.ts";
+import { whyNoGeometry, type Geometry } from "./domain/geometry.ts";
 import { sha256Hex } from "./domain/sha256.ts";
-import { geometryOf } from "./adapters/banal/output.ts";
-import { parseBanalSettings } from "./adapters/banal/settings.ts";
-import type { AbsolutePath } from "./domain/paths.ts";
-import type { Io, ProcessExit } from "./domain/ports.ts";
-import type { BanalCandidate } from "./adapters/banal/locate.ts";
 import type { Fonts, PageText } from "./pdf-geometry.ts";
 import type { PdfReader } from "./pdf-facts.ts";
 
@@ -61,9 +52,25 @@ const FONTS: Fonts = {
   ],
 };
 const NONE: Geometry = {
-  source: "none",
-  why: { kind: "perl-missing" },
+  kind: "unmeasured",
+  why: ["perl is not installed"],
   tried: null,
+};
+/** A measurement, in the domain's names, by a measurer called `banal`. */
+const MEASURED: Geometry = {
+  kind: "measured",
+  by: { tool: "banal", path: "/b", how: "$BANAL" },
+  geometry: {
+    pageWidthIn: 8.5,
+    pageHeightIn: 11,
+    columns: 2,
+    bodyPt: 9,
+    refPt: 7,
+    bodyPages: 3,
+    refPages: 1,
+    appendixPages: 1,
+    pagesByType: { body: 3, bib: 1, appendix: 1 },
+  },
 };
 const doc = (last: PageText, geometry: Geometry = NONE) =>
   factsDocument({
@@ -118,17 +125,8 @@ test("🔴 geometry_source and the nine columns come from ONE branch", () => {
   assert.equal(none.geometry_source, null);
   assert.equal(none.page_w_in, null);
   assert.equal(none.body_pages, null);
-  const g = geometryOf({
-    papersize: [792, 612],
-    columns: 2,
-    bodyfontsize: 9,
-    pages: [{}, {}, {}, { type: "bib", reffontsize: 7 }, { type: "appendix" }],
-  });
-  const by: BanalCandidate = {
-    path: "/b" as AbsolutePath,
-    provenance: { kind: "env" },
-  };
-  const measured = doc(lastPage(60, 30), { source: "banal", by, geometry: g });
+  const measured = doc(lastPage(60, 30), MEASURED);
+  // Guards: the file names the measurer that measured, from the provenance only an adapter builds.
   assert.equal(measured.geometry_source, "banal");
   assert.deepEqual(
     [
@@ -149,32 +147,31 @@ const good: PdfReader = async () => ({
   ok: true,
   facts: { pages: 2, fonts: FONTS, last: lastPage(60, 60), layout: [] },
 });
-const MEASURED =
-  '{"papersize":[792,612],"columns":2,"bodyfontsize":9,"pages":[{},{"type":"bib","reffontsize":7}]}';
-const dirs = { home: "/h", tmp: "/t", cwd: "/r" };
-
-/** Options over in-memory ports: the PDF and venue.json on "disk", banal answering `exit`. */
-function setup(env: Record<string, string>, exit?: ProcessExit) {
+/** Options over in-memory files: the PDF and venue.json on "disk", a measurer answering `geometry`. */
+function setup(geometry: Geometry = NONE) {
   const files = memoryFiles({
     [PDF]: PDF_BYTES,
     [`${PAPER}/venue.json`]: JSON.stringify({
       venue: "agenticdev",
       kind: "short",
     }),
-    "/own/banal": "",
   });
-  const run = scriptedProcess(() => exit ?? exitedWith(MEASURED));
-  const io: Io = memoryIo({ files, run });
+  const measured: unknown[] = [];
   const o: MeasureOptions = {
     readPdf: good,
-    runtime: { io, settings: parseBanalSettings(env, dirs) },
-    projectRoot: "/r",
+    files,
+    measure: {
+      measure(pages) {
+        measured.push(pages);
+        return geometry;
+      },
+    },
   };
-  return { files, run, o };
+  return { files, measured, o };
 }
 
 test("measure: venue and kind from venue.json, pdf relative to the paper, the file's sha256", async () => {
-  const { o } = setup({});
+  const { o } = setup();
   const m = await measurePaper(PAPER, PDF, o);
   assert.ok(m.ok);
   assert.equal(m.value.facts.pdf, "paper.pdf");
@@ -190,47 +187,33 @@ test("measure: venue and kind from venue.json, pdf relative to the paper, the fi
   assert.equal(over.ok && over.value.facts.venue, "aisec");
 });
 
-test("measure without banal: the facts are there with null geometry, and the reason says why", async () => {
-  const { o } = setup({});
+test("measure, not measured: the facts are there with null geometry, and the measurer's reason is kept", async () => {
+  const { o, measured } = setup(NONE);
   const m = await measurePaper(PAPER, PDF, o);
   assert.ok(m.ok);
   assert.equal(m.value.facts.geometry_source, null);
   const g = m.value.geometry;
-  assert.match(
-    g.source === "none" ? whyNoGeometry(g) : "",
-    /^banal not found: /,
+  assert.equal(
+    g.kind === "unmeasured" ? whyNoGeometry(g) : "",
+    "perl is not installed",
   );
+  // Guards: the measurer is handed the pages pdf.js read — the one read feeds both halves.
+  assert.deepEqual(measured, [[]]);
 });
 
-test("measure with $BANAL: banal gets the .xml and a quoted $PDFTOHTML, and its geometry is in", async () => {
-  const { o, run } = setup({ BANAL: "/own/banal" });
+test("measure, measured: the geometry is in the file under its measurer's name", async () => {
+  const { o } = setup(MEASURED);
   const m = await measurePaper(PAPER, PDF, o);
   assert.ok(m.ok);
   assert.equal(m.value.facts.geometry_source, "banal");
-  assert.equal(m.value.facts.columns, 2);
-  assert.equal(m.value.facts.body_pages, 1);
-  const c = run.calls[0];
-  // Guards: the poppler-free path — banal is handed rpp's XML, never the PDF.
-  assert.match(c?.args.at(-1) ?? "", /\.xml$/);
-  assert.match(c?.env["PDFTOHTML"] ?? "", /^'.*pdftohtml'$/);
-});
-
-test("measure with a failing banal: no geometry, and the reason names exit, message and source", async () => {
-  const { o } = setup(
-    { BANAL: "/own/banal" },
-    { kind: "exited", status: 3, stdout: "", stderr: "boom\n" },
-  );
-  const m = await measurePaper(PAPER, PDF, o);
-  const g = m.ok ? m.value.geometry : NONE;
-  // Guards: a banal that runs and fails is not reported as "not found".
-  assert.match(
-    g.source === "none" ? whyNoGeometry(g) : "",
-    /^banal failed \(exit 3\): boom \(banal from \$BANAL: \/own\/banal\)$/,
+  assert.deepEqual(
+    [m.value.facts.columns, m.value.facts.body_pages, m.value.facts.page_w_in],
+    [2, 3, 8.5],
   );
 });
 
 test("a failed read is the one error line, and nothing is written", async () => {
-  const { o, files } = setup({});
+  const { o, files } = setup();
   const before = files.map.size;
   const m = await measurePaper(PAPER, PDF, {
     ...o,
@@ -241,7 +224,7 @@ test("a failed read is the one error line, and nothing is written", async () => 
 });
 
 test("writeFactsFile: <paper>/_build/paper.facts.json holds exactly the document", async () => {
-  const { o, files } = setup({});
+  const { o, files } = setup();
   const m = await measurePaper(PAPER, PDF, o);
   assert.ok(m.ok);
   const out = writeFactsFile(files, PAPER, m.value.facts);
