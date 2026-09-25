@@ -2,19 +2,19 @@
  * THE VENUE RULES — a built PDF judged against the format its venue's call for papers sets.
  *
  *   pdf/fresh      error  the facts describe the PDF on disk (not an earlier build)
- *   pdf/profile    error  the venue the paper names has a profile, and the kind it names exists
+ *   pdf/profile    error  the preset the paper extends resolves, and the kind it names exists
  *   pdf/fonts      error  every font is embedded, none is Type 3, the venue's families are present
- *   pdf/geometry   error  page size and column count match the profile
+ *   pdf/geometry   error  page size and column count match the preset
  *   pdf/limits     error  body and reference pages within the kind's limit; reference font size
- *   pdf/body-size  warn   body font size within the profile's tolerance
+ *   pdf/body-size  warn   body font size within the preset's tolerance
  *   pdf/measured   warn   the paper was measured at all (facts exist, geometry was measured)
  *
  * ── WHAT THEY READ ───────────────────────────────────────────────────────────────
  * Like `pdf/last-page-balance`, they run on a paper's `paper.tex` and judge the files beside it:
- * `paperlint.json` (which venue, which kind), `_build/paper.facts.json` (what `paperlint build`
- * measured) and the PDF the facts name (hashed, never measured). The profile comes from the
- * package's venues directory, read through the same parser the toolchain reads it with
- * (`parseVenueProfile`) — one owner of where profiles live and what they mean.
+ * `paperlint.json` (which preset, which kind), `_build/paper.facts.json` (what `paperlint build`
+ * measured) and the PDF the facts name (hashed, never measured). The preset is resolved by
+ * `paperPreset` in `src/presets.ts` — the same resolution the build, the toolchain and the lint
+ * config use — so there is one answer to "which venue is this paper judged against".
  *
  * The venue is taken from `paperlint.json`, not from the facts: the facts are venue-independent
  * measurements, and a paper whose `paperlint.json` changed after the build is judged against the venue
@@ -24,8 +24,8 @@
  * One rule per reason, and the others are silent — so a paper gets one finding that says what to
  * do, not six that say the same thing:
  *
- *   no venue named          every rule silent — the paper asked for no venue checks
- *   venue does not resolve  pdf/profile (error) — a typo would otherwise switch every check off
+ *   no preset extended      every rule silent — the paper asked for no venue checks
+ *   preset does not resolve pdf/profile (error) — a typo would otherwise switch every check off
  *   not built / no facts    pdf/measured (warn) — lint often runs before or without a build (the
  *                           CI action only lints); a warning is printed and does not fail
  *   facts about another PDF pdf/fresh (error) — judging them would judge an earlier build
@@ -88,7 +88,7 @@ export type Assessment =
 
 export interface VenueRuleDeps {
   readonly files: Files;
-  /** The package's venues directory (`packageVenuesDir()`), where the profiles and their schema are. */
+  /** The package's venues directory (`packageVenuesDir()`): the shipped presets and their schema. */
   readonly venuesDir: string;
 }
 
@@ -203,7 +203,7 @@ export function judgeFonts(
   return out;
 }
 
-/** Page width and height within `dimTol` inches, and the column count, against the profile. */
+/** Page width and height within `dimTol` inches, and the column count, against the preset. */
 export function judgeGeometry(
   g: FlatGeometry,
   format: VenueFormat,
@@ -235,7 +235,7 @@ export function judgeGeometry(
 /**
  * Body and reference pages against the kind's limits, and the reference font size against the
  * profile's range. The range is about the DECLARED size and banal measures the rendered mode, so
- * it is widened by `body_pt_tol` — the drift the profile itself names — or a correct paper fails.
+ * it is widened by `body_pt_tol` — the drift the preset itself names — or a correct paper fails.
  */
 export function judgeLimits(g: FlatGeometry, resolved: Resolved): Finding[] {
   return [...judgePages(g, resolved), ...judgeRefPt(g, resolved)];
@@ -371,7 +371,7 @@ const JUDGES: Readonly<Record<VenueRuleName, Judge>> = {
       : [],
 };
 
-/** How far, in inches, a measured page dimension may be from the profile's. */
+/** How far, in inches, a measured page dimension may be from the preset's. */
 export const DEFAULT_DIM_TOL_IN = 0.05;
 
 type Meta = Pick<VenueRuleModule["meta"], "docs" | "messages"> & {
@@ -397,7 +397,7 @@ const META: Readonly<Record<VenueRuleName, Meta>> = {
   profile: {
     docs: {
       description:
-        "the venue a paper names in paperlint.json has a profile, and the kind it names exists",
+        "the venue preset a paper's paperlint.json extends resolves, and the kind it names exists",
     },
     messages: {
       settingsBroken: `${PAPER_SETTINGS_FILE} cannot be read: {{why}}`,
@@ -471,7 +471,7 @@ const META: Readonly<Record<VenueRuleName, Meta>> = {
     type: "suggestion",
     docs: {
       description:
-        "body font size within the venue profile's tolerance (a measured mode, so a warning)",
+        "body font size within the venue preset's tolerance (a measured mode, so a warning)",
     },
     messages: {
       body: "the body font size measures {{got}} pt against {{want}} ± {{tol}} pt for {{venue}}. The measurement is the mode of the rendered text, not the declared size — check \\documentclass and its options",

@@ -128,7 +128,7 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       Compiles with paperlint's TeX Live, else one on PATH that has every
                                       package the venue declares; on a terminal it offers to install
                                       one, without a terminal it stops and names \`npx paperlint toolchain\`
-  npx paperlint toolchain [--check]   install TeX Live with every package the venue profiles declare
+  npx paperlint toolchain [--check]   install TeX Live with every package the venue presets declare
                                       into ~/.cache/paperlint/texlive (PAPERLINT_TEXLIVE_DIR overrides); a second
                                       run does nothing. --check: report what is missing, change nothing
   npx paperlint doctor                say what is actually wired — and what only LOOKS wired
@@ -178,9 +178,12 @@ another file of the same shape. \`papersDir\` is required; the rest is optional:
 
 per paper — <paper>/paperlint.json (it was venue.json before 2.1.0; \`npx paperlint init\` moves it):
 
-  { "venue": "aisec", "kind": "research", "rules": { "pdf/last-page-balance": "error" } }
+  { "extends": "paperlint:aisec", "kind": "research", "rules": { "pdf/last-page-balance": "error" } }
 
-  "rules" there applies to that paper alone, before the project's "rules" blocks. An unknown key,
+  "extends" names a venue preset: paperlint:<name> (shipped: acm-sigconf, agenticdev, aisec, realm)
+  or ./path.jsonc, relative to the paperlint.json. npm presets are not supported yet.
+
+  "rules" there applies to that paper alone, after its preset's rules and before the project's. An unknown key,
   anywhere in the settings or in a paperlint.json, is an error.
 `;
 

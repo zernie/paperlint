@@ -157,7 +157,10 @@ try {
   );
   const venued = paper("venued", {
     "paper.tex": CLEAN_TEX,
-    "paperlint.json": JSON.stringify({ extends: "paperlint:agenticdev", kind: "short" }),
+    "paperlint.json": JSON.stringify({
+      extends: "paperlint:agenticdev",
+      kind: "short",
+    }),
     "build.sh": "exit 0\n",
   });
   const facts = readFacts(venued);

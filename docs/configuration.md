@@ -62,43 +62,49 @@ hooks stay silent instead. The name is defined once, as `PAPERS_DIR_FIELD` in
 Each level is named after the tool, and each says something the others cannot:
 
 ```
-package.json                 "paperlint": { … }  — the PROJECT: where the papers are, what every paper gets
+package.json                 "paperlint": { … }        the PROJECT: where the papers are, what every paper gets
 papers/
   my-paper/
     paper.tex
     PIPELINE-STATUS.md
-    paperlint.json           THIS PAPER: its venue, its kind, rule overrides for it alone
+    paperlint.json           { "extends": … }          THIS PAPER: its venue preset, its kind, its own rules
+venues/usenix-sec.jsonc      (optional, your own)      a VENUE PRESET: format, page limits, TeX packages, rules
 node_modules/paperlint/skills/submit-paper/references/venues/
-    aisec.jsonc              THE VENUE: page limits, fonts, format — shipped with paperlint
+    acm-sigconf.jsonc  agenticdev.jsonc  aisec.jsonc  realm.jsonc      the shipped presets (paperlint:<name>)
 ```
 
 `<paper>/paperlint.json` is optional; a paper without one gets no venue checks.
 
 ```json
 {
-  "venue": "aisec",
+  "extends": "paperlint:aisec",
   "kind": "research",
-  "rules": { "pdf/last-page-balance": "error" }
+  "rules": { "pdf/body-size": "off" }
 }
 ```
 
-| key        | what it is                                                                                          |
-| ---------- | --------------------------------------------------------------------------------------------------- |
-| `venue`    | the venue profile the built PDF is judged against ([`rules.md`](rules.md#checks-against-the-venue)) |
-| `kind`     | the kind of paper (`short`, `research`, …) whose page limit applies                                 |
-| `pdf`      | where the built PDF is, relative to the paper, when it is not `paper.pdf`                           |
-| `rules`    | rule id → severity, for this paper alone — the same entries as a `rules` block below                |
-| `$comment` | a note for humans (JSON Schema's comment keyword); ignored                                          |
+| key        | what it is                                                                                                                                                                                 |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `extends`  | the venue preset the built PDF is judged against: `paperlint:<name>` (shipped) or `./path` / `../path` (your own, relative to this file) — [`rules.md`](rules.md#checks-against-the-venue) |
+| `kind`     | the kind of paper (`short`, `research`, …) whose page limit applies                                                                                                                        |
+| `pdf`      | where the built PDF is, relative to the paper, when it is not `paper.pdf`                                                                                                                  |
+| `rules`    | rule id → severity, for this paper alone — the same entries as a `rules` block below                                                                                                       |
+| `$comment` | a note for humans (JSON Schema's comment keyword); ignored                                                                                                                                 |
 
-Any other key is an error naming the file and the key, as in `package.json`. A paper's `rules` are
-applied after paperlint's own configuration and **before** the project's `rules` blocks, so the
-project can still override a paper. Only rules paperlint ships may be named.
+Any other key is an error naming the file and the key, as in `package.json`.
+
+**Where a paper's rules come from, in order — a later one wins, rule by rule:** paperlint's own
+configuration → the preset chain's `rules`, from the root preset to the one the paper extends →
+the paper's own `rules` → the project's `rules` blocks in `package.json`. So a venue can turn a
+rule on for its papers, a paper can turn it off for itself, and the project can still override
+both. Only rules paperlint ships may be named, at every level.
 
 **`paperlint.json` replaces `venue.json` (2.1.0); `npx paperlint init` moves it.** The old name is not
 read: a paper with only a `venue.json` gets a `pdf/profile` error and `paperlint doctor` names the
-file, both pointing at `init`. `init` renames the file, removes it when `paperlint.json` already
-holds the same JSON, and refuses — changing nothing — when both exist and differ. A `"_"` key,
-which some `venue.json` files used for a comment, is an unknown key now; rename it to `"$comment"`.
+file, both pointing at `init`. `init` writes the same settings as `paperlint.json` —
+`"venue": "aisec"` becomes `"extends": "paperlint:aisec"`, and the `"_"` some files used as a
+comment becomes `"$comment"` — then deletes `venue.json`. It removes a `venue.json` whose
+`paperlint.json` already says the same, and refuses, changing nothing, when both exist and differ.
 
 ## Why the key lives in `package.json`
 
