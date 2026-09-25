@@ -20,6 +20,15 @@ your project's `node_modules`, so it needs the install first.
 and skill links that pointed into the old package. Until then the old key is still read, with a
 warning.
 
+**Upgrading from 2.0.0**: 2.0.0 wrote hook commands that run `node_modules/paperlint/bin/rpp.mjs`,
+a file later versions do not ship, so those hooks stop running. `npx paperlint doctor` names them;
+`npx paperlint init` replaces them and keeps your own commands in the same matcher. The TeX Live
+and banal caches moved from `~/.cache/rpp/` to `~/.cache/paperlint/`, so `npx paperlint toolchain`
+downloads TeX Live once more (delete the old directory afterwards), and the environment variables
+are now `PAPERLINT_TEXLIVE_DIR`, `PAPERLINT_BANAL_DIR` and `PAPERLINT_CTAN_MIRROR` — the `RPP_*`
+names are no longer read. A leftover `rpp.json` is ignored; its settings belong under the
+`"paperlint"` key of `package.json`.
+
 The npm package carries everything: the `paperlint` command, the ESLint rules, the Claude Code skills
 and hooks, and the scripts the skills run. External programs are separate:
 
