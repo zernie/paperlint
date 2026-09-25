@@ -238,7 +238,9 @@ Checks that only some venues need are off until you turn them on:
 ```
 
 `papersDir` has no default, so the tool never checks a folder you did not choose: without it,
-`paperlint lint` stops and says so, unless you pass a path. An unknown key is an error. The optional
+`paperlint lint` stops and says so, unless you pass a path. Inside it, only the paper's own files are
+linted (`PIPELINE-STATUS.md`, `paper.md`/`paper.tex`, `reviews/*.md`), never a `repro/` script or other
+code kept beside a paper. An unknown key is an error. The optional
 settings, and how to use the checks inside your own ESLint setup, are in
 [`docs/configuration.md`](docs/configuration.md). TeX Live, its install location and the external
 programs the skills use are in [`docs/toolchain.md`](docs/toolchain.md).

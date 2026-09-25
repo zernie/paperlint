@@ -51,6 +51,16 @@ turns every run into a green report over the whole checkout. `paperlint init` fi
 and when nothing on disk looks like a papers directory, it writes the documented default and says
 in the same breath that it is a guess.
 
+**Under `papersDir`, only the files paperlint's own rules are written for are linted:**
+`PIPELINE-STATUS.md`, `paper.md`, `draft.md`, `paper.tex`, and `reviews/*.md`. Everything else — a
+paper's `repro/` scripts, vendored JavaScript, data files — is never handed to ESLint, so it cannot
+fail the run. (In 2.1.0 and earlier, ESLint's built-in defaults also linted every `.js`, `.mjs` and `.cjs`
+under the directory.) A file you name on the command line that is not one of these is refused by
+name. `node_modules/`, `.git/` and `<papers>/.template/` are skipped.
+
+`init` reads a declared `papersDir` first: when `package.json` already names one, that is the directory
+it reports and uses, and nothing is measured or asked.
+
 Until 2026-09-24 this field was called `papers`. The old name is not read as a fallback: `paperlint lint`,
 `paperlint init`, `paperlint doctor`, the ESLint helper and the edit guard all stop with
 `"papers" was renamed to "papersDir" in package.json → "paperlint"`. The two advisory
@@ -151,6 +161,11 @@ override what a paper says:
 - **`files` and `ignores` are globs relative to the file that holds the settings** — the
   directory of your `package.json` — exactly as ESLint resolves them relative to its config file,
   whatever directory you run `paperlint lint` from. A block without `files` applies to every linted file.
+- **Each rule reaches only the files it is written for.** `{ "files": ["papers/**"], "rules":
+{ "paper/source": "warn" } }` turns `paper/source` on for every `PIPELINE-STATUS.md` under `papers/`,
+  and `paper/typography` in the same block would land on every `paper.md`, `draft.md` and `paper.tex`. You do not
+  need to know which file a rule reads; your `files` narrow where it runs, never widen it. The
+  [rule tables](rules.md) name each rule's file.
   A pattern ending in `/**` is the usual way to name one paper.
 - **A rule entry** is a severity (`"off"`, `"warn"`, `"error"`, or `0`/`1`/`2`), or a list whose
   first element is a severity and the rest are the rule's options.
