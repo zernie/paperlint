@@ -149,8 +149,7 @@ Rule 5 is about the tool you are replacing; this one is about the order of work.
 Four proposals were made and withdrawn in one session on 2026-09-17 for exactly this reason —
 [`docs/incidents.md`](docs/incidents.md).
 
-**10. The only impure thing in this package is WHERE IT IS INSTALLED — and it lives in ONE
-module.** Rule 6 generalised: the caller's cwd is one case of it. Checking logic — lint rules,
+**10. Effects live in adapters, and WHERE rpp IS INSTALLED lives in ONE of them.** Rule 6 generalised: the caller's cwd is one case of it. Checking logic — lint rules,
 skills, hooks — must not know its own location, nor its distance from anything else. Every
 answer to _where_ comes from `skills/paper-pipeline/scripts/consumer.mjs`, which adapts per
 channel: own checkout · `node_modules` · plugin cache · CI. A skill naming a script by an
@@ -160,13 +159,11 @@ lines do exactly that.
 <!-- The port's path above is resolved by `npm run check` (vigiles lint), since #67. -->
 <!-- vigiles:file skills/paper-pipeline/scripts/consumer.mjs -->
 
-⚠️ Deliberately NOT full hexagonal architecture, and that is a decision: there is no database or
-service to swap, and the lint rules are already pure functions over an AST, so ports around them
-would be ceremony with no subject. One thing here is impure, so one thing gets a port.
+The layer rules for `src/` live in [`src/CLAUDE.md`](src/CLAUDE.md) and are enforced by the linter.
 
-⏳ **The mechanical half is owed and is the point**: a lint rule that makes an install-specific
-path literal outside the port a finding. Prose will not hold this class — four silent breakages
-happened _while_ comments explaining the hazard sat directly above the code
+⏳ **Still owed: the install-path half** — a lint rule that makes an install-specific path literal
+outside `consumer.mjs` a finding. Prose will not hold this class — four silent breakages happened
+_while_ comments explaining the hazard sat directly above the code
 ([`docs/incidents.md`](docs/incidents.md)).
 
 **11. Installing and using rpp must be as smooth as possible.** Count the actions between "I
@@ -585,9 +582,18 @@ justified two hundred lines above precisely by these minutes being free.
 ## Testing
 
 ```bash
-npx vigiles test --min=1    # every harness on disk, and loud when that set is empty
+npm test                    # vitest over *.test.ts, then the vigiles harnesses
+npx vitest run <file>       # one unit test
 npx vigiles test <file>     # one harness
 ```
+
+**Two kinds of test, told apart by what the file imports.** A `*.harness.*` file tests the agent
+surface and imports `runHook`, `runHarnessTest` or `runEval` from vigiles; everything else is a plain
+unit test, `*.test.ts`, run by vitest — and new tests are TypeScript. Older harnesses that
+import none of the three are frozen in `scripts/harness-api.frozen.json`, which only shrinks;
+`scripts/harness-api.test.ts` parses every harness's imports and holds both halves (#77). vitest
+exits 1 when no file matches, and it transpiles without type-checking, so `npm run check` runs
+`tsc -p tsconfig.test.json` as its own gate.
 
 ⚠️ **Not `vigiles test .`** — the `.` is read as a FILE, the runner dies with
 `ERR_UNSUPPORTED_DIR_IMPORT`, and it still exits 0. See the measured table below.

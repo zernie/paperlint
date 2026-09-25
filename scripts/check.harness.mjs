@@ -135,12 +135,14 @@ for (const g of GATES) {
   // every program other than `node` must be installed in node_modules/.bin.
   const argv = commandOf(g);
   const files = argv.filter((a) => /\.m?js$/.test(a));
-  check(
-    `gate «${g.name}» runs files that exist (${files.join(", ")})`,
-    files.length > 0 && files.every((f) => existsSync(join(ROOT, f))),
-  );
   const programs = argv.filter(
     (a, i) => i === 0 || argv[i - 1] === "scripts/exclusive.mjs",
+  );
+  // Guards: a gate runs SOMETHING — a script of ours, or an installed program such as `tsc`.
+  check(
+    `gate «${g.name}» runs files that exist (${files.join(", ")})`,
+    (files.length > 0 || programs.some((p) => p !== "node")) &&
+      files.every((f) => existsSync(join(ROOT, f))),
   );
   check(
     `gate «${g.name}» runs programs that are installed (${programs.join(", ")})`,

@@ -14,6 +14,7 @@
  *
  * The only substitution is `{{name}}` → the folder name. Nothing else in a template is touched.
  */
+/* eslint-disable boundaries/dependencies -- legacy I/O, moves behind a port in #76 */
 import {
   existsSync,
   mkdirSync,
@@ -21,6 +22,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
+/* eslint-enable boundaries/dependencies */
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 

@@ -19,6 +19,9 @@ import localRules from "./eslint-rules/temp-root-realpath.mjs";
 import portRules from "./eslint-rules/install-path-literals.mjs";
 import n from "eslint-plugin-n";
 import tseslint from "typescript-eslint";
+import boundaries from "eslint-plugin-boundaries";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
 // The complexity set, shared by the TypeScript block and the ratchet below. Every function
 // measured over these limits on 2026-09-24 was either refactored under them (the #59 build code)
@@ -36,6 +39,229 @@ const RATCHET = {
   "src/hooks-settings.ts": { complexity: 12, "max-depth": 4 },
   "src/structure.ts": { complexity: 12, "max-depth": 4 },
   "src/new-paper.ts": { complexity: 11 },
+};
+
+// ── Hexagonal layers (src/CLAUDE.md, issue #76) ─────────────────────────────────────────
+// TWO INDEPENDENT AXES, and a file has a position on each.
+//
+// A. KNOWLEDGE — whose vocabulary does the file speak, the paper's or one external program's?
+//    domain  src/domain/        values and decisions in the paper's vocabulary
+//    port    src/ports/         interfaces shaped by what the inside needs, never by what a tool does
+//    app     src/*.ts           use cases over ports (the flat files; most are ratcheted, #76)
+//    adapter src/adapters/<x>/  everything that exists because program/format <x> exists — pure
+//                               parsers included. One element per folder, used through index.ts.
+//    root    src/cli.ts         reads process.*, builds adapters, wires ports
+// B. PURITY — can anything here fail for a reason not in its arguments? Effects (disk, process,
+//    network, env) only in src/adapters/<x>/<y>.io.ts and the root.
+//
+// "Core" is deliberately not a layer name: the plugin's own `origin: "core"` means NODE BUILT-INS.
+//
+// Folders are ELEMENTS, single files are CATEGORIES (`boundaries/files`): that is v7's model — an
+// element pattern is matched as a folder, and a file-shaped one is refused with a warning. So the
+// root and the flat app files are categories, and the policies below select them with `file:`.
+
+/** Modules that ARE effects. A file importing one must be an `io` file or the root. */
+export const IO_MODULES = [
+  "fs",
+  "fs/promises",
+  "child_process",
+  "os",
+  "net",
+  "http",
+  "https",
+  "worker_threads",
+  "readline",
+  "readline/promises",
+].flatMap((m) => [m, `node:${m}`]);
+
+/** What the inside may import from outside the repository: types, pure path arithmetic, hashing. */
+export const INSIDE_EXTERNALS = [
+  "ts-essentials",
+  "path",
+  "node:path",
+  "crypto",
+  "node:crypto",
+];
+/** What the flat app files may import besides: Node's pure helpers, measured on the first v7 run. */
+export const APP_EXTERNALS = [
+  ...INSIDE_EXTERNALS,
+  "util",
+  "node:util",
+  "url",
+  "node:url",
+  "module",
+  "node:module",
+];
+
+const ORIGINS = ["external", "core"];
+const modules = (source) => ({ to: { module: { origin: ORIGINS, source } } });
+const elements = (...types) => ({ element: { types: { anyOf: types } } });
+const APP = { file: { categories: "app" } };
+const ROOT = { file: { categories: "root" } };
+
+/**
+ * Both axes in one plugin: axis A by element and category, axis B by the file category `io`.
+ *
+ * 🔴 `boundaries/root-path` IS LOAD-BEARING. Without it the plugin matches its patterns against
+ * `process.cwd()` — not ESLint's `cwd` — so lint started from any other directory classifies no file
+ * and the rule passes silently. Measured 2026-09-25: a core → adapter import produced zero findings
+ * until the root was pinned. `root` is a parameter only so `test/eslint-layers.test.ts` can re-root
+ * it at its fixture tree.
+ *
+ * 🔴 `checkAllOrigins: true` IS LOAD-BEARING TOO. The default checks local imports only, so every
+ * `module:` policy below — all of axis B and the inside's library ban — would match nothing and
+ * report nothing. The fixture `src/adapters/one/disk.ts` is what makes that loud.
+ *
+ * Policies are evaluated in order and the LAST one that matches decides, so the narrowing ones
+ * (encapsulation, then axis B) come after the allows they narrow. A dependency no policy allows gets
+ * the plugin's own message, which names both ends ("no policy allowing dependencies from file of
+ * category "app" to elements of type "adapter""); custom messages sit only on the disallows.
+ */
+export const layerBoundaries = (root) => ({
+  files: ["src/**/*.ts"],
+  plugins: { boundaries },
+  settings: {
+    "boundaries/root-path": root,
+    "boundaries/elements": [
+      { type: "port", pattern: "src/ports", partialMatch: false },
+      { type: "domain", pattern: "src/domain", partialMatch: false },
+      // One element PER ADAPTER FOLDER, so adapter → other adapter is a cross-element import.
+      {
+        type: "adapter",
+        pattern: "src/adapters/*",
+        partialMatch: false,
+        capture: ["name"],
+      },
+      // The package's plain-JS modules. Named so an import of one is classified, not unknown.
+      {
+        type: "js-module",
+        pattern: "(eslint-rules|hooks|lib|skills)",
+        partialMatch: false,
+        capture: ["kind"],
+      },
+    ],
+    "boundaries/files": [
+      // `exclusive`: the root also matches the app pattern below, and is only the root.
+      { category: "root", pattern: "src/cli.ts", exclusive: true },
+      // Every other file at the top of src/ is app. A new one gets the full app rules.
+      { category: "app", pattern: "src/*.ts" },
+      { category: "test", pattern: "src/**/*.test.ts" },
+      // AXIS B: purity is a category, orthogonal to the element.
+      { category: "io", pattern: "src/adapters/*/*.io.ts" },
+    ],
+  },
+  rules: {
+    // 🔴 An unclassified file is invisible to the rules below: a new `src/lib/x.ts` could import an
+    // adapter from anywhere and nothing would fire. So every linted file must be a declared element
+    // or category, and every import must resolve to one.
+    "boundaries/no-unknown-files": "error",
+    "boundaries/no-unknown-dependencies": "error",
+    "boundaries/dependencies": [
+      "error",
+      {
+        default: "disallow",
+        checkAllOrigins: true,
+        policies: [
+          // ── AXIS A: who may know whom (jMolecules: Application → Port, never → Adapter) ──
+          { from: elements("domain"), allow: { to: elements("domain") } },
+          { from: elements("port"), allow: { to: elements("domain", "port") } },
+          { from: APP, allow: { to: [elements("domain", "port"), APP] } },
+          // An adapter knows the domain and the ports (jMolecules#306's allowance), never the app,
+          // never another adapter.
+          {
+            from: elements("adapter"),
+            allow: { to: elements("domain", "port") },
+          },
+          {
+            from: ROOT,
+            allow: { to: [{ element: { type: "*" } }, APP] },
+          },
+          // The package's `.mjs` half is read by the outside layers and the flat app files, never
+          // by the domain or a port.
+          {
+            from: [elements("adapter"), APP, ROOT],
+            allow: { to: elements("js-module") },
+          },
+          // ── libraries and built-ins (the plugin calls Node built-ins origin "core") ──
+          {
+            from: elements("domain", "port"),
+            allow: modules(INSIDE_EXTERNALS),
+          },
+          { from: APP, allow: modules(APP_EXTERNALS) },
+          {
+            from: [elements("adapter"), ROOT],
+            allow: { to: { module: { origin: ORIGINS } } },
+          },
+          // Tests may import anything, fakes included …
+          {
+            from: { file: { categories: "test" } },
+            allow: {
+              to: [
+                { element: { type: "*" } },
+                APP,
+                ROOT,
+                { module: { origin: ORIGINS } },
+              ],
+            },
+          },
+          // … but everyone, tests too, reaches an adapter through its index.ts. (Imports inside one
+          // adapter are internal to its element and not checked.)
+          {
+            disallow: {
+              to: {
+                element: { type: "adapter", fileInternalPath: "!index.ts" },
+              },
+            },
+            message:
+              "{{ dependency.source }} is inside an adapter: import its index.ts (src/CLAUDE.md, layers).",
+          },
+          // ── AXIS B: effects only in io files, tests and the root ──
+          // Written as "nobody, then these three" rather than "everyone but these three": a file
+          // with no category has `categories: null`, and a `noneOf` query never matches null — so the
+          // negative form silently exempts every plain file. Measured on `adapters/one/disk.ts`.
+          {
+            disallow: {
+              to: { module: { origin: "core", source: IO_MODULES } },
+            },
+            message:
+              "I/O ({{ dependency.source }}) in a file that is not *.io.ts. Effects live in src/adapters/<tool>/<x>.io.ts or src/cli.ts; this file takes a port (src/CLAUDE.md, purity). Legacy sites carry `-- legacy I/O, moves behind a port in #76`.",
+          },
+          {
+            from: { file: { categories: ["io", "test", "root"] } },
+            allow: { to: { module: { origin: "core", source: IO_MODULES } } },
+          },
+        ],
+      },
+    ],
+  },
+});
+
+/**
+ * The globals the plugin cannot see: `process` and `fetch` are not imports. Same scope as axis B.
+ * Files that did I/O before the layers existed carry an `eslint-disable-next-line` naming #76 above
+ * each such import or use; `reportUnusedDisableDirectives: "error"` turns a disable that suppresses
+ * nothing into a finding, so an exemption leaves the moment its I/O does, and
+ * `scripts/layer-legacy-frozen.mjs` freezes how many each file may carry. A NEW module that needs
+ * the outside world is a new `*.io.ts` in the adapter of the program it talks to — not a disable.
+ */
+export const IO_GLOBALS = {
+  files: ["src/**/*.ts"],
+  ignores: ["src/cli.ts", "src/adapters/*/*.io.ts", "src/**/*.test.ts"],
+  linterOptions: { reportUnusedDisableDirectives: "error" },
+  rules: {
+    "no-restricted-globals": [
+      "error",
+      {
+        name: "process",
+        message:
+          "The environment is an input: the root reads it and passes a value in (src/CLAUDE.md, purity).",
+      },
+      {
+        name: "fetch",
+        message: "Network access is an adapter's *.io.ts file.",
+      },
+    ],
+  },
 };
 
 const ceiling = (rule, n) =>
@@ -109,6 +335,17 @@ export default [
       // Branches per function. Ten is the rule's long-standing default; the worst function
       // measured was 59, and one that size cannot be read, only re-run.
       complexity: ["error", 10],
+      // `x as unknown as T` tells the checker to look away: two spellings of one port were once
+      // reconciled that way (#76). A real conversion is a function; a real subset needs no cast.
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "TSAsExpression > TSAsExpression[typeAnnotation.type='TSUnknownKeyword']",
+          message:
+            "`as unknown as` switches the type checker off. Convert with a function, or fix the type.",
+        },
+      ],
       // Nesting beyond three blocks is where a step belongs in its own named function.
       "max-depth": ["error", 3],
       // Five positional parameters are a record without field names; pass an object instead.
@@ -119,6 +356,9 @@ export default [
       "max-nested-callbacks": ["error", 3],
     },
   },
+  // Hexagonal layers, both axes (src/CLAUDE.md): knowledge by element, purity by file category.
+  IO_GLOBALS,
+  layerBoundaries(dirname(fileURLToPath(import.meta.url))),
   // The ratchet: per-file ceilings for the files written before the limits existed. See RATCHET.
   ...Object.entries(RATCHET).map(([file, max]) => ({
     files: [file],

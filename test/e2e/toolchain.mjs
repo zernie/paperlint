@@ -28,6 +28,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   realpathSync,
   rmSync,
   symlinkSync,
@@ -39,6 +40,12 @@ import { fileURLToPath } from "node:url";
 import { fontNames, readBuilt } from "./read-pdf.mjs";
 
 const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
+const { parseBanalSettings } = await import(
+  join(ROOT, "dist", "adapters", "banal", "index.js")
+);
+const { hostDirs } = await import(
+  join(ROOT, "dist", "adapters", "node", "index.js")
+);
 const CLI = join(ROOT, "bin", "rpp.mjs");
 const strict = process.argv.includes("--strict");
 const dir = process.env.RPP_TEXLIVE_DIR;
@@ -113,6 +120,12 @@ try {
   const bin = join(work, "bin");
   mkdirSync(bin);
   symlinkSync(process.execPath, join(bin, "node"));
+  // perl, because the build's measure step runs banal — perl is not TeX, so the check below that
+  // only rpp's TeX Live was reachable still means what it says.
+  const perl = spawnSync("perl", ["-e", "print $^X"], {
+    encoding: "utf8",
+  }).stdout;
+  symlinkSync(perl, join(bin, "perl"));
   cpSync(
     join(ROOT, "fixtures", "build-e2e", "acmart"),
     join(work, "papers", "acmart"),
@@ -124,15 +137,34 @@ try {
     join(work, "rpp.json"),
     JSON.stringify({ papersDir: "papers" }),
   );
+  // 🔴 banal is where `rpp toolchain` above installed it — HOME is a temp dir here, so without
+  // $RPP_BANAL_DIR the build looked in the wrong cache and wrote the facts with no geometry, while
+  // this script still reported everything matched.
+  const banalDir = parseBanalSettings(process.env, hostDirs()).cacheDir;
   const built = rpp(["build", join("papers", "acmart")], {
     cwd: work,
-    env: { HOME: work, PATH: bin, CI: "1", RPP_TEXLIVE_DIR: dir },
+    env: {
+      HOME: work,
+      PATH: bin,
+      CI: "1",
+      RPP_TEXLIVE_DIR: dir,
+      RPP_BANAL_DIR: banalDir,
+    },
   });
   check("exit 0", built.status === 0, built.out);
   check(
     "the engine is rpp's cache — nothing else was on PATH",
     built.out.includes("engine: TeX Live") && built.out.includes("rpp cache"),
     built.out,
+  );
+  const facts = join(work, "papers", "acmart", "_build", "paper.facts.json");
+  const geometrySource = existsSync(facts)
+    ? JSON.parse(readFileSync(facts, "utf8")).geometry_source
+    : "(no facts file)";
+  check(
+    "the facts file's page geometry was measured by banal",
+    geometrySource === "banal",
+    `geometry_source: ${String(geometrySource)}`,
   );
   const pdf = join(work, "papers", "acmart", "paper.pdf");
   check("the PDF exists", existsSync(pdf));

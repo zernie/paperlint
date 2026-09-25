@@ -128,8 +128,8 @@ Treat it as recovery room for a defect found at the buzzer. Re-read it every cyc
 - **Keywords are a form field, not paper content** — so anything in the PDF's keyword line is
   duplicated dead weight. Keep the list in a non-typeset comment in the source and paste it here.
 - **The abstract field accepts markdown**, so the source abstract can be pasted nearly verbatim.
-  Extracting it from the _built PDF_ instead is a mistake: `pdftotext` on the line-numbered build
-  interleaves the margin numbers and silently drops paragraphs.
+  Extracting it from the _built PDF_ instead is a mistake: a text extractor on the line-numbered
+  build interleaves the margin numbers and silently drops paragraphs.
 
 ## The ARR route is not a free fallback
 

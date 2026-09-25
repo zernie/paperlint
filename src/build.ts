@@ -36,21 +36,33 @@
  * `spawnSync` by default) and reads the files a pass left behind. Where rpp's own files live is
  * answered by `consumer.mjs`, the one module allowed to know it (rule 10).
  */
+// eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
+// eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { delimiter, join, relative } from "node:path";
+// eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import { getParser } from "@unified-latex/unified-latex-util-parse";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
 import {
   declaredVenue,
   factsPath,
-  writeFacts,
+  measurePaper,
+  writeFactsFile,
   FACTS_DIR,
   FACTS_FILE,
   type FactsDocument,
 } from "./facts-file.ts";
 import { readPdf as pdfjsReader, type PdfReader } from "./pdf-facts.ts";
+// eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
+import { banalMeasurer, parseBanalSettings } from "./adapters/banal/index.ts";
+// eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
+import { hostDirs, nodeAdapters, nodeFiles } from "./adapters/node/index.ts";
+import { whyNoGeometry } from "./domain/geometry.ts";
+import type { AbsolutePath } from "./domain/paths.ts";
+import type { Files } from "./ports/files.ts";
+import type { MeasureGeometry } from "./ports/measure-geometry.ts";
 import {
   auxBib,
   bibtexExcerpt,
@@ -118,8 +130,10 @@ export interface BuildContext {
   readonly run: Runner;
   /** Reads a finished PDF — pdf.js by default; the harness passes a fake. */
   readonly readPdf: PdfReader;
-  /** Where the facts writer looks for the consumer's vendored `banal`. */
-  readonly projectRoot: string;
+  /** The page-geometry measurer the facts writer uses. */
+  readonly measure: MeasureGeometry;
+  /** Where the facts file is written. */
+  readonly files: Files;
 }
 
 export type StepOutcome =
@@ -203,7 +217,7 @@ function documentclassOf(ast: LatexRoot | null): PaperFacts["documentclass"] {
 export function readFacts(paperDir: string): PaperFacts {
   const mainPath = join(paperDir, MAIN);
   const main = existsSync(mainPath) ? MAIN : null;
-  const venue = declaredVenue(paperDir);
+  const venue = declaredVenue(nodeFiles, paperDir);
   const ast = main ? parseTex(readFileSync(mainPath, "utf8")) : null;
   return {
     main,
@@ -255,7 +269,9 @@ function hashes(paperDir: string): Hashes {
     const p = join(paperDir, `${JOB}.${ext}`);
     return existsSync(p) ? sha(readFileSync(p)) : null;
   };
-  return Object.fromEntries(TRACKED.map((t) => [t, h(t)])) as unknown as Hashes;
+  const out: Record<string, string | null> = {};
+  for (const t of TRACKED) out[t] = h(t);
+  return out as Hashes;
 }
 
 const readOr = (path: string, enc: BufferEncoding): string | null =>
@@ -466,8 +482,9 @@ const columnsNote = (f: FactsDocument): string => {
 /**
  * Measure the PDF the compile step wrote and write `_build/paper.facts.json`. A PDF pdf.js cannot
  * read fails the build: a PDF nothing can measure is not one to hand in. banal (page geometry) is
- * optional here — used when the project vendors it — and a banal that is found and then FAILS is
- * named in the note; one that is simply not there is not, because most projects do not have it.
+ * optional here: without it the geometry fields are null and the build still succeeds — but the
+ * note SAYS so, with the command that installs it (`rpp toolchain`), because null geometry means
+ * the page-size, column and font-size rules have nothing to judge. A banal that fails is named too.
  */
 export const measureStep: BuildStep = {
   name: "measure",
@@ -480,20 +497,25 @@ export const measureStep: BuildStep = {
         }
       : { yes: false, why: "nothing is compiled" },
   run: async (ctx) => {
-    const r = await writeFacts(ctx.paperDir, join(ctx.paperDir, `${JOB}.pdf`), {
-      readPdf: ctx.readPdf,
-      banal: "optional",
-      env: ctx.env,
-      projectRoot: ctx.projectRoot,
-    });
-    if (!r.ok) return { ok: false, lines: [...r.lines] };
+    const m = await measurePaper(
+      ctx.paperDir,
+      join(ctx.paperDir, `${JOB}.pdf`),
+      {
+        readPdf: ctx.readPdf,
+        measure: ctx.measure,
+        files: ctx.files,
+      },
+    );
+    if (!m.ok) return { ok: false, lines: [m.error] };
+    writeFactsFile(ctx.files, ctx.paperDir, m.value.facts);
+    const g = m.value.geometry;
     const banal =
-      r.geometryMissing && !r.geometryMissing.startsWith("banal not found")
-        ? `; ${r.geometryMissing}`
+      g.kind === "unmeasured"
+        ? `; page geometry not measured — ${whyNoGeometry(g)}`
         : "";
     return {
       ok: true,
-      note: `facts: ${relative(ctx.paperDir, factsPath(ctx.paperDir))}, ${columnsNote(r.facts)}${banal}`,
+      note: `facts: ${relative(ctx.paperDir, factsPath(ctx.paperDir))}, ${columnsNote(m.value.facts)}${banal}`,
     };
   },
 };
@@ -545,17 +567,23 @@ export interface BuildOptions {
   log?: (line: string) => void;
   dryRun?: boolean;
   readPdf?: PdfReader;
-  /** Where `vendor/banal` is looked for. Default: `$CLAUDE_PROJECT_DIR`, else `cwd`. */
+  /** Where a project's `vendor/banal` is looked for. Default: `$CLAUDE_PROJECT_DIR`, else `cwd`. */
   projectRoot?: string;
+  /** The page-geometry measurer. Default: banal, as `env` and `projectRoot` configure it. */
+  measure?: MeasureGeometry;
+  /** Where the facts file is written. Default: the disk. */
+  files?: Files;
 }
 
 /**
  * The options with their defaults. Destructuring defaults and not a spread over a defaults object:
  * an option passed as `undefined` (the CLI passes `dryRun: a.dryRun`) must still get its default.
  */
-function withDefaults({
+function baseDefaults({
   run = spawnSync,
+  // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
   cwd = process.cwd(),
+  // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
   env = process.env,
   steps = STEPS,
   log = console.log,
@@ -565,8 +593,27 @@ function withDefaults({
   dryRun = false,
   readPdf = pdfjsReader,
   projectRoot = env["CLAUDE_PROJECT_DIR"] || cwd,
-}: BuildOptions): Required<BuildOptions> {
+}: BuildOptions): Required<Omit<BuildOptions, "measure" | "files">> {
   return { run, cwd, env, steps, log, dryRun, readPdf, projectRoot };
+}
+
+/** banal as the measurer, wired from the build's environment: the one piece of root work left here (#76). */
+function defaultMeasurer(
+  b: Required<Omit<BuildOptions, "measure" | "files">>,
+): MeasureGeometry {
+  const dirs = hostDirs({ cwd: b.cwd });
+  return banalMeasurer(
+    nodeAdapters({ tmpDir: dirs.tmp }),
+    parseBanalSettings(b.env, dirs),
+    b.projectRoot as AbsolutePath,
+  );
+}
+
+/** `baseDefaults`, plus the measurer and the files — the real ones, from the environment, unless passed. */
+function withDefaults(o: BuildOptions): Required<BuildOptions> {
+  const base = baseDefaults(o);
+  const measure = o.measure ?? defaultMeasurer(base);
+  return { ...base, measure, files: o.files ?? nodeFiles };
 }
 
 /** Run the applicable steps in order, each on the environment the steps before it left. */
@@ -574,7 +621,7 @@ async function runSteps(
   paperDir: string,
   dir: string,
   plan: PlanLine[],
-  { run, env, steps, readPdf, projectRoot }: Required<BuildOptions>,
+  { run, env, steps, readPdf, measure, files }: Required<BuildOptions>,
 ): Promise<BuildResult> {
   let stepEnv = env;
   const notes: string[] = [];
@@ -585,7 +632,8 @@ async function runSteps(
       env: stepEnv,
       run,
       readPdf,
-      projectRoot,
+      measure,
+      files,
     });
     if (!out.ok) {
       // The PDF THIS run wrote and the step then rejected (a partial pass).

@@ -102,7 +102,7 @@ The README links only what a user needs. These are for people changing the packa
 
 ```bash
 npm install
-npm test                 # every harness
+npm test                 # every harness, the tests' type-check, every *.test.ts (Node >= 22.18)
 node scripts/run-mutations.mjs   # run the remaining batteries (deprecated, #52 — do not add to them)
 ```
 

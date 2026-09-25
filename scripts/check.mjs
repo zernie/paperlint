@@ -104,14 +104,25 @@ export const GATES = [
     run: locked("node", "scripts/marketplace-shape.mjs"),
   },
   {
-    name: "every harness (npm test)",
+    name: "every test — vitest over *.test.ts, then the vigiles harnesses (npm test)",
     job: "gates",
     script: "test",
+  },
+  {
+    // vitest transpiles without type-checking, so the tests' types are checked here.
+    name: "the tests type-check",
+    job: "gates",
+    run: ["tsc", "-p", "tsconfig.test.json"],
   },
   {
     name: "mutation batteries are frozen — none new, none grown (#52)",
     job: "gates",
     run: locked("node", "scripts/mutation-batteries-frozen.mjs"),
+  },
+  {
+    name: "legacy layer exemptions are frozen — none new, none grown (#76)",
+    job: "gates",
+    run: locked("node", "scripts/layer-legacy-frozen.mjs"),
   },
   {
     name: "mutation batteries — every guard is killed by its own assertion",
@@ -127,6 +138,11 @@ export const GATES = [
     name: "build e2e — a real pdflatex, and the PDF's fonts are measured",
     job: "build-e2e",
     run: locked("node", "test/e2e/build.mjs"),
+  },
+  {
+    name: "banal e2e — the real banal on pdf.js-written XML gives banal-on-pdftohtml's numbers",
+    job: "build-e2e",
+    run: locked("node", "test/e2e/banal.mjs"),
   },
   {
     name: "toolchain e2e — real TeX Live into $RPP_TEXLIVE_DIR, then a build with only it on PATH",

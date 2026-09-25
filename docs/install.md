@@ -32,7 +32,8 @@ Counted for this package **before** that change:
 
 (Row 9 is the state on 2026-09-18. Since 2026-09-24 TeX Live is `npx rpp toolchain`, or a
 `[Y/n]` inside `rpp build`, and poppler is gone — rpp reads PDFs with pdf.js, shipped as a
-dependency. A JRE and python3 are still the user's.)
+dependency. Since 2026-09-25 `rpp toolchain` also fetches banal, which runs on pdf.js output and
+needs perl. A JRE and python3 are still the user's.)
 
 Nine, three of which are hand-edits to files, and one of which — step 5 — is undocumented enough
 that skipping it leaves `paper-edit-guard` **silently watching a directory that does not exist**

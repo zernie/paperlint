@@ -1,6 +1,7 @@
 /**
  * `rpp toolchain` — install upstream TeX Live, with exactly the packages the venue profiles
- * declare, into rpp's own cache. `rpp build` offers the same install on a terminal.
+ * declare, into rpp's own cache, and banal (the page-geometry script HotCRP runs) at its pinned
+ * commit (`adapters/banal/`). `rpp build` offers the TeX Live install on a terminal.
  *
  * 🔴 WHY rpp INSTALLS TeX AT ALL (rule 11). "Install TeX Live yourself" was a manual step with a
  * trap in it: the distribution packages cost 2.1 GB, and a smaller hand-picked set silently typeset
@@ -23,7 +24,9 @@
  * Processes run through the injected `run` (the port `build.ts` uses), so the harness drives the
  * real download/unpack/verify logic against a fake mirror on disk, never the network.
  */
+// eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { spawnSync } from "node:child_process";
+/* eslint-disable boundaries/dependencies -- legacy I/O, moves behind a port in #76 */
 import {
   existsSync,
   mkdirSync,
@@ -35,6 +38,8 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
+/* eslint-enable boundaries/dependencies */
+// eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -44,6 +49,7 @@ import {
   supportedPlatform,
   type Runner,
 } from "./engine.ts";
+import type { Ready, ToolInstaller } from "./ports/tool-installer.ts";
 import {
   declaredUnion,
   packageNames,
@@ -495,6 +501,8 @@ export interface ToolchainOptions {
   /** The requirements to install — every profile's union by default. */
   readonly tex?: TexRequirements;
   readonly now?: () => number;
+  /** banal's installer. The composition root wires it (`cli.ts`); the harness passes its own. */
+  readonly banal: ToolInstaller;
 }
 
 export type InstallResult =
@@ -507,7 +515,7 @@ export type InstallResult =
  */
 export function ensureTexLive(
   tex: TexRequirements,
-  o: Required<Omit<ToolchainOptions, "check" | "platform" | "tex">>,
+  o: Required<Omit<ToolchainOptions, "check" | "platform" | "tex" | "banal">>,
 ): InstallResult {
   const io: ToolchainIO = { run: o.run, log: o.log, env: o.env };
   const root = cacheRoot(o.env, o.home);
@@ -632,17 +640,23 @@ function fail(
   return { ok: false };
 }
 
-function withDefaults(o: ToolchainOptions): Required<ToolchainOptions> {
+/** The options with defaults filled in. */
+type Resolved = Required<ToolchainOptions>;
+
+function withDefaults(o: ToolchainOptions): Resolved {
   return {
     check: o.check ?? false,
     log: o.log ?? console.log,
     err: o.err ?? console.error,
+    // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
     env: o.env ?? process.env,
     run: o.run ?? spawnSync,
+    // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
     platform: o.platform ?? process.platform,
     home: o.home ?? homedir(),
     tex: o.tex ?? declaredUnion().tex,
     now: o.now ?? Date.now,
+    banal: o.banal,
   };
 }
 
@@ -652,10 +666,7 @@ export const UNSUPPORTED =
   "once it has every package the venue declares.";
 
 /** `--check`: report, change nothing. Exit 0 only when every declared package is present. */
-function report(
-  o: Required<ToolchainOptions>,
-  tree: CachedTree | null,
-): number {
+function report(o: Resolved, tree: CachedTree | null): number {
   const n = packageNames(o.tex).length;
   if (!tree) {
     o.log(
@@ -679,13 +690,36 @@ function report(
   return 1;
 }
 
-/** `rpp toolchain [--check]`. */
-export function runToolchain(options: ToolchainOptions = {}): number {
-  const o = withDefaults(options);
-  if (!supportedPlatform(o.platform)) {
-    o.err(`✗ rpp toolchain: ${UNSUPPORTED}`);
-    return 1;
+/** The banal half, installed or checked, through its installer. True when banal is ready. */
+function banalPart(o: Resolved): boolean {
+  const tool = o.banal;
+  if (o.check) {
+    const r = tool.check();
+    if (r.ok) o.log(`✓ ${tool.label} is installed and runs`);
+    else {
+      o.log(`✗ ${tool.label}: ${r.error.join("; ")}`);
+      o.log("  run `npx rpp toolchain` to install it");
+    }
+    return r.ok;
   }
+  const r = tool.ensure(o.log);
+  if (!r.ok) {
+    fail(o.err, r.error);
+    return false;
+  }
+  o.log(readyLine(tool.label, r.value));
+  return true;
+}
+
+/** The ready line takes a `Ready`: only an installer mints one, so it cannot be printed for a tool that was not verified and run. */
+export function readyLine(label: string, r: Ready): string {
+  return r.fresh
+    ? `✓ ${label} is ready in ${r.where}: ${r.verified}`
+    : `✓ ${label} in ${r.where} is verified and runs — nothing to do`;
+}
+
+/** The TeX Live half: 0 when every declared package is present (or now installed). */
+function texPart(o: Resolved): number {
   const complete = (t: CachedTree) => noGaps(gapsOf(t, o.tex, o.run));
   const tree = usableTree(cachedTrees(cacheRoot(o.env, o.home)), complete);
   if (o.check) return report(o, tree);
@@ -703,4 +737,19 @@ export function runToolchain(options: ToolchainOptions = {}): number {
     `rpp toolchain: TeX Live with ${n} packages into ${cacheRoot(o.env, o.home)}`,
   );
   return ensureTexLive(o.tex, o).ok ? 0 : 1;
+}
+
+/**
+ * `rpp toolchain [--check]`. Both halves always run, so one failure does not hide the other; the
+ * exit code is 0 only when both are ready.
+ */
+export function runToolchain(options: ToolchainOptions): number {
+  const o = withDefaults(options);
+  if (!supportedPlatform(o.platform)) {
+    o.err(`✗ rpp toolchain: ${UNSUPPORTED}`);
+    return 1;
+  }
+  const tex = texPart(o);
+  const banal = banalPart(o);
+  return tex === 0 && banal ? 0 : 1;
 }

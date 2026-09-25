@@ -66,13 +66,15 @@ into ~/.cache/rpp/texlive? [Y/n]` — and continues. Without a terminal (CI, an 
 says to run:
 
 ```sh
-npx rpp toolchain          # upstream TeX Live + the packages the venue profiles declare
+npx rpp toolchain          # upstream TeX Live + the packages the venue profiles declare, and banal
 ```
 
 It installs into `~/.cache/rpp/texlive` (`RPP_TEXLIVE_DIR` changes that), verifies every declared
 file with `kpsewhich`, and a second run does nothing. Linux and macOS; on Windows, install TeX Live
 yourself. Reading the built PDF needs nothing else installed: rpp reads it with pdf.js, which
-comes with the package ([`docs/toolchain.md`](docs/toolchain.md)).
+comes with the package. The same command fetches **banal**, HotCRP's page-geometry script, which
+measures page size, columns and font sizes from that pdf.js read; it needs `perl`, and no poppler
+([`docs/toolchain.md`](docs/toolchain.md)).
 
 Commit `.claude/settings.json`: then every clone gets the hooks. The hook commands run files
 inside `node_modules`, so in a fresh clone they work only after `npm install`.
@@ -246,3 +248,9 @@ your own lint setup.
 ## License
 
 MIT.
+
+**banal is not part of this package.** banal, the page-geometry script from
+[HotCRP](https://github.com/kohler/hotcrp) (Geoffrey M. Voelker, Eddie Kohler), is licensed
+GPL-2.0-or-later. rpp does not contain, copy or modify it: `rpp toolchain` downloads it from HotCRP
+at a pinned commit, checks its sha256, and rpp runs it as a separate program (`perl banal …`),
+reading its JSON output. Details: [`docs/toolchain.md`](docs/toolchain.md#page-geometry-banal-without-poppler).

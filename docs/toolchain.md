@@ -18,17 +18,22 @@ after deciding to use the tool, not before.
 | `java`               | any JRE (21 works)         | render-paper                             | TeXtidote does not run, and **nothing else spell-checks the text** |
 | `python3`            | your system                | the analysis and report scripts          | those scripts do not start                                         |
 | `tlmgr`              | TeX Live                   | the TeX installer itself                 | you cannot add a TeX package                                       |
+| `banal`              | HotCRP (`rpp toolchain`)   | `rpp build`, extract-pdf-facts           | page size, columns and font sizes are `null` in the facts file     |
+| `perl`               | your system (macOS has it) | banal                                    | banal cannot run — the same `null`, and `rpp toolchain` refuses    |
 
 🔴 **Most of these fail QUIETLY**, which is why they are listed rather than left to be discovered.
 A missing checker and a passing checker look identical from outside, so every script here states in
 its last line which checks actually ran — read that line, not the exit code.
 
-## TeX Live: `rpp toolchain`
+## TeX Live and banal: `rpp toolchain`
 
 ```sh
 npx rpp toolchain            # install, or add what is missing; a second run does nothing
-npx rpp toolchain --check    # report, change nothing; exit 1 when a declared package is missing
+npx rpp toolchain --check    # report, change nothing; exit 1 when a declared package or banal is missing
 ```
+
+The command has two halves, TeX Live and banal (below). Both always run, so one failing does not
+hide the other, and the exit code is 0 only when both are ready.
 
 It downloads `install-tl` from a CTAN mirror (four in turn; each download has its own time limit,
 TLS is always verified), installs `scheme-basic` into `~/.cache/rpp/texlive/<TeX Live year>`
@@ -78,9 +83,47 @@ with, the last page's words — with **pdf.js**, which arrives with rpp as the n
 found pdf.js equal on page counts and Type 3 fonts, and the last page's column heights within
 0.2 pt except on an all-Type-3 page (7.2 pt). Poppler is no longer needed by anything rpp runs.
 
-The one exception is optional and yours: **banal**, the page-geometry script HotCRP's format
-checker runs, calls poppler's `pdftohtml` itself. rpp uses banal only when a project vendors it
-(`vendor/banal` or `$BANAL`), and without it the geometry fields of the facts file are `null`.
+## Page geometry: banal, without poppler
+
+The page size, column count, body and reference font sizes and page types in the facts file come
+from **banal**, the page-geometry script HotCRP's format checker runs
+([`src/banal`](https://github.com/kohler/hotcrp/blob/master/src/banal), by Geoffrey M. Voelker and
+Eddie Kohler). rpp runs the real banal, unmodified, so the numbers are the ones HotCRP shows at
+upload.
+
+banal normally reads a PDF through poppler's `pdftohtml -xml`. rpp does not: it writes that XML
+itself from the same pdf.js read (`src/adapters/banal/xml.ts`) and hands banal the `.xml` file, which banal
+accepts as input. Measured on 50 PDFs / 598 pages (2026-09-25): banal on rpp's XML and banal on
+real `pdftohtml` agree on every field the facts file keeps, with no venue verdict changed. They
+agree only because rpp leaves out rotated and invisible text (as `pdftohtml` does), writes each
+text's colour so banal drops light text by its own rule, and writes sizes and coordinates at the
+zoom and precision banal expects. `test/e2e/banal.mjs` checks each of those against the real banal
+on the committed fixtures.
+
+**How it is installed — and the licence boundary.** banal is **GPL-2.0-or-later**; rpp is MIT. rpp
+therefore does not contain banal. `rpp toolchain` downloads it from HotCRP at a pinned commit:
+
+|         |                                                                                                      |
+| ------- | ---------------------------------------------------------------------------------------------------- |
+| URL     | `https://raw.githubusercontent.com/kohler/hotcrp/f3e4352133f3184c7c42b0d5e6501124bead18e6/src/banal` |
+| version | banal 1.2                                                                                            |
+| sha256  | `fd8cc4ae189b9da02460ae442a34f14434e5784210489fb668313ac671006911`                                   |
+
+It refuses a file with any other sha256, stores it in `~/.cache/rpp/banal/<commit>/banal`
+(`$XDG_CACHE_HOME/rpp/banal` when set, `$RPP_BANAL_DIR` over both), and accepts it only after banal
+has run on a one-page probe and measured it. rpp then runs it as a separate program — `perl banal
+-no-time -json <file>.xml` — and reads its JSON output. Nothing of banal is copied, linked or
+translated into this package.
+
+**perl is required** for that, and is checked: without it `rpp toolchain` fails and says how to
+install it (Debian/Ubuntu `apt-get install perl`; macOS ships it). banal asks `pdftohtml -v` before
+it reads any input, so rpp points banal's `$PDFTOHTML` at a small stub that answers with the
+`pdftohtml` version whose XML rpp writes. Poppler itself is not needed by anything rpp runs.
+
+**Which banal is used**, in order: `$BANAL` (a path you name), `vendor/banal` in the project (a copy
+you vendor), then the one `rpp toolchain` installed. Without any, `rpp build` still succeeds with
+the geometry fields `null` and says so with the command that fixes it; `extract-pdf-facts.mjs
+--strict` fails.
 
 pdf.js needs **Node 22.13 or later**, which rpp requires anyway: on Node 20 it opens the same PDFs
 and reports zero fonts without an error, and rpp refuses such a read instead of reporting a

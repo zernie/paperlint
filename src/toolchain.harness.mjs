@@ -12,10 +12,13 @@
  *   1. the pure pieces (year, profile, tlmgr's unknown names, cache location);
  *   2. the download: mirror fallback, archive check, the time limit;
  *   3. the command: fresh install, second run is a no-op, --check, partial add, and the three
- *      ways an install must FAIL naming the package.
+ *      ways an install must FAIL naming the package;
+ *   4. banal, the command's second half: a stand-in banal served from `file://`, never HotCRP —
+ *      the installer's own tests are `banal.harness.mjs`; here only the wiring into the command.
  */
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
   appendFileSync,
   copyFileSync,
@@ -34,6 +37,11 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIXTURE = join(HERE, "..", "fixtures", "toolchain-mirror");
 const T = await import(join(HERE, "toolchain.ts"));
+// The harness is its own composition root for banal: `runToolchain` takes an installer, it does
+// not build one.
+const B = await import(join(HERE, "adapters", "banal", "index.ts"));
+const N = await import(join(HERE, "adapters", "node", "index.ts"));
+const C = await import(join(HERE, "adapters", "curl", "index.ts"));
 
 let n = 0;
 const check = (label, cond, detail = "") => {
@@ -251,12 +259,37 @@ const TEX = {
   tools: { texcount: ["texcount"] },
 };
 const root = join(work, "cache");
+// 🔴 banal goes into the work directory, never the developer's cache: without RPP_BANAL_DIR the
+// command installs into ~/.cache/rpp/banal, and a harness must not leave files in a home.
+const banalDir = join(work, "banal");
 const env = {
   ...process.env,
   RPP_TEXLIVE_DIR: root,
   RPP_CTAN_MIRROR: url(good),
+  RPP_BANAL_DIR: banalDir,
 };
-const cmd = (over = {}) => {
+// A stand-in banal: a Perl script that prints what banal prints for a one-page, 10 pt probe.
+const fakeBanal = join(work, "fake-banal");
+writeFileSync(
+  fakeBanal,
+  'print qq({"bodyfontsize": 10.3, "columns": 1, "pages": [{}]}\\n);\n',
+);
+const BANAL = {
+  url: url(fakeBanal),
+  sha256: createHash("sha256").update(readFileSync(fakeBanal)).digest("hex"),
+};
+/** banal's installer over the real ports, every process going through the recorder. */
+const installer = (e, source, run) => {
+  const s = B.parseBanalSettings(e, N.hostDirs());
+  const ports = N.nodeAdapters({ tmpDir: s.tmpDir, spawn: run });
+  const download = C.curlDownload({
+    run: ports.run,
+    env: s.processEnv,
+    tmpDir: s.tmpDir,
+  });
+  return B.banalInstaller({ ...ports, download }, s, source);
+};
+const cmd = ({ banal = BANAL, ...over } = {}) => {
   const out = [];
   const err = [];
   const rec = recorder();
@@ -267,6 +300,7 @@ const cmd = (over = {}) => {
     run: rec.run,
     platform: "linux",
     tex: TEX,
+    banal: installer(over.env ?? env, banal, rec.run),
     now: (() => {
       let t = 0;
       return () => (t += 1000);
@@ -566,6 +600,50 @@ check(
       r.err.includes("the mirrors disagree about the current release") &&
       !r.calls.some((c) => c.cmd.endsWith("install-tl")),
     r.err,
+  );
+}
+
+// ── 4. banal, the second half of the command ───────────────────────────────────────────
+{
+  const dir = join(work, "banal-4");
+  const e = { ...env, RPP_BANAL_DIR: dir };
+  const before = cmd({ env: e, check: true });
+  // Guards: --check covers banal — a complete TeX Live alone must not read as a ready toolchain.
+  check(
+    "banal: --check with TeX Live complete and no banal exits 1 and names banal",
+    before.code === 1 && before.out.includes("banal not found"),
+    before.out,
+  );
+  const r = cmd({ env: e });
+  check(
+    "banal: the command installs it — exit 0, the ready line says the sha256 was verified",
+    r.code === 0 &&
+      r.out.includes("sha256 verified, and it measured a probe page"),
+    `${r.out}\n${r.err}`,
+  );
+  const again = cmd({ env: e });
+  check(
+    "banal: a second run downloads nothing and says so",
+    again.code === 0 &&
+      again.out.includes("is verified and runs — nothing to do") &&
+      !again.calls.some((c) => c.cmd === "curl"),
+    again.out,
+  );
+  check("banal: --check now passes", cmd({ env: e, check: true }).code === 0);
+}
+{
+  const r = cmd({
+    env: { ...env, RPP_BANAL_DIR: join(work, "banal-bad") },
+    banal: { ...BANAL, sha256: "0".repeat(64) },
+  });
+  // Guards: the two halves are independent — a banal failure fails the command, and TeX Live still
+  // reports ready rather than being hidden behind it.
+  check(
+    "🔴 banal with the wrong sha256: exit 1, the refusal named, and TeX Live still reported ready",
+    r.code === 1 &&
+      r.err.includes("does not have the pinned sha256") &&
+      r.out.includes("nothing to do"),
+    `${r.out}\n${r.err}`,
   );
 }
 

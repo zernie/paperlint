@@ -25,7 +25,9 @@ a naive `[А-Яа-я]` byte-class false-positives on em-dashes/smart-quotes in a
 rg -l '\p{Cyrillic}' <targets>            # or: grep -rIlP '\p{Cyrillic}'
 ```
 
-Both must return empty. Also scan the compiled PDF's text (`pdftotext paper.pdf - | grep -i …`) and any
+Both must return empty. Also scan the compiled PDF's text
+(`python3 -c 'import fitz,sys; print("".join(p.get_text() for p in fitz.open(sys.argv[1])))' paper.pdf | grep -i …`,
+with the same pymupdf the render step installs) and any
 `.pyc`/`__pycache__` (they can embed your absolute repo path) — delete caches before zipping.
 
 ## What is and isn't a leak

@@ -175,6 +175,11 @@ jobs:
       - name: mutation batteries are frozen
         run: node scripts/mutation-batteries-frozen.mjs
 
+      # The legacy exemptions from src/'s layer rules (#76) may only shrink: counted from ESLint's
+      # own suppressedMessages, so a new `-- legacy …` directive anywhere fails here.
+      - name: legacy layer exemptions are frozen
+        run: node scripts/layer-legacy-frozen.mjs
+
       # The batteries that remain still run until #52 replaces or removes them. The runner
       # DISCOVERS batteries rather than listing them and errors on finding zero — see
       # scripts/run-mutations.mjs for why (the hand list it replaced had gone stale, silently).
@@ -275,9 +280,21 @@ jobs:
       # The same command a user runs. On a cache hit it verifies and says "nothing to do"; on a miss
       # it installs from an empty directory and verifies every declared file with kpsewhich.
       # `node bin/rpp.mjs`, not `npx rpp`: inside this repository npx would look the name up on npm.
+      # It also downloads banal, the Perl script HotCRP runs to measure page geometry (~90 KB, pinned
+      # commit, sha256-checked, then run once on a test page). rpp keeps banal and no longer needs
+      # poppler: rpp now writes the XML banal reads, which poppler's pdftohtml used to write.
+      # Both runner images ship perl. The download is too small to be worth an Actions cache.
       - name: rpp toolchain
         run: node bin/rpp.mjs toolchain
         timeout-minutes: 15
+
+      # Proves banal works without poppler. This runner has no poppler, and the test also limits
+      # PATH to perl. rpp turns each fixture PDF into XML with pdf.js, banal measures it, and the
+      # result must equal the numbers banal gave on the same PDFs through poppler's pdftohtml
+      # (recorded once, hardcoded in the test). Runs in seconds, hence the short timeout.
+      - name: banal e2e (--strict)
+        run: node test/e2e/banal.mjs --strict
+        timeout-minutes: 3
 
       # Called directly with --strict (see the install e2e step in the `gates` job).
       - name: build e2e (--strict)

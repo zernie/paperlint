@@ -51,6 +51,9 @@ const check = (label, cond) => {
 };
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-build-")));
+// 🔴 banal is looked for under the temp root, never in the developer's cache: with the real
+// `~/.cache/rpp/banal` present, the measure step would run the real banal on the fake reader's pages.
+const ENV = { RPP_BANAL_DIR: join(root, "no-banal") };
 const paper = (name, files) => {
   const dir = join(root, "papers", name);
   mkdirSync(dir, { recursive: true });
@@ -224,7 +227,7 @@ try {
       events.push("run");
       return tex.run(...a);
     },
-    env: {},
+    env: ENV,
     log: (l) => events.push(l),
   });
   check("a clean paper builds", r.status === "built");
@@ -299,7 +302,7 @@ try {
       detail: "InvalidPDFException: Invalid PDF structure.",
     }),
     run: fakeTex().run,
-    env: {},
+    env: ENV,
     log: quiet,
   });
   check(
@@ -322,7 +325,7 @@ try {
     cwd: root,
     readPdf: fakeRead,
     run: btex.run,
-    env: {},
+    env: ENV,
     log: quiet,
   });
   check("a paper with a \\cite builds", rb.status === "built");
@@ -357,7 +360,7 @@ try {
     cwd: root,
     readPdf: fakeRead,
     run: ftex.run,
-    env: {},
+    env: ENV,
     log: quiet,
   });
   check(
@@ -387,7 +390,7 @@ try {
     cwd: root,
     readPdf: fakeRead,
     run: fakeTex({ missing: true }).run,
-    env: {},
+    env: ENV,
     log: quiet,
   });
   check(
@@ -407,7 +410,7 @@ try {
     cwd: root,
     readPdf: fakeRead,
     run: dtex.run,
-    env: {},
+    env: ENV,
     dryRun: true,
     log: (l) => dryLog.push(l),
   });
@@ -435,7 +438,7 @@ try {
     cwd: root,
     readPdf: fakeRead,
     run: ntex.run,
-    env: {},
+    env: ENV,
     log: quiet,
   });
   check("no paper.tex — status no-source", nr.status === "no-source");
@@ -471,7 +474,7 @@ try {
     cwd: root,
     readPdf: fakeRead,
     run: neTex.run,
-    env: {},
+    env: ENV,
     log: (l) => neLog.push(l),
     engine: async () => {
       pdfWhenEngineAsked = existsSync(join(noEng, "paper.pdf"));
@@ -502,9 +505,9 @@ try {
     cwd: root,
     readPdf: fakeRead,
     run: bsTex.run,
-    env: {},
+    env: ENV,
     log: (l) => bsLog.push(l),
-    engine: async () => ({}),
+    engine: async () => ENV,
   });
   check(
     "🔴 no-source: the stale paper.pdf is GONE",
@@ -532,10 +535,10 @@ try {
     cwd: root,
     readPdf: fakeRead,
     run: dsTex.run,
-    env: {},
+    env: ENV,
     dryRun: true,
     log: quiet,
-    engine: async () => ({}),
+    engine: async () => ENV,
   });
   // Read only if present: a deleted file must fail THIS assertion, not throw ENOENT before it.
   const bodyOf = (p) => (existsSync(p) ? readFileSync(p, "utf8") : null);
@@ -557,9 +560,9 @@ try {
     cwd: root,
     readPdf: fakeRead,
     run: fakeTex().run,
-    env: {},
+    env: ENV,
     log: (l) => frLog.push(l),
-    engine: async () => ({}),
+    engine: async () => ENV,
   });
   check(
     "a success: the PDF on disk is the one this run wrote, and nothing says 'removed'",
@@ -578,9 +581,9 @@ try {
     cwd: root,
     readPdf: fakeRead,
     run: fakeTex({ noPdf: true }).run,
-    env: {},
+    env: ENV,
     log: (l) => emLog.push(l),
-    engine: async () => ({}),
+    engine: async () => ENV,
   });
   check(
     "🔴 empty document: pdflatex exit 0 with no PDF FAILS the build",

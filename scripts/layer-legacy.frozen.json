@@ -1,0 +1,50 @@
+{
+  "issue": "https://github.com/zernie/research-paper-pipeline/issues/76",
+  "why": "Legacy src/*.ts files that still do I/O or import an adapter or a tool package directly. May only shrink: fix a site, delete its directive, lower the count here (delete the file entry at zero). A new file may not appear. Counted from ESLint suppressedMessages by scripts/layer-legacy-frozen.mjs, part of npm run check.",
+  "files": {
+    "src/build-engine.ts": {
+      "boundaries/dependencies": 2,
+      "no-restricted-globals": 2
+    },
+    "src/build.ts": {
+      "boundaries/dependencies": 5,
+      "no-restricted-globals": 2
+    },
+    "src/doctor.ts": {
+      "boundaries/dependencies": 2,
+      "no-restricted-globals": 1
+    },
+    "src/engine.ts": {
+      "boundaries/dependencies": 2,
+      "no-restricted-globals": 1
+    },
+    "src/hooks-settings.ts": {
+      "boundaries/dependencies": 1
+    },
+    "src/init.ts": {
+      "boundaries/dependencies": 4,
+      "no-restricted-globals": 6
+    },
+    "src/link-skills.ts": {
+      "boundaries/dependencies": 1
+    },
+    "src/new-paper.ts": {
+      "boundaries/dependencies": 1
+    },
+    "src/pdf-facts.ts": {
+      "boundaries/dependencies": 3,
+      "no-restricted-globals": 1
+    },
+    "src/structure.ts": {
+      "boundaries/dependencies": 1,
+      "no-restricted-globals": 1
+    },
+    "src/tex-requirements.ts": {
+      "boundaries/dependencies": 2
+    },
+    "src/toolchain.ts": {
+      "boundaries/dependencies": 3,
+      "no-restricted-globals": 2
+    }
+  }
+}

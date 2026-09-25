@@ -239,8 +239,15 @@ const runDoctor = (
   );
   check(
     "no poppler row: rpp reads PDFs with pdf.js, which it installs itself",
-    !PROGRAMS.some((p) => /^pdf(info|fonts|totext)$/.test(p.bin)) &&
+    !PROGRAMS.some((p) => /^pdf(info|fonts|totext|tohtml)$/.test(p.bin)) &&
       !/poppler/.test(none.out),
+  );
+  // Guards: banal's one system requirement is named — a missing perl reads as null geometry, silently.
+  check(
+    "a perl row, naming what goes missing and how banal gets installed",
+    /✗ perl/.test(none.out) &&
+      /rpp toolchain \(it fetches banal\)/.test(none.out),
+    none.out,
   );
   rmSync(dir, { recursive: true, force: true });
 }
