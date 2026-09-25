@@ -103,7 +103,7 @@ process.exit(
         edits: [
           [
             CLI,
-            '    if (\n      fail?.messageTemplate === "file-not-found" ||\n      /No files matching/i.test(fail?.message ?? "")\n    )\n      results = [];\n    else throw e;',
+            "    if (isEmptySet(e)) results = [];\n    else throw e;",
             "    throw e;",
           ],
         ],
