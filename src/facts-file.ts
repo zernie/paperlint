@@ -40,6 +40,8 @@ import {
 } from "./pdf-geometry.ts";
 import { describeFailure, type PdfFacts, type PdfReader } from "./pdf-facts.ts";
 import { findBanal, measureLayout, missingBanal } from "./banal.ts";
+import { describeLine } from "./core/banal/failure.ts";
+import { geometryOf, type BanalGeometry } from "./core/banal/output.ts";
 import { spawnProcess } from "./adapters/node/process.ts";
 import type { RunProcess } from "./core/ports.ts";
 
@@ -76,63 +78,8 @@ export const sha256 = (path: string): string =>
 
 // ── banal ───────────────────────────────────────────────────────────────────────────────
 
-/** The geometry banal measures, in the facts file's field names. */
-export interface BanalFacts {
-  readonly page_w_in: number | null;
-  readonly page_h_in: number | null;
-  readonly columns: number | null;
-  readonly body_pt: number | null;
-  readonly ref_pt: number | null;
-  readonly body_pages: number;
-  readonly ref_pages: number;
-  readonly appendix_pages: number;
-  readonly pages_by_type: Readonly<Record<string, number>>;
-}
-
-interface BanalPage {
-  readonly type?: string;
-  readonly reffontsize?: number | null;
-}
-
-const num = (v: unknown): number | null =>
-  typeof v === "number" && Number.isFinite(v) ? v : null;
-
-/**
- * banal's JSON → the geometry fields. Pure.
- *
- * 🔴 banal OMITS a page's `type` when it is "body" (its line 1022: `push … if $page->{type} ne
- * "body"`), so counting pages whose type equals "body" gives ZERO for every paper in the world —
- * that is how the first page-limit gate was written, and it could not fire once. A page without a
- * type IS a body page.
- */
-export function banalFacts(banal: Record<string, unknown>): BanalFacts {
-  const pages = (
-    Array.isArray(banal["pages"]) ? banal["pages"] : []
-  ) as BanalPage[];
-  const byType: Record<string, number> = {};
-  for (const p of pages)
-    byType[p.type ?? "body"] = (byType[p.type ?? "body"] ?? 0) + 1;
-  const bib = pages.find((p) => p.type === "bib" && p.reffontsize != null);
-  // banal gives papersize as [height, width] in points — checked against live output 2026-08-26.
-  const size = banal["papersize"];
-  const inches = (i: number): number | null =>
-    Array.isArray(size) && num(size[i]) !== null
-      ? Number(((size[i] as number) / 72).toFixed(3))
-      : null;
-  const refPages = byType["bib"] ?? 0;
-  const appendixPages = byType["appendix"] ?? 0;
-  return {
-    page_w_in: inches(1),
-    page_h_in: inches(0),
-    columns: num(banal["columns"]),
-    body_pt: num(banal["bodyfontsize"]),
-    ref_pt: num(bib?.reffontsize),
-    body_pages: pages.length - refPages - appendixPages,
-    ref_pages: refPages,
-    appendix_pages: appendixPages,
-    pages_by_type: byType,
-  };
-}
+/** The geometry banal measures, in the facts file's field names (`core/banal/output.ts`). */
+export type BanalFacts = BanalGeometry;
 
 // ── the document ────────────────────────────────────────────────────────────────────────
 
@@ -270,10 +217,10 @@ function measureGeometry(
   const run = o.run ?? spawnProcess();
   const r = measureLayout(where.path, read.layout, { run, env });
   return r.ok
-    ? { banal: banalFacts(r.json), why: null }
+    ? { banal: geometryOf(r.value), why: null }
     : {
         banal: null,
-        why: `${r.why} (banal from ${where.from}: ${where.path})`,
+        why: `${describeLine(r.error)} (banal from ${where.from}: ${where.path})`,
       };
 }
 

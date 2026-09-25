@@ -39,6 +39,18 @@ import {
 import { homedir, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import type { Command, ProcessExit, RunProcess } from "./core/ports.ts";
+import { andThen, type Result } from "./core/result.ts";
+import {
+  describeLine,
+  PERL_MISSING,
+  type BanalFailure,
+} from "./core/banal/failure.ts";
+import {
+  firstLine,
+  parseBanalOutput,
+  type BanalMeasurement,
+} from "./core/banal/output.ts";
+import { acceptProbe, PROBE_PAGE } from "./core/banal/probe.ts";
 import { pdf2xml, XML_DIALECT, type PageLayout } from "./pdf-layout.ts";
 
 /** The banal rpp runs: HotCRP at this commit, this file, these bytes. */
@@ -65,9 +77,8 @@ export const BANAL_DOWNLOAD_SECONDS = 60;
 /** banal takes well under a second on a paper; a hang still has to end. */
 const BANAL_RUN_MS = 120_000;
 
-export const PERL_MISSING =
-  "perl is not installed — banal, the page-geometry script HotCRP runs, is a Perl program. " +
-  "Install perl (Debian/Ubuntu: apt-get install perl; macOS ships it) and run `npx rpp toolchain`";
+export { PERL_MISSING } from "./core/banal/failure.ts";
+export { PROBE_PAGE } from "./core/banal/probe.ts";
 
 /** An environment as a child process gets it: every value a string, none undefined. */
 export const childEnv = (
@@ -130,13 +141,13 @@ export function missingBanal(env: NodeJS.ProcessEnv, home?: string): string {
 /** The stub standing in for `pdftohtml`: it answers `-v` and refuses to convert anything. */
 export const PDFTOHTML_STUB = [
   "#!/bin/sh",
-  "# research-paper-pipeline: banal reads rpp's pdftohtml-style XML, never a PDF. banal still",
+  "# research-paper-pipeline: banal reads the banal input XML rpp writes, never a PDF. banal still",
   "# asks `pdftohtml -v` which dialect to expect; this answers with the one rpp writes.",
   'if [ "$1" = "-v" ]; then',
   `  echo "pdftohtml version ${XML_DIALECT.version}"`,
   "  exit 0",
   "fi",
-  'echo "rpp: this pdftohtml only answers -v; banal was given a PDF instead of rpp\'s XML" >&2',
+  'echo "rpp: this pdftohtml only answers -v; banal was given a PDF instead of the banal input XML" >&2',
   "exit 1",
   "",
 ].join("\n");
@@ -145,75 +156,16 @@ export const PDFTOHTML_STUB = [
 export const shellQuote = (s: string): string =>
   `'${s.replace(/'/g, `'"'"'`)}'`;
 
-export type BanalOutput =
-  | { readonly ok: true; readonly json: Record<string, unknown> }
-  | { readonly ok: false; readonly why: string };
-
-const firstLine = (s: unknown): string =>
-  String(s ?? "")
-    .split("\n")
-    .map((l) => l.trim())
-    .find(Boolean) ?? "";
-
-/** Why a finished banal process did not measure, before its output is read; null when it ran. */
-function processFailure(r: ProcessExit): string | null {
-  switch (r.kind) {
-    case "not-found":
-      return PERL_MISSING;
-    case "spawn-failed":
-      return `banal failed: ${r.message}`;
-    case "timed-out":
-      return `banal failed: no answer after ${String(r.afterMs)} ms`;
-    case "signalled":
-      return `banal failed (${r.signal}): ${firstLine(r.stderr) || "no output"}`;
-    case "exited":
-      return r.status === 0
-        ? null
-        : `banal failed (exit ${String(r.status)}): ${firstLine(r.stderr) || "no output"}`;
-  }
-}
-
-/** banal's stdout as a JSON object, or why it is not one. */
-function jsonObject(
-  stdout: string,
-  stderr: string,
-): Record<string, unknown> | string {
-  let json: unknown;
-  try {
-    json = JSON.parse(stdout);
-  } catch {
-    return `banal printed no JSON: ${firstLine(stdout) || firstLine(stderr) || "nothing"}`;
-  }
-  return typeof json === "object" && json !== null && !Array.isArray(json)
-    ? (json as Record<string, unknown>)
-    : "banal printed JSON that is not an object";
-}
-
-/** banal's stdout as JSON, or why it is not a measurement. */
-export function parseBanalOutput(r: ProcessExit): BanalOutput {
-  const failed = processFailure(r);
-  if (failed || r.kind !== "exited") return { ok: false, why: failed ?? "" };
-  const obj = jsonObject(r.stdout, r.stderr);
-  if (typeof obj === "string") return { ok: false, why: obj };
-  // banal reports an input it could not read as `{"error": true, "pages": []}` — and exits 0.
-  if (obj["error"] === true)
-    return {
-      ok: false,
-      why: `banal could not read the XML: ${firstLine(r.stderr)}`,
-    };
-  return { ok: true, json: obj };
-}
-
 /**
- * Run banal on pages rpp read with pdf.js: write them as pdftohtml XML beside the `-v` stub in a
- * temporary directory, run `perl banal -no-time -json <file>.xml`, and parse what it prints. The
+ * Run banal on pages rpp read with pdf.js: write them as the banal input XML beside the `-v` stub in
+ * a temporary directory, run `perl banal -no-time -json <file>.xml`, and parse what it prints. The
  * directory is removed either way.
  */
 export function measureLayout(
   banal: string,
   pages: readonly PageLayout[],
   o: { run: RunProcess; env: NodeJS.ProcessEnv },
-): BanalOutput {
+): Result<BanalMeasurement, BanalFailure> {
   const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-banal-")));
   try {
     const xml = join(work, "paper.xml");
@@ -236,38 +188,13 @@ export function measureLayout(
 
 // ── installing it (`rpp toolchain`) ──────────────────────────────────────────────────
 
-/** One text line of `n` characters, 10 pt, at line `i` of a one-column page. */
-const probeLine = (i: number) => ({
-  top: 72 + i * 12,
-  left: 72,
-  width: 468,
-  height: 10,
-  size: 10,
-  font: "Times-Roman",
-  text: "x".repeat(90),
-  upright: true,
-  fill: { kind: "unknown" } as const,
-});
-
-/** A US-letter page of 50 lines of 10 pt text — enough for banal to measure a body font size. */
-export const PROBE_PAGE: PageLayout = {
-  widthPt: 612,
-  heightPt: 792,
-  boxes: Array.from({ length: 50 }, (_, i) => probeLine(i)),
-};
-
 /** Does this banal run and measure? `null` when it does, else why not. */
 export function probeBanal(
   banal: string,
   o: { run: RunProcess; env: NodeJS.ProcessEnv },
 ): string | null {
-  const r = measureLayout(banal, [PROBE_PAGE], o);
-  if (!r.ok) return r.why;
-  const pages = r.json["pages"];
-  const body = r.json["bodyfontsize"];
-  return Array.isArray(pages) && pages.length === 1 && typeof body === "number"
-    ? null
-    : `banal ran on a one-page probe but measured nothing: ${JSON.stringify(r.json)}`;
+  const r = andThen(measureLayout(banal, [PROBE_PAGE], o), acceptProbe);
+  return r.ok ? null : describeLine(r.error);
 }
 
 export const sha256Of = (path: string): string =>

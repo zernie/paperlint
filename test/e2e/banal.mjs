@@ -49,6 +49,9 @@ const { findBanal, measureLayout, missingBanal } = await import(
 const { pdf2xml } = await import(join(ROOT, "dist", "pdf-layout.js"));
 const { readPdf } = await import(join(ROOT, "dist", "pdf-facts.js"));
 const { banalFacts } = await import(join(ROOT, "dist", "facts-file.js"));
+const { spawnProcess } = await import(
+  join(ROOT, "dist", "adapters", "node", "process.js")
+);
 
 /** banal 1.2 on poppler pdftohtml 24.02.0, 2026-09-25 — see the header. */
 const EXPECTED = {
@@ -142,7 +145,7 @@ try {
   symlinkSync(perl, join(bin, "perl"));
   const env = { PATH: bin, HOME: work };
   const measure = (pages, e = env) => {
-    const r = measureLayout(where.path, pages, { run: spawnSync, env: e });
+    const r = measureLayout(where.path, pages, { run: spawnProcess(), env: e });
     return r.ok ? banalFacts(r.json) : r.why;
   };
 
