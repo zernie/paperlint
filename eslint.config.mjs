@@ -19,6 +19,9 @@ import localRules from "./eslint-rules/temp-root-realpath.mjs";
 import portRules from "./eslint-rules/install-path-literals.mjs";
 import n from "eslint-plugin-n";
 import tseslint from "typescript-eslint";
+import boundaries from "eslint-plugin-boundaries";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
 // The complexity set, shared by the TypeScript block and the ratchet below. Every function
 // measured over these limits on 2026-09-24 was either refactored under them (the #59 build code)
@@ -37,6 +40,122 @@ const RATCHET = {
   "src/structure.ts": { complexity: 12, "max-depth": 4 },
   "src/new-paper.ts": { complexity: 11 },
 };
+
+// ── Hexagonal layers (CLAUDE.md rule 10, issue #76) ─────────────────────────────────────────
+// src/core/      pure: decisions, parsing, plans. No disk, no processes, no network, no env.
+// src/adapters/  the only place that touches the outside world, behind a port the core declares.
+// src/cli.ts     the composition root: reads the environment, builds adapters, calls the core.
+export const CORE = "src/core/**/*.ts";
+export const ADAPTERS = "src/adapters/**/*.ts";
+export const COMPOSITION_ROOT = ["src/cli.ts"];
+
+/** Modules that ARE effects. Importing one outside an adapter is the defect this gate names. */
+export const IO_MODULES = [
+  "fs",
+  "fs/promises",
+  "child_process",
+  "os",
+  "net",
+  "http",
+  "https",
+  "worker_threads",
+].flatMap((m) => [m, `node:${m}`]);
+
+// 🔴 SHRINK-ONLY. Files that did I/O inline before the layers existed (2026-09-25). A file leaves
+// this list when its effects move behind a port; nothing ever joins it — a NEW module that needs
+// the outside world is an adapter, full stop. `scripts/io-legacy.harness.mjs` holds both halves:
+// every entry still does I/O (else it must leave), and the list is a subset of the frozen one.
+export const IO_LEGACY = [
+  "src/build-engine.ts",
+  "src/build.ts",
+  "src/doctor.ts",
+  "src/engine.ts",
+  "src/facts-file.ts",
+  "src/hooks-settings.ts",
+  "src/init.ts",
+  "src/link-skills.ts",
+  "src/new-paper.ts",
+  "src/pdf-facts.ts",
+  "src/structure.ts",
+  "src/tex-requirements.ts",
+  "src/toolchain.ts",
+];
+
+/** Where an effect may be written: adapters, the composition root, and the legacy list. */
+const IO_ALLOWED = [ADAPTERS, ...COMPOSITION_ROOT, ...IO_LEGACY];
+
+export const IO_BAN = {
+  files: ["src/**/*.ts"],
+  ignores: IO_ALLOWED,
+  rules: {
+    "no-restricted-imports": [
+      "error",
+      {
+        paths: IO_MODULES.map((name) => ({
+          name,
+          message:
+            "I/O outside an adapter. Declare a port in src/core/ and implement it in src/adapters/ (CLAUDE.md rule 10).",
+        })),
+      },
+    ],
+    "no-restricted-globals": [
+      "error",
+      {
+        name: "process",
+        message:
+          "The environment is an input: the composition root reads it and passes values in.",
+      },
+      {
+        name: "fetch",
+        message:
+          "Network access is an adapter (src/adapters/), not core or command logic.",
+      },
+    ],
+  },
+};
+
+/**
+ * core imports neither adapters nor the app layer; adapters implement ports and never import the app.
+ *
+ * 🔴 `boundaries/root-path` IS LOAD-BEARING. Without it the plugin matches its patterns against
+ * `process.cwd()` — not ESLint's `cwd` — so lint started from any other directory classifies no file
+ * and the rule passes silently. Measured 2026-09-25: a core → adapter import produced zero findings
+ * until the root was pinned. `root` is a parameter only so the test can lint a throwaway tree.
+ */
+export const layerBoundaries = (root) => ({
+  files: ["src/**/*.ts"],
+  plugins: { boundaries },
+  settings: {
+    "boundaries/root-path": root,
+    "boundaries/elements": [
+      { type: "core", mode: "full", pattern: CORE },
+      { type: "adapter", mode: "full", pattern: ADAPTERS },
+      { type: "app", mode: "full", pattern: "src/*.ts" },
+    ],
+  },
+  rules: {
+    "boundaries/dependencies": [
+      "error",
+      {
+        default: "allow",
+        rules: [
+          {
+            from: { type: "core" },
+            disallow: { to: { type: ["adapter", "app"] } },
+            message:
+              "Hexagonal boundary: core (${file.type}) must not import ${dependency.type}. Depend on a port declared in src/core/; the composition root wires the adapter in.",
+          },
+          {
+            from: { type: "adapter" },
+            disallow: { to: { type: "app" } },
+            message:
+              "Hexagonal boundary: an adapter implements a core port and must not import the app layer (${dependency.type}).",
+          },
+        ],
+      },
+    ],
+  },
+});
 
 const ceiling = (rule, n) =>
   rule === "max-lines-per-function"
@@ -119,6 +238,9 @@ export default [
       "max-nested-callbacks": ["error", 3],
     },
   },
+  // Hexagonal layers: I/O only in adapters and the composition root; core imports neither.
+  IO_BAN,
+  layerBoundaries(dirname(fileURLToPath(import.meta.url))),
   // The ratchet: per-file ceilings for the files written before the limits existed. See RATCHET.
   ...Object.entries(RATCHET).map(([file, max]) => ({
     files: [file],

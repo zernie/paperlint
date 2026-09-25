@@ -149,8 +149,7 @@ Rule 5 is about the tool you are replacing; this one is about the order of work.
 Four proposals were made and withdrawn in one session on 2026-09-17 for exactly this reason —
 [`docs/incidents.md`](docs/incidents.md).
 
-**10. The only impure thing in this package is WHERE IT IS INSTALLED — and it lives in ONE
-module.** Rule 6 generalised: the caller's cwd is one case of it. Checking logic — lint rules,
+**10. Effects live in adapters, and WHERE rpp IS INSTALLED lives in ONE of them.** Rule 6 generalised: the caller's cwd is one case of it. Checking logic — lint rules,
 skills, hooks — must not know its own location, nor its distance from anything else. Every
 answer to _where_ comes from `skills/paper-pipeline/scripts/consumer.mjs`, which adapts per
 channel: own checkout · `node_modules` · plugin cache · CI. A skill naming a script by an
@@ -160,13 +159,34 @@ lines do exactly that.
 <!-- The port's path above is resolved by `npm run check` (vigiles lint), since #67. -->
 <!-- vigiles:file skills/paper-pipeline/scripts/consumer.mjs -->
 
-⚠️ Deliberately NOT full hexagonal architecture, and that is a decision: there is no database or
-service to swap, and the lint rules are already pure functions over an AST, so ports around them
-would be ceremony with no subject. One thing here is impure, so one thing gets a port.
+**`src/` is hexagonal, and the linter enforces it** (issue #76). rpp installs TeX Live, runs
+pdflatex, downloads and runs banal, reads PDFs and writes the user's settings, so effects are not
+one exception any more — they are most of the package, and they are where it breaks.
 
-⏳ **The mechanical half is owed and is the point**: a lint rule that makes an install-specific
-path literal outside the port a finding. Prose will not hold this class — four silent breakages
-happened _while_ comments explaining the hazard sat directly above the code
+| layer                   | holds                                                                                    | may import                                                                                    |
+| ----------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `src/core/`             | pure decisions, parsers, plans; the PORTS (interfaces) it needs                          | `src/core/` only — no `node:fs`, `node:child_process`, `node:os`, network, `process`, `fetch` |
+| `src/adapters/`         | the only code that touches disk, processes, network, pdf.js; each implements a core port | `src/core/`, never the app layer                                                              |
+| `src/cli.ts` + commands | the composition root: read the environment, build adapters, call the core                | anything                                                                                      |
+
+Parse at the boundary, into types that cannot hold an invalid state (a banal path that exists only
+after its sha256 and probe passed; an outcome as a discriminated union, not a string); the core
+never re-validates.
+
+Enforced in `eslint.config.mjs`, both at `error`: `no-restricted-imports` + `no-restricted-globals`
+ban I/O outside `src/adapters/` and the composition root, and `eslint-plugin-boundaries` forbids
+core → adapter, core → app, adapter → app. Files that did I/O before the layers existed sit in
+`IO_LEGACY`, which only shrinks — a NEW module that needs the outside world is an adapter.
+`scripts/io-legacy.harness.mjs` proves both halves of each rule and that the list has not grown.
+<!-- vigiles:file scripts/io-legacy.harness.mjs -->
+
+⚠️ **`boundaries/root-path` is load-bearing.** Without it the plugin matches paths against
+`process.cwd()`, so lint started from any other directory classifies nothing and passes. The test
+lints a tree outside the repository to keep that true.
+
+⏳ **Still owed: the install-path half** — a lint rule that makes an install-specific path literal
+outside `consumer.mjs` a finding. Prose will not hold this class — four silent breakages happened
+_while_ comments explaining the hazard sat directly above the code
 ([`docs/incidents.md`](docs/incidents.md)).
 
 **11. Installing and using rpp must be as smooth as possible.** Count the actions between "I
