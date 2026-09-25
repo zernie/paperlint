@@ -126,7 +126,7 @@ what it can read, and it says so.
 
 | #   | action                                                                                                                                                                                                              |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | `npm i -D github:zernie/research-paper-pipeline#<sha>`                                                                                                                                                              |
+| 1   | `npm i -D research-paper-pipeline`                                                                                                                                                                                  |
 | 2   | `npx rpp init` — detects the papers directory, writes the declaration, links the skills into `.claude/skills/`, writes the hooks into `.claude/settings.json`, offers the CI workflow, reports any missing programs |
 
 Two, both in the same terminal.

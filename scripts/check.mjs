@@ -166,6 +166,12 @@ export const NOT_COVERED = {
   merge:
     "dependabot-automerge.yml merges the bot's own pull requests once CI is green. It checks " +
     "nothing itself; there is no local equivalent because it acts on GitHub, not on the tree.",
+  release:
+    "release.yml publishes to npm and tags a GitHub release; running it locally would publish. " +
+    "What can break it silently, the release notes, is rendered by scripts/release-config.test.ts in npm test.",
+  validate:
+    "pr-title.yml checks the pull request's TITLE (the squash commit semantic-release reads), " +
+    "which exists only on GitHub, not in the tree.",
 };
 
 /**

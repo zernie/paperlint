@@ -39,13 +39,12 @@ A **stage** is a point the paper has reached, such as `submitted` or `camera-rea
 ![Node version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fzernie%2Fresearch-paper-pipeline%2Fmain%2Fpackage.json&query=%24.engines.node&label=node)
 
 ```sh
-npm i -D github:zernie/research-paper-pipeline#<commit-sha>
+npm i -D research-paper-pipeline
 npx rpp init
 ```
 
-Pick `<commit-sha>` from the default branch. An npm release (`npm i -D research-paper-pipeline`)
-is coming; until then, install from GitHub. Run `npx rpp` only after this install — `rpp` on the
-public npm registry is a different, unrelated package.
+Run `npx rpp` only after this install — `rpp` on the public npm registry is a different,
+unrelated package.
 
 `rpp init` installs nothing else. It:
 

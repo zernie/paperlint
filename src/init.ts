@@ -265,7 +265,7 @@ export const WORKFLOW_PATH = join(".github", "workflows", "papers.yml");
  */
 export function workflowYaml(papers: string): string {
   return [
-    `# Written by \`rpp init\`. Pin <commit-sha> — this package is not on npm yet.`,
+    `# Written by \`rpp init\`. Replace <commit-sha> with a commit or release tag of the action.`,
     `name: papers`,
     `on: [push, pull_request]`,
     `jobs:`,

@@ -1,0 +1,59 @@
+# The PR title becomes the squash commit on main, and that commit is what semantic-release reads
+# (release.yml). A title without a conventional prefix means a merged fix releases nothing, with
+# every check green. Copied from zernie/vigiles.
+name: PR Title
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    # Measured 5 s in vigiles.
+    timeout-minutes: 5
+    steps:
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            chore
+            refactor
+            test
+            perf
+            ci
+            build
+          requireScope: false
+          subjectPattern: ^.+$
+          subjectPatternError: "PR title must not be empty after the type prefix."
+
+      # For a PR with exactly ONE commit, GitHub's squash merge takes the COMMIT's subject as the
+      # squash title, not the PR's. So a PR can pass the check above and still land a commit with
+      # no conventional prefix, and semantic-release then cuts no version. Measured in vigiles
+      # (#163, 2026-08-19): a `feat!:` PR title, check green, a plain commit on main, no release.
+      - name: The squash title, for a single-commit PR
+        if: github.event.pull_request.commits == 1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          subject=$(gh api "repos/$REPO/pulls/$PR/commits" --jq '.[0].commit.message' | head -1)
+          echo "commit subject: $subject"
+          if ! printf '%s' "$subject" | grep -qE '^(feat|fix|docs|chore|refactor|test|perf|ci|build)(\([^)]+\))?!?: .+'; then
+            echo "::error::This PR has ONE commit, so GitHub's squash default will use the COMMIT subject"
+            echo "::error::as the squash title — not the PR title, which already passed the check above."
+            echo "::error::That subject is: $subject"
+            echo "::error::Fix either side: amend the commit to carry the same conventional prefix, or"
+            echo "::error::set the squash title explicitly when merging. Otherwise semantic-release sees"
+            echo "::error::no releasable change and publishes nothing, with every check green."
+            exit 1
+          fi

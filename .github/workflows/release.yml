@@ -1,0 +1,54 @@
+# Release: every push to main runs semantic-release, which reads the commits since the last tag,
+# and — only when one of them is `feat:`, `fix:` or breaking — bumps the version, publishes the
+# package to npm as `research-paper-pipeline`, tags `vX.Y.Z` and writes a GitHub release.
+# Copied from zernie/vigiles, whose release setup this mirrors.
+#
+# The squash title of a merged PR IS the commit this reads, so a PR titled without a
+# conventional prefix releases nothing, silently. pr-title.yml guards that.
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    # Not measured yet; npm ci + tsc + publish. Bounded generously, but bounded: an unbounded
+    # job that hangs runs to GitHub's six-hour ceiling instead of failing.
+    timeout-minutes: 20
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # semantic-release walks the history back to the last release tag.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          # semantic-release 25 refuses to start below Node ^22.14.0.
+          node-version: "22"
+          cache: npm
+
+      # `npm ci` runs `prepare` (tsc), so dist/ exists before publishing; `npm publish` runs it
+      # again. dist/ is not committed.
+      - name: npm ci
+        run: npm ci
+        timeout-minutes: 5
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # `--no-install`: run the version pinned in package.json, never fetch one. The preset is
+        # pinned with it (conventional-changelog-conventionalcommits 9.3.1): preset 10 renders only
+        # through conventional-changelog-writer 9, which @semantic-release/release-notes-generator
+        # 14 does not load, and vigiles shipped empty release notes for five weeks that way
+        # (zernie/vigiles#282). scripts/release-config.test.ts renders the notes with the installed
+        # toolchain.
+        run: npx --no-install semantic-release
