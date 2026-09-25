@@ -82,7 +82,7 @@ import { migrationOf } from "./paper-settings.ts";
 
 /** How the papers directory was arrived at. Printed, because a guess must not read as a fact. */
 export type PapersHow =
-  "detected" | "chosen" | "not-asked" | "no-answer" | "guessed";
+  "declared" | "detected" | "chosen" | "not-asked" | "no-answer" | "guessed";
 
 /**
  * 🔴 A QUESTION CAN FAIL, AND ITS FAILURE MUST NOT BE THE COMMAND'S. Measured 2026-09-18 on a
@@ -149,17 +149,31 @@ export interface PapersChoice {
 }
 
 /**
- * One hit is used, several are asked about, none falls back to the documented default — and the
- * fallback is labelled a guess in the same breath, because the whole class of defect this command
- * exists to close is a guess that later reads as a measurement.
+ * A declared directory is the answer and nothing is measured or asked. Otherwise one hit is used,
+ * several are asked about, none falls back to the documented default — and the fallback is
+ * labelled a guess in the same breath, because the whole class of defect this command exists to
+ * close is a guess that later reads as a measurement.
+ *
+ * 🔴 WHY THE DECLARATION COMES FIRST. `init` never overwrites a declared `papersDir`, so a
+ * directory measured next to one is a decision nobody makes. It used to be printed anyway —
+ * "✓ eslint-rules/fixtures — 4 candidates" — and then the declared directory was kept: the report
+ * described a choice the command did not take, and a human was asked a question whose answer was
+ * thrown away.
  */
 export async function choosePapers(
   root: string,
   {
     ask,
     interactive,
-  }: { ask?: (q: string) => Promise<string>; interactive: boolean },
+    declared,
+  }: {
+    ask?: (q: string) => Promise<string>;
+    interactive: boolean;
+    /** `papersDir` as package.json already declares it; absent or null when it declares none. */
+    declared?: string | null;
+  },
 ): Promise<PapersChoice> {
+  if (declared) return { papers: declared, how: "declared", candidates: [] };
   const candidates = detectPapers(root);
   const first = candidates[0];
   if (first === undefined)
@@ -180,6 +194,24 @@ export async function choosePapers(
   return picked === undefined
     ? { papers: first, how: "no-answer", candidates }
     : { papers: picked, how: "chosen", candidates };
+}
+
+/**
+ * `papersDir` as `root`'s package.json declares it — a non-empty string — or null. Anything this
+ * cannot read (no file, bad JSON, a renamed field, a non-string) is null here and is reported by
+ * `declarePapers`, which reads the same file right after.
+ */
+export function declaredPapersDir(root: string): string | null {
+  const path = join(root, "package.json");
+  if (!existsSync(path)) return null;
+  try {
+    const found = declaredSettings(JSON.parse(readFileSync(path, "utf8")));
+    const settings = found.settings as Record<string, unknown> | undefined;
+    const v = settings?.[PAPERS_DIR_FIELD];
+    return typeof v === "string" && v.trim() !== "" ? v : null;
+  } catch {
+    return null;
+  }
 }
 
 export type DeclarationResult =
@@ -736,10 +768,18 @@ export async function init(
   log(`paperlint init — each decision below says HOW it was decided`);
 
   // ── 1. where the papers are ───────────────────────────────────────────────────────────
-  const choice = await choosePapers(root, { ask, interactive });
+  const choice = await choosePapers(root, {
+    ask,
+    interactive,
+    declared: declaredPapersDir(root),
+  });
   log(``);
   log(`papers directory`);
-  if (choice.how === "detected")
+  if (choice.how === "declared")
+    log(
+      `  ✓ ${choice.papers} — declared in package.json → "${CONFIG_KEY}".${PAPERS_DIR_FIELD}; nothing measured`,
+    );
+  else if (choice.how === "detected")
     log(
       `  ✓ ${choice.papers} — measured: its subdirectories carry ${PAPER_MARKERS.join(" / ")}`,
     );
