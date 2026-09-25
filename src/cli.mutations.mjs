@@ -186,8 +186,8 @@ process.exit(
         edits: [
           [
             INIT,
-            "  else log(`  · ${why}, so nothing was asked. Default taken: NO file written.`);",
-            "  else log(`  · skipped`);",
+            "      `  · ${why}, so nothing was asked. Default taken: NO file written.`,",
+            "      `  · skipped`,",
           ],
         ],
       },
