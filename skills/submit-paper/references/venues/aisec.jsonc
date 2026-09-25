@@ -44,6 +44,13 @@
       "totpages": ["totpages.sty"],
       "environ": ["environ.sty"],
       "preprint": ["balance.sty"],
+      // acmart's `pbalance` option (the vendor's first fix for an unbalanced last page, which the
+      // optional rule `pdf/last-page-balance` recommends) loads pbalance, which needs filehook and
+      // zref. Measured 2026-09-25 on an acmart sigconf camera-ready: without them the option stops
+      // the build; with them the last page went from 639.6 / 224.1 to 424.4 / 439.2 pt, same page count.
+      "pbalance": ["pbalance.sty"],
+      "filehook": ["filehook.sty"],
+      "zref": ["zref-abspage.sty"],
       "xstring": ["xstring.sty"],
       "everyshi": ["everyshi.sty"],
       "hyperxmp": ["hyperxmp.sty"],
