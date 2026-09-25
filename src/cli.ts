@@ -435,7 +435,7 @@ export const PKG_NAME = "package.json";
  * the CI action to its release tag; an unreadable manifest yields `undefined`, and init then keeps
  * the placeholder instead of guessing.
  */
-export function ownVersion(): string | undefined {
+function ownVersion(): string | undefined {
   try {
     const v = JSON.parse(
       readFileSync(new URL("../package.json", import.meta.url), "utf8"),
