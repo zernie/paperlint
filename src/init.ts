@@ -7,9 +7,8 @@
  * documented install got a `paper-edit-guard` watching a directory that did not exist — and a guard
  * watching nothing is byte-identical, from outside, to a guard that is working (issue #33).
  *
- * The count in `docs/install.md` is the yardstick: how many actions happen between "I want this"
- * and "it works". It was nine, three of them hand-edits to files. The two that this command removes
- * are the two hand-edits that were not even documented as being the same fact twice.
+ * The yardstick is how many actions happen between "I want this" and "it works": two, `npm i` and
+ * this command (`docs/install.md`). Nothing is left to edit by hand.
  *
  * ── THE DECISIONS, AND HOW EACH ONE IS MADE ─────────────────────────────────
  *   papers directory   MEASURED — `detectPapers` walks the repo for a directory whose CHILDREN
@@ -196,7 +195,7 @@ export type DeclarationResult =
  * 🔴 A HOOK CANNOT IMPORT CODE AND CANNOT WALK UP A TREE LOOKING FOR A CONFIG. It can read a path
  * it is able to spell, and the only path it can always spell is the project's own `package.json`.
  * That asymmetry is the whole reason the declaration moved here rather than the readers moving to
- * `rpp.json`: five readers against one (`docs/install.md`).
+ * `rpp.json`: many readers against one (`docs/install.md`, "One declaration").
  *
  * ⚠️ Merged, not rewritten, and never over a value the consumer set — an `init` that silently
  * replaces a setting is worse than an `init` that does nothing, because the consumer keeps

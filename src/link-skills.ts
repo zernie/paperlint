@@ -6,8 +6,8 @@
  * Code reads them from there". It does not: Claude Code discovers project skills in
  * `.claude/skills/<name>/SKILL.md` (plus user and plugin skills), never inside `node_modules`. So a
  * consumer who followed the install to the letter had no `/paper-pipeline` at all (Codex review on
- * #45). The plugin cannot carry them either — it gets no `node_modules`, and 23 of 24 skills run
- * scripts (`docs/install.md`, "Why the plugin ships no code"). The one consumer where the skills
+ * #45). A plugin could not carry them either — it gets no `node_modules`, and 23 of 24 skills run
+ * scripts (`docs/install.md`, "Why it is shaped this way"). The one consumer where the skills
  * DID work had made these links by hand; this module makes the same links, so the layout is the
  * proven one rather than a new one.
  *
