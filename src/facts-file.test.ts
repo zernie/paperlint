@@ -8,6 +8,9 @@
  * real banal is `test/e2e/banal.mjs`.
  */
 import assert from "node:assert/strict";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
 import { test } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import {
@@ -147,12 +150,23 @@ const good: PdfReader = async () => ({
   ok: true,
   facts: { pages: 2, fonts: FONTS, last: lastPage(60, 60), layout: [] },
 });
+/** The shipped presets at their real paths: `extends` resolves through the same Files port. */
+const SHIPPED_PRESETS = Object.fromEntries(
+  readdirSync(packageVenuesDir())
+    .filter((f) => /\.jsonc?$/.test(f))
+    .map((f) => [
+      join(packageVenuesDir(), f),
+      readFileSync(join(packageVenuesDir(), f)),
+    ]),
+);
+
 /** Options over in-memory files: the PDF and paperlint.json on "disk", a measurer answering `geometry`. */
 function setup(geometry: Geometry = NONE) {
   const files = memoryFiles({
     [PDF]: PDF_BYTES,
+    ...SHIPPED_PRESETS,
     [`${PAPER}/paperlint.json`]: JSON.stringify({
-      venue: "agenticdev",
+      extends: "paperlint:agenticdev",
       kind: "short",
     }),
   });
@@ -233,10 +247,29 @@ test("writeFactsFile: <paper>/_build/paper.facts.json holds exactly the document
   assert.deepEqual(JSON.parse(text), m.value.facts);
 });
 
-test("declaredVenue: none without paperlint.json, none when it names no venue", () => {
+test("declaredVenue: none without paperlint.json; no label when it extends no preset", () => {
   assert.equal(declaredVenue(memoryFiles(), PAPER), null);
-  const files = memoryFiles({ [`${PAPER}/paperlint.json`]: '{"kind":"x"}' });
-  assert.equal(declaredVenue(files, PAPER), null);
+  const files = memoryFiles({
+    [`${PAPER}/paperlint.json`]: '{"kind":"x","pdf":"b/p.pdf"}',
+  });
+  assert.deepEqual(declaredVenue(files, PAPER), {
+    label: null,
+    kind: "x",
+    pdf: "b/p.pdf",
+  });
+});
+
+test("declaredVenue: the label is the preset's, and an extends that resolves nowhere is refused", () => {
+  const ok = memoryFiles({
+    ...SHIPPED_PRESETS,
+    [`${PAPER}/paperlint.json`]: '{"extends":"paperlint:aisec"}',
+  });
+  assert.equal(declaredVenue(ok, PAPER)?.label, "aisec");
+  const typo = memoryFiles({
+    ...SHIPPED_PRESETS,
+    [`${PAPER}/paperlint.json`]: '{"extends":"paperlint:aisek"}',
+  });
+  assert.throws(() => declaredVenue(typo, PAPER), /shipped presets/);
 });
 
 test("declaredVenue: a venue.json alone is refused with the command that moves it, not read", () => {

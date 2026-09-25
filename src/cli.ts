@@ -44,21 +44,14 @@ import {
   formatStructure,
   asEslintResults,
 } from "./structure.ts";
-import {
-  buildPapers,
-  papersIn,
-  anyFailed,
-  remedyFor,
-  readFacts,
-  MAIN,
-} from "./build.ts";
+import { buildPapers, papersIn, anyFailed, remedyFor, MAIN } from "./build.ts";
 import { prepareEngine } from "./build-engine.ts";
 import { runToolchain } from "./toolchain.ts";
 import { banalInstaller, parseBanalSettings } from "./adapters/banal/index.ts";
 import { curlDownload } from "./adapters/curl/index.ts";
 import { hostDirs, nodeAdapters, nodeFiles } from "./adapters/node/index.ts";
 import { VENUE_RULE_LEVELS, venueRules } from "./venue-rules.ts";
-import { paperRuleBlock } from "./paper-settings.ts";
+import { paperRules } from "./paper-settings.ts";
 import {
   paperPreset,
   paperPresetProblem,
@@ -89,7 +82,6 @@ import {
   LEGACY_CONFIG_KEY,
   LEGACY_KEY_MESSAGE,
   PAPERS_DIR_FIELD,
-  PAPER_SETTINGS_FILE,
   SETTINGS_KEYS,
   declaredSettings,
   renamedFieldMessage,
@@ -390,22 +382,38 @@ export function paperRuleBlocks(paths: readonly string[]): Parsed<RuleBlock[]> {
 function rulesOfPaper(dir: string, p: PaperPreset): Parsed<RuleBlock | null> {
   const settings = "settings" in p ? p.settings : null;
   if (settings === null) return { ok: true, value: null };
-  const own = paperRuleBlock(dir, settings, SHIPPED_RULES);
-  if (!own.ok || p.kind !== "resolved") return own;
-  const fromPreset = parseRuleEntries(
-    p.preset.rules,
-    `the venue preset ${p.preset.chain.join(" → ")} → "rules"`,
-    SHIPPED_RULES,
-  );
+  const own = paperRules(dir, settings, SHIPPED_RULES);
+  if (!own.ok) return own;
+  const fromPreset =
+    p.kind === "resolved"
+      ? parseRuleEntries(
+          p.preset.rules,
+          `the venue preset ${p.preset.chain.join(" → ")} → "rules"`,
+          SHIPPED_RULES,
+        )
+      : { ok: true as const, value: {} };
   if (!fromPreset.ok) return fromPreset;
-  const rules = { ...fromPreset.value, ...(own.value?.rules ?? {}) };
+  const rules = { ...fromPreset.value, ...(own.value ?? {}) };
   return {
     ok: true,
     value: Object.keys(rules).length
-      ? { basePath: dir, files: ["**"], rules }
+      ? { basePath: dir, files: PAPER_FILE_PATTERNS, rules }
       : null,
   };
 }
+
+/**
+ * The files a paper's block may reach: exactly the ones paperlint's own blocks lint, read off its
+ * config. A wider glob (everything under the paper) would make ESLint lint files no block gives a
+ * language — `paperlint.json` itself would be parsed as JavaScript.
+ */
+const PAPER_FILE_PATTERNS: string[] = [
+  ...new Set(
+    buildConfig({}, { sentinel: "tex language" }).flatMap(
+      (b) => (b as { files?: string[] }).files ?? [],
+    ),
+  ),
+];
 
 /**
  * The settings after the boundary: an unknown key is refused by name, and `rules` becomes parsed
@@ -914,7 +922,7 @@ function paperRequirements(dir: string): TexRequirements {
  * every paper under the project's papers directory — a project's own preset lives outside the
  * package, so the shipped union alone would not see it.
  */
-function toolchainTex(cwd: string): TexRequirements {
+export function toolchainTex(cwd: string): TexRequirements {
   const cfg = readConfig(parseArgs(["toolchain"]), {
     log: () => {},
     err: () => {},

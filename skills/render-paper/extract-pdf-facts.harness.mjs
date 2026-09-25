@@ -60,7 +60,7 @@ try {
   cpSync(join(FIX, "t3-mixed.pdf"), join(paper, "paper.pdf"));
   writeFileSync(
     join(paper, "paperlint.json"),
-    JSON.stringify({ venue: "agenticdev", kind: "short" }),
+    JSON.stringify({ extends: "paperlint:agenticdev", kind: "short" }),
   );
   const factsFile = join(paper, "_build", "paper.facts.json");
 
@@ -149,7 +149,7 @@ try {
 
   writeFileSync(
     join(paper, "paperlint.json"),
-    JSON.stringify({ venue: "x", pdf: "build/other.pdf" }),
+    JSON.stringify({ pdf: "build/other.pdf" }),
   );
   const missing = shim([paper, "--strict"], { BANAL: fake });
   check(

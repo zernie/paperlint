@@ -29,7 +29,7 @@ import type { Files } from "./ports/files.ts";
 import {
   parseRuleEntries,
   type Parsed,
-  type RuleBlock,
+  type RuleEntry,
 } from "./rules-config.ts";
 
 /** What one paper declares. Every absent field is null. */
@@ -190,22 +190,16 @@ export function migrationOf(
 // ── the paper's rule overrides ──────────────────────────────────────────────────────────
 
 /**
- * `rules` → an ESLint block for this paper alone, or the error naming the file. The block's
- * `basePath` is the paper directory and `files` everything under it — ESLint's own way to scope a
- * block to a directory, so no path is re-spelled relative to anything.
+ * `rules` → the parsed entries (rule id → severity or `[severity, options]`), or the error naming
+ * the file. Null when the paper sets none. The block they go into is built where the config is
+ * (`paperRuleBlocks` in cli.ts), which also knows which files a paper's rules may reach.
  */
-export function paperRuleBlock(
+export function paperRules(
   paperDir: string,
   settings: PaperSettings,
   shipped: ReadonlySet<string>,
-): Parsed<RuleBlock | null> {
+): Parsed<Record<string, RuleEntry> | null> {
   if (settings.rules === null) return { ok: true, value: null };
   const where = `${join(paperDir, PAPER_SETTINGS_FILE)} → "rules"`;
-  const rules = parseRuleEntries(settings.rules, where, shipped);
-  return rules.ok
-    ? {
-        ok: true,
-        value: { basePath: paperDir, files: ["**"], rules: rules.value },
-      }
-    : rules;
+  return parseRuleEntries(settings.rules, where, shipped);
 }

@@ -449,7 +449,7 @@ try {
   // not depend on the venue, so no rebuild is needed, and the venue rules must reject it.
   writeFileSync(
     join(work, "papers", "fallback", "paperlint.json"),
-    JSON.stringify({ venue: "agenticdev", kind: "short" }),
+    JSON.stringify({ extends: "paperlint:agenticdev", kind: "short" }),
   );
   const fb = spawnSync(
     process.execPath,

@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import {
   migrationOf,
-  paperRuleBlock,
+  paperRules,
   parsePaperSettings,
   readPaperSettings,
 } from "./paper-settings.ts";
@@ -168,7 +168,7 @@ describe("migrationOf — what `paperlint init` does with a paper's files", () =
   });
 });
 
-describe("paperRuleBlock — `rules` in paperlint.json", () => {
+describe("paperRules — `rules` in paperlint.json", () => {
   const settings = (rules: Record<string, unknown> | null) => ({
     extends: null,
     kind: null,
@@ -176,28 +176,21 @@ describe("paperRuleBlock — `rules` in paperlint.json", () => {
     rules,
   });
 
-  it("no rules: no block", () => {
-    expect(paperRuleBlock(PAPER, settings(null), SHIPPED)).toEqual({
+  it("no rules: none", () => {
+    expect(paperRules(PAPER, settings(null), SHIPPED)).toEqual({
       ok: true,
       value: null,
     });
   });
 
-  it("applies to that paper alone: basePath is the paper directory, files everything under it", () => {
+  it("known rules, parsed", () => {
     expect(
-      paperRuleBlock(
+      paperRules(
         PAPER,
         settings({ "pdf/last-page-balance": "error" }),
         SHIPPED,
       ),
-    ).toEqual({
-      ok: true,
-      value: {
-        basePath: PAPER,
-        files: ["**"],
-        rules: { "pdf/last-page-balance": "error" },
-      },
-    });
+    ).toEqual({ ok: true, value: { "pdf/last-page-balance": "error" } });
   });
 
   it.each([
@@ -208,7 +201,7 @@ describe("paperRuleBlock — `rules` in paperlint.json", () => {
     ],
     ["a bad severity", { "pdf/profile": "loud" }, /is not a severity/],
   ])("refuses %s, naming the file", (_, rules, why) => {
-    const r = paperRuleBlock(PAPER, settings(rules), SHIPPED);
+    const r = paperRules(PAPER, settings(rules), SHIPPED);
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.error).toMatch(why);

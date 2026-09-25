@@ -103,7 +103,9 @@ for (const v of acm) {
     );
 }
 // Venues on ONE template must not drift apart: a second list is how the old installer's three
-// dictionaries diverged.
+// dictionaries diverged. Since the ACM venues extend the `acm-sigconf` family, only the family
+// declares the template's packages, so this holds by construction; the check stays for any two
+// standalone presets that name the same template.
 const byTemplate = new Map();
 for (const v of venues) {
   const t = templateOf(v);
@@ -173,30 +175,22 @@ rmSync(tmp, { recursive: true, force: true });
   const r = R.requirementsFor(null, VENUES);
   // Guards: saying WHY a paper runs on the base set.
   check(
-    "no paperlint.json → the base set, and the source says so",
-    r.source.includes("no paperlint.json") &&
+    "no venue preset → the base set, and the source says so",
+    r.source.includes("no venue preset in paperlint.json") &&
       "hyperref" in r.tex.packages &&
       !("acmart" in r.tex.packages),
     r.source,
   );
 }
+// Which preset a paper resolves to — a typo, the base file, a missing one — is src/presets.ts's
+// question now, tested in src/presets.test.ts; this function only adds a resolved preset's packages.
 {
-  const r = R.requirementsFor("nowhere", VENUES);
-  check(
-    "a venue with no profile → the base set, and the source names the venue",
-    r.source.includes("venue nowhere has no profile") &&
-      !("acmart" in r.tex.packages),
-    r.source,
+  const r = R.requirementsFor(
+    { label: acm[0], tex: read(`${acm[0]}.jsonc`) },
+    VENUES,
   );
-}
-check(
-  "the base file is not a venue: `tex-base` gets the base set with the reason",
-  R.requirementsFor("tex-base", VENUES).source.includes("has no profile"),
-);
-{
-  const r = R.requirementsFor(acm[0], VENUES);
   check(
-    "a known venue → its packages ON TOP OF the base set",
+    "a resolved preset → its packages ON TOP OF the base set, and the source names its label",
     r.source === `venue ${acm[0]}` &&
       "acmart" in r.tex.packages &&
       "hyperref" in r.tex.packages &&

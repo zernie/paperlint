@@ -165,7 +165,9 @@ describe("what does not resolve, and says why", () => {
     expect(r.error.kind).toBe(kind);
     expect(presetProblemText(r.error)).toMatch(text);
   });
+});
 
+describe("chains that do not resolve", () => {
   it("a cycle is refused, naming the chain", () => {
     const r = resolve("./a.jsonc", {
       "/work/papers/p/a.jsonc": JSON.stringify({ extends: "./b.jsonc" }),

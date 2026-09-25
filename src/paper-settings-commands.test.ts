@@ -15,7 +15,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { run } from "./cli.ts";
+import { run, toolchainTex } from "./cli.ts";
 import { migratePaperSettings } from "./init.ts";
 import { doctor } from "./doctor.ts";
 
@@ -125,24 +125,128 @@ describe("paperlint lint — `rules` in a paper's paperlint.json", () => {
   });
 });
 
+describe("paperlint lint — the venue preset's rules", () => {
+  it("agenticdev's preset turns pdf/last-page-balance on for its paper alone", async () => {
+    const root = project({
+      "papers/a/paperlint.json": JSON.stringify({
+        extends: "paperlint:agenticdev",
+        kind: "short",
+      }),
+    });
+    const cfgOf = await import("./cli.ts").then((m) =>
+      m.paperRuleBlocks([join(root, "papers")]),
+    );
+    expect(cfgOf.ok && cfgOf.value).toEqual([
+      {
+        basePath: join(root, "papers/a"),
+        files: expect.arrayContaining([
+          "**/paper.tex",
+          "**/PIPELINE-STATUS.md",
+        ]),
+        rules: { "pdf/last-page-balance": ["error", { tolerancePt: 120 }] },
+      },
+    ]);
+  });
+
+  it("🔴 an unbuilt agenticdev paper: ONE warning (pdf/measured), and no balance error", async () => {
+    const root = project({
+      "papers/a/paperlint.json": JSON.stringify({
+        extends: "paperlint:agenticdev",
+        kind: "short",
+      }),
+    });
+    const r = await lint(root);
+    expect(r.code).toBe(0);
+    expect(rulesIn(r.out, "a")).toEqual(["pdf/measured"]);
+  });
+});
+
+describe("paperlint lint — the paper over its preset, and the project's own presets", () => {
+  it("the paper's own rules win over its preset's", async () => {
+    const root = project({
+      "papers/a/paperlint.json": JSON.stringify({
+        extends: "paperlint:agenticdev",
+        rules: { "pdf/last-page-balance": "off" },
+      }),
+    });
+    const blocks = await import("./cli.ts").then((m) =>
+      m.paperRuleBlocks([join(root, "papers")]),
+    );
+    expect(blocks.ok && blocks.value[0]?.rules).toEqual({
+      "pdf/last-page-balance": "off",
+    });
+  });
+
+  it("a project's own preset, by relative path: its rules apply, an unknown rule id is refused", async () => {
+    const root = project({
+      "venues/usenix-sec.jsonc": JSON.stringify({
+        extends: "paperlint:acm-sigconf",
+        rules: { "pdf/no-such-rule": "error" },
+      }),
+      "papers/a/paperlint.json": JSON.stringify({
+        extends: "../../venues/usenix-sec.jsonc",
+      }),
+    });
+    const r = await lint(root);
+    expect(r.code).toBe(2);
+    expect(r.err).toMatch(/usenix-sec\.jsonc.*not a rule paperlint ships/);
+  });
+
+  it("a typo in extends is a pdf/profile error listing the shipped presets", async () => {
+    const root = project({
+      "papers/a/paperlint.json": JSON.stringify({
+        extends: "paperlint:agenticdve",
+      }),
+    });
+    const r = await lint(root);
+    expect(r.code).toBe(1);
+    expect(r.out).toMatch(/acm-sigconf, agenticdev, aisec, realm/);
+  });
+});
+
+describe("paperlint toolchain — installs what the project's own presets need", () => {
+  it("the shipped union plus a relative preset's tex packages", () => {
+    const root = project({
+      "venues/usenix-sec.jsonc": JSON.stringify({
+        extends: "paperlint:acm-sigconf",
+        tex: { packages: { usenix: ["usenix.sty"] } },
+      }),
+      "papers/a/paperlint.json": JSON.stringify({
+        extends: "../../venues/usenix-sec.jsonc",
+      }),
+    });
+    const tex = toolchainTex(root);
+    expect(tex.packages["usenix"]).toEqual(["usenix.sty"]);
+    expect("acmart" in tex.packages).toBe(true);
+    expect("hyperref" in tex.packages).toBe(true);
+  });
+
+  it("without papers of its own: the shipped union alone", () => {
+    const tex = toolchainTex(project());
+    expect("usenix" in tex.packages).toBe(false);
+    expect("acmart" in tex.packages).toBe(true);
+  });
+});
+
 describe("paperlint init — moves venue.json to paperlint.json", () => {
   const legacy = '{ "venue": "aisec", "kind": "research" }\n';
 
-  it("renames it, byte for byte, and says so", () => {
+  it('moves it, "venue" becoming "extends": "paperlint:<name>", and says so', () => {
     const root = project({ "papers/a/venue.json": legacy });
     const r = migratePaperSettings(join(root, "papers"));
     expect(r.code).toBe(0);
     expect(existsSync(join(root, "papers/a/venue.json"))).toBe(false);
-    expect(readFileSync(join(root, "papers/a/paperlint.json"), "utf8")).toBe(
-      legacy,
-    );
+    expect(
+      JSON.parse(readFileSync(join(root, "papers/a/paperlint.json"), "utf8")),
+    ).toEqual({ extends: "paperlint:aisec", kind: "research" });
     expect(r.lines.join("\n")).toMatch(/a\/venue\.json → a\/paperlint\.json/);
   });
 
   it("both, with the same content: the leftover is removed", () => {
     const root = project({
       "papers/a/venue.json": legacy,
-      "papers/a/paperlint.json": '{"venue":"aisec","kind":"research"}',
+      "papers/a/paperlint.json":
+        '{"extends":"paperlint:aisec","kind":"research"}',
     });
     expect(migratePaperSettings(join(root, "papers")).code).toBe(0);
     expect(existsSync(join(root, "papers/a/venue.json"))).toBe(false);
