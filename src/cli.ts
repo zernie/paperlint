@@ -26,7 +26,7 @@
  * replaced it: silently breaking someone else's workflow is worse than asking them to fix a line.
  */
 import { ESLint, type Linter } from "eslint";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -52,6 +52,12 @@ import { curlDownload } from "./adapters/curl/index.ts";
 import { hostDirs, nodeAdapters, nodeFiles } from "./adapters/node/index.ts";
 import { VENUE_RULE_LEVELS, venueRules } from "./venue-rules.ts";
 import { paperRules } from "./paper-settings.ts";
+import {
+  narrowToOwners,
+  ownedPatterns,
+  ruleOwners,
+  scopeToOwned,
+} from "./paper-files.ts";
 import {
   paperPreset,
   paperPresetProblem,
@@ -295,9 +301,17 @@ export function buildConfig(
         ...VENUE_RULE_LEVELS,
       },
     });
+  // 🔴 ONLY THE FILES THESE BLOCKS CLAIM ARE LINTED (src/paper-files.ts). Without this block ESLint's
+  // built-in defaults lint every .js/.mjs/.cjs under the papers directory — a paper's vendored
+  // `repro/` code failed the run with 74 parse errors and not one finding on a paper file. It goes
+  // FIRST: the `.template/` ignore below must come after its directory un-ignore to win.
+  const owners = ruleOwners(cfg);
+  cfg.unshift(scopeToOwned(ownedPatterns(cfg)));
   // The consumer's own blocks, LAST, so a later block wins — ESLint's rule. Parsed by
-  // `readConfig`; each carries the settings file's directory as its `basePath`.
-  cfg.push(...(opts.rules ?? []));
+  // `readConfig`; each carries the settings file's directory as its `basePath`. Each is split so a
+  // rule reaches only the files its plugin is registered for: `paper` is a different plugin beside
+  // PIPELINE-STATUS.md than beside paper.tex, and ESLint throws on a rule its plugin lacks.
+  cfg.push(...(opts.rules ?? []).flatMap((b) => narrowToOwners(b, owners)));
   return cfg;
 }
 
@@ -365,7 +379,11 @@ export async function silentOptionalRules(
  * not read here; `pdf/profile` and `paperlint doctor` name it.
  */
 export function paperRuleBlocks(paths: readonly string[]): Parsed<RuleBlock[]> {
-  const papers = [...new Set(paths.flatMap((p) => [p, ...papersIn(p)]))];
+  // A FILE named on the command line belongs to the paper it sits in: that paper's settings apply.
+  const dirs = paths.map((p) =>
+    existsSync(p) && statSync(p).isFile() ? dirname(p) : p,
+  );
+  const papers = [...new Set(dirs.flatMap((p) => [p, ...papersIn(p)]))];
   const out: RuleBlock[] = [];
   for (const dir of papers) {
     const p = paperPreset(dir, PRESET_DEPS);
@@ -410,13 +428,9 @@ function rulesOfPaper(dir: string, p: PaperPreset): Parsed<RuleBlock | null> {
  * config. A wider glob (everything under the paper) would make ESLint lint files no block gives a
  * language — `paperlint.json` itself would be parsed as JavaScript.
  */
-const PAPER_FILE_PATTERNS: string[] = [
-  ...new Set(
-    buildConfig({}, { sentinel: "tex language" }).flatMap(
-      (b) => (b as { files?: string[] }).files ?? [],
-    ),
-  ),
-];
+const PAPER_FILE_PATTERNS: string[] = ownedPatterns(
+  buildConfig({}, { sentinel: "tex language" }),
+);
 
 /**
  * The settings after the boundary: an unknown key is refused by name, and `rules` becomes parsed
@@ -1158,6 +1172,14 @@ export async function run(
     overrideConfig: buildConfig(withPapers, texLanguage) as Linter.Config[],
   });
 
+  const unowned = await firstUnownedFile(eslint, paths);
+  if (unowned !== null) {
+    err(
+      `${relative(cwd, unowned) || unowned} is not a file paperlint lints — it lints ${PAPER_FILE_PATTERNS.join(", ")}`,
+    );
+    return 2;
+  }
+
   // 🔴 ESLint THROWS on an empty set (`NoFilesFoundError`) — the guard below simply never got
   // reached, which is what the very first run over an empty directory showed: instead of a clear
   // message a stack from the depths of eslint-helpers.js flew out. A failure stays a failure, but
@@ -1167,12 +1189,7 @@ export async function run(
   try {
     results = await eslint.lintFiles(paths);
   } catch (e) {
-    const fail = e as { messageTemplate?: string; message?: string } | null;
-    if (
-      fail?.messageTemplate === "file-not-found" ||
-      /No files matching/i.test(fail?.message ?? "")
-    )
-      results = [];
+    if (isEmptySet(e)) results = [];
     else throw e;
   }
 
@@ -1195,6 +1212,40 @@ export async function run(
     opts: withPapers,
   });
 }
+
+/**
+ * The first path that is a FILE paperlint does not lint, or null. ESLint would answer such a file
+ * with a warning result ("File ignored because of a matching ignore pattern"), which counts as a
+ * linted file and turns a run over nothing into a green one. The question is asked of ESLint's
+ * own matcher, against the same scope that decides what a directory yields.
+ */
+async function firstUnownedFile(
+  eslint: ESLint,
+  paths: readonly string[],
+): Promise<string | null> {
+  for (const p of paths)
+    if (
+      existsSync(p) &&
+      statSync(p).isFile() &&
+      (await eslint.isPathIgnored(p))
+    )
+      return p;
+  return null;
+}
+
+/**
+ * ESLint's refusals of an empty set: nothing matched (`file-not-found`), or everything that matched
+ * is outside paperlint's scope (`all-matched-files-ignored` — a papers directory holding only
+ * vendored scripts). Both mean "nothing was linted", which the caller reports itself.
+ */
+const isEmptySet = (e: unknown): boolean => {
+  const fail = e as { messageTemplate?: string; message?: string } | null;
+  return (
+    fail?.messageTemplate === "file-not-found" ||
+    fail?.messageTemplate === "all-matched-files-ignored" ||
+    /No files matching/i.test(fail?.message ?? "")
+  );
+};
 
 /**
  * The end of `paperlint lint`: refuse an optional rule that reached no paper, print the findings, and
