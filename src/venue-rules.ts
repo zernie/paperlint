@@ -549,8 +549,8 @@ function rule(name: VenueRuleName, deps: VenueRuleDeps): VenueRuleModule {
           const a = assessPaper(dirname(context.filename), deps);
           const line = reportLine(context.sourceCode.text);
           const loc = {
-            start: { line, column: 0 },
-            end: { line, column: 1 },
+            start: { line, column: 1 },
+            end: { line, column: 2 },
           };
           for (const f of JUDGES[name](a, context.options))
             context.report({ loc, messageId: f.messageId, data: f.data });

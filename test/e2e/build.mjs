@@ -415,6 +415,85 @@ try {
   );
 
   console.log();
+  console.log(
+    "the venue rules judge what the build measured, against venue.json",
+  );
+  // The same lint run: acmart names agenticdev/short in its venue.json, unbalanced names no venue.
+  let all = [];
+  try {
+    all = JSON.parse(linted.stdout).flatMap((r) =>
+      r.messages.map((m) => ({ ...m, file: r.filePath })),
+    );
+  } catch {
+    all = [];
+  }
+  const venueFindings = (paper) =>
+    all.filter(
+      (m) =>
+        m.file.endsWith(join(paper, "paper.tex")) &&
+        /^pdf\/(fresh|profile|fonts|geometry|limits|body-size|measured)$/.test(
+          m.ruleId ?? "",
+        ),
+    );
+  // Only the rules whose answer does not depend on banal's page classification are asserted clean
+  // here: this fixture is one sentence long, and banal calls such a page a "cover" with one
+  // column (fixtures/pdf-facts, test/e2e/banal.mjs), which pdf/geometry would rightly report.
+  check(
+    "🔴 acmart: venue.json resolves, the facts are fresh, and a real acmart build has the fonts agenticdev expects",
+    linted.stdout !== "" &&
+      !venueFindings("acmart").some((m) =>
+        ["pdf/profile", "pdf/fresh", "pdf/fonts"].includes(m.ruleId),
+      ),
+    JSON.stringify(venueFindings("acmart")),
+  );
+  check(
+    "unbalanced: names no venue, so no venue rule says anything",
+    venueFindings("unbalanced").length === 0,
+    JSON.stringify(venueFindings("unbalanced")),
+  );
+  // The fallback paper is an `article` set in Computer Modern — what acmart silently produces when
+  // a font package is missing. Declare it an agenticdev paper after the build: the measurements do
+  // not depend on the venue, so no rebuild is needed, and the venue rules must reject it.
+  writeFileSync(
+    join(work, "papers", "fallback", "venue.json"),
+    JSON.stringify({ venue: "agenticdev", kind: "short" }),
+  );
+  // papers/acmart rides along only so the optional last-page-balance rule the settings above turn
+  // on reaches a paper; a turned-on rule that reaches none fails the run by design.
+  const fb = spawnSync(
+    process.execPath,
+    [CLI, "lint", "papers/fallback", "papers/acmart", "--json"],
+    { cwd: work, encoding: "utf8" },
+  );
+  let fbFindings = [];
+  try {
+    fbFindings = JSON.parse(fb.stdout)
+      .filter((r) => r.filePath.endsWith(join("fallback", "paper.tex")))
+      .flatMap((r) => r.messages);
+  } catch {
+    fbFindings = [{ ruleId: "(unparsable)", message: fb.stdout + fb.stderr }];
+  }
+  check(
+    "🔴 fallback: Computer Modern under an ACM venue — pdf/fonts names the missing LinLibertine, and lint fails",
+    fbFindings.some(
+      (m) =>
+        m.ruleId === "pdf/fonts" &&
+        m.severity === 2 &&
+        /LinLibertine/.test(m.message),
+    ),
+    JSON.stringify(fbFindings),
+  );
+  check(
+    "fallback: one column against two — pdf/geometry reports it (or pdf/measured, when banal did not measure)",
+    fbFindings.some(
+      (m) =>
+        (m.ruleId === "pdf/geometry" && /column/.test(m.message)) ||
+        (m.ruleId === "pdf/measured" && /geometry/.test(m.message)),
+    ),
+    JSON.stringify(fbFindings),
+  );
+
+  console.log();
   console.log("a failed build");
   const brokenDir = join(work, "papers", "broken");
   check(
