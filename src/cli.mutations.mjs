@@ -154,22 +154,6 @@ process.exit(
         edits: [[INIT, "  if (existing !== undefined) {", "  if (false) {"]],
       },
       {
-        name: "init CREATES the second rpp.json carrier again",
-        harness: HARNESS,
-        expect:
-          "🔴 `rpp.json` IS NO LONGER CREATED — a second declaration is what doctor exists to catch",
-        disables:
-          '"one declaration". Two carriers drift apart silently — this is defect #33, ' +
-          "reintroduced by the very install command meant to fix it",
-        edits: [
-          [
-            INIT,
-            '  if (!existsSync(path)) return "absent";',
-            '  if (!existsSync(path)) writeFileSync(path, "{}\\n", "utf8");',
-          ],
-        ],
-      },
-      {
         name: "the default that was taken stops being named",
         harness: HARNESS,
         expect:
@@ -286,30 +270,21 @@ process.exit(
         ],
       },
       {
-        name: "the utility goes back to reading only rpp.json",
+        name: "the utility stops reading package.json",
         harness: HARNESS,
         expect:
           "🔴 THE UTILITY READS THE DECLARATION FROM package.json — otherwise `paperlint init` sets up something `paperlint lint` cannot see",
         disables:
           "the link between the install command and the check command. `init` writes one " +
-          "declaration into package.json, while `lint` looks for it in rpp.json — right after " +
+          "declaration into package.json, while `lint` looks for it somewhere else — right after " +
           'install the run answers "nothing to lint" over a corpus that is right there',
         edits: [
           [
             CLI,
-            '    const pkg = join(dir, PKG_NAME);\n    if (existsSync(pkg) && declaresSettings(pkg))\n      return { path: pkg, kind: "package.json" };',
-            "    const pkg = join(dir, PKG_NAME);",
+            "    if (existsSync(pkg) && declaresSettings(pkg)) return pkg;",
+            "    if (false) return pkg;",
           ],
         ],
-      },
-      {
-        name: "a deprecated carrier gets read silently",
-        harness: HARNESS,
-        expect: "🔴 but a deprecated carrier is NAMED, not just silently read",
-        disables:
-          "the warning that settings live where the hooks do not look. The run is green, one " +
-          "directory is linted, a different one is guarded — and both states look the same",
-        edits: [[CLI, '    if (decl.kind === "rpp.json")', "    if (false)"]],
       },
       {
         name: "consumer data stops reaching the rule",

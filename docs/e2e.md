@@ -35,8 +35,7 @@ temporary tree, **under npm and under pnpm separately**, and drives the installe
 
 - the install itself finishes
 - `paperlint --help` answers with zero
-- `paperlint init` declares the papers directory in `package.json`, and does _not_ leave a second
-  carrier `rpp.json` behind
+- `paperlint init` declares the papers directory in `package.json`
 - `paperlint init` finishes with zero — its doctor found no discrepancy
 - `paperlint init` wires the hooks into `.claude/settings.json` — the same commands `hooks.json`
   publishes, once each — and says they need `npm install` in a fresh clone; a second `init`

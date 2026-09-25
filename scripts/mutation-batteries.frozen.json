@@ -96,7 +96,7 @@
       "cases": 11
     },
     "src/cli.mutations.mjs": {
-      "cases": 28
+      "cases": 26
     },
     "src/doctor.mutations.mjs": {
       "cases": 10

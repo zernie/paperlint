@@ -5,8 +5,8 @@ import type { RuleBlock } from "./rules-config.ts";
  * in someone's head: a typo in a config key read as "field not set", not as an error.
  */
 
-/** The contents of the consumer's `rpp.json`. */
-export interface RppConfig {
+/** The consumer's settings — the `paperlint` key of its `package.json`. */
+export interface PaperlintConfig {
   /** 🔴 REQUIRED. The paper director(ies), relative to the config file ITSELF. The field name is
    * `PAPERS_DIR_FIELD` in lib/paper-config.mjs; code reads it through `papersDirOf()` in cli.ts. */
   papersDir?: string | string[];
@@ -102,5 +102,5 @@ export interface BuildResult {
 
 /** The result of reading the config: either data, or the exit code the caller exits with. */
 export type ConfigRead =
-  | { opts: RppConfig; configPath: string | null; code?: undefined }
+  | { opts: PaperlintConfig; configPath: string | null; code?: undefined }
   | { code: number; opts?: undefined; configPath?: undefined };

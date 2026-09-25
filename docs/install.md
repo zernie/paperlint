@@ -68,8 +68,7 @@ gets the hooks; the hook commands run files inside `node_modules`, so a fresh cl
 config; it can only read a path it can spell, and the one it can always spell is
 `$CLAUDE_PROJECT_DIR/package.json`. That key is read by the three hooks, `eslint-rules/papers.mjs`,
 `lib/skill-trigger-cases.mjs` and `skills/paper-pipeline/scripts/consumer.mjs`; a separate
-`rpp.json` was read only by the CLI. `rpp.json` is still read as a deprecated fallback, and
-`paperlint lint` says so.
+config file would be read only by the CLI, so there is none.
 
 **Nothing runs at install time.** No postinstall script and no automatic TeX download. npm's rule
 is that _"the only valid use of install or preinstall scripts is for compilation"_; husky removed

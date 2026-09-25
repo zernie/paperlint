@@ -111,8 +111,16 @@ try {
   // `--all` takes the papers directory from the config, not from an argument: the CONSUMER names
   // the scope, and that is the same contract for which `lint` has no "." default.
   writeFileSync(
-    join(work, "rpp.json"),
-    JSON.stringify({ [PAPERS_DIR_FIELD]: "papers" }, null, 2),
+    join(work, "package.json"),
+    JSON.stringify(
+      {
+        name: "consumer",
+        private: true,
+        paperlint: { [PAPERS_DIR_FIELD]: "papers" },
+      },
+      null,
+      2,
+    ),
   );
 
   // ── NO TeX LIVE, NO TERMINAL: one line, and nothing is built ─────────────────────────────
@@ -354,16 +362,20 @@ try {
   // The consumer turns pdf/last-page-balance on for two papers, in the settings' `rules` key —
   // ESLint's own block shape, `files` relative to the settings file.
   writeFileSync(
-    join(work, "rpp.json"),
+    join(work, "package.json"),
     JSON.stringify(
       {
-        [PAPERS_DIR_FIELD]: "papers",
-        rules: [
-          {
-            files: ["papers/unbalanced/**", "papers/acmart/**"],
-            rules: { "pdf/last-page-balance": "error" },
-          },
-        ],
+        name: "consumer",
+        private: true,
+        paperlint: {
+          [PAPERS_DIR_FIELD]: "papers",
+          rules: [
+            {
+              files: ["papers/unbalanced/**", "papers/acmart/**"],
+              rules: { "pdf/last-page-balance": "error" },
+            },
+          ],
+        },
       },
       null,
       2,

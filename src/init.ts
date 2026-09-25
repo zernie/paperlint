@@ -2,7 +2,7 @@
  * `paperlint init` — the whole install, in the terminal it was typed in.
  *
  * 🔴 WHAT THIS COMMAND USED TO DO, AND WHY THAT WAS A DEFECT RATHER THAN A SHORTFALL. It wrote
- * `rpp.json` with a GUESSED `"papers": "papers"` and never touched `package.json`. The three hooks
+ * a separate config file with a GUESSED `"papers": "papers"` and never touched `package.json`. The three hooks
  * read the papers directory out of `package.json` and nothing else, so a consumer who followed the
  * documented install got a `paper-edit-guard` watching a directory that did not exist — and a guard
  * watching nothing is byte-identical, from outside, to a guard that is working (issue #33).
@@ -15,7 +15,7 @@
  *                      carry a paper marker. Several hits is the only case a human is asked about.
  *   declaration        WRITTEN into `package.json`, merged, never overwriting a value that is
  *                      already there. Prior art: husky's `init` edits the consumer's package.json
- *                      to add `prepare`. `rpp.json` is no longer created at all.
+ *                      to add `prepare`. No second config file is created.
  *   skills             LINKED — one relative symlink per shipped skill into `.claude/skills/`, the
  *                      only place Claude Code looks for project skills (`link-skills.ts`). An
  *                      entry of the same name that paperlint did not make is reported, never replaced.
@@ -204,8 +204,8 @@ export type DeclarationResult =
  *
  * 🔴 A HOOK CANNOT IMPORT CODE AND CANNOT WALK UP A TREE LOOKING FOR A CONFIG. It can read a path
  * it is able to spell, and the only path it can always spell is the project's own `package.json`.
- * That asymmetry is the whole reason the declaration moved here rather than the readers moving to
- * `rpp.json`: many readers against one (`docs/install.md`, "One declaration").
+ * That asymmetry is the whole reason the declaration lives here rather than in a file of its own:
+ * many readers against one (`docs/install.md`, "One declaration").
  *
  * ⚠️ Merged, not rewritten, and never over a value the consumer set — an `init` that silently
  * replaces a setting is worse than an `init` that does nothing, because the consumer keeps
@@ -257,35 +257,6 @@ function renameKey(
   return Object.fromEntries(
     Object.entries(obj).map(([k, v]) => [k === from ? to : k, v]),
   );
-}
-
-export type RppJsonResult = "absent" | "kept" | "filled" | "unparsable";
-
-/**
- * `rpp.json` is no longer CREATED — but a consumer who already has one keeps it working, and it
- * gets the same `papers` value rather than being left to disagree with `package.json` in silence.
- * Two declarations that disagree is the defect `paperlint doctor` was written to catch; writing the
- * second one on purpose would be handing it new work.
- */
-export function syncRppJson(root: string, papers: string): RppJsonResult {
-  const path = join(root, "rpp.json");
-  if (!existsSync(path)) return "absent";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
-  let cfg: Record<string, any>;
-  const raw = readFileSync(path, "utf8");
-  try {
-    cfg = JSON.parse(raw);
-  } catch {
-    return "unparsable";
-  }
-  if (cfg?.[PAPERS_DIR_FIELD] !== undefined) return "kept";
-  cfg[PAPERS_DIR_FIELD] = papers;
-  writeFileSync(
-    path,
-    JSON.stringify(cfg, null, 2) + (raw.endsWith("\n") ? "\n" : ""),
-    "utf8",
-  );
-  return "filled";
 }
 
 export const WORKFLOW_PATH = join(".github", "workflows", "papers.yml");
@@ -772,23 +743,10 @@ export async function init(
     `      one declaration — the hooks, the rules and the CLI all read this one key`,
   );
   // Every step below uses the DECLARED directory. A kept declaration outranks what init
-  // measured or guessed: otherwise the first paper, the workflow and rpp.json would land in the
+  // measured or guessed: otherwise the first paper and the workflow would land in the
   // guessed directory while lint and the hooks keep reading the declared one.
   const papersDir =
     decl.status === "kept" ? (decl.papers as string) : choice.papers;
-  const rpp = syncRppJson(root, papersDir);
-  if (rpp === "filled")
-    log(
-      `  ⚠ rpp.json was already here — gave it the same ${PAPERS_DIR_FIELD} value; it is deprecated`,
-    );
-  else if (rpp === "kept")
-    log(
-      `  ⚠ rpp.json was already here and already declares ${PAPERS_DIR_FIELD} — left untouched; it is deprecated`,
-    );
-  else if (rpp === "unparsable")
-    log(
-      `  ⚠ rpp.json is here and does not parse — left untouched; it is deprecated, delete it`,
-    );
 
   // ── 3. the skills, linked where Claude Code looks for them ─────────────────────────────
   for (const line of reportSkillLinks(link(root), here)) log(line);

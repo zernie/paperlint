@@ -134,8 +134,12 @@ try {
     },
   );
   writeFileSync(
-    join(work, "rpp.json"),
-    JSON.stringify({ papersDir: "papers" }),
+    join(work, "package.json"),
+    JSON.stringify({
+      name: "consumer",
+      private: true,
+      paperlint: { papersDir: "papers" },
+    }),
   );
   // 🔴 banal is where `paperlint toolchain` above installed it — HOME is a temp dir here, so without
   // $RPP_BANAL_DIR the build looked in the wrong cache and wrote the facts with no geometry, while

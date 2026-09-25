@@ -48,7 +48,7 @@ assert.ok(eslintStep, `no step named "paperlint lint" among: ${names}`);
 assert.match(
   eslintStep.run,
   /npx paperlint lint/,
-  "the lint step must call this package's own CLI — invoking eslint directly bypasses rpp.json and the structure check",
+  "the lint step must call this package's own CLI — invoking eslint directly bypasses the settings and the structure check",
 );
 assert.doesNotMatch(
   eslintStep.run,
@@ -72,7 +72,7 @@ assert.match(
 // The redirect into a report file is only sound while `--json` keeps stdout clean.
 assert.match(
   eslintStep.run,
-  /--json > "\$RUNNER_TEMP\/rpp\.json"/,
+  /--json > "\$RUNNER_TEMP\/paperlint-report\.json"/,
   "the machine-readable report must be redirected whole — it is what the guard reads",
 );
 // The guard must be CALLED, and by file — an inline blob would be untestable.
@@ -115,9 +115,9 @@ const stubbedStepRun = (stubRc) => {
         PATH: `${bin}:${process.env.PATH}`,
         RUNNER_TEMP: TMP,
         GITHUB_ACTION_PATH: HERE,
-        RPP_CONFIG: "eslint.config.mjs",
-        RPP_PATHS: ".",
-        RPP_MAXWARN: "-1",
+        PAPERLINT_CONFIG: "eslint.config.mjs",
+        PAPERLINT_PATHS: ".",
+        PAPERLINT_MAXWARN: "-1",
         STUB_RC: String(stubRc),
         REPORT_JSON: JSON.stringify([{ filePath: "/x/a.md", messages: [] }]),
       },

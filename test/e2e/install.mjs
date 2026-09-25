@@ -435,14 +435,6 @@ try {
           "`paperlint init` declared the papers directory in package.json",
           `package.json ended up with ${JSON.stringify(declared)}\n${init.stdout ?? ""}${init.stderr ?? ""}`,
         );
-    // ONE declaration: no second carrier is created, otherwise the two diverge silently — that is
-    // defect #33 exactly, only reintroduced by our own install command.
-    !existsSync(join(consumer, "rpp.json"))
-      ? ok("and did NOT create a second carrier rpp.json")
-      : bad(
-          "and did NOT create a second carrier rpp.json",
-          "rpp.json appeared",
-        );
     init.status === 0
       ? ok("`paperlint init` finished with zero — doctor found no discrepancy")
       : bad(
