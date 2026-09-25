@@ -26,6 +26,7 @@
  *                     left alone; ANY other entry of the same name — a directory, a file, a link
  *                     elsewhere, a dangling link — is someone else's, and is reported, not replaced.
  */
+// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
 import {
   existsSync,
   lstatSync,

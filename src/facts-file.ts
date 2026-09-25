@@ -28,8 +28,10 @@
  * 🔴 STALENESS. The PDF is not committed, so neither are these facts: they live in `_build/` and
  * carry `pdf_sha256`. A rule compares it with the PDF on disk and refuses facts about another build.
  */
+// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
+// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import {
@@ -261,6 +263,7 @@ function measureGeometry(
   read: PdfFacts,
   o: WriteOptions,
 ): { banal: BanalFacts | null; why: string | null } {
+  // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
   const env = o.env ?? process.env;
   const where = findBanal(env, o.projectRoot, o.home);
   if (!where) return { banal: null, why: missingBanal(env, o.home) };

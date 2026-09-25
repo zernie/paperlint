@@ -7,19 +7,17 @@
  * `test/e2e/banal.mjs`, which runs where `rpp toolchain` has installed banal.
  */
 import assert from "node:assert/strict";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-
-const HERE = dirname(fileURLToPath(import.meta.url));
-const L = await import(join(HERE, "pdf-layout.ts"));
+import { isDeepStrictEqual } from "node:util";
+import * as L from "./pdf-layout.ts";
+import type { OperatorList, PageLayout, TextBox } from "./pdf-layout.ts";
 
 let n = 0;
-const check = (label, cond, detail = "") => {
+const check = (label: string, cond: unknown, detail = "") => {
   assert.ok(cond, detail ? `${label} — ${detail}` : label);
   n++;
 };
 
-const box = (over = {}) => ({
+const box = (over: Partial<TextBox> = {}): TextBox => ({
   top: 10,
   left: 20,
   width: 30,
@@ -31,7 +29,7 @@ const box = (over = {}) => ({
   fill: { kind: "unknown" },
   ...over,
 });
-const page = (boxes, widthPt = 612, heightPt = 792) => ({
+const page = (boxes: TextBox[], widthPt = 612, heightPt = 792): PageLayout => ({
   widthPt,
   heightPt,
   boxes,
@@ -129,8 +127,8 @@ const OPS = {
   showText: 5,
   showSpacedText: 6,
 };
-const glyphs = (s) => [[...s].map((unicode) => ({ unicode }))];
-const ops = (...pairs) => ({
+const glyphs = (s: string) => [[...s].map((unicode) => ({ unicode }))];
+const ops = (...pairs: [number, unknown?][]): OperatorList => ({
   fnArray: pairs.map((p) => p[0]),
   argsArray: pairs.map((p) => p[1] ?? null),
 });
@@ -159,15 +157,16 @@ check(
   // Guards: save/restore — the colour set inside a group ends with it; the next item is not light.
   check(
     "fillsOf: a colour set inside save/restore ends at restore",
-    fills[0].kind === "rgb" &&
-      fills[0].hex === "#f5f5f5" &&
-      fills[1].kind === "unknown",
+    isDeepStrictEqual(fills.slice(0, 2), [
+      { kind: "rgb", hex: "#f5f5f5" },
+      { kind: "unknown" },
+    ]),
     JSON.stringify(fills),
   );
   // Guards: render mode 3 is invisible, and the mode is state, not a property of one operator.
   check(
     "fillsOf: render mode 3 is invisible, and mode 0 ends it",
-    fills[2].kind === "invisible" && fills[3].kind === "unknown",
+    fills[2]?.kind === "invisible" && fills[3]?.kind === "unknown",
     JSON.stringify(fills),
   );
 }
@@ -195,13 +194,13 @@ check(
   // the walk does not lose its place for the items after it.
   check(
     "fillsOf: an unmatched item is `unknown` (kept, never dropped), and the next one still matches",
-    fills[0].kind === "unknown" && fills[1].kind === "rgb",
+    fills[0]?.kind === "unknown" && fills[1]?.kind === "rgb",
     JSON.stringify(fills),
   );
 }
 check(
   "fillsOf: an empty item is `unknown`",
-  L.fillsOf(OPS, ops(), [" "])[0].kind === "unknown",
+  L.fillsOf(OPS, ops(), [" "])[0]?.kind === "unknown",
 );
 
 console.log(

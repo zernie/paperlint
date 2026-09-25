@@ -104,7 +104,7 @@ export const GATES = [
     run: locked("node", "scripts/marketplace-shape.mjs"),
   },
   {
-    name: "every harness (npm test)",
+    name: "every test — harnesses, the tests' type-check, node --test (npm test)",
     job: "gates",
     script: "test",
   },

@@ -36,7 +36,9 @@
  * an answer nobody gave. So the non-interactive path takes the stated default and SAYS which
  * default it took and why nothing was asked, rather than pretending it asked.
  */
+// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
 import { spawnSync } from "node:child_process";
 import { dirname, join, relative, resolve } from "node:path";
 import { doctor, detectPapers, found, PROGRAMS } from "./doctor.ts";
@@ -119,8 +121,11 @@ export function interactivity({
 /** The mode of THIS process — the one place `process` is read for it. */
 export const processInteractivity = (yes: boolean) =>
   interactivity({
+    // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
     stdinTTY: Boolean(process.stdin.isTTY),
+    // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
     stdoutTTY: Boolean(process.stdout.isTTY),
+    // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
     env: process.env,
     yes,
   });
@@ -541,6 +546,7 @@ export interface InitOptions {
 /** Reads one line from a real terminal. Kept out of `init` so the command stays testable. */
 export async function askOnTerminal(question: string): Promise<string> {
   const { createInterface } = await import("node:readline/promises");
+  // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   try {
     return await rl.question(question);
@@ -557,6 +563,7 @@ export async function init(
   const {
     log = console.log,
     err = console.error,
+    // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
     cwd = process.cwd(),
     ask = askOnTerminal,
     yes = false,

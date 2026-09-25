@@ -41,7 +41,7 @@ const RATCHET = {
   "src/new-paper.ts": { complexity: 11 },
 };
 
-// ── Hexagonal layers (CLAUDE.md rule 10, issue #76) ─────────────────────────────────────────
+// ── Hexagonal layers (src/CLAUDE.md, issue #76) ─────────────────────────────────────────
 // src/core/      pure: decisions, parsing, plans. No disk, no processes, no network, no env.
 // src/adapters/  the only place that touches the outside world, behind a port the core declares.
 // src/cli.ts     the composition root: reads the environment, builds adapters, calls the core.
@@ -61,32 +61,19 @@ export const IO_MODULES = [
   "worker_threads",
 ].flatMap((m) => [m, `node:${m}`]);
 
-// 🔴 SHRINK-ONLY. Files that did I/O inline before the layers existed (2026-09-25). A file leaves
-// this list when its effects move behind a port; nothing ever joins it — a NEW module that needs
-// the outside world is an adapter, full stop. `scripts/io-legacy.harness.mjs` holds both halves:
-// every entry still does I/O (else it must leave), and the list is a subset of the frozen one.
-export const IO_LEGACY = [
-  "src/build-engine.ts",
-  "src/build.ts",
-  "src/doctor.ts",
-  "src/engine.ts",
-  "src/facts-file.ts",
-  "src/hooks-settings.ts",
-  "src/init.ts",
-  "src/link-skills.ts",
-  "src/new-paper.ts",
-  "src/pdf-facts.ts",
-  "src/structure.ts",
-  "src/tex-requirements.ts",
-  "src/toolchain.ts",
-];
+// Files that did I/O inline before the layers existed carry an `eslint-disable-next-line` naming
+// #76 above each import or use; `reportUnusedDisableDirectives: "error"` (below) turns a disable
+// that suppresses nothing into a finding, so an exemption leaves the moment its I/O does. A NEW
+// exemption is a new, visible disable comment with its reason — a new module that needs the
+// outside world is an adapter instead.
 
-/** Where an effect may be written: adapters, the composition root, and the legacy list. */
-const IO_ALLOWED = [ADAPTERS, ...COMPOSITION_ROOT, ...IO_LEGACY];
+/** Where an effect may be written: adapters and the composition root. */
+const IO_ALLOWED = [ADAPTERS, ...COMPOSITION_ROOT];
 
 export const IO_BAN = {
   files: ["src/**/*.ts"],
   ignores: IO_ALLOWED,
+  linterOptions: { reportUnusedDisableDirectives: "error" },
   rules: {
     "no-restricted-imports": [
       "error",
@@ -94,7 +81,7 @@ export const IO_BAN = {
         paths: IO_MODULES.map((name) => ({
           name,
           message:
-            "I/O outside an adapter. Declare a port in src/core/ and implement it in src/adapters/ (CLAUDE.md rule 10).",
+            "I/O outside an adapter. Declare a port in src/core/ and implement it in src/adapters/ (src/CLAUDE.md).",
         })),
       },
     ],

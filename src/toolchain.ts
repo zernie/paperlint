@@ -24,7 +24,9 @@
  * Processes run through the injected `run` (the port `build.ts` uses), so the harness drives the
  * real download/unpack/verify logic against a fake mirror on disk, never the network.
  */
+// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
 import { spawnSync } from "node:child_process";
+// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
 import {
   existsSync,
   mkdirSync,
@@ -36,6 +38,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
+// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -651,8 +654,10 @@ function withDefaults(o: ToolchainOptions): Resolved {
     check: o.check ?? false,
     log: o.log ?? console.log,
     err: o.err ?? console.error,
+    // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
     env: o.env ?? process.env,
     run: o.run ?? spawnSync,
+    // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
     platform: o.platform ?? process.platform,
     home: o.home ?? homedir(),
     tex: o.tex ?? declaredUnion().tex,

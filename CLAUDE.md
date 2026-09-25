@@ -159,30 +159,7 @@ lines do exactly that.
 <!-- The port's path above is resolved by `npm run check` (vigiles lint), since #67. -->
 <!-- vigiles:file skills/paper-pipeline/scripts/consumer.mjs -->
 
-**`src/` is hexagonal, and the linter enforces it** (issue #76). rpp installs TeX Live, runs
-pdflatex, downloads and runs banal, reads PDFs and writes the user's settings, so effects are not
-one exception any more — they are most of the package, and they are where it breaks.
-
-| layer                   | holds                                                                                    | may import                                                                                    |
-| ----------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `src/core/`             | pure decisions, parsers, plans; the PORTS (interfaces) it needs                          | `src/core/` only — no `node:fs`, `node:child_process`, `node:os`, network, `process`, `fetch` |
-| `src/adapters/`         | the only code that touches disk, processes, network, pdf.js; each implements a core port | `src/core/`, never the app layer                                                              |
-| `src/cli.ts` + commands | the composition root: read the environment, build adapters, call the core                | anything                                                                                      |
-
-Parse at the boundary, into types that cannot hold an invalid state (a banal path that exists only
-after its sha256 and probe passed; an outcome as a discriminated union, not a string); the core
-never re-validates.
-
-Enforced in `eslint.config.mjs`, both at `error`: `no-restricted-imports` + `no-restricted-globals`
-ban I/O outside `src/adapters/` and the composition root, and `eslint-plugin-boundaries` forbids
-core → adapter, core → app, adapter → app. Files that did I/O before the layers existed sit in
-`IO_LEGACY`, which only shrinks — a NEW module that needs the outside world is an adapter.
-`scripts/io-legacy.harness.mjs` proves both halves of each rule and that the list has not grown.
-<!-- vigiles:file scripts/io-legacy.harness.mjs -->
-
-⚠️ **`boundaries/root-path` is load-bearing.** Without it the plugin matches paths against
-`process.cwd()`, so lint started from any other directory classifies nothing and passes. The test
-lints a tree outside the repository to keep that true.
+The layer rules for `src/` live in [`src/CLAUDE.md`](src/CLAUDE.md) and are enforced by the linter.
 
 ⏳ **Still owed: the install-path half** — a lint rule that makes an install-specific path literal
 outside `consumer.mjs` a finding. Prose will not hold this class — four silent breakages happened
@@ -605,9 +582,19 @@ justified two hundred lines above precisely by these minutes being free.
 ## Testing
 
 ```bash
-npx vigiles test --min=1    # every harness on disk, and loud when that set is empty
+npm test                    # every tier: harnesses, the tests' type-check, node --test
 npx vigiles test <file>     # one harness
+node --test <file>.test.ts  # one unit test
 ```
+
+**Two kinds of test, told apart by what the file imports.** A `*.harness.*` file tests the agent
+surface and imports `runHook`, `runHarnessTest` or `runEval` from vigiles; everything else is a plain
+unit test, `*.test.ts`, run by `node --test` — and new tests are TypeScript. Older harnesses that
+import none of the three are frozen in `scripts/harness-api.frozen.json`, which only shrinks;
+`scripts/harness-api.test.ts` parses every harness's imports and holds both halves (#77). A
+`node --test` run that finds zero files fails (`scripts/run-tests.ts`) — on its own it exits 0.
+Developing rpp needs Node 22.18 or later (the tests and scripts are TypeScript, run by Node's type
+stripping); a consumer runs the compiled `dist/`, so `engines` stays at 22.13.
 
 ⚠️ **Not `vigiles test .`** — the `.` is read as a FILE, the runner dies with
 `ERR_UNSUPPORTED_DIR_IMPORT`, and it still exits 0. See the measured table below.

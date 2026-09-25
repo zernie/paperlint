@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "prepare": "tsc",
-    "test": "node scripts/exclusive.mjs vigiles test --min=1",
+    "test": "node scripts/exclusive.mjs node scripts/run-tests.ts",
     "lint": "node scripts/exclusive.mjs eslint .",
     "check": "node scripts/check.mjs",
     "test:e2e": "node scripts/exclusive.mjs node test/e2e/install.mjs && node scripts/exclusive.mjs node test/e2e/build.mjs",

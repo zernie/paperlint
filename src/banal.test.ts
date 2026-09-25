@@ -1,5 +1,5 @@
 /**
- * `banal.ts` — finding banal, running it on rpp's XML, and installing the pinned copy.
+ * `src/banal.ts` — finding banal, running it on rpp's XML, and installing the pinned copy.
  *
  * 🔴 NO BYTE OF banal IS FETCHED FROM HotCRP HERE. The installer downloads a stand-in Perl script
  * from a `file://` URL with the real `curl` and checks its sha256, so what runs is rpp's own
@@ -10,8 +10,14 @@
  * cases take it away by giving the child an empty PATH.
  */
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+// eslint-disable-next-line no-restricted-imports -- temporary: this test is split into core and adapter tests when banal moves behind ports (#76)
+import {
+  spawnSync,
+  type SpawnSyncOptionsWithStringEncoding,
+  type SpawnSyncReturns,
+} from "node:child_process";
 import { createHash } from "node:crypto";
+// eslint-disable-next-line no-restricted-imports -- temporary: this test is split into core and adapter tests when banal moves behind ports (#76)
 import {
   existsSync,
   mkdirSync,
@@ -22,15 +28,14 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
+// eslint-disable-next-line no-restricted-imports -- temporary: this test is split into core and adapter tests when banal moves behind ports (#76)
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
-
-const HERE = dirname(fileURLToPath(import.meta.url));
-const B = await import(join(HERE, "banal.ts"));
+import { pathToFileURL } from "node:url";
+import * as B from "./banal.ts";
 
 let n = 0;
-const check = (label, cond, detail = "") => {
+const check = (label: string, cond: unknown, detail = "") => {
   assert.ok(cond, detail ? `${label} — ${detail}` : label);
   n++;
 };
@@ -38,8 +43,15 @@ const check = (label, cond, detail = "") => {
 const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-banal-h-")));
 const emptyPath = join(work, "empty-bin");
 mkdirSync(emptyPath);
-const sha = (p) => createHash("sha256").update(readFileSync(p)).digest("hex");
-const script = (name, body) => {
+/** `spawnSync` in the shape `Run` names — the seam this file tests through. */
+const spawnUtf8: B.Run = (cmd, args, opts) =>
+  spawnSync(cmd, [...args], {
+    ...opts,
+    encoding: "utf8",
+  } as SpawnSyncOptionsWithStringEncoding);
+const sha = (p: string) =>
+  createHash("sha256").update(readFileSync(p)).digest("hex");
+const script = (name: string, body: string) => {
   const p = join(work, name);
   writeFileSync(p, body);
   return p;
@@ -123,30 +135,38 @@ try {
   }
 
   // ── running it ────────────────────────────────────────────────────────────────────────
-  const r = (over) => ({
-    status: 0,
-    stdout: "",
-    stderr: "",
-    error: undefined,
-    ...over,
-  });
+  const r = (over: Partial<SpawnSyncReturns<string>>) =>
+    ({
+      pid: 0,
+      output: [],
+      signal: null,
+      status: 0,
+      stdout: "",
+      stderr: "",
+      error: undefined,
+      ...over,
+    }) as SpawnSyncReturns<string>;
+  const why = (o: B.BanalOutput): string => (o.ok ? "" : o.why);
+  const json = (o: B.BanalOutput): Record<string, unknown> =>
+    o.ok ? o.json : {};
   const enoent = Object.assign(new Error("spawnSync perl ENOENT"), {
     code: "ENOENT",
   });
   // Guards: perl missing is its own diagnosis, naming the fix — not "banal failed: ENOENT".
   check(
     "🔴 parseBanalOutput: perl missing is named, with how to install it",
-    B.parseBanalOutput(r({ error: enoent, status: null })).why ===
+    why(B.parseBanalOutput(r({ error: enoent, status: null }))) ===
       B.PERL_MISSING,
   );
   check(
     "parseBanalOutput: a nonzero exit names the exit and banal's first line",
-    B.parseBanalOutput(r({ status: 1, stderr: "\nx.xml: Error: bad\nmore" }))
-      .why === "banal failed (exit 1): x.xml: Error: bad",
+    why(
+      B.parseBanalOutput(r({ status: 1, stderr: "\nx.xml: Error: bad\nmore" })),
+    ) === "banal failed (exit 1): x.xml: Error: bad",
   );
   check(
     "parseBanalOutput: output that is not JSON is not a measurement",
-    /no JSON/.test(B.parseBanalOutput(r({ stdout: "Usage: banal" })).why),
+    /no JSON/.test(why(B.parseBanalOutput(r({ stdout: "Usage: banal" })))),
   );
   // Guards: banal's own failure object ({"error": true, "pages": []}) exits 0 — it must not read as
   // a measurement of zero pages.
@@ -157,7 +177,7 @@ try {
   );
   check(
     "parseBanalOutput: a JSON object is the measurement",
-    B.parseBanalOutput(r({ stdout: '{"columns": 2}' })).json?.columns === 2,
+    json(B.parseBanalOutput(r({ stdout: '{"columns": 2}' })))["columns"] === 2,
   );
   {
     const saw = join(work, "saw.txt");
@@ -169,13 +189,14 @@ try {
       d.startsWith("rpp-banal-"),
     ).length;
     const out = B.measureLayout(recorder, [B.PROBE_PAGE], {
-      run: spawnSync,
+      run: spawnUtf8,
+      // eslint-disable-next-line no-restricted-globals -- temporary: this test is split into core and adapter tests when banal moves behind ports (#76)
       env: process.env,
     });
     const xml = readFileSync(saw, "utf8");
     check(
       "measureLayout: perl runs banal on an .xml file and its JSON comes back",
-      out.ok && out.json.bodyfontsize === 10.3 && xml.endsWith("paper.xml"),
+      out.ok && out.json["bodyfontsize"] === 10.3 && xml.endsWith("paper.xml"),
       JSON.stringify(out),
     );
     // Guards: cleanup — a paper's text must not pile up in the temp directory, one copy per build.
@@ -186,7 +207,7 @@ try {
           .length <= before,
     );
     const noPerl = B.measureLayout(recorder, [B.PROBE_PAGE], {
-      run: spawnSync,
+      run: spawnUtf8,
       env: { PATH: emptyPath },
     });
     check(
@@ -199,13 +220,14 @@ try {
   // ── installing it ─────────────────────────────────────────────────────────────────────
   const good = script("served-banal", GOOD);
   const SOURCE = { url: pathToFileURL(good).href, sha256: sha(good) };
-  const calls = [];
-  const run = (cmd, args, opts) => {
+  const calls: string[] = [];
+  const run: B.Run = (cmd, args, opts) => {
     calls.push(cmd);
-    return spawnSync(cmd, args, opts);
+    return spawnUtf8(cmd, args, opts);
   };
-  const io = (dir, over = {}) => ({
+  const io = (dir: string, over: Partial<B.BanalIO> = {}): B.BanalIO => ({
     run,
+    // eslint-disable-next-line no-restricted-globals -- temporary: this test is split into core and adapter tests when banal moves behind ports (#76)
     env: { ...process.env, RPP_BANAL_DIR: dir },
     log: () => {},
     source: SOURCE,
@@ -257,7 +279,7 @@ try {
     check(
       "🔴 ensureBanal: a download with another sha256 is refused, and nothing is left on disk",
       !bad.ok &&
-        bad.lines[0].includes("does not have the pinned sha256") &&
+        (bad.lines[0] ?? "").includes("does not have the pinned sha256") &&
         bad.lines.some((l) => l.includes(SOURCE.sha256)) &&
         !existsSync(dest) &&
         !existsSync(`${dest}.part`),
@@ -277,7 +299,9 @@ try {
     check(
       "ensureBanal: a failed download names the URL",
       !gone.ok &&
-        gone.lines[0].startsWith("could not download banal from file://"),
+        (gone.lines[0] ?? "").startsWith(
+          "could not download banal from file://",
+        ),
       JSON.stringify(gone),
     );
   }
@@ -292,8 +316,8 @@ try {
     check(
       "🔴 ensureBanal: a banal that downloads fine but measures nothing fails, saying so",
       !r4.ok &&
-        r4.lines[0].includes("does not run") &&
-        r4.lines[0].includes("no JSON"),
+        (r4.lines[0] ?? "").includes("does not run") &&
+        (r4.lines[0] ?? "").includes("no JSON"),
       JSON.stringify(r4),
     );
   }

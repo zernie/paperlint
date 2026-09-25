@@ -36,7 +36,9 @@
  * `spawnSync` by default) and reads the files a pass left behind. Where rpp's own files live is
  * answered by `consumer.mjs`, the one module allowed to know it (rule 10).
  */
+// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
 import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
+// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { delimiter, join, relative } from "node:path";
@@ -555,7 +557,9 @@ export interface BuildOptions {
  */
 function withDefaults({
   run = spawnSync,
+  // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
   cwd = process.cwd(),
+  // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
   env = process.env,
   steps = STEPS,
   log = console.log,

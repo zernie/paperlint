@@ -18,6 +18,7 @@
  * `unpdf` is imported on the first read, not when this module loads: `rpp lint` imports the build
  * and must not pay pdf.js's start-up for a command that never opens a PDF.
  */
+// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
 import { readFileSync } from "node:fs";
 import {
   DEFAULT_ASCENT,
@@ -277,6 +278,7 @@ async function factsOf(doc: Doc, lib: PdfJs): Promise<PdfRead> {
     return fail(
       "zero-fonts-on-text",
       `page(s) ${fonts.pages.join(", ")} draw text, but pdf.js resolved no font for it ` +
+        // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
         `(Node ${process.version}; rpp needs Node >= 22.13, where pdf.js reports fonts)`,
     );
   return {

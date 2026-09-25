@@ -20,8 +20,10 @@
  *
  * Prior art for the shape: `brew doctor`, `flutter doctor`, `npm doctor`, `expo-doctor`.
  */
+// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
+// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
 import { spawnSync } from "node:child_process";
 // Types come from `paper-edit-guard.hook.d.mts`; see the block above for why the import points at
 // the hook itself rather than at a shared module.
@@ -158,6 +160,7 @@ export interface DoctorOptions {
  */
 export function doctor({
   log = console.log,
+  // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
   cwd = process.cwd(),
   projectDir,
   run = spawnSync,

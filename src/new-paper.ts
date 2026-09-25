@@ -14,6 +14,7 @@
  *
  * The only substitution is `{{name}}` → the folder name. Nothing else in a template is touched.
  */
+// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
 import {
   existsSync,
   mkdirSync,

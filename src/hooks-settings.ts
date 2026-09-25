@@ -22,6 +22,7 @@
  * passed in rather than imported here: loading `vigiles/claude-code` costs ~140 ms and pulls
  * `@ast-grep/napi`, which `rpp lint` must not pay for. Only `init` loads it.
  */
+// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";

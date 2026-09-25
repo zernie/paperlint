@@ -19,6 +19,7 @@
  * Where the profiles live is answered by `packageVenuesDir()` in consumer.mjs — the one module
  * allowed to know where this package is installed (rule 10).
  */
+// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
