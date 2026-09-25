@@ -92,7 +92,7 @@ Eddie Kohler). rpp runs the real banal, unmodified, so the numbers are the ones 
 upload.
 
 banal normally reads a PDF through poppler's `pdftohtml -xml`. rpp does not: it writes that XML
-itself from the same pdf.js read (`src/core/banal/xml.ts`) and hands banal the `.xml` file, which banal
+itself from the same pdf.js read (`src/adapters/banal/xml.ts`) and hands banal the `.xml` file, which banal
 accepts as input. Measured on 50 PDFs / 598 pages (2026-09-25): banal on rpp's XML and banal on
 real `pdftohtml` agree on every field the facts file keeps, with no venue verdict changed. They
 agree only because rpp leaves out rotated and invisible text (as `pdftohtml` does), writes each

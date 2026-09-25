@@ -176,7 +176,7 @@ banal -json  +  pdf.js     →   paper.facts.json   →   @eslint/json
 - **`banal`** — [kohler/hotcrp/src/banal](https://github.com/kohler/hotcrp/blob/master/src/banal),
   1901 lines of Perl, dependencies are core Perl + `pdftohtml`. Standalone, alive (commits on
   03.08.2026). rpp feeds it pdftohtml-style XML written from pdf.js instead, so poppler is not
-  needed (`src/core/banal/xml.ts`, `src/banal.ts`; issue #61). Gives you `papersize`, `margin`, `bodyfontsize`, `leading`, `columns`, `npages`,
+  needed (`src/adapters/banal/`: `xml.ts` writes it, `run.ts` runs banal; issue #61). Gives you `papersize`, `margin`, `bodyfontsize`, `leading`, `columns`, `npages`,
   `reffontsize`. It **doesn't know about fonts by construction** — the words `type3`/`embed` don't
   appear in the file at all.
 - **banal does not accept a spec** — the comparison lives in `checkformat.php`, the profile grammar
