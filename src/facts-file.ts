@@ -48,12 +48,8 @@ import type { MeasureGeometry } from "./ports/measure-geometry.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
 import type { Files } from "./ports/files.ts";
 import { err, ok, type Result } from "./domain/result.ts";
-import { readPaperSettings } from "./paper-settings.ts";
-import {
-  LEGACY_PAPER_SETTINGS_FILE,
-  LEGACY_PAPER_SETTINGS_MESSAGE,
-  PAPER_SETTINGS_FILE,
-} from "../lib/paper-config.mjs";
+import { paperPreset, paperPresetProblem } from "./presets.ts";
+import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
 
 export const FACTS_SCHEMA = 2;
 export const FACTS_DIR = "_build";
@@ -69,31 +65,36 @@ export const factsPath = (paperDir: string): string =>
  */
 const at = (p: string): AbsolutePath => p as AbsolutePath;
 
-/** What the facts need from a paper's `paperlint.json`: the venue, its kind, where its PDF is. */
+/** What the facts need from a paper's `paperlint.json`: its venue's label, its kind, where its PDF is. */
 export interface VenueDecl {
-  readonly venue: string;
+  /** The venue preset's display label (`agenticdev`), or null when the paper extends none. */
+  readonly label: string | null;
   readonly kind: string | null;
   readonly pdf: string | null;
 }
 
 /**
- * The venue a paper's `paperlint.json` declares, or null when it has none or names no venue. THROWS
- * with a one-line reason when the file does not parse, or when only the pre-2.1.0 `venue.json` is
- * there: the build reports that as its `facts` failure rather than building against no venue.
+ * What a paper's `paperlint.json` declares, or null when it has none. THROWS with a one-line reason
+ * when the file does not parse, its `extends` does not resolve, or only the pre-2.1.0 `venue.json`
+ * is there: the build reports that as its `facts` failure rather than building against no venue.
  */
 export function declaredVenue(
   files: Files,
   paperDir: string,
+  venuesDir: string = packageVenuesDir(),
 ): VenueDecl | null {
-  const r = readPaperSettings(files, paperDir);
-  if (!r.ok)
-    throw new Error(
-      r.error.kind === "legacy"
-        ? `${join(paperDir, LEGACY_PAPER_SETTINGS_FILE)}: ${LEGACY_PAPER_SETTINGS_MESSAGE}`
-        : `${join(paperDir, PAPER_SETTINGS_FILE)}: ${r.error.why}`,
-    );
-  const s = r.value;
-  return s?.venue ? { venue: s.venue, kind: s.kind, pdf: s.pdf } : null;
+  const p = paperPreset(paperDir, { files, venuesDir });
+  const problem = paperPresetProblem(paperDir, p);
+  if (problem !== null) throw new Error(problem);
+  if (p.kind === "resolved")
+    return {
+      label: p.preset.label,
+      kind: p.settings.kind,
+      pdf: p.settings.pdf,
+    };
+  return p.kind === "none" && p.settings
+    ? { label: null, kind: p.settings.kind, pdf: p.settings.pdf }
+    : null;
 }
 
 // ── the document ────────────────────────────────────────────────────────────────────────
@@ -218,7 +219,7 @@ export async function measurePaper(
   const facts = factsDocument({
     pdf: posix(relative(paperDir, pdf)),
     sha: sha256Hex(bytes),
-    venue: o.venue ?? decl?.venue ?? null,
+    venue: o.venue ?? decl?.label ?? null,
     kind: o.kind ?? decl?.kind ?? null,
     read: r.facts,
     geometry,

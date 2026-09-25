@@ -39,7 +39,6 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
-  renameSync,
   unlinkSync,
   writeFileSync,
   // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
@@ -621,9 +620,10 @@ export interface InitOptions {
 /** Reads one line from a real terminal. Kept out of `init` so the command stays testable. */
 /**
  * Move every paper's pre-2.1.0 `venue.json` to `paperlint.json`, the way the old package.json key
- * is moved: renamed when it is alone, removed when `paperlint.json` already holds the same JSON,
- * and REFUSED — both files left as they are — when the two differ, since there is no way to know
- * which one the author means. `code` is 2 when anything was refused.
+ * is moved, and in the same step `"venue": "aisec"` becomes `"extends": "paperlint:aisec"`: written
+ * as `paperlint.json` when it is alone, removed when `paperlint.json` already says the same, and
+ * REFUSED — both files left as they are — when they differ, since there is no way to know which
+ * one the author means. `code` is 2 when anything was refused.
  */
 export function migratePaperSettings(papersAbs: string): {
   readonly code: number;
@@ -631,35 +631,58 @@ export function migratePaperSettings(papersAbs: string): {
 } {
   const lines: string[] = [];
   let code = 0;
-  const read = (p: string) => (existsSync(p) ? readFileSync(p) : null);
   for (const dir of papersIn(papersAbs, [
     ...PAPER_MARKERS,
     LEGACY_PAPER_SETTINGS_FILE,
   ])) {
-    const [from, to] = [LEGACY_PAPER_SETTINGS_FILE, PAPER_SETTINGS_FILE].map(
-      (f) => join(dir, f),
-    ) as [string, string];
-    const [shownFrom, shownTo] = [from, to].map((p) => relative(papersAbs, p));
-    const plan = migrationOf(read(from), read(to));
-    if (plan === "move") renameSync(from, to);
-    if (plan === "drop-legacy") unlinkSync(from);
-    if (plan === "move")
-      lines.push(`  ✓ ${shownFrom} → ${shownTo} (renamed in paperlint 2.1.0)`);
-    if (plan === "drop-legacy")
-      lines.push(
-        `  ✓ ${shownFrom} removed — ${shownTo} already holds the same`,
-      );
-    if (plan === "conflict") {
-      code = 2;
-      lines.push(
-        `  ✗ ${shownFrom} and ${shownTo} both exist and differ — nothing was moved. Keep ${PAPER_SETTINGS_FILE}, copy what you need from ${LEGACY_PAPER_SETTINGS_FILE} into it, delete ${LEGACY_PAPER_SETTINGS_FILE}, then run init again`,
-      );
-    }
+    const r = migrateOne(dir, (p) => relative(papersAbs, p));
+    if (r === null) continue;
+    lines.push(r.line);
+    if (r.refused) code = 2;
   }
   return {
     code,
     lines: lines.length ? ["", "paper settings", ...lines] : [],
   };
+}
+
+/** One paper's move: done, and the line that says so — or null when there is nothing to move. */
+function migrateOne(
+  dir: string,
+  shown: (p: string) => string,
+): { readonly line: string; readonly refused: boolean } | null {
+  const [from, to] = [LEGACY_PAPER_SETTINGS_FILE, PAPER_SETTINGS_FILE].map(
+    (f) => join(dir, f),
+  ) as [string, string];
+  const read = (p: string) => (existsSync(p) ? readFileSync(p) : null);
+  const plan = migrationOf(read(from), read(to));
+  switch (plan.kind) {
+    case "none":
+      return null;
+    case "move":
+      writeFileSync(to, plan.text);
+      unlinkSync(from);
+      return {
+        line: `  ✓ ${shown(from)} → ${shown(to)} ("venue" is now "extends": "paperlint:<name>"; renamed in paperlint 2.1.0)`,
+        refused: false,
+      };
+    case "drop-legacy":
+      unlinkSync(from);
+      return {
+        line: `  ✓ ${shown(from)} removed — ${shown(to)} already says the same`,
+        refused: false,
+      };
+    case "conflict":
+      return {
+        line: `  ✗ ${shown(from)} and ${shown(to)} both exist and differ — nothing was moved. Keep ${PAPER_SETTINGS_FILE}, copy what you need from ${LEGACY_PAPER_SETTINGS_FILE} into it (its "venue": "x" is "extends": "paperlint:x"), delete ${LEGACY_PAPER_SETTINGS_FILE}, then run init again`,
+        refused: true,
+      };
+    case "broken":
+      return {
+        line: `  ✗ ${shown(from)} was not moved: ${plan.why}`,
+        refused: true,
+      };
+  }
 }
 
 export async function askOnTerminal(question: string): Promise<string> {

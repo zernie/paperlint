@@ -29,12 +29,14 @@
  *
  * Silent, by design, where there is nothing to judge: a stub last page (a few lines) and a review
  * build (numbered lines in the margins make both columns measure full height). Loud where the input
- * is missing: no facts file, a foreign schema, facts about a PDF that is not on disk or changed
+ * is missing: no facts file (unless the paper extends a venue preset — then `pdf/measured` says it),
+ * a foreign schema, facts about a PDF that is not on disk or changed
  * since — a rule that is on and reads nothing must not look like a rule that passed.
  */
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join } from "node:path";
+import { PAPER_SETTINGS_FILE } from "../lib/paper-config.mjs";
 
 /** The difference, in points, that two columns may end apart. See the harness for why 120. */
 export const DEFAULT_TOLERANCE_PT = 120;
@@ -133,11 +135,30 @@ function reportLine(file) {
   }
 }
 
+/**
+ * Whether the paper extends a venue preset. Then the venue rules run on it too, and `pdf/measured`
+ * already says — once, as a warning — that a paper with no facts was not checked; this rule
+ * repeating it as an error would fail a lint-only CI for every paper of a venue whose preset turns
+ * this rule on.
+ */
+function extendsPreset(paperDir) {
+  try {
+    const s = JSON.parse(
+      readFileSync(join(paperDir, PAPER_SETTINGS_FILE), "utf8"),
+    );
+    return typeof s?.extends === "string" && s.extends !== "";
+  } catch {
+    return false;
+  }
+}
+
 /** Everything the rule decides for one paper, as a finding or null. */
 function verdict(paperDir, tolerancePt) {
   const factsFile = join(paperDir, FACTS_REL);
   if (!existsSync(factsFile))
-    return { messageId: "noFacts", data: { file: FACTS_REL } };
+    return extendsPreset(paperDir)
+      ? null
+      : { messageId: "noFacts", data: { file: FACTS_REL } };
   const facts = parseFacts(readFileSync(factsFile, "utf8"));
   if (!facts.ok) return { messageId: facts.messageId, data: facts.data };
   return staleness(paperDir, facts) ?? judgeColumns(facts.last, tolerancePt);

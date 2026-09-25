@@ -1,43 +1,121 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/zernie/paperlint/venue-profile.schema.json",
-  "title": "Venue profile",
-  "description": "One venue's format profile (venues/<venue>.jsonc) and the TeX base set (venues/tex-base.jsonc). The format numbers are read by paperlint's pdf/* venue rules (src/venue-rules.ts); `tex` is read by `paperlint toolchain` and `paperlint build`.",
+  "title": "Venue preset",
+  "description": "One venue preset or template family (venues/<name>.jsonc), and the TeX base set (venues/tex-base.jsonc). A paper's paperlint.json names one with \"extends\"; a preset may extend another. `format` and `rules` are read by paperlint's pdf/* venue rules and its lint config (src/venue-rules.ts, src/presets.ts); `tex` by `paperlint toolchain` and `paperlint build`.",
   "type": "object",
-  "required": ["tex"],
   "additionalProperties": false,
   "properties": {
-    "tex": { "$ref": "#/definitions/tex" },
+    "extends": {
+      "description": "The preset this one builds on: `paperlint:<name>` (shipped) or a path starting with ./ or ../, relative to this file.",
+      "type": "string",
+      "minLength": 1
+    },
+    "name": {
+      "description": "A display name for messages; the file name otherwise.",
+      "type": "string",
+      "minLength": 1
+    },
+    "tex": {
+      "$ref": "#/definitions/tex"
+    },
     "template": {
       "description": "The \\documentclass the venue's template uses.",
       "type": "string",
       "minLength": 1
     },
-    "page_size": { "type": "string", "enum": ["letter", "a4"] },
-    "page_w_in": { "type": "number", "exclusiveMinimum": 0 },
-    "page_h_in": { "type": "number", "exclusiveMinimum": 0 },
-    "textblock_w_in": { "type": "number", "exclusiveMinimum": 0 },
-    "textblock_h_in": { "type": "number", "exclusiveMinimum": 0 },
-    "columns": { "type": "integer", "minimum": 1 },
-    "body_pt": { "type": "number", "exclusiveMinimum": 0 },
-    "body_pt_tol": { "type": "number", "minimum": 0 },
-    "ref_pt_min": { "type": "number", "exclusiveMinimum": 0 },
-    "ref_pt_max": { "type": "number", "exclusiveMinimum": 0 },
-    "fonts_text": { "type": "string", "minLength": 1 },
-    "fonts_title": { "type": "string", "minLength": 1 },
-    "page_limits_not_gated": { "type": "object" },
-    "kinds": {
+    "format": {
+      "description": "What the venue's call for papers sets. Every key is optional; a child preset's key replaces its parent's, and a child's kind replaces that kind.",
       "type": "object",
-      "additionalProperties": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "body_pages_max": { "type": "integer", "minimum": 1 },
-          "ref_pages_max": { "type": "integer", "minimum": 0 }
+      "additionalProperties": false,
+      "properties": {
+        "page_size": {
+          "type": "string",
+          "enum": ["letter", "a4"]
+        },
+        "page_w_in": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "page_h_in": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "textblock_w_in": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "textblock_h_in": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "body_pt": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "body_pt_tol": {
+          "type": "number",
+          "minimum": 0
+        },
+        "ref_pt_min": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "ref_pt_max": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "fonts_text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fonts_title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "page_limits_not_gated": {
+          "type": "object"
+        },
+        "kinds": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "body_pages_max": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "ref_pages_max": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
         }
       }
+    },
+    "rules": {
+      "description": "Rules the venue implies, rule id \u2192 ESLint entry (a severity, or [severity, options]). Applied to every paper that extends this preset, before the paper's own rules.",
+      "type": "object"
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "not": {
+          "required": ["extends"]
+        }
+      },
+      "then": {
+        "required": ["tex"]
+      }
+    }
+  ],
   "definitions": {
     "ctanName": {
       "description": "A package name as tlmgr knows it (CTAN / TeX Live), not a distribution package name.",
@@ -48,7 +126,11 @@
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
-      "items": { "type": "string", "minLength": 1, "pattern": "^[^/\\s]+$" }
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[^/\\s]+$"
+      }
     },
     "tex": {
       "description": "The TeX Live packages this template needs. Each package maps to the files that PROVE it is present: `kpsewhich` must find every one after an install, or the install failed and says which package.",
@@ -59,14 +141,22 @@
         "packages": {
           "type": "object",
           "minProperties": 1,
-          "propertyNames": { "$ref": "#/definitions/ctanName" },
-          "additionalProperties": { "$ref": "#/definitions/proofs" }
+          "propertyNames": {
+            "$ref": "#/definitions/ctanName"
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/proofs"
+          }
         },
         "tools": {
           "description": "Packages that ship a PROGRAM rather than a file LaTeX loads. Proved by an executable of that name in TeX Live's bin directory, not by kpsewhich.",
           "type": "object",
-          "propertyNames": { "$ref": "#/definitions/ctanName" },
-          "additionalProperties": { "$ref": "#/definitions/proofs" }
+          "propertyNames": {
+            "$ref": "#/definitions/ctanName"
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/proofs"
+          }
         }
       }
     }

@@ -142,7 +142,7 @@ function lint(
   return out;
 }
 
-const DECL = { venue: "agenticdev", kind: "short" };
+const DECL = { extends: "paperlint:agenticdev", kind: "short" };
 const ids = (fs: readonly Finding[]) =>
   fs.map((f) => `${f.rule}:${f.messageId}`).sort();
 const withFacts = (patch: (f: Json) => void): Json => {
@@ -157,7 +157,9 @@ describe("a paper that meets its venue", () => {
   });
 
   it("is silent on aisec, a second shipped ACM profile", () => {
-    expect(lint({ venue: { venue: "aisec", kind: "research" } })).toEqual([]);
+    expect(
+      lint({ venue: { extends: "paperlint:aisec", kind: "research" } }),
+    ).toEqual([]);
   });
 
   it("takes the venue from paperlint.json, not from the facts: facts measured with no venue still judge", () => {
@@ -189,19 +191,19 @@ describe("pdf/profile — the declaration must resolve, or nothing is judged", (
   it.each([
     [
       "an unknown venue (a typo would silently disable every check)",
-      { venue: "agentic-dev", kind: "short" },
-      "venueUnknown",
+      { extends: "paperlint:agentic-dev", kind: "short" },
+      "preset",
       /agenticdev, aisec, realm/,
     ],
     [
       "the base TeX set is not a venue",
-      { venue: "tex-base" },
-      "venueUnknown",
+      { extends: "paperlint:tex-base" },
+      "preset",
       /agenticdev, aisec, realm/,
     ],
     [
       "paperlint.json that is not JSON",
-      "{ venue: agenticdev",
+      "{ extends: agenticdev",
       "settingsBroken",
       /paperlint\.json/,
     ],
@@ -229,23 +231,23 @@ describe("pdf/profile — the declaration must resolve, or nothing is judged", (
 
   it("a profile that does not parse is named with the file", () => {
     const fs = lint({
-      venue: { venue: "mine", kind: "short" },
+      venue: { extends: "paperlint:mine", kind: "short" },
       extra: {
         [join(VENUES, "mine.jsonc")]:
           '{ "tex": { "packages": {} }, "columns": "two" }',
       },
     });
-    expect(ids(fs)).toEqual(["pdf/profile:profileBroken"]);
+    expect(ids(fs)).toEqual(["pdf/profile:preset"]);
     expect(fs[0]?.message).toMatch(/mine\.jsonc/);
   });
 });
 
 describe("pdf/profile — the kind", () => {
   it.each([
-    ["no kind", { venue: "agenticdev" }, "kindMissing"],
+    ["no kind", { extends: "paperlint:agenticdev" }, "kindMissing"],
     [
       "a kind the venue does not have",
-      { venue: "agenticdev", kind: "long" },
+      { extends: "paperlint:agenticdev", kind: "long" },
       "kindUnknown",
     ],
   ])(
@@ -283,7 +285,10 @@ describe("pdf/profile — the kind", () => {
       ];
     });
     expect(
-      lint({ venue: { venue: "realm", kind: "long" }, facts: realm }),
+      lint({
+        venue: { extends: "paperlint:realm", kind: "long" },
+        facts: realm,
+      }),
     ).toEqual([]);
   });
 });
@@ -472,7 +477,7 @@ describe("pdf/limits", () => {
     const facts = withFacts((f) => (f.body_pages = 9));
     expect(ids(lint({ venue: DECL, facts }))).toEqual(["pdf/limits:pages"]);
     expect(
-      lint({ venue: { venue: "agenticdev", kind: "full" }, facts }),
+      lint({ venue: { extends: "paperlint:agenticdev", kind: "full" }, facts }),
     ).toEqual([]);
   });
 });

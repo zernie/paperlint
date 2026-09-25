@@ -41,18 +41,12 @@ import {
   type FontEntry,
   type ReadFacts,
 } from "./facts-file.ts";
-import {
-  parseVenueProfile,
-  profileFileOf,
-  venueNames,
-  type KindLimits,
-  type VenueFormat,
-} from "./tex-requirements.ts";
+import type { KindLimits, VenueFormat } from "./tex-requirements.ts";
+import { paperPreset, presetProblemText } from "./presets.ts";
 import type { FlatGeometry } from "./domain/geometry.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import type { Files } from "./ports/files.ts";
-import { readPaperSettings } from "./paper-settings.ts";
 import {
   LEGACY_PAPER_SETTINGS_MESSAGE,
   PAPER_SETTINGS_FILE,
@@ -126,31 +120,6 @@ function kindOf(
       };
 }
 
-/** A venue name → its profile, or the `pdf/profile` finding that says why not. */
-function resolveVenue(
-  deps: VenueRuleDeps,
-  venue: string,
-  kind: string | null,
-): Resolved | Finding {
-  const file = profileFileOf(venue);
-  const body =
-    file === null ? null : text(deps.files, join(deps.venuesDir, file));
-  if (file === null || body === null)
-    return finding("venueUnknown", {
-      venue,
-      known: venueNames(deps.venuesDir).join(", "),
-    });
-  try {
-    const { format } = parseVenueProfile(body, file, deps.venuesDir);
-    return { venue, format, ...kindOf(venue, format, kind) };
-  } catch (e) {
-    return finding("profileBroken", {
-      file,
-      why: (e as Error).message.split("\n").join(" "),
-    });
-  }
-}
-
 /** The facts about the PDF on disk, or the `pdf/fresh` finding that says why they are not. */
 function freshFacts(
   files: Files,
@@ -174,18 +143,27 @@ const isFinding = (v: object): v is Finding => "messageId" in v;
 
 /** One paper, assessed. Reads through `deps.files` only; never throws on a paper's files. */
 export function assessPaper(paperDir: string, deps: VenueRuleDeps): Assessment {
-  const decl = readPaperSettings(deps.files, paperDir);
-  if (!decl.ok)
+  const p = paperPreset(paperDir, deps);
+  if (p.kind === "none") return { kind: "no-venue" };
+  if (p.kind === "settings-problem")
     return {
       kind: "unresolved",
       finding:
-        decl.error.kind === "legacy"
+        p.problem.kind === "legacy"
           ? finding("legacySettings")
-          : finding("settingsBroken", { why: decl.error.why }),
+          : finding("settingsBroken", { why: p.problem.why }),
     };
-  if (decl.value?.venue == null) return { kind: "no-venue" };
-  const venue = resolveVenue(deps, decl.value.venue, decl.value.kind);
-  if (isFinding(venue)) return { kind: "unresolved", finding: venue };
+  if (p.kind === "preset-problem")
+    return {
+      kind: "unresolved",
+      finding: finding("preset", { why: presetProblemText(p.problem) }),
+    };
+  const label = p.preset.label;
+  const venue: Resolved = {
+    venue: label,
+    format: p.preset.format,
+    ...kindOf(label, p.preset.format, p.settings.kind),
+  };
   const factsText = text(deps.files, factsPath(paperDir));
   if (factsText === null) return { kind: "unbuilt", venue };
   const facts = freshFacts(deps.files, paperDir, factsText);
@@ -424,8 +402,8 @@ const META: Readonly<Record<VenueRuleName, Meta>> = {
     messages: {
       settingsBroken: `${PAPER_SETTINGS_FILE} cannot be read: {{why}}`,
       legacySettings: `this paper's venue checks do not run — ${LEGACY_PAPER_SETTINGS_MESSAGE}`,
-      venueUnknown: `${PAPER_SETTINGS_FILE} names the venue \`{{venue}}\`, and paperlint has no profile for it, so its page limit, fonts and format are not checked. Profiles: {{known}}. Fix the name, or turn pdf/profile off for this paper`,
-      profileBroken: "the venue profile {{file}} does not parse: {{why}}",
+      preset:
+        "{{why}} — so this paper's page limit, fonts and format are not checked. Fix `extends` in its paperlint.json, or turn pdf/profile off for this paper",
       kindMissing: `${PAPER_SETTINGS_FILE} names no \`kind\`, so the page limit of \`{{venue}}\` is not checked; its kinds: {{known}}`,
       kindUnknown:
         "`{{venue}}` has no kind `{{kind}}`, so the page limit is not checked; its kinds: {{known}}",

@@ -21,40 +21,51 @@ const SHIPPED = new Set([
 const enc = (s: string) => new TextEncoder().encode(s);
 
 describe("parsePaperSettings", () => {
-  it("reads venue, kind, pdf and rules; every absent field is null", () => {
-    expect(parsePaperSettings({ venue: "aisec", kind: "research" })).toEqual({
+  it("reads extends, kind, pdf and rules; every absent field is null", () => {
+    expect(
+      parsePaperSettings({ extends: "paperlint:aisec", kind: "research" }),
+    ).toEqual({
       ok: true,
-      value: { venue: "aisec", kind: "research", pdf: null, rules: null },
+      value: {
+        extends: "paperlint:aisec",
+        kind: "research",
+        pdf: null,
+        rules: null,
+      },
     });
     expect(parsePaperSettings({})).toEqual({
       ok: true,
-      value: { venue: null, kind: null, pdf: null, rules: null },
+      value: { extends: null, kind: null, pdf: null, rules: null },
     });
   });
 
   it("accepts $comment, JSON Schema's comment keyword, and ignores it", () => {
-    expect(parsePaperSettings({ venue: "aisec", $comment: "why" }).ok).toBe(
-      true,
-    );
+    expect(
+      parsePaperSettings({ extends: "paperlint:aisec", $comment: "why" }).ok,
+    ).toBe(true);
   });
 
   it.each([
     [
       "an unknown key (a typo is not silent)",
       { venu: "aisec" },
-      /unknown key "venu".*venue, kind, pdf, rules/,
+      /unknown key "venu".*extends, kind, pdf, rules/,
     ],
     [
       "the pre-2.1.0 comment key `_`",
-      { venue: "aisec", _: "note" },
+      { extends: "paperlint:aisec", _: "note" },
       /unknown key "_"/,
     ],
     [
-      "a venue that is not a string",
-      { venue: 3 },
-      /"venue" must be a non-empty string/,
+      "an extends that is not a string",
+      { extends: 3 },
+      /"extends" must be a non-empty string/,
     ],
-    ["an empty venue", { venue: "" }, /"venue" must be a non-empty string/],
+    [
+      "an empty extends",
+      { extends: "" },
+      /"extends" must be a non-empty string/,
+    ],
     [
       "rules that are not an object",
       { rules: ["pdf/profile"] },
@@ -78,10 +89,10 @@ describe("readPaperSettings", () => {
 
   it("reads paperlint.json", () => {
     const files = memoryFiles({
-      [`${PAPER}/paperlint.json`]: '{"venue":"aisec"}',
+      [`${PAPER}/paperlint.json`]: '{"extends":"paperlint:aisec"}',
     });
     const r = readPaperSettings(files, PAPER);
-    expect(r.ok && r.value?.venue).toBe("aisec");
+    expect(r.ok && r.value?.extends).toBe("paperlint:aisec");
   });
 
   it("🔴 a venue.json alone is NOT read — it is named, with the command that moves it", () => {
@@ -93,15 +104,15 @@ describe("readPaperSettings", () => {
   it("paperlint.json wins when both exist — the leftover is doctor's to report", () => {
     const files = memoryFiles({
       [`${PAPER}/venue.json`]: '{"venue":"realm"}',
-      [`${PAPER}/paperlint.json`]: '{"venue":"aisec"}',
+      [`${PAPER}/paperlint.json`]: '{"extends":"paperlint:aisec"}',
     });
     const r = readPaperSettings(files, PAPER);
-    expect(r.ok && r.value?.venue).toBe("aisec");
+    expect(r.ok && r.value?.extends).toBe("paperlint:aisec");
   });
 
   it("not JSON: broken, with the parser's reason", () => {
     const files = memoryFiles({
-      [`${PAPER}/paperlint.json`]: "{ venue: aisec",
+      [`${PAPER}/paperlint.json`]: "{ extends: aisec",
     });
     const r = readPaperSettings(files, PAPER);
     expect(r.ok).toBe(false);
@@ -110,31 +121,56 @@ describe("readPaperSettings", () => {
 });
 
 describe("migrationOf — what `paperlint init` does with a paper's files", () => {
+  const plan = (legacy: string | null, current: string | null) =>
+    migrationOf(
+      legacy === null ? null : enc(legacy),
+      current === null ? null : enc(current),
+    );
+
   it.each([
     ["no venue.json", null, null, "none"],
-    ["no venue.json, paperlint.json present", null, '{"venue":"a"}', "none"],
+    [
+      "no venue.json, paperlint.json present",
+      null,
+      '{"extends":"paperlint:a"}',
+      "none",
+    ],
     ["venue.json only", '{"venue":"a"}', null, "move"],
     [
-      "both, the same JSON (spacing differs)",
-      '{"venue":"a"}',
-      '{ "venue": "a" }\n',
+      "both, and paperlint.json already says the same (spacing differs)",
+      '{"venue":"a","kind":"short"}',
+      '{ "extends": "paperlint:a", "kind": "short" }\n',
       "drop-legacy",
     ],
-    ["both, different", '{"venue":"a"}', '{"venue":"b"}', "conflict"],
-    ["both, one not JSON and not byte-equal", "{", '{"venue":"a"}', "conflict"],
+    [
+      "both, different",
+      '{"venue":"a"}',
+      '{"extends":"paperlint:b"}',
+      "conflict",
+    ],
+    ["venue.json that is not JSON", "{", null, "broken"],
+    ["venue.json that is not an object", "[]", null, "broken"],
   ])("%s → %s", (_, legacy, current, want) => {
-    expect(
-      migrationOf(
-        legacy === null ? null : enc(legacy),
-        current === null ? null : enc(current),
-      ),
-    ).toBe(want);
+    expect(plan(legacy, current).kind).toBe(want);
+  });
+
+  it('the move rewrites "venue": "x" to "extends": "paperlint:x", and "_" to "$comment"', () => {
+    const r = plan(
+      '{"venue":"aisec","kind":"research","pdf":"b.pdf","_":"note"}',
+      null,
+    );
+    expect(r.kind === "move" && JSON.parse(r.text)).toEqual({
+      extends: "paperlint:aisec",
+      kind: "research",
+      pdf: "b.pdf",
+      $comment: "note",
+    });
   });
 });
 
 describe("paperRuleBlock — `rules` in paperlint.json", () => {
   const settings = (rules: Record<string, unknown> | null) => ({
-    venue: null,
+    extends: null,
     kind: null,
     pdf: null,
     rules,

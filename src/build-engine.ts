@@ -29,7 +29,11 @@ import {
   usableTree,
   type InstallResult,
 } from "./toolchain.ts";
-import { declaredUnion, type TexRequirements } from "./tex-requirements.ts";
+import {
+  declaredUnion,
+  mergeRequirements,
+  type TexRequirements,
+} from "./tex-requirements.ts";
 
 export interface EngineOptions {
   /** What the targeted papers need: the base set plus each paper's venue. */
@@ -81,7 +85,11 @@ function withDefaults(o: EngineOptions): Resolved {
   };
   return {
     ...r,
-    install: o.install ?? (() => ensureTexLive(declaredUnion().tex, r)),
+    // The shipped union AND what the targeted papers need: a project's own preset lives outside
+    // the package, and its packages are only in `r.tex`.
+    install:
+      o.install ??
+      (() => ensureTexLive(mergeRequirements(declaredUnion().tex, r.tex), r)),
   };
 }
 

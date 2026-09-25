@@ -58,10 +58,16 @@ import { banalInstaller, parseBanalSettings } from "./adapters/banal/index.ts";
 import { curlDownload } from "./adapters/curl/index.ts";
 import { hostDirs, nodeAdapters, nodeFiles } from "./adapters/node/index.ts";
 import { VENUE_RULE_LEVELS, venueRules } from "./venue-rules.ts";
-import { paperRuleBlock, readPaperSettings } from "./paper-settings.ts";
+import { paperRuleBlock } from "./paper-settings.ts";
+import {
+  paperPreset,
+  paperPresetProblem,
+  type PaperPreset,
+} from "./presets.ts";
 import type { ToolInstaller } from "./ports/tool-installer.ts";
 import {
   mergeRequirements,
+  declaredUnion,
   requirementsFor,
   NO_REQUIREMENTS,
   type TexRequirements,
@@ -90,6 +96,7 @@ import {
 } from "../lib/paper-config.mjs";
 import {
   parseRuleBlocks,
+  parseRuleEntries,
   shippedRuleIds,
   unknownKeys,
   type Parsed,
@@ -366,18 +373,38 @@ export function paperRuleBlocks(paths: readonly string[]): Parsed<RuleBlock[]> {
   const papers = [...new Set(paths.flatMap((p) => [p, ...papersIn(p)]))];
   const out: RuleBlock[] = [];
   for (const dir of papers) {
-    const read = readPaperSettings(nodeFiles, dir);
-    if (!read.ok && read.error.kind === "broken")
-      return {
-        ok: false,
-        error: `${join(dir, PAPER_SETTINGS_FILE)}: ${read.error.why}`,
-      };
-    if (!read.ok || read.value === null) continue;
-    const block = paperRuleBlock(dir, read.value, SHIPPED_RULES);
+    const p = paperPreset(dir, PRESET_DEPS);
+    if (p.kind === "settings-problem" && p.problem.kind === "broken")
+      return { ok: false, error: paperPresetProblem(dir, p) ?? dir };
+    const block = rulesOfPaper(dir, p);
     if (!block.ok) return block;
     if (block.value) out.push(block.value);
   }
   return { ok: true, value: out };
+}
+
+/**
+ * One paper's block: its preset chain's `rules`, then its own — later wins per rule id. A preset
+ * that does not resolve contributes nothing here; `pdf/profile` reports it on the paper.
+ */
+function rulesOfPaper(dir: string, p: PaperPreset): Parsed<RuleBlock | null> {
+  const settings = "settings" in p ? p.settings : null;
+  if (settings === null) return { ok: true, value: null };
+  const own = paperRuleBlock(dir, settings, SHIPPED_RULES);
+  if (!own.ok || p.kind !== "resolved") return own;
+  const fromPreset = parseRuleEntries(
+    p.preset.rules,
+    `the venue preset ${p.preset.chain.join(" → ")} → "rules"`,
+    SHIPPED_RULES,
+  );
+  if (!fromPreset.ok) return fromPreset;
+  const rules = { ...fromPreset.value, ...(own.value?.rules ?? {}) };
+  return {
+    ok: true,
+    value: Object.keys(rules).length
+      ? { basePath: dir, files: ["**"], rules }
+      : null,
+  };
 }
 
 /**
@@ -870,15 +897,40 @@ async function runBuild(
   return anyFailed(out.results) ? 1 : 0;
 }
 
-/** What one paper needs from TeX Live; a paperlint.json that does not parse is the build's to report. */
+/** The presets' deps, wired to the disk and the package's own venues directory. */
+const PRESET_DEPS = { files: nodeFiles, venuesDir: packageVenuesDir() };
+
+/**
+ * What one paper needs from TeX Live: the base set plus its preset chain's `tex`. A paper whose
+ * settings or preset do not resolve gets the base set; the build reports why at its facts step.
+ */
 function paperRequirements(dir: string): TexRequirements {
-  let venue: string | null = null;
-  try {
-    venue = readFacts(dir).venue;
-  } catch {
-    venue = null;
-  }
-  return requirementsFor(venue).tex;
+  const p = paperPreset(dir, PRESET_DEPS);
+  return requirementsFor(p.kind === "resolved" ? p.preset : null).tex;
+}
+
+/**
+ * What `paperlint toolchain` installs: every shipped preset's packages, plus the resolved chain of
+ * every paper under the project's papers directory — a project's own preset lives outside the
+ * package, so the shipped union alone would not see it.
+ */
+function toolchainTex(cwd: string): TexRequirements {
+  const cfg = readConfig(parseArgs(["toolchain"]), {
+    log: () => {},
+    err: () => {},
+    cwd,
+  });
+  const roots =
+    cfg.code === undefined
+      ? toPaths(papersDirOf(cfg.opts)).map((rel) =>
+          resolve(dirname(cfg.configPath ?? cwd), rel),
+        )
+      : [];
+  const chains = roots
+    .flatMap((r) => papersIn(r))
+    .map((dir) => paperPreset(dir, PRESET_DEPS))
+    .flatMap((p) => (p.kind === "resolved" ? [p.preset.tex] : []));
+  return declaredUnion(undefined, chains).tex;
 }
 
 /**
@@ -920,8 +972,14 @@ const SIMPLE: Readonly<
   hook: (a, { err }) => runHook(a.paths[0], { err }),
   new: (a, io) => runNew(a, io),
   build: (a, io) => runBuild(a, io),
-  toolchain: (a, { log, err }) =>
-    runToolchain({ check: a.check, log, err, banal: hostBanalInstaller() }),
+  toolchain: (a, { log, err, cwd }) =>
+    runToolchain({
+      check: a.check,
+      log,
+      err,
+      banal: hostBanalInstaller(),
+      tex: toolchainTex(cwd),
+    }),
 };
 
 /** banal's installer, wired from this process's environment: the composition root's work. */
