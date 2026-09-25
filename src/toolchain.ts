@@ -53,8 +53,8 @@ import {
   checkBanal,
   ensureBanal,
   type BanalSource,
-  type Run,
 } from "./banal.ts";
+import { spawnProcess } from "./adapters/node/process.ts";
 import {
   declaredUnion,
   packageNames,
@@ -699,7 +699,7 @@ function report(o: Resolved, tree: CachedTree | null): number {
 /** The banal half, installed or checked. True when banal is ready. */
 function banalPart(o: Resolved): boolean {
   const io = {
-    run: o.run as unknown as Run,
+    run: spawnProcess(o.run),
     env: o.env,
     log: o.log,
     home: o.home,

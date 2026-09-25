@@ -11,11 +11,7 @@
  */
 import assert from "node:assert/strict";
 // eslint-disable-next-line no-restricted-imports -- temporary: this test is split into core and adapter tests when banal moves behind ports (#76)
-import {
-  spawnSync,
-  type SpawnSyncOptionsWithStringEncoding,
-  type SpawnSyncReturns,
-} from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 // eslint-disable-next-line no-restricted-imports -- temporary: this test is split into core and adapter tests when banal moves behind ports (#76)
 import {
@@ -33,6 +29,8 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import * as B from "./banal.ts";
+import { spawnProcess } from "./adapters/node/process.ts";
+import type { RunProcess } from "./core/ports.ts";
 
 let n = 0;
 const check = (label: string, cond: unknown, detail = "") => {
@@ -43,12 +41,7 @@ const check = (label: string, cond: unknown, detail = "") => {
 const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-banal-h-")));
 const emptyPath = join(work, "empty-bin");
 mkdirSync(emptyPath);
-/** `spawnSync` in the shape `Run` names — the seam this file tests through. */
-const spawnUtf8: B.Run = (cmd, args, opts) =>
-  spawnSync(cmd, [...args], {
-    ...opts,
-    encoding: "utf8",
-  } as SpawnSyncOptionsWithStringEncoding);
+const spawnUtf8 = spawnProcess();
 const sha = (p: string) =>
   createHash("sha256").update(readFileSync(p)).digest("hex");
 const script = (name: string, body: string) => {
@@ -135,27 +128,15 @@ try {
   }
 
   // ── running it ────────────────────────────────────────────────────────────────────────
-  const r = (over: Partial<SpawnSyncReturns<string>>) =>
-    ({
-      pid: 0,
-      output: [],
-      signal: null,
-      status: 0,
-      stdout: "",
-      stderr: "",
-      error: undefined,
-      ...over,
-    }) as SpawnSyncReturns<string>;
+  const r = (over: { status?: number; stdout?: string; stderr?: string }) =>
+    ({ kind: "exited", status: 0, stdout: "", stderr: "", ...over }) as const;
   const why = (o: B.BanalOutput): string => (o.ok ? "" : o.why);
   const json = (o: B.BanalOutput): Record<string, unknown> =>
     o.ok ? o.json : {};
-  const enoent = Object.assign(new Error("spawnSync perl ENOENT"), {
-    code: "ENOENT",
-  });
   // Guards: perl missing is its own diagnosis, naming the fix — not "banal failed: ENOENT".
   check(
     "🔴 parseBanalOutput: perl missing is named, with how to install it",
-    why(B.parseBanalOutput(r({ error: enoent, status: null }))) ===
+    why(B.parseBanalOutput({ kind: "not-found", file: "perl" })) ===
       B.PERL_MISSING,
   );
   check(
@@ -221,9 +202,11 @@ try {
   const good = script("served-banal", GOOD);
   const SOURCE = { url: pathToFileURL(good).href, sha256: sha(good) };
   const calls: string[] = [];
-  const run: B.Run = (cmd, args, opts) => {
-    calls.push(cmd);
-    return spawnUtf8(cmd, args, opts);
+  const run: RunProcess = {
+    run: (c) => {
+      calls.push(c.file);
+      return spawnUtf8.run(c);
+    },
   };
   const io = (dir: string, over: Partial<B.BanalIO> = {}): B.BanalIO => ({
     run,

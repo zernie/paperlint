@@ -38,7 +38,7 @@ import {
 } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import type { SpawnSyncReturns } from "node:child_process";
+import type { Command, ProcessExit, RunProcess } from "./core/ports.ts";
 import { pdf2xml, XML_DIALECT, type PageLayout } from "./pdf-layout.ts";
 
 /** The banal rpp runs: HotCRP at this commit, this file, these bytes. */
@@ -69,12 +69,15 @@ export const PERL_MISSING =
   "perl is not installed — banal, the page-geometry script HotCRP runs, is a Perl program. " +
   "Install perl (Debian/Ubuntu: apt-get install perl; macOS ships it) and run `npx rpp toolchain`";
 
-/** A process runner with `spawnSync`'s shape. */
-export type Run = (
-  cmd: string,
-  args: readonly string[],
-  opts: Record<string, unknown>,
-) => SpawnSyncReturns<string>;
+/** An environment as a child process gets it: every value a string, none undefined. */
+export const childEnv = (
+  env: Readonly<Record<string, string | undefined>>,
+): Record<string, string> =>
+  Object.fromEntries(
+    Object.entries(env).filter(
+      (e): e is [string, string] => e[1] !== undefined,
+    ),
+  );
 
 // ── where ────────────────────────────────────────────────────────────────────────────
 
@@ -153,24 +156,33 @@ const firstLine = (s: unknown): string =>
     .find(Boolean) ?? "";
 
 /** Why a finished banal process did not measure, before its output is read; null when it ran. */
-function processFailure(r: SpawnSyncReturns<string>): string | null {
-  const code = (r.error as NodeJS.ErrnoException | undefined)?.code;
-  if (code === "ENOENT") return PERL_MISSING;
-  if (r.error) return `banal failed: ${r.error.message}`;
-  if (r.status !== 0)
-    return `banal failed (exit ${String(r.status)}): ${firstLine(r.stderr) || "no output"}`;
-  return null;
+function processFailure(r: ProcessExit): string | null {
+  switch (r.kind) {
+    case "not-found":
+      return PERL_MISSING;
+    case "spawn-failed":
+      return `banal failed: ${r.message}`;
+    case "timed-out":
+      return `banal failed: no answer after ${String(r.afterMs)} ms`;
+    case "signalled":
+      return `banal failed (${r.signal}): ${firstLine(r.stderr) || "no output"}`;
+    case "exited":
+      return r.status === 0
+        ? null
+        : `banal failed (exit ${String(r.status)}): ${firstLine(r.stderr) || "no output"}`;
+  }
 }
 
 /** banal's stdout as a JSON object, or why it is not one. */
 function jsonObject(
-  r: SpawnSyncReturns<string>,
+  stdout: string,
+  stderr: string,
 ): Record<string, unknown> | string {
   let json: unknown;
   try {
-    json = JSON.parse(String(r.stdout));
+    json = JSON.parse(stdout);
   } catch {
-    return `banal printed no JSON: ${firstLine(r.stdout) || firstLine(r.stderr) || "nothing"}`;
+    return `banal printed no JSON: ${firstLine(stdout) || firstLine(stderr) || "nothing"}`;
   }
   return typeof json === "object" && json !== null && !Array.isArray(json)
     ? (json as Record<string, unknown>)
@@ -178,10 +190,10 @@ function jsonObject(
 }
 
 /** banal's stdout as JSON, or why it is not a measurement. */
-export function parseBanalOutput(r: SpawnSyncReturns<string>): BanalOutput {
+export function parseBanalOutput(r: ProcessExit): BanalOutput {
   const failed = processFailure(r);
-  if (failed) return { ok: false, why: failed };
-  const obj = jsonObject(r);
+  if (failed || r.kind !== "exited") return { ok: false, why: failed ?? "" };
+  const obj = jsonObject(r.stdout, r.stderr);
   if (typeof obj === "string") return { ok: false, why: obj };
   // banal reports an input it could not read as `{"error": true, "pages": []}` — and exits 0.
   if (obj["error"] === true)
@@ -200,7 +212,7 @@ export function parseBanalOutput(r: SpawnSyncReturns<string>): BanalOutput {
 export function measureLayout(
   banal: string,
   pages: readonly PageLayout[],
-  o: { run: Run; env: NodeJS.ProcessEnv },
+  o: { run: RunProcess; env: NodeJS.ProcessEnv },
 ): BanalOutput {
   const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-banal-")));
   try {
@@ -209,12 +221,12 @@ export function measureLayout(
     writeFileSync(xml, pdf2xml(pages));
     writeFileSync(stub, PDFTOHTML_STUB);
     chmodSync(stub, 0o755);
-    const r = o.run("perl", [banal, "-no-time", "-json", xml], {
-      encoding: "utf8",
-      env: { ...o.env, PDFTOHTML: shellQuote(stub) },
-      stdio: ["ignore", "pipe", "pipe"],
-      timeout: BANAL_RUN_MS,
-      maxBuffer: 64 * 1024 * 1024,
+    const r = o.run.run({
+      file: "perl",
+      args: [banal, "-no-time", "-json", xml],
+      env: { ...childEnv(o.env), PDFTOHTML: shellQuote(stub) },
+      timeoutMs: BANAL_RUN_MS,
+      maxOutputBytes: 64 * 1024 * 1024,
     });
     return parseBanalOutput(r);
   } finally {
@@ -247,7 +259,7 @@ export const PROBE_PAGE: PageLayout = {
 /** Does this banal run and measure? `null` when it does, else why not. */
 export function probeBanal(
   banal: string,
-  o: { run: Run; env: NodeJS.ProcessEnv },
+  o: { run: RunProcess; env: NodeJS.ProcessEnv },
 ): string | null {
   const r = measureLayout(banal, [PROBE_PAGE], o);
   if (!r.ok) return r.why;
@@ -267,7 +279,7 @@ export type BanalStep =
 
 /** The IO `ensureBanal` needs. */
 export interface BanalIO {
-  readonly run: Run;
+  readonly run: RunProcess;
   readonly env: NodeJS.ProcessEnv;
   readonly log: (line: string) => void;
   readonly home?: string;
@@ -275,16 +287,32 @@ export interface BanalIO {
 }
 
 const perlRuns = (io: BanalIO): boolean => {
-  const r = io.run("perl", ["-e", "exit 0"], { stdio: "ignore", env: io.env });
-  return !r.error && r.status === 0;
+  const r = io.run.run({
+    file: "perl",
+    args: ["-e", "exit 0"],
+    env: childEnv(io.env),
+    timeoutMs: BANAL_RUN_MS,
+  });
+  return r.kind === "exited" && r.status === 0;
 };
+
+/** Why a curl run did not download, in its own words; null when it exited 0. */
+function curlFailure(r: ProcessExit): string | null {
+  if (r.kind === "exited" && r.status === 0) return null;
+  if (r.kind === "not-found") return "curl is not installed";
+  if (r.kind === "spawn-failed") return r.message;
+  if (r.kind === "timed-out") return `no answer after ${String(r.afterMs)} ms`;
+  const what =
+    r.kind === "exited" ? `curl exited ${String(r.status)}` : r.signal;
+  return firstLine(r.stderr) || what;
+}
 
 /** Download `source` to `dest` and accept it only by its sha256. */
 function download(io: BanalIO, source: BanalSource, dest: string): string[] {
   const part = `${dest}.part`;
-  const r = io.run(
-    "curl",
-    [
+  const curl: Command = {
+    file: "curl",
+    args: [
       "-fsSL",
       "--retry",
       "2",
@@ -294,12 +322,14 @@ function download(io: BanalIO, source: BanalSource, dest: string): string[] {
       part,
       source.url,
     ],
-    { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], env: io.env },
-  );
-  if (r.error || r.status !== 0 || !existsSync(part)) {
+    env: childEnv(io.env),
+    timeoutMs: (BANAL_DOWNLOAD_SECONDS + 30) * 1000,
+  };
+  const failed = curlFailure(io.run.run(curl));
+  if (failed || !existsSync(part)) {
     rmSync(part, { force: true });
     return [
-      `could not download banal from ${source.url}: ${firstLine(r.stderr) || r.error?.message || `curl exited ${String(r.status)}`}`,
+      `could not download banal from ${source.url}: ${failed ?? "curl wrote no file"}`,
     ];
   }
   const got = sha256Of(part);

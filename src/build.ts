@@ -257,7 +257,9 @@ function hashes(paperDir: string): Hashes {
     const p = join(paperDir, `${JOB}.${ext}`);
     return existsSync(p) ? sha(readFileSync(p)) : null;
   };
-  return Object.fromEntries(TRACKED.map((t) => [t, h(t)])) as unknown as Hashes;
+  const out: Record<string, string | null> = {};
+  for (const t of TRACKED) out[t] = h(t);
+  return out as Hashes;
 }
 
 const readOr = (path: string, enc: BufferEncoding): string | null =>

@@ -28,8 +28,6 @@
  * 🔴 STALENESS. The PDF is not committed, so neither are these facts: they live in `_build/` and
  * carry `pdf_sha256`. A rule compares it with the PDF on disk and refuses facts about another build.
  */
-// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
-import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 // eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -41,7 +39,9 @@ import {
   type LastPage,
 } from "./pdf-geometry.ts";
 import { describeFailure, type PdfFacts, type PdfReader } from "./pdf-facts.ts";
-import { findBanal, measureLayout, missingBanal, type Run } from "./banal.ts";
+import { findBanal, measureLayout, missingBanal } from "./banal.ts";
+import { spawnProcess } from "./adapters/node/process.ts";
+import type { RunProcess } from "./core/ports.ts";
 
 export const FACTS_SCHEMA = 2;
 export const FACTS_DIR = "_build";
@@ -243,7 +243,7 @@ export interface WriteOptions {
   /** Where `vendor/banal` is looked for (`banal.ts`, `findBanal`). */
   readonly projectRoot: string;
   /** Runs perl; the harness passes a recorder. */
-  readonly run?: Run;
+  readonly run?: RunProcess;
   /** Home directory for rpp's cache; defaults to the user's. */
   readonly home?: string;
 }
@@ -267,7 +267,7 @@ function measureGeometry(
   const env = o.env ?? process.env;
   const where = findBanal(env, o.projectRoot, o.home);
   if (!where) return { banal: null, why: missingBanal(env, o.home) };
-  const run = o.run ?? (spawnSync as unknown as Run);
+  const run = o.run ?? spawnProcess();
   const r = measureLayout(where.path, read.layout, { run, env });
   return r.ok
     ? { banal: banalFacts(r.json), why: null }

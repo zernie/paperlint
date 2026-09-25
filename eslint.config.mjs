@@ -215,6 +215,17 @@ export default [
       // Branches per function. Ten is the rule's long-standing default; the worst function
       // measured was 59, and one that size cannot be read, only re-run.
       complexity: ["error", 10],
+      // `x as unknown as T` tells the checker to look away: two spellings of one port were once
+      // reconciled that way (#76). A real conversion is a function; a real subset needs no cast.
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "TSAsExpression > TSAsExpression[typeAnnotation.type='TSUnknownKeyword']",
+          message:
+            "`as unknown as` switches the type checker off. Convert with a function, or fix the type.",
+        },
+      ],
       // Nesting beyond three blocks is where a step belongs in its own named function.
       "max-depth": ["error", 3],
       // Five positional parameters are a record without field names; pass an object instead.

@@ -34,7 +34,6 @@ import {
 import {
   fillsOf,
   isUpright,
-  type ColourOps,
   type PageLayout,
   type TextBox,
 } from "./pdf-layout.ts";
@@ -245,7 +244,7 @@ function layoutOf(
 ): PageLayout {
   const vp = page.getViewport({ scale: 1 });
   const fills = fillsOf(
-    lib.OPS as unknown as ColourOps,
+    lib.OPS,
     ops,
     items.map((it) => it.str),
   );
