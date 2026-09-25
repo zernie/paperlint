@@ -37,9 +37,11 @@ import {
 import {
   LEGACY_CONFIG_KEY,
   LEGACY_KEY_MESSAGE,
+  LEGACY_PAPER_SETTINGS_FILE,
+  PAPER_SETTINGS_FILE,
   declaredSettings,
 } from "../lib/paper-config.mjs";
-import { PAPER_MARKERS } from "./build.ts";
+import { PAPER_MARKERS, papersIn } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
 import { doctorHooks } from "./hooks-settings.ts";
 
@@ -233,6 +235,28 @@ function papersVerdict(
   return { lines: out, bad };
 }
 
+/**
+ * A pre-2.1.0 `venue.json` left in a paper: it is no longer read, so that paper's venue checks
+ * silently would not run if nothing named it. `init` moves it.
+ */
+function leftoverSettingsVerdict(
+  root: string,
+  papersDir: string | null,
+): { lines: string[]; bad: number } {
+  if (papersDir === null) return { lines: [], bad: 0 };
+  const lines = papersIn(resolve(root, papersDir), [
+    ...PAPER_MARKERS,
+    LEGACY_PAPER_SETTINGS_FILE,
+  ])
+    .map((dir) => join(dir, LEGACY_PAPER_SETTINGS_FILE))
+    .filter((f) => existsSync(f))
+    .map(
+      (f) =>
+        `  ✗ ${relative(root, f)} is no longer read — paperlint 2.1.0 renamed it ${PAPER_SETTINGS_FILE}, so this paper's venue checks do not run. \`npx paperlint init\` moves it`,
+    );
+  return { lines, bad: lines.length };
+}
+
 export interface DoctorOptions {
   log?: typeof console.log;
   cwd?: string;
@@ -293,8 +317,9 @@ export function doctor({
     `  the hooks will guard ${hookSays ?? "(nothing — the guard refuses and says why on first use)"}`,
   );
   const verdict = papersVerdict(root, cliPapers, hookSays);
-  out.push(...verdict.lines);
-  bad += verdict.bad;
+  const leftover = leftoverSettingsVerdict(root, cliPapers ?? hookSays);
+  out.push(...verdict.lines, ...leftover.lines);
+  bad += verdict.bad + leftover.bad;
 
   // A skill that is not linked is ADVISORY, like a missing program: `paperlint lint`, the hooks and CI
   // work without it, and an entry of the same name that `init` refused to replace is the

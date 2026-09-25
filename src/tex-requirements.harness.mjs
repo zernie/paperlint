@@ -173,8 +173,8 @@ rmSync(tmp, { recursive: true, force: true });
   const r = R.requirementsFor(null, VENUES);
   // Guards: saying WHY a paper runs on the base set.
   check(
-    "no venue.json → the base set, and the source says so",
-    r.source.includes("no venue.json") &&
+    "no paperlint.json → the base set, and the source says so",
+    r.source.includes("no paperlint.json") &&
       "hyperref" in r.tex.packages &&
       !("acmart" in r.tex.packages),
     r.source,

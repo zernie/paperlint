@@ -58,6 +58,7 @@ import { banalInstaller, parseBanalSettings } from "./adapters/banal/index.ts";
 import { curlDownload } from "./adapters/curl/index.ts";
 import { hostDirs, nodeAdapters, nodeFiles } from "./adapters/node/index.ts";
 import { VENUE_RULE_LEVELS, venueRules } from "./venue-rules.ts";
+import { paperRuleBlock, readPaperSettings } from "./paper-settings.ts";
 import type { ToolInstaller } from "./ports/tool-installer.ts";
 import {
   mergeRequirements,
@@ -82,6 +83,7 @@ import {
   LEGACY_CONFIG_KEY,
   LEGACY_KEY_MESSAGE,
   PAPERS_DIR_FIELD,
+  PAPER_SETTINGS_FILE,
   SETTINGS_KEYS,
   declaredSettings,
   renamedFieldMessage,
@@ -91,6 +93,7 @@ import {
   shippedRuleIds,
   unknownKeys,
   type Parsed,
+  type RuleBlock,
 } from "./rules-config.ts";
 export { init };
 export { nextSteps } from "./init.ts";
@@ -171,7 +174,7 @@ another file of the same shape. \`papersDir\` is required; the rest is optional:
   "rules" takes ESLint flat-config blocks (files, ignores, rules), appended after paperlint's own, with
   files relative to the file holding the settings. Optional rules (off unless turned on there):
   pdf/last-page-balance. The venue rules (pdf/fresh, pdf/profile, pdf/fonts, pdf/geometry,
-  pdf/limits, pdf/body-size, pdf/measured) are on for every paper whose venue.json names a venue;
+  pdf/limits, pdf/body-size, pdf/measured) are on for every paper whose paperlint.json names a venue;
   set one to "off" there to skip it. An unknown key, anywhere in the settings, is an error.
 `;
 
@@ -279,7 +282,7 @@ export function buildConfig(
         "paper/typography": typographyOpt,
         "tex/future-promise": "warn",
         "tex/acm-frontmatter-override": "error",
-        // Silent for a paper whose venue.json names no venue (src/venue-rules.ts).
+        // Silent for a paper whose paperlint.json names no venue (src/venue-rules.ts).
         ...VENUE_RULE_LEVELS,
       },
     });
@@ -344,6 +347,30 @@ export async function silentOptionalRules(
     for (const id of turnedOn) if (isOn(cfg.rules?.[id])) reached.add(id);
   }
   return [...turnedOn].filter((id) => !reached.has(id));
+}
+
+/**
+ * Every linted paper's `rules` from its `paperlint.json`, as ESLint blocks scoped to that paper.
+ * A file that does not parse, or names a rule paperlint does not ship, stops the run with one line
+ * naming the file — the same strictness as the project's own `rules`. A leftover `venue.json` is
+ * not read here; `pdf/profile` and `paperlint doctor` name it.
+ */
+export function paperRuleBlocks(paths: readonly string[]): Parsed<RuleBlock[]> {
+  const papers = [...new Set(paths.flatMap((p) => [p, ...papersIn(p)]))];
+  const out: RuleBlock[] = [];
+  for (const dir of papers) {
+    const read = readPaperSettings(nodeFiles, dir);
+    if (!read.ok && read.error.kind === "broken")
+      return {
+        ok: false,
+        error: `${join(dir, PAPER_SETTINGS_FILE)}: ${read.error.why}`,
+      };
+    if (!read.ok || read.value === null) continue;
+    const block = paperRuleBlock(dir, read.value, SHIPPED_RULES);
+    if (!block.ok) return block;
+    if (block.value) out.push(block.value);
+  }
+  return { ok: true, value: out };
 }
 
 /**
@@ -836,7 +863,7 @@ async function runBuild(
   return anyFailed(out.results) ? 1 : 0;
 }
 
-/** What one paper needs from TeX Live; a venue.json that does not parse is the build's to report. */
+/** What one paper needs from TeX Live; a paperlint.json that does not parse is the build's to report. */
 function paperRequirements(dir: string): TexRequirements {
   let venue: string | null = null;
   try {
@@ -1031,6 +1058,14 @@ export async function run(
   // a directory without `PIPELINE-STATUS.md` simply gets not a single rule and reports clean. The
   // analysis of why a structure plugin for ESLint does not cure this is in `structure.mjs`.
   const structure = checkStructure(paths, opts.structure, { cwd });
+  // Each paper's own `rules` (its paperlint.json) go after paperlint's blocks and BEFORE the
+  // project's, so the project's package.json still has the last word.
+  const papers = paperRuleBlocks(paths);
+  if (!papers.ok) return (err(papers.error), 2);
+  const withPapers = {
+    ...opts,
+    rules: [...papers.value, ...(opts.rules ?? [])],
+  };
 
   let texLanguage: unknown = null;
   try {
@@ -1044,7 +1079,7 @@ export async function run(
   const eslint = new ESLint({
     cwd: lintRoot(configPath ? dirname(resolve(cwd, configPath)) : cwd, paths),
     overrideConfigFile: true,
-    overrideConfig: buildConfig(opts, texLanguage) as Linter.Config[],
+    overrideConfig: buildConfig(withPapers, texLanguage) as Linter.Config[],
   });
 
   // 🔴 ESLint THROWS on an empty set (`NoFilesFoundError`) — the guard below simply never got
@@ -1081,7 +1116,7 @@ export async function run(
     log,
     err,
     where: relative(cwd, dirname(resolve(cwd, configPath ?? "."))) || ".",
-    opts,
+    opts: withPapers,
   });
 }
 

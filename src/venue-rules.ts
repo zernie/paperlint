@@ -11,13 +11,13 @@
  *
  * ── WHAT THEY READ ───────────────────────────────────────────────────────────────
  * Like `pdf/last-page-balance`, they run on a paper's `paper.tex` and judge the files beside it:
- * `venue.json` (which venue, which kind), `_build/paper.facts.json` (what `paperlint build`
+ * `paperlint.json` (which venue, which kind), `_build/paper.facts.json` (what `paperlint build`
  * measured) and the PDF the facts name (hashed, never measured). The profile comes from the
  * package's venues directory, read through the same parser the toolchain reads it with
  * (`parseVenueProfile`) — one owner of where profiles live and what they mean.
  *
- * The venue is taken from `venue.json`, not from the facts: the facts are venue-independent
- * measurements, and a paper whose `venue.json` changed after the build is judged against the venue
+ * The venue is taken from `paperlint.json`, not from the facts: the facts are venue-independent
+ * measurements, and a paper whose `paperlint.json` changed after the build is judged against the venue
  * it names now.
  *
  * ── WHO SPEAKS WHEN THE INPUT CANNOT BE JUDGED ───────────────────────────────────
@@ -38,7 +38,6 @@ import {
   FACTS_FILE,
   factsPath,
   parseFactsText,
-  parseVenueDeclText,
   type FontEntry,
   type ReadFacts,
 } from "./facts-file.ts";
@@ -53,6 +52,11 @@ import type { FlatGeometry } from "./domain/geometry.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import type { Files } from "./ports/files.ts";
+import { readPaperSettings } from "./paper-settings.ts";
+import {
+  LEGACY_PAPER_SETTINGS_MESSAGE,
+  PAPER_SETTINGS_FILE,
+} from "../lib/paper-config.mjs";
 
 // ── the verdict's vocabulary ─────────────────────────────────────────────────────────
 
@@ -170,15 +174,16 @@ const isFinding = (v: object): v is Finding => "messageId" in v;
 
 /** One paper, assessed. Reads through `deps.files` only; never throws on a paper's files. */
 export function assessPaper(paperDir: string, deps: VenueRuleDeps): Assessment {
-  const declText = text(deps.files, join(paperDir, "venue.json"));
-  if (declText === null) return { kind: "no-venue" };
-  const decl = parseVenueDeclText(declText);
+  const decl = readPaperSettings(deps.files, paperDir);
   if (!decl.ok)
     return {
       kind: "unresolved",
-      finding: finding("venueJsonBroken", { why: decl.error }),
+      finding:
+        decl.error.kind === "legacy"
+          ? finding("legacySettings")
+          : finding("settingsBroken", { why: decl.error.why }),
     };
-  if (decl.value === null) return { kind: "no-venue" };
+  if (decl.value?.venue == null) return { kind: "no-venue" };
   const venue = resolveVenue(deps, decl.value.venue, decl.value.kind);
   if (isFinding(venue)) return { kind: "unresolved", finding: venue };
   const factsText = text(deps.files, factsPath(paperDir));
@@ -414,15 +419,14 @@ const META: Readonly<Record<VenueRuleName, Meta>> = {
   profile: {
     docs: {
       description:
-        "the venue a paper names in venue.json has a profile, and the kind it names exists",
+        "the venue a paper names in paperlint.json has a profile, and the kind it names exists",
     },
     messages: {
-      venueJsonBroken: "venue.json is not valid JSON ({{why}})",
-      venueUnknown:
-        "venue.json names the venue `{{venue}}`, and paperlint has no profile for it, so its page limit, fonts and format are not checked. Profiles: {{known}}. Fix the name, or turn pdf/profile off for this paper",
+      settingsBroken: `${PAPER_SETTINGS_FILE} cannot be read: {{why}}`,
+      legacySettings: `this paper's venue checks do not run — ${LEGACY_PAPER_SETTINGS_MESSAGE}`,
+      venueUnknown: `${PAPER_SETTINGS_FILE} names the venue \`{{venue}}\`, and paperlint has no profile for it, so its page limit, fonts and format are not checked. Profiles: {{known}}. Fix the name, or turn pdf/profile off for this paper`,
       profileBroken: "the venue profile {{file}} does not parse: {{why}}",
-      kindMissing:
-        "venue.json names no `kind`, so the page limit of `{{venue}}` is not checked; its kinds: {{known}}",
+      kindMissing: `${PAPER_SETTINGS_FILE} names no \`kind\`, so the page limit of \`{{venue}}\` is not checked; its kinds: {{known}}`,
       kindUnknown:
         "`{{venue}}` has no kind `{{kind}}`, so the page limit is not checked; its kinds: {{known}}",
     },

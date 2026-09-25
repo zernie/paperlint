@@ -359,27 +359,20 @@ try {
 
   console.log();
   console.log("the optional balance rule judges what the build measured");
-  // The consumer turns pdf/last-page-balance on for two papers, in the settings' `rules` key —
-  // ESLint's own block shape, `files` relative to the settings file.
+  // The consumer turns pdf/last-page-balance on for two papers, each in its own paperlint.json —
+  // `unbalanced` in a new one, `acmart` beside the venue it already declares.
+  const balanceOn = { rules: { "pdf/last-page-balance": "error" } };
   writeFileSync(
-    join(work, "package.json"),
-    JSON.stringify(
-      {
-        name: "consumer",
-        private: true,
-        paperlint: {
-          [PAPERS_DIR_FIELD]: "papers",
-          rules: [
-            {
-              files: ["papers/unbalanced/**", "papers/acmart/**"],
-              rules: { "pdf/last-page-balance": "error" },
-            },
-          ],
-        },
-      },
-      null,
-      2,
-    ),
+    join(work, "papers", "unbalanced", "paperlint.json"),
+    JSON.stringify(balanceOn),
+  );
+  const acmartSettings = join(work, "papers", "acmart", "paperlint.json");
+  writeFileSync(
+    acmartSettings,
+    JSON.stringify({
+      ...JSON.parse(readFileSync(acmartSettings, "utf8")),
+      ...balanceOn,
+    }),
   );
   const linted = spawnSync(
     process.execPath,
@@ -416,9 +409,9 @@ try {
 
   console.log();
   console.log(
-    "the venue rules judge what the build measured, against venue.json",
+    "the venue rules judge what the build measured, against paperlint.json",
   );
-  // The same lint run: acmart names agenticdev/short in its venue.json, unbalanced names no venue.
+  // The same lint run: acmart names agenticdev/short in its paperlint.json, unbalanced names no venue.
   let all = [];
   try {
     all = JSON.parse(linted.stdout).flatMap((r) =>
@@ -439,7 +432,7 @@ try {
   // here: this fixture is one sentence long, and banal calls such a page a "cover" with one
   // column (fixtures/pdf-facts, test/e2e/banal.mjs), which pdf/geometry would rightly report.
   check(
-    "🔴 acmart: venue.json resolves, the facts are fresh, and a real acmart build has the fonts agenticdev expects",
+    "🔴 acmart: paperlint.json resolves, the facts are fresh, and a real acmart build has the fonts agenticdev expects",
     linted.stdout !== "" &&
       !venueFindings("acmart").some((m) =>
         ["pdf/profile", "pdf/fresh", "pdf/fonts"].includes(m.ruleId),
@@ -455,14 +448,12 @@ try {
   // a font package is missing. Declare it an agenticdev paper after the build: the measurements do
   // not depend on the venue, so no rebuild is needed, and the venue rules must reject it.
   writeFileSync(
-    join(work, "papers", "fallback", "venue.json"),
+    join(work, "papers", "fallback", "paperlint.json"),
     JSON.stringify({ venue: "agenticdev", kind: "short" }),
   );
-  // papers/acmart rides along only so the optional last-page-balance rule the settings above turn
-  // on reaches a paper; a turned-on rule that reaches none fails the run by design.
   const fb = spawnSync(
     process.execPath,
-    [CLI, "lint", "papers/fallback", "papers/acmart", "--json"],
+    [CLI, "lint", "papers/fallback", "--json"],
     { cwd: work, encoding: "utf8" },
   );
   let fbFindings = [];

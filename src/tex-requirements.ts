@@ -26,6 +26,7 @@ import { join } from "node:path";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import Ajv from "ajv";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { PAPER_SETTINGS_FILE } from "../lib/paper-config.mjs";
 
 /** CTAN package name → the names that prove it is installed. */
 export type PackageProofs = Readonly<Record<string, readonly string[]>>;
@@ -242,7 +243,7 @@ export function packageNames(tex: TexRequirements): string[] {
 /**
  * What ONE paper needs: the base set plus its venue's block. A paper with no venue, or a venue this
  * package has no profile for, gets the base set — and the source says which, so an ACM paper built
- * without `venue.json` is visibly running on the base set rather than silently.
+ * without `paperlint.json` is visibly running on the base set rather than silently.
  */
 export function requirementsFor(
   venue: string | null,
@@ -250,7 +251,7 @@ export function requirementsFor(
 ): PaperRequirements {
   const base = readProfile(dir, BASE_PROFILE);
   if (venue === null)
-    return { source: "the base set (no venue.json)", tex: base };
+    return { source: `the base set (no ${PAPER_SETTINGS_FILE})`, tex: base };
   const file = profileFileOf(venue);
   if (file === null || !existsSync(join(dir, file)))
     return {

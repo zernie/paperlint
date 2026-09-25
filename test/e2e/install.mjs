@@ -543,7 +543,7 @@ try {
         );
 
     // 🔴 "CLEAN" MEANS: EXIT 0, AND THE ONE WARNING AN UNBUILT VENUE PAPER MUST CARRY. The acmart
-    // paper names agenticdev in its venue.json and is not built here, so the venue rules could not
+    // paper names agenticdev in its paperlint.json and is not built here, so the venue rules could not
     // run — and `pdf/measured` says so, as a warning. Its absence would be the green zero; any other
     // finding is a false positive on a correct corpus.
     const onlyUnbuilt = (r) => {

@@ -48,6 +48,12 @@ import type { MeasureGeometry } from "./ports/measure-geometry.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
 import type { Files } from "./ports/files.ts";
 import { err, ok, type Result } from "./domain/result.ts";
+import { readPaperSettings } from "./paper-settings.ts";
+import {
+  LEGACY_PAPER_SETTINGS_FILE,
+  LEGACY_PAPER_SETTINGS_MESSAGE,
+  PAPER_SETTINGS_FILE,
+} from "../lib/paper-config.mjs";
 
 export const FACTS_SCHEMA = 2;
 export const FACTS_DIR = "_build";
@@ -57,7 +63,13 @@ export const FACTS_FILE = "paper.facts.json";
 export const factsPath = (paperDir: string): string =>
   join(paperDir, FACTS_DIR, FACTS_FILE);
 
-/** The `venue.json` a paper declares: where it is submitted, as which kind, and where its PDF is. */
+/**
+ * A path as the caller gave it. The `Files` adapter resolves a relative one against the process's
+ * cwd, which is what these callers have always meant; the brand is not a claim this code checked it.
+ */
+const at = (p: string): AbsolutePath => p as AbsolutePath;
+
+/** What the facts need from a paper's `paperlint.json`: the venue, its kind, where its PDF is. */
 export interface VenueDecl {
   readonly venue: string;
   readonly kind: string | null;
@@ -65,44 +77,23 @@ export interface VenueDecl {
 }
 
 /**
- * A path as the caller gave it. The `Files` adapter resolves a relative one against the process's
- * cwd, which is what these callers have always meant; the brand is not a claim this code checked it.
- */
-const at = (p: string): AbsolutePath => p as AbsolutePath;
-
-const str = (v: unknown): string | null => (typeof v === "string" ? v : null);
-
-/** A parsed `venue.json`, or null when it names no venue. */
-export function parseVenueDecl(json: unknown): VenueDecl | null {
-  const d = typeof json === "object" && json !== null ? json : {};
-  const field = (k: string) => str((d as Record<string, unknown>)[k]);
-  const venue = field("venue");
-  return venue ? { venue, kind: field("kind"), pdf: field("pdf") } : null;
-}
-
-/** `venue.json`'s text → the declaration (null when it names no venue), or why it is not JSON. Pure. */
-export function parseVenueDeclText(
-  text: string,
-): Result<VenueDecl | null, string> {
-  try {
-    return ok(parseVenueDecl(JSON.parse(text)));
-  } catch (e) {
-    return err((e as Error).message);
-  }
-}
-
-/**
- * The paper's `venue.json`, or null when there is none or it names no venue. The one reader of
- * that file: the build, the facts writer and the shim all read it here.
+ * The venue a paper's `paperlint.json` declares, or null when it has none or names no venue. THROWS
+ * with a one-line reason when the file does not parse, or when only the pre-2.1.0 `venue.json` is
+ * there: the build reports that as its `facts` failure rather than building against no venue.
  */
 export function declaredVenue(
   files: Files,
   paperDir: string,
 ): VenueDecl | null {
-  const bytes = files.readBytes(at(join(paperDir, "venue.json")));
-  return bytes === null
-    ? null
-    : parseVenueDecl(JSON.parse(new TextDecoder().decode(bytes)));
+  const r = readPaperSettings(files, paperDir);
+  if (!r.ok)
+    throw new Error(
+      r.error.kind === "legacy"
+        ? `${join(paperDir, LEGACY_PAPER_SETTINGS_FILE)}: ${LEGACY_PAPER_SETTINGS_MESSAGE}`
+        : `${join(paperDir, PAPER_SETTINGS_FILE)}: ${r.error.why}`,
+    );
+  const s = r.value;
+  return s?.venue ? { venue: s.venue, kind: s.kind, pdf: s.pdf } : null;
 }
 
 // ── the document ────────────────────────────────────────────────────────────────────────
@@ -196,7 +187,7 @@ export interface MeasureOptions {
   readonly kind?: string | null;
   /** The page-geometry measurer (banal, as the composition root wired it). */
   readonly measure: MeasureGeometry;
-  /** Where the PDF and `venue.json` are read from. */
+  /** Where the PDF and `paperlint.json` are read from. */
   readonly files: Files;
 }
 

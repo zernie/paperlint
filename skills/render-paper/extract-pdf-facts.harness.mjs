@@ -59,7 +59,7 @@ try {
   mkdirSync(paper, { recursive: true });
   cpSync(join(FIX, "t3-mixed.pdf"), join(paper, "paper.pdf"));
   writeFileSync(
-    join(paper, "venue.json"),
+    join(paper, "paperlint.json"),
     JSON.stringify({ venue: "agenticdev", kind: "short" }),
   );
   const factsFile = join(paper, "_build", "paper.facts.json");
@@ -88,7 +88,7 @@ try {
   );
   const facts = JSON.parse(readFileSync(factsFile, "utf8"));
   check(
-    "the facts are schema 2, about paper.pdf, for the venue venue.json declares",
+    "the facts are schema 2, about paper.pdf, for the venue paperlint.json declares",
     facts.schema === 2 &&
       facts.pdf === "paper.pdf" &&
       facts.venue === "agenticdev" &&
@@ -148,7 +148,7 @@ try {
   );
 
   writeFileSync(
-    join(paper, "venue.json"),
+    join(paper, "paperlint.json"),
     JSON.stringify({ venue: "x", pdf: "build/other.pdf" }),
   );
   const missing = shim([paper, "--strict"], { BANAL: fake });

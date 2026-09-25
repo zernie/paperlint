@@ -157,11 +157,11 @@ try {
   );
   const venued = paper("venued", {
     "paper.tex": CLEAN_TEX,
-    "venue.json": JSON.stringify({ venue: "agenticdev", kind: "short" }),
+    "paperlint.json": JSON.stringify({ venue: "agenticdev", kind: "short" }),
     "build.sh": "exit 0\n",
   });
   const facts = readFacts(venued);
-  check("the venue comes from venue.json", facts.venue === "agenticdev");
+  check("the venue comes from paperlint.json", facts.venue === "agenticdev");
   check(
     "a leftover build.sh is a FACT (reported), not a step",
     JSON.stringify(facts.ignoredScripts) === JSON.stringify(["build.sh"]) &&

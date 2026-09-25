@@ -8,7 +8,7 @@
  * it compiles a paper. This file is a composition root: it reads the environment and builds the real
  * adapters (`dist/adapters/node/`), and it owns the `--strict` policy. This
  * script exists for two callers the build does not serve: a PDF paperlint did not build (a paper that
- * declares its artifact elsewhere in `venue.json`), and CI steps that name this script by path.
+ * declares its artifact elsewhere in `paperlint.json`), and CI steps that name this script by path.
  * It reaches the package's compiled code through `../../dist/`, resolved from this file's real
  * location, so it works the same from a checkout, from `node_modules` and through a symlink.
  *
@@ -48,14 +48,14 @@ import {
 import { whyNoGeometry } from "../../dist/domain/geometry.js";
 import { exitCodeFor } from "../../dist/exit-code.js";
 
-/** The paper's `venue.json`, read from disk. */
+/** The venue the paper's `paperlint.json` declares, read from disk. */
 export const declaredVenue = (paperDir) => declaredIn(nodeFiles, paperDir);
 
 const ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 
 /**
  * Accept either a path to a PDF or a PAPER DIRECTORY — and in the second case find the artifact on
- * its own: the path the paper declares in the `pdf` field of `venue.json`, else `paper.pdf` beside
+ * its own: the path the paper declares in the `pdf` field of `paperlint.json`, else `paper.pdf` beside
  * it. A paper written in markdown and built by its own script into `build/acl_latex.pdf` would
  * otherwise be skipped silently. The facts ALWAYS go into `<paper directory>/_build/`, not next to
  * the PDF, where neither a rule's glob nor a human looks.
@@ -111,7 +111,7 @@ if (isMain(import.meta.url)) {
     finish(
       "no-artifact",
       strict,
-      `🛑 no artifact ${pdf} — the paper declared it in venue.json, but it is not built`,
+      `🛑 no artifact ${pdf} — the paper declared it in paperlint.json, but it is not built`,
     );
   // The composition root: banal as the measurer, wired from this process's environment.
   const settings = parseBanalSettings(process.env, hostDirs());
