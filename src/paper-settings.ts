@@ -61,7 +61,8 @@ function stringField(
   k: (typeof STRING_FIELDS)[number],
 ): Result<string | null, string> {
   const v = d[k];
-  if (v === undefined) return ok(null);
+  // `"extends": null` is what `paperlint new` writes: no venue chosen yet.
+  if (v === undefined || (k === "extends" && v === null)) return ok(null);
   return typeof v === "string" && v !== ""
     ? ok(v)
     : err(`"${k}" must be a non-empty string, got ${JSON.stringify(v)}`);

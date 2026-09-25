@@ -67,13 +67,19 @@ papers/
   my-paper/
     paper.tex
     PIPELINE-STATUS.md
-    paperlint.json           { "extends": … }          THIS PAPER: its venue preset, its kind, its own rules
+    paperlint.json           { "extends": … }          THIS PAPER: its venue preset, its kind, its own rules — `paperlint new` writes it
 venues/usenix-sec.jsonc      (optional, your own)      a VENUE PRESET: format, page limits, TeX packages, rules
 node_modules/paperlint/skills/submit-paper/references/venues/
     acm-sigconf.jsonc  agenticdev.jsonc  aisec.jsonc  realm.jsonc      the shipped presets (paperlint:<name>)
 ```
 
-`<paper>/paperlint.json` is optional; a paper without one gets no venue checks.
+`paperlint new` writes `<paper>/paperlint.json` from the template (`templates/paper/paperlint.json`,
+or your `<papers>/.template/paperlint.json` if you keep one), with `"extends": null` — no venue chosen
+yet — and a `$comment` saying what goes there. Until `extends` names a preset, `paperlint lint` gives
+that paper one warning, `pdf/measured`: "this paper names no venue preset yet … set "extends" in
+papers/my-paper/paperlint.json". A paper folder with no `paperlint.json` at all — one created before
+2.1.0 — gets no venue checks and no warning; `npx paperlint new <its name>` adds the file and
+changes nothing else.
 
 ```json
 {

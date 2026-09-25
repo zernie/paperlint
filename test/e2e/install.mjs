@@ -542,28 +542,37 @@ try {
             .join("\n")}${again.stderr ?? ""}`,
         );
 
-    // 🔴 "CLEAN" MEANS: EXIT 0, AND THE ONE WARNING AN UNBUILT VENUE PAPER MUST CARRY. The acmart
-    // paper names agenticdev in its paperlint.json and is not built here, so the venue rules could not
-    // run — and `pdf/measured` says so, as a warning. Its absence would be the green zero; any other
-    // finding is a false positive on a correct corpus.
-    const onlyUnbuilt = (r) => {
+    // 🔴 "CLEAN" MEANS: EXIT 0, AND ONLY THE WARNINGS A CORRECT CORPUS MUST CARRY, one per paper:
+    // the acmart paper extends agenticdev and is not built here, so `pdf/measured` says the venue
+    // checks did not run; a paper made by `paperlint new` names no venue yet, and `pdf/measured`
+    // says that. Their absence would be a green zero; any other finding is a false positive.
+    const expectedWarnings = (papers) => (r) => {
       try {
         const ms = JSON.parse(r.stdout ?? "").flatMap((f) =>
           f.messages.map((m) => ({ ...m, file: f.filePath })),
         );
+        const want = Object.entries(papers);
         return (
           r.status === 0 &&
-          ms.length === 1 &&
-          ms[0].ruleId === "pdf/measured" &&
-          ms[0].severity === 1 &&
-          ms[0].file.endsWith(join("acmart", "paper.tex"))
+          ms.length === want.length &&
+          want.every(([paper, text]) =>
+            ms.some(
+              (m) =>
+                m.ruleId === "pdf/measured" &&
+                m.severity === 1 &&
+                m.file.endsWith(join(paper, "paper.tex")) &&
+                text.test(m.message),
+            ),
+          )
         );
       } catch {
         return false;
       }
     };
+    const UNBUILT = /does not exist, so its page limit/;
+    const NO_PRESET = /names no venue preset yet/;
     const lint = sh(bin, ["lint", "--json"], { cwd: consumer });
-    onlyUnbuilt(lint)
+    expectedWarnings({ acmart: UNBUILT })(lint)
       ? ok("`paperlint lint` passed the corpus clean")
       : bad(
           "`paperlint lint` passed the corpus clean",
@@ -571,22 +580,25 @@ try {
         );
 
     // `paperlint new` from the INSTALLED package: the templates must have shipped in the tarball, and
-    // what they scaffold must be what `paperlint lint` accepts — the first run green, not "missing
-    // PIPELINE-STATUS.md". Then the whole corpus is linted again, now with the new paper in it.
+    // what they scaffold must be what `paperlint lint` accepts — exit 0, not "missing
+    // PIPELINE-STATUS.md", with the one warning that no venue is chosen yet. Then the whole corpus
+    // is linted again, now with the new paper in it.
     const fresh = sh(bin, ["new", "demo"], { cwd: consumer });
     fresh.status === 0 &&
     existsSync(join(consumer, "papers", "demo", "PIPELINE-STATUS.md")) &&
     existsSync(join(consumer, "papers", "demo", "paper.tex")) &&
-    /no findings/.test(fresh.stdout ?? "")
+    existsSync(join(consumer, "papers", "demo", "paperlint.json")) &&
+    NO_PRESET.test(fresh.stdout ?? "") &&
+    /\(0 errors, 1 warning\)/.test(fresh.stdout ?? "")
       ? ok(
-          "`paperlint new demo` scaffolds papers/demo from the shipped templates, and its lint is clean",
+          "`paperlint new demo` scaffolds papers/demo from the shipped templates, paperlint.json included, and its lint passes with the one no-venue warning",
         )
       : bad(
-          "`paperlint new demo` scaffolds papers/demo from the shipped templates, and its lint is clean",
+          "`paperlint new demo` scaffolds papers/demo from the shipped templates, paperlint.json included, and its lint passes with the one no-venue warning",
           (fresh.stdout ?? "") + (fresh.stderr ?? ""),
         );
     const withDemo = sh(bin, ["lint", "--json"], { cwd: consumer });
-    onlyUnbuilt(withDemo)
+    expectedWarnings({ acmart: UNBUILT, demo: NO_PRESET })(withDemo)
       ? ok(
           "`paperlint lint` still passes the corpus clean with the new paper in it",
         )

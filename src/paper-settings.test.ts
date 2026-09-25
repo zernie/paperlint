@@ -45,7 +45,9 @@ describe("parsePaperSettings", () => {
       value: { extends: null, kind: null, pdf: null, rules: null },
     });
   });
+});
 
+describe("parsePaperSettings — optional keys", () => {
   it("accepts $comment, JSON Schema's comment keyword, and ignores it", () => {
     expect(
       parsePaperSettings({ extends: "paperlint:aisec", $comment: "why" }).ok,

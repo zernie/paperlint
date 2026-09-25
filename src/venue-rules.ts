@@ -7,7 +7,7 @@
  *   pdf/geometry   error  page size and column count match the preset
  *   pdf/limits     error  body and reference pages within the kind's limit; reference font size
  *   pdf/body-size  warn   body font size within the preset's tolerance
- *   pdf/measured   warn   the paper was measured at all (facts exist, geometry was measured)
+ *   pdf/measured   warn   the venue checks ran at all (a preset is named, facts exist, geometry measured)
  *
  * ── WHAT THEY READ ───────────────────────────────────────────────────────────────
  * Like `pdf/last-page-balance`, they run on a paper's `paper.tex` and judge the files beside it:
@@ -24,7 +24,8 @@
  * One rule per reason, and the others are silent — so a paper gets one finding that says what to
  * do, not six that say the same thing:
  *
- *   no preset extended      every rule silent — the paper asked for no venue checks
+ *   no paperlint.json       every rule silent — a paper from before 2.1.0 (`paperlint new` writes one)
+ *   extends null / absent   pdf/measured (warn) — no venue chosen yet; it names the file to set
  *   preset does not resolve pdf/profile (error) — a typo would otherwise switch every check off
  *   not built / no facts    pdf/measured (warn) — lint often runs before or without a build (the
  *                           CI action only lints); a warning is printed and does not fail
@@ -32,7 +33,7 @@
  *   no geometry (no banal)  pdf/measured (warn); geometry, limits, body-size silent; fonts still judge
  *   kind does not resolve   pdf/profile (error); limits silent; everything else still judges
  */
-import { dirname, isAbsolute, join, basename } from "node:path";
+import { dirname, isAbsolute, join, basename, relative } from "node:path";
 import {
   FACTS_DIR,
   FACTS_FILE,
@@ -77,6 +78,8 @@ export interface Resolved {
 /** Everything the rules need to know about one paper, decided once. */
 export type Assessment =
   | { readonly kind: "no-venue" }
+  /** A `paperlint.json` that extends no preset yet — `pdf/measured` names the file to set. */
+  | { readonly kind: "no-preset"; readonly file: string }
   | { readonly kind: "unresolved"; readonly finding: Finding }
   | { readonly kind: "unbuilt"; readonly venue: Resolved }
   | { readonly kind: "stale"; readonly finding: Finding }
@@ -144,7 +147,10 @@ const isFinding = (v: object): v is Finding => "messageId" in v;
 /** One paper, assessed. Reads through `deps.files` only; never throws on a paper's files. */
 export function assessPaper(paperDir: string, deps: VenueRuleDeps): Assessment {
   const p = paperPreset(paperDir, deps);
-  if (p.kind === "none") return { kind: "no-venue" };
+  if (p.kind === "none")
+    return p.settings === null
+      ? { kind: "no-venue" }
+      : { kind: "no-preset", file: join(paperDir, PAPER_SETTINGS_FILE) };
   if (p.kind === "settings-problem")
     return {
       kind: "unresolved",
@@ -299,6 +305,8 @@ export function judgeBodySize(
 /** The slice of ESLint's rule context these rules use. */
 export interface VenueRuleContext {
   readonly filename: string;
+  /** ESLint's working directory; file names in messages are shown relative to it. */
+  readonly cwd?: string;
   readonly sourceCode: { readonly text: string };
   readonly options: readonly unknown[];
   report(d: {
@@ -321,7 +329,12 @@ export interface VenueRuleModule {
   create(context: VenueRuleContext): { root?: () => void };
 }
 
-type Judge = (a: Assessment, options: readonly unknown[]) => Finding[];
+/** What a judge may take from its rule context: the rule's options and how to show a path. */
+interface JudgeContext {
+  readonly options: readonly unknown[];
+  readonly shown: (path: string) => string;
+}
+type Judge = (a: Assessment, ctx: JudgeContext) => Finding[];
 
 const REBUILD = "rebuild the paper (`paperlint build`) to rewrite it";
 
@@ -336,22 +349,24 @@ const JUDGES: Readonly<Record<VenueRuleName, Judge>> = {
           ? [a.venue.kindProblem]
           : [],
   fresh: (a) => (a.kind === "stale" ? [a.finding] : []),
-  measured: (a) =>
-    a.kind === "unbuilt"
-      ? [
-          finding("unbuilt", {
-            file: `${FACTS_DIR}/${FACTS_FILE}`,
-            venue: a.venue.venue,
-          }),
-        ]
-      : a.kind === "ready" && a.facts.geometry === null
-        ? [finding("noGeometry")]
-        : [],
+  measured: (a, { shown }) =>
+    a.kind === "no-preset"
+      ? [finding("noPreset", { file: shown(a.file) })]
+      : a.kind === "unbuilt"
+        ? [
+            finding("unbuilt", {
+              file: `${FACTS_DIR}/${FACTS_FILE}`,
+              venue: a.venue.venue,
+            }),
+          ]
+        : a.kind === "ready" && a.facts.geometry === null
+          ? [finding("noGeometry")]
+          : [],
   fonts: (a) =>
     a.kind === "ready"
       ? judgeFonts(a.facts.fonts, a.venue.format, a.venue.venue)
       : [],
-  geometry: (a, options) =>
+  geometry: (a, { options }) =>
     a.kind === "ready" && a.facts.geometry
       ? judgeGeometry(
           a.facts.geometry,
@@ -413,11 +428,13 @@ const META: Readonly<Record<VenueRuleName, Meta>> = {
     type: "suggestion",
     docs: {
       description:
-        "a paper that names a venue has been measured, so the venue checks can run",
+        "the venue checks ran: the paper names a venue preset, and it was built and measured",
     },
     messages: {
       unbuilt:
         "this paper names the venue `{{venue}}`, but {{file}} does not exist, so its page limit, fonts and format were NOT checked — run `paperlint build` before `paperlint lint`",
+      noPreset:
+        'this paper names no venue preset yet, so its page limit, fonts and format are not checked — set "extends" in {{file}} (e.g. "paperlint:agenticdev"; see docs/rules.md)',
       noGeometry:
         "the build measured no page geometry (banal was not found or failed), so page size, columns, page limits and font sizes were NOT checked — run `paperlint toolchain`, then `paperlint build`",
     },
@@ -534,7 +551,9 @@ function rule(name: VenueRuleName, deps: VenueRuleDeps): VenueRuleModule {
             start: { line, column: 1 },
             end: { line, column: 2 },
           };
-          for (const f of JUDGES[name](a, context.options))
+          const cwd = context.cwd;
+          const shown = (p: string) => (cwd ? relative(cwd, p) || p : p);
+          for (const f of JUDGES[name](a, { options: context.options, shown }))
             context.report({ loc, messageId: f.messageId, data: f.data });
         },
       };

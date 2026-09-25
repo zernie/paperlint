@@ -82,10 +82,16 @@ npx paperlint new my-paper
   ✓ created papers/my-paper
       + PIPELINE-STATUS.md  (from the package template)
       + paper.tex  (from the package template)
+      + paperlint.json  (from the package template)
 
 config: package.json
-✓ 2 file(s) checked, no findings
+…/papers/my-paper/paper.tex
+  1:1  warning  this paper names no venue preset yet, so its page limit, fonts and format are not checked — set "extends" in papers/my-paper/paperlint.json (e.g. "paperlint:agenticdev"; see docs/rules.md)  pdf/measured
+
+✖ 1 problem (0 errors, 1 warning)
 ```
+
+The warning is the only thing left to do: the paper does not say where it is going yet.
 
 You now have one folder per paper:
 
@@ -94,12 +100,13 @@ papers/
   my-paper/
     paper.tex                 the paper, in LaTeX
     PIPELINE-STATUS.md        the paper's record: its research question and the stages it reached
-    paperlint.json            this paper's settings: its venue and kind (optional, see below)
+    paperlint.json            this paper's settings: its venue preset and kind — `new` writes it
     reviews/*.md              review notes (optional)
     versions/                 the exact PDF and source you sent at each stage, never edited
 ```
 
-To have the paper checked against its venue, write its `paperlint.json`:
+`paperlint new` writes `paperlint.json` with `"extends": null` and a comment saying what goes
+there. To have the paper checked against its venue, name the venue preset and the kind of paper:
 
 ```json
 { "extends": "paperlint:aisec", "kind": "research" }
@@ -210,7 +217,7 @@ shows up red. Optional inputs: `config`, `max-warnings` (default `-1`, no limit)
 | `pdf/body-size`                | warning | the body font size is off the venue's                                                                            |
 | `pdf/profile`                  | error   | the paper's `extends` names no preset (a typo), or a kind of paper the venue does not have                       |
 | `pdf/fresh`                    | error   | the build facts describe an earlier PDF than the one on disk                                                     |
-| `pdf/measured`                 | warning | the paper names a venue but was not built, so the venue checks did not run                                       |
+| `pdf/measured`                 | warning | the venue checks did not run: the paper names no venue preset yet, or was not built                              |
 
 The `pdf/` checks run only for a paper whose `paperlint.json` extends a venue preset, and they judge the PDF
 `paperlint build` made: build, then lint. Errors fail the run; warnings only print. What each check
