@@ -54,8 +54,8 @@ process.exit(
         edits: [
           [
             SRC,
-            '      symlinkSync(target, entry, "dir");',
-            '      symlinkSync(resolve(physicalHome, target), entry, "dir");',
+            '    symlinkSync(target, entry, "dir");',
+            '    symlinkSync(resolve(dirname(entry), target), entry, "dir");',
           ],
         ],
       },
@@ -84,18 +84,18 @@ process.exit(
         edits: [
           [
             SRC,
-            '  symlinkSync,\n} from "node:fs";',
-            '  symlinkSync,\n  rmSync,\n} from "node:fs";',
+            '  unlinkSync,\n} from "node:fs";',
+            '  unlinkSync,\n  rmSync,\n} from "node:fs";',
           ],
           [
             SRC,
-            '    if (seen.status !== "missing" || !write)',
-            '    if (seen.status === "present" || !write)',
+            "  if (!write || !fixable) {",
+            '  if (!write || seen.status === "present") {',
           ],
           [
             SRC,
-            '      symlinkSync(target, entry, "dir");',
-            '      rmSync(entry, { recursive: true, force: true });\n      symlinkSync(target, entry, "dir");',
+            '    symlinkSync(target, entry, "dir");',
+            '    rmSync(entry, { recursive: true, force: true });\n    symlinkSync(target, entry, "dir");',
           ],
         ],
       },
@@ -125,8 +125,8 @@ process.exit(
         edits: [
           [
             SRC,
-            '    if (seen.status !== "missing" || !write)',
-            '    if (seen.status !== "missing")',
+            "  if (!write || !fixable) {",
+            "  if (!fixable) {",
           ],
           [
             SRC,

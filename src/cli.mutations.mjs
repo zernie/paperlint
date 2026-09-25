@@ -121,8 +121,8 @@ process.exit(
         edits: [
           [
             INIT,
-            '  writeFileSync(\n    path,\n    JSON.stringify(pkg, null, 2) + (raw.endsWith("\\n") ? "\\n" : ""),\n    "utf8",\n  );',
-            "  void pkg;",
+            '    writeFileSync(\n      path,\n      JSON.stringify(pkg, null, 2) + (raw.endsWith("\\n") ? "\\n" : ""),\n      "utf8",\n    );',
+            "    void pkg;",
           ],
         ],
       },
@@ -154,8 +154,8 @@ process.exit(
         edits: [
           [
             INIT,
-            '  if (existing !== undefined) return { status: "kept", path, papers: existing };',
-            '  if (false) return { status: "kept", path, papers: existing };',
+            "  if (existing !== undefined) {",
+            "  if (false) {",
           ],
         ],
       },
