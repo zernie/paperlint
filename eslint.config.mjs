@@ -107,7 +107,7 @@ export const IO_BAN = {
  * 🔴 `boundaries/root-path` IS LOAD-BEARING. Without it the plugin matches its patterns against
  * `process.cwd()` — not ESLint's `cwd` — so lint started from any other directory classifies no file
  * and the rule passes silently. Measured 2026-09-25: a core → adapter import produced zero findings
- * until the root was pinned. `root` is a parameter only so the test can lint a throwaway tree.
+ * until the root was pinned. `root` is a parameter only so `test/eslint-layers.test.ts` can re-root it at its fixture tree.
  */
 export const layerBoundaries = (root) => ({
   files: ["src/**/*.ts"],

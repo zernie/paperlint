@@ -26,5 +26,11 @@ unused disable directives are errors in `src/`: an exemption that no longer supp
 fails lint, and a new one is a visible comment with its reason. A NEW module that needs the outside
 world is an adapter, not a new disable.
 
+`boundaries/no-unknown-files` and `boundaries/no-unknown` make every file here, and every import it
+makes, belong to a declared element (core, adapter, app, or the package's own `.mjs` modules), so a
+new unclassified folder cannot sit outside the rules. `test/eslint-layers.test.ts` lints the fixture
+tree `test/fixtures/layers/src/` with this configuration; each fixture's first line names the rule
+ids it must produce.
+
 ⚠️ **`boundaries/root-path` is load-bearing.** Without it the plugin matches paths against
 `process.cwd()`, so lint started from any other directory classifies nothing and passes.
