@@ -1,6 +1,6 @@
 /**
  * The venue rules (`pdf/fresh` · `pdf/profile` · `pdf/fonts` · `pdf/geometry` · `pdf/limits` ·
- * `pdf/body-size` · `pdf/measured`) over a paper held in memory: `paper.tex`, `venue.json`,
+ * `pdf/body-size` · `pdf/measured`) over a paper held in memory: `paper.tex`, `paperlint.json`,
  * `_build/paper.facts.json` and the PDF the facts describe. The venue profiles are the SHIPPED
  * ones, read from the package's venues directory, so a profile edit that breaks a check shows here.
  *
@@ -78,7 +78,7 @@ const TEX =
   "% a comment\n\\documentclass[sigconf]{acmart}\n\\begin{document}x\\end{document}\n";
 
 interface Paper {
-  readonly venue?: unknown; // the venue.json object, or a raw string, or absent
+  readonly venue?: unknown; // the paperlint.json object, or a raw string, or absent
   readonly facts?: Json | string | null; // null: no facts file
   readonly pdf?: Uint8Array | null; // null: no PDF on disk
   readonly extra?: Readonly<Record<string, string>>;
@@ -101,7 +101,7 @@ function paperFiles(p: Paper): Record<string, string | Uint8Array> {
     [`${PAPER}/paper.tex`]: TEX,
     ...p.extra,
   };
-  if (p.venue !== undefined) out[`${PAPER}/venue.json`] = text(p.venue);
+  if (p.venue !== undefined) out[`${PAPER}/paperlint.json`] = text(p.venue);
   if (p.facts !== null)
     out[`${PAPER}/_build/paper.facts.json`] = text(p.facts ?? goodFacts());
   if (p.pdf !== null) out[`${PAPER}/paper.pdf`] = p.pdf ?? PDF_BYTES;
@@ -160,7 +160,7 @@ describe("a paper that meets its venue", () => {
     expect(lint({ venue: { venue: "aisec", kind: "research" } })).toEqual([]);
   });
 
-  it("takes the venue from venue.json, not from the facts: facts measured with no venue still judge", () => {
+  it("takes the venue from paperlint.json, not from the facts: facts measured with no venue still judge", () => {
     expect(
       lint({
         venue: DECL,
@@ -172,8 +172,8 @@ describe("a paper that meets its venue", () => {
 
 describe("a paper that names no venue", () => {
   it.each([
-    ["no venue.json", undefined],
-    ["a venue.json without a venue", { kind: "short" }],
+    ["no paperlint.json", undefined],
+    ["a paperlint.json without a venue", { kind: "short" }],
   ])("%s: every rule is silent, even with no facts and no PDF", (_, venue) => {
     expect(lint({ venue, facts: null, pdf: null })).toEqual([]);
   });
@@ -200,15 +200,31 @@ describe("pdf/profile — the declaration must resolve, or nothing is judged", (
       /agenticdev, aisec, realm/,
     ],
     [
-      "venue.json that is not JSON",
+      "paperlint.json that is not JSON",
       "{ venue: agenticdev",
-      "venueJsonBroken",
-      /venue\.json/,
+      "settingsBroken",
+      /paperlint\.json/,
+    ],
+    [
+      "paperlint.json with a misspelt key",
+      { venu: "agenticdev" },
+      "settingsBroken",
+      /unknown key "venu"/,
     ],
   ])("%s", (_, venue, messageId, text) => {
     const fs = lint({ venue, facts: null, pdf: null });
     expect(ids(fs)).toEqual([`pdf/profile:${messageId}`]);
     expect(fs[0]?.message).toMatch(text);
+  });
+
+  it("🔴 a venue.json left from before 2.1.0 is not read — pdf/profile says to run `paperlint init`", () => {
+    const fs = lint({
+      facts: null,
+      pdf: null,
+      extra: { [`${PAPER}/venue.json`]: JSON.stringify(DECL) },
+    });
+    expect(ids(fs)).toEqual(["pdf/profile:legacySettings"]);
+    expect(fs[0]?.message).toMatch(/npx paperlint init/);
   });
 
   it("a profile that does not parse is named with the file", () => {
