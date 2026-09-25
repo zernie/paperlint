@@ -48,7 +48,7 @@ const repoWith = (...dirs) => {
   return base;
 };
 const declaring = (papers) => ({
-  "research-paper-pipeline": { [PAPERS_DIR_FIELD]: papers },
+  paperlint: { [PAPERS_DIR_FIELD]: papers },
 });
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -60,7 +60,7 @@ const declaring = (papers) => ({
     ["no package.json content at all", undefined],
     ["an empty package.json", {}],
     ["a package.json with an unrelated key", { name: "x", dependencies: {} }],
-    ["our key present but empty", { "research-paper-pipeline": {} }],
+    ["our key present but empty", { paperlint: {} }],
   ])
     assert.equal(
       papersRoot(pkg, repo),
@@ -114,7 +114,7 @@ for (const declared of ["papers", "docs/papers", "writing/drafts", "a/b/c/d"]) {
       /does not exist/.test(e.message) &&
       /Nothing was declared/.test(e.message) &&
       e.message.includes(
-        `"research-paper-pipeline": { "${PAPERS_DIR_FIELD}": "path/to/papers" }`,
+        `"paperlint": { "${PAPERS_DIR_FIELD}": "path/to/papers" }`,
       ),
     "a missing root reached by DEFAULTING must say so and show the declaration to add",
   );

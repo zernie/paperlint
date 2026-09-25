@@ -81,7 +81,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const TMP = realpathSync(mkdtempSync(join(tmpdir(), "consumer-harness-")));
 process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
 
-/** A throwaway consumer repository with the given `research-paper-pipeline` block (or none). */
+/** A throwaway consumer repository with the given `paperlint` block (or none). */
 function fakeConsumer(block) {
   const root = mkdtempSync(join(TMP, "repo-"));
   writeFileSync(
@@ -94,14 +94,7 @@ function fakeConsumer(block) {
 }
 /** A directory that looks like an installed copy of this package. */
 function installedDir(root) {
-  const d = join(
-    root,
-    "node_modules",
-    "research-paper-pipeline",
-    "skills",
-    "pp",
-    "scripts",
-  );
+  const d = join(root, "node_modules", "paperlint", "skills", "pp", "scripts");
   mkdirSync(d, { recursive: true });
   return d;
 }
@@ -348,17 +341,10 @@ assert.equal(
   //    and it is how the DEFAULT fails as well: with the process started inside the installed
   //    package and CLAUDE_PROJECT_DIR unset, the consumer root is itself under node_modules.
   const root = fakeConsumer({
-    scripts: "node_modules/research-paper-pipeline/skills/pp/scripts",
+    scripts: "node_modules/paperlint/skills/pp/scripts",
   });
   mkdirSync(
-    join(
-      root,
-      "node_modules",
-      "research-paper-pipeline",
-      "skills",
-      "pp",
-      "scripts",
-    ),
+    join(root, "node_modules", "paperlint", "skills", "pp", "scripts"),
     {
       recursive: true,
     },

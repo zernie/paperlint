@@ -56,7 +56,7 @@
  * ── THE LEDGER, THREE RUNGS ─────────────────────────────────────────────────
  *   1. `PIPELINE_LEDGER` in the environment — always wins. This is what test harnesses set to
  *      keep fixture rows out of real history, so it must outrank a declaration on disk.
- *   2. `"research-paper-pipeline": { "ledger": "…" }` in the CONSUMER's `package.json`, read
+ *   2. `"paperlint": { "ledger": "…" }` in the CONSUMER's `package.json`, read
  *      from `process.cwd()`, resolved relative to it.
  *   3. `runs.jsonl` beside this file — ONLY when this file is not inside `node_modules`, i.e.
  *      when the package is being developed in its own checkout. Inside `node_modules` with
@@ -86,8 +86,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 // Re-exported, not re-declared — see the note in `lib/paper-config.mjs`. This file is not a hook
 // and never needed its own copy.
-import { CONFIG_KEY } from "../../../lib/paper-config.mjs";
-export { CONFIG_KEY };
+import { CONFIG_KEY, settingsOf } from "../../../lib/paper-config.mjs";
+export { CONFIG_KEY, settingsOf };
 
 /**
  * True when `metaUrl` belongs to the module Node was told to execute.
@@ -218,7 +218,7 @@ export function installedSkills(dir) {
         dangling
           .map((d) => `  ${d.name} -> ${d.target} (${d.cause})`)
           .join("\n") +
-        `\nRe-run \`rpp init\` if the package moved, or remove the link if the skill was ` +
+        `\nRe-run \`npx paperlint init\` if the package moved, or remove the link if the skill was ` +
         `retired. This is refused rather than skipped: a skipped link reads as a skill that ` +
         `was never installed.`,
     );
@@ -275,7 +275,7 @@ export function ledgerPath(
 
   // Rung 2 — the consumer's declaration.
   const root = consumerRoot({ env, cwd });
-  const declared = consumerPkg({ env, cwd })?.[CONFIG_KEY]?.ledger;
+  const declared = settingsOf(consumerPkg({ env, cwd }))?.ledger;
   // 🔴 `declared === undefined`, NOT `declared ?? default` — the same distinction `papersRoot()`
   // makes and for the same reason: `"ledger": null` is a keystroke, not an absence, and reading
   // it as "nothing was declared" would silently pick a different file than the one asked for.
@@ -367,7 +367,7 @@ export const DEFAULT_SCRIPTS_ROOT = ".claude/skills/paper-pipeline/scripts";
  */
 export function scriptsRoot({ env = process.env, cwd = process.cwd() } = {}) {
   const root = consumerRoot({ env, cwd });
-  const declared = consumerPkg({ env, cwd })?.[CONFIG_KEY]?.scripts;
+  const declared = settingsOf(consumerPkg({ env, cwd }))?.scripts;
   // 🔴 `declared === undefined`, NOT `declared ?? DEFAULT` — the same distinction `papersRoot()`
   // and `ledgerPath()` make, for the same reason: `"scripts": null` is a keystroke, not an
   // absence, and silently substituting the default for it hides a typo behind a working run.
@@ -446,7 +446,7 @@ export function consumerTimezone({
   env = process.env,
   cwd = process.cwd(),
 } = {}) {
-  const declared = consumerPkg({ env, cwd })?.[CONFIG_KEY]?.timezone;
+  const declared = settingsOf(consumerPkg({ env, cwd }))?.timezone;
   // 🔴 `declared === undefined`, NOT `declared ?? DEFAULT` — the same distinction every carrier
   // above makes: `"timezone": null` is a keystroke, not an absence.
   const tz = declared === undefined ? DEFAULT_TIMEZONE : declared;
@@ -498,7 +498,7 @@ export function consumerContactEmail({
   env = process.env,
   cwd = process.cwd(),
 } = {}) {
-  const declared = consumerPkg({ env, cwd })?.[CONFIG_KEY]?.contactEmail;
+  const declared = settingsOf(consumerPkg({ env, cwd }))?.contactEmail;
   if (declared === undefined || declared === null) return null;
   if (typeof declared !== "string" || !declared.includes("@"))
     throw new TypeError(

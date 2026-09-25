@@ -113,7 +113,7 @@ Use \`mcp__Google_Calendar__create_event\` for three anchors per paper. 🔴 **R
 assume it** — it is the \`timezone\` carrier, and it is the author's, not the pipeline's:
 
 \`\`\`
-node -p "require('./package.json')['research-paper-pipeline']?.timezone ?? 'UTC'"
+node -p "((p) => p.paperlint ?? p['research-paper-pipeline'])(require('./package.json'))?.timezone ?? 'UTC'"
 \`\`\`
 
 The example below shows the default, \`UTC\`; substitute whatever that command prints.

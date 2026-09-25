@@ -85,7 +85,9 @@ import {
   CONFIG_KEY,
   DEFAULT_PAPERS_ROOT,
   PAPERS_DIR_FIELD,
+  declaredSettings,
   renamedFieldMessage,
+  settingsOf,
 } from "../lib/paper-config.mjs";
 export { DEFAULT_PAPERS_ROOT };
 
@@ -103,9 +105,11 @@ export { DEFAULT_PAPERS_ROOT };
  *          would change their meaning.
  */
 export function papersRoot(pkg, baseDir = process.cwd()) {
-  const renamed = renamedFieldMessage(pkg?.[CONFIG_KEY]);
+  const found = declaredSettings(pkg);
+  if (found.conflict !== null) throw new TypeError(found.conflict);
+  const renamed = renamedFieldMessage(found.settings);
   if (renamed) throw new TypeError(renamed);
-  const declared = pkg?.[CONFIG_KEY]?.[PAPERS_DIR_FIELD];
+  const declared = settingsOf(pkg)?.[PAPERS_DIR_FIELD];
   // 🔴 `declared === undefined`, NOT `declared ?? DEFAULT`. The two differ on exactly one
   // input — `"papersDir": null` — and the difference is the whole point: `??` reads an explicit
   // `null` as "nothing was declared" and silently uses the default, which is a typed keystroke
@@ -119,7 +123,7 @@ export function papersRoot(pkg, baseDir = process.cwd()) {
     );
   if (!existsSync(resolve(baseDir, root)))
     throw new Error(
-      `research-paper-pipeline: the papers root "${root}" does not exist under ${baseDir}.\n` +
+      `${CONFIG_KEY}: the papers root "${root}" does not exist under ${baseDir}.\n` +
         (declared === undefined
           ? `Nothing was declared, so the default "${DEFAULT_PAPERS_ROOT}" was used. Declare the ` +
             `real location in package.json:\n` +

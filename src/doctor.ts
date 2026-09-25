@@ -34,6 +34,11 @@ import {
   PAPERS_DIR_FIELD,
   OLD_PAPERS_DIR_FIELD,
 } from "../hooks/paper-edit-guard.hook.mjs";
+import {
+  LEGACY_CONFIG_KEY,
+  LEGACY_KEY_MESSAGE,
+  declaredSettings,
+} from "../lib/paper-config.mjs";
 import { PAPER_MARKERS } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
 import { doctorHooks } from "./hooks-settings.ts";
@@ -141,6 +146,54 @@ export function detectPapers(cwd: string, depth = 2): string[] {
 }
 
 /**
+ * The declaration's verdict. The old field name and two differing keys are failures (every reader
+ * refuses them); the old KEY is read and named; a missing declaration is a warning.
+ */
+function declarationVerdict(rawPkg: string): { lines: string[]; bad: number } {
+  const out: string[] = [];
+  const found = (() => {
+    try {
+      return declaredSettings(JSON.parse(rawPkg));
+    } catch {
+      return declaredSettings(undefined);
+    }
+  })();
+  if (found.conflict !== null)
+    return { lines: [`  ✗ ${found.conflict}`], bad: 1 };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
+  const settings = found.settings as Record<string, any> | undefined;
+  const key = found.legacy ? LEGACY_CONFIG_KEY : CONFIG_KEY;
+  const declared = settings?.[PAPERS_DIR_FIELD];
+  if (found.legacy) out.push(`  ⚠ ${LEGACY_KEY_MESSAGE}`);
+  // The old field name is a failure, not a warning: every reader refuses it.
+  if (settings && Object.hasOwn(settings, OLD_PAPERS_DIR_FIELD))
+    return {
+      lines: [
+        ...out,
+        `  ✗ "${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "${key}"`,
+      ],
+      bad: 1,
+    };
+  // 🔴 A MISSING DECLARATION IS A WARNING, NOT A REFUSAL, and that is a decision, not an
+  // oversight. Without it the hook takes the `papers` default; if the papers do live there, the
+  // install WORKS — just by coincidence, and it will break silently on the day the directory
+  // moves. Failing on a working install is not allowed here: for an `error`-level check a false
+  // positive costs more than a miss, because people do not fix it, they switch it off — together
+  // with the binary findings below, which the command was written for. A real breakage (the roots
+  // drifted apart, the directory does not exist) is caught where it is binary.
+  if (declared === undefined)
+    out.push(
+      `  ⚠ package.json has no "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": … } — the hooks fall back to "${DEFAULT_PAPERS_ROOT}"`,
+      `      it works only while your papers happen to live there; declare it and it keeps working`,
+    );
+  else
+    out.push(
+      `  ✓ package.json → ${key}.${PAPERS_DIR_FIELD} = ${JSON.stringify(declared)}`,
+    );
+  return { lines: out, bad: 0 };
+}
+
+/**
  * The papers-directory verdict: whether the CLI and the hooks agree, and whether the directory
  * they name exists. `bad` counts the failures.
  */
@@ -225,40 +278,9 @@ export function doctor({
     );
     bad++;
   } else {
-    const settings = (() => {
-      try {
-        return JSON.parse(rawPkg)?.[CONFIG_KEY];
-      } catch {
-        return undefined;
-      }
-    })();
-    const declared = settings?.[PAPERS_DIR_FIELD];
-    // The old field name is a failure, not a warning: every reader refuses it.
-    const renamed = settings && Object.hasOwn(settings, OLD_PAPERS_DIR_FIELD);
-    if (renamed) {
-      out.push(
-        `  ✗ "${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "${CONFIG_KEY}"`,
-      );
-      bad++;
-    }
-    // 🔴 A MISSING DECLARATION IS A WARNING, NOT A REFUSAL, and that is a decision, not an
-    // oversight. Without it the hook takes the `papers` default; if the papers do live there, the
-    // install WORKS — just by coincidence, and it will break silently on the day the directory
-    // moves. Failing on a working install is not allowed here: for an `error`-level check a false
-    // positive costs more than a miss, because people do not fix it, they switch it off — together
-    // with the binary findings below, which the command was written for. A real breakage (the roots
-    // drifted apart, the directory does not exist) is caught where it is binary.
-    // When the old name is present, the ✗ line pushed above already says what is wrong.
-    if (!renamed)
-      out.push(
-        declared === undefined
-          ? `  ⚠ package.json has no "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": … } — the hooks fall back to "${DEFAULT_PAPERS_ROOT}"`
-          : `  ✓ package.json → ${CONFIG_KEY}.${PAPERS_DIR_FIELD} = ${JSON.stringify(declared)}`,
-      );
-    if (declared === undefined && !renamed)
-      out.push(
-        `      it works only while your papers happen to live there; declare it and it keeps working`,
-      );
+    const declaration = declarationVerdict(rawPkg);
+    out.push(...declaration.lines);
+    bad += declaration.bad;
   }
   if (existsSync(join(root, "rpp.json")))
     out.push(`  ⚠ rpp.json is present — deprecated; the hooks never read it`);

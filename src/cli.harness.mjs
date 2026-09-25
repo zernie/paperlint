@@ -1,5 +1,5 @@
 /**
- * Both halves for the `research-paper-pipeline lint` utility, and separately — failures, each
+ * Both halves for the `paperlint lint` utility, and separately — failures, each
  * of which must be EXPLAINABLE, not just nonzero.
  *
  * 🔴 Two of the defects checked here the utility already had, and both were found by the
@@ -216,7 +216,7 @@ check(
         {
           name: "c",
           version: "1.0.0",
-          "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "papers" },
+          paperlint: { [PAPERS_DIR_FIELD]: "papers" },
         },
         null,
         2,
@@ -237,15 +237,48 @@ check(
       !/is deprecated/.test(r.out),
     );
 
+    // Guards: settings under the key's old name (before 2.0.0) keep working, and say so.
+    writeFileSync(
+      join(root, "package.json"),
+      JSON.stringify({
+        name: "c",
+        version: "1.0.0",
+        "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "papers" },
+      }),
+    );
+    const legacy = await cli(["lint"], root);
+    check(
+      "🔴 the OLD key is still read — the same clean run — and a deprecation line names the new one",
+      legacy.code === 0 &&
+        /no findings/.test(legacy.out) &&
+        /"research-paper-pipeline" in package\.json is the old name .* rename it to "paperlint"/.test(
+          legacy.out,
+        ),
+    );
+    // Guards: both keys, different contents — refused, since there is no telling which is meant.
+    writeFileSync(
+      join(root, "package.json"),
+      JSON.stringify({
+        name: "c",
+        version: "1.0.0",
+        paperlint: { [PAPERS_DIR_FIELD]: "papers" },
+        "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "elsewhere" },
+      }),
+    );
+    const both = await cli(["lint"], root);
+    check(
+      "🔴 both keys with different contents — refused (exit 2), naming both",
+      both.code === 2 &&
+        /has both "paperlint" and "research-paper-pipeline", and they differ/.test(
+          both.out,
+        ),
+    );
+
     // The key is present, the papers-directory field inside it is not: this is not an "empty config" but an
     // unfinished one, and the failure must name the EXACT shape that needs adding.
     writeFileSync(
       join(root, "package.json"),
-      JSON.stringify(
-        { name: "c", version: "1.0.0", "research-paper-pipeline": {} },
-        null,
-        2,
-      ),
+      JSON.stringify({ name: "c", version: "1.0.0", paperlint: {} }, null, 2),
     );
     const noPapers = await cli(["lint"], root);
     check(
@@ -253,7 +286,7 @@ check(
       noPapers.code === 2 &&
         noPapers.out.includes(`must declare \`${PAPERS_DIR_FIELD}\``) &&
         noPapers.out.includes(
-          `"research-paper-pipeline": { "${PAPERS_DIR_FIELD}": "papers" }`,
+          `"paperlint": { "${PAPERS_DIR_FIELD}": "papers" }`,
         ),
     );
 
@@ -264,7 +297,7 @@ check(
       JSON.stringify({
         name: "c",
         version: "1.0.0",
-        "research-paper-pipeline": {
+        paperlint: {
           [OLD_PAPERS_DIR_FIELD]: "papers",
           [PAPERS_DIR_FIELD]: "papers",
         },
@@ -275,7 +308,7 @@ check(
       `the old field name "${OLD_PAPERS_DIR_FIELD}" fails with a message that names the new one`,
       oldName.code === 2 &&
         oldName.out.includes(
-          `"${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "research-paper-pipeline"`,
+          `"${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "paperlint"`,
         ),
     );
     writeFileSync(
@@ -283,7 +316,7 @@ check(
       JSON.stringify({
         name: "c",
         version: "1.0.0",
-        "research-paper-pipeline": { [OLD_PAPERS_DIR_FIELD]: "papers" },
+        paperlint: { [OLD_PAPERS_DIR_FIELD]: "papers" },
       }),
     );
     check(
@@ -319,7 +352,7 @@ check(
       JSON.stringify({
         name: "c",
         version: "1.0.0",
-        "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "papers" },
+        paperlint: { [PAPERS_DIR_FIELD]: "papers" },
       }),
     );
     check(
@@ -378,9 +411,7 @@ check(
     };
   };
   const declared = (dir) =>
-    JSON.parse(readFileSync(join(dir, "package.json"), "utf8"))[
-      "research-paper-pipeline"
-    ];
+    JSON.parse(readFileSync(join(dir, "package.json"), "utf8"))["paperlint"];
   // No check should depend on what is installed ON THIS MACHINE: `command -v` is faked,
   // otherwise "no external programs" would read as a finding about init.
   const haveAll = () => ({ status: 0 });
@@ -454,13 +485,76 @@ check(
       );
     }
 
+    // ── 2½. SETTINGS UNDER THE OLD KEY ARE MOVED TO THE NEW ONE ───────────────────────
+    {
+      const dir = project("old-key", {
+        pkg: {
+          name: "consumer",
+          "research-paper-pipeline": {
+            [PAPERS_DIR_FIELD]: "writing",
+            minFindings: 3,
+          },
+          version: "1.0.0",
+        },
+        papers: ["writing"],
+      });
+      const out = say();
+      await init(dir, {
+        log: out.log,
+        err: out.log,
+        interactive: false,
+        run: haveAll,
+      });
+      const pkg = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
+      check(
+        "🔴 init moves the old key's settings to the new key, whole, and removes the old key",
+        JSON.stringify(pkg.paperlint) ===
+          JSON.stringify({ [PAPERS_DIR_FIELD]: "writing", minFindings: 3 }) &&
+          !("research-paper-pipeline" in pkg),
+      );
+      check(
+        "in the same position in the file, so the diff is a one-word rename",
+        Object.keys(pkg).join() === "name,paperlint,version",
+      );
+      check(
+        "and it says so",
+        /moved the settings from "research-paper-pipeline" \(the old key\) to "paperlint"/.test(
+          out.text(),
+        ),
+      );
+    }
+    {
+      const dir = project("both-keys", {
+        pkg: {
+          name: "consumer",
+          paperlint: { [PAPERS_DIR_FIELD]: "writing" },
+          "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "other" },
+        },
+        papers: ["writing"],
+      });
+      const out = say();
+      const code = await init(dir, {
+        log: out.log,
+        err: out.log,
+        interactive: false,
+        run: haveAll,
+      });
+      check(
+        "both keys with different contents — init refuses (exit 2) and writes nothing",
+        code === 2 &&
+          /they differ/.test(out.text()) &&
+          "research-paper-pipeline" in
+            JSON.parse(readFileSync(join(dir, "package.json"), "utf8")),
+      );
+    }
+
     // ── 3. SOMEONE ELSE'S VALUE DOES NOT GET OVERWRITTEN ─────────────────────────────
     {
       const dir = project("mine", {
         pkg: {
           name: "c",
           version: "1.0.0",
-          "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "mine" },
+          paperlint: { [PAPERS_DIR_FIELD]: "mine" },
         },
         papers: ["writing"],
       });
@@ -727,7 +821,7 @@ check(
         link: (root) => ({
           ok: true,
           home: join(root, ".claude", "skills"),
-          example: "../../node_modules/research-paper-pipeline/skills/alpha",
+          example: "../../node_modules/paperlint/skills/alpha",
           links: [
             { name: "alpha", status: "created" },
             { name: "beta", status: "present" },
@@ -1215,7 +1309,7 @@ check(
       join(tree, "package.json"),
       JSON.stringify({
         name: "x",
-        "research-paper-pipeline": {
+        paperlint: {
           [PAPERS_DIR_FIELD]: "papers",
           typographyDebt: { "papers/p": { sectionSign: 2 } },
         },
@@ -1643,7 +1737,7 @@ console.log(
       const dir = bare("declared");
       writeFileSync(
         join(dir, "package.json"),
-        `{"name":"c","version":"1.0.0","research-paper-pipeline":{"${PAPERS_DIR_FIELD}":"writing"}}\n`,
+        `{"name":"c","version":"1.0.0","paperlint":{"${PAPERS_DIR_FIELD}":"writing"}}\n`,
       );
       const made = [];
       await init(dir, {
@@ -1708,7 +1802,7 @@ console.log(
   try {
     writeFileSync(
       join(root, "package.json"),
-      `{"research-paper-pipeline":{"${PAPERS_DIR_FIELD}":"papers"}}\n`,
+      `{"paperlint":{"${PAPERS_DIR_FIELD}":"papers"}}\n`,
     );
     mkdirSync(join(root, "papers", "p1"), { recursive: true });
     writeFileSync(join(root, "papers", "p1", "paper.md"), "# P\n");
@@ -1755,7 +1849,7 @@ console.log(
     );
     writeFileSync(
       join(root, "package.json"),
-      `{"research-paper-pipeline":{"${PAPERS_DIR_FIELD}":"writing"}}\n`,
+      `{"paperlint":{"${PAPERS_DIR_FIELD}":"writing"}}\n`,
     );
     const r = await cli(["new", "demo"], root);
     check(
@@ -1808,7 +1902,7 @@ console.log(
         JSON.stringify({
           name: "c",
           version: "1.0.0",
-          "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "papers", ...rpp },
+          paperlint: { [PAPERS_DIR_FIELD]: "papers", ...rpp },
         }),
       );
     const balanceOn = (files) => ({
@@ -1821,7 +1915,7 @@ console.log(
       "🔴 an unknown key is REFUSED by name — a typo must not read as 'not set'",
       typo.code === 2 &&
         typo.out.includes(
-          'package.json → "research-paper-pipeline": unknown key "typographyDept"',
+          'package.json → "paperlint": unknown key "typographyDept"',
         ),
     );
     settings({

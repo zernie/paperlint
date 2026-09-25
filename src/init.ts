@@ -65,7 +65,9 @@ import {
 import {
   CONFIG_KEY,
   DEFAULT_PAPERS_ROOT,
+  LEGACY_CONFIG_KEY,
   PAPERS_DIR_FIELD,
+  declaredSettings,
   renamedFieldMessage,
 } from "../lib/paper-config.mjs";
 
@@ -176,8 +178,15 @@ export type DeclarationResult =
       readonly status: "written";
       readonly path: string;
       readonly papers: string;
+      /** The settings were under the old key and were moved to the new one. */
+      readonly migrated: boolean;
     }
-  | { readonly status: "kept"; readonly path: string; readonly papers: unknown }
+  | {
+      readonly status: "kept";
+      readonly path: string;
+      readonly papers: unknown;
+      readonly migrated: boolean;
+    }
   | {
       readonly status: "unparsable";
       readonly path: string;
@@ -213,19 +222,41 @@ export function declarePapers(root: string, papers: string): DeclarationResult {
   } catch (e) {
     return { status: "unparsable", path, reason: (e as Error).message };
   }
-  const message = renamedFieldMessage(pkg?.[CONFIG_KEY]);
+  const found = declaredSettings(pkg);
+  if (found.conflict !== null)
+    return { status: "renamed", path, message: found.conflict };
+  const message = renamedFieldMessage(found.settings);
   if (message) return { status: "renamed", path, message };
+  // Settings under the old key move to the new one, in the same position in the file.
+  const migrated = found.legacy;
+  if (migrated) pkg = renameKey(pkg, LEGACY_CONFIG_KEY, CONFIG_KEY);
+  const write = (): void =>
+    // Two-space indent and the file's own trailing newline: a declaration is not a licence to
+    // reformat somebody else's file, and a one-line diff is a diff a consumer will actually read.
+    writeFileSync(
+      path,
+      JSON.stringify(pkg, null, 2) + (raw.endsWith("\n") ? "\n" : ""),
+      "utf8",
+    );
   const existing = pkg?.[CONFIG_KEY]?.[PAPERS_DIR_FIELD];
-  if (existing !== undefined) return { status: "kept", path, papers: existing };
+  if (existing !== undefined) {
+    if (migrated) write();
+    return { status: "kept", path, papers: existing, migrated };
+  }
   pkg[CONFIG_KEY] = { ...(pkg[CONFIG_KEY] ?? {}), [PAPERS_DIR_FIELD]: papers };
-  // Two-space indent and the file's own trailing newline: a declaration is not a licence to
-  // reformat somebody else's file, and a one-line diff is a diff a consumer will actually read.
-  writeFileSync(
-    path,
-    JSON.stringify(pkg, null, 2) + (raw.endsWith("\n") ? "\n" : ""),
-    "utf8",
+  write();
+  return { status: "written", path, papers, migrated };
+}
+
+/** `obj` with `from` renamed to `to`, keeping the key's position. */
+function renameKey(
+  obj: Record<string, unknown>,
+  from: string,
+  to: string,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(obj).map(([k, v]) => [k === from ? to : k, v]),
   );
-  return { status: "written", path, papers };
 }
 
 export type RppJsonResult = "absent" | "kept" | "filled" | "unparsable";
@@ -709,7 +740,7 @@ export async function init(
   } else if (decl.status === "renamed") {
     err(`  ✗ ${decl.message}`);
     err(
-      `      nothing was written. Rename the field in ${here(decl.path)}, then run init again.`,
+      `      nothing was written. Fix it in ${here(decl.path)}, then run init again.`,
     );
     return 2;
   } else if (decl.status === "unparsable") {
@@ -733,6 +764,10 @@ export async function init(
     );
     return 2;
   }
+  if (decl.migrated)
+    log(
+      `  ✓ moved the settings from "${LEGACY_CONFIG_KEY}" (the old key) to "${CONFIG_KEY}"`,
+    );
   log(
     `      one declaration — the hooks, the rules and the CLI all read this one key`,
   );

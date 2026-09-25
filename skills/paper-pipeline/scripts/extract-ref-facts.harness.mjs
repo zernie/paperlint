@@ -42,7 +42,7 @@ const ROOT = consumerRoot();
 const X = await import(join(HERE, "extract-ref-facts.mjs"));
 
 // 🔴 PAPERS ROOT — FROM THE DECLARATION, NOT BY THE FIRST CONSUMER'S DIRECTORY NAME (12.09.2026).
-// `package.json` → `research-paper-pipeline.papersDir`, default `papers`. The same key is read by
+// `package.json` → `paperlint.papersDir`, default `papers`. The same key is read by
 // ESLint config, hook and skills — the mechanism was moved into the package at step 2, and a second way to know
 // the same thing would be a second truth.
 //
@@ -57,9 +57,9 @@ const X = await import(join(HERE, "extract-ref-facts.mjs"));
 // A directory on disk answers the same question without knowing any name in advance.
 const PAPERS_ROOT = join(
   ROOT,
-  JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"))[
-    "research-paper-pipeline"
-  ]?.[PAPERS_DIR_FIELD] ?? "papers",
+  JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"))["paperlint"]?.[
+    PAPERS_DIR_FIELD
+  ] ?? "papers",
 );
 const REAL_PAPERS = existsSync(PAPERS_ROOT)
   ? readdirSync(PAPERS_ROOT, { withFileTypes: true })

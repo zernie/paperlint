@@ -75,8 +75,11 @@ import {
 // rules and the skill scripts import it too); its types are in lib/paper-config.d.mts.
 import {
   CONFIG_KEY,
+  LEGACY_CONFIG_KEY,
+  LEGACY_KEY_MESSAGE,
   PAPERS_DIR_FIELD,
   SETTINGS_KEYS,
+  declaredSettings,
   renamedFieldMessage,
 } from "../lib/paper-config.mjs";
 import {
@@ -489,9 +492,8 @@ export function findDeclaration(startDir: string): Declaration | null {
  */
 const declaresSettings = (pkgPath: string): boolean => {
   try {
-    return (
-      JSON.parse(readFileSync(pkgPath, "utf8"))?.[CONFIG_KEY] !== undefined
-    );
+    const d = declaredSettings(JSON.parse(readFileSync(pkgPath, "utf8")));
+    return d.settings !== undefined || d.conflict !== null;
   } catch {
     return false;
   }
@@ -538,6 +540,7 @@ export function readConfig(
   }
 
   let opts: RppConfig = {};
+  let legacyKey = false;
   if (decl && configPath) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
     let parsed: any;
@@ -547,7 +550,15 @@ export function readConfig(
       err(`${configPath} is not valid JSON: ${(e as Error).message}`);
       return { code: 2 };
     }
-    opts = decl.kind === "package.json" ? (parsed?.[CONFIG_KEY] ?? {}) : parsed;
+    if (decl.kind === "package.json") {
+      const d = declaredSettings(parsed);
+      if (d.conflict !== null) {
+        err(d.conflict);
+        return { code: 2 };
+      }
+      opts = (d.settings ?? {}) as RppConfig;
+      legacyKey = d.legacy;
+    } else opts = parsed;
     // The discovered config is NAMED out loud. Otherwise a run from someone else's directory picks
     // up someone else's file and does not say so — and a typography-debt mismatch looks like a finding.
     //
@@ -563,15 +574,16 @@ export function readConfig(
     if (decl.kind === "rpp.json")
       (a.json ? err : log)(
         `  ⚠ ${CONFIG_NAME} is deprecated — move these keys under "${CONFIG_KEY}" in ${PKG_NAME}; ` +
-          `the hooks read only that file. \`npx rpp init\` does it for you.`,
+          `the hooks read only that file. \`npx paperlint init\` does it for you.`,
       );
+    if (legacyKey) (a.json ? err : log)(`  ⚠ ${LEGACY_KEY_MESSAGE}`);
   }
 
   // The old field name is refused before anything else is read from the settings: falling back
   // to it would keep it working forever, and this package has no released users to migrate.
   const where =
     decl?.kind === "package.json"
-      ? `${PKG_NAME} → "${CONFIG_KEY}"`
+      ? `${PKG_NAME} → "${legacyKey ? LEGACY_CONFIG_KEY : CONFIG_KEY}"`
       : (decl?.path ?? CONFIG_NAME);
   const renamed = decl ? renamedFieldMessage(opts, where) : null;
   if (renamed) {

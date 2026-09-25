@@ -423,7 +423,7 @@ try {
     const declared = (() => {
       try {
         return JSON.parse(readFileSync(join(consumer, "package.json"), "utf8"))[
-          "research-paper-pipeline"
+          "paperlint"
         ]?.[PAPERS_DIR_FIELD];
       } catch (e) {
         return `unreadable: ${e.message}`;

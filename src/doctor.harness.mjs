@@ -52,8 +52,7 @@ function consumer({ papersDir, pkgKey, rppJson, makeDir = true }) {
     );
   }
   const pkg = { name: "consumer", version: "1.0.0" };
-  if (pkgKey !== undefined)
-    pkg["research-paper-pipeline"] = { [PAPERS_DIR_FIELD]: pkgKey };
+  if (pkgKey !== undefined) pkg["paperlint"] = { [PAPERS_DIR_FIELD]: pkgKey };
   writeFileSync(join(dir, "package.json"), JSON.stringify(pkg, null, 2));
   if (rppJson !== undefined)
     writeFileSync(
@@ -99,7 +98,7 @@ const runDoctor = (
     join(dir, "package.json"),
     JSON.stringify({
       name: "consumer",
-      "research-paper-pipeline": { [OLD_PAPERS_DIR_FIELD]: "papers" },
+      paperlint: { [OLD_PAPERS_DIR_FIELD]: "papers" },
     }),
   );
   const r = runDoctor(dir, { cliPapers: null });
@@ -107,7 +106,7 @@ const runDoctor = (
   check(
     "and doctor says what the field was renamed to",
     r.out.includes(
-      `"${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "research-paper-pipeline"`,
+      `"${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "paperlint"`,
     ),
   );
   rmSync(dir, { recursive: true, force: true });
@@ -156,7 +155,7 @@ const runDoctor = (
   check("an install that works by coincidence does NOT crash", r.code === 0);
   check(
     "but the missing declaration is NAMED, not skipped",
-    /⚠ package\.json has no "research-paper-pipeline"/.test(r.out),
+    /⚠ package\.json has no "paperlint"/.test(r.out),
   );
   check(
     "and it says exactly why that is risky — it works only until the directory moves",
@@ -186,6 +185,39 @@ const runDoctor = (
   rmSync(dir, { recursive: true, force: true });
 }
 
+// ── II-quater. THE KEY'S OLD NAME IS READ AND NAMED; TWO DIFFERENT KEYS ARE A FAILURE ──────
+{
+  const dir = consumer({ papersDir: "papers" });
+  writeFileSync(
+    join(dir, "package.json"),
+    JSON.stringify({
+      "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "papers" },
+    }),
+  );
+  const r = runDoctor(dir, { cliPapers: "papers" });
+  check(
+    "the old key — read (not a failure), and named with the new one",
+    r.code === 0 &&
+      /⚠ "research-paper-pipeline" in package\.json is the old name/.test(
+        r.out,
+      ) &&
+      /the hooks will guard papers/.test(r.out),
+  );
+  writeFileSync(
+    join(dir, "package.json"),
+    JSON.stringify({
+      paperlint: { [PAPERS_DIR_FIELD]: "papers" },
+      "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "elsewhere" },
+    }),
+  );
+  const both = runDoctor(dir, { cliPapers: "papers" });
+  check(
+    "both keys with different contents — a failure",
+    both.code === 2 && /✗ package\.json has both/.test(both.out),
+  );
+  rmSync(dir, { recursive: true, force: true });
+}
+
 // ── III. TWO DECLARATIONS HAVE DRIFTED APART ────────────────────────────────────────────────
 {
   const dir = consumer({
@@ -211,7 +243,7 @@ const runDoctor = (
   const r = runDoctor(dir, { cliPapers: "docs/papers" });
   const fromHook = papersRoot(
     JSON.stringify({
-      "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "docs/papers/" },
+      paperlint: { [PAPERS_DIR_FIELD]: "docs/papers/" },
     }),
   );
   check("the hook itself trims the trailing slash", fromHook === "docs/papers");
@@ -318,7 +350,7 @@ const runDoctor = (
   const state = {
     ok: true,
     home: join(dir, ".claude", "skills"),
-    example: "../../node_modules/research-paper-pipeline/skills/a",
+    example: "../../node_modules/paperlint/skills/a",
     links: [
       { name: "a", status: "present" },
       { name: "b", status: "missing" },
