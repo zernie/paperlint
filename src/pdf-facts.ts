@@ -1,6 +1,7 @@
 /**
- * READ A FINISHED PDF with pdf.js — the shell around `pdf-geometry.ts`. Page count, the fonts the
- * pages draw text with, and the last page's words.
+ * READ A FINISHED PDF with pdf.js — the shell around `pdf-geometry.ts` and `pdf-layout.ts`. Page
+ * count, the fonts the pages draw text with, the last page's words, and every page's text boxes
+ * (the input banal measures page geometry from, written as pdftohtml XML by `pdf-layout.ts`).
  *
  * pdf.js arrives as the npm package `unpdf` (a zero-dependency build of Mozilla's pdf.js), so
  * reading a PDF needs nothing installed on the system. It replaced three poppler programs
@@ -29,6 +30,13 @@ import {
   type RawPage,
   type TextRun,
 } from "./pdf-geometry.ts";
+import {
+  fillsOf,
+  isUpright,
+  type ColourOps,
+  type PageLayout,
+  type TextBox,
+} from "./pdf-layout.ts";
 
 type PdfJs = Awaited<ReturnType<typeof import("unpdf").getResolvedPDFJS>>;
 type Doc = Awaited<ReturnType<PdfJs["getDocument"]>["promise"]>;
@@ -36,11 +44,15 @@ type Page = Awaited<ReturnType<Doc["getPage"]>>;
 type Item = Awaited<ReturnType<Page["getTextContent"]>>["items"][number];
 type TextItem = Extract<Item, { str: string }>;
 
-/** What `readPdf` measured. `last` is the last page's words; `classifyLastPage` reads it. */
+/**
+ * What `readPdf` measured. `last` is the last page's words; `classifyLastPage` reads it. `layout` is
+ * every page's text boxes, for banal (`pdf-layout.ts` writes them as the XML banal reads).
+ */
 export interface PdfFacts {
   readonly pages: number;
   readonly fonts: Fonts;
   readonly last: PageText;
+  readonly layout: readonly PageLayout[];
 }
 
 export type PdfReadFailure =
@@ -130,16 +142,21 @@ function loadedFonts(page: Page): Map<string, RawFont> {
 async function readPage(
   page: Page,
   seen: ReadonlySet<string>,
-): Promise<{ raw: RawPage; items: TextItem[] }> {
+  lib: PdfJs,
+): Promise<{ raw: RawPage; items: TextItem[]; layout: PageLayout }> {
   // The operator list is what makes pdf.js load a page's fonts into `commonObjs`.
-  await page.getOperatorList();
+  const ops = await page.getOperatorList();
   const items = (await page.getTextContent()).items.filter(isText);
   const loaded = loadedFonts(page);
   const named = new Set(items.map((it) => it.fontName));
   const fonts = [...loaded.values()].filter(
     (f) => named.has(f.id) || !seen.has(f.id),
   );
-  return { raw: { hasText: items.length > 0, fonts }, items };
+  return {
+    raw: { hasText: items.length > 0, fonts },
+    items,
+    layout: layoutOf(page, items, ops, lib),
+  };
 }
 
 /**
@@ -182,13 +199,74 @@ function pageText(page: Page, items: readonly TextItem[]): PageText {
   };
 }
 
+/** The font name pdf.js resolved for an item, else its internal id. */
+function fontNameOf(font: unknown, id: string): string {
+  const name = (font as { name?: unknown } | null)?.name;
+  return typeof name === "string" && name ? name : id;
+}
+
+/**
+ * One text item as a box, in points, top-down. The size is the item's vertical scale, which is what
+ * pdftohtml reports as the font size; upright is judged in VIEWER space (the page's /Rotate applied),
+ * because that is where pdftohtml draws.
+ */
+function boxOf(
+  page: Page,
+  vp: ReturnType<Page["getViewport"]>,
+  it: TextItem,
+  lib: PdfJs,
+): Omit<TextBox, "fill"> {
+  const [a = 0, b = 0, c = 0, d = 0, e = 0, f = 0] = it.transform as number[];
+  const [x, baseline] = vp.convertToViewportPoint(e, f) as [number, number];
+  const size = Math.hypot(c, d) || Math.hypot(a, b) || it.height;
+  const font = resolved(page, it.fontName);
+  const m = metricsOf(font);
+  return {
+    top: baseline - m.ascent * size,
+    left: x,
+    width: it.width,
+    height: (m.ascent - m.descent) * size,
+    size,
+    font: fontNameOf(font, it.fontName),
+    text: it.str,
+    upright: isUpright(
+      lib.Util.transform(vp.transform, it.transform) as number[],
+    ),
+  };
+}
+
+/** Every text item of a page as a box with its fill — the input of `pdf2xml`. */
+function layoutOf(
+  page: Page,
+  items: readonly TextItem[],
+  ops: Awaited<ReturnType<Page["getOperatorList"]>>,
+  lib: PdfJs,
+): PageLayout {
+  const vp = page.getViewport({ scale: 1 });
+  const fills = fillsOf(
+    lib.OPS as unknown as ColourOps,
+    ops,
+    items.map((it) => it.str),
+  );
+  const boxes = items.map((it, k): TextBox => ({
+    ...boxOf(page, vp, it, lib),
+    fill: fills[k] ?? { kind: "unknown" },
+  }));
+  return { widthPt: vp.width, heightPt: vp.height, boxes };
+}
+
 /** Every page's fonts, and the last page's words. */
-async function factsOf(doc: Doc): Promise<PdfRead> {
-  const read: { page: Page; raw: RawPage; items: TextItem[] }[] = [];
+async function factsOf(doc: Doc, lib: PdfJs): Promise<PdfRead> {
+  const read: {
+    page: Page;
+    raw: RawPage;
+    items: TextItem[];
+    layout: PageLayout;
+  }[] = [];
   const seen = new Set<string>();
   for (let i = 1; i <= doc.numPages; i++) {
     const page = await doc.getPage(i);
-    const r = await readPage(page, seen);
+    const r = await readPage(page, seen, lib);
     for (const f of r.raw.fonts) seen.add(f.id);
     read.push({ page, ...r });
   }
@@ -207,6 +285,7 @@ async function factsOf(doc: Doc): Promise<PdfRead> {
       pages: doc.numPages,
       fonts,
       last: pageText(last.page, last.items),
+      layout: read.map((r) => r.layout),
     },
   };
 }
@@ -229,10 +308,10 @@ export const readPdf: PdfReader = async (path) => {
   } catch (e) {
     return fail("unreadable", (e as Error).message);
   }
-  const { getDocument } = await loadPdfJs();
-  const task = getDocument({ data, ...PDFJS_OPTIONS });
+  const lib = await loadPdfJs();
+  const task = lib.getDocument({ data, ...PDFJS_OPTIONS });
   try {
-    return await factsOf(await task.promise);
+    return await factsOf(await task.promise, lib);
   } catch (e) {
     return failureOf(e);
   } finally {

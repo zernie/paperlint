@@ -163,9 +163,16 @@ try {
   );
   const good = async () => ({
     ok: true,
-    facts: { pages: 2, fonts: FONTS, last: lastPage(60, 60) },
+    facts: { pages: 2, fonts: FONTS, last: lastPage(60, 60), layout: [] },
   });
-  const opts = { readPdf: good, banal: "optional", projectRoot: root, env: {} };
+  // `home: root`: rpp's own banal is looked for under the temp root, never the developer's cache.
+  const opts = {
+    readPdf: good,
+    banal: "optional",
+    projectRoot: root,
+    env: {},
+    home: root,
+  };
 
   const w = await writeFacts(paper, pdf, opts);
   const onDisk = JSON.parse(readFileSync(factsPath(paper), "utf8"));
@@ -205,10 +212,17 @@ try {
       !existsSync(factsPath(paper)),
   );
 
+  // The stand-in records what it was handed: the input file, and what `$PDFTOHTML -v` answers —
+  // the two things banal itself looks at before it measures anything.
   const fake = join(root, "banal.pl");
+  const seen = join(root, "banal-saw.txt");
   writeFileSync(
     fake,
-    `print '{"papersize":[792,612],"columns":2,"bodyfontsize":9,"pages":[{},{"type":"bib","reffontsize":7}]}';\n`,
+    [
+      `open(my $o, ">", "${seen}"); print $o "$ARGV[-1]\\n", \`$ENV{PDFTOHTML} -v\`; close $o;`,
+      `print '{"papersize":[792,612],"columns":2,"bodyfontsize":9,"pages":[{},{"type":"bib","reffontsize":7}]}';`,
+      "",
+    ].join("\n"),
   );
   const withBanal = await writeFacts(paper, pdf, {
     ...opts,
@@ -222,6 +236,39 @@ try {
       withBanal.facts.columns === 2 &&
       withBanal.facts.body_pages === 1,
     JSON.stringify(withBanal),
+  );
+  const [input = "", answer = ""] = readFileSync(seen, "utf8").split("\n");
+  // Guards: the poppler-free path — banal is handed rpp's XML, never the PDF, which would make it
+  // run pdftohtml.
+  check(
+    "🔴 banal is handed an .xml file, not the PDF",
+    input.endsWith(".xml") && !input.endsWith(".pdf"),
+    input,
+  );
+  // Guards: the dialect answer — with no pdftohtml banal does not run at all, and told an older
+  // version it moves every font size (both shown with the real banal in test/e2e/banal.mjs).
+  check(
+    "🔴 $PDFTOHTML answers -v with the dialect rpp writes",
+    answer === "pdftohtml version 24.02.0",
+    answer,
+  );
+
+  const broken = join(root, "broken.pl");
+  writeFileSync(broken, `print STDERR "boom\\n"; exit 3;\n`);
+  const bad = await writeFacts(paper, pdf, {
+    ...opts,
+    env: { BANAL: broken },
+  });
+  // Guards: a banal that runs and fails is named with its exit, its message and where it came from
+  // — not reported as "not found".
+  check(
+    "banal found but failing: written without geometry, and the reason names exit, message and source",
+    bad.ok &&
+      bad.facts.geometry_source === null &&
+      /banal failed \(exit 3\): boom \(banal from \$BANAL: /.test(
+        bad.geometryMissing ?? "",
+      ),
+    String(bad.geometryMissing),
   );
 
   const before = readFileSync(factsPath(paper), "utf8");

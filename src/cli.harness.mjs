@@ -637,7 +637,7 @@ check(
       const own = out.text().split("── rpp doctor")[0];
       check(
         "every absence is NAMED, and the count matches the names",
-        /✗ 5 of 5 missing: pdflatex, bibtex/.test(own),
+        /✗ 6 of 6 missing: pdflatex, bibtex/.test(own),
       );
       check(
         "🔴 and it carries the INSTALL COMMAND — a remedy, not just a diagnosis",

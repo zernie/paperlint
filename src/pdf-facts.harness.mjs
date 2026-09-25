@@ -136,6 +136,53 @@ try {
   rmSync(tmp, { recursive: true, force: true });
 }
 
+// ── hidden-text: the boxes banal is fed ────────────────────────────────────────────────
+{
+  const f = await read("hidden-text.pdf");
+  const boxes = f.layout.flatMap((p, i) =>
+    p.boxes.map((b) => ({ ...b, page: i + 1 })),
+  );
+  const chars = (pred) =>
+    boxes.filter(pred).reduce((sum, b) => sum + b.text.length, 0);
+  check(
+    "hidden-text: one layout per page, each US letter",
+    f.layout.length === 3 &&
+      f.layout.every((p) => p.widthPt === 612 && p.heightPt === 792),
+    JSON.stringify(f.layout.map((p) => [p.widthPt, p.heightPt])),
+  );
+  // Guards: the rotation test in viewer space — the rotated margin text must reach the writer
+  // marked as not upright, or it is counted as body text.
+  check(
+    "hidden-text: the rotated text is marked not upright, and only it",
+    boxes
+      .filter((b) => !b.upright)
+      .every((b) => b.text.includes("Rotated") || b.text.includes("rotated")) &&
+      chars((b) => !b.upright) > 200,
+  );
+  // Guards: the fill walk on a real operator list — the render-mode-3 layer is found.
+  check(
+    "hidden-text: the render-mode-3 text is marked invisible",
+    chars((b) => b.fill.kind === "invisible") > 150 &&
+      boxes
+        .filter((b) => b.fill.kind === "invisible")
+        .every((b) => /visi|text|layer/i.test(b.text)),
+  );
+  check(
+    "hidden-text: the gray!8 text carries its colour, #f5f5f5",
+    chars((b) => b.fill.kind === "rgb" && b.fill.hex === "#f5f5f5") > 3000,
+  );
+  check(
+    "hidden-text: the body text is upright, visible and not light",
+    chars(
+      (b) =>
+        b.upright &&
+        b.fill.kind !== "invisible" &&
+        !(b.fill.kind === "rgb" && b.fill.hex !== "#000000") &&
+        Math.abs(b.size - 9.96) < 0.1,
+    ) > 3000,
+  );
+}
+
 console.log(
   `✓ ${String(n)} assertions passed — pdf-facts: pdf.js on real PDFs agrees with poppler, and says what it cannot read`,
 );

@@ -11,11 +11,12 @@
  * ── WHERE THE FACTS COME FROM ──────────────────────────────────────────────────
  * - pdf.js (`pdf-facts.ts`) — page count, the fonts the pages draw text with, the last page. Always.
  * - banal (Eddie Kohler's page-geometry tool, the one HotCRP's format checker runs) — paper size,
- *   columns, body and reference font sizes, page types. OPTIONAL: it is a Perl script the consumer
- *   vendors, and rpp does not ship it. Found ⇒ its fields are filled and `geometry_source` says
- *   `banal`; not found ⇒ they are null and `geometry_source` is null, so a rule can tell "not
- *   measured" from "measured as zero". A caller that requires it (`extract-pdf-facts.mjs --strict`)
- *   gets a failure instead.
+ *   columns, body and reference font sizes, page types. It runs on pdftohtml-style XML that rpp
+ *   writes from the same pdf.js read (`pdf-layout.ts`), so poppler is not needed (`banal.ts`).
+ *   OPTIONAL: banal is GPL and rpp does not ship it — `rpp toolchain` fetches it. Found ⇒ its fields
+ *   are filled and `geometry_source` says `banal`; not found ⇒ they are null and `geometry_source`
+ *   is null, so a rule can tell "not measured" from "measured as zero". A caller that requires it
+ *   (`extract-pdf-facts.mjs --strict`) gets a failure instead.
  *
  * ── SCHEMA 2 (2026-09-24) ───────────────────────────────────────────────────────
  * Every schema-1 field keeps its name. The number changed because three meanings did, and a
@@ -27,7 +28,7 @@
  * 🔴 STALENESS. The PDF is not committed, so neither are these facts: they live in `_build/` and
  * carry `pdf_sha256`. A rule compares it with the PDF on disk and refuses facts about another build.
  */
-import { execFileSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
@@ -38,6 +39,7 @@ import {
   type LastPage,
 } from "./pdf-geometry.ts";
 import { describeFailure, type PdfFacts, type PdfReader } from "./pdf-facts.ts";
+import { findBanal, measureLayout, missingBanal, type Run } from "./banal.ts";
 
 export const FACTS_SCHEMA = 2;
 export const FACTS_DIR = "_build";
@@ -128,20 +130,6 @@ export function banalFacts(banal: Record<string, unknown>): BanalFacts {
     appendix_pages: appendixPages,
     pages_by_type: byType,
   };
-}
-
-/** Where banal is: `$BANAL`, else `vendor/banal` under the project root. */
-export function banalPath(env: NodeJS.ProcessEnv, projectRoot: string): string {
-  return env["BANAL"] || join(projectRoot, "vendor", "banal");
-}
-
-/** Run banal on a PDF. Throws when perl or banal fails — the caller decides what that means. */
-export function runBanal(path: string, pdf: string): Record<string, unknown> {
-  return JSON.parse(
-    execFileSync("perl", [path, "-no-time", "-json", pdf], {
-      encoding: "utf8",
-    }),
-  ) as Record<string, unknown>;
 }
 
 // ── the document ────────────────────────────────────────────────────────────────────────
@@ -250,8 +238,12 @@ export interface WriteOptions {
   /** `required`: no banal is a failure. `optional`: no banal leaves the geometry null. */
   readonly banal: "required" | "optional";
   readonly env?: NodeJS.ProcessEnv;
-  /** Where `vendor/banal` is looked for. */
+  /** Where `vendor/banal` is looked for (`banal.ts`, `findBanal`). */
   readonly projectRoot: string;
+  /** Runs perl; the harness passes a recorder. */
+  readonly run?: Run;
+  /** Home directory for rpp's cache; defaults to the user's. */
+  readonly home?: string;
 }
 
 export type WriteResult =
@@ -266,20 +258,20 @@ export type WriteResult =
 
 /** banal's geometry, or the reason there is none. */
 function measureGeometry(
-  pdf: string,
+  read: PdfFacts,
   o: WriteOptions,
 ): { banal: BanalFacts | null; why: string | null } {
-  const path = banalPath(o.env ?? process.env, o.projectRoot);
-  if (!existsSync(path))
-    return { banal: null, why: `banal not found: ${path}` };
-  try {
-    return { banal: banalFacts(runBanal(path, pdf)), why: null };
-  } catch (e) {
-    return {
-      banal: null,
-      why: `banal failed: ${(e as Error).message.split("\n")[0]}`,
-    };
-  }
+  const env = o.env ?? process.env;
+  const where = findBanal(env, o.projectRoot, o.home);
+  if (!where) return { banal: null, why: missingBanal(env, o.home) };
+  const run = o.run ?? (spawnSync as unknown as Run);
+  const r = measureLayout(where.path, read.layout, { run, env });
+  return r.ok
+    ? { banal: banalFacts(r.json), why: null }
+    : {
+        banal: null,
+        why: `${r.why} (banal from ${where.from}: ${where.path})`,
+      };
 }
 
 const posix = (p: string): string => p.split(sep).join("/");
@@ -296,7 +288,7 @@ export async function writeFacts(
 ): Promise<WriteResult> {
   const r = await o.readPdf(pdf);
   if (!r.ok) return { ok: false, lines: [describeFailure(r, pdf)] };
-  const g = measureGeometry(pdf, o);
+  const g = measureGeometry(r.facts, o);
   if (g.why && o.banal === "required") return { ok: false, lines: [g.why] };
   const decl = declaredVenue(paperDir);
   const facts = factsDocument({

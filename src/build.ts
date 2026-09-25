@@ -118,7 +118,7 @@ export interface BuildContext {
   readonly run: Runner;
   /** Reads a finished PDF — pdf.js by default; the harness passes a fake. */
   readonly readPdf: PdfReader;
-  /** Where the facts writer looks for the consumer's vendored `banal`. */
+  /** Where the facts writer looks for a project's own `vendor/banal` (`banal.ts`, `findBanal`). */
   readonly projectRoot: string;
 }
 
@@ -466,8 +466,9 @@ const columnsNote = (f: FactsDocument): string => {
 /**
  * Measure the PDF the compile step wrote and write `_build/paper.facts.json`. A PDF pdf.js cannot
  * read fails the build: a PDF nothing can measure is not one to hand in. banal (page geometry) is
- * optional here — used when the project vendors it — and a banal that is found and then FAILS is
- * named in the note; one that is simply not there is not, because most projects do not have it.
+ * optional here: without it the geometry fields are null and the build still succeeds — but the
+ * note SAYS so, with the command that installs it (`rpp toolchain`), because null geometry means
+ * the page-size, column and font-size rules have nothing to judge. A banal that fails is named too.
  */
 export const measureStep: BuildStep = {
   name: "measure",
@@ -487,10 +488,9 @@ export const measureStep: BuildStep = {
       projectRoot: ctx.projectRoot,
     });
     if (!r.ok) return { ok: false, lines: [...r.lines] };
-    const banal =
-      r.geometryMissing && !r.geometryMissing.startsWith("banal not found")
-        ? `; ${r.geometryMissing}`
-        : "";
+    const banal = r.geometryMissing
+      ? `; page geometry not measured — ${r.geometryMissing}`
+      : "";
     return {
       ok: true,
       note: `facts: ${relative(ctx.paperDir, factsPath(ctx.paperDir))}, ${columnsNote(r.facts)}${banal}`,
@@ -545,7 +545,7 @@ export interface BuildOptions {
   log?: (line: string) => void;
   dryRun?: boolean;
   readPdf?: PdfReader;
-  /** Where `vendor/banal` is looked for. Default: `$CLAUDE_PROJECT_DIR`, else `cwd`. */
+  /** Where a project's `vendor/banal` is looked for. Default: `$CLAUDE_PROJECT_DIR`, else `cwd`. */
   projectRoot?: string;
 }
 

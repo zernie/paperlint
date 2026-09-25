@@ -12,12 +12,14 @@
  *
  * WHAT IT MEASURES WITH. pdf.js (the `unpdf` package, installed with rpp) for the page count, the
  * fonts and the last page — nothing to install. `banal` (the page-geometry script HotCRP's format
- * checker runs) for paper size, columns and font sizes — a Perl script the consumer vendors at
- * `vendor/banal` or names in `$BANAL`.
+ * checker runs) for paper size, columns and font sizes — run by perl on XML rpp writes from the same
+ * pdf.js read, no poppler. `npx rpp toolchain` installs it; `$BANAL` or a project's `vendor/banal`
+ * take precedence (`src/banal.ts`).
  *
  * ── THE EXIT-CODE CONTRACT (callers branch on it) ─────────────────────────────
  *   0  facts written — or, without `--strict`, not written and said so (a local run may lack banal)
- *   1  no such path; or, with `--strict`, the facts could not be taken (no banal, unreadable PDF).
+ *   1  no such path; or, with `--strict`, the facts could not be taken (no banal, no perl, banal
+ *      failed, unreadable PDF).
  *      In CI a missing tool is an ENVIRONMENT error, and a skipped step looks like a passed one
  *   2  usage
  *   3  the paper declares an artifact that is not built — a different event from "extraction

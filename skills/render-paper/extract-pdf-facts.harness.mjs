@@ -37,12 +37,20 @@ const check = (label, cond, detail = "") => {
 };
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-extract-")));
-/** Run the shim from `root`, with no banal anywhere unless `env` names one. */
+/**
+ * Run the shim from `root`, with no banal anywhere unless `env` names one. `HOME` is the temp root:
+ * without it Node falls back to the account's home, where `rpp toolchain` may have installed banal.
+ */
 const shim = (args, env = {}) =>
   spawnSync(process.execPath, [SHIM, ...args], {
     cwd: root,
     encoding: "utf8",
-    env: { PATH: process.env.PATH, CLAUDE_PROJECT_DIR: root, ...env },
+    env: {
+      PATH: process.env.PATH,
+      HOME: root,
+      CLAUDE_PROJECT_DIR: root,
+      ...env,
+    },
   });
 const said = (r) => `${r.stdout}${r.stderr}`;
 
@@ -64,6 +72,7 @@ try {
     "🔴 --strict with no banal: exit 1, named as an environment error, and nothing written",
     strict.status === 1 &&
       /banal not found/.test(said(strict)) &&
+      /`npx rpp toolchain` installs it/.test(said(strict)) &&
       /environment error/.test(said(strict)) &&
       !existsSync(factsFile),
     said(strict),
@@ -113,6 +122,29 @@ try {
     "--strict with banal ($BANAL): exit 0, and the geometry is banal's",
     withBanal.status === 0 && g.geometry_source === "banal" && g.columns === 2,
     said(withBanal),
+  );
+
+  // Guards: missing perl is its own diagnosis, with the fix — not a generic "banal failed".
+  const noPerl = shim([paper, "--strict"], {
+    BANAL: fake,
+    PATH: mkdtempSync(join(root, "empty-path-")),
+  });
+  check(
+    "🔴 --strict with banal but no perl: exit 1, and the message names perl and how to get it",
+    noPerl.status === 1 &&
+      /perl is not installed/.test(said(noPerl)) &&
+      /apt-get install perl/.test(said(noPerl)),
+    said(noPerl),
+  );
+  const noPerlLocal = shim([paper], {
+    BANAL: fake,
+    PATH: mkdtempSync(join(root, "empty-path-")),
+  });
+  check(
+    "without --strict and no perl: exit 0, and the missing geometry is said, naming perl",
+    noPerlLocal.status === 0 &&
+      /perl is not installed/.test(noPerlLocal.stderr),
+    said(noPerlLocal),
   );
 
   writeFileSync(

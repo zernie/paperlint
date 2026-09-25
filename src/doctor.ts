@@ -82,6 +82,14 @@ export const PROGRAMS: readonly Program[] = [
     install: "apt-get install -y default-jre-headless",
   },
   {
+    bin: "perl",
+    from: "your system (macOS ships it)",
+    without:
+      "banal cannot run: page size, columns and font sizes are null in the facts file",
+    install:
+      "apt-get install -y perl, then npx rpp toolchain (it fetches banal)",
+  },
+  {
     bin: "python3",
     from: "your system",
     without: "the analysis and report scripts do not start",

@@ -1,0 +1,28 @@
+% hidden-text.tex — text a page-layout measurement must NOT count, beside text it must.
+% Built with pdflatex (TeX Live 2023). Three kinds of hidden text, each in its own size, so that
+% counting any of them changes what banal measures (its page types and columns):
+%   10 pt black body text             — counted
+%   near-white (gray!8) text, 12 pt    — banal drops light text itself, from the fontspec colour
+%   rotated 90 degrees, 17.28 pt       — pdftohtml writes it with width 0, so banal drops it
+%   invisible (render mode 3), 20.74 pt — pdftohtml does not write it at all
+% Page 2 holds only hidden text, so banal must call it blank.
+\documentclass[twocolumn,10pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{lipsum}
+\pagestyle{empty}
+\newcommand{\invisible}[1]{\pdfliteral direct{3 Tr}#1\pdfliteral direct{0 Tr}}
+\begin{document}
+\lipsum[1-4]
+
+{\color{gray!8}\large Lightgrey watermark text that a reviewer never sees. \lipsum[5-9]\par}
+
+\noindent\rotatebox{90}{\parbox{9cm}{\LARGE Rotated margin text rotated margin text rotated margin text rotated margin text rotated margin text rotated margin text rotated margin text}}
+\rotatebox{90}{\parbox{9cm}{\LARGE Rotated margin text rotated margin text rotated margin text rotated margin text rotated margin text rotated margin text rotated margin text}}
+
+{\huge\invisible{Invisible text layer invisible text layer invisible text layer invisible text layer invisible text layer invisible text layer invisible text layer invisible text layer invisible text layer invisible text layer}\par}
+
+\lipsum[10-11]
+\end{document}
