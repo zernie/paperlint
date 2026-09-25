@@ -34,17 +34,20 @@ import {
   readlinkSync,
   realpathSync,
   symlinkSync,
+  unlinkSync,
 } from "node:fs";
 /* eslint-enable boundaries/dependencies */
 import { createRequire } from "node:module";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   installedSkills,
+  LEGACY_PACKAGE_NAME,
+  PACKAGE_NAME,
   SHIPPED_SKILLS_DIR,
 } from "../skills/paper-pipeline/scripts/consumer.mjs";
 
-export const PACKAGE_NAME = "research-paper-pipeline";
+export { PACKAGE_NAME };
 /** Where Claude Code looks for project skills, relative to the project root. */
 export const SKILLS_HOME = join(".claude", "skills");
 
@@ -106,7 +109,8 @@ export function shippedSkills(
   }
 }
 
-export type LinkStatus = "created" | "present" | "missing" | "foreign";
+export type LinkStatus =
+  "created" | "replaced" | "present" | "missing" | "foreign";
 
 export interface SkillLink {
   readonly name: string;
@@ -125,17 +129,27 @@ export type LinkReport =
     }
   | { readonly ok: false; readonly error: string };
 
-/** What occupies `entry`, judged against the directory it should lead to. */
+/**
+ * What occupies `entry`, judged against the directory it should lead to. A link spelled exactly as
+ * an install under the package's old name wrote it (`legacyTarget`) is `stale`: ours, from before
+ * the rename, and replaced on the next `init`.
+ */
 function inspect(
   entry: string,
   want: string,
-): { status: "present" | "missing" | "foreign"; reason?: string } {
+  legacyTarget: string,
+): { status: "present" | "missing" | "foreign" | "stale"; reason?: string } {
   let st;
   try {
     st = lstatSync(entry);
   } catch {
     return { status: "missing" };
   }
+  if (st.isSymbolicLink() && readlinkSync(entry) === legacyTarget)
+    return {
+      status: "stale",
+      reason: `a link into ${LEGACY_PACKAGE_NAME}, the package's old name — \`npx ${PACKAGE_NAME} init\` replaces it`,
+    };
   try {
     if (realpathSync(entry) === want) return { status: "present" };
   } catch {
@@ -152,6 +166,44 @@ function inspect(
     status: "foreign",
     reason: st.isDirectory() ? "a directory" : "a file",
   };
+}
+
+/**
+ * One skill: inspect its entry and, when writing, create the link — or replace one an install
+ * under the package's old name made.
+ */
+function linkOne(
+  name: string,
+  {
+    entry,
+    target,
+    want,
+    write,
+  }: { entry: string; target: string; want: string; write: boolean },
+): SkillLink {
+  const legacyTarget = target.replace(
+    `node_modules${sep}${PACKAGE_NAME}${sep}`,
+    `node_modules${sep}${LEGACY_PACKAGE_NAME}${sep}`,
+  );
+  const seen = inspect(entry, want, legacyTarget);
+  const fixable = seen.status === "missing" || seen.status === "stale";
+  if (!write || !fixable) {
+    const status = seen.status === "stale" ? "foreign" : seen.status;
+    return seen.reason
+      ? { name, status, reason: seen.reason }
+      : { name, status };
+  }
+  try {
+    if (seen.status === "stale") unlinkSync(entry);
+    symlinkSync(target, entry, "dir");
+    return { name, status: seen.status === "stale" ? "replaced" : "created" };
+  } catch (e) {
+    return {
+      name,
+      status: "foreign",
+      reason: `could not create the link: ${(e as Error).message}`,
+    };
+  }
 }
 
 /**
@@ -193,24 +245,14 @@ export function linkSkills(
 
   let example: string | null = null;
   const links = shipped.names.map((name): SkillLink => {
-    const entry = join(home, name);
     const target = relative(physicalHome, join(spelledSkills, name));
     example ??= target;
-    const seen = inspect(entry, realpathSync(join(shipped.skillsDir, name)));
-    if (seen.status !== "missing" || !write)
-      return seen.reason
-        ? { name, status: seen.status, reason: seen.reason }
-        : { name, status: seen.status };
-    try {
-      symlinkSync(target, entry, "dir");
-      return { name, status: "created" };
-    } catch (e) {
-      return {
-        name,
-        status: "foreign",
-        reason: `could not create the link: ${(e as Error).message}`,
-      };
-    }
+    return linkOne(name, {
+      entry: join(home, name),
+      target,
+      want: realpathSync(join(shipped.skillsDir, name)),
+      write,
+    });
   });
   return { ok: true, home, example, links };
 }

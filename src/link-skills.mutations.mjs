@@ -102,8 +102,7 @@ process.exit(
       {
         name: "the resolved store path is linked instead of the project's own spelling",
         harness: HARNESS,
-        expect:
-          "under pnpm the link goes through node_modules/research-paper-pipeline",
+        expect: "under pnpm the link goes through node_modules/<package>",
         disables:
           "the link surviving an upgrade under pnpm. The store directory carries the version in " +
           "its name; the next install removes it and every skill link dangles until init is re-run",

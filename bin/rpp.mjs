@@ -6,10 +6,10 @@
  * 🔴 WHY NOT MOVE `bin` TO `dist/cli.js`. This path is a PUBLIC CONTRACT, and it already has
  * two consumers outside the package:
  *   1. `plugin/hooks/hooks.json` calls
- *        node "${CLAUDE_PROJECT_DIR}/node_modules/research-paper-pipeline/bin/rpp.mjs" hook <name>
+ *        node "${CLAUDE_PROJECT_DIR}/node_modules/paperlint/bin/rpp.mjs" hook <name>
  *      — the hook wiring was fixed exactly because it addressed a file the consumer did not have;
  *      changing it the next day would be the same class of error;
- *   2. README documents `import { buildConfig } from "research-paper-pipeline/bin/rpp.mjs"`.
+ *   2. docs/configuration.md documents `import { buildConfig } from "paperlint/bin/rpp.mjs"`.
  * A move would cost both, and yield zero: a file name says nothing about what language it is in.
  *
  * 🔴 AND WHY THE FAILURE HERE IS LOUD. A consumer who installed the package from the registry
@@ -27,7 +27,7 @@ import { fileURLToPath } from "node:url";
 const dist = new URL("../dist/cli.js", import.meta.url);
 if (!existsSync(fileURLToPath(dist))) {
   process.stderr.write(
-    `research-paper-pipeline: not built — ${fileURLToPath(dist)} missing.\n` +
+    `paperlint: not built — ${fileURLToPath(dist)} missing.\n` +
       `The package is written in TypeScript; in the registry tarball \`dist/\` already lies built, so\n` +
       `you reach here from a repository clone or a git dependency installed with\n` +
       `\`--ignore-scripts\` (so the \`prepare\` step is skipped).\n` +

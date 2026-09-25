@@ -21,6 +21,7 @@ import assert from "node:assert/strict";
 import {
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -41,9 +42,42 @@ import {
   ledgerPath,
   pipelineScripts,
   scriptsRoot,
+  PACKAGE_NAME,
 } from "./consumer.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
+
+// ── THE PACKAGE NAME HAS ONE SOURCE, AND IT MATCHES THE MANIFEST ─────────────────────────────
+// Every path into the installed package is built from PACKAGE_NAME. Two files cannot import it
+// and spell it themselves: the manifest, and the hook wiring (JSON). Both are checked here.
+{
+  const root = resolve(HERE, "..", "..", "..");
+  const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+  assert.equal(
+    manifest.name,
+    PACKAGE_NAME,
+    "package.json `name` and PACKAGE_NAME in consumer.mjs must agree",
+  );
+  assert.deepEqual(
+    Object.keys(manifest.bin ?? {}),
+    [PACKAGE_NAME],
+    "the package exposes exactly one command, named like the package",
+  );
+  const wiring = JSON.parse(
+    readFileSync(join(root, "plugin", "hooks", "hooks.json"), "utf8"),
+  );
+  const commands = Object.values(wiring.hooks ?? {})
+    .flat()
+    .flatMap((e) => e.hooks ?? [])
+    .map((h) => h.command);
+  assert.ok(
+    commands.length > 0 &&
+      commands.every((c) =>
+        c.includes(`/node_modules/${PACKAGE_NAME}/bin/rpp.mjs`),
+      ),
+    `every command in plugin/hooks/hooks.json runs node_modules/${PACKAGE_NAME}/bin/rpp.mjs`,
+  );
+}
 const TMP = realpathSync(mkdtempSync(join(tmpdir(), "consumer-harness-")));
 process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
 

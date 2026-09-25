@@ -6,7 +6,7 @@
  * whether Node resolves the package from the project, which spelling of it the link uses, and
  * whether `SKILL.md` is reachable THROUGH the link. A stubbed locator would test the stub. So each
  * case lays out a real `node_modules` — the npm shape and the pnpm shape, where
- * `node_modules/research-paper-pipeline` is itself a symlink into a version-stamped store
+ * `node_modules/<package>` is itself a symlink into a version-stamped store
  * directory — and asks the filesystem.
  *
  * The fixture package keeps its skills where the real one does, under `SHIPPED_SKILLS_DIR` from
@@ -35,7 +35,11 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const { linkSkills, locatePackage, shippedSkills } = await import(
   join(HERE, "link-skills.ts")
 );
-const { SHIPPED_SKILLS_DIR: SHIPS } = await import(
+const {
+  SHIPPED_SKILLS_DIR: SHIPS,
+  PACKAGE_NAME: PKG,
+  LEGACY_PACKAGE_NAME,
+} = await import(
   join(HERE, "..", "skills", "paper-pipeline", "scripts", "consumer.mjs")
 );
 
@@ -53,7 +57,7 @@ function writePackage(dir) {
   mkdirSync(dir, { recursive: true });
   writeFileSync(
     join(dir, "package.json"),
-    JSON.stringify({ name: "research-paper-pipeline", version: "1.0.0" }),
+    JSON.stringify({ name: PKG, version: "1.0.0" }),
   );
   for (const s of SKILLS) {
     mkdirSync(join(dir, SHIPS, s, "scripts"), { recursive: true });
@@ -73,25 +77,19 @@ function consumer(name, manager = "npm") {
     join(dir, "package.json"),
     JSON.stringify({ name: "c", version: "1.0.0" }),
   );
-  if (manager === "npm")
-    writePackage(join(dir, "node_modules", "research-paper-pipeline"));
+  if (manager === "npm") writePackage(join(dir, "node_modules", PKG));
   else if (manager === "pnpm") {
     const store = join(
       "node_modules",
       ".pnpm",
-      "research-paper-pipeline@1.0.0",
+      `${PKG}@1.0.0`,
       "node_modules",
-      "research-paper-pipeline",
+      PKG,
     );
     writePackage(join(dir, store));
     symlinkSync(
-      join(
-        ".pnpm",
-        "research-paper-pipeline@1.0.0",
-        "node_modules",
-        "research-paper-pipeline",
-      ),
-      join(dir, "node_modules", "research-paper-pipeline"),
+      join(".pnpm", `${PKG}@1.0.0`, "node_modules", PKG),
+      join(dir, "node_modules", PKG),
       "dir",
     );
   }
@@ -127,15 +125,7 @@ try {
     check(
       "🔴 the link is RELATIVE — an absolute one breaks the moment the checkout moves",
       !isAbsolute(target) &&
-        target ===
-          join(
-            "..",
-            "..",
-            "node_modules",
-            "research-paper-pipeline",
-            SHIPS,
-            "alpha",
-          ),
+        target === join("..", "..", "node_modules", PKG, SHIPS, "alpha"),
     );
   }
 
@@ -191,21 +181,14 @@ try {
     check(
       "Node resolves the package to the version-stamped store directory",
       !("error" in located) &&
-        located.dir.includes(join(".pnpm", "research-paper-pipeline@1.0.0")),
+        located.dir.includes(join(".pnpm", `${PKG}@1.0.0`)),
     );
     const r = linkSkills(dir);
     check(
-      "🔴 under pnpm the link goes through node_modules/research-paper-pipeline, not the .pnpm store — that one dangles on the next upgrade",
+      "🔴 under pnpm the link goes through node_modules/<package>, not the .pnpm store — that one dangles on the next upgrade",
       r.ok &&
         readlinkSync(join(home(dir), "alpha")) ===
-          join(
-            "..",
-            "..",
-            "node_modules",
-            "research-paper-pipeline",
-            SHIPS,
-            "alpha",
-          ),
+          join("..", "..", "node_modules", PKG, SHIPS, "alpha"),
     );
     check(
       "and SKILL.md is reachable through both hops",
@@ -233,6 +216,40 @@ try {
       r.ok &&
         SKILLS.every((s) => status(r, s)?.status === "missing") &&
         !existsSync(home(dir)),
+    );
+  }
+
+  // ── VI-bis. LINKS LEFT BY AN INSTALL UNDER THE OLD NAME ARE REPLACED, NOT SKIPPED ─────
+  // After `npm rm research-paper-pipeline && npm i -D paperlint` every old link dangles. They are
+  // ours, spelled the way an older `init` wrote them, so the next `init` replaces them.
+  {
+    const dir = consumer("renamed");
+    mkdirSync(home(dir), { recursive: true });
+    const old = join(
+      "..",
+      "..",
+      "node_modules",
+      LEGACY_PACKAGE_NAME,
+      SHIPS,
+      "alpha",
+    );
+    symlinkSync(old, join(home(dir), "alpha"), "dir");
+    const seen = linkSkills(dir, { write: false });
+    check(
+      "doctor's read names a link into the old package name, with the command that fixes it",
+      status(seen, "alpha")?.status === "foreign" &&
+        /old name — `npx paperlint init` replaces it/.test(
+          status(seen, "alpha")?.reason ?? "",
+        ),
+    );
+    const r = linkSkills(dir);
+    check(
+      "🔴 init REPLACES it: status `replaced`, and SKILL.md is reachable through the new link",
+      status(r, "alpha")?.status === "replaced" &&
+        existsSync(join(home(dir), "alpha", "SKILL.md")) &&
+        readlinkSync(join(home(dir), "alpha")).includes(
+          join("node_modules", PKG),
+        ),
     );
   }
 

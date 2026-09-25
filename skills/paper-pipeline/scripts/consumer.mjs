@@ -138,6 +138,20 @@ export function packageVenuesDir() {
 }
 
 /**
+ * The package's npm name — the directory it lands in under `node_modules`, and the name Node
+ * resolves it by. Every path into the installed package is built from this, never re-spelled;
+ * `consumer.harness.mjs` checks it against `package.json`.
+ */
+export const PACKAGE_NAME = "paperlint";
+
+/**
+ * The name the package was published under before 2.0.0. Only for recognising what an older
+ * install left behind (hook commands, skill links, the config key) so `init` can replace it and
+ * `doctor` can name it.
+ */
+export const LEGACY_PACKAGE_NAME = "research-paper-pipeline";
+
+/**
  * Where the package keeps the skills it ships, relative to the package root. One constant, read by
  * the linker (`src/link-skills.ts`) and the install e2e, so the two cannot disagree; `files` in
  * package.json must include it for the skills to reach the tarball.

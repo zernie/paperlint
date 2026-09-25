@@ -2,7 +2,7 @@
 # ensure-checkers.sh — installs ALL the external paper checkers with one command and PROVES that
 # each one runs. Idempotent: running it again breaks nothing.
 #
-#   bash node_modules/research-paper-pipeline/skills/render-paper/ensure-checkers.sh
+#   bash node_modules/paperlint/skills/render-paper/ensure-checkers.sh
 #
 # WHY IT EXISTS (2026-09-04). The install used to live as a COMMENT in requirements.txt:
 # five commands, `cp -r … site-packages/` among them. That block was wrong along three axes at

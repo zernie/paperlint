@@ -47,7 +47,7 @@ const M = [
     "the step goes back around the CLI to eslint (the words `rpp lint` left in the comments)",
     "reinstate the bypass: rpp.json unread, the directory-structure check absent in CI, and a " +
       "consumer's nested config free to decide the rule set — while a grep still finds `rpp lint`",
-    "npx rpp lint $RPP_PATHS",
+    "npx paperlint lint $RPP_PATHS",
     'npx eslint --config "$RPP_CONFIG" $RPP_PATHS',
   ],
   [

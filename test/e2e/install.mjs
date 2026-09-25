@@ -22,6 +22,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { PAPERS_DIR_FIELD } from "../../lib/paper-config.mjs";
 import {
   installedSkills,
+  PACKAGE_NAME,
   SHIPPED_SKILLS_DIR,
 } from "../../skills/paper-pipeline/scripts/consumer.mjs";
 import {
@@ -144,7 +145,7 @@ function stageCorpus(root) {
 /**
  * WHERE THE PACKAGE LANDED, asked of Node rather than spelled out (docs/prior-art/package-location.md).
  *
- * The spelling `node_modules/research-paper-pipeline` is not wrong under npm or pnpm. What
+ * The spelling `node_modules/<package>` is not wrong under npm or pnpm. What
  * resolution adds is a second claim the hardcode cannot see: the package is REACHABLE BY NAME
  * from the consumer. Measured there with a closed `exports` map — the directory still exists, every
  * `existsSync` stays green, and the documented public import is broken. `createRequire`, not
@@ -156,7 +157,7 @@ function locateInstalled(consumer) {
     pathToFileURL(join(consumer, "__consumer__.js")).href,
   );
   try {
-    const file = req.resolve("research-paper-pipeline/package.json");
+    const file = req.resolve(`${PACKAGE_NAME}/package.json`);
     return {
       dir: dirname(file),
       manifest: JSON.parse(readFileSync(file, "utf8")),
@@ -389,18 +390,22 @@ try {
     // called `node bin` and reported three false failures on pnpm — that is, it measured my way
     // of launching, not the package. The consumer calls `npx rpp`, which executes the file rather
     // than feeding it to node.
-    const bin = join(consumer, "node_modules", ".bin", "rpp");
+    const bin = join(consumer, "node_modules", ".bin", PACKAGE_NAME);
     const help = sh(bin, ["--help"], { cwd: consumer });
     help.status === 0
-      ? ok("`rpp --help` answers with zero")
-      : bad("`rpp --help` answers with zero", help.stderr);
+      ? ok(`\`${PACKAGE_NAME} --help\` answers with zero`)
+      : bad(`\`${PACKAGE_NAME} --help\` answers with zero`, help.stderr);
     // The shim above proves the MANAGER did its part. This proves the file the manifest PROMISES
     // exists and runs — the real file under both managers, so `node <it>` is uniform where
     // `node <shim>` is not (pnpm writes a shell wrapper).
     const binField = located.manifest.bin;
-    const binRel = typeof binField === "string" ? binField : binField?.rpp;
+    const binRel =
+      typeof binField === "string" ? binField : binField?.[PACKAGE_NAME];
     if (!binRel)
-      bad("the manifest declares the `rpp` bin", JSON.stringify(binField));
+      bad(
+        `the manifest declares the \`${PACKAGE_NAME}\` bin`,
+        JSON.stringify(binField),
+      );
     else {
       const real = sh(process.execPath, [join(installed, binRel), "--help"], {
         cwd: consumer,

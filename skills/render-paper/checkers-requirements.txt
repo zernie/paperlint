@@ -1,6 +1,6 @@
 # Python dependencies for the paper pipeline. Installed with ONE command, no manual steps:
 #
-#   pip install -r node_modules/research-paper-pipeline/skills/render-paper/checkers-requirements.txt
+#   pip install -r node_modules/paperlint/skills/render-paper/checkers-requirements.txt
 #
 # Tools that need something other than Python (the TeXtidote jar) are installed by
 # ensure-checkers.sh nearby — which also VERIFIES that each checker actually runs, not just that

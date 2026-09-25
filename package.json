@@ -1,5 +1,5 @@
 {
-  "name": "research-paper-pipeline",
+  "name": "paperlint",
   "version": "0.0.0-semantically-released",
   "description": "Machine-checkable gates for a research paper kept in git: ESLint rules over .tex/.md paper sources, plus the skills and hooks that drive each stage.",
   "type": "module",
@@ -68,8 +68,7 @@
     "node": ">=22.13"
   },
   "bin": {
-    "research-paper-pipeline": "bin/rpp.mjs",
-    "rpp": "bin/rpp.mjs"
+    "paperlint": "bin/rpp.mjs"
   },
   "files": [
     ".github",

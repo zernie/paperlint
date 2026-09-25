@@ -10,7 +10,7 @@
 set -euo pipefail
 ROOT=$(git rev-parse --show-toplevel)
 
-VENUES_PKG=$(node -e 'try{process.stdout.write(require.resolve("research-paper-pipeline/venues/paper-guards.tex"))}catch{}' 2>/dev/null || true)
+VENUES_PKG=$(node -e 'try{process.stdout.write(require.resolve("paperlint/venues/paper-guards.tex"))}catch{}' 2>/dev/null || true)
 if [ -n "$VENUES_PKG" ] && [ -f "$VENUES_PKG" ]; then
   VENUES_DIR=$(dirname "$VENUES_PKG")
 elif [ -f "$ROOT/.claude/skills/submit-paper/references/venues/paper-guards.tex" ]; then

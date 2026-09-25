@@ -40,6 +40,7 @@ const {
   doctorHooks,
   readSettings,
   MANAGED_BY,
+  LEGACY_MANAGED_BY,
   SETTINGS_PATH,
 } = await import(join(HERE, "hooks-settings.ts"));
 const { claudeCodeHookProtocol } = await import("vigiles/claude-code");
@@ -83,25 +84,34 @@ try {
   // ── which spelling runs which hook ─────────────────────────────────────────────────────
   const ours = `node "\${CLAUDE_PROJECT_DIR}/${MANAGED_BY}" hook paper-edit-guard`;
   const cases = [
-    [ours, { name: "paper-edit-guard", ours: true }],
+    [ours, { name: "paper-edit-guard", ours: true, legacy: false }],
     [
       `node "$CLAUDE_PROJECT_DIR/${MANAGED_BY}" hook paper-status-gates`,
-      { name: "paper-status-gates", ours: true },
+      { name: "paper-status-gates", ours: true, legacy: false },
+    ],
+    // Guards: what an install under the old package name wrote is recognised as ours-but-stale.
+    [
+      `node "$CLAUDE_PROJECT_DIR/${LEGACY_MANAGED_BY}" hook paper-edit-guard`,
+      { name: "paper-edit-guard", ours: false, legacy: true },
     ],
     [
-      `node "$CLAUDE_PROJECT_DIR/node_modules/vigiles/dist/cli.js" hook-runtime run-program "$CLAUDE_PROJECT_DIR/node_modules/research-paper-pipeline/hooks/paper-edit-guard.hook.mjs"`,
-      { name: "paper-edit-guard", ours: false },
+      `node "$CLAUDE_PROJECT_DIR/node_modules/vigiles/dist/cli.js" hook-runtime run-program "$CLAUDE_PROJECT_DIR/node_modules/paperlint/hooks/paper-edit-guard.hook.mjs"`,
+      { name: "paper-edit-guard", ours: false, legacy: false },
+    ],
+    [
+      `npx paperlint hook paper-skills-nudge`,
+      { name: "paper-skills-nudge", ours: false, legacy: false },
     ],
     [
       `npx rpp hook paper-skills-nudge`,
-      { name: "paper-skills-nudge", ours: false },
+      { name: "paper-skills-nudge", ours: false, legacy: false },
     ],
     [
-      `node /abs/proj/node_modules/research-paper-pipeline/bin/rpp.mjs hook paper-edit-guard`,
-      { name: "paper-edit-guard", ours: false },
+      `node /abs/proj/node_modules/paperlint/bin/rpp.mjs hook paper-edit-guard`,
+      { name: "paper-edit-guard", ours: false, legacy: false },
     ],
     [`node my-own-lint.mjs`, null],
-    [`node node_modules/research-paper-pipeline/bin/rpp.mjs lint`, null],
+    [`node node_modules/paperlint/bin/rpp.mjs lint`, null],
   ];
   for (const [cmd, want] of cases)
     check(
@@ -141,6 +151,41 @@ try {
     check(
       "🔴 a second run changes NOTHING — byte-identical, status `present`",
       again.status === "present" && text(dir) === before,
+    );
+  }
+
+  // ── an install under the old package name is migrated, the user's own command kept ─────
+  {
+    const legacyWired = JSON.parse(
+      JSON.stringify(merge({}, wiring.compiled, MANAGED_BY)).replaceAll(
+        MANAGED_BY,
+        LEGACY_MANAGED_BY,
+      ),
+    );
+    legacyWired.hooks.PostToolUse[0].hooks.push({
+      type: "command",
+      command: "node my-own-lint.mjs",
+    });
+    const dir = project("legacy", legacyWired);
+    const before = doctorHooks(dir, wiring).join("\n");
+    check(
+      "🔴 doctor names hook commands left under the old package name, and the fix",
+      /still point into node_modules\/research-paper-pipeline\//.test(before) &&
+        /npx paperlint init` replaces them/.test(before),
+    );
+    const r = wireHooks(dir, merge, wiring);
+    const s = JSON.parse(text(dir));
+    const counts = [...wiredCounts(s, wiring.names).values()];
+    check(
+      "🔴 init replaces them: every hook wired once under the new name, none left under the old",
+      r.status === "written" &&
+        r.replaced === wiring.names.length &&
+        counts.every((c) => c.ours === 1 && c.legacy === 0 && c.other === 0) &&
+        !text(dir).includes("research-paper-pipeline"),
+    );
+    check(
+      "and the user's own command in the same matcher survives the migration",
+      text(dir).includes("node my-own-lint.mjs"),
     );
   }
 

@@ -44,6 +44,7 @@ import { doctor, detectPapers, found, PROGRAMS } from "./doctor.ts";
 import { PAPER_MARKERS, papersIn } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
 import { actionRef } from "./action-ref.ts";
+import { LEGACY_PACKAGE_NAME } from "../skills/paper-pipeline/scripts/consumer.mjs";
 import {
   FRESH_CLONE_NOTE,
   SETTINGS_PATH,
@@ -491,6 +492,10 @@ export function reportHooks(
         : `  ✓ already wired in ${here(outcome.path)} — nothing changed`,
     );
     out.push(`      ${how}`);
+    if (outcome.status === "written" && outcome.replaced > 0)
+      out.push(
+        `      replaced ${String(outcome.replaced)} command(s) that pointed into ${LEGACY_PACKAGE_NAME}, the package's old name`,
+      );
     out.push(`      ${FRESH_CLONE_NOTE}`);
   }
   if (outcome.plugin.length > 0)
@@ -523,7 +528,8 @@ export function reportSkillLinks(
     return out;
   }
   const by = (s: string) => report.links.filter((l) => l.status === s);
-  const created = by("created");
+  const replaced = by("replaced");
+  const created = [...by("created"), ...replaced];
   const present = by("present");
   const skipped = by("foreign");
   // Only a read-only call leaves anything `missing`; counted anyway, so the sum always adds up.
@@ -537,6 +543,10 @@ export function reportSkillLinks(
   if (report.example !== null)
     out.push(
       `      ${join(here(report.home), "<name>")} → ${join(dirname(report.example), "<name>")}`,
+    );
+  if (replaced.length)
+    out.push(
+      `      ${String(replaced.length)} of them replaced a link into ${LEGACY_PACKAGE_NAME}, the package's old name`,
     );
   if (skipped.length) {
     out.push(

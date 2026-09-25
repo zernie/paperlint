@@ -20,7 +20,7 @@
 # file and fails loudly when it did not. This does NOT replace a per-rule glob audit (the package's
 # own `scripts/rules-see-files.mjs` does that, and it reads the package's config, not yours) — it closes the
 # one failure mode that needs no config knowledge: nothing was linted at all.
-name: research-paper-pipeline — LaTeX prose gate
+name: paperlint — LaTeX prose gate
 description: Install the toolchain the texcount/* rules need, run ESLint, and refuse to pass on an empty run.
 
 inputs:
@@ -117,7 +117,7 @@ runs:
     # `--no-config-lookup` is gone with the eslint call and is not missing: the CLI builds its
     # config with `overrideConfigFile: true`, so a consumer's nested config cannot reach the run
     # at all. The guarantee moved from a flag into the code.
-    - name: rpp lint
+    - name: paperlint lint
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       env:
@@ -126,13 +126,13 @@ runs:
         RPP_MAXWARN: ${{ inputs.max-warnings }}
       run: |
         # 🔴 `|| RC=$?` IS LOAD-BEARING, NOT STYLE. GitHub runs composite `shell: bash` as
-        # `bash --noprofile --norc -eo pipefail`, so a bare `npx rpp lint` that exits non-zero
+        # `bash --noprofile --norc -eo pipefail`, so a bare `npx paperlint lint` that exits non-zero
         # ABORTS THE SCRIPT and the guard below never runs — measured, not reasoned: the line
         # after a failing command did not print. That is the whole error path of this action
         # (a bad config, an unreadable report, findings), so under `-e` the guard was reachable
         # ONLY on success, which is the one case it was not written for.
         RC=0
-        npx rpp lint $RPP_PATHS ${RPP_CONFIG:+--config "$RPP_CONFIG"} \
+        npx paperlint lint $RPP_PATHS ${RPP_CONFIG:+--config "$RPP_CONFIG"} \
           --max-warnings="$RPP_MAXWARN" --json > "$RUNNER_TEMP/rpp.json" || RC=$?
         node "$GITHUB_ACTION_PATH/scripts/eslint-report-guard.mjs" \
           "$RUNNER_TEMP/rpp.json" "$RC" "$RPP_PATHS" "${RPP_CONFIG:-rpp.json}"
