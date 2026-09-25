@@ -663,3 +663,11 @@ measured — so the repo's own test command had never once executed a test, and 
 
 Conventional-commit subject, body says what was MEASURED, not what was intended. A number in
 a commit message that no command produced is the thing this repo exists to make impossible.
+
+**The subject is also the release.** Every push to `main` runs semantic-release
+(`.github/workflows/release.yml`), and it reads the squash commit, which is the PR title:
+`feat:` → minor, `fix:` or `perf:` → patch, `!` or a `BREAKING CHANGE:` footer → major,
+`docs:` `chore:` `ci:` `test:` `refactor:` → no release. `pr-title.yml` rejects a title without
+a conventional prefix, and for a one-commit PR checks the commit subject too, since GitHub
+squashes to that. npm, the git tag and the GitHub Release always carry the same version. Never
+`npm publish` by hand.

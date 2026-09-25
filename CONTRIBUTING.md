@@ -109,6 +109,22 @@ node scripts/run-mutations.mjs   # run the remaining batteries (deprecated, #52 
 None of these are needed to USE the tool — they are here because the gates are part of the
 argument, not decoration.
 
+## Releases
+
+Every push to `main` runs semantic-release (`.github/workflows/release.yml`). The squash commit —
+that is, the PR title — decides what ships:
+
+| title                                                         | release |
+| ------------------------------------------------------------- | ------- |
+| `feat: …`                                                     | minor   |
+| `fix: …`, `perf: …`                                           | patch   |
+| any type with `!` (`fix!: …`), or a `BREAKING CHANGE:` footer | major   |
+| `docs:`, `chore:`, `ci:`, `test:`, `refactor:` …              | none    |
+
+`pr-title.yml` fails a PR whose title is not a conventional commit, and for a PR with one commit
+it checks that commit's subject too, because GitHub squashes to it. npm, the git tag `vX.Y.Z` and
+the GitHub Release always carry the same version. Never run `npm publish` by hand.
+
 ## Why not one of the existing academic skill suites
 
 The nearest neighbour, [`Imbad0202/academic-research-skills`](https://github.com/Imbad0202/academic-research-skills),

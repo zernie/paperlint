@@ -36,6 +36,7 @@ A **stage** is a point the paper has reached, such as `submitted` or `camera-rea
 
 <!-- `vigiles:symbol src/init.ts#init` — `npm run check` fails if this function is renamed or removed. -->
 
+[![npm version](https://img.shields.io/npm/v/research-paper-pipeline)](https://www.npmjs.com/package/research-paper-pipeline)
 ![Node version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fzernie%2Fresearch-paper-pipeline%2Fmain%2Fpackage.json&query=%24.engines.node&label=node)
 
 ```sh
@@ -84,10 +85,14 @@ miswired. Details: [`docs/install.md`](docs/install.md#what-rpp-init-writes).
 **In CI**, add one step to a GitHub Actions workflow — it runs the same `rpp lint`:
 
 ```yaml
-- uses: zernie/research-paper-pipeline@<commit-sha>
+- uses: zernie/research-paper-pipeline@v1.0.0
   with:
     paths: papers
 ```
+
+Use the tag of the version you installed (`npm ls research-paper-pipeline`): every npm release
+has a git tag of the same version, so the action runs the same code as your package. `rpp init`
+writes the step with that tag for you.
 
 `paths` is required. The step fails if it checked zero files, so a typo in the path shows up red.
 Optional inputs: `config`, `max-warnings` (default `-1`), `texcount` (default `true`),

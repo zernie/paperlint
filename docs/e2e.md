@@ -135,8 +135,10 @@ everything.
 - **The skills as behaviour.** The install run proves a skill arrived and that its paths resolve.
   Whether the agent then does the right thing with it is a different measurement, and it belongs
   to the harness tier of `vigiles`, not here.
-- **Registry publication.** `npm pack` produces the same tarball `npm publish` would upload, so
-  the packlist is covered; the registry round-trip is not.
+- **Registry publication.** The package is on npm: `research-paper-pipeline@1.0.0` was published
+  on 2026-09-25 by `.github/workflows/release.yml`, and every later release goes the same way. The
+  e2e still covers the packlist through `npm pack`, which produces the same tarball `npm publish`
+  uploads; the registry round-trip — install from npm, then run — is still not run by any test.
 
 ## The corpus
 
