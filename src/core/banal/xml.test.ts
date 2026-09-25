@@ -1,6 +1,6 @@
 /**
- * `pdf-layout.ts` — the pure half of feeding banal: which text a layout tool counts, the fill each
- * item was drawn in, and the pdftohtml-style XML those boxes become.
+ * `xml.ts` — the pure half of feeding banal: which text a layout tool counts, the fill each item was
+ * drawn in, and the banal input XML (pdftohtml's dialect) those boxes become.
  *
  * Every page here is written by hand. The real-PDF half — pdf.js boxes of a committed fixture,
  * written as XML, measured by the real banal and compared with banal on real pdftohtml — is
@@ -8,8 +8,8 @@
  */
 import assert from "node:assert/strict";
 import { isDeepStrictEqual } from "node:util";
-import * as L from "./pdf-layout.ts";
-import type { OperatorList, PageLayout, TextBox } from "./pdf-layout.ts";
+import * as L from "./xml.ts";
+import type { OperatorList, PageLayout, TextBox } from "./xml.ts";
 
 let n = 0;
 const check = (label: string, cond: unknown, detail = "") => {
@@ -204,5 +204,5 @@ check(
 );
 
 console.log(
-  `✓ ${String(n)} assertions passed — pdf-layout: the pdftohtml dialect, which text is written, fills from the operator list`,
+  `✓ ${String(n)} assertions passed — banal input XML: the pdftohtml dialect, which text is written, fills from the operator list`,
 );
