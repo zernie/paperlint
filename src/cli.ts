@@ -430,6 +430,22 @@ export function parseArgs(argv: readonly string[]): Args {
 export const CONFIG_NAME = "rpp.json";
 export const PKG_NAME = "package.json";
 
+/**
+ * This package's own version, from the `package.json` beside `src/` and `dist/` alike. `init` pins
+ * the CI action to its release tag; an unreadable manifest yields `undefined`, and init then keeps
+ * the placeholder instead of guessing.
+ */
+export function ownVersion(): string | undefined {
+  try {
+    const v = JSON.parse(
+      readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+    )?.version;
+    return typeof v === "string" ? v : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** Where the consumer's settings were found, and in which of the two carriers. */
 export interface Declaration {
   readonly path: string;
@@ -951,6 +967,7 @@ export async function run(
       log,
       err,
       cwd,
+      version: ownVersion(),
       yes: a.yes,
       hooks: !a.noHooks,
       paper: a.paper,

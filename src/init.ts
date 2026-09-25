@@ -44,6 +44,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { doctor, detectPapers, found, PROGRAMS } from "./doctor.ts";
 import { PAPER_MARKERS, papersIn } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
+import { actionRef } from "./action-ref.ts";
 import {
   FRESH_CLONE_NOTE,
   SETTINGS_PATH,
@@ -258,14 +259,19 @@ export function syncRppJson(root: string, papers: string): RppJsonResult {
 
 export const WORKFLOW_PATH = join(".github", "workflows", "papers.yml");
 
+/** Where the action is pinned when no release tag is known — obviously a placeholder. */
+export const UNPINNED_REF = "<commit-sha>";
+
 /**
- * The CI step, as a whole workflow. The action is pinned by comment rather than by a sha this
- * command cannot know: a wrong sha written confidently is worse than a placeholder that is
- * obviously a placeholder.
+ * The CI step, as a whole workflow, pinned to `ref` — the release tag of the running package
+ * (`actionRef`). With no tag known (`null`: a git checkout, `npm link`) it keeps the placeholder
+ * and says so: a wrong tag written confidently is worse than a placeholder that is obviously one.
  */
-export function workflowYaml(papers: string): string {
+export function workflowYaml(papers: string, ref: string | null): string {
   return [
-    `# Written by \`rpp init\`. Replace <commit-sha> with a commit or release tag of the action.`,
+    ref === null
+      ? `# Written by \`rpp init\`. Replace ${UNPINNED_REF} with a commit or release tag of the action.`
+      : `# Written by \`rpp init\`, pinned to ${ref} — the release you installed.`,
     `name: papers`,
     `on: [push, pull_request]`,
     `jobs:`,
@@ -273,7 +279,7 @@ export function workflowYaml(papers: string): string {
     `    runs-on: ubuntu-latest`,
     `    steps:`,
     `      - uses: actions/checkout@v4`,
-    `      - uses: zernie/research-paper-pipeline@<commit-sha>`,
+    `      - uses: zernie/research-paper-pipeline@${ref ?? UNPINNED_REF}`,
     `        with:`,
     `          paths: ${papers}`,
     ``,
@@ -288,7 +294,13 @@ export async function offerWorkflow(
   {
     ask,
     interactive,
-  }: { ask?: (q: string) => Promise<string>; interactive: boolean },
+    version,
+  }: {
+    ask?: (q: string) => Promise<string>;
+    interactive: boolean;
+    /** The running package's version; see `InitOptions.version`. */
+    version?: string;
+  },
 ): Promise<WorkflowResult> {
   const path = join(root, WORKFLOW_PATH);
   if (existsSync(path)) return "kept";
@@ -304,8 +316,44 @@ export async function offerWorkflow(
   // No answer — an empty line, or a stream that ended — is the safe default, which is "no file".
   if (answer !== "y" && answer !== "yes") return "declined";
   mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, workflowYaml(papers), "utf8");
+  writeFileSync(path, workflowYaml(papers, actionRef(version)), "utf8");
   return "written";
+}
+
+/** What `init` says about the CI workflow — and, when none was written, the step to paste. */
+export function reportWorkflow(
+  wf: WorkflowResult,
+  {
+    version,
+    papersDir,
+    why,
+  }: { version?: string; papersDir: string; why: string },
+): string[] {
+  const ref = actionRef(version);
+  const out: string[] = [];
+  if (wf === "written")
+    out.push(
+      ref === null
+        ? `  ✓ wrote ${WORKFLOW_PATH} — pin ${UNPINNED_REF} before pushing it`
+        : `  ✓ wrote ${WORKFLOW_PATH}, pinned to ${ref}`,
+    );
+  else if (wf === "kept")
+    out.push(
+      `  ✓ ${WORKFLOW_PATH} is already there — kept, nothing overwritten`,
+    );
+  else if (wf === "declined") out.push(`  · declined — nothing written`);
+  else
+    out.push(
+      `  · ${why}, so nothing was asked. Default taken: NO file written.`,
+    );
+  if (wf !== "written" && wf !== "kept")
+    out.push(
+      `      to run the same checks in CI, add this step to a workflow:`,
+      `        - uses: zernie/research-paper-pipeline@${ref ?? UNPINNED_REF}`,
+      `          with:`,
+      `            paths: ${papersDir}`,
+    );
+  return out;
 }
 
 /**
@@ -542,6 +590,11 @@ export interface InitOptions {
   resolveCliPapers?: (root: string) => string | null;
   /** Links the skills. Injected only so a test can stand in for the installed package. */
   link?: (root: string) => LinkReport;
+  /**
+   * The version of the running package, read by the CLI from its own `package.json`. The CI
+   * workflow is pinned to its release tag (`actionRef`); absent or unreleased, the placeholder.
+   */
+  version?: string;
 }
 
 /** Reads one line from a real terminal. Kept out of `init` so the command stays testable. */
@@ -577,6 +630,7 @@ export async function init(
     run = spawnSync,
     resolveCliPapers,
     link = (r: string) => linkSkills(r),
+    version,
   } = opts;
   // An injected `interactive` is a test standing in for a terminal; its reason is the classic one.
   const { interactive, why } =
@@ -712,19 +766,12 @@ export async function init(
   // ── 5. the one expensive, unguessable thing ───────────────────────────────────────────
   log(``);
   log(`CI`);
-  const wf = await offerWorkflow(root, papersDir, { ask, interactive });
-  if (wf === "written")
-    log(`  ✓ wrote ${WORKFLOW_PATH} — pin <commit-sha> before pushing it`);
-  else if (wf === "kept")
-    log(`  ✓ ${WORKFLOW_PATH} is already there — kept, nothing overwritten`);
-  else if (wf === "declined") log(`  · declined — nothing written`);
-  else log(`  · ${why}, so nothing was asked. Default taken: NO file written.`);
-  if (wf !== "written" && wf !== "kept") {
-    log(`      to run the same checks in CI, add this step to a workflow:`);
-    log(`        - uses: zernie/research-paper-pipeline@<commit-sha>`);
-    log(`          with:`);
-    log(`            paths: ${papersDir}`);
-  }
+  const wf = await offerWorkflow(root, papersDir, {
+    ask,
+    interactive,
+    version,
+  });
+  for (const line of reportWorkflow(wf, { version, papersDir, why })) log(line);
 
   // ── 6. a first paper — offered only where there is none, and only to a human ──────────
   log(``);

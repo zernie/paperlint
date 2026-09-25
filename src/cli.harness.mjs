@@ -13,6 +13,7 @@
  */
 import assert from "node:assert/strict";
 import { recordCheck } from "vigiles";
+import { load as yamlLoad } from "js-yaml";
 import {
   mkdtempSync,
   mkdirSync,
@@ -527,6 +528,23 @@ check(
       );
     }
     {
+      // Guards: the printed step carries the tag of the running release, not a placeholder.
+      const dir = project("ci-printed-pin", { papers: ["writing"] });
+      const out = say();
+      await init(dir, {
+        log: out.log,
+        err: out.log,
+        interactive: false,
+        run: haveAll,
+        version: "1.2.3",
+      });
+      check(
+        "🔴 a released version — the printed step is pinned to its tag, no <commit-sha>",
+        /uses: zernie\/research-paper-pipeline@v1\.2\.3\b/.test(out.text()) &&
+          !/<commit-sha>/.test(out.text()),
+      );
+    }
+    {
       const dir = project("ci-yes", { papers: ["writing"] });
       const asked = [];
       const wf = await offerWorkflow(dir, "writing", {
@@ -544,6 +562,10 @@ check(
         "and the workflow carries THE directory that was actually discussed",
         /paths: writing/.test(readFileSync(join(dir, WORKFLOW_PATH), "utf8")),
       );
+      check(
+        "without a known release the action keeps the obvious placeholder, never a guessed tag",
+        /@<commit-sha>/.test(readFileSync(join(dir, WORKFLOW_PATH), "utf8")),
+      );
       check("the question is asked exactly once", asked.length === 1);
       const again = await offerWorkflow(dir, "writing", {
         interactive: true,
@@ -552,6 +574,26 @@ check(
       check(
         "an existing workflow is neither overwritten nor asked about again",
         again === "kept",
+      );
+    }
+    {
+      const dir = project("ci-pinned", { papers: ["writing"] });
+      const wf = await offerWorkflow(dir, "writing", {
+        interactive: true,
+        ask: async () => "y",
+        version: "1.2.3",
+      });
+      const yaml = existsSync(join(dir, WORKFLOW_PATH))
+        ? readFileSync(join(dir, WORKFLOW_PATH), "utf8")
+        : "";
+      const uses = (yamlLoad(yaml)?.jobs?.papers?.steps ?? []).map(
+        (s) => s.uses,
+      );
+      check(
+        "🔴 a released version — the written workflow is pinned to its tag, no <commit-sha> left",
+        wf === "written" &&
+          uses.includes("zernie/research-paper-pipeline@v1.2.3") &&
+          !yaml.includes("<commit-sha>"),
       );
     }
     {
