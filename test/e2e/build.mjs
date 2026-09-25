@@ -439,9 +439,14 @@ try {
       ),
     JSON.stringify(venueFindings("acmart")),
   );
+  // `unbalanced` has a paperlint.json (it turns the balance rule on) that extends no preset: one
+  // warning that no venue is chosen yet, and nothing else from the venue rules.
   check(
-    "unbalanced: names no venue, so no venue rule says anything",
-    venueFindings("unbalanced").length === 0,
+    "unbalanced: extends no preset, so the venue rules say exactly one thing — no venue chosen yet",
+    venueFindings("unbalanced").length === 1 &&
+      venueFindings("unbalanced")[0].ruleId === "pdf/measured" &&
+      venueFindings("unbalanced")[0].severity === 1 &&
+      /names no venue preset yet/.test(venueFindings("unbalanced")[0].message),
     JSON.stringify(venueFindings("unbalanced")),
   );
   // The fallback paper is an `article` set in Computer Modern — what acmart silently produces when
