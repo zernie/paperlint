@@ -71,25 +71,23 @@ describe("paperlint init — a declared papers directory", () => {
   });
 
   it("is not asked about, even with a human at the terminal", async () => {
+    const root = project();
     const asked: string[] = [];
-    const choice = await choosePapers(project(), {
+    await init(root, {
+      cwd: root,
+      log: () => {},
+      err: () => {},
       interactive: true,
-      ask: async (q) => (asked.push(q), "2"),
-      declared: "papers",
+      ask: async (q) => (asked.push(q), "n"),
+      hooks: false,
+      run: (() => ({ status: 0 })) as never,
+      link: () => ({ ok: false, error: "not linked in this test" }),
     });
-    expect(asked).toEqual([]);
-    expect(choice).toEqual({
-      papers: "papers",
-      how: "declared",
-      candidates: [],
-    });
+    expect(asked.filter((q) => /papers roots/.test(q))).toEqual([]);
   });
 
   it("without a declaration, the candidates are still measured and offered", async () => {
-    const choice = await choosePapers(project(), {
-      interactive: false,
-      declared: null,
-    });
+    const choice = await choosePapers(project(), { interactive: false });
     expect(choice.how).toBe("not-asked");
     expect(choice.candidates.length).toBeGreaterThan(1);
   });
