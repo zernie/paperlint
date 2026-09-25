@@ -10,7 +10,7 @@
  *
  * Two entry points into the tool, and both are whole now:
  *     npx paperlint lint              ← here
- *     uses: zernie/research-paper-pipeline@<sha>    ← action.yml
+ *     uses: zernie/paperlint@<sha>    ← action.yml
  *
  * ⚠️ THE BOUNDARY THIS UTILITY HAS NO RIGHT TO ERASE: the consumer's data stays with the consumer.
  * The typography debt, the marker of the author-list check run, the field dictionary — all of that

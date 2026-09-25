@@ -53,7 +53,7 @@ const fix = {
 const context = {
   cwd: process.cwd(),
   options: {
-    repositoryUrl: "https://github.com/zernie/research-paper-pipeline",
+    repositoryUrl: "https://github.com/zernie/paperlint",
   },
   lastRelease: { gitTag: "v1.0.0", version: "1.0.0" },
   nextRelease: { gitTag: "v2.0.0", version: "2.0.0", type: "major" },

@@ -1,12 +1,13 @@
 # paperlint
 
 [![npm version](https://img.shields.io/npm/v/paperlint)](https://www.npmjs.com/package/paperlint)
-![Node version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fzernie%2Fresearch-paper-pipeline%2Fmain%2Fpackage.json&query=%24.engines.node&label=node)
+![Node version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fzernie%2Fpaperlint%2Fmain%2Fpackage.json&query=%24.engines.node&label=node)
 
-A checker for a research paper you keep in a git repository. You record what happened to the paper
+A linter for scientific papers written in LaTeX: it catches mistakes before you submit to a
+conference or journal. You keep the paper in git and record what happened to it
 — "submitted on 22 July, as this PDF" — and `paperlint` checks that the files match: the PDF you say you
 sent is still there and unchanged, its LaTeX source was kept beside it, and the paper itself avoids
-a few mistakes reviewers flag. It runs on your machine and in CI, like a linter.
+a few mistakes reviewers flag. It runs on your machine and in CI.
 
 It is for researchers and engineers who write papers in LaTeX inside git and submit them to
 conferences or journals. Claude Code users also get optional skills and hooks.
@@ -139,7 +140,7 @@ never fail the run unless you pass `--max-warnings <n>`. `--json` prints the fin
 `paperlint init` offers to write this GitHub Actions workflow step for you. By hand:
 
 ```yaml
-- uses: zernie/research-paper-pipeline@v2.0.0
+- uses: zernie/paperlint@v2.0.0
   with:
     paths: papers
 ```
@@ -219,7 +220,7 @@ with a normal file edit — those are not blocked.
 - **It does not write or grade the paper.** `paperlint lint` checks records and a few mechanical
   mistakes; judging the writing is what the optional skills are for.
 - **New papers are LaTeX.** Markdown papers (`paper.md`) are still read but deprecated
-  ([#57](https://github.com/zernie/research-paper-pipeline/issues/57)).
+  ([#57](https://github.com/zernie/paperlint/issues/57)).
 - **No Yarn Plug'n'Play.** npm and pnpm are supported
   ([`docs/install.md`](docs/install.md#package-managers)).
 

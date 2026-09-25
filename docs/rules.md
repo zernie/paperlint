@@ -31,7 +31,7 @@ the review notes are Markdown files, and the other five rules read those.
 
 A Markdown body (`paper.md`, or `draft.md`) is still read today and gets only the two `paper/`
 rules, which is why they list it above. Markdown papers are deprecated and being removed
-([#57](https://github.com/zernie/research-paper-pipeline/issues/57)); do not start a new one.
+([#57](https://github.com/zernie/paperlint/issues/57)); do not start a new one.
 
 ## The scorecard's `bytes:` and `sourceBytes:`
 

@@ -125,7 +125,7 @@ and the real findings leave with it.
 
 Those are the defaults; you only write the block to change them. `paper.md` is still in them
 because Markdown papers are deprecated but not yet removed
-([#57](https://github.com/zernie/research-paper-pipeline/issues/57)). They were measured against a
+([#57](https://github.com/zernie/paperlint/issues/57)). They were measured against a
 real five-paper corpus rather than chosen — it passes with zero findings, while adding
 `paper.pdf` to `require` produces two findings on papers that are perfectly fine, which is why it
 is not there.
@@ -212,7 +212,7 @@ having run on it, because a missing build read as nothing to do.
 ⚠️ **A `build.sh` or `repro/build-submission.sh` in the paper directory is IGNORED.** Earlier
 versions ran it; `paperlint build` now says one line — `build.sh is ignored — paperlint builds the paper
 itself` — and builds the paper itself. The `buildScripts` key is ignored the same way.
-Why: [#59](https://github.com/zernie/research-paper-pipeline/issues/59).
+Why: [#59](https://github.com/zernie/paperlint/issues/59).
 
 ## Using the rules from an existing ESLint config
 

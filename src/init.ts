@@ -281,7 +281,7 @@ export function workflowYaml(papers: string, ref: string | null): string {
     `    runs-on: ubuntu-latest`,
     `    steps:`,
     `      - uses: actions/checkout@v4`,
-    `      - uses: zernie/research-paper-pipeline@${ref ?? UNPINNED_REF}`,
+    `      - uses: zernie/paperlint@${ref ?? UNPINNED_REF}`,
     `        with:`,
     `          paths: ${papers}`,
     ``,
@@ -351,7 +351,7 @@ export function reportWorkflow(
   if (wf !== "written" && wf !== "kept")
     out.push(
       `      to run the same checks in CI, add this step to a workflow:`,
-      `        - uses: zernie/research-paper-pipeline@${ref ?? UNPINNED_REF}`,
+      `        - uses: zernie/paperlint@${ref ?? UNPINNED_REF}`,
       `          with:`,
       `            paths: ${papersDir}`,
     );

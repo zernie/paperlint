@@ -1,5 +1,5 @@
 {
-  "issue": "https://github.com/zernie/research-paper-pipeline/issues/77",
+  "issue": "https://github.com/zernie/paperlint/issues/77",
   "why": "A *.harness.* file tests the agent surface and imports runHook, runHarnessTest or runEval from vigiles. Plain unit tests are *.test.ts, run by vitest. These are the harness files that existed on main on 2026-09-25 and import none of the three. The list only shrinks: rename a file to *.test.ts (issue #77), or make it a real harness, then delete its entry. Checked by scripts/harness-api.test.ts, part of npm test.",
   "harnesses": [
     "action.harness.mjs",

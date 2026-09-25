@@ -590,7 +590,7 @@ check(
       );
       check(
         "and the CI step is still printed — it just gets pasted in by hand",
-        /uses: zernie\/research-paper-pipeline@/.test(out.text()) &&
+        /uses: zernie\/paperlint@/.test(out.text()) &&
           /paths: writing/.test(out.text()),
       );
     }
@@ -607,7 +607,7 @@ check(
       });
       check(
         "🔴 a released version — the printed step is pinned to its tag, no <commit-sha>",
-        /uses: zernie\/research-paper-pipeline@v1\.2\.3\b/.test(out.text()) &&
+        /uses: zernie\/paperlint@v1\.2\.3\b/.test(out.text()) &&
           !/<commit-sha>/.test(out.text()),
       );
     }
@@ -659,7 +659,7 @@ check(
       check(
         "🔴 a released version — the written workflow is pinned to its tag, no <commit-sha> left",
         wf === "written" &&
-          uses.includes("zernie/research-paper-pipeline@v1.2.3") &&
+          uses.includes("zernie/paperlint@v1.2.3") &&
           !yaml.includes("<commit-sha>"),
       );
     }
