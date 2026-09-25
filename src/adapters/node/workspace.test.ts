@@ -14,7 +14,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { after, test } from "node:test";
+import { afterAll as after, test } from "vitest";
 import { shQuote, stageBanalInput } from "../../core/banal/invocation.ts";
 import { tmpWorkspace } from "./workspace.ts";
 

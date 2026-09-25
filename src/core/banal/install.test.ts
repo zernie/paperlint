@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 import { installedState, sha256Hex, verifyPin } from "./install.ts";
 import { parseSha256 } from "./pin.ts";
 

@@ -7,14 +7,16 @@
  * `test/e2e/banal.mjs`, which runs where `rpp toolchain` has installed banal.
  */
 import assert from "node:assert/strict";
+import { test } from "vitest";
 import { isDeepStrictEqual } from "node:util";
 import * as L from "./xml.ts";
 import type { OperatorList, PageLayout, TextBox } from "./xml.ts";
 
-let n = 0;
+/** One vitest case per assertion, named by its label. */
 const check = (label: string, cond: unknown, detail = "") => {
-  assert.ok(cond, detail ? `${label} — ${detail}` : label);
-  n++;
+  test(label, () => {
+    assert.ok(cond, detail ? `${label} — ${detail}` : label);
+  });
 };
 
 const box = (over: Partial<TextBox> = {}): TextBox => ({
@@ -201,8 +203,4 @@ check(
 check(
   "fillsOf: an empty item is `unknown`",
   L.fillsOf(OPS, ops(), [" "])[0]?.kind === "unknown",
-);
-
-console.log(
-  `✓ ${String(n)} assertions passed — banal input XML: the pdftohtml dialect, which text is written, fills from the operator list`,
 );

@@ -4,7 +4,7 @@
  * literals instead.
  */
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 import type { Command } from "../../core/ports.ts";
 import { spawnProcess } from "./process.ts";
 

@@ -3,7 +3,7 @@
  * accepts a banal by a measurement.
  */
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 import { describe, describeLine, PERL_MISSING } from "./failure.ts";
 import { acceptProbe } from "./probe.ts";
 

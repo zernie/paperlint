@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 import type { AbsolutePath } from "../ports.ts";
 import { err } from "../result.ts";
 import { installedBanal, lookupOrder, pickBanal } from "./locate.ts";

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 import { exitCodeFor, type ExitCode, type ShimOutcome } from "./exit-code.ts";
 
 /** Every outcome × both modes: [outcome, without --strict, with --strict]. */

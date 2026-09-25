@@ -104,9 +104,15 @@ export const GATES = [
     run: locked("node", "scripts/marketplace-shape.mjs"),
   },
   {
-    name: "every test — harnesses, the tests' type-check, node --test (npm test)",
+    name: "every test — vitest over *.test.ts, then the vigiles harnesses (npm test)",
     job: "gates",
     script: "test",
+  },
+  {
+    // vitest transpiles without type-checking, so the tests' types are checked here.
+    name: "the tests type-check",
+    job: "gates",
+    run: ["tsc", "-p", "tsconfig.test.json"],
   },
   {
     name: "mutation batteries are frozen — none new, none grown (#52)",

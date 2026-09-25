@@ -1,7 +1,7 @@
 /**
  * What makes a file a HARNESS. A `*.harness.*` file tests the agent surface, so it drives it through
  * vigiles: it imports `runHook`, `runHarnessTest` or `runEval` from `vigiles` (or a `vigiles/…`
- * entry point). Anything else is a plain unit test and is named `*.test.ts`, run by `node --test`.
+ * entry point). Anything else is a plain unit test and is named `*.test.ts`, run by vitest.
  *
  * The rule is read from the file's IMPORTS, parsed with the TypeScript compiler — not from its
  * folder and not from a text search: a comment or a string that mentions `runHook` is not an import,
@@ -15,7 +15,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
-import { test } from "node:test";
+import { test } from "vitest";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 

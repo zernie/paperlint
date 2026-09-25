@@ -3,7 +3,7 @@
  * measurement → geometry projection. Pure: no perl, no disk. The real banal is `test/e2e/banal.mjs`.
  */
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 import type { ProcessExit } from "../ports.ts";
 import { err } from "../result.ts";
 import type { BanalFailure } from "./failure.ts";

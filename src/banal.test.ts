@@ -5,7 +5,7 @@
  * the adapters' own behaviour is `src/adapters/node/*.test.ts`.
  */
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 import {
   exitedWith,
   fixedDownload,

@@ -7,9 +7,11 @@
  *   - a resolvable id that fails, or a DOI on the wrong paper → false
  *   - a title you simply can't find → unresolvable (NOT false)
  *
- * Run: node verify-cites.test.mjs   (exit 0 = all pass, nonzero = failure)
+ * Run: npx vitest run skills/verify-citations/scripts/verify-cites.test.mjs
  */
 
+import assert from "node:assert/strict";
+import { test } from "vitest";
 import {
   levenshtein,
   titleSimilarity,
@@ -30,16 +32,11 @@ import {
   normalizeIdentifiers,
 } from "./verify-cites.mjs";
 
-let passed = 0;
-let failed = 0;
+/** One vitest case per check, named by it. */
 function ok(cond, name) {
-  if (cond) {
-    passed++;
-    console.log(`  ok   ${name}`);
-  } else {
-    failed++;
-    console.log(`  FAIL ${name}`);
-  }
+  test(name, () => {
+    assert.ok(cond, name);
+  });
 }
 function eq(actual, expected, name) {
   ok(actual === expected, `${name} (got ${JSON.stringify(actual)})`);
@@ -736,7 +733,3 @@ console.log("\n[S4] .bib parser edge cases:");
     "bibitem DOI trailing period not swallowed",
   );
 }
-
-// ── summary ───────────────────────────────────────────────────────────────────
-console.log(`\n${passed} passed, ${failed} failed`);
-process.exit(failed > 0 ? 1 : 0);

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { existsSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { after, test } from "node:test";
+import { afterAll as after, test } from "vitest";
 import type { AbsolutePath } from "../../core/ports.ts";
 import { nodeFiles } from "./files.ts";
 

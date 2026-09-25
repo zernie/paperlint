@@ -14,7 +14,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { after, test } from "node:test";
+import { afterAll as after, test } from "vitest";
 import type { AbsolutePath } from "../../core/ports.ts";
 import { curlDownload } from "./download.ts";
 import { spawnProcess } from "./process.ts";

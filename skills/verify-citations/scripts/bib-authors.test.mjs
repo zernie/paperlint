@@ -10,9 +10,10 @@
  *   too strict -> 13 findings of which 11 are "Last, First" vs "First Last", the checker is
  *                 read once and never again. Measured on our own bibliography 2026-08-24.
  *
- * Run: node .claude/skills/verify-citations/scripts/bib-authors.test.mjs
+ * Run: npx vitest run skills/verify-citations/scripts/bib-authors.test.mjs
  */
 import assert from "node:assert/strict";
+import { test } from "vitest";
 import {
   surnames,
   compare,
@@ -20,12 +21,7 @@ import {
   parseMarkdownRefs,
 } from "./bib-authors.mjs";
 
-let n = 0;
-const t = (name, fn) => {
-  fn();
-  n++;
-  console.log(`  ✓ ${name}`);
-};
+const t = test;
 
 console.log("bib-authors — normalisation");
 
@@ -177,5 +173,3 @@ t("a ## References inside a ``` fence does NOT open the bibliography", () => {
     "quoted markup is not a bibliography — the ^#+ regex counted it as a heading",
   );
 });
-
-console.log(`\n${n} assertions passed.`);

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 import { parseBanalSettings } from "./settings.ts";
 
 const dirs = { home: "/h", tmp: "/t", cwd: "/w" };

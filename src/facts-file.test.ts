@@ -7,7 +7,7 @@
  * is `pdf-facts.harness.mjs`'s job; the real banal is `test/e2e/banal.mjs`.
  */
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 import {
   exitedWith,
   memoryFiles,

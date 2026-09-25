@@ -582,19 +582,18 @@ justified two hundred lines above precisely by these minutes being free.
 ## Testing
 
 ```bash
-npm test                    # every tier: harnesses, the tests' type-check, node --test
+npm test                    # vitest over *.test.ts, then the vigiles harnesses
+npx vitest run <file>       # one unit test
 npx vigiles test <file>     # one harness
-node --test <file>.test.ts  # one unit test
 ```
 
 **Two kinds of test, told apart by what the file imports.** A `*.harness.*` file tests the agent
 surface and imports `runHook`, `runHarnessTest` or `runEval` from vigiles; everything else is a plain
-unit test, `*.test.ts`, run by `node --test` — and new tests are TypeScript. Older harnesses that
+unit test, `*.test.ts`, run by vitest — and new tests are TypeScript. Older harnesses that
 import none of the three are frozen in `scripts/harness-api.frozen.json`, which only shrinks;
-`scripts/harness-api.test.ts` parses every harness's imports and holds both halves (#77). A
-`node --test` run that finds zero files fails (`scripts/run-tests.ts`) — on its own it exits 0.
-Developing rpp needs Node 22.18 or later (the tests and scripts are TypeScript, run by Node's type
-stripping); a consumer runs the compiled `dist/`, so `engines` stays at 22.13.
+`scripts/harness-api.test.ts` parses every harness's imports and holds both halves (#77). vitest
+exits 1 when no file matches, and it transpiles without type-checking, so `npm run check` runs
+`tsc -p tsconfig.test.json` as its own gate.
 
 ⚠️ **Not `vigiles test .`** — the `.` is read as a FILE, the runner dies with
 `ERR_UNSUPPORTED_DIR_IMPORT`, and it still exits 0. See the measured table below.

@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "prepare": "tsc",
-    "test": "node scripts/exclusive.mjs node scripts/run-tests.ts",
+    "test": "node scripts/exclusive.mjs vitest run && node scripts/exclusive.mjs vigiles test --min=1",
     "lint": "node scripts/exclusive.mjs eslint .",
     "check": "node scripts/check.mjs",
     "test:e2e": "node scripts/exclusive.mjs node test/e2e/install.mjs && node scripts/exclusive.mjs node test/e2e/build.mjs",
@@ -34,7 +34,8 @@
     "eslint-plugin-boundaries": "^6.0.2",
     "eslint-plugin-n": "^18.3.0",
     "prettier": "^3.8.1",
-    "typescript-eslint": "^8.70.1"
+    "typescript-eslint": "^8.70.1",
+    "vitest": "^4.1.11"
   },
   "peerDependencies": {
     "@retorquere/bibtex-parser": "^10.0.1"
