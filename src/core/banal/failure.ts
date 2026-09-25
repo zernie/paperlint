@@ -2,8 +2,6 @@
  * Every way getting a measurement from banal can fail, as ONE union — and `describe`, the only
  * place a sentence about it is written. Callers branch on `kind`; nobody parses a message.
  */
-import { assertNever } from "../result.ts";
-
 /** Why there is no banal to run. */
 export type BanalMissing =
   /** `$BANAL` names a file that is not there. An explicit choice: no fallback to another banal. */
@@ -53,49 +51,56 @@ function missing(m: BanalMissing): string {
     : `banal not found: ${m.installed} — \`npx rpp toolchain\` installs it`;
 }
 
+/** What `describe` returns: the first line says what happened, any further lines are detail. */
+export type Lines = readonly [string, ...string[]];
+
+type Kind = BanalFailure["kind"];
+/** One sentence-writer per variant. A mapped type over `kind`, so a new variant without one is a compile error. */
+type Describers = {
+  readonly [K in Kind]: (f: Extract<BanalFailure, { kind: K }>) => Lines;
+};
+
+const orNone = (s: string): string => s || "no output";
+
+const DESCRIBE: Describers = {
+  "perl-missing": () => [PERL_MISSING],
+  "banal-missing": (f) => [missing(f.missing)],
+  "process-failed": (f) => [
+    `banal failed (exit ${String(f.status)}): ${orNone(f.stderrHead)}`,
+  ],
+  signalled: (f) => [`banal failed (${f.signal}): ${orNone(f.stderrHead)}`],
+  "spawn-failed": (f) => [`banal failed: ${f.message}`],
+  "timed-out": (f) => [`banal failed: no answer after ${String(f.afterMs)} ms`],
+  "no-json": (f) => [`banal printed no JSON: ${f.head || "nothing"}`],
+  "banal-error": (f) => [
+    `banal could not read the banal input XML: ${f.stderrHead}`,
+  ],
+  "unexpected-shape": (f) => [
+    `banal printed JSON that is not a measurement: ${f.issues.join("; ")}`,
+  ],
+  "probe-rejected": (f) => [
+    `banal ran on a one-page probe but measured nothing: ${JSON.stringify(f.got)}`,
+  ],
+  "download-failed": (f) => [
+    `could not download banal from ${f.url}: ${f.detail}`,
+  ],
+  "sha-mismatch": (f) => [
+    `banal from ${f.url} does not have the pinned sha256 — refusing to install it`,
+    `expected ${f.expected}`,
+    `got      ${f.got}`,
+  ],
+};
+
 /**
- * What to tell a person: the first line says what happened, any further lines are detail. Most
- * failures are one line; a sha256 mismatch shows both hashes.
+ * What to tell a person. Most failures are one line; a sha256 mismatch shows both hashes.
+ *
+ * The one assertion below narrows the table's entry for `f.kind` to a function of `f`: the mapped
+ * type already pairs each kind with its own variant, and TypeScript cannot correlate the index with
+ * the argument on its own.
  */
-export function describe(f: BanalFailure): readonly [string, ...string[]] {
-  switch (f.kind) {
-    case "perl-missing":
-      return [PERL_MISSING];
-    case "banal-missing":
-      return [missing(f.missing)];
-    case "process-failed":
-      return [
-        `banal failed (exit ${String(f.status)}): ${f.stderrHead || "no output"}`,
-      ];
-    case "signalled":
-      return [`banal failed (${f.signal}): ${f.stderrHead || "no output"}`];
-    case "spawn-failed":
-      return [`banal failed: ${f.message}`];
-    case "timed-out":
-      return [`banal failed: no answer after ${String(f.afterMs)} ms`];
-    case "no-json":
-      return [`banal printed no JSON: ${f.head || "nothing"}`];
-    case "banal-error":
-      return [`banal could not read the banal input XML: ${f.stderrHead}`];
-    case "unexpected-shape":
-      return [
-        `banal printed JSON that is not a measurement: ${f.issues.join("; ")}`,
-      ];
-    case "probe-rejected":
-      return [
-        `banal ran on a one-page probe but measured nothing: ${JSON.stringify(f.got)}`,
-      ];
-    case "download-failed":
-      return [`could not download banal from ${f.url}: ${f.detail}`];
-    case "sha-mismatch":
-      return [
-        `banal from ${f.url} does not have the pinned sha256 — refusing to install it`,
-        `expected ${f.expected}`,
-        `got      ${f.got}`,
-      ];
-    default:
-      return assertNever(f);
-  }
+export function describe(f: BanalFailure): Lines {
+  const write = DESCRIBE[f.kind] as (f: BanalFailure) => Lines;
+  return write(f);
 }
 
 /** `describe` as one line, for a caller that has a single line to fill. */

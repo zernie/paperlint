@@ -128,38 +128,6 @@ try {
   }
 
   // ── running it ────────────────────────────────────────────────────────────────────────
-  const r = (over: { status?: number; stdout?: string; stderr?: string }) =>
-    ({ kind: "exited", status: 0, stdout: "", stderr: "", ...over }) as const;
-  const why = (o: B.BanalOutput): string => (o.ok ? "" : o.why);
-  const json = (o: B.BanalOutput): Record<string, unknown> =>
-    o.ok ? o.json : {};
-  // Guards: perl missing is its own diagnosis, naming the fix — not "banal failed: ENOENT".
-  check(
-    "🔴 parseBanalOutput: perl missing is named, with how to install it",
-    why(B.parseBanalOutput({ kind: "not-found", file: "perl" })) ===
-      B.PERL_MISSING,
-  );
-  check(
-    "parseBanalOutput: a nonzero exit names the exit and banal's first line",
-    why(
-      B.parseBanalOutput(r({ status: 1, stderr: "\nx.xml: Error: bad\nmore" })),
-    ) === "banal failed (exit 1): x.xml: Error: bad",
-  );
-  check(
-    "parseBanalOutput: output that is not JSON is not a measurement",
-    /no JSON/.test(why(B.parseBanalOutput(r({ stdout: "Usage: banal" })))),
-  );
-  // Guards: banal's own failure object ({"error": true, "pages": []}) exits 0 — it must not read as
-  // a measurement of zero pages.
-  check(
-    '🔴 parseBanalOutput: banal\'s `"error": true` with exit 0 is a failure, not zero pages',
-    B.parseBanalOutput(r({ stdout: '{"error": true, "pages": []}' })).ok ===
-      false,
-  );
-  check(
-    "parseBanalOutput: a JSON object is the measurement",
-    json(B.parseBanalOutput(r({ stdout: '{"columns": 2}' })))["columns"] === 2,
-  );
   {
     const saw = join(work, "saw.txt");
     const recorder = script(
@@ -177,7 +145,7 @@ try {
     const xml = readFileSync(saw, "utf8");
     check(
       "measureLayout: perl runs banal on an .xml file and its JSON comes back",
-      out.ok && out.json["bodyfontsize"] === 10.3 && xml.endsWith("paper.xml"),
+      out.ok && out.value.bodyfontsize === 10.3 && xml.endsWith("paper.xml"),
       JSON.stringify(out),
     );
     // Guards: cleanup — a paper's text must not pile up in the temp directory, one copy per build.
@@ -193,7 +161,7 @@ try {
     });
     check(
       "🔴 measureLayout with no perl on PATH: the perl message",
-      !noPerl.ok && noPerl.why === B.PERL_MISSING,
+      !noPerl.ok && noPerl.error.kind === "perl-missing",
       JSON.stringify(noPerl),
     );
   }

@@ -48,7 +48,12 @@ const { findBanal, measureLayout, missingBanal } = await import(
 );
 const { pdf2xml } = await import(join(ROOT, "dist", "pdf-layout.js"));
 const { readPdf } = await import(join(ROOT, "dist", "pdf-facts.js"));
-const { banalFacts } = await import(join(ROOT, "dist", "facts-file.js"));
+const { geometryOf } = await import(
+  join(ROOT, "dist", "core", "banal", "output.js")
+);
+const { describeLine } = await import(
+  join(ROOT, "dist", "core", "banal", "failure.js")
+);
 const { spawnProcess } = await import(
   join(ROOT, "dist", "adapters", "node", "process.js")
 );
@@ -146,7 +151,7 @@ try {
   const env = { PATH: bin, HOME: work };
   const measure = (pages, e = env) => {
     const r = measureLayout(where.path, pages, { run: spawnProcess(), env: e });
-    return r.ok ? banalFacts(r.json) : r.why;
+    return r.ok ? geometryOf(r.value) : describeLine(r.error);
   };
 
   console.log(

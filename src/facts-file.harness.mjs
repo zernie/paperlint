@@ -21,8 +21,12 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const { factsDocument, banalFacts, writeFacts, factsPath, declaredVenue } =
-  await import(join(HERE, "facts-file.ts"));
+const { factsDocument, writeFacts, factsPath, declaredVenue } = await import(
+  join(HERE, "facts-file.ts")
+);
+const { geometryOf: banalFacts } = await import(
+  join(HERE, "core", "banal", "output.ts")
+);
 
 let n = 0;
 const check = (label, cond, detail = "") => {

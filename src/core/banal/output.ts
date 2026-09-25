@@ -117,19 +117,31 @@ export interface BanalGeometry {
 const inches = (pt: number | undefined): number | null =>
   pt === undefined ? null : Number((pt / 72).toFixed(3));
 
+type Page = BanalMeasurement["pages"][number];
+
 /**
- * The measurement → the geometry fields.
- *
  * 🔴 banal OMITS a page's `type` when it is "body" (its line 1022: `push … if $page->{type} ne
  * "body"`), so counting pages whose type equals "body" gives ZERO for every paper in the world —
  * that is how the first page-limit gate was written, and it could not fire once. A page without a
  * type IS a body page.
  */
-export function geometryOf(m: BanalMeasurement): BanalGeometry {
+const typeOf = (p: Page): string => p.type ?? "body";
+
+/** Pages per type, body pages included under "body". */
+function countByType(pages: readonly Page[]): Record<string, number> {
   const byType: Record<string, number> = {};
-  for (const p of m.pages)
-    byType[p.type ?? "body"] = (byType[p.type ?? "body"] ?? 0) + 1;
-  const bib = m.pages.find((p) => p.type === "bib" && p.reffontsize != null);
+  for (const p of pages) byType[typeOf(p)] = (byType[typeOf(p)] ?? 0) + 1;
+  return byType;
+}
+
+/** The reference font size: the first bibliography page that has one. */
+const refFontSize = (pages: readonly Page[]): number | null =>
+  pages.find((p) => p.type === "bib" && p.reffontsize != null)?.reffontsize ??
+  null;
+
+/** The measurement → the geometry fields. */
+export function geometryOf(m: BanalMeasurement): BanalGeometry {
+  const byType = countByType(m.pages);
   const refPages = byType["bib"] ?? 0;
   const appendixPages = byType["appendix"] ?? 0;
   return {
@@ -138,7 +150,7 @@ export function geometryOf(m: BanalMeasurement): BanalGeometry {
     page_h_in: inches(m.papersize?.[0]),
     columns: m.columns ?? null,
     body_pt: m.bodyfontsize ?? null,
-    ref_pt: bib?.reffontsize ?? null,
+    ref_pt: refFontSize(m.pages),
     body_pages: m.pages.length - refPages - appendixPages,
     ref_pages: refPages,
     appendix_pages: appendixPages,
