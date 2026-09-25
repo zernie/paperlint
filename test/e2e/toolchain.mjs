@@ -154,7 +154,8 @@ try {
   check("exit 0", built.status === 0, built.out);
   check(
     "the engine is rpp's cache — nothing else was on PATH",
-    built.out.includes("engine: TeX Live") && built.out.includes("paperlint cache"),
+    built.out.includes("engine: TeX Live") &&
+      built.out.includes("paperlint cache"),
     built.out,
   );
   const facts = join(work, "papers", "acmart", "_build", "paper.facts.json");
