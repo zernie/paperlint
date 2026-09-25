@@ -30,6 +30,7 @@ import { join, dirname, basename, relative } from "node:path";
 import { isMain } from "../paper-pipeline/scripts/consumer.mjs";
 import { declaredVenue, writeFacts } from "../../dist/facts-file.js";
 import { readPdf } from "../../dist/pdf-facts.js";
+import { nodeBanalRuntime } from "../../dist/adapters/node/host.js";
 
 export { declaredVenue };
 
@@ -103,6 +104,7 @@ if (isMain(import.meta.url)) {
     venue: venue ?? null,
     kind: kind ?? null,
     banal: strict ? "required" : "optional",
+    runtime: nodeBanalRuntime(process.env),
     projectRoot: ROOT,
   });
   if (!r.ok) refuse(r.lines, strict);

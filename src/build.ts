@@ -53,6 +53,8 @@ import {
   type FactsDocument,
 } from "./facts-file.ts";
 import { readPdf as pdfjsReader, type PdfReader } from "./pdf-facts.ts";
+import { nodeBanalRuntime } from "./adapters/node/host.ts";
+import type { BanalRuntime } from "./core/banal/settings.ts";
 import {
   auxBib,
   bibtexExcerpt,
@@ -120,8 +122,10 @@ export interface BuildContext {
   readonly run: Runner;
   /** Reads a finished PDF — pdf.js by default; the harness passes a fake. */
   readonly readPdf: PdfReader;
-  /** Where the facts writer looks for a project's own `vendor/banal` (`banal.ts`, `findBanal`). */
+  /** Where the facts writer looks for a project's own `vendor/banal` (`core/banal/locate.ts`). */
   readonly projectRoot: string;
+  /** The ports and settings banal runs with. */
+  readonly banal: BanalRuntime;
 }
 
 export type StepOutcome =
@@ -488,7 +492,7 @@ export const measureStep: BuildStep = {
     const r = await writeFacts(ctx.paperDir, join(ctx.paperDir, `${JOB}.pdf`), {
       readPdf: ctx.readPdf,
       banal: "optional",
-      env: ctx.env,
+      runtime: ctx.banal,
       projectRoot: ctx.projectRoot,
     });
     if (!r.ok) return { ok: false, lines: [...r.lines] };
@@ -551,6 +555,8 @@ export interface BuildOptions {
   readPdf?: PdfReader;
   /** Where a project's `vendor/banal` is looked for. Default: `$CLAUDE_PROJECT_DIR`, else `cwd`. */
   projectRoot?: string;
+  /** The ports and settings banal runs with. Default: the real ones, from `env`. */
+  banal?: BanalRuntime;
 }
 
 /**
@@ -571,8 +577,9 @@ function withDefaults({
   dryRun = false,
   readPdf = pdfjsReader,
   projectRoot = env["CLAUDE_PROJECT_DIR"] || cwd,
+  banal = nodeBanalRuntime(env, { dirs: { cwd } }),
 }: BuildOptions): Required<BuildOptions> {
-  return { run, cwd, env, steps, log, dryRun, readPdf, projectRoot };
+  return { run, cwd, env, steps, log, dryRun, readPdf, projectRoot, banal };
 }
 
 /** Run the applicable steps in order, each on the environment the steps before it left. */
@@ -580,7 +587,7 @@ async function runSteps(
   paperDir: string,
   dir: string,
   plan: PlanLine[],
-  { run, env, steps, readPdf, projectRoot }: Required<BuildOptions>,
+  { run, env, steps, readPdf, projectRoot, banal }: Required<BuildOptions>,
 ): Promise<BuildResult> {
   let stepEnv = env;
   const notes: string[] = [];
@@ -592,6 +599,7 @@ async function runSteps(
       run,
       readPdf,
       projectRoot,
+      banal,
     });
     if (!out.ok) {
       // The PDF THIS run wrote and the step then rejected (a partial pass).

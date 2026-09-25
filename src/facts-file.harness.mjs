@@ -24,6 +24,9 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const { factsDocument, writeFacts, factsPath, declaredVenue } = await import(
   join(HERE, "facts-file.ts")
 );
+const { nodeBanalRuntime } = await import(
+  join(HERE, "adapters", "node", "host.ts")
+);
 const { geometryOf: banalFacts } = await import(
   join(HERE, "core", "banal", "output.ts")
 );
@@ -174,9 +177,9 @@ try {
     readPdf: good,
     banal: "optional",
     projectRoot: root,
-    env: {},
-    home: root,
+    runtime: nodeBanalRuntime({}, { dirs: { home: root } }),
   };
+  const withEnv = (env) => nodeBanalRuntime(env, { dirs: { home: root } });
 
   const w = await writeFacts(paper, pdf, opts);
   const onDisk = JSON.parse(readFileSync(factsPath(paper), "utf8"));
@@ -231,7 +234,7 @@ try {
   const withBanal = await writeFacts(paper, pdf, {
     ...opts,
     banal: "required",
-    env: { BANAL: fake },
+    runtime: withEnv({ BANAL: fake }),
   });
   check(
     "banal found ($BANAL): its geometry is in the facts, and geometry_source says banal",
@@ -261,7 +264,7 @@ try {
   writeFileSync(broken, `print STDERR "boom\\n"; exit 3;\n`);
   const bad = await writeFacts(paper, pdf, {
     ...opts,
-    env: { BANAL: broken },
+    runtime: withEnv({ BANAL: broken }),
   });
   // Guards: a banal that runs and fails is named with its exit, its message and where it came from
   // — not reported as "not found".

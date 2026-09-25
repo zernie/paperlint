@@ -4,7 +4,7 @@
  * signature carries `env` or `home`.
  */
 import { join, resolve } from "node:path";
-import type { AbsolutePath } from "../ports.ts";
+import type { AbsolutePath, Io } from "../ports.ts";
 
 /** An explicit banal to use instead of rpp's (a path to the script). */
 export const BANAL_ENV = "BANAL";
@@ -65,4 +65,10 @@ export function parseBanalSettings(
     tmpDir: absolute(dirs.cwd, dirs.tmp),
     processEnv: childEnv(env),
   };
+}
+
+/** Everything the banal app functions take besides their own arguments: the ports and the settings. */
+export interface BanalRuntime {
+  readonly io: Io;
+  readonly settings: BanalSettings;
 }

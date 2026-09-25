@@ -4,15 +4,16 @@
  * A composition root calls this; nothing below it reads the host again.
  */
 import { homedir, tmpdir } from "node:os";
-import type { Io } from "../../core/ports.ts";
 import {
   parseBanalSettings,
-  type BanalSettings,
+  type BanalRuntime,
   type Environment,
   type HostDirs,
 } from "../../core/banal/settings.ts";
 import { nodeAdapters } from "./index.ts";
 import type { SpawnSync } from "./process.ts";
+
+export type { BanalRuntime } from "../../core/banal/settings.ts";
 
 export const hostDirs = (over: Partial<HostDirs> = {}): HostDirs => ({
   home: homedir(),
@@ -20,12 +21,6 @@ export const hostDirs = (over: Partial<HostDirs> = {}): HostDirs => ({
   cwd: process.cwd(),
   ...over,
 });
-
-/** Everything the banal app functions take besides their own arguments. */
-export interface BanalRuntime {
-  readonly io: Io;
-  readonly settings: BanalSettings;
-}
 
 export interface RuntimeOptions {
   /** Replaces a host directory: a test's temp home. */

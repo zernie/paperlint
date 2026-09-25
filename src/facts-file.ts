@@ -42,7 +42,7 @@ import { describeFailure, type PdfFacts, type PdfReader } from "./pdf-facts.ts";
 import { measureGeometry as banalGeometry } from "./banal.ts";
 import { whyNoGeometry } from "./core/banal/geometry.ts";
 import type { BanalGeometry } from "./core/banal/output.ts";
-import { nodeBanalRuntime } from "./adapters/node/host.ts";
+import type { BanalRuntime } from "./core/banal/settings.ts";
 import type { AbsolutePath } from "./core/ports.ts";
 
 export const FACTS_SCHEMA = 2;
@@ -186,11 +186,10 @@ export interface WriteOptions {
   readonly kind?: string | null;
   /** `required`: no banal is a failure. `optional`: no banal leaves the geometry null. */
   readonly banal: "required" | "optional";
-  readonly env?: NodeJS.ProcessEnv;
-  /** Where `vendor/banal` is looked for (`banal.ts`, `findBanal`). */
+  /** The real or in-memory ports, and the banal settings the composition root parsed. */
+  readonly runtime: BanalRuntime;
+  /** Where `vendor/banal` is looked for (`core/banal/locate.ts`). */
   readonly projectRoot: string;
-  /** Home directory for rpp's cache; defaults to the user's. */
-  readonly home?: string;
 }
 
 export type WriteResult =
@@ -208,11 +207,7 @@ function measureGeometry(
   read: PdfFacts,
   o: WriteOptions,
 ): { banal: BanalFacts | null; why: string | null } {
-  // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
-  const env = o.env ?? process.env;
-  const { io, settings } = nodeBanalRuntime(env, {
-    dirs: o.home ? { home: o.home } : {},
-  });
+  const { io, settings } = o.runtime;
   const g = banalGeometry(
     io,
     settings,
