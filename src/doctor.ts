@@ -1,5 +1,5 @@
 /**
- * `rpp doctor` — the command that makes SILENCE VISIBLE.
+ * `paperlint doctor` — the command that makes SILENCE VISIBLE.
  *
  * 🔴 WHY THIS EXISTS AT ALL, when none of the eight tools surveyed for `docs/install.md` ships a
  * `doctor`. None of them needs one: a formatter that is misconfigured formats nothing and you see
@@ -8,7 +8,7 @@
  * exist. From outside, "installed" and "protecting you" are the same picture.
  *
  * Measured 2026-09-18, and this is the failure the command was written for: a consumer who follows
- * the documented install exactly — `rpp init`, then point the config at their papers — gets a guard
+ * the documented install exactly — `paperlint init`, then point the config at their papers — gets a guard
  * that allows every Bash write to their paper sources. It only appears to work when the directory
  * path happens to contain the segment `papers`, because that is the default the hook falls back to.
  * (Issue #33.)
@@ -51,17 +51,17 @@ export interface Program {
 }
 
 /**
- * The programs the SKILLS shell out to. `rpp lint` needs none of them — it reads files and reports.
+ * The programs the SKILLS shell out to. `paperlint lint` needs none of them — it reads files and reports.
  * Every one of these fails quietly, which is the only reason the list is worth printing: a missing
  * checker and a passing checker produce the same silence.
  */
 /**
- * TeX Live is installed by rpp itself, with every package the venue profiles declare. `rpp build`
+ * TeX Live is installed by paperlint itself, with every package the venue profiles declare. `paperlint build`
  * uses that tree even when its `pdflatex` is not on PATH, so a ✗ here with the cache installed
  * only means the skills' own shell calls will not find it.
  */
 export const TEX_INSTALL =
-  "npx rpp toolchain   (rpp build uses its TeX Live without PATH; the skills need its bin on PATH)";
+  "npx paperlint toolchain   (paperlint build uses its TeX Live without PATH; the skills need its bin on PATH)";
 
 export const PROGRAMS: readonly Program[] = [
   {
@@ -94,7 +94,7 @@ export const PROGRAMS: readonly Program[] = [
     without:
       "banal cannot run: page size, columns and font sizes are null in the facts file",
     install:
-      "apt-get install -y perl, then npx rpp toolchain (it fetches banal)",
+      "apt-get install -y perl, then npx paperlint toolchain (it fetches banal)",
   },
   {
     bin: "python3",
@@ -227,7 +227,7 @@ function papersVerdict(
       bad++;
     } else
       out.push(
-        `  ⚠ ${hookSays} does not exist yet — no papers yet. \`npx rpp new <name>\` creates the first one there`,
+        `  ⚠ ${hookSays} does not exist yet — no papers yet. \`npx paperlint new <name>\` creates the first one there`,
       );
   }
   return { lines: out, bad };
@@ -264,7 +264,7 @@ export function doctor({
   const pkgPath = join(root, "package.json");
   const out: string[] = [
     "",
-    "rpp doctor — what is wired, and what only looks wired",
+    "paperlint doctor — what is wired, and what only looks wired",
     "",
   ];
   let bad = 0;
@@ -298,7 +298,7 @@ export function doctor({
   out.push(...verdict.lines);
   bad += verdict.bad;
 
-  // A skill that is not linked is ADVISORY, like a missing program: `rpp lint`, the hooks and CI
+  // A skill that is not linked is ADVISORY, like a missing program: `paperlint lint`, the hooks and CI
   // work without it, and an entry of the same name that `init` refused to replace is the
   // consumer's own decision. What this section removes is the silence — before it, a consumer
   // without links had no `/paper-pipeline` and nothing anywhere said so.
@@ -324,14 +324,14 @@ export function doctor({
           `      ${g.name} — ${g.status === "missing" ? "not linked" : `${g.reason ?? "occupied"}, not the shipped skill`}`,
         );
       out.push(
-        `      \`npx rpp init\` links the missing ones; it never replaces an entry it did not make`,
+        `      \`npx paperlint init\` links the missing ones; it never replaces an entry it did not make`,
       );
     }
   }
 
   out.push(
     "",
-    "external programs (the skills shell out to these; `rpp lint` needs none of them)",
+    "external programs (the skills shell out to these; `paperlint lint` needs none of them)",
   );
   for (const p of PROGRAMS) {
     if (found(p.bin, run)) out.push(`  ✓ ${p.bin.padEnd(10)} ${p.from}`);

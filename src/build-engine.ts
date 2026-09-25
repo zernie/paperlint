@@ -1,10 +1,10 @@
 /**
- * The shell around `resolveEngine` for `rpp build`: gather the facts, act on the decision, and
+ * The shell around `resolveEngine` for `paperlint build`: gather the facts, act on the decision, and
  * hand the build an environment whose PATH starts with the chosen TeX Live.
  *
  * One decision per run, not per paper: the question "install TeX Live?" is asked at most ONCE, for
  * the union of what the targeted papers need. The install itself is `ensureTexLive` — the same code
- * `rpp toolchain` runs, so "yes" here and the command there cannot install different things.
+ * `paperlint toolchain` runs, so "yes" here and the command there cannot install different things.
  */
 // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { spawnSync } from "node:child_process";
@@ -93,7 +93,7 @@ function withDefaults(o: EngineOptions): Resolved {
 export function gatherFacts(o: Resolved): EngineFacts {
   const probes = cachedTrees(cacheRoot(o.env, o.home)).map(
     (tree): TreeProbe => ({
-      label: `TeX Live ${tree.year} — rpp cache (${tree.dir})`,
+      label: `TeX Live ${tree.year} — paperlint cache (${tree.dir})`,
       bin: tree.bin,
       missing: probeTree(tree.bin, o.tex.packages, o.run),
     }),
@@ -127,8 +127,8 @@ export function refusal(d: EngineDecision, facts: EngineFacts): string {
       ? `; ${join(facts.system.bin, "pdflatex")} lacks: ${facts.system.missing.join(", ")}`
       : "";
   if (d.kind === "refuse" && d.reason === "unsupported")
-    return `✗ rpp build: ${UNSUPPORTED} (missing: ${names(missing)}${sys})`;
-  return `✗ rpp build: no TeX Live with every package these papers need — run \`npx rpp toolchain\` (missing: ${names(missing)}${sys})`;
+    return `✗ paperlint build: ${UNSUPPORTED} (missing: ${names(missing)}${sys})`;
+  return `✗ paperlint build: no TeX Live with every package these papers need — run \`npx paperlint toolchain\` (missing: ${names(missing)}${sys})`;
 }
 
 /** The question a terminal gets — once per run. */

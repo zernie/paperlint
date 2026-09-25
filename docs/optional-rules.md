@@ -1,6 +1,6 @@
 # Optional rules
 
-Some checks matter only for some venues. rpp ships them **off**, and you turn them on for the
+Some checks matter only for some venues. paperlint ships them **off**, and you turn them on for the
 papers that need them, in the `rules` setting of your `package.json`
 ([`configuration.md`](configuration.md#the-rules-key-turning-rules-on-and-off)).
 
@@ -14,7 +14,7 @@ papers that need them, in the `rules` setting of your `package.json`
 
 ```json
 {
-  "research-paper-pipeline": {
+  "paperlint": {
     "papersDir": "papers",
     "rules": [
       {
@@ -33,7 +33,7 @@ wide margin on both sides.
 
 ### What it reads
 
-The rule does not open the PDF to measure it. `rpp build` measures every PDF it builds and writes
+The rule does not open the PDF to measure it. `paperlint build` measures every PDF it builds and writes
 the result to `<paper>/_build/paper.facts.json` ([`configuration.md`](configuration.md#how-rpp-build-compiles-a-paper)),
 and the rule judges that file, reporting on the paper's `paper.tex` at the `\documentclass` line.
 So: **build, then lint.**
@@ -47,7 +47,7 @@ So: **build, then lint.**
 | a last page of a few lines                          | nothing — there is no layout to balance                                                                                       |
 | a review build with numbered lines                  | nothing — the numbers run down the whole page, so both columns measure full height, and balance is a camera-ready requirement |
 
-If you turn the rule on with a `files` glob that reaches no `paper.tex`, `rpp lint` fails and says
+If you turn the rule on with a `files` glob that reaches no `paper.tex`, `paperlint lint` fails and says
 so, rather than reporting a clean run for a rule that never ran.
 
 ### Which venues need it
@@ -74,7 +74,7 @@ your source.
 
 ### Fixing it by hand
 
-rpp does not fix it for you, deliberately: every mechanism is documented as unreliable by its own
+paperlint does not fix it for you, deliberately: every mechanism is documented as unreliable by its own
 authors, and a layout change can silently move a page break in a paper whose page count is
 limited. Conference Publishing Consulting's own advice, in its order:
 
@@ -96,11 +96,11 @@ limited. Conference Publishing Consulting's own advice, in its order:
 
 For IEEEtran, the class's own guide recommends `\IEEEtriggeratref{N}` over any package.
 
-Then `rpp build` again and `rpp lint` again.
+Then `paperlint build` again and `paperlint lint` again.
 
-### Why it is not part of `rpp build`
+### Why it is not part of `paperlint build`
 
-Until 2026-09-24 `rpp build` searched for a `\balance` position itself — rebuilding once per
+Until 2026-09-24 `paperlint build` searched for a `\balance` position itself — rebuilding once per
 bibliography entry — and failed the build, deleting the PDF, when none worked. It was removed:
 only some venues ask for balance, a build step cannot be turned on per venue, given a severity or
 suppressed with a reason, and an automatic layout change was the one place the build rewrote a

@@ -4,7 +4,7 @@
  *
  * 🔴 WHY `dist/` AND NOT A FAKE. The shipped path meeting a real PDF is exactly what a harness
  * cannot show: pdf.js on Node 20 opens the same files and reports zero fonts without an error. So
- * the e2e reads each PDF the way `rpp build` does.
+ * the e2e reads each PDF the way `paperlint build` does.
  *
  * 🔴 AND WHY A SECOND SOURCE. A reader checked only against itself proves nothing about the PDF.
  * pdfTeX lists, at the end of `paper.log`, every font program it embedded (`<…/LinLibertineT.pfb>`).

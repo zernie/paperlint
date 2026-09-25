@@ -1,7 +1,7 @@
 /**
- * `rpp new <name>` — a paper folder the linter accepts, made from a template FILE.
+ * `paperlint new <name>` — a paper folder the linter accepts, made from a template FILE.
  *
- * 🔴 WHY THIS EXISTS. `rpp lint` requires `PIPELINE-STATUS.md` in every paper folder, and until
+ * 🔴 WHY THIS EXISTS. `paperlint lint` requires `PIPELINE-STATUS.md` in every paper folder, and until
  * this command nothing made one: the template sat inside a fenced block of a reference page and a
  * human copied it. The README's own "First run" example opened with the error for the missing file.
  *
@@ -139,7 +139,7 @@ export function newPaper(
   return { ok: true, dir, fresh, files };
 }
 
-/** The report lines, shared by `rpp new` and the first-paper offer in `rpp init`. */
+/** The report lines, shared by `paperlint new` and the first-paper offer in `paperlint init`. */
 export function reportNewPaper(
   result: NewPaperResult,
   here: (p: string) => string,

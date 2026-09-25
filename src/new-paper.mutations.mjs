@@ -1,7 +1,7 @@
 /**
  * Battery for `new-paper.ts`.
  *
- * Every case reintroduces a way `rpp new` damages a paper folder or produces one the linter
+ * Every case reintroduces a way `paperlint new` damages a paper folder or produces one the linter
  * refuses — the first a loss nobody notices until the text is gone, the second the exact
  * "missing file on the first run" this command was written to end.
  */
@@ -24,7 +24,7 @@ process.exit(
         harness: HARNESS,
         expect: "a second run overwrites nothing",
         disables:
-          "the one promise that makes `rpp new` safe on an existing folder. A scorecard with a " +
+          "the one promise that makes `paperlint new` safe on an existing folder. A scorecard with a " +
           "year of journal in it is replaced by the empty template",
         edits: [
           [

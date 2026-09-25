@@ -586,7 +586,7 @@ if (ONLY.length && RUN_ARMS.length !== ONLY.length)
 // a wall of confident 0.00s that read like a finding.
 
 // 1. the roster is what the parent measured
-// Through `installedSkills`, which follows the links `rpp init` makes (rpp#62).
+// Through `installedSkills`, which follows the links `paperlint init` makes (rpp#62).
 const installed = installedSkills(SKILLS_DIR);
 const installedSet = new Set(installed);
 if (installedSet.has(ARMS[5].rename))
@@ -737,7 +737,7 @@ function buildArm(a) {
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
   // 🔴 ONE SKILL AT A TIME, FROM ITS REALPATH — not `cpSync(SKILLS_DIR, dir, { recursive })`.
-  // In a consumer every entry of SKILLS_DIR is a link `rpp init` made (rpp#62), and `cpSync` copies
+  // In a consumer every entry of SKILLS_DIR is a link `paperlint init` made (rpp#62), and `cpSync` copies
   // a link as a link, rewritten to an ABSOLUTE path into the original; `dereference: true` does not
   // change that for nested entries (measured, Node 22.22). The arm's `writeFileSync` below would
   // then land in the real SKILL.md — "the real one is never written" would be false in exactly the

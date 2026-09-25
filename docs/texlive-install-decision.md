@@ -16,7 +16,7 @@ The corpus owner's question that prompted the file: _"write down why we chose on
 another"_.
 
 > **Where this ended up (2026-09-24).** Method 5 below won, and it is no longer a CI script: it is
-> `rpp toolchain` (`src/toolchain.ts`), the command users run and the `build-e2e` job runs on Linux
+> `paperlint toolchain` (`src/toolchain.ts`), the command users run and the `build-e2e` job runs on Linux
 > and macOS. The package list and the file contract (`REQUIRED_FILES` in the deleted
 > `ensure-toolchain.sh`) moved into the venue profiles — each `skills/submit-paper/references/venues/*.jsonc`
 > declares a `tex` block of CTAN package → proof files, and `tex-base.jsonc` the set every paper

@@ -15,7 +15,7 @@
  * font list reads as "no Type 3, nothing unembedded" — a clean verdict over nothing.
  *
  * ── LAZY ────────────────────────────────────────────────────────────────────────
- * `unpdf` is imported on the first read, not when this module loads: `rpp lint` imports the build
+ * `unpdf` is imported on the first read, not when this module loads: `paperlint lint` imports the build
  * and must not pay pdf.js's start-up for a command that never opens a PDF.
  */
 // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
@@ -63,7 +63,7 @@ export type PdfRead =
       readonly detail: string;
     };
 
-/** The port `rpp build` and the facts writer take, so a test can hand them any outcome. */
+/** The port `paperlint build` and the facts writer take, so a test can hand them any outcome. */
 export type PdfReader = (path: string) => Promise<PdfRead>;
 
 /**
@@ -276,7 +276,7 @@ async function factsOf(doc: Doc, lib: PdfJs): Promise<PdfRead> {
       "zero-fonts-on-text",
       `page(s) ${fonts.pages.join(", ")} draw text, but pdf.js resolved no font for it ` +
         // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
-        `(Node ${process.version}; rpp needs Node >= 22.13, where pdf.js reports fonts)`,
+        `(Node ${process.version}; paperlint needs Node >= 22.13, where pdf.js reports fonts)`,
     );
   return {
     ok: true,

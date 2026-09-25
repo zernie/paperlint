@@ -1,10 +1,10 @@
-# research-paper-pipeline
+# paperlint
 
-[![npm version](https://img.shields.io/npm/v/research-paper-pipeline)](https://www.npmjs.com/package/research-paper-pipeline)
+[![npm version](https://img.shields.io/npm/v/paperlint)](https://www.npmjs.com/package/paperlint)
 ![Node version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fzernie%2Fresearch-paper-pipeline%2Fmain%2Fpackage.json&query=%24.engines.node&label=node)
 
 A checker for a research paper you keep in a git repository. You record what happened to the paper
-— "submitted on 22 July, as this PDF" — and `rpp` checks that the files match: the PDF you say you
+— "submitted on 22 July, as this PDF" — and `paperlint` checks that the files match: the PDF you say you
 sent is still there and unchanged, its LaTeX source was kept beside it, and the paper itself avoids
 a few mistakes reviewers flag. It runs on your machine and in CI, like a linter.
 
@@ -16,33 +16,33 @@ conferences or journals. Claude Code users also get optional skills and hooks.
 <!-- `vigiles:symbol src/init.ts#init` — `npm run check` fails if this function is renamed or removed. -->
 
 ```sh
-npm i -D research-paper-pipeline
-npx rpp init
+npm i -D paperlint
+npx paperlint init
 ```
 
-Node 22.13 or newer. Run `npx rpp` only after the install: `rpp` on the public npm registry is a
-different, unrelated package.
+Node 22.13 or newer. Install first: `paperlint init` links the skills and hooks to the copy in
+your project's `node_modules`, so run without the install it has nothing to link to.
 
-`rpp init` finds your papers directory and records it in `package.json`, offers a CI workflow and a
+`paperlint init` finds your papers directory and records it in `package.json`, offers a CI workflow and a
 first paper, and sets up the optional Claude Code skills and hooks. It installs no software. It
 asks questions only when you run it in a terminal; an agent, CI or `--yes` gets the defaults, and
-each default it takes is printed. It ends by running `rpp doctor`, which checks the setup.
+each default it takes is printed. It ends by running `paperlint doctor`, which checks the setup.
 Exactly what it writes: [`docs/install.md`](docs/install.md#what-rpp-init-writes).
 
 ## What you get
 
-| command                 | what it does                                                                                       |
-| ----------------------- | -------------------------------------------------------------------------------------------------- |
-| `npx rpp init`          | sets the project up (see above)                                                                    |
-| `npx rpp new my-paper`  | creates a paper folder from a template; never overwrites a file                                    |
-| `npx rpp lint`          | runs every check over your papers; `npx rpp lint papers/my-paper` checks one                       |
-| `npx rpp build <paper>` | compiles `paper.tex` to `paper.pdf` with pdflatex and bibtex; `--all` builds every paper           |
-| `npx rpp toolchain`     | installs TeX Live with the LaTeX packages your venues need; `--check` only reports what is missing |
-| `npx rpp doctor`        | checks the setup and exits non-zero if something is miswired                                       |
-| `npx rpp --help`        | every command and flag                                                                             |
+| command                       | what it does                                                                                       |
+| ----------------------------- | -------------------------------------------------------------------------------------------------- |
+| `npx paperlint init`          | sets the project up (see above)                                                                    |
+| `npx paperlint new my-paper`  | creates a paper folder from a template; never overwrites a file                                    |
+| `npx paperlint lint`          | runs every check over your papers; `npx paperlint lint papers/my-paper` checks one                 |
+| `npx paperlint build <paper>` | compiles `paper.tex` to `paper.pdf` with pdflatex and bibtex; `--all` builds every paper           |
+| `npx paperlint toolchain`     | installs TeX Live with the LaTeX packages your venues need; `--check` only reports what is missing |
+| `npx paperlint doctor`        | checks the setup and exits non-zero if something is miswired                                       |
+| `npx paperlint --help`        | every command and flag                                                                             |
 
 A venue is the conference or journal you submit to. TeX Live is the standard LaTeX distribution;
-`rpp build` offers to install it the first time it needs it.
+`paperlint build` offers to install it the first time it needs it.
 
 ## Your first paper in five minutes
 
@@ -50,10 +50,10 @@ A venue is the conference or journal you submit to. TeX Live is the standard LaT
 
 <!-- `vigiles:symbol src/new-paper.ts#newPaper` — `npm run check` fails if this function is renamed or removed. -->
 
-After `npx rpp init`:
+After `npx paperlint init`:
 
 ```sh
-npx rpp new my-paper
+npx paperlint new my-paper
 ```
 
 ```
@@ -78,17 +78,17 @@ papers/
 
 A **stage** is a point the paper has reached, such as `submitted` or `camera-ready` (the final
 version for the proceedings). The name may use `a-z`, `0-9`, `.`, `_` and `-`. On a folder that
-already exists, `rpp new` adds only the missing files. To use your own templates, put files with
+already exists, `paperlint new` adds only the missing files. To use your own templates, put files with
 the same names in `papers/.template/`; `{{name}}` in them becomes the paper's name.
 
 Write the paper, then check and build it:
 
 ```sh
-npx rpp lint                     # check every paper
-npx rpp build papers/my-paper    # writes papers/my-paper/paper.pdf
+npx paperlint lint                     # check every paper
+npx paperlint build papers/my-paper    # writes papers/my-paper/paper.pdf
 ```
 
-`rpp build` runs pdflatex and bibtex until the references settle. There is no build script to
+`paperlint build` runs pdflatex and bibtex until the references settle. There is no build script to
 write; a `build.sh` in the paper folder is ignored.
 
 When you submit, copy the PDF and `paper.tex` into `versions/` and record the stage in the front
@@ -105,7 +105,7 @@ stages:
     sourceBytes: 57210
 ```
 
-From then on `rpp lint` fails if that PDF goes missing or changes size. A frozen PDF should never
+From then on `paperlint lint` fails if that PDF goes missing or changes size. A frozen PDF should never
 change, so a size that no longer matches means the file was replaced after you recorded it
 ([`docs/rules.md`](docs/rules.md#the-scorecards-bytes-and-sourcebytes)).
 
@@ -126,27 +126,27 @@ papers/my-paper
 
 Each finding gives the file, line and column, the level, what is wrong, and the check that found
 it. The first line is an error about the folder: without `PIPELINE-STATUS.md`, the three checks
-that read it have nothing to check; `npx rpp new my-paper` adds the file and leaves `paper.tex`
+that read it have nothing to check; `npx paperlint new my-paper` adds the file and leaves `paper.tex`
 alone. The two warnings count typography slips against an allowance you can set per paper: going over
 it is reported, fixing some is not ("paying the debt down is silent").
 
-`rpp lint` exits `1` when any check reports an error (as here, even though the summary line counts
+`paperlint lint` exits `1` when any check reports an error (as here, even though the summary line counts
 only the warnings in files), or when it checked no files at all (usually a wrong path). Warnings
 never fail the run unless you pass `--max-warnings <n>`. `--json` prints the findings as JSON.
 
 ## Run it in CI
 
-`rpp init` offers to write this GitHub Actions workflow step for you. By hand:
+`paperlint init` offers to write this GitHub Actions workflow step for you. By hand:
 
 ```yaml
-- uses: zernie/research-paper-pipeline@v1.0.0
+- uses: zernie/research-paper-pipeline@v2.0.0
   with:
     paths: papers
 ```
 
-Use the tag of the version you installed (`npm ls research-paper-pipeline`): every npm release has
+Use the tag of the version you installed (`npm ls paperlint`): every npm release has
 a git tag of the same version, so the step runs the same code as your package. It runs
-`rpp lint`. `paths` is required, and the step fails if it checked zero files, so a typo in the path
+`paperlint lint`. `paths` is required, and the step fails if it checked zero files, so a typo in the path
 shows up red. Optional inputs: `config`, `max-warnings` (default `-1`, no limit), `texcount` (default
 `true`), `working-directory`.
 
@@ -170,25 +170,25 @@ Checks that only some venues need are off until you turn them on:
 
 ## Configuration
 
-`rpp init` writes the one required setting into `package.json`:
+`paperlint init` writes the one required setting into `package.json`:
 
 ```json
 {
-  "research-paper-pipeline": {
+  "paperlint": {
     "papersDir": "papers"
   }
 }
 ```
 
 `papersDir` has no default, so the tool never checks a folder you did not choose: without it,
-`rpp lint` stops and says so, unless you pass a path. An unknown key is an error. The optional
+`paperlint lint` stops and says so, unless you pass a path. An unknown key is an error. The optional
 settings, and how to use the checks inside your own ESLint setup, are in
 [`docs/configuration.md`](docs/configuration.md). TeX Live, its install location and the external
 programs the skills use are in [`docs/toolchain.md`](docs/toolchain.md).
 
 ## Claude Code (optional)
 
-`rpp lint` needs only Node. If you use Claude Code, `rpp init` also sets up two things:
+`paperlint lint` needs only Node. If you use Claude Code, `paperlint init` also sets up two things:
 
 **Skills** — one per stage of writing a paper, from checking the idea through drafting, review,
 submission and camera-ready. They are linked into `.claude/skills/`. Start with `/paper-pipeline`;
@@ -203,20 +203,20 @@ fresh clone needs `npm install` before they run.
 | `paper-skills-nudge` | no      | after a paper edit, shows the agent the pre-submission checklist |
 | `paper-status-gates` | no      | after a paper edit, lists the stages that have not run yet       |
 
-**Know this about `paper-edit-guard`:** if the `research-paper-pipeline` key in `package.json`
+**Know this about `paper-edit-guard`:** if the `paperlint` key in `package.json`
 cannot be read (the file is missing, or has merge-conflict markers), it blocks **every** shell
 command in Claude Code, not only paper ones, until the key is readable again. Fix `package.json`
 with a normal file edit — those are not blocked.
 
 ## What it does not do
 
-- **It does not install software behind your back.** `rpp init` installs nothing; TeX Live comes
-  only from `rpp toolchain` or when you answer yes in `rpp build`. On Windows, install TeX Live
+- **It does not install software behind your back.** `paperlint init` installs nothing; TeX Live comes
+  only from `paperlint toolchain` or when you answer yes in `paperlint build`. On Windows, install TeX Live
   yourself.
 - **It does not guess what to check.** There is no default papers directory.
-- **It does not overwrite your files.** `rpp new` and `rpp init` only add what is missing.
-- **It does not run your build script.** `rpp build` compiles the paper itself.
-- **It does not write or grade the paper.** `rpp lint` checks records and a few mechanical
+- **It does not overwrite your files.** `paperlint new` and `paperlint init` only add what is missing.
+- **It does not run your build script.** `paperlint build` compiles the paper itself.
+- **It does not write or grade the paper.** `paperlint lint` checks records and a few mechanical
   mistakes; judging the writing is what the optional skills are for.
 - **New papers are LaTeX.** Markdown papers (`paper.md`) are still read but deprecated
   ([#57](https://github.com/zernie/research-paper-pipeline/issues/57)).
@@ -235,6 +235,6 @@ MIT.
 
 **banal is not part of this package.** banal, the page-geometry script from
 [HotCRP](https://github.com/kohler/hotcrp) (Geoffrey M. Voelker, Eddie Kohler), is licensed
-GPL-2.0-or-later. rpp does not contain, copy or modify it: `rpp toolchain` downloads it from HotCRP
-at a pinned commit, checks its sha256, and rpp runs it as a separate program (`perl banal …`),
+GPL-2.0-or-later. paperlint does not contain, copy or modify it: `paperlint toolchain` downloads it from HotCRP
+at a pinned commit, checks its sha256, and paperlint runs it as a separate program (`perl banal …`),
 reading its JSON output. Details: [`docs/toolchain.md`](docs/toolchain.md#page-geometry-banal-without-poppler).

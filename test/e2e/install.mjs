@@ -259,7 +259,7 @@ function contentDelivery(installed) {
  * check looked at the package directory.
  *
  * So this walks the SAME list — every skill the installed package declares — from the consumer
- * root, through the links `rpp init` made, and resolves the script paths the skills name the way
+ * root, through the links `paperlint init` made, and resolves the script paths the skills name the way
  * the agent will: `.claude/skills/<skill>/scripts/x.mjs` from the project root, `scripts/x.mjs`
  * from the skill's own directory as the project sees it.
  */
@@ -388,7 +388,7 @@ try {
     // SYMLINK to the `.mjs`, and `node` swallows it; under pnpm it holds a SHELL WRAPPER, and
     // `node` chokes on its very first line `basedir=$(dirname …)`. The first edition of this test
     // called `node bin` and reported three false failures on pnpm — that is, it measured my way
-    // of launching, not the package. The consumer calls `npx rpp`, which executes the file rather
+    // of launching, not the package. The consumer calls `npx paperlint`, which executes the file rather
     // than feeding it to node.
     const bin = join(consumer, "node_modules", ".bin", PACKAGE_NAME);
     const help = sh(bin, ["--help"], { cwd: consumer });
@@ -430,9 +430,9 @@ try {
       }
     })();
     declared === "papers"
-      ? ok("`rpp init` declared the papers directory in package.json")
+      ? ok("`paperlint init` declared the papers directory in package.json")
       : bad(
-          "`rpp init` declared the papers directory in package.json",
+          "`paperlint init` declared the papers directory in package.json",
           `package.json ended up with ${JSON.stringify(declared)}\n${init.stdout ?? ""}${init.stderr ?? ""}`,
         );
     // ONE declaration: no second carrier is created, otherwise the two diverge silently — that is
@@ -444,9 +444,9 @@ try {
           "rpp.json appeared",
         );
     init.status === 0
-      ? ok("`rpp init` finished with zero — doctor found no discrepancy")
+      ? ok("`paperlint init` finished with zero — doctor found no discrepancy")
       : bad(
-          "`rpp init` finished with zero — doctor found no discrepancy",
+          "`paperlint init` finished with zero — doctor found no discrepancy",
           (init.stdout ?? "") + (init.stderr ?? ""),
         );
 
@@ -505,10 +505,10 @@ try {
       (c) => wiredCommands.filter((w) => w === c).length === 1,
     )
       ? ok(
-          `\`rpp init\` wired all ${wiredCommands.length} hook command(s) into .claude/settings.json, once each`,
+          `\`paperlint init\` wired all ${wiredCommands.length} hook command(s) into .claude/settings.json, once each`,
         )
       : bad(
-          "`rpp init` wired the hooks into .claude/settings.json, once each",
+          "`paperlint init` wired the hooks into .claude/settings.json, once each",
           `${JSON.stringify(wiredCommands).slice(0, 300)}\n${init.stdout ?? ""}`,
         );
     /in a fresh clone they cannot run until `npm install`/.test(
@@ -526,9 +526,11 @@ try {
     // A second `init` is a re-run, not a clash: nothing fails, no link moves.
     const again = sh(bin, ["init"], { cwd: consumer });
     settingsBefore !== null && readFileSync(settingsPath).equals(settingsBefore)
-      ? ok("a second `rpp init` leaves .claude/settings.json byte-identical")
+      ? ok(
+          "a second `paperlint init` leaves .claude/settings.json byte-identical",
+        )
       : bad(
-          "a second `rpp init` leaves .claude/settings.json byte-identical",
+          "a second `paperlint init` leaves .claude/settings.json byte-identical",
           again.stdout,
         );
     const after = consumerSkillView(consumer, installed);
@@ -537,9 +539,11 @@ try {
     new RegExp(
       `0 linked now, ${view.names.length} already linked, 0 skipped`,
     ).test(again.stdout ?? "")
-      ? ok("a second `rpp init` exits zero and leaves every link as it was")
+      ? ok(
+          "a second `paperlint init` exits zero and leaves every link as it was",
+        )
       : bad(
-          "a second `rpp init` exits zero and leaves every link as it was",
+          "a second `paperlint init` exits zero and leaves every link as it was",
           `exit ${String(again.status)}\n${(again.stdout ?? "")
             .split("\n")
             .filter((l) => /shipped|skills/.test(l))
@@ -548,14 +552,14 @@ try {
 
     const lint = sh(bin, ["lint"], { cwd: consumer });
     lint.status === 0 && /no findings/.test(lint.stdout ?? "")
-      ? ok("`rpp lint` passed the corpus clean")
+      ? ok("`paperlint lint` passed the corpus clean")
       : bad(
-          "`rpp lint` passed the corpus clean",
+          "`paperlint lint` passed the corpus clean",
           (lint.stdout ?? "") + (lint.stderr ?? ""),
         );
 
-    // `rpp new` from the INSTALLED package: the templates must have shipped in the tarball, and
-    // what they scaffold must be what `rpp lint` accepts — the first run green, not "missing
+    // `paperlint new` from the INSTALLED package: the templates must have shipped in the tarball, and
+    // what they scaffold must be what `paperlint lint` accepts — the first run green, not "missing
     // PIPELINE-STATUS.md". Then the whole corpus is linted again, now with the new paper in it.
     const fresh = sh(bin, ["new", "demo"], { cwd: consumer });
     fresh.status === 0 &&
@@ -563,17 +567,19 @@ try {
     existsSync(join(consumer, "papers", "demo", "paper.tex")) &&
     /no findings/.test(fresh.stdout ?? "")
       ? ok(
-          "`rpp new demo` scaffolds papers/demo from the shipped templates, and its lint is clean",
+          "`paperlint new demo` scaffolds papers/demo from the shipped templates, and its lint is clean",
         )
       : bad(
-          "`rpp new demo` scaffolds papers/demo from the shipped templates, and its lint is clean",
+          "`paperlint new demo` scaffolds papers/demo from the shipped templates, and its lint is clean",
           (fresh.stdout ?? "") + (fresh.stderr ?? ""),
         );
     const withDemo = sh(bin, ["lint"], { cwd: consumer });
     withDemo.status === 0 && /no findings/.test(withDemo.stdout ?? "")
-      ? ok("`rpp lint` still passes the corpus clean with the new paper in it")
+      ? ok(
+          "`paperlint lint` still passes the corpus clean with the new paper in it",
+        )
       : bad(
-          "`rpp lint` still passes the corpus clean with the new paper in it",
+          "`paperlint lint` still passes the corpus clean with the new paper in it",
           (withDemo.stdout ?? "") + (withDemo.stderr ?? ""),
         );
 
@@ -595,7 +601,7 @@ try {
       found = countByRule(realLint.stdout ?? "");
     } catch (e) {
       bad(
-        "`rpp lint --json` on the real article parses",
+        "`paperlint lint --json` on the real article parses",
         `${e.message}\n${realLint.stderr ?? ""}`,
       );
     }
@@ -634,7 +640,7 @@ try {
         // judged is the RESOLVE.
         if (
           // 🔴 `is NOT running` IN THE LIST IS LOAD-BEARING. The first edition looked only for
-          // `Cannot find module`, while `rpp hook` with an unresolvable runtime catches the
+          // `Cannot find module`, while `paperlint hook` with an unresolvable runtime catches the
           // exception and complains in DIFFERENT words, returning 0 — and the test printed "all
           // 3 commands resolve" with the hooks completely broken. A false green of exactly the
           // class this test is written for: the check looked for the spelling it REMEMBERED, not

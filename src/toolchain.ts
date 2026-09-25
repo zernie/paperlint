@@ -1,9 +1,9 @@
 /**
- * `rpp toolchain` — install upstream TeX Live, with exactly the packages the venue profiles
+ * `paperlint toolchain` — install upstream TeX Live, with exactly the packages the venue profiles
  * declare, into rpp's own cache, and banal (the page-geometry script HotCRP runs) at its pinned
- * commit (`adapters/banal/`). `rpp build` offers the TeX Live install on a terminal.
+ * commit (`adapters/banal/`). `paperlint build` offers the TeX Live install on a terminal.
  *
- * 🔴 WHY rpp INSTALLS TeX AT ALL (rule 11). "Install TeX Live yourself" was a manual step with a
+ * 🔴 WHY paperlint INSTALLS TeX AT ALL (rule 11). "Install TeX Live yourself" was a manual step with a
  * trap in it: the distribution packages cost 2.1 GB, and a smaller hand-picked set silently typeset
  * acmart papers in Computer Modern. The engine decision (2026-09-24) is TeX Live's pdflatex,
  * installed the way Playwright installs browsers: one command, a cache directory, idempotent.
@@ -510,7 +510,7 @@ export type InstallResult =
 
 /**
  * Make the cache hold every package of `tex`: install TeX Live when there is none, add only the
- * missing packages when there is one, verify either way. Used by `rpp toolchain` and by `rpp build`
+ * missing packages when there is one, verify either way. Used by `paperlint toolchain` and by `paperlint build`
  * after a "yes".
  */
 export function ensureTexLive(
@@ -625,7 +625,7 @@ export const leftInPlace = (old: CachedTree): string =>
   `delete that directory to free the space`;
 
 /**
- * `rpp build` finds the tree itself; a script that calls `pdflatex` directly needs this directory
+ * `paperlint build` finds the tree itself; a script that calls `pdflatex` directly needs this directory
  * first on PATH, so every success says where it is.
  */
 export const binLine = (tree: CachedTree): string => `  bin: ${tree.bin}`;
@@ -635,7 +635,7 @@ function fail(
   lines: readonly string[],
 ): InstallResult {
   const [head, ...rest] = lines;
-  err(`✗ rpp toolchain: ${head ?? "failed"}`);
+  err(`✗ paperlint toolchain: ${head ?? "failed"}`);
   for (const l of rest) err(`    ${l}`);
   return { ok: false };
 }
@@ -661,8 +661,8 @@ function withDefaults(o: ToolchainOptions): Resolved {
 }
 
 export const UNSUPPORTED =
-  "Windows is not supported: rpp installs TeX Live with install-tl-unx (Linux, macOS). " +
-  "Install TeX Live yourself (https://tug.org/texlive/windows.html) — rpp build uses a TeX Live on PATH " +
+  "Windows is not supported: paperlint installs TeX Live with install-tl-unx (Linux, macOS). " +
+  "Install TeX Live yourself (https://tug.org/texlive/windows.html) — paperlint build uses a TeX Live on PATH " +
   "once it has every package the venue declares.";
 
 /** `--check`: report, change nothing. Exit 0 only when every declared package is present. */
@@ -670,7 +670,7 @@ function report(o: Resolved, tree: CachedTree | null): number {
   const n = packageNames(o.tex).length;
   if (!tree) {
     o.log(
-      `✗ no TeX Live in ${cacheRoot(o.env, o.home)} — \`npx rpp toolchain\` installs ${n} packages (~230 MB, ~2 min)`,
+      `✗ no TeX Live in ${cacheRoot(o.env, o.home)} — \`npx paperlint toolchain\` installs ${n} packages (~230 MB, ~2 min)`,
     );
     return 1;
   }
@@ -686,7 +686,7 @@ function report(o: Resolved, tree: CachedTree | null): number {
   o.log(
     `✗ TeX Live ${tree.year} in ${tree.dir} lacks ${count} of ${n} declared packages: ${describeGaps(gaps, o.tex)}`,
   );
-  o.log(`  run \`npx rpp toolchain\` to install them`);
+  o.log(`  run \`npx paperlint toolchain\` to install them`);
   return 1;
 }
 
@@ -698,7 +698,7 @@ function banalPart(o: Resolved): boolean {
     if (r.ok) o.log(`✓ ${tool.label} is installed and runs`);
     else {
       o.log(`✗ ${tool.label}: ${r.error.join("; ")}`);
-      o.log("  run `npx rpp toolchain` to install it");
+      o.log("  run `npx paperlint toolchain` to install it");
     }
     return r.ok;
   }
@@ -734,19 +734,19 @@ function texPart(o: Resolved): number {
     return 0;
   }
   o.log(
-    `rpp toolchain: TeX Live with ${n} packages into ${cacheRoot(o.env, o.home)}`,
+    `paperlint toolchain: TeX Live with ${n} packages into ${cacheRoot(o.env, o.home)}`,
   );
   return ensureTexLive(o.tex, o).ok ? 0 : 1;
 }
 
 /**
- * `rpp toolchain [--check]`. Both halves always run, so one failure does not hide the other; the
+ * `paperlint toolchain [--check]`. Both halves always run, so one failure does not hide the other; the
  * exit code is 0 only when both are ready.
  */
 export function runToolchain(options: ToolchainOptions): number {
   const o = withDefaults(options);
   if (!supportedPlatform(o.platform)) {
-    o.err(`✗ rpp toolchain: ${UNSUPPORTED}`);
+    o.err(`✗ paperlint toolchain: ${UNSUPPORTED}`);
     return 1;
   }
   const tex = texPart(o);

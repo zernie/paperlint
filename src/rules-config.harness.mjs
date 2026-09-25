@@ -1,6 +1,6 @@
 /**
  * `rules-config.ts` — parsing the `rules` key into ESLint config blocks, and deriving which rules
- * rpp ships. The end-to-end path (a consumer's package.json → `rpp lint`) is in `cli.harness.mjs`;
+ * paperlint ships. The end-to-end path (a consumer's package.json → `paperlint lint`) is in `cli.harness.mjs`;
  * this pins the parser's output shape and each refusal.
  */
 import assert from "node:assert/strict";
@@ -66,7 +66,7 @@ const refusals = [
   ],
   [
     [{ rules: { "markdown/no-html": "error" } }],
-    '"markdown/no-html" is not a rule rpp ships',
+    '"markdown/no-html" is not a rule paperlint ships',
   ],
   [
     [{ rules: { "paper/typography": ["loud"] } }],

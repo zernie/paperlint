@@ -26,14 +26,14 @@ process.exit(
         harness: HARNESS,
         expect: "the paper's build scripts were NOT executed",
         disables:
-          "the decision this command is built on: rpp compiles the paper itself and never runs a " +
+          "the decision this command is built on: paperlint compiles the paper itself and never runs a " +
           "file from the paper directory. The mutation keeps the 'is ignored' note and runs the " +
           "script anyway — the worst form, because the output still claims it was ignored",
         edits: [
           [
             SRC,
-            "  for (const s of facts.ignoredScripts)\n    log(`  note: ${s} is ignored — rpp builds the paper itself`);\n",
-            '  for (const s of facts.ignoredScripts) {\n    log(`  note: ${s} is ignored — rpp builds the paper itself`);\n    spawnSync("bash", [join(paperDir, s)], { stdio: "ignore" });\n  }\n',
+            "  for (const s of facts.ignoredScripts)\n    log(`  note: ${s} is ignored — paperlint builds the paper itself`);\n",
+            '  for (const s of facts.ignoredScripts) {\n    log(`  note: ${s} is ignored — paperlint builds the paper itself`);\n    spawnSync("bash", [join(paperDir, s)], { stdio: "ignore" });\n  }\n',
           ],
         ],
       },

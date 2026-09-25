@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/zernie/research-paper-pipeline/venue-profile.schema.json",
   "title": "Venue profile",
-  "description": "One venue's format profile (venues/<venue>.jsonc) and the TeX base set (venues/tex-base.jsonc). The format numbers are read by the consumer's pdf/profile rule; `tex` is read by `rpp toolchain` and `rpp build`.",
+  "description": "One venue's format profile (venues/<venue>.jsonc) and the TeX base set (venues/tex-base.jsonc). The format numbers are read by the consumer's pdf/profile rule; `tex` is read by `paperlint toolchain` and `paperlint build`.",
   "type": "object",
   "required": ["tex"],
   "additionalProperties": false,

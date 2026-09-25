@@ -1,4 +1,4 @@
-# Composite action: set up what the LaTeX rules need, then run `rpp lint` over a consumer's corpus.
+# Composite action: set up what the LaTeX rules need, then run `paperlint lint` over a consumer's corpus.
 #
 # 🔴 THIS ACTION CALLS THE PACKAGE'S OWN CLI. It used to invoke `npx eslint` directly, and that was
 # not a style question — it was a second implementation of the same job, and it had already drifted:
@@ -26,7 +26,7 @@ description: Install the toolchain the texcount/* rules need, run ESLint, and re
 inputs:
   config:
     description: >-
-      Path to `rpp.json`. Optional: `rpp lint` finds it by walking up from the working directory,
+      Path to `rpp.json`. Optional: `paperlint lint` finds it by walking up from the working directory,
       the way eslint and tsc find theirs, so most callers never set this. Pass it only when the
       file is somewhere the walk cannot reach. ⚠️ Until 2026-09-18 this input took a path to an
       ESLint FLAT CONFIG and defaulted to `eslint.config.mjs`; a caller still passing one will
@@ -108,7 +108,7 @@ runs:
     # itself. The guard lives in `scripts/eslint-report-guard.mjs` rather than inline here, because
     # an inline `node -e` blob cannot be reached by a test.
     #
-    # 🔴 THE REDIRECT IS ONLY SAFE BECAUSE `--json` KEEPS stdout CLEAN. `rpp lint` prints the name
+    # 🔴 THE REDIRECT IS ONLY SAFE BECAUSE `--json` KEEPS stdout CLEAN. `paperlint lint` prints the name
     # of the config it discovered; in `--json` mode that line goes to stderr, precisely so a pipe
     # or a redirect receives one parsable document. That was a real defect for an hour on 18-09 —
     # the line sat on stdout in front of the array — and it was found by wiring this step up, not

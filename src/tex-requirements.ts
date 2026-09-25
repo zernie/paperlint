@@ -6,13 +6,13 @@
  * one flat set for every paper, edited whenever a build broke, and kept in THREE dictionaries (apt
  * names, CTAN names, the file contract) that drifted apart twice. Now each venue profile carries a
  * `tex` block — CTAN package → the files that prove it is present — and `tex-base.jsonc` carries
- * what every paper gets. `rpp toolchain` installs the union; `rpp build` checks the paper's share.
+ * what every paper gets. `paperlint toolchain` installs the union; `paperlint build` checks the paper's share.
  *
  * ── THE DATA IS PARSED AT THE BOUNDARY ───────────────────────────────────────────
  * A profile is JSONC (every number in it carries a quote from the venue's instructions), parsed
  * by TypeScript's own JSONC reader — the parser the harnesses already read these files with — and
  * validated against `venue-profile.schema.json` by ajv, the JSON Schema validator ESLint itself
- * validates rule options with. After `parseProfile` returns, the rest of rpp holds a typed
+ * validates rule options with. After `parseProfile` returns, the rest of paperlint holds a typed
  * `TexRequirements` and never looks at the text again; a malformed profile throws with the path
  * of every violation, it is never read as "no packages".
  *
@@ -52,7 +52,7 @@ export const NO_REQUIREMENTS: TexRequirements = { packages: {}, tools: {} };
 
 type Ts = typeof import("typescript");
 let ts: Ts | null = null;
-/** TypeScript is loaded only when a profile is read: `rpp lint` never pays for it. */
+/** TypeScript is loaded only when a profile is read: `paperlint lint` never pays for it. */
 function typescript(): Ts {
   ts ??= createRequire(import.meta.url)("typescript") as Ts;
   return ts;
@@ -158,7 +158,7 @@ export function requirementsFor(
     !existsSync(join(dir, file))
   )
     return {
-      source: `the base set (venue ${venue} has no profile in rpp)`,
+      source: `the base set (venue ${venue} has no profile in paperlint)`,
       tex: base,
     };
   return {
@@ -167,7 +167,7 @@ export function requirementsFor(
   };
 }
 
-/** Everything any profile declares — the set `rpp toolchain` installs, so one tree builds any paper. */
+/** Everything any profile declares — the set `paperlint toolchain` installs, so one tree builds any paper. */
 export function declaredUnion(dir: string = packageVenuesDir()): {
   readonly tex: TexRequirements;
   readonly profiles: number;

@@ -39,7 +39,7 @@ const check = (label, cond, detail = "") => {
 const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-extract-")));
 /**
  * Run the shim from `root`, with no banal anywhere unless `env` names one. `HOME` is the temp root:
- * without it Node falls back to the account's home, where `rpp toolchain` may have installed banal.
+ * without it Node falls back to the account's home, where `paperlint toolchain` may have installed banal.
  */
 const shim = (args, env = {}) =>
   spawnSync(process.execPath, [SHIM, ...args], {
@@ -72,7 +72,7 @@ try {
     "🔴 --strict with no banal: exit 1, named as an environment error, and nothing written",
     strict.status === 1 &&
       /banal not found/.test(said(strict)) &&
-      /`npx rpp toolchain` installs it/.test(said(strict)) &&
+      /`npx paperlint toolchain` installs it/.test(said(strict)) &&
       /environment error/.test(said(strict)) &&
       !existsSync(factsFile),
     said(strict),

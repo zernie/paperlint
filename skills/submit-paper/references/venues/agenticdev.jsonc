@@ -13,8 +13,8 @@
   "template": "acmart",
 
   // TeX Live packages the acmart template needs ON TOP OF tex-base.jsonc, each with the files that
-  // prove it is present (checked with kpsewhich after every install). Read by `rpp toolchain` and
-  // `rpp build`; the shape is venue-profile.schema.json.
+  // prove it is present (checked with kpsewhich after every install). Read by `paperlint toolchain` and
+  // `paperlint build`; the shape is venue-profile.schema.json.
   //   libertine · inconsolata (zi4) · newtx — acmart.cls checks ALL THREE and, if ANY is missing,
   //     silently falls back to Computer Modern: the PDF compiles, looks normal, is set in the wrong
   //     font, and the other metric gives another pagination. A submitted paper went out that way.

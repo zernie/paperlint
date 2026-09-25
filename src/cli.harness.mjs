@@ -4,7 +4,7 @@
  *
  * 🔴 Two of the defects checked here the utility already had, and both were found by the
  * FIRST run, not by reading:
- *   1. `rpp --help` used to answer "unknown command `--help`" — argv[0] unconditionally became
+ *   1. `paperlint --help` used to answer "unknown command `--help`" — argv[0] unconditionally became
  *      the command;
  *   2. on an empty set ESLint THROWS `NoFilesFoundError`, and the guard against a false green
  *      zero never lived long enough to reach its own check: instead of a message, a stack trace
@@ -184,7 +184,7 @@ check(
   const r = await cli(["--help"]);
   check(
     "`--help` prints usage and exits zero",
-    r.code === 0 && /npx rpp lint/.test(r.out),
+    r.code === 0 && /npx paperlint lint/.test(r.out),
   );
 }
 // ── ONE DECLARATION, READ BY THE SAME THING THAT WRITES IT ─────────────────────────────
@@ -192,7 +192,7 @@ check(
 // 🔴 WITHOUT THIS BLOCK THE REWRITTEN `init` WOULD PRODUCE A BROKEN INSTALL. It writes one
 // declaration — into `package.json`, the file the hooks know how to read (a hook does not
 // import code and cannot walk up the tree; it can only read a path it is able to name). The
-// utility, though, read ONLY `rpp.json`, so right after `rpp init` its `lint` would say
+// utility, though, read ONLY `rpp.json`, so right after `paperlint init` its `lint` would say
 // "nothing to lint". I.e. the install command and the check command would be looking at
 // different files — exactly the defect it exists to close, just from the other side.
 {
@@ -225,7 +225,7 @@ check(
 
     const r = await cli(["lint"], root);
     check(
-      "🔴 THE UTILITY READS THE DECLARATION FROM package.json — otherwise `rpp init` sets up something `rpp lint` cannot see",
+      "🔴 THE UTILITY READS THE DECLARATION FROM package.json — otherwise `paperlint init` sets up something `paperlint lint` cannot see",
       r.code === 0 && /no findings/.test(r.out),
     );
     check(
@@ -447,7 +447,7 @@ check(
       );
       check(
         "init ends with doctor's report: the install vouches for its OWN state",
-        /rpp doctor — what is wired/.test(out.text()),
+        /paperlint doctor — what is wired/.test(out.text()),
       );
       check(
         "and exits zero on a consistent install",
@@ -775,14 +775,14 @@ check(
       // the same install command. The mutation that stripped the remedy OUT of init stayed
       // green: the assertion found a line printed by a different command and reported coverage
       // that did not exist.
-      const own = out.text().split("── rpp doctor")[0];
+      const own = out.text().split("── paperlint doctor")[0];
       check(
         "every absence is NAMED, and the count matches the names",
         /✗ 6 of 6 missing: pdflatex, bibtex/.test(own),
       );
       check(
         "🔴 and it carries the INSTALL COMMAND — a remedy, not just a diagnosis",
-        /npx rpp toolchain/.test(own),
+        /npx paperlint toolchain/.test(own),
       );
       check(
         "and it says outright that nothing is installed on the user's behalf",
@@ -793,7 +793,9 @@ check(
       check(
         "and init does NOT repeat doctor's table twenty lines above it",
         !/no PDF is produced/.test(own) &&
-          /no PDF is produced/.test(out.text().split("── rpp doctor")[1] ?? ""),
+          /no PDF is produced/.test(
+            out.text().split("── paperlint doctor")[1] ?? "",
+          ),
       );
       check(
         "and asking a system that has everything gives zero absences",
@@ -829,7 +831,7 @@ check(
           ],
         }),
       });
-      const own = out.text().split("── rpp doctor")[0];
+      const own = out.text().split("── paperlint doctor")[0];
       check(
         "init counts what it did with the skills: created, already there, skipped",
         /3 shipped: 1 linked now, 1 already linked, 1 skipped/.test(own),
@@ -890,9 +892,9 @@ check(
       const dir = project("wired", { papers: ["writing"] });
       const r = await cli(["init", dir]);
       check(
-        "`rpp init` reaches the implementation and declares the measured directory",
+        "`paperlint init` reaches the implementation and declares the measured directory",
         declared(dir)[PAPERS_DIR_FIELD] === "writing" &&
-          /rpp init — each decision/.test(r.out),
+          /paperlint init — each decision/.test(r.out),
       );
     }
   } finally {
@@ -927,8 +929,8 @@ check(
       "`lint` with NO path AND no config refuses and names BOTH ways out",
       r.code === 2 &&
         /nothing to lint/.test(r.out) &&
-        /rpp init/.test(r.out) &&
-        /rpp lint papers/.test(r.out),
+        /paperlint init/.test(r.out) &&
+        /paperlint lint papers/.test(r.out),
     );
   } finally {
     rmSync(bare, { recursive: true, force: true });
@@ -1019,7 +1021,7 @@ check(
 
 // ── THE CONFIG FINDS ITSELF, AND THE PAPERS DIRECTORY IS DECLARED IN IT ──────────────────
 //
-// 🔴 THE DEFECT THIS BLOCK EXISTS FOR: `rpp init` wrote `rpp.json`, and `rpp check` only read
+// 🔴 THE DEFECT THIS BLOCK EXISTS FOR: `paperlint init` wrote `rpp.json`, and `rpp check` only read
 // it via an explicit `--options`. I.e. the file the utility itself created had no effect on the
 // run — and there was no way to find that out: zero typography debt looks exactly like a
 // config that was never found.
@@ -1256,7 +1258,7 @@ check(
 
 // ── THE PAPERS DO NOT HAVE TO LIVE UNDER THE CURRENT DIRECTORY (#48) ─────────────────────
 //
-// 🔴 ESLint IGNORES EVERY FILE OUTSIDE ITS `cwd`. With `cwd` left at the default, `rpp lint
+// 🔴 ESLint IGNORES EVERY FILE OUTSIDE ITS `cwd`. With `cwd` left at the default, `paperlint lint
 // /some/other/papers` threw `all-matched-files-ignored` and leaked a raw stack trace, while the
 // same tree linted fine from inside. The property is not "does not crash" — a catch would give
 // that — but "the SAME findings wherever the command is typed", so the assertion compares the
@@ -1350,7 +1352,7 @@ check(
   }
 }
 
-// ── `rpp hook` — THE RUNTIME RESOLVES FROM THE PACKAGE, NOT FROM THE PROJECT ROOT ────────
+// ── `paperlint hook` — THE RUNTIME RESOLVES FROM THE PACKAGE, NOT FROM THE PROJECT ROOT ────────
 //
 // 🔴 The measurement that gave rise to this command: one tarball, two package managers.
 //     npm:  node_modules/vigiles/dist/cli.js  EXISTS
@@ -1372,7 +1374,8 @@ check(
   said = "";
   check(
     "no name — a failure, and the right invocation is suggested",
-    runHook(undefined, { err }) === 2 && /rpp hook paper-edit-guard/.test(said),
+    runHook(undefined, { err }) === 2 &&
+      /paperlint hook paper-edit-guard/.test(said),
   );
 
   said = "";
@@ -1461,7 +1464,7 @@ check(
 }
 
 console.log(
-  `✓ ${String(n)} assertions passed — rpp lint, one command instead of hand-rolled config`,
+  `✓ ${String(n)} assertions passed — paperlint lint, one command instead of hand-rolled config`,
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1477,7 +1480,7 @@ console.log(
   check("and asks for NO manual install", !/npm i -D vigiles/.test(steps));
   check(
     "it names the two commands that ARE left: new and lint",
-    /npx rpp new <name>/.test(steps) && /npx rpp lint/.test(steps),
+    /npx paperlint new <name>/.test(steps) && /npx paperlint lint/.test(steps),
   );
 }
 
@@ -1671,7 +1674,7 @@ console.log(
         },
       });
       check(
-        "a human with no paper is offered one, and the answer and format reach `rpp new`'s routine",
+        "a human with no paper is offered one, and the answer and format reach `paperlint new`'s routine",
         made.length === 1 &&
           made[0].name === "first" &&
           made[0].format === "md" &&
@@ -1796,7 +1799,7 @@ console.log(
   }
 }
 
-// ── `rpp lint` does not sweep the project's paper TEMPLATE as a paper ────────────────────
+// ── `paperlint lint` does not sweep the project's paper TEMPLATE as a paper ────────────────────
 {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-template-")));
   try {
@@ -1838,14 +1841,14 @@ console.log(
   }
 }
 
-// ── `rpp new` through the CLI: the papers directory comes from the one declaration ────────
+// ── `paperlint new` through the CLI: the papers directory comes from the one declaration ────────
 {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-new-cli-")));
   try {
     const none = await cli(["new", "demo"], root);
     check(
       "without a declaration there is nowhere to put a paper — refused, with the remedy",
-      none.code === 2 && /Run `npx rpp init` first/.test(none.out),
+      none.code === 2 && /Run `npx paperlint init` first/.test(none.out),
     );
     writeFileSync(
       join(root, "package.json"),
@@ -1853,7 +1856,7 @@ console.log(
     );
     const r = await cli(["new", "demo"], root);
     check(
-      "🔴 `rpp new demo` creates writing/demo/ and its lint is the verdict — exit 0, no findings",
+      "🔴 `paperlint new demo` creates writing/demo/ and its lint is the verdict — exit 0, no findings",
       r.code === 0 &&
         existsSync(join(root, "writing", "demo", "PIPELINE-STATUS.md")) &&
         existsSync(join(root, "writing", "demo", "paper.tex")) &&
@@ -1940,10 +1943,10 @@ console.log(
     });
     const unknownRule = await cli(["lint"], root);
     check(
-      "a rule rpp does not ship is refused, naming the block and the rule",
+      "a rule paperlint does not ship is refused, naming the block and the rule",
       unknownRule.code === 2 &&
         unknownRule.out.includes(
-          '.rules[0].rules: "pdf/nope" is not a rule rpp ships',
+          '.rules[0].rules: "pdf/nope" is not a rule paperlint ships',
         ),
     );
     settings({
@@ -1971,7 +1974,7 @@ console.log(
       "🔴 an optional rule turned on by a `rules` block RUNS — here it asks for the build's facts",
       on.code === 1 &&
         /pdf\/last-page-balance/.test(on.out) &&
-        /rpp build/.test(on.out),
+        /paperlint build/.test(on.out),
     );
     const fromInside = await cli(["lint"], dir);
     check(
@@ -2000,5 +2003,5 @@ console.log(
 }
 
 console.log(
-  `✓ ${String(n)} assertions in total, including init's hooks and rpp new`,
+  `✓ ${String(n)} assertions in total, including init's hooks and paperlint new`,
 );

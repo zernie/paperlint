@@ -1,5 +1,5 @@
 /**
- * The outcome of something that can fail, as a value: the shape rpp already spoke in plain unions
+ * The outcome of something that can fail, as a value: the shape paperlint already spoke in plain unions
  * (`{ ok: true, … } | { ok: false, … }`), made generic. No classes and no fluent API — a `switch`
  * on `ok` reads the same as every other union in the package.
  */

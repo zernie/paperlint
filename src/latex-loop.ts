@@ -29,7 +29,7 @@
  *
  * ⚠️ `filecontents` with `[overwrite]` is NOT such a case, though this comment said so until
  * 2026-09-24. The environment body is verbatim, so every pass writes the same bytes, and the loop
- * compares CONTENT digests, not modification times. Measured with `rpp build` on TeX Live 2026: a
+ * compares CONTENT digests, not modification times. Measured with `paperlint build` on TeX Live 2026: a
  * real acmart paper embedding its `refs.bib` that way converged in 3 pdflatex passes, and an
  * `article` with an overwritten `\input` file carrying `\label`/`\ref`, a `\tableofcontents` and
  * an overwritten `.bib` converged in 4.

@@ -12,17 +12,17 @@
  * The blocks are appended AFTER rpp's built-in config, so a later block wins, exactly as in ESLint.
  * `files` and `ignores` are resolved relative to the directory of the file that holds the settings,
  * as ESLint resolves them relative to its config file: each block gets that directory as ESLint's
- * own `basePath`, so rpp matches nothing itself.
+ * own `basePath`, so paperlint matches nothing itself.
  *
  * ── WHY PARSED HERE, AND WHY STRICT ─────────────────────────────────────────────
  * ESLint would reject a bad severity or an unknown rule too — but as a stack trace from inside
- * `lintFiles`, naming neither the settings file nor the block. And a key rpp does not read, at the
+ * `lintFiles`, naming neither the settings file nor the block. And a key paperlint does not read, at the
  * top level or in a block, ESLint never sees at all: a typo would silently read as "not set". So
  * every problem is one line naming the key path, before ESLint starts, and nothing downstream sees
  * the raw object again.
  *
- * Only rules rpp ships may be named: the settings configure rpp, and a rule from another plugin
- * would need that plugin, which JSON cannot carry. Which rules rpp ships is read off its own
+ * Only rules paperlint ships may be named: the settings configure paperlint, and a rule from another plugin
+ * would need that plugin, which JSON cannot carry. Which rules paperlint ships is read off its own
  * config (`buildConfig`), not listed a second time.
  */
 import { SETTINGS_KEYS } from "../lib/paper-config.mjs";
@@ -48,7 +48,7 @@ const BLOCK_KEYS = new Set(["files", "ignores", "rules"]);
 
 const bad = <T>(error: string): Parsed<T> => ({ ok: false, error });
 
-/** Every top-level key must be one rpp or its skills read. */
+/** Every top-level key must be one paperlint or its skills read. */
 export function unknownKeys(settings: Record<string, unknown>): string[] {
   return Object.keys(settings).filter((k) => !Object.hasOwn(SETTINGS_KEYS, k));
 }
@@ -77,7 +77,7 @@ function parseRules(
   for (const [id, raw] of Object.entries(v)) {
     if (!shipped.has(id))
       return bad(
-        `${at}.rules: "${id}" is not a rule rpp ships — known: ${[...shipped].sort().join(", ")}`,
+        `${at}.rules: "${id}" is not a rule paperlint ships — known: ${[...shipped].sort().join(", ")}`,
       );
     const entry = parseEntry(raw);
     if (entry === null)
@@ -133,8 +133,8 @@ function parseBlock(
  * The `rules` key → config blocks, or one error naming the key path.
  *
  * @param raw      the value under `rules` (undefined when absent)
- * @param where    how the settings are named in messages, e.g. `package.json → "research-paper-pipeline"`
- * @param shipped  the rule ids rpp ships (`shippedRuleIds`)
+ * @param where    how the settings are named in messages, e.g. `package.json → "paperlint"`
+ * @param shipped  the rule ids paperlint ships (`shippedRuleIds`)
  * @param baseDir  the directory of the file holding the settings
  */
 export function parseRuleBlocks(

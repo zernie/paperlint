@@ -1,4 +1,4 @@
-# CLAUDE.md — research-paper-pipeline
+# CLAUDE.md — paperlint
 
 Machine-checkable gates for writing a research paper in git, extracted from a private
 knowledge base.
@@ -189,14 +189,14 @@ the instruction and never the evidence — the same split as rules 9 and 10 and 
 🔴 The argument "we need another command for X" is, in every tool examined, an argument that
 the CONFIG is not declaring something. Check that before adding a verb.
 
-## Distribution — one install path: npm, then `rpp init`
+## Distribution — one install path: npm, then `paperlint init`
 
-`npm i -D research-paper-pipeline` brings all the code — rules, skills, hooks, scripts. `rpp init`
+`npm i -D paperlint` brings all the code — rules, skills, hooks, scripts. `paperlint init`
 then does what only a command can, because it depends on the project it lands in: it finds the
 papers directory and declares it in `package.json`, links each skill into `.claude/skills/`, writes
 the hook commands into `.claude/settings.json` (vigiles' `mergeRegistrations`, reading
 `plugin/hooks/hooks.json` as the one source), and offers a CI workflow pinned to the installed
-release's tag. `rpp doctor` reads all of it back. Details: `docs/install.md`.
+release's tag. `paperlint doctor` reads all of it back. Details: `docs/install.md`.
 
 **There is no Claude Code plugin or marketplace entry; it was removed in the release after 1.0.0
 (#82).** Do not bring it back without answering these, each measured:
@@ -206,13 +206,13 @@ release's tag. `rpp doctor` reads all of it back. Details: `docs/install.md`.
   skipped install never blocks the plugin"_: on a slow network the hooks load and fail with
   `cannot find module vigiles`, silently.
 - **The skills need the npm package anyway.** 23 of 24 skills run scripts under
-  `paper-pipeline/scripts`, which resolve only through `node_modules/research-paper-pipeline/`.
+  `paper-pipeline/scripts`, which resolve only through `node_modules/paperlint/`.
   A plugin-only consumer got skills whose first command fails.
 - **Its manifests carried versions nothing updated** (0.0.1 and 0.1.0 while npm was at 1.0.0), and
   Claude Code decides plugin updates from that number.
 
 `plugin/hooks/hooks.json` stays where it is: it is not a plugin any more, it is the hook wiring
-`rpp init` merges into the consumer's settings.
+`paperlint init` merges into the consumer's settings.
 
 ## Delivery — how this repo's contents reach a consumer (measured 2026-09-11)
 
@@ -228,10 +228,10 @@ tarball, not repository) found **336 shipping `skills/<n>/SKILL.md` against 15 s
 top of the market is entirely on `skills/`: `@vitejs/devtools-kit` (330 896 downloads/wk),
 `@slidev/cli` (56 809), `anthropics/skills` (175 673 stars).
 
-**The consumer's side is a symlink per skill, made by `rpp init` (`src/link-skills.ts`):**
+**The consumer's side is a symlink per skill, made by `paperlint init` (`src/link-skills.ts`):**
 
 ```
-<consumer>/.claude/skills/<name>  ->  node_modules/research-paper-pipeline/skills/<name>
+<consumer>/.claude/skills/<name>  ->  node_modules/paperlint/skills/<name>
 ```
 
 ⚠️ The skill's name in the listing comes from the **link directory's name**, not from
@@ -319,7 +319,7 @@ no compile step on the consumer's side:
 ```json
 {
   "type": "command",
-  "command": "node \"$CLAUDE_PROJECT_DIR/node_modules/vigiles/dist/cli.js\" hook-runtime run-program \"$CLAUDE_PROJECT_DIR/node_modules/research-paper-pipeline/hooks/paper-edit-guard.hook.mjs\""
+  "command": "node \"$CLAUDE_PROJECT_DIR/node_modules/vigiles/dist/cli.js\" hook-runtime run-program \"$CLAUDE_PROJECT_DIR/node_modules/paperlint/hooks/paper-edit-guard.hook.mjs\""
 }
 ```
 
@@ -340,7 +340,7 @@ resolve OK -> <consumer>/node_modules/vigiles/dist/hook.js
 So this package needs no copy of its own at the consumer's runtime; it needs `vigiles` only
 for its own `vigiles test` and `vigiles compile`. That is `devDependencies`, which `npm i` of
 a dependency does not install. Putting it in `dependencies` risks npm installing a **second**
-copy under `node_modules/research-paper-pipeline/node_modules/vigiles` whenever the ranges
+copy under `node_modules/paperlint/node_modules/vigiles` whenever the ranges
 drift — two runtimes, two sets of stamps and state.
 
 🔴 **THE PARAGRAPH ABOVE WAS TRUE AND THE INSTALL DID THE OPPOSITE — measured 2026-09-17.**

@@ -25,7 +25,7 @@ export interface DanglingSkillLink {
  */
 export declare function installedSkills(dir: string): string[];
 
-/** The directory of venue TeX files this package ships; `rpp build` prepends it to TEXINPUTS. */
+/** The directory of venue TeX files this package ships; `paperlint build` prepends it to TEXINPUTS. */
 export declare function packageVenuesDir(): string;
 export declare const SHIPPED_SKILLS_DIR: string;
 export declare const PACKAGE_NAME: "paperlint";

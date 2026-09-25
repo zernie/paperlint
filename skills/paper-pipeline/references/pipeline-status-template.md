@@ -1,6 +1,6 @@
 # PIPELINE-STATUS template — the per-paper readiness scorecard
 
-`rpp new <name>` writes this into `<papers>/<name>/PIPELINE-STATUS.md` for each paper. It is the
+`paperlint new <name>` writes this into `<papers>/<name>/PIPELINE-STATUS.md` for each paper. It is the
 **durable, colocated, markdown source-of-truth** for _which pipeline work has run, its result, and what is still open_ — so
 "did everything run?" is a checked fact, not a memory. Chat evaporates; this file rides with the paper
 to camera-ready.
@@ -141,9 +141,9 @@ them:
 ---
 
 The template itself is a FILE, not this page: `templates/paper/PIPELINE-STATUS.md` at the package
-root (beside `templates/paper/paper.tex` and `paper.md`). `rpp new <name>` copies it with the paper's
+root (beside `templates/paper/paper.tex` and `paper.md`). `paperlint new <name>` copies it with the paper's
 name filled in, and a project that keeps its own richer scorecard puts one at
-`<papers>/.template/PIPELINE-STATUS.md`, which `rpp new` prefers. It used to live in a fenced block
+`<papers>/.template/PIPELINE-STATUS.md`, which `paperlint new` prefers. It used to live in a fenced block
 here, which meant a command would have had to parse markdown to extract it, and a human had to copy
 it by hand. The copy carries `researchQuestion` (empty) and no `stages` — a new paper has shipped
 nothing.

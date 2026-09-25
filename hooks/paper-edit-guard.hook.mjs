@@ -43,7 +43,7 @@
  * this cannot — there is only one file.
  *
  * ── WHERE THE CONSUMER'S PAPERS ARE ─────────────────────────────────────────
- * One declaration, `"research-paper-pipeline": { "papersDir": "…" }`, read the way a hook is able to
+ * One declaration, `"paperlint": { "papersDir": "…" }`, read the way a hook is able to
  * read anything at all: `needs: [provide("pkg", "cat \"${CLAUDE_PROJECT_DIR:-.}/package.json\"")]`.
  * The alternatives were measured and killed in `eslint-rules/papers.mjs` — an env var cannot be
  * read from a hook at all (no imports), and a symlinked root makes ESLint report zero files.
@@ -134,7 +134,7 @@ export const OLD_PAPERS_DIR_FIELD = "papers";
  */
 /**
  * EXPORTED ON PURPOSE — this is the only way to cross-check without a second copy of the logic.
- * `rpp doctor` has to say which directory THIS hook will guard, not what a retelling of it
+ * `paperlint doctor` has to say which directory THIS hook will guard, not what a retelling of it
  * would guard. The compiled hook is forbidden to IMPORT anything but `vigiles/hook`
  * (that's what `checkHookImports` enforces), so a shared module is impossible — but that ban
  * doesn't restrict exporting outward, and the reverse direction, CLI → hook, is free.

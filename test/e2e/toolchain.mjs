@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * test/e2e/toolchain.mjs — `rpp toolchain` against REAL CTAN, then `rpp build` with ONLY that
+ * test/e2e/toolchain.mjs — `paperlint toolchain` against REAL CTAN, then `paperlint build` with ONLY that
  * TeX Live reachable.
  *
  * `src/toolchain.harness.mjs` drives the installer's logic against a fake mirror on disk; this is
@@ -8,11 +8,11 @@
  * tree they produce builds an acmart paper in the venue's own fonts.
  *
  * What it asserts, in order:
- *   1. `rpp toolchain` exits 0 — an install from an empty directory, or a no-op on a warm cache
+ *   1. `paperlint toolchain` exits 0 — an install from an empty directory, or a no-op on a warm cache
  *      (CI restores one; the run prints which it was);
  *   2. a SECOND run exits 0, says "nothing to do", and touches nothing (it finishes in seconds);
- *   3. `rpp toolchain --check` exits 0;
- *   4. `rpp build` of the acmart fixture with PATH holding node ONLY — no system TeX Live can
+ *   3. `paperlint toolchain --check` exits 0;
+ *   4. `paperlint build` of the acmart fixture with PATH holding node ONLY — no system TeX Live can
  *      stand in, and no PDF tool either — names rpp's cache as the engine, and the PDF carries
  *      Libertine and Biolinum and not one Computer Modern face (read with rpp's own pdf.js reader).
  *
@@ -69,7 +69,7 @@ const check = (label, cond, detail = "") => {
   );
   if (!cond) bad++;
 };
-const rpp = (args, opts = {}) => {
+const paperlint = (args, opts = {}) => {
   const started = Date.now();
   const r = spawnSync(process.execPath, [CLI, ...args], {
     encoding: "utf8",
@@ -86,15 +86,15 @@ const rpp = (args, opts = {}) => {
   return { status: r.status, out, ms: Date.now() - started };
 };
 
-console.log("rpp toolchain");
-const first = rpp(["toolchain"], { timeout: 20 * 60 * 1000 });
+console.log("paperlint toolchain");
+const first = paperlint(["toolchain"], { timeout: 20 * 60 * 1000 });
 check("exit 0", first.status === 0, first.out);
 console.log(
   `  (this run ${first.out.includes("nothing to do") ? "found a warm cache — a no-op" : "INSTALLED from an empty directory"}, ${Math.round(first.ms / 1000)} s)`,
 );
 
-console.log("\nrpp toolchain, again");
-const second = rpp(["toolchain"]);
+console.log("\npaperlint toolchain, again");
+const second = paperlint(["toolchain"]);
 check(
   "exit 0 and 'nothing to do'",
   second.status === 0 && second.out.includes("nothing to do"),
@@ -106,15 +106,15 @@ check(
   `${second.ms} ms`,
 );
 
-console.log("\nrpp toolchain --check");
-const checked = rpp(["toolchain", "--check"]);
+console.log("\npaperlint toolchain --check");
+const checked = paperlint(["toolchain", "--check"]);
 check(
   "exit 0, every declared package present",
   checked.status === 0,
   checked.out,
 );
 
-console.log("\nrpp build with ONLY rpp's TeX Live reachable");
+console.log("\npaperlint build with ONLY paperlint's TeX Live reachable");
 const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-toolchain-e2e-")));
 try {
   const bin = join(work, "bin");
@@ -137,11 +137,11 @@ try {
     join(work, "rpp.json"),
     JSON.stringify({ papersDir: "papers" }),
   );
-  // 🔴 banal is where `rpp toolchain` above installed it — HOME is a temp dir here, so without
+  // 🔴 banal is where `paperlint toolchain` above installed it — HOME is a temp dir here, so without
   // $RPP_BANAL_DIR the build looked in the wrong cache and wrote the facts with no geometry, while
   // this script still reported everything matched.
   const banalDir = parseBanalSettings(process.env, hostDirs()).cacheDir;
-  const built = rpp(["build", join("papers", "acmart")], {
+  const built = paperlint(["build", join("papers", "acmart")], {
     cwd: work,
     env: {
       HOME: work,

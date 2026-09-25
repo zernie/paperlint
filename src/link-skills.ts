@@ -18,10 +18,10 @@
  *   what to link      every subdirectory holding a SKILL.md under the package's
  *                     `SHIPPED_SKILLS_DIR` (consumer.mjs). No list, no count.
  *   where it points   the package as it RESOLVES BY NAME from the project, spelled through the
- *                     project's own `node_modules/research-paper-pipeline` when that path leads to
+ *                     project's own `node_modules/paperlint` when that path leads to
  *                     the same place. Under pnpm the resolved path is the version-stamped
  *                     `.pnpm/…` store directory; a link spelled that way dangles after the next
- *                     upgrade, a link through `node_modules/research-paper-pipeline` does not.
+ *                     upgrade, a link through `node_modules/paperlint` does not.
  *   what it touches   only what is missing. An entry that already leads to the shipped skill is
  *                     left alone; ANY other entry of the same name — a directory, a file, a link
  *                     elsewhere, a dangling link — is someone else's, and is reported, not replaced.
@@ -123,7 +123,7 @@ export type LinkReport =
   | {
       readonly ok: true;
       readonly home: string;
-      /** The link target of the first skill, e.g. `../../node_modules/research-paper-pipeline/skills/x`. */
+      /** The link target of the first skill, e.g. `../../node_modules/paperlint/skills/x`. */
       readonly example: string | null;
       readonly links: readonly SkillLink[];
     }
@@ -208,7 +208,7 @@ function linkOne(
 
 /**
  * Link every shipped skill into `<project>/.claude/skills/`, or — with `write: false` — only
- * report which ones are missing (that is what `rpp doctor` asks).
+ * report which ones are missing (that is what `paperlint doctor` asks).
  */
 export function linkSkills(
   project: string,

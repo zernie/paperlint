@@ -316,7 +316,7 @@ const cmd = ({ banal = BANAL, ...over } = {}) => {
     "--check on an empty cache: exit 1, says nothing is installed and what the command installs",
     r.code === 1 &&
       r.out.includes("no TeX Live in") &&
-      r.out.includes("`npx rpp toolchain` installs 3 packages"),
+      r.out.includes("`npx paperlint toolchain` installs 3 packages"),
     r.out,
   );
   check("--check changes nothing", !existsSync(join(root, "2026")));

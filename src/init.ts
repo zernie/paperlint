@@ -1,5 +1,5 @@
 /**
- * `rpp init` — the whole install, in the terminal it was typed in.
+ * `paperlint init` — the whole install, in the terminal it was typed in.
  *
  * 🔴 WHAT THIS COMMAND USED TO DO, AND WHY THAT WAS A DEFECT RATHER THAN A SHORTFALL. It wrote
  * `rpp.json` with a GUESSED `"papers": "papers"` and never touched `package.json`. The three hooks
@@ -18,7 +18,7 @@
  *                      to add `prepare`. `rpp.json` is no longer created at all.
  *   skills             LINKED — one relative symlink per shipped skill into `.claude/skills/`, the
  *                      only place Claude Code looks for project skills (`link-skills.ts`). An
- *                      entry of the same name that rpp did not make is reported, never replaced.
+ *                      entry of the same name that paperlint did not make is reported, never replaced.
  *   hooks              WRITTEN into `.claude/settings.json` by vigiles' merge (`hooks-settings.ts`);
  *                      asked [Y/n] of a human, YES without one — the guard is what the package is
  *                      for, and the edit is idempotent and visible in `git diff`. `--no-hooks` skips.
@@ -264,7 +264,7 @@ export type RppJsonResult = "absent" | "kept" | "filled" | "unparsable";
 /**
  * `rpp.json` is no longer CREATED — but a consumer who already has one keeps it working, and it
  * gets the same `papers` value rather than being left to disagree with `package.json` in silence.
- * Two declarations that disagree is the defect `rpp doctor` was written to catch; writing the
+ * Two declarations that disagree is the defect `paperlint doctor` was written to catch; writing the
  * second one on purpose would be handing it new work.
  */
 export function syncRppJson(root: string, papers: string): RppJsonResult {
@@ -301,8 +301,8 @@ export const UNPINNED_REF = "<commit-sha>";
 export function workflowYaml(papers: string, ref: string | null): string {
   return [
     ref === null
-      ? `# Written by \`rpp init\`. Replace ${UNPINNED_REF} with a commit or release tag of the action.`
-      : `# Written by \`rpp init\`, pinned to ${ref} — the release you installed.`,
+      ? `# Written by \`paperlint init\`. Replace ${UNPINNED_REF} with a commit or release tag of the action.`
+      : `# Written by \`paperlint init\`, pinned to ${ref} — the release you installed.`,
     `name: papers`,
     `on: [push, pull_request]`,
     `jobs:`,
@@ -402,7 +402,7 @@ export function missingPrograms(
  * What is left after `init` — commands only, all typed in the same terminal.
  *
  * 🔴 THE TWO `/plugin` LINES ARE GONE, AND THAT WAS THE POINT. They were the one step "that cannot
- * be done from a terminal": typed into another program, invisible to `rpp doctor`, impossible for
+ * be done from a terminal": typed into another program, invisible to `paperlint doctor`, impossible for
  * an agent installing this package, and (as a repository-declared plugin) not installed in a cloud
  * session at all. `init` now writes the same three hook commands into `.claude/settings.json`
  * itself (`hooks-settings.ts`), so there is nothing left to type anywhere but here.
@@ -410,8 +410,8 @@ export function missingPrograms(
 export function nextSteps(papersDir: string = DEFAULT_PAPERS_ROOT): string {
   return [
     ``,
-    `next:  npx rpp new <name>   # start a paper in ${papersDir}/ from the template`,
-    `       npx rpp lint         # runs every rule over ${papersDir}`,
+    `next:  npx paperlint new <name>   # start a paper in ${papersDir}/ from the template`,
+    `       npx paperlint lint         # runs every rule over ${papersDir}`,
     ``,
   ].join("\n");
 }
@@ -487,14 +487,14 @@ export function reportHooks(
   }
   if (outcome.status === "declined") {
     out.push(
-      `  · declined — nothing written. \`npx rpp init\` again wires them later`,
+      `  · declined — nothing written. \`npx paperlint init\` again wires them later`,
     );
     return out;
   }
   if (outcome.status === "failed") {
     out.push(`  ✗ not wired — ${outcome.reason}`);
     out.push(
-      `      the hooks need vigiles to run at all; reinstall this package, then \`npx rpp init\``,
+      `      the hooks need vigiles to run at all; reinstall this package, then \`npx paperlint init\``,
     );
     return out;
   }
@@ -514,7 +514,7 @@ export function reportHooks(
         `  ⚠ and NOT wired in any form: ${outcome.missing.join(", ")} — add them in that same form`,
       );
     out.push(
-      `      to switch to the form init writes, delete those commands and run \`npx rpp init\` again`,
+      `      to switch to the form init writes, delete those commands and run \`npx paperlint init\` again`,
     );
   } else {
     out.push(
@@ -554,7 +554,7 @@ export function reportSkillLinks(
   if (!report.ok) {
     out.push(`  ⚠ nothing linked — ${report.error}`);
     out.push(
-      `      install the package into this project (\`npm i -D …\`), then \`npx rpp init\` again`,
+      `      install the package into this project (\`npm i -D …\`), then \`npx paperlint init\` again`,
     );
     return out;
   }
@@ -581,7 +581,7 @@ export function reportSkillLinks(
     );
   if (skipped.length) {
     out.push(
-      `      left untouched — the name is taken by something rpp did not make:`,
+      `      left untouched — the name is taken by something paperlint did not make:`,
     );
     for (const l of skipped)
       out.push(`        ${l.name} — ${l.reason ?? "occupied"}`);
@@ -614,7 +614,7 @@ export interface InitOptions {
   /** `--format tex|md` for that paper. */
   format?: PaperFormat | null;
   /**
-   * Creates one paper and lints it — `rpp new`'s own routine, passed in by the CLI so `init` and
+   * Creates one paper and lints it — `paperlint new`'s own routine, passed in by the CLI so `init` and
    * `new` cannot drift into two implementations.
    */
   createPaper?: (
@@ -624,7 +624,7 @@ export interface InitOptions {
   ) => Promise<number>;
   run?: typeof spawnSync;
   /**
-   * What `rpp lint` would resolve from the declaration, asked of the CLI's OWN reader. A second
+   * What `paperlint lint` would resolve from the declaration, asked of the CLI's OWN reader. A second
    * implementation here would be a second source of truth — the very defect `doctor` reports.
    */
   resolveCliPapers?: (root: string) => string | null;
@@ -686,7 +686,7 @@ export async function init(
   const here = (p: string): string => relative(cwd, p) || p;
 
   log(``);
-  log(`rpp init — each decision below says HOW it was decided`);
+  log(`paperlint init — each decision below says HOW it was decided`);
 
   // ── 1. where the papers are ───────────────────────────────────────────────────────────
   const choice = await choosePapers(root, { ask, interactive });
@@ -760,7 +760,7 @@ export async function init(
       `      The hooks can only read a path they are able to name, and that path is`,
     );
     err(
-      `      package.json. Run \`npm init -y\` here, then \`npx rpp init\` again.`,
+      `      package.json. Run \`npm init -y\` here, then \`npx paperlint init\` again.`,
     );
     return 2;
   }
@@ -854,13 +854,13 @@ export async function init(
   } else if (hasPaper) log(`  ✓ ${papersDir} already holds a paper`);
   else
     log(
-      `  · none yet${interactive ? "" : ` — ${why}, so nothing was asked`}. \`npx rpp new <name>\` or \`--paper <name>\` creates one`,
+      `  · none yet${interactive ? "" : ` — ${why}, so nothing was asked`}. \`npx paperlint new <name>\` or \`--paper <name>\` creates one`,
     );
 
   // ── 7. the toolchain is reported, never installed ─────────────────────────────────────
   log(``);
   log(
-    `external programs (the skills shell out to these; \`rpp lint\` needs none of them)`,
+    `external programs (the skills shell out to these; \`paperlint lint\` needs none of them)`,
   );
   const missing = missingPrograms(run);
   if (missing.length === 0)
@@ -888,13 +888,13 @@ export async function init(
   log(nextSteps(papersDir));
 
   // ── 8. the install states its own condition ───────────────────────────────────────────
-  log(`── rpp doctor ${"─".repeat(56)}`);
+  log(`── paperlint doctor ${"─".repeat(56)}`);
   const cliPapers = resolveCliPapers ? resolveCliPapers(root) : papersDir;
   const code = doctor({ log, cwd: root, projectDir: root, run, cliPapers });
   if (code !== 0)
     log(
       `doctor exits ${String(code)} — the install is NOT finished. The lines marked ✗ above say what is\n` +
-        `left; re-run \`npx rpp doctor\` once you have done them.`,
+        `left; re-run \`npx paperlint doctor\` once you have done them.`,
     );
   return paperCode !== 0 ? paperCode : code;
 }

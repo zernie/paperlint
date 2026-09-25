@@ -135,7 +135,7 @@ const MUTATIONS = [
       ],
     ],
     "a SYMLINKED skill was not counted as installed",
-    "every installed skill in every consumer — `rpp init` makes links, and the evals refuse to start",
+    "every installed skill in every consumer — `paperlint init` makes links, and the evals refuse to start",
   ],
   [
     "a dangling skill link is skipped silently",

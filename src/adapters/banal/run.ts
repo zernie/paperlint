@@ -2,19 +2,19 @@
  * BANAL — the page-geometry script HotCRP's format checker runs — fetched, verified and run.
  *
  * banal (Eddie Kohler, Geoffrey M. Voelker; https://github.com/kohler/hotcrp/blob/master/src/banal)
- * measures a paper's page size, column count, body and reference font sizes and page types. rpp
+ * measures a paper's page size, column count, body and reference font sizes and page types. paperlint
  * runs the REAL banal, unmodified, so the numbers in the facts file are the numbers HotCRP shows a
  * reviewer at upload — a reimplementation would drift from them.
  *
  * ── THE LICENCE BOUNDARY ────────────────────────────────────────────────────────
- * banal is GPL-2.0-or-later; rpp is MIT. rpp therefore never contains banal: `rpp toolchain`
+ * banal is GPL-2.0-or-later; paperlint is MIT. paperlint therefore never contains banal: `paperlint toolchain`
  * DOWNLOADS it from HotCRP at a pinned commit, checks its sha256, and stores it in rpp's cache, and
- * rpp EXECUTES it as a separate program (`perl banal …`), reading its JSON output. Nothing of banal
+ * paperlint EXECUTES it as a separate program (`perl banal …`), reading its JSON output. Nothing of banal
  * is copied, vendored, linked or translated into this package.
  *
  * ── WITHOUT POPPLER ──────────────────────────────────────────────────────────────
  * banal reads a PDF by running poppler's `pdftohtml -xml` — but it also accepts that XML directly:
- * `banal_open_input` (banal 1.2, line 1815) takes a file ending in `.xml` and opens it as is. rpp
+ * `banal_open_input` (banal 1.2, line 1815) takes a file ending in `.xml` and opens it as is. paperlint
  * writes that XML itself from the page layout pdf.js read (`./xml.ts`) and hands banal the `.xml` file,
  * beside a stub that answers banal's one question to poppler (`./invocation.ts`).
  *
@@ -111,7 +111,7 @@ function runBanal(
 
 /**
  * The page geometry banal measures for `pages` — the banal found by `$BANAL`, the project's
- * `vendor/banal`, or `rpp toolchain`'s — or why there is none.
+ * `vendor/banal`, or `paperlint toolchain`'s — or why there is none.
  */
 export function measureGeometry(
   d: BanalDeps,
@@ -135,7 +135,7 @@ export function measureGeometry(
     : { source: "none", why: r.error, tried: by };
 }
 
-// ── installing it (`rpp toolchain`) ──────────────────────────────────────────────────
+// ── installing it (`paperlint toolchain`) ──────────────────────────────────────────────────
 
 /** Does perl start? banal is a Perl program; without perl nothing below can succeed. */
 function perlRuns(d: BanalDeps, s: BanalSettings): boolean {
@@ -201,7 +201,7 @@ export interface EnsureOptions {
 }
 
 /**
- * Make `rpp toolchain`'s banal present, byte-identical to the pin, and RUNNING: perl is checked
+ * Make `paperlint toolchain`'s banal present, byte-identical to the pin, and RUNNING: perl is checked
  * first, a file with the wrong sha256 is replaced, and acceptance is a probe run that has to measure
  * a page — not the download's exit code.
  */

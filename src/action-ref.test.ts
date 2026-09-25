@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "vitest";
 import { actionRef } from "./action-ref.ts";
 
-/** [the running package's version, the ref `rpp init` may pin the action to]. */
+/** [the running package's version, the ref `paperlint init` may pin the action to]. */
 const TABLE: readonly (readonly [string | undefined, string | null])[] = [
   ["1.2.3", "v1.2.3"],
   ["1.0.0", "v1.0.0"],

@@ -1,6 +1,6 @@
 /**
  * The install decisions, on bytes: is what is on disk the pin, and may downloaded bytes be kept.
- * One predicate for `rpp toolchain` and `rpp toolchain --check`, so the two cannot disagree.
+ * One predicate for `paperlint toolchain` and `paperlint toolchain --check`, so the two cannot disagree.
  */
 import type { Opaque } from "ts-essentials";
 import { err, ok, type Result } from "../../domain/result.ts";

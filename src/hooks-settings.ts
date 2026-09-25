@@ -1,11 +1,11 @@
 /**
  * The three editor hooks, wired into `<project>/.claude/settings.json` — the file Claude Code
  * documents as the way to share hooks with a team ("Commit `.claude/settings.json` so everyone
- * who clones the repository gets the same … hooks"). `rpp init` writes it; `rpp doctor` reads it.
+ * who clones the repository gets the same … hooks"). `paperlint init` writes it; `paperlint doctor` reads it.
  *
  * 🔴 WHY THIS REPLACED THE PLUGIN AS THE CARRIER (docs/prior-art/paper-folder-scaffolding.md § 5).
  * The plugin needed two `/plugin` lines typed by a human inside Claude Code: an agent installing
- * this package cannot type them, `rpp doctor` cannot see their effect, and a plugin that the
+ * this package cannot type them, `paperlint doctor` cannot see their effect, and a plugin that the
  * REPOSITORY declares (`enabledPlugins`) is not installed in a cloud session. A settings file is
  * an ordinary file edit, it is committed, and a single-repository cloud session reads its hooks.
  * (A plugin the USER installed at account level does load in the cloud — but that is per person,
@@ -20,7 +20,7 @@
  * `vigiles/claude-code` entry. Ownership is decided per COMMAND by the path token, so a user's
  * own hook sharing a matcher block with ours survives, and a second run changes nothing. It is
  * passed in rather than imported here: loading `vigiles/claude-code` costs ~140 ms and pulls
- * `@ast-grep/napi`, which `rpp lint` must not pay for. Only `init` loads it.
+ * `@ast-grep/napi`, which `paperlint lint` must not pay for. Only `init` loads it.
  */
 // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -82,7 +82,7 @@ function bare(token: string): string {
 }
 
 /**
- * Which rpp hook a command runs, if any, and whether it is spelled the way `init` writes it.
+ * Which paperlint hook a command runs, if any, and whether it is spelled the way `init` writes it.
  *
  * Recognised spellings — each is ONE lexeme of a shell command, which is what a command is:
  *   `node <…>/node_modules/paperlint/bin/rpp.mjs hook <name>`   ours when the path is exactly
@@ -159,7 +159,9 @@ export function shippedWiring(file: string = WIRING_FILE): Wiring {
     .map((c) => hookRun(c.command)?.name)
     .filter((n): n is string => typeof n === "string");
   if (names.length === 0)
-    throw new Error(`${file} names no rpp hook — there is nothing to wire`);
+    throw new Error(
+      `${file} names no paperlint hook — there is nothing to wire`,
+    );
   return { compiled, names: [...new Set(names)] };
 }
 
@@ -369,7 +371,7 @@ function legacyLines(
 }
 
 /**
- * `rpp doctor`'s section. ADVISORY — it never fails the run: the hooks are an in-editor guard,
+ * `paperlint doctor`'s section. ADVISORY — it never fails the run: the hooks are an in-editor guard,
  * `--no-hooks` is a legitimate choice, and a doctor that exits non-zero on a choice gets muted.
  */
 export function doctorHooks(
@@ -392,19 +394,19 @@ export function doctorHooks(
   // not be offered then — the remedy is to pick ONE form.
   const handWired = wiring.names.some((n) => (counts.get(n)?.other ?? 0) > 0);
   const remedy = handWired
-    ? `some rpp hooks are wired by hand under another spelling, and \`npx rpp init\` writes nothing then — add the missing ones in that same form, or delete the hand-written ones and run \`npx rpp init\``
-    : `\`npx rpp init\` adds them`;
+    ? `some paperlint hooks are wired by hand under another spelling, and \`npx paperlint init\` writes nothing then — add the missing ones in that same form, or delete the hand-written ones and run \`npx paperlint init\``
+    : `\`npx paperlint init\` adds them`;
   if (twice.length > 0) {
     out.push(`  ⚠ wired TWICE — each of these runs more than once per event:`);
     for (const n of twice) out.push(`      ${n} ×${String(total(n))}`);
     out.push(
-      `      keep one command per hook; \`npx rpp init\` writes the rpp.mjs form`,
+      `      keep one command per hook; \`npx paperlint init\` writes the rpp.mjs form`,
     );
   }
   if (missing.length === wiring.names.length)
     out.push(
       `  ⚠ not wired — none of the ${String(wiring.names.length)} hooks is in ${SETTINGS_PATH}. ` +
-        `\`npx rpp init\` wires them`,
+        `\`npx paperlint init\` wires them`,
     );
   else if (missing.length > 0)
     out.push(

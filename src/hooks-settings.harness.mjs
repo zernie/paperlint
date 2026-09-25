@@ -103,7 +103,7 @@ try {
       { name: "paper-skills-nudge", ours: false, legacy: false },
     ],
     [
-      `npx rpp hook paper-skills-nudge`,
+      `npx paperlint hook paper-skills-nudge`,
       { name: "paper-skills-nudge", ours: false, legacy: false },
     ],
     [
@@ -325,7 +325,7 @@ try {
   const twice = JSON.parse(JSON.stringify(wiredOnce));
   twice.hooks.PreToolUse[0].hooks.push({
     type: "command",
-    command: "npx rpp hook paper-edit-guard",
+    command: "npx paperlint hook paper-edit-guard",
   });
   const twiceText = doc(twice);
   check(
@@ -340,14 +340,14 @@ try {
         {
           matcher: "Bash",
           hooks: [
-            { type: "command", command: "npx rpp hook paper-edit-guard" },
+            { type: "command", command: "npx paperlint hook paper-edit-guard" },
           ],
         },
       ],
     },
   });
   check(
-    "🔴 partly wired BY HAND → the remedy is NOT `npx rpp init`, which would refuse to write",
+    "🔴 partly wired BY HAND → the remedy is NOT `npx paperlint init`, which would refuse to write",
     /partly wired — missing: paper-skills-nudge, paper-status-gates/.test(
       handPartial,
     ) && /writes nothing then/.test(handPartial),

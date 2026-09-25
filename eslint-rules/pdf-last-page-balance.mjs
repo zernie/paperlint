@@ -8,20 +8,20 @@
  * checker (HotCRP's banal, aclpubcheck, IEEE PDF eXpress) tests it. So a consumer turns it on for
  * the papers whose venue asks, in package.json:
  *
- *   "research-paper-pipeline": { "rules": [ { "files": ["papers/my-paper/**"],
+ *   "paperlint": { "rules": [ { "files": ["papers/my-paper/**"],
  *     "rules": { "pdf/last-page-balance": ["error", { "tolerancePt": 120 }] } } ] }
  *
  * (That is a line comment's worth of JSON in a block comment only because it has no asterisk
  * followed by a slash; see rule 8 of CLAUDE.md before editing it.)
  *
  * ── WHAT IT READS: THE FACTS THE BUILD WROTE, NOT THE PDF ───────────────────────
- * `rpp build` measures the PDF with pdf.js and writes `<paper>/_build/paper.facts.json`. This rule
+ * `paperlint build` measures the PDF with pdf.js and writes `<paper>/_build/paper.facts.json`. This rule
  * runs on `paper.tex` — the one file every LaTeX paper has, and the one ESLint already parses — and
  * judges that paper's facts file beside it. It never opens the PDF to measure it: it hashes it, to
  * refuse facts about a different build than the one on disk.
  *
  * ── IT DOES NOT FIX, AND SAYS HOW TO ────────────────────────────────────────────
- * rpp used to search for a `\balance` position itself and fail the build when none worked. Every
+ * paperlint used to search for a `\balance` position itself and fail the build when none worked. Every
  * mechanism is documented as unreliable by its own authors (acmart: `balance` "may lead to
  * problems", `pbalance` is "experimental"; pbalance: "this package is a hack"), and for ACM TAPS
  * venues ACM recompiles the source, so an edit to a generated `.bbl` may never reach the proceedings.
@@ -169,15 +169,15 @@ const rule = {
         "nothing when the last page is all bibliography, so try `pbalance`; then " +
         "`\\usepackage{flushend}`; then `\\balance` (balance.sty) placed in what would be the " +
         "FIRST column of the last page — in the bibliography, before the \\bibitem that starts " +
-        "that column. Rebuild (`rpp build`) and lint again.",
+        "that column. Rebuild (`paperlint build`) and lint again.",
       noFacts:
         "pdf/last-page-balance is on for this paper, but {{file}} does not exist beside it. The rule " +
-        "judges the facts `rpp build` writes after a successful compile — build the paper first.",
+        "judges the facts `paperlint build` writes after a successful compile — build the paper first.",
       factsBroken:
-        "{{why}} in _build/paper.facts.json — rebuild the paper (`rpp build`) to rewrite it",
+        "{{why}} in _build/paper.facts.json — rebuild the paper (`paperlint build`) to rewrite it",
       schema:
         "_build/paper.facts.json has schema {{got}}; this rule reads schema 2 — rebuild the paper " +
-        "(`rpp build`) to rewrite it",
+        "(`paperlint build`) to rewrite it",
       pdfMissing:
         "_build/paper.facts.json describes {{pdf}}, which is not on disk (a failed build removes " +
         "it) — rebuild the paper",

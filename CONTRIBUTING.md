@@ -90,7 +90,7 @@ The README links only what a user needs. These are for people changing the packa
 
 - [`docs/prior-art/`](docs/prior-art/README.md) — how comparable tools are shaped, with the URLs
   that were checked
-- [`docs/install.md`](docs/install.md) — installation: what `npm i` and `rpp init` set up, what
+- [`docs/install.md`](docs/install.md) — installation: what `npm i` and `paperlint init` set up, what
   `init` writes, supported package managers, troubleshooting, and why it is shaped this way
 - [`docs/e2e.md`](docs/e2e.md) — the end-to-end runs: what each proves, what they do not cover,
   and when a change owes one

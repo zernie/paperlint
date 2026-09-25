@@ -16,7 +16,7 @@ export function recordedFindings() {
 }
 
 /**
- * `rpp lint --json` stdout → `{ruleId: n}`.
+ * `paperlint lint --json` stdout → `{ruleId: n}`.
  * 🔴 Output that does not parse THROWS. An empty set read as "clean" is how this repository's
  * checks have gone hollow before.
  */

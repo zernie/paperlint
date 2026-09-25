@@ -4,7 +4,7 @@
  *
  * The rule is driven the way a consumer drives it: through rpp's own `buildConfig`, with the
  * rule turned on by a `rules` block in the settings — not through a config invented here. Each
- * paper is a temporary directory holding `paper.tex`, `paper.pdf` and the facts `rpp build`
+ * paper is a temporary directory holding `paper.tex`, `paper.pdf` and the facts `paperlint build`
  * would write beside them.
  *
  * Both halves: it FIRES on an unbalanced page and on every input it cannot judge (no facts, a

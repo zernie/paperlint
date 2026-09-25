@@ -120,7 +120,7 @@ process.exit(
         expect:
           "write:false reports every skill as missing and creates nothing",
         disables:
-          "the difference between looking and changing. `rpp doctor` would quietly repair the " +
+          "the difference between looking and changing. `paperlint doctor` would quietly repair the " +
           "state it is supposed to report, so the report can never show the gap",
         edits: [
           [

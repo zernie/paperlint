@@ -1,5 +1,5 @@
 /**
- * Both halves for `rpp doctor` — a command whose subject is the STATE OF THE INSTALL, not a
+ * Both halves for `paperlint doctor` — a command whose subject is the STATE OF THE INSTALL, not a
  * file.
  *
  * 🔴 WHY A TEST MATTERS ESPECIALLY MUCH HERE. Doctor exists precisely because
@@ -113,7 +113,7 @@ const runDoctor = (
 }
 
 // ── II. THE VERY DEFECT: AN INSTALL FOLLOWING THE DOCS ─────────────────────────────────────
-// `rpp init` writes rpp.json and does not touch package.json; the hook reads package.json.
+// `paperlint init` writes rpp.json and does not touch package.json; the hook reads package.json.
 // Measured 09-18.
 {
   const dir = consumer({
@@ -280,7 +280,7 @@ const runDoctor = (
   check("but every absence is NAMED", /✗ pdflatex/.test(none.out));
   check(
     "and it carries a REMEDY, not just a diagnosis",
-    /npx rpp toolchain/.test(none.out),
+    /npx paperlint toolchain/.test(none.out),
   );
   check(
     "and the consequence: which checks silently don't run without it",
@@ -291,7 +291,7 @@ const runDoctor = (
     PROGRAMS.length >= 5,
   );
   check(
-    "no poppler row: rpp reads PDFs with pdf.js, which it installs itself",
+    "no poppler row: paperlint reads PDFs with pdf.js, which it installs itself",
     !PROGRAMS.some((p) => /^pdf(info|fonts|totext|tohtml)$/.test(p.bin)) &&
       !/poppler/.test(none.out),
   );
@@ -299,7 +299,7 @@ const runDoctor = (
   check(
     "a perl row, naming what goes missing and how banal gets installed",
     /✗ perl/.test(none.out) &&
-      /rpp toolchain \(it fetches banal\)/.test(none.out),
+      /paperlint toolchain \(it fetches banal\)/.test(none.out),
     none.out,
   );
   rmSync(dir, { recursive: true, force: true });
@@ -330,7 +330,7 @@ const runDoctor = (
     "node_modules is not searched — someone else's papers are not ours",
     !hits.some((h) => h.startsWith("node_modules")),
   );
-  // A folder holding only the project's paper TEMPLATE (`rpp new` reads `<papers>/.template/`)
+  // A folder holding only the project's paper TEMPLATE (`paperlint new` reads `<papers>/.template/`)
   // carries every marker, and is still not a papers root: discovery skips dot-directories.
   mkdirSync(join(dir, "only-template", ".template"), { recursive: true });
   writeFileSync(join(dir, "only-template", ".template", "paper.tex"), "x");
@@ -392,5 +392,5 @@ const runDoctor = (
 }
 
 console.log(
-  `✓ ${n} assertions passed — rpp doctor: an install can vouch for itself`,
+  `✓ ${n} assertions passed — paperlint doctor: an install can vouch for itself`,
 );

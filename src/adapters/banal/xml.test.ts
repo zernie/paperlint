@@ -4,7 +4,7 @@
  *
  * Every page here is written by hand. The real-PDF half — pdf.js boxes of a committed fixture,
  * written as XML, measured by the real banal and compared with banal on real pdftohtml — is
- * `test/e2e/banal.mjs`, which runs where `rpp toolchain` has installed banal.
+ * `test/e2e/banal.mjs`, which runs where `paperlint toolchain` has installed banal.
  */
 import assert from "node:assert/strict";
 import { test } from "vitest";

@@ -1,5 +1,5 @@
 /**
- * The ref `rpp init` pins the GitHub Action to, decided from the version of the package that is
+ * The ref `paperlint init` pins the GitHub Action to, decided from the version of the package that is
  * running. semantic-release tags every release `v<version>` on the commit it publishes, so the
  * action at that tag is the same code as the installed package.
  *

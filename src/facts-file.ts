@@ -2,9 +2,9 @@
  * THE ONE WRITER of `<paper>/_build/paper.facts.json` — what a finished PDF measures, as data a lint
  * rule can judge. It judges nothing itself.
  *
- * Two callers, one function: `rpp build` writes the facts right after a successful compile, and
+ * Two callers, one function: `paperlint build` writes the facts right after a successful compile, and
  * `skills/render-paper/extract-pdf-facts.mjs` is a thin command-line shim over the same
- * `measurePaper` + `writeFactsFile` for PDFs rpp did not build and for CI steps that name that script by path. Two
+ * `measurePaper` + `writeFactsFile` for PDFs paperlint did not build and for CI steps that name that script by path. Two
  * writers would drift — one would learn a field the other does not — and the rules reading the file
  * cannot tell which wrote it.
  *
@@ -12,9 +12,9 @@
  * - pdf.js (`pdf-facts.ts`) — page count, the fonts the pages draw text with, the last page. Always.
  * - a page-geometry measurer, through the `MeasureGeometry` port (`ports/measure-geometry.ts`) —
  *   today banal (Eddie Kohler's page-geometry tool, the one HotCRP's format checker runs) — paper size,
- *   columns, body and reference font sizes, page types. It runs on pdftohtml-style XML that rpp
+ *   columns, body and reference font sizes, page types. It runs on pdftohtml-style XML that paperlint
  *   writes from the same pdf.js read (`adapters/banal/xml.ts`), so poppler is not needed (`adapters/banal/`).
- *   OPTIONAL: banal is GPL and rpp does not ship it — `rpp toolchain` fetches it. Found ⇒ its fields
+ *   OPTIONAL: banal is GPL and paperlint does not ship it — `paperlint toolchain` fetches it. Found ⇒ its fields
  *   are filled and `geometry_source` says `banal`; not found ⇒ they are null and `geometry_source`
  *   is null, so a rule can tell "not measured" from "measured as zero". Whether that is a failure is
  *   the caller's policy: `extract-pdf-facts.mjs --strict` refuses to write such facts.

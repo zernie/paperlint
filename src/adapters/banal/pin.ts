@@ -1,6 +1,6 @@
 /**
- * The banal rpp runs: HotCRP at one commit, one file, one sha256. The licence boundary is in
- * `./index.ts`: rpp downloads and runs banal, it never contains it.
+ * The banal paperlint runs: HotCRP at one commit, one file, one sha256. The licence boundary is in
+ * `./index.ts`: paperlint downloads and runs banal, it never contains it.
  */
 import { parseSha256, type Sha256 } from "../../domain/sha256.ts";
 

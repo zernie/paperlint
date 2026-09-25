@@ -1,5 +1,5 @@
 ---
-# Created by `rpp new` — from <papers>/.template/ when the project keeps one, else from the package.
+# Created by `paperlint new` — from <papers>/.template/ when the project keeps one, else from the package.
 #
 # researchQuestion — the paper's question, one sentence, written the way it appears in the paper.
 # `paper/research-question` reads it once the paper has shipped a stage. Empty until you have it.

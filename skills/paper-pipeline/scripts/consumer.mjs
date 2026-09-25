@@ -19,7 +19,7 @@
  * A consumer keeps a symlink where the directory used to be:
  *
  *     .claude/skills/paper-pipeline/scripts  ->  ../../../../node_modules/
- *                                                research-paper-pipeline/skills/
+ *                                                paperlint/skills/
  *                                                paper-pipeline/scripts
  *
  * so every command a skill's prose already names — `node .claude/skills/paper-pipeline/scripts/
@@ -125,7 +125,7 @@ export function consumerRoot({ env = process.env, cwd = process.cwd() } = {}) {
 
 /**
  * The directory of venue TeX files THIS PACKAGE ships — `paper-guards.tex` and each venue's
- * `<venue>.tex` — which a paper's preamble `\input`s and `rpp build` puts on `TEXINPUTS`.
+ * `<venue>.tex` — which a paper's preamble `\input`s and `paperlint build` puts on `TEXINPUTS`.
  *
  * Resolved from this file's own location, never from the caller's cwd: the directory travels
  * with the package, wherever the package is installed (own checkout, `node_modules`, a plugin
@@ -168,7 +168,7 @@ export function consumerSkillsDir(opts) {
  * sorted by name. The one answer to "which skills are here" — for the consumer's
  * `.claude/skills/`, for this package's own declared skills directory, and for a copy of either.
  *
- * 🔴 IT FOLLOWS SYMLINKS, AND THAT IS THE WHOLE POINT (rpp#62). `rpp init` (`src/link-skills.ts`)
+ * 🔴 IT FOLLOWS SYMLINKS, AND THAT IS THE WHOLE POINT (rpp#62). `paperlint init` (`src/link-skills.ts`)
  * installs every skill as a link `.claude/skills/<name> -> …/skills/<name>`. A `Dirent` from
  * `readdirSync(dir, { withFileTypes: true })` describes the entry itself, so `isDirectory()` is
  * false for every link: five eval preflights asked the question that way, saw zero skills in

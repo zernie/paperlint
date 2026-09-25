@@ -13,7 +13,7 @@
  * ── THE DECISION (2026-09-11) ───────────────────────────────────────────────
  * ONE declaration, in the consumer's `package.json`, with a default:
  *
- *     "research-paper-pipeline": { "papersDir": "docs/papers" }
+ *     "paperlint": { "papersDir": "docs/papers" }
  *
  * (The field was called `papers` until 2026-09-24; the old name is now refused.)
  * No key → `papers`. Every carrier then reads that one value with its OWN standard mechanism:
@@ -21,7 +21,7 @@
  *   ESLint  →  `import pkg from "./package.json" with { type: "json" }` + this module
  *   hook    →  `needs: [provide("pkg", "cat package.json")]`, JSON.parse inside `decide`
  *   prose   →  the skill names a COMMAND, not a path:
- *              `node -p "require('./package.json')['research-paper-pipeline']?.papersDir ?? 'papers'"`
+ *              `node -p "require('./package.json')['paperlint']?.papersDir ?? 'papers'"`
  *   LaTeX   →  `TEXINPUTS` built FROM THE SCRIPT (`$(dirname "$0")/../tex//:`), so the
  *              consumer declares nothing at all for this carrier
  *

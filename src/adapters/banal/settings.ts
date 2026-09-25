@@ -1,6 +1,6 @@
 /**
  * banal's settings, parsed from the environment VALUE the composition root read once
- * (`domain/host.ts`): which banal the user named, where `rpp toolchain` keeps it, where scratch
+ * (`domain/host.ts`): which banal the user named, where `paperlint toolchain` keeps it, where scratch
  * directories go, and the environment perl and curl get. Nothing here reads the host itself.
  */
 import { join, resolve } from "node:path";
@@ -13,7 +13,7 @@ import type { AbsolutePath } from "../../domain/paths.ts";
 
 /** An explicit banal to use instead of rpp's (a path to the script). */
 export const BANAL_ENV = "BANAL";
-/** Where `rpp toolchain` stores banal. Default: `$XDG_CACHE_HOME/rpp/banal`, else `~/.cache/rpp/banal`. */
+/** Where `paperlint toolchain` stores banal. Default: `$XDG_CACHE_HOME/rpp/banal`, else `~/.cache/rpp/banal`. */
 export const BANAL_DIR_ENV = "RPP_BANAL_DIR";
 
 export interface BanalSettings {

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * `research-paper-pipeline lint [paths…]` — run every rule over the corpus of papers.
+ * `paperlint lint [paths…]` — run every rule over the corpus of papers.
  *
  * 🔴 WHY THIS UTILITY EXISTS. Before it, "installation" meant: install the package AND WRITE BY
  * HAND sixty lines of ESLint flat config, listing ten rules, three languages and four `files`
@@ -9,7 +9,7 @@
  * but that is INTERNAL machinery, and you no longer need to know it in order to run them.
  *
  * Two entry points into the tool, and both are whole now:
- *     npx research-paper-pipeline lint              ← here
+ *     npx paperlint lint              ← here
  *     uses: zernie/research-paper-pipeline@<sha>    ← action.yml
  *
  * ⚠️ THE BOUNDARY THIS UTILITY HAS NO RIGHT TO ERASE: the consumer's data stays with the consumer.
@@ -106,27 +106,28 @@ import findingsCause from "../eslint-rules/review-findings-cause.mjs";
 // @ts-expect-error — an ESLint rule in .mjs, it has no types
 import pdfRules from "../eslint-rules/pdf-last-page-balance.mjs";
 
-const USAGE = `research-paper-pipeline — machine-checkable gates for a paper kept in git
+const USAGE = `paperlint — machine-checkable gates for a paper kept in git
 
-  npx rpp init [dir]                  set the project up: detect the papers directory, declare it
+  npx paperlint init [dir]            set the project up: detect the papers directory, declare it
                                       in package.json, link the skills, wire the hooks into
                                       .claude/settings.json, offer the CI step, report what is missing
-  npx rpp new <name> [--format tex|md]
+  npx paperlint new <name> [--format tex|md]
                                       create <papers>/<name>/ from the template; never overwrites,
                                       on an existing folder adds only the missing files, then lints it
-  npx rpp lint [paths…]               run every rule over your papers
-  npx rpp build <paper> | --all       compile paper.tex to paper.pdf: pdflatex and bibtex, rerun until
+  npx paperlint lint [paths…]         run every rule over your papers
+  npx paperlint build <paper> | --all
+                                      compile paper.tex to paper.pdf: pdflatex and bibtex, rerun until
                                       the references settle. Prints the plan first; a build.sh in the
                                       paper directory is ignored (--dry-run: print the plan only).
-                                      Compiles with rpp's TeX Live, else one on PATH that has every
+                                      Compiles with paperlint's TeX Live, else one on PATH that has every
                                       package the venue declares; on a terminal it offers to install
-                                      one, without a terminal it stops and names \`npx rpp toolchain\`
-  npx rpp toolchain [--check]         install TeX Live with every package the venue profiles declare
+                                      one, without a terminal it stops and names \`npx paperlint toolchain\`
+  npx paperlint toolchain [--check]   install TeX Live with every package the venue profiles declare
                                       into ~/.cache/rpp/texlive (RPP_TEXLIVE_DIR overrides); a second
                                       run does nothing. --check: report what is missing, change nothing
-  npx rpp doctor                      say what is actually wired — and what only LOOKS wired
-  npx rpp hook <name>                 run an editor hook (.claude/settings.json calls this)
-  npx rpp --help
+  npx paperlint doctor                say what is actually wired — and what only LOOKS wired
+  npx paperlint hook <name>           run an editor hook (.claude/settings.json calls this)
+  npx paperlint --help
 
 init:
   --yes, -y           ask nothing, take every default. Without a terminal on stdin AND stdout,
@@ -136,7 +137,7 @@ init:
   --format tex|md     the new paper's source format; default tex
 
 lint:
-  npx rpp lint [paths…] [--config <file.json>] [--json]
+  npx paperlint lint [paths…] [--config <file.json>] [--json]
 
   <paths…>            where your papers live, e.g. papers. Optional ONLY because the declaration
                       names it — one of the two must name the scope. There is no default
@@ -147,11 +148,11 @@ lint:
   --max-warnings <n>  fail when warnings exceed n. Default -1: warnings never fail, because
                       most findings here are advisory and a gate that fails on advice gets muted
 
-settings — the \`research-paper-pipeline\` key of your package.json, found by walking up from the
+settings — the \`paperlint\` key of your package.json, found by walking up from the
 current directory, the way every other tool in the stack finds its config. \`rpp.json\` is still
 read as a deprecated fallback and the run says so. \`papersDir\` is required; the rest is optional:
 
-  "research-paper-pipeline": {
+  "paperlint": {
     "papersDir":         "papers",
     "authorListCommand": "node scripts/bib-authors.mjs",
     "typographyDebt":    { "papers/my-paper": { "sectionSign": 12 } },
@@ -182,9 +183,9 @@ export function buildConfig(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
   const cfg: any[] = [
-    // 🔴 THE PROJECT'S PAPER TEMPLATE IS NOT A PAPER. `rpp new` reads `<papers>/.template/`, and
+    // 🔴 THE PROJECT'S PAPER TEMPLATE IS NOT A PAPER. `paperlint new` reads `<papers>/.template/`, and
     // its files carry every marker a paper does. Flat config does NOT ignore dot-directories by
-    // default (only `node_modules/` and `.git/`), so without this block `rpp lint` would lint the
+    // default (only `node_modules/` and `.git/`), so without this block `paperlint lint` would lint the
     // template as a paper — and a richer template with placeholder stages would fail the run.
     { ignores: ["**/.template/"] },
     // The `pdf` plugin is registered for EVERY file, and its rule is on for none. A consumer's
@@ -286,7 +287,7 @@ const isOn = (entry: unknown): boolean => {
 };
 
 /**
- * Rules rpp ships and turns on for no file itself — the ones a consumer opts into with `rules`.
+ * Rules paperlint ships and turns on for no file itself — the ones a consumer opts into with `rules`.
  * Derived: every shipped rule that no block of rpp's own config names.
  */
 export const OPTIONAL_RULES: ReadonlySet<string> = new Set(
@@ -369,7 +370,7 @@ const commonDir = (paths: readonly string[]): string => {
 };
 
 export function parseArgs(argv: readonly string[]): Args {
-  // `--help` is parsed BEFORE argv[0] becomes the command: otherwise `rpp --help` answers
+  // `--help` is parsed BEFORE argv[0] becomes the command: otherwise `paperlint --help` answers
   // "unknown command `--help`" — caught by the very first run of the utility.
   const out: Args = {
     cmd: null,
@@ -393,7 +394,7 @@ export function parseArgs(argv: readonly string[]): Args {
 
   // 🔴 A FLAG WHOSE VALUE WAS TAKEN AWAY IS A REFUSAL, NOT A DEFAULT. The compiler found this
   // during the move to TypeScript: `rest[++i]` past the last argument gives `undefined`, and
-  // `rpp lint --config` (the value forgotten, or eaten by a substitution in CI) silently turned
+  // `paperlint lint --config` (the value forgotten, or eaten by a substitution in CI) silently turned
   // into "no config given" — that is, it went to auto-discovery and linted against SOMEONE ELSE'S
   // file, saying nothing. The failure is one-sided and toward silence, so it is cured by
   // behaviour, not by a type cast.
@@ -456,9 +457,9 @@ export interface Declaration {
 }
 
 /**
- * 🔴 THE CLI HAD TO LEARN TO READ `package.json`, AND THAT IS NOT A SIDE ERRAND. `rpp init` now
+ * 🔴 THE CLI HAD TO LEARN TO READ `package.json`, AND THAT IS NOT A SIDE ERRAND. `paperlint init` now
  * writes ONE declaration, into the `package.json` key that the three hooks and `eslint-rules`
- * already read. Without this walker the install it produces would not work at all: `rpp lint`
+ * already read. Without this walker the install it produces would not work at all: `paperlint lint`
  * would find no `rpp.json`, report "nothing to lint", and the consumer would be back to
  * declaring the same directory twice — the defect the single declaration removes (issue #33,
  * `docs/install.md`).
@@ -488,7 +489,7 @@ export function findDeclaration(startDir: string): Declaration | null {
 /**
  * A `package.json` WITHOUT the key is not a declaration and must not stop the walk — every
  * project on the way up has one, so stopping there would make the search find nothing, always.
- * An unparsable one is treated the same way here; `rpp doctor` is the command that reports it.
+ * An unparsable one is treated the same way here; `paperlint doctor` is the command that reports it.
  */
 const declaresSettings = (pkgPath: string): boolean => {
   try {
@@ -611,7 +612,7 @@ export function readConfig(
       decl.kind === "package.json"
         ? `${decl.path} must declare \`${PAPERS_DIR_FIELD}\` — the directory your papers live in, e.g.\n` +
             `  { "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": "papers" } }\n` +
-            `It is the one thing this tool cannot guess. \`npx rpp init\` writes it for you.`
+            `It is the one thing this tool cannot guess. \`npx paperlint init\` writes it for you.`
         : `${decl.path} must declare \`${PAPERS_DIR_FIELD}\` — the directory your papers live in, e.g.\n` +
             `  { "${PAPERS_DIR_FIELD}": "papers" }\n` +
             `It is the one thing this tool cannot guess.`,
@@ -638,7 +639,7 @@ const hasPapers = (opts: RppConfig): boolean =>
   toPaths(papersDirOf(opts)).length > 0;
 
 /**
- * `rpp hook <name>` — run an editor hook. It exists for ONE thing: so that the wiring does not
+ * `paperlint hook <name>` — run an editor hook. It exists for ONE thing: so that the wiring does not
  * address the runtime from the project root.
  *
  * 🔴 WHAT IT WAS AND WHY IT BROKE. `hooks.json` called
@@ -647,11 +648,11 @@ const hasPapers = (opts: RppConfig): boolean =>
  * consumer itself, into its own root. After the move to ordinary dependencies the guarantee was
  * gone, and a measurement showed it — one tarball, two managers:
  *     npm:  node_modules/vigiles/dist/cli.js   PRESENT
- *     pnpm: node_modules/vigiles/dist/cli.js   ABSENT (only research-paper-pipeline in the root)
+ *     pnpm: node_modules/vigiles/dist/cli.js   ABSENT (only paperlint in the root)
  * The cost of the failure is asymmetric: `|| exit 2` stood on PreToolUse(Bash), that is, ANY
  * command was denied, including the one you fix it with.
  *
- * WHAT IT IS NOW. The wiring calls ITS OWN bin — `research-paper-pipeline` is a direct dependency,
+ * WHAT IT IS NOW. The wiring calls ITS OWN bin — `paperlint` is a direct dependency,
  * so it lies in the root under any manager — and the runtime is resolved FROM THE POSITION OF THIS
  * FILE via `createRequire`. Wherever the manager laid the tree out, the resolver finds the same
  * thing an `import` from inside the package would.
@@ -685,7 +686,7 @@ export function runHook(
   } = {},
 ): number {
   if (!name) {
-    err(`\`hook\` needs a name, e.g. \`rpp hook paper-edit-guard\``);
+    err(`\`hook\` needs a name, e.g. \`paperlint hook paper-edit-guard\``);
     return 2;
   }
   const program = fileURLToPath(
@@ -703,7 +704,7 @@ export function runHook(
   } catch {
     err(
       `rpp: the hook runtime (vigiles) is not resolvable from ${fileURLToPath(new URL(".", import.meta.url))}.\n` +
-        `The \`${name}\` hook is NOT running. Everything else — \`rpp lint\`, CI — is unaffected.\n` +
+        `The \`${name}\` hook is NOT running. Everything else — \`paperlint lint\`, CI — is unaffected.\n` +
         `Reinstall this package so its dependencies are present.`,
     );
     return 0;
@@ -719,7 +720,7 @@ export function runHook(
 }
 
 /**
- * Create one paper and lint it — shared by `rpp new` and `rpp init --paper`, so the two cannot
+ * Create one paper and lint it — shared by `paperlint new` and `paperlint init --paper`, so the two cannot
  * become two implementations. The lint runs on THAT folder, so the first thing printed after the
  * file list is its verdict rather than the old "missing PIPELINE-STATUS.md".
  */
@@ -742,7 +743,7 @@ export async function createPaperAt(
 }
 
 /**
- * `rpp new <name>` — the papers directory comes from the same declaration every other command
+ * `paperlint new <name>` — the papers directory comes from the same declaration every other command
  * reads; there is no second way to name it. See `new-paper.ts` for what it writes and why.
  */
 async function runNew(
@@ -762,7 +763,7 @@ async function runNew(
   const [name, ...extra] = a.paths;
   if (!name || extra.length > 0) {
     err(
-      `\`new\` takes exactly one paper name: \`rpp new my-paper [--format tex|md]\``,
+      `\`new\` takes exactly one paper name: \`paperlint new my-paper [--format tex|md]\``,
     );
     return 2;
   }
@@ -790,7 +791,7 @@ async function runNew(
   if (!cfg.configPath || papersRoot === undefined) {
     err(
       `no papers directory is declared, so there is nowhere to put \`${name}\`.\n` +
-        `Run \`npx rpp init\` first — it declares the directory in package.json.`,
+        `Run \`npx paperlint init\` first — it declares the directory in package.json.`,
     );
     return 2;
   }
@@ -823,7 +824,7 @@ async function runBuild(
   // setting that silently stopped doing anything.
   if (opts.buildScripts !== undefined)
     log(
-      `note: "buildScripts" in ${relative(cwd, configPath ?? "") || "the settings"} is ignored — rpp builds the paper itself`,
+      `note: "buildScripts" in ${relative(cwd, configPath ?? "") || "the settings"} is ignored — paperlint builds the paper itself`,
     );
   const roots = toPaths(papersDirOf(opts)).map((rel) =>
     resolve(configPath ? dirname(configPath) : cwd, rel),
@@ -842,7 +843,7 @@ async function runBuild(
     targets = a.paths.map((p) => resolve(cwd, p));
   } else {
     err(
-      `\`build\` needs a target: \`rpp build papers/my-paper\` or \`rpp build --all\`.\n` +
+      `\`build\` needs a target: \`paperlint build papers/my-paper\` or \`paperlint build --all\`.\n` +
         `There is deliberately no "build everything" default: a build is expensive and has side\n` +
         `effects, so the target is named — as with make, docker and latexmk.`,
     );
@@ -1017,7 +1018,7 @@ export async function run(
   if (simple) return await simple(a, { log, err, cwd });
   if (a.cmd === "check")
     err(
-      `\`check\` is now \`lint\` — running it anyway. Update the call to \`rpp lint\`.`,
+      `\`check\` is now \`lint\` — running it anyway. Update the call to \`paperlint lint\`.`,
     );
   if (a.cmd !== "lint" && a.cmd !== "check") {
     err(`unknown command \`${a.cmd}\`\n\n${USAGE}`);
@@ -1048,7 +1049,7 @@ export async function run(
   if (paths.length === 0) {
     err(
       `nothing to lint: no path was given and no ${CONFIG_NAME} was found.\n` +
-        `Run \`npx rpp init\` here, or pass the directory: \`rpp lint papers\`.`,
+        `Run \`npx paperlint init\` here, or pass the directory: \`paperlint lint papers\`.`,
     );
     return 2;
   }
@@ -1113,7 +1114,7 @@ export async function run(
 }
 
 /**
- * The end of `rpp lint`: refuse an optional rule that reached no paper, print the findings, and
+ * The end of `paperlint lint`: refuse an optional rule that reached no paper, print the findings, and
  * decide the exit code. Pulled out of `run` so each question has its own function.
  */
 async function reportLint(

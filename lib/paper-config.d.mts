@@ -17,7 +17,9 @@ export declare function declaredSettings(pkg: unknown): {
 };
 
 /** The settings object alone — undefined when absent or on a conflict. */
-export declare function settingsOf(pkg: unknown): any;
+export declare function settingsOf(
+  pkg: unknown,
+): Readonly<Record<string, unknown>> | undefined;
 export declare const DEFAULT_PAPERS_ROOT: string;
 export declare const PAPERS_DIR_FIELD: string;
 export declare const OLD_PAPERS_DIR_FIELD: string;

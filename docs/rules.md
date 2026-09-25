@@ -1,7 +1,7 @@
 # The checks, one by one
 
 The README lists what each check catches in one line. This page says exactly which file each one
-reads and when it fails. Errors fail `rpp lint`; warnings print and do not.
+reads and when it fails. Errors fail `paperlint lint`; warnings print and do not.
 
 | Rule                           | Level | Reads                                         | Fails when                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | ------------------------------ | ----- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -19,7 +19,7 @@ Optional rules — off unless you turn them on in the `rules` setting, because o
 them — are on their own page: [`optional-rules.md`](optional-rules.md). Today there is one,
 `pdf/last-page-balance`.
 
-Besides these rules, `rpp lint` reports a paper directory that is missing a required file (by
+Besides these rules, `paperlint lint` reports a paper directory that is missing a required file (by
 default `PIPELINE-STATUS.md`) as an error. Which files are required is configurable — see
 [`configuration.md`](configuration.md#required-files).
 

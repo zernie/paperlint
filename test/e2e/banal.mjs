@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * test/e2e/banal.mjs — the REAL banal, installed by `rpp toolchain`, measuring the committed PDF
+ * test/e2e/banal.mjs — the REAL banal, installed by `paperlint toolchain`, measuring the committed PDF
  * fixtures through rpp's own path: pdf.js → pdftohtml-style XML → `perl banal`. No poppler.
  *
  * 🔴 THE EXPECTED NUMBERS ARE NOT OURS. Each one is what the same banal (1.2, HotCRP f3e4352)
@@ -18,8 +18,8 @@
  *      moves the body size — so both the stub and the version it answers are load-bearing;
  *   4. `extract-pdf-facts.mjs --strict` writes the facts with `geometry_source: "banal"`.
  *
- * Needs banal where `rpp toolchain` puts it (or `$BANAL`). Without it the run is a declared skip
- * (77); under --strict (CI, after `rpp toolchain`) a failure.
+ * Needs banal where `paperlint toolchain` puts it (or `$BANAL`). Without it the run is a declared skip
+ * (77); under --strict (CI, after `paperlint toolchain`) a failure.
  *
  *   node test/e2e/banal.mjs [--strict]
  */
@@ -134,7 +134,7 @@ if (!found.ok) {
     process.exit(77);
   }
   console.error(
-    `${say}\nIn --strict this is a FAILURE: CI runs \`rpp toolchain\` first.`,
+    `${say}\nIn --strict this is a FAILURE: CI runs \`paperlint toolchain\` first.`,
   );
   process.exit(2);
 }

@@ -1,7 +1,7 @@
 /**
- * `rpp build <paper>` — rpp compiles the paper ITSELF. A paper-supplied script is never run.
+ * `paperlint build <paper>` — paperlint compiles the paper ITSELF. A paper-supplied script is never run.
  *
- * 🔴 WHY rpp OWNS THE BUILD, and why `build.sh` is now IGNORED rather than preferred. Until
+ * 🔴 WHY paperlint OWNS THE BUILD, and why `build.sh` is now IGNORED rather than preferred. Until
  * issue #59 this command looked for `build.sh` / `repro/build-submission.sh` and ran it. Every
  * paper therefore carried its own copy of the same work — find the venue files, set `TEXINPUTS`,
  * run pdflatex and bibtex until the references settle — and the copies drifted: one set
@@ -13,7 +13,7 @@
  * ── THE SHAPE: an ordered list of STEPS, composed, not configured ────────────
  * Each step says whether it applies to THIS paper and why — decided from FACTS parsed out of the
  * paper (its `\documentclass` and options, the venue named in `venue.json`), never from a config
- * flag. `rpp build` prints that plan before running anything, and `--dry-run` prints only the
+ * flag. `paperlint build` prints that plan before running anything, and `--dry-run` prints only the
  * plan. Adding a step is one entry in `STEPS`.
  *
  * ── AFTER A GREEN COMPILE, THE PDF IS MEASURED ──────────────────────────────
@@ -89,12 +89,12 @@ export const PAPER_MARKERS = [
   "venue.json",
 ];
 
-/** The source rpp compiles, and the job name every output file carries. */
+/** The source paperlint compiles, and the job name every output file carries. */
 export const MAIN = "paper.tex";
 export const JOB = "paper";
 
 /**
- * Scripts that `rpp build` USED to run. Their presence is reported and nothing more: running a
+ * Scripts that `paperlint build` USED to run. Their presence is reported and nothing more: running a
  * file from the paper directory is exactly what this command stopped doing.
  */
 export const IGNORED_SCRIPTS = ["build.sh", "repro/build-submission.sh"];
@@ -417,7 +417,7 @@ export const compileStep: BuildStep = {
     if (!facts.main)
       return {
         yes: false,
-        why: `no ${MAIN}; rpp compiles LaTeX, and this paper has none`,
+        why: `no ${MAIN}; paperlint compiles LaTeX, and this paper has none`,
       };
     const dc = facts.documentclass;
     const cls = dc
@@ -483,7 +483,7 @@ const columnsNote = (f: FactsDocument): string => {
  * Measure the PDF the compile step wrote and write `_build/paper.facts.json`. A PDF pdf.js cannot
  * read fails the build: a PDF nothing can measure is not one to hand in. banal (page geometry) is
  * optional here: without it the geometry fields are null and the build still succeeds — but the
- * note SAYS so, with the command that installs it (`rpp toolchain`), because null geometry means
+ * note SAYS so, with the command that installs it (`paperlint toolchain`), because null geometry means
  * the page-size, column and font-size rules have nothing to judge. A banal that fails is named too.
  */
 export const measureStep: BuildStep = {
@@ -672,7 +672,7 @@ export async function buildPaper(
     };
   }
   for (const s of facts.ignoredScripts)
-    log(`  note: ${s} is ignored — rpp builds the paper itself`);
+    log(`  note: ${s} is ignored — paperlint builds the paper itself`);
   const plan = planFor(facts, steps);
   for (const line of formatPlan(plan)) log(line);
 
@@ -688,7 +688,7 @@ export type BuildRun =
   | { readonly kind: "ran"; readonly results: readonly BuildResult[] };
 
 /**
- * `rpp build` over its targets — the ONE path every outcome goes through.
+ * `paperlint build` over its targets — the ONE path every outcome goes through.
  *
  * 🔴 A STALE PDF IS REMOVED HERE, FIRST, AND NOWHERE ELSE. Before the engine is resolved and before
  * any step, every targeted paper's paper.pdf goes. Then no outcome can leave an old PDF looking
@@ -787,7 +787,7 @@ export function remedyFor(results: readonly BuildResult[]): string {
   if (missing.length === 0) return "";
   return (
     `\nNo ${MAIN} in: ${missing.map((r) => r.dir).join(", ")}.\n` +
-    `This is NOT "nothing to build" — rpp compiles LaTeX, and these papers have no LaTeX source.\n` +
-    `Write the paper in ${MAIN}; \`rpp new <name>\` creates one.`
+    `This is NOT "nothing to build" — paperlint compiles LaTeX, and these papers have no LaTeX source.\n` +
+    `Write the paper in ${MAIN}; \`paperlint new <name>\` creates one.`
   );
 }
