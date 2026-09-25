@@ -563,7 +563,7 @@ export interface BuildOptions {
  * The options with their defaults. Destructuring defaults and not a spread over a defaults object:
  * an option passed as `undefined` (the CLI passes `dryRun: a.dryRun`) must still get its default.
  */
-function withDefaults({
+function baseDefaults({
   run = spawnSync,
   // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
   cwd = process.cwd(),
@@ -577,9 +577,16 @@ function withDefaults({
   dryRun = false,
   readPdf = pdfjsReader,
   projectRoot = env["CLAUDE_PROJECT_DIR"] || cwd,
-  banal = nodeBanalRuntime(env, { dirs: { cwd } }),
-}: BuildOptions): Required<BuildOptions> {
-  return { run, cwd, env, steps, log, dryRun, readPdf, projectRoot, banal };
+}: BuildOptions): Required<Omit<BuildOptions, "banal">> {
+  return { run, cwd, env, steps, log, dryRun, readPdf, projectRoot };
+}
+
+/** `baseDefaults`, plus banal's runtime — the real one, from the environment, unless one is passed. */
+function withDefaults(o: BuildOptions): Required<BuildOptions> {
+  const base = baseDefaults(o);
+  const banal =
+    o.banal ?? nodeBanalRuntime(base.env, { dirs: { cwd: base.cwd } });
+  return { ...base, banal };
 }
 
 /** Run the applicable steps in order, each on the environment the steps before it left. */
