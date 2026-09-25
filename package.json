@@ -1,6 +1,6 @@
 {
   "name": "research-paper-pipeline",
-  "version": "0.1.0",
+  "version": "0.0.0-semantically-released",
   "description": "Machine-checkable gates for a research paper kept in git: ESLint rules over .tex/.md paper sources, plus the skills and hooks that drive each stage.",
   "type": "module",
   "license": "MIT",
@@ -30,10 +30,14 @@
   },
   "devDependencies": {
     "@retorquere/bibtex-parser": "^10.0.1",
+    "@semantic-release/commit-analyzer": "13.0.1",
+    "@semantic-release/release-notes-generator": "14.1.1",
     "@types/node": "^26.6.1",
+    "conventional-changelog-conventionalcommits": "9.3.1",
     "eslint-plugin-boundaries": "^7.2.0",
     "eslint-plugin-n": "^18.3.0",
     "prettier": "^3.8.1",
+    "semantic-release": "25.0.9",
     "typescript-eslint": "^8.70.1",
     "vitest": "^4.1.11"
   },
