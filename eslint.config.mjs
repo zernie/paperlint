@@ -118,9 +118,26 @@ export const layerBoundaries = (root) => ({
       { type: "core", mode: "full", pattern: CORE },
       { type: "adapter", mode: "full", pattern: ADAPTERS },
       { type: "app", mode: "full", pattern: "src/*.ts" },
+      // The package's plain-JS modules outside src/ that the app layer imports: the rules, the
+      // hooks, the install-path port. Named so that an import of them is classified, not unknown.
+      {
+        type: "js-module",
+        mode: "full",
+        pattern: [
+          "eslint-rules/**/*.mjs",
+          "hooks/**/*.mjs",
+          "lib/**/*.mjs",
+          "skills/**/*.mjs",
+        ],
+      },
     ],
   },
   rules: {
+    // 🔴 An unclassified file is invisible to the rule below: a new `src/lib/x.ts` could import an
+    // adapter from anywhere and nothing would fire. So every linted file must be a declared element,
+    // and every import must resolve to one.
+    "boundaries/no-unknown-files": "error",
+    "boundaries/no-unknown": "error",
     "boundaries/dependencies": [
       "error",
       {
@@ -128,7 +145,7 @@ export const layerBoundaries = (root) => ({
         rules: [
           {
             from: { type: "core" },
-            disallow: { to: { type: ["adapter", "app"] } },
+            disallow: { to: { type: ["adapter", "app", "js-module"] } },
             message:
               "Hexagonal boundary: core (${file.type}) must not import ${dependency.type}. Depend on a port declared in src/core/; the composition root wires the adapter in.",
           },
