@@ -302,6 +302,25 @@ describe("pdf/profile — the kind", () => {
   });
 });
 
+describe("pdf/profile — a preset with no kinds", () => {
+  it("🔴 a preset with NO kinds (acm-sigconf) and no `kind`: nothing to pick, no finding", () => {
+    const fs = lint({
+      venue: { extends: "paperlint:acm-sigconf" },
+      facts: withFacts((f) => (f.body_pages = 99)),
+    });
+    expect(ids(fs).filter((id) => id.startsWith("pdf/profile"))).toEqual([]);
+  });
+
+  it("…but a `kind` named against a kindless preset is still an error that says it has none", () => {
+    const fs = lint({
+      venue: { extends: "paperlint:acm-sigconf", kind: "short" },
+    });
+    const profile = fs.filter((f) => f.rule === "pdf/profile");
+    expect(ids(profile)).toEqual(["pdf/profile:kindUnknown"]);
+    expect(profile[0]?.message).toMatch(/its kinds: \(none\)/);
+  });
+});
+
 describe("pdf/measured — a paper that names a venue and was not measured says so (warn)", () => {
   it("no facts file: one finding, from pdf/measured only", () => {
     const fs = lint({ venue: DECL, facts: null, pdf: null });

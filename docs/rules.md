@@ -74,7 +74,8 @@ and the split into body and reference pages. They report on the paper's `paper.t
 | has not been built (no facts file)                                                               | `pdf/measured` warning — it does not fail the run, because lint often runs where nothing is built (the CI action only lints) |
 | was built without banal                                                                          | `pdf/measured` warning; fonts are still checked, the rest is not                                                             |
 | has facts about another PDF than the one on disk                                                 | `pdf/fresh` error, and nothing else is judged                                                                                |
-| names no `kind`, or a kind the preset lacks                                                      | `pdf/profile` error; everything but the page limit is still checked                                                          |
+| names no `kind` while its preset has kinds, or a kind the preset lacks                           | `pdf/profile` error; everything but the page limit is still checked                                                          |
+| names no `kind` and its preset has none (`paperlint:acm-sigconf`)                                | nothing — that preset has no page limit to check; everything else is                                                         |
 
 The venue comes from `paperlint.json`, not from the facts, so changing it needs no rebuild: the
 measurements do not depend on it. Messages name the venue by the preset's `name`, else by the file

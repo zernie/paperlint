@@ -109,6 +109,11 @@ function kindOf(
   kind: string | null,
 ): Pick<Resolved, "kind" | "kindProblem"> {
   const known = [...format.kinds.keys()].join(", ") || "(none)";
+  // A preset with no kinds (`acm-sigconf`, a family a paper for an unprofiled venue extends
+  // directly) has no page limit to pick, so naming no kind is the only valid declaration. A kind
+  // named against it is still `kindUnknown`, whose "its kinds: (none)" says why.
+  if (kind === null && format.kinds.size === 0)
+    return { kind: null, kindProblem: null };
   if (kind === null)
     return {
       kind: null,
