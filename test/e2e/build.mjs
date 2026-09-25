@@ -193,8 +193,8 @@ try {
   // 🔴 In CI the build must run on the TeX Live `paperlint toolchain` installed — the runner has no other.
   if (strict)
     check(
-      "strict: the engine is rpp's own cache",
-      engine.includes("rpp cache"),
+      "strict: the engine is paperlint's own cache",
+      engine.includes("paperlint cache"),
       engine,
     );
 

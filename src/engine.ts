@@ -30,7 +30,7 @@ export type Runner = typeof spawnSync;
 
 /** One TeX Live and what it lacks for the papers at hand. */
 export interface TreeProbe {
-  /** How to name it to a human: `rpp cache, TeX Live 2026` / `/usr/bin/pdflatex`. */
+  /** How to name it to a human: `paperlint cache, TeX Live 2026` / `/usr/bin/pdflatex`. */
   readonly label: string;
   /** The directory holding `pdflatex` and `kpsewhich`. */
   readonly bin: string;

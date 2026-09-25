@@ -151,13 +151,7 @@ process.exit(
         disables:
           "the ban on silently replacing a consumer's setting. They keep trusting the old " +
           "value, because nobody told them it changed",
-        edits: [
-          [
-            INIT,
-            "  if (existing !== undefined) {",
-            "  if (false) {",
-          ],
-        ],
+        edits: [[INIT, "  if (existing !== undefined) {", "  if (false) {"]],
       },
       {
         name: "init CREATES the second rpp.json carrier again",

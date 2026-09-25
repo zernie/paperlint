@@ -310,7 +310,7 @@ export function pdflatexArgs(final: boolean): string[] {
 
 const notInstalled = (bin: string): string[] => [
   `${bin} could not be started — it is not installed, or not on PATH.`,
-  `rpp compiles with TeX Live's pdflatex and bibtex: see docs/toolchain.md.`,
+  `paperlint compiles with TeX Live's pdflatex and bibtex: see docs/toolchain.md.`,
 ];
 
 /** The log was read byte for byte to count TeX's columns; show it to a human as UTF-8. */
