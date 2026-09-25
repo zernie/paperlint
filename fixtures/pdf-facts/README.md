@@ -14,7 +14,7 @@ poppler's numbers, so a pass means agreement with the tool pdf.js replaced.
 | `hidden-text.pdf`  | `hidden-text.tex`, pdflatex                                         | two-column body text beside near-white, rotated and render-mode-3 text; page 2 holds only hidden text, so banal calls it blank    |
 
 `test/e2e/banal.mjs` also reads these files, with the real banal: it pins what banal 1.2 printed for
-each one on poppler's `pdftohtml` 24.02.0 (2026-09-25), so a pass there means rpp's pdf.js-written
+each one on poppler's `pdftohtml` 24.02.0 (2026-09-25), so a pass there means paperlint's pdf.js-written
 XML measures the same as poppler's. `hidden-text.pdf` exists for that test: each kind of hidden text
 changes banal's answer if it is counted.
 

@@ -19,7 +19,9 @@ import type { AbsolutePath } from "../../domain/paths.ts";
 import { curlDownload } from "./download.io.ts";
 import { spawnProcess } from "../node/index.ts";
 
-const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-download-test-")));
+const root = realpathSync(
+  mkdtempSync(join(tmpdir(), "paperlint-download-test-")),
+);
 after(() => rmSync(root, { recursive: true, force: true }));
 const at = (...p: string[]) => join(root, ...p) as AbsolutePath;
 

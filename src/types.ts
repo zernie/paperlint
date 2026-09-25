@@ -26,7 +26,7 @@ export interface PaperlintConfig {
   structure?: StructureConfig | false;
   /** REMOVED — `paperlint build` compiles the paper itself. Still typed so a leftover key can be named. */
   buildScripts?: unknown;
-  /** ESLint config blocks appended after rpp's own — PARSED by `parseSettings` in cli.ts. */
+  /** ESLint config blocks appended after paperlint's own — PARSED by `parseSettings` in cli.ts. */
   rules?: readonly RuleBlock[];
 }
 

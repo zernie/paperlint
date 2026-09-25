@@ -43,7 +43,7 @@ const check = (label, cond) => {
 
 /** A consumer on disk: a papers directory, and maybe a declaration in package.json. */
 function consumer({ papersDir, pkgKey, makeDir = true }) {
-  const dir = realpathSync(mkdtempSync(join(tmpdir(), "rpp-doctor-")));
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-doctor-")));
   if (makeDir && papersDir) {
     mkdirSync(join(dir, papersDir, "some-paper"), { recursive: true });
     writeFileSync(
@@ -291,7 +291,7 @@ const runDoctor = (
 
 // ── VII. DETECTING THE PAPERS DIRECTORY ─────────────────────────────────────────────────────
 {
-  const dir = realpathSync(mkdtempSync(join(tmpdir(), "rpp-detect-")));
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-detect-")));
   mkdirSync(join(dir, "writing", "drafts", "p1"), { recursive: true });
   writeFileSync(join(dir, "writing", "drafts", "p1", "paper.tex"), "x");
   mkdirSync(join(dir, "node_modules", "pkg", "papers", "p"), {
@@ -371,7 +371,7 @@ const runDoctor = (
   check("a program that really exists is found", found("node") === true);
   check(
     "a made-up one is not (otherwise the check answers the form, not the subject)",
-    found("rpp-definitely-not-a-real-binary-xyz") === false,
+    found("paperlint-definitely-not-a-real-binary-xyz") === false,
   );
 }
 

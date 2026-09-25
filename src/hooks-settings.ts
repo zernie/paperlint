@@ -94,7 +94,7 @@ interface Run {
  *                          `legacy`: the project-relative form `init` writes, pointing at a file
  *                          this version does not install — what an older `init` left behind
  *                          (1.x: `research-paper-pipeline/bin/rpp.mjs`; 2.0.0: `paperlint/bin/rpp.mjs`)
- *   `npx paperlint hook <name>`, `node_modules/.bin/paperlint hook <name>` (or the old bin names),
+ *   `npx paperlint hook <name>`, `node_modules/.bin/paperlint hook <name>` (or under the old package name),
  *   an absolute path into the package's `bin/`
  *                          another spelling
  *   `vigiles … run-program <…>/node_modules/<pkg>/hooks/<name>.hook.mjs`
@@ -114,7 +114,7 @@ function parseRun(command: string): Run | null {
     );
     const inside = at === -1 ? [] : parts.slice(at + 2);
     const inBin = inside[0] === "bin" && inside.length === 2;
-    const isBin = inBin || ["rpp", ...PKG_DIRS].includes(basename(t));
+    const isBin = inBin || PKG_DIRS.includes(basename(t));
     const name = tokens[i + 2];
     if (isBin && tokens[i + 1] === "hook" && name)
       return {

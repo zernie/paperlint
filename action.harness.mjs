@@ -25,7 +25,7 @@ import * as yaml from "js-yaml";
 import { guard } from "./scripts/eslint-report-guard.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const TMP = realpathSync(mkdtempSync(join(tmpdir(), "rpp-action-")));
+const TMP = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-action-")));
 const action = yaml.load(readFileSync(join(HERE, "action.yml"), "utf8"));
 
 // ── I. SHAPE, read as nodes ───────────────────────────────────────────────────────────────────
@@ -93,7 +93,7 @@ assert.match(
 // So: execute the REAL `run:` block under the REAL flags, with a stub standing in for `npx`, and
 // require that the guard was reached and that ESLint's code came through it.
 const stubbedStepRun = (stubRc) => {
-  const bin = realpathSync(mkdtempSync(join(tmpdir(), "rpp-bin-")));
+  const bin = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-bin-")));
   writeFileSync(
     join(bin, "npx"),
     // Stub prints the report TO STDOUT, not to a file by the `-o` flag: the step no longer passes

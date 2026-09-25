@@ -236,7 +236,7 @@ const CASES = [
 
 // Preflight: a misspelled skill or a changed namespace makes every `fired` predicate permanently
 // false, and the run then reports a wall of confident 0.00s as though the descriptions were dead.
-// Through `installedSkills`, which follows the links `paperlint init` makes (rpp#62).
+// Through `installedSkills`, which follows the links `paperlint init` makes (paperlint#62).
 const installed = new Set(installedSkills(SKILLS_DIR));
 for (const c of CASES) {
   if (!installed.has(c.skill))

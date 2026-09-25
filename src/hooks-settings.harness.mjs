@@ -65,7 +65,7 @@ check(
   wiring.names.join() ===
     "paper-edit-guard,paper-skills-nudge,paper-status-gates",
 );
-const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-hooks-")));
+const work = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-hooks-")));
 try {
   const empty = join(work, "empty-hooks.json");
   writeFileSync(empty, '{"hooks":{}}');

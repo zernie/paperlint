@@ -53,7 +53,7 @@ const facts = (o) => ({
   ...o,
 });
 const ROWS = [
-  // Guards: the order — rpp's own verified cache first, so a build does not depend on whatever TeX
+  // Guards: the order — paperlint's own verified cache first, so a build does not depend on whatever TeX
   // Live the machine happens to carry.
   [
     "a complete cache wins, even over a complete system TeX",
@@ -198,7 +198,9 @@ check(
 // to start, while `paperlint toolchain --check` reported the tree verified. Checked on disk, not
 // through an injected predicate, because the predicate is exactly what was wrong.
 {
-  const bin = realpathSync(mkdtempSync(join(tmpdir(), "rpp-engine-bin-")));
+  const bin = realpathSync(
+    mkdtempSync(join(tmpdir(), "paperlint-engine-bin-")),
+  );
   try {
     mkdirSync(join(bin, "texcount"));
     writeFileSync(join(bin, "checkcites"), "#!/bin/sh\n");

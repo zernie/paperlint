@@ -123,7 +123,7 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       package the venue declares; on a terminal it offers to install
                                       one, without a terminal it stops and names \`npx paperlint toolchain\`
   npx paperlint toolchain [--check]   install TeX Live with every package the venue profiles declare
-                                      into ~/.cache/rpp/texlive (RPP_TEXLIVE_DIR overrides); a second
+                                      into ~/.cache/paperlint/texlive (PAPERLINT_TEXLIVE_DIR overrides); a second
                                       run does nothing. --check: report what is missing, change nothing
   npx paperlint doctor                say what is actually wired — and what only LOOKS wired
   npx paperlint hook <name>           run an editor hook (.claude/settings.json calls this)
@@ -164,7 +164,7 @@ another file of the same shape. \`papersDir\` is required; the rest is optional:
                  "rules": { "pdf/last-page-balance": "error" } } ]
   }
 
-  "rules" takes ESLint flat-config blocks (files, ignores, rules), appended after rpp's own, with
+  "rules" takes ESLint flat-config blocks (files, ignores, rules), appended after paperlint's own, with
   files relative to the file holding the settings. Optional rules (off unless turned on there):
   pdf/last-page-balance. An unknown key, anywhere in the settings, is an error.
 `;
@@ -272,8 +272,8 @@ export function buildConfig(
 }
 
 /**
- * The rule ids a consumer may name in `rules`: every rule rpp's own config defines, read off that
- * config rather than listed again. `@eslint/markdown` is a dependency's plugin, not rpp's.
+ * The rule ids a consumer may name in `rules`: every rule paperlint's own config defines, read off that
+ * config rather than listed again. `@eslint/markdown` is a dependency's plugin, not paperlint's.
  */
 export const SHIPPED_RULES: ReadonlySet<string> = shippedRuleIds(
   buildConfig({}, { sentinel: "tex language" }),
@@ -288,7 +288,7 @@ const isOn = (entry: unknown): boolean => {
 
 /**
  * Rules paperlint ships and turns on for no file itself — the ones a consumer opts into with `rules`.
- * Derived: every shipped rule that no block of rpp's own config names.
+ * Derived: every shipped rule that no block of paperlint's own config names.
  */
 export const OPTIONAL_RULES: ReadonlySet<string> = new Set(
   [...SHIPPED_RULES].filter(
@@ -657,7 +657,7 @@ export function runHook(
       throw new Error(`resolved vigiles, but no cli.js beside it: ${runtime}`);
   } catch {
     err(
-      `rpp: the hook runtime (vigiles) is not resolvable from ${fileURLToPath(new URL(".", import.meta.url))}.\n` +
+      `paperlint: the hook runtime (vigiles) is not resolvable from ${fileURLToPath(new URL(".", import.meta.url))}.\n` +
         `The \`${name}\` hook is NOT running. Everything else — \`paperlint lint\`, CI — is unaffected.\n` +
         `Reinstall this package so its dependencies are present.`,
     );
@@ -1134,7 +1134,7 @@ async function reportLint(
 
 // 🔴 `isMain`, NOT A STRING COMPARISON. The first version wrote
 //     if (import.meta.url === `file://${process.argv[1]}`)
-// and the utility, launched via `node_modules/.bin/rpp`, SILENTLY EXITED WITH ZERO: npm puts a
+// and the utility, launched via `node_modules/.bin/paperlint`, SILENTLY EXITED WITH ZERO: npm puts a
 // SYMLINK there, `process.argv[1]` stays the symlink's path while `import.meta.url` is the real
 // path, and the condition is false. That is, the only way a real consumer launches the utility did
 // not work at all — and it looked like a clean run.

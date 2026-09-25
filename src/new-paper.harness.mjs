@@ -52,7 +52,7 @@ const check = (label, cond) => {
   assert.ok(cond, label);
 };
 
-const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-new-")));
+const work = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-new-")));
 const read = (...p) => readFileSync(join(...p), "utf8");
 const front = (text) => load(frontmatterBlock(text) ?? "") ?? {};
 

@@ -19,8 +19,8 @@ const sh = (script: string, timeoutMs = 10_000): Command => ({
 test("a program that is not there is `not-found`, and names the program", () => {
   // Guards: ENOENT is the executable itself — "perl is missing" rather than "banal failed".
   assert.deepEqual(
-    run.run({ ...sh(""), file: "rpp-no-such-program-xyz", args: [] }),
-    { kind: "not-found", file: "rpp-no-such-program-xyz" },
+    run.run({ ...sh(""), file: "paperlint-no-such-program-xyz", args: [] }),
+    { kind: "not-found", file: "paperlint-no-such-program-xyz" },
   );
 });
 

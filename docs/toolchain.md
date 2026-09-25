@@ -36,12 +36,12 @@ The command has two halves, TeX Live and banal (below). Both always run, so one 
 hide the other, and the exit code is 0 only when both are ready.
 
 It downloads `install-tl` from a CTAN mirror (four in turn; each download has its own time limit,
-TLS is always verified), installs `scheme-basic` into `~/.cache/rpp/texlive/<TeX Live year>`
-(`$XDG_CACHE_HOME/rpp/texlive` when that is set, `$RPP_TEXLIVE_DIR` over both), and `tlmgr install`s
+TLS is always verified), installs `scheme-basic` into `~/.cache/paperlint/texlive/<TeX Live year>`
+(`$XDG_CACHE_HOME/paperlint/texlive` when that is set, `$PAPERLINT_TEXLIVE_DIR` over both), and `tlmgr install`s
 every package the venue profiles declare. Then it checks the RESULT: `kpsewhich` must find every
 file each profile names, and each declared tool must be an executable in the bin directory. A gap
 fails the command and names the package and its file. Linux and macOS; on Windows it refuses, and
-`paperlint build` uses a TeX Live on PATH that has the packages. `RPP_CTAN_MIRROR` names one mirror
+`paperlint build` uses a TeX Live on PATH that has the packages. `PAPERLINT_CTAN_MIRROR` names one mirror
 (a `…/systems/texlive/tlnet` URL) to use instead of the list.
 
 Measured 2026-09-24 from an empty directory: **3 min 04 s, 269 MB** (du: 298 MB), TeX Live 2026, 47
@@ -109,8 +109,8 @@ therefore does not contain banal. `paperlint toolchain` downloads it from HotCRP
 | version | banal 1.2                                                                                            |
 | sha256  | `fd8cc4ae189b9da02460ae442a34f14434e5784210489fb668313ac671006911`                                   |
 
-It refuses a file with any other sha256, stores it in `~/.cache/rpp/banal/<commit>/banal`
-(`$XDG_CACHE_HOME/rpp/banal` when set, `$RPP_BANAL_DIR` over both), and accepts it only after banal
+It refuses a file with any other sha256, stores it in `~/.cache/paperlint/banal/<commit>/banal`
+(`$XDG_CACHE_HOME/paperlint/banal` when set, `$PAPERLINT_BANAL_DIR` over both), and accepts it only after banal
 has run on a one-page probe and measured it. paperlint then runs it as a separate program — `perl banal
 -no-time -json <file>.xml` — and reads its JSON output. Nothing of banal is copied, linked or
 translated into this package.

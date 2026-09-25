@@ -5,7 +5,7 @@
  *
  * The rule is read from the file's IMPORTS, parsed with the TypeScript compiler — not from its
  * folder and not from a text search: a comment or a string that mentions `runHook` is not an import,
- * and `src/cli.harness.mjs` calls a function of rpp's own that happens to be called `runHook`.
+ * and `src/cli.harness.mjs` calls a function of paperlint's own that happens to be called `runHook`.
  *
  * Harnesses that predate the rule and import none of the three are frozen in
  * `harness-api.frozen.json` (issue #77). That list only shrinks: an entry that now imports the API,
@@ -156,7 +156,7 @@ test("an import is what counts — not a mention, not a same-named local functio
   const mention =
     '// runHook\nconst s = "runHarnessTest";\nimport { x } from "vigiles";\n';
   assert.equal(importsAgentApi("a.harness.mjs", mention), false);
-  // Guards: rpp's own `runHook` (src/cli.ts) is not vigiles'.
+  // Guards: paperlint's own `runHook` (src/cli.ts) is not vigiles'.
   assert.equal(
     importsAgentApi(
       "b.harness.mjs",

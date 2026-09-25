@@ -44,7 +44,7 @@ That list was replaced on 2026-08-03; nothing about the toolchain below changed.
 ## Toolchain (one command, not a checklist)
 - **Compiler:** TeX Live, installed by paperlint with exactly the packages the venue profiles declare:
   \`\`\`
-  npx paperlint toolchain            # into ~/.cache/rpp/texlive (RPP_TEXLIVE_DIR overrides); idempotent
+  npx paperlint toolchain            # into ~/.cache/paperlint/texlive (PAPERLINT_TEXLIVE_DIR overrides); idempotent
   npx paperlint toolchain --check    # report what is missing, change nothing
   \`\`\`
   Measured 2026-09-24: 3 min from an empty directory, 269 MB, TeX Live 2026, 47 packages verified
@@ -56,7 +56,7 @@ That list was replaced on 2026-08-03; nothing about the toolchain below changed.
   package gets it there — never in a script, never here. A TeX Live without \`libertine\` builds an
   acmart paper GREEN in Computer Modern; that is why the files are checked, not the exit code.
 - **Reading the PDF** needs nothing installed: \`paperlint build\` and \`extract-pdf-facts.mjs\` use pdf.js,
-  which comes with rpp. Page size, columns and font sizes come from banal (HotCRP's page-geometry
+  which comes with paperlint. Page size, columns and font sizes come from banal (HotCRP's page-geometry
   script), which \`npx paperlint toolchain\` installs and which runs on pdf.js output — it needs \`perl\`,
   and no poppler. Without banal those facts are \`null\` and the build says so.
 - **Renderer:** \`pip install --quiet pymupdf\` (system rasterizers and ghostscript are often missing or

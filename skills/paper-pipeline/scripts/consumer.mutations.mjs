@@ -117,7 +117,7 @@ const MUTATIONS = [
     "the boundary between the pipeline's scripts and a directory merely named like them",
   ],
 
-  // ── `installedSkills` (rpp#62). Its defects fail toward a WRONG ROSTER, not an error: a reader
+  // ── `installedSkills` (paperlint#62). Its defects fail toward a WRONG ROSTER, not an error: a reader
   // that does not follow links sees zero skills in every consumer; one that skips a dangling link
   // reports a broken install as "not installed"; one that counts it hands out an unreadable skill.
   [

@@ -13,14 +13,14 @@
  *   2. a SECOND run exits 0, says "nothing to do", and touches nothing (it finishes in seconds);
  *   3. `paperlint toolchain --check` exits 0;
  *   4. `paperlint build` of the acmart fixture with PATH holding node ONLY — no system TeX Live can
- *      stand in, and no PDF tool either — names rpp's cache as the engine, and the PDF carries
- *      Libertine and Biolinum and not one Computer Modern face (read with rpp's own pdf.js reader).
+ *      stand in, and no PDF tool either — names paperlint's cache as the engine, and the PDF carries
+ *      Libertine and Biolinum and not one Computer Modern face (read with paperlint's own pdf.js reader).
  *
- * It needs `RPP_TEXLIVE_DIR`: installing ~270 MB into a developer's home as a side effect of
+ * It needs `PAPERLINT_TEXLIVE_DIR`: installing ~270 MB into a developer's home as a side effect of
  * `npm run check` would be exactly the unasked install rule 11 forbids. Without it the run is a
  * declared skip (77); under --strict (CI) a failure.
  *
- *   RPP_TEXLIVE_DIR=/some/dir node test/e2e/toolchain.mjs [--strict]
+ *   PAPERLINT_TEXLIVE_DIR=/some/dir node test/e2e/toolchain.mjs [--strict]
  */
 import { spawnSync } from "node:child_process";
 import {
@@ -48,10 +48,10 @@ const { hostDirs } = await import(
 );
 const CLI = join(ROOT, "bin", "paperlint.mjs");
 const strict = process.argv.includes("--strict");
-const dir = process.env.RPP_TEXLIVE_DIR;
+const dir = process.env.PAPERLINT_TEXLIVE_DIR;
 
 if (!dir) {
-  const say = `toolchain-e2e: skipped — RPP_TEXLIVE_DIR is not set.`;
+  const say = `toolchain-e2e: skipped — PAPERLINT_TEXLIVE_DIR is not set.`;
   if (!strict) {
     console.log(
       `${say}\nIt installs real TeX Live (~270 MB) and only into a directory you name.`,
@@ -115,13 +115,15 @@ check(
 );
 
 console.log("\npaperlint build with ONLY paperlint's TeX Live reachable");
-const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-toolchain-e2e-")));
+const work = realpathSync(
+  mkdtempSync(join(tmpdir(), "paperlint-toolchain-e2e-")),
+);
 try {
   const bin = join(work, "bin");
   mkdirSync(bin);
   symlinkSync(process.execPath, join(bin, "node"));
   // perl, because the build's measure step runs banal — perl is not TeX, so the check below that
-  // only rpp's TeX Live was reachable still means what it says.
+  // only paperlint's TeX Live was reachable still means what it says.
   const perl = spawnSync("perl", ["-e", "print $^X"], {
     encoding: "utf8",
   }).stdout;
@@ -142,7 +144,7 @@ try {
     }),
   );
   // 🔴 banal is where `paperlint toolchain` above installed it — HOME is a temp dir here, so without
-  // $RPP_BANAL_DIR the build looked in the wrong cache and wrote the facts with no geometry, while
+  // $PAPERLINT_BANAL_DIR the build looked in the wrong cache and wrote the facts with no geometry, while
   // this script still reported everything matched.
   const banalDir = parseBanalSettings(process.env, hostDirs()).cacheDir;
   const built = paperlint(["build", join("papers", "acmart")], {
@@ -151,13 +153,13 @@ try {
       HOME: work,
       PATH: bin,
       CI: "1",
-      RPP_TEXLIVE_DIR: dir,
-      RPP_BANAL_DIR: banalDir,
+      PAPERLINT_TEXLIVE_DIR: dir,
+      PAPERLINT_BANAL_DIR: banalDir,
     },
   });
   check("exit 0", built.status === 0, built.out);
   check(
-    "the engine is rpp's cache — nothing else was on PATH",
+    "the engine is paperlint's cache — nothing else was on PATH",
     built.out.includes("engine: TeX Live") &&
       built.out.includes("paperlint cache"),
     built.out,

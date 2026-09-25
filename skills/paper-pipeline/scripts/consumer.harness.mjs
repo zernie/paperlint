@@ -478,7 +478,7 @@ assert.equal(
   );
 }
 
-// ── XI. WHICH SKILLS ARE INSTALLED — a link counts, a dangling link is REFUSED (rpp#62) ────────
+// ── XI. WHICH SKILLS ARE INSTALLED — a link counts, a dangling link is REFUSED (paperlint#62) ────────
 // `paperlint init` installs every skill as a SYMLINK `.claude/skills/<name> -> …/skills/<name>`. A
 // `Dirent` from `readdirSync(…, { withFileTypes: true })` describes the entry ITSELF and does not
 // follow links, so `e.isDirectory()` is false for every one of them: the eval preflights that
@@ -512,7 +512,7 @@ assert.equal(
   const names = installedSkills(home);
   assert.ok(
     names.includes("linked"),
-    "a SYMLINKED skill was not counted as installed. This is rpp#62: `paperlint init` installs every " +
+    "a SYMLINKED skill was not counted as installed. This is paperlint#62: `paperlint init` installs every " +
       "skill as a link, so a reader that does not follow links sees none of them in any consumer.",
   );
   assert.deepEqual(

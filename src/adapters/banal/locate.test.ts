@@ -8,7 +8,7 @@ import { parseBanalSettings } from "./settings.ts";
 
 const dirs = { home: "/h", tmp: "/t", cwd: "/w" };
 const project = "/p" as AbsolutePath;
-const cache = `/h/.cache/rpp/banal/${BANAL_PIN.commit.slice(0, 12)}/banal`;
+const cache = `/h/.cache/paperlint/banal/${BANAL_PIN.commit.slice(0, 12)}/banal`;
 const on =
   (...files: string[]) =>
   (p: string) =>
@@ -22,11 +22,11 @@ test("installedBanal: one directory per HotCRP commit", () => {
   assert.equal(installedBanal(parseBanalSettings({}, dirs)), cache);
 });
 
-test("rpp's own copy when nothing else is named", () => {
+test("paperlint's own copy when nothing else is named", () => {
   assert.equal(kind(pick({}, on(cache))), "cache");
 });
 
-test("a project's vendor/banal before rpp's copy", () => {
+test("a project's vendor/banal before paperlint's copy", () => {
   // Guards: a project that vendors banal keeps using its own copy.
   assert.equal(kind(pick({}, on(cache, "/p/vendor/banal"))), "vendor");
 });
@@ -44,7 +44,7 @@ test("🔴 $BANAL naming a missing file finds NOTHING — no fallback to another
   );
 });
 
-test("nothing anywhere: not installed, naming where rpp's copy would be", () => {
+test("nothing anywhere: not installed, naming where paperlint's copy would be", () => {
   assert.deepEqual(
     pick({}, on()),
     err({ kind: "not-installed", installed: cache }),

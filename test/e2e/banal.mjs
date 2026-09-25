@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * test/e2e/banal.mjs — the REAL banal, installed by `paperlint toolchain`, measuring the committed PDF
- * fixtures through rpp's own path: pdf.js → pdftohtml-style XML → `perl banal`. No poppler.
+ * fixtures through paperlint's own path: pdf.js → pdftohtml-style XML → `perl banal`. No poppler.
  *
  * 🔴 THE EXPECTED NUMBERS ARE NOT OURS. Each one is what the same banal (1.2, HotCRP f3e4352)
  * printed when it read the same PDF the way HotCRP does, through poppler's `pdftohtml` 24.02.0 —
@@ -149,7 +149,7 @@ const check = (label, cond, detail = "") => {
   if (!cond) bad++;
 };
 
-const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-banal-e2e-")));
+const work = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-banal-e2e-")));
 try {
   // A PATH holding perl ONLY: whatever answers banal's `pdftohtml -v`, it is not poppler.
   const bin = join(work, "bin");
@@ -190,7 +190,7 @@ try {
     }
     layouts[name] = r.facts.layout;
     const got = measure(r.facts.layout);
-    // Guards: the whole option-1 claim — the real banal on rpp's XML gives HotCRP's numbers.
+    // Guards: the whole option-1 claim — the real banal on paperlint's XML gives HotCRP's numbers.
     check(name, isDeepStrictEqual(got, want), JSON.stringify(got));
   }
 

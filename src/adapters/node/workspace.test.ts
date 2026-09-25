@@ -19,12 +19,12 @@ import { join } from "node:path";
 import { afterAll as after, test } from "vitest";
 import { tmpWorkspace } from "./workspace.io.ts";
 
-const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-ws-test-")));
+const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-ws-test-")));
 after(() => rmSync(root, { recursive: true, force: true }));
 
 test("the directory exists inside the scope and is gone after it", () => {
   const ws = tmpWorkspace(root);
-  const dir = ws.within("rpp-banal-", (s) => {
+  const dir = ws.within("paperlint-banal-", (s) => {
     assert.ok(existsSync(s.dir));
     return s.dir;
   });
@@ -35,7 +35,7 @@ test("the directory exists inside the scope and is gone after it", () => {
 test("the directory is gone after a throw too", () => {
   let seen = "";
   assert.throws(() =>
-    tmpWorkspace(root).within("rpp-banal-", (s) => {
+    tmpWorkspace(root).within("paperlint-banal-", (s) => {
       seen = s.dir;
       throw new Error("boom");
     }),
@@ -46,7 +46,7 @@ test("the directory is gone after a throw too", () => {
 test("🔴 write: the file lands in the scope's directory, and `exec` makes it runnable — from a path with a space and a quote", () => {
   const awkward = join(root, "it's a dir");
   mkdirSync(awkward);
-  tmpWorkspace(awkward).within("rpp-ws-", (s) => {
+  tmpWorkspace(awkward).within("paperlint-ws-", (s) => {
     const plain = s.write("data.txt", "hello", "read");
     assert.equal(readFileSync(plain, "utf8"), "hello");
     const script = s.write("run", "#!/bin/sh\necho ran\n", "exec");

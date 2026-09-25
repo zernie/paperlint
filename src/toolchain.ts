@@ -1,6 +1,6 @@
 /**
  * `paperlint toolchain` — install upstream TeX Live, with exactly the packages the venue profiles
- * declare, into rpp's own cache, and banal (the page-geometry script HotCRP runs) at its pinned
+ * declare, into paperlint's own cache, and banal (the page-geometry script HotCRP runs) at its pinned
  * commit (`adapters/banal/`). `paperlint build` offers the TeX Live install on a terminal.
  *
  * 🔴 WHY paperlint INSTALLS TeX AT ALL (rule 11). "Install TeX Live yourself" was a manual step with a
@@ -19,8 +19,8 @@
  *      once reported success having installed nothing: installers' exit codes are not evidence.)
  * A second run with everything present does nothing and says so; `--check` only reports.
  *
- * Where: `$RPP_TEXLIVE_DIR` when set (CI points its cache there), else
- * `$XDG_CACHE_HOME/rpp/texlive`, else `~/.cache/rpp/texlive` — one tree per TeX Live year inside.
+ * Where: `$PAPERLINT_TEXLIVE_DIR` when set (CI points its cache there), else
+ * `$XDG_CACHE_HOME/paperlint/texlive`, else `~/.cache/paperlint/texlive` — one tree per TeX Live year inside.
  * Processes run through the injected `run` (the port `build.ts` uses), so the harness drives the
  * real download/unpack/verify logic against a fake mirror on disk, never the network.
  */
@@ -56,8 +56,8 @@ import {
   type TexRequirements,
 } from "./tex-requirements.ts";
 
-export const CACHE_ENV = "RPP_TEXLIVE_DIR";
-export const MIRROR_ENV = "RPP_CTAN_MIRROR";
+export const CACHE_ENV = "PAPERLINT_TEXLIVE_DIR";
+export const MIRROR_ENV = "PAPERLINT_CTAN_MIRROR";
 
 /**
  * The CTAN mirrors, redirector first. 🔴 SEVERAL, AND THAT IS A MEASUREMENT: run 33650803245 died
@@ -99,7 +99,11 @@ export function cacheRoot(
   home: string = homedir(),
 ): string {
   if (env[CACHE_ENV]) return env[CACHE_ENV];
-  return join(env["XDG_CACHE_HOME"] || join(home, ".cache"), "rpp", "texlive");
+  return join(
+    env["XDG_CACHE_HOME"] || join(home, ".cache"),
+    "paperlint",
+    "texlive",
+  );
 }
 
 /**
@@ -353,7 +357,9 @@ export function installBase(
   mirrors: readonly string[],
   newerThan: string | null = null,
 ): Step<{ tree: CachedTree; mirror: string }> {
-  const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-install-tl-")));
+  const work = realpathSync(
+    mkdtempSync(join(tmpdir(), "paperlint-install-tl-")),
+  );
   try {
     io.log(`  downloading install-tl…`);
     const mirror = downloadInstaller(
@@ -409,7 +415,7 @@ function runInstallTl(
 ): Step<{ tree: CachedTree; mirror: string }> {
   const dir = join(a.root, a.year);
   mkdirSync(dir, { recursive: true });
-  const profile = join(a.work, "rpp.profile");
+  const profile = join(a.work, "paperlint.profile");
   writeFileSync(profile, tlProfile(dir));
   io.log(
     `  install-tl: TeX Live ${a.year} scheme-basic from ${a.mirror} (~150 MB, about a minute)…`,

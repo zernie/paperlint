@@ -4,22 +4,28 @@ import { parseBanalSettings } from "./settings.ts";
 
 const dirs = { home: "/h", tmp: "/t", cwd: "/w" };
 
-test("cacheDir: $RPP_BANAL_DIR, else $XDG_CACHE_HOME/rpp/banal, else ~/.cache/rpp/banal", () => {
+test("cacheDir: $PAPERLINT_BANAL_DIR, else $XDG_CACHE_HOME/paperlint/banal, else ~/.cache/paperlint/banal", () => {
   assert.equal(
-    parseBanalSettings({ RPP_BANAL_DIR: "/x" }, dirs).cacheDir,
+    parseBanalSettings({ PAPERLINT_BANAL_DIR: "/x" }, dirs).cacheDir,
     "/x",
   );
   assert.equal(
     parseBanalSettings({ XDG_CACHE_HOME: "/c" }, dirs).cacheDir,
-    "/c/rpp/banal",
+    "/c/paperlint/banal",
   );
-  assert.equal(parseBanalSettings({}, dirs).cacheDir, "/h/.cache/rpp/banal");
+  assert.equal(
+    parseBanalSettings({}, dirs).cacheDir,
+    "/h/.cache/paperlint/banal",
+  );
 });
 
 test("an empty variable is unset, and a relative one is relative to the cwd the root read", () => {
-  const s = parseBanalSettings({ BANAL: "b/banal", RPP_BANAL_DIR: "" }, dirs);
+  const s = parseBanalSettings(
+    { BANAL: "b/banal", PAPERLINT_BANAL_DIR: "" },
+    dirs,
+  );
   assert.equal(s.explicit, "/w/b/banal");
-  assert.equal(s.cacheDir, "/h/.cache/rpp/banal");
+  assert.equal(s.cacheDir, "/h/.cache/paperlint/banal");
   assert.equal(parseBanalSettings({}, dirs).explicit, null);
 });
 

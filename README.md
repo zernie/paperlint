@@ -27,7 +27,7 @@ your project's `node_modules`, so run without the install it has nothing to link
 first paper, and sets up the optional Claude Code skills and hooks. It installs no software. It
 asks questions only when you run it in a terminal; an agent, CI or `--yes` gets the defaults, and
 each default it takes is printed. It ends by running `paperlint doctor`, which checks the setup.
-Exactly what it writes: [`docs/install.md`](docs/install.md#what-rpp-init-writes).
+Exactly what it writes: [`docs/install.md`](docs/install.md#what-paperlint-init-writes).
 
 ## What you get
 

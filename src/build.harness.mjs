@@ -50,10 +50,10 @@ const check = (label, cond) => {
   n++;
 };
 
-const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-build-")));
+const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-build-")));
 // 🔴 banal is looked for under the temp root, never in the developer's cache: with the real
-// `~/.cache/rpp/banal` present, the measure step would run the real banal on the fake reader's pages.
-const ENV = { RPP_BANAL_DIR: join(root, "no-banal") };
+// `~/.cache/paperlint/banal` present, the measure step would run the real banal on the fake reader's pages.
+const ENV = { PAPERLINT_BANAL_DIR: join(root, "no-banal") };
 const paper = (name, files) => {
   const dir = join(root, "papers", name);
   mkdirSync(dir, { recursive: true });
@@ -168,10 +168,10 @@ try {
       IGNORED_SCRIPTS.includes("repro/build-submission.sh"),
   );
 
-  // ── inputs: rpp's own venues directory, no configuration ───────────────────────────────
+  // ── inputs: paperlint's own venues directory, no configuration ───────────────────────────────
   const venues = packageVenuesDir();
   check(
-    "the venues directory is rpp's own and holds paper-guards.tex",
+    "the venues directory is paperlint's own and holds paper-guards.tex",
     existsSync(join(venues, "paper-guards.tex")),
   );
   check(
@@ -261,7 +261,7 @@ try {
     tex.calls.every((c) => c.cwd === clean),
   );
   check(
-    "🔴 pdflatex got rpp's venues directory on TEXINPUTS, trailing separator kept",
+    "🔴 pdflatex got paperlint's venues directory on TEXINPUTS, trailing separator kept",
     tex.calls.every((c) => c.texinputs === `${venues}${delimiter}`),
   );
 

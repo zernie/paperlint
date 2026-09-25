@@ -140,7 +140,7 @@ export const GATES = [
     run: locked("node", "test/e2e/banal.mjs"),
   },
   {
-    name: "toolchain e2e — real TeX Live into $RPP_TEXLIVE_DIR, then a build with only it on PATH",
+    name: "toolchain e2e — real TeX Live into $PAPERLINT_TEXLIVE_DIR, then a build with only it on PATH",
     job: "build-e2e",
     run: locked("node", "test/e2e/toolchain.mjs"),
   },

@@ -240,7 +240,7 @@ function contentDelivery(installed) {
       const candidates = [
         // skill-relative: `scripts/x.mjs`, `../other/scripts/x.mjs`
         join(skills, name, raw),
-        // the install-path spelling the port rule exists to retire (rpp#19); counted as resolvable
+        // the install-path spelling the port rule exists to retire (paperlint#19); counted as resolvable
         // only if the file is genuinely there under the declared skills directory
         join(skills, raw.replace(/^\.claude\/skills\//, "")),
       ];
@@ -308,7 +308,7 @@ let skippedManagers = [];
 // realpathSync is NOT decoration: on macOS `/var` is a symlink to `/private/var`, and a path
 // recorded before resolution does not match what a process returns from inside. This is a
 // separate class, and it has already cost a red npm test on macOS only (vigiles#241).
-const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-e2e-")));
+const work = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-e2e-")));
 try {
   const packed = execFileSync(
     "npm",

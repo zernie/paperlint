@@ -7,7 +7,7 @@ import { afterAll as after, test } from "vitest";
 import type { AbsolutePath } from "../../domain/paths.ts";
 import { nodeFiles } from "./files.io.ts";
 
-const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-files-test-")));
+const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-files-test-")));
 after(() => rmSync(root, { recursive: true, force: true }));
 const at = (...p: string[]) => join(root, ...p) as AbsolutePath;
 

@@ -175,7 +175,7 @@ export function consumerSkillsDir(opts) {
  * sorted by name. The one answer to "which skills are here" — for the consumer's
  * `.claude/skills/`, for this package's own declared skills directory, and for a copy of either.
  *
- * 🔴 IT FOLLOWS SYMLINKS, AND THAT IS THE WHOLE POINT (rpp#62). `paperlint init` (`src/link-skills.ts`)
+ * 🔴 IT FOLLOWS SYMLINKS, AND THAT IS THE WHOLE POINT (paperlint#62). `paperlint init` (`src/link-skills.ts`)
  * installs every skill as a link `.claude/skills/<name> -> …/skills/<name>`. A `Dirent` from
  * `readdirSync(dir, { withFileTypes: true })` describes the entry itself, so `isDirectory()` is
  * false for every link: five eval preflights asked the question that way, saw zero skills in

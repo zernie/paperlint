@@ -260,12 +260,12 @@ jobs:
       # No `restore-keys`, deliberately: a partial restore would carry the old year's tree into the
       # new entry, and the old tree is never deleted, so the cache would grow by a whole TeX Live.
       - name: where TeX Live is cached
-        run: echo "RPP_TEXLIVE_DIR=$HOME/.cache/rpp-texlive" >> "$GITHUB_ENV"
+        run: echo "PAPERLINT_TEXLIVE_DIR=$HOME/.cache/paperlint-texlive" >> "$GITHUB_ENV"
 
       - name: TeX Live from cache
         uses: actions/cache@v6
         with:
-          path: ~/.cache/rpp-texlive
+          path: ~/.cache/paperlint-texlive
           key: texlive-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('skills/submit-paper/references/venues/*.jsonc') }}
 
       # The same command a user runs. On a cache hit it verifies and says "nothing to do"; on a miss

@@ -27,7 +27,7 @@ process.exit(
     runner: "node",
     cases: [
       {
-        // The definition lives in the port since rpp#62 (`installedSkills` in consumer.mjs), so
+        // The definition lives in the port since paperlint#62 (`installedSkills` in consumer.mjs), so
         // the defect is planted THERE and must still die in THIS harness — the evidence that the
         // linker reads it through the shared function rather than through a copy of its own.
         name: "any directory counts as a skill",

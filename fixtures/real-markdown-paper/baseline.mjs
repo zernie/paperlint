@@ -34,7 +34,7 @@ export function countByRule(stdout) {
  *              otherwise. Always a failure.
  *   vanished — a recorded rule went fully quiet without the recording being updated: how a check
  *              dies unnoticed. Also a failure.
- * A partial drop is neither: it is what a fix looks like (rpp#44 is expected to take typography
+ * A partial drop is neither: it is what a fix looks like (paperlint#44 is expected to take typography
  * to zero, and then the recording is updated in the same change).
  */
 export function compareToBaseline(found, recorded = recordedFindings()) {

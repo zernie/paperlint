@@ -112,7 +112,7 @@ const undefinedCs = [
   "Here is how much of TeX's memory you used:",
 ];
 const ex = errorExcerpt(undefinedCs);
-// Guards: the spelling rpp's own flags produce for most errors — with only the `!` form recognised,
+// Guards: the spelling paperlint's own flags produce for most errors — with only the `!` form recognised,
 // an undefined control sequence fails with no error line quoted.
 check(
   "-file-line-error form: the error line, the l.NNN line and the rest of the source line",

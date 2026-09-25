@@ -116,7 +116,7 @@ const named = (facts, name) =>
     JSON.stringify(r),
   );
 }
-const tmp = realpathSync(mkdtempSync(join(tmpdir(), "rpp-pdf-facts-")));
+const tmp = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-pdf-facts-")));
 try {
   const notPdf = join(tmp, "paper.pdf");
   writeFileSync(notPdf, "%PDF-stale\n");

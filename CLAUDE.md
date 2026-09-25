@@ -149,7 +149,7 @@ Rule 5 is about the tool you are replacing; this one is about the order of work.
 Four proposals were made and withdrawn in one session on 2026-09-17 for exactly this reason —
 [`docs/incidents.md`](docs/incidents.md).
 
-**10. Effects live in adapters, and WHERE rpp IS INSTALLED lives in ONE of them.** Rule 6 generalised: the caller's cwd is one case of it. Checking logic — lint rules,
+**10. Effects live in adapters, and WHERE paperlint IS INSTALLED lives in ONE of them.** Rule 6 generalised: the caller's cwd is one case of it. Checking logic — lint rules,
 skills, hooks — must not know its own location, nor its distance from anything else. Every
 answer to _where_ comes from `skills/paper-pipeline/scripts/consumer.mjs`, which adapts per
 channel: own checkout · `node_modules` · plugin cache · CI. A skill naming a script by an
@@ -166,10 +166,10 @@ outside `consumer.mjs` a finding. Prose will not hold this class — four silent
 _while_ comments explaining the hazard sat directly above the code
 ([`docs/incidents.md`](docs/incidents.md)).
 
-**11. Installing and using rpp must be as smooth as possible.** Count the actions between "I
+**11. Installing and using paperlint must be as smooth as possible.** Count the actions between "I
 want this" and "it works": every command to copy, flag to pass or file to edit is one more place
 to give up. The target is `npm i` plus one command. A per-paper script, a manual TeX install or a
-"now add this to your config" step is a defect in rpp, not a user task. The only exception is a
+"now add this to your config" step is a defect in paperlint, not a user task. The only exception is a
 choice that really belongs to the user (irreversible, paid, privacy), and then it is named at the
 moment it is asked. The converse holds too: an automatic step that can fail silently is worse
 than an explicit one — it works, or it says loudly that it did not. Measured example of the

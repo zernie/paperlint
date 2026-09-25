@@ -397,7 +397,7 @@ const irrelevantFor = (c) => {
 function assertSkillIdsExist() {
   if (!existsSync(SKILLS_DIR))
     throw new Error(`no skills dir at ${SKILLS_DIR}`);
-  // Through `installedSkills`, which follows the links `paperlint init` makes (rpp#62).
+  // Through `installedSkills`, which follows the links `paperlint init` makes (paperlint#62).
   const installed = new Set(installedSkills(SKILLS_DIR));
   const missing = CASES.map((c) => c.skill).filter((s) => !installed.has(s));
   if (missing.length)

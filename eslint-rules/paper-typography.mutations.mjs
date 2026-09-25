@@ -14,7 +14,7 @@
  * fixture exists, not that the count is correct.
  *
  * The bare-decimal count is the exception, because what it gets wrong is not the lexeme but the
- * INPUT: rpp#44 was a correct regex run over the wrong text. So two cases below change what it
+ * INPUT: paperlint#44 was a correct regex run over the wrong text. So two cases below change what it
  * reads — back to the raw source (the SILENT half must die), and with math dropped from the walk
  * (the CAUGHT half must die, since math is where p-values live).
  */

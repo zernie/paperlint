@@ -34,7 +34,7 @@ wide margin on both sides.
 ### What it reads
 
 The rule does not open the PDF to measure it. `paperlint build` measures every PDF it builds and writes
-the result to `<paper>/_build/paper.facts.json` ([`configuration.md`](configuration.md#how-rpp-build-compiles-a-paper)),
+the result to `<paper>/_build/paper.facts.json` ([`configuration.md`](configuration.md#how-paperlint-build-compiles-a-paper)),
 and the rule judges that file, reporting on the paper's `paper.tex` at the `\documentclass` line.
 So: **build, then lint.**
 
