@@ -33,7 +33,10 @@ import { fileURLToPath } from "node:url";
 import { join, dirname, resolve, relative, basename, sep } from "node:path";
 import markdown from "@eslint/markdown";
 // Types come from consumer.d.mts beside it, the same arrangement as lib/paper-config.d.mts.
-import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import {
+  isMain,
+  packageVenuesDir,
+} from "../skills/paper-pipeline/scripts/consumer.mjs";
 export { isMain };
 import type { Args, PaperlintConfig, ConfigRead } from "./types.ts";
 import {
@@ -53,7 +56,8 @@ import { prepareEngine } from "./build-engine.ts";
 import { runToolchain } from "./toolchain.ts";
 import { banalInstaller, parseBanalSettings } from "./adapters/banal/index.ts";
 import { curlDownload } from "./adapters/curl/index.ts";
-import { hostDirs, nodeAdapters } from "./adapters/node/index.ts";
+import { hostDirs, nodeAdapters, nodeFiles } from "./adapters/node/index.ts";
+import { VENUE_RULE_LEVELS, venueRules } from "./venue-rules.ts";
 import type { ToolInstaller } from "./ports/tool-installer.ts";
 import {
   mergeRequirements,
@@ -166,7 +170,9 @@ another file of the same shape. \`papersDir\` is required; the rest is optional:
 
   "rules" takes ESLint flat-config blocks (files, ignores, rules), appended after paperlint's own, with
   files relative to the file holding the settings. Optional rules (off unless turned on there):
-  pdf/last-page-balance. An unknown key, anywhere in the settings, is an error.
+  pdf/last-page-balance. The venue rules (pdf/fresh, pdf/profile, pdf/fonts, pdf/geometry,
+  pdf/limits, pdf/body-size, pdf/measured) are on for every paper whose venue.json names a venue;
+  set one to "off" there to skip it. An unknown key, anywhere in the settings, is an error.
 `;
 
 /** The config the user would otherwise write by hand. The data comes from `opts`, the mechanism is here. */
@@ -188,11 +194,21 @@ export function buildConfig(
     // default (only `node_modules/` and `.git/`), so without this block `paperlint lint` would lint the
     // template as a paper — and a richer template with placeholder stages would fail the run.
     { ignores: ["**/.template/"] },
-    // The `pdf` plugin is registered for EVERY file, and its rule is on for none. A consumer's
-    // block (`rules`, appended below) turns it on for a glob that also matches markdown files;
-    // with the plugin defined only beside `paper.tex`, ESLint would refuse those files with
-    // "could not find plugin". The rule itself acts on `paper.tex` only.
-    { plugins: { pdf: pdfRules } },
+    // The `pdf` plugin is registered for EVERY file. A consumer's block (`rules`, appended below)
+    // may name its rules for a glob that also matches markdown files; with the plugin defined only
+    // beside `paper.tex`, ESLint would refuse those files with "could not find plugin". Every rule
+    // in it acts on `paper.tex` only. `last-page-balance` is on for no file (optional); the venue
+    // rules are on for every `paper.tex`, in the block below.
+    {
+      plugins: {
+        pdf: {
+          rules: {
+            ...pdfRules.rules,
+            ...venueRules({ files: nodeFiles, venuesDir: packageVenuesDir() }),
+          },
+        },
+      },
+    },
     {
       files: ["**/PIPELINE-STATUS.md"],
       plugins: { markdown, paper: paperStages },
@@ -263,6 +279,8 @@ export function buildConfig(
         "paper/typography": typographyOpt,
         "tex/future-promise": "warn",
         "tex/acm-frontmatter-override": "error",
+        // Silent for a paper whose venue.json names no venue (src/venue-rules.ts).
+        ...VENUE_RULE_LEVELS,
       },
     });
   // The consumer's own blocks, LAST, so a later block wins — ESLint's rule. Parsed by

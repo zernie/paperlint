@@ -40,9 +40,10 @@ import { describeFailure, type PdfFacts, type PdfReader } from "./pdf-facts.ts";
 import {
   flatGeometry,
   type FactsGeometryFields,
+  type FlatGeometry,
   type Geometry,
 } from "./domain/geometry.ts";
-import { sha256Hex } from "./domain/sha256.ts";
+import { parseSha256, sha256Hex, type Sha256 } from "./domain/sha256.ts";
 import type { MeasureGeometry } from "./ports/measure-geometry.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
 import type { Files } from "./ports/files.ts";
@@ -77,6 +78,17 @@ export function parseVenueDecl(json: unknown): VenueDecl | null {
   const field = (k: string) => str((d as Record<string, unknown>)[k]);
   const venue = field("venue");
   return venue ? { venue, kind: field("kind"), pdf: field("pdf") } : null;
+}
+
+/** `venue.json`'s text → the declaration (null when it names no venue), or why it is not JSON. Pure. */
+export function parseVenueDeclText(
+  text: string,
+): Result<VenueDecl | null, string> {
+  try {
+    return ok(parseVenueDecl(JSON.parse(text)));
+  } catch (e) {
+    return err((e as Error).message);
+  }
 }
 
 /**
@@ -238,4 +250,121 @@ export function writeFactsFile(
     new TextEncoder().encode(`${JSON.stringify(facts, null, 2)}\n`),
   );
   return out;
+}
+
+// ── reading ─────────────────────────────────────────────────────────────────────────────
+
+/** What a rule judges, read back from the facts file and typed once. */
+export interface ReadFacts {
+  /** As the file spells it: relative to the paper directory, or absolute. */
+  readonly pdf: string;
+  readonly sha: Sha256;
+  readonly fonts: readonly FontEntry[];
+  /** The geometry columns, or null when no measurer ran (`geometry_source` is null). */
+  readonly geometry: FlatGeometry | null;
+}
+
+/** Why a facts file cannot be judged. */
+export type FactsProblem =
+  | { readonly kind: "schema"; readonly got: string }
+  | { readonly kind: "broken"; readonly why: string };
+
+const isRecord = (v: unknown): v is Readonly<Record<string, unknown>> =>
+  typeof v === "object" && v !== null && !Array.isArray(v);
+const isNum = (v: unknown): v is number =>
+  typeof v === "number" && Number.isFinite(v);
+const numOrNull = (v: unknown): v is number | null => v === null || isNum(v);
+
+function fontOf(v: unknown): FontEntry | null {
+  if (!isRecord(v)) return null;
+  const { name, type, embedded, program } = v;
+  return typeof name === "string" &&
+    typeof type === "string" &&
+    typeof embedded === "boolean" &&
+    typeof program === "string"
+    ? { name, type, embedded, program }
+    : null;
+}
+
+const MAYBE_NUMBERS = [
+  "page_w_in",
+  "page_h_in",
+  "columns",
+  "body_pt",
+  "ref_pt",
+] as const;
+const NUMBERS = ["body_pages", "ref_pages", "appendix_pages"] as const;
+
+/** The geometry columns when a measurer ran; the shape error otherwise. */
+function geometryOf(
+  d: Readonly<Record<string, unknown>>,
+): Result<FlatGeometry | null, string> {
+  if (d["geometry_source"] === null) return ok(null);
+  if (typeof d["geometry_source"] !== "string")
+    return err("`geometry_source` is neither a measurer's name nor null");
+  const bad =
+    MAYBE_NUMBERS.find((k) => !numOrNull(d[k])) ??
+    NUMBERS.find((k) => !isNum(d[k]));
+  if (bad) return err(`\`${bad}\` is not a number`);
+  const pagesByType = d["pages_by_type"];
+  if (!isRecord(pagesByType) || !Object.values(pagesByType).every(isNum))
+    return err("`pages_by_type` is not an object of page counts");
+  const n = (k: (typeof MAYBE_NUMBERS)[number]) => d[k] as number | null;
+  return ok({
+    page_w_in: n("page_w_in"),
+    page_h_in: n("page_h_in"),
+    columns: n("columns"),
+    body_pt: n("body_pt"),
+    ref_pt: n("ref_pt"),
+    body_pages: d["body_pages"] as number,
+    ref_pages: d["ref_pages"] as number,
+    appendix_pages: d["appendix_pages"] as number,
+    pages_by_type: pagesByType as Readonly<Record<string, number>>,
+  });
+}
+
+/** The PDF the facts describe: its path and its sha256. */
+function artifactOf(
+  d: Readonly<Record<string, unknown>>,
+): Result<{ pdf: string; sha: Sha256 }, string> {
+  const pdf = d["pdf"];
+  if (typeof pdf !== "string" || pdf === "") return err("no `pdf` path");
+  try {
+    return ok({ pdf, sha: parseSha256(String(d["pdf_sha256"])) });
+  } catch {
+    return err("no `pdf_sha256` of 64 hex digits");
+  }
+}
+
+/**
+ * The facts file's text → what a rule judges, or why it cannot be judged. The one reader of the
+ * file in `src/`, beside its one writer: a field renamed here and not there is a compile error in
+ * this module, not a rule that silently reads `undefined`. Pure.
+ */
+export function parseFactsText(text: string): Result<ReadFacts, FactsProblem> {
+  let d: unknown;
+  try {
+    d = JSON.parse(text);
+  } catch (e) {
+    return err({ kind: "broken", why: `not JSON (${(e as Error).message})` });
+  }
+  if (!isRecord(d)) return err({ kind: "broken", why: "not a JSON object" });
+  if (d["schema"] !== FACTS_SCHEMA)
+    return err({ kind: "schema", got: JSON.stringify(d["schema"] ?? null) });
+  const artifact = artifactOf(d);
+  if (!artifact.ok) return err({ kind: "broken", why: artifact.error });
+  const rawFonts = d["fonts"];
+  const fonts = Array.isArray(rawFonts) ? rawFonts.map(fontOf) : null;
+  if (fonts === null || fonts.some((f) => f === null))
+    return err({
+      kind: "broken",
+      why: "`fonts` is not a list of { name, type, embedded, program }",
+    });
+  const geometry = geometryOf(d);
+  if (!geometry.ok) return err({ kind: "broken", why: geometry.error });
+  return ok({
+    ...artifact.value,
+    fonts: fonts as FontEntry[],
+    geometry: geometry.value,
+  });
 }

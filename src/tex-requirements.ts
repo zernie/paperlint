@@ -78,18 +78,93 @@ function violations(file: string, v: Validate): string[] {
   );
 }
 
+/** One kind of paper a venue takes (`short`, `research`, …) and its page limits; null = not limited. */
+export interface KindLimits {
+  readonly bodyPagesMax: number | null;
+  readonly refPagesMax: number | null;
+}
+
 /**
- * The text of one profile → its typed requirements, or an Error naming every problem.
+ * The format a venue's call for papers sets — what the `pdf/*` venue rules judge a built PDF
+ * against. Every field the profile leaves out is null, and a rule that finds null checks nothing:
+ * a profile that does not name a number never makes one up.
+ */
+export interface VenueFormat {
+  readonly pageWidthIn: number | null;
+  readonly pageHeightIn: number | null;
+  readonly columns: number | null;
+  readonly bodyPt: number | null;
+  readonly bodyPtTol: number | null;
+  readonly refPtMin: number | null;
+  readonly refPtMax: number | null;
+  /** The prefix a font name of the body text starts with (`LinLibertine`). */
+  readonly fontsText: string | null;
+  readonly fontsTitle: string | null;
+  readonly kinds: ReadonlyMap<string, KindLimits>;
+}
+
+/** A venue profile, parsed: what TeX Live must hold to build the paper, and the format it must meet. */
+export interface VenueProfile {
+  readonly tex: TexRequirements;
+  readonly format: VenueFormat;
+}
+
+/** The profile's JSON after the schema accepted it — the shape `venue-profile.schema.json` allows. */
+interface ProfileJson {
+  readonly tex: Partial<TexRequirements>;
+  readonly page_w_in?: number;
+  readonly page_h_in?: number;
+  readonly columns?: number;
+  readonly body_pt?: number;
+  readonly body_pt_tol?: number;
+  readonly ref_pt_min?: number;
+  readonly ref_pt_max?: number;
+  readonly fonts_text?: string;
+  readonly fonts_title?: string;
+  readonly kinds?: Readonly<
+    Record<string, { body_pages_max?: number; ref_pages_max?: number }>
+  >;
+}
+
+/** An optional profile field as the typed profile holds it: absent is null. */
+const orNull = <T>(v: T | undefined): T | null => (v === undefined ? null : v);
+
+function formatOf(j: ProfileJson): VenueFormat {
+  return {
+    pageWidthIn: orNull(j.page_w_in),
+    pageHeightIn: orNull(j.page_h_in),
+    columns: orNull(j.columns),
+    bodyPt: orNull(j.body_pt),
+    bodyPtTol: orNull(j.body_pt_tol),
+    refPtMin: orNull(j.ref_pt_min),
+    refPtMax: orNull(j.ref_pt_max),
+    fontsText: orNull(j.fonts_text),
+    fontsTitle: orNull(j.fonts_title),
+    kinds: new Map(
+      Object.entries(j.kinds ?? {}).map(([k, v]) => [
+        k,
+        {
+          bodyPagesMax: orNull(v.body_pages_max),
+          refPagesMax: orNull(v.ref_pages_max),
+        },
+      ]),
+    ),
+  };
+}
+
+/**
+ * The text of one profile → the whole typed profile, or an Error naming every problem. The ONE
+ * parser of a profile: the toolchain reads its `tex`, the venue rules its `format`.
  *
  * @param text  the file's contents
  * @param file  the name to put in messages
  * @param dir   the directory holding the schema (the shipped venues directory by default)
  */
-export function parseProfile(
+export function parseVenueProfile(
   text: string,
   file: string,
   dir: string = packageVenuesDir(),
-): TexRequirements {
+): VenueProfile {
   const { config, error } = typescript().parseConfigFileTextToJson(file, text);
   if (error)
     throw new Error(
@@ -100,8 +175,32 @@ export function parseProfile(
     throw new Error(
       `${file} does not match ${SCHEMA_FILE}:\n  ${violations(file, validate).join("\n  ")}`,
     );
-  const tex = (config as { tex: Partial<TexRequirements> }).tex;
-  return { packages: tex.packages ?? {}, tools: tex.tools ?? {} };
+  const j = config as ProfileJson;
+  return {
+    tex: { packages: j.tex.packages ?? {}, tools: j.tex.tools ?? {} },
+    format: formatOf(j),
+  };
+}
+
+/** The text of one profile → its typed TeX requirements, or an Error naming every problem. */
+export function parseProfile(
+  text: string,
+  file: string,
+  dir: string = packageVenuesDir(),
+): TexRequirements {
+  return parseVenueProfile(text, file, dir).tex;
+}
+
+/**
+ * The file a venue's profile lives in, or null when the name cannot be a venue (the base set is a
+ * profile file but not a venue). Whether the file exists is the caller's question.
+ */
+export function profileFileOf(venue: string): string | null {
+  return venue === BASE_PROFILE.slice(0, -PROFILE_EXT.length) ||
+    venue.includes("/") ||
+    venue.includes("\\")
+    ? null
+    : `${venue}${PROFILE_EXT}`;
 }
 
 function readProfile(dir: string, file: string): TexRequirements {
@@ -152,11 +251,8 @@ export function requirementsFor(
   const base = readProfile(dir, BASE_PROFILE);
   if (venue === null)
     return { source: "the base set (no venue.json)", tex: base };
-  const file = `${venue}${PROFILE_EXT}`;
-  if (
-    venue === BASE_PROFILE.slice(0, -PROFILE_EXT.length) ||
-    !existsSync(join(dir, file))
-  )
+  const file = profileFileOf(venue);
+  if (file === null || !existsSync(join(dir, file)))
     return {
       source: `the base set (venue ${venue} has no profile in paperlint)`,
       tex: base,
