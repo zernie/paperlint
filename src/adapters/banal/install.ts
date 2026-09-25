@@ -4,7 +4,7 @@
  */
 import { createHash } from "node:crypto";
 import type { Opaque } from "ts-essentials";
-import { err, ok, type Result } from "../result.ts";
+import { err, ok, type Result } from "../../domain/result.ts";
 import type { BanalSource, Sha256 } from "./pin.ts";
 
 export const sha256Hex = (bytes: Uint8Array): Sha256 =>

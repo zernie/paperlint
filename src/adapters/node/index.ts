@@ -1,5 +1,5 @@
 /** The real `Io`: what a composition root hands the app layer. */
-import type { Io } from "../../core/ports.ts";
+import type { Io } from "../../domain/ports.ts";
 import { curlDownload } from "./download.io.ts";
 import { nodeFiles } from "./files.io.ts";
 import { spawnProcess, type SpawnSync } from "./process.io.ts";

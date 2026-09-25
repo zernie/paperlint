@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import type { AbsolutePath } from "../ports.ts";
-import { err } from "../result.ts";
+import type { AbsolutePath } from "../../domain/ports.ts";
+import { err } from "../../domain/result.ts";
 import { installedBanal, lookupOrder, pickBanal } from "./locate.ts";
 import { BANAL_PIN } from "./pin.ts";
 import { parseBanalSettings } from "./settings.ts";

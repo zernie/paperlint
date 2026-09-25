@@ -124,12 +124,7 @@ export const layerBoundaries = (root) => ({
     "boundaries/root-path": root,
     "boundaries/elements": [
       { type: "port", pattern: "src/ports", partialMatch: false },
-      // `src/core` is the domain's old name, for the one commit before it is renamed.
-      {
-        type: "domain",
-        pattern: ["src/domain", "src/core"],
-        partialMatch: false,
-      },
+      { type: "domain", pattern: "src/domain", partialMatch: false },
       // One element PER ADAPTER FOLDER, so adapter → other adapter is a cross-element import.
       {
         type: "adapter",
@@ -191,12 +186,6 @@ export const layerBoundaries = (root) => ({
           {
             from: elements("domain", "port"),
             allow: modules(INSIDE_EXTERNALS),
-          },
-          // 🔴 ONE COMMIT ONLY: `src/core/banal/` is banal's adapter still filed under the domain's old
-          // name. The next commit moves it to `src/adapters/banal/` and deletes this policy.
-          {
-            from: { file: { path: "src/core/banal/*.ts" } },
-            allow: modules(["zod"]),
           },
           { from: APP, allow: modules(APP_EXTERNALS) },
           {

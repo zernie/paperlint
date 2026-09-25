@@ -15,24 +15,21 @@
  * ── WITHOUT POPPLER ──────────────────────────────────────────────────────────────
  * banal reads a PDF by running poppler's `pdftohtml -xml` — but it also accepts that XML directly:
  * `banal_open_input` (banal 1.2, line 1815) takes a file ending in `.xml` and opens it as is. rpp
- * writes that XML itself from pdf.js text (`core/banal/xml.ts`) and hands banal the `.xml` file,
- * beside a stub that answers banal's one question to poppler (`core/banal/invocation.ts`).
+ * writes that XML itself from the page layout pdf.js read (`./xml.ts`) and hands banal the `.xml` file,
+ * beside a stub that answers banal's one question to poppler (`./invocation.ts`).
  *
  * ── THIS FILE ───────────────────────────────────────────────────────────────────
- * The app layer: it composes the ports (`core/ports.ts`) and the pure decisions (`core/banal/`),
- * and imports nothing from `node:*` that touches the outside world. The composition root hands it
- * an `Io` and the parsed `BanalSettings`.
+ * banal's adapter, and its entry point (`src/adapters/banal/`): everything here exists because banal
+ * does. It is a composite over the ports (`domain/ports.ts`) and this folder's pure modules, and
+ * imports nothing from `node:*` that touches the outside world. The composition root hands it an
+ * `Io` and the parsed `BanalSettings`.
  */
-import type { AbsolutePath, Io } from "./core/ports.ts";
-import { andThen, err, ok, type Result } from "./core/result.ts";
-import type { BanalFailure } from "./core/banal/failure.ts";
-import type { Geometry } from "./core/banal/geometry.ts";
-import {
-  banalCommand,
-  BANAL_RUN_MS,
-  stageBanalInput,
-} from "./core/banal/invocation.ts";
-import { installedState, verifyPin } from "./core/banal/install.ts";
+import type { AbsolutePath, Io } from "../../domain/ports.ts";
+import { andThen, err, ok, type Result } from "../../domain/result.ts";
+import type { BanalFailure } from "./failure.ts";
+import type { Geometry } from "./geometry.ts";
+import { banalCommand, BANAL_RUN_MS, stageBanalInput } from "./invocation.ts";
+import { installedState, verifyPin } from "./install.ts";
 import {
   installedBanal,
   lookupOrder,
@@ -40,16 +37,16 @@ import {
   type BanalCandidate,
   type LocatedBanal,
   type PinnedBanal,
-} from "./core/banal/locate.ts";
+} from "./locate.ts";
 import {
   geometryOf,
   parseBanalOutput,
   type BanalMeasurement,
-} from "./core/banal/output.ts";
-import { BANAL_PIN, pinLabel, type BanalSource } from "./core/banal/pin.ts";
-import { acceptProbe, PROBE_PAGE } from "./core/banal/probe.ts";
-import type { BanalSettings } from "./core/banal/settings.ts";
-import type { PageLayout } from "./core/banal/xml.ts";
+} from "./output.ts";
+import { BANAL_PIN, pinLabel, type BanalSource } from "./pin.ts";
+import { acceptProbe, PROBE_PAGE } from "./probe.ts";
+import type { BanalSettings } from "./settings.ts";
+import type { PageLayout } from "../../domain/page-layout.ts";
 
 /** Seconds: banal is ~90 KB. */
 export const BANAL_DOWNLOAD_SECONDS = 60;

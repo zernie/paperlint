@@ -10,13 +10,13 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
-import type { BanalStaging, StagedInput } from "../../core/banal/invocation.ts";
+import type { BanalStaging, StagedInput } from "../banal/invocation.ts";
 import type {
   AbsolutePath,
   NotAPromise,
   Scratch,
   Workspace,
-} from "../../core/ports.ts";
+} from "../../domain/ports.ts";
 
 function scratchIn(dir: AbsolutePath): Scratch {
   return {

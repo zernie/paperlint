@@ -1,5 +1,5 @@
 /**
- * `src/banal.ts` — the app layer, on in-memory adapters: which `Command` it builds, what it stages,
+ * `adapters/banal/index.ts` — banal's adapter, on in-memory ports: which `Command` it builds, what it stages,
  * what it downloads and writes, and what it concludes. No perl, no disk, no network: the adapters
  * record, and each assertion reads the record. Real perl and the real banal are `test/e2e/banal.mjs`;
  * the adapters' own behaviour is `src/adapters/node/*.test.ts`.
@@ -13,12 +13,12 @@ import {
   memoryIo,
   memoryWorkspace,
   scriptedProcess,
-} from "./adapters/memory/index.ts";
-import { checkBanal, ensureBanal, measureGeometry } from "./banal.ts";
-import { sha256Hex } from "./core/banal/install.ts";
-import { installedBanal } from "./core/banal/locate.ts";
-import { parseBanalSettings } from "./core/banal/settings.ts";
-import type { AbsolutePath, Command, ProcessExit } from "./core/ports.ts";
+} from "../memory/index.ts";
+import { checkBanal, ensureBanal, measureGeometry } from "./index.ts";
+import { sha256Hex } from "./install.ts";
+import { installedBanal } from "./locate.ts";
+import { parseBanalSettings } from "./settings.ts";
+import type { AbsolutePath, Command, ProcessExit } from "../../domain/ports.ts";
 
 const s = parseBanalSettings(
   { BANAL: "/own/banal", PATH: "/bin" },

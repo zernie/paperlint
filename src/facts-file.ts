@@ -12,7 +12,7 @@
  * - pdf.js (`pdf-facts.ts`) — page count, the fonts the pages draw text with, the last page. Always.
  * - banal (Eddie Kohler's page-geometry tool, the one HotCRP's format checker runs) — paper size,
  *   columns, body and reference font sizes, page types. It runs on pdftohtml-style XML that rpp
- *   writes from the same pdf.js read (`core/banal/xml.ts`), so poppler is not needed (`banal.ts`).
+ *   writes from the same pdf.js read (`adapters/banal/xml.ts`), so poppler is not needed (`adapters/banal/`).
  *   OPTIONAL: banal is GPL and rpp does not ship it — `rpp toolchain` fetches it. Found ⇒ its fields
  *   are filled and `geometry_source` says `banal`; not found ⇒ they are null and `geometry_source`
  *   is null, so a rule can tell "not measured" from "measured as zero". Whether that is a failure is
@@ -36,16 +36,16 @@ import {
   type LastPage,
 } from "./pdf-geometry.ts";
 import { describeFailure, type PdfFacts, type PdfReader } from "./pdf-facts.ts";
-import { measureGeometry } from "./banal.ts";
+import { measureGeometry } from "./adapters/banal/index.ts";
 import {
   flatGeometry,
   type FactsGeometryFields,
   type Geometry,
-} from "./core/banal/geometry.ts";
-import { sha256Hex } from "./core/banal/install.ts";
-import type { BanalRuntime } from "./core/banal/settings.ts";
-import type { AbsolutePath, Files } from "./core/ports.ts";
-import { err, ok, type Result } from "./core/result.ts";
+} from "./adapters/banal/geometry.ts";
+import { sha256Hex } from "./adapters/banal/install.ts";
+import type { BanalRuntime } from "./adapters/banal/settings.ts";
+import type { AbsolutePath, Files } from "./domain/ports.ts";
+import { err, ok, type Result } from "./domain/result.ts";
 
 export const FACTS_SCHEMA = 2;
 export const FACTS_DIR = "_build";
@@ -183,7 +183,7 @@ export interface MeasureOptions {
   readonly kind?: string | null;
   /** The real or in-memory ports, and the banal settings the composition root parsed. */
   readonly runtime: BanalRuntime;
-  /** Where `vendor/banal` is looked for (`core/banal/locate.ts`). */
+  /** Where `vendor/banal` is looked for (`adapters/banal/locate.ts`). */
   readonly projectRoot: string;
 }
 

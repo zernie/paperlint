@@ -2,7 +2,7 @@
  * In-memory adapters for the app layer's tests: every port, no disk, no processes, no network.
  * Each one RECORDS what it was asked, so a test asserts on the calls instead of on side effects.
  */
-import type { BanalStaging, StagedInput } from "../../core/banal/invocation.ts";
+import type { BanalStaging, StagedInput } from "../banal/invocation.ts";
 import type {
   AbsolutePath,
   Command,
@@ -14,8 +14,8 @@ import type {
   RunProcess,
   Scratch,
   Workspace,
-} from "../../core/ports.ts";
-import { err, ok } from "../../core/result.ts";
+} from "../../domain/ports.ts";
+import { err, ok } from "../../domain/result.ts";
 
 export interface ScriptedProcess extends RunProcess {
   readonly calls: Command[];

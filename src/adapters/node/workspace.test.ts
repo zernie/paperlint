@@ -15,7 +15,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll as after, test } from "vitest";
-import { shQuote, stageBanalInput } from "../../core/banal/invocation.ts";
+import { shQuote, stageBanalInput } from "../banal/invocation.ts";
 import { tmpWorkspace } from "./workspace.io.ts";
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-ws-test-")));

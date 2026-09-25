@@ -9,11 +9,11 @@ import {
   type BanalRuntime,
   type Environment,
   type HostDirs,
-} from "../../core/banal/settings.ts";
+} from "../banal/settings.ts";
 import { nodeAdapters } from "./index.ts";
 import type { SpawnSync } from "./process.io.ts";
 
-export type { BanalRuntime } from "../../core/banal/settings.ts";
+export type { BanalRuntime } from "../banal/settings.ts";
 
 export const hostDirs = (over: Partial<HostDirs> = {}): HostDirs => ({
   home: homedir(),

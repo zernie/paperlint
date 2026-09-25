@@ -1,6 +1,6 @@
 /**
  * The banal rpp runs: HotCRP at one commit, one file, one sha256. The licence boundary is in
- * `src/banal.ts`: rpp downloads and runs banal, it never contains it.
+ * `./index.ts`: rpp downloads and runs banal, it never contains it.
  */
 import type { Opaque } from "ts-essentials";
 

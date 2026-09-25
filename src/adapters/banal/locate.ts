@@ -5,8 +5,8 @@
  */
 import { join } from "node:path";
 import type { Opaque } from "ts-essentials";
-import type { AbsolutePath } from "../ports.ts";
-import { err, ok, type Result } from "../result.ts";
+import type { AbsolutePath } from "../../domain/ports.ts";
+import { err, ok, type Result } from "../../domain/result.ts";
 import { BANAL_PIN } from "./pin.ts";
 import type { BanalSettings } from "./settings.ts";
 
@@ -25,7 +25,7 @@ export type LocatedBanal = Opaque<BanalCandidate, "LocatedBanal">;
 
 /**
  * `rpp toolchain`'s banal after its bytes hashed to the pin AND it measured the probe page. Minted by
- * `ensureBanal` / `checkBanal` only (`src/banal.ts`): a "ready" line cannot be printed without one.
+ * `ensureBanal` / `checkBanal` only (`./index.ts`): a "ready" line cannot be printed without one.
  */
 export type PinnedBanal = Opaque<BanalCandidate, "PinnedBanal">;
 

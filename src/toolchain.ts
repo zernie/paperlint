@@ -1,7 +1,7 @@
 /**
  * `rpp toolchain` — install upstream TeX Live, with exactly the packages the venue profiles
  * declare, into rpp's own cache, and banal (the page-geometry script HotCRP runs) at its pinned
- * commit (`banal.ts`). `rpp build` offers the TeX Live install on a terminal.
+ * commit (`adapters/banal/`). `rpp build` offers the TeX Live install on a terminal.
  *
  * 🔴 WHY rpp INSTALLS TeX AT ALL (rule 11). "Install TeX Live yourself" was a manual step with a
  * trap in it: the distribution packages cost 2.1 GB, and a smaller hand-picked set silently typeset
@@ -49,10 +49,10 @@ import {
   supportedPlatform,
   type Runner,
 } from "./engine.ts";
-import { checkBanal, ensureBanal } from "./banal.ts";
-import { describe } from "./core/banal/failure.ts";
-import { pinLabel, type BanalSource } from "./core/banal/pin.ts";
-import type { PinnedBanal } from "./core/banal/locate.ts";
+import { checkBanal, ensureBanal } from "./adapters/banal/index.ts";
+import { describe } from "./adapters/banal/failure.ts";
+import { pinLabel, type BanalSource } from "./adapters/banal/pin.ts";
+import type { PinnedBanal } from "./adapters/banal/locate.ts";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import { nodeBanalRuntime } from "./adapters/node/host.io.ts";
 import {

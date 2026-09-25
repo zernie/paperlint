@@ -2,10 +2,10 @@
  * Does a banal RUN — accepted by a measurement, not by the download's exit code. The probe is one
  * US-letter page of 50 lines of 10 pt text: enough for banal to measure a body font size.
  */
-import { err, ok, type Result } from "../result.ts";
+import { err, ok, type Result } from "../../domain/result.ts";
 import type { BanalFailure } from "./failure.ts";
 import type { BanalMeasurement } from "./output.ts";
-import type { PageLayout } from "./xml.ts";
+import type { PageLayout } from "../../domain/page-layout.ts";
 
 /** One text line of 90 characters, 10 pt, at line `i` of a one-column page. */
 const probeLine = (i: number) => ({

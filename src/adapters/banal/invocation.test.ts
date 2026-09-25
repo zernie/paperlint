@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import type { AbsolutePath } from "../ports.ts";
+import type { AbsolutePath } from "../../domain/ports.ts";
 import {
   banalCommand,
   shQuote,

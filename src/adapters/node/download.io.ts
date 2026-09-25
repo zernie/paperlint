@@ -6,9 +6,9 @@
  */
 import { mkdtempSync, readFileSync, realpathSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { firstLine } from "../../core/banal/output.ts";
-import type { Download, ProcessExit, RunProcess } from "../../core/ports.ts";
-import { err, ok } from "../../core/result.ts";
+import { firstLine } from "../banal/output.ts";
+import type { Download, ProcessExit, RunProcess } from "../../domain/ports.ts";
+import { err, ok } from "../../domain/result.ts";
 
 /** Why a curl run did not download, in its own words; null when it exited 0. */
 export function curlFailure(r: ProcessExit): string | null {

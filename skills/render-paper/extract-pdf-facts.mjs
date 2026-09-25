@@ -16,9 +16,9 @@
  * fonts and the last page — nothing to install. `banal` (the page-geometry script HotCRP's format
  * checker runs) for paper size, columns and font sizes — run by perl on XML rpp writes from the same
  * pdf.js read, no poppler. `npx rpp toolchain` installs it; `$BANAL` or a project's `vendor/banal`
- * take precedence (`src/banal.ts`).
+ * take precedence (`src/adapters/banal/`).
  *
- * ── THE EXIT-CODE CONTRACT (callers branch on it; the table is `src/core/facts/exit-code.ts`) ──
+ * ── THE EXIT-CODE CONTRACT (callers branch on it; the table is `src/exit-code.ts`) ──
  *   0  facts written — or, without `--strict`, not written and said so (a local run may lack banal)
  *   1  no such path; or, with `--strict`, the facts could not be taken (no banal, no perl, banal
  *      failed, unreadable PDF).
@@ -38,8 +38,8 @@ import {
 import { readPdf } from "../../dist/pdf-facts.js";
 import { nodeBanalRuntime } from "../../dist/adapters/node/host.io.js";
 import { nodeFiles } from "../../dist/adapters/node/files.io.js";
-import { whyNoGeometry } from "../../dist/core/banal/geometry.js";
-import { exitCodeFor } from "../../dist/core/facts/exit-code.js";
+import { whyNoGeometry } from "../../dist/adapters/banal/geometry.js";
+import { exitCodeFor } from "../../dist/exit-code.js";
 
 /** The paper's `venue.json`, read from disk. */
 export const declaredVenue = (paperDir) => declaredIn(nodeFiles, paperDir);

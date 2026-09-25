@@ -6,7 +6,10 @@
  */
 import type { Opaque } from "ts-essentials";
 import type { Result } from "./result.ts";
-import type { BanalStaging, StagedInput } from "./banal/invocation.ts";
+import type {
+  BanalStaging,
+  StagedInput,
+} from "../adapters/banal/invocation.ts";
 
 /** An absolute path. Minted at the composition root (`abs`), so the core never resolves a cwd. */
 export type AbsolutePath = Opaque<string, "AbsolutePath">;

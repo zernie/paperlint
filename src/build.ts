@@ -59,8 +59,8 @@ import { readPdf as pdfjsReader, type PdfReader } from "./pdf-facts.ts";
 import { nodeBanalRuntime } from "./adapters/node/host.io.ts";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import { nodeFiles } from "./adapters/node/files.io.ts";
-import { whyNoGeometry } from "./core/banal/geometry.ts";
-import type { BanalRuntime } from "./core/banal/settings.ts";
+import { whyNoGeometry } from "./adapters/banal/geometry.ts";
+import type { BanalRuntime } from "./adapters/banal/settings.ts";
 import {
   auxBib,
   bibtexExcerpt,
@@ -128,7 +128,7 @@ export interface BuildContext {
   readonly run: Runner;
   /** Reads a finished PDF — pdf.js by default; the harness passes a fake. */
   readonly readPdf: PdfReader;
-  /** Where the facts writer looks for a project's own `vendor/banal` (`core/banal/locate.ts`). */
+  /** Where the facts writer looks for a project's own `vendor/banal` (`adapters/banal/locate.ts`). */
   readonly projectRoot: string;
   /** The ports and settings banal runs with. */
   readonly banal: BanalRuntime;

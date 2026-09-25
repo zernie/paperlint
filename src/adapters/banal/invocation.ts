@@ -10,9 +10,10 @@
  * refuses anything else. `test/e2e/banal.mjs` shows both failures with the real banal.
  */
 import type { Opaque } from "ts-essentials";
-import type { AbsolutePath, Command } from "../ports.ts";
+import type { AbsolutePath, Command } from "../../domain/ports.ts";
 import type { LocatedBanal } from "./locate.ts";
-import { pdf2xml, XML_DIALECT, type PageLayout } from "./xml.ts";
+import type { PageLayout } from "../../domain/page-layout.ts";
+import { pdf2xml, XML_DIALECT } from "./xml.ts";
 
 /** banal takes well under a second on a paper; a hang still has to end. */
 export const BANAL_RUN_MS = 120_000;

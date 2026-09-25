@@ -5,8 +5,8 @@
  * document — and `pages`, one entry per page, where a page's `type` is OMITTED when it is "body".
  */
 import { z } from "zod";
-import type { ProcessExit } from "../ports.ts";
-import { andThen, err, ok, type Result } from "../result.ts";
+import type { ProcessExit } from "../../domain/ports.ts";
+import { andThen, err, ok, type Result } from "../../domain/result.ts";
 import type { BanalFailure } from "./failure.ts";
 
 const page = z.looseObject({

@@ -12,7 +12,7 @@
  * What it asserts, in order:
  *   1. every fixture's geometry, through `measureLayout`, equals the recorded one — with a PATH
  *      that holds perl and nothing else, so no pdftohtml can be what answered;
- *   2. the four conditions `core/banal/xml.ts` names are each load-bearing on `hidden-text.pdf`: switch
+ *   2. the four conditions `adapters/banal/xml.ts` names are each load-bearing on `hidden-text.pdf`: switch
  *      one off and the measurement changes (a condition that changes nothing is untested);
  *   3. without a pdftohtml to answer `-v`, banal does not run, and a stub answering an old version
  *      moves the body size — so both the stub and the version it answers are load-bearing;
@@ -44,20 +44,24 @@ const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const FIX = join(ROOT, "fixtures", "pdf-facts");
 const strict = process.argv.includes("--strict");
 // The third composition root: the real adapters, the settings parsed from the environment here.
-const { measureGeometry } = await import(join(ROOT, "dist", "banal.js"));
+const { measureGeometry } = await import(
+  join(ROOT, "dist", "adapters", "banal", "index.js")
+);
 const { nodeBanalRuntime } = await import(
-  join(ROOT, "dist", "adapters", "node", "host.js")
+  join(ROOT, "dist", "adapters", "node", "host.io.js")
 );
 const { lookupOrder, pickBanal } = await import(
-  join(ROOT, "dist", "core", "banal", "locate.js")
+  join(ROOT, "dist", "adapters", "banal", "locate.js")
 );
 const { describeLine } = await import(
-  join(ROOT, "dist", "core", "banal", "failure.js")
+  join(ROOT, "dist", "adapters", "banal", "failure.js")
 );
 const { whyNoGeometry } = await import(
-  join(ROOT, "dist", "core", "banal", "geometry.js")
+  join(ROOT, "dist", "adapters", "banal", "geometry.js")
 );
-const { pdf2xml } = await import(join(ROOT, "dist", "core", "banal", "xml.js"));
+const { pdf2xml } = await import(
+  join(ROOT, "dist", "adapters", "banal", "xml.js")
+);
 const { readPdf } = await import(join(ROOT, "dist", "pdf-facts.js"));
 
 /** banal 1.2 on poppler pdftohtml 24.02.0, 2026-09-25 — see the header. */
@@ -179,7 +183,7 @@ try {
   }
 
   console.log(
-    "\n2. each condition in core/banal/xml.ts changes the measurement when switched off",
+    "\n2. each condition in adapters/banal/xml.ts changes the measurement when switched off",
   );
   const hidden = layouts["hidden-text.pdf"] ?? [];
   const base = EXPECTED["hidden-text.pdf"];
