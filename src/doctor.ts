@@ -140,6 +140,46 @@ export function detectPapers(cwd: string, depth = 2): string[] {
   return hits;
 }
 
+/**
+ * The papers-directory verdict: whether the CLI and the hooks agree, and whether the directory
+ * they name exists. `bad` counts the failures.
+ */
+function papersVerdict(
+  root: string,
+  cliPapers: string | null,
+  hookSays: string | null,
+): { lines: string[]; bad: number } {
+  const out: string[] = [];
+  let bad = 0;
+  if (cliPapers && hookSays) {
+    const same = resolve(root, cliPapers) === resolve(root, hookSays);
+    out.push(
+      same
+        ? `  ✓ the same directory — what is linted is what is guarded`
+        : `  ✗ DIFFERENT directories. Every Bash write to ${cliPapers} passes the guard unseen.`,
+    );
+    if (!same) bad++;
+  }
+  // A declared directory that does not exist is a failure only when papers live SOMEWHERE ELSE:
+  // then every write to them passes the guard unseen (issue #33). With no papers anywhere, the
+  // project is simply new — `init --yes` declares the default and creates no paper — and failing
+  // it would teach people to ignore doctor.
+  if (hookSays && !existsSync(join(root, hookSays))) {
+    const guesses = detectPapers(root);
+    if (guesses.length) {
+      out.push(
+        `  ✗ ${hookSays} does not exist — the guard is watching nothing`,
+      );
+      out.push(`      papers look like they live in: ${guesses.join(", ")}`);
+      bad++;
+    } else
+      out.push(
+        `  ⚠ ${hookSays} does not exist yet — no papers yet. \`npx rpp new <name>\` creates the first one there`,
+      );
+  }
+  return { lines: out, bad };
+}
+
 export interface DoctorOptions {
   log?: typeof console.log;
   cwd?: string;
@@ -232,32 +272,9 @@ export function doctor({
   out.push(
     `  the hooks will guard ${hookSays ?? "(nothing — the guard refuses and says why on first use)"}`,
   );
-  if (cliPapers && hookSays) {
-    const same = resolve(root, cliPapers) === resolve(root, hookSays);
-    out.push(
-      same
-        ? `  ✓ the same directory — what is linted is what is guarded`
-        : `  ✗ DIFFERENT directories. Every Bash write to ${cliPapers} passes the guard unseen.`,
-    );
-    if (!same) bad++;
-  }
-  // A declared directory that does not exist is a failure only when papers live SOMEWHERE ELSE:
-  // then every write to them passes the guard unseen (issue #33). With no papers anywhere, the
-  // project is simply new — `init --yes` declares the default and creates no paper — and failing
-  // it would teach people to ignore doctor.
-  if (hookSays && !existsSync(join(root, hookSays))) {
-    const guesses = detectPapers(root);
-    if (guesses.length) {
-      out.push(
-        `  ✗ ${hookSays} does not exist — the guard is watching nothing`,
-      );
-      out.push(`      papers look like they live in: ${guesses.join(", ")}`);
-      bad++;
-    } else
-      out.push(
-        `  ⚠ ${hookSays} does not exist yet — no papers yet. \`npx rpp new <name>\` creates the first one there`,
-      );
-  }
+  const verdict = papersVerdict(root, cliPapers, hookSays);
+  out.push(...verdict.lines);
+  bad += verdict.bad;
 
   // A skill that is not linked is ADVISORY, like a missing program: `rpp lint`, the hooks and CI
   // work without it, and an entry of the same name that `init` refused to replace is the
