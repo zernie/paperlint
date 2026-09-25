@@ -2,7 +2,9 @@
  * Node's implementations of the generic ports: processes, files, scratch directories. What a
  * composition root builds and hands to the adapters that need them (banal's, for one).
  */
-import type { Files, RunProcess, Workspace } from "../../domain/ports.ts";
+import type { Files } from "../../ports/files.ts";
+import type { RunProcess } from "../../ports/process.ts";
+import type { Workspace } from "../../ports/workspace.ts";
 import { nodeFiles } from "./files.io.ts";
 import { spawnProcess, type SpawnSync } from "./process.io.ts";
 import { tmpWorkspace } from "./workspace.io.ts";

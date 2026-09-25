@@ -9,7 +9,7 @@ import {
 } from "node:fs";
 import { dirname } from "node:path";
 import type { AbsolutePath } from "../../domain/paths.ts";
-import type { Files } from "../../domain/ports.ts";
+import type { Files } from "../../ports/files.ts";
 
 const code = (e: unknown): unknown =>
   e instanceof Error ? (e as NodeJS.ErrnoException).code : undefined;

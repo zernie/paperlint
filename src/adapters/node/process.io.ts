@@ -8,7 +8,7 @@ import {
   type SpawnSyncOptionsWithStringEncoding,
   type SpawnSyncReturns,
 } from "node:child_process";
-import type { Command, ProcessExit, RunProcess } from "../../domain/ports.ts";
+import type { Command, ProcessExit, RunProcess } from "../../ports/process.ts";
 
 /** Node's `spawnSync`, or a stand-in with its shape (a harness records the calls through one). */
 export type SpawnSync = typeof spawnSync;

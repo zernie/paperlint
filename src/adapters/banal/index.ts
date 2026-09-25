@@ -64,11 +64,13 @@ export function banalMeasurer(
   };
 }
 
-const ready = (i: Installed): Ready => ({
-  where: i.banal.path,
-  fresh: i.fresh,
-  verified: "sha256 verified, and it measured a probe page",
-});
+/** The one place banal's `Ready` is minted: from an `Installed`, whose `PinnedBanal` only run.ts mints. */
+const ready = (i: Installed): Ready =>
+  ({
+    where: i.banal.path as string,
+    fresh: i.fresh,
+    verified: "sha256 verified, and it measured a probe page",
+  }) as Ready;
 
 /**
  * banal as the `ToolInstaller` port: download at the pin, check the sha256, accept by measuring a

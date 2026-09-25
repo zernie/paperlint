@@ -7,7 +7,7 @@
 import { z } from "zod";
 import type { PageGeometry } from "../../domain/geometry.ts";
 import { firstLine } from "../../domain/text.ts";
-import type { ProcessExit } from "../../domain/ports.ts";
+import type { ProcessExit } from "../../ports/process.ts";
 import { andThen, err, ok, type Result } from "../../domain/result.ts";
 import type { BanalFailure } from "./failure.ts";
 

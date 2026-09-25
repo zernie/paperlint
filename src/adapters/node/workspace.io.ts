@@ -11,7 +11,7 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import type { AbsolutePath } from "../../domain/paths.ts";
-import type { NotAPromise, Scratch, Workspace } from "../../domain/ports.ts";
+import type { NotAPromise, Scratch, Workspace } from "../../ports/workspace.ts";
 
 function scratchIn(dir: AbsolutePath): Scratch {
   return {

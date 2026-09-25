@@ -4,7 +4,7 @@
  */
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import type { ProcessExit } from "../../domain/ports.ts";
+import type { ProcessExit } from "../../ports/process.ts";
 import { err } from "../../domain/result.ts";
 import type { BanalFailure } from "./failure.ts";
 import {

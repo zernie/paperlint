@@ -19,19 +19,17 @@
  * beside a stub that answers banal's one question to poppler (`./invocation.ts`).
  *
  * ── THIS FILE ───────────────────────────────────────────────────────────────────
- * Running and installing banal, over the generic ports (`domain/ports.ts`) and this folder's pure
+ * Running and installing banal, over the generic ports (`src/ports/`) and this folder's pure
  * modules; it imports nothing from `node:*` that touches the outside world. Failures stay banal's
  * own union here, so the tests can branch on them; `./index.ts` turns them into the ports the app
  * sees (`MeasureGeometry`, `ToolInstaller`).
  */
 import type { AbsolutePath } from "../../domain/paths.ts";
 import type { PageGeometry } from "../../domain/geometry.ts";
-import type {
-  Download,
-  Files,
-  RunProcess,
-  Workspace,
-} from "../../domain/ports.ts";
+import type { Download } from "../../ports/download.ts";
+import type { Files } from "../../ports/files.ts";
+import type { RunProcess } from "../../ports/process.ts";
+import type { Workspace } from "../../ports/workspace.ts";
 import { andThen, err, ok, type Result } from "../../domain/result.ts";
 import type { BanalFailure } from "./failure.ts";
 import {

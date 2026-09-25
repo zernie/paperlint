@@ -11,7 +11,8 @@
  */
 import type { Opaque } from "ts-essentials";
 import type { AbsolutePath } from "../../domain/paths.ts";
-import type { Command, Scratch } from "../../domain/ports.ts";
+import type { Command } from "../../ports/process.ts";
+import type { Scratch } from "../../ports/workspace.ts";
 import type { LocatedBanal } from "./locate.ts";
 import type { PageLayout } from "../../domain/page-layout.ts";
 import { pdf2xml, XML_DIALECT } from "./xml.ts";

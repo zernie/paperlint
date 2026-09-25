@@ -10,7 +10,7 @@ import {
   exitedWith,
   fixedDownload,
   memoryFiles,
-  memoryIo,
+  memoryPorts,
   memoryWorkspace,
   scriptedProcess,
 } from "../memory/index.ts";
@@ -19,7 +19,7 @@ import { sha256Hex } from "../../domain/sha256.ts";
 import { installedBanal } from "./locate.ts";
 import { parseBanalSettings } from "./settings.ts";
 import type { AbsolutePath } from "../../domain/paths.ts";
-import type { Command, ProcessExit } from "../../domain/ports.ts";
+import type { Command, ProcessExit } from "../../ports/process.ts";
 
 const s = parseBanalSettings(
   { BANAL: "/own/banal", PATH: "/bin" },
@@ -38,7 +38,7 @@ const banalAnswers = (e: ProcessExit) =>
 test("measureGeometry: perl runs the found banal on the staged XML, and the geometry comes back", () => {
   const run = banalAnswers(exitedWith(MEASURED));
   const workspace = memoryWorkspace();
-  const io = memoryIo({
+  const io = memoryPorts({
     run,
     workspace,
     files: memoryFiles({ "/own/banal": "" }),
@@ -62,13 +62,13 @@ test("measureGeometry: perl runs the found banal on the staged XML, and the geom
 
 test("measureGeometry: no banal anywhere is `banal-missing`, and nothing runs", () => {
   const run = banalAnswers(exitedWith(MEASURED));
-  const g = measureGeometry(memoryIo({ run }), noExplicit, project, []);
+  const g = measureGeometry(memoryPorts({ run }), noExplicit, project, []);
   assert.equal(g.source === "none" && g.why.kind, "banal-missing");
   assert.equal(run.calls.length, 0);
 });
 
 test("🔴 measureGeometry: perl not found is `perl-missing`, naming the banal that was tried", () => {
-  const io = memoryIo({
+  const io = memoryPorts({
     run: scriptedProcess(() => ({ kind: "not-found", file: "perl" })),
     files: memoryFiles({ "/own/banal": "" }),
   });
@@ -78,7 +78,7 @@ test("🔴 measureGeometry: perl not found is `perl-missing`, naming the banal t
 });
 
 test("measureGeometry: banal exiting 3 is `process-failed`", () => {
-  const io = memoryIo({
+  const io = memoryPorts({
     run: banalAnswers({
       kind: "exited",
       status: 3,
@@ -102,7 +102,7 @@ const dest = installedBanal(noExplicit);
 test("ensureBanal: downloads, verifies, writes and probes — fresh; a second run downloads nothing", () => {
   const files = memoryFiles();
   const download = fixedDownload(BODY);
-  const io = memoryIo({
+  const io = memoryPorts({
     run: banalAnswers(exitedWith(MEASURED)),
     files,
     download,
@@ -119,7 +119,7 @@ test("ensureBanal: downloads, verifies, writes and probes — fresh; a second ru
 
 test("🔴 ensureBanal: bytes with another sha256 are refused, and nothing is written", () => {
   const files = memoryFiles();
-  const io = memoryIo({
+  const io = memoryPorts({
     run: banalAnswers(exitedWith(MEASURED)),
     files,
     download: fixedDownload("something else"),
@@ -131,7 +131,7 @@ test("🔴 ensureBanal: bytes with another sha256 are refused, and nothing is wr
 });
 
 test("ensureBanal: a failed download names the URL", () => {
-  const io = memoryIo({
+  const io = memoryPorts({
     run: banalAnswers(exitedWith(MEASURED)),
     download: fixedDownload({ detail: "curl exited 22" }),
   });
@@ -144,7 +144,7 @@ test("ensureBanal: a failed download names the URL", () => {
 });
 
 test("🔴 ensureBanal: a banal that downloads fine but measures nothing fails, saying why", () => {
-  const io = memoryIo({
+  const io = memoryPorts({
     run: banalAnswers(exitedWith("not json")),
     download: fixedDownload(BODY),
   });
@@ -159,7 +159,7 @@ test("🔴 ensureBanal: a banal that downloads fine but measures nothing fails, 
 
 test("🔴 ensureBanal and checkBanal without perl: `perl-missing`, and nothing downloaded", () => {
   const download = fixedDownload(BODY);
-  const io = memoryIo({
+  const io = memoryPorts({
     run: scriptedProcess(() => ({ kind: "not-found", file: "perl" })),
     download,
   });
@@ -173,17 +173,17 @@ test("🔴 ensureBanal and checkBanal without perl: `perl-missing`, and nothing 
 
 test("checkBanal: absent, other bytes, pinned-and-running", () => {
   const run = banalAnswers(exitedWith(MEASURED));
-  const absent = checkBanal(memoryIo({ run }), noExplicit, source);
+  const absent = checkBanal(memoryPorts({ run }), noExplicit, source);
   assert.equal(!absent.ok && absent.error.kind, "banal-missing");
   // Guards: the pin is checked on every run — a changed file is reported, not trusted.
   const tampered = checkBanal(
-    memoryIo({ run, files: memoryFiles({ [dest]: "tampered" }) }),
+    memoryPorts({ run, files: memoryFiles({ [dest]: "tampered" }) }),
     noExplicit,
     source,
   );
   assert.equal(!tampered.ok && tampered.error.kind, "not-pinned");
   const good = checkBanal(
-    memoryIo({ run, files: memoryFiles({ [dest]: BODY }) }),
+    memoryPorts({ run, files: memoryFiles({ [dest]: BODY }) }),
     noExplicit,
     source,
   );

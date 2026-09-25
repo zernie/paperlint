@@ -8,15 +8,16 @@ import assert from "node:assert/strict";
 import { test } from "vitest";
 import { whyNoGeometry } from "../../domain/geometry.ts";
 import type { AbsolutePath } from "../../domain/paths.ts";
-import type { ProcessExit } from "../../domain/ports.ts";
+import type { ProcessExit } from "../../ports/process.ts";
 import { sha256Hex } from "../../domain/sha256.ts";
 import {
   exitedWith,
   fixedDownload,
   memoryFiles,
-  memoryIo,
+  memoryPorts,
   scriptedProcess,
 } from "../memory/index.ts";
+import type { Ready } from "../../ports/tool-installer.ts";
 import { banalInstaller, banalMeasurer, parseBanalSettings } from "./index.ts";
 
 const dirs = { home: "/h", tmp: "/t", cwd: "/r" };
@@ -27,7 +28,7 @@ const MEASURED =
 /** banal's measurer over in-memory ports: `/own/banal` on "disk", banal answering `exit`. */
 function measurer(env: Record<string, string>, exit?: ProcessExit) {
   const run = scriptedProcess(() => exit ?? exitedWith(MEASURED));
-  const io = memoryIo({ run, files: memoryFiles({ "/own/banal": "" }) });
+  const io = memoryPorts({ run, files: memoryFiles({ "/own/banal": "" }) });
   return { run, m: banalMeasurer(io, parseBanalSettings(env, dirs), project) };
 }
 
@@ -81,7 +82,7 @@ const source = {
 };
 
 test("installer: ensure reports the download, and Ready says where and what was verified", () => {
-  const io = memoryIo({
+  const io = memoryPorts({
     run: scriptedProcess((c) =>
       c.args[0] === "-e" ? exitedWith("") : exitedWith(PROBE),
     ),
@@ -103,10 +104,16 @@ test("installer: ensure reports the download, and Ready says where and what was 
 });
 
 test("installer: a failure is lines of text, the first saying what happened", () => {
-  const io = memoryIo({
+  const io = memoryPorts({
     run: scriptedProcess(() => ({ kind: "not-found", file: "perl" })),
   });
   const r = banalInstaller(io, parseBanalSettings({}, dirs), source).check();
   assert.ok(!r.ok);
   assert.match(r.error[0], /perl/);
+});
+
+test("a Ready cannot be written by hand — only an installer mints one", () => {
+  // @ts-expect-error — the brand: a literal is not a Ready (tsc -p tsconfig.test.json checks this line).
+  const forged: Ready = { where: "/x", fresh: true, verified: "trust me" };
+  assert.equal(forged.where, "/x");
 });

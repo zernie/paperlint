@@ -45,7 +45,7 @@ import {
 import { sha256Hex } from "./domain/sha256.ts";
 import type { MeasureGeometry } from "./ports/measure-geometry.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
-import type { Files } from "./domain/ports.ts";
+import type { Files } from "./ports/files.ts";
 import { err, ok, type Result } from "./domain/result.ts";
 
 export const FACTS_SCHEMA = 2;

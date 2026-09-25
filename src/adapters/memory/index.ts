@@ -3,17 +3,10 @@
  * Each one RECORDS what it was asked, so a test asserts on the calls instead of on side effects.
  */
 import type { AbsolutePath } from "../../domain/paths.ts";
-import type {
-  Command,
-  Download,
-  Files,
-  Io,
-  NotAPromise,
-  ProcessExit,
-  RunProcess,
-  Scratch,
-  Workspace,
-} from "../../domain/ports.ts";
+import type { Download } from "../../ports/download.ts";
+import type { Files } from "../../ports/files.ts";
+import type { Command, ProcessExit, RunProcess } from "../../ports/process.ts";
+import type { NotAPromise, Scratch, Workspace } from "../../ports/workspace.ts";
 import { err, ok } from "../../domain/result.ts";
 
 export interface ScriptedProcess extends RunProcess {
@@ -118,8 +111,16 @@ export function fixedDownload(
   };
 }
 
-/** A whole `Io` from in-memory parts; any part can be replaced. */
-export function memoryIo(over: Partial<Io> = {}): Io {
+/** Every generic port at once — what a test hands an adapter built over several of them. */
+export interface MemoryPorts {
+  readonly run: RunProcess;
+  readonly files: Files;
+  readonly workspace: Workspace;
+  readonly download: Download;
+}
+
+/** All four ports from in-memory parts; any part can be replaced. */
+export function memoryPorts(over: Partial<MemoryPorts> = {}): MemoryPorts {
   return {
     run: scriptedProcess(() => exitedWith("")),
     files: memoryFiles(),

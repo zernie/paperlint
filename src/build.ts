@@ -61,7 +61,7 @@ import { banalMeasurer, parseBanalSettings } from "./adapters/banal/index.ts";
 import { hostDirs, nodeAdapters, nodeFiles } from "./adapters/node/index.ts";
 import { whyNoGeometry } from "./domain/geometry.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
-import type { Files } from "./domain/ports.ts";
+import type { Files } from "./ports/files.ts";
 import type { MeasureGeometry } from "./ports/measure-geometry.ts";
 import {
   auxBib,
