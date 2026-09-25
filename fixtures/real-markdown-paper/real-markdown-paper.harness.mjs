@@ -7,7 +7,7 @@
  * Correct, with one refinement measured the same evening: the clean article is NOT green, and its
  * silence is the valuable half precisely because it is the only fixture big enough for a false
  * positive to show up. On its first run it flagged eighteen p-values as missing a leading zero
- * (rpp#44). They are real findings: the rule measures against IEEE / ISO 80000-1 style, and this
+ * (paperlint#44). They are real findings: the rule measures against IEEE / ISO 80000-1 style, and this
  * is a blog post written for a general audience, not for an IEEE venue. All eighteen sit in prose
  * and table cells, so counting from the parsed tree rather than the raw text keeps every one —
  * and deciding that is exactly what an eleven-line stub, where every line was written by someone
@@ -51,7 +51,7 @@ import {
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(dirname(HERE));
-const BIN = join(ROOT, "bin", "rpp.mjs");
+const BIN = join(ROOT, "bin", "paperlint.mjs");
 
 let n = 0;
 const check = (label, cond) => {
@@ -65,7 +65,9 @@ const check = (label, cond) => {
  * prose and changes with every edit, the rule id is the thing being asserted about.
  */
 function findings(patch) {
-  const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-realpaper-")));
+  const work = realpathSync(
+    mkdtempSync(join(tmpdir(), "paperlint-realpaper-")),
+  );
   try {
     mkdirSync(join(work, "papers"), { recursive: true });
     // verbatimSymlinks is not decoration: node's default rewrites a relative symlink to an
@@ -160,7 +162,9 @@ check(
 // so the count alone cannot tell them apart — this is why the message is asserted here and only
 // here.
 {
-  const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-realpaper-msg-")));
+  const work = realpathSync(
+    mkdtempSync(join(tmpdir(), "paperlint-realpaper-msg-")),
+  );
   try {
     mkdirSync(join(work, "papers"), { recursive: true });
     cpSync(HERE, join(work, "papers", "article"), {

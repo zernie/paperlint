@@ -9,7 +9,7 @@
     "",
     "Recorded 2026-09-19. Three of the five are about the scorecard being deliberately thin",
     "(no pdf, no frozen source) rather than about the prose; paper/typography's single entry is",
-    "the 18 p-values of rpp#44. They are real findings against IEEE / ISO 80000-1 style, which",
+    "the 18 p-values of paperlint#44. They are real findings against IEEE / ISO 80000-1 style, which",
     "requires the leading zero, in a blog post written for a general audience rather than for an",
     "IEEE venue. All 18 sit in prose and table cells, so the count from the parsed tree keeps them.",
     "The count is expected to stay. A drop is never a failure here, only growth is."

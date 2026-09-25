@@ -152,6 +152,13 @@ export const PACKAGE_NAME = "paperlint";
 export const LEGACY_PACKAGE_NAME = "research-paper-pipeline";
 
 /**
+ * The package's one executable, relative to the package root — what `bin` in package.json names
+ * and what every hook command runs. Named like the package; `consumer.harness.mjs` checks it
+ * against the manifest, so the file and the hook commands cannot drift apart.
+ */
+export const BIN_FILE = `bin/${PACKAGE_NAME}.mjs`;
+
+/**
  * Where the package keeps the skills it ships, relative to the package root. One constant, read by
  * the linker (`src/link-skills.ts`) and the install e2e, so the two cannot disagree; `files` in
  * package.json must include it for the skills to reach the tarball.
@@ -168,7 +175,7 @@ export function consumerSkillsDir(opts) {
  * sorted by name. The one answer to "which skills are here" — for the consumer's
  * `.claude/skills/`, for this package's own declared skills directory, and for a copy of either.
  *
- * 🔴 IT FOLLOWS SYMLINKS, AND THAT IS THE WHOLE POINT (rpp#62). `paperlint init` (`src/link-skills.ts`)
+ * 🔴 IT FOLLOWS SYMLINKS, AND THAT IS THE WHOLE POINT (paperlint#62). `paperlint init` (`src/link-skills.ts`)
  * installs every skill as a link `.claude/skills/<name> -> …/skills/<name>`. A `Dirent` from
  * `readdirSync(dir, { withFileTypes: true })` describes the entry itself, so `isDirectory()` is
  * false for every link: five eval preflights asked the question that way, saw zero skills in

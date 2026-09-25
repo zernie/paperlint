@@ -86,7 +86,7 @@ function withDefaults(o: EngineOptions): Resolved {
 }
 
 /**
- * The facts `resolveEngine` decides on: rpp's cache and the PATH's TeX Live, each probed. The cache
+ * The facts `resolveEngine` decides on: paperlint's cache and the PATH's TeX Live, each probed. The cache
  * may hold one tree per TeX Live year; the one reported is the newest COMPLETE one, else the newest
  * (so a new year whose install was interrupted never wins over a complete older year).
  */

@@ -50,7 +50,9 @@ const check = (label, cond) => {
 };
 
 const SKILLS = ["alpha", "beta", "gamma"];
-const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-link-skills-")));
+const work = realpathSync(
+  mkdtempSync(join(tmpdir(), "paperlint-link-skills-")),
+);
 
 /** A package as a manager would unpack it: manifest, skills, one non-skill. */
 function writePackage(dir) {

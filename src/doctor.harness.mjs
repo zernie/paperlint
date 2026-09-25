@@ -41,9 +41,9 @@ const check = (label, cond) => {
   assert.ok(cond, label);
 };
 
-/** A consumer on disk: a papers directory, declarations in one or both places. */
-function consumer({ papersDir, pkgKey, rppJson, makeDir = true }) {
-  const dir = realpathSync(mkdtempSync(join(tmpdir(), "rpp-doctor-")));
+/** A consumer on disk: a papers directory, and maybe a declaration in package.json. */
+function consumer({ papersDir, pkgKey, makeDir = true }) {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-doctor-")));
   if (makeDir && papersDir) {
     mkdirSync(join(dir, papersDir, "some-paper"), { recursive: true });
     writeFileSync(
@@ -54,11 +54,6 @@ function consumer({ papersDir, pkgKey, rppJson, makeDir = true }) {
   const pkg = { name: "consumer", version: "1.0.0" };
   if (pkgKey !== undefined) pkg["paperlint"] = { [PAPERS_DIR_FIELD]: pkgKey };
   writeFileSync(join(dir, "package.json"), JSON.stringify(pkg, null, 2));
-  if (rppJson !== undefined)
-    writeFileSync(
-      join(dir, "rpp.json"),
-      JSON.stringify({ [PAPERS_DIR_FIELD]: rppJson }, null, 2),
-    );
   return dir;
 }
 
@@ -113,13 +108,10 @@ const runDoctor = (
 }
 
 // ── II. THE VERY DEFECT: AN INSTALL FOLLOWING THE DOCS ─────────────────────────────────────
-// `paperlint init` writes rpp.json and does not touch package.json; the hook reads package.json.
+// The old `init` wrote its own config file and did not touch package.json; the hook reads package.json.
 // Measured 09-18.
 {
-  const dir = consumer({
-    papersDir: "writing/drafts",
-    rppJson: "writing/drafts",
-  });
+  const dir = consumer({ papersDir: "writing/drafts" });
   const r = runDoctor(dir, { cliPapers: "writing/drafts" });
   check(
     "an install that follows the docs — a FAILURE, not a cheerful report",
@@ -150,7 +142,7 @@ const runDoctor = (
 // It must not fail here (an error-level false positive costs more than a miss), but it must
 // not stay silent either.
 {
-  const dir = consumer({ papersDir: "papers", rppJson: "papers" });
+  const dir = consumer({ papersDir: "papers" });
   const r = runDoctor(dir, { cliPapers: "papers" });
   check("an install that works by coincidence does NOT crash", r.code === 0);
   check(
@@ -220,18 +212,10 @@ const runDoctor = (
 
 // ── III. TWO DECLARATIONS HAVE DRIFTED APART ────────────────────────────────────────────────
 {
-  const dir = consumer({
-    papersDir: "writing/drafts",
-    pkgKey: "papers",
-    rppJson: "writing/drafts",
-  });
+  const dir = consumer({ papersDir: "writing/drafts", pkgKey: "papers" });
   mkdirSync(join(dir, "papers"), { recursive: true });
   const r = runDoctor(dir, { cliPapers: "writing/drafts" });
   check("both declarations exist, but differ — a FAILURE", r.code === 2);
-  check(
-    "the stale rpp.json is called out ⚠",
-    /rpp\.json is present/.test(r.out),
-  );
   rmSync(dir, { recursive: true, force: true });
 }
 
@@ -307,7 +291,7 @@ const runDoctor = (
 
 // ── VII. DETECTING THE PAPERS DIRECTORY ─────────────────────────────────────────────────────
 {
-  const dir = realpathSync(mkdtempSync(join(tmpdir(), "rpp-detect-")));
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-detect-")));
   mkdirSync(join(dir, "writing", "drafts", "p1"), { recursive: true });
   writeFileSync(join(dir, "writing", "drafts", "p1", "paper.tex"), "x");
   mkdirSync(join(dir, "node_modules", "pkg", "papers", "p"), {
@@ -387,7 +371,7 @@ const runDoctor = (
   check("a program that really exists is found", found("node") === true);
   check(
     "a made-up one is not (otherwise the check answers the form, not the subject)",
-    found("rpp-definitely-not-a-real-binary-xyz") === false,
+    found("paperlint-definitely-not-a-real-binary-xyz") === false,
   );
 }
 

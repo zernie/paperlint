@@ -36,7 +36,7 @@ const check = (label, cond, detail = "") => {
   n++;
 };
 
-const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-extract-")));
+const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-extract-")));
 /**
  * Run the shim from `root`, with no banal anywhere unless `env` names one. `HOME` is the temp root:
  * without it Node falls back to the account's home, where `paperlint toolchain` may have installed banal.

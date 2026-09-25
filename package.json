@@ -1,7 +1,7 @@
 {
   "name": "paperlint",
   "version": "0.0.0-semantically-released",
-  "description": "Machine-checkable gates for a research paper kept in git: ESLint rules over .tex/.md paper sources, plus the skills and hooks that drive each stage.",
+  "description": "A linter for scientific papers written in LaTeX: catches mistakes before you submit to a conference or journal.",
   "type": "module",
   "license": "MIT",
   "scripts": {
@@ -51,7 +51,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zernie/research-paper-pipeline.git"
+    "url": "git+https://github.com/zernie/paperlint.git"
   },
   "keywords": [
     "eslint",
@@ -68,7 +68,7 @@
     "node": ">=22.13"
   },
   "bin": {
-    "paperlint": "bin/rpp.mjs"
+    "paperlint": "bin/paperlint.mjs"
   },
   "files": [
     ".github",

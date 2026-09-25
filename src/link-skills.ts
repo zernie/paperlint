@@ -66,7 +66,7 @@ export function locatePackage(project: string): Located {
   let manifest: string;
   try {
     const req = createRequire(
-      pathToFileURL(join(project, "__rpp_locate__.js")).href,
+      pathToFileURL(join(project, "__paperlint_locate__.js")).href,
     );
     manifest = req.resolve(`${PACKAGE_NAME}/package.json`);
   } catch (e) {
@@ -100,7 +100,7 @@ export function shippedSkills(
   // clean run.
   if (!existsSync(skillsDir))
     return { error: `the package's skills directory is missing: ${skillsDir}` };
-  // The same function every reader of an installed skills directory calls (rpp#62): the writer
+  // The same function every reader of an installed skills directory calls (paperlint#62): the writer
   // and the readers of this fact share one definition of "a skill is here", links included.
   try {
     return { skillsDir, names: installedSkills(skillsDir) };

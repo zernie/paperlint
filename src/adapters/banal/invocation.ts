@@ -30,13 +30,13 @@ export const shQuote = (s: string): ShQuoted =>
 /** The stub standing in for `pdftohtml`: it answers `-v` and refuses to convert anything. */
 export const PDFTOHTML_STUB = [
   "#!/bin/sh",
-  "# research-paper-pipeline: banal reads the banal input XML rpp writes, never a PDF. banal still",
-  "# asks `pdftohtml -v` which dialect to expect; this answers with the one rpp writes.",
+  "# paperlint: banal reads the banal input XML it writes, never a PDF. banal still",
+  "# asks `pdftohtml -v` which dialect to expect; this answers with the one paperlint writes.",
   'if [ "$1" = "-v" ]; then',
   `  echo "pdftohtml version ${XML_DIALECT.version}"`,
   "  exit 0",
   "fi",
-  'echo "rpp: this pdftohtml only answers -v; banal was given a PDF instead of the banal input XML" >&2',
+  'echo "paperlint: this pdftohtml only answers -v; banal was given a PDF instead of the banal input XML" >&2',
   "exit 1",
   "",
 ].join("\n");

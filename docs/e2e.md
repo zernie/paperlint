@@ -35,8 +35,7 @@ temporary tree, **under npm and under pnpm separately**, and drives the installe
 
 - the install itself finishes
 - `paperlint --help` answers with zero
-- `paperlint init` declares the papers directory in `package.json`, and does _not_ leave a second
-  carrier `rpp.json` behind
+- `paperlint init` declares the papers directory in `package.json`
 - `paperlint init` finishes with zero — its doctor found no discrepancy
 - `paperlint init` wires the hooks into `.claude/settings.json` — the same commands `hooks.json`
   publishes, once each — and says they need `npm install` in a fresh clone; a second `init`
@@ -88,10 +87,10 @@ paperlint's own cache, because the runner has no other.
 
 ## `test/e2e/toolchain.mjs` — real TeX Live, and only it
 
-`paperlint toolchain` into `$RPP_TEXLIVE_DIR` against real CTAN; a second run must say "nothing to do"
+`paperlint toolchain` into `$PAPERLINT_TEXLIVE_DIR` against real CTAN; a second run must say "nothing to do"
 within seconds; `--check` must exit 0; then the `acmart` fixture is built with PATH holding `node`
 only, so no other TeX Live and no PDF tool can stand in, and the PDF must carry Libertine and Biolinum
-and no Computer Modern face. Without `RPP_TEXLIVE_DIR` it is a declared skip: installing ~270 MB
+and no Computer Modern face. Without `PAPERLINT_TEXLIVE_DIR` it is a declared skip: installing ~270 MB
 into a home directory as a side effect of `npm run check` is the unasked install rule 11 forbids.
 `src/toolchain.harness.mjs` covers the installer's logic (mirror fallback, archive check, time
 limit, verification, idempotence) against a fake mirror on disk, without the network.

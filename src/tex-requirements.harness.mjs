@@ -116,7 +116,7 @@ for (const [t, vs] of byTemplate)
   );
 
 // ── 2. the schema rejects ───────────────────────────────────────────────────────────────
-const tmp = realpathSync(mkdtempSync(join(tmpdir(), "rpp-texreq-h-")));
+const tmp = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-texreq-h-")));
 copyFileSync(join(VENUES, R.SCHEMA_FILE), join(tmp, R.SCHEMA_FILE));
 const bad = (text) => throws(() => R.parseProfile(text, "bad.jsonc", tmp));
 const BAD = [

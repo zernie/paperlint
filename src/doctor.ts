@@ -282,8 +282,6 @@ export function doctor({
     out.push(...declaration.lines);
     bad += declaration.bad;
   }
-  if (existsSync(join(root, "rpp.json")))
-    out.push(`  ⚠ rpp.json is present — deprecated; the hooks never read it`);
 
   out.push("", "papers directory");
   const hookRoot = rawPkg ? papersRoot(rawPkg) : null;

@@ -8,7 +8,7 @@
  *
  * ── THE LICENCE BOUNDARY ────────────────────────────────────────────────────────
  * banal is GPL-2.0-or-later; paperlint is MIT. paperlint therefore never contains banal: `paperlint toolchain`
- * DOWNLOADS it from HotCRP at a pinned commit, checks its sha256, and stores it in rpp's cache, and
+ * DOWNLOADS it from HotCRP at a pinned commit, checks its sha256, and stores it in paperlint's cache, and
  * paperlint EXECUTES it as a separate program (`perl banal …`), reading its JSON output. Nothing of banal
  * is copied, vendored, linked or translated into this package.
  *
@@ -96,7 +96,7 @@ function runBanal(
   banal: LocatedBanal,
   pages: readonly PageLayout[],
 ): Result<BanalMeasurement, BanalFailure> {
-  return d.workspace.within("rpp-banal-", (scratch) =>
+  return d.workspace.within("paperlint-banal-", (scratch) =>
     parseBanalOutput(
       d.run.run(
         banalCommand(

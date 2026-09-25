@@ -47,7 +47,7 @@ const page = (boxes: TextBox[], widthPt = 612, heightPt = 792): PageLayout => ({
   const expected = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<!DOCTYPE pdf2xml SYSTEM "pdf2xml.dtd">',
-    '<pdf2xml producer="research-paper-pipeline (pdf.js)" version="24.02.0">',
+    '<pdf2xml producer="paperlint (pdf.js)" version="24.02.0">',
     '<page number="1" position="absolute" top="0" left="0" height="2376" width="1836">',
     '\t<fontspec id="0" size="30" family="LinLibertineT" color="#000000"/>',
     '<text top="30.000000" left="60.000000" width="90.000000" height="36.000000" font="0">Hello</text>',

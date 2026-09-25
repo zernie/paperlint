@@ -65,12 +65,8 @@ import code and cannot walk up a tree looking for a config; it can read a path i
 and the one path it can always name is the project's `package.json`.
 
 `paperlint lint` looks for it in the current directory and then upwards, the way eslint and tsc find
-theirs, and prints which file it found. `--config <file>` overrides the search.
-
-⚠️ **`rpp.json` is deprecated and still read.** Earlier versions of `init` created it; `init` no
-longer does, and a run that reads one says so on its first line. The hooks never read it, so
-leaving settings there is how the linter and the guard end up watching different directories —
-`paperlint init` copies the value across for you.
+theirs, and prints which file it found. `--config <file>` overrides the search; the file has the
+same shape, with the settings under the `paperlint` key.
 
 ## The `rules` key: turning rules on and off
 
@@ -129,7 +125,7 @@ and the real findings leave with it.
 
 Those are the defaults; you only write the block to change them. `paper.md` is still in them
 because Markdown papers are deprecated but not yet removed
-([#57](https://github.com/zernie/research-paper-pipeline/issues/57)). They were measured against a
+([#57](https://github.com/zernie/paperlint/issues/57)). They were measured against a
 real five-paper corpus rather than chosen — it passes with zero findings, while adding
 `paper.pdf` to `require` produces two findings on papers that are perfectly fine, which is why it
 is not there.
@@ -216,18 +212,18 @@ having run on it, because a missing build read as nothing to do.
 ⚠️ **A `build.sh` or `repro/build-submission.sh` in the paper directory is IGNORED.** Earlier
 versions ran it; `paperlint build` now says one line — `build.sh is ignored — paperlint builds the paper
 itself` — and builds the paper itself. The `buildScripts` key is ignored the same way.
-Why: [#59](https://github.com/zernie/research-paper-pipeline/issues/59).
+Why: [#59](https://github.com/zernie/paperlint/issues/59).
 
 ## Using the rules from an existing ESLint config
 
 Under the hood `paperlint lint` builds an ESLint flat config and runs it. If your repository already
 lints with ESLint, you can import the rule modules from `paperlint/eslint-rules/`
-and wire them yourself; `bin/rpp.mjs` exports `buildConfig(options, texLanguage)` that returns
+and wire them yourself; `bin/paperlint.mjs` exports `buildConfig(options, texLanguage)` that returns
 the exact config the CLI uses, so the shortest path is:
 
 ```js
 // eslint.config.mjs
-import { buildConfig } from "paperlint/bin/rpp.mjs";
+import { buildConfig } from "paperlint/bin/paperlint.mjs";
 import { texLanguage } from "paperlint/eslint-rules/latex-language.mjs";
 export default buildConfig({ minFindings: 3 }, texLanguage);
 ```

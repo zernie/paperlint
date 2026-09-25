@@ -9,7 +9,7 @@
  *   "rules": [ { "files": ["papers/agenticdev-2026/**"],
  *                "rules": { "pdf/last-page-balance": ["error", { "tolerancePt": 120 }] } } ]
  *
- * The blocks are appended AFTER rpp's built-in config, so a later block wins, exactly as in ESLint.
+ * The blocks are appended AFTER paperlint's built-in config, so a later block wins, exactly as in ESLint.
  * `files` and `ignores` are resolved relative to the directory of the file that holds the settings,
  * as ESLint resolves them relative to its config file: each block gets that directory as ESLint's
  * own `basePath`, so paperlint matches nothing itself.
@@ -159,7 +159,7 @@ export function parseRuleBlocks(
 
 /**
  * The rule ids a config defines through its own plugins, as `<plugin>/<rule>`. Plugins passed in
- * `foreign` (a dependency's plugin, such as `@eslint/markdown`) are not rpp's and are skipped.
+ * `foreign` (a dependency's plugin, such as `@eslint/markdown`) are not paperlint's and are skipped.
  */
 export function shippedRuleIds(
   config: readonly unknown[],

@@ -22,7 +22,7 @@ import {
 import type { LocatedBanal } from "./locate.ts";
 import { XML_DIALECT } from "./xml.ts";
 
-test("the staging holds BOTH files: the XML and the -v stub answering the dialect rpp writes", () => {
+test("the staging holds BOTH files: the XML and the -v stub answering the dialect paperlint writes", () => {
   const [xml, stub] = stageBanalInput([]).files;
   assert.equal(xml.name, "paper.xml");
   assert.match(xml.content, /^<\?xml/);
@@ -50,14 +50,14 @@ test("shQuote survives a single quote", () => {
   assert.equal(shQuote("it's"), `'it'"'"'s'`);
 });
 
-const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-stage-test-")));
+const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-stage-test-")));
 after(() => rmSync(root, { recursive: true, force: true }));
 
 test("🔴 stage: on a real scratch directory the stub answers `-v` through the shell, from a path with a space and a quote", () => {
   const awkward = join(root, "it's a dir");
   mkdirSync(awkward);
   const { workspace } = nodeAdapters({ tmpDir: awkward });
-  workspace.within("rpp-banal-", (s) => {
+  workspace.within("paperlint-banal-", (s) => {
     const staged = stage(s, stageBanalInput([]));
     assert.ok(existsSync(staged.xml));
     // Guards: banal runs `$PDFTOHTML -v 2>&1 |` through /bin/sh, unquoted.

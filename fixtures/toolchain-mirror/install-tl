@@ -1,7 +1,7 @@
 #!/bin/sh
-# STANDS IN FOR install-tl in src/toolchain.harness.mjs. It reads TEXDIR from the profile rpp
+# STANDS IN FOR install-tl in src/toolchain.harness.mjs. It reads TEXDIR from the profile paperlint
 # wrote and lays out a tree whose kpsewhich and tlmgr are the stubs shipped beside it, so the
-# harness drives rpp's real download, unpack, install and verify logic without the network.
+# harness drives paperlint's real download, unpack, install and verify logic without the network.
 set -eu
 here=$(cd "$(dirname "$0")" && pwd)
 profile=""

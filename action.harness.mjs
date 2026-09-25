@@ -25,7 +25,7 @@ import * as yaml from "js-yaml";
 import { guard } from "./scripts/eslint-report-guard.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const TMP = realpathSync(mkdtempSync(join(tmpdir(), "rpp-action-")));
+const TMP = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-action-")));
 const action = yaml.load(readFileSync(join(HERE, "action.yml"), "utf8"));
 
 // ── I. SHAPE, read as nodes ───────────────────────────────────────────────────────────────────
@@ -43,12 +43,12 @@ assert.ok(eslintStep, `no step named "paperlint lint" among: ${names}`);
 // 🔴 THE ACTION MUST CALL THE PACKAGE'S OWN CLI, NOT ESLINT. This is not tidiness: while the step
 // invoked `npx eslint` directly it was a SECOND implementation of the same job, and it had already
 // drifted — the directory-structure check (a paper directory with no PIPELINE-STATUS.md gets zero
-// rules and reports clean) lives in `bin/rpp.mjs`, so in CI it did not run at all. Any future edit
+// rules and reports clean) lives in `bin/paperlint.mjs`, so in CI it did not run at all. Any future edit
 // that reaches past the CLI reintroduces exactly that gap, silently and greenly.
 assert.match(
   eslintStep.run,
   /npx paperlint lint/,
-  "the lint step must call this package's own CLI — invoking eslint directly bypasses rpp.json and the structure check",
+  "the lint step must call this package's own CLI — invoking eslint directly bypasses the settings and the structure check",
 );
 assert.doesNotMatch(
   eslintStep.run,
@@ -59,8 +59,8 @@ assert.doesNotMatch(
 // `overrideConfigFile: true`, so a consumer's nested config cannot reach the run. The guarantee
 // moved from a flag into the code — assert the code, not the flag.
 //
-// 🔴 AND ASSERT IT IN THE FILE THAT HOLDS IT. This read said `bin/rpp.mjs` until the CLI moved to
-// TypeScript; `bin/rpp.mjs` is now a loader shim and contains no such call, so the assertion went
+// 🔴 AND ASSERT IT IN THE FILE THAT HOLDS IT. This read said `bin/paperlint.mjs` until the CLI moved to
+// TypeScript; `bin/paperlint.mjs` is now a loader shim and contains no such call, so the assertion went
 // red on a move that changed no behaviour. That redness is the point — the same assertion written
 // as a grep over "the CLI" would have kept passing against whichever file still matched, which is
 // how a check quietly stops watching its subject.
@@ -72,7 +72,7 @@ assert.match(
 // The redirect into a report file is only sound while `--json` keeps stdout clean.
 assert.match(
   eslintStep.run,
-  /--json > "\$RUNNER_TEMP\/rpp\.json"/,
+  /--json > "\$RUNNER_TEMP\/paperlint-report\.json"/,
   "the machine-readable report must be redirected whole — it is what the guard reads",
 );
 // The guard must be CALLED, and by file — an inline blob would be untestable.
@@ -93,7 +93,7 @@ assert.match(
 // So: execute the REAL `run:` block under the REAL flags, with a stub standing in for `npx`, and
 // require that the guard was reached and that ESLint's code came through it.
 const stubbedStepRun = (stubRc) => {
-  const bin = realpathSync(mkdtempSync(join(tmpdir(), "rpp-bin-")));
+  const bin = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-bin-")));
   writeFileSync(
     join(bin, "npx"),
     // Stub prints the report TO STDOUT, not to a file by the `-o` flag: the step no longer passes
@@ -115,9 +115,9 @@ const stubbedStepRun = (stubRc) => {
         PATH: `${bin}:${process.env.PATH}`,
         RUNNER_TEMP: TMP,
         GITHUB_ACTION_PATH: HERE,
-        RPP_CONFIG: "eslint.config.mjs",
-        RPP_PATHS: ".",
-        RPP_MAXWARN: "-1",
+        PAPERLINT_CONFIG: "eslint.config.mjs",
+        PAPERLINT_PATHS: ".",
+        PAPERLINT_MAXWARN: "-1",
         STUB_RC: String(stubRc),
         REPORT_JSON: JSON.stringify([{ filePath: "/x/a.md", messages: [] }]),
       },

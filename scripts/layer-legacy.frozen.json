@@ -1,5 +1,5 @@
 {
-  "issue": "https://github.com/zernie/research-paper-pipeline/issues/76",
+  "issue": "https://github.com/zernie/paperlint/issues/76",
   "why": "Legacy src/*.ts files that still do I/O or import an adapter or a tool package directly. May only shrink: fix a site, delete its directive, lower the count here (delete the file entry at zero). A new file may not appear. Counted from ESLint suppressedMessages by scripts/layer-legacy-frozen.mjs, part of npm run check.",
   "files": {
     "src/build-engine.ts": {

@@ -54,7 +54,7 @@ test("with $BANAL: banal gets the .xml and a quoted $PDFTOHTML, and the geometry
     [2, 1],
   );
   const c = run.calls[0];
-  // Guards: the poppler-free path — banal is handed rpp's XML, never the PDF.
+  // Guards: the poppler-free path — banal is handed paperlint's XML, never the PDF.
   assert.match(c?.args.at(-1) ?? "", /\.xml$/);
   assert.match(c?.env["PDFTOHTML"] ?? "", /^'.*pdftohtml'$/);
 });

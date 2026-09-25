@@ -10,13 +10,13 @@
  *
  * Two entry points into the tool, and both are whole now:
  *     npx paperlint lint              ← here
- *     uses: zernie/research-paper-pipeline@<sha>    ← action.yml
+ *     uses: zernie/paperlint@<sha>    ← action.yml
  *
  * ⚠️ THE BOUNDARY THIS UTILITY HAS NO RIGHT TO ERASE: the consumer's data stays with the consumer.
  * The typography debt, the marker of the author-list check run, the field dictionary — all of that
  * is about ONE corpus, and wiring it into the package would repeat the defect that put the path
  * `.claude/skills/verify-citations/...` into a rule's message. So they live in the consumer's
- * `rpp.json`.
+ * `package.json`, under the `paperlint` key.
  *
  * 🔴 WHY THE COMMAND IS CALLED `lint` AND NOT `check`. It does exactly what everyone else calls by
  * that word: reads files, changes nothing, prints findings, exits non-zero. `check` is taken in the
@@ -35,7 +35,7 @@ import markdown from "@eslint/markdown";
 // Types come from consumer.d.mts beside it, the same arrangement as lib/paper-config.d.mts.
 import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
 export { isMain };
-import type { Args, RppConfig, ConfigRead } from "./types.ts";
+import type { Args, PaperlintConfig, ConfigRead } from "./types.ts";
 import {
   checkStructure,
   formatStructure,
@@ -123,7 +123,7 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       package the venue declares; on a terminal it offers to install
                                       one, without a terminal it stops and names \`npx paperlint toolchain\`
   npx paperlint toolchain [--check]   install TeX Live with every package the venue profiles declare
-                                      into ~/.cache/rpp/texlive (RPP_TEXLIVE_DIR overrides); a second
+                                      into ~/.cache/paperlint/texlive (PAPERLINT_TEXLIVE_DIR overrides); a second
                                       run does nothing. --check: report what is missing, change nothing
   npx paperlint doctor                say what is actually wired — and what only LOOKS wired
   npx paperlint hook <name>           run an editor hook (.claude/settings.json calls this)
@@ -149,8 +149,8 @@ lint:
                       most findings here are advisory and a gate that fails on advice gets muted
 
 settings — the \`paperlint\` key of your package.json, found by walking up from the
-current directory, the way every other tool in the stack finds its config. \`rpp.json\` is still
-read as a deprecated fallback and the run says so. \`papersDir\` is required; the rest is optional:
+current directory, the way every other tool in the stack finds its config. \`--config\` names
+another file of the same shape. \`papersDir\` is required; the rest is optional:
 
   "paperlint": {
     "papersDir":         "papers",
@@ -164,14 +164,14 @@ read as a deprecated fallback and the run says so. \`papersDir\` is required; th
                  "rules": { "pdf/last-page-balance": "error" } } ]
   }
 
-  "rules" takes ESLint flat-config blocks (files, ignores, rules), appended after rpp's own, with
+  "rules" takes ESLint flat-config blocks (files, ignores, rules), appended after paperlint's own, with
   files relative to the file holding the settings. Optional rules (off unless turned on there):
   pdf/last-page-balance. An unknown key, anywhere in the settings, is an error.
 `;
 
 /** The config the user would otherwise write by hand. The data comes from `opts`, the mechanism is here. */
 export function buildConfig(
-  opts: RppConfig = {},
+  opts: PaperlintConfig = {},
   texLanguage: unknown,
 ): unknown[] {
   const paperRules = { ...researchQuestion.rules, ...typography.rules };
@@ -272,8 +272,8 @@ export function buildConfig(
 }
 
 /**
- * The rule ids a consumer may name in `rules`: every rule rpp's own config defines, read off that
- * config rather than listed again. `@eslint/markdown` is a dependency's plugin, not rpp's.
+ * The rule ids a consumer may name in `rules`: every rule paperlint's own config defines, read off that
+ * config rather than listed again. `@eslint/markdown` is a dependency's plugin, not paperlint's.
  */
 export const SHIPPED_RULES: ReadonlySet<string> = shippedRuleIds(
   buildConfig({}, { sentinel: "tex language" }),
@@ -288,7 +288,7 @@ const isOn = (entry: unknown): boolean => {
 
 /**
  * Rules paperlint ships and turns on for no file itself — the ones a consumer opts into with `rules`.
- * Derived: every shipped rule that no block of rpp's own config names.
+ * Derived: every shipped rule that no block of paperlint's own config names.
  */
 export const OPTIONAL_RULES: ReadonlySet<string> = new Set(
   [...SHIPPED_RULES].filter(
@@ -309,7 +309,7 @@ export const OPTIONAL_RULES: ReadonlySet<string> = new Set(
 export async function silentOptionalRules(
   eslint: ESLint,
   lintedFiles: readonly string[],
-  opts: RppConfig,
+  opts: PaperlintConfig,
 ): Promise<string[]> {
   const turnedOn = new Set(
     (opts.rules ?? []).flatMap((b) =>
@@ -333,10 +333,10 @@ export async function silentOptionalRules(
  * config blocks. Nothing after this sees the raw object.
  */
 export function parseSettings(
-  opts: RppConfig,
+  opts: PaperlintConfig,
   where: string,
   baseDir: string,
-): Parsed<RppConfig> {
+): Parsed<PaperlintConfig> {
   const raw = opts as Record<string, unknown>;
   const unknown = unknownKeys(raw);
   if (unknown.length > 0)
@@ -431,7 +431,6 @@ export function parseArgs(argv: readonly string[]): Args {
   return out;
 }
 
-export const CONFIG_NAME = "rpp.json";
 export const PKG_NAME = "package.json";
 
 /**
@@ -450,36 +449,20 @@ function ownVersion(): string | undefined {
   }
 }
 
-/** Where the consumer's settings were found, and in which of the two carriers. */
-export interface Declaration {
-  readonly path: string;
-  readonly kind: "package.json" | "rpp.json";
-}
-
 /**
- * 🔴 THE CLI HAD TO LEARN TO READ `package.json`, AND THAT IS NOT A SIDE ERRAND. `paperlint init` now
- * writes ONE declaration, into the `package.json` key that the three hooks and `eslint-rules`
- * already read. Without this walker the install it produces would not work at all: `paperlint lint`
- * would find no `rpp.json`, report "nothing to lint", and the consumer would be back to
- * declaring the same directory twice — the defect the single declaration removes (issue #33,
+ * 🔴 THE CLI READS `package.json`, THE ONE DECLARATION. `paperlint init` writes the settings under
+ * the `package.json` key that the three hooks and `eslint-rules` already read; the CLI reads the
+ * same file, so the install and the check cannot look at different files (issue #33,
  * `docs/install.md`).
  *
- * `rpp.json` stays readable as a DEPRECATED fallback, and the read says so out loud. Silently
- * dropping a file this command used to write would break working setups on upgrade.
- *
  * The walk goes up to the filesystem root, the way eslint, prettier and tsc find theirs, so a run
- * from inside one paper sees the same settings as a run from the repository root. At each level
- * `package.json` wins over `rpp.json`: it is the carrier every other reader uses, so preferring
- * it is what keeps "one declaration" true rather than merely intended.
+ * from inside one paper sees the same settings as a run from the repository root.
  */
-export function findDeclaration(startDir: string): Declaration | null {
+export function findConfig(startDir: string): string | null {
   let dir = resolve(startDir);
   for (;;) {
     const pkg = join(dir, PKG_NAME);
-    if (existsSync(pkg) && declaresSettings(pkg))
-      return { path: pkg, kind: "package.json" };
-    const rpp = join(dir, CONFIG_NAME);
-    if (existsSync(rpp)) return { path: rpp, kind: "rpp.json" };
+    if (existsSync(pkg) && declaresSettings(pkg)) return pkg;
     const up = dirname(dir);
     if (up === dir) return null;
     dir = up;
@@ -499,11 +482,6 @@ const declaresSettings = (pkgPath: string): boolean => {
     return false;
   }
 };
-
-/** Kept as the one-line question "which file holds the settings" — callers that only need a path. */
-export function findConfig(startDir: string): string | null {
-  return findDeclaration(startDir)?.path ?? null;
-}
 
 /**
  * Reading the config, ONE reader for all commands. Pulled out of `run()` the moment a second
@@ -525,24 +503,17 @@ export function readConfig(
   } = {},
 ): ConfigRead {
   // 🔴 THE CONFIG FINDS ITSELF. An explicit `--config` beats the discovered one — it was named out
-  // loud, and a substitution is never silent. For an explicit path the FILE NAME decides the
-  // carrier: the path here is a value, not a text to make guesses about, and `package.json` holds
-  // the settings under a key.
-  const decl: Declaration | null = a.config
-    ? {
-        path: a.config,
-        kind: basename(a.config) === PKG_NAME ? "package.json" : "rpp.json",
-      }
-    : findDeclaration(cwd);
-  const configPath = decl?.path ?? null;
+  // loud, and a substitution is never silent. Either way the file has the shape of a
+  // `package.json`: the settings sit under the key.
+  const configPath = a.config ?? findConfig(cwd);
   if (a.config && !existsSync(a.config)) {
     err(`config file not found: ${a.config}`);
     return { code: 2 };
   }
 
-  let opts: RppConfig = {};
+  let opts: PaperlintConfig = {};
   let legacyKey = false;
-  if (decl && configPath) {
+  if (configPath) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
     let parsed: any;
     try {
@@ -551,15 +522,13 @@ export function readConfig(
       err(`${configPath} is not valid JSON: ${(e as Error).message}`);
       return { code: 2 };
     }
-    if (decl.kind === "package.json") {
-      const d = declaredSettings(parsed);
-      if (d.conflict !== null) {
-        err(d.conflict);
-        return { code: 2 };
-      }
-      opts = (d.settings ?? {}) as RppConfig;
-      legacyKey = d.legacy;
-    } else opts = parsed;
+    const d = declaredSettings(parsed);
+    if (d.conflict !== null) {
+      err(d.conflict);
+      return { code: 2 };
+    }
+    opts = (d.settings ?? {}) as PaperlintConfig;
+    legacyKey = d.legacy;
     // The discovered config is NAMED out loud. Otherwise a run from someone else's directory picks
     // up someone else's file and does not say so — and a typography-debt mismatch looks like a finding.
     //
@@ -568,30 +537,19 @@ export function readConfig(
     // test but by an attempt to wire our own action to this output; in the harness I first WORKED
     // AROUND this line (stripped the first line before JSON.parse) — that is, the workaround hid
     // the defect exactly where it should have been shouting.
-    (a.json ? err : log)(`config: ${relative(cwd, configPath) || CONFIG_NAME}`);
-    // 🔴 THE DEPRECATED CARRIER IS NAMED OUT LOUD, IT DOES NOT STOP BEING READ. The hooks read ONLY
-    // package.json, so a consumer whose settings stayed in rpp.json lints one directory and guards
-    // another — and both states look equally green.
-    if (decl.kind === "rpp.json")
-      (a.json ? err : log)(
-        `  ⚠ ${CONFIG_NAME} is deprecated — move these keys under "${CONFIG_KEY}" in ${PKG_NAME}; ` +
-          `the hooks read only that file. \`npx paperlint init\` does it for you.`,
-      );
+    (a.json ? err : log)(`config: ${relative(cwd, configPath) || PKG_NAME}`);
     if (legacyKey) (a.json ? err : log)(`  ⚠ ${LEGACY_KEY_MESSAGE}`);
   }
 
   // The old field name is refused before anything else is read from the settings: falling back
   // to it would keep it working forever, and this package has no released users to migrate.
-  const where =
-    decl?.kind === "package.json"
-      ? `${PKG_NAME} → "${legacyKey ? LEGACY_CONFIG_KEY : CONFIG_KEY}"`
-      : (decl?.path ?? CONFIG_NAME);
-  const renamed = decl ? renamedFieldMessage(opts, where) : null;
+  const where = `${configPath ? basename(configPath) : PKG_NAME} → "${legacyKey ? LEGACY_CONFIG_KEY : CONFIG_KEY}"`;
+  const renamed = configPath ? renamedFieldMessage(opts, where) : null;
   if (renamed) {
     err(renamed);
     return { code: 2 };
   }
-  if (decl && configPath) {
+  if (configPath) {
     const parsed = parseSettings(
       opts,
       where,
@@ -607,15 +565,11 @@ export function readConfig(
   // 🔴 THE PAPERS DIRECTORY IS A REQUIRED FIELD. The papers directory is the one thing without which the tool
   // does not know what it works on, and the one thing that cannot be guessed: a default of "." runs
   // the rules over the whole checkout and exits green over a scope nobody chose.
-  if (decl && !hasPapers(opts)) {
+  if (configPath && !hasPapers(opts)) {
     err(
-      decl.kind === "package.json"
-        ? `${decl.path} must declare \`${PAPERS_DIR_FIELD}\` — the directory your papers live in, e.g.\n` +
-            `  { "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": "papers" } }\n` +
-            `It is the one thing this tool cannot guess. \`npx paperlint init\` writes it for you.`
-        : `${decl.path} must declare \`${PAPERS_DIR_FIELD}\` — the directory your papers live in, e.g.\n` +
-            `  { "${PAPERS_DIR_FIELD}": "papers" }\n` +
-            `It is the one thing this tool cannot guess.`,
+      `${configPath} must declare \`${PAPERS_DIR_FIELD}\` — the directory your papers live in, e.g.\n` +
+        `  { "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": "papers" } }\n` +
+        `It is the one thing this tool cannot guess. \`npx paperlint init\` writes it for you.`,
     );
     return { code: 2 };
   }
@@ -623,7 +577,7 @@ export function readConfig(
 }
 
 /** The papers directory field of the settings, read by its one declared name. */
-export function papersDirOf(opts: RppConfig): unknown {
+export function papersDirOf(opts: PaperlintConfig): unknown {
   return (opts as Record<string, unknown>)[PAPERS_DIR_FIELD];
 }
 
@@ -635,7 +589,7 @@ export function toPaths(papers: unknown): string[] {
   return [];
 }
 
-const hasPapers = (opts: RppConfig): boolean =>
+const hasPapers = (opts: PaperlintConfig): boolean =>
   toPaths(papersDirOf(opts)).length > 0;
 
 /**
@@ -703,7 +657,7 @@ export function runHook(
       throw new Error(`resolved vigiles, but no cli.js beside it: ${runtime}`);
   } catch {
     err(
-      `rpp: the hook runtime (vigiles) is not resolvable from ${fileURLToPath(new URL(".", import.meta.url))}.\n` +
+      `paperlint: the hook runtime (vigiles) is not resolvable from ${fileURLToPath(new URL(".", import.meta.url))}.\n` +
         `The \`${name}\` hook is NOT running. Everything else — \`paperlint lint\`, CI — is unaffected.\n` +
         `Reinstall this package so its dependencies are present.`,
     );
@@ -1048,7 +1002,7 @@ export async function run(
         );
   if (paths.length === 0) {
     err(
-      `nothing to lint: no path was given and no ${CONFIG_NAME} was found.\n` +
+      `nothing to lint: no path was given and no "${CONFIG_KEY}" key was found in a ${PKG_NAME}.\n` +
         `Run \`npx paperlint init\` here, or pass the directory: \`paperlint lint papers\`.`,
     );
     return 2;
@@ -1133,7 +1087,7 @@ async function reportLint(
     log: typeof console.log;
     err: typeof console.error;
     where: string;
-    opts: RppConfig;
+    opts: PaperlintConfig;
   },
 ): Promise<number> {
   const silent = await silentOptionalRules(
@@ -1180,7 +1134,7 @@ async function reportLint(
 
 // 🔴 `isMain`, NOT A STRING COMPARISON. The first version wrote
 //     if (import.meta.url === `file://${process.argv[1]}`)
-// and the utility, launched via `node_modules/.bin/rpp`, SILENTLY EXITED WITH ZERO: npm puts a
+// and the utility, launched via `node_modules/.bin/paperlint`, SILENTLY EXITED WITH ZERO: npm puts a
 // SYMLINK there, `process.argv[1]` stays the symlink's path while `import.meta.url` is the real
 // path, and the condition is false. That is, the only way a real consumer launches the utility did
 // not work at all — and it looked like a clean run.

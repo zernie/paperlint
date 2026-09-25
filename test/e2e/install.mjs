@@ -240,7 +240,7 @@ function contentDelivery(installed) {
       const candidates = [
         // skill-relative: `scripts/x.mjs`, `../other/scripts/x.mjs`
         join(skills, name, raw),
-        // the install-path spelling the port rule exists to retire (rpp#19); counted as resolvable
+        // the install-path spelling the port rule exists to retire (paperlint#19); counted as resolvable
         // only if the file is genuinely there under the declared skills directory
         join(skills, raw.replace(/^\.claude\/skills\//, "")),
       ];
@@ -308,7 +308,7 @@ let skippedManagers = [];
 // realpathSync is NOT decoration: on macOS `/var` is a symlink to `/private/var`, and a path
 // recorded before resolution does not match what a process returns from inside. This is a
 // separate class, and it has already cost a red npm test on macOS only (vigiles#241).
-const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-e2e-")));
+const work = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-e2e-")));
 try {
   const packed = execFileSync(
     "npm",
@@ -434,14 +434,6 @@ try {
       : bad(
           "`paperlint init` declared the papers directory in package.json",
           `package.json ended up with ${JSON.stringify(declared)}\n${init.stdout ?? ""}${init.stderr ?? ""}`,
-        );
-    // ONE declaration: no second carrier is created, otherwise the two diverge silently — that is
-    // defect #33 exactly, only reintroduced by our own install command.
-    !existsSync(join(consumer, "rpp.json"))
-      ? ok("and did NOT create a second carrier rpp.json")
-      : bad(
-          "and did NOT create a second carrier rpp.json",
-          "rpp.json appeared",
         );
     init.status === 0
       ? ok("`paperlint init` finished with zero — doctor found no discrepancy")

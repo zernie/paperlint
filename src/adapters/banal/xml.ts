@@ -104,7 +104,7 @@ export function pdf2xml(pages: readonly PageLayout[]): string {
   const lines = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<!DOCTYPE pdf2xml SYSTEM "pdf2xml.dtd">',
-    `<pdf2xml producer="research-paper-pipeline (pdf.js)" version="${XML_DIALECT.version}">`,
+    `<pdf2xml producer="paperlint (pdf.js)" version="${XML_DIALECT.version}">`,
     ...pages.flatMap((p, i) => pageXml(p, i + 1, fonts)),
     "</pdf2xml>",
   ];

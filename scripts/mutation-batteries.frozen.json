@@ -1,5 +1,5 @@
 {
-  "issue": "https://github.com/zernie/research-paper-pipeline/issues/52",
+  "issue": "https://github.com/zernie/paperlint/issues/52",
   "why": "Hand-written *.mutations.mjs batteries are being removed (#52). This list may only shrink: no new batteries, no new cases in existing ones. Delete a battery or a case, then delete its entry or lower its count here. Checked by scripts/mutation-batteries-frozen.mjs, part of npm run check.",
   "batteries": {
     "action.mutations.mjs": {
@@ -96,7 +96,7 @@
       "cases": 11
     },
     "src/cli.mutations.mjs": {
-      "cases": 28
+      "cases": 26
     },
     "src/doctor.mutations.mjs": {
       "cases": 10

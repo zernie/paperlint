@@ -1,7 +1,7 @@
 #!/bin/sh
 # Answers like tlmgr install: each package is looked up in the repository's catalog.txt
 # ("name file…", a "bin:NAME" item creates an executable). An unknown name gets tlmgr's own
-# wording, which is what rpp parses. Every call is appended to tlmgr.log at the tree root.
+# wording, which is what paperlint parses. Every call is appended to tlmgr.log at the tree root.
 bin=$(cd "$(dirname "$0")" && pwd)
 tree=$(cd "$bin/../.." && pwd)
 repo=""

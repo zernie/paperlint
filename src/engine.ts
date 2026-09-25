@@ -8,7 +8,7 @@
  * TeX Live qualifies only when `kpsewhich` finds every file the venue declares (issue #26).
  *
  * The order (the Playwright pattern, decided 2026-09-24):
- *   1. rpp's own cache (`paperlint toolchain` installs it) — when it has everything;
+ *   1. paperlint's own cache (`paperlint toolchain` installs it) — when it has everything;
  *   2. a TeX Live already on PATH — when IT has everything;
  *   3. neither: on a terminal, ask once and install; without one (CI, an agent), refuse in one line
  *      that names `npx paperlint toolchain` and the missing packages. Never a silent install without a
@@ -41,7 +41,7 @@ export interface TreeProbe {
 export interface EngineFacts {
   /** install-tl-unx runs here (Linux, macOS). */
   readonly supported: boolean;
-  /** rpp's cached TeX Live, probed — or null when there is none. */
+  /** paperlint's cached TeX Live, probed — or null when there is none. */
   readonly cache: TreeProbe | null;
   /** The `pdflatex` on PATH, probed — or null when there is none. */
   readonly system: TreeProbe | null;

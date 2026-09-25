@@ -4,7 +4,7 @@
  * 🔴 NOT ONE BYTE OF TeX LIVE IS DOWNLOADED HERE. The mirror is a directory served by `file://`
  * URLs: the real `curl` fetches from it, the real `tar` lists and unpacks it, and the installer
  * inside is `fixtures/toolchain-mirror/install-tl`, which lays out a tree whose `kpsewhich` and
- * `tlmgr` answer from two text files. So what runs is rpp's own download, fallback, unpack,
+ * `tlmgr` answer from two text files. So what runs is paperlint's own download, fallback, unpack,
  * install and verify logic — the part that decides success — and what is faked is only TeX.
  * The real TeX Live half is `test/e2e/toolchain.mjs`.
  *
@@ -78,22 +78,25 @@ check(
   ) === '["urw-base35"]',
 );
 check(
-  "cacheRoot: RPP_TEXLIVE_DIR wins",
-  T.cacheRoot({ RPP_TEXLIVE_DIR: "/ci/tl", XDG_CACHE_HOME: "/x" }, "/h") ===
-    "/ci/tl",
+  "cacheRoot: PAPERLINT_TEXLIVE_DIR wins",
+  T.cacheRoot(
+    { PAPERLINT_TEXLIVE_DIR: "/ci/tl", XDG_CACHE_HOME: "/x" },
+    "/h",
+  ) === "/ci/tl",
 );
 check(
   "cacheRoot: then XDG_CACHE_HOME",
-  T.cacheRoot({ XDG_CACHE_HOME: "/x" }, "/h") === "/x/rpp/texlive",
+  T.cacheRoot({ XDG_CACHE_HOME: "/x" }, "/h") === "/x/paperlint/texlive",
 );
 check(
   "cacheRoot: then ~/.cache",
-  T.cacheRoot({}, "/h") === "/h/.cache/rpp/texlive",
+  T.cacheRoot({}, "/h") === "/h/.cache/paperlint/texlive",
 );
 check(
-  "mirrorsFrom: RPP_CTAN_MIRROR is the ONLY mirror, trailing slash dropped",
-  JSON.stringify(T.mirrorsFrom({ RPP_CTAN_MIRROR: "https://m/tlnet/" })) ===
-    '["https://m/tlnet"]',
+  "mirrorsFrom: PAPERLINT_CTAN_MIRROR is the ONLY mirror, trailing slash dropped",
+  JSON.stringify(
+    T.mirrorsFrom({ PAPERLINT_CTAN_MIRROR: "https://m/tlnet/" }),
+  ) === '["https://m/tlnet"]',
 );
 check(
   "mirrorsFrom: several defaults, every one https",
@@ -146,7 +149,9 @@ check(
 check("usableTree: an empty cache", T.usableTree([], () => true) === null);
 
 // ── the fake mirror ────────────────────────────────────────────────────────────────────
-const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-toolchain-h-")));
+const work = realpathSync(
+  mkdtempSync(join(tmpdir(), "paperlint-toolchain-h-")),
+);
 const good = join(work, "good");
 const garbage = join(work, "garbage");
 const staging = join(work, "staging", "install-tl-20260924");
@@ -259,14 +264,14 @@ const TEX = {
   tools: { texcount: ["texcount"] },
 };
 const root = join(work, "cache");
-// 🔴 banal goes into the work directory, never the developer's cache: without RPP_BANAL_DIR the
-// command installs into ~/.cache/rpp/banal, and a harness must not leave files in a home.
+// 🔴 banal goes into the work directory, never the developer's cache: without PAPERLINT_BANAL_DIR the
+// command installs into ~/.cache/paperlint/banal, and a harness must not leave files in a home.
 const banalDir = join(work, "banal");
 const env = {
   ...process.env,
-  RPP_TEXLIVE_DIR: root,
-  RPP_CTAN_MIRROR: url(good),
-  RPP_BANAL_DIR: banalDir,
+  PAPERLINT_TEXLIVE_DIR: root,
+  PAPERLINT_CTAN_MIRROR: url(good),
+  PAPERLINT_BANAL_DIR: banalDir,
 };
 // A stand-in banal: a Perl script that prints what banal prints for a one-page, 10 pt probe.
 const fakeBanal = join(work, "fake-banal");
@@ -446,7 +451,7 @@ const cmd = ({ banal = BANAL, ...over } = {}) => {
   const r = cmd({
     env: {
       ...env,
-      RPP_TEXLIVE_DIR: fresh,
+      PAPERLINT_TEXLIVE_DIR: fresh,
       FAKE_INSTALL_TL_FAIL: "1",
     },
   });
@@ -462,15 +467,15 @@ const cmd = ({ banal = BANAL, ...over } = {}) => {
   const r = cmd({
     env: {
       ...env,
-      RPP_TEXLIVE_DIR: join(work, "cache-nomirror"),
-      RPP_CTAN_MIRROR: MISSING,
+      PAPERLINT_TEXLIVE_DIR: join(work, "cache-nomirror"),
+      PAPERLINT_CTAN_MIRROR: MISSING,
     },
   });
   check(
     "no mirror answers: exit 1, names the mirrors and the override",
     r.code === 1 &&
       r.err.includes("no CTAN mirror returned install-tl") &&
-      r.err.includes("RPP_CTAN_MIRROR"),
+      r.err.includes("PAPERLINT_CTAN_MIRROR"),
     r.err,
   );
 }
@@ -520,7 +525,11 @@ const withLibertine = {
 };
 const inYears = (mirror, over = {}) =>
   cmd({
-    env: { ...env, RPP_TEXLIVE_DIR: years, RPP_CTAN_MIRROR: mirror },
+    env: {
+      ...env,
+      PAPERLINT_TEXLIVE_DIR: years,
+      PAPERLINT_CTAN_MIRROR: mirror,
+    },
     ...over,
   });
 check(
@@ -583,12 +592,12 @@ check(
 {
   // tlmgr says 2027, but the installer the mirrors hand out is still 2026.
   const split = join(work, "cache-split");
-  cmd({ env: { ...env, RPP_TEXLIVE_DIR: split } });
+  cmd({ env: { ...env, PAPERLINT_TEXLIVE_DIR: split } });
   const r = cmd({
     env: {
       ...env,
-      RPP_TEXLIVE_DIR: split,
-      RPP_CTAN_MIRROR: mirrorFor("split2027", "2027", "2026"),
+      PAPERLINT_TEXLIVE_DIR: split,
+      PAPERLINT_CTAN_MIRROR: mirrorFor("split2027", "2027", "2026"),
     },
     tex: withLibertine,
   });
@@ -606,7 +615,7 @@ check(
 // ── 4. banal, the second half of the command ───────────────────────────────────────────
 {
   const dir = join(work, "banal-4");
-  const e = { ...env, RPP_BANAL_DIR: dir };
+  const e = { ...env, PAPERLINT_BANAL_DIR: dir };
   const before = cmd({ env: e, check: true });
   // Guards: --check covers banal — a complete TeX Live alone must not read as a ready toolchain.
   check(
@@ -633,7 +642,7 @@ check(
 }
 {
   const r = cmd({
-    env: { ...env, RPP_BANAL_DIR: join(work, "banal-bad") },
+    env: { ...env, PAPERLINT_BANAL_DIR: join(work, "banal-bad") },
     banal: { ...BANAL, sha256: "0".repeat(64) },
   });
   // Guards: the two halves are independent — a banal failure fails the command, and TeX Live still

@@ -433,7 +433,7 @@ const CELL_LABEL = {
 // as though the descriptions were dead. That is the failure mode this block exists to prevent.
 
 // 1. the skills exist and declare the names we test against
-// Through `installedSkills`, which follows the links `paperlint init` makes (rpp#62).
+// Through `installedSkills`, which follows the links `paperlint init` makes (paperlint#62).
 const installed = installedSkills(SKILLS_DIR);
 const installedSet = new Set(installed);
 for (const c of CASES) {

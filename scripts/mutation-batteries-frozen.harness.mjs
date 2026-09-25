@@ -60,7 +60,7 @@ const driverBattery = (k) =>
   `import { runMutations } from "./lib/mutation-driver.mjs";\n` +
   `process.exit(runMutations({ root: ".", cases: [${Array.from({ length: k }, (_, i) => `{ name: "c${String(i)}" }`).join(", ")}] }));\n`;
 
-const TMP = realpathSync(mkdtempSync(join(tmpdir(), "rpp-frozen-h-")));
+const TMP = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-frozen-h-")));
 process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
 mkdirSync(join(TMP, "scripts"), { recursive: true });
 mkdirSync(join(TMP, "src"), { recursive: true });

@@ -33,7 +33,7 @@
  * ── WHAT IS PURE AND WHAT IS NOT ─────────────────────────────────────────────
  * The decision of the LaTeX loop is `latex-loop.ts`, reading the log is `latex-log.ts`; both are
  * pure. This file is the shell: it runs processes through the injected `run` (the existing port —
- * `spawnSync` by default) and reads the files a pass left behind. Where rpp's own files live is
+ * `spawnSync` by default) and reads the files a pass left behind. Where paperlint's own files live is
  * answered by `consumer.mjs`, the one module allowed to know it (rule 10).
  */
 // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76

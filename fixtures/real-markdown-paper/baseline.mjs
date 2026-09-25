@@ -1,6 +1,6 @@
 /**
  * ONE reader of `baseline.json`, shared by the two runs that compare against it: the harness
- * beside this file (the repository's own `bin/rpp.mjs`) and `test/e2e/install.mjs` (the binary
+ * beside this file (the repository's own `bin/paperlint.mjs`) and `test/e2e/install.mjs` (the binary
  * a consumer actually got). Two copies of "growth fails, a drop never does" would drift the first
  * time one of them is tightened, and the two runs would then disagree about the same article.
  */
@@ -34,7 +34,7 @@ export function countByRule(stdout) {
  *              otherwise. Always a failure.
  *   vanished — a recorded rule went fully quiet without the recording being updated: how a check
  *              dies unnoticed. Also a failure.
- * A partial drop is neither: it is what a fix looks like (rpp#44 is expected to take typography
+ * A partial drop is neither: it is what a fix looks like (paperlint#44 is expected to take typography
  * to zero, and then the recording is updated in the same change).
  */
 export function compareToBaseline(found, recorded = recordedFindings()) {

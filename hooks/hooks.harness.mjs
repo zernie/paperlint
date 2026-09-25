@@ -72,7 +72,7 @@ const check = (label, cond) => {
  * checkout, which is what `npm install` of a local package does anyway.
  */
 const consumer = (block, { papers = "docs/papers", paper = "alpha" } = {}) => {
-  const dir = realpathSync(mkdtempSync(join(tmpdir(), "rpp-hooks-")));
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-hooks-")));
   const nm = join(dir, "node_modules");
   mkdirSync(nm, { recursive: true });
   symlinkSync(join(ROOT, "node_modules", "vigiles"), join(nm, "vigiles"));

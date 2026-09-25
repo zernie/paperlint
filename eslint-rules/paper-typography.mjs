@@ -27,7 +27,7 @@
  * two (blanking preserves length), so scanning `raw` and reporting the offset found there
  * still points at the right byte.
  *
- * ── WHY `bareDecimal` READS NEITHER, BUT THE PARSED TREE (rpp#44) ─────────────────────────
+ * ── WHY `bareDecimal` READS NEITHER, BUT THE PARSED TREE (paperlint#44) ─────────────────────────
  * Origin. On a workshop paper (HotCRP #20) Reviewer B wrote: `Numbers should be completed:
  * e.g. ".05" -> 0.05`. The submitted PDF really carried `p < .05`, `p=.002`, `p=.006` and
  * `p=.037` in its text (measured with pdftotext on the submitted version); the camera-ready

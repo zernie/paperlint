@@ -17,10 +17,10 @@
  * how the SUBMITTED `aisec-2026` went out. A green exit code says nothing about it: the failure
  * lives in the content of the artifact, so the content is what gets measured.
  *
- * 🔴 THE ENGINE IS rpp's OWN DECISION. The run first proves the refusal — no TeX Live and no terminal
+ * 🔴 THE ENGINE IS paperlint's OWN DECISION. The run first proves the refusal — no TeX Live and no terminal
  * gives one line naming `npx paperlint toolchain` and nothing built — which needs no TeX at all. Then it
  * asks `paperlint build --dry-run` which TeX Live the real run would use; under --strict (CI) that must
- * be rpp's cache, the one `paperlint toolchain` installed in the step before.
+ * be paperlint's cache, the one `paperlint toolchain` installed in the step before.
  *
  * 🔴 A MISSING TeX IS A DECLARED SKIP, NOT A SILENT ONE. For a contributor without TeX Live this
  * run is legitimately impossible, and it exits zero — HAVING SAID SO. In CI the same absence
@@ -56,7 +56,7 @@ import {
 } from "./read-pdf.mjs";
 
 const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const CLI = join(ROOT, "bin", "rpp.mjs");
+const CLI = join(ROOT, "bin", "paperlint.mjs");
 const strict = process.argv.includes("--strict");
 
 /**
@@ -98,7 +98,7 @@ const check = (label, cond, detail = "") => {
 
 // The fixtures are copied: the build leaves `paper.pdf`, `paper.aux` and `paper.log` next to the
 // source, and in the working tree those would be untracked files after every run.
-const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-build-e2e-")));
+const work = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-build-e2e-")));
 try {
   cpSync(join(ROOT, "fixtures", "build-e2e"), join(work, "papers"), {
     recursive: true,
@@ -111,15 +111,23 @@ try {
   // `--all` takes the papers directory from the config, not from an argument: the CONSUMER names
   // the scope, and that is the same contract for which `lint` has no "." default.
   writeFileSync(
-    join(work, "rpp.json"),
-    JSON.stringify({ [PAPERS_DIR_FIELD]: "papers" }, null, 2),
+    join(work, "package.json"),
+    JSON.stringify(
+      {
+        name: "consumer",
+        private: true,
+        paperlint: { [PAPERS_DIR_FIELD]: "papers" },
+      },
+      null,
+      2,
+    ),
   );
 
   // ── NO TeX LIVE, NO TERMINAL: one line, and nothing is built ─────────────────────────────
   // Runs FIRST and needs no TeX: PATH holds node alone, the cache directory is empty, CI is set.
   // This is what an agent or a CI job without `paperlint toolchain` sees.
   console.log("no TeX Live and no terminal");
-  const bare = realpathSync(mkdtempSync(join(tmpdir(), "rpp-bare-")));
+  const bare = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-bare-")));
   // A PDF from an earlier build beside the paper the refusal stops at: it must not survive either.
   const acmartStale = join(work, "papers", "acmart", "paper.pdf");
   writeFileSync(acmartStale, "%PDF-stale");
@@ -136,7 +144,7 @@ try {
           HOME: bare,
           PATH: join(bare, "bin"),
           CI: "1",
-          RPP_TEXLIVE_DIR: join(bare, "cache"),
+          PAPERLINT_TEXLIVE_DIR: join(bare, "cache"),
         },
       },
     );
@@ -187,7 +195,7 @@ try {
   if (!engine || engine.startsWith("engine: none"))
     skipOrFail(
       `build-e2e: skipped — no TeX Live with every declared package (${engine || "no engine line"}).\n` +
-        `Install one with \`node bin/rpp.mjs toolchain\` (RPP_TEXLIVE_DIR picks the directory).`,
+        `Install one with \`node bin/paperlint.mjs toolchain\` (PAPERLINT_TEXLIVE_DIR picks the directory).`,
     );
   console.log(engine);
   // 🔴 In CI the build must run on the TeX Live `paperlint toolchain` installed — the runner has no other.
@@ -294,7 +302,7 @@ try {
   console.log();
   console.log("paper-guards resolves with no configuration");
   check(
-    "guards: \\input{paper-guards} built — rpp's venues directory is on TEXINPUTS",
+    "guards: \\input{paper-guards} built — paperlint's venues directory is on TEXINPUTS",
     existsSync(join(work, "papers", "guards", "paper.pdf")),
   );
 
@@ -354,16 +362,20 @@ try {
   // The consumer turns pdf/last-page-balance on for two papers, in the settings' `rules` key —
   // ESLint's own block shape, `files` relative to the settings file.
   writeFileSync(
-    join(work, "rpp.json"),
+    join(work, "package.json"),
     JSON.stringify(
       {
-        [PAPERS_DIR_FIELD]: "papers",
-        rules: [
-          {
-            files: ["papers/unbalanced/**", "papers/acmart/**"],
-            rules: { "pdf/last-page-balance": "error" },
-          },
-        ],
+        name: "consumer",
+        private: true,
+        paperlint: {
+          [PAPERS_DIR_FIELD]: "papers",
+          rules: [
+            {
+              files: ["papers/unbalanced/**", "papers/acmart/**"],
+              rules: { "pdf/last-page-balance": "error" },
+            },
+          ],
+        },
       },
       null,
       2,

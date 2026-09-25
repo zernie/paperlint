@@ -132,9 +132,10 @@ process.exit(
       {
         name: "the port resolves the venues directory one level off",
         harness: HARNESS,
-        expect: "the venues directory is rpp's own and holds paper-guards.tex",
+        expect:
+          "the venues directory is paperlint's own and holds paper-guards.tex",
         disables:
-          "the one answer to 'where are rpp's venue files'. A wrong directory does not fail " +
+          "the one answer to 'where are paperlint's venue files'. A wrong directory does not fail " +
           "pdflatex by itself — \\input{paper-guards} would fail later, in a paper, far from here",
         edits: [
           [

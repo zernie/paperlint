@@ -260,23 +260,23 @@ jobs:
       # No `restore-keys`, deliberately: a partial restore would carry the old year's tree into the
       # new entry, and the old tree is never deleted, so the cache would grow by a whole TeX Live.
       - name: where TeX Live is cached
-        run: echo "RPP_TEXLIVE_DIR=$HOME/.cache/rpp-texlive" >> "$GITHUB_ENV"
+        run: echo "PAPERLINT_TEXLIVE_DIR=$HOME/.cache/paperlint-texlive" >> "$GITHUB_ENV"
 
       - name: TeX Live from cache
         uses: actions/cache@v6
         with:
-          path: ~/.cache/rpp-texlive
+          path: ~/.cache/paperlint-texlive
           key: texlive-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('skills/submit-paper/references/venues/*.jsonc') }}
 
       # The same command a user runs. On a cache hit it verifies and says "nothing to do"; on a miss
       # it installs from an empty directory and verifies every declared file with kpsewhich.
-      # `node bin/rpp.mjs`, not `npx paperlint`: inside this repository npx would look the name up on npm.
+      # `node bin/paperlint.mjs`, not `npx paperlint`: inside this repository npx would look the name up on npm.
       # It also downloads banal, the Perl script HotCRP runs to measure page geometry (~90 KB, pinned
       # commit, sha256-checked, then run once on a test page). paperlint keeps banal and no longer needs
       # poppler: paperlint now writes the XML banal reads, which poppler's pdftohtml used to write.
       # Both runner images ship perl. The download is too small to be worth an Actions cache.
       - name: paperlint toolchain
-        run: node bin/rpp.mjs toolchain
+        run: node bin/paperlint.mjs toolchain
         timeout-minutes: 15
 
       # Proves banal works without poppler. This runner has no poppler, and the test also limits

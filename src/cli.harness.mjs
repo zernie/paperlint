@@ -35,24 +35,10 @@ import {
 } from "../lib/paper-config.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const {
-  run,
-  parseArgs,
-  buildConfig,
-  nextSteps,
-  findConfig,
-  findDeclaration,
-  toPaths,
-  runHook,
-} = await import(join(HERE, "cli.ts"));
-const {
-  init,
-  choosePapers,
-  offerWorkflow,
-  syncRppJson,
-  missingPrograms,
-  WORKFLOW_PATH,
-} = await import(join(HERE, "init.ts"));
+const { run, parseArgs, buildConfig, nextSteps, findConfig, toPaths, runHook } =
+  await import(join(HERE, "cli.ts"));
+const { init, choosePapers, offerWorkflow, missingPrograms, WORKFLOW_PATH } =
+  await import(join(HERE, "init.ts"));
 const { PROGRAMS } = await import(join(HERE, "doctor.ts"));
 
 let n = 0;
@@ -192,11 +178,11 @@ check(
 // 🔴 WITHOUT THIS BLOCK THE REWRITTEN `init` WOULD PRODUCE A BROKEN INSTALL. It writes one
 // declaration — into `package.json`, the file the hooks know how to read (a hook does not
 // import code and cannot walk up the tree; it can only read a path it is able to name). The
-// utility, though, read ONLY `rpp.json`, so right after `paperlint init` its `lint` would say
+// utility, though, read ONLY its own config file, so right after `paperlint init` its `lint` would say
 // "nothing to lint". I.e. the install command and the check command would be looking at
 // different files — exactly the defect it exists to close, just from the other side.
 {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-carrier-")));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-carrier-")));
   try {
     const paper = join(root, "papers", "p1");
     mkdirSync(join(paper, "versions"), { recursive: true });
@@ -329,40 +315,26 @@ check(
     // and would never find anything, ever.
     writeFileSync(
       join(root, "package.json"),
-      JSON.stringify({ name: "c", version: "1.0.0" }),
-    );
-    writeFileSync(
-      join(root, "rpp.json"),
-      JSON.stringify({ [PAPERS_DIR_FIELD]: "papers" }),
-    );
-    const viaRpp = await cli(["lint"], root);
-    check(
-      "a keyless package.json does not intercept the search — rpp.json is still found",
-      viaRpp.code === 0 && /config: rpp\.json/.test(viaRpp.out),
-    );
-    check(
-      "🔴 but a deprecated carrier is NAMED, not just silently read",
-      /rpp\.json is deprecated/.test(viaRpp.out) &&
-        /the hooks read only that file/.test(viaRpp.out),
-    );
-
-    // Both carriers side by side: the one everything ELSE reads wins.
-    writeFileSync(
-      join(root, "package.json"),
       JSON.stringify({
         name: "c",
         version: "1.0.0",
         paperlint: { [PAPERS_DIR_FIELD]: "papers" },
       }),
     );
-    check(
-      'with both carriers present package.json is chosen — that is what "one declaration" means',
-      findDeclaration(root)?.kind === "package.json" &&
-        findDeclaration(root)?.path === join(root, "package.json"),
+    const inner = join(root, "tools");
+    mkdirSync(inner, { recursive: true });
+    writeFileSync(
+      join(inner, "package.json"),
+      JSON.stringify({ name: "tools", version: "1.0.0" }),
     );
     check(
-      'and findConfig still answers the question "which file holds the settings"',
-      findConfig(root) === join(root, "package.json"),
+      "a keyless package.json does not intercept the search — the one above it is found",
+      findConfig(inner) === join(root, "package.json"),
+    );
+    const viaInner = await cli(["lint"], inner);
+    check(
+      "and `lint` run from under it uses that declaration",
+      viaInner.code === 0 && /config: \.\.\/package\.json/.test(viaInner.out),
     );
   } finally {
     rmSync(root, { recursive: true, force: true });
@@ -372,7 +344,7 @@ check(
 // ── `init` — THREE ACTIONS INSTEAD OF NINE ────────────────────────────────────────────────
 //
 // 🔴 THE DEFECT THIS COMMAND WAS REWRITTEN FOR (issue #33, measured 09-18): init wrote
-// `rpp.json` with a GUESSED `"papers": "papers"` and never touched `package.json` — while the
+// a separate config file with a GUESSED `"papers": "papers"` and never touched `package.json` — while the
 // three hooks read the papers directory from exactly there. A consumer who did everything by
 // the book got a `paper-edit-guard` guarding a directory that did not exist; from outside that
 // is indistinguishable from a working guard, because silence is its success state.
@@ -381,7 +353,7 @@ check(
 // stdin. A harness stuck at an input prompt is not a red test, it is the absence of any answer
 // at all.
 {
-  const workRoot = realpathSync(mkdtempSync(join(tmpdir(), "rpp-init-")));
+  const workRoot = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-init-")));
   const project = (
     name,
     { pkg = { name: "consumer", version: "1.0.0" }, papers = [] } = {},
@@ -440,10 +412,6 @@ check(
       check(
         "and it says HOW it was measured — otherwise a guess reads as a fact",
         /measured: its subdirectories carry/.test(out.text()),
-      );
-      check(
-        "🔴 `rpp.json` IS NO LONGER CREATED — a second declaration is what doctor exists to catch",
-        !existsSync(join(dir, "rpp.json")),
       );
       check(
         "init ends with doctor's report: the install vouches for its OWN state",
@@ -622,7 +590,7 @@ check(
       );
       check(
         "and the CI step is still printed — it just gets pasted in by hand",
-        /uses: zernie\/research-paper-pipeline@/.test(out.text()) &&
+        /uses: zernie\/paperlint@/.test(out.text()) &&
           /paths: writing/.test(out.text()),
       );
     }
@@ -639,7 +607,7 @@ check(
       });
       check(
         "🔴 a released version — the printed step is pinned to its tag, no <commit-sha>",
-        /uses: zernie\/research-paper-pipeline@v1\.2\.3\b/.test(out.text()) &&
+        /uses: zernie\/paperlint@v1\.2\.3\b/.test(out.text()) &&
           !/<commit-sha>/.test(out.text()),
       );
     }
@@ -691,7 +659,7 @@ check(
       check(
         "🔴 a released version — the written workflow is pinned to its tag, no <commit-sha> left",
         wf === "written" &&
-          uses.includes("zernie/research-paper-pipeline@v1.2.3") &&
+          uses.includes("zernie/paperlint@v1.2.3") &&
           !yaml.includes("<commit-sha>"),
       );
     }
@@ -847,47 +815,7 @@ check(
       );
     }
 
-    // ── 8. `rpp.json` FOR THOSE WHO ALREADY HAVE ONE ──────────────────────────────────
-    {
-      const dir = project("legacy", { papers: ["writing"] });
-      writeFileSync(
-        join(dir, "rpp.json"),
-        JSON.stringify({ minFindings: 5 }, null, 2) + "\n",
-      );
-      const out = say();
-      await init(dir, {
-        log: out.log,
-        err: out.log,
-        interactive: false,
-        run: haveAll,
-      });
-      check(
-        "an existing rpp.json gets the SAME value, rather than drifting silently",
-        JSON.parse(readFileSync(join(dir, "rpp.json"), "utf8"))[
-          PAPERS_DIR_FIELD
-        ] === "writing",
-      );
-      check(
-        "and is named deprecated",
-        /rpp\.json was already here/.test(out.text()),
-      );
-
-      const own = join(workRoot, "legacy-own");
-      mkdirSync(own, { recursive: true });
-      writeFileSync(
-        join(own, "package.json"),
-        '{"name":"c","version":"1.0.0"}',
-      );
-      writeFileSync(join(own, "rpp.json"), `{"${PAPERS_DIR_FIELD}":"mine"}`);
-      check(
-        "and the papers-directory value it already declares stays byte for byte — this too is someone else's value",
-        syncRppJson(own, "writing") === "kept" &&
-          readFileSync(join(own, "rpp.json"), "utf8") ===
-            `{"${PAPERS_DIR_FIELD}":"mine"}`,
-      );
-    }
-
-    // ── 9. THE COMMAND IS WIRED TO `run`, NOT MERELY EXPORTED ────────────────────────
+    // ── 8. THE COMMAND IS WIRED TO `run`, NOT MERELY EXPORTED ────────────────────────
     {
       const dir = project("wired", { papers: ["writing"] });
       const r = await cli(["init", dir]);
@@ -922,7 +850,7 @@ check(
   // A "." default would give a green run over whatever happens to be lying around — the same
   // contract as the action, and the same reason. An empty directory with no config is exactly
   // that case.
-  const bare = realpathSync(mkdtempSync(join(tmpdir(), "rpp-bare-")));
+  const bare = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-bare-")));
   try {
     const r = await cli(["lint"], bare);
     check(
@@ -939,7 +867,7 @@ check(
 
 // ── on live files: both halves ───────────────────────────────────────────────────────
 {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-cli-")));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-cli-")));
   try {
     const paper = join(root, "papers", "p1");
     mkdirSync(join(paper, "versions"), { recursive: true });
@@ -1021,12 +949,12 @@ check(
 
 // ── THE CONFIG FINDS ITSELF, AND THE PAPERS DIRECTORY IS DECLARED IN IT ──────────────────
 //
-// 🔴 THE DEFECT THIS BLOCK EXISTS FOR: `paperlint init` wrote `rpp.json`, and `rpp check` only read
+// 🔴 THE DEFECT THIS BLOCK EXISTS FOR: `paperlint init` wrote a config file, and `check` only read
 // it via an explicit `--options`. I.e. the file the utility itself created had no effect on the
 // run — and there was no way to find that out: zero typography debt looks exactly like a
 // config that was never found.
 {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-cfg-")));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-cfg-")));
   try {
     const paper = join(root, "papers", "p1");
     mkdirSync(join(paper, "versions"), { recursive: true });
@@ -1042,21 +970,23 @@ check(
 
     // findConfig — kept separate from the run so the failure is distinguishable
     writeFileSync(
-      join(root, "rpp.json"),
-      JSON.stringify({ [PAPERS_DIR_FIELD]: "papers" }),
+      join(root, "package.json"),
+      JSON.stringify({ paperlint: { [PAPERS_DIR_FIELD]: "papers" } }),
     );
     check(
       "findConfig walks up from a subdirectory and finds the file at the root",
-      findConfig(paper) === join(root, "rpp.json"),
+      findConfig(paper) === join(root, "package.json"),
     );
     // There can be no tautology here: a neighboring tree must NOT pick up our file. Asserting
-    // `=== null` against a live filesystem is not safe — someone else's rpp.json may sit further
+    // `=== null` against a live filesystem is not safe — someone else's package.json may sit further
     // up the chain — so what is asserted is what is actually checkable: our config is not
     // visible from there.
-    const sibling = realpathSync(mkdtempSync(join(tmpdir(), "rpp-other-")));
+    const sibling = realpathSync(
+      mkdtempSync(join(tmpdir(), "paperlint-other-")),
+    );
     check(
       "the config does NOT leak into a neighboring tree — the search goes up, not sideways",
-      findConfig(sibling) !== join(root, "rpp.json"),
+      findConfig(sibling) !== join(root, "package.json"),
     );
     rmSync(sibling, { recursive: true, force: true });
 
@@ -1067,7 +997,7 @@ check(
     );
     check(
       "and the found file is NAMED out loud — swapping settings silently is not acceptable",
-      /config: rpp\.json/.test(found.out),
+      /config: package\.json/.test(found.out),
     );
 
     // 🔴 THE RESOLUTION DISCRIMINATOR. Run FROM the paper's directory: same config, and
@@ -1100,7 +1030,10 @@ check(
 
     // 🔴 THE PAPERS DIRECTORY — A REQUIRED FIELD. A config without it is not an "empty config" but an
     // unfinished one: silently falling back to "." means running the rules over the whole checkout.
-    writeFileSync(join(root, "rpp.json"), JSON.stringify({ minFindings: 3 }));
+    writeFileSync(
+      join(root, "package.json"),
+      JSON.stringify({ paperlint: { minFindings: 3 } }),
+    );
     const noPapers = await cli(["lint"], root);
     check(
       "a config WITHOUT the papers-directory field — a failure, and the field is named by name",
@@ -1113,8 +1046,8 @@ check(
       (
         await (async () => {
           writeFileSync(
-            join(root, "rpp.json"),
-            JSON.stringify({ [PAPERS_DIR_FIELD]: "" }),
+            join(root, "package.json"),
+            JSON.stringify({ paperlint: { [PAPERS_DIR_FIELD]: "" } }),
           );
           return await cli(["lint"], root);
         })()
@@ -1131,7 +1064,7 @@ check(
 // the threshold had to show up here too — otherwise it would have been lost SILENTLY: the run
 // would stay green, and the consumer's setting would stop meaning anything.
 {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-warn-")));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-warn-")));
   try {
     const paper = join(root, "papers", "p1");
     mkdirSync(join(paper, "versions"), { recursive: true });
@@ -1150,8 +1083,8 @@ check(
       `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: 100\n    source: versions/s.tex\n    sourceBytes: 4\nresearchQuestion: "does it hold?"\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`,
     );
     writeFileSync(
-      join(root, "rpp.json"),
-      JSON.stringify({ [PAPERS_DIR_FIELD]: "papers" }),
+      join(root, "package.json"),
+      JSON.stringify({ paperlint: { [PAPERS_DIR_FIELD]: "papers" } }),
     );
 
     const lax = await cli(["lint"], root);
@@ -1184,15 +1117,15 @@ check(
 // one fact that harness cannot know: that the module is WIRED IN. A correct module forgotten in
 // `run()` gives zero findings and looks like a clean corpus.
 {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-wired-")));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-wired-")));
   try {
     const paper = join(root, "papers", "orphan");
     mkdirSync(paper, { recursive: true });
     // The marker is present, the scorecard is not: NOT ONE pipeline rule runs over this directory.
     writeFileSync(join(paper, "paper.tex"), "\\documentclass{article}\n");
     writeFileSync(
-      join(root, "rpp.json"),
-      JSON.stringify({ [PAPERS_DIR_FIELD]: "papers" }),
+      join(root, "package.json"),
+      JSON.stringify({ paperlint: { [PAPERS_DIR_FIELD]: "papers" } }),
     );
 
     const r = await cli(["lint"], root);
@@ -1225,7 +1158,7 @@ check(
     );
     check(
       "and the line about the found config is not lost — it went to stderr",
-      /config: rpp\.json/.test(j.stderr) && !/config:/.test(j.stdout),
+      /config: package\.json/.test(j.stderr) && !/config:/.test(j.stdout),
     );
     check(
       "`--json` gives back ONE array, where the missing-file finding sits next to the rule findings",
@@ -1277,8 +1210,10 @@ check(
       return [`UNPARSABLE: ${r.out}`];
     }
   };
-  const tree = realpathSync(mkdtempSync(join(tmpdir(), "rpp-outside-")));
-  const elsewhere = realpathSync(mkdtempSync(join(tmpdir(), "rpp-elsewhere-")));
+  const tree = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-outside-")));
+  const elsewhere = realpathSync(
+    mkdtempSync(join(tmpdir(), "paperlint-elsewhere-")),
+  );
   try {
     const paper = join(tree, "papers", "p");
     mkdirSync(paper, { recursive: true });
@@ -1435,13 +1370,13 @@ check(
 //
 // 🔴 npm puts a SYMLINK in `node_modules/.bin/`. The first version compared `import.meta.url`
 // against `file://${process.argv[1]}`: for a symlink those two paths are DIFFERENT, the
-// condition is false, and the utility silently exited zero. A direct `node bin/rpp.mjs` worked
+// condition is false, and the utility silently exited zero. A direct `node bin/paperlint.mjs` worked
 // fine, meanwhile — i.e. the defect was invisible in exactly the way it is normally checked.
 {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-link-")));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-link-")));
   try {
-    const link = join(root, "rpp-shim");
-    symlinkSync(join(HERE, "..", "bin", "rpp.mjs"), link);
+    const link = join(root, "paperlint-shim");
+    symlinkSync(join(HERE, "..", "bin", "paperlint.mjs"), link);
     const paper = join(root, "papers", "p");
     mkdirSync(join(paper, "versions"), { recursive: true });
     writeFileSync(
@@ -1552,7 +1487,9 @@ console.log(
 
 // ── init wires the hooks, and a human can say no ─────────────────────────────────────────
 {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-init-hooks-")));
+  const root = realpathSync(
+    mkdtempSync(join(tmpdir(), "paperlint-init-hooks-")),
+  );
   const mk = (name) => {
     const dir = join(root, name);
     mkdirSync(join(dir, "papers", "p1"), { recursive: true });
@@ -1642,7 +1579,9 @@ console.log(
 
 // ── init offers a first paper only where there is none, and only to a human ─────────────
 {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-init-paper-")));
+  const root = realpathSync(
+    mkdtempSync(join(tmpdir(), "paperlint-init-paper-")),
+  );
   const bare = (name) => {
     const dir = join(root, name);
     mkdirSync(dir, { recursive: true });
@@ -1801,7 +1740,7 @@ console.log(
 
 // ── `paperlint lint` does not sweep the project's paper TEMPLATE as a paper ────────────────────
 {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-template-")));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-template-")));
   try {
     writeFileSync(
       join(root, "package.json"),
@@ -1843,7 +1782,7 @@ console.log(
 
 // ── `paperlint new` through the CLI: the papers directory comes from the one declaration ────────
 {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-new-cli-")));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-new-cli-")));
   try {
     const none = await cli(["new", "demo"], root);
     check(
@@ -1887,7 +1826,7 @@ console.log(
 
 // ── the settings are parsed at the boundary: unknown keys, `rules` blocks ─────────────────
 {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-settings-")));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-settings-")));
   try {
     const dir = join(root, "papers", "p");
     mkdirSync(dir, { recursive: true });
@@ -1899,13 +1838,13 @@ console.log(
       join(dir, "paper.tex"),
       "\\documentclass{article}\n\\begin{document}x\\end{document}\n",
     );
-    const settings = (rpp) =>
+    const settings = (extra) =>
       writeFileSync(
         join(root, "package.json"),
         JSON.stringify({
           name: "c",
           version: "1.0.0",
-          paperlint: { [PAPERS_DIR_FIELD]: "papers", ...rpp },
+          paperlint: { [PAPERS_DIR_FIELD]: "papers", ...extra },
         }),
       );
     const balanceOn = (files) => ({

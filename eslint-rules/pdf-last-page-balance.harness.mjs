@@ -2,7 +2,7 @@
  * Colocated test for `eslint-rules/pdf-last-page-balance.mjs` (`pdf/last-page-balance`).
  * Run: `npx vigiles test eslint-rules/pdf-last-page-balance.harness.mjs`
  *
- * The rule is driven the way a consumer drives it: through rpp's own `buildConfig`, with the
+ * The rule is driven the way a consumer drives it: through paperlint's own `buildConfig`, with the
  * rule turned on by a `rules` block in the settings — not through a config invented here. Each
  * paper is a temporary directory holding `paper.tex`, `paper.pdf` and the facts `paperlint build`
  * would write beside them.
@@ -51,7 +51,9 @@ const facts = (lastPage, over = {}) => ({
 });
 const MEASURED = (l, r) => ({ kind: "measured", columns_pt: [l, r] });
 
-const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-balance-rule-")));
+const root = realpathSync(
+  mkdtempSync(join(tmpdir(), "paperlint-balance-rule-")),
+);
 /** A paper directory with paper.tex, paper.pdf and, unless `null`, `_build/paper.facts.json`. */
 const paper = (name, f, { pdf = PDF } = {}) => {
   const dir = join(root, "papers", name);
@@ -67,7 +69,7 @@ const paper = (name, f, { pdf = PDF } = {}) => {
   return dir;
 };
 
-/** Lint files with rpp's config, the rule turned on for `papers/**` (unless `rules` says otherwise). */
+/** Lint files with paperlint's config, the rule turned on for `papers/**` (unless `rules` says otherwise). */
 async function lint(
   files,
   rules = [

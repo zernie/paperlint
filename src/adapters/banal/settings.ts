@@ -11,15 +11,15 @@ import {
 } from "../../domain/host.ts";
 import type { AbsolutePath } from "../../domain/paths.ts";
 
-/** An explicit banal to use instead of rpp's (a path to the script). */
+/** An explicit banal to use instead of paperlint's (a path to the script). */
 export const BANAL_ENV = "BANAL";
-/** Where `paperlint toolchain` stores banal. Default: `$XDG_CACHE_HOME/rpp/banal`, else `~/.cache/rpp/banal`. */
-export const BANAL_DIR_ENV = "RPP_BANAL_DIR";
+/** Where `paperlint toolchain` stores banal. Default: `$XDG_CACHE_HOME/paperlint/banal`, else `~/.cache/paperlint/banal`. */
+export const BANAL_DIR_ENV = "PAPERLINT_BANAL_DIR";
 
 export interface BanalSettings {
   /** `$BANAL`: the user's explicit choice; null when unset. */
   readonly explicit: AbsolutePath | null;
-  /** `$RPP_BANAL_DIR` › `$XDG_CACHE_HOME/rpp/banal` › `<home>/.cache/rpp/banal`. */
+  /** `$PAPERLINT_BANAL_DIR` › `$XDG_CACHE_HOME/paperlint/banal` › `<home>/.cache/paperlint/banal`. */
   readonly cacheDir: AbsolutePath;
   /** Where scratch directories go. */
   readonly tmpDir: AbsolutePath;
@@ -37,7 +37,11 @@ const set = (v: string | undefined): string | null => (v ? v : null);
 function cacheDirOf(env: Environment, d: HostDirs): string {
   return (
     set(env[BANAL_DIR_ENV]) ??
-    join(set(env["XDG_CACHE_HOME"]) ?? join(d.home, ".cache"), "rpp", "banal")
+    join(
+      set(env["XDG_CACHE_HOME"]) ?? join(d.home, ".cache"),
+      "paperlint",
+      "banal",
+    )
   );
 }
 

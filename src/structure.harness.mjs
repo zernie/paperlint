@@ -28,7 +28,7 @@ const check = (label, cond) => {
   n++;
 };
 
-const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-struct-")));
+const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-struct-")));
 const papers = join(root, "papers");
 const paper = (name, files) => {
   const dir = join(papers, name);

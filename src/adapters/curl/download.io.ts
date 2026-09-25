@@ -1,6 +1,6 @@
 /**
  * `Download` through `curl -fsSL`. Not Node's `fetch`: undici's `fetch` ignores `HTTPS_PROXY` unless
- * a proxy agent is installed, and rpp's CI and the containers it runs in reach the network only
+ * a proxy agent is installed, and paperlint's CI and the containers it runs in reach the network only
  * through a proxy. curl reads the proxy variables itself. (A claim from documentation, not measured
  * here — the port is what makes trying the other adapter cheap.)
  */
@@ -41,7 +41,9 @@ export function curlDownload(o: {
 }): Download {
   return {
     fetch(url: string, timeoutMs: number) {
-      const dir = realpathSync(mkdtempSync(join(o.tmpDir, "rpp-download-")));
+      const dir = realpathSync(
+        mkdtempSync(join(o.tmpDir, "paperlint-download-")),
+      );
       const out = join(dir, "body");
       try {
         const seconds = String(Math.ceil(timeoutMs / 1000));

@@ -20,6 +20,15 @@ your project's `node_modules`, so it needs the install first.
 and skill links that pointed into the old package. Until then the old key is still read, with a
 warning.
 
+**Upgrading from 2.0.0**: 2.0.0 wrote hook commands that run `node_modules/paperlint/bin/rpp.mjs`,
+a file later versions do not ship, so those hooks stop running. `npx paperlint doctor` names them;
+`npx paperlint init` replaces them and keeps your own commands in the same matcher. The TeX Live
+and banal caches moved from `~/.cache/rpp/` to `~/.cache/paperlint/`, so `npx paperlint toolchain`
+downloads TeX Live once more (delete the old directory afterwards), and the environment variables
+are now `PAPERLINT_TEXLIVE_DIR`, `PAPERLINT_BANAL_DIR` and `PAPERLINT_CTAN_MIRROR` — the `RPP_*`
+names are no longer read. A leftover `rpp.json` is ignored; its settings belong under the
+`"paperlint"` key of `package.json`.
+
 The npm package carries everything: the `paperlint` command, the ESLint rules, the Claude Code skills
 and hooks, and the scripts the skills run. External programs are separate:
 
@@ -68,8 +77,7 @@ gets the hooks; the hook commands run files inside `node_modules`, so a fresh cl
 config; it can only read a path it can spell, and the one it can always spell is
 `$CLAUDE_PROJECT_DIR/package.json`. That key is read by the three hooks, `eslint-rules/papers.mjs`,
 `lib/skill-trigger-cases.mjs` and `skills/paper-pipeline/scripts/consumer.mjs`; a separate
-`rpp.json` was read only by the CLI. `rpp.json` is still read as a deprecated fallback, and
-`paperlint lint` says so.
+config file would be read only by the CLI, so there is none.
 
 **Nothing runs at install time.** No postinstall script and no automatic TeX download. npm's rule
 is that _"the only valid use of install or preinstall scripts is for compilation"_; husky removed
@@ -135,7 +143,7 @@ on the tree the manager laid out. It also checks that every shipped skill is rea
 directory under a skill's name survives.
 
 Yarn Plug'n'Play has no `node_modules`, and the hook commands in `plugin/hooks/hooks.json` name
-`${CLAUDE_PROJECT_DIR}/node_modules/paperlint/bin/rpp.mjs`. Supporting it would need
+`${CLAUDE_PROJECT_DIR}/node_modules/paperlint/bin/paperlint.mjs`. Supporting it would need
 a different answer to "where is the runtime", not a flag.
 
 ## Install size

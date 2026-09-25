@@ -1,15 +1,30 @@
 # paperlint
 
 [![npm version](https://img.shields.io/npm/v/paperlint)](https://www.npmjs.com/package/paperlint)
-![Node version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fzernie%2Fresearch-paper-pipeline%2Fmain%2Fpackage.json&query=%24.engines.node&label=node)
+![Node version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fzernie%2Fpaperlint%2Fmain%2Fpackage.json&query=%24.engines.node&label=node)
 
-A checker for a research paper you keep in a git repository. You record what happened to the paper
-— "submitted on 22 July, as this PDF" — and `paperlint` checks that the files match: the PDF you say you
-sent is still there and unchanged, its LaTeX source was kept beside it, and the paper itself avoids
-a few mistakes reviewers flag. It runs on your machine and in CI, like a linter.
+A linter for scientific papers written in LaTeX. It catches the mechanical mistakes that get a
+paper desk-rejected or sent back at camera-ready, before you submit.
+
+A LaTeX paper can build without an error and still be wrong. The ACM template silently switches to
+another font when one of its font packages is missing, and the pages break differently. The same
+source paginates differently on a machine with another version of the template. The submitted PDF
+gets overwritten a week later and nobody can say what was sent. You find out from a reviewer or a
+publisher, or never. paperlint checks for these on your machine and in CI:
+
+- **Builds the same PDF everywhere.** `paperlint toolchain` installs TeX Live with exactly the
+  packages your venue's template needs and checks that each one is really there, so the silent
+  font switch cannot happen and your laptop and CI build with the same TeX Live.
+- **Keeps what you submitted.** Record "submitted on 22 July, as this PDF", and paperlint fails if
+  that PDF changes or disappears, or its LaTeX source was not kept beside it.
+- **Knows the classic slips.** An ACM paper that overrides the title-page commands and loses part
+  of page 1; "code will be released" left in a camera-ready; references without a DOI or URL; an
+  unbalanced last page, for publishers that ask for balanced columns (an optional check).
+- **Works with coding agents.** Hooks and skills for Claude Code run the checks after every edit
+  and stop an agent from rewriting the paper around them.
 
 It is for researchers and engineers who write papers in LaTeX inside git and submit them to
-conferences or journals. Claude Code users also get optional skills and hooks.
+conferences or journals.
 
 ## Install and set up
 
@@ -27,7 +42,7 @@ your project's `node_modules`, so run without the install it has nothing to link
 first paper, and sets up the optional Claude Code skills and hooks. It installs no software. It
 asks questions only when you run it in a terminal; an agent, CI or `--yes` gets the defaults, and
 each default it takes is printed. It ends by running `paperlint doctor`, which checks the setup.
-Exactly what it writes: [`docs/install.md`](docs/install.md#what-rpp-init-writes).
+Exactly what it writes: [`docs/install.md`](docs/install.md#what-paperlint-init-writes).
 
 ## What you get
 
@@ -139,7 +154,7 @@ never fail the run unless you pass `--max-warnings <n>`. `--json` prints the fin
 `paperlint init` offers to write this GitHub Actions workflow step for you. By hand:
 
 ```yaml
-- uses: zernie/research-paper-pipeline@v2.0.0
+- uses: zernie/paperlint@v2.0.0
   with:
     paths: papers
 ```
@@ -219,7 +234,7 @@ with a normal file edit — those are not blocked.
 - **It does not write or grade the paper.** `paperlint lint` checks records and a few mechanical
   mistakes; judging the writing is what the optional skills are for.
 - **New papers are LaTeX.** Markdown papers (`paper.md`) are still read but deprecated
-  ([#57](https://github.com/zernie/research-paper-pipeline/issues/57)).
+  ([#57](https://github.com/zernie/paperlint/issues/57)).
 - **No Yarn Plug'n'Play.** npm and pnpm are supported
   ([`docs/install.md`](docs/install.md#package-managers)).
 

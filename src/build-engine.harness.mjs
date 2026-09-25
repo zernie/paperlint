@@ -89,7 +89,7 @@ for (const [a, yes] of [
   check(`isYes(${JSON.stringify(a)}) is ${yes}`, E.isYes(a) === yes);
 
 // ── 2. prepareEngine ────────────────────────────────────────────────────────────────────
-const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-engine-h-")));
+const work = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-engine-h-")));
 const TEX = {
   packages: { acmart: ["acmart.cls"], libertine: ["libertine.sty"] },
   tools: {},
@@ -144,7 +144,7 @@ const go = async (o) => {
   };
 };
 const envWith = (cacheRoot, path) => ({
-  RPP_TEXLIVE_DIR: cacheRoot,
+  PAPERLINT_TEXLIVE_DIR: cacheRoot,
   PATH: path,
 });
 
