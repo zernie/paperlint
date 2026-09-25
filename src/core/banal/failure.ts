@@ -2,12 +2,9 @@
  * Every way getting a measurement from banal can fail, as ONE union — and `describe`, the only
  * place a sentence about it is written. Callers branch on `kind`; nobody parses a message.
  */
-/** Why there is no banal to run. */
-export type BanalMissing =
-  /** `$BANAL` names a file that is not there. An explicit choice: no fallback to another banal. */
-  | { readonly kind: "explicit-not-found"; readonly path: string }
-  /** Nothing named, nothing vendored, and `rpp toolchain` has not installed it (here). */
-  | { readonly kind: "not-installed"; readonly installed: string };
+import type { BanalMissing } from "./locate.ts";
+
+export type { BanalMissing } from "./locate.ts";
 
 export type BanalFailure =
   | { readonly kind: "perl-missing" }
@@ -39,6 +36,14 @@ export type BanalFailure =
       readonly url: string;
       readonly expected: string;
       readonly got: string;
+    }
+  /** The installed file is there, and is not the pin. */
+  | { readonly kind: "not-pinned"; readonly path: string }
+  /** The installed, pinned banal did not measure the probe page. */
+  | {
+      readonly kind: "does-not-run";
+      readonly path: string;
+      readonly why: BanalFailure;
     };
 
 export const PERL_MISSING =
@@ -89,6 +94,12 @@ const DESCRIBE: Describers = {
     `expected ${f.expected}`,
     `got      ${f.got}`,
   ],
+  "not-pinned": (f) => [
+    `banal in ${f.path} is not the pinned one (sha256 differs)`,
+  ],
+  "does-not-run": (f) => [
+    `banal in ${f.path} does not run: ${describeLine(f.why)}`,
+  ],
 };
 
 /**
@@ -104,4 +115,6 @@ export function describe(f: BanalFailure): Lines {
 }
 
 /** `describe` as one line, for a caller that has a single line to fill. */
-export const describeLine = (f: BanalFailure): string => describe(f).join("; ");
+export function describeLine(f: BanalFailure): string {
+  return describe(f).join("; ");
+}

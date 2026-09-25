@@ -43,20 +43,22 @@ import { isDeepStrictEqual } from "node:util";
 const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const FIX = join(ROOT, "fixtures", "pdf-facts");
 const strict = process.argv.includes("--strict");
-const { findBanal, measureLayout, missingBanal } = await import(
-  join(ROOT, "dist", "banal.js")
+// The third composition root: the real adapters, the settings parsed from the environment here.
+const { measureGeometry } = await import(join(ROOT, "dist", "banal.js"));
+const { nodeBanalRuntime } = await import(
+  join(ROOT, "dist", "adapters", "node", "host.js")
 );
-const { pdf2xml } = await import(join(ROOT, "dist", "pdf-layout.js"));
-const { readPdf } = await import(join(ROOT, "dist", "pdf-facts.js"));
-const { geometryOf } = await import(
-  join(ROOT, "dist", "core", "banal", "output.js")
+const { lookupOrder, pickBanal } = await import(
+  join(ROOT, "dist", "core", "banal", "locate.js")
 );
 const { describeLine } = await import(
   join(ROOT, "dist", "core", "banal", "failure.js")
 );
-const { spawnProcess } = await import(
-  join(ROOT, "dist", "adapters", "node", "process.js")
+const { whyNoGeometry } = await import(
+  join(ROOT, "dist", "core", "banal", "geometry.js")
 );
+const { pdf2xml } = await import(join(ROOT, "dist", "core", "banal", "xml.js"));
+const { readPdf } = await import(join(ROOT, "dist", "pdf-facts.js"));
 
 /** banal 1.2 on poppler pdftohtml 24.02.0, 2026-09-25 — see the header. */
 const EXPECTED = {
@@ -117,9 +119,12 @@ const EXPECTED = {
   },
 };
 
-const where = findBanal(process.env, ROOT);
-if (!where) {
-  const say = `banal-e2e: skipped — ${missingBanal(process.env)}`;
+const host = nodeBanalRuntime(process.env);
+const found = pickBanal(lookupOrder(host.settings, ROOT), (p) =>
+  host.io.files.isFile(p),
+);
+if (!found.ok) {
+  const say = `banal-e2e: skipped — ${describeLine({ kind: "banal-missing", missing: found.error })}`;
   if (!strict) {
     console.log(say);
     process.exit(77);
@@ -129,7 +134,8 @@ if (!where) {
   );
   process.exit(2);
 }
-console.log(`banal: ${where.path} (from ${where.from})`);
+const where = found.value;
+console.log(`banal: ${where.path} (from ${where.provenance.kind})`);
 
 let bad = 0;
 const check = (label, cond, detail = "") => {
@@ -149,9 +155,11 @@ try {
   }).stdout;
   symlinkSync(perl, join(bin, "perl"));
   const env = { PATH: bin, HOME: work };
-  const measure = (pages, e = env) => {
-    const r = measureLayout(where.path, pages, { run: spawnProcess(), env: e });
-    return r.ok ? geometryOf(r.value) : describeLine(r.error);
+  // The banal found above, run with a PATH holding perl only.
+  const { io, settings } = nodeBanalRuntime({ ...env, BANAL: where.path });
+  const measure = (pages) => {
+    const g = measureGeometry(io, settings, ROOT, pages);
+    return g.source === "banal" ? g.geometry : whyNoGeometry(g);
   };
 
   console.log(

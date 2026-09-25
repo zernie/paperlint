@@ -6,6 +6,7 @@
  */
 import type { Opaque } from "ts-essentials";
 import type { Result } from "./result.ts";
+import type { BanalStaging, StagedInput } from "./banal/invocation.ts";
 
 /** An absolute path. Minted at the composition root (`abs`), so the core never resolves a cwd. */
 export type AbsolutePath = Opaque<string, "AbsolutePath">;
@@ -63,10 +64,33 @@ export interface Files {
 /** Fetch a URL's bytes. */
 export interface Download {
   fetch(
-    url: URL,
+    url: string,
     timeoutMs: number,
   ): Result<Uint8Array, { readonly detail: string }>;
 }
 
 /** Rejects a Promise at the type level, so an `await` cannot escape a scope that ends synchronously. */
 export type NotAPromise<T> = T extends PromiseLike<unknown> ? never : T;
+
+/** A scratch directory that exists only inside `Workspace.within`. */
+export interface Scratch {
+  readonly dir: AbsolutePath;
+  /** Write both files of a staging into `dir`, the stub executable. The only minter of `StagedInput`. */
+  stage(s: BanalStaging): StagedInput;
+}
+
+/**
+ * A scratch directory that cannot outlive the callback: it is created before `use` runs and removed
+ * after, whether `use` returns or throws. There is no other way to get one.
+ */
+export interface Workspace {
+  within<T>(prefix: string, use: (scratch: Scratch) => NotAPromise<T>): T;
+}
+
+/** The four ports together: what the composition root builds and the app layer is handed. */
+export interface Io {
+  readonly run: RunProcess;
+  readonly files: Files;
+  readonly workspace: Workspace;
+  readonly download: Download;
+}

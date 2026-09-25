@@ -39,11 +39,11 @@ import {
   type LastPage,
 } from "./pdf-geometry.ts";
 import { describeFailure, type PdfFacts, type PdfReader } from "./pdf-facts.ts";
-import { findBanal, measureLayout, missingBanal } from "./banal.ts";
-import { describeLine } from "./core/banal/failure.ts";
-import { geometryOf, type BanalGeometry } from "./core/banal/output.ts";
-import { spawnProcess } from "./adapters/node/process.ts";
-import type { RunProcess } from "./core/ports.ts";
+import { measureGeometry as banalGeometry } from "./banal.ts";
+import { whyNoGeometry } from "./core/banal/geometry.ts";
+import type { BanalGeometry } from "./core/banal/output.ts";
+import { nodeBanalRuntime } from "./adapters/node/host.ts";
+import type { AbsolutePath } from "./core/ports.ts";
 
 export const FACTS_SCHEMA = 2;
 export const FACTS_DIR = "_build";
@@ -189,8 +189,6 @@ export interface WriteOptions {
   readonly env?: NodeJS.ProcessEnv;
   /** Where `vendor/banal` is looked for (`banal.ts`, `findBanal`). */
   readonly projectRoot: string;
-  /** Runs perl; the harness passes a recorder. */
-  readonly run?: RunProcess;
   /** Home directory for rpp's cache; defaults to the user's. */
   readonly home?: string;
 }
@@ -212,16 +210,18 @@ function measureGeometry(
 ): { banal: BanalFacts | null; why: string | null } {
   // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
   const env = o.env ?? process.env;
-  const where = findBanal(env, o.projectRoot, o.home);
-  if (!where) return { banal: null, why: missingBanal(env, o.home) };
-  const run = o.run ?? spawnProcess();
-  const r = measureLayout(where.path, read.layout, { run, env });
-  return r.ok
-    ? { banal: geometryOf(r.value), why: null }
-    : {
-        banal: null,
-        why: `${describeLine(r.error)} (banal from ${where.from}: ${where.path})`,
-      };
+  const { io, settings } = nodeBanalRuntime(env, {
+    dirs: o.home ? { home: o.home } : {},
+  });
+  const g = banalGeometry(
+    io,
+    settings,
+    o.projectRoot as AbsolutePath,
+    read.layout,
+  );
+  return g.source === "banal"
+    ? { banal: g.geometry, why: null }
+    : { banal: null, why: whyNoGeometry(g) };
 }
 
 const posix = (p: string): string => p.split(sep).join("/");

@@ -1,0 +1,32 @@
+/**
+ * The page geometry of a paper, as the domain sees it: measured by a banal that was found, or not
+ * measured and why. The facts file's flat schema-2 fields are DERIVED from this (`flatGeometry`),
+ * so `geometry_source` and the nine columns always come from the same branch.
+ */
+import type { BanalFailure } from "./failure.ts";
+import { describeLine } from "./failure.ts";
+import { provenanceLabel, type BanalCandidate } from "./locate.ts";
+import type { BanalGeometry } from "./output.ts";
+
+export type Geometry =
+  | {
+      readonly source: "banal";
+      readonly by: BanalCandidate;
+      readonly geometry: BanalGeometry;
+    }
+  | {
+      readonly source: "none";
+      readonly why: BanalFailure;
+      /** The banal that was run and failed; null when none was found. */
+      readonly tried: BanalCandidate | null;
+    };
+
+/** Why there is no geometry, in one line — naming the banal that failed, when one ran. */
+export function whyNoGeometry(
+  g: Extract<Geometry, { source: "none" }>,
+): string {
+  const line = describeLine(g.why);
+  return g.tried
+    ? `${line} (banal from ${provenanceLabel(g.tried.provenance)}: ${g.tried.path})`
+    : line;
+}

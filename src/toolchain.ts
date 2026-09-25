@@ -48,13 +48,10 @@ import {
   supportedPlatform,
   type Runner,
 } from "./engine.ts";
-import {
-  BANAL_PIN,
-  checkBanal,
-  ensureBanal,
-  type BanalSource,
-} from "./banal.ts";
-import { spawnProcess } from "./adapters/node/process.ts";
+import { checkBanal, ensureBanal } from "./banal.ts";
+import { describe } from "./core/banal/failure.ts";
+import { pinLabel, type BanalSource } from "./core/banal/pin.ts";
+import { nodeBanalRuntime } from "./adapters/node/host.ts";
 import {
   declaredUnion,
   packageNames,
@@ -698,30 +695,32 @@ function report(o: Resolved, tree: CachedTree | null): number {
 
 /** The banal half, installed or checked. True when banal is ready. */
 function banalPart(o: Resolved): boolean {
-  const io = {
-    run: spawnProcess(o.run),
-    env: o.env,
-    log: o.log,
-    home: o.home,
-    source: o.banal,
-  };
-  const pinned = `banal ${BANAL_PIN.version} (HotCRP ${BANAL_PIN.commit.slice(0, 7)})`;
+  const { io, settings } = nodeBanalRuntime(o.env, {
+    dirs: { home: o.home },
+    spawn: o.run,
+  });
+  const pinned = pinLabel();
   if (o.check) {
-    const why = checkBanal(io);
-    if (why)
-      o.log(`✗ ${pinned}: ${why} — run \`npx rpp toolchain\` to install it`);
-    else o.log(`✓ ${pinned} is installed and runs`);
-    return why === null;
+    const r = checkBanal(io, settings, o.banal);
+    if (r.ok) o.log(`✓ ${pinned} is installed and runs`);
+    else {
+      o.log(`✗ ${pinned}: ${describe(r.error).join("; ")}`);
+      o.log("  run `npx rpp toolchain` to install it");
+    }
+    return r.ok;
   }
-  const r = ensureBanal(io);
+  const r = ensureBanal(io, settings, {
+    ...(o.banal ? { source: o.banal } : {}),
+    onDownload: o.log,
+  });
   if (!r.ok) {
-    fail(o.err, r.lines);
+    fail(o.err, describe(r.error));
     return false;
   }
   o.log(
-    r.fresh
-      ? `✓ ${pinned} is ready in ${r.path}: sha256 verified, and it measured a probe page`
-      : `✓ ${pinned} in ${r.path} is verified and runs — nothing to do`,
+    r.value.fresh
+      ? `✓ ${pinned} is ready in ${r.value.path}: sha256 verified, and it measured a probe page`
+      : `✓ ${pinned} in ${r.value.path} is verified and runs — nothing to do`,
   );
   return true;
 }

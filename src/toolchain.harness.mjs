@@ -595,7 +595,7 @@ check(
   // Guards: --check covers banal — a complete TeX Live alone must not read as a ready toolchain.
   check(
     "banal: --check with TeX Live complete and no banal exits 1 and names banal",
-    before.code === 1 && before.out.includes("no banal in"),
+    before.code === 1 && before.out.includes("banal not found"),
     before.out,
   );
   const r = cmd({ env: e });

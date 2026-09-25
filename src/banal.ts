@@ -15,261 +15,145 @@
  * ── WITHOUT POPPLER ──────────────────────────────────────────────────────────────
  * banal reads a PDF by running poppler's `pdftohtml -xml` — but it also accepts that XML directly:
  * `banal_open_input` (banal 1.2, line 1815) takes a file ending in `.xml` and opens it as is. rpp
- * writes that XML itself from pdf.js text (`pdf-layout.ts`) and hands banal the `.xml` file.
+ * writes that XML itself from pdf.js text (`core/banal/xml.ts`) and hands banal the `.xml` file,
+ * beside a stub that answers banal's one question to poppler (`core/banal/invocation.ts`).
  *
- * One question banal still asks poppler: `$pdftohtml -v`, once, before it reads any input — the XML
- * included — to pick the zoom and a font-size correction (lines 1828-1868). With no pdftohtml it
- * stops (`Error: Failed to run pdftohtml`, measured); told a version below 0.85 it applies a larger
- * correction and every font size moves. So rpp points `$PDFTOHTML` (banal's own override, line 166)
- * at a stub that answers `-v` with `XML_DIALECT.version` — the pdftohtml whose XML `pdf-layout.ts`
- * writes — and refuses anything else. `test/e2e/banal.mjs` shows both failures with the real banal.
+ * ── THIS FILE ───────────────────────────────────────────────────────────────────
+ * The app layer: it composes the ports (`core/ports.ts`) and the pure decisions (`core/banal/`),
+ * and imports nothing from `node:*` that touches the outside world. The composition root hands it
+ * an `Io` and the parsed `BanalSettings`.
  */
-import { createHash } from "node:crypto";
+import type { AbsolutePath, Io } from "./core/ports.ts";
+import { andThen, err, ok, type Result } from "./core/result.ts";
+import type { BanalFailure } from "./core/banal/failure.ts";
+import type { Geometry } from "./core/banal/geometry.ts";
 import {
-  chmodSync,
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  realpathSync,
-  renameSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
-import { homedir, tmpdir } from "node:os";
-import { dirname, join } from "node:path";
-import type { Command, ProcessExit, RunProcess } from "./core/ports.ts";
-import { andThen, type Result } from "./core/result.ts";
+  banalCommand,
+  BANAL_RUN_MS,
+  stageBanalInput,
+} from "./core/banal/invocation.ts";
+import { installedState, verifyPin } from "./core/banal/install.ts";
 import {
-  describeLine,
-  PERL_MISSING,
-  type BanalFailure,
-} from "./core/banal/failure.ts";
+  installedBanal,
+  lookupOrder,
+  pickBanal,
+  type BanalCandidate,
+  type LocatedBanal,
+} from "./core/banal/locate.ts";
 import {
-  firstLine,
+  geometryOf,
   parseBanalOutput,
   type BanalMeasurement,
 } from "./core/banal/output.ts";
+import { BANAL_PIN, pinLabel, type BanalSource } from "./core/banal/pin.ts";
 import { acceptProbe, PROBE_PAGE } from "./core/banal/probe.ts";
-import { pdf2xml, XML_DIALECT, type PageLayout } from "./pdf-layout.ts";
-
-/** The banal rpp runs: HotCRP at this commit, this file, these bytes. */
-export const BANAL_PIN = {
-  version: "1.2",
-  commit: "f3e4352133f3184c7c42b0d5e6501124bead18e6",
-  url: "https://raw.githubusercontent.com/kohler/hotcrp/f3e4352133f3184c7c42b0d5e6501124bead18e6/src/banal",
-  sha256: "fd8cc4ae189b9da02460ae442a34f14434e5784210489fb668313ac671006911",
-} as const;
-
-/** What to download: the pin by default; a harness passes a local file. */
-export interface BanalSource {
-  readonly url: string;
-  readonly sha256: string;
-}
-
-/** An explicit banal to use instead of rpp's (a path to the script). */
-export const BANAL_ENV = "BANAL";
-/** Where `rpp toolchain` stores banal. Default: `$XDG_CACHE_HOME/rpp/banal`, else `~/.cache/rpp/banal`. */
-export const BANAL_DIR_ENV = "RPP_BANAL_DIR";
+import type { BanalSettings } from "./core/banal/settings.ts";
+import type { PageLayout } from "./core/banal/xml.ts";
 
 /** Seconds: banal is ~90 KB. */
 export const BANAL_DOWNLOAD_SECONDS = 60;
-/** banal takes well under a second on a paper; a hang still has to end. */
-const BANAL_RUN_MS = 120_000;
 
-export { PERL_MISSING } from "./core/banal/failure.ts";
-export { PROBE_PAGE } from "./core/banal/probe.ts";
-
-/** An environment as a child process gets it: every value a string, none undefined. */
-export const childEnv = (
-  env: Readonly<Record<string, string | undefined>>,
-): Record<string, string> =>
-  Object.fromEntries(
-    Object.entries(env).filter(
-      (e): e is [string, string] => e[1] !== undefined,
+/** Run `banal` on `pages` in a scratch directory that is gone when this returns. */
+function runBanal(
+  io: Io,
+  s: BanalSettings,
+  banal: LocatedBanal,
+  pages: readonly PageLayout[],
+): Result<BanalMeasurement, BanalFailure> {
+  return io.workspace.within("rpp-banal-", (scratch) =>
+    parseBanalOutput(
+      io.run.run(
+        banalCommand(
+          banal,
+          scratch.stage(stageBanalInput(pages)),
+          s.processEnv,
+        ),
+      ),
     ),
   );
-
-// ── where ────────────────────────────────────────────────────────────────────────────
-
-export function banalHome(
-  env: NodeJS.ProcessEnv,
-  home: string = homedir(),
-): string {
-  if (env[BANAL_DIR_ENV]) return env[BANAL_DIR_ENV];
-  return join(env["XDG_CACHE_HOME"] || join(home, ".cache"), "rpp", "banal");
-}
-
-/** Where `rpp toolchain` puts the pinned banal: one directory per HotCRP commit. */
-export const installedBanal = (env: NodeJS.ProcessEnv, home?: string): string =>
-  join(banalHome(env, home), BANAL_PIN.commit.slice(0, 12), "banal");
-
-/** A banal found on disk, and which rule found it. */
-export interface BanalLocation {
-  readonly path: string;
-  readonly from: "$BANAL" | "vendor/banal" | "rpp toolchain";
 }
 
 /**
- * The banal to run, in order: `$BANAL` (an explicit choice), `<project>/vendor/banal` (a project
- * that vendors its own copy), then the one `rpp toolchain` installed. Null when there is none —
- * `missingBanal` says what to do about it.
+ * The page geometry banal measures for `pages` — the banal found by `$BANAL`, the project's
+ * `vendor/banal`, or `rpp toolchain`'s — or why there is none.
  */
-export function findBanal(
-  env: NodeJS.ProcessEnv,
-  projectRoot: string,
-  home?: string,
-): BanalLocation | null {
-  const own = env[BANAL_ENV];
-  if (own) return existsSync(own) ? { path: own, from: "$BANAL" } : null;
-  const vendored = join(projectRoot, "vendor", "banal");
-  if (existsSync(vendored)) return { path: vendored, from: "vendor/banal" };
-  const cached = installedBanal(env, home);
-  return existsSync(cached) ? { path: cached, from: "rpp toolchain" } : null;
-}
-
-/** Why there is no banal, and the fix — the one wording every caller prints. */
-export function missingBanal(env: NodeJS.ProcessEnv, home?: string): string {
-  const own = env[BANAL_ENV];
-  return own
-    ? `banal not found: $BANAL names ${own}, which does not exist`
-    : `banal not found: ${installedBanal(env, home)} — \`npx rpp toolchain\` installs it`;
-}
-
-// ── running it ───────────────────────────────────────────────────────────────────────
-
-/** The stub standing in for `pdftohtml`: it answers `-v` and refuses to convert anything. */
-export const PDFTOHTML_STUB = [
-  "#!/bin/sh",
-  "# research-paper-pipeline: banal reads the banal input XML rpp writes, never a PDF. banal still",
-  "# asks `pdftohtml -v` which dialect to expect; this answers with the one rpp writes.",
-  'if [ "$1" = "-v" ]; then',
-  `  echo "pdftohtml version ${XML_DIALECT.version}"`,
-  "  exit 0",
-  "fi",
-  'echo "rpp: this pdftohtml only answers -v; banal was given a PDF instead of the banal input XML" >&2',
-  "exit 1",
-  "",
-].join("\n");
-
-/** A path quoted for `/bin/sh` — banal interpolates `$PDFTOHTML` into a shell command unquoted. */
-export const shellQuote = (s: string): string =>
-  `'${s.replace(/'/g, `'"'"'`)}'`;
-
-/**
- * Run banal on pages rpp read with pdf.js: write them as the banal input XML beside the `-v` stub in
- * a temporary directory, run `perl banal -no-time -json <file>.xml`, and parse what it prints. The
- * directory is removed either way.
- */
-export function measureLayout(
-  banal: string,
+export function measureGeometry(
+  io: Io,
+  s: BanalSettings,
+  projectRoot: AbsolutePath,
   pages: readonly PageLayout[],
-  o: { run: RunProcess; env: NodeJS.ProcessEnv },
-): Result<BanalMeasurement, BanalFailure> {
-  const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-banal-")));
-  try {
-    const xml = join(work, "paper.xml");
-    const stub = join(work, "pdftohtml");
-    writeFileSync(xml, pdf2xml(pages));
-    writeFileSync(stub, PDFTOHTML_STUB);
-    chmodSync(stub, 0o755);
-    const r = o.run.run({
-      file: "perl",
-      args: [banal, "-no-time", "-json", xml],
-      env: { ...childEnv(o.env), PDFTOHTML: shellQuote(stub) },
-      timeoutMs: BANAL_RUN_MS,
-      maxOutputBytes: 64 * 1024 * 1024,
-    });
-    return parseBanalOutput(r);
-  } finally {
-    rmSync(work, { recursive: true, force: true });
-  }
+): Geometry {
+  const located = pickBanal(lookupOrder(s, projectRoot), (p) =>
+    io.files.isFile(p),
+  );
+  if (!located.ok)
+    return {
+      source: "none",
+      why: { kind: "banal-missing", missing: located.error },
+      tried: null,
+    };
+  const by: BanalCandidate = located.value;
+  const r = runBanal(io, s, located.value, pages);
+  return r.ok
+    ? { source: "banal", by, geometry: geometryOf(r.value) }
+    : { source: "none", why: r.error, tried: by };
 }
 
 // ── installing it (`rpp toolchain`) ──────────────────────────────────────────────────
 
-/** Does this banal run and measure? `null` when it does, else why not. */
-export function probeBanal(
-  banal: string,
-  o: { run: RunProcess; env: NodeJS.ProcessEnv },
-): string | null {
-  const r = andThen(measureLayout(banal, [PROBE_PAGE], o), acceptProbe);
-  return r.ok ? null : describeLine(r.error);
-}
-
-export const sha256Of = (path: string): string =>
-  createHash("sha256").update(readFileSync(path)).digest("hex");
-
-export type BanalStep =
-  | { readonly ok: true; readonly path: string; readonly fresh: boolean }
-  | { readonly ok: false; readonly lines: readonly string[] };
-
-/** The IO `ensureBanal` needs. */
-export interface BanalIO {
-  readonly run: RunProcess;
-  readonly env: NodeJS.ProcessEnv;
-  readonly log: (line: string) => void;
-  readonly home?: string;
-  readonly source?: BanalSource;
-}
-
-const perlRuns = (io: BanalIO): boolean => {
+/** Does perl start? banal is a Perl program; without perl nothing below can succeed. */
+function perlRuns(io: Io, s: BanalSettings): boolean {
   const r = io.run.run({
     file: "perl",
     args: ["-e", "exit 0"],
-    env: childEnv(io.env),
+    env: s.processEnv,
     timeoutMs: BANAL_RUN_MS,
   });
   return r.kind === "exited" && r.status === 0;
-};
-
-/** Why a curl run did not download, in its own words; null when it exited 0. */
-function curlFailure(r: ProcessExit): string | null {
-  if (r.kind === "exited" && r.status === 0) return null;
-  if (r.kind === "not-found") return "curl is not installed";
-  if (r.kind === "spawn-failed") return r.message;
-  if (r.kind === "timed-out") return `no answer after ${String(r.afterMs)} ms`;
-  const what =
-    r.kind === "exited" ? `curl exited ${String(r.status)}` : r.signal;
-  return firstLine(r.stderr) || what;
 }
 
-/** Download `source` to `dest` and accept it only by its sha256. */
-function download(io: BanalIO, source: BanalSource, dest: string): string[] {
-  const part = `${dest}.part`;
-  const curl: Command = {
-    file: "curl",
-    args: [
-      "-fsSL",
-      "--retry",
-      "2",
-      "--max-time",
-      String(BANAL_DOWNLOAD_SECONDS),
-      "-o",
-      part,
-      source.url,
-    ],
-    env: childEnv(io.env),
-    timeoutMs: (BANAL_DOWNLOAD_SECONDS + 30) * 1000,
-  };
-  const failed = curlFailure(io.run.run(curl));
-  if (failed || !existsSync(part)) {
-    rmSync(part, { force: true });
-    return [
-      `could not download banal from ${source.url}: ${failed ?? "curl wrote no file"}`,
-    ];
-  }
-  const got = sha256Of(part);
-  if (got !== source.sha256) {
-    rmSync(part, { force: true });
-    return [
-      `banal from ${source.url} does not have the pinned sha256 — refusing to install it`,
-      `expected ${source.sha256}`,
-      `got      ${got}`,
-    ];
-  }
-  renameSync(part, dest);
-  return [];
+/** Does the installed banal RUN — accepted by measuring the probe page, not by a download's exit code. */
+function probe(
+  io: Io,
+  s: BanalSettings,
+  path: AbsolutePath,
+): Result<AbsolutePath, BanalFailure> {
+  const banal = { path, provenance: { kind: "cache" } } as LocatedBanal;
+  const r = andThen(runBanal(io, s, banal, [PROBE_PAGE]), acceptProbe);
+  return r.ok ? ok(path) : err({ kind: "does-not-run", path, why: r.error });
+}
+
+/** Download `source` into `dest`, keeping the bytes only when they hash to the pin. */
+function install(
+  io: Io,
+  source: BanalSource,
+  dest: AbsolutePath,
+): Result<null, BanalFailure> {
+  const got = io.download.fetch(source.url, BANAL_DOWNLOAD_SECONDS * 1000);
+  if (!got.ok)
+    return err({
+      kind: "download-failed",
+      url: source.url,
+      detail: got.error.detail,
+    });
+  const pinned = verifyPin(got.value, source);
+  if (!pinned.ok)
+    return err({ kind: "sha-mismatch", url: source.url, ...pinned.error });
+  io.files.writeAtomic(dest, pinned.value);
+  return ok(null);
+}
+
+export interface Installed {
+  readonly path: AbsolutePath;
+  /** True when this run downloaded it. */
+  readonly fresh: boolean;
+}
+
+export interface EnsureOptions {
+  /** What to download — the pin by default; a test passes a local file. */
+  readonly source?: BanalSource;
+  /** Told before a download starts (it can take a while). */
+  readonly onDownload?: (line: string) => void;
 }
 
 /**
@@ -277,32 +161,40 @@ function download(io: BanalIO, source: BanalSource, dest: string): string[] {
  * first, a file with the wrong sha256 is replaced, and acceptance is a probe run that has to measure
  * a page — not the download's exit code.
  */
-export function ensureBanal(io: BanalIO): BanalStep {
-  if (!perlRuns(io)) return { ok: false, lines: [PERL_MISSING] };
-  const source = io.source ?? BANAL_PIN;
-  const dest = installedBanal(io.env, io.home);
-  const present = existsSync(dest) && sha256Of(dest) === source.sha256;
+export function ensureBanal(
+  io: Io,
+  s: BanalSettings,
+  o: EnsureOptions = {},
+): Result<Installed, BanalFailure> {
+  if (!perlRuns(io, s)) return err({ kind: "perl-missing" });
+  const source = o.source ?? BANAL_PIN;
+  const dest = installedBanal(s);
+  const present =
+    installedState(io.files.readBytes(dest), source).kind === "pinned";
   if (!present) {
-    mkdirSync(dirname(dest), { recursive: true });
-    io.log(
-      `  downloading banal ${BANAL_PIN.version} (HotCRP ${BANAL_PIN.commit.slice(0, 7)})…`,
-    );
-    const failed = download(io, source, dest);
-    if (failed.length) return { ok: false, lines: failed };
+    o.onDownload?.(`  downloading ${pinLabel()}…`);
+    const done = install(io, source, dest);
+    if (!done.ok) return done;
   }
-  const why = probeBanal(dest, io);
-  if (why)
-    return { ok: false, lines: [`banal in ${dest} does not run: ${why}`] };
-  return { ok: true, path: dest, fresh: !present };
+  const ran = probe(io, s, dest);
+  return ran.ok ? ok({ path: dest, fresh: !present }) : ran;
 }
 
-/** `--check`: is the pinned banal installed and running? `null` when it is, else why not. */
-export function checkBanal(io: BanalIO): string | null {
-  if (!perlRuns(io)) return PERL_MISSING;
-  const source = io.source ?? BANAL_PIN;
-  const dest = installedBanal(io.env, io.home);
-  if (!existsSync(dest)) return `no banal in ${dest}`;
-  if (sha256Of(dest) !== source.sha256)
-    return `banal in ${dest} is not the pinned one (sha256 differs)`;
-  return probeBanal(dest, io);
+/** `--check`: is the pinned banal installed and running? The same predicate as `ensureBanal`, no download. */
+export function checkBanal(
+  io: Io,
+  s: BanalSettings,
+  source: BanalSource = BANAL_PIN,
+): Result<AbsolutePath, BanalFailure> {
+  if (!perlRuns(io, s)) return err({ kind: "perl-missing" });
+  const dest = installedBanal(s);
+  const state = installedState(io.files.readBytes(dest), source);
+  if (state.kind === "absent")
+    return err({
+      kind: "banal-missing",
+      missing: { kind: "not-installed", installed: dest },
+    });
+  if (state.kind === "other-bytes")
+    return err({ kind: "not-pinned", path: dest });
+  return probe(io, s, dest);
 }
