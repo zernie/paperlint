@@ -107,30 +107,50 @@ interface Run {
 function parseRun(command: string): Run | null {
   const tokens = command.trim().split(/\s+/).map(bare);
   for (let i = 0; i < tokens.length; i++) {
-    const t = posix.normalize(tokens[i] ?? "");
-    const parts = t.split("/");
-    const at = parts.findIndex(
-      (p, j) => p === "node_modules" && PKG_DIRS.includes(parts[j + 1] ?? ""),
-    );
-    const inside = at === -1 ? [] : parts.slice(at + 2);
-    const inBin = inside[0] === "bin" && inside.length === 2;
-    const isBin = inBin || PKG_DIRS.includes(basename(t));
-    const name = tokens[i + 2];
-    if (isBin && tokens[i + 1] === "hook" && name)
-      return {
-        name,
-        ours: t === MANAGED_BY,
-        legacy: inBin && at === 0 && t !== MANAGED_BY,
-        path: t,
-      };
-    if (inside[0] === "hooks" && inside[1]?.endsWith(".hook.mjs"))
-      return {
-        name: basename(inside[1], ".hook.mjs"),
-        ours: false,
-        legacy: false,
-        path: t,
-      };
+    const run = runAt(tokens, i);
+    if (run) return run;
   }
+  return null;
+}
+
+/** The path segments after `node_modules/<pkg>/`, and whether the token starts there. */
+function insidePackage(parts: readonly string[]): {
+  readonly inside: readonly string[];
+  readonly relative: boolean;
+} {
+  const at = parts.findIndex(
+    (p, j) => p === "node_modules" && PKG_DIRS.includes(parts[j + 1] ?? ""),
+  );
+  return {
+    inside: at === -1 ? [] : parts.slice(at + 2),
+    relative: at === 0,
+  };
+}
+
+/** The run token `i` starts, if it names a paperlint hook. */
+function runAt(tokens: readonly string[], i: number): Run | null {
+  const t = posix.normalize(tokens[i] ?? "");
+  const { inside, relative } = insidePackage(t.split("/"));
+  const inBin = inside[0] === "bin" && inside.length === 2;
+  const name = tokens[i + 2];
+  if (
+    (inBin || PKG_DIRS.includes(basename(t))) &&
+    tokens[i + 1] === "hook" &&
+    name
+  )
+    return {
+      name,
+      ours: t === MANAGED_BY,
+      legacy: inBin && relative && t !== MANAGED_BY,
+      path: t,
+    };
+  if (inside[0] === "hooks" && inside[1]?.endsWith(".hook.mjs"))
+    return {
+      name: basename(inside[1], ".hook.mjs"),
+      ours: false,
+      legacy: false,
+      path: t,
+    };
   return null;
 }
 

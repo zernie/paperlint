@@ -29,9 +29,7 @@ process.exit(
           "the duplicate guard for every bin spelling but ours. A hook wired by hand as " +
           "`npx paperlint hook …` or through an absolute path to the bin reads as ours, init merges its own " +
           "copy beside it, and the hook runs twice per event",
-        edits: [
-          [SRC, "        ours: t === MANAGED_BY,", "        ours: true,"],
-        ],
+        edits: [[SRC, "      ours: t === MANAGED_BY,", "      ours: true,"]],
       },
       {
         name: "another spelling no longer stops the write",
