@@ -49,4 +49,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npx --no-install semantic-release --dry-run --no-ci --branches "${{ github.head_ref }}"
+        # env-ci reads the branch from GITHUB_REF (refs/pull/81/merge on a PR) and ignores the
+        # checkout, so the first rehearsal stopped before verifyConditions. Present it as a push
+        # to the PR branch for this one command.
+        run: |
+          GITHUB_EVENT_NAME=push GITHUB_REF="refs/heads/${{ github.head_ref }}" \
+            npx --no-install semantic-release --dry-run --no-ci --branches "${{ github.head_ref }}"
