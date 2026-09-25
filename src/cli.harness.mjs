@@ -1795,11 +1795,13 @@ console.log(
     );
     const r = await cli(["new", "demo"], root);
     check(
-      "🔴 `paperlint new demo` creates writing/demo/ and its lint is the verdict — exit 0, no findings",
+      "🔴 `paperlint new demo` creates writing/demo/ and its lint is the verdict — exit 0, and only the warning that no venue is chosen yet",
       r.code === 0 &&
         existsSync(join(root, "writing", "demo", "PIPELINE-STATUS.md")) &&
         existsSync(join(root, "writing", "demo", "paper.tex")) &&
-        /no findings/.test(r.out),
+        existsSync(join(root, "writing", "demo", "paperlint.json")) &&
+        /names no venue preset yet/.test(r.out) &&
+        /\(0 errors, 1 warning\)/.test(r.out),
     );
     const again = await cli(["new", "demo", "--format", "md"], root);
     check(

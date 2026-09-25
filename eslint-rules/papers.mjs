@@ -85,6 +85,7 @@ import {
   CONFIG_KEY,
   DEFAULT_PAPERS_ROOT,
   PAPERS_DIR_FIELD,
+  PAPER_SETTINGS_FILE,
   declaredSettings,
   renamedFieldMessage,
   settingsOf,
@@ -154,8 +155,11 @@ export function paperFiles(root) {
     tex: [`${root}/*/paper.tex`],
     /** The per-paper stage ledger. */
     status: [`${root}/*/PIPELINE-STATUS.md`],
-    /** The venue data card. */
-    venue: [`${root}/*/venue.json`],
+    /**
+     * The per-paper settings file, `paperlint.json` (`venue.json` before 2.1.0). The key keeps its
+     * old name so a consumer's config that lints these files keeps matching them.
+     */
+    venue: [`${root}/*/${PAPER_SETTINGS_FILE}`],
     /** Facts extracted from the built PDF. */
     pdfFacts: [`${root}/*/_build/paper.facts.json`],
     /** Facts extracted from the bibliography. */

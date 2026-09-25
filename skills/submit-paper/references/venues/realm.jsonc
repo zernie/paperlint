@@ -28,54 +28,56 @@
     },
   },
 
-  "page_size": "a4",
-  "page_w_in": 8.27,
-  "page_h_in": 11.69,
+  "format": {
+    "page_size": "a4",
+    "page_w_in": 8.27,
+    "page_h_in": 11.69,
 
-  "columns": 2,
+    "columns": 2,
 
-  // ACL's stated body size is 11pt; banal measures the render's mode and gives 11.3.
-  "body_pt": 11,
-  "body_pt_tol": 0.5,
+    // ACL's stated body size is 11pt; banal measures the render's mode and gives 11.3.
+    "body_pt": 11,
+    "body_pt_tol": 0.5,
 
-  // ⚠️ The range is derived from a SINGLE measurement (10.3), not from ACL's spec — I could not
-  // find ACL's own numbers for the reference size. So it's set wide: for an `error`-level rule, a
-  // false positive is worse than a miss. Narrow it once a primary source turns up.
-  "ref_pt_min": 9,
-  "ref_pt_max": 11,
+    // ⚠️ The range is derived from a SINGLE measurement (10.3), not from ACL's spec — I could not
+    // find ACL's own numbers for the reference size. So it's set wide: for an `error`-level rule, a
+    // false positive is worse than a miss. Narrow it once a primary source turns up.
+    "ref_pt_min": 9,
+    "ref_pt_max": 11,
 
-  // The Times clone from the ACL template. Headings are NOT gated: the build also contains
-  // NimbusSanL-Bold, but a `pdffonts` measurement can't establish exactly what the heading is set
-  // in — it only says a typeface IS present in the file, not where it's applied.
-  "fonts_text": "NimbusRomNo9L",
+    // The Times clone from the ACL template. Headings are NOT gated: the build also contains
+    // NimbusSanL-Bold, but a `pdffonts` measurement can't establish exactly what the heading is set
+    // in — it only says a typeface IS present in the file, not where it's applied.
+    "fonts_text": "NimbusRomNo9L",
 
-  // 🔴 PAGE LIMITS ARE NOT GATED HERE, AND THAT IS A MEASUREMENT, NOT LAZINESS.
-  //
-  // banal classifies pages by content and counts Limitations and Ethics as part of the BODY.
-  // ACL excludes them from the limit. Measured 08-26 on our own paper: banal said "body 13," the
-  // build's own counter said "body pages: 9," and both are right — they're just counting
-  // different things (the body ends at Conclusion on p.9; pp.10-13 are Limitations/Ethics; the
-  // bibliography starts at 14).
-  //
-  // A gate on banal's number would give 13 against a limit of 8 and would redden on a paper that
-  // is within the limit. For an `error`-level rule that is the worst outcome. The limit stays
-  // owned by the counter inside `build-submission.sh`: it reads the markdown source and therefore
-  // KNOWS where the body ends, which the PDF does not.
-  //
-  // The numbers below are DATA for that counter and for humans, not an input to the rule. Source:
-  // `realm.md`, verified by directly fetching the 2026-08-02/03 CFP.
-  "page_limits_not_gated": {
-    "_": "8 at submission, 9 at camera-ready (+1 page). Both numbers are CURRENTLY hardcoded in build-submission.sh — 8 in the header, 9 in the run — which reads like a mismatch even though these are different STAGES. The script should pull them from here instead.",
-    "long_submission": 8,
-    "long_camera_ready": 9,
-    "short_submission": 4,
-    "short_camera_ready": 5,
-    "refs_and_appendices": "unlimited",
-    "limitations_and_ethics": "not counted (ACL rule)",
-  },
+    // 🔴 PAGE LIMITS ARE NOT GATED HERE, AND THAT IS A MEASUREMENT, NOT LAZINESS.
+    //
+    // banal classifies pages by content and counts Limitations and Ethics as part of the BODY.
+    // ACL excludes them from the limit. Measured 08-26 on our own paper: banal said "body 13," the
+    // build's own counter said "body pages: 9," and both are right — they're just counting
+    // different things (the body ends at Conclusion on p.9; pp.10-13 are Limitations/Ethics; the
+    // bibliography starts at 14).
+    //
+    // A gate on banal's number would give 13 against a limit of 8 and would redden on a paper that
+    // is within the limit. For an `error`-level rule that is the worst outcome. The limit stays
+    // owned by the counter inside `build-submission.sh`: it reads the markdown source and therefore
+    // KNOWS where the body ends, which the PDF does not.
+    //
+    // The numbers below are DATA for that counter and for humans, not an input to the rule. Source:
+    // `realm.md`, verified by directly fetching the 2026-08-02/03 CFP.
+    "page_limits_not_gated": {
+      "_": "8 at submission, 9 at camera-ready (+1 page). Both numbers are CURRENTLY hardcoded in build-submission.sh — 8 in the header, 9 in the run — which reads like a mismatch even though these are different STAGES. The script should pull them from here instead.",
+      "long_submission": 8,
+      "long_camera_ready": 9,
+      "short_submission": 4,
+      "short_camera_ready": 5,
+      "refs_and_appendices": "unlimited",
+      "limitations_and_ethics": "not counted (ACL rule)",
+    },
 
-  "kinds": {
-    "long": {},
-    "short": {},
+    "kinds": {
+      "long": {},
+      "short": {},
+    },
   },
 }

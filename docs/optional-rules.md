@@ -1,8 +1,11 @@
 # Optional rules
 
-Some checks matter only for some venues. paperlint ships them **off**, and you turn them on for the
-papers that need them, in the `rules` setting of your `package.json`
-([`configuration.md`](configuration.md#the-rules-key-turning-rules-on-and-off)).
+Some checks matter only for some venues. paperlint ships them **off**. A venue preset that needs one
+turns it on for its papers (AgenticDev's turns on `pdf/last-page-balance`), and a paper can turn one
+on or off for itself in its own `paperlint.json`
+([`configuration.md`](configuration.md#three-levels-of-settings)). No glob is involved: a paper's
+rules apply to that paper. The `rules` setting of your `package.json` still overrides both, for one
+paper or many ([`configuration.md`](configuration.md#the-rules-key-turning-rules-on-and-off)).
 
 | rule                    | what it checks                                                | who needs it                                              |
 | ----------------------- | ------------------------------------------------------------- | --------------------------------------------------------- |
@@ -12,21 +15,18 @@ papers that need them, in the `rules` setting of your `package.json`
 
 ### Turning it on
 
+A paper that extends `paperlint:agenticdev` has it already, at 120 pt. For any other paper, in its
+`papers/my-paper/paperlint.json`:
+
 ```json
 {
-  "paperlint": {
-    "papersDir": "papers",
-    "rules": [
-      {
-        "files": ["papers/agenticdev-2026/**"],
-        "rules": { "pdf/last-page-balance": ["error", { "tolerancePt": 120 }] }
-      }
-    ]
-  }
+  "extends": "paperlint:aisec",
+  "kind": "research",
+  "rules": { "pdf/last-page-balance": ["error", { "tolerancePt": 120 }] }
 }
 ```
 
-`files` is relative to the `package.json`. `tolerancePt` is how far apart, in points, the two
+It applies to that paper alone; `"off"` there turns it off for a paper whose preset turns it on. `tolerancePt` is how far apart, in points, the two
 columns may end; it defaults to 120. On a real accepted paper the balanced build ended 2.7 pt apart
 and the one the publisher sent back 321.4 pt apart — nothing in between — so the default leaves a
 wide margin on both sides.
@@ -38,17 +38,18 @@ the result to `<paper>/_build/paper.facts.json` ([`configuration.md`](configurat
 and the rule judges that file, reporting on the paper's `paper.tex` at the `\documentclass` line.
 So: **build, then lint.**
 
-| the rule finds                                      | it says                                                                                                                       |
-| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| columns further apart than `tolerancePt`            | **the finding**, with both heights and how to fix it (below)                                                                  |
-| no `_build/paper.facts.json`                        | build the paper first                                                                                                         |
-| facts about a different PDF than the one on disk    | the facts are stale (their SHA-256 differs) — rebuild                                                                         |
-| facts whose PDF is gone (a failed build removes it) | rebuild                                                                                                                       |
-| a last page of a few lines                          | nothing — there is no layout to balance                                                                                       |
-| a review build with numbered lines                  | nothing — the numbers run down the whole page, so both columns measure full height, and balance is a camera-ready requirement |
+| the rule finds                                      | it says                                                                                                                           |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| columns further apart than `tolerancePt`            | **the finding**, with both heights and how to fix it (below)                                                                      |
+| no `_build/paper.facts.json`                        | build the paper first — unless the paper extends a venue preset: then `pdf/measured` already warns, once, and this rule is silent |
+| facts about a different PDF than the one on disk    | the facts are stale (their SHA-256 differs) — rebuild                                                                             |
+| facts whose PDF is gone (a failed build removes it) | rebuild                                                                                                                           |
+| a last page of a few lines                          | nothing — there is no layout to balance                                                                                           |
+| a review build with numbered lines                  | nothing — the numbers run down the whole page, so both columns measure full height, and balance is a camera-ready requirement     |
 
-If you turn the rule on with a `files` glob that reaches no `paper.tex`, `paperlint lint` fails and says
-so, rather than reporting a clean run for a rule that never ran.
+If you turn the rule on — in a `paperlint.json` beside no `paper.tex`, or with a `files` glob in
+`package.json` that reaches none — `paperlint lint` fails and says so, rather than reporting a clean
+run for a rule that never ran.
 
 ### Which venues need it
 

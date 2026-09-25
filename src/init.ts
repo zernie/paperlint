@@ -35,8 +35,14 @@
  * an answer nobody gave. So the non-interactive path takes the stated default and SAYS which
  * default it took and why nothing was asked, rather than pretending it asked.
  */
-// eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  unlinkSync,
+  writeFileSync,
+  // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
+} from "node:fs";
 // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { spawnSync } from "node:child_process";
 import { dirname, join, relative, resolve } from "node:path";
@@ -66,10 +72,13 @@ import {
   CONFIG_KEY,
   DEFAULT_PAPERS_ROOT,
   LEGACY_CONFIG_KEY,
+  LEGACY_PAPER_SETTINGS_FILE,
   PAPERS_DIR_FIELD,
+  PAPER_SETTINGS_FILE,
   declaredSettings,
   renamedFieldMessage,
 } from "../lib/paper-config.mjs";
+import { migrationOf } from "./paper-settings.ts";
 
 /** How the papers directory was arrived at. Printed, because a guess must not read as a fact. */
 export type PapersHow =
@@ -609,6 +618,73 @@ export interface InitOptions {
 }
 
 /** Reads one line from a real terminal. Kept out of `init` so the command stays testable. */
+/**
+ * Move every paper's pre-2.1.0 `venue.json` to `paperlint.json`, the way the old package.json key
+ * is moved, and in the same step `"venue": "aisec"` becomes `"extends": "paperlint:aisec"`: written
+ * as `paperlint.json` when it is alone, removed when `paperlint.json` already says the same, and
+ * REFUSED — both files left as they are — when they differ, since there is no way to know which
+ * one the author means. `code` is 2 when anything was refused.
+ */
+export function migratePaperSettings(papersAbs: string): {
+  readonly code: number;
+  readonly lines: readonly string[];
+} {
+  const lines: string[] = [];
+  let code = 0;
+  for (const dir of papersIn(papersAbs, [
+    ...PAPER_MARKERS,
+    LEGACY_PAPER_SETTINGS_FILE,
+  ])) {
+    const r = migrateOne(dir, (p) => relative(papersAbs, p));
+    if (r === null) continue;
+    lines.push(r.line);
+    if (r.refused) code = 2;
+  }
+  return {
+    code,
+    lines: lines.length ? ["", "paper settings", ...lines] : [],
+  };
+}
+
+/** One paper's move: done, and the line that says so — or null when there is nothing to move. */
+function migrateOne(
+  dir: string,
+  shown: (p: string) => string,
+): { readonly line: string; readonly refused: boolean } | null {
+  const [from, to] = [LEGACY_PAPER_SETTINGS_FILE, PAPER_SETTINGS_FILE].map(
+    (f) => join(dir, f),
+  ) as [string, string];
+  const read = (p: string) => (existsSync(p) ? readFileSync(p) : null);
+  const plan = migrationOf(read(from), read(to));
+  switch (plan.kind) {
+    case "none":
+      return null;
+    case "move":
+      writeFileSync(to, plan.text);
+      unlinkSync(from);
+      return {
+        line: `  ✓ ${shown(from)} → ${shown(to)} ("venue" is now "extends": "paperlint:<name>"; renamed in paperlint 2.1.0)`,
+        refused: false,
+      };
+    case "drop-legacy":
+      unlinkSync(from);
+      return {
+        line: `  ✓ ${shown(from)} removed — ${shown(to)} already says the same`,
+        refused: false,
+      };
+    case "conflict":
+      return {
+        line: `  ✗ ${shown(from)} and ${shown(to)} both exist and differ — nothing was moved. Keep ${PAPER_SETTINGS_FILE}, copy what you need from ${LEGACY_PAPER_SETTINGS_FILE} into it (its "venue": "x" is "extends": "paperlint:x"), delete ${LEGACY_PAPER_SETTINGS_FILE}, then run init again`,
+        refused: true,
+      };
+    case "broken":
+      return {
+        line: `  ✗ ${shown(from)} was not moved: ${plan.why}`,
+        refused: true,
+      };
+  }
+}
+
 export async function askOnTerminal(question: string): Promise<string> {
   // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
   const { createInterface } = await import("node:readline/promises");
@@ -747,6 +823,8 @@ export async function init(
   // guessed directory while lint and the hooks keep reading the declared one.
   const papersDir =
     decl.status === "kept" ? (decl.papers as string) : choice.papers;
+  const moved = migratePaperSettings(resolve(root, papersDir));
+  for (const line of moved.lines) (moved.code ? err : log)(line);
 
   // ── 3. the skills, linked where Claude Code looks for them ─────────────────────────────
   for (const line of reportSkillLinks(link(root), here)) log(line);
@@ -854,5 +932,5 @@ export async function init(
       `doctor exits ${String(code)} — the install is NOT finished. The lines marked ✗ above say what is\n` +
         `left; re-run \`npx paperlint doctor\` once you have done them.`,
     );
-  return paperCode !== 0 ? paperCode : code;
+  return paperCode || moved.code || code;
 }

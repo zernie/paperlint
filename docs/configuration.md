@@ -18,8 +18,8 @@ The README carries the minimal version of this. Everything below is the full sur
     "causeMarker": "Cause:",
     "rules": [
       {
-        "files": ["papers/agenticdev-2026/**"],
-        "rules": { "pdf/last-page-balance": ["error", { "tolerancePt": 120 }] }
+        "files": ["papers/old-draft/**"],
+        "rules": { "paper/typography": "off" }
       }
     ]
   }
@@ -57,6 +57,61 @@ Until 2026-09-24 this field was called `papers`. The old name is not read as a f
 hooks stay silent instead. The name is defined once, as `PAPERS_DIR_FIELD` in
 `lib/paper-config.mjs`.
 
+## Three levels of settings
+
+Each level is named after the tool, and each says something the others cannot:
+
+```
+package.json                 "paperlint": { … }        the PROJECT: where the papers are, what every paper gets
+papers/
+  my-paper/
+    paper.tex
+    PIPELINE-STATUS.md
+    paperlint.json           { "extends": … }          THIS PAPER: its venue preset, its kind, its own rules — `paperlint new` writes it
+venues/usenix-sec.jsonc      (optional, your own)      a VENUE PRESET: format, page limits, TeX packages, rules
+node_modules/paperlint/skills/submit-paper/references/venues/
+    acm-sigconf.jsonc  agenticdev.jsonc  aisec.jsonc  realm.jsonc      the shipped presets (paperlint:<name>)
+```
+
+`paperlint new` writes `<paper>/paperlint.json` from the template (`templates/paper/paperlint.json`,
+or your `<papers>/.template/paperlint.json` if you keep one), with `"extends": null` — no venue chosen
+yet — and a `$comment` saying what goes there. Until `extends` names a preset, `paperlint lint` gives
+that paper one warning, `pdf/measured`: "this paper names no venue preset yet … set "extends" in
+papers/my-paper/paperlint.json". A paper folder with no `paperlint.json` at all — one created before
+2.1.0 — gets no venue checks and no warning; `npx paperlint new <its name>` adds the file and
+changes nothing else.
+
+```json
+{
+  "extends": "paperlint:aisec",
+  "kind": "research",
+  "rules": { "pdf/body-size": "off" }
+}
+```
+
+| key        | what it is                                                                                                                                                                                 |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `extends`  | the venue preset the built PDF is judged against: `paperlint:<name>` (shipped) or `./path` / `../path` (your own, relative to this file) — [`rules.md`](rules.md#checks-against-the-venue) |
+| `kind`     | the kind of paper (`short`, `research`, …) whose page limit applies                                                                                                                        |
+| `pdf`      | where the built PDF is, relative to the paper, when it is not `paper.pdf`                                                                                                                  |
+| `rules`    | rule id → severity, for this paper alone — the same entries as a `rules` block below                                                                                                       |
+| `$comment` | a note for humans (JSON Schema's comment keyword); ignored                                                                                                                                 |
+
+Any other key is an error naming the file and the key, as in `package.json`.
+
+**Where a paper's rules come from, in order — a later one wins, rule by rule:** paperlint's own
+configuration → the preset chain's `rules`, from the root preset to the one the paper extends →
+the paper's own `rules` → the project's `rules` blocks in `package.json`. So a venue can turn a
+rule on for its papers, a paper can turn it off for itself, and the project can still override
+both. Only rules paperlint ships may be named, at every level.
+
+**`paperlint.json` replaces `venue.json` (2.1.0); `npx paperlint init` moves it.** The old name is not
+read: a paper with only a `venue.json` gets a `pdf/profile` error and `paperlint doctor` names the
+file, both pointing at `init`. `init` writes the same settings as `paperlint.json` —
+`"venue": "aisec"` becomes `"extends": "paperlint:aisec"`, and the `"_"` some files used as a
+comment becomes `"$comment"` — then deletes `venue.json`. It removes a `venue.json` whose
+`paperlint.json` already says the same, and refuses, changing nothing, when both exist and differ.
+
 ## Why the key lives in `package.json`
 
 Because of a count: the `package.json` key has **five** readers — the three editor hooks, the
@@ -76,11 +131,15 @@ the three keys that make sense in JSON — `files`, `ignores` and `rules`. paper
 **after** its own configuration, so, as in ESLint, a later block wins: a block can turn on a rule
 that is off by default, or change the severity of one that is on.
 
+For ONE paper, the paper's own `paperlint.json` is simpler — no glob to get wrong
+([above](#three-levels-of-settings)). Use a block here for a rule across several papers, or to
+override what a paper says:
+
 ```json
 "rules": [
   {
-    "files": ["papers/agenticdev-2026/**"],
-    "rules": { "pdf/last-page-balance": ["error", { "tolerancePt": 120 }] }
+    "files": ["papers/**"],
+    "rules": { "pdf/body-size": "off" }
   },
   {
     "files": ["papers/old-draft/**"],
@@ -116,7 +175,7 @@ and the real findings leave with it.
 
 ```json
 "structure": {
-  "markers":      ["PIPELINE-STATUS.md", "paper.tex", "paper.md", "venue.json"],
+  "markers":      ["PIPELINE-STATUS.md", "paper.tex", "paper.md", "paperlint.json"],
   "require":      ["PIPELINE-STATUS.md"],
   "requireOneOf": [["paper.tex", "paper.md"]],
   "ignore":       []
@@ -173,11 +232,12 @@ papers/my-paper
 
 The build does **not** judge the layout. A balanced last page, a page limit, the fonts a venue
 wants — those are verdicts about the finished PDF, and they belong to lint rules that can be
-turned on per venue, given a severity and suppressed with a reason. paperlint once searched for a
+turned on per venue, given a severity and suppressed with a reason: the `pdf/` venue rules
+([`rules.md`](rules.md#checks-against-the-venue)) and the optional `pdf/last-page-balance`. paperlint once searched for a
 `\balance` position itself and failed the build when none worked; that was removed on
 2026-09-24.
 
-The class and its options and the venue in `venue.json` are read from the paper and shown in the
+The class and its options and the venue in `paperlint.json` are read from the paper and shown in the
 plan; later steps decide from them whether they apply.
 
 **`paper.pdf` is deleted before anything runs**, for every targeted paper — before the TeX Live is

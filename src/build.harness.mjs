@@ -137,6 +137,24 @@ const fakeRead = async (pdf) => {
 const CLEAN_TEX = "\\documentclass{article}\\begin{document}x\\end{document}";
 
 try {
+  // ── inputs: paperlint's own venues directory, no configuration ───────────────────────────────
+  // First: the facts below resolve a paper's venue preset in this same directory, so a wrong one
+  // must be named HERE, not as a missing venue label two checks later.
+  const venues = packageVenuesDir();
+  check(
+    "the venues directory is paperlint's own and holds paper-guards.tex",
+    existsSync(join(venues, "paper-guards.tex")),
+  );
+  check(
+    "🔴 with no TEXINPUTS set, the value ENDS in the separator — otherwise the system tree stops resolving",
+    withTexInputs({}, [venues]).TEXINPUTS === `${venues}${delimiter}`,
+  );
+  check(
+    "an existing TEXINPUTS is kept, after ours",
+    withTexInputs({ TEXINPUTS: `/mine${delimiter}` }, [venues]).TEXINPUTS ===
+      `${venues}${delimiter}/mine${delimiter}`,
+  );
+
   // ── facts: parsed from the paper, not configured ──────────────────────────────────────
   check(
     "documentclass and options come from the parser",
@@ -157,31 +175,18 @@ try {
   );
   const venued = paper("venued", {
     "paper.tex": CLEAN_TEX,
-    "venue.json": JSON.stringify({ venue: "agenticdev", kind: "short" }),
+    "paperlint.json": JSON.stringify({
+      extends: "paperlint:agenticdev",
+      kind: "short",
+    }),
     "build.sh": "exit 0\n",
   });
   const facts = readFacts(venued);
-  check("the venue comes from venue.json", facts.venue === "agenticdev");
+  check("the venue comes from paperlint.json", facts.venue === "agenticdev");
   check(
     "a leftover build.sh is a FACT (reported), not a step",
     JSON.stringify(facts.ignoredScripts) === JSON.stringify(["build.sh"]) &&
       IGNORED_SCRIPTS.includes("repro/build-submission.sh"),
-  );
-
-  // ── inputs: paperlint's own venues directory, no configuration ───────────────────────────────
-  const venues = packageVenuesDir();
-  check(
-    "the venues directory is paperlint's own and holds paper-guards.tex",
-    existsSync(join(venues, "paper-guards.tex")),
-  );
-  check(
-    "🔴 with no TEXINPUTS set, the value ENDS in the separator — otherwise the system tree stops resolving",
-    withTexInputs({}, [venues]).TEXINPUTS === `${venues}${delimiter}`,
-  );
-  check(
-    "an existing TEXINPUTS is kept, after ours",
-    withTexInputs({ TEXINPUTS: `/mine${delimiter}` }, [venues]).TEXINPUTS ===
-      `${venues}${delimiter}/mine${delimiter}`,
   );
 
   // ── the plan ──────────────────────────────────────────────────────────────────────────

@@ -25,6 +25,10 @@ import {
 /* eslint-enable boundaries/dependencies */
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  LEGACY_PAPER_SETTINGS_FILE,
+  PAPER_SETTINGS_FILE,
+} from "../lib/paper-config.mjs";
 
 export type PaperFormat = "tex" | "md";
 export const FORMATS: readonly PaperFormat[] = ["tex", "md"];
@@ -83,14 +87,30 @@ export type NewPaperResult =
   | { readonly ok: false; readonly reason: string };
 
 /**
- * The files a paper folder must end up with: the scorecard, plus a source in `format` — unless
- * it already has a source in EITHER format, in which case that one stands and nothing is added.
+ * The files a paper folder must end up with: the scorecard, a source in `format` — unless it
+ * already has a source in EITHER format, in which case that one stands — and `paperlint.json`.
  */
 export function wantedFiles(dir: string, format: PaperFormat): string[] {
+  return [...scorecardAndSource(dir, format), ...settingsFile(dir)];
+}
+
+function scorecardAndSource(dir: string, format: PaperFormat): string[] {
   const hasSource = Object.values(SOURCE_FILE).some((f) =>
     existsSync(join(dir, f)),
   );
   return hasSource ? [STATUS_FILE] : [STATUS_FILE, SOURCE_FILE[format]];
+}
+
+/**
+ * `paperlint.json`, so that nobody has to know the file exists: its template says what to put in
+ * it, and until a venue preset is named lint says so in one warning. Not beside a pre-2.1.0
+ * `venue.json`: `paperlint init` moves that file, and a second, different one would make the move
+ * refuse.
+ */
+function settingsFile(dir: string): string[] {
+  return existsSync(join(dir, LEGACY_PAPER_SETTINGS_FILE))
+    ? []
+    : [PAPER_SETTINGS_FILE];
 }
 
 // Documented in README.md#starting-a-paper — update it when this changes.

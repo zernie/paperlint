@@ -109,6 +109,27 @@ node scripts/run-mutations.mjs   # run the remaining batteries (deprecated, #52 
 None of these are needed to USE the tool — they are here because the gates are part of the
 argument, not decoration.
 
+## Adding a venue
+
+A venue is a **preset**, a JSONC file in `skills/submit-paper/references/venues/`, validated by
+`venue-profile.schema.json` beside it. Adding one is three files and no code:
+
+1. **The preset, thin.** `venues/<name>.jsonc` extends the template family it is built on
+   (`"extends": "paperlint:acm-sigconf"` for an ACM venue) and adds only what the call for papers
+   sets: `format.kinds` (the page limit of each kind of paper) and, when the venue's producer asks
+   for something an optional rule checks, `rules`. Every number carries the quote it came from.
+   A venue on a template with no family yet stands alone (`template`, `tex`, `format`) — or, better,
+   add the family first: measured on a real template build (banal + pdf.js), not copied from
+   documentation ([#88](https://github.com/zernie/paperlint/issues/88)).
+2. **The card.** `venues/<name>.md` — prose about the venue: deadlines, tracks, the blind model,
+   what the form asks.
+3. **A test.** A case in `src/presets.test.ts` that `paperlint:<name>` resolves over its family with
+   the kinds you declared; `src/tex-requirements.harness.mjs` already checks every shipped preset
+   against the schema.
+
+`paperlint toolchain` picks the new preset's packages up by itself, and the README and
+[`docs/rules.md`](docs/rules.md#checks-against-the-venue) list the shipped presets — update both.
+
 ## Releases
 
 Every push to `main` runs semantic-release (`.github/workflows/release.yml`). The squash commit —

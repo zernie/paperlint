@@ -359,27 +359,20 @@ try {
 
   console.log();
   console.log("the optional balance rule judges what the build measured");
-  // The consumer turns pdf/last-page-balance on for two papers, in the settings' `rules` key —
-  // ESLint's own block shape, `files` relative to the settings file.
+  // The consumer turns pdf/last-page-balance on for two papers, each in its own paperlint.json —
+  // `unbalanced` in a new one, `acmart` beside the venue it already declares.
+  const balanceOn = { rules: { "pdf/last-page-balance": "error" } };
   writeFileSync(
-    join(work, "package.json"),
-    JSON.stringify(
-      {
-        name: "consumer",
-        private: true,
-        paperlint: {
-          [PAPERS_DIR_FIELD]: "papers",
-          rules: [
-            {
-              files: ["papers/unbalanced/**", "papers/acmart/**"],
-              rules: { "pdf/last-page-balance": "error" },
-            },
-          ],
-        },
-      },
-      null,
-      2,
-    ),
+    join(work, "papers", "unbalanced", "paperlint.json"),
+    JSON.stringify(balanceOn),
+  );
+  const acmartSettings = join(work, "papers", "acmart", "paperlint.json");
+  writeFileSync(
+    acmartSettings,
+    JSON.stringify({
+      ...JSON.parse(readFileSync(acmartSettings, "utf8")),
+      ...balanceOn,
+    }),
   );
   const linted = spawnSync(
     process.execPath,
@@ -412,6 +405,88 @@ try {
     "acmart: its one-page stub of a last page is not judged",
     !findings.some((f) => f.file.includes(join("acmart", "paper.tex"))),
     JSON.stringify(findings),
+  );
+
+  console.log();
+  console.log(
+    "the venue rules judge what the build measured, against paperlint.json",
+  );
+  // The same lint run: acmart names agenticdev/short in its paperlint.json, unbalanced names no venue.
+  let all = [];
+  try {
+    all = JSON.parse(linted.stdout).flatMap((r) =>
+      r.messages.map((m) => ({ ...m, file: r.filePath })),
+    );
+  } catch {
+    all = [];
+  }
+  const venueFindings = (paper) =>
+    all.filter(
+      (m) =>
+        m.file.endsWith(join(paper, "paper.tex")) &&
+        /^pdf\/(fresh|profile|fonts|geometry|limits|body-size|measured)$/.test(
+          m.ruleId ?? "",
+        ),
+    );
+  // Only the rules whose answer does not depend on banal's page classification are asserted clean
+  // here: this fixture is one sentence long, and banal calls such a page a "cover" with one
+  // column (fixtures/pdf-facts, test/e2e/banal.mjs), which pdf/geometry would rightly report.
+  check(
+    "🔴 acmart: paperlint.json resolves, the facts are fresh, and a real acmart build has the fonts agenticdev expects",
+    linted.stdout !== "" &&
+      !venueFindings("acmart").some((m) =>
+        ["pdf/profile", "pdf/fresh", "pdf/fonts"].includes(m.ruleId),
+      ),
+    JSON.stringify(venueFindings("acmart")),
+  );
+  // `unbalanced` has a paperlint.json (it turns the balance rule on) that extends no preset: one
+  // warning that no venue is chosen yet, and nothing else from the venue rules.
+  check(
+    "unbalanced: extends no preset, so the venue rules say exactly one thing — no venue chosen yet",
+    venueFindings("unbalanced").length === 1 &&
+      venueFindings("unbalanced")[0].ruleId === "pdf/measured" &&
+      venueFindings("unbalanced")[0].severity === 1 &&
+      /names no venue preset yet/.test(venueFindings("unbalanced")[0].message),
+    JSON.stringify(venueFindings("unbalanced")),
+  );
+  // The fallback paper is an `article` set in Computer Modern — what acmart silently produces when
+  // a font package is missing. Declare it an agenticdev paper after the build: the measurements do
+  // not depend on the venue, so no rebuild is needed, and the venue rules must reject it.
+  writeFileSync(
+    join(work, "papers", "fallback", "paperlint.json"),
+    JSON.stringify({ extends: "paperlint:agenticdev", kind: "short" }),
+  );
+  const fb = spawnSync(
+    process.execPath,
+    [CLI, "lint", "papers/fallback", "--json"],
+    { cwd: work, encoding: "utf8" },
+  );
+  let fbFindings = [];
+  try {
+    fbFindings = JSON.parse(fb.stdout)
+      .filter((r) => r.filePath.endsWith(join("fallback", "paper.tex")))
+      .flatMap((r) => r.messages);
+  } catch {
+    fbFindings = [{ ruleId: "(unparsable)", message: fb.stdout + fb.stderr }];
+  }
+  check(
+    "🔴 fallback: Computer Modern under an ACM venue — pdf/fonts names the missing LinLibertine, and lint fails",
+    fbFindings.some(
+      (m) =>
+        m.ruleId === "pdf/fonts" &&
+        m.severity === 2 &&
+        /LinLibertine/.test(m.message),
+    ),
+    JSON.stringify(fbFindings),
+  );
+  check(
+    "fallback: one column against two — pdf/geometry reports it (or pdf/measured, when banal did not measure)",
+    fbFindings.some(
+      (m) =>
+        (m.ruleId === "pdf/geometry" && /column/.test(m.message)) ||
+        (m.ruleId === "pdf/measured" && /geometry/.test(m.message)),
+    ),
+    JSON.stringify(fbFindings),
   );
 
   console.log();

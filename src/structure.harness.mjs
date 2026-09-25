@@ -132,9 +132,9 @@ try {
     !STRUCTURE_DEFAULTS.require.includes("paper.pdf"),
   );
   check(
-    "and `venue.json` counts as a marker but not a requirement",
-    STRUCTURE_DEFAULTS.markers.includes("venue.json") &&
-      !STRUCTURE_DEFAULTS.require.includes("venue.json"),
+    "and `paperlint.json` counts as a marker but not a requirement",
+    STRUCTURE_DEFAULTS.markers.includes("paperlint.json") &&
+      !STRUCTURE_DEFAULTS.require.includes("paperlint.json"),
   );
 
   // ── one schema for both halves ────────────────────────────────────────────────────────

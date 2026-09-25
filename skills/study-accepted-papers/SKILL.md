@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:eb77acd927708132 compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:177ca8805990361e compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
 
 # study-accepted-papers — learn the venue's bar from its own accepted corpus, then lever your draft up
 
@@ -196,6 +196,7 @@ label on it.
 - `verify-citations` — consumes the Step-4 citation gaps.
 - `extend-paper` — the natural home for every EXPENSIVE lever this skill surfaces.
 - `submit-paper` venue data card (`submit-paper/references/venues/<venue>.md`) — save durable venue-bar findings there as data, not as a new skill per venue.
+- the paper's `<paper>/paperlint.json` (`{ "extends": "paperlint:<venue>", "kind": "<kind>" }`) — which venue preset the `pdf/*` rules check the built PDF against; a venue with no shipped preset extends a family (`paperlint:acm-sigconf`) or the project's own `./venues/<name>.jsonc`. Findings about the venue's page limit or format belong in that preset, with their source quote.
 
 ## Provenance
 Built from the **AISec 2026 @ ACM CCS** polish run (2026-07): the "Safety Theater in Agentic Coding /

@@ -12,7 +12,7 @@
  *
  * ── THE SHAPE: an ordered list of STEPS, composed, not configured ────────────
  * Each step says whether it applies to THIS paper and why — decided from FACTS parsed out of the
- * paper (its `\documentclass` and options, the venue named in `venue.json`), never from a config
+ * paper (its `\documentclass` and options, the venue named in `paperlint.json`), never from a config
  * flag. `paperlint build` prints that plan before running anything, and `--dry-run` prints only the
  * plan. Adding a step is one entry in `STEPS`.
  *
@@ -45,6 +45,7 @@ import { delimiter, join, relative } from "node:path";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import { getParser } from "@unified-latex/unified-latex-util-parse";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { PAPER_SETTINGS_FILE } from "../lib/paper-config.mjs";
 import {
   declaredVenue,
   factsPath,
@@ -86,7 +87,7 @@ export const PAPER_MARKERS = [
   "PIPELINE-STATUS.md",
   "paper.tex",
   "paper.md",
-  "venue.json",
+  PAPER_SETTINGS_FILE,
 ];
 
 /** The source paperlint compiles, and the job name every output file carries. */
@@ -114,7 +115,7 @@ export interface PaperFacts {
     readonly name: string;
     readonly options: readonly string[];
   } | null;
-  /** The `venue` field of `venue.json`, or null. */
+  /** The label of the venue preset `paperlint.json` extends, or null. */
   readonly venue: string | null;
   /** Paper-supplied build scripts found on disk — reported as ignored. */
   readonly ignoredScripts: readonly string[];
@@ -222,7 +223,7 @@ export function readFacts(paperDir: string): PaperFacts {
   return {
     main,
     documentclass: documentclassOf(ast),
-    venue: venue?.venue ?? null,
+    venue: venue?.label ?? null,
     ignoredScripts: IGNORED_SCRIPTS.filter((s) =>
       existsSync(join(paperDir, s)),
     ),

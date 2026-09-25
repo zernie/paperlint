@@ -45,8 +45,9 @@ of that — who is filing what, and when — stays in the author's own private n
 - \`references/acl-venue-rules.md\` — what holds at **every** ACL-family venue and workshop: the
   page-limit map, the appendix rule and the trap inside it, Limitations/Ethics as free-but-restricted
   space, anonymity, OpenReview mechanics. Fetch once, not per paper. Venue-specific facts stay in
-  \`submit-paper/references/venues/<venue>.md\`. (No equivalent yet for ACM or IEEE — write one when
-  the next paper goes there.)
+  \`submit-paper/references/venues/<venue>.md\`. (No prose equivalent yet for ACM or IEEE — write one
+  when the next paper goes there. ACM's machine-checked format already exists: the
+  \`paperlint:acm-sigconf\` preset, \`submit-paper/references/venues/acm-sigconf.jsonc\`.)
 
 ## The readiness scorecard (which boxes are checked)
 Stages run in subagents and report into chat, which evaporates — so "did everything run?" becomes

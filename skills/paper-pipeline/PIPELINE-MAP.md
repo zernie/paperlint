@@ -199,6 +199,14 @@ format.
 
 ## 3. Venue constants belong in a card, not in code
 
+> **Done (#79, 2.1.0), in a different shape than planned below.** The constants live in **venue
+> presets**, JSONC files in `submit-paper/references/venues/`: `acm-sigconf.jsonc` is the ACM
+> family (the `format` block — page size, columns, fonts, font sizes — plus the `tex` packages),
+> `agenticdev.jsonc` and `aisec.jsonc` extend it and add their `kinds` (page limits) and `rules`,
+> `realm.jsonc` stands alone. A paper picks one in `<paper>/paperlint.json`
+> (`{ "extends": "paperlint:<venue>", "kind": "…" }`); the `pdf/*` lint rules judge the built PDF
+> against it. The `.md` cards stay as prose. What follows is the plan as it was written.
+
 Right now `LinLibertine`, `LinBiolinum`, `acmart` are hardcoded into `check-render.sh`. This is
 **venue data**, and it belongs in
 `.claude/skills/submit-paper/references/venues/<venue>.md`:
@@ -292,7 +300,7 @@ imports, paths inside regexes).
 ## 2. One build entry point for all papers, not one per paper
 
 > **Done (#59, 2026-09-24).** `paperlint build <paper>` is the entry point, and `paperlint toolchain` installs
-> TeX Live with the packages the venue profiles declare; `ensure-toolchain.sh` and
+> TeX Live with the packages the venue presets declare; `ensure-toolchain.sh` and
 > `ci-install-texlive.sh` are deleted. What follows is the plan as it was written.
 
 **The hole:** `compile-rules` has `repro/build-submission.sh`, which calls `ensure-toolchain.sh`.
@@ -324,9 +332,11 @@ point. Nothing to check.
 | page limit           | **4**           | `venues/realm.md` 8 · `build-submission.sh` 8 · `PIPELINE-STATUS` "8/8" · the build prints **9**                                      |
 | the TeX package list | **5**           | `ensure-toolchain.sh` (executable) · `SKILL.md` · `render-paper.harness.mjs` (pins it ✅) · `build-submission.sh` · `PIPELINE-STATUS` |
 
-The canonical source is the venue card (`venues/<venue>.md`, the `<!-- venue-profile -->` block) for
-format, and — since 2026-09-24 — the `tex` block of `venues/<venue>.jsonc` (plus `tex-base.jsonc`)
-for packages; `ensure-toolchain.sh` held them until then. Everything else is a pointer.
+The canonical source is the venue preset (`venues/<name>.jsonc`, resolved through its `extends`
+chain): its `format` block for the numbers (page size, columns, fonts, font sizes, and `kinds` for
+page limits), its `tex` block (plus `tex-base.jsonc`) for packages — since 2026-09-24;
+`ensure-toolchain.sh` held them until then — and its `rules` block for the checks the venue
+implies. The `.md` card is prose about the venue. Everything else is a pointer.
 
 ## 3-ter. Drop the font gate from `check-render.sh` once the rules run in CI
 

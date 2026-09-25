@@ -12,6 +12,13 @@ source paginates differently on a machine with another version of the template. 
 gets overwritten a week later and nobody can say what was sent. You find out from a reviewer or a
 publisher, or never. paperlint checks for these on your machine and in CI:
 
+- **Checks against your venue.** Point the paper's `paperlint.json` at a venue preset
+  (`"extends": "paperlint:aisec"`), build, lint: the page limit for your kind of paper, embedded
+  fonts and the template's font families, the paper size and column count, and the font sizes, as
+  the venue's call for papers sets them — plus the checks the venue implies, such as a balanced last
+  page. Presets ship for the ACM `acmart` sigconf family and three venues — AgenticDev and AISec
+  (ACM) and REALM (ACL); for any other venue, a preset is one JSON file in your repository
+  ([`docs/rules.md`](docs/rules.md#writing-your-own-venue-preset)).
 - **Builds the same PDF everywhere.** `paperlint toolchain` installs TeX Live with exactly the
   packages your venue's template needs and checks that each one is really there, so the silent
   font switch cannot happen and your laptop and CI build with the same TeX Live.
@@ -75,10 +82,16 @@ npx paperlint new my-paper
   ✓ created papers/my-paper
       + PIPELINE-STATUS.md  (from the package template)
       + paper.tex  (from the package template)
+      + paperlint.json  (from the package template)
 
 config: package.json
-✓ 2 file(s) checked, no findings
+…/papers/my-paper/paper.tex
+  1:1  warning  this paper names no venue preset yet, so its page limit, fonts and format are not checked — set "extends" in papers/my-paper/paperlint.json (e.g. "paperlint:agenticdev"; see docs/rules.md)  pdf/measured
+
+✖ 1 problem (0 errors, 1 warning)
 ```
+
+The warning is the only thing left to do: the paper does not say where it is going yet.
 
 You now have one folder per paper:
 
@@ -87,9 +100,29 @@ papers/
   my-paper/
     paper.tex                 the paper, in LaTeX
     PIPELINE-STATUS.md        the paper's record: its research question and the stages it reached
+    paperlint.json            this paper's settings: its venue preset and kind — `new` writes it
     reviews/*.md              review notes (optional)
     versions/                 the exact PDF and source you sent at each stage, never edited
 ```
+
+`paperlint new` writes `paperlint.json` with `"extends": null` and a comment saying what goes
+there. To have the paper checked against its venue, name the venue preset and the kind of paper:
+
+```json
+{ "extends": "paperlint:aisec", "kind": "research" }
+```
+
+Settings come in three levels, each named after the tool:
+
+```
+package.json            "paperlint": { "papersDir": "papers" }        the project
+papers/my-paper/
+  paperlint.json        { "extends": "paperlint:aisec", … }            this paper
+paperlint:aisec         a venue preset: shipped, or ./your-venue.jsonc  the venue
+```
+
+More in [`docs/configuration.md`](docs/configuration.md#three-levels-of-settings).
+`paperlint.json` replaces `venue.json` (2.1.0); `npx paperlint init` moves it.
 
 A **stage** is a point the paper has reached, such as `submitted` or `camera-ready` (the final
 version for the proceedings). The name may use `a-z`, `0-9`, `.`, `_` and `-`. On a folder that
@@ -167,19 +200,28 @@ shows up red. Optional inputs: `config`, `max-warnings` (default `-1`, no limit)
 
 ## What the checks catch
 
-| check                          | level   | catches                                                                                                    |
-| ------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------- |
-| `paper/stages`                 | error   | a stage's PDF is missing, or it is not the same file any more (its size changed)                           |
-| `paper/source`                 | error   | a stage has no frozen source file next to its PDF                                                          |
-| `paper/author-list`            | warning | a stage is declared, but `PIPELINE-STATUS.md` does not record that the author list was checked             |
-| `paper/research-question`      | warning | the research question is missing from `PIPELINE-STATUS.md`, or the paper does not contain that sentence    |
-| `paper/typography`             | warning | more `§`, `.05`-style decimals, mixed `Fig.`/`Figure`, or references without a DOI or URL than you allowed |
-| `tex/future-promise`           | warning | a camera-ready still says your code "will be released"                                                     |
-| `tex/acm-frontmatter-override` | error   | an ACM paper overrides the template's title-page commands, so parts of page 1 go missing                   |
-| `review/findings-cause`        | error   | a review note lists several findings and names no cause for any of them                                    |
-| `doc/fields`                   | warning | a review note's front matter is missing a field you require (off unless configured)                        |
+| check                          | level   | catches                                                                                                          |
+| ------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------- |
+| `paper/stages`                 | error   | a stage's PDF is missing, or it is not the same file any more (its size changed)                                 |
+| `paper/source`                 | error   | a stage has no frozen source file next to its PDF                                                                |
+| `paper/author-list`            | warning | a stage is declared, but `PIPELINE-STATUS.md` does not record that the author list was checked                   |
+| `paper/research-question`      | warning | the research question is missing from `PIPELINE-STATUS.md`, or the paper does not contain that sentence          |
+| `paper/typography`             | warning | more `§`, `.05`-style decimals, mixed `Fig.`/`Figure`, or references without a DOI or URL than you allowed       |
+| `tex/future-promise`           | warning | a camera-ready still says your code "will be released"                                                           |
+| `tex/acm-frontmatter-override` | error   | an ACM paper overrides the template's title-page commands, so parts of page 1 go missing                         |
+| `review/findings-cause`        | error   | a review note lists several findings and names no cause for any of them                                          |
+| `doc/fields`                   | warning | a review note's front matter is missing a field you require (off unless configured)                              |
+| `pdf/limits`                   | error   | more body or reference pages than the venue allows for your kind of paper, or a reference font size out of range |
+| `pdf/fonts`                    | error   | a Type 3 or unembedded font, or the venue template's fonts are missing (a silent Computer Modern fallback)       |
+| `pdf/geometry`                 | error   | the paper size or column count differs from the venue's                                                          |
+| `pdf/body-size`                | warning | the body font size is off the venue's                                                                            |
+| `pdf/profile`                  | error   | the paper's `extends` names no preset (a typo), or a kind of paper the venue does not have                       |
+| `pdf/fresh`                    | error   | the build facts describe an earlier PDF than the one on disk                                                     |
+| `pdf/measured`                 | warning | the venue checks did not run: the paper names no venue preset yet, or was not built                              |
 
-Errors fail the run; warnings only print. What each check reads: [`docs/rules.md`](docs/rules.md).
+The `pdf/` checks run only for a paper whose `paperlint.json` extends a venue preset, and they judge the PDF
+`paperlint build` made: build, then lint. Errors fail the run; warnings only print. What each check
+reads: [`docs/rules.md`](docs/rules.md).
 Checks that only some venues need are off until you turn them on:
 [`docs/optional-rules.md`](docs/optional-rules.md).
 

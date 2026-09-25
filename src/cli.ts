@@ -33,7 +33,10 @@ import { fileURLToPath } from "node:url";
 import { join, dirname, resolve, relative, basename, sep } from "node:path";
 import markdown from "@eslint/markdown";
 // Types come from consumer.d.mts beside it, the same arrangement as lib/paper-config.d.mts.
-import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import {
+  isMain,
+  packageVenuesDir,
+} from "../skills/paper-pipeline/scripts/consumer.mjs";
 export { isMain };
 import type { Args, PaperlintConfig, ConfigRead } from "./types.ts";
 import {
@@ -41,22 +44,23 @@ import {
   formatStructure,
   asEslintResults,
 } from "./structure.ts";
-import {
-  buildPapers,
-  papersIn,
-  anyFailed,
-  remedyFor,
-  readFacts,
-  MAIN,
-} from "./build.ts";
+import { buildPapers, papersIn, anyFailed, remedyFor, MAIN } from "./build.ts";
 import { prepareEngine } from "./build-engine.ts";
 import { runToolchain } from "./toolchain.ts";
 import { banalInstaller, parseBanalSettings } from "./adapters/banal/index.ts";
 import { curlDownload } from "./adapters/curl/index.ts";
-import { hostDirs, nodeAdapters } from "./adapters/node/index.ts";
+import { hostDirs, nodeAdapters, nodeFiles } from "./adapters/node/index.ts";
+import { VENUE_RULE_LEVELS, venueRules } from "./venue-rules.ts";
+import { paperRules } from "./paper-settings.ts";
+import {
+  paperPreset,
+  paperPresetProblem,
+  type PaperPreset,
+} from "./presets.ts";
 import type { ToolInstaller } from "./ports/tool-installer.ts";
 import {
   mergeRequirements,
+  declaredUnion,
   requirementsFor,
   NO_REQUIREMENTS,
   type TexRequirements,
@@ -84,9 +88,11 @@ import {
 } from "../lib/paper-config.mjs";
 import {
   parseRuleBlocks,
+  parseRuleEntries,
   shippedRuleIds,
   unknownKeys,
   type Parsed,
+  type RuleBlock,
 } from "./rules-config.ts";
 export { init };
 export { nextSteps } from "./init.ts";
@@ -122,7 +128,7 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       Compiles with paperlint's TeX Live, else one on PATH that has every
                                       package the venue declares; on a terminal it offers to install
                                       one, without a terminal it stops and names \`npx paperlint toolchain\`
-  npx paperlint toolchain [--check]   install TeX Live with every package the venue profiles declare
+  npx paperlint toolchain [--check]   install TeX Live with every package the venue presets declare
                                       into ~/.cache/paperlint/texlive (PAPERLINT_TEXLIVE_DIR overrides); a second
                                       run does nothing. --check: report what is missing, change nothing
   npx paperlint doctor                say what is actually wired — and what only LOOKS wired
@@ -166,7 +172,19 @@ another file of the same shape. \`papersDir\` is required; the rest is optional:
 
   "rules" takes ESLint flat-config blocks (files, ignores, rules), appended after paperlint's own, with
   files relative to the file holding the settings. Optional rules (off unless turned on there):
-  pdf/last-page-balance. An unknown key, anywhere in the settings, is an error.
+  pdf/last-page-balance. The venue rules (pdf/fresh, pdf/profile, pdf/fonts, pdf/geometry,
+  pdf/limits, pdf/body-size, pdf/measured) are on for every paper whose paperlint.json names a venue;
+  set one to "off" there to skip it.
+
+per paper — <paper>/paperlint.json (it was venue.json before 2.1.0; \`npx paperlint init\` moves it):
+
+  { "extends": "paperlint:aisec", "kind": "research", "rules": { "pdf/last-page-balance": "error" } }
+
+  "extends" names a venue preset: paperlint:<name> (shipped: acm-sigconf, agenticdev, aisec, realm)
+  or ./path.jsonc, relative to the paperlint.json. npm presets are not supported yet.
+
+  "rules" there applies to that paper alone, after its preset's rules and before the project's. An unknown key,
+  anywhere in the settings or in a paperlint.json, is an error.
 `;
 
 /** The config the user would otherwise write by hand. The data comes from `opts`, the mechanism is here. */
@@ -188,11 +206,21 @@ export function buildConfig(
     // default (only `node_modules/` and `.git/`), so without this block `paperlint lint` would lint the
     // template as a paper — and a richer template with placeholder stages would fail the run.
     { ignores: ["**/.template/"] },
-    // The `pdf` plugin is registered for EVERY file, and its rule is on for none. A consumer's
-    // block (`rules`, appended below) turns it on for a glob that also matches markdown files;
-    // with the plugin defined only beside `paper.tex`, ESLint would refuse those files with
-    // "could not find plugin". The rule itself acts on `paper.tex` only.
-    { plugins: { pdf: pdfRules } },
+    // The `pdf` plugin is registered for EVERY file. A consumer's block (`rules`, appended below)
+    // may name its rules for a glob that also matches markdown files; with the plugin defined only
+    // beside `paper.tex`, ESLint would refuse those files with "could not find plugin". Every rule
+    // in it acts on `paper.tex` only. `last-page-balance` is on for no file (optional); the venue
+    // rules are on for every `paper.tex`, in the block below.
+    {
+      plugins: {
+        pdf: {
+          rules: {
+            ...pdfRules.rules,
+            ...venueRules({ files: nodeFiles, venuesDir: packageVenuesDir() }),
+          },
+        },
+      },
+    },
     {
       files: ["**/PIPELINE-STATUS.md"],
       plugins: { markdown, paper: paperStages },
@@ -263,6 +291,8 @@ export function buildConfig(
         "paper/typography": typographyOpt,
         "tex/future-promise": "warn",
         "tex/acm-frontmatter-override": "error",
+        // Silent for a paper whose paperlint.json names no venue (src/venue-rules.ts).
+        ...VENUE_RULE_LEVELS,
       },
     });
   // The consumer's own blocks, LAST, so a later block wins — ESLint's rule. Parsed by
@@ -327,6 +357,66 @@ export async function silentOptionalRules(
   }
   return [...turnedOn].filter((id) => !reached.has(id));
 }
+
+/**
+ * Every linted paper's `rules` from its `paperlint.json`, as ESLint blocks scoped to that paper.
+ * A file that does not parse, or names a rule paperlint does not ship, stops the run with one line
+ * naming the file — the same strictness as the project's own `rules`. A leftover `venue.json` is
+ * not read here; `pdf/profile` and `paperlint doctor` name it.
+ */
+export function paperRuleBlocks(paths: readonly string[]): Parsed<RuleBlock[]> {
+  const papers = [...new Set(paths.flatMap((p) => [p, ...papersIn(p)]))];
+  const out: RuleBlock[] = [];
+  for (const dir of papers) {
+    const p = paperPreset(dir, PRESET_DEPS);
+    if (p.kind === "settings-problem" && p.problem.kind === "broken")
+      return { ok: false, error: paperPresetProblem(dir, p) ?? dir };
+    const block = rulesOfPaper(dir, p);
+    if (!block.ok) return block;
+    if (block.value) out.push(block.value);
+  }
+  return { ok: true, value: out };
+}
+
+/**
+ * One paper's block: its preset chain's `rules`, then its own — later wins per rule id. A preset
+ * that does not resolve contributes nothing here; `pdf/profile` reports it on the paper.
+ */
+function rulesOfPaper(dir: string, p: PaperPreset): Parsed<RuleBlock | null> {
+  const settings = "settings" in p ? p.settings : null;
+  if (settings === null) return { ok: true, value: null };
+  const own = paperRules(dir, settings, SHIPPED_RULES);
+  if (!own.ok) return own;
+  const fromPreset =
+    p.kind === "resolved"
+      ? parseRuleEntries(
+          p.preset.rules,
+          `the venue preset ${p.preset.chain.join(" → ")} → "rules"`,
+          SHIPPED_RULES,
+        )
+      : { ok: true as const, value: {} };
+  if (!fromPreset.ok) return fromPreset;
+  const rules = { ...fromPreset.value, ...(own.value ?? {}) };
+  return {
+    ok: true,
+    value: Object.keys(rules).length
+      ? { basePath: dir, files: PAPER_FILE_PATTERNS, rules }
+      : null,
+  };
+}
+
+/**
+ * The files a paper's block may reach: exactly the ones paperlint's own blocks lint, read off its
+ * config. A wider glob (everything under the paper) would make ESLint lint files no block gives a
+ * language — `paperlint.json` itself would be parsed as JavaScript.
+ */
+const PAPER_FILE_PATTERNS: string[] = [
+  ...new Set(
+    buildConfig({}, { sentinel: "tex language" }).flatMap(
+      (b) => (b as { files?: string[] }).files ?? [],
+    ),
+  ),
+];
 
 /**
  * The settings after the boundary: an unknown key is refused by name, and `rules` becomes parsed
@@ -818,15 +908,40 @@ async function runBuild(
   return anyFailed(out.results) ? 1 : 0;
 }
 
-/** What one paper needs from TeX Live; a venue.json that does not parse is the build's to report. */
+/** The presets' deps, wired to the disk and the package's own venues directory. */
+const PRESET_DEPS = { files: nodeFiles, venuesDir: packageVenuesDir() };
+
+/**
+ * What one paper needs from TeX Live: the base set plus its preset chain's `tex`. A paper whose
+ * settings or preset do not resolve gets the base set; the build reports why at its facts step.
+ */
 function paperRequirements(dir: string): TexRequirements {
-  let venue: string | null = null;
-  try {
-    venue = readFacts(dir).venue;
-  } catch {
-    venue = null;
-  }
-  return requirementsFor(venue).tex;
+  const p = paperPreset(dir, PRESET_DEPS);
+  return requirementsFor(p.kind === "resolved" ? p.preset : null).tex;
+}
+
+/**
+ * What `paperlint toolchain` installs: every shipped preset's packages, plus the resolved chain of
+ * every paper under the project's papers directory — a project's own preset lives outside the
+ * package, so the shipped union alone would not see it.
+ */
+export function toolchainTex(cwd: string): TexRequirements {
+  const cfg = readConfig(parseArgs(["toolchain"]), {
+    log: () => {},
+    err: () => {},
+    cwd,
+  });
+  const roots =
+    cfg.code === undefined
+      ? toPaths(papersDirOf(cfg.opts)).map((rel) =>
+          resolve(dirname(cfg.configPath ?? cwd), rel),
+        )
+      : [];
+  const chains = roots
+    .flatMap((r) => papersIn(r))
+    .map((dir) => paperPreset(dir, PRESET_DEPS))
+    .flatMap((p) => (p.kind === "resolved" ? [p.preset.tex] : []));
+  return declaredUnion(undefined, chains).tex;
 }
 
 /**
@@ -868,8 +983,14 @@ const SIMPLE: Readonly<
   hook: (a, { err }) => runHook(a.paths[0], { err }),
   new: (a, io) => runNew(a, io),
   build: (a, io) => runBuild(a, io),
-  toolchain: (a, { log, err }) =>
-    runToolchain({ check: a.check, log, err, banal: hostBanalInstaller() }),
+  toolchain: (a, { log, err, cwd }) =>
+    runToolchain({
+      check: a.check,
+      log,
+      err,
+      banal: hostBanalInstaller(),
+      tex: toolchainTex(cwd),
+    }),
 };
 
 /** banal's installer, wired from this process's environment: the composition root's work. */
@@ -1013,6 +1134,14 @@ export async function run(
   // a directory without `PIPELINE-STATUS.md` simply gets not a single rule and reports clean. The
   // analysis of why a structure plugin for ESLint does not cure this is in `structure.mjs`.
   const structure = checkStructure(paths, opts.structure, { cwd });
+  // Each paper's own `rules` (its paperlint.json) go after paperlint's blocks and BEFORE the
+  // project's, so the project's package.json still has the last word.
+  const papers = paperRuleBlocks(paths);
+  if (!papers.ok) return (err(papers.error), 2);
+  const withPapers = {
+    ...opts,
+    rules: [...papers.value, ...(opts.rules ?? [])],
+  };
 
   let texLanguage: unknown = null;
   try {
@@ -1026,7 +1155,7 @@ export async function run(
   const eslint = new ESLint({
     cwd: lintRoot(configPath ? dirname(resolve(cwd, configPath)) : cwd, paths),
     overrideConfigFile: true,
-    overrideConfig: buildConfig(opts, texLanguage) as Linter.Config[],
+    overrideConfig: buildConfig(withPapers, texLanguage) as Linter.Config[],
   });
 
   // 🔴 ESLint THROWS on an empty set (`NoFilesFoundError`) — the guard below simply never got
@@ -1063,7 +1192,7 @@ export async function run(
     log,
     err,
     where: relative(cwd, dirname(resolve(cwd, configPath ?? "."))) || ".",
-    opts,
+    opts: withPapers,
   });
 }
 

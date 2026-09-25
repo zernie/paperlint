@@ -98,11 +98,11 @@ try {
   const papers = join(work, "papers");
   const r = newPaper(papers, "demo", "tex");
   check(
-    "a fresh folder gets the scorecard and a .tex source, both from the package",
+    "a fresh folder gets the scorecard, a .tex source and paperlint.json, all from the package",
     r.ok &&
       r.fresh &&
       r.files.map((f) => `${f.file}:${f.status}:${f.from}`).join(" ") ===
-        "PIPELINE-STATUS.md:created:package paper.tex:created:package",
+        "PIPELINE-STATUS.md:created:package paper.tex:created:package paperlint.json:created:package",
   );
   const status = read(papers, "demo", STATUS_FILE);
   const fm = front(status);
@@ -122,8 +122,10 @@ try {
   );
   const l = await lint(join(papers, "demo"));
   check(
-    "🔴 `paperlint lint` passes the scaffold clean — the first run is green, not a missing-file error",
-    l.code === 0 && /no findings/.test(l.text),
+    "🔴 `paperlint lint` passes the scaffold — exit 0, not a missing-file error — with the one warning that no venue is chosen yet",
+    l.code === 0 &&
+      /names no venue preset yet/.test(l.text) &&
+      /1 problem \(0 errors, 1 warning\)/.test(l.text),
   );
 
   // The format contract of the skills' checker: four sections, parsed.
@@ -171,9 +173,10 @@ try {
   );
   check(
     "wantedFiles asks for a source only when neither format is there",
-    wantedFiles(join(papers, "old"), "tex").join() === STATUS_FILE &&
+    wantedFiles(join(papers, "old"), "tex").join() ===
+      `${STATUS_FILE},paperlint.json` &&
       wantedFiles(join(papers, "nowhere"), "md").join() ===
-        `${STATUS_FILE},paper.md`,
+        `${STATUS_FILE},paper.md,paperlint.json`,
   );
   writeFileSync(join(papers, "afile"), "x");
   check(

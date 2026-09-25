@@ -20,12 +20,13 @@
  * allowed to know where this package is installed (rule 10).
  */
 // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import Ajv from "ajv";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { PAPER_SETTINGS_FILE } from "../lib/paper-config.mjs";
 
 /** CTAN package name → the names that prove it is installed. */
 export type PackageProofs = Readonly<Record<string, readonly string[]>>;
@@ -78,18 +79,133 @@ function violations(file: string, v: Validate): string[] {
   );
 }
 
+/** One kind of paper a venue takes (`short`, `research`, …) and its page limits; null = not limited. */
+export interface KindLimits {
+  readonly bodyPagesMax: number | null;
+  readonly refPagesMax: number | null;
+}
+
 /**
- * The text of one profile → its typed requirements, or an Error naming every problem.
+ * The format a venue's call for papers sets — what the `pdf/*` venue rules judge a built PDF
+ * against. Every field the profile leaves out is null, and a rule that finds null checks nothing:
+ * a profile that does not name a number never makes one up.
+ */
+export interface VenueFormat {
+  readonly pageWidthIn: number | null;
+  readonly pageHeightIn: number | null;
+  readonly columns: number | null;
+  readonly bodyPt: number | null;
+  readonly bodyPtTol: number | null;
+  readonly refPtMin: number | null;
+  readonly refPtMax: number | null;
+  /** The prefix a font name of the body text starts with (`LinLibertine`). */
+  readonly fontsText: string | null;
+  readonly fontsTitle: string | null;
+  readonly kinds: ReadonlyMap<string, KindLimits>;
+}
+
+/** Every format field a preset left out is null; a merge fills it from the parent. */
+export const NO_FORMAT: VenueFormat = {
+  pageWidthIn: null,
+  pageHeightIn: null,
+  columns: null,
+  bodyPt: null,
+  bodyPtTol: null,
+  refPtMin: null,
+  refPtMax: null,
+  fontsText: null,
+  fontsTitle: null,
+  kinds: new Map(),
+};
+
+/**
+ * One preset FILE, parsed — before its `extends` chain is resolved (`src/presets.ts` does that).
+ * A preset is a venue or a template family: `{ extends?, name?, template?, format?, tex?, rules? }`.
+ */
+export interface PresetFile {
+  /** The preset this one builds on: `paperlint:<name>` or a relative path. */
+  readonly extends: string | null;
+  /** A display name for messages; the file name otherwise. */
+  readonly name: string | null;
+  readonly template: string | null;
+  /** Null when the file declares no `tex` block (allowed only with `extends`). */
+  readonly tex: TexRequirements | null;
+  readonly format: VenueFormat;
+  /** rule id → ESLint entry, checked against the shipped rules where a config is built. */
+  readonly rules: Readonly<Record<string, unknown>>;
+}
+
+type KindsJson = Readonly<
+  Record<string, { body_pages_max?: number; ref_pages_max?: number }>
+>;
+
+/** A preset's `format` block after the schema accepted it. */
+interface FormatJson {
+  readonly page_w_in?: number;
+  readonly page_h_in?: number;
+  readonly columns?: number;
+  readonly body_pt?: number;
+  readonly body_pt_tol?: number;
+  readonly ref_pt_min?: number;
+  readonly ref_pt_max?: number;
+  readonly fonts_text?: string;
+  readonly fonts_title?: string;
+  readonly kinds?: KindsJson;
+}
+
+/** The preset's JSON after the schema accepted it — the shape `venue-profile.schema.json` allows. */
+interface PresetJson {
+  readonly extends?: string;
+  readonly name?: string;
+  readonly template?: string;
+  readonly tex?: Partial<TexRequirements>;
+  readonly format?: FormatJson;
+  readonly rules?: Readonly<Record<string, unknown>>;
+}
+
+/** An optional field as the typed preset holds it: absent is null. */
+const orNull = <T>(v: T | undefined): T | null => (v === undefined ? null : v);
+
+function kindsOf(k: KindsJson | undefined): ReadonlyMap<string, KindLimits> {
+  return new Map(
+    Object.entries(k ?? {}).map(([name, v]) => [
+      name,
+      {
+        bodyPagesMax: orNull(v.body_pages_max),
+        refPagesMax: orNull(v.ref_pages_max),
+      },
+    ]),
+  );
+}
+
+function formatOf(j: FormatJson = {}): VenueFormat {
+  return {
+    pageWidthIn: orNull(j.page_w_in),
+    pageHeightIn: orNull(j.page_h_in),
+    columns: orNull(j.columns),
+    bodyPt: orNull(j.body_pt),
+    bodyPtTol: orNull(j.body_pt_tol),
+    refPtMin: orNull(j.ref_pt_min),
+    refPtMax: orNull(j.ref_pt_max),
+    fontsText: orNull(j.fonts_text),
+    fontsTitle: orNull(j.fonts_title),
+    kinds: kindsOf(j.kinds),
+  };
+}
+
+/**
+ * The text of one preset file → the typed file, or an Error naming every problem. The ONE parser
+ * of a preset: the toolchain reads its `tex`, the venue rules its `format`, the config its `rules`.
  *
  * @param text  the file's contents
  * @param file  the name to put in messages
  * @param dir   the directory holding the schema (the shipped venues directory by default)
  */
-export function parseProfile(
+export function parsePreset(
   text: string,
   file: string,
   dir: string = packageVenuesDir(),
-): TexRequirements {
+): PresetFile {
   const { config, error } = typescript().parseConfigFileTextToJson(file, text);
   if (error)
     throw new Error(
@@ -100,8 +216,38 @@ export function parseProfile(
     throw new Error(
       `${file} does not match ${SCHEMA_FILE}:\n  ${violations(file, validate).join("\n  ")}`,
     );
-  const tex = (config as { tex: Partial<TexRequirements> }).tex;
-  return { packages: tex.packages ?? {}, tools: tex.tools ?? {} };
+  const j = config as PresetJson;
+  return {
+    extends: orNull(j.extends),
+    name: orNull(j.name),
+    template: orNull(j.template),
+    tex: j.tex
+      ? { packages: j.tex.packages ?? {}, tools: j.tex.tools ?? {} }
+      : null,
+    format: formatOf(j.format),
+    rules: j.rules ?? {},
+  };
+}
+
+/** The text of one preset → the TeX requirements it declares itself (none without a `tex` block). */
+export function parseProfile(
+  text: string,
+  file: string,
+  dir: string = packageVenuesDir(),
+): TexRequirements {
+  return parsePreset(text, file, dir).tex ?? NO_REQUIREMENTS;
+}
+
+/**
+ * The file a venue's profile lives in, or null when the name cannot be a venue (the base set is a
+ * profile file but not a venue). Whether the file exists is the caller's question.
+ */
+export function profileFileOf(venue: string): string | null {
+  return venue === BASE_PROFILE.slice(0, -PROFILE_EXT.length) ||
+    venue.includes("/") ||
+    venue.includes("\\")
+    ? null
+    : `${venue}${PROFILE_EXT}`;
 }
 
 function readProfile(dir: string, file: string): TexRequirements {
@@ -141,41 +287,45 @@ export function packageNames(tex: TexRequirements): string[] {
 }
 
 /**
- * What ONE paper needs: the base set plus its venue's block. A paper with no venue, or a venue this
- * package has no profile for, gets the base set — and the source says which, so an ACM paper built
- * without `venue.json` is visibly running on the base set rather than silently.
+ * What ONE paper needs: the base set plus its venue preset's `tex` (the union over the preset's
+ * `extends` chain, resolved by `src/presets.ts`). A paper with no preset gets the base set, and the
+ * source says so, so an ACM paper built without a preset is visibly running on the base set.
  */
 export function requirementsFor(
-  venue: string | null,
+  preset: { readonly label: string; readonly tex: TexRequirements } | null,
   dir: string = packageVenuesDir(),
 ): PaperRequirements {
   const base = readProfile(dir, BASE_PROFILE);
-  if (venue === null)
-    return { source: "the base set (no venue.json)", tex: base };
-  const file = `${venue}${PROFILE_EXT}`;
-  if (
-    venue === BASE_PROFILE.slice(0, -PROFILE_EXT.length) ||
-    !existsSync(join(dir, file))
-  )
-    return {
-      source: `the base set (venue ${venue} has no profile in paperlint)`,
-      tex: base,
-    };
-  return {
-    source: `venue ${venue}`,
-    tex: mergeRequirements(base, readProfile(dir, file)),
-  };
+  return preset === null
+    ? {
+        source: `the base set (no venue preset in ${PAPER_SETTINGS_FILE})`,
+        tex: base,
+      }
+    : {
+        source: `venue ${preset.label}`,
+        tex: mergeRequirements(base, preset.tex),
+      };
 }
 
-/** Everything any profile declares — the set `paperlint toolchain` installs, so one tree builds any paper. */
-export function declaredUnion(dir: string = packageVenuesDir()): {
+/**
+ * Everything any shipped preset declares, plus `extra` — the resolved presets of the project's own
+ * papers, which may live outside the package. The set `paperlint toolchain` installs, so one tree
+ * builds any paper.
+ */
+export function declaredUnion(
+  dir: string = packageVenuesDir(),
+  extra: readonly TexRequirements[] = [],
+): {
   readonly tex: TexRequirements;
   readonly profiles: number;
 } {
   const venues = venueNames(dir);
-  const tex = venues.reduce(
+  const shipped = venues.reduce(
     (acc, v) => mergeRequirements(acc, readProfile(dir, `${v}${PROFILE_EXT}`)),
     readProfile(dir, BASE_PROFILE),
   );
-  return { tex, profiles: venues.length + 1 };
+  return {
+    tex: extra.reduce(mergeRequirements, shipped),
+    profiles: venues.length + 1,
+  };
 }

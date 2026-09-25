@@ -32,3 +32,10 @@ export declare function renamedFieldMessage(
 
 /** Every key the settings object may hold, mapped to who reads it. */
 export declare const SETTINGS_KEYS: Readonly<Record<string, string>>;
+
+/** The per-paper settings file, `paperlint.json`, and its name before 2.1.0. */
+export declare const PAPER_SETTINGS_FILE: string;
+export declare const LEGACY_PAPER_SETTINGS_FILE: string;
+/** Every key `paperlint.json` may hold, mapped to who reads it. */
+export declare const PAPER_SETTINGS_KEYS: Readonly<Record<string, string>>;
+export declare const LEGACY_PAPER_SETTINGS_MESSAGE: string;

@@ -65,24 +65,29 @@ function parseEntry(v: unknown): RuleEntry | null {
   return v as RuleEntry;
 }
 
-/** One block's `rules` object. */
-function parseRules(
+/**
+ * A `rules` object — rule id → severity or `[severity, ...options]` — with only the rules paperlint
+ * ships. Read from the package.json blocks and from a paper's `paperlint.json`.
+ *
+ * @param where  the key path to name in messages, e.g. `package.json → "paperlint".rules[0].rules`
+ */
+export function parseRuleEntries(
   v: unknown,
-  at: string,
+  where: string,
   shipped: ReadonlySet<string>,
 ): Parsed<Record<string, RuleEntry>> {
   if (typeof v !== "object" || v === null || Array.isArray(v))
-    return bad(`${at}.rules must be an object of rule id → severity`);
+    return bad(`${where} must be an object of rule id → severity`);
   const out: Record<string, RuleEntry> = {};
   for (const [id, raw] of Object.entries(v)) {
     if (!shipped.has(id))
       return bad(
-        `${at}.rules: "${id}" is not a rule paperlint ships — known: ${[...shipped].sort().join(", ")}`,
+        `${where}: "${id}" is not a rule paperlint ships — known: ${[...shipped].sort().join(", ")}`,
       );
     const entry = parseEntry(raw);
     if (entry === null)
       return bad(
-        `${at}.rules["${id}"]: ${JSON.stringify(raw)} is not a severity — use "off", "warn" or "error", or ["error", { options }]`,
+        `${where}["${id}"]: ${JSON.stringify(raw)} is not a severity — use "off", "warn" or "error", or ["error", { options }]`,
       );
     out[id] = entry;
   }
@@ -121,7 +126,7 @@ function parseBlock(
     );
   const globs = badGlobs(o, at);
   if (globs) return bad(globs);
-  const rules = parseRules(o["rules"], at, ctx.shipped);
+  const rules = parseRuleEntries(o["rules"], `${at}.rules`, ctx.shipped);
   if (!rules.ok) return rules;
   return {
     ok: true,
