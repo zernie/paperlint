@@ -99,11 +99,6 @@ export const GATES = [
     run: locked("node", "scripts/rules-are-content-only.mjs"),
   },
   {
-    name: "the marketplace manifest is accepted by the host's own validator",
-    job: "gates",
-    run: locked("node", "scripts/marketplace-shape.mjs"),
-  },
-  {
     name: "every test — vitest over *.test.ts, then the vigiles harnesses (npm test)",
     job: "gates",
     script: "test",

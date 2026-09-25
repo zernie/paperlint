@@ -105,7 +105,7 @@
       "cases": 7
     },
     "src/link-skills.mutations.mjs": {
-      "cases": 7
+      "cases": 6
     },
     "src/new-paper.mutations.mjs": {
       "cases": 4

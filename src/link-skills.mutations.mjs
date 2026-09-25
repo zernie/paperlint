@@ -27,21 +27,6 @@ process.exit(
     runner: "node",
     cases: [
       {
-        name: "the skills directory is remembered instead of read from plugin.json",
-        harness: HARNESS,
-        expect: "it links every skill the package DECLARES",
-        disables:
-          "the declaration as the one source. The day the package moves its skills, a linker " +
-          "that remembers `skills/` links nothing — and reports a clean run over zero skills",
-        edits: [
-          [
-            SRC,
-            "  const skillsDir = join(pkgDir, declared);",
-            '  const skillsDir = join(pkgDir, "skills");',
-          ],
-        ],
-      },
-      {
         // The definition lives in the port since rpp#62 (`installedSkills` in consumer.mjs), so
         // the defect is planted THERE and must still die in THIS harness — the evidence that the
         // linker reads it through the shared function rather than through a copy of its own.

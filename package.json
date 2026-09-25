@@ -72,7 +72,6 @@
     "rpp": "bin/rpp.mjs"
   },
   "files": [
-    ".claude-plugin",
     ".github",
     "CLAUDE.md",
     "CONTRIBUTING.md",

@@ -9,9 +9,8 @@
  * `node_modules/research-paper-pipeline` is itself a symlink into a version-stamped store
  * directory — and asks the filesystem.
  *
- * The fixture package declares its skills in `./ships/`, NOT in `./skills/`, on purpose: a linker
- * that read `skills/` from memory instead of the manifest would pass against the real package and
- * be caught only here.
+ * The fixture package keeps its skills where the real one does, under `SHIPPED_SKILLS_DIR` from
+ * consumer.mjs — the same constant the linker and the install e2e read.
  *
  * Run:    node src/link-skills.harness.mjs
  * Killed by: src/link-skills.mutations.mjs
@@ -36,6 +35,9 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const { linkSkills, locatePackage, shippedSkills } = await import(
   join(HERE, "link-skills.ts")
 );
+const { SHIPPED_SKILLS_DIR: SHIPS } = await import(
+  join(HERE, "..", "skills", "paper-pipeline", "scripts", "consumer.mjs")
+);
 
 let n = 0;
 const check = (label, cond) => {
@@ -46,25 +48,21 @@ const check = (label, cond) => {
 const SKILLS = ["alpha", "beta", "gamma"];
 const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-link-skills-")));
 
-/** A package as a manager would unpack it: manifest, plugin declaration, skills, one non-skill. */
+/** A package as a manager would unpack it: manifest, skills, one non-skill. */
 function writePackage(dir) {
-  mkdirSync(join(dir, ".claude-plugin"), { recursive: true });
+  mkdirSync(dir, { recursive: true });
   writeFileSync(
     join(dir, "package.json"),
     JSON.stringify({ name: "research-paper-pipeline", version: "1.0.0" }),
   );
-  writeFileSync(
-    join(dir, ".claude-plugin", "plugin.json"),
-    JSON.stringify({ skills: "./ships/" }),
-  );
   for (const s of SKILLS) {
-    mkdirSync(join(dir, "ships", s, "scripts"), { recursive: true });
-    writeFileSync(join(dir, "ships", s, "SKILL.md"), `---\nname: ${s}\n---\n`);
-    writeFileSync(join(dir, "ships", s, "scripts", "run.mjs"), "");
+    mkdirSync(join(dir, SHIPS, s, "scripts"), { recursive: true });
+    writeFileSync(join(dir, SHIPS, s, "SKILL.md"), `---\nname: ${s}\n---\n`);
+    writeFileSync(join(dir, SHIPS, s, "scripts", "run.mjs"), "");
   }
   // A directory without SKILL.md and a loose file: neither is a skill.
-  mkdirSync(join(dir, "ships", "shared"), { recursive: true });
-  writeFileSync(join(dir, "ships", "README.md"), "# skills\n");
+  mkdirSync(join(dir, SHIPS, "shared"), { recursive: true });
+  writeFileSync(join(dir, SHIPS, "README.md"), "# skills\n");
 }
 
 /** A consumer project with the package installed the npm way or the pnpm way. */
@@ -109,7 +107,7 @@ try {
     const dir = consumer("npm");
     const r = linkSkills(dir);
     check(
-      "🔴 it links every skill the package DECLARES (plugin.json → ./ships/), not a remembered skills/",
+      "🔴 it links every skill the package ships",
       r.ok === true && SKILLS.every((s) => status(r, s)?.status === "created"),
     );
     check(
@@ -135,7 +133,7 @@ try {
             "..",
             "node_modules",
             "research-paper-pipeline",
-            "ships",
+            SHIPS,
             "alpha",
           ),
     );
@@ -205,7 +203,7 @@ try {
             "..",
             "node_modules",
             "research-paper-pipeline",
-            "ships",
+            SHIPS,
             "alpha",
           ),
     );
@@ -238,15 +236,15 @@ try {
     );
   }
 
-  // ── VII. A PACKAGE THAT STOPPED DECLARING ITS SKILLS IS AN ERROR, NOT A DEFAULT ────────
+  // ── VII. A PACKAGE WITHOUT ITS SKILLS DIRECTORY IS AN ERROR, NOT ZERO SKILLS ─────────
   {
-    const pkg = join(work, "undeclared");
+    const pkg = join(work, "no-skills");
     writePackage(pkg);
-    writeFileSync(join(pkg, ".claude-plugin", "plugin.json"), "{}");
+    rmSync(join(pkg, SHIPS), { recursive: true, force: true });
     const s = shippedSkills(pkg);
     check(
-      'no "skills" in plugin.json — an error that names the file',
-      "error" in s && /declares no "skills"/.test(s.error),
+      "no skills directory — an error that names it, not an empty list",
+      "error" in s && s.error.includes(join(pkg, SHIPS)),
     );
   }
 } finally {

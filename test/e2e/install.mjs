@@ -20,7 +20,10 @@
  */
 import { execFileSync, spawnSync } from "node:child_process";
 import { PAPERS_DIR_FIELD } from "../../lib/paper-config.mjs";
-import { installedSkills } from "../../skills/paper-pipeline/scripts/consumer.mjs";
+import {
+  installedSkills,
+  SHIPPED_SKILLS_DIR,
+} from "../../skills/paper-pipeline/scripts/consumer.mjs";
 import {
   mkdtempSync,
   mkdirSync,
@@ -164,18 +167,13 @@ function locateInstalled(consumer) {
 }
 
 /**
- * The skills directory as the package DECLARES it (`.claude-plugin/plugin.json`, `"skills"`),
- * not as this script remembers it. A root without the declaration is an error, not a fallback:
- * a default here would make a missing declaration look like a correct one.
+ * The skills directory under `root`, from the same constant the linker reads. A root without it is
+ * an error, not zero skills: an empty list would read as a clean install.
  */
 function skillsDir(root) {
-  const file = join(root, ".claude-plugin", "plugin.json");
-  const declared = existsSync(file)
-    ? JSON.parse(readFileSync(file, "utf8")).skills
-    : undefined;
-  if (typeof declared !== "string")
-    throw new Error(`no "skills" declared in ${file}`);
-  return join(root, declared);
+  const dir = join(root, SHIPPED_SKILLS_DIR);
+  if (!existsSync(dir)) throw new Error(`no skills directory at ${dir}`);
+  return dir;
 }
 
 /**

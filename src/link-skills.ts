@@ -15,8 +15,8 @@
  * (`.claude/skills/paper-pipeline/scripts/x.mjs`) resolve in a consumer at all.
  *
  * ── THE THREE RULES ─────────────────────────────────────────────────────────
- *   what to link      the skills directory the package DECLARES (`.claude-plugin/plugin.json`,
- *                     `"skills"`), every subdirectory holding a SKILL.md. No list, no count.
+ *   what to link      every subdirectory holding a SKILL.md under the package's
+ *                     `SHIPPED_SKILLS_DIR` (consumer.mjs). No list, no count.
  *   where it points   the package as it RESOLVES BY NAME from the project, spelled through the
  *                     project's own `node_modules/research-paper-pipeline` when that path leads to
  *                     the same place. Under pnpm the resolved path is the version-stamped
@@ -31,7 +31,6 @@ import {
   existsSync,
   lstatSync,
   mkdirSync,
-  readFileSync,
   readlinkSync,
   realpathSync,
   symlinkSync,
@@ -40,7 +39,10 @@ import {
 import { createRequire } from "node:module";
 import { dirname, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { installedSkills } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import {
+  installedSkills,
+  SHIPPED_SKILLS_DIR,
+} from "../skills/paper-pipeline/scripts/consumer.mjs";
 
 export const PACKAGE_NAME = "research-paper-pipeline";
 /** Where Claude Code looks for project skills, relative to the project root. */
@@ -84,26 +86,17 @@ export function locatePackage(project: string): Located {
   return { dir, spelled: dir };
 }
 
-/** The skills the package ships, read from the directory its plugin manifest declares. */
+/** The skills the package ships: every skill under its `SHIPPED_SKILLS_DIR`. */
 export function shippedSkills(
   pkgDir: string,
 ):
   | { readonly skillsDir: string; readonly names: readonly string[] }
   | { readonly error: string } {
-  const manifest = join(pkgDir, ".claude-plugin", "plugin.json");
-  let declared: unknown;
-  try {
-    declared = JSON.parse(readFileSync(manifest, "utf8"))?.skills;
-  } catch (e) {
-    return { error: `cannot read ${manifest}: ${(e as Error).message}` };
-  }
-  // A missing declaration is an error, not a fallback to `skills/`: a default here would make a
-  // package that stopped declaring its skills look exactly like one that still does.
-  if (typeof declared !== "string")
-    return { error: `${manifest} declares no "skills" directory` };
-  const skillsDir = join(pkgDir, declared);
+  const skillsDir = join(pkgDir, SHIPPED_SKILLS_DIR);
+  // A missing directory is an error, never an empty list: zero skills linked must not read as a
+  // clean run.
   if (!existsSync(skillsDir))
-    return { error: `the declared skills directory is missing: ${skillsDir}` };
+    return { error: `the package's skills directory is missing: ${skillsDir}` };
   // The same function every reader of an installed skills directory calls (rpp#62): the writer
   // and the readers of this fact share one definition of "a skill is here", links included.
   try {

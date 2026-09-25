@@ -137,6 +137,13 @@ export function packageVenuesDir() {
   );
 }
 
+/**
+ * Where the package keeps the skills it ships, relative to the package root. One constant, read by
+ * the linker (`src/link-skills.ts`) and the install e2e, so the two cannot disagree; `files` in
+ * package.json must include it for the skills to reach the tarball.
+ */
+export const SHIPPED_SKILLS_DIR = "skills";
+
 /** The consumer's skills directory — the fixed Claude Code layout, under its root. */
 export function consumerSkillsDir(opts) {
   return join(consumerRoot(opts), ".claude", "skills");
