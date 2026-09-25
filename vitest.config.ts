@@ -5,6 +5,14 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     include: ["**/*.test.ts", "**/*.test.mjs"],
-    exclude: ["**/node_modules/**", "**/dist/**", "**/.tmp*/**", ".claude/**"],
+    // `test/fixtures/` holds files that are LINTED, not run: the layer fixtures include `*.test.ts`
+    // cases because a test file is one of the categories the layer rules classify.
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/.tmp*/**",
+      ".claude/**",
+      "test/fixtures/**",
+    ],
   },
 });

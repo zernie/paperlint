@@ -120,6 +120,11 @@ export const GATES = [
     run: locked("node", "scripts/mutation-batteries-frozen.mjs"),
   },
   {
+    name: "legacy layer exemptions are frozen — none new, none grown (#76)",
+    job: "gates",
+    run: locked("node", "scripts/layer-legacy-frozen.mjs"),
+  },
+  {
     name: "mutation batteries — every guard is killed by its own assertion",
     job: "gates",
     run: locked("node", "scripts/run-mutations.mjs"),

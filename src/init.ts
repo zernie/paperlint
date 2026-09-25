@@ -36,9 +36,9 @@
  * an answer nobody gave. So the non-interactive path takes the stated default and SAYS which
  * default it took and why nothing was asked, rather than pretending it asked.
  */
-// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
+// eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
+// eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { spawnSync } from "node:child_process";
 import { dirname, join, relative, resolve } from "node:path";
 import { doctor, detectPapers, found, PROGRAMS } from "./doctor.ts";
@@ -381,6 +381,7 @@ export async function offerHooks(
     // object, and an implementation that one day reads `this` must not break here.
     let m = merge;
     if (!m) {
+      // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
       const { claudeCodeHookProtocol } = await import("vigiles/claude-code");
       m = (existing, compiled, managedBy) =>
         claudeCodeHookProtocol.mergeRegistrations(
@@ -545,6 +546,7 @@ export interface InitOptions {
 
 /** Reads one line from a real terminal. Kept out of `init` so the command stays testable. */
 export async function askOnTerminal(question: string): Promise<string> {
+  // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
   const { createInterface } = await import("node:readline/promises");
   // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
   const rl = createInterface({ input: process.stdin, output: process.stdout });

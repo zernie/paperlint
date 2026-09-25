@@ -6,9 +6,9 @@
  * the union of what the targeted papers need. The install itself is `ensureTexLive` — the same code
  * `rpp toolchain` runs, so "yes" here and the command there cannot install different things.
  */
-// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
+// eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { spawnSync } from "node:child_process";
-// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
+// eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { homedir } from "node:os";
 import { delimiter, join } from "node:path";
 import {

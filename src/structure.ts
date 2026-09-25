@@ -21,7 +21,7 @@
  * pipeline marker; `research/`, `plans/` and the other neighbours in the corpus are not touched at
  * all.
  */
-// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
+// eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { readdirSync, existsSync } from "node:fs";
 import { join, relative, basename, isAbsolute, sep } from "node:path";
 import type { StructureConfig, StructureFinding } from "./types.ts";

@@ -36,12 +36,13 @@
  * `spawnSync` by default) and reads the files a pass left behind. Where rpp's own files live is
  * answered by `consumer.mjs`, the one module allowed to know it (rule 10).
  */
-// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
+// eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
-// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
+// eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { delimiter, join, relative } from "node:path";
+// eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import { getParser } from "@unified-latex/unified-latex-util-parse";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
 import {
@@ -54,7 +55,9 @@ import {
   type FactsDocument,
 } from "./facts-file.ts";
 import { readPdf as pdfjsReader, type PdfReader } from "./pdf-facts.ts";
+// eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import { nodeBanalRuntime } from "./adapters/node/host.io.ts";
+// eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import { nodeFiles } from "./adapters/node/files.io.ts";
 import { whyNoGeometry } from "./core/banal/geometry.ts";
 import type { BanalRuntime } from "./core/banal/settings.ts";

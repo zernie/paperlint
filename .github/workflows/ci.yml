@@ -175,6 +175,11 @@ jobs:
       - name: mutation batteries are frozen
         run: node scripts/mutation-batteries-frozen.mjs
 
+      # The legacy exemptions from src/'s layer rules (#76) may only shrink: counted from ESLint's
+      # own suppressedMessages, so a new `-- legacy …` directive anywhere fails here.
+      - name: legacy layer exemptions are frozen
+        run: node scripts/layer-legacy-frozen.mjs
+
       # The batteries that remain still run until #52 replaces or removes them. The runner
       # DISCOVERS batteries rather than listing them and errors on finding zero — see
       # scripts/run-mutations.mjs for why (the hand list it replaced had gone stale, silently).

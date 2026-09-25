@@ -45,19 +45,22 @@ const RATCHET = {
 // TWO INDEPENDENT AXES, and a file has a position on each.
 //
 // A. KNOWLEDGE — whose vocabulary does the file speak, the paper's or one external program's?
-//    domain  src/domain/       values and decisions in the paper's vocabulary
-//    port    src/ports/        interfaces shaped by what the inside needs, never by what a tool does
-//    app     src/app/          one use case per command, over ports
-//    adapter src/adapters/<x>/ everything that exists because program/format <x> exists — pure
-//                              parsers included. One element per folder, used through index.ts.
-//    cli     src/cli/          argv → use case; exit codes
-//    root    src/main.ts       reads process.*, builds adapters, wires ports
+//    domain  src/domain/        values and decisions in the paper's vocabulary
+//    port    src/ports/         interfaces shaped by what the inside needs, never by what a tool does
+//    app     src/*.ts           use cases over ports (the flat files; most are ratcheted, #76)
+//    adapter src/adapters/<x>/  everything that exists because program/format <x> exists — pure
+//                               parsers included. One element per folder, used through index.ts.
+//    root    src/cli.ts         reads process.*, builds adapters, wires ports
 // B. PURITY — can anything here fail for a reason not in its arguments? Effects (disk, process,
 //    network, env) only in src/adapters/<x>/<y>.io.ts and the root.
 //
-// "Core" is deliberately not a type name: the plugin's own `origin: "core"` means NODE BUILT-INS.
+// "Core" is deliberately not a layer name: the plugin's own `origin: "core"` means NODE BUILT-INS.
+//
+// Folders are ELEMENTS, single files are CATEGORIES (`boundaries/files`): that is v7's model — an
+// element pattern is matched as a folder, and a file-shaped one is refused with a warning. So the
+// root and the flat app files are categories, and the policies below select them with `file:`.
 
-/** Modules that ARE effects. A file that imports one must be categorised `io` (below) or be the root. */
+/** Modules that ARE effects. A file importing one must be an `io` file or the root. */
 export const IO_MODULES = [
   "fs",
   "fs/promises",
@@ -67,49 +70,37 @@ export const IO_MODULES = [
   "http",
   "https",
   "worker_threads",
+  "readline",
+  "readline/promises",
 ].flatMap((m) => [m, `node:${m}`]);
 
 /** What the inside may import from outside the repository: types, pure path arithmetic, hashing. */
-export const DOMAIN_EXTERNALS = [
+export const INSIDE_EXTERNALS = [
   "ts-essentials",
   "path",
   "node:path",
   "crypto",
   "node:crypto",
 ];
-
-/**
- * 🔴 A RATCHET, NOT A PERMISSION. The flat `src/*.ts` files predate the layers: each one mixes a
- * use case with the adapter it will become (pdf.js, TeX Live, ESLint, Claude Code), so each imports
- * libraries and the package's `.mjs` modules an `app` file may not. They are listed BY NAME, so a
- * NEW `src/*.ts` is an ordinary `app` file and gets the strict policy. A file leaves this list when
- * #76 moves its tool half into an adapter; never add one.
- */
-export const LEGACY_APP = [
-  "src/build-engine.ts",
-  "src/build.ts",
-  "src/cli.ts",
-  "src/doctor.ts",
-  "src/engine.ts",
-  "src/hooks-settings.ts",
-  "src/init.ts",
-  "src/link-skills.ts",
-  "src/new-paper.ts",
-  "src/pdf-facts.ts",
-  "src/structure.ts",
-  "src/tex-requirements.ts",
-  "src/toolchain.ts",
+/** What the flat app files may import besides: Node's pure helpers, measured on the first v7 run. */
+export const APP_EXTERNALS = [
+  ...INSIDE_EXTERNALS,
+  "util",
+  "node:util",
+  "url",
+  "node:url",
+  "module",
+  "node:module",
 ];
 
-const ANY_MODULE = { module: { origin: { anyOf: ["external", "core"] } } };
-const modules = (source) => ({
-  module: { origin: { anyOf: ["external", "core"] }, source },
-});
-const from = (...types) => ({ element: { types: { anyOf: types } } });
-const to = (...types) => ({ to: { element: { types: { anyOf: types } } } });
+const ORIGINS = ["external", "core"];
+const modules = (source) => ({ to: { module: { origin: ORIGINS, source } } });
+const elements = (...types) => ({ element: { types: { anyOf: types } } });
+const APP = { file: { categories: "app" } };
+const ROOT = { file: { categories: "root" } };
 
 /**
- * Both axes in one plugin: axis A as element types, axis B as the file category `io`.
+ * Both axes in one plugin: axis A by element and category, axis B by the file category `io`.
  *
  * 🔴 `boundaries/root-path` IS LOAD-BEARING. Without it the plugin matches its patterns against
  * `process.cwd()` — not ESLint's `cwd` — so lint started from any other directory classifies no file
@@ -118,11 +109,13 @@ const to = (...types) => ({ to: { element: { types: { anyOf: types } } } });
  * it at its fixture tree.
  *
  * 🔴 `checkAllOrigins: true` IS LOAD-BEARING TOO. The default checks local imports only, so every
- * `module:` policy below — the whole of axis B and the domain's library ban — would match nothing
- * and report nothing. The fixture `src/adapters/one/disk.ts` is what makes that loud.
+ * `module:` policy below — all of axis B and the inside's library ban — would match nothing and
+ * report nothing. The fixture `src/adapters/one/disk.ts` is what makes that loud.
  *
- * Policies are evaluated in order and the LAST one that matches decides — so axis B, a disallow,
- * comes last and overrides every allow above it.
+ * Policies are evaluated in order and the LAST one that matches decides, so the narrowing ones
+ * (encapsulation, then axis B) come after the allows they narrow. A dependency no policy allows gets
+ * the plugin's own message, which names both ends ("no policy allowing dependencies from file of
+ * category "app" to elements of type "adapter""); custom messages sit only on the disallows.
  */
 export const layerBoundaries = (root) => ({
   files: ["src/**/*.ts"],
@@ -130,20 +123,8 @@ export const layerBoundaries = (root) => ({
   settings: {
     "boundaries/root-path": root,
     "boundaries/elements": [
-      // `exclusive`: the root file also matches the legacy `src/*.ts` app pattern below.
-      {
-        type: "root",
-        pattern: ["src/main.ts", "src/cli.ts"],
-        partialMatch: false,
-        exclusive: true,
-      },
-      { type: "cli", pattern: "src/cli", partialMatch: false },
-      {
-        type: "app",
-        pattern: ["src/app", "src/*.ts"],
-        partialMatch: false,
-      },
       { type: "port", pattern: "src/ports", partialMatch: false },
+      // `src/core` is the domain's old name, for the one commit before it is renamed.
       {
         type: "domain",
         pattern: ["src/domain", "src/core"],
@@ -156,8 +137,7 @@ export const layerBoundaries = (root) => ({
         partialMatch: false,
         capture: ["name"],
       },
-      // The package's plain-JS modules the outside layers import. Named so an import of one is
-      // classified, not unknown; captured so a policy can tell the rules from the hooks.
+      // The package's plain-JS modules. Named so an import of one is classified, not unknown.
       {
         type: "js-module",
         pattern: "(eslint-rules|hooks|lib|skills)",
@@ -165,93 +145,101 @@ export const layerBoundaries = (root) => ({
         capture: ["kind"],
       },
     ],
-    // AXIS B: a file's purity is a CATEGORY, orthogonal to its element.
     "boundaries/files": [
+      // `exclusive`: the root also matches the app pattern below, and is only the root.
+      { category: "root", pattern: "src/cli.ts", exclusive: true },
+      // Every other file at the top of src/ is app. A new one gets the full app rules.
+      { category: "app", pattern: "src/*.ts" },
       { category: "test", pattern: "src/**/*.test.ts" },
+      // AXIS B: purity is a category, orthogonal to the element.
       { category: "io", pattern: "src/adapters/*/*.io.ts" },
     ],
   },
   rules: {
     // 🔴 An unclassified file is invisible to the rules below: a new `src/lib/x.ts` could import an
-    // adapter from anywhere and nothing would fire. So every linted file must be a declared element,
-    // and every import must resolve to one.
+    // adapter from anywhere and nothing would fire. So every linted file must be a declared element
+    // or category, and every import must resolve to one.
     "boundaries/no-unknown-files": "error",
     "boundaries/no-unknown-dependencies": "error",
-    // An adapter is used through its index.ts only; its parsers and io files are its own business.
-    "boundaries/entry-point": [
-      "error",
-      {
-        default: "disallow",
-        policies: [
-          { target: { element: { type: "adapter" } }, allow: ["index.ts"] },
-          {
-            target: {
-              element: {
-                types: { anyOf: ["root", "cli", "app", "port", "domain"] },
-              },
-            },
-            allow: ["**"],
-          },
-          { target: { element: { type: "js-module" } }, allow: ["**"] },
-        ],
-      },
-    ],
     "boundaries/dependencies": [
       "error",
       {
         default: "disallow",
         checkAllOrigins: true,
-        message:
-          "{{ from.type }} may not import {{ dependency.source }} (src/CLAUDE.md, layers).",
         policies: [
           // ── AXIS A: who may know whom (jMolecules: Application → Port, never → Adapter) ──
-          { from: from("domain"), allow: to("domain") },
-          { from: from("port"), allow: to("domain", "port") },
-          { from: from("app"), allow: to("domain", "port", "app") },
-          { from: from("cli"), allow: to("domain", "port", "app", "cli") },
-          // An adapter knows the domain and the ports, never the app, never another adapter.
-          { from: from("adapter"), allow: to("domain", "port") },
-          { from: from("root"), allow: { to: { element: { type: "*" } } } },
-          // The package's `.mjs` half: the rules, hooks and helpers the outside layers call.
+          { from: elements("domain"), allow: { to: elements("domain") } },
+          { from: elements("port"), allow: { to: elements("domain", "port") } },
+          { from: APP, allow: { to: [elements("domain", "port"), APP] } },
+          // An adapter knows the domain and the ports (jMolecules#306's allowance), never the app,
+          // never another adapter.
           {
-            from: from("adapter", "cli", "root"),
-            allow: to("js-module"),
-          },
-          // ── libraries and Node built-ins (the plugin calls built-ins origin "core") ──
-          {
-            from: from("domain", "port"),
-            allow: { to: modules(DOMAIN_EXTERNALS) },
-            message:
-              "{{ from.type }} imports no library and no built-in but " +
-              DOMAIN_EXTERNALS.join(", ") +
-              ": {{ dependency.source }} belongs to the adapter of the tool it serves (src/CLAUDE.md, layers).",
+            from: elements("adapter"),
+            allow: { to: elements("domain", "port") },
           },
           {
-            from: from("app", "cli"),
-            allow: { to: modules([...DOMAIN_EXTERNALS, "util", "node:util"]) },
+            from: ROOT,
+            allow: { to: [{ element: { type: "*" } }, APP] },
           },
-          { from: from("adapter", "root"), allow: { to: ANY_MODULE } },
-          // The ratchet above: the flat files' libraries and `.mjs` imports, until #76 splits them.
+          // The package's `.mjs` half is read by the outside layers and the flat app files, never
+          // by the domain or a port.
           {
-            from: { file: { path: LEGACY_APP } },
-            allow: { to: [ANY_MODULE, { element: { type: "js-module" } }] },
+            from: [elements("adapter"), APP, ROOT],
+            allow: { to: elements("js-module") },
           },
-          // Tests may import anything, fakes and internals included.
+          // ── libraries and built-ins (the plugin calls Node built-ins origin "core") ──
+          {
+            from: elements("domain", "port"),
+            allow: modules(INSIDE_EXTERNALS),
+          },
+          // 🔴 ONE COMMIT ONLY: `src/core/banal/` is banal's adapter still filed under the domain's old
+          // name. The next commit moves it to `src/adapters/banal/` and deletes this policy.
+          {
+            from: { file: { path: "src/core/banal/*.ts" } },
+            allow: modules(["zod"]),
+          },
+          { from: APP, allow: modules(APP_EXTERNALS) },
+          {
+            from: [elements("adapter"), ROOT],
+            allow: { to: { module: { origin: ORIGINS } } },
+          },
+          // Tests may import anything, fakes included …
           {
             from: { file: { categories: "test" } },
-            allow: { to: [{ element: { type: "*" } }, ANY_MODULE] },
-          },
-          // ── AXIS B, last so it overrides every allow above: effects only in io files and the root ──
-          {
-            from: {
-              file: { categories: { noneOf: ["io", "test"] } },
-              element: { types: { noneOf: ["root"] } },
+            allow: {
+              to: [
+                { element: { type: "*" } },
+                APP,
+                ROOT,
+                { module: { origin: ORIGINS } },
+              ],
             },
+          },
+          // … but everyone, tests too, reaches an adapter through its index.ts. (Imports inside one
+          // adapter are internal to its element and not checked.)
+          {
+            disallow: {
+              to: {
+                element: { type: "adapter", fileInternalPath: "!index.ts" },
+              },
+            },
+            message:
+              "{{ dependency.source }} is inside an adapter: import its index.ts (src/CLAUDE.md, layers).",
+          },
+          // ── AXIS B: effects only in io files, tests and the root ──
+          // Written as "nobody, then these three" rather than "everyone but these three": a file
+          // with no category has `categories: null`, and a `noneOf` query never matches null — so the
+          // negative form silently exempts every plain file. Measured on `adapters/one/disk.ts`.
+          {
             disallow: {
               to: { module: { origin: "core", source: IO_MODULES } },
             },
             message:
-              "I/O ({{ dependency.source }}) in a file that is not *.io.ts. Effects live in src/adapters/<tool>/<x>.io.ts or the root; this file takes a port (src/CLAUDE.md, purity).",
+              "I/O ({{ dependency.source }}) in a file that is not *.io.ts. Effects live in src/adapters/<tool>/<x>.io.ts or src/cli.ts; this file takes a port (src/CLAUDE.md, purity). Legacy sites carry `-- legacy I/O, moves behind a port in #76`.",
+          },
+          {
+            from: { file: { categories: ["io", "test", "root"] } },
+            allow: { to: { module: { origin: "core", source: IO_MODULES } } },
           },
         ],
       },
@@ -263,17 +251,13 @@ export const layerBoundaries = (root) => ({
  * The globals the plugin cannot see: `process` and `fetch` are not imports. Same scope as axis B.
  * Files that did I/O before the layers existed carry an `eslint-disable-next-line` naming #76 above
  * each such import or use; `reportUnusedDisableDirectives: "error"` turns a disable that suppresses
- * nothing into a finding, so an exemption leaves the moment its I/O does. A NEW module that needs
+ * nothing into a finding, so an exemption leaves the moment its I/O does, and
+ * `scripts/layer-legacy-frozen.mjs` freezes how many each file may carry. A NEW module that needs
  * the outside world is a new `*.io.ts` in the adapter of the program it talks to — not a disable.
  */
 export const IO_GLOBALS = {
   files: ["src/**/*.ts"],
-  ignores: [
-    "src/main.ts",
-    "src/cli.ts",
-    "src/adapters/*/*.io.ts",
-    "src/**/*.test.ts",
-  ],
+  ignores: ["src/cli.ts", "src/adapters/*/*.io.ts", "src/**/*.test.ts"],
   linterOptions: { reportUnusedDisableDirectives: "error" },
   rules: {
     "no-restricted-globals": [

@@ -1,5 +1,5 @@
 // expect: boundaries/dependencies
 import { z } from "zod";
 
-/** A NEW flat src/*.ts file is an ordinary app file: the legacy allowance is by name. */
+/** A tool's package in the app: it belongs to that tool's adapter. */
 export const Shape = z.string();

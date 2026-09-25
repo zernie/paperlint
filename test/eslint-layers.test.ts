@@ -44,7 +44,7 @@ test("every fixture file produces exactly the rule ids its first line expects", 
   });
   const results = await eslint.lintFiles(["src"]);
   // Guards: a glob that matched nothing lints nothing and reports clean — the fixture must be seen.
-  assert.ok(results.length >= 25, `linted ${results.length} fixture files`);
+  assert.ok(results.length >= 24, `linted ${results.length} fixture files`);
   for (const r of results) {
     const got = [
       ...new Set(r.messages.map((x) => x.ruleId ?? "(fatal)")),

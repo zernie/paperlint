@@ -18,9 +18,9 @@
  * this file gathers the facts (probing a tree runs `kpsewhich` through the injected `run`, the port
  * `build.ts` already uses) and acts on the decision.
  */
-// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
+// eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { spawnSync } from "node:child_process";
-// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
+// eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { accessSync, constants, statSync } from "node:fs";
 import { basename, delimiter, join } from "node:path";
 import type { TexRequirements } from "./tex-requirements.ts";

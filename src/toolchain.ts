@@ -24,9 +24,9 @@
  * Processes run through the injected `run` (the port `build.ts` uses), so the harness drives the
  * real download/unpack/verify logic against a fake mirror on disk, never the network.
  */
-// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
+// eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { spawnSync } from "node:child_process";
-// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
+/* eslint-disable boundaries/dependencies -- legacy I/O, moves behind a port in #76 */
 import {
   existsSync,
   mkdirSync,
@@ -38,7 +38,8 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
+/* eslint-enable boundaries/dependencies */
+// eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -52,6 +53,7 @@ import { checkBanal, ensureBanal } from "./banal.ts";
 import { describe } from "./core/banal/failure.ts";
 import { pinLabel, type BanalSource } from "./core/banal/pin.ts";
 import type { PinnedBanal } from "./core/banal/locate.ts";
+// eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import { nodeBanalRuntime } from "./adapters/node/host.io.ts";
 import {
   declaredUnion,
