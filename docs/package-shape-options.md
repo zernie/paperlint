@@ -162,15 +162,15 @@ matters.
 
 ### A — "A linter, full stop"
 
-rpp is Ruff for papers. Skills and hooks leave the package entirely and become a separate,
-self-contained Claude Code plugin that _calls_ rpp when present and says so loudly when absent.
+paperlint is Ruff for papers. Skills and hooks leave the package entirely and become a separate,
+self-contained Claude Code plugin that _calls_ paperlint when present and says so loudly when absent.
 
 ```
-rpp — lint and build for a paper kept in git
+paperlint — lint and build for a paper kept in git
 
-  npx rpp init            find the papers directory, declare it, offer the CI step
-  npx rpp lint [dir…]     run every rule; warnings never fail (--strict makes them)
-  npx rpp build [paper]   run the paper's own build script; record sha256 of source and pdf
+  npx paperlint init            find the papers directory, declare it, offer the CI step
+  npx paperlint lint [dir…]     run every rule; warnings never fail (--strict makes them)
+  npx paperlint build [paper]   run the paper's own build script; record sha256 of source and pdf
 
   --json   machine-readable findings      --strict   promote warnings to errors
 ```
@@ -187,17 +187,17 @@ hooks rewritten as plain stdin-JSON/exit-2 scripts outside the vigiles machinery
 
 One published tarball that is simultaneously the npm package and the plugin: the marketplace entry
 points at npm, the plugin manifest sits at package root, `skills/` is the default scanned
-directory, and `rpp init` opens both doors.
+directory, and `paperlint init` opens both doors.
 
 ```
-rpp — machine-checkable gates for a paper kept in git
+paperlint — machine-checkable gates for a paper kept in git
 
-  npx rpp init            declare where the papers live; wire CI and the plugin; then doctor
-  npx rpp lint [dir…]     run every rule; --strict to fail on warnings; --json for machines
-  npx rpp build [paper]   run the paper's own build script; record sha256 of source and pdf
-  npx rpp doctor          what is wired vs. what only looks wired
+  npx paperlint init            declare where the papers live; wire CI and the plugin; then doctor
+  npx paperlint lint [dir…]     run every rule; --strict to fail on warnings; --json for machines
+  npx paperlint build [paper]   run the paper's own build script; record sha256 of source and pdf
+  npx paperlint doctor          what is wired vs. what only looks wired
 
-  `rpp hook <name>` exists for the plugin wiring and is not for typing.
+  `paperlint hook <name>` exists for the plugin wiring and is not for typing.
 ```
 
 `doctor` survives here _because_ this option puts two copies of the package on disk (plugin cache
@@ -222,7 +222,7 @@ secondary path.
 
 ### D — "A runner, and rule packs like Vale"
 
-rpp becomes a runner; rules are packages declared in config and pulled with `rpp add`, following
+paperlint becomes a runner; rules are packages declared in config and pulled with `paperlint add`, following
 Vale's `Packages:` + `sync`, textlint's rule packages, and `astro add`. Severity is data inside a
 pack, capped by the runner. **Right shape for a second author; ceremony for one publisher.** Named
 here so it is not reinvented, with its trigger: a second rule author.
@@ -249,13 +249,13 @@ asking anyone.
 1. **Declare `exports`.** An empty `exports` map beside a README that documents importing from
    `bin/rpp.mjs` is a false statement about the API surface.
 2. **Replace the mtime and wall-clock checks with hashes recorded by `build`.**
-3. **Make hooks consume `rpp lint --json` and read the `severity` field.** Anything that
+3. **Make hooks consume `paperlint lint --json` and read the `severity` field.** Anything that
    re-derives severity from rendered text — an emoji, a prefix — is lossily reconstructing a field
    that already exists one layer down.
 
 ## One proposal deliberately NOT acted on
 
-The pass suggests `rpp init` write `enabledPlugins` and the marketplace entry into the consumer's
+The pass suggests `paperlint init` write `enabledPlugins` and the marketplace entry into the consumer's
 `.claude/settings.json` so the plugin is enabled without `/plugin` commands. It is a coherent
 idea with a precedent, and it is recorded here as a proposal only: a tool writing into a user's
 agent settings is a decision for the person who owns those settings, not a detail of the install

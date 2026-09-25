@@ -13,7 +13,7 @@
  * the battery.
  *
  * ⚠️ Mutation 1 is the load-bearing one and it is deliberately asymmetric: it sends the step back
- * to calling `npx eslint` directly while LEAVING the words `rpp lint` in the comments above. A
+ * to calling `npx eslint` directly while LEAVING the words `paperlint lint` in the comments above. A
  * harness that grepped the file would stay green; this one parses the YAML and addresses the step
  * as a node, so it dies. That is the whole argument for the parser, made executable.
  *
@@ -44,10 +44,10 @@ const restoreAll = () => {
 const M = [
   [
     ACTION,
-    "the step goes back around the CLI to eslint (the words `rpp lint` left in the comments)",
+    "the step goes back around the CLI to eslint (the words `paperlint lint` left in the comments)",
     "reinstate the bypass: rpp.json unread, the directory-structure check absent in CI, and a " +
-      "consumer's nested config free to decide the rule set — while a grep still finds `rpp lint`",
-    "npx rpp lint $RPP_PATHS",
+      "consumer's nested config free to decide the rule set — while a grep still finds `paperlint lint`",
+    "npx paperlint lint $RPP_PATHS",
     'npx eslint --config "$RPP_CONFIG" $RPP_PATHS',
   ],
   [

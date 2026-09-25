@@ -6,12 +6,11 @@
  * whether Node resolves the package from the project, which spelling of it the link uses, and
  * whether `SKILL.md` is reachable THROUGH the link. A stubbed locator would test the stub. So each
  * case lays out a real `node_modules` — the npm shape and the pnpm shape, where
- * `node_modules/research-paper-pipeline` is itself a symlink into a version-stamped store
+ * `node_modules/<package>` is itself a symlink into a version-stamped store
  * directory — and asks the filesystem.
  *
- * The fixture package declares its skills in `./ships/`, NOT in `./skills/`, on purpose: a linker
- * that read `skills/` from memory instead of the manifest would pass against the real package and
- * be caught only here.
+ * The fixture package keeps its skills where the real one does, under `SHIPPED_SKILLS_DIR` from
+ * consumer.mjs — the same constant the linker and the install e2e read.
  *
  * Run:    node src/link-skills.harness.mjs
  * Killed by: src/link-skills.mutations.mjs
@@ -36,6 +35,13 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const { linkSkills, locatePackage, shippedSkills } = await import(
   join(HERE, "link-skills.ts")
 );
+const {
+  SHIPPED_SKILLS_DIR: SHIPS,
+  PACKAGE_NAME: PKG,
+  LEGACY_PACKAGE_NAME,
+} = await import(
+  join(HERE, "..", "skills", "paper-pipeline", "scripts", "consumer.mjs")
+);
 
 let n = 0;
 const check = (label, cond) => {
@@ -46,25 +52,21 @@ const check = (label, cond) => {
 const SKILLS = ["alpha", "beta", "gamma"];
 const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-link-skills-")));
 
-/** A package as a manager would unpack it: manifest, plugin declaration, skills, one non-skill. */
+/** A package as a manager would unpack it: manifest, skills, one non-skill. */
 function writePackage(dir) {
-  mkdirSync(join(dir, ".claude-plugin"), { recursive: true });
+  mkdirSync(dir, { recursive: true });
   writeFileSync(
     join(dir, "package.json"),
-    JSON.stringify({ name: "research-paper-pipeline", version: "1.0.0" }),
-  );
-  writeFileSync(
-    join(dir, ".claude-plugin", "plugin.json"),
-    JSON.stringify({ skills: "./ships/" }),
+    JSON.stringify({ name: PKG, version: "1.0.0" }),
   );
   for (const s of SKILLS) {
-    mkdirSync(join(dir, "ships", s, "scripts"), { recursive: true });
-    writeFileSync(join(dir, "ships", s, "SKILL.md"), `---\nname: ${s}\n---\n`);
-    writeFileSync(join(dir, "ships", s, "scripts", "run.mjs"), "");
+    mkdirSync(join(dir, SHIPS, s, "scripts"), { recursive: true });
+    writeFileSync(join(dir, SHIPS, s, "SKILL.md"), `---\nname: ${s}\n---\n`);
+    writeFileSync(join(dir, SHIPS, s, "scripts", "run.mjs"), "");
   }
   // A directory without SKILL.md and a loose file: neither is a skill.
-  mkdirSync(join(dir, "ships", "shared"), { recursive: true });
-  writeFileSync(join(dir, "ships", "README.md"), "# skills\n");
+  mkdirSync(join(dir, SHIPS, "shared"), { recursive: true });
+  writeFileSync(join(dir, SHIPS, "README.md"), "# skills\n");
 }
 
 /** A consumer project with the package installed the npm way or the pnpm way. */
@@ -75,25 +77,19 @@ function consumer(name, manager = "npm") {
     join(dir, "package.json"),
     JSON.stringify({ name: "c", version: "1.0.0" }),
   );
-  if (manager === "npm")
-    writePackage(join(dir, "node_modules", "research-paper-pipeline"));
+  if (manager === "npm") writePackage(join(dir, "node_modules", PKG));
   else if (manager === "pnpm") {
     const store = join(
       "node_modules",
       ".pnpm",
-      "research-paper-pipeline@1.0.0",
+      `${PKG}@1.0.0`,
       "node_modules",
-      "research-paper-pipeline",
+      PKG,
     );
     writePackage(join(dir, store));
     symlinkSync(
-      join(
-        ".pnpm",
-        "research-paper-pipeline@1.0.0",
-        "node_modules",
-        "research-paper-pipeline",
-      ),
-      join(dir, "node_modules", "research-paper-pipeline"),
+      join(".pnpm", `${PKG}@1.0.0`, "node_modules", PKG),
+      join(dir, "node_modules", PKG),
       "dir",
     );
   }
@@ -109,7 +105,7 @@ try {
     const dir = consumer("npm");
     const r = linkSkills(dir);
     check(
-      "🔴 it links every skill the package DECLARES (plugin.json → ./ships/), not a remembered skills/",
+      "🔴 it links every skill the package ships",
       r.ok === true && SKILLS.every((s) => status(r, s)?.status === "created"),
     );
     check(
@@ -129,15 +125,7 @@ try {
     check(
       "🔴 the link is RELATIVE — an absolute one breaks the moment the checkout moves",
       !isAbsolute(target) &&
-        target ===
-          join(
-            "..",
-            "..",
-            "node_modules",
-            "research-paper-pipeline",
-            "ships",
-            "alpha",
-          ),
+        target === join("..", "..", "node_modules", PKG, SHIPS, "alpha"),
     );
   }
 
@@ -193,21 +181,14 @@ try {
     check(
       "Node resolves the package to the version-stamped store directory",
       !("error" in located) &&
-        located.dir.includes(join(".pnpm", "research-paper-pipeline@1.0.0")),
+        located.dir.includes(join(".pnpm", `${PKG}@1.0.0`)),
     );
     const r = linkSkills(dir);
     check(
-      "🔴 under pnpm the link goes through node_modules/research-paper-pipeline, not the .pnpm store — that one dangles on the next upgrade",
+      "🔴 under pnpm the link goes through node_modules/<package>, not the .pnpm store — that one dangles on the next upgrade",
       r.ok &&
         readlinkSync(join(home(dir), "alpha")) ===
-          join(
-            "..",
-            "..",
-            "node_modules",
-            "research-paper-pipeline",
-            "ships",
-            "alpha",
-          ),
+          join("..", "..", "node_modules", PKG, SHIPS, "alpha"),
     );
     check(
       "and SKILL.md is reachable through both hops",
@@ -238,15 +219,49 @@ try {
     );
   }
 
-  // ── VII. A PACKAGE THAT STOPPED DECLARING ITS SKILLS IS AN ERROR, NOT A DEFAULT ────────
+  // ── VI-bis. LINKS LEFT BY AN INSTALL UNDER THE OLD NAME ARE REPLACED, NOT SKIPPED ─────
+  // After `npm rm research-paper-pipeline && npm i -D paperlint` every old link dangles. They are
+  // ours, spelled the way an older `init` wrote them, so the next `init` replaces them.
   {
-    const pkg = join(work, "undeclared");
+    const dir = consumer("renamed");
+    mkdirSync(home(dir), { recursive: true });
+    const old = join(
+      "..",
+      "..",
+      "node_modules",
+      LEGACY_PACKAGE_NAME,
+      SHIPS,
+      "alpha",
+    );
+    symlinkSync(old, join(home(dir), "alpha"), "dir");
+    const seen = linkSkills(dir, { write: false });
+    check(
+      "doctor's read names a link into the old package name, with the command that fixes it",
+      status(seen, "alpha")?.status === "foreign" &&
+        /old name — `npx paperlint init` replaces it/.test(
+          status(seen, "alpha")?.reason ?? "",
+        ),
+    );
+    const r = linkSkills(dir);
+    check(
+      "🔴 init REPLACES it: status `replaced`, and SKILL.md is reachable through the new link",
+      status(r, "alpha")?.status === "replaced" &&
+        existsSync(join(home(dir), "alpha", "SKILL.md")) &&
+        readlinkSync(join(home(dir), "alpha")).includes(
+          join("node_modules", PKG),
+        ),
+    );
+  }
+
+  // ── VII. A PACKAGE WITHOUT ITS SKILLS DIRECTORY IS AN ERROR, NOT ZERO SKILLS ─────────
+  {
+    const pkg = join(work, "no-skills");
     writePackage(pkg);
-    writeFileSync(join(pkg, ".claude-plugin", "plugin.json"), "{}");
+    rmSync(join(pkg, SHIPS), { recursive: true, force: true });
     const s = shippedSkills(pkg);
     check(
-      'no "skills" in plugin.json — an error that names the file',
-      "error" in s && /declares no "skills"/.test(s.error),
+      "no skills directory — an error that names it, not an empty list",
+      "error" in s && s.error.includes(join(pkg, SHIPS)),
     );
   }
 } finally {

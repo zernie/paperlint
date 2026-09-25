@@ -1,5 +1,5 @@
 /**
- * Battery for `rpp doctor`.
+ * Battery for `paperlint doctor`.
  *
  * The subject here is unusual and therefore fragile: doctor is a check ABOUT A CHECK. Broken,
  * it prints a column of checkmarks and exits zero — i.e. it fails in exactly the way it was
@@ -119,14 +119,14 @@ process.exit(
         harness: HARNESS,
         expect: "the missing declaration is NAMED, not skipped",
         disables:
-          "the only trace of issue #33 left on an install that STILL works: `rpp init` writes " +
+          "the only trace of issue #33 left on an install that STILL works: `paperlint init` writes " +
           "one file, the hook reads another, and the directories matching up rests on the " +
           "default. A cheerful checkmark instead of a warning turns a coincidence into a confirmation",
         edits: [
           [
             SRC,
-            '          ? `  ⚠ package.json has no "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": … } — the hooks fall back to "${DEFAULT_PAPERS_ROOT}"`',
-            "          ? `  ✓ package.json`",
+            '      `  ⚠ package.json has no "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": … } — the hooks fall back to "${DEFAULT_PAPERS_ROOT}"`,',
+            "      `  ✓ package.json`,",
           ],
         ],
       },
@@ -155,8 +155,8 @@ process.exit(
         edits: [
           [
             SRC,
-            "      out.push(\n        `      \\`npx rpp init\\` links the missing ones; it never replaces an entry it did not make`,\n      );",
-            "      out.push(\n        `      \\`npx rpp init\\` links the missing ones; it never replaces an entry it did not make`,\n      );\n      bad++;",
+            "      out.push(\n        `      \\`npx paperlint init\\` links the missing ones; it never replaces an entry it did not make`,\n      );",
+            "      out.push(\n        `      \\`npx paperlint init\\` links the missing ones; it never replaces an entry it did not make`,\n      );\n      bad++;",
           ],
         ],
       },
@@ -166,7 +166,7 @@ process.exit(
         expect:
           "a directory whose only marked child is .template/ is NOT a papers root",
         disables:
-          "the override slot being invisible to discovery. `rpp init` in a project that has only " +
+          "the override slot being invisible to discovery. `paperlint init` in a project that has only " +
           "a house template would declare the template's parent as the papers directory, measured",
         edits: [[SRC, '          !c.name.startsWith(".") &&\n', ""]],
       },

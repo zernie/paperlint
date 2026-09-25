@@ -1,5 +1,5 @@
 /**
- * The port `rpp toolchain` installs and checks an external program through. One port, many
+ * The port `paperlint toolchain` installs and checks an external program through. One port, many
  * programs: banal implements it now, TeX Live in #76.
  */
 import type { Opaque } from "ts-essentials";

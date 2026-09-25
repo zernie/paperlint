@@ -34,16 +34,16 @@ exists once the code is somewhere else.
 temporary tree, **under npm and under pnpm separately**, and drives the installed binary:
 
 - the install itself finishes
-- `rpp --help` answers with zero
-- `rpp init` declares the papers directory in `package.json`, and does _not_ leave a second
+- `paperlint --help` answers with zero
+- `paperlint init` declares the papers directory in `package.json`, and does _not_ leave a second
   carrier `rpp.json` behind
-- `rpp init` finishes with zero — its doctor found no discrepancy
-- `rpp init` wires the hooks into `.claude/settings.json` — the same commands `hooks.json`
+- `paperlint init` finishes with zero — its doctor found no discrepancy
+- `paperlint init` wires the hooks into `.claude/settings.json` — the same commands `hooks.json`
   publishes, once each — and says they need `npm install` in a fresh clone; a second `init`
   leaves that file byte-identical
-- `rpp lint` passes the staged corpus
-- `rpp new demo` scaffolds a paper from the templates that shipped in the tarball, its own lint is
-  clean, and `rpp lint` stays clean with it in the corpus
+- `paperlint lint` passes the staged corpus
+- `paperlint new demo` scaffolds a paper from the templates that shipped in the tarball, its own lint is
+  clean, and `paperlint lint` stays clean with it in the corpus
 - `hooks.json` arrived and parses, and every hook command named in it resolves to a file
 - every skill arrived, and every script path named inside a skill resolves **in the consumer**
 
@@ -58,21 +58,21 @@ pnpm a shell wrapper, and calling `node bin` measures the caller's habit instead
 
 ## `test/e2e/build.mjs` — a real `pdflatex`
 
-`test/e2e/build.mjs`. It copies `fixtures/build-e2e/` — eight papers, none with a build script rpp
-would run — into a temporary tree, points a config at it, and runs `rpp build --all`. rpp compiles
+`test/e2e/build.mjs`. It copies `fixtures/build-e2e/` — eight papers, none with a build script paperlint
+would run — into a temporary tree, points a config at it, and runs `paperlint build --all`. paperlint compiles
 each paper itself with the real `pdflatex` and `bibtex`; the artifacts are then measured with
-rpp's own pdf.js reader from `dist/`, and the fonts are cross-checked against the list of
+paperlint's own pdf.js reader from `dist/`, and the fonts are cross-checked against the list of
 programs pdfTeX writes into `paper.log`:
 
-| fixture      | what it is there to prove                                                                                                                                                                                                                                                                  |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `acmart`     | a real `\documentclass{acmart}` source builds, and the PDF carries the class's **own** font families — not one family of the silent substitution                                                                                                                                           |
-| `fallback`   | the same document with the fonts missing still **builds green**, and is **rejected** by the font check. The failure is in the artifact, not in the exit code                                                                                                                               |
-| `cite`       | the bibtex path: the PDF shows `[1]`, not `[?]`, and no `??`. Its `build.sh` would leave a trace if run — it must not run, and the run must say it is ignored                                                                                                                              |
-| `guards`     | `\input{paper-guards}` resolves with no configuration, because rpp puts its own venues directory on `TEXINPUTS`                                                                                                                                                                            |
-| `unbalanced` | a two-column acmart paper whose last page comes out 621.5 / 264.8 pt builds **green** — the build does not judge the layout and rewrites nothing — while `_build/paper.facts.json` records both heights, and `rpp lint` with `pdf/last-page-balance` turned on in `rules` reports the page |
-| `broken`     | a failing build names pdflatex and its exit code, quotes the error line and its `l.NNN` context, and deletes the stale `paper.pdf` planted before the run                                                                                                                                  |
-| `no-source`  | a paper with no `paper.tex` is named separately, and the run as a whole is a failure                                                                                                                                                                                                       |
+| fixture      | what it is there to prove                                                                                                                                                                                                                                                                        |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `acmart`     | a real `\documentclass{acmart}` source builds, and the PDF carries the class's **own** font families — not one family of the silent substitution                                                                                                                                                 |
+| `fallback`   | the same document with the fonts missing still **builds green**, and is **rejected** by the font check. The failure is in the artifact, not in the exit code                                                                                                                                     |
+| `cite`       | the bibtex path: the PDF shows `[1]`, not `[?]`, and no `??`. Its `build.sh` would leave a trace if run — it must not run, and the run must say it is ignored                                                                                                                                    |
+| `guards`     | `\input{paper-guards}` resolves with no configuration, because paperlint puts its own venues directory on `TEXINPUTS`                                                                                                                                                                            |
+| `unbalanced` | a two-column acmart paper whose last page comes out 621.5 / 264.8 pt builds **green** — the build does not judge the layout and rewrites nothing — while `_build/paper.facts.json` records both heights, and `paperlint lint` with `pdf/last-page-balance` turned on in `rules` reports the page |
+| `broken`     | a failing build names pdflatex and its exit code, quotes the error line and its `l.NNN` context, and deletes the stale `paper.pdf` planted before the run                                                                                                                                        |
+| `no-source`  | a paper with no `paper.tex` is named separately, and the run as a whole is a failure                                                                                                                                                                                                             |
 
 The `fallback` row is the point of the whole file. `acmart.cls` checks for `libertine.sty`,
 `zi4.sty` and `newtxmath.sty`, and failing to find any of them sets `\@ACM@newfontsfalse` and
@@ -81,14 +81,14 @@ and therefore so does the pagination. A submitted paper went out that way. **An 
 see it, so the content of the artifact is what gets measured.**
 
 Before the fixtures, the run proves the refusal with no TeX at all: PATH holds `node` alone, the
-cache directory is empty and `CI` is set, and `rpp build` must exit 1 with one line naming
-`npx rpp toolchain` and the venue's packages, print no plan and create no PDF and no cache. It then
-asks `rpp build --dry-run` which TeX Live the real run will use; under `--strict` (CI) that must be
-rpp's own cache, because the runner has no other.
+cache directory is empty and `CI` is set, and `paperlint build` must exit 1 with one line naming
+`npx paperlint toolchain` and the venue's packages, print no plan and create no PDF and no cache. It then
+asks `paperlint build --dry-run` which TeX Live the real run will use; under `--strict` (CI) that must be
+paperlint's own cache, because the runner has no other.
 
 ## `test/e2e/toolchain.mjs` — real TeX Live, and only it
 
-`rpp toolchain` into `$RPP_TEXLIVE_DIR` against real CTAN; a second run must say "nothing to do"
+`paperlint toolchain` into `$RPP_TEXLIVE_DIR` against real CTAN; a second run must say "nothing to do"
 within seconds; `--check` must exit 0; then the `acmart` fixture is built with PATH holding `node`
 only, so no other TeX Live and no PDF tool can stand in, and the PDF must carry Libertine and Biolinum
 and no Computer Modern face. Without `RPP_TEXLIVE_DIR` it is a declared skip: installing ~270 MB
@@ -126,7 +126,7 @@ Named here on purpose: a test suite that does not say where it stops is read as 
 everything.
 
 - **macOS and Windows.** Locally these run on whatever machine you have. In CI `build-e2e` is a
-  matrix over `ubuntu-latest` and `macos-latest`; Windows is not run anywhere, and `rpp toolchain`
+  matrix over `ubuntu-latest` and `macos-latest`; Windows is not run anywhere, and `paperlint toolchain`
   refuses it.
 - **The rules, on a real document.** `fixtures/real-markdown-paper/` holds a published article and
   a recorded baseline of what the rules say about it. That is a **lint** fixture, driven by a
@@ -135,8 +135,11 @@ everything.
 - **The skills as behaviour.** The install run proves a skill arrived and that its paths resolve.
   Whether the agent then does the right thing with it is a different measurement, and it belongs
   to the harness tier of `vigiles`, not here.
-- **Registry publication.** `npm pack` produces the same tarball `npm publish` would upload, so
-  the packlist is covered; the registry round-trip is not.
+- **Registry publication.** The package is on npm: `research-paper-pipeline@1.0.0` was published
+  on 2026-09-25 by `.github/workflows/release.yml`; from 2.0.0 it is published as `paperlint`, the
+  same way. The
+  e2e still covers the packlist through `npm pack`, which produces the same tarball `npm publish`
+  uploads; the registry round-trip — install from npm, then run — is still not run by any test.
 
 ## The corpus
 

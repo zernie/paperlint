@@ -1,4 +1,4 @@
-# CLAUDE.md — research-paper-pipeline
+# CLAUDE.md — paperlint
 
 Machine-checkable gates for writing a research paper in git, extracted from a private
 knowledge base.
@@ -189,95 +189,30 @@ the instruction and never the evidence — the same split as rules 9 and 10 and 
 🔴 The argument "we need another command for X" is, in every tool examined, an argument that
 the CONFIG is not declaring something. Check that before adding a verb.
 
-## Distribution — no `smh init`, and that is a measured decision (2026-09-10)
+## Distribution — one install path: npm, then `paperlint init`
 
-Considered: a `research-paper-pipeline init` command that installs the ESLint config and the
-Claude plugin in one shot, the way `vigiles init` does. **Rejected for now**, and the reason is
-worth keeping so it is not reopened.
+`npm i -D paperlint` brings all the code — rules, skills, hooks, scripts. `paperlint init`
+then does what only a command can, because it depends on the project it lands in: it finds the
+papers directory and declares it in `package.json`, links each skill into `.claude/skills/`, writes
+the hook commands into `.claude/settings.json` (vigiles' `mergeRegistrations`, reading
+`plugin/hooks/hooks.json` as the one source), and offers a CI workflow pinned to the installed
+release's tag. `paperlint doctor` reads all of it back. Details: `docs/install.md`.
 
-**What makes `vigiles init` earn its existence** — read from its own implementation, not guessed:
+**There is no Claude Code plugin or marketplace entry; it was removed in the release after 1.0.0
+(#82).** Do not bring it back without answering these, each measured:
 
-```
-Scanning linters and project files...
-  <linter>: <N> rules
-✓ Generated .vigiles/generated.d.ts
-✓ Generated .vigiles/schema.json (YAML-LSP frontmatter schema)
-```
+- **A plugin cannot carry the code.** Claude Code runs `npm ci --ignore-scripts` for a plugin only
+  when its root holds a `package.json` and a lockfile, with a 60-second timeout, and _"a failed or
+  skipped install never blocks the plugin"_: on a slow network the hooks load and fail with
+  `cannot find module vigiles`, silently.
+- **The skills need the npm package anyway.** 23 of 24 skills run scripts under
+  `paper-pipeline/scripts`, which resolve only through `node_modules/paperlint/`.
+  A plugin-only consumer got skills whose first command fails.
+- **Its manifests carried versions nothing updated** (0.0.1 and 0.1.0 while npm was at 1.0.0), and
+  Claude Code decides plugin updates from that number.
 
-It **generates artifacts by measuring the repo it lands in** — TypeScript types for the rules
-_that project_ actually has. That is work no template can do, so a command is the only way to do it.
-
-**This repo has nothing of that shape yet.** Five rules, no per-project configuration, nothing to
-derive from the host repo. An `init` here would copy files — and copying files is exactly what the
-two standard channels already do, for free:
-
-| what ships                                   | channel                 | user's side                                                     |
-| -------------------------------------------- | ----------------------- | --------------------------------------------------------------- |
-| **all code** — rules, skills, hooks, scripts | an npm package          | `npm i -D research-paper-pipeline`                              |
-| **hook wiring only**                         | the plugin in `plugin/` | `/plugin marketplace add <owner>/<repo>` then `/plugin install` |
-
-🔴 **SUPERSEDED 2026-09-23 — `rpp init` exists, and the hook row above no longer describes the
-install.** `init` writes the hook commands into the consumer's `.claude/settings.json` (vigiles'
-`mergeRegistrations`, reading `plugin/hooks/hooks.json` as the one source), and `rpp doctor` reads
-them back. The plugin stops being the hook carrier; its marketplace entry stays for one release.
-Why, with sources: `docs/prior-art/paper-folder-scaffolding.md` § 5. The table is kept because the
-paragraphs below still explain why the plugin never carried code.
-
-🔴 **THE PLUGIN CARRIES NO CODE, AND THAT IS THE DESIGN — measured 2026-09-17.** Claude Code runs
-`npm ci --ignore-scripts` for a plugin _"only when the plugin's root directory contains both a
-package.json and a supported lockfile"_, with a 60-second timeout, and _"a failed or skipped
-install never blocks the plugin"_. Until today the marketplace pointed at `"source": "./"` — the
-repository root — which holds a lockfile of **251 packages**, there for the ESLint rules and of no
-use to a hook. A slow network therefore produced a plugin that loaded with a partial tree and hooks
-that failed with `cannot find module vigiles`, silently.
-
-`plugin/` has no `package.json`, so that install does not run at all. Its `hooks/hooks.json` points
-at the consumer's own npm copy through `${CLAUDE_PROJECT_DIR}` — the same command a consumer used to
-paste by hand, now written by the plugin. `vigiles/hook` resolves upward from
-`node_modules/research-paper-pipeline/hooks/`, which is the contract documented below.
-
-⚠️ **Two manifests now exist and neither is stale.** `plugin/.claude-plugin/plugin.json` is what
-people install. The one at the repository root stays because the skill **eval** tier needs a
-complete plugin at the root (`pluginDir` in `lib/skill-eval-kit.mjs`) — it is a local test fixture,
-not a delivery channel, and the marketplace no longer points at it.
-
-⚠️ **Skills do NOT travel through the plugin, deliberately.** They name their scripts by an
-install-specific path (208 literals, issue #19), so a plugin-only consumer would install skills whose
-first command fails. They ship with the npm package, where those paths resolve. When #19 lands, the
-plugin can carry them too.
-
-🔴 **THE TWO ROWS ARE NOT INDEPENDENT, AND THE TABLE READ AS IF THEY WERE** (issue #8, counted
-again 2026-09-17). The marketplace row needs no npm — that is true of the CHANNEL and false of
-what travels through it:
-
-```
-$ ls skills/*/SKILL.md | wc -l                      24
-$ grep -l "paper-pipeline/scripts" skills/*/SKILL.md | wc -l   23
-```
-
-Twenty-three of twenty-four skills name `paper-pipeline/scripts` in their own prose — the paths
-the model is told to run. Those resolve through the symlink into
-`node_modules/research-paper-pipeline/`, i.e. back through the npm channel. The single
-self-contained skill is `osf-artifact-upload` (52 lines, talks only to the OSF API).
-
-**So a consumer who installs the plugin and nothing else gets 24 skills of which 23 point at
-scripts that are not there.** Nothing fails at install time; it fails later, in the middle of a
-session, as a path that does not exist.
-
-⚠️ **This is a statement of fact, not a plan.** Making the marketplace channel genuinely
-standalone means either vendoring the scripts into every skill (24 copies of the thing this
-package exists to have ONE of) or rewriting 23 skills to call a binary that the npm package
-provides. Both are real work with real trade-offs; neither is done. Until one of them is, the
-honest instruction is the table above: install both.
-
-Both are measured, not assumed: `vigiles` and `Imbad0202/academic-research-skills` (47k stars) both
-ship `.claude-plugin/marketplace.json`, and ARS advertises install as two commands.
-
-🔴 **The condition that would flip this decision:** the moment something must be _derived_ from the
-host repo — detecting the venue/format of the paper and enabling the matching rule set, or reading
-an existing `.tex` to decide what to check. That is generation by measurement, and it is what a
-command is for. Until then, a hand-written `init` is work that npm and the plugin marketplace are
-already doing.
+`plugin/hooks/hooks.json` stays where it is: it is not a plugin any more, it is the hook wiring
+`paperlint init` merges into the consumer's settings.
 
 ## Delivery — how this repo's contents reach a consumer (measured 2026-09-11)
 
@@ -286,27 +221,17 @@ private knowledge base this was extracted from; nothing below is specific to it.
 
 ### Skills ship as `skills/`, and the consumer SYMLINKS them
 
-**Do not move skills to `.claude/skills/` inside this repo.** `plugin.json` points at
-`./skills/` and that is the correct, standard layout — `plugins-reference.md` is explicit:
-
-> **Correct structure**: Components must be at the plugin root, not inside `.claude-plugin/`.
-> Only `plugin.json` belongs in `.claude-plugin/`.
-
-An ecosystem scan of 855 npm packages (by published tarball, not repository) found
-**336 shipping `skills/<n>/SKILL.md` against 15 shipping `.claude/skills/`** — 22 : 1. The
+**Do not move skills to `.claude/skills/` inside this repo.** They live in `skills/`
+(`SHIPPED_SKILLS_DIR` in `skills/paper-pipeline/scripts/consumer.mjs`, read by the linker and the
+install e2e), which is the standard layout. An ecosystem scan of 855 npm packages (by published
+tarball, not repository) found **336 shipping `skills/<n>/SKILL.md` against 15 shipping `.claude/skills/`** — 22 : 1. The
 top of the market is entirely on `skills/`: `@vitejs/devtools-kit` (330 896 downloads/wk),
 `@slidev/cli` (56 809), `anthropics/skills` (175 673 stars).
 
-🔴 **And the wrong layout fails SILENTLY.** With `skills: "./.claude/skills"` the official
-`claude plugin validate` prints `✔ Validation passed` and checks **zero** skills — no
-`Validating skill:` line, exit 0 ([claude-code#87004](https://github.com/anthropics/claude-code/issues/87004)).
-The same files under `./skills` produce a real finding. That is rule 4 of this file
-(`exit 0` with empty output is not "clean") landing in someone else's tool.
-
-**The consumer's side is a symlink per skill, made by `rpp init` (`src/link-skills.ts`):**
+**The consumer's side is a symlink per skill, made by `paperlint init` (`src/link-skills.ts`):**
 
 ```
-<consumer>/.claude/skills/<name>  ->  node_modules/research-paper-pipeline/skills/<name>
+<consumer>/.claude/skills/<name>  ->  node_modules/paperlint/skills/<name>
 ```
 
 ⚠️ The skill's name in the listing comes from the **link directory's name**, not from
@@ -394,7 +319,7 @@ no compile step on the consumer's side:
 ```json
 {
   "type": "command",
-  "command": "node \"$CLAUDE_PROJECT_DIR/node_modules/vigiles/dist/cli.js\" hook-runtime run-program \"$CLAUDE_PROJECT_DIR/node_modules/research-paper-pipeline/hooks/paper-edit-guard.hook.mjs\""
+  "command": "node \"$CLAUDE_PROJECT_DIR/node_modules/vigiles/dist/cli.js\" hook-runtime run-program \"$CLAUDE_PROJECT_DIR/node_modules/paperlint/hooks/paper-edit-guard.hook.mjs\""
 }
 ```
 
@@ -415,7 +340,7 @@ resolve OK -> <consumer>/node_modules/vigiles/dist/hook.js
 So this package needs no copy of its own at the consumer's runtime; it needs `vigiles` only
 for its own `vigiles test` and `vigiles compile`. That is `devDependencies`, which `npm i` of
 a dependency does not install. Putting it in `dependencies` risks npm installing a **second**
-copy under `node_modules/research-paper-pipeline/node_modules/vigiles` whenever the ranges
+copy under `node_modules/paperlint/node_modules/vigiles` whenever the ranges
 drift — two runtimes, two sets of stamps and state.
 
 🔴 **THE PARAGRAPH ABOVE WAS TRUE AND THE INSTALL DID THE OPPOSITE — measured 2026-09-17.**
@@ -663,3 +588,11 @@ measured — so the repo's own test command had never once executed a test, and 
 
 Conventional-commit subject, body says what was MEASURED, not what was intended. A number in
 a commit message that no command produced is the thing this repo exists to make impossible.
+
+**The subject is also the release.** Every push to `main` runs semantic-release
+(`.github/workflows/release.yml`), and it reads the squash commit, which is the PR title:
+`feat:` → minor, `fix:` or `perf:` → patch, `!` or a `BREAKING CHANGE:` footer → major,
+`docs:` `chore:` `ci:` `test:` `refactor:` → no release. `pr-title.yml` rejects a title without
+a conventional prefix, and for a one-commit PR checks the commit subject too, since GitHub
+squashes to that. npm, the git tag and the GitHub Release always carry the same version. Never
+`npm publish` by hand.

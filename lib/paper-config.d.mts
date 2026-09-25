@@ -6,6 +6,20 @@
 // once, in paper-config.mjs.
 
 export declare const CONFIG_KEY: string;
+export declare const LEGACY_CONFIG_KEY: string;
+export declare const LEGACY_KEY_MESSAGE: string;
+
+/** Where a parsed package.json keeps the settings: the new key, else the old one. */
+export declare function declaredSettings(pkg: unknown): {
+  readonly settings: unknown;
+  readonly legacy: boolean;
+  readonly conflict: string | null;
+};
+
+/** The settings object alone — undefined when absent or on a conflict. */
+export declare function settingsOf(
+  pkg: unknown,
+): Readonly<Record<string, unknown>> | undefined;
 export declare const DEFAULT_PAPERS_ROOT: string;
 export declare const PAPERS_DIR_FIELD: string;
 export declare const OLD_PAPERS_DIR_FIELD: string;

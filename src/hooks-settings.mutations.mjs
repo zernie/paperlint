@@ -22,19 +22,15 @@ process.exit(
       {
         name: "every spelling of the bin counts as ours",
         harness: HARNESS,
-        // The spelling truth table is the first owner: `npx rpp hook …` must read as NOT ours,
+        // The spelling truth table is the first owner: `npx paperlint hook …` must read as NOT ours,
         // and that row is where it goes red.
-        expect: '→ {"name":"paper-skills-nudge","ours":false}',
+        expect: '→ {"name":"paper-edit-guard","ours":false,"legacy":true}',
         disables:
           "the duplicate guard for every bin spelling but ours. A hook wired by hand as " +
-          "`npx rpp hook …` or through an absolute rpp.mjs path reads as ours, init merges its own " +
+          "`npx paperlint hook …` or through an absolute rpp.mjs path reads as ours, init merges its own " +
           "copy beside it, and the hook runs twice per event",
         edits: [
-          [
-            SRC,
-            "      return { name, ours: t === MANAGED_BY };",
-            "      return { name, ours: true };",
-          ],
+          [SRC, "        ours: t === MANAGED_BY,", "        ours: true,"],
         ],
       },
       {
@@ -56,7 +52,7 @@ process.exit(
         edits: [
           [
             SRC,
-            "  if (JSON.stringify(next) === JSON.stringify(settings))",
+            "  if (JSON.stringify(next) === JSON.stringify(read.settings))",
             "  if (false)",
           ],
         ],
@@ -92,7 +88,7 @@ process.exit(
         ],
       },
       {
-        name: "doctor offers `rpp init` even where init refuses to write",
+        name: "doctor offers `paperlint init` even where init refuses to write",
         harness: HARNESS,
         expect: "partly wired BY HAND",
         disables:
@@ -110,8 +106,8 @@ process.exit(
         edits: [
           [
             SRC,
-            '    .filter(([id, on]) => on === true && id.split("@")[0] === PKG)',
-            '    .filter(([id]) => id.split("@")[0] === PKG)',
+            '      ([id, on]) => on === true && id.split("@")[0] === LEGACY_PACKAGE_NAME,',
+            '      ([id]) => id.split("@")[0] === LEGACY_PACKAGE_NAME,',
           ],
         ],
       },

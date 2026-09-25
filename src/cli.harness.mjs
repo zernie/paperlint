@@ -1,10 +1,10 @@
 /**
- * Both halves for the `research-paper-pipeline lint` utility, and separately — failures, each
+ * Both halves for the `paperlint lint` utility, and separately — failures, each
  * of which must be EXPLAINABLE, not just nonzero.
  *
  * 🔴 Two of the defects checked here the utility already had, and both were found by the
  * FIRST run, not by reading:
- *   1. `rpp --help` used to answer "unknown command `--help`" — argv[0] unconditionally became
+ *   1. `paperlint --help` used to answer "unknown command `--help`" — argv[0] unconditionally became
  *      the command;
  *   2. on an empty set ESLint THROWS `NoFilesFoundError`, and the guard against a false green
  *      zero never lived long enough to reach its own check: instead of a message, a stack trace
@@ -13,6 +13,7 @@
  */
 import assert from "node:assert/strict";
 import { recordCheck } from "vigiles";
+import { load as yamlLoad } from "js-yaml";
 import {
   mkdtempSync,
   mkdirSync,
@@ -183,7 +184,7 @@ check(
   const r = await cli(["--help"]);
   check(
     "`--help` prints usage and exits zero",
-    r.code === 0 && /npx rpp lint/.test(r.out),
+    r.code === 0 && /npx paperlint lint/.test(r.out),
   );
 }
 // ── ONE DECLARATION, READ BY THE SAME THING THAT WRITES IT ─────────────────────────────
@@ -191,7 +192,7 @@ check(
 // 🔴 WITHOUT THIS BLOCK THE REWRITTEN `init` WOULD PRODUCE A BROKEN INSTALL. It writes one
 // declaration — into `package.json`, the file the hooks know how to read (a hook does not
 // import code and cannot walk up the tree; it can only read a path it is able to name). The
-// utility, though, read ONLY `rpp.json`, so right after `rpp init` its `lint` would say
+// utility, though, read ONLY `rpp.json`, so right after `paperlint init` its `lint` would say
 // "nothing to lint". I.e. the install command and the check command would be looking at
 // different files — exactly the defect it exists to close, just from the other side.
 {
@@ -215,7 +216,7 @@ check(
         {
           name: "c",
           version: "1.0.0",
-          "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "papers" },
+          paperlint: { [PAPERS_DIR_FIELD]: "papers" },
         },
         null,
         2,
@@ -224,7 +225,7 @@ check(
 
     const r = await cli(["lint"], root);
     check(
-      "🔴 THE UTILITY READS THE DECLARATION FROM package.json — otherwise `rpp init` sets up something `rpp lint` cannot see",
+      "🔴 THE UTILITY READS THE DECLARATION FROM package.json — otherwise `paperlint init` sets up something `paperlint lint` cannot see",
       r.code === 0 && /no findings/.test(r.out),
     );
     check(
@@ -236,15 +237,48 @@ check(
       !/is deprecated/.test(r.out),
     );
 
+    // Guards: settings under the key's old name (before 2.0.0) keep working, and say so.
+    writeFileSync(
+      join(root, "package.json"),
+      JSON.stringify({
+        name: "c",
+        version: "1.0.0",
+        "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "papers" },
+      }),
+    );
+    const legacy = await cli(["lint"], root);
+    check(
+      "🔴 the OLD key is still read — the same clean run — and a deprecation line names the new one",
+      legacy.code === 0 &&
+        /no findings/.test(legacy.out) &&
+        /"research-paper-pipeline" in package\.json is the old name .* rename it to "paperlint"/.test(
+          legacy.out,
+        ),
+    );
+    // Guards: both keys, different contents — refused, since there is no telling which is meant.
+    writeFileSync(
+      join(root, "package.json"),
+      JSON.stringify({
+        name: "c",
+        version: "1.0.0",
+        paperlint: { [PAPERS_DIR_FIELD]: "papers" },
+        "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "elsewhere" },
+      }),
+    );
+    const both = await cli(["lint"], root);
+    check(
+      "🔴 both keys with different contents — refused (exit 2), naming both",
+      both.code === 2 &&
+        /has both "paperlint" and "research-paper-pipeline", and they differ/.test(
+          both.out,
+        ),
+    );
+
     // The key is present, the papers-directory field inside it is not: this is not an "empty config" but an
     // unfinished one, and the failure must name the EXACT shape that needs adding.
     writeFileSync(
       join(root, "package.json"),
-      JSON.stringify(
-        { name: "c", version: "1.0.0", "research-paper-pipeline": {} },
-        null,
-        2,
-      ),
+      JSON.stringify({ name: "c", version: "1.0.0", paperlint: {} }, null, 2),
     );
     const noPapers = await cli(["lint"], root);
     check(
@@ -252,7 +286,7 @@ check(
       noPapers.code === 2 &&
         noPapers.out.includes(`must declare \`${PAPERS_DIR_FIELD}\``) &&
         noPapers.out.includes(
-          `"research-paper-pipeline": { "${PAPERS_DIR_FIELD}": "papers" }`,
+          `"paperlint": { "${PAPERS_DIR_FIELD}": "papers" }`,
         ),
     );
 
@@ -263,7 +297,7 @@ check(
       JSON.stringify({
         name: "c",
         version: "1.0.0",
-        "research-paper-pipeline": {
+        paperlint: {
           [OLD_PAPERS_DIR_FIELD]: "papers",
           [PAPERS_DIR_FIELD]: "papers",
         },
@@ -274,7 +308,7 @@ check(
       `the old field name "${OLD_PAPERS_DIR_FIELD}" fails with a message that names the new one`,
       oldName.code === 2 &&
         oldName.out.includes(
-          `"${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "research-paper-pipeline"`,
+          `"${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "paperlint"`,
         ),
     );
     writeFileSync(
@@ -282,7 +316,7 @@ check(
       JSON.stringify({
         name: "c",
         version: "1.0.0",
-        "research-paper-pipeline": { [OLD_PAPERS_DIR_FIELD]: "papers" },
+        paperlint: { [OLD_PAPERS_DIR_FIELD]: "papers" },
       }),
     );
     check(
@@ -318,7 +352,7 @@ check(
       JSON.stringify({
         name: "c",
         version: "1.0.0",
-        "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "papers" },
+        paperlint: { [PAPERS_DIR_FIELD]: "papers" },
       }),
     );
     check(
@@ -377,9 +411,7 @@ check(
     };
   };
   const declared = (dir) =>
-    JSON.parse(readFileSync(join(dir, "package.json"), "utf8"))[
-      "research-paper-pipeline"
-    ];
+    JSON.parse(readFileSync(join(dir, "package.json"), "utf8"))["paperlint"];
   // No check should depend on what is installed ON THIS MACHINE: `command -v` is faked,
   // otherwise "no external programs" would read as a finding about init.
   const haveAll = () => ({ status: 0 });
@@ -415,7 +447,7 @@ check(
       );
       check(
         "init ends with doctor's report: the install vouches for its OWN state",
-        /rpp doctor — what is wired/.test(out.text()),
+        /paperlint doctor — what is wired/.test(out.text()),
       );
       check(
         "and exits zero on a consistent install",
@@ -442,9 +474,77 @@ check(
         /A GUESS/.test(out.text()) &&
           /Nothing here looks like a papers directory/.test(out.text()),
       );
+      // Guards: a fresh project with no papers anywhere is not a broken install. The guard has
+      // nothing to protect yet, and `init --yes` (an agent, CI) must finish green with a next step.
       check(
-        "🔴 no directory ⇒ doctor goes red, and init returns ITS verdict, not its own success",
-        code === 2 && /the install is NOT finished/.test(out.text()),
+        "🔴 no papers anywhere yet — init finishes GREEN and names the next step",
+        code === 0 &&
+          !/the install is NOT finished/.test(out.text()) &&
+          /no papers yet/.test(out.text()) &&
+          /new <name>/.test(out.text()),
+      );
+    }
+
+    // ── 2½. SETTINGS UNDER THE OLD KEY ARE MOVED TO THE NEW ONE ───────────────────────
+    {
+      const dir = project("old-key", {
+        pkg: {
+          name: "consumer",
+          "research-paper-pipeline": {
+            [PAPERS_DIR_FIELD]: "writing",
+            minFindings: 3,
+          },
+          version: "1.0.0",
+        },
+        papers: ["writing"],
+      });
+      const out = say();
+      await init(dir, {
+        log: out.log,
+        err: out.log,
+        interactive: false,
+        run: haveAll,
+      });
+      const pkg = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
+      check(
+        "🔴 init moves the old key's settings to the new key, whole, and removes the old key",
+        JSON.stringify(pkg.paperlint) ===
+          JSON.stringify({ [PAPERS_DIR_FIELD]: "writing", minFindings: 3 }) &&
+          !("research-paper-pipeline" in pkg),
+      );
+      check(
+        "in the same position in the file, so the diff is a one-word rename",
+        Object.keys(pkg).join() === "name,paperlint,version",
+      );
+      check(
+        "and it says so",
+        /moved the settings from "research-paper-pipeline" \(the old key\) to "paperlint"/.test(
+          out.text(),
+        ),
+      );
+    }
+    {
+      const dir = project("both-keys", {
+        pkg: {
+          name: "consumer",
+          paperlint: { [PAPERS_DIR_FIELD]: "writing" },
+          "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "other" },
+        },
+        papers: ["writing"],
+      });
+      const out = say();
+      const code = await init(dir, {
+        log: out.log,
+        err: out.log,
+        interactive: false,
+        run: haveAll,
+      });
+      check(
+        "both keys with different contents — init refuses (exit 2) and writes nothing",
+        code === 2 &&
+          /they differ/.test(out.text()) &&
+          "research-paper-pipeline" in
+            JSON.parse(readFileSync(join(dir, "package.json"), "utf8")),
       );
     }
 
@@ -454,7 +554,7 @@ check(
         pkg: {
           name: "c",
           version: "1.0.0",
-          "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "mine" },
+          paperlint: { [PAPERS_DIR_FIELD]: "mine" },
         },
         papers: ["writing"],
       });
@@ -527,6 +627,23 @@ check(
       );
     }
     {
+      // Guards: the printed step carries the tag of the running release, not a placeholder.
+      const dir = project("ci-printed-pin", { papers: ["writing"] });
+      const out = say();
+      await init(dir, {
+        log: out.log,
+        err: out.log,
+        interactive: false,
+        run: haveAll,
+        version: "1.2.3",
+      });
+      check(
+        "🔴 a released version — the printed step is pinned to its tag, no <commit-sha>",
+        /uses: zernie\/research-paper-pipeline@v1\.2\.3\b/.test(out.text()) &&
+          !/<commit-sha>/.test(out.text()),
+      );
+    }
+    {
       const dir = project("ci-yes", { papers: ["writing"] });
       const asked = [];
       const wf = await offerWorkflow(dir, "writing", {
@@ -544,6 +661,10 @@ check(
         "and the workflow carries THE directory that was actually discussed",
         /paths: writing/.test(readFileSync(join(dir, WORKFLOW_PATH), "utf8")),
       );
+      check(
+        "without a known release the action keeps the obvious placeholder, never a guessed tag",
+        /@<commit-sha>/.test(readFileSync(join(dir, WORKFLOW_PATH), "utf8")),
+      );
       check("the question is asked exactly once", asked.length === 1);
       const again = await offerWorkflow(dir, "writing", {
         interactive: true,
@@ -552,6 +673,26 @@ check(
       check(
         "an existing workflow is neither overwritten nor asked about again",
         again === "kept",
+      );
+    }
+    {
+      const dir = project("ci-pinned", { papers: ["writing"] });
+      const wf = await offerWorkflow(dir, "writing", {
+        interactive: true,
+        ask: async () => "y",
+        version: "1.2.3",
+      });
+      const yaml = existsSync(join(dir, WORKFLOW_PATH))
+        ? readFileSync(join(dir, WORKFLOW_PATH), "utf8")
+        : "";
+      const uses = (yamlLoad(yaml)?.jobs?.papers?.steps ?? []).map(
+        (s) => s.uses,
+      );
+      check(
+        "🔴 a released version — the written workflow is pinned to its tag, no <commit-sha> left",
+        wf === "written" &&
+          uses.includes("zernie/research-paper-pipeline@v1.2.3") &&
+          !yaml.includes("<commit-sha>"),
       );
     }
     {
@@ -634,14 +775,14 @@ check(
       // the same install command. The mutation that stripped the remedy OUT of init stayed
       // green: the assertion found a line printed by a different command and reported coverage
       // that did not exist.
-      const own = out.text().split("── rpp doctor")[0];
+      const own = out.text().split("── paperlint doctor")[0];
       check(
         "every absence is NAMED, and the count matches the names",
         /✗ 6 of 6 missing: pdflatex, bibtex/.test(own),
       );
       check(
         "🔴 and it carries the INSTALL COMMAND — a remedy, not just a diagnosis",
-        /npx rpp toolchain/.test(own),
+        /npx paperlint toolchain/.test(own),
       );
       check(
         "and it says outright that nothing is installed on the user's behalf",
@@ -652,7 +793,9 @@ check(
       check(
         "and init does NOT repeat doctor's table twenty lines above it",
         !/no PDF is produced/.test(own) &&
-          /no PDF is produced/.test(out.text().split("── rpp doctor")[1] ?? ""),
+          /no PDF is produced/.test(
+            out.text().split("── paperlint doctor")[1] ?? "",
+          ),
       );
       check(
         "and asking a system that has everything gives zero absences",
@@ -680,7 +823,7 @@ check(
         link: (root) => ({
           ok: true,
           home: join(root, ".claude", "skills"),
-          example: "../../node_modules/research-paper-pipeline/skills/alpha",
+          example: "../../node_modules/paperlint/skills/alpha",
           links: [
             { name: "alpha", status: "created" },
             { name: "beta", status: "present" },
@@ -688,7 +831,7 @@ check(
           ],
         }),
       });
-      const own = out.text().split("── rpp doctor")[0];
+      const own = out.text().split("── paperlint doctor")[0];
       check(
         "init counts what it did with the skills: created, already there, skipped",
         /3 shipped: 1 linked now, 1 already linked, 1 skipped/.test(own),
@@ -749,9 +892,9 @@ check(
       const dir = project("wired", { papers: ["writing"] });
       const r = await cli(["init", dir]);
       check(
-        "`rpp init` reaches the implementation and declares the measured directory",
+        "`paperlint init` reaches the implementation and declares the measured directory",
         declared(dir)[PAPERS_DIR_FIELD] === "writing" &&
-          /rpp init — each decision/.test(r.out),
+          /paperlint init — each decision/.test(r.out),
       );
     }
   } finally {
@@ -786,8 +929,8 @@ check(
       "`lint` with NO path AND no config refuses and names BOTH ways out",
       r.code === 2 &&
         /nothing to lint/.test(r.out) &&
-        /rpp init/.test(r.out) &&
-        /rpp lint papers/.test(r.out),
+        /paperlint init/.test(r.out) &&
+        /paperlint lint papers/.test(r.out),
     );
   } finally {
     rmSync(bare, { recursive: true, force: true });
@@ -878,7 +1021,7 @@ check(
 
 // ── THE CONFIG FINDS ITSELF, AND THE PAPERS DIRECTORY IS DECLARED IN IT ──────────────────
 //
-// 🔴 THE DEFECT THIS BLOCK EXISTS FOR: `rpp init` wrote `rpp.json`, and `rpp check` only read
+// 🔴 THE DEFECT THIS BLOCK EXISTS FOR: `paperlint init` wrote `rpp.json`, and `rpp check` only read
 // it via an explicit `--options`. I.e. the file the utility itself created had no effect on the
 // run — and there was no way to find that out: zero typography debt looks exactly like a
 // config that was never found.
@@ -1115,7 +1258,7 @@ check(
 
 // ── THE PAPERS DO NOT HAVE TO LIVE UNDER THE CURRENT DIRECTORY (#48) ─────────────────────
 //
-// 🔴 ESLint IGNORES EVERY FILE OUTSIDE ITS `cwd`. With `cwd` left at the default, `rpp lint
+// 🔴 ESLint IGNORES EVERY FILE OUTSIDE ITS `cwd`. With `cwd` left at the default, `paperlint lint
 // /some/other/papers` threw `all-matched-files-ignored` and leaked a raw stack trace, while the
 // same tree linted fine from inside. The property is not "does not crash" — a catch would give
 // that — but "the SAME findings wherever the command is typed", so the assertion compares the
@@ -1168,7 +1311,7 @@ check(
       join(tree, "package.json"),
       JSON.stringify({
         name: "x",
-        "research-paper-pipeline": {
+        paperlint: {
           [PAPERS_DIR_FIELD]: "papers",
           typographyDebt: { "papers/p": { sectionSign: 2 } },
         },
@@ -1209,7 +1352,7 @@ check(
   }
 }
 
-// ── `rpp hook` — THE RUNTIME RESOLVES FROM THE PACKAGE, NOT FROM THE PROJECT ROOT ────────
+// ── `paperlint hook` — THE RUNTIME RESOLVES FROM THE PACKAGE, NOT FROM THE PROJECT ROOT ────────
 //
 // 🔴 The measurement that gave rise to this command: one tarball, two package managers.
 //     npm:  node_modules/vigiles/dist/cli.js  EXISTS
@@ -1231,7 +1374,8 @@ check(
   said = "";
   check(
     "no name — a failure, and the right invocation is suggested",
-    runHook(undefined, { err }) === 2 && /rpp hook paper-edit-guard/.test(said),
+    runHook(undefined, { err }) === 2 &&
+      /paperlint hook paper-edit-guard/.test(said),
   );
 
   said = "";
@@ -1320,7 +1464,7 @@ check(
 }
 
 console.log(
-  `✓ ${String(n)} assertions passed — rpp lint, one command instead of hand-rolled config`,
+  `✓ ${String(n)} assertions passed — paperlint lint, one command instead of hand-rolled config`,
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1336,7 +1480,7 @@ console.log(
   check("and asks for NO manual install", !/npm i -D vigiles/.test(steps));
   check(
     "it names the two commands that ARE left: new and lint",
-    /npx rpp new <name>/.test(steps) && /npx rpp lint/.test(steps),
+    /npx paperlint new <name>/.test(steps) && /npx paperlint lint/.test(steps),
   );
 }
 
@@ -1530,7 +1674,7 @@ console.log(
         },
       });
       check(
-        "a human with no paper is offered one, and the answer and format reach `rpp new`'s routine",
+        "a human with no paper is offered one, and the answer and format reach `paperlint new`'s routine",
         made.length === 1 &&
           made[0].name === "first" &&
           made[0].format === "md" &&
@@ -1596,7 +1740,7 @@ console.log(
       const dir = bare("declared");
       writeFileSync(
         join(dir, "package.json"),
-        `{"name":"c","version":"1.0.0","research-paper-pipeline":{"${PAPERS_DIR_FIELD}":"writing"}}\n`,
+        `{"name":"c","version":"1.0.0","paperlint":{"${PAPERS_DIR_FIELD}":"writing"}}\n`,
       );
       const made = [];
       await init(dir, {
@@ -1655,13 +1799,13 @@ console.log(
   }
 }
 
-// ── `rpp lint` does not sweep the project's paper TEMPLATE as a paper ────────────────────
+// ── `paperlint lint` does not sweep the project's paper TEMPLATE as a paper ────────────────────
 {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-template-")));
   try {
     writeFileSync(
       join(root, "package.json"),
-      `{"research-paper-pipeline":{"${PAPERS_DIR_FIELD}":"papers"}}\n`,
+      `{"paperlint":{"${PAPERS_DIR_FIELD}":"papers"}}\n`,
     );
     mkdirSync(join(root, "papers", "p1"), { recursive: true });
     writeFileSync(join(root, "papers", "p1", "paper.md"), "# P\n");
@@ -1697,22 +1841,22 @@ console.log(
   }
 }
 
-// ── `rpp new` through the CLI: the papers directory comes from the one declaration ────────
+// ── `paperlint new` through the CLI: the papers directory comes from the one declaration ────────
 {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-new-cli-")));
   try {
     const none = await cli(["new", "demo"], root);
     check(
       "without a declaration there is nowhere to put a paper — refused, with the remedy",
-      none.code === 2 && /Run `npx rpp init` first/.test(none.out),
+      none.code === 2 && /Run `npx paperlint init` first/.test(none.out),
     );
     writeFileSync(
       join(root, "package.json"),
-      `{"research-paper-pipeline":{"${PAPERS_DIR_FIELD}":"writing"}}\n`,
+      `{"paperlint":{"${PAPERS_DIR_FIELD}":"writing"}}\n`,
     );
     const r = await cli(["new", "demo"], root);
     check(
-      "🔴 `rpp new demo` creates writing/demo/ and its lint is the verdict — exit 0, no findings",
+      "🔴 `paperlint new demo` creates writing/demo/ and its lint is the verdict — exit 0, no findings",
       r.code === 0 &&
         existsSync(join(root, "writing", "demo", "PIPELINE-STATUS.md")) &&
         existsSync(join(root, "writing", "demo", "paper.tex")) &&
@@ -1761,7 +1905,7 @@ console.log(
         JSON.stringify({
           name: "c",
           version: "1.0.0",
-          "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "papers", ...rpp },
+          paperlint: { [PAPERS_DIR_FIELD]: "papers", ...rpp },
         }),
       );
     const balanceOn = (files) => ({
@@ -1774,7 +1918,7 @@ console.log(
       "🔴 an unknown key is REFUSED by name — a typo must not read as 'not set'",
       typo.code === 2 &&
         typo.out.includes(
-          'package.json → "research-paper-pipeline": unknown key "typographyDept"',
+          'package.json → "paperlint": unknown key "typographyDept"',
         ),
     );
     settings({
@@ -1799,10 +1943,10 @@ console.log(
     });
     const unknownRule = await cli(["lint"], root);
     check(
-      "a rule rpp does not ship is refused, naming the block and the rule",
+      "a rule paperlint does not ship is refused, naming the block and the rule",
       unknownRule.code === 2 &&
         unknownRule.out.includes(
-          '.rules[0].rules: "pdf/nope" is not a rule rpp ships',
+          '.rules[0].rules: "pdf/nope" is not a rule paperlint ships',
         ),
     );
     settings({
@@ -1830,7 +1974,7 @@ console.log(
       "🔴 an optional rule turned on by a `rules` block RUNS — here it asks for the build's facts",
       on.code === 1 &&
         /pdf\/last-page-balance/.test(on.out) &&
-        /rpp build/.test(on.out),
+        /paperlint build/.test(on.out),
     );
     const fromInside = await cli(["lint"], dir);
     check(
@@ -1859,5 +2003,5 @@ console.log(
 }
 
 console.log(
-  `✓ ${String(n)} assertions in total, including init's hooks and rpp new`,
+  `✓ ${String(n)} assertions in total, including init's hooks and paperlint new`,
 );

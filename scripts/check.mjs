@@ -72,7 +72,7 @@ export const GATES = [
     job: "gates",
     run: locked("vigiles", "lint", ".", "README.md"),
     // README.md is passed to `vigiles lint` by name: it is not an instruction file, so vigiles
-    // would not open it on its own. The marks tie the `rpp init` and `rpp new` sections to the
+    // would not open it on its own. The marks tie the `paperlint init` and `paperlint new` sections to the
     // functions that implement them, and the lint fails when either function is renamed.
   },
   {
@@ -97,11 +97,6 @@ export const GATES = [
     reason:
       "source-only property — identical in every environment, so CI adds nothing",
     run: locked("node", "scripts/rules-are-content-only.mjs"),
-  },
-  {
-    name: "the marketplace manifest is accepted by the host's own validator",
-    job: "gates",
-    run: locked("node", "scripts/marketplace-shape.mjs"),
   },
   {
     name: "every test — vitest over *.test.ts, then the vigiles harnesses (npm test)",

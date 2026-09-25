@@ -43,7 +43,7 @@
  * this cannot — there is only one file.
  *
  * ── WHERE THE CONSUMER'S PAPERS ARE ─────────────────────────────────────────
- * One declaration, `"research-paper-pipeline": { "papersDir": "…" }`, read the way a hook is able to
+ * One declaration, `"paperlint": { "papersDir": "…" }`, read the way a hook is able to
  * read anything at all: `needs: [provide("pkg", "cat \"${CLAUDE_PROJECT_DIR:-.}/package.json\"")]`.
  * The alternatives were measured and killed in `eslint-rules/papers.mjs` — an env var cannot be
  * read from a hook at all (no imports), and a symlinked root makes ESLint report zero files.
@@ -108,7 +108,9 @@ import {
 } from "vigiles/hook";
 
 /** The key every carrier of this package reads its consumer-specific settings from. */
-export const CONFIG_KEY = "research-paper-pipeline";
+export const CONFIG_KEY = "paperlint";
+/** The key's name before 2.0.0 — still read, a copy of `lib/paper-config.mjs`. */
+export const LEGACY_CONFIG_KEY = "research-paper-pipeline";
 /** The default. A consumer that declares nothing is assumed to keep papers in `papers/`. */
 export const DEFAULT_PAPERS_ROOT = "papers";
 /**
@@ -132,7 +134,7 @@ export const OLD_PAPERS_DIR_FIELD = "papers";
  */
 /**
  * EXPORTED ON PURPOSE — this is the only way to cross-check without a second copy of the logic.
- * `rpp doctor` has to say which directory THIS hook will guard, not what a retelling of it
+ * `paperlint doctor` has to say which directory THIS hook will guard, not what a retelling of it
  * would guard. The compiled hook is forbidden to IMPORT anything but `vigiles/hook`
  * (that's what `checkHookImports` enforces), so a shared module is impossible — but that ban
  * doesn't restrict exporting outward, and the reverse direction, CLI → hook, is free.
@@ -156,7 +158,21 @@ export const papersRoot = (rawPkg) => {
         `installed and green.`,
     );
   }
-  const settings = pkg?.[CONFIG_KEY];
+  // The settings sit under CONFIG_KEY, or under its old name. Both, with different contents, is
+  // refused: the gate cannot know which one the author means.
+  const current = pkg?.[CONFIG_KEY];
+  const legacy = pkg?.[LEGACY_CONFIG_KEY];
+  if (
+    current !== undefined &&
+    legacy !== undefined &&
+    JSON.stringify(current) !== JSON.stringify(legacy)
+  )
+    return deny(
+      `package.json has both "${CONFIG_KEY}" and "${LEGACY_CONFIG_KEY}", and they differ. ` +
+        `Keep "${CONFIG_KEY}" and delete "${LEGACY_CONFIG_KEY}" (its old name). ` +
+        `Fix it with Edit or Write: file tools do not pass through this gate.`,
+    );
+  const settings = current ?? legacy;
   // The old field name is refused, not read as a fallback: this gate would otherwise guard the
   // default directory while the consumer believes it guards the one they declared.
   if (settings && Object.hasOwn(settings, OLD_PAPERS_DIR_FIELD))

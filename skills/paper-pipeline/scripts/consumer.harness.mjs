@@ -21,6 +21,7 @@ import assert from "node:assert/strict";
 import {
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -41,13 +42,46 @@ import {
   ledgerPath,
   pipelineScripts,
   scriptsRoot,
+  PACKAGE_NAME,
 } from "./consumer.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
+
+// ── THE PACKAGE NAME HAS ONE SOURCE, AND IT MATCHES THE MANIFEST ─────────────────────────────
+// Every path into the installed package is built from PACKAGE_NAME. Two files cannot import it
+// and spell it themselves: the manifest, and the hook wiring (JSON). Both are checked here.
+{
+  const root = resolve(HERE, "..", "..", "..");
+  const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+  assert.equal(
+    manifest.name,
+    PACKAGE_NAME,
+    "package.json `name` and PACKAGE_NAME in consumer.mjs must agree",
+  );
+  assert.deepEqual(
+    Object.keys(manifest.bin ?? {}),
+    [PACKAGE_NAME],
+    "the package exposes exactly one command, named like the package",
+  );
+  const wiring = JSON.parse(
+    readFileSync(join(root, "plugin", "hooks", "hooks.json"), "utf8"),
+  );
+  const commands = Object.values(wiring.hooks ?? {})
+    .flat()
+    .flatMap((e) => e.hooks ?? [])
+    .map((h) => h.command);
+  assert.ok(
+    commands.length > 0 &&
+      commands.every((c) =>
+        c.includes(`/node_modules/${PACKAGE_NAME}/bin/rpp.mjs`),
+      ),
+    `every command in plugin/hooks/hooks.json runs node_modules/${PACKAGE_NAME}/bin/rpp.mjs`,
+  );
+}
 const TMP = realpathSync(mkdtempSync(join(tmpdir(), "consumer-harness-")));
 process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
 
-/** A throwaway consumer repository with the given `research-paper-pipeline` block (or none). */
+/** A throwaway consumer repository with the given `paperlint` block (or none). */
 function fakeConsumer(block) {
   const root = mkdtempSync(join(TMP, "repo-"));
   writeFileSync(
@@ -60,14 +94,7 @@ function fakeConsumer(block) {
 }
 /** A directory that looks like an installed copy of this package. */
 function installedDir(root) {
-  const d = join(
-    root,
-    "node_modules",
-    "research-paper-pipeline",
-    "skills",
-    "pp",
-    "scripts",
-  );
+  const d = join(root, "node_modules", "paperlint", "skills", "pp", "scripts");
   mkdirSync(d, { recursive: true });
   return d;
 }
@@ -314,17 +341,10 @@ assert.equal(
   //    and it is how the DEFAULT fails as well: with the process started inside the installed
   //    package and CLAUDE_PROJECT_DIR unset, the consumer root is itself under node_modules.
   const root = fakeConsumer({
-    scripts: "node_modules/research-paper-pipeline/skills/pp/scripts",
+    scripts: "node_modules/paperlint/skills/pp/scripts",
   });
   mkdirSync(
-    join(
-      root,
-      "node_modules",
-      "research-paper-pipeline",
-      "skills",
-      "pp",
-      "scripts",
-    ),
+    join(root, "node_modules", "paperlint", "skills", "pp", "scripts"),
     {
       recursive: true,
     },
@@ -453,7 +473,7 @@ assert.equal(
 }
 
 // ── XI. WHICH SKILLS ARE INSTALLED — a link counts, a dangling link is REFUSED (rpp#62) ────────
-// `rpp init` installs every skill as a SYMLINK `.claude/skills/<name> -> …/skills/<name>`. A
+// `paperlint init` installs every skill as a SYMLINK `.claude/skills/<name> -> …/skills/<name>`. A
 // `Dirent` from `readdirSync(…, { withFileTypes: true })` describes the entry ITSELF and does not
 // follow links, so `e.isDirectory()` is false for every one of them: the eval preflights that
 // asked this question that way saw ZERO installed skills in every consumer and refused to start.
@@ -468,7 +488,7 @@ assert.equal(
   };
   mkdirSync(home, { recursive: true });
   skill(home, "real-dir"); //                        an ordinary directory
-  skill(store, "linked"); //                         the shape `rpp init` makes: a RELATIVE link
+  skill(store, "linked"); //                         the shape `paperlint init` makes: a RELATIVE link
   symlinkSync(
     join("..", "skills-store", "linked"),
     join(home, "linked"),
@@ -486,7 +506,7 @@ assert.equal(
   const names = installedSkills(home);
   assert.ok(
     names.includes("linked"),
-    "a SYMLINKED skill was not counted as installed. This is rpp#62: `rpp init` installs every " +
+    "a SYMLINKED skill was not counted as installed. This is rpp#62: `paperlint init` installs every " +
       "skill as a link, so a reader that does not follow links sees none of them in any consumer.",
   );
   assert.deepEqual(

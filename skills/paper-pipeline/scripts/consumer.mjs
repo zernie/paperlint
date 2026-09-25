@@ -19,7 +19,7 @@
  * A consumer keeps a symlink where the directory used to be:
  *
  *     .claude/skills/paper-pipeline/scripts  ->  ../../../../node_modules/
- *                                                research-paper-pipeline/skills/
+ *                                                paperlint/skills/
  *                                                paper-pipeline/scripts
  *
  * so every command a skill's prose already names — `node .claude/skills/paper-pipeline/scripts/
@@ -56,7 +56,7 @@
  * ── THE LEDGER, THREE RUNGS ─────────────────────────────────────────────────
  *   1. `PIPELINE_LEDGER` in the environment — always wins. This is what test harnesses set to
  *      keep fixture rows out of real history, so it must outrank a declaration on disk.
- *   2. `"research-paper-pipeline": { "ledger": "…" }` in the CONSUMER's `package.json`, read
+ *   2. `"paperlint": { "ledger": "…" }` in the CONSUMER's `package.json`, read
  *      from `process.cwd()`, resolved relative to it.
  *   3. `runs.jsonl` beside this file — ONLY when this file is not inside `node_modules`, i.e.
  *      when the package is being developed in its own checkout. Inside `node_modules` with
@@ -86,8 +86,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 // Re-exported, not re-declared — see the note in `lib/paper-config.mjs`. This file is not a hook
 // and never needed its own copy.
-import { CONFIG_KEY } from "../../../lib/paper-config.mjs";
-export { CONFIG_KEY };
+import { CONFIG_KEY, settingsOf } from "../../../lib/paper-config.mjs";
+export { CONFIG_KEY, settingsOf };
 
 /**
  * True when `metaUrl` belongs to the module Node was told to execute.
@@ -125,7 +125,7 @@ export function consumerRoot({ env = process.env, cwd = process.cwd() } = {}) {
 
 /**
  * The directory of venue TeX files THIS PACKAGE ships — `paper-guards.tex` and each venue's
- * `<venue>.tex` — which a paper's preamble `\input`s and `rpp build` puts on `TEXINPUTS`.
+ * `<venue>.tex` — which a paper's preamble `\input`s and `paperlint build` puts on `TEXINPUTS`.
  *
  * Resolved from this file's own location, never from the caller's cwd: the directory travels
  * with the package, wherever the package is installed (own checkout, `node_modules`, a plugin
@@ -137,6 +137,27 @@ export function packageVenuesDir() {
   );
 }
 
+/**
+ * The package's npm name — the directory it lands in under `node_modules`, and the name Node
+ * resolves it by. Every path into the installed package is built from this, never re-spelled;
+ * `consumer.harness.mjs` checks it against `package.json`.
+ */
+export const PACKAGE_NAME = "paperlint";
+
+/**
+ * The name the package was published under before 2.0.0. Only for recognising what an older
+ * install left behind (hook commands, skill links, the config key) so `init` can replace it and
+ * `doctor` can name it.
+ */
+export const LEGACY_PACKAGE_NAME = "research-paper-pipeline";
+
+/**
+ * Where the package keeps the skills it ships, relative to the package root. One constant, read by
+ * the linker (`src/link-skills.ts`) and the install e2e, so the two cannot disagree; `files` in
+ * package.json must include it for the skills to reach the tarball.
+ */
+export const SHIPPED_SKILLS_DIR = "skills";
+
 /** The consumer's skills directory — the fixed Claude Code layout, under its root. */
 export function consumerSkillsDir(opts) {
   return join(consumerRoot(opts), ".claude", "skills");
@@ -147,7 +168,7 @@ export function consumerSkillsDir(opts) {
  * sorted by name. The one answer to "which skills are here" — for the consumer's
  * `.claude/skills/`, for this package's own declared skills directory, and for a copy of either.
  *
- * 🔴 IT FOLLOWS SYMLINKS, AND THAT IS THE WHOLE POINT (rpp#62). `rpp init` (`src/link-skills.ts`)
+ * 🔴 IT FOLLOWS SYMLINKS, AND THAT IS THE WHOLE POINT (rpp#62). `paperlint init` (`src/link-skills.ts`)
  * installs every skill as a link `.claude/skills/<name> -> …/skills/<name>`. A `Dirent` from
  * `readdirSync(dir, { withFileTypes: true })` describes the entry itself, so `isDirectory()` is
  * false for every link: five eval preflights asked the question that way, saw zero skills in
@@ -197,7 +218,7 @@ export function installedSkills(dir) {
         dangling
           .map((d) => `  ${d.name} -> ${d.target} (${d.cause})`)
           .join("\n") +
-        `\nRe-run \`rpp init\` if the package moved, or remove the link if the skill was ` +
+        `\nRe-run \`npx paperlint init\` if the package moved, or remove the link if the skill was ` +
         `retired. This is refused rather than skipped: a skipped link reads as a skill that ` +
         `was never installed.`,
     );
@@ -254,7 +275,7 @@ export function ledgerPath(
 
   // Rung 2 — the consumer's declaration.
   const root = consumerRoot({ env, cwd });
-  const declared = consumerPkg({ env, cwd })?.[CONFIG_KEY]?.ledger;
+  const declared = settingsOf(consumerPkg({ env, cwd }))?.ledger;
   // 🔴 `declared === undefined`, NOT `declared ?? default` — the same distinction `papersRoot()`
   // makes and for the same reason: `"ledger": null` is a keystroke, not an absence, and reading
   // it as "nothing was declared" would silently pick a different file than the one asked for.
@@ -346,7 +367,7 @@ export const DEFAULT_SCRIPTS_ROOT = ".claude/skills/paper-pipeline/scripts";
  */
 export function scriptsRoot({ env = process.env, cwd = process.cwd() } = {}) {
   const root = consumerRoot({ env, cwd });
-  const declared = consumerPkg({ env, cwd })?.[CONFIG_KEY]?.scripts;
+  const declared = settingsOf(consumerPkg({ env, cwd }))?.scripts;
   // 🔴 `declared === undefined`, NOT `declared ?? DEFAULT` — the same distinction `papersRoot()`
   // and `ledgerPath()` make, for the same reason: `"scripts": null` is a keystroke, not an
   // absence, and silently substituting the default for it hides a typo behind a working run.
@@ -425,7 +446,7 @@ export function consumerTimezone({
   env = process.env,
   cwd = process.cwd(),
 } = {}) {
-  const declared = consumerPkg({ env, cwd })?.[CONFIG_KEY]?.timezone;
+  const declared = settingsOf(consumerPkg({ env, cwd }))?.timezone;
   // 🔴 `declared === undefined`, NOT `declared ?? DEFAULT` — the same distinction every carrier
   // above makes: `"timezone": null` is a keystroke, not an absence.
   const tz = declared === undefined ? DEFAULT_TIMEZONE : declared;
@@ -477,7 +498,7 @@ export function consumerContactEmail({
   env = process.env,
   cwd = process.cwd(),
 } = {}) {
-  const declared = consumerPkg({ env, cwd })?.[CONFIG_KEY]?.contactEmail;
+  const declared = settingsOf(consumerPkg({ env, cwd }))?.contactEmail;
   if (declared === undefined || declared === null) return null;
   if (typeof declared !== "string" || !declared.includes("@"))
     throw new TypeError(

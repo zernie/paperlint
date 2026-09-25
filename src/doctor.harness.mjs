@@ -1,5 +1,5 @@
 /**
- * Both halves for `rpp doctor` — a command whose subject is the STATE OF THE INSTALL, not a
+ * Both halves for `paperlint doctor` — a command whose subject is the STATE OF THE INSTALL, not a
  * file.
  *
  * 🔴 WHY A TEST MATTERS ESPECIALLY MUCH HERE. Doctor exists precisely because
@@ -52,8 +52,7 @@ function consumer({ papersDir, pkgKey, rppJson, makeDir = true }) {
     );
   }
   const pkg = { name: "consumer", version: "1.0.0" };
-  if (pkgKey !== undefined)
-    pkg["research-paper-pipeline"] = { [PAPERS_DIR_FIELD]: pkgKey };
+  if (pkgKey !== undefined) pkg["paperlint"] = { [PAPERS_DIR_FIELD]: pkgKey };
   writeFileSync(join(dir, "package.json"), JSON.stringify(pkg, null, 2));
   if (rppJson !== undefined)
     writeFileSync(
@@ -99,7 +98,7 @@ const runDoctor = (
     join(dir, "package.json"),
     JSON.stringify({
       name: "consumer",
-      "research-paper-pipeline": { [OLD_PAPERS_DIR_FIELD]: "papers" },
+      paperlint: { [OLD_PAPERS_DIR_FIELD]: "papers" },
     }),
   );
   const r = runDoctor(dir, { cliPapers: null });
@@ -107,14 +106,14 @@ const runDoctor = (
   check(
     "and doctor says what the field was renamed to",
     r.out.includes(
-      `"${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "research-paper-pipeline"`,
+      `"${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "paperlint"`,
     ),
   );
   rmSync(dir, { recursive: true, force: true });
 }
 
 // ── II. THE VERY DEFECT: AN INSTALL FOLLOWING THE DOCS ─────────────────────────────────────
-// `rpp init` writes rpp.json and does not touch package.json; the hook reads package.json.
+// `paperlint init` writes rpp.json and does not touch package.json; the hook reads package.json.
 // Measured 09-18.
 {
   const dir = consumer({
@@ -156,11 +155,65 @@ const runDoctor = (
   check("an install that works by coincidence does NOT crash", r.code === 0);
   check(
     "but the missing declaration is NAMED, not skipped",
-    /⚠ package\.json has no "research-paper-pipeline"/.test(r.out),
+    /⚠ package\.json has no "paperlint"/.test(r.out),
   );
   check(
     "and it says exactly why that is risky — it works only until the directory moves",
     /works only while your papers happen to live there/.test(r.out),
+  );
+  rmSync(dir, { recursive: true, force: true });
+}
+
+// ── II-ter. A FRESH PROJECT WITH NO PAPERS YET IS NOT BROKEN ───────────────────────────────
+// `init --yes` declares the default and creates no paper. The declared directory does not exist,
+// and no papers live anywhere else: the guard has nothing to protect yet. A warning with the next
+// step, not a failure. (A missing directory while papers DO live elsewhere stays ✗ — case II.)
+{
+  const dir = consumer({
+    papersDir: "papers",
+    pkgKey: "papers",
+    makeDir: false,
+  });
+  const r = runDoctor(dir, { cliPapers: "papers" });
+  check("no papers anywhere yet — NOT a failure", r.code === 0);
+  check(
+    "but it is named, with the command that creates the first paper",
+    /⚠ papers does not exist yet — no papers yet/.test(r.out) &&
+      /new <name>/.test(r.out) &&
+      !/watching nothing/.test(r.out),
+  );
+  rmSync(dir, { recursive: true, force: true });
+}
+
+// ── II-quater. THE KEY'S OLD NAME IS READ AND NAMED; TWO DIFFERENT KEYS ARE A FAILURE ──────
+{
+  const dir = consumer({ papersDir: "papers" });
+  writeFileSync(
+    join(dir, "package.json"),
+    JSON.stringify({
+      "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "papers" },
+    }),
+  );
+  const r = runDoctor(dir, { cliPapers: "papers" });
+  check(
+    "the old key — read (not a failure), and named with the new one",
+    r.code === 0 &&
+      /⚠ "research-paper-pipeline" in package\.json is the old name/.test(
+        r.out,
+      ) &&
+      /the hooks will guard papers/.test(r.out),
+  );
+  writeFileSync(
+    join(dir, "package.json"),
+    JSON.stringify({
+      paperlint: { [PAPERS_DIR_FIELD]: "papers" },
+      "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "elsewhere" },
+    }),
+  );
+  const both = runDoctor(dir, { cliPapers: "papers" });
+  check(
+    "both keys with different contents — a failure",
+    both.code === 2 && /✗ package\.json has both/.test(both.out),
   );
   rmSync(dir, { recursive: true, force: true });
 }
@@ -190,7 +243,7 @@ const runDoctor = (
   const r = runDoctor(dir, { cliPapers: "docs/papers" });
   const fromHook = papersRoot(
     JSON.stringify({
-      "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "docs/papers/" },
+      paperlint: { [PAPERS_DIR_FIELD]: "docs/papers/" },
     }),
   );
   check("the hook itself trims the trailing slash", fromHook === "docs/papers");
@@ -227,7 +280,7 @@ const runDoctor = (
   check("but every absence is NAMED", /✗ pdflatex/.test(none.out));
   check(
     "and it carries a REMEDY, not just a diagnosis",
-    /npx rpp toolchain/.test(none.out),
+    /npx paperlint toolchain/.test(none.out),
   );
   check(
     "and the consequence: which checks silently don't run without it",
@@ -238,7 +291,7 @@ const runDoctor = (
     PROGRAMS.length >= 5,
   );
   check(
-    "no poppler row: rpp reads PDFs with pdf.js, which it installs itself",
+    "no poppler row: paperlint reads PDFs with pdf.js, which it installs itself",
     !PROGRAMS.some((p) => /^pdf(info|fonts|totext|tohtml)$/.test(p.bin)) &&
       !/poppler/.test(none.out),
   );
@@ -246,7 +299,7 @@ const runDoctor = (
   check(
     "a perl row, naming what goes missing and how banal gets installed",
     /✗ perl/.test(none.out) &&
-      /rpp toolchain \(it fetches banal\)/.test(none.out),
+      /paperlint toolchain \(it fetches banal\)/.test(none.out),
     none.out,
   );
   rmSync(dir, { recursive: true, force: true });
@@ -277,7 +330,7 @@ const runDoctor = (
     "node_modules is not searched — someone else's papers are not ours",
     !hits.some((h) => h.startsWith("node_modules")),
   );
-  // A folder holding only the project's paper TEMPLATE (`rpp new` reads `<papers>/.template/`)
+  // A folder holding only the project's paper TEMPLATE (`paperlint new` reads `<papers>/.template/`)
   // carries every marker, and is still not a papers root: discovery skips dot-directories.
   mkdirSync(join(dir, "only-template", ".template"), { recursive: true });
   writeFileSync(join(dir, "only-template", ".template", "paper.tex"), "x");
@@ -297,7 +350,7 @@ const runDoctor = (
   const state = {
     ok: true,
     home: join(dir, ".claude", "skills"),
-    example: "../../node_modules/research-paper-pipeline/skills/a",
+    example: "../../node_modules/paperlint/skills/a",
     links: [
       { name: "a", status: "present" },
       { name: "b", status: "missing" },
@@ -339,5 +392,5 @@ const runDoctor = (
 }
 
 console.log(
-  `✓ ${n} assertions passed — rpp doctor: an install can vouch for itself`,
+  `✓ ${n} assertions passed — paperlint doctor: an install can vouch for itself`,
 );

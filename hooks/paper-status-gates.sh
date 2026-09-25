@@ -31,7 +31,9 @@ esac
 # This file used to hard-code both of these paths, which made it a tool with exactly one possible
 # user. Both now come from the one declaration every other carrier of this package reads:
 #
-#   "research-paper-pipeline": { "papersDir": "docs/papers", "scripts": "tools/pipeline" }
+#   "paperlint": { "papersDir": "docs/papers", "scripts": "tools/pipeline" }
+#
+# (The key's name before 2.0.0, "research-paper-pipeline", is still read.)
 #
 # ⚠️ `node -p` RATHER THAN grep/sed ON package.json. A JSON value is not a line of text: it can
 # be quoted, escaped, or spread across lines, and a pattern that gets it right today gets it
@@ -39,7 +41,7 @@ esac
 # already a hard dependency of the checker this script runs, so there is no new requirement.
 ROOT_DIR="${CLAUDE_PROJECT_DIR:-.}"
 read_key() { # $1 = key, $2 = default
-  node -p "(require('$ROOT_DIR/package.json')['research-paper-pipeline']||{})['$1'] ?? '$2'" \
+  node -p "((p) => p['paperlint'] ?? p['research-paper-pipeline'] ?? {})(require('$ROOT_DIR/package.json'))['$1'] ?? '$2'" \
     2>/dev/null || echo "$2"
 }
 # The field used to be called "papers". Every other reader refuses the old name; this script only

@@ -76,7 +76,7 @@ const consumer = (block, { papers = "docs/papers", paper = "alpha" } = {}) => {
   const nm = join(dir, "node_modules");
   mkdirSync(nm, { recursive: true });
   symlinkSync(join(ROOT, "node_modules", "vigiles"), join(nm, "vigiles"));
-  symlinkSync(ROOT, join(nm, "research-paper-pipeline"));
+  symlinkSync(ROOT, join(nm, "paperlint"));
   writeFileSync(
     join(dir, "package.json"),
     block === null
@@ -184,7 +184,7 @@ try {
   // which is when it diagnoses nothing.
   {
     const dir = fixture({
-      "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "docs/papers" },
+      paperlint: { [PAPERS_DIR_FIELD]: "docs/papers" },
     });
     for (const f of SHIPPED) {
       const name = f.replace(/\.hook\.mjs$/, "");
@@ -201,7 +201,7 @@ try {
   // ═══════════════════════════════════════════════════════════════════════════
   {
     const dir = fixture({
-      "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "docs/papers" },
+      paperlint: { [PAPERS_DIR_FIELD]: "docs/papers" },
     });
     const P = "docs/papers/alpha/paper.md";
     const T = "docs/papers/alpha/paper.tex";
@@ -290,7 +290,7 @@ try {
   // working one produce identical output. The lockout announces itself; this does not.
   {
     const dir = fixture({
-      "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "docs/papers" },
+      paperlint: { [PAPERS_DIR_FIELD]: "docs/papers" },
     });
 
     // paper-edit-guard: still GUARDS from a foreign cwd, rather than denying everything.
@@ -357,7 +357,7 @@ try {
     // (a) a declared root is used AS DECLARED — and the default is NOT.
     {
       const dir = fixture(
-        { "research-paper-pipeline": { [PAPERS_DIR_FIELD]: DECLARED } },
+        { paperlint: { [PAPERS_DIR_FIELD]: DECLARED } },
         { papers: DECLARED },
       );
       check(
@@ -371,6 +371,35 @@ try {
       check(
         "carrier: and it still allows an unrelated command",
         at(dir, "paper-edit-guard", harmless).exitCode === 0,
+      );
+    }
+    // (a½) the key's OLD name (before 2.0.0) is still read — an upgrade must not unguard papers.
+    {
+      const dir = fixture(
+        { "research-paper-pipeline": { [PAPERS_DIR_FIELD]: DECLARED } },
+        { papers: DECLARED },
+      );
+      check(
+        "carrier: 🔴 a root declared under the OLD key is still guarded",
+        at(dir, "paper-edit-guard", declaredWrite).exitCode === 2 &&
+          at(dir, "paper-edit-guard", defaultWrite).exitCode === 0,
+      );
+    }
+    {
+      const dir = fixture(
+        {
+          paperlint: { [PAPERS_DIR_FIELD]: DECLARED },
+          "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "papers" },
+        },
+        { papers: DECLARED },
+      );
+      const r = at(dir, "paper-edit-guard", harmless);
+      check(
+        "carrier: both keys with different contents — the gate refuses and names both",
+        r.exitCode === 2 &&
+          /has both "paperlint" and "research-paper-pipeline"/.test(
+            r.stderr + r.stdout,
+          ),
       );
     }
     // (b) no key at all → the documented default, and the converse of (a).
@@ -389,7 +418,7 @@ try {
     //     and silently substitute the default.
     {
       const dir = fixture({
-        "research-paper-pipeline": { [PAPERS_DIR_FIELD]: null },
+        paperlint: { [PAPERS_DIR_FIELD]: null },
       });
       const r = at(dir, "paper-edit-guard", harmless);
       check(
@@ -404,7 +433,7 @@ try {
     // (d) the empty string — the value that makes every prefix test vacuously true.
     {
       const dir = fixture({
-        "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "" },
+        paperlint: { [PAPERS_DIR_FIELD]: "" },
       });
       const r = at(dir, "paper-edit-guard", harmless);
       check(
@@ -420,7 +449,7 @@ try {
     //      in favour of the default directory.
     {
       const dir = fixture({
-        "research-paper-pipeline": { [OLD_PAPERS_DIR_FIELD]: "writing/drafts" },
+        paperlint: { [OLD_PAPERS_DIR_FIELD]: "writing/drafts" },
       });
       const r = at(dir, "paper-edit-guard", harmless);
       check(
@@ -430,14 +459,14 @@ try {
       check(
         "carrier: …and the refusal says what it was renamed to",
         r.stderr.includes(
-          `"${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "research-paper-pipeline"`,
+          `"${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "paperlint"`,
         ),
       );
     }
     // (e) an unreadable package.json — the case that arrives by itself, mid-merge.
     {
       const dir = fixture(
-        { "research-paper-pipeline": { [PAPERS_DIR_FIELD]: DECLARED } },
+        { paperlint: { [PAPERS_DIR_FIELD]: DECLARED } },
         { papers: DECLARED },
       );
       writeFileSync(join(dir, "package.json"), '{ "name": "c" <<<<<<< HEAD\n');
@@ -456,7 +485,7 @@ try {
     //     nothing. This defect made an earlier version of the guard a silent no-op.
     {
       const dir = fixture(
-        { "research-paper-pipeline": { [PAPERS_DIR_FIELD]: DECLARED + "/" } },
+        { paperlint: { [PAPERS_DIR_FIELD]: DECLARED + "/" } },
         { papers: DECLARED },
       );
       check(
@@ -471,7 +500,7 @@ try {
   // ═══════════════════════════════════════════════════════════════════════════
   {
     const dir = fixture({
-      "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "docs/papers" },
+      paperlint: { [PAPERS_DIR_FIELD]: "docs/papers" },
     });
     const lands = (label, p) => {
       const r = at(dir, "paper-skills-nudge", onEdit(p));
@@ -503,7 +532,7 @@ try {
     // The advisory's own asymmetry: it goes quiet where the gate refuses.
     {
       const broken = fixture(
-        { "research-paper-pipeline": { [PAPERS_DIR_FIELD]: null } },
+        { paperlint: { [PAPERS_DIR_FIELD]: null } },
         { papers: "papers" },
       );
       const r = at(
@@ -536,7 +565,7 @@ try {
   // ═══════════════════════════════════════════════════════════════════════════
   {
     const dir = fixture({
-      "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "docs/papers" },
+      paperlint: { [PAPERS_DIR_FIELD]: "docs/papers" },
     });
     const fires = (label, p) => {
       const r = at(dir, "paper-status-gates", onEdit(p));
@@ -571,7 +600,7 @@ try {
     // 🔴 The `??` discriminator again, for this hook's own copy of the carrier.
     {
       const broken = fixture(
-        { "research-paper-pipeline": { [PAPERS_DIR_FIELD]: null } },
+        { paperlint: { [PAPERS_DIR_FIELD]: null } },
         { papers: "papers" },
       );
       check(
@@ -583,7 +612,7 @@ try {
     // The declared root is regex-ESCAPED: `.` in a root must not act as a wildcard.
     {
       const dotted = fixture(
-        { "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "docs.v2/papers" } },
+        { paperlint: { [PAPERS_DIR_FIELD]: "docs.v2/papers" } },
         { papers: "docs.v2/papers" },
       );
       check(
@@ -626,7 +655,7 @@ try {
   // ═══════════════════════════════════════════════════════════════════════════
   {
     const dir = fixture({
-      "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "docs/papers" },
+      paperlint: { [PAPERS_DIR_FIELD]: "docs/papers" },
     });
     const sh = (args) =>
       runHook(

@@ -8,7 +8,7 @@
  *
  * ── WHY pdf.js AND NOT POPPLER (issue #61) ───────────────────────────────────
  * The facts used to come from three poppler programs (`pdfinfo`, `pdffonts`, `pdftotext -bbox`), a
- * system install rpp could not provide and every consumer had to add by hand. A measurement on 25
+ * system install paperlint could not provide and every consumer had to add by hand. A measurement on 25
  * PDFs (2026-09-24) found pdf.js equal on page count and on the Type 3 count of every PDF, and the
  * last page's column heights within 0.2 pt except on an all-Type-3 page (7.2 pt; pdf.js has no
  * ascent for Type 3). No verdict flipped at a 120 pt tolerance.

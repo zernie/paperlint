@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * test/e2e/build.mjs — `rpp build` against a REAL `pdflatex`, from source to finished PDF.
+ * test/e2e/build.mjs — `paperlint build` against a REAL `pdflatex`, from source to finished PDF.
  *
  * 🔴 HOW THIS DIFFERS FROM `src/build.harness.mjs`, AND WHY BOTH ARE NEEDED. That harness
  * substitutes a fake TeX for `spawnSync`: it checks the shell's DECISIONS — what runs, in which
  * order, with which TEXINPUTS, and what is left on disk. Not one of its assertions can say that a
- * PDF came out at the end, let alone WHICH one. Here is the other half: rpp compiles each fixture
+ * PDF came out at the end, let alone WHICH one. Here is the other half: paperlint compiles each fixture
  * with the real pdflatex and bibtex, and the result is measured with a tool rather than taken on
- * trust. No fixture carries a build script that rpp would run: `cite/build.sh` exists only to
+ * trust. No fixture carries a build script that paperlint would run: `cite/build.sh` exists only to
  * prove it is NOT run.
  *
  * 🔴 WHAT EXACTLY THIS CATCHES, AND IT IS NOT A HYPOTHESIS. `acmart.cls` checks for the presence
@@ -18,9 +18,9 @@
  * lives in the content of the artifact, so the content is what gets measured.
  *
  * 🔴 THE ENGINE IS rpp's OWN DECISION. The run first proves the refusal — no TeX Live and no terminal
- * gives one line naming `npx rpp toolchain` and nothing built — which needs no TeX at all. Then it
- * asks `rpp build --dry-run` which TeX Live the real run would use; under --strict (CI) that must
- * be rpp's cache, the one `rpp toolchain` installed in the step before.
+ * gives one line naming `npx paperlint toolchain` and nothing built — which needs no TeX at all. Then it
+ * asks `paperlint build --dry-run` which TeX Live the real run would use; under --strict (CI) that must
+ * be rpp's cache, the one `paperlint toolchain` installed in the step before.
  *
  * 🔴 A MISSING TeX IS A DECLARED SKIP, NOT A SILENT ONE. For a contributor without TeX Live this
  * run is legitimately impossible, and it exits zero — HAVING SAID SO. In CI the same absence
@@ -117,7 +117,7 @@ try {
 
   // ── NO TeX LIVE, NO TERMINAL: one line, and nothing is built ─────────────────────────────
   // Runs FIRST and needs no TeX: PATH holds node alone, the cache directory is empty, CI is set.
-  // This is what an agent or a CI job without `rpp toolchain` sees.
+  // This is what an agent or a CI job without `paperlint toolchain` sees.
   console.log("no TeX Live and no terminal");
   const bare = realpathSync(mkdtempSync(join(tmpdir(), "rpp-bare-")));
   // A PDF from an earlier build beside the paper the refusal stops at: it must not survive either.
@@ -143,12 +143,12 @@ try {
     const said = `${refused.stdout}${refused.stderr}`;
     check("refused: exit 1", refused.status === 1, said);
     check(
-      "refused: ONE line naming `npx rpp toolchain` and the venue's packages",
+      "refused: ONE line naming `npx paperlint toolchain` and the venue's packages",
       said
         .split("\n")
         .some(
           (l) =>
-            l.includes("run `npx rpp toolchain`") &&
+            l.includes("run `npx paperlint toolchain`") &&
             l.includes("acmart") &&
             l.includes("libertine"),
         ),
@@ -190,11 +190,11 @@ try {
         `Install one with \`node bin/rpp.mjs toolchain\` (RPP_TEXLIVE_DIR picks the directory).`,
     );
   console.log(engine);
-  // 🔴 In CI the build must run on the TeX Live `rpp toolchain` installed — the runner has no other.
+  // 🔴 In CI the build must run on the TeX Live `paperlint toolchain` installed — the runner has no other.
   if (strict)
     check(
-      "strict: the engine is rpp's own cache",
-      engine.includes("rpp cache"),
+      "strict: the engine is paperlint's own cache",
+      engine.includes("paperlint cache"),
       engine,
     );
 
@@ -288,7 +288,7 @@ try {
   );
   check(
     "cite: and the run said it was ignored",
-    /build\.sh is ignored — rpp builds the paper itself/.test(out),
+    /build\.sh is ignored — paperlint builds the paper itself/.test(out),
   );
 
   console.log();
@@ -387,7 +387,7 @@ try {
     ];
   }
   check(
-    "🔴 unbalanced: `rpp lint` reports the last page — 621.5 and 264.8 pt, with the fix by hand",
+    "🔴 unbalanced: `paperlint lint` reports the last page — 621.5 and 264.8 pt, with the fix by hand",
     findings.some(
       (f) =>
         f.file.endsWith(join("unbalanced", "paper.tex")) &&

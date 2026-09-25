@@ -1,8 +1,8 @@
 /**
- * Both halves for `new-paper.ts` — the module behind `rpp new` and `rpp init --paper`.
+ * Both halves for `new-paper.ts` — the module behind `paperlint new` and `paperlint init --paper`.
  *
  * What is checked, and why each one matters:
- *   - the scaffold is what `rpp lint` ACCEPTS: the old first run opened with "missing
+ *   - the scaffold is what `paperlint lint` ACCEPTS: the old first run opened with "missing
  *     PIPELINE-STATUS.md", and a scaffold that still produced a finding would move that error
  *     from a missing file into a created one;
  *   - the scorecard carries `researchQuestion` and NO `stages` — a new paper has shipped nothing,
@@ -56,7 +56,7 @@ const work = realpathSync(mkdtempSync(join(tmpdir(), "rpp-new-")));
 const read = (...p) => readFileSync(join(...p), "utf8");
 const front = (text) => load(frontmatterBlock(text) ?? "") ?? {};
 
-/** `rpp lint <dir>` in-process, output captured. */
+/** `paperlint lint <dir>` in-process, output captured. */
 async function lint(dir) {
   const out = [];
   const code = await run(["lint", dir], {
@@ -122,7 +122,7 @@ try {
   );
   const l = await lint(join(papers, "demo"));
   check(
-    "🔴 `rpp lint` passes the scaffold clean — the first run is green, not a missing-file error",
+    "🔴 `paperlint lint` passes the scaffold clean — the first run is green, not a missing-file error",
     l.code === 0 && /no findings/.test(l.text),
   );
 
@@ -212,5 +212,5 @@ try {
 }
 
 console.log(
-  `✓ ${String(n)} assertions passed — rpp new scaffolds what rpp lint accepts`,
+  `✓ ${String(n)} assertions passed — paperlint new scaffolds what paperlint lint accepts`,
 );

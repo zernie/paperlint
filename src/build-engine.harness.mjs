@@ -1,5 +1,5 @@
 /**
- * `build-engine.ts` — `rpp build`'s engine step: facts gathered from a cache on disk and a PATH,
+ * `build-engine.ts` — `paperlint build`'s engine step: facts gathered from a cache on disk and a PATH,
  * the decision acted on. The TeX Lives here are directories with a `pdflatex` file and a fake
  * runner standing in for their `kpsewhich`; the question and the install are injected.
  *
@@ -58,12 +58,12 @@ const refused = E.refusal(
     system: { label: "s", bin: "/usr/bin", missing: ["cm-super"] },
   },
 );
-// Guards: the one line a CI log shows — without `npx rpp toolchain` in it, the reader does not know
+// Guards: the one line a CI log shows — without `npx paperlint toolchain` in it, the reader does not know
 // the cure.
 check(
-  "refusal: ONE line naming `npx rpp toolchain`, the missing packages, and why the system TeX was passed over",
+  "refusal: ONE line naming `npx paperlint toolchain`, the missing packages, and why the system TeX was passed over",
   !refused.includes("\n") &&
-    refused.includes("run `npx rpp toolchain`") &&
+    refused.includes("run `npx paperlint toolchain`") &&
     refused.includes("missing: 2 package(s): acmart, libertine") &&
     refused.includes("/usr/bin/pdflatex lacks: cm-super"),
   refused,
@@ -158,7 +158,7 @@ const envWith = (cacheRoot, path) => ({
   check(
     "a complete cache: used, named, and PATH starts with its bin",
     x.r.ok &&
-      x.out.includes("engine: TeX Live 2026 — rpp cache") &&
+      x.out.includes("engine: TeX Live 2026 — paperlint cache") &&
       x.r.env.PATH.split(delimiter)[0] === cacheBin,
     `${x.out} ${JSON.stringify(x.r)}`,
   );
@@ -177,7 +177,7 @@ const envWith = (cacheRoot, path) => ({
   check(
     "🔴 two years, the newer incomplete: the newest COMPLETE one builds",
     x.r.ok &&
-      x.out.includes("engine: TeX Live 2026 — rpp cache") &&
+      x.out.includes("engine: TeX Live 2026 — paperlint cache") &&
       x.r.env.PATH.split(delimiter)[0] === old,
     x.out,
   );
@@ -218,7 +218,7 @@ const envWith = (cacheRoot, path) => ({
     "🔴 no human, nothing qualifies: refused in one line, NOTHING asked, NOTHING installed",
     !x.r.ok &&
       x.r.code === 1 &&
-      x.err.includes("npx rpp toolchain") &&
+      x.err.includes("npx paperlint toolchain") &&
       x.err.includes("libertine") &&
       x.asked.length === 0 &&
       x.installs() === 0,
@@ -237,7 +237,7 @@ const envWith = (cacheRoot, path) => ({
     !x.r.ok &&
       x.asked.length === 1 &&
       x.installs() === 0 &&
-      x.err.includes("npx rpp toolchain"),
+      x.err.includes("npx paperlint toolchain"),
     JSON.stringify(x),
   );
 }
@@ -277,7 +277,7 @@ const x_run = { found: {} };
     "a terminal, Enter (default yes): installs once, then builds with the cache",
     x.r.ok &&
       x.installs() === 1 &&
-      x.out.includes("engine: TeX Live 2026 — rpp cache") &&
+      x.out.includes("engine: TeX Live 2026 — paperlint cache") &&
       basename(x.r.env.PATH.split(delimiter)[0]) === "x86_64-linux",
     `${x.out}\n${x.err}`,
   );

@@ -175,7 +175,7 @@ banal -json  +  pdf.js     →   paper.facts.json   →   @eslint/json
 
 - **`banal`** — [kohler/hotcrp/src/banal](https://github.com/kohler/hotcrp/blob/master/src/banal),
   1901 lines of Perl, dependencies are core Perl + `pdftohtml`. Standalone, alive (commits on
-  03.08.2026). rpp feeds it pdftohtml-style XML written from pdf.js instead, so poppler is not
+  03.08.2026). paperlint feeds it pdftohtml-style XML written from pdf.js instead, so poppler is not
   needed (`src/adapters/banal/`: `xml.ts` writes it, `run.ts` runs banal; issue #61). Gives you `papersize`, `margin`, `bodyfontsize`, `leading`, `columns`, `npages`,
   `reffontsize`. It **doesn't know about fonts by construction** — the words `type3`/`embed` don't
   appear in the file at all.
@@ -291,7 +291,7 @@ imports, paths inside regexes).
 
 ## 2. One build entry point for all papers, not one per paper
 
-> **Done (#59, 2026-09-24).** `rpp build <paper>` is the entry point, and `rpp toolchain` installs
+> **Done (#59, 2026-09-24).** `paperlint build <paper>` is the entry point, and `paperlint toolchain` installs
 > TeX Live with the packages the venue profiles declare; `ensure-toolchain.sh` and
 > `ci-install-texlive.sh` are deleted. What follows is the plan as it was written.
 
@@ -367,5 +367,5 @@ venue.
 | **`eslint-plugin-project-structure`**      | **can do** conditional "if A then B" (`enforceExistence`, via a real `fs.existsSync`), and it ships a dummy parser + `files: ["**"]`, so it sees folders with not a single JS file. **But there's no OR semantics** — "Makefile OR justfile" is not expressible. We don't need it after item 2; a candidate for other structural rules                                                     |
 | **`steiger`**                              | ❌ dropped — its own README says _"not extendable with more rules"_, plus it's about FSD in JS                                                                                                                                                                                                                                                                                             |
 | **an ESLint config inside a paper folder** | ❌ **doesn't work in this repository**: there are **233** configs here, **2** of them ours — the other 231 sit inside `compile-rules-2026/repro/` (other people's repos, pulled in). A nested lookup would pick up every one of them, which is exactly why we run with `--no-config-lookup`. The same result comes from a `files: ["<papers-root>/<paper>/**"]` section in the root config |
-| **`banal`**                                | ✅ adopted — fetched by `rpp toolchain` at a pinned HotCRP commit (GPL; not vendored into rpp), run on pdf.js-written XML by `rpp build` and `extract-pdf-facts.mjs` (measurement only; the ESLint rules do the judging)                                                                                                                                                                   |
-| **`latexmk`**                              | superseded: `rpp build` runs its own loop (`src/latex-loop.ts`)                                                                                                                                                                                                                                                                                                                            |
+| **`banal`**                                | ✅ adopted — fetched by `paperlint toolchain` at a pinned HotCRP commit (GPL; not vendored into paperlint), run on pdf.js-written XML by `paperlint build` and `extract-pdf-facts.mjs` (measurement only; the ESLint rules do the judging)                                                                                                                                                 |
+| **`latexmk`**                              | superseded: `paperlint build` runs its own loop (`src/latex-loop.ts`)                                                                                                                                                                                                                                                                                                                      |

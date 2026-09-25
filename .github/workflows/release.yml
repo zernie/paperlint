@@ -1,6 +1,6 @@
 # Release: every push to main runs semantic-release, which reads the commits since the last tag,
 # and — only when one of them is `feat:`, `fix:` or breaking — bumps the version, publishes the
-# package to npm as `research-paper-pipeline`, tags `vX.Y.Z` and writes a GitHub release.
+# package to npm as `paperlint`, tags `vX.Y.Z` and writes a GitHub release.
 # Copied from zernie/vigiles, whose release setup this mirrors.
 #
 # The squash title of a merged PR IS the commit this reads, so a PR titled without a

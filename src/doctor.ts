@@ -1,5 +1,5 @@
 /**
- * `rpp doctor` — the command that makes SILENCE VISIBLE.
+ * `paperlint doctor` — the command that makes SILENCE VISIBLE.
  *
  * 🔴 WHY THIS EXISTS AT ALL, when none of the eight tools surveyed for `docs/install.md` ships a
  * `doctor`. None of them needs one: a formatter that is misconfigured formats nothing and you see
@@ -8,7 +8,7 @@
  * exist. From outside, "installed" and "protecting you" are the same picture.
  *
  * Measured 2026-09-18, and this is the failure the command was written for: a consumer who follows
- * the documented install exactly — `rpp init`, then point the config at their papers — gets a guard
+ * the documented install exactly — `paperlint init`, then point the config at their papers — gets a guard
  * that allows every Bash write to their paper sources. It only appears to work when the directory
  * path happens to contain the segment `papers`, because that is the default the hook falls back to.
  * (Issue #33.)
@@ -34,6 +34,11 @@ import {
   PAPERS_DIR_FIELD,
   OLD_PAPERS_DIR_FIELD,
 } from "../hooks/paper-edit-guard.hook.mjs";
+import {
+  LEGACY_CONFIG_KEY,
+  LEGACY_KEY_MESSAGE,
+  declaredSettings,
+} from "../lib/paper-config.mjs";
 import { PAPER_MARKERS } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
 import { doctorHooks } from "./hooks-settings.ts";
@@ -46,17 +51,17 @@ export interface Program {
 }
 
 /**
- * The programs the SKILLS shell out to. `rpp lint` needs none of them — it reads files and reports.
+ * The programs the SKILLS shell out to. `paperlint lint` needs none of them — it reads files and reports.
  * Every one of these fails quietly, which is the only reason the list is worth printing: a missing
  * checker and a passing checker produce the same silence.
  */
 /**
- * TeX Live is installed by rpp itself, with every package the venue profiles declare. `rpp build`
+ * TeX Live is installed by paperlint itself, with every package the venue profiles declare. `paperlint build`
  * uses that tree even when its `pdflatex` is not on PATH, so a ✗ here with the cache installed
  * only means the skills' own shell calls will not find it.
  */
 export const TEX_INSTALL =
-  "npx rpp toolchain   (rpp build uses its TeX Live without PATH; the skills need its bin on PATH)";
+  "npx paperlint toolchain   (paperlint build uses its TeX Live without PATH; the skills need its bin on PATH)";
 
 export const PROGRAMS: readonly Program[] = [
   {
@@ -89,7 +94,7 @@ export const PROGRAMS: readonly Program[] = [
     without:
       "banal cannot run: page size, columns and font sizes are null in the facts file",
     install:
-      "apt-get install -y perl, then npx rpp toolchain (it fetches banal)",
+      "apt-get install -y perl, then npx paperlint toolchain (it fetches banal)",
   },
   {
     bin: "python3",
@@ -140,6 +145,94 @@ export function detectPapers(cwd: string, depth = 2): string[] {
   return hits;
 }
 
+/**
+ * The declaration's verdict. The old field name and two differing keys are failures (every reader
+ * refuses them); the old KEY is read and named; a missing declaration is a warning.
+ */
+function declarationVerdict(rawPkg: string): { lines: string[]; bad: number } {
+  const out: string[] = [];
+  const found = (() => {
+    try {
+      return declaredSettings(JSON.parse(rawPkg));
+    } catch {
+      return declaredSettings(undefined);
+    }
+  })();
+  if (found.conflict !== null)
+    return { lines: [`  ✗ ${found.conflict}`], bad: 1 };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
+  const settings = found.settings as Record<string, any> | undefined;
+  const key = found.legacy ? LEGACY_CONFIG_KEY : CONFIG_KEY;
+  const declared = settings?.[PAPERS_DIR_FIELD];
+  if (found.legacy) out.push(`  ⚠ ${LEGACY_KEY_MESSAGE}`);
+  // The old field name is a failure, not a warning: every reader refuses it.
+  if (settings && Object.hasOwn(settings, OLD_PAPERS_DIR_FIELD))
+    return {
+      lines: [
+        ...out,
+        `  ✗ "${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "${key}"`,
+      ],
+      bad: 1,
+    };
+  // 🔴 A MISSING DECLARATION IS A WARNING, NOT A REFUSAL, and that is a decision, not an
+  // oversight. Without it the hook takes the `papers` default; if the papers do live there, the
+  // install WORKS — just by coincidence, and it will break silently on the day the directory
+  // moves. Failing on a working install is not allowed here: for an `error`-level check a false
+  // positive costs more than a miss, because people do not fix it, they switch it off — together
+  // with the binary findings below, which the command was written for. A real breakage (the roots
+  // drifted apart, the directory does not exist) is caught where it is binary.
+  if (declared === undefined)
+    out.push(
+      `  ⚠ package.json has no "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": … } — the hooks fall back to "${DEFAULT_PAPERS_ROOT}"`,
+      `      it works only while your papers happen to live there; declare it and it keeps working`,
+    );
+  else
+    out.push(
+      `  ✓ package.json → ${key}.${PAPERS_DIR_FIELD} = ${JSON.stringify(declared)}`,
+    );
+  return { lines: out, bad: 0 };
+}
+
+/**
+ * The papers-directory verdict: whether the CLI and the hooks agree, and whether the directory
+ * they name exists. `bad` counts the failures.
+ */
+function papersVerdict(
+  root: string,
+  cliPapers: string | null,
+  hookSays: string | null,
+): { lines: string[]; bad: number } {
+  const out: string[] = [];
+  let bad = 0;
+  if (cliPapers && hookSays) {
+    const same = resolve(root, cliPapers) === resolve(root, hookSays);
+    out.push(
+      same
+        ? `  ✓ the same directory — what is linted is what is guarded`
+        : `  ✗ DIFFERENT directories. Every Bash write to ${cliPapers} passes the guard unseen.`,
+    );
+    if (!same) bad++;
+  }
+  // A declared directory that does not exist is a failure only when papers live SOMEWHERE ELSE:
+  // then every write to them passes the guard unseen (issue #33). With no papers anywhere, the
+  // project is simply new — `init --yes` declares the default and creates no paper — and failing
+  // it would teach people to ignore doctor.
+  if (hookSays && !existsSync(join(root, hookSays))) {
+    const guesses = detectPapers(root);
+    if (guesses.length) {
+      out.push(
+        `  ✗ ${hookSays} does not exist — the guard is watching nothing`,
+      );
+      out.push(`      papers look like they live in: ${guesses.join(", ")}`);
+      bad++;
+    } else
+      out.push(
+        `  ⚠ ${hookSays} does not exist yet — no papers yet. \`npx paperlint new <name>\` creates the first one there`,
+      );
+  }
+  return { lines: out, bad };
+}
+
 export interface DoctorOptions {
   log?: typeof console.log;
   cwd?: string;
@@ -171,7 +264,7 @@ export function doctor({
   const pkgPath = join(root, "package.json");
   const out: string[] = [
     "",
-    "rpp doctor — what is wired, and what only looks wired",
+    "paperlint doctor — what is wired, and what only looks wired",
     "",
   ];
   let bad = 0;
@@ -185,40 +278,9 @@ export function doctor({
     );
     bad++;
   } else {
-    const settings = (() => {
-      try {
-        return JSON.parse(rawPkg)?.[CONFIG_KEY];
-      } catch {
-        return undefined;
-      }
-    })();
-    const declared = settings?.[PAPERS_DIR_FIELD];
-    // The old field name is a failure, not a warning: every reader refuses it.
-    const renamed = settings && Object.hasOwn(settings, OLD_PAPERS_DIR_FIELD);
-    if (renamed) {
-      out.push(
-        `  ✗ "${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "${CONFIG_KEY}"`,
-      );
-      bad++;
-    }
-    // 🔴 A MISSING DECLARATION IS A WARNING, NOT A REFUSAL, and that is a decision, not an
-    // oversight. Without it the hook takes the `papers` default; if the papers do live there, the
-    // install WORKS — just by coincidence, and it will break silently on the day the directory
-    // moves. Failing on a working install is not allowed here: for an `error`-level check a false
-    // positive costs more than a miss, because people do not fix it, they switch it off — together
-    // with the binary findings below, which the command was written for. A real breakage (the roots
-    // drifted apart, the directory does not exist) is caught where it is binary.
-    // When the old name is present, the ✗ line pushed above already says what is wrong.
-    if (!renamed)
-      out.push(
-        declared === undefined
-          ? `  ⚠ package.json has no "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": … } — the hooks fall back to "${DEFAULT_PAPERS_ROOT}"`
-          : `  ✓ package.json → ${CONFIG_KEY}.${PAPERS_DIR_FIELD} = ${JSON.stringify(declared)}`,
-      );
-    if (declared === undefined && !renamed)
-      out.push(
-        `      it works only while your papers happen to live there; declare it and it keeps working`,
-      );
+    const declaration = declarationVerdict(rawPkg);
+    out.push(...declaration.lines);
+    bad += declaration.bad;
   }
   if (existsSync(join(root, "rpp.json")))
     out.push(`  ⚠ rpp.json is present — deprecated; the hooks never read it`);
@@ -232,24 +294,11 @@ export function doctor({
   out.push(
     `  the hooks will guard ${hookSays ?? "(nothing — the guard refuses and says why on first use)"}`,
   );
-  if (cliPapers && hookSays) {
-    const same = resolve(root, cliPapers) === resolve(root, hookSays);
-    out.push(
-      same
-        ? `  ✓ the same directory — what is linted is what is guarded`
-        : `  ✗ DIFFERENT directories. Every Bash write to ${cliPapers} passes the guard unseen.`,
-    );
-    if (!same) bad++;
-  }
-  if (hookSays && !existsSync(join(root, hookSays))) {
-    out.push(`  ✗ ${hookSays} does not exist — the guard is watching nothing`);
-    bad++;
-    const guesses = detectPapers(root);
-    if (guesses.length)
-      out.push(`      papers look like they live in: ${guesses.join(", ")}`);
-  }
+  const verdict = papersVerdict(root, cliPapers, hookSays);
+  out.push(...verdict.lines);
+  bad += verdict.bad;
 
-  // A skill that is not linked is ADVISORY, like a missing program: `rpp lint`, the hooks and CI
+  // A skill that is not linked is ADVISORY, like a missing program: `paperlint lint`, the hooks and CI
   // work without it, and an entry of the same name that `init` refused to replace is the
   // consumer's own decision. What this section removes is the silence — before it, a consumer
   // without links had no `/paper-pipeline` and nothing anywhere said so.
@@ -275,14 +324,14 @@ export function doctor({
           `      ${g.name} — ${g.status === "missing" ? "not linked" : `${g.reason ?? "occupied"}, not the shipped skill`}`,
         );
       out.push(
-        `      \`npx rpp init\` links the missing ones; it never replaces an entry it did not make`,
+        `      \`npx paperlint init\` links the missing ones; it never replaces an entry it did not make`,
       );
     }
   }
 
   out.push(
     "",
-    "external programs (the skills shell out to these; `rpp lint` needs none of them)",
+    "external programs (the skills shell out to these; `paperlint lint` needs none of them)",
   );
   for (const p of PROGRAMS) {
     if (found(p.bin, run)) out.push(`  ✓ ${p.bin.padEnd(10)} ${p.from}`);

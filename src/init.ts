@@ -1,5 +1,5 @@
 /**
- * `rpp init` — the whole install, in the terminal it was typed in.
+ * `paperlint init` — the whole install, in the terminal it was typed in.
  *
  * 🔴 WHAT THIS COMMAND USED TO DO, AND WHY THAT WAS A DEFECT RATHER THAN A SHORTFALL. It wrote
  * `rpp.json` with a GUESSED `"papers": "papers"` and never touched `package.json`. The three hooks
@@ -7,9 +7,8 @@
  * documented install got a `paper-edit-guard` watching a directory that did not exist — and a guard
  * watching nothing is byte-identical, from outside, to a guard that is working (issue #33).
  *
- * The count in `docs/install.md` is the yardstick: how many actions happen between "I want this"
- * and "it works". It was nine, three of them hand-edits to files. The two that this command removes
- * are the two hand-edits that were not even documented as being the same fact twice.
+ * The yardstick is how many actions happen between "I want this" and "it works": two, `npm i` and
+ * this command (`docs/install.md`). Nothing is left to edit by hand.
  *
  * ── THE DECISIONS, AND HOW EACH ONE IS MADE ─────────────────────────────────
  *   papers directory   MEASURED — `detectPapers` walks the repo for a directory whose CHILDREN
@@ -19,7 +18,7 @@
  *                      to add `prepare`. `rpp.json` is no longer created at all.
  *   skills             LINKED — one relative symlink per shipped skill into `.claude/skills/`, the
  *                      only place Claude Code looks for project skills (`link-skills.ts`). An
- *                      entry of the same name that rpp did not make is reported, never replaced.
+ *                      entry of the same name that paperlint did not make is reported, never replaced.
  *   hooks              WRITTEN into `.claude/settings.json` by vigiles' merge (`hooks-settings.ts`);
  *                      asked [Y/n] of a human, YES without one — the guard is what the package is
  *                      for, and the edit is idempotent and visible in `git diff`. `--no-hooks` skips.
@@ -44,6 +43,8 @@ import { dirname, join, relative, resolve } from "node:path";
 import { doctor, detectPapers, found, PROGRAMS } from "./doctor.ts";
 import { PAPER_MARKERS, papersIn } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
+import { actionRef } from "./action-ref.ts";
+import { LEGACY_PACKAGE_NAME } from "../skills/paper-pipeline/scripts/consumer.mjs";
 import {
   FRESH_CLONE_NOTE,
   SETTINGS_PATH,
@@ -64,7 +65,9 @@ import {
 import {
   CONFIG_KEY,
   DEFAULT_PAPERS_ROOT,
+  LEGACY_CONFIG_KEY,
   PAPERS_DIR_FIELD,
+  declaredSettings,
   renamedFieldMessage,
 } from "../lib/paper-config.mjs";
 
@@ -175,8 +178,15 @@ export type DeclarationResult =
       readonly status: "written";
       readonly path: string;
       readonly papers: string;
+      /** The settings were under the old key and were moved to the new one. */
+      readonly migrated: boolean;
     }
-  | { readonly status: "kept"; readonly path: string; readonly papers: unknown }
+  | {
+      readonly status: "kept";
+      readonly path: string;
+      readonly papers: unknown;
+      readonly migrated: boolean;
+    }
   | {
       readonly status: "unparsable";
       readonly path: string;
@@ -195,7 +205,7 @@ export type DeclarationResult =
  * 🔴 A HOOK CANNOT IMPORT CODE AND CANNOT WALK UP A TREE LOOKING FOR A CONFIG. It can read a path
  * it is able to spell, and the only path it can always spell is the project's own `package.json`.
  * That asymmetry is the whole reason the declaration moved here rather than the readers moving to
- * `rpp.json`: five readers against one (`docs/install.md`).
+ * `rpp.json`: many readers against one (`docs/install.md`, "One declaration").
  *
  * ⚠️ Merged, not rewritten, and never over a value the consumer set — an `init` that silently
  * replaces a setting is worse than an `init` that does nothing, because the consumer keeps
@@ -212,19 +222,41 @@ export function declarePapers(root: string, papers: string): DeclarationResult {
   } catch (e) {
     return { status: "unparsable", path, reason: (e as Error).message };
   }
-  const message = renamedFieldMessage(pkg?.[CONFIG_KEY]);
+  const found = declaredSettings(pkg);
+  if (found.conflict !== null)
+    return { status: "renamed", path, message: found.conflict };
+  const message = renamedFieldMessage(found.settings);
   if (message) return { status: "renamed", path, message };
+  // Settings under the old key move to the new one, in the same position in the file.
+  const migrated = found.legacy;
+  if (migrated) pkg = renameKey(pkg, LEGACY_CONFIG_KEY, CONFIG_KEY);
+  const write = (): void =>
+    // Two-space indent and the file's own trailing newline: a declaration is not a licence to
+    // reformat somebody else's file, and a one-line diff is a diff a consumer will actually read.
+    writeFileSync(
+      path,
+      JSON.stringify(pkg, null, 2) + (raw.endsWith("\n") ? "\n" : ""),
+      "utf8",
+    );
   const existing = pkg?.[CONFIG_KEY]?.[PAPERS_DIR_FIELD];
-  if (existing !== undefined) return { status: "kept", path, papers: existing };
+  if (existing !== undefined) {
+    if (migrated) write();
+    return { status: "kept", path, papers: existing, migrated };
+  }
   pkg[CONFIG_KEY] = { ...(pkg[CONFIG_KEY] ?? {}), [PAPERS_DIR_FIELD]: papers };
-  // Two-space indent and the file's own trailing newline: a declaration is not a licence to
-  // reformat somebody else's file, and a one-line diff is a diff a consumer will actually read.
-  writeFileSync(
-    path,
-    JSON.stringify(pkg, null, 2) + (raw.endsWith("\n") ? "\n" : ""),
-    "utf8",
+  write();
+  return { status: "written", path, papers, migrated };
+}
+
+/** `obj` with `from` renamed to `to`, keeping the key's position. */
+function renameKey(
+  obj: Record<string, unknown>,
+  from: string,
+  to: string,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(obj).map(([k, v]) => [k === from ? to : k, v]),
   );
-  return { status: "written", path, papers };
 }
 
 export type RppJsonResult = "absent" | "kept" | "filled" | "unparsable";
@@ -232,7 +264,7 @@ export type RppJsonResult = "absent" | "kept" | "filled" | "unparsable";
 /**
  * `rpp.json` is no longer CREATED — but a consumer who already has one keeps it working, and it
  * gets the same `papers` value rather than being left to disagree with `package.json` in silence.
- * Two declarations that disagree is the defect `rpp doctor` was written to catch; writing the
+ * Two declarations that disagree is the defect `paperlint doctor` was written to catch; writing the
  * second one on purpose would be handing it new work.
  */
 export function syncRppJson(root: string, papers: string): RppJsonResult {
@@ -258,14 +290,19 @@ export function syncRppJson(root: string, papers: string): RppJsonResult {
 
 export const WORKFLOW_PATH = join(".github", "workflows", "papers.yml");
 
+/** Where the action is pinned when no release tag is known — obviously a placeholder. */
+export const UNPINNED_REF = "<commit-sha>";
+
 /**
- * The CI step, as a whole workflow. The action is pinned by comment rather than by a sha this
- * command cannot know: a wrong sha written confidently is worse than a placeholder that is
- * obviously a placeholder.
+ * The CI step, as a whole workflow, pinned to `ref` — the release tag of the running package
+ * (`actionRef`). With no tag known (`null`: a git checkout, `npm link`) it keeps the placeholder
+ * and says so: a wrong tag written confidently is worse than a placeholder that is obviously one.
  */
-export function workflowYaml(papers: string): string {
+export function workflowYaml(papers: string, ref: string | null): string {
   return [
-    `# Written by \`rpp init\`. Replace <commit-sha> with a commit or release tag of the action.`,
+    ref === null
+      ? `# Written by \`paperlint init\`. Replace ${UNPINNED_REF} with a commit or release tag of the action.`
+      : `# Written by \`paperlint init\`, pinned to ${ref} — the release you installed.`,
     `name: papers`,
     `on: [push, pull_request]`,
     `jobs:`,
@@ -273,7 +310,7 @@ export function workflowYaml(papers: string): string {
     `    runs-on: ubuntu-latest`,
     `    steps:`,
     `      - uses: actions/checkout@v4`,
-    `      - uses: zernie/research-paper-pipeline@<commit-sha>`,
+    `      - uses: zernie/research-paper-pipeline@${ref ?? UNPINNED_REF}`,
     `        with:`,
     `          paths: ${papers}`,
     ``,
@@ -288,7 +325,13 @@ export async function offerWorkflow(
   {
     ask,
     interactive,
-  }: { ask?: (q: string) => Promise<string>; interactive: boolean },
+    version,
+  }: {
+    ask?: (q: string) => Promise<string>;
+    interactive: boolean;
+    /** The running package's version; see `InitOptions.version`. */
+    version?: string;
+  },
 ): Promise<WorkflowResult> {
   const path = join(root, WORKFLOW_PATH);
   if (existsSync(path)) return "kept";
@@ -304,8 +347,44 @@ export async function offerWorkflow(
   // No answer — an empty line, or a stream that ended — is the safe default, which is "no file".
   if (answer !== "y" && answer !== "yes") return "declined";
   mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, workflowYaml(papers), "utf8");
+  writeFileSync(path, workflowYaml(papers, actionRef(version)), "utf8");
   return "written";
+}
+
+/** What `init` says about the CI workflow — and, when none was written, the step to paste. */
+export function reportWorkflow(
+  wf: WorkflowResult,
+  {
+    version,
+    papersDir,
+    why,
+  }: { version?: string; papersDir: string; why: string },
+): string[] {
+  const ref = actionRef(version);
+  const out: string[] = [];
+  if (wf === "written")
+    out.push(
+      ref === null
+        ? `  ✓ wrote ${WORKFLOW_PATH} — pin ${UNPINNED_REF} before pushing it`
+        : `  ✓ wrote ${WORKFLOW_PATH}, pinned to ${ref}`,
+    );
+  else if (wf === "kept")
+    out.push(
+      `  ✓ ${WORKFLOW_PATH} is already there — kept, nothing overwritten`,
+    );
+  else if (wf === "declined") out.push(`  · declined — nothing written`);
+  else
+    out.push(
+      `  · ${why}, so nothing was asked. Default taken: NO file written.`,
+    );
+  if (wf !== "written" && wf !== "kept")
+    out.push(
+      `      to run the same checks in CI, add this step to a workflow:`,
+      `        - uses: zernie/research-paper-pipeline@${ref ?? UNPINNED_REF}`,
+      `          with:`,
+      `            paths: ${papersDir}`,
+    );
+  return out;
 }
 
 /**
@@ -323,7 +402,7 @@ export function missingPrograms(
  * What is left after `init` — commands only, all typed in the same terminal.
  *
  * 🔴 THE TWO `/plugin` LINES ARE GONE, AND THAT WAS THE POINT. They were the one step "that cannot
- * be done from a terminal": typed into another program, invisible to `rpp doctor`, impossible for
+ * be done from a terminal": typed into another program, invisible to `paperlint doctor`, impossible for
  * an agent installing this package, and (as a repository-declared plugin) not installed in a cloud
  * session at all. `init` now writes the same three hook commands into `.claude/settings.json`
  * itself (`hooks-settings.ts`), so there is nothing left to type anywhere but here.
@@ -331,8 +410,8 @@ export function missingPrograms(
 export function nextSteps(papersDir: string = DEFAULT_PAPERS_ROOT): string {
   return [
     ``,
-    `next:  npx rpp new <name>   # start a paper in ${papersDir}/ from the template`,
-    `       npx rpp lint         # runs every rule over ${papersDir}`,
+    `next:  npx paperlint new <name>   # start a paper in ${papersDir}/ from the template`,
+    `       npx paperlint lint         # runs every rule over ${papersDir}`,
     ``,
   ].join("\n");
 }
@@ -408,14 +487,14 @@ export function reportHooks(
   }
   if (outcome.status === "declined") {
     out.push(
-      `  · declined — nothing written. \`npx rpp init\` again wires them later`,
+      `  · declined — nothing written. \`npx paperlint init\` again wires them later`,
     );
     return out;
   }
   if (outcome.status === "failed") {
     out.push(`  ✗ not wired — ${outcome.reason}`);
     out.push(
-      `      the hooks need vigiles to run at all; reinstall this package, then \`npx rpp init\``,
+      `      the hooks need vigiles to run at all; reinstall this package, then \`npx paperlint init\``,
     );
     return out;
   }
@@ -435,7 +514,7 @@ export function reportHooks(
         `  ⚠ and NOT wired in any form: ${outcome.missing.join(", ")} — add them in that same form`,
       );
     out.push(
-      `      to switch to the form init writes, delete those commands and run \`npx rpp init\` again`,
+      `      to switch to the form init writes, delete those commands and run \`npx paperlint init\` again`,
     );
   } else {
     out.push(
@@ -444,6 +523,10 @@ export function reportHooks(
         : `  ✓ already wired in ${here(outcome.path)} — nothing changed`,
     );
     out.push(`      ${how}`);
+    if (outcome.status === "written" && outcome.replaced > 0)
+      out.push(
+        `      replaced ${String(outcome.replaced)} command(s) that pointed into ${LEGACY_PACKAGE_NAME}, the package's old name`,
+      );
     out.push(`      ${FRESH_CLONE_NOTE}`);
   }
   if (outcome.plugin.length > 0)
@@ -471,12 +554,13 @@ export function reportSkillLinks(
   if (!report.ok) {
     out.push(`  ⚠ nothing linked — ${report.error}`);
     out.push(
-      `      install the package into this project (\`npm i -D …\`), then \`npx rpp init\` again`,
+      `      install the package into this project (\`npm i -D …\`), then \`npx paperlint init\` again`,
     );
     return out;
   }
   const by = (s: string) => report.links.filter((l) => l.status === s);
-  const created = by("created");
+  const replaced = by("replaced");
+  const created = [...by("created"), ...replaced];
   const present = by("present");
   const skipped = by("foreign");
   // Only a read-only call leaves anything `missing`; counted anyway, so the sum always adds up.
@@ -491,9 +575,13 @@ export function reportSkillLinks(
     out.push(
       `      ${join(here(report.home), "<name>")} → ${join(dirname(report.example), "<name>")}`,
     );
+  if (replaced.length)
+    out.push(
+      `      ${String(replaced.length)} of them replaced a link into ${LEGACY_PACKAGE_NAME}, the package's old name`,
+    );
   if (skipped.length) {
     out.push(
-      `      left untouched — the name is taken by something rpp did not make:`,
+      `      left untouched — the name is taken by something paperlint did not make:`,
     );
     for (const l of skipped)
       out.push(`        ${l.name} — ${l.reason ?? "occupied"}`);
@@ -526,7 +614,7 @@ export interface InitOptions {
   /** `--format tex|md` for that paper. */
   format?: PaperFormat | null;
   /**
-   * Creates one paper and lints it — `rpp new`'s own routine, passed in by the CLI so `init` and
+   * Creates one paper and lints it — `paperlint new`'s own routine, passed in by the CLI so `init` and
    * `new` cannot drift into two implementations.
    */
   createPaper?: (
@@ -536,12 +624,17 @@ export interface InitOptions {
   ) => Promise<number>;
   run?: typeof spawnSync;
   /**
-   * What `rpp lint` would resolve from the declaration, asked of the CLI's OWN reader. A second
+   * What `paperlint lint` would resolve from the declaration, asked of the CLI's OWN reader. A second
    * implementation here would be a second source of truth — the very defect `doctor` reports.
    */
   resolveCliPapers?: (root: string) => string | null;
   /** Links the skills. Injected only so a test can stand in for the installed package. */
   link?: (root: string) => LinkReport;
+  /**
+   * The version of the running package, read by the CLI from its own `package.json`. The CI
+   * workflow is pinned to its release tag (`actionRef`); absent or unreleased, the placeholder.
+   */
+  version?: string;
 }
 
 /** Reads one line from a real terminal. Kept out of `init` so the command stays testable. */
@@ -577,6 +670,7 @@ export async function init(
     run = spawnSync,
     resolveCliPapers,
     link = (r: string) => linkSkills(r),
+    version,
   } = opts;
   // An injected `interactive` is a test standing in for a terminal; its reason is the classic one.
   const { interactive, why } =
@@ -592,7 +686,7 @@ export async function init(
   const here = (p: string): string => relative(cwd, p) || p;
 
   log(``);
-  log(`rpp init — each decision below says HOW it was decided`);
+  log(`paperlint init — each decision below says HOW it was decided`);
 
   // ── 1. where the papers are ───────────────────────────────────────────────────────────
   const choice = await choosePapers(root, { ask, interactive });
@@ -646,7 +740,7 @@ export async function init(
   } else if (decl.status === "renamed") {
     err(`  ✗ ${decl.message}`);
     err(
-      `      nothing was written. Rename the field in ${here(decl.path)}, then run init again.`,
+      `      nothing was written. Fix it in ${here(decl.path)}, then run init again.`,
     );
     return 2;
   } else if (decl.status === "unparsable") {
@@ -666,10 +760,14 @@ export async function init(
       `      The hooks can only read a path they are able to name, and that path is`,
     );
     err(
-      `      package.json. Run \`npm init -y\` here, then \`npx rpp init\` again.`,
+      `      package.json. Run \`npm init -y\` here, then \`npx paperlint init\` again.`,
     );
     return 2;
   }
+  if (decl.migrated)
+    log(
+      `  ✓ moved the settings from "${LEGACY_CONFIG_KEY}" (the old key) to "${CONFIG_KEY}"`,
+    );
   log(
     `      one declaration — the hooks, the rules and the CLI all read this one key`,
   );
@@ -712,19 +810,12 @@ export async function init(
   // ── 5. the one expensive, unguessable thing ───────────────────────────────────────────
   log(``);
   log(`CI`);
-  const wf = await offerWorkflow(root, papersDir, { ask, interactive });
-  if (wf === "written")
-    log(`  ✓ wrote ${WORKFLOW_PATH} — pin <commit-sha> before pushing it`);
-  else if (wf === "kept")
-    log(`  ✓ ${WORKFLOW_PATH} is already there — kept, nothing overwritten`);
-  else if (wf === "declined") log(`  · declined — nothing written`);
-  else log(`  · ${why}, so nothing was asked. Default taken: NO file written.`);
-  if (wf !== "written" && wf !== "kept") {
-    log(`      to run the same checks in CI, add this step to a workflow:`);
-    log(`        - uses: zernie/research-paper-pipeline@<commit-sha>`);
-    log(`          with:`);
-    log(`            paths: ${papersDir}`);
-  }
+  const wf = await offerWorkflow(root, papersDir, {
+    ask,
+    interactive,
+    version,
+  });
+  for (const line of reportWorkflow(wf, { version, papersDir, why })) log(line);
 
   // ── 6. a first paper — offered only where there is none, and only to a human ──────────
   log(``);
@@ -763,13 +854,13 @@ export async function init(
   } else if (hasPaper) log(`  ✓ ${papersDir} already holds a paper`);
   else
     log(
-      `  · none yet${interactive ? "" : ` — ${why}, so nothing was asked`}. \`npx rpp new <name>\` or \`--paper <name>\` creates one`,
+      `  · none yet${interactive ? "" : ` — ${why}, so nothing was asked`}. \`npx paperlint new <name>\` or \`--paper <name>\` creates one`,
     );
 
   // ── 7. the toolchain is reported, never installed ─────────────────────────────────────
   log(``);
   log(
-    `external programs (the skills shell out to these; \`rpp lint\` needs none of them)`,
+    `external programs (the skills shell out to these; \`paperlint lint\` needs none of them)`,
   );
   const missing = missingPrograms(run);
   if (missing.length === 0)
@@ -797,13 +888,13 @@ export async function init(
   log(nextSteps(papersDir));
 
   // ── 8. the install states its own condition ───────────────────────────────────────────
-  log(`── rpp doctor ${"─".repeat(56)}`);
+  log(`── paperlint doctor ${"─".repeat(56)}`);
   const cliPapers = resolveCliPapers ? resolveCliPapers(root) : papersDir;
   const code = doctor({ log, cwd: root, projectDir: root, run, cliPapers });
   if (code !== 0)
     log(
       `doctor exits ${String(code)} — the install is NOT finished. The lines marked ✗ above say what is\n` +
-        `left; re-run \`npx rpp doctor\` once you have done them.`,
+        `left; re-run \`npx paperlint doctor\` once you have done them.`,
     );
   return paperCode !== 0 ? paperCode : code;
 }

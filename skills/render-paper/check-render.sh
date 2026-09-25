@@ -26,7 +26,7 @@ set -uo pipefail
 # A broken `import` in JS fails loudly; here we have to fail on our own.
 #
 # A ladder of THREE candidates, because the directory MOVED (12.09): `venues/` is now carried by the
-# `research-paper-pipeline` package, and at the consumer's old location there is a symlink into it.
+# `paperlint` package, and at the consumer's old location there is a symlink into it.
 # The order "the declared package → a sibling inside the package → the consumer's directory" is
 # deliberate: the package must win silently. It only gets loud when there is NOT A SINGLE ONE.
 # 🔴 THE SCRIPT'S OWN DIRECTORY — TAKEN ABSOLUTE AND BEFORE ANY `cd` (12.09.2026, evening).
@@ -68,7 +68,7 @@ resolve_venues() {
   root="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || printf '%s' "$fallback")}"
 
   # 1) the package, if it already carries venues/ (after step 5)
-  pkg=$(node -e 'try{process.stdout.write(require.resolve("research-paper-pipeline/venues/paper-guards.tex"))}catch{}' 2>/dev/null || true)
+  pkg=$(node -e 'try{process.stdout.write(require.resolve("paperlint/venues/paper-guards.tex"))}catch{}' 2>/dev/null || true)
   if [ -n "$pkg" ] && [ -f "$pkg" ]; then
     dirname "$pkg"
     return 0
@@ -107,7 +107,7 @@ if [ "${1:-}" = "--print-venues" ]; then
     printf '%s\n' "$VD"
     exit 0
   fi
-  echo "✗ paper-guards.tex not found: not under the package name research-paper-pipeline, not beside the script" >&2
+  echo "✗ paper-guards.tex not found: not under the package name paperlint, not beside the script" >&2
   echo "  (skills/submit-paper/references/venues), not at the consumer (.claude/skills/submit-paper/references/venues)." >&2
   echo "  Building the paper without it is not allowed: \\input{paper-guards} will not fail, it will vanish silently," >&2
   echo "  and the PDF will be built WITHOUT the check for dangling \\ref and \\cite." >&2

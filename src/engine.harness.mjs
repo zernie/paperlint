@@ -1,5 +1,5 @@
 /**
- * `engine.ts` — which TeX Live `rpp build` compiles with.
+ * `engine.ts` — which TeX Live `paperlint build` compiles with.
  *
  * Tables, in order:
  *   1. `resolveEngine` over `EngineFacts` — one row per branch of the order;
@@ -195,7 +195,7 @@ check(
 
 // ── 3. "installed" means a regular file that can be run — on a REAL filesystem ─────────────
 // 🔴 `existsSync` says yes to a directory and to a file without the execute bit; both then fail
-// to start, while `rpp toolchain --check` reported the tree verified. Checked on disk, not
+// to start, while `paperlint toolchain --check` reported the tree verified. Checked on disk, not
 // through an injected predicate, because the predicate is exactly what was wrong.
 {
   const bin = realpathSync(mkdtempSync(join(tmpdir(), "rpp-engine-bin-")));
@@ -211,7 +211,7 @@ check(
       pdflatex: ["pdflatex"],
     };
     const missing = missingTools(tools, bin);
-    // Guards: the runnable-file check — `existsSync` says yes to a directory, and `rpp toolchain
+    // Guards: the runnable-file check — `existsSync` says yes to a directory, and `paperlint toolchain
     // --check` once reported a verified tree whose texcount could not start.
     check(
       "🔴 missingTools: a DIRECTORY named like the tool is missing",

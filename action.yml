@@ -1,4 +1,4 @@
-# Composite action: set up what the LaTeX rules need, then run `rpp lint` over a consumer's corpus.
+# Composite action: set up what the LaTeX rules need, then run `paperlint lint` over a consumer's corpus.
 #
 # 🔴 THIS ACTION CALLS THE PACKAGE'S OWN CLI. It used to invoke `npx eslint` directly, and that was
 # not a style question — it was a second implementation of the same job, and it had already drifted:
@@ -20,13 +20,13 @@
 # file and fails loudly when it did not. This does NOT replace a per-rule glob audit (the package's
 # own `scripts/rules-see-files.mjs` does that, and it reads the package's config, not yours) — it closes the
 # one failure mode that needs no config knowledge: nothing was linted at all.
-name: research-paper-pipeline — LaTeX prose gate
+name: paperlint — LaTeX prose gate
 description: Install the toolchain the texcount/* rules need, run ESLint, and refuse to pass on an empty run.
 
 inputs:
   config:
     description: >-
-      Path to `rpp.json`. Optional: `rpp lint` finds it by walking up from the working directory,
+      Path to `rpp.json`. Optional: `paperlint lint` finds it by walking up from the working directory,
       the way eslint and tsc find theirs, so most callers never set this. Pass it only when the
       file is somewhere the walk cannot reach. ⚠️ Until 2026-09-18 this input took a path to an
       ESLint FLAT CONFIG and defaulted to `eslint.config.mjs`; a caller still passing one will
@@ -108,7 +108,7 @@ runs:
     # itself. The guard lives in `scripts/eslint-report-guard.mjs` rather than inline here, because
     # an inline `node -e` blob cannot be reached by a test.
     #
-    # 🔴 THE REDIRECT IS ONLY SAFE BECAUSE `--json` KEEPS stdout CLEAN. `rpp lint` prints the name
+    # 🔴 THE REDIRECT IS ONLY SAFE BECAUSE `--json` KEEPS stdout CLEAN. `paperlint lint` prints the name
     # of the config it discovered; in `--json` mode that line goes to stderr, precisely so a pipe
     # or a redirect receives one parsable document. That was a real defect for an hour on 18-09 —
     # the line sat on stdout in front of the array — and it was found by wiring this step up, not
@@ -117,7 +117,7 @@ runs:
     # `--no-config-lookup` is gone with the eslint call and is not missing: the CLI builds its
     # config with `overrideConfigFile: true`, so a consumer's nested config cannot reach the run
     # at all. The guarantee moved from a flag into the code.
-    - name: rpp lint
+    - name: paperlint lint
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       env:
@@ -126,13 +126,13 @@ runs:
         RPP_MAXWARN: ${{ inputs.max-warnings }}
       run: |
         # 🔴 `|| RC=$?` IS LOAD-BEARING, NOT STYLE. GitHub runs composite `shell: bash` as
-        # `bash --noprofile --norc -eo pipefail`, so a bare `npx rpp lint` that exits non-zero
+        # `bash --noprofile --norc -eo pipefail`, so a bare `npx paperlint lint` that exits non-zero
         # ABORTS THE SCRIPT and the guard below never runs — measured, not reasoned: the line
         # after a failing command did not print. That is the whole error path of this action
         # (a bad config, an unreadable report, findings), so under `-e` the guard was reachable
         # ONLY on success, which is the one case it was not written for.
         RC=0
-        npx rpp lint $RPP_PATHS ${RPP_CONFIG:+--config "$RPP_CONFIG"} \
+        npx paperlint lint $RPP_PATHS ${RPP_CONFIG:+--config "$RPP_CONFIG"} \
           --max-warnings="$RPP_MAXWARN" --json > "$RUNNER_TEMP/rpp.json" || RC=$?
         node "$GITHUB_ACTION_PATH/scripts/eslint-report-guard.mjs" \
           "$RUNNER_TEMP/rpp.json" "$RC" "$RPP_PATHS" "${RPP_CONFIG:-rpp.json}"

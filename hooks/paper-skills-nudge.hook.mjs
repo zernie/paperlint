@@ -39,7 +39,9 @@ import {
 } from "vigiles/hook";
 
 /** The key every carrier of this package reads its consumer-specific settings from. */
-export const CONFIG_KEY = "research-paper-pipeline";
+export const CONFIG_KEY = "paperlint";
+/** The key's name before 2.0.0 — still read, a copy of `lib/paper-config.mjs`. */
+export const LEGACY_CONFIG_KEY = "research-paper-pipeline";
 /** The default. A consumer that declares nothing is assumed to keep papers in `papers/`. */
 export const DEFAULT_PAPERS_ROOT = "papers";
 /**
@@ -75,7 +77,8 @@ export const OLD_PAPERS_DIR_FIELD = "papers";
 const papersRoot = (rawPkg) => {
   let declared;
   try {
-    const settings = JSON.parse(rawPkg)?.[CONFIG_KEY];
+    const pkg = JSON.parse(rawPkg);
+    const settings = pkg?.[CONFIG_KEY] ?? pkg?.[LEGACY_CONFIG_KEY];
     // Old field name: stay silent rather than fall back to the default directory.
     if (settings && Object.hasOwn(settings, OLD_PAPERS_DIR_FIELD)) return null;
     declared = settings?.[PAPERS_DIR_FIELD];

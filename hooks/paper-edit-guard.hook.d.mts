@@ -3,7 +3,8 @@
 // sees `any` and the import needed a `@ts-expect-error` — which covers exactly ONE line and
 // silently stopped covering the import once a formatter wrapped it across five.
 
-export declare const CONFIG_KEY: "research-paper-pipeline";
+export declare const CONFIG_KEY: "paperlint";
+export declare const LEGACY_CONFIG_KEY: "research-paper-pipeline";
 export declare const DEFAULT_PAPERS_ROOT: "papers";
 export declare const PAPERS_DIR_FIELD: string;
 export declare const OLD_PAPERS_DIR_FIELD: string;

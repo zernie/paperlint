@@ -42,10 +42,10 @@ this.
 That list was replaced on 2026-08-03; nothing about the toolchain below changed.*
 
 ## Toolchain (one command, not a checklist)
-- **Compiler:** TeX Live, installed by rpp with exactly the packages the venue profiles declare:
+- **Compiler:** TeX Live, installed by paperlint with exactly the packages the venue profiles declare:
   \`\`\`
-  npx rpp toolchain            # into ~/.cache/rpp/texlive (RPP_TEXLIVE_DIR overrides); idempotent
-  npx rpp toolchain --check    # report what is missing, change nothing
+  npx paperlint toolchain            # into ~/.cache/rpp/texlive (RPP_TEXLIVE_DIR overrides); idempotent
+  npx paperlint toolchain --check    # report what is missing, change nothing
   \`\`\`
   Measured 2026-09-24: 3 min from an empty directory, 269 MB, TeX Live 2026, 47 packages verified
   by \`kpsewhich\` against the files each profile names. The last line it prints is \`bin: <dir>\` —
@@ -55,23 +55,23 @@ That list was replaced on 2026-08-03; nothing about the toolchain below changed.
   \`tex\` block; \`tex-base.jsonc\` for every paper) and nowhere else. A new venue that needs a new
   package gets it there — never in a script, never here. A TeX Live without \`libertine\` builds an
   acmart paper GREEN in Computer Modern; that is why the files are checked, not the exit code.
-- **Reading the PDF** needs nothing installed: \`rpp build\` and \`extract-pdf-facts.mjs\` use pdf.js,
+- **Reading the PDF** needs nothing installed: \`paperlint build\` and \`extract-pdf-facts.mjs\` use pdf.js,
   which comes with rpp. Page size, columns and font sizes come from banal (HotCRP's page-geometry
-  script), which \`npx rpp toolchain\` installs and which runs on pdf.js output — it needs \`perl\`,
+  script), which \`npx paperlint toolchain\` installs and which runs on pdf.js output — it needs \`perl\`,
   and no poppler. Without banal those facts are \`null\` and the build says so.
 - **Renderer:** \`pip install --quiet pymupdf\` (system rasterizers and ghostscript are often missing or
   404 on apt here; pymupdf is reliable). No \`playwright install\`, no external fetches.
 
 ## Compile (full bibtex cycle — needed or citations show as \`[?]\`)
 \`\`\`
-npx rpp build <paper-dir>
+npx paperlint build <paper-dir>
 \`\`\`
-It picks a TeX Live that has every package the venue declares (rpp's own, else one on PATH),
+It picks a TeX Live that has every package the venue declares (paperlint's own, else one on PATH),
 runs pdflatex and bibtex until the references settle, fails on an undefined \`\\ref\`/\`\\cite\`
 through \`paper-guards.tex\`, then measures the PDF into \`_build/paper.facts.json\` (fonts, Type 3,
 the last page's column heights). It judges nothing: a venue that needs a balanced last page turns
 on the optional lint rule \`pdf/last-page-balance\` (see \`docs/optional-rules.md\` in the package). Without a
-terminal and without a qualifying TeX Live it stops with one line naming \`npx rpp toolchain\`.
+terminal and without a qualifying TeX Live it stops with one line naming \`npx paperlint toolchain\`.
 Check the last log anyway: \`grep -iE "Fatal|Output written" \` and
 \`grep -ciE "Undefined control|Citation.*undefined|Reference.*undefined"\` (must be 0).
 

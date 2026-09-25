@@ -1,4 +1,4 @@
-# CI for research-paper-pipeline — ONE job, every gate, bonds set BY MEASUREMENT.
+# CI for paperlint — ONE job, every gate, bonds set BY MEASUREMENT.
 #
 # ── WHY ONE JOB ─────────────────────────────────────────────────────────────
 # Parallelism does not save billable minutes, it ADDS them: every job pays for its own
@@ -105,15 +105,6 @@ jobs:
         run: npm i -g @anthropic-ai/claude-code
         timeout-minutes: 3
 
-      # The manifest is judged by the HOST'S validator, not by a schema we wrote from the docs.
-      # Measured 2026-09-19: the npm-source shape a design note had recorded is rejected, and the
-      # accepted one nests `source` as an object. Since the wrong shape exits nonzero, a gate makes
-      # it unshippable. Placed right after the install because the script FAILS when the binary is
-      # missing rather than skipping — a gate that passes without its tool is a false green.
-      - name: the marketplace manifest
-        run: node scripts/marketplace-shape.mjs
-        timeout-minutes: 2
-
       # 🔴 `--no-skip` HERE, AND PRECISELY AFTER THE INSTALL ABOVE. Measurement 17.09: without it,
       # skip is green, and `skip` status is applied not only to author-declared `skip()`, but also to a file
       # that failed to LOAD. In other words, one flag closes both doors at once.
@@ -157,7 +148,7 @@ jobs:
       # 1-minute granularity GitHub bills in.
       #
       # README.md is linted too, by name (see the same gate in scripts/check.mjs). Its
-      # `vigiles:symbol` marks name the functions behind `rpp init` and `rpp new`; if one is
+      # `vigiles:symbol` marks name the functions behind `paperlint init` and `paperlint new`; if one is
       # renamed or removed, this step fails and names README.md.
       - name: vigiles lint (skills + README.md)
         run: npx vigiles lint . README.md
@@ -202,14 +193,14 @@ jobs:
 
   # ── BUILDING THE PAPER WITH REAL pdflatex, ON LINUX AND macOS ──────────────────────────────────
   #
-  # 🔴 ONE JOB, TWO OPERATING SYSTEMS. TeX Live comes from `rpp toolchain` — the same command a user
+  # 🔴 ONE JOB, TWO OPERATING SYSTEMS. TeX Live comes from `paperlint toolchain` — the same command a user
   # runs — so the job tests the install path users get, not a CI-only script. It used to be a bash
   # installer here and a separate macOS workflow (platform.yml) there; both are gone. macOS matters
   # twice: install-tl-unx has to work on it, and issue #9 (`/var` is a symlink to `/private/var`)
   # exists only there, so the macOS cell also runs `npm test` and the temp-dir probe.
   #
   # 🔴 WHY A SEPARATE JOB, NOT A STEP IN `gates`. Its only dependency is TeX Live, and it alone costs
-  # minutes: ~270 MB, ~3 min cold (measured 2026-09-24 with `rpp toolchain`). A separate job runs in
+  # minutes: ~270 MB, ~3 min cold (measured 2026-09-24 with `paperlint toolchain`). A separate job runs in
   # parallel and caches itself.
   #
   # 🔴 WHY ON EVERY PUSH. It catches silent font substitution — a class that HAS ALREADY shipped a
@@ -263,7 +254,7 @@ jobs:
       # The cache key is what the install depends on: the runner and the declared packages (every
       # venue profile, the base set included). NOT the TeX Live year, and not the calendar year that
       # used to stand in for it: the calendar says nothing about CTAN's release, and a restored tree
-      # from an older year is safe — `rpp toolchain` verifies every declared file on it, leaves it
+      # from an older year is safe — `paperlint toolchain` verifies every declared file on it, leaves it
       # alone when it is complete, and when a newly declared package makes tlmgr refuse it across
       # releases, installs the new year beside it (src/toolchain.ts, `newRelease`).
       # No `restore-keys`, deliberately: a partial restore would carry the old year's tree into the
@@ -279,17 +270,17 @@ jobs:
 
       # The same command a user runs. On a cache hit it verifies and says "nothing to do"; on a miss
       # it installs from an empty directory and verifies every declared file with kpsewhich.
-      # `node bin/rpp.mjs`, not `npx rpp`: inside this repository npx would look the name up on npm.
+      # `node bin/rpp.mjs`, not `npx paperlint`: inside this repository npx would look the name up on npm.
       # It also downloads banal, the Perl script HotCRP runs to measure page geometry (~90 KB, pinned
-      # commit, sha256-checked, then run once on a test page). rpp keeps banal and no longer needs
-      # poppler: rpp now writes the XML banal reads, which poppler's pdftohtml used to write.
+      # commit, sha256-checked, then run once on a test page). paperlint keeps banal and no longer needs
+      # poppler: paperlint now writes the XML banal reads, which poppler's pdftohtml used to write.
       # Both runner images ship perl. The download is too small to be worth an Actions cache.
-      - name: rpp toolchain
+      - name: paperlint toolchain
         run: node bin/rpp.mjs toolchain
         timeout-minutes: 15
 
       # Proves banal works without poppler. This runner has no poppler, and the test also limits
-      # PATH to perl. rpp turns each fixture PDF into XML with pdf.js, banal measures it, and the
+      # PATH to perl. paperlint turns each fixture PDF into XML with pdf.js, banal measures it, and the
       # result must equal the numbers banal gave on the same PDFs through poppler's pdftohtml
       # (recorded once, hardcoded in the test). Runs in seconds, hence the short timeout.
       - name: banal e2e (--strict)

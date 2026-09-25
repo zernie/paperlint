@@ -49,12 +49,12 @@ export type BanalFailure =
 
 export const PERL_MISSING =
   "perl is not installed — banal, the page-geometry script HotCRP runs, is a Perl program. " +
-  "Install perl (Debian/Ubuntu: apt-get install perl; macOS ships it) and run `npx rpp toolchain`";
+  "Install perl (Debian/Ubuntu: apt-get install perl; macOS ships it) and run `npx paperlint toolchain`";
 
 function missing(m: BanalMissing): string {
   return m.kind === "explicit-not-found"
     ? `banal not found: $BANAL names ${m.path}, which does not exist`
-    : `banal not found: ${m.installed} — \`npx rpp toolchain\` installs it`;
+    : `banal not found: ${m.installed} — \`npx paperlint toolchain\` installs it`;
 }
 
 type Kind = BanalFailure["kind"];

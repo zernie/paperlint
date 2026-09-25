@@ -37,8 +37,8 @@ assert.equal(
   `expected 4 steps, got ${action.runs.steps.length}: ${names}`,
 );
 
-const eslintStep = action.runs.steps.find((s) => s.name === "rpp lint");
-assert.ok(eslintStep, `no step named "rpp lint" among: ${names}`);
+const eslintStep = action.runs.steps.find((s) => s.name === "paperlint lint");
+assert.ok(eslintStep, `no step named "paperlint lint" among: ${names}`);
 
 // 🔴 THE ACTION MUST CALL THE PACKAGE'S OWN CLI, NOT ESLINT. This is not tidiness: while the step
 // invoked `npx eslint` directly it was a SECOND implementation of the same job, and it had already
@@ -47,7 +47,7 @@ assert.ok(eslintStep, `no step named "rpp lint" among: ${names}`);
 // that reaches past the CLI reintroduces exactly that gap, silently and greenly.
 assert.match(
   eslintStep.run,
-  /npx rpp lint/,
+  /npx paperlint lint/,
   "the lint step must call this package's own CLI — invoking eslint directly bypasses rpp.json and the structure check",
 );
 assert.doesNotMatch(

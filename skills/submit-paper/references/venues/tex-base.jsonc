@@ -2,7 +2,7 @@
 // venue.json, or a venue.json naming a venue with no profile here). A venue's own `tex.packages`
 // is added on top of this set, never instead of it.
 //
-// Read by `rpp toolchain` (it installs this set plus every venue's) and by `rpp build` (it checks
+// Read by `paperlint toolchain` (it installs this set plus every venue's) and by `paperlint build` (it checks
 // that the TeX Live it is about to use has this set plus the paper's venue's). Validated against
 // venue-profile.schema.json next door.
 //

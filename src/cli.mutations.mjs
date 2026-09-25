@@ -50,7 +50,7 @@ process.exit(
         harness: HARNESS,
         expect: "`--help` as the first argument — is a FLAG, not a command",
         disables:
-          "parsing a flag in the command position. The real defect: `rpp --help` used to " +
+          "parsing a flag in the command position. The real defect: `paperlint --help` used to " +
           'answer "unknown command `--help`" — i.e. the very first command a new user types ' +
           "told them it did not exist",
         edits: [
@@ -121,8 +121,8 @@ process.exit(
         edits: [
           [
             INIT,
-            '  writeFileSync(\n    path,\n    JSON.stringify(pkg, null, 2) + (raw.endsWith("\\n") ? "\\n" : ""),\n    "utf8",\n  );',
-            "  void pkg;",
+            '    writeFileSync(\n      path,\n      JSON.stringify(pkg, null, 2) + (raw.endsWith("\\n") ? "\\n" : ""),\n      "utf8",\n    );',
+            "    void pkg;",
           ],
         ],
       },
@@ -151,13 +151,7 @@ process.exit(
         disables:
           "the ban on silently replacing a consumer's setting. They keep trusting the old " +
           "value, because nobody told them it changed",
-        edits: [
-          [
-            INIT,
-            '  if (existing !== undefined) return { status: "kept", path, papers: existing };',
-            '  if (false) return { status: "kept", path, papers: existing };',
-          ],
-        ],
+        edits: [[INIT, "  if (existing !== undefined) {", "  if (false) {"]],
       },
       {
         name: "init CREATES the second rpp.json carrier again",
@@ -186,8 +180,8 @@ process.exit(
         edits: [
           [
             INIT,
-            "  else log(`  · ${why}, so nothing was asked. Default taken: NO file written.`);",
-            "  else log(`  · skipped`);",
+            "      `  · ${why}, so nothing was asked. Default taken: NO file written.`,",
+            "      `  · skipped`,",
           ],
         ],
       },
@@ -253,7 +247,7 @@ process.exit(
         edits: [
           [
             INIT,
-            "    err(\n      `      package.json. Run \\`npm init -y\\` here, then \\`npx rpp init\\` again.`,\n    );\n    return 2;",
+            "    err(\n      `      package.json. Run \\`npm init -y\\` here, then \\`npx paperlint init\\` again.`,\n    );\n    return 2;",
             "    return 0;",
           ],
         ],
@@ -295,7 +289,7 @@ process.exit(
         name: "the utility goes back to reading only rpp.json",
         harness: HARNESS,
         expect:
-          "🔴 THE UTILITY READS THE DECLARATION FROM package.json — otherwise `rpp init` sets up something `rpp lint` cannot see",
+          "🔴 THE UTILITY READS THE DECLARATION FROM package.json — otherwise `paperlint init` sets up something `paperlint lint` cannot see",
         disables:
           "the link between the install command and the check command. `init` writes one " +
           "declaration into package.json, while `lint` looks for it in rpp.json — right after " +
@@ -445,8 +439,8 @@ process.exit(
         harness: HARNESS,
         expect: "the project's paper TEMPLATE directory is ignored",
         disables:
-          "the override slot `rpp new` reads. Flat config does not skip dot-directories, so a " +
-          "richer house template — placeholder stages and all — would fail every `rpp lint`",
+          "the override slot `paperlint new` reads. Flat config does not skip dot-directories, so a " +
+          "richer house template — placeholder stages and all — would fail every `paperlint lint`",
         edits: [[CLI, '    { ignores: ["**/.template/"] },\n', ""]],
       },
     ],

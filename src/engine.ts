@@ -1,5 +1,5 @@
 /**
- * WHICH TeX LIVE `rpp build` COMPILES WITH — decided from facts, and never a TeX Live that lacks a
+ * WHICH TeX LIVE `paperlint build` COMPILES WITH — decided from facts, and never a TeX Live that lacks a
  * package the paper's venue declares.
  *
  * 🔴 WHY "HAS pdflatex" IS NOT THE QUESTION. A TeX Live without `libertine.sty` builds an acmart
@@ -8,10 +8,10 @@
  * TeX Live qualifies only when `kpsewhich` finds every file the venue declares (issue #26).
  *
  * The order (the Playwright pattern, decided 2026-09-24):
- *   1. rpp's own cache (`rpp toolchain` installs it) — when it has everything;
+ *   1. rpp's own cache (`paperlint toolchain` installs it) — when it has everything;
  *   2. a TeX Live already on PATH — when IT has everything;
  *   3. neither: on a terminal, ask once and install; without one (CI, an agent), refuse in one line
- *      that names `npx rpp toolchain` and the missing packages. Never a silent install without a
+ *      that names `npx paperlint toolchain` and the missing packages. Never a silent install without a
  *      human, never a build on a TeX Live that would typeset the wrong font.
  *
  * `resolveEngine` is that order as a PURE function over `EngineFacts`, table-tested. The rest of
@@ -30,7 +30,7 @@ export type Runner = typeof spawnSync;
 
 /** One TeX Live and what it lacks for the papers at hand. */
 export interface TreeProbe {
-  /** How to name it to a human: `rpp cache, TeX Live 2026` / `/usr/bin/pdflatex`. */
+  /** How to name it to a human: `paperlint cache, TeX Live 2026` / `/usr/bin/pdflatex`. */
   readonly label: string;
   /** The directory holding `pdflatex` and `kpsewhich`. */
   readonly bin: string;
@@ -62,7 +62,7 @@ export type EngineDecision =
     };
 
 /**
- * The decision. `missing` in `ask` and `refuse` is what `rpp toolchain` would install: the cache's
+ * The decision. `missing` in `ask` and `refuse` is what `paperlint toolchain` would install: the cache's
  * gaps when a cache exists, every required package when it does not.
  */
 export function resolveEngine(f: EngineFacts): EngineDecision {
@@ -107,7 +107,7 @@ export function missingPackages(
 /**
  * `path` is a program that can be started: a REGULAR FILE, and on POSIX one this process may
  * execute. `existsSync` is not the question — it says yes to a directory and to a file without
- * the execute bit, and `rpp toolchain --check` then reported a verified tree whose `texcount`
+ * the execute bit, and `paperlint toolchain --check` then reported a verified tree whose `texcount`
  * could not run.
  *
  * On win32 `X_OK` means nothing (Node documents it as behaving like `F_OK` there): whether a file

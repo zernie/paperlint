@@ -1,10 +1,10 @@
 /**
  * banal's adapter — its ENTRY POINT. Everything under `src/adapters/banal/` exists because banal
  * (HotCRP's page-geometry script, GPL, run as a separate program — see `./run.ts` for the licence
- * boundary) exists; nothing outside this folder names it. What the rest of rpp sees is two ports:
+ * boundary) exists; nothing outside this folder names it. What the rest of paperlint sees is two ports:
  *
  *   `banalMeasurer` — `MeasureGeometry`: the page geometry of a paper's text boxes, or why none.
- *   `banalInstaller` — `ToolInstaller`: `rpp toolchain`'s banal, pinned, verified and running.
+ *   `banalInstaller` — `ToolInstaller`: `paperlint toolchain`'s banal, pinned, verified and running.
  *
  * Both are composites over the generic ports a composition root builds (processes, files, scratch
  * directories, downloads), so this file is pure; its settings are parsed from the environment value

@@ -6,8 +6,8 @@
  * Code reads them from there". It does not: Claude Code discovers project skills in
  * `.claude/skills/<name>/SKILL.md` (plus user and plugin skills), never inside `node_modules`. So a
  * consumer who followed the install to the letter had no `/paper-pipeline` at all (Codex review on
- * #45). The plugin cannot carry them either — it gets no `node_modules`, and 23 of 24 skills run
- * scripts (`docs/install.md`, "Why the plugin ships no code"). The one consumer where the skills
+ * #45). A plugin could not carry them either — it gets no `node_modules`, and 23 of 24 skills run
+ * scripts (`docs/install.md`, "Why it is shaped this way"). The one consumer where the skills
  * DID work had made these links by hand; this module makes the same links, so the layout is the
  * proven one rather than a new one.
  *
@@ -15,13 +15,13 @@
  * (`.claude/skills/paper-pipeline/scripts/x.mjs`) resolve in a consumer at all.
  *
  * ── THE THREE RULES ─────────────────────────────────────────────────────────
- *   what to link      the skills directory the package DECLARES (`.claude-plugin/plugin.json`,
- *                     `"skills"`), every subdirectory holding a SKILL.md. No list, no count.
+ *   what to link      every subdirectory holding a SKILL.md under the package's
+ *                     `SHIPPED_SKILLS_DIR` (consumer.mjs). No list, no count.
  *   where it points   the package as it RESOLVES BY NAME from the project, spelled through the
- *                     project's own `node_modules/research-paper-pipeline` when that path leads to
+ *                     project's own `node_modules/paperlint` when that path leads to
  *                     the same place. Under pnpm the resolved path is the version-stamped
  *                     `.pnpm/…` store directory; a link spelled that way dangles after the next
- *                     upgrade, a link through `node_modules/research-paper-pipeline` does not.
+ *                     upgrade, a link through `node_modules/paperlint` does not.
  *   what it touches   only what is missing. An entry that already leads to the shipped skill is
  *                     left alone; ANY other entry of the same name — a directory, a file, a link
  *                     elsewhere, a dangling link — is someone else's, and is reported, not replaced.
@@ -31,18 +31,23 @@ import {
   existsSync,
   lstatSync,
   mkdirSync,
-  readFileSync,
   readlinkSync,
   realpathSync,
   symlinkSync,
+  unlinkSync,
 } from "node:fs";
 /* eslint-enable boundaries/dependencies */
 import { createRequire } from "node:module";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
-import { installedSkills } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import {
+  installedSkills,
+  LEGACY_PACKAGE_NAME,
+  PACKAGE_NAME,
+  SHIPPED_SKILLS_DIR,
+} from "../skills/paper-pipeline/scripts/consumer.mjs";
 
-export const PACKAGE_NAME = "research-paper-pipeline";
+export { PACKAGE_NAME };
 /** Where Claude Code looks for project skills, relative to the project root. */
 export const SKILLS_HOME = join(".claude", "skills");
 
@@ -84,26 +89,17 @@ export function locatePackage(project: string): Located {
   return { dir, spelled: dir };
 }
 
-/** The skills the package ships, read from the directory its plugin manifest declares. */
+/** The skills the package ships: every skill under its `SHIPPED_SKILLS_DIR`. */
 export function shippedSkills(
   pkgDir: string,
 ):
   | { readonly skillsDir: string; readonly names: readonly string[] }
   | { readonly error: string } {
-  const manifest = join(pkgDir, ".claude-plugin", "plugin.json");
-  let declared: unknown;
-  try {
-    declared = JSON.parse(readFileSync(manifest, "utf8"))?.skills;
-  } catch (e) {
-    return { error: `cannot read ${manifest}: ${(e as Error).message}` };
-  }
-  // A missing declaration is an error, not a fallback to `skills/`: a default here would make a
-  // package that stopped declaring its skills look exactly like one that still does.
-  if (typeof declared !== "string")
-    return { error: `${manifest} declares no "skills" directory` };
-  const skillsDir = join(pkgDir, declared);
+  const skillsDir = join(pkgDir, SHIPPED_SKILLS_DIR);
+  // A missing directory is an error, never an empty list: zero skills linked must not read as a
+  // clean run.
   if (!existsSync(skillsDir))
-    return { error: `the declared skills directory is missing: ${skillsDir}` };
+    return { error: `the package's skills directory is missing: ${skillsDir}` };
   // The same function every reader of an installed skills directory calls (rpp#62): the writer
   // and the readers of this fact share one definition of "a skill is here", links included.
   try {
@@ -113,7 +109,8 @@ export function shippedSkills(
   }
 }
 
-export type LinkStatus = "created" | "present" | "missing" | "foreign";
+export type LinkStatus =
+  "created" | "replaced" | "present" | "missing" | "foreign";
 
 export interface SkillLink {
   readonly name: string;
@@ -126,23 +123,33 @@ export type LinkReport =
   | {
       readonly ok: true;
       readonly home: string;
-      /** The link target of the first skill, e.g. `../../node_modules/research-paper-pipeline/skills/x`. */
+      /** The link target of the first skill, e.g. `../../node_modules/paperlint/skills/x`. */
       readonly example: string | null;
       readonly links: readonly SkillLink[];
     }
   | { readonly ok: false; readonly error: string };
 
-/** What occupies `entry`, judged against the directory it should lead to. */
+/**
+ * What occupies `entry`, judged against the directory it should lead to. A link spelled exactly as
+ * an install under the package's old name wrote it (`legacyTarget`) is `stale`: ours, from before
+ * the rename, and replaced on the next `init`.
+ */
 function inspect(
   entry: string,
   want: string,
-): { status: "present" | "missing" | "foreign"; reason?: string } {
+  legacyTarget: string,
+): { status: "present" | "missing" | "foreign" | "stale"; reason?: string } {
   let st;
   try {
     st = lstatSync(entry);
   } catch {
     return { status: "missing" };
   }
+  if (st.isSymbolicLink() && readlinkSync(entry) === legacyTarget)
+    return {
+      status: "stale",
+      reason: `a link into ${LEGACY_PACKAGE_NAME}, the package's old name — \`npx ${PACKAGE_NAME} init\` replaces it`,
+    };
   try {
     if (realpathSync(entry) === want) return { status: "present" };
   } catch {
@@ -162,8 +169,46 @@ function inspect(
 }
 
 /**
+ * One skill: inspect its entry and, when writing, create the link — or replace one an install
+ * under the package's old name made.
+ */
+function linkOne(
+  name: string,
+  {
+    entry,
+    target,
+    want,
+    write,
+  }: { entry: string; target: string; want: string; write: boolean },
+): SkillLink {
+  const legacyTarget = target.replace(
+    `node_modules${sep}${PACKAGE_NAME}${sep}`,
+    `node_modules${sep}${LEGACY_PACKAGE_NAME}${sep}`,
+  );
+  const seen = inspect(entry, want, legacyTarget);
+  const fixable = seen.status === "missing" || seen.status === "stale";
+  if (!write || !fixable) {
+    const status = seen.status === "stale" ? "foreign" : seen.status;
+    return seen.reason
+      ? { name, status, reason: seen.reason }
+      : { name, status };
+  }
+  try {
+    if (seen.status === "stale") unlinkSync(entry);
+    symlinkSync(target, entry, "dir");
+    return { name, status: seen.status === "stale" ? "replaced" : "created" };
+  } catch (e) {
+    return {
+      name,
+      status: "foreign",
+      reason: `could not create the link: ${(e as Error).message}`,
+    };
+  }
+}
+
+/**
  * Link every shipped skill into `<project>/.claude/skills/`, or — with `write: false` — only
- * report which ones are missing (that is what `rpp doctor` asks).
+ * report which ones are missing (that is what `paperlint doctor` asks).
  */
 export function linkSkills(
   project: string,
@@ -200,24 +245,14 @@ export function linkSkills(
 
   let example: string | null = null;
   const links = shipped.names.map((name): SkillLink => {
-    const entry = join(home, name);
     const target = relative(physicalHome, join(spelledSkills, name));
     example ??= target;
-    const seen = inspect(entry, realpathSync(join(shipped.skillsDir, name)));
-    if (seen.status !== "missing" || !write)
-      return seen.reason
-        ? { name, status: seen.status, reason: seen.reason }
-        : { name, status: seen.status };
-    try {
-      symlinkSync(target, entry, "dir");
-      return { name, status: "created" };
-    } catch (e) {
-      return {
-        name,
-        status: "foreign",
-        reason: `could not create the link: ${(e as Error).message}`,
-      };
-    }
+    return linkOne(name, {
+      entry: join(home, name),
+      target,
+      want: realpathSync(join(shipped.skillsDir, name)),
+      write,
+    });
   });
   return { ok: true, home, example, links };
 }

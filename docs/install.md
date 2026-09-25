@@ -1,48 +1,116 @@
-# How installation is supposed to work, and why
+# Installation
 
-This is a decision record, not a how-to. The how-to is the README. This file exists because the
-install was rebuilt three times — a copy-paste line, then a `--with-hooks` flag, then a
-self-contained bundle — and each attempt was designed from the armchair. This time the shape was
-taken from tools that already solved it, and each claim below was measured.
+This page covers what `npm i -D paperlint` and `npx paperlint init` set up, exactly what
+`init` writes, which package managers work, what the install weighs, and what to do when something
+is off. The README has the short version.
 
-## The one number that matters
+## Install
 
-**How many actions does a person perform between "I want this" and "it works"?** Every copied
-command, every flag, every "now add this to your config by hand" is one action and one chance to
-stop.
+```sh
+npm i -D paperlint
+npx paperlint init
+```
 
-🔴 **SHIPPED 2026-09-18 — the table below is now HISTORY, and it is kept because the count is
-the argument.** `rpp init` performs steps 3, 4, 5 and 8 itself and reports step 9; what is left
-is the three-row table at the bottom of this file. The nine rows stay written down because a
-target count means nothing without the count it replaced.
+Two commands in one terminal, in this order: `init` links the skills and hooks to the copy in
+your project's `node_modules`, so it needs the install first.
 
-Counted for this package **before** that change:
+**Upgrading from `research-paper-pipeline`** (the package's name before 2.0.0):
+`npm rm research-paper-pipeline && npm i -D paperlint`, then `npx paperlint init`. It moves the
+`"research-paper-pipeline"` key in `package.json` to `"paperlint"`, and replaces the hook commands
+and skill links that pointed into the old package. Until then the old key is still read, with a
+warning.
 
-| #   | action                                                    | why it exists                            |
-| --- | --------------------------------------------------------- | ---------------------------------------- |
-| 1   | look up a commit sha                                      | not on npm yet                           |
-| 2   | `npm i -D github:zernie/research-paper-pipeline#<sha>`    |                                          |
-| 3   | `npx rpp init`                                            | writes `rpp.json`                        |
-| 4   | edit `rpp.json` so `papers` points at your papers         | the default is a guess                   |
-| 5   | **edit `package.json` to declare `papers` a second time** | the hooks read that file, not `rpp.json` |
-| 6   | `/plugin marketplace add …` inside Claude Code            |                                          |
-| 7   | `/plugin install …` inside Claude Code                    |                                          |
-| 8   | hand-add the CI step, with a sha                          |                                          |
-| 9   | install TeX Live, poppler, a JRE, python3                 | the skills shell out to them             |
+The npm package carries everything: the `paperlint` command, the ESLint rules, the Claude Code skills
+and hooks, and the scripts the skills run. External programs are separate:
 
-(Row 9 is the state on 2026-09-18. Since 2026-09-24 TeX Live is `npx rpp toolchain`, or a
-`[Y/n]` inside `rpp build`, and poppler is gone — rpp reads PDFs with pdf.js, shipped as a
-dependency. Since 2026-09-25 `rpp toolchain` also fetches banal, which runs on pdf.js output and
-needs perl. A JRE and python3 are still the user's.)
+- **TeX Live** — `npx paperlint toolchain` installs the packages your venues declare (or answer `Y` when
+  `paperlint build` offers). It also fetches **banal**, HotCRP's page-geometry script, which needs
+  `perl`. See [`toolchain.md`](toolchain.md).
+- **Java and Python 3** — some skills call them; install them yourself. `paperlint init` and
+  `paperlint doctor` list what is missing and which skills go quiet without it. `paperlint lint` needs none of
+  these programs.
 
-Nine, three of which are hand-edits to files, and one of which — step 5 — is undocumented enough
-that skipping it leaves `paper-edit-guard` **silently watching a directory that does not exist**
-(measured; issue #33).
+## What `paperlint init` does
 
-## What comparable tools do
+In order:
 
-Measured 2026-09-18 by reading published tarballs, not docs, with `esbuild` as a known-positive
-control for the probe.
+1. **Finds the papers directory**, or asks for it. The project must have a `package.json`; without
+   one `init` stops and tells you to run `npm init -y` first.
+2. **Declares it once**, as the `paperlint` key in your `package.json`.
+3. **Links each shipped skill** into `.claude/skills/<name>`, where Claude Code looks for skills.
+4. **Writes the hook commands** into `.claude/settings.json`, beside your own entries.
+5. **Offers a GitHub Actions workflow**, pinned to the release tag of the version you installed.
+6. **Offers a first paper** (`paperlint new`) if the papers directory has none.
+7. **Reports missing external programs** and the command that installs each. It installs nothing.
+8. **Runs `paperlint doctor`** and exits with its verdict.
+
+It asks only what it cannot guess or what costs something. A human at a terminal is asked; an
+agent, CI or `--yes` takes the defaults, and `init` prints which default it took. An unanswered
+question (Ctrl+D) also takes the default.
+
+## What `paperlint init` writes
+
+| what                                                               | where                   | when                                                                                                                                                                              |
+| ------------------------------------------------------------------ | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| a `paperlint` key naming your papers directory                     | your `package.json`     | always                                                                                                                                                                            |
+| the three hook commands, merged in beside your own entries         | `.claude/settings.json` | by default. A human at a terminal is asked [Y/n]; an agent, CI or `--yes` gets YES; `--no-hooks` skips. Hand-wired under another spelling: nothing written, so nothing runs twice |
+| a GitHub Actions workflow, pinned to `@v<installed version>`       | `.github/workflows/`    | only if you say yes; it asks once, and only when a human is at a terminal (stdin and stdout, no `CI`, no `--yes`)                                                                 |
+| a first paper, via `paperlint new`                                 | `<papers>/<name>/`      | only when the papers directory holds none: asked of a human at a terminal, otherwise only with `--paper <name>`                                                                   |
+| one relative symlink per shipped skill, into the installed package | `.claude/skills/<name>` | always — except where that name is already taken (a directory, a file, a link elsewhere): that entry is left as it is and named in the report                                     |
+
+It installs no software and touches nothing else. Commit `.claude/settings.json` so every clone
+gets the hooks; the hook commands run files inside `node_modules`, so a fresh clone needs
+`npm install` first.
+
+## Why it is shaped this way
+
+**One declaration, in `package.json`.** A hook cannot import code or walk up a tree looking for a
+config; it can only read a path it can spell, and the one it can always spell is
+`$CLAUDE_PROJECT_DIR/package.json`. That key is read by the three hooks, `eslint-rules/papers.mjs`,
+`lib/skill-trigger-cases.mjs` and `skills/paper-pipeline/scripts/consumer.mjs`; a separate
+`rpp.json` was read only by the CLI. `rpp.json` is still read as a deprecated fallback, and
+`paperlint lint` says so.
+
+**Nothing runs at install time.** No postinstall script and no automatic TeX download. npm's rule
+is that _"the only valid use of install or preinstall scripts is for compilation"_; husky removed
+its install script in 5.0.0 and Playwright in 1.38.0, because a failed install is cached and its
+output is hidden. An install that can fail quietly is worse than a step that says what it needs.
+
+**Hooks go into `.claude/settings.json`, not a plugin.** Claude Code documents that file as the
+way to share hooks with a team, `init` can write it, `paperlint doctor` can read it back, and it needs
+nothing installed inside Claude Code. A plugin fetched from npm gets no `node_modules` (`npm pack`
+strips the lockfile, and the host runs `npm ci` only when one is present), so it could not carry
+code that runs (probes: [`prior-art/repro/`](prior-art/repro/README.md); decision:
+[`prior-art/paper-folder-scaffolding.md`](prior-art/paper-folder-scaffolding.md) § 5). The package
+ships no plugin.
+
+**Skills are linked, not left in `node_modules`.** Claude Code finds project skills in
+`.claude/skills/<name>/SKILL.md` and never inside `node_modules`. The links also make the
+project-relative script paths inside the skills (`.claude/skills/paper-pipeline/scripts/x.mjs`)
+resolve.
+
+- **What is linked:** every subdirectory with a `SKILL.md` under the package's `skills/`
+  directory (`SHIPPED_SKILLS_DIR` in `skills/paper-pipeline/scripts/consumer.mjs`). No list is
+  written down.
+- **Where a link points:** the package as it resolves by name from your project, spelled through
+  `node_modules/paperlint`. Under pnpm the resolved path is a version-stamped store
+  directory, and a link spelled that way would dangle after the next upgrade.
+- **What it never does:** replace an entry it did not make. Such an entry is named in the report
+  and left alone, and `init` still succeeds; `paperlint doctor` repeats it as a warning.
+
+**`paperlint doctor` exists because the edit guard is silent when it works.** `paper-edit-guard` says
+nothing while guarding and says nothing while watching a directory that does not exist, so
+"installed" and "protecting you" look the same from outside. `doctor` prints the papers directory
+`paperlint lint` resolves and the one the hooks resolve, whether they match, whether the hooks are wired
+(once, twice, or not at all), and which external programs are missing. It also warns when the
+project still enables the old `research-paper-pipeline` plugin, because plugin plus settings would
+run every hook twice. A plugin installed at user scope is outside what it can read, and it says so.
+
+### How comparable tools install
+
+Read from their published tarballs on 2026-09-18. Most write their config from an `init`; the two
+that do not (Prettier, lint-staged) need the most steps. Playwright, the closest analogue (config,
+a CI workflow and a heavy toolchain), asks two questions and guesses the rest.
 
 | tool        | commands to working state                                   | writes config?                                                      | wires hooks/CI?                                                  | install-time script?                              |
 | ----------- | ----------------------------------------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------- |
@@ -55,213 +123,26 @@ control for the probe.
 | Prettier    | 3 — config created by shelling out to `node --eval`         | **no init command exists**                                          | no                                                               | none                                              |
 | lint-staged | 4+, all manual                                              | no                                                                  | no, delegates to husky                                           | none                                              |
 
-Three findings carry over here.
+## Package managers
 
-**Nobody installs anything at postinstall time, and the two who used to say why they stopped.**
-npm's own rule, quoted in husky's write-up: _"The only valid use of install or preinstall scripts
-is for compilation."_ Yarn 2: _"postinstall scripts are not a viable solution."_ husky adds two
-concrete failure modes — the package manager's cache makes a failed install unrepeatable (_"if
-Husky 4 failed to install the first time, re-running `npm install` won't work due to the cache"_),
-and package managers suppress the output, which matters _"for a tool with a big side effect
-(changing Git hooks)"_. Playwright's v1.38.0 notes: _"we recommend to explicitly download browsers
-via `npx playwright install` command."_
+**npm and pnpm are covered; Yarn Plug'n'Play is not supported.**
 
-This settles a question this package asked twice: an automatic install that can quietly fail is
-worse than an explicit step that says what it needs.
+`test/e2e/install.mjs` packs the tarball, installs it into a clean project with each manager that
+launches on the machine, and runs the hook command to see whether it resolves. A grep over
+`hooks.json` would not do: the string is right under any manager, and whether it resolves depends
+on the tree the manager laid out. It also checks that every shipped skill is reachable as
+`.claude/skills/<name>/SKILL.md`, that a second `init` changes nothing, and that a foreign
+directory under a skill's name survives.
 
-**The winning shape is an `init` that writes the config for you.** Six of the eight write it;
-the two that do not (Prettier, lint-staged) have the worst counts on the list.
-
-**Ask only about what cannot be guessed or is expensive.** Playwright is the closest analogue to
-this package — config plus a CI workflow plus a heavy external toolchain — and it asks exactly two
-questions: do you want the workflow, and may I download 300 MB of browsers. Everything guessable it
-guesses. ESLint asks more because language and framework genuinely cannot be inferred.
-
-## Decisions
-
-### One declaration, and it lives in `package.json`
-
-`rpp.json` is folded into the `research-paper-pipeline` key of `package.json`, and read from
-`rpp.json` only as a deprecated fallback that `rpp lint` reports.
-
-This reverses the decision that introduced `rpp.json` days earlier, and the reason is a count, not
-a preference: the `package.json` key has **five** readers — three hooks, `eslint-rules/papers.mjs`,
-`lib/skill-trigger-cases.mjs`, `skills/paper-pipeline/scripts/consumer.mjs` — and `rpp.json` has
-**one**, the CLI. Folding moves one reader; the other direction moves five.
-
-The deeper reason is the one Tailwind acted on when it deleted its `init`: do not scaffold a new
-file for a fact that can live in a file the project already has. A hook cannot import code and
-cannot discover a config by walking up a tree — it can only `cat` a path it is able to name. The
-one path it can always name is `$CLAUDE_PROJECT_DIR/package.json`.
-
-### The guard and the linter must be proved to agree
-
-The split config is how the defect got in; the defect itself is that **nothing ever compared what
-the CLI lints with what the hook guards**. Merging the files removes today's instance and does not
-remove the class — a future second surface would reintroduce it. So the comparison becomes a check
-that runs, not a property that happens to hold.
-
-### Nothing is installed at install time
-
-No postinstall, no autoinstall of TeX. The external toolchain is **reported**, never fetched: the
-report names each missing program, which skills go quiet without it, and the command that installs
-it. This follows the evidence above and this repo's own rule that an installer must verify the
-result rather than trust its exit code.
-
-### `rpp doctor` — the command that makes silence visible
-
-Prior art is outside the JS ecosystem: `brew doctor`, `flutter doctor`, `npm doctor`,
-`expo-doctor`. None of the eight tools above ships one, and none of them needs one, because none of
-them has a guard whose success state is silence.
-
-This package does. `paper-edit-guard` reports nothing when it is working and reports nothing when
-it is watching an empty directory, so "installed" and "protecting you" are indistinguishable from
-outside. `doctor` is what tells them apart: it prints the papers directory the CLI resolved, the
-one the hook will resolve, whether they are the same, whether the hooks are wired in
-`.claude/settings.json` (once, twice, or not at all — and whether the project also enables the
-old plugin), and which external programs are missing. A plugin installed at user scope is outside
-what it can read, and it says so.
-
-## The target count
-
-| #   | action                                                                                                                                                                                                              |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | `npm i -D research-paper-pipeline`                                                                                                                                                                                  |
-| 2   | `npx rpp init` — detects the papers directory, writes the declaration, links the skills into `.claude/skills/`, writes the hooks into `.claude/settings.json`, offers the CI workflow, reports any missing programs |
-
-Two, both in the same terminal.
-
-🔴 **CORRECTED 2026-09-23 — this section used to say three, and that "step 3 cannot be collapsed:
-it is typed into a different program, and nothing on disk can type it for you."** Step 3 was the two
-`/plugin` lines typed inside Claude Code. The premise was that hooks reach Claude Code only through
-a plugin. They also reach it through a file on disk: `.claude/settings.json`, which Claude Code
-documents as the way to share hooks with a team and which `init` can write. The plugin route also
-could not be run by an agent, could not be checked by `rpp doctor`, and — as a plugin the
-repository declares — is not installed in a cloud session. The decision and its sources:
-[`prior-art/paper-folder-scaffolding.md`](prior-art/paper-folder-scaffolding.md) § 5.
-
-### What the implementation added to this plan, and why
-
-One thing here was designed from the armchair after all, and the build found it: **the CLI itself
-could not read the single declaration.** `rpp lint` looked only for `rpp.json`, so an `init` that
-writes the `package.json` key and nothing else produces an install where the very next command
-reports "nothing to lint". Folding the declaration is not complete until the folding reader
-exists — `findDeclaration` in `src/cli.ts` now walks for either carrier, prefers `package.json`
-at each level, and says out loud when it fell back to the deprecated one.
-
-And one measurement, taken on a real pseudo-terminal rather than reasoned about: Node's
-`readline` `question()` REJECTS with `AbortError: Aborted with Ctrl+D` when the answer stream
-ends. That rejection escaped `init` as a stack trace **after** the declaration had already been
-written, so the install both succeeded and looked like a crash. An unanswered question is an
-answer; it now takes the default. Prompting itself turned out to be perfectly testable — the
-question function is injected, so the assertions never need a terminal, and the one property
-that does need a terminal (that a real prompt appears and its answer is used) was checked once
-by hand under `script`.
-
-## Which package managers are covered, and why Yarn PnP is not
-
-Moved out of the README on 2026-09-19: a reader deciding whether to try the tool needs the
-verdict, not the forensics. The verdict is that npm and pnpm are covered and Yarn Plug'n'Play is
-not supported.
-
-`test/e2e/install.mjs` packs the tarball, installs it into a clean consumer project with each
-manager that is actually present on the machine (`npm --version`, `pnpm --version` — a manager
-that does not launch is not counted), and then **runs the hook command** to see whether it
-resolves. The check is deliberately not a grep over `hooks.json`: the string there is correct
-under any manager, while whether it resolves is a property of the tree the manager laid out on
-disk. The verdict is whether the command died on `Cannot find module`.
-
-This matters because one decision has already diverged between the repository's own tree and a
-consumer's: moving `vigiles` from peer to regular dependencies works on npm and does not work on
-pnpm, because the hook wiring addresses the runtime from the project root and pnpm does not put
-transitive dependencies at the root. No test found that.
-
-**Yarn Plug'n'Play is excluded by construction, not by omission.** The hook commands in
-`plugin/hooks/hooks.json` name
-`${CLAUDE_PROJECT_DIR}/node_modules/research-paper-pipeline/bin/rpp.mjs` literally, and under PnP
-there is no `node_modules` directory for that path to resolve against. Supporting it would mean a
-different way of answering "where is the runtime", not a flag.
-
-## Why the plugin ships no code
-
-⚠️ **Since 2026-09-23 the plugin is no longer how anything is installed.** `rpp init` installs both
-halves itself: it writes the hook commands into `.claude/settings.json` (see "The target count"
-above), and it links every skill into `.claude/skills/<name>` as a symlink (see "The npm package is
-not where Claude Code looks" below). `plugin/hooks/hooks.json` stays, as the one source `init`
-reads the hook wiring from, and the marketplace entry stays for one
-release so existing plugin users are not broken; `init` and `doctor` tell a project that enables
-the plugin to uninstall it, because plugin + settings would run every hook twice. The reasoning
-below is still why the plugin never carried code.
-
-The plugin carries the hook wiring only — a manifest and `plugin/hooks/hooks.json`. That split is
-deliberate, and it is also forced.
-
-A plugin fetched from npm gets **no** `node_modules` at all, and gets them silently: `npm pack`
-strips `package-lock.json` unconditionally, and the host runs `npm ci` only when a lockfile is
-present in the fetched copy. Measured 2026-09-19; the probes are in
-[`prior-art/repro/`](prior-art/repro/README.md). A plugin that carried the skills would therefore
-carry scripts it could not run — the failure arriving as `Cannot find module` at hook time, on a
-plugin that installed cleanly.
-
-So the skills ride with the npm package, where a real install has happened, and the plugin stays
-empty enough that it cannot have this problem.
-
-### The npm package is not where Claude Code looks — `rpp init` links the skills
-
-Riding with the npm package gets the skills onto disk, not into Claude Code. Claude Code discovers
-project skills in `.claude/skills/<name>/SKILL.md` (plus user and plugin skills) and never inside
-`node_modules`. Until 2026-09-23 the README said the skills "sit in
-`node_modules/research-paper-pipeline/skills/` and Claude Code reads them from there"; that was
-false, and a consumer who followed it had no `/paper-pipeline` (Codex review on #45). Every test
-stayed green meanwhile, because every test looked at the package directory, not at the project.
-
-The one consumer where the skills did work had made the links by hand, one per skill:
-
-```
-.claude/skills/<name> -> ../../node_modules/research-paper-pipeline/skills/<name>
-```
-
-`rpp init` now makes exactly those links (`src/link-skills.ts`). They are also what makes the
-project-root-relative script paths inside the skills (`.claude/skills/paper-pipeline/scripts/x.mjs`,
-89 of 104 script references on 2026-09-23; the install e2e prints the live count) resolve in a
-consumer at all.
-
-- **What is linked** is read from the package's own declaration — `.claude-plugin/plugin.json`,
-  `"skills"` — every subdirectory holding a `SKILL.md`. No list and no count is written down.
-- **Where the link points** is the package as it resolves by name from the project, spelled
-  through the project's own `node_modules/research-paper-pipeline`. Under pnpm the resolved path
-  is the version-stamped `.pnpm/…` store directory; a link spelled that way would dangle after the
-  next upgrade, one through `node_modules/research-paper-pipeline` does not.
-- **What it never does** is replace an entry it did not make. A directory, a file, a link
-  elsewhere or a dangling link under a shipped skill's name is reported by name and left alone,
-  and that does not fail `init`: refusing to overwrite is the correct outcome, not a broken install.
-  `rpp doctor` repeats the gap as a warning, with the same reasoning as a missing external program.
-
-`test/e2e/install.mjs` checks it from the consumer's side under npm and pnpm: every shipped skill
-reachable as `<consumer>/.claude/skills/<name>/SKILL.md`, every script path resolving from the
-consumer root, a second `init` changing nothing, and a foreign directory under a shipped name
-surviving untouched.
-
-## What `rpp init` writes
-
-Moved out of the README on 2026-09-23. Exactly:
-
-| what                                                               | where                   | when                                                                                                                                                                              |
-| ------------------------------------------------------------------ | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| a `research-paper-pipeline` key naming your papers directory       | your `package.json`     | always                                                                                                                                                                            |
-| the three hook commands, merged in beside your own entries         | `.claude/settings.json` | by default. A human at a terminal is asked [Y/n]; an agent, CI or `--yes` gets YES; `--no-hooks` skips. Hand-wired under another spelling: nothing written, so nothing runs twice |
-| a GitHub Actions workflow                                          | `.github/workflows/`    | only if you say yes; it asks once, and only when a human is at a terminal (stdin and stdout, no `CI`, no `--yes`)                                                                 |
-| a first paper, via `rpp new`                                       | `<papers>/<name>/`      | only when the papers directory holds none: asked of a human at a terminal, otherwise only with `--paper <name>`                                                                   |
-| one relative symlink per shipped skill, into the installed package | `.claude/skills/<name>` | always — except where that name is already taken (a directory, a file, a link elsewhere): that entry is left as it is and named in the report                                     |
-
-It installs no software and touches nothing else. It ends by running `rpp doctor` and exits with
-its verdict.
+Yarn Plug'n'Play has no `node_modules`, and the hook commands in `plugin/hooks/hooks.json` name
+`${CLAUDE_PROJECT_DIR}/node_modules/paperlint/bin/rpp.mjs`. Supporting it would need
+a different answer to "where is the runtime", not a flag.
 
 ## Install size
 
-Measured 2026-09-23 on a clean project with npm 10.9.7 (`npm i <tarball>`, production
-dependencies only), **before** zernie/vigiles#280 made the `vigiles` grammars optional — so the
-`@ast-grep/*` and `typescript` rows below are expected to shrink; re-measure before quoting them.
+Measured 2026-09-23 with npm 10.9.7 on a clean project (production dependencies only). Since then
+zernie/vigiles#280 made the `vigiles` grammars optional, so the `@ast-grep/*` and `typescript` rows
+are probably smaller now; re-measure before quoting them.
 
 |                                        |       size |
 | -------------------------------------- | ---------: |
@@ -272,5 +153,18 @@ dependencies only), **before** zernie/vigiles#280 made the `vigiles` grammars op
 | of which `typescript` (via `vigiles`)  |      23 MB |
 | of which `vigiles` itself              |       6 MB |
 
-Neither `rpp lint` nor any of the three hooks loads `@ast-grep` or `typescript` — measured by
-tracing every module they resolve; `vigiles` itself is loaded.
+Neither `paperlint lint` nor any of the three hooks loads `@ast-grep` or `typescript` (traced);
+`vigiles` itself is loaded.
+
+## Troubleshooting
+
+| symptom                                                      | cause and fix                                                                                                                                   |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `init`: skills "nothing linked", or hooks that fail to start | the package is not installed in this project (`npx` ran a temporary copy). Run `npm i -D paperlint`, then `npx paperlint init` again            |
+| `init` stops: no `package.json`                              | run `npm init -y`, then `npx paperlint init` again                                                                                              |
+| `paperlint lint`: `nothing to lint`                          | no declaration was found. Run `npx paperlint init`, or pass the directory: `paperlint lint papers`                                              |
+| hooks fail with `Cannot find module` in a fresh clone        | the hook commands run files in `node_modules`: run `npm install`                                                                                |
+| `paperlint: not built`                                       | installed from git with `--ignore-scripts`, or a clone before building: run `npm run build` in the package                                      |
+| every hook runs twice                                        | the project still enables the old plugin. `init` and `doctor` print the uninstall command; also remove it from `enabledPlugins`                 |
+| a skill does not show up in Claude Code                      | its name was already taken in `.claude/skills/`. `init` names it and leaves it alone; rename or remove yours and run `npx paperlint init` again |
+| anything else                                                | `npx paperlint doctor` — it checks the setup and exits non-zero on anything miswired                                                            |

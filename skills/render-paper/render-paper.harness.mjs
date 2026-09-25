@@ -194,12 +194,7 @@ await checkSkill("render-paper");
   // true at once, and the package has to win, otherwise the consumer silently keeps building with
   // their old copy. Plant BOTH candidates and see which one is chosen.
   const both = realpathSync(mkdtempSync(join(tmpdir(), "venues-both-")));
-  const pkgVenues = join(
-    both,
-    "node_modules",
-    "research-paper-pipeline",
-    "venues",
-  );
+  const pkgVenues = join(both, "node_modules", "paperlint", "venues");
   const skillVenues = join(
     both,
     ".claude",
@@ -210,9 +205,9 @@ await checkSkill("render-paper");
   );
   for (const d of [pkgVenues, skillVenues]) mkdirSync(d, { recursive: true });
   writeFileSync(
-    join(both, "node_modules", "research-paper-pipeline", "package.json"),
+    join(both, "node_modules", "paperlint", "package.json"),
     JSON.stringify({
-      name: "research-paper-pipeline",
+      name: "paperlint",
       version: "0.0.0",
       exports: { "./venues/*": "./venues/*" },
     }),
@@ -281,7 +276,7 @@ await checkSkill("render-paper");
     );
     assert.match(
       build,
-      /require\.resolve\("research-paper-pipeline\/venues\/paper-guards\.tex"\)/,
+      /require\.resolve\("paperlint\/venues\/paper-guards\.tex"\)/,
       `${where}: the ladder's first rung (the package) must remain`,
     );
     assert.match(

@@ -27,21 +27,6 @@ process.exit(
     runner: "node",
     cases: [
       {
-        name: "the skills directory is remembered instead of read from plugin.json",
-        harness: HARNESS,
-        expect: "it links every skill the package DECLARES",
-        disables:
-          "the declaration as the one source. The day the package moves its skills, a linker " +
-          "that remembers `skills/` links nothing — and reports a clean run over zero skills",
-        edits: [
-          [
-            SRC,
-            "  const skillsDir = join(pkgDir, declared);",
-            '  const skillsDir = join(pkgDir, "skills");',
-          ],
-        ],
-      },
-      {
         // The definition lives in the port since rpp#62 (`installedSkills` in consumer.mjs), so
         // the defect is planted THERE and must still die in THIS harness — the evidence that the
         // linker reads it through the shared function rather than through a copy of its own.
@@ -69,8 +54,8 @@ process.exit(
         edits: [
           [
             SRC,
-            '      symlinkSync(target, entry, "dir");',
-            '      symlinkSync(resolve(physicalHome, target), entry, "dir");',
+            '    symlinkSync(target, entry, "dir");',
+            '    symlinkSync(resolve(dirname(entry), target), entry, "dir");',
           ],
         ],
       },
@@ -99,26 +84,25 @@ process.exit(
         edits: [
           [
             SRC,
-            '  symlinkSync,\n} from "node:fs";',
-            '  symlinkSync,\n  rmSync,\n} from "node:fs";',
+            '  unlinkSync,\n} from "node:fs";',
+            '  unlinkSync,\n  rmSync,\n} from "node:fs";',
           ],
           [
             SRC,
-            '    if (seen.status !== "missing" || !write)',
-            '    if (seen.status === "present" || !write)',
+            "  if (!write || !fixable) {",
+            '  if (!write || seen.status === "present") {',
           ],
           [
             SRC,
-            '      symlinkSync(target, entry, "dir");',
-            '      rmSync(entry, { recursive: true, force: true });\n      symlinkSync(target, entry, "dir");',
+            '    symlinkSync(target, entry, "dir");',
+            '    rmSync(entry, { recursive: true, force: true });\n    symlinkSync(target, entry, "dir");',
           ],
         ],
       },
       {
         name: "the resolved store path is linked instead of the project's own spelling",
         harness: HARNESS,
-        expect:
-          "under pnpm the link goes through node_modules/research-paper-pipeline",
+        expect: "under pnpm the link goes through node_modules/<package>",
         disables:
           "the link surviving an upgrade under pnpm. The store directory carries the version in " +
           "its name; the next install removes it and every skill link dangles until init is re-run",
@@ -136,14 +120,10 @@ process.exit(
         expect:
           "write:false reports every skill as missing and creates nothing",
         disables:
-          "the difference between looking and changing. `rpp doctor` would quietly repair the " +
+          "the difference between looking and changing. `paperlint doctor` would quietly repair the " +
           "state it is supposed to report, so the report can never show the gap",
         edits: [
-          [
-            SRC,
-            '    if (seen.status !== "missing" || !write)',
-            '    if (seen.status !== "missing")',
-          ],
+          [SRC, "  if (!write || !fixable) {", "  if (!fixable) {"],
           [
             SRC,
             "  if (write && shipped.names.length > 0) {",

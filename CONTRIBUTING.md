@@ -90,8 +90,8 @@ The README links only what a user needs. These are for people changing the packa
 
 - [`docs/prior-art/`](docs/prior-art/README.md) — how comparable tools are shaped, with the URLs
   that were checked
-- [`docs/install.md`](docs/install.md) — why the install is shaped this way; a decision record,
-  measured
+- [`docs/install.md`](docs/install.md) — installation: what `npm i` and `paperlint init` set up, what
+  `init` writes, supported package managers, troubleshooting, and why it is shaped this way
 - [`docs/e2e.md`](docs/e2e.md) — the end-to-end runs: what each proves, what they do not cover,
   and when a change owes one
 - [`docs/incidents.md`](docs/incidents.md) — what broke, measured
@@ -108,6 +108,22 @@ node scripts/run-mutations.mjs   # run the remaining batteries (deprecated, #52 
 
 None of these are needed to USE the tool — they are here because the gates are part of the
 argument, not decoration.
+
+## Releases
+
+Every push to `main` runs semantic-release (`.github/workflows/release.yml`). The squash commit —
+that is, the PR title — decides what ships:
+
+| title                                                         | release |
+| ------------------------------------------------------------- | ------- |
+| `feat: …`                                                     | minor   |
+| `fix: …`, `perf: …`                                           | patch   |
+| any type with `!` (`fix!: …`), or a `BREAKING CHANGE:` footer | major   |
+| `docs:`, `chore:`, `ci:`, `test:`, `refactor:` …              | none    |
+
+`pr-title.yml` fails a PR whose title is not a conventional commit, and for a PR with one commit
+it checks that commit's subject too, because GitHub squashes to it. npm, the git tag `vX.Y.Z` and
+the GitHub Release always carry the same version. Never run `npm publish` by hand.
 
 ## Why not one of the existing academic skill suites
 

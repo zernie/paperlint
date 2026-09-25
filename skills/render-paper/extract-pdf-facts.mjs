@@ -4,18 +4,18 @@
  * `<paper>/_build/paper.facts.json`. It judges nothing; lint rules judge the file.
  *
  * 🔴 A THIN SHIM. The measuring and the writing are `measurePaper` and `writeFactsFile` in
- * `src/facts-file.ts`, the one writer of that file; `rpp build` calls the same functions right after
+ * `src/facts-file.ts`, the one writer of that file; `paperlint build` calls the same functions right after
  * it compiles a paper. This file is a composition root: it reads the environment and builds the real
  * adapters (`dist/adapters/node/`), and it owns the `--strict` policy. This
- * script exists for two callers the build does not serve: a PDF rpp did not build (a paper that
+ * script exists for two callers the build does not serve: a PDF paperlint did not build (a paper that
  * declares its artifact elsewhere in `venue.json`), and CI steps that name this script by path.
  * It reaches the package's compiled code through `../../dist/`, resolved from this file's real
  * location, so it works the same from a checkout, from `node_modules` and through a symlink.
  *
- * WHAT IT MEASURES WITH. pdf.js (the `unpdf` package, installed with rpp) for the page count, the
+ * WHAT IT MEASURES WITH. pdf.js (the `unpdf` package, installed with paperlint) for the page count, the
  * fonts and the last page — nothing to install. `banal` (the page-geometry script HotCRP's format
- * checker runs) for paper size, columns and font sizes — run by perl on XML rpp writes from the same
- * pdf.js read, no poppler. `npx rpp toolchain` installs it; `$BANAL` or a project's `vendor/banal`
+ * checker runs) for paper size, columns and font sizes — run by perl on XML paperlint writes from the same
+ * pdf.js read, no poppler. `npx paperlint toolchain` installs it; `$BANAL` or a project's `vendor/banal`
  * take precedence (`src/adapters/banal/`).
  *
  * ── THE EXIT-CODE CONTRACT (callers branch on it; the table is `src/exit-code.ts`) ──

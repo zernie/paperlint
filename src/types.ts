@@ -24,7 +24,7 @@ export interface RppConfig {
   causeMarker?: string;
   /** Which files a paper directory must carry; `false` turns the check off entirely. */
   structure?: StructureConfig | false;
-  /** REMOVED — `rpp build` compiles the paper itself. Still typed so a leftover key can be named. */
+  /** REMOVED — `paperlint build` compiles the paper itself. Still typed so a leftover key can be named. */
   buildScripts?: unknown;
   /** ESLint config blocks appended after rpp's own — PARSED by `parseSettings` in cli.ts. */
   rules?: readonly RuleBlock[];

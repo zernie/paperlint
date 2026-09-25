@@ -242,7 +242,8 @@ try {
   check(
     "one line per ignored script tells the author it is ignored",
     events.filter(
-      (e) => e !== "run" && /is ignored — rpp builds the paper itself/.test(e),
+      (e) =>
+        e !== "run" && /is ignored — paperlint builds the paper itself/.test(e),
     ).length === 2,
   );
   check(
@@ -626,5 +627,5 @@ try {
 }
 
 console.log(
-  `✓ ${String(n)} assertions passed — build: rpp compiles, build.sh never runs, a red build leaves no PDF`,
+  `✓ ${String(n)} assertions passed — build: paperlint compiles, build.sh never runs, a red build leaves no PDF`,
 );

@@ -221,7 +221,7 @@ check(
   const u = R.declaredUnion(VENUES);
   const names = R.packageNames(u.tex);
   check(
-    "declaredUnion: base + every venue — what `rpp toolchain` installs",
+    "declaredUnion: base + every venue — what `paperlint toolchain` installs",
     u.profiles === venues.length + 1 &&
       names.includes("acmart") &&
       names.includes("lineno") &&

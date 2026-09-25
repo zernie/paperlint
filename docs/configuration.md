@@ -1,6 +1,6 @@
 # Configuration reference
 
-One key in your `package.json`, written by `rpp init`. It holds the facts only your repository can
+One key in your `package.json`, written by `paperlint init`. It holds the facts only your repository can
 supply — nothing in it is guessable by a package that has never seen your corpus.
 
 The README carries the minimal version of this. Everything below is the full surface, moved out on
@@ -8,7 +8,7 @@ The README carries the minimal version of this. Everything below is the full sur
 
 ```json
 {
-  "research-paper-pipeline": {
+  "paperlint": {
     "papersDir": "papers",
     "authorListCommand": "node scripts/bib-authors.mjs",
     "typographyDebt": { "papers/my-paper": { "sectionSign": 12 } },
@@ -41,19 +41,19 @@ The README carries the minimal version of this. Everything below is the full sur
 The skill scripts read a few more keys of the same object — `ledger`, `scripts`, `timezone`,
 `contactEmail`, `citeChecks`, `triggerCases` — documented with the skills that use them.
 
-**Any other key is an error**, named in the message: `package.json → "research-paper-pipeline":
+**Any other key is an error**, named in the message: `package.json → "paperlint":
 unknown key "typographyDept"`. A misspelt key would otherwise read as "not set", and the setting
 you meant would silently do nothing. The list of known keys is `SETTINGS_KEYS` in
 `lib/paper-config.mjs`.
 
 `papersDir` is required because the scope is the one thing that must not default: a default of `"."`
-turns every run into a green report over the whole checkout. `rpp init` fills it by measuring —
+turns every run into a green report over the whole checkout. `paperlint init` fills it by measuring —
 and when nothing on disk looks like a papers directory, it writes the documented default and says
 in the same breath that it is a guess.
 
-Until 2026-09-24 this field was called `papers`. The old name is not read as a fallback: `rpp lint`,
-`rpp init`, `rpp doctor`, the ESLint helper and the edit guard all stop with
-`"papers" was renamed to "papersDir" in package.json → "research-paper-pipeline"`. The two advisory
+Until 2026-09-24 this field was called `papers`. The old name is not read as a fallback: `paperlint lint`,
+`paperlint init`, `paperlint doctor`, the ESLint helper and the edit guard all stop with
+`"papers" was renamed to "papersDir" in package.json → "paperlint"`. The two advisory
 hooks stay silent instead. The name is defined once, as `PAPERS_DIR_FIELD` in
 `lib/paper-config.mjs`.
 
@@ -64,19 +64,19 @@ ESLint helper, the skill scripts — and a separate config file had **one**, the
 import code and cannot walk up a tree looking for a config; it can read a path it is able to name,
 and the one path it can always name is the project's `package.json`.
 
-`rpp lint` looks for it in the current directory and then upwards, the way eslint and tsc find
+`paperlint lint` looks for it in the current directory and then upwards, the way eslint and tsc find
 theirs, and prints which file it found. `--config <file>` overrides the search.
 
 ⚠️ **`rpp.json` is deprecated and still read.** Earlier versions of `init` created it; `init` no
 longer does, and a run that reads one says so on its first line. The hooks never read it, so
 leaving settings there is how the linter and the guard end up watching different directories —
-`rpp init` copies the value across for you.
+`paperlint init` copies the value across for you.
 
 ## The `rules` key: turning rules on and off
 
 `rules` is a list of blocks in ESLint's own
 [flat-config shape](https://eslint.org/docs/latest/use/configure/configuration-files), limited to
-the three keys that make sense in JSON — `files`, `ignores` and `rules`. rpp appends the blocks
+the three keys that make sense in JSON — `files`, `ignores` and `rules`. paperlint appends the blocks
 **after** its own configuration, so, as in ESLint, a later block wins: a block can turn on a rule
 that is off by default, or change the severity of one that is on.
 
@@ -95,23 +95,23 @@ that is off by default, or change the severity of one that is on.
 
 - **`files` and `ignores` are globs relative to the file that holds the settings** — the
   directory of your `package.json` — exactly as ESLint resolves them relative to its config file,
-  whatever directory you run `rpp lint` from. A block without `files` applies to every linted file.
+  whatever directory you run `paperlint lint` from. A block without `files` applies to every linted file.
   A pattern ending in `/**` is the usual way to name one paper.
 - **A rule entry** is a severity (`"off"`, `"warn"`, `"error"`, or `0`/`1`/`2`), or a list whose
   first element is a severity and the rest are the rule's options.
-- **Only rules rpp ships can be named** — the ones in [`docs/rules.md`](rules.md) and
-  [`docs/optional-rules.md`](optional-rules.md). A rule id rpp does not ship, a bad severity, a
+- **Only rules paperlint ships can be named** — the ones in [`docs/rules.md`](rules.md) and
+  [`docs/optional-rules.md`](optional-rules.md). A rule id paperlint does not ship, a bad severity, a
   `rules` that is not a list, or a block key other than `files`, `ignores` and `rules` stops the run
   with a message naming the exact key, before anything is linted.
 - **An optional rule you turned on must reach a paper.** If no linted `paper.tex` gets the rule —
-  usually a `files` glob with a typo — `rpp lint` fails and says so: a rule that never runs
+  usually a `files` glob with a typo — `paperlint lint` fails and says so: a rule that never runs
   reports exactly like one that passed.
 
 ## Required files
 
 A rule runs on a file it was handed. A file that is missing is never handed to anything — so no
 rule can report it, and a paper directory without `PIPELINE-STATUS.md` gets **zero** rules and a
-clean report. `rpp lint` therefore checks presence itself, before ESLint runs.
+clean report. `paperlint lint` therefore checks presence itself, before ESLint runs.
 
 Detection is generous and requirements are strict, on purpose. A directory counts as a paper only
 once it already holds one of the marker files, so `research/`, `plans/` and other neighbours in
@@ -138,21 +138,21 @@ This is the half [ls-lint](https://ls-lint.org/) cannot do. ls-lint judges the *
 that exist; it has nothing to compare against for a file that does not. Use both: ls-lint for
 "what is there is named right", this for "what must be there is there".
 
-## How `rpp build` compiles a paper
+## How `paperlint build` compiles a paper
 
-`rpp build <paper>` compiles `paper.tex` to `paper.pdf` itself, with TeX Live's `pdflatex` and
+`paperlint build <paper>` compiles `paper.tex` to `paper.pdf` itself, with TeX Live's `pdflatex` and
 `bibtex` ([`docs/toolchain.md`](toolchain.md)). There is nothing to configure and no script to
 write. It prints its plan first, one line per step, then runs it:
 
 ```
 papers/my-paper
-  inputs: TEXINPUTS += <rpp>/skills/submit-paper/references/venues
+  inputs: TEXINPUTS += <paperlint>/skills/submit-paper/references/venues
   compile: paper.tex (\documentclass[sigconf,screen]{acmart}, venue agenticdev)
   measure: pdf.js → _build/paper.facts.json (facts for the lint rules; nothing is judged here)
   ✓ paper.pdf — 4 pdflatex passes, 1 bibtex run; facts: _build/paper.facts.json, last page 621.5 / 264.8 pt
 ```
 
-- **inputs** — rpp's own venue files (`paper-guards.tex`, `<venue>.tex`) are put on `TEXINPUTS`,
+- **inputs** — paperlint's own venue files (`paper-guards.tex`, `<venue>.tex`) are put on `TEXINPUTS`,
   so `\input{paper-guards}` in a preamble resolves with no setup. The system tree still resolves
   after them.
 - **compile** — `pdflatex -interaction=nonstopmode -halt-on-error -file-line-error`, then `bibtex`
@@ -167,17 +167,17 @@ papers/my-paper
   its program is embedded, and whether it is Type 3), and the heights of the last page's two
   columns — or why they were not measured (a stub page of a few lines, or a review build with
   numbered lines). [banal](https://github.com/kohler/hotcrp/blob/master/src/banal) — installed by
-  `rpp toolchain`, or a project's own `vendor/banal` or `$BANAL` — adds the page size, column count
+  `paperlint toolchain`, or a project's own `vendor/banal` or `$BANAL` — adds the page size, column count
   and font sizes, measured from the same pdf.js read (no poppler; see
   [`toolchain.md`](toolchain.md#page-geometry-banal-without-poppler)); without banal those fields
   are `null` and the build says so. A PDF pdf.js cannot read fails the build. The file is
   written by one function, which `skills/render-paper/extract-pdf-facts.mjs` also calls for PDFs
-  rpp did not build. Keep `_build/` out of git: the facts carry the PDF's SHA-256, and a rule
+  paperlint did not build. Keep `_build/` out of git: the facts carry the PDF's SHA-256, and a rule
   refuses facts about a different PDF than the one on disk.
 
 The build does **not** judge the layout. A balanced last page, a page limit, the fonts a venue
 wants — those are verdicts about the finished PDF, and they belong to lint rules that can be
-turned on per venue, given a severity and suppressed with a reason. rpp once searched for a
+turned on per venue, given a severity and suppressed with a reason. paperlint once searched for a
 `\balance` position itself and failed the build when none worked; that was removed on
 2026-09-24.
 
@@ -214,21 +214,21 @@ having run on it, because a missing build read as nothing to do.
 `--dry-run` prints the plan and runs nothing — and deletes nothing, `paper.pdf` included.
 
 ⚠️ **A `build.sh` or `repro/build-submission.sh` in the paper directory is IGNORED.** Earlier
-versions ran it; `rpp build` now says one line — `build.sh is ignored — rpp builds the paper
+versions ran it; `paperlint build` now says one line — `build.sh is ignored — paperlint builds the paper
 itself` — and builds the paper itself. The `buildScripts` key is ignored the same way.
 Why: [#59](https://github.com/zernie/research-paper-pipeline/issues/59).
 
 ## Using the rules from an existing ESLint config
 
-Under the hood `rpp lint` builds an ESLint flat config and runs it. If your repository already
-lints with ESLint, you can import the rule modules from `research-paper-pipeline/eslint-rules/`
+Under the hood `paperlint lint` builds an ESLint flat config and runs it. If your repository already
+lints with ESLint, you can import the rule modules from `paperlint/eslint-rules/`
 and wire them yourself; `bin/rpp.mjs` exports `buildConfig(options, texLanguage)` that returns
 the exact config the CLI uses, so the shortest path is:
 
 ```js
 // eslint.config.mjs
-import { buildConfig } from "research-paper-pipeline/bin/rpp.mjs";
-import { texLanguage } from "research-paper-pipeline/eslint-rules/latex-language.mjs";
+import { buildConfig } from "paperlint/bin/rpp.mjs";
+import { texLanguage } from "paperlint/eslint-rules/latex-language.mjs";
 export default buildConfig({ minFindings: 3 }, texLanguage);
 ```
 

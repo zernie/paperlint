@@ -20,7 +20,11 @@
  */
 import { execFileSync, spawnSync } from "node:child_process";
 import { PAPERS_DIR_FIELD } from "../../lib/paper-config.mjs";
-import { installedSkills } from "../../skills/paper-pipeline/scripts/consumer.mjs";
+import {
+  installedSkills,
+  PACKAGE_NAME,
+  SHIPPED_SKILLS_DIR,
+} from "../../skills/paper-pipeline/scripts/consumer.mjs";
 import {
   mkdtempSync,
   mkdirSync,
@@ -141,7 +145,7 @@ function stageCorpus(root) {
 /**
  * WHERE THE PACKAGE LANDED, asked of Node rather than spelled out (docs/prior-art/package-location.md).
  *
- * The spelling `node_modules/research-paper-pipeline` is not wrong under npm or pnpm. What
+ * The spelling `node_modules/<package>` is not wrong under npm or pnpm. What
  * resolution adds is a second claim the hardcode cannot see: the package is REACHABLE BY NAME
  * from the consumer. Measured there with a closed `exports` map — the directory still exists, every
  * `existsSync` stays green, and the documented public import is broken. `createRequire`, not
@@ -153,7 +157,7 @@ function locateInstalled(consumer) {
     pathToFileURL(join(consumer, "__consumer__.js")).href,
   );
   try {
-    const file = req.resolve("research-paper-pipeline/package.json");
+    const file = req.resolve(`${PACKAGE_NAME}/package.json`);
     return {
       dir: dirname(file),
       manifest: JSON.parse(readFileSync(file, "utf8")),
@@ -164,18 +168,13 @@ function locateInstalled(consumer) {
 }
 
 /**
- * The skills directory as the package DECLARES it (`.claude-plugin/plugin.json`, `"skills"`),
- * not as this script remembers it. A root without the declaration is an error, not a fallback:
- * a default here would make a missing declaration look like a correct one.
+ * The skills directory under `root`, from the same constant the linker reads. A root without it is
+ * an error, not zero skills: an empty list would read as a clean install.
  */
 function skillsDir(root) {
-  const file = join(root, ".claude-plugin", "plugin.json");
-  const declared = existsSync(file)
-    ? JSON.parse(readFileSync(file, "utf8")).skills
-    : undefined;
-  if (typeof declared !== "string")
-    throw new Error(`no "skills" declared in ${file}`);
-  return join(root, declared);
+  const dir = join(root, SHIPPED_SKILLS_DIR);
+  if (!existsSync(dir)) throw new Error(`no skills directory at ${dir}`);
+  return dir;
 }
 
 /**
@@ -260,7 +259,7 @@ function contentDelivery(installed) {
  * check looked at the package directory.
  *
  * So this walks the SAME list — every skill the installed package declares — from the consumer
- * root, through the links `rpp init` made, and resolves the script paths the skills name the way
+ * root, through the links `paperlint init` made, and resolves the script paths the skills name the way
  * the agent will: `.claude/skills/<skill>/scripts/x.mjs` from the project root, `scripts/x.mjs`
  * from the skill's own directory as the project sees it.
  */
@@ -389,20 +388,24 @@ try {
     // SYMLINK to the `.mjs`, and `node` swallows it; under pnpm it holds a SHELL WRAPPER, and
     // `node` chokes on its very first line `basedir=$(dirname …)`. The first edition of this test
     // called `node bin` and reported three false failures on pnpm — that is, it measured my way
-    // of launching, not the package. The consumer calls `npx rpp`, which executes the file rather
+    // of launching, not the package. The consumer calls `npx paperlint`, which executes the file rather
     // than feeding it to node.
-    const bin = join(consumer, "node_modules", ".bin", "rpp");
+    const bin = join(consumer, "node_modules", ".bin", PACKAGE_NAME);
     const help = sh(bin, ["--help"], { cwd: consumer });
     help.status === 0
-      ? ok("`rpp --help` answers with zero")
-      : bad("`rpp --help` answers with zero", help.stderr);
+      ? ok(`\`${PACKAGE_NAME} --help\` answers with zero`)
+      : bad(`\`${PACKAGE_NAME} --help\` answers with zero`, help.stderr);
     // The shim above proves the MANAGER did its part. This proves the file the manifest PROMISES
     // exists and runs — the real file under both managers, so `node <it>` is uniform where
     // `node <shim>` is not (pnpm writes a shell wrapper).
     const binField = located.manifest.bin;
-    const binRel = typeof binField === "string" ? binField : binField?.rpp;
+    const binRel =
+      typeof binField === "string" ? binField : binField?.[PACKAGE_NAME];
     if (!binRel)
-      bad("the manifest declares the `rpp` bin", JSON.stringify(binField));
+      bad(
+        `the manifest declares the \`${PACKAGE_NAME}\` bin`,
+        JSON.stringify(binField),
+      );
     else {
       const real = sh(process.execPath, [join(installed, binRel), "--help"], {
         cwd: consumer,
@@ -420,16 +423,16 @@ try {
     const declared = (() => {
       try {
         return JSON.parse(readFileSync(join(consumer, "package.json"), "utf8"))[
-          "research-paper-pipeline"
+          "paperlint"
         ]?.[PAPERS_DIR_FIELD];
       } catch (e) {
         return `unreadable: ${e.message}`;
       }
     })();
     declared === "papers"
-      ? ok("`rpp init` declared the papers directory in package.json")
+      ? ok("`paperlint init` declared the papers directory in package.json")
       : bad(
-          "`rpp init` declared the papers directory in package.json",
+          "`paperlint init` declared the papers directory in package.json",
           `package.json ended up with ${JSON.stringify(declared)}\n${init.stdout ?? ""}${init.stderr ?? ""}`,
         );
     // ONE declaration: no second carrier is created, otherwise the two diverge silently — that is
@@ -441,9 +444,9 @@ try {
           "rpp.json appeared",
         );
     init.status === 0
-      ? ok("`rpp init` finished with zero — doctor found no discrepancy")
+      ? ok("`paperlint init` finished with zero — doctor found no discrepancy")
       : bad(
-          "`rpp init` finished with zero — doctor found no discrepancy",
+          "`paperlint init` finished with zero — doctor found no discrepancy",
           (init.stdout ?? "") + (init.stderr ?? ""),
         );
 
@@ -502,10 +505,10 @@ try {
       (c) => wiredCommands.filter((w) => w === c).length === 1,
     )
       ? ok(
-          `\`rpp init\` wired all ${wiredCommands.length} hook command(s) into .claude/settings.json, once each`,
+          `\`paperlint init\` wired all ${wiredCommands.length} hook command(s) into .claude/settings.json, once each`,
         )
       : bad(
-          "`rpp init` wired the hooks into .claude/settings.json, once each",
+          "`paperlint init` wired the hooks into .claude/settings.json, once each",
           `${JSON.stringify(wiredCommands).slice(0, 300)}\n${init.stdout ?? ""}`,
         );
     /in a fresh clone they cannot run until `npm install`/.test(
@@ -523,9 +526,11 @@ try {
     // A second `init` is a re-run, not a clash: nothing fails, no link moves.
     const again = sh(bin, ["init"], { cwd: consumer });
     settingsBefore !== null && readFileSync(settingsPath).equals(settingsBefore)
-      ? ok("a second `rpp init` leaves .claude/settings.json byte-identical")
+      ? ok(
+          "a second `paperlint init` leaves .claude/settings.json byte-identical",
+        )
       : bad(
-          "a second `rpp init` leaves .claude/settings.json byte-identical",
+          "a second `paperlint init` leaves .claude/settings.json byte-identical",
           again.stdout,
         );
     const after = consumerSkillView(consumer, installed);
@@ -534,9 +539,11 @@ try {
     new RegExp(
       `0 linked now, ${view.names.length} already linked, 0 skipped`,
     ).test(again.stdout ?? "")
-      ? ok("a second `rpp init` exits zero and leaves every link as it was")
+      ? ok(
+          "a second `paperlint init` exits zero and leaves every link as it was",
+        )
       : bad(
-          "a second `rpp init` exits zero and leaves every link as it was",
+          "a second `paperlint init` exits zero and leaves every link as it was",
           `exit ${String(again.status)}\n${(again.stdout ?? "")
             .split("\n")
             .filter((l) => /shipped|skills/.test(l))
@@ -545,14 +552,14 @@ try {
 
     const lint = sh(bin, ["lint"], { cwd: consumer });
     lint.status === 0 && /no findings/.test(lint.stdout ?? "")
-      ? ok("`rpp lint` passed the corpus clean")
+      ? ok("`paperlint lint` passed the corpus clean")
       : bad(
-          "`rpp lint` passed the corpus clean",
+          "`paperlint lint` passed the corpus clean",
           (lint.stdout ?? "") + (lint.stderr ?? ""),
         );
 
-    // `rpp new` from the INSTALLED package: the templates must have shipped in the tarball, and
-    // what they scaffold must be what `rpp lint` accepts — the first run green, not "missing
+    // `paperlint new` from the INSTALLED package: the templates must have shipped in the tarball, and
+    // what they scaffold must be what `paperlint lint` accepts — the first run green, not "missing
     // PIPELINE-STATUS.md". Then the whole corpus is linted again, now with the new paper in it.
     const fresh = sh(bin, ["new", "demo"], { cwd: consumer });
     fresh.status === 0 &&
@@ -560,17 +567,19 @@ try {
     existsSync(join(consumer, "papers", "demo", "paper.tex")) &&
     /no findings/.test(fresh.stdout ?? "")
       ? ok(
-          "`rpp new demo` scaffolds papers/demo from the shipped templates, and its lint is clean",
+          "`paperlint new demo` scaffolds papers/demo from the shipped templates, and its lint is clean",
         )
       : bad(
-          "`rpp new demo` scaffolds papers/demo from the shipped templates, and its lint is clean",
+          "`paperlint new demo` scaffolds papers/demo from the shipped templates, and its lint is clean",
           (fresh.stdout ?? "") + (fresh.stderr ?? ""),
         );
     const withDemo = sh(bin, ["lint"], { cwd: consumer });
     withDemo.status === 0 && /no findings/.test(withDemo.stdout ?? "")
-      ? ok("`rpp lint` still passes the corpus clean with the new paper in it")
+      ? ok(
+          "`paperlint lint` still passes the corpus clean with the new paper in it",
+        )
       : bad(
-          "`rpp lint` still passes the corpus clean with the new paper in it",
+          "`paperlint lint` still passes the corpus clean with the new paper in it",
           (withDemo.stdout ?? "") + (withDemo.stderr ?? ""),
         );
 
@@ -592,7 +601,7 @@ try {
       found = countByRule(realLint.stdout ?? "");
     } catch (e) {
       bad(
-        "`rpp lint --json` on the real article parses",
+        "`paperlint lint --json` on the real article parses",
         `${e.message}\n${realLint.stderr ?? ""}`,
       );
     }
@@ -631,7 +640,7 @@ try {
         // judged is the RESOLVE.
         if (
           // 🔴 `is NOT running` IN THE LIST IS LOAD-BEARING. The first edition looked only for
-          // `Cannot find module`, while `rpp hook` with an unresolvable runtime catches the
+          // `Cannot find module`, while `paperlint hook` with an unresolvable runtime catches the
           // exception and complains in DIFFERENT words, returning 0 — and the test printed "all
           // 3 commands resolve" with the hooks completely broken. A false green of exactly the
           // class this test is written for: the check looked for the spelling it REMEMBERED, not

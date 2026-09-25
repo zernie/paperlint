@@ -42,7 +42,7 @@ import {
 } from "node:fs";
 import { resolve, join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { isMain } from "./consumer.mjs";
+import { isMain, settingsOf } from "./consumer.mjs";
 import { consumerRoot } from "./consumer.mjs";
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -84,9 +84,8 @@ const ROOT = consumerRoot();
 // ABSTAINED `input-missing`, not as a crash and not as a clean run.
 const CITE_CHECKS =
   process.env.PIPELINE_CITE_CHECKS ||
-  JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"))[
-    "research-paper-pipeline"
-  ]?.citeChecks ||
+  settingsOf(JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")))
+    ?.citeChecks ||
   null;
 // The citation-checker directory exists and is declared. It sits in the `needs()` of every row
 // that calls it: without that a wrong or undeclared path would fail with a python stack trace, and

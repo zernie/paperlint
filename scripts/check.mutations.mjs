@@ -84,8 +84,8 @@ process.exit(
         edits: [
           [
             CHECK,
-            '"scripts/marketplace-shape.mjs"',
-            '"scripts/marketplace-shape-renamed.mjs"',
+            '"scripts/rules-are-content-only.mjs"',
+            '"scripts/rules-are-content-only-renamed.mjs"',
           ],
         ],
       },

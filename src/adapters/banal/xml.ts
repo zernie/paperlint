@@ -1,13 +1,13 @@
 /**
  * THE BANAL INPUT XML: the pdftohtml-format XML (text boxes with position, size and font per page)
- * that rpp writes from the domain's page layout, which is the input banal reads — PURE. No disk, no pdf.js,
+ * that paperlint writes from the domain's page layout, which is the input banal reads — PURE. No disk, no pdf.js,
  * no process.
  *
  * `pdf-facts.ts` reads the PDF with pdf.js and hands this module plain data: every text item's box,
  * size, font, fill colour and whether it is upright. This module decides which of them a page-layout
  * tool would count, and writes them as the banal input XML, in the dialect `pdftohtml -xml` writes
  * and banal (HotCRP's page-geometry script, see `./index.ts`) reads. banal then measures that XML exactly as it measures the XML poppler's
- * `pdftohtml` writes — which is how rpp gets banal's numbers without poppler (issue #61).
+ * `pdftohtml` writes — which is how paperlint gets banal's numbers without poppler (issue #61).
  *
  * ── WHAT MAKES THE XML EQUAL TO pdftohtml's, as far as banal can tell ─────────────
  * Measured on 50 PDFs / 598 pages (2026-09-25): real banal on this XML gave the same page size,

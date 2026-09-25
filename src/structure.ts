@@ -1,5 +1,5 @@
 /**
- * `rpp lint` — the half ESLint cannot do BY CONSTRUCTION: checking that the required file
+ * `paperlint lint` — the half ESLint cannot do BY CONSTRUCTION: checking that the required file
  * IS THERE.
  *
  * 🔴 WHY THIS IS A SEPARATE MODULE AND NOT A RULE. A rule is invoked for a file that was handed

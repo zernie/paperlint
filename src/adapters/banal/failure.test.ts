@@ -13,7 +13,7 @@ test("describe: perl missing carries the fix", () => {
 });
 
 test("describe: an explicit $BANAL that is not there says so, and nothing else is suggested", () => {
-  // Guards: an explicit choice that is wrong is named, not replaced by "run rpp toolchain".
+  // Guards: an explicit choice that is wrong is named, not replaced by "run paperlint toolchain".
   const [line] = describe({
     kind: "banal-missing",
     missing: { kind: "explicit-not-found", path: "/x/banal" },
@@ -31,7 +31,7 @@ test("describe: not installed names where it was looked for and the fix", () => 
   });
   assert.equal(
     line,
-    "banal not found: /c/banal — `npx rpp toolchain` installs it",
+    "banal not found: /c/banal — `npx paperlint toolchain` installs it",
   );
 });
 
