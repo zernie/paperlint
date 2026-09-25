@@ -173,12 +173,21 @@ describe("a paper that meets its venue", () => {
 });
 
 describe("a paper that names no venue", () => {
-  it.each([
-    ["no paperlint.json", undefined],
-    ["a paperlint.json without a venue", { kind: "short" }],
-  ])("%s: every rule is silent, even with no facts and no PDF", (_, venue) => {
-    expect(lint({ venue, facts: null, pdf: null })).toEqual([]);
+  it("no paperlint.json (a paper from before 2.1.0): every rule is silent, even with no facts and no PDF", () => {
+    expect(lint({ venue: undefined, facts: null, pdf: null })).toEqual([]);
   });
+
+  it.each([
+    ["no extends", { kind: "short" }],
+    ["extends: null — what `paperlint new` writes", { extends: null }],
+  ])(
+    "a paperlint.json with %s: ONE warning from pdf/measured, whatever else is missing",
+    (_, venue) => {
+      const fs = lint({ venue, facts: null, pdf: null });
+      expect(ids(fs)).toEqual(["pdf/measured:noPreset"]);
+      expect(fs[0]?.message).toMatch(/set "extends" in .*paperlint\.json/);
+    },
+  );
 
   it("acts on paper.tex only — any other file gets nothing", () => {
     expect(

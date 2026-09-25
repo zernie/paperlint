@@ -39,6 +39,13 @@ describe("parsePaperSettings", () => {
     });
   });
 
+  it("extends: null is valid and means no venue chosen yet — what `paperlint new` writes", () => {
+    expect(parsePaperSettings({ extends: null })).toEqual({
+      ok: true,
+      value: { extends: null, kind: null, pdf: null, rules: null },
+    });
+  });
+
   it("accepts $comment, JSON Schema's comment keyword, and ignores it", () => {
     expect(
       parsePaperSettings({ extends: "paperlint:aisec", $comment: "why" }).ok,
