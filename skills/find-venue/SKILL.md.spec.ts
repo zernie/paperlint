@@ -129,6 +129,10 @@ dropped and why, and a verdict with no table behind it cannot be re-checked when
 ## Compose with
 - \`research-ideate\` (upstream) — consumes its candidate venue *types* and sharpest framing.
 - \`plan-paper-timeline\` — feed it the chosen deadline to back-plan the work.
+- once a venue is chosen, the paper declares it in \`<paper>/paperlint.json\`:
+  \`{ "extends": "paperlint:<venue>", "kind": "<kind>" }\` — a shipped preset, else a family
+  (\`paperlint:acm-sigconf\`) or the project's own \`./venues/<name>.jsonc\`; the \`pdf/*\` rules then
+  check the built PDF against its page limit and format.
 - \`submit-paper\` venue data cards (\`submit-paper/references/venues/<venue>.md\`, e.g. \`agenticdev.md\`,
   \`aisec.md\`) — the winner gets a venue-specific data card with its HotCRP quirks; save a new one per
   venue as plain data, not a new skill.

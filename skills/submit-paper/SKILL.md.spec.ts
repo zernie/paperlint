@@ -52,6 +52,14 @@ skill with \`name:\`/\`description:\`). This preserves the "save the exact venue
 keeping the skill namespace from proliferating one card per venue. The *mechanics* stay here; the venue
 file is only the facts.
 
+**The card is prose; the machine-checked format is a PRESET beside it.** A paper declares its venue
+in \`<paper>/paperlint.json\`: \`{ "extends": "paperlint:<venue>", "kind": "<kind>" }\`, and the
+\`pdf/*\` lint rules judge the built PDF against that preset (page limit per kind, fonts, page size,
+columns, font sizes). A venue with no shipped preset extends a family — \`paperlint:acm-sigconf\`
+for an ACM venue — or a preset of the project's own, \`./venues/<name>.jsonc\` (paperlint's
+\`docs/rules.md\`, "Writing your own venue preset"). Put the page limits you fetched from the CFP in
+the preset's \`format.kinds\`, each with its quote.
+
 ## Publisher specifics — one level ABOVE the venue
 Camera-ready mechanics belong to the **publisher**, not the venue: ACM eRights, the submit-vs-final
 preamble swap, the copyright block, CCS 2012 codes and the mandatory Source-files upload are identical

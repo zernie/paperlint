@@ -4,7 +4,7 @@ description: End-to-end playbook for submitting a peer-reviewed paper to a doubl
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Skill]
 ---
 
-<!-- vigiles:sha256:6befc6c0f3e910bd compiled from skills/submit-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:4a42424fd18098e5 compiled from skills/submit-paper/SKILL.md.spec.ts -->
 
 # submit-paper — get a reviewed paper from "done" to "ready for review"
 
@@ -35,6 +35,14 @@ save them as a new **data file** `references/venues/<venue>.md` (short `title:` 
 skill with `name:`/`description:`). This preserves the "save the exact venue instructions" rule while
 keeping the skill namespace from proliferating one card per venue. The *mechanics* stay here; the venue
 file is only the facts.
+
+**The card is prose; the machine-checked format is a PRESET beside it.** A paper declares its venue
+in `<paper>/paperlint.json`: `{ "extends": "paperlint:<venue>", "kind": "<kind>" }`, and the
+`pdf/*` lint rules judge the built PDF against that preset (page limit per kind, fonts, page size,
+columns, font sizes). A venue with no shipped preset extends a family — `paperlint:acm-sigconf`
+for an ACM venue — or a preset of the project's own, `./venues/<name>.jsonc` (paperlint's
+`docs/rules.md`, "Writing your own venue preset"). Put the page limits you fetched from the CFP in
+the preset's `format.kinds`, each with its quote.
 
 ## Publisher specifics — one level ABOVE the venue
 Camera-ready mechanics belong to the **publisher**, not the venue: ACM eRights, the submit-vs-final

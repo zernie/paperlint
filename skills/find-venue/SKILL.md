@@ -4,7 +4,7 @@ description: "Discover and rank real venues for a given paper, scored by authors
 allowed-tools: [Read, Write, Grep, Glob, WebSearch, WebFetch, Agent, Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*), Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)]
 ---
 
-<!-- vigiles:sha256:d1efcdc10319e6a3 compiled from skills/find-venue/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:5efdcc0e1b178c1a compiled from skills/find-venue/SKILL.md.spec.ts -->
 
 # find-venue — rank real venues by what earns the credit, then keep or switch
 
@@ -113,6 +113,10 @@ dropped and why, and a verdict with no table behind it cannot be re-checked when
 ## Compose with
 - `research-ideate` (upstream) — consumes its candidate venue *types* and sharpest framing.
 - `plan-paper-timeline` — feed it the chosen deadline to back-plan the work.
+- once a venue is chosen, the paper declares it in `<paper>/paperlint.json`:
+  `{ "extends": "paperlint:<venue>", "kind": "<kind>" }` — a shipped preset, else a family
+  (`paperlint:acm-sigconf`) or the project's own `./venues/<name>.jsonc`; the `pdf/*` rules then
+  check the built PDF against its page limit and format.
 - `submit-paper` venue data cards (`submit-paper/references/venues/<venue>.md`, e.g. `agenticdev.md`,
   `aisec.md`) — the winner gets a venue-specific data card with its HotCRP quirks; save a new one per
   venue as plain data, not a new skill.
