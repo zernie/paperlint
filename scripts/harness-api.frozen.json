@@ -61,7 +61,6 @@
     "src/cli.harness.mjs",
     "src/doctor.harness.mjs",
     "src/engine.harness.mjs",
-    "src/facts-file.harness.mjs",
     "src/hooks-settings.harness.mjs",
     "src/latex-log.harness.mjs",
     "src/latex-loop.harness.mjs",

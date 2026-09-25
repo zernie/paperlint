@@ -3,8 +3,10 @@
  * extract-pdf-facts.mjs — measure a finished PDF and write its FACTS into
  * `<paper>/_build/paper.facts.json`. It judges nothing; lint rules judge the file.
  *
- * 🔴 A THIN SHIM. The measuring and the writing are `writeFacts` in `src/facts-file.ts`, the one
- * writer of that file; `rpp build` calls the same function right after it compiles a paper. This
+ * 🔴 A THIN SHIM. The measuring and the writing are `measurePaper` and `writeFactsFile` in
+ * `src/facts-file.ts`, the one writer of that file; `rpp build` calls the same functions right after
+ * it compiles a paper. This file is a composition root: it reads the environment and builds the real
+ * adapters (`dist/adapters/node/`), and it owns the `--strict` policy. This
  * script exists for two callers the build does not serve: a PDF rpp did not build (a paper that
  * declares its artifact elsewhere in `venue.json`), and CI steps that name this script by path.
  * It reaches the package's compiled code through `../../dist/`, resolved from this file's real
@@ -16,7 +18,7 @@
  * pdf.js read, no poppler. `npx rpp toolchain` installs it; `$BANAL` or a project's `vendor/banal`
  * take precedence (`src/banal.ts`).
  *
- * ── THE EXIT-CODE CONTRACT (callers branch on it) ─────────────────────────────
+ * ── THE EXIT-CODE CONTRACT (callers branch on it; the table is `src/core/facts/exit-code.ts`) ──
  *   0  facts written — or, without `--strict`, not written and said so (a local run may lack banal)
  *   1  no such path; or, with `--strict`, the facts could not be taken (no banal, no perl, banal
  *      failed, unreadable PDF).
@@ -28,11 +30,19 @@
 import { existsSync, statSync } from "node:fs";
 import { join, dirname, basename, relative } from "node:path";
 import { isMain } from "../paper-pipeline/scripts/consumer.mjs";
-import { declaredVenue, writeFacts } from "../../dist/facts-file.js";
+import {
+  declaredVenue as declaredIn,
+  measurePaper,
+  writeFactsFile,
+} from "../../dist/facts-file.js";
 import { readPdf } from "../../dist/pdf-facts.js";
 import { nodeBanalRuntime } from "../../dist/adapters/node/host.js";
+import { nodeFiles } from "../../dist/adapters/node/files.js";
+import { whyNoGeometry } from "../../dist/core/banal/geometry.js";
+import { exitCodeFor } from "../../dist/core/facts/exit-code.js";
 
-export { declaredVenue };
+/** The paper's `venue.json`, read from disk. */
+export const declaredVenue = (paperDir) => declaredIn(nodeFiles, paperDir);
 
 const ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 
@@ -51,37 +61,35 @@ export function resolveTarget(arg) {
   return { paperDir, pdf, decl: decl || {} };
 }
 
-/** Parse the command line, or exit with the contract's code. */
+/**
+ * The ONE `process.exit`: print what happened, then exit with the contract's code for this outcome
+ * in this mode.
+ */
+function finish(outcome, strict, say = null) {
+  if (say) console.error(say);
+  process.exit(exitCodeFor(outcome, { strict }));
+}
+
+/** Parse the command line, or finish with the contract's code. */
 function parseCommandLine(argv) {
   const strict = argv.includes("--strict");
   const [target, venue, kind] = argv.filter((a) => a !== "--strict");
-  if (!target) {
-    console.error(
+  if (!target)
+    finish(
+      "usage",
+      strict,
       "usage: extract-pdf-facts.mjs <paper.pdf | paper directory> [venue] [kind] [--strict]",
     );
-    process.exit(2);
-  }
-  if (!existsSync(target)) {
-    console.error(`🛑 no such path ${target}`);
-    process.exit(1);
-  }
+  if (!existsSync(target))
+    finish("no-such-path", strict, `🛑 no such path ${target}`);
   return { strict, target, venue, kind };
 }
 
-/** Say why no facts were written, and exit with the contract's code for that mode. */
-function refuse(lines, strict) {
-  const msg = lines.join("; ");
-  if (strict) {
-    console.error(
-      `🛑 facts not taken: ${msg} — in CI this is an environment error, not a skip`,
-    );
-    process.exit(1);
-  }
-  console.error(
-    `⏭️  facts not taken: ${msg} (a local run, without --strict). THE PDF IS NOT CHECKED`,
-  );
-  process.exit(0);
-}
+/** Why no facts were taken, in the words for this mode. */
+const refusal = (msg, strict) =>
+  strict
+    ? `🛑 facts not taken: ${msg} — in CI this is an environment error, not a skip`
+    : `⏭️  facts not taken: ${msg} (a local run, without --strict). THE PDF IS NOT CHECKED`;
 
 // 🔴 `isMain`, NOT a comparison of `import.meta.url` with `process.argv[1]`. Node resolves the entry
 // point to its REAL path for `import.meta.url` but leaves `process.argv[1]` as typed, so through a
@@ -92,27 +100,32 @@ if (isMain(import.meta.url)) {
     process.argv.slice(2),
   );
   const { paperDir, pdf } = resolveTarget(target);
-  if (!existsSync(pdf)) {
-    console.error(
+  if (!existsSync(pdf))
+    finish(
+      "no-artifact",
+      strict,
       `🛑 no artifact ${pdf} — the paper declared it in venue.json, but it is not built`,
     );
-    process.exit(3);
-  }
+  const runtime = nodeBanalRuntime(process.env);
   // Command-line arguments override the declaration — for a one-off check of someone else's PDF.
-  const r = await writeFacts(paperDir, pdf, {
+  const m = await measurePaper(paperDir, pdf, {
     readPdf,
     venue: venue ?? null,
     kind: kind ?? null,
-    banal: strict ? "required" : "optional",
-    runtime: nodeBanalRuntime(process.env),
+    runtime,
     projectRoot: ROOT,
   });
-  if (!r.ok) refuse(r.lines, strict);
-  if (r.geometryMissing)
+  if (!m.ok) finish("unreadable", strict, refusal(m.error, strict));
+  const { facts, geometry } = m.value;
+  const why = geometry.source === "none" ? whyNoGeometry(geometry) : null;
+  if (why && strict) finish("no-geometry", strict, refusal(why, strict));
+  const out = writeFactsFile(runtime.io.files, paperDir, facts);
+  if (why)
     console.error(
-      `⚠️  ${r.geometryMissing} — page size, columns and font sizes are null in the facts (run with --strict to require them)`,
+      `⚠️  ${why} — page size, columns and font sizes are null in the facts (run with --strict to require them)`,
     );
   console.log(
-    `✅ ${basename(pdf)} → ${relative(ROOT, r.path) || r.path} (${r.facts.fonts.length} faces, ${r.facts.npages} pp.)`,
+    `✅ ${basename(pdf)} → ${relative(ROOT, out) || out} (${facts.fonts.length} faces, ${facts.npages} pp.)`,
   );
+  finish("written", strict);
 }

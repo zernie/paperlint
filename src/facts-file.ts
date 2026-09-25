@@ -4,7 +4,7 @@
  *
  * Two callers, one function: `rpp build` writes the facts right after a successful compile, and
  * `skills/render-paper/extract-pdf-facts.mjs` is a thin command-line shim over the same
- * `writeFacts` for PDFs rpp did not build and for CI steps that name that script by path. Two
+ * `measurePaper` + `writeFactsFile` for PDFs rpp did not build and for CI steps that name that script by path. Two
  * writers would drift — one would learn a field the other does not — and the rules reading the file
  * cannot tell which wrote it.
  *
@@ -15,8 +15,8 @@
  *   writes from the same pdf.js read (`pdf-layout.ts`), so poppler is not needed (`banal.ts`).
  *   OPTIONAL: banal is GPL and rpp does not ship it — `rpp toolchain` fetches it. Found ⇒ its fields
  *   are filled and `geometry_source` says `banal`; not found ⇒ they are null and `geometry_source`
- *   is null, so a rule can tell "not measured" from "measured as zero". A caller that requires it
- *   (`extract-pdf-facts.mjs --strict`) gets a failure instead.
+ *   is null, so a rule can tell "not measured" from "measured as zero". Whether that is a failure is
+ *   the caller's policy: `extract-pdf-facts.mjs --strict` refuses to write such facts.
  *
  * ── SCHEMA 2 (2026-09-24) ───────────────────────────────────────────────────────
  * Every schema-1 field keeps its name. The number changed because three meanings did, and a
@@ -28,10 +28,7 @@
  * 🔴 STALENESS. The PDF is not committed, so neither are these facts: they live in `_build/` and
  * carry `pdf_sha256`. A rule compares it with the PDF on disk and refuses facts about another build.
  */
-import { createHash } from "node:crypto";
-// eslint-disable-next-line no-restricted-imports -- legacy I/O, moves behind a port in #76
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, sep } from "node:path";
+import { join, relative, sep } from "node:path";
 import {
   classifyLastPage,
   popplerType,
@@ -39,11 +36,16 @@ import {
   type LastPage,
 } from "./pdf-geometry.ts";
 import { describeFailure, type PdfFacts, type PdfReader } from "./pdf-facts.ts";
-import { measureGeometry as banalGeometry } from "./banal.ts";
-import { whyNoGeometry } from "./core/banal/geometry.ts";
-import type { BanalGeometry } from "./core/banal/output.ts";
+import { measureGeometry } from "./banal.ts";
+import {
+  flatGeometry,
+  type FactsGeometryFields,
+  type Geometry,
+} from "./core/banal/geometry.ts";
+import { sha256Hex } from "./core/banal/install.ts";
 import type { BanalRuntime } from "./core/banal/settings.ts";
-import type { AbsolutePath } from "./core/ports.ts";
+import type { AbsolutePath, Files } from "./core/ports.ts";
+import { err, ok, type Result } from "./core/result.ts";
 
 export const FACTS_SCHEMA = 2;
 export const FACTS_DIR = "_build";
@@ -61,25 +63,34 @@ export interface VenueDecl {
 }
 
 /**
+ * A path as the caller gave it. The `Files` adapter resolves a relative one against the process's
+ * cwd, which is what these callers have always meant; the brand is not a claim this code checked it.
+ */
+const at = (p: string): AbsolutePath => p as AbsolutePath;
+
+const str = (v: unknown): string | null => (typeof v === "string" ? v : null);
+
+/** A parsed `venue.json`, or null when it names no venue. */
+export function parseVenueDecl(json: unknown): VenueDecl | null {
+  const d = typeof json === "object" && json !== null ? json : {};
+  const field = (k: string) => str((d as Record<string, unknown>)[k]);
+  const venue = field("venue");
+  return venue ? { venue, kind: field("kind"), pdf: field("pdf") } : null;
+}
+
+/**
  * The paper's `venue.json`, or null when there is none or it names no venue. The one reader of
  * that file: the build, the facts writer and the shim all read it here.
  */
-export function declaredVenue(paperDir: string): VenueDecl | null {
-  const f = join(paperDir, "venue.json");
-  if (!existsSync(f)) return null;
-  const d = JSON.parse(readFileSync(f, "utf8")) as Record<string, unknown>;
-  const str = (v: unknown): string | null => (typeof v === "string" ? v : null);
-  const venue = str(d["venue"]);
-  return venue ? { venue, kind: str(d["kind"]), pdf: str(d["pdf"]) } : null;
+export function declaredVenue(
+  files: Files,
+  paperDir: string,
+): VenueDecl | null {
+  const bytes = files.readBytes(at(join(paperDir, "venue.json")));
+  return bytes === null
+    ? null
+    : parseVenueDecl(JSON.parse(new TextDecoder().decode(bytes)));
 }
-
-export const sha256 = (path: string): string =>
-  createHash("sha256").update(readFileSync(path)).digest("hex");
-
-// ── banal ───────────────────────────────────────────────────────────────────────────────
-
-/** The geometry banal measures, in the facts file's field names (`core/banal/output.ts`). */
-export type BanalFacts = BanalGeometry;
 
 // ── the document ────────────────────────────────────────────────────────────────────────
 
@@ -99,18 +110,6 @@ export type LastPageEntry =
   | { readonly kind: "stub"; readonly words: number }
   | { readonly kind: "review"; readonly line_numbers: number };
 
-const NO_GEOMETRY: { [K in keyof BanalFacts]: null } = {
-  page_w_in: null,
-  page_h_in: null,
-  columns: null,
-  body_pt: null,
-  ref_pt: null,
-  body_pages: null,
-  ref_pages: null,
-  appendix_pages: null,
-  pages_by_type: null,
-};
-
 /** The facts file's content. */
 export type FactsDocument = {
   readonly schema: typeof FACTS_SCHEMA;
@@ -124,8 +123,7 @@ export type FactsDocument = {
   readonly last_page: LastPageEntry;
   /** Schema 1's field, kept: the two heights, or null when the last page is a stub or a review build. */
   readonly last_page_cols_pt: readonly [number, number] | null;
-  readonly geometry_source: "banal" | null;
-} & ({ [K in keyof BanalFacts]: BanalFacts[K] } | typeof NO_GEOMETRY);
+} & FactsGeometryFields;
 
 export function fontEntry(f: FontFact): FontEntry {
   return {
@@ -154,7 +152,7 @@ export interface FactsInput {
   readonly venue: string | null;
   readonly kind: string | null;
   readonly read: PdfFacts;
-  readonly banal: BanalFacts | null;
+  readonly geometry: Geometry;
 }
 
 /** Assemble the document. Pure. */
@@ -172,80 +170,77 @@ export function factsDocument(i: FactsInput): FactsDocument {
       i.read.fonts.kind === "drawn" ? i.read.fonts.list.map(fontEntry) : [],
     last_page: last,
     last_page_cols_pt: last.kind === "measured" ? last.columns_pt : null,
-    geometry_source: i.banal ? "banal" : null,
-    ...(i.banal ?? NO_GEOMETRY),
+    ...flatGeometry(i.geometry),
   };
 }
 
-// ── writing it ──────────────────────────────────────────────────────────────────────────
+// ── measuring and writing ───────────────────────────────────────────────────────────────
 
-/** What `writeFacts` needs besides the paper and its PDF. */
-export interface WriteOptions {
+/** What `measurePaper` needs besides the paper and its PDF. */
+export interface MeasureOptions {
   readonly readPdf: PdfReader;
   readonly venue?: string | null;
   readonly kind?: string | null;
-  /** `required`: no banal is a failure. `optional`: no banal leaves the geometry null. */
-  readonly banal: "required" | "optional";
   /** The real or in-memory ports, and the banal settings the composition root parsed. */
   readonly runtime: BanalRuntime;
   /** Where `vendor/banal` is looked for (`core/banal/locate.ts`). */
   readonly projectRoot: string;
 }
 
-export type WriteResult =
-  | {
-      readonly ok: true;
-      readonly path: string;
-      readonly facts: FactsDocument;
-      /** Set when banal was optional and not used: why the geometry fields are null. */
-      readonly geometryMissing: string | null;
-    }
-  | { readonly ok: false; readonly lines: readonly string[] };
-
-/** banal's geometry, or the reason there is none. */
-function measureGeometry(
-  read: PdfFacts,
-  o: WriteOptions,
-): { banal: BanalFacts | null; why: string | null } {
-  const { io, settings } = o.runtime;
-  const g = banalGeometry(
-    io,
-    settings,
-    o.projectRoot as AbsolutePath,
-    read.layout,
-  );
-  return g.source === "banal"
-    ? { banal: g.geometry, why: null }
-    : { banal: null, why: whyNoGeometry(g) };
+/** The document, and the geometry it was projected from — a caller decides what "no geometry" means. */
+export interface Measured {
+  readonly facts: FactsDocument;
+  readonly geometry: Geometry;
 }
 
 const posix = (p: string): string => p.split(sep).join("/");
 
 /**
- * Measure `pdf` and write `<paperDir>/_build/paper.facts.json`. Nothing is written on failure, and
- * a facts file from an earlier run is left as it was — its `pdf_sha256` no longer matches the PDF,
- * so a rule refuses it.
+ * Measure `pdf`: pdf.js always, banal when one is found. Writes nothing. The error is one line: the
+ * PDF could not be read. Whether a missing geometry is a failure is the CALLER's policy — the build
+ * writes the facts anyway, the shim's `--strict` refuses them.
  */
-export async function writeFacts(
+export async function measurePaper(
   paperDir: string,
   pdf: string,
-  o: WriteOptions,
-): Promise<WriteResult> {
+  o: MeasureOptions,
+): Promise<Result<Measured, string>> {
   const r = await o.readPdf(pdf);
-  if (!r.ok) return { ok: false, lines: [describeFailure(r, pdf)] };
-  const g = measureGeometry(r.facts, o);
-  if (g.why && o.banal === "required") return { ok: false, lines: [g.why] };
-  const decl = declaredVenue(paperDir);
+  if (!r.ok) return err(describeFailure(r, pdf));
+  const bytes = o.runtime.io.files.readBytes(at(pdf));
+  if (bytes === null) return err(`${pdf}: gone after pdf.js read it`);
+  const { io, settings } = o.runtime;
+  const geometry = measureGeometry(
+    io,
+    settings,
+    at(o.projectRoot),
+    r.facts.layout,
+  );
+  const decl = declaredVenue(io.files, paperDir);
   const facts = factsDocument({
     pdf: posix(relative(paperDir, pdf)),
-    sha: sha256(pdf),
+    sha: sha256Hex(bytes),
     venue: o.venue ?? decl?.venue ?? null,
     kind: o.kind ?? decl?.kind ?? null,
     read: r.facts,
-    banal: g.banal,
+    geometry,
   });
+  return ok({ facts, geometry });
+}
+
+/**
+ * Write `<paperDir>/_build/paper.facts.json`, atomically. A caller that decides not to write leaves
+ * an earlier file as it was — its `pdf_sha256` no longer matches the PDF, so a rule refuses it.
+ */
+export function writeFactsFile(
+  files: Files,
+  paperDir: string,
+  facts: FactsDocument,
+): string {
   const out = factsPath(paperDir);
-  mkdirSync(dirname(out), { recursive: true });
-  writeFileSync(out, `${JSON.stringify(facts, null, 2)}\n`);
-  return { ok: true, path: out, facts, geometryMissing: g.why };
+  files.writeAtomic(
+    at(out),
+    new TextEncoder().encode(`${JSON.stringify(facts, null, 2)}\n`),
+  );
+  return out;
 }

@@ -47,13 +47,16 @@ import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs"
 import {
   declaredVenue,
   factsPath,
-  writeFacts,
+  measurePaper,
+  writeFactsFile,
   FACTS_DIR,
   FACTS_FILE,
   type FactsDocument,
 } from "./facts-file.ts";
 import { readPdf as pdfjsReader, type PdfReader } from "./pdf-facts.ts";
 import { nodeBanalRuntime } from "./adapters/node/host.ts";
+import { nodeFiles } from "./adapters/node/files.ts";
+import { whyNoGeometry } from "./core/banal/geometry.ts";
 import type { BanalRuntime } from "./core/banal/settings.ts";
 import {
   auxBib,
@@ -209,7 +212,7 @@ function documentclassOf(ast: LatexRoot | null): PaperFacts["documentclass"] {
 export function readFacts(paperDir: string): PaperFacts {
   const mainPath = join(paperDir, MAIN);
   const main = existsSync(mainPath) ? MAIN : null;
-  const venue = declaredVenue(paperDir);
+  const venue = declaredVenue(nodeFiles, paperDir);
   const ast = main ? parseTex(readFileSync(mainPath, "utf8")) : null;
   return {
     main,
@@ -489,19 +492,25 @@ export const measureStep: BuildStep = {
         }
       : { yes: false, why: "nothing is compiled" },
   run: async (ctx) => {
-    const r = await writeFacts(ctx.paperDir, join(ctx.paperDir, `${JOB}.pdf`), {
-      readPdf: ctx.readPdf,
-      banal: "optional",
-      runtime: ctx.banal,
-      projectRoot: ctx.projectRoot,
-    });
-    if (!r.ok) return { ok: false, lines: [...r.lines] };
-    const banal = r.geometryMissing
-      ? `; page geometry not measured — ${r.geometryMissing}`
-      : "";
+    const m = await measurePaper(
+      ctx.paperDir,
+      join(ctx.paperDir, `${JOB}.pdf`),
+      {
+        readPdf: ctx.readPdf,
+        runtime: ctx.banal,
+        projectRoot: ctx.projectRoot,
+      },
+    );
+    if (!m.ok) return { ok: false, lines: [m.error] };
+    writeFactsFile(ctx.banal.io.files, ctx.paperDir, m.value.facts);
+    const g = m.value.geometry;
+    const banal =
+      g.source === "none"
+        ? `; page geometry not measured — ${whyNoGeometry(g)}`
+        : "";
     return {
       ok: true,
-      note: `facts: ${relative(ctx.paperDir, factsPath(ctx.paperDir))}, ${columnsNote(r.facts)}${banal}`,
+      note: `facts: ${relative(ctx.paperDir, factsPath(ctx.paperDir))}, ${columnsNote(m.value.facts)}${banal}`,
     };
   },
 };

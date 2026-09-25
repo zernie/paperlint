@@ -30,3 +30,32 @@ export function whyNoGeometry(
     ? `${line} (banal from ${provenanceLabel(g.tried.provenance)}: ${g.tried.path})`
     : line;
 }
+
+/** The geometry columns with nothing measured: every one null. */
+export type NullGeometry = { readonly [K in keyof BanalGeometry]: null };
+
+/**
+ * The flat schema-2 fields. `geometry_source` is tied to its branch: `"banal"` only beside measured
+ * columns, null only beside nine nulls — the file cannot say "banal" over an empty measurement.
+ */
+export type FactsGeometryFields =
+  | ({ readonly geometry_source: "banal" } & BanalGeometry)
+  | ({ readonly geometry_source: null } & NullGeometry);
+
+export const NO_GEOMETRY: NullGeometry = {
+  page_w_in: null,
+  page_h_in: null,
+  columns: null,
+  body_pt: null,
+  ref_pt: null,
+  body_pages: null,
+  ref_pages: null,
+  appendix_pages: null,
+  pages_by_type: null,
+};
+
+/** The projection onto the file: one branch in, the matching fields out. */
+export const flatGeometry = (g: Geometry): FactsGeometryFields =>
+  g.source === "banal"
+    ? { geometry_source: "banal", ...g.geometry }
+    : { geometry_source: null, ...NO_GEOMETRY };
