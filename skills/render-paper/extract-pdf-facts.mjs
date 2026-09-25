@@ -36,8 +36,8 @@ import {
   writeFactsFile,
 } from "../../dist/facts-file.js";
 import { readPdf } from "../../dist/pdf-facts.js";
-import { nodeBanalRuntime } from "../../dist/adapters/node/host.js";
-import { nodeFiles } from "../../dist/adapters/node/files.js";
+import { nodeBanalRuntime } from "../../dist/adapters/node/host.io.js";
+import { nodeFiles } from "../../dist/adapters/node/files.io.js";
 import { whyNoGeometry } from "../../dist/core/banal/geometry.js";
 import { exitCodeFor } from "../../dist/core/facts/exit-code.js";
 

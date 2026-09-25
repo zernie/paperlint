@@ -54,8 +54,8 @@ import {
   type FactsDocument,
 } from "./facts-file.ts";
 import { readPdf as pdfjsReader, type PdfReader } from "./pdf-facts.ts";
-import { nodeBanalRuntime } from "./adapters/node/host.ts";
-import { nodeFiles } from "./adapters/node/files.ts";
+import { nodeBanalRuntime } from "./adapters/node/host.io.ts";
+import { nodeFiles } from "./adapters/node/files.io.ts";
 import { whyNoGeometry } from "./core/banal/geometry.ts";
 import type { BanalRuntime } from "./core/banal/settings.ts";
 import {

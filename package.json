@@ -31,7 +31,7 @@
   "devDependencies": {
     "@retorquere/bibtex-parser": "^10.0.1",
     "@types/node": "^26.6.1",
-    "eslint-plugin-boundaries": "^6.0.2",
+    "eslint-plugin-boundaries": "^7.2.0",
     "eslint-plugin-n": "^18.3.0",
     "prettier": "^3.8.1",
     "typescript-eslint": "^8.70.1",

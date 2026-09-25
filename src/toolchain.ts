@@ -52,7 +52,7 @@ import { checkBanal, ensureBanal } from "./banal.ts";
 import { describe } from "./core/banal/failure.ts";
 import { pinLabel, type BanalSource } from "./core/banal/pin.ts";
 import type { PinnedBanal } from "./core/banal/locate.ts";
-import { nodeBanalRuntime } from "./adapters/node/host.ts";
+import { nodeBanalRuntime } from "./adapters/node/host.io.ts";
 import {
   declaredUnion,
   packageNames,

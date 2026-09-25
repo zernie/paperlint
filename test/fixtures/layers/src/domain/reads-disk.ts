@@ -1,5 +1,5 @@
-// expect: no-restricted-imports
+// expect: boundaries/dependencies
 import { existsSync } from "node:fs";
 
-/** I/O in core: the IO_BAN finding. */
+/** I/O in the domain: axis B. */
 export const present = (p: string): boolean => existsSync(p);

@@ -6,7 +6,7 @@
 import assert from "node:assert/strict";
 import { test } from "vitest";
 import type { Command } from "../../core/ports.ts";
-import { spawnProcess } from "./process.ts";
+import { spawnProcess } from "./process.io.ts";
 
 const run = spawnProcess();
 const sh = (script: string, timeoutMs = 10_000): Command => ({

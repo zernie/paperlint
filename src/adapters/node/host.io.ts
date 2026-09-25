@@ -11,7 +11,7 @@ import {
   type HostDirs,
 } from "../../core/banal/settings.ts";
 import { nodeAdapters } from "./index.ts";
-import type { SpawnSync } from "./process.ts";
+import type { SpawnSync } from "./process.io.ts";
 
 export type { BanalRuntime } from "../../core/banal/settings.ts";
 

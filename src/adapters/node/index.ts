@@ -1,9 +1,9 @@
 /** The real `Io`: what a composition root hands the app layer. */
 import type { Io } from "../../core/ports.ts";
-import { curlDownload } from "./download.ts";
-import { nodeFiles } from "./files.ts";
-import { spawnProcess, type SpawnSync } from "./process.ts";
-import { tmpWorkspace } from "./workspace.ts";
+import { curlDownload } from "./download.io.ts";
+import { nodeFiles } from "./files.io.ts";
+import { spawnProcess, type SpawnSync } from "./process.io.ts";
+import { tmpWorkspace } from "./workspace.io.ts";
 
 export interface NodeAdapterOptions {
   /** Scratch directories and downloads go here. */
@@ -24,4 +24,4 @@ export function nodeAdapters(o: NodeAdapterOptions): Io {
   };
 }
 
-export { spawnProcess } from "./process.ts";
+export { spawnProcess } from "./process.io.ts";
