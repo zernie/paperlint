@@ -43,7 +43,7 @@ assert.ok(eslintStep, `no step named "paperlint lint" among: ${names}`);
 // 🔴 THE ACTION MUST CALL THE PACKAGE'S OWN CLI, NOT ESLINT. This is not tidiness: while the step
 // invoked `npx eslint` directly it was a SECOND implementation of the same job, and it had already
 // drifted — the directory-structure check (a paper directory with no PIPELINE-STATUS.md gets zero
-// rules and reports clean) lives in `bin/rpp.mjs`, so in CI it did not run at all. Any future edit
+// rules and reports clean) lives in `bin/paperlint.mjs`, so in CI it did not run at all. Any future edit
 // that reaches past the CLI reintroduces exactly that gap, silently and greenly.
 assert.match(
   eslintStep.run,
@@ -59,8 +59,8 @@ assert.doesNotMatch(
 // `overrideConfigFile: true`, so a consumer's nested config cannot reach the run. The guarantee
 // moved from a flag into the code — assert the code, not the flag.
 //
-// 🔴 AND ASSERT IT IN THE FILE THAT HOLDS IT. This read said `bin/rpp.mjs` until the CLI moved to
-// TypeScript; `bin/rpp.mjs` is now a loader shim and contains no such call, so the assertion went
+// 🔴 AND ASSERT IT IN THE FILE THAT HOLDS IT. This read said `bin/paperlint.mjs` until the CLI moved to
+// TypeScript; `bin/paperlint.mjs` is now a loader shim and contains no such call, so the assertion went
 // red on a move that changed no behaviour. That redness is the point — the same assertion written
 // as a grep over "the CLI" would have kept passing against whichever file still matched, which is
 // how a check quietly stops watching its subject.

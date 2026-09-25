@@ -3,7 +3,7 @@
 # 🔴 THIS ACTION CALLS THE PACKAGE'S OWN CLI. It used to invoke `npx eslint` directly, and that was
 # not a style question — it was a second implementation of the same job, and it had already drifted:
 # the CLI's directory-structure check (a paper directory missing PIPELINE-STATUS.md gets ZERO rules
-# and reports clean) lived only in `bin/rpp.mjs`, so the gate existed locally and was ABSENT in CI,
+# and reports clean) lived only in `bin/paperlint.mjs`, so the gate existed locally and was ABSENT in CI,
 # which is the one place it has to hold. The same bypass also meant `rpp.json` was never read and
 # the caller still had to keep an ESLint flat config — the exact thing the CLI exists to remove.
 #

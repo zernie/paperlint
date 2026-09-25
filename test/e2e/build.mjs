@@ -56,7 +56,7 @@ import {
 } from "./read-pdf.mjs";
 
 const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const CLI = join(ROOT, "bin", "rpp.mjs");
+const CLI = join(ROOT, "bin", "paperlint.mjs");
 const strict = process.argv.includes("--strict");
 
 /**
@@ -187,7 +187,7 @@ try {
   if (!engine || engine.startsWith("engine: none"))
     skipOrFail(
       `build-e2e: skipped — no TeX Live with every declared package (${engine || "no engine line"}).\n` +
-        `Install one with \`node bin/rpp.mjs toolchain\` (RPP_TEXLIVE_DIR picks the directory).`,
+        `Install one with \`node bin/paperlint.mjs toolchain\` (RPP_TEXLIVE_DIR picks the directory).`,
     );
   console.log(engine);
   // 🔴 In CI the build must run on the TeX Live `paperlint toolchain` installed — the runner has no other.

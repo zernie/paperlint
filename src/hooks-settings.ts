@@ -27,6 +27,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  BIN_FILE,
   LEGACY_PACKAGE_NAME,
   PACKAGE_NAME,
 } from "../skills/paper-pipeline/scripts/consumer.mjs";
@@ -44,13 +45,7 @@ export const WIRING_FILE = fileURLToPath(
  * and `${CLAUDE_PROJECT_DIR}/` before comparing, so this is the same file as the spelling in
  * `hooks.json`, and nothing machine-specific lands in a committed file.
  */
-export const MANAGED_BY = `node_modules/${PACKAGE_NAME}/bin/rpp.mjs`;
-
-/**
- * The same token as an install under the package's old name wrote it. A command spelled this way
- * is ours from before the rename: `init` removes it and writes the current one, `doctor` names it.
- */
-export const LEGACY_MANAGED_BY = `node_modules/${LEGACY_PACKAGE_NAME}/bin/rpp.mjs`;
+export const MANAGED_BY = `node_modules/${PACKAGE_NAME}/${BIN_FILE}`;
 
 /** The names the package's directory under `node_modules` has had. */
 const PKG_DIRS: readonly string[] = [PACKAGE_NAME, LEGACY_PACKAGE_NAME];
@@ -81,24 +76,35 @@ function bare(token: string): string {
   return unquoted.replace(/^\$\{?CLAUDE_PROJECT_DIR\}?[/\\]/, "");
 }
 
+/** A hook command reduced to what it runs: the hook, and the path token that runs it. */
+interface Run {
+  readonly name: string;
+  readonly ours: boolean;
+  readonly legacy: boolean;
+  readonly path: string;
+}
+
 /**
  * Which paperlint hook a command runs, if any, and whether it is spelled the way `init` writes it.
  *
  * Recognised spellings — each is ONE lexeme of a shell command, which is what a command is:
- *   `node <…>/node_modules/paperlint/bin/rpp.mjs hook <name>`   ours when the path is exactly
- *                                                              MANAGED_BY
- *   the same under `node_modules/research-paper-pipeline/`     `legacy`: ours before the rename
- *   `npx paperlint hook <name>`, `node_modules/.bin/paperlint hook <name>` (or the old bin names)
- *                                                              another spelling
+ *   `node <…>/node_modules/paperlint/bin/paperlint.mjs hook <name>`
+ *                          ours when the path is exactly MANAGED_BY
+ *   `node node_modules/<pkg>/bin/<any other file> hook <name>`, <pkg> this name or the old one
+ *                          `legacy`: the project-relative form `init` writes, pointing at a file
+ *                          this version does not install — what an older `init` left behind
+ *                          (1.x: `research-paper-pipeline/bin/rpp.mjs`; 2.0.0: `paperlint/bin/rpp.mjs`)
+ *   `npx paperlint hook <name>`, `node_modules/.bin/paperlint hook <name>` (or the old bin names),
+ *   an absolute path into the package's `bin/`
+ *                          another spelling
  *   `vigiles … run-program <…>/node_modules/<pkg>/hooks/<name>.hook.mjs`
- *                                                              another spelling
+ *                          another spelling
  * The last is how the one real consumer wired all three by hand before `init` could.
+ *
+ * `legacy` is decided by the SHAPE `init` writes, not by a list of past file names: any file in
+ * our `bin/` other than BIN_FILE is one that no longer ships, so a future rename is covered too.
  */
-export function hookRun(command: string): {
-  readonly name: string;
-  readonly ours: boolean;
-  readonly legacy: boolean;
-} | null {
+function parseRun(command: string): Run | null {
   const tokens = command.trim().split(/\s+/).map(bare);
   for (let i = 0; i < tokens.length; i++) {
     const t = posix.normalize(tokens[i] ?? "");
@@ -107,24 +113,34 @@ export function hookRun(command: string): {
       (p, j) => p === "node_modules" && PKG_DIRS.includes(parts[j + 1] ?? ""),
     );
     const inside = at === -1 ? [] : parts.slice(at + 2);
-    const isBin =
-      (inside[0] === "bin" && inside[1] === "rpp.mjs") ||
-      ["rpp", ...PKG_DIRS].includes(basename(t));
+    const inBin = inside[0] === "bin" && inside.length === 2;
+    const isBin = inBin || ["rpp", ...PKG_DIRS].includes(basename(t));
     const name = tokens[i + 2];
     if (isBin && tokens[i + 1] === "hook" && name)
       return {
         name,
         ours: t === MANAGED_BY,
-        legacy: t === LEGACY_MANAGED_BY,
+        legacy: inBin && at === 0 && t !== MANAGED_BY,
+        path: t,
       };
     if (inside[0] === "hooks" && inside[1]?.endsWith(".hook.mjs"))
       return {
         name: basename(inside[1], ".hook.mjs"),
         ours: false,
         legacy: false,
+        path: t,
       };
   }
   return null;
+}
+
+export function hookRun(command: string): {
+  readonly name: string;
+  readonly ours: boolean;
+  readonly legacy: boolean;
+} | null {
+  const run = parseRun(command);
+  return run && { name: run.name, ours: run.ours, legacy: run.legacy };
 }
 
 /** Every command in a settings object, with the event it hangs off. */
@@ -356,16 +372,23 @@ export const FRESH_CLONE_NOTE = `the commands point into node_modules/${PACKAGE_
 /** The instruction for a project that also enables the plugin (it only ever existed under the old name). */
 export const UNINSTALL_PLUGIN = `/plugin uninstall ${LEGACY_PACKAGE_NAME}@${LEGACY_PACKAGE_NAME}`;
 
-/** The doctor lines for hook commands an install under the old package name left behind. */
-function legacyLines(
-  counts: ReadonlyMap<string, { readonly legacy: number }>,
-): string[] {
-  let legacy = 0;
-  for (const c of counts.values()) legacy += c.legacy;
-  return legacy === 0
+/**
+ * The doctor lines for hook commands an older install left behind: each names the file it runs,
+ * which this version does not install, so the hook silently does nothing.
+ */
+function legacyLines(settings: Settings): string[] {
+  const stale = new Map<string, number>();
+  for (const { command } of commandsIn(settings)) {
+    const run = parseRun(command);
+    if (run?.legacy) stale.set(run.path, (stale.get(run.path) ?? 0) + 1);
+  }
+  return stale.size === 0
     ? []
     : [
-        `  ⚠ ${String(legacy)} hook command(s) still point into node_modules/${LEGACY_PACKAGE_NAME}/, the package's old name — they no longer run.`,
+        ...[...stale].map(
+          ([path, n]) =>
+            `  ⚠ ${String(n)} hook command(s) run ${path}, which this version does not install — they no longer run.`,
+        ),
         `      \`npx ${PACKAGE_NAME} init\` replaces them`,
       ];
 }
@@ -400,7 +423,7 @@ export function doctorHooks(
     out.push(`  ⚠ wired TWICE — each of these runs more than once per event:`);
     for (const n of twice) out.push(`      ${n} ×${String(total(n))}`);
     out.push(
-      `      keep one command per hook; \`npx paperlint init\` writes the rpp.mjs form`,
+      `      keep one command per hook; \`npx paperlint init\` writes the ${MANAGED_BY} form`,
     );
   }
   if (missing.length === wiring.names.length)
@@ -418,7 +441,7 @@ export function doctorHooks(
       `  ✓ wired — ${wiring.names.join(", ")}, once each`,
       `      ${FRESH_CLONE_NOTE}`,
     );
-  out.push(...legacyLines(counts));
+  out.push(...legacyLines(read.settings));
   const plugin = pluginEnabledHere(read.settings);
   if (plugin.length > 0) {
     out.push(

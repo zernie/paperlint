@@ -11,12 +11,12 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "..");
 const CLI = join(HERE, "cli.ts");
 const HARNESS = join(HERE, "cli.harness.mjs");
-// The `bin/rpp.mjs` shim — the package's EXECUTABLE file, and after the move to TypeScript the
+// The `bin/paperlint.mjs` shim — the package's EXECUTABLE file, and after the move to TypeScript the
 // "was I run or was I imported" check lives right there: `dist/cli.js` is now always imported,
 // so a mutation in it about the symlink proves nothing. The first run after the move showed
 // this literally — the mutation SURVIVED, and it looked like a hole in the harness, when the
 // hole was in what the mutation was aimed at.
-const SHIM = join(HERE, "..", "bin", "rpp.mjs");
+const SHIM = join(HERE, "..", "bin", "paperlint.mjs");
 // `init` stopped being twenty lines inside `cli.ts` and became its own module: it has four
 // decisions, and each must be able to break in a way that EXACTLY its own assertion notices.
 const INIT = join(HERE, "init.ts");
@@ -35,7 +35,7 @@ process.exit(
           "the only way a consumer ever calls the utility. npm puts a SYMLINK in .bin, for " +
           "which process.argv[1] and import.meta.url are different paths; comparing strings " +
           "makes the condition false and the utility SILENTLY exits zero. A direct " +
-          "`node bin/rpp.mjs` still works, meanwhile, so the defect is invisible in exactly the " +
+          "`node bin/paperlint.mjs` still works, meanwhile, so the defect is invisible in exactly the " +
           "way it is normally checked",
         edits: [
           [

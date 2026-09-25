@@ -222,12 +222,12 @@ Why: [#59](https://github.com/zernie/research-paper-pipeline/issues/59).
 
 Under the hood `paperlint lint` builds an ESLint flat config and runs it. If your repository already
 lints with ESLint, you can import the rule modules from `paperlint/eslint-rules/`
-and wire them yourself; `bin/rpp.mjs` exports `buildConfig(options, texLanguage)` that returns
+and wire them yourself; `bin/paperlint.mjs` exports `buildConfig(options, texLanguage)` that returns
 the exact config the CLI uses, so the shortest path is:
 
 ```js
 // eslint.config.mjs
-import { buildConfig } from "paperlint/bin/rpp.mjs";
+import { buildConfig } from "paperlint/bin/paperlint.mjs";
 import { texLanguage } from "paperlint/eslint-rules/latex-language.mjs";
 export default buildConfig({ minFindings: 3 }, texLanguage);
 ```

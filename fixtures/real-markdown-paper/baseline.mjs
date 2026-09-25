@@ -1,6 +1,6 @@
 /**
  * ONE reader of `baseline.json`, shared by the two runs that compare against it: the harness
- * beside this file (the repository's own `bin/rpp.mjs`) and `test/e2e/install.mjs` (the binary
+ * beside this file (the repository's own `bin/paperlint.mjs`) and `test/e2e/install.mjs` (the binary
  * a consumer actually got). Two copies of "growth fails, a drop never does" would drift the first
  * time one of them is tightened, and the two runs would then disagree about the same article.
  */

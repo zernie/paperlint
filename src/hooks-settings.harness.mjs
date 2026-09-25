@@ -40,7 +40,6 @@ const {
   doctorHooks,
   readSettings,
   MANAGED_BY,
-  LEGACY_MANAGED_BY,
   SETTINGS_PATH,
 } = await import(join(HERE, "hooks-settings.ts"));
 const { claudeCodeHookProtocol } = await import("vigiles/claude-code");
@@ -89,10 +88,15 @@ try {
       `node "$CLAUDE_PROJECT_DIR/${MANAGED_BY}" hook paper-status-gates`,
       { name: "paper-status-gates", ours: true, legacy: false },
     ],
-    // Guards: what an install under the old package name wrote is recognised as ours-but-stale.
+    // Guards: what an older install wrote is recognised as ours-but-stale. Spelled literally, not
+    // built from a constant: these are what 1.x and 2.0.0 actually put in users' settings files.
     [
-      `node "$CLAUDE_PROJECT_DIR/${LEGACY_MANAGED_BY}" hook paper-edit-guard`,
+      `node "$CLAUDE_PROJECT_DIR/node_modules/research-paper-pipeline/bin/rpp.mjs" hook paper-edit-guard`,
       { name: "paper-edit-guard", ours: false, legacy: true },
+    ],
+    [
+      `node "\${CLAUDE_PROJECT_DIR}/node_modules/paperlint/bin/rpp.mjs" hook paper-status-gates`,
+      { name: "paper-status-gates", ours: false, legacy: true },
     ],
     [
       `node "$CLAUDE_PROJECT_DIR/node_modules/vigiles/dist/cli.js" hook-runtime run-program "$CLAUDE_PROJECT_DIR/node_modules/paperlint/hooks/paper-edit-guard.hook.mjs"`,
@@ -107,11 +111,11 @@ try {
       { name: "paper-skills-nudge", ours: false, legacy: false },
     ],
     [
-      `node /abs/proj/node_modules/paperlint/bin/rpp.mjs hook paper-edit-guard`,
+      `node /abs/proj/node_modules/paperlint/bin/paperlint.mjs hook paper-edit-guard`,
       { name: "paper-edit-guard", ours: false, legacy: false },
     ],
     [`node my-own-lint.mjs`, null],
-    [`node node_modules/paperlint/bin/rpp.mjs lint`, null],
+    [`node node_modules/paperlint/bin/paperlint.mjs lint`, null],
   ];
   for (const [cmd, want] of cases)
     check(
@@ -154,37 +158,42 @@ try {
     );
   }
 
-  // ── an install under the old package name is migrated, the user's own command kept ─────
-  {
+  // ── what an older install wrote is migrated, the user's own command kept ─────────────────
+  // Two real histories, spelled literally: 1.x wrote the old package directory, 2.0.0 wrote the
+  // new directory with the old entry file name. Neither file exists after an upgrade.
+  for (const [release, stale] of [
+    ["1.x", "node_modules/research-paper-pipeline/bin/rpp.mjs"],
+    ["2.0.0", "node_modules/paperlint/bin/rpp.mjs"],
+  ]) {
     const legacyWired = JSON.parse(
       JSON.stringify(merge({}, wiring.compiled, MANAGED_BY)).replaceAll(
         MANAGED_BY,
-        LEGACY_MANAGED_BY,
+        stale,
       ),
     );
     legacyWired.hooks.PostToolUse[0].hooks.push({
       type: "command",
       command: "node my-own-lint.mjs",
     });
-    const dir = project("legacy", legacyWired);
+    const dir = project(`legacy-${release}`, legacyWired);
     const before = doctorHooks(dir, wiring).join("\n");
     check(
-      "🔴 doctor names hook commands left under the old package name, and the fix",
-      /still point into node_modules\/research-paper-pipeline\//.test(before) &&
+      `🔴 doctor names hook commands ${release} left behind — the missing file, and the fix`,
+      before.includes(`run ${stale}, which this version does not install`) &&
         /npx paperlint init` replaces them/.test(before),
     );
     const r = wireHooks(dir, merge, wiring);
     const s = JSON.parse(text(dir));
     const counts = [...wiredCounts(s, wiring.names).values()];
     check(
-      "🔴 init replaces them: every hook wired once under the new name, none left under the old",
+      `🔴 init replaces what ${release} wrote: every hook wired once, none left at the old path`,
       r.status === "written" &&
         r.replaced === wiring.names.length &&
         counts.every((c) => c.ours === 1 && c.legacy === 0 && c.other === 0) &&
-        !text(dir).includes("research-paper-pipeline"),
+        !text(dir).includes(stale),
     );
     check(
-      "and the user's own command in the same matcher survives the migration",
+      `and the user's own command in the same matcher survives the ${release} migration`,
       text(dir).includes("node my-own-lint.mjs"),
     );
   }

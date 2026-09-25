@@ -135,7 +135,7 @@ on the tree the manager laid out. It also checks that every shipped skill is rea
 directory under a skill's name survives.
 
 Yarn Plug'n'Play has no `node_modules`, and the hook commands in `plugin/hooks/hooks.json` name
-`${CLAUDE_PROJECT_DIR}/node_modules/paperlint/bin/rpp.mjs`. Supporting it would need
+`${CLAUDE_PROJECT_DIR}/node_modules/paperlint/bin/paperlint.mjs`. Supporting it would need
 a different answer to "where is the runtime", not a flag.
 
 ## Install size

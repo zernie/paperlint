@@ -46,7 +46,7 @@ const { parseBanalSettings } = await import(
 const { hostDirs } = await import(
   join(ROOT, "dist", "adapters", "node", "index.js")
 );
-const CLI = join(ROOT, "bin", "rpp.mjs");
+const CLI = join(ROOT, "bin", "paperlint.mjs");
 const strict = process.argv.includes("--strict");
 const dir = process.env.RPP_TEXLIVE_DIR;
 

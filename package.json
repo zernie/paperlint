@@ -68,7 +68,7 @@
     "node": ">=22.13"
   },
   "bin": {
-    "paperlint": "bin/rpp.mjs"
+    "paperlint": "bin/paperlint.mjs"
   },
   "files": [
     ".github",

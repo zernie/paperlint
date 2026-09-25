@@ -1435,13 +1435,13 @@ check(
 //
 // 🔴 npm puts a SYMLINK in `node_modules/.bin/`. The first version compared `import.meta.url`
 // against `file://${process.argv[1]}`: for a symlink those two paths are DIFFERENT, the
-// condition is false, and the utility silently exited zero. A direct `node bin/rpp.mjs` worked
+// condition is false, and the utility silently exited zero. A direct `node bin/paperlint.mjs` worked
 // fine, meanwhile — i.e. the defect was invisible in exactly the way it is normally checked.
 {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "rpp-link-")));
   try {
     const link = join(root, "rpp-shim");
-    symlinkSync(join(HERE, "..", "bin", "rpp.mjs"), link);
+    symlinkSync(join(HERE, "..", "bin", "paperlint.mjs"), link);
     const paper = join(root, "papers", "p");
     mkdirSync(join(paper, "versions"), { recursive: true });
     writeFileSync(

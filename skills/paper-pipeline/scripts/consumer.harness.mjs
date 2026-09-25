@@ -43,6 +43,7 @@ import {
   pipelineScripts,
   scriptsRoot,
   PACKAGE_NAME,
+  BIN_FILE,
 } from "./consumer.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -63,6 +64,11 @@ const HERE = dirname(fileURLToPath(import.meta.url));
     [PACKAGE_NAME],
     "the package exposes exactly one command, named like the package",
   );
+  assert.equal(
+    manifest.bin?.[PACKAGE_NAME],
+    BIN_FILE,
+    "package.json `bin` points at BIN_FILE from consumer.mjs — the file every hook command runs",
+  );
   const wiring = JSON.parse(
     readFileSync(join(root, "plugin", "hooks", "hooks.json"), "utf8"),
   );
@@ -73,9 +79,9 @@ const HERE = dirname(fileURLToPath(import.meta.url));
   assert.ok(
     commands.length > 0 &&
       commands.every((c) =>
-        c.includes(`/node_modules/${PACKAGE_NAME}/bin/rpp.mjs`),
+        c.includes(`/node_modules/${PACKAGE_NAME}/${BIN_FILE}`),
       ),
-    `every command in plugin/hooks/hooks.json runs node_modules/${PACKAGE_NAME}/bin/rpp.mjs`,
+    `every command in plugin/hooks/hooks.json runs node_modules/${PACKAGE_NAME}/${BIN_FILE}`,
   );
 }
 const TMP = realpathSync(mkdtempSync(join(tmpdir(), "consumer-harness-")));

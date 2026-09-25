@@ -51,7 +51,7 @@ import {
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(dirname(HERE));
-const BIN = join(ROOT, "bin", "rpp.mjs");
+const BIN = join(ROOT, "bin", "paperlint.mjs");
 
 let n = 0;
 const check = (label, cond) => {

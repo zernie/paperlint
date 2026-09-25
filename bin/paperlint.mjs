@@ -6,10 +6,10 @@
  * 🔴 WHY NOT MOVE `bin` TO `dist/cli.js`. This path is a PUBLIC CONTRACT, and it already has
  * two consumers outside the package:
  *   1. `plugin/hooks/hooks.json` calls
- *        node "${CLAUDE_PROJECT_DIR}/node_modules/paperlint/bin/rpp.mjs" hook <name>
+ *        node "${CLAUDE_PROJECT_DIR}/node_modules/paperlint/bin/paperlint.mjs" hook <name>
  *      — the hook wiring was fixed exactly because it addressed a file the consumer did not have;
  *      changing it the next day would be the same class of error;
- *   2. docs/configuration.md documents `import { buildConfig } from "paperlint/bin/rpp.mjs"`.
+ *   2. docs/configuration.md documents `import { buildConfig } from "paperlint/bin/paperlint.mjs"`.
  * A move would cost both, and yield zero: a file name says nothing about what language it is in.
  *
  * 🔴 AND WHY THE FAILURE HERE IS LOUD. A consumer who installed the package from the registry
