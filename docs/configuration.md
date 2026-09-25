@@ -173,7 +173,8 @@ papers/my-paper
 
 The build does **not** judge the layout. A balanced last page, a page limit, the fonts a venue
 wants — those are verdicts about the finished PDF, and they belong to lint rules that can be
-turned on per venue, given a severity and suppressed with a reason. paperlint once searched for a
+turned on per venue, given a severity and suppressed with a reason: the `pdf/` venue rules
+([`rules.md`](rules.md#checks-against-the-venue)) and the optional `pdf/last-page-balance`. paperlint once searched for a
 `\balance` position itself and failed the build when none worked; that was removed on
 2026-09-24.
 

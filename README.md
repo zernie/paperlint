@@ -12,6 +12,11 @@ source paginates differently on a machine with another version of the template. 
 gets overwritten a week later and nobody can say what was sent. You find out from a reviewer or a
 publisher, or never. paperlint checks for these on your machine and in CI:
 
+- **Checks against your venue.** Name the venue in the paper's `venue.json`, build, lint: the
+  page limit for your kind of paper, embedded fonts and the template's font families, the paper
+  size and column count, and the font sizes, as the venue's call for papers sets them. Profiles
+  ship for three venues today — AgenticDev and AISec (ACM `acmart` sigconf) and REALM (ACL); adding
+  one is one JSON file in paperlint ([`docs/rules.md`](docs/rules.md#checks-against-the-venue)).
 - **Builds the same PDF everywhere.** `paperlint toolchain` installs TeX Live with exactly the
   packages your venue's template needs and checks that each one is really there, so the silent
   font switch cannot happen and your laptop and CI build with the same TeX Live.
@@ -167,19 +172,28 @@ shows up red. Optional inputs: `config`, `max-warnings` (default `-1`, no limit)
 
 ## What the checks catch
 
-| check                          | level   | catches                                                                                                    |
-| ------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------- |
-| `paper/stages`                 | error   | a stage's PDF is missing, or it is not the same file any more (its size changed)                           |
-| `paper/source`                 | error   | a stage has no frozen source file next to its PDF                                                          |
-| `paper/author-list`            | warning | a stage is declared, but `PIPELINE-STATUS.md` does not record that the author list was checked             |
-| `paper/research-question`      | warning | the research question is missing from `PIPELINE-STATUS.md`, or the paper does not contain that sentence    |
-| `paper/typography`             | warning | more `§`, `.05`-style decimals, mixed `Fig.`/`Figure`, or references without a DOI or URL than you allowed |
-| `tex/future-promise`           | warning | a camera-ready still says your code "will be released"                                                     |
-| `tex/acm-frontmatter-override` | error   | an ACM paper overrides the template's title-page commands, so parts of page 1 go missing                   |
-| `review/findings-cause`        | error   | a review note lists several findings and names no cause for any of them                                    |
-| `doc/fields`                   | warning | a review note's front matter is missing a field you require (off unless configured)                        |
+| check                          | level   | catches                                                                                                          |
+| ------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------- |
+| `paper/stages`                 | error   | a stage's PDF is missing, or it is not the same file any more (its size changed)                                 |
+| `paper/source`                 | error   | a stage has no frozen source file next to its PDF                                                                |
+| `paper/author-list`            | warning | a stage is declared, but `PIPELINE-STATUS.md` does not record that the author list was checked                   |
+| `paper/research-question`      | warning | the research question is missing from `PIPELINE-STATUS.md`, or the paper does not contain that sentence          |
+| `paper/typography`             | warning | more `§`, `.05`-style decimals, mixed `Fig.`/`Figure`, or references without a DOI or URL than you allowed       |
+| `tex/future-promise`           | warning | a camera-ready still says your code "will be released"                                                           |
+| `tex/acm-frontmatter-override` | error   | an ACM paper overrides the template's title-page commands, so parts of page 1 go missing                         |
+| `review/findings-cause`        | error   | a review note lists several findings and names no cause for any of them                                          |
+| `doc/fields`                   | warning | a review note's front matter is missing a field you require (off unless configured)                              |
+| `pdf/limits`                   | error   | more body or reference pages than the venue allows for your kind of paper, or a reference font size out of range |
+| `pdf/fonts`                    | error   | a Type 3 or unembedded font, or the venue template's fonts are missing (a silent Computer Modern fallback)       |
+| `pdf/geometry`                 | error   | the paper size or column count differs from the venue's                                                          |
+| `pdf/body-size`                | warning | the body font size is off the venue's                                                                            |
+| `pdf/profile`                  | error   | `venue.json` names a venue paperlint has no profile for (a typo), or a kind of paper the venue does not have     |
+| `pdf/fresh`                    | error   | the build facts describe an earlier PDF than the one on disk                                                     |
+| `pdf/measured`                 | warning | the paper names a venue but was not built, so the venue checks did not run                                       |
 
-Errors fail the run; warnings only print. What each check reads: [`docs/rules.md`](docs/rules.md).
+The `pdf/` checks run only for a paper whose `venue.json` names a venue, and they judge the PDF
+`paperlint build` made: build, then lint. Errors fail the run; warnings only print. What each check
+reads: [`docs/rules.md`](docs/rules.md).
 Checks that only some venues need are off until you turn them on:
 [`docs/optional-rules.md`](docs/optional-rules.md).
 
