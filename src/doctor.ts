@@ -241,12 +241,22 @@ export function doctor({
     );
     if (!same) bad++;
   }
+  // A declared directory that does not exist is a failure only when papers live SOMEWHERE ELSE:
+  // then every write to them passes the guard unseen (issue #33). With no papers anywhere, the
+  // project is simply new — `init --yes` declares the default and creates no paper — and failing
+  // it would teach people to ignore doctor.
   if (hookSays && !existsSync(join(root, hookSays))) {
-    out.push(`  ✗ ${hookSays} does not exist — the guard is watching nothing`);
-    bad++;
     const guesses = detectPapers(root);
-    if (guesses.length)
+    if (guesses.length) {
+      out.push(
+        `  ✗ ${hookSays} does not exist — the guard is watching nothing`,
+      );
       out.push(`      papers look like they live in: ${guesses.join(", ")}`);
+      bad++;
+    } else
+      out.push(
+        `  ⚠ ${hookSays} does not exist yet — no papers yet. \`npx rpp new <name>\` creates the first one there`,
+      );
   }
 
   // A skill that is not linked is ADVISORY, like a missing program: `rpp lint`, the hooks and CI

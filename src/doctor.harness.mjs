@@ -165,6 +165,27 @@ const runDoctor = (
   rmSync(dir, { recursive: true, force: true });
 }
 
+// ── II-ter. A FRESH PROJECT WITH NO PAPERS YET IS NOT BROKEN ───────────────────────────────
+// `init --yes` declares the default and creates no paper. The declared directory does not exist,
+// and no papers live anywhere else: the guard has nothing to protect yet. A warning with the next
+// step, not a failure. (A missing directory while papers DO live elsewhere stays ✗ — case II.)
+{
+  const dir = consumer({
+    papersDir: "papers",
+    pkgKey: "papers",
+    makeDir: false,
+  });
+  const r = runDoctor(dir, { cliPapers: "papers" });
+  check("no papers anywhere yet — NOT a failure", r.code === 0);
+  check(
+    "but it is named, with the command that creates the first paper",
+    /⚠ papers does not exist yet — no papers yet/.test(r.out) &&
+      /new <name>/.test(r.out) &&
+      !/watching nothing/.test(r.out),
+  );
+  rmSync(dir, { recursive: true, force: true });
+}
+
 // ── III. TWO DECLARATIONS HAVE DRIFTED APART ────────────────────────────────────────────────
 {
   const dir = consumer({

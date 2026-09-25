@@ -443,9 +443,14 @@ check(
         /A GUESS/.test(out.text()) &&
           /Nothing here looks like a papers directory/.test(out.text()),
       );
+      // Guards: a fresh project with no papers anywhere is not a broken install. The guard has
+      // nothing to protect yet, and `init --yes` (an agent, CI) must finish green with a next step.
       check(
-        "🔴 no directory ⇒ doctor goes red, and init returns ITS verdict, not its own success",
-        code === 2 && /the install is NOT finished/.test(out.text()),
+        "🔴 no papers anywhere yet — init finishes GREEN and names the next step",
+        code === 0 &&
+          !/the install is NOT finished/.test(out.text()) &&
+          /no papers yet/.test(out.text()) &&
+          /new <name>/.test(out.text()),
       );
     }
 
