@@ -12,7 +12,7 @@
  * What it asserts, in order:
  *   1. every fixture's geometry, through `measureLayout`, equals the recorded one — with a PATH
  *      that holds perl and nothing else, so no pdftohtml can be what answered;
- *   2. the four conditions `pdf-layout.ts` names are each load-bearing on `hidden-text.pdf`: switch
+ *   2. the four conditions `core/banal/xml.ts` names are each load-bearing on `hidden-text.pdf`: switch
  *      one off and the measurement changes (a condition that changes nothing is untested);
  *   3. without a pdftohtml to answer `-v`, banal does not run, and a stub answering an old version
  *      moves the body size — so both the stub and the version it answers are load-bearing;
@@ -179,7 +179,7 @@ try {
   }
 
   console.log(
-    "\n2. each condition in pdf-layout.ts changes the measurement when switched off",
+    "\n2. each condition in core/banal/xml.ts changes the measurement when switched off",
   );
   const hidden = layouts["hidden-text.pdf"] ?? [];
   const base = EXPECTED["hidden-text.pdf"];

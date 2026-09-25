@@ -1,7 +1,7 @@
 /**
- * READ A FINISHED PDF with pdf.js — the shell around `pdf-geometry.ts` and `pdf-layout.ts`. Page
+ * READ A FINISHED PDF with pdf.js — the shell around `pdf-geometry.ts` and `core/banal/xml.ts`. Page
  * count, the fonts the pages draw text with, the last page's words, and every page's text boxes
- * (the input banal measures page geometry from, written as pdftohtml XML by `pdf-layout.ts`).
+ * (the input banal measures page geometry from, written as pdftohtml XML by `core/banal/xml.ts`).
  *
  * pdf.js arrives as the npm package `unpdf` (a zero-dependency build of Mozilla's pdf.js), so
  * reading a PDF needs nothing installed on the system. It replaced three poppler programs
@@ -36,7 +36,7 @@ import {
   isUpright,
   type PageLayout,
   type TextBox,
-} from "./pdf-layout.ts";
+} from "./core/banal/xml.ts";
 
 type PdfJs = Awaited<ReturnType<typeof import("unpdf").getResolvedPDFJS>>;
 type Doc = Awaited<ReturnType<PdfJs["getDocument"]>["promise"]>;
@@ -46,7 +46,7 @@ type TextItem = Extract<Item, { str: string }>;
 
 /**
  * What `readPdf` measured. `last` is the last page's words; `classifyLastPage` reads it. `layout` is
- * every page's text boxes, for banal (`pdf-layout.ts` writes them as the XML banal reads).
+ * every page's text boxes, for banal (`core/banal/xml.ts` writes them as the XML banal reads).
  */
 export interface PdfFacts {
   readonly pages: number;

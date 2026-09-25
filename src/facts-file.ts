@@ -12,7 +12,7 @@
  * - pdf.js (`pdf-facts.ts`) — page count, the fonts the pages draw text with, the last page. Always.
  * - banal (Eddie Kohler's page-geometry tool, the one HotCRP's format checker runs) — paper size,
  *   columns, body and reference font sizes, page types. It runs on pdftohtml-style XML that rpp
- *   writes from the same pdf.js read (`pdf-layout.ts`), so poppler is not needed (`banal.ts`).
+ *   writes from the same pdf.js read (`core/banal/xml.ts`), so poppler is not needed (`banal.ts`).
  *   OPTIONAL: banal is GPL and rpp does not ship it — `rpp toolchain` fetches it. Found ⇒ its fields
  *   are filled and `geometry_source` says `banal`; not found ⇒ they are null and `geometry_source`
  *   is null, so a rule can tell "not measured" from "measured as zero". Whether that is a failure is
