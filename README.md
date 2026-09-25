@@ -3,14 +3,28 @@
 [![npm version](https://img.shields.io/npm/v/paperlint)](https://www.npmjs.com/package/paperlint)
 ![Node version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fzernie%2Fpaperlint%2Fmain%2Fpackage.json&query=%24.engines.node&label=node)
 
-A linter for scientific papers written in LaTeX: it catches mistakes before you submit to a
-conference or journal. You keep the paper in git and record what happened to it
-— "submitted on 22 July, as this PDF" — and `paperlint` checks that the files match: the PDF you say you
-sent is still there and unchanged, its LaTeX source was kept beside it, and the paper itself avoids
-a few mistakes reviewers flag. It runs on your machine and in CI.
+A linter for scientific papers written in LaTeX. It catches the mechanical mistakes that get a
+paper desk-rejected or sent back at camera-ready, before you submit.
+
+A LaTeX paper can build without an error and still be wrong. The ACM template silently switches to
+another font when one of its font packages is missing, and the pages break differently. The same
+source paginates differently on a machine with another version of the template. The submitted PDF
+gets overwritten a week later and nobody can say what was sent. You find out from a reviewer or a
+publisher, or never. paperlint checks for these on your machine and in CI:
+
+- **Builds the same PDF everywhere.** `paperlint toolchain` installs TeX Live with exactly the
+  packages your venue's template needs and checks that each one is really there, so the silent
+  font switch cannot happen and your laptop and CI build with the same TeX Live.
+- **Keeps what you submitted.** Record "submitted on 22 July, as this PDF", and paperlint fails if
+  that PDF changes or disappears, or its LaTeX source was not kept beside it.
+- **Knows the classic slips.** An ACM paper that overrides the title-page commands and loses part
+  of page 1; "code will be released" left in a camera-ready; references without a DOI or URL; an
+  unbalanced last page, for publishers that ask for balanced columns (an optional check).
+- **Works with coding agents.** Hooks and skills for Claude Code run the checks after every edit
+  and stop an agent from rewriting the paper around them.
 
 It is for researchers and engineers who write papers in LaTeX inside git and submit them to
-conferences or journals. Claude Code users also get optional skills and hooks.
+conferences or journals.
 
 ## Install and set up
 
