@@ -39,6 +39,7 @@ import {
   pickBanal,
   type BanalCandidate,
   type LocatedBanal,
+  type PinnedBanal,
 } from "./core/banal/locate.ts";
 import {
   geometryOf,
@@ -112,15 +113,23 @@ function perlRuns(io: Io, s: BanalSettings): boolean {
   return r.kind === "exited" && r.status === 0;
 }
 
-/** Does the installed banal RUN — accepted by measuring the probe page, not by a download's exit code. */
+/**
+ * Does the installed, pin-verified banal RUN — accepted by measuring the probe page, not by a
+ * download's exit code. The one place a `PinnedBanal` is minted; callers verified the bytes first.
+ */
 function probe(
   io: Io,
   s: BanalSettings,
   path: AbsolutePath,
-): Result<AbsolutePath, BanalFailure> {
-  const banal = { path, provenance: { kind: "cache" } } as LocatedBanal;
-  const r = andThen(runBanal(io, s, banal, [PROBE_PAGE]), acceptProbe);
-  return r.ok ? ok(path) : err({ kind: "does-not-run", path, why: r.error });
+): Result<PinnedBanal, BanalFailure> {
+  const at: BanalCandidate = { path, provenance: { kind: "cache" } };
+  const r = andThen(
+    runBanal(io, s, at as LocatedBanal, [PROBE_PAGE]),
+    acceptProbe,
+  );
+  return r.ok
+    ? ok(at as PinnedBanal)
+    : err({ kind: "does-not-run", path, why: r.error });
 }
 
 /** Download `source` into `dest`, keeping the bytes only when they hash to the pin. */
@@ -144,7 +153,7 @@ function install(
 }
 
 export interface Installed {
-  readonly path: AbsolutePath;
+  readonly banal: PinnedBanal;
   /** True when this run downloaded it. */
   readonly fresh: boolean;
 }
@@ -177,7 +186,7 @@ export function ensureBanal(
     if (!done.ok) return done;
   }
   const ran = probe(io, s, dest);
-  return ran.ok ? ok({ path: dest, fresh: !present }) : ran;
+  return ran.ok ? ok({ banal: ran.value, fresh: !present }) : ran;
 }
 
 /** `--check`: is the pinned banal installed and running? The same predicate as `ensureBanal`, no download. */
@@ -185,7 +194,7 @@ export function checkBanal(
   io: Io,
   s: BanalSettings,
   source: BanalSource = BANAL_PIN,
-): Result<AbsolutePath, BanalFailure> {
+): Result<PinnedBanal, BanalFailure> {
   if (!perlRuns(io, s)) return err({ kind: "perl-missing" });
   const dest = installedBanal(s);
   const state = installedState(io.files.readBytes(dest), source);

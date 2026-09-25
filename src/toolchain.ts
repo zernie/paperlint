@@ -51,6 +51,7 @@ import {
 import { checkBanal, ensureBanal } from "./banal.ts";
 import { describe } from "./core/banal/failure.ts";
 import { pinLabel, type BanalSource } from "./core/banal/pin.ts";
+import type { PinnedBanal } from "./core/banal/locate.ts";
 import { nodeBanalRuntime } from "./adapters/node/host.ts";
 import {
   declaredUnion,
@@ -717,12 +718,15 @@ function banalPart(o: Resolved): boolean {
     fail(o.err, describe(r.error));
     return false;
   }
-  o.log(
-    r.value.fresh
-      ? `✓ ${pinned} is ready in ${r.value.path}: sha256 verified, and it measured a probe page`
-      : `✓ ${pinned} in ${r.value.path} is verified and runs — nothing to do`,
-  );
+  o.log(readyLine(r.value.banal, r.value.fresh));
   return true;
+}
+
+/** The ready line takes a `PinnedBanal`: it cannot be printed for bytes that were not verified and run. */
+export function readyLine(banal: PinnedBanal, fresh: boolean): string {
+  return fresh
+    ? `✓ ${pinLabel()} is ready in ${banal.path}: sha256 verified, and it measured a probe page`
+    : `✓ ${pinLabel()} in ${banal.path} is verified and runs — nothing to do`;
 }
 
 /** The TeX Live half: 0 when every declared package is present (or now installed). */

@@ -23,6 +23,12 @@ export interface BanalCandidate {
 /** A candidate the `Files` port confirmed is a file. Minted by `pickBanal` only. */
 export type LocatedBanal = Opaque<BanalCandidate, "LocatedBanal">;
 
+/**
+ * `rpp toolchain`'s banal after its bytes hashed to the pin AND it measured the probe page. Minted by
+ * `ensureBanal` / `checkBanal` only (`src/banal.ts`): a "ready" line cannot be printed without one.
+ */
+export type PinnedBanal = Opaque<BanalCandidate, "PinnedBanal">;
+
 /** Why there is no banal to run. */
 export type BanalMissing =
   /** `$BANAL` names a file that is not there. An explicit choice: no fallback to another banal. */

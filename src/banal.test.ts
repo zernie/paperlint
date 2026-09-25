@@ -101,7 +101,8 @@ test("ensureBanal: downloads, verifies, writes and probes — fresh; a second ru
     download,
   });
   const first = ensureBanal(io, noExplicit, { source });
-  assert.deepEqual(first, { ok: true, value: { path: dest, fresh: true } });
+  assert.equal(first.ok && first.value.banal.path, dest);
+  assert.equal(first.ok && first.value.fresh, true);
   assert.ok(files.map.has(dest));
   // Guards: idempotence — an installed, matching banal is not downloaded again.
   const second = ensureBanal(io, noExplicit, { source });
