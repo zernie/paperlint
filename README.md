@@ -8,6 +8,9 @@ A checker for a research paper you keep in a git repository. You record what hap
 sent is still there and unchanged, its LaTeX source was kept beside it, and the paper itself avoids
 a few mistakes reviewers flag. It runs on your machine and in CI, like a linter.
 
+It is for researchers and engineers who write papers in LaTeX inside git and submit them to
+conferences or journals. Claude Code users also get optional skills and hooks.
+
 ## Install and set up
 
 <!-- `vigiles:symbol src/init.ts#init` — `npm run check` fails if this function is renamed or removed. -->
@@ -102,8 +105,9 @@ stages:
     sourceBytes: 57210
 ```
 
-From then on `rpp lint` fails if that PDF goes missing or changes size. Why sizes and not a
-checksum: [`docs/rules.md`](docs/rules.md#the-scorecards-bytes-and-sourcebytes).
+From then on `rpp lint` fails if that PDF goes missing or changes size. A frozen PDF should never
+change, so a size that no longer matches means the file was replaced after you recorded it
+([`docs/rules.md`](docs/rules.md#the-scorecards-bytes-and-sourcebytes)).
 
 ### What a finding looks like
 
@@ -121,9 +125,14 @@ papers/my-paper
 ```
 
 Each finding gives the file, line and column, the level, what is wrong, and the check that found
-it. `rpp lint` exits `1` when any check reports an error, or when it checked no files at all
-(usually a wrong path). Warnings never fail the run unless you pass `--max-warnings <n>`. `--json`
-prints the findings as JSON.
+it. The first line is an error about the folder: without `PIPELINE-STATUS.md`, the three checks
+that read it have nothing to check; `npx rpp new my-paper` adds the file and leaves `paper.tex`
+alone. The two warnings count typography slips against an allowance you can set per paper: going over
+it is reported, fixing some is not ("paying the debt down is silent").
+
+`rpp lint` exits `1` when any check reports an error (as here, even though the summary line counts
+only the warnings in files), or when it checked no files at all (usually a wrong path). Warnings
+never fail the run unless you pass `--max-warnings <n>`. `--json` prints the findings as JSON.
 
 ## Run it in CI
 
@@ -138,7 +147,7 @@ prints the findings as JSON.
 Use the tag of the version you installed (`npm ls research-paper-pipeline`): every npm release has
 a git tag of the same version, so the step runs the same code as your package. It runs
 `rpp lint`. `paths` is required, and the step fails if it checked zero files, so a typo in the path
-shows up red. Optional inputs: `config`, `max-warnings` (default `-1`), `texcount` (default
+shows up red. Optional inputs: `config`, `max-warnings` (default `-1`, no limit), `texcount` (default
 `true`), `working-directory`.
 
 ## What the checks catch
@@ -151,7 +160,7 @@ shows up red. Optional inputs: `config`, `max-warnings` (default `-1`), `texcoun
 | `paper/research-question`      | warning | the research question is missing from `PIPELINE-STATUS.md`, or the paper does not contain that sentence    |
 | `paper/typography`             | warning | more `§`, `.05`-style decimals, mixed `Fig.`/`Figure`, or references without a DOI or URL than you allowed |
 | `tex/future-promise`           | warning | a camera-ready still says your code "will be released"                                                     |
-| `tex/acm-frontmatter-override` | error   | an ACM paper overrides the template's front matter and loses parts of page 1                               |
+| `tex/acm-frontmatter-override` | error   | an ACM paper overrides the template's title-page commands, so parts of page 1 go missing                   |
 | `review/findings-cause`        | error   | a review note lists several findings and names no cause for any of them                                    |
 | `doc/fields`                   | warning | a review note's front matter is missing a field you require (off unless configured)                        |
 
@@ -171,8 +180,9 @@ Checks that only some venues need are off until you turn them on:
 }
 ```
 
-`papersDir` has no default, so the tool never checks a folder you did not choose. An unknown key is
-an error. The optional settings, and how to use the checks inside your own ESLint setup, are in
+`papersDir` has no default, so the tool never checks a folder you did not choose: without it,
+`rpp lint` stops and says so, unless you pass a path. An unknown key is an error. The optional
+settings, and how to use the checks inside your own ESLint setup, are in
 [`docs/configuration.md`](docs/configuration.md). TeX Live, its install location and the external
 programs the skills use are in [`docs/toolchain.md`](docs/toolchain.md).
 
@@ -216,7 +226,8 @@ with a normal file edit — those are not blocked.
 ## Contributing
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md): how the package is tested, the one command that runs
-every check, and how releases work (the pull-request title decides the version).
+every check, and how releases work: the pull-request title decides the version (`feat:` is a
+minor release, `fix:` a patch).
 
 ## License
 
