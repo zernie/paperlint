@@ -275,15 +275,18 @@ jobs:
       # The same command a user runs. On a cache hit it verifies and says "nothing to do"; on a miss
       # it installs from an empty directory and verifies every declared file with kpsewhich.
       # `node bin/rpp.mjs`, not `npx rpp`: inside this repository npx would look the name up on npm.
-      # It also fetches banal (HotCRP's page-geometry script, ~90 KB, not cached) at its pinned commit,
-      # checks the sha256 and runs it on a probe page — perl comes with both runner images.
+      # It also downloads banal, the Perl script HotCRP runs to measure page geometry (~90 KB, pinned
+      # commit, sha256-checked, then run once on a test page). rpp keeps banal and no longer needs
+      # poppler: rpp now writes the XML banal reads, which poppler's pdftohtml used to write.
+      # Both runner images ship perl. The download is too small to be worth an Actions cache.
       - name: rpp toolchain
         run: node bin/rpp.mjs toolchain
         timeout-minutes: 15
 
-      # 🔴 NO POPPLER ON THIS RUNNER, AND NONE IS INSTALLED: the real banal measures the committed
-      # fixtures through pdf.js-written XML, with a PATH holding perl alone, and must give the numbers
-      # banal gave on real pdftohtml (recorded in the test). Seconds, so no cache and a small bond.
+      # Proves banal works without poppler. This runner has no poppler, and the test also limits
+      # PATH to perl. rpp turns each fixture PDF into XML with pdf.js, banal measures it, and the
+      # result must equal the numbers banal gave on the same PDFs through poppler's pdftohtml
+      # (recorded once, hardcoded in the test). Runs in seconds, hence the short timeout.
       - name: banal e2e (--strict)
         run: node test/e2e/banal.mjs --strict
         timeout-minutes: 3
