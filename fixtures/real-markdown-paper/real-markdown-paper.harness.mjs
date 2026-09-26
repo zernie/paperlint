@@ -29,7 +29,6 @@
  * any of five unrelated things do.
  */
 import assert from "node:assert/strict";
-import { PAPERS_DIR_FIELD } from "../../lib/paper-config.mjs";
 import { spawnSync } from "node:child_process";
 import {
   cpSync,
@@ -84,7 +83,6 @@ function findings(patch) {
           name: "c",
           version: "1.0.0",
           private: true,
-          paperlint: { [PAPERS_DIR_FIELD]: "papers" },
         },
         null,
         2,
@@ -178,7 +176,6 @@ check(
           name: "c",
           version: "1.0.0",
           private: true,
-          paperlint: { [PAPERS_DIR_FIELD]: "papers" },
         },
         null,
         2,
