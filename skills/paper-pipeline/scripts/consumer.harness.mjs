@@ -32,7 +32,6 @@ import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import {
-  CONFIG_KEY,
   DEFAULT_SCRIPTS_ROOT,
   consumerRoot,
   consumerSkillsDir,
@@ -87,15 +86,12 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const TMP = realpathSync(mkdtempSync(join(tmpdir(), "consumer-harness-")));
 process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
 
-/** A throwaway consumer repository with the given `paperlint` block (or none). */
+/** A throwaway consumer repository with the given root `paperlint.json` settings (or none). */
 function fakeConsumer(block) {
   const root = mkdtempSync(join(TMP, "repo-"));
-  writeFileSync(
-    join(root, "package.json"),
-    JSON.stringify(
-      block === undefined ? { name: "x" } : { name: "x", [CONFIG_KEY]: block },
-    ),
-  );
+  writeFileSync(join(root, "package.json"), JSON.stringify({ name: "x" }));
+  if (block !== undefined)
+    writeFileSync(join(root, "paperlint.json"), JSON.stringify(block));
   return root;
 }
 /** A directory that looks like an installed copy of this package. */
@@ -188,7 +184,7 @@ function installedDir(root) {
   );
   assert.match(
     err.message,
-    /package\.json/,
+    /paperlint\.json/,
     "the refusal must name the file the key goes in",
   );
 }
@@ -409,12 +405,12 @@ assert.equal(
   );
   assert.match(
     missing.message,
-    /package\.json/,
+    /paperlint\.json/,
     "the refusal must name the file the key goes in",
   );
 
   // And the default's version of that message must say the default was used — otherwise someone
-  // who declared nothing goes looking in package.json for a line that is not there.
+  // who declared nothing goes looking in paperlint.json for a line that is not there.
   assert.throws(
     () => scriptsRoot({ env: {}, cwd: fakeConsumer(undefined) }),
     /Nothing was declared/,
@@ -462,7 +458,7 @@ assert.equal(
   assert.equal(s.ledger, "a/b/ledger.mjs");
 
   // EXACTLY ONE slash, whatever the consumer typed. `scriptsRoot()` returns the declaration
-  // verbatim, so a trailing slash in package.json arrives here intact; `${root}/` would then give
+  // verbatim, so a trailing slash in paperlint.json arrives here intact; `${root}/` would then give
   // `a/b//`, which matches nothing — the silent direction again.
   const typedSlash = pipelineScripts("a/b/");
   assert.equal(

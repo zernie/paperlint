@@ -167,7 +167,7 @@ export function parseRuleBlocks(
     );
   const out: RuleBlock[] = [];
   for (const [i, v] of raw.entries()) {
-    const b = parseBlock(v, `${where}.rules[${i}]`, { shipped, baseDir });
+    const b = parseBlock(v, `${where} → rules[${i}]`, { shipped, baseDir });
     if (!b.ok) return b;
     out.push(b.value);
   }

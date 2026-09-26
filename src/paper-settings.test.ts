@@ -174,6 +174,21 @@ describe("readPaperSettings — the root paperlint.json's defaults, the paper's 
     });
   });
 
+  it("papersDir in a paper's file: broken, naming the root file as its place", () => {
+    const r = readPaperSettings(
+      withFiles({ [`${PAPER}/paperlint.json`]: '{"papersDir":"x"}' }),
+      PAPER,
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.why).toMatch(/project setting/);
+  });
+});
+
+describe("findProjectRoot — where the root paperlint.json is looked for", () => {
+  const ROOT = "/work";
+  const withFiles = (f: Record<string, string>) =>
+    memoryFiles({ [`${ROOT}/package.json`]: "{}", ...f });
+
   it("🔴 from INSIDE a paper, the project root is not the paper: its paperlint.json sits beside paper.tex", () => {
     const files = withFiles({
       [`${PAPER}/paper.tex`]: "x",
@@ -188,15 +203,6 @@ describe("readPaperSettings — the root paperlint.json's defaults, the paper's 
     );
     // Neither: where the walk started.
     expect(findProjectRoot(PAPER, () => false)).toBe(PAPER);
-  });
-
-  it("papersDir in a paper's file: broken, naming the root file as its place", () => {
-    const r = readPaperSettings(
-      withFiles({ [`${PAPER}/paperlint.json`]: '{"papersDir":"x"}' }),
-      PAPER,
-    );
-    expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error.why).toMatch(/project setting/);
   });
 });
 

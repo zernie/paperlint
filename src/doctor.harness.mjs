@@ -38,8 +38,8 @@ const check = (label, cond) => {
   assert.ok(cond, label);
 };
 
-/** A consumer on disk: a papers directory, and maybe a declaration in package.json. */
-function consumer({ papersDir, pkgKey, makeDir = true }) {
+/** A consumer on disk: a papers directory, and maybe a declaration in the root paperlint.json. */
+function consumer({ papersDir, declared, makeDir = true }) {
   const dir = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-doctor-")));
   if (makeDir && papersDir) {
     mkdirSync(join(dir, papersDir, "some-paper"), { recursive: true });
@@ -48,9 +48,15 @@ function consumer({ papersDir, pkgKey, makeDir = true }) {
       "# s\n",
     );
   }
-  const pkg = { name: "consumer", version: "1.0.0" };
-  if (pkgKey !== undefined) pkg["paperlint"] = { [PAPERS_DIR_FIELD]: pkgKey };
-  writeFileSync(join(dir, "package.json"), JSON.stringify(pkg, null, 2));
+  writeFileSync(
+    join(dir, "package.json"),
+    JSON.stringify({ name: "consumer", version: "1.0.0" }, null, 2),
+  );
+  if (declared !== undefined)
+    writeFileSync(
+      join(dir, "paperlint.json"),
+      JSON.stringify({ [PAPERS_DIR_FIELD]: declared }, null, 2),
+    );
   return dir;
 }
 
@@ -73,7 +79,7 @@ const runDoctor = (
 
 // ── I. A CONSISTENT INSTALL IS SILENT ───────────────────────────────────────────────────────
 {
-  const dir = consumer({ papersDir: "papers", pkgKey: "papers" });
+  const dir = consumer({ papersDir: "papers", declared: "papers" });
   const r = runDoctor(dir, { cliPapers: "papers" });
   check("a consistent install — exit ZERO", r.code === 0);
   check(
@@ -84,8 +90,8 @@ const runDoctor = (
 }
 
 // ── II. THE VERY DEFECT: AN INSTALL FOLLOWING THE DOCS ─────────────────────────────────────
-// The old `init` wrote its own config file and did not touch package.json; the hook reads package.json.
-// Measured 09-18.
+// The CLI lints one directory and the hook guards another: the install that motivated doctor
+// (issue #33). Here the CLI was pointed elsewhere while the hook took the default.
 {
   const dir = consumer({ papersDir: "writing/drafts" });
   const r = runDoctor(dir, { cliPapers: "writing/drafts" });
@@ -113,21 +119,31 @@ const runDoctor = (
   rmSync(dir, { recursive: true, force: true });
 }
 
-// ── II-bis. A MISSING DECLARATION THAT DOES NO HARM YET ────────────────────────────────────
-// The papers live exactly where the hook's default points. The install WORKS — by coincidence.
-// It must not fail here (an error-level false positive costs more than a miss), but it must
-// not stay silent either.
+// ── II-bis. NO paperlint.json — EVERY DEFAULT, AND THAT IS A VALID PROJECT ─────────────────
+// The CLI and the hooks both take `papers` when nothing is declared, so they cannot disagree.
 {
   const dir = consumer({ papersDir: "papers" });
   const r = runDoctor(dir, { cliPapers: "papers" });
-  check("an install that works by coincidence does NOT crash", r.code === 0);
+  check("no paperlint.json — exit ZERO", r.code === 0);
   check(
-    "but the missing declaration is NAMED, not skipped",
-    /⚠ package\.json has no "paperlint"/.test(r.out),
+    "and it says the defaults are in play, naming the directory",
+    /✓ no paperlint\.json — every setting has its default; papers are in "papers"/.test(
+      r.out,
+    ),
   );
+  rmSync(dir, { recursive: true, force: true });
+}
+
+// ── II-quater. A paperlint.json THAT DOES NOT PARSE — the guard refuses every command ─────
+{
+  const dir = consumer({ papersDir: "papers" });
+  writeFileSync(join(dir, "paperlint.json"), '{ "papersDir": <<<<<<< HEAD\n');
+  const r = runDoctor(dir, { cliPapers: "papers" });
+  check("an unparsable paperlint.json — a FAILURE", r.code === 2);
   check(
-    "and it says exactly why that is risky — it works only until the directory moves",
-    /works only while your papers happen to live there/.test(r.out),
+    "named, with the way out (a file edit, not a command)",
+    /✗ paperlint\.json is not valid JSON/.test(r.out) &&
+      /Edit or Write/.test(r.out),
   );
   rmSync(dir, { recursive: true, force: true });
 }
@@ -139,7 +155,7 @@ const runDoctor = (
 {
   const dir = consumer({
     papersDir: "papers",
-    pkgKey: "papers",
+    declared: "papers",
     makeDir: false,
   });
   const r = runDoctor(dir, { cliPapers: "papers" });
@@ -155,7 +171,7 @@ const runDoctor = (
 
 // ── III. TWO DECLARATIONS HAVE DRIFTED APART ────────────────────────────────────────────────
 {
-  const dir = consumer({ papersDir: "writing/drafts", pkgKey: "papers" });
+  const dir = consumer({ papersDir: "writing/drafts", declared: "papers" });
   mkdirSync(join(dir, "papers"), { recursive: true });
   const r = runDoctor(dir, { cliPapers: "writing/drafts" });
   check("both declarations exist, but differ — a FAILURE", r.code === 2);
@@ -166,12 +182,10 @@ const runDoctor = (
 // This is load-bearing: a copy of the logic would drift silently and print a confident wrong
 // answer.
 {
-  const dir = consumer({ papersDir: "docs/papers", pkgKey: "docs/papers/" });
+  const dir = consumer({ papersDir: "docs/papers", declared: "docs/papers/" });
   const r = runDoctor(dir, { cliPapers: "docs/papers" });
   const fromHook = papersRoot(
-    JSON.stringify({
-      paperlint: { [PAPERS_DIR_FIELD]: "docs/papers/" },
-    }),
+    JSON.stringify({ [PAPERS_DIR_FIELD]: "docs/papers/" }),
   );
   check("the hook itself trims the trailing slash", fromHook === "docs/papers");
   check(
@@ -187,7 +201,7 @@ const runDoctor = (
 
 // ── V. THE HOOK'S REFUSAL IS PASSED ALONG, NOT TURNED INTO A DIRECTORY ─────────────────────
 {
-  const dir = consumer({ papersDir: "papers", pkgKey: "" });
+  const dir = consumer({ papersDir: "papers", declared: "" });
   const r = runDoctor(dir, { cliPapers: "papers" });
   check(
     "an empty string in the declaration — the hook refuses, and doctor NAMES it",
@@ -198,7 +212,7 @@ const runDoctor = (
 
 // ── VI. EXTERNAL PROGRAMS ARE A FACT, NOT A VERDICT ─────────────────────────────────────────
 {
-  const dir = consumer({ papersDir: "papers", pkgKey: "papers" });
+  const dir = consumer({ papersDir: "papers", declared: "papers" });
   const none = runDoctor(dir, { cliPapers: "papers", have: () => 1 });
   check(
     "🔴 a missing tex install does NOT fail the run — a gate on advice would mute the whole thing",
@@ -273,7 +287,7 @@ const runDoctor = (
 // nothing anywhere said so. The link state itself is `link-skills.harness.mjs`'s subject; here
 // only doctor's REPORTING of it is judged, so the state is handed in rather than built on disk.
 {
-  const dir = consumer({ papersDir: "papers", pkgKey: "papers" });
+  const dir = consumer({ papersDir: "papers", declared: "papers" });
   const state = {
     ok: true,
     home: join(dir, ".claude", "skills"),

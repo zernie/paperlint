@@ -36,8 +36,8 @@ import { dirname, join } from "node:path";
 import { checkSkill } from "../../lib/skill-checks.mjs";
 import { papersRoot } from "../../eslint-rules/papers.mjs";
 import {
-  consumerPkg,
   consumerRoot,
+  settingsOf,
 } from "../paper-pipeline/scripts/consumer.mjs";
 
 await checkSkill("render-paper");
@@ -308,7 +308,7 @@ await checkSkill("render-paper");
   // and say so out loud.
   const root = (() => {
     try {
-      return papersRoot(consumerPkg(), consumerRoot());
+      return papersRoot(settingsOf(consumerRoot()), consumerRoot());
     } catch {
       return null;
     }

@@ -90,11 +90,7 @@ describe("paperlint lint — a paper with no venue preset chosen", () => {
     const root = tmp();
     writeFileSync(
       join(root, "package.json"),
-      JSON.stringify({
-        name: "c",
-        private: true,
-        paperlint: { papersDir: "papers" },
-      }),
+      JSON.stringify({ name: "c", private: true }),
     );
     newPaper(join(root, "papers"), "demo", "tex");
     if (extendsValue !== null)

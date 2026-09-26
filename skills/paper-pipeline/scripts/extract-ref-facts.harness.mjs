@@ -21,7 +21,11 @@
  * as success, so an exported test object would report ✓ without running anything.
  */
 import assert from "node:assert/strict";
-import { PAPERS_DIR_FIELD } from "../../../lib/paper-config.mjs";
+import {
+  DEFAULT_PAPERS_ROOT,
+  PAPERS_DIR_FIELD,
+  settingsOf,
+} from "../../../lib/paper-config.mjs";
 import {
   existsSync,
   mkdirSync,
@@ -57,9 +61,7 @@ const X = await import(join(HERE, "extract-ref-facts.mjs"));
 // A directory on disk answers the same question without knowing any name in advance.
 const PAPERS_ROOT = join(
   ROOT,
-  JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"))["paperlint"]?.[
-    PAPERS_DIR_FIELD
-  ] ?? "papers",
+  settingsOf(ROOT)?.[PAPERS_DIR_FIELD] ?? DEFAULT_PAPERS_ROOT,
 );
 const REAL_PAPERS = existsSync(PAPERS_ROOT)
   ? readdirSync(PAPERS_ROOT, { withFileTypes: true })
