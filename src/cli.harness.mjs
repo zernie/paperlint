@@ -24,6 +24,7 @@ import {
   realpathSync,
   symlinkSync,
   readdirSync,
+  renameSync,
 } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
@@ -205,9 +206,20 @@ check(
       !/config:/.test(bare.out),
     );
 
+    // An empty root file is a file with every default, not an unfinished one.
+    writeFileSync(join(root, "paperlint.json"), "{}");
+    const empty = await cli(["lint"], root);
+    check(
+      `an empty paperlint.json — no \`${PAPERS_DIR_FIELD}\`, so the default`,
+      empty.code === 0 && /no findings/.test(empty.out),
+    );
+
+    // 🔴 THE DECLARED DIRECTORY IS NOT THE DEFAULT: with `papers` declared, a CLI that ignored
+    // the file would lint the same tree and pass for the wrong reason.
+    renameSync(join(root, "papers"), join(root, "writing"));
     writeFileSync(
       join(root, "paperlint.json"),
-      JSON.stringify({ [PAPERS_DIR_FIELD]: "papers" }),
+      JSON.stringify({ [PAPERS_DIR_FIELD]: "writing" }),
     );
     const r = await cli(["lint"], root);
     check(
@@ -219,20 +231,8 @@ check(
       /config: paperlint\.json/.test(r.out),
     );
 
-    // An empty root file is a file with every default, not an unfinished one.
-    writeFileSync(join(root, "paperlint.json"), "{}");
-    const empty = await cli(["lint"], root);
-    check(
-      `an empty paperlint.json — no \`${PAPERS_DIR_FIELD}\`, so the default`,
-      empty.code === 0 && /no findings/.test(empty.out),
-    );
-
     // 🔴 A package.json does not stop the walk upward while a root paperlint.json sits above:
     // a nested package (a tools/ workspace) still belongs to the project.
-    writeFileSync(
-      join(root, "paperlint.json"),
-      JSON.stringify({ [PAPERS_DIR_FIELD]: "papers" }),
-    );
     const inner = join(root, "tools");
     mkdirSync(inner, { recursive: true });
     writeFileSync(
@@ -324,6 +324,13 @@ check(
         interactive: false,
         run: haveAll,
       });
+      // 🔴 THE REPORT IS CHECKED FIRST: a directory that was GUESSED lands on the default,
+      // and the default is not written — so the file check below would fail for a guess too,
+      // and could not tell "not measured" from "not written".
+      check(
+        "and it says HOW it was measured — otherwise a guess reads as a fact",
+        /measured: its subdirectories carry/.test(out.text()),
+      );
       check(
         "🔴 THE DECLARATION SHOWS UP IN paperlint.json — the file the hooks read",
         declared(dir) !== undefined &&
@@ -332,10 +339,6 @@ check(
       check(
         "🔴 and its value is MEASURED, not taken from the `papers` default",
         declared(dir)[PAPERS_DIR_FIELD] === "writing/drafts",
-      );
-      check(
-        "and it says HOW it was measured — otherwise a guess reads as a fact",
-        /measured: its subdirectories carry/.test(out.text()),
       );
       check(
         "init ends with doctor's report: the install vouches for its OWN state",
@@ -604,9 +607,15 @@ check(
         "every absence is NAMED, and the count matches the names",
         /✗ 6 of 6 missing: pdflatex, bibtex/.test(own),
       );
+      // The programs section alone: the TeX Live step above it and the "next:" lines below it
+      // name `npx paperlint toolchain` too, and would answer for a section that lost its remedy.
+      const programs = own.slice(
+        own.indexOf("external programs"),
+        own.indexOf("next:"),
+      );
       check(
         "🔴 and it carries the INSTALL COMMAND — a remedy, not just a diagnosis",
-        /npx paperlint toolchain/.test(own),
+        /npx paperlint toolchain/.test(programs),
       );
       check(
         "and it says outright that nothing is installed on the user's behalf",

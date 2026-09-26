@@ -1,6 +1,6 @@
 /**
  * `rules-config.ts` — parsing the `rules` key into ESLint config blocks, and deriving which rules
- * paperlint ships. The end-to-end path (a consumer's package.json → `paperlint lint`) is in `cli.harness.mjs`;
+ * paperlint ships. The end-to-end path (a project's paperlint.json → `paperlint lint`) is in `cli.harness.mjs`;
  * this pins the parser's output shape and each refusal.
  */
 import assert from "node:assert/strict";
@@ -46,23 +46,39 @@ check(
     JSON.stringify(r),
   );
 }
+{
+  const r = parse({ "pdf/last-page-balance": "error" });
+  check(
+    "the object form is ONE block with no `files` — narrowed to each rule's own files later",
+    r.ok &&
+      JSON.stringify(r.value) ===
+        JSON.stringify([
+          {
+            basePath: "/consumer",
+            rules: { "pdf/last-page-balance": "error" },
+          },
+        ]),
+    JSON.stringify(r),
+  );
+}
 check(
   "both severity spellings are accepted",
   parse([{ rules: { "paper/typography": 0, "pdf/last-page-balance": "warn" } }])
     .ok,
 );
 const refusals = [
-  [{ a: 1 }, "S.rules must be a list"],
-  [[42], "S.rules[0] must be an object"],
-  [[{ rules: [] }], "S.rules[0].rules must be an object"],
-  [[{ files: [], rules: {} }], "S.rules[0].files must be a non-empty list"],
+  ["pdf/last-page-balance", 'S → "rules" must be { "<rule>": "<severity>" }'],
+  [{ a: 1 }, '"a" is not a rule paperlint ships'],
+  [[42], "S → rules[0] must be an object"],
+  [[{ rules: [] }], "S → rules[0].rules must be an object"],
+  [[{ files: [], rules: {} }], "S → rules[0].files must be a non-empty list"],
   [
     [{ files: ["x"], ignores: [1], rules: {} }],
-    "S.rules[0].ignores must be a non-empty list",
+    "S → rules[0].ignores must be a non-empty list",
   ],
   [
     [{ languageOptions: {}, rules: {} }],
-    'S.rules[0]: unknown key "languageOptions"',
+    'S → rules[0]: unknown key "languageOptions"',
   ],
   [
     [{ rules: { "markdown/no-html": "error" } }],
@@ -70,7 +86,7 @@ const refusals = [
   ],
   [
     [{ rules: { "paper/typography": ["loud"] } }],
-    'S.rules[0].rules["paper/typography"]: ["loud"] is not a severity',
+    'S → rules[0].rules["paper/typography"]: ["loud"] is not a severity',
   ],
 ];
 for (const [raw, says] of refusals) {
