@@ -345,12 +345,17 @@ export const OPTIONAL_RULES: ReadonlySet<string> = new Set(
  * 🔴 AN OPTIONAL RULE THAT IS ON AND REACHES NO PAPER IS A GREEN ZERO. A `files` glob that matches
  * nothing — a typo, a path relative to the wrong directory — leaves the rule never invoked, and a
  * rule that never runs reports exactly like a rule that passed. So for every optional rule the
- * consumer turned on, some linted `paper.tex` must actually have it enabled; the ones none has are
+ * consumer turned on, some `paper.tex` must actually have it enabled; the ones none has are
  * returned, for the caller to refuse.
+ *
+ * `files` is every `paper.tex` the guard may count: the ones this run linted AND every paper of the
+ * project. Judged against the run alone, `paperlint lint papers/c` failed on a block written for
+ * papers a and b (#103) — a block that reaches a paper outside this run is not dead. A glob that
+ * reaches no paper of the project at all still fails, from a subset as from the whole.
  */
 export async function silentOptionalRules(
   eslint: ESLint,
-  lintedFiles: readonly string[],
+  files: readonly string[],
   opts: PaperlintConfig,
 ): Promise<string[]> {
   const turnedOn = new Set(
@@ -361,11 +366,11 @@ export async function silentOptionalRules(
     ),
   );
   const reached = new Set<string>();
-  for (const f of lintedFiles.filter((p) => basename(p) === MAIN)) {
-    const cfg = (await eslint.calculateConfigForFile(f)) as {
-      rules?: Record<string, unknown>;
-    };
-    for (const id of turnedOn) if (isOn(cfg.rules?.[id])) reached.add(id);
+  for (const f of new Set(files.filter((p) => basename(p) === MAIN))) {
+    // Undefined for a file outside ESLint's cwd or scope: it reaches nothing.
+    const cfg = (await eslint.calculateConfigForFile(f)) as
+      { rules?: Record<string, unknown> } | undefined;
+    for (const id of turnedOn) if (isOn(cfg?.rules?.[id])) reached.add(id);
   }
   return [...turnedOn].filter((id) => !reached.has(id));
 }
@@ -1196,6 +1201,11 @@ export async function run(
     err,
     where: relative(cwd, root) || ".",
     opts: withPapers,
+    // Every paper of the project, not only the ones on the command line (#103).
+    projectPapers: papersRoots(cfg)
+      .flatMap((r) => papersIn(r))
+      .map((d) => join(d, MAIN))
+      .filter((f) => existsSync(f)),
   });
 }
 
@@ -1248,22 +1258,24 @@ async function reportLint(
     err,
     where,
     opts,
+    projectPapers,
   }: {
     a: Args;
     log: typeof console.log;
     err: typeof console.error;
     where: string;
     opts: PaperlintConfig;
+    projectPapers: readonly string[];
   },
 ): Promise<number> {
   const silent = await silentOptionalRules(
     eslint,
-    results.map((r) => r.filePath),
+    [...results.map((r) => r.filePath), ...projectPapers],
     opts,
   );
   if (silent.length > 0) {
     err(
-      `${silent.join(", ")} is turned on in "rules", but no linted paper.tex gets it — check the block's ` +
+      `${silent.join(", ")} is turned on in "rules", but no paper.tex of the project gets it — check the block's ` +
         `"files" (relative to ${where}). A rule that never runs reports exactly like a rule that passed.`,
     );
     return 1;

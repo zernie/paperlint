@@ -1783,7 +1783,7 @@ console.log(
       "🔴 an optional rule turned on for a glob that reaches no paper.tex FAILS the run — not a green zero",
       silent.code === 1 &&
         silent.out.includes(
-          'pdf/last-page-balance is turned on in "rules", but no linted paper.tex gets it',
+          'pdf/last-page-balance is turned on in "rules", but no paper.tex of the project gets it',
         ),
     );
     settings({
