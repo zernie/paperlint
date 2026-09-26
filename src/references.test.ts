@@ -95,7 +95,7 @@ async function lint(files: ReturnType<typeof memoryFiles>, tex: string) {
         language: "tex/latex",
         rules: REFERENCE_RULE_LEVELS,
       },
-    ] as Linter.Config[],
+    ] as unknown as Linter.Config[],
   });
   const [res] = await eslint.lintText(tex, {
     filePath: join(PAPER, "paper.tex"),
