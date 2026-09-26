@@ -44,7 +44,7 @@ import {
 } from "./structure.ts";
 import { buildPapers, papersIn, anyFailed, remedyFor, MAIN } from "./build.ts";
 import { prepareEngine } from "./build-engine.ts";
-import { runToolchain } from "./toolchain.ts";
+import { cacheRoot, cachedTree, runToolchain } from "./toolchain.ts";
 import { banalInstaller, parseBanalSettings } from "./adapters/banal/index.ts";
 import { curlDownload } from "./adapters/curl/index.ts";
 import { hostDirs, nodeAdapters, nodeFiles } from "./adapters/node/index.ts";
@@ -982,6 +982,61 @@ function hostBanalInstaller(): ToolInstaller {
   return banalInstaller({ ...ports, download }, s);
 }
 
+/** `paperlint init`: its flags checked here, the install itself in `init.ts`. */
+async function runInit(
+  a: Args,
+  {
+    log,
+    err,
+    cwd,
+  }: { log: typeof console.log; err: typeof console.error; cwd: string },
+): Promise<number> {
+  // Deferred, not implemented: named and refused, rather than read as the directory argument.
+  if (a.hooksMode !== null) {
+    err(
+      `--hooks=${a.hooksMode} is not implemented. init writes the hooks into .claude/settings.json ` +
+        `(shared, committed) or, with --no-hooks, nowhere.`,
+    );
+    return 2;
+  }
+  if (a.format !== null && !isFormat(a.format)) {
+    err(`--format must be one of ${FORMATS.join(", ")} — got \`${a.format}\``);
+    return 2;
+  }
+  return await init(a.paths[0] ?? ".", {
+    log,
+    err,
+    cwd,
+    version: ownVersion(),
+    yes: a.yes,
+    hooks: !a.noHooks,
+    paper: a.paper,
+    format: isFormat(a.format) ? a.format : null,
+    createPaper: (papersRoot, name, format) =>
+      createPaperAt(papersRoot, name, format, { log, err, cwd }),
+    tex: {
+      installed: () => cachedTree(cacheRoot(process.env)) !== null,
+      install: () =>
+        runToolchain({
+          check: false,
+          log,
+          err,
+          banal: hostBanalInstaller(),
+          tex: toolchainTex(resolve(cwd, a.paths[0] ?? ".")),
+        }),
+    },
+    resolveCliPapers: (root: string): string | null => {
+      const read = readConfig(
+        { ...a, config: null },
+        { log: () => {}, err: () => {}, cwd: root },
+      );
+      return read.code === undefined
+        ? (toPaths(papersDirOf(read.opts))[0] ?? null)
+        : null;
+    },
+  });
+}
+
 export async function run(
   argv: readonly string[],
   {
@@ -1013,43 +1068,7 @@ export async function run(
   // `init` asks the CLI's OWN reader what it would lint, so the two sides `doctor` compares are
   // not two implementations of the same question. A second resolver here is the defect the
   // comparison exists to catch.
-  if (a.cmd === "init") {
-    // Deferred, not implemented: named and refused, rather than read as the directory argument.
-    if (a.hooksMode !== null) {
-      err(
-        `--hooks=${a.hooksMode} is not implemented. init writes the hooks into .claude/settings.json ` +
-          `(shared, committed) or, with --no-hooks, nowhere.`,
-      );
-      return 2;
-    }
-    if (a.format !== null && !isFormat(a.format)) {
-      err(
-        `--format must be one of ${FORMATS.join(", ")} — got \`${a.format}\``,
-      );
-      return 2;
-    }
-    return await init(a.paths[0] ?? ".", {
-      log,
-      err,
-      cwd,
-      version: ownVersion(),
-      yes: a.yes,
-      hooks: !a.noHooks,
-      paper: a.paper,
-      format: isFormat(a.format) ? a.format : null,
-      createPaper: (papersRoot, name, format) =>
-        createPaperAt(papersRoot, name, format, { log, err, cwd }),
-      resolveCliPapers: (root: string): string | null => {
-        const read = readConfig(
-          { ...a, config: null },
-          { log: () => {}, err: () => {}, cwd: root },
-        );
-        return read.code === undefined
-          ? (toPaths(papersDirOf(read.opts))[0] ?? null)
-          : null;
-      },
-    });
-  }
+  if (a.cmd === "init") return await runInit(a, { log, err, cwd });
   // `doctor` reads the config but must NOT die on a broken one — reporting that the config is
   // broken is precisely its job. So a failed read becomes "the CLI would lint nothing", which is
   // what it prints, rather than an early exit that tells the reader nothing about the hooks.

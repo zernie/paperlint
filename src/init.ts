@@ -26,7 +26,9 @@
  *                      Without a human: NO.
  *   first paper        OFFERED only to a human and only when the papers directory holds none;
  *                      without a human only `--paper <name>` creates one (`new-paper.ts`).
- *   external toolchain REPORTED, never installed. npm's own rule, quoted in husky's write-up:
+ *   TeX Live           OFFERED to a human, with its size in the question and NO as the default;
+ *                      without a human only named as the next step (`offerTexLive`).
+ *   other programs     REPORTED, never installed. npm's own rule, quoted in husky's write-up:
  *                      "The only valid use of install or preinstall scripts is for compilation."
  *
  * 🔴 NOTHING IS ASKED WITHOUT A HUMAN — stdin AND stdout a terminal, `CI` unset, no `--yes`
@@ -364,10 +366,18 @@ export function missingPrograms(
  * session at all. `init` now writes the same three hook commands into `.claude/settings.json`
  * itself (`hooks-settings.ts`), so there is nothing left to type anywhere but here.
  */
-export function nextSteps(papersDir: string = DEFAULT_PAPERS_ROOT): string {
+export function nextSteps(
+  papersDir: string = DEFAULT_PAPERS_ROOT,
+  { toolchain = false }: { toolchain?: boolean } = {},
+): string {
   return [
     ``,
     `next:  npx paperlint new <name>   # start a paper in ${papersDir}/ from the template`,
+    ...(toolchain
+      ? [
+          `       npx paperlint toolchain    # TeX Live for building (${TOOLCHAIN_COST})`,
+        ]
+      : []),
     `       npx paperlint lint         # runs every rule over ${papersDir}`,
     ``,
   ].join("\n");
@@ -577,6 +587,11 @@ export interface InitOptions {
    * workflow is pinned to its release tag (`actionRef`); absent or unreleased, the placeholder.
    */
   version?: string;
+  /**
+   * TeX Live for `paperlint build`: whether paperlint's own tree is installed, and how to install
+   * it (`paperlint toolchain`). Passed in by the CLI; without them the step only names the command.
+   */
+  tex?: { readonly installed: () => boolean; readonly install?: () => number };
 }
 
 /** Reads one line from a real terminal. Kept out of `init` so the command stays testable. */
@@ -590,6 +605,56 @@ export async function askOnTerminal(question: string): Promise<string> {
   } finally {
     rl.close();
   }
+}
+
+/** What `paperlint toolchain` costs, said wherever it is offered. */
+export const TOOLCHAIN_COST = "~270 MB, ~3 min, once";
+
+export type TexOutcome =
+  "installed" | "was-installed" | "failed" | "declined" | "not-asked";
+
+/**
+ * TeX Live, for `paperlint build` — `paperlint lint` needs none. OFFERED to a human with its cost
+ * in the question, default NO (270 MB is not a default anyone should get by pressing Enter);
+ * without a human only named as the next step. Nothing is ever installed unasked.
+ */
+export async function offerTexLive(
+  tex: InitOptions["tex"],
+  {
+    ask,
+    interactive,
+  }: { ask?: (q: string) => Promise<string>; interactive: boolean },
+): Promise<TexOutcome> {
+  if (tex?.installed()) return "was-installed";
+  if (!interactive || !ask || !tex?.install) return "not-asked";
+  const answer = (
+    await askOrDefault(
+      ask,
+      `  install TeX Live now, for \`paperlint build\`? (${TOOLCHAIN_COST}) [y/N] `,
+    )
+  )
+    ?.trim()
+    .toLowerCase();
+  if (answer !== "y" && answer !== "yes") return "declined";
+  return tex.install() === 0 ? "installed" : "failed";
+}
+
+/** What `init` says about TeX Live. */
+export function reportTexLive(t: TexOutcome, why: string): string[] {
+  const cmd = `npx paperlint toolchain   # ${TOOLCHAIN_COST}`;
+  if (t === "was-installed") return [`  ✓ paperlint's TeX Live is installed`];
+  if (t === "installed") return [`  ✓ installed`];
+  if (t === "failed")
+    return [
+      `  ✗ the install failed — see above. Run it again:`,
+      `      ${cmd}`,
+    ];
+  return [
+    t === "declined"
+      ? `  · declined — nothing installed. When you want to build:`
+      : `  · not installed — ${why}, so nothing was asked. To build, run once:`,
+    `      ${cmd}`,
+  ];
 }
 
 /** The "papers directory" section of init's report: how the directory was arrived at. */
@@ -774,7 +839,13 @@ export async function init(
       `  · none yet${interactive ? "" : ` — ${why}, so nothing was asked`}. \`npx paperlint new <name>\` or \`--paper <name>\` creates one`,
     );
 
-  // ── 7. the toolchain is reported, never installed ─────────────────────────────────────
+  // ── 7. TeX Live — offered to a human with its cost, never installed unasked ─────────────
+  log(``);
+  log(`TeX Live (for \`paperlint build\`; \`paperlint lint\` needs none)`);
+  const texOutcome = await offerTexLive(opts.tex, { ask, interactive });
+  for (const line of reportTexLive(texOutcome, why)) log(line);
+
+  // ── 8. the other programs are reported, never installed ────────────────────────────────
   log(``);
   log(
     `external programs (the skills shell out to these; \`paperlint lint\` needs none of them)`,
@@ -802,9 +873,13 @@ export async function init(
       log(`        ${cmd}`);
   }
 
-  log(nextSteps(papersDir));
+  log(
+    nextSteps(papersDir, {
+      toolchain: texOutcome !== "was-installed" && texOutcome !== "installed",
+    }),
+  );
 
-  // ── 8. the install states its own condition ───────────────────────────────────────────
+  // ── 9. the install states its own condition ───────────────────────────────────────────
   log(`── paperlint doctor ${"─".repeat(56)}`);
   const cliPapers = resolveCliPapers ? resolveCliPapers(root) : papersDir;
   const code = doctor({ log, cwd: root, projectDir: root, run, cliPapers });

@@ -133,3 +133,74 @@ describe("paperlint init — writes paperlint.json only when something differs f
     ).toEqual({ kind: "short", papersDir: "docs/drafts" });
   });
 });
+
+/** Runs init in a fresh directory with the given TeX Live port; what it printed and asked. */
+const texRun = async (
+  tex: { installed: () => boolean; install?: () => number },
+  { interactive, answer = "" }: { interactive: boolean; answer?: string },
+) => {
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-tex-")));
+  dirs.push(root);
+  const out: string[] = [];
+  const asked: string[] = [];
+  await init(root, {
+    cwd: root,
+    log: (s: string) => out.push(s),
+    err: () => {},
+    interactive,
+    ask: async (q) => (asked.push(q), /TeX Live/.test(q) ? answer : ""),
+    hooks: false,
+    run: (() => ({ status: 0 })) as never,
+    link: () => ({ ok: false as const, error: "not linked in this test" }),
+    tex,
+  });
+  return { text: out.join("\n"), asked };
+};
+
+describe("paperlint init — TeX Live is offered with its cost, never installed unasked", () => {
+  it("🔴 no terminal: nothing is asked or installed, and the command is the next step", async () => {
+    let installs = 0;
+    const r = await texRun(
+      { installed: () => false, install: () => (installs++, 0) },
+      { interactive: false },
+    );
+    expect(installs).toBe(0);
+    expect(r.asked.filter((q) => /TeX Live/.test(q))).toEqual([]);
+    expect(r.text).toMatch(
+      /npx paperlint toolchain {3}# ~270 MB, ~3 min, once/,
+    );
+    expect(r.text).toMatch(/next: .*\n.*npx paperlint toolchain/);
+  });
+
+  it("a human is asked, with the size in the question; yes installs once", async () => {
+    let installs = 0;
+    const r = await texRun(
+      { installed: () => false, install: () => (installs++, 0) },
+      { interactive: true, answer: "y" },
+    );
+    expect(r.asked.find((q) => /TeX Live/.test(q))).toMatch(
+      /~270 MB, ~3 min, once\) \[y\/N\]/,
+    );
+    expect(installs).toBe(1);
+    expect(r.text).not.toMatch(/next: .*\n.*npx paperlint toolchain/);
+  });
+
+  it("Enter is no — nothing installed", async () => {
+    let installs = 0;
+    const r = await texRun(
+      { installed: () => false, install: () => (installs++, 0) },
+      { interactive: true },
+    );
+    expect(installs).toBe(0);
+    expect(r.text).toMatch(/declined — nothing installed/);
+  });
+
+  it("already installed: not asked about", async () => {
+    const r = await texRun(
+      { installed: () => true, install: () => 0 },
+      { interactive: true, answer: "y" },
+    );
+    expect(r.asked.filter((q) => /TeX Live/.test(q))).toEqual([]);
+    expect(r.text).toMatch(/✓ paperlint's TeX Live is installed/);
+  });
+});

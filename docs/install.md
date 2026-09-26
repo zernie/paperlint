@@ -35,8 +35,11 @@ In order:
 4. **Writes the hook commands** into `.claude/settings.json`, beside your own entries.
 5. **Offers a GitHub Actions workflow**, pinned to the release tag of the version you installed.
 6. **Offers a first paper** (`paperlint new`) if the papers directory has none.
-7. **Reports missing external programs** and the command that installs each. It installs nothing.
-8. **Runs `paperlint doctor`** and exits with its verdict.
+7. **Offers TeX Live** for `paperlint build` (`paperlint toolchain`, ~270 MB, ~3 min, once), with
+   the size in the question and NO as the default. Without a terminal it asks nothing and lists the
+   command as the next step. `paperlint lint` needs no TeX.
+8. **Reports missing external programs** and the command that installs each. It installs nothing.
+9. **Runs `paperlint doctor`** and exits with its verdict.
 
 It asks only what it cannot guess or what costs something. A human at a terminal is asked; an
 agent, CI or `--yes` takes the defaults, and `init` prints which default it took. An unanswered
@@ -52,7 +55,7 @@ question (Ctrl+D) also takes the default.
 | a first paper, via `paperlint new`                                 | `<papers>/<name>/`      | only when the papers directory holds none: asked of a human at a terminal, otherwise only with `--paper <name>`                                                                   |
 | one relative symlink per shipped skill, into the installed package | `.claude/skills/<name>` | always — except where that name is already taken (a directory, a file, a link elsewhere): that entry is left as it is and named in the report                                     |
 
-It installs no software and touches nothing else. Commit `.claude/settings.json` so every clone
+It installs no software you did not say yes to, and touches nothing else. Commit `.claude/settings.json` so every clone
 gets the hooks; the hook commands run files inside `node_modules`, so a fresh clone needs
 `npm install` first.
 
