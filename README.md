@@ -49,12 +49,19 @@ It is built on ESLint: the checks are ESLint rules over `.tex` and `.md` files, 
 
 ## 🎯 Supported venues
 
-| preset                  | venue              | format                                  | page limit                                                     |
-| ----------------------- | ------------------ | --------------------------------------- | -------------------------------------------------------------- |
-| `paperlint:acm-sigconf` | any ACM conference | ACM `acmart` sigconf, letter, 2 columns | not checked (the family has no kinds)                          |
-| `paperlint:agenticdev`  | AgenticDev @ ASE   | ACM sigconf                             | `short` 5, `full` 10, `demo` 5 body pages, + 2 of references   |
-| `paperlint:aisec`       | AISec @ ACM CCS    | ACM sigconf                             | 10 body pages + 2 (`research`, `benchmark`, `position`, `sok`) |
-| `paperlint:realm`       | REALM @ EMNLP      | ACL, A4, 2 columns                      | `long` 8, `short` 4 — recorded, not checked (see the preset)   |
+A preset holds a venue's format and page limits. Its **kind** is the paper type the venue sets a
+limit for — `short`, `full`, `research` — named once per paper in its `paperlint.json`.
+
+| preset                  | venue              | format                           | page limit                                                     |
+| ----------------------- | ------------------ | -------------------------------- | -------------------------------------------------------------- |
+| `paperlint:acm-sigconf` | any ACM conference | ACM two-column conference format | not checked: the family sets no kinds                          |
+| `paperlint:agenticdev`  | AgenticDev @ ASE   | ACM two-column conference format | `short` 5, `full` 10, `demo` 5 body pages, + 2 of references   |
+| `paperlint:aisec`       | AISec @ ACM CCS    | ACM two-column conference format | 10 body pages + 2 (`research`, `benchmark`, `position`, `sok`) |
+| `paperlint:realm`       | REALM @ EMNLP      | ACL two-column format, A4        | `long` 8, `short` 4 — recorded, not checked (below)            |
+
+REALM's limit is recorded but not checked because ACL leaves the Limitations and Ethics sections
+out of the page count, and the PDF measurement counts them as body pages: a paper within the limit
+would fail.
 
 Another venue: [a four-line preset file](#another-venue).
 
@@ -67,13 +74,19 @@ paperlint has two halves:
 2. **The skills** help with the work itself, where the answer is a judgment call. They are
    optional; `paperlint init` installs them for [Claude Code](https://claude.com/claude-code).
 
-| stage             | skills                                                                                                                                                                                                          |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| start here        | `paper-pipeline` drives the whole lifecycle · `paper-status` says where the paper stands                                                                                                                        |
-| idea and field    | `research-ideate` worth doing? · `map-prior-work` who else · `analyze-sibling-paper` a close rival · `find-venue` where to send · `study-accepted-papers` what wins there                                       |
-| study and writing | `build-benchmark` the study · `draft-paper` the draft · `argument-arc` the outline · `tighten-paper` the editor's pass                                                                                          |
-| review            | `cold-read-diff` a fresh reader · `grade-paper-writing` the prose · `paper-adversarial-review` Reviewer 2 · `pc-panel-review` the committee · `verify-citations` the references · `harden-paper` the final gate |
-| submit and after  | `plan-paper-timeline` the calendar · `render-paper` the PDF · `submit-paper` the upload · `osf-artifact-upload` the artifact · `camera-ready` · `extend-paper` the next paper                                   |
+- **Start here** — run the whole process step by step (`paper-pipeline`), or ask where the paper
+  stands (`paper-status`).
+- **Judge the idea** — is it worth doing (`research-ideate`), who else works on it
+  (`map-prior-work`), read a close competitor in depth (`analyze-sibling-paper`).
+- **Pick a venue** — find where to send it (`find-venue`), see what gets accepted there
+  (`study-accepted-papers`), put the deadlines in your calendar (`plan-paper-timeline`).
+- **Do the study and write** — design the study and its artifact (`build-benchmark`), write the
+  draft (`draft-paper`), fix the outline (`argument-arc`), cut it down (`tighten-paper`).
+- **Review before you submit** — a reader with no context (`cold-read-diff`), the prose
+  (`grade-paper-writing`), a hostile reviewer (`paper-adversarial-review`), a simulated committee
+  (`pc-panel-review`), the references (`verify-citations`), the final check (`harden-paper`).
+- **Submit and after** — render pages to images (`render-paper`), submit (`submit-paper`), upload
+  the artifact (`osf-artifact-upload`), camera-ready (`camera-ready`), the next paper (`extend-paper`).
 
 ## 🚀 Getting started
 
@@ -230,7 +243,8 @@ The full shape: [`docs/rules.md`](docs/rules.md#writing-your-own-venue-preset).
 
 ## 🤖 Run it in CI
 
-`paperlint init` offers to write this GitHub Actions step for you. By hand:
+`paperlint init` offers to write this workflow for you, pinned to the version you installed. By
+hand:
 
 ```yaml
 - uses: zernie/paperlint@v3.0.0
@@ -238,7 +252,7 @@ The full shape: [`docs/rules.md`](docs/rules.md#writing-your-own-venue-preset).
     paths: papers
 ```
 
-- Use the tag of the version you installed (`npm ls paperlint`).
+- Pin the tag of the version you installed: `npm ls paperlint` prints it.
 - The step runs `paperlint lint`. It does not build, so CI needs no TeX Live.
 
 ## ❓ FAQ
@@ -283,10 +297,10 @@ Only `paperlint lint --fix`, and only three rules: `paper/section-word` (`§` �
 - [`docs/configuration.md`](docs/configuration.md) — every setting, and how `build` compiles
 - [`docs/rules.md`](docs/rules.md) — every check, what it reads and when it fails
 - [`docs/optional-rules.md`](docs/optional-rules.md) — checks only some venues need
-- [`docs/toolchain.md`](docs/toolchain.md) — TeX Live and banal
+- [`docs/toolchain.md`](docs/toolchain.md) — TeX Live, and Banal (HotCRP's page-geometry checker, GPL)
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — how the package is tested and released
 
 ## License
 
-MIT. banal, used for page geometry, is GPL and not part of this package:
+MIT. Banal, used for page geometry, is GPL and not part of this package:
 [`docs/toolchain.md`](docs/toolchain.md#page-geometry-banal-without-poppler).
