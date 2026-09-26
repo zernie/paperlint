@@ -173,7 +173,7 @@ describe("a paper that meets its venue", () => {
 });
 
 describe("a paper that names no venue", () => {
-  it("no paperlint.json (a paper from before 2.1.0): every rule is silent, even with no facts and no PDF", () => {
+  it("no paperlint.json: every rule is silent, even with no facts and no PDF", () => {
     expect(lint({ venue: undefined, facts: null, pdf: null })).toEqual([]);
   });
 

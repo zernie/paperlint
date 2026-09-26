@@ -58,7 +58,7 @@ describe("parsePaperSettings — optional keys", () => {
       /unknown key "venu".*extends, kind, pdf, rules/,
     ],
     [
-      "the pre-2.1.0 comment key `_`",
+      "a comment key other than `$comment`",
       { extends: "paperlint:aisec", _: "note" },
       /unknown key "_"/,
     ],

@@ -15,7 +15,6 @@
  *
  *     "paperlint": { "papersDir": "docs/papers" }
  *
- * (The field was called `papers` until 2026-09-24; the old name is now refused.)
  * No key → `papers`. Every carrier then reads that one value with its OWN standard mechanism:
  *
  *   ESLint  →  `import pkg from "./package.json" with { type: "json" }` + this module
@@ -149,10 +148,7 @@ export function paperFiles(root) {
     tex: [`${root}/*/paper.tex`],
     /** The per-paper stage ledger. */
     status: [`${root}/*/PIPELINE-STATUS.md`],
-    /**
-     * The per-paper settings file, `paperlint.json` (`venue.json` before 2.1.0). The key keeps its
-     * old name so a consumer's config that lints these files keeps matching them.
-     */
+    /** The per-paper settings file, `paperlint.json`. */
     venue: [`${root}/*/${PAPER_SETTINGS_FILE}`],
     /** Facts extracted from the built PDF. */
     pdfFacts: [`${root}/*/_build/paper.facts.json`],
