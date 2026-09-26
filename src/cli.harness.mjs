@@ -223,43 +223,6 @@ check(
       !/is deprecated/.test(r.out),
     );
 
-    // Guards: settings under the key's old name (before 2.0.0) keep working, and say so.
-    writeFileSync(
-      join(root, "package.json"),
-      JSON.stringify({
-        name: "c",
-        version: "1.0.0",
-        "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "papers" },
-      }),
-    );
-    const legacy = await cli(["lint"], root);
-    check(
-      "🔴 the OLD key is still read — the same clean run — and a deprecation line names the new one",
-      legacy.code === 0 &&
-        /no findings/.test(legacy.out) &&
-        /"research-paper-pipeline" in package\.json is the old name .* rename it to "paperlint"/.test(
-          legacy.out,
-        ),
-    );
-    // Guards: both keys, different contents — refused, since there is no telling which is meant.
-    writeFileSync(
-      join(root, "package.json"),
-      JSON.stringify({
-        name: "c",
-        version: "1.0.0",
-        paperlint: { [PAPERS_DIR_FIELD]: "papers" },
-        "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "elsewhere" },
-      }),
-    );
-    const both = await cli(["lint"], root);
-    check(
-      "🔴 both keys with different contents — refused (exit 2), naming both",
-      both.code === 2 &&
-        /has both "paperlint" and "research-paper-pipeline", and they differ/.test(
-          both.out,
-        ),
-    );
-
     // The key is present, the papers-directory field inside it is not: this is not an "empty config" but an
     // unfinished one, and the failure must name the EXACT shape that needs adding.
     writeFileSync(
@@ -274,40 +237,6 @@ check(
         noPapers.out.includes(
           `"paperlint": { "${PAPERS_DIR_FIELD}": "papers" }`,
         ),
-    );
-
-    // The field's OLD name is refused with one clear sentence, not read as a fallback. The
-    // new name sits beside it here on purpose: even then the leftover old name is an error.
-    writeFileSync(
-      join(root, "package.json"),
-      JSON.stringify({
-        name: "c",
-        version: "1.0.0",
-        paperlint: {
-          [OLD_PAPERS_DIR_FIELD]: "papers",
-          [PAPERS_DIR_FIELD]: "papers",
-        },
-      }),
-    );
-    const oldName = await cli(["lint"], root);
-    check(
-      `the old field name "${OLD_PAPERS_DIR_FIELD}" fails with a message that names the new one`,
-      oldName.code === 2 &&
-        oldName.out.includes(
-          `"${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "paperlint"`,
-        ),
-    );
-    writeFileSync(
-      join(root, "package.json"),
-      JSON.stringify({
-        name: "c",
-        version: "1.0.0",
-        paperlint: { [OLD_PAPERS_DIR_FIELD]: "papers" },
-      }),
-    );
-    check(
-      "the old field name alone fails the same way — it is never used as the papers directory",
-      (await cli(["lint"], root)).code === 2,
     );
 
     // 🔴 A package.json WITHOUT the key does not stop the walk upward. Otherwise the search

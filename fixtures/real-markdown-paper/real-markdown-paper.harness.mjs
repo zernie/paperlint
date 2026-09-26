@@ -228,27 +228,7 @@ check(
   );
 }
 
-// The author-list run is recorded (`authorsVerified`) → that rule goes quiet, and only that one.
-{
-  const f = findings((dir) =>
-    edit(
-      dir,
-      "PIPELINE-STATUS.md",
-      "---\n# PIPELINE-STATUS",
-      "authorsVerified: 2026-07-07\n---\n# PIPELINE-STATUS",
-    ),
-  );
-  check(
-    "recording the author-list run silences paper/author-list",
-    (f["paper/author-list"] ?? 0) === 0,
-  );
-  check(
-    "and leaves the stage findings exactly where they were",
-    (f["paper/stages"] ?? 0) === (base["paper/stages"] ?? 0),
-  );
-}
-
 console.log(
   `✓ ${String(n)} assertions passed — the real article: baseline of ` +
-    `${Object.keys(base).length} rule(s) held, 4 variations each moved its own rule`,
+    `${Object.keys(base).length} rule(s) held, 3 variations each moved its own rule`,
 );

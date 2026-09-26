@@ -64,6 +64,8 @@ import { whyNoGeometry } from "./domain/geometry.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
 import type { Files } from "./ports/files.ts";
 import type { MeasureGeometry } from "./ports/measure-geometry.ts";
+import type { CheckReferences } from "./ports/check-references.ts";
+import { recordReferences, REFERENCES_FILE } from "./references.ts";
 import {
   auxBib,
   bibtexExcerpt,
@@ -135,6 +137,8 @@ export interface BuildContext {
   readonly measure: MeasureGeometry;
   /** Where the facts file is written. */
   readonly files: Files;
+  /** The online reference checks; the CLI wires the real ones, a test passes a function. */
+  readonly checkReferences: CheckReferences;
 }
 
 export type StepOutcome =
@@ -521,11 +525,36 @@ export const measureStep: BuildStep = {
   },
 };
 
+// ── step: references ────────────────────────────────────────────────────────────────────
+
+/**
+ * Check the bibliography online — the cited work exists and its title matches (verify-cites), its
+ * authors are the published version's (bib-authors) — and record the verdicts in
+ * `_build/references.json` for the offline lint rules (`reference-rules.ts`). OPTIONAL and NEVER
+ * FAILING: without network the PDF is still built, and the record says `not-checked`.
+ */
+export const referencesStep: BuildStep = {
+  name: "references",
+  required: false,
+  applies: (facts) =>
+    facts.main
+      ? {
+          yes: true,
+          why: `online: citations exist, titles and authors match → ${FACTS_DIR}/${REFERENCES_FILE} (never fails the build)`,
+        }
+      : { yes: false, why: "nothing is compiled" },
+  run: async (ctx) => ({
+    ok: true,
+    note: await recordReferences(ctx.files, ctx.paperDir, ctx.checkReferences),
+  }),
+};
+
 /** The build, in order. A new step is one entry here. */
 export const STEPS: readonly BuildStep[] = [
   inputsStep,
   compileStep,
   measureStep,
+  referencesStep,
 ];
 
 // ── the command ─────────────────────────────────────────────────────────────────────────
@@ -574,6 +603,11 @@ export interface BuildOptions {
   measure?: MeasureGeometry;
   /** Where the facts file is written. Default: the disk. */
   files?: Files;
+  /**
+   * The online reference checks. Default: none — the record then says `not-checked`, and lint
+   * warns. The CLI passes the real ones (`adapters/references`).
+   */
+  checkReferences?: CheckReferences;
 }
 
 /**
@@ -594,8 +628,22 @@ function baseDefaults({
   dryRun = false,
   readPdf = pdfjsReader,
   projectRoot = env["CLAUDE_PROJECT_DIR"] || cwd,
+  checkReferences = async () => ({
+    kind: "not-checked" as const,
+    why: "no reference checker was wired into this build",
+  }),
 }: BuildOptions): Required<Omit<BuildOptions, "measure" | "files">> {
-  return { run, cwd, env, steps, log, dryRun, readPdf, projectRoot };
+  return {
+    run,
+    cwd,
+    env,
+    steps,
+    log,
+    dryRun,
+    readPdf,
+    projectRoot,
+    checkReferences,
+  };
 }
 
 /** banal as the measurer, wired from the build's environment: the one piece of root work left here (#76). */
@@ -622,7 +670,15 @@ async function runSteps(
   paperDir: string,
   dir: string,
   plan: PlanLine[],
-  { run, env, steps, readPdf, measure, files }: Required<BuildOptions>,
+  {
+    run,
+    env,
+    steps,
+    readPdf,
+    measure,
+    files,
+    checkReferences,
+  }: Required<BuildOptions>,
 ): Promise<BuildResult> {
   let stepEnv = env;
   const notes: string[] = [];
@@ -635,6 +691,7 @@ async function runSteps(
       readPdf,
       measure,
       files,
+      checkReferences,
     });
     if (!out.ok) {
       // The PDF THIS run wrote and the step then rejected (a partial pass).

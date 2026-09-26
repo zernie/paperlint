@@ -52,7 +52,8 @@ import { curlDownload } from "./adapters/curl/index.ts";
 import { hostDirs, nodeAdapters, nodeFiles } from "./adapters/node/index.ts";
 import { VENUE_RULE_LEVELS, venueRules } from "./venue-rules.ts";
 import { paperRules } from "./paper-settings.ts";
-import { RECORD_FIELD, outcomeOf, withAuthorsVerified } from "./authors.ts";
+import { referenceRules, REFERENCE_RULE_LEVELS } from "./reference-rules.ts";
+import { onlineReferences } from "./adapters/references/index.ts";
 import {
   narrowToOwners,
   ownedPatterns,
@@ -135,13 +136,13 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       paper directory is ignored (--dry-run: print the plan only).
                                       Compiles with paperlint's TeX Live, else one on PATH that has every
                                       package the venue declares; on a terminal it offers to install
-                                      one, without a terminal it stops and names \`npx paperlint toolchain\`
+                                      one, without a terminal it stops and names \`npx paperlint toolchain\`.
+                                      Then checks the references online (the cited works exist, titles
+                                      and authors match) into _build/references.json — never failing
+                                      the build: without network it records "not checked"
   npx paperlint toolchain [--check]   install TeX Live with every package the venue presets declare
                                       into ~/.cache/paperlint/texlive (PAPERLINT_TEXLIVE_DIR overrides); a second
                                       run does nothing. --check: report what is missing, change nothing
-  npx paperlint authors <paper>       check that each bibliography entry's authors are those of the
-                                      version it cites (DBLP), and when they are, record
-                                      authorsVerified: <date> in the paper's PIPELINE-STATUS.md
   npx paperlint doctor                say what is actually wired — and what only LOOKS wired
   npx paperlint hook <name>           run an editor hook (.claude/settings.json calls this)
   npx paperlint --help
@@ -201,6 +202,11 @@ export function buildConfig(
   texLanguage: unknown,
 ): unknown[] {
   const paperRules = { ...researchQuestion.rules, ...typography.rules };
+  // The reference rules judge `_build/references.json`, and only on `paper.tex`.
+  const texPaperRules = {
+    ...paperRules,
+    ...referenceRules({ files: nodeFiles }),
+  };
   // Each typography rule reports every occurrence where it is, and fixes it (`--fix`).
   const prose = {
     "paper/research-question": "warn",
@@ -241,7 +247,6 @@ export function buildConfig(
       rules: {
         "paper/stages": "error",
         "paper/source": "error",
-        "paper/author-list": "warn",
       },
     },
     {
@@ -259,7 +264,9 @@ export function buildConfig(
         // project names one in `reviewSchema`, by that too (eslint-rules/review-frontmatter.mjs).
         "review/frontmatter": [
           "error",
-          opts.reviewExtension ? { extend: opts.reviewExtension } : {},
+          typeof opts.reviewSchema === "object"
+            ? { extend: opts.reviewSchema }
+            : {},
         ],
       },
     },
@@ -272,12 +279,13 @@ export function buildConfig(
       files: ["**/paper.tex"],
       plugins: {
         tex: { languages: { latex: texLanguage }, rules: texBuild },
-        paper: { rules: paperRules },
+        paper: { rules: texPaperRules },
         bib: bibReachable,
       },
       language: "tex/latex",
       rules: {
         ...prose,
+        ...REFERENCE_RULE_LEVELS,
         "paper/figure-ref-style": "warn",
         "bib/reachable-entry": "warn",
         "tex/future-promise": "warn",
@@ -443,7 +451,7 @@ export function parseSettings(
     value: {
       ...opts,
       rules: rules.value,
-      ...(extension.value ? { reviewExtension: extension.value } : {}),
+      ...(extension.value ? { reviewSchema: extension.value } : {}),
     },
   };
 }
@@ -814,72 +822,6 @@ export async function createPaperAt(
   return run(["lint", result.dir], { log, err, cwd });
 }
 
-/** The author-list check that ships in this package (skills/verify-citations). */
-const BIB_AUTHORS = fileURLToPath(
-  new URL(
-    "../skills/verify-citations/scripts/bib-authors.mjs",
-    import.meta.url,
-  ),
-);
-
-/**
- * `paperlint authors <paper>` — run the author-list check and, when it passes, record
- * `authorsVerified: <today>` in the paper's PIPELINE-STATUS.md (src/authors.ts). The check's own
- * output goes straight to the terminal; nothing is recorded unless it exits 0.
- */
-export function runAuthors(
-  a: Args,
-  {
-    log,
-    err,
-    cwd,
-    run = (script: string, paper: string) =>
-      spawnSync(process.execPath, [script, paper], { stdio: "inherit" }).status,
-    today = () => new Date().toISOString().slice(0, 10),
-  }: {
-    log: typeof console.log;
-    err: typeof console.error;
-    cwd: string;
-    run?: (script: string, paper: string) => number | null;
-    today?: () => string;
-  },
-): number {
-  const [name, ...extra] = a.paths;
-  if (!name || extra.length > 0) {
-    err(
-      "`authors` takes exactly one paper directory: `paperlint authors papers/my-paper`",
-    );
-    return 2;
-  }
-  const paper = resolve(cwd, name);
-  const status = join(paper, "PIPELINE-STATUS.md");
-  if (!existsSync(status)) {
-    err(
-      `${relative(cwd, status) || status} does not exist — there is nowhere to record the run`,
-    );
-    return 2;
-  }
-  const code = run(BIB_AUTHORS, paper);
-  const outcome = outcomeOf(code);
-  if (outcome !== "passed") {
-    err(
-      outcome === "mismatch"
-        ? "author lists differ from the versions cited (above) — fix the entries and run again; nothing recorded"
-        : "the check did not reach every entry (above) — that is not a pass; nothing recorded",
-    );
-    return code ?? 2;
-  }
-  const date = today();
-  const next = withAuthorsVerified(readFileSync(status, "utf8"), date);
-  if (!next.ok) {
-    err(`${relative(cwd, status)}: ${next.error}`);
-    return 2;
-  }
-  writeFileSync(status, next.value);
-  log(`✓ recorded ${RECORD_FIELD}: ${date} in ${relative(cwd, status)}`);
-  return 0;
-}
-
 /**
  * `paperlint new <name>` — the papers directory comes from the same declaration every other command
  * reads; there is no second way to name it. See `new-paper.ts` for what it writes and why.
@@ -988,6 +930,7 @@ async function runBuild(
     cwd,
     dryRun: a.dryRun,
     log,
+    checkReferences: onlineReferences,
     engine: () => engineEnv(targets, a, { log, err }),
   });
   if (out.kind === "no-engine") return 1;
@@ -1069,7 +1012,6 @@ const SIMPLE: Readonly<
   >
 > = {
   hook: (a, { err }) => runHook(a.paths[0], { err }),
-  authors: (a, io) => runAuthors(a, io),
   new: (a, io) => runNew(a, io),
   build: (a, io) => runBuild(a, io),
   toolchain: (a, { log, err, cwd }) =>

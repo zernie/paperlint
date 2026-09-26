@@ -15,7 +15,7 @@
       "cases": 6
     },
     "eslint-rules/paper-stages.mutations.mjs": {
-      "cases": 7
+      "cases": 4
     },
     "eslint-rules/papers.mutations.mjs": {
       "cases": 10

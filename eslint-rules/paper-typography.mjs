@@ -212,16 +212,40 @@ const MD_HIDDEN = new Set([
   "math",
   "inlineMath",
 ]);
+/**
+ * The source offset of each character of a text node's value. The value is the source with
+ * markdown's escapes (`\*`) and character references (`&lt;`) resolved, so the two are walked
+ * side by side; a character whose source cannot be followed gets null (reported, not fixed).
+ */
+function mdOffsets(value, src, start) {
+  const offs = [];
+  let j = start;
+  for (const ch of value) {
+    if (src[j] === ch) offs.push(j++);
+    else if (src[j] === "\\" && src[j + 1] === ch) {
+      offs.push(j + 1);
+      j += 2;
+    } else if (src[j] === "&" && /^&#?\w{1,8};/.test(src.slice(j, j + 10))) {
+      offs.push(null);
+      j = src.indexOf(";", j) + 1;
+    } else {
+      offs.push(null);
+      j++;
+    }
+  }
+  return offs;
+}
+
 function mdVisibleRuns(node, src, out = []) {
   if (!node || MD_HIDDEN.has(node.type)) return out;
   if (node.type === "text") {
     const start = node.position?.start?.offset;
-    const exact =
-      typeof start === "number" &&
-      src.slice(start, start + node.value.length) === node.value;
     out.push({
       text: node.value,
-      offs: [...node.value].map((_, i) => (exact ? start + i : null)),
+      offs:
+        typeof start === "number"
+          ? mdOffsets(node.value, src, start)
+          : [...node.value].map(() => null),
     });
   }
   for (const c of node.children || []) mdVisibleRuns(c, src, out);

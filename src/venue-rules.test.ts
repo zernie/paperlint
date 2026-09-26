@@ -228,16 +228,6 @@ describe("pdf/profile — the declaration must resolve, or nothing is judged", (
     expect(fs[0]?.message).toMatch(text);
   });
 
-  it("🔴 a venue.json left from before 2.1.0 is not read — pdf/profile says to run `paperlint init`", () => {
-    const fs = lint({
-      facts: null,
-      pdf: null,
-      extra: { [`${PAPER}/venue.json`]: JSON.stringify(DECL) },
-    });
-    expect(ids(fs)).toEqual(["pdf/profile:legacySettings"]);
-    expect(fs[0]?.message).toMatch(/npx paperlint init/);
-  });
-
   it("a profile that does not parse is named with the file", () => {
     const fs = lint({
       venue: { extends: "paperlint:mine", kind: "short" },

@@ -272,13 +272,6 @@ test("declaredVenue: the label is the preset's, and an extends that resolves now
   assert.throws(() => declaredVenue(typo, PAPER), /shipped presets/);
 });
 
-test("declaredVenue: a venue.json alone is refused with the command that moves it, not read", () => {
-  const files = memoryFiles({
-    [`${PAPER}/venue.json`]: '{"venue":"agenticdev"}',
-  });
-  assert.throws(() => declaredVenue(files, PAPER), /npx paperlint init/);
-});
-
 test("declaredVenue: a paperlint.json with an unknown key is refused, naming the key", () => {
   const files = memoryFiles({
     [`${PAPER}/paperlint.json`]: '{"venu":"agenticdev"}',

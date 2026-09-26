@@ -45,7 +45,7 @@ const since = () => {
 
 assert.deepEqual(
   Object.keys(stages.rules).sort(),
-  ["author-list", "source", "stages"],
+  ["source", "stages"],
   "rule set changed",
 );
 
@@ -235,121 +235,6 @@ console.log(
 
 console.log(
   `✓ ${String(since())} assertions passed — paper/source, frozen bytes instead of a sha`,
-);
-
-// ── `paper/author-list`: a shipped paper owes itself a run of the author-list cross-check ────
-//
-// This rule's subject is DIFFERENT from its two neighbors above: those check the declaration
-// against the bytes, this one checks the declaration against a record of a run. What they share
-// is exactly one input, the `stages` field, and that's why the rule lives in this module.
-{
-  const lintAuthors = (name) => {
-    const file = join(FIX, name, "PIPELINE-STATUS.md");
-    const msgs = linter.verify(
-      readFileSync(file, "utf-8"),
-      [
-        {
-          files: ["**/*.md"],
-          plugins: { markdown, paper: stages },
-          language: "markdown/gfm",
-          languageOptions: { frontmatter: "yaml" },
-          rules: { "paper/author-list": "error" },
-        },
-      ],
-      file,
-    );
-    assert.deepEqual(
-      msgs.filter((m) => m.fatal),
-      [],
-      `${name}: the rule threw`,
-    );
-    return msgs.map((m) => m.message);
-  };
-
-  // ── stays silent where it must ──
-  check(
-    "a run is recorded in the frontmatter (`authorsVerified`) — silent",
-    lintAuthors("authors-ran").length === 0,
-  );
-  // A draft never asked anyone to read it, so it owes nothing. This is not a carve-out: the
-  // rule's subject is the DEBT of a shipped paper, and an unshipped one has no debt.
-  check(
-    "no stage declared at all — silent, a draft owes nothing",
-    lintAuthors("nothing").length === 0,
-  );
-  // An empty list is not "a stage exists": the record `stages: []` shows up on a paper that was
-  // set up but never submitted anywhere.
-  check(
-    "an empty stage list — silent",
-    linter.verify(
-      "---\nstages: []\n---\n# S\n",
-      [
-        {
-          files: ["**/*.md"],
-          plugins: { markdown, paper: stages },
-          language: "markdown/gfm",
-          languageOptions: { frontmatter: "yaml" },
-          rules: { "paper/author-list": "error" },
-        },
-      ],
-      join(FIX, "x", "PIPELINE-STATUS.md"),
-    ).length === 0,
-  );
-
-  // ── fires on a planted defect ──
-  const owed = lintAuthors("ok");
-  check("a stage is declared, no run — a finding", owed.length === 1);
-  // 🔴 The message must name the CLASS, not just the fact of a miss: otherwise the reader takes
-  // it for a duplicate of the citation-existence check and closes it as noise. The class is
-  // preprint authors under a declared conference, and it is invisible to a check that a
-  // citation merely resolves.
-  check(
-    "and it names the class the cross-check catches, not just the miss",
-    /PREPRINT/.test(owed[0]),
-  );
-
-  // ── the whole reason the move was made ──
-  // The predecessor derived the stage with a REGEX OVER THE SCORECARD'S PROSE. Remeasured
-  // 09-17: for `agenticdev-2026` the prose reads `submitted`, while the frontmatter reads
-  // `submitted, camera-ready`. Here the list comes from the field, so both stages land in the
-  // finding's text.
-  const two = lintAuthors("twice");
-  check(
-    "the stage list in the message comes from the FIELD and carries all of them",
-    two.length === 1 && /submitted\/submitted/.test(two[0]),
-  );
-
-  // ── the run is a RECORD in the frontmatter, not a word in the scorecard (3.0.0) ──
-  check(
-    "the message names paperlint's own command, with the paper",
-    /npx paperlint authors \S+/.test(owed[0]),
-  );
-  // 🔴 The old convention no longer counts: "bib-authors" in a cell or in prose is text, not a
-  // record. Only the `authorsVerified` field is.
-  check(
-    "`bib-authors` in the prose or a table cell is not a record of a run",
-    lintAuthors("marker-in-prose").length === 1,
-  );
-  const badDate = linter.verify(
-    "---\nstages:\n  - stage: submitted\nauthorsVerified: last week\n---\n# S\n",
-    [
-      {
-        files: ["**/*.md"],
-        plugins: { markdown, paper: stages },
-        language: "markdown/gfm",
-        languageOptions: { frontmatter: "yaml" },
-        rules: { "paper/author-list": "error" },
-      },
-    ],
-    join(FIX, "x", "PIPELINE-STATUS.md"),
-  );
-  check(
-    "a value that is not a YYYY-MM-DD date is a finding of its own",
-    badDate.length === 1 && /not a date/.test(badDate[0].message),
-  );
-}
-console.log(
-  `✓ ${String(since())} assertions passed — paper/author-list, the debt of a shipped paper`,
 );
 
 console.log(`✓ ${String(n)} assertions passed in total`);

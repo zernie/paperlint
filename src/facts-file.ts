@@ -75,8 +75,8 @@ export interface VenueDecl {
 
 /**
  * What a paper's `paperlint.json` declares, or null when it has none. THROWS with a one-line reason
- * when the file does not parse, its `extends` does not resolve, or only the pre-2.1.0 `venue.json`
- * is there: the build reports that as its `facts` failure rather than building against no venue.
+ * when the file does not parse or its `extends` does not resolve: the build reports that as its
+ * `facts` failure rather than building against no venue.
  */
 export function declaredVenue(
   files: Files,

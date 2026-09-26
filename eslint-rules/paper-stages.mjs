@@ -47,14 +47,8 @@
  * many, and the field must not be weaker than the filenames it describes.
  */
 import { existsSync, statSync, readdirSync } from "node:fs";
-import { join, dirname, relative } from "node:path";
-import { CORE_SCHEMA, load } from "js-yaml";
-
-/** A real calendar date written as `YYYY-MM-DD` — the shape `paperlint authors` writes. */
-export const isIsoDate = (v) =>
-  typeof v === "string" &&
-  /^\d{4}-\d{2}-\d{2}$/.test(v) &&
-  new Date(`${v}T00:00:00Z`).toISOString().slice(0, 10) === v;
+import { join, dirname } from "node:path";
+import { load } from "js-yaml";
 
 const STAGES = ["submitted", "camera-ready", "arxiv"];
 
@@ -260,75 +254,6 @@ export default {
      * because a stage frozen BEFORE this convention existed cannot be fixed at all — those
      * bytes are gone. Failing a build over unrecoverable history is a gate nobody can clear.
      */
-    /**
-     * `paper/author-list` — a shipped paper OWES ITSELF a run of the author-list cross-check.
-     *
-     * The class this cross-check catches is invisible to an existence check on citations: the
-     * citation exists, the identifier resolves, and the authors are taken from the PREPRINT
-     * while the entry declares a conference. On the live corpus this turned up seven records
-     * across three papers, including a DROPPED LIVING PERSON (`schick2023toolformer` — Eric
-     * Hambro is missing; the NeurIPS version has nine authors, the preprint has eight). Two of
-     * the seven were found on a paper ALREADY SUBMITTED.
-     *
-     * 🔴 THE RUN IS A RECORD, NOT A WORD IN A TABLE (3.0.0). Until 3.0.0 the rule looked for a
-     * `marker` substring ("bib-authors") in the scorecard's table cells, and its message told
-     * the user to run a `command` the project had to configure — while the script ships in this
-     * very package. Both were conventions standing in for a field. Now the check is paperlint's
-     * own command, `npx paperlint authors <paper>`, which runs it and, when the author lists
-     * match, writes `authorsVerified: <YYYY-MM-DD>` into this file's frontmatter. The rule reads
-     * that field: present and a real date, or a finding.
-     *
-     * The stage comes from the `stages` FIELD — the same one `paper/stages` checks against the
-     * bytes in both directions. A paper that declares no stage owes nothing.
-     */
-    "author-list": {
-      meta: {
-        type: "suggestion",
-        docs: {
-          description:
-            "a paper that declares a stage records, as `authorsVerified` in its frontmatter, that the author-list check passed",
-        },
-        schema: [],
-        messages: {
-          neverRan:
-            "stage «{{stages}}» is declared, but the frontmatter records no author-list check (`authorsVerified`). It catches what an existence check cannot see: the citation resolves, the id resolves, and the authors are the PREPRINT's while the entry declares a conference. Run `npx paperlint authors {{paper}}` — it checks and records the date here",
-          badDate:
-            "`authorsVerified: {{value}}` is not a date (YYYY-MM-DD) — `npx paperlint authors {{paper}}` writes it",
-        },
-      },
-      create(context) {
-        return {
-          yaml(node) {
-            let data;
-            try {
-              data = load(node.value ?? "", { schema: CORE_SCHEMA });
-            } catch {
-              return; // `paper/stages` has already reported the unreadable YAML
-            }
-            const raw = data?.stages;
-            if (!Array.isArray(raw)) return;
-            const stages = raw.map((r) => r?.stage).filter(Boolean);
-            if (stages.length === 0) return; // nothing shipped — nothing is owed
-            const paper =
-              relative(context.cwd, dirname(context.filename)) || ".";
-            const value = data.authorsVerified;
-            if (value === undefined || value === null)
-              context.report({
-                node,
-                messageId: "neverRan",
-                data: { stages: stages.join("/"), paper },
-              });
-            else if (!isIsoDate(value))
-              context.report({
-                node,
-                messageId: "badDate",
-                data: { value: String(value), paper },
-              });
-          },
-        };
-      },
-    },
-
     source: {
       meta: {
         type: "problem",

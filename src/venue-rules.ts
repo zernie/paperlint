@@ -24,7 +24,7 @@
  * One rule per reason, and the others are silent — so a paper gets one finding that says what to
  * do, not six that say the same thing:
  *
- *   no paperlint.json       every rule silent — a paper from before 2.1.0 (`paperlint new` writes one)
+ *   no paperlint.json       every rule silent (`paperlint new` writes one)
  *   extends null / absent   pdf/measured (warn) — no venue chosen yet; it names the file to set
  *   preset does not resolve pdf/profile (error) — a typo would otherwise switch every check off
  *   not built / no facts    pdf/measured (warn) — lint often runs before or without a build (the

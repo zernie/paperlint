@@ -1,13 +1,10 @@
 /**
  * `paperlint.json` through the commands, on a real directory: `paperlint lint` applies a paper's
- * `rules` to that paper alone and refuses an unknown rule id; `paperlint init` moves a pre-2.1.0
- * `venue.json` and refuses when both files exist and differ; `paperlint doctor` names a leftover.
+ * `rules` to that paper alone and refuses an unknown rule id.
  */
 import {
-  existsSync,
   mkdirSync,
   mkdtempSync,
-  readFileSync,
   realpathSync,
   rmSync,
   writeFileSync,
@@ -16,8 +13,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { run, toolchainTex } from "./cli.ts";
-import { migratePaperSettings } from "./init.ts";
-import { doctor } from "./doctor.ts";
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -225,87 +220,5 @@ describe("paperlint toolchain — installs what the project's own presets need",
     const tex = toolchainTex(project());
     expect("usenix" in tex.packages).toBe(false);
     expect("acmart" in tex.packages).toBe(true);
-  });
-});
-
-describe("paperlint init — moves venue.json to paperlint.json", () => {
-  const legacy = '{ "venue": "aisec", "kind": "research" }\n';
-
-  it('moves it, "venue" becoming "extends": "paperlint:<name>", and says so', () => {
-    const root = project({ "papers/a/venue.json": legacy });
-    const r = migratePaperSettings(join(root, "papers"));
-    expect(r.code).toBe(0);
-    expect(existsSync(join(root, "papers/a/venue.json"))).toBe(false);
-    expect(
-      JSON.parse(readFileSync(join(root, "papers/a/paperlint.json"), "utf8")),
-    ).toEqual({ extends: "paperlint:aisec", kind: "research" });
-    expect(r.lines.join("\n")).toMatch(/a\/venue\.json → a\/paperlint\.json/);
-  });
-
-  it("both, with the same content: the leftover is removed", () => {
-    const root = project({
-      "papers/a/venue.json": legacy,
-      "papers/a/paperlint.json":
-        '{"extends":"paperlint:aisec","kind":"research"}',
-    });
-    expect(migratePaperSettings(join(root, "papers")).code).toBe(0);
-    expect(existsSync(join(root, "papers/a/venue.json"))).toBe(false);
-  });
-
-  it("🔴 both, and they differ: refused, naming both, and nothing is touched", () => {
-    const root = project({
-      "papers/a/venue.json": legacy,
-      "papers/a/paperlint.json": '{"venue":"realm"}',
-    });
-    const r = migratePaperSettings(join(root, "papers"));
-    expect(r.code).toBe(2);
-    expect(r.lines.join("\n")).toMatch(/a\/venue\.json.*a\/paperlint\.json/);
-    expect(readFileSync(join(root, "papers/a/venue.json"), "utf8")).toBe(
-      legacy,
-    );
-    expect(readFileSync(join(root, "papers/a/paperlint.json"), "utf8")).toBe(
-      '{"venue":"realm"}',
-    );
-  });
-
-  it("no venue.json anywhere: nothing to say", () => {
-    const root = project();
-    expect(migratePaperSettings(join(root, "papers"))).toEqual({
-      code: 0,
-      lines: [],
-    });
-  });
-});
-
-describe("paperlint doctor — names a leftover venue.json", () => {
-  it("✗ with the command that moves it, and a failing exit", () => {
-    const root = project({ "papers/a/venue.json": '{"venue":"aisec"}' });
-    const out: string[] = [];
-    const code = doctor({
-      log: (s: string) => out.push(s),
-      cwd: root,
-      projectDir: root,
-      cliPapers: "papers",
-      run: (() => ({ status: 0, stdout: "", stderr: "" })) as never,
-      skillLinks: () => ({ ok: false, error: "not checked in this test" }),
-    });
-    const text = out.join("\n");
-    expect(text).toMatch(/✗ papers\/a\/venue\.json is no longer read/);
-    expect(text).toMatch(/npx paperlint init/);
-    expect(code).not.toBe(0);
-  });
-
-  it("says nothing about it when there is none", () => {
-    const root = project();
-    const out: string[] = [];
-    doctor({
-      log: (s: string) => out.push(s),
-      cwd: root,
-      projectDir: root,
-      cliPapers: "papers",
-      run: (() => ({ status: 0, stdout: "", stderr: "" })) as never,
-      skillLinks: () => ({ ok: false, error: "not checked in this test" }),
-    });
-    expect(out.join("\n")).not.toMatch(/venue\.json/);
   });
 });

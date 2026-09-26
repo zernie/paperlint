@@ -264,7 +264,7 @@ export type PaperPreset =
       readonly settings: PaperSettings;
       readonly preset: Preset;
     }
-  /** `paperlint.json` does not parse, or only a pre-2.1.0 `venue.json` is there. */
+  /** `paperlint.json` does not parse. */
   | { readonly kind: "settings-problem"; readonly problem: SettingsProblem }
   /** `extends` does not resolve. */
   | {

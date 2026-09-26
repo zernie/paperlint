@@ -76,47 +76,6 @@ process.exit(
           ],
         ],
       },
-      {
-        name: "the rule stops requiring an author cross-check run",
-        harness: HARNESS,
-        expect: "a stage is declared, no run — a finding",
-        disables:
-          "the debt itself: a shipped paper no longer owes anything, and the rule stays silent " +
-          "across the whole corpus — silence is its success state, so from the outside this is " +
-          "indistinguishable",
-        // Target retargeted 09-17: the old line disappeared when the rule moved to parsing, and
-        // the driver honestly said UNUSABLE — "the patch did not land", not "the test is weak".
-        // Now the mutation declares the run recorded before the file is even read.
-        edits: [[RULE, "let recorded = false;", "let recorded = true;"]],
-      },
-      {
-        name: "the exemption for an unshipped paper becomes WIDER than it should",
-        harness: HARNESS,
-        expect: "an empty stage list — silent",
-        disables:
-          "the distinction between 'no stages' and 'there are stages': a draft starts getting a " +
-          "finding, and a rule that scolds drafts gets turned off within a week",
-        edits: [
-          [
-            RULE,
-            "if (stages.length === 0) return; // nothing shipped — nothing is owed",
-            "",
-          ],
-        ],
-      },
-      {
-        name: "the stage list is taken from somewhere OTHER than the field again",
-        harness: HARNESS,
-        expect:
-          "the stage list in the message comes from the FIELD and carries all of them",
-        disables:
-          "the exact reason the move was made. The predecessor derived the stage with a regex " +
-          "over the prose, and on agenticdev printed `submitted` where `submitted, " +
-          "camera-ready` was declared. The mutation brings back a hardcoded list — the set of " +
-          "findings does not change, only the TEXT lies, and without this assert the regression " +
-          "would have passed silently",
-        edits: [[RULE, 'stages: stages.join("/"),', 'stages: "submitted",']],
-      },
     ],
   }),
 );
