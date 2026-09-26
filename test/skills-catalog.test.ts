@@ -1,11 +1,10 @@
 /**
  * THE SKILL CATALOG CANNOT DRIFT FROM THE SKILLS THAT SHIP.
  *
- * Three places name the shipped skills for a reader: `docs/skills.md` (every skill, by stage), the
- * README's pipeline diagram (every skill, at its stage) and the README's Skills section (a few
- * headline skills, and the count). Each is compared against `skills/<name>/SKILL.md` on disk, the
- * directory `paperlint init` links from — so adding, renaming or removing a skill turns this red
- * until the prose follows.
+ * `docs/skills.md` lists every skill by stage, and the README names a few headline skills and the
+ * count. Both are compared against `skills/<name>/SKILL.md` on disk, the directory `paperlint init`
+ * links from — so adding, renaming or removing a skill turns this red until the prose follows. The
+ * README's pipeline diagram and `docs/skills.md` must name the same stages, in the same order.
  */
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -95,9 +94,20 @@ describe("the skill catalog matches the skills that ship", () => {
     expect([...listed].sort()).toEqual(SHIPPED);
   });
 
-  it("the README diagram names every shipped skill, and nothing that is not one", () => {
-    const named = new Set(diagram().match(/[a-z]+(?:-[a-z]+)+/g) ?? []);
-    expect([...named].sort()).toEqual(SHIPPED);
+  it("the README diagram's stages are docs/skills.md's stages, in the same order", () => {
+    const fromDiagram = diagram()
+      .split("\n")
+      .map((l) => /^(\d) (\S+)/.exec(l))
+      .filter((m) => m !== null)
+      .map((m) => `${m[1]} · ${m[2]}`);
+    const fromCatalog = parse(read("docs/skills.md"))
+      .filter(
+        (t, i, all) =>
+          all[i - 1]?.type === "heading_open" && /^\d · /.test(t.content),
+      )
+      .map((t) => t.content.toLowerCase());
+    expect(fromDiagram.length).toBe(8);
+    expect(fromDiagram).toEqual(fromCatalog);
   });
 
   it("the README's headline skills are shipped skills, and its count is the real one", () => {
@@ -105,9 +115,7 @@ describe("the skill catalog matches the skills that ship", () => {
     expect(headline.length).toBeGreaterThanOrEqual(3);
     for (const s of headline) expect(SHIPPED).toContain(s);
     const readme = read("README.md");
-    expect(readme).toContain(
-      `${String(SHIPPED.length)} skills for Claude Code`,
-    );
+    expect(readme).toContain(`${String(SHIPPED.length)} skills help`);
     expect(readme).toContain(`All ${String(SHIPPED.length)}, by stage`);
   });
 });

@@ -50,7 +50,7 @@ the skill whose description matches starts. `paperlint init` installs them into
 | what a reader with no context understood from your last edit, sentence by sentence | `cold-read-diff` |
 | the compiled pages as images, to read on a screen or a phone                       | `render-paper`   |
 
-## 5 · Review and harden
+## 5 · Review
 
 | you get                                                                       | skill                      |
 | ----------------------------------------------------------------------------- | -------------------------- |

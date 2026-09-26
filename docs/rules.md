@@ -200,7 +200,11 @@ rules, which is why they list it above. Markdown papers are deprecated and being
 
 ## The scorecard's `bytes:` and `sourceBytes:`
 
-A stage in `PIPELINE-STATUS.md` looks like this:
+**When you submit,** copy the PDF and `paper.tex` you sent into the paper's `versions/` folder and
+record the stage in the front matter of `PIPELINE-STATUS.md` (the paper's scorecard). From then on
+`paper/stages` fails if that PDF goes missing or changes size, and `paper/source` if its source was
+not kept. Today you record it by hand; a command for it is planned
+([#100](https://github.com/zernie/paperlint/issues/100)). A stage looks like this:
 
 ```yaml
 ---
