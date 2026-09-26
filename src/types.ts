@@ -60,6 +60,10 @@ export interface Args {
   paper: string | null;
   /** `--format tex|md` for `new` and `init --paper`. Validated by the command, not here. */
   format: string | null;
+  /** `--venue <preset>` for `new`: a shipped preset name, or a path to the project's own. */
+  venue: string | null;
+  /** `--kind <kind>` for `new`: one of the venue preset's kinds. */
+  kind: string | null;
   /** `--hooks=<mode>` — parsed only so it can be REFUSED by name rather than read as a path. */
   hooksMode: string | null;
   help?: boolean;

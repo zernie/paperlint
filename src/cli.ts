@@ -65,6 +65,10 @@ import {
 import {
   paperPreset,
   paperPresetProblem,
+  presetProblemText,
+  resolvePreset,
+  shippedPresets,
+  SHIPPED_PREFIX,
   type PaperPreset,
 } from "./presets.ts";
 import type { ToolInstaller } from "./ports/tool-installer.ts";
@@ -84,6 +88,7 @@ import {
   newPaper,
   reportNewPaper,
   type PaperFormat,
+  type VenueSetting,
 } from "./new-paper.ts";
 // The one source for the consumer's config key lives in the .mjs half of the package (the ESLint
 // rules and the skill scripts import it too); its types are in lib/paper-config.d.mts.
@@ -123,12 +128,15 @@ import siblingFrontmatter from "../eslint-rules/sibling-frontmatter.mjs";
 // @ts-expect-error — an ESLint rule in .mjs, it has no types
 import pdfRules from "../eslint-rules/pdf-last-page-balance.mjs";
 
+/** The shipped venue presets, read from the package's venues directory — the one list. */
+const SHIPPED_VENUES = (): string[] => shippedPresets(packageVenuesDir());
+
 const USAGE = `paperlint — machine-checkable gates for a paper kept in git
 
   npx paperlint init [dir]            set the project up: detect the papers directory, declare it
                                       in package.json, link the skills, wire the hooks into
                                       .claude/settings.json, offer the CI step, report what is missing
-  npx paperlint new <name> [--format tex|md]
+  npx paperlint new <name> [--venue <preset>] [--kind <kind>] [--format tex|md]
                                       create <papers>/<name>/ from the template; never overwrites,
                                       on an existing folder adds only the missing files, then lints it
   npx paperlint lint [paths…]         run every rule over your papers
@@ -155,6 +163,15 @@ init:
   --no-hooks          do not wire the hooks (the default without a human is to wire them)
   --paper <name>      create this paper too (without a human, the only way init creates one)
   --format tex|md     the new paper's source format; default tex
+
+new:
+  --venue <preset>    the venue preset, written as "extends" into the paper's paperlint.json:
+                      a shipped one (${SHIPPED_VENUES().join(", ")}), or a path to your
+                      own preset starting with ./ or ../, relative to where you run the command.
+                      On a terminal without --venue, new asks; "none" leaves it unset
+  --kind <kind>       the paper's kind at that venue (its page limit), e.g. short — one of the
+                      preset's kinds; needs --venue
+  --format tex|md     the paper's source format; default tex
 
 lint:
   npx paperlint lint [paths…] [--fix] [--config <file.json>] [--json]
@@ -188,7 +205,7 @@ settings — paperlint.json, at two levels, one schema. Both are optional.
 
     { "extends": "paperlint:aisec", "kind": "research", "rules": { "pdf/last-page-balance": "error" } }
 
-  "extends" names a venue preset: paperlint:<name> (shipped: acm-sigconf, agenticdev, aisec, realm)
+  "extends" names a venue preset: paperlint:<name> (shipped: ${SHIPPED_VENUES().join(", ")})
   or ./path.jsonc, relative to the paperlint.json. npm presets are not supported yet.
 
   "rules" is { "<rule>": "<severity>" } for every paper file in scope, or ESLint flat-config
@@ -585,6 +602,8 @@ export function parseArgs(argv: readonly string[]): Args {
     noHooks: false,
     paper: null,
     format: null,
+    venue: null,
+    kind: null,
     hooksMode: null,
     // -1 = warnings NEVER fail the run. In this set most findings are advisory by design, and a
     // gate that fails on advice gets muted entirely.
@@ -619,6 +638,8 @@ export function parseArgs(argv: readonly string[]): Args {
       out.hooksMode = a.slice("--hooks=".length);
     else if (a === "--paper") out.paper = valueFor(a, ++i) ?? null;
     else if (a === "--format") out.format = valueFor(a, ++i) ?? null;
+    else if (a === "--venue") out.venue = valueFor(a, ++i) ?? null;
+    else if (a === "--kind") out.kind = valueFor(a, ++i) ?? null;
     // `--options` was the first spelling and is kept working. It named the wrong thing — every
     // other tool in the stack calls this file its config — but a flag in someone's CI is not
     // ours to break.
@@ -829,14 +850,141 @@ export async function createPaperAt(
     log,
     err,
     cwd,
-  }: { log: typeof console.log; err: typeof console.error; cwd: string },
+    venue = null,
+  }: {
+    log: typeof console.log;
+    err: typeof console.error;
+    cwd: string;
+    /** What `--venue` chose; null writes the template's `paperlint.json` as it is. */
+    venue?: VenueChoice | null;
+  },
 ): Promise<number> {
-  const result = newPaper(papersRoot, name, format);
+  const result = newPaper(papersRoot, name, format, { venue });
   const here = (p: string): string => relative(cwd, p) || p;
   for (const line of reportNewPaper(result, here)) log(line);
   if (!result.ok) return 2;
+  const config = here(join(result.dir, CONFIG_FILE));
+  if (venue === null)
+    log(
+      `  venue: none yet — set "extends" in ${config}, or next time: paperlint new <name> --venue <preset> (${SHIPPED_VENUES().join(", ")})`,
+    );
+  else if (venue.kind === null && venue.kinds.length > 0)
+    log(
+      `  kind: not set — \`${venue.label}\` sets a page limit per kind (${venue.kinds.join(", ")}); add "kind" to ${config}. Until then lint reports pdf/profile`,
+    );
   log(``);
   return run(["lint", result.dir], { log, err, cwd });
+}
+
+/** A venue `paperlint new` will write, with what the messages need to say about it. */
+export interface VenueChoice extends VenueSetting {
+  /** The preset's word in messages (`agenticdev`, `my-workshop`). */
+  readonly label: string;
+  /** The preset's kinds; empty when it sets no page limit. */
+  readonly kinds: readonly string[];
+}
+
+/**
+ * `--venue` / `--kind` → the `extends` and `kind` to write into `<paperDir>/paperlint.json`, or why
+ * not. Parsed here, at the boundary, and resolved through the same `resolvePreset` lint uses — so a
+ * venue `new` accepts is a venue lint resolves. On a terminal with no `--venue` it asks, with
+ * "none" as the default; without a terminal it chooses nothing (null), as before.
+ *
+ * A path is relative to where the command runs, because that is where it was typed; it is written
+ * relative to the paper's `paperlint.json`, because that is what `extends` is relative to. Written
+ * as typed, `./venues/x.jsonc` would name `<paper>/venues/x.jsonc`.
+ */
+export async function chooseVenue(
+  flags: { readonly venue: string | null; readonly kind: string | null },
+  {
+    paperDir,
+    cwd,
+    interactive,
+    ask,
+  }: {
+    paperDir: string;
+    cwd: string;
+    interactive: boolean;
+    ask: (q: string) => Promise<string>;
+  },
+): Promise<Parsed<VenueChoice | null>> {
+  const shipped = SHIPPED_VENUES();
+  if (flags.kind !== null && flags.venue === null)
+    return bad(
+      `--kind needs --venue: a kind is a page limit of one venue preset — \`paperlint new <name> --venue <preset> --kind ${flags.kind}\``,
+    );
+  const asked = async (q: string): Promise<string> =>
+    (await ask(q).catch(() => "")).trim();
+  const venue =
+    flags.venue ??
+    (interactive
+      ? await asked(`venue: ${[...shipped, "none"].join(" / ")} [none] `)
+      : "");
+  if (venue === "" || (flags.venue === null && venue === "none"))
+    return { ok: true, value: null };
+  const spec = venueSpec(venue, { shipped, paperDir, cwd });
+  if (!spec.ok) return spec;
+  const r = resolvePreset(spec.value, join(paperDir, CONFIG_FILE), PRESET_DEPS);
+  if (!r.ok) return bad(`--venue ${venue}: ${presetProblemText(r.error)}`);
+  const kinds = [...r.value.format.kinds.keys()];
+  const label = r.value.label;
+  if (flags.kind !== null) {
+    if (kinds.length === 0)
+      return bad(
+        `--kind ${flags.kind}: \`${label}\` has no kinds — it sets no page limit, so there is no kind to choose`,
+      );
+    if (!kinds.includes(flags.kind))
+      return bad(
+        `--kind ${flags.kind}: \`${label}\` has no kind \`${flags.kind}\`; its kinds: ${kinds.join(", ")}`,
+      );
+  }
+  const kind =
+    flags.kind ??
+    (interactive && kinds.length > 0
+      ? await asked(`kind: ${[...kinds, "later"].join(" / ")} [later] `)
+      : null);
+  return {
+    ok: true,
+    value: {
+      extends: spec.value,
+      kind: kind !== null && kinds.includes(kind) ? kind : null,
+      label,
+      kinds,
+    },
+  };
+}
+
+const bad = (error: string): { ok: false; error: string } => ({
+  ok: false,
+  error,
+});
+
+/** What `--venue` names → the `extends` value, relative to `<paperDir>/paperlint.json`. */
+function venueSpec(
+  venue: string,
+  {
+    shipped,
+    paperDir,
+    cwd,
+  }: { shipped: readonly string[]; paperDir: string; cwd: string },
+): Parsed<string> {
+  if (venue.startsWith("./") || venue.startsWith("../")) {
+    const file = resolve(cwd, venue);
+    if (!existsSync(file))
+      return bad(
+        `--venue ${venue}: no such file (${file}) — a path is relative to where you run the command`,
+      );
+    const rel = relative(paperDir, file).split(sep).join("/");
+    return { ok: true, value: rel.startsWith("../") ? rel : `./${rel}` };
+  }
+  const name = venue.startsWith(SHIPPED_PREFIX)
+    ? venue.slice(SHIPPED_PREFIX.length)
+    : venue;
+  if (!shipped.includes(name))
+    return bad(
+      `--venue ${venue}: no such venue preset. Shipped: ${shipped.join(", ")} — or a path to your own preset, starting with ./ or ../`,
+    );
+  return { ok: true, value: `${SHIPPED_PREFIX}${name}` };
 }
 
 /**
@@ -860,7 +1008,7 @@ async function runNew(
   const [name, ...extra] = a.paths;
   if (!name || extra.length > 0) {
     err(
-      `\`new\` takes exactly one paper name: \`paperlint new my-paper [--format tex|md]\``,
+      `\`new\` takes exactly one paper name: \`paperlint new my-paper [--venue <preset>] [--kind <kind>] [--format tex|md]\``,
     );
     return 2;
   }
@@ -893,7 +1041,30 @@ async function runNew(
     log(
       `several papers directories are declared — using the first: ${relative(cwd, papersRoot) || papersRoot}`,
     );
-  return createPaperAt(papersRoot, name, format, { log, err, cwd });
+  const paperDir = join(papersRoot, name);
+  // An existing paperlint.json is never overwritten, so a venue for it is refused, not dropped.
+  const hasConfig = existsSync(join(paperDir, CONFIG_FILE));
+  if (hasConfig && (a.venue !== null || a.kind !== null)) {
+    err(
+      `${relative(cwd, join(paperDir, CONFIG_FILE))} already exists and is never overwritten — set "extends" and "kind" in it by hand`,
+    );
+    return 2;
+  }
+  const venue = hasConfig
+    ? { ok: true as const, value: null }
+    : await chooseVenue(a, {
+        paperDir,
+        cwd,
+        interactive: processInteractivity(a.yes).interactive,
+        ask,
+      });
+  if (!venue.ok) return (err(venue.error), 2);
+  return createPaperAt(papersRoot, name, format, {
+    log,
+    err,
+    cwd,
+    venue: venue.value,
+  });
 }
 
 /**

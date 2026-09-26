@@ -91,10 +91,25 @@ skills' keys), which are refused here by name. **It merges over the root file:**
 | `$comment` | a note for humans; ignored                                                                                                                                                                 |
 
 `paperlint new` writes this file from the template (`templates/paper/paperlint.json`, or your
-`<papers>/.template/paperlint.json` if you keep one), with `"extends": null` — no venue chosen yet —
-and a `$comment` saying what goes there. Until `extends` names a preset (here or in the root file),
-`paperlint lint` gives that paper one warning, `pdf/measured`: "this paper names no venue preset
-yet … set "extends" in papers/my-paper/paperlint.json".
+`<papers>/.template/paperlint.json` if you keep one). With `--venue` it writes the venue into it:
+
+```sh
+npx paperlint new my-paper --venue agenticdev --kind short        # "extends": "paperlint:agenticdev"
+npx paperlint new my-paper --venue ./venues/my-workshop.jsonc     # "extends": "../../venues/my-workshop.jsonc"
+```
+
+- A shipped name becomes `paperlint:<name>`; an unknown one exits 2 and lists the shipped presets.
+- A path starts with `./` or `../` and is relative to where you run the command. It is written
+  relative to the paper's `paperlint.json`, which is what `extends` is relative to.
+- `--kind` must be one of the preset's kinds, and needs `--venue`. A preset with kinds and no
+  `--kind` is written anyway; `new` then says that lint reports `pdf/profile` until `kind` is set.
+- On a terminal without `--venue`, `new` asks for the venue (default: none) and then its kind.
+- An existing `paperlint.json` is never overwritten, so `--venue` for it is refused.
+
+Without a venue the file has `"extends": null` and a `$comment` saying what goes there. Until
+`extends` names a preset (here or in the root file), `paperlint lint` gives that paper one warning,
+`pdf/measured`: "this paper names no venue preset yet … set "extends" in
+papers/my-paper/paperlint.json".
 
 **Any other key is an error**, in either file, named in the message: `paperlint.json: unknown key
 "papersdir"`. A misspelt key would otherwise read as "not set", and the setting you meant would
