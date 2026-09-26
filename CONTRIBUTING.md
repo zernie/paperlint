@@ -109,6 +109,7 @@ The README links only what a user needs. These are for people changing the packa
 ```bash
 npm install
 npm test                 # every *.test.ts, then every harness (Node >= 22.18)
+npm run coverage         # the same, under c8, failing below the thresholds in .c8rc.json
 ```
 
 None of these are needed to USE the tool — they are here because the gates are part of the

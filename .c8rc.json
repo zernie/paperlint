@@ -1,0 +1,44 @@
+{
+  "//": [
+    "Coverage of `npm test` (vitest + every vigiles harness). c8 reads NODE_V8_COVERAGE, which every",
+    "child process inherits, so the harnesses' spawned CLIs are measured too; `all` counts files no",
+    "test ever loaded as 0% instead of leaving them out. Sources are compiled `dist/` remapped to",
+    "`src/*.ts` (excludeAfterRemap), so `dist/` itself is excluded after the remap.",
+    "Excluded: tests themselves (*.harness.mjs, *.test.*), *.eval.mjs (PAID LLM evaluations,",
+    "never run by npm test and never unit-run), *.spec.ts (skill sources compiled by vigiles),",
+    "type declarations, fixtures and test/ (inputs and e2e scripts, not the package's code)."
+  ],
+  "all": true,
+  "src": ["."],
+  "include": [
+    "bin/**",
+    "src/**/*.ts",
+    "lib/**",
+    "eslint-rules/**",
+    "hooks/**",
+    "skills/**",
+    "scripts/**",
+    "eslint.config.mjs"
+  ],
+  "exclude": [
+    "**/*.harness.mjs",
+    "**/*.test.*",
+    "**/*.eval.mjs",
+    "**/*.spec.ts",
+    "**/*.d.ts",
+    "**/*.d.mts",
+    "**/fixtures/**",
+    "dist/**",
+    "test/**",
+    "node_modules/**",
+    "coverage/**"
+  ],
+  "extension": [".js", ".mjs", ".ts"],
+  "excludeAfterRemap": true,
+  "reporter": ["text-summary", "json-summary"],
+  "reportsDirectory": "coverage",
+  "lines": 80,
+  "statements": 80,
+  "functions": 78,
+  "branches": 86
+}

@@ -501,6 +501,7 @@ justified two hundred lines above precisely by these minutes being free.
 
 ```bash
 npm test                    # vitest over *.test.ts, then the vigiles harnesses
+npm run coverage            # the same run under c8; fails below the thresholds in .c8rc.json
 npx vitest run <file>       # one unit test
 npx vigiles test <file>     # one harness
 ```
@@ -539,6 +540,12 @@ confident, byte-identical "clean" verdicts for three different skills that had n
    (`"that is the"` matching two different messages, a bare word the usage block always prints).
    A substring is right only when the value is prose whose wording is not the subject; then say
    so in a comment.
+
+3. **Coverage is a gate.** `npm run check` and CI run `npm run coverage` — `npm test` under c8,
+   `--check-coverage` against `.c8rc.json`. c8 reads `NODE_V8_COVERAGE`, so a CLI a harness
+   spawns is measured too — unless the harness hands the child a fresh `env` without it. vitest
+   runs in the `threads` pool with native `import` (`vitest.config.ts` says why): under its
+   defaults c8 saw nothing vitest ran.
 
 ### There is no exclusive lock any more
 

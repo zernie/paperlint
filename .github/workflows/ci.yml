@@ -112,8 +112,11 @@ jobs:
       #
       # ⚠️ And the flag belongs IN THE STEP, not in `package.json`: the macOS cell of build-e2e runs the same `npm test`
       # WITHOUT installing the binary, where skips are legitimate, and a global flag would falsely color it.
-      - name: npm test
-        run: npm test -- --no-skip
+      #
+      # `npm run coverage` is `npm test` under c8 with the thresholds in .c8rc.json: the same tests,
+      # one run, and a drop below the coverage floor fails this step by name.
+      - name: npm test, under coverage
+        run: npm run coverage -- --no-skip
 
       # The rules themselves, over this repository's own fixtures. Two of the four fixtures are
       # DEFECTIVE ON PURPOSE, so a healthy checkout reports warnings here and still exits 0 —

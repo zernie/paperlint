@@ -97,9 +97,12 @@ export const GATES = [
     run: ["node", "scripts/rules-are-content-only.mjs"],
   },
   {
-    name: "every test — vitest over *.test.ts, then the vigiles harnesses (npm test)",
+    name: "every test, under coverage — vitest, then the vigiles harnesses, with c8's thresholds (npm run coverage)",
     job: "gates",
-    script: "test",
+    script: "coverage",
+    // `npm run coverage` IS `npm test`, run under c8 with `--check-coverage` (.c8rc.json holds
+    // the thresholds). One run, not two: the tests pass and the coverage floor holds, or the gate
+    // is red and says which.
   },
   {
     // vitest transpiles without type-checking, so the tests' types are checked here.

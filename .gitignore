@@ -14,3 +14,5 @@ _build/
 !skills/paper-pipeline/repro/*.log
 
 dist/
+# c8's report and raw V8 data (`npm run coverage`).
+coverage/
