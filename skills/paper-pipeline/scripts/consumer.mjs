@@ -56,7 +56,7 @@
  * ── THE LEDGER, THREE RUNGS ─────────────────────────────────────────────────
  *   1. `PIPELINE_LEDGER` in the environment — always wins. This is what test harnesses set to
  *      keep fixture rows out of real history, so it must outrank a declaration on disk.
- *   2. `"paperlint": { "ledger": "…" }` in the CONSUMER's `package.json`, read
+ *   2. `{ "ledger": "…" }` in the CONSUMER's root `paperlint.json`, read
  *      from `process.cwd()`, resolved relative to it.
  *   3. `runs.jsonl` beside this file — ONLY when this file is not inside `node_modules`, i.e.
  *      when the package is being developed in its own checkout. Inside `node_modules` with
@@ -75,7 +75,6 @@
  */
 import {
   existsSync,
-  readFileSync,
   readdirSync,
   readlinkSync,
   realpathSync,
@@ -86,7 +85,11 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 // Re-exported, not re-declared — see the note in `lib/paper-config.mjs`. This file is not a hook
 // and never needed its own copy.
-import { CONFIG_KEY, settingsOf } from "../../../lib/paper-config.mjs";
+import {
+  CONFIG_FILE,
+  CONFIG_KEY,
+  settingsOf,
+} from "../../../lib/paper-config.mjs";
 export { CONFIG_KEY, settingsOf };
 
 /**
@@ -238,16 +241,6 @@ function readlinkOr(entry) {
   }
 }
 
-/** The consumer's parsed `package.json`, or `null` when there is none or it does not parse. */
-export function consumerPkg(opts) {
-  const file = join(consumerRoot(opts), "package.json");
-  try {
-    return JSON.parse(readFileSync(file, "utf8"));
-  } catch {
-    return null;
-  }
-}
-
 /**
  * True when `dir` lies inside a `node_modules` directory.
  *
@@ -275,7 +268,7 @@ export function ledgerPath(
 
   // Rung 2 — the consumer's declaration.
   const root = consumerRoot({ env, cwd });
-  const declared = settingsOf(consumerPkg({ env, cwd }))?.ledger;
+  const declared = settingsOf(consumerRoot({ env, cwd }))?.ledger;
   // 🔴 `declared === undefined`, NOT `declared ?? default` — the same distinction `papersRoot()`
   // makes and for the same reason: `"ledger": null` is a keystroke, not an absence, and reading
   // it as "nothing was declared" would silently pick a different file than the one asked for.
@@ -292,8 +285,8 @@ export function ledgerPath(
     throw new Error(
       `${CONFIG_KEY}: no ledger location is declared, and the default (a file beside this ` +
         `module) is inside node_modules, which \`npm ci\` deletes.\n` +
-        `Declare where the ledger lives, in ${join(root, "package.json")}:\n` +
-        `  "${CONFIG_KEY}": { "ledger": "docs/pipeline-runs.jsonl" }\n` +
+        `Declare where the ledger lives, in ${join(root, CONFIG_FILE)}:\n` +
+        `  { "ledger": "docs/pipeline-runs.jsonl" }\n` +
         `or set PIPELINE_LEDGER for a single run.\n` +
         `This is thrown rather than defaulted on purpose: appending to a path under ` +
         `node_modules succeeds, so the rows would look recorded right up until the next ` +
@@ -314,7 +307,7 @@ export function ledgerPathExisting(hereDir, opts) {
   if (!existsSync(p))
     throw new Error(
       `${CONFIG_KEY}: the ledger "${p}" does not exist. Create it (an empty file is a valid ` +
-        `empty ledger) or fix the "ledger" declaration in package.json.`,
+        `empty ledger) or fix the "ledger" declaration in ${CONFIG_FILE}.`,
     );
   return p;
 }
@@ -367,7 +360,7 @@ export const DEFAULT_SCRIPTS_ROOT = ".claude/skills/paper-pipeline/scripts";
  */
 export function scriptsRoot({ env = process.env, cwd = process.cwd() } = {}) {
   const root = consumerRoot({ env, cwd });
-  const declared = settingsOf(consumerPkg({ env, cwd }))?.scripts;
+  const declared = settingsOf(consumerRoot({ env, cwd }))?.scripts;
   // 🔴 `declared === undefined`, NOT `declared ?? DEFAULT` — the same distinction `papersRoot()`
   // and `ledgerPath()` make, for the same reason: `"scripts": null` is a keystroke, not an
   // absence, and silently substituting the default for it hides a typo behind a working run.
@@ -386,8 +379,8 @@ export function scriptsRoot({ env = process.env, cwd = process.cwd() } = {}) {
         `instruction would point at a directory the repository does not track.\n` +
         `Keep a symlink where the prose already looks —\n` +
         `  ${join(root, DEFAULT_SCRIPTS_ROOT)} -> node_modules/${CONFIG_KEY}/skills/paper-pipeline/scripts\n` +
-        `— or declare the real, repository-relative location in ${join(root, "package.json")}:\n` +
-        `  "${CONFIG_KEY}": { "scripts": "path/to/pipeline/scripts" }\n` +
+        `— or declare the real, repository-relative location in ${join(root, CONFIG_FILE)}:\n` +
+        `  { "scripts": "path/to/pipeline/scripts" }\n` +
         `(If nothing was declared, the root itself is under node_modules: run the command from ` +
         `the consumer repository, or export CLAUDE_PROJECT_DIR.)`,
     );
@@ -396,9 +389,9 @@ export function scriptsRoot({ env = process.env, cwd = process.cwd() } = {}) {
       `${CONFIG_KEY}: the pipeline scripts path "${rel}" does not exist under ${root}.\n` +
         (declared === undefined
           ? `Nothing was declared, so the default "${DEFAULT_SCRIPTS_ROOT}" was used. Create the ` +
-            `symlink there, or declare the real location in package.json:\n` +
-            `  "${CONFIG_KEY}": { "scripts": "path/to/pipeline/scripts" }`
-          : `It is declared in package.json under "${CONFIG_KEY}" as ` +
+            `symlink there, or declare the real location in ${CONFIG_FILE}:\n` +
+            `  { "scripts": "path/to/pipeline/scripts" }`
+          : `It is declared in ${CONFIG_FILE} as ` +
             `"scripts": ${JSON.stringify(declared)}. Fix it there, or create the directory.`) +
         `\nThis is thrown rather than ignored on purpose: this value is a PREFIX that callers ` +
         `filter prose with, so a wrong one matches no instruction at all and every check built ` +
@@ -446,7 +439,7 @@ export function consumerTimezone({
   env = process.env,
   cwd = process.cwd(),
 } = {}) {
-  const declared = settingsOf(consumerPkg({ env, cwd }))?.timezone;
+  const declared = settingsOf(consumerRoot({ env, cwd }))?.timezone;
   // 🔴 `declared === undefined`, NOT `declared ?? DEFAULT` — the same distinction every carrier
   // above makes: `"timezone": null` is a keystroke, not an absence.
   const tz = declared === undefined ? DEFAULT_TIMEZONE : declared;
@@ -460,7 +453,7 @@ export function consumerTimezone({
     throw new RangeError(
       `${CONFIG_KEY}: "timezone" is ${JSON.stringify(tz)}, which is not an IANA time zone this ` +
         `runtime knows (e.g. "Europe/Berlin", "America/New_York", "UTC").\n` +
-        `Fix it in package.json under "${CONFIG_KEY}".\n` +
+        `Fix it in ${CONFIG_FILE}.\n` +
         `This throws rather than falling back to ${DEFAULT_TIMEZONE} on purpose: a silent fallback ` +
         `would put every deadline anchor at the wrong hour while looking like it worked.`,
     );
@@ -498,7 +491,7 @@ export function consumerContactEmail({
   env = process.env,
   cwd = process.cwd(),
 } = {}) {
-  const declared = settingsOf(consumerPkg({ env, cwd }))?.contactEmail;
+  const declared = settingsOf(consumerRoot({ env, cwd }))?.contactEmail;
   if (declared === undefined || declared === null) return null;
   if (typeof declared !== "string" || !declared.includes("@"))
     throw new TypeError(

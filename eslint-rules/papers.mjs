@@ -10,23 +10,20 @@
  * that forbids imports), the PROSE of a skill (read by a model, not resolved by code), and
  * LaTeX (`TEXINPUTS`, kpathsea).
  *
- * ── THE DECISION (2026-09-11) ───────────────────────────────────────────────
- * ONE declaration, in the consumer's `package.json`, with a default:
+ * ── THE DECISION ────────────────────────────────────────────────────────────
+ * ONE declaration, in the project's root `paperlint.json`, with a default:
  *
- *     "paperlint": { "papersDir": "docs/papers" }
+ *     { "papersDir": "docs/papers" }
  *
- * No key → `papers`. Every carrier then reads that one value with its OWN standard mechanism:
+ * No file, or no key → `papers`. Every carrier then reads that one value with its OWN standard
+ * mechanism:
  *
- *   ESLint  →  `import pkg from "./package.json" with { type: "json" }` + this module
- *   hook    →  `needs: [provide("pkg", "cat package.json")]`, JSON.parse inside `decide`
+ *   ESLint  →  `settingsOf(root)` (lib/paper-config.mjs) + this module
+ *   hook    →  `needs: [provide("config", …)]` cats the file, JSON.parse inside `decide`
  *   prose   →  the skill names a COMMAND, not a path:
- *              `node -p "require('./package.json')['paperlint']?.papersDir ?? 'papers'"`
+ *              `node -p "(() => { try { return require('./paperlint.json').papersDir } catch {} })() ?? 'papers'"`
  *   LaTeX   →  `TEXINPUTS` built FROM THE SCRIPT (`$(dirname "$0")/../tex//:`), so the
  *              consumer declares nothing at all for this carrier
- *
- * `package.json` is the right home rather than a new dotfile for one measured reason: it is
- * the file Node already opens to resolve this package, so it cannot be absent, cannot be
- * gitignored, and needs no discovery rules of its own.
  *
  * ── WHAT WAS MEASURED AND KILLED, so it is not proposed again ───────────────
  * (full measurements: consumer repo, `idei/paper-pipeline-extraction/`, 2026-09-11)
@@ -85,14 +82,13 @@ import {
   DEFAULT_PAPERS_ROOT,
   PAPERS_DIR_FIELD,
   CONFIG_FILE,
-  settingsOf,
 } from "../lib/paper-config.mjs";
 export { DEFAULT_PAPERS_ROOT };
 
 /**
  * The declared papers root, verified to be on disk.
  *
- * @param pkg      the consumer's parsed `package.json`
+ * @param settings the project's root `paperlint.json`, parsed (`settingsOf(root)`), or undefined
  * @param baseDir  the directory the root is relative to. PASS `import.meta.dirname` FROM THE
  *                 CONFIG rather than relying on the default: `process.cwd()` is wherever the
  *                 editor, the hook runtime or the CI step happened to start, and in a git
@@ -102,8 +98,8 @@ export { DEFAULT_PAPERS_ROOT };
  *          globs, which ESLint interprets relative to the config, and an absolute path there
  *          would change their meaning.
  */
-export function papersRoot(pkg, baseDir = process.cwd()) {
-  const declared = settingsOf(pkg)?.[PAPERS_DIR_FIELD];
+export function papersRoot(settings, baseDir = process.cwd()) {
+  const declared = settings?.[PAPERS_DIR_FIELD];
   // 🔴 `declared === undefined`, NOT `declared ?? DEFAULT`. The two differ on exactly one
   // input — `"papersDir": null` — and the difference is the whole point: `??` reads an explicit
   // `null` as "nothing was declared" and silently uses the default, which is a typed keystroke
@@ -120,9 +116,9 @@ export function papersRoot(pkg, baseDir = process.cwd()) {
       `${CONFIG_KEY}: the papers root "${root}" does not exist under ${baseDir}.\n` +
         (declared === undefined
           ? `Nothing was declared, so the default "${DEFAULT_PAPERS_ROOT}" was used. Declare the ` +
-            `real location in package.json:\n` +
-            `  "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": "path/to/papers" }`
-          : `It is declared in package.json as "${declared}". Fix it there, or create the ` +
+            `real location in ${CONFIG_FILE}:\n` +
+            `  { "${PAPERS_DIR_FIELD}": "path/to/papers" }`
+          : `It is declared in ${CONFIG_FILE} as "${declared}". Fix it there, or create the ` +
             `directory.`) +
         `\nThis is thrown rather than ignored on purpose: a papers root that matches nothing ` +
         `makes every rule lint zero files, and a run with zero findings is indistinguishable ` +

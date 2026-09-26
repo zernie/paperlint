@@ -24,11 +24,7 @@ function project(files: Record<string, string> = {}): string {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-settings-")));
   dirs.push(root);
   const all: Record<string, string> = {
-    "package.json": JSON.stringify({
-      name: "c",
-      private: true,
-      paperlint: { papersDir: "papers" },
-    }),
+    "package.json": JSON.stringify({ name: "c", private: true }),
     "papers/a/paper.tex":
       "\\documentclass{article}\n\\begin{document}x\\end{document}\n",
     "papers/a/PIPELINE-STATUS.md": "---\nstages: []\n---\n",
@@ -75,26 +71,18 @@ describe("paperlint lint — `rules` in a paper's paperlint.json", () => {
     expect(rulesIn(r.out, "b")).not.toContain("pdf/last-page-balance");
   });
 
-  it("the project's own `rules` blocks come after, so they win", async () => {
+  it("🔴 the paper's own `rules` come after the root paperlint.json's, so they win", async () => {
     const root = project({
-      "package.json": JSON.stringify({
-        name: "c",
-        private: true,
-        paperlint: {
-          papersDir: "papers",
-          rules: [
-            {
-              files: ["papers/a/**"],
-              rules: { "pdf/last-page-balance": "off" },
-            },
-          ],
-        },
+      "paperlint.json": JSON.stringify({
+        rules: [
+          {
+            files: ["papers/*/**"],
+            rules: { "pdf/last-page-balance": "error" },
+          },
+        ],
       }),
       "papers/a/paperlint.json": JSON.stringify({
-        rules: { "pdf/last-page-balance": "error" },
-      }),
-      "papers/b/paperlint.json": JSON.stringify({
-        rules: { "pdf/last-page-balance": "error" },
+        rules: { "pdf/last-page-balance": "off" },
       }),
     });
     const r = await lint(root);
@@ -120,6 +108,61 @@ describe("paperlint lint — `rules` in a paper's paperlint.json", () => {
   });
 });
 
+describe("papersDir — optional, `papers` by default", () => {
+  it("no paperlint.json, papers/x/paper.tex: that paper is linted", async () => {
+    const r = await lint(project());
+    expect(r.code).toBe(0);
+    expect(
+      (JSON.parse(r.out) as { filePath: string }[]).map((f) =>
+        f.filePath.slice(f.filePath.indexOf("papers/")),
+      ),
+    ).toEqual(
+      expect.arrayContaining(["papers/a/paper.tex", "papers/b/paper.tex"]),
+    );
+  });
+
+  it("🔴 no paperlint.json and no papers/: exit 2 and the one clear sentence", async () => {
+    const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-empty-")));
+    dirs.push(root);
+    writeFileSync(join(root, "package.json"), "{}");
+    const r = await lint(root);
+    expect(r.code).toBe(2);
+    expect(r.err).toBe(
+      'no papers in papers/ — create one with `npx paperlint new <name>`, or set "papersDir" in paperlint.json if your papers live elsewhere',
+    );
+  });
+
+  it("an explicit papersDir is honored", async () => {
+    const root = project({
+      "paperlint.json": JSON.stringify({ papersDir: "docs/drafts" }),
+      "docs/drafts/c/paper.tex":
+        "\\documentclass{article}\n\\begin{document}x\\end{document}\n",
+      "docs/drafts/c/PIPELINE-STATUS.md": "---\nstages: []\n---\n",
+    });
+    const r = await lint(root);
+    const linted = (JSON.parse(r.out) as { filePath: string }[]).map((f) =>
+      f.filePath.slice(root.length + 1),
+    );
+    expect(linted).toContain("docs/drafts/c/paper.tex");
+    expect(linted.some((f) => f.startsWith("papers/"))).toBe(false);
+  });
+
+  it("run from inside a paper, the root file is still found and papersDir is relative to it", async () => {
+    const root = project({
+      "paperlint.json": JSON.stringify({ papersDir: "papers" }),
+      "papers/a/paperlint.json": JSON.stringify({ kind: "short" }),
+    });
+    const out: string[] = [];
+    const code = await run(["lint", "--json"], {
+      cwd: join(root, "papers/a"),
+      log: (x: string) => out.push(x),
+      err: () => {},
+    });
+    expect(code).toBe(0);
+    expect(out.join("\n")).toMatch(/papers\/b\/paper\.tex/);
+  });
+});
+
 describe("paperlint lint — the venue preset's rules", () => {
   it("agenticdev's preset turns pdf/last-page-balance on for its paper alone", async () => {
     const root = project({
@@ -131,16 +174,19 @@ describe("paperlint lint — the venue preset's rules", () => {
     const cfgOf = await import("./cli.ts").then((m) =>
       m.paperRuleBlocks([join(root, "papers")]),
     );
-    expect(cfgOf.ok && cfgOf.value).toEqual([
-      {
-        basePath: join(root, "papers/a"),
-        files: expect.arrayContaining([
-          "**/paper.tex",
-          "**/PIPELINE-STATUS.md",
-        ]),
-        rules: { "pdf/last-page-balance": ["error", { tolerancePt: 120 }] },
-      },
-    ]);
+    expect(cfgOf.ok && cfgOf.value).toEqual({
+      preset: [
+        {
+          basePath: join(root, "papers/a"),
+          files: expect.arrayContaining([
+            "**/paper.tex",
+            "**/PIPELINE-STATUS.md",
+          ]),
+          rules: { "pdf/last-page-balance": ["error", { tolerancePt: 120 }] },
+        },
+      ],
+      own: [],
+    });
   });
 
   it("🔴 an unbuilt agenticdev paper: ONE warning (pdf/measured), and no balance error", async () => {
@@ -167,7 +213,11 @@ describe("paperlint lint — the paper over its preset, and the project's own pr
     const blocks = await import("./cli.ts").then((m) =>
       m.paperRuleBlocks([join(root, "papers")]),
     );
-    expect(blocks.ok && blocks.value[0]?.rules).toEqual({
+    // The preset's block comes first and the paper's own after it: the later block wins.
+    expect(blocks.ok && blocks.value.preset[0]?.rules).toEqual({
+      "pdf/last-page-balance": ["error", { tolerancePt: 120 }],
+    });
+    expect(blocks.ok && blocks.value.own[0]?.rules).toEqual({
       "pdf/last-page-balance": "off",
     });
   });

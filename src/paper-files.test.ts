@@ -39,11 +39,7 @@ function project(files: Record<string, string> = {}): string {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-scope-")));
   dirs.push(root);
   const all: Record<string, string> = {
-    "package.json": JSON.stringify({
-      name: "c",
-      private: true,
-      paperlint: { papersDir: "papers" },
-    }),
+    "package.json": JSON.stringify({ name: "c", private: true }),
     "papers/a/paper.tex": TEX,
     "papers/a/PIPELINE-STATUS.md": "---\nstages: []\n---\n",
     ...files,
@@ -110,9 +106,14 @@ describe("paperlint lint — lints only the files paperlint owns", () => {
     });
     rmSync(join(root, "papers/a/paper.tex"));
     rmSync(join(root, "papers/a/PIPELINE-STATUS.md"));
-    const r = await lint(root);
-    expect(r.code).toBe(1);
-    expect(r.err).toMatch(/nothing was linted/);
+    // From the config: the directory holds no paper, which is said before ESLint runs.
+    const fromConfig = await lint(root);
+    expect(fromConfig.code).toBe(2);
+    expect(fromConfig.err).toMatch(/^no papers in papers\//);
+    // Named on the command line: ESLint gets it, lints nothing, and the run says so.
+    const named = await lint(root, ["papers"]);
+    expect(named.code).toBe(1);
+    expect(named.err).toMatch(/nothing was linted/);
   });
 
   it("a file named on the command line that paperlint does not lint is refused by name", async () => {
@@ -137,13 +138,8 @@ describe("`rules` blocks reach only the files each rule is written for", () => {
     "🔴 %s over papers/** runs, instead of crashing inside ESLint",
     async (id) => {
       const root = project({
-        "package.json": JSON.stringify({
-          name: "c",
-          private: true,
-          paperlint: {
-            papersDir: "papers",
-            rules: [{ files: ["papers/**"], rules: { [id]: "warn" } }],
-          },
+        "paperlint.json": JSON.stringify({
+          rules: [{ files: ["papers/**"], rules: { [id]: "warn" } }],
         }),
       });
       const r = await lint(root);

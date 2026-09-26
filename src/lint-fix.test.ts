@@ -26,11 +26,8 @@ function project(
   const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-fix-")));
   dirs.push(root);
   const all: Record<string, string> = {
-    "package.json": JSON.stringify({
-      name: "c",
-      private: true,
-      paperlint: { papersDir: "papers", ...settings },
-    }),
+    "package.json": JSON.stringify({ name: "c", private: true }),
+    "paperlint.json": JSON.stringify({ papersDir: "papers", ...settings }),
     "papers/a/PIPELINE-STATUS.md": "---\nstages: []\n---\n",
     "papers/a/paper.md": "# Intro\n\nSee §5, §6 and §7; p < .05.\n",
     ...files,
@@ -116,11 +113,7 @@ describe("settings: what 3.0.0 removed is an ordinary unknown key or rule", () =
   });
 
   it("paper/typography → not a rule paperlint ships", async () => {
-    const r = await lint(
-      project({
-        rules: [{ files: ["papers/**"], rules: { "paper/typography": "off" } }],
-      }),
-    );
+    const r = await lint(project({ rules: { "paper/typography": "off" } }));
     expect(r.code).toBe(2);
     expect(r.err).toMatch(/"paper\/typography" is not a rule paperlint ships/);
   });
