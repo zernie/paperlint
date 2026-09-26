@@ -10,39 +10,29 @@ The README carries the minimal version of this. Everything below is the full sur
 {
   "paperlint": {
     "papersDir": "papers",
-    "authorListCommand": "node scripts/bib-authors.mjs",
-    "typographyDebt": { "papers/my-paper": { "sectionSign": 12 } },
-    "docFields": { "read": { "values": ["full", "abstract", "none"] } },
-    "reviewSince": "2026-08-23",
-    "minFindings": 3,
-    "causeMarker": "Cause:",
+    "reviewSchema": "schemas/review.json",
     "rules": [
       {
         "files": ["papers/old-draft/**"],
-        "rules": { "paper/typography": "off" }
+        "rules": { "paper/section-word": "off" }
       }
     ]
   }
 }
 ```
 
-| key                 | required | what it is                                                                                |
-| ------------------- | -------- | ----------------------------------------------------------------------------------------- |
-| `papersDir`         | **yes**  | the directory your papers live in, relative to the file holding it. One string or a list. |
-| `structure`         | no       | which files every paper directory must contain — see below. `false` turns it off.         |
-| `authorListCommand` | no       | the command `paper/author-list` tells you to run when the check is missing                |
-| `typographyDebt`    | no       | per-paper allowance of existing typography findings, so the count can only go down        |
-| `docFields`         | no       | required front-matter fields in review files, and the values each may hold                |
-| `reviewSince`       | no       | only review files created on or after this date are checked                               |
-| `minFindings`       | no       | a review with fewer findings than this is not required to name causes                     |
-| `causeMarker`       | no       | the phrase a review uses to introduce a cause (default `Cause:`), in any language         |
-| `rules`             | no       | extra ESLint config blocks: turn optional rules on, change a rule's severity — see below  |
+| key            | required | what it is                                                                                |
+| -------------- | -------- | ----------------------------------------------------------------------------------------- |
+| `papersDir`    | **yes**  | the directory your papers live in, relative to the file holding it. One string or a list. |
+| `structure`    | no       | which files every paper directory must contain — see below. `false` turns it off.         |
+| `reviewSchema` | no       | a JSON Schema file a review's frontmatter must also satisfy — see below                   |
+| `rules`        | no       | extra ESLint config blocks: turn optional rules on, change a rule's severity — see below  |
 
 The skill scripts read a few more keys of the same object — `ledger`, `scripts`, `timezone`,
 `contactEmail`, `citeChecks`, `triggerCases` — documented with the skills that use them.
 
 **Any other key is an error**, named in the message: `package.json → "paperlint":
-unknown key "typographyDept"`. A misspelt key would otherwise read as "not set", and the setting
+unknown key "reviewSchem"`. A misspelt key would otherwise read as "not set", and the setting
 you meant would silently do nothing. The list of known keys is `SETTINGS_KEYS` in
 `lib/paper-config.mjs`.
 
@@ -60,12 +50,6 @@ name. `node_modules/`, `.git/` and `<papers>/.template/` are skipped.
 
 `init` reads a declared `papersDir` first: when `package.json` already names one, that is the directory
 it reports and uses, and nothing is measured or asked.
-
-Until 2026-09-24 this field was called `papers`. The old name is not read as a fallback: `paperlint lint`,
-`paperlint init`, `paperlint doctor`, the ESLint helper and the edit guard all stop with
-`"papers" was renamed to "papersDir" in package.json → "paperlint"`. The two advisory
-hooks stay silent instead. The name is defined once, as `PAPERS_DIR_FIELD` in
-`lib/paper-config.mjs`.
 
 ## Three levels of settings
 
@@ -87,9 +71,8 @@ node_modules/paperlint/skills/submit-paper/references/venues/
 or your `<papers>/.template/paperlint.json` if you keep one), with `"extends": null` — no venue chosen
 yet — and a `$comment` saying what goes there. Until `extends` names a preset, `paperlint lint` gives
 that paper one warning, `pdf/measured`: "this paper names no venue preset yet … set "extends" in
-papers/my-paper/paperlint.json". A paper folder with no `paperlint.json` at all — one created before
-2.1.0 — gets no venue checks and no warning; `npx paperlint new <its name>` adds the file and
-changes nothing else.
+papers/my-paper/paperlint.json". A paper folder with no `paperlint.json` at all gets no venue checks
+and no warning; `npx paperlint new <its name>` adds the file and changes nothing else.
 
 ```json
 {
@@ -115,12 +98,32 @@ the paper's own `rules` → the project's `rules` blocks in `package.json`. So a
 rule on for its papers, a paper can turn it off for itself, and the project can still override
 both. Only rules paperlint ships may be named, at every level.
 
-**`paperlint.json` replaces `venue.json` (2.1.0); `npx paperlint init` moves it.** The old name is not
-read: a paper with only a `venue.json` gets a `pdf/profile` error and `paperlint doctor` names the
-file, both pointing at `init`. `init` writes the same settings as `paperlint.json` —
-`"venue": "aisec"` becomes `"extends": "paperlint:aisec"`, and the `"_"` some files used as a
-comment becomes `"$comment"` — then deletes `venue.json`. It removes a `venue.json` whose
-`paperlint.json` already says the same, and refuses, changing nothing, when both exist and differ.
+## Review frontmatter: paperlint's schema, and your own
+
+A review under `reviews/` records its findings in YAML frontmatter; `review/frontmatter` validates it
+against the JSON Schema paperlint ships (`eslint-rules/review-frontmatter.schema.json`):
+
+```yaml
+---
+findings:
+  - id: 1
+    status: open # open | fixed | wontfix
+    cause: missing-skill # skill-defect | missing-skill | hook | rule — required when open
+---
+```
+
+To require more — a `read:` field on every review, say — write a JSON Schema and point
+`reviewSchema` at it, relative to your `package.json`. It is applied **together with** paperlint's
+(both must pass), so it can add requirements but never lift one. It is read and compiled before
+anything is linted; a missing file or a schema that does not compile stops the run naming it.
+
+```json
+{
+  "type": "object",
+  "required": ["read"],
+  "properties": { "read": { "enum": ["full", "abstract", "none"] } }
+}
+```
 
 ## Why the key lives in `package.json`
 
@@ -300,7 +303,11 @@ the exact config the CLI uses, so the shortest path is:
 // eslint.config.mjs
 import { buildConfig } from "paperlint/bin/paperlint.mjs";
 import { texLanguage } from "paperlint/eslint-rules/latex-language.mjs";
-export default buildConfig({ minFindings: 3 }, texLanguage);
+export default buildConfig({}, texLanguage);
 ```
+
+That config is the whole config for your papers: it starts with a global ignore of every file its
+rules are not written for, so `eslint .` with it lints only the paper files. Do not spread it into a
+config that also lints your JavaScript — that code would be ignored.
 
 Then point the CI action's `config` input at that file.

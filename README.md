@@ -122,7 +122,6 @@ paperlint:aisec         a venue preset: shipped, or ./your-venue.jsonc  the venu
 ```
 
 More in [`docs/configuration.md`](docs/configuration.md#three-levels-of-settings).
-`paperlint.json` replaces `venue.json` (2.1.0); `npx paperlint init` moves it.
 
 A **stage** is a point the paper has reached, such as `submitted` or `camera-ready` (the final
 version for the proceedings). The name may use `a-z`, `0-9`, `.`, `_` and `-`. On a folder that
@@ -204,13 +203,18 @@ shows up red. Optional inputs: `config`, `max-warnings` (default `-1`, no limit)
 | ------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------- |
 | `paper/stages`                 | error   | a stage's PDF is missing, or it is not the same file any more (its size changed)                                 |
 | `paper/source`                 | error   | a stage has no frozen source file next to its PDF                                                                |
-| `paper/author-list`            | warning | a stage is declared, but `PIPELINE-STATUS.md` does not record that the author list was checked                   |
+| `paper/author-list`            | error   | an entry's authors are the preprint's, not those of the version cited (checked online by `paperlint build`)      |
 | `paper/research-question`      | warning | the research question is missing from `PIPELINE-STATUS.md`, or the paper does not contain that sentence          |
-| `paper/typography`             | warning | more `§`, `.05`-style decimals, mixed `Fig.`/`Figure`, or references without a DOI or URL than you allowed       |
+| `paper/section-word`           | warning | `§` instead of the word Section — `paperlint lint --fix` fixes it                                                |
+| `paper/leading-zero`           | warning | `.05` instead of `0.05`, where the reader sees it — `--fix` fixes it                                             |
+| `paper/figure-ref-style`       | warning | `Fig.` and `Figure` mixed in one document — `--fix` writes the majority form                                     |
+| `bib/reachable-entry`          | warning | a reference with no DOI, URL or arXiv id                                                                         |
+| `paper/cite-exists`            | error   | a reference whose DOI or arXiv id resolves to nothing or to another work (checked by `paperlint build`)          |
+| `paper/refs-fresh`             | error   | the bibliography changed since the build checked it                                                              |
+| `paper/refs-checked`           | warning | the references were not checked: no build yet, or it had no network                                              |
 | `tex/future-promise`           | warning | a camera-ready still says your code "will be released"                                                           |
 | `tex/acm-frontmatter-override` | error   | an ACM paper overrides the template's title-page commands, so parts of page 1 go missing                         |
-| `review/findings-cause`        | error   | a review note lists several findings and names no cause for any of them                                          |
-| `doc/fields`                   | warning | a review note's front matter is missing a field you require (off unless configured)                              |
+| `review/frontmatter`           | error   | a review's `findings` records fail the schema — an open finding names no cause — or your own `reviewSchema`      |
 | `pdf/limits`                   | error   | more body or reference pages than the venue allows for your kind of paper, or a reference font size out of range |
 | `pdf/fonts`                    | error   | a Type 3 or unembedded font, or the venue template's fonts are missing (a silent Computer Modern fallback)       |
 | `pdf/geometry`                 | error   | the paper size or column count differs from the venue's                                                          |
@@ -218,6 +222,11 @@ shows up red. Optional inputs: `config`, `max-warnings` (default `-1`, no limit)
 | `pdf/profile`                  | error   | the paper's `extends` names no preset (a typo), or a kind of paper the venue does not have                       |
 | `pdf/fresh`                    | error   | the build facts describe an earlier PDF than the one on disk                                                     |
 | `pdf/measured`                 | warning | the venue checks did not run: the paper names no venue preset yet, or was not built                              |
+
+To keep a deliberate exception, put ESLint's disable directive with the reason on the line:
+`% eslint-disable-next-line paper/leading-zero -- quoted from the reviewer` (it works inside the
+bibliography block of `paper.tex` too). There is no allowance to set: `paperlint lint --fix` fixes the
+typography, and what is left is fixed or excepted where it is.
 
 The `pdf/` checks run only for a paper whose `paperlint.json` extends a venue preset, and they judge the PDF
 `paperlint build` made: build, then lint. Errors fail the run; warnings only print. What each check
