@@ -520,6 +520,11 @@ import none of the three are frozen in `scripts/harness-api.frozen.json`, which 
 exits 1 when no file matches, and it transpiles without type-checking, so `npm run check` runs
 `tsc -p tsconfig.test.json` as its own gate.
 
+**Local = the fast gates on what you touched; the full `npm run check` = CI.** Locally run vitest on
+the touched test files, `npx tsc --noEmit`, `npx eslint <touched files>` and `npm run fmt:check`, then
+push and read CI by job name. The repo is public, so CI is free, and it also runs the TeX e2e that
+cannot run locally; a local full run takes 10-15 min, most of it the mutation batteries (#52).
+
 ⚠️ **Not `vigiles test .`** — the `.` is read as a FILE, the runner dies with
 `ERR_UNSUPPORTED_DIR_IMPORT`, and it still exits 0. See the measured table below.
 

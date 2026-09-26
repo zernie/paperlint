@@ -103,7 +103,7 @@ and the split into body and reference pages. They report on the paper's `paper.t
 | the paper                                                                                        | what you get                                                                                                                 |
 | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
 | has a `paperlint.json` that extends no preset (`"extends": null` is what `paperlint new` writes) | `pdf/measured` warning naming the file to set — no venue chosen yet                                                          |
-| has no `paperlint.json` at all (a paper made before 2.1.0)                                       | nothing                                                                                                                      |
+| has no `paperlint.json` at all                                                                   | nothing                                                                                                                      |
 | extends a preset that does not resolve (a typo, a missing file)                                  | `pdf/profile` error, listing the shipped presets                                                                             |
 | has not been built (no facts file)                                                               | `pdf/measured` warning — it does not fail the run, because lint often runs where nothing is built (the CI action only lints) |
 | was built without banal                                                                          | `pdf/measured` warning; fonts are still checked, the rest is not                                                             |
@@ -215,8 +215,9 @@ researchQuestion: "Does pruning the state space reduce review cost?"
 ---
 ```
 
-Today you write `bytes:` and `sourceBytes:` yourself, or the agent does, once, when the stage is
-recorded; no command in this package generates them. They are not a checksum to maintain: a
+A stage name may use `a-z`, `0-9`, `.`, `_` and `-`. You write `bytes:` and `sourceBytes:` yourself
+(`wc -c < versions/2026-07-22-submitted.pdf`), or the agent does, once, when the stage is recorded;
+no command in this package generates them. They are not a checksum to maintain: a
 frozen PDF is never supposed to change, so `bytes:` disagreeing with the file means the file was
 replaced after it was declared, and that is exactly the finding. If you really did re-freeze a
 stage, update the number in the same commit.
