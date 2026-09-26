@@ -58,8 +58,8 @@ Each stage has [skills](#-skills) that do the work with you; the linter needs no
 
 ## 🎯 Supported venues
 
-A **venue preset** holds a venue's format and page limits. Its **kind** is the paper type the venue
-sets a limit for — `short`, `full`, `research` — chosen once per paper.
+A **venue preset** holds a venue's format and page limits. A paper's **kind** picks which limit
+applies: at AgenticDev a `short` paper gets 5 pages and a `full` one 10. You choose it once per paper.
 
 | preset                  | venue              | format                           | page limit                                                                              |
 | ----------------------- | ------------------ | -------------------------------- | --------------------------------------------------------------------------------------- |
@@ -233,7 +233,7 @@ format: [`docs/rules.md`](docs/rules.md#writing-your-own-venue-preset).
 - **CI runs lint, not build.** It checks typography, references and recorded stages, and fails when
   it checked zero files.
 - The page limit, fonts and online reference checks need a build, which needs TeX Live: they run
-  on your machine. In CI they show as one warning per paper, `pdf/measured`, saying so.
+  on your machine. In CI each paper gets one warning (`pdf/measured`) saying they did not run.
 
 ## ❓ FAQ
 
