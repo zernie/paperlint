@@ -383,7 +383,7 @@ try {
     //
     // 🔴 THIS USED TO COMPARE AGAINST ONE HARD-CODED ZONE — the first consumer's. That is exactly
     // the thing a package may not know: the same CFP date is a different wall-clock hour for every
-    // author, so the zone is the `timezone` CARRIER, read from the consumer's package.json. What
+    // author, so the zone is the `timezone` CARRIER, read from the project's paperlint.json. What
     // the PRESCRIPTION in §3 must show is therefore not anybody's real zone but the documented
     // DEFAULT, next to the instruction telling the model to substitute the declared one.
     //

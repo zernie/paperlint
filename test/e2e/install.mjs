@@ -19,7 +19,6 @@
  * Exit code: 0 — every manager passed; 1 — at least one did not.
  */
 import { execFileSync, spawnSync } from "node:child_process";
-import { PAPERS_DIR_FIELD } from "../../lib/paper-config.mjs";
 import {
   installedSkills,
   PACKAGE_NAME,
@@ -420,20 +419,15 @@ try {
     // measure the default branch and stay silent about the one the command was rewritten for.
     stageCorpus(consumer);
     const init = sh(bin, ["init"], { cwd: consumer });
-    const declared = (() => {
-      try {
-        return JSON.parse(readFileSync(join(consumer, "package.json"), "utf8"))[
-          "paperlint"
-        ]?.[PAPERS_DIR_FIELD];
-      } catch (e) {
-        return `unreadable: ${e.message}`;
-      }
-    })();
-    declared === "papers"
-      ? ok("`paperlint init` declared the papers directory in package.json")
-      : bad(
-          "`paperlint init` declared the papers directory in package.json",
-          `package.json ended up with ${JSON.stringify(declared)}\n${init.stdout ?? ""}${init.stderr ?? ""}`,
+    // The corpus is staged under `papers/`, the default: init measures it and, finding the
+    // default, writes NO paperlint.json. A file here would mean it wrote what it did not need.
+    existsSync(join(consumer, "paperlint.json"))
+      ? bad(
+          "`paperlint init` took the default papers directory and wrote no paperlint.json",
+          `${readFileSync(join(consumer, "paperlint.json"), "utf8")}\n${init.stdout ?? ""}${init.stderr ?? ""}`,
+        )
+      : ok(
+          "`paperlint init` took the default papers directory and wrote no paperlint.json",
         );
     init.status === 0
       ? ok("`paperlint init` finished with zero — doctor found no discrepancy")

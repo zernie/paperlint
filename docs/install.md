@@ -14,21 +14,6 @@ npx paperlint init
 Two commands in one terminal, in this order: `init` links the skills and hooks to the copy in
 your project's `node_modules`, so it needs the install first.
 
-**Upgrading from `research-paper-pipeline`** (the package's name before 2.0.0):
-`npm rm research-paper-pipeline && npm i -D paperlint`, then `npx paperlint init`. It moves the
-`"research-paper-pipeline"` key in `package.json` to `"paperlint"`, and replaces the hook commands
-and skill links that pointed into the old package. Until then the old key is still read, with a
-warning.
-
-**Upgrading from 2.0.0**: 2.0.0 wrote hook commands that run `node_modules/paperlint/bin/rpp.mjs`,
-a file later versions do not ship, so those hooks stop running. `npx paperlint doctor` names them;
-`npx paperlint init` replaces them and keeps your own commands in the same matcher. The TeX Live
-and banal caches moved from `~/.cache/rpp/` to `~/.cache/paperlint/`, so `npx paperlint toolchain`
-downloads TeX Live once more (delete the old directory afterwards), and the environment variables
-are now `PAPERLINT_TEXLIVE_DIR`, `PAPERLINT_BANAL_DIR` and `PAPERLINT_CTAN_MIRROR` — the `RPP_*`
-names are no longer read. A leftover `rpp.json` is ignored; its settings belong under the
-`"paperlint"` key of `package.json`.
-
 The npm package carries everything: the `paperlint` command, the ESLint rules, the Claude Code skills
 and hooks, and the scripts the skills run. External programs are separate:
 
@@ -43,15 +28,18 @@ and hooks, and the scripts the skills run. External programs are separate:
 
 In order:
 
-1. **Finds the papers directory**, or asks for it. The project must have a `package.json`; without
-   one `init` stops and tells you to run `npm init -y` first.
-2. **Declares it once**, as the `paperlint` key in your `package.json`.
+1. **Finds the papers directory**, or asks for it when several directories look like one.
+2. **Declares it**, in a root `paperlint.json`, only when it is not the default `papers`. A project
+   on the defaults gets no config file at all.
 3. **Links each shipped skill** into `.claude/skills/<name>`, where Claude Code looks for skills.
 4. **Writes the hook commands** into `.claude/settings.json`, beside your own entries.
 5. **Offers a GitHub Actions workflow**, pinned to the release tag of the version you installed.
 6. **Offers a first paper** (`paperlint new`) if the papers directory has none.
-7. **Reports missing external programs** and the command that installs each. It installs nothing.
-8. **Runs `paperlint doctor`** and exits with its verdict.
+7. **Offers TeX Live** for `paperlint build` (`paperlint toolchain`, ~270 MB, ~3 min, once), with
+   the size in the question and NO as the default. Without a terminal it asks nothing and lists the
+   command as the next step. `paperlint lint` needs no TeX.
+8. **Reports missing external programs** and the command that installs each. It installs nothing.
+9. **Runs `paperlint doctor`** and exits with its verdict.
 
 It asks only what it cannot guess or what costs something. A human at a terminal is asked; an
 agent, CI or `--yes` takes the defaults, and `init` prints which default it took. An unanswered
@@ -61,23 +49,23 @@ question (Ctrl+D) also takes the default.
 
 | what                                                               | where                   | when                                                                                                                                                                              |
 | ------------------------------------------------------------------ | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| a `paperlint` key naming your papers directory                     | your `package.json`     | always                                                                                                                                                                            |
+| `{ "papersDir": … }` naming your papers directory                  | `paperlint.json`        | only when it is not the default `papers`                                                                                                                                          |
 | the three hook commands, merged in beside your own entries         | `.claude/settings.json` | by default. A human at a terminal is asked [Y/n]; an agent, CI or `--yes` gets YES; `--no-hooks` skips. Hand-wired under another spelling: nothing written, so nothing runs twice |
 | a GitHub Actions workflow, pinned to `@v<installed version>`       | `.github/workflows/`    | only if you say yes; it asks once, and only when a human is at a terminal (stdin and stdout, no `CI`, no `--yes`)                                                                 |
 | a first paper, via `paperlint new`                                 | `<papers>/<name>/`      | only when the papers directory holds none: asked of a human at a terminal, otherwise only with `--paper <name>`                                                                   |
 | one relative symlink per shipped skill, into the installed package | `.claude/skills/<name>` | always — except where that name is already taken (a directory, a file, a link elsewhere): that entry is left as it is and named in the report                                     |
 
-It installs no software and touches nothing else. Commit `.claude/settings.json` so every clone
+It installs no software you did not say yes to, and touches nothing else. Commit `.claude/settings.json` so every clone
 gets the hooks; the hook commands run files inside `node_modules`, so a fresh clone needs
 `npm install` first.
 
 ## Why it is shaped this way
 
-**One declaration, in `package.json`.** A hook cannot import code or walk up a tree looking for a
-config; it can only read a path it can spell, and the one it can always spell is
-`$CLAUDE_PROJECT_DIR/package.json`. That key is read by the three hooks, `eslint-rules/papers.mjs`,
-`lib/skill-trigger-cases.mjs` and `skills/paper-pipeline/scripts/consumer.mjs`; a separate
-config file would be read only by the CLI, so there is none.
+**One file, at the project root.** A hook cannot import code or walk up a tree looking for a
+config; it can only read a path it can spell, and `$CLAUDE_PROJECT_DIR/paperlint.json` is one. The
+same file is read by the CLI, the three hooks, `eslint-rules/papers.mjs`,
+`lib/skill-trigger-cases.mjs` and `skills/paper-pipeline/scripts/consumer.mjs`. It is optional:
+absent, every reader takes the same defaults.
 
 **Nothing runs at install time.** No postinstall script and no automatic TeX download. npm's rule
 is that _"the only valid use of install or preinstall scripts is for compilation"_; husky removed
@@ -110,9 +98,7 @@ resolve.
 nothing while guarding and says nothing while watching a directory that does not exist, so
 "installed" and "protecting you" look the same from outside. `doctor` prints the papers directory
 `paperlint lint` resolves and the one the hooks resolve, whether they match, whether the hooks are wired
-(once, twice, or not at all), and which external programs are missing. It also warns when the
-project still enables the old `research-paper-pipeline` plugin, because plugin plus settings would
-run every hook twice. A plugin installed at user scope is outside what it can read, and it says so.
+(once, twice, or not at all), and which external programs are missing.
 
 ### How comparable tools install
 
@@ -166,13 +152,12 @@ Neither `paperlint lint` nor any of the three hooks loads `@ast-grep` or `typesc
 
 ## Troubleshooting
 
-| symptom                                                      | cause and fix                                                                                                                                   |
-| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `init`: skills "nothing linked", or hooks that fail to start | the package is not installed in this project (`npx` ran a temporary copy). Run `npm i -D paperlint`, then `npx paperlint init` again            |
-| `init` stops: no `package.json`                              | run `npm init -y`, then `npx paperlint init` again                                                                                              |
-| `paperlint lint`: `nothing to lint`                          | no declaration was found. Run `npx paperlint init`, or pass the directory: `paperlint lint papers`                                              |
-| hooks fail with `Cannot find module` in a fresh clone        | the hook commands run files in `node_modules`: run `npm install`                                                                                |
-| `paperlint: not built`                                       | installed from git with `--ignore-scripts`, or a clone before building: run `npm run build` in the package                                      |
-| every hook runs twice                                        | the project still enables the old plugin. `init` and `doctor` print the uninstall command; also remove it from `enabledPlugins`                 |
-| a skill does not show up in Claude Code                      | its name was already taken in `.claude/skills/`. `init` names it and leaves it alone; rename or remove yours and run `npx paperlint init` again |
-| anything else                                                | `npx paperlint doctor` — it checks the setup and exits non-zero on anything miswired                                                            |
+| symptom                                                      | cause and fix                                                                                                                                                                          |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `init`: skills "nothing linked", or hooks that fail to start | the package is not installed in this project (`npx` ran a temporary copy). Run `npm i -D paperlint`, then `npx paperlint init` again                                                   |
+| `paperlint lint`: `no papers in papers/`                     | there is no paper where `papersDir` points. Create one with `npx paperlint new <name>`, or set `"papersDir"` in `paperlint.json`                                                       |
+| hooks fail with `Cannot find module` in a fresh clone        | the hook commands run files in `node_modules`: run `npm install`                                                                                                                       |
+| `paperlint: not built`                                       | installed from git with `--ignore-scripts`, or a clone before building: run `npm run build` in the package                                                                             |
+| a skill does not show up in Claude Code                      | its name was already taken in `.claude/skills/`. `init` names it and leaves it alone; rename or remove yours and run `npx paperlint init` again                                        |
+| **every** shell command is blocked in Claude Code            | `paper-edit-guard` cannot parse the root `paperlint.json` (merge-conflict markers, a typo), and refuses rather than guess. Fix it with a normal file edit — file edits are not blocked |
+| anything else                                                | `npx paperlint doctor` — it checks the setup and exits non-zero on anything miswired                                                                                                   |

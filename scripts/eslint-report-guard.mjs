@@ -26,7 +26,7 @@ import { readFileSync } from "node:fs";
 export function guard(
   reportPath,
   eslintRc,
-  { paths = ".", config = "eslint.config.mjs" } = {},
+  { paths = ".", config = "paperlint.json" } = {},
 ) {
   const lines = [];
   let res;

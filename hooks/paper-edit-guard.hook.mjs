@@ -43,13 +43,13 @@
  * this cannot — there is only one file.
  *
  * ── WHERE THE CONSUMER'S PAPERS ARE ─────────────────────────────────────────
- * One declaration, `"paperlint": { "papersDir": "…" }`, read the way a hook is able to
- * read anything at all: `needs: [provide("pkg", "cat \"${CLAUDE_PROJECT_DIR:-.}/package.json\"")]`.
+ * One declaration, `{ "papersDir": "…" }` in the root `paperlint.json` (optional; default
+ * `papers`), read the way a hook is able to read anything at all: a `provide` that cats the file.
  * The alternatives were measured and killed in `eslint-rules/papers.mjs` — an env var cannot be
  * read from a hook at all (no imports), and a symlinked root makes ESLint report zero files.
  *
  * 🔴 THE PATH IS ANCHORED, AND THAT IS NOT DECORATION. vigiles runs a provider "via execSync in
- * the hook's cwd", so a bare `cat package.json` resolves against whatever directory the hook
+ * the hook's cwd", so a bare `cat paperlint.json` resolves against whatever directory the hook
  * PROCESS happens to have — which is set by the consumer's wiring, a string this hook cannot
  * see and does not control. With the wiring this package documents (`cd "$CLAUDE_PROJECT_DIR"
  * && node …`) the bare read is correct; without it, any tool cwd outside the project root makes
@@ -63,8 +63,8 @@
  * when the variable is absent, so this is strictly wider than what it replaces.
  *
  * 🔴 AN UNREADABLE DECLARATION DENIES, IT DOES NOT DEFAULT. Measured 2026-09-12: when the
- * provider's command fails — no `package.json`, or one with conflict markers in it — `e.ctx.pkg`
- * arrives as the EMPTY STRING and the runtime says nothing. A `try { JSON.parse } catch { use the
+ * provider's command fails — an unreadable file, or one with conflict markers in it — `e.ctx.config`
+ * arrives as the EMPTY STRING (or text that is not JSON) and the runtime says nothing. A `try { JSON.parse } catch { use the
  * default }` therefore turns a broken declaration into a silently permissive gate: the prefix
  * quietly becomes `papers`, nothing under the real root matches, and every Bash write to a paper
  * is allowed by a gate that still looks installed and green. So parse failure is a `deny` that
@@ -107,19 +107,29 @@ import {
   deny,
 } from "vigiles/hook";
 
-/** The key every carrier of this package reads its consumer-specific settings from. */
+/** The tool's name — the package this hook resolves its scripts through. */
 export const CONFIG_KEY = "paperlint";
-/** The key's name before 2.0.0 — still read, a copy of `lib/paper-config.mjs`. */
-export const LEGACY_CONFIG_KEY = "research-paper-pipeline";
+/** The settings file at the project root. Optional: absent means every default. */
+export const CONFIG_FILE = "paperlint.json";
 /** The default. A consumer that declares nothing is assumed to keep papers in `papers/`. */
 export const DEFAULT_PAPERS_ROOT = "papers";
 /**
- * The field under CONFIG_KEY that names the papers directory, and its old name. A copy of the
+ * The field of the root `paperlint.json` that names the papers directory. These are copies of the
  * constants in `lib/paper-config.mjs` (a hook may import nothing but `vigiles/hook`);
  * `lib/paper-config.harness.mjs` checks that the copies match.
  */
 export const PAPERS_DIR_FIELD = "papersDir";
-export const OLD_PAPERS_DIR_FIELD = "papers";
+
+/**
+ * The provider: the root `paperlint.json`, or `{}` when the project has none — so an ABSENT file
+ * (every default) and an UNREADABLE one (the empty string the runtime gives a failed provider)
+ * stay two different inputs.
+ *
+ * 🔴 THE PATH IS ANCHORED TO THE PROJECT ROOT. vigiles runs a provider "via execSync in the hook's
+ * cwd", which is the consumer's wiring — a string this hook cannot see. A bare relative path reads
+ * from whatever directory the Bash tool last moved to.
+ */
+const READ_CONFIG = `f="\${CLAUDE_PROJECT_DIR:-.}/${CONFIG_FILE}"; if [ -e "$f" ]; then cat "$f"; else echo '{}'; fi`;
 
 /**
  * The declared papers root, or a `deny` explaining why there is not one.
@@ -140,51 +150,30 @@ export const OLD_PAPERS_DIR_FIELD = "papers";
  * doesn't restrict exporting outward, and the reverse direction, CLI → hook, is free.
  * Returns the root string, or a rejection object: the caller tells them apart by `typeof`.
  */
-export const papersRoot = (rawPkg) => {
-  let pkg;
+export const papersRoot = (rawConfig) => {
+  let config;
   try {
-    pkg = JSON.parse(rawPkg);
+    config = JSON.parse(rawConfig);
   } catch {
     return deny(
-      `${CONFIG_KEY}: this gate could not read the consumer's package.json, so it does not know ` +
+      `${CONFIG_KEY}: this gate could not read the project's ${CONFIG_FILE}, so it does not know ` +
         `where papers live and is refusing rather than guessing.\n` +
         `The declaration it needs is:\n` +
-        `  "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": "path/to/papers" }\n` +
-        `(no key at all is fine too — the default is "${DEFAULT_PAPERS_ROOT}").\n` +
-        `If package.json is mid-merge or otherwise broken, fix it with Edit or Write: file ` +
+        `  { "${PAPERS_DIR_FIELD}": "path/to/papers" }\n` +
+        `(no file at all is fine too — the default is "${DEFAULT_PAPERS_ROOT}").\n` +
+        `If ${CONFIG_FILE} is mid-merge or otherwise broken, fix it with Edit or Write: file ` +
         `tools do not pass through this gate, so that path out is always open.\n` +
         `This refuses rather than falling back on purpose. A gate whose prefix quietly became ` +
         `the default would allow every Bash write to the real papers root while still looking ` +
         `installed and green.`,
     );
   }
-  // The settings sit under CONFIG_KEY, or under its old name. Both, with different contents, is
-  // refused: the gate cannot know which one the author means.
-  const current = pkg?.[CONFIG_KEY];
-  const legacy = pkg?.[LEGACY_CONFIG_KEY];
-  if (
-    current !== undefined &&
-    legacy !== undefined &&
-    JSON.stringify(current) !== JSON.stringify(legacy)
-  )
-    return deny(
-      `package.json has both "${CONFIG_KEY}" and "${LEGACY_CONFIG_KEY}", and they differ. ` +
-        `Keep "${CONFIG_KEY}" and delete "${LEGACY_CONFIG_KEY}" (its old name). ` +
-        `Fix it with Edit or Write: file tools do not pass through this gate.`,
-    );
-  const settings = current ?? legacy;
-  // The old field name is refused, not read as a fallback: this gate would otherwise guard the
-  // default directory while the consumer believes it guards the one they declared.
-  if (settings && Object.hasOwn(settings, OLD_PAPERS_DIR_FIELD))
-    return deny(
-      `"${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "${CONFIG_KEY}"`,
-    );
-  const declared = settings?.[PAPERS_DIR_FIELD];
+  const declared = config?.[PAPERS_DIR_FIELD];
   const root = declared === undefined ? DEFAULT_PAPERS_ROOT : declared;
   if (typeof root !== "string" || root.length === 0)
     return deny(
       `${CONFIG_KEY}: "${PAPERS_DIR_FIELD}" must be a non-empty string, got ${JSON.stringify(root)}.\n` +
-        `Fix it in the consumer's package.json. This gate refuses while the value is unusable: ` +
+        `Fix it in the project's ${CONFIG_FILE}. This gate refuses while the value is unusable: ` +
         `an empty prefix matches nothing, so the gate would pass every paper write in silence.`,
     );
   // One trailing slash at most, whatever the consumer typed: `"papersDir": "docs/papers/"` reaches
@@ -425,9 +414,9 @@ const namesPaperSource = (raw, prefixes) =>
 export default experimental_defineHook({
   on: "PreToolUse",
   match: tools("Bash"),
-  needs: [provide("pkg", 'cat "${CLAUDE_PROJECT_DIR:-.}/package.json"')],
+  needs: [provide("config", READ_CONFIG)],
   decide: (e) => {
-    const root = papersRoot(e.ctx.pkg);
+    const root = papersRoot(e.ctx.config);
     // A `deny` object rather than a string means the root could not be established. Returning it
     // unchanged is deliberate: there is no root to continue with, so there is nothing to decide.
     if (typeof root !== "string") return root;

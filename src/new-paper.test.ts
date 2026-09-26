@@ -83,14 +83,6 @@ describe("paperlint new — paperlint.json", () => {
       extends: "paperlint:aisec",
     });
   });
-
-  it("is not added beside a pre-2.1.0 venue.json — `paperlint init` moves that one", () => {
-    const papers = join(tmp(), "papers");
-    mkdirSync(join(papers, "old"), { recursive: true });
-    writeFileSync(join(papers, "old", "venue.json"), '{"venue":"aisec"}');
-    const r = newPaper(papers, "old", "tex");
-    expect(r.ok && r.files.map((f) => f.file)).not.toContain("paperlint.json");
-  });
 });
 
 describe("paperlint lint — a paper with no venue preset chosen", () => {
@@ -98,11 +90,7 @@ describe("paperlint lint — a paper with no venue preset chosen", () => {
     const root = tmp();
     writeFileSync(
       join(root, "package.json"),
-      JSON.stringify({
-        name: "c",
-        private: true,
-        paperlint: { papersDir: "papers" },
-      }),
+      JSON.stringify({ name: "c", private: true }),
     );
     newPaper(join(root, "papers"), "demo", "tex");
     if (extendsValue !== null)

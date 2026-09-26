@@ -348,9 +348,8 @@ fi
 # and it does it WIDER: the block here skipped review mode, the rule judges the artifact always. Two
 # sources of truth about one fact drift apart — so the duplicate was deleted, not kept "just in case".
 #
-# 🔴 The condition under which this becomes a loss: the rule looks at papers that declared their venue
-# in `venue.json`. Should a paper appear with a build but without `venue.json`, nobody will check its
-# fonts. Today there are none (all three real papers are declared).
+# 🔴 The condition under which this becomes a loss: the rule looks at papers whose `paperlint.json`
+# names a venue preset. A paper with a build but no preset gets its fonts checked by nobody.
 
 # --- chktex, if installed: LaTeX-source typography the log cannot see ---
 # Adopted 2026-08-24 instead of writing our own. Measured first: out of the box it produced 28

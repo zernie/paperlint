@@ -112,15 +112,11 @@ try {
   // the scope, and that is the same contract for which `lint` has no "." default.
   writeFileSync(
     join(work, "package.json"),
-    JSON.stringify(
-      {
-        name: "consumer",
-        private: true,
-        paperlint: { [PAPERS_DIR_FIELD]: "papers" },
-      },
-      null,
-      2,
-    ),
+    JSON.stringify({ name: "consumer", private: true }, null, 2),
+  );
+  writeFileSync(
+    join(work, "paperlint.json"),
+    JSON.stringify({ [PAPERS_DIR_FIELD]: "papers" }, null, 2),
   );
 
   // ── NO TeX LIVE, NO TERMINAL: one line, and nothing is built ─────────────────────────────

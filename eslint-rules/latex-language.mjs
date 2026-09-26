@@ -64,7 +64,9 @@
  *     is not substituted). Anonymisation is normally done with exactly those, so coinage and
  *     jargon rules see less on an anonymised version than on a camera-ready.
  *  8. `% eslint {"rules":…}` inside `.tex` does NOT work: `applyInlineConfig` returns empty.
- *     `% eslint-disable-next-line <rule> -- reason` DOES work.
+ *     The disable directives DO work — `% eslint-disable-next-line <rule> -- reason`,
+ *     `% eslint-disable-line`, `% eslint-disable` / `% eslint-enable` — and since 3.0.0 also
+ *     inside a `filecontents` bibliography, whose `%` lines are made comment nodes below.
  *  9. `\section*{…}` is untested and does not occur in the corpus (measured: 0 occurrences).
  *     When it appears, `plain()` will glue all arguments together and the heading may come out
  *     as `*X`.
@@ -206,6 +208,32 @@ export function texToMdast(src) {
       position: { start: loc(0), end: loc(preEnd) },
     });
   }
+
+  // 🔴 A `filecontents` body is not LaTeX — it is the `.bib` the paper writes, usually in the
+  // preamble — so the parser returns it as one verbatim node and no comment nodes from it. A
+  // disable directive above a bibliography entry (`% eslint-disable-next-line bib/reachable-entry
+  // -- …`) was therefore invisible. Its `%` lines are made comments here, the only way
+  // `getInlineConfigNodes` sees them. BibTeX ignores text between entries, so the line is
+  // harmless to the build.
+  for (const n of ast.content)
+    if (
+      n.type === "verbatim" &&
+      /^filecontents\*?$/.test(String(n.env)) &&
+      P(n)
+    ) {
+      let at = P(n).start.offset;
+      for (const line of src.slice(at, P(n).end.offset).split("\n")) {
+        const text = line.replace(/\r$/, "");
+        const pct = /^\s*%/.test(text) ? text.indexOf("%") : -1;
+        if (pct >= 0)
+          children.push({
+            type: "html",
+            value: text.slice(pct + 1),
+            position: { start: loc(at + pct), end: loc(at + text.length) },
+          });
+        at += line.length + 1;
+      }
+    }
 
   (function walk(node) {
     if (Array.isArray(node)) return node.forEach((n) => walk(n));

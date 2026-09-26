@@ -25,7 +25,7 @@
 import { readdirSync, existsSync } from "node:fs";
 import { join, relative, basename, isAbsolute, sep } from "node:path";
 import type { StructureConfig, StructureFinding } from "./types.ts";
-import { PAPER_SETTINGS_FILE } from "../lib/paper-config.mjs";
+import { CONFIG_FILE } from "../lib/paper-config.mjs";
 
 /** The requirements after the consumer's config is laid over the defaults. */
 type Rules = Required<StructureConfig>;
@@ -38,7 +38,7 @@ type Rules = Required<StructureConfig>;
  * byte-compared by the `paper/stages` rule anyway.
  */
 export const STRUCTURE_DEFAULTS = {
-  markers: ["PIPELINE-STATUS.md", "paper.tex", "paper.md", PAPER_SETTINGS_FILE],
+  markers: ["PIPELINE-STATUS.md", "paper.tex", "paper.md", CONFIG_FILE],
   require: ["PIPELINE-STATUS.md"],
   requireOneOf: [["paper.tex", "paper.md"]],
   ignore: [],
@@ -122,7 +122,7 @@ export function checkStructure(
  */
 function whyMissingMatters(file: string, dirName: string): string {
   if (file === "PIPELINE-STATUS.md")
-    return `\`paper/stages\`, \`paper/source\` and \`paper/author-list\` read this file, so nothing \`${dirName}\` declares about its stages, sources or authors is checked`;
+    return `\`paper/stages\`, \`paper/source\` and \`paper/research-question\` read this file, so nothing \`${dirName}\` declares about its stages, sources or research question is checked`;
   return `declared as required by your \`structure\` configuration`;
 }
 

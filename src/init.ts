@@ -1,11 +1,10 @@
 /**
  * `paperlint init` — the whole install, in the terminal it was typed in.
  *
- * 🔴 WHAT THIS COMMAND USED TO DO, AND WHY THAT WAS A DEFECT RATHER THAN A SHORTFALL. It wrote
- * a separate config file with a GUESSED `"papers": "papers"` and never touched `package.json`. The three hooks
- * read the papers directory out of `package.json` and nothing else, so a consumer who followed the
- * documented install got a `paper-edit-guard` watching a directory that did not exist — and a guard
- * watching nothing is byte-identical, from outside, to a guard that is working (issue #33).
+ * 🔴 THE HOOKS, THE RULES AND THE CLI READ THE PAPERS DIRECTORY FROM ONE PLACE — the root
+ * `paperlint.json`, or its default `papers` when the file is absent. An install that wrote it
+ * anywhere else would give a `paper-edit-guard` watching a directory that does not exist — and a
+ * guard watching nothing is byte-identical, from outside, to a guard that is working (issue #33).
  *
  * The yardstick is how many actions happen between "I want this" and "it works": two, `npm i` and
  * this command (`docs/install.md`). Nothing is left to edit by hand.
@@ -13,9 +12,9 @@
  * ── THE DECISIONS, AND HOW EACH ONE IS MADE ─────────────────────────────────
  *   papers directory   MEASURED — `detectPapers` walks the repo for a directory whose CHILDREN
  *                      carry a paper marker. Several hits is the only case a human is asked about.
- *   declaration        WRITTEN into `package.json`, merged, never overwriting a value that is
- *                      already there. Prior art: husky's `init` edits the consumer's package.json
- *                      to add `prepare`. No second config file is created.
+ *   declaration        WRITTEN into the root `paperlint.json` only when it differs from the
+ *                      default `papers`; merged, never overwriting a value that is already there.
+ *                      A project on the defaults gets no config file at all.
  *   skills             LINKED — one relative symlink per shipped skill into `.claude/skills/`, the
  *                      only place Claude Code looks for project skills (`link-skills.ts`). An
  *                      entry of the same name that paperlint did not make is reported, never replaced.
@@ -27,7 +26,9 @@
  *                      Without a human: NO.
  *   first paper        OFFERED only to a human and only when the papers directory holds none;
  *                      without a human only `--paper <name>` creates one (`new-paper.ts`).
- *   external toolchain REPORTED, never installed. npm's own rule, quoted in husky's write-up:
+ *   TeX Live           OFFERED to a human, with its size in the question and NO as the default;
+ *                      without a human only named as the next step (`offerTexLive`).
+ *   other programs     REPORTED, never installed. npm's own rule, quoted in husky's write-up:
  *                      "The only valid use of install or preinstall scripts is for compilation."
  *
  * 🔴 NOTHING IS ASKED WITHOUT A HUMAN — stdin AND stdout a terminal, `CI` unset, no `--yes`
@@ -39,7 +40,6 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
-  unlinkSync,
   writeFileSync,
   // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 } from "node:fs";
@@ -50,11 +50,9 @@ import { doctor, detectPapers, found, PROGRAMS } from "./doctor.ts";
 import { PAPER_MARKERS, papersIn } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
 import { actionRef } from "./action-ref.ts";
-import { LEGACY_PACKAGE_NAME } from "../skills/paper-pipeline/scripts/consumer.mjs";
 import {
   FRESH_CLONE_NOTE,
   SETTINGS_PATH,
-  UNINSTALL_PLUGIN,
   shippedWiring,
   wireHooks,
   type Merge,
@@ -69,16 +67,10 @@ import {
 // The one source for the consumer's config key lives in the .mjs half of the package (the ESLint
 // rules and the skill scripts import it too); its types are in lib/paper-config.d.mts.
 import {
-  CONFIG_KEY,
+  CONFIG_FILE,
   DEFAULT_PAPERS_ROOT,
-  LEGACY_CONFIG_KEY,
-  LEGACY_PAPER_SETTINGS_FILE,
   PAPERS_DIR_FIELD,
-  PAPER_SETTINGS_FILE,
-  declaredSettings,
-  renamedFieldMessage,
 } from "../lib/paper-config.mjs";
-import { migrationOf } from "./paper-settings.ts";
 
 /** How the papers directory was arrived at. Printed, because a guess must not read as a fact. */
 export type PapersHow =
@@ -151,7 +143,8 @@ export interface PapersChoice {
 /**
  * One hit is used, several are asked about, none falls back to the documented default — and the
  * fallback is labelled a guess in the same breath, because the whole class of defect this command
- * exists to close is a guess that later reads as a measurement.
+ * exists to close is a guess that later reads as a measurement. Called only when no
+ * `paperlint.json` declares a directory yet (`declarePapers`).
  */
 export async function choosePapers(
   root: string,
@@ -184,88 +177,74 @@ export async function choosePapers(
 
 export type DeclarationResult =
   | {
+      /** The measured directory differs from the default and was written into `paperlint.json`. */
       readonly status: "written";
       readonly path: string;
       readonly papers: string;
-      /** The settings were under the old key and were moved to the new one. */
-      readonly migrated: boolean;
+      /** How the directory that was written was arrived at. */
+      readonly choice: PapersChoice;
+    }
+  | {
+      /** The measured directory IS the default, so nothing needs writing. */
+      readonly status: "default";
+      readonly path: string;
+      readonly papers: string;
+      readonly choice: PapersChoice;
     }
   | {
       readonly status: "kept";
       readonly path: string;
       readonly papers: unknown;
-      readonly migrated: boolean;
     }
   | {
       readonly status: "unparsable";
       readonly path: string;
       readonly reason: string;
-    }
-  | { readonly status: "absent"; readonly path: string }
-  | {
-      readonly status: "renamed";
-      readonly path: string;
-      readonly message: string;
     };
 
 /**
- * Writes ONE declaration, into the file every channel can already name.
- *
- * 🔴 A HOOK CANNOT IMPORT CODE AND CANNOT WALK UP A TREE LOOKING FOR A CONFIG. It can read a path
- * it is able to spell, and the only path it can always spell is the project's own `package.json`.
- * That asymmetry is the whole reason the declaration lives here rather than in a file of its own:
- * many readers against one (`docs/install.md`, "One declaration").
+ * Declares the papers directory in the root `paperlint.json` — the one file the hooks, the rules
+ * and the CLI all read — and only when it is not the default: a project whose papers are in
+ * `papers/` needs no config file.
  *
  * ⚠️ Merged, not rewritten, and never over a value the consumer set — an `init` that silently
  * replaces a setting is worse than an `init` that does nothing, because the consumer keeps
  * believing the old value.
  */
-export function declarePapers(root: string, papers: string): DeclarationResult {
-  const path = join(root, "package.json");
-  if (!existsSync(path)) return { status: "absent", path };
-  const raw = readFileSync(path, "utf8");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
-  let pkg: Record<string, any>;
-  try {
-    pkg = JSON.parse(raw);
-  } catch (e) {
-    return { status: "unparsable", path, reason: (e as Error).message };
+export async function declarePapers(
+  root: string,
+  choose: () => Promise<PapersChoice>,
+): Promise<DeclarationResult> {
+  const path = join(root, CONFIG_FILE);
+  const raw = existsSync(path) ? readFileSync(path, "utf8") : null;
+  let settings: Record<string, unknown> = {};
+  if (raw !== null) {
+    try {
+      settings = JSON.parse(raw) as Record<string, unknown>;
+    } catch (e) {
+      return { status: "unparsable", path, reason: (e as Error).message };
+    }
+    const existing = settings[PAPERS_DIR_FIELD];
+    if (existing !== undefined)
+      return { status: "kept", path, papers: existing };
   }
-  const found = declaredSettings(pkg);
-  if (found.conflict !== null)
-    return { status: "renamed", path, message: found.conflict };
-  const message = renamedFieldMessage(found.settings);
-  if (message) return { status: "renamed", path, message };
-  // Settings under the old key move to the new one, in the same position in the file.
-  const migrated = found.legacy;
-  if (migrated) pkg = renameKey(pkg, LEGACY_CONFIG_KEY, CONFIG_KEY);
-  const write = (): void =>
-    // Two-space indent and the file's own trailing newline: a declaration is not a licence to
-    // reformat somebody else's file, and a one-line diff is a diff a consumer will actually read.
-    writeFileSync(
-      path,
-      JSON.stringify(pkg, null, 2) + (raw.endsWith("\n") ? "\n" : ""),
-      "utf8",
-    );
-  const existing = pkg?.[CONFIG_KEY]?.[PAPERS_DIR_FIELD];
-  if (existing !== undefined) {
-    if (migrated) write();
-    return { status: "kept", path, papers: existing, migrated };
-  }
-  pkg[CONFIG_KEY] = { ...(pkg[CONFIG_KEY] ?? {}), [PAPERS_DIR_FIELD]: papers };
-  write();
-  return { status: "written", path, papers, migrated };
-}
-
-/** `obj` with `from` renamed to `to`, keeping the key's position. */
-function renameKey(
-  obj: Record<string, unknown>,
-  from: string,
-  to: string,
-): Record<string, unknown> {
-  return Object.fromEntries(
-    Object.entries(obj).map(([k, v]) => [k === from ? to : k, v]),
+  // 🔴 ONLY NOW is the directory measured (or asked about). A declared one is the answer, and a
+  // candidate measured beside it is a decision nobody takes.
+  const choice = await choose();
+  if (choice.papers === DEFAULT_PAPERS_ROOT)
+    return { status: "default", path, papers: choice.papers, choice };
+  // Two-space indent and the file's own trailing newline: a declaration is not a licence to
+  // reformat somebody else's file, and a one-line diff is a diff a consumer will actually read.
+  writeFileSync(
+    path,
+    JSON.stringify(
+      { ...settings, [PAPERS_DIR_FIELD]: choice.papers },
+      null,
+      2,
+    ) + (raw === null || raw.endsWith("\n") ? "\n" : ""),
+    "utf8",
   );
+  return { status: "written", path, papers: choice.papers, choice };
 }
 
 export const WORKFLOW_PATH = join(".github", "workflows", "papers.yml");
@@ -387,10 +366,18 @@ export function missingPrograms(
  * session at all. `init` now writes the same three hook commands into `.claude/settings.json`
  * itself (`hooks-settings.ts`), so there is nothing left to type anywhere but here.
  */
-export function nextSteps(papersDir: string = DEFAULT_PAPERS_ROOT): string {
+export function nextSteps(
+  papersDir: string = DEFAULT_PAPERS_ROOT,
+  { toolchain = false }: { toolchain?: boolean } = {},
+): string {
   return [
     ``,
     `next:  npx paperlint new <name>   # start a paper in ${papersDir}/ from the template`,
+    ...(toolchain
+      ? [
+          `       npx paperlint toolchain    # TeX Live for building (${TOOLCHAIN_COST})`,
+        ]
+      : []),
     `       npx paperlint lint         # runs every rule over ${papersDir}`,
     ``,
   ].join("\n");
@@ -503,18 +490,8 @@ export function reportHooks(
         : `  ✓ already wired in ${here(outcome.path)} — nothing changed`,
     );
     out.push(`      ${how}`);
-    if (outcome.status === "written" && outcome.replaced > 0)
-      out.push(
-        `      replaced ${String(outcome.replaced)} command(s) that pointed into ${LEGACY_PACKAGE_NAME}, the package's old name`,
-      );
     out.push(`      ${FRESH_CLONE_NOTE}`);
   }
-  if (outcome.plugin.length > 0)
-    out.push(
-      `  ⚠ this project also enables the plugin (${outcome.plugin.join(", ")}) — with it every hook runs twice.`,
-      `      the plugin no longer carries the hooks: ${UNINSTALL_PLUGIN}`,
-      `      and remove it from "enabledPlugins" in ${SETTINGS_PATH}`,
-    );
   return out;
 }
 
@@ -539,8 +516,7 @@ export function reportSkillLinks(
     return out;
   }
   const by = (s: string) => report.links.filter((l) => l.status === s);
-  const replaced = by("replaced");
-  const created = [...by("created"), ...replaced];
+  const created = by("created");
   const present = by("present");
   const skipped = by("foreign");
   // Only a read-only call leaves anything `missing`; counted anyway, so the sum always adds up.
@@ -554,10 +530,6 @@ export function reportSkillLinks(
   if (report.example !== null)
     out.push(
       `      ${join(here(report.home), "<name>")} → ${join(dirname(report.example), "<name>")}`,
-    );
-  if (replaced.length)
-    out.push(
-      `      ${String(replaced.length)} of them replaced a link into ${LEGACY_PACKAGE_NAME}, the package's old name`,
     );
   if (skipped.length) {
     out.push(
@@ -615,76 +587,14 @@ export interface InitOptions {
    * workflow is pinned to its release tag (`actionRef`); absent or unreleased, the placeholder.
    */
   version?: string;
+  /**
+   * TeX Live for `paperlint build`: whether paperlint's own tree is installed, and how to install
+   * it (`paperlint toolchain`). Passed in by the CLI; without them the step only names the command.
+   */
+  tex?: { readonly installed: () => boolean; readonly install?: () => number };
 }
 
 /** Reads one line from a real terminal. Kept out of `init` so the command stays testable. */
-/**
- * Move every paper's pre-2.1.0 `venue.json` to `paperlint.json`, the way the old package.json key
- * is moved, and in the same step `"venue": "aisec"` becomes `"extends": "paperlint:aisec"`: written
- * as `paperlint.json` when it is alone, removed when `paperlint.json` already says the same, and
- * REFUSED — both files left as they are — when they differ, since there is no way to know which
- * one the author means. `code` is 2 when anything was refused.
- */
-export function migratePaperSettings(papersAbs: string): {
-  readonly code: number;
-  readonly lines: readonly string[];
-} {
-  const lines: string[] = [];
-  let code = 0;
-  for (const dir of papersIn(papersAbs, [
-    ...PAPER_MARKERS,
-    LEGACY_PAPER_SETTINGS_FILE,
-  ])) {
-    const r = migrateOne(dir, (p) => relative(papersAbs, p));
-    if (r === null) continue;
-    lines.push(r.line);
-    if (r.refused) code = 2;
-  }
-  return {
-    code,
-    lines: lines.length ? ["", "paper settings", ...lines] : [],
-  };
-}
-
-/** One paper's move: done, and the line that says so — or null when there is nothing to move. */
-function migrateOne(
-  dir: string,
-  shown: (p: string) => string,
-): { readonly line: string; readonly refused: boolean } | null {
-  const [from, to] = [LEGACY_PAPER_SETTINGS_FILE, PAPER_SETTINGS_FILE].map(
-    (f) => join(dir, f),
-  ) as [string, string];
-  const read = (p: string) => (existsSync(p) ? readFileSync(p) : null);
-  const plan = migrationOf(read(from), read(to));
-  switch (plan.kind) {
-    case "none":
-      return null;
-    case "move":
-      writeFileSync(to, plan.text);
-      unlinkSync(from);
-      return {
-        line: `  ✓ ${shown(from)} → ${shown(to)} ("venue" is now "extends": "paperlint:<name>"; renamed in paperlint 2.1.0)`,
-        refused: false,
-      };
-    case "drop-legacy":
-      unlinkSync(from);
-      return {
-        line: `  ✓ ${shown(from)} removed — ${shown(to)} already says the same`,
-        refused: false,
-      };
-    case "conflict":
-      return {
-        line: `  ✗ ${shown(from)} and ${shown(to)} both exist and differ — nothing was moved. Keep ${PAPER_SETTINGS_FILE}, copy what you need from ${LEGACY_PAPER_SETTINGS_FILE} into it (its "venue": "x" is "extends": "paperlint:x"), delete ${LEGACY_PAPER_SETTINGS_FILE}, then run init again`,
-        refused: true,
-      };
-    case "broken":
-      return {
-        line: `  ✗ ${shown(from)} was not moved: ${plan.why}`,
-        refused: true,
-      };
-  }
-}
-
 export async function askOnTerminal(question: string): Promise<string> {
   // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
   const { createInterface } = await import("node:readline/promises");
@@ -695,6 +605,92 @@ export async function askOnTerminal(question: string): Promise<string> {
   } finally {
     rl.close();
   }
+}
+
+/** What `paperlint toolchain` costs, said wherever it is offered. */
+export const TOOLCHAIN_COST = "~270 MB, ~3 min, once";
+
+export type TexOutcome =
+  "installed" | "was-installed" | "failed" | "declined" | "not-asked";
+
+/**
+ * TeX Live, for `paperlint build` — `paperlint lint` needs none. OFFERED to a human with its cost
+ * in the question, default NO (270 MB is not a default anyone should get by pressing Enter);
+ * without a human only named as the next step. Nothing is ever installed unasked.
+ */
+export async function offerTexLive(
+  tex: InitOptions["tex"],
+  {
+    ask,
+    interactive,
+  }: { ask?: (q: string) => Promise<string>; interactive: boolean },
+): Promise<TexOutcome> {
+  if (tex?.installed()) return "was-installed";
+  if (!interactive || !ask || !tex?.install) return "not-asked";
+  const answer = (
+    await askOrDefault(
+      ask,
+      `  install TeX Live now, for \`paperlint build\`? (${TOOLCHAIN_COST}) [y/N] `,
+    )
+  )
+    ?.trim()
+    .toLowerCase();
+  if (answer !== "y" && answer !== "yes") return "declined";
+  return tex.install() === 0 ? "installed" : "failed";
+}
+
+/** What `init` says about TeX Live. */
+export function reportTexLive(t: TexOutcome, why: string): string[] {
+  const cmd = `npx paperlint toolchain   # ${TOOLCHAIN_COST}`;
+  if (t === "was-installed") return [`  ✓ paperlint's TeX Live is installed`];
+  if (t === "installed") return [`  ✓ installed`];
+  if (t === "failed")
+    return [
+      `  ✗ the install failed — see above. Run it again:`,
+      `      ${cmd}`,
+    ];
+  return [
+    t === "declined"
+      ? `  · declined — nothing installed. When you want to build:`
+      : `  · not installed — ${why}, so nothing was asked. To build, run once:`,
+    `      ${cmd}`,
+  ];
+}
+
+/** The "papers directory" section of init's report: how the directory was arrived at. */
+function papersLines(decl: DeclarationResult, why: string): string[] {
+  const out = [``, `papers directory`];
+  if (decl.status === "kept" && typeof decl.papers === "string")
+    return [
+      ...out,
+      `  ✓ ${decl.papers} — declared in ${CONFIG_FILE} → "${PAPERS_DIR_FIELD}"; nothing measured`,
+    ];
+  if (decl.status !== "written" && decl.status !== "default") return [];
+  const { choice } = decl;
+  if (choice.how === "detected")
+    return [
+      ...out,
+      `  ✓ ${choice.papers} — measured: its subdirectories carry ${PAPER_MARKERS.join(" / ")}`,
+    ];
+  if (choice.how === "chosen")
+    return [
+      ...out,
+      `  ✓ ${choice.papers} — you picked it out of ${String(choice.candidates.length)} candidates`,
+    ];
+  if (choice.how === "not-asked" || choice.how === "no-answer")
+    return [
+      ...out,
+      `  ✓ ${choice.papers} — ${String(choice.candidates.length)} candidates, ` +
+        (choice.how === "not-asked"
+          ? `${why} so nothing was asked`
+          : `no answer was given, so the first one was taken`),
+      `      the others: ${choice.candidates.slice(1).join(", ")} — set "${PAPERS_DIR_FIELD}" in ${CONFIG_FILE} if this is the wrong one`,
+    ];
+  return [
+    ...out,
+    `  · ${choice.papers} — the default. Nothing here looks like a papers directory yet;`,
+    `      \`npx paperlint new <name>\` creates the first paper there.`,
+  ];
 }
 
 // Documented in README.md#install-and-set-up — update it when this changes.
@@ -735,44 +731,21 @@ export async function init(
   log(``);
   log(`paperlint init — each decision below says HOW it was decided`);
 
-  // ── 1. where the papers are ───────────────────────────────────────────────────────────
-  const choice = await choosePapers(root, { ask, interactive });
+  // ── 1. where the papers are, and 2. the declaration, in paperlint.json when not the default ─
+  // The declaration is read FIRST: the directory is measured only when none is declared.
+  const decl = await declarePapers(root, () =>
+    choosePapers(root, { ask, interactive }),
+  );
+  for (const line of papersLines(decl, why)) log(line);
   log(``);
-  log(`papers directory`);
-  if (choice.how === "detected")
-    log(
-      `  ✓ ${choice.papers} — measured: its subdirectories carry ${PAPER_MARKERS.join(" / ")}`,
-    );
-  else if (choice.how === "chosen")
-    log(
-      `  ✓ ${choice.papers} — you picked it out of ${String(choice.candidates.length)} candidates`,
-    );
-  else if (choice.how === "not-asked" || choice.how === "no-answer") {
-    log(
-      `  ✓ ${choice.papers} — ${String(choice.candidates.length)} candidates, ` +
-        (choice.how === "not-asked"
-          ? `${why} so nothing was asked`
-          : `no answer was given, so the first one was taken`),
-    );
-    log(
-      `      the others: ${choice.candidates.slice(1).join(", ")} — change it in package.json if this is the wrong one`,
-    );
-  } else {
-    log(
-      `  ⚠ ${choice.papers} — A GUESS. Nothing here looks like a papers directory yet.`,
-    );
-    log(
-      `      Nothing on disk was measured, so this is the documented default and not a finding.`,
-    );
-  }
-
-  // ── 2. one declaration, in package.json ───────────────────────────────────────────────
-  log(``);
-  log(`declaration`);
-  const decl = declarePapers(root, choice.papers);
+  log(`settings`);
   if (decl.status === "written")
     log(
-      `  ✓ ${here(decl.path)} → "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": ${JSON.stringify(decl.papers)} }`,
+      `  ✓ ${here(decl.path)} → { "${PAPERS_DIR_FIELD}": ${JSON.stringify(decl.papers)} }`,
+    );
+  else if (decl.status === "default")
+    log(
+      `  ✓ nothing to write — "${decl.papers}" is the default, so no ${CONFIG_FILE} is needed`,
     );
   else if (decl.status === "kept") {
     if (typeof decl.papers !== "string") {
@@ -784,13 +757,7 @@ export async function init(
     log(
       `  ✓ ${here(decl.path)} already declares ${PAPERS_DIR_FIELD} = ${JSON.stringify(decl.papers)} — kept, nothing overwritten`,
     );
-  } else if (decl.status === "renamed") {
-    err(`  ✗ ${decl.message}`);
-    err(
-      `      nothing was written. Fix it in ${here(decl.path)}, then run init again.`,
-    );
-    return 2;
-  } else if (decl.status === "unparsable") {
+  } else {
     err(`  ✗ ${here(decl.path)} is not valid JSON: ${decl.reason}`);
     err(
       `      nothing was written. The hooks read their papers directory from this file and`,
@@ -799,32 +766,11 @@ export async function init(
       `      refuse every Bash command while it cannot be parsed — fix the JSON first.`,
     );
     return 2;
-  } else {
-    err(
-      `  ✗ no package.json at ${here(root)} — there is nowhere to put the declaration.`,
-    );
-    err(
-      `      The hooks can only read a path they are able to name, and that path is`,
-    );
-    err(
-      `      package.json. Run \`npm init -y\` here, then \`npx paperlint init\` again.`,
-    );
-    return 2;
   }
-  if (decl.migrated)
-    log(
-      `  ✓ moved the settings from "${LEGACY_CONFIG_KEY}" (the old key) to "${CONFIG_KEY}"`,
-    );
-  log(
-    `      one declaration — the hooks, the rules and the CLI all read this one key`,
-  );
   // Every step below uses the DECLARED directory. A kept declaration outranks what init
   // measured or guessed: otherwise the first paper and the workflow would land in the
   // guessed directory while lint and the hooks keep reading the declared one.
-  const papersDir =
-    decl.status === "kept" ? (decl.papers as string) : choice.papers;
-  const moved = migratePaperSettings(resolve(root, papersDir));
-  for (const line of moved.lines) (moved.code ? err : log)(line);
+  const papersDir = decl.papers as string;
 
   // ── 3. the skills, linked where Claude Code looks for them ─────────────────────────────
   for (const line of reportSkillLinks(link(root), here)) log(line);
@@ -893,7 +839,13 @@ export async function init(
       `  · none yet${interactive ? "" : ` — ${why}, so nothing was asked`}. \`npx paperlint new <name>\` or \`--paper <name>\` creates one`,
     );
 
-  // ── 7. the toolchain is reported, never installed ─────────────────────────────────────
+  // ── 7. TeX Live — offered to a human with its cost, never installed unasked ─────────────
+  log(``);
+  log(`TeX Live (for \`paperlint build\`; \`paperlint lint\` needs none)`);
+  const texOutcome = await offerTexLive(opts.tex, { ask, interactive });
+  for (const line of reportTexLive(texOutcome, why)) log(line);
+
+  // ── 8. the other programs are reported, never installed ────────────────────────────────
   log(``);
   log(
     `external programs (the skills shell out to these; \`paperlint lint\` needs none of them)`,
@@ -921,9 +873,13 @@ export async function init(
       log(`        ${cmd}`);
   }
 
-  log(nextSteps(papersDir));
+  log(
+    nextSteps(papersDir, {
+      toolchain: texOutcome !== "was-installed" && texOutcome !== "installed",
+    }),
+  );
 
-  // ── 8. the install states its own condition ───────────────────────────────────────────
+  // ── 9. the install states its own condition ───────────────────────────────────────────
   log(`── paperlint doctor ${"─".repeat(56)}`);
   const cliPapers = resolveCliPapers ? resolveCliPapers(root) : papersDir;
   const code = doctor({ log, cwd: root, projectDir: root, run, cliPapers });
@@ -932,5 +888,5 @@ export async function init(
       `doctor exits ${String(code)} — the install is NOT finished. The lines marked ✗ above say what is\n` +
         `left; re-run \`npx paperlint doctor\` once you have done them.`,
     );
-  return paperCode || moved.code || code;
+  return paperCode || code;
 }

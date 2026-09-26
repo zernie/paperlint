@@ -173,7 +173,7 @@ describe("a paper that meets its venue", () => {
 });
 
 describe("a paper that names no venue", () => {
-  it("no paperlint.json (a paper from before 2.1.0): every rule is silent, even with no facts and no PDF", () => {
+  it("no paperlint.json: every rule is silent, even with no facts and no PDF", () => {
     expect(lint({ venue: undefined, facts: null, pdf: null })).toEqual([]);
   });
 
@@ -226,16 +226,6 @@ describe("pdf/profile — the declaration must resolve, or nothing is judged", (
     const fs = lint({ venue, facts: null, pdf: null });
     expect(ids(fs)).toEqual([`pdf/profile:${messageId}`]);
     expect(fs[0]?.message).toMatch(text);
-  });
-
-  it("🔴 a venue.json left from before 2.1.0 is not read — pdf/profile says to run `paperlint init`", () => {
-    const fs = lint({
-      facts: null,
-      pdf: null,
-      extra: { [`${PAPER}/venue.json`]: JSON.stringify(DECL) },
-    });
-    expect(ids(fs)).toEqual(["pdf/profile:legacySettings"]);
-    expect(fs[0]?.message).toMatch(/npx paperlint init/);
   });
 
   it("a profile that does not parse is named with the file", () => {
@@ -299,6 +289,25 @@ describe("pdf/profile — the kind", () => {
         facts: realm,
       }),
     ).toEqual([]);
+  });
+});
+
+describe("pdf/profile — a preset with no kinds", () => {
+  it("🔴 a preset with NO kinds (acm-sigconf) and no `kind`: nothing to pick, no finding", () => {
+    const fs = lint({
+      venue: { extends: "paperlint:acm-sigconf" },
+      facts: withFacts((f) => (f.body_pages = 99)),
+    });
+    expect(ids(fs).filter((id) => id.startsWith("pdf/profile"))).toEqual([]);
+  });
+
+  it("…but a `kind` named against a kindless preset is still an error that says it has none", () => {
+    const fs = lint({
+      venue: { extends: "paperlint:acm-sigconf", kind: "short" },
+    });
+    const profile = fs.filter((f) => f.rule === "pdf/profile");
+    expect(ids(profile)).toEqual(["pdf/profile:kindUnknown"]);
+    expect(profile[0]?.message).toMatch(/its kinds: \(none\)/);
   });
 });
 

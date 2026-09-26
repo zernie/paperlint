@@ -47,11 +47,7 @@ import {
   type PaperSettings,
   type SettingsProblem,
 } from "./paper-settings.ts";
-import {
-  LEGACY_PAPER_SETTINGS_FILE,
-  LEGACY_PAPER_SETTINGS_MESSAGE,
-  PAPER_SETTINGS_FILE,
-} from "../lib/paper-config.mjs";
+import { CONFIG_FILE } from "../lib/paper-config.mjs";
 
 /** The prefix of a shipped preset's spec. */
 export const SHIPPED_PREFIX = "paperlint:";
@@ -268,7 +264,7 @@ export type PaperPreset =
       readonly settings: PaperSettings;
       readonly preset: Preset;
     }
-  /** `paperlint.json` does not parse, or only a pre-2.1.0 `venue.json` is there. */
+  /** `paperlint.json` does not parse. */
   | { readonly kind: "settings-problem"; readonly problem: SettingsProblem }
   /** `extends` does not resolve. */
   | {
@@ -283,11 +279,7 @@ export function paperPreset(paperDir: string, deps: PresetDeps): PaperPreset {
   if (!read.ok) return { kind: "settings-problem", problem: read.error };
   const settings = read.value;
   if (settings?.extends == null) return { kind: "none", settings };
-  const r = resolvePreset(
-    settings.extends,
-    join(paperDir, PAPER_SETTINGS_FILE),
-    deps,
-  );
+  const r = resolvePreset(settings.extends, join(paperDir, CONFIG_FILE), deps);
   return r.ok
     ? { kind: "resolved", settings, preset: r.value }
     : { kind: "preset-problem", settings, problem: r.error };
@@ -299,9 +291,7 @@ export function paperPresetProblem(
   p: PaperPreset,
 ): string | null {
   if (p.kind === "preset-problem")
-    return `${join(paperDir, PAPER_SETTINGS_FILE)}: ${presetProblemText(p.problem)}`;
+    return `${join(paperDir, CONFIG_FILE)}: ${presetProblemText(p.problem)}`;
   if (p.kind !== "settings-problem") return null;
-  return p.problem.kind === "legacy"
-    ? `${join(paperDir, LEGACY_PAPER_SETTINGS_FILE)}: ${LEGACY_PAPER_SETTINGS_MESSAGE}`
-    : `${join(paperDir, PAPER_SETTINGS_FILE)}: ${p.problem.why}`;
+  return `${join(paperDir, CONFIG_FILE)}: ${p.problem.why}`;
 }

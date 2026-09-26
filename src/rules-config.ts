@@ -44,6 +44,7 @@ export type Parsed<T> =
   | { readonly ok: false; readonly error: string };
 
 const SEVERITIES: readonly unknown[] = ["off", "warn", "error", 0, 1, 2];
+
 const BLOCK_KEYS = new Set(["files", "ignores", "rules"]);
 
 const bad = <T>(error: string): Parsed<T> => ({ ok: false, error });
@@ -67,7 +68,7 @@ function parseEntry(v: unknown): RuleEntry | null {
 
 /**
  * A `rules` object — rule id → severity or `[severity, ...options]` — with only the rules paperlint
- * ships. Read from the package.json blocks and from a paper's `paperlint.json`.
+ * ships. Read from every `paperlint.json`, the root's and each paper's.
  *
  * @param where  the key path to name in messages, e.g. `package.json → "paperlint".rules[0].rules`
  */
@@ -108,17 +109,20 @@ const globsOf = (o: Record<string, unknown>) => ({
   ...(o["ignores"] ? { ignores: o["ignores"] as string[] } : {}),
 });
 
+const isRecord = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null && !Array.isArray(v);
+
 /** One element of the `rules` list. */
 function parseBlock(
   v: unknown,
   at: string,
   ctx: { shipped: ReadonlySet<string>; baseDir: string },
 ): Parsed<RuleBlock> {
-  if (typeof v !== "object" || v === null || Array.isArray(v))
+  if (!isRecord(v))
     return bad(
       `${at} must be an object like { "files": [...], "rules": {...} }`,
     );
-  const o = v as Record<string, unknown>;
+  const o = v;
   const extra = Object.keys(o).filter((k) => !BLOCK_KEYS.has(k));
   if (extra.length)
     return bad(
@@ -135,10 +139,12 @@ function parseBlock(
 }
 
 /**
- * The `rules` key → config blocks, or one error naming the key path.
+ * The `rules` key → config blocks, or one error naming the key path. Two shapes, at every level:
+ * `{ id: severity }` is one block over every paper file under `baseDir`; a list is ESLint blocks
+ * (`files`, `ignores`, `rules`), their globs relative to `baseDir`.
  *
  * @param raw      the value under `rules` (undefined when absent)
- * @param where    how the settings are named in messages, e.g. `package.json → "paperlint"`
+ * @param where    how the settings are named in messages, e.g. `paperlint.json`
  * @param shipped  the rule ids paperlint ships (`shippedRuleIds`)
  * @param baseDir  the directory of the file holding the settings
  */
@@ -149,13 +155,19 @@ export function parseRuleBlocks(
   baseDir: string,
 ): Parsed<readonly RuleBlock[]> {
   if (raw === undefined) return { ok: true, value: [] };
+  if (isRecord(raw)) {
+    const rules = parseRuleEntries(raw, `${where} → "rules"`, shipped);
+    return rules.ok
+      ? { ok: true, value: [{ basePath: baseDir, rules: rules.value }] }
+      : rules;
+  }
   if (!Array.isArray(raw))
     return bad(
-      `${where}.rules must be a list of blocks, like ESLint's flat config: [{ "files": [...], "rules": {...} }]`,
+      `${where} → "rules" must be { "<rule>": "<severity>" }, or a list of blocks like ESLint's flat config: [{ "files": [...], "rules": {...} }]`,
     );
   const out: RuleBlock[] = [];
   for (const [i, v] of raw.entries()) {
-    const b = parseBlock(v, `${where}.rules[${i}]`, { shipped, baseDir });
+    const b = parseBlock(v, `${where} → rules[${i}]`, { shipped, baseDir });
     if (!b.ok) return b;
     out.push(b.value);
   }

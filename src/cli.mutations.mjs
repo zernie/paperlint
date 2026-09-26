@@ -73,14 +73,15 @@ process.exit(
         edits: [[CLI, "  if (a.missingValue) {", "  if (false) {"]],
       },
       {
-        name: "scope gets a default again",
+        name: "no papers where the config points reads as a clean run",
         harness: HARNESS,
         expect:
-          "`lint` with NO path AND no config refuses and names BOTH ways out",
+          "`lint` with NO path, no config and no papers/ refuses and names BOTH ways out",
         disables:
-          'the "scope is named by the caller" contract. With a default, a user who never ' +
-          "thought about scope gets a green run over whatever happens to be lying in the directory",
-        edits: [[CLI, "if (paths.length === 0) {", "if (false) {"]],
+          "the guard that makes the `papers` default safe. Without it, a project whose papers " +
+          "live elsewhere gets a run over an empty or missing directory instead of the sentence " +
+          "naming both ways out",
+        edits: [[CLI, "    if (empty !== undefined) {", "    if (false) {"]],
       },
       {
         name: "the GUARD AGAINST A GREEN ZERO is removed",
@@ -103,26 +104,26 @@ process.exit(
         edits: [
           [
             CLI,
-            '    if (\n      fail?.messageTemplate === "file-not-found" ||\n      /No files matching/i.test(fail?.message ?? "")\n    )\n      results = [];\n    else throw e;',
+            "    if (isEmptySet(e)) results = [];\n    else throw e;",
             "    throw e;",
           ],
         ],
       },
       {
-        name: "the declaration stops reaching package.json again",
+        name: "the declaration stops reaching paperlint.json again",
         harness: HARNESS,
         expect:
-          "🔴 THE DECLARATION SHOWS UP IN package.json — the file the hooks read",
+          "🔴 THE DECLARATION SHOWS UP IN paperlint.json — the file the hooks read",
         disables:
           "the whole reason this command was rewritten (#33). A hook does not import code and " +
-          "cannot walk up the tree — it reads a path it is able to name, and that path is " +
-          "package.json. Without writing there, the install looks like it succeeded, while " +
-          "`paper-edit-guard` guards the default",
+          "cannot walk up the tree — it reads a path it is able to name, and that path is the " +
+          "root paperlint.json. Without writing there, the install looks like it succeeded, " +
+          "while `paper-edit-guard` guards the default",
         edits: [
           [
             INIT,
-            '    writeFileSync(\n      path,\n      JSON.stringify(pkg, null, 2) + (raw.endsWith("\\n") ? "\\n" : ""),\n      "utf8",\n    );',
-            "    void pkg;",
+            "  writeFileSync(\n    path,\n    JSON.stringify(\n      { ...settings, [PAPERS_DIR_FIELD]: choice.papers },",
+            "  (() => {})(\n    path,\n    JSON.stringify(\n      { ...settings, [PAPERS_DIR_FIELD]: choice.papers },",
           ],
         ],
       },
@@ -130,7 +131,7 @@ process.exit(
         name: "the papers directory is GUESSED again instead of measured",
         harness: HARNESS,
         expect:
-          "🔴 and its value is MEASURED, not taken from the `papers` default",
+          "and it says HOW it was measured — otherwise a guess reads as a fact",
         disables:
           "measuring instead of guessing. The declaration still gets WRITTEN — i.e. the failure " +
           "is one-sided and points toward a confident wrong answer: the file says `papers`, the " +
@@ -151,7 +152,13 @@ process.exit(
         disables:
           "the ban on silently replacing a consumer's setting. They keep trusting the old " +
           "value, because nobody told them it changed",
-        edits: [[INIT, "  if (existing !== undefined) {", "  if (false) {"]],
+        edits: [
+          [
+            INIT,
+            '    if (existing !== undefined)\n      return { status: "kept"',
+            '    if (false)\n      return { status: "kept"',
+          ],
+        ],
       },
       {
         name: "the default that was taken stops being named",
@@ -221,18 +228,18 @@ process.exit(
         ],
       },
       {
-        name: "a missing package.json stops being a failure",
+        name: "a paperlint.json is written for the default again",
         harness: HARNESS,
         expect:
-          "without package.json init FAILS and carries a remedy, not just a diagnosis",
+          "🔴 nothing to measure — the default is taken, and NO paperlint.json is written for it",
         disables:
-          "the loudness of a failure where there is NOWHERE to write. A silent zero here is an " +
-          "install that never happened and reported success",
+          "the rule that a project on the defaults needs no config file. Every init would leave " +
+          "a file restating the default, and a reader could no longer tell a choice from a default",
         edits: [
           [
             INIT,
-            "    err(\n      `      package.json. Run \\`npm init -y\\` here, then \\`npx paperlint init\\` again.`,\n    );\n    return 2;",
-            "    return 0;",
+            '  if (choice.papers === DEFAULT_PAPERS_ROOT)\n    return { status: "default"',
+            '  if (false)\n    return { status: "default"',
           ],
         ],
       },
@@ -270,35 +277,19 @@ process.exit(
         ],
       },
       {
-        name: "the utility stops reading package.json",
+        name: "the utility stops reading paperlint.json",
         harness: HARNESS,
         expect:
-          "🔴 THE UTILITY READS THE DECLARATION FROM package.json — otherwise `paperlint init` sets up something `paperlint lint` cannot see",
+          "🔴 THE UTILITY READS THE DECLARATION FROM paperlint.json — the file `paperlint init` writes and the hooks read",
         disables:
-          "the link between the install command and the check command. `init` writes one " +
-          "declaration into package.json, while `lint` looks for it somewhere else — right after " +
-          'install the run answers "nothing to lint" over a corpus that is right there',
+          "the link between the install command and the check command. `init` writes the " +
+          "declaration into paperlint.json, while `lint` would run on the default — right after " +
+          "install it reports on a directory the papers are not in",
         edits: [
           [
             CLI,
-            "    if (existsSync(pkg) && declaresSettings(pkg)) return pkg;",
-            "    if (false) return pkg;",
-          ],
-        ],
-      },
-      {
-        name: "consumer data stops reaching the rule",
-        harness: HARNESS,
-        expect: "the command from options gets through to the rule",
-        disables:
-          'the "mechanism in the package, data with the consumer" boundary: the ' +
-          "`authorListCommand` option is ignored, and the finding again fails to say WHAT to " +
-          "run the check with",
-        edits: [
-          [
-            CLI,
-            "opts.authorListCommand ? { command: opts.authorListCommand } : {},",
-            "{},",
+            "  const configPath = existsSync(found) ? found : null;",
+            "  const configPath = existsSync(found) ? null : null;",
           ],
         ],
       },

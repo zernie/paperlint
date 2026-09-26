@@ -39,10 +39,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  OLD_PAPERS_DIR_FIELD,
-  PAPERS_DIR_FIELD,
-} from "../lib/paper-config.mjs";
+import { PAPERS_DIR_FIELD } from "../lib/paper-config.mjs";
 
 const HOOKS = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HOOKS, "..");
@@ -61,13 +58,14 @@ const check = (label, cond) => {
 };
 
 /**
- * A throwaway consumer repository: a `package.json` with the given block, a papers tree, and
+ * A throwaway consumer repository: a root `paperlint.json` holding the given settings (none when
+ * `null`), a `package.json`, a papers tree, and
  * `node_modules` wired so both `vigiles/hook` and `require.resolve("<this package>/…")` work
  * from inside it.
  *
  * 🔴 IT IS A REAL DIRECTORY, NOT A MOCK, because what is under test is precisely the part a
  * mock would stub out: whether the hook can READ a declaration out of the consumer's
- * `package.json` via a provider command, and whether a path resolves once this package is
+ * `paperlint.json` via a provider command, and whether a path resolves once this package is
  * installed rather than adjacent. The `node_modules/<pkg>` entry is a symlink to this very
  * checkout, which is what `npm install` of a local package does anyway.
  */
@@ -77,12 +75,9 @@ const consumer = (block, { papers = "docs/papers", paper = "alpha" } = {}) => {
   mkdirSync(nm, { recursive: true });
   symlinkSync(join(ROOT, "node_modules", "vigiles"), join(nm, "vigiles"));
   symlinkSync(ROOT, join(nm, "paperlint"));
-  writeFileSync(
-    join(dir, "package.json"),
-    block === null
-      ? '{"name":"c","type":"module"}\n'
-      : JSON.stringify({ name: "c", type: "module", ...block }) + "\n",
-  );
+  writeFileSync(join(dir, "package.json"), '{"name":"c","type":"module"}\n');
+  if (block !== null)
+    writeFileSync(join(dir, "paperlint.json"), JSON.stringify(block) + "\n");
   if (papers !== null) {
     mkdirSync(join(dir, papers, paper), { recursive: true });
     writeFileSync(
@@ -183,9 +178,7 @@ try {
   // failure, so a diagnostic written at the END only ever prints when nothing else is broken,
   // which is when it diagnoses nothing.
   {
-    const dir = fixture({
-      paperlint: { [PAPERS_DIR_FIELD]: "docs/papers" },
-    });
+    const dir = fixture({ [PAPERS_DIR_FIELD]: "docs/papers" });
     for (const f of SHIPPED) {
       const name = f.replace(/\.hook\.mjs$/, "");
       const r = at(dir, name, STOP);
@@ -200,9 +193,7 @@ try {
   // III. paper-edit-guard — the blocking half and the allowing half
   // ═══════════════════════════════════════════════════════════════════════════
   {
-    const dir = fixture({
-      paperlint: { [PAPERS_DIR_FIELD]: "docs/papers" },
-    });
+    const dir = fixture({ [PAPERS_DIR_FIELD]: "docs/papers" });
     const P = "docs/papers/alpha/paper.md";
     const T = "docs/papers/alpha/paper.tex";
     const deny = (label, cmd) => {
@@ -279,7 +270,7 @@ try {
   // III-b. CWD DRIFT — every hook reads its manifest from the PROJECT ROOT
   // ═══════════════════════════════════════════════════════════════════════════
   // 🔴 Reported live 2026-09-16 by a consumer session: after a `cd` into a subdirectory with no
-  // `package.json`, `paper-edit-guard` denied EVERY Bash command — `pwd` included — and the wedge
+  // manifest, `paper-edit-guard` denied EVERY Bash command — `pwd` included — and the wedge
   // could not be escaped from the shell, because a PreToolUse hook fires before the command that
   // would fix it. The cause is one character of scope: the provider read `package.json`
   // relatively, and vigiles runs providers «via execSync in the hook's cwd».
@@ -289,15 +280,19 @@ try {
   // block anything — it turns them OFF. Silence is a nudge's success state, so a dead nudge and a
   // working one produce identical output. The lockout announces itself; this does not.
   {
-    const dir = fixture({
-      paperlint: { [PAPERS_DIR_FIELD]: "docs/papers" },
-    });
+    // A root the DEFAULT would miss: under drift, a provider that read relatively would fall back
+    // to `papers`, and a guard whose test is depth-agnostic still matches `docs/papers/…` — so
+    // only a root with no `papers` segment shows whether the declaration was actually read.
+    const dir = fixture(
+      { [PAPERS_DIR_FIELD]: "writing/drafts" },
+      { papers: "writing/drafts" },
+    );
 
     // paper-edit-guard: still GUARDS from a foreign cwd, rather than denying everything.
     const write = at(
       dir,
       "paper-edit-guard",
-      onBash(`sed -i s/a/b/ docs/papers/alpha/paper.tex`),
+      onBash(`sed -i s/a/b/ writing/drafts/alpha/paper.tex`),
     );
     check("drift · guard still blocks a paper write", write.exitCode === 2);
     const idle = adrift(dir, "paper-edit-guard", onBash("echo hi"));
@@ -308,7 +303,7 @@ try {
     const guarded = adrift(
       dir,
       "paper-edit-guard",
-      onBash(`sed -i s/a/b/ docs/papers/alpha/paper.tex`),
+      onBash(`sed -i s/a/b/ writing/drafts/alpha/paper.tex`),
     );
     check(
       "drift · guard STILL blocks the paper write it exists for",
@@ -319,13 +314,13 @@ try {
     const nudge = adrift(
       dir,
       "paper-skills-nudge",
-      onEdit(`${dir}/docs/papers/alpha/paper.tex`),
+      onEdit(`${dir}/writing/drafts/alpha/paper.tex`),
     );
     check("drift · the skills nudge still fires", injected(nudge).length > 0);
     const gates = adrift(
       dir,
       "paper-status-gates",
-      onEdit(`${dir}/docs/papers/alpha/PIPELINE-STATUS.md`),
+      onEdit(`${dir}/writing/drafts/alpha/PIPELINE-STATUS.md`),
     );
     check(
       `drift · the status-gates hook still runs (rc=${gates.exitCode})`,
@@ -357,7 +352,7 @@ try {
     // (a) a declared root is used AS DECLARED — and the default is NOT.
     {
       const dir = fixture(
-        { paperlint: { [PAPERS_DIR_FIELD]: DECLARED } },
+        { [PAPERS_DIR_FIELD]: DECLARED },
         { papers: DECLARED },
       );
       check(
@@ -373,36 +368,7 @@ try {
         at(dir, "paper-edit-guard", harmless).exitCode === 0,
       );
     }
-    // (a½) the key's OLD name (before 2.0.0) is still read — an upgrade must not unguard papers.
-    {
-      const dir = fixture(
-        { "research-paper-pipeline": { [PAPERS_DIR_FIELD]: DECLARED } },
-        { papers: DECLARED },
-      );
-      check(
-        "carrier: 🔴 a root declared under the OLD key is still guarded",
-        at(dir, "paper-edit-guard", declaredWrite).exitCode === 2 &&
-          at(dir, "paper-edit-guard", defaultWrite).exitCode === 0,
-      );
-    }
-    {
-      const dir = fixture(
-        {
-          paperlint: { [PAPERS_DIR_FIELD]: DECLARED },
-          "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "papers" },
-        },
-        { papers: DECLARED },
-      );
-      const r = at(dir, "paper-edit-guard", harmless);
-      check(
-        "carrier: both keys with different contents — the gate refuses and names both",
-        r.exitCode === 2 &&
-          /has both "paperlint" and "research-paper-pipeline"/.test(
-            r.stderr + r.stdout,
-          ),
-      );
-    }
-    // (b) no key at all → the documented default, and the converse of (a).
+    // (b) no paperlint.json at all → the documented default, and the converse of (a).
     {
       const dir = fixture(null, { papers: "papers" });
       check(
@@ -417,9 +383,7 @@ try {
     // (c) an explicit `null` is a KEYSTROKE, not an absence. `??` would read it as "undeclared"
     //     and silently substitute the default.
     {
-      const dir = fixture({
-        paperlint: { [PAPERS_DIR_FIELD]: null },
-      });
+      const dir = fixture({ [PAPERS_DIR_FIELD]: null });
       const r = at(dir, "paper-edit-guard", harmless);
       check(
         `carrier: "${PAPERS_DIR_FIELD}": null REFUSES (rc=${r.exitCode})`,
@@ -432,9 +396,7 @@ try {
     }
     // (d) the empty string — the value that makes every prefix test vacuously true.
     {
-      const dir = fixture({
-        paperlint: { [PAPERS_DIR_FIELD]: "" },
-      });
+      const dir = fixture({ [PAPERS_DIR_FIELD]: "" });
       const r = at(dir, "paper-edit-guard", harmless);
       check(
         `carrier: "${PAPERS_DIR_FIELD}": "" REFUSES (rc=${r.exitCode})`,
@@ -445,34 +407,19 @@ try {
         /matches nothing/.test(r.stderr),
       );
     }
-    // (d2) the field's OLD name is refused and named — never read as a fallback, never ignored
-    //      in favour of the default directory.
-    {
-      const dir = fixture({
-        paperlint: { [OLD_PAPERS_DIR_FIELD]: "writing/drafts" },
-      });
-      const r = at(dir, "paper-edit-guard", harmless);
-      check(
-        `carrier: the old field name "${OLD_PAPERS_DIR_FIELD}" REFUSES (rc=${r.exitCode})`,
-        r.exitCode === 2,
-      );
-      check(
-        "carrier: …and the refusal says what it was renamed to",
-        r.stderr.includes(
-          `"${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "paperlint"`,
-        ),
-      );
-    }
-    // (e) an unreadable package.json — the case that arrives by itself, mid-merge.
+    // (e) an unreadable paperlint.json — the case that arrives by itself, mid-merge.
     {
       const dir = fixture(
-        { paperlint: { [PAPERS_DIR_FIELD]: DECLARED } },
+        { [PAPERS_DIR_FIELD]: DECLARED },
         { papers: DECLARED },
       );
-      writeFileSync(join(dir, "package.json"), '{ "name": "c" <<<<<<< HEAD\n');
+      writeFileSync(
+        join(dir, "paperlint.json"),
+        '{ "papersDir": "x" <<<<<<< HEAD\n',
+      );
       const r = at(dir, "paper-edit-guard", harmless);
       check(
-        `carrier: an unparseable package.json REFUSES (rc=${r.exitCode})`,
+        `carrier: an unparseable paperlint.json REFUSES (rc=${r.exitCode})`,
         r.exitCode === 2,
       );
       check(
@@ -485,7 +432,7 @@ try {
     //     nothing. This defect made an earlier version of the guard a silent no-op.
     {
       const dir = fixture(
-        { paperlint: { [PAPERS_DIR_FIELD]: DECLARED + "/" } },
+        { [PAPERS_DIR_FIELD]: DECLARED + "/" },
         { papers: DECLARED },
       );
       check(
@@ -499,9 +446,7 @@ try {
   // V. paper-skills-nudge — it must LAND, not merely fire
   // ═══════════════════════════════════════════════════════════════════════════
   {
-    const dir = fixture({
-      paperlint: { [PAPERS_DIR_FIELD]: "docs/papers" },
-    });
+    const dir = fixture({ [PAPERS_DIR_FIELD]: "docs/papers" });
     const lands = (label, p) => {
       const r = at(dir, "paper-skills-nudge", onEdit(p));
       const ctx = injected(r);
@@ -532,7 +477,7 @@ try {
     // The advisory's own asymmetry: it goes quiet where the gate refuses.
     {
       const broken = fixture(
-        { paperlint: { [PAPERS_DIR_FIELD]: null } },
+        { [PAPERS_DIR_FIELD]: null },
         { papers: "papers" },
       );
       const r = at(
@@ -564,9 +509,7 @@ try {
   // VI. paper-status-gates — the tool runs, and only for a validated directory
   // ═══════════════════════════════════════════════════════════════════════════
   {
-    const dir = fixture({
-      paperlint: { [PAPERS_DIR_FIELD]: "docs/papers" },
-    });
+    const dir = fixture({ [PAPERS_DIR_FIELD]: "docs/papers" });
     const fires = (label, p) => {
       const r = at(dir, "paper-status-gates", onEdit(p));
       check(
@@ -600,7 +543,7 @@ try {
     // 🔴 The `??` discriminator again, for this hook's own copy of the carrier.
     {
       const broken = fixture(
-        { paperlint: { [PAPERS_DIR_FIELD]: null } },
+        { [PAPERS_DIR_FIELD]: null },
         { papers: "papers" },
       );
       check(
@@ -612,7 +555,7 @@ try {
     // The declared root is regex-ESCAPED: `.` in a root must not act as a wildcard.
     {
       const dotted = fixture(
-        { paperlint: { [PAPERS_DIR_FIELD]: "docs.v2/papers" } },
+        { [PAPERS_DIR_FIELD]: "docs.v2/papers" },
         { papers: "docs.v2/papers" },
       );
       check(
@@ -654,9 +597,7 @@ try {
   // VIII. paper-status-gates.sh — a TOOL, and it must refuse to be a hook
   // ═══════════════════════════════════════════════════════════════════════════
   {
-    const dir = fixture({
-      paperlint: { [PAPERS_DIR_FIELD]: "docs/papers" },
-    });
+    const dir = fixture({ [PAPERS_DIR_FIELD]: "docs/papers" });
     const sh = (args) =>
       runHook(
         `bash ${JSON.stringify(join(HOOKS, "paper-status-gates.sh"))} ${args}`,

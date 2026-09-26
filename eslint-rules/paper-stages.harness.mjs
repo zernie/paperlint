@@ -45,7 +45,7 @@ const since = () => {
 
 assert.deepEqual(
   Object.keys(stages.rules).sort(),
-  ["author-list", "source", "stages"],
+  ["source", "stages"],
   "rule set changed",
 );
 
@@ -235,122 +235,6 @@ console.log(
 
 console.log(
   `✓ ${String(since())} assertions passed — paper/source, frozen bytes instead of a sha`,
-);
-
-// ── `paper/author-list`: a shipped paper owes itself a run of the author-list cross-check ────
-//
-// This rule's subject is DIFFERENT from its two neighbors above: those check the declaration
-// against the bytes, this one checks the declaration against a record of a run. What they share
-// is exactly one input, the `stages` field, and that's why the rule lives in this module.
-{
-  const lintAuthors = (name, opts = {}) => {
-    const file = join(FIX, name, "PIPELINE-STATUS.md");
-    const msgs = linter.verify(
-      readFileSync(file, "utf-8"),
-      [
-        {
-          files: ["**/*.md"],
-          plugins: { markdown, paper: stages },
-          language: "markdown/gfm",
-          languageOptions: { frontmatter: "yaml" },
-          rules: { "paper/author-list": ["error", opts] },
-        },
-      ],
-      file,
-    );
-    assert.deepEqual(
-      msgs.filter((m) => m.fatal),
-      [],
-      `${name}: the rule threw`,
-    );
-    return msgs.map((m) => m.message);
-  };
-
-  // ── stays silent where it must ──
-  check(
-    "a run is recorded in the scorecard — silent",
-    lintAuthors("authors-ran").length === 0,
-  );
-  // A draft never asked anyone to read it, so it owes nothing. This is not a carve-out: the
-  // rule's subject is the DEBT of a shipped paper, and an unshipped one has no debt.
-  check(
-    "no stage declared at all — silent, a draft owes nothing",
-    lintAuthors("nothing").length === 0,
-  );
-  // An empty list is not "a stage exists": the record `stages: []` shows up on a paper that was
-  // set up but never submitted anywhere.
-  check(
-    "an empty stage list — silent",
-    linter.verify(
-      "---\nstages: []\n---\n# S\n",
-      [
-        {
-          files: ["**/*.md"],
-          plugins: { markdown, paper: stages },
-          language: "markdown/gfm",
-          languageOptions: { frontmatter: "yaml" },
-          rules: { "paper/author-list": "error" },
-        },
-      ],
-      join(FIX, "x", "PIPELINE-STATUS.md"),
-    ).length === 0,
-  );
-
-  // ── fires on a planted defect ──
-  const owed = lintAuthors("ok");
-  check("a stage is declared, no run — a finding", owed.length === 1);
-  // 🔴 The message must name the CLASS, not just the fact of a miss: otherwise the reader takes
-  // it for a duplicate of the citation-existence check and closes it as noise. The class is
-  // preprint authors under a declared conference, and it is invisible to a check that a
-  // citation merely resolves.
-  check(
-    "and it names the class the cross-check catches, not just the miss",
-    /PREPRINT/.test(owed[0]),
-  );
-
-  // ── the whole reason the move was made ──
-  // The predecessor derived the stage with a REGEX OVER THE SCORECARD'S PROSE. Remeasured
-  // 09-17: for `agenticdev-2026` the prose reads `submitted`, while the frontmatter reads
-  // `submitted, camera-ready`. Here the list comes from the field, so both stages land in the
-  // finding's text.
-  const two = lintAuthors("twice");
-  check(
-    "the stage list in the message comes from the FIELD and carries all of them",
-    two.length === 1 && /submitted\/submitted/.test(two[0]),
-  );
-
-  // ── consumer data stays with the consumer ──
-  // The predecessor hardcoded the path `.claude/skills/verify-citations/...` into the message
-  // text — the address of ONE repository inside a public package.
-  const withCmd = lintAuthors("ok", {
-    command: "node scripts/bib-authors.mjs <paper>",
-  });
-  check(
-    "the run command comes in as an option and lands in the message",
-    /scripts\/bib-authors\.mjs/.test(withCmd[0]),
-  );
-  check(
-    "and without the option the message does not invent a path",
-    !/bib-authors\.mjs/.test(owed[0]),
-  );
-  // The marker is also data: the package cannot know EXACTLY how a given consumer records a run.
-  check(
-    "the marker is configurable — with a different marker the same paper becomes a debtor",
-    lintAuthors("authors-ran", { marker: "no-such-marker" }).length === 1,
-  );
-
-  // ── parsing versus grep: the one case where they diverge ──
-  // 🔴 This assert is the proof of the move to a parser. All the fixtures above pass IDENTICALLY
-  // either way, because their marker sits in a cell. Here it sits in PROSE — "still need to run
-  // bib-authors", an intention, not a record — and grep would read it as evidence of a run. The
-  // evidence must sit in the scorecard.
-  check(
-    "a marker in prose OUTSIDE the table is not a record of a run",
-    lintAuthors("marker-in-prose").length === 1,
-  );
-}
-console.log(
-  `✓ ${String(since())} assertions passed — paper/author-list, the debt of a shipped paper`,
 );
 
 console.log(`✓ ${String(n)} assertions passed in total`);

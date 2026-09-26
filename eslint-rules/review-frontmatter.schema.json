@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:paperlint:review-frontmatter",
+  "title": "paperlint review frontmatter",
+  "description": "The YAML frontmatter of a review report under reviews/. A review with no `findings` key is not a findings record and is not checked for findings. A project adds its own required fields with the `reviewSchema` setting; its schema is applied together with this one.",
+  "type": "object",
+  "properties": {
+    "findings": {
+      "description": "What the review found, one record per finding.",
+      "type": "array",
+      "items": { "$ref": "#/definitions/finding" }
+    }
+  },
+  "definitions": {
+    "finding": {
+      "type": "object",
+      "required": ["id", "status"],
+      "properties": {
+        "id": {
+          "description": "How the review body refers to this finding.",
+          "type": ["integer", "string"]
+        },
+        "status": { "enum": ["open", "fixed", "wontfix"] },
+        "cause": {
+          "description": "What in the PIPELINE let this through: a defective skill, a missing skill, a hook, or a rule. Fix that, and the text edit falls out of running the fixed tool.",
+          "enum": ["skill-defect", "missing-skill", "hook", "rule"]
+        },
+        "title": { "type": "string" },
+        "note": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "if": { "properties": { "status": { "const": "open" } } },
+      "then": { "required": ["cause"] }
+    }
+  }
+}

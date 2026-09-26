@@ -6,10 +6,9 @@
  * ICSE/ASE/SIGSOFT/SIGPLAN proceedings; Sheridan for ACM SIG conferences such as CCS), IEEEtran
  * advises it for camera-ready work, and ACL, USENIX, AAAI and ICML say nothing. No standard format
  * checker (HotCRP's banal, aclpubcheck, IEEE PDF eXpress) tests it. So a consumer turns it on for
- * the papers whose venue asks, in package.json:
+ * the papers whose venue asks, in that paper's paperlint.json:
  *
- *   "paperlint": { "rules": [ { "files": ["papers/my-paper/**"],
- *     "rules": { "pdf/last-page-balance": ["error", { "tolerancePt": 120 }] } } ] }
+ *   { "rules": { "pdf/last-page-balance": ["error", { "tolerancePt": 120 }] } }
  *
  * (That is a line comment's worth of JSON in a block comment only because it has no asterisk
  * followed by a slash; see rule 8 of CLAUDE.md before editing it.)
@@ -36,7 +35,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join } from "node:path";
-import { PAPER_SETTINGS_FILE } from "../lib/paper-config.mjs";
+import { CONFIG_FILE } from "../lib/paper-config.mjs";
 
 /** The difference, in points, that two columns may end apart. See the harness for why 120. */
 export const DEFAULT_TOLERANCE_PT = 120;
@@ -143,9 +142,7 @@ function reportLine(file) {
  */
 function extendsPreset(paperDir) {
   try {
-    const s = JSON.parse(
-      readFileSync(join(paperDir, PAPER_SETTINGS_FILE), "utf8"),
-    );
+    const s = JSON.parse(readFileSync(join(paperDir, CONFIG_FILE), "utf8"));
     return typeof s?.extends === "string" && s.extends !== "";
   } catch {
     return false;

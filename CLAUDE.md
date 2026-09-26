@@ -193,7 +193,7 @@ the CONFIG is not declaring something. Check that before adding a verb.
 
 `npm i -D paperlint` brings all the code — rules, skills, hooks, scripts. `paperlint init`
 then does what only a command can, because it depends on the project it lands in: it finds the
-papers directory and declares it in `package.json`, links each skill into `.claude/skills/`, writes
+papers directory and declares it in a root `paperlint.json` when it is not the default `papers`, links each skill into `.claude/skills/`, writes
 the hook commands into `.claude/settings.json` (vigiles' `mergeRegistrations`, reading
 `plugin/hooks/hooks.json` as the one source), and offers a CI workflow pinned to the installed
 release's tag. `paperlint doctor` reads all of it back. Details: `docs/install.md`.
@@ -519,6 +519,11 @@ import none of the three are frozen in `scripts/harness-api.frozen.json`, which 
 `scripts/harness-api.test.ts` parses every harness's imports and holds both halves (#77). vitest
 exits 1 when no file matches, and it transpiles without type-checking, so `npm run check` runs
 `tsc -p tsconfig.test.json` as its own gate.
+
+**Local = the fast gates on what you touched; the full `npm run check` = CI.** Locally run vitest on
+the touched test files, `npx tsc --noEmit`, `npx eslint <touched files>` and `npm run fmt:check`, then
+push and read CI by job name. The repo is public, so CI is free, and it also runs the TeX e2e that
+cannot run locally; a local full run takes 10-15 min, most of it the mutation batteries (#52).
 
 ⚠️ **Not `vigiles test .`** — the `.` is read as a FILE, the runner dies with
 `ERR_UNSUPPORTED_DIR_IMPORT`, and it still exits 0. See the measured table below.

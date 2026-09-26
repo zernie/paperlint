@@ -17,7 +17,6 @@ const ROOT = resolve(HERE, "..", "..");
 const HARNESS = join(HERE, "real-markdown-paper.harness.mjs");
 const TYPO = join(ROOT, "eslint-rules", "paper-typography.mjs");
 const RQ = join(ROOT, "eslint-rules", "paper-research-question.mjs");
-const STAGES = join(ROOT, "eslint-rules", "paper-stages.mjs");
 
 process.exit(
   runMutations({
@@ -25,7 +24,7 @@ process.exit(
     runner: "node",
     cases: [
       {
-        name: "typography stops counting bare decimals — it goes quiet on the real article",
+        name: "leading-zero stops matching bare decimals — it goes quiet on the real article",
         harness: HARNESS,
         expect:
           "no rule that was recorded has vanished entirely without the baseline being updated",
@@ -36,20 +35,26 @@ process.exit(
         edits: [
           [
             TYPO,
-            "const bareDecimal = countBareDecimals(",
-            "const bareDecimal = 0 * countBareDecimals(",
+            "    for (const m of r.text.matchAll(BARE_DECIMAL)) {",
+            "    for (const m of r.text.matchAll(/(?!)/g)) {",
           ],
         ],
       },
       {
         name: "the § counter stops counting — the planted defect no longer moves its rule",
         harness: HARNESS,
-        expect: "a planted `§` grows paper/typography",
+        expect: "a planted `§` grows paper/section-word",
         disables:
           "the firing half in realistic surroundings. The rule's own fixture is three lines of " +
           "nothing but the defect, so a narrowed counter still fires there; only a document with " +
           "225 lines of competing text shows that it stopped",
-        edits: [[TYPO, "(body.match(/§/g) || []).length", "0"]],
+        edits: [
+          [
+            TYPO,
+            "    for (const m of r.text.matchAll(/§([ \\t]*)(\\d)?/g)) {",
+            "    for (const m of r.text.matchAll(/(?!)§/g)) {",
+          ],
+        ],
       },
       {
         name: "research-question stops comparing the declaration against the paper",
@@ -65,21 +70,6 @@ process.exit(
             RQ,
             "if (flatten(raw).includes(flatten(question))) return;",
             "return;",
-          ],
-        ],
-      },
-      {
-        name: "the author-list marker stops being read — recording the run changes nothing",
-        harness: HARNESS,
-        expect: "recording the author-list run silences paper/author-list",
-        disables:
-          "the only way a consumer can ever clear this finding. A rule that cannot be satisfied is " +
-          "worse than one that never fires: it trains the reader to ignore the whole report",
-        edits: [
-          [
-            STAGES,
-            'const marker = opts.marker ?? "bib-authors";',
-            'const marker = "\\u0000never-matches";',
           ],
         ],
       },

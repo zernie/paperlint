@@ -84,13 +84,13 @@ process.exit(
         edits: [
           [
             SRC,
-            '  unlinkSync,\n} from "node:fs";',
-            '  unlinkSync,\n  rmSync,\n} from "node:fs";',
+            '  symlinkSync,\n} from "node:fs";',
+            '  symlinkSync,\n  rmSync,\n} from "node:fs";',
           ],
           [
             SRC,
-            "  if (!write || !fixable) {",
-            '  if (!write || seen.status === "present") {',
+            '  if (!write || seen.status !== "missing")',
+            '  if (!write || seen.status === "present")',
           ],
           [
             SRC,
@@ -123,7 +123,11 @@ process.exit(
           "the difference between looking and changing. `paperlint doctor` would quietly repair the " +
           "state it is supposed to report, so the report can never show the gap",
         edits: [
-          [SRC, "  if (!write || !fixable) {", "  if (!fixable) {"],
+          [
+            SRC,
+            '  if (!write || seen.status !== "missing")',
+            '  if (seen.status !== "missing")',
+          ],
           [
             SRC,
             "  if (write && shipped.names.length > 0) {",

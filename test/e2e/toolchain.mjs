@@ -137,11 +137,7 @@ try {
   );
   writeFileSync(
     join(work, "package.json"),
-    JSON.stringify({
-      name: "consumer",
-      private: true,
-      paperlint: { papersDir: "papers" },
-    }),
+    JSON.stringify({ name: "consumer", private: true }),
   );
   // 🔴 banal is where `paperlint toolchain` above installed it — HOME is a temp dir here, so without
   // $PAPERLINT_BANAL_DIR the build looked in the wrong cache and wrote the facts with no geometry, while

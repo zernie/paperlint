@@ -1,12 +1,12 @@
 /**
- * `<paper>/paperlint.json` — the per-paper settings file (it was `venue.json` before 2.1.0): parsed
- * strictly, the old name never read, the move planned from bytes, and `rules` turned into an ESLint
- * block for that paper alone.
+ * `<paper>/paperlint.json` — the per-paper settings file: parsed strictly, merged over the root
+ * `paperlint.json`'s defaults, and `rules` turned into an ESLint block for that paper alone.
  */
 import { describe, expect, it } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
+import type { AbsolutePath } from "./domain/paths.ts";
+import { findProjectRoot } from "../lib/paper-config.mjs";
 import {
-  migrationOf,
   paperRules,
   parsePaperSettings,
   readPaperSettings,
@@ -16,9 +16,8 @@ const PAPER = "/work/papers/p";
 const SHIPPED = new Set([
   "pdf/last-page-balance",
   "pdf/profile",
-  "paper/typography",
+  "paper/section-word",
 ]);
-const enc = (s: string) => new TextEncoder().encode(s);
 
 describe("parsePaperSettings", () => {
   it("reads extends, kind, pdf and rules; every absent field is null", () => {
@@ -58,10 +57,10 @@ describe("parsePaperSettings — optional keys", () => {
     [
       "an unknown key (a typo is not silent)",
       { venu: "aisec" },
-      /unknown key "venu".*extends, kind, pdf, rules/,
+      /unknown key "venu" — known keys: papersDir, structure, rules, extends, kind, pdf/,
     ],
     [
-      "the pre-2.1.0 comment key `_`",
+      "a comment key other than `$comment`",
       { extends: "paperlint:aisec", _: "note" },
       /unknown key "_"/,
     ],
@@ -76,9 +75,14 @@ describe("parsePaperSettings — optional keys", () => {
       /"extends" must be a non-empty string/,
     ],
     [
-      "rules that are not an object",
-      { rules: ["pdf/profile"] },
+      "rules that are neither an object nor a list of blocks",
+      { rules: "pdf/profile" },
       /"rules" must be an object/,
+    ],
+    [
+      "🔴 papersDir — a project setting, refused in a paper's file",
+      { papersDir: "papers" },
+      /"papersDir" is a project setting — set it in the root paperlint\.json/,
     ],
     ["not an object at all", ["aisec"], /must be a JSON object/],
   ])("refuses %s", (_, json, why) => {
@@ -104,21 +108,6 @@ describe("readPaperSettings", () => {
     expect(r.ok && r.value?.extends).toBe("paperlint:aisec");
   });
 
-  it("🔴 a venue.json alone is NOT read — it is named, with the command that moves it", () => {
-    const files = memoryFiles({ [`${PAPER}/venue.json`]: '{"venue":"aisec"}' });
-    const r = readPaperSettings(files, PAPER);
-    expect(r).toEqual({ ok: false, error: { kind: "legacy" } });
-  });
-
-  it("paperlint.json wins when both exist — the leftover is doctor's to report", () => {
-    const files = memoryFiles({
-      [`${PAPER}/venue.json`]: '{"venue":"realm"}',
-      [`${PAPER}/paperlint.json`]: '{"extends":"paperlint:aisec"}',
-    });
-    const r = readPaperSettings(files, PAPER);
-    expect(r.ok && r.value?.extends).toBe("paperlint:aisec");
-  });
-
   it("not JSON: broken, with the parser's reason", () => {
     const files = memoryFiles({
       [`${PAPER}/paperlint.json`]: "{ extends: aisec",
@@ -129,51 +118,91 @@ describe("readPaperSettings", () => {
   });
 });
 
-describe("migrationOf — what `paperlint init` does with a paper's files", () => {
-  const plan = (legacy: string | null, current: string | null) =>
-    migrationOf(
-      legacy === null ? null : enc(legacy),
-      current === null ? null : enc(current),
-    );
+describe("readPaperSettings — the root paperlint.json's defaults, the paper's file over them", () => {
+  const ROOT = "/work";
+  const withFiles = (f: Record<string, string>) =>
+    memoryFiles({ [`${ROOT}/package.json`]: "{}", ...f });
+  const read = (f: Record<string, string>) => {
+    const r = readPaperSettings(withFiles(f), PAPER);
+    if (!r.ok) throw new Error(r.error.why);
+    return r.value;
+  };
 
-  it.each([
-    ["no venue.json", null, null, "none"],
-    [
-      "no venue.json, paperlint.json present",
-      null,
-      '{"extends":"paperlint:a"}',
-      "none",
-    ],
-    ["venue.json only", '{"venue":"a"}', null, "move"],
-    [
-      "both, and paperlint.json already says the same (spacing differs)",
-      '{"venue":"a","kind":"short"}',
-      '{ "extends": "paperlint:a", "kind": "short" }\n',
-      "drop-legacy",
-    ],
-    [
-      "both, different",
-      '{"venue":"a"}',
-      '{"extends":"paperlint:b"}',
-      "conflict",
-    ],
-    ["venue.json that is not JSON", "{", null, "broken"],
-    ["venue.json that is not an object", "[]", null, "broken"],
-  ])("%s → %s", (_, legacy, current, want) => {
-    expect(plan(legacy, current).kind).toBe(want);
+  it("no file at either level: null", () => {
+    expect(read({})).toBeNull();
   });
 
-  it('the move rewrites "venue": "x" to "extends": "paperlint:x", and "_" to "$comment"', () => {
-    const r = plan(
-      '{"venue":"aisec","kind":"research","pdf":"b.pdf","_":"note"}',
-      null,
-    );
-    expect(r.kind === "move" && JSON.parse(r.text)).toEqual({
-      extends: "paperlint:aisec",
-      kind: "research",
-      pdf: "b.pdf",
-      $comment: "note",
+  it("root only: its extends and kind are this paper's", () => {
+    expect(
+      read({
+        [`${ROOT}/paperlint.json`]:
+          '{"papersDir":"papers","extends":"paperlint:agenticdev","kind":"short"}',
+      }),
+    ).toEqual({
+      extends: "paperlint:agenticdev",
+      kind: "short",
+      pdf: null,
+      rules: null,
     });
+  });
+
+  it("paper only: its own values", () => {
+    expect(
+      read({ [`${PAPER}/paperlint.json`]: '{"extends":"paperlint:aisec"}' }),
+    ).toEqual({
+      extends: "paperlint:aisec",
+      kind: null,
+      pdf: null,
+      rules: null,
+    });
+  });
+
+  it("🔴 both: the paper's value wins, an absent one falls back to the root's, and `\"extends\": null` is absent", () => {
+    expect(
+      read({
+        [`${ROOT}/paperlint.json`]:
+          '{"extends":"paperlint:agenticdev","kind":"short","rules":{"pdf/profile":"off"}}',
+        [`${PAPER}/paperlint.json`]:
+          '{"extends":null,"kind":"research","rules":{"pdf/fonts":"off"}}',
+      }),
+    ).toEqual({
+      extends: "paperlint:agenticdev",
+      kind: "research",
+      pdf: null,
+      // The root's rules are the project's blocks (cli.ts), not this paper's.
+      rules: { "pdf/fonts": "off" },
+    });
+  });
+
+  it("papersDir in a paper's file: broken, naming the root file as its place", () => {
+    const r = readPaperSettings(
+      withFiles({ [`${PAPER}/paperlint.json`]: '{"papersDir":"x"}' }),
+      PAPER,
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error.why).toMatch(/project setting/);
+  });
+});
+
+describe("findProjectRoot — where the root paperlint.json is looked for", () => {
+  const ROOT = "/work";
+  const withFiles = (f: Record<string, string>) =>
+    memoryFiles({ [`${ROOT}/package.json`]: "{}", ...f });
+
+  it("🔴 from INSIDE a paper, the project root is not the paper: its paperlint.json sits beside paper.tex", () => {
+    const files = withFiles({
+      [`${PAPER}/paper.tex`]: "x",
+      [`${PAPER}/paperlint.json`]: '{"kind":"research"}',
+      [`${ROOT}/paperlint.json`]: '{"extends":"paperlint:aisec"}',
+    });
+    const isFile = (p: string) => files.isFile(p as AbsolutePath);
+    expect(findProjectRoot(PAPER, isFile)).toBe(ROOT);
+    // No root file anywhere: the package.json directory.
+    expect(findProjectRoot(PAPER, (p) => p === `${ROOT}/package.json`)).toBe(
+      ROOT,
+    );
+    // Neither: where the walk started.
+    expect(findProjectRoot(PAPER, () => false)).toBe(PAPER);
   });
 });
 

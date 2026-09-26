@@ -33,13 +33,7 @@
 
 import { record, ABSTENTIONS } from "./ledger.mjs";
 import { execFileSync } from "node:child_process";
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  readdirSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { resolve, join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { isMain, settingsOf } from "./consumer.mjs";
@@ -83,10 +77,7 @@ const ROOT = consumerRoot();
 // simply do not run: `needs()` below checks the directory on disk, so the absence reads as
 // ABSTAINED `input-missing`, not as a crash and not as a clean run.
 const CITE_CHECKS =
-  process.env.PIPELINE_CITE_CHECKS ||
-  settingsOf(JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")))
-    ?.citeChecks ||
-  null;
+  process.env.PIPELINE_CITE_CHECKS || settingsOf(ROOT)?.citeChecks || null;
 // The citation-checker directory exists and is declared. It sits in the `needs()` of every row
 // that calls it: without that a wrong or undeclared path would fail with a python stack trace, and
 // in `flags` mode a stack trace is counted line by line and goes into the ledger as a FINDING whose

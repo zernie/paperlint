@@ -26,11 +26,9 @@ description: Install the toolchain the texcount/* rules need, run ESLint, and re
 inputs:
   config:
     description: >-
-      Path to the `package.json` holding the `paperlint` settings. Optional: `paperlint lint` finds it by walking up from the working directory,
-      the way eslint and tsc find theirs, so most callers never set this. Pass it only when the
-      file is somewhere the walk cannot reach. ⚠️ Until 2026-09-18 this input took a path to an
-      ESLint FLAT CONFIG and defaulted to `eslint.config.mjs`; a caller still passing one will
-      fail loudly on the first run rather than lint against it.
+      Path to the project's root `paperlint.json`. Optional, and so is the file: `paperlint lint`
+      finds it by walking up from the working directory, the way eslint and tsc find theirs, so
+      most callers never set this. Pass it only when the file is somewhere the walk cannot reach.
     required: false
     default: ""
   paths:
@@ -135,4 +133,4 @@ runs:
         npx paperlint lint $PAPERLINT_PATHS ${PAPERLINT_CONFIG:+--config "$PAPERLINT_CONFIG"} \
           --max-warnings="$PAPERLINT_MAXWARN" --json > "$RUNNER_TEMP/paperlint-report.json" || RC=$?
         node "$GITHUB_ACTION_PATH/scripts/eslint-report-guard.mjs" \
-          "$RUNNER_TEMP/paperlint-report.json" "$RC" "$PAPERLINT_PATHS" "${PAPERLINT_CONFIG:-package.json}"
+          "$RUNNER_TEMP/paperlint-report.json" "$RC" "$PAPERLINT_PATHS" "${PAPERLINT_CONFIG:-paperlint.json}"

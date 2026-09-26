@@ -192,7 +192,7 @@ function bibTextFrom(target) {
  * Only three fields are needed (type, key, author, title, booktitle/journal), and a full
  * BibTeX grammar would be a second thing to maintain. Brace-depth counting is enough and
  * is exercised by the colocated test. */
-function parseBib(text) {
+export function parseBib(text) {
   const out = [];
   const re = /@(\w+)\s*\{\s*([^,\s]+)\s*,/g;
   let m;
@@ -289,7 +289,7 @@ export function claimsPublished(e) {
 
 /* ---------- DBLP ---------- */
 
-async function dblpHits(title) {
+export async function dblpHits(title) {
   const url = `${DBLP}/?q=${encodeURIComponent(title)}&format=json&h=6`;
   // Per-request timeout: a check that hangs is indistinguishable from a check that is dead,
   // and this one runs 25+ requests. Measured 2026-08-24: a single unbounded query stalled the
@@ -335,23 +335,31 @@ export function compare(ourSurnames, theirSurnames) {
   return { missing, extra, orderDiffers };
 }
 
-function die(msg) {
-  console.error(`bib-authors: ${msg}`);
-  process.exit(2);
-}
-
-async function main() {
-  const args = process.argv.slice(2).filter((a) => a !== "--json");
-  const asJson = process.argv.includes("--json");
-  if (!args[0])
-    die("usage: bib-authors.mjs <paper-dir|file.bib|file.tex> [--json]");
-
-  const { text, file, markdown } = bibTextFrom(args[0]);
-  const parsed = markdown ? parseMarkdownRefs(text) : parseBib(text);
-  const entries = parsed.filter((e) => e.title && e.author);
+/**
+ * The comparison over parsed entries, the network behind `lookup` (DBLP by default). Returns the
+ * buckets main() prints and `paperlint build` records: `findings` (the author list differs from
+ * the published version's), `matched` (compared, equal), `skipped` (not applicable), `unchecked`
+ * (the lookup FAILED — never a pass). An entry in none of them was a preprint entry, which may
+ * carry preprint metadata.
+ *
+ * @param lookup  title → DBLP-shaped hits; throws on a failed request (`retryable` for a 429)
+ * @param pause   ms → a promise; DBLP asks for gentle clients. A test passes `() => {}`.
+ */
+export async function checkAuthors(
+  parsed,
+  {
+    lookup = dblpHits,
+    pause = (ms) =>
+      new Promise((r) => {
+        setTimeout(r, ms);
+      }),
+  } = {},
+) {
   const findings = [];
   const skipped = []; // legitimately not applicable
   const unchecked = []; // we FAILED to check — must never be reported as a pass
+  const matched = []; // compared against the published record, and equal
+  const entries = parsed.filter((e) => e.title && e.author);
 
   for (const e of parsed.filter((x) => x.unparsed)) {
     skipped.push({
@@ -377,7 +385,7 @@ async function main() {
     let hits = null;
     for (let attempt = 0; attempt < 3 && hits === null; attempt++) {
       try {
-        hits = await dblpHits(e.title.replace(/[{}]/g, ""));
+        hits = await lookup(e.title.replace(/[{}]/g, ""));
       } catch (err) {
         const last = attempt === 2;
         if (last)
@@ -385,10 +393,7 @@ async function main() {
             key: e.key,
             why: `DBLP lookup failed: ${err.message}`,
           });
-        else
-          await new Promise((r) => {
-            setTimeout(r, 1500 * (attempt + 1));
-          });
+        else await pause(1500 * (attempt + 1));
       }
     }
     if (hits === null) continue;
@@ -408,7 +413,9 @@ async function main() {
     const ours = surnames(e.author);
     const theirs = surnames(rec.authors.join(" and "));
     const d = compare(ours, theirs);
-    if (d.missing.length || d.extra.length || d.orderDiffers) {
+    if (!(d.missing.length || d.extra.length || d.orderDiffers))
+      matched.push(e.key);
+    else {
       findings.push({
         key: e.key,
         venue: `${rec.venue} ${rec.year}`.trim(),
@@ -417,12 +424,27 @@ async function main() {
         ...d,
       });
     }
-    // A braced body rather than a concise arrow — see `no-promise-executor-return` (2026-08-28).
-    await new Promise((r) => {
-      setTimeout(r, 900);
-    }); // DBLP asks for gentle clients; 350 ms drew 429s
+    await pause(900); // DBLP asks for gentle clients; 350 ms drew 429s
   }
 
+  return { findings, skipped, unchecked, matched };
+}
+
+function die(msg) {
+  console.error(`bib-authors: ${msg}`);
+  process.exit(2);
+}
+
+async function main() {
+  const args = process.argv.slice(2).filter((a) => a !== "--json");
+  const asJson = process.argv.includes("--json");
+  if (!args[0])
+    die("usage: bib-authors.mjs <paper-dir|file.bib|file.tex> [--json]");
+
+  const { text, file, markdown } = bibTextFrom(args[0]);
+  const parsed = markdown ? parseMarkdownRefs(text) : parseBib(text);
+  const entries = parsed.filter((e) => e.title && e.author);
+  const { findings, skipped, unchecked } = await checkAuthors(parsed);
   if (asJson) {
     console.log(
       JSON.stringify(

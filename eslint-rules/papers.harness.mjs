@@ -47,9 +47,8 @@ const repoWith = (...dirs) => {
   for (const d of dirs) mkdirSync(join(base, d), { recursive: true });
   return base;
 };
-const declaring = (papers) => ({
-  paperlint: { [PAPERS_DIR_FIELD]: papers },
-});
+/** The root `paperlint.json`, parsed, declaring `papers`. */
+const declaring = (papers) => ({ [PAPERS_DIR_FIELD]: papers });
 
 // ═════════════════════════════════════════════════════════════════════════════
 // I. THE DEFAULT AND THE DECLARATION
@@ -57,10 +56,9 @@ const declaring = (papers) => ({
 {
   const repo = repoWith(DEFAULT_PAPERS_ROOT);
   for (const [label, pkg] of [
-    ["no package.json content at all", undefined],
-    ["an empty package.json", {}],
-    ["a package.json with an unrelated key", { name: "x", dependencies: {} }],
-    ["our key present but empty", { paperlint: {} }],
+    ["no paperlint.json at all", undefined],
+    ["an empty paperlint.json", {}],
+    ["a paperlint.json with only other keys", { kind: "short", rules: {} }],
   ])
     assert.equal(
       papersRoot(pkg, repo),
@@ -97,8 +95,8 @@ for (const declared of ["papers", "docs/papers", "writing/drafts", "a/b/c/d"]) {
       e.message.includes('"writing/drafts"') &&
       // names WHERE it looked,
       e.message.includes(repo) &&
-      // tells the reader it came from package.json rather than from a default,
-      /declared in package\.json/.test(e.message) &&
+      // tells the reader it came from paperlint.json rather than from a default,
+      /declared in paperlint\.json/.test(e.message) &&
       // and says WHY this is fatal instead of ignorable.
       /indistinguishable/.test(e.message),
     "a declared-but-missing root must throw, and the message must name the value, the place " +
@@ -113,9 +111,7 @@ for (const declared of ["papers", "docs/papers", "writing/drafts", "a/b/c/d"]) {
     (e) =>
       /does not exist/.test(e.message) &&
       /Nothing was declared/.test(e.message) &&
-      e.message.includes(
-        `"paperlint": { "${PAPERS_DIR_FIELD}": "path/to/papers" }`,
-      ),
+      e.message.includes(`{ "${PAPERS_DIR_FIELD}": "path/to/papers" }`),
     "a missing root reached by DEFAULTING must say so and show the declaration to add",
   );
 }

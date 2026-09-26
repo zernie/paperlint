@@ -27,33 +27,28 @@ case "$pdir_name" in
   *[!A-Za-z0-9._-]* | "" | . | ..) exit 0 ;;
 esac
 
-# ── WHERE THE CONSUMER'S THINGS ARE — TWO CARRIERS, READ, NOT ASSUMED ────────
-# This file used to hard-code both of these paths, which made it a tool with exactly one possible
-# user. Both now come from the one declaration every other carrier of this package reads:
+# ── WHERE THE CONSUMER'S THINGS ARE — READ, NOT ASSUMED ─────────────────────
+# Both paths come from the one declaration every other carrier of this package reads, the
+# project's root paperlint.json (optional — absent means every default):
 #
-#   "paperlint": { "papersDir": "docs/papers", "scripts": "tools/pipeline" }
+#   { "papersDir": "docs/papers", "scripts": "tools/pipeline" }
 #
-# (The key's name before 2.0.0, "research-paper-pipeline", is still read.)
-#
-# ⚠️ `node -p` RATHER THAN grep/sed ON package.json. A JSON value is not a line of text: it can
+# ⚠️ `node -p` RATHER THAN grep/sed ON THE FILE. A JSON value is not a line of text: it can
 # be quoted, escaped, or spread across lines, and a pattern that gets it right today gets it
 # wrong on the first reformat — silently, by producing a root that matches nothing. Node is
 # already a hard dependency of the checker this script runs, so there is no new requirement.
 ROOT_DIR="${CLAUDE_PROJECT_DIR:-.}"
 read_key() { # $1 = key, $2 = default
-  node -p "((p) => p['paperlint'] ?? p['research-paper-pipeline'] ?? {})(require('$ROOT_DIR/package.json'))['$1'] ?? '$2'" \
+  node -p "((c) => c['$1'] ?? '$2')((() => { try { return require('$ROOT_DIR/paperlint.json') } catch { return {} } })())" \
     2>/dev/null || echo "$2"
 }
-# The field used to be called "papers". Every other reader refuses the old name; this script only
-# gives advice, so it stays silent instead of falling back to the default directory.
-[ -z "$(read_key papers '')" ] || exit 0
 papers_root="$(read_key papersDir papers)"
 scripts_root="$(read_key scripts .claude/skills/paper-pipeline/scripts)"
 
 # 🔴 AN UNUSABLE ROOT EXITS, IT DOES NOT BUILD A PATH FROM IT. `node -p` prints `undefined` for a
 # key whose value is literally `null` (`?? ` only catches null/undefined AFTER the object lookup,
-# and a `null` value reaches the default — but a malformed package.json makes the whole command
-# fail and the `|| echo` hands back the default). Either way, an empty or nonsense value would
+# and a `null` value reaches the default — but a malformed paperlint.json reads as {} and
+# hands back the default). Either way, an empty or nonsense value would
 # produce `/<paper>/PIPELINE-STATUS.md` rooted at the filesystem, which does not exist, and this
 # script would exit 0 looking like a paper with nothing to report. Named rather than risked.
 case "$papers_root" in

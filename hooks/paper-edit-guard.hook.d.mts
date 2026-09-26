@@ -4,10 +4,9 @@
 // silently stopped covering the import once a formatter wrapped it across five.
 
 export declare const CONFIG_KEY: "paperlint";
-export declare const LEGACY_CONFIG_KEY: "research-paper-pipeline";
+export declare const CONFIG_FILE: "paperlint.json";
 export declare const DEFAULT_PAPERS_ROOT: "papers";
 export declare const PAPERS_DIR_FIELD: string;
-export declare const OLD_PAPERS_DIR_FIELD: string;
 
 /** The declared papers root, or the hook's rejection object; callers tell them apart by `typeof`. */
-export declare const papersRoot: (rawPkg: string) => string | object;
+export declare const papersRoot: (rawConfig: string) => string | object;

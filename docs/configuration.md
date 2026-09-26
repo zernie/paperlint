@@ -1,85 +1,74 @@
 # Configuration reference
 
-One key in your `package.json`, written by `paperlint init`. It holds the facts only your repository can
-supply — nothing in it is guessable by a package that has never seen your corpus.
-
-The README carries the minimal version of this. Everything below is the full surface, moved out on
-2026-09-19.
-
-```json
-{
-  "paperlint": {
-    "papersDir": "papers",
-    "authorListCommand": "node scripts/bib-authors.mjs",
-    "typographyDebt": { "papers/my-paper": { "sectionSign": 12 } },
-    "docFields": { "read": { "values": ["full", "abstract", "none"] } },
-    "reviewSince": "2026-08-23",
-    "minFindings": 3,
-    "causeMarker": "Cause:",
-    "rules": [
-      {
-        "files": ["papers/old-draft/**"],
-        "rules": { "paper/typography": "off" }
-      }
-    ]
-  }
-}
-```
-
-| key                 | required | what it is                                                                                |
-| ------------------- | -------- | ----------------------------------------------------------------------------------------- |
-| `papersDir`         | **yes**  | the directory your papers live in, relative to the file holding it. One string or a list. |
-| `structure`         | no       | which files every paper directory must contain — see below. `false` turns it off.         |
-| `authorListCommand` | no       | the command `paper/author-list` tells you to run when the check is missing                |
-| `typographyDebt`    | no       | per-paper allowance of existing typography findings, so the count can only go down        |
-| `docFields`         | no       | required front-matter fields in review files, and the values each may hold                |
-| `reviewSince`       | no       | only review files created on or after this date are checked                               |
-| `minFindings`       | no       | a review with fewer findings than this is not required to name causes                     |
-| `causeMarker`       | no       | the phrase a review uses to introduce a cause (default `Cause:`), in any language         |
-| `rules`             | no       | extra ESLint config blocks: turn optional rules on, change a rule's severity — see below  |
-
-The skill scripts read a few more keys of the same object — `ledger`, `scripts`, `timezone`,
-`contactEmail`, `citeChecks`, `triggerCases` — documented with the skills that use them.
-
-**Any other key is an error**, named in the message: `package.json → "paperlint":
-unknown key "typographyDept"`. A misspelt key would otherwise read as "not set", and the setting
-you meant would silently do nothing. The list of known keys is `SETTINGS_KEYS` in
-`lib/paper-config.mjs`.
-
-`papersDir` is required because the scope is the one thing that must not default: a default of `"."`
-turns every run into a green report over the whole checkout. `paperlint init` fills it by measuring —
-and when nothing on disk looks like a papers directory, it writes the documented default and says
-in the same breath that it is a guess.
-
-Until 2026-09-24 this field was called `papers`. The old name is not read as a fallback: `paperlint lint`,
-`paperlint init`, `paperlint doctor`, the ESLint helper and the edit guard all stop with
-`"papers" was renamed to "papersDir" in package.json → "paperlint"`. The two advisory
-hooks stay silent instead. The name is defined once, as `PAPERS_DIR_FIELD` in
-`lib/paper-config.mjs`.
-
-## Three levels of settings
-
-Each level is named after the tool, and each says something the others cannot:
+paperlint reads one file name at two levels, `paperlint.json`, with one schema. Both files are
+optional: a project with its papers in `papers/` and no special wishes needs neither.
 
 ```
-package.json                 "paperlint": { … }        the PROJECT: where the papers are, what every paper gets
+paperlint.json               the PROJECT (optional): where the papers are, the project's rules,
+                             defaults for every paper
 papers/
   my-paper/
     paper.tex
     PIPELINE-STATUS.md
-    paperlint.json           { "extends": … }          THIS PAPER: its venue preset, its kind, its own rules — `paperlint new` writes it
-venues/usenix-sec.jsonc      (optional, your own)      a VENUE PRESET: format, page limits, TeX packages, rules
-node_modules/paperlint/skills/submit-paper/references/venues/
-    acm-sigconf.jsonc  agenticdev.jsonc  aisec.jsonc  realm.jsonc      the shipped presets (paperlint:<name>)
+    paperlint.json           THIS PAPER: its venue preset, its kind, its own rules — `paperlint new` writes it
+venues/usenix-sec.jsonc      (optional, your own) a VENUE PRESET: format, page limits, TeX packages, rules
 ```
 
-`paperlint new` writes `<paper>/paperlint.json` from the template (`templates/paper/paperlint.json`,
-or your `<papers>/.template/paperlint.json` if you keep one), with `"extends": null` — no venue chosen
-yet — and a `$comment` saying what goes there. Until `extends` names a preset, `paperlint lint` gives
-that paper one warning, `pdf/measured`: "this paper names no venue preset yet … set "extends" in
-papers/my-paper/paperlint.json". A paper folder with no `paperlint.json` at all — one created before
-2.1.0 — gets no venue checks and no warning; `npx paperlint new <its name>` adds the file and
-changes nothing else.
+The shipped presets (`paperlint:<name>`) live in the package, under
+`skills/submit-paper/references/venues/`: `acm-sigconf`, `agenticdev`, `aisec`, `realm`.
+
+## The root `paperlint.json`
+
+It sits beside your `package.json`. Without it every setting has its default.
+
+```json
+{
+  "papersDir": "docs/papers",
+  "extends": "paperlint:acm-sigconf",
+  "rules": [
+    {
+      "files": ["docs/papers/old-draft/**"],
+      "rules": { "paper/section-word": "off" }
+    }
+  ]
+}
+```
+
+| key         | default    | what it is                                                                                 |
+| ----------- | ---------- | ------------------------------------------------------------------------------------------ |
+| `papersDir` | `"papers"` | the directory your papers live in, relative to this file. One string or a list. Root only. |
+| `structure` | see below  | which files every paper directory must contain. `false` turns it off. Root only.           |
+| `rules`     | none       | rule overrides — see [below](#the-rules-key-turning-rules-on-and-off)                      |
+| `extends`   | none       | the venue preset for every paper that names none                                           |
+| `kind`      | none       | the kind of paper for every paper that names none                                          |
+| `pdf`       | none       | where the built PDF is, relative to each paper, when it is not `paper.pdf`                 |
+| `$comment`  | —          | a note for humans (JSON Schema's comment keyword); ignored                                 |
+
+The skill scripts read a few more root keys — `ledger`, `scripts`, `timezone`, `contactEmail`,
+`citeChecks`, `triggerCases` — documented with the skills that use them.
+
+**`paperlint lint` finds the file** by walking up from the current directory to the nearest
+`paperlint.json` that is not a paper's own (a paper's sits beside its `paper.tex`); if there is
+none, the project root is the nearest directory with a `package.json`. It prints which file it
+found. `--config <file>` names another file of the same shape.
+
+**No papers where `papersDir` points is an error**, not a clean run:
+
+```
+no papers in papers/ — create one with `npx paperlint new <name>`, or set "papersDir" in paperlint.json if your papers live elsewhere
+```
+
+`paperlint init` writes the root file only when something differs from the defaults: it measures
+where your papers are, and writes `{ "papersDir": … }` only when that is not `papers`. A
+`papersDir` already declared is kept, and nothing is measured or asked.
+
+**Under `papersDir`, only the files paperlint's own rules are written for are linted:**
+`PIPELINE-STATUS.md`, `paper.md`, `draft.md`, `paper.tex`, `reviews/*.md` and `siblings/*.md`.
+Everything else — a paper's `repro/` scripts, vendored JavaScript, data files — is never handed to
+ESLint, so it cannot fail the run. A file you name on the command line that is not one of these is
+refused by name. `node_modules/`, `.git/` and `<papers>/.template/` are skipped.
+
+## A paper's `paperlint.json`
 
 ```json
 {
@@ -89,51 +78,70 @@ changes nothing else.
 }
 ```
 
+The same keys as the root file, minus the project-only ones (`papersDir`, `structure` and the
+skills' keys), which are refused here by name. **It merges over the root file:** its `extends`,
+`kind` and `pdf` win; one it does not set comes from the root.
+
 | key        | what it is                                                                                                                                                                                 |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `extends`  | the venue preset the built PDF is judged against: `paperlint:<name>` (shipped) or `./path` / `../path` (your own, relative to this file) — [`rules.md`](rules.md#checks-against-the-venue) |
 | `kind`     | the kind of paper (`short`, `research`, …) whose page limit applies                                                                                                                        |
 | `pdf`      | where the built PDF is, relative to the paper, when it is not `paper.pdf`                                                                                                                  |
-| `rules`    | rule id → severity, for this paper alone — the same entries as a `rules` block below                                                                                                       |
-| `$comment` | a note for humans (JSON Schema's comment keyword); ignored                                                                                                                                 |
+| `rules`    | rule overrides for this paper alone — `{ "<rule>": "<severity>" }`, or blocks with globs relative to the paper                                                                             |
+| `$comment` | a note for humans; ignored                                                                                                                                                                 |
 
-Any other key is an error naming the file and the key, as in `package.json`.
+`paperlint new` writes this file from the template (`templates/paper/paperlint.json`, or your
+`<papers>/.template/paperlint.json` if you keep one), with `"extends": null` — no venue chosen yet —
+and a `$comment` saying what goes there. Until `extends` names a preset (here or in the root file),
+`paperlint lint` gives that paper one warning, `pdf/measured`: "this paper names no venue preset
+yet … set "extends" in papers/my-paper/paperlint.json".
+
+**Any other key is an error**, in either file, named in the message: `paperlint.json: unknown key
+"papersdir"`. A misspelt key would otherwise read as "not set", and the setting you meant would
+silently do nothing. The key list is `SETTINGS_KEYS` in `lib/paper-config.mjs`.
 
 **Where a paper's rules come from, in order — a later one wins, rule by rule:** paperlint's own
 configuration → the preset chain's `rules`, from the root preset to the one the paper extends →
-the paper's own `rules` → the project's `rules` blocks in `package.json`. So a venue can turn a
-rule on for its papers, a paper can turn it off for itself, and the project can still override
-both. Only rules paperlint ships may be named, at every level.
+the root `paperlint.json`'s `rules` → the paper's own `rules`. So a venue can turn a rule on, the
+project can change that for every paper, and one paper can still change it for itself. Only rules
+paperlint ships may be named, at every level.
 
-**`paperlint.json` replaces `venue.json` (2.1.0); `npx paperlint init` moves it.** The old name is not
-read: a paper with only a `venue.json` gets a `pdf/profile` error and `paperlint doctor` names the
-file, both pointing at `init`. `init` writes the same settings as `paperlint.json` —
-`"venue": "aisec"` becomes `"extends": "paperlint:aisec"`, and the `"_"` some files used as a
-comment becomes `"$comment"` — then deletes `venue.json`. It removes a `venue.json` whose
-`paperlint.json` already says the same, and refuses, changing nothing, when both exist and differ.
+## Records in frontmatter, checked by shipped JSON Schemas
 
-## Why the key lives in `package.json`
+Two kinds of file under a paper keep a record in their YAML frontmatter, and paperlint validates
+each against a JSON Schema it ships (`eslint-rules/*.schema.json`):
 
-Because of a count: the `package.json` key has **five** readers — the three editor hooks, the
-ESLint helper, the skill scripts — and a separate config file had **one**, the CLI. A hook cannot
-import code and cannot walk up a tree looking for a config; it can read a path it is able to name,
-and the one path it can always name is the project's `package.json`.
+- **a review** under `reviews/` (`review/frontmatter`, error) — its findings, each with a status and,
+  when open, the pipeline cause that let it through:
 
-`paperlint lint` looks for it in the current directory and then upwards, the way eslint and tsc find
-theirs, and prints which file it found. `--config <file>` overrides the search; the file has the
-same shape, with the settings under the `paperlint` key.
+  ```yaml
+  ---
+  findings:
+    - id: 1
+      status: open # open | fixed | wontfix
+      cause: missing-skill # skill-defect | missing-skill | hook | rule — required when open
+  ---
+  ```
+
+  A review with no `findings` key is not checked for findings.
+
+- **a sibling card** under `siblings/` (`sibling/frontmatter`, warn; `siblings/README.md` is the index,
+  not a card) — how much of the competing paper was actually read: `read: full | abstract | none`. A
+  card without it, or without frontmatter, is a finding.
 
 ## The `rules` key: turning rules on and off
 
-`rules` is a list of blocks in ESLint's own
-[flat-config shape](https://eslint.org/docs/latest/use/configure/configuration-files), limited to
-the three keys that make sense in JSON — `files`, `ignores` and `rules`. paperlint appends the blocks
-**after** its own configuration, so, as in ESLint, a later block wins: a block can turn on a rule
-that is off by default, or change the severity of one that is on.
+`rules` takes two shapes, in either file:
 
-For ONE paper, the paper's own `paperlint.json` is simpler — no glob to get wrong
-([above](#three-levels-of-settings)). Use a block here for a rule across several papers, or to
-override what a paper says:
+- **`{ "<rule>": "<severity>" }`** — for every paper file in the file's scope: every paper in the
+  root file, that one paper in a paper's file. The simple form, with no glob to get wrong.
+- **a list of blocks** in ESLint's own
+  [flat-config shape](https://eslint.org/docs/latest/use/configure/configuration-files), limited to
+  the three keys that make sense in JSON — `files`, `ignores` and `rules` — for a rule across some
+  papers but not others.
+
+paperlint applies them **after** its own configuration, so, as in ESLint, a later one wins: they
+can turn on a rule that is off by default, or change the severity of one that is on.
 
 ```json
 "rules": [
@@ -143,20 +151,25 @@ override what a paper says:
   },
   {
     "files": ["papers/old-draft/**"],
-    "rules": { "paper/typography": "off" }
+    "rules": { "paper/section-word": "off" }
   }
 ]
 ```
 
-- **`files` and `ignores` are globs relative to the file that holds the settings** — the
-  directory of your `package.json` — exactly as ESLint resolves them relative to its config file,
+- **`files` and `ignores` are globs relative to the file that holds them** — the project root for
+  the root file, the paper for a paper's — exactly as ESLint resolves them relative to its config file,
   whatever directory you run `paperlint lint` from. A block without `files` applies to every linted file.
   A pattern ending in `/**` is the usual way to name one paper.
+- **Each rule reaches only the files it is written for.** A block with `"files": ["papers/**"]` and
+  `"rules": { "paper/source": "warn" }` turns `paper/source` on for every `PIPELINE-STATUS.md` under
+  `papers/`; `paper/section-word` in the same block lands on every `paper.md`, `draft.md` and
+  `paper.tex`. You do not need to know which file a rule reads: your `files` narrow where it runs,
+  never widen it. The [rule tables](rules.md) name each rule's file.
 - **A rule entry** is a severity (`"off"`, `"warn"`, `"error"`, or `0`/`1`/`2`), or a list whose
   first element is a severity and the rest are the rule's options.
 - **Only rules paperlint ships can be named** — the ones in [`docs/rules.md`](rules.md) and
   [`docs/optional-rules.md`](optional-rules.md). A rule id paperlint does not ship, a bad severity, a
-  `rules` that is not a list, or a block key other than `files`, `ignores` and `rules` stops the run
+  `rules` of another shape, or a block key other than `files`, `ignores` and `rules` stops the run
   with a message naming the exact key, before anything is linted.
 - **An optional rule you turned on must reach a paper.** If no linted `paper.tex` gets the rule —
   usually a `files` glob with a typo — `paperlint lint` fails and says so: a rule that never runs
@@ -271,7 +284,7 @@ having run on it, because a missing build read as nothing to do.
 
 ⚠️ **A `build.sh` or `repro/build-submission.sh` in the paper directory is IGNORED.** Earlier
 versions ran it; `paperlint build` now says one line — `build.sh is ignored — paperlint builds the paper
-itself` — and builds the paper itself. The `buildScripts` key is ignored the same way.
+itself` — and builds the paper itself.
 Why: [#59](https://github.com/zernie/paperlint/issues/59).
 
 ## Using the rules from an existing ESLint config
@@ -285,7 +298,9 @@ the exact config the CLI uses, so the shortest path is:
 // eslint.config.mjs
 import { buildConfig } from "paperlint/bin/paperlint.mjs";
 import { texLanguage } from "paperlint/eslint-rules/latex-language.mjs";
-export default buildConfig({ minFindings: 3 }, texLanguage);
+export default buildConfig({}, texLanguage);
 ```
 
-Then point the CI action's `config` input at that file.
+That config is the whole config for your papers: it starts with a global ignore of every file its
+rules are not written for, so `eslint .` with it lints only the paper files. Do not spread it into a
+config that also lints your JavaScript — that code would be ignored.

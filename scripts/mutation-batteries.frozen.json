@@ -5,9 +5,6 @@
     "action.mutations.mjs": {
       "cases": 6
     },
-    "eslint-rules/doc-fields.mutations.mjs": {
-      "cases": 6
-    },
     "eslint-rules/install-path-literals.mutations.mjs": {
       "cases": 3
     },
@@ -18,16 +15,10 @@
       "cases": 6
     },
     "eslint-rules/paper-stages.mutations.mjs": {
-      "cases": 9
-    },
-    "eslint-rules/paper-typography.mutations.mjs": {
-      "cases": 6
+      "cases": 4
     },
     "eslint-rules/papers.mutations.mjs": {
       "cases": 10
-    },
-    "eslint-rules/review-findings-cause.mutations.mjs": {
-      "cases": 4
     },
     "eslint-rules/temp-root-realpath.mutations.mjs": {
       "cases": 5
@@ -36,7 +27,7 @@
       "cases": 21
     },
     "fixtures/real-markdown-paper/real-markdown-paper.mutations.mjs": {
-      "cases": 4
+      "cases": 3
     },
     "hooks/hooks.mutations.mjs": {
       "cases": 23
@@ -96,13 +87,13 @@
       "cases": 11
     },
     "src/cli.mutations.mjs": {
-      "cases": 26
+      "cases": 25
     },
     "src/doctor.mutations.mjs": {
       "cases": 10
     },
     "src/hooks-settings.mutations.mjs": {
-      "cases": 7
+      "cases": 6
     },
     "src/link-skills.mutations.mjs": {
       "cases": 6

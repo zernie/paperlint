@@ -72,7 +72,9 @@ try {
   check(
     "and the message names the CONSEQUENCE, not a restatement of the condition",
     /is checked/.test(at("no-scorecard")[0].message) &&
-      /stages, sources or authors/.test(at("no-scorecard")[0].message),
+      /stages, sources or research question/.test(
+        at("no-scorecard")[0].message,
+      ),
   );
   check(
     "and the consequence names THIS directory by name",

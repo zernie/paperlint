@@ -5,29 +5,27 @@ import type { RuleBlock } from "./rules-config.ts";
  * in someone's head: a typo in a config key read as "field not set", not as an error.
  */
 
-/** The consumer's settings — the `paperlint` key of its `package.json`. */
+/**
+ * The project's settings — the root `paperlint.json`, optional. Every key is optional; the key list
+ * (and which keys a paper's own `paperlint.json` may also hold) is `SETTINGS_KEYS` in
+ * lib/paper-config.mjs.
+ */
 export interface PaperlintConfig {
-  /** 🔴 REQUIRED. The paper director(ies), relative to the config file ITSELF. The field name is
+  /** The paper director(ies), relative to the project root. Default `papers`. The field name is
    * `PAPERS_DIR_FIELD` in lib/paper-config.mjs; code reads it through `papersDirOf()` in cli.ts. */
   papersDir?: string | string[];
-  /** The command that prints the author list from .bib — each corpus has its own. */
-  authorListCommand?: string;
-  /** Per-paper typography debt: how many findings already exist; the number may only go down. */
-  typographyDebt?: Record<string, Record<string, number>>;
-  /** Frontmatter fields required for review notes, and the permitted values of each. */
-  docFields?: Record<string, { values: string[] }>;
-  /** Ignore review findings older than this date. */
-  reviewSince?: string;
-  /** How many findings a cold read must produce to count as a cold read. */
-  minFindings?: number;
-  /** The word with which review notes introduce the cause. */
-  causeMarker?: string;
   /** Which files a paper directory must carry; `false` turns the check off entirely. */
   structure?: StructureConfig | false;
-  /** REMOVED — `paperlint build` compiles the paper itself. Still typed so a leftover key can be named. */
-  buildScripts?: unknown;
   /** ESLint config blocks appended after paperlint's own — PARSED by `parseSettings` in cli.ts. */
   rules?: readonly RuleBlock[];
+  /** The default venue preset of every paper that names none (`src/paper-settings.ts`). */
+  extends?: string | null;
+  /** The default kind of paper. */
+  kind?: string;
+  /** The default path of the built PDF, relative to each paper. */
+  pdf?: string;
+  /** A note for humans; ignored. */
+  $comment?: unknown;
 }
 
 export interface StructureConfig {
@@ -47,6 +45,8 @@ export interface Args {
   paths: string[];
   config: string | null;
   json: boolean;
+  /** `--fix`: `lint` writes every fix a rule offers, then reports what is left. */
+  fix: boolean;
   all: boolean;
   dryRun: boolean;
   /** `--check`: `toolchain` reports what is missing and changes nothing. */
@@ -102,5 +102,17 @@ export interface BuildResult {
 
 /** The result of reading the config: either data, or the exit code the caller exits with. */
 export type ConfigRead =
-  | { opts: PaperlintConfig; configPath: string | null; code?: undefined }
-  | { code: number; opts?: undefined; configPath?: undefined };
+  | {
+      opts: PaperlintConfig;
+      /** The root `paperlint.json`, or null when the project has none. */
+      configPath: string | null;
+      /** The project root: `papersDir` and the `rules` globs are relative to it. */
+      root: string;
+      code?: undefined;
+    }
+  | {
+      code: number;
+      opts?: undefined;
+      configPath?: undefined;
+      root?: undefined;
+    };

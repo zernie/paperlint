@@ -4,7 +4,7 @@ description: Turn a venue's CFP dates into a scheduled, buffered plan on the Goo
 allowed-tools: [Read, Write, Grep, Glob, mcp__Google_Calendar__list_events, mcp__Google_Calendar__search_events, mcp__Google_Calendar__create_event, mcp__Google_Calendar__update_event, Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*), Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)]
 ---
 
-<!-- vigiles:sha256:9009b62e211cf421 compiled from skills/plan-paper-timeline/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:faf0c175f1a0c5e5 compiled from skills/plan-paper-timeline/SKILL.md.spec.ts -->
 
 # plan-paper-timeline — CFP dates → a buffered, filing-aware schedule
 
@@ -96,7 +96,7 @@ Use `mcp__Google_Calendar__create_event` for three anchors per paper. 🔴 **Rea
 assume it** — it is the `timezone` carrier, and it is the author's, not the pipeline's:
 
 ```
-node -p "((p) => p.paperlint ?? p['research-paper-pipeline'])(require('./package.json'))?.timezone ?? 'UTC'"
+node -p "(() => { try { return require('./paperlint.json')?.timezone } catch {} })() ?? 'UTC'"
 ```
 
 The example below shows the default, `UTC`; substitute whatever that command prints.

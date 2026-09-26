@@ -7,18 +7,17 @@
     "this file names the rule. That is not expressible on an eleven-line stub, where every line was",
     "written by someone who already knew which rule would read it.",
     "",
-    "Recorded 2026-09-19. Three of the five are about the scorecard being deliberately thin",
-    "(no pdf, no frozen source) rather than about the prose; paper/typography's single entry is",
-    "the 18 p-values of paperlint#44. They are real findings against IEEE / ISO 80000-1 style, which",
-    "requires the leading zero, in a blog post written for a general audience rather than for an",
-    "IEEE venue. All 18 sit in prose and table cells, so the count from the parsed tree keeps them.",
+    "Recorded 2026-09-19, re-recorded 2026-09-26 for 3.0.0. Three of the four rules are about the",
+    "scorecard being deliberately thin (no pdf, no frozen source) rather than about the prose.",
+    "paper/leading-zero reports each of the 18 p-values of paperlint#44 where it is (one finding per",
+    "occurrence since 3.0.0; before, paper/typography reported them as one count). They are real",
+    "findings against IEEE / ISO 80000-1 style, in a blog post written for a general audience.",
     "The count is expected to stay. A drop is never a failure here, only growth is."
   ],
   "findings": {
     "paper/stages": 2,
     "paper/source": 1,
-    "paper/author-list": 1,
     "paper/research-question": 1,
-    "paper/typography": 1
+    "paper/leading-zero": 18
   }
 }

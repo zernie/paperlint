@@ -24,7 +24,7 @@
  * One rule per reason, and the others are silent — so a paper gets one finding that says what to
  * do, not six that say the same thing:
  *
- *   no paperlint.json       every rule silent — a paper from before 2.1.0 (`paperlint new` writes one)
+ *   no paperlint.json       every rule silent (`paperlint new` writes one)
  *   extends null / absent   pdf/measured (warn) — no venue chosen yet; it names the file to set
  *   preset does not resolve pdf/profile (error) — a typo would otherwise switch every check off
  *   not built / no facts    pdf/measured (warn) — lint often runs before or without a build (the
@@ -48,10 +48,7 @@ import type { FlatGeometry } from "./domain/geometry.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import type { Files } from "./ports/files.ts";
-import {
-  LEGACY_PAPER_SETTINGS_MESSAGE,
-  PAPER_SETTINGS_FILE,
-} from "../lib/paper-config.mjs";
+import { CONFIG_FILE } from "../lib/paper-config.mjs";
 
 // ── the verdict's vocabulary ─────────────────────────────────────────────────────────
 
@@ -109,6 +106,11 @@ function kindOf(
   kind: string | null,
 ): Pick<Resolved, "kind" | "kindProblem"> {
   const known = [...format.kinds.keys()].join(", ") || "(none)";
+  // A preset with no kinds (`acm-sigconf`, a family a paper for an unprofiled venue extends
+  // directly) has no page limit to pick, so naming no kind is the only valid declaration. A kind
+  // named against it is still `kindUnknown`, whose "its kinds: (none)" says why.
+  if (kind === null && format.kinds.size === 0)
+    return { kind: null, kindProblem: null };
   if (kind === null)
     return {
       kind: null,
@@ -150,14 +152,11 @@ export function assessPaper(paperDir: string, deps: VenueRuleDeps): Assessment {
   if (p.kind === "none")
     return p.settings === null
       ? { kind: "no-venue" }
-      : { kind: "no-preset", file: join(paperDir, PAPER_SETTINGS_FILE) };
+      : { kind: "no-preset", file: join(paperDir, CONFIG_FILE) };
   if (p.kind === "settings-problem")
     return {
       kind: "unresolved",
-      finding:
-        p.problem.kind === "legacy"
-          ? finding("legacySettings")
-          : finding("settingsBroken", { why: p.problem.why }),
+      finding: finding("settingsBroken", { why: p.problem.why }),
     };
   if (p.kind === "preset-problem")
     return {
@@ -415,11 +414,10 @@ const META: Readonly<Record<VenueRuleName, Meta>> = {
         "the venue preset a paper's paperlint.json extends resolves, and the kind it names exists",
     },
     messages: {
-      settingsBroken: `${PAPER_SETTINGS_FILE} cannot be read: {{why}}`,
-      legacySettings: `this paper's venue checks do not run — ${LEGACY_PAPER_SETTINGS_MESSAGE}`,
+      settingsBroken: `${CONFIG_FILE} cannot be read: {{why}}`,
       preset:
         "{{why}} — so this paper's page limit, fonts and format are not checked. Fix `extends` in its paperlint.json, or turn pdf/profile off for this paper",
-      kindMissing: `${PAPER_SETTINGS_FILE} names no \`kind\`, so the page limit of \`{{venue}}\` is not checked; its kinds: {{known}}`,
+      kindMissing: `${CONFIG_FILE} names no \`kind\`, so the page limit of \`{{venue}}\` is not checked; its kinds: {{known}}`,
       kindUnknown:
         "`{{venue}}` has no kind `{{kind}}`, so the page limit is not checked; its kinds: {{known}}",
     },

@@ -29,7 +29,6 @@
  * any of five unrelated things do.
  */
 import assert from "node:assert/strict";
-import { PAPERS_DIR_FIELD } from "../../lib/paper-config.mjs";
 import { spawnSync } from "node:child_process";
 import {
   cpSync,
@@ -84,7 +83,6 @@ function findings(patch) {
           name: "c",
           version: "1.0.0",
           private: true,
-          paperlint: { [PAPERS_DIR_FIELD]: "papers" },
         },
         null,
         2,
@@ -178,7 +176,6 @@ check(
           name: "c",
           version: "1.0.0",
           private: true,
-          paperlint: { [PAPERS_DIR_FIELD]: "papers" },
         },
         null,
         2,
@@ -203,7 +200,7 @@ check(
   }
 }
 
-// A section sign appears in real prose → typography grows, and NOTHING ELSE does. The second half
+// A section sign appears in real prose → paper/section-word grows, and NOTHING ELSE does. The second half
 // of that sentence is the one that matters: a rule that reacts to an unrelated edit is reacting
 // to something other than what it claims.
 {
@@ -216,11 +213,11 @@ check(
     ),
   );
   check(
-    "a planted `§` grows paper/typography",
-    (f["paper/typography"] ?? 0) > (base["paper/typography"] ?? 0),
+    "a planted `§` grows paper/section-word",
+    (f["paper/section-word"] ?? 0) > (base["paper/section-word"] ?? 0),
   );
   const others = Object.keys({ ...base, ...f }).filter(
-    (k) => k !== "paper/typography",
+    (k) => k !== "paper/section-word",
   );
   check(
     "and moves no other rule — a rule that reacts to an unrelated edit is not reading what it claims",
@@ -228,27 +225,7 @@ check(
   );
 }
 
-// The author-list marker is recorded → that rule goes quiet, and only that one.
-{
-  const f = findings((dir) =>
-    edit(
-      dir,
-      "PIPELINE-STATUS.md",
-      "| cites | — |",
-      "| cites | bib-authors run 2026-07-07 |",
-    ),
-  );
-  check(
-    "recording the author-list run silences paper/author-list",
-    (f["paper/author-list"] ?? 0) === 0,
-  );
-  check(
-    "and leaves the stage findings exactly where they were",
-    (f["paper/stages"] ?? 0) === (base["paper/stages"] ?? 0),
-  );
-}
-
 console.log(
   `✓ ${String(n)} assertions passed — the real article: baseline of ` +
-    `${Object.keys(base).length} rule(s) held, 4 variations each moved its own rule`,
+    `${Object.keys(base).length} rule(s) held, 3 variations each moved its own rule`,
 );

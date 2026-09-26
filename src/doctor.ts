@@ -29,19 +29,11 @@ import { spawnSync } from "node:child_process";
 // the hook itself rather than at a shared module.
 import {
   papersRoot,
-  CONFIG_KEY,
   DEFAULT_PAPERS_ROOT,
   PAPERS_DIR_FIELD,
-  OLD_PAPERS_DIR_FIELD,
+  CONFIG_FILE,
 } from "../hooks/paper-edit-guard.hook.mjs";
-import {
-  LEGACY_CONFIG_KEY,
-  LEGACY_KEY_MESSAGE,
-  LEGACY_PAPER_SETTINGS_FILE,
-  PAPER_SETTINGS_FILE,
-  declaredSettings,
-} from "../lib/paper-config.mjs";
-import { PAPER_MARKERS, papersIn } from "./build.ts";
+import { PAPER_MARKERS } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
 import { doctorHooks } from "./hooks-settings.ts";
 
@@ -148,51 +140,44 @@ export function detectPapers(cwd: string, depth = 2): string[] {
 }
 
 /**
- * The declaration's verdict. The old field name and two differing keys are failures (every reader
- * refuses them); the old KEY is read and named; a missing declaration is a warning.
+ * The root `paperlint.json`'s verdict. Absent, or silent on `papersDir`, is fine: the default is
+ * `papers`, and the CLI and the hooks take it alike. Only a file that does not parse is a failure —
+ * the edit guard refuses every Bash command while it cannot read it.
  */
-function declarationVerdict(rawPkg: string): { lines: string[]; bad: number } {
-  const out: string[] = [];
-  const found = (() => {
-    try {
-      return declaredSettings(JSON.parse(rawPkg));
-    } catch {
-      return declaredSettings(undefined);
-    }
-  })();
-  if (found.conflict !== null)
-    return { lines: [`  ✗ ${found.conflict}`], bad: 1 };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
-  const settings = found.settings as Record<string, any> | undefined;
-  const key = found.legacy ? LEGACY_CONFIG_KEY : CONFIG_KEY;
-  const declared = settings?.[PAPERS_DIR_FIELD];
-  if (found.legacy) out.push(`  ⚠ ${LEGACY_KEY_MESSAGE}`);
-  // The old field name is a failure, not a warning: every reader refuses it.
-  if (settings && Object.hasOwn(settings, OLD_PAPERS_DIR_FIELD))
+function declarationVerdict(raw: string | null): {
+  lines: string[];
+  bad: number;
+} {
+  if (raw === null)
     return {
       lines: [
-        ...out,
-        `  ✗ "${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "${key}"`,
+        `  ✓ no ${CONFIG_FILE} — every setting has its default; papers are in "${DEFAULT_PAPERS_ROOT}"`,
+      ],
+      bad: 0,
+    };
+  let settings: unknown;
+  try {
+    settings = JSON.parse(raw);
+  } catch (e) {
+    return {
+      lines: [
+        `  ✗ ${CONFIG_FILE} is not valid JSON: ${(e as Error).message}`,
+        `      the edit guard refuses every Bash command until it parses — fix it with Edit or Write`,
       ],
       bad: 1,
     };
-  // 🔴 A MISSING DECLARATION IS A WARNING, NOT A REFUSAL, and that is a decision, not an
-  // oversight. Without it the hook takes the `papers` default; if the papers do live there, the
-  // install WORKS — just by coincidence, and it will break silently on the day the directory
-  // moves. Failing on a working install is not allowed here: for an `error`-level check a false
-  // positive costs more than a miss, because people do not fix it, they switch it off — together
-  // with the binary findings below, which the command was written for. A real breakage (the roots
-  // drifted apart, the directory does not exist) is caught where it is binary.
-  if (declared === undefined)
-    out.push(
-      `  ⚠ package.json has no "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": … } — the hooks fall back to "${DEFAULT_PAPERS_ROOT}"`,
-      `      it works only while your papers happen to live there; declare it and it keeps working`,
-    );
-  else
-    out.push(
-      `  ✓ package.json → ${key}.${PAPERS_DIR_FIELD} = ${JSON.stringify(declared)}`,
-    );
-  return { lines: out, bad: 0 };
+  }
+  const declared = (settings as Record<string, unknown> | null)?.[
+    PAPERS_DIR_FIELD
+  ];
+  return {
+    lines: [
+      declared === undefined
+        ? `  ✓ ${CONFIG_FILE} names no ${PAPERS_DIR_FIELD} — the default "${DEFAULT_PAPERS_ROOT}"`
+        : `  ✓ ${CONFIG_FILE} → ${PAPERS_DIR_FIELD} = ${JSON.stringify(declared)}`,
+    ],
+    bad: 0,
+  };
 }
 
 /**
@@ -235,28 +220,6 @@ function papersVerdict(
   return { lines: out, bad };
 }
 
-/**
- * A pre-2.1.0 `venue.json` left in a paper: it is no longer read, so that paper's venue checks
- * silently would not run if nothing named it. `init` moves it.
- */
-function leftoverSettingsVerdict(
-  root: string,
-  papersDir: string | null,
-): { lines: string[]; bad: number } {
-  if (papersDir === null) return { lines: [], bad: 0 };
-  const lines = papersIn(resolve(root, papersDir), [
-    ...PAPER_MARKERS,
-    LEGACY_PAPER_SETTINGS_FILE,
-  ])
-    .map((dir) => join(dir, LEGACY_PAPER_SETTINGS_FILE))
-    .filter((f) => existsSync(f))
-    .map(
-      (f) =>
-        `  ✗ ${relative(root, f)} is no longer read — paperlint 2.1.0 renamed it ${PAPER_SETTINGS_FILE}, so this paper's venue checks do not run. \`npx paperlint init\` moves it`,
-    );
-  return { lines, bad: lines.length };
-}
-
 export interface DoctorOptions {
   log?: typeof console.log;
   cwd?: string;
@@ -285,7 +248,7 @@ export function doctor({
   skillLinks = (r: string) => linkSkills(r, { write: false }),
 }: DoctorOptions = {}): number {
   const root = projectDir ?? cwd;
-  const pkgPath = join(root, "package.json");
+  const configPath = join(root, CONFIG_FILE);
   const out: string[] = [
     "",
     "paperlint doctor — what is wired, and what only looks wired",
@@ -293,22 +256,15 @@ export function doctor({
   ];
   let bad = 0;
 
-  out.push("declaration");
-  const rawPkg = existsSync(pkgPath) ? readFileSync(pkgPath, "utf8") : "";
-  if (!rawPkg) {
-    out.push(`  ✗ no package.json at ${root}`);
-    out.push(
-      `      the hooks read their papers directory from there and refuse without it`,
-    );
-    bad++;
-  } else {
-    const declaration = declarationVerdict(rawPkg);
-    out.push(...declaration.lines);
-    bad += declaration.bad;
-  }
+  out.push("settings");
+  const raw = existsSync(configPath) ? readFileSync(configPath, "utf8") : null;
+  const declaration = declarationVerdict(raw);
+  out.push(...declaration.lines);
+  bad += declaration.bad;
 
   out.push("", "papers directory");
-  const hookRoot = rawPkg ? papersRoot(rawPkg) : null;
+  // The hook is given what its provider gives it: the file, or `{}` when there is none.
+  const hookRoot = papersRoot(raw ?? "{}");
   const hookSays = typeof hookRoot === "string" ? hookRoot : null;
   out.push(
     `  the CLI will lint    ${cliPapers ?? "(nothing — no declaration found)"}`,
@@ -317,9 +273,8 @@ export function doctor({
     `  the hooks will guard ${hookSays ?? "(nothing — the guard refuses and says why on first use)"}`,
   );
   const verdict = papersVerdict(root, cliPapers, hookSays);
-  const leftover = leftoverSettingsVerdict(root, cliPapers ?? hookSays);
-  out.push(...verdict.lines, ...leftover.lines);
-  bad += verdict.bad + leftover.bad;
+  out.push(...verdict.lines);
+  bad += verdict.bad;
 
   // A skill that is not linked is ADVISORY, like a missing program: `paperlint lint`, the hooks and CI
   // work without it, and an entry of the same name that `init` refused to replace is the

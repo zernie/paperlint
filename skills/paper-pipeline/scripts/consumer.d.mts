@@ -29,5 +29,4 @@ export declare function installedSkills(dir: string): string[];
 export declare function packageVenuesDir(): string;
 export declare const SHIPPED_SKILLS_DIR: string;
 export declare const PACKAGE_NAME: "paperlint";
-export declare const LEGACY_PACKAGE_NAME: "research-paper-pipeline";
 export declare const BIN_FILE: "bin/paperlint.mjs";

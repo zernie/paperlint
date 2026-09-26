@@ -24,18 +24,16 @@ import {
   realpathSync,
   symlinkSync,
   readdirSync,
+  renameSync,
 } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  OLD_PAPERS_DIR_FIELD,
-  PAPERS_DIR_FIELD,
-} from "../lib/paper-config.mjs";
+import { PAPERS_DIR_FIELD, findProjectRoot } from "../lib/paper-config.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const { run, parseArgs, buildConfig, nextSteps, findConfig, toPaths, runHook } =
+const { run, parseArgs, buildConfig, nextSteps, toPaths, runHook } =
   await import(join(HERE, "cli.ts"));
 const { init, choosePapers, offerWorkflow, missingPrograms, WORKFLOW_PATH } =
   await import(join(HERE, "init.ts"));
@@ -133,19 +131,16 @@ check(
 
 // ── config is assembled, and consumer data gets through ────────────────────────────────────
 {
-  const cfg = buildConfig(
-    { typographyDebt: { x: { sectionSign: 3 } }, authorListCommand: "run-me" },
-    null,
-  );
+  const cfg = buildConfig({}, null);
   // Blocks with `files` — the global `ignores` block below is not a rule block.
   const ruleBlocks = (c) => c.filter((b) => Array.isArray(b.files));
   check(
     "without a LaTeX language the config still gets built — a corpus with no .tex is not a reason to refuse",
-    Array.isArray(cfg) && ruleBlocks(cfg).length === 3,
+    Array.isArray(cfg) && ruleBlocks(cfg).length === 4,
   );
   check(
-    "with a LaTeX language a fourth block is added",
-    ruleBlocks(buildConfig({}, {})).length === 4,
+    "with a LaTeX language a fifth block is added",
+    ruleBlocks(buildConfig({}, {})).length === 5,
   );
   check(
     "🔴 the project's paper TEMPLATE directory is ignored — flat config does not skip dot-directories",
@@ -156,12 +151,13 @@ check(
         b.ignores.includes("**/.template/"),
     ),
   );
-  const status = ruleBlocks(cfg).find((c) =>
-    c.files.some((f) => f.includes("PIPELINE-STATUS")),
+  const siblings = ruleBlocks(cfg).find((c) =>
+    c.files.some((f) => f.includes("siblings")),
   );
   check(
-    "the command from options gets through to the rule",
-    status.rules["paper/author-list"][1].command === "run-me",
+    "sibling cards are checked, and the siblings index is not a card",
+    siblings.rules["sibling/frontmatter"] === "warn" &&
+      siblings.ignores.some((g) => g.endsWith("siblings/README.md")),
   );
 }
 
@@ -175,12 +171,10 @@ check(
 }
 // ── ONE DECLARATION, READ BY THE SAME THING THAT WRITES IT ─────────────────────────────
 //
-// 🔴 WITHOUT THIS BLOCK THE REWRITTEN `init` WOULD PRODUCE A BROKEN INSTALL. It writes one
-// declaration — into `package.json`, the file the hooks know how to read (a hook does not
-// import code and cannot walk up the tree; it can only read a path it is able to name). The
-// utility, though, read ONLY its own config file, so right after `paperlint init` its `lint` would say
-// "nothing to lint". I.e. the install command and the check command would be looking at
-// different files — exactly the defect it exists to close, just from the other side.
+// 🔴 WITHOUT THIS BLOCK `init` COULD PRODUCE A BROKEN INSTALL. It writes one declaration, into
+// the root `paperlint.json` — the file the hooks read at `$CLAUDE_PROJECT_DIR`. If the utility
+// read another file, the install command and the check command would be looking at different
+// files — exactly the defect it exists to close, just from the other side.
 {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-carrier-")));
   try {
@@ -198,129 +192,47 @@ check(
     );
     writeFileSync(
       join(root, "package.json"),
-      JSON.stringify(
-        {
-          name: "c",
-          version: "1.0.0",
-          paperlint: { [PAPERS_DIR_FIELD]: "papers" },
-        },
-        null,
-        2,
-      ),
+      JSON.stringify({ name: "c", version: "1.0.0" }),
     );
 
+    // No paperlint.json at all: every default, papers in `papers/`, and no config line.
+    const bare = await cli(["lint"], root);
+    check(
+      "🔴 NO paperlint.json IS A VALID PROJECT — the default papers directory is linted",
+      bare.code === 0 && /no findings/.test(bare.out),
+    );
+    check(
+      "and no config line is printed when there is no file to name",
+      !/config:/.test(bare.out),
+    );
+
+    // An empty root file is a file with every default, not an unfinished one.
+    writeFileSync(join(root, "paperlint.json"), "{}");
+    const empty = await cli(["lint"], root);
+    check(
+      `an empty paperlint.json — no \`${PAPERS_DIR_FIELD}\`, so the default`,
+      empty.code === 0 && /no findings/.test(empty.out),
+    );
+
+    // 🔴 THE DECLARED DIRECTORY IS NOT THE DEFAULT: with `papers` declared, a CLI that ignored
+    // the file would lint the same tree and pass for the wrong reason.
+    renameSync(join(root, "papers"), join(root, "writing"));
+    writeFileSync(
+      join(root, "paperlint.json"),
+      JSON.stringify({ [PAPERS_DIR_FIELD]: "writing" }),
+    );
     const r = await cli(["lint"], root);
     check(
-      "🔴 THE UTILITY READS THE DECLARATION FROM package.json — otherwise `paperlint init` sets up something `paperlint lint` cannot see",
+      "🔴 THE UTILITY READS THE DECLARATION FROM paperlint.json — the file `paperlint init` writes and the hooks read",
       r.code === 0 && /no findings/.test(r.out),
     );
     check(
       "and NAMES the carrier out loud — swapping settings is never silent",
-      /config: package\.json/.test(r.out),
-    );
-    check(
-      "package.json carries no deprecation notice — it is not the one that is deprecated",
-      !/is deprecated/.test(r.out),
+      /config: paperlint\.json/.test(r.out),
     );
 
-    // Guards: settings under the key's old name (before 2.0.0) keep working, and say so.
-    writeFileSync(
-      join(root, "package.json"),
-      JSON.stringify({
-        name: "c",
-        version: "1.0.0",
-        "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "papers" },
-      }),
-    );
-    const legacy = await cli(["lint"], root);
-    check(
-      "🔴 the OLD key is still read — the same clean run — and a deprecation line names the new one",
-      legacy.code === 0 &&
-        /no findings/.test(legacy.out) &&
-        /"research-paper-pipeline" in package\.json is the old name .* rename it to "paperlint"/.test(
-          legacy.out,
-        ),
-    );
-    // Guards: both keys, different contents — refused, since there is no telling which is meant.
-    writeFileSync(
-      join(root, "package.json"),
-      JSON.stringify({
-        name: "c",
-        version: "1.0.0",
-        paperlint: { [PAPERS_DIR_FIELD]: "papers" },
-        "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "elsewhere" },
-      }),
-    );
-    const both = await cli(["lint"], root);
-    check(
-      "🔴 both keys with different contents — refused (exit 2), naming both",
-      both.code === 2 &&
-        /has both "paperlint" and "research-paper-pipeline", and they differ/.test(
-          both.out,
-        ),
-    );
-
-    // The key is present, the papers-directory field inside it is not: this is not an "empty config" but an
-    // unfinished one, and the failure must name the EXACT shape that needs adding.
-    writeFileSync(
-      join(root, "package.json"),
-      JSON.stringify({ name: "c", version: "1.0.0", paperlint: {} }, null, 2),
-    );
-    const noPapers = await cli(["lint"], root);
-    check(
-      `a key with no \`${PAPERS_DIR_FIELD}\` — a failure, and the shape is shown INSIDE package.json`,
-      noPapers.code === 2 &&
-        noPapers.out.includes(`must declare \`${PAPERS_DIR_FIELD}\``) &&
-        noPapers.out.includes(
-          `"paperlint": { "${PAPERS_DIR_FIELD}": "papers" }`,
-        ),
-    );
-
-    // The field's OLD name is refused with one clear sentence, not read as a fallback. The
-    // new name sits beside it here on purpose: even then the leftover old name is an error.
-    writeFileSync(
-      join(root, "package.json"),
-      JSON.stringify({
-        name: "c",
-        version: "1.0.0",
-        paperlint: {
-          [OLD_PAPERS_DIR_FIELD]: "papers",
-          [PAPERS_DIR_FIELD]: "papers",
-        },
-      }),
-    );
-    const oldName = await cli(["lint"], root);
-    check(
-      `the old field name "${OLD_PAPERS_DIR_FIELD}" fails with a message that names the new one`,
-      oldName.code === 2 &&
-        oldName.out.includes(
-          `"${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "paperlint"`,
-        ),
-    );
-    writeFileSync(
-      join(root, "package.json"),
-      JSON.stringify({
-        name: "c",
-        version: "1.0.0",
-        paperlint: { [OLD_PAPERS_DIR_FIELD]: "papers" },
-      }),
-    );
-    check(
-      "the old field name alone fails the same way — it is never used as the papers directory",
-      (await cli(["lint"], root)).code === 2,
-    );
-
-    // 🔴 A package.json WITHOUT the key does not stop the walk upward. Otherwise the search
-    // would end at the first project going up the tree — and every project has a package.json —
-    // and would never find anything, ever.
-    writeFileSync(
-      join(root, "package.json"),
-      JSON.stringify({
-        name: "c",
-        version: "1.0.0",
-        paperlint: { [PAPERS_DIR_FIELD]: "papers" },
-      }),
-    );
+    // 🔴 A package.json does not stop the walk upward while a root paperlint.json sits above:
+    // a nested package (a tools/ workspace) still belongs to the project.
     const inner = join(root, "tools");
     mkdirSync(inner, { recursive: true });
     writeFileSync(
@@ -328,13 +240,13 @@ check(
       JSON.stringify({ name: "tools", version: "1.0.0" }),
     );
     check(
-      "a keyless package.json does not intercept the search — the one above it is found",
-      findConfig(inner) === join(root, "package.json"),
+      "a nested package.json does not intercept the search — the root paperlint.json above it is found",
+      findProjectRoot(inner) === root,
     );
     const viaInner = await cli(["lint"], inner);
     check(
       "and `lint` run from under it uses that declaration",
-      viaInner.code === 0 && /config: \.\.\/package\.json/.test(viaInner.out),
+      viaInner.code === 0 && /config: \.\.\/paperlint\.json/.test(viaInner.out),
     );
   } finally {
     rmSync(root, { recursive: true, force: true });
@@ -356,7 +268,11 @@ check(
   const workRoot = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-init-")));
   const project = (
     name,
-    { pkg = { name: "consumer", version: "1.0.0" }, papers = [] } = {},
+    {
+      pkg = { name: "consumer", version: "1.0.0" },
+      papers = [],
+      settings = null,
+    } = {},
   ) => {
     const dir = join(workRoot, name);
     mkdirSync(dir, { recursive: true });
@@ -372,6 +288,11 @@ check(
         join(dir, "package.json"),
         JSON.stringify(pkg, null, 2) + "\n",
       );
+    if (settings)
+      writeFileSync(
+        join(dir, "paperlint.json"),
+        JSON.stringify(settings, null, 2) + "\n",
+      );
     return dir;
   };
   const say = () => {
@@ -382,8 +303,11 @@ check(
       text: () => lines.join("\n"),
     };
   };
+  /** The root paperlint.json init left behind, or undefined when it wrote none. */
   const declared = (dir) =>
-    JSON.parse(readFileSync(join(dir, "package.json"), "utf8"))["paperlint"];
+    existsSync(join(dir, "paperlint.json"))
+      ? JSON.parse(readFileSync(join(dir, "paperlint.json"), "utf8"))
+      : undefined;
   // No check should depend on what is installed ON THIS MACHINE: `command -v` is faked,
   // otherwise "no external programs" would read as a finding about init.
   const haveAll = () => ({ status: 0 });
@@ -400,18 +324,21 @@ check(
         interactive: false,
         run: haveAll,
       });
+      // 🔴 THE REPORT IS CHECKED FIRST: a directory that was GUESSED lands on the default,
+      // and the default is not written — so the file check below would fail for a guess too,
+      // and could not tell "not measured" from "not written".
       check(
-        "🔴 THE DECLARATION SHOWS UP IN package.json — the file the hooks read",
+        "and it says HOW it was measured — otherwise a guess reads as a fact",
+        /measured: its subdirectories carry/.test(out.text()),
+      );
+      check(
+        "🔴 THE DECLARATION SHOWS UP IN paperlint.json — the file the hooks read",
         declared(dir) !== undefined &&
           typeof declared(dir)[PAPERS_DIR_FIELD] === "string",
       );
       check(
         "🔴 and its value is MEASURED, not taken from the `papers` default",
         declared(dir)[PAPERS_DIR_FIELD] === "writing/drafts",
-      );
-      check(
-        "and it says HOW it was measured — otherwise a guess reads as a fact",
-        /measured: its subdirectories carry/.test(out.text()),
       );
       check(
         "init ends with doctor's report: the install vouches for its OWN state",
@@ -434,13 +361,14 @@ check(
         run: haveAll,
       });
       check(
-        "nothing to measure — the documented default is taken",
-        declared(dir)[PAPERS_DIR_FIELD] === "papers",
+        "🔴 nothing to measure — the default is taken, and NO paperlint.json is written for it",
+        declared(dir) === undefined,
       );
       check(
-        "🔴 and it is MARKED as a guess, not presented as a measurement",
-        /A GUESS/.test(out.text()) &&
-          /Nothing here looks like a papers directory/.test(out.text()),
+        "and it is called the default, not presented as a measurement",
+        /papers — the default\. Nothing here looks like a papers directory/.test(
+          out.text(),
+        ),
       );
       // Guards: a fresh project with no papers anywhere is not a broken install. The guard has
       // nothing to protect yet, and `init --yes` (an agent, CI) must finish green with a next step.
@@ -453,80 +381,13 @@ check(
       );
     }
 
-    // ── 2½. SETTINGS UNDER THE OLD KEY ARE MOVED TO THE NEW ONE ───────────────────────
-    {
-      const dir = project("old-key", {
-        pkg: {
-          name: "consumer",
-          "research-paper-pipeline": {
-            [PAPERS_DIR_FIELD]: "writing",
-            minFindings: 3,
-          },
-          version: "1.0.0",
-        },
-        papers: ["writing"],
-      });
-      const out = say();
-      await init(dir, {
-        log: out.log,
-        err: out.log,
-        interactive: false,
-        run: haveAll,
-      });
-      const pkg = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
-      check(
-        "🔴 init moves the old key's settings to the new key, whole, and removes the old key",
-        JSON.stringify(pkg.paperlint) ===
-          JSON.stringify({ [PAPERS_DIR_FIELD]: "writing", minFindings: 3 }) &&
-          !("research-paper-pipeline" in pkg),
-      );
-      check(
-        "in the same position in the file, so the diff is a one-word rename",
-        Object.keys(pkg).join() === "name,paperlint,version",
-      );
-      check(
-        "and it says so",
-        /moved the settings from "research-paper-pipeline" \(the old key\) to "paperlint"/.test(
-          out.text(),
-        ),
-      );
-    }
-    {
-      const dir = project("both-keys", {
-        pkg: {
-          name: "consumer",
-          paperlint: { [PAPERS_DIR_FIELD]: "writing" },
-          "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "other" },
-        },
-        papers: ["writing"],
-      });
-      const out = say();
-      const code = await init(dir, {
-        log: out.log,
-        err: out.log,
-        interactive: false,
-        run: haveAll,
-      });
-      check(
-        "both keys with different contents — init refuses (exit 2) and writes nothing",
-        code === 2 &&
-          /they differ/.test(out.text()) &&
-          "research-paper-pipeline" in
-            JSON.parse(readFileSync(join(dir, "package.json"), "utf8")),
-      );
-    }
-
     // ── 3. SOMEONE ELSE'S VALUE DOES NOT GET OVERWRITTEN ─────────────────────────────
     {
       const dir = project("mine", {
-        pkg: {
-          name: "c",
-          version: "1.0.0",
-          paperlint: { [PAPERS_DIR_FIELD]: "mine" },
-        },
+        settings: { [PAPERS_DIR_FIELD]: "mine" },
         papers: ["writing"],
       });
-      const before = readFileSync(join(dir, "package.json"), "utf8");
+      const before = readFileSync(join(dir, "paperlint.json"), "utf8");
       const out = say();
       await init(dir, {
         log: out.log,
@@ -536,7 +397,7 @@ check(
       });
       check(
         "🔴 an already-declared value stays intact byte for byte — silently replacing a setting is worse than doing nothing",
-        readFileSync(join(dir, "package.json"), "utf8") === before,
+        readFileSync(join(dir, "paperlint.json"), "utf8") === before,
       );
       check(
         "and it says so out loud, rather than skipping it",
@@ -546,24 +407,22 @@ check(
       );
     }
 
-    // ── 4. NOWHERE TO WRITE — A FAILURE WITH A REMEDY ─────────────────────────────
+    // ── 4. NO package.json — the settings have their own file, so nothing is missing ─
     {
       const dir = project("nopkg", { pkg: null, papers: ["writing"] });
       const out = say();
-      const code = await init(dir, {
+      await init(dir, {
         log: out.log,
         err: out.log,
         interactive: false,
         run: haveAll,
       });
       check(
-        "without package.json init FAILS and carries a remedy, not just a diagnosis",
-        code === 2 &&
-          /npm init -y/.test(out.text()) &&
-          /nowhere to put the declaration/.test(out.text()),
+        "without package.json init still declares the measured directory, in paperlint.json",
+        declared(dir)?.[PAPERS_DIR_FIELD] === "writing",
       );
       check(
-        "and creates nothing in its place",
+        "and creates no package.json",
         !existsSync(join(dir, "package.json")),
       );
     }
@@ -748,9 +607,15 @@ check(
         "every absence is NAMED, and the count matches the names",
         /✗ 6 of 6 missing: pdflatex, bibtex/.test(own),
       );
+      // The programs section alone: the TeX Live step above it and the "next:" lines below it
+      // name `npx paperlint toolchain` too, and would answer for a section that lost its remedy.
+      const programs = own.slice(
+        own.indexOf("external programs"),
+        own.indexOf("next:"),
+      );
       check(
         "🔴 and it carries the INSTALL COMMAND — a remedy, not just a diagnosis",
-        /npx paperlint toolchain/.test(own),
+        /npx paperlint toolchain/.test(programs),
       );
       check(
         "and it says outright that nothing is installed on the user's behalf",
@@ -847,18 +712,17 @@ check(
   );
 }
 {
-  // A "." default would give a green run over whatever happens to be lying around — the same
-  // contract as the action, and the same reason. An empty directory with no config is exactly
-  // that case.
+  // A "." default would give a green run over whatever happens to be lying around. The default
+  // is `papers/`, and an empty directory with no config has none: a refusal naming BOTH ways out.
   const bare = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-bare-")));
   try {
     const r = await cli(["lint"], bare);
     check(
-      "`lint` with NO path AND no config refuses and names BOTH ways out",
+      "`lint` with NO path, no config and no papers/ refuses and names BOTH ways out",
       r.code === 2 &&
-        /nothing to lint/.test(r.out) &&
-        /paperlint init/.test(r.out) &&
-        /paperlint lint papers/.test(r.out),
+        /no papers in papers\//.test(r.out) &&
+        /paperlint new <name>/.test(r.out) &&
+        /set "papersDir" in paperlint\.json/.test(r.out),
     );
   } finally {
     rmSync(bare, { recursive: true, force: true });
@@ -968,14 +832,14 @@ check(
       `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: ${bytes}\n    source: versions/s.tex\n    sourceBytes: 4\nresearchQuestion: "does it hold?"\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`;
     writeFileSync(join(paper, "PIPELINE-STATUS.md"), status(100));
 
-    // findConfig — kept separate from the run so the failure is distinguishable
+    // findProjectRoot — kept separate from the run so the failure is distinguishable
     writeFileSync(
-      join(root, "package.json"),
-      JSON.stringify({ paperlint: { [PAPERS_DIR_FIELD]: "papers" } }),
+      join(root, "paperlint.json"),
+      JSON.stringify({ [PAPERS_DIR_FIELD]: "papers" }),
     );
     check(
-      "findConfig walks up from a subdirectory and finds the file at the root",
-      findConfig(paper) === join(root, "package.json"),
+      "findProjectRoot walks up from inside a paper and finds the root file, not the paper's",
+      findProjectRoot(paper) === root,
     );
     // There can be no tautology here: a neighboring tree must NOT pick up our file. Asserting
     // `=== null` against a live filesystem is not safe — someone else's package.json may sit further
@@ -986,7 +850,7 @@ check(
     );
     check(
       "the config does NOT leak into a neighboring tree — the search goes up, not sideways",
-      findConfig(sibling) !== join(root, "package.json"),
+      findProjectRoot(sibling) !== root,
     );
     rmSync(sibling, { recursive: true, force: true });
 
@@ -997,7 +861,7 @@ check(
     );
     check(
       "and the found file is NAMED out loud — swapping settings silently is not acceptable",
-      /config: package\.json/.test(found.out),
+      /config: paperlint\.json/.test(found.out),
     );
 
     // 🔴 THE RESOLUTION DISCRIMINATOR. Run FROM the paper's directory: same config, and
@@ -1028,26 +892,23 @@ check(
         /nothing was linted under elsewhere/.test(override.out),
     );
 
-    // 🔴 THE PAPERS DIRECTORY — A REQUIRED FIELD. A config without it is not an "empty config" but an
-    // unfinished one: silently falling back to "." means running the rules over the whole checkout.
+    // The papers directory is OPTIONAL: a config without it takes `papers`, never ".".
     writeFileSync(
-      join(root, "package.json"),
-      JSON.stringify({ paperlint: { minFindings: 3 } }),
+      join(root, "paperlint.json"),
+      JSON.stringify({ structure: false }),
     );
     const noPapers = await cli(["lint"], root);
     check(
-      "a config WITHOUT the papers-directory field — a failure, and the field is named by name",
-      noPapers.code === 2 &&
-        noPapers.out.includes(`must declare \`${PAPERS_DIR_FIELD}\``) &&
-        /cannot guess/.test(noPapers.out),
+      "a config WITHOUT the papers-directory field lints the default `papers/`",
+      noPapers.code === 0 && /no findings/.test(noPapers.out),
     );
     check(
-      'an empty string as the papers directory counts as absent, not as the directory ""',
+      'an empty string as the papers directory is refused, not read as the directory ""',
       (
         await (async () => {
           writeFileSync(
-            join(root, "package.json"),
-            JSON.stringify({ paperlint: { [PAPERS_DIR_FIELD]: "" } }),
+            join(root, "paperlint.json"),
+            JSON.stringify({ [PAPERS_DIR_FIELD]: "" }),
           );
           return await cli(["lint"], root);
         })()
@@ -1073,7 +934,7 @@ check(
       join(paper, "versions", "2026-07-22-submitted.pdf"),
       "x".repeat(100),
     );
-    // Three § signs — the `paper/typography` rule, warn level and only warn.
+    // Three § signs — `paper/section-word`, warn level and only warn.
     writeFileSync(
       join(paper, "paper.md"),
       "# Intro\n\nRQ1: does it hold?\n\nSee \u00a7 5 and \u00a7 6 and \u00a7 7.\n",
@@ -1083,8 +944,8 @@ check(
       `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: 100\n    source: versions/s.tex\n    sourceBytes: 4\nresearchQuestion: "does it hold?"\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`,
     );
     writeFileSync(
-      join(root, "package.json"),
-      JSON.stringify({ paperlint: { [PAPERS_DIR_FIELD]: "papers" } }),
+      join(root, "paperlint.json"),
+      JSON.stringify({ [PAPERS_DIR_FIELD]: "papers" }),
     );
 
     const lax = await cli(["lint"], root);
@@ -1099,7 +960,7 @@ check(
     );
     check(
       'and the failure names the NUMBER and the THRESHOLD, not just "too many"',
-      /1 warning\(s\) exceed the --max-warnings limit of 0/.test(strict.out),
+      /3 warning\(s\) exceed the --max-warnings limit of 0/.test(strict.out),
     );
     const generous = await cli(["lint", "--max-warnings", "5"], root);
     check(
@@ -1124,8 +985,8 @@ check(
     // The marker is present, the scorecard is not: NOT ONE pipeline rule runs over this directory.
     writeFileSync(join(paper, "paper.tex"), "\\documentclass{article}\n");
     writeFileSync(
-      join(root, "package.json"),
-      JSON.stringify({ paperlint: { [PAPERS_DIR_FIELD]: "papers" } }),
+      join(root, "paperlint.json"),
+      JSON.stringify({ [PAPERS_DIR_FIELD]: "papers" }),
     );
 
     const r = await cli(["lint"], root);
@@ -1158,7 +1019,7 @@ check(
     );
     check(
       "and the line about the found config is not lost — it went to stderr",
-      /config: package\.json/.test(j.stderr) && !/config:/.test(j.stdout),
+      /config: paperlint\.json/.test(j.stderr) && !/config:/.test(j.stdout),
     );
     check(
       "`--json` gives back ONE array, where the missing-file finding sits next to the rule findings",
@@ -1233,7 +1094,7 @@ check(
     check(
       "the inside run is the reference: it has both a structure and a rule finding",
       findings(inside).some((f) => f.startsWith("structure/required-file")) &&
-        findings(inside).some((f) => f.startsWith("paper/typography")),
+        findings(inside).some((f) => f.startsWith("paper/section-word")),
     );
     check(
       "and from outside it reports the SAME findings with the SAME exit code",
@@ -1241,44 +1102,44 @@ check(
         outside.code === inside.code,
     );
 
-    // The debt, keyed from the config's directory, covers the two `§`.
+    // A `rules` block, its `files` relative to the config's directory, turns the `§` rule off
+    // for this paper — and it must reach the paper from wherever the command runs.
     writeFileSync(
-      join(tree, "package.json"),
+      join(tree, "paperlint.json"),
       JSON.stringify({
-        name: "x",
-        paperlint: {
-          [PAPERS_DIR_FIELD]: "papers",
-          typographyDebt: { "papers/p": { sectionSign: 2 } },
-        },
+        [PAPERS_DIR_FIELD]: "papers",
+        rules: [
+          { files: ["papers/p/**"], rules: { "paper/section-word": "off" } },
+        ],
       }),
     );
     const debtHonoured = (r) =>
       r.code !== 99 &&
-      !findings(r).some((f) => f.startsWith("paper/typography"));
+      !findings(r).some((f) => f.startsWith("paper/section-word"));
     check(
-      "from the config's own directory the declared debt silences the `§` finding",
+      "from the config's own directory the block turns the `§` finding off",
       debtHonoured(await cli(["lint", "--json"], tree)),
     );
     check(
-      "from a SUBDIRECTORY (config found by walking up) the same debt still applies",
+      "from a SUBDIRECTORY (config found by walking up) the same block still applies",
       debtHonoured(await cli(["lint", "--json"], join(tree, "papers"))),
     );
     check(
       "and with `--config` from an unrelated directory it applies too",
       debtHonoured(
         await cli(
-          ["lint", "--json", "--config", join(tree, "package.json")],
+          ["lint", "--json", "--config", join(tree, "paperlint.json")],
           elsewhere,
         ),
       ),
     );
     // A RELATIVE `--config` stays relative in `configPath`, while every paper path is absolute:
-    // without resolving it first, the common root of `.` and `/tmp/…` is `/`, the debt keys
-    // no longer match, and the declared debt comes back as new warnings (Codex on #45).
+    // without resolving it first, the common root of `.` and `/tmp/…` is `/`, and globs written
+    // relative to the config no longer match (Codex on #45).
     check(
-      "and with a RELATIVE `--config package.json` it applies too",
+      "and with a RELATIVE `--config paperlint.json` it applies too",
       debtHonoured(
-        await cli(["lint", "--json", "--config", "package.json"], tree),
+        await cli(["lint", "--json", "--config", "paperlint.json"], tree),
       ),
     );
   } finally {
@@ -1678,8 +1539,8 @@ console.log(
       // step, and every later step must use the kept value, not the directory init guessed.
       const dir = bare("declared");
       writeFileSync(
-        join(dir, "package.json"),
-        `{"name":"c","version":"1.0.0","paperlint":{"${PAPERS_DIR_FIELD}":"writing"}}\n`,
+        join(dir, "paperlint.json"),
+        `{"${PAPERS_DIR_FIELD}":"writing"}\n`,
       );
       const made = [];
       await init(dir, {
@@ -1743,8 +1604,8 @@ console.log(
   const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-template-")));
   try {
     writeFileSync(
-      join(root, "package.json"),
-      `{"paperlint":{"${PAPERS_DIR_FIELD}":"papers"}}\n`,
+      join(root, "paperlint.json"),
+      `{"${PAPERS_DIR_FIELD}":"papers"}\n`,
     );
     mkdirSync(join(root, "papers", "p1"), { recursive: true });
     writeFileSync(join(root, "papers", "p1", "paper.md"), "# P\n");
@@ -1784,14 +1645,14 @@ console.log(
 {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-new-cli-")));
   try {
-    const none = await cli(["new", "demo"], root);
+    const none = await cli(["new", "first"], root);
     check(
-      "without a declaration there is nowhere to put a paper — refused, with the remedy",
-      none.code === 2 && /Run `npx paperlint init` first/.test(none.out),
+      "without a declaration the paper goes into the default `papers/`",
+      none.code === 0 && existsSync(join(root, "papers", "first", "paper.tex")),
     );
     writeFileSync(
-      join(root, "package.json"),
-      `{"paperlint":{"${PAPERS_DIR_FIELD}":"writing"}}\n`,
+      join(root, "paperlint.json"),
+      `{"${PAPERS_DIR_FIELD}":"writing"}\n`,
     );
     const r = await cli(["new", "demo"], root);
     check(
@@ -1842,12 +1703,8 @@ console.log(
     );
     const settings = (extra) =>
       writeFileSync(
-        join(root, "package.json"),
-        JSON.stringify({
-          name: "c",
-          version: "1.0.0",
-          paperlint: { [PAPERS_DIR_FIELD]: "papers", ...extra },
-        }),
+        join(root, "paperlint.json"),
+        JSON.stringify({ [PAPERS_DIR_FIELD]: "papers", ...extra }),
       );
     const balanceOn = (files) => ({
       rules: [{ files, rules: { "pdf/last-page-balance": "error" } }],
@@ -1858,9 +1715,7 @@ console.log(
     check(
       "🔴 an unknown key is REFUSED by name — a typo must not read as 'not set'",
       typo.code === 2 &&
-        typo.out.includes(
-          'package.json → "paperlint": unknown key "typographyDept"',
-        ),
+        typo.out.includes('paperlint.json: unknown key "typographyDept"'),
     );
     settings({
       ledger: "x.jsonl",
@@ -1874,10 +1729,10 @@ console.log(
       "the keys the skill scripts read are known keys, not typos",
       (await cli(["lint"], root)).code !== 2,
     );
-    settings({ rules: { "pdf/last-page-balance": "error" } });
+    settings({ rules: "pdf/last-page-balance" });
     check(
-      "`rules` that is not a list is refused, naming the key",
-      /\.rules must be a list of blocks/.test((await cli(["lint"], root)).out),
+      "`rules` that is neither { id: severity } nor a list is refused, naming the key",
+      /paperlint\.json → "rules" must be/.test((await cli(["lint"], root)).out),
     );
     settings({
       rules: [{ files: ["papers/**"], rules: { "pdf/nope": "error" } }],
@@ -1887,7 +1742,7 @@ console.log(
       "a rule paperlint does not ship is refused, naming the block and the rule",
       unknownRule.code === 2 &&
         unknownRule.out.includes(
-          '.rules[0].rules: "pdf/nope" is not a rule paperlint ships',
+          'rules[0].rules: "pdf/nope" is not a rule paperlint ships',
         ),
     );
     settings({
@@ -1932,7 +1787,7 @@ console.log(
         ),
     );
     settings({
-      rules: [{ files: ["papers/**"], rules: { "paper/typography": "off" } }],
+      rules: [{ files: ["papers/**"], rules: { "paper/section-word": "off" } }],
     });
     check(
       "a built-in rule's severity can be changed the same way",

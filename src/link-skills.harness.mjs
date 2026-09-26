@@ -35,11 +35,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const { linkSkills, locatePackage, shippedSkills } = await import(
   join(HERE, "link-skills.ts")
 );
-const {
-  SHIPPED_SKILLS_DIR: SHIPS,
-  PACKAGE_NAME: PKG,
-  LEGACY_PACKAGE_NAME,
-} = await import(
+const { SHIPPED_SKILLS_DIR: SHIPS, PACKAGE_NAME: PKG } = await import(
   join(HERE, "..", "skills", "paper-pipeline", "scripts", "consumer.mjs")
 );
 
@@ -222,39 +218,6 @@ try {
   }
 
   // ── VI-bis. LINKS LEFT BY AN INSTALL UNDER THE OLD NAME ARE REPLACED, NOT SKIPPED ─────
-  // After `npm rm research-paper-pipeline && npm i -D paperlint` every old link dangles. They are
-  // ours, spelled the way an older `init` wrote them, so the next `init` replaces them.
-  {
-    const dir = consumer("renamed");
-    mkdirSync(home(dir), { recursive: true });
-    const old = join(
-      "..",
-      "..",
-      "node_modules",
-      LEGACY_PACKAGE_NAME,
-      SHIPS,
-      "alpha",
-    );
-    symlinkSync(old, join(home(dir), "alpha"), "dir");
-    const seen = linkSkills(dir, { write: false });
-    check(
-      "doctor's read names a link into the old package name, with the command that fixes it",
-      status(seen, "alpha")?.status === "foreign" &&
-        /old name — `npx paperlint init` replaces it/.test(
-          status(seen, "alpha")?.reason ?? "",
-        ),
-    );
-    const r = linkSkills(dir);
-    check(
-      "🔴 init REPLACES it: status `replaced`, and SKILL.md is reachable through the new link",
-      status(r, "alpha")?.status === "replaced" &&
-        existsSync(join(home(dir), "alpha", "SKILL.md")) &&
-        readlinkSync(join(home(dir), "alpha")).includes(
-          join("node_modules", PKG),
-        ),
-    );
-  }
-
   // ── VII. A PACKAGE WITHOUT ITS SKILLS DIRECTORY IS AN ERROR, NOT ZERO SKILLS ─────────
   {
     const pkg = join(work, "no-skills");
