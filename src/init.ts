@@ -1,11 +1,10 @@
 /**
  * `paperlint init` — the whole install, in the terminal it was typed in.
  *
- * 🔴 WHAT THIS COMMAND USED TO DO, AND WHY THAT WAS A DEFECT RATHER THAN A SHORTFALL. It wrote
- * a separate config file with a GUESSED `"papers": "papers"` and never touched `package.json`. The three hooks
- * read the papers directory out of `package.json` and nothing else, so a consumer who followed the
- * documented install got a `paper-edit-guard` watching a directory that did not exist — and a guard
- * watching nothing is byte-identical, from outside, to a guard that is working (issue #33).
+ * 🔴 THE HOOKS, THE RULES AND THE CLI READ THE PAPERS DIRECTORY FROM ONE PLACE — the root
+ * `paperlint.json`, or its default `papers` when the file is absent. An install that wrote it
+ * anywhere else would give a `paper-edit-guard` watching a directory that does not exist — and a
+ * guard watching nothing is byte-identical, from outside, to a guard that is working (issue #33).
  *
  * The yardstick is how many actions happen between "I want this" and "it works": two, `npm i` and
  * this command (`docs/install.md`). Nothing is left to edit by hand.
@@ -13,9 +12,9 @@
  * ── THE DECISIONS, AND HOW EACH ONE IS MADE ─────────────────────────────────
  *   papers directory   MEASURED — `detectPapers` walks the repo for a directory whose CHILDREN
  *                      carry a paper marker. Several hits is the only case a human is asked about.
- *   declaration        WRITTEN into `package.json`, merged, never overwriting a value that is
- *                      already there. Prior art: husky's `init` edits the consumer's package.json
- *                      to add `prepare`. No second config file is created.
+ *   declaration        WRITTEN into the root `paperlint.json` only when it differs from the
+ *                      default `papers`; merged, never overwriting a value that is already there.
+ *                      A project on the defaults gets no config file at all.
  *   skills             LINKED — one relative symlink per shipped skill into `.claude/skills/`, the
  *                      only place Claude Code looks for project skills (`link-skills.ts`). An
  *                      entry of the same name that paperlint did not make is reported, never replaced.
@@ -66,7 +65,7 @@ import {
 // The one source for the consumer's config key lives in the .mjs half of the package (the ESLint
 // rules and the skill scripts import it too); its types are in lib/paper-config.d.mts.
 import {
-  CONFIG_KEY,
+  CONFIG_FILE,
   DEFAULT_PAPERS_ROOT,
   PAPERS_DIR_FIELD,
 } from "../lib/paper-config.mjs";
@@ -142,8 +141,8 @@ export interface PapersChoice {
 /**
  * One hit is used, several are asked about, none falls back to the documented default — and the
  * fallback is labelled a guess in the same breath, because the whole class of defect this command
- * exists to close is a guess that later reads as a measurement. Called only when package.json
- * declares no directory yet (`declarePapers`).
+ * exists to close is a guess that later reads as a measurement. Called only when no
+ * `paperlint.json` declares a directory yet (`declarePapers`).
  */
 export async function choosePapers(
   root: string,
@@ -176,10 +175,18 @@ export async function choosePapers(
 
 export type DeclarationResult =
   | {
+      /** The measured directory differs from the default and was written into `paperlint.json`. */
       readonly status: "written";
       readonly path: string;
       readonly papers: string;
       /** How the directory that was written was arrived at. */
+      readonly choice: PapersChoice;
+    }
+  | {
+      /** The measured directory IS the default, so nothing needs writing. */
+      readonly status: "default";
+      readonly path: string;
+      readonly papers: string;
       readonly choice: PapersChoice;
     }
   | {
@@ -191,16 +198,12 @@ export type DeclarationResult =
       readonly status: "unparsable";
       readonly path: string;
       readonly reason: string;
-    }
-  | { readonly status: "absent"; readonly path: string };
+    };
 
 /**
- * Writes ONE declaration, into the file every channel can already name.
- *
- * 🔴 A HOOK CANNOT IMPORT CODE AND CANNOT WALK UP A TREE LOOKING FOR A CONFIG. It can read a path
- * it is able to spell, and the only path it can always spell is the project's own `package.json`.
- * That asymmetry is the whole reason the declaration lives here rather than in a file of its own:
- * many readers against one (`docs/install.md`, "One declaration").
+ * Declares the papers directory in the root `paperlint.json` — the one file the hooks, the rules
+ * and the CLI all read — and only when it is not the default: a project whose papers are in
+ * `papers/` needs no config file.
  *
  * ⚠️ Merged, not rewritten, and never over a value the consumer set — an `init` that silently
  * replaces a setting is worse than an `init` that does nothing, because the consumer keeps
@@ -210,35 +213,35 @@ export async function declarePapers(
   root: string,
   choose: () => Promise<PapersChoice>,
 ): Promise<DeclarationResult> {
-  const path = join(root, "package.json");
-  if (!existsSync(path)) return { status: "absent", path };
-  const raw = readFileSync(path, "utf8");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
-  let pkg: Record<string, any>;
-  try {
-    pkg = JSON.parse(raw);
-  } catch (e) {
-    return { status: "unparsable", path, reason: (e as Error).message };
+  const path = join(root, CONFIG_FILE);
+  const raw = existsSync(path) ? readFileSync(path, "utf8") : null;
+  let settings: Record<string, unknown> = {};
+  if (raw !== null) {
+    try {
+      settings = JSON.parse(raw) as Record<string, unknown>;
+    } catch (e) {
+      return { status: "unparsable", path, reason: (e as Error).message };
+    }
+    const existing = settings[PAPERS_DIR_FIELD];
+    if (existing !== undefined)
+      return { status: "kept", path, papers: existing };
   }
-  const write = (): void =>
-    // Two-space indent and the file's own trailing newline: a declaration is not a licence to
-    // reformat somebody else's file, and a one-line diff is a diff a consumer will actually read.
-    writeFileSync(
-      path,
-      JSON.stringify(pkg, null, 2) + (raw.endsWith("\n") ? "\n" : ""),
-      "utf8",
-    );
-  const existing = pkg?.[CONFIG_KEY]?.[PAPERS_DIR_FIELD];
-  if (existing !== undefined) return { status: "kept", path, papers: existing };
   // 🔴 ONLY NOW is the directory measured (or asked about). A declared one is the answer, and a
-  // candidate measured beside it is a decision nobody takes: init used to print
-  // "✓ eslint-rules/fixtures — 4 candidates" and then keep the declared directory.
+  // candidate measured beside it is a decision nobody takes.
   const choice = await choose();
-  pkg[CONFIG_KEY] = {
-    ...(pkg[CONFIG_KEY] ?? {}),
-    [PAPERS_DIR_FIELD]: choice.papers,
-  };
-  write();
+  if (choice.papers === DEFAULT_PAPERS_ROOT)
+    return { status: "default", path, papers: choice.papers, choice };
+  // Two-space indent and the file's own trailing newline: a declaration is not a licence to
+  // reformat somebody else's file, and a one-line diff is a diff a consumer will actually read.
+  writeFileSync(
+    path,
+    JSON.stringify(
+      { ...settings, [PAPERS_DIR_FIELD]: choice.papers },
+      null,
+      2,
+    ) + (raw === null || raw.endsWith("\n") ? "\n" : ""),
+    "utf8",
+  );
   return { status: "written", path, papers: choice.papers, choice };
 }
 
@@ -595,9 +598,9 @@ function papersLines(decl: DeclarationResult, why: string): string[] {
   if (decl.status === "kept" && typeof decl.papers === "string")
     return [
       ...out,
-      `  ✓ ${decl.papers} — declared in package.json → "${CONFIG_KEY}".${PAPERS_DIR_FIELD}; nothing measured`,
+      `  ✓ ${decl.papers} — declared in ${CONFIG_FILE} → "${PAPERS_DIR_FIELD}"; nothing measured`,
     ];
-  if (decl.status !== "written") return [];
+  if (decl.status !== "written" && decl.status !== "default") return [];
   const { choice } = decl;
   if (choice.how === "detected")
     return [
@@ -616,12 +619,12 @@ function papersLines(decl: DeclarationResult, why: string): string[] {
         (choice.how === "not-asked"
           ? `${why} so nothing was asked`
           : `no answer was given, so the first one was taken`),
-      `      the others: ${choice.candidates.slice(1).join(", ")} — change it in package.json if this is the wrong one`,
+      `      the others: ${choice.candidates.slice(1).join(", ")} — set "${PAPERS_DIR_FIELD}" in ${CONFIG_FILE} if this is the wrong one`,
     ];
   return [
     ...out,
-    `  ⚠ ${choice.papers} — A GUESS. Nothing here looks like a papers directory yet.`,
-    `      Nothing on disk was measured, so this is the documented default and not a finding.`,
+    `  · ${choice.papers} — the default. Nothing here looks like a papers directory yet;`,
+    `      \`npx paperlint new <name>\` creates the first paper there.`,
   ];
 }
 
@@ -663,17 +666,21 @@ export async function init(
   log(``);
   log(`paperlint init — each decision below says HOW it was decided`);
 
-  // ── 1. where the papers are, and 2. one declaration, in package.json ──────────────────
+  // ── 1. where the papers are, and 2. the declaration, in paperlint.json when not the default ─
   // The declaration is read FIRST: the directory is measured only when none is declared.
   const decl = await declarePapers(root, () =>
     choosePapers(root, { ask, interactive }),
   );
   for (const line of papersLines(decl, why)) log(line);
   log(``);
-  log(`declaration`);
+  log(`settings`);
   if (decl.status === "written")
     log(
-      `  ✓ ${here(decl.path)} → "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": ${JSON.stringify(decl.papers)} }`,
+      `  ✓ ${here(decl.path)} → { "${PAPERS_DIR_FIELD}": ${JSON.stringify(decl.papers)} }`,
+    );
+  else if (decl.status === "default")
+    log(
+      `  ✓ nothing to write — "${decl.papers}" is the default, so no ${CONFIG_FILE} is needed`,
     );
   else if (decl.status === "kept") {
     if (typeof decl.papers !== "string") {
@@ -685,7 +692,7 @@ export async function init(
     log(
       `  ✓ ${here(decl.path)} already declares ${PAPERS_DIR_FIELD} = ${JSON.stringify(decl.papers)} — kept, nothing overwritten`,
     );
-  } else if (decl.status === "unparsable") {
+  } else {
     err(`  ✗ ${here(decl.path)} is not valid JSON: ${decl.reason}`);
     err(
       `      nothing was written. The hooks read their papers directory from this file and`,
@@ -694,21 +701,7 @@ export async function init(
       `      refuse every Bash command while it cannot be parsed — fix the JSON first.`,
     );
     return 2;
-  } else {
-    err(
-      `  ✗ no package.json at ${here(root)} — there is nowhere to put the declaration.`,
-    );
-    err(
-      `      The hooks can only read a path they are able to name, and that path is`,
-    );
-    err(
-      `      package.json. Run \`npm init -y\` here, then \`npx paperlint init\` again.`,
-    );
-    return 2;
   }
-  log(
-    `      one declaration — the hooks, the rules and the CLI all read this one key`,
-  );
   // Every step below uses the DECLARED directory. A kept declaration outranks what init
   // measured or guessed: otherwise the first paper and the workflow would land in the
   // guessed directory while lint and the hooks keep reading the declared one.

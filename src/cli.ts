@@ -14,9 +14,7 @@
  *
  * ⚠️ THE BOUNDARY THIS UTILITY HAS NO RIGHT TO ERASE: the consumer's data stays with the consumer.
  * Where the papers are and the project's own rule blocks — that is about ONE corpus, so it lives in
- * the consumer's `package.json`, under the `paperlint` key. What used to live there as ratchets and
- * markers (a typography debt, an author-list "marker", a field dictionary) became fixes, records
- * and shipped JSON Schemas in 3.0.0.
+ * the consumer's own `paperlint.json`, at the project root and in each paper.
  *
  * 🔴 WHY THE COMMAND IS CALLED `lint` AND NOT `check`. It does exactly what everyone else calls by
  * that word: reads files, changes nothing, prints findings, exits non-zero. `check` is taken in the
@@ -51,7 +49,11 @@ import { banalInstaller, parseBanalSettings } from "./adapters/banal/index.ts";
 import { curlDownload } from "./adapters/curl/index.ts";
 import { hostDirs, nodeAdapters, nodeFiles } from "./adapters/node/index.ts";
 import { VENUE_RULE_LEVELS, venueRules } from "./venue-rules.ts";
-import { paperRules } from "./paper-settings.ts";
+import {
+  paperRules,
+  stringFields,
+  type PaperSettings,
+} from "./paper-settings.ts";
 import { referenceRules, REFERENCE_RULE_LEVELS } from "./reference-rules.ts";
 import { onlineReferences } from "./adapters/references/index.ts";
 import {
@@ -86,10 +88,11 @@ import {
 // The one source for the consumer's config key lives in the .mjs half of the package (the ESLint
 // rules and the skill scripts import it too); its types are in lib/paper-config.d.mts.
 import {
-  CONFIG_KEY,
+  CONFIG_FILE,
+  DEFAULT_PAPERS_ROOT,
   PAPERS_DIR_FIELD,
   SETTINGS_KEYS,
-  settingsOf,
+  findProjectRoot,
 } from "../lib/paper-config.mjs";
 import {
   parseRuleBlocks,
@@ -98,6 +101,7 @@ import {
   unknownKeys,
   type Parsed,
   type RuleBlock,
+  type RuleEntry,
 } from "./rules-config.ts";
 export { init };
 export { nextSteps } from "./init.ts";
@@ -166,31 +170,33 @@ lint:
   --max-warnings <n>  fail when warnings exceed n. Default -1: warnings never fail, because
                       most findings here are advisory and a gate that fails on advice gets muted
 
-settings — the \`paperlint\` key of your package.json, found by walking up from the
-current directory, the way every other tool in the stack finds its config. \`--config\` names
-another file of the same shape. \`papersDir\` is required; the rest is optional:
+settings — paperlint.json, at two levels, one schema. Both are optional.
 
-  "paperlint": {
-    "papersDir":         "papers",
-    "rules": [ { "files": ["papers/my-paper/**"],
-                 "rules": { "pdf/last-page-balance": "error" } } ]
-  }
+  paperlint.json (the project root, beside package.json) — found by walking up from the
+  current directory. \`--config\` names another file of the same shape.
 
-  "rules" takes ESLint flat-config blocks (files, ignores, rules), appended after paperlint's own, with
-  files relative to the file holding the settings. Optional rules (off unless turned on there):
-  pdf/last-page-balance. The venue rules (pdf/fresh, pdf/profile, pdf/fonts, pdf/geometry,
-  pdf/limits, pdf/body-size, pdf/measured) are on for every paper whose paperlint.json names a venue;
-  set one to "off" there to skip it.
+    {
+      "papersDir": "papers",
+      "rules": [ { "files": ["papers/my-paper/**"],
+                   "rules": { "pdf/last-page-balance": "error" } } ]
+    }
 
-per paper — <paper>/paperlint.json:
+  "papersDir" defaults to "papers". "extends", "kind" and "pdf" here are defaults for every
+  paper. "papersDir", "structure" and the skills' keys are allowed only here.
 
-  { "extends": "paperlint:aisec", "kind": "research", "rules": { "pdf/last-page-balance": "error" } }
+  <papersDir>/<paper>/paperlint.json — one paper, merged over the root file:
+
+    { "extends": "paperlint:aisec", "kind": "research", "rules": { "pdf/last-page-balance": "error" } }
 
   "extends" names a venue preset: paperlint:<name> (shipped: acm-sigconf, agenticdev, aisec, realm)
   or ./path.jsonc, relative to the paperlint.json. npm presets are not supported yet.
 
-  "rules" there applies to that paper alone, after its preset's rules and before the project's. An unknown key,
-  anywhere in the settings or in a paperlint.json, is an error.
+  "rules" is { "<rule>": "<severity>" } for every paper file in scope, or ESLint flat-config
+  blocks (files, ignores, rules) with globs relative to that file. Order, later wins: paperlint's
+  own, the venue preset's, the root file's, the paper's. Optional rules (off unless turned on):
+  pdf/last-page-balance. The venue rules (pdf/fresh, pdf/profile, pdf/fonts, pdf/geometry,
+  pdf/limits, pdf/body-size, pdf/measured) are on for every paper with a venue preset; set one to
+  "off" to skip it. An unknown key, in either file, is an error.
 `;
 
 /** The config the user would otherwise write by hand. The data comes from `opts`, the mechanism is here. */
@@ -365,37 +371,42 @@ export async function silentOptionalRules(
 }
 
 /**
- * Every linted paper's `rules` from its `paperlint.json`, as ESLint blocks scoped to that paper.
- * A file that does not parse, or names a rule paperlint does not ship, stops the run with one line
- * naming the file — the same strictness as the project's own `rules`.
+ * Every linted paper's rules, as ESLint blocks scoped to that paper, in two groups: what its venue
+ * preset turns on, and what its own `paperlint.json` says. The caller puts the root's blocks between
+ * them. A file that does not parse, or names a rule paperlint does not ship, stops the run with one
+ * line naming the file — the same strictness as the root's own `rules`.
  */
-export function paperRuleBlocks(paths: readonly string[]): Parsed<RuleBlock[]> {
+export function paperRuleBlocks(
+  paths: readonly string[],
+): Parsed<{ preset: RuleBlock[]; own: RuleBlock[] }> {
   // A FILE named on the command line belongs to the paper it sits in: that paper's settings apply.
   const dirs = paths.map((p) =>
     existsSync(p) && statSync(p).isFile() ? dirname(p) : p,
   );
   const papers = [...new Set(dirs.flatMap((p) => [p, ...papersIn(p)]))];
-  const out: RuleBlock[] = [];
+  const out = { preset: [] as RuleBlock[], own: [] as RuleBlock[] };
   for (const dir of papers) {
     const p = paperPreset(dir, PRESET_DEPS);
     if (p.kind === "settings-problem" && p.problem.kind === "broken")
       return { ok: false, error: paperPresetProblem(dir, p) ?? dir };
-    const block = rulesOfPaper(dir, p);
-    if (!block.ok) return block;
-    if (block.value) out.push(block.value);
+    const blocks = rulesOfPaper(dir, p);
+    if (!blocks.ok) return blocks;
+    out.preset.push(...blocks.value.preset);
+    out.own.push(...blocks.value.own);
   }
   return { ok: true, value: out };
 }
 
 /**
- * One paper's block: its preset chain's `rules`, then its own — later wins per rule id. A preset
- * that does not resolve contributes nothing here; `pdf/profile` reports it on the paper.
+ * One paper's blocks: its preset chain's `rules`, and its own — either `{ id: severity }` over the
+ * paper's files, or ESLint blocks with globs relative to the paper. A preset that does not resolve
+ * contributes nothing here; `pdf/profile` reports it on the paper.
  */
-function rulesOfPaper(dir: string, p: PaperPreset): Parsed<RuleBlock | null> {
+function rulesOfPaper(
+  dir: string,
+  p: PaperPreset,
+): Parsed<{ preset: RuleBlock[]; own: RuleBlock[] }> {
   const settings = "settings" in p ? p.settings : null;
-  if (settings === null) return { ok: true, value: null };
-  const own = paperRules(dir, settings, SHIPPED_RULES);
-  if (!own.ok) return own;
   const fromPreset =
     p.kind === "resolved"
       ? parseRuleEntries(
@@ -405,12 +416,40 @@ function rulesOfPaper(dir: string, p: PaperPreset): Parsed<RuleBlock | null> {
         )
       : { ok: true as const, value: {} };
   if (!fromPreset.ok) return fromPreset;
-  const rules = { ...fromPreset.value, ...(own.value ?? {}) };
+  const own =
+    settings === null
+      ? { ok: true as const, value: [] }
+      : Array.isArray(settings.rules)
+        ? parseRuleBlocks(
+            settings.rules,
+            join(dir, CONFIG_FILE),
+            SHIPPED_RULES,
+            dir,
+          )
+        : ownRules(dir, settings);
+  if (!own.ok) return own;
+  const scoped = (rules: Record<string, RuleEntry>): RuleBlock[] =>
+    Object.keys(rules).length
+      ? [{ basePath: dir, files: PAPER_FILE_PATTERNS, rules }]
+      : [];
   return {
     ok: true,
-    value: Object.keys(rules).length
-      ? { basePath: dir, files: PAPER_FILE_PATTERNS, rules }
-      : null,
+    value: { preset: scoped(fromPreset.value), own: [...own.value] },
+  };
+}
+
+/** A paper's `{ id: severity }` rules, as one block over the paper's files. */
+function ownRules(
+  dir: string,
+  settings: PaperSettings,
+): Parsed<readonly RuleBlock[]> {
+  const own = paperRules(dir, settings, SHIPPED_RULES);
+  if (!own.ok) return own;
+  return {
+    ok: true,
+    value: own.value
+      ? [{ basePath: dir, files: PAPER_FILE_PATTERNS, rules: own.value }]
+      : [],
   };
 }
 
@@ -424,15 +463,19 @@ const PAPER_FILE_PATTERNS: string[] = ownedPatterns(
 );
 
 /**
- * The settings after the boundary: an unknown key is refused by name, and `rules` becomes parsed
- * config blocks. Nothing after this sees the raw object.
+ * The root `paperlint.json` after the boundary: an unknown key is refused by name, the paper
+ * defaults (`extends`, `kind`, `pdf`) are checked the way a paper's own are, and `rules` becomes
+ * parsed config blocks. Nothing after this sees the raw object.
  */
 export function parseSettings(
-  opts: PaperlintConfig,
+  json: unknown,
   where: string,
   baseDir: string,
 ): Parsed<PaperlintConfig> {
-  const raw = opts as Record<string, unknown>;
+  if (typeof json !== "object" || json === null || Array.isArray(json))
+    return { ok: false, error: `${where}: must be a JSON object` };
+  const raw = json as Record<string, unknown>;
+  const opts = raw as PaperlintConfig;
   const unknown = unknownKeys(raw);
   if (unknown.length > 0)
     return {
@@ -441,6 +484,8 @@ export function parseSettings(
         `${where}: unknown key${unknown.length > 1 ? "s" : ""} ${unknown.map((k) => `"${k}"`).join(", ")} — ` +
         `a typo would otherwise read as "not set". Known keys: ${Object.keys(SETTINGS_KEYS).join(", ")}`,
     };
+  const defaults = stringFields(raw);
+  if (!defaults.ok) return { ok: false, error: `${where}: ${defaults.error}` };
   const rules = parseRuleBlocks(raw["rules"], where, SHIPPED_RULES, baseDir);
   if (!rules.ok) return rules;
   return { ok: true, value: { ...opts, rules: rules.value } };
@@ -528,8 +573,6 @@ export function parseArgs(argv: readonly string[]): Args {
   return out;
 }
 
-export const PKG_NAME = "package.json";
-
 /**
  * This package's own version, from the `package.json` beside `src/` and `dist/` alike. `init` pins
  * the CI action to its release tag; an unreadable manifest yields `undefined`, and init then keeps
@@ -547,44 +590,16 @@ function ownVersion(): string | undefined {
 }
 
 /**
- * 🔴 THE CLI READS `package.json`, THE ONE DECLARATION. `paperlint init` writes the settings under
- * the `package.json` key that the three hooks and `eslint-rules` already read; the CLI reads the
- * same file, so the install and the check cannot look at different files (issue #33,
- * `docs/install.md`).
- *
- * The walk goes up to the filesystem root, the way eslint, prettier and tsc find theirs, so a run
- * from inside one paper sees the same settings as a run from the repository root.
- */
-export function findConfig(startDir: string): string | null {
-  let dir = resolve(startDir);
-  for (;;) {
-    const pkg = join(dir, PKG_NAME);
-    if (existsSync(pkg) && declaresSettings(pkg)) return pkg;
-    const up = dirname(dir);
-    if (up === dir) return null;
-    dir = up;
-  }
-}
-
-/**
- * A `package.json` WITHOUT the key is not a declaration and must not stop the walk — every
- * project on the way up has one, so stopping there would make the search find nothing, always.
- * An unparsable one is treated the same way here; `paperlint doctor` is the command that reports it.
- */
-const declaresSettings = (pkgPath: string): boolean => {
-  try {
-    return settingsOf(JSON.parse(readFileSync(pkgPath, "utf8"))) !== undefined;
-  } catch {
-    return false;
-  }
-};
-
-/**
  * Reading the config, ONE reader for all commands. Pulled out of `run()` the moment a second
  * command needed the same config (`build`): two copies of this block would have drifted apart on
  * the very first edit — exactly the class that already cost us the empty-set guard in two places.
  *
- * @returns `{ opts, configPath }` on success, or `{ code }` — and then the caller exits with it.
+ * 🔴 THE CONFIG FINDS ITSELF: the project root is the nearest directory up from `cwd` with a root
+ * `paperlint.json`, else with a `package.json`, else `cwd` (`findProjectRoot`). The file is
+ * optional — without one every setting has its default, and papers are in `papers/`. An explicit
+ * `--config` beats the discovered one: it was named out loud, and a substitution is never silent.
+ *
+ * @returns `{ opts, configPath, root }` on success, or `{ code }` — and then the caller exits with it.
  */
 export function readConfig(
   a: Args,
@@ -598,69 +613,59 @@ export function readConfig(
     cwd?: string;
   } = {},
 ): ConfigRead {
-  // 🔴 THE CONFIG FINDS ITSELF. An explicit `--config` beats the discovered one — it was named out
-  // loud, and a substitution is never silent. Either way the file has the shape of a
-  // `package.json`: the settings sit under the key.
-  const configPath = a.config ?? findConfig(cwd);
-  if (a.config && !existsSync(a.config)) {
+  if (a.config && !existsSync(resolve(cwd, a.config))) {
     err(`config file not found: ${a.config}`);
     return { code: 2 };
   }
+  const root = a.config
+    ? dirname(resolve(cwd, a.config))
+    : findProjectRoot(cwd);
+  const found = a.config ? resolve(cwd, a.config) : join(root, CONFIG_FILE);
+  const configPath = existsSync(found) ? found : null;
+  if (configPath === null) return { opts: {}, configPath, root };
 
-  let opts: PaperlintConfig = {};
-  if (configPath) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
-    let parsed: any;
-    try {
-      parsed = JSON.parse(readFileSync(configPath, "utf8"));
-    } catch (e) {
-      err(`${configPath} is not valid JSON: ${(e as Error).message}`);
-      return { code: 2 };
-    }
-    opts = (settingsOf(parsed) ?? {}) as PaperlintConfig;
-    // The discovered config is NAMED out loud. Otherwise a run from someone else's directory picks
-    // up someone else's file and does not say so — and its settings then look like findings.
-    //
-    // 🔴 IN `--json` MODE — TO stderr. Machine output must be ONE parsable document: a line before
-    // the array breaks any `| jq`, and it breaks it for the consumer, not for us. Caught not by a
-    // test but by an attempt to wire our own action to this output; in the harness I first WORKED
-    // AROUND this line (stripped the first line before JSON.parse) — that is, the workaround hid
-    // the defect exactly where it should have been shouting.
-    (a.json ? err : log)(`config: ${relative(cwd, configPath) || PKG_NAME}`);
-  }
-
-  const where = `${configPath ? basename(configPath) : PKG_NAME} → "${CONFIG_KEY}"`;
-  if (configPath) {
-    const parsed = parseSettings(
-      opts,
-      where,
-      dirname(resolve(cwd, configPath)),
-    );
-    if (!parsed.ok) {
-      err(parsed.error);
-      return { code: 2 };
-    }
-    opts = parsed.value;
-  }
-
-  // 🔴 THE PAPERS DIRECTORY IS A REQUIRED FIELD. The papers directory is the one thing without which the tool
-  // does not know what it works on, and the one thing that cannot be guessed: a default of "." runs
-  // the rules over the whole checkout and exits green over a scope nobody chose.
-  if (configPath && !hasPapers(opts)) {
-    err(
-      `${configPath} must declare \`${PAPERS_DIR_FIELD}\` — the directory your papers live in, e.g.\n` +
-        `  { "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": "papers" } }\n` +
-        `It is the one thing this tool cannot guess. \`npx paperlint init\` writes it for you.`,
-    );
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(readFileSync(configPath, "utf8"));
+  } catch (e) {
+    err(`${configPath} is not valid JSON: ${(e as Error).message}`);
     return { code: 2 };
   }
-  return { opts, configPath };
+  // The discovered config is NAMED out loud. Otherwise a run from someone else's directory picks
+  // up someone else's file and does not say so — and its settings then look like findings.
+  //
+  // 🔴 IN `--json` MODE — TO stderr. Machine output must be ONE parsable document: a line before
+  // the array breaks any `| jq`, and it breaks it for the consumer, not for us.
+  (a.json ? err : log)(`config: ${relative(cwd, configPath) || CONFIG_FILE}`);
+  const settings = parseSettings(
+    parsed,
+    relative(cwd, configPath) || CONFIG_FILE,
+    root,
+  );
+  if (!settings.ok) {
+    err(settings.error);
+    return { code: 2 };
+  }
+  return { opts: settings.value, configPath, root };
 }
 
-/** The papers directory field of the settings, read by its one declared name. */
+/** The papers directory field of the settings, read by its one declared name; the default when absent. */
 export function papersDirOf(opts: PaperlintConfig): unknown {
-  return (opts as Record<string, unknown>)[PAPERS_DIR_FIELD];
+  const declared = (opts as Record<string, unknown>)[PAPERS_DIR_FIELD];
+  return declared === undefined ? DEFAULT_PAPERS_ROOT : declared;
 }
+
+/** The error for a papers directory that is missing or holds no paper. */
+export const noPapersMessage = (dir: string): string =>
+  `no papers in ${dir}/ — create one with \`npx paperlint new <name>\`, or set "${PAPERS_DIR_FIELD}" ` +
+  `in ${CONFIG_FILE} if your papers live elsewhere`;
+
+/** The papers directories of a read config, absolute: each relative to the project root. */
+export const papersRoots = (cfg: {
+  opts: PaperlintConfig;
+  root: string;
+}): string[] =>
+  toPaths(papersDirOf(cfg.opts)).map((rel) => resolve(cfg.root, rel));
 
 /** The papers directory may be one directory or several; both spellings normalise to a list. */
 export function toPaths(papers: unknown): string[] {
@@ -669,9 +674,6 @@ export function toPaths(papers: unknown): string[] {
     return papers.filter((x) => typeof x === "string" && x.trim());
   return [];
 }
-
-const hasPapers = (opts: PaperlintConfig): boolean =>
-  toPaths(papersDirOf(opts)).length > 0;
 
 /**
  * `paperlint hook <name>` — run an editor hook. It exists for ONE thing: so that the wiring does not
@@ -819,14 +821,11 @@ async function runNew(
   }
   const cfg = readConfig({ ...a, json: false }, { log: () => {}, err, cwd });
   if (cfg.code !== undefined) return cfg.code;
-  const roots = toPaths(papersDirOf(cfg.opts)).map((rel) =>
-    resolve(dirname(cfg.configPath ?? cwd), rel),
-  );
+  const roots = papersRoots(cfg);
   const papersRoot = roots[0];
-  if (!cfg.configPath || papersRoot === undefined) {
+  if (papersRoot === undefined) {
     err(
-      `no papers directory is declared, so there is nowhere to put \`${name}\`.\n` +
-        `Run \`npx paperlint init\` first — it declares the directory in package.json.`,
+      `"${PAPERS_DIR_FIELD}" names no directory, so there is nowhere to put \`${name}\`.`,
     );
     return 2;
   }
@@ -854,10 +853,7 @@ async function runBuild(
 ): Promise<number> {
   const cfg = readConfig(a, { log, err, cwd });
   if (cfg.code !== undefined) return cfg.code;
-  const { opts, configPath } = cfg;
-  const roots = toPaths(papersDirOf(opts)).map((rel) =>
-    resolve(configPath ? dirname(configPath) : cwd, rel),
-  );
+  const roots = papersRoots(cfg);
 
   let targets;
   if (a.all) {
@@ -917,12 +913,7 @@ export function toolchainTex(cwd: string): TexRequirements {
     err: () => {},
     cwd,
   });
-  const roots =
-    cfg.code === undefined
-      ? toPaths(papersDirOf(cfg.opts)).map((rel) =>
-          resolve(dirname(cfg.configPath ?? cwd), rel),
-        )
-      : [];
+  const roots = cfg.code === undefined ? papersRoots(cfg) : [];
   const chains = roots
     .flatMap((r) => papersIn(r))
     .map((dir) => paperPreset(dir, PRESET_DEPS))
@@ -1088,31 +1079,34 @@ export async function run(
 
   const cfg = readConfig(a, { log, err, cwd });
   if (cfg.code !== undefined) return cfg.code;
-  const { opts, configPath } = cfg;
+  const { opts, root } = cfg;
 
   // A command-line argument OVERRIDES the config: one paper out of the corpus gets linted without
   // editing a file.
   //
-  // 🔴 A path FROM THE CONFIG is resolved relative to the CONFIG'S DIRECTORY, not the current one.
-  // Otherwise walking up is pointless: from `papers/aisec-2026` the file would be found, but
-  // `"papersDir": "papers"` would point at `papers/aisec-2026/papers`, which does not exist — and the
-  // run would fail with "nothing found" where everything is in place. A command-line argument stays
+  // 🔴 A path FROM THE CONFIG is resolved relative to the PROJECT ROOT, not the current directory.
+  // Otherwise walking up is pointless: from `papers/aisec-2026` the root would be found, but
+  // `"papersDir": "papers"` would point at `papers/aisec-2026/papers`. A command-line argument stays
   // relative to the current directory: it was typed here and now.
   //
   // Both kinds end up ABSOLUTE: ESLint below runs from `lintRoot`, not from here, and would resolve a
   // relative argument against the wrong directory.
   const paths =
-    a.paths.length > 0
-      ? a.paths.map((p) => resolve(cwd, p))
-      : toPaths(papersDirOf(opts)).map((rel) =>
-          resolve(dirname(configPath ?? cwd), rel),
-        );
+    a.paths.length > 0 ? a.paths.map((p) => resolve(cwd, p)) : papersRoots(cfg);
   if (paths.length === 0) {
     err(
-      `nothing to lint: no path was given and no "${CONFIG_KEY}" key was found in a ${PKG_NAME}.\n` +
-        `Run \`npx paperlint init\` here, or pass the directory: \`paperlint lint papers\`.`,
+      `nothing to lint: "${PAPERS_DIR_FIELD}" names no directory. Pass one: \`paperlint lint papers\`.`,
     );
     return 2;
+  }
+  // 🔴 NO PAPERS WHERE THE CONFIG POINTS IS AN ERROR, NOT A CLEAN RUN. With the default in play the
+  // directory may simply not exist yet; a run over nothing would be green and say nothing.
+  if (a.paths.length === 0) {
+    const empty = paths.find((p) => papersIn(p).length === 0);
+    if (empty !== undefined) {
+      err(noPapersMessage(relative(cwd, empty) || "."));
+      return 2;
+    }
   }
 
   // 🔴 STRUCTURE IS CHECKED BEFORE ESLint AND SEPARATELY FROM IT. A rule is invoked for the file
@@ -1120,13 +1114,13 @@ export async function run(
   // a directory without `PIPELINE-STATUS.md` simply gets not a single rule and reports clean. The
   // analysis of why a structure plugin for ESLint does not cure this is in `structure.mjs`.
   const structure = checkStructure(paths, opts.structure, { cwd });
-  // Each paper's own `rules` (its paperlint.json) go after paperlint's blocks and BEFORE the
-  // project's, so the project's package.json still has the last word.
+  // The order, most general first so the most specific wins (ESLint: a later block wins): each
+  // paper's venue preset → the root paperlint.json → the paper's own paperlint.json.
   const papers = paperRuleBlocks(paths);
   if (!papers.ok) return (err(papers.error), 2);
   const withPapers = {
     ...opts,
-    rules: [...papers.value, ...(opts.rules ?? [])],
+    rules: [...papers.value.preset, ...(opts.rules ?? []), ...papers.value.own],
   };
 
   let texLanguage: unknown = null;
@@ -1139,7 +1133,7 @@ export async function run(
   }
 
   const eslint = new ESLint({
-    cwd: lintRoot(configPath ? dirname(resolve(cwd, configPath)) : cwd, paths),
+    cwd: lintRoot(root, paths),
     overrideConfigFile: true,
     overrideConfig: buildConfig(withPapers, texLanguage) as Linter.Config[],
     fix: a.fix,
@@ -1184,7 +1178,7 @@ export async function run(
     a,
     log,
     err,
-    where: relative(cwd, dirname(resolve(cwd, configPath ?? "."))) || ".",
+    where: relative(cwd, root) || ".",
     opts: withPapers,
   });
 }

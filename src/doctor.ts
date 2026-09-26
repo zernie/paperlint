@@ -29,11 +29,10 @@ import { spawnSync } from "node:child_process";
 // the hook itself rather than at a shared module.
 import {
   papersRoot,
-  CONFIG_KEY,
   DEFAULT_PAPERS_ROOT,
   PAPERS_DIR_FIELD,
+  CONFIG_FILE,
 } from "../hooks/paper-edit-guard.hook.mjs";
-import { settingsOf } from "../lib/paper-config.mjs";
 import { PAPER_MARKERS } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
 import { doctorHooks } from "./hooks-settings.ts";
@@ -140,34 +139,42 @@ export function detectPapers(cwd: string, depth = 2): string[] {
   return hits;
 }
 
-/** The declaration's verdict: a missing declaration is a warning. */
-function declarationVerdict(rawPkg: string): { lines: string[]; bad: number } {
-  const out: string[] = [];
-  const settings = (() => {
-    try {
-      return settingsOf(JSON.parse(rawPkg));
-    } catch {
-      return undefined;
-    }
-  })();
-  const declared = settings?.[PAPERS_DIR_FIELD];
-  // 🔴 A MISSING DECLARATION IS A WARNING, NOT A REFUSAL, and that is a decision, not an
-  // oversight. Without it the hook takes the `papers` default; if the papers do live there, the
-  // install WORKS — just by coincidence, and it will break silently on the day the directory
-  // moves. Failing on a working install is not allowed here: for an `error`-level check a false
-  // positive costs more than a miss, because people do not fix it, they switch it off — together
-  // with the binary findings below, which the command was written for. A real breakage (the roots
-  // drifted apart, the directory does not exist) is caught where it is binary.
-  if (declared === undefined)
-    out.push(
-      `  ⚠ package.json has no "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": … } — the hooks fall back to "${DEFAULT_PAPERS_ROOT}"`,
-      `      it works only while your papers happen to live there; declare it and it keeps working`,
-    );
-  else
-    out.push(
-      `  ✓ package.json → ${CONFIG_KEY}.${PAPERS_DIR_FIELD} = ${JSON.stringify(declared)}`,
-    );
-  return { lines: out, bad: 0 };
+/**
+ * The root `paperlint.json`'s verdict. Absent, or silent on `papersDir`, is fine: the default is
+ * `papers`, and the CLI and the hooks take it alike. Only a file that does not parse is a failure —
+ * the edit guard refuses every Bash command while it cannot read it.
+ */
+function declarationVerdict(raw: string | null): { lines: string[]; bad: number } {
+  if (raw === null)
+    return {
+      lines: [
+        `  ✓ no ${CONFIG_FILE} — every setting has its default; papers are in "${DEFAULT_PAPERS_ROOT}"`,
+      ],
+      bad: 0,
+    };
+  let settings: unknown;
+  try {
+    settings = JSON.parse(raw);
+  } catch (e) {
+    return {
+      lines: [
+        `  ✗ ${CONFIG_FILE} is not valid JSON: ${(e as Error).message}`,
+        `      the edit guard refuses every Bash command until it parses — fix it with Edit or Write`,
+      ],
+      bad: 1,
+    };
+  }
+  const declared = (settings as Record<string, unknown> | null)?.[
+    PAPERS_DIR_FIELD
+  ];
+  return {
+    lines: [
+      declared === undefined
+        ? `  ✓ ${CONFIG_FILE} names no ${PAPERS_DIR_FIELD} — the default "${DEFAULT_PAPERS_ROOT}"`
+        : `  ✓ ${CONFIG_FILE} → ${PAPERS_DIR_FIELD} = ${JSON.stringify(declared)}`,
+    ],
+    bad: 0,
+  };
 }
 
 /**
@@ -238,7 +245,7 @@ export function doctor({
   skillLinks = (r: string) => linkSkills(r, { write: false }),
 }: DoctorOptions = {}): number {
   const root = projectDir ?? cwd;
-  const pkgPath = join(root, "package.json");
+  const configPath = join(root, CONFIG_FILE);
   const out: string[] = [
     "",
     "paperlint doctor — what is wired, and what only looks wired",
@@ -246,22 +253,15 @@ export function doctor({
   ];
   let bad = 0;
 
-  out.push("declaration");
-  const rawPkg = existsSync(pkgPath) ? readFileSync(pkgPath, "utf8") : "";
-  if (!rawPkg) {
-    out.push(`  ✗ no package.json at ${root}`);
-    out.push(
-      `      the hooks read their papers directory from there and refuse without it`,
-    );
-    bad++;
-  } else {
-    const declaration = declarationVerdict(rawPkg);
-    out.push(...declaration.lines);
-    bad += declaration.bad;
-  }
+  out.push("settings");
+  const raw = existsSync(configPath) ? readFileSync(configPath, "utf8") : null;
+  const declaration = declarationVerdict(raw);
+  out.push(...declaration.lines);
+  bad += declaration.bad;
 
   out.push("", "papers directory");
-  const hookRoot = rawPkg ? papersRoot(rawPkg) : null;
+  // The hook is given what its provider gives it: the file, or `{}` when there is none.
+  const hookRoot = papersRoot(raw ?? "{}");
   const hookSays = typeof hookRoot === "string" ? hookRoot : null;
   out.push(
     `  the CLI will lint    ${cliPapers ?? "(nothing — no declaration found)"}`,

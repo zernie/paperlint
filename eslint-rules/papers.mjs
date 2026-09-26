@@ -84,7 +84,7 @@ import {
   CONFIG_KEY,
   DEFAULT_PAPERS_ROOT,
   PAPERS_DIR_FIELD,
-  PAPER_SETTINGS_FILE,
+  CONFIG_FILE,
   settingsOf,
 } from "../lib/paper-config.mjs";
 export { DEFAULT_PAPERS_ROOT };
@@ -149,7 +149,7 @@ export function paperFiles(root) {
     /** The per-paper stage ledger. */
     status: [`${root}/*/PIPELINE-STATUS.md`],
     /** The per-paper settings file, `paperlint.json`. */
-    venue: [`${root}/*/${PAPER_SETTINGS_FILE}`],
+    venue: [`${root}/*/${CONFIG_FILE}`],
     /** Facts extracted from the built PDF. */
     pdfFacts: [`${root}/*/_build/paper.facts.json`],
     /** Facts extracted from the bibliography. */

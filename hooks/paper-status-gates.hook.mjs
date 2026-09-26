@@ -63,16 +63,29 @@ import {
   nothing,
 } from "vigiles/hook";
 
-/** The key every carrier of this package reads its consumer-specific settings from. */
+/** The tool's name — the package this hook resolves its scripts through. */
 export const CONFIG_KEY = "paperlint";
+/** The settings file at the project root. Optional: absent means every default. */
+export const CONFIG_FILE = "paperlint.json";
 /** The default. A consumer that declares nothing is assumed to keep papers in `papers/`. */
 export const DEFAULT_PAPERS_ROOT = "papers";
 /**
- * The field under CONFIG_KEY that names the papers directory. A copy of the
- * constant in `lib/paper-config.mjs` (a hook may import nothing but `vigiles/hook`);
+ * The field of the root `paperlint.json` that names the papers directory. These are copies of the
+ * constants in `lib/paper-config.mjs` (a hook may import nothing but `vigiles/hook`);
  * `lib/paper-config.harness.mjs` checks that the copies match.
  */
 export const PAPERS_DIR_FIELD = "papersDir";
+
+/**
+ * The provider: the root `paperlint.json`, or `{}` when the project has none — so an ABSENT file
+ * (every default) and an UNREADABLE one (the empty string the runtime gives a failed provider)
+ * stay two different inputs.
+ *
+ * 🔴 THE PATH IS ANCHORED TO THE PROJECT ROOT. vigiles runs a provider "via execSync in the hook's
+ * cwd", which is the consumer's wiring — a string this hook cannot see. A bare relative path reads
+ * from whatever directory the Bash tool last moved to.
+ */
+const READ_CONFIG = `f="\${CLAUDE_PROJECT_DIR:-.}/${CONFIG_FILE}"; if [ -e "$f" ]; then cat "$f"; else echo '{}'; fi`;
 
 /**
  * The declared papers root, or `null` when it is unusable.
@@ -85,12 +98,10 @@ export const PAPERS_DIR_FIELD = "papersDir";
  * 🔴 `declared === undefined`, NOT `declared ?? DEFAULT` — `"papersDir": null` is a keystroke, not
  * an absence.
  */
-const papersRoot = (rawPkg) => {
+const papersRoot = (rawConfig) => {
   let declared;
   try {
-    const pkg = JSON.parse(rawPkg);
-    const settings = pkg?.[CONFIG_KEY];
-    declared = settings?.[PAPERS_DIR_FIELD];
+    declared = JSON.parse(rawConfig)?.[PAPERS_DIR_FIELD];
   } catch {
     return null;
   }
@@ -128,21 +139,17 @@ const surface = (dir) =>
 export default experimental_defineReact({
   on: "PostToolUse",
   match: tools("Edit", "Write", "MultiEdit"),
-  // 🔴 THE PATH IS ANCHORED TO THE PROJECT ROOT, and that is not decoration. vigiles runs the
-  // provider "via execSync in the hook's cwd", and the hook process's cwd is the consumer's
-  // own wiring — a string this hook cannot see. A bare `cat package.json` therefore reads from
-  // whatever directory the Bash tool last moved to, and a `cd` into a subdirectory with no
-  // manifest breaks the read.
+  // The provider is anchored to the project root (`READ_CONFIG`, above).
   //
   // ⚠️ THE FAILURE HERE IS SILENT, which makes it more dangerous than its neighbor's.
   // `paper-edit-guard` on PreToolUse DENIES loudly and visibly when the declaration is
   // unreadable. This hook on PostToolUse just returns `nothing()`, i.e. simply stops firing:
-  // the `cat` chain fails → empty string → `JSON.parse("")` throws → `papersRoot` returns null
+  // the `cat` fails → empty string → `JSON.parse("")` throws → `papersRoot` returns null
   // → silence. And silence is exactly what a nudge's success state looks like, so a dead hook
   // is indistinguishable from a working one.
-  needs: [provide("pkg", 'cat "${CLAUDE_PROJECT_DIR:-.}/package.json"')],
+  needs: [provide("config", READ_CONFIG)],
   react: (e) => {
-    const root = papersRoot(e.ctx.pkg);
+    const root = papersRoot(e.ctx.config);
     if (root === null) return nothing();
     const m = paperSourceRe(root).exec(e.path.raw.replace(/^\.\//, ""));
     if (m === null) return nothing();

@@ -45,7 +45,7 @@ import { delimiter, join, relative } from "node:path";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import { getParser } from "@unified-latex/unified-latex-util-parse";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
-import { PAPER_SETTINGS_FILE } from "../lib/paper-config.mjs";
+import { CONFIG_FILE } from "../lib/paper-config.mjs";
 import {
   declaredVenue,
   factsPath,
@@ -89,7 +89,7 @@ export const PAPER_MARKERS = [
   "PIPELINE-STATUS.md",
   "paper.tex",
   "paper.md",
-  PAPER_SETTINGS_FILE,
+  CONFIG_FILE,
 ];
 
 /** The source paperlint compiles, and the job name every output file carries. */

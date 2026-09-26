@@ -26,7 +26,7 @@ import { join } from "node:path";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import Ajv from "ajv";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
-import { PAPER_SETTINGS_FILE } from "../lib/paper-config.mjs";
+import { CONFIG_FILE } from "../lib/paper-config.mjs";
 
 /** CTAN package name → the names that prove it is installed. */
 export type PackageProofs = Readonly<Record<string, readonly string[]>>;
@@ -298,7 +298,7 @@ export function requirementsFor(
   const base = readProfile(dir, BASE_PROFILE);
   return preset === null
     ? {
-        source: `the base set (no venue preset in ${PAPER_SETTINGS_FILE})`,
+        source: `the base set (no venue preset in ${CONFIG_FILE})`,
         tex: base,
       }
     : {

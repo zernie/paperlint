@@ -47,7 +47,7 @@ import {
   type PaperSettings,
   type SettingsProblem,
 } from "./paper-settings.ts";
-import { PAPER_SETTINGS_FILE } from "../lib/paper-config.mjs";
+import { CONFIG_FILE } from "../lib/paper-config.mjs";
 
 /** The prefix of a shipped preset's spec. */
 export const SHIPPED_PREFIX = "paperlint:";
@@ -281,7 +281,7 @@ export function paperPreset(paperDir: string, deps: PresetDeps): PaperPreset {
   if (settings?.extends == null) return { kind: "none", settings };
   const r = resolvePreset(
     settings.extends,
-    join(paperDir, PAPER_SETTINGS_FILE),
+    join(paperDir, CONFIG_FILE),
     deps,
   );
   return r.ok
@@ -295,7 +295,7 @@ export function paperPresetProblem(
   p: PaperPreset,
 ): string | null {
   if (p.kind === "preset-problem")
-    return `${join(paperDir, PAPER_SETTINGS_FILE)}: ${presetProblemText(p.problem)}`;
+    return `${join(paperDir, CONFIG_FILE)}: ${presetProblemText(p.problem)}`;
   if (p.kind !== "settings-problem") return null;
-  return `${join(paperDir, PAPER_SETTINGS_FILE)}: ${p.problem.why}`;
+  return `${join(paperDir, CONFIG_FILE)}: ${p.problem.why}`;
 }

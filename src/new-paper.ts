@@ -25,7 +25,7 @@ import {
 /* eslint-enable boundaries/dependencies */
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { PAPER_SETTINGS_FILE } from "../lib/paper-config.mjs";
+import { CONFIG_FILE } from "../lib/paper-config.mjs";
 
 export type PaperFormat = "tex" | "md";
 export const FORMATS: readonly PaperFormat[] = ["tex", "md"];
@@ -88,7 +88,7 @@ export type NewPaperResult =
  * already has a source in EITHER format, in which case that one stands — and `paperlint.json`.
  */
 export function wantedFiles(dir: string, format: PaperFormat): string[] {
-  return [...scorecardAndSource(dir, format), PAPER_SETTINGS_FILE];
+  return [...scorecardAndSource(dir, format), CONFIG_FILE];
 }
 
 function scorecardAndSource(dir: string, format: PaperFormat): string[] {

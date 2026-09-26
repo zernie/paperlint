@@ -36,7 +36,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join } from "node:path";
-import { PAPER_SETTINGS_FILE } from "../lib/paper-config.mjs";
+import { CONFIG_FILE } from "../lib/paper-config.mjs";
 
 /** The difference, in points, that two columns may end apart. See the harness for why 120. */
 export const DEFAULT_TOLERANCE_PT = 120;
@@ -144,7 +144,7 @@ function reportLine(file) {
 function extendsPreset(paperDir) {
   try {
     const s = JSON.parse(
-      readFileSync(join(paperDir, PAPER_SETTINGS_FILE), "utf8"),
+      readFileSync(join(paperDir, CONFIG_FILE), "utf8"),
     );
     return typeof s?.extends === "string" && s.extends !== "";
   } catch {
