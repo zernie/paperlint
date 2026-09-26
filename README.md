@@ -8,6 +8,8 @@ README style — keep it scannable, not a wall of text:
 - Mechanics and edge cases live in docs/, linked — not inline.
 - A reader must be able to answer "what is it, which venues, how do I start" from the first screen.
 - Sparse emoji are fine where they help rhythm and scanning (e.g. one per section heading or feature bullet); never decorative, never several in a row.
+- One name per thing, everywhere (lint, build, venue preset, kind, skill, papersDir), and no term before it is explained.
+- Editing this file: re-read all of it first, and change it so it still reads as one document — the opening, the diagram, the order and the names your change touches. Remove or merge what it makes redundant. Never bolt on a section or patch one paragraph in isolation.
 -->
 
 # paperlint
@@ -15,42 +17,65 @@ README style — keep it scannable, not a wall of text:
 [![npm version](https://img.shields.io/npm/v/paperlint)](https://www.npmjs.com/package/paperlint)
 ![Node version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fzernie%2Fpaperlint%2Fmain%2Fpackage.json&query=%24.engines.node&label=node)
 
-**A linter for scientific papers written in LaTeX.** It catches the mechanical mistakes that get a
-paper desk-rejected or sent back at camera-ready, before you submit.
+**A pipeline for writing a research paper in LaTeX, from idea to camera-ready — with a linter that
+checks the paper at every step.**
 
-A LaTeX paper can build without an error and still be wrong: a missing font package silently
-changes the font, another template version changes the pagination, the submitted PDF gets
-overwritten. paperlint checks for these on your machine and in CI:
+- ✅ **The linter is the backbone.** `paperlint lint` checks your paper against your venue's rules
+  on every edit and in CI. `paperlint build` compiles it and measures the PDF, so lint can also
+  judge the page limit, the fonts and the references.
+- 🧠 **The skills do the rest of the work with you.** 24 skills for Claude Code, covering every
+  stage: the idea, the venue, the study, the draft, the reviews, submission, camera-ready.
 
-- 📏 **Checks against your venue.** Page limit, embedded fonts, paper size, columns and font sizes,
-  as the call for papers sets them.
-- 🧱 **Builds the same PDF everywhere.** `paperlint toolchain` installs TeX Live with exactly the
-  packages your venue's template needs.
-- 📌 **Keeps what you submitted.** Record the PDF you sent, and paperlint fails if it changes or
-  disappears, or its LaTeX source was not kept.
-- 🔗 **Checks your references online.** At build time: each cited work exists, and its author list
-  is the published version's.
-- ✏️ **Knows the classic slips.** `§` instead of "Section", `.05` instead of `0.05`.
-  `paperlint lint --fix` fixes them.
-
-It is built on ESLint: the checks are ESLint rules over `.tex` and `.md` files, named like
-`paper/leading-zero`. You do not need to know ESLint to use it.
+The linter needs only Node. The skills need [Claude Code](https://claude.com/claude-code) and are
+optional.
 
 ## Contents
 
+- [The pipeline](#-the-pipeline)
 - [Supported venues](#-supported-venues)
-- [Skills](#-skills)
 - [Getting started](#-getting-started)
+- [Skills](#-skills)
+- [Lint and build](#-lint-and-build)
 - [Commands](#-commands)
 - [Configuration](#-configuration)
 - [Run it in CI](#-run-it-in-ci)
 - [FAQ](#-faq)
 - [Docs](#-docs)
 
+## 🧭 The pipeline
+
+Eight stages, the skills that do each, and where the linter checks the paper:
+
+```text
+stage           skills (with Claude Code)                    paperlint
+--------------  -------------------------------------------  ----------------
+1 idea          research-ideate, map-prior-work,
+                analyze-sibling-paper, sweep-design-space
+2 venue         find-venue, study-accepted-papers,           new --venue
+                plan-paper-timeline                            |
+3 study         build-benchmark                                | lint:
+4 draft         draft-paper, argument-arc, tighten-paper,      |  every edit,
+                cold-read-diff, render-paper                   |  every CI run
+5 review        grade-paper-writing, verify-citations,         |
+  and harden    paper-adversarial-review, pc-panel-review,     | build:
+                harden-paper                                   |  pages, fonts,
+6 submit        submit-paper, osf-artifact-upload              |  references
+                                                               | + submitted PDF
+7 camera-ready  camera-ready                                   |  locked in
+8 extend        extend-paper                                   v
+
+paper-pipeline walks you through the stages; paper-status says where you are.
+```
+
+- `new --venue` creates the paper folder with its venue preset (below): the file that holds the
+  venue's page limit and format.
+- `lint` runs from then on, on every edit and in CI. `build` compiles and measures the PDF before
+  you submit; after that, lint also checks that the PDF you sent is kept, unchanged.
+
 ## 🎯 Supported venues
 
-A preset holds a venue's format and page limits. Its **kind** is the paper type the venue sets a
-limit for — `short`, `full`, `research` — named once per paper in its `paperlint.json`.
+A **venue preset** holds a venue's format and page limits. Its **kind** is the paper type the venue
+sets a limit for — `short`, `full`, `research` — chosen once per paper.
 
 | preset                  | venue              | format                           | page limit                                                     |
 | ----------------------- | ------------------ | -------------------------------- | -------------------------------------------------------------- |
@@ -63,30 +88,7 @@ REALM's limit is recorded but not checked because ACL leaves the Limitations and
 out of the page count, and the PDF measurement counts them as body pages: a paper within the limit
 would fail.
 
-Another venue: [a four-line preset file](#another-venue).
-
-## 🧠 Skills
-
-paperlint has two halves:
-
-1. **The linter** — `lint` and `build` — is deterministic: the same paper gives the same verdict,
-   so it belongs in CI.
-2. **The skills** help with the work itself, where the answer is a judgment call. They are
-   optional; `paperlint init` installs them for [Claude Code](https://claude.com/claude-code).
-
-- **Start here** — run the whole process step by step (`paper-pipeline`), or ask where the paper
-  stands (`paper-status`).
-- **Judge the idea** — is it worth doing (`research-ideate`), who else works on it
-  (`map-prior-work`), read a close competitor in depth (`analyze-sibling-paper`).
-- **Pick a venue** — find where to send it (`find-venue`), see what gets accepted there
-  (`study-accepted-papers`), put the deadlines in your calendar (`plan-paper-timeline`).
-- **Do the study and write** — design the study and its artifact (`build-benchmark`), write the
-  draft (`draft-paper`), fix the outline (`argument-arc`), cut it down (`tighten-paper`).
-- **Review before you submit** — a reader with no context (`cold-read-diff`), the prose
-  (`grade-paper-writing`), a hostile reviewer (`paper-adversarial-review`), a simulated committee
-  (`pc-panel-review`), the references (`verify-citations`), the final check (`harden-paper`).
-- **Submit and after** — render pages to images (`render-paper`), submit (`submit-paper`), upload
-  the artifact (`osf-artifact-upload`), camera-ready (`camera-ready`), the next paper (`extend-paper`).
+Your venue is not listed? [Add it in five steps](#-add-a-venue-that-isnt-listed).
 
 ## 🚀 Getting started
 
@@ -98,25 +100,26 @@ paperlint has two halves:
    npm i -D paperlint
    ```
 
-2. Set up — it finds your papers directory, offers a CI workflow and a first paper, and (with
-   Claude Code) links the skills:
+2. Set up. `init` finds the directory your papers live in (`papers/` unless you say otherwise),
+   offers a CI workflow, and — with Claude Code — installs the skills:
 
    ```sh
    npx paperlint init
    ```
 
-3. TeX Live, for building — once. `init` offers it; `paperlint lint` alone needs no TeX:
+3. Install TeX Live, once, for `build`. `init` offers it; `lint` alone needs no TeX:
 
    ```sh
    npx paperlint toolchain   # ~270 MB, ~3 min, once
    ```
 
-4. Create a paper:
+4. Create a paper for your venue. `--venue` is a preset from [the table above](#-supported-venues),
+   `--kind` your paper's type there:
 
    <!-- `vigiles:symbol src/new-paper.ts#newPaper` — `npm run check` fails if this function is renamed or removed. -->
 
    ```sh
-   npx paperlint new my-paper
+   npx paperlint new my-paper --venue agenticdev --kind short
    ```
 
    ```
@@ -126,19 +129,16 @@ paperlint has two halves:
          + paperlint.json  (from the package template)
    ```
 
-5. Pick the venue ([the table above](#-supported-venues)) in `papers/my-paper/paperlint.json`:
+   `paper.tex` is your paper. `PIPELINE-STATUS.md` is its scorecard: the stages it has reached.
+   `paperlint.json` names its venue preset and kind.
 
-   ```json
-   { "extends": "paperlint:agenticdev", "kind": "short" }
-   ```
-
-6. Build the PDF:
+5. Build the PDF ([what build does](#-paperlint-build)):
 
    ```sh
    npx paperlint build papers/my-paper
    ```
 
-7. Check every paper:
+6. Check every paper ([what lint checks](#-paperlint-lint)):
 
    ```sh
    npx paperlint lint
@@ -157,9 +157,99 @@ paperlint has two halves:
      0 errors and 2 warnings potentially fixable with the `--fix` option.
    ```
 
-Errors fail the run (exit 1); warnings only print, unless you pass `--max-warnings <n>`. To keep
-a deliberate exception, put the reason on the line above:
+7. With Claude Code, ask for the next step in plain words — "is this idea worth a paper?" — or for
+   the whole pipeline: "walk me through writing this paper". More in [Skills](#-skills).
+
+## 🧠 Skills
+
+You do not need to learn the skills' names. You talk to Claude Code, and the right skill starts:
+
+- `paper-pipeline` walks you through the stages in order and calls the other skills on the way.
+- Each skill also starts on its own when you ask for what it does: "is this idea worth a paper?",
+  "find me a venue for this", "red-team my draft".
+
+`paperlint init` installs them. The six a new user meets first:
+
+- **A go / no-go on your idea, with the reason** — and the smallest result that would make it a
+  paper. `research-ideate`
+- **A ranked list of venues that fit** — deadline, page limit, indexing. `find-venue`
+- **A first draft from your results** — claims sized, threats to validity written. `draft-paper`
+- **A hostile review before the real one** — overclaims, missing baselines, holes in the
+  method. `paper-adversarial-review`
+- **A ready / not ready verdict before you submit** — worst problem first. `harden-paper`
+- **Where your paper stands, measured** — pages from the real build, what is checked, what
+  blocks you. `paper-status`
+
+All 24, by stage: [`docs/skills.md`](docs/skills.md).
+
+## 🔍 Lint and build
+
+Two commands, two jobs. **build** turns the paper into a PDF and measures it. **lint** judges the
+paper: its source, and what build measured.
+
+### ✅ `paperlint lint`
+
+- **What it reads:** in each paper folder, `paper.tex` (or `paper.md`, `draft.md`),
+  `PIPELINE-STATUS.md`, `reviews/*.md` and `siblings/*.md` — nothing else. A script, a README or
+  `node_modules` beside them is never linted.
+- **What it checks:** the source (typography, references), the scorecard, and what the last build
+  measured (`_build/`): page limit, fonts, format.
+- **Offline and repeatable:** no network, and the same files always give the same verdict. That is
+  why it can fail a CI run.
+- **Exit code:** errors fail the run (exit 1); warnings only print, unless you pass
+  `--max-warnings <n>`. `paperlint lint --fix` fixes what can be fixed.
+
+A deliberate exception gets its reason on the line above:
 `% eslint-disable-next-line paper/leading-zero -- quoted from the reviewer`.
+
+| check                 | catches                                                                |
+| --------------------- | ---------------------------------------------------------------------- |
+| `pdf/fonts`           | the template's fonts are missing — LaTeX silently used Computer Modern |
+| `pdf/limits`          | more pages than the venue allows for your kind of paper                |
+| `paper/stages`        | the PDF you recorded as submitted changed or disappeared               |
+| `paper/source`        | the LaTeX source of a submitted version was not kept                   |
+| `bib/reachable-entry` | a reference with no DOI, URL or arXiv id                               |
+| `paper/author-list`   | a reference lists the preprint's authors, not the published version's  |
+
+Every check: [`docs/rules.md`](docs/rules.md). Checks only some venues need are off until you turn
+them on: [`docs/optional-rules.md`](docs/optional-rules.md).
+
+### 🧱 `paperlint build`
+
+`paperlint build papers/my-paper` starts from `papers/my-paper/paper.tex`, and:
+
+1. **Compiles** with TeX Live's `pdflatex`, runs `bibtex` when the paper has a bibliography, and
+   reruns pdflatex until the references settle (at most five passes, then one final pass).
+2. **Measures** the PDF: page count, fonts, page size, columns, font sizes.
+3. **Checks the references online** (Crossref, DOI, arXiv, DBLP): each cited work exists, and its
+   authors are the published version's. Offline it records "not checked", and the build still passes.
+
+What the paper folder holds afterwards:
+
+```
+papers/my-paper/
+  paper.tex
+  paperlint.json
+  PIPELINE-STATUS.md
+  paper.pdf                  the PDF
+  paper.aux, paper.log, …    LaTeX's own files
+  _build/
+    paper.facts.json         what was measured (step 2)
+    references.json          what the reference check found (step 3)
+```
+
+The build judges nothing: a PDF over the page limit still builds, and lint reports it. Keep
+`_build/` out of git. Details: [`docs/configuration.md`](docs/configuration.md#how-paperlint-build-compiles-a-paper).
+
+### How they fit
+
+- build writes `_build/`; lint reads it. The `pdf/*` checks judge `paper.facts.json`, the
+  reference checks judge `references.json`. Each fails when the PDF or the bibliography changed
+  since the build that wrote it.
+- **lint belongs in CI:** it needs only Node and is fast. There, without a build, it checks the
+  source and the scorecard, and says that the venue checks did not run.
+- **build runs on your machine** before you submit, and after changes that move pages: it needs
+  TeX Live and the network. Then run lint to see the venue checks.
 
 ### 📌 When you submit
 
@@ -181,29 +271,15 @@ From then on `paperlint lint` fails if that PDF goes missing or changes size
 
 ## 🧰 Commands
 
-| command                       | what it does                                                                   |
-| ----------------------------- | ------------------------------------------------------------------------------ |
-| `npx paperlint init`          | sets the project up                                                            |
-| `npx paperlint new my-paper`  | creates a paper folder from a template; never overwrites a file                |
-| `npx paperlint lint`          | runs every check over your papers; `--fix` fixes what can be fixed             |
-| `npx paperlint build <paper>` | compiles `paper.tex` to `paper.pdf`, measures it, checks the references online |
-| `npx paperlint toolchain`     | installs TeX Live with the packages your venues need (~270 MB, ~3 min, once)   |
-| `npx paperlint doctor`        | checks the setup and exits non-zero if something is miswired                   |
-| `npx paperlint --help`        | every command and flag                                                         |
-
-### 🔍 What the checks catch
-
-| check                 | catches                                                                |
-| --------------------- | ---------------------------------------------------------------------- |
-| `pdf/fonts`           | the template's fonts are missing — LaTeX silently used Computer Modern |
-| `pdf/limits`          | more pages than the venue allows for your kind of paper                |
-| `paper/stages`        | the PDF you recorded as submitted changed or disappeared               |
-| `paper/source`        | the LaTeX source of a submitted version was not kept                   |
-| `bib/reachable-entry` | a reference with no DOI, URL or arXiv id                               |
-| `paper/author-list`   | a reference lists the preprint's authors, not the published version's  |
-
-Every check: [`docs/rules.md`](docs/rules.md). Checks only some venues need are off until you
-turn them on: [`docs/optional-rules.md`](docs/optional-rules.md).
+| command                                                     | what it does                                                                   |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `npx paperlint init`                                        | sets the project up                                                            |
+| `npx paperlint new my-paper --venue <preset> --kind <kind>` | creates a paper folder for that venue; never overwrites a file                 |
+| `npx paperlint build <paper>`                               | compiles `paper.tex` to `paper.pdf`, measures it, checks the references online |
+| `npx paperlint lint`                                        | runs every check over your papers; `--fix` fixes what can be fixed             |
+| `npx paperlint toolchain`                                   | installs TeX Live with the packages your venues need (~270 MB, ~3 min, once)   |
+| `npx paperlint doctor`                                      | checks the setup and exits non-zero if something is miswired                   |
+| `npx paperlint --help`                                      | every command and flag                                                         |
 
 ## 🧩 Configuration
 
@@ -211,35 +287,84 @@ Two levels, one file name, both optional:
 
 ```
 paperlint.json                   the project: papersDir, rules, defaults for every paper
-papers/my-paper/paperlint.json   one paper: its venue, its kind, its own rules
+papers/my-paper/paperlint.json   one paper: its venue preset, its kind, its own rules
 ```
 
-`papersDir` defaults to `papers`. If your papers live elsewhere, say so in a `paperlint.json`
-beside your `package.json`:
+`papersDir` — the directory your papers live in — defaults to `papers`. If yours live elsewhere,
+say so in a `paperlint.json` beside your `package.json`:
 
 ```json
 { "papersDir": "docs/papers" }
 ```
 
-- A paper's file merges over the root's: its `extends` and `kind` win, its `rules` apply last.
-- Only the paper files under `papersDir` are linted, never a `repro/` script beside a paper.
+- A paper's file merges over the root's: its `extends` (the venue preset) and `kind` win, its
+  `rules` apply last.
 - An unknown key is an error, so a typo cannot silently turn a setting off.
 
 Every key: [`docs/configuration.md`](docs/configuration.md).
 
-### Another venue
+### ➕ Add a venue that isn't listed
 
-Write a preset in your repository, and extend it by path from the paper's `paperlint.json`
-(`"extends": "../../venues/my-venue.jsonc"`):
+A venue preset is a small file that tells paperlint a venue's rules: its template family, and the
+page limit for each kind of paper. You write one for your venue, on top of a shipped one:
 
-```jsonc
-{
-  "extends": "paperlint:acm-sigconf",
-  "format": { "kinds": { "short": { "body_pages_max": 4 } } },
-}
+1. **Pick the closest shipped preset.** Any ACM venue: `paperlint:acm-sigconf` — it already knows
+   the ACM template's page size, columns and fonts. Another template family: a preset can also
+   [stand alone](docs/rules.md#writing-your-own-venue-preset).
+
+2. **Create the file** in your project, for example `venues/my-workshop.jsonc`.
+
+3. **Write in it what the call for papers sets** — here, a 4-page limit for short papers:
+
+   ```jsonc
+   {
+     // everything the ACM template decides (page size, columns, fonts) comes from here
+     "extends": "paperlint:acm-sigconf",
+     "format": {
+       // one entry per kind of paper the call for papers names
+       "kinds": {
+         // the page limit, not counting references — the number in the call for papers
+         "short": { "body_pages_max": 4 },
+       },
+     },
+   }
+   ```
+
+4. **Point the paper at it.** For a new paper, from the project root:
+
+   ```sh
+   npx paperlint new my-paper --venue ./venues/my-workshop.jsonc --kind short
+   ```
+
+   For an existing paper, set `extends` in `papers/my-paper/paperlint.json`. There the path is
+   relative to that file: `{ "extends": "../../venues/my-workshop.jsonc", "kind": "short" }`.
+
+5. **Check it is picked up:** `npx paperlint build papers/my-paper`, then `npx paperlint lint`. A
+   wrong path is a `pdf/profile` error naming the file it looked for; a kind the preset lacks is a
+   `pdf/profile` error listing its kinds.
+
+A preset other people could use is welcome as a pull request
+([`CONTRIBUTING.md`](CONTRIBUTING.md#adding-a-venue)).
+
+### 🧷 Your own ESLint config
+
+paperlint is built on ESLint: each check is an ESLint rule over `.tex` and `.md` files, named like
+`paper/leading-zero`. You do not need to know ESLint to use it.
+
+If your own ESLint config also lints the paper files, spread `rulesOff` into it. It registers
+paperlint's rules, turned off, so a `% eslint-disable-next-line paper/leading-zero` does not fail
+your run with "Definition for rule … was not found":
+
+```js
+// eslint.config.mjs
+import { rulesOff } from "paperlint/bin/paperlint.mjs";
+import { texLanguage } from "paperlint/eslint-rules/latex-language.mjs";
+
+export default [...rulesOff(texLanguage) /* , your own blocks */];
 ```
 
-The full shape: [`docs/rules.md`](docs/rules.md#writing-your-own-venue-preset).
+Details, and how to run paperlint's whole config from ESLint:
+[`docs/configuration.md`](docs/configuration.md#using-the-rules-from-an-existing-eslint-config).
 
 ## 🤖 Run it in CI
 
@@ -265,8 +390,8 @@ Windows, install TeX Live yourself.
 No. They only add what is missing, and `init` keeps a `papersDir` you already declared.
 
 **My venue isn't listed — what now?**
-Write [a four-line preset](#another-venue) that extends the closest template family. For any ACM
-venue, `paperlint:acm-sigconf` already checks the format, without a page limit.
+Write a venue preset for it on top of the closest shipped one:
+[five steps](#-add-a-venue-that-isnt-listed).
 
 **Do I need TeX Live just to lint?**
 No. `paperlint lint` needs only Node. `paperlint build` needs TeX Live.
@@ -276,16 +401,15 @@ The step fails, and its log lists each finding with file, line, check and messag
 when it checked zero files, so a wrong `paths` shows up red.
 
 **Several papers for different venues in one repo?**
-Yes. Each paper names its own venue in its own `paperlint.json`.
-
-**Where does my configuration live?**
-In `paperlint.json` — at the project root (optional) and in each paper. Nothing goes into
-`package.json`.
+Yes. Each paper names its own venue preset in its own `paperlint.json`.
 
 **Do I need Claude Code?**
-No. The linter needs only Node. With Claude Code, `init` also links the skills and wires three
+No. The linter needs only Node. With Claude Code, `init` also installs the skills and wires three
 hooks into `.claude/settings.json`: one stops a shell command from writing to a paper file, two
 remind the agent what is left after a paper edit ([`docs/install.md`](docs/install.md)).
+
+**Is it ESLint? Can I keep my own ESLint config?**
+It is built on ESLint, and yes: [your own ESLint config](#-your-own-eslint-config).
 
 **Does it change my paper?**
 Only `paperlint lint --fix`, and only three rules: `paper/section-word` (`§` → Section),
@@ -293,6 +417,7 @@ Only `paperlint lint --fix`, and only three rules: `paper/section-word` (`§` �
 
 ## 📚 Docs
 
+- [`docs/skills.md`](docs/skills.md) — every skill, by stage
 - [`docs/install.md`](docs/install.md) — what `init` does, package managers, troubleshooting
 - [`docs/configuration.md`](docs/configuration.md) — every setting, and how `build` compiles
 - [`docs/rules.md`](docs/rules.md) — every check, what it reads and when it fails
