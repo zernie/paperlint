@@ -304,3 +304,32 @@ export default buildConfig({}, texLanguage);
 That config is the whole config for your papers: it starts with a global ignore of every file its
 rules are not written for, so `eslint .` with it lints only the paper files. Do not spread it into a
 config that also lints your JavaScript — that code would be ignored.
+
+### Your own ESLint run over paper files: register paperlint's rules, off
+
+If your `eslint.config.mjs` also lints the paper files — for rules of your own, with paperlint's LaTeX
+language — a `% eslint-disable-next-line paper/leading-zero -- why` in a paper fails that run with
+`Definition for rule 'paper/leading-zero' was not found`: your config does not know paperlint's rule
+names. Spread `rulesOff` first:
+
+```js
+// eslint.config.mjs
+import { rulesOff } from "paperlint/bin/paperlint.mjs";
+import { texLanguage } from "paperlint/eslint-rules/latex-language.mjs";
+
+export default [
+  ...rulesOff(texLanguage),
+  { files: ["**/paper.tex"], language: "tex/latex", rules: {/* your rules */} },
+];
+```
+
+It registers every rule paperlint ships, each turned off (`paperlint lint` is where they run), and
+the LaTeX language as `tex/latex` — use that instead of registering a `tex` plugin of your own, or
+ESLint refuses the config with `Cannot redefine plugin "tex"`, with or without the language. Without
+`texLanguage` it registers the rules only, for a config that lints markdown papers alone.
+
+On the files paperlint lints it also turns off ESLint's report of unused disable directives: a
+directive naming a rule that is off suppresses nothing, and would be reported as unused in every such
+run. `paperlint lint` still reports a directive that silences nothing.
+
+`rulePlugins(texLanguage)` gives the same plugins without the rule levels, one object per plugin name.

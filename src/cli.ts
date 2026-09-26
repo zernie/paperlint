@@ -322,6 +322,64 @@ export const SHIPPED_RULES: ReadonlySet<string> = shippedRuleIds(
   [markdown],
 );
 
+/** A plugin as `rulePlugins` gives it: its rules, and for `tex` the LaTeX language when given. */
+export interface RulePlugin {
+  readonly rules?: Readonly<Record<string, unknown>>;
+  readonly languages?: Readonly<Record<string, unknown>>;
+}
+
+/**
+ * Every plugin paperlint's config registers, ONE object per name, read off that config. In it one
+ * name is bound to different objects in different blocks (`paper` beside `PIPELINE-STATUS.md` is
+ * not `paper` beside `paper.tex`); here their rules are merged, so a config that lints any paper
+ * file knows every rule id. `@eslint/markdown` is a dependency's plugin and is left out. The LaTeX
+ * language rides on `tex` when `texLanguage` is given, and that is how a consumer registers it: a
+ * second `tex` plugin of its own is refused by ESLint ("Cannot redefine plugin "tex"", measured
+ * with and without the language here). Without it, `tex` carries rules only — for a config that
+ * lints markdown papers alone.
+ */
+export function rulePlugins(texLanguage?: unknown): Record<string, RulePlugin> {
+  const out: Record<string, { rules: Record<string, unknown> }> = {};
+  for (const block of buildConfig({}, texLanguage ?? { sentinel: "tex" }))
+    for (const [name, plugin] of Object.entries(
+      (block as { plugins?: Record<string, RulePlugin> }).plugins ?? {},
+    ))
+      if (plugin !== markdown)
+        out[name] = { rules: { ...out[name]?.rules, ...plugin.rules } };
+  if (out["tex"] && texLanguage !== undefined)
+    return {
+      ...out,
+      tex: { ...out["tex"], languages: { latex: texLanguage } },
+    };
+  return out;
+}
+
+/**
+ * A flat-config fragment for a consumer's OWN ESLint run over paper files (#104): every rule
+ * paperlint ships, registered and turned off. Without it a `% eslint-disable-next-line
+ * paper/leading-zero -- why` — the documented escape hatch — fails that run with "Definition for
+ * rule 'paper/leading-zero' was not found". Off, because `paperlint lint` is where they run.
+ *
+ * The second block is not optional, and it is measured: a directive naming a rule that is off
+ * suppresses nothing, so ESLint reports it as an unused directive (a warning by default, an error
+ * under `reportUnusedDisableDirectives: "error"`). On the files paperlint lints that report is
+ * switched off in THIS run — `paperlint lint` still reports a directive that silences nothing.
+ */
+export function rulesOff(texLanguage?: unknown): Linter.Config[] {
+  return [
+    {
+      name: "paperlint/rules-off",
+      plugins: rulePlugins(texLanguage) as Linter.Config["plugins"],
+      rules: Object.fromEntries([...SHIPPED_RULES].map((id) => [id, "off"])),
+    },
+    {
+      name: "paperlint/rules-off/directives",
+      files: PAPER_FILE_PATTERNS,
+      linterOptions: { reportUnusedDisableDirectives: "off" },
+    },
+  ];
+}
+
 /** Whether a rule entry (`"error"`, `2`, `["warn", {…}]`) turns the rule on. */
 const isOn = (entry: unknown): boolean => {
   const sev = Array.isArray(entry) ? entry[0] : entry;
