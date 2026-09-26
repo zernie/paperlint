@@ -113,8 +113,9 @@ Your venue is not listed? [Add it in five steps](#-add-a-venue-that-isnt-listed)
    npx paperlint toolchain   # ~270 MB, ~3 min, once
    ```
 
-4. Create a paper for your venue. `--venue` is a preset from [the table above](#-supported-venues),
-   `--kind` your paper's type there:
+4. Create a paper for your venue. `--venue` names a venue preset from
+   [the table above](#-supported-venues); `--kind` names which of its page limits applies to
+   your paper (`short`, `full`, … as the table lists):
 
    <!-- `vigiles:symbol src/new-paper.ts#newPaper` — `npm run check` fails if this function is renamed or removed. -->
 
