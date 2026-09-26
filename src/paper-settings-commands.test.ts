@@ -177,11 +177,9 @@ describe("paperlint lint — the venue preset's rules", () => {
     expect(cfgOf.ok && cfgOf.value).toEqual({
       preset: [
         {
+          // Scoped to the paper by `basePath` alone: which of its files the rule reaches is decided
+          // once, by narrowing to paperlint's owned scopes (#101), not by a copy of their globs.
           basePath: join(root, "papers/a"),
-          files: expect.arrayContaining([
-            "**/paper.tex",
-            "**/PIPELINE-STATUS.md",
-          ]),
           rules: { "pdf/last-page-balance": ["error", { tolerancePt: 120 }] },
         },
       ],

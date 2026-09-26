@@ -428,17 +428,17 @@ function rulesOfPaper(
           )
         : ownRules(dir, settings);
   if (!own.ok) return own;
+  // No `files`: `narrowToOwners` scopes the block to what paperlint lints under `dir`, exceptions
+  // included. A copy of the globs here is how the siblings index got parsed as JavaScript (#101).
   const scoped = (rules: Record<string, RuleEntry>): RuleBlock[] =>
-    Object.keys(rules).length
-      ? [{ basePath: dir, files: PAPER_FILE_PATTERNS, rules }]
-      : [];
+    Object.keys(rules).length ? [{ basePath: dir, rules }] : [];
   return {
     ok: true,
     value: { preset: scoped(fromPreset.value), own: [...own.value] },
   };
 }
 
-/** A paper's `{ id: severity }` rules, as one block over the paper's files. */
+/** A paper's `{ id: severity }` rules, as one block over the paper's files (narrowed later, #101). */
 function ownRules(
   dir: string,
   settings: PaperSettings,
@@ -447,16 +447,13 @@ function ownRules(
   if (!own.ok) return own;
   return {
     ok: true,
-    value: own.value
-      ? [{ basePath: dir, files: PAPER_FILE_PATTERNS, rules: own.value }]
-      : [],
+    value: own.value ? [{ basePath: dir, rules: own.value }] : [],
   };
 }
 
 /**
- * The files a paper's block may reach: exactly the ones paperlint's own blocks lint, read off its
- * config. A wider glob (everything under the paper) would make ESLint lint files no block gives a
- * language — `paperlint.json` itself would be parsed as JavaScript.
+ * The globs paperlint lints, for the refusal message only. Which files a block reaches is decided by
+ * `narrowToOwners` from `ownedScopes` (src/paper-files.ts), where each glob keeps its exceptions.
  */
 const PAPER_FILE_PATTERNS: string[] = ownedPatterns(
   buildConfig({}, { sentinel: "tex language" }),
