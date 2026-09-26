@@ -123,7 +123,7 @@ process.exit(
           [
             INIT,
             "  writeFileSync(\n    path,\n    JSON.stringify(\n      { ...settings, [PAPERS_DIR_FIELD]: choice.papers },",
-            "  void (\n    path,\n    JSON.stringify(\n      { ...settings, [PAPERS_DIR_FIELD]: choice.papers },",
+            "  (() => {})(\n    path,\n    JSON.stringify(\n      { ...settings, [PAPERS_DIR_FIELD]: choice.papers },",
           ],
         ],
       },
