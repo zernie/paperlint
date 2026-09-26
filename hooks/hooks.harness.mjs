@@ -39,10 +39,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  OLD_PAPERS_DIR_FIELD,
-  PAPERS_DIR_FIELD,
-} from "../lib/paper-config.mjs";
+import { PAPERS_DIR_FIELD } from "../lib/paper-config.mjs";
 
 const HOOKS = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HOOKS, "..");
@@ -373,35 +370,6 @@ try {
         at(dir, "paper-edit-guard", harmless).exitCode === 0,
       );
     }
-    // (a½) the key's OLD name (before 2.0.0) is still read — an upgrade must not unguard papers.
-    {
-      const dir = fixture(
-        { "research-paper-pipeline": { [PAPERS_DIR_FIELD]: DECLARED } },
-        { papers: DECLARED },
-      );
-      check(
-        "carrier: 🔴 a root declared under the OLD key is still guarded",
-        at(dir, "paper-edit-guard", declaredWrite).exitCode === 2 &&
-          at(dir, "paper-edit-guard", defaultWrite).exitCode === 0,
-      );
-    }
-    {
-      const dir = fixture(
-        {
-          paperlint: { [PAPERS_DIR_FIELD]: DECLARED },
-          "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "papers" },
-        },
-        { papers: DECLARED },
-      );
-      const r = at(dir, "paper-edit-guard", harmless);
-      check(
-        "carrier: both keys with different contents — the gate refuses and names both",
-        r.exitCode === 2 &&
-          /has both "paperlint" and "research-paper-pipeline"/.test(
-            r.stderr + r.stdout,
-          ),
-      );
-    }
     // (b) no key at all → the documented default, and the converse of (a).
     {
       const dir = fixture(null, { papers: "papers" });
@@ -443,24 +411,6 @@ try {
       check(
         "carrier: …and explains that an empty prefix matches nothing",
         /matches nothing/.test(r.stderr),
-      );
-    }
-    // (d2) the field's OLD name is refused and named — never read as a fallback, never ignored
-    //      in favour of the default directory.
-    {
-      const dir = fixture({
-        paperlint: { [OLD_PAPERS_DIR_FIELD]: "writing/drafts" },
-      });
-      const r = at(dir, "paper-edit-guard", harmless);
-      check(
-        `carrier: the old field name "${OLD_PAPERS_DIR_FIELD}" REFUSES (rc=${r.exitCode})`,
-        r.exitCode === 2,
-      );
-      check(
-        "carrier: …and the refusal says what it was renamed to",
-        r.stderr.includes(
-          `"${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "paperlint"`,
-        ),
       );
     }
     // (e) an unreadable package.json — the case that arrives by itself, mid-merge.

@@ -17,7 +17,6 @@ const ROOT = resolve(HERE, "..", "..");
 const HARNESS = join(HERE, "real-markdown-paper.harness.mjs");
 const TYPO = join(ROOT, "eslint-rules", "paper-typography.mjs");
 const RQ = join(ROOT, "eslint-rules", "paper-research-question.mjs");
-const STAGES = join(ROOT, "eslint-rules", "paper-stages.mjs");
 
 process.exit(
   runMutations({

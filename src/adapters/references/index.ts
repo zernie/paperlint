@@ -12,6 +12,7 @@ import type {
   CheckReferences,
   EntryVerdict,
 } from "../../ports/check-references.ts";
+import { unreachable } from "./reach.io.ts";
 // @ts-expect-error — a skill script in .mjs, it has no types
 import * as cites from "../../../skills/verify-citations/scripts/verify-cites.mjs";
 // @ts-expect-error — a skill script in .mjs, it has no types
@@ -34,19 +35,6 @@ interface KeyWhy {
   readonly why: string;
 }
 
-/** Why the services cannot be reached, or null when they can. */
-async function unreachable(): Promise<string | null> {
-  try {
-    await fetch("https://api.crossref.org/", {
-      method: "HEAD",
-      signal: AbortSignal.timeout(10_000),
-    });
-    return null;
-  } catch (e) {
-    return `the citation services cannot be reached (${(e as Error).message})`;
-  }
-}
-
 const describeAuthors = (f: AuthorFinding): string =>
   [
     f.missing.length ? `missing ${f.missing.join(", ")}` : "",
@@ -56,6 +44,45 @@ const describeAuthors = (f: AuthorFinding): string =>
     .filter(Boolean)
     .join("; ") + ` (DBLP: ${f.venue})`;
 
+interface AuthorBuckets {
+  readonly findings: readonly AuthorFinding[];
+  readonly skipped: readonly KeyWhy[];
+  readonly unchecked: readonly KeyWhy[];
+  readonly matched: readonly string[];
+}
+
+const authorsOf = (key: string, a: AuthorBuckets): EntryVerdict["authors"] =>
+  a.findings.some((f) => f.key === key)
+    ? "mismatch"
+    : a.unchecked.some((u) => u.key === key)
+      ? "unchecked"
+      : a.matched.includes(key)
+        ? "match"
+        : "skipped";
+
+/** One entry's verdict from the two checkers' answers. */
+function entryVerdict(
+  key: string,
+  found: readonly CiteResult[],
+  a: AuthorBuckets,
+): EntryVerdict {
+  const c = found.find((x) => x.id === key);
+  const mismatch = a.findings.find((f) => f.key === key);
+  const why = [
+    c && c.verdict !== "true" ? c.reason : undefined,
+    mismatch ? describeAuthors(mismatch) : undefined,
+    a.unchecked.find((u) => u.key === key)?.why,
+  ]
+    .filter(Boolean)
+    .join("; ");
+  return {
+    key,
+    exists: c?.verdict ?? "unresolvable",
+    authors: authorsOf(key, a),
+    ...(why ? { why } : {}),
+  };
+}
+
 export const onlineReferences: CheckReferences = async (bib) => {
   const why = await unreachable();
   if (why !== null) return { kind: "not-checked", why };
@@ -63,39 +90,13 @@ export const onlineReferences: CheckReferences = async (bib) => {
   const found: CiteResult[] = [];
   for (const c of cites.parseBib(bib) as { id?: string }[])
     if (c.id) found.push(await cites.verifyCitationLive(c, { cache }));
-  const a = (await authors.checkAuthors(authors.parseBib(bib))) as {
-    findings: AuthorFinding[];
-    skipped: KeyWhy[];
-    unchecked: KeyWhy[];
-    matched: string[];
-  };
+  const a = (await authors.checkAuthors(
+    authors.parseBib(bib),
+  )) as AuthorBuckets;
   const keys = new Set([
     ...found.map((c) => c.id),
     ...a.findings.map((f) => f.key),
   ]);
-  const entries: EntryVerdict[] = [...keys].map((key) => {
-    const c = found.find((x) => x.id === key);
-    const mismatch = a.findings.find((f) => f.key === key);
-    const unchecked = a.unchecked.find((u) => u.key === key);
-    const why = [
-      c && c.verdict !== "true" ? c.reason : undefined,
-      mismatch ? describeAuthors(mismatch) : undefined,
-      unchecked?.why,
-    ]
-      .filter(Boolean)
-      .join("; ");
-    return {
-      key,
-      exists: c?.verdict ?? "unresolvable",
-      authors: mismatch
-        ? "mismatch"
-        : unchecked
-          ? "unchecked"
-          : a.matched.includes(key)
-            ? "match"
-            : "skipped",
-      ...(why ? { why } : {}),
-    };
-  });
+  const entries = [...keys].map((key) => entryVerdict(key, found, a));
   return { kind: "checked", entries };
 };

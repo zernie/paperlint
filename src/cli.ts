@@ -26,7 +26,7 @@
  * replaced it: silently breaking someone else's workflow is worse than asking them to fix a line.
  */
 import { ESLint, type Linter } from "eslint";
-import { readFileSync, existsSync, statSync, writeFileSync } from "node:fs";
+import { readFileSync, existsSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";

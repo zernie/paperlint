@@ -628,27 +628,21 @@ function baseDefaults({
   dryRun = false,
   readPdf = pdfjsReader,
   projectRoot = env["CLAUDE_PROJECT_DIR"] || cwd,
-  checkReferences = async () => ({
-    kind: "not-checked" as const,
-    why: "no reference checker was wired into this build",
-  }),
-}: BuildOptions): Required<Omit<BuildOptions, "measure" | "files">> {
-  return {
-    run,
-    cwd,
-    env,
-    steps,
-    log,
-    dryRun,
-    readPdf,
-    projectRoot,
-    checkReferences,
-  };
+}: BuildOptions): Required<
+  Omit<BuildOptions, "measure" | "files" | "checkReferences">
+> {
+  return { run, cwd, env, steps, log, dryRun, readPdf, projectRoot };
 }
+
+/** Without a checker the record says so — never a pass. The CLI wires the real one. */
+const notWired: CheckReferences = async () => ({
+  kind: "not-checked",
+  why: "no reference checker was wired into this build",
+});
 
 /** banal as the measurer, wired from the build's environment: the one piece of root work left here (#76). */
 function defaultMeasurer(
-  b: Required<Omit<BuildOptions, "measure" | "files">>,
+  b: Required<Omit<BuildOptions, "measure" | "files" | "checkReferences">>,
 ): MeasureGeometry {
   const dirs = hostDirs({ cwd: b.cwd });
   return banalMeasurer(
@@ -662,7 +656,12 @@ function defaultMeasurer(
 function withDefaults(o: BuildOptions): Required<BuildOptions> {
   const base = baseDefaults(o);
   const measure = o.measure ?? defaultMeasurer(base);
-  return { ...base, measure, files: o.files ?? nodeFiles };
+  return {
+    ...base,
+    measure,
+    files: o.files ?? nodeFiles,
+    checkReferences: o.checkReferences ?? notWired,
+  };
 }
 
 /** Run the applicable steps in order, each on the environment the steps before it left. */

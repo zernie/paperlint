@@ -29,10 +29,7 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  OLD_PAPERS_DIR_FIELD,
-  PAPERS_DIR_FIELD,
-} from "../lib/paper-config.mjs";
+import { PAPERS_DIR_FIELD } from "../lib/paper-config.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { run, parseArgs, buildConfig, nextSteps, findConfig, toPaths, runHook } =
