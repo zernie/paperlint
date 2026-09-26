@@ -287,22 +287,6 @@ process.exit(
         ],
       },
       {
-        name: "consumer data stops reaching the rule",
-        harness: HARNESS,
-        expect: "the command from options gets through to the rule",
-        disables:
-          'the "mechanism in the package, data with the consumer" boundary: the ' +
-          "`authorListCommand` option is ignored, and the finding again fails to say WHAT to " +
-          "run the check with",
-        edits: [
-          [
-            CLI,
-            "opts.authorListCommand ? { command: opts.authorListCommand } : {},",
-            "{},",
-          ],
-        ],
-      },
-      {
         name: "init stops naming the skills it skipped",
         harness: HARNESS,
         expect: "a skipped skill is NAMED with what occupies it",

@@ -12,10 +12,7 @@
  * Killed by: src/doctor.mutations.mjs
  */
 import assert from "node:assert/strict";
-import {
-  OLD_PAPERS_DIR_FIELD,
-  PAPERS_DIR_FIELD,
-} from "../lib/paper-config.mjs";
+import { PAPERS_DIR_FIELD } from "../lib/paper-config.mjs";
 import {
   mkdtempSync,
   mkdirSync,
@@ -86,27 +83,6 @@ const runDoctor = (
   rmSync(dir, { recursive: true, force: true });
 }
 
-// ── I½. THE OLD FIELD NAME IS A FAILURE, NAMED ─────────────────────────────────────────────
-{
-  const dir = consumer({ papersDir: "papers", pkgKey: "papers" });
-  writeFileSync(
-    join(dir, "package.json"),
-    JSON.stringify({
-      name: "consumer",
-      paperlint: { [OLD_PAPERS_DIR_FIELD]: "papers" },
-    }),
-  );
-  const r = runDoctor(dir, { cliPapers: null });
-  check("the old field name — exit NON-zero", r.code !== 0);
-  check(
-    "and doctor says what the field was renamed to",
-    r.out.includes(
-      `"${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "paperlint"`,
-    ),
-  );
-  rmSync(dir, { recursive: true, force: true });
-}
-
 // ── II. THE VERY DEFECT: AN INSTALL FOLLOWING THE DOCS ─────────────────────────────────────
 // The old `init` wrote its own config file and did not touch package.json; the hook reads package.json.
 // Measured 09-18.
@@ -173,39 +149,6 @@ const runDoctor = (
     /⚠ papers does not exist yet — no papers yet/.test(r.out) &&
       /new <name>/.test(r.out) &&
       !/watching nothing/.test(r.out),
-  );
-  rmSync(dir, { recursive: true, force: true });
-}
-
-// ── II-quater. THE KEY'S OLD NAME IS READ AND NAMED; TWO DIFFERENT KEYS ARE A FAILURE ──────
-{
-  const dir = consumer({ papersDir: "papers" });
-  writeFileSync(
-    join(dir, "package.json"),
-    JSON.stringify({
-      "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "papers" },
-    }),
-  );
-  const r = runDoctor(dir, { cliPapers: "papers" });
-  check(
-    "the old key — read (not a failure), and named with the new one",
-    r.code === 0 &&
-      /⚠ "research-paper-pipeline" in package\.json is the old name/.test(
-        r.out,
-      ) &&
-      /the hooks will guard papers/.test(r.out),
-  );
-  writeFileSync(
-    join(dir, "package.json"),
-    JSON.stringify({
-      paperlint: { [PAPERS_DIR_FIELD]: "papers" },
-      "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "elsewhere" },
-    }),
-  );
-  const both = runDoctor(dir, { cliPapers: "papers" });
-  check(
-    "both keys with different contents — a failure",
-    both.code === 2 && /✗ package\.json has both/.test(both.out),
   );
   rmSync(dir, { recursive: true, force: true });
 }

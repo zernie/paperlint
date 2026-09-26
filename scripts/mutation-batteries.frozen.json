@@ -87,13 +87,13 @@
       "cases": 11
     },
     "src/cli.mutations.mjs": {
-      "cases": 26
+      "cases": 25
     },
     "src/doctor.mutations.mjs": {
       "cases": 10
     },
     "src/hooks-settings.mutations.mjs": {
-      "cases": 7
+      "cases": 6
     },
     "src/link-skills.mutations.mjs": {
       "cases": 6

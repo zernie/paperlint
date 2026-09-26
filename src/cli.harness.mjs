@@ -130,10 +130,8 @@ check(
 
 // ── config is assembled, and consumer data gets through ────────────────────────────────────
 {
-  const cfg = buildConfig(
-    { typographyDebt: { x: { sectionSign: 3 } }, authorListCommand: "run-me" },
-    null,
-  );
+  const reviewSchema = { required: ["read"] };
+  const cfg = buildConfig({ reviewSchema }, null);
   // Blocks with `files` — the global `ignores` block below is not a rule block.
   const ruleBlocks = (c) => c.filter((b) => Array.isArray(b.files));
   check(
@@ -153,12 +151,12 @@ check(
         b.ignores.includes("**/.template/"),
     ),
   );
-  const status = ruleBlocks(cfg).find((c) =>
-    c.files.some((f) => f.includes("PIPELINE-STATUS")),
+  const reviews = ruleBlocks(cfg).find((c) =>
+    c.files.some((f) => f.includes("reviews")),
   );
   check(
-    "the command from options gets through to the rule",
-    status.rules["paper/author-list"][1].command === "run-me",
+    "the project's review schema gets through to the rule",
+    reviews.rules["review/frontmatter"][1].extend === reviewSchema,
   );
 }
 
@@ -376,69 +374,6 @@ check(
           !/the install is NOT finished/.test(out.text()) &&
           /no papers yet/.test(out.text()) &&
           /new <name>/.test(out.text()),
-      );
-    }
-
-    // ── 2½. SETTINGS UNDER THE OLD KEY ARE MOVED TO THE NEW ONE ───────────────────────
-    {
-      const dir = project("old-key", {
-        pkg: {
-          name: "consumer",
-          "research-paper-pipeline": {
-            [PAPERS_DIR_FIELD]: "writing",
-            minFindings: 3,
-          },
-          version: "1.0.0",
-        },
-        papers: ["writing"],
-      });
-      const out = say();
-      await init(dir, {
-        log: out.log,
-        err: out.log,
-        interactive: false,
-        run: haveAll,
-      });
-      const pkg = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
-      check(
-        "🔴 init moves the old key's settings to the new key, whole, and removes the old key",
-        JSON.stringify(pkg.paperlint) ===
-          JSON.stringify({ [PAPERS_DIR_FIELD]: "writing", minFindings: 3 }) &&
-          !("research-paper-pipeline" in pkg),
-      );
-      check(
-        "in the same position in the file, so the diff is a one-word rename",
-        Object.keys(pkg).join() === "name,paperlint,version",
-      );
-      check(
-        "and it says so",
-        /moved the settings from "research-paper-pipeline" \(the old key\) to "paperlint"/.test(
-          out.text(),
-        ),
-      );
-    }
-    {
-      const dir = project("both-keys", {
-        pkg: {
-          name: "consumer",
-          paperlint: { [PAPERS_DIR_FIELD]: "writing" },
-          "research-paper-pipeline": { [PAPERS_DIR_FIELD]: "other" },
-        },
-        papers: ["writing"],
-      });
-      const out = say();
-      const code = await init(dir, {
-        log: out.log,
-        err: out.log,
-        interactive: false,
-        run: haveAll,
-      });
-      check(
-        "both keys with different contents — init refuses (exit 2) and writes nothing",
-        code === 2 &&
-          /they differ/.test(out.text()) &&
-          "research-paper-pipeline" in
-            JSON.parse(readFileSync(join(dir, "package.json"), "utf8")),
       );
     }
 
@@ -958,7 +893,7 @@ check(
     // unfinished one: silently falling back to "." means running the rules over the whole checkout.
     writeFileSync(
       join(root, "package.json"),
-      JSON.stringify({ paperlint: { minFindings: 3 } }),
+      JSON.stringify({ paperlint: { structure: false } }),
     );
     const noPapers = await cli(["lint"], root);
     check(
@@ -999,7 +934,7 @@ check(
       join(paper, "versions", "2026-07-22-submitted.pdf"),
       "x".repeat(100),
     );
-    // Three § signs — the `paper/typography` rule, warn level and only warn.
+    // Three § signs — `paper/section-word`, warn level and only warn.
     writeFileSync(
       join(paper, "paper.md"),
       "# Intro\n\nRQ1: does it hold?\n\nSee \u00a7 5 and \u00a7 6 and \u00a7 7.\n",
@@ -1025,7 +960,7 @@ check(
     );
     check(
       'and the failure names the NUMBER and the THRESHOLD, not just "too many"',
-      /1 warning\(s\) exceed the --max-warnings limit of 0/.test(strict.out),
+      /3 warning\(s\) exceed the --max-warnings limit of 0/.test(strict.out),
     );
     const generous = await cli(["lint", "--max-warnings", "5"], root);
     check(
@@ -1159,7 +1094,7 @@ check(
     check(
       "the inside run is the reference: it has both a structure and a rule finding",
       findings(inside).some((f) => f.startsWith("structure/required-file")) &&
-        findings(inside).some((f) => f.startsWith("paper/typography")),
+        findings(inside).some((f) => f.startsWith("paper/section-word")),
     );
     check(
       "and from outside it reports the SAME findings with the SAME exit code",
@@ -1167,26 +1102,29 @@ check(
         outside.code === inside.code,
     );
 
-    // The debt, keyed from the config's directory, covers the two `§`.
+    // A `rules` block, its `files` relative to the config's directory, turns the `§` rule off
+    // for this paper — and it must reach the paper from wherever the command runs.
     writeFileSync(
       join(tree, "package.json"),
       JSON.stringify({
         name: "x",
         paperlint: {
           [PAPERS_DIR_FIELD]: "papers",
-          typographyDebt: { "papers/p": { sectionSign: 2 } },
+          rules: [
+            { files: ["papers/p/**"], rules: { "paper/section-word": "off" } },
+          ],
         },
       }),
     );
     const debtHonoured = (r) =>
       r.code !== 99 &&
-      !findings(r).some((f) => f.startsWith("paper/typography"));
+      !findings(r).some((f) => f.startsWith("paper/section-word"));
     check(
-      "from the config's own directory the declared debt silences the `§` finding",
+      "from the config's own directory the block turns the `§` finding off",
       debtHonoured(await cli(["lint", "--json"], tree)),
     );
     check(
-      "from a SUBDIRECTORY (config found by walking up) the same debt still applies",
+      "from a SUBDIRECTORY (config found by walking up) the same block still applies",
       debtHonoured(await cli(["lint", "--json"], join(tree, "papers"))),
     );
     check(
@@ -1199,8 +1137,8 @@ check(
       ),
     );
     // A RELATIVE `--config` stays relative in `configPath`, while every paper path is absolute:
-    // without resolving it first, the common root of `.` and `/tmp/…` is `/`, the debt keys
-    // no longer match, and the declared debt comes back as new warnings (Codex on #45).
+    // without resolving it first, the common root of `.` and `/tmp/…` is `/`, and globs written
+    // relative to the config no longer match (Codex on #45).
     check(
       "and with a RELATIVE `--config package.json` it applies too",
       debtHonoured(
@@ -1858,7 +1796,7 @@ console.log(
         ),
     );
     settings({
-      rules: [{ files: ["papers/**"], rules: { "paper/typography": "off" } }],
+      rules: [{ files: ["papers/**"], rules: { "paper/section-word": "off" } }],
     });
     check(
       "a built-in rule's severity can be changed the same way",

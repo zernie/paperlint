@@ -84,13 +84,13 @@ process.exit(
         edits: [
           [
             SRC,
-            '  unlinkSync,\n} from "node:fs";',
-            '  unlinkSync,\n  rmSync,\n} from "node:fs";',
+            '  symlinkSync,\n} from "node:fs";',
+            '  symlinkSync,\n  rmSync,\n} from "node:fs";',
           ],
           [
             SRC,
-            "  if (!write || !fixable) {",
-            '  if (!write || seen.status === "present") {',
+            '  if (!write || seen.status !== "missing")',
+            '  if (!write || seen.status === "present")',
           ],
           [
             SRC,

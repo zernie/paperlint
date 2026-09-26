@@ -24,12 +24,12 @@ process.exit(
         harness: HARNESS,
         // The spelling truth table is the first owner: `npx paperlint hook …` must read as NOT ours,
         // and that row is where it goes red.
-        expect: '→ {"name":"paper-edit-guard","ours":false,"legacy":true}',
+        expect: '→ {"name":"paper-skills-nudge","ours":false}',
         disables:
           "the duplicate guard for every bin spelling but ours. A hook wired by hand as " +
           "`npx paperlint hook …` or through an absolute path to the bin reads as ours, init merges its own " +
           "copy beside it, and the hook runs twice per event",
-        edits: [[SRC, "      ours: t === MANAGED_BY,", "      ours: true,"]],
+        edits: [[SRC, "ours: t === MANAGED_BY,", "ours: true,"]],
       },
       {
         name: "another spelling no longer stops the write",
@@ -93,21 +93,6 @@ process.exit(
           "a remedy that works. The reader runs init, init writes nothing, and doctor says the " +
           "same thing again — a loop with no exit",
         edits: [[SRC, "  const remedy = handWired", "  const remedy = false"]],
-      },
-      {
-        name: "a disabled plugin counts as enabled",
-        harness: HARNESS,
-        expect: "a disabled entry does not count",
-        disables:
-          "the plugin warning's precision. A project that already switched the plugin off would " +
-          "be told to uninstall it",
-        edits: [
-          [
-            SRC,
-            '      ([id, on]) => on === true && id.split("@")[0] === LEGACY_PACKAGE_NAME,',
-            '      ([id]) => id.split("@")[0] === LEGACY_PACKAGE_NAME,',
-          ],
-        ],
       },
     ],
   }),

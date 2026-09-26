@@ -273,10 +273,14 @@ try {
   // ── the measure step: facts for the lint rules ────────────────────────────────────────
   const factsFile = join(clean, "_build", "paper.facts.json");
   check(
-    "measure: the plan's last step writes the facts, and says it judges nothing",
-    r.plan.at(-1)?.step === "measure" &&
-      /pdf\.js → _build\/paper\.facts\.json/.test(r.plan.at(-1)?.why ?? "") &&
-      /nothing is judged/.test(r.plan.at(-1)?.why ?? ""),
+    "measure: the plan's measure step writes the facts, and says it judges nothing",
+    r.plan.find((p) => p.step === "measure") !== undefined &&
+      /pdf\.js → _build\/paper\.facts\.json/.test(
+        r.plan.find((p) => p.step === "measure")?.why ?? "",
+      ) &&
+      /nothing is judged/.test(
+        r.plan.find((p) => p.step === "measure")?.why ?? "",
+      ),
   );
   check(
     "🔴 measure: a green build wrote _build/paper.facts.json through the readPdf port, on paper.pdf",
