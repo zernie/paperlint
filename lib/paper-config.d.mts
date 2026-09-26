@@ -6,38 +6,18 @@
 // once, in paper-config.mjs.
 
 export declare const CONFIG_KEY: string;
-export declare const LEGACY_CONFIG_KEY: string;
-export declare const LEGACY_KEY_MESSAGE: string;
 
-/** Where a parsed package.json keeps the settings: the new key, else the old one. */
-export declare function declaredSettings(pkg: unknown): {
-  readonly settings: unknown;
-  readonly legacy: boolean;
-  readonly conflict: string | null;
-};
-
-/** The settings object alone — undefined when absent or on a conflict. */
+/** The settings object in a parsed package.json — undefined when absent or not an object. */
 export declare function settingsOf(
   pkg: unknown,
 ): Readonly<Record<string, unknown>> | undefined;
 export declare const DEFAULT_PAPERS_ROOT: string;
 export declare const PAPERS_DIR_FIELD: string;
-export declare const OLD_PAPERS_DIR_FIELD: string;
-
-/** The error text for settings that still use the old field name, or `null` when they do not. */
-export declare function renamedFieldMessage(
-  settings: unknown,
-  where?: string,
-): string | null;
 
 /** Every key the settings object may hold, mapped to who reads it. */
 export declare const SETTINGS_KEYS: Readonly<Record<string, string>>;
-/** Keys removed in 3.0.0, each with the message naming what replaces it. */
-export declare const REMOVED_SETTINGS: Readonly<Record<string, string>>;
 
-/** The per-paper settings file, `paperlint.json`, and its name before 2.1.0. */
+/** The per-paper settings file, `paperlint.json`. */
 export declare const PAPER_SETTINGS_FILE: string;
-export declare const LEGACY_PAPER_SETTINGS_FILE: string;
 /** Every key `paperlint.json` may hold, mapped to who reads it. */
 export declare const PAPER_SETTINGS_KEYS: Readonly<Record<string, string>>;
-export declare const LEGACY_PAPER_SETTINGS_MESSAGE: string;

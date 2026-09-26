@@ -48,10 +48,7 @@ import type { FlatGeometry } from "./domain/geometry.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import type { Files } from "./ports/files.ts";
-import {
-  LEGACY_PAPER_SETTINGS_MESSAGE,
-  PAPER_SETTINGS_FILE,
-} from "../lib/paper-config.mjs";
+import { PAPER_SETTINGS_FILE } from "../lib/paper-config.mjs";
 
 // ── the verdict's vocabulary ─────────────────────────────────────────────────────────
 
@@ -159,10 +156,7 @@ export function assessPaper(paperDir: string, deps: VenueRuleDeps): Assessment {
   if (p.kind === "settings-problem")
     return {
       kind: "unresolved",
-      finding:
-        p.problem.kind === "legacy"
-          ? finding("legacySettings")
-          : finding("settingsBroken", { why: p.problem.why }),
+      finding: finding("settingsBroken", { why: p.problem.why }),
     };
   if (p.kind === "preset-problem")
     return {
@@ -421,7 +415,6 @@ const META: Readonly<Record<VenueRuleName, Meta>> = {
     },
     messages: {
       settingsBroken: `${PAPER_SETTINGS_FILE} cannot be read: {{why}}`,
-      legacySettings: `this paper's venue checks do not run — ${LEGACY_PAPER_SETTINGS_MESSAGE}`,
       preset:
         "{{why}} — so this paper's page limit, fonts and format are not checked. Fix `extends` in its paperlint.json, or turn pdf/profile off for this paper",
       kindMissing: `${PAPER_SETTINGS_FILE} names no \`kind\`, so the page limit of \`{{venue}}\` is not checked; its kinds: {{known}}`,

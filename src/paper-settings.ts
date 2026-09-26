@@ -12,14 +12,9 @@
  *
  * 🔴 STRICT. An unknown key is an error naming the known ones: `"venu": "aisec"` would otherwise
  * read as "no preset", and every venue check would be silently off.
- *
- * 🔴 THE OLD NAME IS NOT READ. Before 2.1.0 the file was `venue.json`. A fallback would keep it
- * working forever and leave two names for one file; instead a `venue.json` with no `paperlint.json`
- * is an error that names `npx paperlint init`, which moves it (`migrationOf` plans that move).
  */
 import { join } from "node:path";
 import {
-  LEGACY_PAPER_SETTINGS_FILE,
   PAPER_SETTINGS_FILE,
   PAPER_SETTINGS_KEYS,
 } from "../lib/paper-config.mjs";
@@ -45,9 +40,7 @@ export interface PaperSettings {
 }
 
 /** Why a paper's settings cannot be read. */
-export type SettingsProblem =
-  | { readonly kind: "broken"; readonly why: string }
-  | { readonly kind: "legacy" };
+export type SettingsProblem = { readonly kind: "broken"; readonly why: string };
 
 const KNOWN = Object.keys(PAPER_SETTINGS_KEYS);
 const STRING_FIELDS = ["extends", "kind", "pdf"] as const;
@@ -107,19 +100,15 @@ export function parsePaperSettings(
 const at = (p: string): AbsolutePath => p as AbsolutePath;
 
 /**
- * A paper's settings: null when it has no `paperlint.json`; the problem when the file does not parse
- * or only the pre-2.1.0 `venue.json` is there. Reads through `files` only; never throws.
+ * A paper's settings: null when it has no `paperlint.json`; the problem when the file does not
+ * parse. Reads through `files` only; never throws.
  */
 export function readPaperSettings(
   files: Files,
   paperDir: string,
 ): Result<PaperSettings | null, SettingsProblem> {
   const bytes = files.readBytes(at(join(paperDir, PAPER_SETTINGS_FILE)));
-  if (bytes === null)
-    return files.readBytes(at(join(paperDir, LEGACY_PAPER_SETTINGS_FILE))) ===
-      null
-      ? ok(null)
-      : err({ kind: "legacy" });
+  if (bytes === null) return ok(null);
   let json: unknown;
   try {
     json = JSON.parse(new TextDecoder().decode(bytes));
@@ -128,64 +117,6 @@ export function readPaperSettings(
   }
   const parsed = parsePaperSettings(json);
   return parsed.ok ? parsed : err({ kind: "broken", why: parsed.error });
-}
-
-// ── the move from venue.json ────────────────────────────────────────────────────────────
-
-/** What `paperlint init` does with one paper's files. */
-export type Migration =
-  /** No `venue.json`: nothing to do. */
-  | { readonly kind: "none" }
-  /** Only `venue.json`: write `text` as `paperlint.json`, delete `venue.json`. */
-  | { readonly kind: "move"; readonly text: string }
-  /** Both, and `paperlint.json` already says the same: the old one is a leftover, delete it. */
-  | { readonly kind: "drop-legacy" }
-  /** Both, and they differ: refuse — there is no way to know which one the author means. */
-  | { readonly kind: "conflict" }
-  /** `venue.json` is not a JSON object: refuse, naming why. */
-  | { readonly kind: "broken"; readonly why: string };
-
-/**
- * A `venue.json` object → the `paperlint.json` object that says the same, in one move:
- * `"venue": "aisec"` becomes `"extends": "paperlint:aisec"` (the only presets that existed were the
- * shipped ones), and the `"_"` some files used as a comment becomes `"$comment"`. Every other key
- * is carried as it is — an unknown one is then refused by name, as in any `paperlint.json`. Pure.
- */
-export function fromLegacy(
-  legacy: Readonly<Record<string, unknown>>,
-): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(legacy)) {
-    if (k === "venue" && typeof v === "string")
-      out["extends"] = `paperlint:${v}`;
-    else if (k === "_") out["$comment"] = v;
-    else out[k] = v;
-  }
-  return out;
-}
-
-const jsonOf = (b: Uint8Array): unknown => {
-  try {
-    return JSON.parse(new TextDecoder().decode(b));
-  } catch {
-    return undefined;
-  }
-};
-
-/** The move, planned from the two files' bytes (null = absent). Pure. */
-export function migrationOf(
-  legacy: Uint8Array | null,
-  current: Uint8Array | null,
-): Migration {
-  if (legacy === null) return { kind: "none" };
-  const old = jsonOf(legacy);
-  if (!isObject(old)) return { kind: "broken", why: "it is not a JSON object" };
-  const next = fromLegacy(old);
-  if (current === null)
-    return { kind: "move", text: `${JSON.stringify(next, null, 2)}\n` };
-  return JSON.stringify(jsonOf(current)) === JSON.stringify(next)
-    ? { kind: "drop-legacy" }
-    : { kind: "conflict" };
 }
 
 // ── the paper's rule overrides ──────────────────────────────────────────────────────────

@@ -86,8 +86,6 @@ import {
   DEFAULT_PAPERS_ROOT,
   PAPERS_DIR_FIELD,
   PAPER_SETTINGS_FILE,
-  declaredSettings,
-  renamedFieldMessage,
   settingsOf,
 } from "../lib/paper-config.mjs";
 export { DEFAULT_PAPERS_ROOT };
@@ -106,10 +104,6 @@ export { DEFAULT_PAPERS_ROOT };
  *          would change their meaning.
  */
 export function papersRoot(pkg, baseDir = process.cwd()) {
-  const found = declaredSettings(pkg);
-  if (found.conflict !== null) throw new TypeError(found.conflict);
-  const renamed = renamedFieldMessage(found.settings);
-  if (renamed) throw new TypeError(renamed);
   const declared = settingsOf(pkg)?.[PAPERS_DIR_FIELD];
   // 🔴 `declared === undefined`, NOT `declared ?? DEFAULT`. The two differ on exactly one
   // input — `"papersDir": null` — and the difference is the whole point: `??` reads an explicit

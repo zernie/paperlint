@@ -45,21 +45,6 @@ export type Parsed<T> =
 
 const SEVERITIES: readonly unknown[] = ["off", "warn", "error", 0, 1, 2];
 
-/**
- * Rule ids removed in 3.0.0, each with what replaces it. Named rather than refused as "not a rule
- * paperlint ships": the id was valid yesterday, and the useful answer is what to write instead.
- */
-export const REMOVED_RULES: Readonly<Record<string, string>> = {
-  "paper/typography":
-    "was split in 3.0.0 into paper/section-word, paper/leading-zero, paper/figure-ref-style and " +
-    "bib/reachable-entry; `paperlint lint --fix` fixes the first three",
-  "review/findings-cause":
-    "was replaced in 3.0.0 by review/frontmatter: a review declares its findings in YAML " +
-    "frontmatter (`findings:`), and every open one names its `cause`",
-  "doc/fields":
-    'was replaced in 3.0.0 by review/frontmatter plus the "reviewSchema" setting: required fields ' +
-    "are a JSON Schema file, applied together with paperlint's own",
-};
 const BLOCK_KEYS = new Set(["files", "ignores", "rules"]);
 
 const bad = <T>(error: string): Parsed<T> => ({ ok: false, error });
@@ -96,8 +81,6 @@ export function parseRuleEntries(
     return bad(`${where} must be an object of rule id → severity`);
   const out: Record<string, RuleEntry> = {};
   for (const [id, raw] of Object.entries(v)) {
-    const removed = REMOVED_RULES[id];
-    if (removed !== undefined) return bad(`${where}: "${id}" ${removed}`);
     if (!shipped.has(id))
       return bad(
         `${where}: "${id}" is not a rule paperlint ships — known: ${[...shipped].sort().join(", ")}`,

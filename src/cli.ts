@@ -86,13 +86,9 @@ import {
 // rules and the skill scripts import it too); its types are in lib/paper-config.d.mts.
 import {
   CONFIG_KEY,
-  LEGACY_CONFIG_KEY,
-  LEGACY_KEY_MESSAGE,
   PAPERS_DIR_FIELD,
   SETTINGS_KEYS,
-  REMOVED_SETTINGS,
-  declaredSettings,
-  renamedFieldMessage,
+  settingsOf,
 } from "../lib/paper-config.mjs";
 import {
   parseRuleBlocks,
@@ -188,7 +184,7 @@ another file of the same shape. \`papersDir\` is required; the rest is optional:
   pdf/limits, pdf/body-size, pdf/measured) are on for every paper whose paperlint.json names a venue;
   set one to "off" there to skip it.
 
-per paper — <paper>/paperlint.json (it was venue.json before 2.1.0; \`npx paperlint init\` moves it):
+per paper — <paper>/paperlint.json:
 
   { "extends": "paperlint:aisec", "kind": "research", "rules": { "pdf/last-page-balance": "error" } }
 
@@ -364,8 +360,7 @@ export async function silentOptionalRules(
 /**
  * Every linted paper's `rules` from its `paperlint.json`, as ESLint blocks scoped to that paper.
  * A file that does not parse, or names a rule paperlint does not ship, stops the run with one line
- * naming the file — the same strictness as the project's own `rules`. A leftover `venue.json` is
- * not read here; `pdf/profile` and `paperlint doctor` name it.
+ * naming the file — the same strictness as the project's own `rules`.
  */
 export function paperRuleBlocks(paths: readonly string[]): Parsed<RuleBlock[]> {
   // A FILE named on the command line belongs to the paper it sits in: that paper's settings apply.
@@ -431,14 +426,6 @@ export function parseSettings(
   baseDir: string,
 ): Parsed<PaperlintConfig> {
   const raw = opts as Record<string, unknown>;
-  const removed = Object.keys(raw).find((k) =>
-    Object.hasOwn(REMOVED_SETTINGS, k),
-  );
-  if (removed !== undefined)
-    return {
-      ok: false,
-      error: `${where}: "${removed}" was removed in paperlint 3.0.0 — ${REMOVED_SETTINGS[removed]}`,
-    };
   const unknown = unknownKeys(raw);
   if (unknown.length > 0)
     return {
@@ -623,8 +610,7 @@ export function findConfig(startDir: string): string | null {
  */
 const declaresSettings = (pkgPath: string): boolean => {
   try {
-    const d = declaredSettings(JSON.parse(readFileSync(pkgPath, "utf8")));
-    return d.settings !== undefined || d.conflict !== null;
+    return settingsOf(JSON.parse(readFileSync(pkgPath, "utf8"))) !== undefined;
   } catch {
     return false;
   }
@@ -659,7 +645,6 @@ export function readConfig(
   }
 
   let opts: PaperlintConfig = {};
-  let legacyKey = false;
   if (configPath) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
     let parsed: any;
@@ -669,13 +654,7 @@ export function readConfig(
       err(`${configPath} is not valid JSON: ${(e as Error).message}`);
       return { code: 2 };
     }
-    const d = declaredSettings(parsed);
-    if (d.conflict !== null) {
-      err(d.conflict);
-      return { code: 2 };
-    }
-    opts = (d.settings ?? {}) as PaperlintConfig;
-    legacyKey = d.legacy;
+    opts = (settingsOf(parsed) ?? {}) as PaperlintConfig;
     // The discovered config is NAMED out loud. Otherwise a run from someone else's directory picks
     // up someone else's file and does not say so — and its settings then look like findings.
     //
@@ -685,17 +664,9 @@ export function readConfig(
     // AROUND this line (stripped the first line before JSON.parse) — that is, the workaround hid
     // the defect exactly where it should have been shouting.
     (a.json ? err : log)(`config: ${relative(cwd, configPath) || PKG_NAME}`);
-    if (legacyKey) (a.json ? err : log)(`  ⚠ ${LEGACY_KEY_MESSAGE}`);
   }
 
-  // The old field name is refused before anything else is read from the settings: falling back
-  // to it would keep it working forever, and this package has no released users to migrate.
-  const where = `${configPath ? basename(configPath) : PKG_NAME} → "${legacyKey ? LEGACY_CONFIG_KEY : CONFIG_KEY}"`;
-  const renamed = configPath ? renamedFieldMessage(opts, where) : null;
-  if (renamed) {
-    err(renamed);
-    return { code: 2 };
-  }
+  const where = `${configPath ? basename(configPath) : PKG_NAME} → "${CONFIG_KEY}"`;
   if (configPath) {
     const parsed = parseSettings(
       opts,
@@ -987,12 +958,6 @@ async function runBuild(
   const cfg = readConfig(a, { log, err, cwd });
   if (cfg.code !== undefined) return cfg.code;
   const { opts, configPath } = cfg;
-  // The key that used to name the scripts to run. It is read by nothing now; saying so beats a
-  // setting that silently stopped doing anything.
-  if (opts.buildScripts !== undefined)
-    log(
-      `note: "buildScripts" in ${relative(cwd, configPath ?? "") || "the settings"} is ignored — paperlint builds the paper itself`,
-    );
   const roots = toPaths(papersDirOf(opts)).map((rel) =>
     resolve(configPath ? dirname(configPath) : cwd, rel),
   );

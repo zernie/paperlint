@@ -47,11 +47,7 @@ import {
   type PaperSettings,
   type SettingsProblem,
 } from "./paper-settings.ts";
-import {
-  LEGACY_PAPER_SETTINGS_FILE,
-  LEGACY_PAPER_SETTINGS_MESSAGE,
-  PAPER_SETTINGS_FILE,
-} from "../lib/paper-config.mjs";
+import { PAPER_SETTINGS_FILE } from "../lib/paper-config.mjs";
 
 /** The prefix of a shipped preset's spec. */
 export const SHIPPED_PREFIX = "paperlint:";
@@ -301,7 +297,5 @@ export function paperPresetProblem(
   if (p.kind === "preset-problem")
     return `${join(paperDir, PAPER_SETTINGS_FILE)}: ${presetProblemText(p.problem)}`;
   if (p.kind !== "settings-problem") return null;
-  return p.problem.kind === "legacy"
-    ? `${join(paperDir, LEGACY_PAPER_SETTINGS_FILE)}: ${LEGACY_PAPER_SETTINGS_MESSAGE}`
-    : `${join(paperDir, PAPER_SETTINGS_FILE)}: ${p.problem.why}`;
+  return `${join(paperDir, PAPER_SETTINGS_FILE)}: ${p.problem.why}`;
 }

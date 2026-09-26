@@ -145,13 +145,6 @@ export function packageVenuesDir() {
 export const PACKAGE_NAME = "paperlint";
 
 /**
- * The name the package was published under before 2.0.0. Only for recognising what an older
- * install left behind (hook commands, skill links, the config key) so `init` can replace it and
- * `doctor` can name it.
- */
-export const LEGACY_PACKAGE_NAME = "research-paper-pipeline";
-
-/**
  * The package's one executable, relative to the package root — what `bin` in package.json names
  * and what every hook command runs. Named like the package; `consumer.harness.mjs` checks it
  * against the manifest, so the file and the hook commands cannot drift apart.

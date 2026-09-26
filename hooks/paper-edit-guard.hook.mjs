@@ -109,17 +109,14 @@ import {
 
 /** The key every carrier of this package reads its consumer-specific settings from. */
 export const CONFIG_KEY = "paperlint";
-/** The key's name before 2.0.0 — still read, a copy of `lib/paper-config.mjs`. */
-export const LEGACY_CONFIG_KEY = "research-paper-pipeline";
 /** The default. A consumer that declares nothing is assumed to keep papers in `papers/`. */
 export const DEFAULT_PAPERS_ROOT = "papers";
 /**
- * The field under CONFIG_KEY that names the papers directory, and its old name. A copy of the
- * constants in `lib/paper-config.mjs` (a hook may import nothing but `vigiles/hook`);
+ * The field under CONFIG_KEY that names the papers directory. A copy of the
+ * constant in `lib/paper-config.mjs` (a hook may import nothing but `vigiles/hook`);
  * `lib/paper-config.harness.mjs` checks that the copies match.
  */
 export const PAPERS_DIR_FIELD = "papersDir";
-export const OLD_PAPERS_DIR_FIELD = "papers";
 
 /**
  * The declared papers root, or a `deny` explaining why there is not one.
@@ -158,27 +155,7 @@ export const papersRoot = (rawPkg) => {
         `installed and green.`,
     );
   }
-  // The settings sit under CONFIG_KEY, or under its old name. Both, with different contents, is
-  // refused: the gate cannot know which one the author means.
-  const current = pkg?.[CONFIG_KEY];
-  const legacy = pkg?.[LEGACY_CONFIG_KEY];
-  if (
-    current !== undefined &&
-    legacy !== undefined &&
-    JSON.stringify(current) !== JSON.stringify(legacy)
-  )
-    return deny(
-      `package.json has both "${CONFIG_KEY}" and "${LEGACY_CONFIG_KEY}", and they differ. ` +
-        `Keep "${CONFIG_KEY}" and delete "${LEGACY_CONFIG_KEY}" (its old name). ` +
-        `Fix it with Edit or Write: file tools do not pass through this gate.`,
-    );
-  const settings = current ?? legacy;
-  // The old field name is refused, not read as a fallback: this gate would otherwise guard the
-  // default directory while the consumer believes it guards the one they declared.
-  if (settings && Object.hasOwn(settings, OLD_PAPERS_DIR_FIELD))
-    return deny(
-      `"${OLD_PAPERS_DIR_FIELD}" was renamed to "${PAPERS_DIR_FIELD}" in package.json → "${CONFIG_KEY}"`,
-    );
+  const settings = pkg?.[CONFIG_KEY];
   const declared = settings?.[PAPERS_DIR_FIELD];
   const root = declared === undefined ? DEFAULT_PAPERS_ROOT : declared;
   if (typeof root !== "string" || root.length === 0)

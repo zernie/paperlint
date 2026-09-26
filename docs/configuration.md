@@ -286,7 +286,7 @@ having run on it, because a missing build read as nothing to do.
 
 ⚠️ **A `build.sh` or `repro/build-submission.sh` in the paper directory is IGNORED.** Earlier
 versions ran it; `paperlint build` now says one line — `build.sh is ignored — paperlint builds the paper
-itself` — and builds the paper itself. The `buildScripts` key is ignored the same way.
+itself` — and builds the paper itself.
 Why: [#59](https://github.com/zernie/paperlint/issues/59).
 
 ## Using the rules from an existing ESLint config

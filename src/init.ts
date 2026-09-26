@@ -39,7 +39,6 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
-  unlinkSync,
   writeFileSync,
   // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 } from "node:fs";
@@ -50,11 +49,9 @@ import { doctor, detectPapers, found, PROGRAMS } from "./doctor.ts";
 import { PAPER_MARKERS, papersIn } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
 import { actionRef } from "./action-ref.ts";
-import { LEGACY_PACKAGE_NAME } from "../skills/paper-pipeline/scripts/consumer.mjs";
 import {
   FRESH_CLONE_NOTE,
   SETTINGS_PATH,
-  UNINSTALL_PLUGIN,
   shippedWiring,
   wireHooks,
   type Merge,
@@ -71,14 +68,8 @@ import {
 import {
   CONFIG_KEY,
   DEFAULT_PAPERS_ROOT,
-  LEGACY_CONFIG_KEY,
-  LEGACY_PAPER_SETTINGS_FILE,
   PAPERS_DIR_FIELD,
-  PAPER_SETTINGS_FILE,
-  declaredSettings,
-  renamedFieldMessage,
 } from "../lib/paper-config.mjs";
-import { migrationOf } from "./paper-settings.ts";
 
 /** How the papers directory was arrived at. Printed, because a guess must not read as a fact. */
 export type PapersHow =
@@ -190,26 +181,18 @@ export type DeclarationResult =
       readonly papers: string;
       /** How the directory that was written was arrived at. */
       readonly choice: PapersChoice;
-      /** The settings were under the old key and were moved to the new one. */
-      readonly migrated: boolean;
     }
   | {
       readonly status: "kept";
       readonly path: string;
       readonly papers: unknown;
-      readonly migrated: boolean;
     }
   | {
       readonly status: "unparsable";
       readonly path: string;
       readonly reason: string;
     }
-  | { readonly status: "absent"; readonly path: string }
-  | {
-      readonly status: "renamed";
-      readonly path: string;
-      readonly message: string;
-    };
+  | { readonly status: "absent"; readonly path: string };
 
 /**
  * Writes ONE declaration, into the file every channel can already name.
@@ -237,14 +220,6 @@ export async function declarePapers(
   } catch (e) {
     return { status: "unparsable", path, reason: (e as Error).message };
   }
-  const found = declaredSettings(pkg);
-  if (found.conflict !== null)
-    return { status: "renamed", path, message: found.conflict };
-  const message = renamedFieldMessage(found.settings);
-  if (message) return { status: "renamed", path, message };
-  // Settings under the old key move to the new one, in the same position in the file.
-  const migrated = found.legacy;
-  if (migrated) pkg = renameKey(pkg, LEGACY_CONFIG_KEY, CONFIG_KEY);
   const write = (): void =>
     // Two-space indent and the file's own trailing newline: a declaration is not a licence to
     // reformat somebody else's file, and a one-line diff is a diff a consumer will actually read.
@@ -254,10 +229,7 @@ export async function declarePapers(
       "utf8",
     );
   const existing = pkg?.[CONFIG_KEY]?.[PAPERS_DIR_FIELD];
-  if (existing !== undefined) {
-    if (migrated) write();
-    return { status: "kept", path, papers: existing, migrated };
-  }
+  if (existing !== undefined) return { status: "kept", path, papers: existing };
   // 🔴 ONLY NOW is the directory measured (or asked about). A declared one is the answer, and a
   // candidate measured beside it is a decision nobody takes: init used to print
   // "✓ eslint-rules/fixtures — 4 candidates" and then keep the declared directory.
@@ -267,18 +239,7 @@ export async function declarePapers(
     [PAPERS_DIR_FIELD]: choice.papers,
   };
   write();
-  return { status: "written", path, papers: choice.papers, migrated, choice };
-}
-
-/** `obj` with `from` renamed to `to`, keeping the key's position. */
-function renameKey(
-  obj: Record<string, unknown>,
-  from: string,
-  to: string,
-): Record<string, unknown> {
-  return Object.fromEntries(
-    Object.entries(obj).map(([k, v]) => [k === from ? to : k, v]),
-  );
+  return { status: "written", path, papers: choice.papers, choice };
 }
 
 export const WORKFLOW_PATH = join(".github", "workflows", "papers.yml");
@@ -516,18 +477,8 @@ export function reportHooks(
         : `  ✓ already wired in ${here(outcome.path)} — nothing changed`,
     );
     out.push(`      ${how}`);
-    if (outcome.status === "written" && outcome.replaced > 0)
-      out.push(
-        `      replaced ${String(outcome.replaced)} command(s) that pointed into ${LEGACY_PACKAGE_NAME}, the package's old name`,
-      );
     out.push(`      ${FRESH_CLONE_NOTE}`);
   }
-  if (outcome.plugin.length > 0)
-    out.push(
-      `  ⚠ this project also enables the plugin (${outcome.plugin.join(", ")}) — with it every hook runs twice.`,
-      `      the plugin no longer carries the hooks: ${UNINSTALL_PLUGIN}`,
-      `      and remove it from "enabledPlugins" in ${SETTINGS_PATH}`,
-    );
   return out;
 }
 
@@ -552,8 +503,7 @@ export function reportSkillLinks(
     return out;
   }
   const by = (s: string) => report.links.filter((l) => l.status === s);
-  const replaced = by("replaced");
-  const created = [...by("created"), ...replaced];
+  const created = by("created");
   const present = by("present");
   const skipped = by("foreign");
   // Only a read-only call leaves anything `missing`; counted anyway, so the sum always adds up.
@@ -567,10 +517,6 @@ export function reportSkillLinks(
   if (report.example !== null)
     out.push(
       `      ${join(here(report.home), "<name>")} → ${join(dirname(report.example), "<name>")}`,
-    );
-  if (replaced.length)
-    out.push(
-      `      ${String(replaced.length)} of them replaced a link into ${LEGACY_PACKAGE_NAME}, the package's old name`,
     );
   if (skipped.length) {
     out.push(
@@ -631,73 +577,6 @@ export interface InitOptions {
 }
 
 /** Reads one line from a real terminal. Kept out of `init` so the command stays testable. */
-/**
- * Move every paper's pre-2.1.0 `venue.json` to `paperlint.json`, the way the old package.json key
- * is moved, and in the same step `"venue": "aisec"` becomes `"extends": "paperlint:aisec"`: written
- * as `paperlint.json` when it is alone, removed when `paperlint.json` already says the same, and
- * REFUSED — both files left as they are — when they differ, since there is no way to know which
- * one the author means. `code` is 2 when anything was refused.
- */
-export function migratePaperSettings(papersAbs: string): {
-  readonly code: number;
-  readonly lines: readonly string[];
-} {
-  const lines: string[] = [];
-  let code = 0;
-  for (const dir of papersIn(papersAbs, [
-    ...PAPER_MARKERS,
-    LEGACY_PAPER_SETTINGS_FILE,
-  ])) {
-    const r = migrateOne(dir, (p) => relative(papersAbs, p));
-    if (r === null) continue;
-    lines.push(r.line);
-    if (r.refused) code = 2;
-  }
-  return {
-    code,
-    lines: lines.length ? ["", "paper settings", ...lines] : [],
-  };
-}
-
-/** One paper's move: done, and the line that says so — or null when there is nothing to move. */
-function migrateOne(
-  dir: string,
-  shown: (p: string) => string,
-): { readonly line: string; readonly refused: boolean } | null {
-  const [from, to] = [LEGACY_PAPER_SETTINGS_FILE, PAPER_SETTINGS_FILE].map(
-    (f) => join(dir, f),
-  ) as [string, string];
-  const read = (p: string) => (existsSync(p) ? readFileSync(p) : null);
-  const plan = migrationOf(read(from), read(to));
-  switch (plan.kind) {
-    case "none":
-      return null;
-    case "move":
-      writeFileSync(to, plan.text);
-      unlinkSync(from);
-      return {
-        line: `  ✓ ${shown(from)} → ${shown(to)} ("venue" is now "extends": "paperlint:<name>"; renamed in paperlint 2.1.0)`,
-        refused: false,
-      };
-    case "drop-legacy":
-      unlinkSync(from);
-      return {
-        line: `  ✓ ${shown(from)} removed — ${shown(to)} already says the same`,
-        refused: false,
-      };
-    case "conflict":
-      return {
-        line: `  ✗ ${shown(from)} and ${shown(to)} both exist and differ — nothing was moved. Keep ${PAPER_SETTINGS_FILE}, copy what you need from ${LEGACY_PAPER_SETTINGS_FILE} into it (its "venue": "x" is "extends": "paperlint:x"), delete ${LEGACY_PAPER_SETTINGS_FILE}, then run init again`,
-        refused: true,
-      };
-    case "broken":
-      return {
-        line: `  ✗ ${shown(from)} was not moved: ${plan.why}`,
-        refused: true,
-      };
-  }
-}
-
 export async function askOnTerminal(question: string): Promise<string> {
   // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
   const { createInterface } = await import("node:readline/promises");
@@ -806,12 +685,6 @@ export async function init(
     log(
       `  ✓ ${here(decl.path)} already declares ${PAPERS_DIR_FIELD} = ${JSON.stringify(decl.papers)} — kept, nothing overwritten`,
     );
-  } else if (decl.status === "renamed") {
-    err(`  ✗ ${decl.message}`);
-    err(
-      `      nothing was written. Fix it in ${here(decl.path)}, then run init again.`,
-    );
-    return 2;
   } else if (decl.status === "unparsable") {
     err(`  ✗ ${here(decl.path)} is not valid JSON: ${decl.reason}`);
     err(
@@ -833,10 +706,6 @@ export async function init(
     );
     return 2;
   }
-  if (decl.migrated)
-    log(
-      `  ✓ moved the settings from "${LEGACY_CONFIG_KEY}" (the old key) to "${CONFIG_KEY}"`,
-    );
   log(
     `      one declaration — the hooks, the rules and the CLI all read this one key`,
   );
@@ -844,8 +713,6 @@ export async function init(
   // measured or guessed: otherwise the first paper and the workflow would land in the
   // guessed directory while lint and the hooks keep reading the declared one.
   const papersDir = decl.papers as string;
-  const moved = migratePaperSettings(resolve(root, papersDir));
-  for (const line of moved.lines) (moved.code ? err : log)(line);
 
   // ── 3. the skills, linked where Claude Code looks for them ─────────────────────────────
   for (const line of reportSkillLinks(link(root), here)) log(line);
@@ -953,5 +820,5 @@ export async function init(
       `doctor exits ${String(code)} — the install is NOT finished. The lines marked ✗ above say what is\n` +
         `left; re-run \`npx paperlint doctor\` once you have done them.`,
     );
-  return paperCode || moved.code || code;
+  return paperCode || code;
 }

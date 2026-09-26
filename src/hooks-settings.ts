@@ -28,7 +28,6 @@ import { basename, dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   BIN_FILE,
-  LEGACY_PACKAGE_NAME,
   PACKAGE_NAME,
 } from "../skills/paper-pipeline/scripts/consumer.mjs";
 
@@ -46,9 +45,6 @@ export const WIRING_FILE = fileURLToPath(
  * `hooks.json`, and nothing machine-specific lands in a committed file.
  */
 export const MANAGED_BY = `node_modules/${PACKAGE_NAME}/${BIN_FILE}`;
-
-/** The names the package's directory under `node_modules` has had. */
-const PKG_DIRS: readonly string[] = [PACKAGE_NAME, LEGACY_PACKAGE_NAME];
 
 export interface HookCommand {
   readonly type: string;
@@ -80,7 +76,6 @@ function bare(token: string): string {
 interface Run {
   readonly name: string;
   readonly ours: boolean;
-  readonly legacy: boolean;
   readonly path: string;
 }
 
@@ -90,19 +85,11 @@ interface Run {
  * Recognised spellings — each is ONE lexeme of a shell command, which is what a command is:
  *   `node <…>/node_modules/paperlint/bin/paperlint.mjs hook <name>`
  *                          ours when the path is exactly MANAGED_BY
- *   `node node_modules/<pkg>/bin/<any other file> hook <name>`, <pkg> this name or the old one
- *                          `legacy`: the project-relative form `init` writes, pointing at a file
- *                          this version does not install — what an older `init` left behind
- *                          (1.x: `research-paper-pipeline/bin/rpp.mjs`; 2.0.0: `paperlint/bin/rpp.mjs`)
- *   `npx paperlint hook <name>`, `node_modules/.bin/paperlint hook <name>` (or under the old package name),
- *   an absolute path into the package's `bin/`
+ *   `npx paperlint hook <name>`, `node_modules/.bin/paperlint hook <name>`, an absolute path into
+ *   the package's `bin/`
  *                          another spelling
- *   `vigiles … run-program <…>/node_modules/<pkg>/hooks/<name>.hook.mjs`
+ *   `vigiles … run-program <…>/node_modules/paperlint/hooks/<name>.hook.mjs`
  *                          another spelling
- * The last is how the one real consumer wired all three by hand before `init` could.
- *
- * `legacy` is decided by the SHAPE `init` writes, not by a list of past file names: any file in
- * our `bin/` other than BIN_FILE is one that no longer ships, so a future rename is covered too.
  */
 function parseRun(command: string): Run | null {
   const tokens = command.trim().split(/\s+/).map(bare);
@@ -113,54 +100,37 @@ function parseRun(command: string): Run | null {
   return null;
 }
 
-/** The path segments after `node_modules/<pkg>/`, and whether the token starts there. */
-function insidePackage(parts: readonly string[]): {
-  readonly inside: readonly string[];
-  readonly relative: boolean;
-} {
+/** The path segments after `node_modules/paperlint/`. */
+function insidePackage(parts: readonly string[]): readonly string[] {
   const at = parts.findIndex(
-    (p, j) => p === "node_modules" && PKG_DIRS.includes(parts[j + 1] ?? ""),
+    (p, j) => p === "node_modules" && parts[j + 1] === PACKAGE_NAME,
   );
-  return {
-    inside: at === -1 ? [] : parts.slice(at + 2),
-    relative: at === 0,
-  };
+  return at === -1 ? [] : parts.slice(at + 2);
 }
 
 /** The run token `i` starts, if it names a paperlint hook. */
 function runAt(tokens: readonly string[], i: number): Run | null {
   const t = posix.normalize(tokens[i] ?? "");
-  const { inside, relative } = insidePackage(t.split("/"));
+  const inside = insidePackage(t.split("/"));
   const inBin = inside[0] === "bin" && inside.length === 2;
   const name = tokens[i + 2];
   if (
-    (inBin || PKG_DIRS.includes(basename(t))) &&
+    (inBin || basename(t) === PACKAGE_NAME) &&
     tokens[i + 1] === "hook" &&
     name
   )
-    return {
-      name,
-      ours: t === MANAGED_BY,
-      legacy: inBin && relative && t !== MANAGED_BY,
-      path: t,
-    };
+    return { name, ours: t === MANAGED_BY, path: t };
   if (inside[0] === "hooks" && inside[1]?.endsWith(".hook.mjs"))
-    return {
-      name: basename(inside[1], ".hook.mjs"),
-      ours: false,
-      legacy: false,
-      path: t,
-    };
+    return { name: basename(inside[1], ".hook.mjs"), ours: false, path: t };
   return null;
 }
 
 export function hookRun(command: string): {
   readonly name: string;
   readonly ours: boolean;
-  readonly legacy: boolean;
 } | null {
   const run = parseRun(command);
-  return run && { name: run.name, ours: run.ours, legacy: run.legacy };
+  return run && { name: run.name, ours: run.ours };
 }
 
 /** Every command in a settings object, with the event it hangs off. */
@@ -205,67 +175,16 @@ export function shippedWiring(file: string = WIRING_FILE): Wiring {
 export function wiredCounts(
   settings: Settings,
   names: readonly string[],
-): Map<string, { ours: number; legacy: number; other: number }> {
-  const counts = new Map(
-    names.map((n) => [n, { ours: 0, legacy: 0, other: 0 }]),
-  );
+): Map<string, { ours: number; other: number }> {
+  const counts = new Map(names.map((n) => [n, { ours: 0, other: 0 }]));
   for (const { command } of commandsIn(settings)) {
     const run = hookRun(command);
     const slot = run ? counts.get(run.name) : undefined;
     if (run && slot)
       if (run.ours) slot.ours++;
-      else if (run.legacy) slot.legacy++;
       else slot.other++;
   }
   return counts;
-}
-
-/**
- * The settings with every command an install under the old package name wrote removed, and the
- * matcher blocks and events left empty by that removal dropped. The user's own commands stay.
- */
-export function withoutLegacy(settings: Settings): {
-  readonly settings: Settings;
-  readonly removed: number;
-} {
-  const hooks = settings["hooks"];
-  if (!hooks || typeof hooks !== "object") return { settings, removed: 0 };
-  let removed = 0;
-  const next: Record<string, HookEntry[]> = {};
-  for (const [event, entries] of Object.entries(hooks as HooksMap)) {
-    const kept: HookEntry[] = [];
-    for (const entry of Array.isArray(entries) ? entries : []) {
-      const list: readonly HookCommand[] = Array.isArray(entry?.hooks)
-        ? entry.hooks
-        : [];
-      const own = list.filter((h) => {
-        const legacy =
-          typeof h?.command === "string" && hookRun(h.command)?.legacy === true;
-        if (legacy) removed++;
-        return !legacy;
-      });
-      if (own.length > 0 || list.length === 0)
-        kept.push({ ...entry, hooks: own });
-    }
-    if (kept.length > 0) next[event] = kept;
-  }
-  return removed === 0
-    ? { settings, removed }
-    : { settings: { ...settings, hooks: next }, removed };
-}
-
-/**
- * Plugin ids the PROJECT enables for this package. A user-scope plugin lives in the user's own
- * settings, which this cannot see — callers must say so rather than print "not enabled".
- */
-export function pluginEnabledHere(settings: Settings): string[] {
-  const enabled = settings["enabledPlugins"];
-  if (!enabled || typeof enabled !== "object") return [];
-  return Object.entries(enabled as Record<string, unknown>)
-    .filter(
-      ([id, on]) => on === true && id.split("@")[0] === LEGACY_PACKAGE_NAME,
-    )
-    .map(([id]) => id);
 }
 
 export type SettingsRead =
@@ -301,9 +220,6 @@ export type WireResult =
       readonly status: "written" | "present";
       readonly path: string;
       readonly names: readonly string[];
-      readonly plugin: readonly string[];
-      /** Commands an install under the old package name wrote, removed before the merge. */
-      readonly replaced: number;
     }
   | {
       readonly status: "foreign";
@@ -316,7 +232,6 @@ export type WireResult =
       }[];
       /** Shipped hooks that no command runs in ANY spelling — left unwired as well. */
       readonly missing: readonly string[];
-      readonly plugin: readonly string[];
     }
   | {
       readonly status: "unparsable";
@@ -342,11 +257,7 @@ export function wireHooks(
 ): WireResult {
   const read = readSettings(root);
   if (read.status === "unparsable") return read;
-  const { path } = read;
-  // Commands from an install under the old package name point at a directory that is gone after
-  // the upgrade. They are ours, so they are replaced rather than counted as someone else's.
-  const { settings, removed } = withoutLegacy(read.settings);
-  const plugin = pluginEnabledHere(settings);
+  const { path, settings } = read;
   const found = commandsIn(settings)
     .map(({ command }) => ({ command, run: hookRun(command) }))
     .filter(({ run }) => run && !run.ours && wiring.names.includes(run.name))
@@ -356,62 +267,19 @@ export function wireHooks(
     const missing = wiring.names.filter(
       (n) => (counts.get(n)?.ours ?? 0) + (counts.get(n)?.other ?? 0) === 0,
     );
-    return {
-      status: "foreign",
-      path,
-      names: wiring.names,
-      found,
-      missing,
-      plugin,
-    };
+    return { status: "foreign", path, names: wiring.names, found, missing };
   }
 
   const next = merge(settings, wiring.compiled, MANAGED_BY);
   if (JSON.stringify(next) === JSON.stringify(read.settings))
-    return {
-      status: "present",
-      path,
-      names: wiring.names,
-      plugin,
-      replaced: 0,
-    };
+    return { status: "present", path, names: wiring.names };
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, JSON.stringify(next, null, 2) + "\n", "utf8");
-  return {
-    status: "written",
-    path,
-    names: wiring.names,
-    plugin,
-    replaced: removed,
-  };
+  return { status: "written", path, names: wiring.names };
 }
 
 /** The consequence every report of a written hook must carry, in one place. */
 export const FRESH_CLONE_NOTE = `the commands point into node_modules/${PACKAGE_NAME}/ — in a fresh clone they cannot run until \`npm install\` has run there`;
-
-/** The instruction for a project that also enables the plugin (it only ever existed under the old name). */
-export const UNINSTALL_PLUGIN = `/plugin uninstall ${LEGACY_PACKAGE_NAME}@${LEGACY_PACKAGE_NAME}`;
-
-/**
- * The doctor lines for hook commands an older install left behind: each names the file it runs,
- * which this version does not install, so the hook silently does nothing.
- */
-function legacyLines(settings: Settings): string[] {
-  const stale = new Map<string, number>();
-  for (const { command } of commandsIn(settings)) {
-    const run = parseRun(command);
-    if (run?.legacy) stale.set(run.path, (stale.get(run.path) ?? 0) + 1);
-  }
-  return stale.size === 0
-    ? []
-    : [
-        ...[...stale].map(
-          ([path, n]) =>
-            `  ⚠ ${String(n)} hook command(s) run ${path}, which this version does not install — they no longer run.`,
-        ),
-        `      \`npx ${PACKAGE_NAME} init\` replaces them`,
-      ];
-}
 
 /**
  * `paperlint doctor`'s section. ADVISORY — it never fails the run: the hooks are an in-editor guard,
@@ -461,17 +329,5 @@ export function doctorHooks(
       `  ✓ wired — ${wiring.names.join(", ")}, once each`,
       `      ${FRESH_CLONE_NOTE}`,
     );
-  out.push(...legacyLines(read.settings));
-  const plugin = pluginEnabledHere(read.settings);
-  if (plugin.length > 0) {
-    out.push(
-      `  ⚠ this project ALSO enables the plugin (${plugin.join(", ")}) — every hook would run twice.`,
-      `      the plugin no longer carries the hooks: ${UNINSTALL_PLUGIN}`,
-      `      and remove it from "enabledPlugins" in ${SETTINGS_PATH}`,
-    );
-  }
-  out.push(
-    `  · a plugin installed at USER scope is not visible from here — \`/plugin\` inside Claude Code shows it`,
-  );
   return out;
 }

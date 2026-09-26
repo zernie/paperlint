@@ -14,7 +14,6 @@
 import { texLanguage } from "./eslint-rules/latex-language.mjs";
 import texBuild from "./eslint-rules/tex-build.mjs";
 import markdown from "@eslint/markdown";
-import reviewRules from "./eslint-rules/review-findings-cause.mjs";
 import localRules from "./eslint-rules/temp-root-realpath.mjs";
 import portRules from "./eslint-rules/install-path-literals.mjs";
 import n from "eslint-plugin-n";
@@ -452,20 +451,6 @@ export default [
     ignores: ["skills/paper-pipeline/references/occupancy-2026-08-06-probe/**"],
     plugins: { n },
     rules: { "n/no-missing-import": "error" },
-  },
-  /**
-   * The package's first markdown rule — unit 1 of step 9 (moved from the consumer).
-   * The block targets OWN fixtures: in the consumer the same plugin is applied to its
-   * review report directory. `warn` for the same reason as .tex below: fixtures
-   * are DELIBERATELY defective, and `error` would mean `npx eslint .` reds on a healthy
-   * checkout. The signal lives in `npm test`, not in the warning count.
-   */
-  {
-    files: ["fixtures/review-findings-cause/**/*.md"],
-    plugins: { markdown, review: reviewRules },
-    language: "markdown/gfm",
-    languageOptions: { frontmatter: "yaml" },
-    rules: { "review/findings-cause": "warn" },
   },
   /**
    * Rule 10's mechanical half, prose side — and this is where the debt actually is: 76
