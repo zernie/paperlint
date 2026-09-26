@@ -10,7 +10,6 @@ The README carries the minimal version of this. Everything below is the full sur
 {
   "paperlint": {
     "papersDir": "papers",
-    "reviewSchema": "schemas/review.json",
     "rules": [
       {
         "files": ["papers/old-draft/**"],
@@ -21,18 +20,17 @@ The README carries the minimal version of this. Everything below is the full sur
 }
 ```
 
-| key            | required | what it is                                                                                |
-| -------------- | -------- | ----------------------------------------------------------------------------------------- |
-| `papersDir`    | **yes**  | the directory your papers live in, relative to the file holding it. One string or a list. |
-| `structure`    | no       | which files every paper directory must contain — see below. `false` turns it off.         |
-| `reviewSchema` | no       | a JSON Schema file a review's frontmatter must also satisfy — see below                   |
-| `rules`        | no       | extra ESLint config blocks: turn optional rules on, change a rule's severity — see below  |
+| key         | required | what it is                                                                                |
+| ----------- | -------- | ----------------------------------------------------------------------------------------- |
+| `papersDir` | **yes**  | the directory your papers live in, relative to the file holding it. One string or a list. |
+| `structure` | no       | which files every paper directory must contain — see below. `false` turns it off.         |
+| `rules`     | no       | extra ESLint config blocks: turn optional rules on, change a rule's severity — see below  |
 
 The skill scripts read a few more keys of the same object — `ledger`, `scripts`, `timezone`,
 `contactEmail`, `citeChecks`, `triggerCases` — documented with the skills that use them.
 
 **Any other key is an error**, named in the message: `package.json → "paperlint":
-unknown key "reviewSchem"`. A misspelt key would otherwise read as "not set", and the setting
+unknown key "papersdir"`. A misspelt key would otherwise read as "not set", and the setting
 you meant would silently do nothing. The list of known keys is `SETTINGS_KEYS` in
 `lib/paper-config.mjs`.
 
@@ -98,32 +96,28 @@ the paper's own `rules` → the project's `rules` blocks in `package.json`. So a
 rule on for its papers, a paper can turn it off for itself, and the project can still override
 both. Only rules paperlint ships may be named, at every level.
 
-## Review frontmatter: paperlint's schema, and your own
+## Records in frontmatter, checked by shipped JSON Schemas
 
-A review under `reviews/` records its findings in YAML frontmatter; `review/frontmatter` validates it
-against the JSON Schema paperlint ships (`eslint-rules/review-frontmatter.schema.json`):
+Two kinds of file under a paper keep a record in their YAML frontmatter, and paperlint validates
+each against a JSON Schema it ships (`eslint-rules/*.schema.json`):
 
-```yaml
----
-findings:
-  - id: 1
-    status: open # open | fixed | wontfix
-    cause: missing-skill # skill-defect | missing-skill | hook | rule — required when open
----
-```
+- **a review** under `reviews/` (`review/frontmatter`, error) — its findings, each with a status and,
+  when open, the pipeline cause that let it through:
 
-To require more — a `read:` field on every review, say — write a JSON Schema and point
-`reviewSchema` at it, relative to your `package.json`. It is applied **together with** paperlint's
-(both must pass), so it can add requirements but never lift one. It is read and compiled before
-anything is linted; a missing file or a schema that does not compile stops the run naming it.
+  ```yaml
+  ---
+  findings:
+    - id: 1
+      status: open # open | fixed | wontfix
+      cause: missing-skill # skill-defect | missing-skill | hook | rule — required when open
+  ---
+  ```
 
-```json
-{
-  "type": "object",
-  "required": ["read"],
-  "properties": { "read": { "enum": ["full", "abstract", "none"] } }
-}
-```
+  A review with no `findings` key is not checked for findings.
+
+- **a sibling card** under `siblings/` (`sibling/frontmatter`, warn; `siblings/README.md` is the index,
+  not a card) — how much of the competing paper was actually read: `read: full | abstract | none`. A
+  card without it, or without frontmatter, is a finding.
 
 ## Why the key lives in `package.json`
 

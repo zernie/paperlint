@@ -10,12 +10,6 @@ export interface PaperlintConfig {
   /** 🔴 REQUIRED. The paper director(ies), relative to the config file ITSELF. The field name is
    * `PAPERS_DIR_FIELD` in lib/paper-config.mjs; code reads it through `papersDirOf()` in cli.ts. */
   papersDir?: string | string[];
-  /**
-   * A JSON Schema file (relative to the settings file) a review's frontmatter must satisfy IN
-   * ADDITION to paperlint's own. `parseSettings` reads and compiles it, and puts the schema itself
-   * here — as it does for `rules` — so nothing after the boundary sees the path.
-   */
-  reviewSchema?: string | Readonly<Record<string, unknown>>;
   /** Which files a paper directory must carry; `false` turns the check off entirely. */
   structure?: StructureConfig | false;
   /** ESLint config blocks appended after paperlint's own — PARSED by `parseSettings` in cli.ts. */

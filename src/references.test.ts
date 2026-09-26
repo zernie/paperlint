@@ -8,7 +8,7 @@
  *   offline → the step still succeeds (the build is not failed) and paper/refs-checked warns
  */
 import { describe, expect, it } from "vitest";
-import { ESLint, type Linter } from "eslint";
+import { ESLint } from "eslint";
 import { join } from "node:path";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
@@ -76,6 +76,12 @@ async function build(tex: string, check: CheckReferences) {
   return { files, out };
 }
 
+/**
+ * The rules as an ESLint plugin. Their context type is the narrow one they read (a custom
+ * language's SourceCode), which ESLint's JS-centred plugin type does not describe.
+ */
+const asPlugin = (rules: object): ESLint.Plugin => ({ rules }) as ESLint.Plugin;
+
 /** Lint `tex` as the paper's paper.tex against what `files` recorded. */
 async function lint(files: ReturnType<typeof memoryFiles>, tex: string) {
   files.writeAtomic(
@@ -90,12 +96,12 @@ async function lint(files: ReturnType<typeof memoryFiles>, tex: string) {
         files: ["**/paper.tex"],
         plugins: {
           tex: { languages: { latex: texLanguage } },
-          paper: { rules: referenceRules({ files }) },
+          paper: asPlugin(referenceRules({ files })),
         },
         language: "tex/latex",
         rules: REFERENCE_RULE_LEVELS,
       },
-    ] as unknown as Linter.Config[],
+    ],
   });
   const [res] = await eslint.lintText(tex, {
     filePath: join(PAPER, "paper.tex"),

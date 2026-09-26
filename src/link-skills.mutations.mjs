@@ -123,7 +123,11 @@ process.exit(
           "the difference between looking and changing. `paperlint doctor` would quietly repair the " +
           "state it is supposed to report, so the report can never show the gap",
         edits: [
-          [SRC, "  if (!write || !fixable) {", "  if (!fixable) {"],
+          [
+            SRC,
+            '  if (!write || seen.status !== "missing")',
+            '  if (seen.status !== "missing")',
+          ],
           [
             SRC,
             "  if (write && shipped.names.length > 0) {",

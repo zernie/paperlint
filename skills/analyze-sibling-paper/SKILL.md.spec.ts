@@ -59,9 +59,9 @@ far below the cost of a "novelty concern" reject.
    abstract → intro → method → claims (as much as is accessible). An abstract hides exactly the overlap
    that matters. Try the fetch routes in order — \`arxiv.org/abs/<id>\` for metadata, \`arxiv.org/html/<id>v1\`,
    \`ar5iv.labs.arxiv.org/html/<id>\`, then the PDF — and **a 403/404 on one route is not "inaccessible"**;
-   switch channel before concluding. **Record what you actually read** in the card as a
-   \`**Read:**\` line naming the sections you covered and the ones you could not — an abstract-only
-   verdict is PROVISIONAL and must say so in that same line.
+   switch channel before concluding. **Record what you actually read** in the card's frontmatter as
+   \`read: full | abstract | none\`, and name in a \`**Read:**\` line the sections you covered and the
+   ones you could not — an abstract-only verdict is PROVISIONAL and must say so.
    🔴 **Verify the abstract's numbers against the body.** They disagree more often than you would expect,
    and a disagreement is itself a finding worth recording.
 
@@ -102,17 +102,21 @@ far below the cost of a "novelty concern" reject.
 
 ## Required shape of the saved card — two sections are machine-checked
 
-The card is not free-form. Two of its parts are checked by \`.claude/hooks/paper-lint.mjs\`
-(\`checkSiblingCards\`) and a card missing either is reported as an unfinished analysis:
+The card is not free-form:
 
-- **\`**Read:**\`** — one line naming what of the full text you actually read and what you could
-  not. This exists because "I read the paper" is the single easiest thing to skip while producing a
-  card that looks complete.
+- **\`read:\` in the frontmatter** — \`full\`, \`abstract\` or \`none\`: how much of the full text you
+  actually read. \`paperlint lint\` checks it (\`sibling/frontmatter\`, a warning on a card without it).
+  It exists because "I read the paper" is the single easiest thing to skip while producing a card that
+  looks complete. The \`**Read:**\` line under it names which sections.
 - **\`## Sibling's References\`** — their bibliography mined and diffed against yours (step 2), with the
   MUST CITE / SHOULD CONSIDER / NOT RELEVANT verdicts.
 
-Enforced only for cards dated on or after 2026-07-29; older cards get one summary nudge instead of
-burying every other finding. Frontmatter needs \`title\`, \`created\`, \`tags\` like any note.
+\`\`\`yaml
+---
+title: "Smith et al. 2025 — <title>"
+read: abstract # full | abstract | none
+---
+\`\`\`
 
 ## Save + surface — COLOCATED with the paper (mandatory — do not leave it in context)
 Each paper's competitive landscape lives **with that paper**, not in a shared research folder: write the
@@ -151,7 +155,7 @@ would have overwritten one another.
 
 ## Rules
 - **Read the paper, not the abstract.** An abstract-only "delta" is not a verdict — and the card must
-  say, in its \`**Read:**\` line, which parts you actually read.
+  say so: \`read: abstract\` in its frontmatter, and which parts in its \`**Read:**\` line.
 - **Mine their references.** A sibling analysis that never opened the sibling's bibliography is half done;
   the scoop you missed is more likely to be in their reference list than in their results.
 - **Classify by contribution type** before judging overlap — it's the difference between a shared concept and a collision.

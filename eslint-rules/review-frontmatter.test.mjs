@@ -1,13 +1,14 @@
 /**
  * review/frontmatter — a review's findings are records in its frontmatter, validated by JSON
- * Schema; a project adds its own requirements with a schema of its own (allOf).
+ * Schema — and sibling cards, the same mechanism with the package's sibling-card schema.
  */
 import { describe, expect, it } from "vitest";
 import { ESLint } from "eslint";
 import markdown from "@eslint/markdown";
-import review, { schemaProblem } from "./review-frontmatter.mjs";
+import review from "./review-frontmatter.mjs";
+import sibling from "./sibling-frontmatter.mjs";
 
-async function lint(text, extend) {
+async function lint(text) {
   const eslint = new ESLint({
     overrideConfigFile: true,
     overrideConfig: [
@@ -17,7 +18,7 @@ async function lint(text, extend) {
         language: "markdown/gfm",
         languageOptions: { frontmatter: "yaml" },
         rules: {
-          "review/frontmatter": ["error", extend ? { extend } : {}],
+          "review/frontmatter": "error",
         },
       },
     ],
@@ -80,43 +81,38 @@ describe("review/frontmatter — the findings record", () => {
   });
 });
 
-describe("review/frontmatter — the project's own schema, applied together with paperlint's", () => {
-  const project = {
-    type: "object",
-    required: ["read"],
-    properties: { read: { enum: ["full", "abstract", "none"] } },
-  };
-
-  it("its required field is enforced, and a date stays a string (YAML core schema)", async () => {
-    expect(await lint(fm("read: full\ncreated: 2026-09-20"), project)).toEqual(
-      [],
-    );
-    expect(await lint(fm("created: 2026-09-20"), project)).toEqual([
+describe("sibling/frontmatter — the same mechanism, the package's own sibling-card schema", () => {
+  async function card(text) {
+    const eslint = new ESLint({
+      overrideConfigFile: true,
+      overrideConfig: [
+        {
+          files: ["**/*.md"],
+          plugins: { markdown, sibling },
+          language: "markdown/gfm",
+          languageOptions: { frontmatter: "yaml" },
+          rules: { "sibling/frontmatter": "warn" },
+        },
+      ],
+    });
+    const [res] = await eslint.lintText(text, { filePath: "siblings/x.md" });
+    return res.messages.map((m) => m.message);
+  }
+  it("read: full | abstract | none — silent", async () => {
+    for (const v of ["full", "abstract", "none"])
+      expect(await card(fm(`read: ${v}`))).toEqual([]);
+  });
+  it("🔴 a card without the field — or without any frontmatter — is a finding", async () => {
+    expect(await card(fm("title: x"))).toEqual([
       "the frontmatter should have required property 'read'",
     ]);
-    expect(await lint(fm("read: skimmed"), project)).toEqual([
+    expect(await card("# no header\n")).toEqual([
+      "the frontmatter should have required property 'read'",
+    ]);
+  });
+  it("a value outside the three names them", async () => {
+    expect(await card(fm("read: skimmed"))).toEqual([
       "`read` must be one of: full, abstract, none",
     ]);
-  });
-
-  it("🔴 a missing frontmatter is not a way around it", async () => {
-    expect(await lint("# No header at all\n", project)).toEqual([
-      "the frontmatter should have required property 'read'",
-    ]);
-  });
-
-  it("and it cannot lift paperlint's: an open finding still needs its cause", async () => {
-    expect(
-      await lint(
-        fm("read: full\nfindings:\n  - id: 1\n    status: open"),
-        project,
-      ),
-    ).toEqual(["`findings[0]` should have required property 'cause'"]);
-  });
-
-  it("schemaProblem: a schema ajv cannot compile is named at the boundary", () => {
-    expect(schemaProblem(project)).toBeNull();
-    expect(schemaProblem({ type: "no-such-type" })).toMatch(/.+/);
-    expect(schemaProblem([])).toMatch(/JSON object/);
   });
 });

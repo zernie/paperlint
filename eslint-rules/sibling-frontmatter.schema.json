@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:paperlint:sibling-frontmatter",
+  "title": "paperlint sibling-card frontmatter",
+  "description": "The YAML frontmatter of a sibling card under <paper>/siblings/ (written by the analyze-sibling-paper skill): how much of the competing paper was actually read. A verdict about a paper read only at the abstract is a different claim from one read in full, and the card must say which.",
+  "type": "object",
+  "required": ["read"],
+  "properties": {
+    "read": {
+      "description": "full: the whole paper was read. abstract: only the abstract (and maybe the figures). none: the card is from citations or a summary alone.",
+      "enum": ["full", "abstract", "none"]
+    }
+  }
+}

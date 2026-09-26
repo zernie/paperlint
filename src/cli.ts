@@ -13,10 +13,10 @@
  *     uses: zernie/paperlint@<sha>    ← action.yml
  *
  * ⚠️ THE BOUNDARY THIS UTILITY HAS NO RIGHT TO ERASE: the consumer's data stays with the consumer.
- * Where the papers are, a project's extra review fields (`reviewSchema`), its own rule blocks — all of
- * that is about ONE corpus, so it lives in the consumer's `package.json`, under the `paperlint` key.
- * What used to live there as ratchets and markers (a typography debt, an author-list "marker", a
- * field dictionary) became fixes, records and a JSON Schema in 3.0.0.
+ * Where the papers are and the project's own rule blocks — that is about ONE corpus, so it lives in
+ * the consumer's `package.json`, under the `paperlint` key. What used to live there as ratchets and
+ * markers (a typography debt, an author-list "marker", a field dictionary) became fixes, records
+ * and shipped JSON Schemas in 3.0.0.
  *
  * 🔴 WHY THE COMMAND IS CALLED `lint` AND NOT `check`. It does exactly what everyone else calls by
  * that word: reads files, changes nothing, prints findings, exits non-zero. `check` is taken in the
@@ -113,13 +113,11 @@ import texBuild from "../eslint-rules/tex-build.mjs";
 // @ts-expect-error — an ESLint rule in .mjs, it has no types
 import bibReachable from "../eslint-rules/bib-reachable-entry.mjs";
 // @ts-expect-error — an ESLint rule in .mjs, it has no types
-import * as reviewRule from "../eslint-rules/review-frontmatter.mjs";
+import reviewFrontmatter from "../eslint-rules/review-frontmatter.mjs";
+// @ts-expect-error — an ESLint rule in .mjs, it has no types
+import siblingFrontmatter from "../eslint-rules/sibling-frontmatter.mjs";
 // @ts-expect-error — an ESLint rule in .mjs, it has no types
 import pdfRules from "../eslint-rules/pdf-last-page-balance.mjs";
-
-const reviewFrontmatter = reviewRule.default;
-const schemaProblem: (schema: unknown) => string | null =
-  reviewRule.schemaProblem;
 
 const USAGE = `paperlint — machine-checkable gates for a paper kept in git
 
@@ -174,7 +172,6 @@ another file of the same shape. \`papersDir\` is required; the rest is optional:
 
   "paperlint": {
     "papersDir":         "papers",
-    "reviewSchema":      "schemas/review.json",
     "rules": [ { "files": ["papers/my-paper/**"],
                  "rules": { "pdf/last-page-balance": "error" } } ]
   }
@@ -259,16 +256,18 @@ export function buildConfig(
       files: ["**/reviews/*.md"],
       plugins: { markdown, review: reviewFrontmatter },
       ...md,
-      rules: {
-        // A review's frontmatter is a record, validated by paperlint's JSON Schema and, when the
-        // project names one in `reviewSchema`, by that too (eslint-rules/review-frontmatter.mjs).
-        "review/frontmatter": [
-          "error",
-          typeof opts.reviewSchema === "object"
-            ? { extend: opts.reviewSchema }
-            : {},
-        ],
-      },
+      // A review's frontmatter is a record, validated by paperlint's JSON Schema
+      // (eslint-rules/review-frontmatter.mjs).
+      rules: { "review/frontmatter": "error" },
+    },
+    {
+      // A sibling card says how much of the competing paper was read (`read:`). The cards are
+      // written by this package's analyze-sibling-paper skill; its README is an index, not a card.
+      files: ["**/siblings/*.md"],
+      ignores: ["**/siblings/README.md"],
+      plugins: { markdown, sibling: siblingFrontmatter },
+      ...md,
+      rules: { "sibling/frontmatter": "warn" },
     },
   ];
 
@@ -444,51 +443,7 @@ export function parseSettings(
     };
   const rules = parseRuleBlocks(raw["rules"], where, SHIPPED_RULES, baseDir);
   if (!rules.ok) return rules;
-  const extension = readReviewSchema(opts.reviewSchema, where, baseDir);
-  if (!extension.ok) return extension;
-  return {
-    ok: true,
-    value: {
-      ...opts,
-      rules: rules.value,
-      ...(extension.value ? { reviewSchema: extension.value } : {}),
-    },
-  };
-}
-
-/**
- * `reviewSchema` → the JSON Schema it names, read and compiled here, at the boundary: a path that
- * does not exist, a file that is not JSON, or a schema ajv cannot compile stops the run with one
- * line naming the file, before anything is linted.
- */
-function readReviewSchema(
-  path: unknown,
-  where: string,
-  baseDir: string,
-): Parsed<Record<string, unknown> | null> {
-  if (path === undefined) return { ok: true, value: null };
-  if (typeof path !== "string" || path === "")
-    return {
-      ok: false,
-      error: `${where}.reviewSchema must be a path to a JSON Schema file`,
-    };
-  const file = resolve(baseDir, path);
-  let schema: unknown;
-  try {
-    schema = JSON.parse(readFileSync(file, "utf8"));
-  } catch (e) {
-    return {
-      ok: false,
-      error: `${where}.reviewSchema: ${path} cannot be read as JSON — ${(e as Error).message}`,
-    };
-  }
-  const problem = schemaProblem(schema);
-  return problem
-    ? {
-        ok: false,
-        error: `${where}.reviewSchema: ${path} is not a valid JSON Schema — ${problem}`,
-      }
-    : { ok: true, value: schema as Record<string, unknown> };
+  return { ok: true, value: { ...opts, rules: rules.value } };
 }
 
 /**

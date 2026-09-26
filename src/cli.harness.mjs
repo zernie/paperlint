@@ -130,17 +130,16 @@ check(
 
 // ── config is assembled, and consumer data gets through ────────────────────────────────────
 {
-  const reviewSchema = { required: ["read"] };
-  const cfg = buildConfig({ reviewSchema }, null);
+  const cfg = buildConfig({}, null);
   // Blocks with `files` — the global `ignores` block below is not a rule block.
   const ruleBlocks = (c) => c.filter((b) => Array.isArray(b.files));
   check(
     "without a LaTeX language the config still gets built — a corpus with no .tex is not a reason to refuse",
-    Array.isArray(cfg) && ruleBlocks(cfg).length === 3,
+    Array.isArray(cfg) && ruleBlocks(cfg).length === 4,
   );
   check(
-    "with a LaTeX language a fourth block is added",
-    ruleBlocks(buildConfig({}, {})).length === 4,
+    "with a LaTeX language a fifth block is added",
+    ruleBlocks(buildConfig({}, {})).length === 5,
   );
   check(
     "🔴 the project's paper TEMPLATE directory is ignored — flat config does not skip dot-directories",
@@ -151,12 +150,13 @@ check(
         b.ignores.includes("**/.template/"),
     ),
   );
-  const reviews = ruleBlocks(cfg).find((c) =>
-    c.files.some((f) => f.includes("reviews")),
+  const siblings = ruleBlocks(cfg).find((c) =>
+    c.files.some((f) => f.includes("siblings")),
   );
   check(
-    "the project's review schema gets through to the rule",
-    reviews.rules["review/frontmatter"][1].extend === reviewSchema,
+    "sibling cards are checked, and the siblings index is not a card",
+    siblings.rules["sibling/frontmatter"] === "warn" &&
+      siblings.ignores.some((g) => g.endsWith("siblings/README.md")),
   );
 }
 

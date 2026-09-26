@@ -78,47 +78,42 @@ describe("paperlint lint --fix", () => {
   });
 });
 
-describe("settings: reviewSchema is read at the boundary", () => {
-  it("a schema file that does not exist stops the run, naming it", async () => {
-    const r = await lint(project({ reviewSchema: "schemas/nope.json" }));
-    expect(r.code).toBe(2);
-    expect(r.err).toMatch(/reviewSchema: schemas\/nope\.json cannot be read/);
-  });
-
-  it("a file that is not a usable JSON Schema stops the run", async () => {
-    const r = await lint(
-      project(
-        { reviewSchema: "schema.json" },
-        { "schema.json": '{ "type": "no-such-type" }' },
-      ),
+describe("sibling cards: `read:` is required, from the package's own schema", () => {
+  it("a card without it is a warning; with it, silent; the index is not a card", async () => {
+    const root = project(
+      {},
+      {
+        "papers/a/siblings/README.md": "# Siblings\n",
+        "papers/a/siblings/smith2025.md": "# Smith 2025\n",
+        "papers/a/siblings/jones2024.md": "---\nread: abstract\n---\n# Jones\n",
+      },
     );
-    expect(r.code).toBe(2);
-    expect(r.err).toMatch(/is not a valid JSON Schema/);
-  });
-
-  it("a valid one is applied to the reviews", async () => {
-    const r = await lint(
-      project(
-        { reviewSchema: "schema.json" },
-        {
-          "schema.json": '{ "required": ["read"] }',
-          "papers/a/reviews/r1.md": "# Review\n",
-        },
-      ),
-    );
-    expect(ruleIds(r.out)).toContain("review/frontmatter");
+    const results = JSON.parse((await lint(root)).out) as {
+      filePath: string;
+      messages: { ruleId: string; severity: number }[];
+    }[];
+    const of = (name: string) =>
+      results.find((r) => r.filePath.endsWith(name))?.messages ?? null;
+    expect(of("smith2025.md")?.map((m) => [m.ruleId, m.severity])).toEqual([
+      ["sibling/frontmatter", 1],
+    ]);
+    expect(of("jones2024.md")).toEqual([]);
+    expect(of("siblings/README.md")).toBeNull();
   });
 });
 
 describe("settings: what 3.0.0 removed is an ordinary unknown key or rule", () => {
-  it.each(["typographyDebt", "authorListCommand", "docFields", "causeMarker"])(
-    "%s → the generic unknown-key error",
-    async (key) => {
-      const r = await lint(project({ [key]: 1 }));
-      expect(r.code).toBe(2);
-      expect(r.err).toMatch(new RegExp(`unknown key "${key}"`));
-    },
-  );
+  it.each([
+    "typographyDebt",
+    "authorListCommand",
+    "docFields",
+    "causeMarker",
+    "reviewSchema",
+  ])("%s → the generic unknown-key error", async (key) => {
+    const r = await lint(project({ [key]: 1 }));
+    expect(r.code).toBe(2);
+    expect(r.err).toMatch(new RegExp(`unknown key "${key}"`));
+  });
 
   it("paper/typography → not a rule paperlint ships", async () => {
     const r = await lint(
