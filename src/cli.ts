@@ -13,10 +13,10 @@
  *     uses: zernie/paperlint@<sha>    ← action.yml
  *
  * ⚠️ THE BOUNDARY THIS UTILITY HAS NO RIGHT TO ERASE: the consumer's data stays with the consumer.
- * The typography debt, the marker of the author-list check run, the field dictionary — all of that
- * is about ONE corpus, and wiring it into the package would repeat the defect that put the path
- * `.claude/skills/verify-citations/...` into a rule's message. So they live in the consumer's
- * `package.json`, under the `paperlint` key.
+ * Where the papers are, a project's extra review fields (`reviewSchema`), its own rule blocks — all of
+ * that is about ONE corpus, so it lives in the consumer's `package.json`, under the `paperlint` key.
+ * What used to live there as ratchets and markers (a typography debt, an author-list "marker", a
+ * field dictionary) became fixes, records and a JSON Schema in 3.0.0.
  *
  * 🔴 WHY THE COMMAND IS CALLED `lint` AND NOT `check`. It does exactly what everyone else calls by
  * that word: reads files, changes nothing, prints findings, exits non-zero. `check` is taken in the
@@ -26,7 +26,7 @@
  * replaced it: silently breaking someone else's workflow is worse than asking them to fix a line.
  */
 import { ESLint, type Linter } from "eslint";
-import { readFileSync, existsSync, statSync } from "node:fs";
+import { readFileSync, existsSync, statSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -52,6 +52,7 @@ import { curlDownload } from "./adapters/curl/index.ts";
 import { hostDirs, nodeAdapters, nodeFiles } from "./adapters/node/index.ts";
 import { VENUE_RULE_LEVELS, venueRules } from "./venue-rules.ts";
 import { paperRules } from "./paper-settings.ts";
+import { RECORD_FIELD, outcomeOf, withAuthorsVerified } from "./authors.ts";
 import {
   narrowToOwners,
   ownedPatterns,
@@ -89,6 +90,7 @@ import {
   LEGACY_KEY_MESSAGE,
   PAPERS_DIR_FIELD,
   SETTINGS_KEYS,
+  REMOVED_SETTINGS,
   declaredSettings,
   renamedFieldMessage,
 } from "../lib/paper-config.mjs";
@@ -112,9 +114,11 @@ import typography from "../eslint-rules/paper-typography.mjs";
 // @ts-expect-error — an ESLint rule in .mjs, it has no types
 import texBuild from "../eslint-rules/tex-build.mjs";
 // @ts-expect-error — an ESLint rule in .mjs, it has no types
-import docFields from "../eslint-rules/doc-fields.mjs";
+import bibReachable from "../eslint-rules/bib-reachable-entry.mjs";
 // @ts-expect-error — an ESLint rule in .mjs, it has no types
-import findingsCause from "../eslint-rules/review-findings-cause.mjs";
+import reviewFrontmatter, {
+  schemaProblem,
+} from "../eslint-rules/review-frontmatter.mjs";
 // @ts-expect-error — an ESLint rule in .mjs, it has no types
 import pdfRules from "../eslint-rules/pdf-last-page-balance.mjs";
 
@@ -137,6 +141,9 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
   npx paperlint toolchain [--check]   install TeX Live with every package the venue presets declare
                                       into ~/.cache/paperlint/texlive (PAPERLINT_TEXLIVE_DIR overrides); a second
                                       run does nothing. --check: report what is missing, change nothing
+  npx paperlint authors <paper>       check that each bibliography entry's authors are those of the
+                                      version it cites (DBLP), and when they are, record
+                                      authorsVerified: <date> in the paper's PIPELINE-STATUS.md
   npx paperlint doctor                say what is actually wired — and what only LOOKS wired
   npx paperlint hook <name>           run an editor hook (.claude/settings.json calls this)
   npx paperlint --help
@@ -149,12 +156,14 @@ init:
   --format tex|md     the new paper's source format; default tex
 
 lint:
-  npx paperlint lint [paths…] [--config <file.json>] [--json]
+  npx paperlint lint [paths…] [--fix] [--config <file.json>] [--json]
 
   <paths…>            where your papers live, e.g. papers. Optional ONLY because the declaration
                       names it — one of the two must name the scope. There is no default
                       of ".": linting whatever happens to be in the checkout is how a green
                       report over a scope nobody chose gets produced.
+  --fix               write every fix the rules offer (section signs, leading zeros, figure
+                      references), then report what is left
   --config <file>     read the settings from this file instead of the discovered one
   --json              machine-readable findings on stdout, nothing else on it
   --max-warnings <n>  fail when warnings exceed n. Default -1: warnings never fail, because
@@ -166,12 +175,7 @@ another file of the same shape. \`papersDir\` is required; the rest is optional:
 
   "paperlint": {
     "papersDir":         "papers",
-    "authorListCommand": "node scripts/bib-authors.mjs",
-    "typographyDebt":    { "papers/my-paper": { "sectionSign": 12 } },
-    "docFields":         { "read": { "values": ["full", "abstract", "none"] } },
-    "reviewSince":       "2026-08-23",
-    "minFindings":       3,
-    "causeMarker":       "Cause:",
+    "reviewSchema":      "schemas/review.json",
     "rules": [ { "files": ["papers/my-paper/**"],
                  "rules": { "pdf/last-page-balance": "error" } } ]
   }
@@ -199,7 +203,12 @@ export function buildConfig(
   texLanguage: unknown,
 ): unknown[] {
   const paperRules = { ...researchQuestion.rules, ...typography.rules };
-  const typographyOpt = ["warn", { debt: opts.typographyDebt ?? {} }];
+  // Each typography rule reports every occurrence where it is, and fixes it (`--fix`).
+  const prose = {
+    "paper/research-question": "warn",
+    "paper/section-word": "warn",
+    "paper/leading-zero": "warn",
+  };
   const md = {
     language: "markdown/gfm",
     languageOptions: { frontmatter: "yaml" },
@@ -234,50 +243,26 @@ export function buildConfig(
       rules: {
         "paper/stages": "error",
         "paper/source": "error",
-        "paper/author-list": [
-          "warn",
-          opts.authorListCommand ? { command: opts.authorListCommand } : {},
-        ],
+        "paper/author-list": "warn",
       },
     },
     {
       files: ["**/paper.md", "**/draft.md"],
       plugins: { markdown, paper: { rules: paperRules } },
       ...md,
-      rules: {
-        "paper/research-question": "warn",
-        "paper/typography": typographyOpt,
-      },
+      rules: prose,
     },
     {
       files: ["**/reviews/*.md"],
-      plugins: {
-        markdown,
-        review: { rules: { ...findingsCause.rules } },
-        doc: docFields,
-      },
+      plugins: { markdown, review: reviewFrontmatter },
       ...md,
       rules: {
-        /*
-         * 🔴 THE DEFAULT IS ENGLISH SINCE 2026-09-17. It used to be the Russian word for "Cause:" —
-         * a Russian word in a package whose interface is English. An `error`-level rule demanded
-         * that a person put Cyrillic into their own file, and there was nothing to change the
-         * marker with: `causeMarker` was not threaded through the CLI at all. The only way out was
-         * to abandon the command and assemble the ESLint config by hand — that is, the defect
-         * pushed you onto exactly the path the utility frees you from.
-         * The Russian marker stays EXPRESSIBLE, but now as a value, not as the default.
-         */
-        "review/findings-cause": [
+        // A review's frontmatter is a record, validated by paperlint's JSON Schema and, when the
+        // project names one in `reviewSchema`, by that too (eslint-rules/review-frontmatter.mjs).
+        "review/frontmatter": [
           "error",
-          {
-            minFindings: opts.minFindings ?? 3,
-            ...(opts.causeMarker ? { causeMarker: opts.causeMarker } : {}),
-            ...(opts.reviewSince ? { sinceCreated: opts.reviewSince } : {}),
-          },
+          opts.reviewExtension ? { extend: opts.reviewExtension } : {},
         ],
-        ...(opts.docFields
-          ? { "doc/fields": ["warn", { fields: opts.docFields }] }
-          : {}),
       },
     },
   ];
@@ -290,11 +275,13 @@ export function buildConfig(
       plugins: {
         tex: { languages: { latex: texLanguage }, rules: texBuild },
         paper: { rules: paperRules },
+        bib: bibReachable,
       },
       language: "tex/latex",
       rules: {
-        "paper/research-question": "warn",
-        "paper/typography": typographyOpt,
+        ...prose,
+        "paper/figure-ref-style": "warn",
+        "bib/reachable-entry": "warn",
         "tex/future-promise": "warn",
         "tex/acm-frontmatter-override": "error",
         // Silent for a paper whose paperlint.json names no venue (src/venue-rules.ts).
@@ -442,6 +429,14 @@ export function parseSettings(
   baseDir: string,
 ): Parsed<PaperlintConfig> {
   const raw = opts as Record<string, unknown>;
+  const removed = Object.keys(raw).find((k) =>
+    Object.hasOwn(REMOVED_SETTINGS, k),
+  );
+  if (removed !== undefined)
+    return {
+      ok: false,
+      error: `${where}: "${removed}" was removed in paperlint 3.0.0 — ${REMOVED_SETTINGS[removed]}`,
+    };
   const unknown = unknownKeys(raw);
   if (unknown.length > 0)
     return {
@@ -452,13 +447,57 @@ export function parseSettings(
     };
   const rules = parseRuleBlocks(raw["rules"], where, SHIPPED_RULES, baseDir);
   if (!rules.ok) return rules;
-  return { ok: true, value: { ...opts, rules: rules.value } };
+  const extension = readReviewSchema(opts.reviewSchema, where, baseDir);
+  if (!extension.ok) return extension;
+  return {
+    ok: true,
+    value: {
+      ...opts,
+      rules: rules.value,
+      ...(extension.value ? { reviewExtension: extension.value } : {}),
+    },
+  };
 }
 
 /**
- * The directory ESLint runs from. ESLint ignores every file outside it (#48), and
- * `paper/typography` reads its debt keys relative to it — keys the config writes from its own
- * directory. So: the deepest directory holding the config's directory and every path. With the
+ * `reviewSchema` → the JSON Schema it names, read and compiled here, at the boundary: a path that
+ * does not exist, a file that is not JSON, or a schema ajv cannot compile stops the run with one
+ * line naming the file, before anything is linted.
+ */
+function readReviewSchema(
+  path: unknown,
+  where: string,
+  baseDir: string,
+): Parsed<Record<string, unknown> | null> {
+  if (path === undefined) return { ok: true, value: null };
+  if (typeof path !== "string" || path === "")
+    return {
+      ok: false,
+      error: `${where}.reviewSchema must be a path to a JSON Schema file`,
+    };
+  const file = resolve(baseDir, path);
+  let schema: unknown;
+  try {
+    schema = JSON.parse(readFileSync(file, "utf8"));
+  } catch (e) {
+    return {
+      ok: false,
+      error: `${where}.reviewSchema: ${path} cannot be read as JSON — ${(e as Error).message}`,
+    };
+  }
+  const problem = schemaProblem(schema);
+  return problem
+    ? {
+        ok: false,
+        error: `${where}.reviewSchema: ${path} is not a valid JSON Schema — ${problem}`,
+      }
+    : { ok: true, value: schema as Record<string, unknown> };
+}
+
+/**
+ * The directory ESLint runs from. ESLint ignores every file outside it (#48), and the consumer's
+ * `rules` globs are written relative to the config's directory. So: the deepest directory holding
+ * the config's directory and every path. With the
  * papers inside the config's directory, that is the config's directory itself.
  */
 const lintRoot = (home: string, paths: readonly string[]): string =>
@@ -481,6 +520,7 @@ export function parseArgs(argv: readonly string[]): Args {
     paths: [],
     config: null,
     json: false,
+    fix: false,
     all: false,
     dryRun: false,
     check: false,
@@ -512,6 +552,7 @@ export function parseArgs(argv: readonly string[]): Args {
     const a = rest[i];
     if (a === undefined) continue;
     if (a === "--json") out.json = true;
+    else if (a === "--fix") out.fix = true;
     else if (a === "--all") out.all = true;
     else if (a === "--dry-run") out.dryRun = true;
     else if (a === "--check") out.check = true;
@@ -634,7 +675,7 @@ export function readConfig(
     opts = (d.settings ?? {}) as PaperlintConfig;
     legacyKey = d.legacy;
     // The discovered config is NAMED out loud. Otherwise a run from someone else's directory picks
-    // up someone else's file and does not say so — and a typography-debt mismatch looks like a finding.
+    // up someone else's file and does not say so — and its settings then look like findings.
     //
     // 🔴 IN `--json` MODE — TO stderr. Machine output must be ONE parsable document: a line before
     // the array breaks any `| jq`, and it breaks it for the consumer, not for us. Caught not by a
@@ -798,6 +839,72 @@ export async function createPaperAt(
   if (!result.ok) return 2;
   log(``);
   return run(["lint", result.dir], { log, err, cwd });
+}
+
+/** The author-list check that ships in this package (skills/verify-citations). */
+const BIB_AUTHORS = fileURLToPath(
+  new URL(
+    "../skills/verify-citations/scripts/bib-authors.mjs",
+    import.meta.url,
+  ),
+);
+
+/**
+ * `paperlint authors <paper>` — run the author-list check and, when it passes, record
+ * `authorsVerified: <today>` in the paper's PIPELINE-STATUS.md (src/authors.ts). The check's own
+ * output goes straight to the terminal; nothing is recorded unless it exits 0.
+ */
+export function runAuthors(
+  a: Args,
+  {
+    log,
+    err,
+    cwd,
+    run = (script: string, paper: string) =>
+      spawnSync(process.execPath, [script, paper], { stdio: "inherit" }).status,
+    today = () => new Date().toISOString().slice(0, 10),
+  }: {
+    log: typeof console.log;
+    err: typeof console.error;
+    cwd: string;
+    run?: (script: string, paper: string) => number | null;
+    today?: () => string;
+  },
+): number {
+  const [name, ...extra] = a.paths;
+  if (!name || extra.length > 0) {
+    err(
+      "`authors` takes exactly one paper directory: `paperlint authors papers/my-paper`",
+    );
+    return 2;
+  }
+  const paper = resolve(cwd, name);
+  const status = join(paper, "PIPELINE-STATUS.md");
+  if (!existsSync(status)) {
+    err(
+      `${relative(cwd, status) || status} does not exist — there is nowhere to record the run`,
+    );
+    return 2;
+  }
+  const code = run(BIB_AUTHORS, paper);
+  const outcome = outcomeOf(code);
+  if (outcome !== "passed") {
+    err(
+      outcome === "mismatch"
+        ? "author lists differ from the versions cited (above) — fix the entries and run again; nothing recorded"
+        : "the check did not reach every entry (above) — that is not a pass; nothing recorded",
+    );
+    return code ?? 2;
+  }
+  const date = today();
+  const next = withAuthorsVerified(readFileSync(status, "utf8"), date);
+  if (!next.ok) {
+    err(`${relative(cwd, status)}: ${next.error}`);
+    return 2;
+  }
+  writeFileSync(status, next.value);
+  log(`✓ recorded ${RECORD_FIELD}: ${date} in ${relative(cwd, status)}`);
+  return 0;
 }
 
 /**
@@ -995,6 +1102,7 @@ const SIMPLE: Readonly<
   >
 > = {
   hook: (a, { err }) => runHook(a.paths[0], { err }),
+  authors: (a, io) => runAuthors(a, io),
   new: (a, io) => runNew(a, io),
   build: (a, io) => runBuild(a, io),
   toolchain: (a, { log, err, cwd }) =>
@@ -1170,6 +1278,7 @@ export async function run(
     cwd: lintRoot(configPath ? dirname(resolve(cwd, configPath)) : cwd, paths),
     overrideConfigFile: true,
     overrideConfig: buildConfig(withPapers, texLanguage) as Linter.Config[],
+    fix: a.fix,
   });
 
   const unowned = await firstUnownedFile(eslint, paths);
@@ -1192,6 +1301,9 @@ export async function run(
     if (isEmptySet(e)) results = [];
     else throw e;
   }
+
+  // `--fix` writes what the rules fixed; the report below is what is LEFT.
+  if (a.fix) await ESLint.outputFixes(results);
 
   // 🔴 THE GUARD AGAINST A GREEN ZERO, the same one as in action.yml and for the same reason:
   // ESLint exits zero when there are no findings, and "no findings" is byte-for-byte

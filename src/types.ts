@@ -10,18 +10,13 @@ export interface PaperlintConfig {
   /** 🔴 REQUIRED. The paper director(ies), relative to the config file ITSELF. The field name is
    * `PAPERS_DIR_FIELD` in lib/paper-config.mjs; code reads it through `papersDirOf()` in cli.ts. */
   papersDir?: string | string[];
-  /** The command that prints the author list from .bib — each corpus has its own. */
-  authorListCommand?: string;
-  /** Per-paper typography debt: how many findings already exist; the number may only go down. */
-  typographyDebt?: Record<string, Record<string, number>>;
-  /** Frontmatter fields required for review notes, and the permitted values of each. */
-  docFields?: Record<string, { values: string[] }>;
-  /** Ignore review findings older than this date. */
-  reviewSince?: string;
-  /** How many findings a cold read must produce to count as a cold read. */
-  minFindings?: number;
-  /** The word with which review notes introduce the cause. */
-  causeMarker?: string;
+  /**
+   * A JSON Schema file (relative to the settings file) a review's frontmatter must satisfy IN
+   * ADDITION to paperlint's own. `parseSettings` reads it into `reviewExtension`.
+   */
+  reviewSchema?: string;
+  /** The schema `reviewSchema` names, read and compiled at the boundary. Not a settings key. */
+  reviewExtension?: Readonly<Record<string, unknown>>;
   /** Which files a paper directory must carry; `false` turns the check off entirely. */
   structure?: StructureConfig | false;
   /** REMOVED — `paperlint build` compiles the paper itself. Still typed so a leftover key can be named. */
@@ -47,6 +42,8 @@ export interface Args {
   paths: string[];
   config: string | null;
   json: boolean;
+  /** `--fix`: `lint` writes every fix a rule offers, then reports what is left. */
+  fix: boolean;
   all: boolean;
   dryRun: boolean;
   /** `--check`: `toolchain` reports what is missing and changes nothing. */

@@ -133,7 +133,7 @@ describe("paperlint lint — lints only the files paperlint owns", () => {
 });
 
 describe("`rules` blocks reach only the files each rule is written for", () => {
-  it.each(["paper/source", "paper/typography", "review/findings-cause"])(
+  it.each(["paper/source", "paper/section-word", "review/frontmatter"])(
     "🔴 %s over papers/** runs, instead of crashing inside ESLint",
     async (id) => {
       const root = project({
@@ -155,7 +155,7 @@ describe("`rules` blocks reach only the files each rule is written for", () => {
   it("the same, from a paper's own paperlint.json", async () => {
     const root = project({
       "papers/a/paperlint.json": JSON.stringify({
-        rules: { "paper/source": "warn", "paper/typography": "off" },
+        rules: { "paper/source": "warn", "paper/section-word": "off" },
       }),
     });
     const r = await lint(root);
@@ -176,7 +176,7 @@ describe("`rules` blocks — where the rule lands", () => {
             {
               basePath: root,
               files: ["papers/**"],
-              rules: { "paper/source": "warn", "paper/typography": "off" },
+              rules: { "paper/source": "warn", "paper/section-word": "off" },
             },
           ],
         },
@@ -191,10 +191,9 @@ describe("`rules` blocks — where the rule lands", () => {
       ).rules;
     const status = await on("papers/a/PIPELINE-STATUS.md");
     expect(status["paper/source"]).toEqual([1]);
-    expect(status["paper/typography"]).toBeUndefined();
+    expect(status["paper/section-word"]).toBeUndefined();
     const draft = await on("papers/a/paper.md");
-    // "off" keeps the options paperlint's own block gave; only the severity changes.
-    expect((draft["paper/typography"] as unknown[])[0]).toBe(0);
+    expect(draft["paper/section-word"]).toEqual([0]);
     expect(draft["paper/source"]).toBeUndefined();
   });
 });

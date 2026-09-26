@@ -32,6 +32,8 @@ export declare function renamedFieldMessage(
 
 /** Every key the settings object may hold, mapped to who reads it. */
 export declare const SETTINGS_KEYS: Readonly<Record<string, string>>;
+/** Keys removed in 3.0.0, each with the message naming what replaces it. */
+export declare const REMOVED_SETTINGS: Readonly<Record<string, string>>;
 
 /** The per-paper settings file, `paperlint.json`, and its name before 2.1.0. */
 export declare const PAPER_SETTINGS_FILE: string;

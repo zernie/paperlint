@@ -47,8 +47,14 @@
  * many, and the field must not be weaker than the filenames it describes.
  */
 import { existsSync, statSync, readdirSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { load } from "js-yaml";
+import { join, dirname, relative } from "node:path";
+import { CORE_SCHEMA, load } from "js-yaml";
+
+/** A real calendar date written as `YYYY-MM-DD` — the shape `paperlint authors` writes. */
+export const isIsoDate = (v) =>
+  typeof v === "string" &&
+  /^\d{4}-\d{2}-\d{2}$/.test(v) &&
+  new Date(`${v}T00:00:00Z`).toISOString().slice(0, 10) === v;
 
 const STAGES = ["submitted", "camera-ready", "arxiv"];
 
@@ -264,111 +270,60 @@ export default {
      * Hambro is missing; the NeurIPS version has nine authors, the preprint has eight). Two of
      * the seven were found on a paper ALREADY SUBMITTED.
      *
-     * 🔴 WHAT THE MOVE FIXED, and this is a measurement, not taste. The predecessor derived the
-     * declared stage with a REGEX OVER THE PROSE of that same file. Remeasured 2026-09-17 on the
-     * live corpus: for `agenticdev-2026` the prose reads `submitted`, the frontmatter declares
-     * `submitted, camera-ready` — the pattern `/camera-ready (?:uploaded|submitted|shipped)/i`
-     * does not catch the form the stage is actually recorded in. Today's set of findings did not
-     * change from this (both checks only asked "is there ANY stage at all"), but the MESSAGE
-     * printed the wrong list of stages. The subject here is the same `stages` field that
-     * `paper/stages` already checks against the bytes in both directions.
+     * 🔴 THE RUN IS A RECORD, NOT A WORD IN A TABLE (3.0.0). Until 3.0.0 the rule looked for a
+     * `marker` substring ("bib-authors") in the scorecard's table cells, and its message told
+     * the user to run a `command` the project had to configure — while the script ships in this
+     * very package. Both were conventions standing in for a field. Now the check is paperlint's
+     * own command, `npx paperlint authors <paper>`, which runs it and, when the author lists
+     * match, writes `authorsVerified: <YYYY-MM-DD>` into this file's frontmatter. The rule reads
+     * that field: present and a real date, or a finding.
      *
-     * 🔴 THE MARKER IS LOOKED FOR IN TABLE CELLS, NOT GREPPED OVER THE FILE. The first draft did
-     * `context.sourceCode.text.includes(marker)` and justified it with a comment saying "a
-     * footnote cell has no node of its own". That turned out to be SIMPLY WRONG — a 2026-09-17
-     * measurement showed the markdown parser hands back `table`, `tableRow` and `tableCell`
-     * (twelve cells on a three-row table). The base rule says, word for word, "parse markdown
-     * with a parser".
-     *
-     * Parsing is also STRICTER than grep, and the difference is real: a marker mentioned in
-     * prose outside the scorecard — in a heading, in a paragraph saying "still need to run
-     * bib-authors", in a quote from someone else — no longer counts as a record of a run. To
-     * grep, those three cases are indistinguishable from a genuine record.
-     *
-     * ⚠️ WHAT THIS STILL DOES NOT FIX: inside the cell the evidence is still PROSE, and a run
-     * phrased in different words will not be seen by the rule. The real fix is a frontmatter
-     * field (`gates.cites.ran`), not a smarter text search; that's separate work, touching four
-     * live scorecards.
-     *
-     * So severity is set by the CONSUMER, and the default is not `error`: the proof of a run is
-     * prose, and a false positive at a blocking level costs more than a miss.
+     * The stage comes from the `stages` FIELD — the same one `paper/stages` checks against the
+     * bytes in both directions. A paper that declares no stage owes nothing.
      */
     "author-list": {
       meta: {
         type: "suggestion",
         docs: {
           description:
-            "a paper that declares a stage records that the author-list check ran — a class the existence check cannot see",
+            "a paper that declares a stage records, as `authorsVerified` in its frontmatter, that the author-list check passed",
         },
-        schema: [
-          {
-            type: "object",
-            properties: {
-              // The run marker in the scorecard. This is consumer data: the package cannot
-              // know EXACTLY how a given consumer records that the cross-check happened.
-              marker: { type: "string" },
-              // What to run. This is a CONSUMER-SPECIFIC PATH, and it has no place in a public
-              // package: the predecessor hardcoded
-              // `.claude/skills/verify-citations/scripts/bib-authors.mjs` right into the message text.
-              command: { type: "string" },
-            },
-            additionalProperties: false,
-          },
-        ],
+        schema: [],
         messages: {
           neverRan:
-            "stage «{{stages}}» is declared, but the scorecard records no author-list run (looked for «{{marker}}» in its table). It catches what an existence check cannot see: the citation resolves, the id resolves, and the authors are the PREPRINT's while the entry declares a conference{{how}}",
+            "stage «{{stages}}» is declared, but the frontmatter has no `authorsVerified` date. Run `npx paperlint authors {{paper}}`: it checks that each entry's authors are those of the version it cites (not the preprint's) and records the date here",
+          badDate:
+            "`authorsVerified: {{value}}` is not a date (YYYY-MM-DD) — `npx paperlint authors {{paper}}` writes it",
         },
       },
       create(context) {
-        const opts = context.options?.[0] ?? {};
-        const marker = opts.marker ?? "bib-authors";
-        const command = opts.command ?? "";
-
-        // The verdict is deferred to the end of the file: the frontmatter node arrives FIRST,
-        // and the table comes after it. Reporting on `yaml` would mean a verdict rendered
-        // without ever seeing the scorecard.
-        let declaredAt = null;
-        let stages = [];
-        let recorded = false;
-
         return {
           yaml(node) {
             let data;
             try {
-              data = load(node.value ?? "");
+              data = load(node.value ?? "", { schema: CORE_SCHEMA });
             } catch {
               return; // `paper/stages` has already reported the unreadable YAML
             }
             const raw = data?.stages;
             if (!Array.isArray(raw)) return;
-            stages = raw.map((r) => r?.stage).filter(Boolean);
-            // One guard, not two: `raw.length === 0` would be a SPECIAL CASE of this same
-            // condition, and a mutation against it would turn out unkillable — the second guard
-            // mutes it. This also covers a non-empty list made of records with no `stage` field.
+            const stages = raw.map((r) => r?.stage).filter(Boolean);
             if (stages.length === 0) return; // nothing shipped — nothing is owed
-            declaredAt = node;
-          },
-
-          // The evidence is a SCORECARD CELL, not any occurrence of the string in the file. It
-          // has a node of its own; the first draft claimed otherwise and grepped the whole text.
-          tableCell(node) {
-            if (recorded) return;
-            if (context.sourceCode.getText(node).includes(marker))
-              recorded = true;
-          },
-
-          "root:exit"() {
-            if (!declaredAt || recorded) return;
-            context.report({
-              node: declaredAt,
-              messageId: "neverRan",
-              data: {
-                stages: stages.join("/"),
-                marker,
-                how: command ? `. Run: ${command}` : "",
-              },
-            });
+            const paper =
+              relative(context.cwd, dirname(context.filename)) || ".";
+            const value = data.authorsVerified;
+            if (value === undefined || value === null)
+              context.report({
+                node,
+                messageId: "neverRan",
+                data: { stages: stages.join("/"), paper },
+              });
+            else if (!isIsoDate(value))
+              context.report({
+                node,
+                messageId: "badDate",
+                data: { value: String(value), paper },
+              });
           },
         };
       },

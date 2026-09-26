@@ -1,129 +1,111 @@
 /**
- * `paper/typography` — four MECHANICAL conventions a reviewer already complained about,
- * counted against a declared debt so that a legacy paper does not drown the new finding.
+ * Three mechanical conventions a reviewer already raised, ONE RULE EACH, reported where each
+ * occurrence is and fixed by `paperlint lint --fix`:
+ *
+ *   paper/section-word      `§5`, `\S\ref{…}`  →  `Section 5`, `Section~\ref{…}`
+ *   paper/leading-zero      `.05`              →  `0.05`
+ *   paper/figure-ref-style  `Fig.~\ref` beside `Figure~\ref` in one document → the majority form
+ *
+ * The fourth check of the old `paper/typography`, an unreachable bibliography entry, is
+ * `bib/reachable-entry` (bib-reachable-entry.mjs): it is about the bibliography, not the prose,
+ * and it has no fix.
  *
  * ── PROVENANCE: every one is a real review finding, not an invented style ───────────────
- * From HotCRP #20 (2026-08-23). Reviewer B listed three as literal to-dos, Reviewer A the
- * fourth:
- *   B#11  "§ -> Section"                   one paper in the source corpus carried 246
- *   B#12  ".05 -> 0.05"                    four in the submitted text, fixed by hand
- *   A#2   "not every entry has a DOI/link" one paper: 0 of 47 entries reachable
+ * From HotCRP #20 (2026-08-23). Reviewer B listed two as literal to-dos:
+ *   B#11  "§ -> Section"   one paper in the source corpus carried 246
+ *   B#12  ".05 -> 0.05"    four in the submitted text, fixed by hand
  *   (own) `Fig.` and `Figure` side by side
  *
- * ── RATCHET, and it is the load-bearing part ───────────────────────────────────────────
- * 🔴 A check that reports 246 findings on its first run is a check that gets muted, and the
- * next REAL instance then hides among the old ones. The consumer's repo has already killed a
- * check exactly that way. So the rule takes a `debt` option — what each paper owes today —
- * and speaks only when a paper is ABSENT from it (a new paper owes nothing) or when its count
- * GREW. Lowering a count is free and silently re-baselines.
+ * ── WHY THERE IS NO DEBT OPTION ANY MORE (3.0.0) ──────────────────────────────────────────
+ * Until 3.0.0 this was ONE rule, `paper/typography`, that counted all four per paper against a
+ * declared `debt` and spoke only when a count grew. A ratchet was needed because the rule could
+ * only COUNT: 246 section signs meant 246 edits by hand, so the only way to turn it on was to
+ * freeze the backlog. Every check here now has a FIX, so the backlog costs one command
+ * (`paperlint lint --fix`), and the ratchet — per-paper numbers in the project config, keyed by
+ * a path — has nothing left to protect. A deliberate exception is an ESLint disable directive on
+ * the line (`% eslint-disable-next-line paper/section-word -- reason`), the standard escape
+ * hatch every ESLint user already knows, not a counter.
  *
- * The debt itself is DATA about one corpus, so it does not live here: the consumer passes it
- * in options. The mechanism is general, the numbers are not.
+ * ── WHY section-word AND figure-ref-style READ `sourceCode.raw` ───────────────────────────
+ * They are about MARKUP. The prose projection of the LaTeX language blanks macros — that is its
+ * purpose — so `\S\ref{}` and `Fig.~\ref{}` reach a normal rule as spaces. Offsets coincide
+ * between the two (blanking preserves length), so scanning `raw` and reporting the offset found
+ * there points at the right byte. Comments and the inline bibliography are skipped.
  *
- * ── WHY THREE COUNTS READ `sourceCode.raw` AND NOT THE PROSE PROJECTION ────────────────
- * `sectionSign`, `figMixed` and `unreachable` are about MARKUP. The projection blanks macros —
- * that is its purpose, it is what lets thirty prose rules read LaTeX without knowing LaTeX — so
- * `\S\ref{}` and `Fig.~\ref{}` reach a normal rule as spaces. Offsets coincide between the
- * two (blanking preserves length), so scanning `raw` and reporting the offset found there
- * still points at the right byte.
+ * 🔴 BOTH forms of the section sign, and the second one is why this check was ever wrong. The
+ * first version counted only the literal `§` and returned ZERO on the very paper whose reviewer
+ * raised it: the source writes `\S\ref{sec:threats}`, which RENDERS as `§5`.
  *
- * ── WHY `bareDecimal` READS NEITHER, BUT THE PARSED TREE (paperlint#44) ─────────────────────────
- * Origin. On a workshop paper (HotCRP #20) Reviewer B wrote: `Numbers should be completed:
- * e.g. ".05" -> 0.05`. The submitted PDF really carried `p < .05`, `p=.002`, `p=.006` and
- * `p=.037` in its text (measured with pdftotext on the submitted version); the camera-ready
- * fixed them by hand.
- *
- * The convention. ISO 80000-1 ("the decimal sign shall be preceded by a zero" for magnitudes
- * below 1) and the IEEE Editorial Style Manual ("0.25, not .25") require the zero. Other styles
- * (APA, AMA) drop it for p-values. The rule measures against IEEE/ISO, because that is what the
- * venues this package targets expect.
- *
- * Why parsed, not raw. The count used to be one regex over the raw source. An independent
- * review ran it on every real input available: 22 findings on the current corpus, 0 true
- * positives. That is survivorship — the real cases had been fixed by hand — and synthetic LaTeX
- * showed where the 22 come from: the regex fires on `[width=.48\columnwidth]`,
- * `p{.25\linewidth}`, comments, code listings and tikz coordinates. The projection is no
- * answer either: it blanks math (where p-values live) and whole tables (where they are
- * reported). So this count walks the TREE and keeps only what the reader sees as a number:
+ * ── WHY leading-zero READS THE PARSED TREE (paperlint#44) ──────────────────────────────────
+ * ISO 80000-1 ("the decimal sign shall be preceded by a zero" for magnitudes below 1) and the
+ * IEEE Editorial Style Manual ("0.25, not .25") require the zero. A regex over the raw source
+ * found 22 decimals on a real corpus and none was a defect: every one sat in markup (an option,
+ * a column spec, a comment, a listing, a tikz coordinate). So this walks the TREE and keeps only
+ * what the reader sees as a number:
  *   LaTeX     prose, inline and display math, table cells, and the text arguments of a known
- *             set of text macros (`\emph`, `\caption`, `\footnote`, headings…). Not: any other
- *             macro's arguments, environment arguments (column specs, widths), comments,
- *             verbatim/listings/`\lstinline`, tikz, the preamble, the inline bibliography.
+ *             set of text macros. Not: any other macro's arguments, environment arguments,
+ *             comments, verbatim/listings/`\lstinline`, tikz, the preamble, the bibliography.
  *   Markdown  text nodes, table cells included. Not: code, inline code, html, front matter.
- * Only then is the lexeme matched, one run of visible text at a time. The arXiv lookbehind
- * stays: in `2310.05736` the dot follows a digit.
- *
- * What still gets through. A decimal inside a quotation, or a paragraph number such as
- * `¶¶.42`, is prose to the parser and is counted. The per-paper debt below absorbs known cases.
- * And the other direction, chosen on purpose: a text macro outside the known set (`\hl{.05}`, an
- * author's `\pval{.05}`) is read as a parameter and NOT counted — for a warning that people
- * learn to mute, a miss costs less than a finding on markup.
+ * Each character of a run keeps its source offset, so the finding points at the dot and the fix
+ * inserts the zero there. The arXiv lookbehind stays: in `2310.05736` the dot follows a digit.
+ * A text macro outside the known set (`\hl{.05}`) is read as a parameter and NOT reported — a
+ * miss costs less than a finding on markup.
  */
-import { relative, dirname } from "node:path";
 import { getParser } from "@unified-latex/unified-latex-util-parse";
 
+/** The inline bibliography — a `filecontents` block writing a `.bib` — with its offsets. */
+export function bibRange(text) {
+  const m =
+    /\\begin\{filecontents\*?\}(?:\[[^\]]*\])?\{[^}]*\.bib\}\r?\n([\s\S]*?)\\end\{filecontents\*?\}/d.exec(
+      text,
+    );
+  if (!m) return null;
+  return {
+    start: m.index,
+    end: m.index + m[0].length,
+    bodyStart: m.indices[1][0],
+    body: m[1],
+  };
+}
+
 /**
- * The inline bibliography is counted differently from the prose, and in this corpus it lives
- * INSIDE the `.tex` in a `filecontents` environment rather than in a separate `.bib`.
+ * The ranges a markup rule must not read: LaTeX comments (the language gives them as `html`
+ * nodes, with positions) and the inline bibliography.
  */
-function splitPaperText(text) {
-  const m = text.match(
-    /\\begin\{filecontents\*?\}(?:\[[^\]]*\])?\{[^}]*\.bib\}\r?\n([\s\S]*?)\\end\{filecontents\*?\}/,
-  );
-  return m
-    ? { body: text.replace(m[0], ""), bib: m[1] }
-    : { body: text, bib: "" };
+function skippedRanges(sourceCode, raw) {
+  const out = [];
+  for (const n of sourceCode.ast?.children ?? [])
+    if (n.type === "html" && n.position)
+      out.push([n.position.start.offset, n.position.end.offset]);
+  const bib = bibRange(raw);
+  if (bib) out.push([bib.start, bib.end]);
+  return out;
+}
+const inside = (ranges, i) => ranges.some(([s, e]) => i >= s && i < e);
+
+/** Every match of `re` in `raw` outside the skipped ranges. */
+function markupMatches(sourceCode, re) {
+  const raw = sourceCode.raw;
+  const skip = skippedRanges(sourceCode, raw);
+  return [...raw.matchAll(re)].filter((m) => !inside(skip, m.index));
 }
 
-function typographyCounts(text, bareDecimal) {
-  const { body, bib } = splitPaperText(text);
+const isTex = (sourceCode) => typeof sourceCode.raw === "string";
 
-  // 🔴 BOTH forms, and the second one is why this check was ever wrong. The first version
-  // counted only the literal `§` and returned ZERO on the very paper whose reviewer raised it:
-  // the source writes `\S\ref{sec:threats}`, which RENDERS as `§5`. Measured on the held-out
-  // submitted build: source hits 0, rendered PDF hits 10. A source-level check calibrated
-  // against a rendered complaint reports clean on the exact defect it was written for.
-  const sectionSign =
-    (body.match(/§/g) || []).length +
-    (body.match(/\\S(?=\s*\\ref|~\\ref|\d)/g) || []).length;
+// ── the text a READER sees, with the source offset of every character ─────────────────────
 
-  // Mixed `Fig.~\ref` and `Figure~\ref` in ONE document. Consistent use of either is fine, so
-  // this counts only when both appear; an absolute rule here would be taste, not a defect.
-  const figShort = (body.match(/\bFig\.~?\\(?:ref|autoref)/g) || []).length;
-  const figLong = (body.match(/\bFigure~?\\(?:ref|autoref)/g) || []).length;
-  const figMixed =
-    figShort > 0 && figLong > 0 ? Math.min(figShort, figLong) : 0;
-
-  // A bibliography entry a reader cannot follow: no doi, no url, no arXiv id.
-  // ⚠️ NOT "no doi". Measured 2026-08-24: ICLR/NeurIPS/TMLR issue no DOIs at all, so a
-  // doi-only rule would demand something that does not exist and get muted for lying.
-  let unreachable = 0;
-  for (const e of bib.split(/^@/m).slice(1)) {
-    if (!/\b(doi|url)\s*=/.test(e) && !/arxiv[:\s]*\d{4}\.\d{4,5}/i.test(e))
-      unreachable++;
-  }
-  return { sectionSign, bareDecimal, figMixed, unreachable };
-}
-
-// ── bareDecimal: the text a READER sees, taken from the tree ─────────────────────────────
-
-// The lexeme, matched inside ONE run of visible text — never over the source. The lookbehind
-// keeps arXiv ids (2310.05736) out: there the dot follows a digit.
-const BARE_DECIMAL = /(?<![\d.\w])\.\d{2,}\b/g;
-const countBareDecimals = (runs) =>
-  runs.reduce((n, run) => n + (run.match(BARE_DECIMAL) || []).length, 0);
+/** A run of visible text; `offs[i]` is the source offset of `text[i]`, or null when unknown. */
+const run = () => ({ text: "", offs: [] });
 
 // Environments whose body is not typeset as text: code, drawings, the inline bibliography.
 const TEX_HIDDEN_ENV =
   /^(verbatim|Verbatim|lstlisting|minted|tikzpicture|filecontents\*?|comment)$/;
-// Text macros whose mandatory argument IS prose. Every other macro's arguments are parameters
-// (`\includegraphics[width=…]`, `\hspace{…}`, `\label{…}`) and are not read.
+// Text macros whose mandatory argument IS prose. Every other macro's arguments are parameters.
 const TEX_PROSE_ARG =
   /^(emph|textbf|textit|textsl|textsc|textup|textmd|textrm|textsf|textnormal|underline|text|mbox|caption|footnote|footnotetext|thanks|title|textsuperscript|textsubscript|part|chapter|section|subsection|subsubsection|paragraph|subparagraph)$/;
-// Macros whose LAST mandatory argument is what the reader sees: a table cell, coloured text,
-// a link's text.
+// Macros whose LAST mandatory argument is what the reader sees.
 const TEX_LAST_ARG = /^(multicolumn|multirow|textcolor|href)$/;
-// In math every macro argument is typeset (`\frac{.05}{2}`, `\sqrt{…}`) except these.
+// In math every macro argument is typeset except these.
 const TEX_MATH_HIDDEN =
   /^(label|ref|eqref|autoref|cite|hspace|vspace|hskip|vskip|kern|mkern|mskip|rule|phantom|hphantom|vphantom|color|raisebox|includegraphics)$/;
 
@@ -131,11 +113,9 @@ const mandatory = (macro) =>
   (macro.args || []).filter((a) => a.openMark === "{");
 
 /**
- * unified-latex attaches arguments only to what it has a signature for. For the rest — `\def\x`,
- * an author's `\foo[width=.48]{…}`, `\begin{subfigure}{.48\textwidth}`, the column spec of
- * `longtable` — the arguments come back as the NEXT SIBLINGS: an optional `[…]` as bare strings,
- * then groups. They are parameters, not prose. Returns the index of the last sibling to skip,
- * starting after `i`; nothing is skipped past whitespace, and an unclosed `[` skips nothing.
+ * unified-latex attaches arguments only to what it has a signature for. For the rest the
+ * arguments come back as the NEXT SIBLINGS: an optional `[…]` as bare strings, then groups.
+ * They are parameters, not prose. Returns the index of the last sibling to skip after `i`.
  */
 function unparsedArgsEnd(nodes, i) {
   let j = i + 1;
@@ -152,21 +132,32 @@ function unparsedArgsEnd(nodes, i) {
   return j - 1;
 }
 
+/** Append a string node to the current run, keeping each character's offset. */
+function appendString(cur, n, src) {
+  const start = n.position?.start?.offset;
+  const exact =
+    typeof start === "number" &&
+    src.slice(start, start + n.content.length) === n.content;
+  for (let i = 0; i < n.content.length; i++)
+    cur.offs.push(exact ? start + i : null);
+  cur.text += n.content;
+}
+
 /**
  * Collect runs of visible text from a unified-latex node list. A run is a stretch of sibling
  * `string` nodes with nothing between them: math splits `.05` into `.`, `0`, `5`, and prose
  * keeps `2310.05736` whole — both come back as one word. Anything else ends the run.
  */
-function texRuns(nodes, math, out) {
-  let run = "";
+function texRuns(nodes, math, src, out) {
+  let cur = run();
   const flush = () => {
-    if (run) out.push(run);
-    run = "";
+    if (cur.text) out.push(cur);
+    cur = run();
   };
   for (let i = 0; i < (nodes || []).length; i++) {
     const n = nodes[i];
     if (n.type === "string") {
-      run += n.content;
+      appendString(cur, n, src);
       continue;
     }
     flush();
@@ -175,32 +166,28 @@ function texRuns(nodes, math, out) {
       n.type === "displaymath" ||
       n.type === "mathenv"
     )
-      texRuns(n.content, true, out);
+      texRuns(n.content, true, src, out);
     else if (n.type === "environment") {
       const env = typeof n.env === "string" ? n.env : "";
-      // The body only: an environment's own arguments are a column spec, a width, a placement —
-      // and when unified-latex has no signature for it, they lead the body as bare siblings.
       if (!TEX_HIDDEN_ENV.test(env)) {
         const body = n.content || [];
         const from = (n.args || []).length ? 0 : unparsedArgsEnd(body, -1) + 1;
-        texRuns(body.slice(from), math, out);
+        texRuns(body.slice(from), math, src, out);
       }
     } else if (n.type === "group") {
-      texRuns(n.content, math, out);
+      texRuns(n.content, math, src, out);
     } else if (n.type === "macro") {
       const args = mandatory(n);
       if (math) {
         if (!TEX_MATH_HIDDEN.test(n.content))
-          for (const a of args) texRuns(a.content, true, out);
+          for (const a of args) texRuns(a.content, true, src, out);
       } else if (TEX_PROSE_ARG.test(n.content)) {
-        for (const a of args) texRuns(a.content, false, out);
+        for (const a of args) texRuns(a.content, false, src, out);
       } else if (TEX_LAST_ARG.test(n.content) && args.length) {
-        texRuns(args[args.length - 1].content, false, out);
+        texRuns(args[args.length - 1].content, false, src, out);
       }
-      // In text, a macro with no parsed arguments may still have them, as siblings.
       if (!math && !(n.args || []).length) i = unparsedArgsEnd(nodes, i);
     }
-    // comment, verb, verbatim, whitespace, parbreak: not the reader's number, or not a word
   }
   flush();
   return out;
@@ -212,11 +199,10 @@ function texVisibleRuns(raw) {
   const document = root.find(
     (n) => n.type === "environment" && n.env === "document",
   );
-  return texRuns(document ? document.content : root, false, []);
+  return texRuns(document ? document.content : root, false, raw, []);
 }
 
-// Markdown: the ESLint markdown language already hands over the mdast. Text nodes are what the
-// reader sees, table cells included; these node types are not prose.
+// Markdown node types that are not prose.
 const MD_HIDDEN = new Set([
   "code",
   "inlineCode",
@@ -226,88 +212,152 @@ const MD_HIDDEN = new Set([
   "math",
   "inlineMath",
 ]);
-function mdVisibleRuns(node, out = []) {
+function mdVisibleRuns(node, src, out = []) {
   if (!node || MD_HIDDEN.has(node.type)) return out;
-  if (node.type === "text") out.push(node.value);
-  for (const c of node.children || []) mdVisibleRuns(c, out);
+  if (node.type === "text") {
+    const start = node.position?.start?.offset;
+    const exact =
+      typeof start === "number" &&
+      src.slice(start, start + node.value.length) === node.value;
+    out.push({
+      text: node.value,
+      offs: [...node.value].map((_, i) => (exact ? start + i : null)),
+    });
+  }
+  for (const c of node.children || []) mdVisibleRuns(c, src, out);
   return out;
 }
 
-/** The TexSourceCode of this package carries `raw`; anything else is read through its AST. */
 const visibleRuns = (sourceCode) =>
-  typeof sourceCode.raw === "string"
+  isTex(sourceCode)
     ? texVisibleRuns(sourceCode.raw)
-    : mdVisibleRuns(sourceCode.ast);
+    : mdVisibleRuns(sourceCode.ast, sourceCode.text);
 
-const LABEL = {
-  sectionSign: "`§` instead of «Section» (reviewer B)",
-  bareDecimal:
-    "a decimal without a leading zero, `.05` instead of `0.05` (IEEE / ISO 80000-1 style)",
-  figMixed: "`Fig.` and `Figure` mixed in one document",
-  unreachable:
-    "bibliography entries with no doi/url/arXiv id — a reader has nothing to follow (reviewer A)",
+/** A report at `[from, to)` of the file. */
+const at = (context, from, to, rest) => {
+  const sc = context.sourceCode;
+  context.report({
+    loc: { start: sc.getLocFromIndex(from), end: sc.getLocFromIndex(to) },
+    ...rest,
+  });
 };
+
+// ── paper/section-word ─────────────────────────────────────────────────────────────────
+
+// The sign (the glyph, or the `\S` macro not followed by a letter), the separator after it, and
+// what follows: a reference (group 3) or a number (group 4).
+const SECTION_TEX = /(§|\\S(?![A-Za-z]))(~|[ \t]*)(?=(\\(?:auto)?ref\b)|(\d))/g;
+const SECTION_GLYPH = /§/g;
+
+function sectionWord(context) {
+  const sc = context.sourceCode;
+  if (isTex(sc)) {
+    const seen = new Set();
+    for (const m of markupMatches(sc, SECTION_TEX)) {
+      seen.add(m.index);
+      const word = m[3] ? "Section~" : "Section ";
+      const range = [m.index, m.index + m[0].length];
+      at(context, range[0], range[1], {
+        messageId: "sign",
+        fix: (f) => f.replaceTextRange(range, word),
+      });
+    }
+    // A glyph before neither a reference nor a number: reported, not rewritten — there is no
+    // single right word for a doubled sign or a sign before prose.
+    for (const m of markupMatches(sc, SECTION_GLYPH))
+      if (!seen.has(m.index))
+        at(context, m.index, m.index + 1, { messageId: "sign" });
+    return;
+  }
+  for (const r of visibleRuns(sc))
+    for (const m of r.text.matchAll(/§([ \t]*)(?=(\d))?/g)) {
+      const from = r.offs[m.index];
+      if (from === null || from === undefined) continue;
+      const range = [from, from + m[0].length];
+      at(context, range[0], range[1], {
+        messageId: "sign",
+        ...(m[2] ? { fix: (f) => f.replaceTextRange(range, "Section ") } : {}),
+      });
+    }
+}
+
+// ── paper/leading-zero ─────────────────────────────────────────────────────────────────
+
+// The lexeme, matched inside ONE run of visible text. The lookbehind keeps arXiv ids
+// (2310.05736) out: there the dot follows a digit.
+const BARE_DECIMAL = /(?<![\d.\w])\.\d{2,}\b/g;
+
+function leadingZero(context) {
+  for (const r of visibleRuns(context.sourceCode))
+    for (const m of r.text.matchAll(BARE_DECIMAL)) {
+      const dot = r.offs[m.index];
+      if (dot === null || dot === undefined) continue;
+      at(context, dot, dot + 1, {
+        messageId: "bare",
+        data: { n: m[0] },
+        fix: (f) => f.insertTextBeforeRange([dot, dot], "0"),
+      });
+    }
+}
+
+// ── paper/figure-ref-style ─────────────────────────────────────────────────────────────
+
+const FIG_REF = /\b(Fig\.|Figure)(?=~?\\(?:ref|autoref)\b)/g;
+
+function figureRefStyle(context) {
+  const sc = context.sourceCode;
+  if (!isTex(sc)) return;
+  const all = markupMatches(sc, FIG_REF);
+  const short = all.filter((m) => m[1] === "Fig.");
+  const long = all.filter((m) => m[1] === "Figure");
+  if (!short.length || !long.length) return;
+  // The minority form is rewritten to the majority one; on a tie, to the full word.
+  const [minority, word] =
+    short.length > long.length ? [long, "Fig."] : [short, "Figure"];
+  for (const m of minority) {
+    const range = [m.index, m.index + m[1].length];
+    at(context, range[0], range[1], {
+      messageId: "mixed",
+      data: { form: m[1], word, n: String(all.length - minority.length) },
+      fix: (f) => f.replaceTextRange(range, word),
+    });
+  }
+}
+
+const rule = (description, messages, check) => ({
+  meta: {
+    type: "suggestion",
+    fixable: "code",
+    docs: { description },
+    schema: [],
+    messages,
+  },
+  create: (context) => ({ "root:exit": () => check(context) }),
+});
 
 export default {
   rules: {
-    typography: {
-      meta: {
-        type: "suggestion",
-        docs: {
-          description:
-            "mechanical conventions a reviewer already raised, counted against a declared debt: silent on what was already there, loud on what grew",
-        },
-        schema: [
-          {
-            type: "object",
-            properties: {
-              // { "<path to the paper directory from repo root>": { sectionSign: 54, unreachable: 18 } }
-              debt: { type: "object", additionalProperties: true },
-            },
-            additionalProperties: false,
-          },
-        ],
-        messages: {
-          grew: "{{n}} × {{label}}{{grew}}. Paying the debt down is silent; growth is reported",
-        },
+    "section-word": rule(
+      "`§` / `\\S` instead of the word Section (a reviewer's to-do); fixable",
+      {
+        sign: "`§` instead of the word «Section» — `paperlint lint --fix` writes it",
       },
-      create(context) {
-        const debt = context.options[0]?.debt ?? {};
-        return {
-          "root:exit"(node) {
-            // `raw` on the LaTeX language, `text` everywhere else. A paper in this corpus may be
-            // written in markdown rather than LaTeX, and three of the four counts apply there
-            // unchanged; only the macro spellings never match, which is correct rather than a
-            // gap. Measured 2026-09-16: the check this rule replaces silently covered a markdown
-            // paper carrying 246 section signs, so a `.tex`-only rule would have LOST it.
-            const raw = context.sourceCode.raw ?? context.sourceCode.text;
-            if (typeof raw !== "string") return;
-            const bareDecimal = countBareDecimals(
-              visibleRuns(context.sourceCode),
-            );
-            const counts = typographyCounts(raw, bareDecimal);
-            const key = relative(context.cwd, dirname(context.filename));
-            const owed = debt[key] ?? {};
-            for (const [field, n] of Object.entries(counts)) {
-              if (n === 0) continue;
-              const before = owed[field] ?? 0;
-              if (n <= before) continue; // known debt, unchanged or paid down
-              context.report({
-                node,
-                messageId: "grew",
-                data: {
-                  n: String(n),
-                  label: LABEL[field],
-                  grew:
-                    before > 0
-                      ? ` (was ${String(before)}, now ${String(n)})`
-                      : "",
-                },
-              });
-            }
-          },
-        };
+      sectionWord,
+    ),
+    "leading-zero": rule(
+      "a decimal below 1 written without its leading zero (IEEE / ISO 80000-1); fixable",
+      {
+        bare: "`{{n}}` has no leading zero — write `0{{n}}` (IEEE / ISO 80000-1); `paperlint lint --fix` inserts it",
       },
-    },
+      leadingZero,
+    ),
+    "figure-ref-style": rule(
+      "`Fig.~\\ref` and `Figure~\\ref` mixed in one document; fixable to the majority form",
+      {
+        mixed:
+          "`{{form}}` beside {{n}} × `{{word}}` in one document — use one form; `paperlint lint --fix` writes `{{word}}`",
+      },
+      figureRefStyle,
+    ),
   },
 };
