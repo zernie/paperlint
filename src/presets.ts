@@ -279,11 +279,7 @@ export function paperPreset(paperDir: string, deps: PresetDeps): PaperPreset {
   if (!read.ok) return { kind: "settings-problem", problem: read.error };
   const settings = read.value;
   if (settings?.extends == null) return { kind: "none", settings };
-  const r = resolvePreset(
-    settings.extends,
-    join(paperDir, CONFIG_FILE),
-    deps,
-  );
+  const r = resolvePreset(settings.extends, join(paperDir, CONFIG_FILE), deps);
   return r.ok
     ? { kind: "resolved", settings, preset: r.value }
     : { kind: "preset-problem", settings, problem: r.error };

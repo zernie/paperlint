@@ -144,7 +144,10 @@ export function detectPapers(cwd: string, depth = 2): string[] {
  * `papers`, and the CLI and the hooks take it alike. Only a file that does not parse is a failure —
  * the edit guard refuses every Bash command while it cannot read it.
  */
-function declarationVerdict(raw: string | null): { lines: string[]; bad: number } {
+function declarationVerdict(raw: string | null): {
+  lines: string[];
+  bad: number;
+} {
   if (raw === null)
     return {
       lines: [
