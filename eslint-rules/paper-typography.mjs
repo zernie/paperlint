@@ -270,10 +270,11 @@ function sectionWord(context) {
     return;
   }
   for (const r of visibleRuns(sc))
-    for (const m of r.text.matchAll(/§([ \t]*)(?=(\d))?/g)) {
+    for (const m of r.text.matchAll(/§([ \t]*)(\d)?/g)) {
       const from = r.offs[m.index];
       if (from === null || from === undefined) continue;
-      const range = [from, from + m[0].length];
+      // The sign and the space after it; the number stays.
+      const range = [from, from + 1 + m[1].length];
       at(context, range[0], range[1], {
         messageId: "sign",
         ...(m[2] ? { fix: (f) => f.replaceTextRange(range, "Section ") } : {}),

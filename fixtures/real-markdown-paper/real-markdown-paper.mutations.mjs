@@ -68,21 +68,6 @@ process.exit(
           ],
         ],
       },
-      {
-        name: "the author-list marker stops being read — recording the run changes nothing",
-        harness: HARNESS,
-        expect: "recording the author-list run silences paper/author-list",
-        disables:
-          "the only way a consumer can ever clear this finding. A rule that cannot be satisfied is " +
-          "worse than one that never fires: it trains the reader to ignore the whole report",
-        edits: [
-          [
-            STAGES,
-            'const marker = opts.marker ?? "bib-authors";',
-            'const marker = "\\u0000never-matches";',
-          ],
-        ],
-      },
     ],
   }),
 );

@@ -77,27 +77,6 @@ process.exit(
         ],
       },
       {
-        // 🔴 A REGRESSION BACK TO GREP. The rule's first draft did exactly this and justified it
-        // by saying "a footnote cell has no node of its own" — a measurement showed the
-        // opposite: the parser hands back `tableCell`. The mutation is caught by ONE fixture out
-        // of six: in the rest the marker already sits in a cell, so grep and parsing are
-        // indistinguishable. Without `marker-in-prose` this regression would have passed
-        // silently, and the rule would again read an intention as a fact.
-        name: "the evidence is grepped over the WHOLE FILE again",
-        harness: HARNESS,
-        expect: "a marker in prose OUTSIDE the table is not a record of a run",
-        disables:
-          "parsing in favor of a string search: 'still need to run bib-authors' — an intention, " +
-          "not a record — counts as a run again, and the paper silently stops being a debtor",
-        edits: [
-          [
-            RULE,
-            "if (context.sourceCode.getText(node).includes(marker))\n              recorded = true;",
-            "if (context.sourceCode.text.includes(marker))\n              recorded = true;",
-          ],
-        ],
-      },
-      {
         name: "the rule stops requiring an author cross-check run",
         harness: HARNESS,
         expect: "a stage is declared, no run — a finding",
@@ -137,20 +116,6 @@ process.exit(
           "findings does not change, only the TEXT lies, and without this assert the regression " +
           "would have passed silently",
         edits: [[RULE, 'stages: stages.join("/"),', 'stages: "submitted",']],
-      },
-      {
-        name: "a consumer-specific path comes back into the package's text",
-        harness: HARNESS,
-        expect:
-          "the run command comes in as an option and lands in the message",
-        disables:
-          "the boundary 'the mechanism goes in the package, the data stays with the consumer': " +
-          "the command stops arriving as an option. The predecessor hardcoded " +
-          "`.claude/skills/verify-citations/...` — the path of one private repository — right " +
-          "into a public rule's message",
-        edits: [
-          [RULE, 'const command = opts.command ?? "";', 'const command = "";'],
-        ],
       },
     ],
   }),

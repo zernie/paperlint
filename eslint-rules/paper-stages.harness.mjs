@@ -243,7 +243,7 @@ console.log(
 // against the bytes, this one checks the declaration against a record of a run. What they share
 // is exactly one input, the `stages` field, and that's why the rule lives in this module.
 {
-  const lintAuthors = (name, opts = {}) => {
+  const lintAuthors = (name) => {
     const file = join(FIX, name, "PIPELINE-STATUS.md");
     const msgs = linter.verify(
       readFileSync(file, "utf-8"),
@@ -253,7 +253,7 @@ console.log(
           plugins: { markdown, paper: stages },
           language: "markdown/gfm",
           languageOptions: { frontmatter: "yaml" },
-          rules: { "paper/author-list": ["error", opts] },
+          rules: { "paper/author-list": "error" },
         },
       ],
       file,
@@ -268,7 +268,7 @@ console.log(
 
   // ── stays silent where it must ──
   check(
-    "a run is recorded in the scorecard — silent",
+    "a run is recorded in the frontmatter (`authorsVerified`) — silent",
     lintAuthors("authors-ran").length === 0,
   );
   // A draft never asked anyone to read it, so it owes nothing. This is not a carve-out: the
@@ -319,34 +319,33 @@ console.log(
     two.length === 1 && /submitted\/submitted/.test(two[0]),
   );
 
-  // ── consumer data stays with the consumer ──
-  // The predecessor hardcoded the path `.claude/skills/verify-citations/...` into the message
-  // text — the address of ONE repository inside a public package.
-  const withCmd = lintAuthors("ok", {
-    command: "node scripts/bib-authors.mjs <paper>",
-  });
+  // ── the run is a RECORD in the frontmatter, not a word in the scorecard (3.0.0) ──
   check(
-    "the run command comes in as an option and lands in the message",
-    /scripts\/bib-authors\.mjs/.test(withCmd[0]),
+    "the message names paperlint's own command, with the paper",
+    /npx paperlint authors \S+/.test(owed[0]),
   );
+  // 🔴 The old convention no longer counts: "bib-authors" in a cell or in prose is text, not a
+  // record. Only the `authorsVerified` field is.
   check(
-    "and without the option the message does not invent a path",
-    !/bib-authors\.mjs/.test(owed[0]),
-  );
-  // The marker is also data: the package cannot know EXACTLY how a given consumer records a run.
-  check(
-    "the marker is configurable — with a different marker the same paper becomes a debtor",
-    lintAuthors("authors-ran", { marker: "no-such-marker" }).length === 1,
-  );
-
-  // ── parsing versus grep: the one case where they diverge ──
-  // 🔴 This assert is the proof of the move to a parser. All the fixtures above pass IDENTICALLY
-  // either way, because their marker sits in a cell. Here it sits in PROSE — "still need to run
-  // bib-authors", an intention, not a record — and grep would read it as evidence of a run. The
-  // evidence must sit in the scorecard.
-  check(
-    "a marker in prose OUTSIDE the table is not a record of a run",
+    "`bib-authors` in the prose or a table cell is not a record of a run",
     lintAuthors("marker-in-prose").length === 1,
+  );
+  const badDate = linter.verify(
+    "---\nstages:\n  - stage: submitted\nauthorsVerified: last week\n---\n# S\n",
+    [
+      {
+        files: ["**/*.md"],
+        plugins: { markdown, paper: stages },
+        language: "markdown/gfm",
+        languageOptions: { frontmatter: "yaml" },
+        rules: { "paper/author-list": "error" },
+      },
+    ],
+    join(FIX, "x", "PIPELINE-STATUS.md"),
+  );
+  check(
+    "a value that is not a YYYY-MM-DD date is a finding of its own",
+    badDate.length === 1 && /not a date/.test(badDate[0].message),
   );
 }
 console.log(

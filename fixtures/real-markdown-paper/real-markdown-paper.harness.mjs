@@ -203,7 +203,7 @@ check(
   }
 }
 
-// A section sign appears in real prose → typography grows, and NOTHING ELSE does. The second half
+// A section sign appears in real prose → paper/section-word grows, and NOTHING ELSE does. The second half
 // of that sentence is the one that matters: a rule that reacts to an unrelated edit is reacting
 // to something other than what it claims.
 {
@@ -216,11 +216,11 @@ check(
     ),
   );
   check(
-    "a planted `§` grows paper/typography",
-    (f["paper/typography"] ?? 0) > (base["paper/typography"] ?? 0),
+    "a planted `§` grows paper/section-word",
+    (f["paper/section-word"] ?? 0) > (base["paper/section-word"] ?? 0),
   );
   const others = Object.keys({ ...base, ...f }).filter(
-    (k) => k !== "paper/typography",
+    (k) => k !== "paper/section-word",
   );
   check(
     "and moves no other rule — a rule that reacts to an unrelated edit is not reading what it claims",
@@ -228,14 +228,14 @@ check(
   );
 }
 
-// The author-list marker is recorded → that rule goes quiet, and only that one.
+// The author-list run is recorded (`authorsVerified`) → that rule goes quiet, and only that one.
 {
   const f = findings((dir) =>
     edit(
       dir,
       "PIPELINE-STATUS.md",
-      "| cites | — |",
-      "| cites | bib-authors run 2026-07-07 |",
+      "---\n# PIPELINE-STATUS",
+      "authorsVerified: 2026-07-07\n---\n# PIPELINE-STATUS",
     ),
   );
   check(

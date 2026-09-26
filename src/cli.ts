@@ -116,11 +116,13 @@ import texBuild from "../eslint-rules/tex-build.mjs";
 // @ts-expect-error — an ESLint rule in .mjs, it has no types
 import bibReachable from "../eslint-rules/bib-reachable-entry.mjs";
 // @ts-expect-error — an ESLint rule in .mjs, it has no types
-import reviewFrontmatter, {
-  schemaProblem,
-} from "../eslint-rules/review-frontmatter.mjs";
+import * as reviewRule from "../eslint-rules/review-frontmatter.mjs";
 // @ts-expect-error — an ESLint rule in .mjs, it has no types
 import pdfRules from "../eslint-rules/pdf-last-page-balance.mjs";
+
+const reviewFrontmatter = reviewRule.default;
+const schemaProblem: (schema: unknown) => string | null =
+  reviewRule.schemaProblem;
 
 const USAGE = `paperlint — machine-checkable gates for a paper kept in git
 

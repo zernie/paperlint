@@ -291,7 +291,7 @@ export default {
         schema: [],
         messages: {
           neverRan:
-            "stage «{{stages}}» is declared, but the frontmatter has no `authorsVerified` date. Run `npx paperlint authors {{paper}}`: it checks that each entry's authors are those of the version it cites (not the preprint's) and records the date here",
+            "stage «{{stages}}» is declared, but the frontmatter records no author-list check (`authorsVerified`). It catches what an existence check cannot see: the citation resolves, the id resolves, and the authors are the PREPRINT's while the entry declares a conference. Run `npx paperlint authors {{paper}}` — it checks and records the date here",
           badDate:
             "`authorsVerified: {{value}}` is not a date (YYYY-MM-DD) — `npx paperlint authors {{paper}}` writes it",
         },
