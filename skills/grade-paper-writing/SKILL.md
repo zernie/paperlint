@@ -4,7 +4,7 @@ description: Use when asking "does this paper read well?" / "is the writing any 
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill, Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*), Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)]
 ---
 
-<!-- vigiles:sha256:374531c7f64e998e compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:c0907d5c98e2c831 compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
 
 # grade-paper-writing — grade how the paper READS, then fix it sentence by sentence
 
@@ -254,6 +254,25 @@ is what happened.
    **`<paper-dir>/reviews/<YYYY-MM-DD>-grade-paper-writing.md`** and link it from the paper's
    `PIPELINE-STATUS.md` (Wc row). Same rule as `pc-panel-review`'s ledger and `analyze-sibling-paper`'s
    `siblings/` — review artifacts live colocated and ride with the paper to camera-ready/extension.
+
+## The report's frontmatter — the findings, as records
+
+The report opens with YAML frontmatter that lists what it found, one record per finding.
+`paperlint lint` validates it (`review/frontmatter`): an **open** finding must name the
+pipeline `cause` that let it through — fix that, and the text edit falls out of running the
+fixed tool.
+
+```yaml
+---
+findings:
+  - id: 1
+    status: open            # open | fixed | wontfix
+    cause: missing-skill    # skill-defect | missing-skill | hook | rule — required when open
+    title: "§3 opens on a term the reader has not met"
+  - id: 2
+    status: fixed
+---
+```
 
 ## Record the verdict
 

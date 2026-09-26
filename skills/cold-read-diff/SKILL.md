@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Bash, Read, Agent]
 ---
 
-<!-- vigiles:sha256:f3c36e3e56bbd3cd compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:596fbd7e2eb85252 compiled from skills/cold-read-diff/SKILL.md.spec.ts -->
 
 # cold-read-diff — the reader who cannot fake understanding
 
@@ -100,6 +100,25 @@ Two more things the same run proved:
 **So:** take the changed lines, then widen each to its enclosing paragraph, expand macros, drop
 comments, and hand the reader continuous prose. The findings that survive that are worth the run; the
 ones that do not are noise, and noise is how this check gets muted.
+
+## The report's frontmatter — the findings, as records
+
+The report opens with YAML frontmatter that lists what it found, one record per finding.
+`paperlint lint` validates it (`review/frontmatter`): an **open** finding must name the
+pipeline `cause` that let it through — fix that, and the text edit falls out of running the
+fixed tool.
+
+```yaml
+---
+findings:
+  - id: 1
+    status: open            # open | fixed | wontfix
+    cause: missing-skill    # skill-defect | missing-skill | hook | rule — required when open
+    title: "§3 opens on a term the reader has not met"
+  - id: 2
+    status: fixed
+---
+```
 
 ## Record the verdict
 

@@ -152,6 +152,15 @@ any \`false\` (fabrication)** — \`unresolvable\` alone is advisory and does NO
 narrowed-false philosophy. API responses are cached to \`scripts/.cite-cache.json\` (gitignored) so re-runs are
 cheap and deterministic.
 
+## 5a. Both checks run on every \`paperlint build\`
+
+\`npx paperlint build\` runs \`verify-cites\` and \`bib-authors\` over the paper's bibliography after the PDF is
+built and records the verdicts, with the SHA-256 of the bibliography it checked, in
+\`<paper>/_build/references.json\`. \`paperlint lint\` reads that record offline: \`paper/cite-exists\` and
+\`paper/author-list\` report a failing entry on its own line, \`paper/refs-fresh\` says when the bibliography
+changed since, and \`paper/refs-checked\` warns when nothing was recorded or the build had no network. The
+step never fails the build. Run the scripts by hand (below) to read a single verdict in full.
+
 ## 5b. The author-list gate — \`scripts/bib-authors.mjs\`
 
 \`verify-cites.mjs\` answers *"does this citation exist, and does the id point at it?"*. There is a second
