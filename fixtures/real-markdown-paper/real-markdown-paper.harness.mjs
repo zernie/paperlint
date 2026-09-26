@@ -22,7 +22,7 @@
  *
  * ⚠️ NOT stored as N copies of the article. Four variations at 225 lines each is 900 lines of
  * duplication that drifts apart the first time the prose is touched; the article is copied to a
- * temp directory and patched there, the same way the mutation batteries treat source.
+ * temp directory and patched there.
  *
  * ⚠️ And not a god object, though it reads across several rules: the subject is ONE document and
  * what the rule set says about it. It breaks when the article or the baseline changes — not when

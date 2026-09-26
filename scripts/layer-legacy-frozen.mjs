@@ -12,7 +12,7 @@
  * `reportUnusedDisableDirectives: "error"` already makes a directive that suppresses nothing a lint
  * error, so a fixed site must drop its comment. What that cannot stop is a NEW directive: a new file,
  * or a new import in an old one, silenced the same way. This check freezes the per-file counts, in
- * the shape `mutation-batteries-frozen.mjs` gives the mutation batteries:
+ * a list that may only shrink:
  *
  *   1. a file carrying a legacy suppression that is not in the frozen list fails — a new exemption;
  *   2. a listed file with no legacy suppression left fails — the list must shrink with the code;

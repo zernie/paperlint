@@ -59,11 +59,8 @@ const SPAWNERS = new Set([
 const isGit = (v) =>
   typeof v === "string" && (v === "git" || v.startsWith("git "));
 
-/** Rule sources only: a mutation file plants defects on purpose, a harness asserts about them. */
-const isRuleSource = (f) =>
-  f.endsWith(".mjs") &&
-  !f.endsWith(".mutations.mjs") &&
-  !f.endsWith(".harness.mjs");
+/** Rule sources only: a harness plants defects on purpose and asserts about them. */
+const isRuleSource = (f) => f.endsWith(".mjs") && !f.endsWith(".harness.mjs");
 
 /** @param {string} src @returns {string[]} the git invocations this source makes */
 export function processImports(src) {

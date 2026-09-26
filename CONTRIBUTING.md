@@ -17,13 +17,19 @@ The second run is the one people skip, and it is the one that matters. A rule th
 finds nothing passes the first kind of test by accident — from outside, "there is nothing wrong
 here" and "this check never ran" look exactly the same.
 
-Older rules also have a **battery** (`*.mutations.mjs`): it deletes one thing the rule depends on
-and then demands the harness go red, at the specific assertion that thing belongs to. **These
-hand-written batteries are deprecated and being removed (#52).** Do not write a new one and do
-not add cases to an existing one; instead, say what an assertion guards in a comment directly
-above it (`// Guards: …`). `npm run check` fails on a new or grown battery — the frozen list in
-`scripts/mutation-batteries.frozen.json` may only shrink. Whether a real mutation-testing tool
-replaces them is decided in #52.
+**Mutation testing was removed (#52).** Rules used to carry a hand-written battery
+(`*.mutations.mjs`) that patched their source and demanded the harness go red. The batteries
+patched source TEXT, so a reformat broke dozens of them, and they were 86% of CI; a probe found
+every hand-written case among what a generated mutation run kills anyway. Do not write one. What
+they were for is now two rules for writing the test itself:
+
+1. **Red first.** Run a new test on the code BEFORE the fix and watch it fail at its own
+   assertion. A test that has only ever been green is indistinguishable from one that cannot fail.
+2. **Assert the whole value** — `assert.deepEqual` / `toEqual` on the entire result, not a
+   substring or one field. A substring passes on output that is wrong everywhere else. The
+   exception is prose whose wording is not the subject; say so in a comment.
+
+Say what an assertion guards in a comment directly above it (`// Guards: …`).
 
 A harness runs in this tree, against this working copy. That is the wrong shape for a defect that
 only exists once somebody else has installed the package — a path written inside a skill, a file
@@ -31,9 +37,9 @@ that never made it into the tarball, a PDF whose content is wrong while the exit
 Those are covered by the end-to-end runs, and [`docs/e2e.md`](docs/e2e.md) says which question
 belongs to which tier, and **when a change owes a new e2e rather than a harness**.
 
-It caught a real one on the way in: `js-yaml` 5 stopped parsing an unquoted date as a `Date`.
-Every harness stayed green under both majors, and only the battery noticed that the rule's
-date coercion had become dead code.
+A historical example of why the clean half matters: `js-yaml` 5 stopped parsing an unquoted date as
+a `Date`, every harness stayed green under both majors, and only a (since removed) mutation battery
+noticed that the rule's date coercion had become dead code — no test asserted the coerced value.
 
 ## Running the checks: one command
 
@@ -41,8 +47,8 @@ date coercion had become dead code.
 npm run check
 ```
 
-That is the whole instruction. It runs every gate in order — build, lint, every harness, every
-mutation battery, the install e2e under npm and pnpm, and a real `pdflatex` build — and ends
+That is the whole instruction. It runs every gate in order — build, lint, every harness, the
+install e2e under npm and pnpm, and a real `pdflatex` build — and ends
 
 by printing **which CI jobs it does not reproduce, and why**.
 
@@ -65,8 +71,8 @@ nobody covered — verified by adding a `windows` job and watching it fail.
 ## Layout
 
 ```
-eslint-rules/   the rules, each with its .harness.mjs beside it (older ones also a .mutations.mjs)
-lib/            shared readers — markdown, skill corpus, the mutation driver
+eslint-rules/   the rules, each with its .harness.mjs beside it
+lib/            shared readers — markdown, skill corpus
 hooks/          three hooks for vigiles — the code
 plugin/         the Claude Code plugin: wiring for those hooks, no code, no package.json
 skills/         24 stage skills
@@ -102,8 +108,7 @@ The README links only what a user needs. These are for people changing the packa
 
 ```bash
 npm install
-npm test                 # every harness, the tests' type-check, every *.test.ts (Node >= 22.18)
-node scripts/run-mutations.mjs   # run the remaining batteries (deprecated, #52 — do not add to them)
+npm test                 # every *.test.ts, then every harness (Node >= 22.18)
 ```
 
 None of these are needed to USE the tool — they are here because the gates are part of the
@@ -166,8 +171,7 @@ Licensing differs too: that suite is CC BY-NC 4.0, this is MIT.
 - **scorecard** — `PIPELINE-STATUS.md`, the file above. One per paper.
 - **frozen** — a copy of the exact PDF or `.tex` that was sent, kept in `versions/`. Bytes, not a
   commit reference: squash and `gc` destroy commit references, and did.
-- **harness** — the test beside a rule. **battery** — a set of edits that try to break a harness
-  (deprecated, being removed in #52).
+- **harness** — the test beside a rule.
 
 ## Also in the box
 

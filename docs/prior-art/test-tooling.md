@@ -27,9 +27,8 @@ So the genuinely agent-facing harnesses are three: `hooks/hooks.harness.mjs` (`r
 (`runHarnessTest`, which spawns the real `claude` binary against a scripted model), and the skill
 contract checks. Everything else is ordinary Node testing that happens to carry the suffix.
 
-⚠️ **The suffix is a CONTRACT, not a style choice.** `lib/mutation-driver.mjs` pairs batteries to
-harnesses by it. Renaming files for a new runner would break that, which has nothing to do with
-running tests.
+The suffix used to be a contract as well — the mutation driver paired batteries to harnesses by
+it. Both were removed in #52, so today the suffix only tells `vigiles test` what to run.
 
 ## Why the install e2e stays a script
 

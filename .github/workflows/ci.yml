@@ -3,7 +3,7 @@
 # ── WHY ONE JOB ─────────────────────────────────────────────────────────────
 # Parallelism does not save billable minutes, it ADDS them: every job pays for its own
 # setup + checkout + install (~20-30 s). Splitting is worth it for signal isolation on a big
-# matrix; here the whole suite is 84 seconds, so a second job would cost more than it isolates.
+# matrix; here the whole suite is ~96 seconds, so a second job would cost more than it isolates.
 #
 # ⛽ THIS REPOSITORY IS PUBLIC, so its minutes are FREE — they do not touch the account's
 # 3000/month quota (verified against the API 2026-09-12: `"private": false`). The header said
@@ -11,23 +11,24 @@
 # rather than guessed. Keep measuring them anyway: the bond exists to stop a HANG, and a hang
 # costs wall-clock and a red check whether or not anyone is billed.
 #
-# ── THE MEASUREMENT THE BONDS COME FROM (local, 2026-09-12) ─────────────────
-#   npm test (12 harnesses)              11 s
-#   npm run lint (eslint over fixtures)   1 s
-#   rules-see-files.mjs                   1 s
-#   vigiles lint                          3 s   ← added 2026-09-12 with the first ten skills
-#   run-mutations.mjs (12 batteries)    242 s   ← 130 mutations, the expensive and load-bearing part
+# ── THE MEASUREMENT THE BONDS COME FROM (local, 4 cores, 2026-09-26) ─────────
+#   npm run build                         2 s
+#   npm test -- --no-skip (69 harnesses) 41 s   ← vitest + every harness
+#   npm run lint                          6 s
+#   npm run fmt:check                     5 s
+#   vigiles lint . README.md              6 s
+#   rules-see-files.mjs                   5 s
+#   layer-legacy-frozen.mjs               3 s
+#   install e2e --strict (npm + pnpm)    28 s
 #   ───────────────────────────────────────────
-#   total work                          ~255 s, plus checkout + install
+#   total work                          ~96 s, plus checkout + install + the claude binary
 #
-# 🔴 THE PREVIOUS NUMBERS ARE KEPT NOWHERE BUT THIS SENTENCE, ON PURPOSE: they said ~84 s total
-# with `timeout-minutes: 8`, i.e. a ~2.7× bond. The pipeline's checkers arrived on 2026-09-12 and
-# tripled every count — 4 harnesses became 12, 45 mutations became 130 — which would have left an
-# 8-minute bond at ~1.3× of a ~6-minute run. A bond that tight fails on a slow runner and reads
-# as a broken suite rather than as a bond. Re-measure when the counts move again; do not cite the
-# table above without re-running it.
+# 🔴 THE PREVIOUS TABLE (2026-09-12) had one more row, `run-mutations.mjs`, at 242 s of ~255 s, and
+# by 2026-09-23 it was 8m39s of a 10m02s job (#52). The batteries were removed in #52, which is
+# what took the job from `timeout-minutes: 20` to 10. Re-measure when the counts move again; do not
+# cite the table above without re-running it.
 #
-# Expect ~6 minutes warm. `timeout-minutes: 20` is ~3.3×, and `npm ci` carries its OWN bond
+# Expect ~3 minutes warm. `timeout-minutes: 10` is ~3×, and `npm ci` carries its OWN bond
 # because a job-level bond cannot tell "the registry hung" from "the suite is slow" and so hands
 # a hang the whole job.
 name: ci
@@ -62,7 +63,7 @@ jobs:
     # there is no pull_request object, and a bare `.draft` would be missing and kill every check there.
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
 
@@ -88,14 +89,10 @@ jobs:
       # i.e., claimed a protection that does not exist. Protection against this case comes from `--no-skip` below.
       # 🔴 THE `claude` CLI IS A TEST DEPENDENCY HERE, and its absence was NOT harmless.
       # `plan-paper-timeline.effects.harness.mjs` spawns the real agent binary; without it the
-      # harness SKIPS, the skip exits 0 through `vigiles test`, and the mutation driver interprets
-      # that as "the mutation survived". Measured 2026-09-15 on run 34966606186: two survivors in CI,
-      # zero locally, the difference being this binary and nothing about the code.
-      #
-      # The driver now REFUSES a battery whose harness skips (lib/mutation-driver.mjs), so the
-      # wrong diagnosis is gone either way. This step is the other half: it restores the evidence
-      # instead of settling for an honest "no evidence". No API key — the tier drives a scripted
-      # stand-in, which is why it costs seconds and $0.
+      # harness SKIPS, and a skip is not evidence. (Measured 2026-09-15 on run 34966606186, when the
+      # since-removed mutation batteries read that skip as two "survivors" in CI and none locally.)
+      # This step restores the evidence instead of settling for an honest "no evidence". No API
+      # key — the tier drives a scripted stand-in, which is why it costs seconds and $0.
       # 🔴 DELIBERATELY UNPINNED, and since issue #7 that is finally honest. The tier exists to
       # notice upstream moving, so a pin would defeat it — but until the version was OBSERVED
       # rather than probed for, an unpinned install meant the assertions characterized whatever
@@ -110,8 +107,7 @@ jobs:
       # that failed to LOAD. In other words, one flag closes both doors at once.
       #
       # ⚠️ The step order was incorrect and made the install above nearly pointless: `npm test`
-      # ran BEFORE it, so the effects tier in this job was always skipped, and the binary
-      # reached only the mutation batteries. The comment about "its absence was NOT harmless"
+      # ran BEFORE it, so the effects tier in this job was always skipped. The comment about "its absence was NOT harmless"
       # described exactly this harm yet did not protect against it itself.
       #
       # ⚠️ And the flag belongs IN THE STEP, not in `package.json`: the macOS cell of build-e2e runs the same `npm test`
@@ -161,21 +157,10 @@ jobs:
       - name: every rule sees a file
         run: node scripts/rules-see-files.mjs
 
-      # Hand-written mutation batteries are being removed (#52): the frozen list may only
-      # shrink — no new battery, no new case in an existing one.
-      - name: mutation batteries are frozen
-        run: node scripts/mutation-batteries-frozen.mjs
-
       # The legacy exemptions from src/'s layer rules (#76) may only shrink: counted from ESLint's
       # own suppressedMessages, so a new `-- legacy …` directive anywhere fails here.
       - name: legacy layer exemptions are frozen
         run: node scripts/layer-legacy-frozen.mjs
-
-      # The batteries that remain still run until #52 replaces or removes them. The runner
-      # DISCOVERS batteries rather than listing them and errors on finding zero — see
-      # scripts/run-mutations.mjs for why (the hand list it replaced had gone stale, silently).
-      - name: mutation batteries
-        run: node scripts/run-mutations.mjs
 
       # pnpm is INSTALLED here rather than hoped for. The runner image may or may not carry it,
       # and the npm/pnpm difference is the entire reason the install e2e exists — so leaving it
@@ -244,8 +229,7 @@ jobs:
                                               : "DIVERGE — this is the platform this job exists for");
           '
 
-      # Issue #9: `npm test` was red ONLY on macOS. Only `npm test`, not the mutation batteries:
-      # they would verify on macOS exactly what the gates job verifies on Linux.
+      # Issue #9: `npm test` was red ONLY on macOS.
       - name: npm test (macOS)
         if: runner.os == 'macOS'
         run: npm test

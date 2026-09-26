@@ -52,8 +52,6 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
  * Programs installed by npm (`vigiles`, `eslint`) are found because `node_modules/.bin` is put
  * first on PATH below, the same way `npm run` does it.
  */
-const locked = (...cmd) => ["node", "scripts/exclusive.mjs", ...cmd];
-
 export const GATES = [
   {
     name: "the package compiles",
@@ -70,7 +68,7 @@ export const GATES = [
   {
     name: "skills lint, and the vigiles marks in README.md and CLAUDE.md",
     job: "gates",
-    run: locked("vigiles", "lint", ".", "README.md"),
+    run: ["vigiles", "lint", ".", "README.md"],
     // README.md is passed to `vigiles lint` by name: it is not an instruction file, so vigiles
     // would not open it on its own. The marks tie the `paperlint init` and `paperlint new` sections to the
     // functions that implement them, and the lint fails when either function is renamed.
@@ -85,7 +83,7 @@ export const GATES = [
   {
     name: "every declared rule is enabled for a file on disk",
     job: "gates",
-    run: locked("node", "scripts/rules-see-files.mjs"),
+    run: ["node", "scripts/rules-see-files.mjs"],
   },
   {
     name: "rules read content, not the filesystem",
@@ -96,7 +94,7 @@ export const GATES = [
     // locally buys a defect that reaches review.
     reason:
       "source-only property — identical in every environment, so CI adds nothing",
-    run: locked("node", "scripts/rules-are-content-only.mjs"),
+    run: ["node", "scripts/rules-are-content-only.mjs"],
   },
   {
     name: "every test — vitest over *.test.ts, then the vigiles harnesses (npm test)",
@@ -110,39 +108,29 @@ export const GATES = [
     run: ["tsc", "-p", "tsconfig.test.json"],
   },
   {
-    name: "mutation batteries are frozen — none new, none grown (#52)",
-    job: "gates",
-    run: locked("node", "scripts/mutation-batteries-frozen.mjs"),
-  },
-  {
     name: "legacy layer exemptions are frozen — none new, none grown (#76)",
     job: "gates",
-    run: locked("node", "scripts/layer-legacy-frozen.mjs"),
-  },
-  {
-    name: "mutation batteries — every guard is killed by its own assertion",
-    job: "gates",
-    run: locked("node", "scripts/run-mutations.mjs"),
+    run: ["node", "scripts/layer-legacy-frozen.mjs"],
   },
   {
     name: "install e2e — pack, install under npm and pnpm, run the binary",
     job: "gates",
-    run: locked("node", "test/e2e/install.mjs"),
+    run: ["node", "test/e2e/install.mjs"],
   },
   {
     name: "build e2e — a real pdflatex, and the PDF's fonts are measured",
     job: "build-e2e",
-    run: locked("node", "test/e2e/build.mjs"),
+    run: ["node", "test/e2e/build.mjs"],
   },
   {
     name: "banal e2e — the real banal on pdf.js-written XML gives banal-on-pdftohtml's numbers",
     job: "build-e2e",
-    run: locked("node", "test/e2e/banal.mjs"),
+    run: ["node", "test/e2e/banal.mjs"],
   },
   {
     name: "toolchain e2e — real TeX Live into $PAPERLINT_TEXLIVE_DIR, then a build with only it on PATH",
     job: "build-e2e",
-    run: locked("node", "test/e2e/toolchain.mjs"),
+    run: ["node", "test/e2e/toolchain.mjs"],
   },
 ];
 
@@ -170,8 +158,7 @@ export const NOT_COVERED = {
 };
 
 /**
- * Exit 77 means "declared skip" — the same code vigiles' runner uses (`SKIP_EXIT_CODE`), and the
- * one lib/mutation-driver.mjs already recognizes. The e2e steps exit 77 when a tool they need is
+ * Exit 77 means "declared skip" — the same code vigiles' runner uses (`SKIP_EXIT_CODE`). The e2e steps exit 77 when a tool they need is
  * absent and --strict is off. Anything else nonzero is a failure.
  *
  * 🔴 A SKIP IS A THIRD OUTCOME. Until the Codex review on #45 the e2e steps exited 0 on a skip,

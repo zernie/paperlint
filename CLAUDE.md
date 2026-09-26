@@ -35,7 +35,7 @@ assumed. Two things that sound like limits and are not:
 | ----------------------- | -----------------------------------------------------------------------------------------: |
 | ESLint rules            | **5** — `latex-language` · `tex-build` · `papers` · `review-findings-cause` · `doc-fields` |
 | harnesses               |                                                                                     **57** |
-| mutation batteries      |                                                                                     **34** |
+| mutation batteries      |                                                    **0** — all 34 removed 2026-09-26 (#52) |
 | skills                  |                                                                                     **24** |
 | hooks (runnable `.mjs`) |                                                                                      **5** |
 | repo-wide scripts       |                                                                                          5 |
@@ -75,8 +75,8 @@ nodes.
 
 **3. Every check needs BOTH halves, or it is not tested.** It must FIRE on a planted defect
 and stay QUIET on a clean fixture. A check that has only been seen quiet is
-indistinguishable from a dead one — silence is its success state. Prove the fire half with a
-mutation, and assert the patch actually landed before trusting a green run.
+indistinguishable from a dead one — silence is its success state. Prove the fire half by
+seeing the test go RED before the fix lands (§ Testing — how a test is written here).
 
 **4. `exit 0` with empty output is NOT "clean".** A rule whose glob matched no files reports
 exactly like a rule that passed. Any rule shipped here must be loud when its input set is
@@ -461,26 +461,19 @@ node scripts/rules-see-files.mjs   # also part of npm run check
 It is per RULE, not per glob, and that distinction is the point: a rule can be enabled in one
 block whose glob is empty while a different block is busy, so "some glob matched something" is
 not evidence about the rule you care about. Both halves are tested
-(`scripts/rules-see-files.harness.mjs`) and both directions are mutated
-(`scripts/rules-see-files.mutations.mjs` — under-reporting and over-reporting must die on
-_different_ assertions, or only one half of the guard is really tested).
+(`scripts/rules-see-files.harness.mjs`), under-reporting and over-reporting each by an
+assertion of its own.
 
-## Mutations — hand-written batteries are deprecated (#52)
+## Mutation testing is REMOVED (#52) — coverage and red-first instead
 
-The `*.mutations.mjs` batteries (string replacements of source lines, run through
-`lib/mutation-driver.mjs`) are being removed. The idea stays — a test must be seen going red
-when the code breaks — but the vehicle is not this one.
+The hand-written `*.mutations.mjs` batteries, their driver and the lock that protected them are
+gone (2026-09-26). One line of why: they patched source TEXT (a reformat broke ~40 of them),
+took 86% of CI, and a probe on two modules found every hand-written case among what a generated
+mutation run kills anyway — while coverage plus well-written tests cover what matters at a
+fraction of the cost. No StrykerJS either; that was the other option in #52 and it was declined.
 
-- **Do not create a new `*.mutations.mjs`**, and **do not add cases to an existing one.**
-- **Record what a test guards as a comment directly above its assertion** (`// Guards: …`).
-- The rule is enforced, not asked for: `scripts/mutation-batteries-frozen.mjs` (part of
-  `npm run check` and CI) fails on a battery missing from `scripts/mutation-batteries.frozen.json`,
-  on a listed battery with more or fewer cases than recorded, and on a listed file that is gone.
-  The list may only shrink — delete a battery or a case, then delete or lower its entry.
-- The intended replacement is a real mutation-testing tool (StrykerJS) or nothing; that is
-  decided in #52, not in a pull request that happens to touch a battery.
-
-The batteries that remain still run (`node scripts/run-mutations.mjs`) until #52 retires them.
+- **Never write a `*.mutations.mjs`** or any other file that edits source to test a test.
+- The idea the batteries carried stays, as a rule for writing the test itself — below.
 
 ## Cost
 
@@ -523,7 +516,7 @@ exits 1 when no file matches, and it transpiles without type-checking, so `npm r
 **Local = the fast gates on what you touched; the full `npm run check` = CI.** Locally run vitest on
 the touched test files, `npx tsc --noEmit`, `npx eslint <touched files>` and `npm run fmt:check`, then
 push and read CI by job name. The repo is public, so CI is free, and it also runs the TeX e2e that
-cannot run locally; a local full run takes 10-15 min, most of it the mutation batteries (#52).
+cannot run locally.
 
 ⚠️ **Not `vigiles test .`** — the `.` is read as a FILE, the runner dies with
 `ERR_UNSUPPORTED_DIR_IMPORT`, and it still exits 0. See the measured table below.
@@ -534,34 +527,24 @@ Skills are tested **through vigiles** — a colocated `<skill>.harness.mjs` besi
 empty — issue #6.) Not through a bespoke script: a home-grown runner here once printed
 confident, byte-identical "clean" verdicts for three different skills that had never loaded.
 
-### Every npm script takes an exclusive lock, and that is not ceremony
+### How a test is written here
 
-`npm run *` in this repository goes through `scripts/exclusive.mjs`, which holds
-`.vigiles/exclusive.lock` for the duration. A second gate started while one is running does not
-queue and does not race — it **refuses**, names the holder, and exits 3.
+1. **Red first.** A new test is seen FAILING before the change that makes it pass — run it on
+   the unfixed code, watch it go red at its own assertion, then fix. A test that has only ever
+   been green is indistinguishable from one that cannot fail. This is what the mutation
+   batteries were for, applied once, at the moment the test is written, at no recurring cost.
+2. **Assert the whole value.** Compare the entire returned value (`assert.deepEqual`,
+   `expect(x).toEqual(…)`), not a substring of it or one field. A substring assertion passes on
+   output that is wrong everywhere else — the batteries found that defect over and over
+   (`"that is the"` matching two different messages, a bare word the usage block always prints).
+   A substring is right only when the value is prose whose wording is not the subject; then say
+   so in a comment.
 
-🔴 **The reason is that the mutation batteries edit the working tree in place.** That strategy is
-deliberate (see `lib/mutation-driver.mjs` — copying the repo per mutation costs minutes instead
-of seconds), and its one cost is that any parallel reader sees a source file mid-mutation. The
-resulting failure is **false, non-deterministic, and blames the wrong file**: it reports a broken
-assertion, not a mutation, and it reads as "the suite is flaky". That has already cost a wrong
-conclusion here — two runs in a row produced _different_ error messages and the diagnosis "I broke
-round-diff" was incorrect.
+### There is no exclusive lock any more
 
-A prose instruction "don't run them at the same time" existed and did not work: prose does not
-execute, so it does not apply to the person in the other terminal, the agent, or the editor with
-tests on save. Measured live, with the batteries running:
-
-```
-$ npm test
-🔴 refused: this repository is busy with a run that EDITS FILES IN PLACE.
-   held by: pid 6645, "node scripts/run-mutations.mjs", since 2026-09-17T05:22:28.757Z
-RC=3
-```
-
-⚠️ A lock left behind by a process that no longer exists is **taken over** with a message, not
-respected. Otherwise one interrupted run would block the repository forever, and the first cure
-anybody reaches for would be "delete the lock by hand" — i.e. switching the mechanism off.
+`scripts/exclusive.mjs` and `.vigiles/exclusive.lock` existed only because the batteries edited
+the working tree in place, so a parallel reader saw half-mutated files. Nothing edits the tree in
+place now, so the lock went with them (#52 § 4).
 
 ## `npm test` — `--min=1` stays, and here is what it is for
 

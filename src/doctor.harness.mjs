@@ -9,7 +9,6 @@
  * this file can tell the two apart.
  *
  * Run:    npx vigiles test src/doctor.harness.mjs
- * Killed by: src/doctor.mutations.mjs
  */
 import assert from "node:assert/strict";
 import { PAPERS_DIR_FIELD } from "../lib/paper-config.mjs";

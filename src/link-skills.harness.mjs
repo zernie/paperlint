@@ -13,7 +13,6 @@
  * consumer.mjs — the same constant the linker and the install e2e read.
  *
  * Run:    node src/link-skills.harness.mjs
- * Killed by: src/link-skills.mutations.mjs
  */
 import assert from "node:assert/strict";
 import {

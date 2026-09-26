@@ -38,10 +38,6 @@ const check = (label, ok) => {
     `quiet on the real corpus (${findings.length} findings)`,
     findings.length === 0,
   );
-  check(
-    "mutation files are not scanned as rules",
-    !checked.some((f) => f.endsWith(".mutations.mjs")),
-  );
 }
 
 // ── II. fires on every form the defect has taken ────────────────────────────

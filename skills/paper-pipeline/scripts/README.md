@@ -189,10 +189,10 @@ assertion class, each on a throwaway copy of `.claude/`, plus a control assertin
 produces _only_ the four known-red YAML findings so no case can pass on noise. Run it by hand after
 touching the harness (`node .claude/skills/paper-pipeline/scripts/skills.mutations.mjs`, ~3 s); CI runs it too.
 
-> **2026-09-24 — hand-written mutation batteries are deprecated (#52).** Do not write a new
-> `*.mutations.mjs` or add cases to an existing one; say what an assertion guards in a comment
-> directly above it. `npm run check` enforces this through `scripts/mutation-batteries.frozen.json`,
-> which may only shrink. The history below is kept as a record, not as an instruction.
+> **2026-09-26 — hand-written mutation batteries are REMOVED (#52)**, with their driver. Do not
+> write a `*.mutations.mjs`; see a new test fail before the fix and assert whole values instead
+> (the repository's CLAUDE.md, § Testing). The history below is kept as a record, not as an
+> instruction — none of the files it names exist any more.
 
 Nine harnesses now carry a mutations file of their own — `delivered-pdf.mutations.mjs` (25 rows), `bound-numbers.mutations.mjs` (12 rows),
 `round-diff.mutations.mjs` (28 rows), `ledger.mutations.mjs` (28 rows, covering the 2026-08-10

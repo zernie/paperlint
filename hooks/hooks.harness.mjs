@@ -21,7 +21,6 @@
  * `.ts` source would be: a twin can drift from its build, and there is no twin here to drift.
  *
  * Run: `npx vigiles test hooks/hooks.harness.mjs`
- * Killed by: `hooks/hooks.mutations.mjs`
  */
 import assert from "node:assert/strict";
 import { runHook } from "vigiles";
