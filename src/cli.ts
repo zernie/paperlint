@@ -625,8 +625,21 @@ export function parseArgs(argv: readonly string[]): Args {
   };
 
   for (let i = 0; i < rest.length; i++) {
-    const a = rest[i];
-    if (a === undefined) continue;
+    const arg = rest[i];
+    if (arg === undefined) continue;
+    // `--flag=value` is `--flag value` for every flag that takes a value: the CI action writes
+    // `--max-warnings="$N"`, and that form used to fall through to the list of paths.
+    const eq = arg.indexOf("=");
+    const inline =
+      arg.startsWith("--") && eq > 0 && VALUE_FLAGS.has(arg.slice(0, eq))
+        ? arg.slice(eq + 1)
+        : undefined;
+    const a = inline === undefined ? arg : arg.slice(0, eq);
+    const take = (): string | undefined => {
+      if (inline === undefined) return valueFor(a, ++i);
+      if (inline === "") out.missingValue = a;
+      return inline === "" ? undefined : inline;
+    };
     if (a === "--json") out.json = true;
     else if (a === "--fix") out.fix = true;
     else if (a === "--all") out.all = true;
@@ -636,23 +649,35 @@ export function parseArgs(argv: readonly string[]): Args {
     else if (a === "--no-hooks") out.noHooks = true;
     else if (a.startsWith("--hooks="))
       out.hooksMode = a.slice("--hooks=".length);
-    else if (a === "--paper") out.paper = valueFor(a, ++i) ?? null;
-    else if (a === "--format") out.format = valueFor(a, ++i) ?? null;
-    else if (a === "--venue") out.venue = valueFor(a, ++i) ?? null;
-    else if (a === "--kind") out.kind = valueFor(a, ++i) ?? null;
+    else if (a === "--paper") out.paper = take() ?? null;
+    else if (a === "--format") out.format = take() ?? null;
+    else if (a === "--venue") out.venue = take() ?? null;
+    else if (a === "--kind") out.kind = take() ?? null;
     // `--options` was the first spelling and is kept working. It named the wrong thing — every
     // other tool in the stack calls this file its config — but a flag in someone's CI is not
     // ours to break.
-    else if (a === "--config" || a === "--options")
-      out.config = valueFor(a, ++i) ?? null;
+    else if (a === "--config" || a === "--options") out.config = take() ?? null;
     else if (a === "--max-warnings") {
-      const v = valueFor(a, ++i);
+      const v = take();
       if (v !== undefined) out.maxWarnings = Number(v);
     } else if (a === "--help" || a === "-h") out.help = true;
+    // An unknown flag is refused by name. Read as a path, it silently lints something else.
+    else if (a.startsWith("-") && a !== "-") out.unknownFlag ??= a;
     else out.paths.push(a);
   }
   return out;
 }
+
+/** The flags that take a value, in either spelling: `--flag value` or `--flag=value`. */
+const VALUE_FLAGS: ReadonlySet<string> = new Set([
+  "--paper",
+  "--format",
+  "--venue",
+  "--kind",
+  "--config",
+  "--options",
+  "--max-warnings",
+]);
 
 /**
  * This package's own version, from the `package.json` beside `src/` and `dist/` alike. `init` pins
@@ -1289,6 +1314,12 @@ export async function run(
       `${a.missingValue} needs a value — it was given none.\n` +
         `Without it the run would silently fall back to whatever config it discovers, which is ` +
         `not what the command line said.`,
+    );
+    return 2;
+  }
+  if (a.unknownFlag !== undefined) {
+    err(
+      `unknown flag \`${a.unknownFlag}\` — \`paperlint --help\` lists every flag`,
     );
     return 2;
   }

@@ -69,6 +69,8 @@ export interface Args {
   help?: boolean;
   /** A flag that turned out to have no value. A non-empty field is a REFUSAL, not a default. */
   missingValue?: string;
+  /** The first flag the parser does not know. Refused, never read as a path. */
+  unknownFlag?: string;
 }
 
 /** A finding about the PRESENCE of a file — what an ESLint rule cannot express. */
