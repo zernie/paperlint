@@ -67,7 +67,7 @@ default `PIPELINE-STATUS.md`) as an error. Which files are required is configura
 ## Checks against the venue
 
 A paper says where it is submitted in a `paperlint.json` beside `paper.tex`
-([`configuration.md`](configuration.md#three-levels-of-settings)):
+([`configuration.md`](configuration.md#a-papers-paperlintjson)):
 
 ```json
 { "extends": "paperlint:aisec", "kind": "research" }
@@ -135,6 +135,7 @@ Put it in your repository and extend it by a path relative to the file that name
 
 ```
 package.json
+paperlint.json            (optional)
 venues/
   usenix-sec.jsonc
 papers/

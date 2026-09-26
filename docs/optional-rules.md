@@ -3,9 +3,10 @@
 Some checks matter only for some venues. paperlint ships them **off**. A venue preset that needs one
 turns it on for its papers (AgenticDev's turns on `pdf/last-page-balance`), and a paper can turn one
 on or off for itself in its own `paperlint.json`
-([`configuration.md`](configuration.md#three-levels-of-settings)). No glob is involved: a paper's
-rules apply to that paper. The `rules` setting of your `package.json` still overrides both, for one
-paper or many ([`configuration.md`](configuration.md#the-rules-key-turning-rules-on-and-off)).
+([`configuration.md`](configuration.md#a-papers-paperlintjson)). No glob is involved: a paper's
+rules apply to that paper. The root `paperlint.json` can turn it on for every paper, or for some
+with a block ([`configuration.md`](configuration.md#the-rules-key-turning-rules-on-and-off)); a
+paper's own file still has the last word for that paper.
 
 | rule                    | what it checks                                                | who needs it                                              |
 | ----------------------- | ------------------------------------------------------------- | --------------------------------------------------------- |
@@ -48,7 +49,7 @@ So: **build, then lint.**
 | a review build with numbered lines                  | nothing — the numbers run down the whole page, so both columns measure full height, and balance is a camera-ready requirement     |
 
 If you turn the rule on — in a `paperlint.json` beside no `paper.tex`, or with a `files` glob in
-`package.json` that reaches none — `paperlint lint` fails and says so, rather than reporting a clean
+the root `paperlint.json` that reaches none — `paperlint lint` fails and says so, rather than reporting a clean
 run for a rule that never ran.
 
 ### Which venues need it

@@ -193,7 +193,7 @@ the CONFIG is not declaring something. Check that before adding a verb.
 
 `npm i -D paperlint` brings all the code — rules, skills, hooks, scripts. `paperlint init`
 then does what only a command can, because it depends on the project it lands in: it finds the
-papers directory and declares it in `package.json`, links each skill into `.claude/skills/`, writes
+papers directory and declares it in a root `paperlint.json` when it is not the default `papers`, links each skill into `.claude/skills/`, writes
 the hook commands into `.claude/settings.json` (vigiles' `mergeRegistrations`, reading
 `plugin/hooks/hooks.json` as the one source), and offers a CI workflow pinned to the installed
 release's tag. `paperlint doctor` reads all of it back. Details: `docs/install.md`.

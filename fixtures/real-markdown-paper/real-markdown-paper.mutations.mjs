@@ -24,7 +24,7 @@ process.exit(
     runner: "node",
     cases: [
       {
-        name: "typography stops counting bare decimals — it goes quiet on the real article",
+        name: "leading-zero stops matching bare decimals — it goes quiet on the real article",
         harness: HARNESS,
         expect:
           "no rule that was recorded has vanished entirely without the baseline being updated",
@@ -35,20 +35,26 @@ process.exit(
         edits: [
           [
             TYPO,
-            "const bareDecimal = countBareDecimals(",
-            "const bareDecimal = 0 * countBareDecimals(",
+            "    for (const m of r.text.matchAll(BARE_DECIMAL)) {",
+            "    for (const m of r.text.matchAll(/(?!)/g)) {",
           ],
         ],
       },
       {
         name: "the § counter stops counting — the planted defect no longer moves its rule",
         harness: HARNESS,
-        expect: "a planted `§` grows paper/typography",
+        expect: "a planted `§` grows paper/section-word",
         disables:
           "the firing half in realistic surroundings. The rule's own fixture is three lines of " +
           "nothing but the defect, so a narrowed counter still fires there; only a document with " +
           "225 lines of competing text shows that it stopped",
-        edits: [[TYPO, "(body.match(/§/g) || []).length", "0"]],
+        edits: [
+          [
+            TYPO,
+            "    for (const m of r.text.matchAll(/§([ \\t]*)(\\d)?/g)) {",
+            "    for (const m of r.text.matchAll(/(?!)§/g)) {",
+          ],
+        ],
       },
       {
         name: "research-question stops comparing the declaration against the paper",

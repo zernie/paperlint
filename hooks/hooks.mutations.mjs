@@ -75,10 +75,10 @@ const M = [
   [
     GUARD,
     "guard carrier/parse failure DEFAULTS instead of denying",
-    "treat an unreadable package.json as «nothing declared» — the measured failure: the provider " +
+    "treat an unreadable paperlint.json as «nothing declared» — the measured failure: the provider " +
       "hands back the EMPTY STRING in silence, so the gate quietly re-roots at the default",
     "  } catch {\n    return deny(\n      `${CONFIG_KEY}: this gate could not read",
-    "  } catch {\n    pkg = {};\n    void deny(\n      `${CONFIG_KEY}: this gate could not read",
+    "  } catch {\n    config = {};\n    void deny(\n      `${CONFIG_KEY}: this gate could not read",
   ],
   [
     GUARD,
@@ -131,8 +131,8 @@ const M = [
     "drop the anchor to the project root — the read fails once cwd drifts, and under the rule " +
       '"an unreadable declaration denies" the guard blocks ANY Bash command, including the one ' +
       "that would fix it",
-    'needs: [provide("pkg", \'cat "${CLAUDE_PROJECT_DIR:-.}/package.json"\')],',
-    'needs: [provide("pkg", "cat package.json")],',
+    'const READ_CONFIG = `f="\\${CLAUDE_PROJECT_DIR:-.}/${CONFIG_FILE}";',
+    'const READ_CONFIG = `f="${CONFIG_FILE}";',
   ],
   [
     "hooks/paper-skills-nudge.hook.mjs",
@@ -141,8 +141,8 @@ const M = [
       "hook does not deny, it returns `nothing()` — i.e. it just quietly stops firing. Silence " +
       "is exactly what a nudge's success state looks like, so a dead hook is indistinguishable " +
       "from a working one except by this mutation",
-    'needs: [provide("pkg", \'cat "${CLAUDE_PROJECT_DIR:-.}/package.json"\')],',
-    'needs: [provide("pkg", "cat package.json")],',
+    'const READ_CONFIG = `f="\\${CLAUDE_PROJECT_DIR:-.}/${CONFIG_FILE}";',
+    'const READ_CONFIG = `f="${CONFIG_FILE}";',
   ],
   [
     GUARD,

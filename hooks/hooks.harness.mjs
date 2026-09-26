@@ -280,13 +280,19 @@ try {
   // block anything — it turns them OFF. Silence is a nudge's success state, so a dead nudge and a
   // working one produce identical output. The lockout announces itself; this does not.
   {
-    const dir = fixture({ [PAPERS_DIR_FIELD]: "docs/papers" });
+    // A root the DEFAULT would miss: under drift, a provider that read relatively would fall back
+    // to `papers`, and a guard whose test is depth-agnostic still matches `docs/papers/…` — so
+    // only a root with no `papers` segment shows whether the declaration was actually read.
+    const dir = fixture(
+      { [PAPERS_DIR_FIELD]: "writing/drafts" },
+      { papers: "writing/drafts" },
+    );
 
     // paper-edit-guard: still GUARDS from a foreign cwd, rather than denying everything.
     const write = at(
       dir,
       "paper-edit-guard",
-      onBash(`sed -i s/a/b/ docs/papers/alpha/paper.tex`),
+      onBash(`sed -i s/a/b/ writing/drafts/alpha/paper.tex`),
     );
     check("drift · guard still blocks a paper write", write.exitCode === 2);
     const idle = adrift(dir, "paper-edit-guard", onBash("echo hi"));
@@ -297,7 +303,7 @@ try {
     const guarded = adrift(
       dir,
       "paper-edit-guard",
-      onBash(`sed -i s/a/b/ docs/papers/alpha/paper.tex`),
+      onBash(`sed -i s/a/b/ writing/drafts/alpha/paper.tex`),
     );
     check(
       "drift · guard STILL blocks the paper write it exists for",
@@ -308,13 +314,13 @@ try {
     const nudge = adrift(
       dir,
       "paper-skills-nudge",
-      onEdit(`${dir}/docs/papers/alpha/paper.tex`),
+      onEdit(`${dir}/writing/drafts/alpha/paper.tex`),
     );
     check("drift · the skills nudge still fires", injected(nudge).length > 0);
     const gates = adrift(
       dir,
       "paper-status-gates",
-      onEdit(`${dir}/docs/papers/alpha/PIPELINE-STATUS.md`),
+      onEdit(`${dir}/writing/drafts/alpha/PIPELINE-STATUS.md`),
     );
     check(
       `drift · the status-gates hook still runs (rc=${gates.exitCode})`,

@@ -46,8 +46,8 @@ process.exit(
         edits: [
           [
             SRC,
-            "  const hookRoot = rawPkg ? papersRoot(rawPkg) : null;",
-            '  const hookRoot = rawPkg ? (JSON.parse(rawPkg)?.["research-paper-pipeline"]?.papersDir ?? "papers") : null;',
+            '  const hookRoot = papersRoot(raw ?? "{}");',
+            '  const hookRoot = raw === null ? "papers" : (() => { try { return JSON.parse(raw)?.papersDir ?? "papers"; } catch { return "papers"; } })();',
           ],
         ],
       },
@@ -115,18 +115,18 @@ process.exit(
         ],
       },
       {
-        name: "a missing declaration is reported as all-clear",
+        name: "an unparsable paperlint.json is reported as all-clear",
         harness: HARNESS,
-        expect: "the missing declaration is NAMED, not skipped",
+        expect: "an unparsable paperlint.json — a FAILURE",
         disables:
-          "the only trace of issue #33 left on an install that STILL works: `paperlint init` writes " +
-          "one file, the hook reads another, and the directories matching up rests on the " +
-          "default. A cheerful checkmark instead of a warning turns a coincidence into a confirmation",
+          "the one failure left in the settings file: while it does not parse, the edit guard " +
+          "refuses every Bash command. A doctor that counts it as fine sends the reader looking " +
+          "everywhere but the file",
         edits: [
           [
             SRC,
-            '      `  ⚠ package.json has no "${CONFIG_KEY}": { "${PAPERS_DIR_FIELD}": … } — the hooks fall back to "${DEFAULT_PAPERS_ROOT}"`,',
-            "      `  ✓ package.json`,",
+            "        `      the edit guard refuses every Bash command until it parses — fix it with Edit or Write`,\n      ],\n      bad: 1,",
+            "        `      the edit guard refuses every Bash command until it parses — fix it with Edit or Write`,\n      ],\n      bad: 0,",
           ],
         ],
       },
