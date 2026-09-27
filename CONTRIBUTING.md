@@ -17,11 +17,7 @@ The second run is the one people skip, and it is the one that matters. A rule th
 finds nothing passes the first kind of test by accident — from outside, "there is nothing wrong
 here" and "this check never ran" look exactly the same.
 
-**Mutation testing was removed (#52).** Rules used to carry a hand-written battery
-(`*.mutations.mjs`) that patched their source and demanded the harness go red. The batteries
-patched source TEXT, so a reformat broke dozens of them, and they were 86% of CI; a probe found
-every hand-written case among what a generated mutation run kills anyway. Do not write one. What
-they were for is now two rules for writing the test itself:
+Two rules for writing the test itself:
 
 1. **Red first.** Run a new test on the code BEFORE the fix and watch it fail at its own
    assertion. A test that has only ever been green is indistinguishable from one that cannot fail.
@@ -39,9 +35,9 @@ that never made it into the tarball, a PDF whose content is wrong while the exit
 Those are covered by the end-to-end runs, and [`docs/e2e.md`](docs/e2e.md) says which question
 belongs to which tier, and **when a change owes a new e2e rather than a harness**.
 
-A historical example of why the clean half matters: `js-yaml` 5 stopped parsing an unquoted date as
-a `Date`, every harness stayed green under both majors, and only a (since removed) mutation battery
-noticed that the rule's date coercion had become dead code — no test asserted the coerced value.
+An example of why asserting the value matters: `js-yaml` 5 stopped parsing an unquoted date as a
+`Date`, every harness stayed green under both majors, and the rule's date coercion had quietly
+become dead code — no test asserted the coerced value.
 
 ## Running the checks: one command
 

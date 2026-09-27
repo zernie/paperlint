@@ -35,7 +35,6 @@ assumed. Two things that sound like limits and are not:
 | ----------------------- | -----------------------------------------------------------------------------------------: |
 | ESLint rules            | **5** — `latex-language` · `tex-build` · `papers` · `review-findings-cause` · `doc-fields` |
 | harnesses               |                                                                                     **57** |
-| mutation batteries      |                                                    **0** — all 34 removed 2026-09-26 (#52) |
 | skills                  |                                                                                     **24** |
 | hooks (runnable `.mjs`) |                                                                                      **5** |
 | repo-wide scripts       |                                                                                          5 |
@@ -464,17 +463,6 @@ not evidence about the rule you care about. Both halves are tested
 (`scripts/rules-see-files.harness.mjs`), under-reporting and over-reporting each by an
 assertion of its own.
 
-## Mutation testing is REMOVED (#52) — coverage and red-first instead
-
-The hand-written `*.mutations.mjs` batteries, their driver and the lock that protected them are
-gone (2026-09-26). One line of why: they patched source TEXT (a reformat broke ~40 of them),
-took 86% of CI, and a probe on two modules found every hand-written case among what a generated
-mutation run kills anyway — while coverage plus well-written tests cover what matters at a
-fraction of the cost. No StrykerJS either; that was the other option in #52 and it was declined.
-
-- **Never write a `*.mutations.mjs`** or any other file that edits source to test a test.
-- The idea the batteries carried stays, as a rule for writing the test itself — below.
-
 ## Cost
 
 ⛽ **This repository is PUBLIC, so its Actions minutes are FREE.** Verified against the API on
@@ -534,11 +522,11 @@ confident, byte-identical "clean" verdicts for three different skills that had n
 
 1. **Red first.** A new test is seen FAILING before the change that makes it pass — run it on
    the unfixed code, watch it go red at its own assertion, then fix. A test that has only ever
-   been green is indistinguishable from one that cannot fail. This is what the mutation
-   batteries were for, applied once, at the moment the test is written, at no recurring cost.
+   been green is indistinguishable from one that cannot fail. Never add a file that patches
+   source to prove a test can fail — seeing it red once, here, is that proof.
 2. **Assert the whole value.** Compare the entire returned value (`assert.deepEqual`,
    `expect(x).toEqual(…)`), not a substring of it or one field. A substring assertion passes on
-   output that is wrong everywhere else — the batteries found that defect over and over
+   output that is wrong everywhere else — a defect found here over and over
    (`"that is the"` matching two different messages, a bare word the usage block always prints).
    A substring is right only when the value is prose whose wording is not the subject; then say
    so in a comment.
@@ -564,12 +552,6 @@ confident, byte-identical "clean" verdicts for three different skills that had n
    coverage-ignore comment in a measured file (it reads comments off the parsed tree), and pins
    `.c8rc.json`'s `exclude` list: a new exclusion fails there until it is added on purpose, with
    its reason. Thresholds are 100 for lines, statements, functions and branches.
-
-### There is no exclusive lock any more
-
-`scripts/exclusive.mjs` and `.vigiles/exclusive.lock` existed only because the batteries edited
-the working tree in place, so a parallel reader saw half-mutated files. Nothing edits the tree in
-place now, so the lock went with them (#52 § 4).
 
 ## `npm test` — `--min=1` stays, and here is what it is for
 
