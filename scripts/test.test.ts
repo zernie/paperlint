@@ -49,3 +49,30 @@ test("both passing is 0 and silent; a harness killed by a signal is exit 1, name
     ["vitest", "harnesses"],
   );
 });
+
+test("every suite runs the SOURCES: the paperlint-source condition is in NODE_OPTIONS, the caller's kept", () => {
+  const seen: (string | undefined)[] = [];
+  const spawn: Spawn = (_file, _args, options) => {
+    seen.push(options.env.NODE_OPTIONS);
+    return { status: 0 };
+  };
+  assert.equal(
+    runSuites([], {
+      spawn,
+      err: assert.fail,
+      env: { NODE_OPTIONS: "--import=./x.ts" },
+    }),
+    0,
+  );
+  assert.deepEqual(seen, [
+    "--conditions=paperlint-source --import=./x.ts",
+    "--conditions=paperlint-source --import=./x.ts",
+  ]);
+  // Without a caller's NODE_OPTIONS there is no stray trailing space.
+  seen.length = 0;
+  runSuites([], { spawn, err: assert.fail, env: {} });
+  assert.deepEqual(seen, [
+    "--conditions=paperlint-source",
+    "--conditions=paperlint-source",
+  ]);
+});

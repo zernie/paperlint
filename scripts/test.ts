@@ -9,6 +9,12 @@
  * mean what they say.
  *
  * Arguments are the harness runner's (`npm test -- --no-skip`), as they were before.
+ *
+ * Both suites run the SOURCES: every child gets `--conditions=paperlint-source`, so `#lib/*` and
+ * `#eslint-rules/*` resolve to `.ts`, not to `dist/`. This runner is the one owner of that
+ * setting. When only `npm run coverage` passed it, a plain `npm test` loaded the rules twice —
+ * `dist/` through `eslint.config.mjs`, `.ts` through the harness — and a harness comparing the two
+ * failed on macOS CI, the one job that runs `npm test` bare.
  */
 import { spawnSync } from "node:child_process";
 import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
@@ -24,8 +30,20 @@ export interface Suite {
 export type Spawn = (
   file: string,
   args: readonly string[],
-  options: { stdio: "inherit" },
+  options: { stdio: "inherit"; env: NodeJS.ProcessEnv },
 ) => { readonly status: number | null };
+
+/** The condition that points package `imports` at the TypeScript sources instead of `dist/`. */
+const SOURCE_CONDITION = "--conditions=paperlint-source";
+
+/** `env` with the source condition first in NODE_OPTIONS, whatever the caller already had kept. */
+export function withSources(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  const own = env.NODE_OPTIONS?.trim();
+  return {
+    ...env,
+    NODE_OPTIONS: own ? `${SOURCE_CONDITION} ${own}` : SOURCE_CONDITION,
+  };
+}
 
 export const SUITES: readonly Suite[] = [
   { name: "vitest", command: ["vitest", "run"] },
@@ -42,16 +60,19 @@ export function runSuites(
     spawn = spawnSync,
     err = console.error,
     suites = SUITES,
+    env = process.env,
   }: {
     spawn?: Spawn;
     err?: (line: string) => void;
     suites?: readonly Suite[];
+    env?: NodeJS.ProcessEnv;
   } = {},
 ): number {
   const failed = suites.flatMap(({ name, command }) => {
     const [file, ...rest] = command;
     const r = spawn(file, [...rest, ...(name === "harnesses" ? args : [])], {
       stdio: "inherit",
+      env: withSources(env),
     });
     return r.status === 0 ? [] : [{ name, code: r.status ?? 1 }];
   });

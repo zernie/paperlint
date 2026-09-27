@@ -8,7 +8,7 @@
     "build": "tsc -p tsconfig.pkg.json && tsc",
     "prepare": "tsc -p tsconfig.pkg.json && tsc",
     "test": "node scripts/test.ts",
-    "coverage": "NODE_OPTIONS=\"--conditions=paperlint-source --import=./test/coverage-src.ts $NODE_OPTIONS\" c8 --check-coverage npm test --",
+    "coverage": "NODE_OPTIONS=\"--import=./test/coverage-src.ts $NODE_OPTIONS\" c8 --check-coverage npm test --",
     "lint": "eslint .",
     "check": "node scripts/check.ts",
     "test:e2e": "node test/e2e/install.ts && node test/e2e/build.ts",

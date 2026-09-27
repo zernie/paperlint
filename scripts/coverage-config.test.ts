@@ -270,7 +270,7 @@ test("the floor is 100 on all four measures, and the script that checks it canno
   // added here would bypass every threshold and the pinned exclude list below.
   assert.equal(
     pkg.scripts["coverage"],
-    'NODE_OPTIONS="--conditions=paperlint-source --import=./test/coverage-src.ts $NODE_OPTIONS" c8 --check-coverage npm test --',
+    'NODE_OPTIONS="--import=./test/coverage-src.ts $NODE_OPTIONS" c8 --check-coverage npm test --',
   );
 });
 

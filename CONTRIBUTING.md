@@ -114,7 +114,9 @@ does not strip types there.
 `dist/eslint-rules/`. Everything else imports those two through the package's subpath imports,
 `#lib/<name>` and `#eslint-rules/<name>` (`"imports"` in `package.json`): the default target is the
 build, which is what an install runs; the `paperlint-source` condition points at the `.ts` instead,
-and `npm run coverage` and `tsconfig.test.json` set it so they read the source.
+and `npm test` (so `npm run coverage` and `npm run check` too) and `tsconfig.test.json` set it so
+they read the source. `scripts/test.ts` is the one place the tests get it; a harness run on its own
+(`npx vigiles test <file>`) needs `NODE_OPTIONS=--conditions=paperlint-source`.
 
 TypeScript is pinned to 6.x, not 7 (measured 2026-09-27): typescript-eslint 8.70.1 declares
 `typescript: >=4.8.4 <6.1.0`, and `typescript@7.0.2`'s package root exports only its version — the
