@@ -208,7 +208,7 @@ export function installedSkills(dir) {
       dangling.push({
         name,
         target: readlinkOr(entry),
-        cause: e.code ?? "error",
+        cause: e.code, // every fs error carries one
       });
       continue;
     }
@@ -236,9 +236,13 @@ export function installedSkills(dir) {
 function readlinkOr(entry) {
   try {
     return readlinkSync(entry);
+    // Only when the entry was a plain file or directory removed between readdir and stat — a race
+    // no test can stage; a link that leads nowhere is still a link and reads fine.
+    /* c8 ignore start */
   } catch {
     return "(not a link)";
   }
+  /* c8 ignore stop */
 }
 
 /**
