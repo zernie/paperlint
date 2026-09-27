@@ -53,7 +53,7 @@
   "reportsDirectory": "coverage",
   "lines": 99,
   "statements": 99,
-  "functions": 86,
+  "functions": 94,
   "branches": 94,
   "typeOnly": [
     "src/types.ts",

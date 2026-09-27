@@ -551,7 +551,15 @@ confident, byte-identical "clean" verdicts for three different skills that had n
    `--check-coverage` against `.c8rc.json`. c8 reads `NODE_V8_COVERAGE`, so a CLI a harness
    spawns is measured too — unless the harness hands the child a fresh `env` without it. vitest
    runs in the `threads` pool with native `import` (`vitest.config.ts` says why): under its
-   defaults c8 saw nothing vitest ran.
+   defaults c8 saw nothing vitest ran. The run preloads `test/coverage-src.mjs`, which answers
+   every import of `dist/*.js` with `src/*.ts`: otherwise a module the tests import directly AND
+   the spawned CLI loads compiled is measured twice, and its branches and functions stay red in
+   whichever copy did not run them. `npm test` without coverage still runs `dist/`.
+5. **`/* c8 ignore */` is rare, block-comment only, and carries its reason.** c8 honours
+   `/* c8 ignore start */ … /* c8 ignore stop */` and `/* c8 ignore next */`; the `//` form is
+   silently ignored. Before ignoring, prefer deleting a fallback the input can never reach (probe
+   the producer and write the shape down); ignore only what the tests cannot stage — a race, a
+   permission root is never denied.
 
 ### There is no exclusive lock any more
 
