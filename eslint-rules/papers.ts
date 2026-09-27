@@ -121,7 +121,7 @@ export function papersRoot(
           ? `Nothing was declared, so the default "${DEFAULT_PAPERS_ROOT}" was used. Declare the ` +
             `real location in ${CONFIG_FILE}:\n` +
             `  { "${PAPERS_DIR_FIELD}": "path/to/papers" }`
-          : `It is declared in ${CONFIG_FILE} as "${declared}". Fix it there, or create the ` +
+          : `It is declared in ${CONFIG_FILE} as "${root}". Fix it there, or create the ` +
             `directory.`) +
         `\nThis is thrown rather than ignored on purpose: a papers root that matches nothing ` +
         `makes every rule lint zero files, and a run with zero findings is indistinguishable ` +

@@ -87,6 +87,13 @@ const STAGES: readonly string[] = ["submitted", "camera-ready", "arxiv"];
  * timestamps. Comparing `Date === "2026-08-29"` is silently false, so every date is
  * normalised before it is compared with one taken from a filename.
  */
+/**
+ * A YAML value as the text a message shows: a scalar as written, nothing as "", and a mapping or
+ * list as its JSON (as a number is) — `String()` would print `[object Object]` for a mapping.
+ */
+const scalarText = (v: unknown): string =>
+  typeof v === "string" ? v : v === undefined ? "" : JSON.stringify(v);
+
 function isoDate(v: unknown): string {
   if (v instanceof Date) return v.toISOString().slice(0, 10);
   if (typeof v === "string") return /^\d{4}-\d{2}-\d{2}/.exec(v)?.[0] ?? "";
@@ -160,7 +167,7 @@ export default {
               context.report({
                 node,
                 messageId: "badYaml",
-                data: { reason: String(e.message) },
+                data: { reason: e.message },
               });
               return;
             }
@@ -178,7 +185,7 @@ export default {
             declared = [];
             for (const entry of list.data) {
               const rec = StageRecord.parse(entry);
-              const stage = String(rec.stage ?? "");
+              const stage = scalarText(rec.stage);
               if (!STAGES.includes(stage)) {
                 context.report({
                   node,
@@ -324,7 +331,7 @@ export default {
             if (!list.success) return;
             for (const entry of list.data) {
               const rec = StageRecord.parse(entry);
-              const stage = String(rec.stage ?? "");
+              const stage = scalarText(rec.stage);
               if (!STAGES.includes(stage)) continue;
               const date = isoDate(rec.date);
 
@@ -338,7 +345,7 @@ export default {
                 });
                 continue;
               }
-              const src = rec.source === undefined ? "" : String(rec.source);
+              const src = scalarText(rec.source);
               if (src === "") {
                 context.report({
                   node,

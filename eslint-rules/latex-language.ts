@@ -290,6 +290,16 @@ const argEnd = (
  * node shapes today's parser never emits (a macro without `args`, an argument without `content`, an
  * `env` given as nodes), which the fallbacks below keep reading instead of throwing on.
  */
+/** Calls `f` on each node in `content`: none for text or nothing, the node itself, or each of a list. */
+function forEachNode(
+  content: TexNode | readonly TexNode[] | string | undefined,
+  f: (n: TexNode) => void,
+): void {
+  if (!content || typeof content !== "object") return;
+  if ("type" in content) f(content);
+  else for (const n of content) forEachNode(n, f);
+}
+
 export function texToMdast(
   src: string,
   {
@@ -376,11 +386,7 @@ export function texToMdast(
   // harmless to the build.
   for (const n of ast.content) {
     const np = P(n);
-    if (
-      n.type === "verbatim" &&
-      /^filecontents\*?$/.test(String(n.env)) &&
-      np
-    ) {
+    if (n.type === "verbatim" && /^filecontents\*?$/.test(n.env) && np) {
       let at = np.start.offset;
       for (const line of src.slice(at, np.end.offset).split("\n")) {
         const text = line.replace(/\r$/, "");
@@ -402,23 +408,14 @@ export function texToMdast(
     "args" in n ? n.args : undefined,
   ];
 
-  (function walk(
-    node: TexNode | readonly TexNode[] | string | undefined,
-  ): void {
-    if (!node || typeof node !== "object") return;
-    if (!("type" in node)) {
-      node.forEach((n) => {
-        walk(n);
-      });
-      return;
-    }
+  forEachNode(ast.content, function walk(node: TexNode): void {
     const pos = P(node);
     // The preamble is already blanked in full; nothing inside it (including a
     // `\renewcommand{\bibliography}`) is a node of the document. Without this cut-off, one real
     // paper got a FALSE `## References` on line 178 — i.e. its bibliography "began" before the
     // introduction, and the whole paper fell into the free half.
     if (pos && pos.start.offset < preEnd) {
-      for (const v of parts(node)) if (v) walk(v);
+      for (const v of parts(node)) forEachNode(v, walk);
       return;
     }
 
@@ -434,7 +431,7 @@ export function texToMdast(
           pos.start.offset + "\\begin{abstract}".length,
           "Abstract",
         );
-        for (const v of parts(node)) if (v) walk(v);
+        for (const v of parts(node)) forEachNode(v, walk);
         return;
       }
       if (env === "thebibliography" && pos) {
@@ -463,16 +460,7 @@ export function texToMdast(
         // receive `&`, `\\` and the column specification, i.e. findings on markup — and for a
         // rule somebody turns up to `error`, a false positive is worse than a miss.
         const keep: { node: TexNode; s: number; e: number }[] = [];
-        (function findProse(
-          n: TexNode | readonly TexNode[] | string | undefined,
-        ): void {
-          if (!n || typeof n !== "object") return;
-          if (!("type" in n)) {
-            n.forEach((c) => {
-              findProse(c);
-            });
-            return;
-          }
+        forEachNode(node.content, function findProse(n: TexNode): void {
           if (n.type === "macro" && FLOAT_PROSE.test(n.content)) {
             const span = spanOf((n.args || []).flatMap((a) => a.content || []));
             // Keep exactly the CONTENT of the argument: `\caption` itself and the braces
@@ -480,8 +468,8 @@ export function texToMdast(
             if (span) keep.push({ node: n, ...span });
             return; // do not look for a caption inside a caption
           }
-          for (const v of parts(n)) if (v) findProse(v);
-        })(node.content);
+          for (const v of parts(n)) forEachNode(v, findProse);
+        });
         keep.sort((a, b) => a.s - b.s);
         let cur = pos.start.offset;
         for (const k of keep) {
@@ -590,7 +578,7 @@ export function texToMdast(
         });
         return;
       }
-      if (node.content === "bibliography" && pos) {
+      if (node.content === "bibliography") {
         synthHeading(
           pos.start.offset,
           argEnd(node, pos.end).offset + 1,
@@ -661,13 +649,13 @@ export function texToMdast(
       }
       if (FLOAT_PROSE.test(node.content)) {
         inCaption++;
-        for (const v of parts(node)) if (v) walk(v);
+        for (const v of parts(node)) forEachNode(v, walk);
         inCaption--;
         return;
       }
     }
-    for (const v of parts(node)) if (v) walk(v);
-  })(ast.content);
+    for (const v of parts(node)) forEachNode(v, walk);
+  });
 
   children.sort((a, b) => a.position.start.offset - b.position.start.offset);
   return {

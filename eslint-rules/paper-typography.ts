@@ -315,13 +315,13 @@ function mdVisibleRuns(
 ): Run[] {
   if (!node || MD_HIDDEN.has(node.type)) return out;
   if (node.type === "text") {
-    const start = node.position?.start?.offset;
+    const start = node.position?.start.offset;
     out.push({
       text: node.value,
       offs:
         typeof start === "number"
           ? mdOffsets(node.value, src, start)
-          : [...node.value].map(() => null),
+          : Array.from(node.value, () => null),
     });
   }
   for (const c of "children" in node ? node.children : [])

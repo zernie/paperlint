@@ -126,7 +126,8 @@ export function parseFacts(text: string): ParsedFacts {
   const last = lastPageOf(d.last_page);
   if (
     typeof d.pdf !== "string" ||
-    !/^[0-9a-f]{64}$/.test(String(d.pdf_sha256 ?? "")) ||
+    typeof d.pdf_sha256 !== "string" ||
+    !/^[0-9a-f]{64}$/.test(d.pdf_sha256) ||
     !last
   )
     return {

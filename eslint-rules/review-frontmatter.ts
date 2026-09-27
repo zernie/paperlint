@@ -71,7 +71,7 @@ function describe(e: ErrorObject): string {
     return `${where} must be one of: ${e.params.allowedValues.join(", ")}`;
   if (e.keyword === "additionalProperties" && "additionalProperty" in e.params)
     return `${where} has an unknown field \`${e.params.additionalProperty}\``;
-  return `${where} ${e.message}`;
+  return `${where} ${String(e.message)}`;
 }
 
 /** The schema's verdict on `data` as messages. Ajv types `errors` as possibly null; that is tolerated. */

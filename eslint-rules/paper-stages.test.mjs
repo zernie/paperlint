@@ -93,6 +93,12 @@ test("each entry: an unknown or missing stage, missing fields, a date that is no
   );
 });
 
+test("a stage written as a mapping is named as written, not as [object Object]", () => {
+  assert.deepEqual(lint("mapping", "stages:\n  - stage: {name: submitted}"), [
+    'unknown stage «{"name":"submitted"}» — the vocabulary is: submitted · camera-ready · arxiv',
+  ]);
+});
+
 test("paper/source skips a `stages` that is not a list, and entries whose stage is unknown or missing", () => {
   assert.deepEqual(
     lint("src-scalar", "stages: submitted", { rule: "source" }),
