@@ -4,7 +4,7 @@ description: Verify every citation is a real work with correct metadata, and tha
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:765ca5e38fb6da6c compiled from skills/verify-citations/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:3a7e10662d0084c4 compiled from skills/verify-citations/SKILL.md.spec.ts -->
 
 # verify-citations — every cite real, the delta explicit
 
@@ -147,11 +147,11 @@ changed since, and `paper/refs-checked` warns when nothing was recorded or the b
 step never fails the build.
 
 What the services ANSWERED is kept in `<paper>/repro/references-cache.json` — **commit it**. A build asks
-only the questions that file cannot answer (a new or edited entry), so an unchanged bibliography builds
-with no network at all, in CI too. It holds responses, never verdicts: the verdicts are derived again on
+only the questions that file cannot answer (a new or edited entry, or an answer older than 30 days), so an
+unchanged bibliography builds with no network at all, in CI too, until its answers age out. It holds responses, never verdicts: the verdicts are derived again on
 every build. A service that refuses (429, HTML instead of JSON, a timeout) is not asked again for the rest of the
 build (the requests already in flight still land); the entries it would have answered say `not asked: <service>: <reason>`, and DBLP's become
-`authors: unchecked`. To refresh one answer, delete its entry; to refresh everything, delete the file. Details:
+`authors: unchecked`. Answers are asked again after 30 days; to refresh one sooner, delete its entry, or delete the file. Details:
 `docs/references.md` in the package. Run the scripts by hand (below) to read a single verdict in full.
 
 ## 5b. The author-list gate — `scripts/bib-authors.mjs`

@@ -42,7 +42,7 @@ check, on every build, and a 51-reference paper did not finish inside a 12-minut
 So the build keeps every answer it receives in `<paper>/repro/references-cache.json`, and the next
 build asks only what that file cannot answer:
 
-- An unchanged bibliography asks nothing and makes no network request at all, not even the check
+- An unchanged bibliography whose answers are under 30 days old asks nothing and makes no network request at all, not even the check
   for whether the services can be reached.
 - Adding or editing an entry asks only about that entry. Answers are stored per identifier (DOI,
   arXiv id, or title), so changing an entry's DOI or title is what makes it be asked again.
@@ -86,7 +86,10 @@ checker reaches every paper at once, instead of being frozen behind a stored "pa
 
 ### Refreshing it
 
-Nothing in the file expires by date. To ask again:
+An answer is used for 30 days after the date in its `fetched` field; after that the next build asks
+again and re-dates it. This is what lets a work that a service had not indexed yet ("no record")
+be found once it is. An answer that could not be refreshed because the service refused stays, and is
+asked again on the next build. To ask sooner:
 
 - **one entry**: delete its lines from the file (the keys name the service and the identifier, and
   DBLP answers carry the title they were asked for);

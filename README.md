@@ -185,8 +185,8 @@ Every skill, by stage: [`docs/skills.md`](docs/skills.md).
 
 - If `paper.pdf` or the bibliography changed since the last build, lint fails and tells you to rebuild.
 - Commit `repro/references-cache.json`: it keeps what the citation services answered, so a build
-  asks only about new or edited entries, and an unchanged bibliography builds without the network
-  ([`docs/references.md`](docs/references.md)).
+  asks only about new or edited entries (and answers older than 30 days), so an unchanged
+  bibliography usually builds without the network ([`docs/references.md`](docs/references.md)).
 - Lint also checks the pipeline's own records: `PIPELINE-STATUS.md`, reviews, notes on related
   papers ([`docs/rules.md`](docs/rules.md)).
 - The rules run on ESLint, so a deliberate exception is a comment on the line above:

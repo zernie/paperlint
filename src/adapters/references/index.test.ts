@@ -371,6 +371,43 @@ test("🔴 one entry edited: only that entry is asked again, and the old answers
   );
 });
 
+// Guards: a cached answer is good for MAX_AGE_DAYS, then asked again. A registry or DBLP that had
+// not indexed a new work yet would otherwise answer "no record" from the committed cache forever.
+test("an answer older than 30 days is asked again and re-dated; at 30 days it is still used", async () => {
+  const bib = PAPERS.join("\n");
+  const first = await cold(bib);
+  vi.useRealTimers();
+  vi.useFakeTimers();
+  const quiet = fakeFetch({});
+  const at30 = await referencesChecker({ today: () => "2026-10-27" })(
+    bib,
+    first.cache,
+  );
+  vi.useRealTimers();
+  vi.useFakeTimers();
+  const calls = answering();
+  const at31 = await settle(
+    referencesChecker({ today: () => "2026-10-28" })(bib, first.cache),
+  );
+  assert.deepEqual(
+    {
+      at30: { calls: quiet, same: at30.cache === first.cache },
+      at31: {
+        asked: calls.some((u) => u.startsWith("https://dblp.org/search")),
+        dates: new Set(
+          [...at31.cache.citations.values(), ...at31.cache.dblp.values()].map(
+            (v) => v.fetched,
+          ),
+        ),
+      },
+    },
+    {
+      at30: { calls: [], same: true },
+      at31: { asked: true, dates: new Set(["2026-10-28"]) },
+    },
+  );
+});
+
 test("a failed lookup is not cached: the next run asks it again", async () => {
   vi.useFakeTimers();
   fakeFetch({

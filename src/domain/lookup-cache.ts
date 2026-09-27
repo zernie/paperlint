@@ -1,6 +1,6 @@
 /**
  * THE LOOKUP CACHE — `<paper>/repro/references-cache.json`: what the citation services ANSWERED,
- * kept so that a build asks each question once, not once per build (#107).
+ * kept so that a build asks each question at most once every MAX_AGE_DAYS, not once per build (#107).
  *
  *   { "schema": 1,
  *     "citations": { "<resolver>:<identifier>": { "fetched": "YYYY-MM-DD", "response": {…} } },
@@ -22,9 +22,10 @@
  * network request at all, not even the reachability probe. It lives in `repro/`, beside the paper,
  * not in `_build/`, which is build output and gitignored.
  *
- * WHAT INVALIDATES AN ENTRY: its key. Editing a bib entry's DOI, arXiv id or title changes the keys
- * it is looked up under, so only that entry is asked again; nothing expires by date. To refresh an
- * answer, delete its entry, or the file. `fetched` records when each answer was obtained.
+ * WHAT INVALIDATES AN ENTRY: its key, or its age. Editing a bib entry's DOI, arXiv id or title
+ * changes the keys it is looked up under, so only that entry is asked again. An answer older than
+ * MAX_AGE_DAYS (by `fetched`) is asked again too, so a work a service had not indexed yet is found
+ * once it is. To refresh an answer sooner, delete its entry, or the file.
  *
  * Parsed here, once, at the boundary: a file that does not match is refused with a named reason,
  * never read as empty.
@@ -67,6 +68,27 @@ export const EMPTY_LOOKUP_CACHE: LookupCache = {
   citations: new Map(),
   dblp: new Map(),
 };
+
+/**
+ * How long a cached answer is used before it is asked again. A registry, doi.org or DBLP that had
+ * not indexed a work yet answers "no record"; kept forever, that answer would outlive the work's
+ * indexing. The age is judged against `fetched`, so every answer — a hit or a miss — gets the
+ * same rule, and nothing has to decide which answers are "negative".
+ */
+export const MAX_AGE_DAYS = 30;
+
+const dayNumber = (date: string): number =>
+  Date.parse(`${date}T00:00:00Z`) / 86_400_000;
+
+/** The part of `cache` still young enough to answer from on `today` (YYYY-MM-DD). */
+export function freshPart(cache: LookupCache, today: string): LookupCache {
+  const young = ({ fetched }: { fetched: string }): boolean =>
+    dayNumber(today) - dayNumber(fetched) <= MAX_AGE_DAYS;
+  return {
+    citations: new Map([...cache.citations].filter(([, v]) => young(v))),
+    dblp: new Map([...cache.dblp].filter(([, v]) => young(v))),
+  };
+}
 
 const isObject = (v: unknown): v is Json =>
   typeof v === "object" && v !== null && !Array.isArray(v);

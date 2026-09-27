@@ -22,6 +22,7 @@ import type {
   EntryVerdict,
 } from "../../ports/check-references.ts";
 import {
+  freshPart,
   type CachedDblp,
   type CachedResponse,
   type DblpHit,
@@ -198,36 +199,49 @@ function cachedDblp(cache: LookupCache, today: () => string) {
 }
 
 /**
- * The cache after a run: the old answers plus every new one, dated today — or the very object
- * passed in when nothing was fetched, so the caller can tell there is nothing to write.
+ * The cache after a run: the old answers with every new one laid over them, dated today — or the
+ * very object passed in when nothing was fetched, so the caller can tell there is nothing to write.
+ * "New" is measured against `usable`, the part the run answered from: an answer too old to use was
+ * asked again, and its fresh copy replaces the old one. An old answer the run could not refresh
+ * (the service refused) stays, and is asked again next build.
  */
 function grown(
-  cache: LookupCache,
-  store: Readonly<Record<string, unknown>>,
-  dblp: ReadonlyMap<string, CachedDblp>,
+  loaded: { readonly cache: LookupCache; readonly usable: LookupCache },
+  run: {
+    readonly store: Readonly<Record<string, unknown>>;
+    readonly dblp: ReadonlyMap<string, CachedDblp>;
+  },
   today: () => string,
 ): LookupCache {
-  const fresh = Object.entries(store).filter(([k]) => !cache.citations.has(k));
-  if (fresh.length === 0 && dblp.size === cache.dblp.size) return cache;
+  const { cache, usable } = loaded;
+  const { store, dblp } = run;
+  const fresh = Object.entries(store).filter(([k]) => !usable.citations.has(k));
+  const freshDblp = [...dblp].filter(([k]) => !usable.dblp.has(k));
+  if (fresh.length === 0 && freshDblp.length === 0) return cache;
   const dated = fresh.map(([k, response]): [string, CachedResponse] => [
     k,
     { fetched: today(), response: response as CachedResponse["response"] },
   ]);
-  return { citations: new Map([...cache.citations, ...dated]), dblp };
+  return {
+    citations: new Map([...cache.citations, ...dated]),
+    dblp: new Map([...cache.dblp, ...freshDblp]),
+  };
 }
 
 /** The checker, with its clock injected; `onlineReferences` is the one the CLI wires. */
 export const referencesChecker =
   ({ today }: ReferencesCheckerOptions): CheckReferences =>
   async (bib, cache) => {
+    // Answers past MAX_AGE_DAYS are left out, so the run asks them again (and `grown` re-dates them).
+    const usable = freshPart(cache, today());
     const citations = (cites.parseBib(bib) as { id?: string }[]).filter(
       (c) => c.id,
     );
     const parsed = authors.parseBib(bib) as BibAuthorsEntry[];
     const store: Record<string, unknown> = Object.fromEntries(
-      [...cache.citations].map(([k, v]) => [k, v.response]),
+      [...usable.citations].map(([k, v]) => [k, v.response]),
     );
-    if (!(await fullyCached(citations, parsed, cache, store))) {
+    if (!(await fullyCached(citations, parsed, usable, store))) {
       const why = await unreachable();
       if (why !== null) return { check: { kind: "not-checked", why }, cache };
     }
@@ -239,7 +253,7 @@ export const referencesChecker =
     // One breaker for the run: a service that refuses is not asked again, not once per citation
     // (#120). Requests already in flight when it starts refusing still land — at most six.
     const breaker = cites.createBreaker() as unknown;
-    const d = cachedDblp(cache, today);
+    const d = cachedDblp(usable, today);
     const [found, a] = await Promise.all([
       mapLimit(
         citations,
@@ -262,7 +276,7 @@ export const referencesChecker =
     const entries = [...keys].map((key) => entryVerdict(key, found, a));
     return {
       check: { kind: "checked", entries },
-      cache: grown(cache, store, d.dblp, today),
+      cache: grown({ cache, usable }, { store, dblp: d.dblp }, today),
     };
   };
 
