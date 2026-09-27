@@ -694,11 +694,12 @@ export function ownVersion(
 ): string | undefined {
   try {
     const manifest: unknown = JSON.parse(readManifest());
-    const v =
-      typeof manifest === "object" && manifest !== null && "version" in manifest
-        ? manifest.version
-        : undefined;
-    return typeof v === "string" ? v : undefined;
+    return typeof manifest === "object" &&
+      manifest !== null &&
+      "version" in manifest &&
+      typeof manifest.version === "string"
+      ? manifest.version
+      : undefined;
   } catch {
     return undefined;
   }

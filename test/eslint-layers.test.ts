@@ -36,26 +36,33 @@ function expected(file: string): string[] {
   return ids === "clean" ? [] : ids.split(/\s+/).sort();
 }
 
-test("every fixture file produces exactly the rule ids its first line expects", async () => {
-  const eslint = new ESLint({
-    cwd: FIXTURE,
-    overrideConfigFile: true,
-    overrideConfig: configRootedAt(FIXTURE),
-  });
-  const results = await eslint.lintFiles(["src"]);
-  // Guards: a glob that matched nothing lints nothing and reports clean — the fixture must be seen.
-  assert.ok(
-    results.length >= 24,
-    `linted ${String(results.length)} fixture files`,
-  );
-  for (const r of results) {
-    const got = [
-      ...new Set(r.messages.map((x) => x.ruleId ?? "(fatal)")),
-    ].sort();
-    assert.deepEqual(
-      got,
-      expected(r.filePath),
-      `${relative(FIXTURE, r.filePath)}: ${r.messages.map((x) => x.message).join(" | ")}`,
+// The configuration is type-aware (strictTypeChecked): ESLint builds the project's TypeScript
+// program before the first file. Measured 2026-09-27: 2.4 s alone, 8.6 s under coverage beside
+// the rest of the suite — past vitest's 5 s default.
+test(
+  "every fixture file produces exactly the rule ids its first line expects",
+  { timeout: 30_000 },
+  async () => {
+    const eslint = new ESLint({
+      cwd: FIXTURE,
+      overrideConfigFile: true,
+      overrideConfig: configRootedAt(FIXTURE),
+    });
+    const results = await eslint.lintFiles(["src"]);
+    // Guards: a glob that matched nothing lints nothing and reports clean — the fixture must be seen.
+    assert.ok(
+      results.length >= 24,
+      `linted ${String(results.length)} fixture files`,
     );
-  }
-});
+    for (const r of results) {
+      const got = [
+        ...new Set(r.messages.map((x) => x.ruleId ?? "(fatal)")),
+      ].sort();
+      assert.deepEqual(
+        got,
+        expected(r.filePath),
+        `${relative(FIXTURE, r.filePath)}: ${r.messages.map((x) => x.message).join(" | ")}`,
+      );
+    }
+  },
+);
