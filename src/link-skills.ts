@@ -60,13 +60,18 @@ export type Located =
  *
  * @returns `dir` — the real directory; `spelled` — the same directory as the project names it.
  */
-export function locatePackage(project: string): Located {
+export function locatePackage(
+  project: string,
+  {
+    resolveManifest = (from: string): string =>
+      createRequire(
+        pathToFileURL(join(from, "__paperlint_locate__.js")).href,
+      ).resolve(`${PACKAGE_NAME}/package.json`),
+  }: { resolveManifest?: (project: string) => string } = {},
+): Located {
   let manifest: string;
   try {
-    const req = createRequire(
-      pathToFileURL(join(project, "__paperlint_locate__.js")).href,
-    );
-    manifest = req.resolve(`${PACKAGE_NAME}/package.json`);
+    manifest = resolveManifest(project);
   } catch (e) {
     return {
       error: `${(e as NodeJS.ErrnoException).code ?? "error"}: ${(e as Error).message.split("\n")[0]}`,
@@ -126,10 +131,28 @@ export type LinkReport =
     }
   | { readonly ok: false; readonly error: string };
 
+/** The filesystem calls linking makes — the disk by default; a test stages a race or a refusal. */
+export interface LinkFs {
+  readonly lstatSync: (p: string) => {
+    isSymbolicLink(): boolean;
+    isDirectory(): boolean;
+  };
+  readonly realpathSync: (p: string) => string;
+  readonly readlinkSync: (p: string) => string;
+  readonly symlinkSync: (target: string, path: string, type: "dir") => void;
+}
+const nodeLinkFs: LinkFs = {
+  lstatSync,
+  realpathSync,
+  readlinkSync,
+  symlinkSync,
+};
+
 /** What occupies `entry`, judged against the directory it should lead to. */
 function inspect(
   entry: string,
   want: string,
+  { lstatSync, realpathSync, readlinkSync }: LinkFs,
 ): { status: "present" | "missing" | "foreign"; reason?: string } {
   let st;
   try {
@@ -163,15 +186,22 @@ function linkOne(
     target,
     want,
     write,
-  }: { entry: string; target: string; want: string; write: boolean },
+    fs,
+  }: {
+    entry: string;
+    target: string;
+    want: string;
+    write: boolean;
+    fs: LinkFs;
+  },
 ): SkillLink {
-  const seen = inspect(entry, want);
+  const seen = inspect(entry, want, fs);
   if (!write || seen.status !== "missing")
     return seen.reason
       ? { name, status: seen.status, reason: seen.reason }
       : { name, status: seen.status };
   try {
-    symlinkSync(target, entry, "dir");
+    fs.symlinkSync(target, entry, "dir");
     return { name, status: "created" };
   } catch (e) {
     return {
@@ -179,6 +209,16 @@ function linkOne(
       status: "foreign",
       reason: `could not create the link: ${(e as Error).message}`,
     };
+  }
+}
+
+/** Create the skills home; the reason it could not be, or null. */
+function makeHome(home: string): string | null {
+  try {
+    mkdirSync(home, { recursive: true });
+    return null;
+  } catch (e) {
+    return `cannot create ${home}: ${(e as Error).message}`;
   }
 }
 
@@ -191,7 +231,12 @@ export function linkSkills(
   {
     write = true,
     locate = locatePackage,
-  }: { write?: boolean; locate?: (p: string) => Located } = {},
+    fs = nodeLinkFs,
+  }: {
+    write?: boolean;
+    locate?: (p: string) => Located;
+    fs?: LinkFs;
+  } = {},
 ): LinkReport {
   const pkg = locate(project);
   if ("error" in pkg)
@@ -205,20 +250,28 @@ export function linkSkills(
   const spelledSkills = join(pkg.spelled, relative(pkg.dir, shipped.skillsDir));
 
   const home = join(project, SKILLS_HOME);
-  if (write && shipped.names.length > 0) {
-    try {
-      mkdirSync(home, { recursive: true });
-    } catch (e) {
-      return {
-        ok: false,
-        error: `cannot create ${home}: ${(e as Error).message}`,
-      };
-    }
-  }
+  const made = write && shipped.names.length > 0 ? makeHome(home) : null;
+  if (made !== null) return { ok: false, error: made };
+  return {
+    ok: true,
+    home,
+    ...linkAll(shipped, { spelledSkills, home, write, fs }),
+  };
+}
+
+/** Every shipped skill's link, and the first one's target as the report's example. */
+function linkAll(
+  shipped: { readonly skillsDir: string; readonly names: readonly string[] },
+  {
+    spelledSkills,
+    home,
+    write,
+    fs,
+  }: { spelledSkills: string; home: string; write: boolean; fs: LinkFs },
+): { example: string | null; links: SkillLink[] } {
   // A relative target resolves against the directory that PHYSICALLY holds the link, so it is
   // computed from the real one — `.claude` may itself be a symlink.
   const physicalHome = existsSync(home) ? realpathSync(home) : resolve(home);
-
   let example: string | null = null;
   const links = shipped.names.map((name): SkillLink => {
     const target = relative(physicalHome, join(spelledSkills, name));
@@ -228,7 +281,8 @@ export function linkSkills(
       target,
       want: realpathSync(join(shipped.skillsDir, name)),
       write,
+      fs,
     });
   });
-  return { ok: true, home, example, links };
+  return { example, links };
 }
