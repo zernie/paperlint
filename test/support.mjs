@@ -41,11 +41,16 @@ export function writeTree(root, files) {
 }
 
 /**
- * Run `node <script> ...args` and return `{ status, stdout, stderr }`. `env` is merged over the
- * inherited environment; `input` is written to stdin.
+ * Run `node [...nodeArgs] <script> ...args` and return `{ status, stdout, stderr }`. `env` is
+ * merged over the inherited environment; `input` is written to stdin; `nodeArgs` are flags for
+ * node itself (e.g. `--import <preload>` to stub a global before the script loads).
  */
-export function runNode(script, args = [], { cwd, env = {}, input } = {}) {
-  const r = spawnSync(process.execPath, [script, ...args], {
+export function runNode(
+  script,
+  args = [],
+  { cwd, env = {}, input, nodeArgs = [] } = {},
+) {
+  const r = spawnSync(process.execPath, [...nodeArgs, script, ...args], {
     cwd,
     env: { ...process.env, ...env },
     input,

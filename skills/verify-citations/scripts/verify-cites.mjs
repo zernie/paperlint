@@ -55,7 +55,10 @@ import {
 } from "../../paper-pipeline/scripts/consumer.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const CACHE_PATH = join(__dirname, ".cite-cache.json");
+// Beside this script by default (the skill says so, and `.gitignore` covers it). VERIFY_CITES_CACHE
+// points it elsewhere — how a test keeps the run from writing into the package it is testing.
+const CACHE_PATH =
+  process.env.VERIFY_CITES_CACHE || join(__dirname, ".cite-cache.json");
 // 🔴 THE ADDRESS IS THE CONSUMER'S, NOT OURS. Crossref's "polite pool" keys off this `mailto:`:
 // it decides who gets the faster tier and, more to the point, WHOM THEY WARN before blocking.
 // Hard-coded, it pointed at one person for every user of this package — so the warnings would

@@ -12,5 +12,10 @@ export interface ScriptResult {
 export declare function runNode(
   script: string,
   args?: readonly string[],
-  options?: { cwd?: string; env?: Record<string, string>; input?: string },
+  options?: {
+    cwd?: string;
+    env?: Record<string, string>;
+    input?: string;
+    nodeArgs?: readonly string[];
+  },
 ): ScriptResult;
