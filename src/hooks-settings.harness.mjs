@@ -58,6 +58,40 @@ check(
   wiring.names.join() ===
     "paper-edit-guard,paper-skills-nudge,paper-status-gates",
 );
+// ── settings written by hand: shapes Claude Code would ignore are skipped, not crashed on ──
+check(
+  "an event that is not a list, an entry with no `hooks` list, a handler with no command → no commands",
+  JSON.stringify(
+    wiredCounts(
+      {
+        hooks: {
+          PreToolUse: "npx paperlint hook paper-edit-guard",
+          PostToolUse: [{ matcher: "Edit" }, null, { hooks: "x" }],
+          Stop: [{ hooks: [{ type: "command" }, null] }],
+        },
+      },
+      wiring.names,
+    ),
+  ) ===
+    JSON.stringify(wiring.names.map((name) => ({ name, ours: 0, other: 0 }))),
+);
+{
+  const file = join(tmpdir(), `paperlint-no-hooks-${String(process.pid)}.json`);
+  writeFileSync(file, "{}\n");
+  let thrown = "";
+  try {
+    shippedWiring(file);
+  } catch (e) {
+    thrown = e.message;
+  }
+  rmSync(file);
+  check(
+    "a wiring file without `hooks` names no hook — and THROWS instead of wiring nothing",
+    thrown === `${file} names no paperlint hook — there is nothing to wire`,
+    thrown,
+  );
+}
+
 const work = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-hooks-")));
 try {
   const empty = join(work, "empty-hooks.json");
