@@ -4,6 +4,8 @@
  * tally is tested on what the linter reports, not on source text.
  */
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { test } from "vitest";
 import {
   checkFrozen,
@@ -194,4 +196,62 @@ test("checkFrozen: a lint that returns no result reports that nothing was counte
     frozen: { "src/a.ts": { x: 1 } },
     counts: {},
   });
+});
+
+test("tally: optional parts of ESLint's result shape are read as absent", () => {
+  const t = tally([
+    { filePath: "src/a.ts" },
+    {
+      filePath: "src/b.ts",
+      suppressedMessages: [
+        { ruleId: null, line: 1, suppressions: [{ justification: IO }] },
+        { ruleId: "boundaries/dependencies", line: 2 },
+        { ruleId: "boundaries/dependencies", line: 3, suppressions: [{}] },
+      ],
+    },
+  ]);
+  assert.deepEqual(t.counts, {});
+  assert.deepEqual(t.unexplained, [
+    'src/b.ts:2: boundaries/dependencies is silenced with "" — a layer exemption must say "legacy I/O|layer, moves behind a port in #76", or the site must be fixed.',
+    'src/b.ts:3: boundaries/dependencies is silenced with "" — a layer exemption must say "legacy I/O|layer, moves behind a port in #76", or the site must be fixed.',
+  ]);
+});
+
+test("checkFrozen: a frozen file with no `files` freezes nothing", async () => {
+  const root = useTempDir("layer-frozen-nofiles-");
+  writeTree(root, { [FROZEN_FILE]: "{}\n" });
+  const r = await checkFrozen(root, {
+    lint: async () => [
+      { filePath: `${root}/src/a.ts`, suppressedMessages: [] },
+    ],
+  });
+  assert.deepEqual(r, { problems: [], frozen: {}, counts: {} });
+});
+
+test("run as a program: the gate's verdict is the exit code", () => {
+  // ESLint is replaced by one whose lint answers nothing, so the real script runs end to end in
+  // well under a second and takes its refusal path.
+  const fake = encodeURIComponent(
+    "export class ESLint { async lintFiles() { return []; } }",
+  );
+  const hook = encodeURIComponent(
+    `export async function resolve(s, c, next) { return s === "eslint" ? { url: "data:text/javascript,${fake}", shortCircuit: true } : next(s, c); }`,
+  );
+  const preload = `data:text/javascript,${encodeURIComponent(
+    `import { register } from "node:module"; register("data:text/javascript,${hook}");`,
+  )}`;
+  const r = spawnSync(
+    process.execPath,
+    [
+      "--import",
+      preload,
+      fileURLToPath(new URL("./layer-legacy-frozen.mjs", import.meta.url)),
+    ],
+    { encoding: "utf8" },
+  );
+  assert.equal(r.status, 1, r.stderr);
+  assert.match(
+    r.stderr,
+    /1 problem\(s\):\n {3}src\/\*\*\/\*\.ts matched no file — nothing was counted\./,
+  );
 });
