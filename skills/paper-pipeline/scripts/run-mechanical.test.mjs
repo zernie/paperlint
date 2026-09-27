@@ -233,6 +233,44 @@ test("a finding's lines reach the reader, capped at twelve", () => {
   ]);
 });
 
+test("a FACT check whose checker crashed makes the run exit 2, and the summary says so — not green", () => {
+  const { code, summary, rows } = run(join(consumer, "papers", "a"), {
+    FAKE_ESLINT: "Oops! Something went wrong",
+    FAKE_PROSE: "✍️  prose-lint — paper.md:\n",
+    FAKE_UNCITED: "{}",
+  });
+  assert.deepEqual(
+    { code, summary, rows },
+    {
+      code: 2,
+      summary: [
+        "🔴 1 FACT check(s) could not run: tighten-paper/structure — what they check is UNKNOWN, not clean",
+        NOTE,
+      ],
+      rows: [
+        "render-paper/report-submission ABSTAINED no-witness",
+        "render-paper/report-submission-citations ABSTAINED input-missing",
+        // eslint printed something that is not JSON.
+        "tighten-paper/structure ABSTAINED crashed",
+        // A flags header alone is not a finding.
+        "grade-paper-writing/prose-lint ABSTAINED no-witness",
+        "verify-citations/verify-cites ABSTAINED no-witness",
+        "harden-paper/artifact-coverage ABSTAINED no-witness",
+        "build-benchmark/check-provenance ABSTAINED no-witness",
+        // Empty output where a JSON array is documented.
+        "build-benchmark/arm-permutation ABSTAINED crashed",
+        "build-benchmark/delivered-pdf ABSTAINED crashed",
+        "build-benchmark/generated-code ABSTAINED no-witness",
+        "grade-paper-writing/textidote ABSTAINED crashed",
+        // A JSON object where an array is documented.
+        "verify-citations/uncited-refs ABSTAINED crashed",
+        "draft-paper/population-map ABSTAINED no-witness",
+        "tighten-paper/round-diff FINDING 1",
+      ],
+    },
+  );
+});
+
 test("eslint that crashed on the file, and eslint that ignored it, are not clean runs", () => {
   const fatal = JSON.stringify([
     {
@@ -290,6 +328,65 @@ test("paper B: every row whose input is absent abstains as input-missing; the re
         "verify-citations/uncited-refs ABSTAINED input-missing",
         "draft-paper/population-map ABSTAINED no-witness",
         "tighten-paper/round-diff ABSTAINED input-missing",
+      ],
+    },
+  );
+});
+
+test("no checker installed: every row that ran is `crashed`, never a finding, and the run is not green", () => {
+  const { code, summary, rows } = run(join(consumer, "papers", "b"), {
+    PATH: join(root, "empty-path"),
+  });
+  assert.deepEqual(
+    { code, summary, rows },
+    {
+      code: 2,
+      summary: [
+        "🔴 3 FACT check(s) could not run: render-paper/report-submission-citations, tighten-paper/structure, verify-citations/verify-cites — what they check is UNKNOWN, not clean",
+        NOTE,
+      ],
+      rows: [
+        "render-paper/report-submission ABSTAINED input-missing",
+        "render-paper/report-submission-citations ABSTAINED crashed",
+        "tighten-paper/structure ABSTAINED crashed",
+        "grade-paper-writing/prose-lint ABSTAINED crashed",
+        "verify-citations/verify-cites ABSTAINED crashed",
+        "harden-paper/artifact-coverage ABSTAINED crashed",
+        "build-benchmark/check-provenance ABSTAINED crashed",
+        "build-benchmark/arm-permutation ABSTAINED input-missing",
+        "build-benchmark/delivered-pdf ABSTAINED input-missing",
+        "build-benchmark/generated-code ABSTAINED crashed",
+        "grade-paper-writing/textidote ABSTAINED input-missing",
+        "verify-citations/uncited-refs ABSTAINED input-missing",
+        "draft-paper/population-map ABSTAINED crashed",
+        "tighten-paper/round-diff ABSTAINED input-missing",
+      ],
+    },
+  );
+});
+
+test("as a process, in a consumer that declares nothing: no FACT check can run, and it says so", () => {
+  const bare = join(root, "bare");
+  writeTree(bare, { "papers/p/paper.md": "# P\n\nText.\n" });
+  writeFileSync(join(bare, "package.json"), "{}\n");
+  const r = runNode(SCRIPT, [join(bare, "papers", "p")], {
+    env: {
+      CLAUDE_PROJECT_DIR: bare,
+      PIPELINE_LEDGER: join(root, "bare.jsonl"),
+    },
+  });
+  assert.deepEqual(
+    {
+      status: r.status,
+      stderr: r.stderr,
+      summary: r.stdout.trimEnd().split("\n\n").pop().split("\n"),
+    },
+    {
+      status: 0,
+      stderr: "",
+      summary: [
+        "⬜ no FACT check ran — each one lacked its input, so nothing here was judged",
+        NOTE,
       ],
     },
   );

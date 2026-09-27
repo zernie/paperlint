@@ -437,9 +437,17 @@ export function main(argv) {
   }
 
   let worst = 0;
+  // 🔴 A FACT CHECK THAT DID NOT RUN IS NOT A CLEAN FACT CHECK. Until 2026-09-27 the summary looked
+  // only at blocking findings, so a run where every checker crashed printed "🟢 no FACT check
+  // recorded a blocking finding" and exited 0 — a counter reporting on work it never did. FACT rows
+  // are the ones whose verdict can block (`exit`, and `eslint` through severity 2).
+  const isFact = (g) => g.read === "exit" || g.read === "eslint";
+  const factCrashed = [];
+  let factJudged = 0;
   for (const g of GATES) {
     const key = `${g.skill}/${g.check}`;
     const abstain = (reason, note) => {
+      if (reason === "crashed" && isFact(g)) factCrashed.push(key);
       console.log(
         `\n⬜ ${key} — abstained (${reason}): ${ABSTENTIONS.get(reason)}`,
       );
@@ -570,6 +578,7 @@ export function main(argv) {
       count = stated ? Number(stated[1]) : lines > 1 ? lines : 0;
     }
 
+    if (isFact(g)) factJudged++;
     if (count === 0) {
       // 🔴 NOT a pass. The check ran and produced no finding, and it has no witness for the
       // negative — so it abstains and the reader derives cleanliness from the absence, if they
@@ -612,13 +621,27 @@ export function main(argv) {
     if (blocking) worst = 1;
   }
 
-  console.log(
-    `\n${worst === 0 ? "🟢 no FACT check recorded a blocking finding" : "🔴 a FACT check found something — see above"}`,
-  );
+  // Exit codes, extending the contract above (2 already meant "could not judge this paper at all"):
+  //   1 — a FACT check found a blocking defect (wins: it is certain and actionable);
+  //   2 — otherwise, a FACT check's checker crashed, so that fact is unknown;
+  //   0 — every FACT check that had its input judged it clean, or none had its input.
+  const summary = [];
+  if (worst) summary.push("🔴 a FACT check found something — see above");
+  if (factCrashed.length)
+    summary.push(
+      `🔴 ${factCrashed.length} FACT check(s) could not run: ${factCrashed.join(", ")} — what they check is UNKNOWN, not clean`,
+    );
+  if (!summary.length)
+    summary.push(
+      factJudged
+        ? "🟢 no FACT check recorded a blocking finding"
+        : "⬜ no FACT check ran — each one lacked its input, so nothing here was judged",
+    );
+  console.log(`\n${summary.join("\n")}`);
   console.log(
     `   Judgement checks report and never fail the run; read them, and never grep this for green.\n`,
   );
-  return worst;
+  return worst || (factCrashed.length ? 2 : 0);
 }
 
 if (isMain(import.meta.url)) process.exit(main(process.argv));
