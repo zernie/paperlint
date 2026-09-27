@@ -81,40 +81,45 @@ function applyState(
   return true;
 }
 
+/** One drawn character and the fill it was drawn in. */
+interface Drawn {
+  readonly ch: string;
+  readonly fill: Fill;
+}
+
 /** Every drawn character, in content order, with the fill it was drawn in. */
-export function drawnCharacters(
-  ops: ColourOps,
-  list: OperatorList,
-): { chars: string[]; fills: Fill[] } {
+export function drawnCharacters(ops: ColourOps, list: OperatorList): Drawn[] {
   const s = { cur: { fill: { kind: "unknown" } as Fill, mode: 0 }, stack: [] };
-  const chars: string[] = [];
-  const fills: Fill[] = [];
+  const drawn: Drawn[] = [];
   list.fnArray.forEach((fn, i) => {
     const args = list.argsArray[i];
     if (applyState(ops, fn, args, s)) return;
     if (fn !== ops.showText && fn !== ops.showSpacedText) return;
     const fill: Fill = s.cur.mode === 3 ? { kind: "invisible" } : s.cur.fill;
-    for (const ch of squeeze(glyphText(args))) {
-      chars.push(ch);
-      fills.push(fill);
-    }
+    for (const ch of squeeze(glyphText(args))) drawn.push({ ch, fill });
   });
-  return { chars, fills };
+  return drawn;
 }
 
 /** How far ahead the walk looks for an item it cannot find where it expects it. */
 export const LOOKAHEAD = 4000;
 
-/** The position at or after `from` where `want` starts in `chars`, or -1 within the look-ahead. */
+/**
+ * Where `want` starts in `drawn`, at or after `from` within the look-ahead, and the fill it was
+ * drawn in — or null. The fill comes from the matched element itself, not a second lookup.
+ */
 function findRun(
-  chars: readonly string[],
+  drawn: readonly Drawn[],
   want: readonly string[],
   from: number,
-): number {
-  const limit = Math.min(chars.length, from + LOOKAHEAD);
-  for (let q = from; q < limit; q++)
-    if (want.every((ch, k) => chars[q + k] === ch)) return q;
-  return -1;
+): { readonly at: number; readonly fill: Fill } | null {
+  const window = drawn.slice(from, from + LOOKAHEAD);
+  for (const [i, d] of window.entries()) {
+    const at = from + i;
+    if (want.every((ch, k) => drawn[at + k]?.ch === ch))
+      return { at, fill: d.fill };
+  }
+  return null;
 }
 
 /**
@@ -141,15 +146,15 @@ export function fillsFor<T>(
   items: readonly T[],
   textOf: (item: T) => string,
 ): { readonly item: T; readonly fill: Fill }[] {
-  const { chars, fills } = drawnCharacters(ops, list);
+  const drawn = drawnCharacters(ops, list);
   let at = 0;
   const fillOf = (text: string): Fill => {
     const want = [...squeeze(text)];
     if (want.length === 0) return { kind: "unknown" };
-    const q = findRun(chars, want, at);
-    if (q < 0) return { kind: "unknown" };
-    at = q + want.length;
-    return fills[q] ?? { kind: "unknown" };
+    const hit = findRun(drawn, want, at);
+    if (hit === null) return { kind: "unknown" };
+    at = hit.at + want.length;
+    return hit.fill;
   };
   return items.map((item) => ({ item, fill: fillOf(textOf(item)) }));
 }
