@@ -340,6 +340,10 @@ export function check(dir, { since } = {}) {
       continue;
     }
     manifests.push(man);
+  // A manifest names its round in `round:`; one that does not is named by its file — printing
+  // `round undefined` would point the reader at nothing.
+  const label = (m) =>
+    m.round === undefined ? relOf(dir, m.path) : `round ${m.round}`;
   }
   manifests.sort((a, b) => Number(a.round ?? 0) - Number(b.round ?? 0));
   const open = manifests.filter((m) => !m.closed);
@@ -353,7 +357,7 @@ export function check(dir, { since } = {}) {
   if (open.length > 1) {
     add(
       "two-open-rounds",
-      `${open.length} manifests have no \`closed:\` (${open.map((m) => `round ${m.round}`).join(", ")}) — with two open rounds every budget below is checked against the wrong base.`,
+      `${open.length} manifests have no \`closed:\` (${open.map((m) => label(m)).join(", ")}) — with two open rounds every budget below is checked against the wrong base.`,
     );
   }
   if (!since && manifests.length > 0 && open.length === 0) {
@@ -410,13 +414,13 @@ export function check(dir, { since } = {}) {
       if (cum > total) {
         add(
           "ratchet-cumulative",
-          `across ${manifests.length} rounds the body grew ${sign(cum)} words against ${sign(total)} of declared budget (${c0.bodyWords} → ${nowC.bodyWords}, from round ${first.round}'s base \`${first.base}\`). Every individual round may have been inside its own budget; this is the drift they compound into.`,
+          `across ${manifests.length} rounds the body grew ${sign(cum)} words against ${sign(total)} of declared budget (${c0.bodyWords} → ${nowC.bodyWords}, from ${label(first)}'s base \`${first.base}\`). Every individual round may have been inside its own budget; this is the drift they compound into.`,
         );
       }
     } else {
       add(
         "unresolvable-base",
-        `round ${first.round}'s base \`${first.base}\` does not resolve (${g0.err}), so cumulative drift across ${manifests.length} rounds is UNMEASURED — not zero.`,
+        `${label(first)}'s base \`${first.base}\` does not resolve (${g0.err}), so cumulative drift across ${manifests.length} rounds is UNMEASURED — not zero.`,
       );
     }
   }
