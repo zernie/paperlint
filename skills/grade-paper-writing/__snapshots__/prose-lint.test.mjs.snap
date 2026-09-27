@@ -1,7 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`--flags-only: an over-long caption flags and exits 1 1`] = `
-"✍️  prose-lint — paper.md:
+"✍️  prose-lint — paper.md — 2 finding(s):
    figures/fig1.tex: caption sentence of 46 words (warn >40) — "Big. word0 word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12 word13 word14 word15 wor…"
    figures/fig1.tex: caption is 106 words (warn >100) — a caption this long is a section under a picture
    run \`node .claude/skills/grade-paper-writing/prose-lint.mjs <file>\` for the sentences

@@ -266,3 +266,13 @@ test("as a process, in a consumer that declares no citation checkers and has no 
   }).toMatchSnapshot();
 });
 
+test("the prose-lint row records the number of findings prose-lint found, not its line count", () => {
+  const row = run(join(consumer, "papers", "c"), {
+    FAKE_PROSE_REAL: "1",
+  }).rows.find((x) => x.row === "grade-paper-writing/prose-lint");
+  assert.deepEqual(row, {
+    row: "grade-paper-writing/prose-lint",
+    kind: "FINDING",
+    findings: 2,
+  });
+});

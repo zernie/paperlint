@@ -689,7 +689,12 @@ for (const f of args.filter((a) => !a.startsWith("--"))) {
     // `hedge-density`, `discourse-subject`, `undefined-coinage`.
     if (lines.length) {
       flagged += lines.length;
-      console.error(`✍️  prose-lint — ${f.split("/").pop()}:`);
+      // The header STATES the count. run-mechanical.mjs prefers a stated "— N finding(s)" over
+      // counting output lines, and without it recorded header + findings + footer: one flagged
+      // caption became three findings in the ledger.
+      console.error(
+        `✍️  prose-lint — ${f.split("/").pop()} — ${lines.length} finding(s):`,
+      );
       lines.forEach((l) => console.error(l));
       console.error(
         "   run `node .claude/skills/grade-paper-writing/prose-lint.mjs <file>` for the sentences",
