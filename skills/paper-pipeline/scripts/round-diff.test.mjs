@@ -6,6 +6,7 @@
  */
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { chmodSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "vitest";
@@ -135,6 +136,24 @@ test("the command: no paper.md is a note; no git on PATH is 'not a git repositor
     {
       kind: "unresolvable-base",
       msg: "cannot read paper.md at `HEAD`: not a git repository. A round whose base does not resolve is a round with no gate, and it must not read as a clean run.",
+    },
+  ]);
+});
+
+test("a git that fails without a word still names the revision it could not read", () => {
+  // A stand-in `git` first on PATH: it knows the repository root, and `show` exits 1 silently.
+  const bin = writeTree(join(root, "quiet-git-bin"), {
+    git: '#!/bin/sh\ncase "$1" in rev-parse) pwd ;; show) exit 1 ;; *) exit 0 ;; esac\n',
+  });
+  chmodSync(join(bin, "git"), 0o755);
+  const dir = writeTree(join(root, "quiet"), { "paper.md": P(["1. A", "x"]) });
+  const r = runNode(SCRIPT, [dir, "--json", "--since=abc"], {
+    env: { PATH: `${bin}:${dirname(process.execPath)}` },
+  });
+  assert.deepEqual(JSON.parse(r.stdout), [
+    {
+      kind: "unresolvable-base",
+      msg: "cannot read paper.md at `abc`: git show abc:paper.md failed. A round whose base does not resolve is a round with no gate, and it must not read as a clean run.",
     },
   ]);
 });

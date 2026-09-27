@@ -65,7 +65,7 @@
  */
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
-import { join, resolve, relative } from "node:path";
+import { basename, join, resolve, relative } from "node:path";
 import { stripFrontmatter, frontmatterBlock } from "../../../lib/markdown.mjs";
 import { isMain } from "./consumer.mjs";
 
@@ -318,7 +318,11 @@ export function check(dir, { since } = {}) {
   const at = (rev) => {
     if (!repo) return { ok: false, err: "not a git repository" };
     const r = git(repo, "show", `${rev}:${rel}`);
-    return r.ok ? { ok: true, src: r.out } : { ok: false, err: r.err }; // git names the failure on stderr: a bad revision, a path it lacks
+    // A git that fails without a word on stderr (killed, or a wrapper that swallows it) still
+    // leaves the reader the revision and path it could not read.
+    return r.ok
+      ? { ok: true, src: r.out }
+      : { ok: false, err: r.err || `git show ${rev}:${rel} failed` };
   };
 
   // ── which round authorises the current state ──
@@ -524,8 +528,8 @@ export function check(dir, { since } = {}) {
 const num = (v, d) =>
   v === undefined || v === null || v === "" || isNaN(Number(v)) ? d : Number(v);
 const sign = (n) => (n > 0 ? `+${n}` : String(n));
-// Every path named here lies inside `dir`, so its path from the parent is never empty.
-const relOf = (dir, p) => relative(resolve(dir, ".."), p);
+/** `p`, which lies inside the paper directory `dir`, named from the paper's own name down. */
+const relOf = (dir, p) => join(basename(dir), relative(dir, p));
 
 // ── CLI ──────────────────────────────────────────────────────────────────────────────────────
 
