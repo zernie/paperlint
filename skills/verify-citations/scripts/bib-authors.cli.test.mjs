@@ -23,7 +23,12 @@ const bib = (key, author, title, venue = "booktitle = {Proc. X}") =>
   `@inproceedings{${key}, author = {${author}}, title = {${title}}, ${venue}}\n`;
 
 writeTree(root, {
+  // The retry backoff (1.5 s, then 3 s) and the 900 ms courtesy pause are real sleeps in the
+  // script. Under CPU load they made "DBLP down" take 11.7 s once and time out. The preload
+  // stands in for the clock too: every timer fires at once, so no test here depends on time.
   "dblp.mjs":
+    "const realSetTimeout = globalThis.setTimeout;\n" +
+    "globalThis.setTimeout = (fn, _ms, ...args) => realSetTimeout(fn, 0, ...args);\n" +
     `const answers = ${JSON.stringify(DBLP_ANSWERS)};\n` +
     "globalThis.fetch = async (url) => {\n" +
     "  const q = new URL(url).searchParams.get('q');\n" +
