@@ -366,12 +366,14 @@ function splitSentences(t) {
 }
 const words = (t) => (t.match(/[A-Za-z0-9%.'’-]+/g) || []).length;
 
-function analyse(text) {
+/**
+ * The metrics of `text`, whose sentences the caller split and found non-empty — the same array is
+ * passed in rather than split again, so the check the caller made is the one the division relies on.
+ */
+function analyse(text, sents) {
   const W = words(text),
     per1k = (n) => +((n / W) * 1000).toFixed(1);
-  const sents = splitSentences(text);
   const lens = sents.map(words);
-  // `lens` is never empty: a body with no sentence is refused before `analyse` is called.
   const mean = lens.reduce((a, b) => a + b, 0) / lens.length;
   const sd = Math.sqrt(
     lens.reduce((a, b) => a + (b - mean) ** 2, 0) / lens.length,
@@ -656,14 +658,16 @@ for (const f of args.filter((a) => !a.startsWith("--"))) {
   // exited 0. Refused like `.tex` above — no number is better than a meaningless one.
   // A body of headings only has words but no sentence (headings are struck out before splitting),
   // and a zero sentence count divides just the same, so the test is on sentences.
-  if (splitSentences(prep(raw)).length === 0) {
+  const text = prep(raw);
+  const sentences = splitSentences(text);
+  if (sentences.length === 0) {
     console.error(
       `prose-lint: ${f} has no prose to measure — after the frontmatter, comments, code ` +
         "blocks, tables and the reference section are stripped, no word is left.",
     );
     process.exit(2);
   }
-  const r = analyse(prep(raw));
+  const r = analyse(text, sentences);
   if (flagsOnly) {
     const lines = [];
     // Citation density in a paragraph and a pile-up of jargon in a sentence moved on 2026-08-26 into
