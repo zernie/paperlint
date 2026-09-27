@@ -971,38 +971,56 @@ async function nvdCheck(cve) {
 }
 
 /**
- * The paper registries, each with the citations it can answer. A resolver that does not apply is
- * not called — it has no request to make — and so stores nothing in the cache. `cacheKeysFor`
- * reads the same table, so the keys it names and the keys a live run stores cannot drift apart.
+ * The paper registries, each with the ONE question it asks of a citation: `ask` picks the
+ * identifier (`{ doi }`, `{ arxiv }` or `{ title }`), or `null` when the registry cannot answer this
+ * citation — then it is not called and stores nothing. The resolver is handed ONLY that question,
+ * and the cache key is built from the same question, so the key always names what was asked: arXiv
+ * asked by arXiv id is keyed by it even when the entry also has a DOI, and correcting that id asks
+ * again.
  */
 const PAPER_RESOLVERS = [
   {
     name: "crossref",
     fn: crossrefResolve,
-    applies: (c) => !!(c.doi || c.title),
+    ask: (c) => (c.doi ? { doi: c.doi } : c.title ? { title: c.title } : null),
   },
   {
     name: "openalex",
     fn: openalexResolve,
-    applies: (c) => !!(c.doi || c.title),
+    ask: (c) => (c.doi ? { doi: c.doi } : c.title ? { title: c.title } : null),
   },
-  { name: "semantic_scholar", fn: semanticScholarResolve, applies: () => true },
+  {
+    name: "semantic_scholar",
+    fn: semanticScholarResolve,
+    ask: (c) =>
+      c.doi
+        ? { doi: c.doi }
+        : c.arxiv
+          ? { arxiv: c.arxiv }
+          : { title: c.title },
+  },
   {
     name: "arxiv",
     fn: arxivResolve,
-    applies: (c) => !!(c.arxiv || (c.title && !c.doi)),
+    // No DOI endpoint: by arXiv id, else a title search — but not for a DOI-only entry.
+    ask: (c) =>
+      c.arxiv
+        ? { arxiv: c.arxiv }
+        : c.title && !c.doi
+          ? { title: c.title }
+          : null,
   },
 ];
 
-/** A paper resolver's cache key: by DOI, else arXiv id, else a hash of the title. */
-const paperKey = (name, c) =>
+/** The cache key of one registry's question: the identifier it was asked by. */
+const paperKey = (name, q) =>
   cacheKey(
     name,
-    c.doi
-      ? `doi:${c.doi}`
-      : c.arxiv
-        ? `arxiv:${c.arxiv}`
-        : `title:${titleHash(c.title)}`,
+    q.doi
+      ? `doi:${q.doi}`
+      : q.arxiv
+        ? `arxiv:${q.arxiv}`
+        : `title:${titleHash(q.title)}`,
   );
 
 /**
@@ -1018,12 +1036,13 @@ async function consult(citation, lookup) {
   const evidence = [];
   const matched = () => evidence.at(-1)?.status === "matched";
   if (citation.doi || citation.arxiv || citation.title) {
-    for (const { name, fn, applies } of PAPER_RESOLVERS) {
-      if (!applies(citation)) continue;
+    for (const { name, fn, ask } of PAPER_RESOLVERS) {
+      const question = ask(citation);
+      if (question === null) continue;
       const resp = await lookup(
-        paperKey(name, citation),
+        paperKey(name, question),
         name,
-        () => fn(citation),
+        () => fn(question),
         () => true,
       );
       evidence.push(classifyResolver(citation, resp));

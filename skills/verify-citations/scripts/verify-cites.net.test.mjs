@@ -243,6 +243,34 @@ test("a second lookup is served from the cache; failures and a nonexistent DOI a
   );
 });
 
+// Guards: each resolver's cache key names the identifier that resolver ASKED. arXiv is asked by
+// arXiv id even when the entry has a DOI; keyed by the DOI, a corrected arXiv id kept the old
+// id's answer and was never asked.
+test("a corrected arXiv id is asked again even when the DOI is unchanged", async () => {
+  const cache = {};
+  const routes = {
+    [CR]: () => json(404),
+    [OA]: () => json(404),
+    [S2]: () => json(404),
+    [AX]: () => text(200, "<feed></feed>"),
+    [DOI]: () => json(200, { responseCode: 1 }),
+  };
+  fakeFetch(routes);
+  await verifyCitationLive(
+    { id: "c", doi: "10.1/x", arxiv: "2401.00001", title: TITLE },
+    { cache },
+  );
+  const again = fakeFetch(routes);
+  await verifyCitationLive(
+    { id: "c", doi: "10.1/x", arxiv: "2401.00002", title: TITLE },
+    { cache },
+  );
+  assert.deepEqual(
+    again.filter((u) => u.startsWith(AX)),
+    [`${AX}?id_list=2401.00002&max_results=1`],
+  );
+});
+
 // Guards: NVD's "not found" must not be cached. A CVE cited before NVD indexes it would otherwise
 // stay "fabricated" in the committed cache forever; only positive existence is kept, as for doi.org.
 test("an NVD not-found answer is not cached, so a later build asks again", async () => {
