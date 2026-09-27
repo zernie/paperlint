@@ -2,7 +2,9 @@
  * THE VENUE-CONFORMANCE RULES OVER THE SOURCE — `paper.tex` judged against what its venue preset
  * requires of the LaTeX itself, before any build:
  *
- *   tex/template   error  the `\documentclass` is the preset's class, with every option it names
+ *   tex/template          error  the `\documentclass` is the preset's class, with every option it names
+ *   tex/required-section  error  each section the preset requires is there, titled exactly, and
+ *                                where the preset says (`last`: after every section of the body)
  *
  * ── WHY THEY LIVE HERE AND NOT IN `eslint-rules/` ────────────────────────────────
  * Like the `pdf/*` venue rules (`venue-rules.ts`), they need the paper's resolved preset —
@@ -18,13 +20,17 @@
 import { basename, dirname } from "node:path";
 import {
   documentClassLine,
+  collapse,
   documentClassOf,
   missingOptions,
+  outlineOf,
   parseLatex,
+  type Outline,
   type Span,
 } from "#eslint-rules/latex-structure";
 import type { TexRoot } from "#eslint-rules/latex-language";
 import { paperPreset, type Preset } from "./presets.ts";
+import type { RequiredSection } from "./tex-requirements.ts";
 import type { Finding, VenueRuleDeps } from "./venue-rules.ts";
 
 /** A finding and where it points; null points at the top of the file. */
@@ -84,9 +90,61 @@ export function judgeTemplate(root: TexRoot, preset: Preset): Located[] {
   }));
 }
 
+/**
+ * One required section against the outline: missing (reported where the document ends, where it
+ * would go), or — for `last` — standing before a section of the body. The body is every section
+ * before the appendix and the bibliography, so the required one may follow the bibliography.
+ */
+function judgeSection(
+  outline: Outline,
+  want: RequiredSection,
+  venue: string,
+): Located[] {
+  const title = collapse(want.title);
+  const found = outline.sections.filter((h) => h.title === title);
+  const last = found.at(-1);
+  const data = { venue, title };
+  if (last === undefined) {
+    const end = outline.end;
+    return [
+      {
+        messageId: "missing",
+        data,
+        at: end === null ? null : { start: end, end },
+      },
+    ];
+  }
+  if (want.position !== "last") return [];
+  const backMatter = outline.backMatter ?? Number.POSITIVE_INFINITY;
+  const after = outline.sections.find(
+    (h) => h.start > last.start && h.start < backMatter && h.title !== title,
+  );
+  return after === undefined
+    ? []
+    : [
+        {
+          messageId: "notLast",
+          data: { ...data, after: after.title },
+          at: last,
+        },
+      ];
+}
+
+/** Every section the preset requires, against the paper's outline. */
+export function judgeRequiredSections(
+  root: TexRoot,
+  preset: Preset,
+): Located[] {
+  if (preset.requiredSections.length === 0) return [];
+  const outline = outlineOf(root);
+  return preset.requiredSections.flatMap((r) =>
+    judgeSection(outline, r, preset.label),
+  );
+}
+
 type Judge = (root: TexRoot, preset: Preset) => Located[];
 
-export type TexVenueRuleName = "template";
+export type TexVenueRuleName = "template" | "required-section";
 
 const RULES: Readonly<
   Record<
@@ -113,6 +171,23 @@ const RULES: Readonly<
       },
     },
   },
+  "required-section": {
+    judge: judgeRequiredSections,
+    meta: {
+      type: "problem",
+      docs: {
+        description:
+          "every section the venue preset requires is there, titled exactly, and where the preset says",
+      },
+      schema: [],
+      messages: {
+        missing:
+          "{{venue}} requires a section titled «{{title}}» and there is none — add `\\section*{{{title}}}` (the title exactly; a bold paragraph does not count)",
+        notLast:
+          "«{{title}}» must close the paper at {{venue}}, and the section «{{after}}» comes after it — move it after the last section of the body (after the bibliography is fine)",
+      },
+    },
+  },
 };
 
 /** The level each rule is on at in paperlint's own config, for every `paper.tex`. */
@@ -120,6 +195,7 @@ export const TEX_VENUE_RULE_LEVELS: Readonly<
   Record<`tex/${TexVenueRuleName}`, "error" | "warn">
 > = {
   "tex/template": "error",
+  "tex/required-section": "error",
 };
 
 /** The last source parsed and its tree: the rules of one file share one parse. */
@@ -161,5 +237,8 @@ function rule(name: TexVenueRuleName, deps: VenueRuleDeps): TexRuleModule {
 export function texVenueRules(
   deps: VenueRuleDeps,
 ): Record<TexVenueRuleName, TexRuleModule> {
-  return { template: rule("template", deps) };
+  return {
+    template: rule("template", deps),
+    "required-section": rule("required-section", deps),
+  };
 }

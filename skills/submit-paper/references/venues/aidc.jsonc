@@ -24,6 +24,17 @@
 
   "template": "\\documentclass[conference,compsoc]{IEEEtran}",
 
+  // «Authors must follow the ACSAC AI Usage Policy for all workshop submissions.» (the call above).
+  // Verbatim from https://www.acsac.org/2026/submissions/ai/ (fetched 2026-09-27):
+  //   «If LLMs are used, authors must include a separate, clearly marked section titled "LLM Usage
+  //    Statement" at the end of the paper. This section does not count towards the page limit.»
+  //   «Failure to comply with these requirements is grounds for desk rejection without further
+  //    review.»
+  // tex/required-section cannot know whether LLMs were used, so it requires the section always: an
+  // author who used none says so in it. A bold paragraph («Use of Generative AI.», what AISec asked
+  // for) is not a section with this title and does not count.
+  "required_sections": [{ "title": "LLM Usage Statement", "position": "last" }],
+
   "format": {
     // \textwidth and \textheight of [conference,compsoc], measured (ieee-conference.jsonc).
     "textblock_w_in": 7.0,

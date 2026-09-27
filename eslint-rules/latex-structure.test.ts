@@ -10,6 +10,7 @@ import {
   collapse,
   documentClassLine,
   documentClassOf,
+  outlineOf,
   parseLatex,
   parseTemplate,
   replaceDocumentClass,
@@ -153,6 +154,62 @@ describe("withDocumentClass — the class `paperlint new` writes", () => {
     expect(replaceDocumentClass("\\documentclass{article}", root, IEEE)).toBe(
       "\\documentclass[conference,compsoc]{IEEEtran}}",
     );
+  });
+});
+
+describe("outlineOf", () => {
+  it("sections in order with titles collapsed, the first back matter, and the document's end", () => {
+    const src =
+      "\\documentclass{article}\\section{Pre}\n\\begin{document}\n\\section{A  B}\n" +
+      "\\section*{C}\n\\appendix\n\\section{D}\n\\bibliography{r}\n\\end{document}";
+    const o = outlineOf(parseLatex(src));
+    expect(o.sections.map((h) => h.title)).toEqual(["A B", "C", "D"]);
+    expect(o.backMatter).toBe(src.indexOf("\\appendix"));
+    expect(o.end).toBe(src.length - 1);
+    // A heading's span covers its title.
+    const [a] = o.sections;
+    expect(a && src.slice(a.start, a.end)).toBe("\\section{A  B}");
+  });
+
+  it("a bibliography environment is back matter too; a fragment has no end", () => {
+    const src = "\\section{A}\\begin{thebibliography}{1}\\end{thebibliography}";
+    expect(outlineOf(parseLatex(src))).toMatchObject({
+      backMatter: src.indexOf("\\begin"),
+      end: null,
+    });
+  });
+
+  it("reads the shapes the parser never emits: no args, no content, no position", () => {
+    const at = (offset: number) => ({
+      start: { offset, line: 1, column: offset + 1 },
+      end: { offset: offset + 1, line: 1, column: offset + 2 },
+    });
+    const root: TexRoot = {
+      content: [
+        {
+          type: "environment",
+          env: "document",
+          content: [
+            { type: "macro", content: "section", position: at(1) },
+            { type: "macro", content: "section" },
+            {
+              type: "macro",
+              content: "textbf",
+              args: [{ type: "argument", openMark: "{" }],
+              position: at(2),
+            },
+          ],
+        },
+      ],
+    };
+    expect(outlineOf(root)).toEqual({
+      sections: [{ start: 1, end: 2, title: "" }],
+      backMatter: null,
+      end: null,
+    });
+    expect(
+      outlineOf({ content: [{ type: "environment", env: "document" }] }),
+    ).toEqual({ sections: [], backMatter: null, end: null });
   });
 });
 

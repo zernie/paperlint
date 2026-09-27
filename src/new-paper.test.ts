@@ -177,13 +177,15 @@ describe("paperlint new --venue / --kind", () => {
     expect(r.code).toBe(0);
   });
 
-  it("🔴 the new paper.tex is set in the venue's class, so tex/template passes on what new wrote", async () => {
+  it("🔴 the new paper.tex is set in the venue's class, so tex/template passes on what new wrote; the required section is named", async () => {
     const r = await newIn(["--venue", "aidc", "--kind", "regular"]);
     const tex = readFileSync(join(r.dir, "paper.tex"), "utf8");
     expect(tex).toContain("\\documentclass[conference,compsoc]{IEEEtran}\n");
     expect(tex).not.toContain("{article}");
     expect(r.out).not.toMatch(/tex\/template/);
-    expect(r.code).toBe(0);
+    // What the stub still lacks is what AIDC requires of the text, and lint says so right away.
+    expect(r.out).toMatch(/tex\/required-section/);
+    expect(r.code).toBe(1);
   });
 
   it("🔴 a path is relative to where you run it, and written relative to the paper's file", async () => {

@@ -195,3 +195,72 @@ export const withDocumentClass = (src: string, want: DocumentClass): string =>
 /** A class as a `\documentclass` line, for a message. */
 export const documentClassLine = (d: DocumentClass): string =>
   `\\documentclass${d.options.length ? `[${d.options.join(",")}]` : ""}{${d.cls}}`;
+
+// ── headings ────────────────────────────────────────────────────────────────────────
+
+/** One `\\section` or `\\section*` of the document, its span covering the title. */
+export interface Heading extends Span {
+  /** The title's text, whitespace collapsed. */
+  readonly title: string;
+}
+
+/** The document's sections in order, where its back matter begins, and where it ends. */
+export interface Outline {
+  readonly sections: readonly Heading[];
+  /** The first `\\appendix` or bibliography, or null: sections from here on are not body. */
+  readonly backMatter: number | null;
+  /** Where `\\end{document}` stands, or null when there is no (positioned) document environment. */
+  readonly end: number | null;
+}
+
+/** Macros and the environment that start the back matter: the appendix and the bibliography. */
+const BACK_MATTER_MACROS = new Set([
+  "appendix",
+  "bibliography",
+  "printbibliography",
+]);
+
+const isBackMatter = (n: TexNode): boolean =>
+  (n.type === "macro" && BACK_MATTER_MACROS.has(n.content)) ||
+  (n.type === "environment" && n.env === "thebibliography");
+
+/** Every node of a list, depth first in source order, through arguments and contents. */
+function forEachDeep(nodes: readonly TexNode[], f: (n: TexNode) => void): void {
+  for (const n of nodes) {
+    f(n);
+    for (const a of ("args" in n && n.args) || [])
+      forEachDeep(a.content ?? [], f);
+    if ("content" in n && Array.isArray(n.content)) forEachDeep(n.content, f);
+  }
+}
+
+function headingOf(n: TexNode & { type: "macro" }, name: Span): Heading {
+  const args = n.args ?? [];
+  return {
+    start: name.start,
+    end: argsEnd(args, name.end),
+    title: collapse(textOf(mandatoryArgs(args).at(-1)?.content)),
+  };
+}
+
+/**
+ * The document body's `\\section`s (starred or not), the start of the back matter, and the end of
+ * the document. A source with no `document` environment is read whole, as a fragment.
+ */
+export function outlineOf(root: TexRoot): Outline {
+  const doc = root.content.find(
+    (n) => n.type === "environment" && n.env === "document",
+  );
+  const body = doc?.type === "environment" ? (doc.content ?? []) : root.content;
+  const sections: Heading[] = [];
+  let backMatter: number | null = null;
+  forEachDeep(body, (n) => {
+    const at = spanOf(n);
+    if (at === null) return;
+    if (n.type === "macro" && n.content === "section")
+      sections.push(headingOf(n, at));
+    else if (backMatter === null && isBackMatter(n)) backMatter = at.start;
+  });
+  const docSpan = doc ? spanOf(doc) : null;
+  return { sections, backMatter, end: docSpan ? docSpan.end - 1 : null };
+}

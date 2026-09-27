@@ -19,7 +19,7 @@
  *   tex        union — a child never removes a package its parent needs
  *   format     per key, the child wins; `kinds` by kind name, a child's kind replaces that kind
  *   rules      per rule id, the child wins
- *   template   the child wins; so does `name`
+ *   template   the child wins; so does `name`, and `required_sections` (the whole list)
  *
  * ── THE LABEL ─────────────────────────────────────────────────────────────────────
  * Messages, the facts file and the build plan need a word for the venue. It is the most derived
@@ -36,6 +36,7 @@ import {
   profileFileOf,
   venueNames,
   type PresetFile,
+  type RequiredSection,
   type TexRequirements,
   type VenueFormat,
 } from "./tex-requirements.ts";
@@ -69,6 +70,7 @@ export interface Preset {
   /** Every file of the chain, root first. */
   readonly chain: readonly string[];
   readonly template: DocumentClass | null;
+  readonly requiredSections: readonly RequiredSection[];
   readonly tex: TexRequirements;
   readonly format: VenueFormat;
   readonly rules: Readonly<Record<string, unknown>>;
@@ -194,12 +196,14 @@ function merged(
   const base: {
     name: string | null;
     template: DocumentClass | null;
+    requiredSections: readonly RequiredSection[];
     tex: TexRequirements;
     format: VenueFormat;
     rules: Readonly<Record<string, unknown>>;
   } = {
     name: null,
     template: null,
+    requiredSections: [],
     tex: NO_REQUIREMENTS,
     format: NO_FORMAT,
     rules: {},
@@ -208,6 +212,7 @@ function merged(
     (acc, p) => ({
       name: p.name ?? acc.name,
       template: p.template ?? acc.template,
+      requiredSections: p.requiredSections ?? acc.requiredSections,
       tex: p.tex ? mergeRequirements(acc.tex, p.tex) : acc.tex,
       format: mergeFormat(acc.format, p.format),
       rules: { ...acc.rules, ...p.rules },
@@ -218,6 +223,7 @@ function merged(
     label: m.name ?? labelOf(spec),
     chain: files,
     template: m.template,
+    requiredSections: m.requiredSections,
     tex: m.tex,
     format: m.format,
     rules: m.rules,

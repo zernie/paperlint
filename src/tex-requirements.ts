@@ -152,6 +152,13 @@ export const NO_FORMAT: VenueFormat = {
   kinds: new Map(),
 };
 
+/** A section a venue requires: its exact title, and whether it must close the paper. */
+export interface RequiredSection {
+  readonly title: string;
+  /** "last": after every section of the body; null: anywhere. */
+  readonly position: "last" | null;
+}
+
 /**
  * One preset FILE, parsed — before its `extends` chain is resolved (`src/presets.ts` does that).
  * A preset is a venue or a template family: `{ extends?, name?, template?, format?, tex?, rules? }`.
@@ -163,6 +170,8 @@ export interface PresetFile {
   readonly name: string | null;
   /** The `\\documentclass` the venue's template uses, parsed; null when the preset names none. */
   readonly template: DocumentClass | null;
+  /** Sections the venue requires; null when the file names none (a child's list replaces its parent's). */
+  readonly requiredSections: readonly RequiredSection[] | null;
   /** Null when the file declares no `tex` block (allowed only with `extends`). */
   readonly tex: TexRequirements | null;
   readonly format: VenueFormat;
@@ -193,6 +202,10 @@ interface PresetJson {
   readonly extends?: string;
   readonly name?: string;
   readonly template?: string;
+  readonly required_sections?: readonly {
+    readonly title: string;
+    readonly position?: "last";
+  }[];
   /** The schema requires `packages` in a `tex` block; `tools` is optional. */
   readonly tex?: Pick<TexRequirements, "packages"> &
     Partial<Pick<TexRequirements, "tools">>;
@@ -270,6 +283,11 @@ export function parsePreset(
     extends: orNull(j.extends),
     name: orNull(j.name),
     template: j.template === undefined ? null : templateOf(j.template, file),
+    requiredSections:
+      j.required_sections?.map((r) => ({
+        title: r.title,
+        position: orNull(r.position),
+      })) ?? null,
     tex: j.tex ? { packages: j.tex.packages, tools: j.tex.tools ?? {} } : null,
     format: formatOf(j.format),
     rules: j.rules ?? {},

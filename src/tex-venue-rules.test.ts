@@ -88,7 +88,11 @@ const ids = (fs: readonly Finding[]) =>
   fs.map((f) => `${f.rule}:${f.messageId}`).sort();
 
 const AIDC = { extends: "paperlint:aidc", kind: "regular" };
-const paper = (documentclass: string, body = "Text.") =>
+/** A paper in `documentclass`; the default body carries AIDC's required closing section. */
+const paper = (
+  documentclass: string,
+  body = "Text.\n\\section*{LLM Usage Statement}\nNone.",
+) =>
   `% a comment\n${documentclass}\n\\begin{document}\n${body}\n\\end{document}\n`;
 const OFFICIAL = paper("\\documentclass[conference,compsoc]{IEEEtran}");
 
@@ -140,14 +144,17 @@ describe("tex/template — the class and every option the preset names", () => {
   });
 
   it("a paper with no \\documentclass at all says so, at the top", () => {
-    const fs = lint("\\begin{document}x\\end{document}\n", AIDC);
+    const fs = lint(
+      "\\begin{document}x\\section*{LLM Usage Statement}\\end{document}\n",
+      AIDC,
+    );
     expect(ids(fs)).toEqual(["tex/template:noClass"]);
     expect(fs[0]?.line).toBe(1);
   });
 
   it("a \\documentclass inside a comment is not the paper's class", () => {
     const fs = lint(
-      "% \\documentclass[conference,compsoc]{IEEEtran}\n\\documentclass{article}\n",
+      "% \\documentclass[conference,compsoc]{IEEEtran}\n\\documentclass{article}\n\\section*{LLM Usage Statement}\n",
       AIDC,
     );
     expect(ids(fs)).toEqual(["tex/template:wrongClass"]);
@@ -239,13 +246,148 @@ describe("tex/template — a project's own preset, and nothing to judge", () => 
   });
 });
 
-describe("paperlint's own config", () => {
-  it("turns tex/template on at error for every paper.tex, and ships it", () => {
-    expect(TEX_VENUE_RULE_LEVELS["tex/template"]).toBe("error");
-    const tex = buildConfig({}, { sentinel: "tex" }).find((b) =>
-      b.files?.includes("**/paper.tex"),
+/** An AIDC paper: the official class, `sections` in order, then `tail` after them. */
+const aidcPaper = (body: string): string =>
+  paper("\\documentclass[conference,compsoc]{IEEEtran}", body);
+const BODY = "\\section{Introduction}\nText.\n\\section{Conclusion}\nText.\n";
+const STATEMENT = "\\section*{LLM Usage Statement}\nNo LLMs were used.\n";
+const BIB = "\\bibliographystyle{IEEEtran}\n\\bibliography{refs}\n";
+const APPENDIX = "\\appendix\n\\section{Proofs}\nText.\n";
+const required = (fs: readonly Finding[]) =>
+  fs.filter((f) => f.rule === "tex/required-section");
+
+describe("tex/required-section — ACSAC's «LLM Usage Statement» under aidc", () => {
+  it.each<[string, string]>([
+    [
+      "after the last body section, before the bibliography",
+      BODY + STATEMENT + BIB,
+    ],
+    [
+      "after the bibliography — «at the end of the paper»",
+      BODY + BIB + STATEMENT,
+    ],
+    ["between the body and an appendix", BODY + STATEMENT + APPENDIX + BIB],
+    [
+      "after the appendix and the bibliography",
+      BODY + APPENDIX + BIB + STATEMENT,
+    ],
+    [
+      "unstarred, with its title broken over two lines",
+      BODY + "\\section{LLM   Usage\n  Statement}\nx\n" + BIB,
+    ],
+    [
+      "inside a thebibliography paper, after it",
+      BODY +
+        "\\begin{thebibliography}{1}\\bibitem{a} A.\\end{thebibliography}\n" +
+        STATEMENT,
+    ],
+  ])("passes %s", (_, body) => {
+    expect(lint(aidcPaper(body), AIDC)).toEqual([]);
+  });
+});
+
+describe("tex/required-section — what fails", () => {
+  it("🔴 the planted «Use of Generative AI» bold paragraph fails: not a section, not that title", () => {
+    const tex = aidcPaper(
+      BODY + BIB + "\\paragraph{Use of Generative AI.} We used an LLM.\n",
     );
-    expect(tex?.rules?.["tex/template"]).toBe("error");
-    expect(SHIPPED_RULES.has("tex/template")).toBe(true);
+    const fs = required(lint(tex, AIDC));
+    expect(ids(fs)).toEqual(["tex/required-section:missing"]);
+    expect(fs[0]?.message).toBe(
+      "aidc requires a section titled «LLM Usage Statement» and there is none — add `\\section*{LLM Usage Statement}` (the title exactly; a bold paragraph does not count)",
+    );
+    // At `\end{document}`, where the section would go.
+    expect(fs[0]?.line).toBe(tex.split("\n").indexOf("\\end{document}") + 1);
+  });
+
+  it("a near title is not the title: the venue's words are the contract", () => {
+    expect(
+      ids(
+        required(
+          lint(aidcPaper(BODY + "\\section*{LLM usage statement}\nx\n"), AIDC),
+        ),
+      ),
+    ).toEqual(["tex/required-section:missing"]);
+  });
+
+  it("🔴 the same section before the introduction fails, naming a body section after it", () => {
+    const tex = aidcPaper(STATEMENT + BODY + BIB);
+    const fs = required(lint(tex, AIDC));
+    expect(ids(fs)).toEqual(["tex/required-section:notLast"]);
+    expect(fs[0]?.message).toMatch(/«Introduction» comes after it/);
+    expect(fs[0]?.line).toBe(
+      tex.split("\n").indexOf("\\section*{LLM Usage Statement}") + 1,
+    );
+  });
+});
+
+describe("tex/required-section — the edges", () => {
+  it("an unmarked section after the bibliography is back matter, not body", () => {
+    // A statement, then the bibliography, then an unmarked section: that section is back matter.
+    expect(
+      lint(
+        aidcPaper(BODY + STATEMENT + BIB + "\\section{Artifact}\nx\n"),
+        AIDC,
+      ),
+    ).toEqual([]);
+  });
+
+  it("a fragment with no document environment: the missing section points at the top", () => {
+    const fs = required(
+      lint(
+        "\\documentclass[conference,compsoc]{IEEEtran}\n\\section{A}\n",
+        AIDC,
+      ),
+    );
+    expect(ids(fs)).toEqual(["tex/required-section:missing"]);
+    expect(fs[0]?.line).toBe(1);
+  });
+
+  it("presets that require no section are silent, whatever the paper has", () => {
+    expect(
+      required(
+        lint(paper("\\documentclass[sigconf]{acmart}"), {
+          extends: "paperlint:aisec",
+          kind: "research",
+        }),
+      ),
+    ).toEqual([]);
+  });
+
+  it("a position other than last (none): anywhere will do; a child's list replaces its parent's", () => {
+    const own = `${PAPER}/own.jsonc`;
+    const extra = {
+      [own]: JSON.stringify({
+        extends: "paperlint:aidc",
+        required_sections: [{ title: "Ethics" }],
+      }),
+    };
+    const settings = { extends: "./own.jsonc", kind: "regular" };
+    expect(
+      lint(aidcPaper("\\section{Ethics}\nx\n" + BODY), settings, { extra }),
+    ).toEqual([]);
+    expect(ids(required(lint(aidcPaper(BODY), settings, { extra })))).toEqual([
+      "tex/required-section:missing",
+    ]);
+  });
+});
+
+describe("paperlint's own config", () => {
+  it.each(Object.entries(TEX_VENUE_RULE_LEVELS))(
+    "turns %s on at %s for every paper.tex, and ships it",
+    (id, level) => {
+      const tex = buildConfig({}, { sentinel: "tex" }).find((b) =>
+        b.files?.includes("**/paper.tex"),
+      );
+      expect(tex?.rules?.[id]).toBe(level);
+      expect(SHIPPED_RULES.has(id)).toBe(true);
+    },
+  );
+
+  it("the levels: template and required-section are errors", () => {
+    expect(TEX_VENUE_RULE_LEVELS).toMatchObject({
+      "tex/template": "error",
+      "tex/required-section": "error",
+    });
   });
 });

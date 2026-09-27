@@ -24,6 +24,25 @@
       "type": "string",
       "minLength": 1
     },
+    "required_sections": {
+      "description": "Sections the venue requires, read by `tex/required-section`. Each is a `\\section` or `\\section*` whose title equals `title` once whitespace is collapsed. `position: \"last\"`: after every section of the body (the ones before the appendix and the bibliography); it may stand after the bibliography. A child preset's list replaces its parent's.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "position": {
+            "type": "string",
+            "enum": ["last"]
+          }
+        }
+      }
+    },
     "format": {
       "description": "What the venue's call for papers sets. Every key is optional; a child preset's key replaces its parent's, and a child's kind replaces that kind.",
       "type": "object",
