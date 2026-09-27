@@ -1048,7 +1048,9 @@ async function consult(citation, lookup) {
       cacheKey("nvd", citation.cve.toUpperCase()),
       "nvd",
       () => nvdCheck(citation.cve),
-      () => true,
+      // Cache only POSITIVE existence, as for doi.org: a CVE cited before NVD indexes it must not
+      // be pinned to "not found" in the committed cache. A missing CVE is asked again each build.
+      (a) => a.found,
     );
     const e = checkNvd(citation, nvd);
     if (e) evidence.push(e);

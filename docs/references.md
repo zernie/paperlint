@@ -47,6 +47,9 @@ build asks only what that file cannot answer:
 - Adding or editing an entry asks only about that entry. Answers are stored per identifier (DOI,
   arXiv id, or title), so changing an entry's DOI or title is what makes it be asked again.
 - A request that failed is not an answer and is not stored, so the next build asks it again.
+- "Does not exist" from doi.org or NVD is not stored either. A DOI or CVE cited before the
+  authority has published it would otherwise stay "does not exist" in the file forever; it is asked
+  again on each build until the authority confirms it.
 
 ## When a service refuses
 

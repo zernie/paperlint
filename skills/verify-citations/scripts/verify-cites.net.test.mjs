@@ -243,6 +243,20 @@ test("a second lookup is served from the cache; failures and a nonexistent DOI a
   );
 });
 
+// Guards: NVD's "not found" must not be cached. A CVE cited before NVD indexes it would otherwise
+// stay "fabricated" in the committed cache forever; only positive existence is kept, as for doi.org.
+test("an NVD not-found answer is not cached, so a later build asks again", async () => {
+  const cache = {};
+  fakeFetch({ [NVD]: () => json(200, { totalResults: 0 }) });
+  await verifyCitationLive({ id: "c", cve: "CVE-2026-0001" }, { cache });
+  const again = fakeFetch({ [NVD]: () => json(200, { totalResults: 1 }) });
+  await verifyCitationLive({ id: "c", cve: "CVE-2026-0001" }, { cache });
+  assert.deepEqual(
+    { asked: again.length, keys: Object.keys(cache) },
+    { asked: 1, keys: ["nvd:CVE-2026-0001"] },
+  );
+});
+
 // Guards: a title-only cache key must keep punctuation that names a different work. A shared key
 // for `C` and `C++` would answer the second from the first's registry responses, no request made.
 test("title-only keys keep punctuation: a C++ title is not served the C title's cached answers", async () => {
