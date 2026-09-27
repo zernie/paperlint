@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  freshPart,
   EMPTY_LOOKUP_CACHE,
   parseLookupCache,
   serializeLookupCache,
@@ -148,5 +149,30 @@ describe("parseLookupCache refusals", () => {
   // Guards: see REFUSALS.
   it.each(REFUSALS)("refuses %s with a named reason", (text, why) => {
     expect(parseLookupCache(text)).toEqual(err(why));
+  });
+});
+
+describe("freshPart", () => {
+  const cache = (fetched: string): LookupCache => ({
+    citations: new Map([
+      [
+        "k",
+        {
+          fetched,
+          response: { db: "crossref", transport: "ok", query: "doi" },
+        },
+      ],
+    ]),
+    dblp: new Map(),
+  });
+  // Guards: the age window has two ends. A date in the future (a clock ahead, a typo) has a
+  // negative age; read as fresh, a miss would be trusted until that date plus 30 days.
+  it.each([
+    ["2026-09-27", 1],
+    ["2026-08-28", 1],
+    ["2026-08-27", 0],
+    ["2026-09-28", 0],
+  ])("on 2026-09-27, an answer fetched %s is kept %i time(s)", (fetched, n) => {
+    expect(freshPart(cache(fetched), "2026-09-27").citations.size).toBe(n);
   });
 });

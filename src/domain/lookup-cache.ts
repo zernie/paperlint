@@ -82,8 +82,11 @@ const dayNumber = (date: string): number =>
 
 /** The part of `cache` still young enough to answer from on `today` (YYYY-MM-DD). */
 export function freshPart(cache: LookupCache, today: string): LookupCache {
-  const young = ({ fetched }: { fetched: string }): boolean =>
-    dayNumber(today) - dayNumber(fetched) <= MAX_AGE_DAYS;
+  // An age below zero is a date in the future (a clock ahead, a typo): not trusted, asked again.
+  const young = ({ fetched }: { fetched: string }): boolean => {
+    const age = dayNumber(today) - dayNumber(fetched);
+    return age >= 0 && age <= MAX_AGE_DAYS;
+  };
   return {
     citations: new Map([...cache.citations].filter(([, v]) => young(v))),
     dblp: new Map([...cache.dblp].filter(([, v]) => young(v))),
