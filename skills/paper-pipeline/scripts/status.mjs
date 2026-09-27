@@ -125,7 +125,7 @@ export function main(argv) {
   const rows = status(dir, { gates: EXPECTED_GATES });
 
   console.log(`\n  ${basename(dir)}\n`);
-  const pad = (s, n) => String(s ?? "").padEnd(n);
+  const pad = (s, n) => String(s).padEnd(n); // every cell is a string or a count
   console.log(
     `  ${pad("check", 36)}${pad("freshness", 14)}${pad("last run produced", 22)}${pad("runs", 6)}when`,
   );
