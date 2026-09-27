@@ -258,6 +258,7 @@ test("the text's date ignores dot-dirs, node_modules, repro, build outputs and a
   const late = "2026-09-20"; // after every row date: walked, any of these would make the gates stale
   const files = {
     ".cache/paper.md": "x",
+    // eslint-disable-next-line port/js-install-path -- a fixture directory the walk must skip, not an install location
     "node_modules/pkg/paper.md": "x",
     "repro/main.tex": "x",
     "build/main.tex": "x",

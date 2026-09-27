@@ -195,36 +195,29 @@ function currentPart(text) {
   return (cut === -1 ? lines : lines.slice(0, cut)).join("\n");
 }
 
-/** Index of the token closing the container opened at `open`. */
-function closeOf(tokens, open, openType, closeType) {
-  let depth = 0;
-  for (let i = open; i < tokens.length; i++) {
-    if (tokens[i].type === openType) depth++;
-    else if (tokens[i].type === closeType && --depth === 0) return i;
-  }
-  return tokens.length - 1;
-}
-
-/** `thead` cells and `tbody` rows of one table, straight from the AST — nothing is guessed. */
-function readTable(toks) {
+/**
+ * `thead` cells and `tbody` rows of one table, straight from the AST — nothing is guessed.
+ *
+ * Leans on markdown-it's token contract, probed rather than assumed: a table always has exactly one
+ * header row; every cell holds one `inline` token (empty cells too); and every body row is padded or
+ * truncated to the header's width. Tables do not nest, so the first `table_close` is this table's.
+ */
+function readTable(tokens, open) {
   const head = [];
   const rows = [];
   let inHead = false;
-  let row = null;
-  for (let i = 0; i < toks.length; i++) {
-    const t = toks[i];
+  let row = [];
+  let i = open;
+  for (; tokens[i].type !== "table_close"; i++) {
+    const t = tokens[i];
     if (t.type === "thead_open") inHead = true;
     else if (t.type === "thead_close") inHead = false;
     else if (t.type === "tr_open") row = [];
-    else if (t.type === "tr_close") {
-      if (row) (inHead ? head : rows).push(row);
-      row = null;
-    } else if (t.type === "th_open" || t.type === "td_open") {
-      const inline = toks[i + 1];
-      row?.push(inline?.type === "inline" ? inline.content.trim() : "");
-    }
+    else if (t.type === "tr_close") (inHead ? head : rows).push(row);
+    else if (t.type === "th_open" || t.type === "td_open")
+      row.push(tokens[i + 1].content.trim());
   }
-  return { head: head[0] ?? [], rows };
+  return { head: head[0], rows, end: i };
 }
 
 /**
@@ -254,9 +247,7 @@ export function parseStatus(text) {
     const t = tokens[i];
 
     if (t.type === "heading_open") {
-      const inline = tokens[i + 1];
-      const raw = inline?.type === "inline" ? inline.content : "";
-      heading = raw.replace(/\s+/g, " ").trim();
+      heading = tokens[i + 1].content.replace(/\s+/g, " ").trim();
       headings.push(heading);
       section = sectionOf(heading);
       if (section) sections[section] ??= [];
@@ -273,26 +264,25 @@ export function parseStatus(text) {
     }
 
     if (t.type !== "table_open") continue;
-    const end = closeOf(tokens, i, "table_open", "table_close");
-    const { head, rows } = readTable(tokens.slice(i, end + 1));
+    const { head, rows, end } = readTable(tokens, i);
     i = end;
     tables++;
 
     // Not a scorecard table. The document's own header row says so; see the decision note up top.
-    const idCol = (head[0] ?? "").toLowerCase().replace(/[*`\s]/g, "");
+    const idCol = head[0].toLowerCase().replace(/[*`\s]/g, "");
     if (!ID_COLUMNS.has(idCol)) continue;
     scorecardTables++;
 
     for (const c of rows) {
-      const id = cleanId(c[0] ?? "");
+      const id = cleanId(c[0]);
       // An unreadable row is skipped silently: the finding about it comes from
       // `pipeline/row-readable`.
       if (!id || c.length < 4) continue;
       const joined = c.join(" | ");
       const row = {
         id,
-        name: c[1] ?? "",
-        skill: c[2] ?? "",
+        name: c[1],
+        skill: c[2],
         // The `Requires` column is no longer read here: all three checks that ate it
         // (`gate-missing-input` · `gate-stale-input` · `unknown-input`) and the check of the
         // declaration itself (`undeclared-input`) moved into `eslint-rules/pipeline-status.mjs`.
@@ -421,7 +411,7 @@ function newestSourceDate(dir) {
     }
     if (when > newest) newest = when;
   }
-  return newest || null;
+  return newest; // non-empty: every source above got a date
 }
 
 // ── checks ───────────────────────────────────────────────────────────────────
@@ -572,9 +562,7 @@ export function check({ sections, header }, { sourceDate, today, dir }) {
     // status would mean nagging about an upload that already happened.
     const row = [...all.values()].find(
       (r) =>
-        what.re.test(r.raw ?? "") &&
-        !DONE.has(r.status) &&
-        !what.done.test(r.raw ?? ""),
+        what.re.test(r.raw) && !DONE.has(r.status) && !what.done.test(r.raw),
     );
     if (row) {
       add(
