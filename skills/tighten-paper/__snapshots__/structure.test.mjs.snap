@@ -1,0 +1,133 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`--section=1 keeps section 1 and its sub-sections, and nothing before it 1`] = `
+"
+=== full.md — outline, in order ===
+   own  total  share  section
+    10     16  53.3%  1 Introduction
+                     ↳ [7/10 KEEP] carries: the claim
+     4                    1.1 Detail
+                         ↳ carries: a sub-point
+     2                    1.2 Bare sub
+                         ↳ 🔴 no carries: note — nobody has said why this section is here
+
+body total 30 words across 4 sections
+
+=== outside the page limit ===
+    40               Limitations
+                     ↳ 🔴 no carries: note — and no page limit forcing the question
+     5                   Scope
+                         ↳ carries: why the scope note
+    30               Appendix A
+                     ↳ carries: the raw tables
+
+free total 75 words = 250% of the body
+🔴 The unbudgeted half is LARGER than the paper. Nothing prices these sections, which
+   is exactly why prose settles here. Ask of each: would a reviewer miss it?
+
+The rest is judgement and stays with the skill: is this the ORDER a stranger needs, does each
+heading name a thing, and does each section earn its place. Read the headings as a set — a
+stranger should be able to reconstruct the argument from them alone.
+"
+`;
+
+exports[`the inventory of body-only.md 1`] = `
+"
+=== body-only.md — outline, in order ===
+   own  total  share  section
+     8      8  66.7%  1 Intro
+                     ↳ 🔴 no carries: note — nobody has said why this section is here
+     4      4  33.3%  2 Rest
+                     ↳ 🔴 no carries: note — nobody has said why this section is here
+     0      0   0.0%  3 Empty
+                     ↳ 🔴 no carries: note — nobody has said why this section is here
+
+body total 12 words across 3 sections
+
+The rest is judgement and stays with the skill: is this the ORDER a stranger needs, does each
+heading name a thing, and does each section earn its place. Read the headings as a set — a
+stranger should be able to reconstruct the argument from them alone.
+"
+`;
+
+exports[`the inventory of full.md 1`] = `
+"
+=== full.md — outline, in order ===
+   own  total  share  section
+     3                    Orphan sub
+    10     16  53.3%  1 Introduction
+                     ↳ [7/10 KEEP] carries: the claim
+     4                    1.1 Detail
+                         ↳ carries: a sub-point
+     2                    1.2 Bare sub
+                         ↳ 🔴 no carries: note — nobody has said why this section is here
+     6      6  20.0%  2 Method
+                     ↳ 🔴 no carries: note — nobody has said why this section is here
+     5      5  16.7%  3 Results
+                     ↳ [?/10 CUT] carries: only a verdict
+     3      3  10.0%  Discussion
+                     ↳ [4/10 NO VERDICT] carries: score only
+
+body total 30 words across 4 sections
+
+=== outside the page limit ===
+    40               Limitations
+                     ↳ 🔴 no carries: note — and no page limit forcing the question
+     5                   Scope
+                         ↳ carries: why the scope note
+    30               Appendix A
+                     ↳ carries: the raw tables
+
+free total 75 words = 250% of the body
+🔴 The unbudgeted half is LARGER than the paper. Nothing prices these sections, which
+   is exactly why prose settles here. Ask of each: would a reviewer miss it?
+
+The rest is judgement and stays with the skill: is this the ORDER a stranger needs, does each
+heading name a thing, and does each section earn its place. Read the headings as a set — a
+stranger should be able to reconstruct the argument from them alone.
+"
+`;
+
+exports[`the inventory of no-appendix.md 1`] = `
+"
+=== no-appendix.md — outline, in order ===
+   own  total  share  section
+     8      8 100.0%  1 Intro
+                     ↳ 🔴 no carries: note — nobody has said why this section is here
+
+body total 8 words across 1 sections
+
+=== outside the page limit ===
+     3               Limitations
+                     ↳ 🔴 no carries: note — and no page limit forcing the question
+
+free total 3 words = 38% of the body
+
+The rest is judgement and stays with the skill: is this the ORDER a stranger needs, does each
+heading name a thing, and does each section earn its place. Read the headings as a set — a
+stranger should be able to reconstruct the argument from them alone.
+"
+`;
+
+exports[`the inventory of refs-first.md 1`] = `
+"
+=== refs-first.md — outline, in order ===
+   own  total  share  section
+     8      8 100.0%  1 Intro
+                     ↳ 🔴 no carries: note — nobody has said why this section is here
+
+body total 8 words across 1 sections
+
+=== outside the page limit ===
+     2               References
+                     ↳ 🔴 no carries: note — and no page limit forcing the question
+     2               Ethical note
+                     ↳ 🔴 no carries: note — and no page limit forcing the question
+
+free total 4 words = 50% of the body
+
+The rest is judgement and stays with the skill: is this the ORDER a stranger needs, does each
+heading name a thing, and does each section earn its place. Read the headings as a set — a
+stranger should be able to reconstruct the argument from them alone.
+"
+`;
