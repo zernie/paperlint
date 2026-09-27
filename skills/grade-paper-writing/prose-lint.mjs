@@ -655,7 +655,9 @@ for (const f of args.filter((a) => !a.startsWith("--"))) {
   // 🔴 NOTHING LEFT IS NOT "CLEAN". A body that strips to no words used to be analysed anyway: every
   // metric is a fraction of the word count, so the report printed NaN, FLAGged three metrics and
   // exited 0. Refused like `.tex` above — no number is better than a meaningless one.
-  if (words(prep(raw)) === 0) {
+  // A body of headings only has words but no sentence (headings are struck out before splitting),
+  // and a zero sentence count divides just the same, so the test is on sentences.
+  if (splitSentences(prep(raw)).length === 0) {
     console.error(
       `prose-lint: ${f} has no prose to measure — after the frontmatter, comments, code ` +
         "blocks, tables and the reference section are stripped, no word is left.",

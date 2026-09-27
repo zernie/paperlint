@@ -133,3 +133,15 @@ test("a file with no prose left to measure is refused with exit 2, not reported 
       "blocks, tables and the reference section are stripped, no word is left.\n",
   });
 });
+
+test("a body of headings only has no sentence to measure, and is refused the same way", () => {
+  writeTree(root, { "headings/paper.md": "## Intro\n\n### Method\n" });
+  const file = join(root, "headings", "paper.md");
+  assert.deepEqual(runNode(SCRIPT, [file]), {
+    status: 2,
+    stdout: "",
+    stderr:
+      `prose-lint: ${file} has no prose to measure — after the frontmatter, comments, code ` +
+      "blocks, tables and the reference section are stripped, no word is left.\n",
+  });
+});
