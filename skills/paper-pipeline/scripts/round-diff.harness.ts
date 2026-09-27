@@ -508,7 +508,7 @@ const msg = (r: Run, kind: string, needle: string, why: string) => {
         touches: ["3"],
         budget: 20,
         base: sha,
-        closed: i < 2 ? `2026-08-1${String(i)}` : undefined,
+        ...(i < 2 ? { closed: `2026-08-1${String(i)}` } : {}),
       }),
     );
   }

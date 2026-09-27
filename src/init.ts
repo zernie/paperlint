@@ -298,7 +298,7 @@ export async function offerWorkflow(
     ask?: (q: string) => Promise<string>;
     interactive: boolean;
     /** The running package's version; see `InitOptions.version`. */
-    version?: string;
+    version?: string | undefined;
   },
 ): Promise<WorkflowResult> {
   const path = join(root, WORKFLOW_PATH);
@@ -326,7 +326,7 @@ export function reportWorkflow(
     version,
     papersDir,
     why,
-  }: { version?: string; papersDir: string; why: string },
+  }: { version?: string | undefined; papersDir: string; why: string },
 ): string[] {
   const ref = actionRef(version);
   const out: string[] = [];
@@ -415,7 +415,7 @@ export async function offerHooks(
     hooks: boolean;
     interactive: boolean;
     ask?: (q: string) => Promise<string>;
-    merge?: Merge;
+    merge?: Merge | undefined;
   },
 ): Promise<HooksOutcome> {
   if (!hooks) return { status: "skipped" };
@@ -569,7 +569,7 @@ export interface InitOptions {
   /** `false` is `--no-hooks`. */
   hooks?: boolean;
   /** vigiles' merge. Injected only so a test can observe or replace it. */
-  merge?: Merge;
+  merge?: Merge | undefined;
   /** `--paper <name>`: create this paper, even without a terminal. */
   paper?: string | null;
   /** `--format tex|md` for that paper. */
@@ -595,7 +595,7 @@ export interface InitOptions {
    * The version of the running package, read by the CLI from its own `package.json`. The CI
    * workflow is pinned to its release tag (`actionRef`); absent or unreleased, the placeholder.
    */
-  version?: string;
+  version?: string | undefined;
   /**
    * TeX Live for `paperlint build`: whether paperlint's own tree is installed, and how to install
    * it (`paperlint toolchain`). Passed in by the CLI; without them the step only names the command.

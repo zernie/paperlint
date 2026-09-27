@@ -384,7 +384,9 @@ export function rulesOff(texLanguage?: unknown): Linter.Config[] {
   return [
     {
       name: "paperlint/rules-off",
-      plugins: rulePlugins(texLanguage) as Linter.Config["plugins"],
+      plugins: rulePlugins(texLanguage) as NonNullable<
+        Linter.Config["plugins"]
+      >,
       rules: Object.fromEntries([...SHIPPED_RULES].map((id) => [id, "off"])),
     },
     {

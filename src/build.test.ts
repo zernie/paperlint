@@ -62,7 +62,7 @@ function bibtexRun(f: Fake, cwd: string) {
     ? { status: f.bibtex }
     : { status: f.bibtex, stdout: f.bibtexOut };
 }
-function fakeRun(f: Fake): BuildOptions["run"] {
+function fakeRun(f: Fake): NonNullable<BuildOptions["run"]> {
   let pass = 0;
   return ((bin: string, _args: string[], opts: { cwd: string }) => {
     if (bin === f.missing)

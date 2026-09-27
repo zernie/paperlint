@@ -278,7 +278,6 @@ rmSync(tmp, { recursive: true, force: true });
             dataPath: "",
             schemaPath: "#/required",
             params: {},
-            message: undefined,
           },
         ],
       })[0] === "f.jsonc: (top level) ",

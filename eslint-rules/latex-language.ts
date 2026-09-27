@@ -701,13 +701,21 @@ class TexSourceCode extends TextSourceCodeBase<{
    * scan `raw` and report with the offset it found.
    */
   raw: string;
-  constructor({ text, ast, raw }: { text: string; ast: MdNode; raw?: string }) {
+  constructor({
+    text,
+    ast,
+    raw,
+  }: {
+    text: string;
+    ast: MdNode;
+    raw?: string | undefined;
+  }) {
     super({ ast, text, lineEndingPattern: /\r?\n/u });
     this.ast = ast;
     this.raw = raw ?? text;
     this.traverse();
   }
-  getParent(node: MdNode): MdNode | undefined {
+  override getParent(node: MdNode): MdNode | undefined {
     return this.#parents.get(node);
   }
   getInlineConfigNodes(): ConfigNode[] {
@@ -735,7 +743,7 @@ class TexSourceCode extends TextSourceCodeBase<{
   applyInlineConfig(): { configs: never[]; problems: FileProblem[] } {
     return { configs: [], problems: [] };
   }
-  traverse(): ArrayIterator<VisitNodeStep> {
+  override traverse(): ArrayIterator<VisitNodeStep> {
     if (this.#steps) return this.#steps.values();
     const steps: VisitNodeStep[] = (this.#steps = []);
     const visit = (node: MdNode, parent?: MdNode) => {
