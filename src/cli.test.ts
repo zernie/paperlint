@@ -557,3 +557,20 @@ test("init's TeX Live install runs the toolchain over the project's papers, neve
   );
   assert.equal(typeof here.installed(), "boolean");
 });
+
+test("lint with its LaTeX language missing from the install still lints the markdown papers", () => {
+  const dir = writeTree(join(root, "lint-no-tex-language"), {
+    "papers/p/paper.md": "# P\n\nSome prose.\n",
+    "no-latex.mjs":
+      "import { register } from 'node:module';\n" +
+      "register('data:text/javascript,' + encodeURIComponent(\"export async function resolve(s, c, next) { if (s.endsWith('latex-language.mjs')) throw Object.assign(new Error('gone'), { code: 'ERR_MODULE_NOT_FOUND' }); return next(s, c); }\"));\n",
+  });
+  const without = runNode(BIN, ["lint", "papers"], {
+    cwd: dir,
+    nodeArgs: ["--import", join(dir, "no-latex.mjs")],
+  });
+  const whole = runNode(BIN, ["lint", "papers"], { cwd: dir });
+  // A markdown paper needs no LaTeX language: the same report, the same code.
+  assert.deepEqual(without, whole);
+  assert.match(whole.stdout, /missing `PIPELINE-STATUS\.md`/);
+});

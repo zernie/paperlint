@@ -1430,11 +1430,16 @@ export async function run(
     rules: [...papers.value.preset, ...(opts.rules ?? []), ...papers.value.own],
   };
 
-  // Loaded lazily because only `lint` needs it — not optionally: unified-latex is a dependency and
-  // build.ts imports it statically, so this process could not have started without it.
-  // @ts-expect-error — the module is .mjs and has no types
-  const latex = await import("../eslint-rules/latex-language.mjs");
-  const texLanguage: unknown = latex.texLanguage;
+  // Loaded lazily because only `lint` needs it. If the module cannot be loaded (a broken install:
+  // the file missing from the package), lint still runs over the markdown papers rather than
+  // failing outright — the LaTeX rules simply have no language to run in.
+  let texLanguage: unknown = null;
+  try {
+    // @ts-expect-error — the module is .mjs and has no types
+    ({ texLanguage } = await import("../eslint-rules/latex-language.mjs"));
+  } catch {
+    texLanguage = null;
+  }
 
   const eslint = new ESLint({
     cwd: lintRoot(root, paths),
