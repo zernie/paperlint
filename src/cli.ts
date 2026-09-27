@@ -609,24 +609,27 @@ export function parseArgs(argv: readonly string[]): Args {
     // gate that fails on advice gets muted entirely.
     maxWarnings: -1,
   };
+  // Consumed from the front: a value flag takes the next argument by shifting it off.
   const rest = [...argv];
-  if (rest[0] && !rest[0].startsWith("-")) out.cmd = rest.shift() ?? null;
+  const first = rest[0];
+  if (first && !first.startsWith("-")) {
+    out.cmd = first;
+    rest.shift();
+  }
 
   // 🔴 A FLAG WHOSE VALUE WAS TAKEN AWAY IS A REFUSAL, NOT A DEFAULT. The compiler found this
-  // during the move to TypeScript: `rest[++i]` past the last argument gives `undefined`, and
+  // during the move to TypeScript: the value past the last argument is `undefined`, and
   // `paperlint lint --config` (the value forgotten, or eaten by a substitution in CI) silently turned
   // into "no config given" — that is, it went to auto-discovery and linted against SOMEONE ELSE'S
   // file, saying nothing. The failure is one-sided and toward silence, so it is cured by
   // behaviour, not by a type cast.
-  const valueFor = (flag: string, i: number): string | undefined => {
-    const v = rest[i];
+  const valueFor = (flag: string): string | undefined => {
+    const v = rest.shift();
     if (v === undefined) out.missingValue = flag;
     return v;
   };
 
-  for (let i = 0; i < rest.length; i++) {
-    const arg = rest[i];
-    if (arg === undefined) continue;
+  for (let arg = rest.shift(); arg !== undefined; arg = rest.shift()) {
     // `--flag=value` is `--flag value` for every flag that takes a value: the CI action writes
     // `--max-warnings="$N"`, and that form used to fall through to the list of paths.
     const eq = arg.indexOf("=");
@@ -636,7 +639,7 @@ export function parseArgs(argv: readonly string[]): Args {
         : undefined;
     const a = inline === undefined ? arg : arg.slice(0, eq);
     const take = (): string | undefined => {
-      if (inline === undefined) return valueFor(a, ++i);
+      if (inline === undefined) return valueFor(a);
       if (inline === "") out.missingValue = a;
       return inline === "" ? undefined : inline;
     };
@@ -742,12 +745,10 @@ export function readConfig(
   //
   // 🔴 IN `--json` MODE — TO stderr. Machine output must be ONE parsable document: a line before
   // the array breaks any `| jq`, and it breaks it for the consumer, not for us.
-  (a.json ? err : log)(`config: ${relative(cwd, configPath) || CONFIG_FILE}`);
-  const settings = parseSettings(
-    parsed,
-    relative(cwd, configPath) || CONFIG_FILE,
-    root,
-  );
+  // `configPath` is a file and `cwd` a directory, so the relative path is never empty.
+  const shown = relative(cwd, configPath);
+  (a.json ? err : log)(`config: ${shown}`);
+  const settings = parseSettings(parsed, shown, root);
   if (!settings.ok) {
     err(settings.error);
     return { code: 2 };
