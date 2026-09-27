@@ -313,11 +313,9 @@ const NOMINAL = /\b\w{4,}(tion|sion|ment|ance|ence|ity|ness)s?\b/gi;
 
 // JARGON — moved into `eslint-rules/paper-craft.mjs` (the `unexplained-jargon` rule, 2026-08-26).
 
+/** Matches of every pattern in the lexicon `pats`, summed. Every caller passes a lexicon array. */
 const count = (t, pats) =>
-  (Array.isArray(pats) ? pats : [pats]).reduce(
-    (n, p) => n + (t.match(p) || []).length,
-    0,
-  );
+  pats.reduce((n, p) => n + (t.match(p) || []).length, 0);
 // 🔴 Next to this lived `listHits(t, pats)` — the same walk, but returning THE MATCHES THEMSELVES
 // rather than their count. Nobody called it (`no-unused-vars`, 2026-08-28), and that is not a
 // trifle: the paragraph below explains that a metric was ignored precisely because it could not NAME
@@ -373,9 +371,10 @@ function analyse(text) {
     per1k = (n) => +((n / W) * 1000).toFixed(1);
   const sents = splitSentences(text);
   const lens = sents.map(words);
-  const mean = lens.reduce((a, b) => a + b, 0) / (lens.length || 1);
+  // `lens` is never empty: a body with no sentence is refused before `analyse` is called.
+  const mean = lens.reduce((a, b) => a + b, 0) / lens.length;
   const sd = Math.sqrt(
-    lens.reduce((a, b) => a + (b - mean) ** 2, 0) / (lens.length || 1),
+    lens.reduce((a, b) => a + (b - mean) ** 2, 0) / lens.length,
   );
 
   const cats = {
