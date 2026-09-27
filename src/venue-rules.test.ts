@@ -213,13 +213,13 @@ describe("pdf/profile — the declaration must resolve, or nothing is judged", (
       "an unknown venue (a typo would silently disable every check)",
       { extends: "paperlint:agentic-dev", kind: "short" },
       "preset",
-      /agenticdev, aisec, realm/,
+      /agenticdev, aidc, aisec, ieee-conference, realm/,
     ],
     [
       "the base TeX set is not a venue",
       { extends: "paperlint:tex-base" },
       "preset",
-      /agenticdev, aisec, realm/,
+      /agenticdev, aidc, aisec, ieee-conference, realm/,
     ],
     [
       "paperlint.json that is not JSON",
@@ -557,6 +557,98 @@ describe("paperlint's own config turns the venue rules on for every paper.tex", 
 
   it("pdf/last-page-balance stays optional", () => {
     expect(OPTIONAL_RULES.has("pdf/last-page-balance")).toBe(true);
+  });
+});
+
+/**
+ * The facts of the 13-page `[conference,compsoc]` IEEEtran paper measured for ieee-conference.jsonc
+ * (2026-09-27): banal's page, columns and sizes, pdf.js's fonts.
+ */
+/** Embedded Type 1 fonts of these names. */
+const type1 = (names: readonly string[]): Font[] =>
+  names.map((name) => ({
+    name,
+    type: "Type 1",
+    embedded: true,
+    program: "Type1",
+  }));
+
+const ieeeFacts = (patch: Patch = () => {}): Facts =>
+  withFacts((f) => {
+    f.page_w_in = 8.5;
+    f.page_h_in = 11;
+    f.columns = 2;
+    f.body_pt = 10.3;
+    f.ref_pt = 8.3;
+    f.body_pages = 12;
+    f.ref_pages = 1;
+    f.fonts = type1([
+      "NimbusRomNo9L-Medi",
+      "NimbusRomNo9L-Regu",
+      "NimbusRomNo9L-ReguItal",
+      "NimbusRomNo9L-MediItal",
+    ]);
+    patch(f);
+  });
+
+describe("the IEEE conference family and AIDC", () => {
+  const FAMILY = { extends: "paperlint:ieee-conference" };
+  const AIDC = { extends: "paperlint:aidc", kind: "regular" };
+
+  it.each([
+    ["the family", FAMILY],
+    ["aidc/regular", AIDC],
+    ["aidc/short", { extends: "paperlint:aidc", kind: "short" }],
+  ])("the measured IEEEtran build passes %s", (_, venue) => {
+    expect(lint({ venue, facts: ieeeFacts() })).toEqual([]);
+  });
+
+  it.each([
+    ["the family", FAMILY],
+    ["aidc", AIDC],
+  ])("the planted A4 build fails %s on both page dimensions", (_, venue) => {
+    const facts = ieeeFacts(
+      (f) => ((f.page_w_in = 8.264), (f.page_h_in = 11.694)),
+    );
+    expect(ids(lint({ venue, facts }))).toEqual([
+      "pdf/geometry:dim",
+      "pdf/geometry:dim",
+    ]);
+  });
+
+  it.each([
+    ["the family", FAMILY],
+    ["aidc", AIDC],
+  ])("the planted Computer Modern build fails %s: no Times", (_, venue) => {
+    const facts = ieeeFacts(
+      (f) => (f.fonts = type1(["CMBX12", "CMR10", "CMTI10"])),
+    );
+    const fs = lint({ venue, facts });
+    expect(ids(fs)).toEqual(["pdf/fonts:noFamily"]);
+    expect(fs[0]?.message).toMatch(/NimbusRomNo9L/);
+  });
+
+  it("a body size off the family's 10 pt fails pdf/body-size", () => {
+    expect(
+      ids(lint({ venue: AIDC, facts: ieeeFacts((f) => (f.body_pt = 9.3)) })),
+    ).toEqual(["pdf/body-size:body"]);
+  });
+
+  it("🔴 AIDC's page limit is not gated: banal's body count of 13 — a correct paper with its LLM Usage Statement before the references — is not a finding", () => {
+    expect(
+      lint({
+        venue: AIDC,
+        facts: ieeeFacts((f) => ((f.body_pages = 13), (f.ref_pages = 0))),
+      }),
+    ).toEqual([]);
+  });
+
+  it("an AIDC kind that does not exist names the two that do", () => {
+    const fs = lint({ venue: { extends: "paperlint:aidc", kind: "wip" } });
+    expect(ids(fs)).toContain("pdf/profile:kindUnknown");
+    expect(fs.find((f) => f.rule === "pdf/profile")?.message).toMatch(
+      /regular, short/,
+    );
   });
 });
 

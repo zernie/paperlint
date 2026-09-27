@@ -26,6 +26,10 @@ import {
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CONFIG_FILE } from "#lib/paper-config";
+import {
+  withDocumentClass,
+  type DocumentClass,
+} from "#eslint-rules/latex-structure";
 import { isRecord } from "./domain/record.ts";
 
 export type PaperFormat = "tex" | "md";
@@ -104,6 +108,11 @@ export interface VenueSetting {
   /** `paperlint:<name>`, or a path relative to the paper's `paperlint.json`. */
   readonly extends: string;
   readonly kind: string | null;
+  /**
+   * The class the preset's template names: the new `paper.tex` is set in it, so `tex/template`
+   * passes on the paper `new` just wrote. Absent or null: the template's class is kept.
+   */
+  readonly template?: DocumentClass | null;
 }
 
 /**
@@ -164,6 +173,12 @@ function fromTemplate(
   if (!existsSync(src))
     return { ok: false, reason: `no template for ${file}: ${src} is missing` };
   const text = readFileSync(src, "utf8").split("{{name}}").join(name);
+  const cls = venue?.template ?? null;
+  if (file === SOURCE_FILE.tex && cls !== null)
+    return {
+      ok: true,
+      value: { file, text: withDocumentClass(text, cls), from },
+    };
   if (file !== CONFIG_FILE || venue === null)
     return { ok: true, value: { file, text, from } };
   const edited = withVenue(text, src, venue);

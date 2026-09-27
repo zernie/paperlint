@@ -18,6 +18,7 @@ reads and when it fails. Errors fail `paperlint lint`; warnings print and do not
 | `paper/refs-checked`           | warn  | `paper.tex` → `_build/references.json`        | the paper has a bibliography and no build has checked it, or the last build could not (no network) — so the two rules above did not run                                                                                                                                                                                                                                                                                                                       |
 | `tex/future-promise`           | warn  | `paper.tex`                                   | a camera-ready build still says "will be released" about something already handed over                                                                                                                                                                                                                                                                                                                                                                        |
 | `tex/acm-frontmatter-override` | error | `paper.tex`                                   | an `acmart` build overrides ACM's front-matter commands and drops template elements from page 1                                                                                                                                                                                                                                                                                                                                                               |
+| `tex/template`                 | error | `paper.tex` → `paperlint.json`                | the `\documentclass` is not the class the venue preset's `template` names, or lacks an option it names (`[conference]{IEEEtran}` under AIDC, which requires `[conference,compsoc]`). Options of the paper's own (`review`, `anonymous`) are allowed. Read off the parse tree, so a class line in a comment does not count. Silent when the paper names no preset or the preset no template                                                                    |
 | `review/frontmatter`           | error | `reviews/*.md`                                | the review's frontmatter fails paperlint's JSON Schema — a `findings` record without `id`/`status`, an unknown field, or an **open** finding with no `cause` (`skill-defect` · `missing-skill` · `hook` · `rule`). A review with no `findings` key is not checked for findings                                                                                                                                                                                |
 | `sibling/frontmatter`          | warn  | `siblings/*.md` (not `README.md`)             | a sibling card's frontmatter has no `read:` saying how much of the competing paper was read (`full` · `abstract` · `none`)                                                                                                                                                                                                                                                                                                                                    |
 | `pdf/fresh`                    | error | `paper.tex` → `_build/paper.facts.json`       | the paper names a venue and the facts cannot be judged: not JSON, a schema other than 2, or they describe a PDF that is gone or differs from the one on disk (its SHA-256)                                                                                                                                                                                                                                                                                    |
@@ -79,21 +80,34 @@ for papers, each with the quote it came from, the TeX packages its template need
 the venue implies. A preset may itself extend another: the ACM venues extend the `acm-sigconf`
 family, which holds everything the ACM template decides.
 
-| preset                  | extends                 | template             | kinds                                                    | page limit checked | rules it turns on       |
-| ----------------------- | ----------------------- | -------------------- | -------------------------------------------------------- | ------------------ | ----------------------- |
-| `paperlint:acm-sigconf` | —                       | ACM `acmart` sigconf | none                                                     | no (no kinds)      | —                       |
-| `paperlint:agenticdev`  | `paperlint:acm-sigconf` | ACM `acmart` sigconf | `short` (5 + 2 refs), `full` (10 + 2), `demo` (5 + 2)    | yes                | `pdf/last-page-balance` |
-| `paperlint:aisec`       | `paperlint:acm-sigconf` | ACM `acmart` sigconf | `research`, `benchmark`, `position`, `sok` (10 + 2 each) | yes                | —                       |
-| `paperlint:realm`       | —                       | ACL                  | `long`, `short`                                          | no — see below     | —                       |
+| preset                      | extends                     | template                              | kinds                                                    | page limit checked | rules it turns on       |
+| --------------------------- | --------------------------- | ------------------------------------- | -------------------------------------------------------- | ------------------ | ----------------------- |
+| `paperlint:acm-sigconf`     | —                           | ACM `acmart` sigconf                  | none                                                     | no (no kinds)      | —                       |
+| `paperlint:agenticdev`      | `paperlint:acm-sigconf`     | ACM `acmart` sigconf                  | `short` (5 + 2 refs), `full` (10 + 2), `demo` (5 + 2)    | yes                | `pdf/last-page-balance` |
+| `paperlint:aisec`           | `paperlint:acm-sigconf`     | ACM `acmart` sigconf                  | `research`, `benchmark`, `position`, `sok` (10 + 2 each) | yes                | —                       |
+| `paperlint:realm`           | —                           | ACL                                   | `long`, `short`                                          | no — see below     | —                       |
+| `paperlint:ieee-conference` | —                           | IEEE `IEEEtran` conference            | none                                                     | no (no kinds)      | —                       |
+| `paperlint:aidc`            | `paperlint:ieee-conference` | IEEE `IEEEtran` conference, `compsoc` | `regular` (12), `short` (6)                              | no — see below     | —                       |
 
-That is all that ships today. There is no IEEE, NeurIPS, USENIX or Springer preset. A paper for an
-ACM venue nobody has profiled can extend `paperlint:acm-sigconf` directly: page size, columns and
-fonts are checked, and `pdf/profile` says the page limit is not. For anything else, write your own
-preset ([below](#writing-your-own-venue-preset)). REALM's preset sets no page limit on purpose:
-banal counts the Limitations and Ethics sections as body, ACL does not, and a limit on banal's
-number would fail a correct paper. AgenticDev's turns on `pdf/last-page-balance` because its
-proceedings are produced by Conference Publishing Consulting, which sends back an unbalanced last
-page; AISec's does not, because nothing in hand says who produces the AISec proceedings.
+That is all that ships today. There is no NeurIPS, USENIX or Springer preset. A paper for an ACM or
+IEEE conference venue nobody has profiled can extend `paperlint:acm-sigconf` or
+`paperlint:ieee-conference` directly: page size, columns and fonts are checked, and `pdf/profile`
+says the page limit is not. For anything else, write your own preset
+([below](#writing-your-own-venue-preset)). REALM's preset sets no page limit on purpose: banal
+counts the Limitations and Ethics sections as body, ACL does not, and a limit on banal's number
+would fail a correct paper. AIDC's sets none for the same reason, measured: banal counts a page as
+body when an appendix or the LLM Usage Statement sits on it before the bibliography, and AIDC counts
+neither, so a correct 12-page paper measured 13. AgenticDev's turns on `pdf/last-page-balance`
+because its proceedings are produced by Conference Publishing Consulting, which sends back an
+unbalanced last page; AISec's does not, because nothing in hand says who produces the AISec
+proceedings.
+
+**How presets are named.** A template family — the preset venues extend, owning the template,
+the format and the TeX packages — is `<publisher>-<template variant>`: `acm-sigconf`, `ieee-conference`. A venue
+is its own short name, lowercase, with no publisher and no parent-conference prefix: `aisec`,
+`agenticdev`, `realm`, `aidc`. Which template a venue uses is said by its `extends`, not by its
+name — a name repeating it would be wrong the day the venue changes template — and the parent
+conference (CCS, ASE, ACSAC) goes into the preset's comment and its `aliases`.
 
 **Build, then lint.** The rules judge what `paperlint build` measured and wrote to
 `_build/paper.facts.json` — page count, fonts, and, through banal, page size, columns, font sizes
@@ -170,14 +184,14 @@ papers/
 
 The numbers and packages above illustrate the shape; take yours from the venue's own call for papers and template.
 
-| key        | what it is                                                                                          |
-| ---------- | --------------------------------------------------------------------------------------------------- |
-| `extends`  | the preset this one builds on: `paperlint:<name>` or `./path` / `../path`, relative to this file    |
-| `name`     | how messages name the venue; the file name otherwise                                                |
-| `template` | the `\documentclass` the venue's template uses                                                      |
-| `format`   | page size, columns, fonts, font sizes, and `kinds` (page limits per kind of paper)                  |
-| `tex`      | TeX Live packages, each with the files that prove it is installed. Required unless `extends` is set |
-| `rules`    | rules the venue implies, rule id → severity or `[severity, options]`                                |
+| key        | what it is                                                                                                                                                                                                 |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `extends`  | the preset this one builds on: `paperlint:<name>` or `./path` / `../path`, relative to this file                                                                                                           |
+| `name`     | how messages name the venue; the file name otherwise                                                                                                                                                       |
+| `template` | the `\documentclass` the venue's template uses — a whole line (`\documentclass[conference,compsoc]{IEEEtran}`) or a bare class name; `tex/template` requires the paper's class and every option named here |
+| `format`   | page size, columns, fonts, font sizes, and `kinds` (page limits per kind of paper)                                                                                                                         |
+| `tex`      | TeX Live packages, each with the files that prove it is installed. Required unless `extends` is set                                                                                                        |
+| `rules`    | rules the venue implies, rule id → severity or `[severity, options]`                                                                                                                                       |
 
 How a chain merges, from the root preset to the paper: `tex` is the union — a child never removes a
 package; `format` keys are replaced one by one, and a child's kind replaces that kind whole;

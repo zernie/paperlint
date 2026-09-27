@@ -40,6 +40,7 @@ import {
   type VenueFormat,
 } from "./tex-requirements.ts";
 import { callerPath } from "./caller-path.ts";
+import type { DocumentClass } from "#eslint-rules/latex-structure";
 import { err, ok, type Result } from "./domain/result.ts";
 import type { Files } from "./ports/files.ts";
 import {
@@ -67,7 +68,7 @@ export interface Preset {
   readonly label: string;
   /** Every file of the chain, root first. */
   readonly chain: readonly string[];
-  readonly template: string | null;
+  readonly template: DocumentClass | null;
   readonly tex: TexRequirements;
   readonly format: VenueFormat;
   readonly rules: Readonly<Record<string, unknown>>;
@@ -192,7 +193,7 @@ function merged(
 ): Preset {
   const base: {
     name: string | null;
-    template: string | null;
+    template: DocumentClass | null;
     tex: TexRequirements;
     format: VenueFormat;
     rules: Readonly<Record<string, unknown>>;

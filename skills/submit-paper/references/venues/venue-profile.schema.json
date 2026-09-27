@@ -20,7 +20,7 @@
       "$ref": "#/definitions/tex"
     },
     "template": {
-      "description": "The \\documentclass the venue's template uses.",
+      "description": "The \\documentclass the venue's template uses: a whole line, `\\documentclass[conference,compsoc]{IEEEtran}`, or a bare class name. `tex/template` requires a paper's class to be this one and to carry every option named here.",
       "type": "string",
       "minLength": 1
     },

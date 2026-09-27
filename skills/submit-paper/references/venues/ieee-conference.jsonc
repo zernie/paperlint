@@ -1,0 +1,66 @@
+// IEEE `IEEEtran` conference — the TEMPLATE FAMILY: everything IEEE's conference template decides,
+// whatever the venue. A venue preset extends it ("extends": "paperlint:ieee-conference") and adds
+// what its call for papers sets: the class options it names, the page limit of each kind of paper,
+// the sections it requires.
+//
+// 🔴 THE NUMBERS ARE MEASURED, NOT COPIED. Built on 2026-09-27 from IEEE's own template files
+// (`bare_conf.tex` and `bare_conf_compsoc.tex`, V1.4b 2015/08/26, from CTAN), and from a 13-page
+// paper of generated prose on each, with IEEEtran.cls V1.8b 2015/08/26, pdflatex, TeX Live 2026
+// (`paperlint toolchain`) and TeX Live 2023 (Debian) — the same fonts on both. What banal and
+// pdf.js reported, and what the class sets, the two option sets side by side:
+//
+//                         [conference]         [conference,compsoc]
+//   page                  8.5 x 11 in          8.5 x 11 in
+//   columns               2                    2
+//   body size (banal)     10.3                 10.3            (declared 10pt)
+//   fonts (pdf.js)        NimbusRomNo9L-Regu / -Medi / -ReguItal / -MediItal, Type 1, embedded
+//   \textwidth            516pt = 7.14 in      505.89pt = 7.00 in
+//   \textheight           672pt = 9.30 in      652.04pt = 9.02 in
+//   section headings      I. SMALL CAPS        1. Title Case
+//
+// So `compsoc` changes the text block and the headings, and nothing the `pdf/*` rules judge: page
+// size, columns, body size and fonts are identical. One family is enough; a venue that requires
+// `compsoc` names it in its own `template` (tex/template checks it) and its own text block (see
+// aidc.jsonc). The planted defects fail as they should, measured on the same compsoc paper:
+//   `a4paper` added to the options        → page 8.264 x 11.694 in: pdf/geometry
+//   Computer Modern (`\rmdefault{cmr}`)   → fonts CMR10, CMBX12, …: pdf/fonts, no NimbusRomNo9L
+{
+  "template": "\\documentclass[conference]{IEEEtran}",
+
+  // TeX Live packages the IEEEtran template needs ON TOP OF tex-base.jsonc, each with the files that
+  // prove it is present (kpsewhich, after every install). Found 2026-09-27 by the loop build →
+  // missing file → tlmgr search --file → install, on the two template files above.
+  //   ieeetran — the class and its bibliography style.
+  //   cite — `bare_conf_compsoc.tex` loads it (`\usepackage[nocompress]{cite}` under compsoc) and
+  //     stops with "File `cite.sty' not found" without it.
+  //   psnfss · times — IEEEtran sets the body in Times (`ot1ptm.fd`, `ptmr7t.tfm`), drawn from the
+  //     URW clone (`utmr8a.pfb`), which is what the PDF names NimbusRomNo9L.
+  "tex": {
+    "packages": {
+      "ieeetran": ["IEEEtran.cls", "IEEEtran.bst"],
+      "cite": ["cite.sty"],
+      "psnfss": ["ot1ptm.fd"],
+      "times": ["ptmr7t.tfm", "utmr8a.pfb"],
+    },
+  },
+
+  "format": {
+    "page_size": "letter",
+    "page_w_in": 8.5,
+    "page_h_in": 11.0,
+
+    // \textwidth and \textheight of [conference], as the class sets them.
+    "textblock_w_in": 7.14,
+    "textblock_h_in": 9.3,
+
+    "columns": 2,
+
+    // IEEEtran's conference default is 10pt; banal measures the rendered mode, 10.3.
+    "body_pt": 10,
+    "body_pt_tol": 0.5,
+
+    // The Times clone. Headings and the title are set in the same family, so a `fonts_title` would
+    // repeat this check and report a Computer Modern build twice.
+    "fonts_text": "NimbusRomNo9L",
+  },
+}

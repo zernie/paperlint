@@ -50,6 +50,7 @@ import { banalInstaller, parseBanalSettings } from "./adapters/banal/index.ts";
 import { curlDownload } from "./adapters/curl/index.ts";
 import { hostDirs, nodeAdapters, nodeFiles } from "./adapters/node/index.ts";
 import { VENUE_RULE_LEVELS, venueRules } from "./venue-rules.ts";
+import { TEX_VENUE_RULE_LEVELS, texVenueRules } from "./tex-venue-rules.ts";
 import {
   paperRules,
   stringFields,
@@ -302,7 +303,16 @@ export function buildConfig(
     cfg.push({
       files: ["**/paper.tex"],
       plugins: {
-        tex: { languages: { latex: texLanguage }, rules: texBuild },
+        tex: {
+          languages: { latex: texLanguage },
+          rules: {
+            ...texBuild,
+            ...texVenueRules({
+              files: nodeFiles,
+              venuesDir: packageVenuesDir(),
+            }),
+          },
+        },
         paper: { rules: texPaperRules },
         bib: bibReachable,
       },
@@ -316,6 +326,7 @@ export function buildConfig(
         "tex/acm-frontmatter-override": "error",
         // Silent for a paper whose paperlint.json names no venue (src/venue-rules.ts).
         ...VENUE_RULE_LEVELS,
+        ...TEX_VENUE_RULE_LEVELS,
       },
     });
   // 🔴 ONLY THE FILES THESE BLOCKS CLAIM ARE LINTED (src/paper-files.ts). Without this block ESLint's
@@ -1037,6 +1048,7 @@ export async function chooseVenue(
     value: {
       extends: spec.value,
       kind: kind !== null && kinds.includes(kind) ? kind : null,
+      template: r.value.template,
       label,
       kinds,
     },

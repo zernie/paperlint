@@ -11,8 +11,11 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { parsePreset } from "./tex-requirements.ts";
 import {
   MAX_PRESET_DEPTH,
+  SHIPPED_PREFIX,
+  shippedPresets,
   labelOf,
   presetProblemText,
   resolvePreset,
@@ -44,7 +47,7 @@ describe("shipped presets", () => {
     expect(r.value.format.columns).toBe(2);
     expect(r.value.format.fontsText).toBe("LinLibertine");
     expect([...r.value.format.kinds.keys()]).toEqual(["short", "full", "demo"]);
-    expect(r.value.template).toBe("acmart");
+    expect(r.value.template).toEqual({ cls: "acmart", options: ["sigconf"] });
     expect("acmart" in r.value.tex.packages).toBe(true);
     expect(r.value.label).toBe("agenticdev");
   });
@@ -68,6 +71,45 @@ describe("shipped presets", () => {
       { tolerancePt: 120 },
     ]);
   });
+});
+
+describe("the naming convention of shipped presets (docs/rules.md)", () => {
+  // Each shipped preset, parsed: its file name and what it extends. The families are DERIVED — a
+  // shipped preset another shipped preset extends — so a new family is checked the day it ships.
+  const presets = shippedPresets(VENUES).map((name) => {
+    const file = join(VENUES, `${name}.jsonc`);
+    return {
+      name,
+      extends: parsePreset(readFileSync(file, "utf8"), file, VENUES).extends,
+    };
+  });
+  const families = presets.filter((p) =>
+    presets.some((q) => q.extends === `${SHIPPED_PREFIX}${p.name}`),
+  );
+  const publishers = families.map((f) => f.name.slice(0, f.name.indexOf("-")));
+
+  it("there are families to check (else the checks below see nothing)", () => {
+    expect(families.map((f) => f.name).sort()).toEqual([
+      "acm-sigconf",
+      "ieee-conference",
+    ]);
+  });
+
+  it.each(families.map((f) => [f.name]))(
+    "the family %s is <publisher>-<template variant>",
+    (name) => {
+      expect(name).toMatch(/^[a-z0-9]+-[a-z0-9-]+$/);
+    },
+  );
+
+  it.each(presets.filter((p) => p.extends !== null).map((p) => [p.name]))(
+    "the venue %s carries no publisher prefix — its template is said by `extends`",
+    (name) => {
+      expect(publishers.filter((pub) => name.startsWith(`${pub}-`))).toEqual(
+        [],
+      );
+    },
+  );
 });
 
 describe("a project's own preset, by relative path", () => {
@@ -149,7 +191,7 @@ describe("what does not resolve, and says why", () => {
       "a shipped name with a typo",
       "paperlint:agenticdve",
       "not-found",
-      /acm-sigconf, agenticdev, aisec, realm/,
+      /acm-sigconf, agenticdev, aidc, aisec, ieee-conference, realm/,
     ],
     ["the base TeX set", "paperlint:tex-base", "not-found", /agenticdev/],
     [
@@ -222,6 +264,21 @@ describe("chains that do not resolve", () => {
       "/work/papers/p/root.jsonc": JSON.stringify({ format: { columns: 1 } }),
     });
     expect(r.ok).toBe(false);
+  });
+});
+
+describe("a preset's template is parsed where the preset is read", () => {
+  it("a template that is neither a \\documentclass line nor a class name is refused, naming the file", () => {
+    const r = resolve("./bad.jsonc", {
+      "/work/papers/p/bad.jsonc": JSON.stringify({
+        template: "\\documentclass[a]{}",
+        tex: { packages: { x: ["x"] } },
+      }),
+    });
+    expect(r.ok).toBe(false);
+    expect(!r.ok && presetProblemText(r.error)).toMatch(
+      /bad\.jsonc: "template": .* is neither a \\documentclass line nor a class name/,
+    );
   });
 });
 
