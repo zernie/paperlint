@@ -22,12 +22,12 @@ import type {
   EntryVerdict,
 } from "../../ports/check-references.ts";
 import {
-  dblpTitleKey,
   type CachedDblp,
   type CachedResponse,
   type DblpHit,
   type LookupCache,
 } from "../../domain/lookup-cache.ts";
+import { sha256Hex } from "../../domain/sha256.ts";
 import { mapLimit } from "./pool.ts";
 import { unreachable } from "./reach.io.ts";
 import { sleep, todayUtc } from "./clock.io.ts";
@@ -146,6 +146,14 @@ async function fullyCached(
   );
 }
 
+/**
+ * The key a DBLP answer is stored under in the lookup cache: the title's identity (verify-cites'
+ * `titleIdentity` — the same rule its own title keys use, so the two caches cannot drift), hashed.
+ * A re-cased or re-braced title keeps its answer; `C` and `C++` do not share one.
+ */
+export const dblpTitleKey = (title: string): string =>
+  sha256Hex(new TextEncoder().encode(cites.titleIdentity(title))).slice(0, 16);
+
 export interface ReferencesCheckerOptions {
   /** The day a new answer is stamped with, YYYY-MM-DD. */
   readonly today: () => string;
@@ -228,7 +236,8 @@ export const referencesChecker =
     // pool of 6 is at most 6 requests to any one of them. The store is shared: two citations with
     // the same identifier may both miss it and ask twice — an extra request, never a different
     // answer.
-    // One breaker for the run: a service that refuses is asked once, not once per citation (#120).
+    // One breaker for the run: a service that refuses is not asked again, not once per citation
+    // (#120). Requests already in flight when it starts refusing still land — at most six.
     const breaker = cites.createBreaker() as unknown;
     const d = cachedDblp(cache, today);
     const [found, a] = await Promise.all([

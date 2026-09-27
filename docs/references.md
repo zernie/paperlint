@@ -54,9 +54,12 @@ Free services rate-limit. From a CI runner or a shared network, Semantic Scholar
 DBLP answers an HTML page where JSON was asked, a registry stops answering. The check handles this
 within one build:
 
-- **A service that refuses is asked once per build.** The first request to each service goes
-  alone; once a service refuses (a `429` or `5xx`, HTML instead of JSON, a timeout, no connection),
-  it is not asked again until the next build, and no retries or pauses are spent on it.
+- **A service that refuses stops being asked for the rest of the build.** The first request to
+  each service goes alone; once a service refuses (a `429` or `5xx`, HTML instead of JSON, a
+  timeout, no connection), no new request goes to it until the next build, and no retries or pauses
+  are spent on it. A service that refuses from the start costs one request. One that starts refusing
+  later costs at most the requests already in flight at that moment — six, the number of entries
+  checked at once.
 - **The entries it would have answered say so.** An entry no registry confirmed carries
   `not asked: <service>: <reason>` in its reason. An entry whose authors DBLP could not check is
   `authors: unchecked`, which `paper/refs-checked` reports and lint never treats as a pass.

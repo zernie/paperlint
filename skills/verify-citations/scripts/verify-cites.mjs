@@ -695,11 +695,25 @@ function saveCache(cache) {
   }
 }
 
+/**
+ * A title's IDENTITY, for cache keys: case, accents, BibTeX braces and runs of whitespace
+ * normalized, punctuation kept. Not `normalizeTitle`, which drops punctuation so that `Title: Sub`
+ * and `Title - Sub` still COMPARE equal — as a key that would make `C` and `C++` one entry, and
+ * the second would be served the first's answers. A punctuation-only variant costs one extra
+ * lookup instead. The one owner of this rule: DBLP's cache key (the references adapter) uses it too.
+ */
+export function titleIdentity(t) {
+  return (t ?? "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/\p{M}+/gu, "")
+    .replace(/[{}]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function titleHash(t) {
-  return createHash("sha1")
-    .update(normalizeTitle(t))
-    .digest("hex")
-    .slice(0, 16);
+  return createHash("sha1").update(titleIdentity(t)).digest("hex").slice(0, 16);
 }
 function cacheKey(kind, val) {
   return `${kind}:${val}`;
@@ -1062,8 +1076,11 @@ export async function wouldAsk(citation, cache) {
  * has answered, every other request to that service waits for it. Once a service REFUSES — a
  * transport error, a 429 or 5xx, a timeout, HTML where JSON was asked — it is not asked again for
  * the rest of the run: every later question to it is answered "refused earlier in this run" at no
- * cost. A rate-limited service therefore costs ONE request per run, not one per citation, and not
- * one per retry (#120).
+ * cost. A service that refuses from its first request costs ONE request per run, not one per
+ * citation, and not one per retry (#120). One that answers first and starts refusing later costs
+ * at most the requests already in flight when the refusal lands — the caller's concurrency (six in
+ * `paperlint build`). Queueing every request to a service behind the previous one would remove that
+ * margin, at the price of making every cold build sequential per service.
  *
  * Nothing about a refusal is remembered past the run: the next run asks again, once.
  *

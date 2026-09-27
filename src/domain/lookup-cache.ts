@@ -8,7 +8,7 @@
  *
  * `citations` holds verify-cites' per-resolver responses (Crossref, OpenAlex, Semantic Scholar,
  * arXiv, doi.org, NVD), under verify-cites' own cache keys. `dblp` holds the hits DBLP returned for
- * a title, under `dblpTitleKey`. Only successful answers are ever stored: a failed request is not an
+ * a title, under the references adapter's `dblpTitleKey`. Only successful answers are ever stored: a failed request is not an
  * answer, so the next build asks again.
  *
  * 🔴 RESPONSES, NEVER VERDICTS. The verdicts (`_build/references.json`) are DERIVED from these
@@ -30,7 +30,6 @@
  * never read as empty.
  */
 import { err, ok, type Result } from "./result.ts";
-import { sha256Hex } from "./sha256.ts";
 
 export const LOOKUP_CACHE_SCHEMA = 1;
 
@@ -54,7 +53,7 @@ export interface DblpHit {
 
 export interface CachedDblp {
   readonly fetched: string;
-  /** The title as it was asked — for a human reading the file; the key is `dblpTitleKey(title)`. */
+  /** The title as it was asked — for a human reading the file; the key is the adapter's `dblpTitleKey(title)`. */
   readonly title: string;
   readonly hits: readonly DblpHit[];
 }
@@ -68,25 +67,6 @@ export const EMPTY_LOOKUP_CACHE: LookupCache = {
   citations: new Map(),
   dblp: new Map(),
 };
-
-/**
- * The key a DBLP answer is stored under: the title with case, accents, BibTeX braces and runs of
- * whitespace normalized, hashed. A re-cased or re-braced title in the .bib keeps its answer.
- * Punctuation stays: `C` and `C++` are different works, and a shared key would serve one's
- * answer for the other. A title that differs only in punctuation costs one extra lookup.
- */
-export const dblpTitleKey = (title: string): string =>
-  sha256Hex(
-    new TextEncoder().encode(
-      title
-        .toLowerCase()
-        .normalize("NFKD")
-        .replace(/\p{M}+/gu, "")
-        .replace(/[{}]/g, "")
-        .replace(/\s+/g, " ")
-        .trim(),
-    ),
-  ).slice(0, 16);
 
 const isObject = (v: unknown): v is Json =>
   typeof v === "object" && v !== null && !Array.isArray(v);

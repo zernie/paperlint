@@ -165,8 +165,8 @@ step never fails the build.
 What the services ANSWERED is kept in \`<paper>/repro/references-cache.json\` — **commit it**. A build asks
 only the questions that file cannot answer (a new or edited entry), so an unchanged bibliography builds
 with no network at all, in CI too. It holds responses, never verdicts: the verdicts are derived again on
-every build. A service that refuses (429, HTML instead of JSON, a timeout) is asked once per build and then
-left alone; the entries it would have answered say \`not asked: <service>: <reason>\`, and DBLP's become
+every build. A service that refuses (429, HTML instead of JSON, a timeout) is not asked again for the rest of the
+build (the requests already in flight still land); the entries it would have answered say \`not asked: <service>: <reason>\`, and DBLP's become
 \`authors: unchecked\`. To refresh one answer, delete its entry; to refresh everything, delete the file. Details:
 \`docs/references.md\` in the package. Run the scripts by hand (below) to read a single verdict in full.
 

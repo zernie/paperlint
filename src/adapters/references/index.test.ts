@@ -5,9 +5,8 @@
  */
 import assert from "node:assert/strict";
 import { afterEach, test, vi } from "vitest";
-import { onlineReferences, referencesChecker } from "./index.ts";
+import { dblpTitleKey, onlineReferences, referencesChecker } from "./index.ts";
 import {
-  dblpTitleKey,
   EMPTY_LOOKUP_CACHE,
   type LookupCache,
 } from "../../domain/lookup-cache.ts";
@@ -501,3 +500,24 @@ test("#120: a DBLP 429 trips it as well; DBLP answering keeps its 900 ms pace be
     { refused: 1, answering: 3, beforePause: false },
   );
 });
+
+// Guards: the DBLP key must not change with presentation markup (BibTeX braces, case, accents,
+// spacing), or a re-cased title in the .bib re-asks DBLP with its 900 ms pause.
+test("dblpTitleKey is the same for the same title under braces, case, accents and spacing", () => {
+  const k = dblpTitleKey("Évaluating {LLM}-based  Agents");
+  assert.equal(dblpTitleKey("evaluating llm-based agents"), k);
+  assert.match(k, /^[0-9a-f]{16}$/);
+  assert.notEqual(dblpTitleKey("Evaluating LLM-based Tools"), k);
+});
+
+// Guards: punctuation can be part of a title's identity. A shared key would serve one work's
+// DBLP answer for another; a separate key costs one extra lookup at most.
+const PUNCTUATION_PAIRS: readonly (readonly [string, string])[] = [
+  ["Fuzzing C Compilers", "Fuzzing C++ Compilers"],
+  ["Verified F Programs", "Verified F# Programs"],
+];
+for (const [a, b] of PUNCTUATION_PAIRS) {
+  test(`dblpTitleKey keeps ${a} and ${b} apart`, () => {
+    assert.notEqual(dblpTitleKey(a), dblpTitleKey(b));
+  });
+}

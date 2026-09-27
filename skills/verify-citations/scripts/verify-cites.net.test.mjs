@@ -243,6 +243,35 @@ test("a second lookup is served from the cache; failures and a nonexistent DOI a
   );
 });
 
+// Guards: a title-only cache key must keep punctuation that names a different work. A shared key
+// for `C` and `C++` would answer the second from the first's registry responses, no request made.
+test("title-only keys keep punctuation: a C++ title is not served the C title's cached answers", async () => {
+  const cache = {};
+  const miss = () =>
+    json(200, { message: { items: [] }, results: [], data: [] });
+  fakeFetch({
+    [CR]: miss,
+    [OA]: miss,
+    [S2]: miss,
+    [AX]: () => text(200, "<feed></feed>"),
+  });
+  await verifyCitationLive(
+    { id: "a", title: "Fuzzing C Compilers" },
+    { cache },
+  );
+  const asked = fakeFetch({
+    [CR]: miss,
+    [OA]: miss,
+    [S2]: miss,
+    [AX]: () => text(200, "<feed></feed>"),
+  });
+  await verifyCitationLive(
+    { id: "b", title: "Fuzzing C++ Compilers" },
+    { cache },
+  );
+  expect(asked.length).toBeGreaterThan(0);
+});
+
 // Guards: `paperlint build` skips its reachability probe when no citation `wouldAsk`. If it said
 // "no" for a citation a live run asks about, a "fully cached" paper would go online anyway; if it
 // said "yes" for one a live run answers from the cache, every warm build would probe the network.
@@ -409,6 +438,34 @@ test("#120: citations in flight at once still ask a refusing service once — th
       openalex: 3,
       s2: 1,
       arxiv: 3,
+    },
+  );
+});
+
+// Guards the stated bound: requests already in flight when a service starts refusing still land
+// (at most as many as run at once), and nothing is asked after the first refusal is recorded.
+test("#120: a service that starts refusing costs at most the requests already in flight", async () => {
+  const breaker = createBreaker();
+  let attempts = 0;
+  let release;
+  const first = new Promise((r) => (release = r));
+  const call = (answer) =>
+    breaker.call("s2", async () => {
+      attempts++;
+      return answer();
+    });
+  const opener = call(() => first);
+  const waiters = Array.from({ length: 5 }, () =>
+    call(async () => ({ ok: false, reason: "http 429" })),
+  );
+  release({ ok: true, value: 1 });
+  await Promise.all([opener, ...waiters]);
+  const after = await call(async () => ({ ok: true, value: 2 }));
+  assert.deepEqual(
+    { attempts, after },
+    {
+      attempts: 6,
+      after: { ok: false, reason: "s2 refused earlier in this run (http 429)" },
     },
   );
 });
