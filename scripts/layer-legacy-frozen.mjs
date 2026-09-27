@@ -115,14 +115,22 @@ export function judge({ counts, unexplained, frozen }) {
 }
 
 /** Lint `src/` with the repository's configuration and run the whole check. */
-export async function checkFrozen(root = ROOT) {
+export async function checkFrozen(
+  root = ROOT,
+  { lint = (cwd) => new ESLint({ cwd }).lintFiles(["src/**/*.ts"]) } = {},
+) {
   const data = JSON.parse(readFileSync(join(root, FROZEN_FILE), "utf8"));
   const frozen = data.files ?? {};
-  const eslint = new ESLint({ cwd: root });
-  // A glob that matched nothing would tally nothing and report every frozen file as fixed. ESLint
-  // refuses that itself, and loudly: `lintFiles` THROWS "No files matching 'src/**/*.ts' were
-  // found" (or "All files matched … are ignored") — measured, so no empty-result branch here.
-  const raw = await eslint.lintFiles(["src/**/*.ts"]);
+  // ESLint itself THROWS when the glob matches nothing ("No files matching 'src/**/*.ts' were
+  // found") or only ignored files — measured. An empty result from any other linter (or a
+  // configuration that lets it through) must not tally nothing and report every frozen file fixed.
+  const raw = await lint(root);
+  if (raw.length === 0)
+    return {
+      problems: ["src/**/*.ts matched no file — nothing was counted."],
+      frozen,
+      counts: {},
+    };
   const results = raw.map((r) => ({
     ...r,
     filePath: relative(root, r.filePath).split(sep).join("/"),

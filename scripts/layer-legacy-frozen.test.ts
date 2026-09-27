@@ -183,3 +183,15 @@ test(
     assert.deepEqual(here.counts, here.frozen);
   },
 );
+
+test("checkFrozen: a lint that returns no result reports that nothing was counted", async () => {
+  const root = useTempDir("layer-frozen-empty-");
+  writeTree(root, {
+    [FROZEN_FILE]: JSON.stringify({ files: { "src/a.ts": { x: 1 } } }),
+  });
+  assert.deepEqual(await checkFrozen(root, { lint: async () => [] }), {
+    problems: ["src/**/*.ts matched no file — nothing was counted."],
+    frozen: { "src/a.ts": { x: 1 } },
+    counts: {},
+  });
+});
