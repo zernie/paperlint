@@ -225,7 +225,7 @@ try {
 // Run A above pins that the calendar surface is absent from a headless session, which
 // is true and worth knowing and also means the skill's CENTRAL STEP has never been
 // checked by anything. Run B supplies the surface with a stand-in
-// (`fixtures/fake-google-calendar.mjs`) carrying the REAL API's required-field sets,
+// (`fixtures/fake-google-calendar.ts`) carrying the REAL API's required-field sets,
 // so the step becomes executable for the first time.
 //
 // ── WHAT IS UNDER TEST, AND WHY IT IS NOT THE MODEL ─────────────────────────────
@@ -312,7 +312,7 @@ try {
         mcpServers: {
           Google_Calendar: {
             command: process.execPath,
-            args: [join(HERE, "fixtures", "fake-google-calendar.mjs")],
+            args: [join(HERE, "fixtures", "fake-google-calendar.ts")],
             env: { FAKE_MCP_LOG: callLog },
           },
         },

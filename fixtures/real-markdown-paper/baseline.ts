@@ -7,12 +7,25 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { z } from "zod";
+
+/** Findings per rule id. */
+export type Counts = Record<string, number>;
+
+const Baseline = z.object({ findings: z.record(z.string(), z.number()) });
+const LintOutput = z.array(
+  z.object({
+    messages: z.array(z.object({ ruleId: z.string().nullable() })).nullish(),
+  }),
+);
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 /** The recorded counts, `{ruleId: n}`. */
-export function recordedFindings() {
-  return JSON.parse(readFileSync(join(HERE, "baseline.json"), "utf8")).findings;
+export function recordedFindings(): Counts {
+  return Baseline.parse(
+    JSON.parse(readFileSync(join(HERE, "baseline.json"), "utf8")),
+  ).findings;
 }
 
 /**
@@ -20,11 +33,13 @@ export function recordedFindings() {
  * 🔴 Output that does not parse THROWS. An empty set read as "clean" is how this repository's
  * checks have gone hollow before.
  */
-export function countByRule(stdout) {
-  const out = {};
-  for (const file of JSON.parse(stdout))
-    for (const m of file.messages ?? [])
-      out[m.ruleId] = (out[m.ruleId] ?? 0) + 1;
+export function countByRule(stdout: string): Counts {
+  const out: Counts = {};
+  for (const file of LintOutput.parse(JSON.parse(stdout)))
+    for (const m of file.messages ?? []) {
+      const rule = String(m.ruleId);
+      out[rule] = (out[rule] ?? 0) + 1;
+    }
   return out;
 }
 
@@ -37,12 +52,18 @@ export function countByRule(stdout) {
  * A partial drop is neither: it is what a fix looks like (paperlint#44 is expected to take typography
  * to zero, and then the recording is updated in the same change).
  */
-export function compareToBaseline(found, recorded = recordedFindings()) {
+export function compareToBaseline(
+  found: Readonly<Counts>,
+  recorded: Readonly<Counts> = recordedFindings(),
+): {
+  grew: { rule: string; now: number; recorded: number }[];
+  vanished: string[];
+} {
   const grew = Object.entries(found)
     .filter(([rule, n]) => n > (recorded[rule] ?? 0))
     .map(([rule, n]) => ({ rule, now: n, recorded: recorded[rule] ?? 0 }));
   const vanished = Object.keys(recorded).filter(
-    (r) => recorded[r] > 0 && !(r in found),
+    (r) => (recorded[r] ?? 0) > 0 && !(r in found),
   );
   return { grew, vanished };
 }

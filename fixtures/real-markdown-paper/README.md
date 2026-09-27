@@ -12,7 +12,7 @@ fixture for this repository's own checks. It is NOT part of the package's API, c
 stability, and will be replaced the moment a better real document is available.
 
 **The article does not ship.** `package.json` excludes this directory from the npm tarball
-(`!fixtures/real-markdown-paper` in `files`) and re-includes only `baseline.mjs` and
+(`!fixtures/real-markdown-paper` in `files`) and re-includes only `baseline.ts` and
 `baseline.json`: `test/e2e/install.mjs` ships and imports the comparator, and a shipped file
 whose relative import points outside the tarball is a broken file. The install e2e copies the
 article itself from the repository into the consumer, the same way it copies

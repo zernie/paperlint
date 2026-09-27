@@ -34,6 +34,20 @@
  * Calls are appended as JSONL to $FAKE_MCP_LOG.
  */
 import { appendFileSync } from "node:fs";
+/** One tool as the real server declares it: which arguments it requires and which it knows. */
+interface ToolSpec {
+  readonly description: string;
+  readonly required: readonly string[];
+  readonly known: readonly string[];
+}
+
+/**
+ * A JSON object. The narrowing is written out rather than done with zod on purpose: zod's import
+ * costs ~45 ms at startup, and the effects harness calls a tool as soon as the session opens — with
+ * zod loaded the server was measured still connecting on every run, without it ready on every run.
+ */
+type Msg = Readonly<Record<string, unknown>>;
+const isObject = (v: unknown): v is Msg => typeof v === "object" && v !== null;
 
 const LOG = process.env.FAKE_MCP_LOG;
 if (!LOG) {
@@ -44,12 +58,14 @@ if (!LOG) {
   );
   process.exit(1);
 }
+/** The log, known to be set from here on. */
+const LOG_FILE: string = LOG;
 
 /**
  * Transcribed from the live tool definitions, 2026-08-17. `required` is the field
  * that carries the weight — everything else is here so an unknown key is detectable.
  */
-const TOOLS = {
+const TOOLS: Readonly<Record<string, ToolSpec>> = {
   create_event: {
     description: "Creates an event on the given calendar.",
     required: ["summary", "startTime", "endTime"],
@@ -138,7 +154,7 @@ const TOOLS = {
   },
 };
 
-const schemaOf = (spec) => ({
+const schemaOf = (spec: ToolSpec) => ({
   type: "object",
   properties: Object.fromEntries(spec.known.map((k) => [k, {}])),
   required: spec.required,
@@ -147,9 +163,12 @@ const schemaOf = (spec) => ({
 let created = 0;
 
 /** @returns {string|null} the reason this call would be rejected, or null if it is well-formed. */
-function reject(name, args) {
-  const spec = TOOLS[name];
-  if (!spec) return `no such tool: ${name}`;
+function reject(
+  name: unknown,
+  args: Readonly<Record<string, unknown>> | null | undefined,
+): string | null {
+  const spec = TOOLS[String(name)];
+  if (!spec) return `no such tool: ${String(name)}`;
   const a = args ?? {};
   const missing = spec.required.filter(
     (k) => a[k] === undefined || a[k] === "",
@@ -162,78 +181,90 @@ function reject(name, args) {
   return null;
 }
 
+/** A `tools/call`: logged whatever its fate, then answered with an error or a fake event id. */
+function call(msg: Msg): Record<string, unknown> {
+  const params = isObject(msg.params) ? msg.params : undefined;
+  const name = params?.name;
+  const args = isObject(params?.arguments) ? params.arguments : {};
+  const why = reject(name, args);
+  // Every call is logged, accepted or not. A rejected call that left no trace
+  // would be indistinguishable from a call that never happened.
+  appendFileSync(
+    LOG_FILE,
+    JSON.stringify({ name, args, ok: why === null, why }) + "\n",
+  );
+  if (why)
+    return {
+      result: {
+        isError: true,
+        content: [{ type: "text", text: `INVALID CALL: ${why}` }],
+      },
+    };
+  created += 1;
+  return {
+    result: {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({
+            id: `evt_fake_${String(created)}`,
+            status: "confirmed",
+          }),
+        },
+      ],
+    },
+  };
+}
+
+/** The reply to one message, or `null` for a notification (no id) this server does not handle. */
+function answer(msg: Msg): Record<string, unknown> | null {
+  if (msg.method === "initialize")
+    return {
+      result: {
+        protocolVersion: "2024-11-05",
+        capabilities: { tools: {} },
+        serverInfo: { name: "fake-google-calendar", version: "1.0.0" },
+      },
+    };
+  if (msg.method === "tools/list")
+    return {
+      result: {
+        tools: Object.entries(TOOLS).map(([name, spec]) => ({
+          name,
+          description: spec.description,
+          inputSchema: schemaOf(spec),
+        })),
+      },
+    };
+  if (msg.method === "tools/call") return call(msg);
+  return msg.id !== undefined ? { result: {} } : null;
+}
+
+/** One line of input, parsed; `null` for a line that is not a JSON-RPC message. */
+function parseLine(line: string): Msg | null {
+  let json: unknown;
+  try {
+    json = JSON.parse(line);
+  } catch {
+    return null;
+  }
+  return isObject(json) ? json : null;
+}
+
 let buf = "";
-process.stdin.on("data", (chunk) => {
+process.stdin.on("data", (chunk: Buffer | string) => {
   buf += chunk;
   let nl;
   while ((nl = buf.indexOf("\n")) >= 0) {
     const line = buf.slice(0, nl).trim();
     buf = buf.slice(nl + 1);
     if (!line) continue;
-    let msg;
-    try {
-      msg = JSON.parse(line);
-    } catch {
-      continue;
-    }
-    const send = (payload) =>
+    const msg = parseLine(line);
+    if (msg === null) continue;
+    const payload = answer(msg);
+    if (payload)
       process.stdout.write(
         JSON.stringify({ jsonrpc: "2.0", id: msg.id, ...payload }) + "\n",
       );
-
-    if (msg.method === "initialize") {
-      send({
-        result: {
-          protocolVersion: "2024-11-05",
-          capabilities: { tools: {} },
-          serverInfo: { name: "fake-google-calendar", version: "1.0.0" },
-        },
-      });
-    } else if (msg.method === "tools/list") {
-      send({
-        result: {
-          tools: Object.entries(TOOLS).map(([name, spec]) => ({
-            name,
-            description: spec.description,
-            inputSchema: schemaOf(spec),
-          })),
-        },
-      });
-    } else if (msg.method === "tools/call") {
-      const name = msg.params?.name;
-      const args = msg.params?.arguments ?? {};
-      const why = reject(name, args);
-      // Every call is logged, accepted or not. A rejected call that left no trace
-      // would be indistinguishable from a call that never happened.
-      appendFileSync(
-        LOG,
-        JSON.stringify({ name, args, ok: why === null, why }) + "\n",
-      );
-      if (why) {
-        send({
-          result: {
-            isError: true,
-            content: [{ type: "text", text: `INVALID CALL: ${why}` }],
-          },
-        });
-      } else {
-        created += 1;
-        send({
-          result: {
-            content: [
-              {
-                type: "text",
-                text: JSON.stringify({
-                  id: `evt_fake_${String(created)}`,
-                  status: "confirmed",
-                }),
-              },
-            ],
-          },
-        });
-      }
-    } else if (msg.id !== undefined) {
-      send({ result: {} });
-    }
   }
 });

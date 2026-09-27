@@ -46,7 +46,7 @@ import {
   compareToBaseline,
   countByRule,
   recordedFindings,
-} from "./baseline.mjs";
+} from "./baseline.ts";
 import { createChecker } from "../../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -91,7 +91,7 @@ function findings(patch) {
       cwd: work,
       encoding: "utf8",
     });
-    // Throws on output that does not parse — see baseline.mjs.
+    // Throws on output that does not parse — see baseline.ts.
     return countByRule(r.stdout);
   } finally {
     rmSync(work, { recursive: true, force: true });

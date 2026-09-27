@@ -13,7 +13,7 @@ import { test } from "vitest";
 import { runNode, useTempDir, writeTree } from "../../../test/support.mjs";
 import { check, newestSourceDate, parseStatus } from "./pipeline-check.mjs";
 import { readdirSync } from "node:fs";
-import { scorecard } from "./fixtures/scorecard.mjs";
+import { scorecard } from "./fixtures/scorecard.ts";
 
 const SCRIPT = join(
   dirname(fileURLToPath(import.meta.url)),

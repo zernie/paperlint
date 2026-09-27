@@ -12,7 +12,9 @@
     "scripts/**/*.ts",
     "test/**/*.ts",
     "lib/**/*.test.ts",
-    "skills/**/*.test.ts"
+    "skills/**/*.test.ts",
+    "fixtures/**/*.ts",
+    "skills/**/fixtures/**/*.ts"
   ],
   "exclude": []
 }

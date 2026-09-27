@@ -42,7 +42,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   compareToBaseline,
   countByRule,
-} from "../../fixtures/real-markdown-paper/baseline.mjs";
+} from "../../fixtures/real-markdown-paper/baseline.ts";
 
 const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const KEEP = process.argv.includes("--keep");

@@ -40,7 +40,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { consumerRoot } from "./consumer.mjs";
-import { scorecard as makeScorecard } from "./fixtures/scorecard.mjs";
+import { scorecard as makeScorecard } from "./fixtures/scorecard.ts";
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 const ROOT = consumerRoot();
