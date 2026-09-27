@@ -44,8 +44,8 @@ It sits beside your `package.json`. Without it every setting has its default.
 | `pdf`       | none       | where the built PDF is, relative to each paper, when it is not `paper.pdf`                 |
 | `$comment`  | —          | a note for humans (JSON Schema's comment keyword); ignored                                 |
 
-The skill scripts read a few more root keys — `ledger`, `scripts`, `timezone`, `contactEmail`,
-`citeChecks`, `triggerCases` — documented with the skills that use them.
+The skill scripts read a few more root keys — `scripts`, `timezone`, `contactEmail`,
+`triggerCases` — documented with the skills that use them.
 
 **`paperlint lint` finds the file** by walking up from the current directory to the nearest
 `paperlint.json` that is not a paper's own (a paper's sits beside its `paper.tex`); if there is

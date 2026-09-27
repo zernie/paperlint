@@ -5,11 +5,9 @@
 "did everything run?" is a checked fact, not a memory. Chat evaporates; this file rides with the paper
 to camera-ready.
 
-🔴 **It is also machine-read.** `../scripts/pipeline-check.mjs` parses this file, so the four section
-headings, the row shape, and the ISO dates are a **format contract**, not decoration. Break them and
-the checks go quiet — which, as of 2026-08-03, is a failure mode this repo has lived through three
-times in one day. Run `node .claude/skills/paper-pipeline/scripts/pipeline-check.mjs <paper-dir>`
-after editing to confirm it still parses.
+🔴 **It is also machine-read.** The status hook prints the `**Readiness verdict:**` line and every
+`☐` gate row each time a paper source is edited, and the rules read the front matter below. Keep
+the verdict line's wording and the `☐`/`☑` marks as they are, or the hook goes quiet.
 
 ## The front matter
 
@@ -41,7 +39,7 @@ match, and the finding will quote exactly what it looked for.
 ## The row ids, and what each one runs
 
 The `id` cell is the **join key** — the same string appears in this template, in every paper's
-scorecard, in `Requires` cells, in `../scripts/pipeline-edges.mjs` and in the skills' own prose. So
+scorecard, in `Requires` cells and in the skills' own prose. So
 the scorecard explains itself where it lives:
 
 | id            | section    | what it is                                                                | run by                          |
@@ -79,27 +77,6 @@ two rows, merged by every consumer — and `Id` (research-ideate) was the header
 parser's header-row filter silently ate that row on **every** scorecard for as long as the template
 existed. Neither is expressible now. Keep new ids lowercase, one word, and say what the row is.
 
-### How `pipeline-check.mjs` reads this file (rewritten 2026-08-09 to parse markdown, not match it)
-
-Both defects above, plus a third — two rows sharing an id merging in silence — had one cause: a
-regular expression guessing at document structure. The parser is now an AST walk (`markdown-it`),
-and two rules decide what it reads. They are stated here because the checker's findings point at
-them:
-
-- **A heading names a section iff its FIRST Latin-script word is `SETUP` / `LOOP` / `CONTINUOUS` /
-  `GATES` / `AFTER`.** Anything after that word is free: `### GATES (re-run 06.08)` is GATES. A
-  heading with a different first word — or none, like `### Гейты, прогнанные 06.08` — names no
-  section and CLOSES the previous one. Headings are **not** translated or fuzzy-matched: guessing
-  what a heading means is the defect, not the fix. Rows in such a region are reported
-  (`unattributed-row`), never dropped.
-- **A table is part of the scorecard iff its header row's first cell is `id`** (also `код`, `code`).
-  The header comes from the table's real `thead`, so there is nothing to guess and a data row
-  reading `| Id |` is a row. Prose tables in a scorecard — the panel must-fix table, a ceiling
-  classification — have no id column and are correctly ignored. The pre-2026-08 single-table format
-  keys its first column `#`, a row number; it does not parse, and the checker says so by name.
-
-**A row is never dropped in silence.** Unattributable, unreadable and duplicate ids are findings.
-
 ## Rules
 
 - **One row per unit of work; update the row in the SAME commit as the work.** Status + ISO date +
@@ -108,14 +85,10 @@ them:
   stage 7"). SETUP is done-or-not. LOOP iterates. **CONTINUOUS is never done** — its date is compared
   against the paper's own mtime, and a `☑` older than the text is a _stale pass_, which reads as
   green and is not. GATES are blocked on named inputs.
-- 🔴 **The `Requires` cells above are not free-form — do not thin them.** The canonical edge set lives
-  in `../scripts/pipeline-edges.mjs`, with the sentence from each skill's own SKILL.md that admitted
-  the edge, and the ESLint rule `pipeline/undeclared-input` (`eslint-rules/pipeline-status.mjs`;
-  until 2026-08-26 `pipeline-check.mjs`) reports any cell that drops one. The cell
-  was retyped by hand for every paper until 2026-08-08, and `compile-rules-2026` had lost four of
-  them — including `arc`, which argument-arc's SKILL.md says must precede `tighten-paper`. A dropped
-  edge is invisible: `gate-missing-input` can only enforce what the cell says. Adding an input the
-  table does not know about is fine and reports nothing.
+- 🔴 **The `Requires` cells above are not free-form — do not thin them.** The cell was retyped by
+  hand for every paper until 2026-08-08, and `compile-rules-2026` had lost four of them — including
+  `arc`, which argument-arc's SKILL.md says must precede `tighten-paper`. A dropped edge is
+  invisible. Adding an input the table does not know about is fine.
 - 🔴 **Row `access` is the one that is not about the paper, and it is the one that bites.** _Can you
   physically upload?_ — account exists, profile is **ACTIVE** rather than "pending moderation", the
   portal is reachable, you know the form's fields and its artifact-hosting requirement. On

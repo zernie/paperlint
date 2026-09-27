@@ -363,8 +363,8 @@ paid for by a consumer who only wants the ESLint rules and never loads a hook.
 
 `optional: true` is the entry that matches what this section already argues: the consumer brings
 its own `vigiles` _when it uses the hooks_, and npm stops deciding that for them. Both halves
-measured on the 56 MB tree: `eslint-rules/latex-language.mjs` and
-`skills/paper-pipeline/scripts/pipeline-check.mjs` load and run (RC=0), while
+measured on the 56 MB tree: `eslint-rules/latex-language.mjs` and the skill scripts load and
+run (RC=0), while
 `hooks/paper-edit-guard.hook.mjs` fails with `ERR_MODULE_NOT_FOUND` — which is this contract
 working, not a defect, exactly as argued below.
 
