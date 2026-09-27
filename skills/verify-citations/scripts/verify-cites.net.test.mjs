@@ -271,6 +271,41 @@ test("a corrected arXiv id is asked again even when the DOI is unchanged", async
   );
 });
 
+// Guards: an arXiv DOI (10.48550/arXiv.<id>) names an arXiv id, so arXiv is asked by that id.
+// Measured 2026-09-27 on a real bibliography: OpenAlex maps 10.48550/arXiv.2310.06770 (SWE-bench)
+// to an unrelated work; with Crossref and Semantic Scholar refusing and arXiv asked only by title
+// "when there is no DOI", nothing contradicted it and the paper came out `exists: false`.
+test("an arXiv DOI is asked of arXiv by its id, whose match outweighs a registry's wrong record", async () => {
+  const calls = fakeFetch({
+    [CR]: () => json(429),
+    [OA]: () =>
+      json(200, {
+        id: "W1",
+        display_name: "GardenBench",
+        publication_year: 2023,
+      }),
+    [S2]: () => json(429),
+    [AX]: () => text(200, feed(TITLE, 2017)),
+    [DOI]: () => json(200, { responseCode: 1 }),
+  });
+  const v = await verifyCitationLive(
+    { id: "c", doi: "10.48550/arXiv.1706.03762", title: TITLE, year: "2017" },
+    { cache: {} },
+  );
+  assert.deepEqual(
+    {
+      verdict: v.verdict,
+      matched: v.matched_db,
+      arxiv: calls.filter((u) => u.startsWith(AX)),
+    },
+    {
+      verdict: "true",
+      matched: "arxiv",
+      arxiv: [`${AX}?id_list=1706.03762&max_results=1`],
+    },
+  );
+});
+
 // Guards: NVD's "not found" must not be cached. A CVE cited before NVD indexes it would otherwise
 // stay "fabricated" in the committed cache forever; only positive existence is kept, as for doi.org.
 test("an NVD not-found answer is not cached, so a later build asks again", async () => {
