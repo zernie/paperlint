@@ -146,6 +146,55 @@ const cases = [];
   );
 }
 
+// ── 5b. `realpathSync.native(…)` resolves too — as a bare import and through a namespace. A
+//       `.native(…)` on anything else is NOT a resolve: another object, a computed member, a call
+//       result, a bare `native` function. Each of those still gets its finding.
+{
+  const root = 'mkdtempSync(join(tmpdir(), "probe-"))';
+  const silent = await on(
+    `${HEAD}import * as fs from "node:fs";\n` +
+      `const a = realpathSync.native(${root});\nconst b = fs.realpathSync.native(${root});\n`,
+  );
+  assert.deepEqual(
+    silent,
+    [],
+    `realpathSync.native must exempt the root; got: ${JSON.stringify(silent)}`,
+  );
+  for (const wrap of [
+    "keep",
+    "other.native",
+    "fs[name].native",
+    "pick().native",
+    "native",
+  ]) {
+    const m = await on(`${HEAD}const r = ${wrap}(${root});\n`);
+    assert.equal(
+      m.length,
+      1,
+      `${wrap}(…) does not resolve the path — one finding expected, got ${JSON.stringify(m)}`,
+    );
+  }
+  cases.push(
+    "realpathSync.native / fs.realpathSync.native exempt; keep, other.native, fs[name].native, pick().native, native do not",
+  );
+}
+
+// ── 5c. The walk over the arguments survives the shapes that are not plain nodes: an array hole
+//       (null) and a regex literal's `regex` object (no `type`). Neither is a `tmpdir()` call.
+{
+  const m = await on(
+    `${HEAD}const a = mkdtempSync([, /tmp/g]);\nconst b = mkdtempSync([, /x/, tmpdir()]);\n`,
+  );
+  assert.deepEqual(
+    m.map((x) => x.line),
+    [5],
+    `only the second call names tmpdir(); got: ${JSON.stringify(m)}`,
+  );
+  cases.push(
+    "an array hole and a regex literal in the arguments are walked, not mistaken",
+  );
+}
+
 // ── 6. 🔴 THE CORPUS ITSELF IS CLEAN. The "silent" half on a made-up string says nothing
 //      about the repository: the rule could also be silent because it was never handed a
 //      single file (the recorded class — `scripts/rules-see-files.mjs`). So this check runs
