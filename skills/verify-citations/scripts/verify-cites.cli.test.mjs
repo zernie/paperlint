@@ -41,6 +41,12 @@ writeTree(root, {
   // does not know is FALSE — the one verdict that fails the run.
   "fetch-404.mjs":
     "globalThis.fetch = async () => new Response(null, { status: 404 });\n",
+  // Prints the User-Agent of every request, then answers 404.
+  "fetch-ua.mjs":
+    "globalThis.fetch = async (url, init) => {\n" +
+    "  process.stderr.write(`UA ${init.headers['User-Agent']}\\n`);\n" +
+    "  return new Response(null, { status: 404 });\n};\n",
+  "consumer/paperlint.json": JSON.stringify({ contactEmail: "me@example.org" }),
 });
 const offline = (args, opts = {}) =>
   runNode(SCRIPT, [...args, "--offline"], { env, ...opts });
@@ -137,4 +143,18 @@ test("a corrupt cache is ignored, and a cache that cannot be written does not fa
     env: { VERIFY_CITES_CACHE: root }, // a directory: reading and writing both fail
   });
   assert.deepEqual([corrupt.status, unwritable.status], [0, 0]);
+});
+
+test("the consumer's declared contact reaches every request's User-Agent (Crossref's polite pool)", () => {
+  const r = runNode(SCRIPT, [join(root, "refs.bib")], {
+    env: { ...env, CLAUDE_PROJECT_DIR: join(root, "consumer") },
+    nodeArgs: ["--import", join(root, "fetch-ua.mjs")],
+  });
+  const agents = new Set(
+    r.stderr.split("\n").filter((l) => l.startsWith("UA ")),
+  );
+  assert.deepEqual(
+    [...agents],
+    ["UA verify-cites/1.0 (citation gate; mailto:me@example.org)"],
+  );
 });

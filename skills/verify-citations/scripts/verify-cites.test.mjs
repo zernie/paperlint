@@ -30,6 +30,8 @@ import {
   normalizeDoi,
   normalizeArxiv,
   normalizeIdentifiers,
+  normalizeTitle,
+  isValidCveId,
 } from "./verify-cites.mjs";
 
 /** One vitest case per check, named by it. */
@@ -733,3 +735,146 @@ console.log("\n[S4] .bib parser edge cases:");
     "bibitem DOI trailing period not swallowed",
   );
 }
+
+// ── Edges of the pure layer: the defensive arms, each with the input that reaches it ──────────
+
+test("levenshtein and normalizeTitle take a missing string as empty", () => {
+  assert.deepEqual(
+    [
+      levenshtein(null, "ab"),
+      levenshtein("abc", undefined),
+      levenshtein("", ""),
+      normalizeTitle(undefined),
+    ],
+    [2, 3, 0, ""],
+  );
+});
+
+test("normalizeDoi / normalizeArxiv pass a missing value through untouched", () => {
+  assert.deepEqual(
+    [
+      normalizeDoi(undefined),
+      normalizeDoi(""),
+      normalizeArxiv(null),
+      normalizeArxiv(""),
+    ],
+    [undefined, "", null, ""],
+  );
+});
+
+test("titleRelation: an acronym of one letter is not an acronym; scripts are told apart", () => {
+  assert.deepEqual(
+    [
+      // "x" is one letter: it cannot spell the initials of anything.
+      titleRelation("x", "extensible markup language"),
+      titleRelation("Нейронные сети", "Neural networks"),
+      titleRelation("ニューラルネットワーク", "Neural networks"),
+      titleRelation("Νευρωνικά δίκτυα", "Neural networks"),
+      titleRelation("الشبكات العصبية", "Neural networks"),
+      titleRelation("!!!", "Neural networks"),
+    ],
+    [
+      "different",
+      "incomparable",
+      "incomparable",
+      "incomparable",
+      "incomparable",
+      "incomparable",
+    ],
+  );
+});
+
+test("yearMatch reads a year out of a string and ignores one that is not a year", () => {
+  assert.deepEqual(
+    [
+      yearMatch("2017-06", 2018),
+      yearMatch("2017", 2020),
+      yearMatch("n.d.", 2020),
+    ],
+    [true, false, true],
+  );
+});
+
+test("classifyResolver: a title search with no `records` field is a miss", () => {
+  assert.deepEqual(
+    classifyResolver(
+      { title: "A Paper" },
+      { db: "crossref", transport: "ok", query: "title" },
+    ),
+    { db: "crossref", status: "title_miss" },
+  );
+});
+
+test("checkNvd with no CVE on the citation says nothing; isValidCveId of nothing is false", () => {
+  assert.deepEqual(
+    [checkNvd({}, null), isValidCveId(undefined)],
+    [null, false],
+  );
+});
+
+test("reduceVerdict: an arXiv id missed only by a non-authoritative source is unresolvable", () => {
+  const r = reduceVerdict({ id: "a", arxiv: "1706.03762" }, [
+    {
+      db: "semantic_scholar",
+      status: "id_unmatched",
+      query: "arxiv",
+      authoritative: false,
+    },
+  ]);
+  assert.deepEqual(r, {
+    id: "a",
+    verdict: "unresolvable",
+    reason:
+      "arXiv id 1706.03762 missed only by non-authoritative sources (the reachable arXiv API did not definitively reject it) — cannot assert fabrication → unresolvable",
+    matched_db: null,
+  });
+});
+
+test("parseBib: @comment/@string/@preamble are skipped, a bare value is read, an empty one is absent", () => {
+  const bib = [
+    "@comment{c, not an entry}",
+    "@string{s, x = {y}}",
+    '@article{k1, title = "Quoted Title", year = 2017, eprint = {1706.03762}, archiveprefix = {arXiv}}',
+    "@misc{k2, title = {T}, year = ,}",
+  ].join("\n");
+  assert.deepEqual(parseBib(bib), [
+    { id: "k1", title: "Quoted Title", year: "2017", arxiv: "1706.03762" },
+    { id: "k2", title: "T" },
+  ]);
+});
+
+test("parseBib's \\bibitem fallback reads an arXiv id and an \\emph title", () => {
+  const text = [
+    "\\begin{thebibliography}{9}",
+    "\\bibitem{a} A. Author. \\emph{A Long Enough Title}. arXiv:1706.03762, 2017.",
+    "\\end{thebibliography}",
+  ].join("\n");
+  assert.deepEqual(parseBib(text), [
+    {
+      id: "a",
+      arxiv: "1706.03762",
+      year: "2017",
+      title: "A Long Enough Title",
+    },
+  ]);
+});
+
+test("parseArxivFeed: an entry without a title is skipped, one without a date has no year", () => {
+  assert.deepEqual(
+    parseArxivFeed("<entry><id>x</id></entry><entry><title>T</title></entry>"),
+    [{ title: "T", year: null }],
+  );
+});
+
+test("a two-letter token ending in s is depluralised to one letter, which spells no acronym", () => {
+  assert.equal(
+    titleRelation("TS models", "totally separate models"),
+    "different",
+  );
+});
+
+test("parseArxivFeed keeps an entry titled Error when it has no <id> to prove it is the sentinel", () => {
+  assert.deepEqual(parseArxivFeed("<entry><title>Error</title></entry>"), [
+    { title: "Error", year: null },
+  ]);
+});

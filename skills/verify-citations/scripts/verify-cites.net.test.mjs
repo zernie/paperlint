@@ -261,3 +261,27 @@ test("a registry that never answers is abandoned after the timeout, as unreachab
     { verdict: "unresolvable", calls: 4 },
   );
 });
+
+test("a registry that answers 200 with no body, or a record without its title, still classifies", async () => {
+  const calls = fakeFetch({
+    [CR]: () => json(200, {}),
+    [OA]: () => json(200, { id: "W1", publication_year: 2017 }),
+    [S2]: () => json(200, { title: "", year: 2017 }),
+    [DOI]: () => json(200, { responseCode: 1 }),
+  });
+  const result = await verifyCitationLive({
+    id: "b",
+    doi: "10.1/x",
+    title: TITLE,
+  });
+  // OpenAlex resolves the DOI to a record with no title: an incomparable title is not a
+  // mismatch, so the DOI stands confirmed.
+  assert.deepEqual(
+    {
+      verdict: result.verdict,
+      matched_db: result.matched_db,
+      calls: calls.length,
+    },
+    { verdict: "true", matched_db: "openalex", calls: 4 },
+  );
+});
