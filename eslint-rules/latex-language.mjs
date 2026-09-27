@@ -121,34 +121,35 @@ const FLOAT_PROSE = /^(caption|footnote)$/;
 const OPAQUE =
   /^(label|ref|autoref|eqref|cite|citep|citet|input|include|usepackage|documentclass|bibliography|bibliographystyle|acmISBN|acmDOI|acmConference|setcopyright|ccsdesc|keywords|orcid|affiliation|email|author|copyrightyear|acmYear|acmBooktitle|acmPrice|settopmatter|definecolor|includegraphics|newcommand|renewcommand|def|let|makeatletter|makeatother|hypersetup|pagestyle|thispagestyle|vspace|hspace)$/;
 
-// The parser's shape, probed (unified-latex 1.x) rather than assumed: a macro whose signature it
-// knows (`\\section`, `\\caption`, `\\textbf`, `\\texttt`, `\\lstinline`, …) ALWAYS carries `args`,
-// even with nothing after it; an unknown macro carries none; every argument's `content` is an
-// array; an environment's `env` is a string. Only the unknown-macro case needs a fallback.
 const P = (n) => n?.position;
 
 function plain(nodes) {
   let out = "";
-  for (const n of nodes) {
+  for (const n of nodes || []) {
     if (n.type === "string") out += n.content;
     else if (n.type === "whitespace") out += " ";
     else if (n.type === "group" || n.type === "argument")
       out += plain(n.content);
     else if (n.type === "macro" && n.args)
-      out += plain(n.args.flatMap((a) => a.content));
+      out += plain(n.args.flatMap((a) => a.content || []));
   }
   return out.trim();
 }
 const argEnd = (node) => {
   let end = P(node).end;
   for (const a of node.args || [])
-    for (const c of a.content)
+    for (const c of a.content || [])
       if (P(c) && P(c).end.offset > end.offset) end = P(c).end;
   return end;
 };
 
-export function texToMdast(src) {
-  const ast = getParser().parse(src);
+/**
+ * The projection of `src`. `parse` is unified-latex by default; a test passes one returning the
+ * node shapes today's parser never emits (a macro without `args`, an argument without `content`, an
+ * `env` given as nodes), which the fallbacks below keep reading instead of throwing on.
+ */
+export function texToMdast(src, { parse = (s) => getParser().parse(s) } = {}) {
+  const ast = parse(src);
   const chars = src.split("");
   const blank = (from, to) => {
     for (let i = from; i < to && i < chars.length; i++)
@@ -175,14 +176,10 @@ export function texToMdast(src) {
   // an ungraded block. Measured across three papers: today there are no such captions in the
   // free half (0 findings), so this guards against tomorrow rather than repairing today.
   let inCaption = 0;
-  /**
-   * A synthetic heading: the ATX marker is written at the START of the span, the tail is blanked.
-   * Every caller passes a span at least as long as its label (`## Abstract` over
-   * `\\begin{abstract}`, `## References` over `\\begin{thebibliography}` or `\\bibliography{…}`),
-   * so the label always fits.
-   */
+  /** A synthetic heading: the ATX marker is written at the START of the span, the tail is blanked. */
   const synthHeading = (from, to, title, depth = 2) => {
     const label = "#".repeat(depth) + " " + title;
+    if (label.length > to - from) return null; // does not fit — do not invent one silently
     blank(from, to);
     for (let i = 0; i < label.length; i++) chars[from + i] = label[i];
     const node = {
@@ -257,7 +254,7 @@ export function texToMdast(src) {
     }
 
     if (node.type === "environment") {
-      const env = node.env;
+      const env = typeof node.env === "string" ? node.env : plain(node.env);
       // 🔴 MEASURED 2026-08-26: none of the three real `.tex` papers has a `Limitations` /
       // `References` / `Appendix` heading. In LaTeX the free half is declared by an
       // ENVIRONMENT and a macro rather than by a heading, so without synthesis `freeRanges`
@@ -272,6 +269,7 @@ export function texToMdast(src) {
         return;
       }
       if (env === "thebibliography" && pos) {
+        // `\begin{thebibliography}` (23 characters) always holds `## References` (13).
         synthHeading(
           pos.start.offset,
           pos.start.offset + "\\begin{thebibliography}".length,
@@ -300,7 +298,9 @@ export function texToMdast(src) {
           if (Array.isArray(n)) return n.forEach(findProse);
           if (!n || typeof n !== "object") return;
           if (n.type === "macro" && FLOAT_PROSE.test(n.content)) {
-            const cs = n.args.flatMap((a) => a.content).filter((c) => P(c));
+            const cs = (n.args || [])
+              .flatMap((a) => a.content || [])
+              .filter((c) => P(c));
             // Keep exactly the CONTENT of the argument: `\caption` itself and the braces
             // stay in the blanked part, so the macro name never becomes prose.
             if (cs.length)
@@ -398,7 +398,7 @@ export function texToMdast(src) {
     if (node.type === "macro" && pos) {
       const depth = HEADING[node.content];
       if (depth) {
-        const title = plain(node.args.flatMap((a) => a.content));
+        const title = plain(node.args?.flatMap((a) => a.content || []));
         const end = argEnd(node);
         // project to ATX: `##` where `\se` was, the rest spaces; the closing `}` too
         blank(pos.start.offset, end.offset + 1);
@@ -431,7 +431,9 @@ export function texToMdast(src) {
       // needs TWO characters after the content, and there is only `}`.
       if (node.content === "texttt" || node.content === "lstinline") {
         const e = argEnd(node);
-        const cs = node.args.flatMap((a) => a.content).filter((c) => P(c));
+        const cs = (node.args || [])
+          .flatMap((a) => a.content || [])
+          .filter((c) => P(c));
         if (cs.length) {
           const s0 = P(cs[0]).start.offset;
           blank(pos.start.offset, s0 - 1);
@@ -446,7 +448,7 @@ export function texToMdast(src) {
         !inCaption
       ) {
         const end = argEnd(node);
-        const sv = plain(node.args.flatMap((a) => a.content));
+        const sv = plain(node.args?.flatMap((a) => a.content || []));
         children.push({
           type: "strong",
           children: [
@@ -478,7 +480,7 @@ export function texToMdast(src) {
         chars[o + 1] = "*";
       }
       for (const a of node.args || []) {
-        const cs = a.content.filter((c) => P(c));
+        const cs = (a.content || []).filter((c) => P(c));
         if (!cs.length) continue;
         const s0 = P(cs[0]).start.offset,
           e0 = P(cs[cs.length - 1]).end.offset;
@@ -530,7 +532,7 @@ class TexSourceCode extends TextSourceCodeBase {
   constructor({ text, ast, raw }) {
     super({ ast, text, lineEndingPattern: /\r?\n/u });
     this.ast = ast;
-    this.raw = raw;
+    this.raw = raw ?? text;
     this.traverse();
   }
   getParent(node) {
