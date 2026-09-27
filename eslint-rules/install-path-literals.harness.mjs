@@ -118,4 +118,20 @@ const cases = [];
   cases.push("js quiet on a module that asks the port");
 }
 
+// ── 5. A TAGGED TEMPLATE WITH AN INVALID ESCAPE has no cooked value, only the raw one — and the
+//      path in it is still a path. (`String.raw` is exactly where such a template is legal.)
+{
+  const [res] = await jsLinter.lintText(
+    "export const p = String.raw`node_modules/paperlint/\\unicode`;\n",
+    { filePath: join(ROOT, "tagged.probe.mjs") },
+  );
+  const m = res.messages.filter((x) => x.ruleId === RULE_JS);
+  assert.equal(
+    m.length,
+    1,
+    `a raw-only template quasi must be read, got ${JSON.stringify(res.messages)}`,
+  );
+  cases.push("js fires on a tagged template whose quasi has no cooked value");
+}
+
 recordCheck(cases.length);

@@ -103,6 +103,22 @@ test("installer: ensure reports the download, and Ready says where and what was 
   assert.equal(i.check().ok, true);
 });
 
+test("installer with no source: the pin is downloaded, and bytes that are not the pin are refused", () => {
+  const download = fixedDownload(BODY);
+  const io = memoryPorts({
+    run: scriptedProcess(() => exitedWith("")),
+    download,
+  });
+  const r = banalInstaller(io, parseBanalSettings({}, dirs)).ensure(() => {});
+  assert.ok(!r.ok);
+  assert.match(
+    r.error[0],
+    /does not have the pinned sha256 — refusing to install it/,
+  );
+  assert.equal(download.urls.length, 1);
+  assert.notEqual(download.urls[0], source.url);
+});
+
 test("installer: a failure is lines of text, the first saying what happened", () => {
   const io = memoryPorts({
     run: scriptedProcess(() => ({ kind: "not-found", file: "perl" })),

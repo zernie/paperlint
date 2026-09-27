@@ -307,13 +307,13 @@ export const readPdf: PdfReader = async (path) => {
   }
   const lib = await loadPdfJs();
   const task = lib.getDocument({ data, ...PDFJS_OPTIONS });
-  try {
-    return await factsOf(await task.promise, lib);
-  } catch (e) {
-    return failureOf(e);
-  } finally {
-    await task.destroy();
-  }
+  // A promise chain rather than try/catch/finally: every path returns a value here, and the code
+  // after such a statement is a block that can never run — which coverage reports as unrun.
+  const read = await task.promise
+    .then((doc) => factsOf(doc, lib))
+    .catch(failureOf);
+  await task.destroy();
+  return read;
 };
 
 /** The one wording of a failed read, as a build step or a CLI prints it. */

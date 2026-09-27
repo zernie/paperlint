@@ -187,10 +187,13 @@ function argText(arg: LatexArgument | undefined): string {
     .join("");
 }
 
-/** A unified-latex AST, or null when the text does not parse. */
-function parseTex(tex: string): LatexRoot | null {
+/** A unified-latex AST, or null when the text does not parse. `parse` is unified-latex's parser. */
+function parseTex(
+  tex: string,
+  parse: (tex: string) => LatexRoot = (t) => getParser().parse(t),
+): LatexRoot | null {
   try {
-    return getParser().parse(tex);
+    return parse(tex);
   } catch {
     // The parser recurses per group: ~20 000 nested `{` exhaust the stack (RangeError). Such a
     // file has no class to report, and must not fail the build at `facts` for it.
@@ -202,8 +205,11 @@ function parseTex(tex: string): LatexRoot | null {
  * `\documentclass[opts]{name}`, read by the unified-latex parser the lint rules already use —
  * so a `\documentclass` inside a comment is a comment, not a class.
  */
-export function parseDocumentclass(tex: string): PaperFacts["documentclass"] {
-  return documentclassOf(parseTex(tex));
+export function parseDocumentclass(
+  tex: string,
+  { parse }: { parse?: (tex: string) => LatexRoot } = {},
+): PaperFacts["documentclass"] {
+  return documentclassOf(parseTex(tex, parse));
 }
 
 function documentclassOf(ast: LatexRoot | null): PaperFacts["documentclass"] {

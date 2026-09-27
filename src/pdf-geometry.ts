@@ -136,7 +136,7 @@ export function wordsOf(run: TextRun): Word[] {
   const y0 = run.baseline - run.ascent * run.size;
   const y1 = run.baseline - run.descent * run.size;
   return [...run.text.matchAll(/\S+/g)].map((m) => {
-    const x0 = run.x + (m.index ?? 0) * perChar;
+    const x0 = run.x + m.index * perChar;
     return { x0, y0, x1: x0 + m[0].length * perChar, y1, text: m[0] };
   });
 }

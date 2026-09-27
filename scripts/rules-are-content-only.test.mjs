@@ -2,6 +2,8 @@
  * rules-are-content-only's gate over a consumer's `eslint-rules/`: temp trees with planted rules.
  */
 import assert from "node:assert/strict";
+import { fileURLToPath } from "node:url";
+import { spawnSync } from "node:child_process";
 import { test } from "vitest";
 import { useTempDir, writeTree } from "../test/support.mjs";
 import { main as contentMain } from "./rules-are-content-only.mjs";
@@ -43,4 +45,17 @@ test("rules-are-content-only: no rules is a failure, a rule asking git is a find
       ["rules-are-content-only: 1 rule sources under <root>/clean, 0 findings"],
     ],
   ]);
+});
+
+test("run as a program over this repository: every rule source is content-only, exit 0", () => {
+  const r = spawnSync(
+    process.execPath,
+    [fileURLToPath(new URL("./rules-are-content-only.mjs", import.meta.url))],
+    { cwd: fileURLToPath(new URL("..", import.meta.url)), encoding: "utf8" },
+  );
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(
+    r.stdout,
+    /^rules-are-content-only: \d+ rule sources under .*, 0 findings\n$/,
+  );
 });

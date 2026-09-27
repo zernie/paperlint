@@ -141,6 +141,18 @@ test("documentclass: an empty name is no class; a macro inside the name contribu
     name: "ab",
     options: [],
   });
+  // unified-latex attaches arguments to the macros it has a signature for; a tree where
+  // `\documentclass` came back bare has no name to read, and is no class.
+  assert.equal(
+    parseDocumentclass("\\documentclass", {
+      parse: () =>
+        ({
+          type: "root",
+          content: [{ type: "macro", content: "documentclass" }],
+        }) as never,
+    }),
+    null,
+  );
 });
 
 test("facts of a paper with no paper.tex: no class", () => {

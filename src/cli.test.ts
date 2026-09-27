@@ -574,3 +574,11 @@ test("lint with its LaTeX language missing from the install still lints the mark
   assert.deepEqual(without, whole);
   assert.match(whole.stdout, /missing `PIPELINE-STATUS\.md`/);
 });
+
+test("`paperlint hook` with no name: exit 2, and the usage names an example", async () => {
+  assert.deepEqual(await cli(["hook"], root), {
+    code: 2,
+    out: "",
+    err: "`hook` needs a name, e.g. `paperlint hook paper-edit-guard`",
+  });
+});
