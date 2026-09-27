@@ -582,6 +582,9 @@ export function parseSettings(
 const lintRoot = (home: string, paths: readonly string[]): string =>
   commonDir([home, ...paths]);
 
+/** A path as the reader typed it: relative to where the command runs, or whole when it IS there. */
+const shown = (cwd: string, p: string): string => relative(cwd, p) || p;
+
 /** The longest shared leading run of path segments. */
 const commonDir = (paths: readonly string[]): string => {
   const [first = [], ...rest] = paths.map((p) => p.split(sep));
@@ -751,10 +754,9 @@ export function readConfig(
   //
   // 🔴 IN `--json` MODE — TO stderr. Machine output must be ONE parsable document: a line before
   // the array breaks any `| jq`, and it breaks it for the consumer, not for us.
-  // `configPath` is a file and `cwd` a directory, so the relative path is never empty.
-  const shown = relative(cwd, configPath);
-  (a.json ? err : log)(`config: ${shown}`);
-  const settings = parseSettings(parsed, shown, root);
+  const shownPath = shown(cwd, configPath);
+  (a.json ? err : log)(`config: ${shownPath}`);
+  const settings = parseSettings(parsed, shownPath, root);
   if (!settings.ok) {
     err(settings.error);
     return { code: 2 };
@@ -892,7 +894,7 @@ export async function createPaperAt(
   },
 ): Promise<number> {
   const result = newPaper(papersRoot, name, format, { venue });
-  const here = (p: string): string => relative(cwd, p) || p;
+  const here = (p: string): string => shown(cwd, p);
   for (const line of reportNewPaper(result, here)) log(line);
   if (!result.ok) return 2;
   const config = here(join(result.dir, CONFIG_FILE));
@@ -1071,7 +1073,7 @@ async function runNew(
   }
   if (roots.length > 1)
     log(
-      `several papers directories are declared — using the first: ${relative(cwd, papersRoot) || papersRoot}`,
+      `several papers directories are declared — using the first: ${shown(cwd, papersRoot)}`,
     );
   const paperDir = join(papersRoot, name);
   // An existing paperlint.json is never overwritten, so a venue for it is refused, not dropped.
@@ -1444,7 +1446,7 @@ export async function run(
   const unowned = await firstUnownedFile(eslint, paths);
   if (unowned !== null) {
     err(
-      `${relative(cwd, unowned)} is not a file paperlint lints — it lints ${PAPER_FILE_PATTERNS.join(", ")}`,
+      `${shown(cwd, unowned)} is not a file paperlint lints — it lints ${PAPER_FILE_PATTERNS.join(", ")}`,
     );
     return 2;
   }
@@ -1471,7 +1473,7 @@ export async function run(
   // is not invoked — and, not being invoked, it physically cannot report that.
   if (results.length === 0) {
     err(
-      `nothing was linted under ${paths.map((x) => relative(cwd, x) || x).join(", ")} — no PIPELINE-STATUS.md, paper.md/tex or reviews/ found there. A clean report over zero files is not a clean report.`,
+      `nothing was linted under ${paths.map((x) => shown(cwd, x)).join(", ")} — no PIPELINE-STATUS.md, paper.md/tex or reviews/ found there. A clean report over zero files is not a clean report.`,
     );
     return 1;
   }
