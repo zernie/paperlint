@@ -11,14 +11,7 @@ export default experimental_skill({
   description:
     'Use when asking "red-team this paper" / "what would Reviewer 2 attack?" / "find the weaknesses before I submit" — ONE fast hostile-but-fair review of a paper draft. Surfaces overclaims, methodology holes, missing baselines/citations, novelty concerns, threats to validity, and desk-reject risks, with concrete fixes, led by a multi-axis 1–5 scorecard whose card composes into a pc-panel-review panel. NOT the multi-reviewer accept/reject decision (pc-panel-review), a writing grade (grade-paper-writing — this skill consumes its stall inventory rather than re-grading prose), or the full pre-submit gate (harden-paper). Especially for security and agentic-coding measurement papers.',
   context: "fork",
-  tools: [
-    "Read",
-    "Write",
-    "Grep",
-    "Glob",
-    "Agent",
-    "Skill",
-  ],
+  tools: ["Read", "Write", "Grep", "Glob", "Agent", "Skill"],
   body: `
 # paper-adversarial-review — be the reviewer who wants to reject it
 

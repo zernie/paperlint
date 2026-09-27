@@ -10,14 +10,7 @@ export default experimental_skill({
   name: "research-ideate",
   description:
     'Decide whether a research idea is worth doing at all — before any work goes into it. Use when someone has an idea and asks: is this worth pursuing, should we take it on, is it a paper or just a blog post, is there a quick minimal result that doesn\'t need a dramatic finding, will it pull us away from our main line of work. Returns a go / no-go verdict with the sharpest framing, the minimal finding and the kinds of venue that would take it. Judges the idea by what counts in a body of work: a peer-reviewed indexed publication, a reusable method or benchmark rather than a one-off "tool X is bad", onward citations rather than GitHub stars, and one connected line rather than scattered topics. Stage: conception, before find-venue and before any draft; hands off to find-venue, build-benchmark, draft-paper.',
-  tools: [
-    "Read",
-    "Write",
-    "Grep",
-    "Glob",
-    "Agent",
-    "Skill",
-  ],
+  tools: ["Read", "Write", "Grep", "Glob", "Agent", "Skill"],
   body: `
 # research-ideate — is this idea worth a paper, and does the paper earn authorship credit?
 

@@ -10,13 +10,7 @@ export default experimental_skill({
   name: "argument-arc",
   description:
     "Build or repair the paper's argument architecture — the one-sentence-per-section outline, the bottom-up inevitability pass, and the name/number budget. Run it when the reader says the paper throws ideas at them, when a structural objection repeats, or before any large rewrite. Not a prose or length skill.",
-  tools: [
-    "Read",
-    "Write",
-    "Grep",
-    "Glob",
-    "Agent",
-  ],
+  tools: ["Read", "Write", "Grep", "Glob", "Agent"],
   body: `
 # argument-arc — does the paper carry the reader to one conclusion
 

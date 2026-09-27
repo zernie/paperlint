@@ -10,15 +10,7 @@ export default experimental_skill({
   name: "extend-paper",
   description:
     'Turn an accepted workshop / short paper into a second, stronger publication at a higher-prestige indexed venue — the "body of work" a strong dossier needs, not a one-hit paper. Covers the ≥30% new-material rule, the never-dual-submit rule, what genuinely counts as new content, and picking + timelining the upgrade venue. Use after a paper is accepted and you want the follow-on publication. Compose with find-venue, plan-paper-timeline, camera-ready, research-ideate.',
-  tools: [
-    "Read",
-    "Write",
-    "Grep",
-    "Glob",
-    "WebSearch",
-    "WebFetch",
-    "Skill",
-  ],
+  tools: ["Read", "Write", "Grep", "Glob", "WebSearch", "WebFetch", "Skill"],
   body: `
 # extend-paper — workshop/short paper → a second, stronger publication
 
