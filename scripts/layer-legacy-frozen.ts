@@ -176,11 +176,30 @@ export function judge({
   return problems;
 }
 
+/**
+ * The repository's configuration, narrowed to what this check counts: `LAYER_RULES` and their
+ * suppressions, with no type information. The configuration is
+ * type-aware, and a type-aware lint builds the whole TypeScript program first — 33 s on a CI runner
+ * under coverage, for rules that read only import paths. Suppressions of the filtered rules are
+ * still reported, which is what `tally` reads.
+ */
+function layerLint(cwd: string): ESLint {
+  return new ESLint({
+    cwd,
+    ruleFilter: ({ ruleId }) => LAYER_RULES.includes(ruleId),
+    overrideConfig: {
+      languageOptions: {
+        parserOptions: { project: false, projectService: false },
+      },
+    },
+  });
+}
+
 /** Lint `src/` with the repository's configuration and run the whole check. */
 export async function checkFrozen(
   root: string = ROOT,
   {
-    lint = (cwd: string) => new ESLint({ cwd }).lintFiles(["src/**/*.ts"]),
+    lint = (cwd: string) => layerLint(cwd).lintFiles(["src/**/*.ts"]),
   }: { lint?: (cwd: string) => Promise<readonly Suppressed[]> } = {},
 ): Promise<FrozenCheck> {
   const data = FrozenFile.parse(
