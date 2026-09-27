@@ -318,9 +318,7 @@ export function check(dir, { since } = {}) {
   const at = (rev) => {
     if (!repo) return { ok: false, err: "not a git repository" };
     const r = git(repo, "show", `${rev}:${rel}`);
-    return r.ok
-      ? { ok: true, src: r.out }
-      : { ok: false, err: r.err || `git show ${rev}:${rel} failed` };
+    return r.ok ? { ok: true, src: r.out } : { ok: false, err: r.err }; // git names the failure on stderr: a bad revision, a path it lacks
   };
 
   // ── which round authorises the current state ──
@@ -340,12 +338,12 @@ export function check(dir, { since } = {}) {
       continue;
     }
     manifests.push(man);
+  }
+  manifests.sort((a, b) => Number(a.round ?? 0) - Number(b.round ?? 0));
   // A manifest names its round in `round:`; one that does not is named by its file — printing
   // `round undefined` would point the reader at nothing.
   const label = (m) =>
     m.round === undefined ? relOf(dir, m.path) : `round ${m.round}`;
-  }
-  manifests.sort((a, b) => Number(a.round ?? 0) - Number(b.round ?? 0));
   const open = manifests.filter((m) => !m.closed);
 
   if (!since && manifests.length === 0) {
@@ -526,7 +524,8 @@ export function check(dir, { since } = {}) {
 const num = (v, d) =>
   v === undefined || v === null || v === "" || isNaN(Number(v)) ? d : Number(v);
 const sign = (n) => (n > 0 ? `+${n}` : String(n));
-const relOf = (dir, p) => relative(resolve(dir, ".."), p) || p;
+// Every path named here lies inside `dir`, so its path from the parent is never empty.
+const relOf = (dir, p) => relative(resolve(dir, ".."), p);
 
 // ── CLI ──────────────────────────────────────────────────────────────────────────────────────
 
