@@ -14,7 +14,9 @@
     "`all` would count them as permanently uncovered. evalOnly: support for the paid evals, reached",
     "only from *.eval.mjs. Both claims are CHECKED by scripts/coverage-config.test.ts.",
     "repro/ and references/: dated research records (a replication driver, a readability probe) kept",
-    "as evidence for claims in the skills' prose, not code the package runs."
+    "as evidence for claims in the skills' prose and the prior-art notes, not code the package runs.",
+    "vitest.config.ts: the test runner's configuration. The pins in scripts/coverage-config.test.ts",
+    "also require every tracked source to be either included or excluded here."
   ],
   "all": true,
   "src": ["."],
@@ -48,7 +50,9 @@
     "lib/skill-eval-fixture.mjs",
     "lib/trigger-ledger.mjs",
     "skills/**/repro/**",
-    "skills/**/references/**"
+    "skills/**/references/**",
+    "docs/prior-art/repro/**",
+    "vitest.config.ts"
   ],
   "extension": [".js", ".mjs", ".ts"],
   "excludeAfterRemap": false,

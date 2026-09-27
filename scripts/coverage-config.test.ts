@@ -19,6 +19,7 @@
  *     reason, on purpose.
  */
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { globSync, readFileSync } from "node:fs";
 import { dirname, join, matchesGlob, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -134,6 +135,24 @@ test("every evalOnly exclusion is imported only by an eval or another evalOnly m
   );
 });
 
+/** Every tracked file c8 could load as code — the extensions it is configured to measure. */
+function trackedSources(): string[] {
+  const r = spawnSync("git", ["ls-files", "-z"], {
+    cwd: ROOT,
+    encoding: "utf8",
+  });
+  assert.equal(r.status, 0, r.stderr);
+  return r.stdout
+    .split("\0")
+    .filter((f) => CONFIG.extension.some((x) => f.endsWith(x)))
+    .sort();
+}
+const isIncluded = (f: string): boolean =>
+  CONFIG.include.some((p) => matchesGlob(f, p));
+const isExcluded = (f: string): boolean =>
+  CONFIG.exclude.some((p) => matchesGlob(f, p));
+const isMeasured = (f: string): boolean => isIncluded(f) && !isExcluded(f);
+
 /** The files c8 measures: `include` globs, the configured extensions, minus every `exclude`. */
 function measuredFiles(): string[] {
   return [...new Set(CONFIG.include.flatMap((p) => globSync(p, { cwd: ROOT })))]
@@ -199,16 +218,18 @@ test("comments() finds comments and only comments — before a closing brace, in
 
 test("no measured source carries a coverage-ignore comment", () => {
   const files = measuredFiles();
+  // The scan covers exactly what c8 measures: the same set, derived from the tracked files.
+  assert.deepEqual(files, trackedSources().filter(isMeasured));
+  assert.ok(files.length > 0);
   const offenders = files.filter((f) =>
     comments(f, readFileSync(join(ROOT, f), "utf8")).some((c) =>
       IGNORE.test(c),
     ),
   );
-  assert.ok(files.length > 100, `only ${String(files.length)} files measured`);
   assert.deepEqual(offenders, []);
 });
 
-test("the floor is 100 on all four measures, `npm run coverage` enforces it, and CI runs that script", () => {
+test("the floor is 100 on all four measures, and the script that checks it cannot loosen it", () => {
   assert.deepEqual(
     [CONFIG.lines, CONFIG.statements, CONFIG.functions, CONFIG.branches],
     [100, 100, 100, 100],
@@ -216,20 +237,101 @@ test("the floor is 100 on all four measures, `npm run coverage` enforces it, and
   const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as {
     scripts: Record<string, string>;
   };
-  // Tokens of one shell command: c8 must be told to CHECK, not only to report.
-  const coverage = (pkg.scripts["coverage"] ?? "").split(/\s+/);
-  assert.ok(coverage.includes("c8") && coverage.includes("--check-coverage"));
-  const ci = yaml.load(
-    readFileSync(join(ROOT, ".github", "workflows", "ci.yml"), "utf8"),
-  ) as { jobs: Record<string, { steps?: { run?: string }[] }> };
-  const runs = Object.values(ci.jobs).flatMap((j) =>
-    (j.steps ?? []).map((s) => s.run ?? ""),
+  // Pinned whole: c8's command-line flags override .c8rc.json, so `--lines 50` or `--exclude "**"`
+  // added here would bypass every threshold and the pinned exclude list below.
+  assert.equal(
+    pkg.scripts["coverage"],
+    'NODE_OPTIONS="--import=./test/coverage-src.mjs $NODE_OPTIONS" c8 --check-coverage npm test --',
   );
-  assert.ok(
-    runs.some(
-      (r) => r.trim().split(/\s+/).slice(0, 3).join(" ") === "npm run coverage",
-    ),
-    `no CI step runs \`npm run coverage\`:\n${runs.join("\n")}`,
+});
+
+/** The gates job and the one step of it that runs coverage, read from the parsed workflow. */
+interface Step {
+  readonly run?: string;
+  readonly if?: unknown;
+  readonly "continue-on-error"?: unknown;
+}
+interface Job {
+  readonly if?: unknown;
+  readonly "continue-on-error"?: unknown;
+  readonly steps?: readonly Step[];
+}
+export function coverageSteps(
+  workflow: string,
+): { job: string; definition: Job; step: Step }[] {
+  const ci = yaml.load(workflow) as { jobs: Record<string, Job> };
+  return Object.entries(ci.jobs).flatMap(([job, definition]) =>
+    (definition.steps ?? [])
+      .filter((step) => (step.run ?? "").trim().startsWith("npm run coverage"))
+      .map((step) => ({ job, definition, step })),
+  );
+}
+
+const DRAFT_GATE =
+  "github.event_name != 'pull_request' || github.event.pull_request.draft == false";
+
+/** Why CI's coverage step would not fail the run on a coverage drop — empty when it would. */
+export function coverageStepHoles(workflow: string): string[] {
+  const found = coverageSteps(workflow);
+  if (found.length !== 1)
+    return [
+      `expected one step running \`npm run coverage\`, found ${String(found.length)}`,
+    ];
+  const [{ job, definition, step }] = found as [(typeof found)[number]];
+  return [
+    ...(job === "gates" ? [] : [`the step is in job ${job}, not gates`]),
+    ...(definition.if === DRAFT_GATE
+      ? []
+      : [
+          `job ${job} runs if ${JSON.stringify(definition.if)}, not only the draft gate`,
+        ]),
+    ...("continue-on-error" in definition
+      ? [`job ${job} has continue-on-error`]
+      : []),
+    ...(step.if === undefined
+      ? []
+      : [`the step has if: ${JSON.stringify(step.if)}`]),
+    ...("continue-on-error" in step ? ["the step has continue-on-error"] : []),
+    ...(step.run?.trim() === "npm run coverage -- --no-skip"
+      ? []
+      : [
+          `the step runs ${JSON.stringify(step.run)}, not \`npm run coverage -- --no-skip\``,
+        ]),
+  ];
+}
+
+test("CI runs the coverage step in the gates job, unconditionally past the draft gate, and fails on it", () => {
+  const ci = readFileSync(join(ROOT, ".github", "workflows", "ci.yml"), "utf8");
+  assert.deepEqual(coverageStepHoles(ci), []);
+});
+
+test("coverageStepHoles names every way to keep CI green over a coverage drop", () => {
+  const wf = (step: string, jobIf = DRAFT_GATE, job = "gates") =>
+    [
+      "jobs:",
+      `  ${job}:`,
+      `    if: ${JSON.stringify(jobIf)}`,
+      "    steps:",
+      "      - name: coverage",
+      `        run: npm run coverage -- --no-skip${step}`,
+    ].join("\n");
+  assert.deepEqual(
+    [
+      coverageStepHoles(wf("")),
+      coverageStepHoles(wf("\n        continue-on-error: true")),
+      coverageStepHoles(wf("\n        if: false")),
+      coverageStepHoles(wf("", "false")),
+      coverageStepHoles(wf("", DRAFT_GATE, "other")),
+      coverageStepHoles("jobs:\n  gates:\n    steps: []\n"),
+    ],
+    [
+      [],
+      ["the step has continue-on-error"],
+      ["the step has if: false"],
+      ['job gates runs if "false", not only the draft gate'],
+      ["the step is in job other, not gates"],
+      ["expected one step running `npm run coverage`, found 0"],
+    ],
   );
 });
 
@@ -265,9 +367,22 @@ test("the exclude list is exactly the justified set", () => {
     ...CONFIG.typeOnly,
     // evalOnly — checked above to be imported only by evals
     ...CONFIG.evalOnly,
-    // dated research records kept as evidence for the skills' prose
+    // dated research records kept as evidence for the skills' prose and the prior-art notes
     "skills/**/repro/**",
     "skills/**/references/**",
+    "docs/prior-art/repro/**",
+    // the test runner's own configuration, read by vitest, not code the package runs
+    "vitest.config.ts",
+  ]);
+  assert.deepEqual(CONFIG.include, [
+    "bin/**",
+    "src/**/*.ts",
+    "lib/**",
+    "eslint-rules/**",
+    "hooks/**",
+    "skills/**",
+    "scripts/**",
+    "eslint.config.mjs",
   ]);
   assert.deepEqual(CONFIG.typeOnly, [
     "src/types.ts",
@@ -280,4 +395,12 @@ test("the exclude list is exactly the justified set", () => {
     "lib/skill-eval-fixture.mjs",
     "lib/trigger-ledger.mjs",
   ]);
+});
+
+test("every tracked source is either measured or excluded by a pattern named above", () => {
+  // A new directory outside `include` would otherwise be invisible to c8 and to this file alike.
+  assert.deepEqual(
+    trackedSources().filter((f) => !isIncluded(f) && !isExcluded(f)),
+    [],
+  );
 });
