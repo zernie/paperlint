@@ -46,7 +46,13 @@ import {
 // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { spawnSync } from "node:child_process";
 import { dirname, join, relative, resolve } from "node:path";
-import { doctor, detectPapers, found, PROGRAMS } from "./doctor.ts";
+import {
+  doctor,
+  detectPapers,
+  found,
+  PROGRAMS,
+  type ProgramProbe,
+} from "./doctor.ts";
 import { PAPER_MARKERS, papersIn } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
 import { actionRef } from "./action-ref.ts";
@@ -73,6 +79,7 @@ import {
   PAPERS_DIR_FIELD,
 } from "#lib/paper-config";
 import { messageOf } from "./domain/text.ts";
+import { isRecord } from "./domain/record.ts";
 
 /** How the papers directory was arrived at. Printed, because a guess must not read as a fact. */
 export type PapersHow =
@@ -227,13 +234,17 @@ export async function declarePapers(
 ): Promise<DeclarationResult> {
   const path = join(root, CONFIG_FILE);
   const raw = existsSync(path) ? readFileSync(path, "utf8") : null;
-  let settings: Record<string, unknown> = {};
+  let settings: Readonly<Record<string, unknown>> = {};
   if (raw !== null) {
+    let parsed: unknown;
     try {
-      settings = JSON.parse(raw) as Record<string, unknown>;
+      parsed = JSON.parse(raw);
     } catch (e) {
       return { status: "unparsable", path, reason: messageOf(e) };
     }
+    if (!isRecord(parsed))
+      return { status: "unparsable", path, reason: "not a JSON object" };
+    settings = parsed;
     const existing = settings[PAPERS_DIR_FIELD];
     if (existing !== undefined)
       return { status: "kept", path, papers: existing };
@@ -362,7 +373,7 @@ export function reportWorkflow(
  * passing checker produce the same silence.
  */
 export function missingPrograms(
-  run = spawnSync,
+  run: ProgramProbe = spawnSync,
 ): readonly (typeof PROGRAMS)[number][] {
   return PROGRAMS.filter((p) => !found(p.bin, run));
 }
@@ -584,7 +595,7 @@ export interface InitOptions {
     name: string,
     format: PaperFormat,
   ) => Promise<number>;
-  run?: typeof spawnSync;
+  run?: ProgramProbe;
   /**
    * What `paperlint lint` would resolve from the declaration, asked of the CLI's OWN reader. A second
    * implementation here would be a second source of truth — the very defect `doctor` reports.
@@ -749,21 +760,28 @@ export async function init(
   for (const line of papersLines(decl, why)) log(line);
   log(``);
   log(`settings`);
-  if (decl.status === "written")
+  // Every step below uses the DECLARED directory. A kept declaration outranks what init
+  // measured or guessed: otherwise the first paper and the workflow would land in the
+  // guessed directory while lint and the hooks keep reading the declared one.
+  let papersDir: string;
+  if (decl.status === "written") {
+    papersDir = decl.papers;
     log(
       `  ✓ ${here(decl.path)} → { "${PAPERS_DIR_FIELD}": ${JSON.stringify(decl.papers)} }`,
     );
-  else if (decl.status === "default")
+  } else if (decl.status === "default") {
+    papersDir = decl.papers;
     log(
       `  ✓ nothing to write — "${decl.papers}" is the default, so no ${CONFIG_FILE} is needed`,
     );
-  else if (decl.status === "kept") {
+  } else if (decl.status === "kept") {
     if (typeof decl.papers !== "string") {
       err(
         `  ✗ ${here(decl.path)} declares ${PAPERS_DIR_FIELD} = ${JSON.stringify(decl.papers)} — it must be a directory path (a string)`,
       );
       return 2;
     }
+    papersDir = decl.papers;
     log(
       `  ✓ ${here(decl.path)} already declares ${PAPERS_DIR_FIELD} = ${JSON.stringify(decl.papers)} — kept, nothing overwritten`,
     );
@@ -777,10 +795,6 @@ export async function init(
     );
     return 2;
   }
-  // Every step below uses the DECLARED directory. A kept declaration outranks what init
-  // measured or guessed: otherwise the first paper and the workflow would land in the
-  // guessed directory while lint and the hooks keep reading the declared one.
-  const papersDir = decl.papers as string;
 
   // ── 3. the skills, linked where Claude Code looks for them ─────────────────────────────
   for (const line of reportSkillLinks(link(root), here)) log(line);

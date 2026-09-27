@@ -467,8 +467,8 @@ const rule = (
   meta: { readonly hasSuggestions?: boolean } = {},
 ) => ({
   meta: {
-    type: "suggestion",
-    fixable: "code",
+    type: "suggestion" as const,
+    fixable: "code" as const,
     docs: { description },
     schema: [],
     messages,

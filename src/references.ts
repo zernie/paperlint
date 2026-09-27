@@ -28,7 +28,7 @@
  * a pass would be the counter that counts what it never looked at.
  */
 import { join } from "node:path";
-import type { AbsolutePath } from "./domain/paths.ts";
+import { callerPath } from "./caller-path.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import type { Files } from "./ports/files.ts";
 import {
@@ -60,9 +60,8 @@ export const lookupCachePath = (paperDir: string): string =>
 export const referencesPath = (paperDir: string): string =>
   join(paperDir, "_build", REFERENCES_FILE);
 
-const at = (p: string): AbsolutePath => p as AbsolutePath;
 const text = (files: Files, p: string): string | null => {
-  const b = files.readBytes(at(p));
+  const b = files.readBytes(callerPath(p));
   return b === null ? null : new TextDecoder().decode(b);
 };
 
@@ -186,7 +185,7 @@ export async function recordReferences(
   const record = (c: ReferencesCheck): ReferencesDocument => {
     const doc = documentOf(bib, c);
     files.writeAtomic(
-      at(referencesPath(paperDir)),
+      callerPath(referencesPath(paperDir)),
       new TextEncoder().encode(`${JSON.stringify(doc, null, 2)}\n`),
     );
     return doc;
@@ -206,7 +205,7 @@ export async function recordReferences(
   const fetched = newAnswers(cache.value, result.cache);
   if (fetched > 0)
     files.writeAtomic(
-      at(lookupCachePath(paperDir)),
+      callerPath(lookupCachePath(paperDir)),
       new TextEncoder().encode(serializeLookupCache(result.cache)),
     );
   const bad = doc.entries.filter(

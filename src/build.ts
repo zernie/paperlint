@@ -61,7 +61,8 @@ import { banalMeasurer, parseBanalSettings } from "./adapters/banal/index.ts";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import { hostDirs, nodeAdapters, nodeFiles } from "./adapters/node/index.ts";
 import { whyNoGeometry } from "./domain/geometry.ts";
-import type { AbsolutePath } from "./domain/paths.ts";
+import { callerPath } from "./caller-path.ts";
+import type { Runner } from "./engine.ts";
 import type { Files } from "./ports/files.ts";
 import type { MeasureGeometry } from "./ports/measure-geometry.ts";
 import type { CheckReferences } from "./ports/check-references.ts";
@@ -76,7 +77,6 @@ import {
 import {
   nextStep,
   summarize,
-  TRACKED,
   type BibInput,
   type Hashes,
   type Observation,
@@ -128,7 +128,7 @@ export interface PaperFacts {
 }
 
 /** A process runner with `spawnSync`'s shape — the port the harness replaces. */
-export type Runner = typeof spawnSync;
+export type { Runner };
 
 /** What a step's `run` receives. `env` is the environment accumulated by the steps before it. */
 export interface BuildContext {
@@ -286,9 +286,8 @@ function hashes(paperDir: string): Hashes {
     const p = join(paperDir, `${JOB}.${ext}`);
     return existsSync(p) ? sha(readFileSync(p)) : null;
   };
-  const out: Record<string, string | null> = {};
-  for (const t of TRACKED) out[t] = h(t);
-  return out as Hashes;
+  // A literal of the mapped type: a new tracked extension without a hash here is a compile error.
+  return { aux: h("aux"), toc: h("toc"), out: h("out"), bbl: h("bbl") };
 }
 
 const readOr = (path: string, enc: BufferEncoding): string | null =>
@@ -387,8 +386,8 @@ function latexPass(
 
 /** The two streams of a finished run, as they really arrive (see `printed`). */
 interface Streams {
-  readonly stdout: string | undefined;
-  readonly stderr: string | undefined;
+  readonly stdout?: string | undefined;
+  readonly stderr?: string | undefined;
 }
 
 /**
@@ -694,7 +693,7 @@ function defaultMeasurer(
   return banalMeasurer(
     nodeAdapters({ tmpDir: dirs.tmp }),
     parseBanalSettings(b.env, dirs),
-    b.projectRoot as AbsolutePath,
+    callerPath(b.projectRoot),
   );
 }
 

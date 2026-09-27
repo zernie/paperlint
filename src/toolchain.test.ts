@@ -34,19 +34,19 @@ type Answer = {
 };
 /** A runner answering by program name (the last path segment); `onRun` may write files first. */
 function io(
-  answers: Record<string, (args: string[]) => Answer>,
+  answers: Record<string, (args: readonly string[]) => Answer>,
 ): ToolchainIO & { lines: string[] } {
   const lines: string[] = [];
   return {
     lines,
     log: (l) => lines.push(l),
     env: {},
-    run: ((cmd: string, args: string[]) => {
+    run: (cmd, args) => {
       const name = cmd.split("/").pop() ?? cmd;
       const answer = answers[`${name} ${args[0] ?? ""}`] ?? answers[name];
       if (!answer) throw new Error(`unexpected ${name} ${args.join(" ")}`);
       return answer(args);
-    }) as never,
+    },
   };
 }
 const ok = (stdout = ""): Answer => ({ status: 0, stdout, stderr: "" });
@@ -194,7 +194,7 @@ function cacheWith(name: string, year: string): string {
 const ACMART = { packages: { acmart: ["acmart.cls"] }, tools: {} };
 function ensure(
   cache: string,
-  answers: Record<string, (args: string[]) => Answer>,
+  answers: Record<string, (args: readonly string[]) => Answer>,
 ) {
   const t = io(answers);
   const errs: string[] = [];
@@ -272,7 +272,11 @@ test("runToolchain with only its installer: the console is the default output", 
   const saved = console.error;
   console.error = (...a: unknown[]) => void seen.push(a.join(" "));
   try {
-    assert.equal(runToolchain({ platform: "win32", banal: {} as never }), 1);
+    const unused = (): never => {
+      throw new Error("an unsupported platform installs nothing");
+    };
+    const banal = { label: "banal", ensure: unused, check: unused };
+    assert.equal(runToolchain({ platform: "win32", banal }), 1);
   } finally {
     console.error = saved;
   }

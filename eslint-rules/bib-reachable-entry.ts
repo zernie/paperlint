@@ -33,7 +33,7 @@ export default {
   rules: {
     "reachable-entry": {
       meta: {
-        type: "suggestion",
+        type: "suggestion" as const,
         docs: {
           description:
             "a bibliography entry carries a doi, a url or an arXiv id — something a reader can follow",

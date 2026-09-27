@@ -15,6 +15,7 @@ import { sha256Hex } from "./domain/sha256.ts";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
 import { VENUE_RULE_LEVELS, venueRules } from "./venue-rules.ts";
 import { buildConfig, OPTIONAL_RULES, SHIPPED_RULES } from "./cli.ts";
+import { present } from "../test/support.ts";
 
 const VENUES = packageVenuesDir();
 const PAPER = "/work/papers/p";
@@ -529,12 +530,15 @@ describe("where a finding points", () => {
 });
 
 describe("paperlint's own config turns the venue rules on for every paper.tex", () => {
-  const texBlock = buildConfig({}, { sentinel: "tex language" }).find((b) =>
-    ((b as { files?: string[] }).files ?? []).includes("**/paper.tex"),
-  ) as { rules: Record<string, unknown> };
+  const texRules = present(
+    buildConfig({}, { sentinel: "tex language" }).find((b) =>
+      (b.files ?? []).includes("**/paper.tex"),
+    )?.rules,
+    "the paper.tex block's rules",
+  );
 
   it.each(Object.entries(VENUE_RULE_LEVELS))("%s is on at %s", (id, level) => {
-    expect(texBlock.rules[id]).toBe(level);
+    expect(texRules[id]).toBe(level);
     expect(SHIPPED_RULES.has(id)).toBe(true);
     expect(OPTIONAL_RULES.has(id)).toBe(false);
   });

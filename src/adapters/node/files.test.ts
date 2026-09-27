@@ -4,14 +4,16 @@ import { existsSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll as after, test } from "vitest";
-import type { AbsolutePath } from "../../domain/paths.ts";
+import { absolutePath, joinPath } from "../../domain/paths.ts";
 import { errorCode, nodeFiles } from "./files.io.ts";
 
-const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-files-test-")));
+const root = absolutePath(
+  realpathSync(mkdtempSync(join(tmpdir(), "paperlint-files-test-"))),
+);
 after(() => {
   rmSync(root, { recursive: true, force: true });
 });
-const at = (...p: string[]) => join(root, ...p) as AbsolutePath;
+const at = (...p: string[]) => joinPath(root, ...p);
 
 test("Files: a missing file reads as null and is not a file", () => {
   assert.equal(nodeFiles.readBytes(at("nope")), null);

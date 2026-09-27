@@ -14,7 +14,8 @@ import type { Geometry, Provenance } from "../../domain/geometry.ts";
 import type { AbsolutePath } from "../../domain/paths.ts";
 import { err, ok } from "../../domain/result.ts";
 import type { MeasureGeometry } from "../../ports/measure-geometry.ts";
-import type { Ready, ToolInstaller } from "../../ports/tool-installer.ts";
+import { ready, type Ready } from "../../domain/ready.ts";
+import type { ToolInstaller } from "../../ports/tool-installer.ts";
 import { describe } from "./failure.ts";
 import { provenanceLabel, type BanalCandidate } from "./locate.ts";
 import { pinLabel, type BanalSource } from "./pin.ts";
@@ -65,15 +66,12 @@ export function banalMeasurer(
 }
 
 /** The one place banal's `Ready` is minted: from an `Installed`, whose `PinnedBanal` only run.ts mints. */
-const ready = (i: Installed): Ready => {
-  // Widened by annotation: the brand of the path is not part of `Ready`'s shape.
-  const where: string = i.banal.path;
-  return {
-    where,
+const readyOf = (i: Installed): Ready =>
+  ready({
+    where: i.banal.path,
     fresh: i.fresh,
     verified: "sha256 verified, and it measured a probe page",
-  } as Ready;
-};
+  });
 
 /**
  * banal as the `ToolInstaller` port: download at the pin, check the sha256, accept by measuring a
@@ -91,12 +89,12 @@ export function banalInstaller(
         ...(source ? { source } : {}),
         onDownload: report,
       });
-      return r.ok ? ok(ready(r.value)) : err(describe(r.error));
+      return r.ok ? ok(readyOf(r.value)) : err(describe(r.error));
     },
     check() {
       const r = checkBanal(d, s, source);
       return r.ok
-        ? ok(ready({ banal: r.value, fresh: false }))
+        ? ok(readyOf({ banal: r.value, fresh: false }))
         : err(describe(r.error));
     },
   };

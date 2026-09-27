@@ -8,7 +8,7 @@
  * 74 errors — parse errors and "Definition for rule … was not found" — none of them on a paper
  * file, and the run failed. Nothing in the settings could turn that off.
  */
-import { ESLint, type Linter } from "eslint";
+import { ESLint } from "eslint";
 import {
   mkdirSync,
   mkdtempSync,
@@ -19,7 +19,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { buildConfig, run } from "./cli.ts";
+import { buildConfig, eslintConfig, run } from "./cli.ts";
 import {
   narrowToOwners,
   ownedPatterns,
@@ -28,6 +28,10 @@ import {
   scopeToOwned,
 } from "./paper-files.ts";
 import { lintReport } from "../test/lint-report.ts";
+import { z } from "zod";
+
+/** What `calculateConfigForFile` answers for a file inside the config's scope, read for its rules. */
+const Computed = z.object({ rules: z.record(z.string(), z.unknown()) });
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -232,25 +236,24 @@ describe("`rules` blocks — where the rule lands", () => {
     const eslint = new ESLint({
       cwd: root,
       overrideConfigFile: true,
-      overrideConfig: buildConfig(
-        {
-          rules: [
-            {
-              basePath: root,
-              files: ["papers/**"],
-              rules: { "paper/source": "warn", "paper/section-word": "off" },
-            },
-          ],
-        },
-        null,
-      ) as Linter.Config[],
+      overrideConfig: eslintConfig(
+        buildConfig(
+          {
+            rules: [
+              {
+                basePath: root,
+                files: ["papers/**"],
+                rules: { "paper/source": "warn", "paper/section-word": "off" },
+              },
+            ],
+          },
+          null,
+        ),
+      ),
     });
     const on = async (file: string) =>
-      (
-        (await eslint.calculateConfigForFile(join(root, file))) as {
-          rules: Record<string, unknown>;
-        }
-      ).rules;
+      Computed.parse(await eslint.calculateConfigForFile(join(root, file)))
+        .rules;
     const status = await on("papers/a/PIPELINE-STATUS.md");
     expect(status["paper/source"]).toEqual([1]);
     expect(status["paper/section-word"]).toBeUndefined();

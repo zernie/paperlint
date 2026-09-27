@@ -26,8 +26,36 @@ import { basename, delimiter, join } from "node:path";
 import type { TexRequirements } from "./tex-requirements.ts";
 import { printed } from "./domain/text.ts";
 
-/** A process runner with `spawnSync`'s shape — the port the harness replaces. */
-export type Runner = typeof spawnSync;
+/** The options paperlint hands a process runner: text out, both streams captured. */
+export interface RunOptions {
+  readonly encoding: "utf8" | "latin1";
+  readonly stdio: ["ignore", "pipe", "pipe"];
+  readonly env?: NodeJS.ProcessEnv;
+  readonly cwd?: string;
+  readonly maxBuffer?: number;
+  readonly timeout?: number;
+}
+
+/**
+ * What paperlint reads of a finished process. `spawnSync`'s result has this shape; a fake needs
+ * nothing more. Both streams are optional: they are `undefined` when the spawn itself failed.
+ */
+export interface RunResult {
+  readonly status: number | null;
+  readonly stdout?: string;
+  readonly stderr?: string;
+  readonly error?: Error;
+}
+
+/**
+ * A process runner: `spawnSync`'s text overload, narrowed to what paperlint passes and reads — the
+ * port the harness replaces. `spawnSync` itself is one.
+ */
+export type Runner = (
+  file: string,
+  args: readonly string[],
+  options: RunOptions,
+) => RunResult;
 
 /** One TeX Live and what it lacks for the papers at hand. */
 export interface TreeProbe {

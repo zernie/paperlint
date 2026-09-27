@@ -2,7 +2,7 @@
  * In-memory adapters for the app layer's tests: every port, no disk, no processes, no network.
  * Each one RECORDS what it was asked, so a test asserts on the calls instead of on side effects.
  */
-import type { AbsolutePath } from "../../domain/paths.ts";
+import { absolutePath } from "../../domain/paths.ts";
 import type { Download } from "../../ports/download.ts";
 import type { Files } from "../../ports/files.ts";
 import type { Command, ProcessExit, RunProcess } from "../../ports/process.ts";
@@ -69,11 +69,12 @@ export interface MemoryWorkspace extends Workspace {
 export function memoryWorkspace(dir = "/scratch"): MemoryWorkspace {
   const written: MemoryWorkspace["written"] = [];
   const ended: ("returned" | "threw")[] = [];
+  const at = absolutePath(dir);
   const scratch: Scratch = {
-    dir: dir as AbsolutePath,
+    dir: at,
     write(name, content, mode) {
       written.push({ name, content, mode });
-      return `${dir}/${name}` as AbsolutePath;
+      return absolutePath(`${dir}/${name}`);
     },
   };
   return {

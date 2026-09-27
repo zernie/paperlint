@@ -10,6 +10,7 @@ import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { test } from "vitest";
 import { runNode, useTempDir, writeTree } from "../test/support.ts";
+import type { runToolchain } from "./toolchain.ts";
 import {
   chooseVenue,
   initTexLive,
@@ -55,6 +56,18 @@ test("parseArgs: the boolean flags of build and toolchain, and a value flag with
       { ...base, cmd: "new", paths: ["x"], kind: "short", maxWarnings: 3 },
     ],
   );
+});
+
+test("🔴 parseSettings refuses a mistyped `structure` instead of letting `lint` crash on it", () => {
+  // Guards: `markers: 5` used to pass the boundary, and `checkStructure` then threw
+  // "rules.markers.some is not a function" from inside `paperlint lint`.
+  for (const structure of [{ markers: 5 }, "yes", { requireOneOf: ["a"] }]) {
+    const r = parseSettings({ structure }, "paperlint.json", "/r");
+    assert.equal(r.ok, false, JSON.stringify(structure));
+    assert.match(r.error, /^paperlint\.json: "structure" must be false/);
+  }
+  const off = parseSettings({ structure: false }, "paperlint.json", "/r");
+  assert.equal(off.ok && off.value.structure, false);
 });
 
 test("parseSettings refuses a non-object, names one unknown key or several, and a mistyped default", () => {
@@ -146,7 +159,7 @@ test("runHook: a runtime with no cli.js beside it, and a hook killed by a signal
   });
   const killed = runHook("paper-edit-guard", {
     err: (m: string) => messages.push(m),
-    run: (() => ({ status: null, signal: "SIGKILL" })) as never,
+    run: () => ({ status: null, signal: "SIGKILL" }),
   });
   assert.deepEqual(
     { noCli, killed, messages: messages.map((m) => m.split(" from ")[0]) },
@@ -363,7 +376,8 @@ test("a paper's paperlint.json that does not parse stops the lint with its path"
 });
 
 test("silentOptionalRules: a config with no rules turns nothing on", async () => {
-  assert.deepEqual(await silentOptionalRules({} as never, [], {}), []);
+  const eslint = { calculateConfigForFile: () => Promise.resolve(undefined) };
+  assert.deepEqual(await silentOptionalRules(eslint, [], {}), []);
 });
 
 test("init with no path and --format md sets up the current directory", async () => {
@@ -538,8 +552,8 @@ test("ownVersion: the manifest's version; an unreadable manifest or a non-string
 
 test("init's TeX Live install runs the toolchain over the project's papers, never a check", () => {
   const dir = writeTree(join(root, "init-tex"), { "package.json": "{}" });
-  const calls: unknown[] = [];
-  const fake = ((o: unknown) => (calls.push(o), 0)) as never;
+  const calls: Parameters<typeof runToolchain>[0][] = [];
+  const fake: typeof runToolchain = (o) => (calls.push(o), 0);
   const log = () => {};
   const here = initTexLive(
     parseArgs(["init"]),
@@ -553,10 +567,7 @@ test("init's TeX Live install runs the toolchain over the project's papers, neve
   );
   assert.deepEqual([here.install(), there.install()], [0, 0]);
   assert.deepEqual(
-    calls.map((c) => {
-      const o = c as { check: boolean; tex: unknown; banal: unknown };
-      return [o.check, o.tex, typeof o.banal];
-    }),
+    calls.map((c) => [c.check, c.tex, typeof c.banal]),
     [
       [false, toolchainTex(dir), "object"],
       [false, toolchainTex(join(dir, "sub")), "object"],

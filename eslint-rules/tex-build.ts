@@ -137,7 +137,7 @@ const FRONTMATTER_OVERRIDES = [
 // checks stop being read too.
 const futurePromise = {
   meta: {
-    type: "problem",
+    type: "problem" as const,
     docs: {
       description:
         "the build is not in review mode, yet the text promises a future release of something already handed over",
@@ -241,7 +241,7 @@ const futurePromise = {
 // miss is a rejection with no content review. In a consumer that is `error`.
 const acmFrontmatterOverride = {
   meta: {
-    type: "problem",
+    type: "problem" as const,
     docs: {
       description:
         "an acmart build overrides ACM's front-matter commands, removing template elements from page 1",

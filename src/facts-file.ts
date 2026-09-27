@@ -45,7 +45,7 @@ import {
 } from "./domain/geometry.ts";
 import { parseSha256, sha256Hex, type Sha256 } from "./domain/sha256.ts";
 import type { MeasureGeometry } from "./ports/measure-geometry.ts";
-import type { AbsolutePath } from "./domain/paths.ts";
+import { callerPath } from "./caller-path.ts";
 import type { Files } from "./ports/files.ts";
 import { err, ok, type Result } from "./domain/result.ts";
 import { paperPreset, paperPresetProblem } from "./presets.ts";
@@ -59,12 +59,6 @@ export const FACTS_FILE = "paper.facts.json";
 /** Where a paper's facts live. */
 export const factsPath = (paperDir: string): string =>
   join(paperDir, FACTS_DIR, FACTS_FILE);
-
-/**
- * A path as the caller gave it. The `Files` adapter resolves a relative one against the process's
- * cwd, which is what these callers have always meant; the brand is not a claim this code checked it.
- */
-const at = (p: string): AbsolutePath => p as AbsolutePath;
 
 /** What the facts need from a paper's `paperlint.json`: its venue's label, its kind, where its PDF is. */
 export interface VenueDecl {
@@ -213,7 +207,7 @@ export async function measurePaper(
 ): Promise<Result<Measured, string>> {
   const r = await o.readPdf(pdf);
   if (!r.ok) return err(describeFailure(r, pdf));
-  const bytes = o.files.readBytes(at(pdf));
+  const bytes = o.files.readBytes(callerPath(pdf));
   if (bytes === null) return err(`${pdf}: gone after pdf.js read it`);
   const geometry = o.measure.measure(r.facts.layout);
   const decl = declaredVenue(o.files, paperDir);
@@ -239,7 +233,7 @@ export function writeFactsFile(
 ): string {
   const out = factsPath(paperDir);
   files.writeAtomic(
-    at(out),
+    callerPath(out),
     new TextEncoder().encode(`${JSON.stringify(facts, null, 2)}\n`),
   );
   return out;
@@ -288,6 +282,34 @@ const MAYBE_NUMBERS = [
 ] as const;
 const NUMBERS = ["body_pages", "ref_pages", "appendix_pages"] as const;
 
+/** The geometry columns as the file holds them once checked. */
+type GeometryColumns = {
+  readonly [K in (typeof MAYBE_NUMBERS)[number]]: number | null;
+} & { readonly [K in (typeof NUMBERS)[number]]: number } & {
+  readonly pages_by_type: Readonly<Record<string, number>>;
+};
+
+const isCounts = (v: unknown): v is Readonly<Record<string, number>> =>
+  isRecord(v) && Object.values(v).every(isNum);
+
+/** Every geometry column has its type: the check the type claims, and nothing else. */
+const hasGeometryColumns = (
+  d: Readonly<Record<string, unknown>>,
+): d is Readonly<Record<string, unknown>> & GeometryColumns =>
+  MAYBE_NUMBERS.every((k) => numOrNull(d[k])) &&
+  NUMBERS.every((k) => isNum(d[k])) &&
+  isCounts(d["pages_by_type"]);
+
+/** Which geometry column is wrong, for a record `hasGeometryColumns` refused. */
+function geometryError(d: Readonly<Record<string, unknown>>): string {
+  const bad =
+    MAYBE_NUMBERS.find((k) => !numOrNull(d[k])) ??
+    NUMBERS.find((k) => !isNum(d[k]));
+  return bad
+    ? `\`${bad}\` is not a number`
+    : "`pages_by_type` is not an object of page counts";
+}
+
 /** The geometry columns when a measurer ran; the shape error otherwise. */
 function geometryOf(
   d: Readonly<Record<string, unknown>>,
@@ -295,24 +317,17 @@ function geometryOf(
   if (d["geometry_source"] === null) return ok(null);
   if (typeof d["geometry_source"] !== "string")
     return err("`geometry_source` is neither a measurer's name nor null");
-  const bad =
-    MAYBE_NUMBERS.find((k) => !numOrNull(d[k])) ??
-    NUMBERS.find((k) => !isNum(d[k]));
-  if (bad) return err(`\`${bad}\` is not a number`);
-  const pagesByType = d["pages_by_type"];
-  if (!isRecord(pagesByType) || !Object.values(pagesByType).every(isNum))
-    return err("`pages_by_type` is not an object of page counts");
-  const n = (k: (typeof MAYBE_NUMBERS)[number]) => d[k] as number | null;
+  if (!hasGeometryColumns(d)) return err(geometryError(d));
   return ok({
-    page_w_in: n("page_w_in"),
-    page_h_in: n("page_h_in"),
-    columns: n("columns"),
-    body_pt: n("body_pt"),
-    ref_pt: n("ref_pt"),
-    body_pages: d["body_pages"] as number,
-    ref_pages: d["ref_pages"] as number,
-    appendix_pages: d["appendix_pages"] as number,
-    pages_by_type: pagesByType as Readonly<Record<string, number>>,
+    page_w_in: d.page_w_in,
+    page_h_in: d.page_h_in,
+    columns: d.columns,
+    body_pt: d.body_pt,
+    ref_pt: d.ref_pt,
+    body_pages: d.body_pages,
+    ref_pages: d.ref_pages,
+    appendix_pages: d.appendix_pages,
+    pages_by_type: d.pages_by_type,
   });
 }
 
@@ -348,7 +363,7 @@ export function parseFactsText(text: string): Result<ReadFacts, FactsProblem> {
   if (!artifact.ok) return err({ kind: "broken", why: artifact.error });
   const rawFonts = d["fonts"];
   const fonts = Array.isArray(rawFonts) ? rawFonts.map(fontOf) : null;
-  if (fonts === null || fonts.some((f) => f === null))
+  if (fonts === null || !fonts.every((f) => f !== null))
     return err({
       kind: "broken",
       why: "`fonts` is not a list of { name, type, embedded, program }",
@@ -357,7 +372,7 @@ export function parseFactsText(text: string): Result<ReadFacts, FactsProblem> {
   if (!geometry.ok) return err({ kind: "broken", why: geometry.error });
   return ok({
     ...artifact.value,
-    fonts: fonts as FontEntry[],
+    fonts,
     geometry: geometry.value,
   });
 }

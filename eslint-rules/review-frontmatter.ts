@@ -90,7 +90,7 @@ export function frontmatterRule(schemaUrl: URL | string, description: string) {
   const validate = new Ajv({ allErrors: true }).compile(schema);
   return {
     meta: {
-      type: "problem",
+      type: "problem" as const,
       docs: { description },
       schema: [],
       messages: {

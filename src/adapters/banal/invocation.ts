@@ -13,7 +13,7 @@ import type { Opaque } from "ts-essentials";
 import type { AbsolutePath } from "../../domain/paths.ts";
 import type { Command } from "../../ports/process.ts";
 import type { Scratch } from "../../ports/workspace.ts";
-import type { LocatedBanal } from "./locate.ts";
+import type { BanalCandidate } from "./locate.ts";
 import type { PageLayout } from "../../domain/page-layout.ts";
 import { pdf2xml, XML_DIALECT } from "./xml.ts";
 
@@ -23,9 +23,19 @@ export const BANAL_RUN_MS = 120_000;
 /** A path quoted for `/bin/sh`. Minted by `shQuote` only. */
 export type ShQuoted = Opaque<string, "ShQuoted">;
 
+// One single-quoted word: any run of non-quotes, each quote spelled `'"'"'`. What `shQuote` writes.
+const SH_QUOTED = /^'(?:[^']|'"'"')*'$/;
+const isShQuoted = (s: string): s is ShQuoted => SH_QUOTED.test(s);
+
+/** A word already quoted for `/bin/sh`, checked; anything else throws. */
+export function parseShQuoted(s: string): ShQuoted {
+  if (!isShQuoted(s)) throw new Error(`not one single-quoted shell word: ${s}`);
+  return s;
+}
+
 /** banal interpolates `$PDFTOHTML` into a shell command unquoted — so the value is quoted here. */
 export const shQuote = (s: string): ShQuoted =>
-  `'${s.replace(/'/g, `'"'"'`)}'` as ShQuoted;
+  parseShQuoted(`'${s.replace(/'/g, `'"'"'`)}'`);
 
 /** The stub standing in for `pdftohtml`: it answers `-v` and refuses to convert anything. */
 export const PDFTOHTML_STUB = [
@@ -64,11 +74,15 @@ export const stageBanalInput = (
   ],
 });
 
+// Not exported: only `stage` can write the property, so only it can make a StagedInput.
+const STAGED = Symbol("StagedInput");
+
 /** The staging written to disk. Minted by `stage` only: both files written, or nothing returned. */
-export type StagedInput = Opaque<
-  { readonly xml: AbsolutePath; readonly stub: AbsolutePath },
-  "StagedInput"
->;
+export interface StagedInput {
+  readonly xml: AbsolutePath;
+  readonly stub: AbsolutePath;
+  readonly [STAGED]: true;
+}
 
 /** Write a staging into a scratch directory, the stub executable. The only minter of `StagedInput`. */
 export function stage(s: Scratch, staging: BanalStaging): StagedInput {
@@ -76,12 +90,13 @@ export function stage(s: Scratch, staging: BanalStaging): StagedInput {
   return {
     xml: s.write(xml.name, xml.content, xml.mode),
     stub: s.write(stub.name, stub.content, stub.mode),
-  } as StagedInput;
+    [STAGED]: true,
+  };
 }
 
 /** `perl banal -no-time -json <xml>`, with `$PDFTOHTML` quoted by construction. */
 export function banalCommand(
-  banal: LocatedBanal,
+  banal: Pick<BanalCandidate, "path">,
   staged: StagedInput,
   baseEnv: Readonly<Record<string, string>>,
 ): Command {

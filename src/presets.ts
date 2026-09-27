@@ -39,7 +39,7 @@ import {
   type TexRequirements,
   type VenueFormat,
 } from "./tex-requirements.ts";
-import type { AbsolutePath } from "./domain/paths.ts";
+import { callerPath } from "./caller-path.ts";
 import { err, ok, type Result } from "./domain/result.ts";
 import type { Files } from "./ports/files.ts";
 import {
@@ -120,7 +120,7 @@ function readPreset(
 ): Result<{ file: string; preset: PresetFile }, PresetProblem> {
   const where = fileOf(spec, from, deps.venuesDir);
   if (!where.ok) return where;
-  const bytes = deps.files.readBytes(where.value as AbsolutePath);
+  const bytes = deps.files.readBytes(callerPath(where.value));
   if (bytes === null)
     return err({ kind: "not-found", spec, file: where.value, shipped: [] });
   try {
@@ -166,14 +166,22 @@ export function mergeFormat(
   parent: VenueFormat,
   child: VenueFormat,
 ): VenueFormat {
-  const keys = Object.keys(NO_FORMAT).filter((k) => k !== "kinds") as Exclude<
-    keyof VenueFormat,
-    "kinds"
-  >[];
-  const scalars = Object.fromEntries(
-    keys.map((k) => [k, child[k] ?? parent[k]]),
-  ) as Omit<VenueFormat, "kinds">;
-  return { ...scalars, kinds: new Map([...parent.kinds, ...child.kinds]) };
+  // Every field listed: a VenueFormat literal missing one is a compile error.
+  const pick = <K extends Exclude<keyof VenueFormat, "kinds">>(
+    k: K,
+  ): VenueFormat[K] => child[k] ?? parent[k];
+  return {
+    pageWidthIn: pick("pageWidthIn"),
+    pageHeightIn: pick("pageHeightIn"),
+    columns: pick("columns"),
+    bodyPt: pick("bodyPt"),
+    bodyPtTol: pick("bodyPtTol"),
+    refPtMin: pick("refPtMin"),
+    refPtMax: pick("refPtMax"),
+    fontsText: pick("fontsText"),
+    fontsTitle: pick("fontsTitle"),
+    kinds: new Map([...parent.kinds, ...child.kinds]),
+  };
 }
 
 /** The chain, root first, merged into one preset. Pure. */
@@ -182,12 +190,18 @@ function merged(
   rootFirst: readonly PresetFile[],
   files: readonly string[],
 ): Preset {
-  const base = {
-    name: null as string | null,
-    template: null as string | null,
+  const base: {
+    name: string | null;
+    template: string | null;
+    tex: TexRequirements;
+    format: VenueFormat;
+    rules: Readonly<Record<string, unknown>>;
+  } = {
+    name: null,
+    template: null,
     tex: NO_REQUIREMENTS,
     format: NO_FORMAT,
-    rules: {} as Readonly<Record<string, unknown>>,
+    rules: {},
   };
   const m = rootFirst.reduce(
     (acc, p) => ({

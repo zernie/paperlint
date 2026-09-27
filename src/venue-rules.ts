@@ -45,8 +45,9 @@ import {
 import type { KindLimits, VenueFormat } from "./tex-requirements.ts";
 import { paperPreset, presetProblemText } from "./presets.ts";
 import type { FlatGeometry } from "./domain/geometry.ts";
-import type { AbsolutePath } from "./domain/paths.ts";
+import { callerPath } from "./caller-path.ts";
 import { sha256Hex } from "./domain/sha256.ts";
+import { fieldOf } from "./domain/record.ts";
 import type { Files } from "./ports/files.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
 
@@ -92,9 +93,8 @@ export interface VenueRuleDeps {
   readonly venuesDir: string;
 }
 
-const at = (p: string): AbsolutePath => p as AbsolutePath;
 const text = (files: Files, p: string): string | null => {
-  const b = files.readBytes(at(p));
+  const b = files.readBytes(callerPath(p));
   return b === null ? null : new TextDecoder().decode(b);
 };
 
@@ -138,7 +138,7 @@ function freshFacts(
       : finding("factsBroken", { why: parsed.error.why });
   const f = parsed.value;
   const pdf = files.readBytes(
-    at(isAbsolute(f.pdf) ? f.pdf : join(paperDir, f.pdf)),
+    callerPath(isAbsolute(f.pdf) ? f.pdf : join(paperDir, f.pdf)),
   );
   if (pdf === null) return finding("pdfMissing", { pdf: f.pdf });
   return sha256Hex(pdf) === f.sha ? f : finding("stale", { pdf: f.pdf });
@@ -373,8 +373,7 @@ const JUDGES: Readonly<Record<VenueRuleName, Judge>> = {
           a.facts.geometry,
           a.venue.format,
           a.venue.venue,
-          (options[0] as { dimTol?: number } | undefined)?.dimTol ??
-            DEFAULT_DIM_TOL_IN,
+          dimTolOf(options[0]),
         )
       : [],
   limits: (a) =>
@@ -389,6 +388,12 @@ const JUDGES: Readonly<Record<VenueRuleName, Judge>> = {
 
 /** How far, in inches, a measured page dimension may be from the preset's. */
 export const DEFAULT_DIM_TOL_IN = 0.05;
+
+/** `geometry`'s `dimTol` option in inches, or the default when the rule was given none. */
+function dimTolOf(options: unknown): number {
+  const tol = fieldOf(options, "dimTol");
+  return typeof tol === "number" ? tol : DEFAULT_DIM_TOL_IN;
+}
 
 type Meta = Pick<VenueRuleModule["meta"], "docs" | "messages"> & {
   readonly type?: "suggestion";
@@ -565,9 +570,14 @@ function rule(name: VenueRuleName, deps: VenueRuleDeps): VenueRuleModule {
 export function venueRules(
   deps: VenueRuleDeps,
 ): Record<VenueRuleName, VenueRuleModule> {
-  const names = Object.keys(META) as VenueRuleName[];
-  return Object.fromEntries(names.map((n) => [n, rule(n, deps)])) as Record<
-    VenueRuleName,
-    VenueRuleModule
-  >;
+  // Every name listed: a record missing one is a compile error.
+  return {
+    fresh: rule("fresh", deps),
+    profile: rule("profile", deps),
+    measured: rule("measured", deps),
+    fonts: rule("fonts", deps),
+    geometry: rule("geometry", deps),
+    limits: rule("limits", deps),
+    "body-size": rule("body-size", deps),
+  };
 }

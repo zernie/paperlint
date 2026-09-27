@@ -31,6 +31,7 @@ import {
   PACKAGE_NAME,
 } from "../skills/paper-pipeline/scripts/consumer.mjs";
 import { messageOf } from "./domain/text.ts";
+import { fieldOf, isRecord } from "./domain/record.ts";
 
 /** The committed, shared settings file — husky's `.husky/` analogue, except git carries it. */
 export const SETTINGS_PATH = join(".claude", "settings.json");
@@ -151,6 +152,25 @@ const prop = (v: unknown): Readonly<Record<string, unknown>> | undefined =>
     ? Object.fromEntries(Object.entries(v))
     : undefined;
 
+const isHookCommand = (v: unknown): v is HookCommand =>
+  typeof fieldOf(v, "type") === "string" &&
+  typeof fieldOf(v, "command") === "string";
+
+function isHookEntry(v: unknown): v is HookEntry {
+  const matcher = fieldOf(v, "matcher");
+  const hooks = fieldOf(v, "hooks");
+  return (
+    ["undefined", "string"].includes(typeof matcher) &&
+    Array.isArray(hooks) &&
+    hooks.every(isHookCommand)
+  );
+}
+
+/** A `hooks` map of the shape Claude Code reads: event → entries → commands. */
+const isHooksMap = (v: unknown): v is HooksMap =>
+  isRecord(v) &&
+  Object.values(v).every((es) => Array.isArray(es) && es.every(isHookEntry));
+
 export interface Wiring {
   readonly compiled: HooksMap;
   /** Derived from the commands, in order. Never empty — an empty set throws. */
@@ -162,8 +182,12 @@ export interface Wiring {
  * check that silently wired nothing would report "✓ wired" over an empty set.
  */
 export function shippedWiring(file: string = WIRING_FILE): Wiring {
-  const json = JSON.parse(readFileSync(file, "utf8")) as { hooks?: HooksMap };
-  const compiled = json.hooks ?? {};
+  const json: unknown = JSON.parse(readFileSync(file, "utf8"));
+  const compiled = fieldOf(json, "hooks") ?? {};
+  if (!isHooksMap(compiled))
+    throw new Error(
+      `${file}: "hooks" is not a map of event → [{ matcher?, hooks: [{ type, command }] }]`,
+    );
   const names = commandsIn({ hooks: compiled })
     .map((c) => hookRun(c.command)?.name)
     .filter((n): n is string => typeof n === "string");
@@ -225,9 +249,9 @@ export function readSettings(root: string): SettingsRead {
   const raw = readFileSync(path, "utf8");
   try {
     const parsed: unknown = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
+    if (!isRecord(parsed))
       return { status: "unparsable", path, reason: "not a JSON object" };
-    return { status: "read", path, settings: parsed as Settings, raw };
+    return { status: "read", path, settings: parsed, raw };
   } catch (e) {
     return { status: "unparsable", path, reason: messageOf(e) };
   }

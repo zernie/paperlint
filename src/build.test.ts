@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "vitest";
-import { useTempDir, writeTree } from "../test/support.ts";
+import { present, useTempDir, writeTree } from "../test/support.ts";
 import {
   bibInput,
   buildPaper,
@@ -64,16 +64,16 @@ function bibtexRun(f: Fake, cwd: string) {
 }
 function fakeRun(f: Fake): NonNullable<BuildOptions["run"]> {
   let pass = 0;
-  return ((bin: string, _args: string[], opts: { cwd: string }) => {
+  return (bin, _args, opts) => {
     if (bin === f.missing)
       return {
         error: Object.assign(new Error("spawn ENOENT"), { code: "ENOENT" }),
         status: null,
       };
-    return bin === "pdflatex"
-      ? latexPass(f, opts.cwd, ++pass)
-      : bibtexRun(f, opts.cwd);
-  }) as never;
+    // The build always runs a pass in the paper's directory.
+    const cwd = present(opts.cwd, "the pass's cwd");
+    return bin === "pdflatex" ? latexPass(f, cwd, ++pass) : bibtexRun(f, cwd);
+  };
 }
 
 const NO_GEOMETRY: Geometry = {
@@ -146,11 +146,10 @@ test("documentclass: an empty name is no class; a macro inside the name contribu
   // `\documentclass` came back bare has no name to read, and is no class.
   assert.equal(
     parseDocumentclass("\\documentclass", {
-      parse: () =>
-        ({
-          type: "root",
-          content: [{ type: "macro", content: "documentclass" }],
-        }) as never,
+      parse: () => ({
+        type: "root",
+        content: [{ type: "macro", content: "documentclass" }],
+      }),
     }),
     null,
   );

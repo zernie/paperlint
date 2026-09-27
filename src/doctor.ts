@@ -37,6 +37,7 @@ import { PAPER_MARKERS } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
 import { doctorHooks } from "./hooks-settings.ts";
 import { messageOf } from "./domain/text.ts";
+import { fieldOf } from "./domain/record.ts";
 
 export interface Program {
   readonly bin: string;
@@ -99,7 +100,17 @@ export const PROGRAMS: readonly Program[] = [
   },
 ];
 
-export const found = (bin: string, run = spawnSync): boolean =>
+/**
+ * Asks the shell whether a program is on PATH. `spawnSync` is one; a fake answers with a status
+ * alone, because a status is all `found` reads.
+ */
+export type ProgramProbe = (
+  file: string,
+  args: readonly string[],
+  options: { readonly shell: true; readonly stdio: "ignore" },
+) => { readonly status: number | null };
+
+export const found = (bin: string, run: ProgramProbe = spawnSync): boolean =>
   run("command", ["-v", bin], { shell: true, stdio: "ignore" }).status === 0;
 
 /** Lists a directory's entries; the disk by default, a test stages an unreadable child. */
@@ -176,9 +187,7 @@ function declarationVerdict(raw: string | null): {
       bad: 1,
     };
   }
-  const declared = (settings as Record<string, unknown> | null)?.[
-    PAPERS_DIR_FIELD
-  ];
+  const declared = fieldOf(settings, PAPERS_DIR_FIELD);
   return {
     lines: [
       declared === undefined
@@ -234,7 +243,7 @@ export interface DoctorOptions {
   cwd?: string;
   /** The project root the hooks are anchored to. Claude Code sets this; it defaults to `cwd`. */
   projectDir?: string;
-  run?: typeof spawnSync;
+  run?: ProgramProbe;
   /** The directory the CLI resolved from its own config, so both sides can be compared. */
   cliPapers?: string | null;
   /** Reads the skill links without writing any. Injected only so a test can fake the install. */

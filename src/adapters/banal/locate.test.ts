@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import type { AbsolutePath } from "../../domain/paths.ts";
+import { absolutePath } from "../../domain/paths.ts";
 import { err } from "../../domain/result.ts";
 import { installedBanal, lookupOrder, pickBanal } from "./locate.ts";
 import { BANAL_PIN } from "./pin.ts";
 import { parseBanalSettings } from "./settings.ts";
 
 const dirs = { home: "/h", tmp: "/t", cwd: "/w" };
-const project = "/p" as AbsolutePath;
+const project = absolutePath("/p");
 const cache = `/h/.cache/paperlint/banal/${BANAL_PIN.commit.slice(0, 12)}/banal`;
 const on =
   (...files: string[]) =>

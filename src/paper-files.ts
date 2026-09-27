@@ -40,16 +40,7 @@
  * - later global-ignore patterns win, across blocks, in config order;
  * - `files: [["a", "b"]]` matches a file only when BOTH patterns match.
  */
-import type { RuleBlock, RuleEntry } from "./rules-config.ts";
-
-/** What this module reads of a config block. */
-interface Block {
-  readonly files?: readonly unknown[];
-  readonly ignores?: readonly unknown[];
-  readonly plugins?: Readonly<
-    Record<string, { readonly rules?: Readonly<Record<string, unknown>> }>
-  >;
-}
+import type { ConfigBlock, RuleBlock, RuleEntry } from "./rules-config.ts";
 
 /**
  * A set of files paperlint lints: an own block's globs and the exceptions that block makes. A file is
@@ -99,20 +90,18 @@ const merged = (scopes: readonly OwnedScope[]): OwnedScope[] => {
  * THE FILES PAPERLINT LINTS: every own block that names `files`, with its `ignores`. A block without
  * `files` (a global ignore, or the block registering `pdf` for every file) claims nothing.
  */
-export function ownedScopes(own: readonly unknown[]): OwnedScope[] {
+export function ownedScopes(own: readonly ConfigBlock[]): OwnedScope[] {
   return merged(
-    own
-      .map((raw) => raw as Block)
-      .flatMap((b) =>
-        b.files === undefined
-          ? []
-          : [{ files: globsOf(b.files), ignores: stringsOf(b.ignores) }],
-      ),
+    own.flatMap((b) =>
+      b.files === undefined
+        ? []
+        : [{ files: globsOf(b.files), ignores: stringsOf(b.ignores) }],
+    ),
   );
 }
 
 /** Every glob paperlint's own blocks lint, once, in config order. */
-export function ownedPatterns(own: readonly unknown[]): string[] {
+export function ownedPatterns(own: readonly ConfigBlock[]): string[] {
   return [...new Set(ownedScopes(own).flatMap((s) => s.files))];
 }
 
@@ -134,7 +123,7 @@ export function scopeToOwned(owned: readonly string[]): {
 }
 
 /** Every `<plugin>/<rule>` a block registers. */
-const ruleIdsOf = (b: Block): string[] =>
+const ruleIdsOf = (b: ConfigBlock): string[] =>
   Object.entries(b.plugins ?? {}).flatMap(([name, plugin]) =>
     Object.keys(plugin.rules ?? {}).map((rule) => `${name}/${rule}`),
   );
@@ -145,12 +134,11 @@ const ruleIdsOf = (b: Block): string[] =>
  * one file more.
  */
 export function ruleOwners(
-  own: readonly unknown[],
+  own: readonly ConfigBlock[],
 ): Map<string, readonly OwnedScope[]> {
   const all = ownedScopes(own);
   const found = new Map<string, OwnedScope[]>();
-  for (const raw of own) {
-    const b = raw as Block;
+  for (const b of own) {
     const scopes =
       b.files === undefined
         ? all
@@ -171,17 +159,18 @@ export function narrowToOwners(
   block: RuleBlock,
   owners: ReadonlyMap<string, readonly OwnedScope[]>,
 ): ScopedBlock[] {
+  // Keyed by the owner's JSON, so rules with equal owners share one group of blocks.
   const groups = new Map<string, Record<string, RuleEntry>>();
+  const ownerOf = new Map<string, readonly OwnedScope[]>();
   for (const [id, entry] of Object.entries(block.rules)) {
     const owner = owners.get(id);
     if (owner === undefined) continue;
     const key = JSON.stringify(owner);
     groups.set(key, { ...groups.get(key), [id]: entry });
+    ownerOf.set(key, owner);
   }
-  return [...groups].flatMap(([key, rules]) =>
-    (JSON.parse(key) as OwnedScope[]).map((scope) =>
-      within(block, scope, rules),
-    ),
+  return [...ownerOf].flatMap(([key, owner]) =>
+    owner.map((scope) => within(block, scope, { ...groups.get(key) })),
   );
 }
 

@@ -55,7 +55,7 @@ const MESSAGES: Readonly<Record<string, string>> = {
 /** Markdown: a skill's own prose, its fenced commands, and its YAML frontmatter. */
 const mdInstallPath = {
   meta: {
-    type: "problem",
+    type: "problem" as const,
     docs: {
       description:
         "a skill must not name its scripts by an install-specific path — rule 10, the port owns where",
@@ -78,7 +78,7 @@ const mdInstallPath = {
 /** JavaScript: the modules this package ships. */
 const jsInstallPath = {
   meta: {
-    type: "problem",
+    type: "problem" as const,
     docs: {
       description:
         "a shipped module must not carry an install-specific path literal — rule 10, the port owns where",

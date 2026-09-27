@@ -160,6 +160,10 @@ export type FontProgram =
 /** A program pdf.js named but this module does not know — kept verbatim, never guessed. */
 export type UnknownProgram = `unknown:${string}`;
 
+const isUnknownProgram = (
+  p: FontProgram | UnknownProgram,
+): p is UnknownProgram => p.startsWith("unknown:");
+
 /**
  * One font the PDF draws text with.
  *
@@ -296,7 +300,5 @@ export const POPPLER_TYPE: Readonly<Record<FontProgram, string>> = {
 /** The type column for any fact, the unknown ones verbatim. */
 export function popplerType(f: FontFact): string {
   if (f.kind === "type3") return POPPLER_TYPE.Type3;
-  return f.program.startsWith("unknown:")
-    ? f.program
-    : POPPLER_TYPE[f.program as FontProgram];
+  return isUnknownProgram(f.program) ? f.program : POPPLER_TYPE[f.program];
 }

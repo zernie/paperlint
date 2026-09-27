@@ -7,7 +7,7 @@
 import assert from "node:assert/strict";
 import { test } from "vitest";
 import { whyNoGeometry } from "../../domain/geometry.ts";
-import type { AbsolutePath } from "../../domain/paths.ts";
+import { absolutePath } from "../../domain/paths.ts";
 import type { ProcessExit } from "../../ports/process.ts";
 import { sha256Hex } from "../../domain/sha256.ts";
 import {
@@ -21,7 +21,7 @@ import type { Ready } from "../../ports/tool-installer.ts";
 import { banalInstaller, banalMeasurer, parseBanalSettings } from "./index.ts";
 
 const dirs = { home: "/h", tmp: "/t", cwd: "/r" };
-const project = "/r" as AbsolutePath;
+const project = absolutePath("/r");
 const MEASURED =
   '{"papersize":[792,612],"columns":2,"bodyfontsize":9,"pages":[{},{"type":"bib","reffontsize":7}]}';
 

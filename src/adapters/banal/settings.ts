@@ -9,7 +9,7 @@ import {
   type Environment,
   type HostDirs,
 } from "../../domain/host.ts";
-import type { AbsolutePath } from "../../domain/paths.ts";
+import { absolutePath, type AbsolutePath } from "../../domain/paths.ts";
 
 /** An explicit banal to use instead of paperlint's (a path to the script). */
 export const BANAL_ENV = "BANAL";
@@ -29,7 +29,7 @@ export interface BanalSettings {
 
 /** `resolve` with an absolute base never consults the process's cwd. */
 const absolute = (cwd: string, p: string): AbsolutePath =>
-  resolve(cwd, p) as AbsolutePath;
+  absolutePath(resolve(cwd, p));
 
 /** An unset variable and an empty one mean the same: not set. */
 const set = (v: string | undefined): string | null => (v ? v : null);

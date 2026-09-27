@@ -40,11 +40,11 @@ function page(items: FakeItem[], fonts: Record<string, unknown>) {
     }),
   };
 }
-const doc = (pages: ReturnType<typeof page>[]) =>
-  ({
-    numPages: pages.length,
-    getPage: (i: number) => Promise.resolve(pages[i - 1]),
-  }) as never;
+const doc = (pages: ReturnType<typeof page>[]) => ({
+  numPages: pages.length,
+  getPage: (i: number) =>
+    Promise.resolve(present(pages[i - 1], `page ${String(i)}`)),
+});
 const item = (
   fontName: string,
   transform: number[],
@@ -140,4 +140,15 @@ test("a failure that is not an Error is named `Error` with its text", () => {
     reason: "unreadable",
     detail: "Error: boom",
   });
+});
+
+test("🔴 a rejection with no value at all is a failure too, not a TypeError out of `readPdf`", () => {
+  // Guards: `readPdf` ends in `.catch(failureOf)`, and reading `.name` off `null` threw from inside it.
+  assert.deepEqual(
+    [failureOf(null), failureOf(undefined)],
+    [
+      { ok: false, reason: "unreadable", detail: "Error: null" },
+      { ok: false, reason: "unreadable", detail: "Error: undefined" },
+    ],
+  );
 });

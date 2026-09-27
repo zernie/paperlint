@@ -15,14 +15,19 @@ export interface ShaMismatch {
   readonly got: Sha256;
 }
 
+// The brand's one owner: the predicate IS the pin check, so no assertion is needed to mint the type.
+const isPinned = (
+  bytes: Uint8Array,
+  source: BanalSource,
+): bytes is PinnedBytes => sha256Hex(bytes) === source.sha256;
+
 export function verifyPin(
   bytes: Uint8Array,
   source: BanalSource,
 ): Result<PinnedBytes, ShaMismatch> {
-  const got = sha256Hex(bytes);
-  return got === source.sha256
-    ? ok(bytes as PinnedBytes)
-    : err({ expected: source.sha256, got });
+  return isPinned(bytes, source)
+    ? ok(bytes)
+    : err({ expected: source.sha256, got: sha256Hex(bytes) });
 }
 
 /** What is installed, judged against the pin. */

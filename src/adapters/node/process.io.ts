@@ -11,8 +11,15 @@ import {
 } from "node:child_process";
 import type { Command, ProcessExit, RunProcess } from "../../ports/process.ts";
 
-/** Node's `spawnSync`, or a stand-in with its shape (a harness records the calls through one). */
-export type SpawnSync = typeof spawnSync;
+/**
+ * Node's `spawnSync` — the one overload this file calls, text in and text out — or a stand-in with its
+ * shape (a harness records the calls through one).
+ */
+export type SpawnSync = (
+  file: string,
+  args: readonly string[],
+  options: SpawnSyncOptionsWithStringEncoding,
+) => SpawnSyncReturns<string>;
 
 const errno = (r: SpawnSyncReturns<string>): string | undefined =>
   codeOf(r.error);

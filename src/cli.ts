@@ -30,6 +30,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join, dirname, resolve, relative, basename, sep } from "node:path";
 import markdown from "@eslint/markdown";
+import { z } from "zod";
 // Types come from consumer.d.mts beside it.
 import {
   isMain,
@@ -112,6 +113,7 @@ import {
   shippedRuleIds,
   unknownKeys,
   type Parsed,
+  type ConfigBlock,
   type RuleBlock,
   type RuleEntry,
 } from "./rules-config.ts";
@@ -127,6 +129,7 @@ import reviewFrontmatter from "#eslint-rules/review-frontmatter";
 import siblingFrontmatter from "#eslint-rules/sibling-frontmatter";
 import pdfRules from "#eslint-rules/pdf-last-page-balance";
 import { messageOf } from "./domain/text.ts";
+import { isRecord } from "./domain/record.ts";
 
 /** The shipped venue presets, read from the package's venues directory — the one list. */
 const SHIPPED_VENUES = (): string[] => shippedPresets(packageVenuesDir());
@@ -220,7 +223,7 @@ settings — paperlint.json, at two levels, one schema. Both are optional.
 export function buildConfig(
   opts: PaperlintConfig = {},
   texLanguage: unknown,
-): unknown[] {
+): ConfigBlock[] {
   const paperRules = { ...researchQuestion.rules, ...typography.rules };
   // The reference rules judge `_build/references.json`, and only on `paper.tex`.
   const texPaperRules = {
@@ -238,7 +241,7 @@ export function buildConfig(
     languageOptions: { frontmatter: "yaml" },
   };
 
-  const cfg: unknown[] = [
+  const cfg: ConfigBlock[] = [
     // 🔴 THE PROJECT'S PAPER TEMPLATE IS NOT A PAPER. `paperlint new` reads `<papers>/.template/`, and
     // its files carry every marker a paper does. Flat config does NOT ignore dot-directories by
     // default (only `node_modules/` and `.git/`), so without this block `paperlint lint` would lint the
@@ -330,6 +333,21 @@ export function buildConfig(
 }
 
 /**
+ * paperlint's blocks as ESLint's config type — the one place the two meet. ESLint types a plugin's
+ * rule as one that runs on ANY language; paperlint's run on the language they were written for, so
+ * no static proof that a block fits exists (`ConfigBlock`, rules-config.ts). ESLint checks every block
+ * when it loads the config and throws on one it cannot use; what is left to check here is that each
+ * is an object.
+ */
+const isEslintBlock = (b: unknown): b is Linter.Config =>
+  typeof b === "object" && b !== null;
+
+export function eslintConfig(blocks: readonly ConfigBlock[]): Linter.Config[] {
+  const loose: readonly unknown[] = blocks;
+  return loose.filter(isEslintBlock);
+}
+
+/**
  * The rule ids a consumer may name in `rules`: every rule paperlint's own config defines, read off that
  * config rather than listed again. `@eslint/markdown` is a dependency's plugin, not paperlint's.
  */
@@ -357,9 +375,7 @@ export interface RulePlugin {
 export function rulePlugins(texLanguage?: unknown): Record<string, RulePlugin> {
   const out: Record<string, { rules: Record<string, unknown> }> = {};
   for (const block of buildConfig({}, texLanguage ?? { sentinel: "tex" }))
-    for (const [name, plugin] of Object.entries(
-      (block as { plugins?: Record<string, RulePlugin> }).plugins ?? {},
-    ))
+    for (const [name, plugin] of Object.entries(block.plugins ?? {}))
       if (plugin !== markdown)
         out[name] = { rules: { ...out[name]?.rules, ...plugin.rules } };
   if (out["tex"] && texLanguage !== undefined)
@@ -382,12 +398,10 @@ export function rulePlugins(texLanguage?: unknown): Record<string, RulePlugin> {
  * switched off in THIS run — `paperlint lint` still reports a directive that silences nothing.
  */
 export function rulesOff(texLanguage?: unknown): Linter.Config[] {
-  return [
+  return eslintConfig([
     {
       name: "paperlint/rules-off",
-      plugins: rulePlugins(texLanguage) as NonNullable<
-        Linter.Config["plugins"]
-      >,
+      plugins: rulePlugins(texLanguage),
       rules: Object.fromEntries([...SHIPPED_RULES].map((id) => [id, "off"])),
     },
     {
@@ -395,7 +409,7 @@ export function rulesOff(texLanguage?: unknown): Linter.Config[] {
       files: PAPER_FILE_PATTERNS,
       linterOptions: { reportUnusedDisableDirectives: "off" },
     },
-  ];
+  ]);
 }
 
 /** Whether a rule entry (`"error"`, `2`, `["warn", {…}]`) turns the rule on. */
@@ -412,7 +426,7 @@ export const OPTIONAL_RULES: ReadonlySet<string> = new Set(
   [...SHIPPED_RULES].filter(
     (id) =>
       !buildConfig({}, { sentinel: "tex language" }).some((b) =>
-        isOn((b as { rules?: Record<string, unknown> }).rules?.[id]),
+        isOn(b.rules?.[id]),
       ),
   ),
 );
@@ -429,8 +443,13 @@ export const OPTIONAL_RULES: ReadonlySet<string> = new Set(
  * papers a and b (#103) — a block that reaches a paper outside this run is not dead. A glob that
  * reaches no paper of the project at all still fails, from a subset as from the whole.
  */
+/** What `calculateConfigForFile` answers, read for its rules: undefined for a file outside ESLint's cwd or scope. */
+const ComputedConfig = z
+  .object({ rules: z.record(z.string(), z.unknown()).optional() })
+  .optional();
+
 export async function silentOptionalRules(
-  eslint: ESLint,
+  eslint: Pick<ESLint, "calculateConfigForFile">,
   files: readonly string[],
   opts: PaperlintConfig,
 ): Promise<string[]> {
@@ -444,8 +463,7 @@ export async function silentOptionalRules(
   const reached = new Set<string>();
   for (const f of new Set(files.filter((p) => basename(p) === MAIN))) {
     // Undefined for a file outside ESLint's cwd or scope: it reaches nothing.
-    const cfg = (await eslint.calculateConfigForFile(f)) as
-      { rules?: Record<string, unknown> } | undefined;
+    const cfg = ComputedConfig.parse(await eslint.calculateConfigForFile(f));
     for (const id of turnedOn) if (isOn(cfg?.rules?.[id])) reached.add(id);
   }
   return [...turnedOn].filter((id) => !reached.has(id));
@@ -543,6 +561,20 @@ const PAPER_FILE_PATTERNS: string[] = ownedPatterns(
   buildConfig({}, { sentinel: "tex language" }),
 );
 
+/** `structure` as `checkStructure` reads it: off, or lists of file names over the defaults. */
+const Names = z.array(z.string()).exactOptional();
+const Structure = z
+  .union([
+    z.literal(false),
+    z.object({
+      markers: Names,
+      require: Names,
+      requireOneOf: z.array(z.array(z.string())).exactOptional(),
+      ignore: Names,
+    }),
+  ])
+  .optional();
+
 /**
  * The root `paperlint.json` after the boundary: an unknown key is refused by name, the paper
  * defaults (`extends`, `kind`, `pdf`) are checked the way a paper's own are, and `rules` becomes
@@ -553,10 +585,9 @@ export function parseSettings(
   where: string,
   baseDir: string,
 ): Parsed<PaperlintConfig> {
-  if (typeof json !== "object" || json === null || Array.isArray(json))
+  if (!isRecord(json))
     return { ok: false, error: `${where}: must be a JSON object` };
-  const raw = json as Record<string, unknown>;
-  const opts = raw as PaperlintConfig;
+  const raw = json;
   const unknown = unknownKeys(raw);
   if (unknown.length > 0)
     return {
@@ -567,9 +598,22 @@ export function parseSettings(
     };
   const defaults = stringFields(raw);
   if (!defaults.ok) return { ok: false, error: `${where}: ${defaults.error}` };
+  const structure = Structure.safeParse(raw["structure"]);
+  if (!structure.success)
+    return {
+      ok: false,
+      error: `${where}: "structure" must be false, or an object whose markers, require and ignore are lists of file names and requireOneOf a list of such lists`,
+    };
   const rules = parseRuleBlocks(raw["rules"], where, SHIPPED_RULES, baseDir);
   if (!rules.ok) return rules;
-  return { ok: true, value: { ...opts, rules: rules.value } };
+  return {
+    ok: true,
+    value: {
+      papersDir: raw[PAPERS_DIR_FIELD],
+      structure: structure.data,
+      rules: rules.value,
+    },
+  };
 }
 
 /**
@@ -770,7 +814,7 @@ export function readConfig(
 
 /** The papers directory field of the settings, read by its one declared name; the default when absent. */
 export function papersDirOf(opts: PaperlintConfig): unknown {
-  const declared = (opts as Record<string, unknown>)[PAPERS_DIR_FIELD];
+  const declared = opts.papersDir;
   return declared === undefined ? DEFAULT_PAPERS_ROOT : declared;
 }
 
@@ -839,7 +883,12 @@ export function runHook(
       createRequire(import.meta.url).resolve(spec),
   }: {
     err?: typeof console.error;
-    run?: typeof spawnSync;
+    /** Runs the hook with the terminal's streams: `spawnSync` is one, and only its status is read. */
+    run?: (
+      file: string,
+      args: readonly string[],
+      options: { readonly stdio: "inherit" },
+    ) => { readonly status: number | null };
     resolve?: (spec: string) => string;
   } = {},
 ): number {
@@ -1466,7 +1515,7 @@ export async function run(
   const eslint = new ESLint({
     cwd: lintRoot(root, paths),
     overrideConfigFile: true,
-    overrideConfig: buildConfig(withPapers, texLanguage) as Linter.Config[],
+    overrideConfig: eslintConfig(buildConfig(withPapers, texLanguage)),
     fix: a.fix,
   });
 
@@ -1543,12 +1592,20 @@ async function firstUnownedFile(
  * is outside paperlint's scope (`all-matched-files-ignored` — a papers directory holding only
  * vendored scripts). Both mean "nothing was linted", which the caller reports itself.
  */
+/** What a thrown ESLint error says about itself; anything else thrown says nothing. */
+const EslintFailure = z
+  .object({
+    messageTemplate: z.string().optional(),
+    message: z.string().optional(),
+  })
+  .catch({});
+
 const isEmptySet = (e: unknown): boolean => {
-  const fail = e as { messageTemplate?: string; message?: string } | null;
+  const fail = EslintFailure.parse(e);
   return (
-    fail?.messageTemplate === "file-not-found" ||
-    fail?.messageTemplate === "all-matched-files-ignored" ||
-    /No files matching/i.test(String(fail?.message))
+    fail.messageTemplate === "file-not-found" ||
+    fail.messageTemplate === "all-matched-files-ignored" ||
+    /No files matching/i.test(String(fail.message))
   );
 };
 
