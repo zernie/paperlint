@@ -240,7 +240,7 @@ try {
     },
   );
   const engine =
-    `${plan.stdout}`.split("\n").find((l) => l.startsWith("engine: ")) ?? "";
+    plan.stdout.split("\n").find((l) => l.startsWith("engine: ")) ?? "";
   if (!engine || engine.startsWith("engine: none"))
     skipOrFail(
       `build-e2e: skipped — no TeX Live with every declared package (${engine || "no engine line"}).\n` +

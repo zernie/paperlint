@@ -109,7 +109,7 @@ const STATES: [string, State, string][] = [
   // Guards: the stop on a document that never settles — without it the loop runs forever; with a
   // silent cap it ships a PDF with stale cross-references.
   [
-    `Q3 cap: ${MAX_PASSES} passes and still unsettled — fail`,
+    `Q3 cap: ${String(MAX_PASSES)} passes and still unsettled — fail`,
     S({ unsettled: ["paper.aux"], latexPasses: MAX_PASSES }),
     "fail",
   ],
@@ -187,22 +187,22 @@ check(
 );
 check(
   "summarize: bibOutdated when the aux names a bibliography bibtex has not run on",
-  sum([latex({ bib: bib(["k"]) })]).bibOutdated === true,
+  sum([latex({ bib: bib(["k"]) })]).bibOutdated,
 );
 check(
   "summarize: bibOutdated is false once bibtex ran on exactly that input",
-  sum([latex({ bib: bib(["k"]) }), bibtex()]).bibOutdated === false,
+  !sum([latex({ bib: bib(["k"]) }), bibtex()]).bibOutdated,
 );
 // Guards: the .bib hash as an input — a corrected author or year in refs.bib would keep the old
 // .bbl, and the PDF would print the entry as it was before the fix.
 check(
   "summarize: the .bib content changed since bibtex ran — bibOutdated",
   sum([latex({ bib: bib(["k"]) }), bibtex(), latex({ bib: bib(["k"], "b2") })])
-    .bibOutdated === true,
+    .bibOutdated,
 );
 check(
   "summarize: no bibliography at all — never bibOutdated",
-  sum([latex()]).bibOutdated === false,
+  !sum([latex()]).bibOutdated,
 );
 check(
   "summarize: unsettled names every tracked file the last pass changed",
@@ -412,10 +412,10 @@ check(
 
 // ── the cap ─────────────────────────────────────────────────────────────────────────────
 const moving = (i: number) =>
-  latex({ before: H(`a${i}`), after: H(`a${i + 1}`) });
+  latex({ before: H(`a${String(i)}`), after: H(`a${String(i + 1)}`) });
 const underCap = Array.from({ length: MAX_PASSES - 1 }, (_, i) => moving(i));
 check(
-  `the cap is ${MAX_PASSES} and it is not hit early: after ${MAX_PASSES - 1} moving passes, one more`,
+  `the cap is ${String(MAX_PASSES)} and it is not hit early: after ${String(MAX_PASSES - 1)} moving passes, one more`,
   MAX_PASSES === 5 && kind(step(underCap)) === "latex",
 );
 const atCap = Array.from({ length: MAX_PASSES }, (_, i) => moving(i));
@@ -474,5 +474,5 @@ check(
 );
 
 console.log(
-  `✓ ${String(check.count)} assertions passed — latex-loop: nextStep over State, summarize over histories, and the two composed, including the ${MAX_PASSES}-pass cap`,
+  `✓ ${String(check.count)} assertions passed — latex-loop: nextStep over State, summarize over histories, and the two composed, including the ${String(MAX_PASSES)}-pass cap`,
 );

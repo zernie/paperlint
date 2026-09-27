@@ -117,7 +117,7 @@ function fixture({
   rounds?: Record<string, string>;
   commitRounds?: boolean;
 } = {}) {
-  const dir = join(tmp, `f${++n}`, "paper-x");
+  const dir = join(tmp, `f${String(++n)}`, "paper-x");
   mkdirSync(dir, { recursive: true });
   const g = (...a: string[]) =>
     spawnSync("git", a, { cwd: dir, encoding: "utf8" });
@@ -169,13 +169,13 @@ const M = ({
   base?: string;
 } = {}) =>
   `---
-round: ${round}
+round: ${String(round)}
 opened: 2026-08-10
 base: ${base}
 touches: [${touches.map((t) => `"${t}"`).join(", ")}]
-${allows ? `allows: [${allows.join(", ")}]\n` : ""}${budget !== undefined ? `budget: ${budget}\n` : ""}${hedge !== undefined ? `hedge-budget: ${hedge}\n` : ""}${closed ? `closed: ${closed}\n` : ""}---
+${allows ? `allows: [${allows.join(", ")}]\n` : ""}${budget !== undefined ? `budget: ${String(budget)}\n` : ""}${hedge !== undefined ? `hedge-budget: ${String(hedge)}\n` : ""}${closed ? `closed: ${closed}\n` : ""}---
 
-Round ${round}.
+Round ${String(round)}.
 `;
 
 /** One finding of the gate's `--json` output, with the two fields these checks read. */
@@ -212,12 +212,13 @@ function run(dir: string, ...args: string[]): Run {
 }
 
 /** Exactly these kinds, in any order — never `.includes`, which is how a deleted check stays green. */
-const only = (r: Run, expected: readonly string[], why: string) =>
+const only = (r: Run, expected: readonly string[], why: string) => {
   assert.deepEqual(
     [...r.kinds].sort(),
     [...expected].sort(),
     `${why}\n  got: ${JSON.stringify(r.findings, null, 2)}`,
   );
+};
 
 /** The finding of this kind must say this. A kind alone does not prove which branch produced it. */
 const msg = (r: Run, kind: string, needle: string, why: string) => {
@@ -494,14 +495,14 @@ const msg = (r: Run, kind: string, needle: string, why: string) => {
   for (const k of [0, 10, 16]) {
     writeFileSync(join(dir, "paper.md"), grow(k));
     g("add", "-A");
-    g("commit", "-qm", `r${k}`);
+    g("commit", "-qm", `r${String(k)}`);
     shas.push(g("rev-parse", "HEAD").stdout.trim());
   }
   writeFileSync(join(dir, "paper.md"), grow(22));
   mkdirSync(join(dir, "rounds"), { recursive: true });
   for (const [i, sha] of shas.entries()) {
     writeFileSync(
-      join(dir, "rounds", `0${i + 1}.md`),
+      join(dir, "rounds", `0${String(i + 1)}.md`),
       M({
         round: i + 1,
         touches: ["3"],

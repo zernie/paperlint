@@ -89,7 +89,9 @@ function isLineNumber(w: Word, widthPt: number): boolean {
  */
 export function classifyLastPage(p: PageText): LastPage {
   if (!(p.widthPt > 0))
-    throw new RangeError(`page width must be positive, got ${p.widthPt}`);
+    throw new RangeError(
+      `page width must be positive, got ${String(p.widthPt)}`,
+    );
   if (p.words.length < STUB_WORDS)
     return { kind: "stub", words: p.words.length };
   const lineNumbers = p.words.filter((w) => isLineNumber(w, p.widthPt)).length;

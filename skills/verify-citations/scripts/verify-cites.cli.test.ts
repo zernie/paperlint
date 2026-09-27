@@ -73,8 +73,8 @@ const parsed = (r: ScriptResult) => ({
   stdout: Verdicts.parse(JSON.parse(r.stdout)),
 });
 const SUMMARY_PASS = (n: number, t: number, u: number, flagged: number) =>
-  `\nverify-cites: ${n} citation(s) — ${t} true, 0 false (fabrication), ${u} unresolvable` +
-  (flagged ? `, ${flagged} with hygiene flag(s)` : "") +
+  `\nverify-cites: ${String(n)} citation(s) — ${String(t)} true, 0 false (fabrication), ${String(u)} unresolvable` +
+  (flagged ? `, ${String(flagged)} with hygiene flag(s)` : "") +
   "\nPASS — no fabrication (unresolvable is advisory)\n";
 
 test("-h is --help", () => {

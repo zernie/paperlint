@@ -51,7 +51,7 @@ function glyphText(args: unknown): string {
   return glyphs
     .map((g) =>
       typeof g === "object" && g !== null && "unicode" in g
-        ? String((g as { unicode: unknown }).unicode ?? "")
+        ? String(g.unicode ?? "")
         : "",
     )
     .join("");

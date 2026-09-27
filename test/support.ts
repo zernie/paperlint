@@ -26,7 +26,9 @@ import { afterAll } from "vitest";
 /** A fresh temp directory (realpath, so macOS /var vs /private/var never differs), removed after the file's tests. */
 export function useTempDir(prefix = "paperlint-test-"): string {
   const dir = realpathSync(mkdtempSync(join(tmpdir(), prefix)));
-  afterAll(() => rmSync(dir, { recursive: true, force: true }));
+  afterAll(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
   return dir;
 }
 

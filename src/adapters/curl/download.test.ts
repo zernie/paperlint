@@ -23,7 +23,9 @@ import { spawnProcess } from "../node/index.ts";
 const root = realpathSync(
   mkdtempSync(join(tmpdir(), "paperlint-download-test-")),
 );
-after(() => rmSync(root, { recursive: true, force: true }));
+after(() => {
+  rmSync(root, { recursive: true, force: true });
+});
 const at = (...p: string[]) => join(root, ...p) as AbsolutePath;
 
 const dl = (env: Record<string, string>) => {

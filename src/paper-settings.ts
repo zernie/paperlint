@@ -200,9 +200,5 @@ export function paperRules(
   if (settings.rules === null || Array.isArray(settings.rules))
     return { ok: true, value: null };
   const where = `${join(paperDir, CONFIG_FILE)} → "rules"`;
-  return parseRuleEntries(
-    settings.rules as Readonly<Record<string, unknown>>,
-    where,
-    shipped,
-  );
+  return parseRuleEntries(settings.rules, where, shipped);
 }

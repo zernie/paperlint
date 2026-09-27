@@ -11,7 +11,7 @@ import { runNode, useTempDir, writeTree } from "../../test/support.ts";
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "structure.mjs");
 const root = useTempDir("structure-");
 const words = (n: number) =>
-  Array.from({ length: n }, (_, i) => `w${i}`).join(" ");
+  Array.from({ length: n }, (_, i) => `w${String(i)}`).join(" ");
 
 writeTree(root, {
   // Every row shape: a sub-section before any section, carries notes with a score and a verdict,

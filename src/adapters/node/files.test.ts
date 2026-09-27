@@ -8,7 +8,9 @@ import type { AbsolutePath } from "../../domain/paths.ts";
 import { errorCode, nodeFiles } from "./files.io.ts";
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-files-test-")));
-after(() => rmSync(root, { recursive: true, force: true }));
+after(() => {
+  rmSync(root, { recursive: true, force: true });
+});
 const at = (...p: string[]) => join(root, ...p) as AbsolutePath;
 
 test("Files: a missing file reads as null and is not a file", () => {

@@ -99,7 +99,7 @@ try {
     const r = linkSkills(dir);
     check(
       "🔴 it links every skill the package ships",
-      r.ok === true && SKILLS.every((s) => status(r, s)?.status === "created"),
+      r.ok && SKILLS.every((s) => status(r, s)?.status === "created"),
     );
     check(
       "and nothing that is not a skill — a directory without SKILL.md is not one",
@@ -195,7 +195,7 @@ try {
     const r = linkSkills(dir);
     check(
       "a project that does not have the package gets an error, not links into somebody's cache",
-      r.ok === false && /does not resolve from/.test(r.error),
+      !r.ok && /does not resolve from/.test(r.error),
     );
     check("and nothing is created", !existsSync(join(dir, ".claude")));
   }
@@ -229,5 +229,5 @@ try {
 }
 
 console.log(
-  `✓ ${check.count} assertions passed — link-skills: the skills are where Claude Code looks`,
+  `✓ ${String(check.count)} assertions passed — link-skills: the skills are where Claude Code looks`,
 );

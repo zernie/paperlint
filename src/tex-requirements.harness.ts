@@ -268,4 +268,4 @@ rmSync(tmp, { recursive: true, force: true });
   );
 }
 
-console.log(`tex-requirements: ${check.count} checks passed`);
+console.log(`tex-requirements: ${String(check.count)} checks passed`);

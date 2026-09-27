@@ -263,7 +263,8 @@ function runEach(
     const o = outcome(r.status);
     if (o === "pass") continue;
     const shown = commandOf(g).join(" ");
-    if (o === "skip") skipped.push(`${g.name}  (${shown} → ${SKIP_EXIT})`);
+    if (o === "skip")
+      skipped.push(`${g.name}  (${shown} → ${String(SKIP_EXIT)})`);
     else failed.push(`${g.name}  (${shown} → ${String(r.status)})`);
   }
   return { failed, skipped };

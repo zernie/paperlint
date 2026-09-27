@@ -24,6 +24,7 @@ import { spawnSync } from "node:child_process";
 import { accessSync, constants, statSync } from "node:fs";
 import { basename, delimiter, join } from "node:path";
 import type { TexRequirements } from "./tex-requirements.ts";
+import { printed } from "./domain/text.ts";
 
 /** A process runner with `spawnSync`'s shape — the port the harness replaces. */
 export type Runner = typeof spawnSync;
@@ -161,7 +162,7 @@ export function probeTree(
     stdio: ["ignore", "pipe", "pipe"],
   });
   if (r.error) return Object.keys(packages).sort();
-  return missingPackages(packages, String(r.stdout ?? ""));
+  return missingPackages(packages, printed(r.stdout));
 }
 
 /**
@@ -181,7 +182,7 @@ export function missingDependencies(
     stdio: ["ignore", "pipe", "pipe"],
   });
   if (r.error) return [];
-  const lines = String(r.stdout ?? "").split("\n");
+  const lines = printed(r.stdout).split("\n");
   const start = lines.findIndex(
     (l) => l.trim() === "DEPENDS WITHOUT PACKAGES:",
   );

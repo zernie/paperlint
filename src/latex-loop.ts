@@ -152,7 +152,7 @@ const noConvergence = (unsettled: readonly string[]): Step => ({
   step: "latex",
   cause: { kind: "no-convergence", unsettled },
   lines: [
-    `the build does not converge: after ${MAX_PASSES} pdflatex passes, the last one still changed or asked to rerun: ${unsettled.join(", ")}.`,
+    `the build does not converge: after ${String(MAX_PASSES)} pdflatex passes, the last one still changed or asked to rerun: ${unsettled.join(", ")}.`,
     `A document whose aux keeps changing on every pass never settles; stopping here instead of`,
     `shipping a PDF with stale cross-references.`,
   ],

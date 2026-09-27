@@ -208,7 +208,10 @@ export function comments(fileName: string, source: string): string[] {
   const visit = (node: ts.Node): void => {
     if (ts.isJSDoc(node)) return; // its text is the comment already collected before its node
     const kids = node.getChildren(sf);
-    if (kids.length > 0) return kids.forEach(visit);
+    if (kids.length > 0) {
+      kids.forEach(visit);
+      return;
+    }
     for (const r of [
       ...(ts.getLeadingCommentRanges(source, node.pos) ?? []),
       ...(ts.getTrailingCommentRanges(source, node.end) ?? []),

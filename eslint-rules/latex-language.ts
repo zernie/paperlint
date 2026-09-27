@@ -406,7 +406,12 @@ export function texToMdast(
     node: TexNode | readonly TexNode[] | string | undefined,
   ): void {
     if (!node || typeof node !== "object") return;
-    if (!("type" in node)) return node.forEach((n) => walk(n));
+    if (!("type" in node)) {
+      node.forEach((n) => {
+        walk(n);
+      });
+      return;
+    }
     const pos = P(node);
     // The preamble is already blanked in full; nothing inside it (including a
     // `\renewcommand{\bibliography}`) is a node of the document. Without this cut-off, one real
@@ -462,7 +467,12 @@ export function texToMdast(
           n: TexNode | readonly TexNode[] | string | undefined,
         ): void {
           if (!n || typeof n !== "object") return;
-          if (!("type" in n)) return n.forEach((c) => findProse(c));
+          if (!("type" in n)) {
+            n.forEach((c) => {
+              findProse(c);
+            });
+            return;
+          }
           if (n.type === "macro" && FLOAT_PROSE.test(n.content)) {
             const span = spanOf((n.args || []).flatMap((a) => a.content || []));
             // Keep exactly the CONTENT of the argument: `\caption` itself and the braces

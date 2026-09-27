@@ -122,7 +122,7 @@ check(
 
 for (const g of grew)
   check(
-    `«${g.rule}» says no MORE about the real article than recorded (${g.now} now, ${g.recorded} recorded) — ` +
+    `«${g.rule}» says no MORE about the real article than recorded (${String(g.now)} now, ${String(g.recorded)} recorded) — ` +
       `growth on real prose is a false positive until proven otherwise; fix the rule or re-record ` +
       `with a reason in baseline.json`,
     false,
@@ -139,13 +139,12 @@ check(
 // replaced a regex earlier today: without this, "it never fires" and "it fires correctly" are
 // indistinguishable on this fixture.
 {
-  const f = findings((dir) =>
-    edit(
+  const f = findings((dir) => { edit(
       dir,
       "PIPELINE-STATUS.md",
       "    date: 2026-07-07\n",
       '    date: 2026-07-07\nresearchQuestion: "My bill didn\'t budge."\n',
-    ),
+    ); },
   );
   check(
     "a research question that is declared AND present in the article silences the rule",
@@ -201,13 +200,12 @@ check(
 // of that sentence is the one that matters: a rule that reacts to an unrelated edit is reacting
 // to something other than what it claims.
 {
-  const f = findings((dir) =>
-    edit(
+  const f = findings((dir) => { edit(
       dir,
       "paper.md",
       "## Not all tokens cost the same",
       "## Not all tokens cost the same\n\nSee § 3 for the model.",
-    ),
+    ); },
   );
   check(
     "a planted `§` grows paper/section-word",
@@ -224,5 +222,5 @@ check(
 
 console.log(
   `✓ ${String(check.count)} assertions passed — the real article: baseline of ` +
-    `${Object.keys(base).length} rule(s) held, 3 variations each moved its own rule`,
+    `${String(Object.keys(base).length)} rule(s) held, 3 variations each moved its own rule`,
 );

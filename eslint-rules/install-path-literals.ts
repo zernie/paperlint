@@ -87,8 +87,9 @@ const jsInstallPath = {
     messages: MESSAGES,
   },
   create(context: RuleContext) {
-    const report = (node: object, prefix: string) =>
+    const report = (node: object, prefix: string) => {
       context.report({ node, messageId: "installPath", data: { prefix } });
+    };
     return {
       Literal(node: { readonly value: unknown }) {
         const prefix = channelPrefixIn(node.value);

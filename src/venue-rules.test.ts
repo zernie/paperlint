@@ -118,10 +118,7 @@ function lint(
   const files = memoryFiles(paperFiles(p));
   const rules = venueRules({ files, venuesDir: VENUES });
   const out: Finding[] = [];
-  for (const [name, rule] of Object.entries(rules) as [
-    string,
-    VenueRuleModule,
-  ][]) {
+  for (const [name, rule] of Object.entries(rules)) {
     const visitor = rule.create({
       filename,
       ...(cwd === undefined ? {} : { cwd }),

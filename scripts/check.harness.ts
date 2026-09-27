@@ -71,7 +71,7 @@ const check = createChecker();
 // command red for anyone without pnpm or TeX, and it would be ignored.
 check("exit 0 is a pass", outcome(0) === "pass");
 check(
-  `exit ${SKIP_EXIT} is a skip — neither a pass nor a failure`,
+  `exit ${String(SKIP_EXIT)} is a skip — neither a pass nor a failure`,
   outcome(SKIP_EXIT) === "skip",
 );
 check("the skip code is the one vigiles' runner uses (77)", SKIP_EXIT === 77);
@@ -267,6 +267,6 @@ check(
 );
 
 console.log(
-  `✓ ${String(check.count)} assertions passed — npm run check: ${GATES.length} gates, ` +
-    `${ciJobs.length} CI job(s) all accounted for`,
+  `✓ ${String(check.count)} assertions passed — npm run check: ${String(GATES.length)} gates, ` +
+    `${String(ciJobs.length)} CI job(s) all accounted for`,
 );

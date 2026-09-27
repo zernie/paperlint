@@ -474,7 +474,11 @@ const rule = (
     messages,
     ...meta,
   },
-  create: (context: RuleContext) => ({ "root:exit": () => check(context) }),
+  create: (context: RuleContext) => ({
+    "root:exit": () => {
+      check(context);
+    },
+  }),
 });
 
 export default {

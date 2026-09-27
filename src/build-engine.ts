@@ -130,7 +130,7 @@ export function gatherFacts(o: Resolved): EngineFacts {
 }
 
 const names = (missing: readonly string[]): string =>
-  `${missing.length} package(s): ${missing.join(", ")}`;
+  `${String(missing.length)} package(s): ${missing.join(", ")}`;
 
 /** The one line a run without a human gets. It names the command and what is missing. */
 export function refusal(d: EngineDecision, facts: EngineFacts): string {

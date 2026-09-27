@@ -128,8 +128,8 @@ interface BibAuthorsEntry {
 /** Whether bib-authors will ask DBLP about this entry — the filter its `checkAuthors` applies. */
 const asksDblp = (e: BibAuthorsEntry): boolean =>
   Boolean(e.title && e.author) &&
-  (authors.claimsPublished(e) as boolean) &&
-  !(authors.truncated(e.author) as boolean);
+  authors.claimsPublished(e) &&
+  !authors.truncated(e.author);
 
 /** Is every question this bibliography would ask already answered in `cache`? */
 async function fullyCached(
@@ -139,7 +139,7 @@ async function fullyCached(
   store: Readonly<Record<string, unknown>>,
 ): Promise<boolean> {
   const asks = await Promise.all(
-    citations.map((c) => cites.wouldAsk(c, store) as Promise<boolean>),
+    citations.map((c) => cites.wouldAsk(c, store)),
   );
   return (
     !asks.includes(true) &&

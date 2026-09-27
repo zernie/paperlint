@@ -65,12 +65,15 @@ export function banalMeasurer(
 }
 
 /** The one place banal's `Ready` is minted: from an `Installed`, whose `PinnedBanal` only run.ts mints. */
-const ready = (i: Installed): Ready =>
-  ({
-    where: i.banal.path as string,
+const ready = (i: Installed): Ready => {
+  // Widened by annotation: the brand of the path is not part of `Ready`'s shape.
+  const where: string = i.banal.path;
+  return {
+    where,
     fresh: i.fresh,
     verified: "sha256 verified, and it measured a probe page",
-  }) as Ready;
+  } as Ready;
+};
 
 /**
  * banal as the `ToolInstaller` port: download at the pin, check the sha256, accept by measuring a

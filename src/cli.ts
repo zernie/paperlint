@@ -1590,7 +1590,7 @@ async function reportLint(
       out.trim() ||
         (structure.length > 0
           ? ""
-          : `✓ ${results.length} file(s) checked, no findings`),
+          : `✓ ${String(results.length)} file(s) checked, no findings`),
     );
   }
   if (structure.length > 0 || results.some((r) => r.errorCount > 0)) return 1;
@@ -1600,7 +1600,7 @@ async function reportLint(
     const warnings = results.reduce((n, r) => n + r.warningCount, 0);
     if (warnings > a.maxWarnings) {
       err(
-        `${warnings} warning(s) exceed the --max-warnings limit of ${a.maxWarnings}`,
+        `${warnings} warning(s) exceed the --max-warnings limit of ${String(a.maxWarnings)}`,
       );
       return 1;
     }

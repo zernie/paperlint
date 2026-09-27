@@ -40,10 +40,15 @@ test("createChecker: a failure throws AND prints the label with its detail, and 
   const printed: string[] = [];
   const check = createChecker({ log: (s) => printed.push(s) });
   // Guards: the detail reaches the reader — the drift this helper replaced dropped it.
-  assert.throws(() => check("the label", false, { got: 3 }), {
-    name: "AssertionError",
-    message: "the label — { got: 3 }",
-  });
+  assert.throws(
+    () => {
+      check("the label", false, { got: 3 });
+    },
+    {
+      name: "AssertionError",
+      message: "the label — { got: 3 }",
+    },
+  );
   assert.deepEqual(
     { count: check.count, printed },
     { count: 1, printed: ["✗ the label — { got: 3 }"] },
@@ -57,11 +62,11 @@ test("createChecker: a detail thunk is only evaluated on failure", () => {
     calls++;
     return "x";
   });
-  assert.throws(() =>
+  assert.throws(() => {
     check("fail", false, () => {
       calls++;
       return "x";
-    }),
-  );
+    });
+  });
   assert.equal(calls, 1);
 });

@@ -211,7 +211,7 @@ try {
     const deny = (label: string, cmd: string) => {
       const r = at(dir, "paper-edit-guard", onBash(cmd));
       check(
-        `guard BLOCKS ${label} (rc=${r.exitCode})`,
+        `guard BLOCKS ${label} (rc=${String(r.exitCode)})`,
         r.exitCode === 2 && r.blocked,
       );
       check(
@@ -222,7 +222,7 @@ try {
     const allow = (label: string, cmd: string) => {
       const r = at(dir, "paper-edit-guard", onBash(cmd));
       check(
-        `guard ALLOWS ${label} (rc=${r.exitCode}, ${r.stderr.length}b err)`,
+        `guard ALLOWS ${label} (rc=${String(r.exitCode)}, ${String(r.stderr.length)}b err)`,
         r.exitCode === 0 && !r.blocked,
       );
     };
@@ -309,7 +309,7 @@ try {
     check("drift · guard still blocks a paper write", write.exitCode === 2);
     const idle = adrift(dir, "paper-edit-guard", onBash("echo hi"));
     check(
-      `drift · guard does NOT deny an unrelated command (rc=${idle.exitCode})`,
+      `drift · guard does NOT deny an unrelated command (rc=${String(idle.exitCode)})`,
       idle.exitCode === 0,
     );
     const guarded = adrift(
@@ -335,7 +335,7 @@ try {
       onEdit(`${dir}/writing/drafts/alpha/PIPELINE-STATUS.md`),
     );
     check(
-      `drift · the status-gates hook still runs (rc=${gates.exitCode})`,
+      `drift · the status-gates hook still runs (rc=${String(gates.exitCode)})`,
       gates.exitCode === 0,
     );
   }
@@ -398,7 +398,7 @@ try {
       const dir = fixture({ [PAPERS_DIR_FIELD]: null });
       const r = at(dir, "paper-edit-guard", harmless);
       check(
-        `carrier: "${PAPERS_DIR_FIELD}": null REFUSES (rc=${r.exitCode})`,
+        `carrier: "${PAPERS_DIR_FIELD}": null REFUSES (rc=${String(r.exitCode)})`,
         r.exitCode === 2,
       );
       check(
@@ -411,7 +411,7 @@ try {
       const dir = fixture({ [PAPERS_DIR_FIELD]: "" });
       const r = at(dir, "paper-edit-guard", harmless);
       check(
-        `carrier: "${PAPERS_DIR_FIELD}": "" REFUSES (rc=${r.exitCode})`,
+        `carrier: "${PAPERS_DIR_FIELD}": "" REFUSES (rc=${String(r.exitCode)})`,
         r.exitCode === 2,
       );
       check(
@@ -431,7 +431,7 @@ try {
       );
       const r = at(dir, "paper-edit-guard", harmless);
       check(
-        `carrier: an unparseable paperlint.json REFUSES (rc=${r.exitCode})`,
+        `carrier: an unparseable paperlint.json REFUSES (rc=${String(r.exitCode)})`,
         r.exitCode === 2,
       );
       check(
@@ -463,7 +463,7 @@ try {
       const r = at(dir, "paper-skills-nudge", onEdit(p));
       const ctx = injected(r);
       check(
-        `nudge LANDS on ${label} (${r.stdout.length}b stdout)`,
+        `nudge LANDS on ${label} (${String(r.stdout.length)}b stdout)`,
         ctx.length > 0,
       );
       check(
@@ -475,7 +475,7 @@ try {
     const silent = (label: string, p: string) => {
       const r = at(dir, "paper-skills-nudge", onEdit(p));
       check(
-        `nudge SILENT on ${label} (${r.stdout.length}b stdout, ${r.stderr.length}b stderr)`,
+        `nudge SILENT on ${label} (${String(r.stdout.length)}b stdout, ${String(r.stderr.length)}b stderr)`,
         r.stdout.length === 0 && r.stderr.length === 0 && r.exitCode === 0,
       );
     };
@@ -525,7 +525,7 @@ try {
     const fires = (label: string, p: string) => {
       const r = at(dir, "paper-status-gates", onEdit(p));
       check(
-        `gates FIRES on ${label} (${r.stderr.length}b stderr)`,
+        `gates FIRES on ${label} (${String(r.stderr.length)}b stderr)`,
         /fixture verdict line/.test(r.stderr),
       );
       check(`gates on ${label} exits 0`, r.exitCode === 0);
@@ -660,7 +660,7 @@ try {
     );
   }
 
-  console.log(`hooks.harness: ${check.count} assertions passed`);
+  console.log(`hooks.harness: ${String(check.count)} assertions passed`);
 } finally {
   for (const d of tmps) rmSync(d, { recursive: true, force: true });
 }

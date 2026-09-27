@@ -22,6 +22,7 @@
  *
  *   PAPERLINT_TEXLIVE_DIR=/some/dir node test/e2e/toolchain.ts [--strict]
  */
+import { printed } from "../../src/domain/text.ts";
 import { spawnSync, type SpawnSyncOptions } from "node:child_process";
 import {
   cpSync,
@@ -78,7 +79,7 @@ const paperlint = (
     encoding: "utf8",
     ...opts,
   });
-  const out = `${r.stdout ?? ""}${r.stderr ?? ""}`;
+  const out = printed(r.stdout) + printed(r.stderr);
   console.log(
     out
       .trim()
@@ -93,7 +94,7 @@ console.log("paperlint toolchain");
 const first = paperlint(["toolchain"], { timeout: 20 * 60 * 1000 });
 check("exit 0", first.status === 0, first.out);
 console.log(
-  `  (this run ${first.out.includes("nothing to do") ? "found a warm cache — a no-op" : "INSTALLED from an empty directory"}, ${Math.round(first.ms / 1000)} s)`,
+  `  (this run ${first.out.includes("nothing to do") ? "found a warm cache — a no-op" : "INSTALLED from an empty directory"}, ${String(Math.round(first.ms / 1000))} s)`,
 );
 
 console.log("\npaperlint toolchain, again");
@@ -106,7 +107,7 @@ check(
 check(
   "and it took seconds, not minutes",
   second.ms < 30_000,
-  `${second.ms} ms`,
+  `${String(second.ms)} ms`,
 );
 
 console.log("\npaperlint toolchain --check");

@@ -83,6 +83,7 @@ import {
   type Step,
 } from "./latex-loop.ts";
 import type { BuildResult, PlanLine } from "./types.ts";
+import { printed } from "./domain/text.ts";
 
 /** A directory counts as a paper by the same markers as `structure.ts` — one shared dictionary. */
 export const PAPER_MARKERS = [
@@ -376,19 +377,23 @@ function latexPass(
       exitCode === 0
         ? []
         : written === null
-          ? printed(r)
+          ? lastPrinted(r)
           : errorExcerpt(log).map(fromLatin1),
   };
+}
+
+/** The two streams of a finished run, as they really arrive (see `printed`). */
+interface Streams {
+  readonly stdout: string | undefined;
+  readonly stderr: string | undefined;
 }
 
 /**
  * The last lines pdflatex printed, for the run that wrote no log — it died before opening one (a
  * format it cannot load, a missing TeX Live file). Marked by NO_LOG, which the report keys on.
  */
-function printed(r: { stdout?: unknown; stderr?: unknown }): string[] {
-  const lines = fromLatin1(
-    `${String(r.stdout ?? "")}\n${String(r.stderr ?? "")}`,
-  )
+function lastPrinted(r: Streams): string[] {
+  const lines = fromLatin1(`${printed(r.stdout)}\n${printed(r.stderr)}`)
     .split("\n")
     .filter((l) => l.trim());
   return [NO_LOG, ...lines.slice(-8).map((l) => `  ${l}`)];
@@ -410,7 +415,7 @@ function bibtexPass(ctx: BuildContext, opts: SpawnOptions): Observation | null {
     after: hashes(ctx.paperDir),
     bib,
     errorLines:
-      exitCode === 0 ? [] : bibtexExcerpt(fromLatin1(String(r.stdout ?? ""))),
+      exitCode === 0 ? [] : bibtexExcerpt(fromLatin1(printed(r.stdout))),
   };
 }
 
@@ -443,7 +448,7 @@ export function compile(ctx: BuildContext): {
 const NO_PDF = `pdflatex exited 0 but wrote no ${JOB}.pdf — does the document have any pages?`;
 
 const plural = (n: number, one: string, many: string): string =>
-  `${n} ${n === 1 ? one : many}`;
+  `${String(n)} ${n === 1 ? one : many}`;
 
 export const compileStep: BuildStep = {
   name: "compile",
@@ -467,7 +472,7 @@ export const compileStep: BuildStep = {
       const bin = end.step === "latex" ? "pdflatex" : "bibtex";
       const where =
         end.cause.kind === "exit"
-          ? `${bin} exited with ${end.cause.code}`
+          ? `${bin} exited with ${String(end.cause.code)}`
           : `${bin} did not converge`;
       const log = join(
         ctx.paperDir,

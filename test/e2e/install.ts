@@ -18,6 +18,7 @@
  * Run: node test/e2e/install.ts [--keep]
  * Exit code: 0 — every manager passed; 1 — at least one did not.
  */
+import { printed } from "../../src/domain/text.ts";
 import {
   execFileSync,
   spawnSync,
@@ -60,8 +61,11 @@ const sh = (
   cmd: string,
   args: readonly string[],
   opts: Omit<SpawnSyncOptions, "encoding"> = {},
-): SpawnSyncReturns<string> =>
-  spawnSync(cmd, args, { encoding: "utf8", ...opts });
+): SpawnSyncReturns<string> => {
+  const r = spawnSync(cmd, args, { encoding: "utf8", ...opts });
+  // Both streams are undefined when the spawn itself failed, whatever Node's types say.
+  return { ...r, stdout: printed(r.stdout), stderr: printed(r.stderr) };
+};
 
 /** An error's code and message, as the checks print them. */
 function describeError(e: unknown): string {
@@ -176,8 +180,7 @@ function managers(): {
   const missing: Manager[] = [];
   for (const m of WANTED) {
     const r = sh(m.probe[0], m.probe[1]);
-    if (r.status === 0)
-      available.push({ ...m, version: (r.stdout ?? "").trim() });
+    if (r.status === 0) available.push({ ...m, version: r.stdout.trim() });
     else missing.push(m);
   }
   return { available, missing };
@@ -292,7 +295,7 @@ function unresolvedHooks(
       input: "{}",
       env: { ...process.env, CLAUDE_PROJECT_DIR: consumer },
     });
-    const out = (r.stderr ?? "") + (r.stdout ?? "");
+    const out = r.stderr + r.stdout;
     return /Cannot find module|MODULE_NOT_FOUND|No such file or directory|is NOT running/.test(
       out,
     )
@@ -314,8 +317,12 @@ function reportHooks(
   },
 ): void {
   for (const f of failures)
-    bad(`the hook command resolves (${f.index + 1}/${cmds.length})`, f.out);
-  if (failures.length === 0) ok(`all ${cmds.length} hook command(s) resolve`);
+    bad(
+      `the hook command resolves (${String(f.index + 1)}/${String(cmds.length)})`,
+      f.out,
+    );
+  if (failures.length === 0)
+    ok(`all ${String(cmds.length)} hook command(s) resolve`);
 }
 
 /** Say that a manager was not measured: a failure under --strict, a declared skip otherwise. */
@@ -516,7 +523,9 @@ try {
       '{"name":"c","version":"1.0.0","private":true}',
     );
     const fail: string[] = [];
-    const ok = (label: string) => console.log(`  ✓ ${label}`);
+    const ok = (label: string) => {
+      console.log(`  ✓ ${label}`);
+    };
     const bad = (label: string, detail?: unknown) => {
       fail.push(label);
       console.log(
@@ -583,7 +592,7 @@ try {
     existsSync(join(consumer, "paperlint.json"))
       ? bad(
           "`paperlint init` took the default papers directory and wrote no paperlint.json",
-          `${readFileSync(join(consumer, "paperlint.json"), "utf8")}\n${init.stdout ?? ""}${init.stderr ?? ""}`,
+          `${readFileSync(join(consumer, "paperlint.json"), "utf8")}\n${init.stdout}${init.stderr}`,
         )
       : ok(
           "`paperlint init` took the default papers directory and wrote no paperlint.json",
@@ -592,18 +601,18 @@ try {
       ? ok("`paperlint init` finished with zero — doctor found no discrepancy")
       : bad(
           "`paperlint init` finished with zero — doctor found no discrepancy",
-          (init.stdout ?? "") + (init.stderr ?? ""),
+          init.stdout + init.stderr,
         );
 
     // The skills, as Claude Code will look for them: in the consumer, not in node_modules.
     const view = consumerSkillView(consumer, installed);
     view.names.length > 0 && view.unreachable.length === 0
       ? ok(
-          `all ${view.names.length} shipped skill(s) are reachable as .claude/skills/<name>/SKILL.md`,
+          `all ${String(view.names.length)} shipped skill(s) are reachable as .claude/skills/<name>/SKILL.md`,
         )
       : bad(
-          `all ${view.names.length} shipped skill(s) are reachable as .claude/skills/<name>/SKILL.md`,
-          `not reachable: ${view.unreachable.join(", ") || "(the package declares zero skills)"}\n${init.stdout ?? ""}`,
+          `all ${String(view.names.length)} shipped skill(s) are reachable as .claude/skills/<name>/SKILL.md`,
+          `not reachable: ${view.unreachable.join(", ") || "(the package declares zero skills)"}\n${init.stdout}`,
         );
     view.notLinks.length === 0 &&
     Object.values(view.links).every((t) => !t.startsWith("/"))
@@ -619,10 +628,10 @@ try {
         );
     view.rootRefs > 0 && view.unresolved.length === 0
       ? ok(
-          `all ${view.refs} script path(s) resolve FROM THE CONSUMER ROOT (${view.rootRefs} project-root-relative)`,
+          `all ${String(view.refs)} script path(s) resolve FROM THE CONSUMER ROOT (${String(view.rootRefs)} project-root-relative)`,
         )
       : bad(
-          `all ${view.refs} script path(s) resolve FROM THE CONSUMER ROOT (${view.rootRefs} project-root-relative)`,
+          `all ${String(view.refs)} script path(s) resolve FROM THE CONSUMER ROOT (${String(view.rootRefs)} project-root-relative)`,
           view.unresolved.slice(0, 5).join("\n") ||
             "zero project-root-relative references — nothing was checked",
         );
@@ -652,15 +661,13 @@ try {
       (c) => wiredCommands.filter((w) => w === c).length === 1,
     )
       ? ok(
-          `\`paperlint init\` wired all ${wiredCommands.length} hook command(s) into .claude/settings.json, once each`,
+          `\`paperlint init\` wired all ${String(wiredCommands.length)} hook command(s) into .claude/settings.json, once each`,
         )
       : bad(
           "`paperlint init` wired the hooks into .claude/settings.json, once each",
-          `${JSON.stringify(wiredCommands).slice(0, 300)}\n${init.stdout ?? ""}`,
+          `${JSON.stringify(wiredCommands).slice(0, 300)}\n${init.stdout}`,
         );
-    /in a fresh clone they cannot run until `npm install`/.test(
-      init.stdout ?? "",
-    )
+    /in a fresh clone they cannot run until `npm install`/.test(init.stdout)
       ? ok("and it says the hook commands need `npm install` in a fresh clone")
       : bad(
           "and it says the hook commands need `npm install` in a fresh clone",
@@ -684,17 +691,17 @@ try {
     again.status === 0 &&
     view.names.every((n) => after.links[n] === view.links[n]) &&
     new RegExp(
-      `0 linked now, ${view.names.length} already linked, 0 skipped`,
-    ).test(again.stdout ?? "")
+      `0 linked now, ${String(view.names.length)} already linked, 0 skipped`,
+    ).test(again.stdout)
       ? ok(
           "a second `paperlint init` exits zero and leaves every link as it was",
         )
       : bad(
           "a second `paperlint init` exits zero and leaves every link as it was",
-          `exit ${String(again.status)}\n${(again.stdout ?? "")
+          `exit ${String(again.status)}\n${again.stdout
             .split("\n")
             .filter((l) => /shipped|skills/.test(l))
-            .join("\n")}${again.stderr ?? ""}`,
+            .join("\n")}${again.stderr}`,
         );
 
     // 🔴 "CLEAN" MEANS: EXIT 0, AND ONLY THE WARNINGS A CORRECT CORPUS MUST CARRY, one per paper:
@@ -705,7 +712,7 @@ try {
       (papers: Record<string, RegExp>) =>
       (r: SpawnSyncReturns<string>): boolean => {
         try {
-          const ms = LintReport.parse(JSON.parse(r.stdout ?? "")).flatMap((f) =>
+          const ms = LintReport.parse(JSON.parse(r.stdout)).flatMap((f) =>
             f.messages.map((m) => ({ ...m, file: f.filePath })),
           );
           const want = Object.entries(papers);
@@ -733,7 +740,7 @@ try {
       ? ok("`paperlint lint` passed the corpus clean")
       : bad(
           "`paperlint lint` passed the corpus clean",
-          (lint.stdout ?? "") + (lint.stderr ?? ""),
+          lint.stdout + lint.stderr,
         );
 
     // `paperlint new` from the INSTALLED package: the templates must have shipped in the tarball, and
@@ -745,14 +752,14 @@ try {
     existsSync(join(consumer, "papers", "demo", "PIPELINE-STATUS.md")) &&
     existsSync(join(consumer, "papers", "demo", "paper.tex")) &&
     existsSync(join(consumer, "papers", "demo", "paperlint.json")) &&
-    NO_PRESET.test(fresh.stdout ?? "") &&
-    /\(0 errors, 1 warning\)/.test(fresh.stdout ?? "")
+    NO_PRESET.test(fresh.stdout) &&
+    /\(0 errors, 1 warning\)/.test(fresh.stdout)
       ? ok(
           "`paperlint new demo` scaffolds papers/demo from the shipped templates, paperlint.json included, and its lint passes with the one no-venue warning",
         )
       : bad(
           "`paperlint new demo` scaffolds papers/demo from the shipped templates, paperlint.json included, and its lint passes with the one no-venue warning",
-          (fresh.stdout ?? "") + (fresh.stderr ?? ""),
+          fresh.stdout + fresh.stderr,
         );
     const withDemo = sh(bin, ["lint", "--json"], { cwd: consumer });
     expectedWarnings({ acmart: UNBUILT, demo: NO_PRESET })(withDemo)
@@ -761,7 +768,7 @@ try {
         )
       : bad(
           "`paperlint lint` still passes the corpus clean with the new paper in it",
-          (withDemo.stdout ?? "") + (withDemo.stderr ?? ""),
+          withDemo.stdout + withDemo.stderr,
         );
 
     // 🔴 THE REAL ARTICLE, AND IT IS NOT EXPECTED TO BE CLEAN. The two papers above were written
@@ -782,7 +789,7 @@ try {
       // Only the article's own files: the rest of the corpus is judged above.
       found = countByRule(
         JSON.stringify(
-          LintFiles.parse(JSON.parse(realLint.stdout ?? "")).filter((f) =>
+          LintFiles.parse(JSON.parse(realLint.stdout)).filter((f) =>
             f.filePath.includes(join("papers", "real-article")),
           ),
         ),
@@ -790,7 +797,7 @@ try {
     } catch (e) {
       bad(
         "`paperlint lint --json` on the real article parses",
-        `${messageOf(e)}\n${realLint.stderr ?? ""}`,
+        `${messageOf(e)}\n${realLint.stderr}`,
       );
     }
     if (found) {
@@ -798,14 +805,15 @@ try {
       grew.length === 0 && vanished.length === 0
         ? ok(
             `the real article matches its baseline (${Object.entries(found)
-              .map(([r, n]) => `${r} ${n}`)
+              .map(([r, n]) => `${r} ${String(n)}`)
               .join(", ")})`,
           )
         : bad(
             "the real article matches its baseline",
             [
               ...grew.map(
-                (g) => `grew: ${g.rule} ${g.now} > recorded ${g.recorded}`,
+                (g) =>
+                  `grew: ${g.rule} ${String(g.now)} > recorded ${String(g.recorded)}`,
               ),
               ...vanished.map((r) => `vanished: ${r}`),
             ].join("\n"),
@@ -825,17 +833,17 @@ try {
     // Content delivery: the skills, and the paths inside them.
     const d = contentDelivery(installed);
     d.missing.length === 0 && d.there === d.here
-      ? ok(`all ${d.here} skill(s) arrived`)
+      ? ok(`all ${String(d.here)} skill(s) arrived`)
       : bad(
-          `all ${d.here} skill(s) arrived`,
-          `${d.there} arrived; missing: ${d.missing.join(", ") || "(count differs without a named gap)"}`,
+          `all ${String(d.here)} skill(s) arrived`,
+          `${String(d.there)} arrived; missing: ${d.missing.join(", ") || "(count differs without a named gap)"}`,
         );
     d.unresolved.length === 0
       ? ok(
-          `all ${d.refs} script path(s) named by skills resolve in the consumer`,
+          `all ${String(d.refs)} script path(s) named by skills resolve in the consumer`,
         )
       : bad(
-          `all ${d.refs} script path(s) named by skills resolve in the consumer`,
+          `all ${String(d.refs)} script path(s) named by skills resolve in the consumer`,
           [...new Set(d.unresolved)].slice(0, 5).join("\n"),
         );
 
@@ -863,13 +871,13 @@ try {
           "untouched\n";
       kept &&
       third.status === 0 &&
-      new RegExp(`${taken} — a directory`).test(third.stdout ?? "")
+      new RegExp(`${taken} — a directory`).test(third.stdout)
         ? ok(
             `a foreign .claude/skills/${taken} is left untouched, named, and init still exits zero`,
           )
         : bad(
             `a foreign .claude/skills/${taken} is left untouched, named, and init still exits zero`,
-            `kept=${String(kept)} exit=${String(third.status)}\n${third.stdout ?? ""}`,
+            `kept=${String(kept)} exit=${String(third.status)}\n${third.stdout}`,
           );
     }
 

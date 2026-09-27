@@ -15,7 +15,7 @@ const root = useTempDir("prose-lint-");
 
 const LONG_CAPTION_SENTENCE = Array.from(
   { length: 45 },
-  (_, i) => `word${i}`,
+  (_, i) => `word${String(i)}`,
 ).join(" ");
 const PAPER = `---
 title: A title the linter must not read as a sentence
