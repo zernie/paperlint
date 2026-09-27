@@ -297,4 +297,28 @@ check(
   ) === "[]",
 );
 
+check(
+  "missingDependencies: a tlmgr that cannot start reports nothing (the tree is judged by probeTree alone)",
+  JSON.stringify(
+    missingDependencies("/tl/bin", () => ({ error: new Error("ENOENT") })),
+  ) === "[]",
+);
+check(
+  "missingDependencies: a section that runs to the end of the output, with no header after it",
+  JSON.stringify(
+    missingDependencies("/tl/bin", () => ({
+      stdout:
+        "\f DEPENDS WITHOUT PACKAGES:\nunicode-data in: latex-bin\nhyphen-base in: x",
+      status: 2,
+    })),
+  ) === '["hyphen-base","unicode-data"]',
+);
+check(
+  "a runner that returns no stdout at all: tlmgr lists nothing, kpsewhich finds nothing",
+  JSON.stringify(missingDependencies("/tl/bin", () => ({ status: 0 }))) ===
+    "[]" &&
+    JSON.stringify(probeTree("/tl/bin", PKGS, () => ({ status: 0 }))) ===
+      JSON.stringify(Object.keys(PKGS).sort()),
+);
+
 console.log(`engine: ${check.count} checks passed`);

@@ -11,7 +11,8 @@ import { dirname } from "node:path";
 import type { AbsolutePath } from "../../domain/paths.ts";
 import type { Files } from "../../ports/files.ts";
 
-const code = (e: unknown): unknown =>
+/** An error's errno code; anything thrown that is not an Error has none. */
+export const errorCode = (e: unknown): unknown =>
   e instanceof Error ? (e as NodeJS.ErrnoException).code : undefined;
 
 export const nodeFiles: Files = {
@@ -22,7 +23,7 @@ export const nodeFiles: Files = {
     try {
       return readFileSync(p);
     } catch (e) {
-      if (code(e) === "ENOENT") return null;
+      if (errorCode(e) === "ENOENT") return null;
       throw e;
     }
   },

@@ -230,3 +230,77 @@ describe("reading what is on disk", () => {
     }
   });
 });
+
+/** A record for `bib`, as the build would write it, with `patch` applied to the document. */
+const record = (
+  files: ReturnType<typeof memoryFiles>,
+  body: Record<string, unknown>,
+) => {
+  const bib = bibliographyOf(files, PAPER)!;
+  files.writeAtomic(
+    referencesPath(PAPER) as AbsolutePath,
+    new TextEncoder().encode(
+      JSON.stringify({
+        schema: 1,
+        bib: { source: bib.source, sha256: bibHash(bib) },
+        ...body,
+      }),
+    ),
+  );
+};
+
+describe("the reference rules over a record written by hand", () => {
+  it("not-checked with no reason recorded says so", async () => {
+    const tex = TEX(ENTRIES);
+    const files = memoryFiles({ [`${PAPER}/paper.tex`]: tex });
+    record(files, { status: "not-checked", entries: [] });
+    const msgs = await lint(files, tex);
+    expect(msgs.map((m) => m.ruleId)).toEqual(["paper/refs-checked"]);
+    expect(msgs[0]!.message).toMatch(/no reason recorded/);
+  });
+
+  it("a verdict without a reason, and one for a key the bibliography lacks, still report", async () => {
+    const tex = TEX(ENTRIES);
+    const files = memoryFiles({ [`${PAPER}/paper.tex`]: tex });
+    record(files, {
+      status: "checked",
+      entries: [
+        { key: "schick2023", exists: "true", authors: "mismatch" },
+        { key: "ghost", exists: "false", authors: "match" },
+      ],
+    });
+    const msgs = await lint(files, tex);
+    expect(msgs.map((m) => [m.ruleId, m.line])).toEqual([
+      ["paper/cite-exists", 1],
+      ["paper/author-list", 3],
+    ]);
+  });
+});
+
+describe("the reference rules over refs.bib, and on other files", () => {
+  it("an external refs.bib: findings sit at the start of paper.tex, naming the key", async () => {
+    const tex = "\\documentclass{acmart}\n\\begin{document}x\\end{document}\n";
+    const files = memoryFiles({
+      [`${PAPER}/paper.tex`]: tex,
+      [`${PAPER}/refs.bib`]: ENTRIES,
+    });
+    record(files, {
+      status: "checked",
+      entries: [verdict("schick2023", "mismatch")],
+    });
+    const msgs = await lint(files, tex);
+    expect(msgs.map((m) => [m.ruleId, m.line])).toEqual([
+      ["paper/author-list", 1],
+    ]);
+    expect(msgs[0]!.message).toMatch(/schick2023/);
+  });
+
+  it("only paper.tex is judged", () => {
+    const files = memoryFiles({});
+    const rules = referenceRules({ files });
+    for (const rule of Object.values(rules))
+      expect(rule.create({ filename: `${PAPER}/notes.tex` } as never)).toEqual(
+        {},
+      );
+  });
+});
