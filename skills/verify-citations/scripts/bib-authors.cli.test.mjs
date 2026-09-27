@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "vitest";
-import { runNode, useTempDir, writeTree } from "../../../test/support.mjs";
+import { runNode, useTempDir, writeTree } from "../../../test/support.ts";
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "bib-authors.mjs");
 const root = useTempDir("bib-authors-cli-");

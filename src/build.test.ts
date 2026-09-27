@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "vitest";
-import { useTempDir, writeTree } from "../test/support.mjs";
+import { useTempDir, writeTree } from "../test/support.ts";
 import {
   bibInput,
   buildPaper,

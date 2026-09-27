@@ -1,6 +1,6 @@
 # End-to-end tests
 
-They are `test/e2e/install.mjs` and `test/e2e/build.mjs`. Both are
+They are `test/e2e/install.ts` and `test/e2e/build.ts`. Both are
 part of `npm run check`, so nobody has to remember to call them. `npm run test:e2e` runs just
 these, install first; if the install e2e fails or is skipped, the build e2e does not run.
 
@@ -28,9 +28,9 @@ assumptions that stop holding the moment somebody else installs the package.
 The third and fourth rows are the ones a harness cannot reach even in principle: the defect only
 exists once the code is somewhere else.
 
-## `test/e2e/install.mjs` — the package, installed
+## `test/e2e/install.ts` — the package, installed
 
-`test/e2e/install.mjs`. It runs `npm pack`, then installs the resulting tarball into a fresh
+`test/e2e/install.ts`. It runs `npm pack`, then installs the resulting tarball into a fresh
 temporary tree, **under npm and under pnpm separately**, and drives the installed binary:
 
 - the install itself finishes
@@ -55,9 +55,9 @@ that works under npm can be dead under pnpm with no error anywhere. The same run
 binary **directly** rather than through `node <path>`: under npm `.bin` holds a symlink, under
 pnpm a shell wrapper, and calling `node bin` measures the caller's habit instead of the package.
 
-## `test/e2e/build.mjs` — a real `pdflatex`
+## `test/e2e/build.ts` — a real `pdflatex`
 
-`test/e2e/build.mjs`. It copies `fixtures/build-e2e/` — eight papers, none with a build script paperlint
+`test/e2e/build.ts`. It copies `fixtures/build-e2e/` — eight papers, none with a build script paperlint
 would run — into a temporary tree, points a config at it, and runs `paperlint build --all`. paperlint compiles
 each paper itself with the real `pdflatex` and `bibtex`; the artifacts are then measured with
 paperlint's own pdf.js reader from `dist/`, and the fonts are cross-checked against the list of
@@ -85,7 +85,7 @@ cache directory is empty and `CI` is set, and `paperlint build` must exit 1 with
 asks `paperlint build --dry-run` which TeX Live the real run will use; under `--strict` (CI) that must be
 paperlint's own cache, because the runner has no other.
 
-## `test/e2e/toolchain.mjs` — real TeX Live, and only it
+## `test/e2e/toolchain.ts` — real TeX Live, and only it
 
 `paperlint toolchain` into `$PAPERLINT_TEXLIVE_DIR` against real CTAN; a second run must say "nothing to do"
 within seconds; `--check` must exit 0; then the `acmart` fixture is built with PATH holding `node`
@@ -142,7 +142,7 @@ everything.
 
 ## The corpus
 
-`stageCorpus()` in `test/e2e/install.mjs` writes a small paper by hand — a declared stage, its
+`stageCorpus()` in `test/e2e/install.ts` writes a small paper by hand — a declared stage, its
 PDF, its byte counts, the cross-check between them — and copies `fixtures/build-e2e/acmart` beside
 it so the LaTeX rules see LaTeX rather than a placeholder.
 

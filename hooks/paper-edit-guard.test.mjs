@@ -7,12 +7,8 @@
  */
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import {
-  hookConsumer,
-  onBash,
-  runShippedHook,
-} from "../test/hook-consumer.mjs";
-import { useTempDir } from "../test/support.mjs";
+import { hookConsumer, onBash, runShippedHook } from "../test/hook-consumer.ts";
+import { useTempDir } from "../test/support.ts";
 
 const dir = hookConsumer(useTempDir("paper-edit-guard-"), {
   "papers/alpha/PIPELINE-STATUS.md": "# S\n",

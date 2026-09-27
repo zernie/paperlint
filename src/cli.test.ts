@@ -9,7 +9,7 @@ import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { test } from "vitest";
-import { runNode, useTempDir, writeTree } from "../test/support.mjs";
+import { runNode, useTempDir, writeTree } from "../test/support.ts";
 import {
   chooseVenue,
   initTexLive,

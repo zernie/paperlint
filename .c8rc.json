@@ -2,7 +2,7 @@
   "//": [
     "Coverage of `npm test` (vitest + every vigiles harness). c8 reads NODE_V8_COVERAGE, which every",
     "child process inherits, so the harnesses' spawned CLIs are measured too; `all` counts files no",
-    "test ever loaded as 0% instead of leaving them out. The run preloads test/coverage-src.mjs,",
+    "test ever loaded as 0% instead of leaving them out. The run preloads test/coverage-src.ts,",
     "which resolves every `dist/*.js` import to its `src/*.ts`, so each module is measured once.",
     "A process that loads `dist/` directly anyway (a child spawned without NODE_OPTIONS) is NOT",
     "counted: `excludeAfterRemap: false` drops `dist/**` before source maps would turn it into a",

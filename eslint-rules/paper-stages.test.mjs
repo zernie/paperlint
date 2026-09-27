@@ -8,7 +8,7 @@ import { join } from "node:path";
 import markdown from "@eslint/markdown";
 import { Linter } from "eslint";
 import { test } from "vitest";
-import { useTempDir, writeTree } from "../test/support.mjs";
+import { useTempDir, writeTree } from "../test/support.ts";
 import stages from "./paper-stages.mjs";
 
 const root = useTempDir("paper-stages-");

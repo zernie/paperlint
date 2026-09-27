@@ -23,7 +23,7 @@ const self = fileURLToPath(import.meta.url);
 // (a test's temp directory), so the preload is re-stated absolute for everything spawned below.
 process.env.NODE_OPTIONS = (process.env.NODE_OPTIONS ?? "")
   .split(/\s+/)
-  .filter((o) => o && !o.endsWith("coverage-src.mjs"))
+  .filter((o) => o && !o.endsWith("coverage-src.ts"))
   .concat(`--import=${self}`)
   .join(" ");
 

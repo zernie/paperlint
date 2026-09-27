@@ -97,7 +97,7 @@ accepts as input. Measured on 50 PDFs / 598 pages (2026-09-25): banal on paperli
 real `pdftohtml` agree on every field the facts file keeps, with no venue verdict changed. They
 agree only because paperlint leaves out rotated and invisible text (as `pdftohtml` does), writes each
 text's colour so banal drops light text by its own rule, and writes sizes and coordinates at the
-zoom and precision banal expects. `test/e2e/banal.mjs` checks each of those against the real banal
+zoom and precision banal expects. `test/e2e/banal.ts` checks each of those against the real banal
 on the committed fixtures.
 
 **How it is installed — and the licence boundary.** banal is **GPL-2.0-or-later**; paperlint is MIT. paperlint

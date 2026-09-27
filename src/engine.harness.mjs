@@ -5,7 +5,7 @@
  *   1. `resolveEngine` over `EngineFacts` — one row per branch of the order;
  *   2. the fact readers: `missingPackages` over kpsewhich output, `missingTools`, `whichOnPath`,
  *      `probeTree` through a fake runner.
- * All pure or port-driven: no TeX needed. The real-TeX half is `test/e2e/build.mjs`.
+ * All pure or port-driven: no TeX needed. The real-TeX half is `test/e2e/build.ts`.
  */
 import {
   chmodSync,

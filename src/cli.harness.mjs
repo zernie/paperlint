@@ -1148,7 +1148,7 @@ check(
 //     pnpm: node_modules/vigiles/dist/cli.js  DOES NOT
 // The old wiring addressed the runtime from the project root and did not resolve under pnpm,
 // and `|| exit 2` on PreToolUse(Bash) turned that into a block on ANY command. The end-to-end
-// half (both installs, real processes) lives in `test/e2e/install.mjs`; here — the verdicts.
+// half (both installs, real processes) lives in `test/e2e/install.ts`; here — the verdicts.
 {
   const calls = [];
   const fake = (code) => (bin, args, opts) => {

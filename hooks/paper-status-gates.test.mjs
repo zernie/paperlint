@@ -5,12 +5,8 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import { test } from "vitest";
-import {
-  hookConsumer,
-  onEdit,
-  runShippedHook,
-} from "../test/hook-consumer.mjs";
-import { useTempDir } from "../test/support.mjs";
+import { hookConsumer, onEdit, runShippedHook } from "../test/hook-consumer.ts";
+import { useTempDir } from "../test/support.ts";
 
 const root = useTempDir("paper-status-gates-");
 const STATUS = "**Readiness verdict:** ✅ fixture verdict line\n";

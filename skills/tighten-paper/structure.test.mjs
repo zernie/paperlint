@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "vitest";
-import { runNode, useTempDir, writeTree } from "../../test/support.mjs";
+import { runNode, useTempDir, writeTree } from "../../test/support.ts";
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "structure.mjs");
 const root = useTempDir("structure-");

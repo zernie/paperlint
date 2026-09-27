@@ -15,7 +15,7 @@ import {
   tally,
   type Suppressed,
 } from "./layer-legacy-frozen.ts";
-import { useTempDir, writeTree } from "../test/support.mjs";
+import { useTempDir, writeTree } from "../test/support.ts";
 
 const IO = "legacy I/O, moves behind a port in #76";
 const LAYER = "legacy layer, moves behind a port in #76";

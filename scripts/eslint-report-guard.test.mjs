@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "vitest";
-import { useTempDir } from "../test/support.mjs";
+import { useTempDir } from "../test/support.ts";
 import { guard } from "./eslint-report-guard.mjs";
 
 test("warnings and rule-less messages are listed; a file with no messages counts as linted", () => {

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * test/e2e/toolchain.mjs — `paperlint toolchain` against REAL CTAN, then `paperlint build` with ONLY that
+ * test/e2e/toolchain.ts — `paperlint toolchain` against REAL CTAN, then `paperlint build` with ONLY that
  * TeX Live reachable.
  *
  * `src/toolchain.harness.mjs` drives the installer's logic against a fake mirror on disk; this is
@@ -20,9 +20,9 @@
  * `npm run check` would be exactly the unasked install rule 11 forbids. Without it the run is a
  * declared skip (77); under --strict (CI) a failure.
  *
- *   PAPERLINT_TEXLIVE_DIR=/some/dir node test/e2e/toolchain.mjs [--strict]
+ *   PAPERLINT_TEXLIVE_DIR=/some/dir node test/e2e/toolchain.ts [--strict]
  */
-import { spawnSync } from "node:child_process";
+import { spawnSync, type SpawnSyncOptions } from "node:child_process";
 import {
   cpSync,
   existsSync,
@@ -37,15 +37,12 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { fontNames, readBuilt } from "./read-pdf.mjs";
+import { z } from "zod";
+import { parseBanalSettings } from "../../dist/adapters/banal/index.js";
+import { hostDirs } from "../../dist/adapters/node/index.js";
+import { fontNames, readBuilt } from "./read-pdf.ts";
 
 const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const { parseBanalSettings } = await import(
-  join(ROOT, "dist", "adapters", "banal", "index.js")
-);
-const { hostDirs } = await import(
-  join(ROOT, "dist", "adapters", "node", "index.js")
-);
 const CLI = join(ROOT, "bin", "paperlint.mjs");
 const strict = process.argv.includes("--strict");
 const dir = process.env.PAPERLINT_TEXLIVE_DIR;
@@ -62,14 +59,20 @@ if (!dir) {
   process.exit(2);
 }
 
+/** The one field of the facts file this run reads. */
+const FactsFile = z.object({ geometry_source: z.unknown() });
+
 let bad = 0;
-const check = (label, cond, detail = "") => {
+const check = (label: string, cond: boolean, detail = ""): void => {
   console.log(
     `  ${cond ? "✓" : "✗"} ${label}${detail && !cond ? ` — ${detail}` : ""}`,
   );
   if (!cond) bad++;
 };
-const paperlint = (args, opts = {}) => {
+const paperlint = (
+  args: readonly string[],
+  opts: Omit<SpawnSyncOptions, "encoding"> = {},
+): { status: number | null; out: string; ms: number } => {
   const started = Date.now();
   const r = spawnSync(process.execPath, [CLI, ...args], {
     encoding: "utf8",
@@ -161,8 +164,8 @@ try {
     built.out,
   );
   const facts = join(work, "papers", "acmart", "_build", "paper.facts.json");
-  const geometrySource = existsSync(facts)
-    ? JSON.parse(readFileSync(facts, "utf8")).geometry_source
+  const geometrySource: unknown = existsSync(facts)
+    ? FactsFile.parse(JSON.parse(readFileSync(facts, "utf8"))).geometry_source
     : "(no facts file)";
   check(
     "the facts file's page geometry was measured by banal",
@@ -188,6 +191,6 @@ try {
 console.log(
   bad === 0
     ? "\n✅ toolchain e2e: everything matched"
-    : `\n🔴 toolchain e2e: ${bad} mismatch(es)`,
+    : `\n🔴 toolchain e2e: ${String(bad)} mismatch(es)`,
 );
 process.exit(bad === 0 ? 0 : 1);

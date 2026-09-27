@@ -13,47 +13,46 @@
  * very system dependency the switch to pdf.js removed.
  */
 import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-
-const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const { readPdf } = await import(join(ROOT, "dist", "pdf-facts.js"));
+import { readPdf, type PdfFacts } from "../../dist/pdf-facts.js";
 
 /** The PDF read by `dist/pdf-facts.js`, or a thrown error naming why it could not be. */
-export async function readBuilt(pdf) {
+export async function readBuilt(pdf: string): Promise<PdfFacts> {
   const r = await readPdf(pdf);
   if (!r.ok) throw new Error(`${pdf}: ${r.reason}: ${r.detail}`);
   return r.facts;
 }
 
 /** Names of every font the PDF draws text with (subset tags already dropped). */
-export const fontNames = (facts) =>
+export const fontNames = (facts: PdfFacts): string[] =>
   facts.fonts.kind === "drawn" ? facts.fonts.list.map((f) => f.name) : [];
 
 /** Names of the fonts with an embedded program — what pdfTeX's log should list too. */
-export const embeddedNames = (facts) =>
+export const embeddedNames = (facts: PdfFacts): string[] =>
   facts.fonts.kind === "drawn"
     ? facts.fonts.list.filter((f) => f.kind === "embedded").map((f) => f.name)
     : [];
 
 /** The last page's text, words joined by spaces. */
-export const lastPageText = (facts) =>
+export const lastPageText = (facts: PdfFacts): string =>
   facts.last.words.map((w) => w.text).join(" ");
 
 /**
  * The Type 1 programs pdfTeX says it embedded, by file name without `.pfb`. The log wraps at 79
  * columns, so the lines are joined before matching.
  */
-export function logEmbedded(logPath) {
+export function logEmbedded(logPath: string): string[] {
   const log = readFileSync(logPath, "latin1").replace(/\r?\n/g, "");
   return [...log.matchAll(/<([^<>]*?)\.pfb>/g)].map(
-    (m) => m[1].split("/").pop() ?? "",
+    (m) => (m[1] ?? "").split("/").pop() ?? "",
   );
 }
 
 /** The same set, case-folded: pdfTeX names `cmr10.pfb`, the PDF says `CMR10`. */
-export const sameFonts = (a, b) => {
-  const norm = (xs) =>
+export const sameFonts = (
+  a: readonly string[],
+  b: readonly string[],
+): boolean => {
+  const norm = (xs: readonly string[]): string =>
     [...new Set(xs.map((x) => x.toLowerCase()))].sort().join();
   return norm(a) === norm(b);
 };

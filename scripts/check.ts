@@ -151,22 +151,22 @@ export const GATES: readonly Gate[] = [
   {
     name: "install e2e — pack, install under npm and pnpm, run the binary",
     job: "gates",
-    run: ["node", "test/e2e/install.mjs"],
+    run: ["node", "test/e2e/install.ts"],
   },
   {
     name: "build e2e — a real pdflatex, and the PDF's fonts are measured",
     job: "build-e2e",
-    run: ["node", "test/e2e/build.mjs"],
+    run: ["node", "test/e2e/build.ts"],
   },
   {
     name: "banal e2e — the real banal on pdf.js-written XML gives banal-on-pdftohtml's numbers",
     job: "build-e2e",
-    run: ["node", "test/e2e/banal.mjs"],
+    run: ["node", "test/e2e/banal.ts"],
   },
   {
     name: "toolchain e2e — real TeX Live into $PAPERLINT_TEXLIVE_DIR, then a build with only it on PATH",
     job: "build-e2e",
-    run: ["node", "test/e2e/toolchain.mjs"],
+    run: ["node", "test/e2e/toolchain.ts"],
   },
 ];
 

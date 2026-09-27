@@ -34,7 +34,7 @@ import {
   reportTexLive,
   reportWorkflow,
 } from "./init.ts";
-import { runNode } from "../test/support.mjs";
+import { runNode } from "../test/support.ts";
 
 const dirs: string[] = [];
 afterEach(() => {

@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { test } from "vitest";
-import { useTempDir, writeTree } from "../test/support.mjs";
+import { useTempDir, writeTree } from "../test/support.ts";
 import { main as contentMain } from "./rules-are-content-only.mjs";
 
 const capture = () => {

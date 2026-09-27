@@ -29,7 +29,7 @@ When in doubt between unit and integration: if the function takes a port (`Files
 
 - **Answers:** does this use case or adapter do the right thing with the world it talks to?
 - **Lives:** beside the module, named like a unit test.
-- **May touch:** a temp directory (`useTempDir` and `writeTree` in `test/support.mjs`), a child
+- **May touch:** a temp directory (`useTempDir` and `writeTree` in `test/support.ts`), a child
   process of this repository's own scripts (`runNode`). Never the real network.
 - **How fakes get in:** through the seams the code already has.
   - a port the use case takes: `memoryFiles` and `scriptedProcess` in `src/adapters/memory/`, a
@@ -60,7 +60,7 @@ When in doubt between unit and integration: if the function takes a port (`Files
 - **Answers:** does the package work once it is somewhere else? The tarball installed into another
   tree, a real `pdflatex` build, the PDF's fonts measured.
 - **May touch:** everything a user's machine has, except the network: a citation service is a
-  counting fake `fetch` even here (`test/e2e/build.mjs`).
+  counting fake `fetch` even here (`test/e2e/build.ts`).
 - **What each run proves, and when a change owes one:** [`e2e.md`](e2e.md).
 
 ## Running
@@ -108,7 +108,7 @@ file matches, and it transpiles without type-checking, so `npm run check` runs
 5. **Coverage is 100% on lines, statements, functions and branches**, enforced by `npm run coverage`
    in `npm run check` and CI. c8 reads `NODE_V8_COVERAGE`, so a CLI a test spawns is measured too,
    unless the test hands the child a fresh `env` without it. vitest runs in the `threads` pool with
-   native `import` (`vitest.config.ts` says why), and the run preloads `test/coverage-src.mjs`, which
+   native `import` (`vitest.config.ts` says why), and the run preloads `test/coverage-src.ts`, which
    answers every import of `dist/*.js` with `src/*.ts`, so no module is measured twice.
 6. **No `c8 ignore`, and no guard deleted to reach 100%.** An effect a test cannot reach — a race, a
    permission root is never denied, a broken install, a 270 MB download — is made injectable and the

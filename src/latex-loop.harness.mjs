@@ -6,7 +6,7 @@
  * A defect in `nextStep` fails in table 1, one in `summarize` in table 2, before table 3 runs.
  *
  * The decision is pure, so none of this needs TeX. The real-pdflatex half lives in
- * `test/e2e/build.mjs`.
+ * `test/e2e/build.ts`.
  */
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";

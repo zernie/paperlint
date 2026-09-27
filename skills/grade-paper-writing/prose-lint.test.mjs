@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "vitest";
-import { runNode, useTempDir, writeTree } from "../../test/support.mjs";
+import { runNode, useTempDir, writeTree } from "../../test/support.ts";
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "prose-lint.mjs");
 const root = useTempDir("prose-lint-");

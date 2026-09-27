@@ -1,7 +1,7 @@
 /**
  * `fill.ts` — what is recovered from pdf.js's exports for each text item: whether it is upright, and
  * the fill it was drawn in (the operator-list walk). Operator lists here are written by hand; the
- * real-PDF half runs in `pdf-facts.harness.mjs` and `test/e2e/banal.mjs`.
+ * real-PDF half runs in `pdf-facts.harness.mjs` and `test/e2e/banal.ts`.
  */
 import assert from "node:assert/strict";
 import { test } from "vitest";

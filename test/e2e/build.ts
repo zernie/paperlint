@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * test/e2e/build.mjs — `paperlint build` against a REAL `pdflatex`, from source to finished PDF.
+ * test/e2e/build.ts — `paperlint build` against a REAL `pdflatex`, from source to finished PDF.
  *
  * 🔴 HOW THIS DIFFERS FROM `src/build.harness.mjs`, AND WHY BOTH ARE NEEDED. That harness
  * substitutes a fake TeX for `spawnSync`: it checks the shell's DECISIONS — what runs, in which
@@ -28,11 +28,13 @@
  * passed one look identical in the interface, and that is exactly the class this whole package is
  * written against.
  *
- *   node test/e2e/build.mjs [--strict]
+ *   node test/e2e/build.ts [--strict]
  */
 import { spawnSync } from "node:child_process";
+import { z } from "zod";
 import { PAPERS_DIR_FIELD } from "../../lib/paper-config.mjs";
-import { run } from "../../bin/paperlint.mjs";
+// `run` is what `bin/paperlint.mjs` re-exports; imported from the build it re-exports, which has types.
+import { run } from "../../dist/cli.js";
 import { referencesChecker } from "../../dist/adapters/references/index.js";
 import {
   cpSync,
@@ -55,7 +57,7 @@ import {
   logEmbedded,
   readBuilt,
   sameFonts,
-} from "./read-pdf.mjs";
+} from "./read-pdf.ts";
 
 const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const CLI = join(ROOT, "bin", "paperlint.mjs");
@@ -70,11 +72,57 @@ const ACMART_FAMILIES = /^(LinLibertine|LinBiolinum)/;
 /** The signature of the silent substitution: the class fell back to its default fonts. */
 const FALLBACK_FAMILIES = /^(CMR|CMBX|CMTI|CMTT|CMSS|LMRoman)/;
 
+/** `paperlint lint --json`: ESLint's results, with the three message fields the checks read. */
+const LintMessage = z.looseObject({
+  ruleId: z.string().nullable(),
+  message: z.string(),
+  severity: z.number(),
+});
+type LintMessage = z.infer<typeof LintMessage>;
+const LintReport = z.array(
+  z.looseObject({ filePath: z.string(), messages: z.array(LintMessage) }),
+);
+
+/** The parts of `_build/paper.facts.json` the balance check reads. */
+const FactsFile = z.looseObject({
+  schema: z.unknown(),
+  last_page: z.unknown(),
+});
+const MeasuredLastPage = z.looseObject({
+  kind: z.literal("measured"),
+  columns_pt: z.tuple([z.number(), z.number()]).rest(z.number()),
+});
+
+/** `_build/references.json`: the status and, per entry, the three verdict fields. */
+const RecordedReferences = z.looseObject({
+  status: z.unknown(),
+  entries: z.array(
+    z.looseObject({
+      key: z.unknown(),
+      exists: z.unknown(),
+      authors: z.unknown(),
+    }),
+  ),
+});
+
+/** `repro/references-cache.json`: the answers per registry, each dated. */
+const ReferencesCache = z.looseObject({
+  schema: z.unknown(),
+  citations: z.record(z.string(), z.looseObject({ fetched: z.unknown() })),
+  dblp: z.record(z.string(), z.unknown()),
+});
+
+/** A JSON file's content, or `null` when there is no such file. */
+const readJson = (file: string): unknown =>
+  existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : null;
+
 /** Declared skip (77) on a contributor's machine, a failure under --strict (CI). */
-function skipOrFail(say) {
+function skipOrFail(say: string): void {
   // The checks that ran before the skip are not waived by it.
   if (bad > 0) {
-    console.error(`${say}\n🔴 and ${bad} check(s) above already failed`);
+    console.error(
+      `${say}\n🔴 and ${String(bad)} check(s) above already failed`,
+    );
     process.exit(1);
   }
   if (!strict) {
@@ -91,7 +139,7 @@ function skipOrFail(say) {
 }
 
 let bad = 0;
-const check = (label, cond, detail = "") => {
+const check = (label: string, cond: boolean, detail = ""): void => {
   console.log(
     `  ${cond ? "✓" : "✗"} ${label}${detail && !cond ? ` — ${detail}` : ""}`,
   );
@@ -210,9 +258,9 @@ try {
   // adapter over a fake `fetch` that answers every service and counts what it was asked — so the
   // lookup cache, the reachability probe and DBLP's pacing are the shipped ones. Everything else
   // is the real command: real pdflatex and bibtex.
-  const asked = [];
+  const asked: string[] = [];
   const realFetch = globalThis.fetch;
-  globalThis.fetch = async (url) => {
+  globalThis.fetch = async (url: string | URL | Request) => {
     asked.push(String(url));
     const u = String(url);
     if (u.startsWith("https://export.arxiv.org/"))
@@ -221,8 +269,8 @@ try {
     return Response.json({ message: { items: [] }, results: [], data: [] });
   };
   const fakeReferences = referencesChecker({ today: () => "2026-09-27" });
-  const printed = [];
-  const say = (...a) => printed.push(a.join(" "));
+  const printed: string[] = [];
+  const say = (...a: unknown[]) => printed.push(a.join(" "));
   const r = {
     status: await run(["build", "--all"], {
       cwd: work,
@@ -330,7 +378,7 @@ try {
   console.log();
   console.log("the build does not judge the layout");
   // The plan and result lines of ONE paper: its name, then the indented lines under it.
-  const block = (name) => {
+  const block = (name: string): string => {
     const lines = out.split("\n");
     const at = lines.findIndex((l) => l === `papers/${name}`);
     if (at < 0) return "";
@@ -351,14 +399,13 @@ try {
     "_build",
     "paper.facts.json",
   );
-  const uf = existsSync(unbFacts)
-    ? JSON.parse(readFileSync(unbFacts, "utf8"))
-    : null;
+  const uf = FactsFile.nullable().parse(readJson(unbFacts));
+  const lastPage = MeasuredLastPage.safeParse(uf?.last_page);
   check(
     "🔴 unbalanced: the build MEASURED it — _build/paper.facts.json, schema 2, both heights (unbalanced: ~621.5 / 264.8 pt)",
     uf?.schema === 2 &&
-      uf.last_page?.kind === "measured" &&
-      Math.abs(uf.last_page.columns_pt[0] - uf.last_page.columns_pt[1]) > 120,
+      lastPage.success &&
+      Math.abs(lastPage.data.columns_pt[0] - lastPage.data.columns_pt[1]) > 120,
     JSON.stringify(uf?.last_page),
   );
   check(
@@ -400,9 +447,9 @@ try {
     [CLI, "lint", "papers/unbalanced", "papers/acmart", "--json"],
     { cwd: work, encoding: "utf8" },
   );
-  let findings = [];
+  let findings: { file: string; message: string }[] = [];
   try {
-    findings = JSON.parse(linted.stdout).flatMap((r) =>
+    findings = LintReport.parse(JSON.parse(linted.stdout)).flatMap((r) =>
       r.messages
         .filter((m) => m.ruleId === "pdf/last-page-balance")
         .map((m) => ({ file: r.filePath, message: m.message })),
@@ -433,15 +480,15 @@ try {
     "the venue rules judge what the build measured, against paperlint.json",
   );
   // The same lint run: acmart names agenticdev/short in its paperlint.json, unbalanced names no venue.
-  let all = [];
+  let all: (LintMessage & { file: string })[] = [];
   try {
-    all = JSON.parse(linted.stdout).flatMap((r) =>
+    all = LintReport.parse(JSON.parse(linted.stdout)).flatMap((r) =>
       r.messages.map((m) => ({ ...m, file: r.filePath })),
     );
   } catch {
     all = [];
   }
-  const venueFindings = (paper) =>
+  const venueFindings = (paper: string) =>
     all.filter(
       (m) =>
         m.file.endsWith(join(paper, "paper.tex")) &&
@@ -451,12 +498,12 @@ try {
     );
   // Only the rules whose answer does not depend on banal's page classification are asserted clean
   // here: this fixture is one sentence long, and banal calls such a page a "cover" with one
-  // column (fixtures/pdf-facts, test/e2e/banal.mjs), which pdf/geometry would rightly report.
+  // column (fixtures/pdf-facts, test/e2e/banal.ts), which pdf/geometry would rightly report.
   check(
     "🔴 acmart: paperlint.json resolves, the facts are fresh, and a real acmart build has the fonts agenticdev expects",
     linted.stdout !== "" &&
       !venueFindings("acmart").some((m) =>
-        ["pdf/profile", "pdf/fresh", "pdf/fonts"].includes(m.ruleId),
+        ["pdf/profile", "pdf/fresh", "pdf/fonts"].includes(m.ruleId ?? ""),
       ),
     JSON.stringify(venueFindings("acmart")),
   );
@@ -465,9 +512,11 @@ try {
   check(
     "unbalanced: extends no preset, so the venue rules say exactly one thing — no venue chosen yet",
     venueFindings("unbalanced").length === 1 &&
-      venueFindings("unbalanced")[0].ruleId === "pdf/measured" &&
-      venueFindings("unbalanced")[0].severity === 1 &&
-      /names no venue preset yet/.test(venueFindings("unbalanced")[0].message),
+      venueFindings("unbalanced")[0]?.ruleId === "pdf/measured" &&
+      venueFindings("unbalanced")[0]?.severity === 1 &&
+      /names no venue preset yet/.test(
+        venueFindings("unbalanced")[0]?.message ?? "",
+      ),
     JSON.stringify(venueFindings("unbalanced")),
   );
   // The fallback paper is an `article` set in Computer Modern — what acmart silently produces when
@@ -482,9 +531,13 @@ try {
     [CLI, "lint", "papers/fallback", "--json"],
     { cwd: work, encoding: "utf8" },
   );
-  let fbFindings = [];
+  let fbFindings: {
+    ruleId: string | null;
+    message: string;
+    severity?: number;
+  }[] = [];
   try {
-    fbFindings = JSON.parse(fb.stdout)
+    fbFindings = LintReport.parse(JSON.parse(fb.stdout))
       .filter((r) => r.filePath.endsWith(join("fallback", "paper.tex")))
       .flatMap((r) => r.messages);
   } catch {
@@ -551,39 +604,39 @@ try {
   );
   const citeDir2 = join(work, "papers", "cite");
   const citeRefs = join(citeDir2, "_build", "references.json");
-  const recorded = existsSync(citeRefs)
-    ? JSON.parse(readFileSync(citeRefs, "utf8"))
-    : null;
+  const recordedJson = readJson(citeRefs);
+  const recorded = RecordedReferences.safeParse(recordedJson);
   check(
     "cite: _build/references.json holds the verdict derived from the services' answers",
-    recorded?.status === "checked" &&
+    recorded.success &&
+      recorded.data.status === "checked" &&
       JSON.stringify(
-        recorded.entries.map((e) => [e.key, e.exists, e.authors]),
+        recorded.data.entries.map((e) => [e.key, e.exists, e.authors]),
       ) === JSON.stringify([["knuth84", "unresolvable", "skipped"]]),
-    JSON.stringify(recorded),
+    JSON.stringify(recordedJson),
   );
   const cacheFile = join(citeDir2, "repro", "references-cache.json");
-  const cacheOnDisk = existsSync(cacheFile)
-    ? JSON.parse(readFileSync(cacheFile, "utf8"))
-    : null;
+  const cacheJson = readJson(cacheFile);
+  const cacheOnDisk = ReferencesCache.safeParse(cacheJson);
   check(
     "cite: the answers landed in repro/references-cache.json — four registries and DBLP, dated",
-    cacheOnDisk?.schema === 1 &&
-      Object.keys(cacheOnDisk.citations).length === 4 &&
-      Object.keys(cacheOnDisk.dblp).length === 1 &&
-      Object.values(cacheOnDisk.citations).every(
+    cacheOnDisk.success &&
+      cacheOnDisk.data.schema === 1 &&
+      Object.keys(cacheOnDisk.data.citations).length === 4 &&
+      Object.keys(cacheOnDisk.data.dblp).length === 1 &&
+      Object.values(cacheOnDisk.data.citations).every(
         (v) => v.fetched === "2026-09-27",
       ),
-    JSON.stringify(cacheOnDisk),
+    JSON.stringify(cacheJson),
   );
   const coldAsked = asked.length;
   asked.length = 0;
-  const warmSaid = [];
+  const warmSaid: string[] = [];
   const t0 = Date.now();
   const warm = await run(["build", "papers/cite"], {
     cwd: work,
-    log: (...a) => warmSaid.push(a.join(" ")),
-    err: (...a) => warmSaid.push(a.join(" ")),
+    log: (...a: unknown[]) => warmSaid.push(a.join(" ")),
+    err: (...a: unknown[]) => warmSaid.push(a.join(" ")),
     checkReferences: fakeReferences,
   });
   const warmMs = Date.now() - t0;
@@ -634,6 +687,6 @@ console.log();
 console.log(
   bad === 0
     ? "✅ build e2e: everything matched"
-    : `🔴 build e2e: ${bad} mismatch(es)`,
+    : `🔴 build e2e: ${String(bad)} mismatch(es)`,
 );
 process.exit(bad === 0 ? 0 : 1);

@@ -9,7 +9,7 @@ import { rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, test, vi } from "vitest";
-import { runNode, useTempDir, writeTree } from "../../../test/support.mjs";
+import { runNode, useTempDir, writeTree } from "../../../test/support.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const root = useTempDir("status-");

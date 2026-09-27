@@ -2,7 +2,7 @@
  * `adapters/banal/index.ts` — banal as the two ports the app sees. What `run.test.ts` checks in
  * banal's own terms is checked here as the domain receives it: a `Geometry` whose provenance names
  * banal and the rule that found it, a reason that is one line of text, a `Ready` that says what was
- * verified. In-memory ports throughout; the real banal is `test/e2e/banal.mjs`.
+ * verified. In-memory ports throughout; the real banal is `test/e2e/banal.ts`.
  */
 import assert from "node:assert/strict";
 import { test } from "vitest";

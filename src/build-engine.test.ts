@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { chmodSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { test } from "vitest";
-import { useTempDir } from "../test/support.mjs";
+import { useTempDir } from "../test/support.ts";
 import { prepareEngine, refusal } from "./build-engine.ts";
 
 const work = useTempDir("paperlint-build-engine-test-");

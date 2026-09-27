@@ -15,10 +15,15 @@
  * it resolves is a property of the tree laid out on disk. So the command is launched, and the
  * verdict is based on whether it died on `Cannot find module`.
  *
- * Run: node test/e2e/install.mjs [--keep]
+ * Run: node test/e2e/install.ts [--keep]
  * Exit code: 0 — every manager passed; 1 — at least one did not.
  */
-import { execFileSync, spawnSync } from "node:child_process";
+import {
+  execFileSync,
+  spawnSync,
+  type SpawnSyncOptions,
+  type SpawnSyncReturns,
+} from "node:child_process";
 import {
   installedSkills,
   PACKAGE_NAME,
@@ -39,9 +44,11 @@ import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { z } from "zod";
 import {
   compareToBaseline,
   countByRule,
+  type Counts,
 } from "../../fixtures/real-markdown-paper/baseline.ts";
 
 const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
@@ -49,15 +56,84 @@ const KEEP = process.argv.includes("--keep");
 // See `managers()`: a manager that will not launch is a declared skip here and a failure in CI.
 const STRICT = process.argv.includes("--strict");
 
-const sh = (cmd, args, opts = {}) =>
+const sh = (
+  cmd: string,
+  args: readonly string[],
+  opts: Omit<SpawnSyncOptions, "encoding"> = {},
+): SpawnSyncReturns<string> =>
   spawnSync(cmd, args, { encoding: "utf8", ...opts });
+
+/** An error's code and message, as the checks print them. */
+function describeError(e: unknown): string {
+  const code =
+    e instanceof Error && "code" in e && typeof e.code === "string"
+      ? e.code
+      : undefined;
+  return `${code ?? "error"}: ${e instanceof Error ? e.message : String(e)}`;
+}
+
+/** An error's message alone. */
+const messageOf = (e: unknown): string =>
+  e instanceof Error ? e.message : String(e);
+
+/** The manifest's one field this run reads: `bin`, a path or a map of names to paths. */
+const Manifest = z.looseObject({
+  bin: z.union([z.string(), z.record(z.string(), z.string())]).optional(),
+});
+type Manifest = z.infer<typeof Manifest>;
+
+/**
+ * Hook wiring, as `plugin/hooks/hooks.json` and `.claude/settings.json` both spell it:
+ * `{ hooks: { <event>: [{ hooks: [{ command }] }] } }`.
+ */
+const HookWiring = z.looseObject({
+  hooks: z
+    .record(
+      z.string(),
+      z
+        .array(
+          z.looseObject({
+            hooks: z
+              .array(z.looseObject({ command: z.string().optional() }))
+              .nullish(),
+          }),
+        )
+        .nullish(),
+    )
+    .nullish(),
+});
+
+/** `paperlint lint --json`: ESLint's results, with the fields the checks read. */
+const LintReport = z.array(
+  z.looseObject({
+    filePath: z.string(),
+    messages: z.array(
+      z.looseObject({
+        ruleId: z.string().nullable(),
+        severity: z.number(),
+        message: z.string(),
+      }),
+    ),
+  }),
+);
+
+/** ESLint's results, each file's other fields kept, so the article's findings can be re-counted. */
+const LintFiles = z.array(z.looseObject({ filePath: z.string() }));
+
+/** A package manager this run measures: how to probe it, how to install with it, and why it is here. */
+interface Manager {
+  name: string;
+  probe: [string, string[]];
+  install: (tgz: string) => [string, string[]];
+  why: string;
+}
 
 /**
  * The managers this run is SUPPOSED to measure, declared as data with the reason each is here.
  * A list, because "which managers did this run actually cover" has to be answerable from the
  * output — not inferred from how many `──` headers scrolled past.
  */
-const WANTED = [
+const WANTED: readonly Manager[] = [
   {
     name: "npm",
     probe: ["npm", ["--version"]],
@@ -89,12 +165,15 @@ const WANTED = [
  * reason this file exists. "pnpm passed" and "pnpm was never tried" printed identically.
  *
  * That is the failure class this package is written against, reproduced inside it: a skipped
- * check and a passed one look the same. `test/e2e/build.mjs` already had the cure — declare the skip,
+ * check and a passed one look the same. `test/e2e/build.ts` already had the cure — declare the skip,
  * and let `--strict` turn it into a failure where absence means a broken environment.
  */
-function managers() {
-  const available = [];
-  const missing = [];
+function managers(): {
+  available: (Manager & { version: string })[];
+  missing: Manager[];
+} {
+  const available: (Manager & { version: string })[] = [];
+  const missing: Manager[] = [];
   for (const m of WANTED) {
     const r = sh(m.probe[0], m.probe[1]);
     if (r.status === 0)
@@ -118,7 +197,7 @@ function managers() {
  * makes sure the LaTeX rules see LaTeX rather than a placeholder. Neither covers the other:
  * measured 2026-09-19, the acmart fixture alone linted 2 files, the stub alone drives the stages.
  */
-function stageCorpus(root) {
+function stageCorpus(root: string): void {
   const paper = join(root, "papers", "p1");
   mkdirSync(join(paper, "versions"), { recursive: true });
   writeFileSync(join(paper, "versions", "s.tex"), "abcd");
@@ -151,7 +230,9 @@ function stageCorpus(root) {
  * `findPackageJSON`: the latter answers past a broken map, which makes it the better locator and
  * the worse canary.
  */
-function locateInstalled(consumer) {
+function locateInstalled(
+  consumer: string,
+): { dir: string; manifest: Manifest; err?: undefined } | { err: string } {
   const req = createRequire(
     pathToFileURL(join(consumer, "__consumer__.js")).href,
   );
@@ -159,10 +240,10 @@ function locateInstalled(consumer) {
     const file = req.resolve(`${PACKAGE_NAME}/package.json`);
     return {
       dir: dirname(file),
-      manifest: JSON.parse(readFileSync(file, "utf8")),
+      manifest: Manifest.parse(JSON.parse(readFileSync(file, "utf8"))),
     };
   } catch (e) {
-    return { err: `${e.code ?? "error"}: ${e.message}` };
+    return { err: describeError(e) };
   }
 }
 
@@ -170,7 +251,7 @@ function locateInstalled(consumer) {
  * The skills directory under `root`, from the same constant the linker reads. A root without it is
  * an error, not zero skills: an empty list would read as a clean install.
  */
-function skillsDir(root) {
+function skillsDir(root: string): string {
   const dir = join(root, SHIPPED_SKILLS_DIR);
   if (!existsSync(dir)) throw new Error(`no skills directory at ${dir}`);
   return dir;
@@ -180,22 +261,88 @@ function skillsDir(root) {
  * The hook commands are taken FROM THE PUBLISHED `hooks.json`, not from the copy in the
  * repository: we check what arrived, not what we shipped.
  */
-function hookCommands(installed) {
+/** Every non-empty hook command in a wiring file, in the order it lists them. */
+const commandsIn = (json: z.infer<typeof HookWiring>): string[] =>
+  Object.values(json.hooks ?? {}).flatMap((entries) =>
+    (entries ?? []).flatMap((entry) =>
+      (entry.hooks ?? []).flatMap((h) => (h.command ? [h.command] : [])),
+    ),
+  );
+
+/**
+ * Run each hook command from the consumer, as its settings would, and return the ones that did not
+ * resolve: their position in `cmds` and what they printed.
+ *
+ * The exit code is not judged: a guard may legitimately return 2 on the merits. What is judged is
+ * the RESOLVE.
+ *
+ * 🔴 `is NOT running` IN THE LIST IS LOAD-BEARING. The first edition looked only for
+ * `Cannot find module`, while `paperlint hook` with an unresolvable runtime catches the exception
+ * and complains in DIFFERENT words, returning 0 — and the test printed "all 3 commands resolve"
+ * with the hooks completely broken. A false green of exactly the class this test is written for:
+ * the check looked for the spelling it REMEMBERED, not for the thing itself.
+ */
+function unresolvedHooks(
+  cmds: readonly string[],
+  consumer: string,
+): { index: number; out: string }[] {
+  return cmds.flatMap((command) => {
+    const r = sh("bash", ["-c", command], {
+      cwd: consumer,
+      input: "{}",
+      env: { ...process.env, CLAUDE_PROJECT_DIR: consumer },
+    });
+    const out = (r.stderr ?? "") + (r.stdout ?? "");
+    return /Cannot find module|MODULE_NOT_FOUND|No such file or directory|is NOT running/.test(
+      out,
+    )
+      ? [{ index: cmds.indexOf(command), out }]
+      : [];
+  });
+}
+
+/** One verdict per hook command that did not resolve, or one saying they all did. */
+function reportHooks(
+  cmds: readonly string[],
+  failures: readonly { index: number; out: string }[],
+  {
+    ok,
+    bad,
+  }: {
+    ok: (label: string) => void;
+    bad: (label: string, detail?: unknown) => void;
+  },
+): void {
+  for (const f of failures)
+    bad(`the hook command resolves (${f.index + 1}/${cmds.length})`, f.out);
+  if (failures.length === 0) ok(`all ${cmds.length} hook command(s) resolve`);
+}
+
+/** Say that a manager was not measured: a failure under --strict, a declared skip otherwise. */
+function announceMissing(m: Manager): void {
+  const say = `NOT MEASURED: ${m.name} does not launch on this machine — ${m.why}`;
+  if (STRICT) console.error(`  \u{1F534} ${say}`);
+  else
+    console.log(
+      `  \u26A0\uFE0F  ${say} (a legitimate skip for a clone without it; --strict makes it a failure)`,
+    );
+}
+
+function hookCommands(
+  installed: string,
+): { cmds: string[]; err?: undefined } | { err: string; cmds?: undefined } {
   const file = join(installed, "plugin", "hooks", "hooks.json");
   if (!existsSync(file))
     return {
       err: `plugin/hooks/hooks.json did not arrive in the tarball: ${file}`,
     };
-  let json;
+  let json: z.infer<typeof HookWiring>;
   try {
-    json = JSON.parse(readFileSync(file, "utf8"));
+    json = HookWiring.parse(JSON.parse(readFileSync(file, "utf8")));
   } catch (e) {
-    return { err: `hooks.json does not parse: ${e.message}` };
+    return { err: `hooks.json does not parse: ${messageOf(e)}` };
   }
-  const cmds = [];
-  for (const entries of Object.values(json.hooks ?? {}))
-    for (const entry of entries ?? [])
-      for (const h of entry.hooks ?? []) if (h.command) cmds.push(h.command);
+  const cmds = commandsIn(json);
   if (cmds.length === 0)
     return { err: "zero commands in hooks.json — there is nothing to check" };
   return { cmds };
@@ -214,8 +361,14 @@ function hookCommands(installed) {
  * which only resolves from one working directory. That path is correct in the repository and
  * absent in the consumer, which is why reading the prose never finds it.
  */
-function contentDelivery(installed) {
-  const listSkills = (root) => {
+function contentDelivery(installed: string): {
+  here: number;
+  there: number;
+  missing: string[];
+  refs: number;
+  unresolved: string[];
+} {
+  const listSkills = (root: string): string[] => {
     const dir = skillsDir(root);
     if (!existsSync(dir)) return [];
     return installedSkills(dir);
@@ -225,14 +378,14 @@ function contentDelivery(installed) {
   const missing = here.filter((n) => !there.includes(n));
 
   // Resolve every script a delivered SKILL.md names, from the consumer's tree.
-  const unresolved = [];
+  const unresolved: string[] = [];
   let refs = 0;
   for (const name of there) {
     const skills = skillsDir(installed);
     const body = readFileSync(join(skills, name, "SKILL.md"), "utf8");
     for (const m of body.matchAll(/([\w./-]*scripts\/[\w-]+\.mjs)/g)) {
       refs++;
-      const raw = m[1];
+      const raw = m[1] ?? "";
       // TWO bases, and both are the declared skills directory. A third — the package root — was
       // measured dead (0 of 104 references, docs/prior-art/package-location.md § 9) and is gone:
       // a candidate nothing uses can only ever hide a wrong-base reference, never find one.
@@ -262,14 +415,25 @@ function contentDelivery(installed) {
  * the agent will: `.claude/skills/<skill>/scripts/x.mjs` from the project root, `scripts/x.mjs`
  * from the skill's own directory as the project sees it.
  */
-function consumerSkillView(consumer, installed) {
+function consumerSkillView(
+  consumer: string,
+  installed: string,
+): {
+  names: string[];
+  unreachable: string[];
+  notLinks: string[];
+  links: Record<string, string>;
+  refs: number;
+  rootRefs: number;
+  unresolved: string[];
+} {
   const dir = skillsDir(installed);
   const names = installedSkills(dir);
   const home = join(consumer, ".claude", "skills");
-  const unreachable = [];
-  const notLinks = [];
-  const links = {};
-  const unresolved = [];
+  const unreachable: string[] = [];
+  const notLinks: string[] = [];
+  const links: Record<string, string> = {};
+  const unresolved: string[] = [];
   let rootRefs = 0;
   let refs = 0;
   for (const name of names) {
@@ -286,7 +450,7 @@ function consumerSkillView(consumer, installed) {
     const body = readFileSync(join(entry, "SKILL.md"), "utf8");
     for (const m of body.matchAll(/([\w./-]*scripts\/[\w-]+\.mjs)/g)) {
       refs++;
-      const raw = m[1];
+      const raw = m[1] ?? "";
       const fromRoot = raw.startsWith(".claude/skills/");
       if (fromRoot) rootRefs++;
       const at = fromRoot ? join(consumer, raw) : join(entry, raw);
@@ -296,14 +460,14 @@ function consumerSkillView(consumer, installed) {
   return { names, unreachable, notLinks, links, refs, rootRefs, unresolved };
 }
 
-const results = [];
+const results: { manager: string; fail: string[] }[] = [];
 // Managers that did not launch under --strict. Part of the FINAL verdict, not a `process.exitCode`
 // set on the side: the unconditional `process.exit(…)` at the bottom overwrites exitCode, so a
 // strict run without pnpm used to print 🔴 and exit 0 (measured, Codex review on #45).
-let strictMissing = [];
+let strictMissing: string[] = [];
 // Managers that did not launch WITHOUT --strict: a declared skip, reported with exit 77 so
 // `npm run check` can tell "measured under npm only" from "measured under both".
-let skippedManagers = [];
+let skippedManagers: string[] = [];
 // realpathSync is NOT decoration: on macOS `/var` is a symlink to `/private/var`, and a path
 // recorded before resolution does not match what a process returns from inside. This is a
 // separate class, and it has already cost a red npm test on macOS only (vigiles#241).
@@ -320,6 +484,8 @@ try {
     .trim()
     .split("\n")
     .pop();
+  // `split` always returns at least one element, so this names a case that cannot occur.
+  if (packed === undefined) throw new Error("npm pack printed nothing");
   const tgz = join(work, packed);
   if (!existsSync(tgz)) throw new Error(`npm pack left no tarball: ${tgz}`);
   console.log(`tarball: ${packed}\n`);
@@ -331,14 +497,7 @@ try {
   // A declared skip, never a silent one. In STRICT it is a failure: in CI a manager that is not
   // installed is a broken environment, and this run's whole point is the npm/pnpm difference.
   if (missing.length) {
-    for (const m of missing) {
-      const say = `NOT MEASURED: ${m.name} does not launch on this machine — ${m.why}`;
-      if (STRICT) console.error(`  \u{1F534} ${say}`);
-      else
-        console.log(
-          `  \u26A0\uFE0F  ${say} (a legitimate skip for a clone without it; --strict makes it a failure)`,
-        );
-    }
+    for (const m of missing) announceMissing(m);
     if (STRICT) {
       console.error(
         `\nIn --strict a missing manager is a FAILURE: measuring ${available.map((m) => m.name).join(", ")} ` +
@@ -356,9 +515,9 @@ try {
       join(consumer, "package.json"),
       '{"name":"c","version":"1.0.0","private":true}',
     );
-    const fail = [];
-    const ok = (label) => console.log(`  ✓ ${label}`);
-    const bad = (label, detail) => {
+    const fail: string[] = [];
+    const ok = (label: string) => console.log(`  ✓ ${label}`);
+    const bad = (label: string, detail?: unknown) => {
       fail.push(label);
       console.log(
         `  ✗ ${label}${detail ? `\n      ${String(detail).trim().split("\n").slice(0, 3).join("\n      ")}` : ""}`,
@@ -372,7 +531,7 @@ try {
     else bad("the install went through", inst.stderr || inst.stdout);
 
     const located = locateInstalled(consumer);
-    if (located.err) {
+    if (located.err !== undefined) {
       bad("the package resolves BY NAME from the consumer", located.err);
       // Nothing below can be measured against a package Node cannot find; say so and move on
       // rather than guess a path and report on the guess.
@@ -473,19 +632,21 @@ try {
     // commands into `.claude/settings.json` — the same commands `plugin/hooks/hooks.json`
     // publishes, once each. Whether they RESOLVE is judged below, by running them.
     const settingsPath = join(consumer, ".claude", "settings.json");
-    const wiredCommands = (() => {
+    const wiredCommands = ((): (string | undefined)[] | { err: string } => {
       try {
-        const json = JSON.parse(readFileSync(settingsPath, "utf8"));
+        const json = HookWiring.parse(
+          JSON.parse(readFileSync(settingsPath, "utf8")),
+        );
         return Object.values(json.hooks ?? {}).flatMap((entries) =>
           (entries ?? []).flatMap((e) => (e.hooks ?? []).map((h) => h.command)),
         );
       } catch (e) {
-        return { err: e.message };
+        return { err: messageOf(e) };
       }
     })();
     const published = hookCommands(installed);
     Array.isArray(wiredCommands) &&
-    !published.err &&
+    published.err === undefined &&
     wiredCommands.length === published.cmds.length &&
     published.cmds.every(
       (c) => wiredCommands.filter((w) => w === c).length === 1,
@@ -540,29 +701,31 @@ try {
     // the acmart paper extends agenticdev and is not built here, so `pdf/measured` says the venue
     // checks did not run; a paper made by `paperlint new` names no venue yet, and `pdf/measured`
     // says that. Their absence would be a green zero; any other finding is a false positive.
-    const expectedWarnings = (papers) => (r) => {
-      try {
-        const ms = JSON.parse(r.stdout ?? "").flatMap((f) =>
-          f.messages.map((m) => ({ ...m, file: f.filePath })),
-        );
-        const want = Object.entries(papers);
-        return (
-          r.status === 0 &&
-          ms.length === want.length &&
-          want.every(([paper, text]) =>
-            ms.some(
-              (m) =>
-                m.ruleId === "pdf/measured" &&
-                m.severity === 1 &&
-                m.file.endsWith(join(paper, "paper.tex")) &&
-                text.test(m.message),
-            ),
-          )
-        );
-      } catch {
-        return false;
-      }
-    };
+    const expectedWarnings =
+      (papers: Record<string, RegExp>) =>
+      (r: SpawnSyncReturns<string>): boolean => {
+        try {
+          const ms = LintReport.parse(JSON.parse(r.stdout ?? "")).flatMap((f) =>
+            f.messages.map((m) => ({ ...m, file: f.filePath })),
+          );
+          const want = Object.entries(papers);
+          return (
+            r.status === 0 &&
+            ms.length === want.length &&
+            want.every(([paper, text]) =>
+              ms.some(
+                (m) =>
+                  m.ruleId === "pdf/measured" &&
+                  m.severity === 1 &&
+                  m.file.endsWith(join(paper, "paper.tex")) &&
+                  text.test(m.message),
+              ),
+            )
+          );
+        } catch {
+          return false;
+        }
+      };
     const UNBUILT = /not built yet, so .*page limit/;
     const NO_PRESET = /names no venue preset yet/;
     const lint = sh(bin, ["lint", "--json"], { cwd: consumer });
@@ -614,12 +777,12 @@ try {
       { recursive: true, verbatimSymlinks: true },
     );
     const realLint = sh(bin, ["lint", "--json"], { cwd: consumer });
-    let found = null;
+    let found: Counts | null = null;
     try {
       // Only the article's own files: the rest of the corpus is judged above.
       found = countByRule(
         JSON.stringify(
-          JSON.parse(realLint.stdout ?? "").filter((f) =>
+          LintFiles.parse(JSON.parse(realLint.stdout ?? "")).filter((f) =>
             f.filePath.includes(join("papers", "real-article")),
           ),
         ),
@@ -627,7 +790,7 @@ try {
     } catch (e) {
       bad(
         "`paperlint lint --json` on the real article parses",
-        `${e.message}\n${realLint.stderr ?? ""}`,
+        `${messageOf(e)}\n${realLint.stderr ?? ""}`,
       );
     }
     if (found) {
@@ -650,39 +813,14 @@ try {
     }
 
     // 🔴 The load-bearing check: the commands ARE EXECUTED.
-    const { cmds, err } = hookCommands(installed);
-    if (err) bad("hooks.json arrived and parses", err);
-    else {
-      let resolved = 0;
-      for (const command of cmds) {
-        const r = sh("bash", ["-c", command], {
-          cwd: consumer,
-          input: "{}",
-          env: { ...process.env, CLAUDE_PROJECT_DIR: consumer },
-        });
-        const out = (r.stderr ?? "") + (r.stdout ?? "");
-        // The exit code is not judged: a guard may legitimately return 2 on the merits. What is
-        // judged is the RESOLVE.
-        if (
-          // 🔴 `is NOT running` IN THE LIST IS LOAD-BEARING. The first edition looked only for
-          // `Cannot find module`, while `paperlint hook` with an unresolvable runtime catches the
-          // exception and complains in DIFFERENT words, returning 0 — and the test printed "all
-          // 3 commands resolve" with the hooks completely broken. A false green of exactly the
-          // class this test is written for: the check looked for the spelling it REMEMBERED, not
-          // for the thing itself.
-          /Cannot find module|MODULE_NOT_FOUND|No such file or directory|is NOT running/.test(
-            out,
-          )
-        )
-          bad(
-            `the hook command resolves (${cmds.indexOf(command) + 1}/${cmds.length})`,
-            out,
-          );
-        else resolved++;
-      }
-      if (resolved === cmds.length)
-        ok(`all ${cmds.length} hook command(s) resolve`);
-    }
+    const hooks = hookCommands(installed);
+    if (hooks.err !== undefined)
+      bad("hooks.json arrived and parses", hooks.err);
+    else
+      reportHooks(hooks.cmds, unresolvedHooks(hooks.cmds, consumer), {
+        ok,
+        bad,
+      });
 
     // Content delivery: the skills, and the paths inside them.
     const d = contentDelivery(installed);

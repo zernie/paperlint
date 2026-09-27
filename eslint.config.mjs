@@ -138,7 +138,7 @@ export const layerBoundaries = (root) => ({
         partialMatch: false,
         capture: ["kind"],
       },
-      // test/support.mjs — shared helpers for tests. Only the `test` category may import it: the
+      // test/support.ts — shared helpers for tests. Only the `test` category may import it: the
       // policies below allow tests any element, and allow no other file this one.
       { type: "test-support", pattern: "test", partialMatch: false },
     ],

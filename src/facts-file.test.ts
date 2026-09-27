@@ -5,7 +5,7 @@
  * in-memory files with a FAKE pdf.js reader and a FAKE measurer, so each outcome — read failed, not
  * measured, measured — is chosen rather than hoped for. Reading real PDFs is
  * `pdf-facts.harness.mjs`'s job; banal as the measurer is `adapters/banal/index.test.ts`, and the
- * real banal is `test/e2e/banal.mjs`.
+ * real banal is `test/e2e/banal.ts`.
  */
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";

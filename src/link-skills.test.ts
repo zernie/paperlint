@@ -14,7 +14,7 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import { test } from "vitest";
-import { useTempDir, writeTree } from "../test/support.mjs";
+import { useTempDir, writeTree } from "../test/support.ts";
 import { linkSkills, locatePackage, type LinkFs } from "./link-skills.ts";
 
 const root = useTempDir("paperlint-link-skills-");

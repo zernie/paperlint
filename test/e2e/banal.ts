@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * test/e2e/banal.mjs — the REAL banal, installed by `paperlint toolchain`, measuring the committed PDF
+ * test/e2e/banal.ts — the REAL banal, installed by `paperlint toolchain`, measuring the committed PDF
  * fixtures through paperlint's own path: pdf.js → pdftohtml-style XML → `perl banal`. No poppler.
  *
  * 🔴 THE EXPECTED NUMBERS ARE NOT OURS. Each one is what the same banal (1.2, HotCRP f3e4352)
@@ -21,7 +21,7 @@
  * Needs banal where `paperlint toolchain` puts it (or `$BANAL`). Without it the run is a declared skip
  * (77); under --strict (CI, after `paperlint toolchain`) a failure.
  *
- *   node test/e2e/banal.mjs [--strict]
+ *   node test/e2e/banal.ts [--strict]
  */
 import { spawnSync } from "node:child_process";
 import {
@@ -36,33 +36,45 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { isDeepStrictEqual } from "node:util";
+import { z } from "zod";
+// The third composition root: the real adapters, the settings parsed from the environment here.
+import {
+  banalMeasurer,
+  parseBanalSettings,
+} from "../../dist/adapters/banal/index.js";
+import {
+  hostDirs,
+  nodeAdapters,
+  nodeFiles,
+} from "../../dist/adapters/node/index.js";
+import { lookupOrder, pickBanal } from "../../dist/adapters/banal/locate.js";
+import { describeLine } from "../../dist/adapters/banal/failure.js";
+import {
+  flatGeometry,
+  whyNoGeometry,
+  type FlatGeometry,
+} from "../../dist/domain/geometry.js";
+import { pdf2xml } from "../../dist/adapters/banal/xml.js";
+import type { PageLayout, TextBox } from "../../dist/domain/page-layout.js";
+import type { AbsolutePath } from "../../dist/domain/paths.js";
+import { readPdf } from "../../dist/pdf-facts.js";
 
-const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
+/** An absolute path is what the brand promises; this checks it rather than asserting it. */
+const isAbsolutePath = (p: string): p is AbsolutePath => isAbsolute(p);
+
+const HERE_ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
+if (!isAbsolutePath(HERE_ROOT))
+  throw new Error(`${HERE_ROOT}: the repository root is not absolute`);
+const ROOT: AbsolutePath = HERE_ROOT;
 const FIX = join(ROOT, "fixtures", "pdf-facts");
 const strict = process.argv.includes("--strict");
-// The third composition root: the real adapters, the settings parsed from the environment here.
-const { banalMeasurer, parseBanalSettings } = await import(
-  join(ROOT, "dist", "adapters", "banal", "index.js")
-);
-const { hostDirs, nodeAdapters, nodeFiles } = await import(
-  join(ROOT, "dist", "adapters", "node", "index.js")
-);
-const { lookupOrder, pickBanal } = await import(
-  join(ROOT, "dist", "adapters", "banal", "locate.js")
-);
-const { describeLine } = await import(
-  join(ROOT, "dist", "adapters", "banal", "failure.js")
-);
-const { flatGeometry, whyNoGeometry } = await import(
-  join(ROOT, "dist", "domain", "geometry.js")
-);
-const { pdf2xml } = await import(
-  join(ROOT, "dist", "adapters", "banal", "xml.js")
-);
-const { readPdf } = await import(join(ROOT, "dist", "pdf-facts.js"));
+
+/** The two fields of banal's JSON, and of the facts file, this run reads. */
+const BanalJson = z.object({ bodyfontsize: z.unknown() });
+const FactsFile = z.record(z.string(), z.unknown());
 
 /** banal 1.2 on poppler pdftohtml 24.02.0, 2026-09-25 — see the header. */
 const EXPECTED = {
@@ -121,7 +133,7 @@ const EXPECTED = {
     appendix_pages: 0,
     pages_by_type: { cover: 1, figure: 1 },
   },
-};
+} satisfies Record<string, FlatGeometry>;
 
 const found = pickBanal(
   lookupOrder(parseBanalSettings(process.env, hostDirs()), ROOT),
@@ -142,7 +154,7 @@ const where = found.value;
 console.log(`banal: ${where.path} (from ${where.provenance.kind})`);
 
 let bad = 0;
-const check = (label, cond, detail = "") => {
+const check = (label: string, cond: boolean, detail = ""): void => {
   console.log(
     `  ${cond ? "✓" : "✗"} ${label}${detail && !cond ? ` — ${detail}` : ""}`,
   );
@@ -170,18 +182,20 @@ try {
     ROOT,
   );
   // The geometry as the facts file spells it (the recorded numbers are in its field names).
-  const measure = (pages) => {
+  const measure = (
+    pages: readonly PageLayout[],
+  ): string | Record<string, unknown> => {
     const g = measurer.measure(pages);
     if (g.kind === "unmeasured") return whyNoGeometry(g);
-    const flat = { ...flatGeometry(g) };
-    delete flat.geometry_source;
-    return flat;
+    return Object.fromEntries(
+      Object.entries(flatGeometry(g)).filter(([k]) => k !== "geometry_source"),
+    );
   };
 
   console.log(
     "\n1. each fixture, pdf.js → XML → banal, equals banal on real pdftohtml",
   );
-  const layouts = {};
+  const layouts: Record<string, readonly PageLayout[]> = {};
   for (const [name, want] of Object.entries(EXPECTED)) {
     const r = await readPdf(join(FIX, name));
     if (!r.ok) {
@@ -199,7 +213,8 @@ try {
   );
   const hidden = layouts["hidden-text.pdf"] ?? [];
   const base = EXPECTED["hidden-text.pdf"];
-  const off = (f) => hidden.map((p) => ({ ...p, boxes: p.boxes.map(f) }));
+  const off = (f: (b: TextBox) => TextBox): PageLayout[] =>
+    hidden.map((p) => ({ ...p, boxes: p.boxes.map(f) }));
   const variants = {
     "rotated text written as if upright": off((b) => ({ ...b, upright: true })),
     "invisible text written": off((b) =>
@@ -224,7 +239,7 @@ try {
   {
     const xml = join(work, "t3-mixed.xml");
     writeFileSync(xml, pdf2xml(layouts["t3-mixed.pdf"] ?? []));
-    const banal = (pdftohtml) =>
+    const banal = (pdftohtml: string) =>
       spawnSync("perl", [where.path, "-no-time", "-json", xml], {
         encoding: "utf8",
         env: { ...env, PDFTOHTML: pdftohtml },
@@ -235,15 +250,16 @@ try {
     check(
       "with no pdftohtml to answer -v, banal does not measure at all",
       none.status !== 0 && /Failed to run/.test(none.stderr),
-      `${none.status} ${none.stderr}`,
+      `${String(none.status)} ${none.stderr}`,
     );
     const old = join(work, "old-pdftohtml");
     writeFileSync(old, '#!/bin/sh\necho "pdftohtml version 0.84"\n', {
       mode: 0o755,
     });
-    let body = null;
+    let body: unknown = null;
     try {
-      body = JSON.parse(banal(old).stdout).bodyfontsize;
+      const json: unknown = JSON.parse(banal(old).stdout);
+      body = BanalJson.parse(json).bodyfontsize;
     } catch {
       body = "no JSON";
     }
@@ -276,7 +292,7 @@ try {
     );
     const file = join(paper, "_build", "paper.facts.json");
     const facts = existsSync(file)
-      ? JSON.parse(readFileSync(file, "utf8"))
+      ? FactsFile.parse(JSON.parse(readFileSync(file, "utf8")))
       : {};
     const picked = Object.fromEntries(
       Object.keys(base).map((k) => [k, facts[k]]),
@@ -296,6 +312,6 @@ try {
 console.log(
   bad === 0
     ? "\n✅ banal e2e: everything matched"
-    : `\n🔴 banal e2e: ${bad} mismatch(es)`,
+    : `\n🔴 banal e2e: ${String(bad)} mismatch(es)`,
 );
 process.exit(bad === 0 ? 0 : 1);

@@ -8,10 +8,10 @@
     "build": "tsc",
     "prepare": "tsc",
     "test": "node scripts/test.ts",
-    "coverage": "NODE_OPTIONS=\"--import=./test/coverage-src.mjs $NODE_OPTIONS\" c8 --check-coverage npm test --",
+    "coverage": "NODE_OPTIONS=\"--import=./test/coverage-src.ts $NODE_OPTIONS\" c8 --check-coverage npm test --",
     "lint": "eslint .",
     "check": "node scripts/check.ts",
-    "test:e2e": "node test/e2e/install.mjs && node test/e2e/build.mjs",
+    "test:e2e": "node test/e2e/install.ts && node test/e2e/build.ts",
     "fmt": "prettier --write .",
     "fmt:check": "prettier --check ."
   },
