@@ -53,7 +53,8 @@ function describe(e) {
   return `${where} ${e.message}`;
 }
 
-const errorsOf = (validate, data) =>
+/** The schema's verdict on `data` as messages. Ajv types `errors` as possibly null; that is tolerated. */
+export const errorsOf = (validate, data) =>
   validate(data)
     ? []
     : (validate.errors ?? []).filter((e) => e.keyword !== "if").map(describe);

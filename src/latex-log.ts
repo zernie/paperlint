@@ -100,9 +100,8 @@ export function logMarkers(lines: readonly string[]): LogMarker[] {
  * contain a dot or a slash, so an ordinary warning ending in a number and a colon cannot pass.
  */
 export function isErrorLine(line: string): boolean {
-  if (line.startsWith("!")) return true;
-  const m = /^([^\s:]+):(\d+): /.exec(line);
-  return m !== null && /[./]/.test(m[1] ?? "");
+  // `<path>:<line>: `, where the path (no space, no colon) holds at least one dot or slash.
+  return line.startsWith("!") || /^[^\s:]*[./][^\s:]*:\d+: /.test(line);
 }
 
 /** The `l.NNN …` line TeX prints to show where in the source it stopped. */
@@ -121,12 +120,13 @@ export function errorExcerpt(lines: readonly string[]): string[] {
   const start = lines.findIndex(isErrorLine);
   if (start < 0) return [];
   const out: string[] = [];
-  for (let i = start; i < lines.length && out.length < MAX_EXCERPT; i++) {
-    const line = lines[i] ?? "";
+  const rest = lines.slice(start);
+  for (const [i, line] of rest.entries()) {
+    if (out.length >= MAX_EXCERPT) break;
     if (line.trim() === "") continue;
     out.push(line);
     if (isContextLine(line)) {
-      const next = lines[i + 1];
+      const next = rest[i + 1];
       if (next !== undefined && next.trim() !== "") out.push(next);
       break;
     }

@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 import { ESLint } from "eslint";
 import markdown from "@eslint/markdown";
-import review from "./review-frontmatter.mjs";
+import review, { errorsOf } from "./review-frontmatter.mjs";
 import sibling from "./sibling-frontmatter.mjs";
 
 async function lint(text) {
@@ -78,6 +78,42 @@ describe("review/frontmatter — the findings record", () => {
     expect(await lint(fm("findings: [unclosed"))).toEqual([
       expect.stringMatching(/does not parse as YAML/),
     ]);
+  });
+});
+
+describe("review/frontmatter — what the parser and the validator may hand back", () => {
+  /** The rule's visitors over a fake context; the reports it makes. */
+  const visit = (value) => {
+    const reports = [];
+    const v = review.rules.frontmatter.create({
+      report: (r) => reports.push(r),
+    });
+    v.yaml({ value });
+    v["root:exit"]({});
+    return reports.map(
+      (r) => r.messageId + (r.data?.why ? `: ${r.data.why}` : ""),
+    );
+  };
+
+  it("an empty frontmatter block is validated as `{}` — silent", async () => {
+    expect(await lint("---\n---\n# Review\n")).toEqual([]);
+    expect(visit(undefined)).toEqual([]);
+  });
+
+  it("a parser failure without a YAML reason is reported by its message, or as unparseable", () => {
+    const throwing = (thrown) => ({
+      toString() {
+        throw thrown;
+      },
+    });
+    expect(visit(throwing(new Error("boom")))).toEqual(["malformed: boom"]);
+    expect(visit(throwing("not an Error"))).toEqual(["malformed: unparseable"]);
+  });
+
+  it("a failed validation with no errors attached names nothing", () => {
+    const validate = () => false;
+    validate.errors = null;
+    expect(errorsOf(validate, {})).toEqual([]);
   });
 });
 
