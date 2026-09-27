@@ -37,9 +37,9 @@ function quotes() {
 
 /** [skill, quote] for every `<skill>/SKILL.md…: "<quote>"` in one cell. */
 function quotesIn(why) {
-  return [
-    ...why.matchAll(/([a-z-]+)\/SKILL\.md[^"]*"((?:[^"\\]|\\.)*)"/g),
-  ].map((m) => [m[1], m[2]]);
+  return [...why.matchAll(/([a-z-]+)\/SKILL\.md[^"]*"((?:[^"\\]|\\.)*)"/g)].map(
+    (m) => [m[1], m[2]],
+  );
 }
 
 // Guards: the pattern below is not vacuous — a cell that names a SKILL.md yields its quote.
