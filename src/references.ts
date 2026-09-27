@@ -108,6 +108,15 @@ export const documentOf = (
     : { status: "not-checked" as const, why: check.why, entries: [] }),
 });
 
+/** A parsed `references.json` of this schema, its entries a list. */
+const isReferencesDocument = (d: unknown): d is ReferencesDocument =>
+  typeof d === "object" &&
+  d !== null &&
+  "schema" in d &&
+  d.schema === REFERENCES_SCHEMA &&
+  "entries" in d &&
+  Array.isArray(d.entries);
+
 /** The recorded verdicts, or null when there are none or they do not parse. */
 export function readReferences(
   files: Files,
@@ -116,10 +125,8 @@ export function readReferences(
   const raw = text(files, referencesPath(paperDir));
   if (raw === null) return null;
   try {
-    const d = JSON.parse(raw) as ReferencesDocument;
-    return d?.schema === REFERENCES_SCHEMA && Array.isArray(d.entries)
-      ? d
-      : null;
+    const d: unknown = JSON.parse(raw);
+    return isReferencesDocument(d) ? d : null;
   } catch {
     return null;
   }

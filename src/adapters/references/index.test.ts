@@ -57,9 +57,10 @@ function fakeFetch(routes: Record<string, () => Response>): string[] {
 
 /** Await `p` while fake time runs, so DBLP's pauses between requests elapse at once. */
 async function settle<T>(p: Promise<T>): Promise<T> {
-  let done = false;
-  const out = p.finally(() => (done = true));
-  while (!done) await vi.advanceTimersByTimeAsync(1000);
+  // A field, not a `let`: the flag is set in a callback, which flow analysis cannot see.
+  const state = { done: false };
+  const out = p.finally(() => (state.done = true));
+  while (!state.done) await vi.advanceTimersByTimeAsync(1000);
   return out;
 }
 
@@ -102,10 +103,7 @@ test("each entry gets its existence and its authors: confirmed, fabricated, mism
   const r = await settle(checkOnly(bib));
   assert.equal(r.kind, "checked");
   const byKey = Object.fromEntries(
-    (r.kind === "checked" ? r.entries : []).map((e) => [
-      e.key,
-      [e.exists, e.authors, e.why ?? ""],
-    ]),
+    r.entries.map((e) => [e.key, [e.exists, e.authors, e.why ?? ""]]),
   );
   assert.deepEqual(
     {
@@ -217,7 +215,7 @@ test(
     const ms = Date.now() - t0;
     assert.equal(r.kind, "checked");
     assert.deepEqual(
-      r.kind === "checked" ? r.entries.map((e) => e.exists) : [],
+      r.entries.map((e) => e.exists),
       serial,
     );
     assert.ok(ms < (20 * 200) / 2, `${String(ms)} ms for 20 lookups`);

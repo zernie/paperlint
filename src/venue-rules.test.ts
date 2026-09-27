@@ -13,11 +13,7 @@ import { describe, expect, it } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
-import {
-  VENUE_RULE_LEVELS,
-  venueRules,
-  type VenueRuleModule,
-} from "./venue-rules.ts";
+import { VENUE_RULE_LEVELS, venueRules } from "./venue-rules.ts";
 import { buildConfig, OPTIONAL_RULES, SHIPPED_RULES } from "./cli.ts";
 
 const VENUES = packageVenuesDir();

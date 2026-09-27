@@ -90,7 +90,7 @@ test("a document with no pages is `empty`; text drawn with no font is refused", 
     lib,
   );
   assert.equal(r.ok, false);
-  assert.equal(!r.ok && r.reason, "zero-fonts-on-text");
+  assert.equal(r.reason, "zero-fonts-on-text");
 });
 
 test("metrics, sizes and names fall back when pdf.js gives none", async () => {
@@ -118,7 +118,7 @@ test("metrics, sizes and names fall back when pdf.js gives none", async () => {
     lib,
   );
   assert.equal(r.ok, true);
-  const boxes = r.ok ? present(r.facts.layout[0], "a first page").boxes : [];
+  const boxes = present(r.facts.layout[0], "a first page").boxes;
   assert.deepEqual(
     boxes.map((b) => [b.font, b.size, b.fill]),
     [
@@ -128,12 +128,10 @@ test("metrics, sizes and names fall back when pdf.js gives none", async () => {
       ["gone", 10, { kind: "unknown" }],
     ],
   );
-  assert.deepEqual(r.ok ? r.facts.last.words.map((w) => w.text) : [], [
-    "word",
-    "word",
-    "word",
-    "word",
-  ]);
+  assert.deepEqual(
+    r.facts.last.words.map((w) => w.text),
+    ["word", "word", "word", "word"],
+  );
 });
 
 test("a failure that is not an Error is named `Error` with its text", () => {

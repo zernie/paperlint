@@ -61,7 +61,7 @@ const isStringList = (v: unknown): v is string[] =>
 
 /** A severity, or `[severity, ...options]`. */
 function parseEntry(v: unknown): RuleEntry | null {
-  const sev = Array.isArray(v) ? v[0] : v;
+  const sev: unknown = Array.isArray(v) ? v[0] : v;
   if (!SEVERITIES.includes(sev)) return null;
   return v as RuleEntry;
 }
@@ -126,7 +126,7 @@ function parseBlock(
   const extra = Object.keys(o).filter((k) => !BLOCK_KEYS.has(k));
   if (extra.length)
     return bad(
-      `${at}: unknown key "${extra[0]}" — a block takes "files", "ignores" and "rules"`,
+      `${at}: unknown key "${String(extra[0])}" — a block takes "files", "ignores" and "rules"`,
     );
   const globs = badGlobs(o, at);
   if (globs) return bad(globs);

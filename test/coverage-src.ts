@@ -14,8 +14,9 @@
  * The compiled output is still what ships and what CI runs everywhere else (`npm test` on macOS,
  * the build-e2e job through `bin/paperlint.mjs`); only the measured run reads the source.
  */
-import { register } from "node:module";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { existsSync } from "node:fs";
+import { registerHooks } from "node:module";
+import { fileURLToPath } from "node:url";
 import { isMainThread } from "node:worker_threads";
 
 const self = fileURLToPath(import.meta.url);
@@ -30,20 +31,18 @@ process.env.NODE_OPTIONS = (process.env.NODE_OPTIONS ?? "")
 // Main threads only. vitest runs its test files in worker threads, and a loader registered there
 // gives each file its own copy of `vitest` — every suite then reports "No test suite found".
 // Those files import `src/*.ts` directly and need no redirect; the processes they spawn get one.
+// `registerHooks` runs the hook synchronously in this thread; the off-thread `register` it
+// replaces is deprecated.
+const DIST = new URL("../dist/", import.meta.url).href;
+const SRC = new URL("../src/", import.meta.url).href;
 if (isMainThread)
-  register(
-    "data:text/javascript," +
-      encodeURIComponent(
-        `import { existsSync } from "node:fs";
-       import { fileURLToPath } from "node:url";
-       const DIST = ${JSON.stringify(new URL("../dist/", import.meta.url).href)};
-       const SRC = ${JSON.stringify(new URL("../src/", import.meta.url).href)};
-       export async function resolve(specifier, context, next) {
-         const r = await next(specifier, context);
-         if (!r.url.startsWith(DIST) || !r.url.endsWith(".js")) return r;
-         const src = SRC + r.url.slice(DIST.length, -".js".length) + ".ts";
-         return existsSync(fileURLToPath(src)) ? { url: src, shortCircuit: true } : r;
-       }`,
-      ),
-    pathToFileURL(self),
-  );
+  registerHooks({
+    resolve(specifier, context, next) {
+      const r = next(specifier, context);
+      if (!r.url.startsWith(DIST) || !r.url.endsWith(".js")) return r;
+      const src = SRC + r.url.slice(DIST.length, -".js".length) + ".ts";
+      return existsSync(fileURLToPath(src))
+        ? { url: src, shortCircuit: true }
+        : r;
+    },
+  });

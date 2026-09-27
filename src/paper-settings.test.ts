@@ -128,12 +128,12 @@ describe("readPaperSettings — a root paperlint.json that cannot be used", () =
       readPaperSettings(withFiles({ [`${ROOT}/paperlint.json`]: root }), PAPER);
     const notJson = broken("{ nope");
     expect(!notJson.ok && notJson.error.kind).toBe("broken");
+    const why: unknown = expect.stringMatching(
+      /^the root paperlint\.json: .*kind/,
+    );
     expect(broken('{"kind":3}')).toEqual({
       ok: false,
-      error: {
-        kind: "broken",
-        why: expect.stringMatching(/^the root paperlint\.json: .*kind/),
-      },
+      error: { kind: "broken", why },
     });
   });
 });

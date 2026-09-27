@@ -51,7 +51,9 @@ function glyphText(args: unknown): string {
   return glyphs
     .map((g) =>
       typeof g === "object" && g !== null && "unicode" in g
-        ? String(g.unicode ?? "")
+        ? typeof g.unicode === "string"
+          ? g.unicode
+          : ""
         : "",
     )
     .join("");
@@ -149,7 +151,7 @@ export function fillsFor<T>(
   const drawn = drawnCharacters(ops, list);
   let at = 0;
   const fillOf = (text: string): Fill => {
-    const want = [...squeeze(text)];
+    const want = Array.from(squeeze(text));
     if (want.length === 0) return { kind: "unknown" };
     const hit = findRun(drawn, want, at);
     if (hit === null) return { kind: "unknown" };

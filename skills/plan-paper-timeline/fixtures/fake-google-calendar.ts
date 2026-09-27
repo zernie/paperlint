@@ -177,7 +177,7 @@ function reject(
     return `missing required argument(s): ${missing.join(", ")} — the real Google Calendar API rejects this call`;
   const unknown = Object.keys(a).filter((k) => !spec.known.includes(k));
   if (unknown.length)
-    return `unknown argument(s): ${unknown.join(", ")} — not fields of ${name} on the real server`;
+    return `unknown argument(s): ${unknown.join(", ")} — not fields of ${String(name)} on the real server`;
   return null;
 }
 
@@ -253,7 +253,7 @@ function parseLine(line: string): Msg | null {
 
 let buf = "";
 process.stdin.on("data", (chunk: Buffer | string) => {
-  buf += chunk;
+  buf += String(chunk);
   let nl;
   while ((nl = buf.indexOf("\n")) >= 0) {
     const line = buf.slice(0, nl).trim();

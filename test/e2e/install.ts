@@ -51,6 +51,7 @@ import {
   countByRule,
   type Counts,
 } from "../../fixtures/real-markdown-paper/baseline.ts";
+import { renderDetail } from "../../lib/check.ts";
 
 const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const KEEP = process.argv.includes("--keep");
@@ -528,9 +529,20 @@ try {
     };
     const bad = (label: string, detail?: unknown) => {
       fail.push(label);
+      const shown = renderDetail(detail).trim();
       console.log(
-        `  ✗ ${label}${detail ? `\n      ${String(detail).trim().split("\n").slice(0, 3).join("\n      ")}` : ""}`,
+        `  ✗ ${label}${shown ? `\n      ${shown.split("\n").slice(0, 3).join("\n      ")}` : ""}`,
       );
+    };
+    /** One check: `ok` under `passLabel` (the label, unless the pass names more), else `bad`. */
+    const verdict = (
+      pass: boolean,
+      label: string,
+      detail?: unknown,
+      passLabel = label,
+    ) => {
+      if (pass) ok(passLabel);
+      else bad(label, detail);
     };
 
     console.log(`── ${m.name} ${m.version}`);
@@ -579,11 +591,11 @@ try {
       const real = sh(process.execPath, [join(installed, binRel), "--help"], {
         cwd: consumer,
       });
-      if (real.status === 0) {
-        ok(`the manifest's bin (${binRel}) runs under node`);
-      } else {
-        bad(`the manifest's bin (${binRel}) runs under node`, real.stderr);
-      }
+      verdict(
+        real.status === 0,
+        `the manifest's bin (${binRel}) runs under node`,
+        real.stderr,
+      );
     }
 
     // 🔴 THE CORPUS IS STAGED BEFORE `init`, AND THIS IS NOT A REORDERING FOR CONVENIENCE. `init`
@@ -843,24 +855,20 @@ try {
     }
     if (found) {
       const { grew, vanished } = compareToBaseline(found);
-      if (grew.length === 0 && vanished.length === 0) {
-        ok(
-          `the real article matches its baseline (${Object.entries(found)
-            .map(([r, n]) => `${r} ${String(n)}`)
-            .join(", ")})`,
-        );
-      } else {
-        bad(
-          "the real article matches its baseline",
-          [
-            ...grew.map(
-              (g) =>
-                `grew: ${g.rule} ${String(g.now)} > recorded ${String(g.recorded)}`,
-            ),
-            ...vanished.map((r) => `vanished: ${r}`),
-          ].join("\n"),
-        );
-      }
+      verdict(
+        grew.length === 0 && vanished.length === 0,
+        "the real article matches its baseline",
+        [
+          ...grew.map(
+            (g) =>
+              `grew: ${g.rule} ${String(g.now)} > recorded ${String(g.recorded)}`,
+          ),
+          ...vanished.map((r) => `vanished: ${r}`),
+        ].join("\n"),
+        `the real article matches its baseline (${Object.entries(found)
+          .map(([r, n]) => `${r} ${String(n)}`)
+          .join(", ")})`,
+      );
     }
 
     // 🔴 The load-bearing check: the commands ARE EXECUTED.
@@ -916,20 +924,13 @@ try {
           "the consumer's own\n" &&
         readFileSync(join(home, "consumers-own-skill", "SKILL.md"), "utf8") ===
           "untouched\n";
-      if (
+      verdict(
         kept &&
-        third.status === 0 &&
-        new RegExp(`${taken} — a directory`).test(third.stdout)
-      ) {
-        ok(
-          `a foreign .claude/skills/${taken} is left untouched, named, and init still exits zero`,
-        );
-      } else {
-        bad(
-          `a foreign .claude/skills/${taken} is left untouched, named, and init still exits zero`,
-          `kept=${String(kept)} exit=${String(third.status)}\n${third.stdout}`,
-        );
-      }
+          third.status === 0 &&
+          new RegExp(`${taken} — a directory`).test(third.stdout),
+        `a foreign .claude/skills/${taken} is left untouched, named, and init still exits zero`,
+        `kept=${String(kept)} exit=${String(third.status)}\n${third.stdout}`,
+      );
     }
 
     results.push({ manager: `${m.name} ${m.version}`, fail });

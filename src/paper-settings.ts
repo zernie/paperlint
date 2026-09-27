@@ -92,11 +92,13 @@ export function parsePaperSettings(
   if (!isObject(json)) return err("must be a JSON object");
   const unknown = Object.keys(json).filter((k) => !KNOWN.includes(k));
   if (unknown.length > 0)
-    return err(`unknown key "${unknown[0]}" — known keys: ${KNOWN.join(", ")}`);
+    return err(
+      `unknown key "${String(unknown[0])}" — known keys: ${KNOWN.join(", ")}`,
+    );
   const project = Object.keys(json).filter((k) => ROOT_ONLY_KEYS.includes(k));
   if (project.length > 0)
     return err(
-      `"${project[0]}" is a project setting — set it in the root ${CONFIG_FILE}, not in a paper's`,
+      `"${String(project[0])}" is a project setting — set it in the root ${CONFIG_FILE}, not in a paper's`,
     );
   const fields = stringFields(json);
   if (!fields.ok) return fields;

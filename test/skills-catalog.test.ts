@@ -98,7 +98,7 @@ describe("the skill catalog matches the skills that ship", () => {
       .split("\n")
       .map((l) => /^(\d) (\S+)/.exec(l))
       .filter((m) => m !== null)
-      .map((m) => `${m[1]} · ${m[2]}`);
+      .map((m) => `${String(m[1])} · ${String(m[2])}`);
     const fromCatalog = parse(read("docs/skills.md"))
       .filter(
         (t, i, all) =>

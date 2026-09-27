@@ -223,7 +223,7 @@ export const NOT_COVERED: Readonly<Record<string, string>> = {
  * this loop counted that as a pass, and `skipped` below was declared and never filled: a machine
  * without pnpm or TeX printed "all gates passed" for runs that never happened.
  */
-export const SKIP_EXIT = 77;
+export const SKIP_EXIT: number = 77;
 export function outcome(status: number | null): Outcome {
   if (status === 0) return "pass";
   if (status === SKIP_EXIT) return "skip";
@@ -294,7 +294,7 @@ function report(
     log(`  CI job «${job}» — ${why}`);
   }
   for (const g of gates.filter((x) => x.job === null)) {
-    log(`  (and «${g.name}» runs ONLY here — ${String(g.reason)})`);
+    log(`  (and «${g.name}» runs ONLY here — ${g.reason})`);
   }
 }
 

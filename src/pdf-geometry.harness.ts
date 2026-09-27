@@ -172,13 +172,13 @@ check(
     "a run splits at whitespace into words with proportional x",
     ws.length === 2 &&
       ws[0]?.text === "ab" &&
-      ws[0]?.x0 === 100 &&
-      ws[0]?.x1 === 120 &&
+      ws[0].x0 === 100 &&
+      ws[0].x1 === 120 &&
       ws[1]?.x0 === 140,
   );
   check(
     "a word spans ascent above the baseline to descent below it",
-    ws[0]?.y0 === 192 && ws[0]?.y1 === 202,
+    ws[0]?.y0 === 192 && ws[0].y1 === 202,
   );
 }
 

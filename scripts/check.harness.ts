@@ -211,7 +211,7 @@ for (const g of GATES.filter((g) => g.job === null)) {
 // for a run gate. Tokens, not a substring: `npm run lint` must not be found inside
 // `npm run lint:skills`, nor a path inside a comment.
 const commandsIn = (run: string | undefined): string[][] =>
-  String(run ?? "")
+  (run ?? "")
     .split(/\n|&&|\|\||;/)
     .map((c) => c.trim().split(/\s+/).filter(Boolean))
     .filter((t) => t.length > 0);
@@ -256,7 +256,7 @@ for (const g of GATES) {
   check(
     `gate «${g.name}» runs its command (${commandOf(g).join(" ")}) in a step of CI job «${g.job}»`,
     steps.some((s) => commandsIn(s.run).some((t) => runsGate(t, g))),
-    steps.map((s) => s.run ?? `(uses ${s.uses})`).join(" | "),
+    steps.map((s) => s.run ?? `(uses ${String(s.uses)})`).join(" | "),
   );
 }
 

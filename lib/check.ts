@@ -26,9 +26,12 @@ export interface Check {
   readonly count: number;
 }
 
+/** A detail given as a function, so it is only built on failure. */
+const isThunk = (d: Detail): d is () => unknown => typeof d === "function";
+
 /** A failure detail as text: strings verbatim, other values through `util.inspect`, a thunk called. */
 export function renderDetail(detail: Detail): string {
-  const value: unknown = typeof detail === "function" ? detail() : detail;
+  const value: unknown = isThunk(detail) ? detail() : detail;
   if (value === undefined || value === null || value === "") return "";
   return typeof value === "string" ? value : inspect(value, { depth: 6 });
 }

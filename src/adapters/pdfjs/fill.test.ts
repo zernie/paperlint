@@ -34,7 +34,7 @@ const OPS = {
   showText: 5,
   showSpacedText: 6,
 };
-const glyphs = (s: string) => [[...s].map((unicode) => ({ unicode }))];
+const glyphs = (s: string) => [Array.from(s, (unicode) => ({ unicode }))];
 const ops = (...pairs: [number, unknown?][]): OperatorList => ({
   fnArray: pairs.map((p) => p[0]),
   argsArray: pairs.map((p) => p[1] ?? null),

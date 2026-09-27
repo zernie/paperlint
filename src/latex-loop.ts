@@ -118,7 +118,7 @@ export type Step =
     };
 
 /** Non-final pdflatex passes allowed before the build is declared non-converging. */
-export const MAX_PASSES = 5;
+export const MAX_PASSES: number = 5;
 
 /** The history, reduced to the four questions `nextStep` asks. */
 export type State = {

@@ -45,10 +45,10 @@ test("measureGeometry: perl runs the found banal on the staged XML, and the geom
   });
   const g = measureGeometry(io, s, project, []);
   assert.equal(g.source, "banal");
-  assert.equal(g.source === "banal" && g.geometry.bodyPt, 10.3);
+  assert.equal(g.geometry.bodyPt, 10.3);
   const [c] = run.calls;
   assert.equal(c?.file, "perl");
-  assert.equal(c?.args.at(-1), "/scratch/paper.xml");
+  assert.equal(c.args.at(-1), "/scratch/paper.xml");
   // Guards: both files staged, once, and the scratch scope ended normally (cleanup ran).
   assert.deepEqual(
     workspace.written.map((w) => [w.name, w.mode]),

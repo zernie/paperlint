@@ -194,7 +194,7 @@ function run(dir: string, ...args: string[]): Run {
   assert.equal(
     json.status,
     0,
-    `the gate must always exit 0 (advisory); it exited ${json.status}:\n${json.stderr}`,
+    `the gate must always exit 0 (advisory); it exited ${String(json.status)}:\n${json.stderr}`,
   );
   let findings: z.infer<typeof Findings>;
   try {
@@ -508,7 +508,7 @@ const msg = (r: Run, kind: string, needle: string, why: string) => {
         touches: ["3"],
         budget: 20,
         base: sha,
-        closed: i < 2 ? "2026-08-1" + i : undefined,
+        closed: i < 2 ? `2026-08-1${String(i)}` : undefined,
       }),
     );
   }

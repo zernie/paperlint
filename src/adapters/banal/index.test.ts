@@ -44,15 +44,12 @@ test("with $BANAL: banal gets the .xml and a quoted $PDFTOHTML, and the geometry
   const { m, run } = measurer({ BANAL: "/own/banal" });
   const g = m.measure([]);
   assert.equal(g.kind, "measured");
-  assert.deepEqual(g.kind === "measured" && g.by, {
+  assert.deepEqual(g.by, {
     tool: "banal",
     path: "/own/banal",
     how: "$BANAL",
   });
-  assert.deepEqual(
-    g.kind === "measured" && [g.geometry.columns, g.geometry.bodyPages],
-    [2, 1],
-  );
+  assert.deepEqual([g.geometry.columns, g.geometry.bodyPages], [2, 1]);
   const c = run.calls[0];
   // Guards: the poppler-free path — banal is handed paperlint's XML, never the PDF.
   assert.match(c?.args.at(-1) ?? "", /\.xml$/);

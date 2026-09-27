@@ -156,7 +156,7 @@ try {
           r.errorCount === 1 &&
           r.warningCount === 0 &&
           r.messages[0]?.ruleId === "structure/required-file" &&
-          r.messages[0]?.severity === 2,
+          r.messages[0].severity === 2,
       ),
   );
   check(

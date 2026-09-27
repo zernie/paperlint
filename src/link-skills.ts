@@ -74,7 +74,7 @@ export function locatePackage(
     manifest = resolveManifest(project);
   } catch (e) {
     return {
-      error: `${(e as NodeJS.ErrnoException).code ?? "error"}: ${(e as Error).message.split("\n")[0]}`,
+      error: `${(e as NodeJS.ErrnoException).code ?? "error"}: ${String((e as Error).message.split("\n")[0])}`,
     };
   }
   const dir = realpathSync(dirname(manifest));

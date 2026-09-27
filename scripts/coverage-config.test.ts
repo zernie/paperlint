@@ -53,7 +53,10 @@ export function runtimeStatements(fileName: string, source: string): string[] {
       (s) =>
         !ts.isInterfaceDeclaration(s) &&
         !ts.isTypeAliasDeclaration(s) &&
-        !(ts.isImportDeclaration(s) && s.importClause?.isTypeOnly) &&
+        !(
+          ts.isImportDeclaration(s) &&
+          s.importClause?.phaseModifier === ts.SyntaxKind.TypeKeyword
+        ) &&
         !(ts.isExportDeclaration(s) && s.isTypeOnly),
     )
     .map((s) => ts.SyntaxKind[s.kind]);

@@ -859,7 +859,7 @@ export function formatResult(r: BuildResult): string {
 function formatFailure(r: BuildResult): string {
   const [head, ...rest] = r.failure?.lines ?? ["failed"];
   return [
-    `  ✗ ${r.failure?.step ?? "build"}: ${head}`,
+    `  ✗ ${r.failure?.step ?? "build"}: ${String(head)}`,
     ...rest.map((l) => `      ${l}`),
     `      ${PDF_REMOVED}`,
   ].join("\n");

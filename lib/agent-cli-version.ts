@@ -99,7 +99,7 @@ export function observeAgentCli({
   if (version === "")
     throw new Error(
       `\`${program} --version\` exited 0 but printed no version on stdout (got ${JSON.stringify(raw)}` +
-        `${probe.stderr ? `, stderr ${JSON.stringify(String(probe.stderr).trim().slice(0, 200))}` : ""}). ` +
+        `${probe.stderr ? `, stderr ${JSON.stringify(probe.stderr.trim().slice(0, 200))}` : ""}). ` +
         `A presence probe is not an observation: this is the \`stdio: "ignore"\` shape that issue #7 ` +
         `is about, and a version nobody read must not be reported as one.`,
     );

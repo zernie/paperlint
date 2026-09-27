@@ -32,7 +32,7 @@ test("createChecker: counts every call, stays silent on a pass", () => {
   const printed: string[] = [];
   const check = createChecker({ log: (s) => printed.push(s) });
   check("a", true);
-  check("b", 1 === 1, "unused detail");
+  check("b", true, "unused detail");
   assert.deepEqual({ count: check.count, printed }, { count: 2, printed: [] });
 });
 

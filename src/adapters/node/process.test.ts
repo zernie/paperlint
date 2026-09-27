@@ -58,7 +58,7 @@ test("a program killed by a signal is `signalled`, with what it printed first", 
 test("output past maxOutputBytes is a spawn failure, named by Node's own message", () => {
   const r = run.run({ ...sh("head -c 100000 /dev/zero"), maxOutputBytes: 10 });
   assert.equal(r.kind, "spawn-failed");
-  assert.match(r.kind === "spawn-failed" ? r.message : "", /ENOBUFS/);
+  assert.match(r.message, /ENOBUFS/);
 });
 
 test("cwd is the Command's when it names one", () => {

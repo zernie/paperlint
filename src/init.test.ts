@@ -81,7 +81,9 @@ describe("paperlint init — a declared papers directory", () => {
     expect(code).toBe(0);
     expect(section).toMatch(/✓ papers — declared in paperlint\.json/);
     expect(section).not.toMatch(/candidates|eslint-rules|drafts/);
-    const cfg = JSON.parse(readFileSync(join(root, "paperlint.json"), "utf8"));
+    const cfg: unknown = JSON.parse(
+      readFileSync(join(root, "paperlint.json"), "utf8"),
+    );
     expect(cfg).toEqual({ papersDir: "papers" });
   });
 

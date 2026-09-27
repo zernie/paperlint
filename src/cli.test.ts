@@ -359,7 +359,7 @@ test("a paper's paperlint.json that does not parse stops the lint with its path"
   });
   const r = paperRuleBlocks([join(dir, "p")]);
   assert.equal(r.ok, false);
-  assert.match(!r.ok ? r.error : "", /^.*rules-broken\/p\/paperlint\.json: /);
+  assert.match(r.error, /^.*rules-broken\/p\/paperlint\.json: /);
 });
 
 test("silentOptionalRules: a config with no rules turns nothing on", async () => {

@@ -13,6 +13,7 @@ import {
   readFileSync,
   realpathSync,
   rmSync,
+  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -116,6 +117,22 @@ for (const [t, vs] of byTemplate)
     `venues on template ${String(t)} declare the SAME packages (${vs.join(", ")})`,
     new Set(vs.map((v) => JSON.stringify(read(`${v}.jsonc`)))).size === 1,
   );
+
+// A venues directory whose schema file is JSON but not a schema: refused where it is read, with
+// the file's name — not deep inside Ajv as "schema should be object or boolean".
+{
+  const odd = realpathSync(
+    mkdtempSync(join(tmpdir(), "paperlint-texreq-schema-")),
+  );
+  writeFileSync(join(odd, R.SCHEMA_FILE), "3\n");
+  check(
+    "a schema file that is not a JSON object is refused, naming the file",
+    new RegExp(
+      `${R.SCHEMA_FILE.replace(/\./g, "\\.")}: not a JSON Schema object`,
+    ).test(throws(() => R.parsePreset("{}", "odd.jsonc", odd))),
+    throws(() => R.parsePreset("{}", "odd.jsonc", odd)),
+  );
+}
 
 // ── 2. the schema rejects ───────────────────────────────────────────────────────────────
 const tmp = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-texreq-h-")));

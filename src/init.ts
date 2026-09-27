@@ -123,13 +123,21 @@ export function interactivity({
   return { interactive: true, why: "a terminal on both ends" };
 }
 
+/**
+ * Whether a standard stream is a terminal. Node types `isTTY` as `boolean`, but on a stream that
+ * is NOT a terminal (a pipe, a file) the property is absent — `undefined` — so it is read as the
+ * optional it really is.
+ */
+const isTty = (stream: { readonly isTTY?: boolean }): boolean =>
+  stream.isTTY === true;
+
 /** The mode of THIS process — the one place `process` is read for it. */
 export const processInteractivity = (yes: boolean) =>
   interactivity({
     // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
-    stdinTTY: Boolean(process.stdin.isTTY),
+    stdinTTY: isTty(process.stdin),
     // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
-    stdoutTTY: Boolean(process.stdout.isTTY),
+    stdoutTTY: isTty(process.stdout),
     // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
     env: process.env,
     yes,
