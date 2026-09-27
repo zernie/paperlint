@@ -93,8 +93,8 @@ interface Run {
  */
 function parseRun(command: string): Run | null {
   const tokens = command.trim().split(/\s+/).map(bare);
-  for (let i = 0; i < tokens.length; i++) {
-    const run = runAt(tokens, i);
+  for (const [i, token] of tokens.entries()) {
+    const run = runAt(token, tokens.slice(i + 1, i + 3));
     if (run) return run;
   }
   return null;
@@ -108,17 +108,13 @@ function insidePackage(parts: readonly string[]): readonly string[] {
   return at === -1 ? [] : parts.slice(at + 2);
 }
 
-/** The run token `i` starts, if it names a paperlint hook. */
-function runAt(tokens: readonly string[], i: number): Run | null {
-  const t = posix.normalize(tokens[i] ?? "");
+/** The run `token` starts, if it names a paperlint hook; `after` is the two tokens that follow it. */
+function runAt(token: string, after: readonly string[]): Run | null {
+  const t = posix.normalize(token);
   const inside = insidePackage(t.split("/"));
   const inBin = inside[0] === "bin" && inside.length === 2;
-  const name = tokens[i + 2];
-  if (
-    (inBin || basename(t) === PACKAGE_NAME) &&
-    tokens[i + 1] === "hook" &&
-    name
-  )
+  const [verb, name] = after;
+  if ((inBin || basename(t) === PACKAGE_NAME) && verb === "hook" && name)
     return { name, ours: t === MANAGED_BY, path: t };
   if (inside[0] === "hooks" && inside[1]?.endsWith(".hook.mjs"))
     return { name: basename(inside[1], ".hook.mjs"), ours: false, path: t };
@@ -171,21 +167,32 @@ export function shippedWiring(file: string = WIRING_FILE): Wiring {
   return { compiled, names: [...new Set(names)] };
 }
 
-/** How many commands run each shipped hook, split by spelling. */
+/** How many commands run one shipped hook, split by spelling. */
+export interface HookCount {
+  readonly name: string;
+  readonly ours: number;
+  readonly other: number;
+}
+
+/** One count per name in `names`, in that order — a name nothing runs has zeros, never a gap. */
 export function wiredCounts(
   settings: Settings,
   names: readonly string[],
-): Map<string, { ours: number; other: number }> {
-  const counts = new Map(names.map((n) => [n, { ours: 0, other: 0 }]));
-  for (const { command } of commandsIn(settings)) {
+): readonly HookCount[] {
+  const runs = commandsIn(settings).flatMap(({ command }) => {
     const run = hookRun(command);
-    const slot = run ? counts.get(run.name) : undefined;
-    if (run && slot)
-      if (run.ours) slot.ours++;
-      else slot.other++;
-  }
-  return counts;
+    return run ? [run] : [];
+  });
+  const count = (name: string, ours: boolean): number =>
+    runs.filter((r) => r.name === name && r.ours === ours).length;
+  return names.map((name) => ({
+    name,
+    ours: count(name, true),
+    other: count(name, false),
+  }));
 }
+
+const total = (c: HookCount): number => c.ours + c.other;
 
 export type SettingsRead =
   | { readonly status: "absent"; readonly path: string; readonly settings: {} }
@@ -258,15 +265,16 @@ export function wireHooks(
   const read = readSettings(root);
   if (read.status === "unparsable") return read;
   const { path, settings } = read;
-  const found = commandsIn(settings)
-    .map(({ command }) => ({ command, run: hookRun(command) }))
-    .filter(({ run }) => run && !run.ours && wiring.names.includes(run.name))
-    .map(({ command, run }) => ({ name: run?.name ?? "", command }));
+  const found = commandsIn(settings).flatMap(({ command }) => {
+    const run = hookRun(command);
+    return run && !run.ours && wiring.names.includes(run.name)
+      ? [{ name: run.name, command }]
+      : [];
+  });
   if (found.length > 0) {
-    const counts = wiredCounts(settings, wiring.names);
-    const missing = wiring.names.filter(
-      (n) => (counts.get(n)?.ours ?? 0) + (counts.get(n)?.other ?? 0) === 0,
-    );
+    const missing = wiredCounts(settings, wiring.names)
+      .filter((c) => total(c) === 0)
+      .map((c) => c.name);
     return { status: "foreign", path, names: wiring.names, found, missing };
   }
 
@@ -297,19 +305,17 @@ export function doctorHooks(
     return out;
   }
   const counts = wiredCounts(read.settings, wiring.names);
-  const total = (n: string): number =>
-    (counts.get(n)?.ours ?? 0) + (counts.get(n)?.other ?? 0);
-  const missing = wiring.names.filter((n) => total(n) === 0);
-  const twice = wiring.names.filter((n) => total(n) > 1);
+  const missing = counts.filter((c) => total(c) === 0).map((c) => c.name);
+  const twice = counts.filter((c) => total(c) > 1);
   // `init` refuses to write while any hook is wired under another spelling, so its remedy must
   // not be offered then — the remedy is to pick ONE form.
-  const handWired = wiring.names.some((n) => (counts.get(n)?.other ?? 0) > 0);
+  const handWired = counts.some((c) => c.other > 0);
   const remedy = handWired
     ? `some paperlint hooks are wired by hand under another spelling, and \`npx paperlint init\` writes nothing then — add the missing ones in that same form, or delete the hand-written ones and run \`npx paperlint init\``
     : `\`npx paperlint init\` adds them`;
   if (twice.length > 0) {
     out.push(`  ⚠ wired TWICE — each of these runs more than once per event:`);
-    for (const n of twice) out.push(`      ${n} ×${String(total(n))}`);
+    for (const c of twice) out.push(`      ${c.name} ×${String(total(c))}`);
     out.push(
       `      keep one command per hook; \`npx paperlint init\` writes the ${MANAGED_BY} form`,
     );

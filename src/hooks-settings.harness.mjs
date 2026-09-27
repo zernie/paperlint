@@ -129,7 +129,7 @@ try {
     check(
       "no settings file → it is created with the three hooks",
       r.status === "written" &&
-        [...wiredCounts(s, wiring.names).values()].every(
+        wiredCounts(s, wiring.names).every(
           (c) => c.ours === 1 && c.other === 0,
         ),
     );
@@ -166,7 +166,7 @@ try {
     );
     check(
       "and ours are there, once each",
-      [...wiredCounts(s, wiring.names).values()].every((c) => c.ours === 1),
+      wiredCounts(s, wiring.names).every((c) => c.ours === 1),
     );
   }
 
@@ -218,7 +218,9 @@ try {
     // The control: without the check, vigiles' merge WOULD add a second copy. This is the
     // reason the check exists, measured rather than asserted.
     const merged = merge(handWired, wiring.compiled, MANAGED_BY);
-    const c = wiredCounts(merged, wiring.names).get("paper-edit-guard");
+    const c = wiredCounts(merged, wiring.names).find(
+      (c) => c.name === "paper-edit-guard",
+    );
     check(
       "(control) vigiles' merge alone would wire paper-edit-guard TWICE here",
       c.ours === 1 && c.other === 1,
