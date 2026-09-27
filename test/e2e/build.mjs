@@ -81,7 +81,7 @@ function skipOrFail(say) {
     console.log(
       `${say}\nThis is a legitimate skip on a machine without it. In CI the same case is a failure (--strict).`,
     );
-    // 77, not 0: a skip is not a pass (scripts/check.mjs, SKIP_EXIT).
+    // 77, not 0: a skip is not a pass (scripts/check.ts, SKIP_EXIT).
     process.exit(77);
   }
   console.error(

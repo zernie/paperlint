@@ -1,5 +1,5 @@
 /**
- * The legacy-exemption ratchet (`layer-legacy-frozen.mjs`): each of its refusals fires on a planted
+ * The legacy-exemption ratchet (`layer-legacy-frozen.ts`): each of its refusals fires on a planted
  * case and stays silent on the matching clean one. The inputs are ESLint's own result shape, so the
  * tally is tested on what the linter reports, not on source text.
  */
@@ -14,7 +14,7 @@ import {
   main,
   tally,
   type Suppressed,
-} from "./layer-legacy-frozen.mjs";
+} from "./layer-legacy-frozen.ts";
 import { useTempDir, writeTree } from "../test/support.mjs";
 
 const IO = "legacy I/O, moves behind a port in #76";
@@ -245,7 +245,7 @@ test("run as a program: the gate's verdict is the exit code", () => {
     [
       "--import",
       preload,
-      fileURLToPath(new URL("./layer-legacy-frozen.mjs", import.meta.url)),
+      fileURLToPath(new URL("./layer-legacy-frozen.ts", import.meta.url)),
     ],
     { encoding: "utf8" },
   );

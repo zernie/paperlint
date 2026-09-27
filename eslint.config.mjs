@@ -243,7 +243,7 @@ export const layerBoundaries = (root) => ({
  * Files that did I/O before the layers existed carry an `eslint-disable-next-line` naming #76 above
  * each such import or use; `reportUnusedDisableDirectives: "error"` turns a disable that suppresses
  * nothing into a finding, so an exemption leaves the moment its I/O does, and
- * `scripts/layer-legacy-frozen.mjs` freezes how many each file may carry. A NEW module that needs
+ * `scripts/layer-legacy-frozen.ts` freezes how many each file may carry. A NEW module that needs
  * the outside world is a new `*.io.ts` in the adapter of the program it talks to — not a disable.
  */
 export const IO_GLOBALS = {

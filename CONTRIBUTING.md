@@ -44,7 +44,7 @@ and reported as "the gates". If a step genuinely cannot run here, it says so out
 being skipped quietly: an e2e that finds no TeX or no pnpm exits 77 _having stated_ why, and
 `npm run check` lists it as skipped instead of counting it as passed.
 
-Each gate's command is listed in `scripts/check.mjs`; run one of them directly while iterating on
+Each gate's command is listed in `scripts/check.ts`; run one of them directly while iterating on
 one rule. They are not what you run before pushing.
 
 **The list of gates cannot quietly fall behind CI.** `scripts/check.harness.mjs` pulls the job

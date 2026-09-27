@@ -18,7 +18,7 @@
 #   npm run fmt:check                     5 s
 #   vigiles lint . README.md              6 s
 #   rules-see-files.mjs                   5 s
-#   layer-legacy-frozen.mjs               3 s
+#   layer-legacy-frozen.ts                3 s
 #   install e2e --strict (npm + pnpm)    28 s
 #   ───────────────────────────────────────────
 #   total work                          ~96 s, plus checkout + install + the claude binary
@@ -146,7 +146,7 @@ jobs:
       # or a pointer to a file that does not exist. Bond is 3 × the measured 3 s, floored at the
       # 1-minute granularity GitHub bills in.
       #
-      # README.md is linted too, by name (see the same gate in scripts/check.mjs). Its
+      # README.md is linted too, by name (see the same gate in scripts/check.ts). Its
       # `vigiles:symbol` marks name the functions behind `paperlint init` and `paperlint new`; if one is
       # renamed or removed, this step fails and names README.md.
       - name: vigiles lint (skills + README.md)
@@ -163,7 +163,7 @@ jobs:
       # The legacy exemptions from src/'s layer rules (#76) may only shrink: counted from ESLint's
       # own suppressedMessages, so a new `-- legacy …` directive anywhere fails here.
       - name: legacy layer exemptions are frozen
-        run: node scripts/layer-legacy-frozen.mjs
+        run: node scripts/layer-legacy-frozen.ts
 
       # pnpm is INSTALLED here rather than hoped for. The runner image may or may not carry it,
       # and the npm/pnpm difference is the entire reason the install e2e exists — so leaving it

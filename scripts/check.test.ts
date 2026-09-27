@@ -1,21 +1,24 @@
 /**
- * check.mjs's runGates — the one command run before a push — on every outcome, with an injected
+ * check.ts's runGates — the one command run before a push — on every outcome, with an injected
  * spawn: a pass, a declared skip (77) and a failure, and THE TAIL that names what it does not cover.
  */
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { test } from "vitest";
-import { GATES, NOT_COVERED, runGates } from "./check.mjs";
+import { GATES, NOT_COVERED, runGates, type Gate } from "./check.ts";
 
 const capture = () => {
-  const out = [];
-  const io = { log: (s) => out.push(s), err: (s) => out.push(`E ${s}`) };
+  const out: string[] = [];
+  const io = {
+    log: (s: string) => out.push(s),
+    err: (s: string) => out.push(`E ${s}`),
+  };
   return { out, io };
 };
 
 test("runGates: a pass, a declared skip (77) and a failure, then the tail naming what is not covered", () => {
-  const gates = [
+  const gates: Gate[] = [
     { name: "passes", job: "gates", run: ["true"] },
     { name: "skips", job: "gates", run: ["skipper", "--x"] },
     {
@@ -25,12 +28,12 @@ test("runGates: a pass, a declared skip (77) and a failure, then the tail naming
       run: ["false"],
     },
   ];
-  const status = { true: 0, skipper: 77, false: 3 };
-  const written = [];
+  const status: Record<string, number> = { true: 0, skipper: 77, false: 3 };
+  const written: string[] = [];
   const { out, io } = capture();
   const code = runGates({
     gates,
-    spawn: (cmd) => ({ status: status[cmd] }),
+    spawn: (cmd) => ({ status: status[cmd] ?? null }),
     write: (s) => written.push(s),
     ...io,
   });
@@ -79,7 +82,7 @@ test("runGates: all passing, with a skip, says how many passed and that the skip
 });
 
 test("run as a program with every gate passing: the plain verdict, exit 0", () => {
-  // spawnSync is replaced before check.mjs loads, so the real file runs end to end — every gate
+  // spawnSync is replaced before check.ts loads, so the real file runs end to end — every gate
   // "passes" in microseconds instead of the eleven real ones running.
   const allPass = [
     'import cp from "node:child_process";',
@@ -92,7 +95,7 @@ test("run as a program with every gate passing: the plain verdict, exit 0", () =
     [
       "--import",
       `data:text/javascript,${encodeURIComponent(allPass)}`,
-      fileURLToPath(new URL("./check.mjs", import.meta.url)),
+      fileURLToPath(new URL("./check.ts", import.meta.url)),
     ],
     { encoding: "utf8" },
   );

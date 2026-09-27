@@ -53,7 +53,39 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
  * Programs installed by npm (`vigiles`, `eslint`) are found because `node_modules/.bin` is put
  * first on PATH below, the same way `npm run` does it.
  */
-export const GATES = [
+/** A gate runs either an npm script or a command of its own — never both. */
+type GateCommand =
+  | { readonly script: string; readonly run?: undefined }
+  | {
+      readonly run: readonly [string, ...string[]];
+      readonly script?: undefined;
+    };
+
+/**
+ * A gate reproduces a CI job, or runs only here and says why (`job: null` needs a `reason`, or it
+ * becomes the quiet way to drop something out of CI).
+ */
+export type Gate = { readonly name: string } & GateCommand &
+  (
+    | { readonly job: string; readonly reason?: undefined }
+    | { readonly job: null; readonly reason: string }
+  );
+
+/** What `runGates` needs from a finished process: its exit status, `null` when a signal ended it. */
+export type Spawn = (
+  cmd: string,
+  args: readonly string[],
+  options: {
+    cwd: string;
+    stdio: "inherit";
+    encoding: "utf8";
+    env: NodeJS.ProcessEnv;
+  },
+) => { readonly status: number | null };
+
+export type Outcome = "pass" | "skip" | "fail";
+
+export const GATES: readonly Gate[] = [
   {
     name: "the package compiles",
     job: "gates",
@@ -114,7 +146,7 @@ export const GATES = [
   {
     name: "legacy layer exemptions are frozen — none new, none grown (#76)",
     job: "gates",
-    run: ["node", "scripts/layer-legacy-frozen.mjs"],
+    run: ["node", "scripts/layer-legacy-frozen.ts"],
   },
   {
     name: "install e2e — pack, install under npm and pnpm, run the binary",
@@ -139,15 +171,17 @@ export const GATES = [
 ];
 
 /** The command line a gate runs, as an argument list. */
-export function commandOf(gate) {
-  return gate.script ? ["npm", "run", "-s", gate.script] : gate.run;
+export function commandOf(gate: Gate): readonly [string, ...string[]] {
+  return gate.script !== undefined
+    ? ["npm", "run", "-s", gate.script]
+    : gate.run;
 }
 
 /**
  * CI jobs this command does NOT reproduce. Each needs a reason a reader can check, because an
  * unexplained gap is indistinguishable from an oversight — which is what the harness enforces.
  */
-export const NOT_COVERED = {
+export const NOT_COVERED: Readonly<Record<string, string>> = {
   // build-e2e's macOS cell is the one part of a covered job no local command can stand in for:
   // it exists because issue #9 appeared on macOS alone (/var is a symlink to /private/var).
   merge:
@@ -170,30 +204,29 @@ export const NOT_COVERED = {
  * without pnpm or TeX printed "all gates passed" for runs that never happened.
  */
 export const SKIP_EXIT = 77;
-export function outcome(status) {
+export function outcome(status: number | null): Outcome {
   if (status === 0) return "pass";
   if (status === SKIP_EXIT) return "skip";
   return "fail";
 }
 
-/**
- * Run every gate in order and print the verdict and THE TAIL. `spawn`, `log`, `err` and `write`
- * are injected so a test can drive every outcome without running eleven real gates.
- *
- * @returns the exit code: 1 when a gate failed, else 0 (a skip is not a failure, and says so).
- */
-export function runGates({
-  gates = GATES,
-  spawn = spawnSync,
-  log = console.log,
-  err = console.error,
-  write = (s) => process.stdout.write(s),
-} = {}) {
+/** The gates that did not pass, each as the line the verdict prints, split by outcome. */
+interface NotPassed {
+  failed: string[];
+  skipped: string[];
+}
+
+/** Run each gate in order; `write` announces it before it starts. */
+function runEach(
+  gates: readonly Gate[],
+  spawn: Spawn,
+  write: (text: string) => unknown,
+): NotPassed {
   const BIN_FIRST_PATH = [join(ROOT, "node_modules", ".bin"), process.env.PATH]
     .filter(Boolean)
     .join(delimiter);
-  const failed = [];
-  const skipped = [];
+  const failed: string[] = [];
+  const skipped: string[] = [];
 
   for (const g of gates) {
     write(`── ${g.name}\n`);
@@ -211,9 +244,17 @@ export function runGates({
     if (o === "pass") continue;
     const shown = commandOf(g).join(" ");
     if (o === "skip") skipped.push(`${g.name}  (${shown} → ${SKIP_EXIT})`);
-    else failed.push(`${g.name}  (${shown} → ${r.status})`);
+    else failed.push(`${g.name}  (${shown} → ${String(r.status)})`);
   }
+  return { failed, skipped };
+}
 
+/** The verdict, then THE TAIL. */
+function report(
+  gates: readonly Gate[],
+  { failed, skipped }: NotPassed,
+  { log, err }: { log: (line: string) => void; err: (line: string) => void },
+): void {
   log("");
   if (failed.length) {
     err("🔴 gates failed:");
@@ -221,7 +262,7 @@ export function runGates({
   } else {
     const passed = gates.length - skipped.length;
     log(
-      `✓ ${passed} gate(s) passed${skipped.length ? `, ${skipped.length} SKIPPED — not run, not passed` : ""}`,
+      `✓ ${String(passed)} gate(s) passed${skipped.length ? `, ${String(skipped.length)} SKIPPED — not run, not passed` : ""}`,
     );
   }
   for (const s of skipped) log(`⏳ skipped: ${s}`);
@@ -232,9 +273,32 @@ export function runGates({
     log(`  CI job «${job}» — ${why}`);
   }
   for (const g of gates.filter((x) => x.job === null)) {
-    log(`  (and «${g.name}» runs ONLY here — ${g.reason})`);
+    log(`  (and «${g.name}» runs ONLY here — ${String(g.reason)})`);
   }
-  return failed.length ? 1 : 0;
+}
+
+/**
+ * Run every gate in order and print the verdict and THE TAIL. `spawn`, `log`, `err` and `write`
+ * are injected so a test can drive every outcome without running eleven real gates.
+ *
+ * @returns the exit code: 1 when a gate failed, else 0 (a skip is not a failure, and says so).
+ */
+export function runGates({
+  gates = GATES,
+  spawn = spawnSync,
+  log = console.log,
+  err = console.error,
+  write = (s: string) => process.stdout.write(s),
+}: {
+  gates?: readonly Gate[];
+  spawn?: Spawn;
+  log?: (line: string) => void;
+  err?: (line: string) => void;
+  write?: (text: string) => unknown;
+} = {}): number {
+  const notPassed = runEach(gates, spawn, write);
+  report(gates, notPassed, { log, err });
+  return notPassed.failed.length ? 1 : 0;
 }
 
 if (isMain(import.meta.url)) process.exit(runGates());

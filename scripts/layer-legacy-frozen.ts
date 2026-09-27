@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * layer-legacy-frozen.mjs — the legacy exemptions from `src/`'s layer rules may only SHRINK.
+ * layer-legacy-frozen.ts — the legacy exemptions from `src/`'s layer rules may only SHRINK.
  *
  * `src/` is hexagonal on two axes (src/CLAUDE.md): who may know whom, and where effects may be
  * written. The flat `src/*.ts` files predate both. Each site in them that still breaks a rule
@@ -32,22 +32,55 @@
  * counted by construction — and a range directive (`/* eslint-disable … *\/` around a multi-line
  * import) counts exactly what it silences.
  *
- * Run: `node scripts/layer-legacy-frozen.mjs` (also part of `npm run check`)
+ * Run: `node scripts/layer-legacy-frozen.ts` (also part of `npm run check`)
  */
 import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
 import { readFileSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ESLint } from "eslint";
+import { z } from "zod";
+
+/** One file's result, in the shape ESLint's `LintResult` reports suppressions. */
+export interface Suppressed {
+  readonly filePath: string;
+  readonly suppressedMessages?: readonly {
+    readonly ruleId: string | null;
+    readonly line: number;
+    readonly suppressions?: readonly { readonly justification?: string }[];
+  }[];
+}
+
+/** Per file, per rule: a count of suppressed findings. */
+export type Counts = Record<string, Record<string, number>>;
+
+/** What `checkFrozen` reports: the problems, and both sides of the comparison. */
+export interface FrozenCheck {
+  problems: string[];
+  frozen: Counts;
+  counts: Counts;
+}
+
+/** The frozen list on disk. A file with no `files` key freezes nothing. */
+const FrozenFile = z.object({
+  files: z.record(z.string(), z.record(z.string(), z.number())).optional(),
+});
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 export const FROZEN_FILE = join("scripts", "layer-legacy.frozen.json");
 
 /** The rules that enforce the layers. A suppression of any other rule is not this check's business. */
-export const LAYER_RULES = ["boundaries/dependencies", "no-restricted-globals"];
+export const LAYER_RULES: readonly string[] = [
+  "boundaries/dependencies",
+  "no-restricted-globals",
+];
 
 /** Where a legacy suppression may never appear: the folders written under the rules. */
-export const NO_LEGACY_UNDER = ["src/domain/", "src/ports/", "src/adapters/"];
+export const NO_LEGACY_UNDER: readonly string[] = [
+  "src/domain/",
+  "src/ports/",
+  "src/adapters/",
+];
 
 /** The justification every legacy directive carries — `I/O` or `layer`, then the issue. */
 export const LEGACY = /^legacy (I\/O|layer), moves behind a port in #76$/;
@@ -57,12 +90,16 @@ export const LEGACY = /^legacy (I\/O|layer), moves behind a port in #76$/;
  * results (`filePath` relative to the repository, POSIX separators) and returns the tally plus
  * every layer suppression that is not a legacy one.
  */
-export function tally(results) {
-  const counts = {};
-  const unexplained = [];
+export function tally(results: readonly Suppressed[]): {
+  counts: Counts;
+  unexplained: string[];
+} {
+  const counts: Counts = {};
+  const unexplained: string[] = [];
   for (const r of results)
     for (const m of r.suppressedMessages ?? []) {
-      if (!LAYER_RULES.includes(m.ruleId ?? "")) continue;
+      const rule = m.ruleId ?? "";
+      if (!LAYER_RULES.includes(rule)) continue;
       const why = (m.suppressions ?? []).map((s) => s.justification ?? "");
       if (!why.some((j) => LEGACY.test(j.trim()))) {
         unexplained.push(
@@ -71,39 +108,64 @@ export function tally(results) {
         continue;
       }
       const file = (counts[r.filePath] ??= {});
-      file[m.ruleId] = (file[m.ruleId] ?? 0) + 1;
+      file[rule] = (file[rule] ?? 0) + 1;
     }
   return { counts, unexplained };
 }
 
+/** A file carrying a legacy exemption where none may be, or one the list does not know. */
+function misplaced(f: string, frozen: Counts): string[] {
+  if (NO_LEGACY_UNDER.some((d) => f.startsWith(d)))
+    return [
+      `${f}: carries a legacy layer exemption, and nothing under ${NO_LEGACY_UNDER.join(", ")} may — those folders are written under the rules. Fix the site (src/CLAUDE.md).`,
+    ];
+  if (!(f in frozen))
+    return [
+      `${f}: a new legacy layer exemption is not accepted (#76). A module that needs the world is a new *.io.ts in the adapter of the program it talks to; an app file takes a port.`,
+    ];
+  return [];
+}
+
+/** One rule's count in one file against its frozen number: grown, new, or shrunk without a record. */
+function compareCount(
+  f: string,
+  rule: string,
+  got: number,
+  frozen: Counts,
+): string[] {
+  const want = frozen[f]?.[rule];
+  if (want === undefined)
+    return f in frozen
+      ? [
+          `${f}: ${String(got)} legacy ${rule} suppression(s), frozen at 0 — no new exemptions in existing files (#76).`,
+        ]
+      : [];
+  if (got > want)
+    return [
+      `${f}: ${String(got)} legacy ${rule} suppressions, frozen at ${String(want)} — no new exemptions in existing files (#76).`,
+    ];
+  if (got < want)
+    return [
+      `${f}: ${String(got)} legacy ${rule} suppressions, frozen at ${String(want)} — lower it to ${String(got)} in ${FROZEN_FILE} (the list must shrink with the code).`,
+    ];
+  return [];
+}
+
 /** Compare the tally with the frozen list. Pure. `frozen` is `{ path: { rule: count } }`. */
-export function judge({ counts, unexplained, frozen }) {
+export function judge({
+  counts,
+  unexplained,
+  frozen,
+}: {
+  counts: Counts;
+  unexplained: readonly string[];
+  frozen: Counts;
+}): string[] {
   const problems = [...unexplained];
   for (const [f, rules] of Object.entries(counts)) {
-    if (NO_LEGACY_UNDER.some((d) => f.startsWith(d)))
-      problems.push(
-        `${f}: carries a legacy layer exemption, and nothing under ${NO_LEGACY_UNDER.join(", ")} may — those folders are written under the rules. Fix the site (src/CLAUDE.md).`,
-      );
-    else if (!(f in frozen))
-      problems.push(
-        `${f}: a new legacy layer exemption is not accepted (#76). A module that needs the world is a new *.io.ts in the adapter of the program it talks to; an app file takes a port.`,
-      );
-    for (const [rule, got] of Object.entries(rules)) {
-      const want = frozen[f]?.[rule];
-      if (want === undefined) {
-        if (f in frozen)
-          problems.push(
-            `${f}: ${String(got)} legacy ${rule} suppression(s), frozen at 0 — no new exemptions in existing files (#76).`,
-          );
-      } else if (got > want)
-        problems.push(
-          `${f}: ${String(got)} legacy ${rule} suppressions, frozen at ${String(want)} — no new exemptions in existing files (#76).`,
-        );
-      else if (got < want)
-        problems.push(
-          `${f}: ${String(got)} legacy ${rule} suppressions, frozen at ${String(want)} — lower it to ${String(got)} in ${FROZEN_FILE} (the list must shrink with the code).`,
-        );
-    }
+    problems.push(...misplaced(f, frozen));
+    for (const [rule, got] of Object.entries(rules))
+      problems.push(...compareCount(f, rule, got, frozen));
   }
   for (const [f, rules] of Object.entries(frozen))
     for (const [rule, want] of Object.entries(rules))
@@ -116,10 +178,14 @@ export function judge({ counts, unexplained, frozen }) {
 
 /** Lint `src/` with the repository's configuration and run the whole check. */
 export async function checkFrozen(
-  root = ROOT,
-  { lint = (cwd) => new ESLint({ cwd }).lintFiles(["src/**/*.ts"]) } = {},
-) {
-  const data = JSON.parse(readFileSync(join(root, FROZEN_FILE), "utf8"));
+  root: string = ROOT,
+  {
+    lint = (cwd: string) => new ESLint({ cwd }).lintFiles(["src/**/*.ts"]),
+  }: { lint?: (cwd: string) => Promise<readonly Suppressed[]> } = {},
+): Promise<FrozenCheck> {
+  const data = FrozenFile.parse(
+    JSON.parse(readFileSync(join(root, FROZEN_FILE), "utf8")),
+  );
   const frozen = data.files ?? {};
   // ESLint itself THROWS when the glob matches nothing ("No files matching 'src/**/*.ts' were
   // found") or only ignored files — measured. An empty result from any other linter (or a
@@ -147,7 +213,11 @@ export async function main({
   check = () => checkFrozen(ROOT),
   log = console.log,
   err = console.error,
-} = {}) {
+}: {
+  check?: () => Promise<FrozenCheck>;
+  log?: (line: string) => void;
+  err?: (line: string) => void;
+} = {}): Promise<number> {
   const { problems, counts } = await check();
   if (problems.length) {
     err(

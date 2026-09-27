@@ -4,22 +4,21 @@
  */
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import { runSuites, SUITES } from "./test.mjs";
+import { runSuites, SUITES, type Spawn } from "./test.ts";
 
-const fake = (status) => {
-  const calls = [];
-  return {
-    calls,
-    spawn: (file, args) => {
-      calls.push([file, ...args]);
-      return { status: status[file] };
-    },
+/** A spawn that records every call and exits with `status[file]` (`null` for a signal). */
+const fake = (status: Record<string, number | null>) => {
+  const calls: string[][] = [];
+  const spawn: Spawn = (file, args) => {
+    calls.push([file, ...args]);
+    return { status: status[file] ?? null };
   };
+  return { calls, spawn };
 };
 
 test("a failing vitest does not skip the harnesses, and is named as the failure", () => {
   const { calls, spawn } = fake({ vitest: 1, vigiles: 0 });
-  const said = [];
+  const said: string[] = [];
   assert.equal(
     runSuites(["--no-skip"], { spawn, err: (s) => said.push(s) }),
     1,
@@ -37,7 +36,7 @@ test("both passing is 0 and silent; a harness killed by a signal is exit 1, name
   const ok = fake({ vitest: 0, vigiles: 0 });
   assert.equal(runSuites([], { spawn: ok.spawn, err: assert.fail }), 0);
   const killed = fake({ vitest: 0, vigiles: null });
-  const said = [];
+  const said: string[] = [];
   assert.equal(
     runSuites([], { spawn: killed.spawn, err: (s) => said.push(s) }),
     1,

@@ -7,7 +7,7 @@
  * and a suite-breaking change was pushed. Writing the subset down in a doc would have produced
  * the same outcome one release later — the list would simply have been wrong instead of absent.
  *
- * So the assertions below do not check that `check.mjs` contains the right strings. They pull
+ * So the assertions below do not check that `check.ts` contains the right strings. They pull
  * the job names OUT OF `.github/workflows/ci.yml` and require every one to be accounted for.
  * Add a job to CI and this goes red the same day, naming the job nobody covered.
  *
@@ -24,7 +24,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(HERE);
 
 const { GATES, NOT_COVERED, outcome, SKIP_EXIT, commandOf } =
-  await import("./check.mjs");
+  await import("./check.ts");
 
 const check = createChecker();
 
@@ -130,7 +130,7 @@ for (const g of GATES) {
   // A `run` gate names files and programs directly. Every file it names must be on disk, and
   // every program other than `node` must be installed in node_modules/.bin.
   const argv = commandOf(g);
-  const files = argv.filter((a) => /\.m?js$/.test(a));
+  const files = argv.filter((a) => /\.[cm]?[jt]s$/.test(a));
   const programs = [argv[0]];
   // Guards: a gate runs SOMETHING — a script of ours, or an installed program such as `tsc`.
   check(
