@@ -119,14 +119,10 @@ export async function checkFrozen(root = ROOT) {
   const data = JSON.parse(readFileSync(join(root, FROZEN_FILE), "utf8"));
   const frozen = data.files ?? {};
   const eslint = new ESLint({ cwd: root });
+  // A glob that matched nothing would tally nothing and report every frozen file as fixed. ESLint
+  // refuses that itself, and loudly: `lintFiles` THROWS "No files matching 'src/**/*.ts' were
+  // found" (or "All files matched … are ignored") — measured, so no empty-result branch here.
   const raw = await eslint.lintFiles(["src/**/*.ts"]);
-  // Guards: a glob that matched nothing tallies nothing and reports every frozen file as fixed.
-  if (raw.length === 0)
-    return {
-      problems: ["src/**/*.ts matched no file — nothing was counted."],
-      frozen,
-      counts: {},
-    };
   const results = raw.map((r) => ({
     ...r,
     filePath: relative(root, r.filePath).split(sep).join("/"),
