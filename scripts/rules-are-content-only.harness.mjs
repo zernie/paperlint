@@ -12,20 +12,16 @@
  *   III. QUIET on sources that merely TALK about the banned module — a comment and a string
  *        literal. This is the half a grep cannot have, and the reason the check parses.
  */
-import assert from "node:assert/strict";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { rulesAreContentOnly, processImports } = await import(
   join(HERE, "rules-are-content-only.mjs")
 );
 
-let n = 0;
-const check = (label, ok) => {
-  n++;
-  assert.equal(ok, true, label);
-};
+const check = createChecker();
 
 // ── I. quiet on the real corpus, and it actually looked ───────────────────────
 {
@@ -106,4 +102,4 @@ for (const [label, src] of [
   check(`quiet on ${label}`, processImports(src).length === 0);
 }
 
-console.log(`rules-are-content-only.harness: ${n} assertions passed`);
+console.log(`rules-are-content-only.harness: ${check.count} assertions passed`);

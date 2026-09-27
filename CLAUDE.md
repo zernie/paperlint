@@ -541,7 +541,11 @@ confident, byte-identical "clean" verdicts for three different skills that had n
    A substring is right only when the value is prose whose wording is not the subject; then say
    so in a comment.
 
-3. **Coverage is a gate.** `npm run check` and CI run `npm run coverage` — `npm test` under c8,
+3. **One assertion helper for harnesses: `lib/check.mjs`.** `const check = createChecker();` then
+   `check(label, cond, detail)`. A failure prints the label and the detail (a value is rendered
+   with `util.inspect`, a function is called only on failure), every call is counted
+   (`check.count`, for the summary line) and reported to vigiles. Do not define a local `check`.
+4. **Coverage is a gate.** `npm run check` and CI run `npm run coverage` — `npm test` under c8,
    `--check-coverage` against `.c8rc.json`. c8 reads `NODE_V8_COVERAGE`, so a CLI a harness
    spawns is measured too — unless the harness hands the child a fresh `env` without it. vitest
    runs in the `threads` pool with native `import` (`vitest.config.ts` says why): under its

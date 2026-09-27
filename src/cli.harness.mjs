@@ -11,8 +11,6 @@
  *      leaked out of the depths of eslint-helpers.
  * Both are pinned down by the assertions below so there is no going back.
  */
-import assert from "node:assert/strict";
-import { recordCheck } from "vigiles";
 import { load as yamlLoad } from "js-yaml";
 import {
   mkdtempSync,
@@ -31,6 +29,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PAPERS_DIR_FIELD, findProjectRoot } from "../lib/paper-config.mjs";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { run, parseArgs, buildConfig, nextSteps, toPaths, runHook } =
@@ -39,14 +38,9 @@ const { init, choosePapers, offerWorkflow, missingPrograms, WORKFLOW_PATH } =
   await import(join(HERE, "init.ts"));
 const { PROGRAMS } = await import(join(HERE, "doctor.ts"));
 
-let n = 0;
 // Counted by vigiles too: `init` now loads `vigiles/claude-code` for its merge, and a harness that
 // loads vigiles without recording a check is reported as having verified nothing.
-const check = (label, cond) => {
-  assert.ok(cond, label);
-  recordCheck(label);
-  n++;
-};
+const check = createChecker();
 
 /** Runs the utility with output captured — quieter and faster than spawning a process. */
 async function cli(args, cwd) {
@@ -1260,7 +1254,7 @@ check(
 }
 
 console.log(
-  `✓ ${String(n)} assertions passed — paperlint lint, one command instead of hand-rolled config`,
+  `✓ ${String(check.count)} assertions passed — paperlint lint, one command instead of hand-rolled config`,
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1799,5 +1793,5 @@ console.log(
 }
 
 console.log(
-  `✓ ${String(n)} assertions in total, including init's hooks and paperlint new`,
+  `✓ ${String(check.count)} assertions in total, including init's hooks and paperlint new`,
 );

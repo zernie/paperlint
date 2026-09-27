@@ -10,7 +10,6 @@
  *
  * The shim imports the compiled package (`dist/`), so `npm run build` runs before this.
  */
-import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
   cpSync,
@@ -25,16 +24,13 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createChecker } from "../../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SHIM = join(HERE, "extract-pdf-facts.mjs");
 const FIX = resolve(HERE, "..", "..", "fixtures", "pdf-facts");
 
-let n = 0;
-const check = (label, cond, detail = "") => {
-  assert.ok(cond, detail ? `${label} — ${detail}` : label);
-  n++;
-};
+const check = createChecker();
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-extract-")));
 /**
@@ -162,5 +158,5 @@ try {
 }
 
 console.log(
-  `✓ ${String(n)} assertions passed — extract-pdf-facts: the exit-code contract, schema 2, and the no-no-yes font`,
+  `✓ ${String(check.count)} assertions passed — extract-pdf-facts: the exit-code contract, schema 2, and the no-no-yes font`,
 );

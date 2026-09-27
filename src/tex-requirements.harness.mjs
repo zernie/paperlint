@@ -7,7 +7,6 @@
  *   2. the schema REJECTS what it must — each bad profile names the offending path;
  *   3. what a paper gets: its venue plus the base set, or the base set with the reason said.
  */
-import assert from "node:assert/strict";
 import {
   copyFileSync,
   mkdtempSync,
@@ -19,6 +18,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const VENUES = join(
@@ -31,11 +31,7 @@ const VENUES = join(
 );
 const R = await import(join(HERE, "tex-requirements.ts"));
 
-let n = 0;
-const check = (label, cond, detail = "") => {
-  assert.ok(cond, `${label}${detail ? ` — ${detail}` : ""}`);
-  n++;
-};
+const check = createChecker();
 const throws = (fn) => {
   try {
     fn();
@@ -229,4 +225,4 @@ rmSync(tmp, { recursive: true, force: true });
   );
 }
 
-console.log(`tex-requirements: ${n} checks passed`);
+console.log(`tex-requirements: ${check.count} checks passed`);

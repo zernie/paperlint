@@ -7,7 +7,6 @@
  *      `probeTree` through a fake runner.
  * All pure or port-driven: no TeX needed. The real-TeX half is `test/e2e/build.mjs`.
  */
-import assert from "node:assert/strict";
 import {
   chmodSync,
   mkdirSync,
@@ -19,6 +18,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const {
@@ -32,11 +32,7 @@ const {
   supportedPlatform,
 } = await import(join(HERE, "engine.ts"));
 
-let n = 0;
-const check = (label, cond, detail = "") => {
-  assert.ok(cond, `${label}${detail ? ` — ${detail}` : ""}`);
-  n++;
-};
+const check = createChecker();
 
 // ── 1. resolveEngine ────────────────────────────────────────────────────────────────────
 const tree = (label, missing = []) => ({ label, bin: `/${label}`, missing });
@@ -301,4 +297,4 @@ check(
   ) === "[]",
 );
 
-console.log(`engine: ${n} checks passed`);
+console.log(`engine: ${check.count} checks passed`);

@@ -11,17 +11,14 @@ import { writeFileSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIX = resolve(HERE, "..", "fixtures", "pdf-facts");
 const { readPdf } = await import(join(HERE, "pdf-facts.ts"));
 const { classifyLastPage } = await import(join(HERE, "pdf-geometry.ts"));
 
-let n = 0;
-const check = (label, cond, detail = "") => {
-  assert.ok(cond, detail ? `${label} — ${detail}` : label);
-  n++;
-};
+const check = createChecker();
 
 const read = async (name) => {
   const r = await readPdf(join(FIX, name));
@@ -184,5 +181,5 @@ try {
 }
 
 console.log(
-  `✓ ${String(n)} assertions passed — pdf-facts: pdf.js on real PDFs agrees with poppler, and says what it cannot read`,
+  `✓ ${String(check.count)} assertions passed — pdf-facts: pdf.js on real PDFs agrees with poppler, and says what it cannot read`,
 );

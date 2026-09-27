@@ -17,6 +17,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { Linter } from "eslint";
 import markdown from "@eslint/markdown";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIX = join(HERE, "..", "fixtures", "paper-research-question");
@@ -24,11 +25,7 @@ const FIX = join(HERE, "..", "fixtures", "paper-research-question");
 const { texLanguage } = await import(join(HERE, "latex-language.mjs"));
 const rq = (await import(join(HERE, "paper-research-question.mjs"))).default;
 
-let n = 0;
-const check = (label, cond) => {
-  assert.ok(cond, label);
-  n++;
-};
+const check = createChecker();
 
 const linter = new Linter();
 
@@ -142,5 +139,5 @@ check(
 );
 
 console.log(
-  `✓ ${String(n)} assertions passed — paper/research-question, the debt of a shipped paper`,
+  `✓ ${String(check.count)} assertions passed — paper/research-question, the debt of a shipped paper`,
 );

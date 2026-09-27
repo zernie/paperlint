@@ -29,7 +29,9 @@ they were for is now two rules for writing the test itself:
    substring or one field. A substring passes on output that is wrong everywhere else. The
    exception is prose whose wording is not the subject; say so in a comment.
 
-Say what an assertion guards in a comment directly above it (`// Guards: …`).
+Say what an assertion guards in a comment directly above it (`// Guards: …`). A harness asserts
+through the shared `lib/check.mjs` (`const check = createChecker()`), which prints the label and
+the detail on failure and counts every call; a new harness does not define its own `check`.
 
 A harness runs in this tree, against this working copy. That is the wrong shape for a defect that
 only exists once somebody else has installed the package — a path written inside a skill, a file

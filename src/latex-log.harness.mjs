@@ -5,9 +5,9 @@
  * memory: the two error spellings `-file-line-error` produces, the missing-package form, and a
  * marker that TeX broke at column 79.
  */
-import assert from "node:assert/strict";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const {
@@ -20,11 +20,7 @@ const {
   MAX_PRINT_LINE,
 } = await import(join(HERE, "latex-log.ts"));
 
-let n = 0;
-const check = (label, cond) => {
-  assert.ok(cond, label);
-  n++;
-};
+const check = createChecker();
 
 // ── the 79-column wrap ──────────────────────────────────────────────────────────────────
 // A package warning long enough that "Rerun to get" crosses column 79. A real acmart log shows the
@@ -222,5 +218,5 @@ check(
 );
 
 console.log(
-  `✓ ${String(n)} assertions passed — latex-log: markers across the 79-column wrap, both error spellings, aux`,
+  `✓ ${String(check.count)} assertions passed — latex-log: markers across the 79-column wrap, both error spellings, aux`,
 );

@@ -6,9 +6,9 @@
  * on 2026-08-29 (the midpoint cut, the review build, years mistaken for line numbers), ported from
  * the harness of the function this replaces.
  */
-import assert from "node:assert/strict";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const {
@@ -21,11 +21,7 @@ const {
   STUB_WORDS,
 } = await import(join(HERE, "pdf-geometry.ts"));
 
-let n = 0;
-const check = (label, cond) => {
-  assert.ok(cond, label);
-  n++;
-};
+const check = createChecker();
 
 const W = 612; // US letter, points
 
@@ -250,5 +246,5 @@ check(
 );
 
 console.log(
-  `✓ ${String(n)} assertions passed — pdf-geometry: columns, stub/review, words from runs, fonts`,
+  `✓ ${String(check.count)} assertions passed — pdf-geometry: columns, stub/review, words from runs, fonts`,
 );

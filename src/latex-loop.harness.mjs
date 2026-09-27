@@ -8,20 +8,16 @@
  * The decision is pure, so none of this needs TeX. The real-pdflatex half lives in
  * `test/e2e/build.mjs`.
  */
-import assert from "node:assert/strict";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { nextStep, summarize, changedFiles, MAX_PASSES } = await import(
   join(HERE, "latex-loop.ts")
 );
 
-let n = 0;
-const check = (label, cond) => {
-  assert.ok(cond, label);
-  n++;
-};
+const check = createChecker();
 
 // ── builders ────────────────────────────────────────────────────────────────────────────
 const H = (aux, toc = null, out = null, bbl = null) => ({ aux, toc, out, bbl });
@@ -445,5 +441,5 @@ check(
 );
 
 console.log(
-  `✓ ${String(n)} assertions passed — latex-loop: nextStep over State, summarize over histories, and the two composed, including the ${MAX_PASSES}-pass cap`,
+  `✓ ${String(check.count)} assertions passed — latex-loop: nextStep over State, summarize over histories, and the two composed, including the ${MAX_PASSES}-pass cap`,
 );

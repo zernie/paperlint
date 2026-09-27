@@ -22,7 +22,6 @@
  *
  * Run: `npx vigiles test hooks/hooks.harness.mjs`
  */
-import assert from "node:assert/strict";
 import { runHook } from "vigiles";
 import { checkHookImports } from "vigiles/hook";
 import {
@@ -39,6 +38,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PAPERS_DIR_FIELD } from "../lib/paper-config.mjs";
+import { createChecker } from "../lib/check.mjs";
 
 const HOOKS = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HOOKS, "..");
@@ -50,11 +50,7 @@ const SHIPPED = readdirSync(HOOKS)
   .filter((f) => f.endsWith(".hook.mjs"))
   .sort();
 
-let n = 0;
-const check = (label, cond) => {
-  assert.ok(cond, label);
-  n++;
-};
+const check = createChecker();
 
 /**
  * A throwaway consumer repository: a root `paperlint.json` holding the given settings (none when
@@ -647,7 +643,7 @@ try {
     );
   }
 
-  console.log(`hooks.harness: ${n} assertions passed`);
+  console.log(`hooks.harness: ${check.count} assertions passed`);
 } finally {
   for (const d of tmps) rmSync(d, { recursive: true, force: true });
 }

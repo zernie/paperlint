@@ -47,16 +47,13 @@ import {
   countByRule,
   recordedFindings,
 } from "./baseline.mjs";
+import { createChecker } from "../../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(dirname(HERE));
 const BIN = join(ROOT, "bin", "paperlint.mjs");
 
-let n = 0;
-const check = (label, cond) => {
-  n++;
-  assert.ok(cond, label);
-};
+const check = createChecker();
 
 /**
  * Lint a copy of the fixture, optionally patched, and return {ruleId: count}.
@@ -226,6 +223,6 @@ check(
 }
 
 console.log(
-  `✓ ${String(n)} assertions passed — the real article: baseline of ` +
+  `✓ ${String(check.count)} assertions passed — the real article: baseline of ` +
     `${Object.keys(base).length} rule(s) held, 3 variations each moved its own rule`,
 );

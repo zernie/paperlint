@@ -15,8 +15,6 @@
  * ⚠️ Assertions at the TOP LEVEL: `vigiles test` imports the file and counts "did not throw"
  * as a pass.
  */
-import assert from "node:assert/strict";
-import { recordCheck } from "vigiles";
 import {
   existsSync,
   mkdirSync,
@@ -29,6 +27,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const {
@@ -44,12 +43,7 @@ const {
 const { claudeCodeHookProtocol } = await import("vigiles/claude-code");
 const merge = (e, c, m) => claudeCodeHookProtocol.mergeRegistrations(e, c, m);
 
-let n = 0;
-const check = (label, cond) => {
-  n++;
-  assert.ok(cond, label);
-  recordCheck(label);
-};
+const check = createChecker();
 
 // ── the contract with vigiles, checked before anything relies on it ──────────────────────
 check(
@@ -247,7 +241,7 @@ try {
 
   // ── doctor's section ───────────────────────────────────────────────────────────────────
   const doc = (settings) => {
-    const dir = project(`doc-${String(n)}`, settings);
+    const dir = project(`doc-${String(check.count)}`, settings);
     return doctorHooks(dir, wiring).join("\n");
   };
   const wiredOnce = merge({}, wiring.compiled, MANAGED_BY);
@@ -306,5 +300,5 @@ try {
 }
 
 console.log(
-  `✓ ${String(n)} assertions passed — the hooks land in .claude/settings.json once`,
+  `✓ ${String(check.count)} assertions passed — the hooks land in .claude/settings.json once`,
 );

@@ -10,7 +10,6 @@
  * `build.sh` is never executed (checked by the trace it would leave on disk and by the list of
  * processes started), and a failed build removes the stale `paper.pdf` (checked on disk).
  */
-import assert from "node:assert/strict";
 import {
   mkdtempSync,
   mkdirSync,
@@ -23,6 +22,7 @@ import {
 import { tmpdir } from "node:os";
 import { join, dirname, delimiter } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const {
@@ -44,11 +44,7 @@ const { packageVenuesDir } = await import(
   join(HERE, "..", "skills", "paper-pipeline", "scripts", "consumer.mjs")
 );
 
-let n = 0;
-const check = (label, cond) => {
-  assert.ok(cond, label);
-  n++;
-};
+const check = createChecker();
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-build-")));
 // 🔴 banal is looked for under the temp root, never in the developer's cache: with the real
@@ -680,5 +676,5 @@ try {
 }
 
 console.log(
-  `✓ ${String(n)} assertions passed — build: paperlint compiles, build.sh never runs, a red build leaves no PDF`,
+  `✓ ${String(check.count)} assertions passed — build: paperlint compiles, build.sh never runs, a red build leaves no PDF`,
 );

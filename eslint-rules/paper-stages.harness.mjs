@@ -16,6 +16,7 @@ import { fileURLToPath } from "node:url";
 import { Linter } from "eslint";
 import markdown from "@eslint/markdown";
 import stages from "./paper-stages.mjs";
+import { createChecker } from "../lib/check.mjs";
 
 const FIX = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -25,11 +26,7 @@ const FIX = join(
 );
 const linter = new Linter();
 
-let n = 0;
-const check = (label, cond) => {
-  assert.ok(cond, label);
-  n++;
-};
+const check = createChecker();
 
 // 🔴 The `n` counter is RUNNING TOTAL across the whole file, so printing it under one rule's
 // heading would credit that rule with someone else's asserts. That's exactly what happened: the
@@ -38,8 +35,8 @@ const check = (label, cond) => {
 // stands next to it again.
 let mark = 0;
 const since = () => {
-  const d = n - mark;
-  mark = n;
+  const d = check.count - mark;
+  mark = check.count;
   return d;
 };
 
@@ -237,4 +234,4 @@ console.log(
   `✓ ${String(since())} assertions passed — paper/source, frozen bytes instead of a sha`,
 );
 
-console.log(`✓ ${String(n)} assertions passed in total`);
+console.log(`✓ ${String(check.count)} assertions passed in total`);

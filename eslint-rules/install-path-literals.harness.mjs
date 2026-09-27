@@ -118,4 +118,4 @@ const cases = [];
   cases.push("js quiet on a module that asks the port");
 }
 
-for (const c of cases) recordCheck(c);
+recordCheck(cases.length);

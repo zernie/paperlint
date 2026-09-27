@@ -11,7 +11,6 @@
  * foreign schema, facts about another PDF), and it is QUIET on a balanced page, a stub, a review
  * build, a file that is not paper.tex — and when nobody turned it on.
  */
-import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import {
   mkdirSync,
@@ -25,6 +24,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ESLint } from "eslint";
 import { texLanguage } from "./latex-language.mjs";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { parseFacts, judgeColumns, DEFAULT_TOLERANCE_PT } = await import(
@@ -32,11 +32,7 @@ const { parseFacts, judgeColumns, DEFAULT_TOLERANCE_PT } = await import(
 );
 const { buildConfig } = await import(join(HERE, "..", "src", "cli.ts"));
 
-let n = 0;
-const check = (label, cond, detail = "") => {
-  assert.ok(cond, detail ? `${label} — ${detail}` : label);
-  n++;
-};
+const check = createChecker();
 
 const TEX =
   "% a paper\n\\documentclass[sigconf]{acmart}\n\\begin{document}x\\end{document}\n";
@@ -204,5 +200,5 @@ try {
 }
 
 console.log(
-  `✓ ${String(n)} assertions passed — pdf/last-page-balance: fires on unbalanced and unjudgeable, quiet on balanced/stub/review/off`,
+  `✓ ${String(check.count)} assertions passed — pdf/last-page-balance: fires on unbalanced and unjudgeable, quiet on balanced/stub/review/off`,
 );

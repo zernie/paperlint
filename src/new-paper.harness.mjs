@@ -16,7 +16,6 @@
  * ⚠️ Assertions at the TOP LEVEL: `vigiles test` imports the file and counts "did not throw"
  * as a pass.
  */
-import assert from "node:assert/strict";
 import {
   existsSync,
   mkdirSync,
@@ -32,6 +31,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { load } from "js-yaml";
 import { frontmatterBlock } from "../lib/markdown.mjs";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(HERE);
@@ -46,11 +46,7 @@ const {
 } = await import(join(HERE, "new-paper.ts"));
 const { run } = await import(join(HERE, "cli.ts"));
 
-let n = 0;
-const check = (label, cond) => {
-  n++;
-  assert.ok(cond, label);
-};
+const check = createChecker();
 
 const work = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-new-")));
 const read = (...p) => readFileSync(join(...p), "utf8");
@@ -217,5 +213,5 @@ try {
 }
 
 console.log(
-  `✓ ${String(n)} assertions passed — paperlint new scaffolds what paperlint lint accepts`,
+  `✓ ${String(check.count)} assertions passed — paperlint new scaffolds what paperlint lint accepts`,
 );
