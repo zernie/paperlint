@@ -170,10 +170,9 @@ export function normalizeIdentifiers(citation) {
   const c = { ...citation };
   if (c.doi) c.doi = normalizeDoi(c.doi);
   if (c.arxiv) c.arxiv = normalizeArxiv(c.arxiv);
-  else if (c.doi) {
-    const id = ARXIV_DOI.exec(c.doi)?.[1];
-    if (id) c.arxiv = id;
-  }
+  // Decided on the NORMALIZED id: a blank field normalizes to "" and must not block the DOI's id.
+  const fromDoi = c.doi ? ARXIV_DOI.exec(c.doi)?.[1] : undefined;
+  if (!c.arxiv && fromDoi) c.arxiv = fromDoi;
   return c;
 }
 
