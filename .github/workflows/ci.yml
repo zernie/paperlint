@@ -118,6 +118,11 @@ jobs:
       - name: npm test, under coverage
         run: npm run coverage -- --no-skip
 
+      # vitest strips types without checking them, so the tests' types are checked here. After
+      # `npm ci`, whose `prepare` built `dist/`: the e2e runs import its declarations.
+      - name: the tests type-check
+        run: npx tsc -p tsconfig.test.json
+
       # The rules themselves, over this repository's own fixtures. Two of the four fixtures are
       # DEFECTIVE ON PURPOSE, so a healthy checkout reports warnings here and still exits 0 —
       # the pass/fail signal for rule behaviour lives in `npm test`, not in the warning count.

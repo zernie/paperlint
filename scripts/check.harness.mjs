@@ -159,6 +159,62 @@ for (const g of GATES.filter((g) => g.job === null)) {
   );
 }
 
+// ── HALF FIVE: the gate's command RUNS in the job it names ─────────────────────────────────
+// Half two proves the job exists; it does not prove the job runs the gate. `the tests type-check`
+// claimed `gates` for weeks while no step of that job ran tsc — the claim was the only coverage.
+// So each step's `run` is split into commands (lines, `&&`, `||`, `;`) and each command into
+// tokens, and the gate's own command has to be one of them: `npm run <script>` (flags and extra
+// arguments allowed) for a script gate, its argv (an `npx` in front and extra arguments allowed)
+// for a run gate. Tokens, not a substring: `npm run lint` must not be found inside
+// `npm run lint:skills`, nor a path inside a comment.
+const commandsIn = (run) =>
+  String(run ?? "")
+    .split(/\n|&&|\|\||;/)
+    .map((c) => c.trim().split(/\s+/).filter(Boolean))
+    .filter((t) => t.length > 0);
+const stepsOf = (job) =>
+  Object.values(workflows).flatMap((wf) => wf.jobs?.[job]?.steps ?? []);
+const startsWith = (tokens, prefix) => prefix.every((p, i) => tokens[i] === p);
+const runsGate = (tokens, g) => {
+  if (g.script)
+    return (
+      tokens[0] === "npm" &&
+      tokens[1] === "run" &&
+      tokens.slice(2).find((t) => !t.startsWith("-")) === g.script
+    );
+  const argv = commandOf(g);
+  return (
+    startsWith(tokens, argv) ||
+    (tokens[0] === "npx" && startsWith(tokens.slice(1), argv))
+  );
+};
+for (const g of GATES) {
+  if (g.job === null) continue;
+  const steps = stepsOf(g.job);
+  if (g.inCi) {
+    // A gate CI runs as a side effect of another step, through an npm lifecycle script: the step
+    // it names must exist in the job and install the package (npm runs lifecycle scripts there),
+    // and the lifecycle script must be the gate's own command, so the two cannot drift apart.
+    const step = steps.find((s) => s.name === g.inCi.step);
+    const tokens = commandsIn(step?.run)[0] ?? [];
+    check(
+      `gate «${g.name}» runs in CI job «${g.job}» through step «${g.inCi.step}», whose ${g.inCi.lifecycle} script is the gate's command`,
+      step !== undefined &&
+        tokens[0] === "npm" &&
+        ["ci", "install"].includes(tokens[1]) &&
+        typeof scripts[g.script] === "string" &&
+        scripts[g.inCi.lifecycle] === scripts[g.script],
+      JSON.stringify({ run: step?.run, lifecycle: scripts[g.inCi.lifecycle] }),
+    );
+    continue;
+  }
+  check(
+    `gate «${g.name}» runs its command (${commandOf(g).join(" ")}) in a step of CI job «${g.job}»`,
+    steps.some((s) => commandsIn(s.run).some((t) => runsGate(t, g))),
+    steps.map((s) => s.run ?? `(uses ${s.uses})`).join(" | "),
+  );
+}
+
 // ── and the tail is not optional ───────────────────────────────────────────────────────────
 check(
   "NOT_COVERED is non-empty — if it ever is, either CI shrank or someone silenced the tail",

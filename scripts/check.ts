@@ -53,12 +53,30 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
  * Programs installed by npm (`vigiles`, `eslint`) are found because `node_modules/.bin` is put
  * first on PATH below, the same way `npm run` does it.
  */
-/** A gate runs either an npm script or a command of its own — never both. */
+/**
+ * How CI runs a gate that has no step of its own: the step that runs it as a side effect, and the
+ * npm lifecycle script through which it does. `check.harness.mjs` requires that step in the job
+ * and that lifecycle script to be the gate's own command, so the two cannot drift apart.
+ */
+export interface RunInCi {
+  readonly step: string;
+  readonly lifecycle: "prepare";
+}
+
+/**
+ * A gate runs either an npm script or a command of its own — never both. Only an npm script can be
+ * run by CI through a lifecycle script (`inCi`); every other gate has a step that runs its command.
+ */
 type GateCommand =
-  | { readonly script: string; readonly run?: undefined }
+  | {
+      readonly script: string;
+      readonly run?: undefined;
+      readonly inCi?: RunInCi;
+    }
   | {
       readonly run: readonly [string, ...string[]];
       readonly script?: undefined;
+      readonly inCi?: undefined;
     };
 
 /**
@@ -90,6 +108,8 @@ export const GATES: readonly Gate[] = [
     name: "the package compiles",
     job: "gates",
     script: "build",
+    // CI has no `npm run build` step: `npm ci` runs `prepare`, which is `tsc` as well.
+    inCi: { step: "npm ci", lifecycle: "prepare" },
     // First because everything below imports from `dist/`. A stale build makes every later
     // failure a lie about its own cause.
   },
