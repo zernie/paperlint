@@ -465,7 +465,10 @@ export function paperRuleBlocks(
     existsSync(p) && statSync(p).isFile() ? dirname(p) : p,
   );
   const papers = [...new Set(dirs.flatMap((p) => [p, ...papersIn(p)]))];
-  const out = { preset: [] as RuleBlock[], own: [] as RuleBlock[] };
+  const out: { preset: RuleBlock[]; own: RuleBlock[] } = {
+    preset: [],
+    own: [],
+  };
   for (const dir of papers) {
     const p = paperPreset(dir, PRESET_DEPS);
     if (p.kind === "settings-problem")

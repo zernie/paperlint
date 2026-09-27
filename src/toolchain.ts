@@ -58,6 +58,9 @@ import {
 } from "./tex-requirements.ts";
 import { printed } from "./domain/text.ts";
 
+/** stdin closed, stdout and stderr captured — the tuple type spawnSync's `stdio` wants. */
+const PIPED: ["ignore", "pipe", "pipe"] = ["ignore", "pipe", "pipe"];
+
 export const CACHE_ENV = "PAPERLINT_TEXLIVE_DIR";
 export const MIRROR_ENV = "PAPERLINT_CTAN_MIRROR";
 
@@ -283,7 +286,7 @@ export function formatDuration(ms: number): string {
 
 const quiet = (io: ToolchainIO, timeout?: number) => ({
   encoding: "utf8" as const,
-  stdio: ["ignore", "pipe", "pipe"] as ["ignore", "pipe", "pipe"],
+  stdio: PIPED,
   env: io.env,
   maxBuffer: 64 * 1024 * 1024,
   ...(timeout ? { timeout } : {}),

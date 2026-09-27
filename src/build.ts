@@ -85,6 +85,9 @@ import {
 import type { BuildResult, PlanLine } from "./types.ts";
 import { messageOf, printed } from "./domain/text.ts";
 
+/** stdin closed, stdout and stderr captured — the tuple type spawnSync's `stdio` wants. */
+const PIPED: ["ignore", "pipe", "pipe"] = ["ignore", "pipe", "pipe"];
+
 /** A directory counts as a paper by the same markers as `structure.ts` — one shared dictionary. */
 export const PAPER_MARKERS = [
   "PIPELINE-STATUS.md",
@@ -338,7 +341,7 @@ function spawnOptions(ctx: BuildContext) {
   return {
     cwd: ctx.paperDir,
     env: ctx.env,
-    stdio: ["ignore", "pipe", "pipe"] as ["ignore", "pipe", "pipe"],
+    stdio: PIPED,
     encoding: "latin1" as const,
     maxBuffer: 64 * 1024 * 1024,
   };
