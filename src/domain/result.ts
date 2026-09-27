@@ -22,8 +22,3 @@ export const match = <T, E, R>(
   r: Result<T, E>,
   on: { readonly ok: (t: T) => R; readonly err: (e: E) => R },
 ): R => (r.ok ? on.ok(r.value) : on.err(r.error));
-
-/** The `default` of an exhaustive `switch`: a new variant is a compile error, not a silent fall-through. */
-export function assertNever(x: never): never {
-  throw new Error(`unhandled variant: ${JSON.stringify(x)}`);
-}
