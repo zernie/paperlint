@@ -83,7 +83,7 @@ import {
   type Step,
 } from "./latex-loop.ts";
 import type { BuildResult, PlanLine } from "./types.ts";
-import { printed } from "./domain/text.ts";
+import { messageOf, printed } from "./domain/text.ts";
 
 /** A directory counts as a paper by the same markers as `structure.ts` — one shared dictionary. */
 export const PAPER_MARKERS = [
@@ -768,7 +768,7 @@ export async function buildPaper(
       dir,
       status: "failed",
       plan: [],
-      failure: { step: "facts", lines: [(e as Error).message] },
+      failure: { step: "facts", lines: [messageOf(e)] },
     };
   }
   for (const s of facts.ignoredScripts)

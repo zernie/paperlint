@@ -3,7 +3,7 @@
  * it — `error`, `status`, `signal`, all nullable — and turns it into a `ProcessExit`, so no caller
  * re-derives "what happened" from three fields.
  */
-import { printed } from "../../domain/text.ts";
+import { codeOf, printed } from "../../domain/text.ts";
 import {
   spawnSync,
   type SpawnSyncOptionsWithStringEncoding,
@@ -14,15 +14,8 @@ import type { Command, ProcessExit, RunProcess } from "../../ports/process.ts";
 /** Node's `spawnSync`, or a stand-in with its shape (a harness records the calls through one). */
 export type SpawnSync = typeof spawnSync;
 
-const errno = (r: SpawnSyncReturns<string>): string | undefined => {
-  const e: unknown = r.error;
-  return typeof e === "object" &&
-    e !== null &&
-    "code" in e &&
-    typeof e.code === "string"
-    ? e.code
-    : undefined;
-};
+const errno = (r: SpawnSyncReturns<string>): string | undefined =>
+  codeOf(r.error);
 
 /** What a finished `spawnSync` came to. ENOENT is the executable itself: `c.file` was not found. */
 export function exitOf(r: SpawnSyncReturns<string>, c: Command): ProcessExit {

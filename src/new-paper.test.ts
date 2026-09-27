@@ -20,6 +20,8 @@ import { parsePaperSettings } from "./paper-settings.ts";
 import { chooseVenue, run } from "./cli.ts";
 import { shippedPresets } from "./presets.ts";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { lintReport } from "../test/lint-report.ts";
+import { z } from "zod";
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -31,10 +33,9 @@ const tmp = () => {
   return d;
 };
 const settingsOf = (dir: string) =>
-  JSON.parse(readFileSync(join(dir, "paperlint.json"), "utf8")) as Record<
-    string,
-    unknown
-  >;
+  z
+    .record(z.string(), z.unknown())
+    .parse(JSON.parse(readFileSync(join(dir, "paperlint.json"), "utf8")));
 
 describe("paperlint new — paperlint.json", () => {
   it("is always written, from the package template: no venue chosen yet, and valid", () => {
@@ -107,11 +108,7 @@ describe("paperlint lint — a paper with no venue preset chosen", () => {
       log: (s: string) => out.push(s),
       err: () => {},
     });
-    const messages = (
-      JSON.parse(out.join("\n")) as {
-        messages: { ruleId: string; severity: number; message: string }[];
-      }[]
-    ).flatMap((r) => r.messages);
+    const messages = lintReport(out.join("\n")).flatMap((r) => r.messages);
     return { code, messages };
   }
 

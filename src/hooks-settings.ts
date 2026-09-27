@@ -30,6 +30,7 @@ import {
   BIN_FILE,
   PACKAGE_NAME,
 } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { messageOf } from "./domain/text.ts";
 
 /** The committed, shared settings file — husky's `.husky/` analogue, except git carries it. */
 export const SETTINGS_PATH = join(".claude", "settings.json");
@@ -228,7 +229,7 @@ export function readSettings(root: string): SettingsRead {
       return { status: "unparsable", path, reason: "not a JSON object" };
     return { status: "read", path, settings: parsed as Settings, raw };
   } catch (e) {
-    return { status: "unparsable", path, reason: (e as Error).message };
+    return { status: "unparsable", path, reason: messageOf(e) };
   }
 }
 

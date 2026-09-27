@@ -43,6 +43,7 @@ import type {
   AuthorFinding,
   BibEntry,
 } from "../../../skills/verify-citations/scripts/bib-authors.mjs";
+import { messageOf } from "../../domain/text.ts";
 
 const describeAuthors = (f: AuthorFinding): string =>
   [
@@ -161,7 +162,7 @@ function cachedDblp(cache: LookupCache, today: () => string) {
         dblp.set(dblpTitleKey(title), { fetched: today(), title, hits });
         return hits;
       } catch (e) {
-        refused = (e as Error).message;
+        refused = messageOf(e);
         throw new Error(`DBLP refused earlier in this run (${refused})`);
       }
     },

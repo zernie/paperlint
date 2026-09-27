@@ -126,6 +126,7 @@ import bibReachable from "#eslint-rules/bib-reachable-entry";
 import reviewFrontmatter from "#eslint-rules/review-frontmatter";
 import siblingFrontmatter from "#eslint-rules/sibling-frontmatter";
 import pdfRules from "#eslint-rules/pdf-last-page-balance";
+import { messageOf } from "./domain/text.ts";
 
 /** The shipped venue presets, read from the package's venues directory — the one list. */
 const SHIPPED_VENUES = (): string[] => shippedPresets(packageVenuesDir());
@@ -746,7 +747,7 @@ export function readConfig(
   try {
     parsed = JSON.parse(readFileSync(configPath, "utf8"));
   } catch (e) {
-    err(`${configPath} is not valid JSON: ${(e as Error).message}`);
+    err(`${configPath} is not valid JSON: ${messageOf(e)}`);
     return { code: 2 };
   }
   // The discovered config is NAMED out loud. Otherwise a run from someone else's directory picks

@@ -30,6 +30,7 @@ import {
   type Parsed,
   type RuleEntry,
 } from "./rules-config.ts";
+import { messageOf } from "./domain/text.ts";
 
 /** What one paper declares. Every absent field is null. */
 export interface PaperSettings {
@@ -125,7 +126,7 @@ function readJson(
   try {
     return ok(JSON.parse(new TextDecoder().decode(bytes)));
   } catch (e) {
-    return err({ kind: "broken", why: `not JSON (${(e as Error).message})` });
+    return err({ kind: "broken", why: `not JSON (${messageOf(e)})` });
   }
 }
 

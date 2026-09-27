@@ -19,3 +19,16 @@ export const firstLine = (s: string): string =>
  */
 export const printed = (stream: string | null | undefined): string =>
   stream ?? "";
+
+/** What a caught value says: an `Error`'s message, anything else as text (`catch` gets `unknown`). */
+export const messageOf = (e: unknown): string =>
+  e instanceof Error ? e.message : String(e);
+
+/** The `code` a Node error carries (`ENOENT`, `EACCES`, …), when it carries a string one. */
+export const codeOf = (e: unknown): string | undefined =>
+  typeof e === "object" &&
+  e !== null &&
+  "code" in e &&
+  typeof e.code === "string"
+    ? e.code
+    : undefined;

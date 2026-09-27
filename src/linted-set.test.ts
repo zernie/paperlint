@@ -19,6 +19,7 @@ import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { run } from "./cli.ts";
+import { lintReport } from "../test/lint-report.ts";
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -91,9 +92,8 @@ async function lintedSet(root: string, args: string[]): Promise<string[]> {
     log: (s: string) => out.push(s),
     err: () => {},
   });
-  type Result = { filePath: string; messages: { ruleId: string | null }[] };
   return (
-    (JSON.parse(out.join("\n")) as Result[])
+    lintReport(out.join("\n"))
       // A structure finding reports a MISSING file in the same shape; it was not linted.
       .filter(
         (r) => !r.messages.some((m) => m.ruleId === "structure/required-file"),

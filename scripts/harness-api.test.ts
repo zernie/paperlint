@@ -18,13 +18,16 @@ import { basename, dirname, join } from "node:path";
 import { test } from "vitest";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
+import { z } from "zod";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
-const FROZEN: readonly string[] = (
-  JSON.parse(
-    readFileSync(join(ROOT, "scripts", "harness-api.frozen.json"), "utf8"),
-  ) as { harnesses: string[] }
-).harnesses;
+const FROZEN: readonly string[] = z
+  .object({ harnesses: z.array(z.string()) })
+  .parse(
+    JSON.parse(
+      readFileSync(join(ROOT, "scripts", "harness-api.frozen.json"), "utf8"),
+    ),
+  ).harnesses;
 
 /** vigiles' agent-testing API — what a harness exists to call. */
 export const AGENT_API = new Set(["runHook", "runHarnessTest", "runEval"]);

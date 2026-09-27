@@ -45,6 +45,7 @@ import type {
   ReferencesRun,
 } from "./ports/check-references.ts";
 import { bibRange } from "#eslint-rules/paper-typography";
+import { messageOf } from "./domain/text.ts";
 
 export const REFERENCES_SCHEMA = 1;
 export const REFERENCES_FILE = "references.json";
@@ -165,7 +166,7 @@ async function run(
   try {
     return await check(bib, cache);
   } catch (e) {
-    return { check: { kind: "not-checked", why: (e as Error).message }, cache };
+    return { check: { kind: "not-checked", why: messageOf(e) }, cache };
   }
 }
 

@@ -13,6 +13,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { run } from "./cli.ts";
+import { lintReport } from "../test/lint-report.ts";
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -50,8 +51,8 @@ async function lint(root: string, args: string[] = []) {
   return { code, out: out.join("\n"), err: err.join("\n") };
 }
 const ruleIds = (stdout: string): string[] =>
-  (JSON.parse(stdout) as { messages: { ruleId: string }[] }[]).flatMap((r) =>
-    r.messages.map((m) => m.ruleId),
+  lintReport(stdout).flatMap((r) =>
+    r.messages.map((m) => m.ruleId ?? "(fatal)"),
   );
 
 describe("paperlint lint --fix", () => {
@@ -85,10 +86,7 @@ describe("sibling cards: `read:` is required, from the package's own schema", ()
         "papers/a/siblings/jones2024.md": "---\nread: abstract\n---\n# Jones\n",
       },
     );
-    const results = JSON.parse((await lint(root)).out) as {
-      filePath: string;
-      messages: { ruleId: string; severity: number }[];
-    }[];
+    const results = lintReport((await lint(root)).out);
     const of = (name: string) =>
       results.find((r) => r.filePath.endsWith(name))?.messages ?? null;
     expect(of("smith2025.md")?.map((m) => [m.ruleId, m.severity])).toEqual([

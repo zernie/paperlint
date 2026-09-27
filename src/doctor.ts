@@ -36,6 +36,7 @@ import {
 import { PAPER_MARKERS } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
 import { doctorHooks } from "./hooks-settings.ts";
+import { messageOf } from "./domain/text.ts";
 
 export interface Program {
   readonly bin: string;
@@ -169,7 +170,7 @@ function declarationVerdict(raw: string | null): {
   } catch (e) {
     return {
       lines: [
-        `  ✗ ${CONFIG_FILE} is not valid JSON: ${(e as Error).message}`,
+        `  ✗ ${CONFIG_FILE} is not valid JSON: ${messageOf(e)}`,
         `      the edit guard refuses every Bash command until it parses — fix it with Edit or Write`,
       ],
       bad: 1,
@@ -334,7 +335,7 @@ export function doctor({
   try {
     out.push(...doctorHooks(root));
   } catch (e) {
-    out.push(`hooks`, `  ⚠ not checked — ${(e as Error).message}`);
+    out.push(`hooks`, `  ⚠ not checked — ${messageOf(e)}`);
   }
   out.push("");
   log(out.join("\n"));

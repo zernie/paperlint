@@ -72,6 +72,7 @@ import {
   DEFAULT_PAPERS_ROOT,
   PAPERS_DIR_FIELD,
 } from "#lib/paper-config";
+import { messageOf } from "./domain/text.ts";
 
 /** How the papers directory was arrived at. Printed, because a guess must not read as a fact. */
 export type PapersHow =
@@ -231,7 +232,7 @@ export async function declarePapers(
     try {
       settings = JSON.parse(raw) as Record<string, unknown>;
     } catch (e) {
-      return { status: "unparsable", path, reason: (e as Error).message };
+      return { status: "unparsable", path, reason: messageOf(e) };
     }
     const existing = settings[PAPERS_DIR_FIELD];
     if (existing !== undefined)
@@ -447,7 +448,7 @@ export async function offerHooks(
     }
     return wireHooks(root, m, shippedWiring());
   } catch (e) {
-    return { status: "failed", reason: (e as Error).message };
+    return { status: "failed", reason: messageOf(e) };
   }
 }
 

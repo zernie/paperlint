@@ -31,6 +31,7 @@
  * never read as empty.
  */
 import { err, ok, type Result } from "./result.ts";
+import { messageOf } from "./text.ts";
 
 export const LOOKUP_CACHE_SCHEMA = 1;
 
@@ -159,7 +160,7 @@ export function parseLookupCache(text: string): Result<LookupCache, string> {
   try {
     json = JSON.parse(text);
   } catch (e) {
-    return err(`not JSON: ${(e as Error).message}`);
+    return err(`not JSON: ${messageOf(e)}`);
   }
   if (!isObject(json))
     return err("expected an object with `schema`, `citations` and `dblp`");

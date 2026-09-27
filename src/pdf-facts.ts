@@ -34,6 +34,7 @@ import {
 import type { PageLayout, TextBox } from "./domain/page-layout.ts";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import { fillsFor, isUpright } from "./adapters/pdfjs/fill.ts";
+import { messageOf } from "./domain/text.ts";
 
 type PdfJs = Awaited<ReturnType<typeof import("unpdf").getResolvedPDFJS>>;
 type Doc = Awaited<ReturnType<PdfJs["getDocument"]>["promise"]>;
@@ -303,7 +304,7 @@ export const readPdf: PdfReader = async (path) => {
   try {
     data = new Uint8Array(readFileSync(path));
   } catch (e) {
-    return fail("unreadable", (e as Error).message);
+    return fail("unreadable", messageOf(e));
   }
   const lib = await loadPdfJs();
   const task = lib.getDocument({ data, ...PDFJS_OPTIONS });

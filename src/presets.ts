@@ -48,6 +48,7 @@ import {
   type SettingsProblem,
 } from "./paper-settings.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
+import { messageOf } from "./domain/text.ts";
 
 /** The prefix of a shipped preset's spec. */
 export const SHIPPED_PREFIX = "paperlint:";
@@ -132,7 +133,7 @@ function readPreset(
     return err({
       kind: "broken",
       file: where.value,
-      why: (e as Error).message.split("\n").join(" "),
+      why: messageOf(e).split("\n").join(" "),
     });
   }
 }
