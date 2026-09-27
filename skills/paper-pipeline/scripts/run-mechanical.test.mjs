@@ -8,7 +8,13 @@
  * The consumer root and the ledger are set BEFORE import: the module resolves both at load time.
  */
 import assert from "node:assert/strict";
-import { chmodSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, expect, test, vi } from "vitest";
@@ -274,5 +280,70 @@ test("the prose-lint row records the number of findings prose-lint found, not it
     row: "grade-paper-writing/prose-lint",
     kind: "FINDING",
     findings: 2,
+  });
+});
+
+test("no directory argument means the current directory", () => {
+  const r = run(undefined);
+  assert.deepEqual(r, {
+    code: 2,
+    out: `stderr: no paper.md in ${process.cwd()}`,
+    rows: [],
+  });
+});
+
+test("a blocking finding with no output still gets a report a reader can open", () => {
+  const r = run(join(consumer, "papers", "a"), { FAKE_REPORT_EXIT: "1" });
+  const report = readFileSync(
+    join(
+      consumer,
+      "papers",
+      "a",
+      "reviews",
+      "mechanical",
+      "render-paper--report-submission.md",
+    ),
+    "utf8",
+  ).replace(/^created: .*$/m, "created: <date>");
+  assert.deepEqual(
+    { row: r.rows[0], report },
+    {
+      row: {
+        row: "render-paper/report-submission",
+        kind: "FINDING",
+        findings: 1,
+        blocking: true,
+      },
+      report: [
+        "---",
+        'title: "render-paper/report-submission — mechanical check output"',
+        "created: <date>",
+        "findings: 1",
+        "---",
+        "",
+        "Written by `run-mechanical.mjs`. What this check looks at: body pages, overfull boxes, unresolved refs, dropped characters, anonymity, artifact URLs",
+        "",
+        "```",
+        "(the check produced no output)",
+        "```",
+        "",
+      ].join("\n"),
+    },
+  );
+});
+
+test("an empty $TEXTIDOTE_JAR is no declaration: the row looks at /opt/textidote, like the checker", () => {
+  // The answer depends on this machine (some images ship the jar in /opt), so the expectation is
+  // derived from the same fact the row reads rather than hard-coded.
+  const atOpt = existsSync("/opt/textidote/textidote.jar");
+  const row = run(join(consumer, "papers", "a"), {
+    TEXTIDOTE_JAR: "",
+    FAKE_TEXTIDOTE: "[]",
+  }).rows.find((x) => x.row === "grade-paper-writing/textidote");
+  assert.deepEqual(row, {
+    row: "grade-paper-writing/textidote",
+    kind: "ABSTAINED",
+    reason: atOpt ? "no-witness" : "input-missing",
+    findings: 0,
   });
 });
