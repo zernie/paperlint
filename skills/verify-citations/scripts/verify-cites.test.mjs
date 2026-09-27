@@ -738,6 +738,20 @@ console.log("\n[S4] .bib parser edge cases:");
 
 // ── Edges of the pure layer: the defensive arms, each with the input that reaches it ──────────
 
+// Guards: the arXiv id is read out of an arXiv DOI whenever the entry has no USABLE arXiv id, so
+// a blank `arxiv` field (JSON input) does not keep arXiv from being asked.
+test.each([
+  [{ doi: "10.48550/arXiv.2310.06770" }, "2310.06770"],
+  [{ doi: "10.48550/arXiv.2310.06770", arxiv: " " }, "2310.06770"],
+  [
+    { doi: "10.48550/arXiv.2310.06770", arxiv: "arXiv:2401.00001" },
+    "2401.00001",
+  ],
+  [{ doi: "10.1145/3548606" }, undefined],
+])("normalizeIdentifiers(%o).arxiv is %s", (citation, arxiv) => {
+  assert.equal(normalizeIdentifiers(citation).arxiv || undefined, arxiv);
+});
+
 test("levenshtein, normalizeTitle and titleIdentity take a missing string as empty", () => {
   assert.deepEqual(
     [
