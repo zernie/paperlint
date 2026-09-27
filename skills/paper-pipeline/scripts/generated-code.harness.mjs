@@ -317,9 +317,8 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
 }
 
 // ── 11. the ledger prints on a CLEAN run, and the header states the count ───────────────────────
-// The count matters beyond tidiness: `run-mechanical.mjs` reads this check in `flags` mode, where
-// it prefers a stated count and otherwise COUNTS OUTPUT LINES. The ledger is ~20 lines that are not
-// findings, so without the stated count a clean paper would be recorded as twenty findings.
+// The count matters beyond tidiness: the ledger is ~20 lines that are not findings, so a caller
+// counting output lines would read a clean paper as twenty findings.
 {
   const r = run(
     fixture({

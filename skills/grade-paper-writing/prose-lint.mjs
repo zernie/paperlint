@@ -692,9 +692,8 @@ for (const f of args.filter((a) => !a.startsWith("--"))) {
     // `hedge-density`, `discourse-subject`, `undefined-coinage`.
     if (lines.length) {
       flagged += lines.length;
-      // The header STATES the count. run-mechanical.mjs prefers a stated "— N finding(s)" over
-      // counting output lines, and without it recorded header + findings + footer: one flagged
-      // caption became three findings in the ledger.
+      // The header STATES the count, so a caller need not count output lines — header and footer
+      // are not findings.
       console.error(
         `✍️  prose-lint — ${f.split("/").pop()} — ${lines.length} finding(s):`,
       );

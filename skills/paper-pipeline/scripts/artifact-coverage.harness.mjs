@@ -199,8 +199,7 @@ function fixture(
 }
 
 // ── 5. KNOWN GAP, asserted so it stays visible ─────────────────────────────────────────
-// 🔴 A paper with NO bundle at all exits 0 in silence, and `run-mechanical.mjs` records that silence
-// as PASS for harden-paper. The checker written because absence is invisible is itself blind to the
+// 🔴 A paper with NO bundle at all exits 0 in silence, which reads as a pass for harden-paper. The checker written because absence is invisible is itself blind to the
 // largest absence there is. Asserting the CURRENT behaviour: when it learns to say "this paper
 // releases nothing", the assertion flips and must be updated — that is the point of writing a gap
 // down rather than leaving it as a thing somebody once noticed.
@@ -412,12 +411,9 @@ const CLEAN_FILES = ["setup/config.json", "runs/gated.tsv"];
   );
 }
 
-// ── 13. the header states the finding COUNT, because run-mechanical.mjs parses it ───────────────
-// `run-mechanical` reads this check in `flags` mode, where it prefers the check's own stated count
-// and falls back to COUNTING OUTPUT LINES. The ledger is a dozen-odd lines that are not findings, so
-// without a stated count a clean run would be recorded as a dozen findings. That regression is
-// invisible in the check's own output and only shows up in the ledger, which is why it is asserted
-// here, from outside, in both directions.
+// ── 13. the header states the finding COUNT ─────────────────────────────────────────────────────
+// The printed ledger is a dozen-odd lines that are not findings, so a caller counting output lines
+// would read a clean run as a dozen findings. Asserted from outside, in both directions.
 {
   const clean = run(
     fixture("count-clean", { index: CLEAN_INDEX, files: CLEAN_FILES }),

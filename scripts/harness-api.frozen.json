@@ -35,7 +35,6 @@
     "skills/paper-pipeline/scripts/consumer.harness.mjs",
     "skills/paper-pipeline/scripts/extract-ref-facts.harness.mjs",
     "skills/paper-pipeline/scripts/generated-code.harness.mjs",
-    "skills/paper-pipeline/scripts/pipeline-check.harness.mjs",
     "skills/paper-pipeline/scripts/population-map.harness.mjs",
     "skills/paper-pipeline/scripts/provenance.harness.mjs",
     "skills/paper-pipeline/scripts/round-diff.harness.ts",

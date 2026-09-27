@@ -1,6 +1,6 @@
 ---
 name: planted-clean
-allowed-tools: [Bash(node ${CLAUDE_SKILL_DIR}/../paper-pipeline/scripts/ledger.mjs:*)]
+allowed-tools: [Bash(node ${CLAUDE_SKILL_DIR}/../paper-pipeline/scripts/extract-ref-facts.mjs:*)]
 ---
 
 # A skill that asks the port where it is
@@ -8,7 +8,7 @@ allowed-tools: [Bash(node ${CLAUDE_SKILL_DIR}/../paper-pipeline/scripts/ledger.m
 Record the verdict:
 
 ```
-node ${CLAUDE_SKILL_DIR}/../paper-pipeline/scripts/ledger.mjs record planted . FINDING 1 report.md
+node ${CLAUDE_SKILL_DIR}/../paper-pipeline/scripts/extract-ref-facts.mjs planted
 ```
 
 Paths inside the repository, such as `skills/paper-pipeline/scripts/consumer.mjs`, are not

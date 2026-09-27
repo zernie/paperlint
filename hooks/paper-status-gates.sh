@@ -2,7 +2,7 @@
 # paper-status-gates.sh — NOT A HOOK. This is a TOOL invoked by `paper-status-gates.hook.mjs`,
 # which owns the event routing and decides WHICH paper (if any) an edit concerned.
 #
-#   --surface <paper-dir>   print the readiness verdict + run the pipeline checker
+#   --surface <paper-dir>   print the readiness verdict and the unrun gates
 #
 # 🔴 WHAT LEFT THIS FILE AND WHY IT MATTERS. It used to read its payload with
 # `INPUT="${CLAUDE_TOOL_INPUT:-}"` plus a `timeout 1 cat` fallback and then grep that blob for a
@@ -28,22 +28,21 @@ case "$pdir_name" in
 esac
 
 # ── WHERE THE CONSUMER'S THINGS ARE — READ, NOT ASSUMED ─────────────────────
-# Both paths come from the one declaration every other carrier of this package reads, the
-# project's root paperlint.json (optional — absent means every default):
+# The papers path comes from the one declaration every other carrier of this package reads, the
+# project's root paperlint.json (optional — absent means the default):
 #
-#   { "papersDir": "docs/papers", "scripts": "tools/pipeline" }
+#   { "papersDir": "docs/papers" }
 #
 # ⚠️ `node -p` RATHER THAN grep/sed ON THE FILE. A JSON value is not a line of text: it can
 # be quoted, escaped, or spread across lines, and a pattern that gets it right today gets it
 # wrong on the first reformat — silently, by producing a root that matches nothing. Node is
-# already a hard dependency of the checker this script runs, so there is no new requirement.
+# already a hard dependency of the hook that runs this script, so there is no new requirement.
 ROOT_DIR="${CLAUDE_PROJECT_DIR:-.}"
 read_key() { # $1 = key, $2 = default
   node -p "((c) => c['$1'] ?? '$2')((() => { try { return require('$ROOT_DIR/paperlint.json') } catch { return {} } })())" \
     2>/dev/null || echo "$2"
 }
 papers_root="$(read_key papersDir papers)"
-scripts_root="$(read_key scripts .claude/skills/paper-pipeline/scripts)"
 
 # 🔴 AN UNUSABLE ROOT EXITS, IT DOES NOT BUILD A PATH FROM IT. `node -p` prints `undefined` for a
 # key whose value is literally `null` (`?? ` only catches null/undefined AFTER the object lookup,
@@ -69,18 +68,9 @@ else
   echo "   whether this paper is submittable, which is the one question it exists to answer." >&2
 fi
 
-CHECK="$ROOT_DIR/$scripts_root/pipeline-check.mjs"
-if [ -f "$CHECK" ]; then
-  # The real checker: stale continuous passes, gates missing their declared inputs, a study that
-  # ran before the claim was stated, submit-access inside the moderation window, a verdict that is
-  # only a percentage, unrun gates. Advisory, always exit 0.
-  node "$CHECK" "$ROOT_DIR/$pdir" >&2 || true
-else
-  # Fallback for a checkout without the skill tree — the old crude surface.
-  gates=$(grep -E '☐' "$STATUS" 2>/dev/null | grep -iE 'study-accepted|pc-panel|harden|verify.?citations' || true)
-  if [ -n "$gates" ]; then
-    echo "⚠️ UNRUN GATES in $pdir/PIPELINE-STATUS.md (☐ — run them, don't 'anti-churn'-skip):" >&2
-    echo "$gates" | sed -E 's/\|.*//; s/^\| */   /' >&2
-  fi
+gates=$(grep -E '☐' "$STATUS" 2>/dev/null | grep -iE 'study-accepted|pc-panel|harden|verify.?citations' || true)
+if [ -n "$gates" ]; then
+  echo "⚠️ UNRUN GATES in $pdir/PIPELINE-STATUS.md (☐ — run them, don't 'anti-churn'-skip):" >&2
+  echo "$gates" | sed -E 's/\|.*//; s/^\| */   /' >&2
 fi
 exit 0

@@ -1,10 +1,9 @@
 /**
  * osf-artifact-upload — the free, deterministic tier. No model, no network, no OSF.
  *
- * WHY THIS ONE IS NOT A `checkSkill()` ONE-LINER. It carries no
- * `announce.mjs <self>` line, so by the pipeline's own membership contract it is
- * not a stage — it is a utility `submit-paper` composes with, and the shared
- * per-skill checks would (correctly) reject it.
+ * WHY THIS ONE IS NOT A `checkSkill()` ONE-LINER. It is not a stage — it is a
+ * utility `submit-paper` composes with — and what matters about it is the rules
+ * it states about its own commands, which the shared per-skill checks do not read.
  *
  * WHAT IT CHECKS: the two rules this skill states about its OWN commands, in its
  * own §gotchas — that every `curl` carries `-g` (bracketed OSF params glob and

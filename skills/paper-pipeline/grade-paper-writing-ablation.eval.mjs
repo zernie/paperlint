@@ -226,7 +226,7 @@
  *
  *      ⚠️ 2026-08-09: A0 IS TWO TOKENS OFF THE TEXT MEASURED BELOW. The scorecard row ids were
  *      renamed from two-letter codes to words (`Hn` → `claims`) because the two-letter space had
- *      collided — see `scripts/pipeline-edges.mjs`. The target's description carried one such
+ *      collided. The target's description carried one such
  *      reference, so "…mandates the Hn claim-preservation diff." became "…mandates the
  *      claims-preservation diff (row `claims`)." A0 is still read from disk and every guard still
  *      passes; the numbers below were measured on the pre-rename bytes and are left as recorded.
