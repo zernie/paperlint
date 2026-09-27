@@ -128,14 +128,28 @@ export function fillsOf(
   list: OperatorList,
   items: readonly string[],
 ): Fill[] {
+  return fillsFor(ops, list, items, (text) => text).map((p) => p.fill);
+}
+
+/**
+ * Each item paired with its fill — `fillsOf` for items that are not bare strings, so a caller never
+ * matches the two lists up by index.
+ */
+export function fillsFor<T>(
+  ops: ColourOps,
+  list: OperatorList,
+  items: readonly T[],
+  textOf: (item: T) => string,
+): { readonly item: T; readonly fill: Fill }[] {
   const { chars, fills } = drawnCharacters(ops, list);
   let at = 0;
-  return items.map((text): Fill => {
+  const fillOf = (text: string): Fill => {
     const want = [...squeeze(text)];
     if (want.length === 0) return { kind: "unknown" };
     const q = findRun(chars, want, at);
     if (q < 0) return { kind: "unknown" };
     at = q + want.length;
     return fills[q] ?? { kind: "unknown" };
-  });
+  };
+  return items.map((item) => ({ item, fill: fillOf(textOf(item)) }));
 }
