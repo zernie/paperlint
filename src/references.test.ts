@@ -422,3 +422,35 @@ describe("the reference rules over refs.bib, and on other files", () => {
       );
   });
 });
+
+describe("the lookup cache — refreshed answers", () => {
+  // Guards: an answer asked again after MAX_AGE_DAYS keeps its key, so the key count does not change.
+  // Counted by size, the refreshed answer was not written, and every later build asked it again.
+  it("an answer refreshed under the same key is counted and written", async () => {
+    const OLD: CachedResponse = { ...ANSWER, fetched: "2026-08-01" };
+    const put =
+      (answer: CachedResponse): CheckReferences =>
+      async (_bib, cache) => ({
+        check: { kind: "checked", entries: [verdict("schick2023")] },
+        cache: {
+          citations: new Map([...cache.citations, ["a", answer]]),
+          dblp: cache.dblp,
+        },
+      });
+    const { files } = await build(TEX(ENTRIES), put(OLD));
+    const again = await referencesStep.run({
+      ...ctx(files),
+      checkReferences: put(ANSWER),
+    });
+    expect({ again, file: cacheText(files) }).toEqual({
+      again: {
+        ok: true,
+        note: "references: 1 checked, 0 failing → _build/references.json; 1 new answer → repro/references-cache.json",
+      },
+      file: serializeLookupCache({
+        citations: new Map([["a", ANSWER]]),
+        dblp: new Map(),
+      }),
+    });
+  });
+});

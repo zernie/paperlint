@@ -19,8 +19,8 @@
  *
  * 🔴 WHAT THE CHECKERS ANSWERED IS KEPT, COMMITTED, IN `<paper>/repro/references-cache.json`
  * (`domain/lookup-cache.ts`). Loaded before the check and saved after it — only when something new
- * was fetched — so a build asks each question once, not once per build (#107: 217 s for 27
- * references, every build). The verdicts above are NOT cached: they are derived from the cached
+ * was fetched, a refreshed answer included — so a build asks each question at most once every
+ * MAX_AGE_DAYS, not once per build (#107: 217 s for 27 references, every build). The verdicts above are NOT cached: they are derived from the cached
  * answers on every build, so a fix to the checkers reaches every paper at once.
  *
  * 🔴 THE STEP NEVER FAILS THE BUILD. A build without network still builds the PDF; the reference
@@ -135,11 +135,20 @@ export function readLookupCache(
   return raw === null ? ok(EMPTY_LOOKUP_CACHE) : parseLookupCache(raw);
 }
 
-const newAnswers = (before: LookupCache, after: LookupCache): number =>
-  after.citations.size +
-  after.dblp.size -
-  before.citations.size -
-  before.dblp.size;
+/**
+ * How many answers the run fetched: entries of `after` that are not the very object `before` held
+ * under that key. The checker keeps every answer it did not fetch as the same object, so this counts
+ * both new keys and answers asked again past MAX_AGE_DAYS under an existing key — which a count of
+ * keys would miss, leaving the refreshed answer unwritten and asked again on every build.
+ */
+const newAnswers = (before: LookupCache, after: LookupCache): number => {
+  const changed = <V>(b: ReadonlyMap<string, V>, a: ReadonlyMap<string, V>) =>
+    [...a].filter(([k, v]) => b.get(k) !== v).length;
+  return (
+    changed(before.citations, after.citations) +
+    changed(before.dblp, after.dblp)
+  );
+};
 
 /** Run the checker; a throw is `not-checked`, with the cache as it was. */
 async function run(
