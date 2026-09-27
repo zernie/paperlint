@@ -191,9 +191,14 @@ function argText(arg: LatexArgument | undefined): string {
 function parseTex(tex: string): LatexRoot | null {
   try {
     return getParser().parse(tex);
+    // No input found that makes unified-latex throw (unbalanced braces, a stray \end, `$$`, a
+    // bare `\verb`, an unclosed verbatim all parse); kept because a throw here would fail the
+    // build at `facts` instead of reporting "no \documentclass found".
+    /* c8 ignore start */
   } catch {
     return null;
   }
+  /* c8 ignore stop */
 }
 
 /**
