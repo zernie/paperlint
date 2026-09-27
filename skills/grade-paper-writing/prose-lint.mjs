@@ -45,8 +45,7 @@
  * from the neighbouring `CLAUDE.md` exactly as `pdf/profile` reads a venue profile, and the address
  * of the finding is the `## Abstract` line in the paper itself. Parity was taken BEFORE the deletion
  * on `compile-rules-2026/paper.md`: 306 words against a ceiling of 305, one finding in both places,
- * the same four numbers. The test and eight mutations are in
- * `eslint-rules/paper-craft.{harness,mutations}.mjs`.
+ * the same four numbers. The test is `eslint-rules/paper-craft.harness.mjs`.
  *
  * WHAT IS LEFT AND WHY — TWO. The paragraph below was written when there were three, and is kept as
  * a record: they read a SECOND ENTITY on the filesystem, while an ESLint rule sees one linted file:

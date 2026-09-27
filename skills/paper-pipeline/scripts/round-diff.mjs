@@ -274,7 +274,7 @@ const unquote = (s) => s.replace(/^["']|["']$/g, "");
  * The first version fell through to the substring rule for numeric entries too, so `touches: ["2"]`
  * matched "Section 12", "2026", and every heading containing the character 2 — a one-character
  * declaration authorising most of the paper, with `overbroad-scope` silent because the LIST was
- * short. Found on 2026-08-10 by mutation, not by reading: disabling the nesting rule changed no
+ * short. Measured on 2026-08-10, not read off the code: disabling the nesting rule changed no
  * verdict, because the substring fallback was quietly doing its job for it.
  */
 export function covers(entry, heading) {

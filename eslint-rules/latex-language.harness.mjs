@@ -11,9 +11,9 @@
  *       clean.tex` goes through the repository's real `eslint.config.mjs` and must be silent.
  *   II. THE PROJECTION ACTUALLY DID ITS WORK — headings (including SYNTHESISED ones), caption
  *       and footnote prose kept, float markup blanked, opaque macros blanked, math blanked,
- *       comments recognised. This is the half that a mutation battery can kill; without it the
- *       language could be gutted and part I would stay green, because a projection that blanks
- *       everything is also silent.
+ *       comments recognised. This is the half a gutted projection could still hide behind;
+ *       without it the language could be gutted and part I would stay green, because a
+ *       projection that blanks everything is also silent.
  *  III. FIRES ON A PLANTED DEFECT — `fixtures/latex-language/defect.tex`, through the real
  *       config, must produce findings, and at the right addresses.
  *   IV. THE LANGUAGE'S BOUNDARIES AS ASSERTIONS. A known limitation recorded only in prose

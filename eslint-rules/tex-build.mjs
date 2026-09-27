@@ -156,10 +156,10 @@ const futurePromise = {
     return {
       root() {
         // 🔴 ONE GUARD, NOT THREE. The first draft had `if (!file || !existsSync(file))`
-        // BEFORE the read — and a mutation run on 2026-09-07 showed that removing that line is
-        // caught by NOTHING: the `try/catch` around the read covers exactly the same cases (no
-        // path, a `<text>` run through stdin, no permission). Two guards doing one job is a
-        // guard no mutation can kill, i.e. a dead assertion dressed as robustness.
+        // BEFORE the read — removing that line on 2026-09-07 showed it is caught by NOTHING:
+        // the `try/catch` around the read covers exactly the same cases (no path, a `<text>` run
+        // through stdin, no permission). Two guards doing one job is a guard the harness can
+        // never fail on, i.e. a dead assertion dressed as robustness.
         // What is left is the read inside `try`: stay quiet rather than judge content we never
         // saw.
         let text;
@@ -264,7 +264,7 @@ const acmFrontmatterOverride = {
       root() {
         // Same single guard as the sibling rule, and for the same measured reason: a separate
         // `existsSync` before the read is covered by this `catch` in every case it could
-        // fire, i.e. it is an assertion no mutation can kill.
+        // fire, i.e. it is an assertion the harness can never fail on.
         let text;
         try {
           text = readFileSync(context.filename, "utf8");
@@ -289,14 +289,14 @@ const acmFrontmatterOverride = {
           for (const { re, removes } of FRONTMATTER_OVERRIDES) {
             // 🔴 NO `re.lastIndex = 0` HERE, AND THAT IS A MEASUREMENT. These regexes are
             // module-level and `/g`, so they carry `lastIndex` across files, and the obvious
-            // defensive line is to reset it. A mutation run on 2026-09-11 removed that line
-            // and the harness stayed GREEN — because the loop below always drains the regex,
-            // and a `/g` `exec` that returns `null` resets `lastIndex` to 0 by itself. The
-            // reset was a guard no mutation could kill, i.e. the same dead assertion dressed
-            // as robustness that the sibling rule's single-`try` comment describes. What
-            // keeps the property honest instead is an ASSERTION, not a line of code: the
-            // harness lints the same input twice in one process and requires the two runs to
-            // agree. Add a `break` to this loop and that assertion is what will fail.
+            // defensive line is to reset it. Removing that line on 2026-09-11 left the harness
+            // GREEN — because the loop below always drains the regex, and a `/g` `exec` that
+            // returns `null` resets `lastIndex` to 0 by itself. The reset was a guard the
+            // harness could never fail on, i.e. the same dead assertion dressed as robustness
+            // that the sibling rule's single-`try` comment describes. What keeps the property
+            // honest instead is an ASSERTION, not a line of code: the harness lints the same
+            // input twice in one process and requires the two runs to agree. Add a `break` to
+            // this loop and that assertion is what will fail.
             let m;
             while ((m = re.exec(line)) !== null) {
               const column = m.index + 1;

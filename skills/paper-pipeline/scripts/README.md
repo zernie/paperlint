@@ -10,7 +10,7 @@ each mechanical gate and check the gate says no (see **Harnesses**, added 2026-0
 > here, and **their tests, which until that day lay in another top-level directory**. That is,
 > colocation was missing precisely where we preach it: checker in the skill, its harness — outside.
 >
-> What remained without an owner (shared library of 24 skills, `markdown.mjs`, mutations engine) —
+> What remained without an owner (shared library of 24 skills, `markdown.mjs`) —
 > in [`.claude/lib/`](../../../lib/README.md), also there the breakdown of four forms of reference, from which
 > path-based search sees only one.
 
@@ -184,133 +184,14 @@ These two are the only ones aimed at the **skills** rather than the scripts they
 is what `vigiles audit`'s `Tested` metric actually counts — "34 surfaces with no vigiles test/eval"
 was never about `structure.mjs`. It also fails differently: a script with a bad path crashes, a
 **skill** with a bad path is read by a model that quietly does something adjacent and reports success.
-Its non-vacuity proof is a separate file, `skills.mutations.mjs` — 21 planted defects, one per
-assertion class, each on a throwaway copy of `.claude/`, plus a control asserting the clean corpus
-produces _only_ the four known-red YAML findings so no case can pass on noise. Run it by hand after
-touching the harness (`node .claude/skills/paper-pipeline/scripts/skills.mutations.mjs`, ~3 s); CI runs it too.
+Its non-vacuity proof is `lib/skill-checks.test.mjs` — a copy of the shipped skills with defects
+planted on the copy, checked against both `checkSkill` (pipeline skills) and `checkProseSkill`
+(skills without the pipeline). Run it with `npx vitest run lib/skill-checks.test.mjs`; CI runs it
+too.
 
-> **2026-09-26 — hand-written mutation batteries are REMOVED (#52)**, with their driver. Do not
-> write a `*.mutations.mjs`; see a new test fail before the fix and assert whole values instead
-> (the repository's CLAUDE.md, § Testing). The history below is kept as a record, not as an
-> instruction — none of the files it names exist any more.
-
-Nine harnesses now carry a mutations file of their own — `delivered-pdf.mutations.mjs` (25 rows), `bound-numbers.mutations.mjs` (12 rows),
-`round-diff.mutations.mjs` (28 rows), `ledger.mutations.mjs` (28 rows, covering the 2026-08-10
-refactor across both `gates.harness.mjs` and `skill-checks.mjs`), `artifact-coverage.mutations.mjs`
-(22 rows), `generated-code.mutations.mjs` (22 rows), `textidote.mutations.mjs` (20 rows) and
-`uncited-refs.mutations.mjs` (8 rows). They are run by
-hand, not in CI, because each one rewrites a source file dozens of times and takes minutes.
-
-> **2026-08-26 — `verify-refs.mjs` moved to the engine and deleted from here** (along with its harness and
-> mutations). Bibliography measurement now `extract-ref-facts.mjs` in the same folder, judgment — twelve
-> rules `refs/*` in `eslint-rules/ref-facts.mjs`, mutations — `eslint-rules/ref-facts.mutations.mjs`
-> (21 rows). Analysis — `the author's private research notes`.
-
-**2026-08-14 — the engine was split out into `mutation-driver.mjs`; the tables stayed.** Each file
-now holds only its cases (which defect, which bytes, which message — data about ITS checker) and
-calls `runMutations()`. The reason is not line count: the ten copies of the driver had DRIFTED, and
-the protections lived in whichever file happened to earn them. Counted against the committed
-versions — the no-op guard (a replacement equal to the original leaves a green harness proving
-nothing) was in **4 of 10**; the retry-once on a non-kill was in **1 of 10**; the strict rule that a
-mutation must be killed by its OWN named assertion, not merely by _something_ going red, was in
-**1 of 10**. All ten now have all three. Two dead-path defects were closed on the way: six `ledger`
-cases named `skills.harness.mjs`, deleted by the 2026-08-11 colocation, and `vigiles test` on a path
-matching nothing exits 0 — so those six reported SURVIVED on every run since (they now go red at
-their own assertions, verified by running them). And the end-of-run "restore failed" line had been
-firing on `gates.harness.mjs`, which is red **on purpose** — the driver now baselines the harnesses
-before touching anything, so that claim means what it says. `skills.mutations.mjs` deliberately
-stays outside the engine: it mutates a COPY of `.claude/`, which is right for cases whose subject
-IS the skill corpus, and it is the only one CI runs. **The
-first run of a mutations file has never yet been clean, and that is the argument for writing one.**
-`delivered-pdf`'s first run left five survivors and three wrong-case hits, and unpicking them found
-three fixtures that tested nothing they claimed to (a window assertion satisfied by ordering, a
-digit-width guard the counter never reached), two mutations that did not mutate, and **one dead rule
-in the checker itself** — a table of sixteen Unicode space separators whose removal changed no
-verdict, because Python's `\s` already matched every one of them. It was deleted rather than tested.
-
-The two 2026-08-10 files kept the streak, and both findings were about the TEST rather than the
-checker. `uncited-refs`'s heading-offset row SURVIVED, which said either that the offset was dead
-code or that nothing watched it; reading `checkcites.lua` settled it — line 359 prints `=> <name>`
-for an auxiliary file it could not resolve and then CARRIES ON into the report, and LaTeX writes
-`\@input{sub.aux}` for every `\include`, so without the offset a partial build makes the wrapper
-report `nope.aux` as an uncited bibliography entry. A fabricated finding, in a report somebody
-would act on. `textidote`'s run reported `key/rule` as a WRONG-CASE kill three times running, and
-each fix exposed the next layer: the key assertions sat after the delta block (so a key defect was
-named by the delta's message), then a finding's rule was being read back out of the key (so a key
-defect was named by the PARSER's message), then the two warnings in the fixture were in the order
-that hides a collapsing key. **And the third fix silently deleted two assertion blocks** — a
-scripted reorder dropped the delta and case blocks, the harness stayed green, and the only signal
-was the next mutation run reporting `key/case` as SURVIVED. Deleting assertions can never turn a
-harness red; nothing but a mutation run can see it.
-
-The two 2026-08-10 arrivals kept the streak, and one of them found a defect in the CHECKER rather
-than in a test. `generated-code`'s first run left **three survivors**:
-
-- **A quiet case that was quiet for the wrong reason.** The fixture proving `--seed` in an argparse
-  call is recognised drew with `rnd.sample(...)` off a local `random.Random(...)`, which the
-  draw pattern does not recognise as a draw at all. So the case passed because _nothing was
-  detected_, not because the seed was — neutering the seed rule changed no verdict. This is the
-  same shape as `delivered-pdf`'s window assertion satisfied by ordering, and it is invisible on
-  inspection: the fixture reads like a correct script, because it is one.
-- **🔴 A dead flag in the checker.** The absolute-path rule is written case-sensitive on purpose —
-  without it an Express route `/users/export` matches `/Users/`. But the matcher was built with
-  `new RegExp(ABS.source + …, 'g')`, which takes the source and **throws the flags away**. Adding
-  an `i` to the pattern therefore changed nothing, i.e. a mutation that did not mutate, i.e. the
-  property the harness asserted lived nowhere the harness could reach. Fixed by threading
-  `ABS.flags` through, which makes the flag load-bearing for the first time.
-- **A mutation that could not change the answer.** Loosening the READ side of the in-place rule
-  alone can never produce a finding, because the WRITE side still demands a quoted literal and no
-  operand can pair. That row now spans both arrays, and says so.
-
-`artifact-coverage`'s 22 rows all killed on the first run, but four killed at a DIFFERENT assertion
-than named, and two of those were the expectation string matching a fragment of prose that appears
-in more than one message (`"that is the"`) — the `no-witness` defect from `ledger.mutations.mjs`,
-committed again three days later. Two rows legitimately kill at an earlier case that asserts the
-same property, and each says which, so a future reader does not read it as off-target. One harness
-case was also restructured because two rows were landing on a shared assertion: a case that tests
-an EXCLUSION should not assert the finding count, or a mutation of the header lands there and hides
-which property actually broke.
-
-The reverse leg's own first run on the live paper found a third defect, this time in the port:
-matching a directory name with `includes()` acquitted a fixture directory called `a-2026-01-01` on
-the strength of the letter "a" appearing in the prose. Substring matching in a cherry-picking
-detector fails in the dangerous direction — it invents evidence that a result was mentioned — and
-it is now whole-token with a minimum length.
-
-`round-diff`'s first run was six rows wrong out of twenty-six, and one of those was a hole in the
-checker rather than in the test: disabling the number-prefix rule in `covers()` changed **no**
-verdict, because a substring fallback had been silently doing its work — which also meant
-`touches: ["2"]` covered "Section 12" and every heading containing a 2, so a one-character
-declaration authorised most of the paper while `overbroad-scope` stayed quiet because the _list_ was
-short. Two more rows were the test's own fault in the two documented ways: a `find` string written
-in its already-mutated form (a mutation that did not mutate), and a fixture that MOVED text between
-body and appendix — which keeps the total constant and therefore cannot test the boundary at all.
-
-`ledger.mutations.mjs` kept the streak: five survivors and two wrong-case kills on its first run,
-and **every one was a defect in the assertion rather than in the checker.** Two matched a bare word
-(`no-witness`, `input-missing`) that the CLI's usage block prints unconditionally, so the refusal
-message could have said anything at all. The dead-report-path case asserted only a non-zero exit —
-which the next line's `ENOENT` supplies once the check is deleted. The status view's reason
-assertion matched the explanatory PARAGRAPH rather than the check's own row, so the reason could
-have been stripped from every row and the test stayed green. And the legacy fixture recorded `PASS`
-with `findings: 0`, which made "a retired acquittal carries nothing forward" true by accident —
-real `PASS` rows carry counts (`sweep-design-space`, 8). One mutation also turned out to be
-**inexpressible finely**: disabling only the no-report-path arm makes the next line `resolve()` a
-null and throw, so the run goes red for a reason unrelated to the check. That row disables the whole
-evidence contract instead and relies on assertion order, which is written down in the row's note.
-
-The `--blocking` flag was found the same way and is worth naming separately, because it is not a
-test defect: it shipped **documented in the usage text and in all 22 SKILL.md files while nothing in
-the CLI parsed it**. Every skill instructing `--blocking` for its desk-reject case would have
-recorded an ordinary advisory finding. That is the repository's oldest failure — a documented
-mechanism nothing implements, the same shape as three hooks dead on arrival and a nudge dead for
-twelve days — arriving _inside_ the refactor written to end it. Block 14 of `gates.harness.mjs` now
-asserts every advertised flag from outside the process, in both directions.
-
-⚠️ A mutations file refuses to start on a dirty working tree, because it rewrites the source it is
-proving. Commit first. (`ledger.mutations.mjs` touches `status.mjs` and `run-mechanical.mjs`, which
-another session may be editing; running it against a copy of `.claude/` with `CLAUDE_PROJECT_DIR`
-pointed at the copy works and is how it was last verified.)
+> **2026-09-26 — hand-written per-checker mutation batteries are REMOVED (#52).** Do not write a
+> `*.mutations.mjs`; see a new test fail before the fix and assert whole values instead (the
+> repository's CLAUDE.md, § Testing).
 
 Five rules, each learned by getting it wrong here:
 
@@ -321,10 +202,10 @@ Five rules, each learned by getting it wrong here:
    importing `ledger.mjs`. Save-and-restore is not isolation; it loses the race on the first crash.
 3. **Run them by explicit path.** `npx vigiles test` with no arguments finds **nothing** here: its
    glob does not descend into dot-directories. Every harness is therefore named explicitly in
-   `.github/workflows/paper-gates.yml` (`hooks` job) — one not named there does not run, and its
+   the `hooks` job of `.github/workflows/ci.yml` — one not named there does not run, and its
    silence looks exactly like having nothing to say. Add the line in the same commit as the file.
-4. **Prove non-vacuity by MUTATION, never by reading.** An assertion you cannot see fail is an
-   assertion you have not tested. `skill-checks.mjs` (then `skills.harness.mjs`) shipped its first draft with a record-block
+4. **Prove non-vacuity by SEEING IT FAIL, never by reading.** An assertion you cannot see fail is
+   an assertion you have not tested. `skill-checks.mjs` (then `skills.harness.mjs`) shipped its first draft with a record-block
    slicer matching `^#` against an already-sliced string; `^` hit offset 0, every block came back as
    the single character `#`, one assertion then fired on all 21 skills while its neighbour checked
    nothing at all. Both were invisible on inspection and obvious on the first planted defect.

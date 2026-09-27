@@ -16,7 +16,7 @@
 #
 # 🔴 WHY WE MERGE ANY BUMP, INCLUDING MAJOR, not just patch/minor.
 # Semver is a PUBLISHER'S CLAIM about their release; `ci` is a MEASUREMENT on our corpus (full harness suite,
-# mutations, gates for "rules see their files" and "rules don't touch git"). A major bump that breaks us
+# gates for "rules see their files" and "rules don't touch git"). A major bump that breaks us
 # reds the run and does not merge; a minor one that breaks us does the same.
 # A version-number filter adds a manual step where measurement already exists, and would miss
 # exactly the class for which version filters are typically used.

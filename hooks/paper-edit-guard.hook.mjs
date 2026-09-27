@@ -355,8 +355,8 @@ const MUTATORS = [
  * `runs()` now sees through `env`, `env -C`, `command`, `nice`, `xargs`, `sudo`, `time`, a
  * repeated space and a quoted head — every form tried. So the crutch defended nothing, which is
  * not a judgement but a measurement: removing it left all 78 harness assertions GREEN, and no
- * command form could be found that it alone catches. A line no mutation can kill is a line
- * documenting a defence that does not exist, so it was deleted rather than kept for comfort.
+ * command form could be found that it alone catches. A line the harness can never fail on is a
+ * line documenting a defence that does not exist, so it was deleted rather than kept for comfort.
  *
  * ⚠️ WHAT THIS DOES NOT FIX: rows 3 and 4 above. A wrapper that moves the working directory is
  * still invisible, because `touches`/`namesPaperSource` compare against a repo-root prefix and

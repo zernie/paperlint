@@ -67,10 +67,9 @@ async function cli(args, cwd) {
     };
   } catch (e) {
     // 🔴 A LEAKED EXCEPTION IS A PROPERTY THAT MUST BE ASSERTED, NOT CAUGHT BY LETTING THE
-    // HARNESS CRASH. The mutation that removes the catch around ESLint used to bring the
-    // harness down with a stack trace, and the driver — under its own strict rule "killed only
-    // by ITS OWN assertion" — refused to count that as a kill and printed "survived". I.e. the
-    // real defect looked like a weak test.
+    // HARNESS CRASH. Removing the catch around ESLint brings the whole harness down with a
+    // stack trace instead of a clean, named assertion failure — i.e. the real defect would
+    // look like a broken test, not a caught one.
     return {
       code: 99,
       out: `THREW: ${e?.message ?? e}`,
@@ -531,8 +530,8 @@ check(
       // declaration had already been written — i.e. the install both succeeded and looked like
       // a crash.
       // 🔴 THE `.catch` HERE IS LOAD-BEARING, NOT CAUTION. A leaked exception is a PROPERTY that
-      // gets asserted; caught by letting the harness crash it reads to the battery's driver as
-      // "the mutation survived", i.e. the real defect would look like a hole in the test.
+      // gets asserted; without it, the harness crashes instead of failing a named assertion,
+      // i.e. the real defect would look like a hole in the test rather than a caught one.
       const aborted = await offerWorkflow(dir, "writing", {
         interactive: true,
         ask: async () => {
@@ -593,7 +592,7 @@ check(
       });
       // 🔴 JUDGE ONLY init's OWN REPORT, BEFORE doctor's banner. The first version of these
       // three assertions looked at the WHOLE output — and doctor also prints `✗ pdflatex` and
-      // the same install command. The mutation that stripped the remedy OUT of init stayed
+      // the same install command. A version of init with the remedy stripped OUT still stayed
       // green: the assertion found a line printed by a different command and reported coverage
       // that did not exist.
       const own = out.text().split("── paperlint doctor")[0];

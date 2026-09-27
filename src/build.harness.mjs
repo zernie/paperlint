@@ -507,8 +507,8 @@ try {
   check("on full success there is no remedy", remedyFor([r]) === "");
 
   // ── 🔴 A STALE PDF NEVER SURVIVES A RUN THAT DID NOT REPLACE IT — every path of buildPapers ──
-  // The order matters for the battery: the up-front removal is killed by the no-engine case, the
-  // existence check by the empty document, and neither case depends on the other defence.
+  // The order matters here: the up-front removal is exercised by the no-engine case below, the
+  // existence check by the empty-document case, and neither depends on the other defence.
   const REMOVED =
     "paper.pdf removed — a stale PDF must not pass for this build";
 

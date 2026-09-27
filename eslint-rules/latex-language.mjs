@@ -33,7 +33,7 @@
  * arguments of those two macros.
  * 🔴 Removing `table` / `figure` from `CODEISH` was NOT an option — rules would then receive
  * `&`, `\\`, the column specification and tikz nodes, i.e. findings on markup. That is pinned
- * by the harness and by a "naive fix" mutation which that part kills.
+ * by the harness.
  * Measured after the fix: nine new findings across three papers, all of them captions and
  * footnotes, reviewed one by one; zero false positives on markup.
  *
@@ -285,7 +285,7 @@ export function texToMdast(src, { parse = (s) => getParser().parse(s) } = {}) {
         return;
       }
       if (CODEISH.test(env) && pos) {
-        // 🔴 THERE WERE TWO LOCKS, AND LIFTING ONE DID NOT HELP (proved by mutation): a
+        // 🔴 THERE WERE TWO LOCKS, AND LIFTING ONE DID NOT HELP: a
         // caption was blanked by `OPAQUE` as a macro, and inside `table` / `figure` it was
         // blanked AGAIN by the whole environment. So what is blanked here is not the float's
         // borders but the float MINUS the arguments of `\caption{}` / `\footnote{}`.

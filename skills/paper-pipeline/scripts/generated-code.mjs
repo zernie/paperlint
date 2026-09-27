@@ -252,8 +252,9 @@ for (const f of files.sort()) {
 
   // 🔴 `ABS.flags`, not a literal 'g'. The first version passed 'g' alone, which silently DROPPED
   // the case-sensitivity that keeps an Express route `/users/export` from matching `/Users/` —
-  // so the property the harness asserts lived nowhere the harness could reach it. Found by the
-  // mutations file: adding an `i` to ABS changed no verdict, i.e. a mutation that did not mutate.
+  // so the property the harness asserts lived nowhere the harness could reach it. Found by
+  // testing directly: adding an `i` to ABS changed no verdict, i.e. the property was
+  // unreachable.
   const abs = code.match(
     new RegExp(ABS.source + "[^\\s'\"`)\\],]*", ABS.flags + "g"),
   );

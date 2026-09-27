@@ -56,7 +56,8 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 //
 // This is exactly the "four forms of a reference" class from `CLAUDE.md`: a file that moves changes
 // the DEPTH of `../` to the root, and a grep over the path does not show it. All fifteen neighbours
-// in the directory (`*.harness.mjs`, `*.mutations.mjs`) got four `..` during the resettlement; this
+// in the directory (`*.harness.mjs` and the since-removed `*.mutations.mjs`) got four `..` during
+// the resettlement; this
 // file did not, because it was the only one that was not a test and nobody ran it.
 const ROOT = consumerRoot();
 

@@ -138,12 +138,10 @@ console.log(
   const { mkdtempSync, writeFileSync, mkdirSync, rmSync } =
     await import("node:fs");
   const root = mkdtempSync(join(FIX, "..", ".tmp-stages-src-"));
-  // 🔴 try/finally, NOT cleanup at the end of the block. Observed 09-16: under every mutation
-  // the assert throws — that is, precisely when the harness is doing its job — and cleanup on
-  // the happy path never runs. One run of the battery left EIGHT `.tmp-stages-src-*` directories
-  // in the repository, one for each mutation deliberately killed. The litter here is not
-  // cosmetic: the mutation driver refuses to run on a dirty tree, so the harness would break
-  // the next run.
+  // 🔴 try/finally, NOT cleanup at the end of the block. Any `check()` above can throw on
+  // failure — that is precisely when the harness is doing its job — so cleanup written after
+  // the checks would never run on that path and would leave a `.tmp-stages-src-*` directory
+  // behind in the repository.
   try {
     const paper = join(root, "one");
     mkdirSync(join(paper, "versions"), { recursive: true });
