@@ -1711,8 +1711,6 @@ console.log(
         typo.out.includes('paperlint.json: unknown key "typographyDept"'),
     );
     settings({
-      ledger: "x.jsonl",
-      citeChecks: "c",
       timezone: "UTC",
       contactEmail: "a@b.c",
       triggerCases: "t.mjs",
