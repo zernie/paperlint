@@ -1,12 +1,12 @@
-# What we test with, and why there is no test framework here
+# What we test with
 
-**Question this file answers:** this package has 57 `*.harness.mjs` files of plain
-`node:assert/strict`, three bespoke e2e scripts, and no jest, vitest, mocha, ava or `node:test`.
-Is that a gap? Should an npm package's install be tested through a local registry?
+**Question this file answers:** should an npm package's install be tested through a local
+registry, and which tests belong to which tool?
 
-**Verdict: change nothing.** A general-purpose runner would buy a reporter and a second answer to
-"do the tests pass". A local registry is what MULTI-package repositories reach for; a single-package
-CLI packs a tarball and installs it. Both conclusions have named triggers for revisiting, below.
+**Verdict.** Unit tests run on vitest (`*.test.ts` / `*.test.mjs`); agent-facing checks are vigiles
+harnesses; the install and build are end-to-end scripts. The install is tested by packing a
+tarball and installing it by path, not through a local registry: a registry is what
+MULTI-package repositories reach for. That conclusion has named triggers for revisiting, below.
 
 ---
 
@@ -26,9 +26,6 @@ So the genuinely agent-facing harnesses are three: `hooks/hooks.harness.mjs` (`r
 `checkHookImports`), `skills/plan-paper-timeline/plan-paper-timeline.effects.harness.mjs`
 (`runHarnessTest`, which spawns the real `claude` binary against a scripted model), and the skill
 contract checks. Everything else is ordinary Node testing that happens to carry the suffix.
-
-The suffix used to be a contract as well — the mutation driver paired batteries to harnesses by
-it. Both were removed in #52, so today the suffix only tells `vigiles test` what to run.
 
 ## Why the install e2e stays a script
 
@@ -79,25 +76,6 @@ answering. Recording this so the question "would it even run here" never has to 
 **Triggers to revisit:** a second published package that this one depends on by range, **or** the
 documented install becoming a cold `npx <name>`. Then: verdaccio as a devDependency spawned by the
 script, Angular-style — not a Docker service in CI.
-
-## Why no vitest, and no `node:test` either
-
-vitest's value is its Vite transform pipeline, jsdom, module mocking and a watch UI. The tests here
-are plain `.mjs`, the sources are compiled by `tsc`, there is no DOM, and the design deliberately
-does not mock — it spawns real processes into temp directories, which is the right shape for a CLI.
-So vitest would add vite and a native esbuild binary to a package whose install weight is itself
-under scrutiny, and nothing breaks without it.
-
-`node:test` costs no dependency but creates the two-answers problem verbatim: a second discovery
-mechanism (`--test` globs against the `.harness.mjs` suffix) and a second exit code.
-
-**What staying honestly costs:** a top-level `assert` stops at the FIRST failure, so a table-driven
-test over many fixtures reports one row per run. Also no name-level filtering (file-level exists:
-`vigiles test <file>`).
-
-**Trigger to revisit:** when continue-after-failure is measurably costing iteration time on a
-table-driven test. The answer then is `node:test`, never vitest, and it must run under the same
-`npm test` line rather than beside it.
 
 ## One known limit, recorded so it is not claimed
 

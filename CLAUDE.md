@@ -504,10 +504,11 @@ import none of the three are frozen in `scripts/harness-api.frozen.json`, which 
 exits 1 when no file matches, and it transpiles without type-checking, so `npm run check` runs
 `tsc -p tsconfig.test.json` as its own gate.
 
-**Local = the fast gates on what you touched; the full `npm run check` = CI.** Locally run vitest on
-the touched test files, `npx tsc --noEmit`, `npx eslint <touched files>` and `npm run fmt:check`, then
-push and read CI by job name. The repo is public, so CI is free, and it also runs the TeX e2e that
-cannot run locally.
+**While working: the fast gates on what you touched. Before every push: `npm run check`.** While
+editing, run vitest on the touched test files (`npx vitest run <file or folder>`), `npx tsc --noEmit`,
+`npx eslint <touched files>` and `npm run fmt:check`. Before pushing, run the full `npm run check`
+(about three minutes) and read its exit code: it includes the 100% coverage gate, which a
+single-file run cannot judge. CI runs the same command plus the TeX e2e that cannot run locally.
 
 ⚠️ **Not `vigiles test .`** — the `.` is read as a FILE, the runner dies with
 `ERR_UNSUPPORTED_DIR_IMPORT`, and it still exits 0. See the measured table below.
@@ -530,12 +531,16 @@ confident, byte-identical "clean" verdicts for three different skills that had n
    (`"that is the"` matching two different messages, a bare word the usage block always prints).
    A substring is right only when the value is prose whose wording is not the subject; then say
    so in a comment.
-
-3. **One assertion helper for harnesses: `lib/check.mjs`.** `const check = createChecker();` then
+3. **Test what the code DOES, never what its source SAYS.** A test that reads a source file (a
+   `.mjs`, a `SKILL.md`, a config) and asserts it contains some text restates the file: rewording
+   turns it red while a real regression stays green. Assert behaviour instead: a return value, the
+   output and exit code of a run, what landed on disk, what a parser reports. Text is a legitimate
+   subject only when it IS the output (a message the program prints, a file it generates).
+4. **One assertion helper for harnesses: `lib/check.mjs`.** `const check = createChecker();` then
    `check(label, cond, detail)`. A failure prints the label and the detail (a value is rendered
    with `util.inspect`, a function is called only on failure), every call is counted
    (`check.count`, for the summary line) and reported to vigiles. Do not define a local `check`.
-4. **Coverage is a gate.** `npm run check` and CI run `npm run coverage` — `npm test` under c8,
+5. **Coverage is a gate.** `npm run check` and CI run `npm run coverage` — `npm test` under c8,
    `--check-coverage` against `.c8rc.json`. c8 reads `NODE_V8_COVERAGE`, so a CLI a harness
    spawns is measured too — unless the harness hands the child a fresh `env` without it. vitest
    runs in the `threads` pool with native `import` (`vitest.config.ts` says why): under its
@@ -543,7 +548,7 @@ confident, byte-identical "clean" verdicts for three different skills that had n
    every import of `dist/*.js` with `src/*.ts`: otherwise a module the tests import directly AND
    the spawned CLI loads compiled is measured twice, and its branches and functions stay red in
    whichever copy did not run them. `npm test` without coverage still runs `dist/`.
-5. **No `c8 ignore`, and no guard deleted to reach 100%.** An effect a test cannot reach — a
+6. **No `c8 ignore`, and no guard deleted to reach 100%.** An effect a test cannot reach — a
    race, a permission root is never denied, a broken install, a 270 MB download — is made
    INJECTABLE (a `readdir`, an fs object, a manifest reader, a toolchain function) and the test
    passes a fake. A precondition about an argument becomes the signature: the function takes the

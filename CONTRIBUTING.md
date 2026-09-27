@@ -17,13 +17,16 @@ The second run is the one people skip, and it is the one that matters. A rule th
 finds nothing passes the first kind of test by accident — from outside, "there is nothing wrong
 here" and "this check never ran" look exactly the same.
 
-Two rules for writing the test itself:
+Three rules for writing the test itself:
 
 1. **Red first.** Run a new test on the code BEFORE the fix and watch it fail at its own
    assertion. A test that has only ever been green is indistinguishable from one that cannot fail.
 2. **Assert the whole value** — `assert.deepEqual` / `toEqual` on the entire result, not a
    substring or one field. A substring passes on output that is wrong everywhere else. The
    exception is prose whose wording is not the subject; say so in a comment.
+3. **Test what the code does, not what its source says.** A test that reads a source file and
+   asserts it contains some text restates the file: rewording turns it red, a real regression
+   stays green. Assert a return value, a run's output and exit code, or what landed on disk.
 
 Say what an assertion guards in a comment directly above it (`// Guards: …`). A harness asserts
 through the shared `lib/check.mjs` (`const check = createChecker()`), which prints the label and
