@@ -120,7 +120,7 @@ export default {
           yaml(node) {
             let data;
             try {
-              data = load(node.value);
+              data = load(node.value ?? "");
             } catch (e) {
               context.report({
                 node,
@@ -279,7 +279,7 @@ export default {
           yaml(node) {
             let data;
             try {
-              data = load(node.value);
+              data = load(node.value ?? "");
             } catch {
               return; // `paper/stages` has already reported the unreadable YAML
             }

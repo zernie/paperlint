@@ -122,3 +122,14 @@ test("versions/: only dated stage pdfs count — not other files, STALE ones, od
     ],
   );
 });
+
+test("a frontmatter node without a value (another markdown language) reads as empty YAML", () => {
+  const reports = [];
+  const context = {
+    filename: join(root, "valueless", "PIPELINE-STATUS.md"),
+    report: (r) => reports.push(r),
+  };
+  for (const rule of ["stages", "source"])
+    stages.rules[rule].create(context).yaml({ type: "yaml" });
+  assert.deepEqual(reports, []);
+});
