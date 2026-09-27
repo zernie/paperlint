@@ -4,7 +4,7 @@ description: Verify every citation is a real work with correct metadata, and tha
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:c3e064c5180ae82c compiled from skills/verify-citations/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:bcf5209e578d28be compiled from skills/verify-citations/SKILL.md.spec.ts -->
 
 # verify-citations — every cite real, the delta explicit
 
@@ -186,11 +186,18 @@ difference is real and not a metadata glitch. Entries that themselves declare a 
 scope (a preprint entry is allowed to carry preprint metadata).
 
 ⚠️ **Discovery credit, and why it is NOT a dependency.** The class was found by running **rebiber**
-(`yuchenlin/rebiber`), which rewrites bib entries into their DBLP records. We deliberately do not depend on
-it: its install fights modern setuptools (the `bibtexparser` wheel dies with `AttributeError:
-install_layout`), and its *output* replaces our entries with DBLP's very long official booktitles — wrong for
-a page-limited paper. We needed the **comparison**, not the rewrite, and that is one fetch with zero deps.
-Note also that live DBLP beat rebiber's bundled dump: `raji2021benchmark` was found only by the live query.
+(`yuchenlin/rebiber`), which rewrites bib entries into their DBLP records. Re-measured 2026-09-27 on rebiber
+1.4.0 (GitHub commit `b917e36`, the pin in `render-paper/checkers-requirements.txt`; the PyPI package is
+a 2021 release upstream disowns):
+- **Install: no longer broken, but heavy.** It installs in 36 s in a clean venv (bibtexparser 2.0.1 wheel,
+  rebiber built from source) — and carries **409 MB** of bundled venue data.
+- **Rewrites: now optional.** `--dry-run --report` previews and leaves the file untouched; `-s True` shortens
+  venues (NAACL 2019 becomes `Proc. of NAACL-HLT` instead of a 160-character booktitle).
+- **Bundled data still misses what live DBLP finds.** `raji2021benchmark` stayed an arXiv entry, local
+  index and `--live-lookup` alike, as it did in August.
+
+So the reason not to depend on it is now scope, not breakage: we need the **comparison** of an author list
+against the published record, not a rewrite of the entry, and that is one DBLP query with zero dependencies.
 
 🔴 **Two design decisions that are load-bearing, both learned by measurement the same day:**
 1. **Compare surname SEQUENCES, nothing else.** A first cut reported 13 differences of which **11 were

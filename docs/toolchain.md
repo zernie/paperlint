@@ -141,12 +141,14 @@ bash node_modules/paperlint/skills/render-paper/ensure-checkers.sh
 
 ```
    ✅ aclpubcheck
-   ✅ rebiber
+   ✅ rebiber 1.4.0
    ✅ jinja2
    ✅ textidote (/opt/textidote/textidote.jar)
 ✅ all checkers are installed AND run
 ```
 
-It checks that the tools RUN, not that pip exited zero — `aclpubcheck --help` prints usage and
-exits zero on an interpreter where its own dependencies do not import, so "installed" and "works"
-are separate questions here.
+It checks that the tools RUN, not that pip exited zero: aclpubcheck's checker module is imported
+(which pulls in numpy and pandas) and its `python3 -m aclpubcheck` entry point must answer, and
+rebiber must convert a known arXiv entry to its official record. Both come from their GitHub
+sources pinned to a commit — each project's own instruction, and why is recorded in
+`checkers-requirements.txt`.

@@ -77,16 +77,16 @@ unreleased. Absence and unfindability fail the same way for a reader.
 
 ## Running `aclpubcheck` locally
 
-The official ACL format checker. `pip install aclpubcheck` fails in some sandboxes (`bibtexparser`
-will not build a wheel). Working recipe:
+The official ACL format checker. Install it, pinned to its GitHub source with rebiber beside it,
+with the package's one command, which then proves it runs:
 
 ```bash
-git clone --depth 1 https://github.com/acl-org/aclpubcheck.git
-pip install pdfplumber PyPDF2 termcolor numpy pylatexenc pybtex unidecode
-mkdir -p stub/rebiber   # rebiber is used ONLY by the optional author-name check
-printf 'def construct_bib_db(*a, **k): return {}\n' > stub/rebiber/__init__.py
-PYTHONPATH=stub python3 -m aclpubcheck --paper_type long <pdf>
+bash node_modules/paperlint/skills/render-paper/ensure-checkers.sh
+python3 -m aclpubcheck --paper_type long <pdf>
 ```
+
+(The recipe that stood here cloned the repository and stubbed rebiber out, because the PyPI release
+did not install. The pinned commit installs, and `ensure-checkers.sh` records why.)
 
 🔴 **Run it on a build WITHOUT line numbers.** Against a `[review]`-mode PDF it reports one margin
 error per line number — about 2,000 of them, all spurious, because it is written for camera-ready
