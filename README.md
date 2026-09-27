@@ -177,13 +177,16 @@ All 24, by stage: [`docs/skills.md`](docs/skills.md).
 
 ## 🔍 Lint and build
 
-|        | `paperlint build`                                                                            | `paperlint lint`                                                                                      |
-| ------ | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| needs  | Node, TeX Live, the network                                                                  | Node                                                                                                  |
-| does   | compiles `paper.tex`, measures the PDF, checks each reference online (exists, right authors) | checks the source, and judges what build recorded: page limit, fonts, the reference results — offline |
-| writes | `paper.pdf`, and in `_build/` the measurements and the reference results                     | nothing (`--fix`: the three fixable slips)                                                            |
+|        | `paperlint build`                                                                                       | `paperlint lint`                                                                                      |
+| ------ | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| needs  | Node, TeX Live, the network                                                                             | Node                                                                                                  |
+| does   | compiles `paper.tex`, measures the PDF, checks each reference online (exists, right authors)            | checks the source, and judges what build recorded: page limit, fonts, the reference results — offline |
+| writes | `paper.pdf`, in `_build/` the measurements and the reference results, and `repro/references-cache.json` | nothing (`--fix`: the three fixable slips)                                                            |
 
 - If `paper.pdf` or the bibliography changed since the last build, lint fails and tells you to rebuild.
+- Commit `repro/references-cache.json`: it keeps what the citation services answered, so a build
+  asks only about new or edited entries, and an unchanged bibliography builds without the network
+  ([`docs/references.md`](docs/references.md)).
 - Lint also checks the pipeline's own records: `PIPELINE-STATUS.md`, reviews, notes on related
   papers ([`docs/rules.md`](docs/rules.md)).
 - The rules run on ESLint, so a deliberate exception is a comment on the line above:
@@ -295,6 +298,7 @@ Only `paperlint lint --fix`, and only three rules: `paper/section-word` (`§` �
 - [`docs/install.md`](docs/install.md) — what `init` does, the hooks, package managers, troubleshooting
 - [`docs/configuration.md`](docs/configuration.md) — every setting, how `build` compiles, using your own ESLint
 - [`docs/rules.md`](docs/rules.md) — every check, venue presets, recording a submitted PDF
+- [`docs/references.md`](docs/references.md) — the reference check, and the cache file to commit
 - [`docs/optional-rules.md`](docs/optional-rules.md) — checks only some venues need
 - [`docs/toolchain.md`](docs/toolchain.md) — TeX Live, and Banal (HotCRP's page-geometry checker, GPL)
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — how the package is tested and released, and adding a venue to it

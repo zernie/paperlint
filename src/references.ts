@@ -17,6 +17,12 @@
  * stale when it changes (`pdf_sha256`); these are about the bibliography and are stale when IT
  * changes (`bib.sha256`). One staleness key per file, the way `pdf/fresh` already works.
  *
+ * 🔴 WHAT THE CHECKERS ANSWERED IS KEPT, COMMITTED, IN `<paper>/repro/references-cache.json`
+ * (`domain/lookup-cache.ts`). Loaded before the check and saved after it — only when something new
+ * was fetched — so a build asks each question once, not once per build (#107: 217 s for 27
+ * references, every build). The verdicts above are NOT cached: they are derived from the cached
+ * answers on every build, so a fix to the checkers reaches every paper at once.
+ *
  * 🔴 THE STEP NEVER FAILS THE BUILD. A build without network still builds the PDF; the reference
  * step records `not-checked` and the lint rule says so, as a warning. Recording "not checked" as
  * a pass would be the counter that counts what it never looked at.
@@ -25,16 +31,30 @@ import { join } from "node:path";
 import type { AbsolutePath } from "./domain/paths.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import type { Files } from "./ports/files.ts";
+import {
+  EMPTY_LOOKUP_CACHE,
+  parseLookupCache,
+  serializeLookupCache,
+  type LookupCache,
+} from "./domain/lookup-cache.ts";
+import { ok, type Result } from "./domain/result.ts";
 import type {
   CheckReferences,
   EntryVerdict,
   ReferencesCheck,
+  ReferencesRun,
 } from "./ports/check-references.ts";
 // @ts-expect-error — an ESLint rule module in .mjs, it has no types
 import { bibRange } from "../eslint-rules/paper-typography.mjs";
 
 export const REFERENCES_SCHEMA = 1;
 export const REFERENCES_FILE = "references.json";
+
+/** The lookup cache's place in a paper: committed, beside the paper's other reproduction files. */
+export const LOOKUP_CACHE_FILE = "repro/references-cache.json";
+
+export const lookupCachePath = (paperDir: string): string =>
+  join(paperDir, LOOKUP_CACHE_FILE);
 
 /** Where a paper's reference verdicts live — beside `paper.facts.json`. */
 export const referencesPath = (paperDir: string): string =>
@@ -106,10 +126,39 @@ export function readReferences(
   }
 }
 
+/** The paper's lookup cache: empty when there is none, or why the file on disk cannot be read. */
+export function readLookupCache(
+  files: Files,
+  paperDir: string,
+): Result<LookupCache, string> {
+  const raw = text(files, lookupCachePath(paperDir));
+  return raw === null ? ok(EMPTY_LOOKUP_CACHE) : parseLookupCache(raw);
+}
+
+const newAnswers = (before: LookupCache, after: LookupCache): number =>
+  after.citations.size +
+  after.dblp.size -
+  before.citations.size -
+  before.dblp.size;
+
+/** Run the checker; a throw is `not-checked`, with the cache as it was. */
+async function run(
+  check: CheckReferences,
+  bib: string,
+  cache: LookupCache,
+): Promise<ReferencesRun> {
+  try {
+    return await check(bib, cache);
+  } catch (e) {
+    return { check: { kind: "not-checked", why: (e as Error).message }, cache };
+  }
+}
+
 /**
- * The build step's work: check the bibliography and record the verdicts. Returns the one-line
- * note the build prints. A checker that throws is recorded as `not-checked` — the step reports,
- * it never refuses.
+ * The build step's work: check the bibliography, serving what it can from the paper's lookup
+ * cache, and record the verdicts. Returns the one-line note the build prints. A checker that
+ * throws, or a cache that does not parse, is recorded as `not-checked` — the step reports, it
+ * never refuses. A cache that does not parse is left as it is, and named.
  */
 export async function recordReferences(
   files: Files,
@@ -118,21 +167,39 @@ export async function recordReferences(
 ): Promise<string> {
   const bib = bibliographyOf(files, paperDir);
   if (bib === null) return "no bibliography — nothing to check";
-  let result: ReferencesCheck;
-  try {
-    result = await check(bib.text);
-  } catch (e) {
-    result = { kind: "not-checked", why: (e as Error).message };
-  }
-  const doc = documentOf(bib, result);
-  files.writeAtomic(
-    at(referencesPath(paperDir)),
-    new TextEncoder().encode(`${JSON.stringify(doc, null, 2)}\n`),
-  );
-  if (result.kind === "not-checked")
-    return `references NOT checked — ${result.why}; lint will say so`;
+  const record = (c: ReferencesCheck): ReferencesDocument => {
+    const doc = documentOf(bib, c);
+    files.writeAtomic(
+      at(referencesPath(paperDir)),
+      new TextEncoder().encode(`${JSON.stringify(doc, null, 2)}\n`),
+    );
+    return doc;
+  };
+  const notChecked = (why: string): string => {
+    record({ kind: "not-checked", why });
+    return `references NOT checked — ${why}; lint will say so`;
+  };
+  const cache = readLookupCache(files, paperDir);
+  if (!cache.ok)
+    return notChecked(
+      `${LOOKUP_CACHE_FILE} cannot be read (${cache.error}) — fix it, or delete it to ask every question again`,
+    );
+  const result = await run(check, bib.text, cache.value);
+  if (result.check.kind === "not-checked") return notChecked(result.check.why);
+  const doc = record(result.check);
+  const fetched = newAnswers(cache.value, result.cache);
+  if (fetched > 0)
+    files.writeAtomic(
+      at(lookupCachePath(paperDir)),
+      new TextEncoder().encode(serializeLookupCache(result.cache)),
+    );
   const bad = doc.entries.filter(
     (e) => e.exists === "false" || e.authors === "mismatch",
   ).length;
-  return `references: ${String(doc.entries.length)} checked, ${String(bad)} failing → _build/${REFERENCES_FILE}`;
+  return (
+    `references: ${String(doc.entries.length)} checked, ${String(bad)} failing → _build/${REFERENCES_FILE}; ` +
+    (fetched > 0
+      ? `${String(fetched)} new answer${fetched === 1 ? "" : "s"} → ${LOOKUP_CACHE_FILE}`
+      : "nothing fetched")
+  );
 }

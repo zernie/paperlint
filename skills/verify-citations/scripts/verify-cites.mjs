@@ -45,8 +45,8 @@
  *         + a summary line on stderr. Exit 1 iff any verdict is `false`.
  */
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { homedir } from "node:os";
 import { dirname, join, extname } from "node:path";
 import { createHash } from "node:crypto";
 import {
@@ -54,11 +54,13 @@ import {
   isMain,
 } from "../../paper-pipeline/scripts/consumer.mjs";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-// Beside this script by default (the skill says so, and `.gitignore` covers it). VERIFY_CITES_CACHE
-// points it elsewhere — how a test keeps the run from writing into the package it is testing.
+// The command line's cache (`paperlint build` passes its own, per paper, and never reads this file).
+// In the user's cache directory, NOT beside this script: installed, this script sits inside
+// node_modules, which `npm ci` wipes. VERIFY_CITES_CACHE points it elsewhere — how a test keeps the
+// run from writing into the home directory.
 const CACHE_PATH =
-  process.env.VERIFY_CITES_CACHE || join(__dirname, ".cite-cache.json");
+  process.env.VERIFY_CITES_CACHE ||
+  join(homedir(), ".cache", "paperlint", "cite-cache.json");
 // 🔴 THE ADDRESS IS THE CONSUMER'S, NOT OURS. Crossref's "polite pool" keys off this `mailto:`:
 // it decides who gets the faster tier and, more to the point, WHOM THEY WARN before blocking.
 // Hard-coded, it pointed at one person for every user of this package — so the warnings would
@@ -686,6 +688,7 @@ function loadCache() {
 }
 function saveCache(cache) {
   try {
+    mkdirSync(dirname(CACHE_PATH), { recursive: true });
     writeFileSync(CACHE_PATH, JSON.stringify(cache, null, 2));
   } catch {
     /* best-effort; a cache write failure must never fail the run */
@@ -758,24 +761,22 @@ async function crossrefResolve(citation) {
         : null,
     };
   }
-  if (citation.title) {
-    const url = `https://api.crossref.org/works?query.bibliographic=${encodeURIComponent(
-      citation.title,
-    )}&rows=5`;
-    const r = await httpGet(url);
-    if (!r.ok) return { db, transport: "error" };
-    const items = r.data?.message?.items || [];
-    return {
-      db,
-      transport: "ok",
-      query: "title",
-      records: items.map((w) => ({
-        title: (w.title || [])[0] || "",
-        year: crYear(w),
-      })),
-    };
-  }
-  return null;
+  // Asked only with a DOI or a title (`PAPER_RESOLVERS`), so without a DOI there is a title.
+  const url = `https://api.crossref.org/works?query.bibliographic=${encodeURIComponent(
+    citation.title,
+  )}&rows=5`;
+  const r = await httpGet(url);
+  if (!r.ok) return { db, transport: "error" };
+  const items = r.data?.message?.items || [];
+  return {
+    db,
+    transport: "ok",
+    query: "title",
+    records: items.map((w) => ({
+      title: (w.title || [])[0] || "",
+      year: crYear(w),
+    })),
+  };
 }
 function crYear(w) {
   return (
@@ -803,23 +804,21 @@ async function openalexResolve(citation) {
         : null,
     };
   }
-  if (citation.title) {
-    const r = await httpGet(
-      `https://api.openalex.org/works?search=${encodeURIComponent(citation.title)}&per-page=5`,
-    );
-    if (!r.ok) return { db, transport: "error" };
-    const items = r.data?.results || [];
-    return {
-      db,
-      transport: "ok",
-      query: "title",
-      records: items.map((w) => ({
-        title: w.display_name || "",
-        year: w.publication_year,
-      })),
-    };
-  }
-  return null;
+  // Asked only with a DOI or a title (`PAPER_RESOLVERS`), so without a DOI there is a title.
+  const r = await httpGet(
+    `https://api.openalex.org/works?search=${encodeURIComponent(citation.title)}&per-page=5`,
+  );
+  if (!r.ok) return { db, transport: "error" };
+  const items = r.data?.results || [];
+  return {
+    db,
+    transport: "ok",
+    query: "title",
+    records: items.map((w) => ({
+      title: w.display_name || "",
+      year: w.publication_year,
+    })),
+  };
 }
 
 const S2 = "https://api.semanticscholar.org/graph/v1/paper";
@@ -874,22 +873,20 @@ async function arxivResolve(citation) {
     const entry = parseArxivFeed(r.data);
     return { db, transport: "ok", query: "arxiv", record: entry[0] ?? null };
   }
-  if (citation.title && !citation.doi) {
-    const r = await httpGet(
-      `https://export.arxiv.org/api/query?search_query=ti:${encodeURIComponent(
-        '"' + citation.title + '"',
-      )}&max_results=5`,
-      { json: false },
-    );
-    if (!r.ok) return { db, transport: "error" };
-    return {
-      db,
-      transport: "ok",
-      query: "title",
-      records: parseArxivFeed(r.data),
-    };
-  }
-  return null;
+  // Asked only with an arXiv id or a title and no DOI (`PAPER_RESOLVERS`).
+  const r = await httpGet(
+    `https://export.arxiv.org/api/query?search_query=ti:${encodeURIComponent(
+      '"' + citation.title + '"',
+    )}&max_results=5`,
+    { json: false },
+  );
+  if (!r.ok) return { db, transport: "error" };
+  return {
+    db,
+    transport: "ok",
+    query: "title",
+    records: parseArxivFeed(r.data),
+  };
 }
 export function parseArxivFeed(xml) {
   const out = [];
@@ -948,6 +945,59 @@ async function nvdCheck(cve) {
 }
 
 /**
+ * The paper registries, each with the citations it can answer. A resolver that does not apply is
+ * not called — it has no request to make — and so stores nothing in the cache. `cacheKeysFor`
+ * reads the same table, so the keys it names and the keys a live run stores cannot drift apart.
+ */
+const PAPER_RESOLVERS = [
+  {
+    name: "crossref",
+    fn: crossrefResolve,
+    applies: (c) => !!(c.doi || c.title),
+  },
+  {
+    name: "openalex",
+    fn: openalexResolve,
+    applies: (c) => !!(c.doi || c.title),
+  },
+  { name: "semantic_scholar", fn: semanticScholarResolve, applies: () => true },
+  {
+    name: "arxiv",
+    fn: arxivResolve,
+    applies: (c) => !!(c.arxiv || (c.title && !c.doi)),
+  },
+];
+
+/** A paper resolver's cache key: by DOI, else arXiv id, else a hash of the title. */
+const paperKey = (name, c) =>
+  cacheKey(
+    name,
+    c.doi
+      ? `doi:${c.doi}`
+      : c.arxiv
+        ? `arxiv:${c.arxiv}`
+        : `title:${titleHash(c.title)}`,
+  );
+
+/**
+ * Every cache key `verifyCitationLive` would consult for `citation` — the requests it would make
+ * if none of them were cached. `paperlint build` asks this BEFORE any request: when every key of
+ * every citation is already in the paper's committed cache, the build makes no network request at
+ * all, not even its reachability probe.
+ */
+export function cacheKeysFor(citation) {
+  const c = normalizeIdentifiers(citation);
+  const keys = [];
+  if (c.doi || c.arxiv || c.title) {
+    for (const r of PAPER_RESOLVERS)
+      if (r.applies(c)) keys.push(paperKey(r.name, c));
+    if (c.doi) keys.push(cacheKey("doi_authority", c.doi));
+  }
+  if (c.cve) keys.push(cacheKey("nvd", c.cve.toUpperCase()));
+  return keys;
+}
+
+/**
  * Verify ONE citation live (with caching). Returns the reduceVerdict result.
  *
  * ⚠️ CONCURRENT CALLS SHARING ONE `cache` MAY ASK TWICE. The cache is read BEFORE the `await` and
@@ -979,29 +1029,17 @@ export async function verifyCitationLive(
 
   // Paper resolvers (skip when the citation is CVE/commit-only).
   if (citation.doi || citation.arxiv || citation.title) {
-    const resolvers = [
-      { name: "crossref", fn: crossrefResolve },
-      { name: "openalex", fn: openalexResolve },
-      { name: "semantic_scholar", fn: semanticScholarResolve },
-      { name: "arxiv", fn: arxivResolve },
-    ];
-    for (const { name, fn } of resolvers) {
-      const ck = cacheKey(
-        name,
-        citation.doi
-          ? `doi:${citation.doi}`
-          : citation.arxiv
-            ? `arxiv:${citation.arxiv}`
-            : `title:${titleHash(citation.title)}`,
-      );
+    for (const { name, fn, applies } of PAPER_RESOLVERS) {
+      if (!applies(citation)) continue;
+      const ck = paperKey(name, citation);
       let resp;
       if (cache[ck]) {
         resp = cache[ck];
       } else {
         resp = await fn(citation);
-        if (resp && resp.transport === "ok") cache[ck] = resp; // only cache successes
+        if (resp.transport === "ok") cache[ck] = resp; // only cache successes
       }
-      if (resp) evidence.push(classifyResolver(citation, resp));
+      evidence.push(classifyResolver(citation, resp));
     }
 
     // DOI authority (doi.org) — the ONLY source that can disprove a DOI (M1).

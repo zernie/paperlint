@@ -1,0 +1,95 @@
+# The reference check
+
+`paperlint build` checks every entry of a paper's bibliography against the services that know
+about published work, after the PDF is built. `paperlint lint` then reports what the check found,
+offline. This page explains how the check works, the file it keeps in your paper's folder, and
+what happens in CI and without a network.
+
+## What is checked, and where
+
+For each entry in the bibliography (the `filecontents` block inside `paper.tex`, else `refs.bib`):
+
+| question                                                                                                 | asked of                                    |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| does the cited work exist, and does its title match?                                                     | Crossref, OpenAlex, Semantic Scholar, arXiv |
+| does a DOI that no registry knows really not exist?                                                      | doi.org, the DOI authority                  |
+| does a cited CVE exist?                                                                                  | NVD                                         |
+| for an entry that claims a published venue, are the authors the published version's, not the preprint's? | DBLP                                        |
+
+A work that is simply not found is `unresolvable`, never a failure: plenty of real work is not
+indexed. Only a positive disproof fails an entry, for example a DOI that resolves to a different
+paper, or one the DOI authority says does not exist.
+
+The verdicts land in `<paper>/_build/references.json`. `paperlint lint` reads that file and reports:
+
+| rule                 | when                                                              |
+| -------------------- | ----------------------------------------------------------------- |
+| `paper/cite-exists`  | an entry's identifier provably does not resolve to the work cited |
+| `paper/author-list`  | an entry's authors are the preprint's under a published venue     |
+| `paper/refs-fresh`   | the bibliography changed since the build checked it — build again |
+| `paper/refs-checked` | no build has checked the references, or the last one could not    |
+
+The step never fails the build. Without a network the PDF is still built and lint warns that the
+references were not checked.
+
+## `repro/references-cache.json` — commit it
+
+Asking five services about every entry is slow. DBLP asks clients to pause between requests, and a
+slow service is retried. Before this cache existed, a 27-reference paper spent 217 seconds on the
+check, on every build, and a 51-reference paper did not finish inside a 12-minute CI job
+([#107](https://github.com/zernie/paperlint/issues/107)).
+
+So the build keeps every answer it receives in `<paper>/repro/references-cache.json`, and the next
+build asks only what that file cannot answer:
+
+- An unchanged bibliography asks nothing and makes no network request at all, not even the check
+  for whether the services can be reached.
+- Adding or editing an entry asks only about that entry. Answers are stored per identifier (DOI,
+  arXiv id, or title), so changing an entry's DOI or title is what makes it be asked again.
+- A request that failed is not an answer and is not stored, so the next build asks it again. A
+  service that refuses every request (Semantic Scholar rate-limiting a runner, DBLP answering HTML)
+  therefore keeps each build asking it — see
+  [#120](https://github.com/zernie/paperlint/issues/120).
+
+**Commit this file.** It sits in `repro/`, beside the paper's other reproduction files, and not in
+`_build/`, which is build output. Committed, it makes CI and every other clone start warm: a CI job
+that builds an unchanged paper spends no time on the check.
+
+It holds what the services answered, each answer with the day it was fetched, and never a verdict.
+The verdicts are worked out again from those answers on every build, so an improvement to the
+checker reaches every paper at once, instead of being frozen behind a stored "passed".
+
+### Refreshing it
+
+Nothing in the file expires by date. To ask again:
+
+- **one entry**: delete its lines from the file (the keys name the service and the identifier, and
+  DBLP answers carry the title they were asked for);
+- **everything**: delete the file.
+
+The next build asks again and writes the new answers.
+
+### A file that does not read
+
+The build refuses a cache file it cannot read (bad JSON, another schema version, a field of the
+wrong type) and says which part is wrong. It does not overwrite the file, and does not run the
+check over half a cache: the references are recorded as not checked, and lint says so. Fix the
+file, or delete it.
+
+## CI
+
+| the paper has                     | a CI build                                                         |
+| --------------------------------- | ------------------------------------------------------------------ |
+| a committed, up-to-date cache     | asks nothing, needs no network for the check                       |
+| a cache missing a few new entries | asks about those entries only                                      |
+| no cache committed                | asks about every entry, every run: commit the file after one build |
+
+A CI run writes new answers into its own checkout, which is thrown away. Build locally and commit
+the file to keep the answers.
+
+## Running a checker by hand
+
+The two checkers are scripts in the `verify-citations` skill and can be run on their own to read
+one verdict in full: `verify-cites.mjs` (existence and title) and `bib-authors.mjs` (authors). Run
+from the command line, `verify-cites.mjs` keeps its own cache in `~/.cache/paperlint/cite-cache.json`
+(`VERIFY_CITES_CACHE` overrides); it never reads or writes the paper's committed cache.

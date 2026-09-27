@@ -6,7 +6,7 @@
  */
 import assert from "node:assert/strict";
 import { afterEach, expect, test, vi } from "vitest";
-import { verifyCitationLive } from "./verify-cites.mjs";
+import { cacheKeysFor, verifyCitationLive } from "./verify-cites.mjs";
 
 const json = (status, body) =>
   new Response(body === undefined ? null : JSON.stringify(body), { status });
@@ -230,6 +230,38 @@ test("a second lookup is served from the cache; failures and a nonexistent DOI a
       // Only the resolver that failed the first time is asked again.
       again: ["https://api.openalex.org/works/doi:10.1%2Fx"],
     },
+  );
+});
+
+// Guards: `paperlint build` skips its reachability probe when every key `cacheKeysFor` names is
+// cached. If the list named a key a live run never stores, a fully cached paper would still probe
+// the network; if it missed one a live run asks, a "fully cached" paper would go online anyway.
+test("cacheKeysFor names exactly the keys a successful live run stores, for each kind of citation", async () => {
+  const cites = [
+    { id: "d", doi: "doi:10.1/X.", title: TITLE },
+    { id: "a", arxiv: "arXiv:1706.03762", title: TITLE },
+    { id: "t", title: TITLE },
+    { id: "v", cve: "cve-2024-0001" },
+    { id: "g", commit: "github.com/a/b/commit/abc1234" },
+  ];
+  fakeFetch({
+    [CR]: () => json(200, { message: { title: [TITLE], items: [] } }),
+    [OA]: () => json(200, { results: [] }),
+    [S2]: () => json(200, { data: [] }),
+    [AX]: () => text(200, "<feed></feed>"),
+    [DOI]: () => json(200, { responseCode: 1 }),
+    [NVD]: () => json(200, { totalResults: 1 }),
+  });
+  const stored = [];
+  for (const c of cites) {
+    const cache = {};
+    await verifyCitationLive(c, { cache });
+    stored.push([Object.keys(cache).sort(), [...cacheKeysFor(c)].sort()]);
+  }
+  for (const [live, listed] of stored) assert.deepEqual(listed, live);
+  assert.deepEqual(
+    stored.map(([live]) => live.length),
+    [4, 4, 4, 1, 0],
   );
 });
 

@@ -16,5 +16,3 @@ _build/
 dist/
 # c8's report and raw V8 data (`npm run coverage`).
 coverage/
-# verify-cites.mjs caches registry answers beside itself; the skill documents it as gitignored.
-.cite-cache.json

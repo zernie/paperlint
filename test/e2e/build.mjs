@@ -33,7 +33,7 @@
 import { spawnSync } from "node:child_process";
 import { PAPERS_DIR_FIELD } from "../../lib/paper-config.mjs";
 import { run } from "../../bin/paperlint.mjs";
-import { parseBib as parseCitations } from "../../skills/verify-citations/scripts/verify-cites.mjs";
+import { referencesChecker } from "../../dist/adapters/references/index.js";
 import {
   cpSync,
   existsSync,
@@ -204,21 +204,23 @@ try {
       engine,
     );
 
-  // 🔴 NO LIVE CITATION SERVICE. The references step asks Crossref, Semantic Scholar, arXiv and
-  // DBLP; a run that depended on them took ~9 minutes and failed when DBLP did. The build runs
-  // in-process through the CLI's own composition root, `run()`, with a fake `CheckReferences` —
-  // the port the unit tests use. Everything else is the real command: real pdflatex and bibtex.
+  // 🔴 NO LIVE CITATION SERVICE. The references step asks Crossref, OpenAlex, Semantic Scholar,
+  // arXiv and DBLP; a run that depended on them took ~9 minutes and failed when DBLP did. The build
+  // runs in-process through the CLI's own composition root, `run()`, with the REAL references
+  // adapter over a fake `fetch` that answers every service and counts what it was asked — so the
+  // lookup cache, the reachability probe and DBLP's pacing are the shipped ones. Everything else
+  // is the real command: real pdflatex and bibtex.
   const asked = [];
-  const fakeReferences = async (bib) => {
-    asked.push(bib);
-    const ids = parseCitations(bib)
-      .map((c) => c.id)
-      .filter(Boolean);
-    return {
-      kind: "checked",
-      entries: ids.map((key) => ({ key, exists: "true", authors: "match" })),
-    };
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    asked.push(String(url));
+    const u = String(url);
+    if (u.startsWith("https://export.arxiv.org/"))
+      return new Response("<feed></feed>");
+    if (u.startsWith("https://dblp.org/")) return Response.json({});
+    return Response.json({ message: { items: [] }, results: [], data: [] });
   };
+  const fakeReferences = referencesChecker({ today: () => "2026-09-27" });
   const printed = [];
   const say = (...a) => printed.push(a.join(" "));
   const r = {
@@ -544,23 +546,63 @@ try {
   );
 
   console.log();
-  console.log("references — recorded from the fake, no service asked");
-  const citeRefs = join(work, "papers", "cite", "_build", "references.json");
+  console.log(
+    "references — answered by the fake services, then from the committed cache",
+  );
+  const citeDir2 = join(work, "papers", "cite");
+  const citeRefs = join(citeDir2, "_build", "references.json");
   const recorded = existsSync(citeRefs)
     ? JSON.parse(readFileSync(citeRefs, "utf8"))
     : null;
   check(
-    "cite: _build/references.json holds the verdicts the checker returned",
+    "cite: _build/references.json holds the verdict derived from the services' answers",
     recorded?.status === "checked" &&
-      JSON.stringify(recorded.entries) ===
-        JSON.stringify([{ key: "knuth84", exists: "true", authors: "match" }]),
+      JSON.stringify(
+        recorded.entries.map((e) => [e.key, e.exists, e.authors]),
+      ) === JSON.stringify([["knuth84", "unresolvable", "skipped"]]),
     JSON.stringify(recorded),
   );
+  const cacheFile = join(citeDir2, "repro", "references-cache.json");
+  const cacheOnDisk = existsSync(cacheFile)
+    ? JSON.parse(readFileSync(cacheFile, "utf8"))
+    : null;
   check(
-    "the checker was handed each bibliography the build compiled",
-    asked.some((b) => parseCitations(b).some((c) => c.id === "knuth84")),
-    `${String(asked.length)} bibliographies`,
+    "cite: the answers landed in repro/references-cache.json — four registries and DBLP, dated",
+    cacheOnDisk?.schema === 1 &&
+      Object.keys(cacheOnDisk.citations).length === 4 &&
+      Object.keys(cacheOnDisk.dblp).length === 1 &&
+      Object.values(cacheOnDisk.citations).every(
+        (v) => v.fetched === "2026-09-27",
+      ),
+    JSON.stringify(cacheOnDisk),
   );
+  const coldAsked = asked.length;
+  asked.length = 0;
+  const warmSaid = [];
+  const t0 = Date.now();
+  const warm = await run(["build", "papers/cite"], {
+    cwd: work,
+    log: (...a) => warmSaid.push(a.join(" ")),
+    err: (...a) => warmSaid.push(a.join(" ")),
+    checkReferences: fakeReferences,
+  });
+  const warmMs = Date.now() - t0;
+  globalThis.fetch = realFetch;
+  check(
+    "🔴 cite: a second build asks NOTHING — no lookup, no reachability probe",
+    warm === 0 && asked.length === 0 && coldAsked > 0,
+    `cold asked ${String(coldAsked)}, warm asked ${String(asked.length)}: ${asked.join(" ")}`,
+  );
+  check(
+    "cite: and says every answer came from the cache",
+    warmSaid.some(
+      (l) =>
+        l.includes("references: 1 checked, 0 failing") &&
+        l.includes("nothing fetched"),
+    ),
+    warmSaid.join("\n"),
+  );
+  console.log(`  (warm build of cite: ${String(warmMs)} ms)`);
 
   console.log();
   console.log("the command's remaining outcomes");

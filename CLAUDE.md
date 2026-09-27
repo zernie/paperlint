@@ -188,6 +188,12 @@ the instruction and never the evidence — the same split as rules 9 and 10 and 
 🔴 The argument "we need another command for X" is, in every tool examined, an argument that
 the CONFIG is not declaring something. Check that before adding a verb.
 
+Rejected on 2026-09-27, so it is not proposed again: a separate `paperlint refs` command for the
+reference check. The slowness it would have moved (#107) was a cache thrown away after every build,
+not a missing verb. The fix keeps the check in `build` and commits what the services answered in
+`<paper>/repro/references-cache.json` — **raw responses, never verdicts**: verdicts are derived
+again on every build, so a checker fix reaches every paper ([`docs/references.md`](docs/references.md)).
+
 ## Distribution — one install path: npm, then `paperlint init`
 
 `npm i -D paperlint` brings all the code — rules, skills, hooks, scripts. `paperlint init`

@@ -149,17 +149,24 @@ node scripts/verify-cites.mjs cites.json --offline   # no network (everything de
 \`\`\`
 It prints per-cite \`{id, verdict, reason, matched_db, matched_title?, flags?}\` + a summary, and **exits 1 iff
 any \`false\` (fabrication)** — \`unresolvable\` alone is advisory and does NOT fail the gate, matching the
-narrowed-false philosophy. API responses are cached to \`scripts/.cite-cache.json\` (gitignored) so re-runs are
-cheap and deterministic.
+narrowed-false philosophy. API responses are cached to \`~/.cache/paperlint/cite-cache.json\`
+(\`VERIFY_CITES_CACHE\` overrides) so re-runs are cheap and deterministic — outside the installed package,
+which \`npm ci\` wipes.
 
-## 5a. Both checks run on every \`paperlint build\`
+## 5a. Both checks run on every \`paperlint build\` — from a committed cache
 
 \`npx paperlint build\` runs \`verify-cites\` and \`bib-authors\` over the paper's bibliography after the PDF is
 built and records the verdicts, with the SHA-256 of the bibliography it checked, in
 \`<paper>/_build/references.json\`. \`paperlint lint\` reads that record offline: \`paper/cite-exists\` and
 \`paper/author-list\` report a failing entry on its own line, \`paper/refs-fresh\` says when the bibliography
 changed since, and \`paper/refs-checked\` warns when nothing was recorded or the build had no network. The
-step never fails the build. Run the scripts by hand (below) to read a single verdict in full.
+step never fails the build.
+
+What the services ANSWERED is kept in \`<paper>/repro/references-cache.json\` — **commit it**. A build asks
+only the questions that file cannot answer (a new or edited entry), so an unchanged bibliography builds
+with no network at all, in CI too. It holds responses, never verdicts: the verdicts are derived again on
+every build. To refresh one answer, delete its entry; to refresh everything, delete the file. Details:
+\`docs/references.md\` in the package. Run the scripts by hand (below) to read a single verdict in full.
 
 ## 5b. The author-list gate — \`scripts/bib-authors.mjs\`
 

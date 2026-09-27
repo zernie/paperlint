@@ -3,6 +3,7 @@
  * Crossref answer. The adapter (`adapters/references/`) runs the package's two checkers; a test
  * passes a function.
  */
+import type { LookupCache } from "../domain/lookup-cache.ts";
 
 /** What one bibliography entry came to. */
 export interface EntryVerdict {
@@ -24,5 +25,18 @@ export type ReferencesCheck =
   /** Nothing could be asked — no network, every service down. Never a pass. */
   | { readonly kind: "not-checked"; readonly why: string };
 
-/** The bibliography's text (BibTeX) → the verdicts. Never throws: a failure is `not-checked`. */
-export type CheckReferences = (bib: string) => Promise<ReferencesCheck>;
+/** A check's verdicts, and the lookup cache grown by whatever it had to fetch. */
+export interface ReferencesRun {
+  readonly check: ReferencesCheck;
+  /** The cache passed in, plus every new successful answer; the same object when nothing was fetched. */
+  readonly cache: LookupCache;
+}
+
+/**
+ * The bibliography's text (BibTeX) and the paper's lookup cache → the verdicts, derived afresh from
+ * cached and newly fetched answers. Never throws: a failure is `not-checked`.
+ */
+export type CheckReferences = (
+  bib: string,
+  cache: LookupCache,
+) => Promise<ReferencesRun>;

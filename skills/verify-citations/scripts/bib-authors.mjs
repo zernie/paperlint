@@ -279,7 +279,7 @@ export function surnames(authorField) {
 }
 
 // Only called for an entry that has an author (checkAuthors filters on it first).
-const truncated = (authorField) => /\band\s+others\b/i.test(authorField);
+export const truncated = (authorField) => /\band\s+others\b/i.test(authorField);
 
 /** Is the entry claiming a PUBLISHED venue (as opposed to a preprint)? */
 export function claimsPublished(e) {
