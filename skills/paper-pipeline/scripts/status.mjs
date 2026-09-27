@@ -120,7 +120,7 @@ function produced(r) {
   return "no row";
 }
 
-function main(argv) {
+export function main(argv) {
   const dir = resolve(argv[2] || ".");
   const rows = status(dir, { gates: EXPECTED_GATES });
 
