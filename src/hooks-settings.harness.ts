@@ -27,7 +27,18 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createChecker } from "../lib/check.ts";
+import { isDeepStrictEqual } from "node:util";
+import { z } from "zod";
 import type { Merge, Settings } from "./hooks-settings.ts";
+
+/** Settings with a PreToolUse entry — the shape the "wired twice" case edits. */
+const PreToolUseSettings = z.looseObject({
+  hooks: z.looseObject({
+    PreToolUse: z.array(
+      z.looseObject({ hooks: z.array(z.looseObject({ command: z.string() })) }),
+    ),
+  }),
+});
 
 const {
   hookRun,
@@ -48,7 +59,7 @@ const check = createChecker();
 // ── the contract with vigiles, checked before anything relies on it ──────────────────────
 check(
   "🔴 vigiles/claude-code exports claudeCodeHookProtocol.mergeRegistrations — the merge init calls",
-  typeof claudeCodeHookProtocol?.mergeRegistrations === "function",
+  typeof claudeCodeHookProtocol.mergeRegistrations === "function",
 );
 
 // ── the one source: plugin/hooks/hooks.json ─────────────────────────────────────────────
@@ -153,13 +164,18 @@ try {
     return dir;
   };
   const text = (dir: string) => readFileSync(join(dir, SETTINGS_PATH), "utf8");
+  const settingsIn = (dir: string): Settings => {
+    const r = readSettings(dir);
+    if (r.status === "unparsable") throw new Error(r.reason);
+    return r.settings;
+  };
 
   // ── a fresh project ────────────────────────────────────────────────────────────────────
   {
     const dir = join(work, "fresh");
     mkdirSync(dir);
     const r = wireHooks(dir, merge, wiring);
-    const s = JSON.parse(text(dir));
+    const s = settingsIn(dir);
     check(
       "no settings file → it is created with the three hooks",
       r.status === "written" &&
@@ -189,14 +205,14 @@ try {
       },
     });
     wireHooks(dir, merge, wiring);
-    const s = JSON.parse(text(dir));
+    const s = settingsIn(dir);
     check(
       "🔴 the user's own hook in the SAME matcher survives",
       JSON.stringify(s).includes("node my-own-lint.mjs"),
     );
     check(
       "and every other key is kept (permissions)",
-      s.permissions?.allow?.[0] === "Bash(ls:*)",
+      isDeepStrictEqual(s["permissions"], { allow: ["Bash(ls:*)"] }),
     );
     check(
       "and ours are there, once each",
@@ -294,8 +310,8 @@ try {
     "nothing wired → ⚠ not wired, with the remedy",
     /⚠ not wired — none of the 3 hooks/.test(doc({})),
   );
-  const twice = JSON.parse(JSON.stringify(wiredOnce));
-  twice.hooks.PreToolUse[0].hooks.push({
+  const twice = PreToolUseSettings.parse(structuredClone(wiredOnce));
+  twice.hooks.PreToolUse[0]?.hooks.push({
     type: "command",
     command: "npx paperlint hook paper-edit-guard",
   });

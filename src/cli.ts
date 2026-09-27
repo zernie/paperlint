@@ -237,8 +237,7 @@ export function buildConfig(
     languageOptions: { frontmatter: "yaml" },
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
-  const cfg: any[] = [
+  const cfg: unknown[] = [
     // 🔴 THE PROJECT'S PAPER TEMPLATE IS NOT A PAPER. `paperlint new` reads `<papers>/.template/`, and
     // its files carry every marker a paper does. Flat config does NOT ignore dot-directories by
     // default (only `node_modules/` and `.git/`), so without this block `paperlint lint` would lint the
@@ -398,7 +397,7 @@ export function rulesOff(texLanguage?: unknown): Linter.Config[] {
 
 /** Whether a rule entry (`"error"`, `2`, `["warn", {…}]`) turns the rule on. */
 const isOn = (entry: unknown): boolean => {
-  const sev = Array.isArray(entry) ? entry[0] : entry;
+  const sev: unknown = Array.isArray(entry) ? entry[0] : entry;
   return sev !== undefined && sev !== "off" && sev !== 0;
 };
 
@@ -694,7 +693,11 @@ export function ownVersion(
     readFileSync(new URL("../package.json", import.meta.url), "utf8"),
 ): string | undefined {
   try {
-    const v = JSON.parse(readManifest())?.version;
+    const manifest: unknown = JSON.parse(readManifest());
+    const v =
+      typeof manifest === "object" && manifest !== null && "version" in manifest
+        ? manifest.version
+        : undefined;
     return typeof v === "string" ? v : undefined;
   } catch {
     return undefined;
@@ -780,7 +783,9 @@ export const papersRoots = (cfg: {
 export function toPaths(papers: unknown): string[] {
   if (typeof papers === "string") return papers.trim() ? [papers.trim()] : [];
   if (Array.isArray(papers))
-    return papers.filter((x) => typeof x === "string" && x.trim());
+    return papers.filter(
+      (x): x is string => typeof x === "string" && x.trim() !== "",
+    );
   return [];
 }
 
@@ -1470,8 +1475,7 @@ export async function run(
   // reached, which is what the very first run over an empty directory showed: instead of a clear
   // message a stack from the depths of eslint-helpers.js flew out. A failure stays a failure, but
   // an explicable one.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
-  let results: any[];
+  let results: ESLint.LintResult[];
   try {
     results = await eslint.lintFiles(paths);
   } catch (e) {
@@ -1547,8 +1551,7 @@ const isEmptySet = (e: unknown): boolean => {
  */
 async function reportLint(
   eslint: ESLint,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
-  results: any[],
+  results: ESLint.LintResult[],
   structure: ReturnType<typeof checkStructure>,
   {
     a,
@@ -1600,7 +1603,7 @@ async function reportLint(
     const warnings = results.reduce((n, r) => n + r.warningCount, 0);
     if (warnings > a.maxWarnings) {
       err(
-        `${warnings} warning(s) exceed the --max-warnings limit of ${String(a.maxWarnings)}`,
+        `${String(warnings)} warning(s) exceed the --max-warnings limit of ${String(a.maxWarnings)}`,
       );
       return 1;
     }
