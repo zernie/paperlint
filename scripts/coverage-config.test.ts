@@ -9,6 +9,9 @@
  *   - `evalOnly`: support for the PAID `*.eval.mjs` evaluations, which `npm test` never runs. The
  *     claim is that nothing but an eval (or another eval-only module) imports them.
  *
+ * The floor itself is pinned: lines, statements, functions and branches are all 100, `npm run
+ * coverage` checks them, and CI runs that script — lowering any of the three links fails here.
+ *
  * Two more gates close the ways around a 100% threshold (owner's rule for #52):
  *   - no measured source carries a coverage-ignore comment (`c8`/`v8`/`istanbul`/`node:coverage
  *     ignore`) — an effect a test cannot reach is made injectable instead;
@@ -19,11 +22,16 @@ import assert from "node:assert/strict";
 import { globSync, readFileSync } from "node:fs";
 import { dirname, join, matchesGlob, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import yaml from "js-yaml";
 import ts from "typescript";
 import { test } from "vitest";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const CONFIG = JSON.parse(readFileSync(join(ROOT, ".c8rc.json"), "utf8")) as {
+  lines: number;
+  statements: number;
+  functions: number;
+  branches: number;
   include: string[];
   exclude: string[];
   extension: string[];
@@ -196,6 +204,31 @@ test("no measured source carries a coverage-ignore comment", () => {
   );
   assert.ok(files.length > 100, `only ${String(files.length)} files measured`);
   assert.deepEqual(offenders, []);
+});
+
+test("the floor is 100 on all four measures, `npm run coverage` enforces it, and CI runs that script", () => {
+  assert.deepEqual(
+    [CONFIG.lines, CONFIG.statements, CONFIG.functions, CONFIG.branches],
+    [100, 100, 100, 100],
+  );
+  const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as {
+    scripts: Record<string, string>;
+  };
+  // Tokens of one shell command: c8 must be told to CHECK, not only to report.
+  const coverage = (pkg.scripts["coverage"] ?? "").split(/\s+/);
+  assert.ok(coverage.includes("c8") && coverage.includes("--check-coverage"));
+  const ci = yaml.load(
+    readFileSync(join(ROOT, ".github", "workflows", "ci.yml"), "utf8"),
+  ) as { jobs: Record<string, { steps?: { run?: string }[] }> };
+  const runs = Object.values(ci.jobs).flatMap((j) =>
+    (j.steps ?? []).map((s) => s.run ?? ""),
+  );
+  assert.ok(
+    runs.some(
+      (r) => r.trim().split(/\s+/).slice(0, 3).join(" ") === "npm run coverage",
+    ),
+    `no CI step runs \`npm run coverage\`:\n${runs.join("\n")}`,
+  );
 });
 
 test("dist/ is excluded BEFORE source maps: a direct load is not a second copy of src/", () => {
