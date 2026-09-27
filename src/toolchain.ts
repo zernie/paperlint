@@ -162,8 +162,8 @@ export function mirrorsFrom(env: NodeJS.ProcessEnv): readonly string[] {
 
 /** `release-texlive.txt`'s first line: "TeX Live (https://tug.org/texlive) version 2026". */
 export function tlYear(release: string): string | null {
-  const first = release.split("\n", 1)[0] ?? "";
-  return /\bversion (\d{4})\b/.exec(first)?.[1] ?? null;
+  // `^[^\n]*`: the first line only — a year on a later line is not the release.
+  return /^[^\n]*\bversion (\d{4})\b/.exec(release)?.[1] ?? null;
 }
 
 /** The install-tl profile: scheme-basic, no docs or sources, every tree variable inside `dir`. */
@@ -359,7 +359,9 @@ function unpack(io: ToolchainIO, archive: string, work: string): string | null {
   return dir ? join(work, dir) : null;
 }
 
-export type Step<T> = { ok: true; value: T } | { ok: false; lines: string[] };
+/** A failed step always says why: its first line is the headline, the rest detail. */
+export type Step<T> =
+  { ok: true; value: T } | { ok: false; lines: [string, ...string[]] };
 
 /** Download, unpack and run install-tl: a fresh scheme-basic tree in `<root>/<year>`. */
 export function installBase(
@@ -458,7 +460,7 @@ function runInstallTl(
  */
 export type AddStep =
   | { readonly ok: true; readonly value: { gaps: Gaps; tail: string[] } }
-  | { readonly ok: false; readonly lines: string[] }
+  | { readonly ok: false; readonly lines: [string, ...string[]] }
   | { readonly ok: false; readonly newer: ReleaseGap };
 
 export function installPackages(
@@ -654,10 +656,9 @@ export const binLine = (tree: CachedTree): string => `  bin: ${tree.bin}`;
 
 function fail(
   err: (line: string) => void,
-  lines: readonly string[],
+  [head, ...rest]: readonly [string, ...string[]],
 ): InstallResult {
-  const [head, ...rest] = lines;
-  err(`✗ paperlint toolchain: ${head ?? "failed"}`);
+  err(`✗ paperlint toolchain: ${head}`);
   for (const l of rest) err(`    ${l}`);
   return { ok: false };
 }
