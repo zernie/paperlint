@@ -210,48 +210,54 @@ async function withoutTex<T>(dir: string, fn: () => Promise<T>): Promise<T> {
   }
 }
 
-test("build: a markdown-only paper is refused; with no TeX Live a dry run says where a real run stops, and a real run stops", async () => {
-  const dir = join(root, "build-notex");
-  writeTree(dir, {
-    "package.json": "{}",
-    "papers/md/paper.md": "# P\n\nx\n",
-    "papers/tex/paper.tex":
-      "\\documentclass{article}\\begin{document}x\\end{document}\n",
-  });
-  const [md, dry, real, toolchain] = await withoutTex(dir, async () => [
-    await cli(["build", "papers/md"], dir),
-    await cli(["build", "papers/tex", "--dry-run"], dir),
-    await cli(["build", "papers/tex"], dir),
-    await cli(["toolchain", "--check"], dir),
-  ]);
-  const venues = join(
-    import.meta.dirname,
-    "..",
-    "skills",
-    "submit-paper",
-    "references",
-    "venues",
+const noTexDir = join(root, "build-notex");
+writeTree(noTexDir, {
+  "package.json": "{}",
+  "papers/md/paper.md": "# P\n\nx\n",
+  "papers/tex/paper.tex":
+    "\\documentclass{article}\\begin{document}x\\end{document}\n",
+});
+const venues = join(
+  import.meta.dirname,
+  "..",
+  "skills",
+  "submit-paper",
+  "references",
+  "venues",
+);
+
+test("build: a markdown-only paper is refused", async () => {
+  const md = await withoutTex(noTexDir, () =>
+    cli(["build", "papers/md"], noTexDir),
   );
+  assert.deepEqual(md, {
+    code: 1,
+    out: [
+      "papers/md",
+      `  inputs: TEXINPUTS += ${venues}`,
+      "  compile: refused — no paper.tex; paperlint compiles LaTeX, and this paper has none",
+      "  measure: skipped — nothing is compiled",
+      "  references: skipped — nothing is compiled",
+      "  ✗ nothing to compile: no paper.tex",
+    ].join("\n"),
+    err:
+      "\nNo paper.tex in: papers/md.\n" +
+      'This is NOT "nothing to build" — paperlint compiles LaTeX, and these papers have no LaTeX source.\n' +
+      "Write the paper in paper.tex; `paperlint new <name>` creates one.",
+  });
+});
+
+test("build: with no TeX Live a dry run says where a real run stops, and a real run stops", async () => {
+  const [dry, real, toolchain] = await withoutTex(noTexDir, async () => [
+    await cli(["build", "papers/tex", "--dry-run"], noTexDir),
+    await cli(["build", "papers/tex"], noTexDir),
+    await cli(["toolchain", "--check"], noTexDir),
+  ]);
   const missing =
     "missing: 19 package(s): amsfonts, amsmath, bibtex, booktabs, caption, cm-super, enumitem, geometry, graphics, hyperref, latex, microtype, natbib, pgf, seqsplit, tools, url, xcolor, xurl";
   assert.deepEqual(
-    { md, dry, real, toolchain: { code: toolchain.code } },
+    { dry, real, toolchain: { code: toolchain.code } },
     {
-      md: {
-        code: 1,
-        out: [
-          "papers/md",
-          `  inputs: TEXINPUTS += ${venues}`,
-          "  compile: refused — no paper.tex; paperlint compiles LaTeX, and this paper has none",
-          "  measure: skipped — nothing is compiled",
-          "  references: skipped — nothing is compiled",
-          "  ✗ nothing to compile: no paper.tex",
-        ].join("\n"),
-        err:
-          "\nNo paper.tex in: papers/md.\n" +
-          'This is NOT "nothing to build" — paperlint compiles LaTeX, and these papers have no LaTeX source.\n' +
-          "Write the paper in paper.tex; `paperlint new <name>` creates one.",
-      },
       dry: {
         code: 0,
         out: [
