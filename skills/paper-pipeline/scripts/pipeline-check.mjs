@@ -346,9 +346,13 @@ function newestSourceDate(dir) {
     let entries;
     try {
       entries = readdirSync(d, { withFileTypes: true });
+      // EACCES on an unreadable subdirectory: the tests run as root, which directory permissions
+      // do not deny, and every other failure needs a race with rm.
+      /* c8 ignore start */
     } catch {
       return;
     }
+    /* c8 ignore stop */
     for (const e of entries) {
       if (
         e.name.startsWith(".") ||

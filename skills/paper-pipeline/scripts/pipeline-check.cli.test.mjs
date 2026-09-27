@@ -11,7 +11,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "vitest";
 import { runNode, useTempDir, writeTree } from "../../../test/support.mjs";
-import { parseStatus } from "./pipeline-check.mjs";
+import { check, parseStatus } from "./pipeline-check.mjs";
 import { scorecard } from "./fixtures/scorecard.mjs";
 
 const SCRIPT = join(
@@ -134,6 +134,29 @@ test("open access far from the deadline is not a finding yet", () => {
   assert.deepEqual(json("early"), []);
 });
 
+test("open access inside the moderation window is flagged even when the box is blank", () => {
+  paper("blank-near", card({ deadline: "2026-09-11", access: { status: "" } }));
+  assert.deepEqual(
+    json("blank-near").map((f) => f.msg),
+    [
+      "access (can you physically submit?) is blank with 10 day(s) to the deadline — profile moderation runs up to two weeks and there is no expedite route without an institutional email",
+    ],
+  );
+});
+
+test("a continuous check that is not ☑, or ☑ without a date, is not called stale here", () => {
+  // The undated ☑ is `pipeline/undated-continuous`'s finding, not this checker's.
+  paper(
+    "not-done",
+    card({ cites: { date: "" }, render: { status: "◐", date: "2020-01-01" } }),
+  );
+  assert.deepEqual(json("not-done"), []);
+});
+
+test("check() on its own: no sections and no directory is no finding", () => {
+  assert.deepEqual(check({ sections: {}, header: "" }, {}), []);
+});
+
 test("--json prints the findings and nothing else", () => {
   paper("js", card({ render: { date: "2026-07-20" } }));
   assert.deepEqual(json("js"), [
@@ -222,6 +245,23 @@ test("reviews/: two different worst sections are not a repeat", () => {
     mtimes: { "reviews/c-coldread.md": "2026-08-20" },
   });
   assert.deepEqual(json("mixed"), []);
+});
+
+test("reviews/ as a file, and a report path that is a directory, are unreadable — not a crash", () => {
+  paper("reviews-file", card(), { files: { reviews: "not a folder\n" } });
+  assert.deepEqual(
+    json("reviews-file").map((f) => f.kind),
+    ["no-cold-read"],
+  );
+  paper("reviews-dir", card(), {
+    files: {
+      "reviews/a-writing.md/inner.txt": "x",
+      "reviews/b-writing.md": "WORST-SECTION: abstract\n",
+      "reviews/c-coldread.md": "read\n",
+    },
+    mtimes: { "reviews/c-coldread.md": "2026-08-20" },
+  });
+  assert.deepEqual(json("reviews-dir"), []);
 });
 
 test("reviews/: a cold read older than the text is stale, under either spelling", () => {
