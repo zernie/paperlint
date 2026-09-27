@@ -28,7 +28,7 @@
  * Tested by: `scripts/rules-are-content-only.harness.mjs` — quiet on the real corpus, firing on
  * a planted rule.
  */
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parse } from "espree";
 import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
@@ -95,7 +95,10 @@ export function rulesAreContentOnly({ cwd }) {
   const dir = join(cwd, "eslint-rules");
   const checked = [];
   const findings = [];
-  for (const f of readdirSync(dir).filter(isRuleSource)) {
+  // A repository with no `eslint-rules/` has no rule sources: `checked` stays empty and the gate
+  // says so by name. `readdirSync` would throw ENOENT instead — a stack trace, not the refusal.
+  const names = existsSync(dir) ? readdirSync(dir) : [];
+  for (const f of names.filter(isRuleSource)) {
     const hits = processImports(readFileSync(join(dir, f), "utf8"));
     // 🔴 The counter increments WITH the verdict, not before it: a `checked` that keeps
     // counting while the verdict stops being reached is the failure recorded in the consumer's

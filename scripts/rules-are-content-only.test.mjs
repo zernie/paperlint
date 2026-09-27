@@ -14,14 +14,15 @@ const capture = () => {
 
 const root = useTempDir("content-only-");
 
-test("rules-are-content-only: a rule asking git is a finding, clean rules pass", () => {
+test("rules-are-content-only: no rules is a failure, a rule asking git is a finding, clean rules pass", () => {
   writeTree(root, {
+    "empty/.keep": "",
     "dirty/eslint-rules/asks-git.mjs":
       'import { execFileSync } from "node:child_process";\nexecFileSync("git", ["log"]);\n',
     "dirty/eslint-rules/clean.mjs": "export default {};\n",
     "clean/eslint-rules/clean.mjs": "export default {};\n",
   });
-  const runs = ["dirty", "clean"].map((d) => {
+  const runs = ["empty", "dirty", "clean"].map((d) => {
     const { out, io } = capture();
     return [
       contentMain({ cwd: `${root}/${d}`, ...io }),
@@ -29,6 +30,7 @@ test("rules-are-content-only: a rule asking git is a finding, clean rules pass",
     ];
   });
   assert.deepEqual(runs, [
+    [1, ["E <root>/empty/eslint-rules: no rule sources"]],
     [
       1,
       [
