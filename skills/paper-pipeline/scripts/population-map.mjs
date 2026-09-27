@@ -94,7 +94,7 @@ export function parseRegistry(tsv) {
     if (!line.trim() || line.startsWith("#")) continue;
     const [id, print, relation, relatedTo, gloss] = line
       .split("\t")
-      .map((c) => (c ?? "").trim());
+      .map((c) => c.trim()); // split yields strings; a missing column is `undefined` in the destructuring
     if (!id || id === "id") continue;
     rows.push({ id, print, relation, relatedTo, gloss });
   }
@@ -108,6 +108,12 @@ export function findings(md, tsv) {
   const out = [];
 
   for (const row of reg) {
+    // A row with no printed quantity has nothing to look for in the body. It used to reach
+    // `printed(undefined)` and crash the checker; it is a defect of the TSV, reported as one.
+    if (!row.print) {
+      out.push({ kind: "incomplete", row });
+      continue;
+    }
     const appears = printed(row.print).test(body);
     if (!appears) {
       // A registry row for a quantity the body no longer prints. Same discipline as the
@@ -124,7 +130,7 @@ export function findings(md, tsv) {
   return out;
 }
 
-/* Importable above this line; the CLI only runs when this file is the entry point, so the selftest
+/* Importable above this line; the CLI only runs when this file is the entry point, so the tests
  * can exercise findings() without the argv handling firing. */
 if (!isMain(import.meta.url)) {
   // imported — nothing to do
@@ -174,6 +180,10 @@ function main() {
     } else if (f.kind === "badref") {
       console.log(
         `  🔴 ${f.row.id} says it relates to "${f.row.relatedTo}", which is not a row in populations.tsv`,
+      );
+    } else {
+      console.log(
+        `  🔴 ${f.row.id} has no printed quantity — the row cannot be checked against the body`,
       );
     }
   }
