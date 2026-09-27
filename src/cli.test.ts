@@ -5,10 +5,21 @@
  * case runs `run()` in-process with its own `cwd` and compares the whole code and output.
  */
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { test } from "vitest";
-import { useTempDir, writeTree } from "../test/support.mjs";
-import { chooseVenue, parseArgs, parseSettings, run, runHook } from "./cli.ts";
+import { runNode, useTempDir, writeTree } from "../test/support.mjs";
+import {
+  chooseVenue,
+  paperRuleBlocks,
+  parseArgs,
+  parseSettings,
+  run,
+  runHook,
+  silentOptionalRules,
+  toolchainTex,
+} from "./cli.ts";
 
 const root = useTempDir("cli-test-");
 
@@ -279,4 +290,224 @@ test("build: with no TeX Live a dry run says where a real run stops, and a real 
       toolchain: { code: 1 },
     },
   );
+});
+
+const BIN = join(import.meta.dirname, "..", "bin", "paperlint.mjs");
+
+test("no command prints the usage and exits 2; --kind with no value is refused", async () => {
+  const r = await cli([], root);
+  assert.equal(r.code, 2);
+  assert.match(r.out, /^paperlint — /);
+  assert.equal(parseArgs(["new", "x", "--kind"]).missingValue, "--kind");
+});
+
+test("src/cli.ts run as the program itself answers like the bin", () => {
+  const r = runNode(join(import.meta.dirname, "cli.ts"), ["--help"]);
+  assert.equal(r.status, 0);
+  assert.match(r.stdout, /^paperlint — /);
+});
+
+test("build and toolchain over a broken or empty declaration", async () => {
+  const broken = writeTree(join(root, "build-broken"), {
+    "paperlint.json": "{ nope",
+  });
+  const empty = writeTree(join(root, "build-none"), {
+    "paperlint.json": JSON.stringify({ papersDir: [] }),
+  });
+  const b = await cli(["build", "--all"], broken);
+  const e = await cli(["build", "--all"], empty);
+  assert.deepEqual(
+    [b.code, e],
+    [
+      2,
+      {
+        code: 1,
+        out: "config: paperlint.json",
+        err: "--all: no papers found under (nothing declared)",
+      },
+    ],
+  );
+  // A config that does not parse contributes no paper to the toolchain: the shipped presets only.
+  assert.deepEqual(toolchainTex(broken), toolchainTex(empty));
+});
+
+test("build --dry-run on a paper with a venue plans for the preset's packages", async () => {
+  const dir = writeTree(join(root, "build-venue"), {
+    "package.json": "{}",
+    "papers/v/paper.tex":
+      "\\documentclass{acmart}\\begin{document}x\\end{document}\n",
+    "papers/v/paperlint.json": JSON.stringify({ extends: "paperlint:aisec" }),
+  });
+  const r = await withoutTex(dir, () =>
+    cli(["build", "papers/v", "--dry-run"], dir),
+  );
+  assert.equal(r.code, 0);
+  assert.match(r.out, /^engine: none — a real run would stop here: .*acmart/);
+});
+
+test("a paper's paperlint.json that does not parse stops the lint with its path", () => {
+  const dir = writeTree(join(root, "rules-broken"), {
+    "p/paper.md": "# P\n",
+    "p/paperlint.json": "{ nope",
+  });
+  const r = paperRuleBlocks([join(dir, "p")]);
+  assert.equal(r.ok, false);
+  assert.match(!r.ok ? r.error : "", /^.*rules-broken\/p\/paperlint\.json: /);
+});
+
+test("silentOptionalRules: a config with no rules turns nothing on", async () => {
+  assert.deepEqual(await silentOptionalRules({} as never, [], {} as never), []);
+});
+
+test("init with no path and --format md sets up the current directory", async () => {
+  const dir = writeTree(join(root, "init-here"), { "package.json": "{}" });
+  const r = await cli(
+    ["init", "--yes", "--no-hooks", "--paper", "first", "--format", "md"],
+    dir,
+  );
+  assert.equal(
+    existsSync(join(dir, "papers", "first", "paper.md")),
+    true,
+    r.out + r.err,
+  );
+});
+
+test("init and doctor with a declaration that names no directory: nothing to compare", async () => {
+  const dir = writeTree(join(root, "init-empty"), {
+    "package.json": "{}",
+    "paperlint.json": JSON.stringify({ papersDir: [] }),
+  });
+  const d = await cli(["doctor"], dir);
+  assert.match(
+    d.out,
+    / {2}the CLI will lint {4}\(nothing — no declaration found\)/,
+  );
+});
+
+test("lint: an empty papers directory that IS the working directory is named '.'", async () => {
+  const dir = writeTree(join(root, "lint-dot"), {
+    "paperlint.json": JSON.stringify({ papersDir: "." }),
+  });
+  const r = await cli(["lint"], dir);
+  assert.equal(r.code, 2);
+  assert.match(r.err, /^no papers in \./);
+});
+
+test("lint: a named directory with nothing paperlint lints is named in full when it is the working directory", async () => {
+  const dir = writeTree(join(root, "lint-nothing"), { "notes.txt": "x" });
+  const r = await cli(["lint", "."], dir);
+  assert.deepEqual(r.code, 1);
+  assert.match(r.err, new RegExp(`^nothing was linted under ${dir} — `));
+});
+
+test("new from inside the paper it names adds the missing files and names the paper in full", async () => {
+  const dir = writeTree(join(root, "new-inside"), {
+    "paperlint.json": JSON.stringify({ papersDir: "papers" }),
+    "papers/p/paper.md": "# P\n",
+  });
+  const r = await cli(
+    ["new", "p", "--format", "md", "--yes"],
+    join(dir, "papers", "p"),
+  );
+  assert.match(
+    r.out,
+    new RegExp(
+      `already there, only missing files added: ${join(dir, "papers", "p")}`,
+    ),
+  );
+});
+
+test("new with several directories, run from the first, names it in full", async () => {
+  const dir = writeTree(join(root, "new-several-inside"), {
+    "paperlint.json": JSON.stringify({ papersDir: ["a", "b"] }),
+    "a/.keep": "",
+  });
+  const r = await cli(["new", "p", "--format", "md", "--yes"], join(dir, "a"));
+  assert.equal(
+    r.out.split("\n")[0],
+    `several papers directories are declared — using the first: ${join(dir, "a")}`,
+  );
+});
+
+test("lint: an ESLint failure that is not an empty set is not swallowed", async () => {
+  const dir = writeTree(join(root, "lint-bad-option"), {
+    "paperlint.json": JSON.stringify({
+      rules: { "paper/stages": ["error", { x: 1 }] },
+    }),
+    "papers/p/paper.md": "# P\n",
+    "papers/p/PIPELINE-STATUS.md": "---\nstages: []\n---\n# S\n",
+  });
+  await assert.rejects(cli(["lint"], dir), {
+    message:
+      /Key "paper\/stages":\n\tValue \[\{"x":1\}\] should NOT have more than 0 items/,
+  });
+});
+
+test("lint: a path that shares nothing with the project but the filesystem root is still linted", async () => {
+  // The temp project lives under the OS temp directory and the fixture in this repository: the
+  // only directory holding both is `/`, and ESLint runs from there.
+  const paper = join(
+    import.meta.dirname,
+    "..",
+    "fixtures",
+    "paper-stages",
+    "ok",
+  );
+  const r = await cli(["lint", paper], root);
+  assert.equal(r.code, 1);
+  assert.match(
+    r.out,
+    /stage «submitted» \(2026-07-22\) carries no frozen source/,
+  );
+});
+
+/**
+ * `new` at a terminal: stdin and stdout claim to be TTYs (a preload), and each prompt is answered
+ * when it appears — a pipe written all at once is swallowed by the first question.
+ */
+function newAtTerminal(cwd: string, answers: Record<string, string>) {
+  const tty = join(root, "tty.mjs");
+  writeTree(root, {
+    "tty.mjs":
+      'Object.defineProperty(process.stdin, "isTTY", { value: true });\n' +
+      'Object.defineProperty(process.stdout, "isTTY", { value: true });\n',
+  });
+  return new Promise<{ status: number | null; out: string }>((done) => {
+    const child = spawn(
+      process.execPath,
+      ["--import", tty, BIN, "new", "first"],
+      {
+        cwd,
+        env: { ...process.env, CI: "" },
+      },
+    );
+    let out = "";
+    const asked = new Set<string>();
+    child.stdout.on("data", (d: Buffer) => {
+      out += String(d);
+      for (const [prompt, answer] of Object.entries(answers)) {
+        if (asked.has(prompt) || !out.includes(prompt)) continue;
+        asked.add(prompt);
+        child.stdin.write(answer);
+      }
+    });
+    child.on("close", (status) => done({ status, out }));
+  });
+}
+
+test("new at a terminal asks for the format and the venue; the answers pick them", async () => {
+  const md = writeTree(join(root, "new-tty-md"), { "package.json": "{}" });
+  const r = await newAtTerminal(md, { "format:": "md\n", "venue:": "none\n" });
+  assert.equal(r.status, 0, r.out);
+  assert.equal(existsSync(join(md, "papers", "first", "paper.md")), true);
+});
+
+test("chooseVenue: a question that fails (the stream ended) takes the default, no venue", async () => {
+  const r = await chooseVenue(parseArgs(["new", "x"]), {
+    paperDir: join(root, "x"),
+    cwd: root,
+    interactive: true,
+    ask: () => Promise.reject(new Error("Aborted with Ctrl+D")),
+  });
+  assert.deepEqual(r, { ok: true, value: null });
 });

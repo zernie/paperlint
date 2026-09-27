@@ -693,6 +693,9 @@ const VALUE_FLAGS: ReadonlySet<string> = new Set([
  * the placeholder instead of guessing.
  */
 function ownVersion(): string | undefined {
+  // The package's own manifest always exists and carries a string version, so the two fallbacks
+  // below only run in a broken install — which no test can stage from inside the package.
+  /* c8 ignore start */
   try {
     const v = JSON.parse(
       readFileSync(new URL("../package.json", import.meta.url), "utf8"),
@@ -701,6 +704,7 @@ function ownVersion(): string | undefined {
   } catch {
     return undefined;
   }
+  /* c8 ignore stop */
 }
 
 /**
@@ -1289,6 +1293,9 @@ async function runInit(
       createPaperAt(papersRoot, name, format, { log, err, cwd }),
     tex: {
       installed: () => cachedTree(cacheRoot(process.env)) !== null,
+      // The real TeX Live install (~270 MB), run only when a human at a terminal says yes; init's
+      // decision around it is tested with a fake installer (init.test.ts).
+      /* c8 ignore start */
       install: () =>
         runToolchain({
           check: false,
@@ -1297,6 +1304,7 @@ async function runInit(
           banal: hostBanalInstaller(),
           tex: toolchainTex(resolve(cwd, a.paths[0] ?? ".")),
         }),
+      /* c8 ignore stop */
     },
     resolveCliPapers: (root: string): string | null =>
       cliPapers({ ...a, config: null }, root),
