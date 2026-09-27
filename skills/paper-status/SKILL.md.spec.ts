@@ -14,17 +14,6 @@ export default experimental_skill({
   body: `
 # paper-status — state, measured before it is narrated
 
-## Run me
-
-🔴 FIRST, before any other step:
-
-\`\`\`
-node .claude/skills/paper-pipeline/scripts/announce.mjs paper-status <paper-dir>
-\`\`\`
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
-
 The author asks "what's the status there?" constantly, and the answer keeps coming from the wrong place: my
 memory of the session, which drifts, or a 200-line scorecard he cannot skim. Both fail the same way —
 **they narrate state instead of measuring it.**
@@ -55,17 +44,12 @@ So on any turn that touched a paper, the reply ends with **three lines, unprompt
 Three failures make this a rule rather than a preference, all in one session:
 - I finished a page-fit cut and stopped, so he asked what the status was;
 - I left artifact hosting on his side of the split for a day and a half while the credential to clear
-  it sat in the environment (see \`credential-available\` in \`pipeline-check.mjs\`);
+  it sat in the environment;
 - three consecutive panels returned Weak Accept and the ceiling they named was never the next task,
   because nothing turned "here is the score" into "here is what to do about it".
 
 **Never end a paper turn on a completed sub-task alone.** "Fits in 8 pages" is a measurement, not a
 status; the status is what that measurement makes possible next.
-
-**Enforcement leg.** \`pipeline-check.mjs\` prints its banner **unconditionally**, including when it has
-zero findings — deadline countdown, verdict row, and \`➡️ NEXT\`. It runs from \`paper-status-gates.sh\`
-on every edit to a paper source, so the state arrives without anyone pulling it. If that banner and
-this section ever disagree, the banner is a measurement and this is prose: believe the banner.
 
 ## How to run it
 
@@ -95,8 +79,6 @@ Compare against the dates in \`PIPELINE-STATUS.md\`. If the paper moved after a 
 gate's verdict **does not describe the current paper** — say so explicitly, and say what changed since.
 An accept-probability from a superseded draft is not evidence about this one; carrying it forward is
 the single most common way a status report lies.
-
-If the project ships a checker (\`.claude/skills/paper-pipeline/scripts/pipeline-check.mjs\`), run it.
 
 ### 3. Read the judgement rows — from BOTH checklists, they answer different questions
 
@@ -131,28 +113,6 @@ Short. He is asking because he wants to decide what to do next, not to read a re
    Page limit and blind model come from the measured build, not from the checklist's memory of them.
 5. **What moved since he last asked**, three lines maximum.
 6. **The deadline, in his timezone**, and what is on the critical path to it.
-
-## Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-\`\`\`
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record paper-status <paper-dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record paper-status <paper-dir> ABSTAINED <reason> "<one line>"
-\`\`\`
-
-This skill reports state and does not judge the paper, so what it records is about the **status run**:
-**FINDING** — \`<count>\` blockers printed, \`<report-path>\` the status output.
-**ABSTAINED** — \`no-witness\`: the status run measured everything it can and printed zero blockers.
-\`crashed\`: the build did not run, so nothing was measured.
-
-🔴 \`crashed\` is the one outcome that must never be narrated as a status. This skill exists because
-state was being narrated instead of measured; a status report built on a build that did not happen
-is that same failure with a fresh timestamp on it. Under the old vocabulary this was \`ERROR\`, which
-sat in the same column as a verdict about the paper — it does not any more.
-
-🔴 **There is no PASS**, so "zero blockers" cannot be stored. Print it, and let the reader draw the
-conclusion from an empty blocker list they can see.
 
 ## Rules
 

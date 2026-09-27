@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
-import type { AbsolutePath } from "./domain/paths.ts";
+import { absolutePath } from "./domain/paths.ts";
 import { findProjectRoot } from "../lib/paper-config.ts";
 import {
   paperRules,
@@ -215,7 +215,7 @@ describe("findProjectRoot — where the root paperlint.json is looked for", () =
       [`${PAPER}/paperlint.json`]: '{"kind":"research"}',
       [`${ROOT}/paperlint.json`]: '{"extends":"paperlint:aisec"}',
     });
-    const isFile = (p: string) => files.isFile(p as AbsolutePath);
+    const isFile = (p: string) => files.isFile(absolutePath(p));
     expect(findProjectRoot(PAPER, isFile)).toBe(ROOT);
     // No root file anywhere: the package.json directory.
     expect(findProjectRoot(PAPER, (p) => p === `${ROOT}/package.json`)).toBe(

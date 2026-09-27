@@ -11,7 +11,7 @@
  * The findings themselves are planted in `population-map.test.mjs` (vitest; until #52 a
  * self-test script this harness spawned). This file keeps what only the command shows: finding
  * paper.md and repro/populations.tsv, and `--flags-only` staying silent on a clean paper — the
- * wiring the CI step and `run-mechanical.mjs` actually invoke.
+ * wiring the CI step actually invokes.
  */
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -107,8 +107,8 @@ const REG = [
 }
 
 // ── 4. KNOWN GAP, asserted so it stays visible ─────────────────────────────────────────
-// 🔴 A paper with NO repro/populations.tsv exits 0 in silence, and `run-mechanical.mjs` records
-// that silence as PASS for draft-paper. So a paper that never declared its populations scores
+// 🔴 A paper with NO repro/populations.tsv exits 0 in silence, which reads as a pass for
+// draft-paper. So a paper that never declared its populations scores
 // identically to one that declared them and tied every one. Absence is invisible again — the same
 // shape artifact-coverage.mjs was written to close for the released bundle.
 //

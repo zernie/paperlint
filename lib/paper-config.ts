@@ -138,11 +138,9 @@ export const SETTINGS_KEYS: Readonly<Record<string, string>> = Object.freeze({
     "the venue preset: paperlint:<name> or ./path.jsonc — the pdf/ venue rules, paperlint build",
   kind: "the kind of paper, whose page limit applies — pdf/limits",
   pdf: "where the built PDF is, relative to the paper, when it is not paper.pdf — the facts",
-  ledger: "the run ledger — skills/paper-pipeline/scripts/consumer.mjs",
   scripts: "how skill prose names the scripts — consumer.mjs",
-  timezone: "dates in the ledger — consumer.mjs",
+  timezone: "the zone deadline anchors are written in — consumer.mjs",
   contactEmail: "the polite-pool address for citation lookups — consumer.mjs",
-  citeChecks: "the consumer's citation checkers — run-mechanical.mjs",
   triggerCases:
     "the consumer's own skill trigger cases — lib/skill-trigger-cases.mjs",
   $comment: "a note for humans (JSON Schema's own comment keyword); ignored",
@@ -152,10 +150,8 @@ export const SETTINGS_KEYS: Readonly<Record<string, string>> = Object.freeze({
 export const ROOT_ONLY_KEYS: readonly string[] = Object.freeze([
   "papersDir",
   "structure",
-  "ledger",
   "scripts",
   "timezone",
   "contactEmail",
-  "citeChecks",
   "triggerCases",
 ]);

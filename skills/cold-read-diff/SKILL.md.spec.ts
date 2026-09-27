@@ -14,16 +14,7 @@ export default experimental_skill({
   body: `
 # cold-read-diff — the reader who cannot fake understanding
 
-## Run me
 
-🔴 FIRST, before any other step:
-
-\`\`\`
-node .claude/skills/paper-pipeline/scripts/announce.mjs cold-read-diff <paper-dir>
-\`\`\`
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
 
 ## The failure this exists for
 
@@ -125,25 +116,6 @@ findings:
 ---
 \`\`\`
 
-## Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-\`\`\`
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record cold-read-diff <paper-dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record cold-read-diff <paper-dir> ABSTAINED <reason> "<one line>"
-\`\`\`
-
-**FINDING** — \`<count>\` is the number of changed sentences the cold reader could not restate (every
-\`CANNOT PARSE\` counts), \`<report-path>\` is the \`reviews/*cold-read*.md\` file.
-**ABSTAINED** — \`no-witness\`: every changed sentence came back restated correctly.
-\`input-missing\`: the diff held no prose to read.
-
-🔴 These two are different answers and the difference is the whole reason the vocabulary is closed:
-one says a reader read it and found nothing, the other says there was nothing to hand a reader.
-Prose collapses them and the old \`PASS\`/\`ABSENT\` pair only half-separated them, because \`PASS\` also
-got recorded when nobody had run a reader at all. There is no \`PASS\` now; the reason is the answer.
-
 ## Rules
 
 - 🔴 **No context in the prompt. Ever.** Not the title, not the abstract, not "this is a paper about
@@ -162,12 +134,6 @@ got recorded when nobody had run a reader at all. There is no \`PASS\` now; the 
   ability to understand his own sentence is not evidence about anyone else's.
 - **Run it on your own fixes too.** The author is the least qualified judge of whether his repair
   reads, and that is exactly when he feels most certain.
-
-## Enforcement
-
-\`pipeline-check.mjs\` raises \`stale-cold-read\` when the newest \`reviews/*cold-read*.md\` is older than
-the paper source, and \`no-cold-read\` when none exists. The date comparison is the whole mechanism:
-a cold read that predates the current text describes prose that no longer exists.
 
 ## Compose with
 

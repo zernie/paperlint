@@ -24,20 +24,6 @@ export default experimental_skill({
   body: `
 # analyze-sibling-paper — settle "isn't this just X?" before a reviewer does
 
-## Run me
-
-🔴 FIRST, before any other step:
-
-\`\`\`
-node .claude/skills/paper-pipeline/scripts/announce.mjs analyze-sibling-paper <paper-dir>
-\`\`\`
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
-
-The \`<paper-dir>\` argument is **your** paper, not the sibling — the row belongs to the paper being
-defended. The sibling is named by \`<report-path>\` when the verdict is recorded.
-
 When a paper close to yours surfaces, the wrong move is to cite it from its abstract and move on — that
 leaves a scoop risk you can't see and a reviewer can. This skill reads the *actual* competitor, judges
 whether your contribution genuinely differs, and produces a saved analysis with concrete action points
@@ -128,30 +114,6 @@ it does, contribution type, timing (prior/concurrent + dates), the steelmanned s
 and the action points (with the exact clause text to add/replace). Per the save-research rule, a competitor
 analysis that lives only in a chat is lost the moment the session ends — and it's exactly what you'll need
 again at rebuttal. **A close sibling with no file in \`<paper-dir>/siblings/\` is an unfinished analysis.**
-
-## Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-\`\`\`
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record analyze-sibling-paper <paper-dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record analyze-sibling-paper <paper-dir> ABSTAINED <reason> "<one line>"
-\`\`\`
-
-**FINDING** — \`<count>\` is the number of action points the card produced (positioning clauses plus
-*MUST CITE* entries), \`<report-path>\` is the saved card, which names the sibling. Add \`--blocking\`
-for a genuine scoop, which the skill already treats as an escalation rather than a clause.
-**ABSTAINED** — \`no-witness\`: the sibling was read in full and the delta needs no text to change.
-\`blocked\`: the sibling's full text could not be obtained, so only its abstract was seen — which is
-explicitly not an analysis and must never be recorded as one.
-
-🔴 **There is no PASS.** "The delta is real" read identically whether the sibling had been read
-whole or skimmed, and this skill's own first rule is that an abstract-only delta is not a verdict.
-\`no-witness\` and \`blocked\` now say which happened.
-
-One row per sibling analysed, filed under its own \`--check=<sibling-slug>\`; several finding rows
-against one paper is the normal shape here, not a check that keeps failing. Before 2026-08-10 they
-would have overwritten one another.
 
 ## Rules
 - **Read the paper, not the abstract.** An abstract-only "delta" is not a verdict — and the card must

@@ -22,7 +22,7 @@ import {
   SETTINGS_KEYS,
   findProjectRoot,
 } from "#lib/paper-config";
-import type { AbsolutePath } from "./domain/paths.ts";
+import { callerPath } from "./caller-path.ts";
 import { err, ok, type Result } from "./domain/result.ts";
 import type { Files } from "./ports/files.ts";
 import {
@@ -114,14 +114,12 @@ export function parsePaperSettings(
   });
 }
 
-const at = (p: string): AbsolutePath => p as AbsolutePath;
-
 /** A JSON file through `files`: undefined when absent, the problem when it does not parse. */
 function readJson(
   files: Files,
   path: string,
 ): Result<unknown, SettingsProblem> {
-  const bytes = files.readBytes(at(path));
+  const bytes = files.readBytes(callerPath(path));
   if (bytes === null) return ok(undefined);
   try {
     return ok(JSON.parse(new TextDecoder().decode(bytes)));
@@ -139,7 +137,9 @@ function rootDefaults(
   files: Files,
   paperDir: string,
 ): Result<Defaults | null, SettingsProblem> {
-  const root = findProjectRoot(dirname(paperDir), (p) => files.isFile(at(p)));
+  const root = findProjectRoot(dirname(paperDir), (p) =>
+    files.isFile(callerPath(p)),
+  );
   const json = readJson(files, join(root, CONFIG_FILE));
   if (!json.ok) return json;
   if (!isObject(json.value)) return ok(null);

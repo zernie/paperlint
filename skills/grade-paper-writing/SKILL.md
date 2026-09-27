@@ -1,23 +1,12 @@
 ---
 name: grade-paper-writing
 description: Use when asking "does this paper read well?" / "is the writing any good?" / "it reads like a wall of text and jargon" / "grade the writing" on a draft. Grades WRITING CRAFT only — nine dimensions 1–5 (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking) against how the best-written papers read (Peyton Jones, McEnerney, Gopen & Swan; exemplars Trusting Trust, Carlini, Greshake), naming the offending sentence and the fix for each. Runs the PERSONA cold-read stall pass (a committed non-academic persona subagent, per-section) whose stall inventory — not the rubric number — is the readability gate other skills consume (pc-panel-review, paper-adversarial-review, harden-paper). Defaults to a blind multi-grader panel; after fixes, mandates the claims-preservation diff (row `claims`). NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT venue-bar content strength (study-accepted-papers). Compose with harden-paper (which calls it), draft-paper (generative counterpart), render-paper.
-allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill, Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*), Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)]
+allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:c0907d5c98e2c831 compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:c5d998b7471000fc compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
 
 # grade-paper-writing — grade how the paper READS, then fix it sentence by sentence
-
-## Run me
-
-🔴 FIRST, before any other step:
-
-```
-node .claude/skills/paper-pipeline/scripts/announce.mjs grade-paper-writing <paper-dir>
-```
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
 
 The review skills hunt scientific defects; `study-accepted-papers` checks whether the contribution clears
 the venue's bar. Neither tells you the paper is a slog to read. This skill does exactly that: it grades
@@ -212,8 +201,7 @@ is what happened.
    side effect.
 
 7. 🔴 **Put `WORST-SECTION: <section>` on the FIRST LINE of the report.** Machine-readable, one
-   section, lowercase, no decoration. `pipeline-check.mjs` reads the last four reports and raises
-   `repeat-finding` when the same section is worst twice running. This exists because the abstract
+   section, lowercase, no decoration, so the next round can compare it with the last report. This exists because the abstract
    was named worst **five consecutive times**, was faithfully recorded in the scorecard all five
    times, and was never once the next task. A review loop that only appends findings converges on a
    paper whose defects are all thoroughly documented and none of them fixed. **Naming the worst
@@ -273,29 +261,6 @@ findings:
     status: fixed
 ---
 ```
-
-## Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-```
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record grade-paper-writing <paper-dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record grade-paper-writing <paper-dir> ABSTAINED <reason> "<one line>"
-```
-
-**FINDING** — `<count>` is the number of entries in the PERSONA stall inventory, and `<report-path>`
-is that inventory. Add `--blocking` when a dimension scored 1–2, or stall density is over its cap.
-**ABSTAINED** — `no-witness`: the inventory came back empty. `blocked`: no persona reader was run,
-so there is no inventory — which is not an empty inventory and must never be filed as one.
-
-🔴 **There is no PASS**, and the distinction the two abstentions draw is the one that was being
-lost: "a reader stalled nowhere" and "nobody read it" produced the same word.
-
-🔴 **Record the stall count, never the rubric number.** The inventory is what `pc-panel-review`,
-`paper-adversarial-review` and `harden-paper` consume; a 44/60 in the ledger would let a paper whose
-readability gate is failing look clean to every skill downstream.
-
-`prose-lint.mjs` files separately as `grade-paper-writing/prose-lint`. One check, one row.
 
 ## Rules
 - Grade **writing, not science.** A correct paper can still score a 2 here; say so. Don't drift into

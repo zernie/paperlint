@@ -59,9 +59,8 @@ function missing(m: BanalMissing): string {
 
 type Kind = BanalFailure["kind"];
 /** One sentence-writer per variant. A mapped type over `kind`, so a new variant without one is a compile error. */
-type Describers = {
-  readonly [K in Kind]: (f: Extract<BanalFailure, { kind: K }>) => Lines;
-};
+type FailureOf = { readonly [K in Kind]: Extract<BanalFailure, { kind: K }> };
+type Describers = { readonly [K in Kind]: (f: FailureOf[K]) => Lines };
 
 const orNone = (s: string): string => s || "no output";
 
@@ -101,15 +100,15 @@ const DESCRIBE: Describers = {
 };
 
 /**
- * What to tell a person. Most failures are one line; a sha256 mismatch shows both hashes.
- *
- * The one assertion below narrows the table's entry for `f.kind` to a function of `f`: the mapped
- * type already pairs each kind with its own variant, and TypeScript cannot correlate the index with
- * the argument on its own.
+ * The describer for `kind`, applied to its own variant. Generic over the kind, so the table's entry
+ * and the argument are correlated through `FailureOf[K]` and need no assertion (TypeScript#47109).
  */
+const describeKind = <K extends Kind>(kind: K, f: FailureOf[K]): Lines =>
+  DESCRIBE[kind](f);
+
+/** What to tell a person. Most failures are one line; a sha256 mismatch shows both hashes. */
 export function describe(f: BanalFailure): Lines {
-  const write = DESCRIBE[f.kind] as (f: BanalFailure) => Lines;
-  return write(f);
+  return describeKind(f.kind, f);
 }
 
 /** `describe` as one line, for a caller that has a single line to fill. */

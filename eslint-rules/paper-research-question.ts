@@ -131,7 +131,7 @@ export default {
   rules: {
     "research-question": {
       meta: {
-        type: "suggestion",
+        type: "suggestion" as const,
         docs: {
           description:
             "a paper that declares a stage states its research question explicitly — otherwise the reviewer reconstructs it themselves, and says so",

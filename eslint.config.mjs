@@ -414,6 +414,13 @@ export default [
       // `any` switches the checker off for everything it flows into. The preset has it too; named
       // here so that dropping the preset cannot drop it.
       "@typescript-eslint/no-explicit-any": "error",
+      // A type assertion (`x as T`, `<T>x`) is a claim the checker takes on trust (#126). A value
+      // from outside is parsed or guarded where it enters; a brand is minted by its own checked
+      // constructor. `as const` asserts nothing about the value and stays allowed.
+      "@typescript-eslint/consistent-type-assertions": [
+        "error",
+        { assertionStyle: "never" },
+      ],
       // The behaviour rules of the `.mjs` block, for the same reasons: each changes what the code
       // DOES, not how it looks, and a regex that escapes the wrong thing searches for the wrong thing.
       "no-empty": "error",

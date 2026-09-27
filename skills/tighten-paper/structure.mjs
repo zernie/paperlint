@@ -22,7 +22,7 @@
  *
  * ── 2026-08-26, EVENING: BOTH NAMED CONSUMERS ARE CLOSED, AND A THIRD ONE TURNED UP ────────
  *
- * The paragraph above named two callers and said that until they are converted, the ledger writes
+ * The paragraph above named two callers and said that until they are converted, they read
  * "no findings" BY SILENCE. That was true and measured: on `the reference paper/paper.md`
  * `--flags-only` printed 0 lines, while the same bytes through ESLint give **6 findings**
  * (`subsection-size` ×2 · `section-lead` · `free-section-size` ×2 · `block-ungraded`).
@@ -31,11 +31,6 @@
  *       stood next to it, running the same rules over the same glob; a measurement showed a
  *       byte-identical list of files. The full justification is in the comment where the removed
  *       step used to be.
- *   `run-mechanical.mjs`, the `tighten-paper/structure` line → CONVERTED to ESLint
- *       (`read: 'eslint'`, filtered by the rules from `eslint-rules/paper-structure.mjs`). Not
- *       deleted: ESLint writes nothing into the ledger, and the ledger is the only place where the
- *       fact "somebody looked at this paper's structure on these bytes" is stored with a hash of the
- *       input.
  *
  * 🔴 A THIRD CALLER THE BANNER DID NOT KNOW ABOUT: `.githooks/pre-commit`. It printed nothing and
  * swallowed the exit code through `|| true`. The lesson is exactly the one already recorded in
@@ -294,11 +289,9 @@ const freeTotal = freeSections.reduce((a, r) => a + r.words, 0);
 // edit, and there is nothing to settle the question of which one is right.
 
 if (flagsOnly) {
-  // Silence and exit code 0 — ALWAYS. Deliberately not one line on stdout/stderr:
-  // `run-mechanical.mjs` reads this mode as `read: 'flags'`, that is, "non-empty output = a
-  // finding", and a pointer saying "the checks have moved" would turn into a permanent false finding
-  // in the ledger. The limitation of this mode is named in the banner at the top; it is cured by
-  // converting both callers to `npx eslint`, not here.
+  // Silence and exit code 0 — ALWAYS. Deliberately not one line on stdout/stderr: a caller that
+  // reads "non-empty output = a finding" would turn a pointer saying "the checks have moved" into a
+  // permanent false finding. The limitation of this mode is named in the banner at the top.
   process.exit(0);
 }
 

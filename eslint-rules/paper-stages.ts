@@ -130,7 +130,7 @@ export default {
   rules: {
     stages: {
       meta: {
-        type: "problem",
+        type: "problem" as const,
         docs: {
           description:
             "a paper's stage is declared as a FIELD, and every declaration is checked against the bytes on disk in both directions",
@@ -300,7 +300,7 @@ export default {
      */
     source: {
       meta: {
-        type: "problem",
+        type: "problem" as const,
         docs: {
           description:
             "a declared stage freezes its source beside the pdf and is checked by bytes — not by a commit reference",

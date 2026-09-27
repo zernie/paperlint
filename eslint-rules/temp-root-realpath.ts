@@ -112,7 +112,7 @@ export default {
   rules: {
     "temp-root-realpath": {
       meta: {
-        type: "problem",
+        type: "problem" as const,
         docs: {
           description:
             "a temp root taken from tmpdir() is resolved to its realpath at the moment it is created",

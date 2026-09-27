@@ -1,23 +1,12 @@
 ---
 name: extend-paper
 description: Turn an accepted workshop / short paper into a second, stronger publication at a higher-prestige indexed venue — the "body of work" a strong dossier needs, not a one-hit paper. Covers the ≥30% new-material rule, the never-dual-submit rule, what genuinely counts as new content, and picking + timelining the upgrade venue. Use after a paper is accepted and you want the follow-on publication. Compose with find-venue, plan-paper-timeline, camera-ready, research-ideate.
-allowed-tools: [Read, Write, Grep, Glob, WebSearch, WebFetch, Skill, Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*), Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)]
+allowed-tools: [Read, Write, Grep, Glob, WebSearch, WebFetch, Skill]
 ---
 
-<!-- vigiles:sha256:436bb3586d84a654 compiled from skills/extend-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:6310b1e7748e10de compiled from skills/extend-paper/SKILL.md.spec.ts -->
 
 # extend-paper — workshop/short paper → a second, stronger publication
-
-## Run me
-
-🔴 FIRST, before any other step:
-
-```
-node .claude/skills/paper-pipeline/scripts/announce.mjs extend-paper <paper-dir>
-```
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
 
 One accepted paper is a data point; two related papers climbing in prestige is a **trajectory**, and
 "sustained acclaim" is what a body-of-work review actually rewards. Workshop→conference and
@@ -65,26 +54,6 @@ Run **plan-paper-timeline** against the upgrade venue's deadline, then deliberat
 submissions**. A burst of papers clustered right before an external filing deadline reads as
 manufactured, not sustained — a documented reason for refusal, not a stylistic worry. Aim the extension to land a few months after the first paper's
 acceptance so the record shows steady output over time, one ORCID tying every version together.
-
-## Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-```
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record extend-paper <paper-dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record extend-paper <paper-dir> ABSTAINED <reason> "<one line>"
-```
-
-**FINDING** — `<count>` open items before the extension is legitimate; `<report-path>` is the plan.
-Add `--blocking` when the ≥30% cannot honestly be pointed at, which sends the work back to
-`research-ideate`.
-**ABSTAINED** — `no-witness`: a legitimate extension is scoped — ≥30% genuinely new material, one
-named venue, no dual submission — and nothing is open. `blocked`: there is no accepted base paper
-to extend.
-
-🔴 **There is no PASS**, and here that matters more than anywhere: the tempting move at this moment
-is to resubmit the same paper with a new title, and a stored "legitimate" would have been exactly
-the paperwork for it. The blocking finding is what the pipeline is watching for; nothing else is.
 
 ## Compose with
 - **find-venue** — choose the higher-prestige indexed target and confirm it welcomes extensions.

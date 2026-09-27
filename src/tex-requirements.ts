@@ -27,6 +27,7 @@ import { join } from "node:path";
 import Ajv from "ajv";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
 import { CONFIG_FILE } from "#lib/paper-config";
+import { fieldOf } from "./domain/record.ts";
 
 /** CTAN package name → the names that prove it is installed. */
 export type PackageProofs = Readonly<Record<string, readonly string[]>>;
@@ -51,15 +52,37 @@ const PROFILE_EXT = ".jsonc";
 
 export const NO_REQUIREMENTS: TexRequirements = { packages: {}, tools: {} };
 
-type Ts = typeof import("typescript");
-let ts: Ts | null = null;
+/** The two functions of `typescript` a profile is read with. */
+type TsJsonc = Pick<
+  typeof import("typescript"),
+  "parseConfigFileTextToJson" | "flattenDiagnosticMessageText"
+>;
+
+const isTsJsonc = (m: unknown): m is TsJsonc =>
+  typeof fieldOf(m, "parseConfigFileTextToJson") === "function" &&
+  typeof fieldOf(m, "flattenDiagnosticMessageText") === "function";
+
+/** `typescript` as `load` returns it — `require` answers `any` — checked for the two functions used. */
+export function loadTypescript(load: (id: string) => unknown): TsJsonc {
+  const m = load("typescript");
+  if (!isTsJsonc(m))
+    throw new Error(
+      "`typescript` loaded without parseConfigFileTextToJson — reinstall this package",
+    );
+  return m;
+}
+
+let ts: TsJsonc | null = null;
 /** TypeScript is loaded only when a profile is read: `paperlint lint` never pays for it. */
-function typescript(): Ts {
-  ts ??= createRequire(import.meta.url)("typescript") as Ts;
+function typescript(): TsJsonc {
+  ts ??= loadTypescript(createRequire(import.meta.url));
   return ts;
 }
 
 type Validate = ReturnType<Ajv.Ajv["compile"]>;
+/** `PresetJson` is the TypeScript side of the profile schema: a document the schema accepts is one. */
+const matchesSchema = (v: unknown, validate: Validate): v is PresetJson =>
+  validate(v) === true;
 const validators = new Map<string, Validate>();
 function validatorFor(dir: string): Validate {
   const known = validators.get(dir);
@@ -223,11 +246,11 @@ export function parsePreset(
       `${file}: not valid JSONC — ${typescript().flattenDiagnosticMessageText(error.messageText, " ")}`,
     );
   const validate = validatorFor(dir);
-  if (!validate(config))
+  if (!matchesSchema(config, validate))
     throw new Error(
       `${file} does not match ${SCHEMA_FILE}:\n  ${violations(file, validate).join("\n  ")}`,
     );
-  const j = config as PresetJson;
+  const j = config;
   return {
     extends: orNull(j.extends),
     name: orNull(j.name),

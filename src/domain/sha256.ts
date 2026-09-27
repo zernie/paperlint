@@ -9,13 +9,15 @@ import type { Opaque } from "ts-essentials";
 export type Sha256 = Opaque<string, "Sha256">;
 
 const SHA256 = /^[0-9a-f]{64}$/;
+// The brand's one owner: the predicate IS the check, so no assertion is needed to mint the type.
+const isSha256 = (s: string): s is Sha256 => SHA256.test(s);
 
 /** A sha256 written down as text — a pin, an option — checked where it is written, not where it is used. */
 export function parseSha256(s: string): Sha256 {
-  if (!SHA256.test(s))
+  if (!isSha256(s))
     throw new Error(`not a sha256 (64 lowercase hex digits): ${s}`);
-  return s as Sha256;
+  return s;
 }
 
 export const sha256Hex = (bytes: Uint8Array): Sha256 =>
-  createHash("sha256").update(bytes).digest("hex") as Sha256;
+  parseSha256(createHash("sha256").update(bytes).digest("hex"));

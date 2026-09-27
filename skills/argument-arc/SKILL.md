@@ -1,10 +1,10 @@
 ---
 name: argument-arc
 description: Build or repair the paper's argument architecture — the one-sentence-per-section outline, the bottom-up inevitability pass, and the name/number budget. Run it when the reader says the paper throws ideas at them, when a structural objection repeats, or before any large rewrite. Not a prose or length skill.
-allowed-tools: [Read, Write, Grep, Glob, Agent, Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*), Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)]
+allowed-tools: [Read, Write, Grep, Glob, Agent]
 ---
 
-<!-- vigiles:sha256:05a1eaa79bb596d5 compiled from skills/argument-arc/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:66be3161e5bde916 compiled from skills/argument-arc/SKILL.md.spec.ts -->
 
 # argument-arc — does the paper carry the reader to one conclusion
 
@@ -13,17 +13,6 @@ allowed-tools: [Read, Write, Grep, Glob, Agent, Bash(node .claude/skills/paper-p
 > of ideas.** The first two assume the argument is right and the delivery is wrong. This one asks
 > whether the argument exists. Run it *before* them — cutting words inside a broken arc is how a
 > session burns a day and ships the same paper.
-
-## Run me
-
-🔴 FIRST, before any other step:
-
-```
-node .claude/skills/paper-pipeline/scripts/announce.mjs argument-arc <paper-dir>
-```
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
 
 The failure it exists to catch has a signature: every paragraph is defensible, every number is real,
 and the reader still finishes the section unable to say what it was for. That is not a prose problem
@@ -48,7 +37,6 @@ came out — which is how a run gets thrown away. That is not hypothetical: it w
 data is collected costs the data. Costs a paragraph; saves a study.**
 
 `build-benchmark` reads this paragraph before designing, and refuses to proceed if `frame` is empty.
-`pipeline-check.mjs` reports a study that ran with no stated claim.
 
 *Added 2026-08-03 alongside the replacement of the numbered stage list — this skill previously existed
 only as a repair, which meant nobody stated the claim while stating it was still cheap.*
@@ -124,28 +112,6 @@ most needs help. This skill does:
   If the author says the paper is *weak*, that is a quality judgment, not procrastination, and citing
   the calendar against it is a category error.
 - **Rebuild produces a new outline through steps 1–4 above, and it too gets shown before editing.**
-
-## Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-```
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record argument-arc <paper-dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record argument-arc <paper-dir> ABSTAINED <reason> "<one line>"
-```
-
-🔴 **There is no PASS.** "The arc carries the reader" is not a value this pass can write down; it is
-what a reader may conclude from the absence of findings, and the concluding is theirs.
-
-**FINDING** — the arc is broken; `<count>` is the number of sections the new outline moves, merges
-or deletes, and `<report-path>` is that outline. Add `--blocking` when there is no conclusion
-sentence to build an arc from: that refusal is a finding about the draft, not an aborted run, and
-`<report-path>` is the one-line statement of what is missing.
-**ABSTAINED** — `no-witness`: the outline was read end to end and nothing moved. `blocked`: there
-was no outline to read at all.
-
-An `ABSTAINED no-witness` on a draft the author has twice called a pile is a missed finding, and
-`status.mjs` will start asking about a check that has only ever abstained.
 
 ## Rules
 

@@ -18,7 +18,7 @@ import { checkBanal, ensureBanal, measureGeometry } from "./run.ts";
 import { sha256Hex } from "../../domain/sha256.ts";
 import { installedBanal } from "./locate.ts";
 import { parseBanalSettings } from "./settings.ts";
-import type { AbsolutePath } from "../../domain/paths.ts";
+import { absolutePath } from "../../domain/paths.ts";
 import type { Command, ProcessExit } from "../../ports/process.ts";
 
 const s = parseBanalSettings(
@@ -29,7 +29,7 @@ const noExplicit = parseBanalSettings(
   { PATH: "/bin" },
   { home: "/h", tmp: "/t", cwd: "/w" },
 );
-const project = "/p" as AbsolutePath;
+const project = absolutePath("/p");
 /** What banal prints for the one-page probe. */
 const MEASURED = '{"bodyfontsize": 10.3, "columns": 1, "pages": [{}]}';
 const banalAnswers = (e: ProcessExit) =>

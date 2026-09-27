@@ -12,10 +12,12 @@ import type { RuleBlock } from "./rules-config.ts";
  */
 export interface PaperlintConfig {
   /** The paper director(ies), relative to the project root. Default `papers`. The field name is
-   * `PAPERS_DIR_FIELD` in lib/paper-config.mjs; code reads it through `papersDirOf()` in cli.ts. */
-  papersDir?: string | string[];
+   * `PAPERS_DIR_FIELD` in lib/paper-config.mjs; code reads it through `papersDirOf()` in cli.ts.
+   * As written in the file: `toPaths` turns a string or a list of strings into directories, and
+   * reads anything else as none. */
+  papersDir?: unknown;
   /** Which files a paper directory must carry; `false` turns the check off entirely. */
-  structure?: StructureConfig | false;
+  structure?: StructureConfig | false | undefined;
   /** ESLint config blocks appended after paperlint's own — PARSED by `parseSettings` in cli.ts. */
   rules?: readonly RuleBlock[];
   /** The default venue preset of every paper that names none (`src/paper-settings.ts`). */

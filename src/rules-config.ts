@@ -39,11 +39,40 @@ export interface RuleBlock {
   readonly rules: Readonly<Record<string, RuleEntry>>;
 }
 
+/**
+ * A plugin as a config block registers it, typed to what paperlint reads of it: its rules, and the
+ * languages it brings (`tex` brings LaTeX).
+ */
+export interface ConfigPlugin {
+  readonly rules?: Readonly<Record<string, unknown>>;
+  readonly languages?: Readonly<Record<string, unknown>>;
+}
+
+/**
+ * An ESLint config block as paperlint builds and reads one. Not `Linter.Config`: ESLint types a
+ * plugin's rule as one that runs on ANY language, and paperlint's rules are written for the language
+ * they read (LaTeX, markdown), so none of them is assignable to it. ESLint checks a block when it
+ * loads it; `eslintConfig` in cli.ts is the one place these blocks become `Linter.Config`.
+ */
+export interface ConfigBlock {
+  readonly name?: string;
+  readonly basePath?: string;
+  readonly files?: readonly (string | readonly string[])[];
+  readonly ignores?: readonly string[];
+  readonly plugins?: Readonly<Record<string, ConfigPlugin>>;
+  readonly language?: string;
+  readonly languageOptions?: Readonly<Record<string, unknown>>;
+  readonly linterOptions?: Readonly<Record<string, unknown>>;
+  readonly rules?: Readonly<Record<string, unknown>>;
+}
+
 export type Parsed<T> =
   | { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly error: string };
 
-const SEVERITIES: readonly unknown[] = ["off", "warn", "error", 0, 1, 2];
+const SEVERITIES: readonly Severity[] = ["off", "warn", "error", 0, 1, 2];
+const isSeverity = (v: unknown): v is Severity =>
+  SEVERITIES.some((s) => s === v);
 
 const BLOCK_KEYS = new Set(["files", "ignores", "rules"]);
 
@@ -61,9 +90,10 @@ const isStringList = (v: unknown): v is string[] =>
 
 /** A severity, or `[severity, ...options]`. */
 function parseEntry(v: unknown): RuleEntry | null {
-  const sev: unknown = Array.isArray(v) ? v[0] : v;
-  if (!SEVERITIES.includes(sev)) return null;
-  return v as RuleEntry;
+  const entry: readonly unknown[] = Array.isArray(v) ? v : [v];
+  const [sev, ...options] = entry;
+  if (!isSeverity(sev)) return null;
+  return Array.isArray(v) ? [sev, ...options] : sev;
 }
 
 /**
@@ -105,8 +135,8 @@ function badGlobs(o: Record<string, unknown>, at: string): string | null {
 
 /** The block's `files`/`ignores`, present only when given. */
 const globsOf = (o: Record<string, unknown>) => ({
-  ...(o["files"] ? { files: o["files"] as string[] } : {}),
-  ...(o["ignores"] ? { ignores: o["ignores"] as string[] } : {}),
+  ...(isStringList(o["files"]) ? { files: o["files"] } : {}),
+  ...(isStringList(o["ignores"]) ? { ignores: o["ignores"] } : {}),
 });
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
@@ -182,16 +212,15 @@ export function parseRuleBlocks(
  * `foreign` (a dependency's plugin, such as `@eslint/markdown`) are not paperlint's and are skipped.
  */
 export function shippedRuleIds(
-  config: readonly unknown[],
+  config: readonly ConfigBlock[],
   foreign: readonly unknown[],
 ): Set<string> {
   const ids = new Set<string>();
   for (const block of config) {
-    const plugins = (block as { plugins?: Record<string, unknown> }).plugins;
-    for (const [name, plugin] of Object.entries(plugins ?? {})) {
+    for (const [name, plugin] of Object.entries(block.plugins ?? {})) {
       if (foreign.includes(plugin)) continue;
-      const rules = (plugin as { rules?: Record<string, unknown> }).rules;
-      for (const rule of Object.keys(rules ?? {})) ids.add(`${name}/${rule}`);
+      for (const rule of Object.keys(plugin.rules ?? {}))
+        ids.add(`${name}/${rule}`);
     }
   }
   return ids;

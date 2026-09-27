@@ -118,6 +118,23 @@ try {
     threw,
   );
 
+  const malformed = join(work, "malformed-hooks.json");
+  writeFileSync(
+    malformed,
+    '{"hooks":{"PreToolUse":[{"hooks":[{"type":"command"}]}]}}',
+  );
+  let why = "";
+  try {
+    shippedWiring(malformed);
+  } catch (e) {
+    why = e instanceof Error ? e.message : String(e);
+  }
+  check(
+    "a wiring file whose `hooks` is not Claude Code's shape THROWS, naming the shape",
+    why.startsWith(`${malformed}: "hooks" is not a map of event`),
+    why,
+  );
+
   // ── which spelling runs which hook ─────────────────────────────────────────────────────
   const ours = `node "\${CLAUDE_PROJECT_DIR}/${MANAGED_BY}" hook paper-edit-guard`;
   const cases: [string, { name: string; ours: boolean } | null][] = [

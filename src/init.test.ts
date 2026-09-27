@@ -70,7 +70,7 @@ describe("paperlint init — a declared papers directory", () => {
       err: (s: string) => out.push(s),
       interactive: false,
       hooks: false,
-      run: (() => ({ status: 0 })) as never,
+      run: () => ({ status: 0 }),
       link: () => ({ ok: false, error: "not linked in this test" }),
     });
     const text = out.join("\n");
@@ -97,7 +97,7 @@ describe("paperlint init — a declared papers directory", () => {
       interactive: true,
       ask: (q) => Promise.resolve((asked.push(q), "n")),
       hooks: false,
-      run: (() => ({ status: 0 })) as never,
+      run: () => ({ status: 0 }),
       link: () => ({ ok: false, error: "not linked in this test" }),
     });
     expect(asked.filter((q) => /papers roots/.test(q))).toEqual([]);
@@ -116,7 +116,7 @@ describe("paperlint init — writes paperlint.json only when something differs f
     err: () => {},
     interactive: false,
     hooks: false,
-    run: (() => ({ status: 0 })) as never,
+    run: () => ({ status: 0 }),
     link: () => ({ ok: false as const, error: "not linked in this test" }),
   };
   const fresh = (files: Record<string, string>): string => {
@@ -170,7 +170,7 @@ const texRun = async (
     ask: (q) =>
       Promise.resolve((asked.push(q), /TeX Live/.test(q) ? answer : "")),
     hooks: false,
-    run: (() => ({ status: 0 })) as never,
+    run: () => ({ status: 0 }),
     link: () => ({ ok: false as const, error: "not linked in this test" }),
     tex,
   });
@@ -249,7 +249,7 @@ async function initRun(
     err: (s: string) => err.push(s),
     interactive: false,
     hooks: false,
-    run: (() => ({ status: 0 })) as never,
+    run: () => ({ status: 0 }),
     link: () => ({ ok: false, error: "not linked in this test" }),
     ...opts,
   });
@@ -278,6 +278,26 @@ describe("paperlint init — a paperlint.json it cannot use stops it before anyt
         "  ✗ paperlint.json declares papersDir = 7 — it must be a directory path (a string)",
       ],
     ]);
+  });
+
+  it("🔴 a paperlint.json holding JSON that is not an object is refused, not read as settings", async () => {
+    // Guards: `null` threw a TypeError reading the papers field; `[1]` was spread into a settings
+    // object and the consumer's file rewritten as `{ "0": 1, "papersDir": … }`.
+    for (const json of ["null\n", "[1]\n"]) {
+      const root = tree({
+        "paperlint.json": json,
+        "drafts/a/paper.md": "# a\n",
+      });
+      const decl = await declarePapers(root, () =>
+        choosePapers(root, { interactive: false }),
+      );
+      expect(decl).toEqual({
+        status: "unparsable",
+        path: join(root, "paperlint.json"),
+        reason: "not a JSON object",
+      });
+      expect(readFileSync(join(root, "paperlint.json"), "utf8")).toBe(json);
+    }
   });
 
   it("a file without a trailing newline keeps having none", async () => {

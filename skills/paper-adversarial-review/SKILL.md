@@ -2,10 +2,10 @@
 name: paper-adversarial-review
 description: Use when asking "red-team this paper" / "what would Reviewer 2 attack?" / "find the weaknesses before I submit" — ONE fast hostile-but-fair review of a paper draft. Surfaces overclaims, methodology holes, missing baselines/citations, novelty concerns, threats to validity, and desk-reject risks, with concrete fixes, led by a multi-axis 1–5 scorecard whose card composes into a pc-panel-review panel. NOT the multi-reviewer accept/reject decision (pc-panel-review), a writing grade (grade-paper-writing — this skill consumes its stall inventory rather than re-grading prose), or the full pre-submit gate (harden-paper). Especially for security and agentic-coding measurement papers.
 context: fork
-allowed-tools: [Read, Write, Grep, Glob, Agent, Skill, Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*), Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)]
+allowed-tools: [Read, Write, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:2da081a03ae7fee3 compiled from skills/paper-adversarial-review/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:68dcbcc1b7ab5348 compiled from skills/paper-adversarial-review/SKILL.md.spec.ts -->
 
 # paper-adversarial-review — be the reviewer who wants to reject it
 
@@ -14,17 +14,6 @@ allowed-tools: [Read, Write, Grep, Glob, Agent, Skill, Bash(node .claude/skills/
 > meta-review — the real pre-submission GATE, run LAST; its **venue-fit mode** is the one-reviewer
 > CFP-fit score (formerly `venue-review-sim`). Reach for an atom (this, or venue-fit mode) for a quick
 > spot-check; run the panel for the decision.
-
-## Run me
-
-🔴 FIRST, before any other step:
-
-```
-node .claude/skills/paper-pipeline/scripts/announce.mjs paper-adversarial-review <paper-dir>
-```
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
 
 Purpose: catch what a real peer reviewer will hit, while it's still fixable. Peer review is
 **read, not run** — reviewers judge the *text, figures, and reported numbers*, rarely execute code.
@@ -90,28 +79,6 @@ venue + paper type (short/full/position/benchmark). Ask for the structured outpu
 - **Missing citations** (specific, real — do not invent).
 - **Strongest reframing** if the contribution is undersold or misframed.
 - **What to cut** (for length / TMI) and **what to add** (for soundness).
-
-## Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-```
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record paper-adversarial-review <paper-dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record paper-adversarial-review <paper-dir> ABSTAINED <reason> "<one line>"
-```
-
-**FINDING** — `<count>` is the number of ranked weaknesses, `<report-path>` the review with its
-scorecard. Add `--blocking` when the leaning is reject, or there is a live desk-reject risk.
-**ABSTAINED** — `no-witness`: the hostile read found nothing. `blocked`: there was no rendered
-draft to attack.
-
-🔴 **There is no PASS, and this skill is the reason the word was dangerous.** A hostile read that
-found nothing either met a very good paper or was not hostile, and the old vocabulary wrote the
-same word for both. `no-witness` says the true thing — this reader has no witness for the paper
-being sound — and leaves the second possibility standing where it belongs, in view.
-
-Record the weakness count, not the Overall 1–5. The average is exactly what this skill tells its own
-reviewer to distrust — the lowest one or two axes are the story.
 
 ## Rules
 - Be adversarial but *fair* and *specific* — "weak" is useless; "the 65% claim in the abstract isn't

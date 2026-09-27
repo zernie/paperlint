@@ -32,17 +32,6 @@ export default experimental_skill({
 > doesn't systematically hit — the submission-readiness gate. Run it after the draft is written and
 > before \`submit-paper\`. It does not re-implement the sub-skills; it calls them and checks the rest.
 
-## Run me
-
-🔴 FIRST, before any other step:
-
-\`\`\`
-node .claude/skills/paper-pipeline/scripts/announce.mjs harden-paper <paper-dir>
-\`\`\`
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
-
 **Principle:** a paper dies from any *one* unclosed axis. Reviewers only *read* — so every claim,
 number, and omission must survive on the page. Go axis by axis; for each, **find → fix → re-verify**,
 don't just list. Below, each axis says what to run / check and the specific traps that recur.
@@ -301,33 +290,6 @@ levers landed** (coined handle + its one-sentence definition, the "first taxonom
 framing, the one quotable stat, the reusable artifact, any dry-humour line and where), and the short
 list of items only the author can close (host artifact, click submit, disclose-before-public, post the
 preprint). If every gate passes and every axis is PASS/FIXED → hand off to \`submit-paper\`.
-
-## Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-\`\`\`
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record harden-paper <paper-dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record harden-paper <paper-dir> ABSTAINED <reason> "<one line>"
-\`\`\`
-
-**FINDING** — \`<count>\` is the number of failing gates plus still-OPEN axes and \`<report-path>\` the
-worst-gate-first vector. Add \`--blocking\` when any gate in the vector fails, as opposed to an axis
-merely being open.
-**ABSTAINED** — \`no-witness\`: every gate answered and no axis is open, which is the state that hands
-off to \`submit-paper\`. \`blocked\`: a gate in the vector has never been run, so the vector has a hole
-in it and there is nothing to hand off.
-
-🔴 **There is no PASS, and this skill must not reinvent one.** Its whole design is that the verdict
-is a VECTOR reported worst-gate-first, and a stored scalar acquittal was the single value that could
-flatten it. \`no-witness\` here means every gate answered and none of them found anything — it is not
-"ready", and the readiness call is a sentence a human writes in the report.
-
-🔴 **Never record the accept-probability as the count.** A single scalar hiding a multi-dimensional
-failure is the exact thing this skill refuses to report in prose, and a ledger row is prose that
-survives longer.
-
-The artifact-coverage script files separately as \`harden-paper/artifact-coverage\`. One check, one row.
 
 ## Composes with
 \`tighten-paper\` (axis 0, run FIRST — structure before sentences), \`paper-adversarial-review\` +

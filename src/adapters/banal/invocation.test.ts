@@ -11,15 +11,15 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll as after, test } from "vitest";
 import { nodeAdapters } from "../node/index.ts";
-import type { AbsolutePath } from "../../domain/paths.ts";
+import { absolutePath } from "../../domain/paths.ts";
+import type { Scratch } from "../../ports/workspace.ts";
 import {
   banalCommand,
+  parseShQuoted,
   shQuote,
   stage,
   stageBanalInput,
-  type StagedInput,
 } from "./invocation.ts";
-import type { LocatedBanal } from "./locate.ts";
 import { XML_DIALECT } from "./xml.ts";
 
 test("the staging holds BOTH files: the XML and the -v stub answering the dialect paperlint writes", () => {
@@ -32,11 +32,14 @@ test("the staging holds BOTH files: the XML and the -v stub answering the dialec
 });
 
 test("banalCommand: perl runs banal on the staged .xml, with $PDFTOHTML quoted", () => {
-  const banal = {
-    path: "/b/banal" as AbsolutePath,
-    provenance: { kind: "cache" },
-  } as LocatedBanal;
-  const staged = { xml: "/s/paper.xml", stub: "/s d/pdftohtml" } as StagedInput;
+  // A scratch that places the two files in different directories, one with a space.
+  const scratch: Scratch = {
+    dir: absolutePath("/s"),
+    write: (name) =>
+      absolutePath(name === "paper.xml" ? "/s/paper.xml" : "/s d/pdftohtml"),
+  };
+  const staged = stage(scratch, stageBanalInput([]));
+  const banal = { path: absolutePath("/b/banal") };
   const c = banalCommand(banal, staged, { PATH: "/bin" });
   assert.deepEqual(
     [c.file, ...c.args],
@@ -48,6 +51,15 @@ test("banalCommand: perl runs banal on the staged .xml, with $PDFTOHTML quoted",
 
 test("shQuote survives a single quote", () => {
   assert.equal(shQuote("it's"), `'it'"'"'s'`);
+});
+
+test("parseShQuoted refuses a word the shell would split or expand", () => {
+  assert.equal(parseShQuoted(`'a b'`), `'a b'`);
+  assert.throws(() => parseShQuoted("a b"), /not one single-quoted shell word/);
+  assert.throws(
+    () => parseShQuoted(`'a'b'`),
+    /not one single-quoted shell word/,
+  );
 });
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-stage-test-")));

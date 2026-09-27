@@ -44,8 +44,6 @@ import {
   lookupOrder,
   pickBanal,
   type BanalCandidate,
-  type LocatedBanal,
-  type PinnedBanal,
 } from "./locate.ts";
 import {
   geometryOf,
@@ -89,11 +87,14 @@ export type BanalOutcome =
       readonly tried: BanalCandidate | null;
     };
 
-/** Run `banal` on `pages` in a scratch directory that is gone when this returns. */
+/**
+ * Run `banal` on `pages` in a scratch directory that is gone when this returns. It needs the path
+ * only: `measureGeometry` passes the banal `pickBanal` located, `probe` the one whose bytes it verified.
+ */
 function runBanal(
   d: BanalDeps,
   s: BanalSettings,
-  banal: LocatedBanal,
+  banal: Pick<BanalCandidate, "path">,
   pages: readonly PageLayout[],
 ): Result<BanalMeasurement, BanalFailure> {
   return d.workspace.within("paperlint-banal-", (scratch) =>
@@ -148,6 +149,15 @@ function perlRuns(d: BanalDeps, s: BanalSettings): boolean {
   return r.kind === "exited" && r.status === 0;
 }
 
+// Not exported: only `probe` below can write the property, so only it can make a PinnedBanal.
+const PINNED = Symbol("PinnedBanal");
+
+/**
+ * `paperlint toolchain`'s banal after its bytes hashed to the pin AND it measured the probe page. Minted by
+ * `probe` only, for `ensureBanal` / `checkBanal` (`./index.ts`): a "ready" line cannot be printed without one.
+ */
+export type PinnedBanal = BanalCandidate & { readonly [PINNED]: true };
+
 /**
  * Does the installed, pin-verified banal RUN — accepted by measuring the probe page, not by a
  * download's exit code. The one place a `PinnedBanal` is minted; callers verified the bytes first.
@@ -157,13 +167,9 @@ function probe(
   s: BanalSettings,
   path: AbsolutePath,
 ): Result<PinnedBanal, BanalFailure> {
-  const at: BanalCandidate = { path, provenance: { kind: "cache" } };
-  const r = andThen(
-    runBanal(d, s, at as LocatedBanal, [PROBE_PAGE]),
-    acceptProbe,
-  );
+  const r = andThen(runBanal(d, s, { path }, [PROBE_PAGE]), acceptProbe);
   return r.ok
-    ? ok(at as PinnedBanal)
+    ? ok({ path, provenance: { kind: "cache" }, [PINNED]: true })
     : err({ kind: "does-not-run", path, why: r.error });
 }
 

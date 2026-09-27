@@ -21,11 +21,7 @@ interface Token {
 
 const ROOT = join(import.meta.dirname, "..");
 const read = (p: string): string => readFileSync(join(ROOT, p), "utf8");
-const parse = (text: string): Token[] =>
-  (new MarkdownIt() as { parse: (s: string, e: object) => Token[] }).parse(
-    text,
-    {},
-  );
+const parse = (text: string): Token[] => new MarkdownIt().parse(text, {});
 
 const SHIPPED = readdirSync(join(ROOT, "skills"), { withFileTypes: true })
   .filter(

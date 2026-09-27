@@ -45,7 +45,6 @@
     "src/types.ts",
     "src/ports/*.ts",
     "src/domain/page-layout.ts",
-    "src/domain/paths.ts",
     "eslint-rules/rule-context.ts",
     "lib/skill-eval-kit.mjs",
     "lib/skill-eval-fixture.ts",
@@ -67,7 +66,6 @@
     "src/types.ts",
     "src/ports/*.ts",
     "src/domain/page-layout.ts",
-    "src/domain/paths.ts",
     "eslint-rules/rule-context.ts"
   ],
   "evalOnly": [

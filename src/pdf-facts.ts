@@ -35,12 +35,67 @@ import type { PageLayout, TextBox } from "./domain/page-layout.ts";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import { fillsFor, isUpright } from "./adapters/pdfjs/fill.ts";
 import { messageOf } from "./domain/text.ts";
+import { fieldOf, isRecord, numbersOf } from "./domain/record.ts";
 
 type PdfJs = Awaited<ReturnType<typeof import("unpdf").getResolvedPDFJS>>;
-type Doc = Awaited<ReturnType<PdfJs["getDocument"]>["promise"]>;
-type Page = Awaited<ReturnType<Doc["getPage"]>>;
-type Item = Awaited<ReturnType<Page["getTextContent"]>>["items"][number];
-type TextItem = Extract<Item, { str: string }>;
+
+/** A text item as this module reads it; pdf.js's `TextItem` is one. */
+interface TextItem {
+  readonly str: string;
+  readonly fontName: string;
+  /** pdf.js types it `any[]`; `numbersOf` reads it. */
+  readonly transform: readonly unknown[];
+  readonly width: number;
+  readonly height: number;
+}
+/** What else pdf.js lists among a page's items: a marked-content boundary, with no text. */
+interface MarkedContent {
+  readonly type: string;
+  readonly str?: undefined;
+}
+type Item = TextItem | MarkedContent;
+
+/** A page's operators, as `fillsFor` walks them; pdf.js's operator list is one. */
+interface OperatorList {
+  readonly fnArray: readonly number[];
+  readonly argsArray: readonly unknown[];
+}
+
+/** A viewport as this module reads it; pdf.js's `PageViewport` is one. */
+interface Viewport {
+  readonly width: number;
+  readonly height: number;
+  readonly transform: readonly number[];
+  convertToViewportPoint(x: number, y: number): readonly unknown[];
+}
+
+/**
+ * A page as this module reads it. pdf.js's `PDFPageProxy` is one, and so is a test's fake page: the
+ * module depends on these five members, not on the rest of pdf.js's page.
+ */
+interface Page {
+  getOperatorList(): Promise<OperatorList>;
+  getTextContent(): Promise<{ readonly items: readonly Item[] }>;
+  /** pdf.js's `commonObjs`: loaded objects by id, iterable as `[id, object]` pairs. */
+  readonly commonObjs: {
+    has(id: string): boolean;
+    get(id: string): unknown;
+    [Symbol.iterator](): Iterator<readonly unknown[]>;
+  };
+  getViewport(params: { scale: number }): Viewport;
+}
+
+/** A document as this module reads it; pdf.js's `PDFDocumentProxy` is one. */
+interface Doc {
+  readonly numPages: number;
+  getPage(pageNumber: number): Promise<Page>;
+}
+
+/** A viewport point, which pdf.js types as `any[]`: the two numbers it holds. */
+const pointOf = (xy: readonly unknown[]): [number, number] => [
+  Number(xy[0]),
+  Number(xy[1]),
+];
 
 /**
  * What `readPdf` measured. `last` is the last page's words; `classifyLastPage` reads it. `layout` is
@@ -95,8 +150,8 @@ const fail = (reason: PdfReadFailure, detail: string): PdfRead => ({
 
 /** A font object pdf.js left in `commonObjs`, read into a `RawFont`, or null when it is not one. */
 export function rawFontOf(id: string, obj: unknown): RawFont | null {
-  if (typeof obj !== "object" || obj === null) return null;
-  const o = obj as Record<string, unknown>;
+  if (!isRecord(obj)) return null;
+  const o = obj;
   if (!("loadedName" in o) && !("isType3Font" in o)) return null;
   const str = (v: unknown): string | undefined =>
     typeof v === "string" ? v : undefined;
@@ -111,7 +166,7 @@ export function rawFontOf(id: string, obj: unknown): RawFont | null {
 }
 
 const isText = (it: Item): it is TextItem =>
-  "str" in it && it.str.trim() !== "";
+  typeof it.str === "string" && it.str.trim() !== "";
 
 /** The font pdf.js resolved for `id`, if it did. `get` throws on an unresolved id; `has` does not. */
 function resolved(page: Page, id: string): unknown {
@@ -124,9 +179,10 @@ function resolved(page: Page, id: string): unknown {
  */
 function loadedFonts(page: Page): Map<string, RawFont> {
   const out = new Map<string, RawFont>();
-  for (const [id, obj] of page.commonObjs as Iterable<[string, unknown]>) {
-    const f = rawFontOf(id, obj);
-    if (f) out.set(id, f);
+  // pdf.js yields `[id, object]` pairs, typed `any[]`.
+  for (const entry of page.commonObjs) {
+    const f = rawFontOf(String(entry[0]), entry[1]);
+    if (f) out.set(f.id, f);
   }
   return out;
 }
@@ -167,7 +223,7 @@ async function readPage(
  * Both are far below any balance tolerance, so the simpler rule stays.
  */
 function metricsOf(font: unknown): { ascent: number; descent: number } {
-  const f = (font ?? {}) as Record<string, unknown>;
+  const f = isRecord(font) ? font : {};
   const ascent = f["ascent"];
   if (typeof ascent !== "number" || !(ascent > 0))
     return { ascent: DEFAULT_ASCENT, descent: DEFAULT_DESCENT };
@@ -179,8 +235,8 @@ function metricsOf(font: unknown): { ascent: number; descent: number } {
 function pageText(page: Page, items: readonly TextItem[]): PageText {
   const vp = page.getViewport({ scale: 1 });
   const runs: TextRun[] = items.map((it) => {
-    const [a = 0, b = 0, , d = 0, e = 0, f = 0] = it.transform as number[];
-    const [x, baseline] = vp.convertToViewportPoint(e, f) as [number, number];
+    const [a = 0, b = 0, , d = 0, e = 0, f = 0] = numbersOf(it.transform);
+    const [x, baseline] = pointOf(vp.convertToViewportPoint(e, f));
     const size = Math.hypot(a, b) || it.height || Math.abs(d);
     return {
       text: it.str,
@@ -200,7 +256,7 @@ function pageText(page: Page, items: readonly TextItem[]): PageText {
 
 /** The font name pdf.js resolved for an item, else its internal id. */
 function fontNameOf(font: unknown, id: string): string {
-  const name = (font as { name?: unknown } | null)?.name;
+  const name = fieldOf(font, "name");
   return typeof name === "string" && name ? name : id;
 }
 
@@ -211,12 +267,12 @@ function fontNameOf(font: unknown, id: string): string {
  */
 function boxOf(
   page: Page,
-  vp: ReturnType<Page["getViewport"]>,
+  vp: Viewport,
   it: TextItem,
   lib: PdfJs,
 ): Omit<TextBox, "fill"> {
-  const [a = 0, b = 0, c = 0, d = 0, e = 0, f = 0] = it.transform as number[];
-  const [x, baseline] = vp.convertToViewportPoint(e, f) as [number, number];
+  const [a = 0, b = 0, c = 0, d = 0, e = 0, f = 0] = numbersOf(it.transform);
+  const [x, baseline] = pointOf(vp.convertToViewportPoint(e, f));
   const size = Math.hypot(c, d) || Math.hypot(a, b) || it.height;
   const font = resolved(page, it.fontName);
   const m = metricsOf(font);
@@ -229,7 +285,7 @@ function boxOf(
     font: fontNameOf(font, it.fontName),
     text: it.str,
     upright: isUpright(
-      lib.Util.transform(vp.transform, it.transform) as number[],
+      numbersOf(lib.Util.transform(vp.transform, it.transform)),
     ),
   };
 }
@@ -238,7 +294,7 @@ function boxOf(
 function layoutOf(
   page: Page,
   items: readonly TextItem[],
-  ops: Awaited<ReturnType<Page["getOperatorList"]>>,
+  ops: OperatorList,
   lib: PdfJs,
 ): PageLayout {
   const vp = page.getViewport({ scale: 1 });
@@ -290,10 +346,11 @@ export async function factsOf(doc: Doc, lib: PdfJs): Promise<PdfRead> {
 
 /** pdf.js's own exception names for the two conditions a caller can act on. */
 export function failureOf(e: unknown): PdfRead {
-  const err = e as { name?: string; message?: string };
-  const detail = `${err.name ?? "Error"}: ${err.message ?? String(e)}`;
+  const name = fieldOf(e, "name");
+  const message = fieldOf(e, "message");
+  const detail = `${typeof name === "string" ? name : "Error"}: ${typeof message === "string" ? message : String(e)}`;
   return fail(
-    err.name === "PasswordException" ? "encrypted" : "unreadable",
+    name === "PasswordException" ? "encrypted" : "unreadable",
     detail,
   );
 }

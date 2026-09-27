@@ -62,10 +62,12 @@ type Resolved = Required<Omit<EngineOptions, "install">> & {
 };
 
 /** The options a caller actually set — `undefined` must still get its default, so no plain spread. */
-const defined = <T extends object>(o: T): Partial<T> =>
-  Object.fromEntries(
-    Object.entries(o).filter(([, v]) => v !== undefined),
-  ) as Partial<T>;
+function defined<T extends object>(o: T): Partial<T> {
+  const out: Partial<T> = {};
+  // `for…in` hands out `o`'s keys typed as its keys; an options literal has no inherited ones.
+  for (const k in o) if (o[k] !== undefined) out[k] = o[k];
+  return out;
+}
 
 function withDefaults(o: EngineOptions): Resolved {
   const r = {
@@ -133,7 +135,10 @@ const names = (missing: readonly string[]): string =>
   `${String(missing.length)} package(s): ${missing.join(", ")}`;
 
 /** The one line a run without a human gets. It names the command and what is missing. */
-export function refusal(d: EngineDecision, facts: EngineFacts): string {
+export function refusal(
+  d: EngineDecision,
+  facts: Pick<EngineFacts, "system">,
+): string {
   const missing = d.kind === "refuse" || d.kind === "ask" ? d.missing : [];
   const sys =
     facts.system && facts.system.missing.length

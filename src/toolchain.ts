@@ -295,8 +295,8 @@ const quiet = (io: ToolchainIO, timeout?: number) => ({
 /** The last lines a process printed — what a failure shows. */
 function tail(
   r: {
-    readonly stdout: string | undefined;
-    readonly stderr: string | undefined;
+    readonly stdout?: string | undefined;
+    readonly stderr?: string | undefined;
   },
   n = 12,
 ): string[] {

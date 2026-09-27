@@ -430,7 +430,6 @@ test("the exclude list is exactly the justified set", () => {
     "src/types.ts",
     "src/ports/*.ts",
     "src/domain/page-layout.ts",
-    "src/domain/paths.ts",
     "eslint-rules/rule-context.ts",
   ]);
   assert.deepEqual(CONFIG.evalOnly, [

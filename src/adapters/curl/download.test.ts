@@ -15,18 +15,18 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterAll as after, test } from "vitest";
-import type { AbsolutePath } from "../../domain/paths.ts";
+import { absolutePath, joinPath } from "../../domain/paths.ts";
 import { curlDownload, curlFailure } from "./download.io.ts";
 import type { ProcessExit } from "../../ports/process.ts";
 import { spawnProcess } from "../node/index.ts";
 
-const root = realpathSync(
-  mkdtempSync(join(tmpdir(), "paperlint-download-test-")),
+const root = absolutePath(
+  realpathSync(mkdtempSync(join(tmpdir(), "paperlint-download-test-"))),
 );
 after(() => {
   rmSync(root, { recursive: true, force: true });
 });
-const at = (...p: string[]) => join(root, ...p) as AbsolutePath;
+const at = (...p: string[]) => joinPath(root, ...p);
 
 const dl = (env: Record<string, string>) => {
   const tmp = at("dl-tmp");

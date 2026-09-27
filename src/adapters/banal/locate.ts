@@ -3,9 +3,7 @@
  * `$BANAL` (an explicit choice — if it names nothing, there is NO fallback), `<project>/vendor/banal`
  * (a project that vendors its own copy), then the one `paperlint toolchain` installed.
  */
-import { join } from "node:path";
-import type { Opaque } from "ts-essentials";
-import type { AbsolutePath } from "../../domain/paths.ts";
+import { joinPath, type AbsolutePath } from "../../domain/paths.ts";
 import { err, ok, type Result } from "../../domain/result.ts";
 import { BANAL_PIN } from "./pin.ts";
 import type { BanalSettings } from "./settings.ts";
@@ -20,14 +18,20 @@ export interface BanalCandidate {
   readonly provenance: Provenance;
 }
 
-/** A candidate the `Files` port confirmed is a file. Minted by `pickBanal` only. */
-export type LocatedBanal = Opaque<BanalCandidate, "LocatedBanal">;
+// Not exported: only this module can write the property, so only `locate` can make a LocatedBanal.
+const LOCATED = Symbol("LocatedBanal");
 
-/**
- * `paperlint toolchain`'s banal after its bytes hashed to the pin AND it measured the probe page. Minted by
- * `ensureBanal` / `checkBanal` only (`./index.ts`): a "ready" line cannot be printed without one.
- */
-export type PinnedBanal = Opaque<BanalCandidate, "PinnedBanal">;
+/** A candidate the `Files` port confirmed is a file. Minted by `pickBanal` (through `locate`) only. */
+export type LocatedBanal = BanalCandidate & { readonly [LOCATED]: true };
+
+/** `path` as a banal to run — when the `Files` port says it is a file, else null. */
+function locate(
+  path: AbsolutePath,
+  kind: Provenance["kind"],
+  isFile: (p: AbsolutePath) => boolean,
+): LocatedBanal | null {
+  return isFile(path) ? { path, provenance: { kind }, [LOCATED]: true } : null;
+}
 
 /** Why there is no banal to run. */
 export type BanalMissing =
@@ -47,7 +51,7 @@ export type LookupOrder =
 
 /** Where `paperlint toolchain` puts the pinned banal: one directory per HotCRP commit. */
 export const installedBanal = (s: BanalSettings): AbsolutePath =>
-  join(s.cacheDir, BANAL_PIN.commit.slice(0, 12), "banal") as AbsolutePath;
+  joinPath(s.cacheDir, BANAL_PIN.commit.slice(0, 12), "banal");
 
 export function lookupOrder(
   s: BanalSettings,
@@ -56,25 +60,27 @@ export function lookupOrder(
   if (s.explicit) return { kind: "explicit", path: s.explicit };
   return {
     kind: "search",
-    vendor: join(projectRoot, "vendor", "banal") as AbsolutePath,
+    vendor: joinPath(projectRoot, "vendor", "banal"),
     cache: installedBanal(s),
   };
 }
-
-const located = (path: AbsolutePath, kind: Provenance["kind"]) =>
-  ok({ path, provenance: { kind } } as LocatedBanal);
 
 export function pickBanal(
   order: LookupOrder,
   isFile: (p: AbsolutePath) => boolean,
 ): Result<LocatedBanal, BanalMissing> {
-  if (order.kind === "explicit")
-    return isFile(order.path)
-      ? located(order.path, "env")
+  if (order.kind === "explicit") {
+    const own = locate(order.path, "env", isFile);
+    return own
+      ? ok(own)
       : err({ kind: "explicit-not-found", path: order.path });
-  if (isFile(order.vendor)) return located(order.vendor, "vendor");
-  if (isFile(order.cache)) return located(order.cache, "cache");
-  return err({ kind: "not-installed", installed: order.cache });
+  }
+  const found =
+    locate(order.vendor, "vendor", isFile) ??
+    locate(order.cache, "cache", isFile);
+  return found
+    ? ok(found)
+    : err({ kind: "not-installed", installed: order.cache });
 }
 
 /** Which rule found it, as a person reads it. */

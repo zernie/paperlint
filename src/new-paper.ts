@@ -26,6 +26,7 @@ import {
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CONFIG_FILE } from "#lib/paper-config";
+import { isRecord } from "./domain/record.ts";
 
 export type PaperFormat = "tex" | "md";
 export const FORMATS: readonly PaperFormat[] = ["tex", "md"];
@@ -115,15 +116,18 @@ function withVenue(
   src: string,
   venue: VenueSetting,
 ): { ok: true; text: string } | { ok: false; reason: string } {
-  let obj: Record<string, unknown>;
+  let obj: unknown;
   try {
-    obj = JSON.parse(text) as Record<string, unknown>;
+    obj = JSON.parse(text);
   } catch {
+    obj = null;
+  }
+  // Not JSON, or JSON that is not an object: there is no field to write "extends" into.
+  if (!isRecord(obj))
     return {
       ok: false,
       reason: `--venue cannot be written into ${src}: it is not plain JSON — set "extends" by hand`,
     };
-  }
   const out: Record<string, unknown> = { ...obj, extends: venue.extends };
   delete out["$comment"];
   if (venue.kind !== null) out["kind"] = venue.kind;

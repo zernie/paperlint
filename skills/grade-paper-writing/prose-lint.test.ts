@@ -1,5 +1,5 @@
 /**
- * prose-lint.mjs as a process — the way the skill and `run-mechanical.mjs` run it. Every mode, on
+ * prose-lint.mjs as a process — the way the skill runs it. Every mode, on
  * fixtures written here, with the WHOLE output compared: the report is the product, so a changed
  * number or a dropped line is a changed result.
  */

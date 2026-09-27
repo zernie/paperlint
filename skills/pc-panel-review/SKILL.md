@@ -4,7 +4,7 @@ description: Use when asking "what would the program committee decide?" / "simul
 allowed-tools: [Read, Write, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:9622701a349ea249 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:b9feb099347291ff compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
 
 # pc-panel-review — model the whole PC, not one reviewer
 
@@ -14,17 +14,6 @@ allowed-tools: [Read, Write, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill
 > (below): ONE reviewer scoring a named venue's CFP rubric to predict its accept/reject — the quick
 > single-lens spot-check (formerly the standalone `venue-review-sim` skill). Reach for Venue-fit mode or
 > `paper-adversarial-review` for a fast spot-check; run the full panel (this) for the decision.
-
-## Run me
-
-🔴 FIRST, before any other step:
-
-```
-node .claude/skills/paper-pipeline/scripts/announce.mjs pc-panel-review <paper-dir>
-```
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
 
 The Venue-fit mode gives ONE reviewer's fit score; `paper-adversarial-review` gives ONE defect hunt.
 A real decision is made by **2–4 reviewers with different priorities + a meta-review** that weighs
@@ -61,8 +50,7 @@ prose-only read can.
    (proven: ~88% accept on a paper the human reader found exhausting). These two artifacts are the
    panel's only legitimate source for the readability/structure signal.
    *(Scorecard: this gate is row **`panel`**, and it declares **`structure`** (tighten-paper) + **`writing`**
-   (grade-paper-writing) as its required inputs — `pipeline-check.mjs` reports `panel` marked done while
-   either input is missing or newer than it.)*
+   (grade-paper-writing) as its required inputs.)*
 3. **Pick 3 (or 4) reviewer lenses** that a real PC for THIS venue would field. Menu — choose by fit:
    - **Methods/stats skeptic** — sample size, construct validity, multiple comparisons, overclaims,
      whether the CIs support the claims.
@@ -144,38 +132,6 @@ the claim falsifiable: *TEXT* invites "then write it", and *IMMOVABLE* invites "
 
 🔴 **A deadline is a constraint on how much you rework, never an argument for the current form.** If
 the author invokes it against a TEXT prong, that is the failure this section exists to catch.
-
-**Enforced** by `../paper-pipeline/scripts/pipeline-check.mjs` → `ceiling-unplanned`: a ceiling recorded
-in the scorecard whose prongs carry none of the three labels is a finding.
-
-## Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-```
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record pc-panel-review <paper-dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record pc-panel-review <paper-dir> ABSTAINED <reason> "<one line>"
-```
-
-**FINDING** — `<count>` is the number of **consensus** must-fixes (flagged by ≥2 independent
-reviewers, not the union of everything anyone said), `<report-path>` is the meta-review. Add
-`--blocking` when the chair's decision is reject.
-**ABSTAINED** — `blocked`: the panel never ran because its required inputs (the persona stall
-inventory, the structural verdict) do not exist. `no-witness`: the panel ran and reached no
-consensus must-fix.
-
-🔴 **THIS IS THE SKILL THE DELETION OF `PASS` WAS WRITTEN FOR.** Five model reviewers from one
-vendor agreeing was being recorded as an acquittal — and correlated agreement between instances of
-one model is not independent evidence of anything. There is now no constructor that can say it.
-"Accept with no must-fix" is `ABSTAINED no-witness`: the panel produced no finding, which is a fact
-about the panel and not a fact about the paper.
-
-🔴 **The `blocked` row is the one that matters most here.** A blocked panel and a panel nobody
-launched read identically in prose, and on 2026-08-04 a status line said the panel was running when
-it had never been launched at all. Record the block; do not leave the check silent.
-
-Venue-fit mode records under the same skill name with the fit verdict and `<count>` 0 — it is one
-reviewer's spot-check, and its row should not be mistaken for the panel's decision.
 
 ## Rules
 - **Independence is non-negotiable** — never let reviewers see each other's reviews before the

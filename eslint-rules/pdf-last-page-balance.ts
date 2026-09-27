@@ -218,7 +218,7 @@ function verdict(paperDir: string, tolerancePt: number): Finding | null {
 
 const rule = {
   meta: {
-    type: "problem",
+    type: "problem" as const,
     docs: {
       description:
         "the last page's two columns end at about the same height (optional; for venues that require it)",

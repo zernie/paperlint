@@ -7,9 +7,8 @@
  *     from a missing file into a created one;
  *   - the scorecard carries `researchQuestion` and NO `stages` — a new paper has shipped nothing,
  *     and a placeholder stage would be a red `paper/stages` on the very first run;
- *   - the scorecard PARSES as a scorecard (`pipeline-check.mjs` finds its four sections). The
- *     template used to live in a code fence; moved into a file, it must still be the format the
- *     skills' checker reads;
+ *   - the scorecard carries the `**Readiness verdict:**` line the status hook surfaces on every
+ *     paper edit — without it the hook reports that the paper cannot say whether it is ready;
  *   - it never overwrites, and on an existing folder adds only what is missing;
  *   - the project's `<papers>/.template/` wins over the package, file by file.
  *
@@ -25,7 +24,6 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -124,26 +122,12 @@ try {
       /1 problem \(0 errors, 1 warning\)/.test(l.text),
   );
 
-  // The format contract of the skills' checker: four sections, parsed.
-  const pc = spawnSync(
-    process.execPath,
-    [
-      join(ROOT, "skills", "paper-pipeline", "scripts", "pipeline-check.mjs"),
-      join(papers, "demo"),
-      "--json",
-      "--today=2026-09-23",
-    ],
-    { cwd: work, encoding: "utf8" },
-  );
-  let parsed = null;
-  try {
-    parsed = JSON.parse(pc.stdout);
-  } catch {
-    parsed = null;
-  }
+  // What the status hook reads on every paper edit: the verdict line.
   check(
-    "the scorecard PARSES for pipeline-check — its four sections are found (it prints JSON, not the format warning)",
-    Array.isArray(parsed) && !/expected the four sections/.test(pc.stderr),
+    "the scorecard carries the `**Readiness verdict:**` line the status hook surfaces",
+    /^\*\*Readiness verdict:\*\*/m.test(
+      readFileSync(join(papers, "demo", STATUS_FILE), "utf8"),
+    ),
   );
 
   // ── never overwrite; on an existing folder only the missing files ─────────────────────

@@ -10,16 +10,14 @@
  *             -> catches a skill renamed or removed while the conductor still
  *                points at the old name. The agent reads a route to nowhere.
  *
- *   backward  every pipeline-wired skill is named by the conductor
+ *   backward  every skill this package ships is named by the conductor
  *             -> catches the far more common one: a stage skill added and never
  *                wired into the map, so the orchestrated run silently skips it.
  *
- * 🔴 THE BACKWARD DIRECTION IS RED TODAY, WHICH IS WHY IT IS WORTH WRITING.
- * Three wired skills are absent from the conductor (see MISSING below). Two are
- * genuine stages. They are held in an explicit list rather than asserted away,
- * and the list is checked for rot in both directions: an entry naming a skill
- * that stopped being wired, or one that HAS since been routed, fails — so the
- * debt cannot quietly become permanent.
+ * The skills the map does not name are held in an explicit list (NOT_IN_MAP), each
+ * with its reason, and the list is checked for rot in both directions: an entry
+ * naming a skill that no longer ships, or one the map HAS since named, fails — so
+ * an exception cannot quietly outlive its reason.
  *
  * ⚠️ COVERAGE NOTE. Before this file, `paper-pipeline` counted as covered because
  * five older eval files sit in its directory — and every one of them measures
@@ -37,13 +35,8 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const SKILLS_DIR = join(HERE, "..");
 const SELF = "paper-pipeline";
 
-/** Same contract `skill-checks.mjs` derives membership from: a skill announces ITSELF. */
-const PIPELINE_MARKER =
-  /^\s*node\s+\.claude\/skills\/paper-pipeline\/scripts\/announce\.mjs\s+([a-z0-9-]+)/m;
-
 const dirs = installedSkills(SKILLS_DIR);
 const read = (d) => readFileSync(join(SKILLS_DIR, d, "SKILL.md"), "utf-8");
-const wired = dirs.filter((d) => PIPELINE_MARKER.test(read(d)));
 
 const src = read(SELF);
 
@@ -82,62 +75,54 @@ for (const name of new Set(asserted)) {
   recordCheck();
 }
 
-// ── backward: every wired stage skill is named somewhere in the map ──
-/**
- * Wired skills the conductor does NOT name, each with why it is tolerated TODAY.
- * Dated, because an undated allowance is indistinguishable from an oversight —
- * the same argument `skill-checks.mjs` makes about its own EXCLUDED map.
- */
-const MISSING = new Map([
+// ── backward: every shipped skill is named somewhere in the map ──
+/** Shipped skills the conductor does NOT name, each with why. */
+const NOT_IN_MAP = new Map([
   [
     "cold-read-diff",
-    "2026-08-11 — absent from the MAP but NOT unreachable: it is in EXPECTED_GATES and `grade-paper-writing` routes to it, so a run gets there. Belongs in the map for discoverability; not added here because the pipeline is being reworked in parallel",
+    "reached through `grade-paper-writing`, which routes to it; missing only from the map",
   ],
   [
     "sweep-design-space",
-    "2026-08-11 — same shape: in EXPECTED_GATES, reached via `argument-arc`, missing only from the map. Deferred to the rework",
+    "reached through `argument-arc`; missing only from the map",
   ],
   [
     "paper-status",
     "reports ON the pipeline rather than being a stage in it — the conductor has nothing to route to it",
   ],
+  [
+    "osf-artifact-upload",
+    "a helper that uploads an artifact file, not a stage of writing a paper",
+  ],
 ]);
 
-for (const name of wired) {
+for (const name of dirs) {
   if (name === SELF) continue;
-  if (MISSING.has(name)) continue;
+  if (NOT_IN_MAP.has(name)) continue;
   assert.ok(
     routed.has(name),
-    `${name} is a wired pipeline skill and paper-pipeline never names it. Whether that STRANDS ` +
-      `it depends on whether a sibling routes to it — check before calling it unreachable ` +
-      `(measured 2026-08-11: both known-absent skills WERE reachable via a sibling, and the ` +
-      `first version of this message claimed otherwise). What it always costs is discoverability: ` +
-      `a reader of the map does not learn the stage exists.`,
+    `${name} ships with this package and paper-pipeline never names it. A reader of the map ` +
+      `does not learn the stage exists; name it in the map, or add it to NOT_IN_MAP with a reason.`,
   );
   recordCheck();
 }
 
-// ── the allowance list must not rot, in BOTH directions ──
-for (const [name, reason] of MISSING) {
+// ── the exception list must not rot, in BOTH directions ──
+for (const [name, reason] of NOT_IN_MAP) {
   assert.ok(
     dirs.includes(name),
-    `MISSING names "${name}" and no such skill exists — delete the entry. Recorded reason: "${reason}"`,
-  );
-  assert.ok(
-    wired.includes(name),
-    `MISSING names "${name}", which is no longer a wired pipeline skill, so the allowance covers ` +
-      `nothing. Recorded reason: "${reason}"`,
+    `NOT_IN_MAP names "${name}" and no such skill ships — delete the entry. Recorded reason: "${reason}"`,
   );
   assert.ok(
     !routed.has(name),
-    `MISSING still names "${name}", but paper-pipeline DOES name it now — the debt was paid and the ` +
-      `entry is stale. Delete it, so the assertion above starts protecting this skill.`,
+    `NOT_IN_MAP still names "${name}", but paper-pipeline DOES name it now — delete the entry, ` +
+      `so the assertion above starts protecting this skill.`,
   );
   recordCheck();
 }
 
 console.log(
   `✓ paper-pipeline routing: ${String(new Set(asserted).size)} routes resolve · ` +
-    `${String(wired.length - MISSING.size - 1)} wired skills reachable · ` +
-    `${String(MISSING.size)} known-absent (${[...MISSING.keys()].join(", ")})`,
+    `${String(dirs.length - NOT_IN_MAP.size - 1)} skills named · ` +
+    `${String(NOT_IN_MAP.size)} not in the map (${[...NOT_IN_MAP.keys()].join(", ")})`,
 );

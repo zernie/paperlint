@@ -9,10 +9,11 @@
  */
 import { describe, expect, it } from "vitest";
 import { ESLint } from "eslint";
+import { eslintConfig } from "./cli.ts";
 import { join } from "node:path";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import { ok } from "./domain/result.ts";
-import type { AbsolutePath } from "./domain/paths.ts";
+import { absolutePath } from "./domain/paths.ts";
 import type {
   CheckReferences,
   EntryVerdict,
@@ -78,9 +79,13 @@ const offline: CheckReferences = (_bib, cache) =>
 const ctx = (files: ReturnType<typeof memoryFiles>) => ({
   paperDir: PAPER,
   env: {},
-  run: (() => ({})) as never,
-  readPdf: (() => null) as never,
-  measure: (() => null) as never,
+  run: () => ({ status: 0 }),
+  readPdf: () => Promise.reject(new Error("the references step reads no PDF")),
+  measure: {
+    measure: () => {
+      throw new Error("the references step measures nothing");
+    },
+  },
   files,
 });
 
@@ -94,32 +99,26 @@ async function build(tex: string, check: CheckReferences) {
   return { files, out };
 }
 
-/**
- * The rules as an ESLint plugin. Their context type is the narrow one they read (a custom
- * language's SourceCode), which ESLint's JS-centred plugin type does not describe.
- */
-const asPlugin = (rules: object): ESLint.Plugin => ({ rules }) as ESLint.Plugin;
-
 /** Lint `tex` as the paper's paper.tex against what `files` recorded. */
 async function lint(files: ReturnType<typeof memoryFiles>, tex: string) {
   files.writeAtomic(
-    `${PAPER}/paper.tex` as AbsolutePath,
+    absolutePath(`${PAPER}/paper.tex`),
     new TextEncoder().encode(tex),
   );
   const eslint = new ESLint({
     cwd: "/work",
     overrideConfigFile: true,
-    overrideConfig: [
+    overrideConfig: eslintConfig([
       {
         files: ["**/paper.tex"],
         plugins: {
           tex: { languages: { latex: texLanguage } },
-          paper: asPlugin(referenceRules({ files })),
+          paper: { rules: referenceRules({ files }) },
         },
         language: "tex/latex",
         rules: REFERENCE_RULE_LEVELS,
       },
-    ],
+    ]),
   });
   const [res] = await eslint.lintText(tex, {
     filePath: join(PAPER, "paper.tex"),
@@ -186,7 +185,7 @@ function fetching(key: string) {
   return { check, seen };
 }
 const cacheText = (files: ReturnType<typeof memoryFiles>): string | null => {
-  const b = files.readBytes(lookupCachePath(PAPER) as AbsolutePath);
+  const b = files.readBytes(absolutePath(lookupCachePath(PAPER)));
   return b === null ? null : new TextDecoder().decode(b);
 };
 
@@ -363,7 +362,7 @@ const record = (
 ) => {
   const bib = present(bibliographyOf(files, PAPER), "the bibliography");
   files.writeAtomic(
-    referencesPath(PAPER) as AbsolutePath,
+    absolutePath(referencesPath(PAPER)),
     new TextEncoder().encode(
       JSON.stringify({
         schema: 1,
@@ -424,9 +423,16 @@ describe("the reference rules over refs.bib, and on other files", () => {
     const files = memoryFiles({});
     const rules = referenceRules({ files });
     for (const rule of Object.values(rules))
-      expect(rule.create({ filename: `${PAPER}/notes.tex` } as never)).toEqual(
-        {},
-      );
+      expect(
+        rule.create({
+          filename: `${PAPER}/notes.tex`,
+          cwd: "/work",
+          sourceCode: { getLocFromIndex: () => ({ line: 1, column: 0 }) },
+          report: () => {
+            throw new Error("a file that is not paper.tex is never reported");
+          },
+        }),
+      ).toEqual({});
   });
 });
 

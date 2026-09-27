@@ -7,11 +7,9 @@
  *
  *   1. where is the consumer's repository root, now that walking `..` from here lands in
  *      `node_modules/` instead;
- *   2. where does the run ledger live, now that the directory next to this file is wiped by
- *      `npm ci`;
- *   3. was this file executed, or merely imported — a question whose usual answer stops
+ *   2. was this file executed, or merely imported — a question whose usual answer stops
  *      working the moment the file is reached through a symlink;
- *   4. by what path a SKILL'S PROSE names these scripts, so that a checker can tell an
+ *   3. by what path a SKILL'S PROSE names these scripts, so that a checker can tell an
  *      instruction that runs them from one that runs something else. See the fourth-carrier
  *      section at the bottom of this file.
  *
@@ -23,7 +21,7 @@
  *                                                paper-pipeline/scripts
  *
  * so every command a skill's prose already names — `node .claude/skills/paper-pipeline/scripts/
- * ledger.mjs …` — keeps working unchanged. That is the whole reason the symlink exists: the
+ * <script>.mjs …` — keeps working unchanged. That is the whole reason the symlink exists: the
  * first consumer names those paths 306 times across 129 files, almost all of it in the PROSE of
  * skills, which no refactor can rewrite.
  *
@@ -35,12 +33,11 @@
  *     process.cwd()     /…/<the consumer repository root>
  *
  * Node resolves the entry point to its realpath (`--preserve-symlinks-main` is off by default)
- * but leaves `argv[1]` as typed. Three consequences, each one a function here:
+ * but leaves `argv[1]` as typed. Two consequences, each one a function here:
  *
  *   🔴 `import.meta.url === \`file://${process.argv[1]}\`` — the main guard nine scripts in this
  *      directory used — is `false` through the symlink. NOT an error: the process exits 0 having
- *      done nothing. `ledger.mjs record …` would silently record nothing, `announce.mjs` would
- *      silently announce nothing, and every caller would read success. `isMain()` compares
+ *      done nothing, and every caller reads success. `isMain()` compares
  *      against the REALPATH of `argv[1]` instead, which is true through both routes.
  *
  *   🔴 `resolve(import.meta.dirname, "..", "..", "..", "..")` — the repository root, correct
@@ -48,30 +45,9 @@
  *      by `process.cwd()`, which is the consumer root because every one of those 306 invocations
  *      is `node .claude/skills/…` typed from the repository root. `consumerRoot()`.
  *
- *   🔴 `join(import.meta.dirname, "runs.jsonl")` — the ledger's default home — now points inside
- *      `node_modules`, which `npm ci` deletes. Appending there is SILENT DATA LOSS: the write
- *      succeeds, the rows are real, and they vanish at the next install with no error anywhere.
- *      `ledgerPath()` refuses to return that path at all.
- *
- * ── THE LEDGER, THREE RUNGS ─────────────────────────────────────────────────
- *   1. `PIPELINE_LEDGER` in the environment — always wins. This is what test harnesses set to
- *      keep fixture rows out of real history, so it must outrank a declaration on disk.
- *   2. `{ "ledger": "…" }` in the CONSUMER's root `paperlint.json`, read
- *      from `process.cwd()`, resolved relative to it.
- *   3. `runs.jsonl` beside this file — ONLY when this file is not inside `node_modules`, i.e.
- *      when the package is being developed in its own checkout. Inside `node_modules` with
- *      nothing declared, this THROWS.
- *
- * 🔴 WHY RUNG 3 THROWS RATHER THAN GUESSING. Every other candidate default is worse in the same
- * direction. Writing beside the file loses data at the next `npm ci`. Writing to
- * `<cwd>/runs.jsonl` puts an append-only journal at the top of someone's repository without
- * asking. Writing nowhere makes `record()` a no-op, which is the stored "nothing was wrong" this
- * ledger exists to abolish. A throw is the only one of the four that cannot be mistaken for
- * having worked — and it carries the cure, naming the key and the file to put it in.
- *
- * ⚠️ THE EXAMPLES HERE ARE DELIBERATELY GENERIC (`docs/pipeline-runs.jsonl`). The first
- * consumer's own directory names are absent by the same rule `papers.harness.mjs` part IV
- * enforces for `papers.mjs`: a package that spells out one user's private tree has one user.
+ * ⚠️ THE EXAMPLES HERE ARE DELIBERATELY GENERIC. The first consumer's own directory names are
+ * absent by the same rule `papers.harness.mjs` part IV enforces for `papers.mjs`: a package that
+ * spells out one user's private tree has one user.
  */
 import {
   existsSync,
@@ -246,68 +222,22 @@ function readlinkOr(entry, readlink) {
  * True when `dir` lies inside a `node_modules` directory.
  *
  * Segment-wise, not `includes("node_modules")`: a repository legitimately named
- * `my-node_modules-inspector` is not an installed package, and a substring test would refuse to
- * write its ledger. Cheap to get right, and the failure it prevents is a throw in someone's face.
+ * `my-node_modules-inspector` is not an installed package, and a substring test would refuse it.
+ * Cheap to get right, and the failure it prevents is a throw in someone's face.
  */
 export function insideNodeModules(dir) {
   return dir.split(sep).includes("node_modules");
 }
 
-/**
- * Where the run ledger lives. Three rungs; see the docblock.
- *
- * @param hereDir  the directory of the module that owns the ledger — pass `import.meta.dirname`.
- * @returns an absolute path. Never a path inside `node_modules`.
- */
-export function ledgerPath(
-  hereDir,
-  { env = process.env, cwd = process.cwd() } = {},
-) {
-  // Rung 1 — the environment. Deliberately first: harnesses redirect the ledger BEFORE importing
-  // it, and a declaration on disk that could override that would put fixture rows in real history.
-  if (env.PIPELINE_LEDGER) return resolve(env.PIPELINE_LEDGER);
-
-  // Rung 2 — the consumer's declaration.
-  const root = consumerRoot({ env, cwd });
-  const declared = settingsOf(consumerRoot({ env, cwd }))?.ledger;
-  // 🔴 `declared === undefined`, NOT `declared ?? default` — the same distinction `papersRoot()`
-  // makes and for the same reason: `"ledger": null` is a keystroke, not an absence, and reading
-  // it as "nothing was declared" would silently pick a different file than the one asked for.
-  if (declared !== undefined) {
-    if (typeof declared !== "string" || declared.length === 0)
-      throw new TypeError(
-        `${CONFIG_KEY}: "ledger" must be a non-empty string, got ${JSON.stringify(declared)}`,
-      );
-    return resolve(root, declared);
-  }
-
-  // Rung 3 — beside this file, but only in the package's own checkout.
-  if (insideNodeModules(hereDir))
-    throw new Error(
-      `${CONFIG_KEY}: no ledger location is declared, and the default (a file beside this ` +
-        `module) is inside node_modules, which \`npm ci\` deletes.\n` +
-        `Declare where the ledger lives, in ${join(root, CONFIG_FILE)}:\n` +
-        `  { "ledger": "docs/pipeline-runs.jsonl" }\n` +
-        `or set PIPELINE_LEDGER for a single run.\n` +
-        `This is thrown rather than defaulted on purpose: appending to a path under ` +
-        `node_modules succeeds, so the rows would look recorded right up until the next ` +
-        `install removed them, with no error at any point.`,
-    );
-  return join(hereDir, "runs.jsonl");
-}
-
 // ═════════════════════════════════════════════════════════════════════════════════════════════
-// THE FOURTH CARRIER — WHERE A SKILL'S PROSE NAMES THESE SCRIPTS
+// WHERE A SKILL'S PROSE NAMES THESE SCRIPTS
 //
-// `papersRoot()` answers "where does the consumer keep its papers"; `ledgerPath()` answers
-// "where does the run journal live"; `citeChecks` (read in `run-mechanical.mjs`) answers "where
-// are the consumer's own citation checkers". This answers the fourth: BY WHAT PATH does a skill
-// instruct the model to run `announce.mjs` and `ledger.mjs`.
+// `papersRoot()` answers "where does the consumer keep its papers". This answers: BY WHAT PATH
+// does a skill instruct the model to run this package's scripts.
 //
-// 🔴 IT IS A DIFFERENT KIND OF PATH FROM THE OTHER THREE, and the difference decides the API.
-// The other three are read by CODE and may be absolute. This one is compared against text a
-// human wrote inside a SKILL.md — `node .claude/skills/paper-pipeline/scripts/ledger.mjs record
-// …` — so it must stay relative to the consumer root and spelled with `/`, exactly as the prose
+// 🔴 IT IS A DIFFERENT KIND OF PATH, and the difference decides the API. `papersRoot()` is read by
+// CODE and may be absolute. This one is compared against text a human wrote inside a SKILL.md —
+// `node .claude/skills/paper-pipeline/scripts/<script>.mjs …` — so it must stay relative to the consumer root and spelled with `/`, exactly as the prose
 // spells it. Returning an absolute path here would make every `startsWith` test false and every
 // check that depends on it pass over an empty set.
 //
@@ -346,7 +276,7 @@ export function scriptsRoot({ env = process.env, cwd = process.cwd() } = {}) {
   const root = consumerRoot({ env, cwd });
   const declared = settingsOf(consumerRoot({ env, cwd }))?.scripts;
   // 🔴 `declared === undefined`, NOT `declared ?? DEFAULT` — the same distinction `papersRoot()`
-  // and `ledgerPath()` make, for the same reason: `"scripts": null` is a keystroke, not an
+  // makes, for the same reason: `"scripts": null` is a keystroke, not an
   // absence, and silently substituting the default for it hides a typo behind a working run.
   const rel = declared === undefined ? DEFAULT_SCRIPTS_ROOT : declared;
   if (typeof rel !== "string" || rel.length === 0)
@@ -385,12 +315,11 @@ export function scriptsRoot({ env = process.env, cwd = process.cwd() } = {}) {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════════════════════
-// THE SIXTH CARRIER — WHICH WALL CLOCK THE CONSUMER SCHEDULES AGAINST
+// WHICH WALL CLOCK THE CONSUMER SCHEDULES AGAINST
 //
-// `papersRoot()` answers "where are the papers", `ledgerPath()` "where is the journal",
-// `citeChecks` "where are the consumer's citation checkers", `scriptsRoot()` "by what path does
-// prose name these scripts", `triggerCases` "where are the consumer's own trigger cases". This
-// answers the sixth: IN WHAT TIME ZONE does a deadline anchor get written.
+// `papersRoot()` answers "where are the papers", `scriptsRoot()` "by what path does prose name
+// these scripts", `triggerCases` "where are the consumer's own trigger cases". This answers: IN
+// WHAT TIME ZONE does a deadline anchor get written.
 //
 // 🔴 WHY IT IS A DECLARATION AND NOT A CONSTANT. A deadline is the one quantity in this pipeline
 // that is meaningless without a zone, and the zone belongs to the PERSON, not to the pipeline —
@@ -446,7 +375,7 @@ export function consumerTimezone({
 }
 
 // ═════════════════════════════════════════════════════════════════════════════════════════════
-// THE SEVENTH CARRIER — WHOM THE SCHOLARLY APIs SHOULD CONTACT
+// WHOM THE SCHOLARLY APIs SHOULD CONTACT
 //
 // Crossref and friends run a "polite pool": send a `mailto:` in the User-Agent and you get the
 // faster, more reliable tier, plus a warning by email instead of a silent block if your usage
@@ -485,13 +414,7 @@ export function consumerContactEmail({
   return declared;
 }
 
-/**
- * The individual script paths, derived from one root.
- *
- * 🔴 THE NAMES LIVE HERE, NOT IN THE CONSUMER — the same half that keeps `paperFiles()` honest.
- * `announce.mjs` and `ledger.mjs` are this package's contract; a consumer that spelled them out
- * itself would keep its copy of the list in step by hand, and a hand-kept list rots silently.
- */
+/** The prefix every prose path to this package's scripts starts with, derived from one root. */
 export function pipelineScripts(root) {
   // 🔴 ONE TRAILING SLASH, NOT THE ONE THAT WAS TYPED. `scriptsRoot()` returns the declaration
   // verbatim — it must, the value is compared against prose — so `"scripts": "tools/pipeline/"`
@@ -504,9 +427,5 @@ export function pipelineScripts(root) {
   return {
     /** What every prose path under this root starts with. Trailing slash, for `startsWith`. */
     prefix: `${base}/`,
-    /** Announces that a gate has started. */
-    announce: `${base}/announce.mjs`,
-    /** Appends the verdict row. */
-    ledger: `${base}/ledger.mjs`,
   };
 }

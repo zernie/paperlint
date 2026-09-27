@@ -15,17 +15,6 @@ export default experimental_skill({
   body: `
 # build-benchmark — the study + the artifact reviewers can run
 
-## Run me
-
-🔴 FIRST, before any other step:
-
-\`\`\`
-node .claude/skills/paper-pipeline/scripts/announce.mjs build-benchmark <paper-dir>
-\`\`\`
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
-
 A measurement paper is only as strong as the artifact a reviewer can \`cd\` into and re-run. This skill
 covers both halves: the study design that makes the finding true, and the self-checking artifact that
 makes it *verifiable*. The contribution is the **method**, not the one tool you happened to test — build
@@ -168,35 +157,6 @@ real-code-through-real-contract execution reveals it.
 
 Before submitting, verify the artifact you built with the reviewer-side reproduction protocol:
 **\`references/adversarial-cold-repro.md\`** (cold re-run, three-way reconcile, robustness attacks).
-
-## Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-\`\`\`
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record build-benchmark <paper-dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record build-benchmark <paper-dir> ABSTAINED <reason> "<one line>"
-\`\`\`
-
-🔴 **There is no PASS.** An artifact that recomputes every headline number and exits 0 has produced
-no finding; it has not certified the study. Record the absence, do not name it a success.
-
-**FINDING** — \`<count>\` numbers did not reproduce, or reproduce only with caveats; \`<report-path>\`
-is the artifact output. Add \`--blocking\` for the §0 refusal: \`frame\` is empty, so the study was not
-designed.
-**ABSTAINED** — \`no-witness\`: the artifact ran and every number reproduced. \`input-missing\`: the
-raw data is not in the repo. \`crashed\`: the harness itself died.
-
-🔴 That §0 refusal is a **finding, not an aborted run** — it is a fact about the work, so it is a
-FINDING and not an abstention. Record it and stop. A study that was never designed leaves exactly
-the same silence as one that is still running, and the difference costs a week to rediscover.
-
-🔴 **THREE MECHANICAL CHECKS FILE UNDER THIS SKILL** and each has its own ledger row:
-\`build-benchmark/check-provenance\`, \`build-benchmark/arm-permutation\`,
-\`build-benchmark/delivered-pdf\` (see \`.claude/skills/paper-pipeline/scripts/run-mechanical.mjs\`). Until 2026-08-10 the
-ledger keyed on the SKILL, so a clean run of one erased a finding of another from every derived
-view — which is why two of the three sat unwired. This block records the JUDGEMENT pass, under the
-bare key \`build-benchmark\`; never file a mechanical result here.
 
 ## Compose with
 - **argument-arc (frame mode)** — 🔴 **hard input.** Owns row \`frame\`, the stated claim. No \`frame\`, no study.

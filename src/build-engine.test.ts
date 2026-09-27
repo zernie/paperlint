@@ -9,6 +9,7 @@ import { dirname, join } from "node:path";
 import { test } from "vitest";
 import { useTempDir } from "../test/support.ts";
 import { prepareEngine, refusal } from "./build-engine.ts";
+import type { Runner } from "./engine.ts";
 
 const work = useTempDir("paperlint-build-engine-test-");
 const TEX = { packages: { acmart: ["acmart.cls"] }, tools: {} };
@@ -20,11 +21,12 @@ const texAt = (dir: string): string => {
   return dir;
 };
 /** kpsewhich answers per bin directory. */
-const fakeRun = (found: Record<string, string>) =>
-  ((cmd: string) => ({
+const fakeRun =
+  (found: Record<string, string>): Runner =>
+  (cmd) => ({
     stdout: found[dirname(cmd)] ?? "",
     status: 0,
-  })) as never;
+  });
 
 async function go(o: Parameters<typeof prepareEngine>[0]) {
   const out: string[] = [];
@@ -101,7 +103,10 @@ test("a complete cache is used from an environment with no PATH at all", async (
 
 test("the refusal line for a decision to use a tree names nothing missing", () => {
   assert.equal(
-    refusal({ kind: "use-cache" } as never, { system: null } as never),
+    refusal(
+      { kind: "use-cache", tree: { label: "cache", bin: "/b", missing: [] } },
+      { system: null },
+    ),
     "✗ paperlint build: no TeX Live with every package these papers need — run `npx paperlint toolchain` (missing: 0 package(s): )",
   );
 });
@@ -122,14 +127,14 @@ test("without an ask or an install given: Enter is yes, and the default install 
       PAPERLINT_CTAN_MIRROR: "https://mirror.invalid/tlnet",
       PATH: join(work, "nothing"),
     },
-    run: ((cmd: string) => {
+    run: (cmd) => {
       calls.push(cmd.split("/").pop() ?? cmd);
       return {
         status: 22,
         stdout: "",
         stderr: "curl: (6) could not resolve\n",
       };
-    }) as never,
+    },
   });
   assert.deepEqual(r, { ok: false, code: 1 });
   assert.ok(calls.includes("curl"), calls.join(","));

@@ -44,6 +44,7 @@ import type {
   BibEntry,
 } from "../../../skills/verify-citations/scripts/bib-authors.mjs";
 import { messageOf } from "../../domain/text.ts";
+import { isRecord } from "../../domain/record.ts";
 
 const describeAuthors = (f: AuthorFinding): string =>
   [
@@ -188,12 +189,16 @@ function grown(
 ): LookupCache {
   const { cache, usable } = loaded;
   const { store, dblp } = run;
-  const fresh = Object.entries(store).filter(([k]) => !usable.citations.has(k));
+  // verify-cites stores each answer as an object; only such a value is a response the cache can hold.
+  const fresh = Object.entries(store).filter(
+    (e): e is [string, Readonly<Record<string, unknown>>] =>
+      !usable.citations.has(e[0]) && isRecord(e[1]),
+  );
   const freshDblp = [...dblp].filter(([k]) => !usable.dblp.has(k));
   if (fresh.length === 0 && freshDblp.length === 0) return cache;
   const dated = fresh.map(([k, response]): [string, CachedResponse] => [
     k,
-    { fetched: today(), response: response as CachedResponse["response"] },
+    { fetched: today(), response },
   ]);
   return {
     citations: new Map([...cache.citations, ...dated]),

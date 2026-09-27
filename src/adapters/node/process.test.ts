@@ -5,7 +5,7 @@
  */
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import type { AbsolutePath } from "../../domain/paths.ts";
+import { absolutePath } from "../../domain/paths.ts";
 import type { Command } from "../../ports/process.ts";
 import { spawnProcess } from "./process.io.ts";
 
@@ -62,19 +62,19 @@ test("output past maxOutputBytes is a spawn failure, named by Node's own message
 });
 
 test("cwd is the Command's when it names one", () => {
-  const r = run.run({ ...sh("pwd"), cwd: "/" as AbsolutePath });
+  const r = run.run({ ...sh("pwd"), cwd: absolutePath("/") });
   assert.deepEqual(r.kind === "exited" && r.stdout, "/\n");
 });
 
 test("a spawn that reports no status, no signal and no error reads as exit 1, not success", () => {
-  const silent = spawnProcess((() => ({
+  const silent = spawnProcess(() => ({
     pid: 0,
     output: [],
     stdout: "",
     stderr: "",
     status: null,
     signal: null,
-  })) as never);
+  }));
   assert.deepEqual(silent.run(sh("true")), {
     kind: "exited",
     status: 1,
