@@ -207,7 +207,7 @@ function isAcronymOf(base, words) {
   for (let i = 0; i < words.length; i++) {
     let acr = "";
     for (let j = i; j < words.length && acr.length < base.length; j++) {
-      acr += words[j][0] || "";
+      acr += words[j][0]; // content tokens are never empty
     }
     if (acr === base) return true;
   }
@@ -851,20 +851,18 @@ async function semanticScholarResolve(citation) {
       record: w?.title != null ? { title: w.title || "", year: w.year } : null,
     };
   }
-  if (citation.title) {
-    const r = await httpGet(
-      `${base}/search?query=${encodeURIComponent(citation.title)}&fields=title,year&limit=5`,
-    );
-    if (!r.ok) return { db, transport: "error" };
-    const items = r.data?.data || [];
-    return {
-      db,
-      transport: "ok",
-      query: "title",
-      records: items.map((w) => ({ title: w.title || "", year: w.year })),
-    };
-  }
-  return null;
+  // No id, so a title: verifyCitationLive calls the resolvers only when one of the three exists.
+  const r = await httpGet(
+    `${base}/search?query=${encodeURIComponent(citation.title)}&fields=title,year&limit=5`,
+  );
+  if (!r.ok) return { db, transport: "error" };
+  const items = r.data?.data || [];
+  return {
+    db,
+    transport: "ok",
+    query: "title",
+    records: items.map((w) => ({ title: w.title || "", year: w.year })),
+  };
 }
 
 async function arxivResolve(citation) {
@@ -923,8 +921,8 @@ export function parseArxivFeed(xml) {
  * means "no metadata here"; doi.org responseCode 100 means "this DOI does not
  * exist". Returns { transport, responseCode } for classifyDoiAuthority.
  */
+// Called only for a citation with a DOI (verifyCitationLive checks first).
 async function doiAuthorityCheck(citation) {
-  if (!citation.doi) return null;
   // Keep the DOI's own slashes as path separators; encode the rest.
   const path = encodeURIComponent(citation.doi.trim()).replace(/%2F/gi, "/");
   const r = await httpGet(`https://doi.org/api/handles/${path}`);
@@ -937,8 +935,8 @@ async function doiAuthorityCheck(citation) {
   };
 }
 
+// Called only for a citation with a CVE (verifyCitationLive checks first).
 async function nvdCheck(citation) {
-  if (!citation.cve) return null;
   if (!isValidCveId(citation.cve)) {
     // Malformed CVE id — treat as a provided-id-that-cannot-resolve (fabrication).
     return { transport: "ok", found: false };
