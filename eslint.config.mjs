@@ -25,6 +25,8 @@ import { fileURLToPath } from "node:url";
 // The complexity set, shared by the TypeScript block and the ratchet below. Every function
 // measured over these limits on 2026-09-24 was either refactored under them (the #59 build code)
 // or pinned at its current maximum in RATCHET.
+const TS_FILES = ["**/*.ts", "**/*.mts"];
+
 const MAX_LINES = { max: 60, skipComments: true, skipBlankLines: true };
 
 // 🔴 A CEILING, NOT A PERMISSION: each number is the file's measured maximum on 2026-09-24, so a
@@ -353,31 +355,45 @@ export default [
   // `no-useless-escape` in a spec that had dropped a backslash from its compiled SKILL.md. The
   // #59 build files were refactored clean; the older CLI files sit in RATCHET, one block below.
   //
-  // NOT TYPE-AWARE, deliberately: no rule here needs type information, and `npm run build`
-  // (tsc, strict) already type-checks `src/` as the first gate of `npm run check`.
+  // TYPE-AWARE since 2026-09-27: typescript-eslint's `strictTypeChecked` preset, fed by
+  // `tsconfig.test.json`, which now includes EVERY tracked `.ts`/`.mts` (the 24 skill specs and
+  // `vitest.config.ts` had been in no tsconfig, so neither tsc nor this block type-checked them).
+  // `parserOptions.project` rather than `projectService`: the service looks for the nearest
+  // `tsconfig.json`, and the root one covers only the shipped `src/`, so every test, script and
+  // spec would fall back to a default project. First run: 374 findings in 64 files, all fixed in
+  // the same PR, none suppressed.
   //
   // NOT HERE: `port/js-install-path` (43 findings, 41 of them the specs' `.claude/skills/`
   // literals — issue #19's debt, `warn` for `.mjs` for the same reason; 2 in hooks-settings.ts,
   // which writes the consumer's settings and must name the install) and `n/no-missing-import`
-  // (tsc already fails on an unresolved import in `src/`).
+  // (tsc already fails on an unresolved import).
+  ...tseslint.configs.strictTypeChecked.map((config) => ({
+    ...config,
+    files: TS_FILES,
+  })),
   {
-    files: ["**/*.ts", "**/*.mts"],
-    languageOptions: { parser: tseslint.parser },
+    files: TS_FILES,
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        project: "./tsconfig.test.json",
+        tsconfigRootDir: dirname(fileURLToPath(import.meta.url)),
+      },
+    },
     plugins: { "@typescript-eslint": tseslint.plugin, local: localRules },
     rules: {
       // The same macOS-only defect as in the `.mjs` block; clean here, so it opens at `error`.
       "local/temp-root-realpath": "error",
-      // A dead import is a sign of an incomplete edit. The TypeScript variant, because the core
-      // rule does not understand type-only positions.
-      "@typescript-eslint/no-unused-vars": "error",
-      // `any` switches the checker off for everything it flows into — the gate that makes `src/`
-      // TypeScript at all. Five older sites are pinned inline and named in #49.
+      // `any` switches the checker off for everything it flows into. The preset has it too; named
+      // here so that dropping the preset cannot drop it.
       "@typescript-eslint/no-explicit-any": "error",
       // The behaviour rules of the `.mjs` block, for the same reasons: each changes what the code
       // DOES, not how it looks, and a regex that escapes the wrong thing searches for the wrong thing.
       "no-empty": "error",
       "no-constant-condition": "error",
-      "no-dupe-keys": "error",
+      // `no-unreachable` is switched off by the preset's `eslint-recommended` layer on the claim
+      // that tsc reports it; tsc only greys unreachable code unless `allowUnreachableCode` is
+      // false, so it is switched back on. (`no-dupe-keys` is dropped: tsc does fail on it.)
       "no-unreachable": "error",
       "no-fallthrough": "error",
       "no-useless-escape": "error",
@@ -473,7 +489,9 @@ export default [
       // unreachable code, fallthrough in `case`.
       "no-empty": "error",
       "no-constant-condition": "error",
-      "no-dupe-keys": "error",
+      // `no-unreachable` is switched off by the preset's `eslint-recommended` layer on the claim
+      // that tsc reports it; tsc only greys unreachable code unless `allowUnreachableCode` is
+      // false, so it is switched back on. (`no-dupe-keys` is dropped: tsc does fail on it.)
       "no-unreachable": "error",
       "no-fallthrough": "error",
       // Regexes: unnecessary escaping slash and control character in class — both findings about

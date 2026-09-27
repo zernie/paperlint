@@ -8,18 +8,13 @@
     "sourceMap": false,
     "customConditions": ["paperlint-source"]
   },
-  "include": [
-    "src/**/*.ts",
-    "scripts/**/*.ts",
-    "test/**/*.ts",
-    "lib/**/*.test.ts",
-    "hooks/**/*.test.ts",
-    "bin/**/*.test.ts",
-    "skills/**/*.test.ts",
-    "fixtures/**/*.ts",
-    "skills/**/fixtures/**/*.ts",
-    "hooks/**/*.harness.ts",
-    "skills/**/*.harness.ts"
-  ],
-  "exclude": []
+  "include": ["**/*.ts", "**/*.mts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "plugin",
+    "**/.tmp*",
+    "docs/prior-art/repro"
+  ]
 }
