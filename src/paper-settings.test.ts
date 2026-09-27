@@ -132,6 +132,20 @@ describe("readPaperSettings — the root paperlint.json's defaults, the paper's 
     expect(read({})).toBeNull();
   });
 
+  it("a root file that does not parse, or names a field of the wrong type, is the paper's problem too", () => {
+    const broken = (root: string) =>
+      readPaperSettings(withFiles({ [`${ROOT}/paperlint.json`]: root }), PAPER);
+    const notJson = broken("{ nope");
+    expect(!notJson.ok && notJson.error.kind).toBe("broken");
+    expect(broken('{"kind":3}')).toEqual({
+      ok: false,
+      error: {
+        kind: "broken",
+        why: expect.stringMatching(/^the root paperlint\.json: .*kind/),
+      },
+    });
+  });
+
   it("root only: its extends and kind are this paper's", () => {
     expect(
       read({

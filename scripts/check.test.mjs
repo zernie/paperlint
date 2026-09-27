@@ -3,6 +3,8 @@
  * spawn: a pass, a declared skip (77) and a failure, and THE TAIL that names what it does not cover.
  */
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { test } from "vitest";
 import { GATES, NOT_COVERED, runGates } from "./check.mjs";
 
@@ -74,4 +76,29 @@ test("runGates: all passing, with a skip, says how many passed and that the skip
     ],
   );
   assert.ok(GATES.length > 0);
+});
+
+test("run as a program with every gate passing: the plain verdict, exit 0", () => {
+  // spawnSync is replaced before check.mjs loads, so the real file runs end to end — every gate
+  // "passes" in microseconds instead of the eleven real ones running.
+  const allPass = [
+    'import cp from "node:child_process";',
+    'import { syncBuiltinESMExports } from "node:module";',
+    "cp.spawnSync = () => ({ status: 0 });",
+    "syncBuiltinESMExports();",
+  ].join("\n");
+  const r = spawnSync(
+    process.execPath,
+    [
+      "--import",
+      `data:text/javascript,${encodeURIComponent(allPass)}`,
+      fileURLToPath(new URL("./check.mjs", import.meta.url)),
+    ],
+    { encoding: "utf8" },
+  );
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(
+    r.stdout,
+    new RegExp(`\\n✓ ${String(GATES.length)} gate\\(s\\) passed\\n`),
+  );
 });

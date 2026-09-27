@@ -293,6 +293,32 @@ describe("bib/reachable-entry", () => {
     expect(m.column).toBe(1);
     expect(m.message).toMatch(/`lost`/);
   });
+
+  it("an entry with no key is reported as `?`, not skipped", async () => {
+    const [m] = ids(
+      await lint(bibDoc("@article{\n  title = {x}}")),
+      "bib/reachable-entry",
+    );
+    expect(m.message).toMatch(/`\?`/);
+  });
+
+  it("a source code with only `text`, or with neither text nor raw", () => {
+    const run = (sourceCode) => {
+      const out = [];
+      bib.rules["reachable-entry"]
+        .create({
+          sourceCode: {
+            getLocFromIndex: (i) => ({ line: 1, column: i }),
+            ...sourceCode,
+          },
+          report: (r) => out.push(r.data.key),
+        })
+        ["root:exit"]();
+      return out;
+    };
+    expect(run({ text: bibDoc("@article{t, title = {x}}") })).toEqual(["t"]);
+    expect(run({})).toEqual([]);
+  });
 });
 
 describe("the escape hatch — a disable directive in a `%` comment", () => {

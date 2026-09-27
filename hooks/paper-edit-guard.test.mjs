@@ -50,3 +50,12 @@ test("a redirection target is read through backslashes, quoted or not, and ends 
 test("moving a paper source away is a write to it: denied", () => {
   assert.equal(guard(`mv ${P} /tmp/elsewhere.md`), 2);
 });
+
+test("a command cut off right after a backslash still names its target, quoted or not", () => {
+  // The backslash escapes nothing — there is no next character — and the target read so far
+  // is still a paper source.
+  assert.deepEqual(
+    [guard(`echo x ${GT} ${P}\\`), guard(`echo x ${GT} "${P}\\`)],
+    [2, 2],
+  );
+});
