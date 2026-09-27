@@ -1,7 +1,7 @@
 /**
  * texToMdast / texLanguage on the shapes the harness does not carry: a `thebibliography`
  * environment, a float on the file's last line with no newline after it, a heading whose title
- * holds a macro, an unknown macro in prose, and a parse that fails.
+ * holds a macro, an unknown macro in prose, and a parse that fails (nesting deep enough to exhaust the parser).
  */
 import assert from "node:assert/strict";
 import { test } from "vitest";
@@ -60,16 +60,10 @@ test("a heading's title keeps the text of a macro with an argument", () => {
   });
 });
 
-test("a body that cannot be read is a parse failure, not a throw", () => {
-  const r = texLanguage.parse({
-    body: {
-      toString() {
-        throw new Error("unreadable");
-      },
-    },
-  });
+test("a body the parser cannot take (nesting deep enough to exhaust its stack) is a parse failure, not a throw", () => {
+  const r = texLanguage.parse({ body: "{".repeat(20_000) });
   assert.deepEqual(
-    [r.ok, r.errors.map((e) => e.message)],
-    [false, ["unreadable"]],
+    [r.ok, r.errors.map((e) => e.constructor.name)],
+    [false, ["RangeError"]],
   );
 });

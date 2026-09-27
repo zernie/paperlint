@@ -132,6 +132,11 @@ async function build(dir: string, f: Fake = {}, over: BuildOptions = {}) {
 
 test("documentclass: an empty name is no class; a macro inside the name contributes nothing", () => {
   assert.equal(parseDocumentclass("\\documentclass{}"), null);
+  // Nested deep enough to exhaust the parser's stack: no class, not a crash.
+  assert.equal(
+    parseDocumentclass(`\\documentclass{x}${"{".repeat(20_000)}`),
+    null,
+  );
   assert.deepEqual(parseDocumentclass("\\documentclass{a\\foo{}b}"), {
     name: "ab",
     options: [],
