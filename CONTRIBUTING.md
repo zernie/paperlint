@@ -102,6 +102,13 @@ npm run coverage         # the same, under c8, failing below the thresholds in .
 None of these are needed to USE the tool — they are here because the gates are part of the
 argument, not decoration.
 
+New code is TypeScript (#78). The last block of [`eslint.config.mjs`](eslint.config.mjs) makes any
+`.js`, `.mjs` or `.cjs` file an error in the directories already converted (`TYPESCRIPT_ONLY`), so
+`npm run lint` fails on one; a directory that still mixes the two is not listed yet, and the change
+that converts it adds it. Code that only this repository runs (tests, `scripts/`, `test/e2e/`) is
+run by `node` directly; code a consumer runs from `node_modules` needs a build first, because Node
+does not strip types there.
+
 Coverage is 100% for lines, statements, functions and branches, and there is no `c8 ignore`:
 code a test cannot reach directly — a race, a permission, a broken install, a real download — takes
 the effect as a parameter (the ports in `src/ports`, an injected `readdir` or runner), and the test

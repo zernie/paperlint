@@ -271,6 +271,26 @@ const ceiling = (rule, n) =>
     ? ["error", { ...MAX_LINES, max: n }]
     : ["error", n];
 
+/**
+ * New code is TypeScript (#78). A JavaScript file (`.js`, `.mjs`, `.cjs`) under any of these
+ * directories is an error, whatever its name — the check is on the file's AST root, so a name with
+ * any number of dots and an empty file are both caught. The directories are the ones already moved
+ * to TypeScript; each later step of #78 adds the directories it converts, and the last one replaces
+ * the list with every JavaScript file in the repository.
+ */
+const TYPESCRIPT_ONLY = [
+  "src/adapters/**/*.{js,mjs,cjs}",
+  "src/domain/**/*.{js,mjs,cjs}",
+  "src/ports/**/*.{js,mjs,cjs}",
+  // test/ itself and test/e2e — not test/fixtures/layers/eslint-rules, whose `rule.mjs` stands for
+  // the JavaScript module it is linted as.
+  "test/*.{js,mjs,cjs}",
+  "test/e2e/**/*.{js,mjs,cjs}",
+  "test/fixtures/layers/src/**/*.{js,mjs,cjs}",
+  "skills/paper-pipeline/scripts/fixtures/**/*.{js,mjs,cjs}",
+  "skills/plan-paper-timeline/fixtures/**/*.{js,mjs,cjs}",
+];
+
 export default [
   // 🔴 TRANSIENT DIRECTORIES ARE NOT THE CORPUS, and leaving them in is a RACE, not sloppiness.
   // `paper-stages.harness.mjs` creates a temp tree under fixtures and removes it when done,
@@ -506,5 +526,19 @@ export default [
     // real. Do not silence them by adding an ignore — a rule that lints only clean inputs is
     // one whose firing path nothing exercises, which is rule 4 wearing a different hat. The
     // pass/fail signal lives in `npm test`, not in the warning count of `npm run lint`.
+  },
+  // LAST, so no block above can replace its `no-restricted-syntax` options for these files (none
+  // sets that rule for JavaScript today; being last keeps it that way).
+  {
+    files: TYPESCRIPT_ONLY,
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "Program",
+          message: "New code is TypeScript (#78): write this file as .ts.",
+        },
+      ],
+    },
   },
 ];
