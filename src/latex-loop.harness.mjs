@@ -440,6 +440,11 @@ check(
   changedFiles(H(null), H("a1")).includes("aux"),
 );
 
+check(
+  "a history of only a bibtex run that left every file as it was: nothing unsettled",
+  JSON.stringify(summarize([bibtex({ after: H("a1") })]).unsettled) === "[]",
+);
+
 console.log(
   `✓ ${String(check.count)} assertions passed — latex-loop: nextStep over State, summarize over histories, and the two composed, including the ${MAX_PASSES}-pass cap`,
 );
