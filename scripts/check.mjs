@@ -37,6 +37,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -175,17 +176,29 @@ export function outcome(status) {
   return "fail";
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+/**
+ * Run every gate in order and print the verdict and THE TAIL. `spawn`, `log`, `err` and `write`
+ * are injected so a test can drive every outcome without running eleven real gates.
+ *
+ * @returns the exit code: 1 when a gate failed, else 0 (a skip is not a failure, and says so).
+ */
+export function runGates({
+  gates = GATES,
+  spawn = spawnSync,
+  log = console.log,
+  err = console.error,
+  write = (s) => process.stdout.write(s),
+} = {}) {
   const BIN_FIRST_PATH = [join(ROOT, "node_modules", ".bin"), process.env.PATH]
     .filter(Boolean)
     .join(delimiter);
   const failed = [];
   const skipped = [];
 
-  for (const g of GATES) {
-    process.stdout.write(`── ${g.name}\n`);
+  for (const g of gates) {
+    write(`── ${g.name}\n`);
     const [cmd, ...args] = commandOf(g);
-    const r = spawnSync(cmd, args, {
+    const r = spawn(cmd, args, {
       cwd: ROOT,
       stdio: "inherit",
       encoding: "utf8",
@@ -201,29 +214,29 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else failed.push(`${g.name}  (${shown} → ${r.status})`);
   }
 
-  console.log("");
+  log("");
   if (failed.length) {
-    console.error("🔴 gates failed:");
-    for (const f of failed) console.error(`   ${f}`);
+    err("🔴 gates failed:");
+    for (const f of failed) err(`   ${f}`);
   } else {
-    const passed = GATES.length - skipped.length;
-    console.log(
+    const passed = gates.length - skipped.length;
+    log(
       `✓ ${passed} gate(s) passed${skipped.length ? `, ${skipped.length} SKIPPED — not run, not passed` : ""}`,
     );
   }
-  if (skipped.length) for (const s of skipped) console.log(`⏳ skipped: ${s}`);
+  for (const s of skipped) log(`⏳ skipped: ${s}`);
 
   // THE TAIL. Not decoration — the reason this file exists rather than a list in a doc.
-  console.log("\nWhat this command does NOT cover:");
+  log("\nWhat this command does NOT cover:");
   for (const [job, why] of Object.entries(NOT_COVERED)) {
-    console.log(`  CI job «${job}» — ${why}`);
+    log(`  CI job «${job}» — ${why}`);
   }
-  const localOnly = GATES.filter((g) => g.job === null);
-  for (const g of localOnly) {
-    console.log(`  (and «${g.name}» runs ONLY here — ${g.reason})`);
+  for (const g of gates.filter((x) => x.job === null)) {
+    log(`  (and «${g.name}» runs ONLY here — ${g.reason})`);
   }
-
-  process.exit(failed.length ? 1 : 0);
+  return failed.length ? 1 : 0;
 }
+
+if (isMain(import.meta.url)) process.exit(runGates());
 
 export { ROOT, existsSync, join };

@@ -106,30 +106,40 @@ export function rulesAreContentOnly({ cwd }) {
   return { checked, findings };
 }
 
-if (isMain(import.meta.url)) {
-  // 🔴 `process.cwd()`, NOT the package root. A consumer installs this package and runs the
-  // script from its own repository, where the rules that matter are ITS `eslint-rules/` — the
-  // package's own are already checked by the package's own gate. Anchored to the package root
-  // the consumer's gate would re-check the same eight files and report a confident zero about
-  // rules it never opened: a counter that counts what it ignores.
-  const cwd = process.cwd();
+/**
+ * The gate over `cwd`'s `eslint-rules/`: exit 1 on no rule sources (a silent zero would read as
+ * clean) or on any rule asking git; 0 otherwise.
+ *
+ * 🔴 `cwd` is `process.cwd()`, NOT the package root. A consumer installs this package and runs the
+ * script from its own repository, where the rules that matter are ITS `eslint-rules/` — the
+ * package's own are already checked by the package's own gate. Anchored to the package root the
+ * consumer's gate would re-check the same eight files and report a confident zero about rules it
+ * never opened: a counter that counts what it ignores.
+ */
+export function main({
+  cwd = process.cwd(),
+  log = console.log,
+  err = console.error,
+} = {}) {
   const { checked, findings } = rulesAreContentOnly({ cwd });
   if (checked.length === 0) {
-    console.error(
+    err(
       `${join(cwd, "eslint-rules")}: no rule sources. Either this is not a repository with ` +
         `ESLint rules, or the directory moved — a silent zero here would read as a clean run.`,
     );
-    process.exit(1);
+    return 1;
   }
   for (const { file, specifier } of findings) {
-    console.error(
+    err(
       `${file}: imports \`${specifier}\`. A rule may not ask git: history is rewritten by ` +
         `routine maintenance and CI clones one commit deep, so the fact does not survive where ` +
         `the rule has to hold. Put the fact on disk and check it by bytes.`,
     );
   }
-  console.log(
+  log(
     `rules-are-content-only: ${checked.length} rule sources under ${cwd}, ${findings.length} findings`,
   );
-  process.exit(findings.length === 0 ? 0 : 1);
+  return findings.length === 0 ? 0 : 1;
 }
+
+if (isMain(import.meta.url)) process.exit(main());

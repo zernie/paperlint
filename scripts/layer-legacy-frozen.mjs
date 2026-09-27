@@ -34,6 +34,7 @@
  *
  * Run: `node scripts/layer-legacy-frozen.mjs` (also part of `npm run check`)
  */
+import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
 import { readFileSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -134,19 +135,31 @@ export async function checkFrozen(root = ROOT) {
   return { problems: judge({ ...t, frozen }), frozen, counts: t.counts };
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const { problems, counts } = await checkFrozen(ROOT);
+/**
+ * The gate: exit 1 naming every problem, or 0 with the count of what stays frozen. `check` is
+ * injected so a test can hand it problems without planting suppressions in real source.
+ */
+export async function main({
+  check = () => checkFrozen(ROOT),
+  log = console.log,
+  err = console.error,
+} = {}) {
+  const { problems, counts } = await check();
   if (problems.length) {
-    console.error(
+    err(
       `🔴 legacy layer exemptions are frozen and may only shrink (#76) — ${String(problems.length)} problem(s):`,
     );
-    for (const p of problems) console.error(`   ${p}`);
-    process.exit(1);
+    for (const p of problems) err(`   ${p}`);
+    return 1;
   }
   const n = Object.values(counts)
     .flatMap((r) => Object.values(r))
     .reduce((s, v) => s + v, 0);
-  console.log(
+  log(
     `✓ ${String(Object.keys(counts).length)} legacy files, ${String(n)} frozen layer exemptions, none new, none grown (#76)`,
   );
+  return 0;
 }
+
+// `isMain`, not a comparison with `file://${argv[1]}`: that is false through a symlink (consumer.mjs).
+if (isMain(import.meta.url)) process.exit(await main());
