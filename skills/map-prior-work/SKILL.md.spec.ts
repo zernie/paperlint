@@ -24,17 +24,6 @@ export default experimental_skill({
   body: `
 # map-prior-work — find out who already did it, while you can still change course
 
-## Run me
-
-🔴 FIRST, before any other step:
-
-\`\`\`
-node .claude/skills/paper-pipeline/scripts/announce.mjs map-prior-work <paper-dir>
-\`\`\`
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
-
 The expensive failure this prevents, in one sentence: **you discover the paper that already did your
 contribution after the draft is finished, when the only move left is rewriting the claim under deadline.**
 
@@ -187,29 +176,6 @@ returned nothing. The next sweep starts from that, and "nothing found" is only u
 you looked.
 
 ---
-
-## Step 8 — record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-\`\`\`
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record map-prior-work <paper-dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record map-prior-work <paper-dir> ABSTAINED <reason> "<one line>"
-\`\`\`
-
-**FINDING** — \`<count>\` is the number of rivals triaged 🔴 or 🟠 (they threaten the claim),
-\`<report-path>\` is the sweep file. Add \`--blocking\` when a rival did the contribution first and the
-claim has to change.
-**ABSTAINED** — \`no-witness\`: swept, and nothing found threatens what you claim. \`blocked\`: the
-paper has no stated contribution yet, so there is nothing to sweep against.
-
-That blocking finding is the outcome this skill was written from, discovered at T−10 days by
-accident. Recorded here it is a dated fact about the field rather than a memory of a bad night.
-
-🔴 **There is no PASS**, and this skill is where the reason is easiest to see. "Nothing threatens
-the claim" is a statement about everything that exists, made by a sweep that read a bounded list —
-so it can never be witnessed, only ever failed to be refuted. \`no-witness\` says that in one word,
-and the sweep's own coverage-gaps section says how far the reading actually went.
 
 ## Rules
 

@@ -19,22 +19,9 @@ export default experimental_skill({
     "mcp__Google_Calendar__search_events",
     "mcp__Google_Calendar__create_event",
     "mcp__Google_Calendar__update_event",
-    "Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*)",
-    "Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)",
   ],
   body: `
 # plan-paper-timeline — CFP dates → a buffered, filing-aware schedule
-
-## Run me
-
-🔴 FIRST, before any other step:
-
-\`\`\`
-node .claude/skills/paper-pipeline/scripts/announce.mjs plan-paper-timeline <paper-dir>
-\`\`\`
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
 
 A deadline is not a plan. This skill converts the four dates every CFP gives you — **submission (AoE),
 notification, camera-ready, event** — into calendar events with the buffers that actually keep a
@@ -75,7 +62,6 @@ institutional email has no expedite route** — no support queue jump, no "I'm o
 That is why \`access\` is scheduled in the first week rather than the last: it is the one item where the
 only remedy for being late is having started earlier.
 
-\`pipeline-check.mjs\` reports an \`access\` row still \`☐\` inside the moderation window as a finding, and
 \`submit-paper\` is hard-blocked on \`access\` being green.
 
 ## 1. Build the timeline backwards from the AoE deadline
@@ -158,28 +144,6 @@ When scheduling paper N against papers already on the calendar and a known/likel
 - If two CFPs force a cluster, stagger which one you *extend* later (workshop → conference) so the
   second, stronger publication lands in a later month on purpose.
 - Prefer a paper with an earlier, safely-past deadline over one that would pile onto the filing month.
-
-## 5. Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-\`\`\`
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record plan-paper-timeline <paper-dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record plan-paper-timeline <paper-dir> ABSTAINED <reason> "<one line>"
-\`\`\`
-
-**FINDING** — \`<count>\` slots have no buffer, or collide with another paper's pre-filing window;
-\`<report-path>\` is the plan. Add \`--blocking\` when the deadline cannot be met from here.
-**ABSTAINED** — \`no-witness\`: the backwards plan is on the calendar, \`access\` is green and no slot
-is tight. \`input-missing\`: \`find-venue\` has produced no dated deadline to plan against.
-
-This is the one skill whose blocking finding is a fact about the calendar rather than about the
-paper: portal moderation runs up to two weeks and an author with no institutional email has no
-expedite route, so one recorded today is still true tomorrow no matter how good the science gets.
-
-🔴 **There is no PASS**, so "the plan is on the calendar" is not storable here. Put the event ids in
-the \`ABSTAINED\` note — markdown is the source of truth and the calendar is its projection, and a row
-with neither is a claim about a calendar nobody opened.
 
 ## Scorecard rows this skill owns
 Two, and they fail differently — see \`paper-pipeline/references/pipeline-status-template.md\`:

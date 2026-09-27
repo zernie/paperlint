@@ -23,17 +23,6 @@ export default experimental_skill({
   body: `
 # camera-ready — de-anonymize an accepted paper into the final proceedings version
 
-## Run me
-
-🔴 FIRST, before any other step:
-
-\`\`\`
-node .claude/skills/paper-pipeline/scripts/announce.mjs camera-ready <paper-dir>
-\`\`\`
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
-
 The reviewed PDF was anonymized on purpose. Acceptance flips that: the camera-ready carries your
 real name, your real repo, and an archival DOI — and it's the version that gets indexed, so it's the
 actual authorship evidence. This skill is the reverse of the anonymization you did at
@@ -127,28 +116,6 @@ If tight, ACM allows references to spill into the reference-only extra pages.
 - Verify the public artifact link resolves and the DOI is live before you submit the final PDF.
 - Record the paper's DOI, the artifact DOI, and the ORCID in the paper's HANDOFF — those three IDs are
   the authorship evidence and the anchor the extension (\`extend-paper\`) builds on.
-
-## 6. Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-\`\`\`
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record camera-ready <paper-dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record camera-ready <paper-dir> ABSTAINED <reason> "<one line>"
-\`\`\`
-
-**FINDING** — \`<count>\` residual items still open; \`<report-path>\` names them. Add \`--blocking\` for
-anything that must not be pushed past: anonymization residue, a dead artifact link, or — on a
-security paper — disclosure not yet complete.
-**ABSTAINED** — \`no-witness\`: shipped, de-anonymized, DOI live, page limit re-checked, with the DOI
-in the note. \`blocked\`: the acceptance notice has not arrived, so there is nothing to make ready.
-
-🔴 That blocking finding is the only one in this pipeline whose consequence is **irreversible**. The
-public de-anonymized repo is Google-findable the moment it is pushed, so record it before, not after.
-
-🔴 **There is no PASS**, and on this skill that is not a formality: a stored "shipped" would have
-been the one row in the pipeline that could be true of a repo nobody had looked at. The DOI in the
-note is the witness. Without it there is nothing to check the row against.
 
 ## Compose with
 - **submit-paper** (upstream — this reverses what it anonymized).

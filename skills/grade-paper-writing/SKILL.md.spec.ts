@@ -18,22 +18,9 @@ export default experimental_skill({
     "Glob",
     "Agent",
     "Skill",
-    "Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*)",
-    "Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)",
   ],
   body: `
 # grade-paper-writing — grade how the paper READS, then fix it sentence by sentence
-
-## Run me
-
-🔴 FIRST, before any other step:
-
-\`\`\`
-node .claude/skills/paper-pipeline/scripts/announce.mjs grade-paper-writing <paper-dir>
-\`\`\`
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
 
 The review skills hunt scientific defects; \`study-accepted-papers\` checks whether the contribution clears
 the venue's bar. Neither tells you the paper is a slog to read. This skill does exactly that: it grades
@@ -228,8 +215,7 @@ is what happened.
    side effect.
 
 7. 🔴 **Put \`WORST-SECTION: <section>\` on the FIRST LINE of the report.** Machine-readable, one
-   section, lowercase, no decoration. \`pipeline-check.mjs\` reads the last four reports and raises
-   \`repeat-finding\` when the same section is worst twice running. This exists because the abstract
+   section, lowercase, no decoration, so the next round can compare it with the last report. This exists because the abstract
    was named worst **five consecutive times**, was faithfully recorded in the scorecard all five
    times, and was never once the next task. A review loop that only appends findings converges on a
    paper whose defects are all thoroughly documented and none of them fixed. **Naming the worst
@@ -289,29 +275,6 @@ findings:
     status: fixed
 ---
 \`\`\`
-
-## Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-\`\`\`
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record grade-paper-writing <paper-dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record grade-paper-writing <paper-dir> ABSTAINED <reason> "<one line>"
-\`\`\`
-
-**FINDING** — \`<count>\` is the number of entries in the PERSONA stall inventory, and \`<report-path>\`
-is that inventory. Add \`--blocking\` when a dimension scored 1–2, or stall density is over its cap.
-**ABSTAINED** — \`no-witness\`: the inventory came back empty. \`blocked\`: no persona reader was run,
-so there is no inventory — which is not an empty inventory and must never be filed as one.
-
-🔴 **There is no PASS**, and the distinction the two abstentions draw is the one that was being
-lost: "a reader stalled nowhere" and "nobody read it" produced the same word.
-
-🔴 **Record the stall count, never the rubric number.** The inventory is what \`pc-panel-review\`,
-\`paper-adversarial-review\` and \`harden-paper\` consume; a 44/60 in the ledger would let a paper whose
-readability gate is failing look clean to every skill downstream.
-
-\`prose-lint.mjs\` files separately as \`grade-paper-writing/prose-lint\`. One check, one row.
 
 ## Rules
 - Grade **writing, not science.** A correct paper can still score a 2 here; say so. Don't drift into

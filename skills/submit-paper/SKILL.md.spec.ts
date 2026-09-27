@@ -24,17 +24,6 @@ export default experimental_skill({
   body: `
 # submit-paper — get a reviewed paper from "done" to "ready for review"
 
-## Run me
-
-🔴 FIRST, before any other step:
-
-\`\`\`
-node .claude/skills/paper-pipeline/scripts/announce.mjs submit-paper <paper-dir>
-\`\`\`
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
-
 Assumes the paper is already hardened (run \`pc-panel-review\` — incl. its venue-fit mode — +
 \`paper-adversarial-review\` first). This skill is the submission mechanics — the part that bit us with
 avoidable friction the first time. Distilled from the AgenticDev 2026 submission.
@@ -170,27 +159,6 @@ documented per-paper in \`versions/README.md\`.
 the file inside was the wrong build (340 952 B vs the real 352 357 B). It surfaced only when a reviewer
 cited \`L. 166\` and there was nothing to resolve the line against. A folder without a checker is a
 convention with no reader.
-
-## 8. Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-\`\`\`
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record submit-paper <paper-dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record submit-paper <paper-dir> ABSTAINED <reason> "<one line>"
-\`\`\`
-
-**FINDING** — \`check-deanon.sh\` exited non-zero, \`access\` is not green, the PDF is over the limit, or
-the ready-for-review click never happened; \`<count>\` is the number of blocking items and
-\`<report-path>\` names them. Always \`--blocking\` — every item here stops the submission.
-**ABSTAINED** — \`no-witness\`: uploaded **and** marked ready for review, with the venue card or the
-submission id in the note. \`blocked\`: the portal account is not through moderation yet.
-
-🔴 **A saved draft must never be recorded as done — and it now cannot be.** A saved-but-not-submitted
-paper is the one failure this skill's provenance names by hand, and it was invisible to every other
-check in the pipeline. There is no constructor for "submitted"; there is only the absence of blocking
-items, plus a submission id in the note that a human can go and look up. The id IS the witness, and
-recording \`no-witness\` without one is the same lie in a new vocabulary.
 
 ## Compose with
 - Harden first: \`pc-panel-review\` (incl. its venue-fit mode), \`paper-adversarial-review\`, \`render-paper\`.
