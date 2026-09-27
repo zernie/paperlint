@@ -109,6 +109,12 @@ that converts it adds it. Code that only this repository runs (tests, `scripts/`
 run by `node` directly; code a consumer runs from `node_modules` needs a build first, because Node
 does not strip types there.
 
+TypeScript is pinned to 6.x, not 7 (measured 2026-09-27): typescript-eslint 8.70.1 declares
+`typescript: >=4.8.4 <6.1.0`, and `typescript@7.0.2`'s package root exports only its version — the
+compiler API that `scripts/harness-api.test.ts` and `scripts/coverage-config.test.ts` parse with
+(`createSourceFile`) moved under `typescript/unstable/*`. Moving to 7 waits for a typescript-eslint
+release that allows it and for those two tests to parse through a stable API.
+
 Coverage is 100% for lines, statements, functions and branches, and there is no `c8 ignore`:
 code a test cannot reach directly — a race, a permission, a broken install, a real download — takes
 the effect as a parameter (the ports in `src/ports`, an injected `readdir` or runner), and the test
