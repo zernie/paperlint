@@ -106,7 +106,7 @@
  *     not an id — and is therefore not adopted; see the diagnostic in `main`.
  */
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import MarkdownIt from "markdown-it";
 import {
@@ -375,10 +375,16 @@ function newestSourceDate(dir) {
   walk(dir, 0);
   if (!sources.length) return null;
 
-  const QUIET_GIT = { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] };
   let newest = "";
   for (const p of sources) {
     let when; // no initializer: both branches below assign it (2026-08-28)
+    // Asked from the file's own directory: from the caller's cwd, a paper in another repository
+    // (or the cwd outside any) made git throw, and every date silently became an mtime.
+    const QUIET_GIT = {
+      cwd: dirname(p),
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    };
     try {
       // Dirty file: the edit is real and uncommitted, so mtime is the honest answer.
       // stderr is not the reader's: outside a repository git prints `fatal: … is outside
