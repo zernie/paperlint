@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "prepare": "tsc",
-    "test": "vitest run && vigiles test --min=1",
+    "test": "node scripts/test.mjs",
     "coverage": "NODE_OPTIONS=\"--import=./test/coverage-src.mjs $NODE_OPTIONS\" c8 --check-coverage npm test --",
     "lint": "eslint .",
     "check": "node scripts/check.mjs",
