@@ -1429,7 +1429,7 @@ export async function run(
   const unowned = await firstUnownedFile(eslint, paths);
   if (unowned !== null) {
     err(
-      `${relative(cwd, unowned) || unowned} is not a file paperlint lints — it lints ${PAPER_FILE_PATTERNS.join(", ")}`,
+      `${relative(cwd, unowned)} is not a file paperlint lints — it lints ${PAPER_FILE_PATTERNS.join(", ")}`,
     );
     return 2;
   }
@@ -1505,7 +1505,7 @@ const isEmptySet = (e: unknown): boolean => {
   return (
     fail?.messageTemplate === "file-not-found" ||
     fail?.messageTemplate === "all-matched-files-ignored" ||
-    /No files matching/i.test(fail?.message ?? "")
+    /No files matching/i.test(String(fail?.message))
   );
 };
 
