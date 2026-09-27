@@ -956,21 +956,18 @@ async function nvdCheck(citation) {
 /**
  * Verify ONE citation live (with caching). Returns the reduceVerdict result.
  *
- * 🔴 CONTRACT: CALL SEQUENTIALLY. The shared `cache` is read BEFORE the `await` and written AFTER
- * it (three places below), so two concurrent calls sharing the same `cache` will both miss the
- * write and both fall through to the network. This doesn't corrupt the data — the resolvers are
- * deterministic, and the second call writes an equivalent value — but it's extra requests to
- * CrossRef / OpenAlex / Semantic Scholar / arXiv / NVD, i.e. a direct route to a 429, which is
- * exactly why the neighboring `bib-authors.mjs` has 900ms pauses.
+ * ⚠️ CONCURRENT CALLS SHARING ONE `cache` MAY ASK TWICE. The cache is read BEFORE the `await` and
+ * written AFTER it (three places below), so two concurrent calls for the SAME identifier both miss
+ * and both go to the network. The data does not suffer — the resolvers are deterministic and the
+ * second write is equivalent — the cost is an extra request per duplicate identifier.
  *
- * Today the contract IS HONORED: the only caller is `main()` in this same file (a sequential
- * `for … of` with `await`), so the interleaving `require-atomic-updates` warns about does not
- * exist. The rule is deliberately left at `warn` for that reason: it judges the SHAPE, not the
- * fact of it. But the function IS EXPORTED and takes a shared cache — exactly what gets
- * parallelized via `Promise.all` — so the warning is left visible rather than suppressed. The real
- * fix would be caching UNRESOLVED promises in the cache (in-flight deduplication) rather than
- * values; that's incompatible with the current JSON-based `saveCache()` and so hasn't been done
- * (measured 2026-08-28).
+ * Callers: `main()` here calls it one citation at a time; `paperlint build`'s references step
+ * (`src/adapters/references/index.ts`) calls it six at a time (#107 — serially, 27 references took
+ * 217 s). Six is the bound on requests in flight to any one service, since a citation's own
+ * requests go to the four resolvers one after another. `require-atomic-updates` stays at `warn`
+ * because the interleaving it describes now exists, and is accepted for the reason above. In-flight
+ * deduplication (caching the promise, not the value) would remove the duplicate request; it does
+ * not fit `saveCache()`'s JSON file and has not been done.
  */
 export async function verifyCitationLive(
   citation,

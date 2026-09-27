@@ -12,7 +12,11 @@ import type {
   CheckReferences,
   EntryVerdict,
 } from "../../ports/check-references.ts";
+import { mapLimit } from "./pool.ts";
 import { unreachable } from "./reach.io.ts";
+
+/** Citations looked up at once (#107). */
+const LOOKUPS_IN_FLIGHT = 6;
 // @ts-expect-error — a skill script in .mjs, it has no types
 import * as cites from "../../../skills/verify-citations/scripts/verify-cites.mjs";
 // @ts-expect-error — a skill script in .mjs, it has no types
@@ -86,13 +90,24 @@ function entryVerdict(
 export const onlineReferences: CheckReferences = async (bib) => {
   const why = await unreachable();
   if (why !== null) return { kind: "not-checked", why };
+  // 🔴 #107: the lookups were one at a time — 27 references took 217 s. They now run
+  // LOOKUPS_IN_FLIGHT at a time, and the DBLP author pass runs beside them (it keeps its own
+  // serial pace and 900 ms pause, which DBLP asks for). Each citation's own requests go to four
+  // different services one after another, so a pool of 6 is at most 6 requests to any one of
+  // them. The cache is shared: two citations with the same identifier may both miss it and ask
+  // twice — an extra request, never a different answer.
   const cache = {};
-  const found: CiteResult[] = [];
-  for (const c of cites.parseBib(bib) as { id?: string }[])
-    if (c.id) found.push(await cites.verifyCitationLive(c, { cache }));
-  const a = (await authors.checkAuthors(
-    authors.parseBib(bib),
-  )) as AuthorBuckets;
+  const citations = (cites.parseBib(bib) as { id?: string }[]).filter(
+    (c) => c.id,
+  );
+  const [found, a] = await Promise.all([
+    mapLimit(
+      citations,
+      LOOKUPS_IN_FLIGHT,
+      (c) => cites.verifyCitationLive(c, { cache }) as Promise<CiteResult>,
+    ),
+    authors.checkAuthors(authors.parseBib(bib)) as Promise<AuthorBuckets>,
+  ]);
   const keys = new Set([
     ...found.map((c) => c.id),
     ...a.findings.map((f) => f.key),

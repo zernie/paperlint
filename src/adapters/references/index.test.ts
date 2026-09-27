@@ -6,6 +6,8 @@
 import assert from "node:assert/strict";
 import { afterEach, test, vi } from "vitest";
 import { onlineReferences } from "./index.ts";
+// @ts-expect-error — a skill script in .mjs, it has no types
+import * as cites from "../../../skills/verify-citations/scripts/verify-cites.mjs";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -155,4 +157,72 @@ test("an author finding names what is extra and what is out of order; an entry o
       "missing hopper; extra lovelace (DBLP: ICSE 2024)",
     ],
   });
+});
+
+// ── #107: the per-citation lookups run concurrently ──────────────────────────────────────
+
+/** A fetch where every request takes `ms` of real time; `down` DOIs fail at the transport. */
+function slowFetch(ms: number, down: readonly string[] = []) {
+  vi.stubGlobal("fetch", async (url: string) => {
+    await new Promise((r) => {
+      setTimeout(r, ms);
+    });
+    if (down.some((d) => url.includes(encodeURIComponent(d))))
+      throw Object.assign(new Error("aborted"), { name: "AbortError" });
+    if (url.startsWith("https://api.crossref.org/works/"))
+      return json(200, {
+        message: { title: ["Paper"], issued: { "date-parts": [[2024]] } },
+      });
+    if (url.startsWith("https://doi.org/api/handles/"))
+      return json(200, { responseCode: 1 });
+    return url === "https://api.crossref.org/" ? json(200) : json(404);
+  });
+}
+/** N preprint-style entries (no venue, so the DBLP pass and its pauses do not apply). */
+const manyBib = (n: number) =>
+  Array.from(
+    { length: n },
+    (_, i) =>
+      `@misc{k${String(i)}, author={Ada Lovelace}, title={Paper}, doi={10.1234/p${String(i)}}}`,
+  ).join("\n");
+
+// The serial baseline alone takes ~4 s, past vitest's 5 s default with the concurrent run added.
+test(
+  "#107: twenty lookups of ~200 ms each finish in far less than twenty times 200 ms, with the serial verdicts",
+  { timeout: 20_000 },
+  async () => {
+    // Five requests per citation (four resolvers and doi.org), 40 ms each: ~200 ms per lookup.
+    slowFetch(40);
+    const bib = manyBib(20);
+    const serial: string[] = [];
+    for (const c of cites.parseBib(bib) as { id: string }[])
+      serial.push(
+        (
+          (await cites.verifyCitationLive(c, { cache: {} })) as {
+            verdict: string;
+          }
+        ).verdict,
+      );
+    const t0 = Date.now();
+    const r = await onlineReferences(bib);
+    const ms = Date.now() - t0;
+    assert.equal(r.kind, "checked");
+    assert.deepEqual(
+      r.kind === "checked" ? r.entries.map((e) => e.exists) : [],
+      serial,
+    );
+    assert.ok(ms < (20 * 200) / 2, `${String(ms)} ms for 20 lookups`);
+  },
+);
+
+test("#107: a lookup whose requests time out is that entry's `unresolvable`, not the others' failure", async () => {
+  slowFetch(5, ["10.1234/p3"]);
+  const r = await onlineReferences(manyBib(8));
+  assert.deepEqual(
+    r.kind === "checked" ? r.entries.map((e) => [e.key, e.exists]) : [],
+    Array.from({ length: 8 }, (_, i) => [
+      `k${String(i)}`,
+      i === 3 ? "unresolvable" : "true",
+    ]),
+  );
 });
