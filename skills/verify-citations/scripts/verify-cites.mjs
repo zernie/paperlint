@@ -156,13 +156,24 @@ export function normalizeArxiv(arxiv) {
     .trim();
 }
 
+/** arXiv registers a DataCite DOI for every paper: `10.48550/arXiv.<id>`. */
+const ARXIV_DOI = /^10\.48550\/arxiv\.(.+)$/i;
+
 /** Shallow copy of a citation with doi/arxiv identifiers normalized. Applied at the
  *  verify boundary so BOTH JSON input and .bib-parsed input are clean before any
- *  network / authority lookup. */
+ *  network / authority lookup.
+ *
+ *  An arXiv DOI also yields the arXiv id it names, when the entry has none of its own: without
+ *  it arXiv is asked only by title, and only for an entry with no DOI, so a registry that maps
+ *  the DOI to the wrong work goes uncontradicted (OpenAlex did, for SWE-bench, on 2026-09-27). */
 export function normalizeIdentifiers(citation) {
   const c = { ...citation };
   if (c.doi) c.doi = normalizeDoi(c.doi);
   if (c.arxiv) c.arxiv = normalizeArxiv(c.arxiv);
+  else if (c.doi) {
+    const id = ARXIV_DOI.exec(c.doi)?.[1];
+    if (id) c.arxiv = id;
+  }
   return c;
 }
 
