@@ -115,3 +115,44 @@ test("each entry gets its existence and its authors: confirmed, fabricated, mism
     },
   );
 });
+
+test("an author finding names what is extra and what is out of order; an entry only the author check read is unresolvable", async () => {
+  vi.useFakeTimers();
+  fakeFetch({
+    "https://dblp.org/search/publ/api/?q=Extra%20Paper": () =>
+      dblp("Extra Paper", ["Ada Lovelace"]),
+    "https://dblp.org/search/publ/api/?q=Swapped%20Paper": () =>
+      dblp("Swapped Paper", ["Ada Lovelace", "Alan Turing"]),
+    "https://dblp.org/search/publ/api/?q=Comment%20Paper": () =>
+      dblp("Comment Paper", ["Grace Hopper"]),
+    "https://dblp.org/": () => json(200, {}),
+    "https://api.crossref.org/": () => json(200),
+  });
+  const bib = [
+    "@inproceedings{extra, author={Ada Lovelace and Grace Hopper}, title={Extra Paper}, booktitle={ICSE}}",
+    "@inproceedings{swapped, author={Alan Turing and Ada Lovelace}, title={Swapped Paper}, booktitle={ICSE}}",
+    // verify-cites skips @comment blocks; bib-authors reads them — so only one checker sees this key.
+    "@comment{commented, author={Ada Lovelace}, title={Comment Paper}, booktitle={ICSE}}",
+  ].join("\n");
+  const r = await settle(onlineReferences(bib));
+  const why = Object.fromEntries(
+    (r.kind === "checked" ? r.entries : []).map((e) => [
+      e.key,
+      [e.exists, e.why],
+    ]),
+  );
+  assert.deepEqual(why, {
+    extra: [
+      "unresolvable",
+      "not found by title in any database (no resolvable id to disprove) — could be a legit unindexed/regional/pre-digital work, NOT fabrication; extra hopper (DBLP: ICSE 2024)",
+    ],
+    swapped: [
+      "unresolvable",
+      "not found by title in any database (no resolvable id to disprove) — could be a legit unindexed/regional/pre-digital work, NOT fabrication; order differs (DBLP: ICSE 2024)",
+    ],
+    commented: [
+      "unresolvable",
+      "missing hopper; extra lovelace (DBLP: ICSE 2024)",
+    ],
+  });
+});
