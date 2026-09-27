@@ -850,10 +850,6 @@ function formatRefusal(r: BuildResult): string {
   return r.staleRemoved ? `${refused}\n      ${PDF_REMOVED}` : refused;
 }
 
-export function formatResults(results: readonly BuildResult[]): string {
-  return results.map(formatResult).join("\n");
-}
-
 /**
  * 🔴 "Nothing to compile" COUNTS AS A REFUSAL on a par with a failed build. Failing to tell these
  * two apart is what once produced a green run over a paper no job had built.
