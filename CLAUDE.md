@@ -555,11 +555,15 @@ confident, byte-identical "clean" verdicts for three different skills that had n
    every import of `dist/*.js` with `src/*.ts`: otherwise a module the tests import directly AND
    the spawned CLI loads compiled is measured twice, and its branches and functions stay red in
    whichever copy did not run them. `npm test` without coverage still runs `dist/`.
-5. **`/* c8 ignore */` is rare, block-comment only, and carries its reason.** c8 honours
-   `/* c8 ignore start */ … /* c8 ignore stop */` and `/* c8 ignore next */`; the `//` form is
-   silently ignored. Before ignoring, prefer deleting a fallback the input can never reach (probe
-   the producer and write the shape down); ignore only what the tests cannot stage — a race, a
-   permission root is never denied.
+5. **No `c8 ignore`, and no guard deleted to reach 100%.** An effect a test cannot reach — a
+   race, a permission root is never denied, a broken install, a 270 MB download — is made
+   INJECTABLE (a `readdir`, an fs object, a manifest reader, a toolchain function) and the test
+   passes a fake. A precondition about an argument becomes the signature: the function takes the
+   value it needs, so a call without it cannot be written. A guard whose input can really occur
+   stays, with the test that reaches it. `scripts/coverage-config.test.ts` fails on any
+   coverage-ignore comment in a measured file (it reads comments off the parsed tree), and pins
+   `.c8rc.json`'s `exclude` list: a new exclusion fails there until it is added on purpose, with
+   its reason. Thresholds are 100 for lines, statements, functions and branches.
 
 ### There is no exclusive lock any more
 

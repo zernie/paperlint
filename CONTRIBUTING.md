@@ -117,6 +117,12 @@ npm run coverage         # the same, under c8, failing below the thresholds in .
 None of these are needed to USE the tool — they are here because the gates are part of the
 argument, not decoration.
 
+Coverage is 100% for lines, statements, functions and branches, and there is no `c8 ignore`:
+code a test cannot reach directly — a race, a permission, a broken install, a real download — takes
+the effect as a parameter (the ports in `src/ports`, an injected `readdir` or runner), and the test
+passes a fake. `scripts/coverage-config.test.ts` fails on a coverage-ignore comment and on any
+change to `.c8rc.json`'s exclude list that was not made there on purpose.
+
 ## Adding a venue
 
 A venue is a **preset**, a JSONC file in `skills/submit-paper/references/venues/`, validated by

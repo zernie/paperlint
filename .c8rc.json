@@ -2,8 +2,9 @@
   "//": [
     "Coverage of `npm test` (vitest + every vigiles harness). c8 reads NODE_V8_COVERAGE, which every",
     "child process inherits, so the harnesses' spawned CLIs are measured too; `all` counts files no",
-    "test ever loaded as 0% instead of leaving them out. Sources are compiled `dist/` remapped to",
-    "`src/*.ts` (excludeAfterRemap), so `dist/` itself is excluded after the remap.",
+    "test ever loaded as 0% instead of leaving them out. The run preloads test/coverage-src.mjs,",
+    "which resolves every `dist/*.js` import to its `src/*.ts`, so each module is measured once;",
+    "`dist/` stays excluded (after any remap) in case something loads it directly.",
     "Excluded: tests themselves (*.harness.mjs, *.test.*), *.eval.mjs (PAID LLM evaluations,",
     "never run by npm test and never unit-run), *.spec.ts (skill sources compiled by vigiles),",
     "type declarations, fixtures and test/ (inputs and e2e scripts, not the package's code).",
