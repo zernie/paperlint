@@ -708,32 +708,33 @@ function cacheKey(kind, val) {
   return `${kind}:${val}`;
 }
 
+/** One request, classified: rate-limit/outage and other failures → `ok:false`, 404 → `notFound`. */
+async function request(url, json, signal) {
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": USER_AGENT,
+      Accept: json ? "application/json" : "*/*",
+    },
+    signal,
+  });
+  if (res.status === 429 || res.status >= 500) {
+    return { ok: false, reason: `http ${res.status}` }; // rate-limit / outage
+  }
+  if (res.status === 404) return { ok: true, notFound: true };
+  if (!res.ok) return { ok: false, reason: `http ${res.status}` };
+  const data = json ? await res.json() : await res.text();
+  return { ok: true, data };
+}
+
 async function httpGet(url, { json = true } = {}) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
-  try {
-    const res = await fetch(url, {
-      headers: {
-        "User-Agent": USER_AGENT,
-        Accept: json ? "application/json" : "*/*",
-      },
-      signal: ctrl.signal,
-    });
-    if (res.status === 429 || res.status >= 500) {
-      return { ok: false, reason: `http ${res.status}` }; // rate-limit / outage
-    }
-    if (res.status === 404) return { ok: true, notFound: true };
-    if (!res.ok) return { ok: false, reason: `http ${res.status}` };
-    const data = json ? await res.json() : await res.text();
-    return { ok: true, data };
-  } catch (e) {
-    return {
-      ok: false,
-      reason: e.name === "AbortError" ? "timeout" : String(e),
-    };
-  } finally {
-    clearTimeout(timer);
-  }
+  const result = await request(url, json, ctrl.signal).catch((e) => ({
+    ok: false,
+    reason: e.name === "AbortError" ? "timeout" : String(e),
+  }));
+  clearTimeout(timer);
+  return result;
 }
 
 // Each *Resolver returns a normalized response (the shape classifyResolver eats).
