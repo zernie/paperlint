@@ -80,7 +80,12 @@ import {
   type TexRequirements,
 } from "./tex-requirements.ts";
 import { doctor } from "./doctor.ts";
-import { init, processInteractivity, askOnTerminal } from "./init.ts";
+import {
+  askOnTerminal,
+  askOrDefault,
+  init,
+  processInteractivity,
+} from "./init.ts";
 import {
   DEFAULT_FORMAT,
   FORMATS,
@@ -940,7 +945,7 @@ export async function chooseVenue(
       `--kind needs --venue: a kind is a page limit of one venue preset — \`paperlint new <name> --venue <preset> --kind ${flags.kind}\``,
     );
   const asked = async (q: string): Promise<string> =>
-    (await ask(q).catch(() => "")).trim();
+    (await askOrDefault(ask, q))?.trim() ?? "";
   const venue =
     flags.venue ??
     (interactive
@@ -1048,10 +1053,10 @@ async function runNew(
     }
     format = a.format;
   } else if (processInteractivity(a.yes).interactive) {
-    const f = await ask(`format: tex / md [${DEFAULT_FORMAT}] `).catch(
-      () => "",
-    );
-    if (isFormat(f.trim())) format = f.trim() as PaperFormat;
+    const f = (
+      await askOrDefault(ask, `format: tex / md [${DEFAULT_FORMAT}] `)
+    )?.trim();
+    if (isFormat(f)) format = f;
   }
   const cfg = readConfig({ ...a, json: false }, { log: () => {}, err, cwd });
   if (cfg.code !== undefined) return cfg.code;

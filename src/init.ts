@@ -83,7 +83,7 @@ export type PapersHow =
  * declaration had already been written. So the install both succeeded and looked like a crash.
  * An unanswered question is an answer: take the default and say so.
  */
-async function askOrDefault(
+export async function askOrDefault(
   ask: (q: string) => Promise<string>,
   question: string,
 ): Promise<string | null> {
