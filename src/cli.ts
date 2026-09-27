@@ -1410,14 +1410,11 @@ export async function run(
     rules: [...papers.value.preset, ...(opts.rules ?? []), ...papers.value.own],
   };
 
-  let texLanguage: unknown = null;
-  try {
-    // @ts-expect-error — the module is .mjs and has no types; a missing LaTeX parser is a normal
-    // case here, it is caught by the catch below.
-    ({ texLanguage } = await import("../eslint-rules/latex-language.mjs"));
-  } catch {
-    /* without a LaTeX parser we work over markdown */
-  }
+  // Loaded lazily because only `lint` needs it — not optionally: unified-latex is a dependency and
+  // build.ts imports it statically, so this process could not have started without it.
+  // @ts-expect-error — the module is .mjs and has no types
+  const latex = await import("../eslint-rules/latex-language.mjs");
+  const texLanguage: unknown = latex.texLanguage;
 
   const eslint = new ESLint({
     cwd: lintRoot(root, paths),
