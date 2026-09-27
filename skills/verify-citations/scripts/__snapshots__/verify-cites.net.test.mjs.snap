@@ -1,0 +1,235 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`CVEs: found by count, found by list, not found, NVD down, and a malformed id 1`] = `
+{
+  "calls": [
+    "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=CVE-2024-0001",
+    "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=CVE-2024-0002",
+    "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=CVE-2024-0003",
+    "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=CVE-2024-0004",
+    "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=CVE-2024-0005",
+  ],
+  "results": [
+    {
+      "id": "cve-2024-0001",
+      "matched_db": "nvd",
+      "matched_title": "cve-2024-0001",
+      "reason": "confirmed by nvd — "cve-2024-0001"",
+      "verdict": "true",
+    },
+    {
+      "id": "CVE-2024-0002",
+      "matched_db": "nvd",
+      "matched_title": "CVE-2024-0002",
+      "reason": "confirmed by nvd — "CVE-2024-0002"",
+      "verdict": "true",
+    },
+    {
+      "id": "CVE-2024-0003",
+      "matched_db": null,
+      "reason": "RESOLVED_TO_NOTHING: the provided CVE CVE-2024-0003 resolves to no record (checked nvd) — fabrication evidence",
+      "verdict": "false",
+    },
+    {
+      "id": "CVE-2024-0004",
+      "matched_db": null,
+      "reason": "all databases unreachable (network/rate-limit) — degraded to unresolvable, never to false",
+      "verdict": "unresolvable",
+    },
+    {
+      "id": "CVE-2024-0005",
+      "matched_db": null,
+      "reason": "RESOLVED_TO_NOTHING: the provided CVE CVE-2024-0005 resolves to no record (checked nvd) — fabrication evidence",
+      "verdict": "false",
+    },
+    {
+      "id": "CVE-24-1",
+      "matched_db": null,
+      "reason": "RESOLVED_TO_NOTHING: the provided CVE CVE-24-1 resolves to no record (checked nvd) — fabrication evidence",
+      "verdict": "false",
+    },
+  ],
+}
+`;
+
+exports[`S2 and arXiv unreachable for an arXiv id 1`] = `
+{
+  "calls": [
+    "https://api.semanticscholar.org/graph/v1/paper/arXiv%3A1706.03762?fields=title,year",
+    "https://export.arxiv.org/api/query?id_list=1706.03762&max_results=1",
+  ],
+  "result": {
+    "id": "x",
+    "matched_db": null,
+    "reason": "all databases unreachable (network/rate-limit) — degraded to unresolvable, never to false",
+    "verdict": "unresolvable",
+  },
+}
+`;
+
+exports[`a DOI every registry resolves to the claimed paper, and the authority knows: true 1`] = `
+{
+  "calls": [
+    "https://api.crossref.org/works/10.1%2Fx",
+    "https://api.openalex.org/works/doi:10.1%2Fx",
+    "https://api.semanticscholar.org/graph/v1/paper/DOI%3A10.1%2Fx?fields=title,year",
+    "https://doi.org/api/handles/10.1/x",
+  ],
+  "result": {
+    "id": "v",
+    "matched_db": "crossref",
+    "matched_title": "Attention Is All You Need",
+    "reason": "confirmed by crossref — "Attention Is All You Need"",
+    "verdict": "true",
+  },
+}
+`;
+
+exports[`a DOI nobody knows, and the authority says it does not exist: false 1`] = `
+{
+  "calls": [
+    "https://api.crossref.org/works/10.1%2Fnope",
+    "https://api.openalex.org/works/doi:10.1%2Fnope",
+    "https://api.semanticscholar.org/graph/v1/paper/DOI%3A10.1%2Fnope?fields=title,year",
+    "https://doi.org/api/handles/10.1/nope",
+  ],
+  "result": {
+    "id": "f",
+    "matched_db": null,
+    "reason": "RESOLVED_TO_NOTHING: DOI 10.1/nope does not resolve at the DOI authority (doi.org handle responseCode 100 = not found) — fabrication evidence",
+    "verdict": "false",
+  },
+}
+`;
+
+exports[`a title only: every registry's search endpoint, hits and all 1`] = `
+{
+  "calls": [
+    "https://api.crossref.org/works?query.bibliographic=Attention%20Is%20All%20You%20Need&rows=5",
+    "https://api.openalex.org/works?search=Attention%20Is%20All%20You%20Need&per-page=5",
+    "https://api.semanticscholar.org/graph/v1/paper/search?query=Attention%20Is%20All%20You%20Need&fields=title,year&limit=5",
+    "https://export.arxiv.org/api/query?search_query=ti:%22Attention%20Is%20All%20You%20Need%22&max_results=5",
+  ],
+  "result": {
+    "id": "t",
+    "matched_db": "crossref",
+    "matched_title": "Attention Is All You Need",
+    "reason": "confirmed by crossref — "Attention Is All You Need"",
+    "verdict": "true",
+  },
+}
+`;
+
+exports[`a title search that cannot reach any registry is unresolvable 1`] = `
+{
+  "calls": [
+    "https://api.crossref.org/works?query.bibliographic=Attention%20Is%20All%20You%20Need&rows=5",
+    "https://api.openalex.org/works?search=Attention%20Is%20All%20You%20Need&per-page=5",
+    "https://api.semanticscholar.org/graph/v1/paper/search?query=Attention%20Is%20All%20You%20Need&fields=title,year&limit=5",
+    "https://export.arxiv.org/api/query?search_query=ti:%22Attention%20Is%20All%20You%20Need%22&max_results=5",
+  ],
+  "result": {
+    "id": "d",
+    "matched_db": null,
+    "reason": "all databases unreachable (network/rate-limit) — degraded to unresolvable, never to false",
+    "verdict": "unresolvable",
+  },
+}
+`;
+
+exports[`a title search whose answers are empty or shapeless is a miss, not a match 1`] = `
+{
+  "calls": [
+    "https://api.crossref.org/works?query.bibliographic=Attention%20Is%20All%20You%20Need&rows=5",
+    "https://api.openalex.org/works?search=Attention%20Is%20All%20You%20Need&per-page=5",
+    "https://api.semanticscholar.org/graph/v1/paper/search?query=Attention%20Is%20All%20You%20Need&fields=title,year&limit=5",
+    "https://export.arxiv.org/api/query?search_query=ti:%22Attention%20Is%20All%20You%20Need%22&max_results=5",
+  ],
+  "result": {
+    "id": "e",
+    "matched_db": null,
+    "reason": "not found by title in any database (no resolvable id to disprove) — could be a legit unindexed/regional/pre-digital work, NOT fabrication",
+    "verdict": "unresolvable",
+  },
+}
+`;
+
+exports[`an arXiv id nobody has: the arXiv API's empty feed and S2's 404 1`] = `
+{
+  "calls": [
+    "https://api.semanticscholar.org/graph/v1/paper/arXiv%3A9999.99999?fields=title,year",
+    "https://export.arxiv.org/api/query?id_list=9999.99999&max_results=1",
+  ],
+  "result": {
+    "id": "n",
+    "matched_db": null,
+    "reason": "RESOLVED_TO_NOTHING: arXiv id 9999.99999 returns a definitive not-found from the reachable arXiv API — fabrication evidence",
+    "verdict": "false",
+  },
+}
+`;
+
+exports[`an arXiv id: Semantic Scholar by arXiv id, the arXiv API by id_list 1`] = `
+{
+  "calls": [
+    "https://api.crossref.org/works?query.bibliographic=Attention%20Is%20All%20You%20Need&rows=5",
+    "https://api.openalex.org/works?search=Attention%20Is%20All%20You%20Need&per-page=5",
+    "https://api.semanticscholar.org/graph/v1/paper/arXiv%3A1706.03762?fields=title,year",
+    "https://export.arxiv.org/api/query?id_list=1706.03762&max_results=1",
+  ],
+  "result": {
+    "id": "a",
+    "matched_db": "semantic_scholar",
+    "matched_title": "Attention Is All You Need",
+    "reason": "confirmed by semantic_scholar — "Attention Is All You Need"",
+    "verdict": "true",
+  },
+}
+`;
+
+exports[`every registry down (429, 503, 403, a thrown error): unresolvable, never false 1`] = `
+{
+  "calls": [
+    "https://api.crossref.org/works/10.1%2Fx",
+    "https://api.openalex.org/works/doi:10.1%2Fx",
+    "https://api.semanticscholar.org/graph/v1/paper/DOI%3A10.1%2Fx?fields=title,year",
+    "https://doi.org/api/handles/10.1/x",
+  ],
+  "result": {
+    "id": "u",
+    "matched_db": null,
+    "reason": "all databases unreachable (network/rate-limit) — degraded to unresolvable, never to false",
+    "verdict": "unresolvable",
+  },
+}
+`;
+
+exports[`offline: no request at all, the verdict from the citation alone 1`] = `
+{
+  "calls": [],
+  "result": {
+    "id": "o",
+    "matched_db": null,
+    "reason": "all databases unreachable (network/rate-limit) — degraded to unresolvable, never to false",
+    "verdict": "unresolvable",
+  },
+}
+`;
+
+exports[`records with fields missing: no title, a subtitle, a year only in \`published\`, no id 1`] = `
+{
+  "calls": [
+    "https://api.crossref.org/works/10.1%2Fx",
+    "https://api.openalex.org/works/doi:10.1%2Fx",
+    "https://api.semanticscholar.org/graph/v1/paper/DOI%3A10.1%2Fx?fields=title,year",
+    "https://doi.org/api/handles/10.1/x",
+  ],
+  "result": {
+    "id": "m",
+    "matched_db": "crossref",
+    "matched_title": "",
+    "reason": "confirmed by crossref",
+    "verdict": "true",
+  },
+}
+`;
