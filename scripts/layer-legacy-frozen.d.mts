@@ -26,3 +26,8 @@ export declare function checkFrozen(root?: string): Promise<{
   frozen: Counts;
   counts: Counts;
 }>;
+export declare function main(options?: {
+  check?: () => Promise<{ problems: string[]; frozen: Counts; counts: Counts }>;
+  log?: (line: string) => void;
+  err?: (line: string) => void;
+}): Promise<number>;

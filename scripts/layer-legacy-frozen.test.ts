@@ -5,7 +5,7 @@
  */
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import { judge, tally, type Suppressed } from "./layer-legacy-frozen.mjs";
+import { judge, main, tally, type Suppressed } from "./layer-legacy-frozen.mjs";
 
 const IO = "legacy I/O, moves behind a port in #76";
 const LAYER = "legacy layer, moves behind a port in #76";
@@ -111,5 +111,45 @@ test("a layer finding silenced without naming #76 is reported; other rules' supp
   assert.match(
     p[0] ?? "",
     /src\/build\.ts:4: boundaries\/dependencies is silenced with "temporary"/,
+  );
+});
+
+test("main: problems are listed and fail; a clean count passes", async () => {
+  const run = async (r: {
+    problems: string[];
+    counts: Record<string, Record<string, number>>;
+  }) => {
+    const out: string[] = [];
+    const code = await main({
+      check: async () => ({ ...r, frozen: {} }),
+      log: (s: string) => out.push(s),
+      err: (s: string) => out.push(`E ${s}`),
+    });
+    return { code, out };
+  };
+  assert.deepEqual(
+    [
+      await run({ problems: ["a.ts: grew", "b.ts: new"], counts: {} }),
+      await run({
+        problems: [],
+        counts: { "a.ts": { r: 2 }, "b.ts": { r: 1, s: 1 } },
+      }),
+    ],
+    [
+      {
+        code: 1,
+        out: [
+          "E 🔴 legacy layer exemptions are frozen and may only shrink (#76) — 2 problem(s):",
+          "E    a.ts: grew",
+          "E    b.ts: new",
+        ],
+      },
+      {
+        code: 0,
+        out: [
+          "✓ 2 legacy files, 4 frozen layer exemptions, none new, none grown (#76)",
+        ],
+      },
+    ],
   );
 });
