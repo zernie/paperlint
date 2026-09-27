@@ -45,6 +45,16 @@ const shim = (args, env = {}) =>
       PATH: process.env.PATH,
       HOME: root,
       CLAUDE_PROJECT_DIR: root,
+      // Forwarded, not chosen: under `npm run coverage` these carry the coverage directory and the
+      // preload that resolves dist/ to src/. Dropping them measured the shim's dist/ imports as a
+      // second copy of each module (the function map remapped through source maps, with shifted
+      // columns), so every function it did not call counted as uncovered in src/.
+      ...(process.env.NODE_OPTIONS
+        ? { NODE_OPTIONS: process.env.NODE_OPTIONS }
+        : {}),
+      ...(process.env.NODE_V8_COVERAGE
+        ? { NODE_V8_COVERAGE: process.env.NODE_V8_COVERAGE }
+        : {}),
       ...env,
     },
   });

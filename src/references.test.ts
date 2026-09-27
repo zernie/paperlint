@@ -207,3 +207,26 @@ describe("the reference rules", () => {
     expect(referencesPath(PAPER)).toBe(`${PAPER}/_build/references.json`);
   });
 });
+
+describe("reading what is on disk", () => {
+  it("no paper.tex: the bibliography is refs.bib, from its first byte", () => {
+    const files = memoryFiles({ [`${PAPER}/refs.bib`]: ENTRIES });
+    expect(bibliographyOf(files, PAPER)).toEqual({
+      source: "refs.bib",
+      text: ENTRIES,
+      offset: 0,
+    });
+  });
+
+  it("a references.json of another schema, without entries, or not JSON reads as none", () => {
+    for (const body of [
+      JSON.stringify({ schema: 999, entries: [] }),
+      JSON.stringify({ schema: 1 }),
+      "null",
+      "{",
+    ]) {
+      const files = memoryFiles({ [referencesPath(PAPER)]: body });
+      expect(readReferences(files, PAPER)).toBeNull();
+    }
+  });
+});

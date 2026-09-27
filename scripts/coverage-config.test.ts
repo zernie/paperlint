@@ -198,6 +198,13 @@ test("no measured source carries a coverage-ignore comment", () => {
   assert.deepEqual(offenders, []);
 });
 
+test("dist/ is excluded BEFORE source maps: a direct load is not a second copy of src/", () => {
+  // With `true`, a dist/ file remapped through its source map lands under src/ and escapes the
+  // `dist/**` exclude — measured: the extract-pdf-facts shim, spawned without NODE_OPTIONS, added a
+  // column-shifted duplicate of every function in the src/ modules it imported.
+  assert.equal(CONFIG.excludeAfterRemap, false);
+});
+
 test("the exclude list is exactly the justified set", () => {
   assert.deepEqual(CONFIG.exclude, [
     // tests themselves

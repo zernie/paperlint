@@ -108,7 +108,13 @@ check(
           markdown: foreign,
         },
       },
-      { plugins: { paper: { rules: { typography: {} } } } },
+      // A plugin that carries only a language (the `tex` plugin does) has no rules to ship.
+      {
+        plugins: {
+          paper: { rules: { typography: {} } },
+          tex: { languages: {} },
+        },
+      },
       { files: ["x"] },
     ],
     [foreign],
