@@ -195,29 +195,36 @@ function currentPart(text) {
   return (cut === -1 ? lines : lines.slice(0, cut)).join("\n");
 }
 
-/**
- * `thead` cells and `tbody` rows of one table, straight from the AST — nothing is guessed.
- *
- * Leans on markdown-it's token contract, probed rather than assumed: a table always has exactly one
- * header row; every cell holds one `inline` token (empty cells too); and every body row is padded or
- * truncated to the header's width. Tables do not nest, so the first `table_close` is this table's.
- */
-function readTable(tokens, open) {
+/** Index of the token closing the container opened at `open`. */
+function closeOf(tokens, open, openType, closeType) {
+  let depth = 0;
+  for (let i = open; i < tokens.length; i++) {
+    if (tokens[i].type === openType) depth++;
+    else if (tokens[i].type === closeType && --depth === 0) return i;
+  }
+  return tokens.length - 1;
+}
+
+/** `thead` cells and `tbody` rows of one table, straight from the AST — nothing is guessed. */
+function readTable(toks) {
   const head = [];
   const rows = [];
   let inHead = false;
-  let row = [];
-  let i = open;
-  for (; tokens[i].type !== "table_close"; i++) {
-    const t = tokens[i];
+  let row = null;
+  for (let i = 0; i < toks.length; i++) {
+    const t = toks[i];
     if (t.type === "thead_open") inHead = true;
     else if (t.type === "thead_close") inHead = false;
     else if (t.type === "tr_open") row = [];
-    else if (t.type === "tr_close") (inHead ? head : rows).push(row);
-    else if (t.type === "th_open" || t.type === "td_open")
-      row.push(tokens[i + 1].content.trim());
+    else if (t.type === "tr_close") {
+      if (row) (inHead ? head : rows).push(row);
+      row = null;
+    } else if (t.type === "th_open" || t.type === "td_open") {
+      const inline = toks[i + 1];
+      row?.push(inline?.type === "inline" ? inline.content.trim() : "");
+    }
   }
-  return { head: head[0], rows, end: i };
+  return { head: head[0] ?? [], rows };
 }
 
 /**
@@ -231,7 +238,7 @@ function readTable(tokens, open) {
  * read is still skipped (`continue`), just silently — the linter speaks about it, and to the
  * precision of a line.
  */
-export function parseStatus(text) {
+export function parseStatus(text, { parse = (t) => md.parse(t, {}) } = {}) {
   const sections = {};
   let verdict = "";
   let header = "";
@@ -242,12 +249,14 @@ export function parseStatus(text) {
   let section = null;
   let heading = "(before the first heading)";
 
-  const tokens = md.parse(currentPart(text), {});
+  const tokens = parse(currentPart(text));
   for (let i = 0; i < tokens.length; i++) {
     const t = tokens[i];
 
     if (t.type === "heading_open") {
-      heading = tokens[i + 1].content.replace(/\s+/g, " ").trim();
+      const inline = tokens[i + 1];
+      const raw = inline?.type === "inline" ? inline.content : "";
+      heading = raw.replace(/\s+/g, " ").trim();
       headings.push(heading);
       section = sectionOf(heading);
       if (section) sections[section] ??= [];
@@ -264,23 +273,25 @@ export function parseStatus(text) {
     }
 
     if (t.type !== "table_open") continue;
-    const { head, rows, end } = readTable(tokens, i);
+    const end = closeOf(tokens, i, "table_open", "table_close");
+    const { head, rows } = readTable(tokens.slice(i, end + 1));
     i = end;
     tables++;
 
     // Not a scorecard table. The document's own header row says so; see the decision note up top.
-    const idCol = head[0].toLowerCase().replace(/[*`\s]/g, "");
+    const idCol = (head[0] ?? "").toLowerCase().replace(/[*`\s]/g, "");
     if (!ID_COLUMNS.has(idCol)) continue;
     scorecardTables++;
 
     for (const c of rows) {
-      const id = cleanId(c[0]);
+      const id = cleanId(c[0] ?? "");
       // An unreadable row is skipped silently: the finding about it comes from
       // `pipeline/row-readable`.
       if (!id || c.length < 4) continue;
       const joined = c.join(" | ");
       const row = {
         id,
+        // `c.length >= 4` above, and every cell is a string (readTable), so both exist.
         name: c[1],
         skill: c[2],
         // The `Requires` column is no longer read here: all three checks that ate it
@@ -563,10 +574,10 @@ export function check({ sections, header }, { sourceDate, today, dir }) {
     // `done` is checked against the row TEXT, not the row's status box: a multi-axis gate like
     // harden stays ⚠ for reasons that have nothing to do with this credential, and firing on its
     // status would mean nagging about an upload that already happened.
-    const row = [...all.values()].find(
-      (r) =>
-        what.re.test(r.raw) && !DONE.has(r.status) && !what.done.test(r.raw),
-    );
+    const row = [...all.values()].find((r) => {
+      const text = r.raw ?? ""; // a row built by another caller may carry no raw text
+      return what.re.test(text) && !DONE.has(r.status) && !what.done.test(text);
+    });
     if (row) {
       add(
         "credential-available",

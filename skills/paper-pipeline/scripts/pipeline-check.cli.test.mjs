@@ -411,3 +411,64 @@ test("newestSourceDate: a subdirectory that cannot be listed is skipped, the res
     [TEXT_DATE, "2026-09-20"],
   );
 });
+
+test("parseStatus reads a token stream that breaks markdown-it's shape without throwing", () => {
+  const T = (type, content) =>
+    content === undefined ? { type } : { type, content };
+  const tokens = [
+    // a heading whose inline token is missing
+    T("heading_open"),
+    T("paragraph_open"),
+    T("heading_open"),
+    T("inline", "SETUP"),
+    // a table with no thead, a cell before any row, a row closed that was never opened
+    T("table_open"),
+    T("td_open"),
+    T("inline", "stray"),
+    T("tr_close"),
+    T("table_close"),
+    // a scorecard table: a header cell with no inline, an empty row, then one real row — and no
+    // table_close at all, so the table runs to the end of the stream
+    T("table_open"),
+    T("thead_open"),
+    T("tr_open"),
+    T("th_open"),
+    T("inline", "id"),
+    T("th_open"),
+    T("th_close"),
+    T("tr_close"),
+    T("thead_close"),
+    T("tr_open"),
+    T("tr_close"),
+    T("tr_open"),
+    ...["idea", "w", "s", "☑"].flatMap((c) => [T("td_open"), T("inline", c)]),
+    T("tr_close"),
+  ];
+  const parsed = parseStatus("ignored", { parse: () => tokens });
+  assert.deepEqual(parsed.shape, {
+    tables: 2,
+    scorecardTables: 1,
+    headings: ["", "SETUP"],
+  });
+  assert.deepEqual(
+    parsed.sections.SETUP.map((r) => [r.id, r.name, r.skill, r.status]),
+    [["idea", "w", "s", "☑"]],
+  );
+});
+
+test("check(): rows built by another caller without their raw text are read as empty", () => {
+  const saved = process.env.GITHUB_TOKEN;
+  process.env.GITHUB_TOKEN = "t";
+  try {
+    assert.deepEqual(
+      check(
+        { sections: { GATES: [{ id: "g", status: "◐" }] }, header: "" },
+        {},
+      ),
+      [],
+    );
+  } finally {
+    if (saved === undefined) delete process.env.GITHUB_TOKEN;
+    else process.env.GITHUB_TOKEN = saved;
+  }
+});
