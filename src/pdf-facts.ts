@@ -33,7 +33,7 @@ import {
 } from "./pdf-geometry.ts";
 import type { PageLayout, TextBox } from "./domain/page-layout.ts";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
-import { fillsOf, isUpright } from "./adapters/pdfjs/fill.ts";
+import { fillsFor, isUpright } from "./adapters/pdfjs/fill.ts";
 
 type PdfJs = Awaited<ReturnType<typeof import("unpdf").getResolvedPDFJS>>;
 type Doc = Awaited<ReturnType<PdfJs["getDocument"]>["promise"]>;
@@ -241,20 +241,18 @@ function layoutOf(
   lib: PdfJs,
 ): PageLayout {
   const vp = page.getViewport({ scale: 1 });
-  const fills = fillsOf(
-    lib.OPS,
-    ops,
-    items.map((it) => it.str),
+  const boxes = fillsFor(lib.OPS, ops, items, (it) => it.str).map(
+    ({ item, fill }): TextBox => ({ ...boxOf(page, vp, item, lib), fill }),
   );
-  const boxes = items.map((it, k): TextBox => ({
-    ...boxOf(page, vp, it, lib),
-    fill: fills[k] ?? { kind: "unknown" },
-  }));
   return { widthPt: vp.width, heightPt: vp.height, boxes };
 }
 
-/** Every page's fonts, and the last page's words. */
-async function factsOf(doc: Doc, lib: PdfJs): Promise<PdfRead> {
+/**
+ * Every page's fonts, and the last page's words. Exported with `failureOf` so a test can hand it a
+ * document whose objects pdf.js shapes only in rare files (a font without metrics, a zero-scale
+ * transform, no pages) — `readPdf` below is the one production caller.
+ */
+export async function factsOf(doc: Doc, lib: PdfJs): Promise<PdfRead> {
   const read: {
     page: Page;
     raw: RawPage;
@@ -290,7 +288,7 @@ async function factsOf(doc: Doc, lib: PdfJs): Promise<PdfRead> {
 }
 
 /** pdf.js's own exception names for the two conditions a caller can act on. */
-function failureOf(e: unknown): PdfRead {
+export function failureOf(e: unknown): PdfRead {
   const err = e as { name?: string; message?: string };
   const detail = `${err.name ?? "Error"}: ${err.message ?? String(e)}`;
   return fail(
