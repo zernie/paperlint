@@ -418,7 +418,7 @@ function writeReport(dir, g, count, body) {
   return rel;
 }
 
-function main(argv) {
+export function main(argv) {
   const dir = resolve(argv[2] || ".");
   if (!existsSync(join(dir, "paper.md"))) {
     console.error(`no paper.md in ${dir}`);
