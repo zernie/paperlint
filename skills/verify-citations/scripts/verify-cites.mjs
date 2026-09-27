@@ -49,7 +49,10 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, extname } from "node:path";
 import { createHash } from "node:crypto";
-import { consumerContactEmail } from "../../paper-pipeline/scripts/consumer.mjs";
+import {
+  consumerContactEmail,
+  isMain,
+} from "../../paper-pipeline/scripts/consumer.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CACHE_PATH = join(__dirname, ".cite-cache.json");
@@ -1103,6 +1106,10 @@ async function main() {
 }
 
 // Run as CLI only when invoked directly (not when imported by the test).
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+// 🔴 `isMain`, not `fileURLToPath(import.meta.url) === process.argv[1]`. The skill runs this file
+// through `.claude/skills/verify-citations`, a symlink; Node reports `import.meta.url` as the
+// realpath and `argv[1]` as the link, so the old comparison was false and the CLI exited 0 having
+// done nothing — a silent PASS for any bibliography. (consumer.mjs `isMain` documents the class.)
+if (isMain(import.meta.url)) {
   main();
 }
