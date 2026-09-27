@@ -692,19 +692,16 @@ const VALUE_FLAGS: ReadonlySet<string> = new Set([
  * the CI action to its release tag; an unreadable manifest yields `undefined`, and init then keeps
  * the placeholder instead of guessing.
  */
-function ownVersion(): string | undefined {
-  // The package's own manifest always exists and carries a string version, so the two fallbacks
-  // below only run in a broken install — which no test can stage from inside the package.
-  /* c8 ignore start */
+export function ownVersion(
+  readManifest: () => string = () =>
+    readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+): string | undefined {
   try {
-    const v = JSON.parse(
-      readFileSync(new URL("../package.json", import.meta.url), "utf8"),
-    )?.version;
+    const v = JSON.parse(readManifest())?.version;
     return typeof v === "string" ? v : undefined;
   } catch {
     return undefined;
   }
-  /* c8 ignore stop */
 }
 
 /**
@@ -1249,6 +1246,33 @@ function hostBanalInstaller(): ToolInstaller {
 }
 
 /**
+ * init's TeX Live step: whether paperlint's own tree is installed, and how to install it —
+ * `runToolchain` over what this project's papers need. `toolchain` is the seam a test replaces:
+ * the real one downloads ~270 MB.
+ */
+export function initTexLive(
+  a: Args,
+  {
+    log,
+    err,
+    cwd,
+  }: { log: typeof console.log; err: typeof console.error; cwd: string },
+  toolchain: typeof runToolchain = runToolchain,
+): { readonly installed: () => boolean; readonly install: () => number } {
+  return {
+    installed: () => cachedTree(cacheRoot(process.env)) !== null,
+    install: () =>
+      toolchain({
+        check: false,
+        log,
+        err,
+        banal: hostBanalInstaller(),
+        tex: toolchainTex(resolve(cwd, a.paths[0] ?? ".")),
+      }),
+  };
+}
+
+/**
  * The first papers directory the CLI would lint from `cwd`, or null when the config does not read
  * or names none — what `doctor` (and `init`, through it) compares the hooks' directory against.
  */
@@ -1291,21 +1315,7 @@ async function runInit(
     format: isFormat(a.format) ? a.format : null,
     createPaper: (papersRoot, name, format) =>
       createPaperAt(papersRoot, name, format, { log, err, cwd }),
-    tex: {
-      installed: () => cachedTree(cacheRoot(process.env)) !== null,
-      // The real TeX Live install (~270 MB), run only when a human at a terminal says yes; init's
-      // decision around it is tested with a fake installer (init.test.ts).
-      /* c8 ignore start */
-      install: () =>
-        runToolchain({
-          check: false,
-          log,
-          err,
-          banal: hostBanalInstaller(),
-          tex: toolchainTex(resolve(cwd, a.paths[0] ?? ".")),
-        }),
-      /* c8 ignore stop */
-    },
+    tex: initTexLive(a, { log, err, cwd }),
     resolveCliPapers: (root: string): string | null =>
       cliPapers({ ...a, config: null }, root),
   });

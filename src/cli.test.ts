@@ -12,6 +12,8 @@ import { test } from "vitest";
 import { runNode, useTempDir, writeTree } from "../test/support.mjs";
 import {
   chooseVenue,
+  initTexLive,
+  ownVersion,
   paperRuleBlocks,
   parseArgs,
   parseSettings,
@@ -510,4 +512,48 @@ test("chooseVenue: a question that fails (the stream ended) takes the default, n
     ask: () => Promise.reject(new Error("Aborted with Ctrl+D")),
   });
   assert.deepEqual(r, { ok: true, value: null });
+});
+
+test("ownVersion: the manifest's version; an unreadable manifest or a non-string version is undefined", () => {
+  assert.deepEqual(
+    [
+      ownVersion(() => '{"version": "1.2.3"}'),
+      ownVersion(() => "{ nope"),
+      ownVersion(() => '{"version": 3}'),
+      ownVersion(() => {
+        throw new Error("ENOENT");
+      }),
+      typeof ownVersion(),
+    ],
+    ["1.2.3", undefined, undefined, undefined, "string"],
+  );
+});
+
+test("init's TeX Live install runs the toolchain over the project's papers, never a check", () => {
+  const dir = writeTree(join(root, "init-tex"), { "package.json": "{}" });
+  const calls: unknown[] = [];
+  const fake = ((o: unknown) => (calls.push(o), 0)) as never;
+  const log = () => {};
+  const here = initTexLive(
+    parseArgs(["init"]),
+    { log, err: log, cwd: dir },
+    fake,
+  );
+  const there = initTexLive(
+    parseArgs(["init", "sub"]),
+    { log, err: log, cwd: dir },
+    fake,
+  );
+  assert.deepEqual([here.install(), there.install()], [0, 0]);
+  assert.deepEqual(
+    calls.map((c) => {
+      const o = c as { check: boolean; tex: unknown; banal: unknown };
+      return [o.check, o.tex, typeof o.banal];
+    }),
+    [
+      [false, toolchainTex(dir), "object"],
+      [false, toolchainTex(join(dir, "sub")), "object"],
+    ],
+  );
+  assert.equal(typeof here.installed(), "boolean");
 });
