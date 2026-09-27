@@ -13,7 +13,15 @@
  */
 import assert from "node:assert/strict";
 import { join, dirname } from "node:path";
-import { readFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { Linter } from "eslint";
 import markdown from "@eslint/markdown";
@@ -137,6 +145,67 @@ check(
   lint("shipped-no-rq", "paper.tex", { statusFile: "PIPELINE-STATUS.md" })
     .length === 1,
 );
+
+// ── a scorecard that cannot be read is no scorecard: silence, never a crash ────────────
+// A directory where the file should be (EISDIR), and front matter that is not YAML — which
+// `paper/stages` reports on the scorecard itself, so this rule does not report it twice.
+{
+  const work = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-rq-")));
+  try {
+    const paperIn = (name, status) => {
+      const dir = join(work, name);
+      mkdirSync(dir);
+      status(join(dir, "PIPELINE-STATUS.md"));
+      const path = join(dir, "paper.md");
+      writeFileSync(path, "# A paper\n");
+      // A linter rooted at the scratch directory: files outside `cwd` match no config.
+      return new Linter({ cwd: work }).verify(
+        "# A paper\n",
+        [
+          {
+            files: ["**/*.md"],
+            plugins: { markdown, paper: rq },
+            language: "markdown/gfm",
+            rules: { "paper/research-question": "error" },
+          },
+        ],
+        path,
+      );
+    };
+    check(
+      "a scorecard path that is a directory: no finding, no crash",
+      JSON.stringify(paperIn("dir", (p) => mkdirSync(p))) === "[]",
+      () => paperIn("dir2", (p) => mkdirSync(p)),
+    );
+    check(
+      "a scorecard whose front matter is not YAML: no finding, no crash",
+      JSON.stringify(
+        paperIn("yaml", (p) =>
+          writeFileSync(p, "---\nstages: [submitted\n---\n"),
+        ),
+      ) === "[]",
+    );
+  } finally {
+    rmSync(work, { recursive: true, force: true });
+  }
+}
+
+// ── a language whose source code carries no text at all: nothing to compare, silence ───
+{
+  const reports = [];
+  rq.rules["research-question"]
+    .create({
+      options: [],
+      filename: join(FIX, "shipped-no-rq", "paper.tex"),
+      sourceCode: {},
+      report: (r) => reports.push(r),
+    })
+    ["root:exit"]({});
+  check(
+    "a source code with neither `raw` nor `text` is skipped, even for a shipped paper",
+    reports.length === 0,
+  );
+}
 
 console.log(
   `✓ ${String(check.count)} assertions passed — paper/research-question, the debt of a shipped paper`,

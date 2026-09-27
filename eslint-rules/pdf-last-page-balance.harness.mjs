@@ -175,6 +175,66 @@ try {
     only(await lint([join(old, "paper.tex")]))[0]?.messageId === "schema",
   );
 
+  // ── the facts' optional spellings, and a paper.tex the rule cannot place the finding in ──
+  check(
+    "parseFacts: no schema at all, or JSON null, is schema `null` — named, not crashed on",
+    parseFacts("{}").data?.got === "null" &&
+      parseFacts("null").data?.got === "null",
+  );
+  check(
+    "parseFacts: facts without a pdf_sha256 are `factsBroken`",
+    parseFacts(JSON.stringify(facts(MEASURED(1, 1), { pdf_sha256: undefined })))
+      .messageId === "factsBroken",
+  );
+  const abs = paper("absolute-pdf", null);
+  writeFileSync(
+    join(abs, "_build", "paper.facts.json"),
+    JSON.stringify(
+      facts(MEASURED(621.5, 264.8), { pdf: join(abs, "paper.pdf") }),
+    ),
+  );
+  const absMsgs = only(await lint([join(abs, "paper.tex")]));
+  check(
+    "facts naming the PDF by an absolute path are read from there, and judged",
+    absMsgs.length === 1 && absMsgs[0].messageId === "unbalanced",
+    JSON.stringify(absMsgs),
+  );
+  const noClass = paper("no-documentclass", facts(MEASURED(621.5, 264.8)));
+  writeFileSync(
+    join(noClass, "paper.tex"),
+    "\\begin{document}x\\end{document}\n",
+  );
+  check(
+    "a paper.tex with no \\documentclass line: the finding goes on line 1",
+    only(await lint([join(noClass, "paper.tex")]))[0]?.line === 1,
+  );
+  // The text is linted from memory and paper.tex is not on disk: the rule cannot read it back
+  // to find the class line, and still reports — on line 1.
+  const unsaved = paper("unsaved", facts(MEASURED(621.5, 264.8)));
+  rmSync(join(unsaved, "paper.tex"));
+  const [fromMemory] = await new ESLint({
+    cwd: root,
+    overrideConfigFile: true,
+    overrideConfig: buildConfig(
+      {
+        rules: [
+          {
+            basePath: root,
+            files: ["papers/**"],
+            rules: { "pdf/last-page-balance": "error" },
+          },
+        ],
+      },
+      texLanguage,
+    ),
+  }).lintText(TEX, { filePath: join(unsaved, "paper.tex") });
+  const mem = only(fromMemory.messages);
+  check(
+    "a paper.tex linted from memory, not on disk: reported on line 1, not crashed on",
+    mem.length === 1 && mem[0].line === 1 && mem[0].messageId === "unbalanced",
+    JSON.stringify(fromMemory.messages),
+  );
+
   // ── quiet ───────────────────────────────────────────────────────────────────────────
   const bal = paper("balanced", facts(MEASURED(464.2, 461.5)));
   const stub = paper("stub", facts({ kind: "stub", words: 12 }));
