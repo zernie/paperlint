@@ -4,20 +4,9 @@ description: Compile a LaTeX paper (ACM/IEEE/arXiv) to PDF and render its pages 
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, SendUserFile]
 ---
 
-<!-- vigiles:sha256:0943963cae95f8f1 compiled from skills/render-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:a1ec1d392f144c80 compiled from skills/render-paper/SKILL.md.spec.ts -->
 
 # render-paper — .tex → PDF → readable page PNGs
-
-## Run me
-
-🔴 FIRST, before any other step:
-
-```
-node .claude/skills/paper-pipeline/scripts/announce.mjs render-paper <paper-dir>
-```
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
 
 Turns a LaTeX source into (a) a compiled PDF and (b) per-page PNG images crisp enough to read
 the font on a phone. Encodes the exact toolchain and the failures already debugged, so it works
@@ -129,31 +118,6 @@ python3 -c "import fitz; d=fitz.open('paper.pdf'); \
 ## Deliver
 - Send the PNGs with `SendUserFile` (`display: render`) so the user can read on phone; caption what
   changed since the last render. Send the PDF too (`display: attach`) if they want the file.
-
-## Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-```
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record render-paper <paper-dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record render-paper <paper-dir> ABSTAINED <reason> "<one line>"
-```
-
-🔴 **There is no PASS**, not even here, where the temptation is strongest — an exit code of 0 from
-`check-render.sh` means the parser found no defect in the log, which is not the same as the page
-being right, and the delivered-PDF check exists because that difference once put `7 x 10^13` on
-page one.
-
-**FINDING** — `check-render.sh` exited non-zero; `<count>` is Overfull boxes plus undefined
-refs/citations and `<report-path>` is the log. Always `--blocking`: every one of these is a fact
-about the artifact, never a matter of taste.
-**ABSTAINED** — `no-witness`: it compiled and the log parser found nothing. `input-missing`: there
-is no `.tex` to compile. `crashed`: no LaTeX toolchain on this machine, which must never be read
-as a clean render.
-
-It runs twenty times a day, so the ledger fills with rows, and that is fine: each row pins a page count
-to a specific set of paper bytes, which is exactly what the `tighten-paper` structure gate is blocked
-on and what a remembered page count keeps getting wrong.
 
 ## Compose with
 - `paper-adversarial-review` / `pc-panel-review` (incl. its venue-fit mode) — review the rendered draft.

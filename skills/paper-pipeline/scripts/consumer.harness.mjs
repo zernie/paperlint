@@ -1,12 +1,10 @@
 /**
- * consumer.harness.mjs — every rung of `ledgerPath()`, both directions, plus the two path facts
- * the move into a package depends on.
+ * consumer.harness.mjs — the path facts the move into a package depends on, both directions.
  *
  * `npx vigiles test skills/paper-pipeline/scripts/consumer.harness.mjs`
  *
  * 🔴 WHY THIS FILE IS NOT OPTIONAL. The resolutions in `consumer.mjs` all fail in the SILENT
- * direction when they are wrong: a bad ledger path still accepts appends, a bad main guard still
- * exits 0, a bad root still hashes a missing directory to a stable value. None of them produce an
+ * direction when they are wrong: a bad main guard still exits 0, a bad root still hashes a missing directory to a stable value. None of them produce an
  * error, and every one of them produces a run that reads as success. So each is asserted here in
  * BOTH directions — fires when it should, silent when it should — because an assertion that only
  * ever sees the good case cannot tell a working resolver from a constant.
@@ -38,7 +36,6 @@ import {
   insideNodeModules,
   installedSkills,
   isMain,
-  ledgerPath,
   pipelineScripts,
   scriptsRoot,
   PACKAGE_NAME,
@@ -101,94 +98,6 @@ function installedDir(root) {
   return d;
 }
 
-// ── I. RUNG 1 — the environment wins, and it wins over a declaration ─────────────────────────
-{
-  const root = fakeConsumer({ ledger: "declared/here.jsonl" });
-  const env = { PIPELINE_LEDGER: join(root, "from-env.jsonl") };
-  assert.equal(
-    ledgerPath(installedDir(root), { env, cwd: root }),
-    resolve(join(root, "from-env.jsonl")),
-    "PIPELINE_LEDGER did not win. It must outrank everything: harnesses set it BEFORE importing " +
-      "the ledger precisely so fixture rows cannot reach real history, and a declaration on disk " +
-      "that could override it would put them there.",
-  );
-  // The other direction: with the variable gone, the same call must move to the next rung.
-  assert.equal(
-    ledgerPath(installedDir(root), { env: {}, cwd: root }),
-    resolve(root, "declared/here.jsonl"),
-    "without PIPELINE_LEDGER the declaration must be used — otherwise rung 1 is not a rung, it " +
-      "is the only path, and this assertion pair proves nothing about precedence.",
-  );
-}
-
-// ── II. RUNG 2 — the consumer's declaration, resolved against the consumer root ───────────────
-{
-  const root = fakeConsumer({ ledger: "docs/pipeline-runs.jsonl" });
-  assert.equal(
-    ledgerPath(installedDir(root), { env: {}, cwd: root }),
-    join(root, "docs/pipeline-runs.jsonl"),
-    "a declared relative ledger must resolve against the consumer root, not against the cwd of " +
-      "whatever process happened to start",
-  );
-  // 🔴 `null` is a keystroke, not an absence. `?? DEFAULT` would read it as "nothing declared"
-  // and silently use another file — the same distinction `papersRoot()` makes.
-  assert.throws(
-    () =>
-      ledgerPath(installedDir(root), {
-        env: {},
-        cwd: fakeConsumer({ ledger: null }),
-      }),
-    /must be a non-empty string/,
-    'a `"ledger": null` was accepted. Anything written down must be usable; only ABSENCE may ' +
-      "fall through to the next rung.",
-  );
-  assert.throws(
-    () =>
-      ledgerPath(installedDir(root), {
-        env: {},
-        cwd: fakeConsumer({ ledger: "" }),
-      }),
-    /must be a non-empty string/,
-    "an empty declared ledger was accepted; it resolves to the consumer root itself",
-  );
-}
-
-// ── III. RUNG 3 — beside the file, but NEVER inside node_modules ──────────────────────────────
-{
-  const root = fakeConsumer(undefined);
-  // Developing the package in its own checkout: the default is legitimate.
-  const own = mkdtempSync(join(TMP, "checkout-"));
-  assert.equal(
-    ledgerPath(own, { env: {}, cwd: root }),
-    join(own, "runs.jsonl"),
-    "outside node_modules and with nothing declared, the ledger belongs beside the module",
-  );
-  // Installed as a dependency with nothing declared: refusing is the whole point.
-  let err;
-  try {
-    ledgerPath(installedDir(root), { env: {}, cwd: root });
-  } catch (e) {
-    err = e;
-  }
-  assert.ok(
-    err,
-    "🔴 ledgerPath RETURNED A PATH INSIDE node_modules. Appending there SUCCEEDS, so the rows " +
-      "look recorded until the next `npm ci` deletes them — silent data loss with no error at " +
-      "any point. This must throw.",
-  );
-  assert.match(
-    err.message,
-    /"ledger"/,
-    "the refusal must name the key to declare. An error that states the problem without the cure " +
-      "gets worked around by whoever hits it.",
-  );
-  assert.match(
-    err.message,
-    /paperlint\.json/,
-    "the refusal must name the file the key goes in",
-  );
-}
-
 // ── IV. `insideNodeModules` is SEGMENT-WISE, not a substring ──────────────────────────────────
 assert.equal(
   insideNodeModules(join("a", "node_modules", "b")),
@@ -199,7 +108,7 @@ assert.equal(
   insideNodeModules(join("a", "my-node_modules-inspector", "b")),
   false,
   "a directory whose NAME merely contains `node_modules` was treated as an install — that " +
-    "consumer would be refused its own ledger for a naming coincidence",
+    "consumer would be refused for a naming coincidence",
 );
 assert.equal(
   insideNodeModules(join("a", "b")),
@@ -433,7 +342,7 @@ assert.equal(
   );
 }
 
-// ── X. THE SCRIPT NAMES ARE DERIVED, NOT RESTATED ─────────────────────────────────────────────
+// ── X. THE PREFIX IS DERIVED, NOT RESTATED ─────────────────────────────────────────────
 // The names belong to this package; a consumer that spelled them out would keep its copy in step
 // by hand. The trailing slash on `prefix` is load-bearing: without it the prefix also matches a
 // SIBLING directory whose name merely starts with the root's.
@@ -443,19 +352,17 @@ assert.equal(
   // `assert` aborts at the first failure, and a prefix that lost its slash died on "must end in a
   // separator" — leaving the assertion that states WHY the slash matters unreached and unproven.
   assert.equal(
-    "a/b-other/ledger.mjs".startsWith(s.prefix),
+    "a/b-other/structure.mjs".startsWith(s.prefix),
     false,
     "the prefix matched a sibling directory sharing the root's name — drop the trailing slash " +
       "and every such path is mistaken for a pipeline script",
   );
   assert.equal(
-    "a/b/ledger.mjs".startsWith(s.prefix),
+    "a/b/structure.mjs".startsWith(s.prefix),
     true,
     "the prefix failed on a real member",
   );
   assert.equal(s.prefix, "a/b/", "prefix must end in a separator");
-  assert.equal(s.announce, "a/b/announce.mjs");
-  assert.equal(s.ledger, "a/b/ledger.mjs");
 
   // EXACTLY ONE slash, whatever the consumer typed. `scriptsRoot()` returns the declaration
   // verbatim, so a trailing slash in paperlint.json arrives here intact; `${root}/` would then give
@@ -466,11 +373,6 @@ assert.equal(
     "a/b/",
     'a declared trailing slash doubled the separator. `"scripts": "tools/pipeline/"` is a normal ' +
       "thing to write, and the doubled prefix matches no instruction at all.",
-  );
-  assert.equal(
-    typedSlash.ledger,
-    "a/b/ledger.mjs",
-    "the script paths doubled the separator too",
   );
 }
 

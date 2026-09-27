@@ -4,7 +4,7 @@ description: The orchestrator for writing a research paper end-to-end, from idea
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:291d2266e29874be compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:a15a3fcf5fdfedf7 compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
 
 # paper-pipeline — the conductor for the whole organism
 
@@ -44,30 +44,6 @@ their grade/result, what's open,* and a one-line **submit-ready verdict**. Rules
 - **"Is paper X ready / what's checked?"** = read this file (verdict + any `☐`/`◐`/`⚠` rows), don't
   reconstruct from chat.
 - Distinct from `SUBMIT-CHECKLIST.md` (venue-format compliance); both must be green before upload.
-- 🔴 **Enforcement leg (prose-isn't-policy), and it is a script, not a paragraph.**
-  `scripts/pipeline-check.mjs` reads this file on every paper edit and reports the failures that
-  actually happened on real papers: a CONTINUOUS check whose last run predates the current text, a GATE
-  that ran without its required input, **a `Requires` cell that omits an edge the pipeline declares**
-  (the canonical set is `scripts/pipeline-edges.mjs`, with the admitting sentence per edge), a study
-  that ran with no stated claim, the `access` row not green inside the moderation window, and a verdict
-  line that is just an accept probability. Run it directly
-  with `node .claude/skills/paper-pipeline/scripts/pipeline-check.mjs <paper-dir>`; it is wired into
-  `.claude/hooks/paper-status-gates.sh` and asserted in `.claude/hooks/hooks.harness.mjs`.
-  **The grading itself stays judgment** (that is the skills' job) — only the mechanically checkable
-  parts are compiled. *Added 2026-08-03, the day three hooks in this repo were found to have been dead
-  for weeks: an advisory that is never exercised is indistinguishable from one that works.*
-
-  🔴 **As of 2026-08-26, this file is read by TWO things.** Sixteen checks over it live as
-  `@eslint/markdown` rules in `eslint-rules/pipeline-status.mjs` (run:
-  `npx eslint <paper-dir>/PIPELINE-STATUS.md`; five of them are `error`), while
-  `scripts/pipeline-check.mjs` holds six whose input lies OUTSIDE the file — git, the clock, the
-  `reviews/` directory, `process.env`. The classification of all 22 lives in the
-  author's private notes (`<papers-root>/research/2026-08-26-klassifikatsiya-pipeline-check.md`).
-
-  ⚠️ The paragraph above lived for a day NOT HERE but directly in `SKILL.md` — i.e. in the
-  generated file. The very first `vigiles compile` (27.08) ate it, and it was not a human who
-  noticed but an agent whose compile had just erased someone else's edit. **An edit to `SKILL.md`
-  without `.spec.ts` is an edit with an expiration date: the next compile.**
 
 ## 🗺️ Where every check actually runs — and where it can be walked around
 
@@ -133,9 +109,7 @@ Prior art is named in the file header (`adewale/skill-eval-harness` does this to
 
 🔴 **Still manual, and no mechanism has been found for it:** the **cold read** — a reader with no
 context restating each sentence — is the only check that catches a sentence that is short, true,
-threshold-passing and meaningless. It needs a fresh subagent, so no hook can run it. What IS
-mechanised is noticing that it is *overdue*: `pipeline-check.mjs` reports `stale-cold-read` when the
-prose changed after the last one.
+threshold-passing and meaningless. It needs a fresh subagent, so no hook can run it.
 
 Install the git hook once per clone: `git config core.hooksPath .githooks`.
 

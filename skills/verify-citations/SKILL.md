@@ -4,20 +4,9 @@ description: Verify every citation is a real work with correct metadata, and tha
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:3a7e10662d0084c4 compiled from skills/verify-citations/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:fe3634eb63db5c0d compiled from skills/verify-citations/SKILL.md.spec.ts -->
 
 # verify-citations — every cite real, the delta explicit
-
-## Run me
-
-🔴 FIRST, before any other step:
-
-```
-node .claude/skills/paper-pipeline/scripts/announce.mjs verify-citations <paper-dir>
-```
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
 
 Reviewers reject on a single fabricated or wrong citation — it reads as either sloppiness or a
 hallucinated bibliography, and either one is fatal. And they reject on "this was already done by ___" if
@@ -30,8 +19,7 @@ bibliography changes, including the edit you make on the last day. Scorecard row
 `<paper-dir>/PIPELINE-STATUS.md`; see the CONTINUOUS section of `paper-pipeline`.
 
 - **A pass dated before the current text is STALE, and stale reads as green.** The date in the `cites`
-  row is compared against the paper's own mtime, and `../paper-pipeline/scripts/pipeline-check.mjs` reports the
-  mismatch — because a `☑` from three days and forty edits ago is worse than a `☐`: it looks closed.
+  row is compared against the paper's own mtime — because a `☑` from three days and forty edits ago is worse than a `☐`: it looks closed.
 - **"We checked last cycle" does not count.** Say it plainly, because it is the exact sentence that
   ships a fabricated cite: a review round adds text, added text adds citations, and the run that
   cleared the bibliography never saw them.
@@ -293,30 +281,6 @@ therefore being checked for the first time.
 **Every check is exercised.** `src/references.test.ts` drives the `refs/*` rules, and `npm run coverage`
 fails CI if any line or branch of them goes unexercised. Run `npx vitest run src/references.test.ts`
 after any edit to the rules.
-
-## 6. Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-```
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record verify-citations <paper-dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record verify-citations <paper-dir> ABSTAINED <reason> "<one line>"
-```
-
-**FINDING** — `<count>` is the number of cites still `% VERIFY` or `unresolvable`; `<report-path>`
-lists them. Add `--blocking` for a cite an authoritative source disproves, or a missing delta
-sentence; either is a submit blocker.
-**ABSTAINED** — `no-witness`: every cite resolved with correct metadata and the delta sentence is in
-the prose. `crashed`: the registries were unreachable, so nothing was verified — which is emphatically
-not the same as everything checking out, and under the old vocabulary both came back `PASS`.
-
-🔴 **There is no PASS.** `no-witness` here means every cite the paper makes was looked up and none
-of them came back wrong. It does not mean the bibliography is complete: this check cannot see a work
-that should have been cited and is not. That gap belongs to `map-prior-work`, and no row here covers it.
-
-Because this check is CONTINUOUS, it writes a row per run and never a final one. That is the point:
-the ledger compares the row against the paper's current bytes, so a pass that predates the last three
-`\cite` additions reports as STALE-PAPER instead of reading as green.
 
 ## Rules
 - **Re-run on every `\cite` added or moved.** A `cites` row older than the paper's text is a stale pass,

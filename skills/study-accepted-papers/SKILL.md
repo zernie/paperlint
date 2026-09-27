@@ -5,20 +5,9 @@ context: fork
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:177ca8805990361e compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:e199b342e4e98338 compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
 
 # study-accepted-papers — learn the venue's bar from its own accepted corpus, then lever your draft up
-
-## Run me
-
-🔴 FIRST, before any other step:
-
-```
-node .claude/skills/paper-pipeline/scripts/announce.mjs study-accepted-papers <paper-dir>
-```
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
 
 Reviewers don't score in a vacuum — they score against the papers that got in last cycle. This skill
 makes that reference standard explicit: pull the venue's **actually-accepted** papers of your type,
@@ -156,28 +145,6 @@ it is the operative subset: the structural mismatch to fix, the strength being u
 being violated, and the **things previously believed that the corpus disproved** (those are the most
 valuable lines in the file, because without them the pipeline re-derives the wrong belief). Keep it
 short enough that it survives being loaded into every session.
-
-## Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-```
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record study-accepted-papers <paper-dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record study-accepted-papers <paper-dir> ABSTAINED <reason> "<one line>"
-```
-
-**FINDING** — `<count>` is the number of levers, `<report-path>` the ranked CHEAP/EXPENSIVE list.
-Add `--blocking` when the draft is missing something the track *requires* (an artifact link, a named
-benchmark, a metric definition): a desk-reject, never a weak accept, and worth the loudest thing
-this skill can say.
-**ABSTAINED** — `no-witness`: the corpus was read and no lever came out of it. `input-missing`: the
-venue publishes no accepted papers to mine.
-
-🔴 **There is no PASS**, and the reason is visible here. "The draft already sits at the venue's bar"
-is only meaningful next to the corpus it was measured against — *33 of 34 accepted papers*, not
-*most of them* — and a stored acquittal carried that denominator nowhere. Put the corpus size in the
-`ABSTAINED` note and in the report; without it the row is an impression with a machine-readable
-label on it.
 
 ## Rules
 - **Fetch real accepted papers.** Never fabricate a title, author, or "what made it strong". Unverifiable → drop or mark VERIFY.

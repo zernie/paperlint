@@ -1,27 +1,12 @@
 ---
 name: research-ideate
 description: "Decide whether a research idea is worth doing at all — before any work goes into it. Use when someone has an idea and asks: is this worth pursuing, should we take it on, is it a paper or just a blog post, is there a quick minimal result that doesn't need a dramatic finding, will it pull us away from our main line of work. Returns a go / no-go verdict with the sharpest framing, the minimal finding and the kinds of venue that would take it. Judges the idea by what counts in a body of work: a peer-reviewed indexed publication, a reusable method or benchmark rather than a one-off \"tool X is bad\", onward citations rather than GitHub stars, and one connected line rather than scattered topics. Stage: conception, before find-venue and before any draft; hands off to find-venue, build-benchmark, draft-paper."
-allowed-tools: [Read, Write, Grep, Glob, Agent, Skill, Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*), Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)]
+allowed-tools: [Read, Write, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:f0ccfb74162bca40 compiled from skills/research-ideate/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:03a0131d306d7ab0 compiled from skills/research-ideate/SKILL.md.spec.ts -->
 
 # research-ideate — is this idea worth a paper, and does the paper earn authorship credit?
-
-## Run me
-
-🔴 FIRST, before any other step:
-
-```
-node .claude/skills/paper-pipeline/scripts/announce.mjs research-ideate <dir>
-```
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
-
-The `<dir>` argument is **optional in spirit**: this skill can run before a paper directory exists, so
-pass whichever directory the work lives in, or `.`. The ledger row is written either way, and a plain
-dot is more honest than an invented path.
 
 Runs BEFORE any effort is spent. An idea can be interesting and still be a bad *publication*
 investment — the wrong framing produces something un-publishable or un-citable, which counts for
@@ -86,28 +71,6 @@ Emit a compact verdict:
 4. **2–3 candidate venue TYPES** — not specific venues (that's `find-venue`'s job), but the shape:
    e.g. "security-of-AI-coding workshop @ a top-tier security conference," "SE-measurement workshop @
    ASE/FSE," "eval/benchmark track." Hand these to `find-venue`.
-
-## Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-```
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record research-ideate <dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record research-ideate <dir> ABSTAINED <reason> "<one line>"
-```
-
-🔴 **There is no PASS**, so there is no way to write down "go" as a value. A clean go is the
-absence of findings across the axes, and whoever wants to call it a go says so themselves.
-
-**FINDING** — go with reshaping, where `<count>` is the number of axes that need it and
-`<report-path>` is the output. Add `--blocking` for a no-go: axis (a) is a hard stop, not a weight,
-and a no-go is the loudest finding this skill produces.
-**ABSTAINED** — `no-witness`: all axes were scored and none needed reshaping. `blocked`: the idea
-was too vague to score, which is a different thing from a no-go and must not be recorded as one.
-
-A recorded no-go is the cheapest artifact in this whole pipeline, and the one most often lost: an idea
-killed in conversation comes back three months later wearing a different name, and nothing in the repo
-remembers that it was already judged.
 
 ## Rules
 - Axis (a) is a gate, not a weight — no indexed peer review, no idea. Everything else reshapes.

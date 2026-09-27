@@ -1,23 +1,12 @@
 ---
 name: draft-paper
 description: Use when the numbers exist and it's time to WRITE the paper — "draft the paper", "turn these findings into a submission", "write the abstract/intro/threats". Gives the section skeleton of a measurement/benchmark paper plus what gets it accepted AND cited — precise claim-sizing (including an explicit "what we do NOT claim"), a construct-validity frame, an honest threats-to-validity section that turns limitations in your favor, and one memorable stat that travels. Encodes the two theses that carried real measurement papers ("measuring the wrong number", "safety theater"). NOT for grading finished prose (grade-paper-writing) or structural editing (tighten-paper) — this is the generative counterpart. Compose with build-benchmark (numbers), grade-paper-writing (prose QA), render-paper, verify-citations, then the review skills.
-allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill, Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*), Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)]
+allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:1b6a7bdc0ea402ec compiled from skills/draft-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:46bb85bfaa45e595 compiled from skills/draft-paper/SKILL.md.spec.ts -->
 
 # draft-paper — prose that survives review and gets cited
-
-## Run me
-
-🔴 FIRST, before any other step:
-
-```
-node .claude/skills/paper-pipeline/scripts/announce.mjs draft-paper <paper-dir>
-```
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
 
 A measurement paper lives or dies on two things reviewers actually reward: a **reusable method/norm**
 they can apply to the next system, and **claim-sizing so precise it can't be attacked**. Numbers alone
@@ -100,34 +89,6 @@ Before any review pass, run the draft through the paper-side prose QA — it cat
 For papers they duplicate — and are superseded by — `grade-paper-writing` + writing-craft's persona
 pass (the blog skills lack the persona fix, so they under-fire on paper prose). Never route paper
 prose QA to them.
-
-## Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-```
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record draft-paper <paper-dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record draft-paper <paper-dir> ABSTAINED <reason> "<one line>"
-```
-
-This skill generates rather than judges, so what it records is about the run, not about the paper.
-
-**FINDING** — it declined to draft because a required input was missing: no numbers from
-`build-benchmark`, or an empty `frame` paragraph from `argument-arc`. `--blocking`, always, because
-drafting past it produces prose about numbers that do not exist.
-**ABSTAINED** — `no-witness`: sections were written and the generator has nothing to report about
-the paper. Put the drafted sections in the note; they are the deliverable, not evidence of a defect.
-
-🔴 **Design smell, stated plainly: this gate will almost always record an abstention**, and
-`status.mjs` will flag it as one that has never returned a finding. Leave the flag standing — it is
-telling the truth. A generator is not a gate, and the only honest negative it can produce is the
-refusal above. If a run ever ends with prose written from numbers that do not exist, that is a
-`FINDING --blocking` and must be recorded as one rather than quietly upgraded.
-
-🔴 Deleting `PASS` did not fix this skill and was never going to: the old vocabulary let it write
-down "I produced sections" as though that were an answer about the manuscript, and the new one
-simply refuses to. The generator is still not a gate. `draft-paper/population-map` — a real check —
-is the row that can say no about this skill's output.
 
 ## Compose with
 - **`build-benchmark`** — its numbers/CIs are the Results section's raw material; never hand-type a

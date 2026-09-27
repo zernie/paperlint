@@ -1,27 +1,12 @@
 ---
 name: find-venue
 description: "Discover and rank real venues for a given paper, scored by authorship credit not just prestige. Fetch candidate CFPs (WebSearch/WebFetch), capture deadline / page limit / paper-type fit / indexing (ACM DL / IEEE Xplore / archival vs non-archival) / double-blind / remote-attendance / selectivity, then rank by credit-weight (peer-reviewed + indexed + parent-venue prestige) × topic fit × accept-probability × deadline feasibility × remote-friendliness. Emit a comparison table and a keep/switch recommendation. Encodes: workshop newness does NOT hurt authorship; non-archival workshops rank LOW; the prestige move is to EXTEND the accepted paper later, not hold out. Compose with research-ideate (upstream), plan-paper-timeline, the submit-paper venue data cards (submit-paper/references/venues/<venue>.md), and extend-paper."
-allowed-tools: [Read, Write, Grep, Glob, WebSearch, WebFetch, Agent, Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*), Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)]
+allowed-tools: [Read, Write, Grep, Glob, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:5efdcc0e1b178c1a compiled from skills/find-venue/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:bfda3e840d81d95d compiled from skills/find-venue/SKILL.md.spec.ts -->
 
 # find-venue — rank real venues by what earns the credit, then keep or switch
-
-## Run me
-
-🔴 FIRST, before any other step:
-
-```
-node .claude/skills/paper-pipeline/scripts/announce.mjs find-venue <dir>
-```
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
-
-The `<dir>` argument is **optional in spirit**: this skill can run before a paper directory exists, so
-pass whichever directory the work lives in, or `.`. The ledger row is written either way, and a plain
-dot is more honest than an invented path.
 
 Takes a paper (or the candidate venue *types* from `research-ideate`) and finds the best real place to
 submit it. "Best" here means **best for the publication record**, which is not the same as most prestigious —
@@ -81,27 +66,6 @@ rank = credit-weight × topic-fit × accept-probability × deadline-feasibility 
 2. **Keep/switch recommendation** — the top-ranked venue with the one-line reason, and (if the paper
    already has a target) an explicit **keep** or **switch** verdict against it. Note the intended
    `extend-paper` upgrade target for later.
-
-## Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-```
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record find-venue <dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record find-venue <dir> ABSTAINED <reason> "<one line>"
-```
-
-🔴 **There is no PASS.** A shortlist is a set of findings about the world, not a certificate that
-the venue question is settled.
-
-**FINDING** — the sweep produced a ranked shortlist with an explicit keep/switch call; `<count>` is
-the number of candidates ranked and `<report-path>` the comparison table. Add `--blocking` when
-nothing open clears the peer-reviewed + indexed gate — a real answer, and not an empty run.
-**ABSTAINED** — `no-witness`: CFPs were read and no candidate could be ranked either way.
-`input-missing`: there is no paper description to match venues against.
-
-Record the whole table's path, not just the winner. The next sweep starts from the candidates that were
-dropped and why, and a verdict with no table behind it cannot be re-checked when a deadline moves.
 
 ## Rules
 - Fetch every CFP fact from the real page; never invent a deadline, page limit, or indexing status.

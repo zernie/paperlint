@@ -5,24 +5,9 @@ context: fork
 allowed-tools: [WebSearch, WebFetch, Read, Write, Grep, Glob, Bash, Agent]
 ---
 
-<!-- vigiles:sha256:1822c8c01e352f42 compiled from skills/sweep-design-space/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:46cb38ac1731883d compiled from skills/sweep-design-space/SKILL.md.spec.ts -->
 
 # sweep-design-space — stop circling, sweep
-
-## Run me
-
-🔴 FIRST, before any other step:
-
-```
-node .claude/skills/paper-pipeline/scripts/announce.mjs sweep-design-space <dir>
-```
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
-
-The `<dir>` argument is **optional in spirit**: this skill can run before a paper directory exists, so
-pass whichever directory the work lives in, or `.`. The ledger row is written either way, and a plain
-dot is more honest than an invented path.
 
 A model asked for "a solution" returns the three designs nearest its training prior, then variations of
 those, then variations of the variations. The user experiences this as *"you are thinking very narrowly"* —
@@ -213,28 +198,6 @@ rather than one gate. A ladder is only worth anything if every rung is:
 assurance levels already exist; the question is whether anyone has carried them to your problem.
 
 ---
-
-## Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-```
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record sweep-design-space <dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record sweep-design-space <dir> ABSTAINED <reason> "<one line>"
-```
-
-🔴 **There is no PASS.** A sweep that turns up survivors has not certified anything; it has found
-candidates, and candidates are findings.
-
-**FINDING** — the sweep produced something to act on; `<count>` is the number of survivors and
-`<report-path>` the sweep, including the groups that yielded nothing. Add `--blocking` when the
-whole sweep died on the filters — that is the loudest thing this skill can say.
-**ABSTAINED** — `no-witness`: the sweep ran and neither found a survivor nor established that none
-exists. `blocked`: there was no problem statement to sweep against.
-
-The skill's own rules already say negative results count. The ledger is how that survives the session:
-a recorded finding names the groups that were swept, so the next sweep starts from named constructs
-instead of from memory — which is the failure mode this skill exists to break.
 
 ## Rules
 

@@ -1,23 +1,12 @@
 ---
 name: tighten-paper
 description: "Use when a paper \"feels long / bloated / overly complex / hard to read / doesn't deliver its point / the middle drags\" — or after review rounds deposited hedge-mass. The developmental / editorial pass on a DRAFTED paper: what a real human editor thinks reading it cover to cover — the ONE point, does every section earn its place, can it be SKIMMED, is it too long for its contribution, which sections are TMI that belong in the artifact/appendix, does the conclusion pay off the intro's promise. Produces a structural verdict + a concrete cut / fold / merge / reorder plan — NOT sentence fixes. Its verdict is a required INPUT to pc-panel-review and a hard gate in harden-paper. NOT sentence craft or a writing grade (grade-paper-writing), NOT jargon stalls (the persona stall pass), NOT scientific defects (pc-panel-review / paper-adversarial-review). Run it BEFORE those on a bloated draft — no point polishing sentences in a section that should be cut."
-allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Bash(node .claude/skills/paper-pipeline/scripts/announce.mjs:*), Bash(node .claude/skills/paper-pipeline/scripts/ledger.mjs:*)]
+allowed-tools: [Read, Write, Edit, Grep, Glob, Agent]
 ---
 
-<!-- vigiles:sha256:79a018d2fd2bf3e7 compiled from skills/tighten-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:fd00cde33ea4b81c compiled from skills/tighten-paper/SKILL.md.spec.ts -->
 
 # tighten-paper — the developmental edit
-
-## Run me
-
-🔴 FIRST, before any other step:
-
-```
-node .claude/skills/paper-pipeline/scripts/announce.mjs tighten-paper <paper-dir>
-```
-
-An advisory pass cannot be observed failing — silence is both its error state and its normal
-state — so starting is an event, and events get written down.
 
 Sentence-level passes make a wall of text into readable text. They do **not** tell you the wall shouldn't be there
 at all. This pass is the editor who reads the whole paper once and asks: *is this the right paper, at the right
@@ -320,32 +309,6 @@ Produce:
   with X / REORDER / TIGHTEN), why, and rough length saved. Lead with the highest-impact.
 - **The middle-sag diagnosis** and the fix (consolidate these findings, lead each with its point).
 - **Skim-test failures** (headings/lead-sentences that don't carry the argument).
-
-## Record the verdict
-
-🔴 LAST step, once the deliverable exists:
-
-```
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record tighten-paper <paper-dir> FINDING <count> <report-path>
-node .claude/skills/paper-pipeline/scripts/ledger.mjs record tighten-paper <paper-dir> ABSTAINED <reason> "<one line>"
-```
-
-**FINDING** is the normal row — `<count>` is the number of CUT / FOLD / MERGE / REORDER actions in
-the plan and `<report-path>` is the plan itself. Add `--blocking` when the paper is over its limit
-and the plan cannot get it under.
-**ABSTAINED** — `no-witness`: a cover-to-cover read produced no action at all, which on a real draft
-should be rare. `blocked`: the declined pass of the section above — content is still being added, so
-there was nothing to read whole.
-
-🔴 **This is the check with the documented history of never saying no**: a tightening pass once
-returned KEEP on 80 of 81 sections and still counted as run. It is also one of the three failures
-that deleted `PASS` — the word made "I read it all and nothing moved" indistinguishable from "I did
-not really read it". `status.mjs` reports a check that has never recorded a finding, on the
-mutation-testing principle that a test which kills no mutant is not a test. So an `ABSTAINED
-no-witness` here owes a note saying what was read and why nothing moved.
-
-The mechanical half of this skill files separately, under `tighten-paper/structure` — one check, one
-row. Do not record a `structure.mjs` result here.
 
 ## Compose
 Run this FIRST on a draft that "feels bloated" — before grade-paper-writing / the stall pass / pc-panel, because
