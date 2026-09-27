@@ -26,7 +26,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createChecker } from "../lib/check.mjs";
+import { createChecker } from "../lib/check.ts";
 import type { Merge, Settings } from "./hooks-settings.ts";
 
 const {

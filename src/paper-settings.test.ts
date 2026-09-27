@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
-import { findProjectRoot } from "../lib/paper-config.mjs";
+import { findProjectRoot } from "../lib/paper-config.ts";
 import {
   paperRules,
   parsePaperSettings,

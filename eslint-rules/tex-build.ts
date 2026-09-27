@@ -50,6 +50,7 @@
  * on `readdirSync` order and on how many drafts happen to lie next to the paper.
  */
 import { readFileSync } from "node:fs";
+import type { RuleContext } from "./rule-context.ts";
 
 /**
  * A copy rather than an import, for the same reason the prose lexicons are copies: a rule may
@@ -152,7 +153,7 @@ const futurePromise = {
         "through paper.tex",
     },
   },
-  create(context) {
+  create(context: RuleContext) {
     return {
       root() {
         // 🔴 ONE GUARD, NOT THREE. The first draft had `if (!file || !existsSync(file))`
@@ -177,7 +178,7 @@ const futurePromise = {
           .split("\n")
           .map((l) => l.replace(/(^|[^\\])%.*$/, "$1"));
         lines.forEach((line, i) => {
-          const m = line.match(FUTURE_PROMISE_RE);
+          const m = FUTURE_PROMISE_RE.exec(line);
           if (!m) return;
           const column = m.index + 1;
           context.report({
@@ -259,7 +260,7 @@ const acmFrontmatterOverride = {
         "on its own",
     },
   },
-  create(context) {
+  create(context: RuleContext) {
     return {
       root() {
         // Same single guard as the sibling rule, and for the same measured reason: a separate

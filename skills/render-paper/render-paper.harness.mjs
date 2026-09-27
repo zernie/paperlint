@@ -34,7 +34,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { checkSkill } from "../../lib/skill-checks.mjs";
-import { papersRoot } from "../../eslint-rules/papers.mjs";
+import { papersRoot } from "#eslint-rules/papers";
 import {
   consumerRoot,
   settingsOf,

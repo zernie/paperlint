@@ -106,8 +106,130 @@ import {
   ConfigCommentParser,
   Directive,
 } from "@eslint/plugin-kit";
+import assert from "node:assert/strict";
+import type {
+  DirectiveType,
+  File,
+  FileProblem,
+  Language,
+  LanguageOptions,
+  OkParseResult,
+  ParseResult,
+} from "@eslint/core";
 
-const HEADING = { part: 1, section: 2, subsection: 3, subsubsection: 4 };
+/** A position in the `.tex`, as unified-latex and mdast both spell it. */
+export interface Point {
+  readonly offset: number;
+  readonly line: number;
+  readonly column: number;
+}
+export interface Span {
+  readonly start: Point;
+  readonly end: Point;
+}
+
+/**
+ * A node as the projection reads it: unified-latex's shape, with every part the projection can
+ * live without made optional — a macro without `args`, an argument without `content`, an `env`
+ * given as nodes. unified-latex's own `Ast.Root` is one of these.
+ */
+export type TexNode =
+  | {
+      readonly type: "string" | "comment";
+      readonly content: string;
+      readonly position?: Span;
+    }
+  | {
+      readonly type: "macro";
+      readonly content: string;
+      readonly args?: readonly TexArg[];
+      readonly position?: Span;
+    }
+  | {
+      readonly type: "environment" | "mathenv";
+      readonly env: string | readonly TexNode[];
+      readonly content?: readonly TexNode[];
+      readonly args?: readonly TexArg[];
+      readonly position?: Span;
+    }
+  | {
+      readonly type: "verbatim" | "verb";
+      readonly env: string;
+      readonly content: string;
+      readonly position?: Span;
+    }
+  | {
+      readonly type: "group" | "inlinemath" | "displaymath" | "root";
+      readonly content: readonly TexNode[];
+      readonly position?: Span;
+    }
+  | { readonly type: "whitespace" | "parbreak"; readonly position?: Span }
+  | TexArg;
+
+/** A macro's or an environment's argument. */
+export interface TexArg {
+  readonly type: "argument";
+  readonly content?: readonly TexNode[];
+  readonly openMark?: string;
+  readonly closeMark?: string;
+  readonly position?: Span;
+}
+
+/** What a parser hands the projection. */
+export interface TexRoot {
+  readonly content: readonly TexNode[];
+}
+
+/**
+ * The projection's mdast-shaped output: the node kinds the prose rules read (`root`, `heading`,
+ * `text`, `strong`, `code`, `html`), each with its span in the `.tex`.
+ */
+export type MdNode =
+  | {
+      readonly type: "root" | "strong";
+      readonly position: Span;
+      readonly children: readonly MdNode[];
+    }
+  | {
+      readonly type: "heading";
+      readonly position: Span;
+      readonly depth: number;
+      readonly title: string;
+      readonly children: readonly MdNode[];
+    }
+  | {
+      readonly type: "text" | "html";
+      readonly position: Span;
+      readonly value: string;
+    }
+  | {
+      readonly type: "code";
+      readonly position: Span;
+      readonly lang: string;
+      readonly value: string;
+    };
+
+/** An inline-config comment: an `html` node's text and where it sits. */
+interface ConfigNode {
+  readonly value: string;
+  readonly position: Span;
+}
+
+/**
+ * `xs[i]` for an index this module computed from `xs` itself. The default is what arithmetic on a
+ * missing element gave in the JavaScript this was written in: `undefined` becomes NaN, not 0.
+ */
+const nth = (xs: readonly number[], i: number): number => {
+  const { [i]: v = Number.NaN } = xs;
+  return v;
+};
+
+const HEADING: Readonly<Record<string, number>> = {
+  part: 1,
+  section: 2,
+  subsection: 3,
+  subsubsection: 4,
+};
 const CODEISH =
   /^(verbatim|lstlisting|minted|figure|figure\*|table|table\*|tabular|algorithm|algorithmic|thebibliography|tikzpicture|filecontents\*?)$/;
 // Prose that a CODEISH environment has NO right to swallow together with the markup.
@@ -121,9 +243,24 @@ const FLOAT_PROSE = /^(caption|footnote)$/;
 const OPAQUE =
   /^(label|ref|autoref|eqref|cite|citep|citet|input|include|usepackage|documentclass|bibliography|bibliographystyle|acmISBN|acmDOI|acmConference|setcopyright|ccsdesc|keywords|orcid|affiliation|email|author|copyrightyear|acmYear|acmBooktitle|acmPrice|settopmatter|definecolor|includegraphics|newcommand|renewcommand|def|let|makeatletter|makeatother|hypersetup|pagestyle|thispagestyle|vspace|hspace)$/;
 
-const P = (n) => n?.position;
+const P = (n: TexNode | undefined): Span | undefined => n?.position;
 
-function plain(nodes) {
+/**
+ * Where the positioned nodes among `nodes` begin and end, or `undefined` when none is positioned.
+ * Nodes without a position are skipped rather than trusted, the way the projection always has.
+ */
+const spanOf = (
+  nodes: readonly TexNode[],
+): { s: number; e: number } | undefined => {
+  const spans = nodes.map(P).filter((p): p is Span => p !== undefined);
+  const [first] = spans;
+  const last = spans.at(-1);
+  return first && last
+    ? { s: first.start.offset, e: last.end.offset }
+    : undefined;
+};
+
+function plain(nodes: readonly TexNode[] | undefined): string {
   let out = "";
   for (const n of nodes || []) {
     if (n.type === "string") out += n.content;
@@ -135,11 +272,16 @@ function plain(nodes) {
   }
   return out.trim();
 }
-const argEnd = (node) => {
-  let end = P(node).end;
+const argEnd = (
+  node: { readonly args?: readonly TexArg[] },
+  start: Point,
+): Point => {
+  let end = start;
   for (const a of node.args || [])
-    for (const c of a.content || [])
-      if (P(c) && P(c).end.offset > end.offset) end = P(c).end;
+    for (const c of a.content || []) {
+      const at = P(c);
+      if (at && at.end.offset > end.offset) end = at.end;
+    }
   return end;
 };
 
@@ -148,28 +290,33 @@ const argEnd = (node) => {
  * node shapes today's parser never emits (a macro without `args`, an argument without `content`, an
  * `env` given as nodes), which the fallbacks below keep reading instead of throwing on.
  */
-export function texToMdast(src, { parse = (s) => getParser().parse(s) } = {}) {
+export function texToMdast(
+  src: string,
+  {
+    parse = (s: string): TexRoot => getParser().parse(s),
+  }: { parse?: (s: string) => TexRoot } = {},
+): { root: MdNode; text: string } {
   const ast = parse(src);
   const chars = src.split("");
-  const blank = (from, to) => {
+  const blank = (from: number, to: number) => {
     for (let i = from; i < to && i < chars.length; i++)
       if (chars[i] !== "\n") chars[i] = " ";
   };
   const lineStarts = [0];
   for (let i = 0; i < src.length; i++)
     if (src[i] === "\n") lineStarts.push(i + 1);
-  const loc = (off) => {
+  const loc = (off: number): Point => {
     let lo = 0,
       hi = lineStarts.length - 1;
     while (lo < hi) {
       const m = (lo + hi + 1) >> 1;
-      if (lineStarts[m] <= off) lo = m;
+      if (nth(lineStarts, m) <= off) lo = m;
       else hi = m - 1;
     }
-    return { line: lo + 1, column: off - lineStarts[lo] + 1, offset: off };
+    return { line: lo + 1, column: off - nth(lineStarts, lo) + 1, offset: off };
   };
-  const children = [];
-  const pendingStrong = [];
+  const children: MdNode[] = [];
+  const pendingStrong: number[] = [];
   // Nesting depth inside a `\caption{}` / `\footnote{}` argument. Exactly one place needs it:
   // bold lead-in synthesis. An `\emph{…}` in the first column INSIDE a caption is an editor's
   // line break, not the heading of an appendix block, and a block-note rule would take it for
@@ -177,12 +324,19 @@ export function texToMdast(src, { parse = (s) => getParser().parse(s) } = {}) {
   // free half (0 findings), so this guards against tomorrow rather than repairing today.
   let inCaption = 0;
   /** A synthetic heading: the ATX marker is written at the START of the span, the tail is blanked. */
-  const synthHeading = (from, to, title, depth = 2) => {
+  const synthHeading = (
+    from: number,
+    to: number,
+    title: string,
+    depth = 2,
+  ): MdNode | null => {
     const label = "#".repeat(depth) + " " + title;
     if (label.length > to - from) return null; // does not fit — do not invent one silently
     blank(from, to);
-    for (let i = 0; i < label.length; i++) chars[from + i] = label[i];
-    const node = {
+    label.split("").forEach((ch, i) => {
+      chars[from + i] = ch;
+    });
+    const node: MdNode = {
       type: "heading",
       depth,
       title,
@@ -220,14 +374,15 @@ export function texToMdast(src, { parse = (s) => getParser().parse(s) } = {}) {
   // -- …`) was therefore invisible. Its `%` lines are made comments here, the only way
   // `getInlineConfigNodes` sees them. BibTeX ignores text between entries, so the line is
   // harmless to the build.
-  for (const n of ast.content)
+  for (const n of ast.content) {
+    const np = P(n);
     if (
       n.type === "verbatim" &&
       /^filecontents\*?$/.test(String(n.env)) &&
-      P(n)
+      np
     ) {
-      let at = P(n).start.offset;
-      for (const line of src.slice(at, P(n).end.offset).split("\n")) {
+      let at = np.start.offset;
+      for (const line of src.slice(at, np.end.offset).split("\n")) {
         const text = line.replace(/\r$/, "");
         const pct = /^\s*%/.test(text) ? text.indexOf("%") : -1;
         if (pct >= 0)
@@ -239,17 +394,26 @@ export function texToMdast(src, { parse = (s) => getParser().parse(s) } = {}) {
         at += line.length + 1;
       }
     }
+  }
 
-  (function walk(node) {
-    if (Array.isArray(node)) return node.forEach((n) => walk(n));
+  /** What `walk` descends into: a node's `content` (nodes, or a string it skips) and `args`. */
+  const parts = (n: TexNode) => [
+    "content" in n ? n.content : undefined,
+    "args" in n ? n.args : undefined,
+  ];
+
+  (function walk(
+    node: TexNode | readonly TexNode[] | string | undefined,
+  ): void {
     if (!node || typeof node !== "object") return;
+    if (!("type" in node)) return node.forEach((n) => walk(n));
     const pos = P(node);
     // The preamble is already blanked in full; nothing inside it (including a
     // `\renewcommand{\bibliography}`) is a node of the document. Without this cut-off, one real
     // paper got a FALSE `## References` on line 178 — i.e. its bibliography "began" before the
     // introduction, and the whole paper fell into the free half.
     if (pos && pos.start.offset < preEnd) {
-      for (const k of ["content", "args"]) if (node[k]) walk(node[k]);
+      for (const v of parts(node)) if (v) walk(v);
       return;
     }
 
@@ -265,7 +429,7 @@ export function texToMdast(src, { parse = (s) => getParser().parse(s) } = {}) {
           pos.start.offset + "\\begin{abstract}".length,
           "Abstract",
         );
-        for (const k of ["content", "args"]) if (node[k]) walk(node[k]);
+        for (const v of parts(node)) if (v) walk(v);
         return;
       }
       if (env === "thebibliography" && pos) {
@@ -293,25 +457,20 @@ export function texToMdast(src, { parse = (s) => getParser().parse(s) } = {}) {
         // Removing `table` / `figure` from `CODEISH` was NOT an option: prose rules would then
         // receive `&`, `\\` and the column specification, i.e. findings on markup — and for a
         // rule somebody turns up to `error`, a false positive is worse than a miss.
-        const keep = [];
-        (function findProse(n) {
-          if (Array.isArray(n)) return n.forEach(findProse);
+        const keep: { node: TexNode; s: number; e: number }[] = [];
+        (function findProse(
+          n: TexNode | readonly TexNode[] | string | undefined,
+        ): void {
           if (!n || typeof n !== "object") return;
+          if (!("type" in n)) return n.forEach((c) => findProse(c));
           if (n.type === "macro" && FLOAT_PROSE.test(n.content)) {
-            const cs = (n.args || [])
-              .flatMap((a) => a.content || [])
-              .filter((c) => P(c));
+            const span = spanOf((n.args || []).flatMap((a) => a.content || []));
             // Keep exactly the CONTENT of the argument: `\caption` itself and the braces
             // stay in the blanked part, so the macro name never becomes prose.
-            if (cs.length)
-              keep.push({
-                node: n,
-                s: P(cs[0]).start.offset,
-                e: P(cs[cs.length - 1]).end.offset,
-              });
+            if (span) keep.push({ node: n, ...span });
             return; // do not look for a caption inside a caption
           }
-          for (const k of ["content", "args"]) if (n[k]) findProse(n[k]);
+          for (const v of parts(n)) if (v) findProse(v);
         })(node.content);
         keep.sort((a, b) => a.s - b.s);
         let cur = pos.start.offset;
@@ -324,7 +483,7 @@ export function texToMdast(src, { parse = (s) => getParser().parse(s) } = {}) {
         // document splitter drops from its clean text every line a `code` node TOUCHES, so one
         // node spanning the whole float would carry the caption back into darkness right after
         // the projection had saved it.
-        const proseLines = new Set();
+        const proseLines = new Set<number>();
         for (const k of keep)
           for (
             let l = loc(k.s).line;
@@ -338,8 +497,9 @@ export function texToMdast(src, { parse = (s) => getParser().parse(s) } = {}) {
           if (proseLines.has(l)) continue;
           let r = l;
           while (r + 1 <= L1 && !proseLines.has(r + 1)) r++;
-          const s0 = lineStarts[l - 1];
-          const e0 = r < lineStarts.length ? lineStarts[r] - 1 : src.length;
+          const s0 = nth(lineStarts, l - 1);
+          const e0 =
+            r < lineStarts.length ? nth(lineStarts, r) - 1 : src.length;
           children.push({
             type: "code",
             lang: env,
@@ -399,12 +559,14 @@ export function texToMdast(src, { parse = (s) => getParser().parse(s) } = {}) {
       const depth = HEADING[node.content];
       if (depth) {
         const title = plain(node.args?.flatMap((a) => a.content || []));
-        const end = argEnd(node);
+        const end = argEnd(node, pos.end);
         // project to ATX: `##` where `\se` was, the rest spaces; the closing `}` too
         blank(pos.start.offset, end.offset + 1);
         for (let i = 0; i < depth; i++) chars[pos.start.offset + i] = "#";
         const tStart = end.offset - title.length;
-        for (let i = 0; i < title.length; i++) chars[tStart + i] = title[i];
+        title.split("").forEach((ch, i) => {
+          chars[tStart + i] = ch;
+        });
         const tPos = { start: loc(tStart), end: loc(end.offset) };
         children.push({
           type: "heading",
@@ -419,23 +581,25 @@ export function texToMdast(src, { parse = (s) => getParser().parse(s) } = {}) {
         return;
       }
       if (node.content === "bibliography" && pos) {
-        synthHeading(pos.start.offset, argEnd(node).offset + 1, "References");
+        synthHeading(
+          pos.start.offset,
+          argEnd(node, pos.end).offset + 1,
+          "References",
+        );
         return;
       }
       if (OPAQUE.test(node.content)) {
-        blank(pos.start.offset, argEnd(node).offset + 1);
+        blank(pos.start.offset, argEnd(node, pos.end).offset + 1);
         return;
       }
       // `\texttt{X}` → `` `X` ``: exactly the same character count, so offsets do not move.
       // This is the only markdown markup the projection can reproduce without shifting: `**`
       // needs TWO characters after the content, and there is only `}`.
       if (node.content === "texttt" || node.content === "lstinline") {
-        const e = argEnd(node);
-        const cs = (node.args || [])
-          .flatMap((a) => a.content || [])
-          .filter((c) => P(c));
-        if (cs.length) {
-          const s0 = P(cs[0]).start.offset;
+        const e = argEnd(node, pos.end);
+        const span = spanOf((node.args || []).flatMap((a) => a.content || []));
+        if (span) {
+          const s0 = span.s;
           blank(pos.start.offset, s0 - 1);
           chars[s0 - 1] = "`";
           chars[e.offset] = "`";
@@ -447,7 +611,7 @@ export function texToMdast(src, { parse = (s) => getParser().parse(s) } = {}) {
         pos.start.column === 1 &&
         !inCaption
       ) {
-        const end = argEnd(node);
+        const end = argEnd(node, pos.end);
         const sv = plain(node.args?.flatMap((a) => a.content || []));
         children.push({
           type: "strong",
@@ -474,27 +638,25 @@ export function texToMdast(src, { parse = (s) => getParser().parse(s) } = {}) {
       }
       // an ordinary macro: blank the NAME (`\emph`) and the argument's BRACES; the content is prose
       blank(pos.start.offset, pos.end.offset);
-      while (pendingStrong.length) {
-        const o = pendingStrong.pop();
+      for (const o of pendingStrong.splice(0)) {
         chars[o] = "*";
         chars[o + 1] = "*";
       }
       for (const a of node.args || []) {
-        const cs = (a.content || []).filter((c) => P(c));
-        if (!cs.length) continue;
-        const s0 = P(cs[0]).start.offset,
-          e0 = P(cs[cs.length - 1]).end.offset;
+        const span = spanOf(a.content || []);
+        if (!span) continue;
+        const { s: s0, e: e0 } = span;
         if (a.openMark) blank(s0 - a.openMark.length, s0);
         if (a.closeMark) blank(e0, e0 + a.closeMark.length);
       }
       if (FLOAT_PROSE.test(node.content)) {
         inCaption++;
-        for (const k of ["content", "args"]) if (node[k]) walk(node[k]);
+        for (const v of parts(node)) if (v) walk(v);
         inCaption--;
         return;
       }
     }
-    for (const k of ["content", "args"]) if (node[k]) walk(node[k]);
+    for (const v of parts(node)) if (v) walk(v);
   })(ast.content);
 
   children.sort((a, b) => a.position.start.offset - b.position.start.offset);
@@ -512,12 +674,24 @@ const commentParser = new ConfigCommentParser();
 const directiveStart =
   /^\s*eslint(?:-enable|-disable(?:(?:-next)?-line)?)?(?:\s|$)/u;
 
-class TexSourceCode extends TextSourceCodeBase {
-  #steps;
-  #parents = new WeakMap();
-  #comments = [];
-  #inline;
-  ast;
+const DIRECTIVES: ReadonlyMap<string, DirectiveType> = new Map([
+  ["eslint-disable", "disable"],
+  ["eslint-enable", "enable"],
+  ["eslint-disable-next-line", "disable-next-line"],
+  ["eslint-disable-line", "disable-line"],
+]);
+
+class TexSourceCode extends TextSourceCodeBase<{
+  LangOptions: LanguageOptions;
+  RootNode: MdNode;
+  SyntaxElementWithLoc: MdNode;
+  ConfigNode: ConfigNode;
+}> {
+  #steps: VisitNodeStep[] | undefined;
+  #parents = new WeakMap<MdNode, MdNode | undefined>();
+  #comments: ConfigNode[] = [];
+  #inline: ConfigNode[] | undefined;
+  override ast: MdNode;
   /**
    * `raw` is the UNPROJECTED `.tex`, and it is here because the projection is lossy by design:
    * it blanks macros, so a rule that must count `\S\ref` or `Fig.~\ref` sees spaces. Those
@@ -528,62 +702,52 @@ class TexSourceCode extends TextSourceCodeBase {
    * so an offset computed on `raw` addresses the same byte of `text`. A rule may therefore
    * scan `raw` and report with the offset it found.
    */
-  raw;
-  constructor({ text, ast, raw }) {
+  raw: string;
+  constructor({ text, ast, raw }: { text: string; ast: MdNode; raw?: string }) {
     super({ ast, text, lineEndingPattern: /\r?\n/u });
     this.ast = ast;
     this.raw = raw ?? text;
     this.traverse();
   }
-  getParent(node) {
+  getParent(node: MdNode): MdNode | undefined {
     return this.#parents.get(node);
   }
-  getInlineConfigNodes() {
+  getInlineConfigNodes(): ConfigNode[] {
     if (!this.#inline)
       this.#inline = this.#comments
         .filter((c) => directiveStart.test(c.value))
         .map((c) => ({ value: c.value.trim(), position: c.position }));
     return this.#inline;
   }
-  getDisableDirectives() {
-    const directives = [];
+  getDisableDirectives(): { problems: FileProblem[]; directives: Directive[] } {
+    const directives: Directive[] = [];
     for (const comment of this.getInlineConfigNodes()) {
-      const { label, value, justification } = commentParser.parseDirective(
-        comment.value,
-      );
-      if (
-        [
-          "eslint-disable",
-          "eslint-enable",
-          "eslint-disable-next-line",
-          "eslint-disable-line",
-        ].includes(label)
-      )
+      const parsed = commentParser.parseDirective(comment.value);
+      // `directiveStart` admitted this comment, and every text it admits parses as a directive.
+      assert.ok(parsed, `unparsable directive: ${comment.value}`);
+      const { label, value, justification } = parsed;
+      const type = DIRECTIVES.get(label);
+      if (type)
         directives.push(
-          new Directive({
-            type: label.slice(7),
-            node: comment,
-            value,
-            justification,
-          }),
+          new Directive({ type, node: comment, value, justification }),
         );
     }
     return { problems: [], directives };
   }
-  applyInlineConfig() {
+  applyInlineConfig(): { configs: never[]; problems: FileProblem[] } {
     return { configs: [], problems: [] };
   }
-  traverse() {
+  traverse(): ArrayIterator<VisitNodeStep> {
     if (this.#steps) return this.#steps.values();
-    const steps = (this.#steps = []);
-    const visit = (node, parent) => {
+    const steps: VisitNodeStep[] = (this.#steps = []);
+    const visit = (node: MdNode, parent?: MdNode) => {
       this.#parents.set(node, parent);
       steps.push(
         new VisitNodeStep({ target: node, phase: 1, args: [node, parent] }),
       );
       if (node.type === "html")
         this.#comments.push({ value: node.value, position: node.position });
-      for (const c of node.children || []) visit(c, node);
+      for (const c of "children" in node ? node.children : []) visit(c, node);
       steps.push(
         new VisitNodeStep({ target: node, phase: 2, args: [node, parent] }),
       );
@@ -593,30 +757,48 @@ class TexSourceCode extends TextSourceCodeBase {
   }
 }
 
-export const texLanguage = {
+export const texLanguage: Language<{
+  LangOptions: LanguageOptions;
+  Code: TexSourceCode;
+  RootNode: MdNode;
+  Node: MdNode;
+}> = {
   fileType: "text",
   lineStart: 1,
   columnStart: 1,
   nodeTypeKey: "type",
   defaultLanguageOptions: {},
   validateLanguageOptions() {},
-  parse(file) {
+  parse(file: File): ParseResult<MdNode> {
     try {
       const raw = String(file.body);
       const { root, text } = texToMdast(raw);
       return { ok: true, ast: root, projected: text, raw };
     } catch (ex) {
-      return { ok: false, errors: [ex] };
+      // What the parser throws is an Error: its own syntax error, or the stack exhausted. ESLint
+      // prints a parse failure at its `line` and `column`, and a failure of the whole parse has
+      // no position of its own, so it is placed at the start of the file.
+      assert.ok(ex instanceof Error);
+      return { ok: false, errors: [Object.assign(ex, { line: 1, column: 1 })] };
     }
   },
-  createSourceCode(file, parseResult) {
+  createSourceCode(
+    file: File,
+    parseResult: OkParseResult<MdNode>,
+  ): TexSourceCode {
+    // What `parse` above returned, read back: ESLint hands a language's extra fields through
+    // untyped, so they are narrowed here rather than trusted.
+    const projected: unknown = parseResult["projected"];
+    const raw: unknown = parseResult["raw"];
+    assert.ok(typeof projected === "string");
     // 🔴 LOAD-BEARING: the SourceCode receives the PROJECTION, not the source. Lengths and
     // offsets are equal, so the position of a finding points into the real `.tex` while the
     // rule sees prose.
     return new TexSourceCode({
-      text: parseResult.projected,
+      text: projected,
       ast: parseResult.ast,
-      raw: parseResult.raw,
+      // Absent from a parse result made by hand; the source code then reads the projection.
+      raw: typeof raw === "string" ? raw : undefined,
     });
   },
 };

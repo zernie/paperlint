@@ -11,7 +11,7 @@ import { writeFileSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createChecker } from "../lib/check.mjs";
+import { createChecker } from "../lib/check.ts";
 import type { PdfFacts } from "./pdf-facts.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));

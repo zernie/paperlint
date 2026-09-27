@@ -1,5 +1,5 @@
 /**
- * The one assertion helper every `*.harness.mjs` uses.
+ * The one assertion helper every harness uses.
  *
  * Until #52 each harness defined its own `check()`, and the copies had drifted: some printed a
  * detail on failure and some dropped it, some joined it with " — " and some with a newline, and two
@@ -17,15 +17,24 @@ import assert from "node:assert/strict";
 import { inspect } from "node:util";
 import { recordCheck } from "vigiles";
 
+/** A failure detail: text, any value (rendered with `util.inspect`), or a thunk producing one. */
+export type Detail = unknown;
+
+/** `check(label, cond, detail?)`, and how many times it has been called. */
+export interface Check {
+  (label: string, cond: unknown, detail?: Detail): void;
+  readonly count: number;
+}
+
 /** A failure detail as text: strings verbatim, other values through `util.inspect`, a thunk called. */
-export function renderDetail(detail) {
-  const value = typeof detail === "function" ? detail() : detail;
+export function renderDetail(detail: Detail): string {
+  const value: unknown = typeof detail === "function" ? detail() : detail;
   if (value === undefined || value === null || value === "") return "";
   return typeof value === "string" ? value : inspect(value, { depth: 6 });
 }
 
 /** The label, then the detail: on the same line when it is one line, below it when it is many. */
-export function failureMessage(label, detail) {
+export function failureMessage(label: string, detail: Detail): string {
   const shown = renderDetail(detail);
   if (!shown) return label;
   return shown.includes("\n") ? `${label}\n${shown}` : `${label} — ${shown}`;
@@ -35,16 +44,17 @@ export function failureMessage(label, detail) {
  * A fresh `check(label, cond, detail?)`. `check.count` is how many times it has been called.
  * `log` is where a failure is printed — stderr unless this module's own test injects one.
  */
-export function createChecker({ log = console.error } = {}) {
-  let count = 0;
-  const check = (label, cond, detail) => {
-    count++;
+export function createChecker({
+  log = console.error,
+}: { log?: (line: string) => void } = {}): Check {
+  const check = (label: string, cond: unknown, detail?: Detail): void => {
+    check.count++;
     recordCheck();
     if (cond) return;
     const message = failureMessage(label, detail);
     log(`✗ ${message}`);
     assert.fail(message);
   };
-  Object.defineProperty(check, "count", { get: () => count });
+  check.count = 0;
   return check;
 }

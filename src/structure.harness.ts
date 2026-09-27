@@ -16,7 +16,7 @@ import {
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { z } from "zod";
-import { createChecker } from "../lib/check.mjs";
+import { createChecker } from "../lib/check.ts";
 
 /** `asEslintResults` promises only `unknown[]`; these are the fields the checks read. */
 const EslintResults = z.array(

@@ -38,8 +38,8 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
-import { PAPERS_DIR_FIELD } from "../lib/paper-config.mjs";
-import { createChecker } from "../lib/check.mjs";
+import { PAPERS_DIR_FIELD } from "../lib/paper-config.ts";
+import { createChecker } from "../lib/check.ts";
 
 const HOOKS = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HOOKS, "..");

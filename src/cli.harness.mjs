@@ -28,8 +28,8 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { PAPERS_DIR_FIELD, findProjectRoot } from "../lib/paper-config.mjs";
-import { createChecker } from "../lib/check.mjs";
+import { PAPERS_DIR_FIELD, findProjectRoot } from "../lib/paper-config.ts";
+import { createChecker } from "../lib/check.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { run, parseArgs, buildConfig, nextSteps, toPaths, runHook } =

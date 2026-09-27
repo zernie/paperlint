@@ -27,7 +27,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { isAbsolute, join } from "node:path";
-import { createChecker } from "../lib/check.mjs";
+import { createChecker } from "../lib/check.ts";
 import type { LinkReport } from "./link-skills.ts";
 
 const { linkSkills, locatePackage, shippedSkills } =

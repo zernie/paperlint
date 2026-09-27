@@ -57,7 +57,7 @@ import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, ".."); // eslint-rules → repository root
-const LANG = join(HERE, "latex-language.mjs");
+const LANG = join(HERE, "latex-language.ts");
 assert.ok(existsSync(LANG), `no entry point for the test: ${LANG}`);
 
 const { texLanguage, texToMdast } = await import(LANG);
@@ -507,7 +507,7 @@ const headings = (root) => root.children.filter((c) => c.type === "heading");
   // the file has to exist on disk (the rule reads it from disk, and a missing path makes it
   // silent for the wrong reason), and a `.tex` file written inside the repository would also
   // be picked up by the glob assertions in part V.
-  const texBuild = (await import(join(HERE, "tex-build.mjs"))).default;
+  const texBuild = (await import(join(HERE, "tex-build.ts"))).default;
   const local = new ESLint({
     cwd: TMP,
     overrideConfigFile: true,

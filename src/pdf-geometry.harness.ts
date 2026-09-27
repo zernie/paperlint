@@ -6,7 +6,7 @@
  * on 2026-08-29 (the midpoint cut, the review build, years mistaken for line numbers), ported from
  * the harness of the function this replaces.
  */
-import { createChecker } from "../lib/check.mjs";
+import { createChecker } from "../lib/check.ts";
 import type { RawFont } from "./pdf-geometry.ts";
 
 const {

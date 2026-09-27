@@ -9,8 +9,7 @@
  */
 import { ESLint, type Linter } from "eslint";
 import { describe, expect, it } from "vitest";
-// @ts-expect-error — the module is .mjs and has no types.
-import { texLanguage } from "../eslint-rules/latex-language.mjs";
+import { texLanguage } from "../eslint-rules/latex-language.ts";
 import { rulePlugins, rulesOff, SHIPPED_RULES } from "./cli.ts";
 
 const PAPER = [

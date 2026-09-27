@@ -9,7 +9,7 @@ import markdown from "@eslint/markdown";
 import { Linter } from "eslint";
 import { test } from "vitest";
 import { useTempDir, writeTree } from "../test/support.ts";
-import stages from "./paper-stages.mjs";
+import stages from "./paper-stages.ts";
 
 const root = useTempDir("paper-stages-");
 // Flat config matches `files` against paths under the linter's cwd; the temp papers live outside

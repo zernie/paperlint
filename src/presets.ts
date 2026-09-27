@@ -47,7 +47,7 @@ import {
   type PaperSettings,
   type SettingsProblem,
 } from "./paper-settings.ts";
-import { CONFIG_FILE } from "../lib/paper-config.mjs";
+import { CONFIG_FILE } from "#lib/paper-config";
 
 /** The prefix of a shipped preset's spec. */
 export const SHIPPED_PREFIX = "paperlint:";

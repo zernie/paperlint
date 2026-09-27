@@ -7,7 +7,7 @@
  * The package writes the cards, so it ships the schema: `sibling-frontmatter.schema.json`. Same
  * mechanism as `review/frontmatter`.
  */
-import { frontmatterRule } from "./review-frontmatter.mjs";
+import { frontmatterRule } from "./review-frontmatter.ts";
 
 export default {
   rules: {

@@ -47,7 +47,7 @@ import {
   countByRule,
   recordedFindings,
 } from "./baseline.ts";
-import { createChecker } from "../../lib/check.mjs";
+import { createChecker } from "../../lib/check.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(dirname(HERE));

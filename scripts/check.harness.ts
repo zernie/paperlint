@@ -19,7 +19,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { load } from "js-yaml";
 import { z } from "zod";
-import { createChecker } from "../lib/check.mjs";
+import { createChecker } from "../lib/check.ts";
 import type { Gate } from "./check.ts";
 
 /** A workflow file, as far as these checks read it. `on` is a plain key: js-yaml reads YAML 1.2. */

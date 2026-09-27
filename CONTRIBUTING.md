@@ -55,8 +55,8 @@ nobody covered — verified by adding a `windows` job and watching it fail.
 ## Layout
 
 ```
-eslint-rules/   the rules, each with its .harness.mjs beside it
-lib/            shared readers — markdown, skill corpus
+eslint-rules/   the rules (TypeScript, built to dist/eslint-rules/), each with its harness beside it
+lib/            shared readers — markdown, config keys (TypeScript, built to dist/lib/); skill corpus
 hooks/          three hooks for vigiles — the code
 plugin/         the Claude Code plugin: wiring for those hooks, no code, no package.json
 skills/         24 stage skills
@@ -108,6 +108,13 @@ New code is TypeScript (#78). The last block of [`eslint.config.mjs`](eslint.con
 that converts it adds it. Code that only this repository runs (tests, `scripts/`, `test/e2e/`) is
 run by `node` directly; code a consumer runs from `node_modules` needs a build first, because Node
 does not strip types there.
+
+`npm run build` is one `tsc` over two projects into one `dist/`: `tsconfig.json` builds `src/` to
+`dist/*.js`, and `tsconfig.pkg.json` builds `lib/` and `eslint-rules/` to `dist/lib/` and
+`dist/eslint-rules/`. Everything else imports those two through the package's subpath imports,
+`#lib/<name>` and `#eslint-rules/<name>` (`"imports"` in `package.json`): the default target is the
+build, which is what an install runs; the `paperlint-source` condition points at the `.ts` instead,
+and `npm run coverage` and `tsconfig.test.json` set it so they read the source.
 
 TypeScript is pinned to 6.x, not 7 (measured 2026-09-27): typescript-eslint 8.70.1 declares
 `typescript: >=4.8.4 <6.1.0`, and `typescript@7.0.2`'s package root exports only its version — the

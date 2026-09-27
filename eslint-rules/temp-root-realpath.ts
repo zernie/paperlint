@@ -45,8 +45,18 @@
  * assertion was about their sum.
  */
 
+import type { CallExpression, Node } from "estree";
+import type { RuleContext } from "./rule-context.ts";
+
+/**
+ * Whether `value` is an ESTree node: an object whose `type` is a string. The walk below reaches
+ * every property of a node, and most of them (`regex`, `value`, arrays of flags) are not nodes.
+ */
+const isNode = (value: object): value is Node =>
+  "type" in value && typeof value.type === "string";
+
 /** The called function's name: `f()` and `mod.f()` count as the same name for our purposes. */
-const calleeName = (node) => {
+const calleeName = (node: Node | null | undefined): string => {
   if (node?.type !== "CallExpression") return "";
   const c = node.callee;
   if (c.type === "Identifier") return c.name;
@@ -65,10 +75,10 @@ const calleeName = (node) => {
  * text-based guard would be forced to exclude itself — exactly the class of check string-based
  * checks are banned for in this repository.
  */
-const mentionsTmpdir = (node) => {
+const mentionsTmpdir = (node: unknown): boolean => {
   if (node === null || typeof node !== "object") return false;
   if (Array.isArray(node)) return node.some(mentionsTmpdir);
-  if (typeof node.type !== "string") return false;
+  if (!isNode(node)) return false;
   if (calleeName(node) === "tmpdir") return true;
   for (const [key, value] of Object.entries(node)) {
     if (key === "parent" || key === "loc" || key === "range") continue;
@@ -79,7 +89,9 @@ const mentionsTmpdir = (node) => {
 };
 
 /** `realpathSync(x)` and `realpathSync.native(x)` — both resolve the path, both count. */
-const isRealpathCall = (node) => {
+const isRealpathCall = (
+  node: Node | null | undefined,
+): node is CallExpression => {
   if (node?.type !== "CallExpression") return false;
   const name = calleeName(node);
   if (name === "realpathSync") return true;
@@ -91,6 +103,7 @@ const isRealpathCall = (node) => {
   return (
     obj?.type === "MemberExpression" &&
     !obj.computed &&
+    "name" in obj.property &&
     obj.property.name === "realpathSync"
   );
 };
@@ -113,9 +126,9 @@ export default {
             "directory under two names, and every path comparison built on it silently compares the two.",
         },
       },
-      create(context) {
+      create(context: RuleContext) {
         return {
-          CallExpression(node) {
+          CallExpression(node: CallExpression & { readonly parent?: Node }) {
             if (calleeName(node) !== "mkdtempSync") return;
             if (!mentionsTmpdir(node.arguments)) return;
             const parent = node.parent;

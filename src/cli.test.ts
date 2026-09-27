@@ -563,7 +563,7 @@ test("lint with its LaTeX language missing from the install still lints the mark
     "papers/p/paper.md": "# P\n\nSome prose.\n",
     "no-latex.mjs":
       "import { register } from 'node:module';\n" +
-      "register('data:text/javascript,' + encodeURIComponent(\"export async function resolve(s, c, next) { if (s.endsWith('latex-language.mjs')) throw Object.assign(new Error('gone'), { code: 'ERR_MODULE_NOT_FOUND' }); return next(s, c); }\"));\n",
+      "register('data:text/javascript,' + encodeURIComponent(\"export async function resolve(s, c, next) { if (s === '#eslint-rules/latex-language') throw Object.assign(new Error('gone'), { code: 'ERR_MODULE_NOT_FOUND' }); return next(s, c); }\"));\n",
   });
   const without = runNode(BIN, ["lint", "papers"], {
     cwd: dir,

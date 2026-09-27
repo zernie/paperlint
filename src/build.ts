@@ -45,7 +45,7 @@ import { delimiter, join, relative } from "node:path";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import { getParser } from "@unified-latex/unified-latex-util-parse";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
-import { CONFIG_FILE } from "../lib/paper-config.mjs";
+import { CONFIG_FILE } from "#lib/paper-config";
 import {
   declaredVenue,
   factsPath,

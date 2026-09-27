@@ -70,7 +70,7 @@ import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, ".."); // eslint-rules → repository root
-const RULES = join(HERE, "tex-build.mjs");
+const RULES = join(HERE, "tex-build.ts");
 assert.ok(existsSync(RULES), `no entry point for the test: ${RULES}`);
 
 const TMP = realpathSync(mkdtempSync(join(tmpdir(), "tex-build-")));
@@ -78,7 +78,7 @@ const TMP = realpathSync(mkdtempSync(join(tmpdir(), "tex-build-")));
 // `rmSync` at the bottom never runs in exactly the runs that are red.
 process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
 
-const { texLanguage } = await import(join(HERE, "latex-language.mjs"));
+const { texLanguage } = await import(join(HERE, "latex-language.ts"));
 const texBuild = (await import(RULES)).default;
 
 // A new rule with no declared severity must not slip through unnoticed.

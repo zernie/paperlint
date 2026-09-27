@@ -23,12 +23,12 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ESLint } from "eslint";
-import { texLanguage } from "./latex-language.mjs";
-import { createChecker } from "../lib/check.mjs";
+import { texLanguage } from "./latex-language.ts";
+import { createChecker } from "../lib/check.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { parseFacts, judgeColumns, DEFAULT_TOLERANCE_PT } = await import(
-  join(HERE, "pdf-last-page-balance.mjs")
+  join(HERE, "pdf-last-page-balance.ts")
 );
 const { buildConfig } = await import(join(HERE, "..", "src", "cli.ts"));
 

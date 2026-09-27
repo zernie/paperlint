@@ -64,13 +64,14 @@ import {
   nameProblem,
   type PaperFormat,
 } from "./new-paper.ts";
-// The one source for the consumer's config key lives in the .mjs half of the package (the ESLint
-// rules and the skill scripts import it too); its types are in lib/paper-config.d.mts.
+// The one source for the consumer's config key lives in lib/ (the ESLint rules and the skill scripts
+// import it too). It is imported compiled, from dist/, the one path that resolves the same from src/
+// and from dist/ — see CONTRIBUTING.md.
 import {
   CONFIG_FILE,
   DEFAULT_PAPERS_ROOT,
   PAPERS_DIR_FIELD,
-} from "../lib/paper-config.mjs";
+} from "#lib/paper-config";
 
 /** How the papers directory was arrived at. Printed, because a guess must not read as a fact. */
 export type PapersHow =

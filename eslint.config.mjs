@@ -11,11 +11,11 @@
  * is why `scripts/rules-see-files.mjs` exists and why it runs as part of the test suite:
  * every rule declared below must be enabled for at least one file that is actually on disk.
  */
-import { texLanguage } from "./eslint-rules/latex-language.mjs";
-import texBuild from "./eslint-rules/tex-build.mjs";
+import { texLanguage } from "#eslint-rules/latex-language";
+import texBuild from "#eslint-rules/tex-build";
 import markdown from "@eslint/markdown";
-import localRules from "./eslint-rules/temp-root-realpath.mjs";
-import portRules from "./eslint-rules/install-path-literals.mjs";
+import localRules from "#eslint-rules/temp-root-realpath";
+import portRules from "#eslint-rules/install-path-literals";
 import n from "eslint-plugin-n";
 import tseslint from "typescript-eslint";
 import boundaries from "eslint-plugin-boundaries";
@@ -38,6 +38,20 @@ const RATCHET = {
   "src/hooks-settings.ts": { complexity: 12, "max-depth": 4 },
   "src/structure.ts": { complexity: 12, "max-depth": 4 },
   "src/new-paper.ts": { complexity: 11 },
+  // Moved from JavaScript on 2026-09-27 (#78) and measured that day: the move changed their
+  // language, not their shape, so their debt is pinned here like the rest rather than paid in it.
+  "eslint-rules/latex-language.ts": {
+    complexity: 68,
+    "max-lines-per-function": 314,
+    "max-depth": 4,
+  },
+  "eslint-rules/paper-typography.ts": { complexity: 29, "max-depth": 5 },
+  "eslint-rules/paper-stages.ts": {
+    complexity: 15,
+    "max-lines-per-function": 105,
+  },
+  "eslint-rules/temp-root-realpath.ts": { complexity: 13 },
+  "lib/markdown.ts": { complexity: 12 },
 };
 
 // ── Hexagonal layers (src/CLAUDE.md, issue #76) ─────────────────────────────────────────
@@ -121,6 +135,15 @@ export const layerBoundaries = (root) => ({
   plugins: { boundaries },
   settings: {
     "boundaries/root-path": root,
+    // `#lib/*` and `#eslint-rules/*` are package.json subpath imports; the Node resolver the plugin
+    // defaults to does not read that map and leaves them unresolved, i.e. unknown. The TypeScript
+    // resolver reads it, and with the repository's source condition lands on the `.ts` file, which
+    // is classified as the js-module element it is.
+    "import/resolver": {
+      typescript: {
+        conditionNames: ["paperlint-source", "types", "import", "node"],
+      },
+    },
     "boundaries/elements": [
       { type: "port", pattern: "src/ports", partialMatch: false },
       { type: "domain", pattern: "src/domain", partialMatch: false },

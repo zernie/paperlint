@@ -38,23 +38,44 @@
  * author wrote correctly.
  */
 import Ajv from "ajv";
+import type { ErrorObject } from "ajv";
 import { CORE_SCHEMA, load } from "js-yaml";
+import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { z } from "zod";
+import type { RuleContext } from "./rule-context.ts";
+
+/** A compiled schema, as far as `errorsOf` uses one. Ajv's `ValidateFunction` is one. */
+export interface Validate {
+  (data: unknown): unknown;
+  readonly errors?: readonly ErrorObject[] | null;
+}
+
+/**
+ * What a parser failure says about itself. js-yaml's `YAMLException` carries a `reason`; anything
+ * else thrown may carry a `message`, or be a bare value that says nothing.
+ */
+const Thrown = z
+  .object({
+    reason: z.string().optional().catch(undefined),
+    message: z.string().optional().catch(undefined),
+  })
+  .catch({});
 
 /** One ajv error as a line a person can act on. `if` errors only repeat their `then`. */
-function describe(e) {
+function describe(e: ErrorObject): string {
   const where = e.dataPath
     ? `\`${e.dataPath.replace(/^\./, "")}\``
     : "the frontmatter";
-  if (e.keyword === "enum")
+  if (e.keyword === "enum" && "allowedValues" in e.params)
     return `${where} must be one of: ${e.params.allowedValues.join(", ")}`;
-  if (e.keyword === "additionalProperties")
+  if (e.keyword === "additionalProperties" && "additionalProperty" in e.params)
     return `${where} has an unknown field \`${e.params.additionalProperty}\``;
   return `${where} ${e.message}`;
 }
 
 /** The schema's verdict on `data` as messages. Ajv types `errors` as possibly null; that is tolerated. */
-export const errorsOf = (validate, data) =>
+export const errorsOf = (validate: Validate, data: unknown): string[] =>
   validate(data)
     ? []
     : (validate.errors ?? []).filter((e) => e.keyword !== "if").map(describe);
@@ -63,10 +84,10 @@ export const errorsOf = (validate, data) =>
  * A rule that validates a markdown file's YAML frontmatter against the JSON Schema in `schemaUrl`
  * (a file shipped beside the rule). A file with no frontmatter is validated as `{}`.
  */
-export function frontmatterRule(schemaUrl, description) {
-  const validate = new Ajv({ allErrors: true }).compile(
-    JSON.parse(readFileSync(schemaUrl, "utf8")),
-  );
+export function frontmatterRule(schemaUrl: URL | string, description: string) {
+  const schema: unknown = JSON.parse(readFileSync(schemaUrl, "utf8"));
+  assert.ok(typeof schema === "object" && schema !== null, "not a schema");
+  const validate = new Ajv({ allErrors: true }).compile(schema);
   return {
     meta: {
       type: "problem",
@@ -78,24 +99,25 @@ export function frontmatterRule(schemaUrl, description) {
         invalid: "{{problem}}",
       },
     },
-    create(context) {
-      let frontmatter = null;
-      let data = {};
+    create(context: RuleContext) {
+      let frontmatter: object | null = null;
+      let data: unknown = {};
       return {
-        yaml(node) {
+        yaml(node: { readonly value?: string }) {
           frontmatter = node;
           try {
             data = load(node.value ?? "", { schema: CORE_SCHEMA }) ?? {};
           } catch (e) {
             data = null;
+            const { reason, message } = Thrown.parse(e);
             context.report({
               node,
               messageId: "malformed",
-              data: { why: e.reason ?? e.message ?? "unparseable" },
+              data: { why: reason ?? message ?? "unparseable" },
             });
           }
         },
-        "root:exit"(root) {
+        "root:exit"(root: object) {
           if (data === null) return;
           for (const problem of errorsOf(validate, data))
             context.report({

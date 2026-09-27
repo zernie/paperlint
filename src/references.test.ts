@@ -32,8 +32,7 @@ import {
   type LookupCache,
 } from "./domain/lookup-cache.ts";
 import { referenceRules, REFERENCE_RULE_LEVELS } from "./reference-rules.ts";
-// @ts-expect-error — an ESLint language in .mjs, it has no types
-import { texLanguage } from "../eslint-rules/latex-language.mjs";
+import { texLanguage } from "../eslint-rules/latex-language.ts";
 
 const PAPER = "/work/papers/p";
 const TEX = (entries: string) =>

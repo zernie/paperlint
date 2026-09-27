@@ -28,7 +28,7 @@ import { dirname, join, resolve } from "node:path";
  * and the hooks resolve their scripts through it. It equals the package name, and
  * `lib/paper-config.harness.mjs` checks that.
  */
-export const CONFIG_KEY = "paperlint";
+export const CONFIG_KEY: string = "paperlint";
 
 /**
  * THE SETTINGS FILE, ONE NAME AT TWO LEVELS, ONE SCHEMA (`SETTINGS_KEYS`):
@@ -41,13 +41,13 @@ export const CONFIG_KEY = "paperlint";
  * applied after the root's. A venue preset (`paperlint:<name>`, or the project's own `./x.jsonc`)
  * is the third level, below both.
  */
-export const CONFIG_FILE = "paperlint.json";
+export const CONFIG_FILE: string = "paperlint.json";
 
 /**
  * The files that make a directory a PAPER. A `paperlint.json` beside one of them is that paper's,
  * never the project's — so walking up from inside a paper does not stop at the paper's own file.
  */
-export const PAPER_MARKERS = Object.freeze([
+export const PAPER_MARKERS: readonly string[] = Object.freeze([
   "paper.tex",
   "paper.md",
   "draft.md",
@@ -61,13 +61,16 @@ export const PAPER_MARKERS = Object.freeze([
  *
  * @param isFile  whether a path exists — `existsSync` by default; `src/` passes its Files port.
  */
-export function findProjectRoot(startDir, isFile = existsSync) {
+export function findProjectRoot(
+  startDir: string,
+  isFile: (path: string) => boolean = existsSync,
+): string {
   const start = resolve(startDir);
-  const isPaper = (d) => PAPER_MARKERS.some((m) => isFile(join(d, m)));
+  const isPaper = (d: string) => PAPER_MARKERS.some((m) => isFile(join(d, m)));
   // Up from `start` to the first directory `found` accepts; null past the filesystem root. A
   // loop with an exit condition rather than `for (;;)`: the code after an endless loop is a block
   // that can never run, and coverage counts it as one that did not.
-  const walk = (found) => {
+  const walk = (found: (dir: string) => boolean): string | null => {
     let d = start;
     while (!found(d)) {
       if (dirname(d) === d) return null;
@@ -82,7 +85,7 @@ export function findProjectRoot(startDir, isFile = existsSync) {
   );
 }
 
-const isObject = (v) =>
+const isObject = (v: unknown): v is Readonly<Record<string, unknown>> =>
   v !== null && typeof v === "object" && !Array.isArray(v);
 
 /**
@@ -90,8 +93,10 @@ const isObject = (v) =>
  * such file, or it does not parse, or it is not an object. For readers that only need one key and
  * fall back to its default; `paperlint lint` parses the file strictly and names what is wrong.
  */
-export function settingsOf(root) {
-  let v;
+export function settingsOf(
+  root: string,
+): Readonly<Record<string, unknown>> | undefined {
+  let v: unknown;
   try {
     v = JSON.parse(readFileSync(join(root, CONFIG_FILE), "utf8"));
   } catch {
@@ -101,7 +106,7 @@ export function settingsOf(root) {
 }
 
 /** The default papers directory, used when the root `paperlint.json` declares none (or there is none). */
-export const DEFAULT_PAPERS_ROOT = "papers";
+export const DEFAULT_PAPERS_ROOT: string = "papers";
 
 /**
  * The field that names the papers directory: `{ "papersDir": "papers" }` in the root
@@ -112,7 +117,7 @@ export const DEFAULT_PAPERS_ROOT = "papers";
  * here. The three hooks cannot import this module, so they keep their own copy, and
  * `lib/paper-config.harness.mjs` checks that every copy matches this one.
  */
-export const PAPERS_DIR_FIELD = "papersDir";
+export const PAPERS_DIR_FIELD: string = "papersDir";
 
 /**
  * Every key a `paperlint.json` may hold — the root's and a paper's, ONE schema — with who reads it.
@@ -124,7 +129,7 @@ export const PAPERS_DIR_FIELD = "papersDir";
  * `PaperlintConfig`, and requires each to be here — so a new reader that forgets this list turns
  * the harness red before a consumer's config does.
  */
-export const SETTINGS_KEYS = Object.freeze({
+export const SETTINGS_KEYS: Readonly<Record<string, string>> = Object.freeze({
   papersDir: `the papers directory, default "papers" — every command, the hooks`,
   structure: "which files a paper directory must hold — paperlint lint",
   rules:
@@ -144,7 +149,7 @@ export const SETTINGS_KEYS = Object.freeze({
 });
 
 /** The keys that only mean something for the whole project: refused in a paper's `paperlint.json`. */
-export const ROOT_ONLY_KEYS = Object.freeze([
+export const ROOT_ONLY_KEYS: readonly string[] = Object.freeze([
   "papersDir",
   "structure",
   "ledger",

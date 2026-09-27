@@ -14,7 +14,7 @@
  */
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createChecker } from "../lib/check.mjs";
+import { createChecker } from "../lib/check.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { rulesAreContentOnly, processImports } = await import(

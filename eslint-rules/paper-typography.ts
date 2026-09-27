@@ -59,51 +59,87 @@
  * is REPORTED WITHOUT A FIX and the zero is offered as a suggestion: an autofix must never be the
  * one to decide what a number means. A real `.05` in any other paragraph is fixed as before.
  */
+import assert from "node:assert/strict";
 import { getParser } from "@unified-latex/unified-latex-util-parse";
+import type { Nodes } from "mdast";
+import type { TexArg, TexNode, TexRoot } from "./latex-language.ts";
+import type {
+  RuleContext,
+  RuleFixer,
+  RuleReport,
+  RuleSourceCode,
+} from "./rule-context.ts";
+
+/** Where a `.bib` embedded in a `filecontents` environment sits in the file. */
+export interface BibRange {
+  readonly start: number;
+  readonly end: number;
+  readonly bodyStart: number;
+  readonly body: string;
+}
+
+/** The `.tex` language's source code: the one that carries the unprojected file. */
+type TexSourceCode = RuleSourceCode & { readonly raw: string };
+
+/** A run of visible text, and for each of its characters the offset it came from (or null). */
+interface Run {
+  text: string;
+  offs: (number | null)[];
+}
 
 /** The inline bibliography — a `filecontents` block writing a `.bib` — with its offsets. */
-export function bibRange(text) {
+export function bibRange(text: string): BibRange | null {
   const m =
     /\\begin\{filecontents\*?\}(?:\[[^\]]*\])?\{[^}]*\.bib\}\r?\n([\s\S]*?)\\end\{filecontents\*?\}/d.exec(
       text,
     );
   if (!m) return null;
-  return {
-    start: m.index,
-    end: m.index + m[0].length,
-    bodyStart: m.indices[1][0],
-    body: m[1],
-  };
+  const [whole, body] = m;
+  const bodyStart = m.indices?.[1]?.[0];
+  // The `d` flag records every group's indices, and group 1 is not optional.
+  assert.ok(body !== undefined && bodyStart !== undefined, "no .bib body");
+  return { start: m.index, end: m.index + whole.length, bodyStart, body };
 }
 
 /**
  * The ranges a markup rule must not read: LaTeX comments (the language gives them as `html`
  * nodes, with positions) and the inline bibliography.
  */
-function skippedRanges(sourceCode, raw) {
-  const out = [];
+function skippedRanges(
+  sourceCode: RuleSourceCode,
+  raw: string,
+): [number, number][] {
+  const out: [number, number][] = [];
   for (const n of sourceCode.ast?.children ?? [])
-    if (n.type === "html" && n.position)
-      out.push([n.position.start.offset, n.position.end.offset]);
+    if (n.type === "html" && n.position) {
+      // An offset-less point compares as NaN: inside no range, as `undefined` always did.
+      const {
+        start: { offset: s = Number.NaN },
+        end: { offset: e = Number.NaN },
+      } = n.position;
+      out.push([s, e]);
+    }
   const bib = bibRange(raw);
   if (bib) out.push([bib.start, bib.end]);
   return out;
 }
-const inside = (ranges, i) => ranges.some(([s, e]) => i >= s && i < e);
+const inside = (ranges: readonly [number, number][], i: number) =>
+  ranges.some(([s, e]) => i >= s && i < e);
 
 /** Every match of `re` in `raw` outside the skipped ranges. */
-function markupMatches(sourceCode, re) {
+function markupMatches(sourceCode: TexSourceCode, re: RegExp) {
   const raw = sourceCode.raw;
   const skip = skippedRanges(sourceCode, raw);
   return [...raw.matchAll(re)].filter((m) => !inside(skip, m.index));
 }
 
-const isTex = (sourceCode) => typeof sourceCode.raw === "string";
+const isTex = (sourceCode: RuleSourceCode): sourceCode is TexSourceCode =>
+  typeof sourceCode.raw === "string";
 
 // ── the text a READER sees, with the source offset of every character ─────────────────────
 
 /** A run of visible text; `offs[i]` is the source offset of `text[i]`, or null when unknown. */
-const run = () => ({ text: "", offs: [] });
+const run = (): Run => ({ text: "", offs: [] });
 
 // Environments whose body is not typeset as text: code, drawings, the inline bibliography.
 const TEX_HIDDEN_ENV =
@@ -117,7 +153,7 @@ const TEX_LAST_ARG = /^(multicolumn|multirow|textcolor|href)$/;
 const TEX_MATH_HIDDEN =
   /^(label|ref|eqref|autoref|cite|hspace|vspace|hskip|vskip|kern|mkern|mskip|rule|phantom|hphantom|vphantom|color|raisebox|includegraphics)$/;
 
-const mandatory = (macro) =>
+const mandatory = (macro: { readonly args?: readonly TexArg[] }) =>
   (macro.args || []).filter((a) => a.openMark === "{");
 
 /**
@@ -125,15 +161,15 @@ const mandatory = (macro) =>
  * arguments come back as the NEXT SIBLINGS: an optional `[…]` as bare strings, then groups.
  * They are parameters, not prose. Returns the index of the last sibling to skip after `i`.
  */
-function unparsedArgsEnd(nodes, i) {
+/** Whether `n` is a string node whose text passes `test`. */
+const isString = (n: TexNode | undefined, test: (s: string) => boolean) =>
+  n?.type === "string" && test(n.content);
+
+function unparsedArgsEnd(nodes: readonly TexNode[], i: number): number {
   let j = i + 1;
-  if (nodes[j]?.type === "string" && nodes[j].content.startsWith("[")) {
+  if (isString(nodes[j], (c) => c.startsWith("["))) {
     let k = j;
-    while (
-      k < nodes.length &&
-      !(nodes[k].type === "string" && nodes[k].content.endsWith("]"))
-    )
-      k++;
+    while (k < nodes.length && !isString(nodes[k], (c) => c.endsWith("]"))) k++;
     if (k < nodes.length) j = k + 1;
   }
   while (nodes[j]?.type === "group") j++;
@@ -141,13 +177,22 @@ function unparsedArgsEnd(nodes, i) {
 }
 
 /** Append a string node to the current run, keeping each character's offset. */
-function appendString(cur, n, src) {
+function appendString(
+  cur: Run,
+  n: {
+    readonly content: string;
+    readonly position?: { readonly start?: { readonly offset: number } };
+  },
+  src: string,
+) {
   const start = n.position?.start?.offset;
   const exact =
     typeof start === "number" &&
-    src.slice(start, start + n.content.length) === n.content;
+    src.slice(start, start + n.content.length) === n.content
+      ? start
+      : null;
   for (let i = 0; i < n.content.length; i++)
-    cur.offs.push(exact ? start + i : null);
+    cur.offs.push(exact === null ? null : exact + i);
   cur.text += n.content;
 }
 
@@ -156,14 +201,23 @@ function appendString(cur, n, src) {
  * `string` nodes with nothing between them: math splits `.05` into `.`, `0`, `5`, and prose
  * keeps `2310.05736` whole — both come back as one word. Anything else ends the run.
  */
-function texRuns(nodes, math, src, out) {
+/** What stands in for an index past the end: a node every branch below passes over. */
+const NOTHING: TexNode = { type: "whitespace" };
+
+function texRuns(
+  nodes: readonly TexNode[] | undefined,
+  math: boolean,
+  src: string,
+  out: Run[],
+): Run[] {
   let cur = run();
   const flush = () => {
     if (cur.text) out.push(cur);
     cur = run();
   };
-  for (let i = 0; i < (nodes || []).length; i++) {
-    const n = nodes[i];
+  const list = nodes || [];
+  for (let i = 0; i < list.length; i++) {
+    const { [i]: n = NOTHING } = list;
     if (n.type === "string") {
       appendString(cur, n, src);
       continue;
@@ -192,9 +246,9 @@ function texRuns(nodes, math, src, out) {
       } else if (TEX_PROSE_ARG.test(n.content)) {
         for (const a of args) texRuns(a.content, false, src, out);
       } else if (TEX_LAST_ARG.test(n.content) && args.length) {
-        texRuns(args[args.length - 1].content, false, src, out);
+        texRuns(args.at(-1)?.content, false, src, out);
       }
-      if (!math && !(n.args || []).length) i = unparsedArgsEnd(nodes, i);
+      if (!math && !(n.args || []).length) i = unparsedArgsEnd(list, i);
     }
   }
   flush();
@@ -206,13 +260,16 @@ function texRuns(nodes, math, src, out) {
  * with the fields the walk tolerates being absent.
  */
 export function texVisibleRuns(
-  raw,
-  { parse = (s) => getParser().parse(s) } = {},
-) {
+  raw: string,
+  {
+    parse = (s: string): TexRoot => getParser().parse(s),
+  }: { parse?: (s: string) => TexRoot } = {},
+): Run[] {
   const root = parse(raw).content;
   // Only the document body is typeset. A fragment with no `document` environment is all body.
   const document = root.find(
-    (n) => n.type === "environment" && n.env === "document",
+    (n): n is Extract<TexNode, { type: "environment" | "mathenv" }> =>
+      n.type === "environment" && n.env === "document",
   );
   return texRuns(document ? document.content : root, false, raw, []);
 }
@@ -232,8 +289,8 @@ const MD_HIDDEN = new Set([
  * markdown's escapes (`\*`) and character references (`&lt;`) resolved, so the two are walked
  * side by side; a character whose source cannot be followed gets null (reported, not fixed).
  */
-function mdOffsets(value, src, start) {
-  const offs = [];
+function mdOffsets(value: string, src: string, start: number) {
+  const offs: (number | null)[] = [];
   let j = start;
   for (const ch of value) {
     if (src[j] === ch) offs.push(j++);
@@ -251,7 +308,11 @@ function mdOffsets(value, src, start) {
   return offs;
 }
 
-function mdVisibleRuns(node, src, out = []) {
+function mdVisibleRuns(
+  node: Nodes | undefined,
+  src: string,
+  out: Run[] = [],
+): Run[] {
   if (!node || MD_HIDDEN.has(node.type)) return out;
   if (node.type === "text") {
     const start = node.position?.start?.offset;
@@ -263,17 +324,23 @@ function mdVisibleRuns(node, src, out = []) {
           : [...node.value].map(() => null),
     });
   }
-  for (const c of node.children || []) mdVisibleRuns(c, src, out);
+  for (const c of "children" in node ? node.children : [])
+    mdVisibleRuns(c, src, out);
   return out;
 }
 
-const visibleRuns = (sourceCode) =>
+const visibleRuns = (sourceCode: RuleSourceCode): Run[] =>
   isTex(sourceCode)
     ? texVisibleRuns(sourceCode.raw)
     : mdVisibleRuns(sourceCode.ast, sourceCode.text);
 
 /** A report at `[from, to)` of the file. */
-const at = (context, from, to, rest) => {
+const at = (
+  context: RuleContext,
+  from: number,
+  to: number,
+  rest: Omit<RuleReport, "loc" | "node">,
+) => {
   const sc = context.sourceCode;
   context.report({
     loc: { start: sc.getLocFromIndex(from), end: sc.getLocFromIndex(to) },
@@ -288,14 +355,14 @@ const at = (context, from, to, rest) => {
 const SECTION_TEX = /(§|\\S(?![A-Za-z]))(~|[ \t]*)(?=(\\(?:auto)?ref\b)|(\d))/g;
 const SECTION_GLYPH = /§/g;
 
-function sectionWord(context) {
+function sectionWord(context: RuleContext) {
   const sc = context.sourceCode;
   if (isTex(sc)) {
     const seen = new Set();
     for (const m of markupMatches(sc, SECTION_TEX)) {
       seen.add(m.index);
       const word = m[3] ? "Section~" : "Section ";
-      const range = [m.index, m.index + m[0].length];
+      const range: [number, number] = [m.index, m.index + m[0].length];
       at(context, range[0], range[1], {
         messageId: "sign",
         fix: (f) => f.replaceTextRange(range, word),
@@ -313,7 +380,8 @@ function sectionWord(context) {
       const from = r.offs[m.index];
       if (from === null || from === undefined) continue;
       // The sign and the space after it; the number stays.
-      const range = [from, from + 1 + m[1].length];
+      const [, gap = ""] = m;
+      const range: [number, number] = [from, from + 1 + gap.length];
       at(context, range[0], range[1], {
         messageId: "sign",
         ...(m[2] ? { fix: (f) => f.replaceTextRange(range, "Section ") } : {}),
@@ -334,13 +402,13 @@ const DESIGNATOR_BEFORE = /(?:[¶§]|\\[PS](?![A-Za-z]))[ \t~]*$/;
 const DESIGNATED = /(?:[¶§]|\\[PS](?![A-Za-z]))[ \t~]*\.\d/;
 
 /** The source of the paragraph holding `i`, up to `i`: from the last blank line before it. */
-const paragraphBefore = (src, i) => {
+const paragraphBefore = (src: string, i: number) => {
   const head = src.slice(0, i);
   const blank = [...head.matchAll(/\n[ \t]*\n/g)].at(-1);
   return head.slice(blank ? blank.index + blank[0].length : 0);
 };
 
-function leadingZero(context) {
+function leadingZero(context: RuleContext) {
   const sc = context.sourceCode;
   const src = isTex(sc) ? sc.raw : sc.text;
   for (const r of visibleRuns(sc))
@@ -349,7 +417,7 @@ function leadingZero(context) {
       if (dot === null || dot === undefined) continue;
       const before = paragraphBefore(src, dot);
       if (DESIGNATOR_BEFORE.test(before)) continue;
-      const zero = (f) => f.insertTextBeforeRange([dot, dot], "0");
+      const zero = (f: RuleFixer) => f.insertTextBeforeRange([dot, dot], "0");
       at(
         context,
         dot,
@@ -371,7 +439,7 @@ function leadingZero(context) {
 
 const FIG_REF = /\b(Fig\.|Figure)(?=~?\\(?:ref|autoref)\b)/g;
 
-function figureRefStyle(context) {
+function figureRefStyle(context: RuleContext) {
   const sc = context.sourceCode;
   if (!isTex(sc)) return;
   const all = markupMatches(sc, FIG_REF);
@@ -382,16 +450,22 @@ function figureRefStyle(context) {
   const [minority, word] =
     short.length > long.length ? [long, "Fig."] : [short, "Figure"];
   for (const m of minority) {
-    const range = [m.index, m.index + m[1].length];
+    const [, form = ""] = m;
+    const range: [number, number] = [m.index, m.index + form.length];
     at(context, range[0], range[1], {
       messageId: "mixed",
-      data: { form: m[1], word, n: String(all.length - minority.length) },
+      data: { form, word, n: String(all.length - minority.length) },
       fix: (f) => f.replaceTextRange(range, word),
     });
   }
 }
 
-const rule = (description, messages, check, meta = {}) => ({
+const rule = (
+  description: string,
+  messages: Readonly<Record<string, string>>,
+  check: (context: RuleContext) => void,
+  meta: { readonly hasSuggestions?: boolean } = {},
+) => ({
   meta: {
     type: "suggestion",
     fixable: "code",
@@ -400,7 +474,7 @@ const rule = (description, messages, check, meta = {}) => ({
     messages,
     ...meta,
   },
-  create: (context) => ({ "root:exit": () => check(context) }),
+  create: (context: RuleContext) => ({ "root:exit": () => check(context) }),
 });
 
 export default {

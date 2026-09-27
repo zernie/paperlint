@@ -32,7 +32,7 @@
  */
 import { spawnSync } from "node:child_process";
 import { z } from "zod";
-import { PAPERS_DIR_FIELD } from "../../lib/paper-config.mjs";
+import { PAPERS_DIR_FIELD } from "../../lib/paper-config.ts";
 // `run` is what `bin/paperlint.mjs` re-exports; imported from the build it re-exports, which has types.
 import { run } from "../../dist/cli.js";
 import { referencesChecker } from "../../dist/adapters/references/index.js";

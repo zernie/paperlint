@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist",
+    "resolveJsonModule": true
+  },
+  "include": ["lib/*.ts", "eslint-rules/*.ts", "eslint-rules/*.json"],
+  "exclude": ["**/*.test.ts", "**/*.harness.ts", "**/*.d.ts"]
+}

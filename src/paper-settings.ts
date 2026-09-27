@@ -21,7 +21,7 @@ import {
   ROOT_ONLY_KEYS,
   SETTINGS_KEYS,
   findProjectRoot,
-} from "../lib/paper-config.mjs";
+} from "#lib/paper-config";
 import type { AbsolutePath } from "./domain/paths.ts";
 import { err, ok, type Result } from "./domain/result.ts";
 import type { Files } from "./ports/files.ts";

@@ -250,7 +250,7 @@ import { assertPromptDiversity, skip } from "vigiles";
 import { paid_measureTriggerRate as measureTriggerRate } from "vigiles/eval";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { frontmatterBlock } from "../../lib/markdown.mjs";
+import { frontmatterBlock } from "#lib/markdown";
 import { parseFm } from "../../lib/skill-corpus.mjs";
 import { installedSkills } from "./scripts/consumer.mjs";
 

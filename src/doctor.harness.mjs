@@ -10,7 +10,7 @@
  *
  * Run:    npx vigiles test src/doctor.harness.mjs
  */
-import { PAPERS_DIR_FIELD } from "../lib/paper-config.mjs";
+import { PAPERS_DIR_FIELD } from "../lib/paper-config.ts";
 import {
   mkdtempSync,
   mkdirSync,
@@ -21,7 +21,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createChecker } from "../lib/check.mjs";
+import { createChecker } from "../lib/check.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { doctor, detectPapers, PROGRAMS, found } = await import(

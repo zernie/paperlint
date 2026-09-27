@@ -25,7 +25,7 @@
  * would need that plugin, which JSON cannot carry. Which rules paperlint ships is read off its own
  * config (`buildConfig`), not listed a second time.
  */
-import { SETTINGS_KEYS } from "../lib/paper-config.mjs";
+import { SETTINGS_KEYS } from "#lib/paper-config";
 
 /** ESLint's severities, in both of its spellings. */
 export type Severity = "off" | "warn" | "error" | 0 | 1 | 2;

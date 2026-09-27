@@ -44,8 +44,7 @@ import type {
   ReferencesCheck,
   ReferencesRun,
 } from "./ports/check-references.ts";
-// @ts-expect-error — an ESLint rule module in .mjs, it has no types
-import { bibRange } from "../eslint-rules/paper-typography.mjs";
+import { bibRange } from "#eslint-rules/paper-typography";
 
 export const REFERENCES_SCHEMA = 1;
 export const REFERENCES_FILE = "references.json";

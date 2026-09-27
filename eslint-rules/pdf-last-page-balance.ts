@@ -35,7 +35,58 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join } from "node:path";
-import { CONFIG_FILE } from "../lib/paper-config.mjs";
+import assert from "node:assert/strict";
+import { z } from "zod";
+import { CONFIG_FILE } from "../lib/paper-config.ts";
+import type { RuleContext } from "./rule-context.ts";
+
+/** A reason to report, in ESLint's terms. */
+export interface Finding {
+  readonly messageId: string;
+  readonly data: Readonly<Record<string, string>>;
+}
+
+/** The `last_page` field, as far as this rule can judge it. */
+export type LastPage =
+  | { readonly kind: "stub" | "review" }
+  | {
+      readonly kind: "measured";
+      readonly left: number;
+      readonly right: number;
+    };
+
+/** What `parseFacts` reads out of `paper.facts.json`, or why it cannot. */
+export type ParsedFacts =
+  | {
+      readonly ok: true;
+      readonly pdf: string;
+      /** Whatever the file holds there; it matched the digest pattern, and is compared as-is. */
+      readonly sha: unknown;
+      readonly last: LastPage;
+    }
+  | ({ readonly ok: false } & Finding);
+
+// The fields read, each as it is written; anything that is not a mapping has none of them.
+const FactsFields = z
+  .looseObject({
+    schema: z.unknown().optional(),
+    pdf: z.unknown().optional(),
+    pdf_sha256: z.unknown().optional(),
+    last_page: z.unknown().optional(),
+  })
+  .catch({});
+const LastPageFields = z
+  .looseObject({
+    kind: z.unknown().optional(),
+    columns_pt: z.unknown().optional(),
+  })
+  .catch({});
+/** Two column heights: finite numbers, exactly two of them. */
+const Columns = z.tuple([z.number(), z.number()]);
+const Settings = z.looseObject({ extends: z.unknown().optional() }).catch({});
+const RuleOptions = z
+  .object({ tolerancePt: z.number().optional() })
+  .default({});
 
 /** The difference, in points, that two columns may end apart. See the harness for why 120. */
 export const DEFAULT_TOLERANCE_PT = 120;
@@ -43,44 +94,39 @@ export const DEFAULT_TOLERANCE_PT = 120;
 export const FACTS_SCHEMA = 2;
 export const FACTS_REL = join("_build", "paper.facts.json");
 
-const isHeight = (x) => typeof x === "number" && Number.isFinite(x);
-
 /** The `last_page` field, parsed. */
-function lastPageOf(v) {
-  if (v?.kind === "stub" || v?.kind === "review") return { kind: v.kind };
-  const c = v?.columns_pt;
-  if (
-    v?.kind === "measured" &&
-    Array.isArray(c) &&
-    c.length === 2 &&
-    c.every(isHeight)
-  )
-    return { kind: "measured", left: c[0], right: c[1] };
+function lastPageOf(v: unknown): LastPage | null {
+  const { kind, columns_pt } = LastPageFields.parse(v);
+  if (kind === "stub" || kind === "review") return { kind };
+  const c = Columns.safeParse(columns_pt);
+  if (kind === "measured" && c.success)
+    return { kind: "measured", left: c.data[0], right: c.data[1] };
   return null;
 }
 
 /**
  * The facts file's text → what this rule needs, or the reason it cannot be judged. Pure.
- *
- * @returns {{ ok: true, pdf: string, sha: string, last: object } | { ok: false, messageId: string, data: object }}
  */
-export function parseFacts(text) {
-  let d;
+export function parseFacts(text: string): ParsedFacts {
+  let raw: unknown;
   try {
-    d = JSON.parse(text);
+    raw = JSON.parse(text);
   } catch (e) {
+    // `JSON.parse` throws a `SyntaxError` and nothing else.
+    assert.ok(e instanceof Error);
     return { ok: false, messageId: "factsBroken", data: { why: e.message } };
   }
-  if (d?.schema !== FACTS_SCHEMA)
+  const d = FactsFields.parse(raw);
+  if (d.schema !== FACTS_SCHEMA)
     return {
       ok: false,
       messageId: "schema",
-      data: { got: JSON.stringify(d?.schema ?? null) },
+      data: { got: JSON.stringify(d.schema ?? null) },
     };
   const last = lastPageOf(d.last_page);
   if (
     typeof d.pdf !== "string" ||
-    !/^[0-9a-f]{64}$/.test(d.pdf_sha256 ?? "") ||
+    !/^[0-9a-f]{64}$/.test(String(d.pdf_sha256 ?? "")) ||
     !last
   )
     return {
@@ -94,9 +140,12 @@ export function parseFacts(text) {
 }
 
 /** Whether the facts describe the PDF on disk: null when they do, else the reason. */
-function staleness(paperDir, facts) {
+function staleness(
+  paperDir: string,
+  facts: { readonly pdf: string; readonly sha: unknown },
+): Finding | null {
   const pdf = isAbsolute(facts.pdf) ? facts.pdf : join(paperDir, facts.pdf);
-  let got;
+  let got: string;
   try {
     got = createHash("sha256").update(readFileSync(pdf)).digest("hex");
   } catch {
@@ -108,7 +157,10 @@ function staleness(paperDir, facts) {
 }
 
 /** The finding for a measured page, or null when it is balanced. Pure. */
-export function judgeColumns(last, tolerancePt) {
+export function judgeColumns(
+  last: LastPage,
+  tolerancePt: number,
+): Finding | null {
   if (last.kind !== "measured") return null;
   const diff = Math.abs(last.left - last.right);
   if (diff <= tolerancePt) return null;
@@ -124,7 +176,7 @@ export function judgeColumns(last, tolerancePt) {
 }
 
 /** Where a finding goes: the `\documentclass` line, where the class options that fix it live. */
-function reportLine(file) {
+function reportLine(file: string): number {
   try {
     const lines = readFileSync(file, "utf8").split("\n");
     const i = lines.findIndex((l) => /^\s*\\documentclass\b/.test(l));
@@ -140,17 +192,19 @@ function reportLine(file) {
  * repeating it as an error would fail a lint-only CI for every paper of a venue whose preset turns
  * this rule on.
  */
-function extendsPreset(paperDir) {
+function extendsPreset(paperDir: string): boolean {
   try {
-    const s = JSON.parse(readFileSync(join(paperDir, CONFIG_FILE), "utf8"));
-    return typeof s?.extends === "string" && s.extends !== "";
+    const s = Settings.parse(
+      JSON.parse(readFileSync(join(paperDir, CONFIG_FILE), "utf8")),
+    );
+    return typeof s.extends === "string" && s.extends !== "";
   } catch {
     return false;
   }
 }
 
 /** Everything the rule decides for one paper, as a finding or null. */
-function verdict(paperDir, tolerancePt) {
+function verdict(paperDir: string, tolerancePt: number): Finding | null {
   const factsFile = join(paperDir, FACTS_REL);
   if (!existsSync(factsFile))
     return extendsPreset(paperDir)
@@ -204,10 +258,12 @@ const rule = {
         "differs), so judging it would judge an earlier build — rebuild the paper",
     },
   },
-  create(context) {
+  create(context: RuleContext) {
     // Judged once per paper, on its paper.tex: the paper directory is the file's directory.
     if (basename(context.filename) !== "paper.tex") return {};
-    const tolerancePt = context.options[0]?.tolerancePt ?? DEFAULT_TOLERANCE_PT;
+    const { tolerancePt = DEFAULT_TOLERANCE_PT } = RuleOptions.parse(
+      context.options[0],
+    );
     return {
       root() {
         const v = verdict(dirname(context.filename), tolerancePt);

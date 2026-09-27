@@ -30,7 +30,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join, dirname, resolve, relative, basename, sep } from "node:path";
 import markdown from "@eslint/markdown";
-// Types come from consumer.d.mts beside it, the same arrangement as lib/paper-config.d.mts.
+// Types come from consumer.d.mts beside it.
 import {
   isMain,
   packageVenuesDir,
@@ -96,15 +96,16 @@ import {
   type PaperFormat,
   type VenueSetting,
 } from "./new-paper.ts";
-// The one source for the consumer's config key lives in the .mjs half of the package (the ESLint
-// rules and the skill scripts import it too); its types are in lib/paper-config.d.mts.
+// The one source for the consumer's config key lives in lib/ (the ESLint rules and the skill scripts
+// import it too). It is imported compiled, from dist/, the one path that resolves the same from src/
+// and from dist/ — see CONTRIBUTING.md.
 import {
   CONFIG_FILE,
   DEFAULT_PAPERS_ROOT,
   PAPERS_DIR_FIELD,
   SETTINGS_KEYS,
   findProjectRoot,
-} from "../lib/paper-config.mjs";
+} from "#lib/paper-config";
 import {
   parseRuleBlocks,
   parseRuleEntries,
@@ -117,22 +118,14 @@ import {
 export { init };
 export { nextSteps } from "./init.ts";
 
-// @ts-expect-error — an ESLint rule in .mjs, it has no types
-import paperStages from "../eslint-rules/paper-stages.mjs";
-// @ts-expect-error — an ESLint rule in .mjs, it has no types
-import researchQuestion from "../eslint-rules/paper-research-question.mjs";
-// @ts-expect-error — an ESLint rule in .mjs, it has no types
-import typography from "../eslint-rules/paper-typography.mjs";
-// @ts-expect-error — an ESLint rule in .mjs, it has no types
-import texBuild from "../eslint-rules/tex-build.mjs";
-// @ts-expect-error — an ESLint rule in .mjs, it has no types
-import bibReachable from "../eslint-rules/bib-reachable-entry.mjs";
-// @ts-expect-error — an ESLint rule in .mjs, it has no types
-import reviewFrontmatter from "../eslint-rules/review-frontmatter.mjs";
-// @ts-expect-error — an ESLint rule in .mjs, it has no types
-import siblingFrontmatter from "../eslint-rules/sibling-frontmatter.mjs";
-// @ts-expect-error — an ESLint rule in .mjs, it has no types
-import pdfRules from "../eslint-rules/pdf-last-page-balance.mjs";
+import paperStages from "#eslint-rules/paper-stages";
+import researchQuestion from "#eslint-rules/paper-research-question";
+import typography from "#eslint-rules/paper-typography";
+import texBuild from "#eslint-rules/tex-build";
+import bibReachable from "#eslint-rules/bib-reachable-entry";
+import reviewFrontmatter from "#eslint-rules/review-frontmatter";
+import siblingFrontmatter from "#eslint-rules/sibling-frontmatter";
+import pdfRules from "#eslint-rules/pdf-last-page-balance";
 
 /** The shipped venue presets, read from the package's venues directory — the one list. */
 const SHIPPED_VENUES = (): string[] => shippedPresets(packageVenuesDir());
@@ -1453,8 +1446,7 @@ export async function run(
   // failing outright — the LaTeX rules simply have no language to run in.
   let texLanguage: unknown = null;
   try {
-    // @ts-expect-error — the module is .mjs and has no types
-    ({ texLanguage } = await import("../eslint-rules/latex-language.mjs"));
+    ({ texLanguage } = await import("#eslint-rules/latex-language"));
   } catch {
     texLanguage = null;
   }

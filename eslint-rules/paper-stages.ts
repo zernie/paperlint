@@ -48,30 +48,62 @@
  */
 import { existsSync, statSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
+import assert from "node:assert/strict";
 import { load } from "js-yaml";
+import { z } from "zod";
+import type { RuleContext } from "./rule-context.ts";
 
-const STAGES = ["submitted", "camera-ready", "arxiv"];
+/** The frontmatter's `stages` field, whatever it holds; anything that is not a mapping has none. */
+const Frontmatter = z.looseObject({ stages: z.unknown().optional() }).catch({});
+const StageList = z.array(z.unknown());
+/** One `stages` entry. A field of the wrong shape is read as it is written, then judged below. */
+const StageRecord = z
+  .looseObject({
+    stage: z.unknown().optional(),
+    date: z.unknown().optional(),
+    pdf: z.unknown().optional(),
+    bytes: z.unknown().optional(),
+    source: z.unknown().optional(),
+    sourceBytes: z.unknown().optional(),
+    sourceLost: z.unknown().optional(),
+  })
+  .catch({});
+const REQUIRED = ["date", "pdf", "bytes"] satisfies readonly (
+  "date" | "pdf" | "bytes"
+)[];
+
+/** A stage the frontmatter declares, with the fields every check below needs. */
+interface Declared {
+  readonly stage: string;
+  readonly date: string;
+  readonly pdf: string;
+  readonly bytes: number;
+}
+
+const STAGES: readonly string[] = ["submitted", "camera-ready", "arxiv"];
 
 /**
  * A YAML date without quotes parses to a `Date`, not a string — js-yaml honours YAML 1.1
  * timestamps. Comparing `Date === "2026-08-29"` is silently false, so every date is
  * normalised before it is compared with one taken from a filename.
  */
-function isoDate(v) {
+function isoDate(v: unknown): string {
   if (v instanceof Date) return v.toISOString().slice(0, 10);
   if (typeof v === "string") return /^\d{4}-\d{2}-\d{2}/.exec(v)?.[0] ?? "";
   return "";
 }
 
 /** Frozen versions on disk, as `{name, date, stage}`. */
-function frozenPdfs(versionsDir) {
-  let names;
+function frozenPdfs(
+  versionsDir: string,
+): { name: string; date: string; stage: string }[] {
+  let names: string[];
   try {
     names = readdirSync(versionsDir);
   } catch {
     return [];
   }
-  const out = [];
+  const out: { name: string; date: string; stage: string }[] = [];
   for (const name of names) {
     if (!name.endsWith(".pdf")) continue;
     // ⚠️ A name carrying `STALE` is a version WITHDRAWN on purpose — one such file records
@@ -80,8 +112,9 @@ function frozenPdfs(versionsDir) {
     if (name.includes("STALE")) continue;
     const m = /^(\d{4}-\d{2}-\d{2})-(.+)\.pdf$/.exec(name);
     if (!m) continue;
-    if (!STAGES.includes(m[2])) continue;
-    out.push({ name, date: m[1], stage: m[2] });
+    const [, date = "", stage = ""] = m;
+    if (!STAGES.includes(stage)) continue;
+    out.push({ name, date, stage });
   }
   return out;
 }
@@ -112,16 +145,18 @@ export default {
             "`versions/{{file}}` is frozen, but no «{{stage}}» stage on {{date}} is declared in `stages` — the artefact ran ahead of the declaration",
         },
       },
-      create(context) {
+      create(context: RuleContext) {
         const dir = dirname(context.filename);
-        let declared = null; // null = there was no frontmatter at all
+        let declared: Declared[] | null = null; // null = there was no frontmatter at all
 
         return {
-          yaml(node) {
-            let data;
+          yaml(node: { readonly value?: string }) {
+            let data: unknown;
             try {
               data = load(node.value ?? "");
             } catch (e) {
+              // js-yaml throws its own `YAMLException`, an `Error`, and nothing else.
+              assert.ok(e instanceof Error);
               context.report({
                 node,
                 messageId: "badYaml",
@@ -129,9 +164,10 @@ export default {
               });
               return;
             }
-            const raw = data?.stages;
+            const { stages: raw } = Frontmatter.parse(data);
             if (raw === undefined) return;
-            if (!Array.isArray(raw)) {
+            const list = StageList.safeParse(raw);
+            if (!list.success) {
               context.report({
                 node,
                 messageId: "notAList",
@@ -140,8 +176,9 @@ export default {
               return;
             }
             declared = [];
-            for (const rec of raw) {
-              const stage = String(rec?.stage ?? "");
+            for (const entry of list.data) {
+              const rec = StageRecord.parse(entry);
+              const stage = String(rec.stage ?? "");
               if (!STAGES.includes(stage)) {
                 context.report({
                   node,
@@ -151,7 +188,7 @@ export default {
                 continue;
               }
               let complete = true;
-              for (const key of ["date", "pdf", "bytes"]) {
+              for (const key of REQUIRED) {
                 if (rec[key] === undefined) {
                   context.report({
                     node,
@@ -207,7 +244,7 @@ export default {
           // ── direction two: bytes owe their declaration ────────────────────────────────
           // 🔴 On `root:exit` rather than inside `yaml`, because the case worth catching is
           // precisely the one with NO frontmatter at all — where the `yaml` visitor never runs.
-          "root:exit"(node) {
+          "root:exit"(node: object) {
             const records = declared ?? [];
             for (const f of frozenPdfs(join(dir, "versions"))) {
               if (records.some((r) => r.stage === f.stage && r.date === f.date))
@@ -273,26 +310,27 @@ export default {
             "stage «{{stage}}» ({{date}}): the source is declared LOST. There is nothing left to match a build against a reviewer's line — if a copy turns up, put it in versions/ and clear the flag",
         },
       },
-      create(context) {
+      create(context: RuleContext) {
         const dir = dirname(context.filename);
         return {
-          yaml(node) {
-            let data;
+          yaml(node: { readonly value?: string }) {
+            let data: unknown;
             try {
               data = load(node.value ?? "");
             } catch {
               return; // `paper/stages` has already reported the unreadable YAML
             }
-            const raw = data?.stages;
-            if (!Array.isArray(raw)) return;
-            for (const rec of raw) {
-              const stage = String(rec?.stage ?? "");
+            const list = StageList.safeParse(Frontmatter.parse(data).stages);
+            if (!list.success) return;
+            for (const entry of list.data) {
+              const rec = StageRecord.parse(entry);
+              const stage = String(rec.stage ?? "");
               if (!STAGES.includes(stage)) continue;
-              const date = isoDate(rec?.date);
+              const date = isoDate(rec.date);
 
               // Acknowledging the loss is a RECORD, not an exemption: the rule keeps speaking,
               // because the state stays defective, just unfixable today.
-              if (rec?.sourceLost === true) {
+              if (rec.sourceLost === true) {
                 context.report({
                   node,
                   messageId: "lostAcknowledged",
@@ -300,7 +338,7 @@ export default {
                 });
                 continue;
               }
-              const src = rec?.source === undefined ? "" : String(rec.source);
+              const src = rec.source === undefined ? "" : String(rec.source);
               if (src === "") {
                 context.report({
                   node,
@@ -319,7 +357,7 @@ export default {
                 continue;
               }
               const got = statSync(abs).size;
-              const want = Number(rec?.sourceBytes);
+              const want = Number(rec.sourceBytes);
               if (Number.isFinite(want) && got !== want)
                 context.report({
                   node,

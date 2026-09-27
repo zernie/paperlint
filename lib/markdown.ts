@@ -32,7 +32,28 @@
 // a bare top-level `import` changed the shape of the failure: no `node_modules` → exit 1
 // → **the blocking `pre` gate in paper-lint stops blocking silently**, because
 // PreToolUse counts only exit code 2 as a block. Measured: `ERR_MODULE_NOT_FOUND`, exit 1.
-let md = null;
+import type MarkdownIt from "markdown-it";
+import type { Token } from "markdown-it";
+
+/** One ATX heading: its level, its text without the hashes, its 0-based line and line offset. */
+export interface Heading {
+  readonly depth: number;
+  readonly text: string;
+  readonly line: number;
+  readonly offset: number;
+}
+
+/** A chunk of the document: the heading it starts with (`null` for the preamble), with and without it. */
+export interface Section {
+  readonly heading: Heading | null;
+  readonly raw: string;
+  readonly body: string;
+}
+
+/** A block tokenizer with markdown-it's shape — the default, or one a test passes. */
+export type Parse = (text: string) => readonly Token[];
+
+let md: MarkdownIt | null = null;
 try {
   const { default: MarkdownIt } = await import("markdown-it");
   md = new MarkdownIt();
@@ -50,7 +71,10 @@ try {
 export const MD_AVAILABLE = () => md !== null;
 
 /** markdown-it's block tokens for `text`, or null when it did not resolve. A test passes its own. */
-const defaultParse = () => (md === null ? null : (text) => md.parse(text, {}));
+const defaultParse = (): Parse | null => {
+  const parser = md;
+  return parser === null ? null : (text) => parser.parse(text, {});
+};
 
 /**
  * The frontmatter is BLANKED with spaces, not cut out: the offsets must stay the
@@ -60,7 +84,7 @@ const defaultParse = () => (md === null ? null : (text) => md.parse(text, {}));
  * sections.
  */
 const FRONTMATTER_RE = /^---[ \t]*\r?\n[\s\S]*?\r?\n---[ \t]*(?=\r?\n|$)/;
-export function blankFrontmatter(text) {
+export function blankFrontmatter(text: string): string {
   const m = FRONTMATTER_RE.exec(text);
   return m ? m[0].replace(/[^\n]/g, " ") + text.slice(m[0].length) : text;
 }
@@ -78,7 +102,7 @@ export function blankFrontmatter(text) {
  * and rejected: gray-matter"). The value here is one fence instead of eight, and the
  * parsing of VALUES is done by `js-yaml` at the caller.
  */
-export function frontmatterBlock(text) {
+export function frontmatterBlock(text: string): string | null {
   const m = FRONTMATTER_RE.exec(text);
   if (!m) return null;
   const inner = m[0]
@@ -96,13 +120,13 @@ export function frontmatterBlock(text) {
  * later shown to the user; cutting — where the text is merely counted. Choose by what
  * the caller does, not by taste.
  */
-export function stripFrontmatter(text) {
+export function stripFrontmatter(text: string): string {
   const m = FRONTMATTER_RE.exec(text);
   return m ? text.slice(m[0].length).replace(/^\r?\n/, "") : text;
 }
 
 /** Line-start offsets — so that `token.map` becomes a position in the source string. */
-function lineStarts(text) {
+function lineStarts(text: string): number[] {
   const out = [0];
   for (let i = 0; i < text.length; i++) if (text[i] === "\n") out.push(i + 1);
   return out;
@@ -121,13 +145,15 @@ function lineStarts(text) {
  * under without a blank line would become a level-2 heading per CommonMark. The former
  * regexps knew only ATX, so this preserves the contract rather than narrowing it.
  */
-export function headings(text, { parse = defaultParse() } = {}) {
+export function headings(
+  text: string,
+  { parse = defaultParse() }: { parse?: Parse | null } = {},
+): Heading[] {
   if (parse === null) return [];
   const toks = parse(blankFrontmatter(text));
   const starts = lineStarts(text);
-  const out = [];
-  for (let i = 0; i < toks.length; i++) {
-    const t = toks[i];
+  const out: Heading[] = [];
+  for (const [i, t] of toks.entries()) {
     if (t.type !== "heading_open" || !t.map) continue;
     if (!t.markup || !t.markup.startsWith("#")) continue; // setext — see the caveat above
     // markdown-it follows `heading_open` with its `inline` token and maps blocks to lines of the
@@ -166,18 +192,22 @@ export function headings(text, { parse = defaultParse() } = {}) {
  * happened (`recordBlock` in `skill-corpus.mjs` returned a single "#" character for all
  * 21 skills).
  */
-export function splitSections(text, { min = 2, max = 6 } = {}) {
+export function splitSections(
+  text: string,
+  { min = 2, max = 6 }: { min?: number; max?: number } = {},
+): Section[] {
   const hs = headings(text).filter((h) => h.depth >= min && h.depth <= max);
-  const out = [];
-  const preEnd = hs.length ? hs[0].offset : text.length;
+  const out: Section[] = [];
+  const [first] = hs;
+  const preEnd = first ? first.offset : text.length;
   out.push({
     heading: null,
     raw: text.slice(0, preEnd),
     body: text.slice(0, preEnd),
   });
-  for (let i = 0; i < hs.length; i++) {
-    const h = hs[i];
-    const end = i + 1 < hs.length ? hs[i + 1].offset : text.length;
+  for (const [i, h] of hs.entries()) {
+    const next = hs[i + 1];
+    const end = next ? next.offset : text.length;
     const nl = text.indexOf("\n", h.offset);
     const bodyStart = nl === -1 || nl + 1 > end ? end : nl + 1;
     out.push({
@@ -221,18 +251,21 @@ export function splitSections(text, { min = 2, max = 6 } = {}) {
  * degradation is acceptable (see the module comment), while a silent fallback to a
  * regex would mean a working degraded version that nobody notices.
  */
-export function fences(text) {
+export function fences(text: string): string[] {
   if (md === null) return [];
-  const out = [];
+  const out: string[] = [];
   for (const t of md.parse(blankFrontmatter(text), {}))
     if (t.type === "fence" || t.type === "code_block") out.push(t.content);
   return out;
 }
 
-export function stripFences(text, { blank = false } = {}) {
+export function stripFences(
+  text: string,
+  { blank = false }: { blank?: boolean } = {},
+): string {
   if (md === null) return text;
   const lines = text.split("\n");
-  const drop = new Set();
+  const drop = new Set<number>();
   for (const t of md.parse(blankFrontmatter(text), {}))
     if ((t.type === "fence" || t.type === "code_block") && t.map)
       for (let i = t.map[0]; i < t.map[1]; i++) drop.add(i);
@@ -249,7 +282,9 @@ export function stripFences(text, { blank = false } = {}) {
  * indistinguishable from "the paper has no sections". A confident zero has already been
  * read as a finding four times in this repo; here it is inexpressible.
  */
-export function requireMarkdown({ from = import.meta.url } = {}) {
+export function requireMarkdown({
+  from = import.meta.url,
+}: { from?: string } = {}): void {
   if (MD_AVAILABLE()) return;
   // 🔴 THE CURE DEPENDS ON WHERE THIS COPY RUNS FROM. Measured 2026-09-19: a Claude Code plugin
   // copy is installed without dependencies (`npm pack` strips `package-lock.json`, and the plugin
@@ -301,23 +336,27 @@ export function requireMarkdown({ from = import.meta.url } = {}) {
  * automatically, by the construction of the parser, and not by a separate line-type
  * check.
  */
-export function paragraphs(text) {
+export function paragraphs(text: string): { line: number; endLine: number }[] {
   if (md === null) return [];
   return md
     .parse(blankFrontmatter(text), {})
-    .filter((t) => t.type === "paragraph_open" && t.map)
-    .map((t) => ({ line: t.map[0], endLine: t.map[1] }));
+    .flatMap((t) =>
+      t.type === "paragraph_open" && t.map
+        ? [{ line: t.map[0], endLine: t.map[1] }]
+        : [],
+    );
 }
 
-export function tables(text) {
+export function tables(
+  text: string,
+): { line: number; endLine: number; rows: string[][] }[] {
   if (md === null) return [];
   const lines = blankFrontmatter(text).split("\n");
-  const out = [];
+  const out: { line: number; endLine: number; rows: string[][] }[] = [];
   for (const t of md.parse(blankFrontmatter(text), {})) {
     if (t.type !== "table_open" || !t.map) continue;
-    const rows = [];
-    for (let i = t.map[0]; i < t.map[1]; i++) {
-      const raw = lines[i];
+    const rows: string[][] = [];
+    for (const raw of lines.slice(t.map[0], t.map[1])) {
       if (/^\s*\|?[\s:|-]+\|?\s*$/.test(raw) && raw.includes("-")) continue; // alignment
       rows.push(
         raw

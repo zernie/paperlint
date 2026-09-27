@@ -60,7 +60,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { runHarnessTest, skip } from "vigiles";
-import { observeAgentCli } from "../../lib/agent-cli-version.mjs";
+import { observeAgentCli } from "#lib/agent-cli-version";
 import { DEFAULT_TIMEZONE } from "../paper-pipeline/scripts/consumer.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));

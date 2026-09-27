@@ -21,7 +21,8 @@
  * a field name followed by `=` — BibTeX's own lexical shape, one lexeme at a time, not a parse:
  * the parser (`@retorquere/bibtex-parser`) is an OPTIONAL peer of this package.
  */
-import { bibRange } from "./paper-typography.mjs";
+import { bibRange } from "./paper-typography.ts";
+import type { RuleContext } from "./rule-context.ts";
 
 /** Entry types that are not references. */
 const NOT_AN_ENTRY = /^@(comment|string|preamble)\b/i;
@@ -43,7 +44,7 @@ export default {
             "`{{key}}` has no doi, url or arXiv id — a reader has nothing to follow. If none exists, keep the exception with `% eslint-disable-next-line bib/reachable-entry -- <why>` above the entry",
         },
       },
-      create(context) {
+      create(context: RuleContext) {
         return {
           "root:exit"() {
             const sc = context.sourceCode;
@@ -55,7 +56,7 @@ export default {
               const entry = bib.body.slice(s, starts[i + 1] ?? bib.body.length);
               if (NOT_AN_ENTRY.test(entry)) return;
               if (HAS_LINK.test(entry) || HAS_ARXIV.test(entry)) return;
-              const head = entry.split("\n")[0];
+              const [head = ""] = entry.split("\n");
               const key = /\{\s*([^,\s]+)/.exec(head)?.[1] ?? "?";
               const from = bib.bodyStart + s;
               context.report({

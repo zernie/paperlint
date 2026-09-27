@@ -26,6 +26,7 @@ import { fileURLToPath } from "node:url";
 import yaml from "js-yaml";
 import ts from "typescript";
 import { test } from "vitest";
+import { z } from "zod";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const CONFIG = JSON.parse(readFileSync(join(ROOT, ".c8rc.json"), "utf8")) as {
@@ -59,6 +60,35 @@ export function runtimeStatements(fileName: string, source: string): string[] {
 }
 
 /** Every relative module specifier a source imports, statically or with `import("…")`. */
+/**
+ * The package's subpath imports (`#lib/*`, `#eslint-rules/*`), each as its prefix and the source
+ * file pattern its `paperlint-source` condition names — so an import written `#lib/x` is followed
+ * to `lib/x.ts` like a relative one, instead of being skipped as a bare package name.
+ */
+const SUBPATHS = Object.entries(
+  z
+    .object({
+      imports: z.record(
+        z.string().endsWith("/*"),
+        z.object({ "paperlint-source": z.string() }),
+      ),
+    })
+    .parse(JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")))
+    .imports,
+).map(([key, t]) => ({
+  prefix: key.slice(0, -"*".length),
+  target: t["paperlint-source"],
+}));
+
+/** Where a specifier points inside the repository: a relative path, or a subpath import's source. */
+function resolvedSpecifier(fileName: string, spec: string): string[] {
+  if (spec.startsWith(".")) return [resolve(dirname(fileName), spec)];
+  return SUBPATHS.filter(({ prefix }) => spec.startsWith(prefix)).map(
+    ({ prefix, target }) =>
+      resolve(ROOT, target.replace("*", spec.slice(prefix.length))),
+  );
+}
+
 export function importedPaths(fileName: string, source: string): string[] {
   const sf = ts.createSourceFile(fileName, source, ts.ScriptTarget.Latest);
   const found: string[] = [];
@@ -69,8 +99,8 @@ export function importedPaths(fileName: string, source: string): string[] {
           node.expression.kind === ts.SyntaxKind.ImportKeyword
         ? node.arguments[0]
         : undefined;
-    if (spec && ts.isStringLiteral(spec) && spec.text.startsWith("."))
-      found.push(resolve(dirname(fileName), spec.text));
+    if (spec && ts.isStringLiteral(spec))
+      found.push(...resolvedSpecifier(fileName, spec.text));
     ts.forEachChild(node, visit);
   };
   visit(sf);
@@ -240,7 +270,7 @@ test("the floor is 100 on all four measures, and the script that checks it canno
   // added here would bypass every threshold and the pinned exclude list below.
   assert.equal(
     pkg.scripts["coverage"],
-    'NODE_OPTIONS="--import=./test/coverage-src.ts $NODE_OPTIONS" c8 --check-coverage npm test --',
+    'NODE_OPTIONS="--conditions=paperlint-source --import=./test/coverage-src.ts $NODE_OPTIONS" c8 --check-coverage npm test --',
   );
 });
 
@@ -388,10 +418,11 @@ test("the exclude list is exactly the justified set", () => {
     "src/ports/*.ts",
     "src/domain/page-layout.ts",
     "src/domain/paths.ts",
+    "eslint-rules/rule-context.ts",
   ]);
   assert.deepEqual(CONFIG.evalOnly, [
     "lib/skill-eval-kit.mjs",
-    "lib/skill-eval-fixture.mjs",
+    "lib/skill-eval-fixture.ts",
     "lib/trigger-ledger.mjs",
   ]);
 });

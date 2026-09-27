@@ -39,28 +39,42 @@ export const CHARACTERIZED_CLI = "2.1.227";
 /** What `claude --version` prints: `2.1.273 (Claude Code)`. */
 const VERSION_IN = /\b(\d+\.\d+\.\d+)\b/;
 
-/**
- * @typedef {object} CliObservation
- * @property {boolean} present  the binary answered `--version` with status 0
- * @property {string}  raw      the full line it printed, trimmed
- * @property {string}  version  the dotted version parsed out of it
- * @property {string}  characterized  the version the assertions were written against
- * @property {boolean} drifted  observed and characterized differ
- * @property {string}  note     one line naming BOTH numbers, for the report and for failures
- */
+/** What one `--version` probe of the agent CLI observed. */
+export interface CliObservation {
+  /** The binary answered `--version` with status 0. */
+  present: boolean;
+  /** The full line it printed, trimmed. */
+  raw: string;
+  /** The dotted version parsed out of it. */
+  version: string;
+  /** The version the assertions were written against. */
+  characterized: string;
+  /** Observed and characterized differ. */
+  drifted: boolean;
+  /** One line naming BOTH numbers, for the report and for failures. */
+  note: string;
+}
 
-/**
- * @param {object} deps
- * @param {Function} deps.spawnSync  injected, so every case below is stageable
- * @param {string}  [deps.program]
- * @param {string}  [deps.characterized]
- * @returns {CliObservation}
- */
+/** The one process call the probe makes — injected, so every case is stageable. */
+export type SpawnVersion = (
+  program: string,
+  args: readonly string[],
+  options: { encoding: "utf8" },
+) => {
+  readonly status: number | null;
+  readonly stdout?: string | null;
+  readonly stderr?: string | null;
+};
+
 export function observeAgentCli({
   spawnSync,
   program = "claude",
   characterized = CHARACTERIZED_CLI,
-}) {
+}: {
+  spawnSync: SpawnVersion;
+  program?: string;
+  characterized?: string;
+}): CliObservation {
   // 🔴 `encoding: "utf8"` IS THE FIX. With `stdio: "ignore"` — the shape this replaces — the
   // child's output goes nowhere and `probe.stdout` comes back null, so everything downstream
   // would be describing a string that was never read.

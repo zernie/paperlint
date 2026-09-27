@@ -82,7 +82,7 @@ import {
   DEFAULT_PAPERS_ROOT,
   PAPERS_DIR_FIELD,
   CONFIG_FILE,
-} from "../lib/paper-config.mjs";
+} from "../lib/paper-config.ts";
 export { DEFAULT_PAPERS_ROOT };
 
 /**
@@ -98,7 +98,10 @@ export { DEFAULT_PAPERS_ROOT };
  *          globs, which ESLint interprets relative to the config, and an absolute path there
  *          would change their meaning.
  */
-export function papersRoot(settings, baseDir = process.cwd()) {
+export function papersRoot(
+  settings: Readonly<Record<string, unknown>> | null | undefined,
+  baseDir: string = process.cwd(),
+): string {
   const declared = settings?.[PAPERS_DIR_FIELD];
   // 🔴 `declared === undefined`, NOT `declared ?? DEFAULT`. The two differ on exactly one
   // input — `"papersDir": null` — and the difference is the whole point: `??` reads an explicit
@@ -136,7 +139,7 @@ export function papersRoot(settings, baseDir = process.cwd()) {
  * with the rule, in the same package, rather than as a line every consumer has to add by hand
  * to keep up. A hand-maintained list of paths is the thing that rots, and rots silently.
  */
-export function paperFiles(root) {
+export function paperFiles(root: string) {
   return {
     /** Markdown drafts — the two names a paper's prose is allowed to have. */
     md: [`${root}/*/paper.md`, `${root}/*/draft.md`],

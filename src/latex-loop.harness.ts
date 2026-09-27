@@ -8,7 +8,7 @@
  * The decision is pure, so none of this needs TeX. The real-pdflatex half lives in
  * `test/e2e/build.ts`.
  */
-import { createChecker } from "../lib/check.mjs";
+import { createChecker } from "../lib/check.ts";
 import type {
   BibInput,
   Hashes,

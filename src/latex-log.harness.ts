@@ -5,7 +5,7 @@
  * memory: the two error spellings `-file-line-error` produces, the missing-package form, and a
  * marker that TeX broke at column 79.
  */
-import { createChecker } from "../lib/check.mjs";
+import { createChecker } from "../lib/check.ts";
 import type { LogMarker } from "./latex-log.ts";
 
 const {

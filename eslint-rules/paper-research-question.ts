@@ -35,6 +35,23 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { load } from "js-yaml";
+import { z } from "zod";
+import type { RuleContext } from "./rule-context.ts";
+
+/**
+ * The two scorecard fields this rule reads, parsed rather than trusted: a field of the wrong shape
+ * reads as absent, the way `data?.stages` on a string or a number always did.
+ */
+const Scorecard = z
+  .looseObject({
+    stages: z.array(z.unknown()).catch([]),
+    researchQuestion: z.string().catch(""),
+  })
+  .catch({ stages: [], researchQuestion: "" });
+const StageEntry = z.looseObject({ stage: z.unknown().optional() }).catch({});
+const RuleOptions = z
+  .object({ statusFile: z.string().default("PIPELINE-STATUS.md") })
+  .default({ statusFile: "PIPELINE-STATUS.md" });
 
 /**
  * 🔴 THE REGEX IS GONE, AND THE REASON IS NOT "regexes are bad" — IT IS THAT IT ANSWERED THE
@@ -76,18 +93,21 @@ import { load } from "js-yaml";
  */
 
 /** Whitespace is the only thing normalised: a sentence wrapped across lines is the same sentence. */
-const flatten = (t) => t.replace(/\s+/g, " ").trim().toLowerCase();
+const flatten = (t: string) => t.replace(/\s+/g, " ").trim().toLowerCase();
 
 /**
  * Both facts come out of ONE parse of the scorecard's front matter: the stages (has this paper
  * shipped?) and the declared question. Reading them separately would invite the two to be taken
  * from different revisions of the same file.
  */
-function scorecard(dir, statusName) {
+function scorecard(
+  dir: string,
+  statusName: string,
+): { stages: unknown[]; question: string } {
   const p = join(dir, statusName);
   const none = { stages: [], question: "" };
   if (!existsSync(p)) return none;
-  let text;
+  let text: string;
   try {
     text = readFileSync(p, "utf-8");
   } catch {
@@ -95,18 +115,16 @@ function scorecard(dir, statusName) {
   }
   const m = /^---\n([\s\S]*?)\n---/.exec(text);
   if (!m) return none;
-  let data;
+  const [, front = ""] = m;
+  let data: unknown;
   try {
-    data = load(m[1]);
+    data = load(front);
   } catch {
     return none; // the unreadable YAML is already reported by `paper/stages`, on its own file
   }
-  const raw = data?.stages;
-  const stages = Array.isArray(raw)
-    ? raw.map((r) => r?.stage).filter(Boolean)
-    : [];
-  const q = data?.researchQuestion;
-  return { stages, question: typeof q === "string" ? q : "" };
+  const { stages: raw, researchQuestion: question } = Scorecard.parse(data);
+  const stages = raw.map((r) => StageEntry.parse(r).stage).filter(Boolean);
+  return { stages, question };
 }
 
 export default {
@@ -137,14 +155,15 @@ export default {
             "the scorecard declares a research question the paper does not contain. Looked for «{{needle}}» with whitespace collapsed, and the source has no such run of text. Either the paper dropped it or the declaration drifted from what was written — and which of the two it is, only you know",
         },
       },
-      create(context) {
-        const statusName =
-          context.options?.[0]?.statusFile ?? "PIPELINE-STATUS.md";
+      create(context: RuleContext) {
+        const { statusFile: statusName } = RuleOptions.parse(
+          context.options[0],
+        );
         return {
           // `root:exit` exists for both markdown and the `tex/latex` language — the same place
           // `paper/typography` lives, and for the same reason: a paper in this corpus can be
           // either.
-          "root:exit"(node) {
+          "root:exit"(node: object) {
             const raw = context.sourceCode.raw ?? context.sourceCode.text;
             if (typeof raw !== "string") return;
             const { stages, question } = scorecard(

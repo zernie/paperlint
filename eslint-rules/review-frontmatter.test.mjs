@@ -5,8 +5,8 @@
 import { describe, expect, it } from "vitest";
 import { ESLint } from "eslint";
 import markdown from "@eslint/markdown";
-import review, { errorsOf } from "./review-frontmatter.mjs";
-import sibling from "./sibling-frontmatter.mjs";
+import review, { errorsOf } from "./review-frontmatter.ts";
+import sibling from "./sibling-frontmatter.ts";
 
 async function lint(text) {
   const eslint = new ESLint({

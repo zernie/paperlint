@@ -65,7 +65,7 @@ import {
   headings as mdHeadings,
   splitSections,
   requireMarkdown,
-} from "../../../lib/markdown.mjs";
+} from "#lib/markdown";
 
 // Markup is parsed with a parser (`CLAUDE.md`, 2026-08-11). We fail rather than degrade: without
 // the parser NOT A SINGLE section would be found in the paper, and the check "every section with a

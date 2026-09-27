@@ -45,10 +45,7 @@
  */
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join, extname } from "node:path";
-import {
-  headings as mdHeadings,
-  requireMarkdown,
-} from "../../../lib/markdown.mjs";
+import { headings as mdHeadings, requireMarkdown } from "#lib/markdown";
 import { isMain } from "../../paper-pipeline/scripts/consumer.mjs";
 
 const DBLP = "https://dblp.org/search/publ/api";

@@ -25,7 +25,7 @@
 import { readdirSync, existsSync } from "node:fs";
 import { join, relative, basename, isAbsolute, sep } from "node:path";
 import type { StructureConfig, StructureFinding } from "./types.ts";
-import { CONFIG_FILE } from "../lib/paper-config.mjs";
+import { CONFIG_FILE } from "#lib/paper-config";
 
 /** The requirements after the consumer's config is laid over the defaults. */
 type Rules = Required<StructureConfig>;

@@ -20,7 +20,7 @@
 import assert from "node:assert/strict";
 import { ESLint } from "eslint";
 import { recordCheck } from "vigiles";
-import localRules from "./temp-root-realpath.mjs";
+import localRules from "./temp-root-realpath.ts";
 
 const eslint = new ESLint({
   overrideConfigFile: true,

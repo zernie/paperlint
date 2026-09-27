@@ -19,7 +19,7 @@ import {
 import { tmpdir } from "node:os";
 import { basename, delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createChecker } from "../lib/check.mjs";
+import { createChecker } from "../lib/check.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const E = await import(join(HERE, "build-engine.ts"));

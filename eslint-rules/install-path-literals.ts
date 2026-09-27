@@ -22,6 +22,8 @@
  * The parser can: this rule sees nodes, and it is pointed only at skills.
  */
 
+import type { RuleContext } from "./rule-context.ts";
+
 // Each entry is a prefix that only makes sense in ONE install channel.
 const CHANNEL_PREFIXES = [
   ".claude/skills/", // the consumer symlinks the package's skills to here
@@ -31,7 +33,7 @@ const CHANNEL_PREFIXES = [
 ];
 
 /** The first channel prefix appearing in `s`, or null. Plain substring: a path IS a string. */
-function channelPrefixIn(s) {
+function channelPrefixIn(s: unknown): string | null {
   if (typeof s !== "string") return null;
   for (const p of CHANNEL_PREFIXES) if (s.includes(p)) return p;
   return null;
@@ -42,7 +44,7 @@ function channelPrefixIn(s) {
 // that never existed (#67) and read fine for a week: the harness now requires it on disk.
 const PORT = "skills/paper-pipeline/scripts/consumer.mjs";
 
-const MESSAGES = {
+const MESSAGES: Readonly<Record<string, string>> = {
   installPath:
     "This names a file by where it is INSTALLED ('{{prefix}}'), so it resolves in one " +
     "delivery channel and does not exist in another. Rule 10: every answer to *where* comes " +
@@ -61,8 +63,8 @@ const mdInstallPath = {
     schema: [],
     messages: MESSAGES,
   },
-  create(context) {
-    const check = (node) => {
+  create(context: RuleContext) {
+    const check = (node: { readonly value?: unknown }) => {
       const prefix = channelPrefixIn(node.value);
       if (prefix)
         context.report({ node, messageId: "installPath", data: { prefix } });
@@ -84,17 +86,22 @@ const jsInstallPath = {
     schema: [],
     messages: MESSAGES,
   },
-  create(context) {
-    const report = (node, prefix) =>
+  create(context: RuleContext) {
+    const report = (node: object, prefix: string) =>
       context.report({ node, messageId: "installPath", data: { prefix } });
     return {
-      Literal(node) {
+      Literal(node: { readonly value: unknown }) {
         const prefix = channelPrefixIn(node.value);
         if (prefix) report(node, prefix);
       },
       // A template literal's static parts are just as much a path as a plain string; its
       // interpolations are not our business, which is why the quasis are read one by one.
-      TemplateElement(node) {
+      TemplateElement(node: {
+        readonly value?: {
+          readonly cooked?: string | null;
+          readonly raw: string;
+        };
+      }) {
         const prefix = channelPrefixIn(node.value?.cooked ?? node.value?.raw);
         if (prefix) report(node, prefix);
       },

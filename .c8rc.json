@@ -3,7 +3,7 @@
     "Coverage of `npm test` (vitest + every vigiles harness). c8 reads NODE_V8_COVERAGE, which every",
     "child process inherits, so the harnesses' spawned CLIs are measured too; `all` counts files no",
     "test ever loaded as 0% instead of leaving them out. The run preloads test/coverage-src.ts,",
-    "which resolves every `dist/*.js` import to its `src/*.ts`, so each module is measured once.",
+    "which resolves every `dist/*.js` import to its source `.ts`, so each module is measured once.",
     "A process that loads `dist/` directly anyway (a child spawned without NODE_OPTIONS) is NOT",
     "counted: `excludeAfterRemap: false` drops `dist/**` before source maps would turn it into a",
     "second, column-shifted copy of the `src/` file whose unrun functions read as uncovered.",
@@ -46,8 +46,9 @@
     "src/ports/*.ts",
     "src/domain/page-layout.ts",
     "src/domain/paths.ts",
+    "eslint-rules/rule-context.ts",
     "lib/skill-eval-kit.mjs",
-    "lib/skill-eval-fixture.mjs",
+    "lib/skill-eval-fixture.ts",
     "lib/trigger-ledger.mjs",
     "skills/**/repro/**",
     "skills/**/references/**",
@@ -66,11 +67,12 @@
     "src/types.ts",
     "src/ports/*.ts",
     "src/domain/page-layout.ts",
-    "src/domain/paths.ts"
+    "src/domain/paths.ts",
+    "eslint-rules/rule-context.ts"
   ],
   "evalOnly": [
     "lib/skill-eval-kit.mjs",
-    "lib/skill-eval-fixture.mjs",
+    "lib/skill-eval-fixture.ts",
     "lib/trigger-ledger.mjs"
   ]
 }

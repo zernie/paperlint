@@ -25,7 +25,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
-import { createChecker } from "../../lib/check.mjs";
+import { createChecker } from "../../lib/check.ts";
 import type { ScriptResult } from "../../test/support.ts";
 
 /** The facts file, as far as these checks read it. */

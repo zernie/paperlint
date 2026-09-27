@@ -17,7 +17,7 @@
  * not throw" as success; an exported `tests` object is run by nothing.
  */
 import assert from "node:assert/strict";
-import { PAPERS_DIR_FIELD } from "../lib/paper-config.mjs";
+import { PAPERS_DIR_FIELD } from "../lib/paper-config.ts";
 import {
   mkdirSync,
   mkdtempSync,
@@ -31,7 +31,7 @@ import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { DEFAULT_PAPERS_ROOT, paperFiles, papersRoot } from "./papers.mjs";
+import { DEFAULT_PAPERS_ROOT, paperFiles, papersRoot } from "./papers.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");

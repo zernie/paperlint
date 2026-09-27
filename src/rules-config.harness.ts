@@ -3,7 +3,7 @@
  * paperlint ships. The end-to-end path (a project's paperlint.json → `paperlint lint`) is in `cli.harness.mjs`;
  * this pins the parser's output shape and each refusal.
  */
-import { createChecker } from "../lib/check.mjs";
+import { createChecker } from "../lib/check.ts";
 
 const { parseRuleBlocks, shippedRuleIds, unknownKeys } =
   await import("./rules-config.ts");

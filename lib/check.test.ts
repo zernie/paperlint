@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import { createChecker, failureMessage, renderDetail } from "./check.mjs";
+import { createChecker, failureMessage, renderDetail } from "./check.ts";
 
 test("renderDetail: a string verbatim, nothing for empty, a value inspected, a thunk called", () => {
   assert.deepEqual(

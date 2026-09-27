@@ -9,7 +9,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-// @ts-expect-error — markdown-it ships no types in this repository
 import MarkdownIt from "markdown-it";
 
 interface Token {

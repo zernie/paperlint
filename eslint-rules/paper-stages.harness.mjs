@@ -15,8 +15,8 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Linter } from "eslint";
 import markdown from "@eslint/markdown";
-import stages from "./paper-stages.mjs";
-import { createChecker } from "../lib/check.mjs";
+import stages from "./paper-stages.ts";
+import { createChecker } from "../lib/check.ts";
 
 const FIX = join(
   dirname(fileURLToPath(import.meta.url)),
