@@ -113,6 +113,52 @@ test(".bib: a key the text spells with spaces has no line; a missing title or ye
   );
 });
 
+test(".bib from a parser that returns no fields, or list and number fields: joined and printed, not dropped", async () => {
+  const load = async () => ({
+    parse: () => ({
+      entries: [
+        { key: "bare" },
+        {
+          key: "odd",
+          fields: {
+            title: ["Split", "Title"],
+            year: 2021,
+            note: null,
+            author: [{ firstName: "Ada", lastName: "Lovelace" }],
+          },
+        },
+      ],
+    }),
+  });
+  const [bare, odd] = await parseBib("@misc{bare,}\n@misc{odd,}\n", { load });
+  assert.deepEqual(
+    [
+      bare,
+      { title: odd.title, year: odd.year, authors: odd.authors, raw: odd.raw },
+    ],
+    [
+      {
+        n: 1,
+        line: 1,
+        key: "bare",
+        raw: "",
+        authors: [],
+        truncated: false,
+        title: null,
+        year: null,
+        venue_text: "",
+        doi_field: null,
+      },
+      {
+        title: "Split Title",
+        year: "2021",
+        authors: ["Ada Lovelace"],
+        raw: "Ada Lovelace Split Title 2021",
+      },
+    ],
+  );
+});
+
 test("identifiers: a declared DOI field comes first; an entry without text fields has none", () => {
   const ids = extractIds({
     doi_field: "10.1111/field",

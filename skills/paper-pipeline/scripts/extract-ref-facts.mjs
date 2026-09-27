@@ -254,10 +254,13 @@ const joinName = (a) =>
  * the same, and "the bibliography was not checked" reads as "the bibliography is fine". That is why
  * the message names the command, not the fact.
  */
-export async function parseBib(text) {
+export async function parseBib(
+  text,
+  { load = () => import("@retorquere/bibtex-parser") } = {},
+) {
   let parse;
   try {
-    ({ parse } = await import("@retorquere/bibtex-parser"));
+    ({ parse } = await load());
   } catch (e) {
     if (e?.code !== "ERR_MODULE_NOT_FOUND") throw e;
     throw new Error(
@@ -280,7 +283,7 @@ export async function parseBib(text) {
     return i === -1 ? 0 : i + 1;
   };
   return res.entries.map((e, i) => {
-    const f = e.fields;
+    const f = e.fields ?? {};
     const names = Array.isArray(f.author) ? f.author : [];
     // `and others` is BibTeX's `et al.`. The parser returns it as an author with no first name.
     const isOthers = (a) => !a.firstName && /^others$/i.test(a.lastName ?? "");
@@ -289,10 +292,17 @@ export async function parseBib(text) {
       .filter((a) => !isOthers(a))
       .map(joinName)
       .filter(Boolean);
-    // Every field read below is a plain string in the parser's output (probed: `title` and
-    // `note` too; only list fields such as `keywords` come back as arrays, and none is read), so
-    // an absent field is the only other case.
-    const str = (v) => v ?? "";
+    // A field is a string in today's parser output (list fields such as `keywords` are arrays,
+    // and none of those is read); an array or a number from another parser version is joined or
+    // printed rather than dropped.
+    const str = (v) =>
+      Array.isArray(v)
+        ? v.join(" ")
+        : typeof v === "string"
+          ? v
+          : v == null
+            ? ""
+            : String(v);
     const venueText = [f.booktitle, f.journal, f.note, f.howpublished]
       .map(str)
       .filter(Boolean)
