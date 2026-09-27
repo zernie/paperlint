@@ -5,7 +5,15 @@
  */
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import { judge, main, tally, type Suppressed } from "./layer-legacy-frozen.mjs";
+import {
+  checkFrozen,
+  FROZEN_FILE,
+  judge,
+  main,
+  tally,
+  type Suppressed,
+} from "./layer-legacy-frozen.mjs";
+import { useTempDir, writeTree } from "../test/support.mjs";
 
 const IO = "legacy I/O, moves behind a port in #76";
 const LAYER = "legacy layer, moves behind a port in #76";
@@ -152,4 +160,18 @@ test("main: problems are listed and fail; a clean count passes", async () => {
       },
     ],
   );
+});
+
+test("checkFrozen on this repository: nothing new, nothing grown — and on a tree with no src/, ESLint refuses loudly", async () => {
+  const root = useTempDir("layer-frozen-");
+  writeTree(root, {
+    [FROZEN_FILE]: JSON.stringify({ files: {} }),
+    "eslint.config.mjs": "export default [];\n",
+  });
+  const here = await checkFrozen();
+  await assert.rejects(checkFrozen(root), {
+    message: "No files matching 'src/**/*.ts' were found.",
+  });
+  assert.deepEqual(here.problems, []);
+  assert.deepEqual(here.counts, here.frozen);
 });
