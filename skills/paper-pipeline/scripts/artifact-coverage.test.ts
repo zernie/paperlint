@@ -15,7 +15,7 @@ const SCRIPT = join(
   "artifact-coverage.mjs",
 );
 const root = useTempDir("artifact-coverage-");
-const run = (...args) => runNode(SCRIPT, args);
+const run = (...args: string[]) => runNode(SCRIPT, args);
 
 test("no argument prints the usage; a paper with no markdown source is a named skip", () => {
   assert.deepEqual(run(), {

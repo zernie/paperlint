@@ -9,7 +9,12 @@ import { join } from "node:path";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "vitest";
-import { runNode, useTempDir, writeTree } from "../../../test/support.ts";
+import {
+  parseJson,
+  runNode,
+  useTempDir,
+  writeTree,
+} from "../../../test/support.ts";
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "bib-authors.mjs");
 const root = useTempDir("bib-authors-cli-");
@@ -19,7 +24,12 @@ const DBLP_ANSWERS = {
   "Swapped Order": [["Ada Lovelace", "Alan Turing"]],
   "All Good": [["Ada Lovelace"]],
 };
-const bib = (key, author, title, venue = "booktitle = {Proc. X}") =>
+const bib = (
+  key: string,
+  author: string,
+  title: string,
+  venue = "booktitle = {Proc. X}",
+) =>
   `@inproceedings{${key}, author = {${author}}, title = {${title}}, ${venue}}\n`;
 
 writeTree(root, {
@@ -54,7 +64,7 @@ writeTree(root, {
   "empty/.keep": "",
 });
 
-const run = (...args) => {
+const run = (...args: string[]) => {
   const r = runNode(SCRIPT, args, {
     nodeArgs: ["--import", join(root, "dblp.mjs")],
   });
@@ -126,7 +136,7 @@ test("a paper directory: the canonical paper.bib is read, and each difference is
 test("two .tex files and no paper.tex: the first by name, said out loud; its filecontents is read", () => {
   const r = run(join(root, "twotex"), "--json");
   assert.deepEqual(
-    { status: r.status, stderr: r.stderr, report: JSON.parse(r.stdout) },
+    { status: r.status, stderr: r.stderr, report: parseJson(r.stdout) },
     {
       status: 0,
       stderr:

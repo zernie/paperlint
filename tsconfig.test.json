@@ -12,6 +12,8 @@
     "scripts/**/*.ts",
     "test/**/*.ts",
     "lib/**/*.test.ts",
+    "hooks/**/*.test.ts",
+    "bin/**/*.test.ts",
     "skills/**/*.test.ts",
     "fixtures/**/*.ts",
     "skills/**/fixtures/**/*.ts"

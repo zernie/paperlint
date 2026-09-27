@@ -18,7 +18,7 @@ const GT = String.fromCharCode(62);
 const P = "papers/alpha/paper.md";
 
 /** The guard's exit code for one Bash command: 2 denies, 0 lets it through. */
-const guard = (command) =>
+const guard = (command: string): number =>
   runShippedHook("paper-edit-guard", onBash(command), dir).exitCode;
 
 test("a `>` inside quotes, after an escaped quote, or escaped itself is not a redirection", () => {

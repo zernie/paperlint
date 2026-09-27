@@ -15,7 +15,7 @@ const SCRIPT = join(
   "generated-code.mjs",
 );
 const root = useTempDir("generated-code-");
-const run = (...args) => runNode(SCRIPT, args);
+const run = (...args: string[]) => runNode(SCRIPT, args);
 
 test("no argument prints the usage; a directory that does not exist scanned nothing, and says so", () => {
   assert.deepEqual(run(), {
@@ -41,7 +41,7 @@ test("repro/: a dangling link is passed over; skipped trees are named, more than
   const dir = writeTree(join(root, "paper"), {
     ...deep,
     "repro/.cache/x.py": "",
-    // eslint-disable-next-line port/js-install-path -- a fixture directory the scan must skip, not an install location
+    // A fixture directory the scan must skip, not an install location.
     "repro/node_modules/x.js": "",
     "repro/__pycache__/x.py": "",
     // Draws randomness unseeded: a NO_SEED finding, which the reasonless row below waves through.

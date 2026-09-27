@@ -9,7 +9,23 @@ import { readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "vitest";
-import { runNode, useTempDir, writeTree } from "../../../test/support.ts";
+import { z } from "zod";
+import {
+  runNode,
+  useTempDir,
+  writeTree,
+  type ScriptResult,
+} from "../../../test/support.ts";
+
+/** The verdicts `verify-cites --json`… prints: one per citation, with the fields these tests read. */
+const Verdicts = z.array(
+  z.looseObject({
+    id: z.unknown(),
+    verdict: z.unknown(),
+    flags: z.array(z.unknown()).nullish(),
+  }),
+);
+const Cache = z.record(z.string(), z.unknown());
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const root = useTempDir("verify-cites-cli-");
@@ -48,10 +64,15 @@ writeTree(root, {
     "  return new Response(null, { status: 404 });\n};\n",
   "consumer/paperlint.json": JSON.stringify({ contactEmail: "me@example.org" }),
 });
-const offline = (args, opts = {}) =>
-  runNode(SCRIPT, [...args, "--offline"], { env, ...opts });
-const parsed = (r) => ({ ...r, stdout: JSON.parse(r.stdout) });
-const SUMMARY_PASS = (n, t, u, flagged) =>
+const offline = (
+  args: readonly string[],
+  opts: { input?: string } = {},
+): ScriptResult => runNode(SCRIPT, [...args, "--offline"], { env, ...opts });
+const parsed = (r: ScriptResult) => ({
+  ...r,
+  stdout: Verdicts.parse(JSON.parse(r.stdout)),
+});
+const SUMMARY_PASS = (n: number, t: number, u: number, flagged: number) =>
   `\nverify-cites: ${n} citation(s) — ${t} true, 0 false (fabrication), ${u} unresolvable` +
   (flagged ? `, ${flagged} with hygiene flag(s)` : "") +
   "\nPASS — no fabrication (unresolvable is advisory)\n";
@@ -118,9 +139,11 @@ test("online, a DOI the authority does not know is FALSE: FAIL, exit 1, and the 
   assert.deepEqual(
     {
       status: r.status,
-      verdicts: JSON.parse(r.stdout).map((x) => x.verdict),
+      verdicts: Verdicts.parse(JSON.parse(r.stdout)).map((x) => x.verdict),
       tail: r.stderr.trim().split("\n").pop(),
-      cached: Object.keys(JSON.parse(readFileSync(CACHE, "utf8"))).sort(),
+      cached: Object.keys(
+        Cache.parse(JSON.parse(readFileSync(CACHE, "utf8"))),
+      ).sort(),
     },
     {
       status: 1,

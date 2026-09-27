@@ -10,7 +10,8 @@ import { runNode, useTempDir, writeTree } from "../../test/support.ts";
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "structure.mjs");
 const root = useTempDir("structure-");
-const words = (n) => Array.from({ length: n }, (_, i) => `w${i}`).join(" ");
+const words = (n: number) =>
+  Array.from({ length: n }, (_, i) => `w${i}`).join(" ");
 
 writeTree(root, {
   // Every row shape: a sub-section before any section, carries notes with a score and a verdict,
@@ -69,7 +70,7 @@ ${words(30)}
   "body-only.md": `## 1 Intro\n${words(8)}\n\n## 2 Rest\n${words(4)}\n\n## 3 Empty\n`,
 });
 
-const run = (...args) => {
+const run = (...args: string[]) => {
   const r = runNode(
     SCRIPT,
     args.map((a) => (a.startsWith("--") ? a : join(root, a))),
