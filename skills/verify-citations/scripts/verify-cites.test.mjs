@@ -30,6 +30,7 @@ import {
   normalizeArxiv,
   normalizeIdentifiers,
   normalizeTitle,
+  titleIdentity,
   isValidCveId,
 } from "./verify-cites.mjs";
 
@@ -737,15 +738,16 @@ console.log("\n[S4] .bib parser edge cases:");
 
 // ── Edges of the pure layer: the defensive arms, each with the input that reaches it ──────────
 
-test("levenshtein and normalizeTitle take a missing string as empty", () => {
+test("levenshtein, normalizeTitle and titleIdentity take a missing string as empty", () => {
   assert.deepEqual(
     [
       levenshtein(null, "ab"),
       levenshtein("abc", undefined),
       levenshtein("", ""),
       normalizeTitle(undefined),
+      titleIdentity(undefined),
     ],
-    [2, 3, 0, ""],
+    [2, 3, 0, "", ""],
   );
 });
 

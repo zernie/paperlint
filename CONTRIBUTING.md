@@ -10,27 +10,10 @@ it is below.
 
 ## How this is tested
 
-Every rule ships with a **harness**: a test that runs the rule twice. Once on a file with a defect
-planted in it, where the rule must find it. Once on a clean file, where the rule must say nothing.
-
-The second run is the one people skip, and it is the one that matters. A rule that is broken and
-finds nothing passes the first kind of test by accident — from outside, "there is nothing wrong
-here" and "this check never ran" look exactly the same.
-
-Three rules for writing the test itself:
-
-1. **Red first.** Run a new test on the code BEFORE the fix and watch it fail at its own
-   assertion. A test that has only ever been green is indistinguishable from one that cannot fail.
-2. **Assert the whole value** — `assert.deepEqual` / `toEqual` on the entire result, not a
-   substring or one field. A substring passes on output that is wrong everywhere else. The
-   exception is prose whose wording is not the subject; say so in a comment.
-3. **Test what the code does, not what its source says.** A test that reads a source file and
-   asserts it contains some text restates the file: rewording turns it red, a real regression
-   stays green. Assert a return value, a run's output and exit code, or what landed on disk.
-
-Say what an assertion guards in a comment directly above it (`// Guards: …`). A harness asserts
-through the shared `lib/check.mjs` (`const check = createChecker()`), which prints the label and
-the detail on failure and counts every call; a new harness does not define its own `check`.
+Unit and integration tests run under vitest beside the module they test; harnesses run under
+vigiles and cover what an agent sees; end-to-end runs install the package and build real PDFs.
+Every test is seen red first, asserts the whole value, and tests what the code does rather than
+what a file says. [`docs/testing.md`](docs/testing.md) says which kind to write and how.
 
 A harness runs in this tree, against this working copy. That is the wrong shape for a defect that
 only exists once somebody else has installed the package — a path written inside a skill, a file
@@ -85,6 +68,7 @@ docs/           evidence that would otherwise bloat CLAUDE.md:
                   incidents.md  what broke, measured
                   install.md  the install contract
                   e2e.md  the end-to-end runs, and when a change owes one
+                  testing.md  which kind of test to write, and the rules for all of them
 ```
 
 Most of the package's rules run on users' papers and are described for users in
@@ -101,6 +85,8 @@ The README links only what a user needs. These are for people changing the packa
   `init` writes, supported package managers, troubleshooting, and why it is shaped this way
 - [`docs/e2e.md`](docs/e2e.md) — the end-to-end runs: what each proves, what they do not cover,
   and when a change owes one
+- [`docs/testing.md`](docs/testing.md) — the kinds of test, which one a change needs, and the rules
+  for every one
 - [`docs/incidents.md`](docs/incidents.md) — what broke, measured
 - [`docs/package-shape-options.md`](docs/package-shape-options.md) — the options for the
   package's shape, and the ranking

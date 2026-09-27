@@ -27,8 +27,10 @@ echo "== python dependencies =="
 # bibtexparser looked like the guilty one.
 pip install -q --only-binary :all: -r "$HERE/checkers-requirements.txt"
 # The checker itself — WITHOUT its dependencies: they are listed in requirements.txt by name, minus
-# the unbuildable `tsv`, which it does not import. The reason is in the header of requirements.txt.
-pip install -q --no-deps aclpubcheck
+# the unbuildable `tsv`, which it does not import. From its GitHub source at a fixed commit, not
+# PyPI — both reasons are in the header of requirements.txt.
+ACLPUBCHECK="aclpubcheck @ git+https://github.com/acl-org/aclpubcheck@237bee3a554f2d2fcda69cd0cf1edf4168e3d339"
+pip install -q --no-deps "$ACLPUBCHECK"
 
 echo "== TeXtidote (a jar, not a pip package) =="
 if [ -f "$JAR" ]; then
@@ -55,10 +57,24 @@ fail=0
 # "numpy.dtype size changed"). That is, the acceptance check that stood here let through exactly
 # the failure it was written for. `import aclpubcheck.formatchecker` pulls in numpy and pandas on
 # lines 15 and 20 of the checker itself and therefore fails honestly.
+# And the entry point, which the PyPI release did not have: `python3 -m aclpubcheck` must answer.
 python3 -c "import aclpubcheck.formatchecker" >/dev/null 2>&1 \
+  && python3 -m aclpubcheck --help >/dev/null 2>&1 \
   && echo "   ✅ aclpubcheck" || { echo "   ❌ aclpubcheck is installed, but does not run"; fail=1; }
-python3 -c "import rebiber" >/dev/null 2>&1 \
-  && echo "   ✅ rebiber" || { echo "   ❌ rebiber does not import"; fail=1; }
+# 🔴 RUN IT, NOT IMPORT IT. rebiber is used as a command, and an import proves neither the entry
+# point, nor that it loads its bundled venue data, nor that it parses a .bib (bibtexparser 2 since
+# 1.4). So it is given the arXiv entry of a paper its data knows (NeurIPS 2017) with --dry-run
+# (nothing is written) and must report that entry CONVERTED to the official record — measured
+# 2026-09-27 on the pinned commit: `converted (official): 1`, no network.
+reb_tmp="$(mktemp -d)"
+printf '@article{vaswani2017attention,\n  title = {Attention Is All You Need},\n  author = {Vaswani, Ashish and Shazeer, Noam and Parmar, Niki and Uszkoreit, Jakob and Jones, Llion and Gomez, Aidan N. and Kaiser, Lukasz and Polosukhin, Illia},\n  journal = {arXiv preprint arXiv:1706.03762},\n  year = {2017}\n}\n' > "$reb_tmp/in.bib"
+reb_out="$(rebiber -i "$reb_tmp/in.bib" --dry-run 2>&1 || true)"
+if grep -q "converted (official): 1" <<<"$reb_out"; then
+  echo "   ✅ rebiber $(rebiber -v 2>/dev/null)"
+else
+  echo "   ❌ rebiber does not convert a known entry"; fail=1
+fi
+rm -rf "$reb_tmp"
 python3 -c "import jinja2" >/dev/null 2>&1 \
   && echo "   ✅ jinja2" || { echo "   ❌ jinja2 does not import"; fail=1; }
 java -jar "$JAR" --version >/dev/null 2>&1 \

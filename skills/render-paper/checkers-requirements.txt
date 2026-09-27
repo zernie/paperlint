@@ -8,25 +8,26 @@
 
 jinja2>=3.0                  # {{macro}} substitution in paper_numbers.py
 
-# 🔴 THIS PIN IS LOAD-BEARING, not cosmetic. aclpubcheck pulls in bibtexparser; the 2.x branch is
-# beta (2.0.0b9) with a different API, and the 1.4.x branch's sdist does not build under
-# setuptools 68+. 1.3.0 has a prebuilt WHEEL (bibtexparser-1.3.0-py3-none-any.whl), so `<2`
-# resolves to it and there's nothing to build. Verified 2026-09-04 in a clean venv: install exits
-# 0, `python -m aclpubcheck.formatchecker --help` runs.
-bibtexparser<2
+# bibtexparser is pulled in by rebiber (below), not by aclpubcheck: aclpubcheck's own code never
+# imports it. rebiber 1.4 moved to bibtexparser 2 (`bibtexparser>=2,<3` in its pyproject), and
+# 2.0.1 is a stable release with a prebuilt wheel. The old pin `bibtexparser<2` existed only
+# for rebiber 1.1.3; it would now make the file unsatisfiable, so it is gone.
 
-# 🔴 aclpubcheck IS INSTALLED SEPARATELY, WITH `--no-deps`, AND IT IS DELIBERATELY NOT LISTED HERE.
-# Measured 2026-09-17: it declares `tsv>=1.2,<2.0`, which has NO PREBUILT WHEEL AT ALL
-# (`pip download --only-binary :all: tsv` → "from versions: none"), and its source does not build
+# 🔴 aclpubcheck IS INSTALLED SEPARATELY, WITH `--no-deps`, BY ensure-checkers.sh, AND IT IS
+# DELIBERATELY NOT LISTED HERE (a requirements file cannot say `--no-deps` for one line).
+# It comes from its GitHub source pinned to a commit, not from PyPI: upstream says to install "from
+# the GitHub repository (DIFFERENT from `pypi`)", and PyPI's 0.2.0 is a snapshot of 2022-10-10. The
+# pin is 237bee3 of 2026-09-11, whose own setup.py pins rebiber to the SAME commit as below —
+# measured 2026-09-27: both resolve together, `pip check` names no rebiber conflict.
+# Why `--no-deps`: it still declares `tsv`, which has NO PREBUILT WHEEL AT ALL
+# (`pip download --only-binary :all: tsv` → "from versions: none"), and whose source does not build
 # under a modern setuptools:
 #     AttributeError: install_layout. Did you mean: 'install_platlib'?
-# That one line alone made installing the WHOLE file fail, and that's why the paper went a month
+# That one line alone once made installing the WHOLE file fail, and that's why a paper went a month
 # without an official format check.
-# Verified, not assumed: `tsv` is imported NOWHERE in aclpubcheck's source (grep for
-# `import tsv|from tsv` — 0 hits), and without it
-# `python3 -m aclpubcheck.formatchecker --help` prints usage and exits zero.
-# So what follows is aclpubcheck's OWN dependencies, taken verbatim from the package's metadata,
-# minus tsv. A list, rather than `aclpubcheck` on one line, so the next unrepresentable dependency
+# Verified, not assumed, on the pinned commit: `tsv` is imported NOWHERE in aclpubcheck's source,
+# and neither is `setuptools`, which it also declares.
+# So what follows is aclpubcheck's OWN dependencies, from its setup.py, minus tsv and setuptools. A list, rather than `aclpubcheck` on one line, so the next unrepresentable dependency
 # reads as a missing line rather than an unverified assumption.
 # 🔴 THE UPPER BOUNDS ARE REMOVED, AND THAT IS A MEASUREMENT, NOT CARELESSNESS. The first edition
 # of this list copied aclpubcheck's bounds verbatim — and turned red on CI, where Python is newer:
@@ -48,8 +49,18 @@ pylatexenc>=2.10
 termcolor>=2.0.1
 tqdm>=4.64.1
 
-rebiber>=1.1.3               # an aclpubcheck dependency AND our own tool
+# 🔴 rebiber FROM ITS GITHUB SOURCE, PINNED TO A COMMIT — NOT FROM PyPI. The upstream README says
+# so itself: "Install from GitHub only. We do not publish or support PyPI (`pip install rebiber` is
+# a 2021 1.1.3 release)." The `rebiber>=1.1.3` that stood here installed exactly that 2021 release
+# (#114). The pin is 1.4.0, commit b917e36 of 2026-09-08 ("Support bibtexparser 2 parsing and
+# writing APIs"); upstream has no 1.4 tag, so a commit is the only fixed name.
+# Measured 2026-09-27 in a clean Python 3.11 venv, under this file's `--only-binary :all:`: installs
+# in 36 s (pip builds it from source with hatchling, the one allowed build), `rebiber -v` runs,
+# and a `--dry-run` over a three-entry .bib leaves the file untouched. It carries 409 MB of venue
+# data. aclpubcheck declares `rebiber>=1.1.3,<2`, which 1.4.0 satisfies.
+rebiber @ git+https://github.com/yuchenlin/rebiber@b917e36ec94084a84025eb06781b5aac96d1cedd
 
-# ⚠️ Call ONLY as `python3 -m aclpubcheck.formatchecker`. The package has no __main__.py, and the
-# form `python3 -m aclpubcheck` fails with "cannot be directly executed" — that's exactly how this
-# step once lived its whole life without ever running.
+# Since the pinned commit the package has a `__main__.py`, so `python3 -m aclpubcheck <pdf>` runs
+# the format checker (measured 2026-09-27 on its example PDF: 10 errors, 0 warnings, exit 0). The
+# PyPI 0.2.0 that stood here had none, and `python3 -m aclpubcheck` failed with "cannot be directly
+# executed"; `python3 -m aclpubcheck.formatchecker` works on both.

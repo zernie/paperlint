@@ -562,6 +562,10 @@ export const measureStep: BuildStep = {
  * authors are the published version's (bib-authors) — and record the verdicts in
  * `_build/references.json` for the offline lint rules (`reference-rules.ts`). OPTIONAL and NEVER
  * FAILING: without network the PDF is still built, and the record says `not-checked`.
+ *
+ * What the services answered is read from and added to `<paper>/repro/references-cache.json`
+ * (`references.ts`, `domain/lookup-cache.ts`), committed with the paper, so only a new or edited
+ * entry is asked, and an unchanged bibliography is checked with no network at all (#107).
  */
 export const referencesStep: BuildStep = {
   name: "references",
@@ -665,9 +669,12 @@ function baseDefaults({
 }
 
 /** Without a checker the record says so — never a pass. The CLI wires the real one. */
-const notWired: CheckReferences = async () => ({
-  kind: "not-checked",
-  why: "no reference checker was wired into this build",
+const notWired: CheckReferences = async (_bib, cache) => ({
+  check: {
+    kind: "not-checked",
+    why: "no reference checker was wired into this build",
+  },
+  cache,
 });
 
 /** banal as the measurer, wired from the build's environment: the one piece of root work left here (#76). */

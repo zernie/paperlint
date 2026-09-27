@@ -28,11 +28,10 @@
  *
  * ⚠️ Discovery credit and a deliberate NON-dependency: this class was found by running
  * `rebiber` (yuchenlin/rebiber), which rewrites bib entries to their DBLP records. We do
- * NOT depend on it here. Two reasons, both practical: its install needs a Python toolchain
- * that fights modern setuptools (bibtexparser wheel fails with `AttributeError:
- * install_layout`; the workaround is vendoring a tarball), and its output REPLACES entries
- * with DBLP's very long official booktitles, which is wrong for a page-limited paper. What
- * we actually needed was the comparison, and that is one HTTPS call with no dependencies.
+ * NOT depend on it here. Re-measured 2026-09-27 on 1.4.0 (GitHub b917e36): it installs cleanly
+ * now but carries 409 MB of venue data, its bundled data still misses entries live DBLP finds,
+ * and what it does is REWRITE an entry — we need the comparison of an author list against the
+ * published record, and that is one HTTPS call with no dependencies.
  *
  * 🔴 The normalisation below is load-bearing, not tidiness. A first cut of this comparison
  * reported 13 mismatches on our bibliography, of which ELEVEN were "Last, First" vs
@@ -279,7 +278,7 @@ export function surnames(authorField) {
 }
 
 // Only called for an entry that has an author (checkAuthors filters on it first).
-const truncated = (authorField) => /\band\s+others\b/i.test(authorField);
+export const truncated = (authorField) => /\band\s+others\b/i.test(authorField);
 
 /** Is the entry claiming a PUBLISHED venue (as opposed to a preprint)? */
 export function claimsPublished(e) {

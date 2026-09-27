@@ -34,6 +34,9 @@ exports[`CVEs: found by count, found by list, not found, NVD down, and a malform
       "id": "CVE-2024-0004",
       "matched_db": null,
       "reason": "all databases unreachable (network/rate-limit) — degraded to unresolvable, never to false",
+      "refused": [
+        "nvd: http 500",
+      ],
       "verdict": "unresolvable",
     },
     {
@@ -62,6 +65,10 @@ exports[`S2 and arXiv unreachable for an arXiv id 1`] = `
     "id": "x",
     "matched_db": null,
     "reason": "all databases unreachable (network/rate-limit) — degraded to unresolvable, never to false",
+    "refused": [
+      "semantic_scholar: http 500",
+      "arxiv: http 500",
+    ],
     "verdict": "unresolvable",
   },
 }
@@ -71,9 +78,6 @@ exports[`a DOI every registry resolves to the claimed paper, and the authority k
 {
   "calls": [
     "https://api.crossref.org/works/10.1%2Fx",
-    "https://api.openalex.org/works/doi:10.1%2Fx",
-    "https://api.semanticscholar.org/graph/v1/paper/DOI%3A10.1%2Fx?fields=title,year",
-    "https://doi.org/api/handles/10.1/x",
   ],
   "result": {
     "id": "v",
@@ -112,9 +116,9 @@ exports[`a title only: every registry's search endpoint, hits and all 1`] = `
   ],
   "result": {
     "id": "t",
-    "matched_db": "crossref",
+    "matched_db": "arxiv",
     "matched_title": "Attention Is All You Need",
-    "reason": "confirmed by crossref — "Attention Is All You Need"",
+    "reason": "confirmed by arxiv — "Attention Is All You Need"",
     "verdict": "true",
   },
 }
@@ -132,6 +136,12 @@ exports[`a title search that cannot reach any registry is unresolvable 1`] = `
     "id": "d",
     "matched_db": null,
     "reason": "all databases unreachable (network/rate-limit) — degraded to unresolvable, never to false",
+    "refused": [
+      "crossref: http 500",
+      "openalex: http 502",
+      "semantic_scholar: timeout",
+      "arxiv: http 503",
+    ],
     "verdict": "unresolvable",
   },
 }
@@ -175,13 +185,16 @@ exports[`an arXiv id: Semantic Scholar by arXiv id, the arXiv API by id_list 1`]
     "https://api.crossref.org/works?query.bibliographic=Attention%20Is%20All%20You%20Need&rows=5",
     "https://api.openalex.org/works?search=Attention%20Is%20All%20You%20Need&per-page=5",
     "https://api.semanticscholar.org/graph/v1/paper/arXiv%3A1706.03762?fields=title,year",
-    "https://export.arxiv.org/api/query?id_list=1706.03762&max_results=1",
   ],
   "result": {
     "id": "a",
     "matched_db": "semantic_scholar",
     "matched_title": "Attention Is All You Need",
     "reason": "confirmed by semantic_scholar — "Attention Is All You Need"",
+    "refused": [
+      "crossref: Error: unrouted request: https://api.crossref.org/works?query.bibliographic=Attention%20Is%20All%20You%20Need&rows=5",
+      "openalex: Error: unrouted request: https://api.openalex.org/works?search=Attention%20Is%20All%20You%20Need&per-page=5",
+    ],
     "verdict": "true",
   },
 }
@@ -199,6 +212,12 @@ exports[`every registry down (429, 503, 403, a thrown error): unresolvable, neve
     "id": "u",
     "matched_db": null,
     "reason": "all databases unreachable (network/rate-limit) — degraded to unresolvable, never to false",
+    "refused": [
+      "crossref: http 429",
+      "openalex: http 503",
+      "semantic_scholar: http 403",
+      "doi_authority: TypeError: fetch failed",
+    ],
     "verdict": "unresolvable",
   },
 }
@@ -226,10 +245,9 @@ exports[`records with fields missing: no title, a subtitle, a year only in \`pub
   ],
   "result": {
     "id": "m",
-    "matched_db": "crossref",
-    "matched_title": "",
-    "reason": "confirmed by crossref",
-    "verdict": "true",
+    "matched_db": null,
+    "reason": "DOI_MISMATCH: identifier resolves via crossref to an UNRELATED paper "" (claimed "Attention Is All You Need") — DOI misdirection",
+    "verdict": "false",
   },
 }
 `;

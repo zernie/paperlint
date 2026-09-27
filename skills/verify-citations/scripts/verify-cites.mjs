@@ -45,8 +45,8 @@
  *         + a summary line on stderr. Exit 1 iff any verdict is `false`.
  */
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { homedir } from "node:os";
 import { dirname, join, extname } from "node:path";
 import { createHash } from "node:crypto";
 import {
@@ -54,11 +54,13 @@ import {
   isMain,
 } from "../../paper-pipeline/scripts/consumer.mjs";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-// Beside this script by default (the skill says so, and `.gitignore` covers it). VERIFY_CITES_CACHE
-// points it elsewhere — how a test keeps the run from writing into the package it is testing.
+// The command line's cache (`paperlint build` passes its own, per paper, and never reads this file).
+// In the user's cache directory, NOT beside this script: installed, this script sits inside
+// node_modules, which `npm ci` wipes. VERIFY_CITES_CACHE points it elsewhere — how a test keeps the
+// run from writing into the home directory.
 const CACHE_PATH =
-  process.env.VERIFY_CITES_CACHE || join(__dirname, ".cite-cache.json");
+  process.env.VERIFY_CITES_CACHE ||
+  join(homedir(), ".cache", "paperlint", "cite-cache.json");
 // 🔴 THE ADDRESS IS THE CONSUMER'S, NOT OURS. Crossref's "polite pool" keys off this `mailto:`:
 // it decides who gets the faster tier and, more to the point, WHOM THEY WARN before blocking.
 // Hard-coded, it pointed at one person for every user of this package — so the warnings would
@@ -686,17 +688,32 @@ function loadCache() {
 }
 function saveCache(cache) {
   try {
+    mkdirSync(dirname(CACHE_PATH), { recursive: true });
     writeFileSync(CACHE_PATH, JSON.stringify(cache, null, 2));
   } catch {
     /* best-effort; a cache write failure must never fail the run */
   }
 }
 
+/**
+ * A title's IDENTITY, for cache keys: case, accents, BibTeX braces and runs of whitespace
+ * normalized, punctuation kept. Not `normalizeTitle`, which drops punctuation so that `Title: Sub`
+ * and `Title - Sub` still COMPARE equal — as a key that would make `C` and `C++` one entry, and
+ * the second would be served the first's answers. A punctuation-only variant costs one extra
+ * lookup instead. The one owner of this rule: DBLP's cache key (the references adapter) uses it too.
+ */
+export function titleIdentity(t) {
+  return (t ?? "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/\p{M}+/gu, "")
+    .replace(/[{}]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function titleHash(t) {
-  return createHash("sha1")
-    .update(normalizeTitle(t))
-    .digest("hex")
-    .slice(0, 16);
+  return createHash("sha1").update(titleIdentity(t)).digest("hex").slice(0, 16);
 }
 function cacheKey(kind, val) {
   return `${kind}:${val}`;
@@ -716,8 +733,20 @@ async function request(url, json, signal) {
   }
   if (res.status === 404) return { ok: true, notFound: true };
   if (!res.ok) return { ok: false, reason: `http ${res.status}` };
-  const data = json ? await res.json() : await res.text();
-  return { ok: true, data };
+  const text = await res.text();
+  if (!json) return { ok: true, data: text };
+  // 🔴 A service that is rate-limiting some clients answers 200 with an HTML page instead of JSON
+  // (DBLP does, #110). That is a refusal, named as one — not a parse error to puzzle over.
+  try {
+    return { ok: true, data: JSON.parse(text) };
+  } catch {
+    return {
+      ok: false,
+      reason: text.trimStart().startsWith("<")
+        ? "answered HTML, not JSON"
+        : "answered something that is not JSON",
+    };
+  }
 }
 
 async function httpGet(url, { json = true } = {}) {
@@ -740,7 +769,7 @@ async function crossrefResolve(citation) {
     const r = await httpGet(
       `https://api.crossref.org/works/${encodeURIComponent(citation.doi)}`,
     );
-    if (!r.ok) return { db, transport: "error" };
+    if (!r.ok) return { db, transport: "error", reason: r.reason };
     if (r.notFound) return { db, transport: "ok", query: "doi", record: null };
     const w = r.data?.message;
     return {
@@ -758,24 +787,22 @@ async function crossrefResolve(citation) {
         : null,
     };
   }
-  if (citation.title) {
-    const url = `https://api.crossref.org/works?query.bibliographic=${encodeURIComponent(
-      citation.title,
-    )}&rows=5`;
-    const r = await httpGet(url);
-    if (!r.ok) return { db, transport: "error" };
-    const items = r.data?.message?.items || [];
-    return {
-      db,
-      transport: "ok",
-      query: "title",
-      records: items.map((w) => ({
-        title: (w.title || [])[0] || "",
-        year: crYear(w),
-      })),
-    };
-  }
-  return null;
+  // Asked only with a DOI or a title (`PAPER_RESOLVERS`), so without a DOI there is a title.
+  const url = `https://api.crossref.org/works?query.bibliographic=${encodeURIComponent(
+    citation.title,
+  )}&rows=5`;
+  const r = await httpGet(url);
+  if (!r.ok) return { db, transport: "error", reason: r.reason };
+  const items = r.data?.message?.items || [];
+  return {
+    db,
+    transport: "ok",
+    query: "title",
+    records: items.map((w) => ({
+      title: (w.title || [])[0] || "",
+      year: crYear(w),
+    })),
+  };
 }
 function crYear(w) {
   return (
@@ -791,7 +818,7 @@ async function openalexResolve(citation) {
     const r = await httpGet(
       `https://api.openalex.org/works/doi:${encodeURIComponent(citation.doi)}`,
     );
-    if (!r.ok) return { db, transport: "error" };
+    if (!r.ok) return { db, transport: "error", reason: r.reason };
     if (r.notFound) return { db, transport: "ok", query: "doi", record: null };
     const w = r.data;
     return {
@@ -803,23 +830,21 @@ async function openalexResolve(citation) {
         : null,
     };
   }
-  if (citation.title) {
-    const r = await httpGet(
-      `https://api.openalex.org/works?search=${encodeURIComponent(citation.title)}&per-page=5`,
-    );
-    if (!r.ok) return { db, transport: "error" };
-    const items = r.data?.results || [];
-    return {
-      db,
-      transport: "ok",
-      query: "title",
-      records: items.map((w) => ({
-        title: w.display_name || "",
-        year: w.publication_year,
-      })),
-    };
-  }
-  return null;
+  // Asked only with a DOI or a title (`PAPER_RESOLVERS`), so without a DOI there is a title.
+  const r = await httpGet(
+    `https://api.openalex.org/works?search=${encodeURIComponent(citation.title)}&per-page=5`,
+  );
+  if (!r.ok) return { db, transport: "error", reason: r.reason };
+  const items = r.data?.results || [];
+  return {
+    db,
+    transport: "ok",
+    query: "title",
+    records: items.map((w) => ({
+      title: w.display_name || "",
+      year: w.publication_year,
+    })),
+  };
 }
 
 const S2 = "https://api.semanticscholar.org/graph/v1/paper";
@@ -836,7 +861,7 @@ async function semanticScholarById(citation) {
   const query = citation.doi ? "doi" : "arxiv";
   const id = citation.doi ? `DOI:${citation.doi}` : `arXiv:${citation.arxiv}`;
   const r = await httpGet(`${S2}/${encodeURIComponent(id)}?fields=title,year`);
-  if (!r.ok) return { db, transport: "error" };
+  if (!r.ok) return { db, transport: "error", reason: r.reason };
   if (r.notFound) return { db, transport: "ok", query, record: null };
   const w = r.data;
   return {
@@ -852,7 +877,7 @@ async function semanticScholarByTitle(title) {
   const r = await httpGet(
     `${S2}/search?query=${encodeURIComponent(title)}&fields=title,year&limit=5`,
   );
-  if (!r.ok) return { db, transport: "error" };
+  if (!r.ok) return { db, transport: "error", reason: r.reason };
   const items = r.data?.data || [];
   return {
     db,
@@ -870,26 +895,24 @@ async function arxivResolve(citation) {
       `https://export.arxiv.org/api/query?id_list=${encodeURIComponent(citation.arxiv)}&max_results=1`,
       { json: false },
     );
-    if (!r.ok) return { db, transport: "error" };
+    if (!r.ok) return { db, transport: "error", reason: r.reason };
     const entry = parseArxivFeed(r.data);
     return { db, transport: "ok", query: "arxiv", record: entry[0] ?? null };
   }
-  if (citation.title && !citation.doi) {
-    const r = await httpGet(
-      `https://export.arxiv.org/api/query?search_query=ti:${encodeURIComponent(
-        '"' + citation.title + '"',
-      )}&max_results=5`,
-      { json: false },
-    );
-    if (!r.ok) return { db, transport: "error" };
-    return {
-      db,
-      transport: "ok",
-      query: "title",
-      records: parseArxivFeed(r.data),
-    };
-  }
-  return null;
+  // Asked only with an arXiv id or a title and no DOI (`PAPER_RESOLVERS`).
+  const r = await httpGet(
+    `https://export.arxiv.org/api/query?search_query=ti:${encodeURIComponent(
+      '"' + citation.title + '"',
+    )}&max_results=5`,
+    { json: false },
+  );
+  if (!r.ok) return { db, transport: "error", reason: r.reason };
+  return {
+    db,
+    transport: "ok",
+    query: "title",
+    records: parseArxivFeed(r.data),
+  };
 }
 export function parseArxivFeed(xml) {
   const out = [];
@@ -923,7 +946,7 @@ async function doiAuthorityCheck(doi) {
   const path = encodeURIComponent(doi.trim()).replace(/%2F/gi, "/");
   const r = await httpGet(`https://doi.org/api/handles/${path}`);
   if (r.notFound) return { transport: "ok", responseCode: 100 }; // 404 = not found
-  if (!r.ok) return { transport: "error" };
+  if (!r.ok) return { transport: "error", reason: r.reason };
   const code = r.data?.responseCode;
   return {
     transport: "ok",
@@ -941,31 +964,190 @@ async function nvdCheck(cve) {
       cve.toUpperCase(),
     )}`,
   );
-  if (!r.ok) return { transport: "error" };
+  if (!r.ok) return { transport: "error", reason: r.reason };
   if (r.notFound) return { transport: "ok", found: false };
   const total = r.data?.totalResults ?? (r.data?.vulnerabilities || []).length;
   return { transport: "ok", found: total > 0 };
 }
 
 /**
- * Verify ONE citation live (with caching). Returns the reduceVerdict result.
+ * The paper registries, each with the ONE question it asks of a citation: `ask` picks the
+ * identifier (`{ doi }`, `{ arxiv }` or `{ title }`), or `null` when the registry cannot answer this
+ * citation — then it is not called and stores nothing. The resolver is handed ONLY that question,
+ * and the cache key is built from the same question, so the key always names what was asked: arXiv
+ * asked by arXiv id is keyed by it even when the entry also has a DOI, and correcting that id asks
+ * again.
+ */
+const PAPER_RESOLVERS = [
+  {
+    name: "crossref",
+    fn: crossrefResolve,
+    ask: (c) => (c.doi ? { doi: c.doi } : c.title ? { title: c.title } : null),
+  },
+  {
+    name: "openalex",
+    fn: openalexResolve,
+    ask: (c) => (c.doi ? { doi: c.doi } : c.title ? { title: c.title } : null),
+  },
+  {
+    name: "semantic_scholar",
+    fn: semanticScholarResolve,
+    ask: (c) =>
+      c.doi
+        ? { doi: c.doi }
+        : c.arxiv
+          ? { arxiv: c.arxiv }
+          : { title: c.title },
+  },
+  {
+    name: "arxiv",
+    fn: arxivResolve,
+    // No DOI endpoint: by arXiv id, else a title search — but not for a DOI-only entry.
+    ask: (c) =>
+      c.arxiv
+        ? { arxiv: c.arxiv }
+        : c.title && !c.doi
+          ? { title: c.title }
+          : null,
+  },
+];
+
+/** The cache key of one registry's question: the identifier it was asked by. */
+const paperKey = (name, q) =>
+  cacheKey(
+    name,
+    q.doi
+      ? `doi:${q.doi}`
+      : q.arxiv
+        ? `arxiv:${q.arxiv}`
+        : `title:${titleHash(q.title)}`,
+  );
+
+/**
+ * The evidence for one citation, asked in order through `lookup(key, service, fetch, keep)`, which
+ * decides where each answer comes from (the cache, the network, or nowhere). ONE code path for the
+ * live run and for `wouldAsk`, so the two cannot disagree about which questions a citation asks.
+ *
+ * 🔴 IT STOPS AT THE FIRST MATCH. `reduceVerdict` lets a match win over everything else, so once one
+ * registry has confirmed the work, no further answer can change the verdict — asking Semantic
+ * Scholar after Crossref confirmed a DOI only costs a request, and a rate-limited one at that.
+ */
+async function consult(citation, lookup) {
+  const evidence = [];
+  const matched = () => evidence.at(-1)?.status === "matched";
+  if (citation.doi || citation.arxiv || citation.title) {
+    for (const { name, fn, ask } of PAPER_RESOLVERS) {
+      const question = ask(citation);
+      if (question === null) continue;
+      const resp = await lookup(
+        paperKey(name, question),
+        name,
+        () => fn(question),
+        () => true,
+      );
+      evidence.push(classifyResolver(citation, resp));
+      if (matched()) return evidence;
+    }
+    // DOI authority (doi.org) — the ONLY source that can disprove a DOI (M1). Consulted whenever no
+    // registry confirmed the DOI, so a registry-404 never becomes `false` without doi.org.
+    if (citation.doi) {
+      const auth = await lookup(
+        cacheKey("doi_authority", citation.doi),
+        "doi_authority",
+        () => doiAuthorityCheck(citation.doi),
+        // Cache only POSITIVE existence; never authority-absent (100), so a freshly-minted DOI
+        // checked pre-propagation isn't pinned to `false` on re-run.
+        (a) => a.responseCode !== 100,
+      );
+      evidence.push(classifyDoiAuthority(auth));
+    }
+  }
+  if (citation.cve) {
+    const nvd = await lookup(
+      cacheKey("nvd", citation.cve.toUpperCase()),
+      "nvd",
+      () => nvdCheck(citation.cve),
+      // Cache only POSITIVE existence, as for doi.org: a CVE cited before NVD indexes it must not
+      // be pinned to "not found" in the committed cache. A missing CVE is asked again each build.
+      (a) => a.found,
+    );
+    const e = checkNvd(citation, nvd);
+    if (e) evidence.push(e);
+  }
+  return evidence;
+}
+
+/**
+ * Would verifying `citation` make a request, given `cache`? `paperlint build` asks this BEFORE any
+ * request: when no citation would, the build makes no network request at all, not even its
+ * reachability probe. It walks the same `consult` as the live run, answering from the cache only.
+ */
+export async function wouldAsk(citation, cache) {
+  let missed = false;
+  await consult(normalizeIdentifiers(citation), async (key) => {
+    if (cache[key]) return cache[key];
+    missed = true;
+    return { transport: "error" };
+  });
+  return missed;
+}
+
+/**
+ * A circuit breaker for ONE run, per service. The first request to a service goes alone; until it
+ * has answered, every other request to that service waits for it. Once a service REFUSES — a
+ * transport error, a 429 or 5xx, a timeout, HTML where JSON was asked — it is not asked again for
+ * the rest of the run: every later question to it is answered "refused earlier in this run" at no
+ * cost. A service that refuses from its first request costs ONE request per run, not one per
+ * citation, and not one per retry (#120). One that answers first and starts refusing later costs
+ * at most the requests already in flight when the refusal lands — the caller's concurrency (six in
+ * `paperlint build`). Queueing every request to a service behind the previous one would remove that
+ * margin, at the price of making every cold build sequential per service.
+ *
+ * Nothing about a refusal is remembered past the run: the next run asks again, once.
+ *
+ * `attempt` returns `{ ok: true, value }` or `{ ok: false, reason }`; `call` returns the same shape,
+ * with `reason` saying "refused earlier" when the service was not asked.
+ */
+export function createBreaker() {
+  const state = new Map();
+  const call = async (service, attempt) => {
+    const s = state.get(service);
+    if (s?.refused)
+      return {
+        ok: false,
+        reason: `${service} refused earlier in this run (${s.refused})`,
+      };
+    if (s?.first) {
+      await s.first;
+      return call(service, attempt);
+    }
+    const pending = attempt();
+    if (!s) state.set(service, { first: pending });
+    const r = await pending;
+    if (!r.ok) state.set(service, { refused: r.reason });
+    else if (!s) state.set(service, { answered: true });
+    return r;
+  };
+  return { call };
+}
+
+/**
+ * Verify ONE citation live (with caching). Returns the reduceVerdict result, plus `refused` —
+ * "<service>: <reason>" for every question that went unanswered — when there were any.
  *
  * ⚠️ CONCURRENT CALLS SHARING ONE `cache` MAY ASK TWICE. The cache is read BEFORE the `await` and
- * written AFTER it (three places below), so two concurrent calls for the SAME identifier both miss
- * and both go to the network. The data does not suffer — the resolvers are deterministic and the
- * second write is equivalent — the cost is an extra request per duplicate identifier.
+ * written AFTER it, so two concurrent calls for the SAME identifier both miss and both go to the
+ * network. The data does not suffer — the resolvers are deterministic and the second write is
+ * equivalent — the cost is an extra request per duplicate identifier.
  *
  * Callers: `main()` here calls it one citation at a time; `paperlint build`'s references step
- * (`src/adapters/references/index.ts`) calls it six at a time (#107 — serially, 27 references took
- * 217 s). Six is the bound on requests in flight to any one service, since a citation's own
- * requests go to the four resolvers one after another. `require-atomic-updates` stays at `warn`
- * because the interleaving it describes now exists, and is accepted for the reason above. In-flight
- * deduplication (caching the promise, not the value) would remove the duplicate request; it does
- * not fit `saveCache()`'s JSON file and has not been done.
+ * (`src/adapters/references/index.ts`) calls it six at a time (#107), sharing one `breaker` for the
+ * run. `require-atomic-updates` stays at `warn` because the interleaving it describes exists, and is
+ * accepted for the reason above.
  */
 export async function verifyCitationLive(
   citation,
-  { cache = {}, offline = false } = {},
+  { cache = {}, offline = false, breaker = createBreaker() } = {},
 ) {
   citation = normalizeIdentifiers(citation); // clean doi:/arXiv: prefixes + trailing punct first
   const commitFlags = checkCommit(citation);
@@ -975,65 +1157,27 @@ export async function verifyCitationLive(
     return reduceVerdict(citation, [], commitFlags);
   }
 
-  const evidence = [];
-
-  // Paper resolvers (skip when the citation is CVE/commit-only).
-  if (citation.doi || citation.arxiv || citation.title) {
-    const resolvers = [
-      { name: "crossref", fn: crossrefResolve },
-      { name: "openalex", fn: openalexResolve },
-      { name: "semantic_scholar", fn: semanticScholarResolve },
-      { name: "arxiv", fn: arxivResolve },
-    ];
-    for (const { name, fn } of resolvers) {
-      const ck = cacheKey(
-        name,
-        citation.doi
-          ? `doi:${citation.doi}`
-          : citation.arxiv
-            ? `arxiv:${citation.arxiv}`
-            : `title:${titleHash(citation.title)}`,
-      );
-      let resp;
-      if (cache[ck]) {
-        resp = cache[ck];
-      } else {
-        resp = await fn(citation);
-        if (resp && resp.transport === "ok") cache[ck] = resp; // only cache successes
+  const refused = [];
+  const evidence = await consult(
+    citation,
+    async (key, service, fetch, keep) => {
+      if (cache[key]) return cache[key];
+      const r = await breaker.call(service, async () => {
+        const resp = await fetch();
+        return resp.transport === "ok"
+          ? { ok: true, value: resp }
+          : { ok: false, reason: resp.reason };
+      });
+      if (!r.ok) {
+        refused.push(`${service}: ${r.reason}`);
+        return { db: service, transport: "error" };
       }
-      if (resp) evidence.push(classifyResolver(citation, resp));
-    }
-
-    // DOI authority (doi.org) — the ONLY source that can disprove a DOI (M1).
-    // Always consulted when a DOI is present so a registry-404 never becomes
-    // `false` without doi.org confirming responseCode 100.
-    if (citation.doi) {
-      const ck = cacheKey("doi_authority", citation.doi);
-      let auth = cache[ck];
-      if (!auth) {
-        auth = await doiAuthorityCheck(citation.doi);
-        // Cache only POSITIVE existence; never cache authority-absent (100), so a
-        // freshly-minted DOI checked pre-propagation isn't pinned to `false` on re-run.
-        if (auth && auth.transport === "ok" && auth.responseCode !== 100)
-          cache[ck] = auth;
-      }
-      evidence.push(classifyDoiAuthority(auth));
-    }
-  }
-
-  // CVE via NVD.
-  if (citation.cve) {
-    const ck = cacheKey("nvd", citation.cve.toUpperCase());
-    let nvd = cache[ck];
-    if (!nvd) {
-      nvd = await nvdCheck(citation.cve);
-      if (nvd.transport === "ok") cache[ck] = nvd;
-    }
-    const e = checkNvd(citation, nvd);
-    if (e) evidence.push(e);
-  }
-
-  return reduceVerdict(citation, evidence, commitFlags);
+      if (keep(r.value)) cache[key] = r.value; // only successes are ever cached
+      return r.value;
+    },
+  );
+  const verdict = reduceVerdict(citation, evidence, commitFlags);
+  return refused.length ? { ...verdict, refused } : verdict;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1068,6 +1212,7 @@ async function main() {
   }
 
   const cache = loadCache();
+  const breaker = createBreaker();
   const results = [];
   for (const c of cites) {
     if (!c || !c.id) {
@@ -1079,7 +1224,7 @@ async function main() {
       });
       continue;
     }
-    results.push(await verifyCitationLive(c, { cache, offline }));
+    results.push(await verifyCitationLive(c, { cache, offline, breaker }));
   }
   saveCache(cache);
 

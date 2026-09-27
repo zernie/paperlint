@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest";
 import { ESLint } from "eslint";
 import { join } from "node:path";
 import { memoryFiles } from "./adapters/memory/index.ts";
+import { ok } from "./domain/result.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
 import type {
   CheckReferences,
@@ -20,9 +21,16 @@ import { referencesStep } from "./build.ts";
 import {
   bibHash,
   bibliographyOf,
+  lookupCachePath,
   readReferences,
   referencesPath,
 } from "./references.ts";
+import {
+  parseLookupCache,
+  serializeLookupCache,
+  type CachedResponse,
+  type LookupCache,
+} from "./domain/lookup-cache.ts";
 import { referenceRules, REFERENCE_RULE_LEVELS } from "./reference-rules.ts";
 // @ts-expect-error — an ESLint language in .mjs, it has no types
 import { texLanguage } from "../eslint-rules/latex-language.mjs";
@@ -55,22 +63,30 @@ const verdict = (
 
 const checker =
   (entries: readonly EntryVerdict[]): CheckReferences =>
-  async () => ({ kind: "checked", entries });
-const offline: CheckReferences = async () => ({
-  kind: "not-checked",
-  why: "the citation services cannot be reached (fetch failed)",
+  async (_bib, cache) => ({ check: { kind: "checked", entries }, cache });
+const offline: CheckReferences = async (_bib, cache) => ({
+  check: {
+    kind: "not-checked",
+    why: "the citation services cannot be reached (fetch failed)",
+  },
+  cache,
+});
+
+/** The step's context over `files`, with every port it does not use stubbed. */
+const ctx = (files: ReturnType<typeof memoryFiles>) => ({
+  paperDir: PAPER,
+  env: {},
+  run: (() => ({})) as never,
+  readPdf: (() => null) as never,
+  measure: (() => null) as never,
+  files,
 });
 
 /** Run the build step on a paper held in memory; returns the files and the step's outcome. */
 async function build(tex: string, check: CheckReferences) {
   const files = memoryFiles({ [`${PAPER}/paper.tex`]: tex });
   const out = await referencesStep.run({
-    paperDir: PAPER,
-    env: {},
-    run: (() => ({})) as never,
-    readPdf: (() => null) as never,
-    measure: (() => null) as never,
-    files,
+    ...ctx(files),
     checkReferences: check,
   });
   return { files, out };
@@ -141,6 +157,108 @@ describe("the references build step", () => {
     });
     expect(out.ok).toBe(true);
     expect(readReferences(files, PAPER)?.why).toMatch(/DBLP exploded/);
+  });
+});
+
+const ANSWER: CachedResponse = {
+  fetched: "2026-09-27",
+  response: { db: "crossref", transport: "ok", query: "doi" },
+};
+/** A checker that fetches `key` unless the cache has it, recording the cache it was handed. */
+function fetching(key: string) {
+  const seen: LookupCache[] = [];
+  const check: CheckReferences = async (_bib, cache) => {
+    seen.push(cache);
+    return {
+      check: { kind: "checked", entries: [verdict("schick2023")] },
+      cache: cache.citations.has(key)
+        ? cache
+        : {
+            citations: new Map([...cache.citations, [key, ANSWER]]),
+            dblp: cache.dblp,
+          },
+    };
+  };
+  return { check, seen };
+}
+const cacheText = (files: ReturnType<typeof memoryFiles>): string | null => {
+  const b = files.readBytes(lookupCachePath(PAPER) as AbsolutePath);
+  return b === null ? null : new TextDecoder().decode(b);
+};
+
+describe("the lookup cache — <paper>/repro/references-cache.json", () => {
+  it("a build that fetched writes the cache; the next build is handed it and writes nothing", async () => {
+    const f = fetching("crossref:doi:10.1/x");
+    const { files, out } = await build(TEX(ENTRIES), f.check);
+    expect(out).toEqual({
+      ok: true,
+      note: "references: 1 checked, 0 failing → _build/references.json; 1 new answer → repro/references-cache.json",
+    });
+    const written = cacheText(files);
+    expect(written).toBe(
+      serializeLookupCache({
+        citations: new Map([["crossref:doi:10.1/x", ANSWER]]),
+        dblp: new Map(),
+      }),
+    );
+    const again = await referencesStep.run({
+      ...ctx(files),
+      checkReferences: f.check,
+    });
+    expect(again).toEqual({
+      ok: true,
+      note: "references: 1 checked, 0 failing → _build/references.json; nothing fetched",
+    });
+    // The second build was handed exactly what the first one wrote.
+    expect(parseLookupCache(written!)).toEqual(ok(f.seen[1]));
+    expect(cacheText(files)).toBe(written);
+  });
+});
+
+describe("the lookup cache — counting and refusing", () => {
+  it("two new answers are counted as two", async () => {
+    const two: CheckReferences = async (_bib, cache) => ({
+      check: { kind: "checked", entries: [verdict("schick2023")] },
+      cache: {
+        citations: new Map([
+          ["a", ANSWER],
+          ["b", ANSWER],
+        ]),
+        dblp: cache.dblp,
+      },
+    });
+    const { out } = await build(TEX(ENTRIES), two);
+    expect(out).toEqual({
+      ok: true,
+      note: "references: 1 checked, 0 failing → _build/references.json; 2 new answers → repro/references-cache.json",
+    });
+  });
+
+  it("no answer fetched and no cache on disk: no cache file is created", async () => {
+    const { files } = await build(
+      TEX(ENTRIES),
+      checker([verdict("schick2023")]),
+    );
+    expect(cacheText(files)).toBeNull();
+  });
+
+  it("🔴 a cache that does not parse is refused BY NAME and left alone — the check is not run over half a cache", async () => {
+    const files = memoryFiles({
+      [`${PAPER}/paper.tex`]: TEX(ENTRIES),
+      [lookupCachePath(PAPER)]: '{"schema": 7}',
+    });
+    const f = fetching("k");
+    const out = await referencesStep.run({
+      ...ctx(files),
+      checkReferences: f.check,
+    });
+    expect(out).toEqual({
+      ok: true,
+      note: "references NOT checked — repro/references-cache.json cannot be read (schema 7: this paperlint reads schema 1) — fix it, or delete it to ask every question again; lint will say so",
+    });
+    expect(f.seen).toEqual([]);
+    expect(cacheText(files)).toBe('{"schema": 7}');
+    expect(readReferences(files, PAPER)?.status).toBe("not-checked");
   });
 });
 
@@ -302,5 +420,37 @@ describe("the reference rules over refs.bib, and on other files", () => {
       expect(rule.create({ filename: `${PAPER}/notes.tex` } as never)).toEqual(
         {},
       );
+  });
+});
+
+describe("the lookup cache — refreshed answers", () => {
+  // Guards: an answer asked again after MAX_AGE_DAYS keeps its key, so the key count does not change.
+  // Counted by size, the refreshed answer was not written, and every later build asked it again.
+  it("an answer refreshed under the same key is counted and written", async () => {
+    const OLD: CachedResponse = { ...ANSWER, fetched: "2026-08-01" };
+    const put =
+      (answer: CachedResponse): CheckReferences =>
+      async (_bib, cache) => ({
+        check: { kind: "checked", entries: [verdict("schick2023")] },
+        cache: {
+          citations: new Map([...cache.citations, ["a", answer]]),
+          dblp: cache.dblp,
+        },
+      });
+    const { files } = await build(TEX(ENTRIES), put(OLD));
+    const again = await referencesStep.run({
+      ...ctx(files),
+      checkReferences: put(ANSWER),
+    });
+    expect({ again, file: cacheText(files) }).toEqual({
+      again: {
+        ok: true,
+        note: "references: 1 checked, 0 failing → _build/references.json; 1 new answer → repro/references-cache.json",
+      },
+      file: serializeLookupCache({
+        citations: new Map([["a", ANSWER]]),
+        dblp: new Map(),
+      }),
+    });
   });
 });

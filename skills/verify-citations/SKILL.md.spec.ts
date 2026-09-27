@@ -149,17 +149,26 @@ node scripts/verify-cites.mjs cites.json --offline   # no network (everything de
 \`\`\`
 It prints per-cite \`{id, verdict, reason, matched_db, matched_title?, flags?}\` + a summary, and **exits 1 iff
 any \`false\` (fabrication)** — \`unresolvable\` alone is advisory and does NOT fail the gate, matching the
-narrowed-false philosophy. API responses are cached to \`scripts/.cite-cache.json\` (gitignored) so re-runs are
-cheap and deterministic.
+narrowed-false philosophy. API responses are cached to \`~/.cache/paperlint/cite-cache.json\`
+(\`VERIFY_CITES_CACHE\` overrides) so re-runs are cheap and deterministic — outside the installed package,
+which \`npm ci\` wipes.
 
-## 5a. Both checks run on every \`paperlint build\`
+## 5a. Both checks run on every \`paperlint build\` — from a committed cache
 
 \`npx paperlint build\` runs \`verify-cites\` and \`bib-authors\` over the paper's bibliography after the PDF is
 built and records the verdicts, with the SHA-256 of the bibliography it checked, in
 \`<paper>/_build/references.json\`. \`paperlint lint\` reads that record offline: \`paper/cite-exists\` and
 \`paper/author-list\` report a failing entry on its own line, \`paper/refs-fresh\` says when the bibliography
 changed since, and \`paper/refs-checked\` warns when nothing was recorded or the build had no network. The
-step never fails the build. Run the scripts by hand (below) to read a single verdict in full.
+step never fails the build.
+
+What the services ANSWERED is kept in \`<paper>/repro/references-cache.json\` — **commit it**. A build asks
+only the questions that file cannot answer (a new or edited entry, or an answer older than 30 days), so an
+unchanged bibliography builds with no network at all, in CI too, until its answers age out. It holds responses, never verdicts: the verdicts are derived again on
+every build. A service that refuses (429, HTML instead of JSON, a timeout) is not asked again for the rest of the
+build (the requests already in flight still land); the entries it would have answered say \`not asked: <service>: <reason>\`, and DBLP's become
+\`authors: unchecked\`. Answers are asked again after 30 days; to refresh one sooner, delete its entry, or delete the file. Details:
+\`docs/references.md\` in the package. Run the scripts by hand (below) to read a single verdict in full.
 
 ## 5b. The author-list gate — \`scripts/bib-authors.mjs\`
 
@@ -195,11 +204,18 @@ difference is real and not a metadata glitch. Entries that themselves declare a 
 scope (a preprint entry is allowed to carry preprint metadata).
 
 ⚠️ **Discovery credit, and why it is NOT a dependency.** The class was found by running **rebiber**
-(\`yuchenlin/rebiber\`), which rewrites bib entries into their DBLP records. We deliberately do not depend on
-it: its install fights modern setuptools (the \`bibtexparser\` wheel dies with \`AttributeError:
-install_layout\`), and its *output* replaces our entries with DBLP's very long official booktitles — wrong for
-a page-limited paper. We needed the **comparison**, not the rewrite, and that is one fetch with zero deps.
-Note also that live DBLP beat rebiber's bundled dump: \`raji2021benchmark\` was found only by the live query.
+(\`yuchenlin/rebiber\`), which rewrites bib entries into their DBLP records. Re-measured 2026-09-27 on rebiber
+1.4.0 (GitHub commit \`b917e36\`, the pin in \`render-paper/checkers-requirements.txt\`; the PyPI package is
+a 2021 release upstream disowns):
+- **Install: no longer broken, but heavy.** It installs in 36 s in a clean venv (bibtexparser 2.0.1 wheel,
+  rebiber built from source) — and carries **409 MB** of bundled venue data.
+- **Rewrites: now optional.** \`--dry-run --report\` previews and leaves the file untouched; \`-s True\` shortens
+  venues (NAACL 2019 becomes \`Proc. of NAACL-HLT\` instead of a 160-character booktitle).
+- **Bundled data still misses what live DBLP finds.** \`raji2021benchmark\` stayed an arXiv entry, local
+  index and \`--live-lookup\` alike, as it did in August.
+
+So the reason not to depend on it is now scope, not breakage: we need the **comparison** of an author list
+against the published record, not a rewrite of the entry, and that is one DBLP query with zero dependencies.
 
 🔴 **Two design decisions that are load-bearing, both learned by measurement the same day:**
 1. **Compare surname SEQUENCES, nothing else.** A first cut reported 13 differences of which **11 were

@@ -1,8 +1,8 @@
 /**
  * THE SKILL CATALOG CANNOT DRIFT FROM THE SKILLS THAT SHIP.
  *
- * `docs/skills.md` lists every skill by stage, and the README names a few headline skills and the
- * count. Both are compared against `skills/<name>/SKILL.md` on disk, the directory `paperlint init`
+ * `docs/skills.md` lists every skill by stage, and the README names a few headline skills. The README
+ * carries no count: a hand-typed number could only be kept true by a test of the README's text. Both are compared against `skills/<name>/SKILL.md` on disk, the directory `paperlint init`
  * links from — so adding, renaming or removing a skill turns this red until the prose follows. The
  * README's pipeline diagram and `docs/skills.md` must name the same stages, in the same order.
  */
@@ -110,12 +110,9 @@ describe("the skill catalog matches the skills that ship", () => {
     expect(fromDiagram).toEqual(fromCatalog);
   });
 
-  it("the README's headline skills are shipped skills, and its count is the real one", () => {
+  it("the README's headline skills are shipped skills", () => {
     const headline = spansIn("Skills").filter((s) => SKILL_NAME.test(s));
     expect(headline.length).toBeGreaterThanOrEqual(3);
     for (const s of headline) expect(SHIPPED).toContain(s);
-    const readme = read("README.md");
-    expect(readme).toContain(`optional, ${String(SHIPPED.length)} of them`);
-    expect(readme).toContain(`All ${String(SHIPPED.length)}, by stage`);
   });
 });
