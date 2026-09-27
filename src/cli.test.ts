@@ -5,7 +5,7 @@
  * case runs `run()` in-process with its own `cwd` and compares the whole code and output.
  */
 import assert from "node:assert/strict";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { test } from "vitest";
 import { useTempDir, writeTree } from "../test/support.mjs";
 import { chooseVenue, parseArgs, parseSettings, run, runHook } from "./cli.ts";
@@ -190,6 +190,87 @@ test("doctor reads a broken config as 'the CLI would lint nothing' instead of st
         "  the CLI will lint    (nothing — no declaration found)",
         "  the hooks will guard (nothing — the guard refuses and says why on first use)",
       ],
+    },
+  );
+});
+
+/** Run with no TeX Live anywhere: PATH holds node alone, the cache is an empty directory. */
+async function withoutTex<T>(dir: string, fn: () => Promise<T>): Promise<T> {
+  const saved = { ...process.env };
+  Object.assign(process.env, {
+    PATH: dirname(process.execPath),
+    PAPERLINT_TEXLIVE_DIR: join(dir, "no-texlive"),
+    PAPERLINT_BANAL_DIR: join(dir, "no-banal"),
+    HOME: dir,
+  });
+  try {
+    return await fn();
+  } finally {
+    process.env = saved;
+  }
+}
+
+test("build: a markdown-only paper is refused; with no TeX Live a dry run says where a real run stops, and a real run stops", async () => {
+  const dir = join(root, "build-notex");
+  writeTree(dir, {
+    "package.json": "{}",
+    "papers/md/paper.md": "# P\n\nx\n",
+    "papers/tex/paper.tex":
+      "\\documentclass{article}\\begin{document}x\\end{document}\n",
+  });
+  const [md, dry, real, toolchain] = await withoutTex(dir, async () => [
+    await cli(["build", "papers/md"], dir),
+    await cli(["build", "papers/tex", "--dry-run"], dir),
+    await cli(["build", "papers/tex"], dir),
+    await cli(["toolchain", "--check"], dir),
+  ]);
+  const venues = join(
+    import.meta.dirname,
+    "..",
+    "skills",
+    "submit-paper",
+    "references",
+    "venues",
+  );
+  const missing =
+    "missing: 19 package(s): amsfonts, amsmath, bibtex, booktabs, caption, cm-super, enumitem, geometry, graphics, hyperref, latex, microtype, natbib, pgf, seqsplit, tools, url, xcolor, xurl";
+  assert.deepEqual(
+    { md, dry, real, toolchain: { code: toolchain.code } },
+    {
+      md: {
+        code: 1,
+        out: [
+          "papers/md",
+          `  inputs: TEXINPUTS += ${venues}`,
+          "  compile: refused — no paper.tex; paperlint compiles LaTeX, and this paper has none",
+          "  measure: skipped — nothing is compiled",
+          "  references: skipped — nothing is compiled",
+          "  ✗ nothing to compile: no paper.tex",
+        ].join("\n"),
+        err:
+          "\nNo paper.tex in: papers/md.\n" +
+          'This is NOT "nothing to build" — paperlint compiles LaTeX, and these papers have no LaTeX source.\n' +
+          "Write the paper in paper.tex; `paperlint new <name>` creates one.",
+      },
+      dry: {
+        code: 0,
+        out: [
+          `engine: none — a real run would stop here: paperlint build: no TeX Live with every package these papers need — run \`npx paperlint toolchain\` (${missing})`,
+          "papers/tex",
+          `  inputs: TEXINPUTS += ${venues}`,
+          "  compile: paper.tex (\\documentclass{article})",
+          "  measure: pdf.js → _build/paper.facts.json (facts for the lint rules; nothing is judged here)",
+          "  references: online: citations exist, titles and authors match → _build/references.json (never fails the build)",
+          "  – not run (--dry-run)",
+        ].join("\n"),
+        err: "",
+      },
+      real: {
+        code: 1,
+        out: "",
+        err: `✗ paperlint build: no TeX Live with every package these papers need — run \`npx paperlint toolchain\` (${missing})`,
+      },
+      toolchain: { code: 1 },
     },
   );
 });
