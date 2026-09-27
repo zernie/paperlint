@@ -498,7 +498,7 @@ justified two hundred lines above precisely by these minutes being free.
 | a pure function                                                            | unit — vitest, `<module>.test.ts` beside it   |
 | a use case or adapter that reaches disk, a process, the network, the clock | integration — vitest, fakes through the ports |
 | a hook's decision, a skill's contract                                      | harness — vigiles, `<surface>.harness.mjs`    |
-| the installed package, a real TeX build                                    | e2e — `test/e2e/*.mjs`                        |
+| the installed package, a real TeX build                                    | e2e — `test/e2e/*.ts`                         |
 
 Red first · assert the whole value · test what the code does, never what its source says · no test
 touches the real network · 100% coverage, no `c8 ignore`. **Before every push: `npm run check`,

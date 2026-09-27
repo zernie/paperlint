@@ -18,9 +18,10 @@ When in doubt between unit and integration: if the function takes a port (`Files
 ## Unit — vitest, pure functions
 
 - **Answers:** does this function return the right value for this input?
-- **Lives:** beside the module, `<module>.test.ts` for a `.ts` module, `<module>.test.mjs` for a
-  `.mjs` one (TypeScript has no types to check a JS module against, and `allowJs` was measured to
-  break a dozen existing `@ts-expect-error` imports).
+- **Lives:** beside the module, `<module>.test.ts`. A test that IMPORTS a `.mjs` module stays
+  `<module>.test.mjs` until that module moves to TypeScript (#78): TypeScript has no types to check
+  it against, and `allowJs` was measured to break a dozen existing `@ts-expect-error` imports. A
+  test that only runs a `.mjs` script as a process has nothing to import and is `.test.ts` already.
 - **May touch:** nothing. No disk, no network, no process, no clock.
 - **Example:** `src/domain/lookup-cache.test.ts` — the reference cache's parse, serialize and key
   functions, each refusal compared as a whole value.
@@ -55,12 +56,14 @@ When in doubt between unit and integration: if the function takes a port (`Files
 - **Skills are tested through vigiles**, not a bespoke runner: a home-grown runner here once printed
   byte-identical "clean" verdicts for three skills that had never loaded.
 
-## End-to-end — `test/e2e/*.mjs`
+## End-to-end — `test/e2e/*.ts`
 
 - **Answers:** does the package work once it is somewhere else? The tarball installed into another
   tree, a real `pdflatex` build, the PDF's fonts measured.
 - **May touch:** everything a user's machine has, except the network: a citation service is a
   counting fake `fetch` even here (`test/e2e/build.ts`).
+- **Types:** the runs import the built modules from `dist/` (the shipped path is the point), so
+  their types are the declarations `tsc` emits — `npm run build` before type-checking them.
 - **What each run proves, and when a change owes one:** [`e2e.md`](e2e.md).
 
 ## Running
