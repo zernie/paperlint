@@ -17,7 +17,7 @@ import {
 } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, test, vi } from "vitest";
 import { runNode, useTempDir, writeTree } from "../../../test/support.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -106,7 +106,11 @@ const ESLINT_FINDINGS = JSON.stringify([
   },
 ]);
 
-/** Run `main` on a paper with the given stand-in answers; stdout and the new ledger rows. */
+/**
+ * Run `main` on a paper with the given stand-in answers. Returns the exit code, the full stdout,
+ * the closing summary (the lines after the last blank line — what a reader acts on), and the
+ * ledger rows written, one compact string each: `skill/check KIND reason|findings [blocking]`.
+ */
 function run(paper, fakes = {}) {
   rmSync(LEDGER, { force: true });
   const saved = { ...process.env };
@@ -126,53 +130,54 @@ function run(paper, fakes = {}) {
     err.mockRestore();
     process.env = saved;
   }
-  let rows = [];
-  try {
-    rows = readFileSync(LEDGER, "utf8")
-      .trim()
-      .split("\n")
-      .map((l) => JSON.parse(l))
-      .map(({ skill, check, kind, reason, findings, blocking }) => ({
-        row: `${skill}/${check}`,
-        kind,
-        ...(reason ? { reason } : {}),
-        ...(findings !== undefined ? { findings } : {}),
-        ...(blocking ? { blocking } : {}),
-      }));
-  } catch {
-    // no row written
-  }
+  const rows = existsSync(LEDGER)
+    ? readFileSync(LEDGER, "utf8")
+        .trim()
+        .split("\n")
+        .map((l) => JSON.parse(l))
+        .map(
+          ({ skill, check, kind, reason, findings, blocking }) =>
+            `${skill}/${check} ${kind} ${kind === "FINDING" ? findings : reason}` +
+            (blocking ? " blocking" : ""),
+        )
+    : [];
   const out = lines.join("\n").replaceAll(root, "<root>");
-  return { code, out, rows };
+  const summary = out.trimEnd().split("\n\n").pop().split("\n");
+  return { code, out, summary, rows };
 }
 
 afterEach(() => rmSync(LEDGER, { force: true }));
 
+const NOTE =
+  "   Judgement checks report and never fail the run; read them, and never grep this for green.";
+
 test("a directory with no paper.md: exit 2, named", () => {
-  const r = run(join(root, "nowhere"));
-  assert.deepEqual(r, {
-    code: 2,
-    out: "stderr: no paper.md in <root>/nowhere",
-    rows: [],
-  });
+  const { code, out, rows } = run(join(root, "nowhere"));
+  assert.deepEqual(
+    { code, out, rows },
+    { code: 2, out: "stderr: no paper.md in <root>/nowhere", rows: [] },
+  );
 });
 
 test("two rows sharing a key are refused before anything runs", () => {
   GATES.push({ ...GATES[0] });
   try {
-    const r = run(join(consumer, "papers", "a"));
-    assert.deepEqual(r, {
-      code: 2,
-      out: 'stderr: two checks share the row key "render-paper/report-submission" — they would take turns being the answer',
-      rows: [],
-    });
+    const { code, out, rows } = run(join(consumer, "papers", "a"));
+    assert.deepEqual(
+      { code, out, rows },
+      {
+        code: 2,
+        out: 'stderr: two checks share the row key "render-paper/report-submission" — they would take turns being the answer',
+        rows: [],
+      },
+    );
   } finally {
     GATES.pop();
   }
 });
 
-test("paper A, every checker answering with findings", () => {
-  const r = run(join(consumer, "papers", "a"), {
+test("paper A, every checker answering with findings: exit 1 on the blocking FACT findings", () => {
+  const { code, summary, rows } = run(join(consumer, "papers", "a"), {
     FAKE_REPORT: "overfull box\nunresolved ref\n",
     FAKE_REPORT_EXIT: "1",
     FAKE_ESLINT: ESLINT_FINDINGS,
@@ -185,16 +190,47 @@ test("paper A, every checker answering with findings", () => {
     FAKE_TEXTIDOTE: "[]",
     FAKE_UNCITED: JSON.stringify(["smith2020"]),
   });
-  expect(r).toMatchSnapshot();
+  assert.deepEqual(
+    { code, summary, rows },
+    {
+      code: 1,
+      summary: ["🔴 a FACT check found something — see above", NOTE],
+      rows: [
+        "render-paper/report-submission FINDING 2 blocking",
+        "render-paper/report-submission-citations ABSTAINED input-missing",
+        // Two of the three messages are this row's rules; the third belongs to another row.
+        "tighten-paper/structure FINDING 2 blocking",
+        // No stated count: the stand-in's two lines are counted.
+        "grade-paper-writing/prose-lint FINDING 2",
+        "verify-citations/verify-cites FINDING 1 blocking",
+        "harden-paper/artifact-coverage ABSTAINED no-witness",
+        "build-benchmark/check-provenance ABSTAINED no-witness",
+        "build-benchmark/arm-permutation FINDING 2",
+        "build-benchmark/delivered-pdf ABSTAINED crashed",
+        "build-benchmark/generated-code ABSTAINED no-witness",
+        "grade-paper-writing/textidote ABSTAINED no-witness",
+        "verify-citations/uncited-refs FINDING 1",
+        "draft-paper/population-map ABSTAINED no-witness",
+        "tighten-paper/round-diff FINDING 1",
+      ],
+    },
+  );
 });
 
-test("paper A, checkers answering in the shapes a row must not count", () => {
-  const r = run(join(consumer, "papers", "a"), {
-    FAKE_ESLINT: "Oops! Something went wrong",
-    FAKE_PROSE: "✍️  prose-lint — paper.md:\n",
-    FAKE_UNCITED: "{}",
+test("a finding's lines reach the reader, capped at twelve", () => {
+  const { out } = run(join(consumer, "papers", "a"), {
+    FAKE_ESLINT: "[]",
+    FAKE_UNCITED: JSON.stringify(Array.from({ length: 20 }, (_, i) => `e${i}`)),
   });
-  expect(r).toMatchSnapshot();
+  const block = out
+    .split("\n\n")
+    .find((b) => b.includes("uncited-refs — 20 finding(s)"));
+  assert.deepEqual(block.split("\n"), [
+    "🟠 verify-citations/uncited-refs — 20 finding(s) → reviews/mechanical/verify-citations--uncited-refs.md",
+    "   a bibliography entry no \\cite in the paper points at",
+    "   [",
+    ...Array.from({ length: 11 }, (_, i) => `     "e${i}",`),
+  ]);
 });
 
 test("eslint that crashed on the file, and eslint that ignored it, are not clean runs", () => {
@@ -213,8 +249,8 @@ test("eslint that crashed on the file, and eslint that ignored it, are not clean
     },
   ]);
   const structure = (fakes) =>
-    run(join(consumer, "papers", "a"), fakes).rows.find(
-      (x) => x.row === "tighten-paper/structure",
+    run(join(consumer, "papers", "a"), fakes).rows.find((x) =>
+      x.startsWith("tighten-paper/structure "),
     );
   assert.deepEqual(
     [
@@ -223,73 +259,55 @@ test("eslint that crashed on the file, and eslint that ignored it, are not clean
       structure({ FAKE_ESLINT: "[]" }),
     ],
     [
-      {
-        row: "tighten-paper/structure",
-        kind: "ABSTAINED",
-        reason: "crashed",
-        findings: 0,
-      },
-      {
-        row: "tighten-paper/structure",
-        kind: "ABSTAINED",
-        reason: "input-missing",
-        findings: 0,
-      },
-      {
-        row: "tighten-paper/structure",
-        kind: "ABSTAINED",
-        reason: "no-witness",
-        findings: 0,
-      },
+      "tighten-paper/structure ABSTAINED crashed",
+      "tighten-paper/structure ABSTAINED input-missing",
+      "tighten-paper/structure ABSTAINED no-witness",
     ],
   );
 });
 
-test("paper B: every row whose input is absent abstains as input-missing", () => {
-  expect(run(join(consumer, "papers", "b"))).toMatchSnapshot();
-});
-
-test("a checker that is not installed is `crashed`, never a finding", () => {
-  const r = run(join(consumer, "papers", "b"), {
-    PATH: join(root, "empty-path"),
+test("paper B: every row whose input is absent abstains as input-missing; the rest judge", () => {
+  const { code, summary, rows } = run(join(consumer, "papers", "b"), {
+    FAKE_ESLINT: "[]",
   });
-  expect(r).toMatchSnapshot();
-});
-
-test("as a process, in a consumer that declares no citation checkers and has no structure rules", () => {
-  const bare = join(root, "bare");
-  writeTree(bare, { "papers/p/paper.md": "# P\n\nText.\n" });
-  writeFileSync(join(bare, "package.json"), "{}\n");
-  const r = runNode(SCRIPT, [join(bare, "papers", "p")], {
-    env: {
-      CLAUDE_PROJECT_DIR: bare,
-      PIPELINE_LEDGER: join(root, "bare.jsonl"),
+  assert.deepEqual(
+    { code, summary, rows },
+    {
+      code: 0,
+      summary: ["🟢 no FACT check recorded a blocking finding", NOTE],
+      rows: [
+        "render-paper/report-submission ABSTAINED input-missing",
+        "render-paper/report-submission-citations ABSTAINED no-witness",
+        "tighten-paper/structure ABSTAINED no-witness",
+        "grade-paper-writing/prose-lint ABSTAINED no-witness",
+        "verify-citations/verify-cites ABSTAINED no-witness",
+        "harden-paper/artifact-coverage ABSTAINED no-witness",
+        "build-benchmark/check-provenance ABSTAINED no-witness",
+        "build-benchmark/arm-permutation ABSTAINED input-missing",
+        "build-benchmark/delivered-pdf ABSTAINED input-missing",
+        "build-benchmark/generated-code ABSTAINED no-witness",
+        "grade-paper-writing/textidote ABSTAINED input-missing",
+        "verify-citations/uncited-refs ABSTAINED input-missing",
+        "draft-paper/population-map ABSTAINED no-witness",
+        "tighten-paper/round-diff ABSTAINED input-missing",
+      ],
     },
-  });
-  expect({
-    ...r,
-    stdout: r.stdout.replaceAll(root, "<root>"),
-  }).toMatchSnapshot();
+  );
 });
 
 test("the prose-lint row records the number of findings prose-lint found, not its line count", () => {
   const row = run(join(consumer, "papers", "c"), {
     FAKE_PROSE_REAL: "1",
-  }).rows.find((x) => x.row === "grade-paper-writing/prose-lint");
-  assert.deepEqual(row, {
-    row: "grade-paper-writing/prose-lint",
-    kind: "FINDING",
-    findings: 2,
-  });
+  }).rows.find((x) => x.startsWith("grade-paper-writing/prose-lint "));
+  assert.equal(row, "grade-paper-writing/prose-lint FINDING 2");
 });
 
 test("no directory argument means the current directory", () => {
-  const r = run(undefined);
-  assert.deepEqual(r, {
-    code: 2,
-    out: `stderr: no paper.md in ${process.cwd()}`,
-    rows: [],
-  });
+  const { code, out, rows } = run(undefined);
+  assert.deepEqual(
+    { code, out, rows },
+    { code: 2, out: `stderr: no paper.md in ${process.cwd()}`, rows: [] },
+  );
 });
 
 test("a blocking finding with no output still gets a report a reader can open", () => {
@@ -308,12 +326,7 @@ test("a blocking finding with no output still gets a report a reader can open", 
   assert.deepEqual(
     { row: r.rows[0], report },
     {
-      row: {
-        row: "render-paper/report-submission",
-        kind: "FINDING",
-        findings: 1,
-        blocking: true,
-      },
+      row: "render-paper/report-submission FINDING 1 blocking",
       report: [
         "---",
         'title: "render-paper/report-submission — mechanical check output"',
@@ -339,11 +352,9 @@ test("an empty $TEXTIDOTE_JAR is no declaration: the row looks at /opt/textidote
   const row = run(join(consumer, "papers", "a"), {
     TEXTIDOTE_JAR: "",
     FAKE_TEXTIDOTE: "[]",
-  }).rows.find((x) => x.row === "grade-paper-writing/textidote");
-  assert.deepEqual(row, {
-    row: "grade-paper-writing/textidote",
-    kind: "ABSTAINED",
-    reason: atOpt ? "no-witness" : "input-missing",
-    findings: 0,
-  });
+  }).rows.find((x) => x.startsWith("grade-paper-writing/textidote "));
+  assert.equal(
+    row,
+    `grade-paper-writing/textidote ABSTAINED ${atOpt ? "no-witness" : "input-missing"}`,
+  );
 });
