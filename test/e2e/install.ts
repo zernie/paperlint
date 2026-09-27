@@ -39,6 +39,7 @@ import {
   existsSync,
   readFileSync,
   readlinkSync,
+  readdirSync,
   realpathSync,
 } from "node:fs";
 import { createRequire } from "node:module";
@@ -52,6 +53,7 @@ import {
   type Counts,
 } from "../../fixtures/real-markdown-paper/baseline.ts";
 import { renderDetail } from "../../lib/check.ts";
+import { documentedSpecifiers, modulePaths } from "./public-paths.ts";
 
 const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const KEEP = process.argv.includes("--keep");
@@ -712,6 +714,45 @@ try {
     const settingsBefore = existsSync(settingsPath)
       ? readFileSync(settingsPath)
       : null;
+
+    // Every module path a consumer may import resolves and loads from the INSTALLED package: the
+    // `paperlint/…` imports in the shipped docs' code blocks, and `paperlint/lib/<name>.mjs` /
+    // `paperlint/eslint-rules/<name>.mjs` for every module shipped. Moving the sources to
+    // TypeScript put the code in `dist/`; the public names must not move with it. One process
+    // imports them all, from the consumer's directory, the way a consumer's config would — AFTER
+    // `init`, because `lib/skill-corpus.mjs` reads the consumer's `.claude/skills/` when it loads.
+    const docsDir = join(installed, "docs");
+    const specifiers = [
+      ...new Set([
+        ...readdirSync(docsDir)
+          .filter((f) => f.endsWith(".md"))
+          .flatMap((f) =>
+            documentedSpecifiers(readFileSync(join(docsDir, f), "utf8")),
+          ),
+        ...modulePaths(installed),
+      ]),
+    ];
+    const loaded = sh(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        `const failed = [];
+for (const s of ${JSON.stringify(specifiers)}) {
+  try { await import(s); } catch (e) { failed.push(s + " — " + (e.code ?? e.message)); }
+}
+console.log(JSON.stringify(failed));`,
+      ],
+      { cwd: consumer },
+    );
+    const failedImports = z
+      .array(z.string())
+      .safeParse(loaded.status === 0 ? JSON.parse(loaded.stdout) : null);
+    verdict(
+      failedImports.success && failedImports.data.length === 0,
+      `every public module path loads from the installed package (${String(specifiers.length)})`,
+      failedImports.success ? failedImports.data.join("\n") : loaded.stderr,
+    );
 
     // A second `init` is a re-run, not a clash: nothing fails, no link moves.
     const again = sh(bin, ["init"], { cwd: consumer });

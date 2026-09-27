@@ -118,6 +118,13 @@ and `npm test` (so `npm run coverage` and `npm run check` too) and `tsconfig.tes
 they read the source. `scripts/test.ts` is the one place the tests get it; a harness run on its own
 (`npx vigiles test <file>`) needs `NODE_OPTIONS=--conditions=paperlint-source`.
 
+Consumers import the same modules by their old public names — `paperlint/eslint-rules/<name>.mjs`,
+`paperlint/lib/<name>.mjs`, `paperlint/bin/paperlint.mjs` — which the `"exports"` map in
+`package.json` points at `dist/`. The install e2e imports every one of them, and every
+`paperlint/…` import in a `docs/` code block, from the installed package; a module moved or renamed
+without its public name fails there. The five `lib/*.mjs` modules not yet converted are listed in
+`"exports"` by name until step 4 (#127) converts them.
+
 TypeScript is pinned to 6.x, not 7 (measured 2026-09-27): typescript-eslint 8.70.1 declares
 `typescript: >=4.8.4 <6.1.0`, and `typescript@7.0.2`'s package root exports only its version — the
 compiler API that `scripts/harness-api.test.ts` and `scripts/coverage-config.test.ts` parse with

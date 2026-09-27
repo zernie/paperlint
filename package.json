@@ -75,6 +75,22 @@
   "bin": {
     "paperlint": "bin/paperlint.mjs"
   },
+  "exports": {
+    "./eslint-rules/*.mjs": {
+      "types": "./dist/eslint-rules/*.d.ts",
+      "default": "./dist/eslint-rules/*.js"
+    },
+    "./lib/skill-checks.mjs": "./lib/skill-checks.mjs",
+    "./lib/skill-corpus.mjs": "./lib/skill-corpus.mjs",
+    "./lib/skill-eval-kit.mjs": "./lib/skill-eval-kit.mjs",
+    "./lib/skill-trigger-cases.mjs": "./lib/skill-trigger-cases.mjs",
+    "./lib/trigger-ledger.mjs": "./lib/trigger-ledger.mjs",
+    "./lib/*.mjs": {
+      "types": "./dist/lib/*.d.ts",
+      "default": "./dist/lib/*.js"
+    },
+    "./*": "./*"
+  },
   "files": [
     ".github",
     "CLAUDE.md",
