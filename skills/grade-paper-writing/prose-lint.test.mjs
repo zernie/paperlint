@@ -53,8 +53,14 @@ We believe that rather than guessing, we measure. Instead of prose, the numbers 
 writeTree(root, {
   "p/paper.md": PAPER,
   "p/figures/fig1.tex": `\\begin{figure}\\caption{\\textbf{Big.} ${LONG_CAPTION_SENTENCE}. ${"More words here. ".repeat(20)}}\\end{figure}`,
-  "p/figures/fig2.tex": "\\caption{\\label{x}}",
+  // Empty once LaTeX commands and braces are stripped: skipped, not counted as a zero-word caption.
+  "p/figures/fig2.tex": "\\caption{\\centering}",
+  // A lone "#": no word at all, and no sentence either.
+  "p/figures/fig4.tex": "\\caption{{#}}",
   "p/figures/notes.txt": "not a figure",
+  // Reads as a markdown heading once LaTeX is stripped ("# Big"), so it splits into NO sentence:
+  // the caption scan must not flag it and must not crash.
+  "p/figures/fig3.tex": "\\caption{{#} Big}",
   "clean/paper.md": "## Intro\n\nShort and plain. Nothing else.\n",
   "page.txt":
     "A rendered page. It was hyphen-\nated across a line.\n\n12\n\fNext page text here.\nReferences\n[1] cut here.\n",
