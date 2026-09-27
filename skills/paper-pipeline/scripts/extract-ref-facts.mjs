@@ -212,7 +212,7 @@ function dropEtAl(authors) {
   return { authors: out.filter(Boolean), truncated: true };
 }
 
-const yearIn = (s) => (/\b(19|20)\d{2}\b/.exec(s ?? "") ?? [null])[0];
+const yearIn = (s) => (/\b(19|20)\d{2}\b/.exec(s) ?? [null])[0];
 
 // ── parsing: .bib WITH A REAL PARSER ─────────────────────────────────────────
 
