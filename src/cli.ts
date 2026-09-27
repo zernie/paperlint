@@ -56,6 +56,7 @@ import {
 } from "./paper-settings.ts";
 import { referenceRules, REFERENCE_RULE_LEVELS } from "./reference-rules.ts";
 import { onlineReferences } from "./adapters/references/index.ts";
+import type { CheckReferences } from "./ports/check-references.ts";
 import {
   narrowToOwners,
   ownedPatterns,
@@ -1114,7 +1115,13 @@ async function runBuild(
     log,
     err,
     cwd,
-  }: { log: typeof console.log; err: typeof console.error; cwd: string },
+    checkReferences,
+  }: {
+    log: typeof console.log;
+    err: typeof console.error;
+    cwd: string;
+    checkReferences: CheckReferences;
+  },
 ): Promise<number> {
   const cfg = readConfig(a, { log, err, cwd });
   if (cfg.code !== undefined) return cfg.code;
@@ -1146,7 +1153,7 @@ async function runBuild(
     cwd,
     dryRun: a.dryRun,
     log,
-    checkReferences: onlineReferences,
+    checkReferences,
     engine: () => engineEnv(targets, a, { log, err }),
   });
   if (out.kind === "no-engine") return 1;
@@ -1218,7 +1225,12 @@ const SIMPLE: Readonly<
     string,
     (
       a: Args,
-      io: { log: typeof console.log; err: typeof console.error; cwd: string },
+      io: {
+        log: typeof console.log;
+        err: typeof console.error;
+        cwd: string;
+        checkReferences: CheckReferences;
+      },
     ) => number | Promise<number>
   >
 > = {
@@ -1329,10 +1341,16 @@ export async function run(
     log = console.log,
     err = console.error,
     cwd = process.cwd(),
+    checkReferences = onlineReferences,
   }: {
     log?: typeof console.log;
     err?: typeof console.error;
     cwd?: string;
+    /**
+     * `build`'s online reference check — the real services by default. The e2e build passes a
+     * fake: no test depends on Crossref, Semantic Scholar or DBLP answering.
+     */
+    checkReferences?: CheckReferences;
   } = {},
 ): Promise<number> {
   const a = parseArgs(argv);
@@ -1374,7 +1392,7 @@ export async function run(
     });
   }
   const simple = SIMPLE[a.cmd];
-  if (simple) return await simple(a, { log, err, cwd });
+  if (simple) return await simple(a, { log, err, cwd, checkReferences });
   if (a.cmd === "check")
     err(
       `\`check\` is now \`lint\` — running it anyway. Update the call to \`paperlint lint\`.`,
