@@ -15,7 +15,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { existsSync } from "node:fs";
-import { newPaper, OVERRIDE_DIR } from "./new-paper.ts";
+import { newPaper, OVERRIDE_DIR, reportNewPaper } from "./new-paper.ts";
 import { parsePaperSettings } from "./paper-settings.ts";
 import { chooseVenue, run } from "./cli.ts";
 import { shippedPresets } from "./presets.ts";
@@ -300,5 +300,35 @@ describe("chooseVenue — on a terminal", () => {
     );
     expect(r).toEqual({ ok: true, value: null });
     expect(t.asked).toEqual([]);
+  });
+});
+
+describe("a project's own template", () => {
+  it("🔴 a template paperlint.json with comments refuses --venue by name, and nothing is made", () => {
+    const papers = join(tmp(), "papers");
+    mkdirSync(join(papers, OVERRIDE_DIR), { recursive: true });
+    const src = join(papers, OVERRIDE_DIR, "paperlint.json");
+    writeFileSync(src, '{\n  // our house venue\n  "extends": null\n}\n');
+    const r = newPaper(papers, "p", "tex", {
+      venue: { extends: "paperlint:aisec", kind: null },
+    });
+    expect(r).toEqual({
+      ok: false,
+      reason: `--venue cannot be written into ${src}: it is not plain JSON — set "extends" by hand`,
+    });
+    expect(existsSync(join(papers, "p"))).toBe(false);
+  });
+
+  it("the report names where each created file came from", () => {
+    const papers = join(tmp(), "papers");
+    mkdirSync(join(papers, OVERRIDE_DIR), { recursive: true });
+    writeFileSync(join(papers, OVERRIDE_DIR, "paperlint.json"), "{}\n");
+    const lines = reportNewPaper(newPaper(papers, "p", "tex"), (p) => p);
+    expect(lines).toContain(
+      "      + paperlint.json  (from the project's .template/ template)",
+    );
+    expect(
+      lines.filter((l) => l.endsWith("(from the package template)")).length,
+    ).toBeGreaterThan(0);
   });
 });

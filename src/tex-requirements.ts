@@ -72,8 +72,14 @@ function validatorFor(dir: string): Validate {
   return v;
 }
 
-/** Every violation as `<file>: <path> <message>` — one line each, so all of them are fixed at once. */
-function violations(file: string, v: Validate): string[] {
+/**
+ * Every violation as `<file>: <path> <message>` — one line each, so all of them are fixed at once.
+ * Ajv types `errors` as possibly null and a message as optional; both are tolerated, not assumed.
+ */
+export function violations(
+  file: string,
+  v: Pick<Validate, "errors">,
+): string[] {
   return (v.errors ?? []).map(
     (e) => `${file}: ${e.dataPath || "(top level)"} ${e.message ?? ""}`,
   );
@@ -158,7 +164,9 @@ interface PresetJson {
   readonly extends?: string;
   readonly name?: string;
   readonly template?: string;
-  readonly tex?: Partial<TexRequirements>;
+  /** The schema requires `packages` in a `tex` block; `tools` is optional. */
+  readonly tex?: Pick<TexRequirements, "packages"> &
+    Partial<Pick<TexRequirements, "tools">>;
   readonly format?: FormatJson;
   readonly rules?: Readonly<Record<string, unknown>>;
 }
@@ -221,9 +229,7 @@ export function parsePreset(
     extends: orNull(j.extends),
     name: orNull(j.name),
     template: orNull(j.template),
-    tex: j.tex
-      ? { packages: j.tex.packages ?? {}, tools: j.tex.tools ?? {} }
-      : null,
+    tex: j.tex ? { packages: j.tex.packages, tools: j.tex.tools ?? {} } : null,
     format: formatOf(j.format),
     rules: j.rules ?? {},
   };

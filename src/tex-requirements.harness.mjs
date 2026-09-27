@@ -225,4 +225,35 @@ rmSync(tmp, { recursive: true, force: true });
   );
 }
 
+// ── 5. the parser's tolerances: an optional block left out, and Ajv's optional fields ───
+{
+  const bare = R.parsePreset(
+    '{ "extends": "paperlint:aisec" }',
+    "bare.jsonc",
+    VENUES,
+  );
+  check(
+    "a preset that only extends another: no tex block, `rules` an empty object",
+    JSON.stringify([bare.extends, bare.tex, bare.rules]) ===
+      '["paperlint:aisec",null,{}]',
+    bare,
+  );
+  // Guards: `packages` is read without a fallback because the schema refuses a tex block
+  // without it — this is the refusal the type relies on.
+  check(
+    "a tex block without `packages` is refused by the schema, before anything reads it",
+    /tex\.jsonc: \.tex should have required property 'packages'/.test(
+      throws(() => R.parsePreset('{ "tex": {} }', "tex.jsonc", VENUES)),
+    ),
+    throws(() => R.parsePreset('{ "tex": {} }', "tex.jsonc", VENUES)),
+  );
+  check(
+    "violations: Ajv's null `errors` is no violation; a message Ajv left out is an empty one",
+    R.violations("f.jsonc", { errors: null }).length === 0 &&
+      R.violations("f.jsonc", {
+        errors: [{ dataPath: "", message: undefined }],
+      })[0] === "f.jsonc: (top level) ",
+  );
+}
+
 console.log(`tex-requirements: ${check.count} checks passed`);
