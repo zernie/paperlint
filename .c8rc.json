@@ -54,8 +54,8 @@
   "reportsDirectory": "coverage",
   "lines": 99,
   "statements": 99,
-  "functions": 94,
-  "branches": 94,
+  "functions": 95,
+  "branches": 96,
   "typeOnly": [
     "src/types.ts",
     "src/ports/*.ts",
