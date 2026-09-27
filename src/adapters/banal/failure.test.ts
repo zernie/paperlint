@@ -4,7 +4,12 @@
  */
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import { describe, describeLine, PERL_MISSING } from "./failure.ts";
+import {
+  type BanalFailure,
+  describe,
+  describeLine,
+  PERL_MISSING,
+} from "./failure.ts";
 import { acceptProbe } from "./probe.ts";
 
 test("describe: perl missing carries the fix", () => {
@@ -60,4 +65,68 @@ test("acceptProbe: one page and a body size is accepted; anything else is `probe
   const r = acceptProbe({ pages: [{}], bodyfontsize: null });
   assert.equal(!r.ok && r.error.kind, "probe-rejected");
   assert.equal(acceptProbe({ pages: [], bodyfontsize: 10 }).ok, false);
+});
+
+test("describe: every other kind is one exact sentence", () => {
+  const cases: readonly [BanalFailure, string][] = [
+    [
+      { kind: "process-failed", status: 2, stderrHead: "boom" },
+      "banal failed (exit 2): boom",
+    ],
+    [
+      { kind: "signalled", signal: "SIGKILL", stderrHead: "" },
+      "banal failed (SIGKILL): no output",
+    ],
+    [
+      { kind: "signalled", signal: "SIGTERM", stderrHead: "late" },
+      "banal failed (SIGTERM): late",
+    ],
+    [{ kind: "spawn-failed", message: "EACCES" }, "banal failed: EACCES"],
+    [
+      { kind: "timed-out", afterMs: 500 },
+      "banal failed: no answer after 500 ms",
+    ],
+    [{ kind: "no-json", head: "" }, "banal printed no JSON: nothing"],
+    [{ kind: "no-json", head: "Usage:" }, "banal printed no JSON: Usage:"],
+    [
+      { kind: "banal-error", stderrHead: "bad xml" },
+      "banal could not read the banal input XML: bad xml",
+    ],
+    [
+      {
+        kind: "unexpected-shape",
+        issues: ["pages missing", "bodyfontsize not a number"],
+      },
+      "banal printed JSON that is not a measurement: pages missing; bodyfontsize not a number",
+    ],
+    [
+      { kind: "probe-rejected", got: { pages: [] } },
+      'banal ran on a one-page probe but measured nothing: {"pages":[]}',
+    ],
+    [
+      { kind: "download-failed", url: "https://x/banal", detail: "HTTP 404" },
+      "could not download banal from https://x/banal: HTTP 404",
+    ],
+    [
+      { kind: "not-pinned", path: "/c/banal" },
+      "banal in /c/banal is not the pinned one (sha256 differs)",
+    ],
+    [
+      {
+        kind: "does-not-run",
+        path: "/c/banal",
+        why: { kind: "timed-out", afterMs: 9 },
+      },
+      "banal in /c/banal does not run: banal failed: no answer after 9 ms",
+    ],
+  ];
+  for (const [failure, sentence] of cases)
+    assert.deepEqual(describe(failure), [sentence]);
+});
+
+test("describeLine: a sha256 mismatch joins its three lines", () => {
+  assert.equal(
+    describeLine({ kind: "sha-mismatch", url: "u", expected: "e", got: "g" }),
+    "banal from u does not have the pinned sha256 — refusing to install it; expected e; got      g",
+  );
 });

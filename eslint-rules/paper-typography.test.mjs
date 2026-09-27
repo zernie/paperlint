@@ -16,7 +16,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { texLanguage } from "./latex-language.mjs";
-import typography from "./paper-typography.mjs";
+import typography, { texVisibleRuns } from "./paper-typography.mjs";
 import bib from "./bib-reachable-entry.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -333,5 +333,124 @@ describe("the escape hatch — a disable directive in a `%` comment", () => {
     expect(
       res.messages.filter((m) => /Unused eslint-disable/.test(m.message)),
     ).toHaveLength(1);
+  });
+});
+
+describe("where visible text comes from — the walk's other paths", () => {
+  it("a decimal in a braced group, in a typeset math argument, in a table's last argument", async () => {
+    const src = doc(
+      "In a group {.05}.\n\n\\multicolumn{2}{c}{.35}\n\n$x_{.75}$",
+    );
+    expect(
+      ids(await lint(src), "paper/leading-zero").map((m) =>
+        m.message.slice(0, 5),
+      ),
+    ).toEqual(["`.05`", "`.35`", "`.75`"]);
+  });
+
+  it("🔴 inside `\\frac{}{}` unified-latex gives offsets relative to the argument: the decimal is NOT reported", async () => {
+    // Guards: a character whose file offset is unknown gets no report and, above all, no fix at
+    // a guessed place. Known false negative, recorded rather than hidden.
+    const src = doc("$\\frac{1}{.25}$");
+    expect(texVisibleRuns(src).map((r) => [r.text, r.offs])).toContainEqual([
+      ".25",
+      [null, null, null],
+    ]);
+    expect(ids(await lint(src), "paper/leading-zero")).toEqual([]);
+  });
+
+  it("a last-argument macro written without its argument ends the run and reports nothing", async () => {
+    expect(ids(await lint(doc("See \\href")), "paper/leading-zero")).toEqual(
+      [],
+    );
+  });
+
+  it("a tree with no content, no args and a non-string environment name is walked, not thrown on", () => {
+    const tree = {
+      content: [
+        { type: "string", content: "a" },
+        { type: "group" },
+        { type: "environment", env: { weird: true } },
+        { type: "inlinemath" },
+        { type: "string", content: "b" },
+      ],
+    };
+    expect(texVisibleRuns("ab", { parse: () => tree })).toEqual([
+      { text: "a", offs: [null] },
+      { text: "b", offs: [null] },
+    ]);
+  });
+});
+
+describe("markdown: offsets that cannot be followed, and rules that are LaTeX-only", () => {
+  const mdLint = async (text, rules) => {
+    const [res] = await new ESLint({
+      cwd: FIX,
+      overrideConfigFile: true,
+      overrideConfig: [
+        {
+          files: ["**/*.md"],
+          plugins: { markdown, paper: typography },
+          language: "markdown/gfm",
+          rules,
+        },
+      ],
+    }).lintText(text, { filePath: join(FIX, "inline", "paper.md") });
+    expect(res.messages.filter((m) => m.fatal)).toEqual([]);
+    return res;
+  };
+
+  it("`§` before prose is reported without a fix", async () => {
+    const src = "As § above.\n";
+    const res = await mdLint(src, { "paper/section-word": "warn" });
+    expect(res.messages.map((m) => [m.ruleId, m.column, m.fix])).toEqual([
+      ["paper/section-word", 4, undefined],
+    ]);
+  });
+
+  it("a sign or a dot written as a character reference has no source offset: nothing is reported", async () => {
+    const res = await mdLint("See &#167; 5 and &#46;25.\n", {
+      "paper/section-word": "warn",
+      "paper/leading-zero": "warn",
+    });
+    expect(res.messages).toEqual([]);
+  });
+
+  it("figure-ref-style is LaTeX-only: silent on markdown", async () => {
+    const res = await mdLint("Figure~\\ref{a} and Fig.~\\ref{b}.\n", {
+      "paper/figure-ref-style": "warn",
+    });
+    expect(res.messages).toEqual([]);
+  });
+});
+
+describe("a source code the rules did not expect — the defaults hold", () => {
+  const reports = (ruleId, sourceCode) => {
+    const out = [];
+    const context = {
+      sourceCode: {
+        getLocFromIndex: (i) => ({ line: 1, column: i }),
+        ...sourceCode,
+      },
+      report: (r) => out.push(r),
+    };
+    typography.rules[ruleId].create(context)["root:exit"]();
+    return out;
+  };
+
+  it("LaTeX source without an AST: no comment ranges, the sign is still found", () => {
+    const found = reports("section-word", { raw: "See §5." });
+    expect(found.map((r) => [r.messageId, r.loc.start.column])).toEqual([
+      ["sign", 4],
+    ]);
+  });
+
+  it("markdown text nodes without positions: seen, never reported at a guessed place", () => {
+    const ast = {
+      type: "root",
+      children: [{ type: "text", value: "§5 and .25" }],
+    };
+    expect(reports("section-word", { text: "§5 and .25", ast })).toEqual([]);
+    expect(reports("leading-zero", { text: "§5 and .25", ast })).toEqual([]);
   });
 });

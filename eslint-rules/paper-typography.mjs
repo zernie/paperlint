@@ -201,8 +201,15 @@ function texRuns(nodes, math, src, out) {
   return out;
 }
 
-function texVisibleRuns(raw) {
-  const root = getParser().parse(raw).content;
+/**
+ * The visible runs of a LaTeX source. `parse` is unified-latex's parser; a test hands in a tree
+ * with the fields the walk tolerates being absent.
+ */
+export function texVisibleRuns(
+  raw,
+  { parse = (s) => getParser().parse(s) } = {},
+) {
+  const root = parse(raw).content;
   // Only the document body is typeset. A fragment with no `document` environment is all body.
   const document = root.find(
     (n) => n.type === "environment" && n.env === "document",
