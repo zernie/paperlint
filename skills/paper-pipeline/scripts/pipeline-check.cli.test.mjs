@@ -11,7 +11,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "vitest";
 import { runNode, useTempDir, writeTree } from "../../../test/support.mjs";
-import { check, parseStatus } from "./pipeline-check.mjs";
+import { check, newestSourceDate, parseStatus } from "./pipeline-check.mjs";
+import { readdirSync } from "node:fs";
 import { scorecard } from "./fixtures/scorecard.mjs";
 
 const SCRIPT = join(
@@ -391,4 +392,22 @@ test("parseStatus: a heading with no Latin word is no section; a short or id-les
     scorecardTables: 2,
     headings: ["Итоги", "SETUP"],
   });
+});
+
+test("newestSourceDate: a subdirectory that cannot be listed is skipped, the rest still dated", () => {
+  const dir = paper("unlistable", card(), {
+    files: { "locked/late.tex": "x" },
+    mtimes: { "locked/late.tex": "2026-09-20" },
+  });
+  const readdir = (d) => {
+    if (d.endsWith("locked"))
+      throw Object.assign(new Error("EACCES: permission denied"), {
+        code: "EACCES",
+      });
+    return readdirSync(d, { withFileTypes: true });
+  };
+  assert.deepEqual(
+    [newestSourceDate(dir, { readdir }), newestSourceDate(dir)],
+    [TEXT_DATE, "2026-09-20"],
+  );
 });

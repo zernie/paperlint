@@ -339,20 +339,19 @@ const GENERATED_DIRS = new Set([
   "artifact-anon",
 ]);
 
-function newestSourceDate(dir) {
+export function newestSourceDate(
+  dir,
+  { readdir = (d) => readdirSync(d, { withFileTypes: true }) } = {},
+) {
   const sources = [];
   const walk = (d, depth) => {
     if (depth > 3) return;
     let entries;
     try {
-      entries = readdirSync(d, { withFileTypes: true });
-      // EACCES on an unreadable subdirectory: the tests run as root, which directory permissions
-      // do not deny, and every other failure needs a race with rm.
-      /* c8 ignore start */
+      entries = readdir(d);
     } catch {
-      return;
+      return; // a directory that cannot be listed (EACCES) holds no source this walk can date
     }
-    /* c8 ignore stop */
     for (const e of entries) {
       if (
         e.name.startsWith(".") ||
