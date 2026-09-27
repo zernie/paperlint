@@ -1244,6 +1244,17 @@ function hostBanalInstaller(): ToolInstaller {
   return banalInstaller({ ...ports, download }, s);
 }
 
+/**
+ * The first papers directory the CLI would lint from `cwd`, or null when the config does not read
+ * or names none — what `doctor` (and `init`, through it) compares the hooks' directory against.
+ */
+function cliPapers(a: Args, cwd: string): string | null {
+  const read = readConfig(a, { log: () => {}, err: () => {}, cwd });
+  return read.code === undefined
+    ? (toPaths(papersDirOf(read.opts))[0] ?? null)
+    : null;
+}
+
 /** `paperlint init`: its flags checked here, the install itself in `init.ts`. */
 async function runInit(
   a: Args,
@@ -1287,15 +1298,8 @@ async function runInit(
           tex: toolchainTex(resolve(cwd, a.paths[0] ?? ".")),
         }),
     },
-    resolveCliPapers: (root: string): string | null => {
-      const read = readConfig(
-        { ...a, config: null },
-        { log: () => {}, err: () => {}, cwd: root },
-      );
-      return read.code === undefined
-        ? (toPaths(papersDirOf(read.opts))[0] ?? null)
-        : null;
-    },
+    resolveCliPapers: (root: string): string | null =>
+      cliPapers({ ...a, config: null }, root),
   });
 }
 
@@ -1341,11 +1345,7 @@ export async function run(
   // broken is precisely its job. So a failed read becomes "the CLI would lint nothing", which is
   // what it prints, rather than an early exit that tells the reader nothing about the hooks.
   if (a.cmd === "doctor") {
-    const read = readConfig(a, { log: () => {}, err: () => {}, cwd });
-    const papers =
-      read.code === undefined
-        ? (toPaths(papersDirOf(read.opts))[0] ?? null)
-        : null;
+    const papers = cliPapers(a, cwd);
     return doctor({
       log,
       cwd,
