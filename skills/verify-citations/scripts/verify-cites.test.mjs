@@ -15,7 +15,6 @@ import { test } from "vitest";
 import {
   levenshtein,
   titleSimilarity,
-  titlesMatch,
   yearMatch,
   titleRelation,
   bestTitleRelation,
@@ -54,17 +53,17 @@ ok(
   "case/normalize identical titles",
 );
 ok(
-  titlesMatch(
+  titleSimilarity(
     "Deep Residual Learning for Image Recognition",
     "Deep Residual Learning for Image Recognitionn",
-  ),
+  ) >= 0.7,
   "one typo still ≥0.70",
 );
 ok(
-  !titlesMatch(
+  titleSimilarity(
     "Attention Is All You Need",
     "A Survey of Reinforcement Learning",
-  ),
+  ) < 0.7,
   "unrelated titles < 0.70",
 );
 ok(yearMatch(2020, 2021), "year ±1 ok");

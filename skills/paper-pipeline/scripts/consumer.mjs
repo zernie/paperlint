@@ -300,23 +300,6 @@ export function ledgerPath(
   return join(hereDir, "runs.jsonl");
 }
 
-/**
- * `ledgerPath()` plus the assurance that the directory holding it exists.
- *
- * Split out rather than folded in, because the two failures are different: an undeclared ledger
- * is a setup mistake the message above can fix, while a declared-but-missing directory may be
- * the very thing the caller is about to create.
- */
-export function ledgerPathExisting(hereDir, opts) {
-  const p = ledgerPath(hereDir, opts);
-  if (!existsSync(p))
-    throw new Error(
-      `${CONFIG_KEY}: the ledger "${p}" does not exist. Create it (an empty file is a valid ` +
-        `empty ledger) or fix the "ledger" declaration in ${CONFIG_FILE}.`,
-    );
-  return p;
-}
-
 // ═════════════════════════════════════════════════════════════════════════════════════════════
 // THE FOURTH CARRIER — WHERE A SKILL'S PROSE NAMES THESE SCRIPTS
 //

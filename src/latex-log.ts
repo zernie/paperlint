@@ -39,13 +39,6 @@ export type LogMarker =
   | "undefined-references"
   | "undefined-citations";
 
-/** Markers that mean "the output of this pass is not final yet". */
-export const RERUN_MARKERS: readonly LogMarker[] = [
-  "rerun-requested",
-  "labels-changed",
-  "rerunfilecheck",
-];
-
 /**
  * Rejoin the lines TeX broke at column 79. A line of exactly 79 bytes continues on the next one.
  *

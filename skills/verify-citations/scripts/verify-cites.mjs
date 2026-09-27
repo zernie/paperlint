@@ -128,11 +128,6 @@ export function titleSimilarity(a, b) {
   return 1 - levenshtein(na, nb) / maxLen;
 }
 
-/** Two titles "match" iff normalized similarity ≥ threshold (default 0.70). */
-export function titlesMatch(a, b, threshold = TITLE_THRESHOLD) {
-  return titleSimilarity(a, b) >= threshold;
-}
-
 /** Normalize a DOI: strip a `doi:` / resolver-URL prefix and any TRAILING sentence
  *  punctuation a .bib or prose extractor swallowed. A trailing `.` makes doi.org
  *  return responseCode 100, so an unnormalized real DOI reads as fabrication (the
@@ -257,8 +252,7 @@ export function titleRelation(a, b) {
   const sb = scriptsOf(nb);
   if (sa.size && sb.size && ![...sa].some((x) => sb.has(x)))
     return "incomparable";
-  const sim = 1 - levenshtein(na, nb) / Math.max(na.length, nb.length);
-  if (sim >= TITLE_THRESHOLD) return "match";
+  if (titleSimilarity(a, b) >= TITLE_THRESHOLD) return "match";
   const A = contentTokens(na);
   const B = contentTokens(nb);
   if (A.length && B.length) {

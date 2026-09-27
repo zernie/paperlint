@@ -12,7 +12,6 @@ import {
   consumerTimezone,
   installedSkills,
   isMain,
-  ledgerPathExisting,
 } from "./consumer.mjs";
 
 const root = useTempDir("consumer-");
@@ -68,18 +67,6 @@ test("installedSkills: an entry gone between the listing and the stat is refused
   assert.throws(() => installedSkills("/s", fake(new Error("odd"))), {
     dangling: [{ name: "gone", target: "(not a link)", cause: "error" }],
   });
-});
-
-test("ledgerPathExisting: a declared ledger that is not on disk throws; one that is, is returned", () => {
-  const dir = consumer("ledger", { ledger: "runs.jsonl" });
-  assert.throws(
-    () => ledgerPathExisting(dir, at(dir)),
-    new Error(
-      `paperlint: the ledger "${join(dir, "runs.jsonl")}" does not exist. Create it (an empty file is a valid empty ledger) or fix the "ledger" declaration in paperlint.json.`,
-    ),
-  );
-  writeFileSync(join(dir, "runs.jsonl"), "");
-  assert.equal(ledgerPathExisting(dir, at(dir)), join(dir, "runs.jsonl"));
 });
 
 test("consumerTimezone: UTC by default, the declared zone, and loud refusals of null and a typo", () => {
