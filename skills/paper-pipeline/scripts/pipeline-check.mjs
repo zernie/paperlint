@@ -375,14 +375,20 @@ function newestSourceDate(dir) {
   walk(dir, 0);
   if (!sources.length) return null;
 
+  const QUIET_GIT = { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] };
   let newest = "";
   for (const p of sources) {
     let when; // no initializer: both branches below assign it (2026-08-28)
     try {
       // Dirty file: the edit is real and uncommitted, so mtime is the honest answer.
-      const dirty = execFileSync("git", ["status", "--porcelain", "--", p], {
-        encoding: "utf8",
-      }).trim();
+      // stderr is not the reader's: outside a repository git prints `fatal: … is outside
+      // repository` and throws, and the catch below already answers with the mtime. Inherited,
+      // that line reached the person's terminal under a banner that was otherwise correct.
+      const dirty = execFileSync(
+        "git",
+        ["status", "--porcelain", "--", p],
+        QUIET_GIT,
+      ).trim();
       // 🔴 EMPTY OUTPUT FROM `git log` IS NOT A DATE. The command exits 0 and prints NOTHING when
       // a path has no history: a shallow clone (`actions/checkout` defaults to `fetch-depth: 1`), a
       // file outside git, a file inside `node_modules`. Previously that empty value went on as
@@ -398,9 +404,11 @@ function newestSourceDate(dir) {
       // 34784079821).
       const logged = dirty
         ? ""
-        : execFileSync("git", ["log", "-1", "--format=%cs", "--", p], {
-            encoding: "utf8",
-          }).trim();
+        : execFileSync(
+            "git",
+            ["log", "-1", "--format=%cs", "--", p],
+            QUIET_GIT,
+          ).trim();
       when = logged || new Date(statSync(p).mtimeMs).toISOString().slice(0, 10);
     } catch {
       when = new Date(statSync(p).mtimeMs).toISOString().slice(0, 10); // no git here: fall back
