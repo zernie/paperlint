@@ -207,7 +207,7 @@ function isAcronymOf(base, words) {
   for (let i = 0; i < words.length; i++) {
     let acr = "";
     for (let j = i; j < words.length && acr.length < base.length; j++) {
-      acr += words[j][0]; // content tokens are never empty
+      acr += words[j].charAt(0); // "" for an empty token, like the first letter of nothing
     }
     if (acr === base) return true;
   }
@@ -828,33 +828,35 @@ async function openalexResolve(citation) {
   return null;
 }
 
-async function semanticScholarResolve(citation) {
+const S2 = "https://api.semanticscholar.org/graph/v1/paper";
+
+// By its id when the citation has one, else by the title — the resolvers run only for a citation
+// with at least one of the three, so the title search is given a title.
+const semanticScholarResolve = (citation) =>
+  citation.doi || citation.arxiv
+    ? semanticScholarById(citation)
+    : semanticScholarByTitle(citation.title);
+
+async function semanticScholarById(citation) {
   const db = "semantic_scholar";
-  const base = "https://api.semanticscholar.org/graph/v1/paper";
-  if (citation.doi || citation.arxiv) {
-    const id = citation.doi ? `DOI:${citation.doi}` : `arXiv:${citation.arxiv}`;
-    const r = await httpGet(
-      `${base}/${encodeURIComponent(id)}?fields=title,year`,
-    );
-    if (!r.ok) return { db, transport: "error" };
-    if (r.notFound)
-      return {
-        db,
-        transport: "ok",
-        query: citation.doi ? "doi" : "arxiv",
-        record: null,
-      };
-    const w = r.data;
-    return {
-      db,
-      transport: "ok",
-      query: citation.doi ? "doi" : "arxiv",
-      record: w?.title != null ? { title: w.title || "", year: w.year } : null,
-    };
-  }
-  // No id, so a title: verifyCitationLive calls the resolvers only when one of the three exists.
+  const query = citation.doi ? "doi" : "arxiv";
+  const id = citation.doi ? `DOI:${citation.doi}` : `arXiv:${citation.arxiv}`;
+  const r = await httpGet(`${S2}/${encodeURIComponent(id)}?fields=title,year`);
+  if (!r.ok) return { db, transport: "error" };
+  if (r.notFound) return { db, transport: "ok", query, record: null };
+  const w = r.data;
+  return {
+    db,
+    transport: "ok",
+    query,
+    record: w?.title != null ? { title: w.title || "", year: w.year } : null,
+  };
+}
+
+async function semanticScholarByTitle(title) {
+  const db = "semantic_scholar";
   const r = await httpGet(
-    `${base}/search?query=${encodeURIComponent(citation.title)}&fields=title,year&limit=5`,
+    `${S2}/search?query=${encodeURIComponent(title)}&fields=title,year&limit=5`,
   );
   if (!r.ok) return { db, transport: "error" };
   const items = r.data?.data || [];
@@ -922,10 +924,9 @@ export function parseArxivFeed(xml) {
  * means "no metadata here"; doi.org responseCode 100 means "this DOI does not
  * exist". Returns { transport, responseCode } for classifyDoiAuthority.
  */
-// Called only for a citation with a DOI (verifyCitationLive checks first).
-async function doiAuthorityCheck(citation) {
+async function doiAuthorityCheck(doi) {
   // Keep the DOI's own slashes as path separators; encode the rest.
-  const path = encodeURIComponent(citation.doi.trim()).replace(/%2F/gi, "/");
+  const path = encodeURIComponent(doi.trim()).replace(/%2F/gi, "/");
   const r = await httpGet(`https://doi.org/api/handles/${path}`);
   if (r.notFound) return { transport: "ok", responseCode: 100 }; // 404 = not found
   if (!r.ok) return { transport: "error" };
@@ -936,15 +937,14 @@ async function doiAuthorityCheck(citation) {
   };
 }
 
-// Called only for a citation with a CVE (verifyCitationLive checks first).
-async function nvdCheck(citation) {
-  if (!isValidCveId(citation.cve)) {
+async function nvdCheck(cve) {
+  if (!isValidCveId(cve)) {
     // Malformed CVE id — treat as a provided-id-that-cannot-resolve (fabrication).
     return { transport: "ok", found: false };
   }
   const r = await httpGet(
     `https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=${encodeURIComponent(
-      citation.cve.toUpperCase(),
+      cve.toUpperCase(),
     )}`,
   );
   if (!r.ok) return { transport: "error" };
@@ -1017,13 +1017,13 @@ export async function verifyCitationLive(
       const ck = cacheKey("doi_authority", citation.doi);
       let auth = cache[ck];
       if (!auth) {
-        auth = await doiAuthorityCheck(citation);
+        auth = await doiAuthorityCheck(citation.doi);
         // Cache only POSITIVE existence; never cache authority-absent (100), so a
         // freshly-minted DOI checked pre-propagation isn't pinned to `false` on re-run.
         if (auth && auth.transport === "ok" && auth.responseCode !== 100)
           cache[ck] = auth;
       }
-      if (auth) evidence.push(classifyDoiAuthority(auth));
+      evidence.push(classifyDoiAuthority(auth));
     }
   }
 
@@ -1032,8 +1032,8 @@ export async function verifyCitationLive(
     const ck = cacheKey("nvd", citation.cve.toUpperCase());
     let nvd = cache[ck];
     if (!nvd) {
-      nvd = await nvdCheck(citation);
-      if (nvd && nvd.transport === "ok") cache[ck] = nvd;
+      nvd = await nvdCheck(citation.cve);
+      if (nvd.transport === "ok") cache[ck] = nvd;
     }
     const e = checkNvd(citation, nvd);
     if (e) evidence.push(e);
