@@ -46,10 +46,29 @@ build asks only what that file cannot answer:
   for whether the services can be reached.
 - Adding or editing an entry asks only about that entry. Answers are stored per identifier (DOI,
   arXiv id, or title), so changing an entry's DOI or title is what makes it be asked again.
-- A request that failed is not an answer and is not stored, so the next build asks it again. A
-  service that refuses every request (Semantic Scholar rate-limiting a runner, DBLP answering HTML)
-  therefore keeps each build asking it — see
-  [#120](https://github.com/zernie/paperlint/issues/120).
+- A request that failed is not an answer and is not stored, so the next build asks it again.
+
+## When a service refuses
+
+Free services rate-limit. From a CI runner or a shared network, Semantic Scholar answers `429`,
+DBLP answers an HTML page where JSON was asked, a registry stops answering. The check handles this
+within one build:
+
+- **A service that refuses is asked once per build.** The first request to each service goes
+  alone; once a service refuses (a `429` or `5xx`, HTML instead of JSON, a timeout, no connection),
+  it is not asked again until the next build, and no retries or pauses are spent on it.
+- **The entries it would have answered say so.** An entry no registry confirmed carries
+  `not asked: <service>: <reason>` in its reason. An entry whose authors DBLP could not check is
+  `authors: unchecked`, which `paper/refs-checked` reports and lint never treats as a pass.
+- **Once one registry confirms a work, the others are not asked.** A confirmation settles the
+  verdict, so the remaining registries (and doi.org) could only cost requests.
+- **DBLP's pace** — it asks clients to pause between queries — is kept between queries DBLP
+  actually answered, and not after a cached answer or once DBLP has refused.
+
+Measured 2026-09-27 from a sandboxed runner where Semantic Scholar, OpenAlex and Crossref answered
+`429` and DBLP answered HTML: a 30-reference paper built in 5.6 s cold and 5.4 s warm (the check
+used to take 475 s and 450 s). Its entries were recorded, with the refusals named, and each later
+build fills in more of the cache as the services let it.
 
 **Commit this file.** It sits in `repro/`, beside the paper's other reproduction files, and not in
 `_build/`, which is build output. Committed, it makes CI and every other clone start warm: a CI job

@@ -43,6 +43,8 @@ interface CiteResult {
   readonly id: string;
   readonly verdict: "true" | "false" | "unresolvable";
   readonly reason?: string;
+  /** "<service>: <reason>" for each question a refusing service did not answer (#120). */
+  readonly refused?: readonly string[];
 }
 interface AuthorFinding {
   readonly key: string;
@@ -81,6 +83,18 @@ const authorsOf = (key: string, a: AuthorBuckets): EntryVerdict["authors"] =>
         ? "match"
         : "skipped";
 
+/**
+ * Why a work was not confirmed: verify-cites' reason, then — when some registry refused — which
+ * one, so "unresolvable" is not read as "every registry looked and found nothing". Nothing for a
+ * confirmed work: a refusal after a confirmation changed nothing.
+ */
+const unconfirmed = (
+  c: CiteResult | undefined,
+): readonly (string | undefined)[] =>
+  c && c.verdict !== "true"
+    ? [c.reason, ...(c.refused ?? []).map((r) => `not asked: ${r}`)]
+    : [];
+
 /** One entry's verdict from the two checkers' answers. */
 function entryVerdict(
   key: string,
@@ -90,7 +104,7 @@ function entryVerdict(
   const c = found.find((x) => x.id === key);
   const mismatch = a.findings.find((f) => f.key === key);
   const why = [
-    c && c.verdict !== "true" ? c.reason : undefined,
+    ...unconfirmed(c),
     mismatch ? describeAuthors(mismatch) : undefined,
     a.unchecked.find((u) => u.key === key)?.why,
   ]
@@ -117,15 +131,17 @@ const asksDblp = (e: BibAuthorsEntry): boolean =>
   !(authors.truncated(e.author) as boolean);
 
 /** Is every question this bibliography would ask already answered in `cache`? */
-function fullyCached(
+async function fullyCached(
   citations: readonly object[],
   entries: readonly BibAuthorsEntry[],
   cache: LookupCache,
-): boolean {
+  store: Readonly<Record<string, unknown>>,
+): Promise<boolean> {
+  const asks = await Promise.all(
+    citations.map((c) => cites.wouldAsk(c, store) as Promise<boolean>),
+  );
   return (
-    citations.every((c) =>
-      (cites.cacheKeysFor(c) as string[]).every((k) => cache.citations.has(k)),
-    ) &&
+    !asks.includes(true) &&
     entries.filter(asksDblp).every((e) => cache.dblp.has(dblpTitleKey(e.title)))
   );
 }
@@ -136,24 +152,40 @@ export interface ReferencesCheckerOptions {
 }
 
 /**
- * bib-authors' `lookup` and `pause`, answering from the cached DBLP hits first. The pause after a
- * cached answer is skipped: DBLP's pace protects DBLP, and a cached answer did not ask it.
+ * bib-authors' `lookup` and `pause`, answering from the cached DBLP hits first.
+ *
+ * 🔴 DBLP IS ASKED UNTIL IT REFUSES ONCE, THEN NOT AT ALL FOR THE REST OF THE RUN (#120). A 429, an
+ * HTML page where JSON was asked, a timeout: bib-authors would retry each title three times with
+ * backoff, and move on to the next title to do it again — 51 titles × 3 × up to 15 s. After the
+ * first refusal every lookup fails at once with the reason, and no pause is waited, so each entry
+ * lands in bib-authors' `unchecked` bucket ("never a pass") for the price of ONE request.
+ *
+ * The 900 ms pace protects DBLP, so it is kept only after an answer DBLP actually gave: not after a
+ * cached answer, and not once DBLP is off.
  */
 function cachedDblp(cache: LookupCache, today: () => string) {
   const dblp = new Map<string, CachedDblp>(cache.dblp);
   let lastWasCached = false;
+  let refused: string | null = null;
   return {
     dblp,
     lookup: async (title: string): Promise<readonly DblpHit[]> => {
       const hit = dblp.get(dblpTitleKey(title));
       lastWasCached = hit !== undefined;
       if (hit) return hit.hits;
-      const hits = (await authors.dblpHits(title)) as DblpHit[];
-      dblp.set(dblpTitleKey(title), { fetched: today(), title, hits });
-      return hits;
+      if (refused !== null)
+        throw new Error(`DBLP refused earlier in this run (${refused})`);
+      try {
+        const hits = (await authors.dblpHits(title)) as DblpHit[];
+        dblp.set(dblpTitleKey(title), { fetched: today(), title, hits });
+        return hits;
+      } catch (e) {
+        refused = (e as Error).message;
+        throw new Error(`DBLP refused earlier in this run (${refused})`);
+      }
     },
     pause: (ms: number): Promise<void> =>
-      lastWasCached ? Promise.resolve() : sleep(ms),
+      lastWasCached || refused !== null ? Promise.resolve() : sleep(ms),
   };
 }
 
@@ -184,7 +216,10 @@ export const referencesChecker =
       (c) => c.id,
     );
     const parsed = authors.parseBib(bib) as BibAuthorsEntry[];
-    if (!fullyCached(citations, parsed, cache)) {
+    const store: Record<string, unknown> = Object.fromEntries(
+      [...cache.citations].map(([k, v]) => [k, v.response]),
+    );
+    if (!(await fullyCached(citations, parsed, cache, store))) {
       const why = await unreachable();
       if (why !== null) return { check: { kind: "not-checked", why }, cache };
     }
@@ -193,16 +228,18 @@ export const referencesChecker =
     // pool of 6 is at most 6 requests to any one of them. The store is shared: two citations with
     // the same identifier may both miss it and ask twice — an extra request, never a different
     // answer.
-    const store: Record<string, unknown> = Object.fromEntries(
-      [...cache.citations].map(([k, v]) => [k, v.response]),
-    );
+    // One breaker for the run: a service that refuses is asked once, not once per citation (#120).
+    const breaker = cites.createBreaker() as unknown;
     const d = cachedDblp(cache, today);
     const [found, a] = await Promise.all([
       mapLimit(
         citations,
         LOOKUPS_IN_FLIGHT,
         (c) =>
-          cites.verifyCitationLive(c, { cache: store }) as Promise<CiteResult>,
+          cites.verifyCitationLive(c, {
+            cache: store,
+            breaker,
+          }) as Promise<CiteResult>,
       ),
       authors.checkAuthors(parsed, {
         lookup: d.lookup,

@@ -124,7 +124,10 @@ test("each entry gets its existence and its authors: confirmed, fabricated, mism
       fake: ["false", "skipped"],
       drift: ["unresolvable", "mismatch"],
       driftWhy: "missing turing (DBLP: ICSE 2024)",
-      flaky: ["unchecked", "DBLP lookup failed: DBLP 500"],
+      flaky: [
+        "unchecked",
+        "DBLP lookup failed: DBLP refused earlier in this run (DBLP 500)",
+      ],
       pre: ["unresolvable", "skipped"],
     },
   );
@@ -140,7 +143,7 @@ test("an author finding names what is extra and what is out of order; an entry o
     "https://dblp.org/search/publ/api/?q=Comment%20Paper": () =>
       dblp("Comment Paper", ["Grace Hopper"]),
     "https://dblp.org/": () => json(200, {}),
-    "https://api.crossref.org/": () => json(200),
+    "https://api.crossref.org/": () => json(200, { message: { items: [] } }),
   });
   const bib = [
     "@inproceedings{extra, author={Ada Lovelace and Grace Hopper}, title={Extra Paper}, booktitle={ICSE}}",
@@ -278,7 +281,10 @@ test("cold: every answer is stored with the day it was fetched — responses, ne
   assert.equal(check.kind, "checked");
   assert.deepEqual(
     {
-      citations: [...cache.citations.keys()].sort(),
+      // The lookups run concurrently, so insertion order is not the subject.
+      citations: [...cache.citations.keys()]
+        .map((k) => k.split(":").slice(0, 2).join(":"))
+        .sort(),
       dblp: [...cache.dblp.values()].map((d) => [d.title, d.hits.length]),
       dates: new Set(
         [...cache.citations.values(), ...cache.dblp.values()].map(
@@ -287,11 +293,19 @@ test("cold: every answer is stored with the day it was fetched — responses, ne
       ),
     },
     {
-      // Every key verify-cites names for these citations (pinned against a live run in
-      // verify-cites.net.test.mjs): the cold run stored every answer it got.
-      citations: (cites.parseBib(PAPERS.join("\n")) as object[])
-        .flatMap((c) => cites.cacheKeysFor(c) as string[])
-        .sort(),
+      // `good` is confirmed by Crossref, which ends its lookups; the two title-only entries are
+      // found nowhere, so each asked all four registries.
+      citations: [
+        "arxiv:title",
+        "arxiv:title",
+        "crossref:doi",
+        "crossref:title",
+        "crossref:title",
+        "openalex:title",
+        "openalex:title",
+        "semantic_scholar:title",
+        "semantic_scholar:title",
+      ],
       dblp: [
         ["Good Paper", 1],
         ["Other Paper", 0],
@@ -388,4 +402,102 @@ test("offline with an incomplete cache: not-checked, and the cache comes back un
     },
     cache: EMPTY_LOOKUP_CACHE,
   });
+});
+
+// ── #120: a service that refuses costs one request per run ───────────────────────────────
+
+const PUBLISHED = [
+  "@inproceedings{a, author={Ada Lovelace}, title={First Paper}, booktitle={ICSE}}",
+  "@inproceedings{b, author={Ada Lovelace}, title={Second Paper}, booktitle={ICSE}}",
+  "@inproceedings{c, author={Ada Lovelace}, title={Third Paper}, booktitle={ICSE}}",
+].join("\n");
+
+/** Every registry answers "not found"; DBLP and Semantic Scholar answer with `dblp` and `s2`. */
+function refusing(dblpAnswer: () => Response, s2: () => Response) {
+  return fakeFetch({
+    "https://api.crossref.org/": () => json(200, { message: { items: [] } }),
+    "https://api.openalex.org/": () => json(200, { results: [] }),
+    "https://api.semanticscholar.org/": s2,
+    "https://export.arxiv.org/": () => new Response("<feed></feed>"),
+    "https://dblp.org/": dblpAnswer,
+  });
+}
+const count = (calls: string[], prefix: string) =>
+  calls.filter((u) => u.startsWith(prefix)).length;
+
+test("🔴 #120: DBLP answering HTML is asked ONCE — no retries, no pause — and every entry says why it is unchecked", async () => {
+  // Fake timers with NO advancing: a single 900 ms pause or retry backoff would hang the test.
+  vi.useFakeTimers();
+  const calls = refusing(
+    () => new Response("<!doctype html><title>429</title>"),
+    () => json(429),
+  );
+  const { check } = await cached(PUBLISHED, EMPTY_LOOKUP_CACHE);
+  const entries = check.kind === "checked" ? check.entries : [];
+  assert.deepEqual(
+    {
+      dblp: count(calls, "https://dblp.org/"),
+      s2: count(calls, "https://api.semanticscholar.org/"),
+      crossref: count(calls, "https://api.crossref.org/works"),
+      entries: entries.map((e) => [e.key, e.exists, e.authors]),
+    },
+    {
+      dblp: 1,
+      s2: 1,
+      crossref: 3,
+      entries: [
+        ["a", "unresolvable", "unchecked"],
+        ["b", "unresolvable", "unchecked"],
+        ["c", "unresolvable", "unchecked"],
+      ],
+    },
+  );
+  // The reason, as the record carries it — its last part names both refusals.
+  assert.deepEqual(
+    entries.map((e) => e.why?.split("; ").slice(1)),
+    [
+      [
+        "not asked: semantic_scholar: http 429",
+        "DBLP lookup failed: DBLP refused earlier in this run (Unexpected token '<', \"<!doctype \"... is not valid JSON)",
+      ],
+      [
+        "not asked: semantic_scholar: semantic_scholar refused earlier in this run (http 429)",
+        "DBLP lookup failed: DBLP refused earlier in this run (Unexpected token '<', \"<!doctype \"... is not valid JSON)",
+      ],
+      [
+        "not asked: semantic_scholar: semantic_scholar refused earlier in this run (http 429)",
+        "DBLP lookup failed: DBLP refused earlier in this run (Unexpected token '<', \"<!doctype \"... is not valid JSON)",
+      ],
+    ],
+  );
+});
+
+test("#120: a DBLP 429 trips it as well; DBLP answering keeps its 900 ms pace between queries", async () => {
+  vi.useFakeTimers();
+  const refused = refusing(
+    () => json(429),
+    () => json(200, { data: [] }),
+  );
+  await cached(PUBLISHED, EMPTY_LOOKUP_CACHE);
+  vi.useRealTimers();
+  vi.useFakeTimers();
+  const answering = refusing(
+    () => dblp("First Paper", ["Ada Lovelace"]),
+    () => json(200, { data: [] }),
+  );
+  const pending = cached(PUBLISHED, EMPTY_LOOKUP_CACHE);
+  // One compared entry, then the pause: without advancing time, the run cannot finish.
+  let done = false;
+  void pending.finally(() => (done = true));
+  await vi.advanceTimersByTimeAsync(0);
+  const beforePause = done;
+  await settle(pending);
+  assert.deepEqual(
+    {
+      refused: count(refused, "https://dblp.org/"),
+      answering: count(answering, "https://dblp.org/"),
+      beforePause,
+    },
+    { refused: 1, answering: 3, beforePause: false },
+  );
 });
