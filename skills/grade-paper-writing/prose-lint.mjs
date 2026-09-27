@@ -652,6 +652,16 @@ for (const f of args.filter((a) => !a.startsWith("--"))) {
   const raw = fs.readFileSync(f, "utf8");
   const isPdfText = f.endsWith(".txt");
   const prep = isPdfText ? pdfTextOnly : bodyOnly;
+  // 🔴 NOTHING LEFT IS NOT "CLEAN". A body that strips to no words used to be analysed anyway: every
+  // metric is a fraction of the word count, so the report printed NaN, FLAGged three metrics and
+  // exited 0. Refused like `.tex` above — no number is better than a meaningless one.
+  if (words(prep(raw)) === 0) {
+    console.error(
+      `prose-lint: ${f} has no prose to measure — after the frontmatter, comments, code ` +
+        "blocks, tables and the reference section are stripped, no word is left.",
+    );
+    process.exit(2);
+  }
   const r = analyse(prep(raw));
   if (flagsOnly) {
     const lines = [];

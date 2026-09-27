@@ -118,3 +118,18 @@ test("--flags-only: a paper with no figures directory is clean, exit 0 and silen
     },
   );
 });
+
+test("a file with no prose left to measure is refused with exit 2, not reported as NaN", () => {
+  writeTree(root, {
+    "empty/paper.md":
+      "---\ntitle: only frontmatter\n---\n<!-- and a note -->\n",
+  });
+  const file = join(root, "empty", "paper.md");
+  assert.deepEqual(runNode(SCRIPT, [file]), {
+    status: 2,
+    stdout: "",
+    stderr:
+      `prose-lint: ${file} has no prose to measure — after the frontmatter, comments, code ` +
+      "blocks, tables and the reference section are stripped, no word is left.\n",
+  });
+});
