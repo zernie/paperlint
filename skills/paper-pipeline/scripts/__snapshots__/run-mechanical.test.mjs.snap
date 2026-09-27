@@ -1,0 +1,596 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`a checker that is not installed is \`crashed\`, never a finding 1`] = `
+{
+  "code": 0,
+  "out": "
+⬜ render-paper/report-submission — abstained (input-missing): could not run: the thing it reads is not there
+
+⬜ render-paper/report-submission-citations — abstained (crashed): the check itself errored out
+
+⬜ tighten-paper/structure — abstained (crashed): the check itself errored out
+
+⬜ grade-paper-writing/prose-lint — abstained (crashed): the check itself errored out
+
+⬜ verify-citations/verify-cites — abstained (crashed): the check itself errored out
+
+⬜ harden-paper/artifact-coverage — abstained (crashed): the check itself errored out
+
+⬜ build-benchmark/check-provenance — abstained (crashed): the check itself errored out
+
+⬜ build-benchmark/arm-permutation — abstained (input-missing): could not run: the thing it reads is not there
+
+⬜ build-benchmark/delivered-pdf — abstained (input-missing): could not run: the thing it reads is not there
+
+⬜ build-benchmark/generated-code — abstained (crashed): the check itself errored out
+
+⬜ grade-paper-writing/textidote — abstained (input-missing): could not run: the thing it reads is not there
+
+⬜ verify-citations/uncited-refs — abstained (input-missing): could not run: the thing it reads is not there
+
+⬜ draft-paper/population-map — abstained (crashed): the check itself errored out
+
+⬜ tighten-paper/round-diff — abstained (input-missing): could not run: the thing it reads is not there
+
+🟢 no FACT check recorded a blocking finding
+   Judgement checks report and never fail the run; read them, and never grep this for green.
+",
+  "rows": [
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "input-missing",
+      "row": "render-paper/report-submission",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "crashed",
+      "row": "render-paper/report-submission-citations",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "crashed",
+      "row": "tighten-paper/structure",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "crashed",
+      "row": "grade-paper-writing/prose-lint",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "crashed",
+      "row": "verify-citations/verify-cites",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "crashed",
+      "row": "harden-paper/artifact-coverage",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "crashed",
+      "row": "build-benchmark/check-provenance",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "input-missing",
+      "row": "build-benchmark/arm-permutation",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "input-missing",
+      "row": "build-benchmark/delivered-pdf",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "crashed",
+      "row": "build-benchmark/generated-code",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "input-missing",
+      "row": "grade-paper-writing/textidote",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "input-missing",
+      "row": "verify-citations/uncited-refs",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "crashed",
+      "row": "draft-paper/population-map",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "input-missing",
+      "row": "tighten-paper/round-diff",
+    },
+  ],
+}
+`;
+
+exports[`as a process, in a consumer that declares no citation checkers and has no structure rules 1`] = `
+{
+  "status": 0,
+  "stderr": "",
+  "stdout": "
+⬜ render-paper/report-submission — abstained (input-missing): could not run: the thing it reads is not there
+
+⬜ render-paper/report-submission-citations — abstained (input-missing): could not run: the thing it reads is not there
+
+⬜ tighten-paper/structure — abstained (input-missing): could not run: the thing it reads is not there
+
+⬜ grade-paper-writing/prose-lint — abstained (input-missing): could not run: the thing it reads is not there
+
+⬜ verify-citations/verify-cites — abstained (input-missing): could not run: the thing it reads is not there
+
+🤍 harden-paper/artifact-coverage — no finding recorded (abstained: no-witness)
+   does the released bundle hold data for what the paper points at
+
+🤍 build-benchmark/check-provenance — no finding recorded (abstained: no-witness)
+   bolded figures with no row in any provenance file
+
+⬜ build-benchmark/arm-permutation — abstained (input-missing): could not run: the thing it reads is not there
+
+⬜ build-benchmark/delivered-pdf — abstained (input-missing): could not run: the thing it reads is not there
+
+🤍 build-benchmark/generated-code — no finding recorded (abstained: no-witness)
+   analysis scripts that never seed randomness, hard-code an absolute path, or clobber their own input
+
+⬜ grade-paper-writing/textidote — abstained (input-missing): could not run: the thing it reads is not there
+
+⬜ verify-citations/uncited-refs — abstained (input-missing): could not run: the thing it reads is not there
+
+🤍 draft-paper/population-map — no finding recorded (abstained: no-witness)
+   can the reader tell WHICH SET each number counts
+
+⬜ tighten-paper/round-diff — abstained (input-missing): could not run: the thing it reads is not there
+
+🟢 no FACT check recorded a blocking finding
+   Judgement checks report and never fail the run; read them, and never grep this for green.
+
+",
+}
+`;
+
+exports[`paper A, checkers answering in the shapes a row must not count 1`] = `
+{
+  "code": 0,
+  "out": "
+🤍 render-paper/report-submission — no finding recorded (abstained: no-witness)
+   body pages, overfull boxes, unresolved refs, dropped characters, anonymity, artifact URLs
+
+⬜ render-paper/report-submission-citations — abstained (input-missing): could not run: the thing it reads is not there
+
+⬜ tighten-paper/structure — abstained (crashed): the check itself errored out
+
+🤍 grade-paper-writing/prose-lint — no finding recorded (abstained: no-witness)
+   thresholds with published baselines; judgement, so it never fails the run
+
+🤍 verify-citations/verify-cites — no finding recorded (abstained: no-witness)
+   the mechanical half only — the fetching half needs the network and a reader
+
+🤍 harden-paper/artifact-coverage — no finding recorded (abstained: no-witness)
+   does the released bundle hold data for what the paper points at
+
+🤍 build-benchmark/check-provenance — no finding recorded (abstained: no-witness)
+   bolded figures with no row in any provenance file
+
+⬜ build-benchmark/arm-permutation — abstained (crashed): the check itself errored out
+
+⬜ build-benchmark/delivered-pdf — abstained (crashed): the check itself errored out
+
+🤍 build-benchmark/generated-code — no finding recorded (abstained: no-witness)
+   analysis scripts that never seed randomness, hard-code an absolute path, or clobber their own input
+
+⬜ grade-paper-writing/textidote — abstained (crashed): the check itself errored out
+
+⬜ verify-citations/uncited-refs — abstained (crashed): the check itself errored out
+
+🤍 draft-paper/population-map — no finding recorded (abstained: no-witness)
+   can the reader tell WHICH SET each number counts
+
+🟠 tighten-paper/round-diff — 1 finding(s) → reviews/mechanical/tighten-paper--round-diff.md
+   a review round may only change what it declared; the whole body is weighed every round
+   [
+     {
+       "kind": "no-round-ledger",
+       "msg": "no readable round manifest under a/rounds — review rounds on this paper are unrecorded, so the ratchet (3 body words, 0.0 hedges per 1000) is measured against nothing. Open a round before the next review pass."
+     }
+   ]
+
+🟢 no FACT check recorded a blocking finding
+   Judgement checks report and never fail the run; read them, and never grep this for green.
+",
+  "rows": [
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "no-witness",
+      "row": "render-paper/report-submission",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "input-missing",
+      "row": "render-paper/report-submission-citations",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "crashed",
+      "row": "tighten-paper/structure",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "no-witness",
+      "row": "grade-paper-writing/prose-lint",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "no-witness",
+      "row": "verify-citations/verify-cites",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "no-witness",
+      "row": "harden-paper/artifact-coverage",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "no-witness",
+      "row": "build-benchmark/check-provenance",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "crashed",
+      "row": "build-benchmark/arm-permutation",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "crashed",
+      "row": "build-benchmark/delivered-pdf",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "no-witness",
+      "row": "build-benchmark/generated-code",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "crashed",
+      "row": "grade-paper-writing/textidote",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "crashed",
+      "row": "verify-citations/uncited-refs",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "no-witness",
+      "row": "draft-paper/population-map",
+    },
+    {
+      "findings": 1,
+      "kind": "FINDING",
+      "row": "tighten-paper/round-diff",
+    },
+  ],
+}
+`;
+
+exports[`paper A, every checker answering with findings 1`] = `
+{
+  "code": 1,
+  "out": "
+🔴 render-paper/report-submission — 2 finding(s) → reviews/mechanical/render-paper--report-submission.md
+   body pages, overfull boxes, unresolved refs, dropped characters, anonymity, artifact URLs
+   overfull box
+   unresolved ref
+   
+
+⬜ render-paper/report-submission-citations — abstained (input-missing): could not run: the thing it reads is not there
+
+🔴 tighten-paper/structure — 2 finding(s) → reviews/mechanical/tighten-paper--structure.md
+   section weights, the free half vs the half under a page limit, unjustified blocks
+   paper.md:1:1  error  paper/section-lead  no lead
+   paper.md:3:1  warning  paper/subsection-size  long
+
+🟠 grade-paper-writing/prose-lint — 2 finding(s) → reviews/mechanical/grade-paper-writing--prose-lint.md
+   thresholds with published baselines; judgement, so it never fails the run
+   ✍️  prose-lint — paper.md:
+      a long caption
+   
+
+🔴 verify-citations/verify-cites — 1 finding(s) → reviews/mechanical/verify-citations--verify-cites.md
+   the mechanical half only — the fetching half needs the network and a reader
+   1 fabricated entry
+   
+
+🤍 harden-paper/artifact-coverage — no finding recorded (abstained: no-witness)
+   does the released bundle hold data for what the paper points at
+
+🤍 build-benchmark/check-provenance — no finding recorded (abstained: no-witness)
+   bolded figures with no row in any provenance file
+
+🟠 build-benchmark/arm-permutation — 2 finding(s) → reviews/mechanical/build-benchmark--arm-permutation.md
+   a quantity that does not move when its arm label moves was transcribed, not computed
+   [
+     {
+       "q": 1
+     },
+     {
+       "q": 2
+     }
+   ]
+
+⬜ build-benchmark/delivered-pdf — abstained (crashed): the check itself errored out
+
+🤍 build-benchmark/generated-code — no finding recorded (abstained: no-witness)
+   analysis scripts that never seed randomness, hard-code an absolute path, or clobber their own input
+
+🤍 grade-paper-writing/textidote — no finding recorded (abstained: no-witness)
+   a spelling or grammar warning with no row in repro/textidote-grandfathered.txt
+
+🟠 verify-citations/uncited-refs — 1 finding(s) → reviews/mechanical/verify-citations--uncited-refs.md
+   a bibliography entry no \\cite in the paper points at
+   [
+     "smith2020"
+   ]
+
+🤍 draft-paper/population-map — no finding recorded (abstained: no-witness)
+   can the reader tell WHICH SET each number counts
+
+🟠 tighten-paper/round-diff — 1 finding(s) → reviews/mechanical/tighten-paper--round-diff.md
+   a review round may only change what it declared; the whole body is weighed every round
+   [
+     {
+       "kind": "no-round-ledger",
+       "msg": "no readable round manifest under a/rounds — review rounds on this paper are unrecorded, so the ratchet (3 body words, 0.0 hedges per 1000) is measured against nothing. Open a round before the next review pass."
+     }
+   ]
+
+🔴 a FACT check found something — see above
+   Judgement checks report and never fail the run; read them, and never grep this for green.
+",
+  "rows": [
+    {
+      "blocking": true,
+      "findings": 2,
+      "kind": "FINDING",
+      "row": "render-paper/report-submission",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "input-missing",
+      "row": "render-paper/report-submission-citations",
+    },
+    {
+      "blocking": true,
+      "findings": 2,
+      "kind": "FINDING",
+      "row": "tighten-paper/structure",
+    },
+    {
+      "findings": 2,
+      "kind": "FINDING",
+      "row": "grade-paper-writing/prose-lint",
+    },
+    {
+      "blocking": true,
+      "findings": 1,
+      "kind": "FINDING",
+      "row": "verify-citations/verify-cites",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "no-witness",
+      "row": "harden-paper/artifact-coverage",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "no-witness",
+      "row": "build-benchmark/check-provenance",
+    },
+    {
+      "findings": 2,
+      "kind": "FINDING",
+      "row": "build-benchmark/arm-permutation",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "crashed",
+      "row": "build-benchmark/delivered-pdf",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "no-witness",
+      "row": "build-benchmark/generated-code",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "no-witness",
+      "row": "grade-paper-writing/textidote",
+    },
+    {
+      "findings": 1,
+      "kind": "FINDING",
+      "row": "verify-citations/uncited-refs",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "no-witness",
+      "row": "draft-paper/population-map",
+    },
+    {
+      "findings": 1,
+      "kind": "FINDING",
+      "row": "tighten-paper/round-diff",
+    },
+  ],
+}
+`;
+
+exports[`paper B: every row whose input is absent abstains as input-missing 1`] = `
+{
+  "code": 0,
+  "out": "
+⬜ render-paper/report-submission — abstained (input-missing): could not run: the thing it reads is not there
+
+🤍 render-paper/report-submission-citations — no finding recorded (abstained: no-witness)
+   a \\cite with no bibliography entry, from the pdflatex log
+
+⬜ tighten-paper/structure — abstained (crashed): the check itself errored out
+
+🤍 grade-paper-writing/prose-lint — no finding recorded (abstained: no-witness)
+   thresholds with published baselines; judgement, so it never fails the run
+
+🤍 verify-citations/verify-cites — no finding recorded (abstained: no-witness)
+   the mechanical half only — the fetching half needs the network and a reader
+
+🤍 harden-paper/artifact-coverage — no finding recorded (abstained: no-witness)
+   does the released bundle hold data for what the paper points at
+
+🤍 build-benchmark/check-provenance — no finding recorded (abstained: no-witness)
+   bolded figures with no row in any provenance file
+
+⬜ build-benchmark/arm-permutation — abstained (input-missing): could not run: the thing it reads is not there
+
+⬜ build-benchmark/delivered-pdf — abstained (input-missing): could not run: the thing it reads is not there
+
+🤍 build-benchmark/generated-code — no finding recorded (abstained: no-witness)
+   analysis scripts that never seed randomness, hard-code an absolute path, or clobber their own input
+
+⬜ grade-paper-writing/textidote — abstained (input-missing): could not run: the thing it reads is not there
+
+⬜ verify-citations/uncited-refs — abstained (input-missing): could not run: the thing it reads is not there
+
+🤍 draft-paper/population-map — no finding recorded (abstained: no-witness)
+   can the reader tell WHICH SET each number counts
+
+⬜ tighten-paper/round-diff — abstained (input-missing): could not run: the thing it reads is not there
+
+🟢 no FACT check recorded a blocking finding
+   Judgement checks report and never fail the run; read them, and never grep this for green.
+",
+  "rows": [
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "input-missing",
+      "row": "render-paper/report-submission",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "no-witness",
+      "row": "render-paper/report-submission-citations",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "crashed",
+      "row": "tighten-paper/structure",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "no-witness",
+      "row": "grade-paper-writing/prose-lint",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "no-witness",
+      "row": "verify-citations/verify-cites",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "no-witness",
+      "row": "harden-paper/artifact-coverage",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "no-witness",
+      "row": "build-benchmark/check-provenance",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "input-missing",
+      "row": "build-benchmark/arm-permutation",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "input-missing",
+      "row": "build-benchmark/delivered-pdf",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "no-witness",
+      "row": "build-benchmark/generated-code",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "input-missing",
+      "row": "grade-paper-writing/textidote",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "input-missing",
+      "row": "verify-citations/uncited-refs",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "no-witness",
+      "row": "draft-paper/population-map",
+    },
+    {
+      "findings": 0,
+      "kind": "ABSTAINED",
+      "reason": "input-missing",
+      "row": "tighten-paper/round-diff",
+    },
+  ],
+}
+`;

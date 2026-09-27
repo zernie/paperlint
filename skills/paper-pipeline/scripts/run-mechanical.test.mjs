@@ -1,0 +1,268 @@
+/**
+ * run-mechanical.mjs — every row against a fake consumer whose checkers are stand-ins with a
+ * scripted answer, so each way of READING a result (`exit`, `flags`, `json`, `eslint`) and each way
+ * of NOT getting one (input missing, checker not installed, output that is not what the row reads)
+ * is driven on purpose. What is compared is what the run tells a reader (stdout) and what it
+ * records (the ledger rows, minus hashes and timestamps).
+ *
+ * The consumer root and the ledger are set BEFORE import: the module resolves both at load time.
+ */
+import assert from "node:assert/strict";
+import { chmodSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { afterEach, expect, test, vi } from "vitest";
+import { runNode, useTempDir, writeTree } from "../../../test/support.mjs";
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const SCRIPT = join(HERE, "run-mechanical.mjs");
+const root = useTempDir("run-mechanical-");
+const consumer = join(root, "consumer");
+const LEDGER = join(root, "runs.jsonl");
+
+/** A node stand-in that prints what FAKE_<NAME> says and exits with FAKE_<NAME>_EXIT. */
+const nodeFake = (name) =>
+  `const out = process.env.FAKE_${name} ?? "";\n` +
+  `process.stdout.write(out);\n` +
+  `process.exit(Number(process.env.FAKE_${name}_EXIT ?? 0));\n`;
+/** The same, in python — the citation checkers and the repro scripts are python. */
+const pyFake = (name) =>
+  `import os, sys\n` +
+  `sys.stdout.write(os.environ.get("FAKE_${name}", ""))\n` +
+  `sys.exit(int(os.environ.get("FAKE_${name}_EXIT", "0")))\n`;
+
+writeTree(consumer, {
+  "paperlint.json": JSON.stringify({ citeChecks: "cite" }),
+  "cite/report-submission.py": pyFake("REPORT"),
+  "cite/uncited_refs.py": pyFake("UNCITED"),
+  "eslint-rules/paper-structure.mjs":
+    'export default { "section-lead": {}, "subsection-size": {} };\n',
+  "node_modules/.bin/eslint": `#!${process.execPath}\n${nodeFake("ESLINT")}`,
+  // The stand-in hands over to the REAL prose-lint when asked, so the count the ledger records can
+  // be checked against what the real checker printed.
+  ".claude/skills/grade-paper-writing/prose-lint.mjs":
+    `if (process.env.FAKE_PROSE_REAL) await import(${JSON.stringify(
+      join(HERE, "..", "..", "grade-paper-writing", "prose-lint.mjs"),
+    )});\n` + nodeFake("PROSE"),
+  ".claude/skills/verify-citations/scripts/verify-cites.test.mjs":
+    nodeFake("CITES"),
+  // Paper A: a submission — a venue limit, a build, every repro checker present.
+  "papers/a/paper.md": "# A\n\nA plain paragraph.\n",
+  "papers/a/.body-limit": "8\n",
+  "papers/a/build/paper.log": "log\n",
+  "papers/a/build/paper.aux": "aux\n",
+  "papers/a/build/acl_latex.pdf": "%PDF\n",
+  "papers/a/repro/arm_permutation.py": pyFake("ARM"),
+  "papers/a/repro/delivered_pdf.py": pyFake("DELIVERED"),
+  "papers/a/repro/textidote_check.py": pyFake("TEXTIDOTE"),
+  "papers/a/rounds/.keep": "",
+  // Paper B: built in place, no venue, nothing optional.
+  "papers/b/paper.md": "# B\n\nAnother paragraph.\n",
+  // Paper C: one figure whose caption breaks BOTH caption limits — two prose-lint findings.
+  "papers/c/paper.md": "# C\n\nA paragraph of prose.\n",
+  "papers/c/figures/f.tex": `\\caption{${"word ".repeat(110)}}`,
+  "papers/b/paper.log": "log\n",
+  "textidote.jar": "",
+});
+chmodSync(join(consumer, "node_modules/.bin/eslint"), 0o755);
+
+process.env.CLAUDE_PROJECT_DIR = consumer;
+process.env.PIPELINE_LEDGER = LEDGER;
+process.env.TEXTIDOTE_JAR = join(consumer, "textidote.jar");
+const { GATES, main } = await import("./run-mechanical.mjs");
+
+const ESLINT_FINDINGS = JSON.stringify([
+  {
+    filePath: "paper.md",
+    messages: [
+      {
+        ruleId: "paper/section-lead",
+        severity: 2,
+        line: 1,
+        column: 1,
+        message: "no lead",
+      },
+      {
+        ruleId: "paper/subsection-size",
+        severity: 1,
+        line: 3,
+        column: 1,
+        message: "long",
+      },
+      {
+        ruleId: "paper/other-row",
+        severity: 2,
+        line: 4,
+        column: 1,
+        message: "not ours",
+      },
+    ],
+  },
+]);
+
+/** Run `main` on a paper with the given stand-in answers; stdout and the new ledger rows. */
+function run(paper, fakes = {}) {
+  rmSync(LEDGER, { force: true });
+  const saved = { ...process.env };
+  Object.assign(process.env, fakes);
+  const lines = [];
+  const log = vi.spyOn(console, "log").mockImplementation((...a) => {
+    lines.push(a.join(" "));
+  });
+  const err = vi.spyOn(console, "error").mockImplementation((...a) => {
+    lines.push(`stderr: ${a.join(" ")}`);
+  });
+  let code;
+  try {
+    code = main(["node", SCRIPT, paper]);
+  } finally {
+    log.mockRestore();
+    err.mockRestore();
+    process.env = saved;
+  }
+  let rows = [];
+  try {
+    rows = readFileSync(LEDGER, "utf8")
+      .trim()
+      .split("\n")
+      .map((l) => JSON.parse(l))
+      .map(({ skill, check, kind, reason, findings, blocking }) => ({
+        row: `${skill}/${check}`,
+        kind,
+        ...(reason ? { reason } : {}),
+        ...(findings !== undefined ? { findings } : {}),
+        ...(blocking ? { blocking } : {}),
+      }));
+  } catch {
+    // no row written
+  }
+  const out = lines.join("\n").replaceAll(root, "<root>");
+  return { code, out, rows };
+}
+
+afterEach(() => rmSync(LEDGER, { force: true }));
+
+test("a directory with no paper.md: exit 2, named", () => {
+  const r = run(join(root, "nowhere"));
+  assert.deepEqual(r, {
+    code: 2,
+    out: "stderr: no paper.md in <root>/nowhere",
+    rows: [],
+  });
+});
+
+test("two rows sharing a key are refused before anything runs", () => {
+  GATES.push({ ...GATES[0] });
+  try {
+    const r = run(join(consumer, "papers", "a"));
+    assert.deepEqual(r, {
+      code: 2,
+      out: 'stderr: two checks share the row key "render-paper/report-submission" — they would take turns being the answer',
+      rows: [],
+    });
+  } finally {
+    GATES.pop();
+  }
+});
+
+test("paper A, every checker answering with findings", () => {
+  const r = run(join(consumer, "papers", "a"), {
+    FAKE_REPORT: "overfull box\nunresolved ref\n",
+    FAKE_REPORT_EXIT: "1",
+    FAKE_ESLINT: ESLINT_FINDINGS,
+    FAKE_PROSE: "✍️  prose-lint — paper.md:\n   a long caption\n",
+    FAKE_PROSE_EXIT: "1",
+    FAKE_CITES: "1 fabricated entry\n",
+    FAKE_CITES_EXIT: "1",
+    FAKE_ARM: JSON.stringify([{ q: 1 }, { q: 2 }]),
+    FAKE_DELIVERED: "not json",
+    FAKE_TEXTIDOTE: "[]",
+    FAKE_UNCITED: JSON.stringify(["smith2020"]),
+  });
+  expect(r).toMatchSnapshot();
+});
+
+test("paper A, checkers answering in the shapes a row must not count", () => {
+  const r = run(join(consumer, "papers", "a"), {
+    FAKE_ESLINT: "Oops! Something went wrong",
+    FAKE_PROSE: "✍️  prose-lint — paper.md:\n",
+    FAKE_UNCITED: "{}",
+  });
+  expect(r).toMatchSnapshot();
+});
+
+test("eslint that crashed on the file, and eslint that ignored it, are not clean runs", () => {
+  const fatal = JSON.stringify([
+    {
+      filePath: "p",
+      messages: [{ ruleId: null, fatal: true, message: "Parsing error" }],
+    },
+  ]);
+  const ignored = JSON.stringify([
+    {
+      filePath: "p",
+      messages: [
+        { ruleId: null, message: "File ignored because outside of base path." },
+      ],
+    },
+  ]);
+  const structure = (fakes) =>
+    run(join(consumer, "papers", "a"), fakes).rows.find(
+      (x) => x.row === "tighten-paper/structure",
+    );
+  assert.deepEqual(
+    [
+      structure({ FAKE_ESLINT: fatal }),
+      structure({ FAKE_ESLINT: ignored }),
+      structure({ FAKE_ESLINT: "[]" }),
+    ],
+    [
+      {
+        row: "tighten-paper/structure",
+        kind: "ABSTAINED",
+        reason: "crashed",
+        findings: 0,
+      },
+      {
+        row: "tighten-paper/structure",
+        kind: "ABSTAINED",
+        reason: "input-missing",
+        findings: 0,
+      },
+      {
+        row: "tighten-paper/structure",
+        kind: "ABSTAINED",
+        reason: "no-witness",
+        findings: 0,
+      },
+    ],
+  );
+});
+
+test("paper B: every row whose input is absent abstains as input-missing", () => {
+  expect(run(join(consumer, "papers", "b"))).toMatchSnapshot();
+});
+
+test("a checker that is not installed is `crashed`, never a finding", () => {
+  const r = run(join(consumer, "papers", "b"), {
+    PATH: join(root, "empty-path"),
+  });
+  expect(r).toMatchSnapshot();
+});
+
+test("as a process, in a consumer that declares no citation checkers and has no structure rules", () => {
+  const bare = join(root, "bare");
+  writeTree(bare, { "papers/p/paper.md": "# P\n\nText.\n" });
+  writeFileSync(join(bare, "package.json"), "{}\n");
+  const r = runNode(SCRIPT, [join(bare, "papers", "p")], {
+    env: {
+      CLAUDE_PROJECT_DIR: bare,
+      PIPELINE_LEDGER: join(root, "bare.jsonl"),
+    },
+  });
+  expect({
+    ...r,
+    stdout: r.stdout.replaceAll(root, "<root>"),
+  }).toMatchSnapshot();
+});
+
