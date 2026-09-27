@@ -64,7 +64,7 @@ import {
 } from "./paper-files.ts";
 import {
   paperPreset,
-  paperPresetProblem,
+  settingsProblemLine,
   presetProblemText,
   resolvePreset,
   shippedPresets,
@@ -467,8 +467,8 @@ export function paperRuleBlocks(
   const out = { preset: [] as RuleBlock[], own: [] as RuleBlock[] };
   for (const dir of papers) {
     const p = paperPreset(dir, PRESET_DEPS);
-    if (p.kind === "settings-problem" && p.problem.kind === "broken")
-      return { ok: false, error: paperPresetProblem(dir, p) ?? dir };
+    if (p.kind === "settings-problem")
+      return { ok: false, error: settingsProblemLine(dir, p.problem) };
     const blocks = rulesOfPaper(dir, p);
     if (!blocks.ok) return blocks;
     out.preset.push(...blocks.value.preset);
@@ -484,9 +484,9 @@ export function paperRuleBlocks(
  */
 function rulesOfPaper(
   dir: string,
-  p: PaperPreset,
+  p: Exclude<PaperPreset, { kind: "settings-problem" }>,
 ): Parsed<{ preset: RuleBlock[]; own: RuleBlock[] }> {
-  const settings = "settings" in p ? p.settings : null;
+  const { settings } = p;
   const fromPreset =
     p.kind === "resolved"
       ? parseRuleEntries(

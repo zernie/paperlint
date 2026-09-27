@@ -293,5 +293,11 @@ export function paperPresetProblem(
   if (p.kind === "preset-problem")
     return `${join(paperDir, CONFIG_FILE)}: ${presetProblemText(p.problem)}`;
   if (p.kind !== "settings-problem") return null;
-  return `${join(paperDir, CONFIG_FILE)}: ${p.problem.why}`;
+  return settingsProblemLine(paperDir, p.problem);
 }
+
+/** The one line naming a paper's `paperlint.json` that does not parse, and why. */
+export const settingsProblemLine = (
+  paperDir: string,
+  problem: SettingsProblem,
+): string => `${join(paperDir, CONFIG_FILE)}: ${problem.why}`;
