@@ -27,6 +27,33 @@ import { fileURLToPath } from "node:url";
 // or pinned at its current maximum in RATCHET.
 const TS_FILES = ["**/*.ts", "**/*.mts"];
 
+/** `x as unknown as T` tells the checker to look away (#76). Shared: a block REPLACES a rule's options. */
+const AS_UNKNOWN_AS = {
+  selector:
+    "TSAsExpression > TSAsExpression[typeAnnotation.type='TSUnknownKeyword']",
+  message:
+    "`as unknown as` switches the type checker off. Convert with a function, or fix the type.",
+};
+
+/**
+ * A RULE MAY NOT ASK GIT. `paper/source` once bound a paper's stage to a commit sha and checked it
+ * with `git cat-file -e`; of four recorded shas, one still resolved ninety minutes later, because
+ * squash-merge and `gc` delete commits as routine. And `actions/checkout` fetches one commit, so
+ * under CI even a live sha does not resolve: the rule is red where it must hold and green locally.
+ * A rule reads the files ESLint gives it. Matched on the AST: a spawner called with the program
+ * `git` (or a shell line starting with `git `). Two things pass, deliberately: opening `.git/` with
+ * `fs`, and a program name assembled at runtime.
+ */
+const SPAWNERS = "exec|execSync|execFile|execFileSync|spawn|spawnSync|fork";
+const GIT_IN_A_RULE = [
+  `CallExpression[callee.name=/^(${SPAWNERS})$/][arguments.0.value=/^git( |$)/]`,
+  `CallExpression[callee.property.name=/^(${SPAWNERS})$/][arguments.0.value=/^git( |$)/]`,
+].map((selector) => ({
+  selector,
+  message:
+    "A rule may not run git: a sha is deleted by routine maintenance and absent from a shallow CI checkout. Read the file content ESLint passes the rule.",
+}));
+
 const MAX_LINES = { max: 60, skipComments: true, skipBlankLines: true };
 
 // 🔴 A CEILING, NOT A PERMISSION: each number is the file's measured maximum on 2026-09-24, so a
@@ -405,15 +432,7 @@ export default [
       complexity: ["error", 10],
       // `x as unknown as T` tells the checker to look away: two spellings of one port were once
       // reconciled that way (#76). A real conversion is a function; a real subset needs no cast.
-      "no-restricted-syntax": [
-        "error",
-        {
-          selector:
-            "TSAsExpression > TSAsExpression[typeAnnotation.type='TSUnknownKeyword']",
-          message:
-            "`as unknown as` switches the type checker off. Convert with a function, or fix the type.",
-        },
-      ],
+      "no-restricted-syntax": ["error", AS_UNKNOWN_AS],
       // Nesting beyond three blocks is where a step belongs in its own named function.
       "max-depth": ["error", 3],
       // Five positional parameters are a record without field names; pass an object instead.
@@ -574,6 +593,14 @@ export default [
     // real. Do not silence them by adding an ignore — a rule that lints only clean inputs is
     // one whose firing path nothing exercises, which is rule 4 wearing a different hat. The
     // pass/fail signal lives in `npm test`, not in the warning count of `npm run lint`.
+  },
+  // Rule sources, whatever their extension; tests and harnesses plant git calls on purpose.
+  {
+    files: ["eslint-rules/*.ts", "eslint-rules/*.mjs"],
+    ignores: ["eslint-rules/*.test.*", "eslint-rules/*.harness.*"],
+    rules: {
+      "no-restricted-syntax": ["error", AS_UNKNOWN_AS, ...GIT_IN_A_RULE],
+    },
   },
   // LAST, so no block above can replace its `no-restricted-syntax` options for these files (none
   // sets that rule for JavaScript today; being last keeps it that way).

@@ -16,7 +16,6 @@
     "lib/paper-config.harness.mjs",
     "lib/skill-trigger-cases.harness.mjs",
     "scripts/check.harness.ts",
-    "scripts/rules-are-content-only.harness.mjs",
     "scripts/rules-see-files.harness.mjs",
     "skills/analyze-sibling-paper/analyze-sibling-paper.harness.mjs",
     "skills/argument-arc/argument-arc.harness.mjs",

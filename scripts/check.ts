@@ -139,17 +139,6 @@ export const GATES: readonly Gate[] = [
     run: ["node", "scripts/rules-see-files.mjs"],
   },
   {
-    name: "rules read content, not the filesystem",
-    job: null,
-    // 🔴 Deliberately not in CI, and this is the one asymmetry worth stating rather than
-    // hiding: the check is about a property of the rules' source, which cannot change between
-    // a developer's tree and the runner's. Running it twice buys nothing; NOT running it
-    // locally buys a defect that reaches review.
-    reason:
-      "source-only property — identical in every environment, so CI adds nothing",
-    run: ["node", "scripts/rules-are-content-only.mjs"],
-  },
-  {
     name: "every test, under coverage — vitest, then the vigiles harnesses, with c8's thresholds (npm run coverage)",
     job: "gates",
     script: "coverage",
