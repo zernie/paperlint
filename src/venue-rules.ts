@@ -48,7 +48,7 @@ import type { FlatGeometry } from "./domain/geometry.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import type { Files } from "./ports/files.ts";
-import { CONFIG_FILE } from "../lib/paper-config.mjs";
+import { CONFIG_FILE } from "#lib/paper-config";
 
 // ── the verdict's vocabulary ─────────────────────────────────────────────────────────
 

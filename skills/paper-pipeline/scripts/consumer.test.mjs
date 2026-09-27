@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, test } from "vitest";
-import { useTempDir, writeTree } from "../../../test/support.mjs";
+import { useTempDir, writeTree } from "../../../test/support.ts";
 import {
   consumerContactEmail,
   consumerTimezone,

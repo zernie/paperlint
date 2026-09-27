@@ -10,12 +10,10 @@ export async function mapLimit<T, R>(
   fn: (item: T) => Promise<R>,
 ): Promise<R[]> {
   const out: R[] = new Array<R>(items.length);
-  let next = 0;
+  // ONE iterator shared by every worker: each `next()` hands out the next index exactly once.
+  const queue = items.entries();
   const worker = async (): Promise<void> => {
-    while (next < items.length) {
-      const i = next++;
-      out[i] = await fn(items[i] as T);
-    }
+    for (const [i, item] of queue) out[i] = await fn(item);
   };
   await Promise.all(
     Array.from({ length: Math.min(limit, items.length) }, worker),

@@ -21,7 +21,7 @@ import {
   ROOT_ONLY_KEYS,
   SETTINGS_KEYS,
   findProjectRoot,
-} from "../lib/paper-config.mjs";
+} from "#lib/paper-config";
 import type { AbsolutePath } from "./domain/paths.ts";
 import { err, ok, type Result } from "./domain/result.ts";
 import type { Files } from "./ports/files.ts";
@@ -30,6 +30,7 @@ import {
   type Parsed,
   type RuleEntry,
 } from "./rules-config.ts";
+import { messageOf } from "./domain/text.ts";
 
 /** What one paper declares. Every absent field is null. */
 export interface PaperSettings {
@@ -92,11 +93,13 @@ export function parsePaperSettings(
   if (!isObject(json)) return err("must be a JSON object");
   const unknown = Object.keys(json).filter((k) => !KNOWN.includes(k));
   if (unknown.length > 0)
-    return err(`unknown key "${unknown[0]}" — known keys: ${KNOWN.join(", ")}`);
+    return err(
+      `unknown key "${String(unknown[0])}" — known keys: ${KNOWN.join(", ")}`,
+    );
   const project = Object.keys(json).filter((k) => ROOT_ONLY_KEYS.includes(k));
   if (project.length > 0)
     return err(
-      `"${project[0]}" is a project setting — set it in the root ${CONFIG_FILE}, not in a paper's`,
+      `"${String(project[0])}" is a project setting — set it in the root ${CONFIG_FILE}, not in a paper's`,
     );
   const fields = stringFields(json);
   if (!fields.ok) return fields;
@@ -123,7 +126,7 @@ function readJson(
   try {
     return ok(JSON.parse(new TextDecoder().decode(bytes)));
   } catch (e) {
-    return err({ kind: "broken", why: `not JSON (${(e as Error).message})` });
+    return err({ kind: "broken", why: `not JSON (${messageOf(e)})` });
   }
 }
 
@@ -200,9 +203,5 @@ export function paperRules(
   if (settings.rules === null || Array.isArray(settings.rules))
     return { ok: true, value: null };
   const where = `${join(paperDir, CONFIG_FILE)} → "rules"`;
-  return parseRuleEntries(
-    settings.rules as Readonly<Record<string, unknown>>,
-    where,
-    shipped,
-  );
+  return parseRuleEntries(settings.rules, where, shipped);
 }

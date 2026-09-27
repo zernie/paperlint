@@ -45,7 +45,7 @@ import { delimiter, join, relative } from "node:path";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import { getParser } from "@unified-latex/unified-latex-util-parse";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
-import { CONFIG_FILE } from "../lib/paper-config.mjs";
+import { CONFIG_FILE } from "#lib/paper-config";
 import {
   declaredVenue,
   factsPath,
@@ -83,6 +83,10 @@ import {
   type Step,
 } from "./latex-loop.ts";
 import type { BuildResult, PlanLine } from "./types.ts";
+import { messageOf, printed } from "./domain/text.ts";
+
+/** stdin closed, stdout and stderr captured — the tuple type spawnSync's `stdio` wants. */
+const PIPED: ["ignore", "pipe", "pipe"] = ["ignore", "pipe", "pipe"];
 
 /** A directory counts as a paper by the same markers as `structure.ts` — one shared dictionary. */
 export const PAPER_MARKERS = [
@@ -337,7 +341,7 @@ function spawnOptions(ctx: BuildContext) {
   return {
     cwd: ctx.paperDir,
     env: ctx.env,
-    stdio: ["ignore", "pipe", "pipe"] as ["ignore", "pipe", "pipe"],
+    stdio: PIPED,
     encoding: "latin1" as const,
     maxBuffer: 64 * 1024 * 1024,
   };
@@ -376,19 +380,23 @@ function latexPass(
       exitCode === 0
         ? []
         : written === null
-          ? printed(r)
+          ? lastPrinted(r)
           : errorExcerpt(log).map(fromLatin1),
   };
+}
+
+/** The two streams of a finished run, as they really arrive (see `printed`). */
+interface Streams {
+  readonly stdout: string | undefined;
+  readonly stderr: string | undefined;
 }
 
 /**
  * The last lines pdflatex printed, for the run that wrote no log — it died before opening one (a
  * format it cannot load, a missing TeX Live file). Marked by NO_LOG, which the report keys on.
  */
-function printed(r: { stdout?: unknown; stderr?: unknown }): string[] {
-  const lines = fromLatin1(
-    `${String(r.stdout ?? "")}\n${String(r.stderr ?? "")}`,
-  )
+function lastPrinted(r: Streams): string[] {
+  const lines = fromLatin1(`${printed(r.stdout)}\n${printed(r.stderr)}`)
     .split("\n")
     .filter((l) => l.trim());
   return [NO_LOG, ...lines.slice(-8).map((l) => `  ${l}`)];
@@ -410,7 +418,7 @@ function bibtexPass(ctx: BuildContext, opts: SpawnOptions): Observation | null {
     after: hashes(ctx.paperDir),
     bib,
     errorLines:
-      exitCode === 0 ? [] : bibtexExcerpt(fromLatin1(String(r.stdout ?? ""))),
+      exitCode === 0 ? [] : bibtexExcerpt(fromLatin1(printed(r.stdout))),
   };
 }
 
@@ -443,7 +451,7 @@ export function compile(ctx: BuildContext): {
 const NO_PDF = `pdflatex exited 0 but wrote no ${JOB}.pdf — does the document have any pages?`;
 
 const plural = (n: number, one: string, many: string): string =>
-  `${n} ${n === 1 ? one : many}`;
+  `${String(n)} ${n === 1 ? one : many}`;
 
 export const compileStep: BuildStep = {
   name: "compile",
@@ -467,7 +475,7 @@ export const compileStep: BuildStep = {
       const bin = end.step === "latex" ? "pdflatex" : "bibtex";
       const where =
         end.cause.kind === "exit"
-          ? `${bin} exited with ${end.cause.code}`
+          ? `${bin} exited with ${String(end.cause.code)}`
           : `${bin} did not converge`;
       const log = join(
         ctx.paperDir,
@@ -669,13 +677,14 @@ function baseDefaults({
 }
 
 /** Without a checker the record says so — never a pass. The CLI wires the real one. */
-const notWired: CheckReferences = async (_bib, cache) => ({
-  check: {
-    kind: "not-checked",
-    why: "no reference checker was wired into this build",
-  },
-  cache,
-});
+const notWired: CheckReferences = (_bib, cache) =>
+  Promise.resolve({
+    check: {
+      kind: "not-checked",
+      why: "no reference checker was wired into this build",
+    },
+    cache,
+  });
 
 /** banal as the measurer, wired from the build's environment: the one piece of root work left here (#76). */
 function defaultMeasurer(
@@ -762,7 +771,7 @@ export async function buildPaper(
       dir,
       status: "failed",
       plan: [],
-      failure: { step: "facts", lines: [(e as Error).message] },
+      failure: { step: "facts", lines: [messageOf(e)] },
     };
   }
   for (const s of facts.ignoredScripts)
@@ -853,7 +862,7 @@ export function formatResult(r: BuildResult): string {
 function formatFailure(r: BuildResult): string {
   const [head, ...rest] = r.failure?.lines ?? ["failed"];
   return [
-    `  ✗ ${r.failure?.step ?? "build"}: ${head}`,
+    `  ✗ ${r.failure?.step ?? "build"}: ${String(head)}`,
     ...rest.map((l) => `      ${l}`),
     `      ${PDF_REMOVED}`,
   ].join("\n");

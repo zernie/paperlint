@@ -71,7 +71,7 @@ function withDefaults(o: EngineOptions): Resolved {
   const r = {
     dryRun: false,
     interactive: false,
-    ask: async () => "",
+    ask: () => Promise.resolve(""),
     log: console.log,
     err: console.error,
     // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
@@ -130,7 +130,7 @@ export function gatherFacts(o: Resolved): EngineFacts {
 }
 
 const names = (missing: readonly string[]): string =>
-  `${missing.length} package(s): ${missing.join(", ")}`;
+  `${String(missing.length)} package(s): ${missing.join(", ")}`;
 
 /** The one line a run without a human gets. It names the command and what is missing. */
 export function refusal(d: EngineDecision, facts: EngineFacts): string {

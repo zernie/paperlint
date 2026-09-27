@@ -1,7 +1,7 @@
 # Prior art — how comparable tools are shaped
 
 **Why this folder lives in the repository.** These are technical records that code and other docs
-cite by path: `test/e2e/install.mjs` cites `package-location.md`, `scripts/marketplace-shape.mjs`
+cite by path: `test/e2e/install.ts` cites `package-location.md`, `scripts/marketplace-shape.mjs`
 and `docs/install.md` point at the probes in `repro/`, and `eslint.config.mjs` excludes `repro/`
 by name. Moving the folder out would leave those references pointing nowhere. The notes are for
 contributors and maintainers, not for someone checking a paper, which is why the README does not

@@ -71,10 +71,7 @@ import {
 } from "node:fs";
 import { createHash } from "node:crypto";
 import { join, resolve, dirname, basename } from "node:path";
-import {
-  headings as mdHeadings,
-  requireMarkdown,
-} from "../../../lib/markdown.mjs";
+import { headings as mdHeadings, requireMarkdown } from "#lib/markdown";
 import { isMain } from "./consumer.mjs";
 
 // Markup is parsed with a parser (`CLAUDE.md`, 2026-08-11). We fail rather than degrade: without

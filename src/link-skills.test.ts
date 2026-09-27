@@ -14,7 +14,7 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import { test } from "vitest";
-import { useTempDir, writeTree } from "../test/support.mjs";
+import { useTempDir, writeTree } from "../test/support.ts";
 import { linkSkills, locatePackage, type LinkFs } from "./link-skills.ts";
 
 const root = useTempDir("paperlint-link-skills-");
@@ -62,7 +62,7 @@ test("a package without a skills directory, or one holding a dangling link, is n
   symlinkSync(join(root, "gone"), join(dangling, "skills", "b"));
   const r = linkSkills(join(root, "p2"), { locate: at(dangling) });
   assert.equal(r.ok, false);
-  assert.match(!r.ok ? r.error : "", /^1 skill link\(s\) in .* lead nowhere:/);
+  assert.match(r.error, /^1 skill link\(s\) in .* lead nowhere:/);
 });
 
 test("a skills home that cannot be made is named", () => {
@@ -71,7 +71,7 @@ test("a skills home that cannot be made is named", () => {
   });
   const r = linkSkills(project, { locate: at(pkg("home", ["a"])) });
   assert.equal(r.ok, false);
-  assert.match(!r.ok ? r.error : "", /^cannot create .*\.claude\/skills: /);
+  assert.match(r.error, /^cannot create .*\.claude\/skills: /);
 });
 
 test("entries that are someone else's: a plain file, one that cannot be resolved, a link that cannot be made", () => {

@@ -66,7 +66,7 @@
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { basename, join, resolve, relative } from "node:path";
-import { stripFrontmatter, frontmatterBlock } from "../../../lib/markdown.mjs";
+import { stripFrontmatter, frontmatterBlock } from "#lib/markdown";
 import { isMain } from "./consumer.mjs";
 
 // ── the lexicon ──────────────────────────────────────────────────────────────────────────────

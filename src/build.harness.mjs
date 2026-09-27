@@ -4,7 +4,7 @@
  * The process runner is replaced by a fake that writes what pdflatex and bibtex would write, so
  * these assertions check the SHELL's decisions: what is run, with which environment, in which
  * order, and what is left on disk. Whether a real pdflatex produces a real PDF is the other half,
- * `test/e2e/build.mjs`.
+ * `test/e2e/build.ts`.
  *
  * 🔴 THE TWO THINGS PINNED DOWN HERE THAT A RETURNED OBJECT CANNOT SHOW: a paper-supplied
  * `build.sh` is never executed (checked by the trace it would leave on disk and by the list of
@@ -22,7 +22,7 @@ import {
 import { tmpdir } from "node:os";
 import { join, dirname, delimiter } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createChecker } from "../lib/check.mjs";
+import { createChecker } from "../lib/check.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const {

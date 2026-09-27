@@ -18,9 +18,10 @@ When in doubt between unit and integration: if the function takes a port (`Files
 ## Unit — vitest, pure functions
 
 - **Answers:** does this function return the right value for this input?
-- **Lives:** beside the module, `<module>.test.ts` for a `.ts` module, `<module>.test.mjs` for a
-  `.mjs` one (TypeScript has no types to check a JS module against, and `allowJs` was measured to
-  break a dozen existing `@ts-expect-error` imports).
+- **Lives:** beside the module, `<module>.test.ts`. A test that IMPORTS a `.mjs` module stays
+  `<module>.test.mjs` until that module moves to TypeScript (#78): TypeScript has no types to check
+  it against, and `allowJs` was measured to break a dozen existing `@ts-expect-error` imports. A
+  test that only runs a `.mjs` script as a process has nothing to import and is `.test.ts` already.
 - **May touch:** nothing. No disk, no network, no process, no clock.
 - **Example:** `src/domain/lookup-cache.test.ts` — the reference cache's parse, serialize and key
   functions, each refusal compared as a whole value.
@@ -29,7 +30,7 @@ When in doubt between unit and integration: if the function takes a port (`Files
 
 - **Answers:** does this use case or adapter do the right thing with the world it talks to?
 - **Lives:** beside the module, named like a unit test.
-- **May touch:** a temp directory (`useTempDir` and `writeTree` in `test/support.mjs`), a child
+- **May touch:** a temp directory (`useTempDir` and `writeTree` in `test/support.ts`), a child
   process of this repository's own scripts (`runNode`). Never the real network.
 - **How fakes get in:** through the seams the code already has.
   - a port the use case takes: `memoryFiles` and `scriptedProcess` in `src/adapters/memory/`, a
@@ -51,16 +52,18 @@ When in doubt between unit and integration: if the function takes a port (`Files
 - **Asserts through** `lib/check.mjs`: `const check = createChecker();` then
   `check(label, cond, detail)`. A failure prints the label and the detail, every call is counted.
   Do not define a local `check`.
-- **Example:** `hooks/hooks.harness.mjs`.
+- **Example:** `hooks/hooks.harness.ts`.
 - **Skills are tested through vigiles**, not a bespoke runner: a home-grown runner here once printed
   byte-identical "clean" verdicts for three skills that had never loaded.
 
-## End-to-end — `test/e2e/*.mjs`
+## End-to-end — `test/e2e/*.ts`
 
 - **Answers:** does the package work once it is somewhere else? The tarball installed into another
   tree, a real `pdflatex` build, the PDF's fonts measured.
 - **May touch:** everything a user's machine has, except the network: a citation service is a
-  counting fake `fetch` even here (`test/e2e/build.mjs`).
+  counting fake `fetch` even here (`test/e2e/build.ts`).
+- **Types:** the runs import the built modules from `dist/` (the shipped path is the point), so
+  their types are the declarations `tsc` emits — `npm run build` before type-checking them.
 - **What each run proves, and when a change owes one:** [`e2e.md`](e2e.md).
 
 ## Running
@@ -108,7 +111,7 @@ file matches, and it transpiles without type-checking, so `npm run check` runs
 5. **Coverage is 100% on lines, statements, functions and branches**, enforced by `npm run coverage`
    in `npm run check` and CI. c8 reads `NODE_V8_COVERAGE`, so a CLI a test spawns is measured too,
    unless the test hands the child a fresh `env` without it. vitest runs in the `threads` pool with
-   native `import` (`vitest.config.ts` says why), and the run preloads `test/coverage-src.mjs`, which
+   native `import` (`vitest.config.ts` says why), and the run preloads `test/coverage-src.ts`, which
    answers every import of `dist/*.js` with `src/*.ts`, so no module is measured twice.
 6. **No `c8 ignore`, and no guard deleted to reach 100%.** An effect a test cannot reach — a race, a
    permission root is never denied, a broken install, a 270 MB download — is made injectable and the

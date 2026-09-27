@@ -10,7 +10,6 @@ import {
   EMPTY_LOOKUP_CACHE,
   type LookupCache,
 } from "../../domain/lookup-cache.ts";
-// @ts-expect-error — a skill script in .mjs, it has no types
 import * as cites from "../../../skills/verify-citations/scripts/verify-cites.mjs";
 
 /** The verdicts of a cold run — an empty cache, the adapter the CLI wires. */
@@ -46,29 +45,29 @@ const dblp = (title: string, authors: string[]) =>
 /** Route by URL prefix; the longest prefix wins. */
 function fakeFetch(routes: Record<string, () => Response>): string[] {
   const calls: string[] = [];
-  vi.stubGlobal("fetch", async (url: string) => {
+  vi.stubGlobal("fetch", (url: string) => {
     calls.push(url);
-    const hit = Object.keys(routes)
-      .filter((p) => url.startsWith(p))
-      .sort((a, b) => b.length - a.length)[0];
-    if (hit === undefined) return json(404);
-    return routes[hit]!();
+    const hit = Object.entries(routes)
+      .filter(([p]) => url.startsWith(p))
+      .sort(([a], [b]) => b.length - a.length)[0];
+    return Promise.resolve(hit === undefined ? json(404) : hit[1]());
   });
   return calls;
 }
 
 /** Await `p` while fake time runs, so DBLP's pauses between requests elapse at once. */
 async function settle<T>(p: Promise<T>): Promise<T> {
-  let done = false;
-  const out = p.finally(() => (done = true));
-  while (!done) await vi.advanceTimersByTimeAsync(1000);
+  // A field, not a `let`: the flag is set in a callback, which flow analysis cannot see.
+  const state = { done: false };
+  const out = p.finally(() => (state.done = true));
+  while (!state.done) await vi.advanceTimersByTimeAsync(1000);
   return out;
 }
 
 test("no service answers: not-checked, with the reason", async () => {
-  vi.stubGlobal("fetch", async () => {
-    throw new Error("getaddrinfo ENOTFOUND api.crossref.org");
-  });
+  vi.stubGlobal("fetch", () =>
+    Promise.reject(new Error("getaddrinfo ENOTFOUND api.crossref.org")),
+  );
   assert.deepEqual(await checkOnly("@misc{k, title={T}}"), {
     kind: "not-checked",
     why: "the citation services cannot be reached (getaddrinfo ENOTFOUND api.crossref.org)",
@@ -104,19 +103,19 @@ test("each entry gets its existence and its authors: confirmed, fabricated, mism
   const r = await settle(checkOnly(bib));
   assert.equal(r.kind, "checked");
   const byKey = Object.fromEntries(
-    (r.kind === "checked" ? r.entries : []).map((e) => [
-      e.key,
-      [e.exists, e.authors, e.why ?? ""],
-    ]),
+    r.entries.map((e) => [e.key, [e.exists, e.authors, e.why ?? ""]]),
   );
   assert.deepEqual(
     {
-      good: byKey["good"]!.slice(0, 2),
-      fake: byKey["fake"]!.slice(0, 2),
-      drift: byKey["drift"]!.slice(0, 2),
-      driftWhy: String(byKey["drift"]![2]).split("; ").pop(),
-      flaky: [byKey["flaky"]![1], String(byKey["flaky"]![2]).split("; ").pop()],
-      pre: byKey["pre"]!.slice(0, 2),
+      good: byKey["good"]?.slice(0, 2),
+      fake: byKey["fake"]?.slice(0, 2),
+      drift: byKey["drift"]?.slice(0, 2),
+      driftWhy: String(byKey["drift"]?.[2]).split("; ").pop(),
+      flaky: [
+        byKey["flaky"]?.[1],
+        String(byKey["flaky"]?.[2]).split("; ").pop(),
+      ],
+      pre: byKey["pre"]?.slice(0, 2),
     },
     {
       good: ["true", "match"],
@@ -209,20 +208,14 @@ test(
     slowFetch(40);
     const bib = manyBib(20);
     const serial: string[] = [];
-    for (const c of cites.parseBib(bib) as { id: string }[])
-      serial.push(
-        (
-          (await cites.verifyCitationLive(c, { cache: {} })) as {
-            verdict: string;
-          }
-        ).verdict,
-      );
+    for (const c of cites.parseBib(bib))
+      serial.push((await cites.verifyCitationLive(c, { cache: {} })).verdict);
     const t0 = Date.now();
     const r = await checkOnly(bib);
     const ms = Date.now() - t0;
     assert.equal(r.kind, "checked");
     assert.deepEqual(
-      r.kind === "checked" ? r.entries.map((e) => e.exists) : [],
+      r.entries.map((e) => e.exists),
       serial,
     );
     assert.ok(ms < (20 * 200) / 2, `${String(ms)} ms for 20 lookups`);
@@ -249,7 +242,7 @@ const PAPERS = [
   "@inproceedings{good, author={Ada Lovelace}, title={Good Paper}, booktitle={ICSE}, doi={10.1/good}}",
   "@inproceedings{other, author={Ada Lovelace}, title={Other Paper}, booktitle={ICSE}}",
   "@misc{pre, author={Ada Lovelace}, title={A Preprint}, journal={arXiv preprint}}",
-];
+] as const;
 /** Every service answers; DBLP knows "Good Paper" and nothing else. */
 const answering = () =>
   fakeFetch({
@@ -414,7 +407,7 @@ test("a failed lookup is not cached: the next run asks it again", async () => {
     "https://api.crossref.org/": () => json(200, { message: { items: [] } }),
     "https://dblp.org/": () => json(500),
   });
-  const bib = PAPERS[1]!;
+  const bib = PAPERS[1];
   const r = await settle(cached(bib, EMPTY_LOOKUP_CACHE));
   const failed: LookupCache = r.cache;
   assert.deepEqual(
@@ -427,10 +420,10 @@ test("a failed lookup is not cached: the next run asks it again", async () => {
 });
 
 test("offline with an incomplete cache: not-checked, and the cache comes back unchanged", async () => {
-  vi.stubGlobal("fetch", async () => {
-    throw new Error("getaddrinfo ENOTFOUND api.crossref.org");
-  });
-  const r = await cached(PAPERS[0]!, EMPTY_LOOKUP_CACHE);
+  vi.stubGlobal("fetch", () =>
+    Promise.reject(new Error("getaddrinfo ENOTFOUND api.crossref.org")),
+  );
+  const r = await cached(PAPERS[0], EMPTY_LOOKUP_CACHE);
   assert.deepEqual(r, {
     check: {
       kind: "not-checked",

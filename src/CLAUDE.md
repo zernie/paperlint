@@ -35,7 +35,7 @@ through the `io` file category in `boundaries/dependencies`; the `process` and `
 carries `// eslint-disable-next-line <rule> -- legacy <I/O|layer>, moves behind a port in #76`.
 Unused directives are errors (`reportUnusedDisableDirectives`), so a fixed site must drop its
 comment; the per-file counts are frozen in `scripts/layer-legacy.frozen.json` and checked by
-`scripts/layer-legacy-frozen.mjs` (`npm run check`, CI), which counts ESLint's own
+`scripts/layer-legacy-frozen.ts` (`npm run check`, CI), which counts ESLint's own
 `suppressedMessages` and fails when a file's count grows, a file not in the list carries one, or
 anything under `src/domain/`, `src/ports/` or `src/adapters/` does. A NEW module that needs the
 world is a new `*.io.ts` in the adapter of the program it talks to — never a new directive.

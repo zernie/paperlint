@@ -23,24 +23,26 @@ import { spawnSync } from "node:child_process";
 import { globSync, readFileSync } from "node:fs";
 import { dirname, join, matchesGlob, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-// @ts-expect-error — js-yaml ships no types, and the package does not depend on @types/js-yaml
 import yaml from "js-yaml";
 import ts from "typescript";
 import { test } from "vitest";
+import { z } from "zod";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
-const CONFIG = JSON.parse(readFileSync(join(ROOT, ".c8rc.json"), "utf8")) as {
-  lines: number;
-  statements: number;
-  functions: number;
-  branches: number;
-  excludeAfterRemap: boolean;
-  include: string[];
-  exclude: string[];
-  extension: string[];
-  typeOnly: string[];
-  evalOnly: string[];
-};
+const CONFIG = z
+  .object({
+    lines: z.number(),
+    statements: z.number(),
+    functions: z.number(),
+    branches: z.number(),
+    excludeAfterRemap: z.boolean(),
+    include: z.array(z.string()),
+    exclude: z.array(z.string()),
+    extension: z.array(z.string()),
+    typeOnly: z.array(z.string()),
+    evalOnly: z.array(z.string()),
+  })
+  .parse(JSON.parse(readFileSync(join(ROOT, ".c8rc.json"), "utf8")));
 
 const expand = (patterns: readonly string[]): string[] =>
   patterns.flatMap((p) => globSync(p, { cwd: ROOT })).sort();
@@ -53,13 +55,45 @@ export function runtimeStatements(fileName: string, source: string): string[] {
       (s) =>
         !ts.isInterfaceDeclaration(s) &&
         !ts.isTypeAliasDeclaration(s) &&
-        !(ts.isImportDeclaration(s) && s.importClause?.isTypeOnly) &&
+        !(
+          ts.isImportDeclaration(s) &&
+          s.importClause?.phaseModifier === ts.SyntaxKind.TypeKeyword
+        ) &&
         !(ts.isExportDeclaration(s) && s.isTypeOnly),
     )
     .map((s) => ts.SyntaxKind[s.kind]);
 }
 
 /** Every relative module specifier a source imports, statically or with `import("…")`. */
+/**
+ * The package's subpath imports (`#lib/*`, `#eslint-rules/*`), each as its prefix and the source
+ * file pattern its `paperlint-source` condition names — so an import written `#lib/x` is followed
+ * to `lib/x.ts` like a relative one, instead of being skipped as a bare package name.
+ */
+const SUBPATHS = Object.entries(
+  z
+    .object({
+      imports: z.record(
+        z.string().endsWith("/*"),
+        z.object({ "paperlint-source": z.string() }),
+      ),
+    })
+    .parse(JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")))
+    .imports,
+).map(([key, t]) => ({
+  prefix: key.slice(0, -"*".length),
+  target: t["paperlint-source"],
+}));
+
+/** Where a specifier points inside the repository: a relative path, or a subpath import's source. */
+function resolvedSpecifier(fileName: string, spec: string): string[] {
+  if (spec.startsWith(".")) return [resolve(dirname(fileName), spec)];
+  return SUBPATHS.filter(({ prefix }) => spec.startsWith(prefix)).map(
+    ({ prefix, target }) =>
+      resolve(ROOT, target.replace("*", spec.slice(prefix.length))),
+  );
+}
+
 export function importedPaths(fileName: string, source: string): string[] {
   const sf = ts.createSourceFile(fileName, source, ts.ScriptTarget.Latest);
   const found: string[] = [];
@@ -70,8 +104,8 @@ export function importedPaths(fileName: string, source: string): string[] {
           node.expression.kind === ts.SyntaxKind.ImportKeyword
         ? node.arguments[0]
         : undefined;
-    if (spec && ts.isStringLiteral(spec) && spec.text.startsWith("."))
-      found.push(resolve(dirname(fileName), spec.text));
+    if (spec && ts.isStringLiteral(spec))
+      found.push(...resolvedSpecifier(fileName, spec.text));
     ts.forEachChild(node, visit);
   };
   visit(sf);
@@ -179,7 +213,10 @@ export function comments(fileName: string, source: string): string[] {
   const visit = (node: ts.Node): void => {
     if (ts.isJSDoc(node)) return; // its text is the comment already collected before its node
     const kids = node.getChildren(sf);
-    if (kids.length > 0) return kids.forEach(visit);
+    if (kids.length > 0) {
+      kids.forEach(visit);
+      return;
+    }
     for (const r of [
       ...(ts.getLeadingCommentRanges(source, node.pos) ?? []),
       ...(ts.getTrailingCommentRanges(source, node.end) ?? []),
@@ -234,32 +271,36 @@ test("the floor is 100 on all four measures, and the script that checks it canno
     [CONFIG.lines, CONFIG.statements, CONFIG.functions, CONFIG.branches],
     [100, 100, 100, 100],
   );
-  const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as {
-    scripts: Record<string, string>;
-  };
+  const pkg = z
+    .object({ scripts: z.record(z.string(), z.string()) })
+    .parse(JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")));
   // Pinned whole: c8's command-line flags override .c8rc.json, so `--lines 50` or `--exclude "**"`
   // added here would bypass every threshold and the pinned exclude list below.
   assert.equal(
     pkg.scripts["coverage"],
-    'NODE_OPTIONS="--import=./test/coverage-src.mjs $NODE_OPTIONS" c8 --check-coverage npm test --',
+    'NODE_OPTIONS="--import=./test/coverage-src.ts $NODE_OPTIONS" c8 --check-coverage npm test --',
   );
 });
 
 /** The gates job and the one step of it that runs coverage, read from the parsed workflow. */
-interface Step {
-  readonly run?: string;
-  readonly if?: unknown;
-  readonly "continue-on-error"?: unknown;
-}
-interface Job {
-  readonly if?: unknown;
-  readonly "continue-on-error"?: unknown;
-  readonly steps?: readonly Step[];
-}
+const StepSchema = z.looseObject({
+  run: z.string().optional(),
+  if: z.unknown().optional(),
+  "continue-on-error": z.unknown().optional(),
+});
+const JobSchema = z.looseObject({
+  if: z.unknown().optional(),
+  "continue-on-error": z.unknown().optional(),
+  steps: z.array(StepSchema).optional(),
+});
+type Step = z.infer<typeof StepSchema>;
+type Job = z.infer<typeof JobSchema>;
 export function coverageSteps(
   workflow: string,
 ): { job: string; definition: Job; step: Step }[] {
-  const ci = yaml.load(workflow) as { jobs: Record<string, Job> };
+  const ci = z
+    .looseObject({ jobs: z.record(z.string(), JobSchema) })
+    .parse(yaml.load(workflow));
   return Object.entries(ci.jobs).flatMap(([job, definition]) =>
     (definition.steps ?? [])
       .filter((step) => (step.run ?? "").trim().startsWith("npm run coverage"))
@@ -273,11 +314,12 @@ const DRAFT_GATE =
 /** Why CI's coverage step would not fail the run on a coverage drop — empty when it would. */
 export function coverageStepHoles(workflow: string): string[] {
   const found = coverageSteps(workflow);
-  if (found.length !== 1)
+  const [only, ...more] = found;
+  if (only === undefined || more.length > 0)
     return [
       `expected one step running \`npm run coverage\`, found ${String(found.length)}`,
     ];
-  const [{ job, definition, step }] = found as [(typeof found)[number]];
+  const { job, definition, step } = only;
   return [
     ...(job === "gates" ? [] : [`the step is in job ${job}, not gates`]),
     ...(definition.if === DRAFT_GATE
@@ -345,7 +387,7 @@ test("dist/ is excluded BEFORE source maps: a direct load is not a second copy o
 test("the exclude list is exactly the justified set", () => {
   assert.deepEqual(CONFIG.exclude, [
     // tests themselves
-    "**/*.harness.mjs",
+    "**/*.harness.*",
     "**/*.test.*",
     // PAID LLM evaluations, never run by `npm test`
     "**/*.eval.mjs",
@@ -356,7 +398,7 @@ test("the exclude list is exactly the justified set", () => {
     "**/*.d.mts",
     // inputs the tests read
     "**/fixtures/**",
-    // build output (the coverage run resolves it to src/ — test/coverage-src.mjs)
+    // build output (the coverage run resolves it to src/ — test/coverage-src.ts)
     "dist/**",
     // test support
     "test/**",
@@ -389,10 +431,11 @@ test("the exclude list is exactly the justified set", () => {
     "src/ports/*.ts",
     "src/domain/page-layout.ts",
     "src/domain/paths.ts",
+    "eslint-rules/rule-context.ts",
   ]);
   assert.deepEqual(CONFIG.evalOnly, [
     "lib/skill-eval-kit.mjs",
-    "lib/skill-eval-fixture.mjs",
+    "lib/skill-eval-fixture.ts",
     "lib/trigger-ledger.mjs",
   ]);
 });

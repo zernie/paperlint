@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { getResolvedPDFJS } from "unpdf";
 import { test } from "vitest";
 import { factsOf, failureOf, rawFontOf } from "./pdf-facts.ts";
+import { present } from "../test/support.ts";
 
 const lib = await getResolvedPDFJS();
 const H = 792;
@@ -23,8 +24,8 @@ interface FakeItem {
 function page(items: FakeItem[], fonts: Record<string, unknown>) {
   const objs = new Map(Object.entries(fonts));
   return {
-    getOperatorList: async () => ({ fnArray: [], argsArray: [] }),
-    getTextContent: async () => ({ items }),
+    getOperatorList: () => Promise.resolve({ fnArray: [], argsArray: [] }),
+    getTextContent: () => Promise.resolve({ items }),
     // Iterable like pdf.js's `commonObjs`, with its `has`/`get`.
     commonObjs: {
       has: (id: string) => objs.has(id),
@@ -42,7 +43,7 @@ function page(items: FakeItem[], fonts: Record<string, unknown>) {
 const doc = (pages: ReturnType<typeof page>[]) =>
   ({
     numPages: pages.length,
-    getPage: async (i: number) => pages[i - 1],
+    getPage: (i: number) => Promise.resolve(pages[i - 1]),
   }) as never;
 const item = (
   fontName: string,
@@ -89,7 +90,7 @@ test("a document with no pages is `empty`; text drawn with no font is refused", 
     lib,
   );
   assert.equal(r.ok, false);
-  assert.equal(!r.ok && r.reason, "zero-fonts-on-text");
+  assert.equal(r.reason, "zero-fonts-on-text");
 });
 
 test("metrics, sizes and names fall back when pdf.js gives none", async () => {
@@ -117,7 +118,7 @@ test("metrics, sizes and names fall back when pdf.js gives none", async () => {
     lib,
   );
   assert.equal(r.ok, true);
-  const boxes = r.ok ? r.facts.layout[0]!.boxes : [];
+  const boxes = present(r.facts.layout[0], "a first page").boxes;
   assert.deepEqual(
     boxes.map((b) => [b.font, b.size, b.fill]),
     [
@@ -127,12 +128,10 @@ test("metrics, sizes and names fall back when pdf.js gives none", async () => {
       ["gone", 10, { kind: "unknown" }],
     ],
   );
-  assert.deepEqual(r.ok ? r.facts.last.words.map((w) => w.text) : [], [
-    "word",
-    "word",
-    "word",
-    "word",
-  ]);
+  assert.deepEqual(
+    r.facts.last.words.map((w) => w.text),
+    ["word", "word", "word", "word"],
+  );
 });
 
 test("a failure that is not an Error is named `Error` with its text", () => {

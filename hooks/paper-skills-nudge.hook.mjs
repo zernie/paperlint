@@ -28,7 +28,7 @@
  * load at all, and a consumer-side thin spec that imports this logic is refused by
  * `vigiles compile` and can therefore never be re-stamped. The full reasoning, with both
  * measurements, is in that file's header; the capability surface of this one is asserted by
- * `hooks.harness.mjs` running `checkHookImports` over the shipped artifact.
+ * `hooks.harness.ts` running `checkHookImports` over the shipped artifact.
  */
 import {
   experimental_defineReact,

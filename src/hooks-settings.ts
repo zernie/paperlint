@@ -30,6 +30,7 @@ import {
   BIN_FILE,
   PACKAGE_NAME,
 } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { messageOf } from "./domain/text.ts";
 
 /** The committed, shared settings file — husky's `.husky/` analogue, except git carries it. */
 export const SETTINGS_PATH = join(".claude", "settings.json");
@@ -133,16 +134,22 @@ export function hookRun(command: string): {
 export function commandsIn(
   settings: Settings,
 ): { readonly event: string; readonly command: string }[] {
-  const hooks = settings["hooks"];
-  if (!hooks || typeof hooks !== "object") return [];
   const out: { event: string; command: string }[] = [];
-  for (const [event, entries] of Object.entries(hooks as HooksMap))
-    for (const entry of Array.isArray(entries) ? entries : [])
-      for (const h of Array.isArray(entry?.hooks) ? entry.hooks : [])
-        if (typeof h?.command === "string")
-          out.push({ event, command: h.command });
+  for (const [event, entries] of Object.entries(prop(settings["hooks"]) ?? {}))
+    for (const entry of listOf(entries))
+      for (const h of listOf(prop(entry)?.["hooks"])) {
+        const command = prop(h)?.["command"];
+        if (typeof command === "string") out.push({ event, command });
+      }
   return out;
 }
+
+/** The settings file is the user's: any level may be missing or of the wrong kind. */
+const listOf = (v: unknown): readonly unknown[] => (Array.isArray(v) ? v : []);
+const prop = (v: unknown): Readonly<Record<string, unknown>> | undefined =>
+  typeof v === "object" && v !== null
+    ? Object.fromEntries(Object.entries(v))
+    : undefined;
 
 export interface Wiring {
   readonly compiled: HooksMap;
@@ -195,7 +202,11 @@ export function wiredCounts(
 const total = (c: HookCount): number => c.ours + c.other;
 
 export type SettingsRead =
-  | { readonly status: "absent"; readonly path: string; readonly settings: {} }
+  | {
+      readonly status: "absent";
+      readonly path: string;
+      readonly settings: Settings;
+    }
   | {
       readonly status: "read";
       readonly path: string;
@@ -218,7 +229,7 @@ export function readSettings(root: string): SettingsRead {
       return { status: "unparsable", path, reason: "not a JSON object" };
     return { status: "read", path, settings: parsed as Settings, raw };
   } catch (e) {
-    return { status: "unparsable", path, reason: (e as Error).message };
+    return { status: "unparsable", path, reason: messageOf(e) };
   }
 }
 

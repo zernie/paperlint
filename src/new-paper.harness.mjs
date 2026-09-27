@@ -30,8 +30,8 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { load } from "js-yaml";
-import { frontmatterBlock } from "../lib/markdown.mjs";
-import { createChecker } from "../lib/check.mjs";
+import { frontmatterBlock } from "../lib/markdown.ts";
+import { createChecker } from "../lib/check.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(HERE);

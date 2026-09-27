@@ -33,9 +33,12 @@ export interface OperatorList {
 /** Text as the walk compares it: normalised, with no whitespace (items and glyphs split spaces differently). */
 const squeeze = (s: string): string => s.normalize("NFKC").replace(/\s+/g, "");
 
+/** An operator's argument list; pdf.js types it `any`, and a malformed one reads as empty. */
+const listOf = (v: unknown): readonly unknown[] => (Array.isArray(v) ? v : []);
+
 /** `setFillRGBColor`'s argument: a `#rrggbb` string in current pdf.js, three 0-255 numbers in older ones. */
 export function hexOf(args: unknown): string {
-  const a = Array.isArray(args) ? (args as unknown[]) : [];
+  const a = listOf(args);
   if (typeof a[0] === "string") return a[0].toLowerCase();
   const byte = (v: unknown): string =>
     Math.round(typeof v === "number" ? v : 0)
@@ -46,12 +49,13 @@ export function hexOf(args: unknown): string {
 
 /** The characters a show-text operator draws, from its glyph objects. */
 function glyphText(args: unknown): string {
-  const a = Array.isArray(args) ? (args as unknown[]) : [];
-  const glyphs = Array.isArray(a[0]) ? (a[0] as unknown[]) : [];
+  const glyphs = listOf(listOf(args)[0]);
   return glyphs
     .map((g) =>
       typeof g === "object" && g !== null && "unicode" in g
-        ? String((g as { unicode: unknown }).unicode ?? "")
+        ? typeof g.unicode === "string"
+          ? g.unicode
+          : ""
         : "",
     )
     .join("");
@@ -76,7 +80,7 @@ function applyState(
   else if (fn === ops.setFillRGBColor)
     s.cur.fill = { kind: "rgb", hex: hexOf(args) };
   else if (fn === ops.setTextRenderingMode)
-    s.cur.mode = Number((args as unknown[] | undefined)?.[0] ?? 0);
+    s.cur.mode = Number(listOf(args)[0] ?? 0);
   else return false;
   return true;
 }
@@ -89,7 +93,10 @@ interface Drawn {
 
 /** Every drawn character, in content order, with the fill it was drawn in. */
 export function drawnCharacters(ops: ColourOps, list: OperatorList): Drawn[] {
-  const s = { cur: { fill: { kind: "unknown" } as Fill, mode: 0 }, stack: [] };
+  const s: { cur: State; stack: State[] } = {
+    cur: { fill: { kind: "unknown" }, mode: 0 },
+    stack: [],
+  };
   const drawn: Drawn[] = [];
   list.fnArray.forEach((fn, i) => {
     const args = list.argsArray[i];
@@ -149,7 +156,7 @@ export function fillsFor<T>(
   const drawn = drawnCharacters(ops, list);
   let at = 0;
   const fillOf = (text: string): Fill => {
-    const want = [...squeeze(text)];
+    const want = Array.from(squeeze(text));
     if (want.length === 0) return { kind: "unknown" };
     const hit = findRun(drawn, want, at);
     if (hit === null) return { kind: "unknown" };

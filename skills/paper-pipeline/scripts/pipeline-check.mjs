@@ -109,10 +109,7 @@ import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import MarkdownIt from "markdown-it";
-import {
-  headings as mdHeadings,
-  requireMarkdown,
-} from "../../../lib/markdown.mjs";
+import { headings as mdHeadings, requireMarkdown } from "#lib/markdown";
 import { isMain } from "./consumer.mjs";
 
 // Markup is parsed with a parser (`CLAUDE.md`, 2026-08-11). This script already parsed tables

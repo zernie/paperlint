@@ -51,7 +51,9 @@ test("shQuote survives a single quote", () => {
 });
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-stage-test-")));
-after(() => rmSync(root, { recursive: true, force: true }));
+after(() => {
+  rmSync(root, { recursive: true, force: true });
+});
 
 test("🔴 stage: on a real scratch directory the stub answers `-v` through the shell, from a path with a space and a quote", () => {
   const awkward = join(root, "it's a dir");

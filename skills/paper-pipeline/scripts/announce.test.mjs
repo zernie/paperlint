@@ -8,7 +8,7 @@ import { cpSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, test } from "vitest";
-import { runNode, useTempDir, writeTree } from "../../../test/support.mjs";
+import { runNode, useTempDir, writeTree } from "../../../test/support.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SCRIPT = join(HERE, "announce.mjs");

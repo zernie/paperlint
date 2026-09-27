@@ -13,6 +13,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { run, toolchainTex } from "./cli.ts";
+import { lintReport } from "../test/lint-report.ts";
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -55,9 +56,9 @@ async function lint(
 }
 
 const rulesIn = (stdout: string, paper: string): string[] =>
-  (JSON.parse(stdout) as { filePath: string; messages: { ruleId: string }[] }[])
+  lintReport(stdout)
     .filter((r) => r.filePath.endsWith(join(paper, "paper.tex")))
-    .flatMap((r) => r.messages.map((m) => m.ruleId));
+    .flatMap((r) => r.messages.map((m) => m.ruleId ?? "(fatal)"));
 
 describe("🔴 an optional rule that reaches no paper — judged against the PROJECT, not the run (#103)", () => {
   const THIRD = {
@@ -151,7 +152,7 @@ describe("papersDir — optional, `papers` by default", () => {
     const r = await lint(project());
     expect(r.code).toBe(0);
     expect(
-      (JSON.parse(r.out) as { filePath: string }[]).map((f) =>
+      lintReport(r.out).map((f) =>
         f.filePath.slice(f.filePath.indexOf("papers/")),
       ),
     ).toEqual(
@@ -178,7 +179,7 @@ describe("papersDir — optional, `papers` by default", () => {
       "docs/drafts/c/PIPELINE-STATUS.md": "---\nstages: []\n---\n",
     });
     const r = await lint(root);
-    const linted = (JSON.parse(r.out) as { filePath: string }[]).map((f) =>
+    const linted = lintReport(r.out).map((f) =>
       f.filePath.slice(root.length + 1),
     );
     expect(linted).toContain("docs/drafts/c/paper.tex");

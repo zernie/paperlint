@@ -18,7 +18,7 @@
 #   npm run fmt:check                     5 s
 #   vigiles lint . README.md              6 s
 #   rules-see-files.mjs                   5 s
-#   layer-legacy-frozen.mjs               3 s
+#   layer-legacy-frozen.ts                3 s
 #   install e2e --strict (npm + pnpm)    28 s
 #   ───────────────────────────────────────────
 #   total work                          ~96 s, plus checkout + install + the claude binary
@@ -118,6 +118,11 @@ jobs:
       - name: npm test, under coverage
         run: npm run coverage -- --no-skip
 
+      # vitest strips types without checking them, so the tests' types are checked here. After
+      # `npm ci`, whose `prepare` built `dist/`: the e2e runs import its declarations.
+      - name: the tests type-check
+        run: npx tsc -p tsconfig.test.json
+
       # The rules themselves, over this repository's own fixtures. Two of the four fixtures are
       # DEFECTIVE ON PURPOSE, so a healthy checkout reports warnings here and still exits 0 —
       # the pass/fail signal for rule behaviour lives in `npm test`, not in the warning count.
@@ -146,7 +151,7 @@ jobs:
       # or a pointer to a file that does not exist. Bond is 3 × the measured 3 s, floored at the
       # 1-minute granularity GitHub bills in.
       #
-      # README.md is linted too, by name (see the same gate in scripts/check.mjs). Its
+      # README.md is linted too, by name (see the same gate in scripts/check.ts). Its
       # `vigiles:symbol` marks name the functions behind `paperlint init` and `paperlint new`; if one is
       # renamed or removed, this step fails and names README.md.
       - name: vigiles lint (skills + README.md)
@@ -163,7 +168,7 @@ jobs:
       # The legacy exemptions from src/'s layer rules (#76) may only shrink: counted from ESLint's
       # own suppressedMessages, so a new `-- legacy …` directive anywhere fails here.
       - name: legacy layer exemptions are frozen
-        run: node scripts/layer-legacy-frozen.mjs
+        run: node scripts/layer-legacy-frozen.ts
 
       # pnpm is INSTALLED here rather than hoped for. The runner image may or may not carry it,
       # and the npm/pnpm difference is the entire reason the install e2e exists — so leaving it
@@ -176,7 +181,7 @@ jobs:
       # Called directly with --strict, the same as the build e2e below. --strict: a manager that does not launch is a declared skip on a
       # contributor's clone and a FAILURE here, because in CI it means a broken environment.
       - name: install e2e (--strict)
-        run: node test/e2e/install.mjs --strict
+        run: node test/e2e/install.ts --strict
         timeout-minutes: 10
 
   # ── BUILDING THE PAPER WITH REAL pdflatex, ON LINUX AND macOS ──────────────────────────────────
@@ -271,14 +276,14 @@ jobs:
       # result must equal the numbers banal gave on the same PDFs through poppler's pdftohtml
       # (recorded once, hardcoded in the test). Runs in seconds, hence the short timeout.
       - name: banal e2e (--strict)
-        run: node test/e2e/banal.mjs --strict
+        run: node test/e2e/banal.ts --strict
         timeout-minutes: 3
 
       # Called directly with --strict (see the install e2e step in the `gates` job).
       - name: build e2e (--strict)
-        run: node test/e2e/build.mjs --strict
+        run: node test/e2e/build.ts --strict
         timeout-minutes: 10
 
       - name: toolchain e2e (--strict)
-        run: node test/e2e/toolchain.mjs --strict
+        run: node test/e2e/toolchain.ts --strict
         timeout-minutes: 10

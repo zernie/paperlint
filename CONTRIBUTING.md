@@ -44,10 +44,10 @@ and reported as "the gates". If a step genuinely cannot run here, it says so out
 being skipped quietly: an e2e that finds no TeX or no pnpm exits 77 _having stated_ why, and
 `npm run check` lists it as skipped instead of counting it as passed.
 
-Each gate's command is listed in `scripts/check.mjs`; run one of them directly while iterating on
+Each gate's command is listed in `scripts/check.ts`; run one of them directly while iterating on
 one rule. They are not what you run before pushing.
 
-**The list of gates cannot quietly fall behind CI.** `scripts/check.harness.mjs` pulls the job
+**The list of gates cannot quietly fall behind CI.** `scripts/check.harness.ts` pulls the job
 names out of `.github/workflows/ci.yml` and requires each to be either reproduced by a gate or
 named with a reason for why it cannot be. Add a job and it goes red the same day, naming the job
 nobody covered — verified by adding a `windows` job and watching it fail.
@@ -55,8 +55,8 @@ nobody covered — verified by adding a `windows` job and watching it fail.
 ## Layout
 
 ```
-eslint-rules/   the rules, each with its .harness.mjs beside it
-lib/            shared readers — markdown, skill corpus
+eslint-rules/   the rules (TypeScript, built to dist/eslint-rules/), each with its harness beside it
+lib/            shared readers — markdown, config keys (TypeScript, built to dist/lib/); skill corpus
 hooks/          three hooks for vigiles — the code
 plugin/         the Claude Code plugin: wiring for those hooks, no code, no package.json
 skills/         24 stage skills
@@ -102,6 +102,35 @@ npm run coverage         # the same, under c8, failing below the thresholds in .
 None of these are needed to USE the tool — they are here because the gates are part of the
 argument, not decoration.
 
+New code is TypeScript (#78). The last block of [`eslint.config.mjs`](eslint.config.mjs) makes any
+`.js`, `.mjs` or `.cjs` file an error in the directories already converted (`TYPESCRIPT_ONLY`), so
+`npm run lint` fails on one; a directory that still mixes the two is not listed yet, and the change
+that converts it adds it. Code that only this repository runs (tests, `scripts/`, `test/e2e/`) is
+run by `node` directly; code a consumer runs from `node_modules` needs a build first, because Node
+does not strip types there.
+
+`npm run build` is one `tsc` over two projects into one `dist/`: `tsconfig.json` builds `src/` to
+`dist/*.js`, and `tsconfig.pkg.json` builds `lib/` and `eslint-rules/` to `dist/lib/` and
+`dist/eslint-rules/`. Everything else imports those two through the package's subpath imports,
+`#lib/<name>` and `#eslint-rules/<name>` (`"imports"` in `package.json`): the default target is the
+build, which is what an install runs; the `paperlint-source` condition points at the `.ts` instead,
+and `npm test` (so `npm run coverage` and `npm run check` too) and `tsconfig.test.json` set it so
+they read the source. `scripts/test.ts` is the one place the tests get it; a harness run on its own
+(`npx vigiles test <file>`) needs `NODE_OPTIONS=--conditions=paperlint-source`.
+
+Consumers import the same modules by their old public names — `paperlint/eslint-rules/<name>.mjs`,
+`paperlint/lib/<name>.mjs`, `paperlint/bin/paperlint.mjs` — which the `"exports"` map in
+`package.json` points at `dist/`. The install e2e imports every one of them, and every
+`paperlint/…` import in a `docs/` code block, from the installed package; a module moved or renamed
+without its public name fails there. The five `lib/*.mjs` modules not yet converted are listed in
+`"exports"` by name until step 4 (#127) converts them.
+
+TypeScript is pinned to 6.x, not 7 (measured 2026-09-27): typescript-eslint 8.70.1 declares
+`typescript: >=4.8.4 <6.1.0`, and `typescript@7.0.2`'s package root exports only its version — the
+compiler API that `scripts/harness-api.test.ts` and `scripts/coverage-config.test.ts` parse with
+(`createSourceFile`) moved under `typescript/unstable/*`. Moving to 7 waits for a typescript-eslint
+release that allows it and for those two tests to parse through a stable API.
+
 Coverage is 100% for lines, statements, functions and branches, and there is no `c8 ignore`:
 code a test cannot reach directly — a race, a permission, a broken install, a real download — takes
 the effect as a parameter (the ports in `src/ports`, an injected `readdir` or runner), and the test
@@ -123,7 +152,7 @@ A venue is a **preset**, a JSONC file in `skills/submit-paper/references/venues/
 2. **The card.** `venues/<name>.md` — prose about the venue: deadlines, tracks, the blind model,
    what the form asks.
 3. **A test.** A case in `src/presets.test.ts` that `paperlint:<name>` resolves over its family with
-   the kinds you declared; `src/tex-requirements.harness.mjs` already checks every shipped preset
+   the kinds you declared; `src/tex-requirements.harness.ts` already checks every shipped preset
    against the schema.
 
 `paperlint toolchain` picks the new preset's packages up by itself, and the README and

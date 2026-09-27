@@ -27,6 +27,7 @@ import {
   ruleOwners,
   scopeToOwned,
 } from "./paper-files.ts";
+import { lintReport } from "../test/lint-report.ts";
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -67,7 +68,7 @@ async function lint(
 }
 
 const linted = (stdout: string): string[] =>
-  (JSON.parse(stdout) as { filePath: string }[]).map((r) => r.filePath);
+  lintReport(stdout).map((r) => r.filePath);
 
 /** Vendored code under a paper: a syntax error, an unknown rule in a directive, plain CommonJS. */
 const VENDORED = {
@@ -208,10 +209,7 @@ describe("🔴 a generated block never reaches a file paperlint does not lint (#
     async (_, settings) => {
       const root = project({ ...SIBLINGS, ...settings });
       const r = await lint(root);
-      const results = JSON.parse(r.out) as {
-        filePath: string;
-        messages: { ruleId: string | null; message: string }[];
-      }[];
+      const results = lintReport(r.out);
       // Guards: the class — no file reaches ESLint's default JavaScript parser.
       expect(
         results.flatMap((x) => x.messages).filter((m) => m.ruleId === null),

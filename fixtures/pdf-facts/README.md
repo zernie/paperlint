@@ -1,6 +1,6 @@
 # PDF fixtures for the pdf.js reader
 
-Real PDFs that `src/pdf-facts.harness.mjs` and `skills/render-paper/extract-pdf-facts.harness.mjs`
+Real PDFs that `src/pdf-facts.harness.ts` and `skills/render-paper/extract-pdf-facts.harness.ts`
 read. They were measured with poppler and with pdf.js on 2026-09-24 (issue #61); the harnesses pin
 poppler's numbers, so a pass means agreement with the tool pdf.js replaced.
 
@@ -13,7 +13,7 @@ poppler's numbers, so a pass means agreement with the tool pdf.js replaced.
 | `encrypted.pdf`    | `t3-all.pdf` saved with an AES-256 user password (PyMuPDF)          | pdf.js refuses it with `PasswordException`; the reader reports `encrypted`                                                        |
 | `hidden-text.pdf`  | `hidden-text.tex`, pdflatex                                         | two-column body text beside near-white, rotated and render-mode-3 text; page 2 holds only hidden text, so banal calls it blank    |
 
-`test/e2e/banal.mjs` also reads these files, with the real banal: it pins what banal 1.2 printed for
+`test/e2e/banal.ts` also reads these files, with the real banal: it pins what banal 1.2 printed for
 each one on poppler's `pdftohtml` 24.02.0 (2026-09-25), so a pass there means paperlint's pdf.js-written
 XML measures the same as poppler's. `hidden-text.pdf` exists for that test: each kind of hidden text
 changes banal's answer if it is counted.

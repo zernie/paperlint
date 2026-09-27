@@ -1,0 +1,359 @@
+/**
+ * Both halves for `hooks-settings.ts` — the three hooks written into `.claude/settings.json`.
+ *
+ * The merge under test is vigiles' REAL one (`vigiles/claude-code`), not a stand-in: the claims
+ * that matter — a user's hook in the same matcher survives, a second run is byte-identical — are
+ * claims about that function meeting our wiring, and a fake would only test the fake.
+ *
+ * What each block defends against, in real life:
+ *   - a SECOND copy of a hook wired by hand under another spelling: Claude Code dedupes only
+ *     identical handlers, so the guard would run twice and nothing would say so;
+ *   - a rewrite on every `init`: the settings file is committed, so churn is a diff someone reviews
+ *     for nothing — and a reformat of the user's own file is a change they did not ask for;
+ *   - a doctor that says "wired" over nothing, or offers a remedy `init` then refuses to apply.
+ *
+ * ⚠️ Assertions at the TOP LEVEL: `vigiles test` imports the file and counts "did not throw"
+ * as a pass.
+ */
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { createChecker } from "../lib/check.ts";
+import { isDeepStrictEqual } from "node:util";
+import { z } from "zod";
+import type { Merge, Settings } from "./hooks-settings.ts";
+
+/** Settings with a PreToolUse entry — the shape the "wired twice" case edits. */
+const PreToolUseSettings = z.looseObject({
+  hooks: z.looseObject({
+    PreToolUse: z.array(
+      z.looseObject({ hooks: z.array(z.looseObject({ command: z.string() })) }),
+    ),
+  }),
+});
+
+const {
+  hookRun,
+  shippedWiring,
+  wireHooks,
+  wiredCounts,
+  doctorHooks,
+  readSettings,
+  MANAGED_BY,
+  SETTINGS_PATH,
+} = await import("./hooks-settings.ts");
+const { claudeCodeHookProtocol } = await import("vigiles/claude-code");
+const merge: Merge = (e, c, m) =>
+  claudeCodeHookProtocol.mergeRegistrations(e, c, m);
+
+const check = createChecker();
+
+// ── the contract with vigiles, checked before anything relies on it ──────────────────────
+check(
+  "🔴 vigiles/claude-code exports claudeCodeHookProtocol.mergeRegistrations — the merge init calls",
+  typeof claudeCodeHookProtocol.mergeRegistrations === "function",
+);
+
+// ── the one source: plugin/hooks/hooks.json ─────────────────────────────────────────────
+const wiring = shippedWiring();
+check(
+  "the hook names are DERIVED from hooks.json — three, in its order",
+  wiring.names.join() ===
+    "paper-edit-guard,paper-skills-nudge,paper-status-gates",
+);
+// ── settings written by hand: shapes Claude Code would ignore are skipped, not crashed on ──
+check(
+  "an event that is not a list, an entry with no `hooks` list, a handler with no command → no commands",
+  JSON.stringify(
+    wiredCounts(
+      {
+        hooks: {
+          PreToolUse: "npx paperlint hook paper-edit-guard",
+          PostToolUse: [{ matcher: "Edit" }, null, { hooks: "x" }],
+          Stop: [{ hooks: [{ type: "command" }, null] }],
+        },
+      },
+      wiring.names,
+    ),
+  ) ===
+    JSON.stringify(wiring.names.map((name) => ({ name, ours: 0, other: 0 }))),
+);
+{
+  const file = join(tmpdir(), `paperlint-no-hooks-${String(process.pid)}.json`);
+  writeFileSync(file, "{}\n");
+  let thrown = "";
+  try {
+    shippedWiring(file);
+  } catch (e) {
+    thrown = e instanceof Error ? e.message : String(e);
+  }
+  rmSync(file);
+  check(
+    "a wiring file without `hooks` names no hook — and THROWS instead of wiring nothing",
+    thrown === `${file} names no paperlint hook — there is nothing to wire`,
+    thrown,
+  );
+}
+
+const work = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-hooks-")));
+try {
+  const empty = join(work, "empty-hooks.json");
+  writeFileSync(empty, '{"hooks":{}}');
+  let threw = false;
+  try {
+    shippedWiring(empty);
+  } catch {
+    threw = true;
+  }
+  check(
+    "a wiring file naming no hook THROWS — wiring nothing must not read as wired",
+    threw,
+  );
+
+  // ── which spelling runs which hook ─────────────────────────────────────────────────────
+  const ours = `node "\${CLAUDE_PROJECT_DIR}/${MANAGED_BY}" hook paper-edit-guard`;
+  const cases: [string, { name: string; ours: boolean } | null][] = [
+    [ours, { name: "paper-edit-guard", ours: true }],
+    [
+      `node "$CLAUDE_PROJECT_DIR/${MANAGED_BY}" hook paper-status-gates`,
+      { name: "paper-status-gates", ours: true },
+    ],
+    [
+      `node "$CLAUDE_PROJECT_DIR/node_modules/vigiles/dist/cli.js" hook-runtime run-program "$CLAUDE_PROJECT_DIR/node_modules/paperlint/hooks/paper-edit-guard.hook.mjs"`,
+      { name: "paper-edit-guard", ours: false },
+    ],
+    [
+      `npx paperlint hook paper-skills-nudge`,
+      { name: "paper-skills-nudge", ours: false },
+    ],
+    [
+      `npx paperlint hook paper-skills-nudge`,
+      { name: "paper-skills-nudge", ours: false },
+    ],
+    [
+      `node /abs/proj/node_modules/paperlint/bin/paperlint.mjs hook paper-edit-guard`,
+      { name: "paper-edit-guard", ours: false },
+    ],
+    [`node my-own-lint.mjs`, null],
+    [`node node_modules/paperlint/bin/paperlint.mjs lint`, null],
+  ];
+  for (const [cmd, want] of cases)
+    check(
+      `hookRun(${cmd.slice(0, 60)}…) → ${JSON.stringify(want)}`,
+      JSON.stringify(hookRun(cmd)) === JSON.stringify(want),
+    );
+
+  const project = (name: string, settings?: Settings | string) => {
+    const dir = join(work, name);
+    mkdirSync(join(dir, ".claude"), { recursive: true });
+    if (settings !== undefined)
+      writeFileSync(
+        join(dir, SETTINGS_PATH),
+        typeof settings === "string"
+          ? settings
+          : JSON.stringify(settings, null, 2) + "\n",
+      );
+    return dir;
+  };
+  const text = (dir: string) => readFileSync(join(dir, SETTINGS_PATH), "utf8");
+  const settingsIn = (dir: string): Settings => {
+    const r = readSettings(dir);
+    if (r.status === "unparsable") throw new Error(r.reason);
+    return r.settings;
+  };
+
+  // ── a fresh project ────────────────────────────────────────────────────────────────────
+  {
+    const dir = join(work, "fresh");
+    mkdirSync(dir);
+    const r = wireHooks(dir, merge, wiring);
+    const s = settingsIn(dir);
+    check(
+      "no settings file → it is created with the three hooks",
+      r.status === "written" &&
+        wiredCounts(s, wiring.names).every(
+          (c) => c.ours === 1 && c.other === 0,
+        ),
+    );
+    const before = text(dir);
+    const again = wireHooks(dir, merge, wiring);
+    check(
+      "🔴 a second run changes NOTHING — byte-identical, status `present`",
+      again.status === "present" && text(dir) === before,
+    );
+  }
+
+  // ── the user's own hooks and keys survive ──────────────────────────────────────────────
+  {
+    const dir = project("user", {
+      permissions: { allow: ["Bash(ls:*)"] },
+      hooks: {
+        PostToolUse: [
+          {
+            matcher: "Edit|Write|MultiEdit",
+            hooks: [{ type: "command", command: "node my-own-lint.mjs" }],
+          },
+        ],
+      },
+    });
+    wireHooks(dir, merge, wiring);
+    const s = settingsIn(dir);
+    check(
+      "🔴 the user's own hook in the SAME matcher survives",
+      JSON.stringify(s).includes("node my-own-lint.mjs"),
+    );
+    check(
+      "and every other key is kept (permissions)",
+      isDeepStrictEqual(s["permissions"], { allow: ["Bash(ls:*)"] }),
+    );
+    check(
+      "and ours are there, once each",
+      wiredCounts(s, wiring.names).every((c) => c.ours === 1),
+    );
+  }
+
+  // ── already wired, in someone else's formatting → the file is not touched ──────────────
+  {
+    const wired = merge({}, wiring.compiled, MANAGED_BY);
+    const fourSpaces = JSON.stringify(wired, null, 4);
+    const dir = project("formatted", fourSpaces);
+    const r = wireHooks(dir, merge, wiring);
+    check(
+      "🔴 wired already → nothing is rewritten, not even to our indentation",
+      r.status === "present" && text(dir) === fourSpaces,
+    );
+  }
+
+  // ── another spelling of the same hook → write NOTHING ──────────────────────────────────
+  {
+    const handWired = {
+      hooks: {
+        PreToolUse: [
+          {
+            matcher: "Bash",
+            hooks: [
+              {
+                type: "command",
+                command:
+                  'node "$CLAUDE_PROJECT_DIR/node_modules/vigiles/dist/cli.js" hook-runtime run-program "$CLAUDE_PROJECT_DIR/node_modules/paperlint/hooks/paper-edit-guard.hook.mjs"',
+              },
+            ],
+          },
+        ],
+      },
+    };
+    const dir = project("foreign", handWired);
+    const before = text(dir);
+    const r = wireHooks(dir, merge, wiring);
+    check(
+      "🔴 a hook wired by hand under another spelling → `foreign`, and the file is untouched",
+      r.status === "foreign" && text(dir) === before,
+    );
+    check(
+      "the report names the hook and the command it found",
+      r.status === "foreign" &&
+        r.found.length === 1 &&
+        r.found[0]?.name === "paper-edit-guard",
+    );
+    check(
+      "and names the hooks that are not wired in ANY form",
+      r.status === "foreign" &&
+        r.missing.join() === "paper-skills-nudge,paper-status-gates",
+    );
+    // The control: without the check, vigiles' merge WOULD add a second copy. This is the
+    // reason the check exists, measured rather than asserted.
+    const merged = merge(handWired, wiring.compiled, MANAGED_BY);
+    const c = wiredCounts(merged, wiring.names).find(
+      (c) => c.name === "paper-edit-guard",
+    );
+    check(
+      "(control) vigiles' merge alone would wire paper-edit-guard TWICE here",
+      c?.ours === 1 && c.other === 1,
+    );
+  }
+
+  // ── a file that does not parse is reported, never overwritten ──────────────────────────
+  {
+    const dir = project("broken", "{ not json");
+    const r = wireHooks(dir, merge, wiring);
+    check(
+      "an unparsable settings.json → `unparsable`, bytes untouched",
+      r.status === "unparsable" && text(dir) === "{ not json",
+    );
+    check(
+      "an array is not a settings object either",
+      readSettings(project("array", "[]\n")).status === "unparsable",
+    );
+  }
+
+  // ── doctor's section ───────────────────────────────────────────────────────────────────
+  const doc = (settings?: Settings | string) => {
+    const dir = project(`doc-${String(check.count)}`, settings);
+    return doctorHooks(dir, wiring).join("\n");
+  };
+  const wiredOnce = merge({}, wiring.compiled, MANAGED_BY);
+  check(
+    "wired once each → ✓ wired, with the fresh-clone consequence",
+    /✓ wired — paper-edit-guard, paper-skills-nudge, paper-status-gates, once each/.test(
+      doc(wiredOnce),
+    ) && /cannot run until `npm install`/.test(doc(wiredOnce)),
+  );
+  check(
+    "nothing wired → ⚠ not wired, with the remedy",
+    /⚠ not wired — none of the 3 hooks/.test(doc({})),
+  );
+  const twice = PreToolUseSettings.parse(structuredClone(wiredOnce));
+  twice.hooks.PreToolUse[0]?.hooks.push({
+    type: "command",
+    command: "npx paperlint hook paper-edit-guard",
+  });
+  const twiceText = doc(twice);
+  check(
+    "🔴 the same hook under two spellings → ⚠ wired TWICE, naming it with its count",
+    /wired TWICE/.test(twiceText) &&
+      /paper-edit-guard ×2/.test(twiceText) &&
+      !/✓ wired/.test(twiceText),
+  );
+  const handPartial = doc({
+    hooks: {
+      PreToolUse: [
+        {
+          matcher: "Bash",
+          hooks: [
+            { type: "command", command: "npx paperlint hook paper-edit-guard" },
+          ],
+        },
+      ],
+    },
+  });
+  check(
+    "🔴 partly wired BY HAND → the remedy is NOT `npx paperlint init`, which would refuse to write",
+    /partly wired — missing: paper-skills-nudge, paper-status-gates/.test(
+      handPartial,
+    ) && /writes nothing then/.test(handPartial),
+  );
+  check(
+    "an unparsable file is named in doctor, not crashed on",
+    /does not parse/.test(
+      doctorHooks(project("doc-broken", "{"), wiring).join("\n"),
+    ),
+  );
+  check(
+    "(the scratch projects exist — nothing above was vacuous)",
+    existsSync(work),
+  );
+} finally {
+  rmSync(work, { recursive: true, force: true });
+}
+
+console.log(
+  `✓ ${String(check.count)} assertions passed — the hooks land in .claude/settings.json once`,
+);

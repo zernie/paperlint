@@ -5,13 +5,13 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "build": "tsc",
-    "prepare": "tsc",
-    "test": "node scripts/test.mjs",
-    "coverage": "NODE_OPTIONS=\"--import=./test/coverage-src.mjs $NODE_OPTIONS\" c8 --check-coverage npm test --",
+    "build": "tsc -p tsconfig.pkg.json && tsc",
+    "prepare": "tsc -p tsconfig.pkg.json && tsc",
+    "test": "node scripts/test.ts",
+    "coverage": "NODE_OPTIONS=\"--import=./test/coverage-src.ts $NODE_OPTIONS\" c8 --check-coverage npm test --",
     "lint": "eslint .",
-    "check": "node scripts/check.mjs",
-    "test:e2e": "node test/e2e/install.mjs && node test/e2e/build.mjs",
+    "check": "node scripts/check.ts",
+    "test:e2e": "node test/e2e/install.ts && node test/e2e/build.ts",
     "fmt": "prettier --write .",
     "fmt:check": "prettier --check ."
   },
@@ -24,7 +24,7 @@
     "js-yaml": "^4.1.0",
     "markdown-it": "^14.3.0",
     "ts-essentials": "^10.2.1",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.3",
     "unpdf": "^1.8.1",
     "vigiles": "^31.0.1",
     "zod": "^4.6.5"
@@ -33,9 +33,12 @@
     "@retorquere/bibtex-parser": "^10.0.1",
     "@semantic-release/commit-analyzer": "13.0.1",
     "@semantic-release/release-notes-generator": "14.1.1",
+    "@types/js-yaml": "^4.0.9",
+    "@types/markdown-it": "^14.2.0",
     "@types/node": "^26.6.1",
     "c8": "^12.0.0",
     "conventional-changelog-conventionalcommits": "9.3.1",
+    "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-boundaries": "^7.2.0",
     "eslint-plugin-n": "^18.3.0",
     "prettier": "^3.8.1",
@@ -72,6 +75,22 @@
   "bin": {
     "paperlint": "bin/paperlint.mjs"
   },
+  "exports": {
+    "./eslint-rules/*.mjs": {
+      "types": "./dist/eslint-rules/*.d.ts",
+      "default": "./dist/eslint-rules/*.js"
+    },
+    "./lib/skill-checks.mjs": "./lib/skill-checks.mjs",
+    "./lib/skill-corpus.mjs": "./lib/skill-corpus.mjs",
+    "./lib/skill-eval-kit.mjs": "./lib/skill-eval-kit.mjs",
+    "./lib/skill-trigger-cases.mjs": "./lib/skill-trigger-cases.mjs",
+    "./lib/trigger-ledger.mjs": "./lib/trigger-ledger.mjs",
+    "./lib/*.mjs": {
+      "types": "./dist/lib/*.d.ts",
+      "default": "./dist/lib/*.js"
+    },
+    "./*": "./*"
+  },
   "files": [
     ".github",
     "CLAUDE.md",
@@ -93,6 +112,19 @@
     "skills",
     "src",
     "templates",
-    "tsconfig.json"
-  ]
+    "tsconfig.json",
+    "tsconfig.pkg.json"
+  ],
+  "imports": {
+    "#lib/*": {
+      "paperlint-source": "./lib/*.ts",
+      "types": "./dist/lib/*.d.ts",
+      "default": "./dist/lib/*.js"
+    },
+    "#eslint-rules/*": {
+      "paperlint-source": "./eslint-rules/*.ts",
+      "types": "./dist/eslint-rules/*.d.ts",
+      "default": "./dist/eslint-rules/*.js"
+    }
+  }
 }

@@ -15,11 +15,19 @@ import { describe, expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { analyzeCommits } from "@semantic-release/commit-analyzer";
 import { generateNotes } from "@semantic-release/release-notes-generator";
+import { z } from "zod";
 
-type PluginEntry = string | [string, Record<string, unknown>];
-const releaserc = JSON.parse(
-  readFileSync(new URL("../.releaserc.json", import.meta.url), "utf8"),
-) as { plugins: PluginEntry[] };
+const PluginEntry = z.union([
+  z.string(),
+  z.tuple([z.string(), z.record(z.string(), z.unknown())]),
+]);
+const releaserc = z
+  .object({ plugins: z.array(PluginEntry) })
+  .parse(
+    JSON.parse(
+      readFileSync(new URL("../.releaserc.json", import.meta.url), "utf8"),
+    ),
+  );
 
 /** The options `.releaserc.json` gives one plugin, exactly as semantic-release would pass them. */
 function optionsFor(name: string): Record<string, unknown> {

@@ -34,7 +34,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { checkSkill } from "../../lib/skill-checks.mjs";
-import { papersRoot } from "../../eslint-rules/papers.mjs";
+import { papersRoot } from "#eslint-rules/papers";
 import {
   consumerRoot,
   settingsOf,
@@ -44,7 +44,7 @@ await checkSkill("render-paper");
 
 // The TeX package pins that stood here (texlive-fonts-extra, texlive-plain-generic in
 // ensure-toolchain.sh) moved with the list itself: the venue profiles declare the packages, and
-// src/tex-requirements.harness.mjs asserts that every acmart venue declares libertine, inconsolata,
+// src/tex-requirements.harness.ts asserts that every acmart venue declares libertine, inconsolata,
 // newtx, kastrup (binhex.tex) and fancyhdr — each proved by the file whose absence broke a build.
 
 // ── TEXINPUTS: WHERE THE SCRIPTS LOOK FOR `paper-guards.tex` ─────────────────

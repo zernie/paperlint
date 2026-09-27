@@ -279,7 +279,7 @@ cannot.
 
 What the twin was for was the CAPABILITY CHECK — `vigiles compile` refuses a hook that imports
 anything but `vigiles/hook`, because the import list _is_ the capability surface. That check is a
-function, `checkHookImports`, and `hooks/hooks.harness.mjs` runs it over every shipped
+function, `checkHookImports`, and `hooks/hooks.harness.ts` runs it over every shipped
 `.hook.mjs` directly. Same check, applied to the artifact that actually executes, with no second
 file to keep in step. What is lost is `tsc` on the hook body and the typed `e.ctx` — named here
 rather than left as an omission.
@@ -497,8 +497,8 @@ justified two hundred lines above precisely by these minutes being free.
 | -------------------------------------------------------------------------- | --------------------------------------------- |
 | a pure function                                                            | unit — vitest, `<module>.test.ts` beside it   |
 | a use case or adapter that reaches disk, a process, the network, the clock | integration — vitest, fakes through the ports |
-| a hook's decision, a skill's contract                                      | harness — vigiles, `<surface>.harness.mjs`    |
-| the installed package, a real TeX build                                    | e2e — `test/e2e/*.mjs`                        |
+| a hook's decision, a skill's contract                                      | harness — vigiles, `<surface>.harness.ts`     |
+| the installed package, a real TeX build                                    | e2e — `test/e2e/*.ts`                         |
 
 Red first · assert the whole value · test what the code does, never what its source says · no test
 touches the real network · 100% coverage, no `c8 ignore`. **Before every push: `npm run check`,

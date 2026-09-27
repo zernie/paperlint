@@ -10,7 +10,7 @@ import { chmodSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "vitest";
-import { runNode, useTempDir, writeTree } from "../../../test/support.mjs";
+import { runNode, useTempDir, writeTree } from "../../../test/support.ts";
 import { census, check, covers, parseManifest } from "./round-diff.mjs";
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "round-diff.mjs");

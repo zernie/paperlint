@@ -11,11 +11,11 @@
  * is why `scripts/rules-see-files.mjs` exists and why it runs as part of the test suite:
  * every rule declared below must be enabled for at least one file that is actually on disk.
  */
-import { texLanguage } from "./eslint-rules/latex-language.mjs";
-import texBuild from "./eslint-rules/tex-build.mjs";
+import { texLanguage } from "#eslint-rules/latex-language";
+import texBuild from "#eslint-rules/tex-build";
 import markdown from "@eslint/markdown";
-import localRules from "./eslint-rules/temp-root-realpath.mjs";
-import portRules from "./eslint-rules/install-path-literals.mjs";
+import localRules from "#eslint-rules/temp-root-realpath";
+import portRules from "#eslint-rules/install-path-literals";
 import n from "eslint-plugin-n";
 import tseslint from "typescript-eslint";
 import boundaries from "eslint-plugin-boundaries";
@@ -25,6 +25,35 @@ import { fileURLToPath } from "node:url";
 // The complexity set, shared by the TypeScript block and the ratchet below. Every function
 // measured over these limits on 2026-09-24 was either refactored under them (the #59 build code)
 // or pinned at its current maximum in RATCHET.
+const TS_FILES = ["**/*.ts", "**/*.mts"];
+
+/** `x as unknown as T` tells the checker to look away (#76). Shared: a block REPLACES a rule's options. */
+const AS_UNKNOWN_AS = {
+  selector:
+    "TSAsExpression > TSAsExpression[typeAnnotation.type='TSUnknownKeyword']",
+  message:
+    "`as unknown as` switches the type checker off. Convert with a function, or fix the type.",
+};
+
+/**
+ * A RULE MAY NOT ASK GIT. `paper/source` once bound a paper's stage to a commit sha and checked it
+ * with `git cat-file -e`; of four recorded shas, one still resolved ninety minutes later, because
+ * squash-merge and `gc` delete commits as routine. And `actions/checkout` fetches one commit, so
+ * under CI even a live sha does not resolve: the rule is red where it must hold and green locally.
+ * A rule reads the files ESLint gives it. Matched on the AST: a spawner called with the program
+ * `git` (or a shell line starting with `git `). Two things pass, deliberately: opening `.git/` with
+ * `fs`, and a program name assembled at runtime.
+ */
+const SPAWNERS = "exec|execSync|execFile|execFileSync|spawn|spawnSync|fork";
+const GIT_IN_A_RULE = [
+  `CallExpression[callee.name=/^(${SPAWNERS})$/][arguments.0.value=/^git( |$)/]`,
+  `CallExpression[callee.property.name=/^(${SPAWNERS})$/][arguments.0.value=/^git( |$)/]`,
+].map((selector) => ({
+  selector,
+  message:
+    "A rule may not run git: a sha is deleted by routine maintenance and absent from a shallow CI checkout. Read the file content ESLint passes the rule.",
+}));
+
 const MAX_LINES = { max: 60, skipComments: true, skipBlankLines: true };
 
 // 🔴 A CEILING, NOT A PERMISSION: each number is the file's measured maximum on 2026-09-24, so a
@@ -38,6 +67,20 @@ const RATCHET = {
   "src/hooks-settings.ts": { complexity: 12, "max-depth": 4 },
   "src/structure.ts": { complexity: 12, "max-depth": 4 },
   "src/new-paper.ts": { complexity: 11 },
+  // Moved from JavaScript on 2026-09-27 (#78) and measured that day: the move changed their
+  // language, not their shape, so their debt is pinned here like the rest rather than paid in it.
+  "eslint-rules/latex-language.ts": {
+    complexity: 68,
+    "max-lines-per-function": 314,
+    "max-depth": 4,
+  },
+  "eslint-rules/paper-typography.ts": { complexity: 29, "max-depth": 5 },
+  "eslint-rules/paper-stages.ts": {
+    complexity: 15,
+    "max-lines-per-function": 105,
+  },
+  "eslint-rules/temp-root-realpath.ts": { complexity: 13 },
+  "lib/markdown.ts": { complexity: 12 },
 };
 
 // ── Hexagonal layers (src/CLAUDE.md, issue #76) ─────────────────────────────────────────
@@ -121,6 +164,15 @@ export const layerBoundaries = (root) => ({
   plugins: { boundaries },
   settings: {
     "boundaries/root-path": root,
+    // `#lib/*` and `#eslint-rules/*` are package.json subpath imports; the Node resolver the plugin
+    // defaults to does not read that map and leaves them unresolved, i.e. unknown. The TypeScript
+    // resolver reads it, and with the repository's source condition lands on the `.ts` file, which
+    // is classified as the js-module element it is.
+    "import/resolver": {
+      typescript: {
+        conditionNames: ["paperlint-source", "types", "import", "node"],
+      },
+    },
     "boundaries/elements": [
       { type: "port", pattern: "src/ports", partialMatch: false },
       { type: "domain", pattern: "src/domain", partialMatch: false },
@@ -138,7 +190,7 @@ export const layerBoundaries = (root) => ({
         partialMatch: false,
         capture: ["kind"],
       },
-      // test/support.mjs — shared helpers for tests. Only the `test` category may import it: the
+      // test/support.ts — shared helpers for tests. Only the `test` category may import it: the
       // policies below allow tests any element, and allow no other file this one.
       { type: "test-support", pattern: "test", partialMatch: false },
     ],
@@ -147,7 +199,8 @@ export const layerBoundaries = (root) => ({
       { category: "root", pattern: "src/cli.ts", exclusive: true },
       // Every other file at the top of src/ is app. A new one gets the full app rules.
       { category: "app", pattern: "src/*.ts" },
-      { category: "test", pattern: "src/**/*.test.ts" },
+      // A harness is a test too: it drives the code through vigiles instead of vitest.
+      { category: "test", pattern: "src/**/*.{test,harness}.ts" },
       // AXIS B: purity is a category, orthogonal to the element.
       { category: "io", pattern: "src/adapters/*/*.io.ts" },
     ],
@@ -243,12 +296,17 @@ export const layerBoundaries = (root) => ({
  * Files that did I/O before the layers existed carry an `eslint-disable-next-line` naming #76 above
  * each such import or use; `reportUnusedDisableDirectives: "error"` turns a disable that suppresses
  * nothing into a finding, so an exemption leaves the moment its I/O does, and
- * `scripts/layer-legacy-frozen.mjs` freezes how many each file may carry. A NEW module that needs
+ * `scripts/layer-legacy-frozen.ts` freezes how many each file may carry. A NEW module that needs
  * the outside world is a new `*.io.ts` in the adapter of the program it talks to — not a disable.
  */
 export const IO_GLOBALS = {
   files: ["src/**/*.ts"],
-  ignores: ["src/cli.ts", "src/adapters/*/*.io.ts", "src/**/*.test.ts"],
+  ignores: [
+    "src/cli.ts",
+    "src/adapters/*/*.io.ts",
+    "src/**/*.test.ts",
+    "src/**/*.harness.ts",
+  ],
   linterOptions: { reportUnusedDisableDirectives: "error" },
   rules: {
     "no-restricted-globals": [
@@ -270,6 +328,27 @@ const ceiling = (rule, n) =>
   rule === "max-lines-per-function"
     ? ["error", { ...MAX_LINES, max: n }]
     : ["error", n];
+
+/**
+ * New code is TypeScript (#78). A JavaScript file (`.js`, `.mjs`, `.cjs`) under any of these
+ * directories is an error, whatever its name — the check is on the file's AST root, so a name with
+ * any number of dots and an empty file are both caught. The directories are the ones already moved
+ * to TypeScript; each later step of #78 adds the directories it converts, and the last one replaces
+ * the list with every JavaScript file in the repository.
+ */
+const TYPESCRIPT_ONLY = [
+  "src/adapters/**/*.{js,mjs,cjs}",
+  "src/domain/**/*.{js,mjs,cjs}",
+  "src/ports/**/*.{js,mjs,cjs}",
+  // test/ itself and test/e2e — not test/fixtures/layers/eslint-rules, whose `rule.mjs` stands for
+  // the JavaScript module it is linted as.
+  "test/*.{js,mjs,cjs}",
+  "test/e2e/**/*.{js,mjs,cjs}",
+  "test/fixtures/layers/src/**/*.{js,mjs,cjs}",
+  "fixtures/real-markdown-paper/**/*.{js,mjs,cjs}",
+  "skills/paper-pipeline/scripts/fixtures/**/*.{js,mjs,cjs}",
+  "skills/plan-paper-timeline/fixtures/**/*.{js,mjs,cjs}",
+];
 
 export default [
   // 🔴 TRANSIENT DIRECTORIES ARE NOT THE CORPUS, and leaving them in is a RACE, not sloppiness.
@@ -297,37 +376,51 @@ export default [
   // 🔴 THE PACKAGE'S TYPESCRIPT, and before 2026-09-24 no block matched it — the same silent
   // ignore the `.mjs` block below was written against, recurring for `.ts` (#49). `src/` is the
   // CLI and the build; the skill specs compile into the SKILL.md files the package ships; the
-  // three hand-written `.d.mts` type the `.mjs` modules `src/` imports. All tracked TypeScript.
+  // hand-written `.d.mts` files type the `.mjs` modules `src/` imports. All tracked TypeScript.
   //
   // Measured on the first run (41727cd): 44 findings in 9 of 39 files, all in `src/`, plus one
   // `no-useless-escape` in a spec that had dropped a backslash from its compiled SKILL.md. The
   // #59 build files were refactored clean; the older CLI files sit in RATCHET, one block below.
   //
-  // NOT TYPE-AWARE, deliberately: no rule here needs type information, and `npm run build`
-  // (tsc, strict) already type-checks `src/` as the first gate of `npm run check`.
+  // TYPE-AWARE since 2026-09-27: typescript-eslint's `strictTypeChecked` preset, fed by
+  // `tsconfig.test.json`, which now includes EVERY tracked `.ts`/`.mts` (the 24 skill specs and
+  // `vitest.config.ts` had been in no tsconfig, so neither tsc nor this block type-checked them).
+  // `parserOptions.project` rather than `projectService`: the service looks for the nearest
+  // `tsconfig.json`, and the root one covers only the shipped `src/`, so every test, script and
+  // spec would fall back to a default project. First run: 374 findings in 64 files, all fixed in
+  // the same PR, none suppressed.
   //
   // NOT HERE: `port/js-install-path` (43 findings, 41 of them the specs' `.claude/skills/`
   // literals — issue #19's debt, `warn` for `.mjs` for the same reason; 2 in hooks-settings.ts,
   // which writes the consumer's settings and must name the install) and `n/no-missing-import`
-  // (tsc already fails on an unresolved import in `src/`).
+  // (tsc already fails on an unresolved import).
+  ...tseslint.configs.strictTypeChecked.map((config) => ({
+    ...config,
+    files: TS_FILES,
+  })),
   {
-    files: ["**/*.ts", "**/*.mts"],
-    languageOptions: { parser: tseslint.parser },
+    files: TS_FILES,
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        project: "./tsconfig.test.json",
+        tsconfigRootDir: dirname(fileURLToPath(import.meta.url)),
+      },
+    },
     plugins: { "@typescript-eslint": tseslint.plugin, local: localRules },
     rules: {
       // The same macOS-only defect as in the `.mjs` block; clean here, so it opens at `error`.
       "local/temp-root-realpath": "error",
-      // A dead import is a sign of an incomplete edit. The TypeScript variant, because the core
-      // rule does not understand type-only positions.
-      "@typescript-eslint/no-unused-vars": "error",
-      // `any` switches the checker off for everything it flows into — the gate that makes `src/`
-      // TypeScript at all. Five older sites are pinned inline and named in #49.
+      // `any` switches the checker off for everything it flows into. The preset has it too; named
+      // here so that dropping the preset cannot drop it.
       "@typescript-eslint/no-explicit-any": "error",
       // The behaviour rules of the `.mjs` block, for the same reasons: each changes what the code
       // DOES, not how it looks, and a regex that escapes the wrong thing searches for the wrong thing.
       "no-empty": "error",
       "no-constant-condition": "error",
-      "no-dupe-keys": "error",
+      // `no-unreachable` is switched off by the preset's `eslint-recommended` layer on the claim
+      // that tsc reports it; tsc only greys unreachable code unless `allowUnreachableCode` is
+      // false, so it is switched back on. (`no-dupe-keys` is dropped: tsc does fail on it.)
       "no-unreachable": "error",
       "no-fallthrough": "error",
       "no-useless-escape": "error",
@@ -339,15 +432,7 @@ export default [
       complexity: ["error", 10],
       // `x as unknown as T` tells the checker to look away: two spellings of one port were once
       // reconciled that way (#76). A real conversion is a function; a real subset needs no cast.
-      "no-restricted-syntax": [
-        "error",
-        {
-          selector:
-            "TSAsExpression > TSAsExpression[typeAnnotation.type='TSUnknownKeyword']",
-          message:
-            "`as unknown as` switches the type checker off. Convert with a function, or fix the type.",
-        },
-      ],
+      "no-restricted-syntax": ["error", AS_UNKNOWN_AS],
       // Nesting beyond three blocks is where a step belongs in its own named function.
       "max-depth": ["error", 3],
       // Five positional parameters are a record without field names; pass an object instead.
@@ -423,7 +508,9 @@ export default [
       // unreachable code, fallthrough in `case`.
       "no-empty": "error",
       "no-constant-condition": "error",
-      "no-dupe-keys": "error",
+      // `no-unreachable` is switched off by the preset's `eslint-recommended` layer on the claim
+      // that tsc reports it; tsc only greys unreachable code unless `allowUnreachableCode` is
+      // false, so it is switched back on. (`no-dupe-keys` is dropped: tsc does fail on it.)
       "no-unreachable": "error",
       "no-fallthrough": "error",
       // Regexes: unnecessary escaping slash and control character in class — both findings about
@@ -506,5 +593,27 @@ export default [
     // real. Do not silence them by adding an ignore — a rule that lints only clean inputs is
     // one whose firing path nothing exercises, which is rule 4 wearing a different hat. The
     // pass/fail signal lives in `npm test`, not in the warning count of `npm run lint`.
+  },
+  // Rule sources, whatever their extension; tests and harnesses plant git calls on purpose.
+  {
+    files: ["eslint-rules/*.ts", "eslint-rules/*.mjs"],
+    ignores: ["eslint-rules/*.test.*", "eslint-rules/*.harness.*"],
+    rules: {
+      "no-restricted-syntax": ["error", AS_UNKNOWN_AS, ...GIT_IN_A_RULE],
+    },
+  },
+  // LAST, so no block above can replace its `no-restricted-syntax` options for these files (none
+  // sets that rule for JavaScript today; being last keeps it that way).
+  {
+    files: TYPESCRIPT_ONLY,
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "Program",
+          message: "New code is TypeScript (#78): write this file as .ts.",
+        },
+      ],
+    },
   },
 ];

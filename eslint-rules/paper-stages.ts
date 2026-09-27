@@ -1,0 +1,380 @@
+/**
+ * `paper/stages` — the stage a paper has reached is an author's CLAIM, so it is a FIELD, and
+ * the bytes on disk are the evidence that claim is checked against.
+ *
+ * ── WHAT THIS REPLACES, and why the replacement is not cosmetic ─────────────────────────
+ * The predecessor kept a vocabulary of stage names in a JS const and applied its regexes to
+ * the WHOLE of `PIPELINE-STATUS.md`:
+ *
+ *     { stage: "submitted", declaredBy: /(?<!\bas\s)(?<!\bbe\s)\bsubmitted\b/i }
+ *
+ * The lookbehinds are not decoration — they were added after the only match in one paper's
+ * file turned out to be a reviewer's idiom, "Weak Accept as submitted", which says nothing
+ * about submission. The check then demanded a frozen pdf and was RIGHT BY ACCIDENT.
+ *
+ * 🔴 And it stayed wrong in the other direction, measured 2026-09-16 on the live corpus:
+ * `versions/2026-08-29-camera-ready.pdf` had been on disk for 16 days at 616 175 bytes while
+ * the `camera-ready` pattern matched ZERO times anywhere in the file. The artefact preceded
+ * the declaration, so all three checks gated on that declaration were blind by construction.
+ *
+ * ── TWO DIRECTIONS, and neither alone is the check ──────────────────────────────────────
+ *   declared -> bytes   a record without its file, or with the wrong size, is a false claim
+ *   bytes -> declared   a frozen version nobody declared is the case above, and it is also
+ *                       what stops the whole rule being switched off by deleting a line
+ *
+ * Absence of the field is therefore LEGITIMATE — a paper that has shipped nothing owes
+ * nothing — without being an escape hatch: the second direction still speaks if bytes exist.
+ * That asymmetry is deliberate and is the reason this rule does not copy `doc/fields`, where
+ * a missing frontmatter IS the finding.
+ *
+ * ── WHY A FIELD CANNOT BECOME A TICKED BOX HERE ─────────────────────────────────────────
+ * The usual objection to turning a check into a field is that a field gets ticked instead of
+ * the work being done. It does not apply, and the reason is the direction of the incentive:
+ * a tick normally REMOVES an obligation, while `stages` CREATES them — declare a stage and
+ * you owe a pdf of the right size. Nobody writes a line in order to receive findings. The
+ * real-world pressure is to UNDER-declare, which is exactly what direction two catches.
+ *
+ * ── THE FIELD IS THE ONLY MACHINE-READABLE CARRIER ──────────────────────────────────────
+ * ⚠️ A paper's status file also carries a `State:` line in its header and one or two
+ * scorecard tables. Those are DISPLAY. No consistency check between them is written here on
+ * purpose: one paper in the source corpus carries two scorecards in two different column
+ * formats, and a rule reconciling them would drown in noise within a day.
+ *
+ * ── A LIST, NOT A MAP, and that is load-bearing ─────────────────────────────────────────
+ * A paper can reach the same stage twice: one in the source corpus was submitted to a venue
+ * in August, rejected in September, and is being resubmitted elsewhere in October. A map
+ * keyed by stage name holds one. The `versions/<date>-<stage>.pdf` convention already holds
+ * many, and the field must not be weaker than the filenames it describes.
+ */
+import { existsSync, statSync, readdirSync } from "node:fs";
+import { join, dirname } from "node:path";
+import assert from "node:assert/strict";
+import { load } from "js-yaml";
+import { z } from "zod";
+import type { RuleContext } from "./rule-context.ts";
+
+/** The frontmatter's `stages` field, whatever it holds; anything that is not a mapping has none. */
+const Frontmatter = z.looseObject({ stages: z.unknown().optional() }).catch({});
+const StageList = z.array(z.unknown());
+/** One `stages` entry. A field of the wrong shape is read as it is written, then judged below. */
+const StageRecord = z
+  .looseObject({
+    stage: z.unknown().optional(),
+    date: z.unknown().optional(),
+    pdf: z.unknown().optional(),
+    bytes: z.unknown().optional(),
+    source: z.unknown().optional(),
+    sourceBytes: z.unknown().optional(),
+    sourceLost: z.unknown().optional(),
+  })
+  .catch({});
+const REQUIRED = ["date", "pdf", "bytes"] satisfies readonly (
+  "date" | "pdf" | "bytes"
+)[];
+
+/** A stage the frontmatter declares, with the fields every check below needs. */
+interface Declared {
+  readonly stage: string;
+  readonly date: string;
+  readonly pdf: string;
+  readonly bytes: number;
+}
+
+const STAGES: readonly string[] = ["submitted", "camera-ready", "arxiv"];
+
+/**
+ * A YAML date without quotes parses to a `Date`, not a string — js-yaml honours YAML 1.1
+ * timestamps. Comparing `Date === "2026-08-29"` is silently false, so every date is
+ * normalised before it is compared with one taken from a filename.
+ */
+/**
+ * A YAML value as the text a message shows: a scalar as written, nothing as "", and a mapping or
+ * list as its JSON (as a number is) — `String()` would print `[object Object]` for a mapping.
+ */
+const scalarText = (v: unknown): string =>
+  typeof v === "string" ? v : v === undefined ? "" : JSON.stringify(v);
+
+function isoDate(v: unknown): string {
+  if (v instanceof Date) return v.toISOString().slice(0, 10);
+  if (typeof v === "string") return /^\d{4}-\d{2}-\d{2}/.exec(v)?.[0] ?? "";
+  return "";
+}
+
+/** Frozen versions on disk, as `{name, date, stage}`. */
+function frozenPdfs(
+  versionsDir: string,
+): { name: string; date: string; stage: string }[] {
+  let names: string[];
+  try {
+    names = readdirSync(versionsDir);
+  } catch {
+    return [];
+  }
+  const out: { name: string; date: string; stage: string }[] = [];
+  for (const name of names) {
+    if (!name.endsWith(".pdf")) continue;
+    // ⚠️ A name carrying `STALE` is a version WITHDRAWN on purpose — one such file records
+    // that the wrong pdf sat in the folder for a month. Demanding a declaration for it would
+    // turn a deliberate record of a mistake into a finding.
+    if (name.includes("STALE")) continue;
+    const m = /^(\d{4}-\d{2}-\d{2})-(.+)\.pdf$/.exec(name);
+    if (!m) continue;
+    const [, date = "", stage = ""] = m;
+    if (!STAGES.includes(stage)) continue;
+    out.push({ name, date, stage });
+  }
+  return out;
+}
+
+export default {
+  rules: {
+    stages: {
+      meta: {
+        type: "problem",
+        docs: {
+          description:
+            "a paper's stage is declared as a FIELD, and every declaration is checked against the bytes on disk in both directions",
+        },
+        schema: [],
+        messages: {
+          badYaml: "the frontmatter does not parse as YAML: {{reason}}",
+          notAList:
+            "`stages` must be a LIST of entries, not {{got}} — a paper can reach the same stage twice",
+          badStage: "unknown stage «{{stage}}» — the vocabulary is: {{known}}",
+          missingKey: "the «{{stage}}» entry has no `{{key}}` field",
+          badDate:
+            "the date «{{date}}» in the «{{stage}}» entry is not YYYY-MM-DD",
+          declaredNoFile:
+            "stage «{{stage}}» ({{date}}) is declared, but `{{pdf}}` is not on disk",
+          bytesDiffer:
+            "«{{stage}}» ({{date}}): {{want}} bytes declared, {{got}} on disk — this is NOT that file",
+          fileNotDeclared:
+            "`versions/{{file}}` is frozen, but no «{{stage}}» stage on {{date}} is declared in `stages` — the artefact ran ahead of the declaration",
+        },
+      },
+      create(context: RuleContext) {
+        const dir = dirname(context.filename);
+        let declared: Declared[] | null = null; // null = there was no frontmatter at all
+
+        return {
+          yaml(node: { readonly value?: string }) {
+            let data: unknown;
+            try {
+              data = load(node.value ?? "");
+            } catch (e) {
+              // js-yaml throws its own `YAMLException`, an `Error`, and nothing else.
+              assert.ok(e instanceof Error);
+              context.report({
+                node,
+                messageId: "badYaml",
+                data: { reason: e.message },
+              });
+              return;
+            }
+            const { stages: raw } = Frontmatter.parse(data);
+            if (raw === undefined) return;
+            const list = StageList.safeParse(raw);
+            if (!list.success) {
+              context.report({
+                node,
+                messageId: "notAList",
+                data: { got: raw === null ? "empty" : typeof raw },
+              });
+              return;
+            }
+            declared = [];
+            for (const entry of list.data) {
+              const rec = StageRecord.parse(entry);
+              const stage = scalarText(rec.stage);
+              if (!STAGES.includes(stage)) {
+                context.report({
+                  node,
+                  messageId: "badStage",
+                  data: { stage, known: STAGES.join(" · ") },
+                });
+                continue;
+              }
+              let complete = true;
+              for (const key of REQUIRED) {
+                if (rec[key] === undefined) {
+                  context.report({
+                    node,
+                    messageId: "missingKey",
+                    data: { stage, key },
+                  });
+                  complete = false;
+                }
+              }
+              if (!complete) continue;
+              const date = isoDate(rec.date);
+              if (date === "") {
+                context.report({
+                  node,
+                  messageId: "badDate",
+                  data: { stage, date: String(rec.date) },
+                });
+                continue;
+              }
+              declared.push({
+                stage,
+                date,
+                pdf: String(rec.pdf),
+                bytes: Number(rec.bytes),
+              });
+
+              // ── direction one: a claim owes its bytes ────────────────────────────────
+              const abs = join(dir, String(rec.pdf));
+              if (!existsSync(abs)) {
+                context.report({
+                  node,
+                  messageId: "declaredNoFile",
+                  data: { stage, date, pdf: String(rec.pdf) },
+                });
+                continue;
+              }
+              const got = statSync(abs).size;
+              if (got !== Number(rec.bytes)) {
+                context.report({
+                  node,
+                  messageId: "bytesDiffer",
+                  data: {
+                    stage,
+                    date,
+                    want: String(rec.bytes),
+                    got: String(got),
+                  },
+                });
+              }
+            }
+          },
+
+          // ── direction two: bytes owe their declaration ────────────────────────────────
+          // 🔴 On `root:exit` rather than inside `yaml`, because the case worth catching is
+          // precisely the one with NO frontmatter at all — where the `yaml` visitor never runs.
+          "root:exit"(node: object) {
+            const records = declared ?? [];
+            for (const f of frozenPdfs(join(dir, "versions"))) {
+              if (records.some((r) => r.stage === f.stage && r.date === f.date))
+                continue;
+              context.report({
+                node,
+                messageId: "fileNotDeclared",
+                data: { file: f.name, stage: f.stage, date: f.date },
+              });
+            }
+          },
+        };
+      },
+    },
+
+    /**
+     * `paper/source` — a declared stage must have its SOURCE frozen on disk, beside the pdf,
+     * and the bytes must match. Not a commit reference. Not a hash of one.
+     *
+     * ── WHY NOT A COMMIT, measured 2026-09-16 and it is not a close call ──────────────────
+     * The predecessor recorded provenance as `commit <sha>` in prose and checked that the sha
+     * RESOLVED. Its stated premise was "git holds those bytes immutably, materialising a copy
+     * duplicates a guarantee we already have". That premise is false wherever branches are
+     * SQUASH-merged: the squash destroys the branch commits, and the next `git gc` removes
+     * the objects.
+     *
+     * 🔴 Measured on the live corpus, inside ninety minutes of ONE session: two recorded shas
+     * resolved, then stopped resolving after a routine `gc` following a branch reset. Of the
+     * four declared stages in that corpus, THREE had lost their source entirely — including
+     * papers already submitted to a venue, which is exactly the case the check existed for
+     * (a reviewer cites a line number and there is no layout left to resolve it against).
+     *
+     * So a sha is not a pointer to bytes; it is a pointer to a pointer, and the outer one
+     * evaporates. Checking it verifies that the REFERENCE is alive, which is a different
+     * claim from the one anybody wants.
+     *
+     * ── COST, because "duplicating" was the objection ─────────────────────────────────────
+     * A paper source is 57-68 KB of LaTeX beside a pdf of 305-382 KB that is already
+     * committed. Freezing it adds under a fifth to what the folder holds anyway, and turns a
+     * claim about the world into bytes this rule can actually compare.
+     *
+     * ── SEVERITY: nudge, and the reason CHANGED ──────────────────────────────────────────
+     * Still `warn` at the consumer, but no longer because "only the author knows". Now it is
+     * because a stage frozen BEFORE this convention existed cannot be fixed at all — those
+     * bytes are gone. Failing a build over unrecoverable history is a gate nobody can clear.
+     */
+    source: {
+      meta: {
+        type: "problem",
+        docs: {
+          description:
+            "a declared stage freezes its source beside the pdf and is checked by bytes — not by a commit reference",
+        },
+        schema: [],
+        messages: {
+          noSource:
+            "stage «{{stage}}» ({{date}}) carries no frozen source. A commit reference will not do: squash and gc destroy it — three of four sources were lost that way in this corpus",
+          sourceMissing:
+            "«{{stage}}» ({{date}}): source `{{src}}` is declared, but the file is not on disk",
+          sourceBytes:
+            "«{{stage}}» ({{date}}): the source is declared as {{want}} bytes, {{got}} on disk — this is NOT that file",
+          lostAcknowledged:
+            "stage «{{stage}}» ({{date}}): the source is declared LOST. There is nothing left to match a build against a reviewer's line — if a copy turns up, put it in versions/ and clear the flag",
+        },
+      },
+      create(context: RuleContext) {
+        const dir = dirname(context.filename);
+        return {
+          yaml(node: { readonly value?: string }) {
+            let data: unknown;
+            try {
+              data = load(node.value ?? "");
+            } catch {
+              return; // `paper/stages` has already reported the unreadable YAML
+            }
+            const list = StageList.safeParse(Frontmatter.parse(data).stages);
+            if (!list.success) return;
+            for (const entry of list.data) {
+              const rec = StageRecord.parse(entry);
+              const stage = scalarText(rec.stage);
+              if (!STAGES.includes(stage)) continue;
+              const date = isoDate(rec.date);
+
+              // Acknowledging the loss is a RECORD, not an exemption: the rule keeps speaking,
+              // because the state stays defective, just unfixable today.
+              if (rec.sourceLost === true) {
+                context.report({
+                  node,
+                  messageId: "lostAcknowledged",
+                  data: { stage, date },
+                });
+                continue;
+              }
+              const src = scalarText(rec.source);
+              if (src === "") {
+                context.report({
+                  node,
+                  messageId: "noSource",
+                  data: { stage, date },
+                });
+                continue;
+              }
+              const abs = join(dir, src);
+              if (!existsSync(abs)) {
+                context.report({
+                  node,
+                  messageId: "sourceMissing",
+                  data: { stage, date, src },
+                });
+                continue;
+              }
+              const got = statSync(abs).size;
+              const want = Number(rec.sourceBytes);
+              if (Number.isFinite(want) && got !== want)
+                context.report({
+                  node,
+                  messageId: "sourceBytes",
+                  data: { stage, date, want: String(want), got: String(got) },
+                });
+            }
+          },
+        };
+      },
+    },
+  },
+};

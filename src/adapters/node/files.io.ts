@@ -10,10 +10,10 @@ import {
 import { dirname } from "node:path";
 import type { AbsolutePath } from "../../domain/paths.ts";
 import type { Files } from "../../ports/files.ts";
+import { codeOf } from "../../domain/text.ts";
 
 /** An error's errno code; anything thrown that is not an Error has none. */
-export const errorCode = (e: unknown): unknown =>
-  e instanceof Error ? (e as NodeJS.ErrnoException).code : undefined;
+export const errorCode = (e: unknown): unknown => codeOf(e);
 
 export const nodeFiles: Files = {
   isFile(p: AbsolutePath): boolean {

@@ -56,6 +56,10 @@ import {
   packageNames,
   type TexRequirements,
 } from "./tex-requirements.ts";
+import { printed } from "./domain/text.ts";
+
+/** stdin closed, stdout and stderr captured — the tuple type spawnSync's `stdio` wants. */
+const PIPED: ["ignore", "pipe", "pipe"] = ["ignore", "pipe", "pipe"];
 
 export const CACHE_ENV = "PAPERLINT_TEXLIVE_DIR";
 export const MIRROR_ENV = "PAPERLINT_CTAN_MIRROR";
@@ -274,23 +278,29 @@ export function describeGaps(g: Gaps, tex: TexRequirements): string {
 export function formatDuration(ms: number): string {
   const s = Math.round(ms / 1000);
   return s < 60
-    ? `${s}s`
-    : `${Math.floor(s / 60)}m${String(s % 60).padStart(2, "0")}s`;
+    ? `${String(s)}s`
+    : `${String(Math.floor(s / 60))}m${String(s % 60).padStart(2, "0")}s`;
 }
 
 // ── processes ────────────────────────────────────────────────────────────────────────
 
 const quiet = (io: ToolchainIO, timeout?: number) => ({
   encoding: "utf8" as const,
-  stdio: ["ignore", "pipe", "pipe"] as ["ignore", "pipe", "pipe"],
+  stdio: PIPED,
   env: io.env,
   maxBuffer: 64 * 1024 * 1024,
   ...(timeout ? { timeout } : {}),
 });
 
 /** The last lines a process printed — what a failure shows. */
-function tail(r: ReturnType<Runner>, n = 12): string[] {
-  const text = `${String(r.stdout ?? "")}\n${String(r.stderr ?? "")}`;
+function tail(
+  r: {
+    readonly stdout: string | undefined;
+    readonly stderr: string | undefined;
+  },
+  n = 12,
+): string[] {
+  const text = `${printed(r.stdout)}\n${printed(r.stderr)}`;
   return text
     .split("\n")
     .filter((l) => l.trim())
@@ -475,13 +485,15 @@ export function installPackages(
     if (noGaps(gaps)) break;
     const want = [...gaps.packages, ...gaps.tools, ...gaps.dependencies];
     const repairsBase = gaps.dependencies.length > 0;
-    io.log(`  tlmgr: installing ${want.length} package(s) from ${mirror}…`);
+    io.log(
+      `  tlmgr: installing ${String(want.length)} package(s) from ${mirror}…`,
+    );
     const r = io.run(
       join(tree.bin, "tlmgr"),
       ["--repository", mirror, "install", ...want],
       quiet(io, TLMGR_MS),
     );
-    const output = `${String(r.stdout ?? "")}\n${String(r.stderr ?? "")}`;
+    const output = `${printed(r.stdout)}\n${printed(r.stderr)}`;
     // A new release: every mirror serves it, so trying the next one only repeats the refusal.
     const newer = releaseGap(output);
     if (newer) return { ok: false, newer };
@@ -567,7 +579,7 @@ export function ensureTexLive(
   if (!verified.ok) return fail(o.err, verified.lines);
   o.log(
     `✓ TeX Live ${used.year} is ready in ${used.dir}: ${verified.value} ` +
-      `${sizeMB(used.dir)} MB, ${formatDuration(o.now() - started)}`,
+      `${String(sizeMB(used.dir))} MB, ${formatDuration(o.now() - started)}`,
   );
   o.log(binLine(used));
   if (used !== tree.value) o.log(leftInPlace(tree.value));
@@ -638,14 +650,14 @@ function verify(
   return {
     ok: true,
     value:
-      `${packageNames(tex).length} packages verified ` +
-      `(${files} files found by kpsewhich, ${Object.keys(tex.tools).length} tools),`,
+      `${String(packageNames(tex).length)} packages verified ` +
+      `(${String(files)} files found by kpsewhich, ${String(Object.keys(tex.tools).length)} tools),`,
   };
 }
 
 /** The superseded tree is named, with the space it holds — and left alone. */
 export const leftInPlace = (old: CachedTree): string =>
-  `  TeX Live ${old.year} in ${old.dir} is left in place and no longer used (${sizeMB(old.dir)} MB); ` +
+  `  TeX Live ${old.year} in ${old.dir} is left in place and no longer used (${String(sizeMB(old.dir))} MB); ` +
   `delete that directory to free the space`;
 
 /**
@@ -693,14 +705,14 @@ function report(o: Resolved, tree: CachedTree | null): number {
   const n = packageNames(o.tex).length;
   if (!tree) {
     o.log(
-      `✗ no TeX Live in ${cacheRoot(o.env, o.home)} — \`npx paperlint toolchain\` installs ${n} packages (~230 MB, ~2 min)`,
+      `✗ no TeX Live in ${cacheRoot(o.env, o.home)} — \`npx paperlint toolchain\` installs ${String(n)} packages (~230 MB, ~2 min)`,
     );
     return 1;
   }
   const gaps = gapsOf(tree, o.tex, o.run);
   if (noGaps(gaps)) {
     o.log(
-      `✓ TeX Live ${tree.year} in ${tree.dir} has all ${n} declared packages`,
+      `✓ TeX Live ${tree.year} in ${tree.dir} has all ${String(n)} declared packages`,
     );
     o.log(binLine(tree));
     return 0;
@@ -709,9 +721,11 @@ function report(o: Resolved, tree: CachedTree | null): number {
   // A dependency the install left out is not one of the venue's declared packages: counted apart,
   // so the line never reads "lacks 0 of 51" followed by a name.
   const what = [
-    ...(declared ? [`${declared} of ${n} declared packages`] : []),
+    ...(declared
+      ? [`${String(declared)} of ${String(n)} declared packages`]
+      : []),
     ...(gaps.dependencies.length
-      ? [`${gaps.dependencies.length} TeX Live base package(s)`]
+      ? [`${String(gaps.dependencies.length)} TeX Live base package(s)`]
       : []),
   ].join(" and ");
   o.log(
@@ -759,13 +773,13 @@ function texPart(o: Resolved): number {
   // reason to install only when tlmgr refuses to add a newly declared package to the old tree.
   if (tree && complete(tree)) {
     o.log(
-      `✓ TeX Live ${tree.year} in ${tree.dir} already has all ${n} declared packages — nothing to do`,
+      `✓ TeX Live ${tree.year} in ${tree.dir} already has all ${String(n)} declared packages — nothing to do`,
     );
     o.log(binLine(tree));
     return 0;
   }
   o.log(
-    `paperlint toolchain: TeX Live with ${n} packages into ${cacheRoot(o.env, o.home)}`,
+    `paperlint toolchain: TeX Live with ${String(n)} packages into ${cacheRoot(o.env, o.home)}`,
   );
   return ensureTexLive(o.tex, o).ok ? 0 : 1;
 }

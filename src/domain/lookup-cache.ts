@@ -31,6 +31,7 @@
  * never read as empty.
  */
 import { err, ok, type Result } from "./result.ts";
+import { messageOf } from "./text.ts";
 
 export const LOOKUP_CACHE_SCHEMA = 1;
 
@@ -106,7 +107,7 @@ function sectionOf<T>(
   name: string,
   section: unknown,
   known: readonly string[],
-  one: (o: Json, at: string) => Result<T, string>,
+  one: (o: Json, fetched: string, at: string) => Result<T, string>,
 ): Result<Map<string, T>, string> {
   if (!isObject(section)) return err(`\`${name}\`: expected an object`);
   const out = new Map<string, T>();
@@ -115,18 +116,23 @@ function sectionOf<T>(
     if (!isObject(v)) return err(`${at}\`: expected an object`);
     const extra = unknownField(v, known);
     if (extra !== undefined) return err(`${at}\`: unknown field \`${extra}\``);
-    if (!isDate(v["fetched"]))
+    const fetched = v["fetched"];
+    if (!isDate(fetched))
       return err(`${at}.fetched\`: expected a date, YYYY-MM-DD`);
-    const r = one(v, at);
+    const r = one(v, fetched, at);
     if (!r.ok) return r;
     out.set(key, r.value);
   }
   return ok(out);
 }
 
-const cachedResponse = (o: Json, at: string): Result<CachedResponse, string> =>
+const cachedResponse = (
+  o: Json,
+  fetched: string,
+  at: string,
+): Result<CachedResponse, string> =>
   isObject(o["response"]) && o["response"]["transport"] === "ok"
-    ? ok({ fetched: o["fetched"] as string, response: o["response"] })
+    ? ok({ fetched, response: o["response"] })
     : err(
         `${at}.response\`: expected a successful response ({"transport": "ok", …})`,
       );
@@ -137,7 +143,11 @@ const isHit = (h: unknown): h is DblpHit =>
   Array.isArray(h["authors"]) &&
   h["authors"].every((a) => typeof a === "string");
 
-function cachedDblp(o: Json, at: string): Result<CachedDblp, string> {
+function cachedDblp(
+  o: Json,
+  fetched: string,
+  at: string,
+): Result<CachedDblp, string> {
   const { title, hits } = o;
   if (typeof title !== "string") return err(`${at}.title\`: expected a string`);
   if (!Array.isArray(hits)) return err(`${at}.hits\`: expected an array`);
@@ -147,9 +157,9 @@ function cachedDblp(o: Json, at: string): Result<CachedDblp, string> {
       `${at}.hits[${String(bad)}]\`: expected {venue, year, type, title: string; authors: string[]}`,
     );
   return ok({
-    fetched: o["fetched"] as string,
+    fetched,
     title,
-    hits: hits as DblpHit[],
+    hits: hits.filter(isHit),
   });
 }
 
@@ -159,7 +169,7 @@ export function parseLookupCache(text: string): Result<LookupCache, string> {
   try {
     json = JSON.parse(text);
   } catch (e) {
-    return err(`not JSON: ${(e as Error).message}`);
+    return err(`not JSON: ${messageOf(e)}`);
   }
   if (!isObject(json))
     return err("expected an object with `schema`, `citations` and `dblp`");
@@ -186,8 +196,8 @@ export function parseLookupCache(text: string): Result<LookupCache, string> {
   return ok({ citations: citations.value, dblp: dblp.value });
 }
 
-const sorted = <T>(m: ReadonlyMap<string, T>): Record<string, T> =>
-  Object.fromEntries([...m.keys()].sort().map((k) => [k, m.get(k) as T]));
+const sorted = <T>(m: ReadonlyMap<string, T>): Record<string, T | undefined> =>
+  Object.fromEntries([...m.keys()].sort().map((k) => [k, m.get(k)]));
 
 /** The cache as the file holds it: keys sorted, so one new answer is a small diff. */
 export const serializeLookupCache = (c: LookupCache): string =>

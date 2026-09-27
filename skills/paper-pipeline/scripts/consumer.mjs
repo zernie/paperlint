@@ -85,11 +85,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 // Re-exported, not re-declared — see the note in `lib/paper-config.mjs`. This file is not a hook
 // and never needed its own copy.
-import {
-  CONFIG_FILE,
-  CONFIG_KEY,
-  settingsOf,
-} from "../../../lib/paper-config.mjs";
+import { CONFIG_FILE, CONFIG_KEY, settingsOf } from "#lib/paper-config";
 export { CONFIG_KEY, settingsOf };
 
 /**

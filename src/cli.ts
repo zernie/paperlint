@@ -30,7 +30,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join, dirname, resolve, relative, basename, sep } from "node:path";
 import markdown from "@eslint/markdown";
-// Types come from consumer.d.mts beside it, the same arrangement as lib/paper-config.d.mts.
+// Types come from consumer.d.mts beside it.
 import {
   isMain,
   packageVenuesDir,
@@ -96,15 +96,16 @@ import {
   type PaperFormat,
   type VenueSetting,
 } from "./new-paper.ts";
-// The one source for the consumer's config key lives in the .mjs half of the package (the ESLint
-// rules and the skill scripts import it too); its types are in lib/paper-config.d.mts.
+// The one source for the consumer's config key lives in lib/ (the ESLint rules and the skill scripts
+// import it too). It is imported compiled, from dist/, the one path that resolves the same from src/
+// and from dist/ — see CONTRIBUTING.md.
 import {
   CONFIG_FILE,
   DEFAULT_PAPERS_ROOT,
   PAPERS_DIR_FIELD,
   SETTINGS_KEYS,
   findProjectRoot,
-} from "../lib/paper-config.mjs";
+} from "#lib/paper-config";
 import {
   parseRuleBlocks,
   parseRuleEntries,
@@ -117,22 +118,15 @@ import {
 export { init };
 export { nextSteps } from "./init.ts";
 
-// @ts-expect-error — an ESLint rule in .mjs, it has no types
-import paperStages from "../eslint-rules/paper-stages.mjs";
-// @ts-expect-error — an ESLint rule in .mjs, it has no types
-import researchQuestion from "../eslint-rules/paper-research-question.mjs";
-// @ts-expect-error — an ESLint rule in .mjs, it has no types
-import typography from "../eslint-rules/paper-typography.mjs";
-// @ts-expect-error — an ESLint rule in .mjs, it has no types
-import texBuild from "../eslint-rules/tex-build.mjs";
-// @ts-expect-error — an ESLint rule in .mjs, it has no types
-import bibReachable from "../eslint-rules/bib-reachable-entry.mjs";
-// @ts-expect-error — an ESLint rule in .mjs, it has no types
-import reviewFrontmatter from "../eslint-rules/review-frontmatter.mjs";
-// @ts-expect-error — an ESLint rule in .mjs, it has no types
-import siblingFrontmatter from "../eslint-rules/sibling-frontmatter.mjs";
-// @ts-expect-error — an ESLint rule in .mjs, it has no types
-import pdfRules from "../eslint-rules/pdf-last-page-balance.mjs";
+import paperStages from "#eslint-rules/paper-stages";
+import researchQuestion from "#eslint-rules/paper-research-question";
+import typography from "#eslint-rules/paper-typography";
+import texBuild from "#eslint-rules/tex-build";
+import bibReachable from "#eslint-rules/bib-reachable-entry";
+import reviewFrontmatter from "#eslint-rules/review-frontmatter";
+import siblingFrontmatter from "#eslint-rules/sibling-frontmatter";
+import pdfRules from "#eslint-rules/pdf-last-page-balance";
+import { messageOf } from "./domain/text.ts";
 
 /** The shipped venue presets, read from the package's venues directory — the one list. */
 const SHIPPED_VENUES = (): string[] => shippedPresets(packageVenuesDir());
@@ -244,8 +238,7 @@ export function buildConfig(
     languageOptions: { frontmatter: "yaml" },
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
-  const cfg: any[] = [
+  const cfg: unknown[] = [
     // 🔴 THE PROJECT'S PAPER TEMPLATE IS NOT A PAPER. `paperlint new` reads `<papers>/.template/`, and
     // its files carry every marker a paper does. Flat config does NOT ignore dot-directories by
     // default (only `node_modules/` and `.git/`), so without this block `paperlint lint` would lint the
@@ -392,7 +385,9 @@ export function rulesOff(texLanguage?: unknown): Linter.Config[] {
   return [
     {
       name: "paperlint/rules-off",
-      plugins: rulePlugins(texLanguage) as Linter.Config["plugins"],
+      plugins: rulePlugins(texLanguage) as NonNullable<
+        Linter.Config["plugins"]
+      >,
       rules: Object.fromEntries([...SHIPPED_RULES].map((id) => [id, "off"])),
     },
     {
@@ -405,7 +400,7 @@ export function rulesOff(texLanguage?: unknown): Linter.Config[] {
 
 /** Whether a rule entry (`"error"`, `2`, `["warn", {…}]`) turns the rule on. */
 const isOn = (entry: unknown): boolean => {
-  const sev = Array.isArray(entry) ? entry[0] : entry;
+  const sev: unknown = Array.isArray(entry) ? entry[0] : entry;
   return sev !== undefined && sev !== "off" && sev !== 0;
 };
 
@@ -470,7 +465,10 @@ export function paperRuleBlocks(
     existsSync(p) && statSync(p).isFile() ? dirname(p) : p,
   );
   const papers = [...new Set(dirs.flatMap((p) => [p, ...papersIn(p)]))];
-  const out = { preset: [] as RuleBlock[], own: [] as RuleBlock[] };
+  const out: { preset: RuleBlock[]; own: RuleBlock[] } = {
+    preset: [],
+    own: [],
+  };
   for (const dir of papers) {
     const p = paperPreset(dir, PRESET_DEPS);
     if (p.kind === "settings-problem")
@@ -701,8 +699,13 @@ export function ownVersion(
     readFileSync(new URL("../package.json", import.meta.url), "utf8"),
 ): string | undefined {
   try {
-    const v = JSON.parse(readManifest())?.version;
-    return typeof v === "string" ? v : undefined;
+    const manifest: unknown = JSON.parse(readManifest());
+    return typeof manifest === "object" &&
+      manifest !== null &&
+      "version" in manifest &&
+      typeof manifest.version === "string"
+      ? manifest.version
+      : undefined;
   } catch {
     return undefined;
   }
@@ -747,7 +750,7 @@ export function readConfig(
   try {
     parsed = JSON.parse(readFileSync(configPath, "utf8"));
   } catch (e) {
-    err(`${configPath} is not valid JSON: ${(e as Error).message}`);
+    err(`${configPath} is not valid JSON: ${messageOf(e)}`);
     return { code: 2 };
   }
   // The discovered config is NAMED out loud. Otherwise a run from someone else's directory picks
@@ -787,7 +790,9 @@ export const papersRoots = (cfg: {
 export function toPaths(papers: unknown): string[] {
   if (typeof papers === "string") return papers.trim() ? [papers.trim()] : [];
   if (Array.isArray(papers))
-    return papers.filter((x) => typeof x === "string" && x.trim());
+    return papers.filter(
+      (x): x is string => typeof x === "string" && x.trim() !== "",
+    );
   return [];
 }
 
@@ -1453,8 +1458,7 @@ export async function run(
   // failing outright — the LaTeX rules simply have no language to run in.
   let texLanguage: unknown = null;
   try {
-    // @ts-expect-error — the module is .mjs and has no types
-    ({ texLanguage } = await import("../eslint-rules/latex-language.mjs"));
+    ({ texLanguage } = await import("#eslint-rules/latex-language"));
   } catch {
     texLanguage = null;
   }
@@ -1478,8 +1482,7 @@ export async function run(
   // reached, which is what the very first run over an empty directory showed: instead of a clear
   // message a stack from the depths of eslint-helpers.js flew out. A failure stays a failure, but
   // an explicable one.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
-  let results: any[];
+  let results: ESLint.LintResult[];
   try {
     results = await eslint.lintFiles(paths);
   } catch (e) {
@@ -1555,8 +1558,7 @@ const isEmptySet = (e: unknown): boolean => {
  */
 async function reportLint(
   eslint: ESLint,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- #49: replace with a real type
-  results: any[],
+  results: ESLint.LintResult[],
   structure: ReturnType<typeof checkStructure>,
   {
     a,
@@ -1598,7 +1600,7 @@ async function reportLint(
       out.trim() ||
         (structure.length > 0
           ? ""
-          : `✓ ${results.length} file(s) checked, no findings`),
+          : `✓ ${String(results.length)} file(s) checked, no findings`),
     );
   }
   if (structure.length > 0 || results.some((r) => r.errorCount > 0)) return 1;
@@ -1608,7 +1610,7 @@ async function reportLint(
     const warnings = results.reduce((n, r) => n + r.warningCount, 0);
     if (warnings > a.maxWarnings) {
       err(
-        `${warnings} warning(s) exceed the --max-warnings limit of ${a.maxWarnings}`,
+        `${String(warnings)} warning(s) exceed the --max-warnings limit of ${String(a.maxWarnings)}`,
       );
       return 1;
     }

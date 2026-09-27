@@ -28,8 +28,8 @@ import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { PAPERS_DIR_FIELD, findProjectRoot } from "../lib/paper-config.mjs";
-import { createChecker } from "../lib/check.mjs";
+import { PAPERS_DIR_FIELD, findProjectRoot } from "../lib/paper-config.ts";
+import { createChecker } from "../lib/check.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { run, parseArgs, buildConfig, nextSteps, toPaths, runHook } =
@@ -635,7 +635,7 @@ check(
 
     // ── 7-bis. THE SKILLS: WHAT WAS LINKED, AND WHAT WAS LEFT ALONE, BY NAME ────────────
     //
-    // The links themselves are `link-skills.harness.mjs`'s subject. Here: init REPORTS them, and
+    // The links themselves are `link-skills.harness.ts`'s subject. Here: init REPORTS them, and
     // a name it refused to take does not turn a working install red. The state is handed in so
     // this block does not depend on a package being installed next to the temp project.
     {
@@ -967,7 +967,7 @@ check(
 
 // ── STRUCTURE GETS THROUGH TO THE COMMAND ──────────────────────────────────────────────
 //
-// `structure.mjs` is checked separately and in full (`structure.harness.mjs`). Here — exactly
+// `structure.mjs` is checked separately and in full (`structure.harness.ts`). Here — exactly
 // one fact that harness cannot know: that the module is WIRED IN. A correct module forgotten in
 // `run()` gives zero findings and looks like a clean corpus.
 {
@@ -1148,7 +1148,7 @@ check(
 //     pnpm: node_modules/vigiles/dist/cli.js  DOES NOT
 // The old wiring addressed the runtime from the project root and did not resolve under pnpm,
 // and `|| exit 2` on PreToolUse(Bash) turned that into a block on ANY command. The end-to-end
-// half (both installs, real processes) lives in `test/e2e/install.mjs`; here — the verdicts.
+// half (both installs, real processes) lives in `test/e2e/install.ts`; here — the verdicts.
 {
   const calls = [];
   const fake = (code) => (bin, args, opts) => {
@@ -1258,7 +1258,7 @@ console.log(
 
 // ─────────────────────────────────────────────────────────────────────────────
 // What is left after init is typed in THE SAME TERMINAL. The two `/plugin` lines are gone: the
-// hooks are written into `.claude/settings.json` by init itself (hooks-settings.harness.mjs).
+// hooks are written into `.claude/settings.json` by init itself (hooks-settings.harness.ts).
 
 {
   const steps = nextSteps("papers");

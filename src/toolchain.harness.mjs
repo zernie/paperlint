@@ -6,7 +6,7 @@
  * inside is `fixtures/toolchain-mirror/install-tl`, which lays out a tree whose `kpsewhich` and
  * `tlmgr` answer from two text files. So what runs is paperlint's own download, fallback, unpack,
  * install and verify logic — the part that decides success — and what is faked is only TeX.
- * The real TeX Live half is `test/e2e/toolchain.mjs`.
+ * The real TeX Live half is `test/e2e/toolchain.ts`.
  *
  * Tables, in order:
  *   1. the pure pieces (year, profile, tlmgr's unknown names, cache location);
@@ -32,7 +32,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { createChecker } from "../lib/check.mjs";
+import { createChecker } from "../lib/check.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIXTURE = join(HERE, "..", "fixtures", "toolchain-mirror");

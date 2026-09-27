@@ -50,6 +50,7 @@ import type { Files } from "./ports/files.ts";
 import { err, ok, type Result } from "./domain/result.ts";
 import { paperPreset, paperPresetProblem } from "./presets.ts";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { messageOf } from "./domain/text.ts";
 
 export const FACTS_SCHEMA = 2;
 export const FACTS_DIR = "_build";
@@ -338,7 +339,7 @@ export function parseFactsText(text: string): Result<ReadFacts, FactsProblem> {
   try {
     d = JSON.parse(text);
   } catch (e) {
-    return err({ kind: "broken", why: `not JSON (${(e as Error).message})` });
+    return err({ kind: "broken", why: `not JSON (${messageOf(e)})` });
   }
   if (!isRecord(d)) return err({ kind: "broken", why: "not a JSON object" });
   if (d["schema"] !== FACTS_SCHEMA)

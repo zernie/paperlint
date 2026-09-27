@@ -8,8 +8,8 @@ import { join } from "node:path";
 import markdown from "@eslint/markdown";
 import { Linter } from "eslint";
 import { test } from "vitest";
-import { useTempDir, writeTree } from "../test/support.mjs";
-import stages from "./paper-stages.mjs";
+import { useTempDir, writeTree } from "../test/support.ts";
+import stages from "./paper-stages.ts";
 
 const root = useTempDir("paper-stages-");
 // Flat config matches `files` against paths under the linter's cwd; the temp papers live outside
@@ -91,6 +91,12 @@ test("each entry: an unknown or missing stage, missing fields, a date that is no
       "stage «arxiv» (2026-08-03) is declared, but `versions/x.pdf` is not on disk",
     ],
   );
+});
+
+test("a stage written as a mapping is named as written, not as [object Object]", () => {
+  assert.deepEqual(lint("mapping", "stages:\n  - stage: {name: submitted}"), [
+    'unknown stage «{"name":"submitted"}» — the vocabulary is: submitted · camera-ready · arxiv',
+  ]);
 });
 
 test("paper/source skips a `stages` that is not a list, and entries whose stage is unknown or missing", () => {

@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "vitest";
-import { useTempDir, writeTree } from "../test/support.mjs";
+import { useTempDir, writeTree } from "../test/support.ts";
 import {
   bibInput,
   buildPaper,
@@ -62,7 +62,7 @@ function bibtexRun(f: Fake, cwd: string) {
     ? { status: f.bibtex }
     : { status: f.bibtex, stdout: f.bibtexOut };
 }
-function fakeRun(f: Fake): BuildOptions["run"] {
+function fakeRun(f: Fake): NonNullable<BuildOptions["run"]> {
   let pass = 0;
   return ((bin: string, _args: string[], opts: { cwd: string }) => {
     if (bin === f.missing)
@@ -103,18 +103,19 @@ const page = (words: number, numbered = 0) => ({
 });
 const reader =
   (last = page(80)): PdfReader =>
-  async () => ({
-    ok: true,
-    facts: {
-      pages: 1,
-      fonts: {
-        kind: "drawn",
-        list: [{ kind: "embedded", name: "CMR10", program: "Type1" }],
+  () =>
+    Promise.resolve({
+      ok: true,
+      facts: {
+        pages: 1,
+        fonts: {
+          kind: "drawn",
+          list: [{ kind: "embedded", name: "CMR10", program: "Type1" }],
+        },
+        last,
+        layout: [],
       },
-      last,
-      layout: [],
-    },
-  });
+    });
 const quiet = () => {};
 /** buildPaper with fakes; the verdict line is what the command would print for it. */
 async function build(dir: string, f: Fake = {}, over: BuildOptions = {}) {
@@ -332,7 +333,7 @@ test("paths: a paper that IS the working directory is named by its full path", a
   const run = await buildPapers([dir], {
     cwd: dir,
     log: (l) => lines.push(l),
-    engine: async () => null,
+    engine: () => Promise.resolve(null),
   });
   assert.deepEqual(
     [run, lines],

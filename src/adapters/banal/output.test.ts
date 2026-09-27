@@ -1,6 +1,6 @@
 /**
  * `output.ts` — every way a banal run can end, as a table of `ProcessExit` → `Result`, and the
- * measurement → geometry projection. Pure: no perl, no disk. The real banal is `test/e2e/banal.mjs`.
+ * measurement → geometry projection. Pure: no perl, no disk. The real banal is `test/e2e/banal.ts`.
  */
 import assert from "node:assert/strict";
 import { test } from "vitest";

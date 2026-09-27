@@ -23,7 +23,9 @@ import { spawnProcess } from "../node/index.ts";
 const root = realpathSync(
   mkdtempSync(join(tmpdir(), "paperlint-download-test-")),
 );
-after(() => rmSync(root, { recursive: true, force: true }));
+after(() => {
+  rmSync(root, { recursive: true, force: true });
+});
 const at = (...p: string[]) => join(root, ...p) as AbsolutePath;
 
 const dl = (env: Record<string, string>) => {
@@ -45,7 +47,7 @@ test("Download: a URL that does not answer is a failure with curl's words", () =
   const { d } = dl({ PATH: "/usr/bin:/bin" });
   const r = d.fetch(pathToFileURL(at("missing")).href, 10_000);
   assert.equal(r.ok, false);
-  assert.ok(!r.ok && r.error.detail.length > 0);
+  assert.ok(r.error.detail.length > 0);
 });
 
 test("🔴 Download: no curl on PATH is named as that, not as a failed URL", () => {

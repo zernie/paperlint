@@ -5,7 +5,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     // 🔴 TWO SETTINGS SO THAT `c8 npm test` SEES WHAT vitest RUNS (measured 2026-09-26: under the
-    // defaults a module imported only by a *.test.ts, scripts/layer-legacy-frozen.mjs, reported 0%
+    // defaults a module imported only by a *.test.ts, scripts/layer-legacy-frozen.ts, reported 0%
     // while its tests passed, and `c8 vitest run` alone reported 0 lines covered in total).
     //
     // `pool: "threads"` — the default `forks` pool ends its child processes without a normal exit,

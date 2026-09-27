@@ -25,7 +25,7 @@ import {
 /* eslint-enable boundaries/dependencies */
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CONFIG_FILE } from "../lib/paper-config.mjs";
+import { CONFIG_FILE } from "#lib/paper-config";
 
 export type PaperFormat = "tex" | "md";
 export const FORMATS: readonly PaperFormat[] = ["tex", "md"];
@@ -50,7 +50,7 @@ export const SOURCE_FILE: Readonly<Record<PaperFormat, string>> = {
 };
 
 export const isFormat = (v: unknown): v is PaperFormat =>
-  FORMATS.includes(v as PaperFormat);
+  FORMATS.some((f) => f === v);
 
 /**
  * Why a name is refused, or null. `[a-z0-9._-]+` is the charset; a LEADING dot is refused on top

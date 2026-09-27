@@ -97,7 +97,7 @@ import {
   stripFences,
   requireMarkdown,
   stripFrontmatter,
-} from "../../lib/markdown.mjs";
+} from "#lib/markdown";
 
 // Markup is parsed with a PARSER (`CLAUDE.md`, 2026-08-11). We fail rather than degrade: without a
 // parser not one section would be found in the paper, `--flags-only` would return 0 findings and

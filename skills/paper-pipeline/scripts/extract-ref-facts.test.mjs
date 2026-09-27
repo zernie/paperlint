@@ -8,7 +8,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "vitest";
-import { runNode, useTempDir, writeTree } from "../../../test/support.mjs";
+import { runNode, useTempDir, writeTree } from "../../../test/support.ts";
 import {
   buildFacts,
   extractIds,

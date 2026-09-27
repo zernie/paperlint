@@ -20,7 +20,9 @@ import { afterAll as after, test } from "vitest";
 import { tmpWorkspace } from "./workspace.io.ts";
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-ws-test-")));
-after(() => rmSync(root, { recursive: true, force: true }));
+after(() => {
+  rmSync(root, { recursive: true, force: true });
+});
 
 test("the directory exists inside the scope and is gone after it", () => {
   const ws = tmpWorkspace(root);

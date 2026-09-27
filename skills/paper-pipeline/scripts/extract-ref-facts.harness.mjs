@@ -25,7 +25,7 @@ import {
   DEFAULT_PAPERS_ROOT,
   PAPERS_DIR_FIELD,
   settingsOf,
-} from "../../../lib/paper-config.mjs";
+} from "#lib/paper-config";
 import {
   existsSync,
   mkdirSync,

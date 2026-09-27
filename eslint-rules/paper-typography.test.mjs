@@ -15,9 +15,9 @@ import markdown from "@eslint/markdown";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { texLanguage } from "./latex-language.mjs";
-import typography, { texVisibleRuns } from "./paper-typography.mjs";
-import bib from "./bib-reachable-entry.mjs";
+import { texLanguage } from "./latex-language.ts";
+import typography, { texVisibleRuns } from "./paper-typography.ts";
+import bib from "./bib-reachable-entry.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIX = join(HERE, "..", "fixtures", "paper-typography");

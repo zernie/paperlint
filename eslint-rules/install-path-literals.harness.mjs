@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 import { ESLint } from "eslint";
 import markdown from "@eslint/markdown";
 import { recordCheck } from "vigiles";
-import port, { PORT } from "./install-path-literals.mjs";
+import port, { PORT } from "./install-path-literals.ts";
 
 // Resolved from THIS file, never from the caller's cwd — rule 6, and the mistake this very
 // class of bug is about.

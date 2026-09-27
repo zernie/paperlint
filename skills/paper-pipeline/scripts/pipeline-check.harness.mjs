@@ -5,7 +5,7 @@
  * moved to `eslint-rules/pipeline-status.mjs`, and their cases — to `eslint-rules/pipeline-status.harness.mjs`.
  * `npx vigiles test .claude/skills/paper-pipeline/scripts/pipeline-check.harness.mjs`.
  *
- * WHY THIS EXISTS ALONGSIDE THE FIXTURE TEST IN hooks.harness.mjs. That one runs the checker over
+ * WHY THIS EXISTS ALONGSIDE THE FIXTURE TEST IN hooks.harness.ts. That one runs the checker over
  * `scripts/fixtures/dirty/`, a scorecard carrying every defect at once, and asserts each kind
  * appears somewhere in the output. It cannot answer the question that matters when a check breaks:
  * WHICH defect produced WHICH finding. A checker that reports `stale-continuous` for the wrong
@@ -40,7 +40,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { consumerRoot } from "./consumer.mjs";
-import { scorecard as makeScorecard } from "./fixtures/scorecard.mjs";
+import { scorecard as makeScorecard } from "./fixtures/scorecard.ts";
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 const ROOT = consumerRoot();

@@ -1,7 +1,7 @@
 /**
  * `adapters/banal/run.ts` — running and installing banal, on in-memory ports: which `Command` it builds, what it stages,
  * what it downloads and writes, and what it concludes. No perl, no disk, no network: the adapters
- * record, and each assertion reads the record. Real perl and the real banal are `test/e2e/banal.mjs`;
+ * record, and each assertion reads the record. Real perl and the real banal are `test/e2e/banal.ts`;
  * the adapters' own behaviour is `src/adapters/node/*.test.ts`.
  */
 import assert from "node:assert/strict";
@@ -45,10 +45,10 @@ test("measureGeometry: perl runs the found banal on the staged XML, and the geom
   });
   const g = measureGeometry(io, s, project, []);
   assert.equal(g.source, "banal");
-  assert.equal(g.source === "banal" && g.geometry.bodyPt, 10.3);
+  assert.equal(g.geometry.bodyPt, 10.3);
   const [c] = run.calls;
   assert.equal(c?.file, "perl");
-  assert.equal(c?.args.at(-1), "/scratch/paper.xml");
+  assert.equal(c.args.at(-1), "/scratch/paper.xml");
   // Guards: both files staged, once, and the scratch scope ended normally (cleanup ran).
   assert.deepEqual(
     workspace.written.map((w) => [w.name, w.mode]),

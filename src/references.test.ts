@@ -32,8 +32,8 @@ import {
   type LookupCache,
 } from "./domain/lookup-cache.ts";
 import { referenceRules, REFERENCE_RULE_LEVELS } from "./reference-rules.ts";
-// @ts-expect-error — an ESLint language in .mjs, it has no types
-import { texLanguage } from "../eslint-rules/latex-language.mjs";
+import { texLanguage } from "../eslint-rules/latex-language.ts";
+import { present } from "../test/support.ts";
 
 const PAPER = "/work/papers/p";
 const TEX = (entries: string) =>
@@ -63,14 +63,16 @@ const verdict = (
 
 const checker =
   (entries: readonly EntryVerdict[]): CheckReferences =>
-  async (_bib, cache) => ({ check: { kind: "checked", entries }, cache });
-const offline: CheckReferences = async (_bib, cache) => ({
-  check: {
-    kind: "not-checked",
-    why: "the citation services cannot be reached (fetch failed)",
-  },
-  cache,
-});
+  (_bib, cache) =>
+    Promise.resolve({ check: { kind: "checked", entries }, cache });
+const offline: CheckReferences = (_bib, cache) =>
+  Promise.resolve({
+    check: {
+      kind: "not-checked",
+      why: "the citation services cannot be reached (fetch failed)",
+    },
+    cache,
+  });
 
 /** The step's context over `files`, with every port it does not use stubbed. */
 const ctx = (files: ReturnType<typeof memoryFiles>) => ({
@@ -122,7 +124,7 @@ async function lint(files: ReturnType<typeof memoryFiles>, tex: string) {
   const [res] = await eslint.lintText(tex, {
     filePath: join(PAPER, "paper.tex"),
   });
-  return res!.messages;
+  return present(res, "one lint result").messages;
 }
 
 describe("the references build step", () => {
@@ -135,7 +137,9 @@ describe("the references build step", () => {
     expect(out.ok).toBe(true);
     const doc = readReferences(files, PAPER);
     expect(doc?.status).toBe("checked");
-    expect(doc?.bib.sha256).toBe(bibHash(bibliographyOf(files, PAPER)!));
+    expect(doc?.bib.sha256).toBe(
+      bibHash(present(bibliographyOf(files, PAPER), "the bibliography")),
+    );
     expect(await lint(files, tex)).toEqual([]);
   });
 
@@ -148,13 +152,13 @@ describe("the references build step", () => {
     expect(msgs.map((m) => [m.ruleId, m.severity])).toEqual([
       ["paper/refs-checked", 1],
     ]);
-    expect(msgs[0]!.message).toMatch(/cannot be reached/);
+    expect(msgs[0]?.message).toMatch(/cannot be reached/);
   });
 
   it("a checker that throws is recorded as not checked, not as a failed build", async () => {
-    const { files, out } = await build(TEX(ENTRIES), async () => {
-      throw new Error("DBLP exploded");
-    });
+    const { files, out } = await build(TEX(ENTRIES), () =>
+      Promise.reject(new Error("DBLP exploded")),
+    );
     expect(out.ok).toBe(true);
     expect(readReferences(files, PAPER)?.why).toMatch(/DBLP exploded/);
   });
@@ -167,9 +171,9 @@ const ANSWER: CachedResponse = {
 /** A checker that fetches `key` unless the cache has it, recording the cache it was handed. */
 function fetching(key: string) {
   const seen: LookupCache[] = [];
-  const check: CheckReferences = async (_bib, cache) => {
+  const check: CheckReferences = (_bib, cache) => {
     seen.push(cache);
-    return {
+    return Promise.resolve({
       check: { kind: "checked", entries: [verdict("schick2023")] },
       cache: cache.citations.has(key)
         ? cache
@@ -177,7 +181,7 @@ function fetching(key: string) {
             citations: new Map([...cache.citations, [key, ANSWER]]),
             dblp: cache.dblp,
           },
-    };
+    });
   };
   return { check, seen };
 }
@@ -210,23 +214,26 @@ describe("the lookup cache — <paper>/repro/references-cache.json", () => {
       note: "references: 1 checked, 0 failing → _build/references.json; nothing fetched",
     });
     // The second build was handed exactly what the first one wrote.
-    expect(parseLookupCache(written!)).toEqual(ok(f.seen[1]));
+    expect(parseLookupCache(present(written, "the written cache"))).toEqual(
+      ok(f.seen[1]),
+    );
     expect(cacheText(files)).toBe(written);
   });
 });
 
 describe("the lookup cache — counting and refusing", () => {
   it("two new answers are counted as two", async () => {
-    const two: CheckReferences = async (_bib, cache) => ({
-      check: { kind: "checked", entries: [verdict("schick2023")] },
-      cache: {
-        citations: new Map([
-          ["a", ANSWER],
-          ["b", ANSWER],
-        ]),
-        dblp: cache.dblp,
-      },
-    });
+    const two: CheckReferences = (_bib, cache) =>
+      Promise.resolve({
+        check: { kind: "checked", entries: [verdict("schick2023")] },
+        cache: {
+          citations: new Map([
+            ["a", ANSWER],
+            ["b", ANSWER],
+          ]),
+          dblp: cache.dblp,
+        },
+      });
     const { out } = await build(TEX(ENTRIES), two);
     expect(out).toEqual({
       ok: true,
@@ -271,8 +278,8 @@ describe("the reference rules", () => {
     );
     const msgs = await lint(files, tex);
     expect(msgs.map((m) => m.ruleId)).toEqual(["paper/author-list"]);
-    expect(msgs[0]!.line).toBe(3);
-    expect(msgs[0]!.message).toMatch(/`schick2023`.*missing hambro/);
+    expect(msgs[0]?.line).toBe(3);
+    expect(msgs[0]?.message).toMatch(/`schick2023`.*missing hambro/);
   });
 
   it("an identifier that provably fails → paper/cite-exists on that entry", async () => {
@@ -311,7 +318,7 @@ describe("the reference rules", () => {
     const files = memoryFiles({});
     const msgs = await lint(files, TEX(ENTRIES));
     expect(msgs.map((m) => m.ruleId)).toEqual(["paper/refs-checked"]);
-    expect(msgs[0]!.message).toMatch(/npx paperlint build/);
+    expect(msgs[0]?.message).toMatch(/npx paperlint build/);
   });
 
   it("a paper with no bibliography gets nothing", async () => {
@@ -354,7 +361,7 @@ const record = (
   files: ReturnType<typeof memoryFiles>,
   body: Record<string, unknown>,
 ) => {
-  const bib = bibliographyOf(files, PAPER)!;
+  const bib = present(bibliographyOf(files, PAPER), "the bibliography");
   files.writeAtomic(
     referencesPath(PAPER) as AbsolutePath,
     new TextEncoder().encode(
@@ -374,7 +381,7 @@ describe("the reference rules over a record written by hand", () => {
     record(files, { status: "not-checked", entries: [] });
     const msgs = await lint(files, tex);
     expect(msgs.map((m) => m.ruleId)).toEqual(["paper/refs-checked"]);
-    expect(msgs[0]!.message).toMatch(/no reason recorded/);
+    expect(msgs[0]?.message).toMatch(/no reason recorded/);
   });
 
   it("a verdict without a reason, and one for a key the bibliography lacks, still report", async () => {
@@ -410,7 +417,7 @@ describe("the reference rules over refs.bib, and on other files", () => {
     expect(msgs.map((m) => [m.ruleId, m.line])).toEqual([
       ["paper/author-list", 1],
     ]);
-    expect(msgs[0]!.message).toMatch(/schick2023/);
+    expect(msgs[0]?.message).toMatch(/schick2023/);
   });
 
   it("only paper.tex is judged", () => {
@@ -430,13 +437,14 @@ describe("the lookup cache — refreshed answers", () => {
     const OLD: CachedResponse = { ...ANSWER, fetched: "2026-08-01" };
     const put =
       (answer: CachedResponse): CheckReferences =>
-      async (_bib, cache) => ({
-        check: { kind: "checked", entries: [verdict("schick2023")] },
-        cache: {
-          citations: new Map([...cache.citations, ["a", answer]]),
-          dblp: cache.dblp,
-        },
-      });
+      (_bib, cache) =>
+        Promise.resolve({
+          check: { kind: "checked", entries: [verdict("schick2023")] },
+          cache: {
+            citations: new Map([...cache.citations, ["a", answer]]),
+            dblp: cache.dblp,
+          },
+        });
     const { files } = await build(TEX(ENTRIES), put(OLD));
     const again = await referencesStep.run({
       ...ctx(files),

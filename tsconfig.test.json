@@ -5,14 +5,16 @@
     "rootDir": ".",
     "declaration": false,
     "declarationMap": false,
-    "sourceMap": false
+    "sourceMap": false,
+    "customConditions": ["paperlint-source"]
   },
-  "include": [
-    "src/**/*.ts",
-    "scripts/**/*.ts",
-    "test/**/*.ts",
-    "lib/**/*.test.ts",
-    "skills/**/*.test.ts"
-  ],
-  "exclude": []
+  "include": ["**/*.ts", "**/*.mts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "plugin",
+    "**/.tmp*",
+    "docs/prior-art/repro"
+  ]
 }

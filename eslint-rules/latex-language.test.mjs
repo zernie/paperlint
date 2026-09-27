@@ -5,7 +5,7 @@
  */
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import { texLanguage, texToMdast } from "./latex-language.mjs";
+import { texLanguage, texToMdast } from "./latex-language.ts";
 
 /** The projection plus each node's type, lang/title and start–end offsets. */
 const project = (src) => {
@@ -65,6 +65,12 @@ test("a body the parser cannot take (nesting deep enough to exhaust its stack) i
   assert.deepEqual(
     [r.ok, r.errors.map((e) => e.constructor.name)],
     [false, ["RangeError"]],
+  );
+  // ESLint prints a parse failure at its `line` and `column`; a failure of the whole parse has no
+  // position of its own, so it sits at the start of the file rather than at `undefined:undefined`.
+  assert.deepEqual(
+    r.errors.map((e) => [e.line, e.column]),
+    [[1, 1]],
   );
 });
 

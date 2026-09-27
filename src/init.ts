@@ -64,13 +64,15 @@ import {
   nameProblem,
   type PaperFormat,
 } from "./new-paper.ts";
-// The one source for the consumer's config key lives in the .mjs half of the package (the ESLint
-// rules and the skill scripts import it too); its types are in lib/paper-config.d.mts.
+// The one source for the consumer's config key lives in lib/ (the ESLint rules and the skill scripts
+// import it too). It is imported compiled, from dist/, the one path that resolves the same from src/
+// and from dist/ — see CONTRIBUTING.md.
 import {
   CONFIG_FILE,
   DEFAULT_PAPERS_ROOT,
   PAPERS_DIR_FIELD,
-} from "../lib/paper-config.mjs";
+} from "#lib/paper-config";
+import { messageOf } from "./domain/text.ts";
 
 /** How the papers directory was arrived at. Printed, because a guess must not read as a fact. */
 export type PapersHow =
@@ -122,13 +124,21 @@ export function interactivity({
   return { interactive: true, why: "a terminal on both ends" };
 }
 
+/**
+ * Whether a standard stream is a terminal. Node types `isTTY` as `boolean`, but on a stream that
+ * is NOT a terminal (a pipe, a file) the property is absent — `undefined` — so it is read as the
+ * optional it really is.
+ */
+const isTty = (stream: { readonly isTTY?: boolean }): boolean =>
+  stream.isTTY === true;
+
 /** The mode of THIS process — the one place `process` is read for it. */
 export const processInteractivity = (yes: boolean) =>
   interactivity({
     // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
-    stdinTTY: Boolean(process.stdin.isTTY),
+    stdinTTY: isTty(process.stdin),
     // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
-    stdoutTTY: Boolean(process.stdout.isTTY),
+    stdoutTTY: isTty(process.stdout),
     // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76
     env: process.env,
     yes,
@@ -222,7 +232,7 @@ export async function declarePapers(
     try {
       settings = JSON.parse(raw) as Record<string, unknown>;
     } catch (e) {
-      return { status: "unparsable", path, reason: (e as Error).message };
+      return { status: "unparsable", path, reason: messageOf(e) };
     }
     const existing = settings[PAPERS_DIR_FIELD];
     if (existing !== undefined)
@@ -289,7 +299,7 @@ export async function offerWorkflow(
     ask?: (q: string) => Promise<string>;
     interactive: boolean;
     /** The running package's version; see `InitOptions.version`. */
-    version?: string;
+    version?: string | undefined;
   },
 ): Promise<WorkflowResult> {
   const path = join(root, WORKFLOW_PATH);
@@ -317,7 +327,7 @@ export function reportWorkflow(
     version,
     papersDir,
     why,
-  }: { version?: string; papersDir: string; why: string },
+  }: { version?: string | undefined; papersDir: string; why: string },
 ): string[] {
   const ref = actionRef(version);
   const out: string[] = [];
@@ -406,7 +416,7 @@ export async function offerHooks(
     hooks: boolean;
     interactive: boolean;
     ask?: (q: string) => Promise<string>;
-    merge?: Merge;
+    merge?: Merge | undefined;
   },
 ): Promise<HooksOutcome> {
   if (!hooks) return { status: "skipped" };
@@ -438,7 +448,7 @@ export async function offerHooks(
     }
     return wireHooks(root, m, shippedWiring());
   } catch (e) {
-    return { status: "failed", reason: (e as Error).message };
+    return { status: "failed", reason: messageOf(e) };
   }
 }
 
@@ -560,7 +570,7 @@ export interface InitOptions {
   /** `false` is `--no-hooks`. */
   hooks?: boolean;
   /** vigiles' merge. Injected only so a test can observe or replace it. */
-  merge?: Merge;
+  merge?: Merge | undefined;
   /** `--paper <name>`: create this paper, even without a terminal. */
   paper?: string | null;
   /** `--format tex|md` for that paper. */
@@ -586,7 +596,7 @@ export interface InitOptions {
    * The version of the running package, read by the CLI from its own `package.json`. The CI
    * workflow is pinned to its release tag (`actionRef`); absent or unreleased, the placeholder.
    */
-  version?: string;
+  version?: string | undefined;
   /**
    * TeX Live for `paperlint build`: whether paperlint's own tree is installed, and how to install
    * it (`paperlint toolchain`). Passed in by the CLI; without them the step only names the command.

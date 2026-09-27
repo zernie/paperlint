@@ -3,7 +3,7 @@
  *
  * PURE. No disk, no process, no clock. The shell in `build.ts` runs a step, records what it saw
  * as an `Observation`, appends it to the history and asks `nextStep(summarize(history))` again.
- * Both halves are table tests (`latex-loop.harness.mjs`), not scenarios that need TeX.
+ * Both halves are table tests (`latex-loop.harness.ts`), not scenarios that need TeX.
  *
  * ── THE LOOP: `summarize` reduces the history to a `State`, and `nextStep` asks four questions ──
  *   1. did the last program fail?                          → fail, with its error lines
@@ -118,7 +118,7 @@ export type Step =
     };
 
 /** Non-final pdflatex passes allowed before the build is declared non-converging. */
-export const MAX_PASSES = 5;
+export const MAX_PASSES: number = 5;
 
 /** The history, reduced to the four questions `nextStep` asks. */
 export type State = {
@@ -152,7 +152,7 @@ const noConvergence = (unsettled: readonly string[]): Step => ({
   step: "latex",
   cause: { kind: "no-convergence", unsettled },
   lines: [
-    `the build does not converge: after ${MAX_PASSES} pdflatex passes, the last one still changed or asked to rerun: ${unsettled.join(", ")}.`,
+    `the build does not converge: after ${String(MAX_PASSES)} pdflatex passes, the last one still changed or asked to rerun: ${unsettled.join(", ")}.`,
     `A document whose aux keeps changing on every pass never settles; stopping here instead of`,
     `shipping a PDF with stale cross-references.`,
   ],

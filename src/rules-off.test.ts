@@ -9,9 +9,9 @@
  */
 import { ESLint, type Linter } from "eslint";
 import { describe, expect, it } from "vitest";
-// @ts-expect-error — the module is .mjs and has no types.
-import { texLanguage } from "../eslint-rules/latex-language.mjs";
+import { texLanguage } from "../eslint-rules/latex-language.ts";
 import { rulePlugins, rulesOff, SHIPPED_RULES } from "./cli.ts";
+import { present } from "../test/support.ts";
 
 const PAPER = [
   "\\documentclass{article}",
@@ -45,7 +45,7 @@ async function lintAsConsumer(
   const [res] = await eslint.lintText(PAPER, {
     filePath: "papers/a/paper.tex",
   });
-  return res!.messages;
+  return present(res, "one lint result").messages;
 }
 
 describe("rulesOff — paperlint's rules, registered and off, for a consumer's own ESLint run", () => {
@@ -100,7 +100,9 @@ describe("rulesOff — paperlint's rules, registered and off, for a consumer's o
       "// eslint-disable-next-line paper/leading-zero -- nothing to silence\nconst x = 1;\n",
       { filePath: "src/x.js" },
     );
-    expect(res!.messages.map((m) => m.message)).toEqual([
+    expect(
+      present(res, "one lint result").messages.map((m) => m.message),
+    ).toEqual([
       "Unused eslint-disable directive (no problems were reported from 'paper/leading-zero').",
     ]);
   });

@@ -2,7 +2,7 @@
  * `adapters/banal/index.ts` — banal as the two ports the app sees. What `run.test.ts` checks in
  * banal's own terms is checked here as the domain receives it: a `Geometry` whose provenance names
  * banal and the rule that found it, a reason that is one line of text, a `Ready` that says what was
- * verified. In-memory ports throughout; the real banal is `test/e2e/banal.mjs`.
+ * verified. In-memory ports throughout; the real banal is `test/e2e/banal.ts`.
  */
 import assert from "node:assert/strict";
 import { test } from "vitest";
@@ -44,15 +44,12 @@ test("with $BANAL: banal gets the .xml and a quoted $PDFTOHTML, and the geometry
   const { m, run } = measurer({ BANAL: "/own/banal" });
   const g = m.measure([]);
   assert.equal(g.kind, "measured");
-  assert.deepEqual(g.kind === "measured" && g.by, {
+  assert.deepEqual(g.by, {
     tool: "banal",
     path: "/own/banal",
     how: "$BANAL",
   });
-  assert.deepEqual(
-    g.kind === "measured" && [g.geometry.columns, g.geometry.bodyPages],
-    [2, 1],
-  );
+  assert.deepEqual([g.geometry.columns, g.geometry.bodyPages], [2, 1]);
   const c = run.calls[0];
   // Guards: the poppler-free path — banal is handed paperlint's XML, never the PDF.
   assert.match(c?.args.at(-1) ?? "", /\.xml$/);

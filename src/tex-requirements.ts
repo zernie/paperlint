@@ -26,7 +26,7 @@ import { join } from "node:path";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import Ajv from "ajv";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
-import { CONFIG_FILE } from "../lib/paper-config.mjs";
+import { CONFIG_FILE } from "#lib/paper-config";
 
 /** CTAN package name → the names that prove it is installed. */
 export type PackageProofs = Readonly<Record<string, readonly string[]>>;
@@ -64,9 +64,10 @@ const validators = new Map<string, Validate>();
 function validatorFor(dir: string): Validate {
   const known = validators.get(dir);
   if (known) return known;
-  const schema: object = JSON.parse(
-    readFileSync(join(dir, SCHEMA_FILE), "utf8"),
-  );
+  const path = join(dir, SCHEMA_FILE);
+  const schema: unknown = JSON.parse(readFileSync(path, "utf8"));
+  if (typeof schema !== "object" || schema === null)
+    throw new Error(`${path}: not a JSON Schema object`);
   const v = new Ajv({ allErrors: true }).compile(schema);
   validators.set(dir, v);
   return v;
@@ -214,7 +215,9 @@ export function parsePreset(
   file: string,
   dir: string = packageVenuesDir(),
 ): PresetFile {
-  const { config, error } = typescript().parseConfigFileTextToJson(file, text);
+  const parsed = typescript().parseConfigFileTextToJson(file, text);
+  const config: unknown = parsed.config;
+  const error = parsed.error;
   if (error)
     throw new Error(
       `${file}: not valid JSONC — ${typescript().flattenDiagnosticMessageText(error.messageText, " ")}`,

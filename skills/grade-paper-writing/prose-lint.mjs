@@ -70,7 +70,7 @@ import {
   stripFences,
   requireMarkdown,
   stripFrontmatter,
-} from "../../lib/markdown.mjs";
+} from "#lib/markdown";
 
 // Markup is parsed with a PARSER (`CLAUDE.md`, 2026-08-11). We fail rather than degrade, even
 // though this file is advisory: without a parser the paper's body would collapse to empty, and from

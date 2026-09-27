@@ -13,11 +13,7 @@ import { describe, expect, it } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
-import {
-  VENUE_RULE_LEVELS,
-  venueRules,
-  type VenueRuleModule,
-} from "./venue-rules.ts";
+import { VENUE_RULE_LEVELS, venueRules } from "./venue-rules.ts";
 import { buildConfig, OPTIONAL_RULES, SHIPPED_RULES } from "./cli.ts";
 
 const VENUES = packageVenuesDir();
@@ -34,9 +30,18 @@ const shipped = Object.fromEntries(
 );
 
 type Json = Record<string, unknown>;
+interface Font {
+  name: string;
+  type: string;
+  embedded: boolean;
+  program: string;
+}
+/** The facts file as these tests edit it: free-form, except the fonts they reach into. */
+type Facts = Json & { fonts: Font[] };
+type Patch = (f: Facts) => void;
 
 /** The facts of a short agenticdev paper that meets every number in its profile. */
-function goodFacts(): Json {
+function goodFacts(): Facts {
   return {
     schema: 2,
     pdf: "paper.pdf",
@@ -118,10 +123,7 @@ function lint(
   const files = memoryFiles(paperFiles(p));
   const rules = venueRules({ files, venuesDir: VENUES });
   const out: Finding[] = [];
-  for (const [name, rule] of Object.entries(rules) as [
-    string,
-    VenueRuleModule,
-  ][]) {
+  for (const [name, rule] of Object.entries(rules)) {
     const visitor = rule.create({
       filename,
       ...(cwd === undefined ? {} : { cwd }),
@@ -147,7 +149,13 @@ function lint(
 const DECL = { extends: "paperlint:agenticdev", kind: "short" };
 const ids = (fs: readonly Finding[]) =>
   fs.map((f) => `${f.rule}:${f.messageId}`).sort();
-const withFacts = (patch: (f: Json) => void): Json => {
+/** A patch that changes one field set of the `i`-th font. */
+const font =
+  (i: number, change: Partial<Font>): Patch =>
+  (f) => {
+    f.fonts = f.fonts.map((x, j) => (j === i ? { ...x, ...change } : x));
+  };
+const withFacts = (patch: Patch): Facts => {
   const f = goodFacts();
   patch(f);
   return f;
@@ -260,7 +268,7 @@ describe("pdf/profile — the kind", () => {
       // the fonts rule still runs with an unresolved kind
       const fonts = lint({
         venue,
-        facts: withFacts((f) => ((f.fonts as Json[])[0]!.embedded = false)),
+        facts: withFacts(font(0, { embedded: false })),
       });
       expect(ids(fonts)).toEqual([
         `pdf/fonts:notEmbedded`,
@@ -338,7 +346,7 @@ describe("pdf/measured — a paper that names a venue and was not measured says 
         "pages_by_type",
       ])
         f[k] = null;
-      (f.fonts as Json[])[0]!.program = "Type3";
+      font(0, { program: "Type3" })(f);
     });
     expect(ids(lint({ venue: DECL, facts: g }))).toEqual([
       "pdf/fonts:type3",
@@ -348,7 +356,7 @@ describe("pdf/measured — a paper that names a venue and was not measured says 
 });
 
 describe("pdf/fresh — facts about another build are not judged", () => {
-  it.each([
+  it.each<[string, Paper, string]>([
     [
       "a changed PDF",
       { pdf: new TextEncoder().encode("another build") },
@@ -364,55 +372,48 @@ describe("pdf/fresh — facts about another build are not judged", () => {
     ],
     [
       "a font entry of the wrong shape",
-      { facts: withFacts((f) => (f.fonts = [{ name: 3 }])) },
+      { facts: { ...goodFacts(), fonts: [{ name: 3 }] } },
       "factsBroken",
     ],
-  ] as [string, Paper, string][])(
-    "%s: one finding, from pdf/fresh only",
-    (_, p, messageId) => {
-      // Everything else planted wrong too — none of it may be reported over stale facts.
-      const facts =
-        p.facts ?? withFacts((f) => ((f.body_pages = 99), (f.columns = 1)));
-      expect(ids(lint({ venue: DECL, ...p, facts }))).toEqual([
-        `pdf/fresh:${messageId}`,
-      ]);
-    },
-  );
+  ])("%s: one finding, from pdf/fresh only", (_, p, messageId) => {
+    // Everything else planted wrong too — none of it may be reported over stale facts.
+    const facts =
+      p.facts ?? withFacts((f) => ((f.body_pages = 99), (f.columns = 1)));
+    expect(ids(lint({ venue: DECL, ...p, facts }))).toEqual([
+      `pdf/fresh:${messageId}`,
+    ]);
+  });
 });
 
 describe("pdf/fonts", () => {
-  it.each([
-    [
-      "a Type 3 font",
-      (f: Json) => ((f.fonts as Json[])[0]!.program = "Type3"),
-      ["pdf/fonts:type3"],
-    ],
+  it.each<[string, (f: Facts) => void, string[]]>([
+    ["a Type 3 font", font(0, { program: "Type3" }), ["pdf/fonts:type3"]],
     [
       "a font not embedded",
-      (f: Json) => ((f.fonts as Json[])[1]!.embedded = false),
+      font(1, { embedded: false }),
       ["pdf/fonts:notEmbedded"],
     ],
     [
       "the text family missing — acmart fell back to Computer Modern",
-      (f: Json) => ((f.fonts as Json[])[0]!.name = "CMR10"),
+      font(0, { name: "CMR10" }),
       ["pdf/fonts:noFamily"],
     ],
     [
       "both families missing: one finding per family",
-      (f: Json) =>
+      (f: Facts) =>
         (f.fonts = [
           { name: "CMR10", type: "Type 1", embedded: true, program: "Type1" },
         ]),
       ["pdf/fonts:noFamily", "pdf/fonts:noFamily"],
     ],
-  ] as [string, (f: Json) => void, string[]][])("%s", (_, patch, want) => {
+  ])("%s", (_, patch, want) => {
     expect(ids(lint({ venue: DECL, facts: withFacts(patch) }))).toEqual(want);
   });
 
   it("names the family and the fonts the PDF does have", () => {
     const [f] = lint({
       venue: DECL,
-      facts: withFacts((x) => ((x.fonts as Json[])[0]!.name = "CMR10")),
+      facts: withFacts(font(0, { name: "CMR10" })),
     });
     expect(f?.message).toMatch(/LinLibertine/);
     expect(f?.message).toMatch(/CMR10/);
@@ -420,28 +421,28 @@ describe("pdf/fonts", () => {
 });
 
 describe("pdf/geometry", () => {
-  it.each([
+  it.each<[string, (f: Facts) => void, string[]]>([
     [
       "A4 instead of letter",
-      (f: Json) => ((f.page_w_in = 8.27), (f.page_h_in = 11.69)),
+      (f: Facts) => ((f.page_w_in = 8.27), (f.page_h_in = 11.69)),
       ["pdf/geometry:dim", "pdf/geometry:dim"],
     ],
     [
       "one column instead of two",
-      (f: Json) => (f.columns = 1),
+      (f: Facts) => (f.columns = 1),
       ["pdf/geometry:columns"],
     ],
     [
       "a page size banal could not read",
-      (f: Json) => (f.page_w_in = null),
+      (f: Facts) => (f.page_w_in = null),
       ["pdf/geometry:dimMissing"],
     ],
     [
       "0.03 in off is inside the default tolerance",
-      (f: Json) => (f.page_w_in = 8.53),
+      (f: Facts) => (f.page_w_in = 8.53),
       [],
     ],
-  ] as [string, (f: Json) => void, string[]][])("%s", (_, patch, want) => {
+  ])("%s", (_, patch, want) => {
     expect(ids(lint({ venue: DECL, facts: withFacts(patch) }))).toEqual(want);
   });
 
@@ -455,46 +456,43 @@ describe("pdf/geometry", () => {
 });
 
 describe("pdf/limits", () => {
-  it.each([
+  it.each<[string, (f: Facts) => void, string[], RegExp | null]>([
     [
       "one body page over the short-paper limit",
-      (f: Json) => (f.body_pages = 6),
+      (f: Facts) => (f.body_pages = 6),
       ["pdf/limits:pages"],
       /body pages: 6, over the limit 5 for agenticdev\/short/,
     ],
     [
       "one reference page over",
-      (f: Json) => (f.ref_pages = 3),
+      (f: Facts) => (f.ref_pages = 3),
       ["pdf/limits:pages"],
       /reference pages: 3, over the limit 2/,
     ],
-    ["exactly at the limit", (f: Json) => (f.body_pages = 5), [], null],
+    ["exactly at the limit", (f: Facts) => (f.body_pages = 5), [], null],
     [
       "a reference font below the range",
-      (f: Json) => (f.ref_pt = 6),
+      (f: Facts) => (f.ref_pt = 6),
       ["pdf/limits:refPt"],
       /6 pt/,
     ],
     [
       "6.8 pt is inside the range once the measuring drift (body_pt_tol) is allowed",
-      (f: Json) => (f.ref_pt = 6.8),
+      (f: Facts) => (f.ref_pt = 6.8),
       [],
       null,
     ],
     [
       "no reference font measured (no bibliography) is not a finding",
-      (f: Json) => (f.ref_pt = null),
+      (f: Facts) => (f.ref_pt = null),
       [],
       null,
     ],
-  ] as [string, (f: Json) => void, string[], RegExp | null][])(
-    "%s",
-    (_, patch, want, text) => {
-      const fs = lint({ venue: DECL, facts: withFacts(patch) });
-      expect(ids(fs)).toEqual(want);
-      if (text) expect(fs[0]?.message).toMatch(text);
-    },
-  );
+  ])("%s", (_, patch, want, text) => {
+    const fs = lint({ venue: DECL, facts: withFacts(patch) });
+    expect(ids(fs)).toEqual(want);
+    if (text) expect(fs[0]?.message).toMatch(text);
+  });
 
   it("a longer kind of the same venue passes the same page count", () => {
     const facts = withFacts((f) => (f.body_pages = 9));
@@ -506,19 +504,19 @@ describe("pdf/limits", () => {
 });
 
 describe("pdf/body-size", () => {
-  it.each([
+  it.each<[string, (f: Facts) => void, string[]]>([
     [
       "10.2 pt against 9 ± 0.5",
-      (f: Json) => (f.body_pt = 10.2),
+      (f: Facts) => (f.body_pt = 10.2),
       ["pdf/body-size:body"],
     ],
-    ["9.4 pt is inside the tolerance", (f: Json) => (f.body_pt = 9.4), []],
+    ["9.4 pt is inside the tolerance", (f: Facts) => (f.body_pt = 9.4), []],
     [
       "no body size measured",
-      (f: Json) => (f.body_pt = null),
+      (f: Facts) => (f.body_pt = null),
       ["pdf/body-size:bodyMissing"],
     ],
-  ] as [string, (f: Json) => void, string[]][])("%s", (_, patch, want) => {
+  ])("%s", (_, patch, want) => {
     expect(ids(lint({ venue: DECL, facts: withFacts(patch) }))).toEqual(want);
   });
 });
@@ -567,7 +565,7 @@ describe("a project's own preset, and the facts' other spellings", () => {
       format: { columns: 2, body_pt: 9, ref_pt_min: 7, ref_pt_max: 8 },
     }),
   };
-  const house = (patch: (f: Json) => void = () => {}) =>
+  const house = (patch: (f: Facts) => void = () => {}) =>
     lint({
       venue: { extends: "./house.jsonc" },
       facts: withFacts(patch),

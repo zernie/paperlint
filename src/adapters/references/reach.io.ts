@@ -1,3 +1,4 @@
+import { messageOf } from "../../domain/text.ts";
 /** Whether the citation services answer at all — the one request that decides "not checked". */
 export async function unreachable(): Promise<string | null> {
   try {
@@ -7,6 +8,6 @@ export async function unreachable(): Promise<string | null> {
     });
     return null;
   } catch (e) {
-    return `the citation services cannot be reached (${(e as Error).message})`;
+    return `the citation services cannot be reached (${messageOf(e)})`;
   }
 }

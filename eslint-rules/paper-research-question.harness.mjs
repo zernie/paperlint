@@ -25,13 +25,13 @@ import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { Linter } from "eslint";
 import markdown from "@eslint/markdown";
-import { createChecker } from "../lib/check.mjs";
+import { createChecker } from "../lib/check.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIX = join(HERE, "..", "fixtures", "paper-research-question");
 
-const { texLanguage } = await import(join(HERE, "latex-language.mjs"));
-const rq = (await import(join(HERE, "paper-research-question.mjs"))).default;
+const { texLanguage } = await import(join(HERE, "latex-language.ts"));
+const rq = (await import(join(HERE, "paper-research-question.ts"))).default;
 
 const check = createChecker();
 

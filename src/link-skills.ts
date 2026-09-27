@@ -44,6 +44,7 @@ import {
   PACKAGE_NAME,
   SHIPPED_SKILLS_DIR,
 } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { messageOf, codeOf } from "./domain/text.ts";
 
 export { PACKAGE_NAME };
 /** Where Claude Code looks for project skills, relative to the project root. */
@@ -74,7 +75,7 @@ export function locatePackage(
     manifest = resolveManifest(project);
   } catch (e) {
     return {
-      error: `${(e as NodeJS.ErrnoException).code ?? "error"}: ${(e as Error).message.split("\n")[0]}`,
+      error: `${codeOf(e) ?? "error"}: ${String(messageOf(e).split("\n")[0])}`,
     };
   }
   const dir = realpathSync(dirname(manifest));
@@ -108,7 +109,7 @@ export function shippedSkills(
   try {
     return { skillsDir, names: installedSkills(skillsDir) };
   } catch (e) {
-    return { error: (e as Error).message };
+    return { error: messageOf(e) };
   }
 }
 
@@ -207,7 +208,7 @@ function linkOne(
     return {
       name,
       status: "foreign",
-      reason: `could not create the link: ${(e as Error).message}`,
+      reason: `could not create the link: ${messageOf(e)}`,
     };
   }
 }
@@ -218,7 +219,7 @@ function makeHome(home: string): string | null {
     mkdirSync(home, { recursive: true });
     return null;
   } catch (e) {
-    return `cannot create ${home}: ${(e as Error).message}`;
+    return `cannot create ${home}: ${messageOf(e)}`;
   }
 }
 

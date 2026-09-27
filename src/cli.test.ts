@@ -9,7 +9,7 @@ import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { test } from "vitest";
-import { runNode, useTempDir, writeTree } from "../test/support.mjs";
+import { runNode, useTempDir, writeTree } from "../test/support.ts";
 import {
   chooseVenue,
   initTexLive,
@@ -169,7 +169,12 @@ test("chooseVenue: a preset by path (inside and outside the paper), by prefixed 
   const choose = (venue: string) =>
     chooseVenue(
       { venue, kind: null },
-      { paperDir, cwd: dir, interactive: false, ask: async () => "" },
+      {
+        paperDir,
+        cwd: dir,
+        interactive: false,
+        ask: () => Promise.resolve(""),
+      },
     );
   const results = await Promise.all([
     choose("./papers/p/mine.jsonc"),
@@ -354,11 +359,11 @@ test("a paper's paperlint.json that does not parse stops the lint with its path"
   });
   const r = paperRuleBlocks([join(dir, "p")]);
   assert.equal(r.ok, false);
-  assert.match(!r.ok ? r.error : "", /^.*rules-broken\/p\/paperlint\.json: /);
+  assert.match(r.error, /^.*rules-broken\/p\/paperlint\.json: /);
 });
 
 test("silentOptionalRules: a config with no rules turns nothing on", async () => {
-  assert.deepEqual(await silentOptionalRules({} as never, [], {} as never), []);
+  assert.deepEqual(await silentOptionalRules({} as never, [], {}), []);
 });
 
 test("init with no path and --format md sets up the current directory", async () => {
@@ -493,7 +498,9 @@ function newAtTerminal(cwd: string, answers: Record<string, string>) {
         child.stdin.write(answer);
       }
     });
-    child.on("close", (status) => done({ status, out }));
+    child.on("close", (status) => {
+      done({ status, out });
+    });
   });
 }
 
@@ -563,7 +570,7 @@ test("lint with its LaTeX language missing from the install still lints the mark
     "papers/p/paper.md": "# P\n\nSome prose.\n",
     "no-latex.mjs":
       "import { register } from 'node:module';\n" +
-      "register('data:text/javascript,' + encodeURIComponent(\"export async function resolve(s, c, next) { if (s.endsWith('latex-language.mjs')) throw Object.assign(new Error('gone'), { code: 'ERR_MODULE_NOT_FOUND' }); return next(s, c); }\"));\n",
+      "register('data:text/javascript,' + encodeURIComponent(\"export async function resolve(s, c, next) { if (s === '#eslint-rules/latex-language') throw Object.assign(new Error('gone'), { code: 'ERR_MODULE_NOT_FOUND' }); return next(s, c); }\"));\n",
   });
   const without = runNode(BIN, ["lint", "papers"], {
     cwd: dir,

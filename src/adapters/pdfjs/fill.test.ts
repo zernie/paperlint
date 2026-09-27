@@ -1,7 +1,7 @@
 /**
  * `fill.ts` — what is recovered from pdf.js's exports for each text item: whether it is upright, and
  * the fill it was drawn in (the operator-list walk). Operator lists here are written by hand; the
- * real-PDF half runs in `pdf-facts.harness.mjs` and `test/e2e/banal.mjs`.
+ * real-PDF half runs in `pdf-facts.harness.ts` and `test/e2e/banal.ts`.
  */
 import assert from "node:assert/strict";
 import { test } from "vitest";
@@ -34,7 +34,7 @@ const OPS = {
   showText: 5,
   showSpacedText: 6,
 };
-const glyphs = (s: string) => [[...s].map((unicode) => ({ unicode }))];
+const glyphs = (s: string) => [Array.from(s, (unicode) => ({ unicode }))];
 const ops = (...pairs: [number, unknown?][]): OperatorList => ({
   fnArray: pairs.map((p) => p[0]),
   argsArray: pairs.map((p) => p[1] ?? null),
