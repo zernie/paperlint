@@ -192,27 +192,32 @@ export function consumerSkillsDir(opts) {
  * in the port and the TypeScript writer imports it, as `src/cli.ts` already does for `isMain`.
  *
  * @param dir  the directory to list. A missing directory throws `ENOENT` from `readdirSync`.
+ * @param fs   the four calls it makes; a test passes a fake to stage what a real disk only does
+ *             in a race (an entry gone between the listing and the stat).
  * @returns the skill names, sorted.
  */
-export function installedSkills(dir) {
+export function installedSkills(
+  dir,
+  fs = { readdirSync, statSync, existsSync, readlinkSync },
+) {
   const names = [];
   const dangling = [];
-  for (const name of readdirSync(dir)) {
+  for (const name of fs.readdirSync(dir)) {
     const entry = join(dir, name);
     let st;
     try {
-      st = statSync(entry); // FOLLOWS the link — the question is where the entry LEADS
+      st = fs.statSync(entry); // FOLLOWS the link — the question is where the entry LEADS
     } catch (e) {
       // The entry was listed a moment ago, so a failed stat is a link that leads nowhere
       // (ENOENT) or in a circle (ELOOP) — not an absence.
       dangling.push({
         name,
-        target: readlinkOr(entry),
-        cause: e.code, // every fs error carries one
+        target: readlinkOr(entry, fs.readlinkSync),
+        cause: e.code ?? "error",
       });
       continue;
     }
-    if (st.isDirectory() && existsSync(join(entry, "SKILL.md")))
+    if (st.isDirectory() && fs.existsSync(join(entry, "SKILL.md")))
       names.push(name);
   }
   if (dangling.length) {
@@ -233,16 +238,12 @@ export function installedSkills(dir) {
 }
 
 /** Where a link points, for the message — or a placeholder when it is not a link at all. */
-function readlinkOr(entry) {
+function readlinkOr(entry, readlink) {
   try {
-    return readlinkSync(entry);
-    // Only when the entry was a plain file or directory removed between readdir and stat — a race
-    // no test can stage; a link that leads nowhere is still a link and reads fine.
-    /* c8 ignore start */
+    return readlink(entry);
   } catch {
-    return "(not a link)";
+    return "(not a link)"; // a plain entry gone between the listing and the stat
   }
-  /* c8 ignore stop */
 }
 
 /**

@@ -46,6 +46,30 @@ test("installedSkills: a link that leads nowhere is refused by name, with the er
   });
 });
 
+test("installedSkills: an entry gone between the listing and the stat is refused as '(not a link)'; an error without a code says 'error'", () => {
+  const fake = (statError) => ({
+    readdirSync: () => ["gone"],
+    statSync: () => {
+      throw statError;
+    },
+    existsSync: () => false,
+    readlinkSync: () => {
+      throw Object.assign(new Error("EINVAL"), { code: "EINVAL" });
+    },
+  });
+  assert.throws(
+    () =>
+      installedSkills(
+        "/s",
+        fake(Object.assign(new Error("ENOENT"), { code: "ENOENT" })),
+      ),
+    { dangling: [{ name: "gone", target: "(not a link)", cause: "ENOENT" }] },
+  );
+  assert.throws(() => installedSkills("/s", fake(new Error("odd"))), {
+    dangling: [{ name: "gone", target: "(not a link)", cause: "error" }],
+  });
+});
+
 test("ledgerPathExisting: a declared ledger that is not on disk throws; one that is, is returned", () => {
   const dir = consumer("ledger", { ledger: "runs.jsonl" });
   assert.throws(
