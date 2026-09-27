@@ -44,9 +44,7 @@ test("doctor: a settings file silent on papersDir, an occupied entry, an unreada
   const code = doctor({
     cwd: root,
     log: (s: string) => lines.push(s),
-    run: (() => ({
-      status: 0,
-    })) as unknown as typeof import("node:child_process").spawnSync,
+    run: (() => ({ status: 0 })) as never,
     cliPapers: join(root, "papers"),
     skillLinks: () => ({
       ok: true,
