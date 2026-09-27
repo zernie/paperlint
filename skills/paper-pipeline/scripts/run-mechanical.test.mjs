@@ -271,38 +271,49 @@ test("a FACT check whose checker crashed makes the run exit 2, and the summary s
   );
 });
 
-test("eslint that crashed on the file, and eslint that ignored it, are not clean runs", () => {
-  const fatal = JSON.stringify([
-    {
-      filePath: "p",
-      messages: [{ ruleId: null, fatal: true, message: "Parsing error" }],
-    },
-  ]);
-  const ignored = JSON.stringify([
-    {
-      filePath: "p",
-      messages: [
-        { ruleId: null, message: "File ignored because outside of base path." },
+// Three full runs of the script: 1.6 s alone, past vitest's 5 s default under c8 with the whole
+// suite in parallel (measured in `npm run check`), so the budget is stated here.
+test(
+  "eslint that crashed on the file, and eslint that ignored it, are not clean runs",
+  {
+    timeout: 30_000,
+  },
+  () => {
+    const fatal = JSON.stringify([
+      {
+        filePath: "p",
+        messages: [{ ruleId: null, fatal: true, message: "Parsing error" }],
+      },
+    ]);
+    const ignored = JSON.stringify([
+      {
+        filePath: "p",
+        messages: [
+          {
+            ruleId: null,
+            message: "File ignored because outside of base path.",
+          },
+        ],
+      },
+    ]);
+    const structure = (fakes) =>
+      run(join(consumer, "papers", "a"), fakes).rows.find((x) =>
+        x.startsWith("tighten-paper/structure "),
+      );
+    assert.deepEqual(
+      [
+        structure({ FAKE_ESLINT: fatal }),
+        structure({ FAKE_ESLINT: ignored }),
+        structure({ FAKE_ESLINT: "[]" }),
       ],
-    },
-  ]);
-  const structure = (fakes) =>
-    run(join(consumer, "papers", "a"), fakes).rows.find((x) =>
-      x.startsWith("tighten-paper/structure "),
+      [
+        "tighten-paper/structure ABSTAINED crashed",
+        "tighten-paper/structure ABSTAINED input-missing",
+        "tighten-paper/structure ABSTAINED no-witness",
+      ],
     );
-  assert.deepEqual(
-    [
-      structure({ FAKE_ESLINT: fatal }),
-      structure({ FAKE_ESLINT: ignored }),
-      structure({ FAKE_ESLINT: "[]" }),
-    ],
-    [
-      "tighten-paper/structure ABSTAINED crashed",
-      "tighten-paper/structure ABSTAINED input-missing",
-      "tighten-paper/structure ABSTAINED no-witness",
-    ],
-  );
-});
+  },
+);
 
 test("paper B: every row whose input is absent abstains as input-missing; the rest judge", () => {
   const { code, summary, rows } = run(join(consumer, "papers", "b"), {

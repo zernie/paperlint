@@ -22,6 +22,7 @@ import assert from "node:assert/strict";
 import { globSync, readFileSync } from "node:fs";
 import { dirname, join, matchesGlob, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+// @ts-expect-error — js-yaml ships no types, and the package does not depend on @types/js-yaml
 import yaml from "js-yaml";
 import ts from "typescript";
 import { test } from "vitest";
@@ -32,6 +33,7 @@ const CONFIG = JSON.parse(readFileSync(join(ROOT, ".c8rc.json"), "utf8")) as {
   statements: number;
   functions: number;
   branches: number;
+  excludeAfterRemap: boolean;
   include: string[];
   exclude: string[];
   extension: string[];

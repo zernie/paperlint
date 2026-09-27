@@ -118,19 +118,10 @@ describe("readPaperSettings", () => {
   });
 });
 
-describe("readPaperSettings — the root paperlint.json's defaults, the paper's file over them", () => {
+describe("readPaperSettings — a root paperlint.json that cannot be used", () => {
   const ROOT = "/work";
   const withFiles = (f: Record<string, string>) =>
     memoryFiles({ [`${ROOT}/package.json`]: "{}", ...f });
-  const read = (f: Record<string, string>) => {
-    const r = readPaperSettings(withFiles(f), PAPER);
-    if (!r.ok) throw new Error(r.error.why);
-    return r.value;
-  };
-
-  it("no file at either level: null", () => {
-    expect(read({})).toBeNull();
-  });
 
   it("a root file that does not parse, or names a field of the wrong type, is the paper's problem too", () => {
     const broken = (root: string) =>
@@ -144,6 +135,21 @@ describe("readPaperSettings — the root paperlint.json's defaults, the paper's 
         why: expect.stringMatching(/^the root paperlint\.json: .*kind/),
       },
     });
+  });
+});
+
+describe("readPaperSettings — the root paperlint.json's defaults, the paper's file over them", () => {
+  const ROOT = "/work";
+  const withFiles = (f: Record<string, string>) =>
+    memoryFiles({ [`${ROOT}/package.json`]: "{}", ...f });
+  const read = (f: Record<string, string>) => {
+    const r = readPaperSettings(withFiles(f), PAPER);
+    if (!r.ok) throw new Error(r.error.why);
+    return r.value;
+  };
+
+  it("no file at either level: null", () => {
+    expect(read({})).toBeNull();
   });
 
   it("root only: its extends and kind are this paper's", () => {

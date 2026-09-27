@@ -61,7 +61,10 @@ test("curlFailure: every way curl can end, in its own words", () => {
   const cases: readonly [ProcessExit, string | null][] = [
     [{ kind: "exited", status: 0, stdout: "", stderr: "" }, null],
     [{ kind: "spawn-failed", message: "EACCES" }, "EACCES"],
-    [{ kind: "timed-out", afterMs: 40_000 }, "no answer after 40000 ms"],
+    [
+      { kind: "timed-out", afterMs: 40_000, stdout: "", stderr: "" },
+      "no answer after 40000 ms",
+    ],
     [{ kind: "exited", status: 22, stdout: "", stderr: "" }, "curl exited 22"],
     [
       {

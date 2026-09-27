@@ -4,7 +4,7 @@ description: Verify every citation is a real work with correct metadata, and tha
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:2bb9f6f1233094cf compiled from skills/verify-citations/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:9973bd8fef7e0927 compiled from skills/verify-citations/SKILL.md.spec.ts -->
 
 # verify-citations — every cite real, the delta explicit
 
