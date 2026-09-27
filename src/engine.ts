@@ -194,7 +194,7 @@ export function missingDependencies(
   return [
     ...new Set(
       (end < 0 ? section : section.slice(0, end)).map((l) =>
-        l.split(" in: ")[0]!.trim(),
+        l.replace(/ in: [\s\S]*/, "").trim(),
       ),
     ),
   ].sort();

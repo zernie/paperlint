@@ -33,6 +33,7 @@ import {
 } from "./domain/lookup-cache.ts";
 import { referenceRules, REFERENCE_RULE_LEVELS } from "./reference-rules.ts";
 import { texLanguage } from "../eslint-rules/latex-language.ts";
+import { present } from "../test/support.ts";
 
 const PAPER = "/work/papers/p";
 const TEX = (entries: string) =>
@@ -123,7 +124,7 @@ async function lint(files: ReturnType<typeof memoryFiles>, tex: string) {
   const [res] = await eslint.lintText(tex, {
     filePath: join(PAPER, "paper.tex"),
   });
-  return res!.messages;
+  return present(res, "one lint result").messages;
 }
 
 describe("the references build step", () => {
@@ -136,7 +137,9 @@ describe("the references build step", () => {
     expect(out.ok).toBe(true);
     const doc = readReferences(files, PAPER);
     expect(doc?.status).toBe("checked");
-    expect(doc?.bib.sha256).toBe(bibHash(bibliographyOf(files, PAPER)!));
+    expect(doc?.bib.sha256).toBe(
+      bibHash(present(bibliographyOf(files, PAPER), "the bibliography")),
+    );
     expect(await lint(files, tex)).toEqual([]);
   });
 
@@ -149,7 +152,7 @@ describe("the references build step", () => {
     expect(msgs.map((m) => [m.ruleId, m.severity])).toEqual([
       ["paper/refs-checked", 1],
     ]);
-    expect(msgs[0]!.message).toMatch(/cannot be reached/);
+    expect(msgs[0]?.message).toMatch(/cannot be reached/);
   });
 
   it("a checker that throws is recorded as not checked, not as a failed build", async () => {
@@ -211,7 +214,9 @@ describe("the lookup cache — <paper>/repro/references-cache.json", () => {
       note: "references: 1 checked, 0 failing → _build/references.json; nothing fetched",
     });
     // The second build was handed exactly what the first one wrote.
-    expect(parseLookupCache(written!)).toEqual(ok(f.seen[1]));
+    expect(parseLookupCache(present(written, "the written cache"))).toEqual(
+      ok(f.seen[1]),
+    );
     expect(cacheText(files)).toBe(written);
   });
 });
@@ -273,8 +278,8 @@ describe("the reference rules", () => {
     );
     const msgs = await lint(files, tex);
     expect(msgs.map((m) => m.ruleId)).toEqual(["paper/author-list"]);
-    expect(msgs[0]!.line).toBe(3);
-    expect(msgs[0]!.message).toMatch(/`schick2023`.*missing hambro/);
+    expect(msgs[0]?.line).toBe(3);
+    expect(msgs[0]?.message).toMatch(/`schick2023`.*missing hambro/);
   });
 
   it("an identifier that provably fails → paper/cite-exists on that entry", async () => {
@@ -313,7 +318,7 @@ describe("the reference rules", () => {
     const files = memoryFiles({});
     const msgs = await lint(files, TEX(ENTRIES));
     expect(msgs.map((m) => m.ruleId)).toEqual(["paper/refs-checked"]);
-    expect(msgs[0]!.message).toMatch(/npx paperlint build/);
+    expect(msgs[0]?.message).toMatch(/npx paperlint build/);
   });
 
   it("a paper with no bibliography gets nothing", async () => {
@@ -356,7 +361,7 @@ const record = (
   files: ReturnType<typeof memoryFiles>,
   body: Record<string, unknown>,
 ) => {
-  const bib = bibliographyOf(files, PAPER)!;
+  const bib = present(bibliographyOf(files, PAPER), "the bibliography");
   files.writeAtomic(
     referencesPath(PAPER) as AbsolutePath,
     new TextEncoder().encode(
@@ -376,7 +381,7 @@ describe("the reference rules over a record written by hand", () => {
     record(files, { status: "not-checked", entries: [] });
     const msgs = await lint(files, tex);
     expect(msgs.map((m) => m.ruleId)).toEqual(["paper/refs-checked"]);
-    expect(msgs[0]!.message).toMatch(/no reason recorded/);
+    expect(msgs[0]?.message).toMatch(/no reason recorded/);
   });
 
   it("a verdict without a reason, and one for a key the bibliography lacks, still report", async () => {
@@ -412,7 +417,7 @@ describe("the reference rules over refs.bib, and on other files", () => {
     expect(msgs.map((m) => [m.ruleId, m.line])).toEqual([
       ["paper/author-list", 1],
     ]);
-    expect(msgs[0]!.message).toMatch(/schick2023/);
+    expect(msgs[0]?.message).toMatch(/schick2023/);
   });
 
   it("only paper.tex is judged", () => {

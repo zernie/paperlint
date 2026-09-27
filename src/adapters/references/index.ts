@@ -35,29 +35,14 @@ import { sleep, todayUtc } from "./clock.io.ts";
 
 /** Citations looked up at once (#107). */
 const LOOKUPS_IN_FLIGHT = 6;
-// @ts-expect-error — a skill script in .mjs, it has no types
 import * as cites from "../../../skills/verify-citations/scripts/verify-cites.mjs";
-// @ts-expect-error — a skill script in .mjs, it has no types
+import type { CiteVerdict } from "../../../skills/verify-citations/scripts/verify-cites.mjs";
 import * as authors from "../../../skills/verify-citations/scripts/bib-authors.mjs";
-
-interface CiteResult {
-  readonly id: string;
-  readonly verdict: "true" | "false" | "unresolvable";
-  readonly reason?: string;
-  /** "<service>: <reason>" for each question a refusing service did not answer (#120). */
-  readonly refused?: readonly string[];
-}
-interface AuthorFinding {
-  readonly key: string;
-  readonly venue: string;
-  readonly missing: readonly string[];
-  readonly extra: readonly string[];
-  readonly orderDiffers: boolean;
-}
-interface KeyWhy {
-  readonly key: string;
-  readonly why: string;
-}
+import type {
+  AuthorBuckets,
+  AuthorFinding,
+  BibEntry,
+} from "../../../skills/verify-citations/scripts/bib-authors.mjs";
 
 const describeAuthors = (f: AuthorFinding): string =>
   [
@@ -67,13 +52,6 @@ const describeAuthors = (f: AuthorFinding): string =>
   ]
     .filter(Boolean)
     .join("; ") + ` (DBLP: ${f.venue})`;
-
-interface AuthorBuckets {
-  readonly findings: readonly AuthorFinding[];
-  readonly skipped: readonly KeyWhy[];
-  readonly unchecked: readonly KeyWhy[];
-  readonly matched: readonly string[];
-}
 
 const authorsOf = (key: string, a: AuthorBuckets): EntryVerdict["authors"] =>
   a.findings.some((f) => f.key === key)
@@ -90,7 +68,7 @@ const authorsOf = (key: string, a: AuthorBuckets): EntryVerdict["authors"] =>
  * confirmed work: a refusal after a confirmation changed nothing.
  */
 const unconfirmed = (
-  c: CiteResult | undefined,
+  c: CiteVerdict | undefined,
 ): readonly (string | undefined)[] =>
   c && c.verdict !== "true"
     ? [c.reason, ...(c.refused ?? []).map((r) => `not asked: ${r}`)]
@@ -99,7 +77,7 @@ const unconfirmed = (
 /** One entry's verdict from the two checkers' answers. */
 function entryVerdict(
   key: string,
-  found: readonly CiteResult[],
+  found: readonly CiteVerdict[],
   a: AuthorBuckets,
 ): EntryVerdict {
   const c = found.find((x) => x.id === key);
@@ -119,22 +97,16 @@ function entryVerdict(
   };
 }
 
-interface BibAuthorsEntry {
-  readonly key: string;
-  readonly title: string;
-  readonly author: string;
-}
-
 /** Whether bib-authors will ask DBLP about this entry — the filter its `checkAuthors` applies. */
-const asksDblp = (e: BibAuthorsEntry): boolean =>
+const asksDblp = (e: BibEntry): boolean =>
   Boolean(e.title && e.author) &&
   authors.claimsPublished(e) &&
   !authors.truncated(e.author);
 
 /** Is every question this bibliography would ask already answered in `cache`? */
 async function fullyCached(
-  citations: readonly object[],
-  entries: readonly BibAuthorsEntry[],
+  citations: readonly cites.Citation[],
+  entries: readonly BibEntry[],
   cache: LookupCache,
   store: Readonly<Record<string, unknown>>,
 ): Promise<boolean> {
@@ -185,7 +157,7 @@ function cachedDblp(cache: LookupCache, today: () => string) {
       if (refused !== null)
         throw new Error(`DBLP refused earlier in this run (${refused})`);
       try {
-        const hits = (await authors.dblpHits(title)) as DblpHit[];
+        const hits = await authors.dblpHits(title);
         dblp.set(dblpTitleKey(title), { fetched: today(), title, hits });
         return hits;
       } catch (e) {
@@ -234,10 +206,8 @@ export const referencesChecker =
   async (bib, cache) => {
     // Answers past MAX_AGE_DAYS are left out, so the run asks them again (and `grown` re-dates them).
     const usable = freshPart(cache, today());
-    const citations = (cites.parseBib(bib) as { id?: string }[]).filter(
-      (c) => c.id,
-    );
-    const parsed = authors.parseBib(bib) as BibAuthorsEntry[];
+    const citations = cites.parseBib(bib);
+    const parsed = authors.parseBib(bib);
     const store: Record<string, unknown> = Object.fromEntries(
       [...usable.citations].map(([k, v]) => [k, v.response]),
     );
@@ -252,22 +222,19 @@ export const referencesChecker =
     // answer.
     // One breaker for the run: a service that refuses is not asked again, not once per citation
     // (#120). Requests already in flight when it starts refusing still land — at most six.
-    const breaker = cites.createBreaker() as unknown;
+    const breaker = cites.createBreaker();
     const d = cachedDblp(usable, today);
     const [found, a] = await Promise.all([
-      mapLimit(
-        citations,
-        LOOKUPS_IN_FLIGHT,
-        (c) =>
-          cites.verifyCitationLive(c, {
-            cache: store,
-            breaker,
-          }) as Promise<CiteResult>,
+      mapLimit(citations, LOOKUPS_IN_FLIGHT, (c) =>
+        cites.verifyCitationLive(c, {
+          cache: store,
+          breaker,
+        }),
       ),
       authors.checkAuthors(parsed, {
         lookup: d.lookup,
         pause: d.pause,
-      }) as Promise<AuthorBuckets>,
+      }),
     ]);
     const keys = new Set([
       ...found.map((c) => c.id),

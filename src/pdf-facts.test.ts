@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import { getResolvedPDFJS } from "unpdf";
 import { test } from "vitest";
 import { factsOf, failureOf, rawFontOf } from "./pdf-facts.ts";
+import { present } from "../test/support.ts";
 
 const lib = await getResolvedPDFJS();
 const H = 792;
@@ -117,7 +118,7 @@ test("metrics, sizes and names fall back when pdf.js gives none", async () => {
     lib,
   );
   assert.equal(r.ok, true);
-  const boxes = r.ok ? r.facts.layout[0]!.boxes : [];
+  const boxes = r.ok ? present(r.facts.layout[0], "a first page").boxes : [];
   assert.deepEqual(
     boxes.map((b) => [b.font, b.size, b.fill]),
     [

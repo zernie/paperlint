@@ -11,6 +11,7 @@
  * is how `npm run coverage` measures CLIs. A test that passes its own `env` gets it merged OVER the
  * inherited one, so coverage survives unless a test deliberately removes it.
  */
+import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
   mkdirSync,
@@ -82,4 +83,14 @@ export function runNode(
   });
   if (r.error) throw r.error;
   return { status: r.status, stdout: r.stdout, stderr: r.stderr };
+}
+
+/**
+ * The value, or a failed test that names what was missing — a `!` that checks instead of
+ * assuming. For values a test's own setup guarantees but the type cannot (an array index, a
+ * `Map` lookup, the one result of a one-file lint).
+ */
+export function present<T>(value: T | null | undefined, what: string): T {
+  assert.ok(value !== undefined && value !== null, `expected ${what}`);
+  return value;
 }
