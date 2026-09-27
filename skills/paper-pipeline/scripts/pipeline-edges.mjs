@@ -124,11 +124,11 @@ export const UNEXPRESSED = [
   ],
   [
     "draft ← study",
-    'draft-paper/SKILL.md: "**FAIL** — it declined to draft because a required input was missing: no numbers from build-benchmark"',
+    'draft-paper/SKILL.md: "**FINDING** — it declined to draft because a required input was missing: no numbers from `build-benchmark`"',
   ],
   [
     "priorwork ← idea",
-    'paper-pipeline/SKILL.md SETUP: map-prior-work runs "right after `research-ideate` says go"',
+    'map-prior-work/SKILL.md, the `priorwork` row: "SETUP, right after `research-ideate` says go"',
   ],
 ];
 

@@ -114,7 +114,7 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
       "explicit",
       "import random\nrandom.seed(7)\nrows = random.sample(all_rows, 30)\n",
     ],
-    // 🔴 THIS FIXTURE WAS VACUOUS IN ITS FIRST FORM and the mutations file caught it. It drew with
+    // 🔴 THIS FIXTURE WAS VACUOUS IN ITS FIRST FORM. It drew with
     // `rnd.sample(...)` off a local `random.Random(...)`, which the DRAWS pattern does not recognise
     // as a draw at all — so the case passed because NOTHING was detected, not because the seed was.
     // Neutering the `--seed` alternation changed no verdict. It now draws with `np.random.choice`,
@@ -243,9 +243,9 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
 // ever fails, one of the two checks should be deleted rather than both kept.
 {
   // Silence asserted through --flags-only rather than through the header's count, so that this case
-  // tests the EXCLUSION and not the count. Sharing the count assertion with case 11 made a mutation
-  // of the header land here instead, which reads as an off-target kill and hides which property
-  // actually failed.
+  // tests the EXCLUSION and not the count. Sharing the count assertion with case 11 meant a defect
+  // in the header would be caught here instead, which reads as an off-target result and hides
+  // which property actually failed.
   const r = run(
     fixture({ bundle: { "leak.py": 'open("/home/example/secret.tsv")\n' } }),
     false,

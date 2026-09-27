@@ -138,6 +138,9 @@ export const layerBoundaries = (root) => ({
         partialMatch: false,
         capture: ["kind"],
       },
+      // test/support.mjs — shared helpers for tests. Only the `test` category may import it: the
+      // policies below allow tests any element, and allow no other file this one.
+      { type: "test-support", pattern: "test", partialMatch: false },
     ],
     "boundaries/files": [
       // `exclusive`: the root also matches the app pattern below, and is only the root.
@@ -369,8 +372,9 @@ export default [
    * 🔴 THIS BLOCK COVERS THE PACKAGE ITSELF, and before 2026-09-15 it was not here: the config held only
    * one block for `.tex` (I don't quote the glob inside this comment: the sequence
    * "star-slash" would close the comment itself — which is where I tripped), and a file with no block gets simply IGNORED by ESLint 9.
-   * Meaning: 133 own `.mjs` — mutation engine, three hooks, scripts for 24 skills — went unchecked,
-   * with green `npm run lint`. A tool that checks others' papers and not itself.
+   * Meaning: 133 own `.mjs` — a since-removed mutation-testing engine, three hooks, scripts for
+   * 24 skills — went unchecked, with green `npm run lint`. A tool that checks others' papers and
+   * not itself.
    *
    * Measurement on the first run: 15 files with dead imports (`resolve`, `pathToFileURL`) and
    * orphaned constants — remnants of a move from `mine`, where those names were needed. All

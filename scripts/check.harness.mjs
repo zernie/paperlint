@@ -14,11 +14,11 @@
  * ⚠️ Assertions at the TOP LEVEL: `vigiles test` imports the file and counts "did not throw"
  * as a pass.
  */
-import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { load } from "js-yaml";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(HERE);
@@ -26,11 +26,7 @@ const ROOT = dirname(HERE);
 const { GATES, NOT_COVERED, outcome, SKIP_EXIT, commandOf } =
   await import("./check.mjs");
 
-let n = 0;
-const check = (label, cond) => {
-  n++;
-  assert.ok(cond, label);
-};
+const check = createChecker();
 
 // ── the workflow is the ORACLE, not a copy of it ───────────────────────────────────────────
 // A declared skip is a THIRD outcome. Folding it into "pass" printed "all gates passed" on a
@@ -135,9 +131,7 @@ for (const g of GATES) {
   // every program other than `node` must be installed in node_modules/.bin.
   const argv = commandOf(g);
   const files = argv.filter((a) => /\.m?js$/.test(a));
-  const programs = argv.filter(
-    (a, i) => i === 0 || argv[i - 1] === "scripts/exclusive.mjs",
-  );
+  const programs = [argv[0]];
   // Guards: a gate runs SOMETHING — a script of ours, or an installed program such as `tsc`.
   check(
     `gate «${g.name}» runs files that exist (${files.join(", ")})`,
@@ -172,6 +166,6 @@ check(
 );
 
 console.log(
-  `✓ ${String(n)} assertions passed — npm run check: ${GATES.length} gates, ` +
+  `✓ ${String(check.count)} assertions passed — npm run check: ${GATES.length} gates, ` +
     `${ciJobs.length} CI job(s) all accounted for`,
 );

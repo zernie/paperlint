@@ -3,20 +3,16 @@
  * paperlint ships. The end-to-end path (a project's paperlint.json → `paperlint lint`) is in `cli.harness.mjs`;
  * this pins the parser's output shape and each refusal.
  */
-import assert from "node:assert/strict";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { parseRuleBlocks, shippedRuleIds, unknownKeys } = await import(
   join(HERE, "rules-config.ts")
 );
 
-let n = 0;
-const check = (label, cond, detail = "") => {
-  assert.ok(cond, detail ? `${label} — ${detail}` : label);
-  n++;
-};
+const check = createChecker();
 
 const SHIPPED = new Set(["pdf/last-page-balance", "paper/typography"]);
 const parse = (raw) => parseRuleBlocks(raw, "S", SHIPPED, "/consumer");
@@ -112,7 +108,13 @@ check(
           markdown: foreign,
         },
       },
-      { plugins: { paper: { rules: { typography: {} } } } },
+      // A plugin that carries only a language (the `tex` plugin does) has no rules to ship.
+      {
+        plugins: {
+          paper: { rules: { typography: {} } },
+          tex: { languages: {} },
+        },
+      },
       { files: ["x"] },
     ],
     [foreign],
@@ -126,5 +128,5 @@ check(
 }
 
 console.log(
-  `✓ ${String(n)} assertions passed — rules-config: blocks parsed with basePath, every refusal names its key`,
+  `✓ ${String(check.count)} assertions passed — rules-config: blocks parsed with basePath, every refusal names its key`,
 );

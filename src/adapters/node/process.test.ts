@@ -5,6 +5,7 @@
  */
 import assert from "node:assert/strict";
 import { test } from "vitest";
+import type { AbsolutePath } from "../../domain/paths.ts";
 import type { Command } from "../../ports/process.ts";
 import { spawnProcess } from "./process.io.ts";
 
@@ -43,4 +44,41 @@ test("the environment is the Command's, whole: nothing leaks in from the parent"
   const r = run.run({ ...sh('echo "[$HOME][$X]"'), env: { X: "1" } });
   // Guards: `Command.env` is the child's entire environment — the adapter merges nothing.
   assert.deepEqual(r.kind === "exited" && r.stdout, "[][1]\n");
+});
+
+test("a program killed by a signal is `signalled`, with what it printed first", () => {
+  assert.deepEqual(run.run(sh("echo before; kill -TERM $$")), {
+    kind: "signalled",
+    signal: "SIGTERM",
+    stdout: "before\n",
+    stderr: "",
+  });
+});
+
+test("output past maxOutputBytes is a spawn failure, named by Node's own message", () => {
+  const r = run.run({ ...sh("head -c 100000 /dev/zero"), maxOutputBytes: 10 });
+  assert.equal(r.kind, "spawn-failed");
+  assert.match(r.kind === "spawn-failed" ? r.message : "", /ENOBUFS/);
+});
+
+test("cwd is the Command's when it names one", () => {
+  const r = run.run({ ...sh("pwd"), cwd: "/" as AbsolutePath });
+  assert.deepEqual(r.kind === "exited" && r.stdout, "/\n");
+});
+
+test("a spawn that reports no status, no signal and no error reads as exit 1, not success", () => {
+  const silent = spawnProcess((() => ({
+    pid: 0,
+    output: [],
+    stdout: "",
+    stderr: "",
+    status: null,
+    signal: null,
+  })) as never);
+  assert.deepEqual(silent.run(sh("true")), {
+    kind: "exited",
+    status: 1,
+    stdout: "",
+    stderr: "",
+  });
 });

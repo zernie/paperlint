@@ -71,8 +71,8 @@ const READ_CONFIG = `f="\${CLAUDE_PROJECT_DIR:-.}/${CONFIG_FILE}"; if [ -e "$f" 
  * `e.path.under()`, and vigiles normalises the prefix itself (`normalizePrefix` →
  * `trimTrailingSeparators`), so `"docs/papers/"` and `"docs/papers"` are the same prefix to it.
  * A normalise here would be a line no test could kill, which is a line that documents a
- * defence that does not exist. Checked 2026-09-12 by mutation: removing it left the harness
- * green, which is the finding that produced this paragraph.
+ * defence that does not exist. Confirmed 2026-09-12: removing it left the harness green, which
+ * is the finding that produced this paragraph.
  *
  * ⚠️ A NUDGE FALLS SILENT WHERE THE GATE REFUSES, and the asymmetry is the decision, not an
  * inconsistency. `paper-edit-guard` denies on an unreadable declaration because a gate that

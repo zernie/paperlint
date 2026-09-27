@@ -109,3 +109,37 @@ check(
   "fillsOf: an empty item is `unknown`",
   L.fillsOf(OPS, ops(), [" "])[0]?.kind === "unknown",
 );
+
+// ── argument shapes pdf.js versions differ on ────────────────────────────────────────────
+test("isUpright on a short transform; hexOf on a non-array and on non-numbers", () => {
+  assert.deepEqual(
+    [L.isUpright([]), L.hexOf(null), L.hexOf([255.4, "x", undefined])],
+    [true, "#000000", "#ff0000"],
+  );
+});
+
+test("the walk reads odd show-text arguments as no characters, and odd state operators as defaults", () => {
+  const drawn = L.drawnCharacters(
+    OPS,
+    ops(
+      [OPS.restore], // a restore with nothing saved: the default state
+      [OPS.setTextRenderingMode], // a mode with no argument: 0
+      [99], // an operator the walk does not read
+      [OPS.showText, "not an array"],
+      [OPS.showText, ["not glyphs"]],
+      [OPS.showText, [[7, null, { unicode: undefined }, { unicode: "A" }]]],
+    ),
+  );
+  assert.deepEqual(drawn, [{ ch: "A", fill: { kind: "unknown" } }]);
+});
+
+test("an item that matches only up to the end of the drawn text is not found", () => {
+  const list = ops(
+    [OPS.setFillRGBColor, ["#112233"]],
+    [OPS.showText, glyphs("ab")],
+  );
+  assert.deepEqual(L.fillsOf(OPS, list, ["bc", "b"]), [
+    { kind: "unknown" },
+    { kind: "rgb", hex: "#112233" },
+  ]);
+});

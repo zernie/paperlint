@@ -6,7 +6,6 @@
  * So every "found" here has a paired "not found on the neighboring directory", and the defaults
  * are separately checked against the shape of the live corpus.
  */
-import assert from "node:assert/strict";
 import {
   mkdtempSync,
   mkdirSync,
@@ -17,16 +16,13 @@ import {
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { checkStructure, formatStructure, asEslintResults, STRUCTURE_DEFAULTS } =
   await import(join(HERE, "structure.ts"));
 
-let n = 0;
-const check = (label, cond) => {
-  assert.ok(cond, label);
-  n++;
-};
+const check = createChecker();
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-struct-")));
 const papers = join(root, "papers");
@@ -177,5 +173,5 @@ try {
 }
 
 console.log(
-  `✓ ${String(n)} assertions passed — structure: a missing file cannot complain for itself`,
+  `✓ ${String(check.count)} assertions passed — structure: a missing file cannot complain for itself`,
 );

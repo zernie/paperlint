@@ -79,21 +79,23 @@ export async function rulesSeeFiles({ cwd }) {
 // a symlink the two are not equal and the CLI silently does not run — the process exits 0 having
 // done nothing. The consumer reaches these scripts through exactly such a symlink. Observed 14.09
 // on run 34784079821: `extract-pdf-facts.mjs --strict` returned RC=0 and created no facts file.
-if (isMain(import.meta.url)) {
-  const { rules, linted, blind } = await rulesSeeFiles({ cwd: process.cwd() });
+/** The gate: every declared rule listed with the files it saw; exit 1 when one saw none. */
+export async function main({ cwd = process.cwd(), log = console.log } = {}) {
+  const { rules, linted, blind } = await rulesSeeFiles({ cwd });
   for (const { rule, files } of rules)
-    console.log(`${String(files).padStart(4)}  ${rule}`);
-  console.log(`\n${rules.length} rule(s) declared, ${linted} file(s) linted.`);
+    log(`${String(files).padStart(4)}  ${rule}`);
+  log(`\n${rules.length} rule(s) declared, ${linted} file(s) linted.`);
   if (blind.length) {
-    console.log(
+    log(
       `\n✗ ${blind.length} rule(s) saw NO file and were never invoked:\n` +
         blind.map((r) => `    ${r}`).join("\n") +
         "\n\n  A rule that is never invoked reports exactly what a rule that passed reports.\n" +
         "  Fix the glob it is declared on, or delete the declaration — do not leave it green.",
     );
-    process.exit(1);
+    return 1;
   }
-  console.log(
-    "✓ every declared rule was enabled for at least one file on disk.",
-  );
+  log("✓ every declared rule was enabled for at least one file on disk.");
+  return 0;
 }
+
+if (isMain(import.meta.url)) process.exit(await main());

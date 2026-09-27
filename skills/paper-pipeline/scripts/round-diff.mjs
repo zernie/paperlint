@@ -65,7 +65,7 @@
  */
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
-import { join, resolve, relative } from "node:path";
+import { basename, join, resolve, relative } from "node:path";
 import { stripFrontmatter, frontmatterBlock } from "../../../lib/markdown.mjs";
 import { isMain } from "./consumer.mjs";
 
@@ -274,7 +274,7 @@ const unquote = (s) => s.replace(/^["']|["']$/g, "");
  * The first version fell through to the substring rule for numeric entries too, so `touches: ["2"]`
  * matched "Section 12", "2026", and every heading containing the character 2 — a one-character
  * declaration authorising most of the paper, with `overbroad-scope` silent because the LIST was
- * short. Found on 2026-08-10 by mutation, not by reading: disabling the nesting rule changed no
+ * short. Measured on 2026-08-10, not read off the code: disabling the nesting rule changed no
  * verdict, because the substring fallback was quietly doing its job for it.
  */
 export function covers(entry, heading) {
@@ -318,6 +318,8 @@ export function check(dir, { since } = {}) {
   const at = (rev) => {
     if (!repo) return { ok: false, err: "not a git repository" };
     const r = git(repo, "show", `${rev}:${rel}`);
+    // A git that fails without a word on stderr (killed, or a wrapper that swallows it) still
+    // leaves the reader the revision and path it could not read.
     return r.ok
       ? { ok: true, src: r.out }
       : { ok: false, err: r.err || `git show ${rev}:${rel} failed` };
@@ -342,6 +344,10 @@ export function check(dir, { since } = {}) {
     manifests.push(man);
   }
   manifests.sort((a, b) => Number(a.round ?? 0) - Number(b.round ?? 0));
+  // A manifest names its round in `round:`; one that does not is named by its file — printing
+  // `round undefined` would point the reader at nothing.
+  const label = (m) =>
+    m.round === undefined ? relOf(dir, m.path) : `round ${m.round}`;
   const open = manifests.filter((m) => !m.closed);
 
   if (!since && manifests.length === 0) {
@@ -353,7 +359,7 @@ export function check(dir, { since } = {}) {
   if (open.length > 1) {
     add(
       "two-open-rounds",
-      `${open.length} manifests have no \`closed:\` (${open.map((m) => `round ${m.round}`).join(", ")}) — with two open rounds every budget below is checked against the wrong base.`,
+      `${open.length} manifests have no \`closed:\` (${open.map((m) => label(m)).join(", ")}) — with two open rounds every budget below is checked against the wrong base.`,
     );
   }
   if (!since && manifests.length > 0 && open.length === 0) {
@@ -410,13 +416,13 @@ export function check(dir, { since } = {}) {
       if (cum > total) {
         add(
           "ratchet-cumulative",
-          `across ${manifests.length} rounds the body grew ${sign(cum)} words against ${sign(total)} of declared budget (${c0.bodyWords} → ${nowC.bodyWords}, from round ${first.round}'s base \`${first.base}\`). Every individual round may have been inside its own budget; this is the drift they compound into.`,
+          `across ${manifests.length} rounds the body grew ${sign(cum)} words against ${sign(total)} of declared budget (${c0.bodyWords} → ${nowC.bodyWords}, from ${label(first)}'s base \`${first.base}\`). Every individual round may have been inside its own budget; this is the drift they compound into.`,
         );
       }
     } else {
       add(
         "unresolvable-base",
-        `round ${first.round}'s base \`${first.base}\` does not resolve (${g0.err}), so cumulative drift across ${manifests.length} rounds is UNMEASURED — not zero.`,
+        `${label(first)}'s base \`${first.base}\` does not resolve (${g0.err}), so cumulative drift across ${manifests.length} rounds is UNMEASURED — not zero.`,
       );
     }
   }
@@ -522,7 +528,8 @@ export function check(dir, { since } = {}) {
 const num = (v, d) =>
   v === undefined || v === null || v === "" || isNaN(Number(v)) ? d : Number(v);
 const sign = (n) => (n > 0 ? `+${n}` : String(n));
-const relOf = (dir, p) => relative(resolve(dir, ".."), p) || p;
+/** `p`, which lies inside the paper directory `dir`, named from the paper's own name down. */
+const relOf = (dir, p) => join(basename(dir), relative(dir, p));
 
 // ── CLI ──────────────────────────────────────────────────────────────────────────────────────
 

@@ -1,0 +1,57 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`--flags-only: an over-long caption flags and exits 1 1`] = `
+"✍️  prose-lint — paper.md — 2 finding(s):
+   figures/fig1.tex: caption sentence of 46 words (warn >40) — "Big. word0 word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12 word13 word14 word15 wor…"
+   figures/fig1.tex: caption is 106 words (warn >100) — a caption this long is a section under a picture
+   run \`node .claude/skills/grade-paper-writing/prose-lint.mjs <file>\` for the sentences
+"
+`;
+
+exports[`--headings lists every heading from level 2 to 4, in order 1`] = `
+"
+=== paper.md — every heading, in order ===
+  1. Introduction
+  2. Method
+
+Read these as a stranger who will read nothing else. Each should name a thing:
+a linter, a configuration, a repository, a rule — not "answers", "kinds", "moves".
+
+(thresholds and their sources are in THRESHOLDS at the top of this file)
+"
+`;
+
+exports[`a .tex file is refused with exit 2, and nothing is measured 1`] = `
+"prose-lint reads markdown, not LaTeX: <root>/paper.tex
+There is no .tex stripping here — the word count would include the preamble and the .bib,
+and every metric (they are all fractions of the word count) would be understated by roughly half.
+What to cover prose in .tex with — papers/research/2026-08-26-proza-v-latex-zanyatost.md
+"
+`;
+
+exports[`the full report over markdown and rendered text 1`] = `
+"
+=== paper.md — 82 words, 9 sentences ===
+sentence lengths [7,10,8,6,19,6,8,8,6]  mean 8.7  sd 3.9  CV 0.45
+FLAG all metadiscourse/1000w  195.1   (Hyland RA baseline 64.9, warn >90)
+     nominalisations/1000w    12.2
+FLAG "rather than"/instead-of/10,000w  243.9   (warn >25; not epanorthosis, no published baseline)
+FLAG sentences ending on a cross-ref/citation/hedge (wasted stress position): 3
+       > …Clearly the first result matters (Section 3).
+       > …Prior work agrees [1, 2].
+       > … full suite of papers, which suggests the method might hold generally.
+ok   sentences whose main claim is a negation: 22%
+     topic positions (whose story is this?): "in this paper we present" | "it might possibly help, but" | "clearly the first result matters" | "prior work agrees [1, 2]." | "the speedup was 40% on" | "- the first item is" | "- the second item is" | "we believe that rather than" | "instead of prose, the numbers"
+
+=== page.txt — 13 words, 3 sentences ===
+sentence lengths [3,6,4]  mean 4.3  sd 1.2  CV 0.29
+ok   all metadiscourse/1000w  0   (Hyland RA baseline 64.9, warn >90)
+     nominalisations/1000w    0
+ok   "rather than"/instead-of/10,000w  0   (warn >25; not epanorthosis, no published baseline)
+ok   sentences ending on a cross-ref/citation/hedge (wasted stress position): 0
+ok   sentences whose main claim is a negation: 0%
+     topic positions (whose story is this?): "a rendered page." | "it was hyphenated across a" | "next page text here."
+
+(thresholds and their sources are in THRESHOLDS at the top of this file)
+"
+`;

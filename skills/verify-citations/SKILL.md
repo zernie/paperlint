@@ -4,7 +4,7 @@ description: Verify every citation is a real work with correct metadata, and tha
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:2bb9f6f1233094cf compiled from skills/verify-citations/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:9973bd8fef7e0927 compiled from skills/verify-citations/SKILL.md.spec.ts -->
 
 # verify-citations — every cite real, the delta explicit
 
@@ -259,7 +259,7 @@ the same one MedSci Skills (arXiv:2606.09500) closes with `verify_refs.py`.
 | year | ±1 on a title search | exact, and only against the record that dates the cited version |
 | preprint→published | not asked | arXiv `journal_ref`/`doi` present and no venue named → say so |
 | what it could not check | folded into `unresolvable` | **enumerated, one rule per reason, never counted as verified** |
-| tests | `verify-cites.test.mjs` — not a `*.harness.mjs`, so `npx vigiles test` never runs it | `eslint-rules/ref-facts.harness.mjs` + `.claude/skills/paper-pipeline/scripts/extract-ref-facts.harness.mjs`, plus `eslint-rules/ref-facts.mutations.mjs` |
+| tests | `verify-cites.test.mjs` — not a `*.harness.mjs`, so `npx vigiles test` never runs it | `src/references.test.ts` (the `refs/*` rules in `src/reference-rules.ts`) + `skills/paper-pipeline/scripts/extract-ref-facts.test.mjs` and `.harness.mjs`, under the package's 100% line and branch coverage gate |
 
 **The uncovered set is the point.** A reference with no resolvable identifier is a FINDING here
 (`refs/no-identifier`), and every partial comparison is another (`refs/partial-check`, one messageId per
@@ -274,9 +274,9 @@ and its `.bib` regex required a closing `}` on its own line, which neither real 
 references`). The `.bib` half now goes through `@retorquere/bibtex-parser`. Two of the three papers are
 therefore being checked for the first time.
 
-**Every check is watched failing.** `node eslint-rules/ref-facts.mutations.mjs` neuters each rule in turn
-and requires the harness to go red at the named case — 21 mutations, all killed, and three of them were
-findings about the TEST rather than the rule. Run it after any edit to the rules.
+**Every check is exercised.** `src/references.test.ts` drives the `refs/*` rules, and `npm run coverage`
+fails CI if any line or branch of them goes unexercised. Run `npx vitest run src/references.test.ts`
+after any edit to the rules.
 
 ## 6. Record the verdict
 

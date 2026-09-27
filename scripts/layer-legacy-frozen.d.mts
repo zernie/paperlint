@@ -21,8 +21,16 @@ export declare function judge(o: {
   unexplained: readonly string[];
   frozen: Counts;
 }): string[];
-export declare function checkFrozen(root?: string): Promise<{
+export declare function checkFrozen(
+  root?: string,
+  options?: { lint?: (cwd: string) => Promise<unknown[]> },
+): Promise<{
   problems: string[];
   frozen: Counts;
   counts: Counts;
 }>;
+export declare function main(options?: {
+  check?: () => Promise<{ problems: string[]; frozen: Counts; counts: Counts }>;
+  log?: (line: string) => void;
+  err?: (line: string) => void;
+}): Promise<number>;

@@ -35,7 +35,6 @@ assumed. Two things that sound like limits and are not:
 | ----------------------- | -----------------------------------------------------------------------------------------: |
 | ESLint rules            | **5** — `latex-language` · `tex-build` · `papers` · `review-findings-cause` · `doc-fields` |
 | harnesses               |                                                                                     **57** |
-| mutation batteries      |                                                                                     **34** |
 | skills                  |                                                                                     **24** |
 | hooks (runnable `.mjs`) |                                                                                      **5** |
 | repo-wide scripts       |                                                                                          5 |
@@ -75,8 +74,8 @@ nodes.
 
 **3. Every check needs BOTH halves, or it is not tested.** It must FIRE on a planted defect
 and stay QUIET on a clean fixture. A check that has only been seen quiet is
-indistinguishable from a dead one — silence is its success state. Prove the fire half with a
-mutation, and assert the patch actually landed before trusting a green run.
+indistinguishable from a dead one — silence is its success state. Prove the fire half by
+seeing the test go RED before the fix lands (§ Testing — how a test is written here).
 
 **4. `exit 0` with empty output is NOT "clean".** A rule whose glob matched no files reports
 exactly like a rule that passed. Any rule shipped here must be loud when its input set is
@@ -461,26 +460,8 @@ node scripts/rules-see-files.mjs   # also part of npm run check
 It is per RULE, not per glob, and that distinction is the point: a rule can be enabled in one
 block whose glob is empty while a different block is busy, so "some glob matched something" is
 not evidence about the rule you care about. Both halves are tested
-(`scripts/rules-see-files.harness.mjs`) and both directions are mutated
-(`scripts/rules-see-files.mutations.mjs` — under-reporting and over-reporting must die on
-_different_ assertions, or only one half of the guard is really tested).
-
-## Mutations — hand-written batteries are deprecated (#52)
-
-The `*.mutations.mjs` batteries (string replacements of source lines, run through
-`lib/mutation-driver.mjs`) are being removed. The idea stays — a test must be seen going red
-when the code breaks — but the vehicle is not this one.
-
-- **Do not create a new `*.mutations.mjs`**, and **do not add cases to an existing one.**
-- **Record what a test guards as a comment directly above its assertion** (`// Guards: …`).
-- The rule is enforced, not asked for: `scripts/mutation-batteries-frozen.mjs` (part of
-  `npm run check` and CI) fails on a battery missing from `scripts/mutation-batteries.frozen.json`,
-  on a listed battery with more or fewer cases than recorded, and on a listed file that is gone.
-  The list may only shrink — delete a battery or a case, then delete or lower its entry.
-- The intended replacement is a real mutation-testing tool (StrykerJS) or nothing; that is
-  decided in #52, not in a pull request that happens to touch a battery.
-
-The batteries that remain still run (`node scripts/run-mutations.mjs`) until #52 retires them.
+(`scripts/rules-see-files.harness.mjs`), under-reporting and over-reporting each by an
+assertion of its own.
 
 ## Cost
 
@@ -508,22 +489,26 @@ justified two hundred lines above precisely by these minutes being free.
 
 ```bash
 npm test                    # vitest over *.test.ts, then the vigiles harnesses
+npm run coverage            # the same run under c8; fails below the thresholds in .c8rc.json
 npx vitest run <file>       # one unit test
 npx vigiles test <file>     # one harness
 ```
 
 **Two kinds of test, told apart by what the file imports.** A `*.harness.*` file tests the agent
 surface and imports `runHook`, `runHarnessTest` or `runEval` from vigiles; everything else is a plain
-unit test, `*.test.ts`, run by vitest — and new tests are TypeScript. Older harnesses that
+unit test run by vitest, beside the module it tests: `<module>.test.ts` for a `.ts` module, and
+`<module>.test.mjs` for a `.mjs` one (TypeScript has no types to check a JS module against, and
+`allowJs` was measured to break a dozen existing `@ts-expect-error` imports). Older harnesses that
 import none of the three are frozen in `scripts/harness-api.frozen.json`, which only shrinks;
 `scripts/harness-api.test.ts` parses every harness's imports and holds both halves (#77). vitest
 exits 1 when no file matches, and it transpiles without type-checking, so `npm run check` runs
 `tsc -p tsconfig.test.json` as its own gate.
 
-**Local = the fast gates on what you touched; the full `npm run check` = CI.** Locally run vitest on
-the touched test files, `npx tsc --noEmit`, `npx eslint <touched files>` and `npm run fmt:check`, then
-push and read CI by job name. The repo is public, so CI is free, and it also runs the TeX e2e that
-cannot run locally; a local full run takes 10-15 min, most of it the mutation batteries (#52).
+**While working: the fast gates on what you touched. Before every push: `npm run check`.** While
+editing, run vitest on the touched test files (`npx vitest run <file or folder>`), `npx tsc --noEmit`,
+`npx eslint <touched files>` and `npm run fmt:check`. Before pushing, run the full `npm run check`
+(about three minutes) and read its exit code: it includes the 100% coverage gate, which a
+single-file run cannot judge. CI runs the same command plus the TeX e2e that cannot run locally.
 
 ⚠️ **Not `vigiles test .`** — the `.` is read as a FILE, the runner dies with
 `ERR_UNSUPPORTED_DIR_IMPORT`, and it still exits 0. See the measured table below.
@@ -534,34 +519,44 @@ Skills are tested **through vigiles** — a colocated `<skill>.harness.mjs` besi
 empty — issue #6.) Not through a bespoke script: a home-grown runner here once printed
 confident, byte-identical "clean" verdicts for three different skills that had never loaded.
 
-### Every npm script takes an exclusive lock, and that is not ceremony
+### How a test is written here
 
-`npm run *` in this repository goes through `scripts/exclusive.mjs`, which holds
-`.vigiles/exclusive.lock` for the duration. A second gate started while one is running does not
-queue and does not race — it **refuses**, names the holder, and exits 3.
-
-🔴 **The reason is that the mutation batteries edit the working tree in place.** That strategy is
-deliberate (see `lib/mutation-driver.mjs` — copying the repo per mutation costs minutes instead
-of seconds), and its one cost is that any parallel reader sees a source file mid-mutation. The
-resulting failure is **false, non-deterministic, and blames the wrong file**: it reports a broken
-assertion, not a mutation, and it reads as "the suite is flaky". That has already cost a wrong
-conclusion here — two runs in a row produced _different_ error messages and the diagnosis "I broke
-round-diff" was incorrect.
-
-A prose instruction "don't run them at the same time" existed and did not work: prose does not
-execute, so it does not apply to the person in the other terminal, the agent, or the editor with
-tests on save. Measured live, with the batteries running:
-
-```
-$ npm test
-🔴 refused: this repository is busy with a run that EDITS FILES IN PLACE.
-   held by: pid 6645, "node scripts/run-mutations.mjs", since 2026-09-17T05:22:28.757Z
-RC=3
-```
-
-⚠️ A lock left behind by a process that no longer exists is **taken over** with a message, not
-respected. Otherwise one interrupted run would block the repository forever, and the first cure
-anybody reaches for would be "delete the lock by hand" — i.e. switching the mechanism off.
+1. **Red first.** A new test is seen FAILING before the change that makes it pass — run it on
+   the unfixed code, watch it go red at its own assertion, then fix. A test that has only ever
+   been green is indistinguishable from one that cannot fail. Never add a file that patches
+   source to prove a test can fail — seeing it red once, here, is that proof.
+2. **Assert the whole value.** Compare the entire returned value (`assert.deepEqual`,
+   `expect(x).toEqual(…)`), not a substring of it or one field. A substring assertion passes on
+   output that is wrong everywhere else — a defect found here over and over
+   (`"that is the"` matching two different messages, a bare word the usage block always prints).
+   A substring is right only when the value is prose whose wording is not the subject; then say
+   so in a comment.
+3. **Test what the code DOES, never what its source SAYS.** A test that reads a source file (a
+   `.mjs`, a `SKILL.md`, a config) and asserts it contains some text restates the file: rewording
+   turns it red while a real regression stays green. Assert behaviour instead: a return value, the
+   output and exit code of a run, what landed on disk, what a parser reports. Text is a legitimate
+   subject only when it IS the output (a message the program prints, a file it generates).
+4. **One assertion helper for harnesses: `lib/check.mjs`.** `const check = createChecker();` then
+   `check(label, cond, detail)`. A failure prints the label and the detail (a value is rendered
+   with `util.inspect`, a function is called only on failure), every call is counted
+   (`check.count`, for the summary line) and reported to vigiles. Do not define a local `check`.
+5. **Coverage is a gate.** `npm run check` and CI run `npm run coverage` — `npm test` under c8,
+   `--check-coverage` against `.c8rc.json`. c8 reads `NODE_V8_COVERAGE`, so a CLI a harness
+   spawns is measured too — unless the harness hands the child a fresh `env` without it. vitest
+   runs in the `threads` pool with native `import` (`vitest.config.ts` says why): under its
+   defaults c8 saw nothing vitest ran. The run preloads `test/coverage-src.mjs`, which answers
+   every import of `dist/*.js` with `src/*.ts`: otherwise a module the tests import directly AND
+   the spawned CLI loads compiled is measured twice, and its branches and functions stay red in
+   whichever copy did not run them. `npm test` without coverage still runs `dist/`.
+6. **No `c8 ignore`, and no guard deleted to reach 100%.** An effect a test cannot reach — a
+   race, a permission root is never denied, a broken install, a 270 MB download — is made
+   INJECTABLE (a `readdir`, an fs object, a manifest reader, a toolchain function) and the test
+   passes a fake. A precondition about an argument becomes the signature: the function takes the
+   value it needs, so a call without it cannot be written. A guard whose input can really occur
+   stays, with the test that reaches it. `scripts/coverage-config.test.ts` fails on any
+   coverage-ignore comment in a measured file (it reads comments off the parsed tree), and pins
+   `.c8rc.json`'s `exclude` list: a new exclusion fails there until it is added on purpose, with
+   its reason. Thresholds are 100 for lines, statements, functions and branches.
 
 ## `npm test` — `--min=1` stays, and here is what it is for
 

@@ -28,7 +28,7 @@
  * Tested by: `scripts/rules-are-content-only.harness.mjs` — quiet on the real corpus, firing on
  * a planted rule.
  */
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parse } from "espree";
 import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
@@ -59,11 +59,8 @@ const SPAWNERS = new Set([
 const isGit = (v) =>
   typeof v === "string" && (v === "git" || v.startsWith("git "));
 
-/** Rule sources only: a mutation file plants defects on purpose, a harness asserts about them. */
-const isRuleSource = (f) =>
-  f.endsWith(".mjs") &&
-  !f.endsWith(".mutations.mjs") &&
-  !f.endsWith(".harness.mjs");
+/** Rule sources only: a harness plants defects on purpose and asserts about them. */
+const isRuleSource = (f) => f.endsWith(".mjs") && !f.endsWith(".harness.mjs");
 
 /** @param {string} src @returns {string[]} the git invocations this source makes */
 export function processImports(src) {
@@ -98,7 +95,10 @@ export function rulesAreContentOnly({ cwd }) {
   const dir = join(cwd, "eslint-rules");
   const checked = [];
   const findings = [];
-  for (const f of readdirSync(dir).filter(isRuleSource)) {
+  // A repository with no `eslint-rules/` has no rule sources: `checked` stays empty and the gate
+  // says so by name. `readdirSync` would throw ENOENT instead — a stack trace, not the refusal.
+  const names = existsSync(dir) ? readdirSync(dir) : [];
+  for (const f of names.filter(isRuleSource)) {
     const hits = processImports(readFileSync(join(dir, f), "utf8"));
     // 🔴 The counter increments WITH the verdict, not before it: a `checked` that keeps
     // counting while the verdict stops being reached is the failure recorded in the consumer's
@@ -109,30 +109,40 @@ export function rulesAreContentOnly({ cwd }) {
   return { checked, findings };
 }
 
-if (isMain(import.meta.url)) {
-  // 🔴 `process.cwd()`, NOT the package root. A consumer installs this package and runs the
-  // script from its own repository, where the rules that matter are ITS `eslint-rules/` — the
-  // package's own are already checked by the package's own gate. Anchored to the package root
-  // the consumer's gate would re-check the same eight files and report a confident zero about
-  // rules it never opened: a counter that counts what it ignores.
-  const cwd = process.cwd();
+/**
+ * The gate over `cwd`'s `eslint-rules/`: exit 1 on no rule sources (a silent zero would read as
+ * clean) or on any rule asking git; 0 otherwise.
+ *
+ * 🔴 `cwd` is `process.cwd()`, NOT the package root. A consumer installs this package and runs the
+ * script from its own repository, where the rules that matter are ITS `eslint-rules/` — the
+ * package's own are already checked by the package's own gate. Anchored to the package root the
+ * consumer's gate would re-check the same eight files and report a confident zero about rules it
+ * never opened: a counter that counts what it ignores.
+ */
+export function main({
+  cwd = process.cwd(),
+  log = console.log,
+  err = console.error,
+} = {}) {
   const { checked, findings } = rulesAreContentOnly({ cwd });
   if (checked.length === 0) {
-    console.error(
+    err(
       `${join(cwd, "eslint-rules")}: no rule sources. Either this is not a repository with ` +
         `ESLint rules, or the directory moved — a silent zero here would read as a clean run.`,
     );
-    process.exit(1);
+    return 1;
   }
   for (const { file, specifier } of findings) {
-    console.error(
+    err(
       `${file}: imports \`${specifier}\`. A rule may not ask git: history is rewritten by ` +
         `routine maintenance and CI clones one commit deep, so the fact does not survive where ` +
         `the rule has to hold. Put the fact on disk and check it by bytes.`,
     );
   }
-  console.log(
+  log(
     `rules-are-content-only: ${checked.length} rule sources under ${cwd}, ${findings.length} findings`,
   );
-  process.exit(findings.length === 0 ? 0 : 1);
+  return findings.length === 0 ? 0 : 1;
 }
+
+if (isMain(import.meta.url)) process.exit(main());

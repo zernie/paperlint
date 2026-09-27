@@ -12,7 +12,7 @@
  * `reportUnusedDisableDirectives: "error"` already makes a directive that suppresses nothing a lint
  * error, so a fixed site must drop its comment. What that cannot stop is a NEW directive: a new file,
  * or a new import in an old one, silenced the same way. This check freezes the per-file counts, in
- * the shape `mutation-batteries-frozen.mjs` gives the mutation batteries:
+ * a list that may only shrink:
  *
  *   1. a file carrying a legacy suppression that is not in the frozen list fails — a new exemption;
  *   2. a listed file with no legacy suppression left fails — the list must shrink with the code;
@@ -34,6 +34,7 @@
  *
  * Run: `node scripts/layer-legacy-frozen.mjs` (also part of `npm run check`)
  */
+import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
 import { readFileSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -114,12 +115,16 @@ export function judge({ counts, unexplained, frozen }) {
 }
 
 /** Lint `src/` with the repository's configuration and run the whole check. */
-export async function checkFrozen(root = ROOT) {
+export async function checkFrozen(
+  root = ROOT,
+  { lint = (cwd) => new ESLint({ cwd }).lintFiles(["src/**/*.ts"]) } = {},
+) {
   const data = JSON.parse(readFileSync(join(root, FROZEN_FILE), "utf8"));
   const frozen = data.files ?? {};
-  const eslint = new ESLint({ cwd: root });
-  const raw = await eslint.lintFiles(["src/**/*.ts"]);
-  // Guards: a glob that matched nothing tallies nothing and reports every frozen file as fixed.
+  // ESLint itself THROWS when the glob matches nothing ("No files matching 'src/**/*.ts' were
+  // found") or only ignored files — measured. An empty result from any other linter (or a
+  // configuration that lets it through) must not tally nothing and report every frozen file fixed.
+  const raw = await lint(root);
   if (raw.length === 0)
     return {
       problems: ["src/**/*.ts matched no file — nothing was counted."],
@@ -134,19 +139,31 @@ export async function checkFrozen(root = ROOT) {
   return { problems: judge({ ...t, frozen }), frozen, counts: t.counts };
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const { problems, counts } = await checkFrozen(ROOT);
+/**
+ * The gate: exit 1 naming every problem, or 0 with the count of what stays frozen. `check` is
+ * injected so a test can hand it problems without planting suppressions in real source.
+ */
+export async function main({
+  check = () => checkFrozen(ROOT),
+  log = console.log,
+  err = console.error,
+} = {}) {
+  const { problems, counts } = await check();
   if (problems.length) {
-    console.error(
+    err(
       `🔴 legacy layer exemptions are frozen and may only shrink (#76) — ${String(problems.length)} problem(s):`,
     );
-    for (const p of problems) console.error(`   ${p}`);
-    process.exit(1);
+    for (const p of problems) err(`   ${p}`);
+    return 1;
   }
   const n = Object.values(counts)
     .flatMap((r) => Object.values(r))
     .reduce((s, v) => s + v, 0);
-  console.log(
+  log(
     `✓ ${String(Object.keys(counts).length)} legacy files, ${String(n)} frozen layer exemptions, none new, none grown (#76)`,
   );
+  return 0;
 }
+
+// `isMain`, not a comparison with `file://${argv[1]}`: that is false through a symlink (consumer.mjs).
+if (isMain(import.meta.url)) process.exit(await main());

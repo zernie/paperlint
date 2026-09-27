@@ -129,8 +129,8 @@ export async function recordReferences(
     at(referencesPath(paperDir)),
     new TextEncoder().encode(`${JSON.stringify(doc, null, 2)}\n`),
   );
-  if (doc.status === "not-checked")
-    return `references NOT checked — ${doc.why ?? "no reason given"}; lint will say so`;
+  if (result.kind === "not-checked")
+    return `references NOT checked — ${result.why}; lint will say so`;
   const bad = doc.entries.filter(
     (e) => e.exists === "false" || e.authors === "mismatch",
   ).length;

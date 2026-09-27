@@ -71,8 +71,9 @@ export interface ScopedBlock {
   readonly rules: Readonly<Record<string, RuleEntry>>;
 }
 
-const globsOf = (b: Block): string[] =>
-  (b.files ?? []).filter((f): f is string => typeof f === "string");
+/** A block's `files`, the string globs only. */
+const globsOf = (files: readonly unknown[]): string[] =>
+  files.filter((f): f is string => typeof f === "string");
 
 const stringsOf = (xs: readonly unknown[] | undefined): string[] =>
   (xs ?? []).filter((x): x is string => typeof x === "string");
@@ -102,8 +103,11 @@ export function ownedScopes(own: readonly unknown[]): OwnedScope[] {
   return merged(
     own
       .map((raw) => raw as Block)
-      .filter((b) => b.files !== undefined)
-      .map((b) => ({ files: globsOf(b), ignores: stringsOf(b.ignores) })),
+      .flatMap((b) =>
+        b.files === undefined
+          ? []
+          : [{ files: globsOf(b.files), ignores: stringsOf(b.ignores) }],
+      ),
   );
 }
 
@@ -150,7 +154,7 @@ export function ruleOwners(
     const scopes =
       b.files === undefined
         ? all
-        : [{ files: globsOf(b), ignores: stringsOf(b.ignores) }];
+        : [{ files: globsOf(b.files), ignores: stringsOf(b.ignores) }];
     for (const id of ruleIdsOf(b))
       found.set(id, [...(found.get(id) ?? []), ...scopes]);
   }

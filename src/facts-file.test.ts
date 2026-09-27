@@ -18,6 +18,7 @@ import {
   factsDocument,
   factsPath,
   measurePaper,
+  parseFactsText,
   writeFactsFile,
   type MeasureOptions,
 } from "./facts-file.ts";
@@ -277,4 +278,113 @@ test("declaredVenue: a paperlint.json with an unknown key is refused, naming the
     [`${PAPER}/paperlint.json`]: '{"venu":"agenticdev"}',
   });
   assert.throws(() => declaredVenue(files, PAPER), /unknown key "venu"/);
+});
+
+test("a PDF with no text has an empty font list, not a failed document", () => {
+  const d = factsDocument({
+    pdf: "paper.pdf",
+    sha: "a".repeat(64),
+    venue: null,
+    kind: null,
+    read: {
+      pages: 1,
+      fonts: { kind: "no-text" },
+      last: lastPage(0, 0),
+      layout: [],
+    },
+    geometry: NONE,
+  });
+  assert.deepEqual(d.fonts, []);
+});
+
+test("measure: a PDF gone between pdf.js's read and the hash is an error, not a hash of nothing", async () => {
+  const { o, files } = setup();
+  files.map.delete(PDF);
+  const m = await measurePaper(PAPER, PDF, o);
+  assert.equal(!m.ok && m.error, `${PDF}: gone after pdf.js read it`);
+});
+
+test("measure: no paperlint.json and no override — venue and kind are null", async () => {
+  const { o, files } = setup();
+  files.map.delete(`${PAPER}/paperlint.json`);
+  const m = await measurePaper(PAPER, PDF, o);
+  assert.deepEqual(m.ok && [m.value.facts.venue, m.value.facts.kind], [
+    null,
+    null,
+  ]);
+});
+
+// ── reading the file back: every refusal names what is wrong ────────────────────────────
+const written = (geometry: Geometry = MEASURED) => ({
+  ...doc(lastPage(60, 30), geometry),
+});
+const parse = (d: unknown) => parseFactsText(JSON.stringify(d));
+const why = (d: unknown): string => {
+  const r = parse(d);
+  return !r.ok && r.error.kind === "broken" ? r.error.why : "";
+};
+
+test("parseFactsText: a written document reads back, with and without geometry", () => {
+  const measured = parse(written());
+  assert.ok(measured.ok);
+  assert.equal(measured.value.geometry?.columns, 2);
+  const none = parse(written(NONE));
+  assert.equal(none.ok && none.value.geometry, null);
+});
+
+test("parseFactsText: every malformed shape is refused with its reason", () => {
+  assert.equal(why([1]), "not a JSON object");
+  assert.equal(why({ ...written(), pdf: "" }), "no `pdf` path");
+  assert.equal(why({ ...written(), pdf: 7 }), "no `pdf` path");
+  assert.equal(
+    why({ ...written(), pdf_sha256: "xyz" }),
+    "no `pdf_sha256` of 64 hex digits",
+  );
+  assert.equal(
+    why({ ...written(), fonts: [{ name: "x" }] }),
+    "`fonts` is not a list of { name, type, embedded, program }",
+  );
+  assert.equal(
+    why({ ...written(), fonts: ["Times"] }),
+    "`fonts` is not a list of { name, type, embedded, program }",
+  );
+  assert.equal(
+    why({ ...written(), geometry_source: 3 }),
+    "`geometry_source` is neither a measurer's name nor null",
+  );
+  assert.equal(
+    why({ ...written(), columns: "two" }),
+    "`columns` is not a number",
+  );
+  assert.equal(
+    why({ ...written(), ref_pages: null }),
+    "`ref_pages` is not a number",
+  );
+  assert.equal(
+    why({ ...written(), pages_by_type: { body: "3" } }),
+    "`pages_by_type` is not an object of page counts",
+  );
+  assert.equal(
+    why({ ...written(), pages_by_type: [3] }),
+    "`pages_by_type` is not an object of page counts",
+  );
+  assert.equal(
+    why({ ...written(), fonts: "Times" }),
+    "`fonts` is not a list of { name, type, embedded, program }",
+  );
+  const notJson = parseFactsText("{");
+  assert.match(
+    !notJson.ok && notJson.error.kind === "broken" ? notJson.error.why : "",
+    /^not JSON \(/,
+  );
+});
+
+test("parseFactsText: a missing schema is reported as null, another schema by its value", () => {
+  const missing = parse({ ...written(), schema: undefined });
+  assert.deepEqual(!missing.ok && missing.error, {
+    kind: "schema",
+    got: "null",
+  });
+  const other = parse({ ...written(), schema: 1 });
+  assert.deepEqual(!other.ok && other.error, { kind: "schema", got: "1" });
 });

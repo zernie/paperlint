@@ -14,8 +14,7 @@
  * on the mutation-testing principle that a test which kills no mutant is not a test. On the live
  * paper this check reports one finding (`no-round-ledger` — there are no rounds on file yet), so the
  * live corpus cannot distinguish "the other twelve checks work" from "the other twelve checks are
- * dead code". Its evidence of life is here, and its evidence that THIS FILE has teeth is
- * `round-diff.mutations.mjs`.
+ * dead code". Its evidence of life is here: every case below was seen failing before it passed.
  *
  * 🔴 ASSERTIONS RUN AT MODULE TOP LEVEL. `vigiles test` imports the file and treats "did not throw"
  * as a pass; an earlier harness in this directory exported a `tests` object, nothing ran, and the

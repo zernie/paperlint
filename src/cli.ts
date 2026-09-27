@@ -56,6 +56,7 @@ import {
 } from "./paper-settings.ts";
 import { referenceRules, REFERENCE_RULE_LEVELS } from "./reference-rules.ts";
 import { onlineReferences } from "./adapters/references/index.ts";
+import type { CheckReferences } from "./ports/check-references.ts";
 import {
   narrowToOwners,
   ownedPatterns,
@@ -64,7 +65,7 @@ import {
 } from "./paper-files.ts";
 import {
   paperPreset,
-  paperPresetProblem,
+  settingsProblemLine,
   presetProblemText,
   resolvePreset,
   shippedPresets,
@@ -80,7 +81,12 @@ import {
   type TexRequirements,
 } from "./tex-requirements.ts";
 import { doctor } from "./doctor.ts";
-import { init, processInteractivity, askOnTerminal } from "./init.ts";
+import {
+  askOnTerminal,
+  askOrDefault,
+  init,
+  processInteractivity,
+} from "./init.ts";
 import {
   DEFAULT_FORMAT,
   FORMATS,
@@ -467,8 +473,8 @@ export function paperRuleBlocks(
   const out = { preset: [] as RuleBlock[], own: [] as RuleBlock[] };
   for (const dir of papers) {
     const p = paperPreset(dir, PRESET_DEPS);
-    if (p.kind === "settings-problem" && p.problem.kind === "broken")
-      return { ok: false, error: paperPresetProblem(dir, p) ?? dir };
+    if (p.kind === "settings-problem")
+      return { ok: false, error: settingsProblemLine(dir, p.problem) };
     const blocks = rulesOfPaper(dir, p);
     if (!blocks.ok) return blocks;
     out.preset.push(...blocks.value.preset);
@@ -484,9 +490,9 @@ export function paperRuleBlocks(
  */
 function rulesOfPaper(
   dir: string,
-  p: PaperPreset,
+  p: Exclude<PaperPreset, { kind: "settings-problem" }>,
 ): Parsed<{ preset: RuleBlock[]; own: RuleBlock[] }> {
-  const settings = "settings" in p ? p.settings : null;
+  const { settings } = p;
   const fromPreset =
     p.kind === "resolved"
       ? parseRuleEntries(
@@ -577,6 +583,9 @@ export function parseSettings(
 const lintRoot = (home: string, paths: readonly string[]): string =>
   commonDir([home, ...paths]);
 
+/** A path as the reader typed it: relative to where the command runs, or whole when it IS there. */
+const shown = (cwd: string, p: string): string => relative(cwd, p) || p;
+
 /** The longest shared leading run of path segments. */
 const commonDir = (paths: readonly string[]): string => {
   const [first = [], ...rest] = paths.map((p) => p.split(sep));
@@ -609,24 +618,27 @@ export function parseArgs(argv: readonly string[]): Args {
     // gate that fails on advice gets muted entirely.
     maxWarnings: -1,
   };
+  // Consumed from the front: a value flag takes the next argument by shifting it off.
   const rest = [...argv];
-  if (rest[0] && !rest[0].startsWith("-")) out.cmd = rest.shift() ?? null;
+  const first = rest[0];
+  if (first && !first.startsWith("-")) {
+    out.cmd = first;
+    rest.shift();
+  }
 
   // 🔴 A FLAG WHOSE VALUE WAS TAKEN AWAY IS A REFUSAL, NOT A DEFAULT. The compiler found this
-  // during the move to TypeScript: `rest[++i]` past the last argument gives `undefined`, and
+  // during the move to TypeScript: the value past the last argument is `undefined`, and
   // `paperlint lint --config` (the value forgotten, or eaten by a substitution in CI) silently turned
   // into "no config given" — that is, it went to auto-discovery and linted against SOMEONE ELSE'S
   // file, saying nothing. The failure is one-sided and toward silence, so it is cured by
   // behaviour, not by a type cast.
-  const valueFor = (flag: string, i: number): string | undefined => {
-    const v = rest[i];
+  const valueFor = (flag: string): string | undefined => {
+    const v = rest.shift();
     if (v === undefined) out.missingValue = flag;
     return v;
   };
 
-  for (let i = 0; i < rest.length; i++) {
-    const arg = rest[i];
-    if (arg === undefined) continue;
+  for (let arg = rest.shift(); arg !== undefined; arg = rest.shift()) {
     // `--flag=value` is `--flag value` for every flag that takes a value: the CI action writes
     // `--max-warnings="$N"`, and that form used to fall through to the list of paths.
     const eq = arg.indexOf("=");
@@ -636,7 +648,7 @@ export function parseArgs(argv: readonly string[]): Args {
         : undefined;
     const a = inline === undefined ? arg : arg.slice(0, eq);
     const take = (): string | undefined => {
-      if (inline === undefined) return valueFor(a, ++i);
+      if (inline === undefined) return valueFor(a);
       if (inline === "") out.missingValue = a;
       return inline === "" ? undefined : inline;
     };
@@ -684,11 +696,12 @@ const VALUE_FLAGS: ReadonlySet<string> = new Set([
  * the CI action to its release tag; an unreadable manifest yields `undefined`, and init then keeps
  * the placeholder instead of guessing.
  */
-function ownVersion(): string | undefined {
+export function ownVersion(
+  readManifest: () => string = () =>
+    readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+): string | undefined {
   try {
-    const v = JSON.parse(
-      readFileSync(new URL("../package.json", import.meta.url), "utf8"),
-    )?.version;
+    const v = JSON.parse(readManifest())?.version;
     return typeof v === "string" ? v : undefined;
   } catch {
     return undefined;
@@ -742,12 +755,9 @@ export function readConfig(
   //
   // 🔴 IN `--json` MODE — TO stderr. Machine output must be ONE parsable document: a line before
   // the array breaks any `| jq`, and it breaks it for the consumer, not for us.
-  (a.json ? err : log)(`config: ${relative(cwd, configPath) || CONFIG_FILE}`);
-  const settings = parseSettings(
-    parsed,
-    relative(cwd, configPath) || CONFIG_FILE,
-    root,
-  );
+  const shownPath = shown(cwd, configPath);
+  (a.json ? err : log)(`config: ${shownPath}`);
+  const settings = parseSettings(parsed, shownPath, root);
   if (!settings.ok) {
     err(settings.error);
     return { code: 2 };
@@ -885,7 +895,7 @@ export async function createPaperAt(
   },
 ): Promise<number> {
   const result = newPaper(papersRoot, name, format, { venue });
-  const here = (p: string): string => relative(cwd, p) || p;
+  const here = (p: string): string => shown(cwd, p);
   for (const line of reportNewPaper(result, here)) log(line);
   if (!result.ok) return 2;
   const config = here(join(result.dir, CONFIG_FILE));
@@ -939,7 +949,7 @@ export async function chooseVenue(
       `--kind needs --venue: a kind is a page limit of one venue preset — \`paperlint new <name> --venue <preset> --kind ${flags.kind}\``,
     );
   const asked = async (q: string): Promise<string> =>
-    (await ask(q).catch(() => "")).trim();
+    (await askOrDefault(ask, q))?.trim() ?? "";
   const venue =
     flags.venue ??
     (interactive
@@ -1047,10 +1057,10 @@ async function runNew(
     }
     format = a.format;
   } else if (processInteractivity(a.yes).interactive) {
-    const f = await ask(`format: tex / md [${DEFAULT_FORMAT}] `).catch(
-      () => "",
-    );
-    if (isFormat(f.trim())) format = f.trim() as PaperFormat;
+    const f = (
+      await askOrDefault(ask, `format: tex / md [${DEFAULT_FORMAT}] `)
+    )?.trim();
+    if (isFormat(f)) format = f;
   }
   const cfg = readConfig({ ...a, json: false }, { log: () => {}, err, cwd });
   if (cfg.code !== undefined) return cfg.code;
@@ -1064,7 +1074,7 @@ async function runNew(
   }
   if (roots.length > 1)
     log(
-      `several papers directories are declared — using the first: ${relative(cwd, papersRoot) || papersRoot}`,
+      `several papers directories are declared — using the first: ${shown(cwd, papersRoot)}`,
     );
   const paperDir = join(papersRoot, name);
   // An existing paperlint.json is never overwritten, so a venue for it is refused, not dropped.
@@ -1105,7 +1115,13 @@ async function runBuild(
     log,
     err,
     cwd,
-  }: { log: typeof console.log; err: typeof console.error; cwd: string },
+    checkReferences,
+  }: {
+    log: typeof console.log;
+    err: typeof console.error;
+    cwd: string;
+    checkReferences: CheckReferences;
+  },
 ): Promise<number> {
   const cfg = readConfig(a, { log, err, cwd });
   if (cfg.code !== undefined) return cfg.code;
@@ -1137,7 +1153,7 @@ async function runBuild(
     cwd,
     dryRun: a.dryRun,
     log,
-    checkReferences: onlineReferences,
+    checkReferences,
     engine: () => engineEnv(targets, a, { log, err }),
   });
   if (out.kind === "no-engine") return 1;
@@ -1209,7 +1225,12 @@ const SIMPLE: Readonly<
     string,
     (
       a: Args,
-      io: { log: typeof console.log; err: typeof console.error; cwd: string },
+      io: {
+        log: typeof console.log;
+        err: typeof console.error;
+        cwd: string;
+        checkReferences: CheckReferences;
+      },
     ) => number | Promise<number>
   >
 > = {
@@ -1236,6 +1257,44 @@ function hostBanalInstaller(): ToolInstaller {
     tmpDir: s.tmpDir,
   });
   return banalInstaller({ ...ports, download }, s);
+}
+
+/**
+ * init's TeX Live step: whether paperlint's own tree is installed, and how to install it —
+ * `runToolchain` over what this project's papers need. `toolchain` is the seam a test replaces:
+ * the real one downloads ~270 MB.
+ */
+export function initTexLive(
+  a: Args,
+  {
+    log,
+    err,
+    cwd,
+  }: { log: typeof console.log; err: typeof console.error; cwd: string },
+  toolchain: typeof runToolchain = runToolchain,
+): { readonly installed: () => boolean; readonly install: () => number } {
+  return {
+    installed: () => cachedTree(cacheRoot(process.env)) !== null,
+    install: () =>
+      toolchain({
+        check: false,
+        log,
+        err,
+        banal: hostBanalInstaller(),
+        tex: toolchainTex(resolve(cwd, a.paths[0] ?? ".")),
+      }),
+  };
+}
+
+/**
+ * The first papers directory the CLI would lint from `cwd`, or null when the config does not read
+ * or names none — what `doctor` (and `init`, through it) compares the hooks' directory against.
+ */
+function cliPapers(a: Args, cwd: string): string | null {
+  const read = readConfig(a, { log: () => {}, err: () => {}, cwd });
+  return read.code === undefined
+    ? (toPaths(papersDirOf(read.opts))[0] ?? null)
+    : null;
 }
 
 /** `paperlint init`: its flags checked here, the install itself in `init.ts`. */
@@ -1270,26 +1329,9 @@ async function runInit(
     format: isFormat(a.format) ? a.format : null,
     createPaper: (papersRoot, name, format) =>
       createPaperAt(papersRoot, name, format, { log, err, cwd }),
-    tex: {
-      installed: () => cachedTree(cacheRoot(process.env)) !== null,
-      install: () =>
-        runToolchain({
-          check: false,
-          log,
-          err,
-          banal: hostBanalInstaller(),
-          tex: toolchainTex(resolve(cwd, a.paths[0] ?? ".")),
-        }),
-    },
-    resolveCliPapers: (root: string): string | null => {
-      const read = readConfig(
-        { ...a, config: null },
-        { log: () => {}, err: () => {}, cwd: root },
-      );
-      return read.code === undefined
-        ? (toPaths(papersDirOf(read.opts))[0] ?? null)
-        : null;
-    },
+    tex: initTexLive(a, { log, err, cwd }),
+    resolveCliPapers: (root: string): string | null =>
+      cliPapers({ ...a, config: null }, root),
   });
 }
 
@@ -1299,10 +1341,16 @@ export async function run(
     log = console.log,
     err = console.error,
     cwd = process.cwd(),
+    checkReferences = onlineReferences,
   }: {
     log?: typeof console.log;
     err?: typeof console.error;
     cwd?: string;
+    /**
+     * `build`'s online reference check — the real services by default. The e2e build passes a
+     * fake: no test depends on Crossref, Semantic Scholar or DBLP answering.
+     */
+    checkReferences?: CheckReferences;
   } = {},
 ): Promise<number> {
   const a = parseArgs(argv);
@@ -1335,11 +1383,7 @@ export async function run(
   // broken is precisely its job. So a failed read becomes "the CLI would lint nothing", which is
   // what it prints, rather than an early exit that tells the reader nothing about the hooks.
   if (a.cmd === "doctor") {
-    const read = readConfig(a, { log: () => {}, err: () => {}, cwd });
-    const papers =
-      read.code === undefined
-        ? (toPaths(papersDirOf(read.opts))[0] ?? null)
-        : null;
+    const papers = cliPapers(a, cwd);
     return doctor({
       log,
       cwd,
@@ -1348,7 +1392,7 @@ export async function run(
     });
   }
   const simple = SIMPLE[a.cmd];
-  if (simple) return await simple(a, { log, err, cwd });
+  if (simple) return await simple(a, { log, err, cwd, checkReferences });
   if (a.cmd === "check")
     err(
       `\`check\` is now \`lint\` — running it anyway. Update the call to \`paperlint lint\`.`,
@@ -1404,13 +1448,15 @@ export async function run(
     rules: [...papers.value.preset, ...(opts.rules ?? []), ...papers.value.own],
   };
 
+  // Loaded lazily because only `lint` needs it. If the module cannot be loaded (a broken install:
+  // the file missing from the package), lint still runs over the markdown papers rather than
+  // failing outright — the LaTeX rules simply have no language to run in.
   let texLanguage: unknown = null;
   try {
-    // @ts-expect-error — the module is .mjs and has no types; a missing LaTeX parser is a normal
-    // case here, it is caught by the catch below.
+    // @ts-expect-error — the module is .mjs and has no types
     ({ texLanguage } = await import("../eslint-rules/latex-language.mjs"));
   } catch {
-    /* without a LaTeX parser we work over markdown */
+    texLanguage = null;
   }
 
   const eslint = new ESLint({
@@ -1423,7 +1469,7 @@ export async function run(
   const unowned = await firstUnownedFile(eslint, paths);
   if (unowned !== null) {
     err(
-      `${relative(cwd, unowned) || unowned} is not a file paperlint lints — it lints ${PAPER_FILE_PATTERNS.join(", ")}`,
+      `${shown(cwd, unowned)} is not a file paperlint lints — it lints ${PAPER_FILE_PATTERNS.join(", ")}`,
     );
     return 2;
   }
@@ -1450,7 +1496,7 @@ export async function run(
   // is not invoked — and, not being invoked, it physically cannot report that.
   if (results.length === 0) {
     err(
-      `nothing was linted under ${paths.map((x) => relative(cwd, x) || x).join(", ")} — no PIPELINE-STATUS.md, paper.md/tex or reviews/ found there. A clean report over zero files is not a clean report.`,
+      `nothing was linted under ${paths.map((x) => shown(cwd, x)).join(", ")} — no PIPELINE-STATUS.md, paper.md/tex or reviews/ found there. A clean report over zero files is not a clean report.`,
     );
     return 1;
   }
@@ -1499,7 +1545,7 @@ const isEmptySet = (e: unknown): boolean => {
   return (
     fail?.messageTemplate === "file-not-found" ||
     fail?.messageTemplate === "all-matched-files-ignored" ||
-    /No files matching/i.test(fail?.message ?? "")
+    /No files matching/i.test(String(fail?.message))
   );
 };
 

@@ -4,8 +4,18 @@
  * tally is tested on what the linter reports, not on source text.
  */
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { test } from "vitest";
-import { judge, tally, type Suppressed } from "./layer-legacy-frozen.mjs";
+import {
+  checkFrozen,
+  FROZEN_FILE,
+  judge,
+  main,
+  tally,
+  type Suppressed,
+} from "./layer-legacy-frozen.mjs";
+import { useTempDir, writeTree } from "../test/support.mjs";
 
 const IO = "legacy I/O, moves behind a port in #76";
 const LAYER = "legacy layer, moves behind a port in #76";
@@ -111,5 +121,137 @@ test("a layer finding silenced without naming #76 is reported; other rules' supp
   assert.match(
     p[0] ?? "",
     /src\/build\.ts:4: boundaries\/dependencies is silenced with "temporary"/,
+  );
+});
+
+test("main: problems are listed and fail; a clean count passes", async () => {
+  const run = async (r: {
+    problems: string[];
+    counts: Record<string, Record<string, number>>;
+  }) => {
+    const out: string[] = [];
+    const code = await main({
+      check: async () => ({ ...r, frozen: {} }),
+      log: (s: string) => out.push(s),
+      err: (s: string) => out.push(`E ${s}`),
+    });
+    return { code, out };
+  };
+  assert.deepEqual(
+    [
+      await run({ problems: ["a.ts: grew", "b.ts: new"], counts: {} }),
+      await run({
+        problems: [],
+        counts: { "a.ts": { r: 2 }, "b.ts": { r: 1, s: 1 } },
+      }),
+    ],
+    [
+      {
+        code: 1,
+        out: [
+          "E 🔴 legacy layer exemptions are frozen and may only shrink (#76) — 2 problem(s):",
+          "E    a.ts: grew",
+          "E    b.ts: new",
+        ],
+      },
+      {
+        code: 0,
+        out: [
+          "✓ 2 legacy files, 4 frozen layer exemptions, none new, none grown (#76)",
+        ],
+      },
+    ],
+  );
+});
+
+// Lints the whole of src/ with the real config: ~3 s alone, 5.6 s measured under c8 with the
+// suite running in parallel — past vitest's 5 s default, so the budget is stated here.
+test(
+  "checkFrozen on this repository: nothing new, nothing grown — and on a tree with no src/, ESLint refuses loudly",
+  {
+    timeout: 30_000,
+  },
+  async () => {
+    const root = useTempDir("layer-frozen-");
+    writeTree(root, {
+      [FROZEN_FILE]: JSON.stringify({ files: {} }),
+      "eslint.config.mjs": "export default [];\n",
+    });
+    const here = await checkFrozen();
+    await assert.rejects(checkFrozen(root), {
+      message: "No files matching 'src/**/*.ts' were found.",
+    });
+    assert.deepEqual(here.problems, []);
+    assert.deepEqual(here.counts, here.frozen);
+  },
+);
+
+test("checkFrozen: a lint that returns no result reports that nothing was counted", async () => {
+  const root = useTempDir("layer-frozen-empty-");
+  writeTree(root, {
+    [FROZEN_FILE]: JSON.stringify({ files: { "src/a.ts": { x: 1 } } }),
+  });
+  assert.deepEqual(await checkFrozen(root, { lint: async () => [] }), {
+    problems: ["src/**/*.ts matched no file — nothing was counted."],
+    frozen: { "src/a.ts": { x: 1 } },
+    counts: {},
+  });
+});
+
+test("tally: optional parts of ESLint's result shape are read as absent", () => {
+  const t = tally([
+    { filePath: "src/a.ts" },
+    {
+      filePath: "src/b.ts",
+      suppressedMessages: [
+        { ruleId: null, line: 1, suppressions: [{ justification: IO }] },
+        { ruleId: "boundaries/dependencies", line: 2 },
+        { ruleId: "boundaries/dependencies", line: 3, suppressions: [{}] },
+      ],
+    },
+  ]);
+  assert.deepEqual(t.counts, {});
+  assert.deepEqual(t.unexplained, [
+    'src/b.ts:2: boundaries/dependencies is silenced with "" — a layer exemption must say "legacy I/O|layer, moves behind a port in #76", or the site must be fixed.',
+    'src/b.ts:3: boundaries/dependencies is silenced with "" — a layer exemption must say "legacy I/O|layer, moves behind a port in #76", or the site must be fixed.',
+  ]);
+});
+
+test("checkFrozen: a frozen file with no `files` freezes nothing", async () => {
+  const root = useTempDir("layer-frozen-nofiles-");
+  writeTree(root, { [FROZEN_FILE]: "{}\n" });
+  const r = await checkFrozen(root, {
+    lint: async () => [
+      { filePath: `${root}/src/a.ts`, suppressedMessages: [] },
+    ],
+  });
+  assert.deepEqual(r, { problems: [], frozen: {}, counts: {} });
+});
+
+test("run as a program: the gate's verdict is the exit code", () => {
+  // ESLint is replaced by one whose lint answers nothing, so the real script runs end to end in
+  // well under a second and takes its refusal path.
+  const fake = encodeURIComponent(
+    "export class ESLint { async lintFiles() { return []; } }",
+  );
+  const hook = encodeURIComponent(
+    `export async function resolve(s, c, next) { return s === "eslint" ? { url: "data:text/javascript,${fake}", shortCircuit: true } : next(s, c); }`,
+  );
+  const preload = `data:text/javascript,${encodeURIComponent(
+    `import { register } from "node:module"; register("data:text/javascript,${hook}");`,
+  )}`;
+  const r = spawnSync(
+    process.execPath,
+    [
+      "--import",
+      preload,
+      fileURLToPath(new URL("./layer-legacy-frozen.mjs", import.meta.url)),
+    ],
+    { encoding: "utf8" },
+  );
+  assert.equal(r.status, 1, r.stderr);
+  assert.match(
+    r.stderr,
+    /1 problem\(s\):\n {3}src\/\*\*\/\*\.ts matched no file — nothing was counted\./,
   );
 });

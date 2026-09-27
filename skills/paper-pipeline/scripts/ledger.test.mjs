@@ -1,0 +1,254 @@
+/**
+ * The ledger says NO when it should and YES when it should — both directions, for every property
+ * the design claims (formerly `ledger.selftest.mjs`, which nothing ran).
+ *
+ * Everything lives under one temp directory: the ledger file (PIPELINE_LEDGER) and a consumer root
+ * (CLAUDE_PROJECT_DIR) holding a copy of the one skill whose hash is watched. Both are set BEFORE
+ * `ledger.mjs` is imported, because it resolves them at import time.
+ */
+import assert from "node:assert/strict";
+import {
+  appendFileSync,
+  cpSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { afterAll, test } from "vitest";
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const tmp = realpathSync(mkdtempSync(join(tmpdir(), "ledger-test-")));
+const paper = join(tmp, "a-paper");
+const consumer = join(tmp, "consumer");
+const gate = "cold-read-diff"; // a real skill, so skillHash resolves
+mkdirSync(paper, { recursive: true });
+mkdirSync(join(consumer, ".claude", "skills"), { recursive: true });
+cpSync(
+  join(HERE, "..", "..", gate),
+  join(consumer, ".claude", "skills", gate),
+  {
+    recursive: true,
+    verbatimSymlinks: true,
+  },
+);
+process.env.PIPELINE_LEDGER = join(tmp, "runs.jsonl");
+process.env.CLAUDE_PROJECT_DIR = consumer;
+const { record, status } = await import("./ledger.mjs");
+afterAll(() => rmSync(tmp, { recursive: true, force: true }));
+
+const check = (name, actual, expected) => assert.equal(actual, expected, name);
+const mk = (t) => writeFileSync(join(paper, "paper.md"), t);
+const st = () => status(paper, { gates: [gate] })[0];
+
+test("the ledger catches every planted error, in order", () => {
+  // ── 1. NEVER-RUN is a state, not an absence ──────────────────────────────────────────────
+  mk("version one");
+  check("a gate nobody has run reads NEVER-RUN", st().state, "NEVER-RUN");
+
+  // ── 2. a fresh run is fresh ──────────────────────────────────────────────────────────────
+  // The clean run is an ABSTENTION, not a pass: there is no constructor asserting that nothing
+  // was wrong (see ledger.mjs). `no-witness` says the check ran and produced no finding.
+  const ran = () =>
+    record({ skill: gate, paper, kind: "ABSTAINED", reason: "no-witness" });
+  ran();
+  check("a run against the current bytes reads FRESH", st().state, "FRESH");
+
+  // ── 3. 🔴 THE PLANTED ERROR THIS FILE EXISTS FOR: the paper changes underneath a green gate.
+  //        This is the exact defect that shipped — a ☑ describing a document that no longer
+  //        exists. If this assertion ever goes green-on-stale, the ledger is decorative.
+  mk("version two, rewritten after the gate ran");
+  check(
+    "after the paper changes, the same verdict reads STALE-PAPER",
+    st().state,
+    "STALE-PAPER",
+  );
+
+  // ── 4. and the property `make` does not have: the CHECKER changed ────────────────────────
+  mk("version one"); // put the paper back so only the skill differs
+  ran();
+  check("back on the original bytes it is FRESH again", st().state, "FRESH");
+
+  // The SKILL.md whose bytes `skillHash(gate)` folds into the key is the CONSUMER's, resolved from
+  // CLAUDE_PROJECT_DIR — here a temp copy, so the edit below never touches a tracked file. (The
+  // selftest this replaced appended to the real skills/cold-read-diff/SKILL.md and restored it,
+  // i.e. it edited the working tree in place while other tests could be reading it.)
+  const skillFile = join(consumer, ".claude", "skills", gate, "SKILL.md");
+  const skillBefore = readFileSync(skillFile);
+  try {
+    appendFileSync(
+      skillFile,
+      "\n<!-- selftest: transient edit, removed below -->\n",
+    );
+    check(
+      "editing the SKILL itself makes its old verdict STALE-SKILL",
+      st().state,
+      "STALE-SKILL",
+    );
+  } finally {
+    writeFileSync(skillFile, skillBefore); // never leave a real skill modified
+  }
+  check("restoring the skill restores FRESH", st().state, "FRESH");
+
+  // ── 5. the mute-check signal, both ways ──────────────────────────────────────────────────
+  check(
+    "a check that has only ever abstained is flagged as never having found anything",
+    st().everFound,
+    false,
+  );
+  writeFileSync(join(paper, "report.md"), "---\nfindings: 3\n---\n");
+  record({
+    skill: gate,
+    paper,
+    kind: "FINDING",
+    findings: 3,
+    report: "report.md",
+  });
+  check("one finding clears the flag", st().everFound, true);
+
+  // ── 6. a retired verdict is refused rather than silently stored ──────────────────────────
+  // 🔴 THE POINT OF THE WHOLE REFACTOR, asserted at its narrowest: `PASS` cannot be written.
+  // Not "is discouraged" — the constructor does not exist, and reaching for it is an error that
+  // names what to do instead.
+  let msg = "";
+  try {
+    record({ skill: gate, paper, kind: "PASS" });
+  } catch (e) {
+    msg = e.message;
+  }
+  check("recording PASS throws", msg.includes("not a verdict any more"), true);
+  check(
+    "...and the error says what to record instead",
+    msg.includes("no-witness"),
+    true,
+  );
+
+  let threw = false;
+  try {
+    record({ skill: gate, paper, kind: "probably fine" });
+  } catch {
+    threw = true;
+  }
+  check("an unrecognised kind throws instead of being written", threw, true);
+
+  threw = false;
+  try {
+    record({ skill: gate, paper, kind: "ABSTAINED", reason: "it seemed fine" });
+  } catch {
+    threw = true;
+  }
+  check("an abstention with a free-text reason throws", threw, true);
+
+  // ── 7. ONE CHECK, ONE ROW: two checks under one skill do not overwrite each other ────────
+  // The defect: `status()` takes the last row per key, and the key used to be the skill. A clean
+  // run of the second check erased a finding of the first from every derived view.
+  writeFileSync(join(paper, "prov.md"), "---\nfindings: 5\n---\n");
+  record({
+    skill: "build-benchmark",
+    check: "check-provenance",
+    paper,
+    kind: "FINDING",
+    findings: 5,
+    report: "prov.md",
+  });
+  record({
+    skill: "build-benchmark",
+    check: "arm-permutation",
+    paper,
+    kind: "ABSTAINED",
+    reason: "no-witness",
+  });
+  const both = status(paper, {
+    gates: [
+      "build-benchmark/check-provenance",
+      "build-benchmark/arm-permutation",
+    ],
+  });
+  check(
+    "the finding survives a clean run of a SIBLING check",
+    both[0].findings,
+    5,
+  );
+  check("and the sibling keeps its own row", both[1].findings, 0);
+  check("the sibling did not inherit the finding", both[1].everFound, false);
+
+  // ── 8. ORDER IN THE FILE IS NOT ORDER IN TIME ────────────────────────────────────────────
+  // The defect (external review, P1, 2026-09-15): `status()` took `runs[runs.length - 1]`, so the
+  // verdict was decided by POSITION. The consumer declares `merge=union` for this ledger, and
+  // union concatenates "ours, then theirs" without ordering anything — so a merge that lands an
+  // older row after a newer one hid the finding and reported a clean state.
+  //
+  // The fixture reproduces exactly that shape: both rows are REAL (written by `record`), only
+  // their order in the file is swapped, which is all a union merge does. The older row's stamp is
+  // set explicitly rather than slept for, so the test is deterministic and costs no wall clock.
+  const LEDGER_FILE = process.env.PIPELINE_LEDGER;
+  writeFileSync(join(paper, "merge.md"), "---\nfindings: 3\n---\n");
+  record({
+    skill: gate,
+    check: "merge-order",
+    paper,
+    kind: "ABSTAINED",
+    reason: "no-witness",
+  });
+  record({
+    skill: gate,
+    check: "merge-order",
+    paper,
+    kind: "FINDING",
+    findings: 3,
+    report: "merge.md",
+  });
+
+  {
+    const all = readFileSync(LEDGER_FILE, "utf8").split("\n").filter(Boolean);
+    const [abstained, finding] = all.slice(-2).map((l) => JSON.parse(l));
+    abstained.ts = "2026-01-01T00:00:00.000Z"; // deliberately older, with no dependence on a timer
+    writeFileSync(
+      LEDGER_FILE,
+      [
+        ...all.slice(0, -2),
+        JSON.stringify(finding),
+        JSON.stringify(abstained),
+      ].join("\n") + "\n",
+    );
+  }
+
+  const merged = status(paper, { gates: [`${gate}/merge-order`] })[0];
+  check(
+    "an older row sitting AFTER a newer one does not hide the finding",
+    merged.findings,
+    3,
+  );
+  check(
+    "...and the verdict does not come from the stale abstention",
+    merged.abstained,
+    null,
+  );
+
+  // The other half: EQUAL stamps must keep the old behaviour — file order decides. Two runs inside
+  // one second carry no other information, and for a single writer file order is the true order.
+  {
+    const all = readFileSync(LEDGER_FILE, "utf8").split("\n").filter(Boolean);
+    const [finding, abstained] = all.slice(-2).map((l) => JSON.parse(l));
+    const sameTs = finding.ts;
+    writeFileSync(
+      LEDGER_FILE,
+      [
+        ...all.slice(0, -2),
+        JSON.stringify({ ...finding, ts: sameTs }),
+        JSON.stringify({ ...abstained, ts: sameTs }),
+      ].join("\n") + "\n",
+    );
+    const tie = status(paper, { gates: [`${gate}/merge-order`] })[0];
+    check(
+      "with equal stamps the later row in the file still wins",
+      tie.findings,
+      0,
+    );
+  }
+});

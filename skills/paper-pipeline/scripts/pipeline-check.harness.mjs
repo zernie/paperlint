@@ -40,6 +40,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { consumerRoot } from "./consumer.mjs";
+import { scorecard as makeScorecard } from "./fixtures/scorecard.mjs";
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 const ROOT = consumerRoot();
@@ -50,74 +51,12 @@ const tmp = realpathSync(mkdtempSync(join(tmpdir(), "pipecheck-harness-")));
 // has something real to compare against. Every clean row therefore carries today's date: hard-coding
 // a date would make this suite start failing on its own the following morning.
 const TODAY = new Date().toISOString().slice(0, 10);
-const FAR = "2027-12-31";
 
 const ENV = { ...process.env };
 delete ENV.OSF_TOKEN;
 delete ENV.GITHUB_TOKEN;
 
-/**
- * A scorecard with the four sections the template requires, all green. `over` replaces individual
- * cells: `{ cites: { date: "2020-01-01" } }`, `{ verdict: "…" }`, `{ deadline: "2026-08-18" }`,
- * `{ tail: "…" }` for anything appended after the last section, `{ preamble: "…" }` for anything
- * inserted BEFORE the first heading (the only way to plant a row under no heading at all).
- */
-function scorecard(over = {}) {
-  const r = (id, status = "☑", date = TODAY) => ({
-    id,
-    status,
-    date,
-    ...(over[id] ?? {}),
-  });
-  const row = (o, ...mid) =>
-    `| ${o.id} | work | ${o.skill ?? "skill"} | ${mid.length ? mid.join(" | ") + " | " : ""}${o.status} | ${o.date} | ${o.result ?? "result"} | — |`;
-  // The GATES `Requires` cell, canonical by default so the baseline is silent — `{ structure: {
-  // requires: "render" } }` plants a dropped edge. `harden` deliberately declares four of its five
-  // canonical inputs: the fifth (`priordelta`) has no row in this fixture, and the clean case asserts that the checker stays
-  // quiet about an edge there is nowhere to point at.
-  const req = (id, dflt) => over[id]?.requires ?? dflt;
-  const verdict =
-    over.verdict ??
-    "Submit-ready — every gate green, artifact reproduces clean, nothing blocking.";
-  return [
-    "# PIPELINE-STATUS — harness fixture",
-    `Venue: Fixture Workshop · Deadline: ${over.deadline ?? FAR} · Blind: double · State: drafting`,
-    "",
-    `**Readiness verdict:** ${verdict}`,
-    "",
-    over.preamble ?? "",
-    "",
-    "### SETUP",
-    "| id | Work | Skill | Status | Date | Result | Open |",
-    "|----|------|-------|--------|------|--------|------|",
-    row(r("idea")),
-    row(r("access")),
-    row(r("frame")),
-    "",
-    "### LOOP",
-    "| id | Work | Skill | Status | Date | Result | Open |",
-    "|----|------|-------|--------|------|--------|------|",
-    row(r("study")),
-    row(r("draft")),
-    row(r("arc")),
-    "",
-    "### CONTINUOUS",
-    "| id | Trigger | Skill | Status | Date | Result | Open |",
-    "|----|---------|-------|--------|------|--------|------|",
-    row(r("cites")),
-    row(r("render")),
-    "",
-    "### GATES",
-    "| id | Gate | Skill | Requires | Status | Date | Result | Open |",
-    "|----|------|-------|----------|--------|------|--------|------|",
-    row(r("structure"), req("structure", "render, arc")),
-    row(r("writing"), req("writing", "draft, arc, structure")),
-    row(r("panel"), req("panel", "structure, writing")),
-    row(r("harden"), req("harden", "panel, structure, writing, cites")),
-    "",
-    over.tail ?? "",
-  ].join("\n");
-}
+const scorecard = (over = {}) => makeScorecard(over, TODAY);
 
 /** Write a fixture and return the findings pipeline-check reports, verbatim. */
 function findings(name, over = {}, today = TODAY) {

@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll as after, test } from "vitest";
 import type { AbsolutePath } from "../../domain/paths.ts";
-import { nodeFiles } from "./files.io.ts";
+import { errorCode, nodeFiles } from "./files.io.ts";
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-files-test-")));
 after(() => rmSync(root, { recursive: true, force: true }));
@@ -25,4 +25,16 @@ test("Files: writeAtomic creates the directory and leaves no .part behind", () =
     "x",
   );
   assert.equal(existsSync(`${p}.part`), false);
+});
+
+test("Files: a read that fails for another reason than absence throws — a directory is not an empty file", () => {
+  assert.throws(() => nodeFiles.readBytes(at()), { code: "EISDIR" });
+});
+
+test("errorCode: an Error's errno code; a thrown non-Error has none", () => {
+  assert.equal(
+    errorCode(Object.assign(new Error("x"), { code: "ENOENT" })),
+    "ENOENT",
+  );
+  assert.equal(errorCode("ENOENT"), undefined);
 });

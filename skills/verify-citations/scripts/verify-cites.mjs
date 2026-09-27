@@ -49,10 +49,16 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, extname } from "node:path";
 import { createHash } from "node:crypto";
-import { consumerContactEmail } from "../../paper-pipeline/scripts/consumer.mjs";
+import {
+  consumerContactEmail,
+  isMain,
+} from "../../paper-pipeline/scripts/consumer.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const CACHE_PATH = join(__dirname, ".cite-cache.json");
+// Beside this script by default (the skill says so, and `.gitignore` covers it). VERIFY_CITES_CACHE
+// points it elsewhere — how a test keeps the run from writing into the package it is testing.
+const CACHE_PATH =
+  process.env.VERIFY_CITES_CACHE || join(__dirname, ".cite-cache.json");
 // 🔴 THE ADDRESS IS THE CONSUMER'S, NOT OURS. Crossref's "polite pool" keys off this `mailto:`:
 // it decides who gets the faster tier and, more to the point, WHOM THEY WARN before blocking.
 // Hard-coded, it pointed at one person for every user of this package — so the warnings would
@@ -120,11 +126,6 @@ export function titleSimilarity(a, b) {
   if (!na || !nb) return 0;
   const maxLen = Math.max(na.length, nb.length);
   return 1 - levenshtein(na, nb) / maxLen;
-}
-
-/** Two titles "match" iff normalized similarity ≥ threshold (default 0.70). */
-export function titlesMatch(a, b, threshold = TITLE_THRESHOLD) {
-  return titleSimilarity(a, b) >= threshold;
 }
 
 /** Normalize a DOI: strip a `doi:` / resolver-URL prefix and any TRAILING sentence
@@ -201,7 +202,7 @@ function isAcronymOf(base, words) {
   for (let i = 0; i < words.length; i++) {
     let acr = "";
     for (let j = i; j < words.length && acr.length < base.length; j++) {
-      acr += words[j][0] || "";
+      acr += words[j].charAt(0); // "" for an empty token, like the first letter of nothing
     }
     if (acr === base) return true;
   }
@@ -251,8 +252,7 @@ export function titleRelation(a, b) {
   const sb = scriptsOf(nb);
   if (sa.size && sb.size && ![...sa].some((x) => sb.has(x)))
     return "incomparable";
-  const sim = 1 - levenshtein(na, nb) / Math.max(na.length, nb.length);
-  if (sim >= TITLE_THRESHOLD) return "match";
+  if (titleSimilarity(a, b) >= TITLE_THRESHOLD) return "match";
   const A = contentTokens(na);
   const B = contentTokens(nb);
   if (A.length && B.length) {
@@ -702,32 +702,33 @@ function cacheKey(kind, val) {
   return `${kind}:${val}`;
 }
 
+/** One request, classified: rate-limit/outage and other failures → `ok:false`, 404 → `notFound`. */
+async function request(url, json, signal) {
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": USER_AGENT,
+      Accept: json ? "application/json" : "*/*",
+    },
+    signal,
+  });
+  if (res.status === 429 || res.status >= 500) {
+    return { ok: false, reason: `http ${res.status}` }; // rate-limit / outage
+  }
+  if (res.status === 404) return { ok: true, notFound: true };
+  if (!res.ok) return { ok: false, reason: `http ${res.status}` };
+  const data = json ? await res.json() : await res.text();
+  return { ok: true, data };
+}
+
 async function httpGet(url, { json = true } = {}) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
-  try {
-    const res = await fetch(url, {
-      headers: {
-        "User-Agent": USER_AGENT,
-        Accept: json ? "application/json" : "*/*",
-      },
-      signal: ctrl.signal,
-    });
-    if (res.status === 429 || res.status >= 500) {
-      return { ok: false, reason: `http ${res.status}` }; // rate-limit / outage
-    }
-    if (res.status === 404) return { ok: true, notFound: true };
-    if (!res.ok) return { ok: false, reason: `http ${res.status}` };
-    const data = json ? await res.json() : await res.text();
-    return { ok: true, data };
-  } catch (e) {
-    return {
-      ok: false,
-      reason: e.name === "AbortError" ? "timeout" : String(e),
-    };
-  } finally {
-    clearTimeout(timer);
-  }
+  const result = await request(url, json, ctrl.signal).catch((e) => ({
+    ok: false,
+    reason: e.name === "AbortError" ? "timeout" : String(e),
+  }));
+  clearTimeout(timer);
+  return result;
 }
 
 // Each *Resolver returns a normalized response (the shape classifyResolver eats).
@@ -821,44 +822,44 @@ async function openalexResolve(citation) {
   return null;
 }
 
-async function semanticScholarResolve(citation) {
+const S2 = "https://api.semanticscholar.org/graph/v1/paper";
+
+// By its id when the citation has one, else by the title — the resolvers run only for a citation
+// with at least one of the three, so the title search is given a title.
+const semanticScholarResolve = (citation) =>
+  citation.doi || citation.arxiv
+    ? semanticScholarById(citation)
+    : semanticScholarByTitle(citation.title);
+
+async function semanticScholarById(citation) {
   const db = "semantic_scholar";
-  const base = "https://api.semanticscholar.org/graph/v1/paper";
-  if (citation.doi || citation.arxiv) {
-    const id = citation.doi ? `DOI:${citation.doi}` : `arXiv:${citation.arxiv}`;
-    const r = await httpGet(
-      `${base}/${encodeURIComponent(id)}?fields=title,year`,
-    );
-    if (!r.ok) return { db, transport: "error" };
-    if (r.notFound)
-      return {
-        db,
-        transport: "ok",
-        query: citation.doi ? "doi" : "arxiv",
-        record: null,
-      };
-    const w = r.data;
-    return {
-      db,
-      transport: "ok",
-      query: citation.doi ? "doi" : "arxiv",
-      record: w?.title != null ? { title: w.title || "", year: w.year } : null,
-    };
-  }
-  if (citation.title) {
-    const r = await httpGet(
-      `${base}/search?query=${encodeURIComponent(citation.title)}&fields=title,year&limit=5`,
-    );
-    if (!r.ok) return { db, transport: "error" };
-    const items = r.data?.data || [];
-    return {
-      db,
-      transport: "ok",
-      query: "title",
-      records: items.map((w) => ({ title: w.title || "", year: w.year })),
-    };
-  }
-  return null;
+  const query = citation.doi ? "doi" : "arxiv";
+  const id = citation.doi ? `DOI:${citation.doi}` : `arXiv:${citation.arxiv}`;
+  const r = await httpGet(`${S2}/${encodeURIComponent(id)}?fields=title,year`);
+  if (!r.ok) return { db, transport: "error" };
+  if (r.notFound) return { db, transport: "ok", query, record: null };
+  const w = r.data;
+  return {
+    db,
+    transport: "ok",
+    query,
+    record: w?.title != null ? { title: w.title || "", year: w.year } : null,
+  };
+}
+
+async function semanticScholarByTitle(title) {
+  const db = "semantic_scholar";
+  const r = await httpGet(
+    `${S2}/search?query=${encodeURIComponent(title)}&fields=title,year&limit=5`,
+  );
+  if (!r.ok) return { db, transport: "error" };
+  const items = r.data?.data || [];
+  return {
+    db,
+    transport: "ok",
+    query: "title",
+    records: items.map((w) => ({ title: w.title || "", year: w.year })),
+  };
 }
 
 async function arxivResolve(citation) {
@@ -917,10 +918,9 @@ export function parseArxivFeed(xml) {
  * means "no metadata here"; doi.org responseCode 100 means "this DOI does not
  * exist". Returns { transport, responseCode } for classifyDoiAuthority.
  */
-async function doiAuthorityCheck(citation) {
-  if (!citation.doi) return null;
+async function doiAuthorityCheck(doi) {
   // Keep the DOI's own slashes as path separators; encode the rest.
-  const path = encodeURIComponent(citation.doi.trim()).replace(/%2F/gi, "/");
+  const path = encodeURIComponent(doi.trim()).replace(/%2F/gi, "/");
   const r = await httpGet(`https://doi.org/api/handles/${path}`);
   if (r.notFound) return { transport: "ok", responseCode: 100 }; // 404 = not found
   if (!r.ok) return { transport: "error" };
@@ -931,15 +931,14 @@ async function doiAuthorityCheck(citation) {
   };
 }
 
-async function nvdCheck(citation) {
-  if (!citation.cve) return null;
-  if (!isValidCveId(citation.cve)) {
+async function nvdCheck(cve) {
+  if (!isValidCveId(cve)) {
     // Malformed CVE id — treat as a provided-id-that-cannot-resolve (fabrication).
     return { transport: "ok", found: false };
   }
   const r = await httpGet(
     `https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=${encodeURIComponent(
-      citation.cve.toUpperCase(),
+      cve.toUpperCase(),
     )}`,
   );
   if (!r.ok) return { transport: "error" };
@@ -951,21 +950,18 @@ async function nvdCheck(citation) {
 /**
  * Verify ONE citation live (with caching). Returns the reduceVerdict result.
  *
- * 🔴 CONTRACT: CALL SEQUENTIALLY. The shared `cache` is read BEFORE the `await` and written AFTER
- * it (three places below), so two concurrent calls sharing the same `cache` will both miss the
- * write and both fall through to the network. This doesn't corrupt the data — the resolvers are
- * deterministic, and the second call writes an equivalent value — but it's extra requests to
- * CrossRef / OpenAlex / Semantic Scholar / arXiv / NVD, i.e. a direct route to a 429, which is
- * exactly why the neighboring `bib-authors.mjs` has 900ms pauses.
+ * ⚠️ CONCURRENT CALLS SHARING ONE `cache` MAY ASK TWICE. The cache is read BEFORE the `await` and
+ * written AFTER it (three places below), so two concurrent calls for the SAME identifier both miss
+ * and both go to the network. The data does not suffer — the resolvers are deterministic and the
+ * second write is equivalent — the cost is an extra request per duplicate identifier.
  *
- * Today the contract IS HONORED: the only caller is `main()` in this same file (a sequential
- * `for … of` with `await`), so the interleaving `require-atomic-updates` warns about does not
- * exist. The rule is deliberately left at `warn` for that reason: it judges the SHAPE, not the
- * fact of it. But the function IS EXPORTED and takes a shared cache — exactly what gets
- * parallelized via `Promise.all` — so the warning is left visible rather than suppressed. The real
- * fix would be caching UNRESOLVED promises in the cache (in-flight deduplication) rather than
- * values; that's incompatible with the current JSON-based `saveCache()` and so hasn't been done
- * (measured 2026-08-28).
+ * Callers: `main()` here calls it one citation at a time; `paperlint build`'s references step
+ * (`src/adapters/references/index.ts`) calls it six at a time (#107 — serially, 27 references took
+ * 217 s). Six is the bound on requests in flight to any one service, since a citation's own
+ * requests go to the four resolvers one after another. `require-atomic-updates` stays at `warn`
+ * because the interleaving it describes now exists, and is accepted for the reason above. In-flight
+ * deduplication (caching the promise, not the value) would remove the duplicate request; it does
+ * not fit `saveCache()`'s JSON file and has not been done.
  */
 export async function verifyCitationLive(
   citation,
@@ -1015,13 +1011,13 @@ export async function verifyCitationLive(
       const ck = cacheKey("doi_authority", citation.doi);
       let auth = cache[ck];
       if (!auth) {
-        auth = await doiAuthorityCheck(citation);
+        auth = await doiAuthorityCheck(citation.doi);
         // Cache only POSITIVE existence; never cache authority-absent (100), so a
         // freshly-minted DOI checked pre-propagation isn't pinned to `false` on re-run.
         if (auth && auth.transport === "ok" && auth.responseCode !== 100)
           cache[ck] = auth;
       }
-      if (auth) evidence.push(classifyDoiAuthority(auth));
+      evidence.push(classifyDoiAuthority(auth));
     }
   }
 
@@ -1030,8 +1026,8 @@ export async function verifyCitationLive(
     const ck = cacheKey("nvd", citation.cve.toUpperCase());
     let nvd = cache[ck];
     if (!nvd) {
-      nvd = await nvdCheck(citation);
-      if (nvd && nvd.transport === "ok") cache[ck] = nvd;
+      nvd = await nvdCheck(citation.cve);
+      if (nvd.transport === "ok") cache[ck] = nvd;
     }
     const e = checkNvd(citation, nvd);
     if (e) evidence.push(e);
@@ -1103,6 +1099,10 @@ async function main() {
 }
 
 // Run as CLI only when invoked directly (not when imported by the test).
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+// 🔴 `isMain`, not `fileURLToPath(import.meta.url) === process.argv[1]`. The skill runs this file
+// through `.claude/skills/verify-citations`, a symlink; Node reports `import.meta.url` as the
+// realpath and `argv[1]` as the link, so the old comparison was false and the CLI exited 0 having
+// done nothing — a silent PASS for any bibliography. (consumer.mjs `isMain` documents the class.)
+if (isMain(import.meta.url)) {
   main();
 }

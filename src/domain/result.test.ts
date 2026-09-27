@@ -10,6 +10,10 @@ test("map and andThen run on ok and pass an error through untouched", () => {
     map(ok(2), (n) => n + 1),
     ok(3),
   );
+  assert.deepEqual(
+    map(half(3), () => assert.fail("mapped after an error")),
+    err("3 is odd"),
+  );
   assert.deepEqual(andThen(ok(8), half), ok(4));
   // Guards: an error short-circuits — the function after it is not called.
   assert.deepEqual(

@@ -13,9 +13,7 @@
  * consumer.mjs — the same constant the linker and the install e2e read.
  *
  * Run:    node src/link-skills.harness.mjs
- * Killed by: src/link-skills.mutations.mjs
  */
-import assert from "node:assert/strict";
 import {
   existsSync,
   mkdirSync,
@@ -30,6 +28,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { linkSkills, locatePackage, shippedSkills } = await import(
@@ -39,11 +38,7 @@ const { SHIPPED_SKILLS_DIR: SHIPS, PACKAGE_NAME: PKG } = await import(
   join(HERE, "..", "skills", "paper-pipeline", "scripts", "consumer.mjs")
 );
 
-let n = 0;
-const check = (label, cond) => {
-  n++;
-  assert.ok(cond, label);
-};
+const check = createChecker();
 
 const SKILLS = ["alpha", "beta", "gamma"];
 const work = realpathSync(
@@ -234,5 +229,5 @@ try {
 }
 
 console.log(
-  `✓ ${n} assertions passed — link-skills: the skills are where Claude Code looks`,
+  `✓ ${check.count} assertions passed — link-skills: the skills are where Claude Code looks`,
 );

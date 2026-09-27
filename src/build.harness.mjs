@@ -10,7 +10,6 @@
  * `build.sh` is never executed (checked by the trace it would leave on disk and by the list of
  * processes started), and a failed build removes the stale `paper.pdf` (checked on disk).
  */
-import assert from "node:assert/strict";
 import {
   mkdtempSync,
   mkdirSync,
@@ -23,6 +22,7 @@ import {
 import { tmpdir } from "node:os";
 import { join, dirname, delimiter } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const {
@@ -44,11 +44,7 @@ const { packageVenuesDir } = await import(
   join(HERE, "..", "skills", "paper-pipeline", "scripts", "consumer.mjs")
 );
 
-let n = 0;
-const check = (label, cond) => {
-  assert.ok(cond, label);
-  n++;
-};
+const check = createChecker();
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-build-")));
 // 🔴 banal is looked for under the temp root, never in the developer's cache: with the real
@@ -511,8 +507,8 @@ try {
   check("on full success there is no remedy", remedyFor([r]) === "");
 
   // ── 🔴 A STALE PDF NEVER SURVIVES A RUN THAT DID NOT REPLACE IT — every path of buildPapers ──
-  // The order matters for the battery: the up-front removal is killed by the no-engine case, the
-  // existence check by the empty document, and neither case depends on the other defence.
+  // The order matters here: the up-front removal is exercised by the no-engine case below, the
+  // existence check by the empty-document case, and neither depends on the other defence.
   const REMOVED =
     "paper.pdf removed — a stale PDF must not pass for this build";
 
@@ -680,5 +676,5 @@ try {
 }
 
 console.log(
-  `✓ ${String(n)} assertions passed — build: paperlint compiles, build.sh never runs, a red build leaves no PDF`,
+  `✓ ${String(check.count)} assertions passed — build: paperlint compiles, build.sh never runs, a red build leaves no PDF`,
 );

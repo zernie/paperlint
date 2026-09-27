@@ -120,7 +120,7 @@ export const LEDGER = ledgerPath(HERE);
 // `.claude/skills/paper-pipeline/scripts/` that resolves to `…/paper-pipeline/skills`, which does
 // not exist. And the failure is SILENT in the worst direction — `skillHash()` over a missing
 // directory is stable, so every recorded verdict reads FRESH forever and staleness detection is
-// dead without a single error. Caught only because `ledger.selftest.mjs` asserts the transition.
+// dead without a single error. Caught only because the ledger self-test (now `ledger.test.mjs`) asserts the transition.
 //
 // 🔴 AND IT BROKE A SECOND TIME, THE SAME WAY, ON 2026-09-12 — which is why it is no longer a
 // walk at all. The skills being hashed are the CONSUMER's: `skillHash()` answers "has the checker

@@ -106,7 +106,7 @@
  *     not an id — and is therefore not adopted; see the diagnostic in `main`.
  */
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import MarkdownIt from "markdown-it";
 import {
@@ -238,7 +238,7 @@ function readTable(toks) {
  * read is still skipped (`continue`), just silently — the linter speaks about it, and to the
  * precision of a line.
  */
-export function parseStatus(text) {
+export function parseStatus(text, { parse = (t) => md.parse(t, {}) } = {}) {
   const sections = {};
   let verdict = "";
   let header = "";
@@ -249,7 +249,7 @@ export function parseStatus(text) {
   let section = null;
   let heading = "(before the first heading)";
 
-  const tokens = md.parse(currentPart(text), {});
+  const tokens = parse(currentPart(text));
   for (let i = 0; i < tokens.length; i++) {
     const t = tokens[i];
 
@@ -291,8 +291,9 @@ export function parseStatus(text) {
       const joined = c.join(" | ");
       const row = {
         id,
-        name: c[1] ?? "",
-        skill: c[2] ?? "",
+        // `c.length >= 4` above, and every cell is a string (readTable), so both exist.
+        name: c[1],
+        skill: c[2],
         // The `Requires` column is no longer read here: all three checks that ate it
         // (`gate-missing-input` · `gate-stale-input` · `unknown-input`) and the check of the
         // declaration itself (`undeclared-input`) moved into `eslint-rules/pipeline-status.mjs`.
@@ -349,15 +350,18 @@ const GENERATED_DIRS = new Set([
   "artifact-anon",
 ]);
 
-function newestSourceDate(dir) {
+export function newestSourceDate(
+  dir,
+  { readdir = (d) => readdirSync(d, { withFileTypes: true }) } = {},
+) {
   const sources = [];
   const walk = (d, depth) => {
     if (depth > 3) return;
     let entries;
     try {
-      entries = readdirSync(d, { withFileTypes: true });
+      entries = readdir(d);
     } catch {
-      return;
+      return; // a directory that cannot be listed (EACCES) holds no source this walk can date
     }
     for (const e of entries) {
       if (
@@ -378,11 +382,23 @@ function newestSourceDate(dir) {
   let newest = "";
   for (const p of sources) {
     let when; // no initializer: both branches below assign it (2026-08-28)
+    // Asked from the file's own directory: from the caller's cwd, a paper in another repository
+    // (or the cwd outside any) made git throw, and every date silently became an mtime.
+    const QUIET_GIT = {
+      cwd: dirname(p),
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    };
     try {
       // Dirty file: the edit is real and uncommitted, so mtime is the honest answer.
-      const dirty = execFileSync("git", ["status", "--porcelain", "--", p], {
-        encoding: "utf8",
-      }).trim();
+      // stderr is not the reader's: outside a repository git prints `fatal: … is outside
+      // repository` and throws, and the catch below already answers with the mtime. Inherited,
+      // that line reached the person's terminal under a banner that was otherwise correct.
+      const dirty = execFileSync(
+        "git",
+        ["status", "--porcelain", "--", p],
+        QUIET_GIT,
+      ).trim();
       // 🔴 EMPTY OUTPUT FROM `git log` IS NOT A DATE. The command exits 0 and prints NOTHING when
       // a path has no history: a shallow clone (`actions/checkout` defaults to `fetch-depth: 1`), a
       // file outside git, a file inside `node_modules`. Previously that empty value went on as
@@ -398,16 +414,18 @@ function newestSourceDate(dir) {
       // 34784079821).
       const logged = dirty
         ? ""
-        : execFileSync("git", ["log", "-1", "--format=%cs", "--", p], {
-            encoding: "utf8",
-          }).trim();
+        : execFileSync(
+            "git",
+            ["log", "-1", "--format=%cs", "--", p],
+            QUIET_GIT,
+          ).trim();
       when = logged || new Date(statSync(p).mtimeMs).toISOString().slice(0, 10);
     } catch {
       when = new Date(statSync(p).mtimeMs).toISOString().slice(0, 10); // no git here: fall back
     }
     if (when > newest) newest = when;
   }
-  return newest || null;
+  return newest; // non-empty: every source above got a date
 }
 
 // ── checks ───────────────────────────────────────────────────────────────────
@@ -556,12 +574,10 @@ export function check({ sections, header }, { sourceDate, today, dir }) {
     // `done` is checked against the row TEXT, not the row's status box: a multi-axis gate like
     // harden stays ⚠ for reasons that have nothing to do with this credential, and firing on its
     // status would mean nagging about an upload that already happened.
-    const row = [...all.values()].find(
-      (r) =>
-        what.re.test(r.raw ?? "") &&
-        !DONE.has(r.status) &&
-        !what.done.test(r.raw ?? ""),
-    );
+    const row = [...all.values()].find((r) => {
+      const text = r.raw ?? ""; // a row built by another caller may carry no raw text
+      return what.re.test(text) && !DONE.has(r.status) && !what.done.test(text);
+    });
     if (row) {
       add(
         "credential-available",

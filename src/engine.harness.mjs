@@ -7,7 +7,6 @@
  *      `probeTree` through a fake runner.
  * All pure or port-driven: no TeX needed. The real-TeX half is `test/e2e/build.mjs`.
  */
-import assert from "node:assert/strict";
 import {
   chmodSync,
   mkdirSync,
@@ -19,6 +18,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const {
@@ -32,11 +32,7 @@ const {
   supportedPlatform,
 } = await import(join(HERE, "engine.ts"));
 
-let n = 0;
-const check = (label, cond, detail = "") => {
-  assert.ok(cond, `${label}${detail ? ` — ${detail}` : ""}`);
-  n++;
-};
+const check = createChecker();
 
 // ── 1. resolveEngine ────────────────────────────────────────────────────────────────────
 const tree = (label, missing = []) => ({ label, bin: `/${label}`, missing });
@@ -301,4 +297,28 @@ check(
   ) === "[]",
 );
 
-console.log(`engine: ${n} checks passed`);
+check(
+  "missingDependencies: a tlmgr that cannot start reports nothing (the tree is judged by probeTree alone)",
+  JSON.stringify(
+    missingDependencies("/tl/bin", () => ({ error: new Error("ENOENT") })),
+  ) === "[]",
+);
+check(
+  "missingDependencies: a section that runs to the end of the output, with no header after it",
+  JSON.stringify(
+    missingDependencies("/tl/bin", () => ({
+      stdout:
+        "\f DEPENDS WITHOUT PACKAGES:\nunicode-data in: latex-bin\nhyphen-base in: x",
+      status: 2,
+    })),
+  ) === '["hyphen-base","unicode-data"]',
+);
+check(
+  "a runner that returns no stdout at all: tlmgr lists nothing, kpsewhich finds nothing",
+  JSON.stringify(missingDependencies("/tl/bin", () => ({ status: 0 }))) ===
+    "[]" &&
+    JSON.stringify(probeTree("/tl/bin", PKGS, () => ({ status: 0 }))) ===
+      JSON.stringify(Object.keys(PKGS).sort()),
+);
+
+console.log(`engine: ${check.count} checks passed`);

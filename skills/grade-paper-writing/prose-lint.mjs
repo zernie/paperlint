@@ -45,8 +45,7 @@
  * from the neighbouring `CLAUDE.md` exactly as `pdf/profile` reads a venue profile, and the address
  * of the finding is the `## Abstract` line in the paper itself. Parity was taken BEFORE the deletion
  * on `compile-rules-2026/paper.md`: 306 words against a ceiling of 305, one finding in both places,
- * the same four numbers. The test and eight mutations are in
- * `eslint-rules/paper-craft.{harness,mutations}.mjs`.
+ * the same four numbers. The test is `eslint-rules/paper-craft.harness.mjs`.
  *
  * WHAT IS LEFT AND WHY — TWO. The paragraph below was written when there were three, and is kept as
  * a record: they read a SECOND ENTITY on the filesystem, while an ESLint rule sees one linted file:
@@ -313,11 +312,9 @@ const NOMINAL = /\b\w{4,}(tion|sion|ment|ance|ence|ity|ness)s?\b/gi;
 
 // JARGON — moved into `eslint-rules/paper-craft.mjs` (the `unexplained-jargon` rule, 2026-08-26).
 
+/** Matches of every pattern in the lexicon `pats`, summed. Every caller passes a lexicon array. */
 const count = (t, pats) =>
-  (Array.isArray(pats) ? pats : [pats]).reduce(
-    (n, p) => n + (t.match(p) || []).length,
-    0,
-  );
+  pats.reduce((n, p) => n + (t.match(p) || []).length, 0);
 // 🔴 Next to this lived `listHits(t, pats)` — the same walk, but returning THE MATCHES THEMSELVES
 // rather than their count. Nobody called it (`no-unused-vars`, 2026-08-28), and that is not a
 // trifle: the paragraph below explains that a metric was ignored precisely because it could not NAME
@@ -368,14 +365,17 @@ function splitSentences(t) {
 }
 const words = (t) => (t.match(/[A-Za-z0-9%.'’-]+/g) || []).length;
 
-function analyse(text) {
+/**
+ * The metrics of `text`, whose sentences the caller split and found non-empty — the same array is
+ * passed in rather than split again, so the check the caller made is the one the division relies on.
+ */
+function analyse(text, sents) {
   const W = words(text),
     per1k = (n) => +((n / W) * 1000).toFixed(1);
-  const sents = splitSentences(text);
   const lens = sents.map(words);
-  const mean = lens.reduce((a, b) => a + b, 0) / (lens.length || 1);
+  const mean = lens.reduce((a, b) => a + b, 0) / lens.length;
   const sd = Math.sqrt(
-    lens.reduce((a, b) => a + (b - mean) ** 2, 0) / (lens.length || 1),
+    lens.reduce((a, b) => a + (b - mean) ** 2, 0) / lens.length,
   );
 
   const cats = {
@@ -652,7 +652,21 @@ for (const f of args.filter((a) => !a.startsWith("--"))) {
   const raw = fs.readFileSync(f, "utf8");
   const isPdfText = f.endsWith(".txt");
   const prep = isPdfText ? pdfTextOnly : bodyOnly;
-  const r = analyse(prep(raw));
+  // 🔴 NOTHING LEFT IS NOT "CLEAN". A body that strips to no words used to be analysed anyway: every
+  // metric is a fraction of the word count, so the report printed NaN, FLAGged three metrics and
+  // exited 0. Refused like `.tex` above — no number is better than a meaningless one.
+  // A body of headings only has words but no sentence (headings are struck out before splitting),
+  // and a zero sentence count divides just the same, so the test is on sentences.
+  const text = prep(raw);
+  const sentences = splitSentences(text);
+  if (sentences.length === 0) {
+    console.error(
+      `prose-lint: ${f} has no prose to measure — after the frontmatter, comments, code ` +
+        "blocks, tables and the reference section are stripped, no word is left.",
+    );
+    process.exit(2);
+  }
+  const r = analyse(text, sentences);
   if (flagsOnly) {
     const lines = [];
     // Citation density in a paragraph and a pile-up of jargon in a sentence moved on 2026-08-26 into
@@ -678,7 +692,12 @@ for (const f of args.filter((a) => !a.startsWith("--"))) {
     // `hedge-density`, `discourse-subject`, `undefined-coinage`.
     if (lines.length) {
       flagged += lines.length;
-      console.error(`✍️  prose-lint — ${f.split("/").pop()}:`);
+      // The header STATES the count. run-mechanical.mjs prefers a stated "— N finding(s)" over
+      // counting output lines, and without it recorded header + findings + footer: one flagged
+      // caption became three findings in the ledger.
+      console.error(
+        `✍️  prose-lint — ${f.split("/").pop()} — ${lines.length} finding(s):`,
+      );
       lines.forEach((l) => console.error(l));
       console.error(
         "   run `node .claude/skills/grade-paper-writing/prose-lint.mjs <file>` for the sentences",

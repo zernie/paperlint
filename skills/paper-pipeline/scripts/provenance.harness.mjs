@@ -234,6 +234,32 @@ const NOTES = [
   assert.match(out, /clean/, "clean run did not print a verdict:\n" + out);
 }
 
+// ── 6. a registry with no ratchet file: every registered quantity sourced, nothing still raw ──
+{
+  const d = paper("no-ratchet", {
+    body: "Nothing bolded here.",
+    notes: NOTES,
+    numbers: "# id\tvalue\n a\t1\n",
+  });
+  const { out } = kinds(d);
+  assert.match(
+    out,
+    /1 quantities are sourced and guarded, 0 are still raw/,
+    "no numbers-grandfathered.txt must count as zero still raw:\n" + out,
+  );
+}
+
+// ── 7. no argument: the directory it is run from ──────────────────────────────────────────
+{
+  const d = paper("from-cwd", { body: "Nothing bolded here.", notes: NOTES });
+  const out = execFileSync("node", [SCRIPT], { cwd: d, encoding: "utf8" });
+  assert.match(
+    out,
+    /clean/,
+    "run with no argument must judge its cwd:\n" + out,
+  );
+}
+
 rmSync(tmp, { recursive: true, force: true });
 console.log(
   "✓ check-provenance: no-numbers-gate fires, coverage is measured, both guards are pinned, clean run speaks",

@@ -16,7 +16,8 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterAll as after, test } from "vitest";
 import type { AbsolutePath } from "../../domain/paths.ts";
-import { curlDownload } from "./download.io.ts";
+import { curlDownload, curlFailure } from "./download.io.ts";
+import type { ProcessExit } from "../../ports/process.ts";
 import { spawnProcess } from "../node/index.ts";
 
 const root = realpathSync(
@@ -54,4 +55,45 @@ test("🔴 Download: no curl on PATH is named as that, not as a failed URL", () 
   const r = d.fetch("https://example.test/banal", 10_000);
   // Guards: a missing curl is its own diagnosis — once, it read "spawnSync curl ENOENT".
   assert.deepEqual(!r.ok && r.error, { detail: "curl is not installed" });
+});
+
+test("curlFailure: every way curl can end, in its own words", () => {
+  const cases: readonly [ProcessExit, string | null][] = [
+    [{ kind: "exited", status: 0, stdout: "", stderr: "" }, null],
+    [{ kind: "spawn-failed", message: "EACCES" }, "EACCES"],
+    [
+      { kind: "timed-out", afterMs: 40_000, stdout: "", stderr: "" },
+      "no answer after 40000 ms",
+    ],
+    [{ kind: "exited", status: 22, stdout: "", stderr: "" }, "curl exited 22"],
+    [
+      {
+        kind: "exited",
+        status: 22,
+        stdout: "",
+        stderr: "curl: (22) 404\nmore",
+      },
+      "curl: (22) 404",
+    ],
+    [
+      { kind: "signalled", signal: "SIGTERM", stdout: "", stderr: "" },
+      "SIGTERM",
+    ],
+  ];
+  for (const [exit, words] of cases) assert.equal(curlFailure(exit), words);
+});
+
+test("Download: curl exits 0 and writes nothing — a failure that says so, not empty bytes", () => {
+  const tmp = at("dl-silent");
+  mkdirSync(tmp, { recursive: true });
+  const d = curlDownload({
+    run: { run: () => ({ kind: "exited", status: 0, stdout: "", stderr: "" }) },
+    env: {},
+    tmpDir: tmp,
+  });
+  assert.deepEqual(d.fetch("https://example.test/banal", 1_000), {
+    ok: false,
+    error: { detail: "curl wrote no file" },
+  });
+  assert.deepEqual(readdirSync(tmp), []);
 });

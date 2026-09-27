@@ -23,7 +23,14 @@ export interface DanglingSkillLink {
  * `SKILL.md`, symlinks followed. Throws an error with `code: "DANGLING_SKILL_LINK"` and a
  * `dangling: DanglingSkillLink[]` property when any entry is a link that does not resolve.
  */
-export declare function installedSkills(dir: string): string[];
+/** The four filesystem calls `installedSkills` makes — a test passes a fake. */
+export interface SkillsFs {
+  readdirSync(dir: string): string[];
+  statSync(path: string): { isDirectory(): boolean };
+  existsSync(path: string): boolean;
+  readlinkSync(path: string): string;
+}
+export declare function installedSkills(dir: string, fs?: SkillsFs): string[];
 
 /** The directory of venue TeX files this package ships; `paperlint build` prepends it to TEXINPUTS. */
 export declare function packageVenuesDir(): string;

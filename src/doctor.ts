@@ -21,7 +21,7 @@
  * Prior art for the shape: `brew doctor`, `flutter doctor`, `npm doctor`, `expo-doctor`.
  */
 // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { type Dirent, existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { spawnSync } from "node:child_process";
@@ -101,14 +101,22 @@ export const PROGRAMS: readonly Program[] = [
 export const found = (bin: string, run = spawnSync): boolean =>
   run("command", ["-v", bin], { shell: true, stdio: "ignore" }).status === 0;
 
+/** Lists a directory's entries; the disk by default, a test stages an unreadable child. */
+type ReadDir = (dir: string) => Dirent[];
+const readDir: ReadDir = (dir) => readdirSync(dir, { withFileTypes: true });
+
 /** Directories that look like papers, used to REPLACE a guessed default with a measurement. */
-export function detectPapers(cwd: string, depth = 2): string[] {
+export function detectPapers(
+  cwd: string,
+  depth = 2,
+  readdir: ReadDir = readDir,
+): string[] {
   const hits: string[] = [];
   const skip = new Set(["node_modules", ".git", "dist", "_build", ".claude"]);
   const walk = (dir: string, left: number): void => {
     let entries;
     try {
-      entries = readdirSync(dir, { withFileTypes: true });
+      entries = readdir(dir);
     } catch {
       return;
     }
@@ -119,7 +127,7 @@ export function detectPapers(cwd: string, depth = 2): string[] {
       // A directory whose CHILDREN look like papers is the papers root — not the paper itself.
       let children;
       try {
-        children = readdirSync(here, { withFileTypes: true });
+        children = readdir(here);
       } catch {
         continue;
       }

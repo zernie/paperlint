@@ -21,9 +21,7 @@
  * `.ts` source would be: a twin can drift from its build, and there is no twin here to drift.
  *
  * Run: `npx vigiles test hooks/hooks.harness.mjs`
- * Killed by: `hooks/hooks.mutations.mjs`
  */
-import assert from "node:assert/strict";
 import { runHook } from "vigiles";
 import { checkHookImports } from "vigiles/hook";
 import {
@@ -40,6 +38,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PAPERS_DIR_FIELD } from "../lib/paper-config.mjs";
+import { createChecker } from "../lib/check.mjs";
 
 const HOOKS = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HOOKS, "..");
@@ -51,11 +50,7 @@ const SHIPPED = readdirSync(HOOKS)
   .filter((f) => f.endsWith(".hook.mjs"))
   .sort();
 
-let n = 0;
-const check = (label, cond) => {
-  assert.ok(cond, label);
-  n++;
-};
+const check = createChecker();
 
 /**
  * A throwaway consumer repository: a root `paperlint.json` holding the given settings (none when
@@ -492,7 +487,7 @@ try {
       // 🔴 AND SILENT ON THE DEFAULT ROOT TOO — this is the half that catches `??`. With
       // `declared ?? DEFAULT` an explicit `null` is read as «nothing was declared», the prefix
       // becomes `papers/`, and the nudge starts firing about a tree the consumer never named.
-      // Without this case that mutation survives, because the assertion above passes either way.
+      // Without this case that defect survives, because the assertion above passes either way.
       const d = at(
         broken,
         "paper-skills-nudge",
@@ -629,8 +624,8 @@ try {
     );
     // 🔴 THE NASTY NAME NEEDS A REAL DIRECTORY BEHIND IT, or the assertion cannot fail. First
     // draft just passed `a;b` and checked for silence — but a name that names nothing is silent
-    // anyway, for want of a status file, so the mutation that DELETES the name check survived
-    // green. The fixture now contains a paper literally called `a;b` with a status file in it:
+    // anyway, for want of a status file, so deleting the name check would leave this harness
+    // green regardless. The fixture now contains a paper literally called `a;b` with a status file in it:
     // with the check, silence; without it, the verdict comes out. Measured 2026-09-12.
     mkdirSync(join(dir, "docs/papers/a;b"), { recursive: true });
     writeFileSync(
@@ -648,7 +643,7 @@ try {
     );
   }
 
-  console.log(`hooks.harness: ${n} assertions passed`);
+  console.log(`hooks.harness: ${check.count} assertions passed`);
 } finally {
   for (const d of tmps) rmSync(d, { recursive: true, force: true });
 }

@@ -298,9 +298,9 @@ assert.equal(
 
   // 🔴 RELATIVE, AND `/`-SEPARATED, ASSERTED BEFORE THE EQUALITIES BELOW — and the order is a
   // finding, not a preference. `assert` aborts at the first failure, so with this line placed
-  // after them a resolver that returned an absolute path died on "must be returned as written":
-  // the mutation run reported RED-but-a-DIFFERENT-case, i.e. this assertion was never reached and
-  // nothing showed it can fail. The narrow property goes first; the equalities then cover the rest.
+  // after them a resolver that returned an absolute path died on "must be returned as written" —
+  // a RED result, but for a different case than this one, i.e. this assertion was never reached
+  // and nothing showed it can fail. The narrow property goes first; the equalities then cover the rest.
   // The value is compared against text a human typed inside a SKILL.md, so an absolute path makes
   // every `startsWith` false — not an error, an empty loop body.
   assert.equal(

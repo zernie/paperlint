@@ -253,17 +253,19 @@ function judgePages(g: FlatGeometry, resolved: Resolved): Finding[] {
     [kind.limits.bodyPagesMax, g.body_pages, "body pages"],
     [kind.limits.refPagesMax, g.ref_pages, "reference pages"],
   ];
-  return pages
-    .filter(([max, got]) => max !== null && got > max)
-    .map(([max, got, what]) =>
-      finding("pages", {
-        what,
-        got,
-        max: max ?? 0,
-        venue: resolved.venue,
-        kind: kind.name,
-      }),
-    );
+  return pages.flatMap(([max, got, what]) =>
+    max !== null && got > max
+      ? [
+          finding("pages", {
+            what,
+            got,
+            max,
+            venue: resolved.venue,
+            kind: kind.name,
+          }),
+        ]
+      : [],
+  );
 }
 
 function judgeRefPt(g: FlatGeometry, resolved: Resolved): Finding[] {

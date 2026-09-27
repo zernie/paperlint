@@ -5,9 +5,9 @@
  * memory: the two error spellings `-file-line-error` produces, the missing-package form, and a
  * marker that TeX broke at column 79.
  */
-import assert from "node:assert/strict";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const {
@@ -20,11 +20,7 @@ const {
   MAX_PRINT_LINE,
 } = await import(join(HERE, "latex-log.ts"));
 
-let n = 0;
-const check = (label, cond) => {
-  assert.ok(cond, label);
-  n++;
-};
+const check = createChecker();
 
 // ── the 79-column wrap ──────────────────────────────────────────────────────────────────
 // A package warning long enough that "Rerun to get" crosses column 79. A real acmart log shows the
@@ -221,6 +217,35 @@ check(
     .citations.length === 1,
 );
 
+check(
+  "an \\@input aux that is not there (the default reader finds nothing) is skipped",
+  JSON.stringify(auxBib("\\@input{gone.aux}\n\\citation{x}\n").citations) ===
+    JSON.stringify(["x"]),
+);
+check(
+  "a log whose LAST line is exactly 79 bytes keeps it (nothing follows to join it to)",
+  JSON.stringify(unwrapLog(`a\n${"x".repeat(79)}`)) ===
+    JSON.stringify(["a", "x".repeat(79)]),
+);
+check(
+  "an error path must hold a dot or a slash; a bare word before the line number is not one",
+  isErrorLine("paper.tex:4: Undefined control sequence.") &&
+    isErrorLine("chapters/intro:9: x") &&
+    !isErrorLine("paper:4: x") &&
+    !isErrorLine("two words.tex:4: x"),
+);
+{
+  const flood = [
+    "./paper.tex:1: Undefined control sequence.",
+    ...Array.from({ length: 20 }, (_, i) => `noise ${String(i)}`),
+    "l.1 \\foo",
+  ];
+  check(
+    "an excerpt stops at MAX_EXCERPT lines even before the l.NNN line arrives",
+    errorExcerpt(flood).length === 12 && errorExcerpt(flood)[11] === "noise 10",
+  );
+}
+
 console.log(
-  `✓ ${String(n)} assertions passed — latex-log: markers across the 79-column wrap, both error spellings, aux`,
+  `✓ ${String(check.count)} assertions passed — latex-log: markers across the 79-column wrap, both error spellings, aux`,
 );

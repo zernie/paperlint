@@ -752,9 +752,9 @@ function buildArm(a) {
   // WRITING is the opposite case, and a parser is the wrong tool: `yaml.dump` would
   // reformat the whole block, so the fixture would differ from the real file in ways
   // the ablation is not measuring. The line is READ OUT of the file instead of
-  // assumed — the idiom skills.mutations.mjs already uses — and a missing line is an
-  // error rather than a silent no-op, because a mutation that does not apply scores
-  // as a pass over a fixture nobody changed.
+  // assumed, and a missing line is an error rather than a silent no-op, because an
+  // edit that fails to apply would otherwise score as a pass over a fixture nobody
+  // changed.
   const setLine = (text, key, value) => {
     const line = new RegExp(`^${key}:.*\\n`, "m").exec(text); // kb-lint:markdown-regex-ok — editing a LINE, not parsing
     if (!line)

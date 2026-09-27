@@ -9,9 +9,7 @@
  * this file can tell the two apart.
  *
  * Run:    npx vigiles test src/doctor.harness.mjs
- * Killed by: src/doctor.mutations.mjs
  */
-import assert from "node:assert/strict";
 import { PAPERS_DIR_FIELD } from "../lib/paper-config.mjs";
 import {
   mkdtempSync,
@@ -23,6 +21,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { doctor, detectPapers, PROGRAMS, found } = await import(
@@ -32,11 +31,7 @@ const { papersRoot } = await import(
   join(HERE, "..", "hooks", "paper-edit-guard.hook.mjs")
 );
 
-let n = 0;
-const check = (label, cond) => {
-  n++;
-  assert.ok(cond, label);
-};
+const check = createChecker();
 
 /** A consumer on disk: a papers directory, and maybe a declaration in the root paperlint.json. */
 function consumer({ papersDir, declared, makeDir = true }) {
@@ -333,5 +328,5 @@ const runDoctor = (
 }
 
 console.log(
-  `✓ ${n} assertions passed — paperlint doctor: an install can vouch for itself`,
+  `✓ ${check.count} assertions passed — paperlint doctor: an install can vouch for itself`,
 );

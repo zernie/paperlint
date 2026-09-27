@@ -15,8 +15,6 @@
  * ⚠️ Assertions at the TOP LEVEL: `vigiles test` imports the file and counts "did not throw"
  * as a pass.
  */
-import assert from "node:assert/strict";
-import { recordCheck } from "vigiles";
 import {
   existsSync,
   mkdirSync,
@@ -29,6 +27,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const {
@@ -44,12 +43,7 @@ const {
 const { claudeCodeHookProtocol } = await import("vigiles/claude-code");
 const merge = (e, c, m) => claudeCodeHookProtocol.mergeRegistrations(e, c, m);
 
-let n = 0;
-const check = (label, cond) => {
-  n++;
-  assert.ok(cond, label);
-  recordCheck(label);
-};
+const check = createChecker();
 
 // ── the contract with vigiles, checked before anything relies on it ──────────────────────
 check(
@@ -64,6 +58,40 @@ check(
   wiring.names.join() ===
     "paper-edit-guard,paper-skills-nudge,paper-status-gates",
 );
+// ── settings written by hand: shapes Claude Code would ignore are skipped, not crashed on ──
+check(
+  "an event that is not a list, an entry with no `hooks` list, a handler with no command → no commands",
+  JSON.stringify(
+    wiredCounts(
+      {
+        hooks: {
+          PreToolUse: "npx paperlint hook paper-edit-guard",
+          PostToolUse: [{ matcher: "Edit" }, null, { hooks: "x" }],
+          Stop: [{ hooks: [{ type: "command" }, null] }],
+        },
+      },
+      wiring.names,
+    ),
+  ) ===
+    JSON.stringify(wiring.names.map((name) => ({ name, ours: 0, other: 0 }))),
+);
+{
+  const file = join(tmpdir(), `paperlint-no-hooks-${String(process.pid)}.json`);
+  writeFileSync(file, "{}\n");
+  let thrown = "";
+  try {
+    shippedWiring(file);
+  } catch (e) {
+    thrown = e.message;
+  }
+  rmSync(file);
+  check(
+    "a wiring file without `hooks` names no hook — and THROWS instead of wiring nothing",
+    thrown === `${file} names no paperlint hook — there is nothing to wire`,
+    thrown,
+  );
+}
+
 const work = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-hooks-")));
 try {
   const empty = join(work, "empty-hooks.json");
@@ -135,7 +163,7 @@ try {
     check(
       "no settings file → it is created with the three hooks",
       r.status === "written" &&
-        [...wiredCounts(s, wiring.names).values()].every(
+        wiredCounts(s, wiring.names).every(
           (c) => c.ours === 1 && c.other === 0,
         ),
     );
@@ -172,7 +200,7 @@ try {
     );
     check(
       "and ours are there, once each",
-      [...wiredCounts(s, wiring.names).values()].every((c) => c.ours === 1),
+      wiredCounts(s, wiring.names).every((c) => c.ours === 1),
     );
   }
 
@@ -224,7 +252,9 @@ try {
     // The control: without the check, vigiles' merge WOULD add a second copy. This is the
     // reason the check exists, measured rather than asserted.
     const merged = merge(handWired, wiring.compiled, MANAGED_BY);
-    const c = wiredCounts(merged, wiring.names).get("paper-edit-guard");
+    const c = wiredCounts(merged, wiring.names).find(
+      (c) => c.name === "paper-edit-guard",
+    );
     check(
       "(control) vigiles' merge alone would wire paper-edit-guard TWICE here",
       c.ours === 1 && c.other === 1,
@@ -247,7 +277,7 @@ try {
 
   // ── doctor's section ───────────────────────────────────────────────────────────────────
   const doc = (settings) => {
-    const dir = project(`doc-${String(n)}`, settings);
+    const dir = project(`doc-${String(check.count)}`, settings);
     return doctorHooks(dir, wiring).join("\n");
   };
   const wiredOnce = merge({}, wiring.compiled, MANAGED_BY);
@@ -306,5 +336,5 @@ try {
 }
 
 console.log(
-  `✓ ${String(n)} assertions passed — the hooks land in .claude/settings.json once`,
+  `✓ ${String(check.count)} assertions passed — the hooks land in .claude/settings.json once`,
 );

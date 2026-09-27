@@ -16,7 +16,6 @@
  *   4. banal, the command's second half: a stand-in banal served from `file://`, never HotCRP —
  *      the installer's own tests are `banal.harness.mjs`; here only the wiring into the command.
  */
-import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
@@ -33,6 +32,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIXTURE = join(HERE, "..", "fixtures", "toolchain-mirror");
@@ -43,11 +43,7 @@ const B = await import(join(HERE, "adapters", "banal", "index.ts"));
 const N = await import(join(HERE, "adapters", "node", "index.ts"));
 const C = await import(join(HERE, "adapters", "curl", "index.ts"));
 
-let n = 0;
-const check = (label, cond, detail = "") => {
-  assert.ok(cond, `${label}${detail ? ` — ${detail}` : ""}`);
-  n++;
-};
+const check = createChecker();
 
 // ── 1. pure pieces ──────────────────────────────────────────────────────────────────────
 check(
@@ -692,4 +688,4 @@ check(
 }
 
 rmSync(work, { recursive: true, force: true });
-console.log(`toolchain: ${n} checks passed`);
+console.log(`toolchain: ${check.count} checks passed`);

@@ -10,7 +10,6 @@
  *
  * The shim imports the compiled package (`dist/`), so `npm run build` runs before this.
  */
-import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
   cpSync,
@@ -25,16 +24,13 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createChecker } from "../../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SHIM = join(HERE, "extract-pdf-facts.mjs");
 const FIX = resolve(HERE, "..", "..", "fixtures", "pdf-facts");
 
-let n = 0;
-const check = (label, cond, detail = "") => {
-  assert.ok(cond, detail ? `${label} — ${detail}` : label);
-  n++;
-};
+const check = createChecker();
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-extract-")));
 /**
@@ -49,6 +45,16 @@ const shim = (args, env = {}) =>
       PATH: process.env.PATH,
       HOME: root,
       CLAUDE_PROJECT_DIR: root,
+      // Forwarded, not chosen: under `npm run coverage` these carry the coverage directory and the
+      // preload that resolves dist/ to src/. Dropping them measured the shim's dist/ imports as a
+      // second copy of each module (the function map remapped through source maps, with shifted
+      // columns), so every function it did not call counted as uncovered in src/.
+      ...(process.env.NODE_OPTIONS
+        ? { NODE_OPTIONS: process.env.NODE_OPTIONS }
+        : {}),
+      ...(process.env.NODE_V8_COVERAGE
+        ? { NODE_V8_COVERAGE: process.env.NODE_V8_COVERAGE }
+        : {}),
       ...env,
     },
   });
@@ -157,10 +163,53 @@ try {
     missing.status === 3 && /not built/.test(said(missing)),
     said(missing),
   );
+
+  // ── a PDF named directly, in a directory with no paperlint.json, no project dir set ──
+  const loose = join(root, "papers", "loose");
+  mkdirSync(loose, { recursive: true });
+  cpSync(join(FIX, "t3-mixed.pdf"), join(loose, "draft.pdf"));
+  const direct = shim([join(loose, "draft.pdf")], { CLAUDE_PROJECT_DIR: "" });
+  const looseFacts = join(loose, "_build", "paper.facts.json");
+  check(
+    "a PDF path: facts go to its directory's _build/, the path printed relative to the cwd",
+    direct.status === 0 &&
+      direct.stdout.startsWith(
+        "✅ draft.pdf → papers/loose/_build/paper.facts.json (",
+      ) &&
+      JSON.parse(readFileSync(looseFacts, "utf8")).venue === null,
+    said(direct),
+  );
+  // The project directory IS the facts file (nonsense, but an environment can say it): the
+  // relative path would be empty, so the absolute one is printed instead of nothing.
+  const same = shim([join(loose, "draft.pdf")], {
+    CLAUDE_PROJECT_DIR: looseFacts,
+  });
+  check(
+    "a project dir equal to the facts file prints the absolute path, never an empty one",
+    same.stdout.startsWith(`✅ draft.pdf → ${looseFacts} (`),
+    said(same),
+  );
+
+  // ── a file that is not a PDF: refused, strict or not, in the words for the mode ──
+  writeFileSync(join(loose, "broken.pdf"), "not a pdf at all\n");
+  const brokenStrict = shim([join(loose, "broken.pdf"), "--strict"]);
+  const brokenLocal = shim([join(loose, "broken.pdf")]);
+  check(
+    "an unreadable PDF: --strict exits 1 as an environment error; locally exit 0, saying THE PDF IS NOT CHECKED",
+    brokenStrict.status === 1 &&
+      /🛑 facts not taken: .* — in CI this is an environment error/.test(
+        brokenStrict.stderr,
+      ) &&
+      brokenLocal.status === 0 &&
+      /⏭️ {2}facts not taken: .*THE PDF IS NOT CHECKED/.test(
+        brokenLocal.stderr,
+      ),
+    `${said(brokenStrict)}\n---\n${said(brokenLocal)}`,
+  );
 } finally {
   rmSync(root, { recursive: true, force: true });
 }
 
 console.log(
-  `✓ ${String(n)} assertions passed — extract-pdf-facts: the exit-code contract, schema 2, and the no-no-yes font`,
+  `✓ ${String(check.count)} assertions passed — extract-pdf-facts: the exit-code contract, schema 2, and the no-no-yes font`,
 );

@@ -113,6 +113,7 @@ function lint(
   p: Paper,
   filename = `${PAPER}/paper.tex`,
   options: Json = {},
+  cwd?: string,
 ): Finding[] {
   const files = memoryFiles(paperFiles(p));
   const rules = venueRules({ files, venuesDir: VENUES });
@@ -123,6 +124,7 @@ function lint(
   ][]) {
     const visitor = rule.create({
       filename,
+      ...(cwd === undefined ? {} : { cwd }),
       sourceCode: { text: TEX },
       options:
         name === "geometry" && Object.keys(options).length ? [options] : [],
@@ -553,5 +555,63 @@ describe("paperlint's own config turns the venue rules on for every paper.tex", 
 
   it("pdf/last-page-balance stays optional", () => {
     expect(OPTIONAL_RULES.has("pdf/last-page-balance")).toBe(true);
+  });
+});
+
+describe("a project's own preset, and the facts' other spellings", () => {
+  // A standalone preset (no `extends`, so it carries a `tex` block) that sets a body size with no
+  // tolerance, a reference range, two columns — and no page size and no font families.
+  const HOUSE = {
+    [`${PAPER}/house.jsonc`]: JSON.stringify({
+      tex: { packages: { acmart: ["acmart.cls"] } },
+      format: { columns: 2, body_pt: 9, ref_pt_min: 7, ref_pt_max: 8 },
+    }),
+  };
+  const house = (patch: (f: Json) => void = () => {}) =>
+    lint({
+      venue: { extends: "./house.jsonc" },
+      facts: withFacts(patch),
+      extra: HOUSE,
+    });
+
+  it("no page size in the preset: nothing to compare, whatever the PDF measures", () => {
+    expect(ids(house((f) => ((f.page_w_in = 5), (f.page_h_in = 5))))).toEqual(
+      [],
+    );
+  });
+
+  it("a body size with no tolerance is not judged; a reference range with none is judged exactly", () => {
+    expect(ids(house((f) => (f.body_pt = 12)))).toEqual([]);
+    // 6.9 pt passes agenticdev (its body_pt_tol widens the range) and fails here, where nothing does.
+    expect(ids(house((f) => (f.ref_pt = 6.9)))).toEqual(["pdf/limits:refPt"]);
+  });
+
+  it("facts naming the PDF by an absolute path are checked against that file", () => {
+    expect(
+      lint({
+        venue: DECL,
+        facts: withFacts((f) => (f.pdf = `${PAPER}/paper.pdf`)),
+      }),
+    ).toEqual([]);
+  });
+
+  it("a PDF with no fonts at all: each missing family says so", () => {
+    const fs = lint({ venue: DECL, facts: withFacts((f) => (f.fonts = [])) });
+    expect(ids(fs)).toEqual(["pdf/fonts:noFamily", "pdf/fonts:noFamily"]);
+    expect(fs[0]?.message).toMatch(/\(no fonts\)/);
+  });
+
+  it("file names in messages are relative to ESLint's cwd — and never empty", () => {
+    const at = (cwd: string) =>
+      lint(
+        { venue: { kind: "short" }, facts: null, pdf: null },
+        undefined,
+        {},
+        cwd,
+      )[0]?.message;
+    expect(at("/work")).toMatch(/set "extends" in papers\/p\/paperlint\.json/);
+    expect(at(`${PAPER}/paperlint.json`)).toMatch(
+      /set "extends" in \/work\/papers\/p\/paperlint\.json/,
+    );
   });
 });

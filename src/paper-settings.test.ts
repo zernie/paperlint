@@ -118,6 +118,26 @@ describe("readPaperSettings", () => {
   });
 });
 
+describe("readPaperSettings — a root paperlint.json that cannot be used", () => {
+  const ROOT = "/work";
+  const withFiles = (f: Record<string, string>) =>
+    memoryFiles({ [`${ROOT}/package.json`]: "{}", ...f });
+
+  it("a root file that does not parse, or names a field of the wrong type, is the paper's problem too", () => {
+    const broken = (root: string) =>
+      readPaperSettings(withFiles({ [`${ROOT}/paperlint.json`]: root }), PAPER);
+    const notJson = broken("{ nope");
+    expect(!notJson.ok && notJson.error.kind).toBe("broken");
+    expect(broken('{"kind":3}')).toEqual({
+      ok: false,
+      error: {
+        kind: "broken",
+        why: expect.stringMatching(/^the root paperlint\.json: .*kind/),
+      },
+    });
+  });
+});
+
 describe("readPaperSettings — the root paperlint.json's defaults, the paper's file over them", () => {
   const ROOT = "/work";
   const withFiles = (f: Record<string, string>) =>

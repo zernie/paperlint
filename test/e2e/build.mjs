@@ -32,6 +32,8 @@
  */
 import { spawnSync } from "node:child_process";
 import { PAPERS_DIR_FIELD } from "../../lib/paper-config.mjs";
+import { run } from "../../bin/paperlint.mjs";
+import { parseBib as parseCitations } from "../../skills/verify-citations/scripts/verify-cites.mjs";
 import {
   cpSync,
   existsSync,
@@ -202,11 +204,32 @@ try {
       engine,
     );
 
-  const r = spawnSync(process.execPath, [CLI, "build", "--all"], {
-    cwd: work,
-    encoding: "utf8",
-  });
-  const out = (r.stdout || "") + (r.stderr || "");
+  // 🔴 NO LIVE CITATION SERVICE. The references step asks Crossref, Semantic Scholar, arXiv and
+  // DBLP; a run that depended on them took ~9 minutes and failed when DBLP did. The build runs
+  // in-process through the CLI's own composition root, `run()`, with a fake `CheckReferences` —
+  // the port the unit tests use. Everything else is the real command: real pdflatex and bibtex.
+  const asked = [];
+  const fakeReferences = async (bib) => {
+    asked.push(bib);
+    const ids = parseCitations(bib)
+      .map((c) => c.id)
+      .filter(Boolean);
+    return {
+      kind: "checked",
+      entries: ids.map((key) => ({ key, exists: "true", authors: "match" })),
+    };
+  };
+  const printed = [];
+  const say = (...a) => printed.push(a.join(" "));
+  const r = {
+    status: await run(["build", "--all"], {
+      cwd: work,
+      log: say,
+      err: say,
+      checkReferences: fakeReferences,
+    }),
+  };
+  const out = printed.join("\n");
   console.log(
     out
       .trim()
@@ -518,6 +541,25 @@ try {
   check(
     "🔴 empty: the stale paper.pdf planted before the run is GONE — it cannot pass for this build",
     !existsSync(join(work, "papers", "empty", "paper.pdf")),
+  );
+
+  console.log();
+  console.log("references — recorded from the fake, no service asked");
+  const citeRefs = join(work, "papers", "cite", "_build", "references.json");
+  const recorded = existsSync(citeRefs)
+    ? JSON.parse(readFileSync(citeRefs, "utf8"))
+    : null;
+  check(
+    "cite: _build/references.json holds the verdicts the checker returned",
+    recorded?.status === "checked" &&
+      JSON.stringify(recorded.entries) ===
+        JSON.stringify([{ key: "knuth84", exists: "true", authors: "match" }]),
+    JSON.stringify(recorded),
+  );
+  check(
+    "the checker was handed each bibliography the build compiled",
+    asked.some((b) => parseCitations(b).some((c) => c.id === "knuth84")),
+    `${String(asked.length)} bibliographies`,
   );
 
   console.log();

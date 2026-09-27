@@ -11,6 +11,7 @@
     "src/**/*.ts",
     "scripts/**/*.ts",
     "test/**/*.ts",
+    "lib/**/*.test.ts",
     "skills/**/*.test.ts"
   ],
   "exclude": []

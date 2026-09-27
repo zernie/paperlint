@@ -5,7 +5,7 @@
  * ── WHY IT EXISTS, AND IT IS A MEASURED FAILURE, NOT A TIDINESS IDEA ───────────────────────
  * On 2026-09-19 a change to `paper/research-question` was pushed that broke the test suite.
  * The gates were run afterwards — `lint`, `check:readme`, `check:globs`, `check:content-only`,
- * and the rule's own mutation battery, all green — but `npm test` and `test:install` were not,
+ * and the rule's own (since-removed) mutation battery, all green — but `npm test` and `test:install` were not,
  * because there were eleven separate scripts and no way to run them except from memory. Five
  * callers across two files had been left behind by the change, and the suite said so; nobody
  * asked it.
@@ -37,6 +37,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -52,8 +53,6 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
  * Programs installed by npm (`vigiles`, `eslint`) are found because `node_modules/.bin` is put
  * first on PATH below, the same way `npm run` does it.
  */
-const locked = (...cmd) => ["node", "scripts/exclusive.mjs", ...cmd];
-
 export const GATES = [
   {
     name: "the package compiles",
@@ -70,7 +69,7 @@ export const GATES = [
   {
     name: "skills lint, and the vigiles marks in README.md and CLAUDE.md",
     job: "gates",
-    run: locked("vigiles", "lint", ".", "README.md"),
+    run: ["vigiles", "lint", ".", "README.md"],
     // README.md is passed to `vigiles lint` by name: it is not an instruction file, so vigiles
     // would not open it on its own. The marks tie the `paperlint init` and `paperlint new` sections to the
     // functions that implement them, and the lint fails when either function is renamed.
@@ -85,7 +84,7 @@ export const GATES = [
   {
     name: "every declared rule is enabled for a file on disk",
     job: "gates",
-    run: locked("node", "scripts/rules-see-files.mjs"),
+    run: ["node", "scripts/rules-see-files.mjs"],
   },
   {
     name: "rules read content, not the filesystem",
@@ -96,12 +95,15 @@ export const GATES = [
     // locally buys a defect that reaches review.
     reason:
       "source-only property — identical in every environment, so CI adds nothing",
-    run: locked("node", "scripts/rules-are-content-only.mjs"),
+    run: ["node", "scripts/rules-are-content-only.mjs"],
   },
   {
-    name: "every test — vitest over *.test.ts, then the vigiles harnesses (npm test)",
+    name: "every test, under coverage — vitest, then the vigiles harnesses, with c8's thresholds (npm run coverage)",
     job: "gates",
-    script: "test",
+    script: "coverage",
+    // `npm run coverage` IS `npm test`, run under c8 with `--check-coverage` (.c8rc.json holds
+    // the thresholds). One run, not two: the tests pass and the coverage floor holds, or the gate
+    // is red and says which.
   },
   {
     // vitest transpiles without type-checking, so the tests' types are checked here.
@@ -110,39 +112,29 @@ export const GATES = [
     run: ["tsc", "-p", "tsconfig.test.json"],
   },
   {
-    name: "mutation batteries are frozen — none new, none grown (#52)",
-    job: "gates",
-    run: locked("node", "scripts/mutation-batteries-frozen.mjs"),
-  },
-  {
     name: "legacy layer exemptions are frozen — none new, none grown (#76)",
     job: "gates",
-    run: locked("node", "scripts/layer-legacy-frozen.mjs"),
-  },
-  {
-    name: "mutation batteries — every guard is killed by its own assertion",
-    job: "gates",
-    run: locked("node", "scripts/run-mutations.mjs"),
+    run: ["node", "scripts/layer-legacy-frozen.mjs"],
   },
   {
     name: "install e2e — pack, install under npm and pnpm, run the binary",
     job: "gates",
-    run: locked("node", "test/e2e/install.mjs"),
+    run: ["node", "test/e2e/install.mjs"],
   },
   {
     name: "build e2e — a real pdflatex, and the PDF's fonts are measured",
     job: "build-e2e",
-    run: locked("node", "test/e2e/build.mjs"),
+    run: ["node", "test/e2e/build.mjs"],
   },
   {
     name: "banal e2e — the real banal on pdf.js-written XML gives banal-on-pdftohtml's numbers",
     job: "build-e2e",
-    run: locked("node", "test/e2e/banal.mjs"),
+    run: ["node", "test/e2e/banal.mjs"],
   },
   {
     name: "toolchain e2e — real TeX Live into $PAPERLINT_TEXLIVE_DIR, then a build with only it on PATH",
     job: "build-e2e",
-    run: locked("node", "test/e2e/toolchain.mjs"),
+    run: ["node", "test/e2e/toolchain.mjs"],
   },
 ];
 
@@ -170,8 +162,7 @@ export const NOT_COVERED = {
 };
 
 /**
- * Exit 77 means "declared skip" — the same code vigiles' runner uses (`SKIP_EXIT_CODE`), and the
- * one lib/mutation-driver.mjs already recognizes. The e2e steps exit 77 when a tool they need is
+ * Exit 77 means "declared skip" — the same code vigiles' runner uses (`SKIP_EXIT_CODE`). The e2e steps exit 77 when a tool they need is
  * absent and --strict is off. Anything else nonzero is a failure.
  *
  * 🔴 A SKIP IS A THIRD OUTCOME. Until the Codex review on #45 the e2e steps exited 0 on a skip,
@@ -185,17 +176,29 @@ export function outcome(status) {
   return "fail";
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+/**
+ * Run every gate in order and print the verdict and THE TAIL. `spawn`, `log`, `err` and `write`
+ * are injected so a test can drive every outcome without running eleven real gates.
+ *
+ * @returns the exit code: 1 when a gate failed, else 0 (a skip is not a failure, and says so).
+ */
+export function runGates({
+  gates = GATES,
+  spawn = spawnSync,
+  log = console.log,
+  err = console.error,
+  write = (s) => process.stdout.write(s),
+} = {}) {
   const BIN_FIRST_PATH = [join(ROOT, "node_modules", ".bin"), process.env.PATH]
     .filter(Boolean)
     .join(delimiter);
   const failed = [];
   const skipped = [];
 
-  for (const g of GATES) {
-    process.stdout.write(`── ${g.name}\n`);
+  for (const g of gates) {
+    write(`── ${g.name}\n`);
     const [cmd, ...args] = commandOf(g);
-    const r = spawnSync(cmd, args, {
+    const r = spawn(cmd, args, {
       cwd: ROOT,
       stdio: "inherit",
       encoding: "utf8",
@@ -211,29 +214,29 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     else failed.push(`${g.name}  (${shown} → ${r.status})`);
   }
 
-  console.log("");
+  log("");
   if (failed.length) {
-    console.error("🔴 gates failed:");
-    for (const f of failed) console.error(`   ${f}`);
+    err("🔴 gates failed:");
+    for (const f of failed) err(`   ${f}`);
   } else {
-    const passed = GATES.length - skipped.length;
-    console.log(
+    const passed = gates.length - skipped.length;
+    log(
       `✓ ${passed} gate(s) passed${skipped.length ? `, ${skipped.length} SKIPPED — not run, not passed` : ""}`,
     );
   }
-  if (skipped.length) for (const s of skipped) console.log(`⏳ skipped: ${s}`);
+  for (const s of skipped) log(`⏳ skipped: ${s}`);
 
   // THE TAIL. Not decoration — the reason this file exists rather than a list in a doc.
-  console.log("\nWhat this command does NOT cover:");
+  log("\nWhat this command does NOT cover:");
   for (const [job, why] of Object.entries(NOT_COVERED)) {
-    console.log(`  CI job «${job}» — ${why}`);
+    log(`  CI job «${job}» — ${why}`);
   }
-  const localOnly = GATES.filter((g) => g.job === null);
-  for (const g of localOnly) {
-    console.log(`  (and «${g.name}» runs ONLY here — ${g.reason})`);
+  for (const g of gates.filter((x) => x.job === null)) {
+    log(`  (and «${g.name}» runs ONLY here — ${g.reason})`);
   }
-
-  process.exit(failed.length ? 1 : 0);
+  return failed.length ? 1 : 0;
 }
+
+if (isMain(import.meta.url)) process.exit(runGates());
 
 export { ROOT, existsSync, join };

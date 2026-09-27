@@ -192,27 +192,32 @@ export function consumerSkillsDir(opts) {
  * in the port and the TypeScript writer imports it, as `src/cli.ts` already does for `isMain`.
  *
  * @param dir  the directory to list. A missing directory throws `ENOENT` from `readdirSync`.
+ * @param fs   the four calls it makes; a test passes a fake to stage what a real disk only does
+ *             in a race (an entry gone between the listing and the stat).
  * @returns the skill names, sorted.
  */
-export function installedSkills(dir) {
+export function installedSkills(
+  dir,
+  fs = { readdirSync, statSync, existsSync, readlinkSync },
+) {
   const names = [];
   const dangling = [];
-  for (const name of readdirSync(dir)) {
+  for (const name of fs.readdirSync(dir)) {
     const entry = join(dir, name);
     let st;
     try {
-      st = statSync(entry); // FOLLOWS the link — the question is where the entry LEADS
+      st = fs.statSync(entry); // FOLLOWS the link — the question is where the entry LEADS
     } catch (e) {
       // The entry was listed a moment ago, so a failed stat is a link that leads nowhere
       // (ENOENT) or in a circle (ELOOP) — not an absence.
       dangling.push({
         name,
-        target: readlinkOr(entry),
+        target: readlinkOr(entry, fs.readlinkSync),
         cause: e.code ?? "error",
       });
       continue;
     }
-    if (st.isDirectory() && existsSync(join(entry, "SKILL.md")))
+    if (st.isDirectory() && fs.existsSync(join(entry, "SKILL.md")))
       names.push(name);
   }
   if (dangling.length) {
@@ -233,11 +238,11 @@ export function installedSkills(dir) {
 }
 
 /** Where a link points, for the message — or a placeholder when it is not a link at all. */
-function readlinkOr(entry) {
+function readlinkOr(entry, readlink) {
   try {
-    return readlinkSync(entry);
+    return readlink(entry);
   } catch {
-    return "(not a link)";
+    return "(not a link)"; // a plain entry gone between the listing and the stat
   }
 }
 
@@ -293,23 +298,6 @@ export function ledgerPath(
         `install removed them, with no error at any point.`,
     );
   return join(hereDir, "runs.jsonl");
-}
-
-/**
- * `ledgerPath()` plus the assurance that the directory holding it exists.
- *
- * Split out rather than folded in, because the two failures are different: an undeclared ledger
- * is a setup mistake the message above can fix, while a declared-but-missing directory may be
- * the very thing the caller is about to create.
- */
-export function ledgerPathExisting(hereDir, opts) {
-  const p = ledgerPath(hereDir, opts);
-  if (!existsSync(p))
-    throw new Error(
-      `${CONFIG_KEY}: the ledger "${p}" does not exist. Create it (an empty file is a valid ` +
-        `empty ledger) or fix the "ledger" declaration in ${CONFIG_FILE}.`,
-    );
-  return p;
 }
 
 // ═════════════════════════════════════════════════════════════════════════════════════════════

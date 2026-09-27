@@ -13,6 +13,8 @@ _build/
 # `git check-ignore -v` named this line for every one of them.
 !skills/paper-pipeline/repro/*.log
 
-# Mutex for run exclusivity (scripts/exclusive.mjs) — exists only during a run.
-.vigiles/exclusive.lock/
 dist/
+# c8's report and raw V8 data (`npm run coverage`).
+coverage/
+# verify-cites.mjs caches registry answers beside itself; the skill documents it as gitignored.
+.cite-cache.json

@@ -61,6 +61,11 @@ const ROWS: readonly (readonly [
     { kind: "no-json", head: "Usage: banal" },
   ],
   [
+    "nothing on stdout: the head is stderr's first line",
+    exited({ stdout: "", stderr: "\nCan't locate XML/Parser.pm\n" }),
+    { kind: "no-json", head: "Can't locate XML/Parser.pm" },
+  ],
+  [
     // Guards: banal's own failure object exits 0 — it must not read as zero pages.
     'banal\'s `"error": true` with exit 0',
     exited({ stdout: '{"error": true, "pages": []}', stderr: "cannot read" }),

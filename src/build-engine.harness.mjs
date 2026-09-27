@@ -8,7 +8,6 @@
  *   2. prepareEngine: use the cache · use the system · refuse without a human · ask, decline,
  *      accept and install · dry-run never asks or installs.
  */
-import assert from "node:assert/strict";
 import {
   chmodSync,
   mkdirSync,
@@ -20,15 +19,12 @@ import {
 import { tmpdir } from "node:os";
 import { basename, delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const E = await import(join(HERE, "build-engine.ts"));
 
-let n = 0;
-const check = (label, cond, detail = "") => {
-  assert.ok(cond, `${label}${detail ? ` — ${detail}` : ""}`);
-  n++;
-};
+const check = createChecker();
 
 // ── 1. texts ────────────────────────────────────────────────────────────────────────────
 const noCache = {
@@ -311,4 +307,4 @@ const x_run = { found: {} };
 }
 
 rmSync(work, { recursive: true, force: true });
-console.log(`build-engine: ${n} checks passed`);
+console.log(`build-engine: ${check.count} checks passed`);

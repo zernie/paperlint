@@ -343,8 +343,8 @@ try {
     // matters more than it looks. The first version of this guard keyed on `evt_fake_`,
     // a string the stand-in prints only on SUCCESS — so a perfectly correct schema
     // REJECTION arrived with no marker and was reported as "something else served this
-    // tool". The guard meant to protect the verdict was hiding it, and it took a
-    // mutation run to notice (2026-08-17). The log is written on both paths, so a
+    // tool". The guard meant to protect the verdict was hiding it, and that went
+    // unnoticed until 2026-08-17. The log is written on both paths, so a
     // non-empty log means our server handled the call, whatever it decided.
     const logged = existsSync(callLog)
       ? readFileSync(callLog, "utf8")

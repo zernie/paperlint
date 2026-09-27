@@ -319,6 +319,18 @@ describe("paper-files — the pieces", () => {
   });
 });
 
+describe("paper-files — blocks that carry no rules", () => {
+  it("a plugin with only a language registers no rule; a block with no files owns no pattern of its own", () => {
+    const own = [
+      { plugins: { tex: { languages: {} } } },
+      { ignores: ["**/x.md"], plugins: { tex: { languages: {} } } },
+      { files: ["**/a.md"], plugins: { p: { rules: { one: {} } } } },
+    ];
+    expect([...ruleOwners(own).keys()]).toEqual(["p/one"]);
+    expect(ownedPatterns(own)).toEqual(["**/a.md"]);
+  });
+});
+
 describe("paper-files — narrowing a block", () => {
   const own = [
     { plugins: { g: { rules: { any: {} } } } },

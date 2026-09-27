@@ -8,29 +8,10 @@
  * THE REGISTRY ITSELF (`repro/populations.tsv`), both have no address in the paper, and so cannot be expressed by ESLint,
  * which reports only to the linted file.
  *
- * WHY THIS FILE AND NOT MORE CASES IN THE SELF-TEST. `population-map.selftest.mjs` is thorough —
- * 7 planted cases, both directions. Nothing here duplicates it. Two things were wrong with it
- * anyway:
- *
- *   1. IT IS INVISIBLE TO THE MEASUREMENT. `vigiles audit` scores this repo `Tested: 0`, and the
- *      metric counts `*.harness.mjs` / `*.eval.mjs`. Verified 2026-08-07: bare `npx vigiles test`
- *      reports no harness files found — its glob does not descend into dot-dirs AND the self-test
- *      does not carry a name the collector looks for. Given an explicit path it runs
- *      fine, which is the trap: it is green, correct, and uncounted, so the repo reads
- *      as having no test for its own registry hygiene.
- *
- *   2. IT ONLY EXERCISES `findings()`. Everything between the command line and that function —
- *      finding paper.md, finding repro/populations.tsv, `--flags-only` staying silent on a clean
- *      paper — is what the CI step and `run-mechanical.mjs` actually invoke, and none of it was
- *      under test. This repository's three dead hooks all had correct logic; what was broken was
- *      the wiring around it.
- *
- * 🔴 THE SELF-TEST IS RUN AS A SUBPROCESS, NEVER IMPORTED. It ends in `process.exit(fail ? 1 : 0)`.
- * Import it and a PASSING self-test terminates this process at that line — every assertion below it
- * never runs, and `vigiles test` reports ✓ because nothing threw. That is trap #1 from
- * hooks.harness.mjs wearing a different hat, and it would have been undetectable from the output.
- *
- * Every fixture is a throwaway in a temp dir; nothing here reads or writes a real paper.
+ * The findings themselves are planted in `population-map.test.mjs` (vitest; until #52 a
+ * self-test script this harness spawned). This file keeps what only the command shows: finding
+ * paper.md and repro/populations.tsv, and `--flags-only` staying silent on a clean paper — the
+ * wiring the CI step and `run-mechanical.mjs` actually invoke.
  */
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -49,7 +30,6 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 
 const ROOT = consumerRoot();
 const SCRIPT = join(HERE, "population-map.mjs");
-const SELFTEST = join(HERE, "population-map.selftest.mjs");
 const tmp = realpathSync(mkdtempSync(join(tmpdir(), "popmap-harness-")));
 
 /** Run a node script; never throws on a non-zero exit. */
@@ -86,29 +66,6 @@ const REG = [
   "broad\t1,921\troot\t\tthe corpus",
   "census\t134\tdisjoint\tbroad\ta separate sample",
 ].join("\n");
-
-// ── 1. the self-test still kills every mutant it claims to ─────────────────────────────
-// Owning it from a *.harness.mjs is the whole point: the metric now counts it, and a regression in
-// the self-test itself fails this file rather than passing unnoticed in a step nobody reads.
-{
-  const r = run([SELFTEST]);
-  assert.equal(r.code, 0, "population-map.selftest.mjs failed:\n" + r.out);
-  const m = r.out.match(/(\d+) passed, (\d+) failed/);
-  assert.ok(
-    m,
-    "the self-test printed no result line — it may have exited before running:\n" +
-      r.out,
-  );
-  // A self-test that runs ZERO cases also prints "0 failed" and exits 0. That shape is exactly how
-  // this repo's earlier harness reported ✓ on `assert.equal(1, 2)`, so the count is asserted too.
-  // Threshold lowered 13 → 7 along with the move of two findings to ESLint. The assertion on COUNT is kept:
-  // a self-test that ran zero cases also prints «0 failed» and exits zero.
-  assert.ok(
-    Number(m[1]) >= 7,
-    `the self-test ran only ${m[1]} case(s) — cases have gone missing`,
-  );
-  assert.equal(Number(m[2]), 0, "the self-test reported failures:\n" + r.out);
-}
 
 // ── 2. the CLI finds the paper and the registry, and fires on a stale registry row ─────
 // 🔴 FIXTURE REWRITTEN 2026-08-26. Before that it planted an UNLINKED POPULATION, and that

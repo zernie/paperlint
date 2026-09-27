@@ -212,7 +212,7 @@ function dropEtAl(authors) {
   return { authors: out.filter(Boolean), truncated: true };
 }
 
-const yearIn = (s) => (/\b(19|20)\d{2}\b/.exec(s ?? "") ?? [null])[0];
+const yearIn = (s) => (/\b(19|20)\d{2}\b/.exec(s) ?? [null])[0];
 
 // ── parsing: .bib WITH A REAL PARSER ─────────────────────────────────────────
 
@@ -254,10 +254,13 @@ const joinName = (a) =>
  * the same, and "the bibliography was not checked" reads as "the bibliography is fine". That is why
  * the message names the command, not the fact.
  */
-export async function parseBib(text) {
+export async function parseBib(
+  text,
+  { load = () => import("@retorquere/bibtex-parser") } = {},
+) {
   let parse;
   try {
-    ({ parse } = await import("@retorquere/bibtex-parser"));
+    ({ parse } = await load());
   } catch (e) {
     if (e?.code !== "ERR_MODULE_NOT_FOUND") throw e;
     throw new Error(
@@ -289,6 +292,9 @@ export async function parseBib(text) {
       .filter((a) => !isOthers(a))
       .map(joinName)
       .filter(Boolean);
+    // A field is a string in today's parser output (list fields such as `keywords` are arrays,
+    // and none of those is read); an array or a number from another parser version is joined or
+    // printed rather than dropped.
     const str = (v) =>
       Array.isArray(v)
         ? v.join(" ")
@@ -477,7 +483,6 @@ export function loadCache(path) {
 }
 
 function saveCache(path, cache) {
-  if (!path) return;
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, `${JSON.stringify(cache, null, 1)}\n`);
 }

@@ -230,6 +230,8 @@ describe("labelOf — display only, never used to resolve", () => {
     ["paperlint:agenticdev", "agenticdev"],
     ["./venues/usenix-sec.jsonc", "usenix-sec"],
     ["../shared/acl.json", "acl"],
+    ["./.hidden", ".hidden"],
+    ["paperlint:", ""],
   ])("%s → %s", (spec, label) => {
     expect(labelOf(spec)).toBe(label);
   });
