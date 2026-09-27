@@ -153,7 +153,7 @@ finished. Neither row present means it did not run, whatever any status file cla
 - `EXPECTED_GATES` in `status.mjs` is the table. A check that records rows and is absent there
   writes rows nobody sees. Add a new skill AND its mechanical checks; `unlistedGates()` catches the
   omission after the fact, and `pipeline-corpus.harness.mjs` catches it before.
-- `ledger.selftest.mjs` and every harness redirect `PIPELINE_LEDGER` to a temp file **before**
+- `ledger.test.mjs` and every harness redirect `PIPELINE_LEDGER` to a temp file **before**
   importing `ledger.mjs`. Save-and-restore is not isolation; it lost that race on its first day.
 
 ## Harnesses (2026-08-07)

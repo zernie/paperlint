@@ -6,7 +6,12 @@
     "`src/*.ts` (excludeAfterRemap), so `dist/` itself is excluded after the remap.",
     "Excluded: tests themselves (*.harness.mjs, *.test.*), *.eval.mjs (PAID LLM evaluations,",
     "never run by npm test and never unit-run), *.spec.ts (skill sources compiled by vigiles),",
-    "type declarations, fixtures and test/ (inputs and e2e scripts, not the package's code)."
+    "type declarations, fixtures and test/ (inputs and e2e scripts, not the package's code).",
+    "typeOnly: modules with no runtime code (interfaces and type aliases) \u2014 nothing to execute, so",
+    "`all` would count them as permanently uncovered. evalOnly: support for the paid evals, reached",
+    "only from *.eval.mjs. Both claims are CHECKED by scripts/coverage-config.test.ts.",
+    "repro/ and references/: dated research records (a replication driver, a readability probe) kept",
+    "as evidence for claims in the skills' prose, not code the package runs."
   ],
   "all": true,
   "src": ["."],
@@ -31,7 +36,16 @@
     "dist/**",
     "test/**",
     "node_modules/**",
-    "coverage/**"
+    "coverage/**",
+    "src/types.ts",
+    "src/ports/*.ts",
+    "src/domain/page-layout.ts",
+    "src/domain/paths.ts",
+    "lib/skill-eval-kit.mjs",
+    "lib/skill-eval-fixture.mjs",
+    "lib/trigger-ledger.mjs",
+    "skills/**/repro/**",
+    "skills/**/references/**"
   ],
   "extension": [".js", ".mjs", ".ts"],
   "excludeAfterRemap": true,
@@ -40,5 +54,16 @@
   "lines": 80,
   "statements": 80,
   "functions": 78,
-  "branches": 86
+  "branches": 86,
+  "typeOnly": [
+    "src/types.ts",
+    "src/ports/*.ts",
+    "src/domain/page-layout.ts",
+    "src/domain/paths.ts"
+  ],
+  "evalOnly": [
+    "lib/skill-eval-kit.mjs",
+    "lib/skill-eval-fixture.mjs",
+    "lib/trigger-ledger.mjs"
+  ]
 }

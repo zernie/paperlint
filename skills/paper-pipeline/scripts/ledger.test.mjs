@@ -1,54 +1,52 @@
-// ledger.selftest.mjs — plant each failure this thing exists to catch, and watch it catch them.
-//
-// The project's rule, written after five tools reported success while doing nothing:
-// "a checker that has never failed does not count as working". So this file does not check that
-// the ledger runs. It checks that it says NO when it should, and YES when it should — both
-// directions, for every property the design claims.
-//
-//   node .claude/skills/paper-pipeline/scripts/ledger.selftest.mjs
-
+/**
+ * The ledger says NO when it should and YES when it should — both directions, for every property
+ * the design claims (formerly `ledger.selftest.mjs`, which nothing ran).
+ *
+ * Everything lives under one temp directory: the ledger file (PIPELINE_LEDGER) and a consumer root
+ * (CLAUDE_PROJECT_DIR) holding a copy of the one skill whose hash is watched. Both are set BEFORE
+ * `ledger.mjs` is imported, because it resolves them at import time.
+ */
+import assert from "node:assert/strict";
 import {
-  mkdtempSync,
-  writeFileSync,
-  rmSync,
-  readFileSync,
   appendFileSync,
-  existsSync,
+  cpSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
   realpathSync,
+  rmSync,
+  writeFileSync,
 } from "node:fs";
-import { consumerSkillsDir } from "./consumer.mjs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { afterAll, test } from "vitest";
 
-const tmp = realpathSync(mkdtempSync(join(tmpdir(), "ledger-selftest-")));
+const HERE = dirname(fileURLToPath(import.meta.url));
+const tmp = realpathSync(mkdtempSync(join(tmpdir(), "ledger-test-")));
 const paper = join(tmp, "a-paper");
-
-// 🔴 Point the ledger at a throwaway file BEFORE importing it. The first version wrote to the real
-// ledger and restored it in a `finally`, which leaks fixture rows into permanent history the moment
-// the run dies between the two — and it did, on the day this shipped. Isolation, not cleanup.
+const consumer = join(tmp, "consumer");
+const gate = "cold-read-diff"; // a real skill, so skillHash resolves
+mkdirSync(paper, { recursive: true });
+mkdirSync(join(consumer, ".claude", "skills"), { recursive: true });
+cpSync(
+  join(HERE, "..", "..", gate),
+  join(consumer, ".claude", "skills", gate),
+  {
+    recursive: true,
+    verbatimSymlinks: true,
+  },
+);
 process.env.PIPELINE_LEDGER = join(tmp, "runs.jsonl");
+process.env.CLAUDE_PROJECT_DIR = consumer;
+const { record, status } = await import("./ledger.mjs");
+afterAll(() => rmSync(tmp, { recursive: true, force: true }));
 
-let failures = 0;
-const check = (name, actual, expected) => {
-  const ok = actual === expected;
-  if (!ok) failures++;
-  console.log(
-    `  ${ok ? "ok  " : "FAIL"}  ${name}${ok ? "" : `  — expected ${expected}, got ${actual}`}`,
-  );
-};
+const check = (name, actual, expected) => assert.equal(actual, expected, name);
+const mk = (t) => writeFileSync(join(paper, "paper.md"), t);
+const st = () => status(paper, { gates: [gate] })[0];
 
-try {
-  // `skillHash` was dropped from the destructuring on 2026-08-28 — no check below was reading it.
-  const { record, status } = await import("./ledger.mjs");
-  const mk = (t) => {
-    writeFileSync(join(paper, "paper.md"), t);
-  };
-  const { mkdirSync } = await import("node:fs");
-  mkdirSync(paper, { recursive: true });
-
-  const gate = "cold-read-diff"; // a real skill, so skillHash resolves
-  const st = () => status(paper, { gates: [gate] })[0];
-
+test("the ledger catches every planted error, in order", () => {
   // ── 1. NEVER-RUN is a state, not an absence ──────────────────────────────────────────────
   mk("version one");
   check("a gate nobody has run reads NEVER-RUN", st().state, "NEVER-RUN");
@@ -76,30 +74,11 @@ try {
   ran();
   check("back on the original bytes it is FRESH again", st().state, "FRESH");
 
-  // 🔴 `../skills/…` until 2026-08-15, when this file moved from `.claude/pipeline/` into the
-  // skill it serves. A SIXTH form of hidden reference, after literal paths, `join()` segments,
-  // relative imports, path-shaped regexes and `..`-depth constants: `new URL(rel, import.meta.url)`
-  // is not an import, so neither a path search nor an import resolver sees it. It broke in CI —
-  // ENOENT on `.claude/skills/paper-pipeline/skills/cold-read-diff/SKILL.md`, a path assembled from
-  // the new location and the old relative segment.
-  //
-  // 🔴 AND A SEVENTH FORM, 2026-09-12: the segment was right and the ANCHOR moved. Once the
-  // mechanism ships as a package, `import.meta.url` is inside `node_modules`, so the same two `..`
-  // now name a skill directory of the PACKAGE — which holds no consumer skill. The subject here
-  // was never "a file near me"; it is "the SKILL.md whose bytes `skillHash(gate)` folds into the
-  // key", and that file belongs to the repository under test. So it is resolved the way
-  // `ledger.mjs` resolves `SKILLS`, from the consumer root, and the two cannot drift apart.
-  const skillFile = join(consumerSkillsDir(), gate, "SKILL.md");
-  // Loud, not skipped. This assertion is the only one covering property 2 of the design ("the
-  // checker's own source is part of the key"); skipping it when the file is absent would leave the
-  // selftest printing success while proving one property fewer — the green-over-emptiness this
-  // whole file exists to forbid.
-  if (!existsSync(skillFile))
-    throw new Error(
-      `ledger.selftest: ${skillFile} does not exist.\n` +
-        `This selftest runs against a CONSUMER of the pipeline — a repository that has the ` +
-        `pipeline's skills installed under .claude/skills/ — not against this package on its own.`,
-    );
+  // The SKILL.md whose bytes `skillHash(gate)` folds into the key is the CONSUMER's, resolved from
+  // CLAUDE_PROJECT_DIR — here a temp copy, so the edit below never touches a tracked file. (The
+  // selftest this replaced appended to the real skills/cold-read-diff/SKILL.md and restored it,
+  // i.e. it edited the working tree in place while other tests could be reading it.)
+  const skillFile = join(consumer, ".claude", "skills", gate, "SKILL.md");
   const skillBefore = readFileSync(skillFile);
   try {
     appendFileSync(
@@ -272,15 +251,4 @@ try {
       0,
     );
   }
-} finally {
-  // The ledger lives inside `tmp`, so removing the fixture removes it too. Nothing to restore,
-  // which is the point — there is no window in which real history is at risk.
-  rmSync(tmp, { recursive: true, force: true });
-}
-
-console.log(
-  failures === 0
-    ? "\n  all planted errors were caught\n"
-    : `\n  🔴 ${failures} assertion(s) failed — the ledger is not doing what it claims\n`,
-);
-process.exit(failures === 0 ? 0 : 1);
+});

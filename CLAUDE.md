@@ -508,7 +508,9 @@ npx vigiles test <file>     # one harness
 
 **Two kinds of test, told apart by what the file imports.** A `*.harness.*` file tests the agent
 surface and imports `runHook`, `runHarnessTest` or `runEval` from vigiles; everything else is a plain
-unit test, `*.test.ts`, run by vitest — and new tests are TypeScript. Older harnesses that
+unit test run by vitest, beside the module it tests: `<module>.test.ts` for a `.ts` module, and
+`<module>.test.mjs` for a `.mjs` one (TypeScript has no types to check a JS module against, and
+`allowJs` was measured to break a dozen existing `@ts-expect-error` imports). Older harnesses that
 import none of the three are frozen in `scripts/harness-api.frozen.json`, which only shrinks;
 `scripts/harness-api.test.ts` parses every harness's imports and holds both halves (#77). vitest
 exits 1 when no file matches, and it transpiles without type-checking, so `npm run check` runs
