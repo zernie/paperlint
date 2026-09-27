@@ -27,7 +27,7 @@ before you submit.** It comes in two parts:
 
   Smaller slips too: `§` for "Section", `.05` for `0.05` — fixed for you.
 
-- 🧠 **Skills for [Claude Code](https://claude.com/claude-code)** — optional, 24 of them, covering the
+- 🧠 **Skills for [Claude Code](https://claude.com/claude-code)** — optional, covering the
   whole pipeline: the idea, the venue, the study, the draft, the reviews, submission.
 
 ## Contents
@@ -173,7 +173,7 @@ what it does — "is this idea worth a paper?", "find me a venue for this". `ini
 - **A ready / not ready verdict before you submit**, worst problem first. `harden-paper`
 - **Where your paper stands**, measured from the real build. `paper-status`
 
-All 24, by stage: [`docs/skills.md`](docs/skills.md).
+Every skill, by stage: [`docs/skills.md`](docs/skills.md).
 
 ## 🔍 Lint and build
 

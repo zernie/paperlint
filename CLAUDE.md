@@ -75,7 +75,7 @@ nodes.
 **3. Every check needs BOTH halves, or it is not tested.** It must FIRE on a planted defect
 and stay QUIET on a clean fixture. A check that has only been seen quiet is
 indistinguishable from a dead one — silence is its success state. Prove the fire half by
-seeing the test go RED before the fix lands (§ Testing — how a test is written here).
+seeing the test go RED before the fix lands ([`docs/testing.md`](docs/testing.md)).
 
 **4. `exit 0` with empty output is NOT "clean".** A rule whose glob matched no files reports
 exactly like a rule that passed. Any rule shipped here must be loud when its input set is
@@ -493,102 +493,17 @@ justified two hundred lines above precisely by these minutes being free.
 
 ## Testing
 
-```bash
-npm test                    # vitest over *.test.ts, then the vigiles harnesses
-npm run coverage            # the same run under c8; fails below the thresholds in .c8rc.json
-npx vitest run <file>       # one unit test
-npx vigiles test <file>     # one harness
-```
+| you are testing                                                            | kind                                          |
+| -------------------------------------------------------------------------- | --------------------------------------------- |
+| a pure function                                                            | unit — vitest, `<module>.test.ts` beside it   |
+| a use case or adapter that reaches disk, a process, the network, the clock | integration — vitest, fakes through the ports |
+| a hook's decision, a skill's contract                                      | harness — vigiles, `<surface>.harness.mjs`    |
+| the installed package, a real TeX build                                    | e2e — `test/e2e/*.mjs`                        |
 
-**Two kinds of test, told apart by what the file imports.** A `*.harness.*` file tests the agent
-surface and imports `runHook`, `runHarnessTest` or `runEval` from vigiles; everything else is a plain
-unit test run by vitest, beside the module it tests: `<module>.test.ts` for a `.ts` module, and
-`<module>.test.mjs` for a `.mjs` one (TypeScript has no types to check a JS module against, and
-`allowJs` was measured to break a dozen existing `@ts-expect-error` imports). Older harnesses that
-import none of the three are frozen in `scripts/harness-api.frozen.json`, which only shrinks;
-`scripts/harness-api.test.ts` parses every harness's imports and holds both halves (#77). vitest
-exits 1 when no file matches, and it transpiles without type-checking, so `npm run check` runs
-`tsc -p tsconfig.test.json` as its own gate.
-
-**While working: the fast gates on what you touched. Before every push: `npm run check`.** While
-editing, run vitest on the touched test files (`npx vitest run <file or folder>`), `npx tsc --noEmit`,
-`npx eslint <touched files>` and `npm run fmt:check`. Before pushing, run the full `npm run check`
-(about three minutes) and read its exit code: it includes the 100% coverage gate, which a
-single-file run cannot judge. CI runs the same command plus the TeX e2e that cannot run locally.
-
-⚠️ **Not `vigiles test .`** — the `.` is read as a FILE, the runner dies with
-`ERR_UNSUPPORTED_DIR_IMPORT`, and it still exits 0. See the measured table below.
-
-Skills are tested **through vigiles** — a colocated `<skill>.harness.mjs` beside the skill.
-(This read «Skills, if and when they arrive» until 2026-09-17; there are 24 of them under
-`skills/` carrying a `SKILL.md`, and the README's opening line claimed the repository was
-empty — issue #6.) Not through a bespoke script: a home-grown runner here once printed
-confident, byte-identical "clean" verdicts for three different skills that had never loaded.
-
-### How a test is written here
-
-1. **Red first.** A new test is seen FAILING before the change that makes it pass — run it on
-   the unfixed code, watch it go red at its own assertion, then fix. A test that has only ever
-   been green is indistinguishable from one that cannot fail. Never add a file that patches
-   source to prove a test can fail — seeing it red once, here, is that proof.
-2. **Assert the whole value.** Compare the entire returned value (`assert.deepEqual`,
-   `expect(x).toEqual(…)`), not a substring of it or one field. A substring assertion passes on
-   output that is wrong everywhere else — a defect found here over and over
-   (`"that is the"` matching two different messages, a bare word the usage block always prints).
-   A substring is right only when the value is prose whose wording is not the subject; then say
-   so in a comment.
-3. **Test what the code DOES, never what its source SAYS.** A test that reads a source file (a
-   `.mjs`, a `SKILL.md`, a config) and asserts it contains some text restates the file: rewording
-   turns it red while a real regression stays green. Assert behaviour instead: a return value, the
-   output and exit code of a run, what landed on disk, what a parser reports. Text is a legitimate
-   subject only when it IS the output (a message the program prints, a file it generates).
-4. **One assertion helper for harnesses: `lib/check.mjs`.** `const check = createChecker();` then
-   `check(label, cond, detail)`. A failure prints the label and the detail (a value is rendered
-   with `util.inspect`, a function is called only on failure), every call is counted
-   (`check.count`, for the summary line) and reported to vigiles. Do not define a local `check`.
-5. **Coverage is a gate.** `npm run check` and CI run `npm run coverage` — `npm test` under c8,
-   `--check-coverage` against `.c8rc.json`. c8 reads `NODE_V8_COVERAGE`, so a CLI a harness
-   spawns is measured too — unless the harness hands the child a fresh `env` without it. vitest
-   runs in the `threads` pool with native `import` (`vitest.config.ts` says why): under its
-   defaults c8 saw nothing vitest ran. The run preloads `test/coverage-src.mjs`, which answers
-   every import of `dist/*.js` with `src/*.ts`: otherwise a module the tests import directly AND
-   the spawned CLI loads compiled is measured twice, and its branches and functions stay red in
-   whichever copy did not run them. `npm test` without coverage still runs `dist/`.
-6. **No `c8 ignore`, and no guard deleted to reach 100%.** An effect a test cannot reach — a
-   race, a permission root is never denied, a broken install, a 270 MB download — is made
-   INJECTABLE (a `readdir`, an fs object, a manifest reader, a toolchain function) and the test
-   passes a fake. A precondition about an argument becomes the signature: the function takes the
-   value it needs, so a call without it cannot be written. A guard whose input can really occur
-   stays, with the test that reaches it. `scripts/coverage-config.test.ts` fails on any
-   coverage-ignore comment in a measured file (it reads comments off the parsed tree), and pins
-   `.c8rc.json`'s `exclude` list: a new exclusion fails there until it is added on purpose, with
-   its reason. Thresholds are 100 for lines, statements, functions and branches.
-
-## `npm test` — `--min=1` stays, and here is what it is for
-
-The script is `vigiles test --min=1`. It went green on 2026-09-11 when the first harnesses
-landed; before that it correctly exited 1:
-
-```
-✗ vigiles test: --min=1 but only 0 test file(s) matched — evals never executed
-  (check the paths/globs, or that the run was reached).
-```
-
-Do **not** "fix" a future red by dropping `--min` — the flag is the only thing standing
-between "every test passed" and "no test ran", which is rule 4 applied to the test runner
-itself.
-
-🔴 **Two ways this command lies if written differently, both measured 2026-09-11:**
-
-| form                   | what happens                                                                | exit  |
-| ---------------------- | --------------------------------------------------------------------------- | ----- |
-| `vigiles test .`       | `.` is read as a FILE — `ERR_UNSUPPORTED_DIR_IMPORT`, uncaught, runner dies | **0** |
-| `vigiles test`         | `No **/*.harness.{mjs,cjs,js,mts,cts,ts} files found.`                      | **0** |
-| `vigiles test --min=1` | names the empty match and fails                                             | **1** |
-
-The first row is the worse one: the runner crashed with a stack trace and still reported
-success. `package.json` shipped `vigiles test .` from the initial scaffold until this was
-measured — so the repo's own test command had never once executed a test, and said nothing.
+Red first · assert the whole value · test what the code does, never what its source says · no test
+touches the real network · 100% coverage, no `c8 ignore`. **Before every push: `npm run check`,
+exit code read without a pipe.** Everything else — where files live, how fakes are injected, the
+`--min=1` trap: [`docs/testing.md`](docs/testing.md).
 
 ## Commits
 
