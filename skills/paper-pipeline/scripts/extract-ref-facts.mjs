@@ -280,7 +280,7 @@ export async function parseBib(text) {
     return i === -1 ? 0 : i + 1;
   };
   return res.entries.map((e, i) => {
-    const f = e.fields ?? {};
+    const f = e.fields;
     const names = Array.isArray(f.author) ? f.author : [];
     // `and others` is BibTeX's `et al.`. The parser returns it as an author with no first name.
     const isOthers = (a) => !a.firstName && /^others$/i.test(a.lastName ?? "");
@@ -289,14 +289,10 @@ export async function parseBib(text) {
       .filter((a) => !isOthers(a))
       .map(joinName)
       .filter(Boolean);
-    const str = (v) =>
-      Array.isArray(v)
-        ? v.join(" ")
-        : typeof v === "string"
-          ? v
-          : v == null
-            ? ""
-            : String(v);
+    // Every field read below is a plain string in the parser's output (probed: `title` and
+    // `note` too; only list fields such as `keywords` come back as arrays, and none is read), so
+    // an absent field is the only other case.
+    const str = (v) => v ?? "";
     const venueText = [f.booktitle, f.journal, f.note, f.howpublished]
       .map(str)
       .filter(Boolean)
@@ -477,7 +473,6 @@ export function loadCache(path) {
 }
 
 function saveCache(path, cache) {
-  if (!path) return;
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, `${JSON.stringify(cache, null, 1)}\n`);
 }
