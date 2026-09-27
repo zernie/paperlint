@@ -46,13 +46,13 @@ const dblp = (title: string, authors: string[]) =>
 /** Route by URL prefix; the longest prefix wins. */
 function fakeFetch(routes: Record<string, () => Response>): string[] {
   const calls: string[] = [];
-  vi.stubGlobal("fetch", async (url: string) => {
+  vi.stubGlobal("fetch", (url: string) => {
     calls.push(url);
     const hit = Object.keys(routes)
       .filter((p) => url.startsWith(p))
       .sort((a, b) => b.length - a.length)[0];
-    if (hit === undefined) return json(404);
-    return routes[hit]!();
+    if (hit === undefined) return Promise.resolve(json(404));
+    return Promise.resolve(routes[hit]!());
   });
   return calls;
 }
@@ -66,9 +66,9 @@ async function settle<T>(p: Promise<T>): Promise<T> {
 }
 
 test("no service answers: not-checked, with the reason", async () => {
-  vi.stubGlobal("fetch", async () => {
-    throw new Error("getaddrinfo ENOTFOUND api.crossref.org");
-  });
+  vi.stubGlobal("fetch", () =>
+    Promise.reject(new Error("getaddrinfo ENOTFOUND api.crossref.org")),
+  );
   assert.deepEqual(await checkOnly("@misc{k, title={T}}"), {
     kind: "not-checked",
     why: "the citation services cannot be reached (getaddrinfo ENOTFOUND api.crossref.org)",
@@ -427,9 +427,9 @@ test("a failed lookup is not cached: the next run asks it again", async () => {
 });
 
 test("offline with an incomplete cache: not-checked, and the cache comes back unchanged", async () => {
-  vi.stubGlobal("fetch", async () => {
-    throw new Error("getaddrinfo ENOTFOUND api.crossref.org");
-  });
+  vi.stubGlobal("fetch", () =>
+    Promise.reject(new Error("getaddrinfo ENOTFOUND api.crossref.org")),
+  );
   const r = await cached(PAPERS[0]!, EMPTY_LOOKUP_CACHE);
   assert.deepEqual(r, {
     check: {

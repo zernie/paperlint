@@ -62,14 +62,16 @@ const verdict = (
 
 const checker =
   (entries: readonly EntryVerdict[]): CheckReferences =>
-  async (_bib, cache) => ({ check: { kind: "checked", entries }, cache });
-const offline: CheckReferences = async (_bib, cache) => ({
-  check: {
-    kind: "not-checked",
-    why: "the citation services cannot be reached (fetch failed)",
-  },
-  cache,
-});
+  (_bib, cache) =>
+    Promise.resolve({ check: { kind: "checked", entries }, cache });
+const offline: CheckReferences = (_bib, cache) =>
+  Promise.resolve({
+    check: {
+      kind: "not-checked",
+      why: "the citation services cannot be reached (fetch failed)",
+    },
+    cache,
+  });
 
 /** The step's context over `files`, with every port it does not use stubbed. */
 const ctx = (files: ReturnType<typeof memoryFiles>) => ({
@@ -151,9 +153,9 @@ describe("the references build step", () => {
   });
 
   it("a checker that throws is recorded as not checked, not as a failed build", async () => {
-    const { files, out } = await build(TEX(ENTRIES), async () => {
-      throw new Error("DBLP exploded");
-    });
+    const { files, out } = await build(TEX(ENTRIES), () =>
+      Promise.reject(new Error("DBLP exploded")),
+    );
     expect(out.ok).toBe(true);
     expect(readReferences(files, PAPER)?.why).toMatch(/DBLP exploded/);
   });
@@ -166,9 +168,9 @@ const ANSWER: CachedResponse = {
 /** A checker that fetches `key` unless the cache has it, recording the cache it was handed. */
 function fetching(key: string) {
   const seen: LookupCache[] = [];
-  const check: CheckReferences = async (_bib, cache) => {
+  const check: CheckReferences = (_bib, cache) => {
     seen.push(cache);
-    return {
+    return Promise.resolve({
       check: { kind: "checked", entries: [verdict("schick2023")] },
       cache: cache.citations.has(key)
         ? cache
@@ -176,7 +178,7 @@ function fetching(key: string) {
             citations: new Map([...cache.citations, [key, ANSWER]]),
             dblp: cache.dblp,
           },
-    };
+    });
   };
   return { check, seen };
 }
@@ -216,16 +218,17 @@ describe("the lookup cache — <paper>/repro/references-cache.json", () => {
 
 describe("the lookup cache — counting and refusing", () => {
   it("two new answers are counted as two", async () => {
-    const two: CheckReferences = async (_bib, cache) => ({
-      check: { kind: "checked", entries: [verdict("schick2023")] },
-      cache: {
-        citations: new Map([
-          ["a", ANSWER],
-          ["b", ANSWER],
-        ]),
-        dblp: cache.dblp,
-      },
-    });
+    const two: CheckReferences = (_bib, cache) =>
+      Promise.resolve({
+        check: { kind: "checked", entries: [verdict("schick2023")] },
+        cache: {
+          citations: new Map([
+            ["a", ANSWER],
+            ["b", ANSWER],
+          ]),
+          dblp: cache.dblp,
+        },
+      });
     const { out } = await build(TEX(ENTRIES), two);
     expect(out).toEqual({
       ok: true,
@@ -429,13 +432,14 @@ describe("the lookup cache — refreshed answers", () => {
     const OLD: CachedResponse = { ...ANSWER, fetched: "2026-08-01" };
     const put =
       (answer: CachedResponse): CheckReferences =>
-      async (_bib, cache) => ({
-        check: { kind: "checked", entries: [verdict("schick2023")] },
-        cache: {
-          citations: new Map([...cache.citations, ["a", answer]]),
-          dblp: cache.dblp,
-        },
-      });
+      (_bib, cache) =>
+        Promise.resolve({
+          check: { kind: "checked", entries: [verdict("schick2023")] },
+          cache: {
+            citations: new Map([...cache.citations, ["a", answer]]),
+            dblp: cache.dblp,
+          },
+        });
     const { files } = await build(TEX(ENTRIES), put(OLD));
     const again = await referencesStep.run({
       ...ctx(files),

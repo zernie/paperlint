@@ -34,7 +34,7 @@ async function go(o: Parameters<typeof prepareEngine>[0]) {
     err: (l) => err.push(l),
     platform: "linux",
     interactive: true,
-    ask: async () => "y",
+    ask: () => Promise.resolve("y"),
     ...o,
   });
   return { r, out, err };

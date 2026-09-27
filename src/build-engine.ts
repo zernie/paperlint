@@ -71,7 +71,7 @@ function withDefaults(o: EngineOptions): Resolved {
   const r = {
     dryRun: false,
     interactive: false,
-    ask: async () => "",
+    ask: () => Promise.resolve(""),
     log: console.log,
     err: console.error,
     // eslint-disable-next-line no-restricted-globals -- legacy I/O, moves behind a port in #76

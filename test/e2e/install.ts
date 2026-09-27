@@ -559,9 +559,11 @@ try {
     // than feeding it to node.
     const bin = join(consumer, "node_modules", ".bin", PACKAGE_NAME);
     const help = sh(bin, ["--help"], { cwd: consumer });
-    help.status === 0
-      ? ok(`\`${PACKAGE_NAME} --help\` answers with zero`)
-      : bad(`\`${PACKAGE_NAME} --help\` answers with zero`, help.stderr);
+    if (help.status === 0) {
+      ok(`\`${PACKAGE_NAME} --help\` answers with zero`);
+    } else {
+      bad(`\`${PACKAGE_NAME} --help\` answers with zero`, help.stderr);
+    }
     // The shim above proves the MANAGER did its part. This proves the file the manifest PROMISES
     // exists and runs — the real file under both managers, so `node <it>` is uniform where
     // `node <shim>` is not (pnpm writes a shell wrapper).
@@ -577,9 +579,11 @@ try {
       const real = sh(process.execPath, [join(installed, binRel), "--help"], {
         cwd: consumer,
       });
-      real.status === 0
-        ? ok(`the manifest's bin (${binRel}) runs under node`)
-        : bad(`the manifest's bin (${binRel}) runs under node`, real.stderr);
+      if (real.status === 0) {
+        ok(`the manifest's bin (${binRel}) runs under node`);
+      } else {
+        bad(`the manifest's bin (${binRel}) runs under node`, real.stderr);
+      }
     }
 
     // 🔴 THE CORPUS IS STAGED BEFORE `init`, AND THIS IS NOT A REORDERING FOR CONVENIENCE. `init`
@@ -589,52 +593,64 @@ try {
     const init = sh(bin, ["init"], { cwd: consumer });
     // The corpus is staged under `papers/`, the default: init measures it and, finding the
     // default, writes NO paperlint.json. A file here would mean it wrote what it did not need.
-    existsSync(join(consumer, "paperlint.json"))
-      ? bad(
-          "`paperlint init` took the default papers directory and wrote no paperlint.json",
-          `${readFileSync(join(consumer, "paperlint.json"), "utf8")}\n${init.stdout}${init.stderr}`,
-        )
-      : ok(
-          "`paperlint init` took the default papers directory and wrote no paperlint.json",
-        );
-    init.status === 0
-      ? ok("`paperlint init` finished with zero — doctor found no discrepancy")
-      : bad(
-          "`paperlint init` finished with zero — doctor found no discrepancy",
-          init.stdout + init.stderr,
-        );
+    if (existsSync(join(consumer, "paperlint.json"))) {
+      bad(
+        "`paperlint init` took the default papers directory and wrote no paperlint.json",
+        `${readFileSync(join(consumer, "paperlint.json"), "utf8")}\n${init.stdout}${init.stderr}`,
+      );
+    } else {
+      ok(
+        "`paperlint init` took the default papers directory and wrote no paperlint.json",
+      );
+    }
+    if (init.status === 0) {
+      ok("`paperlint init` finished with zero — doctor found no discrepancy");
+    } else {
+      bad(
+        "`paperlint init` finished with zero — doctor found no discrepancy",
+        init.stdout + init.stderr,
+      );
+    }
 
     // The skills, as Claude Code will look for them: in the consumer, not in node_modules.
     const view = consumerSkillView(consumer, installed);
-    view.names.length > 0 && view.unreachable.length === 0
-      ? ok(
-          `all ${String(view.names.length)} shipped skill(s) are reachable as .claude/skills/<name>/SKILL.md`,
-        )
-      : bad(
-          `all ${String(view.names.length)} shipped skill(s) are reachable as .claude/skills/<name>/SKILL.md`,
-          `not reachable: ${view.unreachable.join(", ") || "(the package declares zero skills)"}\n${init.stdout}`,
-        );
-    view.notLinks.length === 0 &&
-    Object.values(view.links).every((t) => !t.startsWith("/"))
-      ? ok("each is a RELATIVE symlink, not a copy")
-      : bad(
-          "each is a RELATIVE symlink, not a copy",
-          `not links: ${view.notLinks.join(", ") || "-"}; absolute: ${
-            Object.entries(view.links)
-              .filter(([, t]) => t.startsWith("/"))
-              .map(([n]) => n)
-              .join(", ") || "-"
-          }`,
-        );
-    view.rootRefs > 0 && view.unresolved.length === 0
-      ? ok(
-          `all ${String(view.refs)} script path(s) resolve FROM THE CONSUMER ROOT (${String(view.rootRefs)} project-root-relative)`,
-        )
-      : bad(
-          `all ${String(view.refs)} script path(s) resolve FROM THE CONSUMER ROOT (${String(view.rootRefs)} project-root-relative)`,
-          view.unresolved.slice(0, 5).join("\n") ||
-            "zero project-root-relative references — nothing was checked",
-        );
+    if (view.names.length > 0 && view.unreachable.length === 0) {
+      ok(
+        `all ${String(view.names.length)} shipped skill(s) are reachable as .claude/skills/<name>/SKILL.md`,
+      );
+    } else {
+      bad(
+        `all ${String(view.names.length)} shipped skill(s) are reachable as .claude/skills/<name>/SKILL.md`,
+        `not reachable: ${view.unreachable.join(", ") || "(the package declares zero skills)"}\n${init.stdout}`,
+      );
+    }
+    if (
+      view.notLinks.length === 0 &&
+      Object.values(view.links).every((t) => !t.startsWith("/"))
+    ) {
+      ok("each is a RELATIVE symlink, not a copy");
+    } else {
+      bad(
+        "each is a RELATIVE symlink, not a copy",
+        `not links: ${view.notLinks.join(", ") || "-"}; absolute: ${
+          Object.entries(view.links)
+            .filter(([, t]) => t.startsWith("/"))
+            .map(([n]) => n)
+            .join(", ") || "-"
+        }`,
+      );
+    }
+    if (view.rootRefs > 0 && view.unresolved.length === 0) {
+      ok(
+        `all ${String(view.refs)} script path(s) resolve FROM THE CONSUMER ROOT (${String(view.rootRefs)} project-root-relative)`,
+      );
+    } else {
+      bad(
+        `all ${String(view.refs)} script path(s) resolve FROM THE CONSUMER ROOT (${String(view.rootRefs)} project-root-relative)`,
+        view.unresolved.slice(0, 5).join("\n") ||
+          "zero project-root-relative references — nothing was checked",
+      );
+    }
 
     // 🔴 THE HOOKS ARE WIRED WHERE CLAUDE CODE READS THEM, BY init ITSELF. No `/plugin` line is
     // typed anywhere: `init` without a terminal takes the YES default and writes the three
@@ -654,55 +670,72 @@ try {
       }
     })();
     const published = hookCommands(installed);
-    Array.isArray(wiredCommands) &&
-    published.err === undefined &&
-    wiredCommands.length === published.cmds.length &&
-    published.cmds.every(
-      (c) => wiredCommands.filter((w) => w === c).length === 1,
-    )
-      ? ok(
-          `\`paperlint init\` wired all ${String(wiredCommands.length)} hook command(s) into .claude/settings.json, once each`,
-        )
-      : bad(
-          "`paperlint init` wired the hooks into .claude/settings.json, once each",
-          `${JSON.stringify(wiredCommands).slice(0, 300)}\n${init.stdout}`,
-        );
-    /in a fresh clone they cannot run until `npm install`/.test(init.stdout)
-      ? ok("and it says the hook commands need `npm install` in a fresh clone")
-      : bad(
-          "and it says the hook commands need `npm install` in a fresh clone",
-          init.stdout,
-        );
+    if (
+      Array.isArray(wiredCommands) &&
+      published.err === undefined &&
+      wiredCommands.length === published.cmds.length &&
+      published.cmds.every(
+        (c) => wiredCommands.filter((w) => w === c).length === 1,
+      )
+    ) {
+      ok(
+        `\`paperlint init\` wired all ${String(wiredCommands.length)} hook command(s) into .claude/settings.json, once each`,
+      );
+    } else {
+      bad(
+        "`paperlint init` wired the hooks into .claude/settings.json, once each",
+        `${JSON.stringify(wiredCommands).slice(0, 300)}\n${init.stdout}`,
+      );
+    }
+    if (
+      /in a fresh clone they cannot run until `npm install`/.test(init.stdout)
+    ) {
+      ok("and it says the hook commands need `npm install` in a fresh clone");
+    } else {
+      bad(
+        "and it says the hook commands need `npm install` in a fresh clone",
+        init.stdout,
+      );
+    }
     const settingsBefore = existsSync(settingsPath)
       ? readFileSync(settingsPath)
       : null;
 
     // A second `init` is a re-run, not a clash: nothing fails, no link moves.
     const again = sh(bin, ["init"], { cwd: consumer });
-    settingsBefore !== null && readFileSync(settingsPath).equals(settingsBefore)
-      ? ok(
-          "a second `paperlint init` leaves .claude/settings.json byte-identical",
-        )
-      : bad(
-          "a second `paperlint init` leaves .claude/settings.json byte-identical",
-          again.stdout,
-        );
+    if (
+      settingsBefore !== null &&
+      readFileSync(settingsPath).equals(settingsBefore)
+    ) {
+      ok(
+        "a second `paperlint init` leaves .claude/settings.json byte-identical",
+      );
+    } else {
+      bad(
+        "a second `paperlint init` leaves .claude/settings.json byte-identical",
+        again.stdout,
+      );
+    }
     const after = consumerSkillView(consumer, installed);
-    again.status === 0 &&
-    view.names.every((n) => after.links[n] === view.links[n]) &&
-    new RegExp(
-      `0 linked now, ${String(view.names.length)} already linked, 0 skipped`,
-    ).test(again.stdout)
-      ? ok(
-          "a second `paperlint init` exits zero and leaves every link as it was",
-        )
-      : bad(
-          "a second `paperlint init` exits zero and leaves every link as it was",
-          `exit ${String(again.status)}\n${again.stdout
-            .split("\n")
-            .filter((l) => /shipped|skills/.test(l))
-            .join("\n")}${again.stderr}`,
-        );
+    if (
+      again.status === 0 &&
+      view.names.every((n) => after.links[n] === view.links[n]) &&
+      new RegExp(
+        `0 linked now, ${String(view.names.length)} already linked, 0 skipped`,
+      ).test(again.stdout)
+    ) {
+      ok(
+        "a second `paperlint init` exits zero and leaves every link as it was",
+      );
+    } else {
+      bad(
+        "a second `paperlint init` exits zero and leaves every link as it was",
+        `exit ${String(again.status)}\n${again.stdout
+          .split("\n")
+          .filter((l) => /shipped|skills/.test(l))
+          .join("\n")}${again.stderr}`,
+      );
+    }
 
     // 🔴 "CLEAN" MEANS: EXIT 0, AND ONLY THE WARNINGS A CORRECT CORPUS MUST CARRY, one per paper:
     // the acmart paper extends agenticdev and is not built here, so `pdf/measured` says the venue
@@ -736,40 +769,48 @@ try {
     const UNBUILT = /not built yet, so .*page limit/;
     const NO_PRESET = /names no venue preset yet/;
     const lint = sh(bin, ["lint", "--json"], { cwd: consumer });
-    expectedWarnings({ acmart: UNBUILT })(lint)
-      ? ok("`paperlint lint` passed the corpus clean")
-      : bad(
-          "`paperlint lint` passed the corpus clean",
-          lint.stdout + lint.stderr,
-        );
+    if (expectedWarnings({ acmart: UNBUILT })(lint)) {
+      ok("`paperlint lint` passed the corpus clean");
+    } else {
+      bad(
+        "`paperlint lint` passed the corpus clean",
+        lint.stdout + lint.stderr,
+      );
+    }
 
     // `paperlint new` from the INSTALLED package: the templates must have shipped in the tarball, and
     // what they scaffold must be what `paperlint lint` accepts — exit 0, not "missing
     // PIPELINE-STATUS.md", with the one warning that no venue is chosen yet. Then the whole corpus
     // is linted again, now with the new paper in it.
     const fresh = sh(bin, ["new", "demo"], { cwd: consumer });
-    fresh.status === 0 &&
-    existsSync(join(consumer, "papers", "demo", "PIPELINE-STATUS.md")) &&
-    existsSync(join(consumer, "papers", "demo", "paper.tex")) &&
-    existsSync(join(consumer, "papers", "demo", "paperlint.json")) &&
-    NO_PRESET.test(fresh.stdout) &&
-    /\(0 errors, 1 warning\)/.test(fresh.stdout)
-      ? ok(
-          "`paperlint new demo` scaffolds papers/demo from the shipped templates, paperlint.json included, and its lint passes with the one no-venue warning",
-        )
-      : bad(
-          "`paperlint new demo` scaffolds papers/demo from the shipped templates, paperlint.json included, and its lint passes with the one no-venue warning",
-          fresh.stdout + fresh.stderr,
-        );
+    if (
+      fresh.status === 0 &&
+      existsSync(join(consumer, "papers", "demo", "PIPELINE-STATUS.md")) &&
+      existsSync(join(consumer, "papers", "demo", "paper.tex")) &&
+      existsSync(join(consumer, "papers", "demo", "paperlint.json")) &&
+      NO_PRESET.test(fresh.stdout) &&
+      /\(0 errors, 1 warning\)/.test(fresh.stdout)
+    ) {
+      ok(
+        "`paperlint new demo` scaffolds papers/demo from the shipped templates, paperlint.json included, and its lint passes with the one no-venue warning",
+      );
+    } else {
+      bad(
+        "`paperlint new demo` scaffolds papers/demo from the shipped templates, paperlint.json included, and its lint passes with the one no-venue warning",
+        fresh.stdout + fresh.stderr,
+      );
+    }
     const withDemo = sh(bin, ["lint", "--json"], { cwd: consumer });
-    expectedWarnings({ acmart: UNBUILT, demo: NO_PRESET })(withDemo)
-      ? ok(
-          "`paperlint lint` still passes the corpus clean with the new paper in it",
-        )
-      : bad(
-          "`paperlint lint` still passes the corpus clean with the new paper in it",
-          withDemo.stdout + withDemo.stderr,
-        );
+    if (expectedWarnings({ acmart: UNBUILT, demo: NO_PRESET })(withDemo)) {
+      ok(
+        "`paperlint lint` still passes the corpus clean with the new paper in it",
+      );
+    } else {
+      bad(
+        "`paperlint lint` still passes the corpus clean with the new paper in it",
+        withDemo.stdout + withDemo.stderr,
+      );
+    }
 
     // 🔴 THE REAL ARTICLE, AND IT IS NOT EXPECTED TO BE CLEAN. The two papers above were written
     // for the rules; this one was published before the rules existed, so it is the only input on
@@ -802,22 +843,24 @@ try {
     }
     if (found) {
       const { grew, vanished } = compareToBaseline(found);
-      grew.length === 0 && vanished.length === 0
-        ? ok(
-            `the real article matches its baseline (${Object.entries(found)
-              .map(([r, n]) => `${r} ${String(n)}`)
-              .join(", ")})`,
-          )
-        : bad(
-            "the real article matches its baseline",
-            [
-              ...grew.map(
-                (g) =>
-                  `grew: ${g.rule} ${String(g.now)} > recorded ${String(g.recorded)}`,
-              ),
-              ...vanished.map((r) => `vanished: ${r}`),
-            ].join("\n"),
-          );
+      if (grew.length === 0 && vanished.length === 0) {
+        ok(
+          `the real article matches its baseline (${Object.entries(found)
+            .map(([r, n]) => `${r} ${String(n)}`)
+            .join(", ")})`,
+        );
+      } else {
+        bad(
+          "the real article matches its baseline",
+          [
+            ...grew.map(
+              (g) =>
+                `grew: ${g.rule} ${String(g.now)} > recorded ${String(g.recorded)}`,
+            ),
+            ...vanished.map((r) => `vanished: ${r}`),
+          ].join("\n"),
+        );
+      }
     }
 
     // 🔴 The load-bearing check: the commands ARE EXECUTED.
@@ -832,20 +875,24 @@ try {
 
     // Content delivery: the skills, and the paths inside them.
     const d = contentDelivery(installed);
-    d.missing.length === 0 && d.there === d.here
-      ? ok(`all ${String(d.here)} skill(s) arrived`)
-      : bad(
-          `all ${String(d.here)} skill(s) arrived`,
-          `${String(d.there)} arrived; missing: ${d.missing.join(", ") || "(count differs without a named gap)"}`,
-        );
-    d.unresolved.length === 0
-      ? ok(
-          `all ${String(d.refs)} script path(s) named by skills resolve in the consumer`,
-        )
-      : bad(
-          `all ${String(d.refs)} script path(s) named by skills resolve in the consumer`,
-          [...new Set(d.unresolved)].slice(0, 5).join("\n"),
-        );
+    if (d.missing.length === 0 && d.there === d.here) {
+      ok(`all ${String(d.here)} skill(s) arrived`);
+    } else {
+      bad(
+        `all ${String(d.here)} skill(s) arrived`,
+        `${String(d.there)} arrived; missing: ${d.missing.join(", ") || "(count differs without a named gap)"}`,
+      );
+    }
+    if (d.unresolved.length === 0) {
+      ok(
+        `all ${String(d.refs)} script path(s) named by skills resolve in the consumer`,
+      );
+    } else {
+      bad(
+        `all ${String(d.refs)} script path(s) named by skills resolve in the consumer`,
+        [...new Set(d.unresolved)].slice(0, 5).join("\n"),
+      );
+    }
 
     // 🔴 A NAME THAT IS ALREADY TAKEN STAYS TAKEN. Last, because it deliberately breaks one
     // skill's link: the consumer's own directory under a shipped skill's name, plus one under a
@@ -869,16 +916,20 @@ try {
           "the consumer's own\n" &&
         readFileSync(join(home, "consumers-own-skill", "SKILL.md"), "utf8") ===
           "untouched\n";
-      kept &&
-      third.status === 0 &&
-      new RegExp(`${taken} — a directory`).test(third.stdout)
-        ? ok(
-            `a foreign .claude/skills/${taken} is left untouched, named, and init still exits zero`,
-          )
-        : bad(
-            `a foreign .claude/skills/${taken} is left untouched, named, and init still exits zero`,
-            `kept=${String(kept)} exit=${String(third.status)}\n${third.stdout}`,
-          );
+      if (
+        kept &&
+        third.status === 0 &&
+        new RegExp(`${taken} — a directory`).test(third.stdout)
+      ) {
+        ok(
+          `a foreign .claude/skills/${taken} is left untouched, named, and init still exits zero`,
+        );
+      } else {
+        bad(
+          `a foreign .claude/skills/${taken} is left untouched, named, and init still exits zero`,
+          `kept=${String(kept)} exit=${String(third.status)}\n${third.stdout}`,
+        );
+      }
     }
 
     results.push({ manager: `${m.name} ${m.version}`, fail });

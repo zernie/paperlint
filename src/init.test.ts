@@ -93,7 +93,7 @@ describe("paperlint init — a declared papers directory", () => {
       log: () => {},
       err: () => {},
       interactive: true,
-      ask: async (q) => (asked.push(q), "n"),
+      ask: (q) => Promise.resolve((asked.push(q), "n")),
       hooks: false,
       run: (() => ({ status: 0 })) as never,
       link: () => ({ ok: false, error: "not linked in this test" }),
@@ -165,7 +165,8 @@ const texRun = async (
     log: (s: string) => out.push(s),
     err: () => {},
     interactive,
-    ask: async (q) => (asked.push(q), /TeX Live/.test(q) ? answer : ""),
+    ask: (q) =>
+      Promise.resolve((asked.push(q), /TeX Live/.test(q) ? answer : "")),
     hooks: false,
     run: (() => ({ status: 0 })) as never,
     link: () => ({ ok: false as const, error: "not linked in this test" }),
@@ -301,7 +302,7 @@ describe("paperlint init — how several candidate directories were decided, sai
   it("picked by a human", async () => {
     const r = await initRun(several(), {
       interactive: true,
-      ask: async () => "2",
+      ask: () => Promise.resolve("2"),
     });
     expect(section(r.out)).toEqual([
       "  ✓ writing — you picked it out of 2 candidates",
@@ -319,7 +320,7 @@ describe("paperlint init — how several candidate directories were decided, sai
   it("an answer that picks nothing: the first, and said so", async () => {
     const r = await initRun(several(), {
       interactive: true,
-      ask: async () => "nine",
+      ask: () => Promise.resolve("nine"),
     });
     expect(section(r.out)[0]).toBe(
       "  ✓ drafts — 2 candidates, no answer was given, so the first one was taken",
@@ -433,7 +434,7 @@ describe("paperlint init — TeX Live and hooks failures, whole", () => {
   it("TeX Live: a failed install says to run it again", async () => {
     const t = await offerTexLive(
       { installed: () => false, install: () => 1 },
-      { interactive: true, ask: async () => "yes" },
+      { interactive: true, ask: () => Promise.resolve("yes") },
     );
     expect([t, reportTexLive(t, "")]).toEqual([
       "failed",
@@ -462,8 +463,8 @@ describe("paperlint init — a first paper", () => {
     const made: string[] = [];
     const r = await initRun(tree({}), {
       interactive: true,
-      ask: async () => "",
-      createPaper: async (_root, name) => (made.push(name), 0),
+      ask: () => Promise.resolve(""),
+      createPaper: (_root, name) => Promise.resolve((made.push(name), 0)),
     });
     expect(made).toEqual([]);
     expect(r.out[r.out.indexOf("first paper") + 1]).toBe(

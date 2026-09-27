@@ -131,7 +131,7 @@ test("main: problems are listed and fail; a clean count passes", async () => {
   }) => {
     const out: string[] = [];
     const code = await main({
-      check: async () => ({ ...r, frozen: {} }),
+      check: () => Promise.resolve({ ...r, frozen: {} }),
       log: (s: string) => out.push(s),
       err: (s: string) => out.push(`E ${s}`),
     });
@@ -191,11 +191,14 @@ test("checkFrozen: a lint that returns no result reports that nothing was counte
   writeTree(root, {
     [FROZEN_FILE]: JSON.stringify({ files: { "src/a.ts": { x: 1 } } }),
   });
-  assert.deepEqual(await checkFrozen(root, { lint: async () => [] }), {
-    problems: ["src/**/*.ts matched no file — nothing was counted."],
-    frozen: { "src/a.ts": { x: 1 } },
-    counts: {},
-  });
+  assert.deepEqual(
+    await checkFrozen(root, { lint: () => Promise.resolve([]) }),
+    {
+      problems: ["src/**/*.ts matched no file — nothing was counted."],
+      frozen: { "src/a.ts": { x: 1 } },
+      counts: {},
+    },
+  );
 });
 
 test("tally: optional parts of ESLint's result shape are read as absent", () => {
@@ -221,9 +224,10 @@ test("checkFrozen: a frozen file with no `files` freezes nothing", async () => {
   const root = useTempDir("layer-frozen-nofiles-");
   writeTree(root, { [FROZEN_FILE]: "{}\n" });
   const r = await checkFrozen(root, {
-    lint: async () => [
-      { filePath: `${root}/src/a.ts`, suppressedMessages: [] },
-    ],
+    lint: () =>
+      Promise.resolve([
+        { filePath: `${root}/src/a.ts`, suppressedMessages: [] },
+      ]),
   });
   assert.deepEqual(r, { problems: [], frozen: {}, counts: {} });
 });

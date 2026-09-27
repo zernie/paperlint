@@ -674,13 +674,14 @@ function baseDefaults({
 }
 
 /** Without a checker the record says so — never a pass. The CLI wires the real one. */
-const notWired: CheckReferences = async (_bib, cache) => ({
-  check: {
-    kind: "not-checked",
-    why: "no reference checker was wired into this build",
-  },
-  cache,
-});
+const notWired: CheckReferences = (_bib, cache) =>
+  Promise.resolve({
+    check: {
+      kind: "not-checked",
+      why: "no reference checker was wired into this build",
+    },
+    cache,
+  });
 
 /** banal as the measurer, wired from the build's environment: the one piece of root work left here (#76). */
 function defaultMeasurer(

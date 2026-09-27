@@ -23,8 +23,8 @@ interface FakeItem {
 function page(items: FakeItem[], fonts: Record<string, unknown>) {
   const objs = new Map(Object.entries(fonts));
   return {
-    getOperatorList: async () => ({ fnArray: [], argsArray: [] }),
-    getTextContent: async () => ({ items }),
+    getOperatorList: () => Promise.resolve({ fnArray: [], argsArray: [] }),
+    getTextContent: () => Promise.resolve({ items }),
     // Iterable like pdf.js's `commonObjs`, with its `has`/`get`.
     commonObjs: {
       has: (id: string) => objs.has(id),
@@ -42,7 +42,7 @@ function page(items: FakeItem[], fonts: Record<string, unknown>) {
 const doc = (pages: ReturnType<typeof page>[]) =>
   ({
     numPages: pages.length,
-    getPage: async (i: number) => pages[i - 1],
+    getPage: (i: number) => Promise.resolve(pages[i - 1]),
   }) as never;
 const item = (
   fontName: string,

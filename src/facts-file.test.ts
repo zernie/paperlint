@@ -147,10 +147,11 @@ test("🔴 geometry_source and the nine columns come from ONE branch", () => {
 const PAPER = "/r/papers/p";
 const PDF = `${PAPER}/paper.pdf`;
 const PDF_BYTES = "%PDF-pretend";
-const good: PdfReader = async () => ({
-  ok: true,
-  facts: { pages: 2, fonts: FONTS, last: lastPage(60, 60), layout: [] },
-});
+const good: PdfReader = () =>
+  Promise.resolve({
+    ok: true,
+    facts: { pages: 2, fonts: FONTS, last: lastPage(60, 60), layout: [] },
+  });
 /** The shipped presets at their real paths: `extends` resolves through the same Files port. */
 const SHIPPED_PRESETS = Object.fromEntries(
   readdirSync(packageVenuesDir())
@@ -232,7 +233,8 @@ test("a failed read is the one error line, and nothing is written", async () => 
   const before = files.map.size;
   const m = await measurePaper(PAPER, PDF, {
     ...o,
-    readPdf: async () => ({ ok: false, reason: "unreadable", detail: "boom" }),
+    readPdf: () =>
+      Promise.resolve({ ok: false, reason: "unreadable", detail: "boom" }),
   });
   assert.match(!m.ok ? m.error : "", /pdf\.js \(unreadable\): boom/);
   assert.equal(files.map.size, before);

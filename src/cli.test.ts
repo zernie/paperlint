@@ -169,7 +169,12 @@ test("chooseVenue: a preset by path (inside and outside the paper), by prefixed 
   const choose = (venue: string) =>
     chooseVenue(
       { venue, kind: null },
-      { paperDir, cwd: dir, interactive: false, ask: async () => "" },
+      {
+        paperDir,
+        cwd: dir,
+        interactive: false,
+        ask: () => Promise.resolve(""),
+      },
     );
   const results = await Promise.all([
     choose("./papers/p/mine.jsonc"),

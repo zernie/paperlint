@@ -263,13 +263,16 @@ try {
   // is the real command: real pdflatex and bibtex.
   const asked: string[] = [];
   const realFetch = globalThis.fetch;
-  globalThis.fetch = async (url: string | URL | Request) => {
-    asked.push(String(url));
-    const u = String(url);
+  globalThis.fetch = (url: string | URL | Request) => {
+    const u = url instanceof Request ? url.url : String(url);
+    asked.push(u);
     if (u.startsWith("https://export.arxiv.org/"))
-      return new Response("<feed></feed>");
-    if (u.startsWith("https://dblp.org/")) return Response.json({});
-    return Response.json({ message: { items: [] }, results: [], data: [] });
+      return Promise.resolve(new Response("<feed></feed>"));
+    if (u.startsWith("https://dblp.org/"))
+      return Promise.resolve(Response.json({}));
+    return Promise.resolve(
+      Response.json({ message: { items: [] }, results: [], data: [] }),
+    );
   };
   const fakeReferences = referencesChecker({ today: () => "2026-09-27" });
   const printed: string[] = [];

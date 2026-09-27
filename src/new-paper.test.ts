@@ -266,7 +266,8 @@ describe("chooseVenue — on a terminal", () => {
         paperDir: "/p/papers/demo",
         cwd: "/p",
         interactive: true,
-        ask: async (q: string) => (asked.push(q), answers.shift() ?? ""),
+        ask: (q: string) =>
+          Promise.resolve((asked.push(q), answers.shift() ?? "")),
       },
     };
   };
