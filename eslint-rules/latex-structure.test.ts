@@ -13,7 +13,9 @@ import {
   outlineOf,
   parseLatex,
   parseTemplate,
+  renderedRuns,
   replaceDocumentClass,
+  spanIn,
   withDocumentClass,
 } from "./latex-structure.ts";
 
@@ -210,6 +212,27 @@ describe("outlineOf", () => {
     expect(
       outlineOf({ content: [{ type: "environment", env: "document" }] }),
     ).toEqual({ sections: [], backMatter: null, end: null });
+  });
+});
+
+describe("renderedRuns", () => {
+  it("runs of strings and spaces, each character mapped to its source offset", () => {
+    const src = "A~B \\emph{C D}\n\n E";
+    const runs = renderedRuns(parseLatex(src));
+    expect(runs.map((r) => r.text)).toEqual(["A B ", "C D", " E"]);
+    const [first] = runs;
+    expect(first && spanIn(first, 2, 3)).toEqual({ start: 2, end: 3 });
+  });
+
+  it("skips what has no position, an environment named by nodes, and an argument without content", () => {
+    const root: TexRoot = {
+      content: [
+        str("unpositioned"),
+        { type: "environment", env: [str("x")], content: [str("y")] },
+        { type: "macro", content: "emph", args: [{ type: "argument" }] },
+      ],
+    };
+    expect(renderedRuns(root)).toEqual([]);
   });
 });
 

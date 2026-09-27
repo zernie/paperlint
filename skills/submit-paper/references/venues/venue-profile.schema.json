@@ -24,6 +24,15 @@
       "type": "string",
       "minLength": 1
     },
+    "aliases": {
+      "description": "Other names the venue goes by in a paper's text — its acronym, its parent conference (`[\"AISec\", \"ACM CCS\"]`). Read by `tex/venue-leftover`: a paper that extends another venue and says one of these is flagged. Matched as whole words, case-sensitive. Collected along the `extends` chain, with `name`.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
     "required_sections": {
       "description": "Sections the venue requires, read by `tex/required-section`. Each is a `\\section` or `\\section*` whose title equals `title` once whitespace is collapsed. `position: \"last\"`: after every section of the body (the ones before the appendix and the bibliography); it may stand after the bibliography. A child preset's list replaces its parent's.",
       "type": "array",

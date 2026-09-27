@@ -75,6 +75,13 @@ Most of the package's rules run on users' papers and are described for users in
 [`docs/rules.md`](docs/rules.md); the rest lint this package's own source and never see a user's
 files.
 
+A new rule ships with its page, `docs/rules/<group>/<rule>.md`, in these sections: What it
+catches · Why · Examples (failing / passing) · Options / preset fields · What it does not check ·
+How to fix. Its `meta.docs.url` points at that page, and its row in `docs/rules.md` is one line
+linking there. `src/rule-docs.test.ts` holds every rule the config registers to this; the rules
+older than the convention wait in its `AWAITING_PAGE` list, which only shrinks — #131 writes their
+pages.
+
 ## Maintainer docs
 
 The README links only what a user needs. These are for people changing the package:

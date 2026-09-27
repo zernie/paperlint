@@ -64,6 +64,7 @@ const KEY_SIGNATURES: Readonly<Record<string, { signature: string }>> = {
   RequirePackage: { signature: "o m o" },
   documentclass: { signature: "o m o" },
 };
+const KEY_MACROS = new Set(Object.keys(KEY_SIGNATURES));
 
 let parser: ReturnType<typeof getParser> | null = null;
 /** A LaTeX source → its tree. One parser for the process: building one compiles its grammar. */
@@ -224,13 +225,18 @@ const isBackMatter = (n: TexNode): boolean =>
   (n.type === "macro" && BACK_MATTER_MACROS.has(n.content)) ||
   (n.type === "environment" && n.env === "thebibliography");
 
+/** The node lists inside a node, in source order: each argument's, then its content. */
+function childLists(n: TexNode): (readonly TexNode[])[] {
+  const lists = (("args" in n && n.args) || []).map((a) => a.content ?? []);
+  if ("content" in n && Array.isArray(n.content)) lists.push(n.content);
+  return lists;
+}
+
 /** Every node of a list, depth first in source order, through arguments and contents. */
 function forEachDeep(nodes: readonly TexNode[], f: (n: TexNode) => void): void {
   for (const n of nodes) {
     f(n);
-    for (const a of ("args" in n && n.args) || [])
-      forEachDeep(a.content ?? [], f);
-    if ("content" in n && Array.isArray(n.content)) forEachDeep(n.content, f);
+    for (const list of childLists(n)) forEachDeep(list, f);
   }
 }
 
@@ -263,4 +269,91 @@ export function outlineOf(root: TexRoot): Outline {
   });
   const docSpan = doc ? spanOf(doc) : null;
   return { sections, backMatter, end: docSpan ? docSpan.end - 1 : null };
+}
+
+// ── the text a reader sees ──────────────────────────────────────────────────────────
+
+/** A run of rendered text; `offs[i]` is the source offset of `text[i]`. */
+export interface TextRun {
+  readonly text: string;
+  readonly offs: readonly number[];
+}
+
+/** The source span of `run.text.slice(from, to)`, `to > from`. */
+export function spanIn(run: TextRun, from: number, to: number): Span {
+  let start = 0;
+  let end = 0;
+  run.offs.forEach((o, i) => {
+    if (i === from) start = o;
+    if (i === to - 1) end = o + 1;
+  });
+  return { start, end };
+}
+
+/** Environments whose body is not text a reader sees as prose: code and the bibliography. */
+const HIDDEN_ENVS = new Set([
+  "thebibliography",
+  "verbatim",
+  "Verbatim",
+  "lstlisting",
+  "minted",
+  "comment",
+]);
+
+/** Node types a reader does not see as prose: comments, code, math. */
+const HIDDEN_TYPES = new Set<TexNode["type"]>([
+  "comment",
+  "verbatim",
+  "verb",
+  "inlinemath",
+  "displaymath",
+  "mathenv",
+]);
+
+const isHidden = (n: TexNode): boolean =>
+  HIDDEN_TYPES.has(n.type) ||
+  (n.type === "environment" &&
+    typeof n.env === "string" &&
+    HIDDEN_ENVS.has(n.env)) ||
+  (n.type === "macro" && KEY_MACROS.has(n.content));
+
+/** A node's contribution to the run in progress: its characters and their offsets, or null. */
+function runPart(n: TexNode): { text: string; at: number } | null {
+  const at = n.position?.start.offset;
+  if (at === undefined) return null;
+  if (n.type === "whitespace" || n.type === "parbreak")
+    return { text: " ", at };
+  if (n.type !== "string") return null;
+  // A tie (`~`) is a space the reader sees.
+  return { text: n.content === "~" ? " " : n.content, at };
+}
+
+/**
+ * Runs of rendered text: stretches of sibling strings and spaces. Anything else ends a run and is
+ * entered — a group's text, a macro's arguments — except what a reader never sees: comments,
+ * math, code, the bibliography, and the arguments of `KEY_SIGNATURES`' macros.
+ */
+export function renderedRuns(root: TexRoot): TextRun[] {
+  const out: TextRun[] = [];
+  const walk = (nodes: readonly TexNode[]): void => {
+    let run: { text: string; offs: number[] } = { text: "", offs: [] };
+    const flush = () => {
+      if (run.text.trim()) out.push(run);
+      run = { text: "", offs: [] };
+    };
+    for (const n of nodes) {
+      const part = runPart(n);
+      if (part) {
+        run.text += part.text;
+        for (let i = 0; i < part.text.length; i++) run.offs.push(part.at + i);
+        continue;
+      }
+      flush();
+      if (isHidden(n)) continue;
+      for (const list of childLists(n)) walk(list);
+    }
+    flush();
+  };
+  walk(root.content);
+  return out;
 }

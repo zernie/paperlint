@@ -170,6 +170,8 @@ export interface PresetFile {
   readonly name: string | null;
   /** The `\\documentclass` the venue's template uses, parsed; null when the preset names none. */
   readonly template: DocumentClass | null;
+  /** Other names the venue goes by in a paper's text; empty when the file names none. */
+  readonly aliases: readonly string[];
   /** Sections the venue requires; null when the file names none (a child's list replaces its parent's). */
   readonly requiredSections: readonly RequiredSection[] | null;
   /** Null when the file declares no `tex` block (allowed only with `extends`). */
@@ -202,6 +204,7 @@ interface PresetJson {
   readonly extends?: string;
   readonly name?: string;
   readonly template?: string;
+  readonly aliases?: readonly string[];
   readonly required_sections?: readonly {
     readonly title: string;
     readonly position?: "last";
@@ -243,6 +246,14 @@ function formatOf(j: FormatJson = {}): VenueFormat {
   };
 }
 
+/** A preset's `required_sections`, or null when it names none. */
+const sectionsOf = (
+  r: PresetJson["required_sections"],
+): readonly RequiredSection[] | null =>
+  r === undefined
+    ? null
+    : r.map((x) => ({ title: x.title, position: orNull(x.position) }));
+
 /** A preset's `template` → the class it names, or an Error naming the file. */
 function templateOf(text: string, file: string): DocumentClass {
   const t = parseTemplate(text);
@@ -283,11 +294,8 @@ export function parsePreset(
     extends: orNull(j.extends),
     name: orNull(j.name),
     template: j.template === undefined ? null : templateOf(j.template, file),
-    requiredSections:
-      j.required_sections?.map((r) => ({
-        title: r.title,
-        position: orNull(r.position),
-      })) ?? null,
+    aliases: j.aliases ?? [],
+    requiredSections: sectionsOf(j.required_sections),
     tex: j.tex ? { packages: j.tex.packages, tools: j.tex.tools ?? {} } : null,
     format: formatOf(j.format),
     rules: j.rules ?? {},

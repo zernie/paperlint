@@ -8,7 +8,12 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
-import { TEX_VENUE_RULE_LEVELS, texVenueRules } from "./tex-venue-rules.ts";
+import {
+  otherVenues,
+  TEX_VENUE_RULE_LEVELS,
+  texVenueRules,
+} from "./tex-venue-rules.ts";
+import { resolvePreset } from "./presets.ts";
 import { buildConfig, SHIPPED_RULES } from "./cli.ts";
 
 const VENUES = packageVenuesDir();
@@ -372,6 +377,122 @@ describe("tex/required-section — the edges", () => {
   });
 });
 
+const INSTITUTION =
+  "\\institution{Submission to AISec 2026 @ ACM CCS --- double-blind review}";
+const leftovers = (fs: readonly Finding[]) =>
+  fs.filter((f) => f.rule === "tex/venue-leftover");
+
+describe("tex/venue-leftover — another venue named in the text", () => {
+  it("🔴 the author-block line fails under aidc: both names, on that line", () => {
+    const tex = aidcPaper(`${INSTITUTION}\n${BODY}${STATEMENT}`);
+    const fs = leftovers(lint(tex, AIDC));
+    expect(fs.map((f) => f.message)).toEqual([
+      "«AISec» names aisec, and this paper extends aidc — a leftover from an earlier submission? A reviewer reads it before the abstract. Comments and citation keys are not reported; a sentence that names the other venue on purpose can keep it with a disable directive",
+      expect.stringContaining("«ACM CCS» names aisec"),
+    ]);
+    const line = tex.split("\n").indexOf(INSTITUTION) + 1;
+    expect(fs.map((f) => f.line)).toEqual([line, line]);
+  });
+
+  it("the same line passes under aisec — it is that venue's own name", () => {
+    const tex = paper(
+      "\\documentclass[sigconf]{acmart}",
+      `${INSTITUTION}\nText.`,
+    );
+    expect(
+      leftovers(lint(tex, { extends: "paperlint:aisec", kind: "research" })),
+    ).toEqual([]);
+  });
+
+  it("a \\cite key and a comment naming it produce no finding", () => {
+    const tex = aidcPaper(
+      `As shown~\\cite{aisec2025,AISec} and \\citep[AISec]{AISec}. % AISec 2026\n${BODY}${STATEMENT}`,
+    );
+    expect(leftovers(lint(tex, AIDC))).toEqual([]);
+  });
+
+  it("the bibliography, math, code and labels are not the text a reader sees as the venue's", () => {
+    const tex = aidcPaper(
+      `$AISec$ \\label{AISec} \\ref{AISec} \\url{https://AISec.cc} \\begin{verbatim}AISec\\end{verbatim}\n` +
+        `${BODY}${STATEMENT}\\begin{thebibliography}{1}\\bibitem{a} In Proc. AISec.\\end{thebibliography}\n`,
+    );
+    expect(leftovers(lint(tex, AIDC))).toEqual([]);
+  });
+});
+
+describe("tex/venue-leftover — where names are found, and whose they are", () => {
+  it.each<[string, string, string[]]>([
+    [
+      "the preamble's \\acmConference",
+      "\\acmConference[AISec '26]{x}",
+      ["AISec"],
+    ],
+    ["a footnote", "Text.\\footnote{Submitted to REALM.}", ["REALM"]],
+    ["a tie inside the name", "ACM~CCS", ["ACM CCS"]],
+    [
+      "whole words only: AISecX and xAIDC are other words",
+      "AISecX, EMNLPs and AgenticDevOps.",
+      [],
+    ],
+    ["case matters: aisec is not AISec", "aisec.cc", []],
+  ])("%s", (_, text, want) => {
+    const tex = aidcPaper(`${text}\n${BODY}${STATEMENT}`);
+    expect(
+      leftovers(lint(tex, AIDC)).map((f) => /«(.*?)»/u.exec(f.message)?.[1]),
+    ).toEqual(want);
+  });
+
+  it("a name a venue shares with this paper's own chain is not a leftover", () => {
+    const own = `${PAPER}/own.jsonc`;
+    const extra = {
+      [own]: JSON.stringify({
+        extends: "paperlint:aidc",
+        name: "AIDC 2027",
+        aliases: ["ACM CCS"],
+      }),
+    };
+    const tex = aidcPaper(`ACM CCS and AIDC 2027.\n${BODY}${STATEMENT}`);
+    expect(
+      leftovers(
+        lint(tex, { extends: "./own.jsonc", kind: "regular" }, { extra }),
+      ),
+    ).toEqual([]);
+  });
+
+  it("under a family, a venue that extends it is another venue", () => {
+    // ieee-conference is on aidc's chain, so under the family aidc is ANOTHER venue.
+    const tex = paper(
+      "\\documentclass[conference]{IEEEtran}",
+      "Accepted at AIDC. Formerly at AISec.",
+    );
+    expect(
+      leftovers(lint(tex, { extends: "paperlint:ieee-conference" }))
+        .map((f) => /«(.*?)»/u.exec(f.message)?.[1])
+        .sort(),
+    ).toEqual(["AIDC", "AISec"]);
+  });
+});
+
+describe("otherVenues", () => {
+  it("every shipped venue off the paper's chain; one that does not resolve is skipped", () => {
+    const files = memoryFiles(
+      Object.fromEntries(
+        Object.entries(shipped).filter(([f]) => !f.endsWith("realm.jsonc")),
+      ),
+    );
+    const deps = { files, venuesDir: VENUES };
+    const from = `${PAPER}/paperlint.json`;
+    const aidc = resolvePreset("paperlint:aidc", from, deps);
+    expect(aidc.ok).toBe(true);
+    if (!aidc.ok) return;
+    expect(otherVenues(aidc.value, from, deps).map((o) => o.label)).toEqual([
+      "acm-sigconf",
+      "agenticdev",
+      "aisec",
+    ]);
+  });
+});
+
 describe("paperlint's own config", () => {
   it.each(Object.entries(TEX_VENUE_RULE_LEVELS))(
     "turns %s on at %s for every paper.tex, and ships it",
@@ -384,10 +505,11 @@ describe("paperlint's own config", () => {
     },
   );
 
-  it("the levels: template and required-section are errors", () => {
-    expect(TEX_VENUE_RULE_LEVELS).toMatchObject({
+  it("the levels: template and required-section are errors, venue-leftover a warning", () => {
+    expect(TEX_VENUE_RULE_LEVELS).toEqual({
       "tex/template": "error",
       "tex/required-section": "error",
+      "tex/venue-leftover": "warn",
     });
   });
 });

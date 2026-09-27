@@ -15,7 +15,8 @@ venues/usenix-sec.jsonc      (optional, your own) a VENUE PRESET: format, page l
 ```
 
 The shipped presets (`paperlint:<name>`) live in the package, under
-`skills/submit-paper/references/venues/`: `acm-sigconf`, `agenticdev`, `aisec`, `realm`.
+`skills/submit-paper/references/venues/`: `acm-sigconf`, `agenticdev`, `aidc`, `aisec`,
+`ieee-conference`, `realm`.
 
 ## The root `paperlint.json`
 

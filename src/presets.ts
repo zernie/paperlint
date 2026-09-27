@@ -20,6 +20,7 @@
  *   format     per key, the child wins; `kinds` by kind name, a child's kind replaces that kind
  *   rules      per rule id, the child wins
  *   template   the child wins; so does `name`, and `required_sections` (the whole list)
+ *   aliases    union, with every `name` — what the venue is called along the chain
  *
  * ── THE LABEL ─────────────────────────────────────────────────────────────────────
  * Messages, the facts file and the build plan need a word for the venue. It is the most derived
@@ -70,6 +71,8 @@ export interface Preset {
   /** Every file of the chain, root first. */
   readonly chain: readonly string[];
   readonly template: DocumentClass | null;
+  /** Every `name` and `aliases` along the chain: what this venue is called in a paper's text. */
+  readonly aliases: readonly string[];
   readonly requiredSections: readonly RequiredSection[];
   readonly tex: TexRequirements;
   readonly format: VenueFormat;
@@ -196,6 +199,7 @@ function merged(
   const base: {
     name: string | null;
     template: DocumentClass | null;
+    aliases: readonly string[];
     requiredSections: readonly RequiredSection[];
     tex: TexRequirements;
     format: VenueFormat;
@@ -203,6 +207,7 @@ function merged(
   } = {
     name: null,
     template: null,
+    aliases: [],
     requiredSections: [],
     tex: NO_REQUIREMENTS,
     format: NO_FORMAT,
@@ -212,6 +217,13 @@ function merged(
     (acc, p) => ({
       name: p.name ?? acc.name,
       template: p.template ?? acc.template,
+      aliases: [
+        ...new Set([
+          ...acc.aliases,
+          ...(p.name === null ? [] : [p.name]),
+          ...p.aliases,
+        ]),
+      ],
       requiredSections: p.requiredSections ?? acc.requiredSections,
       tex: p.tex ? mergeRequirements(acc.tex, p.tex) : acc.tex,
       format: mergeFormat(acc.format, p.format),
@@ -223,6 +235,7 @@ function merged(
     label: m.name ?? labelOf(spec),
     chain: files,
     template: m.template,
+    aliases: m.aliases,
     requiredSections: m.requiredSections,
     tex: m.tex,
     format: m.format,

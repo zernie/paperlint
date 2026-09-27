@@ -77,6 +77,13 @@ and stay QUIET on a clean fixture. A check that has only been seen quiet is
 indistinguishable from a dead one — silence is its success state. Prove the fire half by
 seeing the test go RED before the fix lands ([`docs/testing.md`](docs/testing.md)).
 
+**A new rule ships with its page**, `docs/rules/<group>/<rule>.md`, in these sections: What it
+catches · Why · Examples (failing / passing) · Options / preset fields · What it does not check ·
+How to fix. Its `meta.docs.url` points at that page, and its row in `docs/rules.md` is one line
+linking there. `src/rule-docs.test.ts` holds every rule the config registers to this; the rules
+older than the convention wait in its `AWAITING_PAGE` list, which only shrinks — #131 writes their
+pages.
+
 **4. `exit 0` with empty output is NOT "clean".** A rule whose glob matched no files reports
 exactly like a rule that passed. Any rule shipped here must be loud when its input set is
 empty. This is the specific defect that blocks stage 1 of the plan: in the source base a

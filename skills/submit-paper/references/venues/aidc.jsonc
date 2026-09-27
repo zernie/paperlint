@@ -22,6 +22,10 @@
 {
   "extends": "paperlint:ieee-conference",
 
+  // What the venue is called in a paper's text (tex/venue-leftover): the workshop, and the
+  // conference it is held at.
+  "aliases": ["AIDC", "ACSAC"],
+
   "template": "\\documentclass[conference,compsoc]{IEEEtran}",
 
   // «Authors must follow the ACSAC AI Usage Policy for all workshop submissions.» (the call above).

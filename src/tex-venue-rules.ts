@@ -5,6 +5,8 @@
  *   tex/template          error  the `\documentclass` is the preset's class, with every option it names
  *   tex/required-section  error  each section the preset requires is there, titled exactly, and
  *                                where the preset says (`last`: after every section of the body)
+ *   tex/venue-leftover    warn   the text a reader sees names ANOTHER shipped venue — its `name`
+ *                                or one of its `aliases` — than the one the paper extends
  *
  * ── WHY THEY LIVE HERE AND NOT IN `eslint-rules/` ────────────────────────────────
  * Like the `pdf/*` venue rules (`venue-rules.ts`), they need the paper's resolved preset —
@@ -17,7 +19,8 @@
  * `pdf/profile` already say so, once. A preset that names no template: silent — there is nothing to
  * compare, and a template-family preset is where it is named.
  */
-import { basename, dirname } from "node:path";
+import { basename, dirname, join } from "node:path";
+import { CONFIG_FILE } from "#lib/paper-config";
 import {
   documentClassLine,
   collapse,
@@ -25,11 +28,19 @@ import {
   missingOptions,
   outlineOf,
   parseLatex,
+  renderedRuns,
+  spanIn,
   type Outline,
   type Span,
 } from "#eslint-rules/latex-structure";
 import type { TexRoot } from "#eslint-rules/latex-language";
-import { paperPreset, type Preset } from "./presets.ts";
+import {
+  paperPreset,
+  resolvePreset,
+  SHIPPED_PREFIX,
+  shippedPresets,
+  type Preset,
+} from "./presets.ts";
 import type { RequiredSection } from "./tex-requirements.ts";
 import type { Finding, VenueRuleDeps } from "./venue-rules.ts";
 
@@ -59,7 +70,7 @@ export interface TexRuleContext {
 export interface TexRuleModule {
   readonly meta: {
     readonly type: "problem" | "suggestion";
-    readonly docs: { readonly description: string };
+    readonly docs: { readonly description: string; readonly url: string };
     readonly schema: readonly object[];
     readonly messages: Readonly<Record<string, string>>;
   };
@@ -142,9 +153,60 @@ export function judgeRequiredSections(
   );
 }
 
-type Judge = (root: TexRoot, preset: Preset) => Located[];
+/** Another shipped venue: the word for it, and what it is called in a paper's text. */
+export interface OtherVenue {
+  readonly label: string;
+  readonly aliases: readonly string[];
+}
 
-export type TexVenueRuleName = "template" | "required-section";
+/** `s` as a pattern that matches it literally. */
+const literal = (s: string): string =>
+  s.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+
+/**
+ * Each place the rendered text names another venue — one of its aliases as a whole word, case
+ * and all — unless that alias is also this paper's venue's own (a shared parent conference).
+ */
+export function judgeLeftover(
+  root: TexRoot,
+  preset: Preset,
+  others: readonly OtherVenue[],
+): Located[] {
+  const own = new Set(preset.aliases);
+  const names = others.flatMap((o) =>
+    o.aliases
+      .filter((a) => !own.has(a))
+      .map((alias) => ({
+        other: o.label,
+        re: new RegExp(
+          `(?<![\\p{L}\\p{N}])${literal(alias)}(?![\\p{L}\\p{N}])`,
+          "gu",
+        ),
+      })),
+  );
+  return renderedRuns(root).flatMap((run) =>
+    names.flatMap(({ other, re }) =>
+      [...run.text.matchAll(re)].map((m) => ({
+        messageId: "leftover",
+        data: { name: m[0], other, venue: preset.label },
+        at: spanIn(run, m.index, m.index + m[0].length),
+      })),
+    ),
+  );
+}
+
+/** Where a rule's page lives: `docs/rules/tex/<name>.md` on the default branch. */
+export const ruleDocsUrl = (name: TexVenueRuleName): string =>
+  `https://github.com/zernie/paperlint/blob/main/docs/rules/tex/${name}.md`;
+
+type Judge = (
+  root: TexRoot,
+  preset: Preset,
+  others: () => readonly OtherVenue[],
+) => Located[];
+
+export type TexVenueRuleName =
+  "template" | "required-section" | "venue-leftover";
 
 const RULES: Readonly<
   Record<
@@ -159,6 +221,7 @@ const RULES: Readonly<
       docs: {
         description:
           "the \\documentclass is the venue preset's class, with every option the preset names",
+        url: ruleDocsUrl("template"),
       },
       schema: [],
       messages: {
@@ -178,6 +241,7 @@ const RULES: Readonly<
       docs: {
         description:
           "every section the venue preset requires is there, titled exactly, and where the preset says",
+        url: ruleDocsUrl("required-section"),
       },
       schema: [],
       messages: {
@@ -185,6 +249,22 @@ const RULES: Readonly<
           "{{venue}} requires a section titled «{{title}}» and there is none — add `\\section*{{{title}}}` (the title exactly; a bold paragraph does not count)",
         notLast:
           "«{{title}}» must close the paper at {{venue}}, and the section «{{after}}» comes after it — move it after the last section of the body (after the bibliography is fine)",
+      },
+    },
+  },
+  "venue-leftover": {
+    judge: (root, preset, others) => judgeLeftover(root, preset, others()),
+    meta: {
+      type: "suggestion",
+      docs: {
+        description:
+          "the text names another shipped venue than the one the paper extends — a leftover from an earlier submission",
+        url: ruleDocsUrl("venue-leftover"),
+      },
+      schema: [],
+      messages: {
+        leftover:
+          "«{{name}}» names {{other}}, and this paper extends {{venue}} — a leftover from an earlier submission? A reviewer reads it before the abstract. Comments and citation keys are not reported; a sentence that names the other venue on purpose can keep it with a disable directive",
       },
     },
   },
@@ -196,6 +276,7 @@ export const TEX_VENUE_RULE_LEVELS: Readonly<
 > = {
   "tex/template": "error",
   "tex/required-section": "error",
+  "tex/venue-leftover": "warn",
 };
 
 /** The last source parsed and its tree: the rules of one file share one parse. */
@@ -203,6 +284,24 @@ let last: { readonly raw: string; readonly root: TexRoot } | null = null;
 function treeOf(raw: string): TexRoot {
   if (last?.raw !== raw) last = { raw, root: parseLatex(raw) };
   return last.root;
+}
+
+/**
+ * Every shipped venue but the ones on this paper's own chain, each resolved the way a paper
+ * extending it would be. A preset that does not resolve is skipped: `pdf/profile` owns that.
+ */
+export function otherVenues(
+  preset: Preset,
+  fromFile: string,
+  deps: VenueRuleDeps,
+): OtherVenue[] {
+  return shippedPresets(deps.venuesDir).flatMap((name) => {
+    const r = resolvePreset(`${SHIPPED_PREFIX}${name}`, fromFile, deps);
+    // A preset all of whose files are on this paper's chain is this venue or one it extends.
+    return r.ok && !r.value.chain.every((f) => preset.chain.includes(f))
+      ? [{ label: r.value.label, aliases: r.value.aliases }]
+      : [];
+  });
 }
 
 function rule(name: TexVenueRuleName, deps: VenueRuleDeps): TexRuleModule {
@@ -218,7 +317,14 @@ function rule(name: TexVenueRuleName, deps: VenueRuleDeps): TexRuleModule {
           if (p.kind !== "resolved") return;
           const sc = context.sourceCode;
           const at = (i: number) => sc.getLocFromIndex(i);
-          for (const f of judge(treeOf(sc.raw ?? sc.text), p.preset))
+          const preset = p.preset;
+          const others = () =>
+            otherVenues(
+              preset,
+              join(dirname(context.filename), CONFIG_FILE),
+              deps,
+            );
+          for (const f of judge(treeOf(sc.raw ?? sc.text), preset, others))
             context.report({
               loc: {
                 start: at(f.at?.start ?? 0),
@@ -240,5 +346,6 @@ export function texVenueRules(
   return {
     template: rule("template", deps),
     "required-section": rule("required-section", deps),
+    "venue-leftover": rule("venue-leftover", deps),
   };
 }
