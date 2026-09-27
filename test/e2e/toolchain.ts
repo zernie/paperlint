@@ -60,7 +60,7 @@ if (!dir) {
 }
 
 /** The one field of the facts file this run reads. */
-const FactsFile = z.object({ geometry_source: z.unknown() });
+const FactsFile = z.object({ geometry_source: z.unknown().optional() });
 
 let bad = 0;
 const check = (label: string, cond: boolean, detail = ""): void => {

@@ -38,7 +38,7 @@
  * install reverting it.
  *
  * The capability surface is therefore asserted HERE, on the artifact that actually executes:
- * `hooks.harness.mjs` runs `checkHookImports` over every shipped `.hook.mjs`. That is a stricter
+ * `hooks.harness.ts` runs `checkHookImports` over every shipped `.hook.mjs`. That is a stricter
  * check than compiling a twin `.ts` source would be, because a twin can drift from its build and
  * this cannot — there is only one file.
  *

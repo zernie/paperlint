@@ -19,7 +19,7 @@
  * boundary reads as complete, which is the same class as a counter that counts what it ignores.
  *
  * ── WHAT KEEPS THE LIST FROM GOING STALE ───────────────────────────────────────────────────
- * `check.harness.mjs` sits beside it and pulls the job names OUT OF THE WORKFLOW ITSELF,
+ * `check.harness.ts` sits beside it and pulls the job names OUT OF THE WORKFLOW ITSELF,
  * requiring every one to be either covered here or named in `NOT_COVERED` with a reason. Add a
  * job to CI and the harness goes red the same day — the list cannot quietly fall behind.
  *
@@ -55,7 +55,7 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
  */
 /**
  * How CI runs a gate that has no step of its own: the step that runs it as a side effect, and the
- * npm lifecycle script through which it does. `check.harness.mjs` requires that step in the job
+ * npm lifecycle script through which it does. `check.harness.ts` requires that step in the job
  * and that lifecycle script to be the gate's own command, so the two cannot drift apart.
  */
 export interface RunInCi {

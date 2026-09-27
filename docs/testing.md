@@ -52,7 +52,7 @@ When in doubt between unit and integration: if the function takes a port (`Files
 - **Asserts through** `lib/check.mjs`: `const check = createChecker();` then
   `check(label, cond, detail)`. A failure prints the label and the detail, every call is counted.
   Do not define a local `check`.
-- **Example:** `hooks/hooks.harness.mjs`.
+- **Example:** `hooks/hooks.harness.ts`.
 - **Skills are tested through vigiles**, not a bespoke runner: a home-grown runner here once printed
   byte-identical "clean" verdicts for three skills that had never loaded.
 

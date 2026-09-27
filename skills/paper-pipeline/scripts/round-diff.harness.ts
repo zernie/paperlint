@@ -1,5 +1,5 @@
 /**
- * round-diff.harness.mjs — plant the defect each check in `round-diff.mjs` claims to catch, assert
+ * round-diff.harness.ts — plant the defect each check in `round-diff.mjs` claims to catch, assert
  * it says no with the RIGHT WORDS, and assert it stays silent on the clean case. `npx vigiles test`.
  *
  * WHAT IS UNDER TEST. `.claude/skills/paper-pipeline/scripts/round-diff.mjs`: a review round may only
@@ -49,6 +49,7 @@ import {
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { z } from "zod";
 const HERE = dirname(fileURLToPath(import.meta.url));
 
 const SCRIPT = join(HERE, "round-diff.mjs");
@@ -60,7 +61,9 @@ const tmp = realpathSync(mkdtempSync(join(tmpdir(), "round-diff-harness-")));
 // numbered body, a `## References` boundary and an appendix after it. The boundary is load-bearing
 // — the ratchet must not charge for words moved into an appendix.
 
-const P = (o = {}) => `---
+type Section =
+  "abstract" | "s1" | "s2" | "s21" | "s3" | "lim" | "refs" | "appendix";
+const P = (o: Partial<Record<Section, string>> = {}) => `---
 title: "A fixture"
 ---
 
@@ -108,10 +111,16 @@ function fixture({
   now = null,
   rounds = {},
   commitRounds = false,
+}: {
+  base?: string;
+  now?: string | null;
+  rounds?: Record<string, string>;
+  commitRounds?: boolean;
 } = {}) {
   const dir = join(tmp, `f${++n}`, "paper-x");
   mkdirSync(dir, { recursive: true });
-  const g = (...a) => spawnSync("git", a, { cwd: dir, encoding: "utf8" });
+  const g = (...a: string[]) =>
+    spawnSync("git", a, { cwd: dir, encoding: "utf8" });
   g("init", "-q", "-b", "main");
   g("config", "user.email", "h@example.com");
   g("config", "user.name", "harness");
@@ -150,6 +159,14 @@ const M = ({
   hedge,
   closed,
   base = "__BASE__",
+}: {
+  round?: number;
+  touches?: readonly string[];
+  allows?: readonly string[];
+  budget?: number;
+  hedge?: number;
+  closed?: string;
+  base?: string;
 } = {}) =>
   `---
 round: ${round}
@@ -161,7 +178,15 @@ ${allows ? `allows: [${allows.join(", ")}]\n` : ""}${budget !== undefined ? `bud
 Round ${round}.
 `;
 
-function run(dir, ...args) {
+/** One finding of the gate's `--json` output, with the two fields these checks read. */
+const Findings = z.array(z.looseObject({ kind: z.string(), msg: z.string() }));
+type Run = {
+  findings: z.infer<typeof Findings>;
+  kinds: string[];
+  text: string;
+};
+
+function run(dir: string, ...args: string[]): Run {
   const json = spawnSync("node", [SCRIPT, dir, "--json", ...args], {
     encoding: "utf8",
   });
@@ -171,9 +196,9 @@ function run(dir, ...args) {
     0,
     `the gate must always exit 0 (advisory); it exited ${json.status}:\n${json.stderr}`,
   );
-  let findings;
+  let findings: z.infer<typeof Findings>;
   try {
-    findings = JSON.parse(json.stdout);
+    findings = Findings.parse(JSON.parse(json.stdout));
   } catch {
     throw new Error(
       `--json did not produce JSON.\nstdout:\n${json.stdout}\nstderr:\n${json.stderr}`,
@@ -187,7 +212,7 @@ function run(dir, ...args) {
 }
 
 /** Exactly these kinds, in any order — never `.includes`, which is how a deleted check stays green. */
-const only = (r, expected, why) =>
+const only = (r: Run, expected: readonly string[], why: string) =>
   assert.deepEqual(
     [...r.kinds].sort(),
     [...expected].sort(),
@@ -195,7 +220,7 @@ const only = (r, expected, why) =>
   );
 
 /** The finding of this kind must say this. A kind alone does not prove which branch produced it. */
-const msg = (r, kind, needle, why) => {
+const msg = (r: Run, kind: string, needle: string, why: string) => {
   const f = r.findings.find((x) => x.kind === kind);
   assert.ok(
     f,
@@ -452,7 +477,7 @@ const msg = (r, kind, needle, why) => {
 // paid it back — which is exactly the failure the cumulative check exists for, and exactly what a
 // per-round gate forgets the moment the round is closed.
 {
-  const grow = (k) =>
+  const grow = (k: number) =>
     P({
       s3:
         "The direction holds across all four rules. " +
@@ -460,7 +485,8 @@ const msg = (r, kind, needle, why) => {
     });
   const dir = join(tmp, "cumulative", "paper-x");
   mkdirSync(dir, { recursive: true });
-  const g = (...a) => spawnSync("git", a, { cwd: dir, encoding: "utf8" });
+  const g = (...a: string[]) =>
+    spawnSync("git", a, { cwd: dir, encoding: "utf8" });
   g("init", "-q", "-b", "main");
   g("config", "user.email", "h@e.com");
   g("config", "user.name", "h");

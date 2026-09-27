@@ -12,7 +12,7 @@
  * The fixture package keeps its skills where the real one does, under `SHIPPED_SKILLS_DIR` from
  * consumer.mjs — the same constant the linker and the install e2e read.
  *
- * Run:    node src/link-skills.harness.mjs
+ * Run:    node src/link-skills.harness.ts
  */
 import {
   existsSync,
@@ -26,17 +26,14 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, isAbsolute, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { isAbsolute, join } from "node:path";
 import { createChecker } from "../lib/check.mjs";
+import type { LinkReport } from "./link-skills.ts";
 
-const HERE = dirname(fileURLToPath(import.meta.url));
-const { linkSkills, locatePackage, shippedSkills } = await import(
-  join(HERE, "link-skills.ts")
-);
-const { SHIPPED_SKILLS_DIR: SHIPS, PACKAGE_NAME: PKG } = await import(
-  join(HERE, "..", "skills", "paper-pipeline", "scripts", "consumer.mjs")
-);
+const { linkSkills, locatePackage, shippedSkills } =
+  await import("./link-skills.ts");
+const { SHIPPED_SKILLS_DIR: SHIPS, PACKAGE_NAME: PKG } =
+  await import("../skills/paper-pipeline/scripts/consumer.mjs");
 
 const check = createChecker();
 
@@ -46,7 +43,7 @@ const work = realpathSync(
 );
 
 /** A package as a manager would unpack it: manifest, skills, one non-skill. */
-function writePackage(dir) {
+function writePackage(dir: string): void {
   mkdirSync(dir, { recursive: true });
   writeFileSync(
     join(dir, "package.json"),
@@ -63,7 +60,7 @@ function writePackage(dir) {
 }
 
 /** A consumer project with the package installed the npm way or the pnpm way. */
-function consumer(name, manager = "npm") {
+function consumer(name: string, manager = "npm"): string {
   const dir = join(work, name);
   mkdirSync(join(dir, "node_modules"), { recursive: true });
   writeFileSync(
@@ -89,8 +86,11 @@ function consumer(name, manager = "npm") {
   return dir;
 }
 
-const home = (dir) => join(dir, ".claude", "skills");
-const status = (report, name) => report.links.find((l) => l.name === name);
+const home = (dir: string) => join(dir, ".claude", "skills");
+/** The report's links; a refusal has none. */
+const linksOf = (report: LinkReport) => (report.ok ? report.links : []);
+const status = (report: LinkReport, name: string) =>
+  linksOf(report).find((l) => l.name === name);
 
 try {
   // ── I. A FRESH npm CONSUMER: EVERY DECLARED SKILL IS LINKED, AND ONLY SKILLS ───────────
@@ -103,7 +103,7 @@ try {
     );
     check(
       "and nothing that is not a skill — a directory without SKILL.md is not one",
-      r.links.length === SKILLS.length &&
+      linksOf(r).length === SKILLS.length &&
         !existsSync(join(home(dir), "shared")),
     );
     check(

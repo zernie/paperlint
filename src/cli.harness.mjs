@@ -635,7 +635,7 @@ check(
 
     // ── 7-bis. THE SKILLS: WHAT WAS LINKED, AND WHAT WAS LEFT ALONE, BY NAME ────────────
     //
-    // The links themselves are `link-skills.harness.mjs`'s subject. Here: init REPORTS them, and
+    // The links themselves are `link-skills.harness.ts`'s subject. Here: init REPORTS them, and
     // a name it refused to take does not turn a working install red. The state is handed in so
     // this block does not depend on a package being installed next to the temp project.
     {
@@ -967,7 +967,7 @@ check(
 
 // ── STRUCTURE GETS THROUGH TO THE COMMAND ──────────────────────────────────────────────
 //
-// `structure.mjs` is checked separately and in full (`structure.harness.mjs`). Here — exactly
+// `structure.mjs` is checked separately and in full (`structure.harness.ts`). Here — exactly
 // one fact that harness cannot know: that the module is WIRED IN. A correct module forgotten in
 // `run()` gives zero findings and looks like a clean corpus.
 {
@@ -1258,7 +1258,7 @@ console.log(
 
 // ─────────────────────────────────────────────────────────────────────────────
 // What is left after init is typed in THE SAME TERMINAL. The two `/plugin` lines are gone: the
-// hooks are written into `.claude/settings.json` by init itself (hooks-settings.harness.mjs).
+// hooks are written into `.claude/settings.json` by init itself (hooks-settings.harness.ts).
 
 {
   const steps = nextSteps("papers");

@@ -5,11 +5,9 @@
  * memory: the two error spellings `-file-line-error` produces, the missing-package form, and a
  * marker that TeX broke at column 79.
  */
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { createChecker } from "../lib/check.mjs";
+import type { LogMarker } from "./latex-log.ts";
 
-const HERE = dirname(fileURLToPath(import.meta.url));
 const {
   unwrapLog,
   logMarkers,
@@ -18,7 +16,7 @@ const {
   bibtexExcerpt,
   auxBib,
   MAX_PRINT_LINE,
-} = await import(join(HERE, "latex-log.ts"));
+} = await import("./latex-log.ts");
 
 const check = createChecker();
 
@@ -78,13 +76,15 @@ const firstPass = [
 const m = logMarkers(firstPass);
 check(
   "every documented marker is recognised",
-  [
-    "rerun-requested",
-    "labels-changed",
-    "rerunfilecheck",
-    "undefined-references",
-    "undefined-citations",
-  ].every((k) => m.includes(k)),
+  (
+    [
+      "rerun-requested",
+      "labels-changed",
+      "rerunfilecheck",
+      "undefined-references",
+      "undefined-citations",
+    ] satisfies LogMarker[]
+  ).every((k) => m.includes(k)),
 );
 check(
   "a clean log carries no markers",
@@ -96,7 +96,7 @@ check(
 // Guards: matching the documented summary line rather than the word 'undefined'.
 check(
   "a single reference warning is not the end-of-run summary",
-  !logMarkers([firstPass[0]]).includes("undefined-references"),
+  !logMarkers(firstPass.slice(0, 1)).includes("undefined-references"),
 );
 
 // ── error excerpt ───────────────────────────────────────────────────────────────────────
@@ -114,7 +114,7 @@ check(
   "-file-line-error form: the error line, the l.NNN line and the rest of the source line",
   ex[0] === "./paper.tex:4: Undefined control sequence." &&
     ex[1] === "l.4 \\foo" &&
-    ex[2].includes("bar baz"),
+    (ex[2] ?? "").includes("bar baz"),
 );
 // Guards: the end of the excerpt — without it the excerpt runs into TeX's memory statistics and
 // buries the line the author needs.

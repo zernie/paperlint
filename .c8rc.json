@@ -7,7 +7,7 @@
     "A process that loads `dist/` directly anyway (a child spawned without NODE_OPTIONS) is NOT",
     "counted: `excludeAfterRemap: false` drops `dist/**` before source maps would turn it into a",
     "second, column-shifted copy of the `src/` file whose unrun functions read as uncovered.",
-    "Excluded: tests themselves (*.harness.mjs, *.test.*), *.eval.mjs (PAID LLM evaluations,",
+    "Excluded: tests themselves (*.harness.*, *.test.*), *.eval.mjs (PAID LLM evaluations,",
     "never run by npm test and never unit-run), *.spec.ts (skill sources compiled by vigiles),",
     "type declarations, fixtures and test/ (inputs and e2e scripts, not the package's code).",
     "typeOnly: modules with no runtime code (interfaces and type aliases) \u2014 nothing to execute, so",
@@ -31,7 +31,7 @@
     "eslint.config.mjs"
   ],
   "exclude": [
-    "**/*.harness.mjs",
+    "**/*.harness.*",
     "**/*.test.*",
     "**/*.eval.mjs",
     "**/*.spec.ts",

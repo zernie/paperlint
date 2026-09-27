@@ -147,7 +147,8 @@ export const layerBoundaries = (root) => ({
       { category: "root", pattern: "src/cli.ts", exclusive: true },
       // Every other file at the top of src/ is app. A new one gets the full app rules.
       { category: "app", pattern: "src/*.ts" },
-      { category: "test", pattern: "src/**/*.test.ts" },
+      // A harness is a test too: it drives the code through vigiles instead of vitest.
+      { category: "test", pattern: "src/**/*.{test,harness}.ts" },
       // AXIS B: purity is a category, orthogonal to the element.
       { category: "io", pattern: "src/adapters/*/*.io.ts" },
     ],
@@ -248,7 +249,12 @@ export const layerBoundaries = (root) => ({
  */
 export const IO_GLOBALS = {
   files: ["src/**/*.ts"],
-  ignores: ["src/cli.ts", "src/adapters/*/*.io.ts", "src/**/*.test.ts"],
+  ignores: [
+    "src/cli.ts",
+    "src/adapters/*/*.io.ts",
+    "src/**/*.test.ts",
+    "src/**/*.harness.ts",
+  ],
   linterOptions: { reportUnusedDisableDirectives: "error" },
   rules: {
     "no-restricted-globals": [
@@ -287,6 +293,7 @@ const TYPESCRIPT_ONLY = [
   "test/*.{js,mjs,cjs}",
   "test/e2e/**/*.{js,mjs,cjs}",
   "test/fixtures/layers/src/**/*.{js,mjs,cjs}",
+  "fixtures/real-markdown-paper/**/*.{js,mjs,cjs}",
   "skills/paper-pipeline/scripts/fixtures/**/*.{js,mjs,cjs}",
   "skills/plan-paper-timeline/fixtures/**/*.{js,mjs,cjs}",
 ];

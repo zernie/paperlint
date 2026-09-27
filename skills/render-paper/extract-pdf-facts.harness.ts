@@ -24,7 +24,29 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { z } from "zod";
 import { createChecker } from "../../lib/check.mjs";
+import type { ScriptResult } from "../../test/support.ts";
+
+/** The facts file, as far as these checks read it. */
+const Facts = z.looseObject({
+  schema: z.unknown().optional(),
+  pdf: z.unknown().optional(),
+  venue: z.unknown().optional(),
+  kind: z.unknown().optional(),
+  geometry_source: z.unknown().optional(),
+  columns: z.unknown().optional(),
+  fonts: z.unknown().optional(),
+});
+const Fonts = z.array(
+  z.looseObject({
+    name: z.unknown().optional(),
+    embedded: z.unknown().optional(),
+    type: z.unknown().optional(),
+  }),
+);
+const readFacts = (file: string) =>
+  Facts.parse(JSON.parse(readFileSync(file, "utf8")));
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SHIM = join(HERE, "extract-pdf-facts.mjs");
@@ -37,7 +59,7 @@ const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-extract-")));
  * Run the shim from `root`, with no banal anywhere unless `env` names one. `HOME` is the temp root:
  * without it Node falls back to the account's home, where `paperlint toolchain` may have installed banal.
  */
-const shim = (args, env = {}) =>
+const shim = (args: readonly string[], env: Record<string, string> = {}) =>
   spawnSync(process.execPath, [SHIM, ...args], {
     cwd: root,
     encoding: "utf8",
@@ -58,7 +80,8 @@ const shim = (args, env = {}) =>
       ...env,
     },
   });
-const said = (r) => `${r.stdout}${r.stderr}`;
+const said = (r: Pick<ScriptResult, "stdout" | "stderr">) =>
+  `${r.stdout}${r.stderr}`;
 
 try {
   const paper = join(root, "papers", "mixed");
@@ -92,7 +115,9 @@ try {
       /banal not found/.test(local.stderr),
     said(local),
   );
-  const facts = JSON.parse(readFileSync(factsFile, "utf8"));
+  const facts = readFacts(factsFile);
+  const fonts = Fonts.safeParse(facts.fonts);
+  const fontList = fonts.success ? fonts.data : [];
   check(
     "the facts are schema 2, about paper.pdf, for the venue paperlint.json declares",
     facts.schema === 2 &&
@@ -103,10 +128,10 @@ try {
   );
   check(
     "a text PDF has fonts",
-    Array.isArray(facts.fonts) && facts.fonts.length === 4,
+    fonts.success && fontList.length === 4,
     JSON.stringify(facts.fonts),
   );
-  const times = facts.fonts.find((f) => f.name === "Times-Roman");
+  const times = fontList.find((f) => f.name === "Times-Roman");
   check(
     "🔴 Times-Roman — pdffonts `Type 1 Custom no no yes` — is embedded: false (the old reader said true)",
     times?.embedded === false && times.type === "Type 1",
@@ -114,7 +139,7 @@ try {
   );
   check(
     "the Type 3 font keeps poppler's type spelling, which consumers match on",
-    facts.fonts.some((f) => f.type === "Type 3"),
+    fontList.some((f) => f.type === "Type 3"),
   );
 
   const fake = join(root, "banal.pl");
@@ -123,7 +148,7 @@ try {
     `print '{"papersize":[792,612],"columns":2,"bodyfontsize":9,"pages":[{}]}';\n`,
   );
   const withBanal = shim([paper, "--strict"], { BANAL: fake });
-  const g = JSON.parse(readFileSync(factsFile, "utf8"));
+  const g = readFacts(factsFile);
   check(
     "--strict with banal ($BANAL): exit 0, and the geometry is banal's",
     withBanal.status === 0 && g.geometry_source === "banal" && g.columns === 2,
@@ -176,7 +201,7 @@ try {
       direct.stdout.startsWith(
         "✅ draft.pdf → papers/loose/_build/paper.facts.json (",
       ) &&
-      JSON.parse(readFileSync(looseFacts, "utf8")).venue === null,
+      readFacts(looseFacts).venue === null,
     said(direct),
   );
   // The project directory IS the facts file (nonsense, but an environment can say it): the

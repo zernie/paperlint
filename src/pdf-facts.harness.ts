@@ -1,7 +1,7 @@
 /**
  * `pdf-facts.ts` — pdf.js reading REAL PDFs, committed under `fixtures/pdf-facts/`.
  *
- * The pure decisions are tested in `pdf-geometry.harness.mjs` with hand-written words. This file is
+ * The pure decisions are tested in `pdf-geometry.harness.ts` with hand-written words. This file is
  * the other half: that the shell asks pdf.js the right questions, with the right options, and maps
  * what comes back. The expected numbers are the ones poppler reported for the same files in the
  * 2026-09-24 measurement (issue #61), so a pass here is agreement with the tool this replaced.
@@ -12,22 +12,23 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createChecker } from "../lib/check.mjs";
+import type { PdfFacts } from "./pdf-facts.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIX = resolve(HERE, "..", "fixtures", "pdf-facts");
-const { readPdf } = await import(join(HERE, "pdf-facts.ts"));
-const { classifyLastPage } = await import(join(HERE, "pdf-geometry.ts"));
+const { readPdf } = await import("./pdf-facts.ts");
+const { classifyLastPage } = await import("./pdf-geometry.ts");
 
 const check = createChecker();
 
-const read = async (name) => {
+const read = async (name: string): Promise<PdfFacts> => {
   const r = await readPdf(join(FIX, name));
   assert.ok(r.ok, `${name} must read: ${JSON.stringify(r)}`);
   return r.facts;
 };
-const kinds = (facts) =>
+const kinds = (facts: PdfFacts): string[] =>
   facts.fonts.kind === "drawn" ? facts.fonts.list.map((f) => f.kind) : [];
-const named = (facts, name) =>
+const named = (facts: PdfFacts, name: string) =>
   facts.fonts.kind === "drawn"
     ? facts.fonts.list.find((f) => f.name === name)
     : undefined;
@@ -139,7 +140,7 @@ try {
   const boxes = f.layout.flatMap((p, i) =>
     p.boxes.map((b) => ({ ...b, page: i + 1 })),
   );
-  const chars = (pred) =>
+  const chars = (pred: (b: (typeof boxes)[number]) => boolean) =>
     boxes.filter(pred).reduce((sum, b) => sum + b.text.length, 0);
   check(
     "hidden-text: one layout per page, each US letter",

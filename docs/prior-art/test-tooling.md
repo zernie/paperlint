@@ -22,7 +22,7 @@ import anything from "vigiles"         10
   …of which import ONLY recordCheck     8
 ```
 
-So the genuinely agent-facing harnesses are three: `hooks/hooks.harness.mjs` (`runHook`,
+So the genuinely agent-facing harnesses are three: `hooks/hooks.harness.ts` (`runHook`,
 `checkHookImports`), `skills/plan-paper-timeline/plan-paper-timeline.effects.harness.mjs`
 (`runHarnessTest`, which spawns the real `claude` binary against a scripted model), and the skill
 contract checks. Everything else is ordinary Node testing that happens to carry the suffix.

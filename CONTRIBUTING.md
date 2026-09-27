@@ -47,7 +47,7 @@ being skipped quietly: an e2e that finds no TeX or no pnpm exits 77 _having stat
 Each gate's command is listed in `scripts/check.ts`; run one of them directly while iterating on
 one rule. They are not what you run before pushing.
 
-**The list of gates cannot quietly fall behind CI.** `scripts/check.harness.mjs` pulls the job
+**The list of gates cannot quietly fall behind CI.** `scripts/check.harness.ts` pulls the job
 names out of `.github/workflows/ci.yml` and requires each to be either reproduced by a gate or
 named with a reason for why it cannot be. Add a job and it goes red the same day, naming the job
 nobody covered — verified by adding a `windows` job and watching it fail.
@@ -136,7 +136,7 @@ A venue is a **preset**, a JSONC file in `skills/submit-paper/references/venues/
 2. **The card.** `venues/<name>.md` — prose about the venue: deadlines, tracks, the blind model,
    what the form asks.
 3. **A test.** A case in `src/presets.test.ts` that `paperlint:<name>` resolves over its family with
-   the kinds you declared; `src/tex-requirements.harness.mjs` already checks every shipped preset
+   the kinds you declared; `src/tex-requirements.harness.ts` already checks every shipped preset
    against the schema.
 
 `paperlint toolchain` picks the new preset's packages up by itself, and the README and

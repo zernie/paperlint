@@ -73,7 +73,7 @@ const FIX = join(ROOT, "fixtures", "pdf-facts");
 const strict = process.argv.includes("--strict");
 
 /** The two fields of banal's JSON, and of the facts file, this run reads. */
-const BanalJson = z.object({ bodyfontsize: z.unknown() });
+const BanalJson = z.object({ bodyfontsize: z.unknown().optional() });
 const FactsFile = z.record(z.string(), z.unknown());
 
 /** banal 1.2 on poppler pdftohtml 24.02.0, 2026-09-25 — see the header. */

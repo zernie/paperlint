@@ -1,5 +1,5 @@
 /**
- * hooks.harness.mjs — the three shipped hooks, each asserted in BOTH halves.
+ * hooks.harness.ts — the three shipped hooks, each asserted in BOTH halves.
  *
  * 🔴 WHY "BOTH HALVES" IS THE ORGANISING RULE HERE AND NOT A STYLE. Two of these three are
  * ADVISORY: silence is their success state. So "it printed nothing" and "it is dead" look
@@ -20,9 +20,9 @@
  * `checkHookImports`, over the shipped files directly. That is STRICTER than compiling a twin
  * `.ts` source would be: a twin can drift from its build, and there is no twin here to drift.
  *
- * Run: `npx vigiles test hooks/hooks.harness.mjs`
+ * Run: `npx vigiles test hooks/hooks.harness.ts`
  */
-import { runHook } from "vigiles";
+import { runHook, type HookInput, type HookRunResult } from "vigiles";
 import { checkHookImports } from "vigiles/hook";
 import {
   mkdtempSync,
@@ -37,6 +37,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { z } from "zod";
 import { PAPERS_DIR_FIELD } from "../lib/paper-config.mjs";
 import { createChecker } from "../lib/check.mjs";
 
@@ -64,7 +65,13 @@ const check = createChecker();
  * installed rather than adjacent. The `node_modules/<pkg>` entry is a symlink to this very
  * checkout, which is what `npm install` of a local package does anyway.
  */
-const consumer = (block, { papers = "docs/papers", paper = "alpha" } = {}) => {
+const consumer = (
+  block: unknown,
+  {
+    papers = "docs/papers",
+    paper = "alpha",
+  }: { papers?: string | null; paper?: string } = {},
+) => {
   const dir = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-hooks-")));
   const nm = join(dir, "node_modules");
   mkdirSync(nm, { recursive: true });
@@ -84,24 +91,28 @@ const consumer = (block, { papers = "docs/papers", paper = "alpha" } = {}) => {
 };
 
 /** `run-program <hook>` exactly as a consumer's settings block invokes it. */
-const program = (name) =>
+const program = (name: string) =>
   `node ${JSON.stringify(CLI)} hook-runtime run-program ${JSON.stringify(join(HOOKS, name + ".hook.mjs"))}`;
 
-const onBash = (command) => ({
+const onBash = (command: string): HookInput => ({
   hook_event_name: "PreToolUse",
   tool_name: "Bash",
   tool_input: { command },
 });
-const onEdit = (file_path) => ({
+const onEdit = (file_path: string): HookInput => ({
   hook_event_name: "PostToolUse",
   tool_name: "Edit",
   tool_input: { file_path },
   tool_response: {},
 });
-const STOP = { hook_event_name: "Stop", tool_name: "", tool_input: {} };
+const STOP: HookInput = {
+  hook_event_name: "Stop",
+  tool_name: "",
+  tool_input: {},
+};
 
 /** Run a hook AS a consumer: cwd and `CLAUDE_PROJECT_DIR` both point at the fixture repo. */
-const at = (dir, name, input) =>
+const at = (dir: string, name: string, input: HookInput): HookRunResult =>
   runHook(program(name), input, { cwd: dir, env: { CLAUDE_PROJECT_DIR: dir } });
 
 /**
@@ -116,23 +127,29 @@ const at = (dir, name, input) =>
  * live case: a session `cd`s into a subtree, and vigiles runs every provider «via execSync in
  * the hook's cwd».
  */
-const adrift = (dir, name, input) =>
+const adrift = (dir: string, name: string, input: HookInput): HookRunResult =>
   runHook(program(name), input, {
     cwd: realpathSync(mkdtempSync(join(tmpdir(), "drift-"))),
     env: { CLAUDE_PROJECT_DIR: dir },
   });
 
 /** An injected notice, as the model would receive it — not the returned reaction. */
-const injected = (r) => {
+const Injected = z.object({
+  hookSpecificOutput: z.object({ additionalContext: z.string().nullish() }),
+});
+const injected = (r: HookRunResult): string => {
   try {
-    return JSON.parse(r.stdout).hookSpecificOutput.additionalContext ?? "";
+    return (
+      Injected.parse(JSON.parse(r.stdout)).hookSpecificOutput
+        .additionalContext ?? ""
+    );
   } catch {
     return "";
   }
 };
 
-const tmps = [];
-const fixture = (...args) => {
+const tmps: string[] = [];
+const fixture = (...args: Parameters<typeof consumer>) => {
   const d = consumer(...args);
   tmps.push(d);
   return d;
@@ -191,7 +208,7 @@ try {
     const dir = fixture({ [PAPERS_DIR_FIELD]: "docs/papers" });
     const P = "docs/papers/alpha/paper.md";
     const T = "docs/papers/alpha/paper.tex";
-    const deny = (label, cmd) => {
+    const deny = (label: string, cmd: string) => {
       const r = at(dir, "paper-edit-guard", onBash(cmd));
       check(
         `guard BLOCKS ${label} (rc=${r.exitCode})`,
@@ -202,7 +219,7 @@ try {
         /Use Edit or Write/.test(r.stderr),
       );
     };
-    const allow = (label, cmd) => {
+    const allow = (label: string, cmd: string) => {
       const r = at(dir, "paper-edit-guard", onBash(cmd));
       check(
         `guard ALLOWS ${label} (rc=${r.exitCode}, ${r.stderr.length}b err)`,
@@ -442,7 +459,7 @@ try {
   // ═══════════════════════════════════════════════════════════════════════════
   {
     const dir = fixture({ [PAPERS_DIR_FIELD]: "docs/papers" });
-    const lands = (label, p) => {
+    const lands = (label: string, p: string) => {
       const r = at(dir, "paper-skills-nudge", onEdit(p));
       const ctx = injected(r);
       check(
@@ -455,7 +472,7 @@ try {
       );
       check(`nudge on ${label} exits 0`, r.exitCode === 0);
     };
-    const silent = (label, p) => {
+    const silent = (label: string, p: string) => {
       const r = at(dir, "paper-skills-nudge", onEdit(p));
       check(
         `nudge SILENT on ${label} (${r.stdout.length}b stdout, ${r.stderr.length}b stderr)`,
@@ -505,7 +522,7 @@ try {
   // ═══════════════════════════════════════════════════════════════════════════
   {
     const dir = fixture({ [PAPERS_DIR_FIELD]: "docs/papers" });
-    const fires = (label, p) => {
+    const fires = (label: string, p: string) => {
       const r = at(dir, "paper-status-gates", onEdit(p));
       check(
         `gates FIRES on ${label} (${r.stderr.length}b stderr)`,
@@ -513,7 +530,7 @@ try {
       );
       check(`gates on ${label} exits 0`, r.exitCode === 0);
     };
-    const silent = (label, p) => {
+    const silent = (label: string, p: string) => {
       const r = at(dir, "paper-status-gates", onEdit(p));
       check(
         `gates SILENT on ${label}`,
@@ -593,7 +610,7 @@ try {
   // ═══════════════════════════════════════════════════════════════════════════
   {
     const dir = fixture({ [PAPERS_DIR_FIELD]: "docs/papers" });
-    const sh = (args) =>
+    const sh = (args: string) =>
       runHook(
         `bash ${JSON.stringify(join(HOOKS, "paper-status-gates.sh"))} ${args}`,
         STOP,

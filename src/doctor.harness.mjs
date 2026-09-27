@@ -279,7 +279,7 @@ const runDoctor = (
 
 // ── VII-bis. SKILLS THAT ARE NOT LINKED ARE NAMED — AND DO NOT FAIL THE RUN ─────────────────
 // Before this section a consumer without `.claude/skills/` links had no `/paper-pipeline`, and
-// nothing anywhere said so. The link state itself is `link-skills.harness.mjs`'s subject; here
+// nothing anywhere said so. The link state itself is `link-skills.harness.ts`'s subject; here
 // only doctor's REPORTING of it is judged, so the state is handed in rather than built on disk.
 {
   const dir = consumer({ papersDir: "papers", declared: "papers" });

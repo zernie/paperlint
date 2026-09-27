@@ -6,11 +6,9 @@
  * on 2026-08-29 (the midpoint cut, the review build, years mistaken for line numbers), ported from
  * the harness of the function this replaces.
  */
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { createChecker } from "../lib/check.mjs";
+import type { RawFont } from "./pdf-geometry.ts";
 
-const HERE = dirname(fileURLToPath(import.meta.url));
 const {
   classifyLastPage,
   wordsOf,
@@ -19,14 +17,23 @@ const {
   programOf,
   popplerType,
   STUB_WORDS,
-} = await import(join(HERE, "pdf-geometry.ts"));
+} = await import("./pdf-geometry.ts");
 
 const check = createChecker();
+
+/** A row of stacked words: `n` of them from `top` downwards, `step` apart. */
+interface Row {
+  x: number;
+  top: number;
+  n?: number;
+  step?: number;
+  text?: string;
+}
 
 const W = 612; // US letter, points
 
 /** Words from rows `{x, top, n, step, text}`: `n` words stacked downwards, each 10 pt tall. */
-const words = (rows) =>
+const words = (rows: readonly Row[]) =>
   rows.flatMap(({ x, top, n: count = 1, step = 10, text = "word" }) =>
     Array.from({ length: count }, (_, i) => ({
       x0: x,
@@ -36,7 +43,7 @@ const words = (rows) =>
       text,
     })),
   );
-const page = (rows, widthPt = W) => ({
+const page = (rows: readonly Row[], widthPt = W) => ({
   widthPt,
   heightPt: 792,
   words: words(rows),
@@ -164,19 +171,19 @@ check(
   check(
     "a run splits at whitespace into words with proportional x",
     ws.length === 2 &&
-      ws[0].text === "ab" &&
-      ws[0].x0 === 100 &&
-      ws[0].x1 === 120 &&
-      ws[1].x0 === 140,
+      ws[0]?.text === "ab" &&
+      ws[0]?.x0 === 100 &&
+      ws[0]?.x1 === 120 &&
+      ws[1]?.x0 === 140,
   );
   check(
     "a word spans ascent above the baseline to descent below it",
-    ws[0].y0 === 192 && ws[0].y1 === 202,
+    ws[0]?.y0 === 192 && ws[0]?.y1 === 202,
   );
 }
 
 // ── fonts ───────────────────────────────────────────────────────────────────────────────
-const font = (over) => ({
+const font = (over: Partial<RawFont>): RawFont => ({
   id: "f1",
   name: "ABCDEF+LinLibertineT",
   type: "Type1",
@@ -227,7 +234,7 @@ check(
   ]);
   check(
     "fonts: each font once, in the order pages first drew them",
-    r.kind === "drawn" && r.list.length === 2 && r.list[1].name === "B",
+    r.kind === "drawn" && r.list.length === 2 && r.list[1]?.name === "B",
   );
 }
 {

@@ -15,18 +15,27 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { z } from "zod";
 import { createChecker } from "../lib/check.mjs";
 
-const HERE = dirname(fileURLToPath(import.meta.url));
+/** `asEslintResults` promises only `unknown[]`; these are the fields the checks read. */
+const EslintResults = z.array(
+  z.object({
+    errorCount: z.number(),
+    warningCount: z.number(),
+    messages: z.array(
+      z.object({ ruleId: z.string().nullable(), severity: z.number() }),
+    ),
+  }),
+);
 const { checkStructure, formatStructure, asEslintResults, STRUCTURE_DEFAULTS } =
-  await import(join(HERE, "structure.ts"));
+  await import("./structure.ts");
 
 const check = createChecker();
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-struct-")));
 const papers = join(root, "papers");
-const paper = (name, files) => {
+const paper = (name: string, files: readonly string[]) => {
   const dir = join(papers, name);
   mkdirSync(dir, { recursive: true });
   for (const f of files) {
@@ -50,7 +59,7 @@ try {
   writeFileSync(join(papers, ".hidden", "paper.tex"), "x");
 
   const f = checkStructure([papers], undefined, { cwd: root });
-  const at = (name) => f.filter((x) => x.file.endsWith(name));
+  const at = (name: string) => f.filter((x) => x.file.endsWith(name));
 
   check(
     "a complete paper directory — NOT A SINGLE finding",
@@ -63,24 +72,26 @@ try {
   check(
     "a missing scorecard — a finding",
     at("no-scorecard").length === 1 &&
-      /missing `PIPELINE-STATUS\.md`/.test(at("no-scorecard")[0].message),
+      /missing `PIPELINE-STATUS\.md`/.test(
+        at("no-scorecard")[0]?.message ?? "",
+      ),
   );
   check(
     "and the message names the CONSEQUENCE, not a restatement of the condition",
-    /are skipped/.test(at("no-scorecard")[0].message) &&
+    /are skipped/.test(at("no-scorecard")[0]?.message ?? "") &&
       /stage, source and research-question checks/.test(
-        at("no-scorecard")[0].message,
+        at("no-scorecard")[0]?.message ?? "",
       ),
   );
   check(
     "and the consequence names THIS directory by name",
-    /no-scorecard/.test(at("no-scorecard")[0].message),
+    /no-scorecard/.test(at("no-scorecard")[0]?.message ?? ""),
   );
   check(
     "a directory with no source — a finding, and BOTH accepted forms are listed",
     at("no-source").length === 1 &&
-      /`paper\.tex`/.test(at("no-source")[0].message) &&
-      /`paper\.md`/.test(at("no-source")[0].message),
+      /`paper\.tex`/.test(at("no-source")[0]?.message ?? "") &&
+      /`paper\.md`/.test(at("no-source")[0]?.message ?? ""),
   );
 
   // 🔴 THE PAIRED HALF: detection is GENEROUS. Without this the check would scream about every
@@ -136,7 +147,7 @@ try {
   );
 
   // ── one schema for both halves ────────────────────────────────────────────────────────
-  const asResults = asEslintResults(f);
+  const asResults = EslintResults.parse(asEslintResults(f));
   check(
     "findings come back shaped like an ESLint result — `--json` stays one array",
     asResults.length === 2 &&
@@ -144,8 +155,8 @@ try {
         (r) =>
           r.errorCount === 1 &&
           r.warningCount === 0 &&
-          r.messages[0].ruleId === "structure/required-file" &&
-          r.messages[0].severity === 2,
+          r.messages[0]?.ruleId === "structure/required-file" &&
+          r.messages[0]?.severity === 2,
       ),
   );
   check(
@@ -156,7 +167,7 @@ try {
         { require: ["PIPELINE-STATUS.md", "refs.bib"] },
         { cwd: root },
       ).filter((x) => x.file.endsWith("no-source"));
-      return asEslintResults(two)[0].errorCount === 2;
+      return EslintResults.parse(asEslintResults(two))[0]?.errorCount === 2;
     })(),
   );
   check(

@@ -8,28 +8,41 @@
  * The decision is pure, so none of this needs TeX. The real-pdflatex half lives in
  * `test/e2e/build.ts`.
  */
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { createChecker } from "../lib/check.mjs";
+import type {
+  BibInput,
+  Hashes,
+  Observation,
+  State,
+  Step,
+} from "./latex-loop.ts";
 
-const HERE = dirname(fileURLToPath(import.meta.url));
-const { nextStep, summarize, changedFiles, MAX_PASSES } = await import(
-  join(HERE, "latex-loop.ts")
-);
+const { nextStep, summarize, changedFiles, MAX_PASSES } =
+  await import("./latex-loop.ts");
 
 const check = createChecker();
 
 // ── builders ────────────────────────────────────────────────────────────────────────────
-const H = (aux, toc = null, out = null, bbl = null) => ({ aux, toc, out, bbl });
-const NO_BIB = { kind: "none" };
-const bib = (citations, bibHash = "b1") => ({
+type LatexPass = Extract<Observation, { step: "latex" }>;
+type BibtexPass = Extract<Observation, { step: "bibtex" }>;
+const H = (
+  aux: string | null,
+  toc: string | null = null,
+  out: string | null = null,
+  bbl: string | null = null,
+): Hashes => ({ aux, toc, out, bbl });
+const NO_BIB: BibInput = { kind: "none" };
+const bib = (
+  citations: readonly string[],
+  bibHash: string | null = "b1",
+): BibInput => ({
   kind: "needed",
   citations,
   databases: ["refs"],
   style: "plain",
   bibHash,
 });
-const latex = (o = {}) => ({
+const latex = (o: Partial<LatexPass> = {}): LatexPass => ({
   step: "latex",
   final: false,
   exitCode: 0,
@@ -40,7 +53,7 @@ const latex = (o = {}) => ({
   errorLines: [],
   ...o,
 });
-const bibtex = (o = {}) => ({
+const bibtex = (o: Partial<BibtexPass> = {}): BibtexPass => ({
   step: "bibtex",
   exitCode: 0,
   before: H("a1"),
@@ -49,11 +62,11 @@ const bibtex = (o = {}) => ({
   errorLines: [],
   ...o,
 });
-const kind = (s) =>
+const kind = (s: Step) =>
   s.kind === "latex" ? `latex${s.final ? "-final" : ""}` : s.kind;
 
 // ── 1. nextStep over a State ─────────────────────────────────────────────────────────────
-const S = (o = {}) => ({
+const S = (o: Partial<State> = {}): State => ({
   failed: null,
   bibOutdated: false,
   unsettled: [],
@@ -62,12 +75,12 @@ const S = (o = {}) => ({
   warnings: [],
   ...o,
 });
-const exitFail = {
+const exitFail: NonNullable<State["failed"]> = {
   step: "bibtex",
   cause: { kind: "exit", code: 2 },
   lines: ["I couldn't open database file nope.bib"],
 };
-const STATES = [
+const STATES: [string, State, string][] = [
   // Guards: the only moment paper-guards can speak — its error comes on the final pass, so testing
   // 'final' before 'exit code' would ship the undefined reference green.
   [
@@ -115,20 +128,29 @@ for (const [label, state, expected] of STATES) {
 const q1 = nextStep(S({ failed: exitFail }));
 check(
   "Q1 passes the failure through: the step, the cause and the lines verbatim",
-  q1.step === "bibtex" && q1.cause.code === 2 && q1.lines === exitFail.lines,
+  q1.kind === "fail" &&
+    q1.step === "bibtex" &&
+    q1.cause.kind === "exit" &&
+    q1.cause.code === 2 &&
+    q1.lines === exitFail.lines,
 );
 const q3cap = nextStep(
   S({ unsettled: ["paper.aux", "labels-changed"], latexPasses: MAX_PASSES }),
 );
 check(
   "the cap's failure is no-convergence and NAMES what stayed unsettled",
-  q3cap.cause.kind === "no-convergence" &&
-    q3cap.lines[0].includes("paper.aux, labels-changed"),
+  q3cap.kind === "fail" &&
+    q3cap.cause.kind === "no-convergence" &&
+    (q3cap.lines[0] ?? "").includes("paper.aux, labels-changed"),
 );
 check(
   "done carries the state's warnings",
-  nextStep(S({ finalDone: true, warnings: ["undefined-citations"] }))
-    .warnings[0] === "undefined-citations",
+  (() => {
+    const done = nextStep(
+      S({ finalDone: true, warnings: ["undefined-citations"] }),
+    );
+    return done.kind === "done" && done.warnings[0] === "undefined-citations";
+  })(),
 );
 
 // ── 2. summarize over histories ─────────────────────────────────────────────────────────
@@ -152,7 +174,10 @@ check(
   (() => {
     const f = sum([latex({ exitCode: 1, errorLines: ["l.4 \\foo"] })]).failed;
     return (
-      f?.step === "latex" && f.cause.code === 1 && f.lines[0] === "l.4 \\foo"
+      f?.step === "latex" &&
+      f.cause.kind === "exit" &&
+      f.cause.code === 1 &&
+      f.lines[0] === "l.4 \\foo"
     );
   })(),
 );
@@ -232,10 +257,10 @@ check(
 );
 
 // ── 3. composed: nextStep(summarize(history)) ───────────────────────────────────────────
-const step = (history) => nextStep(summarize(history));
+const step = (history: readonly Observation[]) => nextStep(summarize(history));
 
 // ── the histories the loop sees ───────────────────────────────────────────────────────────────────────────
-const TABLE = [
+const TABLE: [string, Observation[], string][] = [
   ["nothing ran yet — the first step is a plain pass", [], "latex"],
   [
     "a pass that created the aux — rerun",
@@ -364,7 +389,8 @@ const latexFail = step([
 ]);
 check(
   "a latex fail names the step, the exit code and the log excerpt verbatim",
-  latexFail.step === "latex" &&
+  latexFail.kind === "fail" &&
+    latexFail.step === "latex" &&
     latexFail.cause.kind === "exit" &&
     latexFail.cause.code === 1 &&
     latexFail.lines[1] === "l.4 \\foo",
@@ -380,11 +406,13 @@ check(
   "a bibtex fail names BIBTEX, not latex",
   bibFail.kind === "fail" &&
     bibFail.step === "bibtex" &&
+    bibFail.cause.kind === "exit" &&
     bibFail.cause.code === 2,
 );
 
 // ── the cap ─────────────────────────────────────────────────────────────────────────────
-const moving = (i) => latex({ before: H(`a${i}`), after: H(`a${i + 1}`) });
+const moving = (i: number) =>
+  latex({ before: H(`a${i}`), after: H(`a${i + 1}`) });
 const underCap = Array.from({ length: MAX_PASSES - 1 }, (_, i) => moving(i));
 check(
   `the cap is ${MAX_PASSES} and it is not hit early: after ${MAX_PASSES - 1} moving passes, one more`,
@@ -398,7 +426,7 @@ check(
 );
 check(
   "the non-convergence failure NAMES the file that kept changing",
-  capped.kind === "fail" && capped.lines[0].includes("paper.aux"),
+  capped.kind === "fail" && (capped.lines[0] ?? "").includes("paper.aux"),
 );
 const cappedMarker = step(
   Array.from({ length: MAX_PASSES }, () =>
@@ -408,7 +436,7 @@ const cappedMarker = step(
 check(
   "a log that keeps asking for a rerun hits the same cap, and names the marker",
   cappedMarker.kind === "fail" &&
-    cappedMarker.lines[0].includes("labels-changed"),
+    (cappedMarker.lines[0] ?? "").includes("labels-changed"),
 );
 const convergedAtCap = [...atCap.slice(0, -1), latex()];
 check(

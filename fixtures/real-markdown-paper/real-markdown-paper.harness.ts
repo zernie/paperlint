@@ -60,7 +60,7 @@ const check = createChecker();
  * Counting by rule rather than reading the rendered text on purpose: the message wording is
  * prose and changes with every edit, the rule id is the thing being asserted about.
  */
-function findings(patch) {
+function findings(patch: ((dir: string) => void) | null) {
   const work = realpathSync(
     mkdtempSync(join(tmpdir(), "paperlint-realpaper-")),
   );
@@ -98,7 +98,7 @@ function findings(patch) {
   }
 }
 
-const edit = (dir, file, from, to) => {
+const edit = (dir: string, file: string, from: string, to: string) => {
   const p = join(dir, file);
   const s = readFileSync(p, "utf8");
   // The planted defect must actually land. A patch that silently misses turns a variation into a

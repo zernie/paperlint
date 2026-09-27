@@ -20,8 +20,8 @@ import {
 /** The verdicts `verify-cites --json`… prints: one per citation, with the fields these tests read. */
 const Verdicts = z.array(
   z.looseObject({
-    id: z.unknown(),
-    verdict: z.unknown(),
+    id: z.unknown().optional(),
+    verdict: z.unknown().optional(),
     flags: z.array(z.unknown()).nullish(),
   }),
 );

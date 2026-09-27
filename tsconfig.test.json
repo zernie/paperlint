@@ -16,7 +16,9 @@
     "bin/**/*.test.ts",
     "skills/**/*.test.ts",
     "fixtures/**/*.ts",
-    "skills/**/fixtures/**/*.ts"
+    "skills/**/fixtures/**/*.ts",
+    "hooks/**/*.harness.ts",
+    "skills/**/*.harness.ts"
   ],
   "exclude": []
 }

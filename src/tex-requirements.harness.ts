@@ -18,6 +18,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
+import { z } from "zod";
 import { createChecker } from "../lib/check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -29,18 +30,18 @@ const VENUES = join(
   "references",
   "venues",
 );
-const R = await import(join(HERE, "tex-requirements.ts"));
+const R = await import("./tex-requirements.ts");
 
 const check = createChecker();
-const throws = (fn) => {
+const throws = (fn: () => unknown): string => {
   try {
     fn();
     return "";
   } catch (e) {
-    return e.message;
+    return e instanceof Error ? e.message : String(e);
   }
 };
-const read = (f) =>
+const read = (f: string) =>
   R.parseProfile(readFileSync(join(VENUES, f), "utf8"), f, VENUES);
 
 // ── 1. the shipped data ─────────────────────────────────────────────────────────────────
@@ -69,11 +70,14 @@ check(
 );
 
 // The whole profile, parsed the way the other harnesses read these files — never a line of text.
-const templateOf = (v) =>
-  ts.parseConfigFileTextToJson(
-    v,
-    readFileSync(join(VENUES, `${v}.jsonc`), "utf8"),
-  ).config.template;
+const TemplateField = z.object({ template: z.unknown().optional() });
+const templateOf = (v: string): unknown =>
+  TemplateField.parse(
+    ts.parseConfigFileTextToJson(
+      v,
+      readFileSync(join(VENUES, `${v}.jsonc`), "utf8"),
+    ).config,
+  ).template;
 const acm = venues.filter((v) => templateOf(v) === "acmart");
 check(
   "at least one acmart venue is shipped (else the next checks see nothing)",
@@ -92,7 +96,7 @@ for (const v of acm) {
     // minimal one.
     ["fancyhdr", "fancyhdr.sty"],
     ["acmart", "acmart.cls"],
-  ])
+  ] satisfies [string, string][])
     check(
       `🔴 ${v}: declares ${pkg}, proved by ${file}`,
       tex.packages[pkg]?.includes(file),
@@ -102,22 +106,23 @@ for (const v of acm) {
 // dictionaries diverged. Since the ACM venues extend the `acm-sigconf` family, only the family
 // declares the template's packages, so this holds by construction; the check stays for any two
 // standalone presets that name the same template.
-const byTemplate = new Map();
+const byTemplate = new Map<unknown, string[]>();
 for (const v of venues) {
   const t = templateOf(v);
   byTemplate.set(t, [...(byTemplate.get(t) ?? []), v]);
 }
 for (const [t, vs] of byTemplate)
   check(
-    `venues on template ${t} declare the SAME packages (${vs.join(", ")})`,
+    `venues on template ${String(t)} declare the SAME packages (${vs.join(", ")})`,
     new Set(vs.map((v) => JSON.stringify(read(`${v}.jsonc`)))).size === 1,
   );
 
 // ── 2. the schema rejects ───────────────────────────────────────────────────────────────
 const tmp = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-texreq-h-")));
 copyFileSync(join(VENUES, R.SCHEMA_FILE), join(tmp, R.SCHEMA_FILE));
-const bad = (text) => throws(() => R.parseProfile(text, "bad.jsonc", tmp));
-const BAD = [
+const bad = (text: string) =>
+  throws(() => R.parseProfile(text, "bad.jsonc", tmp));
+const BAD: [string, string, string][] = [
   ["no `tex` block at all", `{ "template": "acmart" }`, "tex"],
   // Guards: typo detection — `templat` would be accepted and the field silently unread.
   [
@@ -181,13 +186,12 @@ rmSync(tmp, { recursive: true, force: true });
 // Which preset a paper resolves to — a typo, the base file, a missing one — is src/presets.ts's
 // question now, tested in src/presets.test.ts; this function only adds a resolved preset's packages.
 {
-  const r = R.requirementsFor(
-    { label: acm[0], tex: read(`${acm[0]}.jsonc`) },
-    VENUES,
-  );
+  // `acm` is non-empty: the check above it throws otherwise.
+  const [label = ""] = acm;
+  const r = R.requirementsFor({ label, tex: read(`${label}.jsonc`) }, VENUES);
   check(
     "a resolved preset → its packages ON TOP OF the base set, and the source names its label",
-    r.source === `venue ${acm[0]}` &&
+    r.source === `venue ${label}` &&
       "acmart" in r.tex.packages &&
       "hyperref" in r.tex.packages &&
       "texcount" in r.tex.tools,
@@ -251,7 +255,15 @@ rmSync(tmp, { recursive: true, force: true });
     "violations: Ajv's null `errors` is no violation; a message Ajv left out is an empty one",
     R.violations("f.jsonc", { errors: null }).length === 0 &&
       R.violations("f.jsonc", {
-        errors: [{ dataPath: "", message: undefined }],
+        errors: [
+          {
+            keyword: "required",
+            dataPath: "",
+            schemaPath: "#/required",
+            params: {},
+            message: undefined,
+          },
+        ],
       })[0] === "f.jsonc: (top level) ",
   );
 }

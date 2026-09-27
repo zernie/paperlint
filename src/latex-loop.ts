@@ -3,7 +3,7 @@
  *
  * PURE. No disk, no process, no clock. The shell in `build.ts` runs a step, records what it saw
  * as an `Observation`, appends it to the history and asks `nextStep(summarize(history))` again.
- * Both halves are table tests (`latex-loop.harness.mjs`), not scenarios that need TeX.
+ * Both halves are table tests (`latex-loop.harness.ts`), not scenarios that need TeX.
  *
  * ── THE LOOP: `summarize` reduces the history to a `State`, and `nextStep` asks four questions ──
  *   1. did the last program fail?                          → fail, with its error lines

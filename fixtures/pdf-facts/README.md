@@ -1,6 +1,6 @@
 # PDF fixtures for the pdf.js reader
 
-Real PDFs that `src/pdf-facts.harness.mjs` and `skills/render-paper/extract-pdf-facts.harness.mjs`
+Real PDFs that `src/pdf-facts.harness.ts` and `skills/render-paper/extract-pdf-facts.harness.ts`
 read. They were measured with poppler and with pdf.js on 2026-09-24 (issue #61); the harnesses pin
 poppler's numbers, so a pass means agreement with the tool pdf.js replaced.
 

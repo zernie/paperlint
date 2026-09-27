@@ -18,7 +18,44 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { load } from "js-yaml";
+import { z } from "zod";
 import { createChecker } from "../lib/check.mjs";
+import type { Gate } from "./check.ts";
+
+/** A workflow file, as far as these checks read it. `on` is a plain key: js-yaml reads YAML 1.2. */
+const Step = z.looseObject({
+  name: z.string().optional(),
+  run: z.string().optional(),
+  uses: z.string().optional(),
+});
+const Workflow = z.looseObject({
+  on: z
+    .looseObject({
+      pull_request: z
+        .looseObject({ types: z.array(z.string()).optional() })
+        .nullish(),
+    })
+    .optional(),
+  jobs: z
+    .record(
+      z.string(),
+      z.looseObject({
+        steps: z.array(Step).optional(),
+        strategy: z
+          .looseObject({
+            matrix: z
+              .looseObject({ os: z.array(z.string()).optional() })
+              .optional(),
+          })
+          .optional(),
+      }),
+    )
+    .optional(),
+});
+type Workflow = z.infer<typeof Workflow>;
+const PackageJson = z.looseObject({
+  scripts: z.record(z.string(), z.string()).optional(),
+});
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(HERE);
@@ -54,7 +91,10 @@ const WF_DIR = join(ROOT, ".github", "workflows");
 const workflows = Object.fromEntries(
   readdirSync(WF_DIR)
     .filter((f) => f.endsWith(".yml"))
-    .map((f) => [f, load(readFileSync(join(WF_DIR, f), "utf-8"))]),
+    .map((f) => [
+      f,
+      Workflow.parse(load(readFileSync(join(WF_DIR, f), "utf-8"))),
+    ]),
 );
 const ciJobs = Object.values(workflows).flatMap((wf) =>
   Object.keys(wf.jobs ?? {}),
@@ -67,7 +107,8 @@ check(
 // ── macOS: a cell of the TeX job, on every push ─────────────────────────────────────────
 // install-tl-unx must work there, and issue #9 appears there alone. The trigger used to be a
 // separate once-per-PR workflow; the repository is public, so the minutes are free.
-const prTypes = (wf) => wf.on?.pull_request?.types ?? [];
+const prTypes = (wf: Workflow | undefined): string[] =>
+  wf?.on?.pull_request?.types ?? [];
 const buildOs =
   workflows["ci.yml"]?.jobs?.["build-e2e"]?.strategy?.matrix?.os ?? [];
 check(
@@ -114,7 +155,9 @@ for (const job of Object.keys(NOT_COVERED)) {
 // A gate whose script or file was renamed fails at the moment someone runs it — which is
 // exactly the moment they are trusting it. Catch it here instead.
 const scripts =
-  JSON.parse(readFileSync(join(ROOT, "package.json"), "utf-8")).scripts ?? {};
+  PackageJson.parse(
+    JSON.parse(readFileSync(join(ROOT, "package.json"), "utf-8")),
+  ).scripts ?? {};
 for (const g of GATES) {
   check(
     `gate «${g.name}» says how to run it in exactly one way (script or run)`,
@@ -167,15 +210,16 @@ for (const g of GATES.filter((g) => g.job === null)) {
 // arguments allowed) for a script gate, its argv (an `npx` in front and extra arguments allowed)
 // for a run gate. Tokens, not a substring: `npm run lint` must not be found inside
 // `npm run lint:skills`, nor a path inside a comment.
-const commandsIn = (run) =>
+const commandsIn = (run: string | undefined): string[][] =>
   String(run ?? "")
     .split(/\n|&&|\|\||;/)
     .map((c) => c.trim().split(/\s+/).filter(Boolean))
     .filter((t) => t.length > 0);
-const stepsOf = (job) =>
+const stepsOf = (job: string) =>
   Object.values(workflows).flatMap((wf) => wf.jobs?.[job]?.steps ?? []);
-const startsWith = (tokens, prefix) => prefix.every((p, i) => tokens[i] === p);
-const runsGate = (tokens, g) => {
+const startsWith = (tokens: readonly string[], prefix: readonly string[]) =>
+  prefix.every((p, i) => tokens[i] === p);
+const runsGate = (tokens: readonly string[], g: Gate): boolean => {
   if (g.script)
     return (
       tokens[0] === "npm" &&
@@ -191,20 +235,21 @@ const runsGate = (tokens, g) => {
 for (const g of GATES) {
   if (g.job === null) continue;
   const steps = stepsOf(g.job);
-  if (g.inCi) {
+  const { inCi } = g;
+  if (inCi) {
     // A gate CI runs as a side effect of another step, through an npm lifecycle script: the step
     // it names must exist in the job and install the package (npm runs lifecycle scripts there),
     // and the lifecycle script must be the gate's own command, so the two cannot drift apart.
-    const step = steps.find((s) => s.name === g.inCi.step);
+    const step = steps.find((s) => s.name === inCi.step);
     const tokens = commandsIn(step?.run)[0] ?? [];
     check(
-      `gate «${g.name}» runs in CI job «${g.job}» through step «${g.inCi.step}», whose ${g.inCi.lifecycle} script is the gate's command`,
+      `gate «${g.name}» runs in CI job «${g.job}» through step «${inCi.step}», whose ${inCi.lifecycle} script is the gate's command`,
       step !== undefined &&
         tokens[0] === "npm" &&
-        ["ci", "install"].includes(tokens[1]) &&
+        ["ci", "install"].includes(tokens[1] ?? "") &&
         typeof scripts[g.script] === "string" &&
-        scripts[g.inCi.lifecycle] === scripts[g.script],
-      JSON.stringify({ run: step?.run, lifecycle: scripts[g.inCi.lifecycle] }),
+        scripts[inCi.lifecycle] === scripts[g.script],
+      JSON.stringify({ run: step?.run, lifecycle: scripts[inCi.lifecycle] }),
     );
     continue;
   }

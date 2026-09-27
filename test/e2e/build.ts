@@ -85,8 +85,8 @@ const LintReport = z.array(
 
 /** The parts of `_build/paper.facts.json` the balance check reads. */
 const FactsFile = z.looseObject({
-  schema: z.unknown(),
-  last_page: z.unknown(),
+  schema: z.unknown().optional(),
+  last_page: z.unknown().optional(),
 });
 const MeasuredLastPage = z.looseObject({
   kind: z.literal("measured"),
@@ -95,20 +95,23 @@ const MeasuredLastPage = z.looseObject({
 
 /** `_build/references.json`: the status and, per entry, the three verdict fields. */
 const RecordedReferences = z.looseObject({
-  status: z.unknown(),
+  status: z.unknown().optional(),
   entries: z.array(
     z.looseObject({
-      key: z.unknown(),
-      exists: z.unknown(),
-      authors: z.unknown(),
+      key: z.unknown().optional(),
+      exists: z.unknown().optional(),
+      authors: z.unknown().optional(),
     }),
   ),
 });
 
 /** `repro/references-cache.json`: the answers per registry, each dated. */
 const ReferencesCache = z.looseObject({
-  schema: z.unknown(),
-  citations: z.record(z.string(), z.looseObject({ fetched: z.unknown() })),
+  schema: z.unknown().optional(),
+  citations: z.record(
+    z.string(),
+    z.looseObject({ fetched: z.unknown().optional() }),
+  ),
   dblp: z.record(z.string(), z.unknown()),
 });
 

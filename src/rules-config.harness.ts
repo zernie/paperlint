@@ -3,24 +3,18 @@
  * paperlint ships. The end-to-end path (a project's paperlint.json → `paperlint lint`) is in `cli.harness.mjs`;
  * this pins the parser's output shape and each refusal.
  */
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { createChecker } from "../lib/check.mjs";
 
-const HERE = dirname(fileURLToPath(import.meta.url));
-const { parseRuleBlocks, shippedRuleIds, unknownKeys } = await import(
-  join(HERE, "rules-config.ts")
-);
+const { parseRuleBlocks, shippedRuleIds, unknownKeys } =
+  await import("./rules-config.ts");
 
 const check = createChecker();
 
 const SHIPPED = new Set(["pdf/last-page-balance", "paper/typography"]);
-const parse = (raw) => parseRuleBlocks(raw, "S", SHIPPED, "/consumer");
+const parse = (raw: unknown) => parseRuleBlocks(raw, "S", SHIPPED, "/consumer");
 
-check(
-  "no `rules` key: no blocks",
-  parse(undefined).ok && parse(undefined).value.length === 0,
-);
+const none = parse(undefined);
+check("no `rules` key: no blocks", none.ok && none.value.length === 0);
 {
   const r = parse([
     {
@@ -62,7 +56,7 @@ check(
   parse([{ rules: { "paper/typography": 0, "pdf/last-page-balance": "warn" } }])
     .ok,
 );
-const refusals = [
+const refusals: [unknown, string][] = [
   ["pdf/last-page-balance", 'S → "rules" must be { "<rule>": "<severity>" }'],
   [{ a: 1 }, '"a" is not a rule paperlint ships'],
   [[42], "S → rules[0] must be an object"],

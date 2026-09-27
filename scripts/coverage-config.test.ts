@@ -23,7 +23,6 @@ import { spawnSync } from "node:child_process";
 import { globSync, readFileSync } from "node:fs";
 import { dirname, join, matchesGlob, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-// @ts-expect-error — js-yaml ships no types, and the package does not depend on @types/js-yaml
 import yaml from "js-yaml";
 import ts from "typescript";
 import { test } from "vitest";
@@ -345,7 +344,7 @@ test("dist/ is excluded BEFORE source maps: a direct load is not a second copy o
 test("the exclude list is exactly the justified set", () => {
   assert.deepEqual(CONFIG.exclude, [
     // tests themselves
-    "**/*.harness.mjs",
+    "**/*.harness.*",
     "**/*.test.*",
     // PAID LLM evaluations, never run by `npm test`
     "**/*.eval.mjs",

@@ -25,11 +25,10 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { createChecker } from "../lib/check.mjs";
+import type { Merge, Settings } from "./hooks-settings.ts";
 
-const HERE = dirname(fileURLToPath(import.meta.url));
 const {
   hookRun,
   shippedWiring,
@@ -39,9 +38,10 @@ const {
   readSettings,
   MANAGED_BY,
   SETTINGS_PATH,
-} = await import(join(HERE, "hooks-settings.ts"));
+} = await import("./hooks-settings.ts");
 const { claudeCodeHookProtocol } = await import("vigiles/claude-code");
-const merge = (e, c, m) => claudeCodeHookProtocol.mergeRegistrations(e, c, m);
+const merge: Merge = (e, c, m) =>
+  claudeCodeHookProtocol.mergeRegistrations(e, c, m);
 
 const check = createChecker();
 
@@ -82,7 +82,7 @@ check(
   try {
     shippedWiring(file);
   } catch (e) {
-    thrown = e.message;
+    thrown = e instanceof Error ? e.message : String(e);
   }
   rmSync(file);
   check(
@@ -109,7 +109,7 @@ try {
 
   // ── which spelling runs which hook ─────────────────────────────────────────────────────
   const ours = `node "\${CLAUDE_PROJECT_DIR}/${MANAGED_BY}" hook paper-edit-guard`;
-  const cases = [
+  const cases: [string, { name: string; ours: boolean } | null][] = [
     [ours, { name: "paper-edit-guard", ours: true }],
     [
       `node "$CLAUDE_PROJECT_DIR/${MANAGED_BY}" hook paper-status-gates`,
@@ -140,7 +140,7 @@ try {
       JSON.stringify(hookRun(cmd)) === JSON.stringify(want),
     );
 
-  const project = (name, settings) => {
+  const project = (name: string, settings?: Settings | string) => {
     const dir = join(work, name);
     mkdirSync(join(dir, ".claude"), { recursive: true });
     if (settings !== undefined)
@@ -152,7 +152,7 @@ try {
       );
     return dir;
   };
-  const text = (dir) => readFileSync(join(dir, SETTINGS_PATH), "utf8");
+  const text = (dir: string) => readFileSync(join(dir, SETTINGS_PATH), "utf8");
 
   // ── a fresh project ────────────────────────────────────────────────────────────────────
   {
@@ -243,11 +243,14 @@ try {
     );
     check(
       "the report names the hook and the command it found",
-      r.found.length === 1 && r.found[0].name === "paper-edit-guard",
+      r.status === "foreign" &&
+        r.found.length === 1 &&
+        r.found[0]?.name === "paper-edit-guard",
     );
     check(
       "and names the hooks that are not wired in ANY form",
-      r.missing.join() === "paper-skills-nudge,paper-status-gates",
+      r.status === "foreign" &&
+        r.missing.join() === "paper-skills-nudge,paper-status-gates",
     );
     // The control: without the check, vigiles' merge WOULD add a second copy. This is the
     // reason the check exists, measured rather than asserted.
@@ -257,7 +260,7 @@ try {
     );
     check(
       "(control) vigiles' merge alone would wire paper-edit-guard TWICE here",
-      c.ours === 1 && c.other === 1,
+      c?.ours === 1 && c.other === 1,
     );
   }
 
@@ -276,7 +279,7 @@ try {
   }
 
   // ── doctor's section ───────────────────────────────────────────────────────────────────
-  const doc = (settings) => {
+  const doc = (settings?: Settings | string) => {
     const dir = project(`doc-${String(check.count)}`, settings);
     return doctorHooks(dir, wiring).join("\n");
   };
