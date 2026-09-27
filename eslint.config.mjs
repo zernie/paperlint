@@ -349,7 +349,7 @@ export default [
   // 🔴 THE PACKAGE'S TYPESCRIPT, and before 2026-09-24 no block matched it — the same silent
   // ignore the `.mjs` block below was written against, recurring for `.ts` (#49). `src/` is the
   // CLI and the build; the skill specs compile into the SKILL.md files the package ships; the
-  // three hand-written `.d.mts` type the `.mjs` modules `src/` imports. All tracked TypeScript.
+  // hand-written `.d.mts` files type the `.mjs` modules `src/` imports. All tracked TypeScript.
   //
   // Measured on the first run (41727cd): 44 findings in 9 of 39 files, all in `src/`, plus one
   // `no-useless-escape` in a spec that had dropped a backslash from its compiled SKILL.md. The
