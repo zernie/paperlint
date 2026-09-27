@@ -70,8 +70,10 @@ export const EMPTY_LOOKUP_CACHE: LookupCache = {
 };
 
 /**
- * The key a DBLP answer is stored under: the title with case, accents, braces and punctuation
- * removed, hashed. A re-cased or re-braced title in the .bib keeps its answer.
+ * The key a DBLP answer is stored under: the title with case, accents, BibTeX braces and runs of
+ * whitespace normalized, hashed. A re-cased or re-braced title in the .bib keeps its answer.
+ * Punctuation stays: `C` and `C++` are different works, and a shared key would serve one's
+ * answer for the other. A title that differs only in punctuation costs one extra lookup.
  */
 export const dblpTitleKey = (title: string): string =>
   sha256Hex(
@@ -80,7 +82,9 @@ export const dblpTitleKey = (title: string): string =>
         .toLowerCase()
         .normalize("NFKD")
         .replace(/\p{M}+/gu, "")
-        .replace(/[^\p{L}\p{N}]+/gu, ""),
+        .replace(/[{}]/g, "")
+        .replace(/\s+/g, " ")
+        .trim(),
     ),
   ).slice(0, 16);
 

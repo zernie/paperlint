@@ -153,12 +153,21 @@ describe("parseLookupCache refusals", () => {
 });
 
 describe("dblpTitleKey", () => {
-  // Guards: the key must not change with markup the lookup itself strips (braces, case,
-  // punctuation, accents), or a re-cased title in the .bib re-asks DBLP with its 900 ms pause.
-  it("is the same for the same title under braces, case, punctuation and accents", () => {
-    const k = dblpTitleKey("Évaluating {LLM}-based Agents");
-    expect(dblpTitleKey("evaluating llm based agents")).toBe(k);
+  // Guards: the key must not change with presentation markup (BibTeX braces, case, accents,
+  // spacing), or a re-cased title in the .bib re-asks DBLP with its 900 ms pause.
+  it("is the same for the same title under braces, case, accents and spacing", () => {
+    const k = dblpTitleKey("Évaluating {LLM}-based  Agents");
+    expect(dblpTitleKey("evaluating llm-based agents")).toBe(k);
     expect(k).toMatch(/^[0-9a-f]{16}$/);
     expect(dblpTitleKey("Evaluating LLM-based Tools")).not.toBe(k);
+  });
+
+  // Guards: punctuation can be part of a title's identity. A shared key would serve one work's
+  // DBLP answer for another; a separate key costs one extra lookup at most.
+  it.each([
+    ["Fuzzing C Compilers", "Fuzzing C++ Compilers"],
+    ["Verified F Programs", "Verified F# Programs"],
+  ])("keeps %s and %s apart", (a, b) => {
+    expect(dblpTitleKey(a)).not.toBe(dblpTitleKey(b));
   });
 });
