@@ -85,12 +85,12 @@ const TEST_FILES = [
   "test/**/*.{ts,mts}",
 ];
 
-// 🔴 A CEILING, NOT A PERMISSION: each number is the file's measured maximum when its limit arrived
-// (complexity, depth and 60-line functions on 2026-09-24; cognitive complexity and the 30-line
-// source limit on 2026-09-28; the TypeScript moves of #78 on 2026-09-27), so a
-// function in these files can get simpler and cannot get worse. Lower a number when a refactor
-// lowers the maximum; never raise one. Paying the debt down is issue #137. A file leaves this table
-// when it passes the shared limits.
+// 🔴 A CEILING, NOT A PERMISSION: each number is the file's measured maximum on the day its limit
+// arrived (complexity and depth on 2026-09-24, the files #78 moved to TypeScript on 2026-09-27,
+// cognitive complexity and the 30-line source limit on 2026-09-28), so a function in these files
+// can get simpler and cannot get worse. Lower a number when a refactor lowers the maximum; never
+// raise one. Paying the debt down is issue #137. A file leaves this table when it passes the
+// shared limits.
 const RATCHET = {
   "eslint-rules/latex-language.ts": {
     complexity: 68,
