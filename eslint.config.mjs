@@ -428,6 +428,7 @@ const TYPESCRIPT_ONLY = [
   "test/*.{js,mjs,cjs}",
   "test/e2e/**/*.{js,mjs,cjs}",
   "test/fixtures/layers/src/**/*.{js,mjs,cjs}",
+  "fixtures/accepted-papers/**/*.{js,mjs,cjs}",
   "fixtures/real-markdown-paper/**/*.{js,mjs,cjs}",
   "skills/paper-pipeline/scripts/fixtures/**/*.{js,mjs,cjs}",
   "skills/plan-paper-timeline/fixtures/**/*.{js,mjs,cjs}",

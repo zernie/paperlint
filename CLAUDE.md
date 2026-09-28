@@ -517,7 +517,9 @@ criterion in a skill, is held to them.
    reader includes a skimming reviewer who reads the abstract, the introduction and the conclusion,
    and judges whether it reads as a paper at that venue and whose result each sentence states.
 4. **Thresholds are calibrated, not borrowed.** A threshold is set with the same counter on real
-   accepted papers, never taken from a published figure measured by a different counter.
+   accepted papers, never taken from a published figure measured by a different counter. Those
+   papers are [`fixtures/accepted-papers/`](fixtures/accepted-papers/README.md), and every rule's
+   count on them is recorded there.
 5. **A rewrite is accepted on what reviewers see.** That is the combined count of every surface form
    of a tic (a narrow rule is gamed by rewording), plus a claims-preservation check that no claim was
    softened or strengthened — not the one pattern the triggering rule matched.

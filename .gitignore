@@ -13,6 +13,10 @@ _build/
 # `git check-ignore -v` named this line for every one of them.
 !skills/paper-pipeline/repro/*.log
 
+# The accepted papers' own .bbl files are the authors' source, as arXiv published them, not our
+# build output (fixtures/accepted-papers/README.md).
+!fixtures/accepted-papers/*/*.bbl
+
 dist/
 # c8's report and raw V8 data (`npm run coverage`).
 coverage/
