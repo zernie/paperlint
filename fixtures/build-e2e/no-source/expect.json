@@ -1,0 +1,10 @@
+{
+  "$comment": "No paper.tex: a refusal, named separately, and a stale paper.pdf is removed.",
+  "build": {
+    "outcome": "failed"
+  },
+  "says": [
+    "✗ nothing to compile: no paper.tex",
+    "paper.pdf removed — a stale PDF must not pass for this build"
+  ]
+}

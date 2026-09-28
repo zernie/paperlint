@@ -1,0 +1,60 @@
+{
+  "$comment": "A two-column acmart paper whose last page ends unbalanced. The build measures it without judging; the optional lint rule reports it.",
+  "build": {
+    "outcome": "pdf"
+  },
+  "says": [
+    "✓ paper.pdf",
+    "facts: _build/paper.facts.json, last page 621.5 / 264.8 pt"
+  ],
+  "saysNot": [
+    "  balance:"
+  ],
+  "files": {
+    "lacks": {
+      "paper.bbl": [
+        "\\balance"
+      ]
+    }
+  },
+  "facts": {
+    "schema": 2,
+    "lastPageColumnsPt": [
+      621.5,
+      264.8
+    ]
+  },
+  "lint": {
+    "paperlintJson": {
+      "rules": {
+        "pdf/last-page-balance": "error"
+      }
+    },
+    "exit": 1,
+    "rules": {
+      "pdf/last-page-balance": [
+        {
+          "severity": 2,
+          "says": [
+            "621.5 and 264.8 pt",
+            "pbalance"
+          ]
+        }
+      ],
+      "pdf/fresh": [],
+      "pdf/profile": [],
+      "pdf/fonts": [],
+      "pdf/geometry": [],
+      "pdf/limits": [],
+      "pdf/body-size": [],
+      "pdf/measured": [
+        {
+          "severity": 1,
+          "says": [
+            "names no venue preset yet"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,12 +1,19 @@
 /**
  * check.ts's runGates — the one command run before a push — on every outcome, with an injected
- * spawn: a pass, a declared skip (77) and a failure, and THE TAIL that names what it does not cover.
+ * spawn: a pass, a skip (counted in a vitest gate's JSON report) and a failure, and THE TAIL that
+ * names what it does not cover.
  */
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { test } from "vitest";
-import { GATES, NOT_COVERED, runGates, type Gate } from "./check.ts";
+import {
+  GATES,
+  NOT_COVERED,
+  reportArgs,
+  runGates,
+  type Gate,
+} from "./check.ts";
 
 const capture = () => {
   const out: string[] = [];
@@ -17,10 +24,12 @@ const capture = () => {
   return { out, io };
 };
 
-test("runGates: a pass, a declared skip (77) and a failure, then the tail naming what is not covered", () => {
+const SKIPPED_2 = JSON.stringify({ numPendingTests: 2, numTodoTests: 0 });
+
+test("runGates: a pass, a vitest gate that skipped tests, and a failure, then the tail naming what is not covered", () => {
   const gates: Gate[] = [
     { name: "passes", job: "gates", run: ["true"] },
-    { name: "skips", job: "gates", run: ["skipper", "--x"] },
+    { name: "skips", job: "gates", script: "test:e2e:x", vitest: true },
     {
       name: "fails",
       job: null,
@@ -28,15 +37,30 @@ test("runGates: a pass, a declared skip (77) and a failure, then the tail naming
       run: ["false"],
     },
   ];
-  const status: Record<string, number> = { true: 0, skipper: 77, false: 3 };
+  const status: Record<string, number> = { true: 0, npm: 0, false: 3 };
+  const calls: string[][] = [];
   const written: string[] = [];
   const { out, io } = capture();
   const code = runGates({
     gates,
-    spawn: (cmd) => ({ status: status[cmd] ?? null }),
+    spawn: (cmd, args) => {
+      calls.push([cmd, ...args]);
+      return { status: status[cmd] ?? null };
+    },
     write: (s) => written.push(s),
+    reportOf: () => SKIPPED_2,
     ...io,
   });
+  // The vitest gate is asked for its JSON report, beside its usual output.
+  const vitestCall = calls[1] ?? [];
+  const file = (vitestCall.at(-1) ?? "").replace("--outputFile.json=", "");
+  assert.deepEqual(vitestCall, [
+    "npm",
+    "run",
+    "-s",
+    "test:e2e:x",
+    ...reportArgs(file),
+  ]);
   assert.deepEqual(
     { code, written, out },
     {
@@ -46,7 +70,7 @@ test("runGates: a pass, a declared skip (77) and a failure, then the tail naming
         "",
         "E 🔴 gates failed:",
         "E    fails  (false → 3)",
-        "⏳ skipped: skips  (skipper --x → 77)",
+        "⏳ skipped: skips  (npm run -s test:e2e:x → 2 test(s) skipped)",
         "\nWhat this command does NOT cover:",
         ...Object.entries(NOT_COVERED).map(
           ([job, why]) => `  CI job «${job}» — ${why}`,
@@ -62,12 +86,11 @@ test("runGates: all passing, with a skip, says how many passed and that the skip
   const code = runGates({
     gates: [
       { name: "a", job: "gates", script: "build" },
-      { name: "b", job: "gates", run: ["skipper"] },
+      { name: "b", job: "gates", script: "test:e2e:x", vitest: true },
     ],
-    spawn: (cmd, args) => ({
-      status: cmd === "npm" && args[2] === "build" ? 0 : 77,
-    }),
+    spawn: () => ({ status: 0 }),
     write: () => {},
+    reportOf: () => SKIPPED_2,
     ...io,
   });
   assert.deepEqual(
@@ -75,10 +98,28 @@ test("runGates: all passing, with a skip, says how many passed and that the skip
     [
       0,
       "✓ 1 gate(s) passed, 1 SKIPPED — not run, not passed",
-      "⏳ skipped: b  (skipper → 77)",
+      "⏳ skipped: b  (npm run -s test:e2e:x → 2 test(s) skipped)",
     ],
   );
   assert.ok(GATES.length > 0);
+});
+
+test("🔴 runGates: a vitest gate that exits 0 but leaves no report is a FAILURE, not a pass", () => {
+  const { out, io } = capture();
+  const code = runGates({
+    gates: [{ name: "v", job: "gates", script: "test:e2e:x", vitest: true }],
+    spawn: () => ({ status: 0 }),
+    write: () => {},
+    ...io,
+  });
+  assert.deepEqual(
+    [code, out[1], out[2]],
+    [
+      1,
+      "E 🔴 gates failed:",
+      "E    v  (npm run -s test:e2e:x → exit 0, but no vitest JSON report to read skips from)",
+    ],
+  );
 });
 
 test("run as a program with every gate passing: the plain verdict, exit 0", () => {
@@ -87,7 +128,13 @@ test("run as a program with every gate passing: the plain verdict, exit 0", () =
   const allPass = [
     'import cp from "node:child_process";',
     'import { syncBuiltinESMExports } from "node:module";',
-    "cp.spawnSync = () => ({ status: 0 });",
+    'import fs from "node:fs";',
+    // A vitest gate writes its report where check.ts asked; a real run of none of them happens.
+    "cp.spawnSync = (cmd, args = []) => {",
+    '  const o = args.find((a) => a.startsWith("--outputFile.json="));',
+    "  if (o) fs.writeFileSync(o.slice(18), JSON.stringify({ numPendingTests: 0, numTodoTests: 0 }));",
+    "  return { status: 0 };",
+    "};",
     "syncBuiltinESMExports();",
   ].join("\n");
   const r = spawnSync(

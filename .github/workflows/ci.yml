@@ -19,7 +19,7 @@
 #   vigiles lint . README.md              6 s
 #   rules-see-files.mjs                   5 s
 #   layer-legacy-frozen.ts                3 s
-#   install e2e --strict (npm + pnpm)    28 s
+#   npm run test:e2e:install (npm+pnpm) 38 s
 #   ───────────────────────────────────────────
 #   total work                          ~96 s, plus checkout + install + the claude binary
 #
@@ -178,10 +178,11 @@ jobs:
         run: corepack enable pnpm
         timeout-minutes: 2
 
-      # Called directly with --strict, the same as the build e2e below. --strict: a manager that does not launch is a declared skip on a
-      # contributor's clone and a FAILURE here, because in CI it means a broken environment.
-      - name: install e2e (--strict)
-        run: node test/e2e/install.ts --strict
+      # The vitest project `e2e-install`: pack, install under npm and pnpm, run the binary. A manager
+      # that does not launch is a skip on a contributor's clone and a FAILURE here, because `CI` is set
+      # and in CI it means a broken environment (test/e2e/need.ts).
+      - name: npm run test:e2e:install
+        run: npm run test:e2e:install
         timeout-minutes: 10
 
   # ── BUILDING THE PAPER WITH REAL pdflatex, ON LINUX AND macOS ──────────────────────────────────
@@ -199,7 +200,7 @@ jobs:
   # 🔴 WHY ON EVERY PUSH. It catches silent font substitution — a class that HAS ALREADY shipped a
   # paper typeset in the wrong font. This repository is public, so the macOS minutes are free.
   #
-  # `--strict`: absence of TeX locally is a legitimate skip; here it is an environment failure.
+  # `CI` is set: absence of TeX locally is a legitimate skip; here it is an environment failure.
   build-e2e:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     strategy:
@@ -271,19 +272,11 @@ jobs:
         run: node bin/paperlint.mjs toolchain
         timeout-minutes: 15
 
-      # Proves banal works without poppler. This runner has no poppler, and the test also limits
-      # PATH to perl. paperlint turns each fixture PDF into XML with pdf.js, banal measures it, and the
-      # result must equal the numbers banal gave on the same PDFs through poppler's pdftohtml
-      # (recorded once, hardcoded in the test). Runs in seconds, hence the short timeout.
-      - name: banal e2e (--strict)
-        run: node test/e2e/banal.ts --strict
-        timeout-minutes: 3
-
-      # Called directly with --strict (see the install e2e step in the `gates` job).
-      - name: build e2e (--strict)
-        run: node test/e2e/build.ts --strict
-        timeout-minutes: 10
-
-      - name: toolchain e2e (--strict)
-        run: node test/e2e/toolchain.ts --strict
-        timeout-minutes: 10
+      # Every e2e test under test/e2e/tex/, found by the vitest project `e2e-tex`: the toolchain again
+      # (a no-op on the tree above, then a build with only it on PATH), the real banal on the XML
+      # paperlint writes (no poppler on this runner), and a real pdflatex build of every fixture in
+      # fixtures/build-e2e/, each against its own expect.json. `CI` is set on every runner, so a
+      # missing TeX Live or banal FAILS here instead of skipping (test/e2e/need.ts).
+      - name: npm run test:e2e:tex
+        run: npm run test:e2e:tex
+        timeout-minutes: 20

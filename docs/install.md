@@ -121,7 +121,7 @@ a CI workflow and a heavy toolchain), asks two questions and guesses the rest.
 
 **npm and pnpm are covered; Yarn Plug'n'Play is not supported.**
 
-`test/e2e/install.ts` packs the tarball, installs it into a clean project with each manager that
+`test/e2e/install/install.e2e.ts` packs the tarball, installs it into a clean project with each manager that
 launches on the machine, and runs the hook command to see whether it resolves. A grep over
 `hooks.json` would not do: the string is right under any manager, and whether it resolves depends
 on the tree the manager laid out. It also checks that every shipped skill is reachable as

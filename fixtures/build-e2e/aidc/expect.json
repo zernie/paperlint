@@ -1,0 +1,30 @@
+{
+  "$comment": "A real IEEEtran [conference,compsoc] paper for AIDC: builds on paperlint's TeX Live, conforms, and carries ONE planted leftover — its author block names AISec (line 28).",
+  "build": {
+    "outcome": "pdf"
+  },
+  "fonts": {
+    "some": "NimbusRomNo9L",
+    "none": "^(CMR|CMBX|CMTI|CMTT|CMSS|LMRoman)"
+  },
+  "lint": {
+    "exit": 0,
+    "errors": 0,
+    "rules": {
+      "pdf/fonts": [],
+      "pdf/geometry": [],
+      "pdf/fresh": [],
+      "tex/template": [],
+      "tex/required-section": [],
+      "tex/venue-leftover": [
+        {
+          "severity": 1,
+          "line": 28,
+          "says": [
+            "«AISec» names aisec"
+          ]
+        }
+      ]
+    }
+  }
+}

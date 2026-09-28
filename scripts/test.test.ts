@@ -24,7 +24,7 @@ test("a failing vitest does not skip the harnesses, and is named as the failure"
     1,
   );
   assert.deepEqual(calls, [
-    ["vitest", "run"],
+    ["vitest", "run", "--project", "unit"],
     ["vigiles", "test", "--min=1", "--no-skip"],
   ]);
   assert.deepEqual(said, [

@@ -8,10 +8,12 @@
     "build": "tsc -p tsconfig.pkg.json && tsc",
     "prepare": "tsc -p tsconfig.pkg.json && tsc",
     "test": "node scripts/test.ts",
+    "test:e2e": "vitest run --project 'e2e-*'",
+    "test:e2e:install": "vitest run --project e2e-install",
+    "test:e2e:tex": "vitest run --project e2e-tex",
     "coverage": "NODE_OPTIONS=\"--import=./test/coverage-src.ts $NODE_OPTIONS\" c8 --check-coverage npm test --",
     "lint": "eslint .",
     "check": "node scripts/check.ts",
-    "test:e2e": "node test/e2e/install.ts && node test/e2e/build.ts",
     "fmt": "prettier --write .",
     "fmt:check": "prettier --check ."
   },

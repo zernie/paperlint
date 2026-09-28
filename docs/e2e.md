@@ -1,8 +1,17 @@
 # End-to-end tests
 
-They are `test/e2e/install.ts` and `test/e2e/build.ts`. Both are
-part of `npm run check`, so nobody has to remember to call them. `npm run test:e2e` runs just
-these, install first; if the install e2e fails or is skipped, the build e2e does not run.
+They are vitest tests named `*.e2e.ts` under `test/e2e/`, one vitest project per environment they
+need, found by the project's glob — no list of files exists in `package.json`, `scripts/check.ts`
+or CI:
+
+| script                     | project       | what it needs                                | files                       |
+| -------------------------- | ------------- | -------------------------------------------- | --------------------------- |
+| `npm run test:e2e:install` | `e2e-install` | npm and pnpm, and the network for `npm pack` | `test/e2e/install/*.e2e.ts` |
+| `npm run test:e2e:tex`     | `e2e-tex`     | TeX Live from `paperlint toolchain`, banal   | `test/e2e/tex/*.e2e.ts`     |
+| `npm run test:e2e`         | both          |                                              |                             |
+
+Both areas are part of `npm run check`, so nobody has to remember to call them. CI runs each in the
+job that has its environment: `test:e2e:install` in `gates`, `test:e2e:tex` in `build-e2e`.
 
 This page says what they prove, what they deliberately do not, and when a change owes a new one.
 
@@ -28,10 +37,11 @@ assumptions that stop holding the moment somebody else installs the package.
 The third and fourth rows are the ones a harness cannot reach even in principle: the defect only
 exists once the code is somewhere else.
 
-## `test/e2e/install.ts` — the package, installed
+## `test/e2e/install/install.e2e.ts` — the package, installed
 
-`test/e2e/install.ts`. It runs `npm pack`, then installs the resulting tarball into a fresh
-temporary tree, **under npm and under pnpm separately**, and drives the installed binary:
+It runs `npm pack`, then installs the resulting tarball into a fresh temporary tree, **under npm
+and under pnpm separately** — one test per manager, each the whole scenario, because its steps
+depend on each other — and drives the installed binary:
 
 - the install itself finishes
 - `paperlint --help` answers with zero
@@ -55,13 +65,21 @@ that works under npm can be dead under pnpm with no error anywhere. The same run
 binary **directly** rather than through `node <path>`: under npm `.bin` holds a symlink, under
 pnpm a shell wrapper, and calling `node bin` measures the caller's habit instead of the package.
 
-## `test/e2e/build.ts` — a real `pdflatex`
+## `test/e2e/tex/build.e2e.ts` — a real `pdflatex`
 
-`test/e2e/build.ts`. It copies `fixtures/build-e2e/` — eight papers, none with a build script paperlint
-would run — into a temporary tree, points a config at it, and runs `paperlint build --all`. paperlint compiles
-each paper itself with the real `pdflatex` and `bibtex`; the artifacts are then measured with
+It copies `fixtures/build-e2e/` — nine papers, none with a build script paperlint would run — into
+a temporary tree, points a config at it, and runs `paperlint build --all`. paperlint compiles each
+paper itself with the real `pdflatex` and `bibtex`; the artifacts are then measured with
 paperlint's own pdf.js reader from `dist/`, and the fonts are cross-checked against the list of
-programs pdfTeX writes into `paper.log`:
+programs pdfTeX writes into `paper.log`.
+
+**Each fixture declares what it must produce** in `fixtures/build-e2e/<name>/expect.json`, parsed
+with the schema in `test/e2e/tex/build-expect.ts`: whether it builds (`build.outcome`), what its
+lines of the build output say, its fonts, its last page's text, files in its directory, the facts
+the build measured, and — for `paperlint lint` after the build — the exit code and **exactly** the
+findings for each rule it names (`[]` is "none"). One `describe` per fixture directory turns each
+declared field into a test. A folder without `expect.json`, or with one the schema rejects, fails.
+A new venue fixture is a new folder: its paper, its `paperlint.json`, its `expect.json`.
 
 | fixture      | what it is there to prove                                                                                                                                                                                                                                                                        |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -72,6 +90,8 @@ programs pdfTeX writes into `paper.log`:
 | `unbalanced` | a two-column acmart paper whose last page comes out 621.5 / 264.8 pt builds **green** — the build does not judge the layout and rewrites nothing — while `_build/paper.facts.json` records both heights, and `paperlint lint` with `pdf/last-page-balance` turned on in `rules` reports the page |
 | `broken`     | a failing build names pdflatex and its exit code, quotes the error line and its `l.NNN` context, and deletes the stale `paper.pdf` planted before the run                                                                                                                                        |
 | `no-source`  | a paper with no `paper.tex` is named separately, and the run as a whole is a failure                                                                                                                                                                                                             |
+| `empty`      | a document with no pages: pdflatex exits 0 and writes no PDF, and that is a failure, not a green `paper.pdf`                                                                                                                                                                                     |
+| `aidc`       | a real `[conference,compsoc]{IEEEtran}` paper builds on paperlint's TeX Live in NimbusRomNo9L, `tex/template`, `tex/required-section` and the `pdf/*` rules find nothing, and `tex/venue-leftover` warns once, on its planted line                                                               |
 
 The `fallback` row is the point of the whole file. `acmart.cls` checks for `libertine.sty`,
 `zi4.sty` and `newtxmath.sty`, and failing to find any of them sets `\@ACM@newfontsfalse` and
@@ -79,28 +99,30 @@ typesets the paper in Computer Modern. The build is green, the PDF looks fine, t
 and therefore so does the pagination. A submitted paper went out that way. **An exit code cannot
 see it, so the content of the artifact is what gets measured.**
 
-Before the fixtures, the run proves the refusal with no TeX at all: PATH holds `node` alone, the
+Beside the fixtures, one test proves the refusal with no TeX at all: PATH holds `node` alone, the
 cache directory is empty and `CI` is set, and `paperlint build` must exit 1 with one line naming
-`npx paperlint toolchain` and the venue's packages, print no plan and create no PDF and no cache. It then
-asks `paperlint build --dry-run` which TeX Live the real run will use; under `--strict` (CI) that must be
-paperlint's own cache, because the runner has no other.
+`npx paperlint toolchain` and the venue's packages, print no plan and create no PDF and no cache.
+The rest asks `paperlint build --dry-run` which TeX Live the real run will use; under CI that must
+be paperlint's own cache, because the runner has no other.
 
-## `test/e2e/toolchain.ts` — real TeX Live, and only it
+## `test/e2e/tex/toolchain.e2e.ts` — real TeX Live, and only it
 
 `paperlint toolchain` into `$PAPERLINT_TEXLIVE_DIR` against real CTAN; a second run must say "nothing to do"
 within seconds; `--check` must exit 0; then the `acmart` fixture is built with PATH holding `node`
 only, so no other TeX Live and no PDF tool can stand in, and the PDF must carry Libertine and Biolinum
-and no Computer Modern face. Without `PAPERLINT_TEXLIVE_DIR` it is a declared skip: installing ~270 MB
+and no Computer Modern face. Without `PAPERLINT_TEXLIVE_DIR` its tests are skipped: installing ~270 MB
 into a home directory as a side effect of `npm run check` is the unasked install rule 11 forbids.
 `src/toolchain.harness.mjs` covers the installer's logic (mirror fallback, archive check, time
 limit, verification, idempotence) against a fake mirror on disk, without the network.
 
-## Skips are declared, never silent
+## Skips are reported, never passed
 
 A clone without TeX Live genuinely cannot run the build e2e; a machine without pnpm cannot run
-half of the install e2e. Each says so and exits **77** — the skip code vigiles' own runner uses —
-not zero, and `npm run check` reports it as `SKIPPED — not run, not passed`. In CI the same absence
-means a broken environment, so `--strict` turns the skip into a failure.
+half of the install e2e. Their tests are then `skipIf`'d, and vitest reports them as skipped.
+`npm run check` reads that count from vitest's JSON report and prints the gate as
+`SKIPPED — not run, not passed`. In CI the same absence means a broken environment: with `CI` set
+(or `PAPERLINT_E2E_STRICT=1`) each such file registers one more test that fails and names what is
+missing (`test/e2e/need.ts`).
 
 A skipped step and a passed one look identical in a CI interface. That is the class this whole
 package is written against, so it is not allowed to happen inside it either.
@@ -142,7 +164,7 @@ everything.
 
 ## The corpus
 
-`stageCorpus()` in `test/e2e/install.ts` writes a small paper by hand — a declared stage, its
+`stageCorpus()` in `test/e2e/install/install.e2e.ts` writes a small paper by hand — a declared stage, its
 PDF, its byte counts, the cross-check between them — and copies `fixtures/build-e2e/acmart` beside
 it so the LaTeX rules see LaTeX rather than a placeholder.
 

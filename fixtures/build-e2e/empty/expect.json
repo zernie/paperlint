@@ -1,0 +1,12 @@
+{
+  "$comment": "No pages: pdflatex exits 0 and writes no PDF, which is a failure, not a green paper.pdf.",
+  "build": {
+    "outcome": "failed"
+  },
+  "says": [
+    "✗ compile: pdflatex exited 0 but wrote no paper.pdf — does the document have any pages?"
+  ],
+  "saysNot": [
+    "✓"
+  ]
+}

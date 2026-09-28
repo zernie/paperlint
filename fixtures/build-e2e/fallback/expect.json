@@ -1,0 +1,53 @@
+{
+  "$comment": "Computer Modern standing in for acmart's silent fallback. It builds green; declared an agenticdev paper afterwards, the venue rules reject it.",
+  "build": {
+    "outcome": "pdf"
+  },
+  "fonts": {
+    "some": "^(CMR|CMBX|CMTI|CMTT|CMSS|LMRoman)",
+    "matchLog": true
+  },
+  "lint": {
+    "paperlintJson": {
+      "extends": "paperlint:agenticdev",
+      "kind": "short"
+    },
+    "exit": 1,
+    "rules": {
+      "pdf/fonts": [
+        {
+          "severity": 2,
+          "says": [
+            "LinLibertine"
+          ]
+        },
+        {
+          "severity": 2,
+          "says": [
+            "LinBiolinum"
+          ]
+        }
+      ],
+      "pdf/geometry": [
+        {
+          "severity": 2,
+          "says": [
+            "page width is 8.264 in, agenticdev requires 8.5 in"
+          ]
+        },
+        {
+          "severity": 2,
+          "says": [
+            "page height is 11.694 in, agenticdev requires 11 in"
+          ]
+        },
+        {
+          "severity": 2,
+          "says": [
+            "column(s), agenticdev requires 2"
+          ]
+        }
+      ]
+    }
+  }
+}

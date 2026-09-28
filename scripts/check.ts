@@ -34,9 +34,11 @@
  * (no TeX, no network), and the tail names every skip. "I ran check" then means one thing.
  */
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { z } from "zod";
 import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -72,11 +74,17 @@ type GateCommand =
       readonly script: string;
       readonly run?: undefined;
       readonly inCi?: RunInCi;
+      /**
+       * The script is a vitest run, so its JSON report says how many tests were SKIPPED: a run
+       * whose exit is 0 and whose report counts a skip is a skip, not a pass.
+       */
+      readonly vitest?: true;
     }
   | {
       readonly run: readonly [string, ...string[]];
       readonly script?: undefined;
       readonly inCi?: undefined;
+      readonly vitest?: undefined;
     };
 
 /**
@@ -160,22 +168,14 @@ export const GATES: readonly Gate[] = [
   {
     name: "install e2e — pack, install under npm and pnpm, run the binary",
     job: "gates",
-    run: ["node", "test/e2e/install.ts"],
+    script: "test:e2e:install",
+    vitest: true,
   },
   {
-    name: "build e2e — a real pdflatex, and the PDF's fonts are measured",
+    name: "TeX e2e — real TeX Live: paperlint toolchain, a real pdflatex build of every fixture, the real banal",
     job: "build-e2e",
-    run: ["node", "test/e2e/build.ts"],
-  },
-  {
-    name: "banal e2e — the real banal on pdf.js-written XML gives banal-on-pdftohtml's numbers",
-    job: "build-e2e",
-    run: ["node", "test/e2e/banal.ts"],
-  },
-  {
-    name: "toolchain e2e — real TeX Live into $PAPERLINT_TEXLIVE_DIR, then a build with only it on PATH",
-    job: "build-e2e",
-    run: ["node", "test/e2e/toolchain.ts"],
+    script: "test:e2e:tex",
+    vitest: true,
   },
 ];
 
@@ -205,18 +205,41 @@ export const NOT_COVERED: Readonly<Record<string, string>> = {
 };
 
 /**
- * Exit 77 means "declared skip" — the same code vigiles' runner uses (`SKIP_EXIT_CODE`). The e2e steps exit 77 when a tool they need is
- * absent and --strict is off. Anything else nonzero is a failure.
+ * vitest's JSON report, as far as the verdict reads it: skipped (`pending`) and `todo` tests.
  *
- * 🔴 A SKIP IS A THIRD OUTCOME. Until the Codex review on #45 the e2e steps exited 0 on a skip,
- * this loop counted that as a pass, and `skipped` below was declared and never filled: a machine
- * without pnpm or TeX printed "all gates passed" for runs that never happened.
+ * 🔴 A SKIP IS A THIRD OUTCOME. Until the Codex review on #45 the e2e runs exited 0 on a skip and
+ * this loop counted that as a pass: a machine without pnpm or TeX printed "all gates passed" for
+ * runs that never happened. The count comes from the runner's own report, not from an exit code
+ * the tests would have to agree on.
  */
-export const SKIP_EXIT: number = 77;
-export function outcome(status: number | null): Outcome {
-  if (status === 0) return "pass";
-  if (status === SKIP_EXIT) return "skip";
-  return "fail";
+const VitestReport = z.looseObject({
+  numPendingTests: z.number().int().nonnegative(),
+  numTodoTests: z.number().int().nonnegative(),
+});
+
+/** How many tests a vitest JSON report says were not run, or null when it is not one. */
+export function skippedIn(report: string | null): number | null {
+  if (report === null) return null;
+  try {
+    const r = VitestReport.safeParse(JSON.parse(report));
+    return r.success ? r.data.numPendingTests + r.data.numTodoTests : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A gate's outcome from its exit status and, for a vitest gate, the skip count its report gave
+ * (`null`: the report is missing or unreadable, which cannot be read as a pass).
+ */
+export function outcome(
+  status: number | null,
+  vitest?: { readonly skipped: number | null },
+): Outcome {
+  if (status !== 0) return "fail";
+  if (vitest === undefined) return "pass";
+  if (vitest.skipped === null) return "fail";
+  return vitest.skipped > 0 ? "skip" : "pass";
 }
 
 /** The gates that did not pass, each as the line the verdict prints, split by outcome. */
@@ -225,11 +248,29 @@ interface NotPassed {
   skipped: string[];
 }
 
+/** A report file's text, read once and removed; null when the run wrote none. */
+export type ReadReport = (file: string) => string | null;
+const readReport: ReadReport = (file) => {
+  if (!existsSync(file)) return null;
+  const text = readFileSync(file, "utf8");
+  rmSync(file, { force: true });
+  return text;
+};
+
+/** The arguments that make a vitest gate write its JSON report to `file`, beside the usual output. */
+export const reportArgs = (file: string): string[] => [
+  "--",
+  "--reporter=default",
+  "--reporter=json",
+  `--outputFile.json=${file}`,
+];
+
 /** Run each gate in order; `write` announces it before it starts. */
 function runEach(
   gates: readonly Gate[],
   spawn: Spawn,
   write: (text: string) => unknown,
+  reportOf: ReadReport,
 ): NotPassed {
   const BIN_FIRST_PATH = [join(ROOT, "node_modules", ".bin"), process.env.PATH]
     .filter(Boolean)
@@ -237,10 +278,14 @@ function runEach(
   const failed: string[] = [];
   const skipped: string[] = [];
 
-  for (const g of gates) {
+  for (const [i, g] of gates.entries()) {
     write(`── ${g.name}\n`);
     const [cmd, ...args] = commandOf(g);
-    const r = spawn(cmd, args, {
+    const file = join(
+      tmpdir(),
+      `paperlint-check-${String(process.pid)}-${String(i)}.json`,
+    );
+    const r = spawn(cmd, g.vitest ? [...args, ...reportArgs(file)] : args, {
       cwd: ROOT,
       stdio: "inherit",
       encoding: "utf8",
@@ -249,12 +294,18 @@ function runEach(
     // 🔴 The exit code is read from the command itself, never from a pipe. `cmd | tail && …`
     // reports the FILTER's status, which is almost always zero — that is how a red harness
     // shipped on 2026-09-16.
-    const o = outcome(r.status);
+    const skips = g.vitest ? { skipped: skippedIn(reportOf(file)) } : undefined;
+    const o = outcome(r.status, skips);
     if (o === "pass") continue;
     const shown = commandOf(g).join(" ");
     if (o === "skip")
-      skipped.push(`${g.name}  (${shown} → ${String(SKIP_EXIT)})`);
-    else failed.push(`${g.name}  (${shown} → ${String(r.status)})`);
+      skipped.push(
+        `${g.name}  (${shown} → ${String(skips?.skipped)} test(s) skipped)`,
+      );
+    else
+      failed.push(
+        `${g.name}  (${shown} → ${r.status === 0 ? "exit 0, but no vitest JSON report to read skips from" : String(r.status)})`,
+      );
   }
   return { failed, skipped };
 }
@@ -299,14 +350,16 @@ export function runGates({
   log = console.log,
   err = console.error,
   write = (s: string) => process.stdout.write(s),
+  reportOf = readReport,
 }: {
   gates?: readonly Gate[];
   spawn?: Spawn;
   log?: (line: string) => void;
   err?: (line: string) => void;
   write?: (text: string) => unknown;
+  reportOf?: ReadReport;
 } = {}): number {
-  const notPassed = runEach(gates, spawn, write);
+  const notPassed = runEach(gates, spawn, write, reportOf);
   report(gates, notPassed, { log, err });
   return notPassed.failed.length ? 1 : 0;
 }

@@ -1,0 +1,11 @@
+{
+  "$comment": "Does not compile: an undefined control sequence on line 6. The build names pdflatex and quotes the log.",
+  "build": {
+    "outcome": "failed"
+  },
+  "says": [
+    "✗ compile: pdflatex exited with 1",
+    "./paper.tex:6: Undefined control sequence.",
+    "l.6 Text before, then \\undefinedmacro"
+  ]
+}

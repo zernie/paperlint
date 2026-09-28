@@ -4,7 +4,7 @@
  * The process runner is replaced by a fake that writes what pdflatex and bibtex would write, so
  * these assertions check the SHELL's decisions: what is run, with which environment, in which
  * order, and what is left on disk. Whether a real pdflatex produces a real PDF is the other half,
- * `test/e2e/build.ts`.
+ * `test/e2e/tex/build.e2e.ts`.
  *
  * 🔴 THE TWO THINGS PINNED DOWN HERE THAT A RETURNED OBJECT CANNOT SHOW: a paper-supplied
  * `build.sh` is never executed (checked by the trace it would leave on disk and by the list of

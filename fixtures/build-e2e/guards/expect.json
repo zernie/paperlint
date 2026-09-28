@@ -1,0 +1,6 @@
+{
+  "$comment": "\\input{paper-guards} resolves with no configuration: paperlint's venues directory is on TEXINPUTS.",
+  "build": {
+    "outcome": "pdf"
+  }
+}

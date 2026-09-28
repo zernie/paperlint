@@ -7,7 +7,7 @@
  * (`Error: Failed to run pdftohtml`, measured); told a version below 0.85 it applies a larger
  * correction and every font size moves. So `$PDFTOHTML` (banal's own override, line 166) points at a
  * stub that answers `-v` with `XML_DIALECT.version` — the pdftohtml whose XML `xml.ts` writes — and
- * refuses anything else. `test/e2e/banal.ts` shows both failures with the real banal.
+ * refuses anything else. `test/e2e/tex/banal.e2e.ts` shows both failures with the real banal.
  */
 import type { Opaque } from "ts-essentials";
 import type { AbsolutePath } from "../../domain/paths.ts";

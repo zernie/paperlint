@@ -37,12 +37,14 @@ install e2e under npm and pnpm, and a real `pdflatex` build — and ends
 by printing **which CI jobs it does not reproduce, and why**.
 
 🔴 **There is no `--fast` flag, and that is the point.** On 2026-09-19 a rule change was pushed
-that broke the suite: the gates were run afterwards and were green, but `npm test` and
-`test:install` were not among them, because there were eleven separate scripts and the only way
+that broke the suite: the gates were run afterwards and were green, but `npm test` and the
+install e2e were not among them, because there were eleven separate scripts and the only way
 to run them all was from memory. A subset flag re-creates exactly that — the cheap half gets run
 and reported as "the gates". If a step genuinely cannot run here, it says so out loud rather than
-being skipped quietly: an e2e that finds no TeX or no pnpm exits 77 _having stated_ why, and
-`npm run check` lists it as skipped instead of counting it as passed.
+being skipped quietly: an e2e test that finds no TeX or no pnpm is reported SKIPPED by vitest,
+and `npm run check` reads that count from vitest's JSON report and lists the gate as skipped
+instead of counting it as passed. The e2e areas also run alone: `npm run test:e2e:install`,
+`npm run test:e2e:tex`, or both with `npm run test:e2e`.
 
 Each gate's command is listed in `scripts/check.ts`; run one of them directly while iterating on
 one rule. They are not what you run before pushing.

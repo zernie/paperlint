@@ -1,0 +1,26 @@
+{
+  "$comment": "acmart in its own fonts: the class silently falls back to Computer Modern when one of its font packages is missing, and that is what this fixture exists to catch. Only the rules whose answer does not depend on banal's page classification are named: the paper is one sentence long, banal calls such a page a one-column cover, and pdf/geometry rightly reports that — so neither it nor the exit code is part of the claim.",
+  "build": {
+    "outcome": "pdf"
+  },
+  "fonts": {
+    "all": "^(LinLibertine|LinBiolinum)",
+    "none": "^(CMR|CMBX|CMTI|CMTT|CMSS|LMRoman)",
+    "matchLog": true
+  },
+  "lint": {
+    "paperlintJson": {
+      "extends": "paperlint:agenticdev",
+      "kind": "short",
+      "rules": {
+        "pdf/last-page-balance": "error"
+      }
+    },
+    "rules": {
+      "pdf/last-page-balance": [],
+      "pdf/profile": [],
+      "pdf/fresh": [],
+      "pdf/fonts": []
+    }
+  }
+}
