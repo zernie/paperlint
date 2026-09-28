@@ -60,6 +60,21 @@ describe("a sentence with a number and no owner is reported, once, as its whole 
       reported("A model changes its mind on \\emph{21.5\\%} of rows."),
     ).toEqual(["A model changes its mind on \\emph{21.5\\%} of rows."]);
   });
+});
+
+describe("where the reported sentence's text comes from", () => {
+  it("the text of a formatting macro the parser has no signature for, and of a bare group", () => {
+    expect(
+      reported("\\enquote{It fails 40\\%.} {\\bfseries It holds 60\\%.}"),
+    ).toEqual(["It fails 40\\%.", "It holds 60\\%."]);
+  });
+
+  it("a source with no document environment is read whole", () => {
+    const src = "It fails 40\\%.";
+    expect(
+      judgeClaimProvenance(latexReader.bodyProse(src)).map((f) => f.at),
+    ).toEqual([{ start: 0, end: src.length }]);
+  });
 
   it("the abstract is body prose", () => {
     expect(
@@ -109,6 +124,10 @@ describe("an owner silences the sentence", () => {
       "The registry grew 900\\% (\\href{https://e.org}{see})..",
     ],
     [
+      "a footnote whose own footnote links",
+      "The registry grew 900\\%.\\footnote{Seen\\footnote{\\url{https://e.org}} there.}",
+    ],
+    [
       "a footnote that links",
       "The registry grew 900\\%.\\footnote{\\url{https://e.org}}",
     ],
@@ -123,6 +142,12 @@ describe("an owner silences the sentence", () => {
     ["§N", "The rate is 12\\% (\\S 4)."],
     ["n = 134", "The rate is 12\\% (n = 134)."],
     ["$n=134$ in math", "The rate is 12\\% ($n=134$)."],
+    ["$n{=}7$ in math, braces and all", "The rate is 12\\% ($n{=}7$)."],
+    [
+      "a claimant named as one",
+      "The skill advertises a 65\\% token reduction.",
+    ],
+    ["a claim in brackets", "The second tool (claim 63\\%) runs slower."],
     ["a count of things", "The rule held in 48 runs."],
     ["a count with an adjective", "The rule held in 48 independent runs."],
     ["of N things", "Of 1,836 repositories, 12\\% ship hooks."],
@@ -139,10 +164,24 @@ describe("a number that is not the body's claim is not read", () => {
   it.each([
     ["a year", "In 2024 the first agents shipped."],
     [
+      "the level of an interval",
+      "It is the 95\\% CI of the median, and the 99\\% confidence band.",
+    ],
+    [
       "a name with a digit",
       "GPT-4 and COVID-19 and v1.2 and 10k and 2FA and 0x1F appear.",
     ],
     ["math", "The bound $x \\le 3$ holds."],
+    ["an equation", "\\begin{equation} x = 40 \\end{equation}"],
+    [
+      "a bibliography environment",
+      "Text.\n\\begin{thebibliography}{9}\\bibitem{a} It fails 40\\%.\\end{thebibliography}",
+    ],
+    ["the ACM classification", "\\ccsdesc[500]{Security~Software}Text."],
+    [
+      "its XML",
+      "\\begin{CCSXML}<concept_significance>500</concept_significance>\\end{CCSXML}",
+    ],
     [
       "a table",
       "\\begin{table}\\caption{Rates: 12\\%}\\begin{tabular}{l}40\\%\\end{tabular}\\end{table}",

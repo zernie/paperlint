@@ -500,6 +500,28 @@ of the account-wide 3000/month shared with every other private repo, and the bud
 private again, this section and `.github/dependabot.yml` are revisited together** — the bot is
 justified two hundred lines above precisely by these minutes being free.
 
+## Writing checks — what keeps them from pushing papers toward a blog post
+
+The rules and skills that judge a paper's prose follow five principles. A new rule, or a new
+criterion in a skill, is held to them.
+
+1. **Every writing check is two-sided.** A check with only a ceiling — too long, too many markers,
+   too many of X — pushes every paper toward clipped, unsignposted prose, and the one equilibrium of
+   a set of ceilings is a blog post. A new check has a floor as well, or measures the distance to a
+   reference (accepted papers of the target venue); never only "less is better".
+2. **Rules count, skills judge.** What is countable on the parse tree — a density, a number with no
+   owner (`tex/claim-provenance`), a missing section — is a lint rule. What needs reading — register
+   relative to a venue, genre, whether a claim changed strength — is a skill criterion. A skill does
+   not grep prose for what a rule can count; a rule is not asked to judge register.
+3. **The model reader is the venue's reviewer, not only a smart outsider.** A check that simulates a
+   reader includes a skimming reviewer who reads the abstract, the introduction and the conclusion,
+   and judges whether it reads as a paper at that venue and whose result each sentence states.
+4. **Thresholds are calibrated, not borrowed.** A threshold is set with the same counter on real
+   accepted papers, never taken from a published figure measured by a different counter.
+5. **A rewrite is accepted on what reviewers see.** That is the combined count of every surface form
+   of a tic (a narrow rule is gamed by rewording), plus a claims-preservation check that no claim was
+   softened or strengthened — not the one pattern the triggering rule matched.
+
 ## Testing
 
 | you are testing                                                            | kind                                                        |

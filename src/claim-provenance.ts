@@ -2,8 +2,9 @@
  * `tex/claim-provenance` — a sentence of the body that states a number says whose the number is.
  *
  *   warn  a sentence with a number and none of: a citation or a link, the authors (we, our, us), a
- *        place in the paper (`\ref` and its kin, "Section 3", "Table 2", "Appendix B", "§4"), or the
- *        sample it counts ("n = 134", "48 runs", "of 1,836 repositories")
+ *        place in the paper (`\ref` and its kin, "Section 3", "Table 2", "Appendix B", "§4"), a
+ *        claimant named as one ("advertises 65%", "(claim 63%)"), or the sample it counts
+ *        ("n = 134", "48 runs", "of 1,836 repositories")
  *
  * ── WHY ──────────────────────────────────────────────────────────────────────────
  * A reviewer who cannot tell a property of the world from a cited finding from the authors' own
@@ -121,17 +122,29 @@ const COUNT =
 
 /** The first number in `s` that is a quantity, or undefined. */
 const quantityIn = (s: string): string | undefined =>
-  [...s.matchAll(NUMBER)].map((m) => m[0]).find((n) => !YEAR.test(n));
+  [...s.matchAll(NUMBER)]
+    .filter((m) => !CONFIDENCE.test(s.slice(m.index + m[0].length)))
+    .map((m) => m[0])
+    .find((n) => !YEAR.test(n));
+
+/** What follows the level of an interval ("95% CI"): the level is not a result. */
+const CONFIDENCE = /^\s*(?:CI|confidence)(?!\p{L})/u;
+
+/** A claimant named as such: "advertises a 65% reduction", "(claim 63%)". */
+const ATTRIBUTED =
+  /(?<!\p{L})(?:advertis(?:e|es|ed|ing)|claim(?:s|ed)?)(?!\p{L})/iu;
 
 /** Whether a sentence says whose its number is. `maths` is the source of its math. */
 const isOwned = (s: string, maths: readonly string[]): boolean =>
   s.includes(CITATION) ||
   s.includes(REFERENCE) ||
   [...s.matchAll(FIRST_PERSON)].some((m) => m[0] !== "US") ||
+  ATTRIBUTED.test(s) ||
   PLACE.test(s) ||
   SAMPLE_SIZE.test(s) ||
   COUNT.test(s) ||
-  maths.some((m) => SAMPLE_SIZE.test(m));
+  // `$n{=}7$` and `$n = 7$` alike: braces are grouping in math, not text.
+  maths.some((m) => SAMPLE_SIZE.test(m.replace(/[{}]/gu, "")));
 
 /** Each piece of a passage with the offset where it starts in the passage's text. */
 const laidOut = (

@@ -6,9 +6,11 @@
  */
 import type * as Ast from "@unified-latex/unified-latex-types";
 import { describe, expect, it } from "vitest";
-import { runText, spanIn } from "../../domain/tex-document.ts";
+import { runText, spanIn, type ProsePiece } from "../../domain/tex-document.ts";
 import {
+  bodyProse,
   documentClassOf,
+  inPlace,
   latexReader,
   macroPlace,
   mandatory,
@@ -357,5 +359,57 @@ describe("renderedRuns", () => {
         .map(runText)
         .some((t) => t.includes("AISec")),
     ).toBe(false);
+  });
+});
+
+describe("inPlace — a node the parser gave no position yields nothing, never offset 0", () => {
+  it("a span is handed to f; an unplaced node gives the empty list", () => {
+    const f = (s: { start: number; end: number }) => [s.start];
+    expect(inPlace({ kind: "at", span: { start: 3, end: 5 } }, f)).toEqual([3]);
+    expect(inPlace({ kind: "unplaced" }, f)).toEqual([]);
+  });
+});
+
+/** A prose piece, readable in an expectation: text as itself, a mark or math in angle brackets. */
+const pieceShape = (x: ProsePiece): string =>
+  x.kind === "text"
+    ? x.segment.text
+    : x.kind === "owner"
+      ? `<${x.owner}@${String(x.span.start)}>`
+      : `<math ${x.tex}>`;
+
+describe("bodyProse — passages a sentence cannot cross, with the marks that say where a claim comes from", () => {
+  it("text, a citation mark, a reference mark and math, in source order; a footnote is its own passage", () => {
+    const src =
+      "\\begin{document}\nA~\\cite{k} B \\ref{s} $x$.\\footnote{F.}\n\n\\section{H}C\\%\n\\end{document}";
+    const at = (s: string) => src.indexOf(s);
+    const shape = bodyProse(parseLatex(src)).map((p) =>
+      p.pieces.map(pieceShape),
+    );
+    expect(shape).toEqual([
+      [
+        "A",
+        " ",
+        `<citation@${String(at("\\cite"))}>`,
+        " ",
+        "B",
+        " ",
+        `<reference@${String(at("\\ref"))}>`,
+        " ",
+        "<math $x$>",
+        ".",
+      ],
+      ["F", "."],
+      ["C", "%"],
+    ]);
+  });
+
+  it("a character macro's character stands at the macro's last source character", () => {
+    const src = "C\\%";
+    const [p] = bodyProse(parseLatex(src));
+    expect(p?.pieces.at(-1)).toEqual({
+      kind: "text",
+      segment: { text: "%", at: 2 },
+    });
   });
 });

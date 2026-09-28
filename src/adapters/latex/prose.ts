@@ -59,6 +59,7 @@ const SKIPPED_ENVS: ReadonlySet<string> = new Set([
   "Verbatim",
   "minted",
   "comment",
+  "CCSXML",
 ]);
 
 /** Macros that start the back matter: nothing after them is the body. */
@@ -199,14 +200,16 @@ const math = (t: ParsedTex, n: Node): readonly Event[] =>
 const lastArgument = (m: Macro): readonly Node[] =>
   mandatory(m).at(-1)?.content ?? [];
 
-/** Whether a walk yielded a citation or a link anywhere, in nested footnotes too. */
+/**
+ * Whether a walk yielded a citation or a link. A footnote nested inside that cites has already left
+ * its own citation mark among these events, so the top level is enough.
+ */
 const cites = (events: readonly Event[]): boolean =>
-  events.some((e) =>
-    e.kind === "aside"
-      ? cites(e.events)
-      : e.kind === "piece" &&
-        e.piece.kind === "owner" &&
-        e.piece.owner === "citation",
+  events.some(
+    (e) =>
+      e.kind === "piece" &&
+      e.piece.kind === "owner" &&
+      e.piece.owner === "citation",
   );
 
 /** A footnote: its own passage, and a citation mark in the host sentence when it cites or links. */
@@ -275,24 +278,57 @@ function nodeEvents(t: ParsedTex, n: Node): readonly Event[] {
 }
 
 /**
- * A group right after a macro the parser attached no arguments to is that macro's argument —
- * `\institution{…}`, `\tool{}` — not prose, unless the macro formats prose (`\enquote{…}` without
- * csquotes' signature). A run of such groups all belong to the macro.
+ * Where a node list stands with respect to a macro the parser attached no arguments to: in prose,
+ * in that macro's arguments, or inside one of its `[…]` arguments.
  */
-function isUnattachedArgument(list: readonly Node[], i: number): boolean {
-  if (list[i]?.type !== "group") return false;
-  const owner = list[list.slice(0, i).findLastIndex((n) => n.type !== "group")];
-  return (
-    owner?.type === "macro" &&
-    owner.args === undefined &&
-    !INLINE_MACROS.has(owner.content)
-  );
+type ArgumentState = "prose" | "arguments" | "optional";
+
+/** A macro whose `{…}` and `[…]` after it are its arguments, unattached: not a formatting or a character macro. */
+const isUnsignedMacro = (n: Node): boolean =>
+  n.type === "macro" &&
+  n.args === undefined &&
+  !INLINE_MACROS.has(n.content) &&
+  !CHARACTER_MACROS.has(n.content);
+
+const isString = (n: Node, s: string): boolean =>
+  n.type === "string" && n.content === s;
+
+/** One node's step: whether it is skipped as an argument, and the state after it. */
+function step(
+  state: ArgumentState,
+  n: Node,
+): { readonly skip: boolean; readonly state: ArgumentState } {
+  if (state === "optional")
+    return { skip: true, state: isString(n, "]") ? "arguments" : "optional" };
+  if (state === "arguments" && n.type === "group")
+    return { skip: true, state: "arguments" };
+  if (state === "arguments" && isString(n, "["))
+    return { skip: true, state: "optional" };
+  return { skip: false, state: isUnsignedMacro(n) ? "arguments" : "prose" };
 }
 
+/**
+ * The nodes of a list that are prose: without the `{…}` and `[…]` right after a macro the parser
+ * gave no signature — `\institution{…}`, `\ccsdesc[500]{…}`, `\tool{}` — which are its arguments,
+ * not text. A formatting macro's group (`\enquote{…}` without csquotes' signature) stays prose.
+ */
+const proseNodes = (list: readonly Node[]): readonly Node[] =>
+  list.reduce<{
+    readonly kept: readonly Node[];
+    readonly state: ArgumentState;
+  }>(
+    (acc, n) => {
+      const next = step(acc.state, n);
+      return {
+        kept: next.skip ? acc.kept : [...acc.kept, n],
+        state: next.state,
+      };
+    },
+    { kept: [], state: "prose" },
+  ).kept;
+
 function walkList(t: ParsedTex, list: readonly Node[]): readonly Event[] {
-  return list.flatMap((n, i) =>
-    isUnattachedArgument(list, i) ? [] : nodeEvents(t, n),
-  );
+  return proseNodes(list).flatMap((n) => nodeEvents(t, n));
 }
 
 /** The events before the back matter starts. */

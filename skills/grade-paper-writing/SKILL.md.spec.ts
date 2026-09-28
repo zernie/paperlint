@@ -396,9 +396,11 @@ came from measured **1.3 per 1,000** after rounds of grading that targeted zero 
 then wrote that readers were *"required to infer the intended relationships between claims"*.
 
 **Countable, in both directions.** Count frame markers per 1,000 words in the body and set the count
-beside the reference papers of dimension #10 (or Hyland's range when none were fetched). Above the
-range: look for frames that stand in for content. **Below the range is a finding too** — the reader
-is being left to work out what kind of claim each sentence makes. Then, separately, list the frames
+beside the SAME count, taken by the same counter, on the reference papers of dimension #10. Hyland's
+figures come from a different counter: they show that a floor exists, not where it lies, so with no
+reference papers the count is reported without a verdict. Above the references' range: look for
+frames that stand in for content. **Below it is a finding too** — the reader is being left to work
+out what kind of claim each sentence makes. Then, separately, list the frames
 whose announced content never arrives within the next two sentences; those are the defects.
 
 **Rewrite heuristic:** keep the frame and make it carry the claim. *"Two findings come first,

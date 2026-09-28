@@ -12,6 +12,7 @@ reported once, however many numbers it holds. Any one of these owners silences i
 | a work outside the paper     | a `\cite` (any of natbib's or biblatex's forms), a `\url`, an `\href`, or a footnote that cites or links                          |
 | the authors                  | _we_, _our_, _ours_, _us_ (the capitalised country _US_ is not the authors)                                                       |
 | a place in the paper         | `\ref`, `\cref`, `\autoref` and their kin, or the words _Section 4_, _Table 2_, _Fig. 3_, _Appendix B_, _§4_                      |
+| a claimant named as one      | _advertises_, _claims_: _"the skill advertises a 65% reduction"_, _"(claim 63%)"_                                                 |
 | the sample the number counts | _n = 134_ (in prose or in math), or a count followed by what it counts: _48 runs_, _48 independent runs_, _of 1,836 repositories_ |
 
 It reads the body: from the start of the document, the abstract included, to `\appendix` or the
@@ -19,7 +20,7 @@ bibliography. Footnotes are read as sentences of their own. A citation or a foot
 the full stop belongs to the sentence the full stop ends.
 
 A number is digits a reader sees — `42\%`, `0.37`, `1,836`, `3x`, `3×`. Not a number: a year on its
-own (1900–2099); digits glued to a letter, a hyphen or a point (`GPT-4`, `COVID-19`, `v1.2`, `10k`,
+own (1900–2099); the level of an interval (the 95 of _95% CI_); digits glued to a letter, a hyphen or a point (`GPT-4`, `COVID-19`, `v1.2`, `10k`,
 `0x1F`); anything inside math, a table, a figure, a caption, a heading, code, a comment, a macro
 definition, or the title block.
 
@@ -28,7 +29,7 @@ definition, or the title block.
 A reviewer who cannot tell a property of the world from a cited finding from the authors' own
 measurement says so, and scores the paper's soundness on it. Academic prose carries the owner by
 default — _we found_, _[12] report_, _(Table 2)_ — and a sentence rewritten for punch loses it first:
-_"Under test the rules were obeyed: … no violation in 48 runs"_ has no subject, and a reader takes it
+_"Under test the rules held in 97% of cases"_ has no subject, and a reader takes it
 for a result from the literature. This rule is the floor under the rules that shorten sentences.
 
 ## Examples
