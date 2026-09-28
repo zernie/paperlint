@@ -5,18 +5,16 @@
 # A paper's own build script must not hard-code a path into the agent's skills directory:
 # once the skills move into a package that address points at nothing, and LaTeX's reaction to
 # a missing \input is SILENCE, not an error. So the script resolves the venues directory
-# through the package first, falls back to the in-repo copy, and then VERIFIES that kpsewhich
+# through the installed package, and then VERIFIES that kpsewhich
 # can actually see the file before handing anything to pdflatex.
 set -euo pipefail
 ROOT=$(git rev-parse --show-toplevel)
 
-VENUES_PKG=$(node -e 'try{process.stdout.write(require.resolve("paperlint/venues/paper-guards.tex"))}catch{}' 2>/dev/null || true)
+VENUES_PKG=$(cd "$ROOT" && node -e 'try{process.stdout.write(require.resolve("paperlint/presets/tex/paper-guards.tex"))}catch{}' 2>/dev/null || true)
 if [ -n "$VENUES_PKG" ] && [ -f "$VENUES_PKG" ]; then
   VENUES_DIR=$(dirname "$VENUES_PKG")
-elif [ -f "$ROOT/.claude/skills/submit-paper/references/venues/paper-guards.tex" ]; then
-  VENUES_DIR="$ROOT/.claude/skills/submit-paper/references/venues"
 else
-  echo "✗ paper-guards.tex found neither in the package nor in the repository" >&2
+  echo "✗ paper-guards.tex not found in the installed paperlint package" >&2
   exit 1
 fi
 export TEXINPUTS="$VENUES_DIR:"

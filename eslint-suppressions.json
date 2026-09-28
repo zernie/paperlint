@@ -1,0 +1,528 @@
+{
+  "eslint-rules/install-path-literals.ts": {
+    "functional/no-loop-statements": {
+      "count": 1
+    }
+  },
+  "eslint-rules/latex-language.ts": {
+    "functional/immutable-data": {
+      "count": 30
+    },
+    "functional/no-let": {
+      "count": 14
+    },
+    "functional/no-loop-statements": {
+      "count": 27
+    },
+    "functional/prefer-immutable-types": {
+      "count": 23
+    }
+  },
+  "eslint-rules/paper-research-question.ts": {
+    "functional/no-let": {
+      "count": 2
+    },
+    "functional/prefer-immutable-types": {
+      "count": 1
+    }
+  },
+  "eslint-rules/paper-stages.ts": {
+    "functional/immutable-data": {
+      "count": 2
+    },
+    "functional/no-let": {
+      "count": 5
+    },
+    "functional/no-loop-statements": {
+      "count": 5
+    },
+    "functional/prefer-immutable-types": {
+      "count": 4
+    }
+  },
+  "eslint-rules/paper-typography.ts": {
+    "functional/immutable-data": {
+      "count": 11
+    },
+    "functional/no-let": {
+      "count": 6
+    },
+    "functional/no-loop-statements": {
+      "count": 16
+    },
+    "functional/prefer-immutable-types": {
+      "count": 15
+    }
+  },
+  "eslint-rules/pdf-last-page-balance.ts": {
+    "functional/no-let": {
+      "count": 2
+    }
+  },
+  "eslint-rules/review-frontmatter.ts": {
+    "functional/no-let": {
+      "count": 2
+    },
+    "functional/no-loop-statements": {
+      "count": 1
+    },
+    "functional/prefer-immutable-types": {
+      "count": 3
+    }
+  },
+  "eslint-rules/temp-root-realpath.ts": {
+    "functional/no-loop-statements": {
+      "count": 1
+    },
+    "functional/prefer-immutable-types": {
+      "count": 2
+    }
+  },
+  "eslint-rules/tex-build.ts": {
+    "functional/no-let": {
+      "count": 3
+    },
+    "functional/no-loop-statements": {
+      "count": 2
+    }
+  },
+  "lib/agent-cli-version.ts": {
+    "functional/prefer-immutable-types": {
+      "count": 3
+    }
+  },
+  "lib/check.ts": {
+    "functional/immutable-data": {
+      "count": 2
+    }
+  },
+  "lib/markdown.ts": {
+    "functional/immutable-data": {
+      "count": 8
+    },
+    "functional/no-let": {
+      "count": 3
+    },
+    "functional/no-loop-statements": {
+      "count": 8
+    },
+    "functional/prefer-immutable-types": {
+      "count": 11
+    }
+  },
+  "lib/paper-config.ts": {
+    "functional/no-let": {
+      "count": 2
+    },
+    "functional/no-loop-statements": {
+      "count": 1
+    }
+  },
+  "lib/skill-checks.mjs": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "lib/skill-corpus.mjs": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "lib/skill-eval-kit.mjs": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "lib/skill-trigger-cases.mjs": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "lib/trigger-ledger.mjs": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/adapters/banal/output.ts": {
+    "functional/immutable-data": {
+      "count": 1
+    },
+    "functional/no-loop-statements": {
+      "count": 1
+    },
+    "functional/prefer-immutable-types": {
+      "count": 4
+    }
+  },
+  "src/adapters/banal/probe.ts": {
+    "functional/prefer-immutable-types": {
+      "count": 1
+    }
+  },
+  "src/adapters/banal/xml.ts": {
+    "functional/immutable-data": {
+      "count": 3
+    },
+    "functional/no-loop-statements": {
+      "count": 1
+    },
+    "functional/prefer-immutable-types": {
+      "count": 4
+    }
+  },
+  "src/adapters/memory/index.ts": {
+    "functional/immutable-data": {
+      "count": 6
+    },
+    "functional/prefer-immutable-types": {
+      "count": 4
+    }
+  },
+  "src/adapters/node/process.io.ts": {
+    "functional/prefer-immutable-types": {
+      "count": 5
+    }
+  },
+  "src/adapters/pdfjs/fill.ts": {
+    "functional/immutable-data": {
+      "count": 6
+    },
+    "functional/no-loop-statements": {
+      "count": 2
+    },
+    "functional/prefer-immutable-types": {
+      "count": 6
+    }
+  },
+  "src/adapters/references/index.ts": {
+    "functional/immutable-data": {
+      "count": 1
+    },
+    "functional/no-let": {
+      "count": 2
+    },
+    "functional/prefer-immutable-types": {
+      "count": 2
+    },
+    "no-restricted-imports": {
+      "count": 4
+    }
+  },
+  "src/adapters/references/pool.ts": {
+    "functional/immutable-data": {
+      "count": 1
+    },
+    "functional/no-loop-statements": {
+      "count": 1
+    },
+    "functional/prefer-immutable-types": {
+      "count": 1
+    }
+  },
+  "src/build-engine.ts": {
+    "functional/immutable-data": {
+      "count": 1
+    },
+    "functional/no-loop-statements": {
+      "count": 1
+    },
+    "functional/prefer-immutable-types": {
+      "count": 2
+    }
+  },
+  "src/build.ts": {
+    "functional/immutable-data": {
+      "count": 4
+    },
+    "functional/no-let": {
+      "count": 2
+    },
+    "functional/no-loop-statements": {
+      "count": 6
+    },
+    "functional/prefer-immutable-types": {
+      "count": 33
+    }
+  },
+  "src/cli.ts": {
+    "functional/immutable-data": {
+      "count": 31
+    },
+    "functional/no-let": {
+      "count": 7
+    },
+    "functional/no-loop-statements": {
+      "count": 8
+    },
+    "functional/prefer-immutable-types": {
+      "count": 41
+    },
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/doctor.ts": {
+    "functional/immutable-data": {
+      "count": 25
+    },
+    "functional/no-let": {
+      "count": 5
+    },
+    "functional/no-loop-statements": {
+      "count": 3
+    },
+    "functional/prefer-immutable-types": {
+      "count": 7
+    }
+  },
+  "src/domain/host.ts": {
+    "functional/prefer-immutable-types": {
+      "count": 1
+    }
+  },
+  "src/domain/lookup-cache.ts": {
+    "functional/immutable-data": {
+      "count": 1
+    },
+    "functional/no-let": {
+      "count": 1
+    },
+    "functional/no-loop-statements": {
+      "count": 1
+    },
+    "functional/prefer-immutable-types": {
+      "count": 2
+    }
+  },
+  "src/domain/paths.ts": {
+    "functional/prefer-immutable-types": {
+      "count": 1
+    }
+  },
+  "src/domain/record.ts": {
+    "functional/prefer-immutable-types": {
+      "count": 1
+    }
+  },
+  "src/engine.ts": {
+    "functional/no-loop-statements": {
+      "count": 1
+    },
+    "functional/prefer-immutable-types": {
+      "count": 5
+    }
+  },
+  "src/facts-file.ts": {
+    "functional/no-let": {
+      "count": 1
+    }
+  },
+  "src/hooks-settings.ts": {
+    "functional/immutable-data": {
+      "count": 9
+    },
+    "functional/no-loop-statements": {
+      "count": 5
+    },
+    "functional/prefer-immutable-types": {
+      "count": 7
+    },
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/init.ts": {
+    "functional/immutable-data": {
+      "count": 24
+    },
+    "functional/no-let": {
+      "count": 7
+    },
+    "functional/no-loop-statements": {
+      "count": 8
+    },
+    "functional/prefer-immutable-types": {
+      "count": 15
+    }
+  },
+  "src/latex-log.ts": {
+    "functional/immutable-data": {
+      "count": 16
+    },
+    "functional/no-let": {
+      "count": 1
+    },
+    "functional/no-loop-statements": {
+      "count": 6
+    },
+    "functional/prefer-immutable-types": {
+      "count": 11
+    }
+  },
+  "src/latex-loop.ts": {
+    "functional/no-loop-statements": {
+      "count": 1
+    },
+    "functional/prefer-immutable-types": {
+      "count": 2
+    }
+  },
+  "src/link-skills.ts": {
+    "functional/no-let": {
+      "count": 4
+    },
+    "functional/no-loop-statements": {
+      "count": 1
+    },
+    "functional/prefer-immutable-types": {
+      "count": 4
+    },
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/new-paper.ts": {
+    "functional/immutable-data": {
+      "count": 6
+    },
+    "functional/no-let": {
+      "count": 1
+    },
+    "functional/no-loop-statements": {
+      "count": 3
+    },
+    "functional/prefer-immutable-types": {
+      "count": 9
+    }
+  },
+  "src/paper-files.ts": {
+    "functional/immutable-data": {
+      "count": 4
+    },
+    "functional/no-loop-statements": {
+      "count": 4
+    },
+    "functional/prefer-immutable-types": {
+      "count": 8
+    }
+  },
+  "src/paper-settings.ts": {
+    "functional/immutable-data": {
+      "count": 1
+    },
+    "functional/no-loop-statements": {
+      "count": 1
+    },
+    "functional/prefer-immutable-types": {
+      "count": 1
+    }
+  },
+  "src/pdf-facts.ts": {
+    "functional/immutable-data": {
+      "count": 3
+    },
+    "functional/no-let": {
+      "count": 3
+    },
+    "functional/no-loop-statements": {
+      "count": 3
+    },
+    "functional/prefer-immutable-types": {
+      "count": 10
+    }
+  },
+  "src/pdf-geometry.ts": {
+    "functional/immutable-data": {
+      "count": 1
+    },
+    "functional/no-loop-statements": {
+      "count": 2
+    },
+    "functional/prefer-immutable-types": {
+      "count": 1
+    }
+  },
+  "src/presets.ts": {
+    "functional/immutable-data": {
+      "count": 1
+    },
+    "functional/no-let": {
+      "count": 1
+    },
+    "functional/no-loop-statements": {
+      "count": 1
+    },
+    "functional/prefer-immutable-types": {
+      "count": 4
+    }
+  },
+  "src/reference-rules.ts": {
+    "functional/no-loop-statements": {
+      "count": 1
+    },
+    "functional/prefer-immutable-types": {
+      "count": 4
+    }
+  },
+  "src/rules-config.ts": {
+    "functional/immutable-data": {
+      "count": 3
+    },
+    "functional/no-loop-statements": {
+      "count": 6
+    },
+    "functional/prefer-immutable-types": {
+      "count": 8
+    }
+  },
+  "src/structure.ts": {
+    "functional/immutable-data": {
+      "count": 4
+    },
+    "functional/no-loop-statements": {
+      "count": 6
+    },
+    "functional/prefer-immutable-types": {
+      "count": 7
+    }
+  },
+  "src/tex-requirements.ts": {
+    "functional/immutable-data": {
+      "count": 2
+    },
+    "functional/no-let": {
+      "count": 1
+    },
+    "functional/no-loop-statements": {
+      "count": 1
+    },
+    "functional/prefer-immutable-types": {
+      "count": 6
+    }
+  },
+  "src/toolchain.ts": {
+    "functional/immutable-data": {
+      "count": 1
+    },
+    "functional/no-let": {
+      "count": 5
+    },
+    "functional/no-loop-statements": {
+      "count": 4
+    },
+    "functional/prefer-immutable-types": {
+      "count": 20
+    }
+  },
+  "src/venue-rules.ts": {
+    "functional/immutable-data": {
+      "count": 6
+    },
+    "functional/no-loop-statements": {
+      "count": 4
+    },
+    "functional/prefer-immutable-types": {
+      "count": 13
+    }
+  }
+}

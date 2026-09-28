@@ -49,7 +49,7 @@ import { callerPath } from "./caller-path.ts";
 import type { Files } from "./ports/files.ts";
 import { err, ok, type Result } from "./domain/result.ts";
 import { paperPreset, paperPresetProblem } from "./presets.ts";
-import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { presetsDir } from "./package-dirs.ts";
 import { messageOf } from "./domain/text.ts";
 
 export const FACTS_SCHEMA = 2;
@@ -76,7 +76,7 @@ export interface VenueDecl {
 export function declaredVenue(
   files: Files,
   paperDir: string,
-  venuesDir: string = packageVenuesDir(),
+  venuesDir: string = presetsDir(),
 ): VenueDecl | null {
   const p = paperPreset(paperDir, { files, venuesDir });
   const problem = paperPresetProblem(paperDir, p);

@@ -46,7 +46,7 @@ export function withSources(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
 }
 
 export const SUITES: readonly Suite[] = [
-  { name: "vitest", command: ["vitest", "run"] },
+  { name: "vitest", command: ["vitest", "run", "--project", "unit"] },
   { name: "harnesses", command: ["vigiles", "test", "--min=1"] },
 ];
 

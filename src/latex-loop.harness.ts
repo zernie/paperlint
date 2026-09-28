@@ -6,7 +6,7 @@
  * A defect in `nextStep` fails in table 1, one in `summarize` in table 2, before table 3 runs.
  *
  * The decision is pure, so none of this needs TeX. The real-pdflatex half lives in
- * `test/e2e/build.ts`.
+ * `test/e2e/tex/build.e2e.ts`.
  */
 import { createChecker } from "../lib/check.ts";
 import type {

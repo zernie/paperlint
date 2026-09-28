@@ -104,6 +104,11 @@ export interface VenueSetting {
   /** `paperlint:<name>`, or a path relative to the paper's `paperlint.json`. */
   readonly extends: string;
   readonly kind: string | null;
+  /**
+   * The new `paper.tex` set in the class the preset's template names, so `tex/template` passes on
+   * the paper `new` just wrote. Absent or null: the template's class is kept.
+   */
+  readonly setClass?: ((paperTex: string) => string) | null;
 }
 
 /**
@@ -164,6 +169,9 @@ function fromTemplate(
   if (!existsSync(src))
     return { ok: false, reason: `no template for ${file}: ${src} is missing` };
   const text = readFileSync(src, "utf8").split("{{name}}").join(name);
+  const setClass = venue?.setClass ?? null;
+  if (file === SOURCE_FILE.tex && setClass !== null)
+    return { ok: true, value: { file, text: setClass(text), from } };
   if (file !== CONFIG_FILE || venue === null)
     return { ok: true, value: { file, text, from } };
   const edited = withVenue(text, src, venue);

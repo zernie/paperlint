@@ -23,6 +23,7 @@ import {
   silentOptionalRules,
   toolchainTex,
 } from "./cli.ts";
+import { texInputsDir } from "./package-dirs.ts";
 
 const root = useTempDir("cli-test-");
 
@@ -248,14 +249,7 @@ writeTree(noTexDir, {
   "papers/tex/paper.tex":
     "\\documentclass{article}\\begin{document}x\\end{document}\n",
 });
-const venues = join(
-  import.meta.dirname,
-  "..",
-  "skills",
-  "submit-paper",
-  "references",
-  "venues",
-);
+const venues = texInputsDir();
 
 test("build: a markdown-only paper is refused", async () => {
   const md = await withoutTex(noTexDir, () =>

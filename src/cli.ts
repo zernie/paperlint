@@ -32,10 +32,8 @@ import { join, dirname, resolve, relative, basename, sep } from "node:path";
 import markdown from "@eslint/markdown";
 import { z } from "zod";
 // Types come from consumer.d.mts beside it.
-import {
-  isMain,
-  packageVenuesDir,
-} from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { presetsDir } from "./package-dirs.ts";
 export { isMain };
 import type { Args, PaperlintConfig, ConfigRead } from "./types.ts";
 import {
@@ -48,8 +46,10 @@ import { prepareEngine } from "./build-engine.ts";
 import { cacheRoot, cachedTree, runToolchain } from "./toolchain.ts";
 import { banalInstaller, parseBanalSettings } from "./adapters/banal/index.ts";
 import { curlDownload } from "./adapters/curl/index.ts";
+import { latexReader } from "./adapters/latex/index.ts";
 import { hostDirs, nodeAdapters, nodeFiles } from "./adapters/node/index.ts";
 import { VENUE_RULE_LEVELS, venueRules } from "./venue-rules.ts";
+import { TEX_VENUE_RULE_LEVELS, texVenueRules } from "./tex-venue-rules.ts";
 import {
   paperRules,
   stringFields,
@@ -72,6 +72,7 @@ import {
   shippedPresets,
   SHIPPED_PREFIX,
   type PaperPreset,
+  type PresetTemplate,
 } from "./presets.ts";
 import type { ToolInstaller } from "./ports/tool-installer.ts";
 import {
@@ -132,7 +133,7 @@ import { messageOf } from "./domain/text.ts";
 import { isRecord } from "./domain/record.ts";
 
 /** The shipped venue presets, read from the package's venues directory — the one list. */
-const SHIPPED_VENUES = (): string[] => shippedPresets(packageVenuesDir());
+const SHIPPED_VENUES = (): string[] => shippedPresets(presetsDir());
 
 const USAGE = `paperlint — machine-checkable gates for a paper kept in git
 
@@ -257,7 +258,7 @@ export function buildConfig(
         pdf: {
           rules: {
             ...pdfRules.rules,
-            ...venueRules({ files: nodeFiles, venuesDir: packageVenuesDir() }),
+            ...venueRules({ files: nodeFiles, venuesDir: presetsDir() }),
           },
         },
       },
@@ -302,7 +303,17 @@ export function buildConfig(
     cfg.push({
       files: ["**/paper.tex"],
       plugins: {
-        tex: { languages: { latex: texLanguage }, rules: texBuild },
+        tex: {
+          languages: { latex: texLanguage },
+          rules: {
+            ...texBuild,
+            ...texVenueRules({
+              files: nodeFiles,
+              venuesDir: presetsDir(),
+              latex: latexReader,
+            }),
+          },
+        },
         paper: { rules: texPaperRules },
         bib: bibReachable,
       },
@@ -316,6 +327,7 @@ export function buildConfig(
         "tex/acm-frontmatter-override": "error",
         // Silent for a paper whose paperlint.json names no venue (src/venue-rules.ts).
         ...VENUE_RULE_LEVELS,
+        ...TEX_VENUE_RULE_LEVELS,
       },
     });
   // 🔴 ONLY THE FILES THESE BLOCKS CLAIM ARE LINTED (src/paper-files.ts). Without this block ESLint's
@@ -1037,10 +1049,23 @@ export async function chooseVenue(
     value: {
       extends: spec.value,
       kind: kind !== null && kinds.includes(kind) ? kind : null,
+      setClass: classSetter(r.value.template),
       label,
       kinds,
     },
   };
+}
+
+/**
+ * What `paperlint new` does to the template's paper.tex for a venue: set it in the class the
+ * preset's template names. Null when the preset names no template, or one the reader cannot read
+ * (then `tex/template` says so on the new paper).
+ */
+function classSetter(
+  t: PresetTemplate | null,
+): ((paperTex: string) => string) | null {
+  const cls = t === null ? null : latexReader.template(t.text);
+  return cls === null ? null : (src) => latexReader.withDocumentClass(src, cls);
 }
 
 const bad = (error: string): { ok: false; error: string } => ({
@@ -1217,7 +1242,7 @@ async function runBuild(
 }
 
 /** The presets' deps, wired to the disk and the package's own venues directory. */
-const PRESET_DEPS = { files: nodeFiles, venuesDir: packageVenuesDir() };
+const PRESET_DEPS = { files: nodeFiles, venuesDir: presetsDir() };
 
 /**
  * What one paper needs from TeX Live: the base set plus its preset chain's `tex`. A paper whose

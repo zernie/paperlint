@@ -15,7 +15,8 @@ venues/usenix-sec.jsonc      (optional, your own) a VENUE PRESET: format, page l
 ```
 
 The shipped presets (`paperlint:<name>`) live in the package, under
-`skills/submit-paper/references/venues/`: `acm-sigconf`, `agenticdev`, `aisec`, `realm`.
+`presets/`: `acm-sigconf`, `agenticdev`, `aidc`, `aisec`,
+`ieee-conference`, `realm`.
 
 ## The root `paperlint.json`
 
@@ -229,7 +230,7 @@ write. It prints its plan first, one line per step, then runs it:
 
 ```
 papers/my-paper
-  inputs: TEXINPUTS += <paperlint>/skills/submit-paper/references/venues
+  inputs: TEXINPUTS += <paperlint>/presets/tex
   compile: paper.tex (\documentclass[sigconf,screen]{acmart}, venue agenticdev)
   measure: pdf.js → _build/paper.facts.json (facts for the lint rules; nothing is judged here)
   ✓ paper.pdf — 4 pdflatex passes, 1 bibtex run; facts: _build/paper.facts.json, last page 621.5 / 264.8 pt

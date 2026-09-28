@@ -8,7 +8,14 @@
 // acmart (letter 8.5x11, size 9, Libertine) shares NOTHING with this — copying the numbers from
 // `agenticdev.jsonc` would give a gate that reddens on a correct paper.
 {
-  "template": "acl",
+  // ACL's template is not a class: `acl_latex.tex` opens with `\documentclass[11pt]{article}` and
+  // loads `acl.sty` as a package (https://github.com/acl-org/acl-style-files, checked 2026-09-27).
+  // So the class `tex/template` compares against is article, at 11pt.
+  "template": "\\documentclass[11pt]{article}",
+
+  // What the venue is called in a paper's text (tex/venue-leftover): the workshop, and the
+  // conference it is held at.
+  "aliases": ["REALM", "EMNLP"],
 
   // TeX Live packages the ACL template needs ON TOP OF tex-base.jsonc (the shape is
   // venue-profile.schema.json). acl.sty itself travels with the paper; these are what it loads.

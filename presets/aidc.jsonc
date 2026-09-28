@@ -1,0 +1,73 @@
+// AIDC @ IEEE ACSAC 2026 (Workshop on Agentic AI in Offensive and Defensive Cyber Operations) — a
+// VENUE preset over the IEEE conference family. Everything the IEEEtran template decides (page
+// size, columns, fonts, body size, TeX packages) comes from ieee-conference.jsonc; this file adds
+// what AIDC's call for papers sets.
+//
+// Verbatim from https://aidcworkshop.github.io/ (fetched 2026-09-27):
+//   «All submitted papers must be prepared in US Letter size, not A4, using the double-column IEEE
+//    conference format. This requirement will be strictly enforced.»
+//   «LaTeX submissions must use the IEEEtran.cls version 1.8b template with the
+//    \documentclass[conference,compsoc]{IEEEtran} document class option.»
+//   «Regular technical papers: Up to 12 pages excluding references and appendices.»
+//   «Short position papers or work-in-progress (WIP) papers: Up to 6 pages, excluding references
+//    and appendices.»
+//   «Submissions must be properly anonymized for double-blind review.»
+//
+// THE DEADLINE PEOPLE GET WRONG (not a lint fact): the HotCRP portal closes 2026-10-02 11:59:59 UTC
+// (`"sub":1790942399` on https://aidc.submit.acsac.org/deadlines, recorded in paperlint#90), while
+// the workshop page says «October 2, 2026 (Anywhere-on-Earth, AoE)» — a day later. The portal is
+// what refuses the upload.
+//
+// THE REVIEW IS DOUBLE-BLIND: `"blind":true` in the same portal data, and the call above.
+{
+  "extends": "paperlint:ieee-conference",
+
+  // What the venue is called in a paper's text (tex/venue-leftover): the workshop, and the
+  // conference it is held at.
+  "aliases": ["AIDC", "ACSAC"],
+
+  "template": "\\documentclass[conference,compsoc]{IEEEtran}",
+
+  // «Authors must follow the ACSAC AI Usage Policy for all workshop submissions.» (the call above).
+  // Verbatim from https://www.acsac.org/2026/submissions/ai/ (fetched 2026-09-27):
+  //   «If LLMs are used, authors must include a separate, clearly marked section titled "LLM Usage
+  //    Statement" at the end of the paper. This section does not count towards the page limit.»
+  //   «Failure to comply with these requirements is grounds for desk rejection without further
+  //    review.»
+  // tex/required-section cannot know whether LLMs were used, so it requires the section always: an
+  // author who used none says so in it. A bold paragraph («Use of Generative AI.», what AISec asked
+  // for) is not a section with this title and does not count.
+  "required_sections": [{ "title": "LLM Usage Statement", "position": "last" }],
+
+  "format": {
+    // \textwidth and \textheight of [conference,compsoc], measured (ieee-conference.jsonc).
+    "textblock_w_in": 7.0,
+    "textblock_h_in": 9.02,
+
+    // 🔴 PAGE LIMITS ARE NOT GATED HERE, AND THAT IS A MEASUREMENT. banal splits pages into body
+    // and references by what is on them, and a page that holds ANY non-bibliography text counts as
+    // body. Measured 2026-09-27 on a [conference,compsoc] paper whose body ends at the foot of
+    // page 12:
+    //   LLM Usage Statement before the references → body 13, references 0
+    //   an appendix before the references         → body 13, references 2
+    //   both placed after the references          → body right, the tail counted as references
+    // AIDC counts neither in the limit («excluding references and appendices»; the ACSAC AI policy:
+    // the LLM Usage Statement «does not count towards the page limit»), and tex/required-section
+    // accepts the statement before or after the bibliography. A gate on banal's body count would
+    // therefore fail a correct 12-page paper — the realm.jsonc case again. The numbers below are
+    // data for humans, not an input to pdf/limits.
+    "page_limits_not_gated": {
+      "_": "Body pages, excluding references, appendices and the LLM Usage Statement. banal counts a page holding an appendix or the statement before the bibliography as body, so its body count is not this number.",
+      "regular": 12,
+      "short": 6,
+      "references_and_appendices": "unlimited",
+      "llm_usage_statement": "not counted (ACSAC AI policy)",
+    },
+
+    // «Short position papers or work-in-progress (WIP) papers» share one limit, so one kind.
+    "kinds": {
+      "regular": {},
+      "short": {},
+    },
+  },
+}

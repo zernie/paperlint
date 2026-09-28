@@ -19,7 +19,8 @@
  *   tex        union — a child never removes a package its parent needs
  *   format     per key, the child wins; `kinds` by kind name, a child's kind replaces that kind
  *   rules      per rule id, the child wins
- *   template   the child wins; so does `name`
+ *   template   the child wins; so does `name`, and `required_sections` (the whole list)
+ *   aliases    union, with every `name` — what the venue is called along the chain
  *
  * ── THE LABEL ─────────────────────────────────────────────────────────────────────
  * Messages, the facts file and the build plan need a word for the venue. It is the most derived
@@ -36,6 +37,7 @@ import {
   profileFileOf,
   venueNames,
   type PresetFile,
+  type RequiredSection,
   type TexRequirements,
   type VenueFormat,
 } from "./tex-requirements.ts";
@@ -61,13 +63,27 @@ export interface PresetDeps {
   readonly venuesDir: string;
 }
 
+/** A preset's `template`, as its file spells it. */
+export interface PresetTemplate {
+  readonly text: string;
+  readonly file: string;
+}
+
 /** A resolved chain, merged. */
 export interface Preset {
   /** The word for this venue in messages. */
   readonly label: string;
   /** Every file of the chain, root first. */
   readonly chain: readonly string[];
-  readonly template: string | null;
+  /**
+   * The `\\documentclass` the venue's template uses, as the preset spells it, and the file that
+   * spells it; null when no file of the chain names one. Read by the rules and `paperlint new`,
+   * through the LaTeX reader.
+   */
+  readonly template: PresetTemplate | null;
+  /** Every `name` and `aliases` along the chain: what this venue is called in a paper's text. */
+  readonly aliases: readonly string[];
+  readonly requiredSections: readonly RequiredSection[];
   readonly tex: TexRequirements;
   readonly format: VenueFormat;
   readonly rules: Readonly<Record<string, unknown>>;
@@ -187,26 +203,37 @@ export function mergeFormat(
 /** The chain, root first, merged into one preset. Pure. */
 function merged(
   spec: string,
-  rootFirst: readonly PresetFile[],
-  files: readonly string[],
+  rootFirst: readonly { readonly preset: PresetFile; readonly file: string }[],
 ): Preset {
   const base: {
     name: string | null;
-    template: string | null;
+    template: PresetTemplate | null;
+    aliases: readonly string[];
+    requiredSections: readonly RequiredSection[];
     tex: TexRequirements;
     format: VenueFormat;
     rules: Readonly<Record<string, unknown>>;
   } = {
     name: null,
     template: null,
+    aliases: [],
+    requiredSections: [],
     tex: NO_REQUIREMENTS,
     format: NO_FORMAT,
     rules: {},
   };
   const m = rootFirst.reduce(
-    (acc, p) => ({
+    (acc, { preset: p, file }) => ({
       name: p.name ?? acc.name,
-      template: p.template ?? acc.template,
+      template: p.template === null ? acc.template : { text: p.template, file },
+      aliases: [
+        ...new Set([
+          ...acc.aliases,
+          ...(p.name === null ? [] : [p.name]),
+          ...p.aliases,
+        ]),
+      ],
+      requiredSections: p.requiredSections ?? acc.requiredSections,
       tex: p.tex ? mergeRequirements(acc.tex, p.tex) : acc.tex,
       format: mergeFormat(acc.format, p.format),
       rules: { ...acc.rules, ...p.rules },
@@ -215,8 +242,10 @@ function merged(
   );
   return {
     label: m.name ?? labelOf(spec),
-    chain: files,
+    chain: rootFirst.map((x) => x.file),
     template: m.template,
+    aliases: m.aliases,
+    requiredSections: m.requiredSections,
     tex: m.tex,
     format: m.format,
     rules: m.rules,
@@ -238,13 +267,7 @@ export function resolvePreset(
       ? err({ ...chain.error, shipped: shippedPresets(deps.venuesDir) })
       : chain;
   const rootFirst = [...chain.value].reverse();
-  return ok(
-    merged(
-      spec,
-      rootFirst.map((x) => x.preset),
-      rootFirst.map((x) => x.file),
-    ),
-  );
+  return ok(merged(spec, rootFirst));
 }
 
 /** The shipped presets' names (each is spelled `paperlint:<name>`). */

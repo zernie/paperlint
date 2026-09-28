@@ -4,7 +4,7 @@
  * The process runner is replaced by a fake that writes what pdflatex and bibtex would write, so
  * these assertions check the SHELL's decisions: what is run, with which environment, in which
  * order, and what is left on disk. Whether a real pdflatex produces a real PDF is the other half,
- * `test/e2e/build.ts`.
+ * `test/e2e/tex/build.e2e.ts`.
  *
  * 🔴 THE TWO THINGS PINNED DOWN HERE THAT A RETURNED OBJECT CANNOT SHOW: a paper-supplied
  * `build.sh` is never executed (checked by the trace it would leave on disk and by the list of
@@ -40,9 +40,7 @@ const {
   STEPS,
   IGNORED_SCRIPTS,
 } = await import(join(HERE, "build.ts"));
-const { packageVenuesDir } = await import(
-  join(HERE, "..", "skills", "paper-pipeline", "scripts", "consumer.mjs")
-);
+const { texInputsDir } = await import(join(HERE, "package-dirs.ts"));
 
 const check = createChecker();
 
@@ -137,12 +135,12 @@ const fakeRead = async (pdf) => {
 const CLEAN_TEX = "\\documentclass{article}\\begin{document}x\\end{document}";
 
 try {
-  // ── inputs: paperlint's own venues directory, no configuration ───────────────────────────────
+  // ── inputs: paperlint's own TeX inputs directory, no configuration ────────────────────────────
   // First: the facts below resolve a paper's venue preset in this same directory, so a wrong one
   // must be named HERE, not as a missing venue label two checks later.
-  const venues = packageVenuesDir();
+  const venues = texInputsDir();
   check(
-    "the venues directory is paperlint's own and holds paper-guards.tex",
+    "the TeX inputs directory is paperlint's own and holds paper-guards.tex",
     existsSync(join(venues, "paper-guards.tex")),
   );
   check(

@@ -58,7 +58,7 @@ that has every declared package, so a new-year install that was interrupted neve
 complete older one.
 
 **Where the package list lives:** in the venue profiles, not here and not in a script.
-`skills/submit-paper/references/venues/<venue>.jsonc` carries a `tex` block — CTAN package → the
+`presets/<venue>.jsonc` carries a `tex` block — CTAN package → the
 files that prove it is installed — and `tex-base.jsonc` carries what every paper gets, and all a
 paper with an unknown venue gets. The shape is `venue-profile.schema.json` in the same directory.
 A venue that needs a new package gets one line there.
@@ -97,7 +97,7 @@ accepts as input. Measured on 50 PDFs / 598 pages (2026-09-25): banal on paperli
 real `pdftohtml` agree on every field the facts file keeps, with no venue verdict changed. They
 agree only because paperlint leaves out rotated and invisible text (as `pdftohtml` does), writes each
 text's colour so banal drops light text by its own rule, and writes sizes and coordinates at the
-zoom and precision banal expects. `test/e2e/banal.ts` checks each of those against the real banal
+zoom and precision banal expects. `test/e2e/tex/banal.e2e.ts` checks each of those against the real banal
 on the committed fixtures.
 
 **How it is installed — and the licence boundary.** banal is **GPL-2.0-or-later**; paperlint is MIT. paperlint

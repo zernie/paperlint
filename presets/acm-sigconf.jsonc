@@ -7,7 +7,10 @@
 // requirements. A paper may extend this family directly for an ACM venue nobody has profiled:
 // page size, columns and fonts are checked; with no kinds, the page limit is not.
 {
-  "template": "acmart",
+  // `tex/template` requires a paper's class to be acmart WITH `sigconf`: acmart's default format is
+  // `manuscript`, a single-column layout no sigconf venue takes. Other options (review, anonymous,
+  // screen, nonacm) are the paper's to add.
+  "template": "\\documentclass[sigconf]{acmart}",
 
   // TeX Live packages the acmart template needs ON TOP OF tex-base.jsonc, each with the files that
   // prove it is present (checked with kpsewhich after every install). Read by `paperlint toolchain` and

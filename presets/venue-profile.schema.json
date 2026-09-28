@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/zernie/paperlint/venue-profile.schema.json",
   "title": "Venue preset",
-  "description": "One venue preset or template family (venues/<name>.jsonc), and the TeX base set (venues/tex-base.jsonc). A paper's paperlint.json names one with \"extends\"; a preset may extend another. `format` and `rules` are read by paperlint's pdf/* venue rules and its lint config (src/venue-rules.ts, src/presets.ts); `tex` by `paperlint toolchain` and `paperlint build`.",
+  "description": "One venue preset or template family (presets/<name>.jsonc), and the TeX base set (presets/tex-base.jsonc). A paper's paperlint.json names one with \"extends\"; a preset may extend another. `format` and `rules` are read by paperlint's pdf/* venue rules and its lint config (src/venue-rules.ts, src/presets.ts); `tex` by `paperlint toolchain` and `paperlint build`.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -20,9 +20,37 @@
       "$ref": "#/definitions/tex"
     },
     "template": {
-      "description": "The \\documentclass the venue's template uses.",
+      "description": "The \\documentclass the venue's template uses: a whole line, `\\documentclass[conference,compsoc]{IEEEtran}`, or a bare class name. `tex/template` requires a paper's class to be this one and to carry every option named here.",
       "type": "string",
       "minLength": 1
+    },
+    "aliases": {
+      "description": "Other names the venue goes by in a paper's text — its acronym, its parent conference (`[\"AISec\", \"ACM CCS\"]`). Read by `tex/venue-leftover`: a paper that extends another venue and says one of these is flagged. Matched as whole words, case-sensitive. Collected along the `extends` chain, with `name`.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "required_sections": {
+      "description": "Sections the venue requires, read by `tex/required-section`. Each is a `\\section` or `\\section*` whose title equals `title` once whitespace is collapsed. `position: \"last\"`: after every section of the body (the ones before the appendix and the bibliography); it may stand after the bibliography. A child preset's list replaces its parent's.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "position": {
+            "type": "string",
+            "enum": ["last"]
+          }
+        }
+      }
     },
     "format": {
       "description": "What the venue's call for papers sets. Every key is optional; a child preset's key replaces its parent's, and a child's kind replaces that kind.",

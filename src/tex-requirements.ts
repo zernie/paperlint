@@ -16,8 +16,8 @@
  * `TexRequirements` and never looks at the text again; a malformed profile throws with the path
  * of every violation, it is never read as "no packages".
  *
- * Where the profiles live is answered by `packageVenuesDir()` in consumer.mjs — the one module
- * allowed to know where this package is installed (rule 10).
+ * Where the profiles live is answered by `presetsDir()` in `package-dirs.ts` — the one module
+ * allowed to know where this package's data is installed (rule 10).
  */
 // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { readFileSync, readdirSync } from "node:fs";
@@ -25,7 +25,7 @@ import { createRequire } from "node:module";
 import { join } from "node:path";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import Ajv from "ajv";
-import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { presetsDir } from "./package-dirs.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
 import { fieldOf } from "./domain/record.ts";
 
@@ -148,6 +148,13 @@ export const NO_FORMAT: VenueFormat = {
   kinds: new Map(),
 };
 
+/** A section a venue requires: its exact title, and whether it must close the paper. */
+export interface RequiredSection {
+  readonly title: string;
+  /** "last": after every section of the body; null: anywhere. */
+  readonly position: "last" | null;
+}
+
 /**
  * One preset FILE, parsed — before its `extends` chain is resolved (`src/presets.ts` does that).
  * A preset is a venue or a template family: `{ extends?, name?, template?, format?, tex?, rules? }`.
@@ -157,7 +164,12 @@ export interface PresetFile {
   readonly extends: string | null;
   /** A display name for messages; the file name otherwise. */
   readonly name: string | null;
+  /** The `\\documentclass` the venue's template uses, as the file spells it; null when it names none. */
   readonly template: string | null;
+  /** Other names the venue goes by in a paper's text; empty when the file names none. */
+  readonly aliases: readonly string[];
+  /** Sections the venue requires; null when the file names none (a child's list replaces its parent's). */
+  readonly requiredSections: readonly RequiredSection[] | null;
   /** Null when the file declares no `tex` block (allowed only with `extends`). */
   readonly tex: TexRequirements | null;
   readonly format: VenueFormat;
@@ -188,6 +200,11 @@ interface PresetJson {
   readonly extends?: string;
   readonly name?: string;
   readonly template?: string;
+  readonly aliases?: readonly string[];
+  readonly required_sections?: readonly {
+    readonly title: string;
+    readonly position?: "last";
+  }[];
   /** The schema requires `packages` in a `tex` block; `tools` is optional. */
   readonly tex?: Pick<TexRequirements, "packages"> &
     Partial<Pick<TexRequirements, "tools">>;
@@ -225,6 +242,14 @@ function formatOf(j: FormatJson = {}): VenueFormat {
   };
 }
 
+/** A preset's `required_sections`, or null when it names none. */
+const sectionsOf = (
+  r: PresetJson["required_sections"],
+): readonly RequiredSection[] | null =>
+  r === undefined
+    ? null
+    : r.map((x) => ({ title: x.title, position: orNull(x.position) }));
+
 /**
  * The text of one preset file → the typed file, or an Error naming every problem. The ONE parser
  * of a preset: the toolchain reads its `tex`, the venue rules its `format`, the config its `rules`.
@@ -236,7 +261,7 @@ function formatOf(j: FormatJson = {}): VenueFormat {
 export function parsePreset(
   text: string,
   file: string,
-  dir: string = packageVenuesDir(),
+  dir: string = presetsDir(),
 ): PresetFile {
   const parsed = typescript().parseConfigFileTextToJson(file, text);
   const config: unknown = parsed.config;
@@ -255,6 +280,8 @@ export function parsePreset(
     extends: orNull(j.extends),
     name: orNull(j.name),
     template: orNull(j.template),
+    aliases: j.aliases ?? [],
+    requiredSections: sectionsOf(j.required_sections),
     tex: j.tex ? { packages: j.tex.packages, tools: j.tex.tools ?? {} } : null,
     format: formatOf(j.format),
     rules: j.rules ?? {},
@@ -265,7 +292,7 @@ export function parsePreset(
 export function parseProfile(
   text: string,
   file: string,
-  dir: string = packageVenuesDir(),
+  dir: string = presetsDir(),
 ): TexRequirements {
   return parsePreset(text, file, dir).tex ?? NO_REQUIREMENTS;
 }
@@ -287,7 +314,7 @@ function readProfile(dir: string, file: string): TexRequirements {
 }
 
 /** The venues that have a profile — every `.jsonc` in the directory except the base set. */
-export function venueNames(dir: string = packageVenuesDir()): string[] {
+export function venueNames(dir: string = presetsDir()): string[] {
   return readdirSync(dir)
     .filter((f) => f.endsWith(PROFILE_EXT) && f !== BASE_PROFILE)
     .map((f) => f.slice(0, -PROFILE_EXT.length))
@@ -325,7 +352,7 @@ export function packageNames(tex: TexRequirements): string[] {
  */
 export function requirementsFor(
   preset: { readonly label: string; readonly tex: TexRequirements } | null,
-  dir: string = packageVenuesDir(),
+  dir: string = presetsDir(),
 ): PaperRequirements {
   const base = readProfile(dir, BASE_PROFILE);
   return preset === null
@@ -345,7 +372,7 @@ export function requirementsFor(
  * builds any paper.
  */
 export function declaredUnion(
-  dir: string = packageVenuesDir(),
+  dir: string = presetsDir(),
   extra: readonly TexRequirements[] = [],
 ): {
   readonly tex: TexRequirements;

@@ -232,6 +232,9 @@ describe("paperlint lint — the venue preset's rules", () => {
         extends: "paperlint:agenticdev",
         kind: "short",
       }),
+      // In agenticdev's class, or tex/template would be the finding.
+      "papers/a/paper.tex":
+        "\\documentclass[sigconf]{acmart}\n\\begin{document}x\\end{document}\n",
     });
     const r = await lint(root);
     expect(r.code).toBe(0);
@@ -282,7 +285,9 @@ describe("paperlint lint — the paper over its preset, and the project's own pr
     });
     const r = await lint(root);
     expect(r.code).toBe(1);
-    expect(r.out).toMatch(/acm-sigconf, agenticdev, aisec, realm/);
+    expect(r.out).toMatch(
+      /acm-sigconf, agenticdev, aidc, aisec, ieee-conference, realm/,
+    );
   });
 });
 

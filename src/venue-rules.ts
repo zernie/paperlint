@@ -89,7 +89,7 @@ export type Assessment =
 
 export interface VenueRuleDeps {
   readonly files: Files;
-  /** The package's venues directory (`packageVenuesDir()`): the shipped presets and their schema. */
+  /** The package's presets directory (`presetsDir()`): the shipped presets and their schema. */
   readonly venuesDir: string;
 }
 

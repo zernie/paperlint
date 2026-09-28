@@ -77,6 +77,13 @@ and stay QUIET on a clean fixture. A check that has only been seen quiet is
 indistinguishable from a dead one — silence is its success state. Prove the fire half by
 seeing the test go RED before the fix lands ([`docs/testing.md`](docs/testing.md)).
 
+**A new rule ships with its page**, `docs/rules/<group>/<rule>.md`, in these sections: What it
+catches · Why · Examples (failing / passing) · Options / preset fields · What it does not check ·
+How to fix. Its `meta.docs.url` points at that page, and its row in `docs/rules.md` is one line
+linking there. `src/rule-docs.test.ts` holds every rule the config registers to this; the rules
+older than the convention wait in its `AWAITING_PAGE` list, which only shrinks — #131 writes their
+pages.
+
 **4. `exit 0` with empty output is NOT "clean".** A rule whose glob matched no files reports
 exactly like a rule that passed. Any rule shipped here must be loud when its input set is
 empty. This is the specific defect that blocks stage 1 of the plan: in the source base a
@@ -150,13 +157,15 @@ Four proposals were made and withdrawn in one session on 2026-09-17 for exactly 
 
 **10. Effects live in adapters, and WHERE paperlint IS INSTALLED lives in ONE of them.** Rule 6 generalised: the caller's cwd is one case of it. Checking logic — lint rules,
 skills, hooks — must not know its own location, nor its distance from anything else. Every
-answer to _where_ comes from `skills/paper-pipeline/scripts/consumer.mjs`, which adapts per
-channel: own checkout · `node_modules` · plugin cache · CI. A skill naming a script by an
-install-specific path in its own prose walks around that door, and 208 such literals across 190
-lines do exactly that.
+answer to _where_ comes from one of two modules, each for one side: the consumer (its root, the
+package's name) from `skills/paper-pipeline/scripts/consumer.mjs`, which adapts per channel — own
+checkout · `node_modules` · plugin cache · CI; the package's own data (`presets/`, `presets/tex/`)
+from `src/package-dirs.ts`. A skill naming a script by an install-specific path in its own prose
+walks around that door, and 208 such literals across 190 lines do exactly that.
 
-<!-- The port's path above is resolved by `npm run check` (vigiles lint), since #67. -->
+<!-- The ports' paths above are resolved by `npm run check` (vigiles lint), since #67. -->
 <!-- vigiles:file skills/paper-pipeline/scripts/consumer.mjs -->
+<!-- vigiles:file src/package-dirs.ts -->
 
 The layer rules for `src/` live in [`src/CLAUDE.md`](src/CLAUDE.md) and are enforced by the linter.
 
@@ -493,17 +502,28 @@ justified two hundred lines above precisely by these minutes being free.
 
 ## Testing
 
-| you are testing                                                            | kind                                          |
-| -------------------------------------------------------------------------- | --------------------------------------------- |
-| a pure function                                                            | unit — vitest, `<module>.test.ts` beside it   |
-| a use case or adapter that reaches disk, a process, the network, the clock | integration — vitest, fakes through the ports |
-| a hook's decision, a skill's contract                                      | harness — vigiles, `<surface>.harness.ts`     |
-| the installed package, a real TeX build                                    | e2e — `test/e2e/*.ts`                         |
+| you are testing                                                            | kind                                                        |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| a pure function                                                            | unit — vitest, `<module>.test.ts` beside it                 |
+| a use case or adapter that reaches disk, a process, the network, the clock | integration — vitest, fakes through the ports               |
+| a hook's decision, a skill's contract                                      | harness — vigiles, `<surface>.harness.ts`                   |
+| the installed package, a real TeX build                                    | e2e — `test/e2e/<area>/*.e2e.ts`, `npm run test:e2e:<area>` |
 
 Red first · assert the whole value · test what the code does, never what its source says · no test
 touches the real network · 100% coverage, no `c8 ignore`. **Before every push: `npm run check`,
 exit code read without a pipe.** Everything else — where files live, how fakes are injected, the
 `--min=1` trap: [`docs/testing.md`](docs/testing.md).
+
+**A new rule** needs unit tests beside it and a reporting and a silent case in
+`src/rule-cases.test.ts`, which runs every registered rule through real ESLint and fails on one
+without cases. An e2e fixture only when [`docs/e2e.md`](docs/e2e.md)'s triggers say so.
+
+**New code is functional.** In `src/`, `eslint-rules/` and `lib/` (tests aside) there is no
+`let`, no mutation, no loop, and types are read-only (`eslint-plugin-functional`); a `switch` over a
+union names every member. Collections go through [Remeda](https://remedajs.com/) — `lodash`,
+`lodash-es` and `ramda` are refused by `npm run lint`. Old code is listed in
+`eslint-suppressions.json`, ESLint's own bulk suppressions, which may only shrink: fixing a listed
+site without `npx eslint . --prune-suppressions` fails lint, and #134 burns the list down.
 
 ## Commits
 

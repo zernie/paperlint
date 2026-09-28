@@ -27,16 +27,27 @@ So the genuinely agent-facing harnesses are three: `hooks/hooks.harness.ts` (`ru
 (`runHarnessTest`, which spawns the real `claude` binary against a scripted model), and the skill
 contract checks. Everything else is ordinary Node testing that happens to carry the suffix.
 
-## Why the install e2e stays a script
+## The e2e runs are vitest projects
 
-`test/e2e/install.ts` is one linear scenario per package manager with strictly dependent steps
-— install, bin, `init`, `lint`, hook commands, content delivery — and a summary. A runner adds
-named subtests and a reporter; the script already prints per-check `✓`/`✗` and a per-manager
-verdict. The pack-and-install work stays in our code under any host, so the host buys only the
-reporter, at the cost of a second exit-code path.
+The end-to-end runs are vitest tests (`test/e2e/<area>/*.e2e.ts`), one project per environment
+they need — `e2e-install` (npm and pnpm) and `e2e-tex` (TeX Live) — found by the project's glob, so
+no list of files exists in `package.json`, `scripts/check.ts` or CI (#132). What the runner buys is
+not the reporter alone:
 
-It also stays OUT of `npm test`: it needs the network for the consumer's transitive dependencies
-and takes minutes. It is its own CI step with its own timeout.
+- **the fixture table.** `fixtures/build-e2e/` is a table of independent cases, and each fixture's
+  `expect.json` becomes its own tests through one `describe.each` over the directory. A new venue
+  fixture is a folder, not a block of test code.
+- **a skip the aggregate can read.** A missing tool is `skipIf`, and vitest's JSON report counts it,
+  which is what `npm run check` reads to print a gate as skipped rather than passed. Under CI the
+  same absence fails (`test/e2e/need.ts`).
+
+`install.e2e.ts` stays ONE test per package manager, each the whole scenario — install, bin,
+`init`, `lint`, hook commands, content delivery — because its steps depend on each other: a
+failure in the install makes every later step meaningless. Inside it, each check is a soft
+expectation, so a run reports every mismatch, not the first.
+
+The e2e projects stay OUT of `npm test` (project `unit`): they need the network, TeX Live or
+several minutes. Each runs in its own CI job, with its own timeout.
 
 ## Tarball-by-path versus a local registry
 

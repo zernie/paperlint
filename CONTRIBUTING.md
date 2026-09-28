@@ -37,12 +37,14 @@ install e2e under npm and pnpm, and a real `pdflatex` build — and ends
 by printing **which CI jobs it does not reproduce, and why**.
 
 🔴 **There is no `--fast` flag, and that is the point.** On 2026-09-19 a rule change was pushed
-that broke the suite: the gates were run afterwards and were green, but `npm test` and
-`test:install` were not among them, because there were eleven separate scripts and the only way
+that broke the suite: the gates were run afterwards and were green, but `npm test` and the
+install e2e were not among them, because there were eleven separate scripts and the only way
 to run them all was from memory. A subset flag re-creates exactly that — the cheap half gets run
 and reported as "the gates". If a step genuinely cannot run here, it says so out loud rather than
-being skipped quietly: an e2e that finds no TeX or no pnpm exits 77 _having stated_ why, and
-`npm run check` lists it as skipped instead of counting it as passed.
+being skipped quietly: an e2e test that finds no TeX or no pnpm is reported SKIPPED by vitest,
+and `npm run check` reads that count from vitest's JSON report and lists the gate as skipped
+instead of counting it as passed. The e2e areas also run alone: `npm run test:e2e:install`,
+`npm run test:e2e:tex`, or both with `npm run test:e2e`.
 
 Each gate's command is listed in `scripts/check.ts`; run one of them directly while iterating on
 one rule. They are not what you run before pushing.
@@ -75,6 +77,13 @@ Most of the package's rules run on users' papers and are described for users in
 [`docs/rules.md`](docs/rules.md); the rest lint this package's own source and never see a user's
 files.
 
+A new rule ships with its page, `docs/rules/<group>/<rule>.md`, in these sections: What it
+catches · Why · Examples (failing / passing) · Options / preset fields · What it does not check ·
+How to fix. Its `meta.docs.url` points at that page, and its row in `docs/rules.md` is one line
+linking there. `src/rule-docs.test.ts` holds every rule the config registers to this; the rules
+older than the convention wait in its `AWAITING_PAGE` list, which only shrinks — #131 writes their
+pages.
+
 ## Maintainer docs
 
 The README links only what a user needs. These are for people changing the package:
@@ -101,6 +110,13 @@ npm run coverage         # the same, under c8, failing below the thresholds in .
 
 None of these are needed to USE the tool — they are here because the gates are part of the
 argument, not decoration.
+
+**New code is functional.** In `src/`, `eslint-rules/` and `lib/` (tests aside) there is no
+`let`, no mutation, no loop, and types are read-only (`eslint-plugin-functional`); a `switch` over a
+union names every member. Collections go through [Remeda](https://remedajs.com/) — `lodash`,
+`lodash-es` and `ramda` are refused by `npm run lint`. Old code is listed in
+`eslint-suppressions.json`, ESLint's own bulk suppressions, which may only shrink: fixing a listed
+site without `npx eslint . --prune-suppressions` fails lint, and #134 burns the list down.
 
 New code is TypeScript (#78). The last block of [`eslint.config.mjs`](eslint.config.mjs) makes any
 `.js`, `.mjs` or `.cjs` file an error in the directories already converted (`TYPESCRIPT_ONLY`), so
@@ -139,17 +155,17 @@ change to `.c8rc.json`'s exclude list that was not made there on purpose.
 
 ## Adding a venue
 
-A venue is a **preset**, a JSONC file in `skills/submit-paper/references/venues/`, validated by
+A venue is a **preset**, a JSONC file in `presets/`, validated by
 `venue-profile.schema.json` beside it. Adding one is three files and no code:
 
-1. **The preset, thin.** `venues/<name>.jsonc` extends the template family it is built on
+1. **The preset, thin.** `presets/<name>.jsonc` extends the template family it is built on
    (`"extends": "paperlint:acm-sigconf"` for an ACM venue) and adds only what the call for papers
    sets: `format.kinds` (the page limit of each kind of paper) and, when the venue's producer asks
    for something an optional rule checks, `rules`. Every number carries the quote it came from.
    A venue on a template with no family yet stands alone (`template`, `tex`, `format`) — or, better,
    add the family first: measured on a real template build (banal + pdf.js), not copied from
    documentation ([#88](https://github.com/zernie/paperlint/issues/88)).
-2. **The card.** `venues/<name>.md` — prose about the venue: deadlines, tracks, the blind model,
+2. **The card.** `skills/submit-paper/references/venues/<name>.md` — prose about the venue: deadlines, tracks, the blind model,
    what the form asks.
 3. **A test.** A case in `src/presets.test.ts` that `paperlint:<name>` resolves over its family with
    the kinds you declared; `src/tex-requirements.harness.ts` already checks every shipped preset

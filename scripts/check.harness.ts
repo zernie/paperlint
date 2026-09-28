@@ -60,28 +60,50 @@ const PackageJson = z.looseObject({
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(HERE);
 
-const { GATES, NOT_COVERED, outcome, SKIP_EXIT, commandOf } =
+const { GATES, NOT_COVERED, outcome, skippedIn, commandOf } =
   await import("./check.ts");
 
 const check = createChecker();
 
 // ── the workflow is the ORACLE, not a copy of it ───────────────────────────────────────────
-// A declared skip is a THIRD outcome. Folding it into "pass" printed "all gates passed" on a
-// machine where the e2e never ran (Codex review on #45); folding it into "fail" would make the
-// command red for anyone without pnpm or TeX, and it would be ignored.
-check("exit 0 is a pass", outcome(0) === "pass");
+// A skip is a THIRD outcome. Folding it into "pass" printed "all gates passed" on a machine where
+// the e2e never ran (Codex review on #45); folding it into "fail" would make the command red for
+// anyone without pnpm or TeX, and it would be ignored. The count is vitest's own, from its report.
+check("exit 0 of a plain gate is a pass", outcome(0) === "pass");
 check(
-  `exit ${String(SKIP_EXIT)} is a skip — neither a pass nor a failure`,
-  outcome(SKIP_EXIT) === "skip",
+  "exit 0 of a vitest gate whose report counts no skip is a pass",
+  outcome(0, { skipped: 0 }) === "pass",
 );
-check("the skip code is the one vigiles' runner uses (77)", SKIP_EXIT === 77);
 check(
-  "any other nonzero exit is a failure",
-  outcome(1) === "fail" && outcome(2) === "fail",
+  "exit 0 of a vitest gate whose report counts skipped tests is a SKIP — neither a pass nor a failure",
+  outcome(0, { skipped: 2 }) === "skip",
+);
+check(
+  "🔴 exit 0 of a vitest gate with no readable report is a FAILURE — an unread count cannot be a pass",
+  outcome(0, { skipped: null }) === "fail",
+);
+check(
+  "any nonzero exit is a failure, skips or not",
+  outcome(1) === "fail" &&
+    outcome(2, { skipped: 0 }) === "fail" &&
+    outcome(1, { skipped: 3 }) === "fail",
 );
 check(
   "a process killed by a signal (status null) is a failure, not a skip",
   outcome(null) === "fail",
+);
+check(
+  "skippedIn counts skipped and todo tests from vitest's JSON report",
+  skippedIn(
+    JSON.stringify({ numTotalTests: 9, numPendingTests: 3, numTodoTests: 1 }),
+  ) === 4 &&
+    skippedIn(JSON.stringify({ numPendingTests: 0, numTodoTests: 0 })) === 0,
+);
+check(
+  "skippedIn: no report, not JSON, or not vitest's shape is null — never zero",
+  skippedIn(null) === null &&
+    skippedIn("not json") === null &&
+    skippedIn("{}") === null,
 );
 
 // Every workflow, not just ci.yml: a harness reading one file would stop seeing a job added to
@@ -188,6 +210,13 @@ for (const g of GATES) {
     ),
   );
 }
+for (const g of GATES.filter((x) => x.vitest)) {
+  // Guards: the skip count is read from vitest's JSON report, so the script must BE a vitest run.
+  check(
+    `gate «${g.name}» is marked vitest, and its script is a vitest run (npm run ${String(g.script)})`,
+    (scripts[g.script ?? ""] ?? "").startsWith("vitest run"),
+  );
+}
 check(
   "`check` itself is wired as a script, or nobody can run any of this",
   typeof scripts.check === "string",
@@ -259,6 +288,31 @@ for (const g of GATES) {
     steps.map((s) => s.run ?? `(uses ${String(s.uses)})`).join(" | "),
   );
 }
+
+// ── the e2e runs are found by vitest's projects, never listed ──────────────────────────────
+// A list of e2e files is a second copy of the directory, and the three copies that existed
+// (package.json, this script, CI) disagreed: two of four, four of four, a step per file (#132).
+const namesE2eFile = (run: string | undefined): string[] =>
+  commandsIn(run)
+    .flat()
+    .filter((t) => /(^|\/)test\/e2e\//.test(t));
+check(
+  "no npm script names a file under test/e2e/ — the vitest projects find them",
+  Object.values(scripts).flatMap(namesE2eFile).length === 0,
+  JSON.stringify(scripts),
+);
+check(
+  "no workflow step names a file under test/e2e/",
+  Object.values(workflows)
+    .flatMap((wf) => Object.values(wf.jobs ?? {}))
+    .flatMap((j) => j.steps ?? [])
+    .flatMap((st) => namesE2eFile(st.run)).length === 0,
+);
+check(
+  "no gate names a file under test/e2e/",
+  GATES.flatMap((g) => commandOf(g).filter((t) => t.includes("test/e2e/")))
+    .length === 0,
+);
 
 // ── and the tail is not optional ───────────────────────────────────────────────────────────
 check(

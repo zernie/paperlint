@@ -19,7 +19,7 @@ import { newPaper, OVERRIDE_DIR, reportNewPaper } from "./new-paper.ts";
 import { parsePaperSettings } from "./paper-settings.ts";
 import { chooseVenue, run } from "./cli.ts";
 import { shippedPresets } from "./presets.ts";
-import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { presetsDir } from "./package-dirs.ts";
 import { lintReport } from "../test/lint-report.ts";
 import { z } from "zod";
 
@@ -177,6 +177,31 @@ describe("paperlint new --venue / --kind", () => {
     expect(r.code).toBe(0);
   });
 
+  it("🔴 the new paper.tex is set in the venue's class, so tex/template passes on what new wrote; the required section is named", async () => {
+    const r = await newIn(["--venue", "aidc", "--kind", "regular"]);
+    const tex = readFileSync(join(r.dir, "paper.tex"), "utf8");
+    expect(tex).toContain("\\documentclass[conference,compsoc]{IEEEtran}\n");
+    expect(tex).not.toContain("{article}");
+    expect(r.out).not.toMatch(/tex\/template/);
+    // What the stub still lacks is what AIDC requires of the text, and lint says so right away.
+    expect(r.out).toMatch(/tex\/required-section/);
+    expect(r.code).toBe(1);
+  });
+
+  it("a preset that names no template, or one no reader can read, leaves the template's class as it is", async () => {
+    for (const template of [undefined, "\\documentclass[a]{}"]) {
+      const r = await newIn(["--venue", "./venues/bare.jsonc"], {
+        "venues/bare.jsonc": JSON.stringify({
+          ...(template === undefined ? {} : { template }),
+          tex: { packages: { x: ["x.sty"] } },
+        }),
+      });
+      expect(readFileSync(join(r.dir, "paper.tex"), "utf8")).toContain(
+        "\\documentclass{article}",
+      );
+    }
+  });
+
   it("🔴 a path is relative to where you run it, and written relative to the paper's file", async () => {
     const r = await newIn(
       ["--venue", "./venues/my-workshop.jsonc", "--kind", "short"],
@@ -197,7 +222,7 @@ describe("paperlint new --venue / --kind", () => {
     const r = await newIn(["--venue", "icse"]);
     expect(r.code).toBe(2);
     // Guards: the list is read from the shipped presets, the same list lint prints.
-    expect(r.err).toContain(shippedPresets(packageVenuesDir()).join(", "));
+    expect(r.err).toContain(shippedPresets(presetsDir()).join(", "));
     expect(r.err).toMatch(/--venue icse: no such venue preset/);
     expect(existsSync(r.dir)).toBe(false);
   });
@@ -277,7 +302,7 @@ describe("chooseVenue — on a terminal", () => {
       value: { extends: "paperlint:agenticdev", kind: "full" },
     });
     expect(t.asked[0]).toContain(
-      [...shippedPresets(packageVenuesDir()), "none"].join(" / "),
+      [...shippedPresets(presetsDir()), "none"].join(" / "),
     );
     expect(t.asked[1]).toMatch(/kind: short \/ full \/ demo \/ later/);
   });

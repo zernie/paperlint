@@ -16,22 +16,12 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-import ts from "typescript";
-import { z } from "zod";
+import { join } from "node:path";
 import { createChecker } from "../lib/check.ts";
 
-const HERE = dirname(fileURLToPath(import.meta.url));
-const VENUES = join(
-  HERE,
-  "..",
-  "skills",
-  "submit-paper",
-  "references",
-  "venues",
-);
 const R = await import("./tex-requirements.ts");
+const { parseTemplate } = await import("./adapters/latex/index.ts");
+const VENUES = (await import("./package-dirs.ts")).presetsDir();
 
 const check = createChecker();
 const throws = (fn: () => unknown): string => {
@@ -70,15 +60,15 @@ check(
   "cm-super" in base.packages,
 );
 
-// The whole profile, parsed the way the other harnesses read these files — never a line of text.
-const TemplateField = z.object({ template: z.unknown().optional() });
-const templateOf = (v: string): unknown =>
-  TemplateField.parse(
-    ts.parseConfigFileTextToJson(
-      v,
-      readFileSync(join(VENUES, `${v}.jsonc`), "utf8"),
-    ).config,
-  ).template;
+// The class each profile's template names, as the parser reads it — never a line of text.
+const presetOf = (v: string) =>
+  R.parsePreset(
+    readFileSync(join(VENUES, `${v}.jsonc`), "utf8"),
+    `${v}.jsonc`,
+    VENUES,
+  );
+const templateOf = (v: string): string | undefined =>
+  parseTemplate(presetOf(v).template ?? "")?.cls;
 const acm = venues.filter((v) => templateOf(v) === "acmart");
 check(
   "at least one acmart venue is shipped (else the next checks see nothing)",
@@ -108,7 +98,7 @@ for (const v of acm) {
 // declares the template's packages, so this holds by construction; the check stays for any two
 // standalone presets that name the same template.
 const byTemplate = new Map<unknown, string[]>();
-for (const v of venues) {
+for (const v of venues.filter((x) => presetOf(x).extends === null)) {
   const t = templateOf(v);
   byTemplate.set(t, [...(byTemplate.get(t) ?? []), v]);
 }

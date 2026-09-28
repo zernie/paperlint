@@ -10,15 +10,18 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
-import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { presetsDir } from "./package-dirs.ts";
+import { parsePreset } from "./tex-requirements.ts";
 import {
   MAX_PRESET_DEPTH,
+  SHIPPED_PREFIX,
+  shippedPresets,
   labelOf,
   presetProblemText,
   resolvePreset,
 } from "./presets.ts";
 
-const VENUES = packageVenuesDir();
+const VENUES = presetsDir();
 const shipped = Object.fromEntries(
   readdirSync(VENUES)
     .filter((f) => f.endsWith(".jsonc") || f.endsWith(".json"))
@@ -44,7 +47,11 @@ describe("shipped presets", () => {
     expect(r.value.format.columns).toBe(2);
     expect(r.value.format.fontsText).toBe("LinLibertine");
     expect([...r.value.format.kinds.keys()]).toEqual(["short", "full", "demo"]);
-    expect(r.value.template).toBe("acmart");
+    // The family's template, as its file spells it: the child names none.
+    expect(r.value.template).toEqual({
+      text: "\\documentclass[sigconf]{acmart}",
+      file: join(VENUES, "acm-sigconf.jsonc"),
+    });
     expect("acmart" in r.value.tex.packages).toBe(true);
     expect(r.value.label).toBe("agenticdev");
   });
@@ -68,6 +75,45 @@ describe("shipped presets", () => {
       { tolerancePt: 120 },
     ]);
   });
+});
+
+describe("the naming convention of shipped presets (docs/rules.md)", () => {
+  // Each shipped preset, parsed: its file name and what it extends. The families are DERIVED — a
+  // shipped preset another shipped preset extends — so a new family is checked the day it ships.
+  const presets = shippedPresets(VENUES).map((name) => {
+    const file = join(VENUES, `${name}.jsonc`);
+    return {
+      name,
+      extends: parsePreset(readFileSync(file, "utf8"), file, VENUES).extends,
+    };
+  });
+  const families = presets.filter((p) =>
+    presets.some((q) => q.extends === `${SHIPPED_PREFIX}${p.name}`),
+  );
+  const publishers = families.map((f) => f.name.slice(0, f.name.indexOf("-")));
+
+  it("there are families to check (else the checks below see nothing)", () => {
+    expect(families.map((f) => f.name).sort()).toEqual([
+      "acm-sigconf",
+      "ieee-conference",
+    ]);
+  });
+
+  it.each(families.map((f) => [f.name]))(
+    "the family %s is <publisher>-<template variant>",
+    (name) => {
+      expect(name).toMatch(/^[a-z0-9]+-[a-z0-9-]+$/);
+    },
+  );
+
+  it.each(presets.filter((p) => p.extends !== null).map((p) => [p.name]))(
+    "the venue %s carries no publisher prefix — its template is said by `extends`",
+    (name) => {
+      expect(publishers.filter((pub) => name.startsWith(`${pub}-`))).toEqual(
+        [],
+      );
+    },
+  );
 });
 
 describe("a project's own preset, by relative path", () => {
@@ -149,7 +195,7 @@ describe("what does not resolve, and says why", () => {
       "a shipped name with a typo",
       "paperlint:agenticdve",
       "not-found",
-      /acm-sigconf, agenticdev, aisec, realm/,
+      /acm-sigconf, agenticdev, aidc, aisec, ieee-conference, realm/,
     ],
     ["the base TeX set", "paperlint:tex-base", "not-found", /agenticdev/],
     [
@@ -222,6 +268,21 @@ describe("chains that do not resolve", () => {
       "/work/papers/p/root.jsonc": JSON.stringify({ format: { columns: 1 } }),
     });
     expect(r.ok).toBe(false);
+  });
+});
+
+describe("a preset's template: kept as its file spells it, with that file", () => {
+  it("a child's template replaces its parent's, and names its own file", () => {
+    const r = resolve("./own.jsonc", {
+      "/work/papers/p/own.jsonc": JSON.stringify({
+        extends: "paperlint:aidc",
+        template: "\\documentclass[conference]{IEEEtran}",
+      }),
+    });
+    expect(r.ok && r.value.template).toEqual({
+      text: "\\documentclass[conference]{IEEEtran}",
+      file: "/work/papers/p/own.jsonc",
+    });
   });
 });
 

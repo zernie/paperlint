@@ -1,7 +1,7 @@
 /**
  * `adapters/banal/run.ts` — running and installing banal, on in-memory ports: which `Command` it builds, what it stages,
  * what it downloads and writes, and what it concludes. No perl, no disk, no network: the adapters
- * record, and each assertion reads the record. Real perl and the real banal are `test/e2e/banal.ts`;
+ * record, and each assertion reads the record. Real perl and the real banal are `test/e2e/tex/banal.e2e.ts`;
  * the adapters' own behaviour is `src/adapters/node/*.test.ts`.
  */
 import assert from "node:assert/strict";

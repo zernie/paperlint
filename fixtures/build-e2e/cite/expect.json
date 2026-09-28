@@ -1,0 +1,27 @@
+{
+  "$comment": "The bibtex path: the citation and the \\ref resolve, and the leftover build.sh is ignored, not run.",
+  "build": {
+    "outcome": "pdf",
+    "pages": 1
+  },
+  "says": [
+    "build.sh is ignored — paperlint builds the paper itself"
+  ],
+  "text": {
+    "contains": [
+      "[1]"
+    ],
+    "lacks": [
+      "[?]",
+      "??"
+    ]
+  },
+  "files": {
+    "exist": [
+      "paper.bbl"
+    ],
+    "absent": [
+      "RAN"
+    ]
+  }
+}

@@ -40,6 +40,11 @@ When in doubt between unit and integration: if the function takes a port (`Files
 - **Example:** `src/adapters/references/index.test.ts` — the reference checker over a fake
   `fetch`: a cold run stores every answer, a warm run makes no request at all (the recorded list of
   requests is empty), an edited entry asks only for itself.
+- **A rule through real ESLint is integration, not e2e:** `src/rule-cases.test.ts` reads every rule
+  the registry holds (`rulePlugins`) and runs each through `paperlint lint --json` in-process on a
+  small paper tree — the CLI's own config, the `tex/latex` language, `loc`, message templating. Each
+  rule needs a case that reports (id, severity, line) and one that stays silent; a registered rule
+  without cases fails the test by name. A `_build/` file a rule reads is planted, not built.
 
 ## Harness — vigiles, the agent-facing surface only
 
@@ -56,14 +61,20 @@ When in doubt between unit and integration: if the function takes a port (`Files
 - **Skills are tested through vigiles**, not a bespoke runner: a home-grown runner here once printed
   byte-identical "clean" verdicts for three skills that had never loaded.
 
-## End-to-end — `test/e2e/*.ts`
+## End-to-end — `test/e2e/<area>/*.e2e.ts`
 
 - **Answers:** does the package work once it is somewhere else? The tarball installed into another
   tree, a real `pdflatex` build, the PDF's fonts measured.
 - **May touch:** everything a user's machine has, except the network: a citation service is a
-  counting fake `fetch` even here (`test/e2e/build.ts`).
+  counting fake `fetch` even here (`test/e2e/tex/build.e2e.ts`).
 - **Types:** the runs import the built modules from `dist/` (the shipped path is the point), so
   their types are the declarations `tsc` emits — `npm run build` before type-checking them.
+- **Where:** a directory per environment the tests need — `test/e2e/install/` (npm and pnpm),
+  `test/e2e/tex/` (TeX Live) — each a vitest project that finds `*.e2e.ts` by its glob. A new e2e
+  file needs no list anywhere. Helpers beside them are named without `.e2e.ts`.
+- **A missing tool:** `missing(what, present)` from `test/e2e/need.ts` → `describe.skipIf`. Locally
+  the tests are reported skipped; with `CI` set they fail.
+- **A build fixture:** a folder in `fixtures/build-e2e/` with its own `expect.json`; no test code.
 - **What each run proves, and when a change owes one:** [`e2e.md`](e2e.md).
 
 ## Running
@@ -71,9 +82,11 @@ When in doubt between unit and integration: if the function takes a port (`Files
 ```bash
 npx vitest run <file or folder>   # unit and integration tests
 npx vigiles test <file>           # one harness
-npm test                          # everything: vitest, then every harness
+npm test                          # unit and integration (vitest project `unit`), then every harness
 npm run coverage                  # the same under c8, failing below the thresholds in .c8rc.json
-npm run test:e2e                  # the end-to-end runs
+npm run test:e2e                  # every end-to-end run
+npm run test:e2e:install          # the package packed and installed under npm and pnpm
+npm run test:e2e:tex              # real TeX Live: toolchain, builds of every fixture, banal
 npm run check                     # every gate CI runs, and the list of what it does not reproduce
 ```
 

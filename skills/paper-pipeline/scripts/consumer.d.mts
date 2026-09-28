@@ -32,8 +32,6 @@ export interface SkillsFs {
 }
 export declare function installedSkills(dir: string, fs?: SkillsFs): string[];
 
-/** The directory of venue TeX files this package ships; `paperlint build` prepends it to TEXINPUTS. */
-export declare function packageVenuesDir(): string;
 export declare const SHIPPED_SKILLS_DIR: string;
 export declare const PACKAGE_NAME: "paperlint";
 export declare const BIN_FILE: "bin/paperlint.mjs";
