@@ -570,6 +570,82 @@ try {
   );
 
   console.log();
+  console.log(
+    "an IEEE workshop paper: AIDC, built on paperlint's TeX Live and linted",
+  );
+  // The ieee-conference family declares its TeX packages; this build proves `paperlint toolchain`
+  // installed them (in CI the engine is paperlint's own cache — checked above). The fixture closes
+  // with the LLM Usage Statement and plants ONE leftover: its author block names AISec.
+  const aidcPdf = join(work, "papers", "aidc", "paper.pdf");
+  check("aidc: the PDF exists", existsSync(aidcPdf), block("aidc"));
+  if (existsSync(aidcPdf)) {
+    const f = fontNames(await readBuilt(aidcPdf));
+    check(
+      "aidc: typeset in IEEEtran's Times (NimbusRomNo9L), not Computer Modern",
+      f.some((n) => /NimbusRomNo9L/.test(n)) &&
+        !f.some((n) => FALLBACK_FAMILIES.test(n)),
+      f.join(", "),
+    );
+  }
+  const aidcLint = spawnSync(
+    process.execPath,
+    [CLI, "lint", "papers/aidc", "--json"],
+    { cwd: work, encoding: "utf8" },
+  );
+  let aidc: (LintMessage & { line: number })[] = [];
+  try {
+    aidc = LintReport.parse(JSON.parse(aidcLint.stdout))
+      .filter((r) => r.filePath.endsWith(join("aidc", "paper.tex")))
+      .flatMap((r) =>
+        r.messages.map((m) => ({ ...m, line: z.number().parse(m["line"]) })),
+      );
+  } catch {
+    aidc = [
+      {
+        ruleId: "(unparsable)",
+        message: aidcLint.stdout + aidcLint.stderr,
+        severity: 2,
+        line: 0,
+      },
+    ];
+  }
+  const aidcShown = JSON.stringify(aidc);
+  for (const rule of [
+    "pdf/fonts",
+    "pdf/geometry",
+    "pdf/fresh",
+    "tex/template",
+    "tex/required-section",
+  ])
+    check(
+      `🔴 aidc: ${rule} finds nothing on a conforming IEEEtran paper`,
+      aidcLint.stdout !== "" && !aidc.some((m) => m.ruleId === rule),
+      aidcShown,
+    );
+  const planted =
+    readFileSync(
+      join(ROOT, "fixtures", "build-e2e", "aidc", "paper.tex"),
+      "utf8",
+    )
+      .split("\n")
+      .findIndex((l) => l.includes("Submission to AISec")) + 1;
+  const leftovers = aidc.filter((m) => m.ruleId === "tex/venue-leftover");
+  check(
+    "🔴 aidc: tex/venue-leftover warns exactly once, on the author-block line that names AISec",
+    planted > 0 &&
+      leftovers.length === 1 &&
+      leftovers[0]?.severity === 1 &&
+      leftovers[0].line === planted &&
+      /«AISec» names aisec/.test(leftovers[0].message),
+    aidcShown,
+  );
+  check(
+    "aidc: nothing at error level, so lint exits 0",
+    aidcLint.status === 0 && !aidc.some((m) => m.severity === 2),
+    aidcShown,
+  );
+
+  console.log();
   console.log("a failed build");
   const brokenDir = join(work, "papers", "broken");
   check(

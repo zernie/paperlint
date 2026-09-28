@@ -1,0 +1,47 @@
+% A small real paper in the class AIDC requires, built by the e2e on paperlint's own TeX Live, so
+% `paperlint toolchain` is proved to install what the ieee-conference preset declares.
+% Two things are deliberate: the LLM Usage Statement closes the paper (tex/required-section passes),
+% and the author block still names the venue this paper was first written for (tex/venue-leftover
+% warns on that one line, and on nothing else).
+\documentclass[conference,compsoc]{IEEEtran}
+\begin{filecontents*}{refs.bib}
+@article{knuth84,
+  title   = {Literate Programming},
+  author  = {Knuth, Donald E.},
+  journal = {The Computer Journal},
+  volume  = {27},
+  number  = {2},
+  pages   = {97--111},
+  year    = {1984},
+  doi     = {10.1093/comjnl/27.2.97}
+}
+\end{filecontents*}
+% banal calls a page with a few lines on it a one-column "cover", and pdf/geometry would rightly
+% report that. So the body fills two columns of a page: one paragraph, set several times.
+\newcommand{\filler}{This paragraph is ordinary prose, set in the two columns of the conference
+format so that the page geometry is measured on a real body of text. It says nothing new, and it
+does not need to: the fixture is about the class, the fonts and the page, not about its content.
+A reviewer would find it dull, which is exactly what a measurement fixture should be.\par}
+\begin{document}
+\title{A Fixture Typeset in the Class the Venue Requires}
+\author{\IEEEauthorblockN{A. Author}
+\IEEEauthorblockA{Submission to AISec 2026 --- double-blind review}}
+\maketitle
+\begin{abstract}
+The abstract exists so the build has the front matter an IEEE paper carries.
+\end{abstract}
+\section{Introduction}
+This paper has a body of ordinary prose, set in the two columns of the conference format, and
+it cites one article~\cite{knuth84}.
+\filler\filler\filler\filler
+\section{Method}
+The method is to build this file with pdflatex and bibtex, then read the facts of the PDF.
+\filler\filler\filler\filler\filler\filler
+\section{Conclusion}
+The conclusion restates that the fixture builds.
+\filler\filler\filler\filler
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+\section*{LLM Usage Statement}
+No LLMs were used in writing this fixture.
+\end{document}
