@@ -19,6 +19,7 @@ import portRules from "#eslint-rules/install-path-literals";
 import n from "eslint-plugin-n";
 import tseslint from "typescript-eslint";
 import boundaries from "eslint-plugin-boundaries";
+import functional from "eslint-plugin-functional";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -26,6 +27,12 @@ import { fileURLToPath } from "node:url";
 // measured over these limits on 2026-09-24 was either refactored under them (the #59 build code)
 // or pinned at its current maximum in RATCHET.
 const TS_FILES = ["**/*.ts", "**/*.mts"];
+
+/** Collection helpers come from Remeda; these would be a second library for the same job. */
+const ONE_COLLECTION_LIBRARY = ["lodash", "lodash-es", "ramda"].map((name) => ({
+  name,
+  message: "use remeda (see CLAUDE.md)",
+}));
 
 /** An import of a skill's file, from code of the package itself (#133). */
 const NO_SKILLS = [
@@ -457,6 +464,9 @@ export default [
       "max-lines-per-function": ["error", MAX_LINES],
       // Three levels of callbacks is the ceiling before a promise chain or a named step is due.
       "max-nested-callbacks": ["error", 3],
+      // A `switch` over a union names every member (or says `default:` on purpose): a state added
+      // to the type is then a compile-time finding at every place that must handle it.
+      "@typescript-eslint/switch-exhaustiveness-check": "error",
     },
   },
   // Hexagonal layers, both axes (src/CLAUDE.md): knowledge by element, purity by file category.
@@ -610,6 +620,12 @@ export default [
     // one whose firing path nothing exercises, which is rule 4 wearing a different hat. The
     // pass/fail signal lives in `npm test`, not in the warning count of `npm run lint`.
   },
+  {
+    files: ["**/*.{ts,mts,mjs,js,cjs}"],
+    rules: {
+      "no-restricted-imports": ["error", { paths: ONE_COLLECTION_LIBRARY }],
+    },
+  },
   // 🔴 THE LINTER DOES NOT READ A SKILL. Skills are consumers of the package, not its storage: the
   // venue presets once lived in a skill and were located through a skill's script, so renaming the
   // skill broke `paperlint lint` (#133). The package's own code — src/, eslint-rules/, lib/ — may
@@ -622,7 +638,28 @@ export default [
     ],
     ignores: ["**/*.test.*", "**/*.harness.*"],
     rules: {
-      "no-restricted-imports": ["error", { patterns: NO_SKILLS }],
+      "no-restricted-imports": [
+        "error",
+        { paths: ONE_COLLECTION_LIBRARY, patterns: NO_SKILLS },
+      ],
+    },
+  },
+  // 🔴 NEW CODE IS FUNCTIONAL: no `let`, no mutation, no loops, readonly types. Old code is listed
+  // in eslint-suppressions.json (ESLint's own bulk suppressions), which may only shrink: a fixed
+  // site that is not pruned fails `npm run lint`, and #134 burns the list down. Tests may mutate
+  // their fixtures.
+  {
+    files: ["src/**/*.ts", "eslint-rules/**/*.ts", "lib/**/*.ts"],
+    ignores: ["**/*.test.*", "**/*.harness.*"],
+    plugins: { functional },
+    rules: {
+      "functional/no-let": "error",
+      "functional/immutable-data": "error",
+      "functional/no-loop-statements": "error",
+      "functional/prefer-immutable-types": [
+        "error",
+        { enforcement: "ReadonlyShallow", ignoreInferredTypes: true },
+      ],
     },
   },
   // Rule sources, whatever their extension; tests and harnesses plant git calls on purpose.

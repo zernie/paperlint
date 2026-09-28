@@ -28,10 +28,6 @@ import Ajv from "ajv";
 import { presetsDir } from "./package-dirs.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
 import { fieldOf } from "./domain/record.ts";
-import {
-  parseTemplate,
-  type DocumentClass,
-} from "#eslint-rules/latex-structure";
 
 /** CTAN package name → the names that prove it is installed. */
 export type PackageProofs = Readonly<Record<string, readonly string[]>>;
@@ -168,8 +164,8 @@ export interface PresetFile {
   readonly extends: string | null;
   /** A display name for messages; the file name otherwise. */
   readonly name: string | null;
-  /** The `\\documentclass` the venue's template uses, parsed; null when the preset names none. */
-  readonly template: DocumentClass | null;
+  /** The `\\documentclass` the venue's template uses, as the file spells it; null when it names none. */
+  readonly template: string | null;
   /** Other names the venue goes by in a paper's text; empty when the file names none. */
   readonly aliases: readonly string[];
   /** Sections the venue requires; null when the file names none (a child's list replaces its parent's). */
@@ -254,16 +250,6 @@ const sectionsOf = (
     ? null
     : r.map((x) => ({ title: x.title, position: orNull(x.position) }));
 
-/** A preset's `template` → the class it names, or an Error naming the file. */
-function templateOf(text: string, file: string): DocumentClass {
-  const t = parseTemplate(text);
-  if (t === null)
-    throw new Error(
-      `${file}: "template": ${JSON.stringify(text)} is neither a \\documentclass line nor a class name`,
-    );
-  return t;
-}
-
 /**
  * The text of one preset file → the typed file, or an Error naming every problem. The ONE parser
  * of a preset: the toolchain reads its `tex`, the venue rules its `format`, the config its `rules`.
@@ -293,7 +279,7 @@ export function parsePreset(
   return {
     extends: orNull(j.extends),
     name: orNull(j.name),
-    template: j.template === undefined ? null : templateOf(j.template, file),
+    template: orNull(j.template),
     aliases: j.aliases ?? [],
     requiredSections: sectionsOf(j.required_sections),
     tex: j.tex ? { packages: j.tex.packages, tools: j.tex.tools ?? {} } : null,

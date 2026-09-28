@@ -154,14 +154,22 @@ export function fillsFor<T>(
   textOf: (item: T) => string,
 ): { readonly item: T; readonly fill: Fill }[] {
   const drawn = drawnCharacters(ops, list);
-  let at = 0;
-  const fillOf = (text: string): Fill => {
-    const want = Array.from(squeeze(text));
-    if (want.length === 0) return { kind: "unknown" };
-    const hit = findRun(drawn, want, at);
-    if (hit === null) return { kind: "unknown" };
-    at = hit.at + want.length;
-    return hit.fill;
-  };
-  return items.map((item) => ({ item, fill: fillOf(textOf(item)) }));
+  // Each item is searched for after the previous one's match: the offset threads through.
+  const { out } = items.reduce<{
+    readonly at: number;
+    readonly out: readonly { readonly item: T; readonly fill: Fill }[];
+  }>(
+    (acc, item) => {
+      const want = Array.from(squeeze(textOf(item)));
+      const hit = want.length === 0 ? null : findRun(drawn, want, acc.at);
+      return hit === null
+        ? { at: acc.at, out: [...acc.out, { item, fill: { kind: "unknown" } }] }
+        : {
+            at: hit.at + want.length,
+            out: [...acc.out, { item, fill: hit.fill }],
+          };
+    },
+    { at: 0, out: [] },
+  );
+  return [...out];
 }

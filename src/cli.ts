@@ -46,6 +46,7 @@ import { prepareEngine } from "./build-engine.ts";
 import { cacheRoot, cachedTree, runToolchain } from "./toolchain.ts";
 import { banalInstaller, parseBanalSettings } from "./adapters/banal/index.ts";
 import { curlDownload } from "./adapters/curl/index.ts";
+import { latexReader } from "./adapters/latex/index.ts";
 import { hostDirs, nodeAdapters, nodeFiles } from "./adapters/node/index.ts";
 import { VENUE_RULE_LEVELS, venueRules } from "./venue-rules.ts";
 import { TEX_VENUE_RULE_LEVELS, texVenueRules } from "./tex-venue-rules.ts";
@@ -71,6 +72,7 @@ import {
   shippedPresets,
   SHIPPED_PREFIX,
   type PaperPreset,
+  type PresetTemplate,
 } from "./presets.ts";
 import type { ToolInstaller } from "./ports/tool-installer.ts";
 import {
@@ -308,6 +310,7 @@ export function buildConfig(
             ...texVenueRules({
               files: nodeFiles,
               venuesDir: presetsDir(),
+              latex: latexReader,
             }),
           },
         },
@@ -1046,11 +1049,23 @@ export async function chooseVenue(
     value: {
       extends: spec.value,
       kind: kind !== null && kinds.includes(kind) ? kind : null,
-      template: r.value.template,
+      setClass: classSetter(r.value.template),
       label,
       kinds,
     },
   };
+}
+
+/**
+ * What `paperlint new` does to the template's paper.tex for a venue: set it in the class the
+ * preset's template names. Null when the preset names no template, or one the reader cannot read
+ * (then `tex/template` says so on the new paper).
+ */
+function classSetter(
+  t: PresetTemplate | null,
+): ((paperTex: string) => string) | null {
+  const cls = t === null ? null : latexReader.template(t.text);
+  return cls === null ? null : (src) => latexReader.withDocumentClass(src, cls);
 }
 
 const bad = (error: string): { ok: false; error: string } => ({

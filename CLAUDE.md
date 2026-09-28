@@ -514,6 +514,13 @@ touches the real network · 100% coverage, no `c8 ignore`. **Before every push: 
 exit code read without a pipe.** Everything else — where files live, how fakes are injected, the
 `--min=1` trap: [`docs/testing.md`](docs/testing.md).
 
+**New code is functional.** In `src/`, `eslint-rules/` and `lib/` (tests aside) there is no
+`let`, no mutation, no loop, and types are read-only (`eslint-plugin-functional`); a `switch` over a
+union names every member. Collections go through [Remeda](https://remedajs.com/) — `lodash`,
+`lodash-es` and `ramda` are refused by `npm run lint`. Old code is listed in
+`eslint-suppressions.json`, ESLint's own bulk suppressions, which may only shrink: fixing a listed
+site without `npx eslint . --prune-suppressions` fails lint, and #134 burns the list down.
+
 ## Commits
 
 Conventional-commit subject, body says what was MEASURED, not what was intended. A number in

@@ -8,7 +8,10 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import { presetsDir } from "./package-dirs.ts";
+import { latexReader } from "./adapters/latex/index.ts";
 import {
+  judgeRequiredSections,
+  judgeTemplate,
   otherVenues,
   TEX_VENUE_RULE_LEVELS,
   texVenueRules,
@@ -64,7 +67,7 @@ function lint(
   });
   const out: Finding[] = [];
   for (const [name, rule] of Object.entries(
-    texVenueRules({ files, venuesDir: VENUES }),
+    texVenueRules({ files, venuesDir: VENUES, latex: latexReader }),
   )) {
     const visitor = rule.create({
       filename,
@@ -147,7 +150,9 @@ describe("tex/template — the class and every option the preset names", () => {
     // At the \documentclass line, where the fix is.
     expect(fs[0]?.line).toBe(2);
   });
+});
 
+describe("tex/template — the class line's states: missing, empty, commented out", () => {
   it("a paper with no \\documentclass at all says so, at the top", () => {
     const fs = lint(
       "\\begin{document}x\\section*{LLM Usage Statement}\\end{document}\n",
@@ -155,6 +160,18 @@ describe("tex/template — the class and every option the preset names", () => {
     );
     expect(ids(fs)).toEqual(["tex/template:noClass"]);
     expect(fs[0]?.line).toBe(1);
+  });
+
+  it("🔴 \\documentclass{} names no class: an empty class, reported on its own line — not a missing one at the top", () => {
+    const fs = lint(
+      "% header\n\\documentclass{}\n\\begin{document}x\\section*{LLM Usage Statement}\\end{document}\n",
+      AIDC,
+    );
+    expect(ids(fs)).toEqual(["tex/template:emptyClass"]);
+    expect(fs[0]?.line).toBe(2);
+    expect(fs[0]?.message).toBe(
+      "the \\documentclass names no class; aidc requires `\\documentclass[conference,compsoc]{IEEEtran}`",
+    );
   });
 
   it("a \\documentclass inside a comment is not the paper's class", () => {
@@ -206,6 +223,28 @@ describe("tex/template — a project's own preset, and nothing to judge", () => 
         },
       ),
     ).toEqual([]);
+  });
+});
+
+describe("tex/template — a template the reader cannot read, a bare class name, nothing to judge", () => {
+  it("a template the reader cannot read is said once, naming its file — the class is not judged", () => {
+    const own = `${PAPER}/own.jsonc`;
+    const fs = lint(
+      paper("\\documentclass{article}"),
+      { extends: "./own.jsonc" },
+      {
+        extra: {
+          [own]: JSON.stringify({
+            template: "\\documentclass[a]{}",
+            tex: { packages: { x: ["x"] } },
+          }),
+        },
+      },
+    );
+    expect(ids(fs)).toEqual(["tex/template:badTemplate"]);
+    expect(fs[0]?.message).toBe(
+      `${own}: the preset's "template" "\\\\documentclass[a]{}" is neither a \\documentclass line nor a class name, so the class cannot be checked`,
+    );
   });
 
   it("a bare class name as the template names the class and no option", () => {
@@ -470,6 +509,63 @@ describe("tex/venue-leftover — where names are found, and whose they are", () 
         .map((f) => /«(.*?)»/u.exec(f.message)?.[1])
         .sort(),
     ).toEqual(["AIDC", "AISec"]);
+  });
+});
+
+describe("the judges, on places the parser did not give", () => {
+  const files = memoryFiles(shipped);
+  const aidc = resolvePreset("paperlint:aidc", `${PAPER}/paperlint.json`, {
+    files,
+    venuesDir: VENUES,
+  });
+  const preset = aidc.ok ? aidc.value : null;
+
+  it("a class line with no place is reported at the top of the file, not at an invented offset", () => {
+    expect(preset).not.toBeNull();
+    if (preset === null) return;
+    expect(
+      judgeTemplate(
+        { kind: "empty", place: { kind: "unplaced" } },
+        preset,
+        latexReader,
+      ),
+    ).toMatchObject([{ messageId: "emptyClass", at: null }]);
+  });
+
+  it("a required section with no place is never out of order; a section with no place is not counted as after it", () => {
+    expect(preset).not.toBeNull();
+    if (preset === null) return;
+    const at = (start: number) => ({
+      kind: "at" as const,
+      span: { start, end: start + 1 },
+    });
+    const statement = "LLM Usage Statement";
+    expect(
+      judgeRequiredSections(
+        () => ({
+          sections: [
+            { title: statement, place: { kind: "unplaced" } },
+            { title: "Introduction", place: at(50) },
+          ],
+          backMatter: null,
+          end: 99,
+        }),
+        preset,
+      ),
+    ).toEqual([]);
+    expect(
+      judgeRequiredSections(
+        () => ({
+          sections: [
+            { title: statement, place: at(10) },
+            { title: "Introduction", place: { kind: "unplaced" } },
+          ],
+          backMatter: null,
+          end: 99,
+        }),
+        preset,
+      ),
+    ).toEqual([]);
   });
 });
 

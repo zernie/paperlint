@@ -47,7 +47,11 @@ describe("shipped presets", () => {
     expect(r.value.format.columns).toBe(2);
     expect(r.value.format.fontsText).toBe("LinLibertine");
     expect([...r.value.format.kinds.keys()]).toEqual(["short", "full", "demo"]);
-    expect(r.value.template).toEqual({ cls: "acmart", options: ["sigconf"] });
+    // The family's template, as its file spells it: the child names none.
+    expect(r.value.template).toEqual({
+      text: "\\documentclass[sigconf]{acmart}",
+      file: join(VENUES, "acm-sigconf.jsonc"),
+    });
     expect("acmart" in r.value.tex.packages).toBe(true);
     expect(r.value.label).toBe("agenticdev");
   });
@@ -267,18 +271,18 @@ describe("chains that do not resolve", () => {
   });
 });
 
-describe("a preset's template is parsed where the preset is read", () => {
-  it("a template that is neither a \\documentclass line nor a class name is refused, naming the file", () => {
-    const r = resolve("./bad.jsonc", {
-      "/work/papers/p/bad.jsonc": JSON.stringify({
-        template: "\\documentclass[a]{}",
-        tex: { packages: { x: ["x"] } },
+describe("a preset's template: kept as its file spells it, with that file", () => {
+  it("a child's template replaces its parent's, and names its own file", () => {
+    const r = resolve("./own.jsonc", {
+      "/work/papers/p/own.jsonc": JSON.stringify({
+        extends: "paperlint:aidc",
+        template: "\\documentclass[conference]{IEEEtran}",
       }),
     });
-    expect(r.ok).toBe(false);
-    expect(!r.ok && presetProblemText(r.error)).toMatch(
-      /bad\.jsonc: "template": .* is neither a \\documentclass line nor a class name/,
-    );
+    expect(r.ok && r.value.template).toEqual({
+      text: "\\documentclass[conference]{IEEEtran}",
+      file: "/work/papers/p/own.jsonc",
+    });
   });
 });
 

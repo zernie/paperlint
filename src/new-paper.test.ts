@@ -188,6 +188,20 @@ describe("paperlint new --venue / --kind", () => {
     expect(r.code).toBe(1);
   });
 
+  it("a preset that names no template, or one no reader can read, leaves the template's class as it is", async () => {
+    for (const template of [undefined, "\\documentclass[a]{}"]) {
+      const r = await newIn(["--venue", "./venues/bare.jsonc"], {
+        "venues/bare.jsonc": JSON.stringify({
+          ...(template === undefined ? {} : { template }),
+          tex: { packages: { x: ["x.sty"] } },
+        }),
+      });
+      expect(readFileSync(join(r.dir, "paper.tex"), "utf8")).toContain(
+        "\\documentclass{article}",
+      );
+    }
+  });
+
   it("🔴 a path is relative to where you run it, and written relative to the paper's file", async () => {
     const r = await newIn(
       ["--venue", "./venues/my-workshop.jsonc", "--kind", "short"],

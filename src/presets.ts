@@ -42,7 +42,6 @@ import {
   type VenueFormat,
 } from "./tex-requirements.ts";
 import { callerPath } from "./caller-path.ts";
-import type { DocumentClass } from "#eslint-rules/latex-structure";
 import { err, ok, type Result } from "./domain/result.ts";
 import type { Files } from "./ports/files.ts";
 import {
@@ -64,13 +63,24 @@ export interface PresetDeps {
   readonly venuesDir: string;
 }
 
+/** A preset's `template`, as its file spells it. */
+export interface PresetTemplate {
+  readonly text: string;
+  readonly file: string;
+}
+
 /** A resolved chain, merged. */
 export interface Preset {
   /** The word for this venue in messages. */
   readonly label: string;
   /** Every file of the chain, root first. */
   readonly chain: readonly string[];
-  readonly template: DocumentClass | null;
+  /**
+   * The `\\documentclass` the venue's template uses, as the preset spells it, and the file that
+   * spells it; null when no file of the chain names one. Read by the rules and `paperlint new`,
+   * through the LaTeX reader.
+   */
+  readonly template: PresetTemplate | null;
   /** Every `name` and `aliases` along the chain: what this venue is called in a paper's text. */
   readonly aliases: readonly string[];
   readonly requiredSections: readonly RequiredSection[];
@@ -193,12 +203,11 @@ export function mergeFormat(
 /** The chain, root first, merged into one preset. Pure. */
 function merged(
   spec: string,
-  rootFirst: readonly PresetFile[],
-  files: readonly string[],
+  rootFirst: readonly { readonly preset: PresetFile; readonly file: string }[],
 ): Preset {
   const base: {
     name: string | null;
-    template: DocumentClass | null;
+    template: PresetTemplate | null;
     aliases: readonly string[];
     requiredSections: readonly RequiredSection[];
     tex: TexRequirements;
@@ -214,9 +223,9 @@ function merged(
     rules: {},
   };
   const m = rootFirst.reduce(
-    (acc, p) => ({
+    (acc, { preset: p, file }) => ({
       name: p.name ?? acc.name,
-      template: p.template ?? acc.template,
+      template: p.template === null ? acc.template : { text: p.template, file },
       aliases: [
         ...new Set([
           ...acc.aliases,
@@ -233,7 +242,7 @@ function merged(
   );
   return {
     label: m.name ?? labelOf(spec),
-    chain: files,
+    chain: rootFirst.map((x) => x.file),
     template: m.template,
     aliases: m.aliases,
     requiredSections: m.requiredSections,
@@ -258,13 +267,7 @@ export function resolvePreset(
       ? err({ ...chain.error, shipped: shippedPresets(deps.venuesDir) })
       : chain;
   const rootFirst = [...chain.value].reverse();
-  return ok(
-    merged(
-      spec,
-      rootFirst.map((x) => x.preset),
-      rootFirst.map((x) => x.file),
-    ),
-  );
+  return ok(merged(spec, rootFirst));
 }
 
 /** The shipped presets' names (each is spelled `paperlint:<name>`). */

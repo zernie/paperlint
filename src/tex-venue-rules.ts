@@ -11,8 +11,9 @@
  * ── WHY THEY LIVE HERE AND NOT IN `eslint-rules/` ────────────────────────────────
  * Like the `pdf/*` venue rules (`venue-rules.ts`), they need the paper's resolved preset —
  * `paperPreset`, the one answer to "which venue is this paper judged against" — and read it through
- * the `Files` port. What they read of the source comes from `eslint-rules/latex-structure.ts`, over
- * the parse tree of `sourceCode.raw`, never by searching the text.
+ * the `Files` port. What they read of the source comes through the `LatexReader` port
+ * (`src/ports/latex.ts`, implemented over unified-latex in `src/adapters/latex/`): the parse tree of
+ * `sourceCode.raw`, never a search of the text.
  *
  * ── WHO SPEAKS WHEN THERE IS NOTHING TO JUDGE ───────────────────────────────────
  * No `paperlint.json`, no `extends`, or a preset that does not resolve: silent. `pdf/measured` and
@@ -22,18 +23,18 @@
 import { basename, dirname, join } from "node:path";
 import { CONFIG_FILE } from "#lib/paper-config";
 import {
-  documentClassLine,
   collapse,
-  documentClassOf,
+  documentClassLine,
   missingOptions,
-  outlineOf,
-  parseLatex,
-  renderedRuns,
+  runText,
   spanIn,
+  type ClassLine,
   type Outline,
+  type Place,
   type Span,
-} from "#eslint-rules/latex-structure";
-import type { TexRoot } from "#eslint-rules/latex-language";
+  type TextRun,
+} from "./domain/tex-document.ts";
+import type { LatexReader } from "./ports/latex.ts";
 import {
   paperPreset,
   resolvePreset,
@@ -55,7 +56,7 @@ export interface TexRuleContext {
   readonly sourceCode: {
     readonly text: string;
     readonly raw?: string;
-    getLocFromIndex(index: number): { line: number; column: number };
+    getLocFromIndex(index: number): Readonly<{ line: number; column: number }>;
   };
   report(d: {
     readonly loc: {
@@ -77,43 +78,72 @@ export interface TexRuleModule {
   create(context: TexRuleContext): { root?: () => void };
 }
 
-// ── the judges: a parsed source + a resolved preset → findings. Pure. ────────────────
+// ── the judges: what the source says + a resolved preset → findings. Pure. ─────────
 
-/** The paper's class against the preset's template: the class equal, every named option present. */
-export function judgeTemplate(root: TexRoot, preset: Preset): Located[] {
-  const want = preset.template;
-  if (want === null) return [];
-  const data = { venue: preset.label, template: documentClassLine(want) };
-  const got = documentClassOf(root);
-  if (got === null) return [{ messageId: "noClass", data, at: null }];
-  if (got.cls !== want.cls)
+/** A place as a finding points at it: its span, or null — the top of the file — when unplaced. */
+const spanOf = (p: Place): Span | null => (p.kind === "at" ? p.span : null);
+
+/**
+ * The paper's class line against the preset's template: a template the reader cannot read is said
+ * once; then the class must be there, name a class, be the template's class, and carry every
+ * option the template names.
+ */
+export function judgeTemplate(
+  line: ClassLine,
+  preset: Preset,
+  latex: Pick<LatexReader, "template">,
+): readonly Located[] {
+  const t = preset.template;
+  if (t === null) return [];
+  const want = latex.template(t.text);
+  if (want === null)
     return [
       {
-        messageId: "wrongClass",
-        data: { ...data, got: got.cls },
-        at: got.span,
+        messageId: "badTemplate",
+        data: { file: t.file, text: JSON.stringify(t.text) },
+        at: null,
       },
     ];
-  return missingOptions(got, want).map((option) => ({
-    messageId: "missingOption",
-    data: { ...data, option },
-    at: got.span,
-  }));
+  const data = { venue: preset.label, template: documentClassLine(want) };
+  switch (line.kind) {
+    case "missing":
+      return [{ messageId: "noClass", data, at: null }];
+    case "empty":
+      return [{ messageId: "emptyClass", data, at: spanOf(line.place) }];
+    case "class":
+      return line.cls === want.cls
+        ? missingOptions(line, want).map((option) => ({
+            messageId: "missingOption",
+            data: { ...data, option },
+            at: spanOf(line.place),
+          }))
+        : [
+            {
+              messageId: "wrongClass",
+              data: { ...data, got: line.cls },
+              at: spanOf(line.place),
+            },
+          ];
+  }
 }
+
+/** Where a heading starts, or null when the parser gave it no place. */
+const startOf = (p: Place): number | null =>
+  p.kind === "at" ? p.span.start : null;
 
 /**
  * One required section against the outline: missing (reported where the document ends, where it
  * would go), or — for `last` — standing before a section of the body. The body is every section
- * before the appendix and the bibliography, so the required one may follow the bibliography.
+ * before the appendix and the bibliography, so the required one may follow the bibliography. A
+ * heading without a place cannot be ordered, so it is never reported as out of order.
  */
 function judgeSection(
   outline: Outline,
   want: RequiredSection,
   venue: string,
-): Located[] {
+): readonly Located[] {
   const title = collapse(want.title);
-  const found = outline.sections.filter((h) => h.title === title);
-  const last = found.at(-1);
+  const last = outline.sections.filter((h) => h.title === title).at(-1);
   const data = { venue, title };
   if (last === undefined) {
     const end = outline.end;
@@ -125,31 +155,38 @@ function judgeSection(
       },
     ];
   }
-  if (want.position !== "last") return [];
+  const lastStart = startOf(last.place);
+  if (want.position !== "last" || lastStart === null) return [];
   const backMatter = outline.backMatter ?? Number.POSITIVE_INFINITY;
-  const after = outline.sections.find(
-    (h) => h.start > last.start && h.start < backMatter && h.title !== title,
-  );
+  const after = outline.sections.find((h) => {
+    const start = startOf(h.place);
+    return (
+      start !== null &&
+      start > lastStart &&
+      start < backMatter &&
+      h.title !== title
+    );
+  });
   return after === undefined
     ? []
     : [
         {
           messageId: "notLast",
           data: { ...data, after: after.title },
-          at: last,
+          at: spanOf(last.place),
         },
       ];
 }
 
 /** Every section the preset requires, against the paper's outline. */
 export function judgeRequiredSections(
-  root: TexRoot,
+  outline: () => Outline,
   preset: Preset,
-): Located[] {
+): readonly Located[] {
   if (preset.requiredSections.length === 0) return [];
-  const outline = outlineOf(root);
+  const o = outline();
   return preset.requiredSections.flatMap((r) =>
-    judgeSection(outline, r, preset.label),
+    judgeSection(o, r, preset.label),
   );
 }
 
@@ -168,10 +205,10 @@ const literal = (s: string): string =>
  * and all — unless that alias is also this paper's venue's own (a shared parent conference).
  */
 export function judgeLeftover(
-  root: TexRoot,
+  runs: readonly TextRun[],
   preset: Preset,
   others: readonly OtherVenue[],
-): Located[] {
+): readonly Located[] {
   const own = new Set(preset.aliases);
   const names = others.flatMap((o) =>
     o.aliases
@@ -184,9 +221,9 @@ export function judgeLeftover(
         ),
       })),
   );
-  return renderedRuns(root).flatMap((run) =>
+  return runs.flatMap((run) =>
     names.flatMap(({ other, re }) =>
-      [...run.text.matchAll(re)].map((m) => ({
+      [...runText(run).matchAll(re)].map((m) => ({
         messageId: "leftover",
         data: { name: m[0], other, venue: preset.label },
         at: spanIn(run, m.index, m.index + m[0].length),
@@ -199,11 +236,14 @@ export function judgeLeftover(
 export const ruleDocsUrl = (name: TexVenueRuleName): string =>
   `https://github.com/zernie/paperlint/blob/main/docs/rules/tex/${name}.md`;
 
-type Judge = (
-  root: TexRoot,
-  preset: Preset,
-  others: () => readonly OtherVenue[],
-) => Located[];
+/** What a judge reads: the paper's source through the reader, its preset, the other venues. */
+interface Reading {
+  readonly src: string;
+  readonly latex: LatexReader;
+  readonly preset: Preset;
+  readonly others: () => readonly OtherVenue[];
+}
+type Judge = (r: Reading) => readonly Located[];
 
 export type TexVenueRuleName =
   "template" | "required-section" | "venue-leftover";
@@ -215,7 +255,8 @@ const RULES: Readonly<
   >
 > = {
   template: {
-    judge: judgeTemplate,
+    judge: (r) =>
+      judgeTemplate(r.latex.documentClass(r.src), r.preset, r.latex),
     meta: {
       type: "problem",
       docs: {
@@ -227,6 +268,10 @@ const RULES: Readonly<
       messages: {
         noClass:
           "paper.tex has no \\documentclass; {{venue}} requires `{{template}}`",
+        emptyClass:
+          "the \\documentclass names no class; {{venue}} requires `{{template}}`",
+        badTemplate:
+          '{{file}}: the preset\'s "template" {{text}} is neither a \\documentclass line nor a class name, so the class cannot be checked',
         wrongClass:
           "the class is `{{got}}`, and {{venue}} requires `{{template}}` — the page size, fonts and layout the venue checks come from the class",
         missingOption:
@@ -235,7 +280,7 @@ const RULES: Readonly<
     },
   },
   "required-section": {
-    judge: judgeRequiredSections,
+    judge: (r) => judgeRequiredSections(() => r.latex.outline(r.src), r.preset),
     meta: {
       type: "problem",
       docs: {
@@ -253,7 +298,8 @@ const RULES: Readonly<
     },
   },
   "venue-leftover": {
-    judge: (root, preset, others) => judgeLeftover(root, preset, others()),
+    judge: (r) =>
+      judgeLeftover(r.latex.renderedRuns(r.src), r.preset, r.others()),
     meta: {
       type: "suggestion",
       docs: {
@@ -279,13 +325,6 @@ export const TEX_VENUE_RULE_LEVELS: Readonly<
   "tex/venue-leftover": "warn",
 };
 
-/** The last source parsed and its tree: the rules of one file share one parse. */
-let last: { readonly raw: string; readonly root: TexRoot } | null = null;
-function treeOf(raw: string): TexRoot {
-  if (last?.raw !== raw) last = { raw, root: parseLatex(raw) };
-  return last.root;
-}
-
 /**
  * Every shipped venue but the ones on this paper's own chain, each resolved the way a paper
  * extending it would be. A preset that does not resolve is skipped: `pdf/profile` owns that.
@@ -294,7 +333,7 @@ export function otherVenues(
   preset: Preset,
   fromFile: string,
   deps: VenueRuleDeps,
-): OtherVenue[] {
+): readonly OtherVenue[] {
   return shippedPresets(deps.venuesDir).flatMap((name) => {
     const r = resolvePreset(`${SHIPPED_PREFIX}${name}`, fromFile, deps);
     // A preset all of whose files are on this paper's chain is this venue or one it extends.
@@ -304,7 +343,12 @@ export function otherVenues(
   });
 }
 
-function rule(name: TexVenueRuleName, deps: VenueRuleDeps): TexRuleModule {
+/** What the venue-conformance rules are built with: the preset store, and the LaTeX reader. */
+export interface TexVenueRuleDeps extends VenueRuleDeps {
+  readonly latex: LatexReader;
+}
+
+function rule(name: TexVenueRuleName, deps: TexVenueRuleDeps): TexRuleModule {
   const { judge, meta } = RULES[name];
   return {
     meta,
@@ -324,15 +368,18 @@ function rule(name: TexVenueRuleName, deps: VenueRuleDeps): TexRuleModule {
               join(dirname(context.filename), CONFIG_FILE),
               deps,
             );
-          for (const f of judge(treeOf(sc.raw ?? sc.text), preset, others))
+          judge({
+            src: sc.raw ?? sc.text,
+            latex: deps.latex,
+            preset,
+            others,
+          }).forEach((f) => {
             context.report({
-              loc: {
-                start: at(f.at?.start ?? 0),
-                end: at(f.at?.end ?? 0),
-              },
+              loc: { start: at(f.at?.start ?? 0), end: at(f.at?.end ?? 0) },
               messageId: f.messageId,
               data: f.data,
             });
+          });
         },
       };
     },
@@ -341,8 +388,8 @@ function rule(name: TexVenueRuleName, deps: VenueRuleDeps): TexRuleModule {
 
 /** The venue-conformance rules, as rules of the `tex` plugin (beside `tex/future-promise`). */
 export function texVenueRules(
-  deps: VenueRuleDeps,
-): Record<TexVenueRuleName, TexRuleModule> {
+  deps: TexVenueRuleDeps,
+): Readonly<Record<TexVenueRuleName, TexRuleModule>> {
   return {
     template: rule("template", deps),
     "required-section": rule("required-section", deps),

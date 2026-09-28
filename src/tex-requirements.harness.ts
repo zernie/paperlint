@@ -20,6 +20,7 @@ import { join } from "node:path";
 import { createChecker } from "../lib/check.ts";
 
 const R = await import("./tex-requirements.ts");
+const { parseTemplate } = await import("./adapters/latex/index.ts");
 const VENUES = (await import("./package-dirs.ts")).presetsDir();
 
 const check = createChecker();
@@ -66,7 +67,8 @@ const presetOf = (v: string) =>
     `${v}.jsonc`,
     VENUES,
   );
-const templateOf = (v: string): string | undefined => presetOf(v).template?.cls;
+const templateOf = (v: string): string | undefined =>
+  parseTemplate(presetOf(v).template ?? "")?.cls;
 const acm = venues.filter((v) => templateOf(v) === "acmart");
 check(
   "at least one acmart venue is shipped (else the next checks see nothing)",
