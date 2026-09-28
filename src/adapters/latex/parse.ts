@@ -6,7 +6,8 @@
  * citation commands have none, so `\citep{aisec2025}` came back with its key as a separate group —
  * readable as prose. `KEY_SIGNATURES` declares them, and the other macros whose arguments name a
  * file, a label or a URL rather than say something, so their arguments are attached and the
- * rendered text skips them structurally.
+ * rendered text skips them structurally. `\href` says something in one argument and names a URL in
+ * the other, so it is signed too, and `KEY_ARGUMENT` says which of its arguments is not text.
  */
 import type * as Ast from "@unified-latex/unified-latex-types";
 import { getParser } from "@unified-latex/unified-latex-util-parse";
@@ -65,6 +66,18 @@ export const KEY_SIGNATURES: Readonly<
 ]);
 
 /**
+ * Macros that print some arguments and not others: the index of the one argument that is a key or
+ * a URL. A citation (`o o m`) prints its `[…]` notes, not its `{…}` key; `\href` (`m m`) prints its
+ * link text, not its URL.
+ */
+export const KEY_ARGUMENT: ReadonlyMap<string, number> = new Map([
+  ...[...CITATION_MACROS].map((m) => [m, 2] as const),
+  ["href", 0],
+]);
+
+const LINK_SIGNATURES = Object.fromEntries(signed(["href"], "m m"));
+
+/**
  * Macros that define other macros or environments: their bodies are text only once expanded, never
  * where they are written. `\def` and its kin get a signature so the name and the body attach to
  * them; a parameter text (`\def\x#1{…}`) is not modelled.
@@ -98,7 +111,9 @@ export interface ParsedTex {
 
 /** One parser for the process, made on first use: building one compiles its grammar. */
 const parser = once(() =>
-  getParser({ macros: { ...KEY_SIGNATURES, ...DEF_SIGNATURES } }),
+  getParser({
+    macros: { ...KEY_SIGNATURES, ...LINK_SIGNATURES, ...DEF_SIGNATURES },
+  }),
 );
 
 /** A LaTeX source → its tree. */

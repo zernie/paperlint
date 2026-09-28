@@ -344,6 +344,18 @@ describe("tex/required-section — what fails", () => {
     expect(fs[0]?.line).toBe(tex.split("\n").indexOf("\\end{document}") + 1);
   });
 
+  it("🔴 a heading inside a macro definition or a comment environment is not in the PDF: missing", () => {
+    const tex = aidcPaper(
+      BODY +
+        BIB +
+        "\\newcommand{\\stmt}{\\section*{LLM Usage Statement}}\n" +
+        "\\begin{comment}\n\\section*{LLM Usage Statement}\n\\end{comment}\n",
+    );
+    expect(ids(required(lint(tex, AIDC)))).toEqual([
+      "tex/required-section:missing",
+    ]);
+  });
+
   it("a near title is not the title: the venue's words are the contract", () => {
     expect(
       ids(
@@ -455,6 +467,17 @@ describe("tex/venue-leftover — another venue named in the text", () => {
       `As shown~\\citep[presented at AISec]{aisec2025}.\n${BODY}${STATEMENT}`,
     );
     expect(leftovers(lint(tex, AIDC)).map((f) => f.line)).toEqual([4]);
+  });
+
+  it("\\href: a name in the URL is not reported, a name in the link text is", () => {
+    const inUrl = aidcPaper(
+      `See \\href{https://example.org/AISec/2026}{the workshop}.\n${BODY}${STATEMENT}`,
+    );
+    expect(leftovers(lint(inUrl, AIDC))).toEqual([]);
+    const inText = aidcPaper(
+      `See \\href{https://example.org/}{AISec 2026}.\n${BODY}${STATEMENT}`,
+    );
+    expect(leftovers(lint(inText, AIDC)).map((f) => f.line)).toEqual([4]);
   });
 
   it("the bibliography, math, code and labels are not the text a reader sees as the venue's", () => {

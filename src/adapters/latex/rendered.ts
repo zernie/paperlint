@@ -1,68 +1,9 @@
 /** The text a reader sees, each character with the source offset it came from. */
 import { hasAtLeast, sortBy } from "remeda";
 import type { Segment, TextRun } from "../../domain/tex-document.ts";
-import {
-  isArgument,
-  isList,
-  isNode,
-  visited,
-  type Argument,
-  type Node,
-  type Visited,
-} from "./nodes.ts";
-import {
-  CITATION_MACROS,
-  DEFINITION_MACROS,
-  KEY_SIGNATURES,
-  type ParsedTex,
-} from "./parse.ts";
-
-/** Environments whose body is not text a reader sees as prose: code and the bibliography. */
-const HIDDEN_ENVS: ReadonlySet<string> = new Set([
-  "thebibliography",
-  "verbatim",
-  "Verbatim",
-  "lstlisting",
-  "minted",
-  "comment",
-]);
-
-/** Node types a reader does not see as prose: comments, code, math. */
-const HIDDEN_TYPES: ReadonlySet<Node["type"]> = new Set<Node["type"]>([
-  "comment",
-  "verbatim",
-  "verb",
-  "inlinemath",
-  "displaymath",
-  "mathenv",
-]);
-
-const KEY_MACROS: ReadonlySet<string> = new Set(Object.keys(KEY_SIGNATURES));
-
-const isCitation = (v: Visited | undefined): boolean =>
-  v !== undefined &&
-  isNode(v) &&
-  v.type === "macro" &&
-  CITATION_MACROS.has(v.content);
-
-/** A macro whose arguments a reader never sees: a definition, or a key macro that is not a citation. */
-const isHiddenMacro = (name: string): boolean =>
-  DEFINITION_MACROS.has(name) ||
-  (KEY_MACROS.has(name) && !CITATION_MACROS.has(name));
-
-const isHiddenNode = (n: Node): boolean =>
-  HIDDEN_TYPES.has(n.type) ||
-  (n.type === "environment" && HIDDEN_ENVS.has(n.env)) ||
-  (n.type === "macro" && isHiddenMacro(n.content));
-
-/**
- * What a reader never sees: hidden node types and environments, a macro definition, a key macro
- * whole — except a citation, which keeps its `[…]` notes and loses only its `{…}` key.
- */
-const isHidden = (v: Visited, parent: Visited | undefined): boolean => {
-  if (isArgument(v)) return v.openMark === "{" && isCitation(parent);
-  return isNode(v) && isHiddenNode(v);
-};
+import { isUnrendered } from "./hidden.ts";
+import { isList, visited, type Argument, type Node } from "./nodes.ts";
+import type { ParsedTex } from "./parse.ts";
 
 /** A node's rendered text and where it starts, or null when it is not text (it ends a run). */
 function segmentOf(n: Node | Argument): Segment | null {
@@ -103,10 +44,10 @@ function runsOf(list: readonly (Node | Argument)[]): readonly TextRun[] {
 /**
  * Runs of rendered text, in document order: stretches of sibling strings and spaces. Everything
  * else ends a run and is entered — a group's text, a macro's arguments — except what a reader never
- * sees: comments, math, code, the bibliography, and the arguments of `KEY_SIGNATURES`' macros.
+ * sees (`isUnrendered`): comments, math, code, the bibliography, definitions, keys and URLs.
  */
 export const renderedRuns = (t: ParsedTex): readonly TextRun[] =>
   sortBy(
-    visited(t.root, isHidden).filter(isList).flatMap(runsOf),
+    visited(t.root, isUnrendered).filter(isList).flatMap(runsOf),
     (r) => r.segments[0].at,
   );

@@ -204,6 +204,23 @@ describe("outlineOf", () => {
   });
 });
 
+describe("outlineOf — a heading that is never rendered is not in the outline", () => {
+  it.each<[string, string]>([
+    [
+      "a comment environment",
+      "\\begin{comment}\\section{Hidden}\\end{comment}",
+    ],
+    ["a \\newcommand body", "\\newcommand{\\x}{\\section{Hidden}}"],
+    ["a \\def body", "\\def\\y{\\section{Hidden}}"],
+    ["a \\newenvironment body", "\\newenvironment{e}{\\section{Hidden}}{}"],
+  ])("%s", (_, hidden) => {
+    const src = `\\begin{document}${hidden}\\section{Real}\\end{document}`;
+    expect(outlineOf(parseLatex(src)).sections.map((h) => h.title)).toEqual([
+      "Real",
+    ]);
+  });
+});
+
 describe("renderedRuns", () => {
   it("runs of strings and spaces, each character mapped to its source offset", () => {
     const src = "A~B \\emph{C D}\n\n E";
@@ -231,6 +248,14 @@ describe("renderedRuns", () => {
       .map(runText);
     expect(runs.some((t) => t.includes("Presented at AISec"))).toBe(true);
     expect(runs.some((t) => t.includes("zzkey"))).toBe(false);
+  });
+
+  it("\\href: its URL is hidden, its link text is text", () => {
+    const runs = latexReader
+      .renderedRuns("x \\href{https://example.org/AISec}{the zzlink text} y")
+      .map(runText);
+    expect(runs.some((t) => t.includes("AISec"))).toBe(false);
+    expect(runs.some((t) => t.includes("the zzlink text"))).toBe(true);
   });
 
   it("the body of a macro definition is not text a reader sees", () => {
