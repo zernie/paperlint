@@ -10,7 +10,12 @@ import {
   type Node,
   type Visited,
 } from "./nodes.ts";
-import { CITATION_MACROS, KEY_SIGNATURES, type ParsedTex } from "./parse.ts";
+import {
+  CITATION_MACROS,
+  DEFINITION_MACROS,
+  KEY_SIGNATURES,
+  type ParsedTex,
+} from "./parse.ts";
 
 /** Environments whose body is not text a reader sees as prose: code and the bibliography. */
 const HIDDEN_ENVS: ReadonlySet<string> = new Set([
@@ -40,18 +45,23 @@ const isCitation = (v: Visited | undefined): boolean =>
   v.type === "macro" &&
   CITATION_MACROS.has(v.content);
 
+/** A macro whose arguments a reader never sees: a definition, or a key macro that is not a citation. */
+const isHiddenMacro = (name: string): boolean =>
+  DEFINITION_MACROS.has(name) ||
+  (KEY_MACROS.has(name) && !CITATION_MACROS.has(name));
+
+const isHiddenNode = (n: Node): boolean =>
+  HIDDEN_TYPES.has(n.type) ||
+  (n.type === "environment" && HIDDEN_ENVS.has(n.env)) ||
+  (n.type === "macro" && isHiddenMacro(n.content));
+
 /**
- * What a reader never sees: hidden node types and environments, a key macro whole — except a
- * citation, which keeps its `[…]` notes and loses only its `{…}` key.
+ * What a reader never sees: hidden node types and environments, a macro definition, a key macro
+ * whole — except a citation, which keeps its `[…]` notes and loses only its `{…}` key.
  */
 const isHidden = (v: Visited, parent: Visited | undefined): boolean => {
   if (isArgument(v)) return v.openMark === "{" && isCitation(parent);
-  if (!isNode(v)) return false;
-  return (
-    HIDDEN_TYPES.has(v.type) ||
-    (v.type === "environment" && HIDDEN_ENVS.has(v.env)) ||
-    (v.type === "macro" && KEY_MACROS.has(v.content) && !isCitation(v))
-  );
+  return isNode(v) && isHiddenNode(v);
 };
 
 /** A node's rendered text and where it starts, or null when it is not text (it ends a run). */

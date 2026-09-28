@@ -64,6 +64,28 @@ export const KEY_SIGNATURES: Readonly<
   ...signed(["usepackage", "RequirePackage", "documentclass"], "o m o"),
 ]);
 
+/**
+ * Macros that define other macros or environments: their bodies are text only once expanded, never
+ * where they are written. `\def` and its kin get a signature so the name and the body attach to
+ * them; a parameter text (`\def\x#1{…}`) is not modelled.
+ */
+export const DEFINITION_MACROS: ReadonlySet<string> = new Set([
+  "newcommand",
+  "renewcommand",
+  "providecommand",
+  "DeclareRobustCommand",
+  "newenvironment",
+  "renewenvironment",
+  "def",
+  "gdef",
+  "edef",
+  "xdef",
+]);
+
+const DEF_SIGNATURES = Object.fromEntries(
+  signed(["def", "gdef", "edef", "xdef"], "m m"),
+);
+
 // Not exported: a `ParsedTex` carries this property, and the one way to write it is `parseLatex`.
 const PARSED = Symbol("ParsedTex");
 
@@ -75,7 +97,9 @@ export interface ParsedTex {
 }
 
 /** One parser for the process, made on first use: building one compiles its grammar. */
-const parser = once(() => getParser({ macros: { ...KEY_SIGNATURES } }));
+const parser = once(() =>
+  getParser({ macros: { ...KEY_SIGNATURES, ...DEF_SIGNATURES } }),
+);
 
 /** A LaTeX source → its tree. */
 export const parseLatex = (src: string): ParsedTex => ({

@@ -123,6 +123,8 @@ describe("parseTemplate — a preset's template", () => {
     ["article", { cls: "article", options: [] }],
     [" acmart\n", { cls: "acmart", options: [] }],
     ["two words", null],
+    ["% c\n\\documentclass{article}\n", { cls: "article", options: [] }],
+    ["\\documentclass{article} trailing", null],
     ["\\documentclass[a]{}", null],
     ["", null],
   ])("%j → %j", (text, want) => {
@@ -165,6 +167,15 @@ describe("replaceDocumentClass — the class `paperlint new` writes", () => {
     expect(
       latexReader.withDocumentClass("\\documentclass{article}", IEEE),
     ).toBe("\\documentclass[conference,compsoc]{IEEEtran}");
+  });
+});
+
+describe("outlineOf — a heading's title", () => {
+  it("keeps the text of formatting macros and drops keys such as a label", () => {
+    const o = outlineOf(
+      parseLatex("\\section*{LLM \\textbf{Usage} Statement\\label{s:llm}}"),
+    );
+    expect(o.sections.map((h) => h.title)).toEqual(["LLM Usage Statement"]);
   });
 });
 
@@ -220,6 +231,14 @@ describe("renderedRuns", () => {
       .map(runText);
     expect(runs.some((t) => t.includes("Presented at AISec"))).toBe(true);
     expect(runs.some((t) => t.includes("zzkey"))).toBe(false);
+  });
+
+  it("the body of a macro definition is not text a reader sees", () => {
+    const src =
+      "\\newcommand{\\oldvenue}{AISec} \\renewcommand\\b{AISec} \\def\\c{AISec} x";
+    const runs = latexReader.renderedRuns(src).map(runText);
+    expect(runs.some((t) => t.includes("AISec"))).toBe(false);
+    expect(runs.some((t) => t.includes("x"))).toBe(true);
   });
 
   it("the options of other key macros stay hidden: they are settings, not prose", () => {

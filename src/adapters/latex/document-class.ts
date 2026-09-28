@@ -65,13 +65,13 @@ export function documentClassOf(t: ParsedTex): ClassLine {
  */
 export function parseTemplate(text: string): DocumentClass | null {
   const t = parseLatex(text);
+  const [only, ...rest] = t.root.content.filter(
+    (n) => n.type !== "whitespace" && n.type !== "comment",
+  );
+  if (only === undefined || rest.length > 0) return null;
   const line = documentClassOf(t);
   if (line.kind === "class") return { cls: line.cls, options: line.options };
-  if (line.kind === "empty") return null;
-  const [only, ...rest] = t.root.content.filter((n) => n.type !== "whitespace");
-  return only?.type === "string" && rest.length === 0
-    ? { cls: only.content, options: [] }
-    : null;
+  return only.type === "string" ? { cls: only.content, options: [] } : null;
 }
 
 /**

@@ -2,6 +2,7 @@
 import type * as Ast from "@unified-latex/unified-latex-types";
 import { CONTINUE, SKIP, visit } from "@unified-latex/unified-latex-util-visit";
 import type { Place, Span } from "../../domain/tex-document.ts";
+import { KEY_SIGNATURES } from "./parse.ts";
 
 export { collapse } from "../../domain/tex-document.ts";
 
@@ -27,13 +28,20 @@ export const placeOf = (n: Positioned): Place =>
         span: { start: n.position.start.offset, end: n.position.end.offset },
       };
 
-/** The text of a node list with markup dropped: strings, spaces, and what groups hold. */
+/**
+ * The text of a node list with markup dropped: strings, spaces, what groups hold, and the arguments
+ * of formatting macros (`\textbf{Usage}` → `Usage`). A key macro's arguments (`\label{…}`,
+ * `\cite{…}`) are not text.
+ */
 export const textOf = (nodes: readonly Node[] | undefined): string =>
   (nodes ?? [])
     .map((n) => {
       if (n.type === "string") return n.content;
       if (n.type === "whitespace" || n.type === "parbreak") return " ";
-      return n.type === "group" ? textOf(n.content) : "";
+      if (n.type === "group") return textOf(n.content);
+      return n.type === "macro" && !(n.content in KEY_SIGNATURES)
+        ? (n.args ?? []).map((a) => textOf(a.content)).join("")
+        : "";
     })
     .join("");
 
