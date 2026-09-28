@@ -85,11 +85,14 @@ export interface TexRuleModule {
 /** A place as a finding points at it: its span, or null — the top of the file — when unplaced. */
 const spanOf = (p: Place): Span | null => (p.kind === "at" ? p.span : null);
 
-/** What every template finding names: the venue and the class line it requires. */
-interface TemplateData {
+/**
+ * What every template finding names: the venue and the class line it requires. A type alias, not an
+ * interface: a finding's `data` is a string record, and only an alias is assignable to one.
+ */
+type TemplateData = {
   readonly venue: string;
   readonly template: string;
-}
+};
 
 /** A class line that names a class, against the template's: the same class, with every option. */
 function judgeClass(
