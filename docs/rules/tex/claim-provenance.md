@@ -24,7 +24,7 @@ the full stop belongs to the sentence the full stop ends.
 A number is digits a reader sees — `42\%`, `0.37`, `1,836`, `3x`, `3×`. Not a number: a year on its
 own (1900–2099); a number right after a capitalised word inside the sentence (_Claude 3_, _Python
 3.12_, _Node 22_), which is a name; the level of an interval (the 95 of _95% CI_); digits glued to a letter, a hyphen or a point (`GPT-4`, `COVID-19`, `v1.2`, `10k`,
-`0x1F`); anything inside math, a table, a figure, a caption, a heading, code, a comment, a macro
+`0x1F`); anything inside math, a table, a figure, a caption, a heading (a run-in one too: `\textbf{Threats.}` opening a paragraph), code, a comment, a macro
 definition, or the title block.
 
 ## Why

@@ -73,6 +73,7 @@ describe("measureRegister — what the body is counted as", () => {
       words: 3,
     });
     expect(measured(". !")).toMatchObject({ sentences: 0, words: 0 });
+    expect(measureRegister([])).toMatchObject({ sentences: 0, at: null });
   });
 
   it("the examples are the first three of each kind, as the reader sees them", () => {

@@ -18,7 +18,6 @@
  * (src/domain/sentences.ts). A citation, a cross-reference or math reads as one word, as it does on
  * the page. A body under 2 000 words is not judged: there one sentence decides a rate.
  */
-import { z } from "zod";
 import { runText, type Passage, type Span } from "./domain/tex-document.ts";
 import { runOf, sentences } from "./domain/sentences.ts";
 import { readPaper, reportInPaper, type PaperDeps } from "./tex-paper.ts";
@@ -131,62 +130,71 @@ export const DEFAULT_LIMITS: RegisterLimits = {
 const quoted = (xs: readonly string[]): string =>
   xs.map((x) => `«${x}»`).join(", ");
 
+/** The short-sentence finding, when the share runs above its limit. */
+function shortSentences(m: RegisterMeasure, limit: number): readonly Located[] {
+  const share = (100 * m.short) / m.sentences;
+  if (share <= limit) return [];
+  const data = {
+    share: share.toFixed(1),
+    count: m.short,
+    sentences: m.sentences,
+    limit,
+    examples: quoted(m.shortExamples),
+  };
+  return [{ messageId: "shortSentences", data, at: m.at }];
+}
+
+/** The conjunction-start finding, when the rate runs above its limit. */
+function conjunctionStarts(
+  m: RegisterMeasure,
+  limit: number,
+): readonly Located[] {
+  const rate = (1000 * m.conjunctionStarts) / m.words;
+  if (rate <= limit) return [];
+  const data = {
+    count: m.conjunctionStarts,
+    rate: rate.toFixed(2),
+    limit,
+    examples: quoted(m.conjunctionExamples),
+  };
+  return [{ messageId: "conjunctionStarts", data, at: m.at }];
+}
+
 /** One finding for each rate above its limit, at the start of the body. */
 export function judgeRegister(
   m: RegisterMeasure,
   limits: Partial<RegisterLimits>,
 ): readonly Located[] {
   if (m.words < MIN_WORDS) return [];
-  const { shortSentencePercent, conjunctionStartsPer1000 } = {
-    ...DEFAULT_LIMITS,
-    ...limits,
-  };
-  const share = (100 * m.short) / m.sentences;
-  const rate = (1000 * m.conjunctionStarts) / m.words;
+  const l = { ...DEFAULT_LIMITS, ...limits };
   return [
-    ...(share > shortSentencePercent
-      ? [
-          {
-            messageId: "shortSentences",
-            data: {
-              share: share.toFixed(1),
-              count: m.short,
-              sentences: m.sentences,
-              limit: shortSentencePercent,
-              examples: quoted(m.shortExamples),
-            },
-            at: m.at,
-          },
-        ]
-      : []),
-    ...(rate > conjunctionStartsPer1000
-      ? [
-          {
-            messageId: "conjunctionStarts",
-            data: {
-              count: m.conjunctionStarts,
-              rate: rate.toFixed(2),
-              limit: conjunctionStartsPer1000,
-              examples: quoted(m.conjunctionExamples),
-            },
-            at: m.at,
-          },
-        ]
-      : []),
+    ...shortSentences(m, l.shortSentencePercent),
+    ...conjunctionStarts(m, l.conjunctionStartsPer1000),
   ];
 }
 
-/** The rule's options, as ESLint validated them against the schema. */
-const Options = z
-  .object({
-    shortSentencePercent: z
-      .number()
-      .default(DEFAULT_LIMITS.shortSentencePercent),
-    conjunctionStartsPer1000: z
-      .number()
-      .default(DEFAULT_LIMITS.conjunctionStartsPer1000),
-  })
-  .default(DEFAULT_LIMITS);
+/** The rule's first option as a record: ESLint has validated it against the schema. */
+function givenOptions(
+  options: readonly unknown[] | undefined,
+): Readonly<Record<string, unknown>> {
+  const [o] = options ?? [];
+  return typeof o === "object" && o !== null
+    ? Object.fromEntries(Object.entries(o))
+    : {};
+}
+
+/** The limits the config sets, each one it leaves out at its default. */
+function limitsOf(options: readonly unknown[] | undefined): RegisterLimits {
+  const given = givenOptions(options);
+  const limit = (key: keyof RegisterLimits): number => {
+    const v = given[key];
+    return typeof v === "number" ? v : DEFAULT_LIMITS[key];
+  };
+  return {
+    shortSentencePercent: limit("shortSentencePercent"),
+    conjunctionStartsPer1000: limit("conjunctionStartsPer1000"),
+  };
+}
 
 const META: TexRuleModule["meta"] = {
   type: "suggestion",
@@ -227,7 +235,7 @@ export const registerRule = (deps: PaperDeps): TexRuleModule => ({
           paper,
           judgeRegister(
             measureRegister(deps.latex.bodyProse(paper.text)),
-            Options.parse(context.options?.[0]),
+            limitsOf(context.options),
           ),
         );
       },

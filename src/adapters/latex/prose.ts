@@ -17,6 +17,7 @@ import type * as Ast from "@unified-latex/unified-latex-types";
 import { hasAtLeast, sortBy } from "remeda";
 import type { Owner, Passage, ProsePiece } from "../../domain/tex-document.ts";
 import {
+  argumentsOf,
   inPlace,
   macroPlace,
   mandatory,
@@ -213,13 +214,13 @@ const cites = (events: readonly Event[]): boolean =>
   );
 
 /**
- * What a list item typesets: the parser hands an `\item` inside a list its text as the last argument
- * (the `[label]` before it is not prose); an `\item` outside a list gets no arguments, and holds none.
+ * What a list item typesets: the parser hands an `\item` its text as the last argument (the
+ * `[label]` before it is not prose).
  */
-const itemBody = (m: Macro): readonly Node[] => {
-  const [last] = (m.args ?? []).slice(-1);
-  return last === undefined ? [] : last.content;
-};
+const itemBody = (m: Macro): readonly Node[] =>
+  argumentsOf(m)
+    .slice(-1)
+    .flatMap((a) => a.content);
 
 /** A footnote: its own passage, and a citation mark in the host sentence when it cites or links. */
 function footnote(t: ParsedTex, m: Macro): readonly Event[] {
@@ -228,17 +229,36 @@ function footnote(t: ParsedTex, m: Macro): readonly Event[] {
   return cites(inside) ? [...mark(m, "citation"), aside] : [aside];
 }
 
+/**
+ * Macros with events of their own: `\href{url}{text}` is a link whose text is prose; a footnote is a
+ * passage of its own; a list item ends a passage and opens the next with its text.
+ */
+const OWN_EVENTS: ReadonlyMap<
+  string,
+  (t: ParsedTex, m: Macro) => readonly Event[]
+> = new Map([
+  [
+    "href",
+    (t: ParsedTex, m: Macro) => [
+      ...mark(m, "citation"),
+      ...walkList(t, lastArgument(m)),
+    ],
+  ],
+  ["footnote", footnote],
+  [
+    "item",
+    (t: ParsedTex, m: Macro) => [BREAK, ...walkList(t, itemBody(m), true)],
+  ],
+]);
+
 function macroEvents(t: ParsedTex, m: Macro): readonly Event[] {
   const name = m.content;
   if (DEFINITION_MACROS.has(name)) return [];
   if (BACK_MATTER.has(name)) return [END];
   if (REFERENCE_MACROS.has(name)) return mark(m, "reference");
   if (SOURCE_MACROS.has(name)) return mark(m, "citation");
-  // `\href{url}{text}` is a link, and its text is prose.
-  if (name === "href")
-    return [...mark(m, "citation"), ...walkList(t, lastArgument(m))];
-  if (name === "footnote") return footnote(t, m);
-  if (name === "item") return [BREAK, ...walkList(t, itemBody(m), true)];
+  const own = OWN_EVENTS.get(name);
+  if (own !== undefined) return own(t, m);
   if (BREAK_MACROS.has(name)) return [BREAK];
   if (INLINE_MACROS.has(name)) return walkList(t, lastArgument(m));
   const ch = CHARACTER_MACROS.get(name);

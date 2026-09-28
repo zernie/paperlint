@@ -422,6 +422,17 @@ describe("bodyProse — passages a sentence cannot cross, with the marks that sa
     ]);
   });
 
+  it("a character macro's character stands at the macro's last source character", () => {
+    const src = "C\\%";
+    const [p] = bodyProse(parseLatex(src));
+    expect(p?.pieces.at(-1)).toEqual({
+      kind: "text",
+      segment: { text: "%", at: 2 },
+    });
+  });
+});
+
+describe("bodyProse — run-in headings and list items", () => {
   /** The text of each passage of `src`'s body, marks and math left out. */
   const texts = (src: string): readonly string[] =>
     bodyProse(parseLatex(src)).map((p) =>
@@ -443,12 +454,20 @@ describe("bodyProse — passages a sentence cannot cross, with the marks that sa
     ]);
   });
 
-  it("🔴 a list item's text is prose, each item its own passage; its label is not — and an \\item outside a list is an empty break", () => {
+  it("🔴 a list item's text is prose, each item its own passage; its label is not — and an \\item outside a list ends a passage", () => {
     expect(
       texts(
         "\\begin{document}\n\\begin{itemize}\n\\item[A:] It grows.\n\\item It holds.\n\\end{itemize}\nAfter \\item the list.\n\\end{document}",
       ),
     ).toEqual(["It grows.", "It holds.", "After", "the list."]);
+  });
+
+  it("a run-in heading holding a footnote or a citation is still a heading, left out whole", () => {
+    expect(
+      texts(
+        "\\begin{document}\n\\textbf{Scale\\footnote{F.}.} It grows.\n\n\\textbf{See~\\cite{k}:} It holds.\n\\end{document}",
+      ),
+    ).toEqual(["It grows.", "It holds."]);
   });
 
   it("the same markup inside a sentence, or without the closing mark, is prose", () => {
@@ -457,15 +476,6 @@ describe("bodyProse — passages a sentence cannot cross, with the marks that sa
         "\\begin{document}\nWe \\textbf{do not.} stop.\n\n\\textbf{Bold} opens this one.\n\\end{document}",
       ),
     ).toEqual(["We do not. stop.", "Bold opens this one."]);
-  });
-
-  it("a character macro's character stands at the macro's last source character", () => {
-    const src = "C\\%";
-    const [p] = bodyProse(parseLatex(src));
-    expect(p?.pieces.at(-1)).toEqual({
-      kind: "text",
-      segment: { text: "%", at: 2 },
-    });
   });
 });
 
