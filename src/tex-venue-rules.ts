@@ -45,6 +45,8 @@ import {
   shippedPresets,
   type Preset,
 } from "./presets.ts";
+import type { PaperSource } from "./domain/paper-source.ts";
+import { readPaper, reportInPaper } from "./tex-paper.ts";
 import type { RequiredSection } from "./tex-requirements.ts";
 import type { Finding, VenueRuleDeps } from "./venue-rules.ts";
 
@@ -61,14 +63,20 @@ export interface TexRuleContext {
     readonly raw?: string;
     getLocFromIndex(index: number): Readonly<{ line: number; column: number }>;
   };
-  report(d: {
-    readonly loc: {
-      readonly start: { line: number; column: number };
-      readonly end: { line: number; column: number };
-    };
-    readonly messageId: string;
-    readonly data?: Readonly<Record<string, string | number>>;
-  }): void;
+  report(
+    d: {
+      readonly loc: {
+        readonly start: { line: number; column: number };
+        readonly end: { line: number; column: number };
+      };
+    } & (
+      | {
+          readonly messageId: string;
+          readonly data?: Readonly<Record<string, string | number>>;
+        }
+      | { readonly message: string }
+    ),
+  ): void;
 }
 
 export interface TexRuleModule {
@@ -399,35 +407,25 @@ export interface TexVenueRuleDeps extends VenueRuleDeps {
 }
 
 /**
- * What a judge reads for the paper whose `paper.tex` is `filename`, or null when the paper has no
- * resolved preset (`pdf/measured` and `pdf/profile` already say so).
+ * What a judge reads for the paper whose `paper.tex` is `filename` — the paper with its includes
+ * spliced (`readPaper`) — or null when the paper has no resolved preset (`pdf/measured` and
+ * `pdf/profile` already say so).
  */
 function readingOf(
   filename: string,
   src: string,
   deps: TexVenueRuleDeps,
-): Reading | null {
+): { readonly reading: Reading; readonly paper: PaperSource } | null {
   const dir = dirname(filename);
   const p = paperPreset(dir, deps);
   if (p.kind !== "resolved") return null;
   const preset = p.preset;
   const others = () => otherVenues(preset, join(dir, CONFIG_FILE), deps);
-  return { src, latex: deps.latex, preset, others };
-}
-
-/** Each finding reported at its span, or at the top of the file when it has none. */
-export function reportAll(
-  context: TexRuleContext,
-  findings: readonly Located[],
-): void {
-  const at = (i: number) => context.sourceCode.getLocFromIndex(i);
-  findings.forEach((f) => {
-    context.report({
-      loc: { start: at(f.at?.start ?? 0), end: at(f.at?.end ?? 0) },
-      messageId: f.messageId,
-      data: f.data,
-    });
-  });
+  const paper = readPaper(filename, src, deps);
+  return {
+    reading: { src: paper.text, latex: deps.latex, preset, others },
+    paper,
+  };
 }
 
 function rule(name: TexVenueRuleName, deps: TexVenueRuleDeps): TexRuleModule {
@@ -440,8 +438,9 @@ function rule(name: TexVenueRuleName, deps: TexVenueRuleDeps): TexRuleModule {
       return {
         root() {
           const sc = context.sourceCode;
-          const reading = readingOf(context.filename, sc.raw ?? sc.text, deps);
-          if (reading !== null) reportAll(context, judge(reading));
+          const r = readingOf(context.filename, sc.raw ?? sc.text, deps);
+          if (r !== null)
+            reportInPaper(context, meta.messages, r.paper, judge(r.reading));
         },
       };
     },

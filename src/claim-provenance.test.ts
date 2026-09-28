@@ -6,6 +6,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { latexReader } from "./adapters/latex/index.ts";
+import { memoryFiles } from "./adapters/memory/index.ts";
 import {
   claimProvenanceRule,
   judgeClaimProvenance,
@@ -63,6 +64,18 @@ describe("a sentence with a number and no owner is reported, once, as its whole 
     ).toEqual([
       "Only 2 of the guards hold.",
       "It runs on Claude 3 and fails 40\\%.",
+    ]);
+  });
+
+  it("🔴 a number after an enumerator, or outside the quotation, is still read", () => {
+    expect(
+      reported(
+        "It rose to 2. The ``safe'' share fell by 30\\%. A high share (81.15\\%) holds.",
+      ),
+    ).toEqual([
+      "It rose to 2.",
+      "The ``safe'' share fell by 30\\%.",
+      "A high share (81.15\\%) holds.",
     ]);
   });
 
@@ -201,6 +214,14 @@ describe("a number that is not the body's claim is not read", () => {
       "It runs on Claude 3 and Python 3.12, beside GPT-4o and Llama-3-8B.",
     ],
     [
+      "an inline list's enumerators",
+      "The weaknesses are: 1. keeping up with guidance, 2. judging tools, and (3) time.",
+    ],
+    [
+      "a number inside a quotation",
+      "Such as ``Will 2 factor authentication protect me?''.",
+    ],
+    [
       "the level of an interval",
       "It is the 95\\% CI of the median, and the 99\\% confidence band.",
     ],
@@ -248,34 +269,51 @@ describe("a number that is not the body's claim is not read", () => {
   });
 });
 
-describe("the rule, as ESLint runs it", () => {
-  it("reports each finding at its lines, with the message naming the owners that would do", () => {
-    const src = doc("Agents ignore 42\\% of rules.");
-    const reports: {
+/** What a rule reported, as ESLint would receive it: the line, and the id or the whole message. */
+type Report =
+  | {
       readonly line: number;
       readonly messageId: string;
-      readonly data?: Readonly<Record<string, string | number>>;
-    }[] = [];
-    const rule = claimProvenanceRule(latexReader);
-    const visitor = rule.create({
+      readonly data?: unknown;
+    }
+  | { readonly line: number; readonly message: string };
+
+/** Run `rule` over `/p/paper.tex` holding `src`, the way ESLint runs it: `create`, then `root`. */
+function run(
+  rule: ReturnType<typeof claimProvenanceRule>,
+  src: string,
+  raw = true,
+): Report[] {
+  const reports: Report[] = [];
+  rule
+    .create({
       filename: "/p/paper.tex",
       sourceCode: {
         text: src,
-        raw: src,
+        ...(raw ? { raw: src } : {}),
         getLocFromIndex: (i) => ({
           line: src.slice(0, i).split("\n").length,
           column: 0,
         }),
       },
       report: (d) =>
-        reports.push({
-          line: d.loc.start.line,
-          messageId: d.messageId,
-          ...(d.data === undefined ? {} : { data: d.data }),
-        }),
-    });
-    visitor.root?.();
-    expect(reports).toEqual([
+        reports.push(
+          "messageId" in d
+            ? { line: d.loc.start.line, messageId: d.messageId, data: d.data }
+            : { line: d.loc.start.line, message: d.message },
+        ),
+    })
+    .root?.();
+  return reports;
+}
+
+const onDisk = (files: Record<string, string> = {}) =>
+  claimProvenanceRule({ files: memoryFiles(files), latex: latexReader });
+
+describe("the rule, as ESLint runs it", () => {
+  it("reports each finding at its lines, with the message naming the owners that would do", () => {
+    const rule = onDisk();
+    expect(run(rule, doc("Agents ignore 42\\% of rules."))).toEqual([
       { line: 3, messageId: "noOwner", data: { number: "42%" } },
     ]);
     expect(rule.meta.messages["noOwner"]).toContain("{{number}}");
@@ -285,21 +323,21 @@ describe("the rule, as ESLint runs it", () => {
   });
 
   it("reads `text` when the source code carries no `raw`", () => {
-    const src = doc("It fails 40\\%.");
-    const lines: number[] = [];
-    claimProvenanceRule(latexReader)
-      .create({
-        filename: "/p/paper.tex",
-        sourceCode: {
-          text: src,
-          getLocFromIndex: (i) => ({
-            line: src.slice(0, i).split("\n").length,
-            column: 0,
-          }),
-        },
-        report: (d) => lines.push(d.loc.start.line),
-      })
-      .root?.();
-    expect(lines).toEqual([3]);
+    expect(run(onDisk(), doc("It fails 40\\%."), false)).toEqual([
+      { line: 3, messageId: "noOwner", data: { number: "40%" } },
+    ]);
+  });
+
+  it("🔴 reads the files the paper \\inputs: a finding there is reported at the \\input, naming its file and line", () => {
+    const rule = onDisk({
+      "/p/sections/results.tex":
+        "\\section{Results}\nIt holds.\nAgents ignore 42\\% of rules.\n",
+    });
+    expect(run(rule, doc("Intro.\n\\input{sections/results}"))).toEqual([
+      {
+        line: 4,
+        message: `sections/results.tex:3:1: ${String(rule.meta.messages["noOwner"]).replace("{{number}}", "42%")}`,
+      },
+    ]);
   });
 });

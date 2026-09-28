@@ -79,11 +79,16 @@ function lint(
       report: (d) =>
         out.push({
           rule: `tex/${name}`,
-          messageId: d.messageId,
-          message: Object.entries(d.data ?? {}).reduce(
-            (m, [k, v]) => m.replaceAll(`{{${k}}}`, String(v)),
-            rule.meta.messages[d.messageId] ?? `(no message ${d.messageId})`,
-          ),
+          // A finding from an included file arrives as a whole message, its file at the front.
+          messageId: "messageId" in d ? d.messageId : "(message)",
+          message:
+            "messageId" in d
+              ? Object.entries(d.data ?? {}).reduce(
+                  (m, [k, v]) => m.replaceAll(`{{${k}}}`, String(v)),
+                  rule.meta.messages[d.messageId] ??
+                    `(no message ${d.messageId})`,
+                )
+              : d.message,
           line: d.loc.start.line,
         }),
     });
@@ -180,6 +185,37 @@ describe("tex/template — the class line's states: missing, empty, commented ou
       AIDC,
     );
     expect(ids(fs)).toEqual(["tex/template:wrongClass"]);
+  });
+});
+
+describe("the venue rules read the whole paper: the files it \\inputs, spliced where they stand", () => {
+  it("🔴 a required section kept in an included file is found, and its order judged in the paper", () => {
+    const tex = paper(
+      "\\documentclass[conference,compsoc]{IEEEtran}",
+      "Text.\n\\input{sections/closing}",
+    );
+    const extra = {
+      [`${PAPER}/sections/closing.tex`]:
+        "\\section*{LLM Usage Statement}\nNone.\n",
+    };
+    expect(lint(tex, AIDC, { extra })).toEqual([]);
+    // Without the file, the section is missing — and tex/missing-input (not a venue rule) says why.
+    expect(ids(lint(tex, AIDC))).toEqual(["tex/required-section:missing"]);
+  });
+
+  it("a leftover venue name in an included file is reported at the \\input, naming the file and line", () => {
+    const tex = paper(
+      "\\documentclass[conference,compsoc]{IEEEtran}",
+      "Text.\n\\input{intro}\n\\section*{LLM Usage Statement}\nNone.",
+    );
+    const fs = lint(tex, AIDC, {
+      extra: {
+        [`${PAPER}/intro.tex`]: "One line.\nFirst written for AgenticDev.\n",
+      },
+    });
+    expect(fs.map((f) => [f.line, f.message.split(": ")[0]])).toEqual([
+      [5, "intro.tex:2:19"],
+    ]);
   });
 });
 

@@ -51,6 +51,7 @@ import { hostDirs, nodeAdapters, nodeFiles } from "./adapters/node/index.ts";
 import { VENUE_RULE_LEVELS, venueRules } from "./venue-rules.ts";
 import { TEX_VENUE_RULE_LEVELS, texVenueRules } from "./tex-venue-rules.ts";
 import { claimProvenanceRule } from "./claim-provenance.ts";
+import { missingInputRule } from "./tex-paper.ts";
 import {
   paperRules,
   stringFields,
@@ -313,7 +314,14 @@ export function buildConfig(
               venuesDir: presetsDir(),
               latex: latexReader,
             }),
-            "claim-provenance": claimProvenanceRule(latexReader),
+            "claim-provenance": claimProvenanceRule({
+              files: nodeFiles,
+              latex: latexReader,
+            }),
+            "missing-input": missingInputRule({
+              files: nodeFiles,
+              latex: latexReader,
+            }),
           },
         },
         paper: { rules: texPaperRules },
@@ -328,6 +336,7 @@ export function buildConfig(
         "tex/future-promise": "warn",
         // A number with no owner: a prose rule, on beside the others above.
         "tex/claim-provenance": "warn",
+        "tex/missing-input": "warn",
         "tex/acm-frontmatter-override": "error",
         // Silent for a paper whose paperlint.json names no venue (src/venue-rules.ts).
         ...VENUE_RULE_LEVELS,

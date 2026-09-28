@@ -11,7 +11,9 @@ now going to VenueB.
 It only knows the venues paperlint ships a preset for, by each preset's `name` and `aliases`. A
 venue with no preset is not recognized.
 
-It looks at what a reader sees — prose, the author block, captions, footnotes, a citation's note in
+It reads the whole paper — `paper.tex` with the files it `\input`s, `\include`s or `\subfile`s
+spliced in; a name found in an included file is reported at that include, with the file and line at
+the front of the message. It looks at what a reader sees — prose, the author block, captions, footnotes, a citation's note in
 square brackets, and front-matter macros such as `\acmConference` — and ignores comments, citation
 keys, labels, URLs (a `\url`, and the address of an `\href` — its link text is read), math, code and
 the bibliography. Names are matched as whole words, case-sensitive.
@@ -58,7 +60,7 @@ reported.
 ## What it does not check
 
 - A venue no shipped preset describes.
-- A name split by markup (`\textbf{AI}Sec`), and text pulled in with `\input`.
+- A name split by markup (`\textbf{AI}Sec`).
 
 ## How to fix
 

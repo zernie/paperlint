@@ -349,6 +349,17 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       ),
     ),
   },
+  "tex/missing-input": {
+    reports: {
+      tree: paper(tex("Text.\n\\input{sections/gone}")),
+      file: TEX_FILE,
+      severity: 1,
+      line: 4,
+    },
+    silent: paper(tex("Text.\n\\input{sections/here}"), {
+      [`${P}/sections/here.tex`]: "More text.\n",
+    }),
+  },
   "bib/reachable-entry": {
     reports: {
       tree: paper(inlineBib("@book{a,\n  title = {A},\n  year = {2026}\n}")),

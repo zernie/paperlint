@@ -24,7 +24,6 @@
  * digit glued to a letter or a hyphen ("GPT-4", "10k"), or right after a capitalised word inside the
  * sentence ("Claude 3", "Python 3.12"), as part of a name. Warn, never error: it asks the question; the author answers it.
  */
-import type { LatexReader } from "./ports/latex.ts";
 import {
   runText,
   spanIn,
@@ -33,8 +32,8 @@ import {
   type Segment,
   type TextRun,
 } from "./domain/tex-document.ts";
+import { readPaper, reportInPaper, type PaperDeps } from "./tex-paper.ts";
 import {
-  reportAll,
   ruleDocsUrl,
   type Located,
   type TexRuleModule,
@@ -124,16 +123,31 @@ const SAMPLE_SIZE = /(?<![\p{L}\\])[nN]\s*=\s*\d/u;
 const COUNT =
   /(?<![\p{L}\p{N}.,])(?:\d{1,3}(?:,\d{3})+|\d+)(?![.,]?\d)\s+(?:(?!(?:of|the|and|or|to|in|for|on|at|by|a|an|with|from|than|as)\s)[\p{L}-]+\s+){0,2}\p{Ll}+s(?!\p{L})/gu;
 
+/** A quotation (`` … '' or “ … ”): an example the paper quotes, not a claim it makes. */
+const QUOTED = /``[^']*?''|“[^”]*?”/gu;
+
+/**
+ * An inline list's enumerator: a whole number standing after the start, `:`, `,`, `;` or `(`, and
+ * closed by `.` or `)` — "are: 1. the challenge …, 2. …", "(3)"; not "(81.15%)".
+ */
+const isEnumerator = (s: string, at: number, n: string): boolean =>
+  /^\d+$/u.test(n) &&
+  /^[.)](?:\s|$)/u.test(s.slice(at + n.length)) &&
+  /(?:^|[:,;(])\s*$/u.test(s.slice(0, at));
+
 /** The first number in `s` that is a quantity, or undefined. */
-const quantityIn = (s: string): string | undefined =>
-  [...s.matchAll(NUMBER)]
+const quantityIn = (s: string): string | undefined => {
+  const unquoted = s.replace(QUOTED, (q) => " ".repeat(q.length));
+  return [...unquoted.matchAll(NUMBER)]
     .filter(
       (m) =>
-        !CONFIDENCE.test(s.slice(m.index + m[0].length)) &&
-        !(isNamed(s, m.index) && !m[0].endsWith("%")),
+        !CONFIDENCE.test(unquoted.slice(m.index + m[0].length)) &&
+        !isEnumerator(unquoted, m.index, m[0]) &&
+        !(isNamed(unquoted, m.index) && !m[0].endsWith("%")),
     )
     .map((m) => m[0])
     .find((n) => !YEAR.test(n));
+};
 
 /**
  * A capitalised word right before the number, and not the sentence's first word: the number is part
@@ -234,16 +248,19 @@ const META: TexRuleModule["meta"] = {
   },
 };
 
-/** The rule, over the body's prose as the LaTeX reader gives it. */
-export const claimProvenanceRule = (latex: LatexReader): TexRuleModule => ({
+/** The rule, over the body's prose of the whole paper, its includes spliced (`readPaper`). */
+export const claimProvenanceRule = (deps: PaperDeps): TexRuleModule => ({
   meta: META,
   create(context) {
     return {
       root() {
         const sc = context.sourceCode;
-        reportAll(
+        const paper = readPaper(context.filename, sc.raw ?? sc.text, deps);
+        reportInPaper(
           context,
-          judgeClaimProvenance(latex.bodyProse(sc.raw ?? sc.text)),
+          META.messages,
+          paper,
+          judgeClaimProvenance(deps.latex.bodyProse(paper.text)),
         );
       },
     };

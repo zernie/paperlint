@@ -20,6 +20,7 @@ Dropped from the e-print: `00README.json` (arXiv's build metadata) and `ACM-Refe
 
 ## What the rules read here
 
-The body lives in `sections/*.tex`, pulled in by `\input`, which no rule follows. The rules read the
-preamble, the title block, the abstract, and the reviews the authors kept in a disabled
-`\if\showreview1` branch.
+The body lives in `sections/*.tex`, pulled in by `\input`. The parse-tree rules read it spliced into
+`paper.tex`, where TeX reads it, and report a finding from it at that `\input`, with the section
+file and line at the front of the message. They also read the reviews the authors kept in a
+disabled `\if\showreview1` branch.

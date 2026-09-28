@@ -39,6 +39,8 @@ export interface Segment {
   readonly start: number;
   readonly end: number;
   readonly file: string;
+  /** The whole text of `file`, so a place in it can be told as a line and a column. */
+  readonly source: string;
   readonly from: number;
   /** Where, in the main file, the outermost include that brought this text in stands. */
   readonly via: Span | null;
@@ -58,7 +60,6 @@ export interface PaperSource {
   readonly main: string;
   readonly text: string;
   readonly segments: readonly Segment[];
-  readonly files: Readonly<Record<string, string>>;
   readonly missing: readonly MissingInclude[];
 }
 
@@ -85,8 +86,6 @@ interface Piece {
   readonly text: string;
   readonly segments: readonly Segment[];
   readonly missing: readonly MissingInclude[];
-  /** The text of every included file the piece was read from, by path. */
-  readonly files: Readonly<Record<string, string>>;
 }
 
 /** `segments` moved by `by` characters. */
@@ -108,13 +107,15 @@ interface Stretch {
 /** A stretch as a piece: its text, and one segment mapping it back. */
 const copied = ({ file, text, from, to, via }: Stretch): Piece => ({
   text: text.slice(from, to),
-  segments: to > from ? [{ start: 0, end: to - from, file, from, via }] : [],
+  segments:
+    to > from
+      ? [{ start: 0, end: to - from, file, source: text, from, via }]
+      : [],
   missing: [],
-  files: {},
 });
 
 /** Nothing: an include left out. */
-const NOTHING: Piece = { text: "", segments: [], missing: [], files: {} };
+const NOTHING: Piece = { text: "", segments: [], missing: [] };
 
 /** Pieces joined in order. */
 const joined = (pieces: readonly Piece[]): Piece =>
@@ -123,7 +124,6 @@ const joined = (pieces: readonly Piece[]): Piece =>
       text: acc.text + p.text,
       segments: [...acc.segments, ...shifted(p.segments, acc.text.length)],
       missing: [...acc.missing, ...p.missing],
-      files: { ...acc.files, ...p.files },
     }),
     NOTHING,
   );
@@ -173,13 +173,12 @@ function included(file: string, inc: Include, ctx: Context): Piece {
     };
   if (ctx.stack.includes(hit.path)) return NOTHING;
   const body = inc.macro === "subfile" ? ctx.deps.documentBody(hit.text) : null;
-  const inside = spliced(
+  return spliced(
     hit.path,
     hit.text,
     body ?? { start: 0, end: hit.text.length },
     { deps: ctx.deps, stack: [...ctx.stack, hit.path], via },
   );
-  return { ...inside, files: { ...inside.files, [hit.path]: hit.text } };
 }
 
 /** The paper whose main file is `main` (a path relative to the paper directory) with `text`. */
@@ -198,7 +197,6 @@ export function assemblePaper(
     main,
     text: p.text,
     segments: p.segments,
-    files: { ...p.files, [main]: text },
     missing: p.missing,
   };
 }
@@ -206,6 +204,8 @@ export function assemblePaper(
 /** Where a span of the assembled text stands: in which file, at which offsets, and via which include. */
 export interface Origin {
   readonly file: string;
+  /** The whole text of `file`. */
+  readonly source: string;
   readonly span: Span;
   readonly via: Span | null;
 }
@@ -223,6 +223,7 @@ export function originOf(p: PaperSource, span: Span): Origin | null {
   const end = Math.min(span.end, seg.end);
   return {
     file: seg.file,
+    source: seg.source,
     span: {
       start: seg.from + span.start - seg.start,
       end: seg.from + end - seg.start,

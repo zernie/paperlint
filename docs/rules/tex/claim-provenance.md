@@ -15,8 +15,10 @@ reported once, however many numbers it holds. Any one of these owners silences i
 | a claimant named as one      | _advertises_, _claims_: _"the skill advertises a 65% reduction"_, _"(claim 63%)"_                                                 |
 | the sample the number counts | _n = 134_ (in prose or in math), or a count followed by what it counts: _48 runs_, _48 independent runs_, _of 1,836 repositories_ |
 
-It reads the body: from the start of the document, the abstract included, to `\appendix` or the
-bibliography. Footnotes are read as sentences of their own. A citation or a footnote set right after
+It reads the body of the whole paper — `paper.tex` with the files it `\input`s, `\include`s or
+`\subfile`s spliced in — from the start of the document, the abstract included, to `\appendix` or the
+bibliography. A sentence in an included file is reported at that include, with the file and line at
+the front of the message. Footnotes are read as sentences of their own. A citation or a footnote set right after
 the full stop belongs to the sentence the full stop ends.
 
 A number is digits a reader sees — `42\%`, `0.37`, `1,836`, `3x`, `3×`. Not a number: a year on its
@@ -61,8 +63,7 @@ any other rule.
 
 - Whether the owner is the right one: a citation that does not report the number, or a _we_ in a
   sentence about someone else's work, silences the sentence all the same.
-- What a custom macro prints: `\rate{}` defined as `42\%` is not a number here. Text pulled in with
-  `\input` is not read.
+- What a custom macro prints: `\rate{}` defined as `42\%` is not a number here.
 - Which numbers are names, beyond the two shapes it knows: a number after a lowercase word (_version
   3 of the model_) is read as a quantity, and so is the number of a name that opens the sentence
   (_Claude 3 fails …_).

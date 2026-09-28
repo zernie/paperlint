@@ -2,10 +2,12 @@
   "$comment": [
     "What the rules say about this accepted paper today. Growth fails; a drop never does.",
     "Each count is classified in ../README.md, 'What the rules say about the corpus'.",
-    "The body is in sections/*.tex, pulled in by \\input, which no rule follows: the prose rules",
-    "read the preamble, the title block, the abstract and the review text in a disabled branch."
+    "The body is in sections/*.tex, pulled in by \\input; the rules read it spliced into paper.tex",
+    "and report a finding from it at the \\input, with the file and line in the message.",
+    "The count GREW when the rules started to follow \\input (#141): 0 to 9 for tex/claim-provenance."
   ],
   "findings": {
-    "pdf/measured": 1
+    "pdf/measured": 1,
+    "tex/claim-provenance": 9
   }
 }

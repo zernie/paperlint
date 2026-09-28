@@ -43,7 +43,7 @@ describe("assemblePaper — the text TeX reads", () => {
     );
     expect(p.text).toBe("AoneBtwoC");
     expect(p.missing).toEqual([]);
-    expect(Object.keys(p.files).sort()).toEqual([
+    expect([...new Set(p.segments.map((g) => g.file))]).toEqual([
       "paper.tex",
       "s/one.tex",
       "two.tex",
@@ -60,6 +60,7 @@ describe("assemblePaper — the text TeX reads", () => {
     expect(p.text).toBe("x[BB]y");
     expect(originOf(p, { start: 2, end: 4 })).toEqual({
       file: "s/b.tex",
+      source: "BB",
       span: { start: 0, end: 2 },
       via: { start: 1, end: 10 },
     });
@@ -121,6 +122,7 @@ describe("originOf — where a span of the assembled text comes from", () => {
   it("in the main file: its own offsets, via nothing", () => {
     expect(originOf(p, { start: 0, end: 2 })).toEqual({
       file: "paper.tex",
+      source: "ab\\input{x}cd",
       span: { start: 0, end: 2 },
       via: null,
     });
@@ -129,6 +131,7 @@ describe("originOf — where a span of the assembled text comes from", () => {
   it("after the include: offsets in the main file past the macro", () => {
     expect(originOf(p, { start: 5, end: 7 })).toEqual({
       file: "paper.tex",
+      source: "ab\\input{x}cd",
       span: { start: 11, end: 13 },
       via: null,
     });
@@ -137,6 +140,7 @@ describe("originOf — where a span of the assembled text comes from", () => {
   it("a span running out of an included file is cut at its end", () => {
     expect(originOf(p, { start: 3, end: 7 })).toEqual({
       file: "x.tex",
+      source: "XYZ",
       span: { start: 1, end: 3 },
       via: { start: 2, end: 11 },
     });

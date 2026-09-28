@@ -42,19 +42,25 @@ paper, left for a later change; one line each.
 | agenticdev-acm26 | `tex/claim-provenance` | 9 | real | numbers stated with no owner in the sentence ("The first is that the tool cuts output tokens by 65%.") — the paper reviewers called too informal |
 | secure-acsac24 | `tex/claim-provenance` | 6 | real | the authors' own results stated without a subject or a pointer ("LLMs experience a significant decrease in accuracy, with a 5.44% drop …"); the owner is in a neighbouring sentence, which the rule does not read |
 | secure-acsac24 | `tex/claim-provenance` | 1 | known | a range that defines a scale, not a result ("Typically set between 0 and 1, the temperature …") |
+| llm-splained-acsac25 | `tex/claim-provenance` | 9 | real | the authors' own results in `sections/*.tex` stated without a subject or a pointer ("GPT errors exceeded 30% in both categories …"); the owner is in a neighbouring sentence |
 
 Two limits the corpus shows and no count records:
 
-- **`\input` is not followed.** `llm-splained-acsac25` keeps its body in `sections/*.tex`; no rule
-  reads it, so that paper tests the preamble, the title block and the abstract only.
-- **A disabled conditional branch is read as text.** The same paper keeps its reviews inside
+- **A disabled conditional branch is read as text.** `llm-splained-acsac25` keeps its reviews inside
   `\if\showreview1 … \fi` with the switch off; the prose rules read them.
+- **The rules over ESLint's own LaTeX text read `paper.tex` alone.** The parse-tree rules
+  (`tex/template`, `tex/required-section`, `tex/venue-leftover`, `tex/claim-provenance`) read the
+  included files; `paper/section-word`, `paper/leading-zero`, `paper/figure-ref-style` and
+  `tex/future-promise` do not yet, so `sections/*.tex` is not checked by them.
 
-False positives this corpus has already caught, each fixed with a test first:
+False positives and blind spots this corpus has already caught, each fixed with a test first:
 `tex/claim-provenance` read the digit in `\if\conference1` as a number in prose, and did not
 recognise "466 Boolean questions" or "900 systematically collected questions" as a sample;
 `paper/section-word` reported the `§` of `\crefname{section}{§}{§§}`, a label definition, not prose;
-`tex/template` judged the first of three `\documentclass` lines behind the `\conference` switch.
+`tex/template` judged the first of three `\documentclass` lines behind the `\conference` switch;
+the parse-tree rules did not follow `\input`, so this paper's body in `sections/*.tex` went unread;
+`tex/claim-provenance` read an inline list's enumerators ("are: 1. …, 2. …") and a number inside a
+quoted example as claims.
 
 ## Licence rule — read before adding a paper
 
