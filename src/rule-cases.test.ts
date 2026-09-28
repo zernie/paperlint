@@ -334,7 +334,9 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       line: 4,
     },
     silent: paper(
-      tex("Text.\nWe measured that agents ignore 42\\% of the rules."),
+      tex(
+        "Text.\nWe measured that agents ignore 42\\% of the rules.\nThey run on Claude 3 and Python 3.12.",
+      ),
     ),
   },
   "bib/reachable-entry": {

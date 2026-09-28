@@ -20,9 +20,9 @@
  *
  * ── WHAT IT CANNOT KNOW ──────────────────────────────────────────────────────────
  * Whether an owner is the RIGHT one (a citation that does not say the number, a "we" in a sentence
- * about someone else), what a custom macro prints, or which numbers are names ("Claude 3"). A year
- * alone (1900–2099) is read as a date, and a digit glued to a letter or a hyphen ("GPT-4", "10k") as
- * part of a name. Warn, never error: it asks the question; the author answers it.
+ * about someone else) or what a custom macro prints. A year alone (1900–2099) is read as a date; a
+ * digit glued to a letter or a hyphen ("GPT-4", "10k"), or right after a capitalised word inside the
+ * sentence ("Claude 3", "Python 3.12"), as part of a name. Warn, never error: it asks the question; the author answers it.
  */
 import type { LatexReader } from "./ports/latex.ts";
 import {
@@ -118,14 +118,29 @@ const SAMPLE_SIZE = /(?<![\p{L}\\])[nN]\s*=\s*\d/u;
 
 /** A count followed by what it counts: "48 runs", "1,836 repositories", "48 independent runs". */
 const COUNT =
-  /(?<![\p{L}\p{N}.,])(?:\d{1,3}(?:,\d{3})+|\d+)(?![.,]?\d)\s+(?:\p{Ll}+\s+)?\p{Ll}+s(?!\p{L})/u;
+  /(?<![\p{L}\p{N}.,])(?:\d{1,3}(?:,\d{3})+|\d+)(?![.,]?\d)\s+(?:\p{Ll}+\s+)?\p{Ll}+s(?!\p{L})/gu;
 
 /** The first number in `s` that is a quantity, or undefined. */
 const quantityIn = (s: string): string | undefined =>
   [...s.matchAll(NUMBER)]
-    .filter((m) => !CONFIDENCE.test(s.slice(m.index + m[0].length)))
+    .filter(
+      (m) =>
+        !CONFIDENCE.test(s.slice(m.index + m[0].length)) &&
+        !(isNamed(s, m.index) && !m[0].endsWith("%")),
+    )
     .map((m) => m[0])
     .find((n) => !YEAR.test(n));
+
+/**
+ * A capitalised word right before the number, and not the sentence's first word: the number is part
+ * of a name — "Claude 3", "Python 3.12", "Node 22" — not a quantity. A sentence-initial word ("Only 2
+ * of 46") is capitalised because it opens the sentence, and says nothing.
+ */
+const NAMED_BY = /\S\s+\p{Lu}[\p{L}\p{N}.+-]*\s$/u;
+
+/** Whether the number at `at` in the sentence `s` is part of a name (`NAMED_BY`). */
+const isNamed = (s: string, at: number): boolean =>
+  NAMED_BY.test(s.slice(s.length - s.trimStart().length, at));
 
 /** What follows the level of an interval ("95% CI"): the level is not a result. */
 const CONFIDENCE = /^\s*(?:CI|confidence)(?!\p{L})/u;
@@ -142,7 +157,8 @@ const isOwned = (s: string, maths: readonly string[]): boolean =>
   ATTRIBUTED.test(s) ||
   PLACE.test(s) ||
   SAMPLE_SIZE.test(s) ||
-  COUNT.test(s) ||
+  // "Claude 3 and fails" is a name and a verb, not a count.
+  [...s.matchAll(COUNT)].some((m) => !isNamed(s, m.index)) ||
   // `$n{=}7$` and `$n = 7$` alike: braces are grouping in math, not text.
   maths.some((m) => SAMPLE_SIZE.test(m.replace(/[{}]/gu, "")));
 

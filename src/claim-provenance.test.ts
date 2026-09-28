@@ -49,6 +49,17 @@ describe("a sentence with a number and no owner is reported, once, as its whole 
     ).toEqual(["Under test the rules held in 97\\% of cases."]);
   });
 
+  it("🔴 a name before a number is skipped only mid-sentence: a sentence-initial word is not a name", () => {
+    expect(
+      reported(
+        "Only 2 of the guards hold. It runs on Claude 3 and fails 40\\%.",
+      ),
+    ).toEqual([
+      "Only 2 of the guards hold.",
+      "It runs on Claude 3 and fails 40\\%.",
+    ]);
+  });
+
   it("🔴 «US» is a country, not the authors", () => {
     expect(reported("US agencies report 40\\% growth.")).toEqual([
       "US agencies report 40\\% growth.",
@@ -149,6 +160,7 @@ describe("an owner silences the sentence", () => {
     ],
     ["a claim in brackets", "The second tool (claim 63\\%) runs slower."],
     ["a count of things", "The rule held in 48 runs."],
+    ["a count of times", "It is 3 times faster."],
     ["a count with an adjective", "The rule held in 48 independent runs."],
     ["of N things", "Of 1,836 repositories, 12\\% ship hooks."],
     [
@@ -163,6 +175,10 @@ describe("an owner silences the sentence", () => {
 describe("a number that is not the body's claim is not read", () => {
   it.each([
     ["a year", "In 2024 the first agents shipped."],
+    [
+      "a digit that belongs to a product or model name",
+      "It runs on Claude 3 and Python 3.12, beside GPT-4o and Llama-3-8B.",
+    ],
     [
       "the level of an interval",
       "It is the 95\\% CI of the median, and the 99\\% confidence band.",

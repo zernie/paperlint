@@ -4,7 +4,7 @@ description: Use when asking "is this paper actually ready to submit?" / "what's
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:9fab7d8fef904224 compiled from skills/harden-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:35f1ec023504e0ce compiled from skills/harden-paper/SKILL.md.spec.ts -->
 
 # harden-paper — the multi-axis pre-submit gate
 
@@ -61,7 +61,8 @@ middle sags" — wasting the polish on possibly-cut sections.
      there with no pointer reaching it, the body is overclaiming and "it's in the appendix" is not
      a defence — reviewers are not required to read appendices, and ARR says so in as many words.
      Rule and the sorting test: `paper-pipeline/references/body-vs-appendix.md`.
-   Mechanical leg: the ESLint rule `paper/uncited-assertion` (axis 7) compiles part of this hunt.
+   Mechanical leg: `tex/claim-provenance` (axis 7) reports every sentence that states a number and
+   does not say whose it is.
 
 3. **Novelty vs the nearest neighbor** — the scoop check. Search for the paper that *already did your
    thing* (`verify-citations` covers metadata; here, actively hunt the closest empirical/method twin).
@@ -114,36 +115,14 @@ middle sags" — wasting the polish on possibly-cut sections.
        to an artifact output or a `\cite`; an untraceable number is treated as fabricated** (source or cut).
        *(This session: "37% growth to 18% cut across independent runs" was in neither — only the artifact
        evaluator caught it.)*
-     - **`npx eslint --no-config-lookup --config eslint.config.mjs <paper-file.tex|.md>`** — the *overclaim*
-       axis (axis 2), compiled. The rule is `paper/uncited-assertion` (`eslint-rules/paper-claims.mjs`); it
-       used to be a hand-run script `check-uncited-assertions.{sh,mjs}`, ported into the rule family on
-       2026-08-27 because the script had to be REMEMBERED and the rule runs with the other 32 in one pass —
-       on all four paper bodies, `.tex` included, not just `paper.md`.
-       It flags any sentence making an empirical/quantitative claim about **prior work** — a number, a `%`, a
-       fuzzy quantifier (`most`/`the majority`/`significantly`), or an empirical verb
-       (`shows`/`demonstrates`/`outperforms`/`reduces`/`improves`/`we find`) — that carries **no citation**.
-       Citation forms recognized: **any `\…cite…` macro** (`\cite`/`\citep`/`\citet`/`\footcite`/`\smartcite`/
-       `\parencite`/`\textcite`/`\citeauthor`/`\citeyearpar`…), `\footnote`, **numeric cites** `[12]`/`[3,4]`/
-       `[1]` (the dominant CS style), a URL, or a markdown `[@key]`/`[^fn]`/`](link)`. This is the exact thing a
-       reviewer pounces on ("[citation needed]"). *Complementary to `check-numbers.sh`, not a dup:* that one
-       traces **every** number; this one flags **empirical assertions lacking a cite** and stays quiet on the
-       paper's own results. **Guards** (so it doesn't false-alarm): years (`2026`), version numbers (`v1.2`,
-       `Node 18`), figure/table/section/equation refs — both literal (`Table 2 shows …`) and cross-ref macros
-       (`Table~\ref{tab:x} shows …`, `\autoref`/`\Cref`), numbers inside math mode, **tabular/array bodies** and
-       **ordered-list markers** (`2.`), **definitions** (`is defined as`/`refers to`/`we define`), and the
-       paper's **OWN reported results**. The own-result guard is a **subject-proximity heuristic** (not a
-       parser): it exempts a sentence only when first person is the *subject* — it **starts** with
-       `we`/`this paper`/`this work`, or has `we <verb>` / `our <contribution-noun>` — so `We find a 6% reduction`
-       passes but a bare `Transformers outperform RNNs by 12%` flags, and, deliberately, `US-based detectors
-       reject 40%` (country "US", not "us") and `Our reading of the literature shows X outperforms Y` (a claim
-       about others) still **flag**. Fix each hit by attaching a cite, reframing honestly as your own result, by
-       cutting the claim — or, for a genuinely defensible one, an `eslint-disable-next-line` **with the reason
-       on the spot**. Contract fixtures live in `fixtures/uncited-assertions-sample.{tex,md}` (annotated
-       MUST/​MUST-NOT-flag cases, incl. the numeric-cite / `\footcite` / `\ref`-float / list-marker / own-result
-       regressions) and are still the rule's test — `eslint-rules/paper-claims.harness.mjs` runs them.
-       *(Severity is `warn` on purpose: both the own-result guard and sentence splitting are **heuristics** —
-       a fixed abbreviation set (`vs.`/`e.g.`/`i.e.`/`et al.`/`cf.`) is protected from false breaks, and on the
-       four committed papers the rule reports 374 findings. Treat volume as advisory, not a hard gate.)*
+     - **`npx paperlint lint`** — the *overclaim* axis (axis 2), compiled, as `tex/claim-provenance`: every
+       sentence of the body that states a number and has no owner — no citation or link, no *we*/*our*, no
+       `\ref` or "Table 2", no named sample ("n = 134", "48 runs") — is reported, because a reader cannot
+       tell a cited finding from the authors' own measurement from a general fact. Fix each hit by saying
+       whose the number is in the sentence, or keep it with an `eslint-disable-next-line` **and the reason
+       on the spot**. What it cannot judge (whether the owner is the right one) is on its page,
+       `docs/rules/tex/claim-provenance.md`. Complementary to `check-numbers.sh`, not a dup: that one traces
+       **every** number to the artifact; this one asks each number's sentence for its owner.
      Enumeration is mechanical; the per-line trace/reconcile stays judgment (prose isn't policy — compile the list).
 
 8. **Writing craft (audience-appropriate language + how it reads)** — run **`grade-paper-writing`** (the

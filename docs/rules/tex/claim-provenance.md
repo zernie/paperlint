@@ -20,7 +20,8 @@ bibliography. Footnotes are read as sentences of their own. A citation or a foot
 the full stop belongs to the sentence the full stop ends.
 
 A number is digits a reader sees — `42\%`, `0.37`, `1,836`, `3x`, `3×`. Not a number: a year on its
-own (1900–2099); the level of an interval (the 95 of _95% CI_); digits glued to a letter, a hyphen or a point (`GPT-4`, `COVID-19`, `v1.2`, `10k`,
+own (1900–2099); a number right after a capitalised word inside the sentence (_Claude 3_, _Python
+3.12_, _Node 22_), which is a name; the level of an interval (the 95 of _95% CI_); digits glued to a letter, a hyphen or a point (`GPT-4`, `COVID-19`, `v1.2`, `10k`,
 `0x1F`); anything inside math, a table, a figure, a caption, a heading, code, a comment, a macro
 definition, or the title block.
 
@@ -62,7 +63,9 @@ any other rule.
   sentence about someone else's work, silences the sentence all the same.
 - What a custom macro prints: `\rate{}` defined as `42\%` is not a number here. Text pulled in with
   `\input` is not read.
-- Which numbers are names. _Claude 3_ or _Node 22_ reads as a quantity and is reported.
+- Which numbers are names, beyond the two shapes it knows: a number after a lowercase word (_version
+  3 of the model_) is read as a quantity, and so is the number of a name that opens the sentence
+  (_Claude 3 fails …_).
 - Whether a count followed by a plural noun is really the sample (_3 times faster_ passes as one).
 - Markdown papers (`paper.md`): it reads the LaTeX parse tree only.
 
