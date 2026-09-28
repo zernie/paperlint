@@ -488,13 +488,32 @@ function factsTest(dir: string, want: NonNullable<FixtureExpect["facts"]>) {
 /** `paperlint lint` on this one paper: its exit code, and exactly the findings named. */
 function lintTest(name: string, want: NonNullable<FixtureExpect["lint"]>) {
   const exit = want.exit === undefined ? "" : `exit ${String(want.exit)}, `;
-  it(`paperlint lint: ${exit}exactly the findings declared for ${Object.keys(want.rules).join(", ") || "no rule"}`, () => {
+  const which =
+    want.findings === undefined
+      ? Object.keys(want.rules).join(", ") || "no rule"
+      : "every rule";
+  it(`paperlint lint: ${exit}exactly the findings declared for ${which}`, () => {
     const got = lintPaper(work, name, want.paperlintJson);
     if (want.exit !== undefined) expect(got.status, got.raw).toBe(want.exit);
     if (want.errors !== undefined)
       expect(
         got.messages.filter((m) => m.severity === 2).map(shown),
       ).toHaveLength(want.errors);
+    if (want.findings !== undefined) {
+      const all = want.findings;
+      expect(
+        got.messages.length === all.length &&
+          all.every((f) =>
+            sameFindings(
+              got.messages.filter((m) => m.ruleId === f.rule),
+              all.filter((x) => x.rule === f.rule),
+            ),
+          ),
+        JSON.stringify(
+          got.messages.map((m) => ({ rule: m.ruleId, ...shown(m) })),
+        ),
+      ).toBe(true);
+    }
     for (const [rule, findings] of Object.entries(want.rules)) {
       const of = got.messages.filter((m) => m.ruleId === rule);
       expect(

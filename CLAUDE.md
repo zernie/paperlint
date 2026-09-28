@@ -514,6 +514,10 @@ touches the real network · 100% coverage, no `c8 ignore`. **Before every push: 
 exit code read without a pipe.** Everything else — where files live, how fakes are injected, the
 `--min=1` trap: [`docs/testing.md`](docs/testing.md).
 
+**A new rule** needs unit tests beside it and a reporting and a silent case in
+`src/rule-cases.test.ts`, which runs every registered rule through real ESLint and fails on one
+without cases. An e2e fixture only when [`docs/e2e.md`](docs/e2e.md)'s triggers say so.
+
 **New code is functional.** In `src/`, `eslint-rules/` and `lib/` (tests aside) there is no
 `let`, no mutation, no loop, and types are read-only (`eslint-plugin-functional`); a `switch` over a
 union names every member. Collections go through [Remeda](https://remedajs.com/) — `lodash`,

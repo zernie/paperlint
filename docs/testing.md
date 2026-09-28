@@ -40,6 +40,11 @@ When in doubt between unit and integration: if the function takes a port (`Files
 - **Example:** `src/adapters/references/index.test.ts` — the reference checker over a fake
   `fetch`: a cold run stores every answer, a warm run makes no request at all (the recorded list of
   requests is empty), an edited entry asks only for itself.
+- **A rule through real ESLint is integration, not e2e:** `src/rule-cases.test.ts` reads every rule
+  the registry holds (`rulePlugins`) and runs each through `paperlint lint --json` in-process on a
+  small paper tree — the CLI's own config, the `tex/latex` language, `loc`, message templating. Each
+  rule needs a case that reports (id, severity, line) and one that stays silent; a registered rule
+  without cases fails the test by name. A `_build/` file a rule reads is planted, not built.
 
 ## Harness — vigiles, the agent-facing surface only
 

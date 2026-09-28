@@ -15,27 +15,30 @@ job that has its environment: `test:e2e:install` in `gates`, `test:e2e:tex` in `
 
 This page says what they prove, what they deliberately do not, and when a change owes a new one.
 
-## The line between a harness and an end-to-end run
+## The line between the other tests and an end-to-end run
 
-Most of this package is tested by harnesses, described in [`CONTRIBUTING.md`](../CONTRIBUTING.md):
-a rule is handed a file with a defect and must find it, then a clean file and must stay silent.
-That is the right shape for a rule, and it cannot answer a different kind of question.
+The rest of the package is tested by unit and integration tests and, for what an agent sees, by
+harnesses — [`testing.md`](testing.md) says which is which. A rule is tested twice before any e2e:
+unit tests beside it hand its logic a defect and a clean input, and `src/rule-cases.test.ts` runs
+every registered rule through real ESLint on a small paper tree, the way `paperlint lint` does.
+That is still an integration test: no TeX, no install, the working tree as it is.
 
-A harness runs **in this repository's process, against this repository's working tree**. It
-imports the module directly. Every path resolves, every dependency is already installed, and the
-file it reads is the file in `git`. An end-to-end run exists because all three of those are
+Those tests run **in this repository's process, against this repository's working tree**. They
+import the modules directly. Every path resolves, every dependency is already installed, and the
+file they read is the file in `git`. An end-to-end run exists because all three of those are
 assumptions that stop holding the moment somebody else installs the package.
 
-| question                                                                             | answered by                                               |
-| ------------------------------------------------------------------------------------ | --------------------------------------------------------- |
-| does this rule find this defect, and stay quiet otherwise                            | harness                                                   |
-| does the CLI pick the right script, with the right interpreter                       | harness (`src/build.harness.mjs` substitutes `spawnSync`) |
-| does the tarball, installed into a tree that is not this one, contain what it claims | **e2e**                                                   |
-| do the paths written inside a skill resolve where the package actually lands         | **e2e**                                                   |
-| did a PDF come out, and is it typeset in the fonts the venue requires                | **e2e**                                                   |
+| question                                                                             | answered by                                                   |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
+| does this rule find this defect, and stay quiet otherwise                            | unit, beside the rule                                         |
+| does the rule run through ESLint, wired, on the file it is for                       | integration (`src/rule-cases.test.ts`)                        |
+| does the CLI pick the right script, with the right interpreter                       | integration (`src/build.harness.mjs` substitutes `spawnSync`) |
+| does the tarball, installed into a tree that is not this one, contain what it claims | **e2e**                                                       |
+| do the paths written inside a skill resolve where the package actually lands         | **e2e**                                                       |
+| did a PDF come out, and is it typeset in the fonts the venue requires                | **e2e**                                                       |
 
-The third and fourth rows are the ones a harness cannot reach even in principle: the defect only
-exists once the code is somewhere else.
+The last three rows are the ones no other test can reach even in principle: the defect only exists
+once the code is somewhere else, or once a real TeX has typeset it.
 
 ## `test/e2e/install/install.e2e.ts` — the package, installed
 
@@ -137,9 +140,13 @@ Not every change does. The trigger is countable — ask whether the change touch
 - anything read through `package.json` fields — `bin`, `files`, `exports`
 - a new external program the pipeline shells out to
 - a new artifact the pipeline produces whose **content** can be wrong while the exit code is zero
+- a new template-family preset: the TeX packages it declares, and the page size and fonts measured
+  from a real build of its class → one fixture folder in `fixtures/build-e2e/`, with its
+  `expect.json`
 
-If none of those apply, a harness beside the changed module is the right test, and an e2e run
-would only make the suite slower without making it stricter.
+If none of those apply, a unit or integration test beside the changed module is the right test,
+and an e2e run would only make the suite slower without making it stricter. A new rule is not a
+trigger by itself: its cases in `src/rule-cases.test.ts` already run it through real ESLint.
 
 ## What these two do NOT cover
 

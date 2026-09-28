@@ -95,6 +95,8 @@ export const FixtureExpect = z.strictObject({
       errors: z.number().int().nonnegative().optional(),
       /** For each rule named: EXACTLY these findings, in line order. `[]` means none. */
       rules: z.record(z.string(), z.array(Finding)).default({}),
+      /** EXACTLY these findings from every rule together, in line order. `[]` means none at all. */
+      findings: z.array(Finding.extend({ rule: z.string() })).optional(),
     })
     .optional(),
 });

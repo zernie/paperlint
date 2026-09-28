@@ -1,8 +1,7 @@
 % A small real paper in the class AIDC requires, built by the e2e on paperlint's own TeX Live, so
-% `paperlint toolchain` is proved to install what the ieee-conference preset declares.
-% Two things are deliberate: the LLM Usage Statement closes the paper (tex/required-section passes),
-% and the author block still names the venue this paper was first written for (tex/venue-leftover
-% warns on that one line, and on nothing else).
+% `paperlint toolchain` is proved to install what the ieee-conference preset declares, and every
+% rule is judged against what a real build of the class measures. It conforms: the LLM Usage
+% Statement closes it, and not one rule has anything to say.
 \documentclass[conference,compsoc]{IEEEtran}
 \begin{filecontents*}{refs.bib}
 @article{knuth84,
@@ -25,7 +24,7 @@ A reviewer would find it dull, which is exactly what a measurement fixture shoul
 \begin{document}
 \title{A Fixture Typeset in the Class the Venue Requires}
 \author{\IEEEauthorblockN{A. Author}
-\IEEEauthorblockA{Submission to AISec 2026 --- double-blind review}}
+\IEEEauthorblockA{Anonymous for double-blind review}}
 \maketitle
 \begin{abstract}
 The abstract exists so the build has the front matter an IEEE paper carries.
