@@ -1,7 +1,7 @@
 /** The paper's `\documentclass`, a preset's template, and setting a class in a source. */
 import {
   documentClassLine,
-  missingOptions,
+  venueClass,
   type ClassLine,
   type DocumentClass,
 } from "../../domain/tex-document.ts";
@@ -52,10 +52,8 @@ export function parseTemplate(text: string): DocumentClass | null {
 }
 
 /**
- * The source with its `\documentclass` set to `want`. The right class keeps the author's own
- * options and gains the ones `want` names that it lacks (unchanged when none is missing); another
- * class is replaced by `want` whole. A source with no class, an empty one, or one the parser gave
- * no position is returned as it is.
+ * The source with its `\documentclass` line rewritten to satisfy `want` (see `venueClass`). A source
+ * whose class already does, or that has no class line the parser could place, is returned as it is.
  */
 export function replaceDocumentClass(
   t: ParsedTex,
@@ -63,12 +61,8 @@ export function replaceDocumentClass(
 ): string {
   const line = documentClassOf(t);
   if (line.kind !== "class" || line.place.kind === "unplaced") return t.src;
-  const missing = missingOptions(line, want);
-  if (line.cls === want.cls && missing.length === 0) return t.src;
-  const next: DocumentClass =
-    line.cls === want.cls
-      ? { cls: line.cls, options: [...line.options, ...missing] }
-      : want;
+  const next = venueClass(line, want);
+  if (next === null) return t.src;
   const { start, end } = line.place.span;
-  return `${t.src.slice(0, start)}${documentClassLine(next)}${t.src.slice(end)}`;
+  return t.src.slice(0, start) + documentClassLine(next) + t.src.slice(end);
 }

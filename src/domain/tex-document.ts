@@ -36,6 +36,21 @@ export const missingOptions = (
   want: DocumentClass,
 ): readonly string[] => want.options.filter((o) => !got.options.includes(o));
 
+/**
+ * The class a paper should have to satisfy a venue's `want`, or null when it already does. Another
+ * class becomes `want`; the same class keeps the paper's options and gains the ones it lacks.
+ */
+export function venueClass(
+  have: DocumentClass,
+  want: DocumentClass,
+): DocumentClass | null {
+  if (have.cls !== want.cls) return want;
+  const missing = missingOptions(have, want);
+  return missing.length === 0
+    ? null
+    : { cls: have.cls, options: [...have.options, ...missing] };
+}
+
 /** A class as a `\documentclass` line, for a message and for the line `paperlint new` writes. */
 export const documentClassLine = (d: DocumentClass): string =>
   `\\documentclass${d.options.length > 0 ? `[${d.options.join(",")}]` : ""}{${d.cls}}`;

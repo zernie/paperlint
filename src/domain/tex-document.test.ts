@@ -6,6 +6,7 @@ import {
   missingOptions,
   runText,
   spanIn,
+  venueClass,
   type TextRun,
 } from "./tex-document.ts";
 
@@ -57,6 +58,22 @@ describe("a document class", () => {
         { cls: "x", options: ["a", "b", "c"] },
       ),
     ).toEqual(["a", "c"]);
+  });
+
+  it("venueClass: another class becomes the venue's; the same class keeps its options and gains the missing", () => {
+    const want = { cls: "IEEEtran", options: ["conference", "compsoc"] };
+    expect(venueClass({ cls: "article", options: ["11pt"] }, want)).toEqual(
+      want,
+    );
+    expect(
+      venueClass({ cls: "IEEEtran", options: ["review", "conference"] }, want),
+    ).toEqual({
+      cls: "IEEEtran",
+      options: ["review", "conference", "compsoc"],
+    });
+    expect(
+      venueClass({ cls: "IEEEtran", options: ["compsoc", "conference"] }, want),
+    ).toBeNull();
   });
 
   it("collapse: every run of whitespace, newlines included, and trims", () => {
