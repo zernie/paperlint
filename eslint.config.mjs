@@ -20,6 +20,7 @@ import n from "eslint-plugin-n";
 import tseslint from "typescript-eslint";
 import boundaries from "eslint-plugin-boundaries";
 import functional from "eslint-plugin-functional";
+import sonarjs from "eslint-plugin-sonarjs";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -70,33 +71,99 @@ const GIT_IN_A_RULE = [
     "A rule may not run git: a sha is deleted by routine maintenance and absent from a shallow CI checkout. Read the file content ESLint passes the rule.",
 }));
 
-const MAX_LINES = { max: 60, skipComments: true, skipBlankLines: true };
+/** Source code: a function is one job, and thirty lines is where a second job starts to hide. */
+const MAX_LINES = { max: 30, skipComments: true, skipBlankLines: true };
+/**
+ * Tests keep sixty: a `describe`/`it` callback is a list of cases, not a function to split, and
+ * cutting it by line count scatters one scenario across helpers nobody reads twice.
+ */
+const MAX_LINES_TESTS = { ...MAX_LINES, max: 60 };
+const TEST_FILES = [
+  "**/*.test.{ts,mts}",
+  "**/*.harness.{ts,mts}",
+  "**/*.e2e.{ts,mts}",
+  "test/**/*.{ts,mts}",
+];
 
-// 🔴 A CEILING, NOT A PERMISSION: each number is the file's measured maximum on 2026-09-24, so a
+// 🔴 A CEILING, NOT A PERMISSION: each number is the file's measured maximum when its limit arrived
+// (complexity, depth and 60-line functions on 2026-09-24; cognitive complexity and the 30-line
+// source limit on 2026-09-28; the TypeScript moves of #78 on 2026-09-27), so a
 // function in these files can get simpler and cannot get worse. Lower a number when a refactor
-// lowers the maximum; never raise one. Paying the debt down is issue #72. A file leaves this table
+// lowers the maximum; never raise one. Paying the debt down is issue #137. A file leaves this table
 // when it passes the shared limits.
 const RATCHET = {
-  "src/init.ts": { complexity: 59, "max-lines-per-function": 219 },
-  "src/cli.ts": { complexity: 43, "max-lines-per-function": 152 },
-  "src/doctor.ts": { complexity: 38, "max-lines-per-function": 125 },
-  "src/hooks-settings.ts": { complexity: 12, "max-depth": 4 },
-  "src/structure.ts": { complexity: 12, "max-depth": 4 },
-  "src/new-paper.ts": { complexity: 11 },
-  // Moved from JavaScript on 2026-09-27 (#78) and measured that day: the move changed their
-  // language, not their shape, so their debt is pinned here like the rest rather than paid in it.
   "eslint-rules/latex-language.ts": {
     complexity: 68,
+    "sonarjs/cognitive-complexity": 98,
     "max-lines-per-function": 314,
     "max-depth": 4,
   },
-  "eslint-rules/paper-typography.ts": { complexity: 29, "max-depth": 5 },
   "eslint-rules/paper-stages.ts": {
     complexity: 15,
+    "sonarjs/cognitive-complexity": 21,
     "max-lines-per-function": 105,
   },
+  "eslint-rules/paper-typography.ts": {
+    complexity: 29,
+    "sonarjs/cognitive-complexity": 41,
+    "max-lines-per-function": 50,
+    "max-depth": 5,
+  },
+  "eslint-rules/pdf-last-page-balance.ts": { "max-lines-per-function": 31 },
+  "eslint-rules/review-frontmatter.ts": { "max-lines-per-function": 46 },
   "eslint-rules/temp-root-realpath.ts": { complexity: 13 },
+  "eslint-rules/tex-build.ts": { "max-lines-per-function": 34 },
+  "lib/agent-cli-version.ts": { "max-lines-per-function": 42 },
   "lib/markdown.ts": { complexity: 12 },
+  "scripts/check.ts": {
+    "sonarjs/cognitive-complexity": 13,
+    "max-lines-per-function": 39,
+  },
+  "skills/plan-paper-timeline/fixtures/fake-google-calendar.ts": {
+    "max-lines-per-function": 31,
+  },
+  "src/adapters/curl/download.io.ts": { "max-lines-per-function": 39 },
+  "src/adapters/references/index.ts": { "max-lines-per-function": 36 },
+  "src/build-engine.ts": { "max-lines-per-function": 33 },
+  "src/build.ts": {
+    "sonarjs/cognitive-complexity": 13,
+    "max-lines-per-function": 41,
+  },
+  "src/cli.ts": {
+    complexity: 43,
+    "sonarjs/cognitive-complexity": 30,
+    "max-lines-per-function": 152,
+  },
+  "src/doctor.ts": {
+    complexity: 38,
+    "sonarjs/cognitive-complexity": 20,
+    "max-lines-per-function": 125,
+  },
+  "src/domain/lookup-cache.ts": { "max-lines-per-function": 31 },
+  "src/hooks-settings.ts": {
+    complexity: 12,
+    "max-lines-per-function": 42,
+    "max-depth": 4,
+  },
+  "src/init.ts": {
+    complexity: 59,
+    "sonarjs/cognitive-complexity": 44,
+    "max-lines-per-function": 219,
+  },
+  "src/latex-log.ts": { "sonarjs/cognitive-complexity": 12 },
+  "src/link-skills.ts": { "max-lines-per-function": 32 },
+  "src/new-paper.ts": { complexity: 11, "max-lines-per-function": 38 },
+  "src/pdf-facts.ts": { "max-lines-per-function": 33 },
+  "src/presets.ts": { "max-lines-per-function": 50 },
+  "src/reference-rules.ts": { "max-lines-per-function": 36 },
+  "src/references.ts": { "max-lines-per-function": 43 },
+  "src/structure.ts": {
+    complexity: 12,
+    "sonarjs/cognitive-complexity": 24,
+    "max-lines-per-function": 39,
+    "max-depth": 4,
+  },
+  "src/toolchain.ts": { "max-lines-per-function": 50 },
 };
 
 // ── Hexagonal layers (src/CLAUDE.md, issue #76) ─────────────────────────────────────────
@@ -423,7 +490,11 @@ export default [
         tsconfigRootDir: dirname(fileURLToPath(import.meta.url)),
       },
     },
-    plugins: { "@typescript-eslint": tseslint.plugin, local: localRules },
+    plugins: {
+      "@typescript-eslint": tseslint.plugin,
+      local: localRules,
+      sonarjs,
+    },
     rules: {
       // The same macOS-only defect as in the `.mjs` block; clean here, so it opens at `error`.
       "local/temp-root-realpath": "error",
@@ -453,6 +524,10 @@ export default [
       // Branches per function. Ten is the rule's long-standing default; the worst function
       // measured was 59, and one that size cannot be read, only re-run.
       complexity: ["error", 10],
+      // `complexity` counts branches; cognitive complexity also charges NESTING, which is what makes
+      // a function hard to read. Only this one rule of the plugin: its recommended set is a style
+      // guide of its own, and each rule here is a decision.
+      "sonarjs/cognitive-complexity": ["error", 10],
       // `x as unknown as T` tells the checker to look away: two spellings of one port were once
       // reconciled that way (#76). A real conversion is a function; a real subset needs no cast.
       "no-restricted-syntax": ["error", AS_UNKNOWN_AS],
@@ -468,6 +543,10 @@ export default [
       // to the type is then a compile-time finding at every place that must handle it.
       "@typescript-eslint/switch-exhaustiveness-check": "error",
     },
+  },
+  {
+    files: TEST_FILES,
+    rules: { "max-lines-per-function": ["error", MAX_LINES_TESTS] },
   },
   // Hexagonal layers, both axes (src/CLAUDE.md): knowledge by element, purity by file category.
   IO_GLOBALS,

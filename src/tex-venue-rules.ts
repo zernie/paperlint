@@ -29,6 +29,8 @@ import {
   runText,
   spanIn,
   type ClassLine,
+  type DocumentClass,
+  type Heading,
   type Outline,
   type Place,
   type Span,
@@ -83,6 +85,44 @@ export interface TexRuleModule {
 /** A place as a finding points at it: its span, or null — the top of the file — when unplaced. */
 const spanOf = (p: Place): Span | null => (p.kind === "at" ? p.span : null);
 
+/** What every template finding names: the venue and the class line it requires. */
+interface TemplateData {
+  readonly venue: string;
+  readonly template: string;
+}
+
+/** A class line that names a class, against the template's: the same class, with every option. */
+function judgeClass(
+  line: Extract<ClassLine, { readonly kind: "class" }>,
+  want: DocumentClass,
+  data: TemplateData,
+): readonly Located[] {
+  const at = spanOf(line.place);
+  if (line.cls !== want.cls)
+    return [{ messageId: "wrongClass", data: { ...data, got: line.cls }, at }];
+  return missingOptions(line, want).map((option) => ({
+    messageId: "missingOption",
+    data: { ...data, option },
+    at,
+  }));
+}
+
+/** The paper's class line against a template that was read: present, naming a class, that class. */
+function judgeClassLine(
+  line: ClassLine,
+  want: DocumentClass,
+  data: TemplateData,
+): readonly Located[] {
+  switch (line.kind) {
+    case "missing":
+      return [{ messageId: "noClass", data, at: null }];
+    case "empty":
+      return [{ messageId: "emptyClass", data, at: spanOf(line.place) }];
+    case "class":
+      return judgeClass(line, want, data);
+  }
+}
+
 /**
  * The paper's class line against the preset's template: a template the reader cannot read is said
  * once; then the class must be there, name a class, be the template's class, and carry every
@@ -96,40 +136,40 @@ export function judgeTemplate(
   const t = preset.template;
   if (t === null) return [];
   const want = latex.template(t.text);
-  if (want === null)
-    return [
-      {
-        messageId: "badTemplate",
-        data: { file: t.file, text: JSON.stringify(t.text) },
-        at: null,
-      },
-    ];
-  const data = { venue: preset.label, template: documentClassLine(want) };
-  switch (line.kind) {
-    case "missing":
-      return [{ messageId: "noClass", data, at: null }];
-    case "empty":
-      return [{ messageId: "emptyClass", data, at: spanOf(line.place) }];
-    case "class":
-      return line.cls === want.cls
-        ? missingOptions(line, want).map((option) => ({
-            messageId: "missingOption",
-            data: { ...data, option },
-            at: spanOf(line.place),
-          }))
-        : [
-            {
-              messageId: "wrongClass",
-              data: { ...data, got: line.cls },
-              at: spanOf(line.place),
-            },
-          ];
+  if (want === null) {
+    const data = { file: t.file, text: JSON.stringify(t.text) };
+    return [{ messageId: "badTemplate", data, at: null }];
   }
+  const data = { venue: preset.label, template: documentClassLine(want) };
+  return judgeClassLine(line, want, data);
 }
 
 /** Where a heading starts, or null when the parser gave it no place. */
 const startOf = (p: Place): number | null =>
   p.kind === "at" ? p.span.start : null;
+
+/** A required section that is absent, reported where the document ends — where it would go. */
+const missingSection = (
+  outline: Outline,
+  data: { readonly venue: string; readonly title: string },
+): Located => ({
+  messageId: "missing",
+  data,
+  at: outline.end === null ? null : { start: outline.end, end: outline.end },
+});
+
+/** The first section of the body that starts after `start` and is not titled `title`. */
+function bodySectionAfter(
+  outline: Outline,
+  start: number,
+  title: string,
+): Heading | undefined {
+  const backMatter = outline.backMatter ?? Number.POSITIVE_INFINITY;
+  return outline.sections.find((h) => {
+    const s = startOf(h.place);
+    return s !== null && s > start && s < backMatter && h.title !== title;
+  });
+}
 
 /**
  * One required section against the outline: missing (reported where the document ends, where it
@@ -145,37 +185,13 @@ function judgeSection(
   const title = collapse(want.title);
   const last = outline.sections.filter((h) => h.title === title).at(-1);
   const data = { venue, title };
-  if (last === undefined) {
-    const end = outline.end;
-    return [
-      {
-        messageId: "missing",
-        data,
-        at: end === null ? null : { start: end, end },
-      },
-    ];
-  }
+  if (last === undefined) return [missingSection(outline, data)];
   const lastStart = startOf(last.place);
   if (want.position !== "last" || lastStart === null) return [];
-  const backMatter = outline.backMatter ?? Number.POSITIVE_INFINITY;
-  const after = outline.sections.find((h) => {
-    const start = startOf(h.place);
-    return (
-      start !== null &&
-      start > lastStart &&
-      start < backMatter &&
-      h.title !== title
-    );
-  });
-  return after === undefined
-    ? []
-    : [
-        {
-          messageId: "notLast",
-          data: { ...data, after: after.title },
-          at: spanOf(last.place),
-        },
-      ];
+  const after = bodySectionAfter(outline, lastStart, title);
+  if (after === undefined) return [];
+  const notLast = { ...data, after: after.title };
+  return [{ messageId: "notLast", data: notLast, at: spanOf(last.place) }];
 }
 
 /** Every section the preset requires, against the paper's outline. */
@@ -348,6 +364,38 @@ export interface TexVenueRuleDeps extends VenueRuleDeps {
   readonly latex: LatexReader;
 }
 
+/**
+ * What a judge reads for the paper whose `paper.tex` is `filename`, or null when the paper has no
+ * resolved preset (`pdf/measured` and `pdf/profile` already say so).
+ */
+function readingOf(
+  filename: string,
+  src: string,
+  deps: TexVenueRuleDeps,
+): Reading | null {
+  const dir = dirname(filename);
+  const p = paperPreset(dir, deps);
+  if (p.kind !== "resolved") return null;
+  const preset = p.preset;
+  const others = () => otherVenues(preset, join(dir, CONFIG_FILE), deps);
+  return { src, latex: deps.latex, preset, others };
+}
+
+/** Each finding reported at its span, or at the top of the file when it has none. */
+function reportAll(
+  context: TexRuleContext,
+  findings: readonly Located[],
+): void {
+  const at = (i: number) => context.sourceCode.getLocFromIndex(i);
+  findings.forEach((f) => {
+    context.report({
+      loc: { start: at(f.at?.start ?? 0), end: at(f.at?.end ?? 0) },
+      messageId: f.messageId,
+      data: f.data,
+    });
+  });
+}
+
 function rule(name: TexVenueRuleName, deps: TexVenueRuleDeps): TexRuleModule {
   const { judge, meta } = RULES[name];
   return {
@@ -357,29 +405,9 @@ function rule(name: TexVenueRuleName, deps: TexVenueRuleDeps): TexRuleModule {
       if (basename(context.filename) !== "paper.tex") return {};
       return {
         root() {
-          const p = paperPreset(dirname(context.filename), deps);
-          if (p.kind !== "resolved") return;
           const sc = context.sourceCode;
-          const at = (i: number) => sc.getLocFromIndex(i);
-          const preset = p.preset;
-          const others = () =>
-            otherVenues(
-              preset,
-              join(dirname(context.filename), CONFIG_FILE),
-              deps,
-            );
-          judge({
-            src: sc.raw ?? sc.text,
-            latex: deps.latex,
-            preset,
-            others,
-          }).forEach((f) => {
-            context.report({
-              loc: { start: at(f.at?.start ?? 0), end: at(f.at?.end ?? 0) },
-              messageId: f.messageId,
-              data: f.data,
-            });
-          });
+          const reading = readingOf(context.filename, sc.raw ?? sc.text, deps);
+          if (reading !== null) reportAll(context, judge(reading));
         },
       };
     },

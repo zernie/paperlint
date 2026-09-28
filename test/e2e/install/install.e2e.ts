@@ -405,37 +405,81 @@ function consumerSkillView(
   rootRefs: number;
   unresolved: string[];
 } {
-  const dir = skillsDir(installed);
-  const names = installedSkills(dir);
-  const home = join(consumer, ".claude", "skills");
-  const unreachable: string[] = [];
-  const notLinks: string[] = [];
-  const links: Record<string, string> = {};
-  const unresolved: string[] = [];
-  let rootRefs = 0;
-  let refs = 0;
-  for (const name of names) {
-    const entry = join(home, name);
-    if (!existsSync(join(entry, "SKILL.md"))) {
-      unreachable.push(name);
-      continue;
-    }
-    try {
-      links[name] = readlinkSync(entry);
-    } catch {
-      notLinks.push(name);
-    }
-    const body = readFileSync(join(entry, "SKILL.md"), "utf8");
-    for (const m of body.matchAll(/([\w./-]*scripts\/[\w-]+\.mjs)/g)) {
-      refs++;
-      const raw = m[1] ?? "";
-      const fromRoot = raw.startsWith(".claude/skills/");
-      if (fromRoot) rootRefs++;
-      const at = fromRoot ? join(consumer, raw) : join(entry, raw);
-      if (!existsSync(at)) unresolved.push(`${name}: ${raw}`);
-    }
+  const names = installedSkills(skillsDir(installed));
+  const seen = names.map((name) => skillSeen(consumer, name));
+  const reached = seen.flatMap((s) => (s.kind === "reached" ? [s] : []));
+  const scripts = reached.flatMap((s) =>
+    s.scripts.map((r) => ({ skill: s.name, ...r })),
+  );
+  return {
+    names,
+    unreachable: seen.flatMap((s) =>
+      s.kind === "unreachable" ? [s.name] : [],
+    ),
+    notLinks: reached.flatMap((s) => (s.link === null ? [s.name] : [])),
+    links: Object.fromEntries(
+      reached.flatMap((s) => (s.link === null ? [] : [[s.name, s.link]])),
+    ),
+    refs: scripts.length,
+    rootRefs: scripts.filter((r) => r.fromRoot).length,
+    unresolved: scripts.flatMap((r) =>
+      r.resolves ? [] : [`${r.skill}: ${r.raw}`],
+    ),
+  };
+}
+
+/** A script path a SKILL.md names, and whether it resolves the way the agent resolves it. */
+interface ScriptRef {
+  readonly raw: string;
+  readonly fromRoot: boolean;
+  readonly resolves: boolean;
+}
+
+/** One skill as the consumer's project sees it: absent, or there — as a link or as a copy. */
+type SkillSeen =
+  | { readonly kind: "unreachable"; readonly name: string }
+  | {
+      readonly kind: "reached";
+      readonly name: string;
+      /** Where the entry links to, or null when it is not a symlink. */
+      readonly link: string | null;
+      readonly scripts: readonly ScriptRef[];
+    };
+
+/** The skill `name` from the consumer root, `.claude/skills/<name>/SKILL.md`. */
+function skillSeen(consumer: string, name: string): SkillSeen {
+  const entry = join(consumer, ".claude", "skills", name);
+  if (!existsSync(join(entry, "SKILL.md")))
+    return { kind: "unreachable", name };
+  return {
+    kind: "reached",
+    name,
+    link: linkTarget(entry),
+    scripts: scriptRefs(consumer, entry),
+  };
+}
+
+/** What `entry` links to, or null when it is not a symlink. */
+function linkTarget(entry: string): string | null {
+  try {
+    return readlinkSync(entry);
+  } catch {
+    return null;
   }
-  return { names, unreachable, notLinks, links, refs, rootRefs, unresolved };
+}
+
+/**
+ * The script paths a skill's SKILL.md names: `.claude/skills/<skill>/scripts/x.mjs` resolved from
+ * the project root, anything else from the skill's own directory.
+ */
+function scriptRefs(consumer: string, entry: string): readonly ScriptRef[] {
+  const body = readFileSync(join(entry, "SKILL.md"), "utf8");
+  return [...body.matchAll(/([\w./-]*scripts\/[\w-]+\.mjs)/g)].map((m) => {
+    const raw = m[1] ?? "";
+    const fromRoot = raw.startsWith(".claude/skills/");
+    const at = fromRoot ? join(consumer, raw) : join(entry, raw);
+    return { raw, fromRoot, resolves: existsSync(at) };
+  });
 }
 
 // realpathSync is NOT decoration: on macOS `/var` is a symlink to `/private/var`, and a path
