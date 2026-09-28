@@ -293,6 +293,10 @@ const isUnsignedMacro = (n: Node): boolean =>
 const isString = (n: Node, s: string): boolean =>
   n.type === "string" && n.content === s;
 
+/** A `{…}` group, or digits glued to the macro (`\if\conference1`): an argument it takes. */
+const isMandatoryArgument = (n: Node): boolean =>
+  n.type === "group" || (n.type === "string" && /^\d+$/u.test(n.content));
+
 /** One node's step: whether it is skipped as an argument, and the state after it. */
 function step(
   state: ArgumentState,
@@ -300,7 +304,7 @@ function step(
 ): { readonly skip: boolean; readonly state: ArgumentState } {
   if (state === "optional")
     return { skip: true, state: isString(n, "]") ? "arguments" : "optional" };
-  if (state === "arguments" && n.type === "group")
+  if (state === "arguments" && isMandatoryArgument(n))
     return { skip: true, state: "arguments" };
   if (state === "arguments" && isString(n, "["))
     return { skip: true, state: "optional" };
@@ -308,9 +312,9 @@ function step(
 }
 
 /**
- * The nodes of a list that are prose: without the `{…}` and `[…]` right after a macro the parser
- * gave no signature — `\institution{…}`, `\ccsdesc[500]{…}`, `\tool{}` — which are its arguments,
- * not text. A formatting macro's group (`\enquote{…}` without csquotes' signature) stays prose.
+ * The nodes of a list that are prose: without the `{…}`, `[…]` and glued digits right after a
+ * macro the parser gave no signature — `\institution{…}`, `\ccsdesc[500]{…}`, `\tool{}`,
+ * `\if\conference1` — which are its arguments, not text. A formatting macro's group (`\enquote{…}` without csquotes' signature) stays prose.
  */
 const proseNodes = (list: readonly Node[]): readonly Node[] =>
   list.reduce<{

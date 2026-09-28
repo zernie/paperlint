@@ -1,0 +1,63 @@
+
+\section{Introduction}
+\label{sec:intro}
+\starfootnote{ Both authors contributed equally as advisors.}
+
+
+Large language models (LLMs) have grown increasingly popular among users for distilling complex information in user-friendly ways. This capability has made LLMs an appealing resource for computer security and online safety. For example, LLMs provide financial advice as chatbots \cite{next_web}, and are endorsed for fraud detection by security vendors \cite{zdnet_norton, biocatch, dataleon}. The use of LLMs for computer security advice is the natural evolution of the user practice of seeking online advice for security-relevant tasks such as strong password creation \cite{redmiles-2016-sources-n-selection}. However, the quality of LLM chat responses to end user security questions has not been rigorously studied.\footnote{Since we studied the role of LLMs solely as conversational assistants, we will refer to them as ``LLM'' throughout the remainder of the paper.} There is a critical need to evaluate the quality of LLM support in the user security context as adoption accelerates.
+
+
+
+
+
+
+There are well-documented risks to relying on LLMs for information, including hallucinations, reasoning errors,
+and vulnerability to concept drift~\cite{openai2024gpt4, GPT4SystemCard, geminiteam2024geminiv1, brown2020language, rajani-etal-2019-explain, shwartz-etal-2020-unsupervised, Lu_2018, bommasani2022opportunitiesrisksfoundationmodels}. Further, LLMs have been found to perpetuate known misconceptions in security and online safety~\cite{chen2023can}. A larger and broader evaluation of LLM security responses (beyond known misconceptions \cite{chen2023can}) is needed in order to help identify the boundaries of LLM security ``knowledge” and inform users and model developers of LLM shortcomings.%
+
+
+
+To address this gap, we conducted the first expert-based manual evaluation of LLM responses to end-user security questions. We collected a diverse set of security and online safety questions from FAQs published by consumer safety and commercial organizations, covering seven key security areas. These questions are representative of common user concerns (\Cref{sec:represent}). We evaluated responses to these questions from three popular LLMs---GPT, Llama, and Gemini---using authoritative sources to assess their accuracy, completeness, and relevance. Our qualitative assessment focused on identifying patterns of errors and communication styles in LLM responses, providing insights into their strengths and limitations.
+
+
+
+
+
+Our assessment is guided by the following research questions (RQs):
+
+ 
+\begin{enumerate}[wide, label={\bfseries RQ\arabic*:}, left=0pt..0em, itemindent=2.6em]
+    \item What is the information quality of LLM responses to user security questions? %
+    \item What are the patterns of deficient or erroneous LLM responses to user security questions? %
+    \item What actionable suggestions can improve LLM performance for users seeking security advice and developers building models?%
+\end{enumerate}
+
+We found that LLMs provide quality information expressed in a user-friendly manner when prompted with \textit{general knowledge} security questions. However, we also found consistent %
+deficiencies and errors across LLMs. %
+Surfacing these limitations can help users more effectively engage with LLMs and support improved model development. 
+
+In particular, LLMs often fail to leverage research findings that could improve communication of important nuances in guidance and reduce misinterpretation of more specialized concepts. For example, LLMs provide outdated password guidance, neglect the risks of app permissions, fail to connect phishing and HTTPS URLs, and confuse zero-knowledge proofs and zero-knowledge encryption---all topics well-studied in research. 
+In addition, our findings tentatively suggest LLMs may be influenced by marketing materials in that they tend to over-promise the capabilities of technology and products (e.g., endorsing VPNs for phishing protection), and miss important criticisms (e.g., neglecting the transparency benefits of open source code and data breach handling). %
+
+
+We also find safety guardrails can interfere with answering benign security questions as can patterns of indirect communication style. %
+Indirect LLM responses may begin  with encouraging or sycophantic \cite{sharma2023towards} statements (e.g., ``Great question!’’), or other information that has not been asked for and may already be known by the user (e.g., definitions). We term the latter ``LLM-splaining’’ given its similarity to mansplaining \cite{solnit2014men}.
+
+\paragraph{Contributions.} We advance the understanding of LLM performance on user security questions through:
+\begin{enumerate}[label={\bfseries \arabic*)}] %
+    \item \textbf{A diverse set of LLM ``knowledge’’ %
+   deficiencies in computer security}: Through inductive thematic analysis on 1244 responses across the 3 LLMs, we found multiple patterns of inaccuracy and omissions, some of which can lead to complete user-LLM interaction failures in which LLM responses are not relevant to the user's question. These patterns inform guidance for users and model developers (\Cref{findings},~\Cref{sec:discussion}). %
+    \item \textbf{A corpus of user security questions with authoritative answer sources}: We curated and will publish a collection of user security questions from 7 categories with sources of authoritative answers for use by future research and development projects (\Cref{sec:method}).
+    \item \textbf{A framework for assessing LLMs}: We adapted information integrity concepts to form a framework for the qualitative assessment of the content and communication style of LLM responses (\Cref{sec:method}).
+
+    \item \add{\textbf{A corpus of expert-rated LLM responses:} $5$ security researchers conducted the first known expert manual evaluation of $1244$ LLM responses to user security and safety questions. The labeled corpus is potentially useful for training an automated LLM evaluation system. We will make the dataset available to researchers and developers upon request.}
+\end{enumerate}
+
+
+
+
+
+
+
+
+
+

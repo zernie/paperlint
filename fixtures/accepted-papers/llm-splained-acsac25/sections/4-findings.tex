@@ -1,0 +1,221 @@
+
+
+
+
+
+
+
+
+\section{Findings} %
+\label{findings}
+
+
+\begin{table}[!h]
+\if \conference1
+\relsize{-1}
+\fi
+    \setlength{\abovecaptionskip}{0pt}
+\caption{Performance of GPT in terms of \% of responses where it fully achieved the indicated attribute.}
+\label{tab:gpt-evaluation-dist-by-topics}
+\resizebox{\linewidth}{!}{%
+    {\renewcommand{\arraystretch}{1.2}%
+    \begin{tabular}{p{0.17\linewidth}p{0.37\linewidth}p{0.09\linewidth}p{0.16\linewidth}p{0.1\linewidth}p{0.11\linewidth}}
+    \toprule
+    \textbf{Categorization}& \textbf{Category} & \textbf{Accuracy} & \textbf{Thoroughness} & \textbf{Relevancy} & \textbf{Directness} \\
+    \cline{3-6}
+     & & Correct & Thorough & Relevant & Direct \\
+    \midrule
+    \textbf{} & \textbf{\# of responses out of all (900)} & 0.73 & 0.68 & 0.98 & 0.83 \\
+    \cline{1-6}
+    \multirow[t]{7}{\linewidth}{\textbf{Security Category}} & \textbf{Authentication (449)} & 0.69 & 0.69 & 0.98 & 0.83 \\
+    \textbf{} & \textbf{Scams (83)} & 0.82 & 0.70 & 1.00 & 0.83 \\
+    \textbf{} & \textbf{Safe browsing (50)} & 0.80 & 0.68 & 0.96 & 0.88 \\
+    \textbf{} & \textbf{Antivirus (163)} & 0.61 & 0.59 & 0.99 & 0.86 \\
+    \textbf{} & \textbf{Secure network/WiFi (46)} & 0.87 & 0.67 & 0.96 & 0.70 \\
+    \textbf{} & \textbf{Smart devices (19)} & 0.89 & 0.63 & 0.95 & 0.79 \\
+    \textbf{} & \textbf{Updates (90)} & 0.88 & 0.81 & 0.99 & 0.84 \\
+    \cline{1-6}
+    \multirow[t]{3}{\linewidth}{\textbf{Knowledge Category}} & \textbf{Factual (437)} & 0.76 & 0.72 & 0.98 & 0.84 \\
+    \textbf{} & \textbf{Conceptual (164)} & 0.72 & 0.77 & 0.98 & 0.89 \\
+    \textbf{} & \textbf{Procedural (299)} & 0.69 & 0.57 & 0.99 & 0.78 \\
+    \bottomrule
+    \end{tabular}
+    }
+}
+\end{table}
+
+In our evaluation, GPT, Llama, and Gemini attempted to answer almost all the questions in our corpus, however, often with errors in correctness, thoroughness, or relevancy. In this section, we briefly discuss the evaluation results, then \add{generalizable} error patterns seen across the three models in more detail, along with cause hypotheses. We discuss guidance for users and developers based on these patterns in \Cref{sec:discussion}.
+
+
+As mentioned earlier, assessing the information integrity of LLM responses was time-consuming. Over 6 %
+months, we evaluated 900 GPT responses (including establishing a high IRR). We present the findings of our GPT evaluation in \Cref{tab:gpt-evaluation-dist-by-topics}. Out of these 900 GPT responses, 415 were perfect (i.e., correct, thorough, relevant, and direct), and 485 were imperfect. GPT responses were accurate, thorough, relevant, and direct 73\%, 68\%, 98\%, and 83\% of the time, respectively. We report the detailed breakdown across different question categorizations in \Cref{tab:appendix-gpt-evaluation-dist-big-with-directness} in \Cref{gpt-eval-results}. \remove{We do not report the Llama and Gemini evaluation numbers because they were only evaluated for questions where GPT had failed, and reporting them could lead to incorrect LLM performance comparisons.}
+
+\add{\paragraph{Note:} We do not report quantitative evaluation results for Llama and Gemini, as their responses were only assessed for a subset of questions where GPT had previously failed, see \Cref{overall-evaluation}. Reporting these selective results could lead to misleading comparisons of overall model performance.}
+
+
+
+
+
+
+ 
+
+
+\paragraph{GPT evaluation overview:} First, there is a downward trend in GPT's accuracy from factual (highest accuracy), conceptual, to procedural questions (lowest accuracy), where knowledge category is listed in order of cognitive processing required \cite{blooms-taxonomy-2001}. We hypothesize LLMs may not be good at synthesizing multiple pieces of information and formulating new facts.
+
+Second, GPT's overall performance—and its performance within individual security categories—is lower on questions that involve specific products, platforms, or companies (398 out of 900 questions). When a question is related to a product, platform, or company, the probability of the GPT response being fully accurate, thorough, and relevant is 44\%. This probability increases to 60\% for questions that are not associated with such entities.
+
+Lastly, GPT performs particularly poorly in the authentication and antivirus/anti-malware security categories. This underperformance may be attributed to the high proportion (81.15\%) of product-, platform-, or company-specific questions within these categories.
+
+Following this evaluation, we present the most common error and deficiency patterns identified across all three LLMs.  %
+
+
+
+
+
+
+
+
+
+
+
+
+
+\paragraph{Error patterns in LLMs.} Through our manual expert evaluation and inductive thematic analysis, we identified several recurring error patterns across responses from multiple LLMs that have the potential to negatively impact user security. We organized these errors into two high-level categories: content-related errors, which involve incorrect or deficient information, and communication-related errors, which pertain to how the response is conveyed to the user.
+
+Within each high-level category, we further grouped fine-grained error types into mid-level themes that capture broader underlying issues. For example, the mid-level category \textit{\LackAdherenceResearch} encompasses specific patterns such as “Password Guidance,” “HTTPS Over-Reliance,” “App Permission Risks,” and “Lacking Explanations.” In our analysis, we detail each of these patterns and offer hypotheses regarding the potential causes behind these mid-level error groups.
+
+\subsection{Finding: LLM Content Error Patterns}
+\label{sec:content_errors}
+
+
+
+
+
+\paragraph{1) \LackAdherenceResearch.} A key error pattern observed across all three LLMs is a failure to incorporate recent research findings, resulting in responses that are outdated, incorrect, or incomplete. This issue was especially prevalent in areas such as password security (65 responses) and HTTPS reliance (15 responses).
+
+   
+    \noindent \textit{\textbf{Password guidance}:} All evaluated models continued to recommend outdated practices, such as enforcing password complexity and requiring frequent password changes—advice that contradicts current security research and official guidelines. For example, in response to the question “What makes for a secure password?”, GPT advised:
+            
+            \begin{quote}
+                \underline{Complexity}: Include a mix of uppercase letters, lowercase letters, numbers, and special characters (e.g., \!!, @, \#, \$, \%).
+            \end{quote}
+            \begin{quote}    
+                \underline{Regular Updates}: Regularly updating your passwords can help reduce the risk of unauthorized access, especially if there's a chance that your password may have been exposed.
+            \end{quote}
+    
+    
+    These recommendations are inconsistent with recent research showing that password complexity requirements reduce usability without substantially enhancing security \cite{shay-2016-password-policy}, and that routine password changes—unless prompted by a known breach—offer limited benefit \cite{zhang-2010-password-expiration, chiasson-2015-password-expiration, habib-2018-password-expiration}. Current NIST guidelines also no longer support these practices \cite{grassi-2017-nist-password-guidelines}. This pattern indicates that LLMs are not well-aligned with current research guidance, particularly in security contexts where precision and relevance are essential.
+        
+    \noindent \textit{\textbf{HTTPS overreliance:}} Another common error across all three LLMs is the over-reliance on HTTPS as an indicator of website legitimacy and safety. The models frequently advised users to trust websites solely based on the presence of HTTPS and a lock icon, without clarifying the protocol’s limitations. For example, Llama suggested that users verify websites by checking for HTTPS, implying it guarantees security and legitimacy. In response to “How can I avoid phishing?”, Llama stated:
+        \begin{quote}
+            \underline{Check for HTTPS and a lock icon}: When visiting a website, make sure it starts with “https" and has a lock icon in the address bar. \underline{This indicates that the site is secure and legitimate}.
+        \end{quote}
+
+    This guidance is misleading. While HTTPS encrypts data in transit, it does not ensure that a website is trustworthy or free from malicious content. According to the 2019 Anti-Phishing Working Group report, 58\% of phishing URLs used HTTPS \cite{apwg2019-HTTPS-phishing-report}, and attackers often exploit this trust to increase the success of phishing attempts \cite{kim-https-phishing-CA-2021}. Additionally, they often omit key points about malicious websites that use HTTPS and the protocol’s broader privacy limitations, reinforcing misconceptions that may endanger users.
+    
+    By failing to explain that HTTPS guarantees only encryption—not authenticity or safety—LLM responses risk creating a false sense of security. 
+
+    \noindent \textit{\textbf{App permissions risks:}} All three LLMs failed to mention the security and privacy risks associated with app permissions when asked about their necessity. Prior research has identified several concerns, including over-privileged applications \cite{felt-permissions-2011}, deceptive practices by free apps to obtain permissions \cite{chia-permission-risks-2012}, and the misuse of automatically granted permissions without clear disclosure \cite{calciati-auto-permissions-2020}. These risks are particularly important to highlight, as app stores such as Google Play and Apple’s App Store display only broad permission categories (e.g., “Personal info,” “Location”), while more specific details (e.g., access to email or precise location) are hidden deeper in the interface.
+
+    \noindent \textit{\textbf{Lacking explanations:}} Across all three LLMs, responses to questions such as “Why do I need antivirus software?” and “What can happen if someone breaks into my home Wi-Fi?” lacked important research-backed explanations. For the former, LLMs often recommended antivirus software without qualification, despite research showing it is not always necessary or effective in all scenarios \cite{dekoven-security-practices-2019}. For the latter, none of the responses mentioned significant threats posed by local network attackers, such as household fingerprinting and tracking the behavior of occupants \cite{girish-local-iot-2023}.
+     
+
+    We hypothesize that, beyond known LLM limitations, this error may stem from data bias in the training corpus—specifically, an overrepresentation of marketing materials compared to up-to-date security research, which is often paywalled in academic papers and books. This speculation is supported by researchers' observations of similarities between LLM responses and language found on product websites. However, this cannot be confirmed due to the lack of transparency around LLM training datasets.
+
+    \paragraph{2) \Overprescription.} LLMs often portrayed security solutions in an overly optimistic manner, either omitting their limitations or recommending them for inappropriate use cases, resulting in responses that were inaccurate or incomplete. This pattern was observed in 19 responses across all three LLMs.
+    
+
+        
+    \noindent \textit{\textbf{Virtual private networks (VPNs):}} GPT and Gemini incorrectly recommended VPNs for purposes beyond their intended use, such as preventing phishing attacks and encrypting Bluetooth traffic. For the question “What are the benefits of using a VPN?" Gemini responded:
+                        \begin{quote}
+                        Enhanced Online Security: \uline{A good VPN can protect you from malicious websites and phishing attempts.}
+                        \end{quote}
+            
+            All of them asserted VPNs could prevent identity theft. For the question “How can a VPN help protect against identity theft?" GPT claimed:
+                        \begin{quote}
+                            \underline{Data Breach Protection}: In the event of a data breach, if you’ve transmitted sensitive information while connected to a VPN, the encrypted data will be less useful to cybercriminals who may have obtained it.
+                        \end{quote}
+
+            Additionally, all three models advised using VPNs to secure IoT devices—guidance that is impractical for typical end users. Llama, for example, recommended using a VPN to protect voice assistant data on public networks.
+            
+            Crucially, none of the models acknowledged that VPNs do not protect against threats from local network adversaries (e.g., on public Wi-Fi) or inherently malicious websites. These omissions contribute to misconceptions about the capabilities and appropriate use of VPNs.
+
+    \noindent \textit{\textbf{Multi-factor authentication (MFA):}} All three LLMs incorrectly recommended using MFA as a defense against spoofing attacks, where attackers impersonate another individual. However, MFA does not prevent users from receiving or engaging with calls from spoofed phone numbers, making this recommendation misleading. For example, in response to the question “What is spoofing?”, Llama advised:
+            \begin{quote}
+            To protect yourself from spoofing attacks: \uline{Use strong passwords and enable two-factor authentication whenever possible.}
+            \end{quote}
+
+
+    We hypothesize that these error patterns may stem from data quality issues, specifically the presence of unverified claims from marketing materials and blog posts about technology and security products in the training data.
+
+    \paragraph{3) \TransparencyArguments.} LLMs frequently failed to mention key transparency-related factors—such as open-source codebases, public vulnerability disclosure programs, and the historical handling of data breaches—when discussing password managers, VPNs, and MFA providers. These elements are critical for building user trust in security products.
+
+    For example, GPT consistently omitted transparency considerations when recommending password managers, even in response to questions specifically for closed-source options. Gemini occasionally mentioned transparency, while Llama incorrectly claimed that the Google Password Manager Chrome extension is open source, stating:
+    \begin{quote}
+        \uline{Open-Source Code}: The Google Password Manager Chrome extension is open-source, which allows developers and security experts to review and audit the code for vulnerabilities.
+    \end{quote}
+    
+    In discussions of products with a known history of security incidents—such as LastPass and Okta \cite{lastpass_security_incident-2022-12, lastpass_incident_data-2023-03, lastpass_security_notice_2015, okta_verkada_attack_2021, okta_support_system_unauthorized_access_2023}—GPT did not reference prior breaches, and Llama omitted this information entirely. Gemini only acknowledged such breaches when explicitly asked and did not suggest considering incident history as a criterion for choosing a password manager.
+    
+    Similarly, none of the models recommended evaluating VPN providers based on their past handling of security incidents, despite documented cases of providers failing to disclose breaches transparently \cite{nordvpn_datacenter_breach_2019}. All three models also neglected to suggest assessing the presence of vulnerability disclosure programs when selecting security tools.
+    
+    This recurring omission reflects a broader issue with LLM reasoning and may stem, at least in part, from the underrepresentation of content in the training data that explains the importance of transparency in fostering user trust.
+    
+    \paragraph{4) \MissingThreatAngles.} Across several security-related topics, LLMs failed to address critical threat vectors and appropriate mitigation strategies, potentially leaving users vulnerable. This pattern was observed in 34 responses across the models.
+    
+
+        \noindent \textit{\textbf{Password manager:}} When asked about master password compromise or unusual activity, LLMs consistently omitted key recommendations such as revoking access to the affected account and changing all passwords stored in the manager. These omissions are significant, as failure to revoke access allows attackers continued access, and not updating compromised passwords increases the risk of further breaches.
+    
+        \noindent \textit{\textbf{IoT and smart devices:}} In response to “How can I make sure my IoT devices are secure?”, none of the models suggested securing devices with WPA2/WPA3 protocols. Additionally, they failed to mention known vulnerabilities such as Blueborne \cite{cert_vu240311}—which enables remote code execution—for questions about Bluetooth security, and did not identify NFC cloning as a threat when asked about NFC risks.
+    
+        \noindent \textit{\textbf{Antivirus:}} When asked “How can I remove malware from my computer?”, all models incorrectly recommended creating backups prior to malware removal, despite the risk of copying infected files. For the question “What can happen if I use end-of-life antivirus applications?”, GPT failed to mention that such products may contain unpatched vulnerabilities. %
+    
+        We hypothesize that these omissions result from limitations in both LLM reasoning capabilities and training data coverage, despite the fact that many of these answers are publicly available.
+
+    
+    \paragraph{5) \UISteps.} When responding to procedural or “how-to" questions, all three LLMs frequently provided overly specific, fabricated steps that were either inaccurate or incomplete. In many cases, they omitted steps for relevant platforms or included steps for non-applicable ones. This pattern was the most prevalent among our observations, occurring 169 times across the models.
+
+    
+
+    For instance, in response to “How do I configure the security features in Safari?”, Gemini suggested:
+
+
+    \begin{quote}
+        General Security Settings: $\Rightarrow$
+        Open Safari: Click the Safari icon in your Dock or Applications folder. $\Rightarrow$
+        Go to Preferences: Click “Safari" in the menu bar, then select “Preferences". $\Rightarrow$
+        Choose “Security": Click the “Security" tab.
+    \end{quote}
+
+    These instructions are inaccurate, as Safari no longer includes a “Preferences” option in its menu, rendering the guidance unhelpful—especially for non-technical users seeking to securely configure their browser. %
+    
+    We hypothesize that this error pattern stems from two main factors: concept drift and hallucination. User interfaces for browsers and security tools change frequently, and documentation may not always reflect these updates promptly, contributing to concept drift. Additionally, many products have similar but not identical features or workflows (e.g., account recovery procedures), and LLMs—due to their probabilistic nature—often generalize or conflate these nuances, leading to inaccurate responses.
+
+    \paragraph{6) \Hallucinations.} Hallucination—a known issue in LLMs—refers to the generation of nonsensical or incorrect information, which can lead to security misinformation, particularly for non-technical users. All three models frequently generated factually incorrect responses, or "hallucinations," that mislead users and compromise information reliability. GPT, for instance, incorrectly linked Bluetooth use on public Wi-Fi to security risks and inaccurately recommended VPNs to secure Bluetooth communications. It also misrepresented device compatibility with antivirus software, suggesting non-existent capabilities across platforms like IoT devices, NAS systems, and smartwatches.
+
+    Llama repeatedly claimed that Google Password Manager uses zero-knowledge proofs—a cryptographic concept not applicable to its actual implementation, which uses zero-knowledge encryption—thus perpetuating a misconception.
+    
+    Gemini hallucinated that “AVG AntiVirus Hack Alerts” was a scam and incorrectly asserted that “AVG Mobile Security for iOS” does not exist, misleading users by either raising false alarms or downplaying legitimate security tools. These errors likely stem from training data quality issues and inherent reasoning limitations, particularly the prevalence of incorrect information in online sources.
+
+ 
+    We hypothesize this error pattern may also be due to data quality and LLM reasoning challenges. Many of the presented facts are well-represented in (incorrect) internet content.
+
+\subsection{Finding: LLM Communication Error Patterns}
+\label{sec:communication_errors}
+
+
+    LLMs use alignment to ensure that content generated aligns with human preferences and values, enhancing usability, safety, and reliability. The following patterns illustrate limitations in current LLM alignment strategies.
+
+    \paragraph{1) \MisinterpretQuestions.} All three models demonstrated difficulty interpreting questions involving homonyms or specific user requirements. For example, when asked how to securely install an IoT camera, GPT provided only physical installation steps, omitting security considerations. In other cases, terms like “viruses," “cookies," “patches," and “secrets" were interpreted incorrectly—yielding biological, culinary, or linguistic definitions rather than relevant technical explanations.
+
+    \paragraph{2) \RestrictiveGuardrails.} Gemini and, to a lesser extent, Llama occasionally refused to answer straightforward user questions, citing safety concerns. This behavior was most prominent in Gemini, which declined to respond to a question such as “What are the five most common passwords nowadays?” Llama exhibited this only once. In response to “What is an example of a secure password?”, Gemini replied: \begin{footnotesize}\textit{“It's great you're thinking about password security! I can't give you a specific example of a secure password, because that would be a security risk itself."}
+    \end{footnotesize}
+
+    Additionally, questions like “Can a password be attacked by brute force?”, “How can hackers use public Wi-Fi to steal my information?”, and “How do I scan my PC for potential threats with AVG AntiVirus?” were blocked by Gemini’s default safety configurations until adjustments were made. While safety measures are important, achieving a balance is crucial to maintain the models’ usability.
+    
+    \paragraph{3) \IndirectResponses.} Users tend to have short attention spans when reading online \cite{Schade2018, Nielsen1996, Nielsen1997}, making it important for responses to be direct and relevant. However, LLMs frequently begin with information already implied by the question or with generic, encouraging, or patronizing statements—such as “That’s a great question!” or “It’s important to feel secure about your passwords.” We refer to this indirect style as LLM-splaining. All three models exhibited this behavior frequently, with 260 recorded instances. For example, in response to “Can I trust Google Password Manager?”, GPT began with: \begin{footnotesize}\textit{“Google Password Manager is a feature offered by Google that stores and manages passwords for various websites and applications."}\end{footnotesize}
+    
+    \paragraph{4) \ResponsesGearedTowardsDevelopers.} At times, the models provided responses that were too technical for general end-users, instead targeting developers or system administrators. For example, in response to “How can phishing be prevented?”, Llama recommended setting up SPF, DKIM, and DMARC—solutions more appropriate for IT professionals. Similarly, when asked about the importance of HTTPS, models emphasized SEO and reputation impact, which are concerns specific to web developers. Responses to “How do I install Okta?” were for system administrators. 
+     
+     We hypothesize, these misalignments may stem from rigid safety constraints and an overrepresentation of developer-focused documentation in the training data.
+

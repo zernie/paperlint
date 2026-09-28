@@ -49,6 +49,12 @@ describe("a sentence with a number and no owner is reported, once, as its whole 
     ).toEqual(["Under test the rules held in 97\\% of cases."]);
   });
 
+  it("🔴 a count's modifiers are words, not «of the»: «2 of the guards» is not a sample", () => {
+    expect(reported("It held for 2 of the guards.")).toEqual([
+      "It held for 2 of the guards.",
+    ]);
+  });
+
   it("🔴 a name before a number is skipped only mid-sentence: a sentence-initial word is not a name", () => {
     expect(
       reported(
@@ -142,6 +148,13 @@ describe("an owner silences the sentence", () => {
       "a footnote that links",
       "The registry grew 900\\%.\\footnote{\\url{https://e.org}}",
     ],
+  ])("%s", (_, body) => {
+    expect(reported(body)).toEqual([]);
+  });
+});
+
+describe("an owner in words silences the sentence", () => {
+  it.each([
     ["we", "We find a 6\\% reduction."],
     ["our", "Our census found 12\\% of files empty."],
     ["a \\ref", "The rate is 12\\% (Table~\\ref{t:rates})."],
@@ -162,6 +175,14 @@ describe("an owner silences the sentence", () => {
     ["a count of things", "The rule held in 48 runs."],
     ["a count of times", "It is 3 times faster."],
     ["a count with an adjective", "The rule held in 48 independent runs."],
+    [
+      "a count with a capitalised modifier",
+      "Each dataset contains 466 Boolean questions.",
+    ],
+    [
+      "a count with two modifiers",
+      "GPT was evaluated on 900 systematically collected questions.",
+    ],
     ["of N things", "Of 1,836 repositories, 12\\% ship hooks."],
     [
       "e.g. does not end the sentence",
@@ -218,6 +239,10 @@ describe("a number that is not the body's claim is not read", () => {
       "\\affiliation{\\institution{Lab 42}}Text.",
     ],
     ["a macro definition", "\\newcommand{\\rate}{42\\%}Text."],
+    [
+      "a TeX conditional's argument glued to its macro",
+      "\\def\\conference{2}\n\\if\\conference1\n\\fi\n\\if\\conference2\nText.\n\\fi",
+    ],
   ])("%s", (_, body) => {
     expect(reported(body)).toEqual([]);
   });

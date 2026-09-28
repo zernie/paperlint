@@ -116,9 +116,13 @@ const PLACE =
 /** "n = 134", in prose or in math. */
 const SAMPLE_SIZE = /(?<![\p{L}\\])[nN]\s*=\s*\d/u;
 
-/** A count followed by what it counts: "48 runs", "1,836 repositories", "48 independent runs". */
+/**
+ * A count followed by what it counts, with up to two modifiers that are not function words: "48
+ * runs", "1,836 repositories", "466 Boolean questions", "900 systematically collected questions" —
+ * and not "2 of the guards".
+ */
 const COUNT =
-  /(?<![\p{L}\p{N}.,])(?:\d{1,3}(?:,\d{3})+|\d+)(?![.,]?\d)\s+(?:\p{Ll}+\s+)?\p{Ll}+s(?!\p{L})/gu;
+  /(?<![\p{L}\p{N}.,])(?:\d{1,3}(?:,\d{3})+|\d+)(?![.,]?\d)\s+(?:(?!(?:of|the|and|or|to|in|for|on|at|by|a|an|with|from|than|as)\s)[\p{L}-]+\s+){0,2}\p{Ll}+s(?!\p{L})/gu;
 
 /** The first number in `s` that is a quantity, or undefined. */
 const quantityIn = (s: string): string | undefined =>

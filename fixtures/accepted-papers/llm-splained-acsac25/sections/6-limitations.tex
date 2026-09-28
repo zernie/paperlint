@@ -1,0 +1,24 @@
+\section{Limitations and Future Work} 
+\subsection{Representation of user queries in our corpus}
+\label{sec:represent}
+
+The findings of this study depend on the user security questions used for the assessment. We therefore acknowledge that our assessment is closely tied to our efforts to curate end-user security questions.
+
+To validate the real-world relevance of our question corpus, we compared it against user-generated security questions from Reddit and Quora. For each of the 900 study questions, we retrieved up to 20 top Google search results using site-specific queries (“site:reddit.com” and “site:quora.com”). We extracted user questions either directly from the URL (Quora) or via API (Reddit), and computed their cosine similarity with the corresponding study question. Our analysis showed that over 71\% of study questions had a corresponding Reddit or Quora question with a similarity score of at least 0.75, and more than 22\% had a similarity of at least 0.9, indicating strong alignment with real-world user concerns.
+
+As part of our analysis to determine reliability for paraphrased questions (\Cref{appendix-prompt-sensitivity}), we showed that our findings are equivalent to the use of questions in the voice of users and would not change with their inclusion. In addition, questions are listed in the FAQs of consumer-focused organizations because they are \textit{frequently} asked by users; presumably, they are \textit{representative} of broadly held user concerns and less characterized by query or interaction styles that are known to change over time \cite{evolution-of-search}, so our study would be relevant over time by not including the questions in the users' voices. %
+
+Still, since we have not recruited users for our study, we acknowledge that our questions might miss the exact natural language users use to interact with LLMs. %
+Users' natural language of interaction with generative AI, exhaustive assessment of security-related questions \add{with prompt engineering}, \add{and exploration of user perception of LLM responses} are left as future work.
+
+As with any qualitative study, our manual evaluation of LLM responses is subject to potential human error and interpretation bias. To mitigate this, we conducted a four-way evaluation on a subset of 72 responses, achieving an IRR categorized as “substantial.” Additionally, all individually rated responses underwent dual verification, and any disagreements were resolved through discussion prior to inclusion in the final results. 
+
+\subsection{Future Work}
+Another important aspect of digital safety is privacy; the assessment of LLMs in the privacy domain is left as future work.%
+
+The error reasons are hypotheses based on previously published LLM research. Some of these hypotheses are challenging to verify, in particular, training data-related hypotheses depend on access to model training data. Also, our recommendations for developers are based on prior research, but we have not verified that the recommendations solve the identified issues when followed. %
+Our usability recommendations have not yet been tested on actual users to measure their efficacy. %
+
+Researchers should evaluate AI-powered search engines that generate source-based responses (e.g., ChatGPT search). During our study, these tools were newly introduced and lacked accessible APIs, limiting large-scale evaluation. Future research should examine the sources these engines suggest and how they are used to construct responses.
+
+Our findings are limited to the specific LLMs evaluated in this study and may not generalize to other models or future versions of the same models, particularly as they continue to evolve. Developing an automated evaluation system that can assess open-ended LLM responses with expert-level accuracy represents a promising direction for future research. Our expert-labeled dataset of question–response pairs could serve as a valuable resource for training or benchmarking such systems. Additionally, establishing a benchmark for automated evaluation of LLM performance on open-ended security-related questions would enable systematic, quantitative comparisons across models and versions over time. We leave these avenues for future work.

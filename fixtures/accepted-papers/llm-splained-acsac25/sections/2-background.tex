@@ -1,0 +1,77 @@
+\section{Background and Related Work}
+\label{sec:background}
+
+\paragraph{Security and privacy advice for non-expert end users.}
+Prior work has explored many aspects of user security and privacy advice, including the sources and behavioral impact of advice by demographic segment \cite{redmiles-2016-sources-n-selection, redmiles-2016-learned-to-be-secure}, user advice source selection \cite{redmiles-2016-learned-to-be-secure, pfeffer-2022-replication-infomal-lessons, emilee-2012-informal-lessons} and availability of advice \cite{sruti-2022-ambiguous-sec-advice}. The security mental models and misconceptions that advice would ideally address \cite{nicholson-2018-cybersurvival, herbert2023world} and how they are impacted by mass media \cite{fulton-2019-media-effect}, are also well-studied.
+
+
+
+From user studies, the research community has found that expert security advice can be complex and difficult for users to follow \cite{reeder-2017-152-steps, redmiles2020webadvice}.
+By conducting user studies involving users and administrators, Murray et al. found available security advice to be contradictory and ambiguous, resulting in user disagreement regarding the value of advice~\cite{murray-2023-costbenefitsofadvice}.
+
+
+
+
+Closest to this paper is Chen et al.'s \cite{chen2023can} evaluation of LLMs' ability to refute security misconceptions, where they found Bard and ChatGPT correctly negate security misconceptions approximately $70\%$ of the time. To the best of our knowledge, this paper is only the second to consider the quality of LLM user security advice and the first to broadly assess LLM advice across security topics. Unlike Chen et al., who focused on a fixed set of known misconceptions and binary “Yes/No" responses, our evaluation considers open-ended user queries and assesses both the content and communication style of responses. While the scope of our work is different and broader, we do find evidence of some of the misconceptions they study, i.e., ``Websites that use HTTPS are trustworthy,'' and “HTTPS protocol could protect against phishing”. %
+
+
+\begin{table}[!h]
+    \relsize{-1}
+    \centering
+    \vspace{-1.0em}
+    \setlength{\abovecaptionskip}{0pt}
+    \caption{This paper and existing security advice research.}
+    
+    \resizebox{\linewidth}{!}{%
+    \begin{tabular}{ p{0.60\linewidth} p{0.4\linewidth}}
+        \toprule
+        \textbf{Data source} & \textbf{Prior works}\\ 
+        \midrule
+        Interviews and questionnaires & \cite{redmiles2020webadvice, redmiles-2016-learned-to-be-secure, redmiles-2016-sources-n-selection, murray-2023-costbenefitsofadvice, robert-2017-152steps, emilee-2012-informal-lessons, pfeffer-2022-replication-infomal-lessons, ion-2015-expert-v-non-expert, busse-2019-replication-expert-v-non-expert} \\
+        Q\&A websites & \cite{hasegawa-2022-non-experts-snp-qna} \\
+        Mass media, and social media & \cite{fulton-2019-media-effect, sruti-2022-ambiguous-sec-advice} \\
+        LLM responses & \cite{chen2023can}, this paper\\
+        \bottomrule
+    \end{tabular}
+    }
+    \label{sec-advice-related-work}
+    \vspace{-1.0em}
+\end{table}
+
+
+
+
+
+
+\paragraph{LLM proliferation.} The adoption of LLMs has grown so swiftly that there is speculation they will replace traditional search engines \cite{pcmag-chatGPT-v-Google}. The LLMs we have evaluated, GPT-4 \cite{openai2024gpt4}, Gemini \cite{geminiteam2024geminiv1.5}, and Llama-3 \cite{Llama3git}, are used by a large number of users \cite{Liu-ai-usage-2024} as browser-based conversation bots offered by model developers: OpenAI uses GPT-based models in ChatGPT \cite{GPT4Research}; Meta uses Llama in its chatbot \cite{MetaLlama3launchblog,}; and Google uses Gemini in its chatbot of the same name \cite{GeminiReleaseBlog} and on the search page. Many other companies use models' APIs for customer support bots interfacing with users \cite{openaistories}. 
+
+
+
+
+
+
+\paragraph{LLM evaluations.} Safety and security evaluation by model developers has not covered the evaluation of user security questions \cite{openai2024gpt4, GPT4SystemCard}, \cite{geminiteam2024geminiv1.5, geminiteam2024geminiv1}. Indeed much of the security evaluation focus has been on the generation of harmful content (e.g., \cite{inan2023Llama}), and insecure code generation by LLMs and their ability to assist in cyberattacks in an automated way \cite{PurpleLlama, bhatt2023purple}.%
+
+The machine learning research community has developed several LLM benchmarks \cite{chang-llms-eval-survey-2024}. To the best of our knowledge, the only benchmarks overlapping with computer security and privacy are: \cite{zhang-etal-2024-safetybench} that focuses on various aspects of online privacy practices (in addition to other topics) %
+and, \cite{hendrycks2021measuring} that covers cryptography and other technical security topics.  
+Questions in \cite{hendrycks2021measuring} and \cite{zhang-etal-2024-safetybench} are multiple-choice questions, whereas our questions are open-ended; \cite{mt-bench-zheng-2023} covers open-ended questions but doesn't include end-user security questions.
+
+
+
+In contrast to these benchmarks, we provide the first prompt corpus and associated LLM responses to questions representing end-user security concerns across 7 security topics.
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
