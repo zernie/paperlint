@@ -4,7 +4,7 @@ description: Use when asking "does this paper read well?" / "is the writing any 
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:24b52ace53c4379d compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:baf1f69df2502086 compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
 
 # grade-paper-writing — grade how the paper READS, then fix it sentence by sentence
 
@@ -177,8 +177,9 @@ is what happened.
    conference) in the same paper type: fetch them from the proceedings or the program page, or use the
    ones the author supplies. Read the abstract, the introduction and the conclusion of each beside the
    draft's, and record, for both sides: how each result is owned (*we measured* · a citation · a named
-   population), how claims are linked (*therefore*, *in contrast*, *first … finally*, *this section*),
-   sentence length and fragments, and whether any sentence is an aphorism or a closing punchline. The
+   population), how often a point is made by contrast (*not X but Y*, *rather than*, *instead of* —
+   the measured difference between this corpus and accepted papers), sentence length and fragments,
+   and whether any sentence is an aphorism or a closing punchline. The
    score is the distance: 5 = a reviewer could not tell the draft from the reference papers by register;
    1 = it reads as a different genre. Quote the reference sentence beside each draft sentence you flag.
    If no accepted paper can be fetched or supplied, write `#10: not graded — no reference papers` and
@@ -352,10 +353,10 @@ changes neither meaning nor register — and never rewrite a cited work's title 
 **Signposting is the register, not a tic, and this skill never removes it on style grounds.** Frame
 markers and relation words — *we show*, *this section*, *first … finally*, *in contrast*, *therefore*,
 *however* — are how academic prose tells the reader what kind of claim comes next and how it relates to
-the last one. A reviewer who finds too few of them writes *"readers are often required to infer the
-intended relationships between claims"*. Flag a connective only when it asserts a relation the two
-sentences do not have (a *therefore* that does not follow), or when it is empty filler (*it is worth
-noting that*). Never flag one for being academic.
+the last one. Their count does not separate a draft from accepted papers (see "Contrast framing"
+below); removing them does, in the wrong direction. Flag a connective only when it asserts a relation
+the two sentences do not have (a *therefore* that does not follow), or when it is empty filler (*it is
+worth noting that*). Never flag one for being academic.
 
 **Other markers worth a pass:** nominalisation density (*an honest accounting of what the construction
 costs* — abstract nouns doing the work verbs should do) and statistics chained through a paragraph
@@ -379,29 +380,37 @@ them measures words and sentences. The defect is not in the words.
 
 Two separable failures:
 
-### 1. A frame that carries nothing (empty metadiscourse)
+### 1. Contrast framing, and a frame that carries nothing
 
-*"Two findings come first, because they bind whatever else you build"* says nothing about rules
-files, agents, or repositories: the frame is there, and the claim it announces is not. The defect is
-the **emptiness**, not the frame. Hyland's *frame markers* (*this paper · this section · we show ·
-first … finally · in what follows*) are standard academic signposting, and a paper needs them: his
-2005 corpus averages about 5 per 1,000 words, 3.0–6.6 across disciplines. The paper this specimen
-came from measured **1.3 per 1,000** after rounds of grading that targeted zero — and a reviewer
-then wrote that readers were *"required to infer the intended relationships between claims"*.
+**What separates this corpus from accepted papers is contrast, not signposting — measure that
+first.** Counted with the same counter on five accepted ACSAC 2024/25 ML-security papers against a
+paper of ours: *"not X but Y"* at 35.5 per 10,000 words in ours against at most 4.9 there (and five
+of their six hits were *"not only … but also"*); *"rather than / instead of"* at 19.9 against at most
+5.4. Every sentence that defines its point by what it is not is a sentence whose point the reader
+must reconstruct. **Rewrite heuristic:** state the thing; move the rejected alternative to its own
+sentence, or drop it if nobody proposed it. Check *instead of · rather than · not … but* first,
+against the same count on the reference papers of dimension #10.
 
-**Countable, in both directions.** Count frame markers per 1,000 words in the body and set the count
-beside the SAME count, taken by the same counter, on the reference papers of dimension #10. Hyland's
-figures come from a different counter: they show that a floor exists, not where it lies, so with no
-reference papers the count is reported without a verdict. Above the references' range: look for
-frames that stand in for content. **Below it is a finding too** — the reader is being left to work
-out what kind of claim each sentence makes. Then, separately, list the frames
-whose announced content never arrives within the next two sentences; those are the defects.
+**Frame markers do not separate us from accepted papers, and are not a target in either direction.**
+Hyland's *frame markers* (*this paper · this section · we show · first … finally · in what follows*)
+measured 0.76–3.1 per 1,000 words on those five accepted papers (median 1.46); the lowest accepted
+paper measured is 0.76, and ours sat inside that range. So neither "remove signposting" nor "add
+signposting to reach a number" is a fix. A published average from a different counter (Hyland's
+~5 per 1,000) says nothing about where a venue's floor lies.
 
-**Rewrite heuristic:** keep the frame and make it carry the claim. *"Two findings come first,
-because they bind whatever else you build. Asked the same question twice…"* → *"We first report two
-properties of the model that constrain any harness built on it. Asked the same question twice with
-identical inputs, it changed its verdict on 21.5% of rows (Section 4.5)."* The frame now names what
-follows, and the sentence after it says whose measurement it is.
+What IS a defect is a frame that carries nothing. *"Two findings come first, because they bind
+whatever else you build"* says nothing about rules files, agents, or repositories: the frame is
+there, and the claim it announces is not. List the frames whose announced content never arrives
+within the next two sentences; those are the findings. **Rewrite heuristic:** keep the frame and make
+it carry the claim. *"Two findings come first, because they bind whatever else you build. Asked the
+same question twice…"* → *"We first report two properties of the model that constrain any harness
+built on it. Asked the same question twice with identical inputs, it changed its verdict on 21.5% of
+rows (Section 4.5)."* The frame now names what follows, and the sentence after it says whose
+measurement it is.
+
+⚠️ **Vocabulary lists are not a register signal.** *robust*, *significant*, *comprehensive* and the
+rest of the AI-tells vocabulary fire on every one of the five accepted papers. Flag such a word only
+when it is empty in its sentence, never as evidence of a machine or of the wrong register.
 
 ### 2. The qualification eats the claim
 
