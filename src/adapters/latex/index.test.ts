@@ -241,6 +241,7 @@ describe("outlineOf — a formatting macro's text is its last mandatory argument
       "LLM Usage Statement",
     ],
     ["\\section*{\\color{red}LLM Usage Statement}", "LLM Usage Statement"],
+    ["\\section*{LLM~Usage~Statement}", "LLM Usage Statement"],
     [
       "\\section*{\\colorbox{yellow}{LLM Usage} Statement}",
       "LLM Usage Statement",

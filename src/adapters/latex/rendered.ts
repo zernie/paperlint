@@ -2,7 +2,13 @@
 import { hasAtLeast, sortBy } from "remeda";
 import type { Segment, TextRun } from "../../domain/tex-document.ts";
 import { isUnrendered } from "./hidden.ts";
-import { isList, visited, type Argument, type Node } from "./nodes.ts";
+import {
+  isList,
+  stringText,
+  visited,
+  type Argument,
+  type Node,
+} from "./nodes.ts";
 import type { ParsedTex } from "./parse.ts";
 
 /** A node's rendered text and where it starts, or null when it is not text (it ends a run). */
@@ -12,8 +18,7 @@ function segmentOf(n: Node | Argument): Segment | null {
   if (n.type === "whitespace" || n.type === "parbreak")
     return { text: " ", at };
   if (n.type !== "string") return null;
-  // A tie (`~`) is a space the reader sees.
-  return { text: n.content === "~" ? " " : n.content, at };
+  return { text: stringText(n.content), at };
 }
 
 /** One node list → its runs: stretches of sibling text, split wherever anything else stands. */

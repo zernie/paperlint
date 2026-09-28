@@ -34,6 +34,10 @@ export const mandatory = (m: Macro): readonly Argument[] =>
 export const optional = (m: Macro): Argument | undefined =>
   (m.args ?? []).find((a) => a.openMark === "[");
 
+/** What a string node reads as: itself, except a tie (`~`), which is a space the reader sees. */
+export const stringText = (content: string): string =>
+  content === "~" ? " " : content;
+
 /** Which of a macro's mandatory arguments it typesets: one of them, or none at all. */
 type Shown =
   | { readonly kind: "argument"; readonly at: number }
@@ -72,7 +76,7 @@ function shownText(m: Macro): string {
 export const textOf = (nodes: readonly Node[] | undefined): string =>
   (nodes ?? [])
     .map((n) => {
-      if (n.type === "string") return n.content;
+      if (n.type === "string") return stringText(n.content);
       if (n.type === "whitespace" || n.type === "parbreak") return " ";
       if (n.type === "group") return textOf(n.content);
       return n.type === "macro" && !(n.content in KEY_SIGNATURES)
