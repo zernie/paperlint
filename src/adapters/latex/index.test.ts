@@ -240,6 +240,19 @@ describe("outlineOf — a formatting macro's text is its last mandatory argument
       "\\section*{\\texorpdfstring{LLM Usage Statement}{Short}}",
       "LLM Usage Statement",
     ],
+    ["\\section*{\\color{red}LLM Usage Statement}", "LLM Usage Statement"],
+    [
+      "\\section*{\\colorbox{yellow}{LLM Usage} Statement}",
+      "LLM Usage Statement",
+    ],
+    [
+      "\\section*{\\fontsize{10}{12}\\selectfont LLM \\vspace{1em}Usage\\hspace{2pt} Statement}",
+      "LLM Usage Statement",
+    ],
+    [
+      "\\section*{\\setlength{\\parskip}{0pt}\\addtolength{\\parskip}{1pt}LLM Usage Statement}",
+      "LLM Usage Statement",
+    ],
   ])("%s → %s", (src, title) => {
     expect(outlineOf(parseLatex(src)).sections.map((h) => h.title)).toEqual([
       title,

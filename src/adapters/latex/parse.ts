@@ -78,6 +78,12 @@ export const KEY_ARGUMENT: ReadonlyMap<string, number> = new Map([
 const LINK_SIGNATURES = Object.fromEntries(signed(["href"], "m m"));
 
 /**
+ * Declarations unified-latex has no signature for: signed so their arguments (sizes, not text)
+ * attach to them instead of standing beside them as groups a reader would seem to see.
+ */
+const DECLARATION_SIGNATURES = Object.fromEntries(signed(["fontsize"], "m m"));
+
+/**
  * Macros that define other macros or environments. A heading in a body is no section where it is
  * written, so the outline skips these; the rendered text reads a body as written, since nothing here
  * expands macros. `\def` and its kin get a signature so the name and the body attach to them; a
@@ -113,7 +119,12 @@ export interface ParsedTex {
 /** One parser for the process, made on first use: building one compiles its grammar. */
 const parser = once(() =>
   getParser({
-    macros: { ...KEY_SIGNATURES, ...LINK_SIGNATURES, ...DEF_SIGNATURES },
+    macros: {
+      ...KEY_SIGNATURES,
+      ...LINK_SIGNATURES,
+      ...DECLARATION_SIGNATURES,
+      ...DEF_SIGNATURES,
+    },
   }),
 );
 

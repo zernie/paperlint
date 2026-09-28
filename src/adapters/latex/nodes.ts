@@ -34,18 +34,39 @@ export const mandatory = (m: Macro): readonly Argument[] =>
 export const optional = (m: Macro): Argument | undefined =>
   (m.args ?? []).find((a) => a.openMark === "[");
 
+/** Which of a macro's mandatory arguments it typesets: one of them, or none at all. */
+type Shown =
+  | { readonly kind: "argument"; readonly at: number }
+  | { readonly kind: "none" };
+
+const LAST: Shown = { kind: "argument", at: -1 };
+const NONE: Shown = { kind: "none" };
+
 /**
- * Macros whose typeset argument is not their last mandatory one: which mandatory argument it is.
- * `\texorpdfstring{shown}{bookmark}` typesets the first; the second is the PDF bookmark.
+ * Macros that do not typeset their last mandatory argument, as data. `\texorpdfstring{shown}{bookmark}`
+ * typesets the first; a declaration (`\color{red}`, `\fontsize{10}{12}`, `\vspace{1em}`,
+ * `\setlength{\x}{0pt}`) typesets none. Every other macro typesets its last (`\textcolor{red}{x}`,
+ * `\colorbox{yellow}{x}`, `\href{url}{x}`).
  */
-const PRINTED_ARGUMENT: ReadonlyMap<string, number> = new Map([
-  ["texorpdfstring", 0],
+const SHOWN_ARGUMENT: ReadonlyMap<string, Shown> = new Map<string, Shown>([
+  ["texorpdfstring", { kind: "argument", at: 0 }],
+  ...["color", "fontsize", "vspace", "hspace", "setlength", "addtolength"].map(
+    (m) => [m, NONE] as const,
+  ),
 ]);
+
+/** The text a (non-key) macro typesets: see `SHOWN_ARGUMENT`. */
+function shownText(m: Macro): string {
+  const shown = SHOWN_ARGUMENT.get(m.content) ?? LAST;
+  return shown.kind === "none"
+    ? ""
+    : textOf(mandatory(m).at(shown.at)?.content);
+}
 
 /**
  * The text of a node list with markup dropped: strings, spaces, what groups hold, and the argument a
  * formatting macro typesets — its last mandatory one (`\textbf{Usage}`, `\textcolor{red}{Usage}`,
- * `\href{url}{Usage}` → `Usage`) unless `PRINTED_ARGUMENT` names another. A key macro's arguments
+ * `\href{url}{Usage}` → `Usage`) unless `SHOWN_ARGUMENT` says otherwise. A key macro's arguments
  * (`\label{…}`, `\cite{…}`) are not text.
  */
 export const textOf = (nodes: readonly Node[] | undefined): string =>
@@ -55,9 +76,7 @@ export const textOf = (nodes: readonly Node[] | undefined): string =>
       if (n.type === "whitespace" || n.type === "parbreak") return " ";
       if (n.type === "group") return textOf(n.content);
       return n.type === "macro" && !(n.content in KEY_SIGNATURES)
-        ? textOf(
-            mandatory(n).at(PRINTED_ARGUMENT.get(n.content) ?? -1)?.content,
-          )
+        ? shownText(n)
         : "";
     })
     .join("");
