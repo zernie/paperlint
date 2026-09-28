@@ -4,7 +4,7 @@ description: Compile a LaTeX paper (ACM/IEEE/arXiv) to PDF and render its pages 
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, SendUserFile]
 ---
 
-<!-- vigiles:sha256:a1ec1d392f144c80 compiled from skills/render-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:5e2ee8850c098375 compiled from skills/render-paper/SKILL.md.spec.ts -->
 
 # render-paper — .tex → PDF → readable page PNGs
 
@@ -34,7 +34,7 @@ That list was replaced on 2026-08-03; nothing about the toolchain below changed.
   by `kpsewhich` against the files each profile names. The last line it prints is `bin: <dir>` —
   put that directory first on PATH before calling `pdflatex` or `check-render.sh` by hand.
 
-  🔴 The package list lives in the venue profiles (`submit-paper/references/venues/*.jsonc`, the
+  🔴 The package list lives in the venue profiles (`presets/*.jsonc` in the package, the
   `tex` block; `tex-base.jsonc` for every paper) and nowhere else. A new venue that needs a new
   package gets it there — never in a script, never here. A TeX Live without `libertine` builds an
   acmart paper GREEN in Computer Modern; that is why the files are checked, not the exit code.

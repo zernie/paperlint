@@ -148,17 +148,17 @@ change to `.c8rc.json`'s exclude list that was not made there on purpose.
 
 ## Adding a venue
 
-A venue is a **preset**, a JSONC file in `skills/submit-paper/references/venues/`, validated by
+A venue is a **preset**, a JSONC file in `presets/`, validated by
 `venue-profile.schema.json` beside it. Adding one is three files and no code:
 
-1. **The preset, thin.** `venues/<name>.jsonc` extends the template family it is built on
+1. **The preset, thin.** `presets/<name>.jsonc` extends the template family it is built on
    (`"extends": "paperlint:acm-sigconf"` for an ACM venue) and adds only what the call for papers
    sets: `format.kinds` (the page limit of each kind of paper) and, when the venue's producer asks
    for something an optional rule checks, `rules`. Every number carries the quote it came from.
    A venue on a template with no family yet stands alone (`template`, `tex`, `format`) — or, better,
    add the family first: measured on a real template build (banal + pdf.js), not copied from
    documentation ([#88](https://github.com/zernie/paperlint/issues/88)).
-2. **The card.** `venues/<name>.md` — prose about the venue: deadlines, tracks, the blind model,
+2. **The card.** `skills/submit-paper/references/venues/<name>.md` — prose about the venue: deadlines, tracks, the blind model,
    what the form asks.
 3. **A test.** A case in `src/presets.test.ts` that `paperlint:<name>` resolves over its family with
    the kinds you declared; `src/tex-requirements.harness.ts` already checks every shipped preset

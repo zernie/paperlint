@@ -150,7 +150,7 @@ To skip a check for one paper — a finding you accept — set it to `"off"` in 
 
 A preset is a JSONC file (JSON with comments — keep the call-for-papers quote beside each number)
 of the same shape as the shipped ones, validated by
-[`venue-profile.schema.json`](../skills/submit-paper/references/venues/venue-profile.schema.json).
+[`venue-profile.schema.json`](../presets/venue-profile.schema.json).
 Put it in your repository and extend it by a path relative to the file that names it:
 
 ```

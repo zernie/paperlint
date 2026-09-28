@@ -58,7 +58,7 @@ that has every declared package, so a new-year install that was interrupted neve
 complete older one.
 
 **Where the package list lives:** in the venue profiles, not here and not in a script.
-`skills/submit-paper/references/venues/<venue>.jsonc` carries a `tex` block — CTAN package → the
+`presets/<venue>.jsonc` carries a `tex` block — CTAN package → the
 files that prove it is installed — and `tex-base.jsonc` carries what every paper gets, and all a
 paper with an unknown venue gets. The shape is `venue-profile.schema.json` in the same directory.
 A venue that needs a new package gets one line there.

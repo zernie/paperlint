@@ -4,7 +4,7 @@ description: The orchestrator for writing a research paper end-to-end, from idea
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:a15a3fcf5fdfedf7 compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:c3eea3ac60e9c816 compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
 
 # paper-pipeline — the conductor for the whole organism
 
@@ -30,7 +30,7 @@ of that — who is filing what, and when — stays in the author's own private n
   space, anonymity, OpenReview mechanics. Fetch once, not per paper. Venue-specific facts stay in
   `submit-paper/references/venues/<venue>.md`. (No prose equivalent yet for ACM or IEEE — write one
   when the next paper goes there. ACM's machine-checked format already exists: the
-  `paperlint:acm-sigconf` preset, `submit-paper/references/venues/acm-sigconf.jsonc`.)
+  `paperlint:acm-sigconf` preset, `presets/acm-sigconf.jsonc` in the package.)
 
 ## The readiness scorecard (which boxes are checked)
 Stages run in subagents and report into chat, which evaporates — so "did everything run?" becomes

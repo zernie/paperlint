@@ -1,0 +1,47 @@
+{
+  "lib/skill-checks.mjs": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "lib/skill-corpus.mjs": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "lib/skill-eval-kit.mjs": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "lib/skill-trigger-cases.mjs": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "lib/trigger-ledger.mjs": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/adapters/references/index.ts": {
+    "no-restricted-imports": {
+      "count": 4
+    }
+  },
+  "src/cli.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/hooks-settings.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  },
+  "src/link-skills.ts": {
+    "no-restricted-imports": {
+      "count": 1
+    }
+  }
+}

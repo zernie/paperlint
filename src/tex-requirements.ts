@@ -16,8 +16,8 @@
  * `TexRequirements` and never looks at the text again; a malformed profile throws with the path
  * of every violation, it is never read as "no packages".
  *
- * Where the profiles live is answered by `packageVenuesDir()` in consumer.mjs — the one module
- * allowed to know where this package is installed (rule 10).
+ * Where the profiles live is answered by `presetsDir()` in `package-dirs.ts` — the one module
+ * allowed to know where this package's data is installed (rule 10).
  */
 // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { readFileSync, readdirSync } from "node:fs";
@@ -25,7 +25,7 @@ import { createRequire } from "node:module";
 import { join } from "node:path";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import Ajv from "ajv";
-import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { presetsDir } from "./package-dirs.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
 import { fieldOf } from "./domain/record.ts";
 import {
@@ -275,7 +275,7 @@ function templateOf(text: string, file: string): DocumentClass {
 export function parsePreset(
   text: string,
   file: string,
-  dir: string = packageVenuesDir(),
+  dir: string = presetsDir(),
 ): PresetFile {
   const parsed = typescript().parseConfigFileTextToJson(file, text);
   const config: unknown = parsed.config;
@@ -306,7 +306,7 @@ export function parsePreset(
 export function parseProfile(
   text: string,
   file: string,
-  dir: string = packageVenuesDir(),
+  dir: string = presetsDir(),
 ): TexRequirements {
   return parsePreset(text, file, dir).tex ?? NO_REQUIREMENTS;
 }
@@ -328,7 +328,7 @@ function readProfile(dir: string, file: string): TexRequirements {
 }
 
 /** The venues that have a profile — every `.jsonc` in the directory except the base set. */
-export function venueNames(dir: string = packageVenuesDir()): string[] {
+export function venueNames(dir: string = presetsDir()): string[] {
   return readdirSync(dir)
     .filter((f) => f.endsWith(PROFILE_EXT) && f !== BASE_PROFILE)
     .map((f) => f.slice(0, -PROFILE_EXT.length))
@@ -366,7 +366,7 @@ export function packageNames(tex: TexRequirements): string[] {
  */
 export function requirementsFor(
   preset: { readonly label: string; readonly tex: TexRequirements } | null,
-  dir: string = packageVenuesDir(),
+  dir: string = presetsDir(),
 ): PaperRequirements {
   const base = readProfile(dir, BASE_PROFILE);
   return preset === null
@@ -386,7 +386,7 @@ export function requirementsFor(
  * builds any paper.
  */
 export function declaredUnion(
-  dir: string = packageVenuesDir(),
+  dir: string = presetsDir(),
   extra: readonly TexRequirements[] = [],
 ): {
   readonly tex: TexRequirements;

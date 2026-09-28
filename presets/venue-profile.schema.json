@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/zernie/paperlint/venue-profile.schema.json",
   "title": "Venue preset",
-  "description": "One venue preset or template family (venues/<name>.jsonc), and the TeX base set (venues/tex-base.jsonc). A paper's paperlint.json names one with \"extends\"; a preset may extend another. `format` and `rules` are read by paperlint's pdf/* venue rules and its lint config (src/venue-rules.ts, src/presets.ts); `tex` by `paperlint toolchain` and `paperlint build`.",
+  "description": "One venue preset or template family (presets/<name>.jsonc), and the TeX base set (presets/tex-base.jsonc). A paper's paperlint.json names one with \"extends\"; a preset may extend another. `format` and `rules` are read by paperlint's pdf/* venue rules and its lint config (src/venue-rules.ts, src/presets.ts); `tex` by `paperlint toolchain` and `paperlint build`.",
   "type": "object",
   "additionalProperties": false,
   "properties": {

@@ -109,6 +109,7 @@
     "fixtures/real-markdown-paper/baseline.*",
     "hooks",
     "lib",
+    "presets",
     "plugin",
     "scripts",
     "skills",

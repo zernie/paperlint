@@ -16,20 +16,11 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { createChecker } from "../lib/check.ts";
 
-const HERE = dirname(fileURLToPath(import.meta.url));
-const VENUES = join(
-  HERE,
-  "..",
-  "skills",
-  "submit-paper",
-  "references",
-  "venues",
-);
 const R = await import("./tex-requirements.ts");
+const VENUES = (await import("./package-dirs.ts")).presetsDir();
 
 const check = createChecker();
 const throws = (fn: () => unknown): string => {

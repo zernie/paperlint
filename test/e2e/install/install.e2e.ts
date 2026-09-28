@@ -570,6 +570,7 @@ function scenario(m: Manager & { version: string }): void {
   stepRealArticle(c);
   stepHooksAndContent(c);
   stepTaken(c, view);
+  stepAidc(c);
 }
 
 function stepBin(c: Consumer): void {
@@ -972,6 +973,48 @@ function stepHooksAndContent(c: Consumer): void {
       [...new Set(d.unresolved)].slice(0, 5).join("\n"),
     );
   }
+}
+
+/**
+ * A preset added by name travels in the tarball: `paperlint new --venue aidc` resolves
+ * `paperlint:aidc` from the INSTALLED package's `presets/`, sets the new paper.tex in its class, and
+ * `paperlint lint` judges the paper against it — the preset's required section is named, and no
+ * finding says the preset did not resolve. Last: it adds a paper the corpus checks above do not count.
+ */
+function stepAidc(c: Consumer): void {
+  const { consumer, bin } = c;
+  const made = sh(
+    bin,
+    ["new", "aidc-demo", "--venue", "aidc", "--kind", "short"],
+    {
+      cwd: consumer,
+    },
+  );
+  const tex = join(consumer, "papers", "aidc-demo", "paper.tex");
+  verdict(
+    existsSync(tex) &&
+      readFileSync(tex, "utf8").includes(
+        "\\documentclass[conference,compsoc]{IEEEtran}",
+      ),
+    "`paperlint new --venue aidc` resolves paperlint:aidc from the installed presets/ and sets its class",
+    made.stdout + made.stderr,
+  );
+  const lint = sh(bin, ["lint", "papers/aidc-demo", "--json"], {
+    cwd: consumer,
+  });
+  let rules: (string | null)[] = [];
+  try {
+    rules = LintReport.parse(JSON.parse(lint.stdout)).flatMap((f) =>
+      f.messages.map((m) => m.ruleId),
+    );
+  } catch {
+    rules = ["(unparsable)"];
+  }
+  verdict(
+    rules.includes("tex/required-section") && !rules.includes("pdf/profile"),
+    "and `paperlint lint` judges it against paperlint:aidc: its required section is named, the preset resolves",
+    JSON.stringify(rules) + lint.stderr,
+  );
 }
 
 function stepTaken(c: Consumer, view: SkillView): void {

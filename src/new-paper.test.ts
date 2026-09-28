@@ -19,7 +19,7 @@ import { newPaper, OVERRIDE_DIR, reportNewPaper } from "./new-paper.ts";
 import { parsePaperSettings } from "./paper-settings.ts";
 import { chooseVenue, run } from "./cli.ts";
 import { shippedPresets } from "./presets.ts";
-import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { presetsDir } from "./package-dirs.ts";
 import { lintReport } from "../test/lint-report.ts";
 import { z } from "zod";
 
@@ -208,7 +208,7 @@ describe("paperlint new --venue / --kind", () => {
     const r = await newIn(["--venue", "icse"]);
     expect(r.code).toBe(2);
     // Guards: the list is read from the shipped presets, the same list lint prints.
-    expect(r.err).toContain(shippedPresets(packageVenuesDir()).join(", "));
+    expect(r.err).toContain(shippedPresets(presetsDir()).join(", "));
     expect(r.err).toMatch(/--venue icse: no such venue preset/);
     expect(existsSync(r.dir)).toBe(false);
   });
@@ -288,7 +288,7 @@ describe("chooseVenue — on a terminal", () => {
       value: { extends: "paperlint:agenticdev", kind: "full" },
     });
     expect(t.asked[0]).toContain(
-      [...shippedPresets(packageVenuesDir()), "none"].join(" / "),
+      [...shippedPresets(presetsDir()), "none"].join(" / "),
     );
     expect(t.asked[1]).toMatch(/kind: short \/ full \/ demo \/ later/);
   });

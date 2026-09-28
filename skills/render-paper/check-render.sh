@@ -25,75 +25,28 @@ set -uo pipefail
 # check — that is, the defect the guard was set up for comes back together with a green report.
 # A broken `import` in JS fails loudly; here we have to fail on our own.
 #
-# A ladder of THREE candidates, because the directory MOVED (12.09): `venues/` is now carried by the
-# `paperlint` package, and at the consumer's old location there is a symlink into it.
-# The order "the declared package → a sibling inside the package → the consumer's directory" is
-# deliberate: the package must win silently. It only gets loud when there is NOT A SINGLE ONE.
-# 🔴 THE SCRIPT'S OWN DIRECTORY — TAKEN ABSOLUTE AND BEFORE ANY `cd` (12.09.2026, evening).
-# Found by a RED HARNESS, `gates.harness.mjs`, not by proofreading, and it is my own regression from
-# the same day: below, the script does `cd "$DIR"` into the paper directory, and the venues resolve
-# stood AFTER that `cd`. So `git rev-parse --show-toplevel` was already running in the fixture's
-# temporary directory, the root was not found, and the build honestly stopped — on a test that had
-# been passing until then.
+# TWO candidates, in this order: the package by its NAME, from the current directory (a consumer's
+# installed paperlint wins), then the package THIS script ships in. Loud only when neither holds it.
 #
-# ⚠️ The previous version was wrong THE SAME WAY, but silently: it did not check the result and built
-# the PDF without the reference guard. That is, going red is not a new breakage but a manifestation
-# of an old one; still, a test that was green yesterday and is red today is mine to fix.
-#
-# The neighbouring `build.sh` already carries this same lesson in a comment ("The script directory is
-# taken ONCE and ABSOLUTE, before cd") — CI failed on it there on 30.08. A second instance of the same
-# class in a file right next door.
+# 🔴 THE SCRIPT'S OWN DIRECTORY IS TAKEN ABSOLUTE AND BEFORE ANY `cd`: below, the script `cd`s into
+# the paper directory, and a lookup after that would start from the paper, not from here.
 SELF_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 resolve_venues() {
-  local root pkg
-  # Three sources for the root, from the most explicit to the most reliable. The last one is the
-  # SCRIPT's location (`.claude/skills/render-paper/` ⇒ three levels up), and it is the only one that
-  # depends neither on the current directory nor on whether the caller sits inside a git tree.
-  # ⚠️ THE PARENTHESES ARE MANDATORY, and the harness caught this a minute after I wrote the line
-  # without them. In bash `A || B && C` parses as `(A || B) && C`, so on a SUCCESSFUL `git rev-parse`
-  # the `pwd` ran as well, and the substitution returned TWO lines — the repository root plus the
-  # current directory. By hand from a directory outside git this did not reproduce: there git failed,
-  # and only one branch ran.
-  # ⚠️ THE LAST RUNG SEARCHES, IT DOES NOT COUNT LEVELS. `cd "$SELF_DIR/../../.."` used to stand here
-  # — correct for `.claude/skills/render-paper/` (three levels to the root) and silently wrong after
-  # the skill moved into the package, where it lies in `skills/render-paper/` (two): the climb
-  # overshot ABOVE the repository, and rung 2 looked for venues in someone else's directory. Climbing
-  # up to the directory that holds `.claude` does not depend on the depth.
-  local probe="$SELF_DIR" fallback=""
-  while [ "$probe" != "/" ]; do
-    if [ -d "$probe/.claude" ]; then fallback="$probe"; break; fi
-    probe=$(dirname "$probe")
-  done
-  root="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || printf '%s' "$fallback")}"
-
-  # 1) the package, if it already carries venues/ (after step 5)
-  pkg=$(node -e 'try{process.stdout.write(require.resolve("paperlint/venues/paper-guards.tex"))}catch{}' 2>/dev/null || true)
+  local pkg own
+  # 1) the package by its name. `node -e` resolves from the current directory.
+  pkg=$(node -e 'try{process.stdout.write(require.resolve("paperlint/presets/tex/paper-guards.tex"))}catch{}' 2>/dev/null || true)
   if [ -n "$pkg" ] && [ -f "$pkg" ]; then
     dirname "$pkg"
     return 0
   fi
 
-  # 2) THE SIBLING SKILL, from THIS script's directory. Added 12.09 together with the move of
-  # `submit-paper` into the package, and it is the only one of the three that works in BOTH worlds at
-  # once:
-  #   • package checkout   `skills/render-paper/..` → `skills/submit-paper/references/venues`
-  #   • consumer           `.claude/skills/render-paper/..` → `.claude/skills/submit-paper/...`
-  #     (both directories are symlinks into the package, `-f` goes through them, and `cd`+`pwd`
-  #     leaves the logical path)
-  # Rung 1 depends on cwd (`node -e` resolves from the current directory), rung 3 depends on the
-  # consumer's root having been found at all. This one depends on neither — exactly the anchor whose
-  # absence had `gates.harness.mjs` red on 12.09.
-  local sibling="$SELF_DIR/../submit-paper/references/venues"
-  if [ -f "$sibling/paper-guards.tex" ]; then
-    (cd "$sibling" && pwd)
-    return 0
-  fi
-
-  # 3) the skill directory in the consumer — for a consumer that mounted the skills differently
-  local local_dir="$root/.claude/skills/submit-paper/references/venues"
-  if [ -f "$local_dir/paper-guards.tex" ]; then
-    printf '%s\n' "$local_dir"
+  # 2) the package this script is part of: `skills/render-paper/` → `presets/tex/`. `cd -P` follows
+  # the symlinks a consumer's `.claude/skills/render-paper` is made of, so `../..` is the PACKAGE's
+  # root, not the consumer's `.claude/`. Depends neither on the cwd nor on a git tree.
+  own="$(cd -P "$SELF_DIR" && pwd)/../../presets/tex"
+  if [ -f "$own/paper-guards.tex" ]; then
+    (cd "$own" && pwd)
     return 0
   fi
 
@@ -107,8 +60,8 @@ if [ "${1:-}" = "--print-venues" ]; then
     printf '%s\n' "$VD"
     exit 0
   fi
-  echo "✗ paper-guards.tex not found: not under the package name paperlint, not beside the script" >&2
-  echo "  (skills/submit-paper/references/venues), not at the consumer (.claude/skills/submit-paper/references/venues)." >&2
+  echo "✗ paper-guards.tex not found: not under the package name paperlint (paperlint/presets/tex)," >&2
+  echo "  not in the package this script ships in (../../presets/tex from it)." >&2
   echo "  Building the paper without it is not allowed: \\input{paper-guards} will not fail, it will vanish silently," >&2
   echo "  and the PDF will be built WITHOUT the check for dangling \\ref and \\cite." >&2
   exit 2
@@ -135,7 +88,7 @@ if [ "${NO_COMPILE:-0}" != "1" ] && [ -f "$BASE.tex" ]; then
   # Two passes: overfull boxes surface on every pass; a second pass settles refs
   # so Reference/Citation-undefined warnings are accurate.
   # 🔴 TEXINPUTS is mandatory, and that was found by a crash on 26.08. Papers pull in their venue's
-  # numbers via `\input{<venue>}`, and the file lies in `.claude/skills/submit-paper/references/venues/`.
+  # numbers via `\input{<venue>}`, and the file lies in the package's `presets/tex/`.
   # Without that path the build fails with `File \`agenticdev.tex' not found` — and the `|| true`
   # below swallows it, after which the script reads a log of UNKNOWN origin and reports on it. That
   # is, compiling this paper here silently did not work, and it only became visible once a pass

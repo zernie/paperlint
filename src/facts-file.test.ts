@@ -10,7 +10,7 @@
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { presetsDir } from "./package-dirs.ts";
 import { test } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import {
@@ -154,12 +154,9 @@ const good: PdfReader = () =>
   });
 /** The shipped presets at their real paths: `extends` resolves through the same Files port. */
 const SHIPPED_PRESETS = Object.fromEntries(
-  readdirSync(packageVenuesDir())
+  readdirSync(presetsDir())
     .filter((f) => /\.jsonc?$/.test(f))
-    .map((f) => [
-      join(packageVenuesDir(), f),
-      readFileSync(join(packageVenuesDir(), f)),
-    ]),
+    .map((f) => [join(presetsDir(), f), readFileSync(join(presetsDir(), f))]),
 );
 
 /** Options over in-memory files: the PDF and paperlint.json on "disk", a measurer answering `geometry`. */

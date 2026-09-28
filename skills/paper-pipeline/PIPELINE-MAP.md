@@ -200,7 +200,7 @@ format.
 ## 3. Venue constants belong in a card, not in code
 
 > **Done (#79, 2.1.0), in a different shape than planned below.** The constants live in **venue
-> presets**, JSONC files in `submit-paper/references/venues/`: `acm-sigconf.jsonc` is the ACM
+> presets**, JSONC files in the package's `presets/`: `acm-sigconf.jsonc` is the ACM
 > family (the `format` block — page size, columns, fonts, font sizes — plus the `tex` packages),
 > `agenticdev.jsonc` and `aisec.jsonc` extend it and add their `kinds` (page limits) and `rules`,
 > `realm.jsonc` stands alone. A paper picks one in `<paper>/paperlint.json`
@@ -332,7 +332,7 @@ point. Nothing to check.
 | page limit           | **4**           | `venues/realm.md` 8 · `build-submission.sh` 8 · `PIPELINE-STATUS` "8/8" · the build prints **9**                                      |
 | the TeX package list | **5**           | `ensure-toolchain.sh` (executable) · `SKILL.md` · `render-paper.harness.mjs` (pins it ✅) · `build-submission.sh` · `PIPELINE-STATUS` |
 
-The canonical source is the venue preset (`venues/<name>.jsonc`, resolved through its `extends`
+The canonical source is the venue preset (`presets/<name>.jsonc`, resolved through its `extends`
 chain): its `format` block for the numbers (page size, columns, fonts, font sizes, and `kinds` for
 page limits), its `tex` block (plus `tex-base.jsonc`) for packages — since 2026-09-24;
 `ensure-toolchain.sh` held them until then — and its `rules` block for the checks the venue

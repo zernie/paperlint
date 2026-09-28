@@ -27,6 +27,15 @@ import { fileURLToPath } from "node:url";
 // or pinned at its current maximum in RATCHET.
 const TS_FILES = ["**/*.ts", "**/*.mts"];
 
+/** An import of a skill's file, from code of the package itself (#133). */
+const NO_SKILLS = [
+  {
+    regex: "(^|/)skills/",
+    message:
+      "The package's own code does not import from skills/: a skill is a consumer, not storage (#133). Move what you need into src/ or lib/.",
+  },
+];
+
 /** `x as unknown as T` tells the checker to look away (#76). Shared: a block REPLACES a rule's options. */
 const AS_UNKNOWN_AS = {
   selector:
@@ -600,6 +609,21 @@ export default [
     // real. Do not silence them by adding an ignore — a rule that lints only clean inputs is
     // one whose firing path nothing exercises, which is rule 4 wearing a different hat. The
     // pass/fail signal lives in `npm test`, not in the warning count of `npm run lint`.
+  },
+  // 🔴 THE LINTER DOES NOT READ A SKILL. Skills are consumers of the package, not its storage: the
+  // venue presets once lived in a skill and were located through a skill's script, so renaming the
+  // skill broke `paperlint lint` (#133). The package's own code — src/, eslint-rules/, lib/ — may
+  // not import from skills/. Tests and harnesses may: they check the skills.
+  {
+    files: [
+      "src/**/*.{ts,mts,mjs,js}",
+      "eslint-rules/**/*.{ts,mts,mjs,js}",
+      "lib/**/*.{ts,mts,mjs,js}",
+    ],
+    ignores: ["**/*.test.*", "**/*.harness.*"],
+    rules: {
+      "no-restricted-imports": ["error", { patterns: NO_SKILLS }],
+    },
   },
   // Rule sources, whatever their extension; tests and harnesses plant git calls on purpose.
   {

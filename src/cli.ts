@@ -32,10 +32,8 @@ import { join, dirname, resolve, relative, basename, sep } from "node:path";
 import markdown from "@eslint/markdown";
 import { z } from "zod";
 // Types come from consumer.d.mts beside it.
-import {
-  isMain,
-  packageVenuesDir,
-} from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { isMain } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { presetsDir } from "./package-dirs.ts";
 export { isMain };
 import type { Args, PaperlintConfig, ConfigRead } from "./types.ts";
 import {
@@ -133,7 +131,7 @@ import { messageOf } from "./domain/text.ts";
 import { isRecord } from "./domain/record.ts";
 
 /** The shipped venue presets, read from the package's venues directory — the one list. */
-const SHIPPED_VENUES = (): string[] => shippedPresets(packageVenuesDir());
+const SHIPPED_VENUES = (): string[] => shippedPresets(presetsDir());
 
 const USAGE = `paperlint — machine-checkable gates for a paper kept in git
 
@@ -258,7 +256,7 @@ export function buildConfig(
         pdf: {
           rules: {
             ...pdfRules.rules,
-            ...venueRules({ files: nodeFiles, venuesDir: packageVenuesDir() }),
+            ...venueRules({ files: nodeFiles, venuesDir: presetsDir() }),
           },
         },
       },
@@ -309,7 +307,7 @@ export function buildConfig(
             ...texBuild,
             ...texVenueRules({
               files: nodeFiles,
-              venuesDir: packageVenuesDir(),
+              venuesDir: presetsDir(),
             }),
           },
         },
@@ -1229,7 +1227,7 @@ async function runBuild(
 }
 
 /** The presets' deps, wired to the disk and the package's own venues directory. */
-const PRESET_DEPS = { files: nodeFiles, venuesDir: packageVenuesDir() };
+const PRESET_DEPS = { files: nodeFiles, venuesDir: presetsDir() };
 
 /**
  * What one paper needs from TeX Live: the base set plus its preset chain's `tex`. A paper whose

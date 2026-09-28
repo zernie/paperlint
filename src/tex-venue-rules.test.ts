@@ -7,7 +7,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
-import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { presetsDir } from "./package-dirs.ts";
 import {
   otherVenues,
   TEX_VENUE_RULE_LEVELS,
@@ -16,7 +16,7 @@ import {
 import { resolvePreset } from "./presets.ts";
 import { buildConfig, SHIPPED_RULES } from "./cli.ts";
 
-const VENUES = packageVenuesDir();
+const VENUES = presetsDir();
 const PAPER = "/work/papers/p";
 const shipped = Object.fromEntries(
   readdirSync(VENUES)

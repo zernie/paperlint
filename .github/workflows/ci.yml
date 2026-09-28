@@ -259,7 +259,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.cache/paperlint-texlive
-          key: texlive-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('skills/submit-paper/references/venues/*.jsonc') }}
+          key: texlive-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('presets/*.jsonc') }}
 
       # The same command a user runs. On a cache hit it verifies and says "nothing to do"; on a miss
       # it installs from an empty directory and verifies every declared file with kpsewhich.

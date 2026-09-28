@@ -157,13 +157,15 @@ Four proposals were made and withdrawn in one session on 2026-09-17 for exactly 
 
 **10. Effects live in adapters, and WHERE paperlint IS INSTALLED lives in ONE of them.** Rule 6 generalised: the caller's cwd is one case of it. Checking logic — lint rules,
 skills, hooks — must not know its own location, nor its distance from anything else. Every
-answer to _where_ comes from `skills/paper-pipeline/scripts/consumer.mjs`, which adapts per
-channel: own checkout · `node_modules` · plugin cache · CI. A skill naming a script by an
-install-specific path in its own prose walks around that door, and 208 such literals across 190
-lines do exactly that.
+answer to _where_ comes from one of two modules, each for one side: the consumer (its root, the
+package's name) from `skills/paper-pipeline/scripts/consumer.mjs`, which adapts per channel — own
+checkout · `node_modules` · plugin cache · CI; the package's own data (`presets/`, `presets/tex/`)
+from `src/package-dirs.ts`. A skill naming a script by an install-specific path in its own prose
+walks around that door, and 208 such literals across 190 lines do exactly that.
 
-<!-- The port's path above is resolved by `npm run check` (vigiles lint), since #67. -->
+<!-- The ports' paths above are resolved by `npm run check` (vigiles lint), since #67. -->
 <!-- vigiles:file skills/paper-pipeline/scripts/consumer.mjs -->
+<!-- vigiles:file src/package-dirs.ts -->
 
 The layer rules for `src/` live in [`src/CLAUDE.md`](src/CLAUDE.md) and are enforced by the linter.
 

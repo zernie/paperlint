@@ -40,9 +40,7 @@ const {
   STEPS,
   IGNORED_SCRIPTS,
 } = await import(join(HERE, "build.ts"));
-const { packageVenuesDir } = await import(
-  join(HERE, "..", "skills", "paper-pipeline", "scripts", "consumer.mjs")
-);
+const { texInputsDir } = await import(join(HERE, "package-dirs.ts"));
 
 const check = createChecker();
 
@@ -137,12 +135,12 @@ const fakeRead = async (pdf) => {
 const CLEAN_TEX = "\\documentclass{article}\\begin{document}x\\end{document}";
 
 try {
-  // ── inputs: paperlint's own venues directory, no configuration ───────────────────────────────
+  // ── inputs: paperlint's own TeX inputs directory, no configuration ────────────────────────────
   // First: the facts below resolve a paper's venue preset in this same directory, so a wrong one
   // must be named HERE, not as a missing venue label two checks later.
-  const venues = packageVenuesDir();
+  const venues = texInputsDir();
   check(
-    "the venues directory is paperlint's own and holds paper-guards.tex",
+    "the TeX inputs directory is paperlint's own and holds paper-guards.tex",
     existsSync(join(venues, "paper-guards.tex")),
   );
   check(

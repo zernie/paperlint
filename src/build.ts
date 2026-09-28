@@ -34,7 +34,7 @@
  * The decision of the LaTeX loop is `latex-loop.ts`, reading the log is `latex-log.ts`; both are
  * pure. This file is the shell: it runs processes through the injected `run` (the existing port —
  * `spawnSync` by default) and reads the files a pass left behind. Where paperlint's own files live is
- * answered by `consumer.mjs`, the one module allowed to know it (rule 10).
+ * answered by `package-dirs.ts`, the one module allowed to know it (rule 10).
  */
 // eslint-disable-next-line boundaries/dependencies -- legacy I/O, moves behind a port in #76
 import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
@@ -44,7 +44,7 @@ import { createHash } from "node:crypto";
 import { delimiter, join, relative } from "node:path";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import { getParser } from "@unified-latex/unified-latex-util-parse";
-import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { texInputsDir } from "./package-dirs.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
 import {
   declaredVenue,
@@ -268,11 +268,11 @@ export const inputsStep: BuildStep = {
   required: false,
   applies: () => ({
     yes: true,
-    why: `TEXINPUTS += ${packageVenuesDir()}`,
+    why: `TEXINPUTS += ${texInputsDir()}`,
   }),
   run: (ctx) => ({
     ok: true,
-    env: withTexInputs(ctx.env, [packageVenuesDir()]),
+    env: withTexInputs(ctx.env, [texInputsDir()]),
   }),
 };
 

@@ -68,34 +68,11 @@ await checkSkill("render-paper");
   const run = (args, opts = {}) =>
     spawnSync("bash", [CHECK, ...args], { encoding: "utf8", ...opts });
 
-  // First half — on TODAY's tree, resolution must succeed IF THERE IS ANYTHING TO
-  // resolve.
-  //
-  // 🔴 THERE USED TO BE AN UNCONDITIONAL `assert.equal(status, 0)` HERE, AND THE MOVE BROKE IT —
-  // for a real reason, not by accident. It relied on the SURROUNDING tree: while the skill lived
-  // at the consumer, the second rung of the ladder won
-  // (`.claude/skills/submit-paper/references/venues/`). The package checkout has neither that nor
-  // the first rung — `venues/` arrives together with `submit-paper`, which hasn't moved yet. So
-  // the assertion wasn't checking resolution, it was checking for the presence of an unrelated
-  // directory nearby.
-  //
-  // The form now is: resolution must succeed IF AND ONLY IF at least one candidate exists on
-  // disk. This is still a real assertion — it fails if a candidate exists and the script didn't
-  // find it — but it stops requiring the existence of something this repository doesn't have yet.
-  // The absence of both candidates gets PRINTED, not swallowed: "the check found nothing to
-  // check" and "the check passed" have to look different.
+  // First half — on this tree, resolution must succeed IF AND ONLY IF a candidate exists on disk:
+  // the package's own `presets/tex/`. The absence of it is PRINTED, not swallowed: "the check found
+  // nothing to check" and "the check passed" have to look different.
   const candidates = [
-    // rung 1 — the package
-    join(HERE, "..", "..", "venues", "paper-guards.tex"),
-    // rung 2 — the skill directory at the consumer
-    join(
-      HERE,
-      "..",
-      "submit-paper",
-      "references",
-      "venues",
-      "paper-guards.tex",
-    ),
+    join(HERE, "..", "..", "presets", "tex", "paper-guards.tex"),
   ].filter((c) => existsSync(c));
 
   const ok = run(["--print-venues"]);
@@ -108,9 +85,8 @@ await checkSkill("render-paper");
         `silent success this whole block was written to catch.`,
     );
     console.log(
-      `  --print-venues: NOT VERIFIED on the live tree — paper-guards.tex is absent from both ` +
-        `the package (venues/) and next to it (submit-paper/references/venues/). It arrives with ` +
-        `\`submit-paper\`; until then only the fixtures below hold this half.`,
+      `  --print-venues: NOT VERIFIED on the live tree — paper-guards.tex is absent from the ` +
+        `package's presets/tex/; only the fixtures below hold this half.`,
     );
   } else {
     assert.equal(
@@ -159,18 +135,9 @@ await checkSkill("render-paper");
   // When the file is NOWHERE, the script must exit with code 2 and say why. A silent success here
   // is exactly the defect the whole ladder was written for.
   //
-  // 🔴 RUN AGAINST A COPY OF THE SCRIPT, AND THIS IS NOT A TEST WORKAROUND, IT'S A CONSEQUENCE OF
-  // THE MOVE (09-12, wave ③). Before `submit-paper` moved, "nowhere" was reproduced by an empty
-  // consumer root: both former rungs looked outward (the package name from cwd · `.claude/` under
-  // the root), and an empty directory found nothing at either. Now the script has a rung anchored
-  // to ITS OWN directory (`$SELF_DIR/../submit-paper/references/venues`) — added for
-  // cwd-independence — so as long as the script sits inside the package, venues next to it exist
-  // ALWAYS, and "nowhere" can no longer be reached through the environment. The only honest way to
-  // demonstrate that state is to move the script itself out of the package. The property being
-  // checked is otherwise identical, word for word: nothing resolved ⇒ exit 2 + the name of the
-  // missing file. ⚠️ What this form no longer checks: that an empty consumer root won't make the
-  // script lie — and it shouldn't, because such a root is now legitimately shadowed by the copy in
-  // the package.
+  // 🔴 RUN AGAINST A COPY OF THE SCRIPT. Inside the package its second rung (the package it ships
+  // in) always holds the file, so "nowhere" is reachable only by moving the script out of the
+  // package: nothing resolved ⇒ exit 2 + the name of the missing file.
   const empty = realpathSync(mkdtempSync(join(tmpdir(), "venues-none-")));
   const lonely = join(empty, "check-render.sh");
   copyFileSync(CHECK, lonely);
@@ -190,30 +157,21 @@ await checkSkill("render-paper");
     "the failure message must name the missing file",
   );
 
-  // Third half — the ORDER of the rungs. Not cosmetic: on the day of the move, both rungs will be
-  // true at once, and the package has to win, otherwise the consumer silently keeps building with
-  // their old copy. Plant BOTH candidates and see which one is chosen.
+  // Third half — the ORDER of the rungs. The package the consumer installed, found by its name,
+  // must win over the copy this script ships in; otherwise a consumer silently builds with a stale
+  // copy. Plant a package by name beside the real script and see which one is chosen.
   const both = realpathSync(mkdtempSync(join(tmpdir(), "venues-both-")));
-  const pkgVenues = join(both, "node_modules", "paperlint", "venues");
-  const skillVenues = join(
-    both,
-    ".claude",
-    "skills",
-    "submit-paper",
-    "references",
-    "venues",
-  );
-  for (const d of [pkgVenues, skillVenues]) mkdirSync(d, { recursive: true });
+  const pkgVenues = join(both, "node_modules", "paperlint", "presets", "tex");
+  mkdirSync(pkgVenues, { recursive: true });
   writeFileSync(
     join(both, "node_modules", "paperlint", "package.json"),
     JSON.stringify({
       name: "paperlint",
       version: "0.0.0",
-      exports: { "./venues/*": "./venues/*" },
+      exports: { "./*": "./*" },
     }),
   );
   writeFileSync(join(pkgVenues, "paper-guards.tex"), "% from package\n");
-  writeFileSync(join(skillVenues, "paper-guards.tex"), "% from skill dir\n");
   const race = run(["--print-venues"], {
     cwd: both,
     env: { ...process.env, CLAUDE_PROJECT_DIR: both },
@@ -226,7 +184,7 @@ await checkSkill("render-paper");
   assert.equal(
     race.stdout.trim(),
     pkgVenues,
-    "with both candidates present, the PACKAGE wins, not the skill directory",
+    "with both candidates present, the INSTALLED package wins, not the copy the script ships in",
   );
 }
 
@@ -276,7 +234,7 @@ await checkSkill("render-paper");
     );
     assert.match(
       build,
-      /require\.resolve\("paperlint\/venues\/paper-guards\.tex"\)/,
+      /require\.resolve\("paperlint\/presets\/tex\/paper-guards\.tex"\)/,
       `${where}: the ladder's first rung (the package) must remain`,
     );
     assert.match(

@@ -10,7 +10,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
-import { packageVenuesDir } from "../skills/paper-pipeline/scripts/consumer.mjs";
+import { presetsDir } from "./package-dirs.ts";
 import { parsePreset } from "./tex-requirements.ts";
 import {
   MAX_PRESET_DEPTH,
@@ -21,7 +21,7 @@ import {
   resolvePreset,
 } from "./presets.ts";
 
-const VENUES = packageVenuesDir();
+const VENUES = presetsDir();
 const shipped = Object.fromEntries(
   readdirSync(VENUES)
     .filter((f) => f.endsWith(".jsonc") || f.endsWith(".json"))
