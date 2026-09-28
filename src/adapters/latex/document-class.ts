@@ -22,14 +22,12 @@ const isDocumentClass = (n: Node): n is Macro =>
 const isComma = (n: Node): boolean => n.type === "string" && n.content === ",";
 
 /** Nodes split at the top-level commas: a comma inside braces belongs to its group node. */
-const splitAtCommas = (nodes: readonly Node[]): readonly (readonly Node[])[] =>
-  nodes.reduce<readonly (readonly Node[])[]>(
-    (parts, n) =>
-      isComma(n)
-        ? [...parts, []]
-        : [...parts.slice(0, -1), [...(parts.at(-1) ?? []), n]],
-    [[]],
+function splitAtCommas(nodes: readonly Node[]): readonly (readonly Node[])[] {
+  const cuts = nodes.flatMap((n, i) => (isComma(n) ? [i] : []));
+  return [-1, ...cuts].map((from, k) =>
+    nodes.slice(from + 1, cuts[k] ?? nodes.length),
   );
+}
 
 /** The source text a run of nodes spans, whitespace collapsed; its markup-free text if unplaced. */
 function sourceOf(src: string, nodes: readonly Node[]): string {
