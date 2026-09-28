@@ -417,7 +417,7 @@ describe("tex/required-section — the edges", () => {
 });
 
 const INSTITUTION =
-  "\\institution{Submission to AISec 2026 @ ACM CCS --- double-blind review}";
+  "\\institution{Presented at AISec 2026, co-located with ACM CCS}";
 const leftovers = (fs: readonly Finding[]) =>
   fs.filter((f) => f.rule === "tex/venue-leftover");
 

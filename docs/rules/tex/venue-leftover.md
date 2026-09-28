@@ -4,70 +4,63 @@
 
 ## What it catches
 
-The text a reader sees names another shipped venue than the one the paper extends: that venue's
-`name`, or one of its `aliases`, as a whole word, case-sensitive. "The text a reader sees" is prose,
-the author block, footnotes, captions, and the preamble's front-matter macros (`\acmConference`,
-`\acmBooktitle`).
+The paper mentions a venue other than the one set in its `paperlint.json`. Usually that is text
+left over from an earlier submission: "Submission to VenueA 2026" in the author block of a paper
+now going to VenueB.
+
+It only knows the venues paperlint ships a preset for, by each preset's `name` and `aliases`. A
+venue with no preset is not recognized.
+
+It looks at what a reader sees — prose, the author block, captions, footnotes, and front-matter
+macros such as `\acmConference` — and ignores comments, citation keys, labels, URLs, math, code and
+the bibliography. Names are matched as whole words, case-sensitive.
 
 ## Why
 
-A paper resubmitted to AIDC still said, on page 1, in its author block:
-
-```latex
-\institution{Submission to AISec 2026 @ ACM CCS --- double-blind review}
-```
-
-That was the previous venue, and a reviewer sees it before the abstract. The paper's
-`paperlint.json` said `aidc`, and nothing compared what the source says about the venue with what
-the settings say.
+A reviewer reads the author block before the abstract. A line naming the previous venue tells them
+the paper was written for somewhere else, and at a double-blind venue it can say more than that.
+Nothing else compares what the source says about the venue with what the settings say.
 
 ## Examples
 
-Failing, under `"extends": "paperlint:aidc"`:
+Under `"extends": "paperlint:realm"`, where the `agenticdev` preset's alias is `AgenticDev`:
 
 ```latex
-\institution{Submission to AISec 2026 @ ACM CCS --- double-blind review}
+\acmConference[AgenticDev '26]{Workshop on Agentic Development}  % warns: «AgenticDev»
+As shown~\cite{agenticdev2025}.                                   % silent: a citation key
+% AgenticDev draft                                                 % silent: a comment
 ```
 
-> «AISec» names aisec, and this paper extends aidc — a leftover from an earlier submission? A
-> reviewer reads it before the abstract. Comments and citation keys are not reported; a sentence
-> that names the other venue on purpose can keep it with a disable directive
+The first line reports:
 
-(and a second finding for «ACM CCS».)
+> «AgenticDev» names agenticdev, and this paper extends realm — a leftover from an earlier
+> submission? A reviewer reads it before the abstract. Comments and citation keys are not
+> reported; a sentence that names the other venue on purpose can keep it with a disable directive
 
-Passing — the same line under `"extends": "paperlint:aisec"`, and under any preset:
+The same line passes under `"extends": "paperlint:agenticdev"`: it names the paper's own venue.
 
-```latex
-As shown~\cite{aisec2025}.   % AISec 2026 — a comment
-\begin{thebibliography}{1}\bibitem{a} In Proc. AISec.\end{thebibliography}
-```
+## Preset fields
 
-## Options / preset fields
-
-No rule options. It reads each preset's `name` and `aliases`, collected along `extends`:
+No rule options. It reads every shipped preset's `name` and `aliases`, collected along `extends`:
 
 ```jsonc
-"aliases": ["AISec", "ACM CCS"]
+"aliases": ["AgenticDev"]
 ```
 
-The shipped aliases: `aisec` AISec, ACM CCS · `agenticdev` AgenticDev · `realm` REALM, EMNLP ·
-`aidc` AIDC, ACSAC. The families (`acm-sigconf`, `ieee-conference`) declare none. The names of the
-paper's own chain are never reported, even when another venue shares one.
+A name the paper's own chain also declares (two workshops of one parent conference) is never
+reported.
 
 ## What it does not check
 
-- Comments, citation keys (`\cite`, `\citep`, biblatex's), `\label`/`\ref` keys, URLs, file names,
-  math, code environments and the bibliography: excluded on the parse tree, not by a pattern.
-- A venue no shipped preset describes, and a project's own presets other than the one the paper
-  extends.
+- A venue no shipped preset describes.
 - A name split by markup (`\textbf{AI}Sec`), and text pulled in with `\input`.
 
 ## How to fix
 
-Remove or replace the old venue's name. A sentence that names another venue on purpose («unlike
-AISec, …») keeps it with ESLint's directive and the reason:
+Remove or replace the old venue's name. A sentence that names another venue on purpose keeps it
+with ESLint's directive and the reason:
 
 ```latex
 % eslint-disable-next-line tex/venue-leftover -- comparing with the venue that published [3]
-Unlike AISec, this workshop …
+Unlike AgenticDev, this workshop …
 ```
