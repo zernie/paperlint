@@ -1,22 +1,19 @@
 /**
- * `tex/register` — the body reads at the register of a paper, not of a post: two rates over the
- * whole body, each reported once when it runs above what accepted papers show.
+ * `tex/register` — the body reads at the register of a paper, not of a post: sentences that open
+ * with a coordinating conjunction stay as rare as they are in accepted papers.
  *
- *   warn  more than 12% of the body's sentences run under eight words
- *   warn  more than 0.8 sentences per 1000 words open with And, So, But, Nor, Or or Yet
+ *   warn  more than 0.8 sentences per 1000 words of the body open with And, So, But, Nor, Or or Yet
  *
  * ── WHY ──────────────────────────────────────────────────────────────────────────
  * Reviewers called our prose "too informal" and "a blogpost" twice. Measured against eleven accepted
- * papers, the two things that set our drafts apart were these: runs of short sentences, and
- * sentences that open with a coordinating conjunction. Mean sentence length did not separate the two
- * groups, so there is no floor on it. The limits are options; their defaults and the measurement
- * behind them are on the rule's page.
+ * papers, sentence-initial conjunctions set our drafts apart (accepted 0–0.58 per 1000 words). The
+ * limit is an option; its default and the measurement behind it are on the rule's page.
  *
  * ── WHAT IT READS ────────────────────────────────────────────────────────────────
  * The body's prose through the `LatexReader` port (`bodyProse`) — the parse tree of the whole paper,
  * includes spliced — cut into sentences by the same splitter `tex/claim-provenance` uses
  * (src/domain/sentences.ts). A citation, a cross-reference or math reads as one word, as it does on
- * the page. A body under 2 000 words is not judged: there one sentence decides a rate.
+ * the page. A body under 2 000 words is not judged: there one sentence decides the rate.
  */
 import { runText, type Passage, type Span } from "./domain/tex-document.ts";
 import { runOf, sentences } from "./domain/sentences.ts";
@@ -27,11 +24,11 @@ import {
   type TexRuleModule,
 } from "./tex-venue-rules.ts";
 
-/** A sentence under this many words is short. The calibration counted it so; it is not an option. */
-export const SHORT_WORDS = 8;
-
-/** Under this many words in the body, no rate is judged. */
+/** Under this many words in the body, the rate is not judged. */
 export const MIN_WORDS = 2000;
+
+/** The limit when the config sets none, from the measurement on the rule's page. */
+export const DEFAULT_LIMIT = 0.8;
 
 /** The words that, opening a sentence, make it a conjunction start. Capitalised: only a first word. */
 const CONJUNCTIONS: ReadonlySet<string> = new Set([
@@ -48,7 +45,7 @@ const MARK = /[-]/gu;
 
 const WORDS = new Intl.Segmenter("en", { granularity: "word" });
 
-/** A sentence as the rates see it: its text, its words, and its first word. */
+/** A sentence as the rate sees it: its text, its words, and its first word. */
 interface Sentence {
   readonly text: string;
   readonly words: number;
@@ -69,13 +66,10 @@ function sentenceOf(text: string): Sentence | null {
 
 /** What the body measures. */
 export interface RegisterMeasure {
-  readonly sentences: number;
   readonly words: number;
-  readonly short: number;
   readonly conjunctionStarts: number;
-  /** The first three of each kind, as the reader sees them. */
-  readonly shortExamples: readonly string[];
-  readonly conjunctionExamples: readonly string[];
+  /** The first three, as the reader sees them. */
+  readonly examples: readonly string[];
   /** Where the body's first passage starts, for a finding about the whole body. */
   readonly at: Span | null;
 }
@@ -91,7 +85,7 @@ function startOf(p: Passage): Span {
     : first.span;
 }
 
-/** The body's sentences, counted. */
+/** The body's words, and its sentences that open with a conjunction. */
 export function measureRegister(passages: readonly Passage[]): RegisterMeasure {
   const all = passages.flatMap((p) => {
     const text = runText(runOf(p));
@@ -100,122 +94,61 @@ export function measureRegister(passages: readonly Passage[]): RegisterMeasure {
       return s === null ? [] : [s];
     });
   });
-  const short = all.filter((s) => s.words < SHORT_WORDS);
   const conj = all.filter((s) => CONJUNCTIONS.has(s.first));
   const [first] = passages;
   return {
-    sentences: all.length,
     words: all.reduce((n, s) => n + s.words, 0),
-    short: short.length,
     conjunctionStarts: conj.length,
-    shortExamples: short.slice(0, 3).map((s) => s.text),
-    conjunctionExamples: conj.slice(0, 3).map((s) => s.text),
+    examples: conj.slice(0, 3).map((s) => s.text),
     at: first === undefined ? null : startOf(first),
   };
 }
 
-/** The limits: each rate is reported when it runs above its limit. */
-export interface RegisterLimits {
-  readonly shortSentencePercent: number;
-  readonly conjunctionStartsPer1000: number;
-}
-
-/** The defaults, from the measurement on the rule's page. */
-export const DEFAULT_LIMITS: RegisterLimits = {
-  shortSentencePercent: 12,
-  conjunctionStartsPer1000: 0.8,
-};
-
-/** Examples as the message quotes them. */
-const quoted = (xs: readonly string[]): string =>
-  xs.map((x) => `«${x}»`).join(", ");
-
-/** The short-sentence finding, when the share runs above its limit. */
-function shortSentences(m: RegisterMeasure, limit: number): readonly Located[] {
-  const share = (100 * m.short) / m.sentences;
-  if (share <= limit) return [];
-  const data = {
-    share: share.toFixed(1),
-    count: m.short,
-    sentences: m.sentences,
-    limit,
-    examples: quoted(m.shortExamples),
-  };
-  return [{ messageId: "shortSentences", data, at: m.at }];
-}
-
-/** The conjunction-start finding, when the rate runs above its limit. */
-function conjunctionStarts(
+/** One finding, at the start of the body, when the rate runs above `limit` per 1000 words. */
+export function judgeRegister(
   m: RegisterMeasure,
-  limit: number,
+  limit: number = DEFAULT_LIMIT,
 ): readonly Located[] {
+  if (m.words < MIN_WORDS) return [];
   const rate = (1000 * m.conjunctionStarts) / m.words;
   if (rate <= limit) return [];
   const data = {
     count: m.conjunctionStarts,
     rate: rate.toFixed(2),
     limit,
-    examples: quoted(m.conjunctionExamples),
+    examples: m.examples.map((x) => `«${x}»`).join(", "),
   };
   return [{ messageId: "conjunctionStarts", data, at: m.at }];
 }
 
-/** One finding for each rate above its limit, at the start of the body. */
-export function judgeRegister(
-  m: RegisterMeasure,
-  limits: Partial<RegisterLimits>,
-): readonly Located[] {
-  if (m.words < MIN_WORDS) return [];
-  const l = { ...DEFAULT_LIMITS, ...limits };
-  return [
-    ...shortSentences(m, l.shortSentencePercent),
-    ...conjunctionStarts(m, l.conjunctionStartsPer1000),
-  ];
-}
-
-/** The rule's first option as a record: ESLint has validated it against the schema. */
-function givenOptions(
-  options: readonly unknown[] | undefined,
-): Readonly<Record<string, unknown>> {
+/** The limit the config sets, or the default: ESLint has validated the option against the schema. */
+function limitOf(options: readonly unknown[] | undefined): number {
   const [o] = options ?? [];
-  return typeof o === "object" && o !== null
-    ? Object.fromEntries(Object.entries(o))
-    : {};
-}
-
-/** The limits the config sets, each one it leaves out at its default. */
-function limitsOf(options: readonly unknown[] | undefined): RegisterLimits {
-  const given = givenOptions(options);
-  const limit = (key: keyof RegisterLimits): number => {
-    const v = given[key];
-    return typeof v === "number" ? v : DEFAULT_LIMITS[key];
-  };
-  return {
-    shortSentencePercent: limit("shortSentencePercent"),
-    conjunctionStartsPer1000: limit("conjunctionStartsPer1000"),
-  };
+  const given: Readonly<Record<string, unknown>> =
+    typeof o === "object" && o !== null
+      ? Object.fromEntries(Object.entries(o))
+      : {};
+  const v = given["conjunctionStartsPer1000"];
+  return typeof v === "number" ? v : DEFAULT_LIMIT;
 }
 
 const META: TexRuleModule["meta"] = {
   type: "suggestion",
   docs: {
     description:
-      "the body reads at a paper's register: few sentences under eight words, few sentences opening with And, So or But",
+      "the body reads at a paper's register: few sentences open with And, So, But, Nor, Or or Yet",
     url: ruleDocsUrl("register"),
   },
   schema: [
     {
       type: "object",
       properties: {
-        shortSentencePercent: { type: "number", minimum: 0, maximum: 100 },
         conjunctionStartsPer1000: { type: "number", minimum: 0 },
       },
       additionalProperties: false,
     },
   ],
   messages: {
-    shortSentences:
-      "{{share}}% of the body's {{sentences}} sentences run under 8 words ({{count}}; first: {{examples}}). Accepted papers measured 2.2–10.9%; this rule warns above {{limit}}%. A run of short sentences reads as a post, not a paper — join the ones that carry one step of the same argument",
     conjunctionStarts:
       "{{count}} sentences open with And, So, But, Nor, Or or Yet — {{rate}} per 1000 words (first: {{examples}}). Accepted papers measured 0–0.58; this rule warns above {{limit}}. Join the sentence to the one before, or open with the connective a paper uses (However, Therefore, Moreover)",
   },
@@ -235,7 +168,7 @@ export const registerRule = (deps: PaperDeps): TexRuleModule => ({
           paper,
           judgeRegister(
             measureRegister(deps.latex.bodyProse(paper.text)),
-            limitsOf(context.options),
+            limitOf(context.options),
           ),
         );
       },

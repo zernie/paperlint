@@ -42,7 +42,7 @@ paper, left for a later change; one line each.
 | agenticdev-acm26 | `tex/claim-provenance` | 9 | real | numbers stated with no owner in the sentence ("The first is that the tool cuts output tokens by 65%.") — the paper reviewers called too informal |
 | secure-acsac24 | `tex/claim-provenance` | 6 | real | the authors' own results stated without a subject or a pointer ("LLMs experience a significant decrease in accuracy, with a 5.44% drop …"); the owner is in a neighbouring sentence, which the rule does not read |
 | secure-acsac24 | `tex/claim-provenance` | 1 | known | a range that defines a scale, not a result ("Typically set between 0 and 1, the temperature …") |
-| agenticdev-acm26 | `tex/register` | 1 | real | 7 sentences open with _And_, _So_, _But_ or _Nor_ — 1.60 per 1000 words against a limit of 0.8; the two papers written by others read 0. Short sentences: 7.0%, under the 12% limit |
+| agenticdev-acm26 | `tex/register` | 1 | real | 7 sentences open with _And_, _So_, _But_ or _Nor_ — 1.60 per 1000 words against a limit of 0.8; the two papers written by others read 0 |
 | llm-splained-acsac25 | `tex/claim-provenance` | 11 | real | the authors' own results in `sections/*.tex` stated without a subject or a pointer ("GPT errors exceeded 30% in both categories …"); the owner is in a neighbouring sentence. One ("ranged from 1 to 13") is in a list item, which the rules did not read before; one is in the reviews' disabled branch (below) |
 
 Two limits the corpus shows and no count records:
@@ -62,8 +62,7 @@ recognise "466 Boolean questions" or "900 systematically collected questions" as
 the parse-tree rules did not follow `\input`, so this paper's body in `sections/*.tex` went unread;
 `tex/claim-provenance` read an inline list's enumerators ("are: 1. …, 2. …") and a number inside a
 quoted example as claims; the body's prose dropped every `\item` whole (the parser hands an item
-its text as an argument), and read run-in headings (`\textbf{Threats.}`) as sentences — which
-`tex/register` would have counted as short.
+its text as an argument), and read run-in headings (`\textbf{Threats.}`) as sentences.
 
 ## Licence rule — read before adding a paper
 

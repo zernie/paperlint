@@ -342,7 +342,7 @@ export function buildConfig(
         // A number with no owner: a prose rule, on beside the others above.
         "tex/claim-provenance": "warn",
         "tex/missing-input": "warn",
-        // Short sentences and conjunction starts over the whole body: register, not vocabulary.
+        // Sentence-initial conjunctions over the whole body: register, not vocabulary.
         "tex/register": "warn",
         "tex/acm-frontmatter-override": "error",
         // Silent for a paper whose paperlint.json names no venue (src/venue-rules.ts).

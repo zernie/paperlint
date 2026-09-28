@@ -77,17 +77,15 @@ describe.each(PAPERS)("the accepted paper %s", (name) => {
 });
 
 /**
- * What `tex/register` measures on each paper, recorded: the share of sentences under eight words and
- * the sentences opening with And, So, But, Nor, Or or Yet per 1000 words. The two papers written by
- * others read well under both limits; `agenticdev-acm26` is ours, and its conjunction starts are over
- * the limit — the one finding its baseline records. A change to how the body is read moves these.
+ * What `tex/register` measures on each paper, recorded: sentences opening with And, So, But, Nor,
+ * Or or Yet per 1000 words. The two papers written by others read 0; `agenticdev-acm26` is ours,
+ * and its rate is over the limit — the one finding its baseline records. A change to how the body
+ * is read moves these.
  */
-const REGISTER: Readonly<
-  Record<string, { readonly short: string; readonly per1000: string }>
-> = {
-  "agenticdev-acm26": { short: "7.0", per1000: "1.60" },
-  "llm-splained-acsac25": { short: "7.3", per1000: "0.00" },
-  "secure-acsac24": { short: "3.3", per1000: "0.00" },
+const CONJUNCTION_STARTS_PER_1000: Readonly<Record<string, string>> = {
+  "agenticdev-acm26": "1.60",
+  "llm-splained-acsac25": "0.00",
+  "secure-acsac24": "0.00",
 };
 
 describe.each(PAPERS)("tex/register on the accepted paper %s", (name) => {
@@ -101,16 +99,13 @@ describe.each(PAPERS)("tex/register on the accepted paper %s", (name) => {
     ),
   );
 
-  it("measures the recorded rates", () => {
-    expect({
-      short: ((100 * m.short) / m.sentences).toFixed(1),
-      per1000: ((1000 * m.conjunctionStarts) / m.words).toFixed(2),
-    }).toEqual(REGISTER[name]);
+  it("measures the recorded rate", () => {
+    expect(((1000 * m.conjunctionStarts) / m.words).toFixed(2)).toBe(
+      CONJUNCTION_STARTS_PER_1000[name],
+    );
   });
 
-  it("is silent on the papers written by others; on ours, reports only the conjunction starts", () => {
-    expect(judgeRegister(m, {}).map((f) => f.messageId)).toEqual(
-      name === "agenticdev-acm26" ? ["conjunctionStarts"] : [],
-    );
+  it("is silent on the papers written by others, and reports ours", () => {
+    expect(judgeRegister(m).length).toBe(name === "agenticdev-acm26" ? 1 : 0);
   });
 });
