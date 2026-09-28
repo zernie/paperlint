@@ -66,7 +66,9 @@ describe("a sentence with a number and no owner is reported, once, as its whole 
       "It runs on Claude 3 and fails 40\\%.",
     ]);
   });
+});
 
+describe("the numbers the rule skips do not hide their neighbours", () => {
   it("🔴 a number after an enumerator, or outside the quotation, is still read", () => {
     expect(
       reported(
@@ -229,6 +231,13 @@ describe("a number that is not the body's claim is not read", () => {
       "a name with a digit",
       "GPT-4 and COVID-19 and v1.2 and 10k and 2FA and 0x1F appear.",
     ],
+  ])("%s", (_, body) => {
+    expect(reported(body)).toEqual([]);
+  });
+});
+
+describe("markup that is not the body's prose is not read", () => {
+  it.each([
     ["math", "The bound $x \\le 3$ holds."],
     ["an equation", "\\begin{equation} x = 40 \\end{equation}"],
     [
