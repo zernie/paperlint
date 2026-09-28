@@ -1,8 +1,9 @@
 /**
- * ONE reader of `baseline.json`, shared by the two runs that compare against it: the harness
- * beside this file (the repository's own `bin/paperlint.mjs`) and `test/e2e/install/install.e2e.ts` (the binary
- * a consumer actually got). Two copies of "growth fails, a drop never does" would drift the first
- * time one of them is tightened, and the two runs would then disagree about the same article.
+ * ONE reader of `baseline.json`, shared by every run that compares against one: the harness beside
+ * this file (the repository's own `bin/paperlint.mjs`), `test/e2e/install/install.e2e.ts` (the
+ * binary a consumer actually got), and `fixtures/accepted-papers/accepted-papers.test.ts` (one
+ * baseline per accepted paper). Two copies of "growth fails, a drop never does" would drift the
+ * first time one of them is tightened, and the runs would then disagree about the same rules.
  */
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -21,10 +22,10 @@ const LintOutput = z.array(
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
-/** The recorded counts, `{ruleId: n}`. */
-export function recordedFindings(): Counts {
+/** The counts recorded in `dir`'s `baseline.json` (this article's by default), `{ruleId: n}`. */
+export function recordedFindings(dir: string = HERE): Counts {
   return Baseline.parse(
-    JSON.parse(readFileSync(join(HERE, "baseline.json"), "utf8")),
+    JSON.parse(readFileSync(join(dir, "baseline.json"), "utf8")),
   ).findings;
 }
 

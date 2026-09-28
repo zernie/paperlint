@@ -28,11 +28,20 @@ export const placeOf = (n: Positioned): Place =>
         span: { start: n.position.start.offset, end: n.position.end.offset },
       };
 
+/** What `f` makes of a place's span, or nothing for a node the parser gave no position. */
+export const inPlace = <T>(
+  p: Place,
+  f: (span: Span) => readonly T[],
+): readonly T[] => (p.kind === "at" ? f(p.span) : []);
+
+/** A macro's arguments, in order: none when the parser attached none. */
+export const argumentsOf = (m: Macro): readonly Argument[] => m.args ?? [];
+
 /** The first mandatory (`{…}`) and optional (`[…]`) arguments' contents, and the last mandatory one's. */
 export const mandatory = (m: Macro): readonly Argument[] =>
-  (m.args ?? []).filter((a) => a.openMark === "{");
+  argumentsOf(m).filter((a) => a.openMark === "{");
 export const optional = (m: Macro): Argument | undefined =>
-  (m.args ?? []).find((a) => a.openMark === "[");
+  argumentsOf(m).find((a) => a.openMark === "[");
 
 /** What a string node reads as: itself, except a tie (`~`), which is a space the reader sees. */
 export const stringText = (content: string): string =>

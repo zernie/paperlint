@@ -1,9 +1,11 @@
 /**
- * Reads a paper.tex and answers three questions — checks nothing itself: `documentClassOf` (which
+ * Reads a paper.tex and answers four questions — checks nothing itself: `documentClassOf` (which
  * class, with which options, and where), `outlineOf` (the sections in order, where the back matter
- * starts, where the document ends) and `renderedRuns` (the text a reader sees, each character with
- * its source offset). Used by `tex/template`, `tex/required-section`, `tex/venue-leftover` and
- * `paperlint new`, through the `LatexReader` port (`src/ports/latex.ts`); `src/cli.ts` wires it.
+ * starts, where the document ends), `renderedRuns` (the text a reader sees, each character with
+ * its source offset) and `bodyProse` (the body's prose as passages, with its citation and
+ * cross-reference marks). Used by `tex/template`, `tex/required-section`, `tex/venue-leftover`,
+ * `tex/claim-provenance` and `paperlint new`, through the `LatexReader` port (`src/ports/latex.ts`);
+ * `src/cli.ts` wires it.
  *
  * ── WHY THE PARSE TREE AND NOT THE `tex/latex` PROJECTION ────────────────────────
  * The ESLint language's projection (`eslint-rules/latex-language.ts`) blanks the preamble,
@@ -24,8 +26,10 @@ import {
   parseTemplate,
   replaceDocumentClass,
 } from "./document-class.ts";
+import { documentBodyOf, includesOf } from "./includes.ts";
 import { outlineOf } from "./outline.ts";
 import { parseLatex } from "./parse.ts";
+import { bodyProse } from "./prose.ts";
 import { renderedRuns } from "./rendered.ts";
 
 export {
@@ -35,14 +39,17 @@ export {
 } from "./document-class.ts";
 export {
   collapse,
+  inPlace,
   macroPlace,
   mandatory,
   optional,
   placeOf,
   textOf,
 } from "./nodes.ts";
+export { documentBodyOf, includesOf } from "./includes.ts";
 export { outlineOf } from "./outline.ts";
 export { parseLatex, type ParsedTex } from "./parse.ts";
+export { bodyProse } from "./prose.ts";
 export { renderedRuns } from "./rendered.ts";
 
 /** The `LatexReader` port over unified-latex: each call parses its source once. */
@@ -50,6 +57,9 @@ export const latexReader: LatexReader = {
   documentClass: (src) => documentClassOf(parseLatex(src)),
   outline: (src) => outlineOf(parseLatex(src)),
   renderedRuns: (src) => renderedRuns(parseLatex(src)),
+  bodyProse: (src) => bodyProse(parseLatex(src)),
+  includes: (src) => includesOf(parseLatex(src)),
+  documentBody: (src) => documentBodyOf(parseLatex(src)),
   template: parseTemplate,
   withDocumentClass: (src, want) => replaceDocumentClass(parseLatex(src), want),
 };

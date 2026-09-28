@@ -6,9 +6,13 @@
  */
 import type * as Ast from "@unified-latex/unified-latex-types";
 import { describe, expect, it } from "vitest";
-import { runText, spanIn } from "../../domain/tex-document.ts";
+import { runText, spanIn, type ProsePiece } from "../../domain/tex-document.ts";
 import {
+  bodyProse,
+  documentBodyOf,
   documentClassOf,
+  includesOf,
+  inPlace,
   latexReader,
   macroPlace,
   mandatory,
@@ -43,6 +47,16 @@ describe("documentClassOf — the class line's three states", () => {
       kind: "empty",
       place: { kind: "at", span: { start: 2, end: 16 } },
     });
+  });
+
+  it("ambiguous: two \\documentclass lines behind a switch, each read as a candidate in source order", () => {
+    const src =
+      "\\if\\x1\\documentclass{article}\\fi\\if\\x2\\documentclass[a]{b}\\fi";
+    const line = documentClassOf(parseLatex(src));
+    expect(
+      line.kind === "ambiguous" &&
+        line.candidates.map((c) => c.kind === "class" && c.cls),
+    ).toEqual(["article", "b"]);
   });
 
   it("missing: no \\documentclass at the top of the tree", () => {
@@ -156,6 +170,12 @@ describe("replaceDocumentClass — the class `paperlint new` writes", () => {
     expect(replaced("\\documentclass[review, foo={a,b}]{IEEEtran}\nx")).toBe(
       "\\documentclass[review, foo={a,b},conference,compsoc]{IEEEtran}\nx",
     );
+  });
+
+  it("🔴 a source with several \\documentclass lines is returned as it is: which branch builds is not known", () => {
+    const src =
+      "\\if\\x1\\documentclass{article}\\fi\\if\\x2\\documentclass{IEEEtran}\\fi";
+    expect(replaced(src)).toBe(src);
   });
 
   it("no class, or an empty one, is returned as it is", () => {
@@ -357,5 +377,159 @@ describe("renderedRuns", () => {
         .map(runText)
         .some((t) => t.includes("AISec")),
     ).toBe(false);
+  });
+});
+
+describe("inPlace — a node the parser gave no position yields nothing, never offset 0", () => {
+  it("a span is handed to f; an unplaced node gives the empty list", () => {
+    const f = (s: { start: number; end: number }) => [s.start];
+    expect(inPlace({ kind: "at", span: { start: 3, end: 5 } }, f)).toEqual([3]);
+    expect(inPlace({ kind: "unplaced" }, f)).toEqual([]);
+  });
+});
+
+/** A prose piece, readable in an expectation: text as itself, a mark or math in angle brackets. */
+const pieceShape = (x: ProsePiece): string =>
+  x.kind === "text"
+    ? x.segment.text
+    : x.kind === "owner"
+      ? `<${x.owner}@${String(x.span.start)}>`
+      : `<math ${x.tex}>`;
+
+describe("bodyProse — passages a sentence cannot cross, with the marks that say where a claim comes from", () => {
+  it("text, a citation mark, a reference mark and math, in source order; a footnote is its own passage", () => {
+    const src =
+      "\\begin{document}\nA~\\cite{k} B \\ref{s} $x$.\\footnote{F.}\n\n\\section{H}C\\%\n\\end{document}";
+    const at = (s: string) => src.indexOf(s);
+    const shape = bodyProse(parseLatex(src)).map((p) =>
+      p.pieces.map(pieceShape),
+    );
+    expect(shape).toEqual([
+      [
+        "A",
+        " ",
+        `<citation@${String(at("\\cite"))}>`,
+        " ",
+        "B",
+        " ",
+        `<reference@${String(at("\\ref"))}>`,
+        " ",
+        "<math $x$>",
+        ".",
+      ],
+      ["F", "."],
+      ["C", "%"],
+    ]);
+  });
+
+  it("a character macro's character stands at the macro's last source character", () => {
+    const src = "C\\%";
+    const [p] = bodyProse(parseLatex(src));
+    expect(p?.pieces.at(-1)).toEqual({
+      kind: "text",
+      segment: { text: "%", at: 2 },
+    });
+  });
+});
+
+describe("bodyProse — run-in headings and list items", () => {
+  /** The text of each passage of `src`'s body, marks and math left out. */
+  const texts = (src: string): readonly string[] =>
+    bodyProse(parseLatex(src)).map((p) =>
+      p.pieces
+        .map((x) => (x.kind === "text" ? x.segment.text : ""))
+        .join("")
+        .trim(),
+    );
+
+  it("🔴 a run-in heading — a bold, italic or emphasised phrase ending in `.` or `:` that opens a paragraph or an item — is a heading, left out", () => {
+    expect(
+      texts(
+        "\\begin{document}\n\\section{Method}\\label{sec:m}\n\\vspace{2pt}\\textbf{Correctness gate.} Each task carries a check.\n\n\\noindent \\textit{\\textbf{VPNs:}} GPT recommended them.\n\\begin{itemize}\n\\item \\emph{Scale.} It grows.\n\\end{itemize}\n\\end{document}",
+      ),
+    ).toEqual([
+      "Each task carries a check.",
+      "GPT recommended them.",
+      "It grows.",
+    ]);
+  });
+
+  it("🔴 a list item's text is prose, each item its own passage; its label is not — and an \\item outside a list ends a passage", () => {
+    expect(
+      texts(
+        "\\begin{document}\n\\begin{itemize}\n\\item[A:] It grows.\n\\item It holds.\n\\end{itemize}\nAfter \\item the list.\n\\end{document}",
+      ),
+    ).toEqual(["It grows.", "It holds.", "After", "the list."]);
+  });
+
+  it("a run-in heading holding a footnote or a citation is still a heading, left out whole", () => {
+    expect(
+      texts(
+        "\\begin{document}\n\\textbf{Scale\\footnote{F.}.} It grows.\n\n\\textbf{See~\\cite{k}:} It holds.\n\\end{document}",
+      ),
+    ).toEqual(["It grows.", "It holds."]);
+  });
+
+  it("the same markup inside a sentence, or without the closing mark, is prose", () => {
+    expect(
+      texts(
+        "\\begin{document}\nWe \\textbf{do not.} stop.\n\n\\textbf{Bold} opens this one.\n\\end{document}",
+      ),
+    ).toEqual(["We do not. stop.", "Bold opens this one."]);
+  });
+});
+
+describe("includesOf — the files a source pulls in", () => {
+  it("each of \\input, \\include and \\subfile, with the path as written and the macro's span", () => {
+    const src = "a\\input{sections/1-intro}\n\\include{b.tex}\\subfile{c_d}";
+    expect(includesOf(parseLatex(src))).toEqual([
+      {
+        macro: "input",
+        target: "sections/1-intro",
+        span: { start: 1, end: 25 },
+      },
+      { macro: "include", target: "b.tex", span: { start: 26, end: 41 } },
+      { macro: "subfile", target: "c_d", span: { start: 41, end: 54 } },
+    ]);
+  });
+
+  it("\\input without braces (TeX's own form) names the file up to the next space", () => {
+    const targets = (src: string) =>
+      includesOf(parseLatex(src)).map((i) => i.target);
+    expect(targets("\\input sections/a \n")).toEqual(["sections/a"]);
+    // At the end of the source, the name runs to it.
+    expect(targets("\\input sections/a")).toEqual(["sections/a"]);
+  });
+
+  it("an \\input with nothing after it names no file", () => {
+    expect(includesOf(parseLatex("\\input"))).toEqual([]);
+  });
+
+  it("not in a comment, not in a macro definition's body, not an empty argument", () => {
+    const src = "% \\input{old}\n\\newcommand{\\x}{\\input{y}}\\input{}";
+    expect(includesOf(parseLatex(src))).toEqual([]);
+  });
+
+  it("the port answers the same over a source", () => {
+    expect(latexReader.includes("\\input{a}").map((i) => i.target)).toEqual([
+      "a",
+    ]);
+  });
+});
+
+describe("documentBodyOf — the body of a source that is a document of its own", () => {
+  it("from the first to the last node inside the document environment", () => {
+    const src =
+      "\\documentclass{x}\\begin{document}BODY and more\\end{document}";
+    const body = documentBodyOf(parseLatex(src));
+    expect(body && src.slice(body.start, body.end)).toBe("BODY and more");
+    expect(latexReader.documentBody(src)).toEqual(body);
+  });
+
+  it("none without a document environment, or with an empty one", () => {
+    expect(documentBodyOf(parseLatex("just text"))).toBe(null);
+    expect(documentBodyOf(parseLatex("\\begin{document}\\end{document}"))).toBe(
+      null,
+    );
   });
 });

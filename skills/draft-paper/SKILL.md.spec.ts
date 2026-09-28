@@ -84,7 +84,7 @@ grade.
 
 ## Run the prose through the PAPER suite's QA (do not skip — and do not use the blog skills)
 Before any review pass, run the draft through the paper-side prose QA — it catches what a self-read won't:
-- **\`grade-paper-writing\`** — the 9-dim rubric + the PERSONA cold-read stall pass (a committed
+- **\`grade-paper-writing\`** — the 10-dim rubric + the PERSONA cold-read stall pass (a committed
   non-academic persona, per-section — the localized "wait, what does that even mean?" axis authors are
   blind to). Its avoid-list grep also strips the AI-writing tropes (hedge-stacking, "it's worth
   noting", limp connectives, fake balance) that make a draft read unserious to a human PC.

@@ -56,7 +56,7 @@
  *
  *   A0  baseline          verbatim. The control.
  *   A1  short             keep sentence 1 ("Use when asking …") and sentence 2 ("Grades WRITING CRAFT
- *                         only — nine dimensions … the fix for each."). Delete everything after.
+ *                         only — ten dimensions … the fix for each."). Delete everything after.
  *                         1174 -> ~530 chars. The blunt arm: does ANY deletion revive it?
  *   A2  no-subordination  delete ONLY the two clauses announcing that this skill is a SUBROUTINE of
  *                         other skills: "whose stall inventory … is the readability gate other skills
@@ -67,7 +67,7 @@
  *                         deferring — declining to call a thing that presents itself as something
  *                         another skill calls. No other skill in the roster says this about itself.
  *   A3  no-negation       delete ONLY the sentence carrying the "NOT …" delegation clauses.
- *   A4  no-machinery      delete ONLY the opaque internals and proper nouns: the nine-dimension
+ *   A4  no-machinery      delete ONLY the opaque internals and proper nouns: the ten-dimension
  *                         parenthetical, the "(Peyton Jones, McEnerney, Gopen & Swan; exemplars …)"
  *                         authorities, the PERSONA sentence and the blind-panel/claims-diff sentence.
  *                         Keeps sentence 1 and the NOT-clauses.
@@ -76,7 +76,7 @@
  *                         "grade-paper-writing" reads as a niche in-house verb the selector skips.
  *                         The only arm that changes nothing about the description text.
  *   A6  persona-only      ADDED AFTER A0-A5 RAN, on request, and it is A1's MIRROR. The skill has two
- *                         jobs — a nine-dimension rubric and a persona cold-read stall pass — and A1
+ *                         jobs — a ten-dimension rubric and a persona cold-read stall pass — and A1
  *                         as specified keeps the rubric sentence and deletes the persona one, so the
  *                         six-arm design had a rubric-only description and no persona-only twin. A6 is
  *                         that twin: the opening sentence (minus the `"grade the writing"` trigger,
@@ -518,9 +518,9 @@ const D_NEGATION = [
   " NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT venue-bar content strength (study-accepted-papers).",
 ];
 const D_MACHINERY = [
-  " (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking)",
+  " (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking, Register distance to the target venue)",
   " (Peyton Jones, McEnerney, Gopen & Swan; exemplars Trusting Trust, Carlini, Greshake)",
-  " Runs the PERSONA cold-read stall pass (a committed non-academic persona subagent, per-section) whose stall inventory — not the rubric number — is the readability gate other skills consume (pc-panel-review, paper-adversarial-review, harden-paper).",
+  " Runs the cold-read stall pass with TWO committed personas (a non-academic engineer per section, and a workshop reviewer skimming abstract, introduction and conclusion) whose stall inventory — not the rubric number — is the readability gate other skills consume (pc-panel-review, paper-adversarial-review, harden-paper).",
   " Defaults to a blind multi-grader panel; after fixes, mandates the claims-preservation diff (row `claims`).",
 ];
 // NOTE ON "FOUR NOT-CLAUSES": the description carries THREE uppercase "NOT …" delegation clauses
@@ -546,7 +546,7 @@ const applyCuts = (s, cuts) => {
 // its subordination tail removed — see the header for why that tail goes.
 const D_PERSONA_ONLY = [
   ' / "grade the writing"',
-  " Grades WRITING CRAFT only — nine dimensions 1–5 (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking) against how the best-written papers read (Peyton Jones, McEnerney, Gopen & Swan; exemplars Trusting Trust, Carlini, Greshake), naming the offending sentence and the fix for each.",
+  " Grades WRITING CRAFT only — ten dimensions 1–5 (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking, Register distance to the target venue) against how the best-written papers read (Peyton Jones, McEnerney, Gopen & Swan; exemplars Trusting Trust, Carlini, Greshake) AND against 2–3 accepted papers of the target venue, naming the offending sentence and the fix for each.",
   " whose stall inventory — not the rubric number — is the readability gate other skills consume (pc-panel-review, paper-adversarial-review, harden-paper)",
   " Defaults to a blind multi-grader panel; after fixes, mandates the claims-preservation diff (row `claims`).",
   " NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT venue-bar content strength (study-accepted-papers).",

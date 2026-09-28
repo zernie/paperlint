@@ -1,10 +1,10 @@
 ---
 name: pc-panel-review
-description: Use when asking "what would the program committee decide?" / "simulate the reviewers" / "what's this paper's accept probability?" on a drafted paper + artifact. Spawns N independent reviewers with DISTINCT lenses (one actually RUNS the artifact), then synthesizes a PC-chair meta-review into an accept/reject decision, a calibrated probability, and consensus must-fixes. Requires grade-paper-writing's persona stall inventory + tighten-paper's structural verdict as inputs (blocked until they exist — the panel cannot feel reader fatigue on its own). Also has a lightweight single-reviewer VENUE-FIT MODE for a quick CFP-fit spot-check. NOT a single fast defect hunt (paper-adversarial-review), a writing grade (grade-paper-writing), or the full pre-submit gate (harden-paper, which calls this) — this models the PC decision itself.
+description: Use when asking "what would the program committee decide?" / "simulate the reviewers" / "what's this paper's accept probability?" on a drafted paper + artifact. Spawns N independent reviewers with DISTINCT lenses (one actually RUNS the artifact, one is a skimming genre/register reviewer), then synthesizes a PC-chair meta-review into an accept/reject decision reported as min/median/max, a calibrated probability, and consensus must-fixes. Requires grade-paper-writing's persona stall inventory + tighten-paper's structural verdict as inputs (blocked until they exist — the panel cannot feel reader fatigue on its own). Also has a lightweight single-reviewer VENUE-FIT MODE for a quick CFP-fit spot-check. NOT a single fast defect hunt (paper-adversarial-review), a writing grade (grade-paper-writing), or the full pre-submit gate (harden-paper, which calls this) — this models the PC decision itself.
 allowed-tools: [Read, Write, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:b9feb099347291ff compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:7e5fb04d1cfa0548 compiled from skills/pc-panel-review/SKILL.md.spec.ts -->
 
 # pc-panel-review — model the whole PC, not one reviewer
 
@@ -51,7 +51,15 @@ prose-only read can.
    panel's only legitimate source for the readability/structure signal.
    *(Scorecard: this gate is row **`panel`**, and it declares **`structure`** (tighten-paper) + **`writing`**
    (grade-paper-writing) as its required inputs.)*
-3. **Pick 3 (or 4) reviewer lenses** that a real PC for THIS venue would field. Menu — choose by fit:
+3. **Pick 3 (or 4) reviewer lenses** that a real PC for THIS venue would field. One is fixed; the rest
+   come from the menu, by fit:
+   - **Genre/register reviewer — MANDATORY on every panel, at every venue.** Confidence 3 (knows the
+     area, not this topic), reads ONLY the abstract, the introduction and the conclusion, and judges
+     whether this reads as a paper at this venue: whose result each sentence states, whether the
+     relations between claims are signposted or left to infer, and whether anything is an aphorism,
+     a fragment or a colloquial turn. This is the reviewer who writes one short review, scores low,
+     and calls the paper a blog post — the one reviewer a panel of careful full readers never
+     predicts. Give it the three sections as text and the venue's name, nothing else.
    - **Methods/stats skeptic** — sample size, construct validity, multiple comparisons, overclaims,
      whether the CIs support the claims.
    - **Domain practitioner** — relevance to the CFP, novelty vs the nearest prior work, does the
@@ -67,7 +75,13 @@ prose-only read can.
 4. **Spawn them in PARALLEL, each on a separate model instance** (e.g. Fable via subagent), each blind
    to the others — independence is the whole point. Give each: the paper (`.tex`/PDF), the artifact
    path, the quoted rubric, its lens, **and the two step-2 artifacts (persona stall inventory +
-   tighten-paper structural verdict)**. Force a filled review form (below).
+   tighten-paper structural verdict)** — the genre/register reviewer gets only its three sections.
+   Force a filled review form (below).
+
+   🔴 **No reviewer is shown a previous round** — not its scores, not its reviews, not "the panel
+   gave 3.25 last time", not a list of what changed since. A reviewer who is told the last score
+   anchors on it (*"up from the 3.25 the earlier rounds reported"*), and the rounds then converge on
+   each other instead of on the paper. Comparing rounds is the chair's job, after the reviews land.
 5. **Synthesize the meta-review yourself** (PC chair) once all land — see output.
 
 ## Each reviewer returns a review form
@@ -90,10 +104,19 @@ prose-only read can.
 - One-line meta: does this belong at this venue?
 
 ## The meta-review (PC-chair synthesis) — the actual deliverable
-- **Score table:** each reviewer × each criterion + overall + confidence, at a glance.
-- **Decision:** the rec the PC discussion converges on (weight by confidence; a lone low-confidence
-  outlier doesn't sink two confident accepts), + a **calibrated accept probability** for this venue
-  and edition.
+- **Score table:** each reviewer × each criterion + overall + confidence, at a glance, and under it
+  the overall score's **min / median / max** across reviewers — never a mean alone, which hides the
+  one low review that decides a workshop.
+- **Decision:** for a **workshop**, the decision follows the **MIN**: a workshop PC with three
+  reviews and a short discussion does not overrule a reject, so one Reject or Strong Reject sinks the
+  paper however confident the others are. For a conference, the rec the PC discussion converges on,
+  weighted by confidence, with the min named beside it. Either way, a **calibrated accept probability**
+  for this venue and edition.
+- 🔴 **One reviewer is not a panel.** A run with fewer than three reviews and a meta-review — a
+  Venue-fit spot-check, a single re-review, a panel whose other seats did not return — is recorded as
+  what it is (`venue-fit`, `single review`), never in the scorecard's `panel` row. A single
+  review recorded as a panel verdict is how a paper reaches submission on an 88% that three real
+  reviewers turned into a reject.
 - **Consensus must-fixes:** issues **≥2 reviewers independently raised** — these are the real ones;
   apply before submitting.
 - **Single-reviewer flags:** noted, triaged (fix if cheap, else defer to camera-ready).
@@ -199,9 +222,11 @@ reject-risk without rubber-stamping. For the real decision, escalate to the full
 ## The reproduce loop (why this beats a prose review)
 This is "double-blind review as a real venue does it, WITH reproduction." The artifact-runner reviewer
 is the difference-maker on both runs so far: it doesn't judge the paper's numbers, it re-derives them.
-Run the panel, apply the consensus fixes, then **re-run the panel** (same lenses, told what changed) to
-confirm the fixes landed and nothing regressed — the artifact-runner re-executes every harness each
-round. Track the accept-probability progression in the review ledger. Stop when the panel converges to
+Run the panel, apply the consensus fixes, then **re-run the panel** — same lenses, FRESH reviewers,
+told nothing about the previous round — to confirm the fixes landed and nothing regressed; the
+artifact-runner re-executes every harness each round. The chair, not the reviewers, sets the new
+reviews beside the old ones and checks that each earlier must-fix is gone. Track the min / median / max
+progression in the review ledger. Stop when the panel converges to
 accept and the artifact reproduces clean; don't loop past one confirming round.
 
 ## Provenance (two papers, battle-tested)

@@ -1,0 +1,221 @@
+
+
+
+\if \conference1
+    \section{Validation of LLM Response Reliability} \label{appendix-repro-validation}
+\fi
+
+\if \conference2
+    \subsection{Validation of LLM Response Reliability} \label{appendix-repro-validation}
+\fi
+
+
+\begin{table}[!h]
+
+\if \conference1
+\relsize{-1}
+\fi
+
+    \centering
+    \setlength{\abovecaptionskip}{0pt}
+    \caption{Evaluation results of paraphrasing experiment where 10 questions were paraphrased 42 times.}
+    \label{tab:prompt-sensitivity-eval}
+    \begin{tabular}{p{0.11\linewidth} p{0.16\linewidth} p{0.12\linewidth} p{0.18\linewidth} p{0.15\linewidth}}
+        \toprule
+        Model & Completely similar & Mostly similar & Insufficiently similar & Consistent? \\
+        \midrule
+        GPT & 2 & 37 & 3 & Yes\\
+        Llama & 0 & 38 & 4  & Yes\\
+        Gemini & 0  & 35  & 7  & Yes\\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\paragraph{Are LLM responses consistent across paraphrased questions?} Our experiment comprised 10 questions paraphrased to generate 42 additional questions. GPT, Llama, and Gemini generated 52 responses each for these questions. The breakdown of our assessment is in the table \ref{tab:prompt-sensitivity-eval}. Based on our evaluation, we concluded all the models generate mostly similar responses to semantically similar prompts, so LLM responses are consistent for our purposes, even when a few responses for all models were evaluated as insufficiently similar, all the researchers as a group concluded that they were not different enough to change our conclusion. 
+
+\paragraph{Takeaway.} LLM responses are mostly insensitive to paraphrasing of open-ended user security questions. As such, for each of our security questions, we only asked an LLM once without rewording.
+
+\begin{table}[!h]
+
+\if \conference1
+\relsize{-1}
+\fi
+    \centering
+    \setlength{\abovecaptionskip}{0pt}
+    \caption{Evaluation results of repetitive consistency experiment where 7 questions were asked repeatedly 5 times.}
+    \label{tab:repetitive-consistency-eval}
+    \begin{tabular}{p{0.11\linewidth} p{0.16\linewidth} p{0.12\linewidth} p{0.18\linewidth} p{0.18\linewidth}}
+        \toprule
+        Model & Completely similar & Mostly similar & Insufficiently similar & Consistent? \\
+        \midrule
+        GPT & 0 & 6 & 1 & Yes\\
+        Llama & 0 & 7 & 0 & Yes\\
+        Gemini & 0 & 7 & 0  & Yes\\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\paragraph{Are LLM responses consistent across repeated questions?} Our experiment comprised 7 questions, where each question was repeatedly used to generate 5 responses for all three LLMs, 35 responses in total from each model. The breakdown of our assessment is in the table \ref{tab:repetitive-consistency-eval}. From this experiment, we concluded that all three LLMs in our evaluation generate mostly similar responses for a question asked repeatedly, thus their responses have consistency.
+
+\paragraph{Takeaway.} LLM responses are mostly consistent given the same repeated questions. As such, for each of our security questions, we only asked an LLM once without repetition.
+
+\if \conference1
+    \section{Heuristics for Users} \label{gpt-eval-results}
+\fi
+
+\if \conference2
+    \subsection{Heuristics for Users} \label{gpt-eval-results}
+\fi
+
+To give users simple heuristics to detect errors in LLM responses, we calculated the conditional probability of error in other evaluation criteria given that the user sees an error in one evaluation criterion (e.g., Directness), and present it in \cref{appendix-tab:cond-probabilities}.
+
+\begin{table}[!h]
+    \setlength{\abovecaptionskip}{0pt}
+\caption{Given error in one criterion, conditional probabilities of error rates in other evaluation criteria in GPT responses.}
+\label{appendix-tab:cond-probabilities}
+\if \conference1
+\relsize{-1}
+\fi
+\resizebox{\linewidth}{!}{%
+    \begin{tabular}{p{0.2\linewidth}p{0.20\linewidth}p{0.22\linewidth}p{0.225\linewidth}}
+    \toprule
+    Given error & \# of responses & \# of err in others & $P($error$)$ in others \\
+    \midrule
+    Not Correct & 246 & 139 & 0.565 \\
+    Not Thorough & 287 & 154 & 0.537 \\
+    Not Relevant & 15 & 11 & 0.733 \\
+    Not Direct & 153 & 90 & 0.588 \\
+    \bottomrule
+    \end{tabular}
+}
+\end{table}
+
+
+
+
+
+
+
+\begin{table*}[!hb]
+\if \conference1
+\relsize{-1}
+\fi
+    \setlength{\abovecaptionskip}{0pt}
+\caption{Detailed performance of GPT in terms of \% of responses where it fully achieved the indicated attribute.}
+\label{tab:appendix-gpt-evaluation-dist-big-with-directness}
+
+\resizebox{\textwidth}{!}{%
+    {\renewcommand{\arraystretch}{1.2}%
+    \begin{tabular}{p{0.07\linewidth}p{0.2\linewidth}p{0.04\linewidth}p{0.06\linewidth}p{0.05\linewidth}p{0.05\linewidth}p{0.06\linewidth}p{0.06\linewidth}p{0.04\linewidth}p{0.06\linewidth}p{0.05\linewidth}p{0.04\linewidth}p{0.04\linewidth}}
+    \toprule
+     &  & \multicolumn{3}{l}{Accuracy} & \multicolumn{3}{l}{Thoroughness} & \multicolumn{3}{l}{Relevancy} & \multicolumn{2}{l}{Directness}\\
+     \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11} \cmidrule(lr){12-13}
+    {Categorization} &\ Categories & Correct & Somewhat correct & Not correct & Thorough & Somewhat thorough & Not thorough & Relevant & Somewhat relevant & Not relevant & Direct & Not direct \\
+    \midrule
+    \textbf{} & \textbf{\# of all questions (900)} & 0.73 & 0.26 & 0.01 & 0.68 & 0.30 & 0.02 & 0.98 & 0.01 & 0.01 & 0.83 & 0.17 \\
+    \cline{1-13}
+    \multirow[t]{7}{\linewidth}{\textbf{Security Category}} & \textbf{Authentication (449)} & 0.69 & 0.30 & 0.01 & 0.69 & 0.29 & 0.02 & 0.98 & 0.01 & 0.01 & 0.83 & 0.17 \\
+    \textbf{} & \textbf{Scams (83)} & 0.82 & 0.18 & 0.00 & 0.70 & 0.30 & 0.00 & 1.00 & 0.00 & 0.00 & 0.83 & 0.17 \\
+    \textbf{} & \textbf{Safe browsing (50)} & 0.80 & 0.20 & 0.00 & 0.68 & 0.28 & 0.04 & 0.96 & 0.04 & 0.00 & 0.88 & 0.12 \\
+    \textbf{} & \textbf{Av (163)} & 0.61 & 0.37 & 0.02 & 0.59 & 0.39 & 0.02 & 0.99 & 0.00 & 0.01 & 0.86 & 0.14 \\
+    \textbf{} & \textbf{Secure network/wifi (46)} & 0.87 & 0.13 & 0.00 & 0.67 & 0.33 & 0.00 & 0.96 & 0.04 & 0.00 & 0.70 & 0.30 \\
+    \textbf{} & \textbf{Smart devs (19)} & 0.89 & 0.11 & 0.00 & 0.63 & 0.26 & 0.11 & 0.95 & 0.00 & 0.05 & 0.79 & 0.21 \\
+    \textbf{} & \textbf{Updates (90)} & 0.88 & 0.12 & 0.00 & 0.81 & 0.18 & 0.01 & 0.99 & 0.01 & 0.00 & 0.84 & 0.16 \\
+    \cline{1-13}
+    \multirow[t]{5}{\linewidth}{\textbf{Themes of questions}} & \textbf{Glossary and Facts (355)} & 0.69 & 0.30 & 0.01 & 0.75 & 0.23 & 0.02 & 0.98 & 0.02 & 0.01 & 0.85 & 0.15 \\
+    \textbf{} & \textbf{Guidance and Best Practices (399)} & 0.72 & 0.27 & 0.01 & 0.61 & 0.37 & 0.02 & 0.99 & 0.01 & 0.01 & 0.81 & 0.19 \\
+    \textbf{} & \textbf{Trends (17)} & 0.47 & 0.53 & 0.00 & 0.82 & 0.18 & 0.00 & 1.00 & 0.00 & 0.00 & 0.76 & 0.24 \\
+    \textbf{} & \textbf{Risk Assessment (100)} & 0.85 & 0.13 & 0.02 & 0.68 & 0.29 & 0.03 & 0.97 & 0.02 & 0.01 & 0.88 & 0.12 \\
+    \textbf{} & \textbf{Attacks (29)} & 1.00 & 0.00 & 0.00 & 0.83 & 0.17 & 0.00 & 1.00 & 0.00 & 0.00 & 0.72 & 0.28 \\
+    \cline{1-13}
+    \multirow[t]{3}{\linewidth}{\textbf{Knowledge}} & \textbf{Factual (437)} & 0.76 & 0.23 & 0.01 & 0.72 & 0.25 & 0.03 & 0.98 & 0.01 & 0.01 & 0.84 & 0.16 \\
+    \textbf{} & \textbf{Conceptual (164)} & 0.72 & 0.28 & 0.00 & 0.77 & 0.23 & 0.01 & 0.98 & 0.02 & 0.00 & 0.89 & 0.11 \\
+    \textbf{} & \textbf{Procedural (299)} & 0.69 & 0.30 & 0.01 & 0.57 & 0.41 & 0.02 & 0.99 & 0.01 & 0.00 & 0.78 & 0.22 \\
+    \bottomrule
+    \end{tabular}
+    }
+    }
+
+\end{table*}
+
+\if \conference1
+    \section{More Error Themes and Patterns in Models} \label{appendix-error-patterns}
+\fi
+
+\if \conference2
+    \subsection{More Error Themes and Patterns in Models} \label{appendix-error-patterns}
+\fi
+
+
+
+
+
+
+
+
+
+
+\if \conference1
+    \subsection{\Permissions} 
+\fi
+
+\if \conference2
+    \subsubsection{\Permissions} 
+\fi
+    All the LLMs in our evaluation omitted and listed incorrect mobile permissions used by different security products, like AV, password manager, and MFA applications, and sometimes failed to explain why permission was used on mobiles or computers. They often mentioned AVs needed camera, microphone, phone, and SMS permissions, but these are not listed in their official documentation. When explaining why permissions like \textit{location} and \textit{nativeMessaging} were used by MFA mobile applications and browser extensions, their responses failed to mention the reason is access control and to support biometrics. 
+
+
+\if \conference1
+    \subsection{\Scams}
+\fi
+
+\if \conference2
+    \subsubsection{\Scams}
+\fi
+    All the LLMs were not completely thorough in explaining scams in terms of what exactly a scam is about, who the target audience is and who reports more, their recent trends and the consequences. When explaining cryptocurrency scams, they didn't mention these scams ask anyone to invest money and do not just target people with cryptocurrencies. GPT failed to explain the AV software scam. When asked about the target audience and report, they conflated targeting and reporting and didn't mention that the elderly population (65+) gets targeted more and young adults (18 - 65) report more scams \cite{ftc_scams_all_ages_2022}. Llama and GPT didn't mention that the underage (\textless18) population also experiences and reports scams \cite{ftc_consumer_sentinal_scam_by_age_2023}. No models mentioned that scams could lead to computational resource misuse, not just financial loss.
+
+
+\if \conference1
+    \subsection{\MakingUpFactsAV}
+\fi
+
+\if \conference2
+    \subsubsection{\MakingUpFactsAV}
+\fi
+    We found that LLMs frequently generated fabricated information when discussing the capabilities of antivirus (AV) software. For example, they incorrectly claimed that AVs are available for IoT devices, NAS systems, and gaming consoles. GPT invented the term “file emulation” to explain AV functionality, while both GPT and Llama made unverifiable claims, such as AVs being inherently “lightweight,” “efficient,” and not affecting battery life—claims contradicted by user reports on forums like Reddit.
+
+    Llama also fabricated specific statistics about battery consumption by various AVs and made misleading comparisons to activities like browsing Facebook or playing Candy Crush. Across our dataset, LLMs exaggerated AV features not listed on official websites, such as call blockers and anti-theft tools. Regarding ransomware protection, LLMs consistently claimed AVs detect suspicious activity in real time and can decrypt encrypted files—claims inconsistent with AVs' actual permission-based block lists and lack of file recovery capabilities. Notably, Gemini mischaracterized AVG’s Hack Alerts as a scam or phishing attempt.
+
+\if \conference1
+    \subsection{\TemporalDependency}
+\fi
+
+\if \conference2
+    \subsubsection{\TemporalDependency}
+\fi
+    All the models, but more specifically GPT, showed temporal dependency unawareness, where they would present solutions that can only be taken retroactively. They all suggested backing up data after malware infection, and taking action on the lost phone used for 2FA. GPT suggested revoking security keys after they are lost, which won't be possible without recovering the account; using Okta TOTP in case the mobile is inaccessible; downloading or updating AVs after disconnecting the device from the internet in case of malware infection.
+
+
+\if \conference1
+    \subsection{\IncorrectURLsEmails}
+\fi
+
+\if \conference2
+    \subsubsection{\IncorrectURLsEmails}
+\fi
+     All the models confidently linked URLs and email addresses in their responses. URLs were either inaccessible or landed on random websites, and emails were not active email addresses or non-existent. We saw this behavior 11 times in GPT across all 900 questions, and 7 and 5 times in Llama and Gemini, respectively, in our limited 304-response evaluation. 
+\if \conference1
+    \subsection{\ResponsesGearedTowardsDevelopers.}
+\fi
+
+\if \conference2
+    \subsubsection{\ResponsesGearedTowardsDevelopers.}
+\fi
+    Often answering basic security questions, the LLMs we studied explained them with too much technical content that is unlikely to be interpretable by end users. For the question “How do antivirus work?", below is an excerpt from Gemini's response:
+
+    \begin{quote}
+    \uline{Heuristic Analysis}: This method looks for suspicious patterns in code that may indicate malicious behavior, even if the program hasn't been seen before. It's like looking for signs of a virus based on how it acts, not just what it looks like.
+    \end{quote}
+    \begin{quote}
+    \uline{Machine Learning}: More advanced antivirus programs use AI to analyze large amounts of data and learn to identify new malware threats. They can detect anomalies and unusual behavior, even if they haven't encountered that specific threat before.
+    \end{quote}

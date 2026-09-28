@@ -24,11 +24,27 @@ export interface DocumentClass {
   readonly options: readonly string[];
 }
 
-/** A paper's `\documentclass`: none, one that names no class, or a class with its options. */
-export type ClassLine =
-  | { readonly kind: "missing" }
+/** One `\documentclass` line: one that names no class, or a class with its options. */
+export type ClassCandidate =
   | { readonly kind: "empty"; readonly place: Place }
   | ({ readonly kind: "class"; readonly place: Place } & DocumentClass);
+
+/**
+ * A paper's `\documentclass`: none, exactly one, or several — a source that picks its class behind
+ * a TeX switch (`\if\venue1 \documentclass{article} \fi …`). Which branch builds is not
+ * evaluated, so several lines are candidates, in source order, and none of them is THE class.
+ */
+export type ClassLine =
+  | { readonly kind: "missing" }
+  | ClassCandidate
+  | {
+      readonly kind: "ambiguous";
+      readonly candidates: readonly [
+        ClassCandidate,
+        ClassCandidate,
+        ...ClassCandidate[],
+      ];
+    };
 
 /** The options of `want` that `got` does not carry — every one, in `want`'s order. */
 export const missingOptions = (
@@ -107,4 +123,21 @@ export function spanIn(run: TextRun, from: number, to: number): Span | null {
   const start = offsetIn(run.segments, from);
   const last = to > from ? offsetIn(run.segments, to - 1) : null;
   return start === null || last === null ? null : { start, end: last + 1 };
+}
+
+/** What a mark in prose says about where a claim comes from: a work outside the paper, or a place in it. */
+export type Owner = "citation" | "reference";
+
+/**
+ * One piece of body prose, in source order: text a reader sees, a mark the markup leaves in the
+ * sentence (a `\cite`, a link, a `\ref`), or math, with its source.
+ */
+export type ProsePiece =
+  | { readonly kind: "text"; readonly segment: Segment }
+  | { readonly kind: "owner"; readonly owner: Owner; readonly span: Span }
+  | { readonly kind: "math"; readonly tex: string; readonly span: Span };
+
+/** A stretch of body prose no sentence crosses — a paragraph, a list item, a footnote. Never empty. */
+export interface Passage {
+  readonly pieces: readonly [ProsePiece, ...ProsePiece[]];
 }

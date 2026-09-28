@@ -1,0 +1,14 @@
+{
+  "$comment": [
+    "What the rules say about this accepted paper today. Growth fails; a drop never does.",
+    "Each count is classified in ../README.md, 'What the rules say about the corpus'.",
+    "tex/register: 7 sentences open with And/So/But/Nor (1.60 per 1000 words, limit 0.8) - this is OUR paper,",
+    "the one of the three whose prose reviewers called informal; the two others read 0."
+  ],
+  "findings": {
+    "pdf/measured": 1,
+    "paper/refs-checked": 1,
+    "tex/claim-provenance": 9,
+    "tex/register": 1
+  }
+}

@@ -84,6 +84,13 @@ linking there. `src/rule-docs.test.ts` holds every rule the config registers to 
 older than the convention wait in its `AWAITING_PAGE` list, which only shrinks — #131 writes their
 pages.
 
+**A rule or a skill criterion that judges prose is two-sided.** A check that only caps something —
+length, markers, hedges — drives papers toward clipped, unsignposted prose that reviewers call a
+blog post, so a new one also has a floor, or measures the distance to accepted papers of the target
+venue, with its threshold measured by the same counter on those papers. What the parse tree can
+count is a rule; what needs reading (register, genre) is a skill criterion. The five principles are
+in [`CLAUDE.md`](CLAUDE.md#writing-checks--what-keeps-them-from-pushing-papers-toward-a-blog-post).
+
 ## Maintainer docs
 
 The README links only what a user needs. These are for people changing the package:

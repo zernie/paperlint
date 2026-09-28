@@ -2,6 +2,7 @@
 import {
   documentClassLine,
   venueClass,
+  type ClassCandidate,
   type ClassLine,
   type DocumentClass,
 } from "../../domain/tex-document.ts";
@@ -52,11 +53,12 @@ const optionText = (src: string, part: readonly Node[]): string =>
       .join(""),
   );
 
-const classNode = (t: ParsedTex): Macro | undefined =>
-  t.root.content.find(isDocumentClass);
+/** Every `\documentclass` at the top of the tree, in source order. */
+const classNodes = (t: ParsedTex): readonly Macro[] =>
+  t.root.content.filter(isDocumentClass);
 
 /** A `\documentclass` node as a class line: empty, or the class with its options as read. */
-function classLine(src: string, node: Macro): ClassLine {
+function classLine(src: string, node: Macro): ClassCandidate {
   const place = macroPlace(node);
   const cls = collapse(textOf(mandatory(node)[0]?.content));
   if (cls === "") return { kind: "empty", place };
@@ -67,13 +69,18 @@ function classLine(src: string, node: Macro): ClassLine {
 }
 
 /**
- * The first `\documentclass` at the top of the tree: missing; empty (`\documentclass{}`); or the
- * class with each of its options as written (`foo={a,b}` stays one option, braces kept), whitespace
- * collapsed. Its place spans the macro and its arguments.
+ * The `\documentclass` at the top of the tree: missing; empty (`\documentclass{}`); the class with
+ * each of its options as written (`foo={a,b}` stays one option, braces kept), whitespace collapsed,
+ * its place spanning the macro and its arguments; or, when there are several (behind a TeX switch),
+ * each of them as a candidate.
  */
 export function documentClassOf(t: ParsedTex): ClassLine {
-  const node = classNode(t);
-  return node === undefined ? { kind: "missing" } : classLine(t.src, node);
+  const lines = classNodes(t).map((n) => classLine(t.src, n));
+  const [first, second, ...rest] = lines;
+  if (first === undefined) return { kind: "missing" };
+  return second === undefined
+    ? first
+    : { kind: "ambiguous", candidates: [first, second, ...rest] };
 }
 
 /**
@@ -118,15 +125,16 @@ function addOptions(
 /**
  * The source with its `\documentclass` line changed to satisfy `want` (see `venueClass`): another
  * class is replaced by the template's line; the same class gains the options it lacks in place. A
- * source whose class already satisfies `want`, or that has no class line the parser could place, is
- * returned as it is.
+ * source whose class already satisfies `want`, that has no class line the parser could place, or
+ * that has several, is returned as it is.
  */
 export function replaceDocumentClass(
   t: ParsedTex,
   want: DocumentClass,
 ): string {
-  const node = classNode(t);
-  if (node === undefined) return t.src;
+  // Several lines behind a switch: which one builds is not known, so none is rewritten.
+  const [node, ...others] = classNodes(t);
+  if (node === undefined || others.length > 0) return t.src;
   const line = classLine(t.src, node);
   if (line.kind !== "class" || line.place.kind === "unplaced") return t.src;
   const { start, end } = line.place.span;

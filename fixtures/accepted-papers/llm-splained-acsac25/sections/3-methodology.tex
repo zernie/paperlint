@@ -1,0 +1,237 @@
+
+
+
+    
+
+    
+
+
+\if \conference1
+\section{Methodology} \label{sec:method}
+\fi
+\if \conference2
+\section{Method}
+\label{sec:method}
+\fi
+We conducted a qualitative analysis of 900 security questions, focusing on errors and knowledge deficiencies across three LLMs. This evaluation establishes a baseline for LLM knowledge in security and safety, excluding privacy questions and large-scale quantitative comparisons.
+
+We answered the RQs through three tasks. First, we built a corpus of questions reflecting end-user security concerns. Then, we collected responses to the questions from three LLMs in a ``zero-shot''~\cite{kojima2023large}, single-turn setting. Finally, we assessed the information quality and directness of the LLM responses. In this section, we describe how we implemented these tasks to prioritize common end-user questions and reliably measure LLM performance on the questions.
+
+
+\subsection{Question Collection} 
+\label{non-exp-question-collection} 
+
+\begin{table}[!htb]
+
+    
+    \centering
+    \caption{The security categories we identified and underlying topics}
+
+    \begin{tabular}{L{0.13\textwidth}L{0.27\textwidth}}
+    \toprule
+        \textbf{Category} & \textbf{Topics} \\ 
+    \midrule
+Authentication & Strong passwords, Password managers, 2FA, Account recovery  \\ 
+Social Engineering & Phishing, Scam  \\ 
+Software Updates & Patches/Security Updates, General Software Updates, Outdated software, Device/Firmware Updates\\ 
+Antivirus / Antimalware & Guidance for Identified Compromises, Running AV Scans, AV Capabilities and Rationale, Specific AV knowledge \\ 
+Safe Browsing & E-Commerce, Internet Safety Rules, Types of Compromise, Compromised / Unsafe Webpages, Browser Security Settings  \\ 
+Secure Wi-Fi / Network & Public Wi-Fi, Home Network, Bluetooth, NFC, VPN \\ 
+Smart Devices Security & Smart home, Smartphones  \\ 
+    \bottomrule
+    \end{tabular}
+    \label{tab:categories-table}
+    \vspace{-1em}
+    
+\end{table}
+
+\paragraph{Identifying security topics.} To answer our RQs, we built a corpus that would closely represent common end user security concerns. To start, we collected security topics from trusted security content resources made available to users from the National Institute of Standards and Technology (NIST) \cite{NIST}, National Cyber Security Center (NCSC) \cite{NCSC}, Cybersecurity and Infrastructure Security Agency (CISA)~\cite{CISA}, and National Cybersecurity Alliance (NCA) \cite{NCA}. We identified seven high-level security categories: Authentication, Social Engineering, Software Updates, Antivirus / Antimalware, Safe Browsing, Secure Wi-Fi / Network, and Smart Devices Security. We also noted the underlying fine-grained security topics that were discussed in these resources, shown in~\Cref{tab:categories-table}.
+
+\add{\paragraph{Collecting questions.} We combined three different approaches to collect questions in the seven security categories. First, we developed Google Search queries related to topics, similar to the method Redmiles et al. used~\cite{redmiles2020webadvice}. With the queries, we identified websites meeting our trusted resource criteria that were popular sources of security guidance and mined them for FAQ guides. We defined trusted resources as organizations that either have a mission tied to user security (e.g., government agencies, universities) or a business that strongly depends on customer security (e.g., financial services, security vendors).\footnote{Our trusted resources collection includes security vendors, government agencies, non-profit organizations, financial institutions, university cybersecurity guides, and product websites (e.g., social media, browsers, and email providers). Some examples of trusted resources are the NIST, NCSC, CISA, NCA, Canadian Centre for Cyber Security (CCCS), Federal Communications Commission (FCC), Federal Trade Commission (FTC) and the Electronic Frontier Foundation (EFF).} %
+Second, we included product sites related to the categories (Chrome, Edge, Facebook, Gmail, etc.) to collect security FAQs that are relevant to users. 
+Third, we used templates to construct some questions related to the seven categories, such as ``What is [insert security concept, technology or product]?’’,  “Why should I trust [password manager] with my passwords?", “How to install [popular password manager]?", and ``What is a [type of scam]?" 
+We collected questions from more than $50$ trusted resources in our corpus. We later evaluated the representation of actual user queries in these questions in~\Cref{sec:represent}, and also as part of our check on LLM response reliability in~\Cref{appendix-prompt-sensitivity}.
+
+We found corpora from related research to be limited in scope~\cite{chen2023can,pattnaik2023perspectives,pattnaik2023perspectives} or were unable to be shared~\cite{redmiles2020webadvice}. Therefore, we built our own corpus of questions by mining dominant security topics and using them alongside question templates to extract user questions from {trusted resources}. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\paragraph{Authoritative sources.}
+To assess the accuracy and completeness of LLM responses, we identified authoritative sources for each question in our study. These sources were selected based on established criteria for trusted resources and typically included FAQs, advice bulletins, or official documentation published by reputable organizations. For straightforward questions (e.g., “What is malware?”), a single authoritative source---the source of the question---often sufficed. However, more complex questions (e.g., “What are some other ways of defending against a phishing attack?”) required consultation of multiple sources and expert interpretation. On average, 1.7 authoritative sources were used per question. All sources were reviewed and validated for reliability by cybersecurity subject matter experts at a major financial services institution.
+}
+
+To classify the questions by the type of security information sought, two authors agreed that each question is most aligned with one of the following areas: \textbf{glossary and facts, guidance and best practices, attacks, trends, and risk assessment}. We also classified questions by knowledge category, \textbf{factual}, \textbf{conceptual}, and \textbf{procedural}, as in Bloom's taxonomy \cite{blooms-taxonomy-2001}. \add{See \Cref{tab:appendix-gpt-evaluation-dist-big-with-directness} for the number of questions in each category.} We will make the questions and their categorizations available for other researchers.
+
+
+
+\subsection{Response Generation} \label{response-generation}
+Prompt engineering is an active research area and recent studies suggest it is at best an emerging practice for users (e.g., \cite{zamfirescu2023johnny}), so we chose the default LLM conversation templates as the best available proxy for a typical user-LLM interaction. With the default templates, we
+appended our questions to generate responses from GPT, Gemini, and Llama. 
+The exact conversation template used to generate responses for all of our evaluations is below:
+\begin{lstlisting}[language=Python]
+conversation_messages = [
+ {"role": "system",
+  "content": "You are a helpful assistant."},
+ {"role": "user",
+  "content": "Hello!"},
+ {"role": "assistant",
+  "content":"Hello! How can I assist you today?"},
+ {"role": "user", 
+  "content": "-> Questions go here. <-"}]
+\end{lstlisting}
+
+\subsection{Response Evaluation} \label{evaluation-criteria}
+
+\subsubsection{Evaluation Criteria \& Codebook}
+We carefully reviewed LLM responses, assessing both content and communication style. With respect to content, we focus on information integrity and evaluate the accuracy, completeness, and relevancy of LLM responses as in Flowerday et al. \cite{flowerday-2007}. We also consider communication style by way of directness (also known as the inverted pyramid style of writing \cite{zinsser2001writing}), where necessary and important information is presented first. This communication style is often recommended for web \cite{Schade2018, Nielsen1996, Nielsen1997} and nonfiction writing. %
+For our study, we define evaluation criteria as the following:
+
+
+\begin{enumerate}
+    \setlength\itemsep{0em}
+    \item \textbf{Accuracy}: The proportion of verifiably correct information %
+    \item \textbf{Thoroughness}: The degree to which all necessary information is provided%
+    \item \textbf{Relevancy}: The proportion of information that is relevant%
+    \item \textbf{Directness}: Whether the initial text is responsive to the question asked. %
+\end{enumerate}
+
+
+
+\remove{
+Since there was no established codebook for interpreting these attributes in the user security context, we developed a
+codebook (to be made available) that enabled the authors to consistently assess these attributes on a 3-point Likert scale. Each author coded LLM responses manually to evaluate the 4 attributes. %
+The authors used information present in the authoritative sources of the question, along with their subject matter expertise, to assess all the facts in a response by following the detailed definition of four earlier mentioned criteria to the best of their ability.
+
+In our codebook, the 3-point Likert scale for accuracy, thoroughness, and relevancy is summarized as: the attribute is completely achieved (e.g., in the case of accuracy, all information is determined to be correct), the attribute is partially achieved, and the attribute
+is only minimally achieved. Directness is assessed as a binary label, i.e., the initial LLM text is directly responsive to the question asked or it is not. The authors also added notes explaining their evaluation of the attributes; these notes facilitated the analysis in \Cref{overall-evaluation}.}
+
+\add{
+Since there was no established codebook for interpreting these attributes in the user security context, we developed a codebook (to be made available) that enabled the authors to consistently assess these attributes. Each author coded LLM responses manually to evaluate the four attributes. The authors used information present in the authoritative sources of the question, along with their subject matter expertise, to assess all the facts in a response by following the detailed definition of four earlier mentioned criteria to the best of their ability.
+
+In our codebook, for accuracy, thoroughness, and relevancy, a 3-point Likert scale is used: the attribute is completely achieved (e.g., in the case of accuracy, all information is determined to be correct), the attribute is partially achieved, and the attribute is only minimally achieved. Directness is assessed as a binary label, i.e., the initial LLM text is directly responsive to the question asked or not.
+
+
+For thoroughness, the authors collectively decided and agreed upon the authoritative sources for each question. If an LLM response covers all aspects mentioned across the sources, then we rate it as ``completely thorough''. For a question about a specific platform or product, only one authoritative source is needed, which is the official documentation. For example, for the question “How to setup the Google Authenticator app?", we only used official Google documentation \cite{GoogleAuthenticatorSetup} %
+on the other hand, for a question like “Are public Wi-Fi Networks Safe?", we used multiple authoritative sources from FTC \cite{FTC2024-public-wifi} %
+and NSA \cite{NSA-wireless}.%
+Furthermore, even though we use a 3-point Likert scale, we manually write down notes on what a particular LLM response is not perfect (e.g., not completely accurate, or not completely thorough). These notes facilitated the analysis in~\Cref{overall-evaluation}.}%
+
+
+
+Examples of coded responses and the complete definition of each code point and its options in our codebook can be accessed \href{https://docs.google.com/document/d/e/2PACX-1vQ99tup4hftyJMDTYlRgL41AM560v-fFqWfSQzb2-G1emV-j_etghUB0-DYL0j9cMSQX7AYjF9d5Ojt/pub}{\textbf{here}}~\cite{codebook}.
+
+Our attributes are motivated by the need to manage risk in AI systems and past research. For example, a
+correct but incomplete answer could create user risk. %
+Relevancy is important given user difficulty with prioritizing advice \cite{redmiles2020webadvice} and reconciling contradictions \cite{murray-2023-costbenefitsofadvice}. %
+Finally, directness reduces the risk of losing user attention due to unnecessary information \cite{Nielsen1997}. %
+
+
+\subsubsection{Coding the responses} %
+\label{irr-establishment}
+
+We qualitatively coded the responses on our evaluation criteria to measure quality, dividing the workload among four members of the research team. 
+First, each coder coded 72 GPT responses each for consistency. Inter-rater reliability was calculated (Fleiss’s $\kappa$: Accuracy 0.73, Thoroughness 0.63, Directness 0.76) after three rounds~\cite{mchugh2012-irr}. There was 100\% agreement with Relevancy. Due to the substantial level of agreement, we divided the rest of the question responses among the coders for evaluation.
+
+
+
+
+
+
+
+
+
+
+\paragraph{Breakdown of the 72 responses used to establish IRR.} %
+Out of \questionsCollected collected questions, 30 were used during IRR. 10 questions out of these 30 were rephrased with Google search APIs (more details are in the prompt sensitivity experiment \Cref{appendix-prompt-sensitivity}) to generate another set of 42 semantically similar questions, totaling $72\ (=10 + 42 + 20)$.
+
+\paragraph{Post-IRR evaluation of \postIRRQuestions responses.} In our dataset, LLM responses to open-ended questions contain $\sim$335 words on average. Evaluation of \postIRRQuestions responses of that size is a large amount of work, so we onboarded a fifth researcher to help code responses. The fifth researcher was trained to code responses using our codebook on some of the 72 responses the four researchers had coded during the IRR establishment phase, and the remaining were used to measure the IRR among 5 coders. After onboarding the 5th coder, the remaining \postIRRQuestions questions were split among the five researchers for evaluation. 
+
+
+
+
+
+ \paragraph{Total number of responses assessed and final evaluation assigned to them.} In our study, we evaluated \questionsEvaluated GPT responses in total, 72 during the IRR and 828 post-IRR. During the IRR establishment, coders did not have 100\% agreement in their evaluation of some responses, so to assign a final rating, these coders regrouped to discuss and assign a final collaborative rating. After dividing the rest of the questions, if a coder felt unsure about their assessment, they collaborated with another coder. In addition, every coder's evaluation was spot-checked by a second researcher to ensure that the original assessment was correct.
+
+\subsection{LLM Response Reliability}
+\label{sec:reproducibility}
+
+Before making conclusions about LLM performance, it is necessary to gauge response reliability over multiple invocations of the same, or semantically similar, prompts. In \cite{chen2023can} some unreliability was found in responses to repeated and paraphrased queries. To the best of our knowledge, LLM response reliability has not been studied for open-ended user security questions, so we conducted two analyses to gauge response reliability for end-user security questions. 
+
+
+
+
+
+\subsubsection{Reliability for Paraphrased Questions} \label{appendix-prompt-sensitivity}
+
+Our methodology to measure reliability in LLM responses across paraphrased questions (referred to as ``queries'' in \cite{chen2023can}) was the following:
+
+\begin{enumerate}[wide, label={\bfseries \arabic*)}, left=0pt..0pt, itemindent=10pt]
+
+    \item \textbf{Question selection:} First, we sampled 16 questions from our list of \questionsCollected questions such that they covered all the security categories in \Cref{tab:categories-table} and security question themes mentioned in the \Cref{non-exp-question-collection}.
+    
+    \item \textbf{Rephrasing questions using user queries:} We paraphrased original questions (OQs) using Google's autocomplete API \cite{google-auto-complete-api} (used by Google in the search bar) and related question suggestions \cite{google-query-rec} (often presented on the Google search result page as “People also ask", “More to ask", or “Questions related to your search"). Using these Google APIs, 16 questions were paraphrased 274 times, referred to as paraphrased questions (PQs) here. Then, using the transformer-based model Universal Semantic Encoder (USE) \cite{tensorflow-USE}, we measured how semantically close a Google API paraphrase is to the OQ to reduce the list of PQs to 157 for 15 OQs. Finally, 4 researchers manually verified whether the remaining 157 PQs for the 15 OQs were good paraphrases. At the conclusion, we had 10 OQs paraphrased to 42 questions (PQs). The number of times each OQ was rephrased ranged from 1 to 13. \add{To better represent organic user queries, we rephrase using Google Autocomplete that reflects user queries on the Google search engine \cite{google-autocomplete-2024}}. %
+    
+    
+    \item \textbf{Response generation:} We collected responses for all 10 OQs and their 42 PQs by presenting them to an LLM model as prompts with the setup described in \ref{response-generation}.
+    
+    \item \textbf{Manual response similarity assessment:} Each pair of responses (one for an OQ and another for its PQ) was coded by two authors independently on a similarity level of the ordinal scale \textbf{completely similar}, \textbf{mostly similar}, \textbf{insufficiently similar}. Authors assigned similarity levels %
+    following the guidelines described in our codebook \cite{codebook}. %
+    Any disagreements between the two authors' assigned similarity levels were resolved through discussion, and a single similarity level was assigned.
+    
+\end{enumerate}
+
+\subsubsection{Reliability for Repeated Questions} \label{appendix-repetive-consistency}
+
+Our methodology for measuring consistency in LLM responses across repeated questions was the following: \textit{(\romannumeral 1)}\ We sampled 7 questions from our list of \questionsCollected questions; \textit{(\romannumeral 2)}\ Each question was presented to an LLM model 5 times to collect their response; \textit{(\romannumeral 3)}\ All 5 responses for a question were first individually rated by two authors on our evaluation criteria mentioned in \ref{evaluation-criteria} following the guidelines mentioned in our codebook \cite{codebook};
+\textit{(\romannumeral 4)}\ Finally, for each question, authors rated 5 responses as a group on the similarity level of the ordinal scale \textbf{completely similar}, \textbf{mostly similar}, \textbf{insufficiently similar}. 
+
+
+\remove{\paragraph{Conclusion:} To gauge response reliability for user security questions, we gathered LLM responses to repeated and paraphrased questions and two authors manually reviewed them to assess the semantic similarity of the responses. We found LLM responses were generally semantically similar and consequently, we generated a single response for a given question and LLM in the remainder of the evaluation. See the detailed results of our evaluation in \Cref{appendix-repro-validation}.}
+
+\add{\paragraph{Conclusion:} To gauge response reliability for user security questions, we gathered LLM responses to repeated and paraphrased questions and two authors manually reviewed them to assess the semantic similarity of the responses. We found LLM responses were mostly semantically similar and speculated that our results would be unlikely to change with actual user questions. Consequently, we generated a single response for each question and LLM, and used the questions collected from FAQs, opting not to include more questions in users' voices in the remainder of the evaluation. See the detailed results of our evaluation in \Cref{appendix-repro-validation}.}
+
+
+
+
+
+
+\subsection{Error Pattern Discovery in LLM Responses} \label{overall-evaluation}
+
+
+
+
+
+
+\paragraph{Qualitative Analysis of Imperfect GPT Responses.} In our qualitative analysis of imperfect GPT responses, we first conducted a manual review to identify recurring errors—specifically, mistakes or knowledge gaps present across multiple outputs. To catalog these errors systematically, we employed an inductive thematic analysis \cite{braun-2006-thematic-analysis}. We revisited every response that failed to satisfy at least one of our four evaluation criteria—accuracy, thoroughness, relevance, and directness—and assigned each a concise error label based on the coder’s notes. We then examined these labels and merged any that described similar error patterns, discarding labels that did not recur.
+
+\paragraph{Evaluation of Llama and Gemini.} Next, to determine whether the error patterns we identified in GPT generalized to other models, we applied the same coding scheme to responses generated by Llama and Gemini. Given the considerable time required for manual evaluation, we limited our assessment to the subset of \geminiQuestionsEvaluated questions for which GPT had produced imperfect responses. For each of these items, we evaluated the corresponding Llama and Gemini outputs using our established codebook \cite{codebook} and then conducted a thematic analysis of their errors. After coding 304 responses (across both models), we observed that every error pattern previously attributed to GPT also appeared in Llama and Gemini, at which point we concluded our analysis.
+
+Although our selective approach may have overlooked additional model-specific errors in Llama and Gemini, it nonetheless confirms that the error patterns we identified are shared across all three systems. Due to time constraints, a comprehensive exploration of any remaining issues in Llama and Gemini is left for future work.
+
+
+
+
+
+
+
+
+
+
+The evaluation results of GPT for all the questions and the tags assigned during the error pattern discovery process are summarized in \Cref{findings}.%
+
+
+

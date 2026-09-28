@@ -28,6 +28,7 @@ import {
   missingOptions,
   runText,
   spanIn,
+  type ClassCandidate,
   type ClassLine,
   type DocumentClass,
   type Heading,
@@ -44,6 +45,8 @@ import {
   shippedPresets,
   type Preset,
 } from "./presets.ts";
+import type { PaperSource } from "./domain/paper-source.ts";
+import { readPaper, reportInPaper } from "./tex-paper.ts";
 import type { RequiredSection } from "./tex-requirements.ts";
 import type { Finding, VenueRuleDeps } from "./venue-rules.ts";
 
@@ -55,19 +58,27 @@ export interface Located extends Finding {
 /** The slice of ESLint's rule context these rules use. `raw` exists on the `.tex` language's. */
 export interface TexRuleContext {
   readonly filename: string;
+  /** The rule's options from the config, as ESLint validated them against its schema. */
+  readonly options?: readonly unknown[];
   readonly sourceCode: {
     readonly text: string;
     readonly raw?: string;
     getLocFromIndex(index: number): Readonly<{ line: number; column: number }>;
   };
-  report(d: {
-    readonly loc: {
-      readonly start: { line: number; column: number };
-      readonly end: { line: number; column: number };
-    };
-    readonly messageId: string;
-    readonly data?: Readonly<Record<string, string | number>>;
-  }): void;
+  report(
+    d: {
+      readonly loc: {
+        readonly start: { line: number; column: number };
+        readonly end: { line: number; column: number };
+      };
+    } & (
+      | {
+          readonly messageId: string;
+          readonly data?: Readonly<Record<string, string | number>>;
+        }
+      | { readonly message: string }
+    ),
+  ): void;
 }
 
 export interface TexRuleModule {
@@ -110,6 +121,30 @@ function judgeClass(
   }));
 }
 
+/** A candidate as the message names it: its line, or an empty `\documentclass{}`. */
+const candidateLine = (c: ClassCandidate): string =>
+  c.kind === "class" ? documentClassLine(c) : "\\documentclass{}";
+
+/**
+ * Several class lines behind a TeX switch: satisfied when any candidate is the template's class
+ * with its options; otherwise one finding, at the first candidate, naming every one.
+ */
+function judgeCandidates(
+  candidates: readonly [ClassCandidate, ...ClassCandidate[]],
+  want: DocumentClass,
+  data: TemplateData,
+): readonly Located[] {
+  const matches = candidates.some(
+    (c) => c.kind === "class" && judgeClass(c, want, data).length === 0,
+  );
+  if (matches) return [];
+  const named = candidates.map((c) => `\`${candidateLine(c)}\``).join(", ");
+  const found = { ...data, count: candidates.length, candidates: named };
+  return [
+    { messageId: "noCandidate", data: found, at: spanOf(candidates[0].place) },
+  ];
+}
+
 /** The paper's class line against a template that was read: present, naming a class, that class. */
 function judgeClassLine(
   line: ClassLine,
@@ -123,6 +158,8 @@ function judgeClassLine(
       return [{ messageId: "emptyClass", data, at: spanOf(line.place) }];
     case "class":
       return judgeClass(line, want, data);
+    case "ambiguous":
+      return judgeCandidates(line.candidates, want, data);
   }
 }
 
@@ -252,7 +289,9 @@ export function judgeLeftover(
 }
 
 /** Where a rule's page lives: `docs/rules/tex/<name>.md` on the default branch. */
-export const ruleDocsUrl = (name: TexVenueRuleName): string =>
+export const ruleDocsUrl = (
+  name: TexVenueRuleName | "claim-provenance" | "register",
+): string =>
   `https://github.com/zernie/paperlint/blob/main/docs/rules/tex/${name}.md`;
 
 /** What a judge reads: the paper's source through the reader, its preset, the other venues. */
@@ -295,6 +334,8 @@ const RULES: Readonly<
           "the class is `{{got}}`, and {{venue}} requires `{{template}}` — the page size, fonts and layout the venue checks come from the class",
         missingOption:
           "the class option `{{option}}` is missing: {{venue}} requires `{{template}}`",
+        noCandidate:
+          "none of the {{count}} \\documentclass lines is `{{template}}`, which {{venue}} requires: {{candidates}}. The source picks one behind a TeX switch, which is not evaluated; make one of them the venue's",
       },
     },
   },
@@ -368,35 +409,25 @@ export interface TexVenueRuleDeps extends VenueRuleDeps {
 }
 
 /**
- * What a judge reads for the paper whose `paper.tex` is `filename`, or null when the paper has no
- * resolved preset (`pdf/measured` and `pdf/profile` already say so).
+ * What a judge reads for the paper whose `paper.tex` is `filename` — the paper with its includes
+ * spliced (`readPaper`) — or null when the paper has no resolved preset (`pdf/measured` and
+ * `pdf/profile` already say so).
  */
 function readingOf(
   filename: string,
   src: string,
   deps: TexVenueRuleDeps,
-): Reading | null {
+): { readonly reading: Reading; readonly paper: PaperSource } | null {
   const dir = dirname(filename);
   const p = paperPreset(dir, deps);
   if (p.kind !== "resolved") return null;
   const preset = p.preset;
   const others = () => otherVenues(preset, join(dir, CONFIG_FILE), deps);
-  return { src, latex: deps.latex, preset, others };
-}
-
-/** Each finding reported at its span, or at the top of the file when it has none. */
-function reportAll(
-  context: TexRuleContext,
-  findings: readonly Located[],
-): void {
-  const at = (i: number) => context.sourceCode.getLocFromIndex(i);
-  findings.forEach((f) => {
-    context.report({
-      loc: { start: at(f.at?.start ?? 0), end: at(f.at?.end ?? 0) },
-      messageId: f.messageId,
-      data: f.data,
-    });
-  });
+  const paper = readPaper(filename, src, deps);
+  return {
+    reading: { src: paper.text, latex: deps.latex, preset, others },
+    paper,
+  };
 }
 
 function rule(name: TexVenueRuleName, deps: TexVenueRuleDeps): TexRuleModule {
@@ -409,8 +440,9 @@ function rule(name: TexVenueRuleName, deps: TexVenueRuleDeps): TexRuleModule {
       return {
         root() {
           const sc = context.sourceCode;
-          const reading = readingOf(context.filename, sc.raw ?? sc.text, deps);
-          if (reading !== null) reportAll(context, judge(reading));
+          const r = readingOf(context.filename, sc.raw ?? sc.text, deps);
+          if (r !== null)
+            reportInPaper(context, meta.messages, r.paper, judge(r.reading));
         },
       };
     },

@@ -9,6 +9,9 @@ the required sections by title in `required_sections`; the paper must have a `\s
 `\section*` with exactly that title (whitespace collapsed), and, when the preset says
 `position: "last"`, no section of the main text may come after it.
 
+It reads the sections of the whole paper, the files `paper.tex` includes spliced in where they are
+included, so a required section kept in `sections/llm-usage.tex` counts.
+
 It only knows the sections a preset lists. A paper whose `paperlint.json` names no preset, or a
 preset with no `required_sections`, gets no finding.
 
@@ -66,7 +69,6 @@ the bibliography or an appendix is fine. Without `position`, anywhere will do.
 ## What it does not check
 
 - Whether LLMs were used, or what the section says.
-- Sections pulled in with `\input` or `\include`: the rule reads `paper.tex` alone.
 
 ## How to fix
 

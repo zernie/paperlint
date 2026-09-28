@@ -4,7 +4,7 @@ description: Use when the numbers exist and it's time to WRITE the paper — "dr
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:46bb85bfaa45e595 compiled from skills/draft-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:c8d25c21dc01a742 compiled from skills/draft-paper/SKILL.md.spec.ts -->
 
 # draft-paper — prose that survives review and gets cited
 
@@ -78,7 +78,7 @@ grade.
 
 ## Run the prose through the PAPER suite's QA (do not skip — and do not use the blog skills)
 Before any review pass, run the draft through the paper-side prose QA — it catches what a self-read won't:
-- **`grade-paper-writing`** — the 9-dim rubric + the PERSONA cold-read stall pass (a committed
+- **`grade-paper-writing`** — the 10-dim rubric + the PERSONA cold-read stall pass (a committed
   non-academic persona, per-section — the localized "wait, what does that even mean?" axis authors are
   blind to). Its avoid-list grep also strips the AI-writing tropes (hedge-stacking, "it's worth
   noting", limp connectives, fake balance) that make a draft read unserious to a human PC.

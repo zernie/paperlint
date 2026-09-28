@@ -1,10 +1,10 @@
 ---
 name: grade-paper-writing
-description: Use when asking "does this paper read well?" / "is the writing any good?" / "it reads like a wall of text and jargon" / "grade the writing" on a draft. Grades WRITING CRAFT only — nine dimensions 1–5 (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking) against how the best-written papers read (Peyton Jones, McEnerney, Gopen & Swan; exemplars Trusting Trust, Carlini, Greshake), naming the offending sentence and the fix for each. Runs the PERSONA cold-read stall pass (a committed non-academic persona subagent, per-section) whose stall inventory — not the rubric number — is the readability gate other skills consume (pc-panel-review, paper-adversarial-review, harden-paper). Defaults to a blind multi-grader panel; after fixes, mandates the claims-preservation diff (row `claims`). NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT venue-bar content strength (study-accepted-papers). Compose with harden-paper (which calls it), draft-paper (generative counterpart), render-paper.
+description: Use when asking "does this paper read well?" / "is the writing any good?" / "it reads like a wall of text and jargon" / "grade the writing" on a draft. Grades WRITING CRAFT only — ten dimensions 1–5 (Title, Abstract, Intro architecture, Structure, Prose clarity, Jargon discipline, Landing-the-point, Figure economy, Honesty-without-hedge-stacking, Register distance to the target venue) against how the best-written papers read (Peyton Jones, McEnerney, Gopen & Swan; exemplars Trusting Trust, Carlini, Greshake) AND against 2–3 accepted papers of the target venue, naming the offending sentence and the fix for each. Runs the cold-read stall pass with TWO committed personas (a non-academic engineer per section, and a workshop reviewer skimming abstract, introduction and conclusion) whose stall inventory — not the rubric number — is the readability gate other skills consume (pc-panel-review, paper-adversarial-review, harden-paper). Defaults to a blind multi-grader panel; after fixes, mandates the claims-preservation diff (row `claims`). NOT a content/defect review (paper-adversarial-review / pc-panel-review), NOT a structural cut plan (tighten-paper — run that first on a bloated draft), NOT venue-bar content strength (study-accepted-papers). Compose with harden-paper (which calls it), draft-paper (generative counterpart), render-paper.
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:c5d998b7471000fc compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:baf1f69df2502086 compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
 
 # grade-paper-writing — grade how the paper READS, then fix it sentence by sentence
 
@@ -16,7 +16,7 @@ doesn't drive home how crazy the situation is"* — which is a writing problem, 
 which the defect-hunting skills will pass right over.
 
 Grounding (do NOT re-derive — read it): `../paper-pipeline/references/writing-craft.md` holds the craft
-rules, the exemplar lessons, and the full nine-dimension rubric with 1/5 anchors. This skill applies it.
+rules, the exemplar lessons, and the full ten-dimension rubric with 1/5 anchors. This skill applies it.
 
 ## The frame to hold while grading (from the reference)
 The papers that make a human care share three moves: **(1) open on a problem/assumption the reader already
@@ -24,6 +24,14 @@ holds; (2) break it with the single most visceral concrete instance, not an aggr
 repeatable sentence.** Grade the draft against that trio, plus McEnerney's test — *does this create value
 for the reader, or just record the author's thinking?* — and Gopen/Swan's sentence mechanics (payload in
 the stress position, subject next to verb, one idea per sentence).
+
+🔴 **Every push in this rubric has a floor as well as a ceiling.** The craft rules above pull toward
+short, plain, punchy sentences, and each mechanical check below caps something: jargon, length, hedges,
+connectives. A rubric in which every check is a ceiling has one equilibrium — terse assertions with no
+signposting and no stated owner — and reviewers call that a blog post (*"overly literary"*, *"some
+sentences are too informal"*, *"readers are often required to infer the intended relationships between
+claims"*). The floor is the venue's own register: dimension #10 measures the distance to it, and no fix
+this skill proposes may move the text further from it than it already is.
 
 ## Execution model — run the graders as subagents (context forks), by default
 The blind panel (≥3 graders) and the cold-read stall pass **run in fresh subagents, not inline** — for two
@@ -77,6 +85,21 @@ they supplied it.
 Give the passage **as text in the prompt**, not as a file path. A path invites reading the
 neighbours, and reading the neighbours is how this pass fails silently.
 
+### Two readers, and both run
+
+The pass runs two committed personas, each in its own subagent. Neither replaces the other: they
+stall on different sentences.
+
+| persona | reads | stalls on |
+|---|---|---|
+| **the engineer** — a strong practitioner outside academia (`Sam` in the reference) | every section, one subagent per section | terms, walls, sentences that mean nothing to someone who does not already hold the idea |
+| **the workshop reviewer** — a PC member at the target venue with 40 minutes for the paper, Confidence 3 | the abstract, the introduction and the conclusion, skimmed in that order | a sentence whose result has no owner (the authors? a cited work? a population?), a relation between claims left for the reader to infer, and anything that does not read like a paper at this venue |
+
+The engineer cannot report the second column by construction: he does not know what a paper at the
+venue sounds like, and a sentence with no stated owner reads to him as confident, not as ambiguous.
+The reviewer persona's full prompt is in the reference, next to the engineer's. Its findings go into
+the same stall inventory, under their own classes (7 and 8 below).
+
 ### The one question, per sentence
 
 > **What does this sentence claim? Restate it in your own words.**
@@ -98,6 +121,8 @@ every 2026-08-05 defect lived.
 | 4 | 🔴 **means nothing** | every word is known, the sentence parses grammatically, and the reader still cannot say what it claims | *"the state to remove is not the rule but its claim about itself"* · *"constructions nobody built"* |
 | 5 | 🔴 **sounds clever, carries nothing** | reads smoothly, feels like a payoff, and its content is a restatement or is borrowed from a section the reader has not read | *"nine deletions against four fixes is §5.1's cheap way out, winning again"* |
 | 6 | 🔴 **vague heading** | a heading naming no concrete object — no linter, no configuration, no agent, no file | *"Three answers, all of them after the fact"* · *"The configuration nobody resolves"* |
+| 7 | 🔴 **whose result?** (reviewer persona) | the reader cannot tell whether a claim is a property of the world, a cited finding, or the authors' own measurement | *"asked twice about the same repositories, it changes its mind on a fifth"* — the paper's own experiment, read as a fact about LLMs |
+| 8 | 🔴 **off-register** (reviewer persona) | a sentence the venue's accepted papers would not contain: an aphorism, a fragment, a colloquial closing line, an unmarked jump between claims | *"Measure the bill, not the syllables."* — quoted back by a reviewer as "too informal" |
 
 Class 5 is the one a knowing reader always waves through, because it reads *well*. Ask for it by
 name — "which sentences sound clever but say less than they appear to?" — or it will not be reported.
@@ -133,11 +158,12 @@ is what happened.
 2. **Run the cold-read stall pass FIRST — the full specification is below, under "The stall pass".**
    It was previously a pointer to a reference section that did not exist, which is why the pass drifted
    into "log where I stumbled" and stopped catching the class it exists for.
-2. **Score all nine dimensions 1–5** using the anchors in the reference, on the **absolute scale** defined
+2. **Score all ten dimensions 1–5** using the anchors in the reference, on the **absolute scale** defined
    there (5 = best-in-field, **3 = the default for a solid paper**; most dimensions are 2–3). Weight Prose
-   (#5), Jargon (#6), Landing (#7) ×2 — that's where "wall of jargon" lives. Report raw /45 + weighted /60.
+   (#5), Jargon (#6), Landing (#7) and Register (#10) ×2 — the first three are where "wall of jargon"
+   lives, the fourth is where "blog post" lives. Report raw /50 + weighted /70.
    **Do NOT trust a single grade.** A lone grader — especially one that just wrote or verified the paper —
-   anchors optimistic; a 52/60-looking number is suspect until confirmed. So **when the score matters, run a
+   anchors optimistic; a 60/70-looking number is suspect until confirmed. So **when the score matters, run a
    blind panel: ≥3 independent graders (fresh subagents, ideally an adversarial model like Fable), each
    blind to any prior score, to each other, and to the "it improved" framing — given only the current page
    and the field's best.** Report the **distribution (per-dimension + overall min / median / max)**, not one
@@ -146,6 +172,18 @@ is what happened.
 3. **For every dimension scoring ≤3, name the specific offending sentence or section** and write the fix —
    not "tighten the prose" but the rewritten sentence, or "move the point from ¶3 to ¶1", or "gloss
    `operation-normalized` in plain words at first use." Fixes must be applyable, not vibes.
+3a. **Grade #10, register distance, against the venue's own papers — not against the exemplars.**
+   Take 2–3 papers accepted at the target venue (or, for a first-edition workshop, at its parent
+   conference) in the same paper type: fetch them from the proceedings or the program page, or use the
+   ones the author supplies. Read the abstract, the introduction and the conclusion of each beside the
+   draft's, and record, for both sides: how each result is owned (*we measured* · a citation · a named
+   population), how often a point is made by contrast (*not X but Y*, *rather than*, *instead of* —
+   the measured difference between this corpus and accepted papers), sentence length and fragments,
+   and whether any sentence is an aphorism or a closing punchline. The
+   score is the distance: 5 = a reviewer could not tell the draft from the reference papers by register;
+   1 = it reads as a different genre. Quote the reference sentence beside each draft sentence you flag.
+   If no accepted paper can be fetched or supplied, write `#10: not graded — no reference papers` and
+   say which were tried; a register score from memory is the guess this dimension exists to replace.
 4. **Find the paper's three-move opportunities:** what held assumption could open it? what is its single
    most visceral concrete instance (lead with that, not the mean)? what one sentence should the reader
    quote? If the draft is missing any, that's the highest-leverage fix.
@@ -210,7 +248,7 @@ is what happened.
 8. **Run the avoid-list grep (mechanical).** Grep the source for the slop / web-slang / filler / hype words
    in `../paper-pipeline/references/writing-craft.md` → "The avoid-list", and report every hit with its line number and a
    replacement. These are scrutinize-words, not absolute bans — but each hit is a readability debit against
-   dimension #6 (Jargon) and the "engaging + human-readable" north star. (This session's miss that motivated
+   dimension #6 (Jargon) and the north star — readable by the target reader, in the venue's register. (This session's miss that motivated
    it: "listicle" survived into a submitted-ready AISec draft.)
 7. **Wall-of-text sweep (see `writing-craft.md` → "The wall-of-text check").** Flag any paragraph running
    >~15 source lines / ~150 words or covering >3 sub-points — a visual wall the reader's eye slides off
@@ -224,7 +262,7 @@ is what happened.
    isn't strong enough" and "nothing here is quotable."
 
 ## Output
-1. **Scorecard** — nine dimensions with one-line justification each; raw /45 + weighted /60. When a blind
+1. **Scorecard** — ten dimensions with one-line justification each; raw /50 + weighted /70. When a blind
    panel was run (the default when the score matters), report the **distribution** — per-dimension and
    overall min / median / max across graders — not a single number, and name any dimension they split on.
    Lead with the two or three dimensions dragging it down, ranked.
@@ -299,19 +337,31 @@ Mechanical leg: `paper-lint`'s plain-language pass flags any sentence carrying t
 citation groups, or five or more reference numbers in under 45 words. It cannot judge whether the
 prose is *good*; it reliably catches this one shape, which is the shape that recurs.
 
-**And the words themselves, not only the sentences.** *Adherence* means *following the rules*. The
-"Jargon discipline" dimension below does not catch this, because the word looks perfectly at home —
-judgment slides right past it. What catches it is a list: `paper-lint` carries ~30 words with a plain
-English equivalent (adherence · utilise · demonstrates · constitutes · prior to · necessitates ·
-facilitates · methodology · leverage · albeit · comprise · entail · in order to …) and names the
-replacement in the nudge. Keep the list narrow — only words where the swap does not change meaning —
-and never rewrite a cited work's title to obey it.
+**And the words themselves, not only the sentences.** *Utilise* means *use*. The "Jargon discipline"
+dimension below does not catch this, because the word looks perfectly at home — judgment slides right
+past it. What catches it is a list: `paper-lint` carries ~30 words with a plainer equivalent (utilise ·
+constitutes · prior to · necessitates · facilitates · leverage · albeit · in order to …) and names the
+replacement in the nudge.
 
-**Other markers of the same register, all cheap to check and all worth a pass:** nominalisation
-density (*an honest accounting of what the construction costs* — abstract nouns doing the work verbs
-should do), stock connectives (*furthermore*, *thereby*, *it is worth noting*), and statistics chained
-through a paragraph instead of sitting in a table. Numbers belong in a table the moment there are more
-than about six of them in one paragraph.
+🔴 **The swap is two-sided: replace a word only when the plain word stays in academic register.**
+*Utilise → use* and *in order to → to* pass: the replacement is what the venue's own papers write.
+*Adherence → following*, *demonstrates → shows* in a results sentence, *methodology → how we did it*
+do not pass when the reference papers of dimension #10 use the first form — there the plain word is a
+step toward a blog post, and the finding is withdrawn. Keep the list narrow — only words where the swap
+changes neither meaning nor register — and never rewrite a cited work's title to obey it.
+
+**Signposting is the register, not a tic, and this skill never removes it on style grounds.** Frame
+markers and relation words — *we show*, *this section*, *first … finally*, *in contrast*, *therefore*,
+*however* — are how academic prose tells the reader what kind of claim comes next and how it relates to
+the last one. Their count does not separate a draft from accepted papers (see "Contrast framing"
+below); removing them does, in the wrong direction. Flag a connective only when it asserts a relation
+the two sentences do not have (a *therefore* that does not follow), or when it is empty filler (*it is
+worth noting that*). Never flag one for being academic.
+
+**Other markers worth a pass:** nominalisation density (*an honest accounting of what the construction
+costs* — abstract nouns doing the work verbs should do) and statistics chained through a paragraph
+instead of sitting in a table. Numbers belong in a table the moment there are more than about six of
+them in one paragraph.
 
 
 ## 🔴 The class the rubric could not see, and why it kept coming back (2026-08-04)
@@ -330,25 +380,37 @@ them measures words and sentences. The defect is not in the words.
 
 Two separable failures:
 
-### 1. The text talks about the text (metadiscourse)
+### 1. Contrast framing, and a frame that carries nothing
 
-*"Two findings come first, because they bind whatever else you build"* says nothing about rules
-files, agents, or repositories. It is the paper **narrating its own structure** — the reader is
-handed a table of contents where they expected a fact. This is Hyland's *frame marker*, and in this
-corpus it is the single most reliable smell of machine-drafted expository prose: an
-instruction-tuned model is rewarded for signposting, so it signposts where a writer would simply
-say the thing.
+**What separates this corpus from accepted papers is contrast, not signposting — measure that
+first.** Counted with the same counter on five accepted ACSAC 2024/25 ML-security papers against a
+paper of ours: *"not X but Y"* at 35.5 per 10,000 words in ours against at most 4.9 there (and five
+of their six hits were *"not only … but also"*); *"rather than / instead of"* at 19.9 against at most
+5.4. Every sentence that defines its point by what it is not is a sentence whose point the reader
+must reconstruct. **Rewrite heuristic:** state the thing; move the rejected alternative to its own
+sentence, or drop it if nobody proposed it. Check *instead of · rather than · not … but* first,
+against the same count on the reference papers of dimension #10.
 
-**Countable.** Per section, count openers and connectives whose subject is the document rather than
-the world: *this paper · this section · we now turn · comes first · in what follows · the rest of
-this · as discussed above · it is worth noting · importantly*. Measured on this paper: **10 in the
-body**, and the abstract's opener was one. Target for an abstract or conclusion: **zero**. Body:
-under one per section, and every survivor must earn a reason.
+**Frame markers do not separate us from accepted papers, and are not a target in either direction.**
+Hyland's *frame markers* (*this paper · this section · we show · first … finally · in what follows*)
+measured 0.76–3.1 per 1,000 words on those five accepted papers (median 1.46); the lowest accepted
+paper measured is 0.76, and ours sat inside that range. So neither "remove signposting" nor "add
+signposting to reach a number" is a fix. A published average from a different counter (Hyland's
+~5 per 1,000) says nothing about where a venue's floor lies.
 
-**Rewrite heuristic:** delete the frame and start at the fact. *"Two findings come first, because
-they bind whatever else you build. Asked the same question twice…"* → *"Asked the same question
-twice with identical inputs, a frontier model changes its verdict on 21.5% of rows."* Nothing is
-lost. The ordering was already visible — it is the order of the sentences.
+What IS a defect is a frame that carries nothing. *"Two findings come first, because they bind
+whatever else you build"* says nothing about rules files, agents, or repositories: the frame is
+there, and the claim it announces is not. List the frames whose announced content never arrives
+within the next two sentences; those are the findings. **Rewrite heuristic:** keep the frame and make
+it carry the claim. *"Two findings come first, because they bind whatever else you build. Asked the
+same question twice…"* → *"We first report two properties of the model that constrain any harness
+built on it. Asked the same question twice with identical inputs, it changed its verdict on 21.5% of
+rows (Section 4.5)."* The frame now names what follows, and the sentence after it says whose
+measurement it is.
+
+⚠️ **Vocabulary lists are not a register signal.** *robust*, *significant*, *comprehensive* and the
+rest of the AI-tells vocabulary fire on every one of the five accepted papers. Flag such a word only
+when it is empty in its sentence, never as evidence of a machine or of the wrong register.
 
 ### 2. The qualification eats the claim
 
@@ -388,9 +450,11 @@ one sentence.
 They are the only two sections most readers finish, and the abstract is the only one every reviewer
 reads before forming a view. Grade them **separately and harder**:
 
-- **zero** frame markers, **zero** self-reference to the paper;
+- no frame that announces a claim and then does not make it; *"We show that…"* naming the authors'
+  own result is the register of an abstract, not a defect;
 - first sentence is about the world, never about the document;
-- no number arrives without the unit it counts (*"21.5% of rows"* — rows of what?);
+- no number arrives without the unit it counts (*"21.5% of rows"* — rows of what?) or without its
+  owner — the authors' measurement, a cited work, or a named population;
 - the last sentence of each is a **conclusion**, not an announcement of one;
 - nothing may refer forward to a section the reader has not read.
 
@@ -400,8 +464,9 @@ one did, and it was the worst section in the paper by measured density both time
 
 ### What is NOT mechanizable here
 
-Whether a frame marker is load-bearing (*"we claim nothing there"* genuinely scopes a claim) and
-whether a hedge is honest or defensive. Count them, surface them, and leave the verdict to a reader.
+Whether a frame marker carries its claim (*"we claim nothing there"* genuinely scopes one) and
+whether a hedge is honest or defensive. The mechanical leg that does exist: `tex/claim-provenance`
+reports every sentence of the body that holds a number and no owner. Count them, surface them, and leave the verdict to a reader.
 The counter's job is that nobody can say afterwards they did not know.
 
 ## Compose with

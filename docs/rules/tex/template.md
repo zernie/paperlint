@@ -8,6 +8,17 @@ The paper is not set in the class its venue requires. The rule compares the `\do
 of `paper.tex` with the preset's `template`: the class must be the same, and every option the
 template names must be there. The paper may add options of its own.
 
+A source that keeps one file for several venues and picks the class behind a TeX switch has several
+`\documentclass` lines. The switch is not evaluated: each line is a candidate, the paper passes when
+one of them is the template's class with its options, and when none is, one finding at the first
+candidate names every one:
+
+```latex
+\def\venue{2}
+\if\venue1 \documentclass{article} \fi
+\if\venue2 \documentclass[conference,compsoc]{IEEEtran} \fi   % passes: the second candidate matches
+```
+
 It only knows the class a preset names. A paper whose `paperlint.json` names no preset, or a
 preset with no `template`, gets no finding.
 
@@ -55,6 +66,7 @@ and no option. A value that is neither is reported as a finding that names the p
   requires is there.
 - The version of the class file (#94).
 - A `\documentclass` inside a comment: the rule reads the parse tree, so it does not count.
+- Which branch of a TeX switch builds: with several class lines, one matching candidate is enough.
 
 ## How to fix
 

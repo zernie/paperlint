@@ -79,10 +79,13 @@ attributed to Kent Beck — treat as widely-cited, not primary-verified.)
 - **MapReduce** — "Simplified" in the title = the reader's _benefit_ as the promise; clean topic sentences;
   motivating example before mechanism.
 
-## The gradeable rubric — 9 dimensions, score 1–5 (anchors), most-severe first
+## The gradeable rubric — 10 dimensions, score 1–5 (anchors), most-severe first
 
-For the "wall of jargon" failure mode, **weight #5 Prose, #6 Jargon, #7 Landing-the-point ×2.** Score each,
-name the offending sentence/section, write the fix.
+For the "wall of jargon" failure mode, **weight #5 Prose, #6 Jargon, #7 Landing-the-point ×2**; for the
+"blog post" failure mode, **weight #10 Register ×2** as well. Score each, name the offending
+sentence/section, write the fix. Dimensions #1–#9 push toward plain and memorable; #10 is the floor
+under them — a fix that raises one of them by leaving the venue's register lowers #10, and the
+grade says so.
 
 1. **Title — value + memorability.** 1 = generic topic label, forgettable. 5 = states the finding or the
    reader's benefit and is quotable; repeatable after one read.
@@ -91,7 +94,7 @@ name the offending sentence/section, write the fix.
 3. **Intro architecture — problem/why-care/contribution/evidence, fast.** 1 = background/lit-tour, point
    arrives on page 2–3. 5 = SPJ arc in the first half-page + a bulleted, forward-referenced contributions list.
 4. **Structure & signposting (incl. visual density).** 1 = arbitrary order, paragraphs open mid-thought,
-   boilerplate roadmap, OR a wall — one giant unbroken paragraph the reader's eye slides off. 5 = each
+   no signposting between claims (the reader must infer how one claim relates to the next), OR a wall — one giant unbroken paragraph the reader's eye slides off. 5 = each
    section one job, every paragraph's first sentence is its claim, forward refs not a roadmap, AND no wall:
    long related-work / discussion blocks are broken into scannable chunks with bold/italic run-in sub-heads
    (see the wall-of-text check below).
@@ -115,6 +118,14 @@ validity`, `null`, `coarse`, coined handles) used with no plain-words gloss — 
    self-contained. 5 = one "money figure" a skim-reader understands alone; self-contained captions; tables show the one comparison that matters.
 9. **Honesty without hedge-stacking.** 1 = overclaims OR drowns in hedges + defensive early related-work
    wall. 5 = explicit "what we do NOT claim," one clean threats-to-validity move, related work at the end as context.
+10. **Register distance to the target venue — graded against 2–3 accepted papers of that venue (or its
+    parent conference), never against the exemplars above.** 1 = reads as another genre: aphorisms and
+    punchline closings, fragments, colloquial asides, claims with no stated owner, relations between
+    claims left for the reader to infer. 5 = a reviewer at the venue could not tell it from the
+    reference papers by register: results owned (_we measured_, a citation, a named population),
+    relations signposted (_therefore_, _in contrast_, _this section_), sentences complete. Every flag
+    quotes the reference sentence it was compared against. No reference papers → not graded, and the
+    report says so; this dimension is never scored from memory.
 
 ## Scoring calibration — how to avoid an inflated grade (read before scoring)
 
@@ -175,6 +186,25 @@ bucket-1 field terms and trips on buckets 2–3. Optionally also run it on a **d
 lacks the vocabulary for real (not by role-play) and stalls even more like a human. The persona's inventory feeds
 straight into the fix pass.
 
+**Run the second persona too — the workshop reviewer. Both, never one instead of the other.** Sam cannot see two
+defects by construction: he does not know what a paper at this venue sounds like, and a sentence with no stated
+owner reads to him as confident rather than ambiguous. Those are exactly the two a real reviewer wrote down
+("difficult at first to distinguish among properties of LLMs, statistical observations from repositories, and
+experimental findings produced by the authors"; "blogpost"). Spawn a second fresh subagent:
+
+> You are a program-committee member at <venue>. You review for it every year, you have eleven papers this
+> round, and you have 40 minutes for this one. Your confidence will be 3: you know the area, not this exact
+> topic. Read the abstract, then the introduction, then the conclusion — nothing else. For EVERY sentence ask:
+> whose result does this state — the authors' own measurement, a cited work, or a general property of the
+> world? If you cannot tell, quote it and write WHOSE?. Where two sentences sit side by side and you have to
+> work out yourself how they relate, quote the pair and write RELATION?. Where a sentence would not appear in
+> a paper at <venue> — an aphorism, a punchline, a fragment, a colloquial turn — quote it and write REGISTER.
+> Then give the overall recommendation you would write after these 40 minutes, and the one sentence of your
+> review a chair would read first. Output the list and the recommendation only.
+
+Its WHOSE? / RELATION? / REGISTER lines go into the stall inventory as classes 7 and 8 of `grade-paper-writing`.
+Give it the three sections as text, and no framing: it is a reviewer who has not talked to the authors.
+
 **Run the persona PER SECTION for a dense or long (>~6pp) paper — never one whole-paper pass.** A single pass over
 a full paper skims the middle: this session a whole-paper sweep scored 44/60 and missed the walls that per-section
 persona reads (intro, method, results) each caught immediately. Chunk it to 2–3pp / one section per subagent, so
@@ -233,16 +263,18 @@ of `rm -rf` collapses to one"), a triple-nested-em-dash sentence you parse twice
 (the author's rule: don't open on the spec sheet.) When unsure which bucket a term is in, ask: _would a reviewer at THIS
 venue use it, or is it imported from stats/philosophy/our own coinage?_
 
-**De-jargon is RE-VOICING the sentence, not swapping the word.** Replacing a coined term with a plainer noun inside
-an otherwise stiff academic sentence leaves the sentence academic — the reader still stalls on the _register_, not
-just the word (GateBench 2026-07-25: a term-level de-jargon pass cleared the flagged words but the author still hit
-sections "way too academicy for 0 reason"). The fix: rewrite the whole SENTENCE the way you'd say it to a colleague
-at a whiteboard — subject–verb–object, active voice, one clause, contractions fine, no nominalizations ("performs
-an evaluation of" → "checks"). **Read each rewritten sentence ALOUD: if you'd never say it that way to a person,
-it's still academic.** E.g. "We therefore position the guard as a defense against trigger~A and a measurement
-instrument, not an injection defense" → "So the guard is there to catch accidents and to measure the problem — it
-is not built to stop an attacker." A word-swap that leaves the academic sentence shape is a HALF-fix; the
-deliverable is plain-spoken sentences, and a de-jargon/tighten pass is not done until the prose reads spoken.
+**De-jargon is RE-VOICING the sentence, not swapping the word — and the new voice is the venue's, not
+a conversation's.** Replacing a coined term with a plainer noun inside a sentence built around nominalizations
+leaves the stall in place (GateBench 2026-07-25: a term-level de-jargon pass cleared the flagged words but the
+author still hit sections "way too academicy for 0 reason"). The fix is the sentence shape: subject–verb–object,
+active voice, the actor named, no nominalizations ("performs an evaluation of" → "checks"). **The fix stops at the
+register of the venue's accepted papers:** no contractions, no fragments, no colloquial asides, and the signposting
+stays (_therefore_, _in contrast_, _we show_). E.g. "We therefore position the guard as a defense against
+trigger~A and a measurement instrument, not an injection defense" → "The guard is therefore a defense against
+accidental triggers and an instrument for measuring them; it is not designed to stop an attacker." — plainer,
+and still a sentence the venue prints. "So the guard is there to catch accidents — it is not built to stop an
+attacker" goes one step too far: it is what a reviewer quotes back as informal. Test each rewrite against a
+sentence from the reference papers of dimension #10, not against how it sounds aloud.
 
 **Step 0 — mechanical pre-scan (BEFORE reading, so the pass can't rubber-stamp).** Run the coined-compound
 grep from the avoid-list against the source and add EVERY hit to the stall inventory as a candidate; grep the
@@ -376,9 +408,11 @@ axis that catches "the conclusion isn't strong enough."
 
 ## The avoid-list — words that read as slop or stall a human (flag every hit)
 
-The north star: **a paper should be engaging and human-readable — write for a smart non-specialist who will
-read it willingly, not to sound academic.** The test (the author's 10-second rule): would a strong engineer who is
-NOT a researcher get this sentence in 10 seconds? If not, it's too dense. The jargon dimension (#6) and the
+The north star: **a paper should be readable by a smart non-specialist AND read as a paper at its venue —
+plain where plainness costs nothing, academic where the register expects it.** Two tests, both apply: would a
+strong engineer who is NOT a researcher get this sentence in 10 seconds? If not, it's too dense. Would it sit
+unremarked in one of the venue's accepted papers (dimension #10)? If not, it's too loose — a replacement that
+passes the first test by failing the second is not a fix. The jargon dimension (#6) and the
 stall pass are the judgment; the list below is the _checkable_ part (prose isn't policy — compile what's
 mechanical). These are **scrutinize-words, not absolute bans** (some are legit in context — "significant" for
 a real stat, "method"); on every hit, ask "does this earn its place, or is it slop / hype / a reader-stall?"
@@ -435,7 +469,8 @@ number, so the paper does not have to print them all — divide the labor:
 
 1. **DO lead with the concrete crazy instance, not the aggregate stat** (Carlini's UUID).
 2. **DO manufacture the "wait, what?" pivot** — surface the held assumption, then break it (Greshake).
-3. **DO write the intro as the SPJ arc + a bulleted, forward-referenced contributions list**; kill the "organized as follows" roadmap.
+3. **DO write the intro as the SPJ arc + a bulleted, forward-referenced contributions list**; keep an
+   "organized as follows" paragraph only when the venue's accepted papers carry one.
 4. **DON'T imitate Attention-style dense contribution-less prose** unless the audience already cares.
 5. **DON'T stack jargon or hedges** — gloss every term plainly at first use; replace hedge-piles with one
    precise scope sentence; land one repeatable moral (Trusting Trust).

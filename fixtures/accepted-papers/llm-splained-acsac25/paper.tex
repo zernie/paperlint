@@ -1,0 +1,516 @@
+
+\def\conference{2} %
+
+
+\if \conference1
+    \documentclass[letterpaper,twocolumn,10pt]{article}
+    \usepackage{usenix-2020-09}%
+\fi
+
+\if \conference3
+    \documentclass[letterpaper,twocolumn,10pt,table]{article}
+\fi
+
+
+
+
+
+
+\if \conference2
+    \documentclass[conference,compsoc]{IEEEtran}
+\fi
+
+
+
+
+
+
+
+\if \conference2
+    \ifCLASSOPTIONcompsoc
+      \usepackage[caption=false,font=footnotesize,labelfont=sf,textfont=sf]{subfig}
+    \else
+      \usepackage[caption=false,font=footnotesize]{subfig}
+    \fi
+\fi
+
+\usepackage{tikz}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{comment}
+\usepackage{array}
+
+\usepackage{relsize}
+\if \conference1
+    \usepackage{graphicx}
+    \usepackage{titlesec}
+    \usepackage[normalem]{ulem}
+
+    \titleformat{\subsection}[hang]
+    {\normalfont\bfseries}
+    {\thesubsection}{0.5em}{}
+    
+    \titlespacing*{\subsection}{0pc}{0.5em}{0.5em}
+    \titlespacing*{\subsubsection}{0pc}{0.5em}{0.5em}
+
+\fi
+
+\if \conference2
+\usepackage[hyphens,spaces,obeyspaces]{url}
+\usepackage[colorlinks = true,
+            linkcolor = blue,
+            urlcolor  = blue,
+            citecolor = blue,
+            anchorcolor = blue]{hyperref}         %
+\usepackage[compact]{titlesec}
+\fi
+
+\usepackage{filecontents}
+\usepackage{multirow}
+\usepackage{pdflscape}
+\usepackage{rotating}
+
+\usepackage{enumitem}
+\setlist{nolistsep}
+
+\usepackage{cleveref}
+\usepackage{listings}
+\usepackage{svg}
+\usepackage[normalem]{ulem}
+
+\usepackage{cleveref}
+\crefname{section}{§}{§§}
+\Crefname{section}{§}{§§}
+
+\titlespacing{\section}{0pt}{2ex}{1ex}
+\titlespacing{\subsection}{0pt}{1ex}{1ex}
+\titlespacing{\subsubsection}{0pt}{1ex}{0ex}
+\titlespacing{\paragraph}{0pt}{1.25ex plus 1ex minus .2ex}{1em}
+\renewcommand{\topfraction}{0.99} %
+\renewcommand{\floatpagefraction}{0.99}
+\renewcommand\fbox{\fcolorbox{white}{white}}
+
+\newcolumntype{B}{>{\hsize=1.714\hsize}X}
+\newcolumntype{M}{>{\hsize=0.708\hsize}X}
+\newcolumntype{S}{>{\hsize=0.577\hsize}X}
+\newcolumntype{P}{>{\hsize=0.7\hsize}X}
+\newcolumntype{Q}{>{\hsize=1.3\hsize}X}
+\newcolumntype{Y}{>{\centering\arraybackslash}X} %
+\newcolumntype{L}{>{\raggedright\arraybackslash}p} %
+\newcolumntype{C}{>{\centering\arraybackslash}p} %
+\newcolumntype{R}{>{\raggedleft\arraybackslash}p} %
+
+
+
+\if \conference2
+\makeatletter
+
+\Hy@AtBeginDocument{
+	\def\@pdfborder{0 0 1} %
+	\def\@pdfborderstyle{/S/U/W 0.5} %
+}
+\makeatother
+\fi
+
+\if 1\conference
+    \usepackage[
+        backend = biber,
+        sorting = none, %
+        citestyle = numeric-comp, %
+        maxbibnames = 3, %
+        mincrossrefs = 1000, %
+        url=false
+    ]{biblatex} 
+\fi
+
+\if \conference2
+    \usepackage[
+        backend = biber,
+        sorting = none, %
+        maxbibnames = 3, %
+        mincrossrefs = 1000, %
+        citestyle = numeric,
+        url=false,
+        doi=false,
+    ]{biblatex} 
+\fi
+
+\if \conference1
+    \usepackage[
+        backend = biber,
+        sorting = none, %
+        citestyle = numeric-comp, %
+        maxbibnames = 3, %
+        mincrossrefs = 1000, %
+    ]{biblatex} 
+\fi
+
+
+\addbibresource{bibs/general-web-ml.bib}
+\addbibresource{bibs/llms-evals.bib}
+\addbibresource{bibs/usable-snp-related.bib}
+
+\DeclareSourcemap{
+	\maps[datatype=bibtex, overwrite]{
+		\map{
+			\step[fieldset=editor, null]
+			\step[fieldset=location, null]
+			\step[fieldset=publisher, null]
+			\step[fieldset=isbn, null]
+			\step[fieldset=issn, null]
+			\step[fieldset=pages, null]
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+\makeatletter
+\newcommand{\starfootnote}[1]{%
+  \begingroup
+    \renewcommand{\thefootnote}{\fnsymbol{footnote}}%
+    \let\IEEE@orig@makefntext\@makefntext
+    \renewcommand{\@makefntext}[1]{%
+      \parindent 1em%
+      \noindent
+      \hb@xt@1.8em{\hss\@thefnmark\ }##1%
+    }%
+    \footnotetext[1]{#1}%
+    \let\@makefntext\IEEE@orig@makefntext
+  \endgroup
+}
+\makeatother
+
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+  backgroundcolor=\color{backcolour}, commentstyle=\color{codegreen},
+  keywordstyle=\color{magenta},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{codepurple},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,         
+  breaklines=true,                 
+  captionpos=b,                    
+  keepspaces=true,                 
+  numbers=left,                    
+  numbersep=5pt,                  
+  showspaces=false,                
+  showstringspaces=false,
+  showtabs=false,                  
+  tabsize=2
+}
+
+\lstset{style=mystyle}
+
+\begin{document}
+
+
+\date{}
+
+
+
+
+
+
+\title{Learned, Lagged, LLM-splained: LLM Responses to End User Security Questions} %
+
+
+\if\conference1
+\fi
+
+
+\if\conference2
+
+    
+\author{
+    \IEEEauthorblockN{Vijay Prakash}
+    \IEEEauthorblockA{New York University\\
+    \small vp2179@nyu.edu}
+    \and
+
+    \IEEEauthorblockN{Kevin Lee}
+    \IEEEauthorblockA{JPMorgan Chase\\
+    \small kevin.lee@jpmorgan.com}
+    \and
+
+    \IEEEauthorblockN{Arkaprabha Bhattacharya~}
+    \IEEEauthorblockA{Cornell Tech\\
+    \small ab2956@cornell.edu}
+    \and
+
+    \IEEEauthorblockN{~Danny Yuxing Huang*}
+    \IEEEauthorblockA{New York University\\
+    \small dhuang@nyu.edu}
+    \and
+
+    \IEEEauthorblockN{Jessica Staddon*}
+    \IEEEauthorblockA{Northeastern University\\
+    \small j.staddon@northeastern.edu}
+}
+
+\fi
+
+\maketitle
+
+
+\renewcommand{\paragraph}[1]{\vspace{0.1cm} \noindent \textbf{#1}}
+
+\def\diffmode{2}
+
+\if\diffmode1
+\newcommand{\add}[1]{{\color{ForestGreen} {#1}}}
+\newcommand{\remove}[1]{{\color{red} {\sout{#1}}}}
+\else
+\newcommand{\remove}[1]{{\color{red}{}}}
+\newcommand{\add}[1]{{\color{black} {#1}}}
+\fi
+
+\newcommand{\kevin}[1]{{[\color{brown} KL: {#1}]}}
+\newcommand{\arka}[1]{{\color{orange} {#1}{-- arka}}}
+
+
+\newcommand{\vijay}[1]{{\color{purple} {#1}{-- Vijay}}}
+\newcommand{\jessica}[1]{{\color{blue} {#1}{-- jessica}}}
+\newcommand{\danny}[1]{{[\color{cyan} DH: {#1}]}}
+
+
+\newcommand*\circledsmall[1]{\tikz[baseline=(char.base)]{
+            \node[shape=circle,draw,inner sep=1pt, scale=0.7] (char) {#1};}}
+            
+\newcommand*\circledmed[1]{\tikz[baseline=(char.base)]{
+            \node[shape=circle,draw,inner sep=1pt, scale=0.8] (char) {#1};}}
+
+\newcommand*\circledfilled[1]{\tikz[baseline=(char.base)]{
+            \node[shape=circle, draw, fill=black, text=white, inner sep=1pt,] (char) {#1};}}
+
+\newcommand*\circledmedfilled[1]{\tikz[baseline=(char.base)]{
+            \node[shape=circle, draw, fill=black, text=white, inner sep=0pt, scale=0.8] (char) {#1};}}
+
+\newcommand*\circledsmallfilled[1]{\tikz[baseline=(char.base)]{
+            \node[shape=circle, draw, fill=black, text=white, inner sep=0pt, scale=0.7] (char) {#1};}}
+
+\newcommand*\squaremed[1]{\tikz[baseline=(char.base)]{
+            \node[shape=rectangle, draw, fill=black, text=white, inner sep=2pt, scale=0.8] (char) {\textbf{#1}};}}
+
+\newcommand{\questionsCollected}{858 }
+\newcommand{\questionsEvaluated}{900 }
+\newcommand{\postIRRQuestions}{828 }
+\newcommand{\geminiQuestionsEvaluated}{172 }
+\newcommand{\llamaQuestionsEvaluated}{172 }
+\newcommand{\failurepattenrcountLLaMAandGemini}{14}
+\newcommand{\failurepattenrcountGPT}{13}
+
+\newcommand{\actionableSuggestion}{Actionable suggestion}
+\newcommand{\asShort}{
+    \circledmedfilled{AS}
+}
+\newcommand{\devsuggestion}{
+    \circledmedfilled{D}
+}
+\newcommand{\usersuggestion}{
+    \circledmedfilled{U}
+}
+
+
+\newcommand{\inlinecircle}[2][1.2ex]{
+    \tikz[baseline=(char.base)]{
+        \node[shape=circle, fill=black, text=white, inner sep=0pt, minimum size=#1] (char) {#2};
+    }
+}
+
+\newcommand{\ucircle}[1][1.2ex]{
+    \inlinecircle[#1]{U}
+}
+
+
+\newcommand{\LackAdherenceResearch}{Failure to leverage research}
+\newcommand{\Overprescription}{Over-prescription of security technologies and products}
+\newcommand{\TransparencyArguments}{Missing transparency arguments that build trust among users}
+\newcommand{\Permissions}{Listing used permissions and their Explanation}
+\newcommand{\Scams}{Explaining scams and their trends}
+\newcommand{\MakingUpFactsAV}{Making up facts about the AV technology}
+\newcommand{\MissingThreatAngles}{Missing threat angles}
+\newcommand{\Hallucinations}{Security misinformation due to hallucinations}
+\newcommand{\TemporalDependency}{Temporal dependency unawareness}
+\newcommand{\UISteps}{Incorrect and incomplete user interface (UI) steps}
+\newcommand{\IncorrectURLsEmails}{Incorrect URLs and email addresses}
+\newcommand{\ResponsesGearedTowardsDevelopers}{Responses geared towards developers and system administrators}
+\newcommand{\MisinterpretQuestions}{Misinterpreting the questions}
+\newcommand{\RestrictiveGuardrails}{Overly restrictive safety guardrails}
+\newcommand{\IndirectResponses}{LLM-splaining}
+
+\newcommand{\failureReason}{Reasons behind this error pattern: }
+
+
+\renewenvironment{quote}
+  {\list{}{\leftmargin=-0.0em%
+            \topsep=0pt
+            }\item[]\itshape\footnotesize}
+{\endlist}
+
+\begin{abstract}
+Answering end user security questions is challenging. While large language models (LLMs) like GPT, Llama, and Gemini are far from error-free, they have shown promise in answering a variety of questions outside of security. We qualitatively evaluated responses from three popular LLMs to 900 systematically collected security questions in the first such evaluation in the area of end user security. %
+
+While LLMs demonstrate broad generalist ``knowledge'' of end user security information, there are  
+patterns of errors and limitations across LLMs---including stale, inaccurate, and incomplete answers, as well as indirect or unresponsive communication styles---which negatively impact the user experience. Based on these patterns, we suggest directions for improved model development and
+recommend user strategies for interacting with LLMs when seeking assistance with security.
+\end{abstract}
+
+\def\showreview{2}
+
+\if\showreview1
+\newpage
+
+\hrulefill
+
+In \Cref{review}, we present the peer review of the submission from another conference. Our paper addressing reviewer comments starts from \Cref{sec:intro}, where removed contents are in red, and our updated responses are in green.
+
+\hrulefill
+\section{Peer Review Comments} \label{review}
+
+
+
+\subsubsection*{Review \#357A}
+\hrulefill
+
+\paragraph{Paper Summary}
+This paper examines the performance of LLMs in answering end-user security questions. It evaluated 3 LLMs on 900 security questions and found that while LLMs can answer general security questions, there are also errors and limitations. The paper made model improvement suggestions accordingly.
+
+\paragraph{Technical Correctness}
+\begin{itemize}
+    \item Fixable Major Issues
+\end{itemize}
+
+\paragraph{Technical Correctness Comments}
+I was not sure about the questions collection process. See below for details.
+
+\paragraph{Scientific Contribution}
+\begin{itemize}
+    \item Addresses a Long-Known Issue
+    \item Identifies an Impactful Vulnerability
+\end{itemize}
+
+\paragraph{Presentation}
+\begin{itemize}
+    \item No Flaws in Presentation
+\end{itemize}
+
+\paragraph{Comments to Authors}
+There is a spike of papers that evaluate LLMs in different tasks. This particular paper focuses on security questions, which can be an interesting application domain as such questions may have a real-world impact on users’ security, safety, and potentially privacy as well. I have some concerns about the paper:
+\begin{itemize}
+    \item I found myself having a hard time understanding the process of question collection. It is not clear to me why the stated approach was chosen, given its several limitations. Security content based on trusted resources was not necessarily what users would ask. For example, a general user would have very few opportunities to work with network security, which typically requires more advanced knowledge. Additionally, the template only focused on “what” and “why” questions without addressing “how” questions, which most users might struggle with.
+    \item There is also some confusion regarding the data analysis process. The paper once suggested that all four attributes were evaluated using a 3-point Likert scale but later mentioned different evaluation scales. The “thoroughness” attribute is particularly unclear—how was “completely achieved” determined?
+    \item The idea of “reliability” is interesting but raises questions. For instance, how does paraphrasing influence the results? Were partial answers or repeated attempts considered in the study? It is unclear how meaningful the results related to reliability are, given the variability in responses.
+\end{itemize}
+Overall, I have fundamental concerns about the approach and would not argue for accepting this at this stage.
+
+\paragraph{Recommended Decision}
+Weak Reject (Can be Convinced by a Champion)
+
+\paragraph{Reviewer Confidence}
+Highly Confident
+
+\paragraph{Should this submission be reviewed by the Research Ethics Committee?}
+No
+
+
+\hrulefill
+
+\subsubsection*{Review \#357B}
+\hrulefill
+
+\paragraph{Paper Summary}
+This research performs a qualitative study on LLM performance in the area of end-user security and online safety by evaluating three popular LLMs—GPT, LLaMA, and Gemini—on 900 systematically collected questions. The study categorizes errors into content and communication styles, identifying outdated guidance, omission of critical details, and misrepresentation of security technologies. The authors collected user questions on security and online safety covering seven security topics from frequently asked questions published by consumer safety and commercial organizations. Responses through zero-shot prompting are assessed for quality, specifically their accuracy, completeness, and relevance. Evaluation includes aspects of communication style, directness, and whether necessary and important information is presented first. The methodology of response evaluation uses spot-checks to ensure correctness and reliability checks through repeated question evaluation. The authors find that LLM responses are generally semantically similar, leading to a single response being generated for a given question and LLM.
+
+\paragraph{Technical Correctness}
+\begin{itemize}
+    \item Fixable Major Issues
+\end{itemize}
+
+\paragraph{Technical Correctness Comments}
+The research evaluates all 900 questions with GPT but limits the analysis of LLaMA and Gemini responses to only those where GPT failed. As a result, the cross-model comparison is incomplete and could be biased.
+
+A detailed quantitative comparison between the three LLMs (e.g., accuracy scores across categories for LLaMA and Gemini) is missing.
+
+The study implies that LLMs rely heavily on marketing materials and outdated information. Quantification of this impact would be beneficial, as would understanding the training data distribution.
+
+It is unclear whether the user questions represent real-world user queries. The natural language and framing of actual end-user questions may differ significantly from the dataset.
+
+The study uses 900 questions from multiple sources.
+
+Ethical considerations and data privacy protocols are considered and addressed.
+
+The plan to release the question corpus is important for reproducibility.
+
+\paragraph{Scientific Contribution}
+\begin{itemize}
+    \item Provides a Valuable Step Forward in an Established Field
+\end{itemize}
+
+\paragraph{Scientific Contribution Comments}
+This research evaluates LLMs' capabilities and limitations in addressing user security.
+
+\paragraph{Presentation}
+\begin{itemize}
+    \item No Flaws in Presentation
+\end{itemize}
+
+\paragraph{Presentation Comments}
+The paper is well-written, well-structured, and presented with examples and illustrations. The research addresses an important topic, with a corpus of systematically selected questions covering dominant security areas. Recommendations are provided to both users and developers.
+
+\paragraph{Comments to Authors}
+The quality of LLM responses to end user security questions has not been rigorously studied yet. Therefore, there is a critical need to evaluate the quality of LLM support in the user security content as adoption accelerates. In the beginning the paper discusses previous work and and says that there are already well-documented risks to relying on LLMs for information broadly, including hallucinations, challenges in reasoning, and vulnerability to concept drift.
+Further, LLMs have been found to perpetuate known misconceptions in security and online safety.
+It points out, that a larger and broader evaluation of LLM security responses (beyond known misconceptions) is needed in order to comprehensively outline the boundaries of LLM security “knowledge” to inform users about LLM shortcomings, and support future model development and improvement. The authors identify key insights and make recommendation:
+\begin{itemize}
+\item LLMs demonstrate broad generalist “knowledge” of end user security information 
+\item there are patterns of errors and limitations across LLMs consisting of stale and inaccurate answers
+\item indirect or unresponsive communication styles
+\item paper suggests directions for model improvement 
+\item and recommends user strategies for interacting with LLMs when seeking assistance with security
+\end{itemize}
+
+The authors focus only on security questions, excluding privacy-related queries, which may be even critical in the context of end users.
+
+The study does not incorporate feedback from the users to understand the usability and effectiveness of LLM responses.
+
+The study does not scale due to manual evaluation and also misses out to address scientific and systemic challenges by such an automated study. The limited size may also introduce bias into the results. Some explanations or intepretations are speculative, such as causes for deficiencies due to over-representation of marketing content in training datasets.
+
+How do your recommendations generalize to other LLMs? and beyond user security?
+
+\paragraph{Recommended Decision}
+Weak Reject (Can be Convinced by a Champion)
+
+\paragraph{Reviewer Confidence}
+Fairly Confident
+
+\paragraph{Should this submission be reviewed by the Research Ethics Committee?}
+No
+
+\newpage
+\fi
+
+
+\input{sections/1-introduction}
+\input{sections/2-background} 
+\input{sections/3-methodology}
+\input{sections/4-findings}
+\input{sections/5-discussion}
+\input{sections/6-limitations}
+\input{sections/7-open-science}
+\printbibliography
+\appendix
+\input{sections/appendix}
+
+\end{document}

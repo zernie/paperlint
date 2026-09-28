@@ -128,6 +128,9 @@ const AIDC = {
 };
 const IEEE = "\\documentclass[conference,compsoc]{IEEEtran}";
 const STATEMENT = "\\section*{LLM Usage Statement}\nNone.";
+/** Two `\\documentclass` lines behind a switch: `article` for one venue, `second` for this one. */
+const switched = (second: string): string =>
+  `\\def\\venue{2}\n\\if\\venue1\n\\documentclass{article}\n\\fi\n\\if\\venue2\n${second}\n\\fi`;
 const aidc = (body: string, cls = IEEE) =>
   paper(tex(`\\section{Introduction}\n${body}\n${STATEMENT}`, cls), AIDC);
 
@@ -147,6 +150,13 @@ interface RuleCases {
 }
 
 const TEX_FILE = `${P}/paper.tex`;
+
+/** A body of 200 sentences of 14 words: enough words for `tex/register` to judge a rate. */
+const FORMAL = Array.from(
+  { length: 200 },
+  () =>
+    "The rule reads the body of the paper and counts every sentence it holds.",
+).join(" ");
 const STATUS_FILE = `${P}/PIPELINE-STATUS.md`;
 const SHIPPED_STATUS =
   "---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/a.pdf\n    bytes: 1\n---\n# PIPELINE-STATUS\n";
@@ -202,7 +212,13 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       severity: 1,
       line: 3,
     },
-    silent: paper(tex("As in Section~2.")),
+    // A cleveref name definition sets a label, it is not prose.
+    silent: paper(
+      tex(
+        "As in Section~2.",
+        "\\documentclass{article}\n\\usepackage{cleveref}\n\\crefname{section}{§}{§§}",
+      ),
+    ),
   },
   "paper/leading-zero": {
     reports: {
@@ -299,14 +315,15 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     silent: paper(fixture("tex-build/frontmatter-clean.tex")),
   },
+  // The class picked behind a TeX switch: two candidates, one of them the venue's or none.
   "tex/template": {
     reports: {
-      tree: aidc("Text.", "\\documentclass[conference]{IEEEtran}"),
+      tree: aidc("Text.", switched("\\documentclass[conference]{IEEEtran}")),
       file: TEX_FILE,
       severity: 2,
-      line: 1,
+      line: 3,
     },
-    silent: aidc("Text."),
+    silent: aidc("Text.", switched(IEEE)),
   },
   "tex/required-section": {
     reports: {
@@ -325,6 +342,39 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       line: 4,
     },
     silent: aidc("Text."),
+  },
+  "tex/claim-provenance": {
+    reports: {
+      tree: paper(tex("Text.\nAgents ignore 42\\% of the rules.")),
+      file: TEX_FILE,
+      severity: 1,
+      line: 4,
+    },
+    silent: paper(
+      tex(
+        "Text.\nWe measured that agents ignore 42\\% of the rules.\nThey run on Claude 3 and Python 3.12.",
+      ),
+    ),
+  },
+  "tex/register": {
+    reports: {
+      tree: paper(tex(`${FORMAL} But it holds. So it goes. And it ends.`)),
+      file: TEX_FILE,
+      severity: 1,
+      line: 3,
+    },
+    silent: paper(tex(FORMAL)),
+  },
+  "tex/missing-input": {
+    reports: {
+      tree: paper(tex("Text.\n\\input{sections/gone}")),
+      file: TEX_FILE,
+      severity: 1,
+      line: 4,
+    },
+    silent: paper(tex("Text.\n\\input{sections/here}"), {
+      [`${P}/sections/here.tex`]: "More text.\n",
+    }),
   },
   "bib/reachable-entry": {
     reports: {

@@ -61,6 +61,7 @@
  */
 import assert from "node:assert/strict";
 import { getParser } from "@unified-latex/unified-latex-util-parse";
+import { takeWhile } from "remeda";
 import type { Nodes } from "mdast";
 import type { TexArg, TexNode, TexRoot } from "./latex-language.ts";
 import type {
@@ -121,7 +122,77 @@ function skippedRanges(
     }
   const bib = bibRange(raw);
   if (bib) out.push([bib.start, bib.end]);
-  return out;
+  return [...out, ...crefDefinitionRanges(raw)];
+}
+
+/**
+ * cleveref's name and format definitions (`\crefname{section}{§}{§§}`): the label a reference
+ * prints is set there, not written as prose, so a sign in them is not a sign in the text.
+ */
+const CREF_DEFINITIONS: ReadonlySet<string> = new Set([
+  "crefname",
+  "Crefname",
+  "crefformat",
+  "Crefformat",
+  "crefrangeformat",
+  "Crefrangeformat",
+  "crefmultiformat",
+  "Crefmultiformat",
+  "crefrangemultiformat",
+  "Crefrangemultiformat",
+]);
+
+const isGroup = (n: TexNode): boolean => n.type === "group";
+
+/**
+ * A macro's range with its arguments: the ones the parser attached (cleveref's are signed) or the
+ * `{…}` groups standing right after it when it was given none — from the first to the last offset
+ * any of them carries. An argument's closing brace is one character past its last node.
+ */
+function withArguments(
+  m: TexNode & { readonly type: "macro" },
+  after: readonly TexNode[],
+): readonly [number, number][] {
+  const offsets = [
+    m.position?.start.offset,
+    m.position?.end.offset,
+    ...(m.args ?? []).map((a) => {
+      const last = a.content?.at(-1)?.position?.end.offset;
+      return last === undefined ? undefined : last + 1;
+    }),
+    takeWhile(after, isGroup).at(-1)?.position?.end.offset,
+  ].filter((o): o is number => o !== undefined);
+  return offsets.length === 0
+    ? []
+    : [[Math.min(...offsets), Math.max(...offsets)]];
+}
+
+/**
+ * The ranges of the cleveref definitions in the preamble and in the document body. `parse` is
+ * unified-latex's; a test hands in a tree with the fields the walk tolerates being absent.
+ */
+export function crefDefinitionRanges(
+  raw: string,
+  {
+    parse = (s: string): TexRoot => getParser().parse(s),
+  }: { readonly parse?: (s: string) => TexRoot } = {},
+): readonly [number, number][] {
+  const root = parse(raw);
+  const doc = root.content.find(
+    (n): n is Extract<TexNode, { type: "environment" | "mathenv" }> =>
+      n.type === "environment" && n.env === "document",
+  );
+  const lists: readonly (readonly TexNode[])[] = [
+    root.content,
+    doc?.content ?? [],
+  ];
+  return lists.flatMap((list) =>
+    list.flatMap((n, i) =>
+      n.type === "macro" && CREF_DEFINITIONS.has(n.content)
+        ? withArguments(n, list.slice(i + 1))
+        : [],
+    ),
+  );
 }
 const inside = (ranges: readonly [number, number][], i: number) =>
   ranges.some(([s, e]) => i >= s && i < e);
