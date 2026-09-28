@@ -26,6 +26,7 @@ import {
   parseTemplate,
   replaceDocumentClass,
 } from "./document-class.ts";
+import { documentBodyOf, includesOf } from "./includes.ts";
 import { outlineOf } from "./outline.ts";
 import { parseLatex } from "./parse.ts";
 import { bodyProse } from "./prose.ts";
@@ -45,6 +46,7 @@ export {
   placeOf,
   textOf,
 } from "./nodes.ts";
+export { documentBodyOf, includesOf } from "./includes.ts";
 export { outlineOf } from "./outline.ts";
 export { parseLatex, type ParsedTex } from "./parse.ts";
 export { bodyProse } from "./prose.ts";
@@ -56,6 +58,8 @@ export const latexReader: LatexReader = {
   outline: (src) => outlineOf(parseLatex(src)),
   renderedRuns: (src) => renderedRuns(parseLatex(src)),
   bodyProse: (src) => bodyProse(parseLatex(src)),
+  includes: (src) => includesOf(parseLatex(src)),
+  documentBody: (src) => documentBodyOf(parseLatex(src)),
   template: parseTemplate,
   withDocumentClass: (src, want) => replaceDocumentClass(parseLatex(src), want),
 };

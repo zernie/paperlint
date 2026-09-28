@@ -9,7 +9,9 @@ import { describe, expect, it } from "vitest";
 import { runText, spanIn, type ProsePiece } from "../../domain/tex-document.ts";
 import {
   bodyProse,
+  documentBodyOf,
   documentClassOf,
+  includesOf,
   inPlace,
   latexReader,
   macroPlace,
@@ -427,5 +429,60 @@ describe("bodyProse — passages a sentence cannot cross, with the marks that sa
       kind: "text",
       segment: { text: "%", at: 2 },
     });
+  });
+});
+
+describe("includesOf — the files a source pulls in", () => {
+  it("each of \\input, \\include and \\subfile, with the path as written and the macro's span", () => {
+    const src = "a\\input{sections/1-intro}\n\\include{b.tex}\\subfile{c_d}";
+    expect(includesOf(parseLatex(src))).toEqual([
+      {
+        macro: "input",
+        target: "sections/1-intro",
+        span: { start: 1, end: 25 },
+      },
+      { macro: "include", target: "b.tex", span: { start: 26, end: 41 } },
+      { macro: "subfile", target: "c_d", span: { start: 41, end: 54 } },
+    ]);
+  });
+
+  it("\\input without braces (TeX's own form) names the file up to the next space", () => {
+    const targets = (src: string) =>
+      includesOf(parseLatex(src)).map((i) => i.target);
+    expect(targets("\\input sections/a \n")).toEqual(["sections/a"]);
+    // At the end of the source, the name runs to it.
+    expect(targets("\\input sections/a")).toEqual(["sections/a"]);
+  });
+
+  it("an \\input with nothing after it names no file", () => {
+    expect(includesOf(parseLatex("\\input"))).toEqual([]);
+  });
+
+  it("not in a comment, not in a macro definition's body, not an empty argument", () => {
+    const src = "% \\input{old}\n\\newcommand{\\x}{\\input{y}}\\input{}";
+    expect(includesOf(parseLatex(src))).toEqual([]);
+  });
+
+  it("the port answers the same over a source", () => {
+    expect(latexReader.includes("\\input{a}").map((i) => i.target)).toEqual([
+      "a",
+    ]);
+  });
+});
+
+describe("documentBodyOf — the body of a source that is a document of its own", () => {
+  it("from the first to the last node inside the document environment", () => {
+    const src =
+      "\\documentclass{x}\\begin{document}BODY and more\\end{document}";
+    const body = documentBodyOf(parseLatex(src));
+    expect(body && src.slice(body.start, body.end)).toBe("BODY and more");
+    expect(latexReader.documentBody(src)).toEqual(body);
+  });
+
+  it("none without a document environment, or with an empty one", () => {
+    expect(documentBodyOf(parseLatex("just text"))).toBe(null);
+    expect(documentBodyOf(parseLatex("\\begin{document}\\end{document}"))).toBe(
+      null,
+    );
   });
 });

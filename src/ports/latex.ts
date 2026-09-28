@@ -2,11 +2,13 @@
  * What paperlint needs from a LaTeX source, shaped by its rules and `paperlint new` — not by the
  * parser. The one implementation is `src/adapters/latex/` (unified-latex); `src/cli.ts` wires it.
  */
+import type { Include } from "../domain/paper-source.ts";
 import type {
   ClassLine,
   DocumentClass,
   Outline,
   Passage,
+  Span,
   TextRun,
 } from "../domain/tex-document.ts";
 
@@ -23,6 +25,10 @@ export interface LatexReader {
    * code or the title block. Citations, links and cross-references stay in place as marks.
    */
   readonly bodyProse: (src: string) => readonly Passage[];
+  /** Every `\input`, `\include` and `\subfile`, in source order: the path as written, where it stands. */
+  readonly includes: (src: string) => readonly Include[];
+  /** The span of the `document` environment's body, or null when the source has none. */
+  readonly documentBody: (src: string) => Span | null;
   /**
    * A preset's `template` → the class it names: a whole `\documentclass[…]{…}` line, or a bare
    * class name (no option). Null for anything else.

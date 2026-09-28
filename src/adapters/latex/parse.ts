@@ -55,6 +55,7 @@ export const KEY_SIGNATURES: Readonly<
       "url",
       "input",
       "include",
+      "subfile",
       "bibliography",
       "bibliographystyle",
       "addbibresource",

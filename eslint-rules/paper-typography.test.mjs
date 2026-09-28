@@ -16,7 +16,10 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { texLanguage } from "./latex-language.ts";
-import typography, { texVisibleRuns } from "./paper-typography.ts";
+import typography, {
+  crefDefinitionRanges,
+  texVisibleRuns,
+} from "./paper-typography.ts";
 import bib from "./bib-reachable-entry.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -124,6 +127,36 @@ describe("paper/section-word", () => {
       "\\begin{document}\nText.\n\\end{document}\n";
     expect(ids(await lint(src), "paper/section-word")).toEqual([]);
     expect(await fixed(src)).toBe(src);
+  });
+
+  it("a definition's range: its attached arguments, or the groups after a macro the parser did not sign", () => {
+    const signed = "\\crefname{section}{}{§§}";
+    expect(crefDefinitionRanges(signed)).toEqual([[0, signed.length]]);
+    const at = (s, e) => ({ start: { offset: s }, end: { offset: e } });
+    const tree = (macro, after) => ({ content: [macro, ...after] });
+    expect(
+      crefDefinitionRanges("", {
+        parse: () =>
+          tree({ type: "macro", content: "Crefname", position: at(0, 9) }, [
+            { type: "group", content: [], position: at(9, 14) },
+            { type: "string", content: "x", position: at(14, 15) },
+          ]),
+      }),
+    ).toEqual([[0, 14]]);
+    // A node with no position has no range; an argument with no content ends nothing.
+    expect(
+      crefDefinitionRanges("", {
+        parse: () =>
+          tree(
+            {
+              type: "macro",
+              content: "crefname",
+              args: [{ type: "argument" }],
+            },
+            [],
+          ),
+      }),
+    ).toEqual([]);
   });
 
   it("…while a § in prose next to such a definition is still reported", async () => {

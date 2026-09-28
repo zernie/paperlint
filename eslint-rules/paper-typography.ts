@@ -144,30 +144,40 @@ const CREF_DEFINITIONS: ReadonlySet<string> = new Set([
 
 const isGroup = (n: TexNode): boolean => n.type === "group";
 
-/** Past the closing mark of a macro's last attached argument that holds text; its name's end otherwise. */
-const argumentsEnd = (m: TexNode & { readonly type: "macro" }): number =>
-  (m.args ?? []).reduce((end, a) => {
-    const last = a.content?.at(-1)?.position?.end.offset;
-    return last === undefined ? end : last + (a.closeMark ?? "").length;
-  }, m.position?.end.offset ?? 0);
-
 /**
- * A macro's range with its arguments: the ones the parser attached (cleveref's are signed), or the
- * `{…}` groups standing right after it when it was given none.
+ * A macro's range with its arguments: the ones the parser attached (cleveref's are signed) or the
+ * `{…}` groups standing right after it when it was given none — from the first to the last offset
+ * any of them carries. An argument's closing brace is one character past its last node.
  */
 function withArguments(
   m: TexNode & { readonly type: "macro" },
   after: readonly TexNode[],
 ): readonly [number, number][] {
-  const start = m.position?.start.offset;
-  if (start === undefined) return [];
-  const group = takeWhile(after, isGroup).at(-1)?.position?.end.offset;
-  return [[start, Math.max(argumentsEnd(m), group ?? 0)]];
+  const offsets = [
+    m.position?.start.offset,
+    m.position?.end.offset,
+    ...(m.args ?? []).map((a) => {
+      const last = a.content?.at(-1)?.position?.end.offset;
+      return last === undefined ? undefined : last + 1;
+    }),
+    takeWhile(after, isGroup).at(-1)?.position?.end.offset,
+  ].filter((o): o is number => o !== undefined);
+  return offsets.length === 0
+    ? []
+    : [[Math.min(...offsets), Math.max(...offsets)]];
 }
 
-/** The ranges of the cleveref definitions in the preamble and in the document body. */
-function crefDefinitionRanges(raw: string): readonly [number, number][] {
-  const root: TexRoot = getParser().parse(raw);
+/**
+ * The ranges of the cleveref definitions in the preamble and in the document body. `parse` is
+ * unified-latex's; a test hands in a tree with the fields the walk tolerates being absent.
+ */
+export function crefDefinitionRanges(
+  raw: string,
+  {
+    parse = (s: string): TexRoot => getParser().parse(s),
+  }: { readonly parse?: (s: string) => TexRoot } = {},
+): readonly [number, number][] {
+  const root = parse(raw);
   const doc = root.content.find(
     (n): n is Extract<TexNode, { type: "environment" | "mathenv" }> =>
       n.type === "environment" && n.env === "document",
