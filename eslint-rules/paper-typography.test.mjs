@@ -118,6 +118,20 @@ describe("paper/section-word", () => {
     expect(ids(await lint(src), "paper/section-word")).toEqual([]);
   });
 
+  it("🔴 a cleveref name definition is not prose: silent, and --fix leaves it as written", async () => {
+    const src =
+      "\\documentclass{article}\n\\usepackage{cleveref}\n\\crefname{section}{§}{§§}\n\\Crefname{section}{§}{§§}\n" +
+      "\\begin{document}\nText.\n\\end{document}\n";
+    expect(ids(await lint(src), "paper/section-word")).toEqual([]);
+    expect(await fixed(src)).toBe(src);
+  });
+
+  it("…while a § in prose next to such a definition is still reported", async () => {
+    const src =
+      "\\documentclass{article}\n\\crefname{section}{§}{§§}\n\\begin{document}\nSee §5.\n\\end{document}\n";
+    expect(ids(await lint(src), "paper/section-word")).toHaveLength(1);
+  });
+
   it("markdown: `§5` → `Section 5`, code untouched", async () => {
     const src = "See §5 and `§3` here.\n";
     expect(ids(await lint(src, "paper.md"), "paper/section-word")).toHaveLength(

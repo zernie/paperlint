@@ -52,12 +52,22 @@ it("the corpus holds papers — an empty listing would make every case below vac
   expect(PAPERS.length).toBeGreaterThanOrEqual(3);
 });
 
+/**
+ * One run of the whole CLI over a full paper: 2.7 s here and 6.2 s on the CI runner (measured), so
+ * the 5 s default is too tight; 30 s leaves room for the files `\input` pulls in.
+ */
+const LINT_TIMEOUT_MS = 30_000;
+
 describe.each(PAPERS)("the accepted paper %s", (name) => {
-  it("says no more than recorded, and no recorded rule has gone quiet", async () => {
-    const { grew, vanished } = compareToBaseline(
-      await lintPaper(name),
-      recordedFindings(join(HERE, name)),
-    );
-    expect({ grew, vanished }).toEqual({ grew: [], vanished: [] });
-  });
+  it(
+    "says no more than recorded, and no recorded rule has gone quiet",
+    { timeout: LINT_TIMEOUT_MS },
+    async () => {
+      const { grew, vanished } = compareToBaseline(
+        await lintPaper(name),
+        recordedFindings(join(HERE, name)),
+      );
+      expect({ grew, vanished }).toEqual({ grew: [], vanished: [] });
+    },
+  );
 });

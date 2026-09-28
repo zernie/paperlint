@@ -7,7 +7,6 @@
   ],
   "findings": {
     "pdf/measured": 1,
-    "tex/template": 1,
-    "paper/section-word": 6
+    "tex/template": 1
   }
 }

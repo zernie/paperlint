@@ -202,7 +202,13 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       severity: 1,
       line: 3,
     },
-    silent: paper(tex("As in Section~2.")),
+    // A cleveref name definition sets a label, it is not prose.
+    silent: paper(
+      tex(
+        "As in Section~2.",
+        "\\documentclass{article}\n\\usepackage{cleveref}\n\\crefname{section}{§}{§§}",
+      ),
+    ),
   },
   "paper/leading-zero": {
     reports: {
