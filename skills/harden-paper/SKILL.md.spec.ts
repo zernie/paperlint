@@ -36,7 +36,7 @@ export default experimental_skill({
 number, and omission must survive on the page. Go axis by axis; for each, **find → fix → re-verify**,
 don't just list. Below, each axis says what to run / check and the specific traps that recur.
 
-> Axes 1–10 are **soundness** gates (get it accepted / avoid desk-reject). Axis 11 (**citability**) is
+> Axes 1–10 and 12 are **soundness** gates (get it accepted / avoid desk-reject). Axis 11 (**citability**) is
 > the *impact* gate — a correct-but-forgettable paper passes review and gets cited zero times. For a
 > body of work, citability is not optional polish; run it as a gate too.
 
@@ -164,7 +164,7 @@ middle sags" — wasting the polish on possibly-cut sections.
      Enumeration is mechanical; the per-line trace/reconcile stays judgment (prose isn't policy — compile the list).
 
 8. **Writing craft (audience-appropriate language + how it reads)** — run **\`grade-paper-writing\`** (the
-   9-dim rubric in \`../paper-pipeline/references/writing-craft.md\`).
+   10-dim rubric in \`../paper-pipeline/references/writing-craft.md\`).
    🔴 **Invoke it BY NAME with the Skill tool — do not describe the need and hope it fires.**
    Selection of this skill is **not reliable, and not reliably bad either**: the same eight prompts,
    the same description and the same 36 competitors measured **21%** in the morning and **50–54%**
@@ -176,8 +176,9 @@ middle sags" — wasting the polish on possibly-cut sections.
    An explicit call does not depend on selection at all. Without it this axis silently does not run,
    and a hardening pass that skipped its readability axis reports the same "done" as one that ran it.
    **Downstream of axis 0** (don't polish a
-   section slated to be cut). Two hard rules from the AISec session: (a) run the stall pass as a **persona
-   subagent** ("Sam", a non-expert reader), per-section for a dense paper — the rubric SCORE under-fires because a
+   section slated to be cut). Two hard rules from the AISec session: (a) run the stall pass as **both persona
+   subagents** — "Sam", a non-expert engineer, per-section for a dense paper, and the workshop reviewer
+   skimming abstract, introduction and conclusion for whose result each sentence states — the rubric SCORE under-fires because a
    frontier grader knows every term and never stalls (it scored a wall-heavy paper 44/60); the persona inventory,
    not the number, is the gate. (b) **A wall / spec-sheet / coined-jargon-heading HARD-FAILS this axis — it is not
    a "minor" note.** Strip jargon the *target venue's* reviewers won't know (register-calibration: keep field-native
@@ -227,6 +228,23 @@ middle sags" — wasting the polish on possibly-cut sections.
       accrue to the extended/arXiv version. Log the follow-on (fuller taxonomy, bigger corpus, the
       dropped refs) so the citable artifact exists. Put a preprint where people can find and cite it.
 
+12. **Headline results table** — every number in the abstract and in the conclusion appears in ONE
+    table in the body, one row per headline result, with these columns: the result as stated, its
+    **n** (what was counted, and how many), its **ground-truth source** (the authors' own measurement
+    with the section that reports it, a cited work, or a public dataset), any correction applied
+    (multiplicity, a recall floor, a rerun), and the one-line reading the paper draws from it.
+    - **Find:** list every number in the abstract and the conclusion (\`check-numbers.sh\` enumerates
+      them), then look each one up in the table. A number with no row, a row with no n, or a row with
+      no source is a finding — one per number, not one for the axis.
+    - **Why it is an axis and not a nicety:** a reviewer who cannot tell *"properties of LLMs,
+      statistical observations from repositories, and experimental findings produced by the authors"*
+      apart asks for exactly this — *"a compact table summarizing each headline result, sample size,
+      ground-truth source, correction, and final interpretation"*. Prose cannot carry five attributes
+      per number; the table can, and it gives every headline claim the owner that
+      \`tex/claim-provenance\` asks of each sentence.
+    - **Fix:** build the table, point the abstract's and the conclusion's numbers at it, and move a
+      number that has no n or no source out of the abstract until it has both.
+
 ## Mechanical submission gates (do these yourself — don't punt to the author)
 
 - **Double-blind hygiene.** Run the mechanical gate — it greps the deny-list across the PDF text +
@@ -264,6 +282,8 @@ ready"** — the gates are orthogonal axes and do not average out. **Ready ⇔ A
   left unresolved;
 - **Nearest-neighbor scoop** — axis 3 answered: the closest sibling found and either distinguished
   or escalated (\`analyze-sibling-paper\`);
+- **Headline results table** — axis 12: every number in the abstract and the conclusion has a row
+  with its n and its ground-truth source;
 - **The mechanical gates** — de-anon hygiene, page/word-fit, format template.
 
 > 🔴 **Citations and scoop were MISSING from this list until 2026-08-31, and the omission had

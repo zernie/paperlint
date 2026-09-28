@@ -36,7 +36,7 @@ of that — who is filing what, and when — stays in the author's own private n
 - \`references/artifact-checklist.md\` — the self-checking reproduction artifact.
 - \`references/anonymization.md\` — the double-blind deny-list + hygiene (and its reverse at camera-ready).
 - \`references/writing-craft.md\` — how well-written papers read (craft rules + exemplar lessons + the
-  gradeable 9-dim writing rubric); cited by \`draft-paper\`, \`grade-paper-writing\`, and \`harden-paper\`.
+  gradeable 10-dim writing rubric); cited by \`draft-paper\`, \`grade-paper-writing\`, and \`harden-paper\`.
 - \`references/review-ratchet.md\` — how to fix a caught overclaim (tighten → cut → Threats → hedge)
   and why every review round must be paid back with a \`tighten-paper\` pass; cited by
   \`paper-adversarial-review\`, \`pc-panel-review\`, \`harden-paper\`.
@@ -241,7 +241,7 @@ skill: 🔴 **argument architecture** — does the whole thing carry the reader 
 nobody's) · **content strength** — does the contribution clear *this venue's* bar (\`study-accepted-papers\`,
 mines the accepted corpus for Accept→Strong levers; in SETUP, before the prose is set) ·
 **scientific defects** — what a hostile reviewer attacks (\`paper-adversarial-review\` / \`pc-panel-review\`)
-· **writing craft** — does it read like a human wrote it (\`grade-paper-writing\`, the 9-dim rubric in
+· **writing craft** — does it read like a human wrote it (\`grade-paper-writing\`, the 10-dim rubric in
 \`references/writing-craft.md\`; called by \`harden-paper\`). A paper can ace one and fail another — grade all four.
 **The arc axis comes first**, because tightening length and polishing sentences inside a broken arc is
 how a day disappears and the same paper ships.

@@ -8,7 +8,7 @@ import { experimental_skill } from "vigiles/spec";
 export default experimental_skill({
   name: "cold-read-diff",
   description:
-    "Send just-changed paper prose to a reader with NO context and ask what each sentence claims — the only check that catches a sentence which is short, true, jargon-free and still meaningless to anyone who does not already know the idea. Run after every prose edit to a paper, before calling the edit done, and before reporting a section as fixed. Scoped to the diff, so it is cheap enough to run every time. Not a writing grade (grade-paper-writing), not a structural pass (tighten-paper), not a defect review.",
+    "Send just-changed paper prose to two readers with NO context — an engineer who asks what each sentence claims, and a skimming workshop reviewer who asks whose result it states and whether it reads like a paper — the only check that catches a sentence which is short, true, jargon-free and still meaningless to anyone who does not already know the idea. Run after every prose edit to a paper, before calling the edit done, and before reporting a section as fixed. Scoped to the diff, so it is cheap enough to run every time. Not a writing grade (grade-paper-writing), not a structural pass (tighten-paper), not a defect review.",
   context: "fork",
   tools: ["Bash", "Read", "Agent"],
   body: `
@@ -62,21 +62,41 @@ one, and its confusion is the finding.
 
 1. **Take the diff.** \`git diff -U0 -- <paper.md>\` since the last commit, or the \`new_string\` of the
    edits just applied. Prose only — skip comments, tables, bibliography.
-2. **Spawn ONE agent with no repository context.** Give it the changed paragraphs **as text in the
-   prompt**, not as a file path. A path is an invitation to read the neighbours, and reading the
-   neighbours is how the check fails silently. \`sonnet\` is the right model: competent, cheap,
-   and not the one that wrote the sentence.
-3. **Ask exactly two questions per sentence:**
+2. **Spawn TWO agents with no repository context, one per persona, in parallel.** Give each the
+   changed paragraphs **as text in the prompt**, not as a file path. A path is an invitation to read
+   the neighbours, and reading the neighbours is how the check fails silently. \`sonnet\` is the right
+   model: competent, cheap, and not the one that wrote the sentence.
+
+   | persona | who | what only it can report |
+   |---|---|---|
+   | **the engineer** | a strong practitioner outside academia, reading closely | a sentence that parses only for a reader who already holds the idea |
+   | **the workshop reviewer** | a PC member at the target venue with 40 minutes for the whole paper, skimming the abstract, the introduction and the conclusion, Confidence 3 | a sentence whose result has no owner, a relation between claims left to infer, a sentence that does not read like a paper at this venue |
+
+   The engineer cannot see the second column: a sentence with no stated owner reads to him as
+   confident, and he does not know the venue's register. Both run, every time; neither replaces the
+   other. The reviewer is told the venue's name and nothing else. When the diff touches none of the
+   abstract, the introduction and the conclusion, the reviewer still reads it — as the paragraph a
+   skimming reviewer lands on.
+3. **Ask the engineer exactly two questions per sentence:**
    - *What does this sentence claim? Restate it in your own words.* If restating requires guessing,
      the answer is \`CANNOT PARSE\` plus what stopped them — an undefined term, a pronoun with no
      referent, a number with no denominator, two clauses that do not connect.
    - *Would a reader who stops here understand it?* Yes / No / Only-if-they-know-X.
+
+   **Ask the reviewer two different ones:**
+   - *Whose result does this sentence state — the authors' measurement, a cited work, or a property
+     of the world?* If it cannot tell, the answer is \`WHOSE?\` with the sentence quoted.
+   - *Does this read like a paper at this venue?* If not, \`REGISTER\` with the sentence quoted and
+     what a paper there would write instead — an aphorism, a fragment, a colloquial turn, or two
+     claims side by side with the relation between them unstated.
 4. **Ask for the dangerous class explicitly:** *which sentences sound clever but say less than they
    appear to?* Those read fine and carry nothing, and they are the ones a knowing reader waves
    through.
 5. **Apply the fixes — as rewrites of the whole thought, never as excisions.** See the rule below.
-6. **Re-run on the fix.** An edit is not done until the same kind of reader parses the replacement.
-   One confirming round; do not loop past it.
+6. **Re-run on the fix, with both personas.** An edit is not done until the engineer parses the
+   replacement AND the reviewer finds its owner and its register. A fix for the engineer that goes
+   colloquial is a new \`REGISTER\` finding, and the reverse holds too. One confirming round; do not
+   loop past it.
 
 ## 🔴 Hand the reader WHOLE PARAGRAPHS, never \`+\` lines
 
@@ -120,7 +140,8 @@ findings:
 
 - 🔴 **No context in the prompt. Ever.** Not the title, not the abstract, not "this is a paper about
   agent rules files". Every sentence of background handed to the reader is a sentence of confusion
-  they will no longer report.
+  they will no longer report. The one exception is the venue's name, given to the reviewer persona:
+  judging register without knowing the venue is guessing.
 - 🔴 **A fix that removes the flagged construction and keeps the compression is not a fix.** Proven
   twice in one hour: *"not through any defect in how we write it, but because that is what English
   is"* → *"that is what English is for"* (tic gone, meaning inverted into nonsense); *"the agent

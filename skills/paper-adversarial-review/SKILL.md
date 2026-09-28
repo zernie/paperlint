@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Read, Write, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:68dcbcc1b7ab5348 compiled from skills/paper-adversarial-review/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:fe41e7c71eb4672d compiled from skills/paper-adversarial-review/SKILL.md.spec.ts -->
 
 # paper-adversarial-review — be the reviewer who wants to reject it
 
@@ -88,6 +88,6 @@ venue + paper type (short/full/position/benchmark). Ask for the structured outpu
 - If the paper is genuinely strong, say so — don't manufacture problems.
 
 ## Compose with
-- `grade-paper-writing` — the Readability/prose axis of the scorecard defers to its 9-dim rubric; run it for the sentence-level fixes behind a low readability score.
+- `grade-paper-writing` — the Readability/prose axis of the scorecard defers to its 10-dim rubric; run it for the sentence-level fixes behind a low readability score.
 - `pc-panel-review` — this atom's scorecard is one reviewer's card; the panel aggregates N of them (same 1–5 scale) into the decision.
 - The venue CFP (fit/format). Prose QA for papers routes to `grade-paper-writing` + `paper-pipeline/references/writing-craft.md` — NOT the site repo's `writing-quality` / `audience-test` skills (those are for blog posts only; the paper suite's persona pass supersedes them here).
