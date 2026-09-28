@@ -29,71 +29,20 @@ import {
   spanIn,
   type Passage,
   type ProsePiece,
-  type Segment,
-  type TextRun,
 } from "./domain/tex-document.ts";
+import {
+  CITATION,
+  REFERENCE,
+  runOf,
+  segmentOf,
+  sentences,
+} from "./domain/sentences.ts";
 import { readPaper, reportInPaper, type PaperDeps } from "./tex-paper.ts";
 import {
   ruleDocsUrl,
   type Located,
   type TexRuleModule,
 } from "./tex-venue-rules.ts";
-
-/** What stands in a sentence's text for a mark: characters no prose contains (private use). */
-const CITATION = "";
-const REFERENCE = "";
-const MATH = "";
-
-/** A piece as the text of its sentence sees it: text as itself, a mark or math as one character. */
-function segmentOf(p: ProsePiece): Segment {
-  switch (p.kind) {
-    case "text":
-      return p.segment;
-    case "owner":
-      return {
-        text: p.owner === "citation" ? CITATION : REFERENCE,
-        at: p.span.start,
-      };
-    case "math":
-      return { text: MATH, at: p.span.start };
-  }
-}
-
-/** A passage as one run of text, each mark a character where it stands. */
-const runOf = (p: Passage): TextRun => {
-  const [first, ...rest] = p.pieces;
-  return { segments: [segmentOf(first), ...rest.map(segmentOf)] };
-};
-
-/** An abbreviation whose full stop does not end a sentence, at the end of a segment. */
-const ABBREVIATION =
-  /(?:^|[^\p{L}])(?:e\.g|i\.e|cf|vs|et al|Figs?|Secs?|Tab|Eqs?|No|App|approx|resp)\.\s*$/u;
-
-const SEGMENTER = new Intl.Segmenter("en", { granularity: "sentence" });
-
-/** Marks, and the spaces among them, that open a segment: a `\cite` or a footnote set after the full stop. */
-const LEADING_MARKS = /^[\s\uE000\uE001]*[\uE000\uE001]/u;
-
-type Range = readonly [number, number];
-
-/**
- * The sentences of `text`, as `[from, to)` ranges. A break after an abbreviation is undone, and
- * marks standing right after a full stop belong to the sentence the full stop ends.
- */
-function sentences(text: string): readonly Range[] {
-  return [...SEGMENTER.segment(text)].reduce<readonly Range[]>((acc, s) => {
-    const prev = acc.at(-1);
-    const end = s.index + s.segment.length;
-    if (prev === undefined) return [[s.index, end]];
-    const before = acc.slice(0, -1);
-    if (ABBREVIATION.test(text.slice(...prev)))
-      return [...before, [prev[0], end]];
-    const split = s.index + (LEADING_MARKS.exec(s.segment)?.[0].length ?? 0);
-    return split < end
-      ? [...before, [prev[0], split], [split, end]]
-      : [...before, [prev[0], end]];
-  }, []);
-}
 
 /**
  * A number a reader sees: digits not glued to a letter, a hyphen or a point before them (a name, a

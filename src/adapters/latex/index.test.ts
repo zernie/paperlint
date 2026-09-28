@@ -422,6 +422,43 @@ describe("bodyProse — passages a sentence cannot cross, with the marks that sa
     ]);
   });
 
+  /** The text of each passage of `src`'s body, marks and math left out. */
+  const texts = (src: string): readonly string[] =>
+    bodyProse(parseLatex(src)).map((p) =>
+      p.pieces
+        .map((x) => (x.kind === "text" ? x.segment.text : ""))
+        .join("")
+        .trim(),
+    );
+
+  it("🔴 a run-in heading — a bold, italic or emphasised phrase ending in `.` or `:` that opens a paragraph or an item — is a heading, left out", () => {
+    expect(
+      texts(
+        "\\begin{document}\n\\section{Method}\\label{sec:m}\n\\vspace{2pt}\\textbf{Correctness gate.} Each task carries a check.\n\n\\noindent \\textit{\\textbf{VPNs:}} GPT recommended them.\n\\begin{itemize}\n\\item \\emph{Scale.} It grows.\n\\end{itemize}\n\\end{document}",
+      ),
+    ).toEqual([
+      "Each task carries a check.",
+      "GPT recommended them.",
+      "It grows.",
+    ]);
+  });
+
+  it("🔴 a list item's text is prose, each item its own passage; its label is not — and an \\item outside a list is an empty break", () => {
+    expect(
+      texts(
+        "\\begin{document}\n\\begin{itemize}\n\\item[A:] It grows.\n\\item It holds.\n\\end{itemize}\nAfter \\item the list.\n\\end{document}",
+      ),
+    ).toEqual(["It grows.", "It holds.", "After", "the list."]);
+  });
+
+  it("the same markup inside a sentence, or without the closing mark, is prose", () => {
+    expect(
+      texts(
+        "\\begin{document}\nWe \\textbf{do not.} stop.\n\n\\textbf{Bold} opens this one.\n\\end{document}",
+      ),
+    ).toEqual(["We do not. stop.", "Bold opens this one."]);
+  });
+
   it("a character macro's character stands at the macro's last source character", () => {
     const src = "C\\%";
     const [p] = bodyProse(parseLatex(src));

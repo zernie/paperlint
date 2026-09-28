@@ -7,7 +7,8 @@
  * appendix or the bibliography; the marks that say where a claim comes from — a citation, a link, a
  * cross-reference — where they stand; math, as its source.
  *
- * Left out: headings, captions and list-item labels (each also ends a passage), the title block,
+ * Left out: headings — a run-in one too, a bold or italic phrase ending in `.` or `:` that opens a
+ * paragraph or an item (`\textbf{Threats.} …`) — captions and list-item labels (each also ends a passage), the title block,
  * floats and tables, code, comments, macro definitions, the groups that follow a macro the parser
  * gave no signature (`\institution{…}`), and everything from the back matter on. A footnote is its
  * own passage; one that cites or links leaves a citation mark in the sentence it hangs from.
@@ -90,7 +91,7 @@ const SOURCE_MACROS: ReadonlySet<string> = new Set([
   "url",
 ]);
 
-/** Macros that end a passage and whose arguments are not prose: headings, captions, items, the title block. */
+/** Macros that end a passage and whose arguments are not prose: headings, captions, the title block. */
 const BREAK_MACROS: ReadonlySet<string> = new Set([
   "part",
   "chapter",
@@ -101,7 +102,6 @@ const BREAK_MACROS: ReadonlySet<string> = new Set([
   "subparagraph",
   "caption",
   "captionof",
-  "item",
   "bibitem",
   "maketitle",
   "title",
@@ -212,6 +212,15 @@ const cites = (events: readonly Event[]): boolean =>
       e.piece.owner === "citation",
   );
 
+/**
+ * What a list item typesets: the parser hands an `\item` inside a list its text as the last argument
+ * (the `[label]` before it is not prose); an `\item` outside a list gets no arguments, and holds none.
+ */
+const itemBody = (m: Macro): readonly Node[] => {
+  const [last] = (m.args ?? []).slice(-1);
+  return last === undefined ? [] : last.content;
+};
+
 /** A footnote: its own passage, and a citation mark in the host sentence when it cites or links. */
 function footnote(t: ParsedTex, m: Macro): readonly Event[] {
   const inside = walkList(t, lastArgument(m));
@@ -229,6 +238,7 @@ function macroEvents(t: ParsedTex, m: Macro): readonly Event[] {
   if (name === "href")
     return [...mark(m, "citation"), ...walkList(t, lastArgument(m))];
   if (name === "footnote") return footnote(t, m);
+  if (name === "item") return [BREAK, ...walkList(t, itemBody(m), true)];
   if (BREAK_MACROS.has(name)) return [BREAK];
   if (INLINE_MACROS.has(name)) return walkList(t, lastArgument(m));
   const ch = CHARACTER_MACROS.get(name);
@@ -242,7 +252,7 @@ function environmentEvents(
   if (e.type === "mathenv") return math(t, e);
   if (e.env === "thebibliography") return [END];
   if (SKIPPED_ENVS.has(e.env)) return [BREAK];
-  return [BREAK, ...walkList(t, e.content), BREAK];
+  return [BREAK, ...walkList(t, e.content, true), BREAK];
 }
 
 type NodeOf<K extends Node["type"]> = Extract<Node, { readonly type: K }>;
@@ -331,8 +341,72 @@ const proseNodes = (list: readonly Node[]): readonly Node[] =>
     { kept: [], state: "prose" },
   ).kept;
 
-function walkList(t: ParsedTex, list: readonly Node[]): readonly Event[] {
-  return proseNodes(list).flatMap((n) => nodeEvents(t, n));
+/** Formatting macros a run-in heading is set in: `\textbf{Correctness gate.} Each task…`. */
+const RUN_IN_MACROS: ReadonlySet<string> = new Set([
+  "textbf",
+  "textit",
+  "emph",
+  "textsc",
+  "underline",
+]);
+
+/** The text a list of events typesets, marks and math left out. */
+const typeset = (events: readonly Event[]): string =>
+  events
+    .map((e) =>
+      e.kind === "piece" && e.piece.kind === "text" ? e.piece.segment.text : "",
+    )
+    .join("");
+
+/** A formatting macro whose phrase ends in `.` or `:` — a run-in heading, when it opens a paragraph. */
+const isRunInHeading = (t: ParsedTex, n: Node): boolean =>
+  n.type === "macro" &&
+  RUN_IN_MACROS.has(n.content) &&
+  /[.:]$/u.test(typeset(walkList(t, lastArgument(n))).trim());
+
+/** Macros that typeset no text, and so leave a paragraph's opening where it was. */
+const SILENT_AT_OPENING: ReadonlySet<string> = new Set([
+  "noindent",
+  "label",
+  "vspace",
+  "smallskip",
+  "medskip",
+  "bigskip",
+  "phantomsection",
+]);
+
+/** Nodes that leave a paragraph's opening where it was: spaces, comments, macros that typeset nothing. */
+const keepsOpening = (n: Node): boolean =>
+  n.type === "whitespace" ||
+  n.type === "comment" ||
+  (n.type === "macro" && SILENT_AT_OPENING.has(n.content));
+
+/** Nodes after which a paragraph opens: a paragraph break, and a macro that ends a passage (a heading). */
+const opensAfter = (n: Node): boolean =>
+  n.type === "parbreak" || (n.type === "macro" && BREAK_MACROS.has(n.content));
+
+/**
+ * A list's events. `opens` says the list starts a paragraph (the body, an environment's content);
+ * a run-in heading that opens a paragraph ends the passage before it and is left out, like a heading.
+ */
+function walkList(
+  t: ParsedTex,
+  list: readonly Node[],
+  opens = false,
+): readonly Event[] {
+  return proseNodes(list).reduce<{
+    readonly events: readonly Event[];
+    readonly opening: boolean;
+  }>(
+    (acc, n) => ({
+      events: [
+        ...acc.events,
+        ...(acc.opening && isRunInHeading(t, n) ? [BREAK] : nodeEvents(t, n)),
+      ],
+      opening: opensAfter(n) || (acc.opening && keepsOpening(n)),
+    }),
+    { events: [], opening: opens },
+  ).events;
 }
 
 /** The events before the back matter starts. */
@@ -384,7 +458,7 @@ const startOf = (p: Passage): number => {
 export function bodyProse(t: ParsedTex): readonly Passage[] {
   const body = t.root.content.find(isDocument)?.content ?? t.root.content;
   return sortBy(
-    passagesOf(untilEnd(walkList(t, body))).filter(hasProse),
+    passagesOf(untilEnd(walkList(t, body, true))).filter(hasProse),
     startOf,
   );
 }
