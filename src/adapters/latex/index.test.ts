@@ -144,6 +144,12 @@ describe("replaceDocumentClass — the class `paperlint new` writes", () => {
     expect(replaced(src)).toBe(src);
   });
 
+  it("the right class missing a required option keeps the author's options and adds the missing ones", () => {
+    expect(
+      replaced("\\documentclass[review,anonymous,conference]{IEEEtran}\nx"),
+    ).toBe("\\documentclass[review,anonymous,conference,compsoc]{IEEEtran}\nx");
+  });
+
   it("no class, or an empty one, is returned as it is", () => {
     expect(replaced("just text")).toBe("just text");
     expect(replaced("\\documentclass{}\nx")).toBe("\\documentclass{}\nx");
