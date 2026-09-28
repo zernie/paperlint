@@ -12,7 +12,7 @@ import {
   type Macro,
   type Node,
 } from "./nodes.ts";
-import { isUnrendered } from "./hidden.ts";
+import { isDefinition, isUnrendered } from "./hidden.ts";
 import type { ParsedTex } from "./parse.ts";
 
 /** Macros and the environment that start the back matter: the appendix and the bibliography. */
@@ -41,14 +41,15 @@ const headingOf = (m: Macro): Heading => ({
 /**
  * The body's `\section`s (starred or not) in document order, the first back-matter node, and the
  * end of the document. A source with no `document` environment is read whole, as a fragment. What
- * the PDF never shows is pruned (`isUnrendered`): a heading in a comment environment or in a macro
- * definition's body is not a section of the paper.
+ * the PDF never shows is pruned (`isUnrendered`), and so is a macro definition's body
+ * (`isDefinition`): a heading in a comment environment or in a definition is not a section.
  */
 export function outlineOf(t: ParsedTex): Outline {
   const doc = t.root.content.find(isDocument);
-  const nodes = visited(doc?.content ?? t.root.content, isUnrendered).filter(
-    isNode,
-  );
+  const nodes = visited(
+    doc?.content ?? t.root.content,
+    (v, parent) => isUnrendered(v, parent) || isDefinition(v),
+  ).filter(isNode);
   const backMatter =
     nodes
       .filter(isBackMatter)

@@ -28,10 +28,16 @@ export const placeOf = (n: Positioned): Place =>
         span: { start: n.position.start.offset, end: n.position.end.offset },
       };
 
+/** The first mandatory (`{…}`) and optional (`[…]`) arguments' contents, and the last mandatory one's. */
+export const mandatory = (m: Macro): readonly Argument[] =>
+  (m.args ?? []).filter((a) => a.openMark === "{");
+export const optional = (m: Macro): Argument | undefined =>
+  (m.args ?? []).find((a) => a.openMark === "[");
+
 /**
- * The text of a node list with markup dropped: strings, spaces, what groups hold, and the arguments
- * of formatting macros (`\textbf{Usage}` → `Usage`). A key macro's arguments (`\label{…}`,
- * `\cite{…}`) are not text.
+ * The text of a node list with markup dropped: strings, spaces, what groups hold, and a formatting
+ * macro's last mandatory argument — the one it prints (`\textbf{Usage}`, `\textcolor{red}{Usage}`,
+ * `\href{url}{Usage}` → `Usage`). A key macro's arguments (`\label{…}`, `\cite{…}`) are not text.
  */
 export const textOf = (nodes: readonly Node[] | undefined): string =>
   (nodes ?? [])
@@ -40,16 +46,10 @@ export const textOf = (nodes: readonly Node[] | undefined): string =>
       if (n.type === "whitespace" || n.type === "parbreak") return " ";
       if (n.type === "group") return textOf(n.content);
       return n.type === "macro" && !(n.content in KEY_SIGNATURES)
-        ? (n.args ?? []).map((a) => textOf(a.content)).join("")
+        ? textOf(mandatory(n).at(-1)?.content)
         : "";
     })
     .join("");
-
-/** The first mandatory (`{…}`) and optional (`[…]`) arguments' contents, and the last mandatory one's. */
-export const mandatory = (m: Macro): readonly Argument[] =>
-  (m.args ?? []).filter((a) => a.openMark === "{");
-export const optional = (m: Macro): Argument | undefined =>
-  (m.args ?? []).find((a) => a.openMark === "[");
 
 /**
  * A macro's place with its arguments: from its name to past the closing mark of the last argument

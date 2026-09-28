@@ -158,6 +158,19 @@ describe("replaceDocumentClass — the class `paperlint new` writes", () => {
     );
   });
 
+  it("🔴 a line comment inside the options is not part of an option: the rebuilt line still compiles", () => {
+    const src = "\\documentclass[review,% reason\nanonymous]{acmart}\nx";
+    const t = parseLatex(src);
+    const line = documentClassOf(t);
+    expect(line.kind === "class" && line.options).toEqual([
+      "review",
+      "anonymous",
+    ]);
+    expect(
+      replaceDocumentClass(t, { cls: "acmart", options: ["sigconf"] }),
+    ).toBe("\\documentclass[review,anonymous,sigconf]{acmart}\nx");
+  });
+
   it("no class, or an empty one, is returned as it is", () => {
     expect(replaced("just text")).toBe("just text");
     expect(replaced("\\documentclass{}\nx")).toBe("\\documentclass{}\nx");
@@ -176,6 +189,24 @@ describe("outlineOf — a heading's title", () => {
       parseLatex("\\section*{LLM \\textbf{Usage} Statement\\label{s:llm}}"),
     );
     expect(o.sections.map((h) => h.title)).toEqual(["LLM Usage Statement"]);
+  });
+});
+
+describe("outlineOf — a formatting macro's text is its last mandatory argument", () => {
+  it.each<[string, string]>([
+    [
+      "\\section*{\\textcolor{red}{LLM Usage Statement}}",
+      "LLM Usage Statement",
+    ],
+    [
+      "\\section*{LLM \\emph{Usage} \\textbf{Statement}}",
+      "LLM Usage Statement",
+    ],
+    ["\\section*{See \\href{https://x.org}{the site}}", "See the site"],
+  ])("%s → %s", (src, title) => {
+    expect(outlineOf(parseLatex(src)).sections.map((h) => h.title)).toEqual([
+      title,
+    ]);
   });
 });
 
@@ -258,12 +289,13 @@ describe("renderedRuns", () => {
     expect(runs.some((t) => t.includes("the zzlink text"))).toBe(true);
   });
 
-  it("the body of a macro definition is not text a reader sees", () => {
+  it("a macro definition's body is read like prose: the rule does not expand macros", () => {
     const src =
-      "\\newcommand{\\oldvenue}{AISec} \\renewcommand\\b{AISec} \\def\\c{AISec} x";
-    const runs = latexReader.renderedRuns(src).map(runText);
-    expect(runs.some((t) => t.includes("AISec"))).toBe(false);
-    expect(runs.some((t) => t.includes("x"))).toBe(true);
+      "\\newcommand{\\oldvenue}{AISec} \\renewcommand\\b{BISec} \\def\\c{CISec} x";
+    const text = latexReader.renderedRuns(src).map(runText).join("|");
+    expect(
+      ["AISec", "BISec", "CISec", "x"].filter((w) => text.includes(w)),
+    ).toEqual(["AISec", "BISec", "CISec", "x"]);
   });
 
   it("the options of other key macros stay hidden: they are settings, not prose", () => {

@@ -44,7 +44,8 @@ function runsOf(list: readonly (Node | Argument)[]): readonly TextRun[] {
 /**
  * Runs of rendered text, in document order: stretches of sibling strings and spaces. Everything
  * else ends a run and is entered — a group's text, a macro's arguments — except what a reader never
- * sees (`isUnrendered`): comments, math, code, the bibliography, definitions, keys and URLs.
+ * sees (`isUnrendered`): comments, math, code, the bibliography, keys and URLs. A macro definition's
+ * body is read where it is written.
  */
 export const renderedRuns = (t: ParsedTex): readonly TextRun[] =>
   sortBy(

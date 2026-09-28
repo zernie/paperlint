@@ -78,9 +78,10 @@ export const KEY_ARGUMENT: ReadonlyMap<string, number> = new Map([
 const LINK_SIGNATURES = Object.fromEntries(signed(["href"], "m m"));
 
 /**
- * Macros that define other macros or environments: their bodies are text only once expanded, never
- * where they are written. `\def` and its kin get a signature so the name and the body attach to
- * them; a parameter text (`\def\x#1{…}`) is not modelled.
+ * Macros that define other macros or environments. A heading in a body is no section where it is
+ * written, so the outline skips these; the rendered text reads a body as written, since nothing here
+ * expands macros. `\def` and its kin get a signature so the name and the body attach to them; a
+ * parameter text (`\def\x#1{…}`) is not modelled.
  */
 export const DEFINITION_MACROS: ReadonlySet<string> = new Set([
   "newcommand",

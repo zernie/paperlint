@@ -21,24 +21,37 @@ const isDocumentClass = (n: Node): n is Macro =>
 
 const isComma = (n: Node): boolean => n.type === "string" && n.content === ",";
 
-/** Nodes split at the top-level commas: a comma inside braces belongs to its group node. */
-function splitAtCommas(nodes: readonly Node[]): readonly (readonly Node[])[] {
-  const cuts = nodes.flatMap((n, i) => (isComma(n) ? [i] : []));
+/** Nodes split wherever `at` holds, the separators dropped: a comma inside braces is its group's. */
+function splitWhere(
+  nodes: readonly Node[],
+  at: (n: Node) => boolean,
+): readonly (readonly Node[])[] {
+  const cuts = nodes.flatMap((n, i) => (at(n) ? [i] : []));
   return [-1, ...cuts].map((from, k) =>
     nodes.slice(from + 1, cuts[k] ?? nodes.length),
   );
 }
 
-/** The source text a run of nodes spans, whitespace collapsed; its markup-free text if unplaced. */
+/** The source text a run of nodes spans; its markup-free text if unplaced. */
 function sourceOf(src: string, nodes: readonly Node[]): string {
   const start = nodes[0]?.position?.start.offset;
   const end = nodes.at(-1)?.position?.end.offset;
-  return collapse(
-    start === undefined || end === undefined
-      ? textOf(nodes)
-      : src.slice(start, end),
-  );
+  return start === undefined || end === undefined
+    ? textOf(nodes)
+    : src.slice(start, end);
 }
+
+/**
+ * One option as written, whitespace collapsed. A line comment inside it is not part of it: the
+ * option is the source around the comment, never one slice across it — a `%` kept in a rebuilt
+ * line would comment out the rest of that line.
+ */
+const optionText = (src: string, part: readonly Node[]): string =>
+  collapse(
+    splitWhere(part, (n) => n.type === "comment")
+      .map((run) => sourceOf(src, run))
+      .join(" "),
+  );
 
 /**
  * The first `\documentclass` at the top of the tree: missing; empty (`\documentclass{}`); or the
@@ -51,8 +64,8 @@ export function documentClassOf(t: ParsedTex): ClassLine {
   const place = macroPlace(node);
   const cls = collapse(textOf(mandatory(node)[0]?.content));
   if (cls === "") return { kind: "empty", place };
-  const options = splitAtCommas(optional(node)?.content ?? [])
-    .map((part) => sourceOf(t.src, part))
+  const options = splitWhere(optional(node)?.content ?? [], isComma)
+    .map((part) => optionText(t.src, part))
     .filter(Boolean);
   return { kind: "class", cls, options, place };
 }

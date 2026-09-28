@@ -1,8 +1,12 @@
 /**
  * What a reader of the PDF never sees, as a walk over the tree prunes it: comments, math and code,
- * the bibliography's body, a macro definition's body, and the arguments that are keys, labels,
- * files or URLs. The rendered text and the outline both prune with it, so a name in a URL is no
- * more a leftover than a heading in a definition is a section.
+ * the bibliography's body, and the arguments that are keys, labels, files or URLs. The rendered
+ * text and the outline both prune with it.
+ *
+ * A macro definition's body is NOT pruned here. It is text once the macro is used, and nothing here
+ * expands macros, so the rendered text reads the body where it is written — a definition naming
+ * another venue is a leftover whether it is used or not. The outline prunes it on top
+ * (`isDefinition`): a heading in a definition body is not a section where it is written.
  */
 import {
   isArgument,
@@ -35,10 +39,9 @@ const HIDDEN_TYPES: ReadonlySet<Node["type"]> = new Set<Node["type"]>([
 
 const KEY_MACROS: ReadonlySet<string> = new Set(Object.keys(KEY_SIGNATURES));
 
-/** A macro whose arguments a reader never sees: a definition, or a key macro that prints none. */
+/** A key macro that prints none of its arguments (`\label`, `\url`, …). */
 const isHiddenMacro = (name: string): boolean =>
-  DEFINITION_MACROS.has(name) ||
-  (KEY_MACROS.has(name) && !KEY_ARGUMENT.has(name));
+  KEY_MACROS.has(name) && !KEY_ARGUMENT.has(name);
 
 const isHiddenNode = (n: Node): boolean =>
   HIDDEN_TYPES.has(n.type) ||
@@ -61,3 +64,7 @@ export const isUnrendered = (
   parent: Visited | undefined,
 ): boolean =>
   isArgument(v) ? isKeyArgument(v, parent) : isNode(v) && isHiddenNode(v);
+
+/** A macro that defines another macro or an environment (`\newcommand`, `\def`, …). */
+export const isDefinition = (v: Visited): boolean =>
+  isNode(v) && v.type === "macro" && DEFINITION_MACROS.has(v.content);

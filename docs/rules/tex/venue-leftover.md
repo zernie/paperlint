@@ -13,7 +13,12 @@ venue with no preset is not recognized.
 
 It looks at what a reader sees — prose, the author block, captions, footnotes, a citation's note in
 square brackets, and front-matter macros such as `\acmConference` — and ignores comments, citation
-keys, labels, URLs, math, code and the bibliography. Names are matched as whole words, case-sensitive.
+keys, labels, URLs (a `\url`, and the address of an `\href` — its link text is read), math, code and
+the bibliography. Names are matched as whole words, case-sensitive.
+
+A macro definition that names another venue — `\newcommand{\oldvenue}{VenueA}` — is reported at the
+definition, whether or not the macro is used: the rule does not expand macros, so a use such as
+`Submitted to \oldvenue` has no text of its own, and the definition is where the old name lives.
 
 ## Why
 

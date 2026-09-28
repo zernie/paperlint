@@ -469,6 +469,16 @@ describe("tex/venue-leftover — another venue named in the text", () => {
     expect(leftovers(lint(tex, AIDC)).map((f) => f.line)).toEqual([4]);
   });
 
+  it("the bibliography, math, code and labels are not the text a reader sees as the venue's", () => {
+    const tex = aidcPaper(
+      `$AISec$ \\label{AISec} \\ref{AISec} \\url{https://AISec.cc} \\begin{verbatim}AISec\\end{verbatim}\n` +
+        `${BODY}${STATEMENT}\\begin{thebibliography}{1}\\bibitem{a} In Proc. AISec.\\end{thebibliography}\n`,
+    );
+    expect(leftovers(lint(tex, AIDC))).toEqual([]);
+  });
+});
+
+describe("tex/venue-leftover — a URL is not text, a definition body is", () => {
   it("\\href: a name in the URL is not reported, a name in the link text is", () => {
     const inUrl = aidcPaper(
       `See \\href{https://example.org/AISec/2026}{the workshop}.\n${BODY}${STATEMENT}`,
@@ -480,13 +490,21 @@ describe("tex/venue-leftover — another venue named in the text", () => {
     expect(leftovers(lint(inText, AIDC)).map((f) => f.line)).toEqual([4]);
   });
 
-  it("the bibliography, math, code and labels are not the text a reader sees as the venue's", () => {
-    const tex = aidcPaper(
-      `$AISec$ \\label{AISec} \\ref{AISec} \\url{https://AISec.cc} \\begin{verbatim}AISec\\end{verbatim}\n` +
-        `${BODY}${STATEMENT}\\begin{thebibliography}{1}\\bibitem{a} In Proc. AISec.\\end{thebibliography}\n`,
-    );
-    expect(leftovers(lint(tex, AIDC))).toEqual([]);
-  });
+  it.each<[string, string]>([
+    ["unused", ""],
+    ["used", "Submitted to \\oldvenue.\n"],
+  ])(
+    "a macro definition naming another venue is reported at the definition, %s",
+    (_, use) => {
+      const tex = aidcPaper(
+        `\\newcommand{\\oldvenue}{AISec}\n${use}${BODY}${STATEMENT}`,
+      );
+      const fs = leftovers(lint(tex, AIDC));
+      expect(fs.map((f) => [f.line, f.message.slice(0, 16)])).toEqual([
+        [4, "«AISec» names ai"],
+      ]);
+    },
+  );
 });
 
 describe("tex/venue-leftover — where names are found, and whose they are", () => {
