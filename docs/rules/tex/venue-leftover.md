@@ -11,9 +11,9 @@ now going to VenueB.
 It only knows the venues paperlint ships a preset for, by each preset's `name` and `aliases`. A
 venue with no preset is not recognized.
 
-It looks at what a reader sees — prose, the author block, captions, footnotes, and front-matter
-macros such as `\acmConference` — and ignores comments, citation keys, labels, URLs, math, code and
-the bibliography. Names are matched as whole words, case-sensitive.
+It looks at what a reader sees — prose, the author block, captions, footnotes, a citation's note in
+square brackets, and front-matter macros such as `\acmConference` — and ignores comments, citation
+keys, labels, URLs, math, code and the bibliography. Names are matched as whole words, case-sensitive.
 
 ## Why
 

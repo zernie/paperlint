@@ -19,9 +19,33 @@ import { parseLatex, type ParsedTex } from "./parse.ts";
 const isDocumentClass = (n: Node): n is Macro =>
   n.type === "macro" && n.content === "documentclass";
 
+const isComma = (n: Node): boolean => n.type === "string" && n.content === ",";
+
+/** Nodes split at the top-level commas: a comma inside braces belongs to its group node. */
+const splitAtCommas = (nodes: readonly Node[]): readonly (readonly Node[])[] =>
+  nodes.reduce<readonly (readonly Node[])[]>(
+    (parts, n) =>
+      isComma(n)
+        ? [...parts, []]
+        : [...parts.slice(0, -1), [...(parts.at(-1) ?? []), n]],
+    [[]],
+  );
+
+/** The source text a run of nodes spans, whitespace collapsed; its markup-free text if unplaced. */
+function sourceOf(src: string, nodes: readonly Node[]): string {
+  const start = nodes[0]?.position?.start.offset;
+  const end = nodes.at(-1)?.position?.end.offset;
+  return collapse(
+    start === undefined || end === undefined
+      ? textOf(nodes)
+      : src.slice(start, end),
+  );
+}
+
 /**
  * The first `\documentclass` at the top of the tree: missing; empty (`\documentclass{}`); or the
- * class with each of its options, whitespace collapsed. Its place spans the macro and its arguments.
+ * class with each of its options as written (`foo={a,b}` stays one option, braces kept), whitespace
+ * collapsed. Its place spans the macro and its arguments.
  */
 export function documentClassOf(t: ParsedTex): ClassLine {
   const node = t.root.content.find(isDocumentClass);
@@ -29,9 +53,8 @@ export function documentClassOf(t: ParsedTex): ClassLine {
   const place = macroPlace(node);
   const cls = collapse(textOf(mandatory(node)[0]?.content));
   if (cls === "") return { kind: "empty", place };
-  const options = textOf(optional(node)?.content)
-    .split(",")
-    .map(collapse)
+  const options = splitAtCommas(optional(node)?.content ?? [])
+    .map((part) => sourceOf(t.src, part))
     .filter(Boolean);
   return { kind: "class", cls, options, place };
 }

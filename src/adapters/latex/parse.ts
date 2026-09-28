@@ -18,30 +18,30 @@ const signed = (
 ): readonly (readonly [string, { readonly signature: string }])[] =>
   names.map((m) => [m, { signature }] as const);
 
+/** Citation commands: their `{…}` argument is a key, their `[…]` ones are notes the reader sees. */
+export const CITATION_MACROS: ReadonlySet<string> = new Set([
+  "cite",
+  "citep",
+  "citet",
+  "citealp",
+  "citealt",
+  "citeauthor",
+  "citeyear",
+  "citeyearpar",
+  "Citep",
+  "Citet",
+  "nocite",
+  "parencite",
+  "textcite",
+  "autocite",
+  "footcite",
+]);
+
 /** Macros whose arguments are keys, labels, files or URLs — never text a reader sees. */
 export const KEY_SIGNATURES: Readonly<
   Record<string, { readonly signature: string }>
 > = Object.fromEntries([
-  ...signed(
-    [
-      "cite",
-      "citep",
-      "citet",
-      "citealp",
-      "citealt",
-      "citeauthor",
-      "citeyear",
-      "citeyearpar",
-      "Citep",
-      "Citet",
-      "nocite",
-      "parencite",
-      "textcite",
-      "autocite",
-      "footcite",
-    ],
-    "o o m",
-  ),
+  ...signed([...CITATION_MACROS], "o o m"),
   ...signed(
     [
       "label",

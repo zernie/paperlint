@@ -445,9 +445,16 @@ describe("tex/venue-leftover — another venue named in the text", () => {
 
   it("a \\cite key and a comment naming it produce no finding", () => {
     const tex = aidcPaper(
-      `As shown~\\cite{aisec2025,AISec} and \\citep[AISec]{AISec}. % AISec 2026\n${BODY}${STATEMENT}`,
+      `As shown~\\cite{aisec2025,AISec} and \\citep{AISec}. % AISec 2026\n${BODY}${STATEMENT}`,
     );
     expect(leftovers(lint(tex, AIDC))).toEqual([]);
+  });
+
+  it("a citation's note in square brackets is printed, so it is reported", () => {
+    const tex = aidcPaper(
+      `As shown~\\citep[presented at AISec]{aisec2025}.\n${BODY}${STATEMENT}`,
+    );
+    expect(leftovers(lint(tex, AIDC)).map((f) => f.line)).toEqual([4]);
   });
 
   it("the bibliography, math, code and labels are not the text a reader sees as the venue's", () => {

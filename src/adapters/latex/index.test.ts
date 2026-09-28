@@ -150,6 +150,12 @@ describe("replaceDocumentClass — the class `paperlint new` writes", () => {
     ).toBe("\\documentclass[review,anonymous,conference,compsoc]{IEEEtran}\nx");
   });
 
+  it("an option with a braced value keeps its braces and its commas", () => {
+    expect(replaced("\\documentclass[review, foo={a,b}]{IEEEtran}\nx")).toBe(
+      "\\documentclass[review,foo={a,b},conference,compsoc]{IEEEtran}\nx",
+    );
+  });
+
   it("no class, or an empty one, is returned as it is", () => {
     expect(replaced("just text")).toBe("just text");
     expect(replaced("\\documentclass{}\nx")).toBe("\\documentclass{}\nx");
@@ -200,6 +206,24 @@ describe("renderedRuns", () => {
     const src =
       "x % AISec\n$AISec$ \\cite{AISec} \\label{AISec} \\url{https://AISec.cc}\n" +
       "\\begin{verbatim}AISec\\end{verbatim}\\begin{thebibliography}{1}\\bibitem{a} AISec\\end{thebibliography}";
+    expect(
+      latexReader
+        .renderedRuns(src)
+        .map(runText)
+        .some((t) => t.includes("AISec")),
+    ).toBe(false);
+  });
+
+  it("a citation's key is hidden, its notes in square brackets are text", () => {
+    const runs = latexReader
+      .renderedRuns("x \\citep[Presented at AISec][p.~3]{zzkey} y")
+      .map(runText);
+    expect(runs.some((t) => t.includes("Presented at AISec"))).toBe(true);
+    expect(runs.some((t) => t.includes("zzkey"))).toBe(false);
+  });
+
+  it("the options of other key macros stay hidden: they are settings, not prose", () => {
+    const src = "\\includegraphics[AISec]{f} \\usepackage[AISec]{p}";
     expect(
       latexReader
         .renderedRuns(src)

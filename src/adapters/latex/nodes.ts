@@ -63,23 +63,23 @@ export function macroPlace(m: Macro): Place {
 export type Visited = Readonly<Ast.Ast> | readonly (Node | Argument)[];
 
 /**
- * Everything visit reaches under `tree`, in document order, node lists included; `skip` prunes a
- * node's subtree (its arguments and content). visit reports through a callback and returns
- * nothing, so the one collection point of this adapter is here.
+ * Everything visit reaches under `tree`, in document order, node lists included; `skip` prunes what
+ * it is given (a node or an argument, with the node that holds it) and everything under it. visit
+ * reports through a callback and returns nothing, so the one collection point of this adapter is here.
  */
 export function visited(
   // eslint-disable-next-line functional/prefer-immutable-types -- visit's own parameter type is mutable
   tree: Ast.Ast,
-  skip: (n: Node) => boolean,
+  skip: (v: Visited, parent: Visited | undefined) => boolean,
 ): readonly Visited[] {
   // eslint-disable-next-line functional/prefer-immutable-types -- the one accumulator, see above
   const seen: Visited[] = [];
   visit(
     tree,
-    (node) => {
+    (node, info) => {
       // eslint-disable-next-line functional/immutable-data -- visit is callback-only; see above
       seen.push(node);
-      return isNode(node) && skip(node) ? SKIP : CONTINUE;
+      return skip(node, info.parents[0]) ? SKIP : CONTINUE;
     },
     { includeArrays: true },
   );
@@ -89,6 +89,10 @@ export function visited(
 /** A node list visit reached. `Array.isArray` alone does not narrow a readonly array. */
 export const isList = (v: Visited): v is readonly (Node | Argument)[] =>
   Array.isArray(v);
+
+/** A macro's argument, as visit reports it. */
+export const isArgument = (v: Visited): v is Argument =>
+  !isList(v) && v.type === "argument";
 
 /** A node, as opposed to a node list or an argument (which visit also reports). */
 export const isNode = (v: Visited): v is Node =>
