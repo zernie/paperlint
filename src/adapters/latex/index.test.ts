@@ -132,9 +132,9 @@ describe("parseTemplate — a preset's template", () => {
   });
 });
 
-describe("replaceDocumentClass — the class `paperlint new` writes", () => {
-  const replaced = (src: string) => replaceDocumentClass(parseLatex(src), IEEE);
+const replaced = (src: string) => replaceDocumentClass(parseLatex(src), IEEE);
 
+describe("replaceDocumentClass — the class `paperlint new` writes", () => {
   it("replaces the whole line, arguments included, and keeps everything around it", () => {
     expect(replaced("% c\n\\documentclass[11pt]{article}\n\\title{x}\n")).toBe(
       "% c\n\\documentclass[conference,compsoc]{IEEEtran}\n\\title{x}\n",
@@ -152,23 +152,10 @@ describe("replaceDocumentClass — the class `paperlint new` writes", () => {
     ).toBe("\\documentclass[review,anonymous,conference,compsoc]{IEEEtran}\nx");
   });
 
-  it("an option with a braced value keeps its braces and its commas", () => {
+  it("an option with a braced value keeps its braces, its commas and its spacing", () => {
     expect(replaced("\\documentclass[review, foo={a,b}]{IEEEtran}\nx")).toBe(
-      "\\documentclass[review,foo={a,b},conference,compsoc]{IEEEtran}\nx",
+      "\\documentclass[review, foo={a,b},conference,compsoc]{IEEEtran}\nx",
     );
-  });
-
-  it("🔴 a line comment inside the options is not part of an option: the rebuilt line still compiles", () => {
-    const src = "\\documentclass[review,% reason\nanonymous]{acmart}\nx";
-    const t = parseLatex(src);
-    const line = documentClassOf(t);
-    expect(line.kind === "class" && line.options).toEqual([
-      "review",
-      "anonymous",
-    ]);
-    expect(
-      replaceDocumentClass(t, { cls: "acmart", options: ["sigconf"] }),
-    ).toBe("\\documentclass[review,anonymous,sigconf]{acmart}\nx");
   });
 
   it("no class, or an empty one, is returned as it is", () => {
@@ -180,6 +167,52 @@ describe("replaceDocumentClass — the class `paperlint new` writes", () => {
     expect(
       latexReader.withDocumentClass("\\documentclass{article}", IEEE),
     ).toBe("\\documentclass[conference,compsoc]{IEEEtran}");
+  });
+});
+
+describe("replaceDocumentClass — missing options are added in place, the author's bytes kept", () => {
+  it("🔴 the missing options go before the `]`: the author's bytes, a comment included, stay as written", () => {
+    expect(replaced("\\documentclass[foo=bar% note\nbaz]{IEEEtran}\nx")).toBe(
+      "\\documentclass[foo=bar% note\nbaz,conference,compsoc]{IEEEtran}\nx",
+    );
+    const acm = "\\documentclass[review,% reason\nanonymous]{acmart}\nx";
+    expect(
+      replaceDocumentClass(parseLatex(acm), {
+        cls: "acmart",
+        options: ["sigconf"],
+      }),
+    ).toBe("\\documentclass[review,% reason\nanonymous,sigconf]{acmart}\nx");
+  });
+
+  it("a trailing comment in the options: the missing ones go on the next line, before the `]`", () => {
+    expect(replaced("\\documentclass[review% c\n]{IEEEtran}")).toBe(
+      "\\documentclass[review% c\n,conference,compsoc]{IEEEtran}",
+    );
+  });
+
+  it("no options, an empty `[]`, a blank `[ ]`: the options are written without a stray comma", () => {
+    expect(replaced("\\documentclass{IEEEtran}\nx")).toBe(
+      "\\documentclass[conference,compsoc]{IEEEtran}\nx",
+    );
+    expect(replaced("\\documentclass[]{IEEEtran}")).toBe(
+      "\\documentclass[conference,compsoc]{IEEEtran}",
+    );
+    expect(replaced("\\documentclass[ ]{IEEEtran}")).toBe(
+      "\\documentclass[ conference,compsoc]{IEEEtran}",
+    );
+  });
+
+  it("reading the options: a line comment joins its two sides with no space, as TeX does", () => {
+    const read = (src: string) => {
+      const line = documentClassOf(parseLatex(src));
+      return line.kind === "class" && line.options;
+    };
+    expect(read("\\documentclass[review,% reason\nanonymous]{acmart}")).toEqual(
+      ["review", "anonymous"],
+    );
+    expect(read("\\documentclass[foo=bar% note\nbaz]{IEEEtran}")).toEqual([
+      "foo=barbaz",
+    ]);
   });
 });
 
@@ -203,6 +236,10 @@ describe("outlineOf — a formatting macro's text is its last mandatory argument
       "LLM Usage Statement",
     ],
     ["\\section*{See \\href{https://x.org}{the site}}", "See the site"],
+    [
+      "\\section*{\\texorpdfstring{LLM Usage Statement}{Short}}",
+      "LLM Usage Statement",
+    ],
   ])("%s → %s", (src, title) => {
     expect(outlineOf(parseLatex(src)).sections.map((h) => h.title)).toEqual([
       title,

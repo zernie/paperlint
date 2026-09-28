@@ -42,16 +42,29 @@ function sourceOf(src: string, nodes: readonly Node[]): string {
 }
 
 /**
- * One option as written, whitespace collapsed. A line comment inside it is not part of it: the
- * option is the source around the comment, never one slice across it — a `%` kept in a rebuilt
- * line would comment out the rest of that line.
+ * One option as TeX reads it, whitespace collapsed. A line comment is not part of it, and it joins
+ * its two sides with no space: `foo=bar% note⏎baz` is `foo=barbaz`.
  */
 const optionText = (src: string, part: readonly Node[]): string =>
   collapse(
     splitWhere(part, (n) => n.type === "comment")
       .map((run) => sourceOf(src, run))
-      .join(" "),
+      .join(""),
   );
+
+const classNode = (t: ParsedTex): Macro | undefined =>
+  t.root.content.find(isDocumentClass);
+
+/** A `\documentclass` node as a class line: empty, or the class with its options as read. */
+function classLine(src: string, node: Macro): ClassLine {
+  const place = macroPlace(node);
+  const cls = collapse(textOf(mandatory(node)[0]?.content));
+  if (cls === "") return { kind: "empty", place };
+  const options = splitWhere(optional(node)?.content ?? [], isComma)
+    .map((part) => optionText(src, part))
+    .filter(Boolean);
+  return { kind: "class", cls, options, place };
+}
 
 /**
  * The first `\documentclass` at the top of the tree: missing; empty (`\documentclass{}`); or the
@@ -59,15 +72,8 @@ const optionText = (src: string, part: readonly Node[]): string =>
  * collapsed. Its place spans the macro and its arguments.
  */
 export function documentClassOf(t: ParsedTex): ClassLine {
-  const node = t.root.content.find(isDocumentClass);
-  if (node === undefined) return { kind: "missing" };
-  const place = macroPlace(node);
-  const cls = collapse(textOf(mandatory(node)[0]?.content));
-  if (cls === "") return { kind: "empty", place };
-  const options = splitWhere(optional(node)?.content ?? [], isComma)
-    .map((part) => optionText(t.src, part))
-    .filter(Boolean);
-  return { kind: "class", cls, options, place };
+  const node = classNode(t);
+  return node === undefined ? { kind: "missing" } : classLine(t.src, node);
 }
 
 /**
@@ -85,18 +91,57 @@ export function parseTemplate(text: string): DocumentClass | null {
   return only.type === "string" ? { cls: only.content, options: [] } : null;
 }
 
+/** `src` with `text` in place of `[from, to)`. */
+const splice = (src: string, from: number, to: number, text: string): string =>
+  src.slice(0, from) + text + src.slice(to);
+
 /**
- * The source with its `\documentclass` line rewritten to satisfy `want` (see `venueClass`). A source
- * whose class already does, or that has no class line the parser could place, is returned as it is.
+ * `options` written into the class line's own source: before the `]` of its `[…]` — right after the
+ * last node inside, or right after the `[` when there is none — or as a new `[…]` after the name.
+ * The bytes between `[` and `]` stay as the author wrote them, comments and braces included.
+ */
+function addOptions(
+  src: string,
+  node: Macro,
+  line: { readonly start: number; readonly empty: boolean },
+  options: readonly string[],
+): string {
+  const list = options.join(",");
+  const nameEnd = line.start + 1 + node.content.length; // `\` and the macro's name
+  const opt = optional(node);
+  if (opt === undefined) return splice(src, nameEnd, nameEnd, `[${list}]`);
+  const close =
+    opt.content.at(-1)?.position?.end.offset ?? src.indexOf("[", nameEnd) + 1;
+  return splice(src, close, close, line.empty ? list : `,${list}`);
+}
+
+/**
+ * The source with its `\documentclass` line changed to satisfy `want` (see `venueClass`): another
+ * class is replaced by the template's line; the same class gains the options it lacks in place. A
+ * source whose class already satisfies `want`, or that has no class line the parser could place, is
+ * returned as it is.
  */
 export function replaceDocumentClass(
   t: ParsedTex,
   want: DocumentClass,
 ): string {
-  const line = documentClassOf(t);
+  const node = classNode(t);
+  if (node === undefined) return t.src;
+  const line = classLine(t.src, node);
   if (line.kind !== "class" || line.place.kind === "unplaced") return t.src;
-  const next = venueClass(line, want);
-  if (next === null) return t.src;
   const { start, end } = line.place.span;
-  return t.src.slice(0, start) + documentClassLine(next) + t.src.slice(end);
+  const change = venueClass(line, want);
+  switch (change.kind) {
+    case "keep":
+      return t.src;
+    case "replace":
+      return splice(t.src, start, end, documentClassLine(change.by));
+    case "add":
+      return addOptions(
+        t.src,
+        node,
+        { start, empty: line.options.length === 0 },
+        change.options,
+      );
+  }
 }

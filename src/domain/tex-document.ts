@@ -36,19 +36,26 @@ export const missingOptions = (
   want: DocumentClass,
 ): readonly string[] => want.options.filter((o) => !got.options.includes(o));
 
+/** What a paper's class line needs to satisfy a venue: nothing, options added, or the venue's line. */
+export type ClassChange =
+  | { readonly kind: "keep" }
+  | { readonly kind: "add"; readonly options: readonly string[] }
+  | { readonly kind: "replace"; readonly by: DocumentClass };
+
 /**
- * The class a paper should have to satisfy a venue's `want`, or null when it already does. Another
- * class becomes `want`; the same class keeps the paper's options and gains the ones it lacks.
+ * What a paper's class must change to satisfy a venue's `want`: another class is replaced by `want`;
+ * the same class keeps its options and gains the ones it lacks, in `want`'s order. This decides WHAT
+ * changes; writing it into a source is the LaTeX adapter's.
  */
 export function venueClass(
   have: DocumentClass,
   want: DocumentClass,
-): DocumentClass | null {
-  if (have.cls !== want.cls) return want;
+): ClassChange {
+  if (have.cls !== want.cls) return { kind: "replace", by: want };
   const missing = missingOptions(have, want);
   return missing.length === 0
-    ? null
-    : { cls: have.cls, options: [...have.options, ...missing] };
+    ? { kind: "keep" }
+    : { kind: "add", options: missing };
 }
 
 /** A class as a `\documentclass` line, for a message and for the line `paperlint new` writes. */

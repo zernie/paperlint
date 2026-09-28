@@ -60,20 +60,18 @@ describe("a document class", () => {
     ).toEqual(["a", "c"]);
   });
 
-  it("venueClass: another class becomes the venue's; the same class keeps its options and gains the missing", () => {
+  it("venueClass: another class is replaced; the same class gains the missing options, or is kept", () => {
     const want = { cls: "IEEEtran", options: ["conference", "compsoc"] };
-    expect(venueClass({ cls: "article", options: ["11pt"] }, want)).toEqual(
-      want,
-    );
-    expect(
-      venueClass({ cls: "IEEEtran", options: ["review", "conference"] }, want),
-    ).toEqual({
-      cls: "IEEEtran",
-      options: ["review", "conference", "compsoc"],
+    expect(venueClass({ cls: "article", options: ["11pt"] }, want)).toEqual({
+      kind: "replace",
+      by: want,
     });
     expect(
+      venueClass({ cls: "IEEEtran", options: ["review", "conference"] }, want),
+    ).toEqual({ kind: "add", options: ["compsoc"] });
+    expect(
       venueClass({ cls: "IEEEtran", options: ["compsoc", "conference"] }, want),
-    ).toBeNull();
+    ).toEqual({ kind: "keep" });
   });
 
   it("collapse: every run of whitespace, newlines included, and trims", () => {
