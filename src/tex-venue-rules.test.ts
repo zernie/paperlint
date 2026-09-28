@@ -183,6 +183,52 @@ describe("tex/template — the class line's states: missing, empty, commented ou
   });
 });
 
+describe("tex/template — several \\documentclass lines behind a TeX switch", () => {
+  /** One source for two venues, the class picked by `\\if` — as an accepted ACSAC paper does it. */
+  const switched = (a: string, b: string) =>
+    paper(
+      `\\def\\venue{2}\n\\if\\venue1\n${a}\n\\fi\n\\if\\venue2\n${b}\n\\fi`,
+    );
+
+  it("passes when one of the candidates is the preset's class with its options", () => {
+    expect(
+      lint(
+        switched(
+          "\\documentclass[letterpaper,twocolumn]{article}",
+          "\\documentclass[conference,compsoc]{IEEEtran}",
+        ),
+        AIDC,
+      ),
+    ).toEqual([]);
+  });
+
+  it("reports once, at the first candidate, naming every candidate, when none is the preset's", () => {
+    const fs = lint(
+      switched(
+        "\\documentclass{article}",
+        "\\documentclass[conference]{IEEEtran}",
+      ),
+      AIDC,
+    );
+    expect(ids(fs)).toEqual(["tex/template:noCandidate"]);
+    // Line 4: the first candidate, after the comment, `\\def` and `\\if` lines.
+    expect(fs[0]?.line).toBe(4);
+    expect(fs[0]?.message).toBe(
+      "none of the 2 \\documentclass lines is `\\documentclass[conference,compsoc]{IEEEtran}`, which aidc requires: `\\documentclass{article}`, `\\documentclass[conference]{IEEEtran}`. The source picks one behind a TeX switch, which is not evaluated; make one of them the venue's",
+    );
+  });
+
+  it("an empty candidate is named as such", () => {
+    const fs = lint(
+      switched("\\documentclass{}", "\\documentclass{article}"),
+      AIDC,
+    );
+    expect(fs[0]?.message).toMatch(
+      /`\\documentclass\{\}`, `\\documentclass\{article\}`/,
+    );
+  });
+});
+
 describe("tex/template — the shipped ACM and ACL templates", () => {
   it("🔴 acmart without sigconf — the manuscript format — fails every ACM preset", () => {
     for (const settings of [

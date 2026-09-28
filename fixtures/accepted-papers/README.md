@@ -42,7 +42,6 @@ paper, left for a later change; one line each.
 | agenticdev-acm26 | `tex/claim-provenance` | 9 | real | numbers stated with no owner in the sentence ("The first is that the tool cuts output tokens by 65%.") — the paper reviewers called too informal |
 | secure-acsac24 | `tex/claim-provenance` | 6 | real | the authors' own results stated without a subject or a pointer ("LLMs experience a significant decrease in accuracy, with a 5.44% drop …"); the owner is in a neighbouring sentence, which the rule does not read |
 | secure-acsac24 | `tex/claim-provenance` | 1 | known | a range that defines a scale, not a result ("Typically set between 0 and 1, the temperature …") |
-| llm-splained-acsac25 | `tex/template` | 1 | known | the source picks its class with `\if\conference…`; the rule reads the first of three `\documentclass` lines (`article`) and does not evaluate the switch |
 
 Two limits the corpus shows and no count records:
 
@@ -54,7 +53,8 @@ Two limits the corpus shows and no count records:
 False positives this corpus has already caught, each fixed with a test first:
 `tex/claim-provenance` read the digit in `\if\conference1` as a number in prose, and did not
 recognise "466 Boolean questions" or "900 systematically collected questions" as a sample;
-`paper/section-word` reported the `§` of `\crefname{section}{§}{§§}`, a label definition, not prose.
+`paper/section-word` reported the `§` of `\crefname{section}{§}{§§}`, a label definition, not prose;
+`tex/template` judged the first of three `\documentclass` lines behind the `\conference` switch.
 
 ## Licence rule — read before adding a paper
 

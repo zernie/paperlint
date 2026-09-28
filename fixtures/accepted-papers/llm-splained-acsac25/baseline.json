@@ -6,7 +6,6 @@
     "read the preamble, the title block, the abstract and the review text in a disabled branch."
   ],
   "findings": {
-    "pdf/measured": 1,
-    "tex/template": 1
+    "pdf/measured": 1
   }
 }

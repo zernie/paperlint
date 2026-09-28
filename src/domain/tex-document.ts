@@ -24,11 +24,27 @@ export interface DocumentClass {
   readonly options: readonly string[];
 }
 
-/** A paper's `\documentclass`: none, one that names no class, or a class with its options. */
-export type ClassLine =
-  | { readonly kind: "missing" }
+/** One `\documentclass` line: one that names no class, or a class with its options. */
+export type ClassCandidate =
   | { readonly kind: "empty"; readonly place: Place }
   | ({ readonly kind: "class"; readonly place: Place } & DocumentClass);
+
+/**
+ * A paper's `\documentclass`: none, exactly one, or several — a source that picks its class behind
+ * a TeX switch (`\if\venue1 \documentclass{article} \fi …`). Which branch builds is not
+ * evaluated, so several lines are candidates, in source order, and none of them is THE class.
+ */
+export type ClassLine =
+  | { readonly kind: "missing" }
+  | ClassCandidate
+  | {
+      readonly kind: "ambiguous";
+      readonly candidates: readonly [
+        ClassCandidate,
+        ClassCandidate,
+        ...ClassCandidate[],
+      ];
+    };
 
 /** The options of `want` that `got` does not carry — every one, in `want`'s order. */
 export const missingOptions = (

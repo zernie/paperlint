@@ -28,6 +28,7 @@ import {
   missingOptions,
   runText,
   spanIn,
+  type ClassCandidate,
   type ClassLine,
   type DocumentClass,
   type Heading,
@@ -110,6 +111,30 @@ function judgeClass(
   }));
 }
 
+/** A candidate as the message names it: its line, or an empty `\documentclass{}`. */
+const candidateLine = (c: ClassCandidate): string =>
+  c.kind === "class" ? documentClassLine(c) : "\\documentclass{}";
+
+/**
+ * Several class lines behind a TeX switch: satisfied when any candidate is the template's class
+ * with its options; otherwise one finding, at the first candidate, naming every one.
+ */
+function judgeCandidates(
+  candidates: readonly [ClassCandidate, ...ClassCandidate[]],
+  want: DocumentClass,
+  data: TemplateData,
+): readonly Located[] {
+  const matches = candidates.some(
+    (c) => c.kind === "class" && judgeClass(c, want, data).length === 0,
+  );
+  if (matches) return [];
+  const named = candidates.map((c) => `\`${candidateLine(c)}\``).join(", ");
+  const found = { ...data, count: candidates.length, candidates: named };
+  return [
+    { messageId: "noCandidate", data: found, at: spanOf(candidates[0].place) },
+  ];
+}
+
 /** The paper's class line against a template that was read: present, naming a class, that class. */
 function judgeClassLine(
   line: ClassLine,
@@ -123,6 +148,8 @@ function judgeClassLine(
       return [{ messageId: "emptyClass", data, at: spanOf(line.place) }];
     case "class":
       return judgeClass(line, want, data);
+    case "ambiguous":
+      return judgeCandidates(line.candidates, want, data);
   }
 }
 
@@ -297,6 +324,8 @@ const RULES: Readonly<
           "the class is `{{got}}`, and {{venue}} requires `{{template}}` — the page size, fonts and layout the venue checks come from the class",
         missingOption:
           "the class option `{{option}}` is missing: {{venue}} requires `{{template}}`",
+        noCandidate:
+          "none of the {{count}} \\documentclass lines is `{{template}}`, which {{venue}} requires: {{candidates}}. The source picks one behind a TeX switch, which is not evaluated; make one of them the venue's",
       },
     },
   },

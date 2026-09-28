@@ -128,6 +128,9 @@ const AIDC = {
 };
 const IEEE = "\\documentclass[conference,compsoc]{IEEEtran}";
 const STATEMENT = "\\section*{LLM Usage Statement}\nNone.";
+/** Two `\\documentclass` lines behind a switch: `article` for one venue, `second` for this one. */
+const switched = (second: string): string =>
+  `\\def\\venue{2}\n\\if\\venue1\n\\documentclass{article}\n\\fi\n\\if\\venue2\n${second}\n\\fi`;
 const aidc = (body: string, cls = IEEE) =>
   paper(tex(`\\section{Introduction}\n${body}\n${STATEMENT}`, cls), AIDC);
 
@@ -305,14 +308,15 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     silent: paper(fixture("tex-build/frontmatter-clean.tex")),
   },
+  // The class picked behind a TeX switch: two candidates, one of them the venue's or none.
   "tex/template": {
     reports: {
-      tree: aidc("Text.", "\\documentclass[conference]{IEEEtran}"),
+      tree: aidc("Text.", switched("\\documentclass[conference]{IEEEtran}")),
       file: TEX_FILE,
       severity: 2,
-      line: 1,
+      line: 3,
     },
-    silent: aidc("Text."),
+    silent: aidc("Text.", switched(IEEE)),
   },
   "tex/required-section": {
     reports: {

@@ -47,6 +47,16 @@ describe("documentClassOf — the class line's three states", () => {
     });
   });
 
+  it("ambiguous: two \\documentclass lines behind a switch, each read as a candidate in source order", () => {
+    const src =
+      "\\if\\x1\\documentclass{article}\\fi\\if\\x2\\documentclass[a]{b}\\fi";
+    const line = documentClassOf(parseLatex(src));
+    expect(
+      line.kind === "ambiguous" &&
+        line.candidates.map((c) => c.kind === "class" && c.cls),
+    ).toEqual(["article", "b"]);
+  });
+
   it("missing: no \\documentclass at the top of the tree", () => {
     expect(
       documentClassOf(parseLatex("\\begin{document}\\end{document}")),
@@ -158,6 +168,12 @@ describe("replaceDocumentClass — the class `paperlint new` writes", () => {
     expect(replaced("\\documentclass[review, foo={a,b}]{IEEEtran}\nx")).toBe(
       "\\documentclass[review, foo={a,b},conference,compsoc]{IEEEtran}\nx",
     );
+  });
+
+  it("🔴 a source with several \\documentclass lines is returned as it is: which branch builds is not known", () => {
+    const src =
+      "\\if\\x1\\documentclass{article}\\fi\\if\\x2\\documentclass{IEEEtran}\\fi";
+    expect(replaced(src)).toBe(src);
   });
 
   it("no class, or an empty one, is returned as it is", () => {
