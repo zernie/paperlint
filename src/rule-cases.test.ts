@@ -326,6 +326,17 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     silent: aidc("Text."),
   },
+  "tex/claim-provenance": {
+    reports: {
+      tree: paper(tex("Text.\nAgents ignore 42\\% of the rules.")),
+      file: TEX_FILE,
+      severity: 1,
+      line: 4,
+    },
+    silent: paper(
+      tex("Text.\nWe measured that agents ignore 42\\% of the rules."),
+    ),
+  },
   "bib/reachable-entry": {
     reports: {
       tree: paper(inlineBib("@book{a,\n  title = {A},\n  year = {2026}\n}")),

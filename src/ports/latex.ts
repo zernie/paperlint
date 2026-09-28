@@ -6,6 +6,7 @@ import type {
   ClassLine,
   DocumentClass,
   Outline,
+  Passage,
   TextRun,
 } from "../domain/tex-document.ts";
 
@@ -16,6 +17,12 @@ export interface LatexReader {
   readonly outline: (src: string) => Outline;
   /** The text a reader sees: prose, the author block, footnotes — not comments, keys, math, code. */
   readonly renderedRuns: (src: string) => readonly TextRun[];
+  /**
+   * The body's prose, as passages a sentence cannot cross: from the start of the document (the
+   * abstract included) to the appendix or the bibliography, without headings, captions, floats,
+   * code or the title block. Citations, links and cross-references stay in place as marks.
+   */
+  readonly bodyProse: (src: string) => readonly Passage[];
   /**
    * A preset's `template` → the class it names: a whole `\documentclass[…]{…}` line, or a bare
    * class name (no option). Null for anything else.

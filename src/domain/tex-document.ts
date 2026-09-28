@@ -108,3 +108,20 @@ export function spanIn(run: TextRun, from: number, to: number): Span | null {
   const last = to > from ? offsetIn(run.segments, to - 1) : null;
   return start === null || last === null ? null : { start, end: last + 1 };
 }
+
+/** What a mark in prose says about where a claim comes from: a work outside the paper, or a place in it. */
+export type Owner = "citation" | "reference";
+
+/**
+ * One piece of body prose, in source order: text a reader sees, a mark the markup leaves in the
+ * sentence (a `\cite`, a link, a `\ref`), or math, with its source.
+ */
+export type ProsePiece =
+  | { readonly kind: "text"; readonly segment: Segment }
+  | { readonly kind: "owner"; readonly owner: Owner; readonly span: Span }
+  | { readonly kind: "math"; readonly tex: string; readonly span: Span };
+
+/** A stretch of body prose no sentence crosses — a paragraph, a list item, a footnote. Never empty. */
+export interface Passage {
+  readonly pieces: readonly [ProsePiece, ...ProsePiece[]];
+}

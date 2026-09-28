@@ -28,6 +28,12 @@ export const placeOf = (n: Positioned): Place =>
         span: { start: n.position.start.offset, end: n.position.end.offset },
       };
 
+/** What `f` makes of a place's span, or nothing for a node the parser gave no position. */
+export const inPlace = <T>(
+  p: Place,
+  f: (span: Span) => readonly T[],
+): readonly T[] => (p.kind === "at" ? f(p.span) : []);
+
 /** The first mandatory (`{…}`) and optional (`[…]`) arguments' contents, and the last mandatory one's. */
 export const mandatory = (m: Macro): readonly Argument[] =>
   (m.args ?? []).filter((a) => a.openMark === "{");

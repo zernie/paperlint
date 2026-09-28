@@ -252,7 +252,9 @@ export function judgeLeftover(
 }
 
 /** Where a rule's page lives: `docs/rules/tex/<name>.md` on the default branch. */
-export const ruleDocsUrl = (name: TexVenueRuleName): string =>
+export const ruleDocsUrl = (
+  name: TexVenueRuleName | "claim-provenance",
+): string =>
   `https://github.com/zernie/paperlint/blob/main/docs/rules/tex/${name}.md`;
 
 /** What a judge reads: the paper's source through the reader, its preset, the other venues. */
@@ -385,7 +387,7 @@ function readingOf(
 }
 
 /** Each finding reported at its span, or at the top of the file when it has none. */
-function reportAll(
+export function reportAll(
   context: TexRuleContext,
   findings: readonly Located[],
 ): void {
