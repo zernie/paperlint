@@ -150,6 +150,13 @@ interface RuleCases {
 }
 
 const TEX_FILE = `${P}/paper.tex`;
+
+/** A body of 200 sentences of 14 words: enough words for `tex/register` to judge a rate. */
+const FORMAL = Array.from(
+  { length: 200 },
+  () =>
+    "The rule reads the body of the paper and counts every sentence it holds.",
+).join(" ");
 const STATUS_FILE = `${P}/PIPELINE-STATUS.md`;
 const SHIPPED_STATUS =
   "---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/a.pdf\n    bytes: 1\n---\n# PIPELINE-STATUS\n";
@@ -348,6 +355,15 @@ const CASES: Readonly<Record<string, RuleCases>> = {
         "Text.\nWe measured that agents ignore 42\\% of the rules.\nThey run on Claude 3 and Python 3.12.",
       ),
     ),
+  },
+  "tex/register": {
+    reports: {
+      tree: paper(tex(`${FORMAL} But it holds. So it goes. And it ends.`)),
+      file: TEX_FILE,
+      severity: 1,
+      line: 3,
+    },
+    silent: paper(tex(FORMAL)),
   },
   "tex/missing-input": {
     reports: {

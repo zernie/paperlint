@@ -58,6 +58,8 @@ export interface Located extends Finding {
 /** The slice of ESLint's rule context these rules use. `raw` exists on the `.tex` language's. */
 export interface TexRuleContext {
   readonly filename: string;
+  /** The rule's options from the config, as ESLint validated them against its schema. */
+  readonly options?: readonly unknown[];
   readonly sourceCode: {
     readonly text: string;
     readonly raw?: string;
@@ -288,7 +290,7 @@ export function judgeLeftover(
 
 /** Where a rule's page lives: `docs/rules/tex/<name>.md` on the default branch. */
 export const ruleDocsUrl = (
-  name: TexVenueRuleName | "claim-provenance",
+  name: TexVenueRuleName | "claim-provenance" | "register",
 ): string =>
   `https://github.com/zernie/paperlint/blob/main/docs/rules/tex/${name}.md`;
 

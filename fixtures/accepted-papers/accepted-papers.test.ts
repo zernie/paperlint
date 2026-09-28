@@ -11,11 +11,15 @@
  * The integration tier: the CLI's own `run`, in-process, on a copy of the paper under `papers/` —
  * nothing here is true only after an install, and no build artifact is read (docs/e2e.md).
  */
-import { cpSync, readdirSync, statSync } from "node:fs";
+import { cpSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { run } from "../../src/cli.ts";
+import { latexReader } from "../../src/adapters/latex/index.ts";
+import { nodeFiles } from "../../src/adapters/node/index.ts";
+import { judgeRegister, measureRegister } from "../../src/register.ts";
+import { readPaper } from "../../src/tex-paper.ts";
 import { useTempDir, writeTree } from "../../test/support.ts";
 import {
   compareToBaseline,
@@ -70,4 +74,43 @@ describe.each(PAPERS)("the accepted paper %s", (name) => {
       expect({ grew, vanished }).toEqual({ grew: [], vanished: [] });
     },
   );
+});
+
+/**
+ * What `tex/register` measures on each paper, recorded: the share of sentences under eight words and
+ * the sentences opening with And, So, But, Nor, Or or Yet per 1000 words. The two papers written by
+ * others read well under both limits; `agenticdev-acm26` is ours, and its conjunction starts are over
+ * the limit — the one finding its baseline records. A change to how the body is read moves these.
+ */
+const REGISTER: Readonly<
+  Record<string, { readonly short: string; readonly per1000: string }>
+> = {
+  "agenticdev-acm26": { short: "7.0", per1000: "1.60" },
+  "llm-splained-acsac25": { short: "7.3", per1000: "0.00" },
+  "secure-acsac24": { short: "3.3", per1000: "0.00" },
+};
+
+describe.each(PAPERS)("tex/register on the accepted paper %s", (name) => {
+  const file = join(HERE, name, "paper.tex");
+  const m = measureRegister(
+    latexReader.bodyProse(
+      readPaper(file, readFileSync(file, "utf8"), {
+        files: nodeFiles,
+        latex: latexReader,
+      }).text,
+    ),
+  );
+
+  it("measures the recorded rates", () => {
+    expect({
+      short: ((100 * m.short) / m.sentences).toFixed(1),
+      per1000: ((1000 * m.conjunctionStarts) / m.words).toFixed(2),
+    }).toEqual(REGISTER[name]);
+  });
+
+  it("is silent on the papers written by others; on ours, reports only the conjunction starts", () => {
+    expect(judgeRegister(m, {}).map((f) => f.messageId)).toEqual(
+      name === "agenticdev-acm26" ? ["conjunctionStarts"] : [],
+    );
+  });
 });
