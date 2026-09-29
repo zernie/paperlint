@@ -21,10 +21,15 @@ interface FakeItem {
   height: number;
 }
 /** A page whose text items and loaded fonts are given; its viewport flips y like pdf.js's. */
-function page(items: FakeItem[], fonts: Record<string, unknown>) {
+function page(
+  items: FakeItem[],
+  fonts: Record<string, unknown>,
+  said: { ops?: number[]; annotations?: unknown[] } = {},
+) {
   const objs = new Map(Object.entries(fonts));
   return {
-    getOperatorList: () => Promise.resolve({ fnArray: [], argsArray: [] }),
+    getOperatorList: () =>
+      Promise.resolve({ fnArray: said.ops ?? [], argsArray: [] }),
     getTextContent: () => Promise.resolve({ items }),
     // Iterable like pdf.js's `commonObjs`, with its `has`/`get`.
     commonObjs: {
@@ -32,6 +37,7 @@ function page(items: FakeItem[], fonts: Record<string, unknown>) {
       get: (id: string) => objs.get(id),
       [Symbol.iterator]: () => objs[Symbol.iterator](),
     },
+    getAnnotations: () => Promise.resolve(said.annotations ?? []),
     getViewport: () => ({
       width: 612,
       height: H,
@@ -40,8 +46,9 @@ function page(items: FakeItem[], fonts: Record<string, unknown>) {
     }),
   };
 }
-const doc = (pages: ReturnType<typeof page>[]) => ({
+const doc = (pages: ReturnType<typeof page>[], info: unknown = {}) => ({
   numPages: pages.length,
+  getMetadata: () => Promise.resolve({ info, metadata: null }),
   getPage: (i: number) =>
     Promise.resolve(present(pages[i - 1], `page ${String(i)}`)),
 });
@@ -149,6 +156,26 @@ test("🔴 a rejection with no value at all is a failure too, not a TypeError ou
     [
       { ok: false, reason: "unreadable", detail: "Error: null" },
       { ok: false, reason: "unreadable", detail: "Error: undefined" },
+    ],
+  );
+});
+
+test("what the pages say: text, links with their page, raster pages, metadata", async () => {
+  const fonts = { f1: { loadedName: "f1", name: "Named", ascent: 0.8 } };
+  const plain = page([item("f1", [10, 0, 0, 10, 50, 700])], fonts);
+  const imaged = page([item("f1", [10, 0, 0, 10, 50, 700])], fonts, {
+    ops: [lib.OPS.save, lib.OPS.paintImageXObject, lib.OPS.restore],
+    annotations: [{ subtype: "Link", url: "https://github.com/adaexample" }],
+  });
+  const r = await factsOf(doc([plain, imaged], { Author: "Ada Example" }), lib);
+  assert.ok(r.ok);
+  assert.deepEqual(
+    [r.facts.pageTexts, r.facts.links, r.facts.imagePages, r.facts.metadata],
+    [
+      ["word", "word"],
+      [{ page: 2, uri: "https://github.com/adaexample" }],
+      [2],
+      { Author: "Ada Example" },
     ],
   );
 });

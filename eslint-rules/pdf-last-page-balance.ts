@@ -91,7 +91,7 @@ const RuleOptions = z
 /** The difference, in points, that two columns may end apart. See the harness for why 120. */
 export const DEFAULT_TOLERANCE_PT = 120;
 /** The schema of `paper.facts.json` this rule reads (`src/facts-file.ts`, FACTS_SCHEMA). */
-export const FACTS_SCHEMA = 2;
+export const FACTS_SCHEMA = 3;
 export const FACTS_REL = join("_build", "paper.facts.json");
 
 /** The `last_page` field, parsed. */
@@ -249,7 +249,7 @@ const rule = {
       factsBroken:
         "{{why}} in _build/paper.facts.json — rebuild the paper (`paperlint build`) to rewrite it",
       schema:
-        "_build/paper.facts.json has schema {{got}}; this rule reads schema 2 — rebuild the paper " +
+        "_build/paper.facts.json has schema {{got}}; this rule reads schema 3 — rebuild the paper " +
         "(`paperlint build`) to rewrite it",
       pdfMissing:
         "_build/paper.facts.json describes {{pdf}}, which is not on disk (a failed build removes " +

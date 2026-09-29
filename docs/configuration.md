@@ -35,15 +35,16 @@ It sits beside your `package.json`. Without it every setting has its default.
 }
 ```
 
-| key         | default    | what it is                                                                                 |
-| ----------- | ---------- | ------------------------------------------------------------------------------------------ |
-| `papersDir` | `"papers"` | the directory your papers live in, relative to this file. One string or a list. Root only. |
-| `structure` | see below  | which files every paper directory must contain. `false` turns it off. Root only.           |
-| `rules`     | none       | rule overrides — see [below](#the-rules-key-turning-rules-on-and-off)                      |
-| `extends`   | none       | the venue preset for every paper that names none                                           |
-| `kind`      | none       | the kind of paper for every paper that names none                                          |
-| `pdf`       | none       | where the built PDF is, relative to each paper, when it is not `paper.pdf`                 |
-| `$comment`  | —          | a note for humans (JSON Schema's comment keyword); ignored                                 |
+| key         | default    | what it is                                                                                             |
+| ----------- | ---------- | ------------------------------------------------------------------------------------------------------ |
+| `papersDir` | `"papers"` | the directory your papers live in, relative to this file. One string or a list. Root only.             |
+| `structure` | see below  | which files every paper directory must contain. `false` turns it off. Root only.                       |
+| `rules`     | none       | rule overrides — see [below](#the-rules-key-turning-rules-on-and-off)                                  |
+| `extends`   | none       | the venue preset for every paper that names none                                                       |
+| `kind`      | none       | the kind of paper for every paper that names none                                                      |
+| `pdf`       | none       | where the built PDF is, relative to each paper, when it is not `paper.pdf`                             |
+| `identity`  | none       | what identifies the authors, for every paper — see [`anonymity/identity`](rules/anonymity/identity.md) |
+| `$comment`  | —          | a note for humans (JSON Schema's comment keyword); ignored                                             |
 
 The skill scripts read a few more root keys — `scripts`, `timezone`, `contactEmail`,
 `triggerCases` — documented with the skills that use them.
@@ -83,13 +84,14 @@ The same keys as the root file, minus the project-only ones (`papersDir`, `struc
 skills' keys), which are refused here by name. **It merges over the root file:** its `extends`,
 `kind` and `pdf` win; one it does not set comes from the root.
 
-| key        | what it is                                                                                                                                                                                 |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `extends`  | the venue preset the built PDF is judged against: `paperlint:<name>` (shipped) or `./path` / `../path` (your own, relative to this file) — [`rules.md`](rules.md#checks-against-the-venue) |
-| `kind`     | the kind of paper (`short`, `research`, …) whose page limit applies                                                                                                                        |
-| `pdf`      | where the built PDF is, relative to the paper, when it is not `paper.pdf`                                                                                                                  |
-| `rules`    | rule overrides for this paper alone — `{ "<rule>": "<severity>" }`, or blocks with globs relative to the paper                                                                             |
-| `$comment` | a note for humans; ignored                                                                                                                                                                 |
+| key        | what it is                                                                                                                                                                                                             |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `extends`  | the venue preset the built PDF is judged against: `paperlint:<name>` (shipped) or `./path` / `../path` (your own, relative to this file) — [`rules.md`](rules.md#checks-against-the-venue)                             |
+| `kind`     | the kind of paper (`short`, `research`, …) whose page limit applies                                                                                                                                                    |
+| `pdf`      | where the built PDF is, relative to the paper, when it is not `paper.pdf`                                                                                                                                              |
+| `identity` | what identifies the authors — names, handles, emails, affiliations, your own project names. A blind venue's PDF must say none of it ([`anonymity/identity`](rules/anonymity/identity.md)). Joined with the root's list |
+| `rules`    | rule overrides for this paper alone — `{ "<rule>": "<severity>" }`, or blocks with globs relative to the paper                                                                                                         |
+| `$comment` | a note for humans; ignored                                                                                                                                                                                             |
 
 `paperlint new` writes this file from the template (`templates/paper/paperlint.json`, or your
 `<papers>/.template/paperlint.json` if you keep one). With `--venue` it writes the venue into it:

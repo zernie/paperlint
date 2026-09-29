@@ -6,9 +6,11 @@
     "and report a finding from it at the \\input, with the file and line in the message.",
     "The count GREW when the rules started to follow \\input (#141): 0 to 9 for tex/claim-provenance;",
     "then 9 to 11 when list items started to be read as prose (one in the reviews' disabled branch).",
-    "paper/leading-zero 0 to 2 when lint started to read the included files as files of their own (#144): `.58` and `.73` in sections/5-discussion.tex."
+    "paper/leading-zero 0 to 2 when lint started to read the included files as files of their own (#144): `.58` and `.73` in sections/5-discussion.tex.",
+    "format/layout-override 0 to 3 when the rule was added: three `\\vspace{-1em}` in sections/2-background.tex and sections/3-methodology.tex."
   ],
   "findings": {
+    "format/layout-override": 3,
     "paper/leading-zero": 2,
     "pdf/measured": 1,
     "tex/claim-provenance": 11

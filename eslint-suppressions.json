@@ -445,7 +445,7 @@
       "count": 1
     },
     "functional/prefer-immutable-types": {
-      "count": 4
+      "count": 3
     }
   },
   "src/reference-rules.ts": {

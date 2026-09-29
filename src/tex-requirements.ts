@@ -131,6 +131,8 @@ export interface VenueFormat {
   /** The prefix a font name of the body text starts with (`LinLibertine`). */
   readonly fontsText: string | null;
   readonly fontsTitle: string | null;
+  /** How the body is counted: null is banal's count; `references`, the pages before the references. */
+  readonly bodyEndsAt: "references" | null;
   readonly kinds: ReadonlyMap<string, KindLimits>;
 }
 
@@ -145,6 +147,7 @@ export const NO_FORMAT: VenueFormat = {
   refPtMax: null,
   fontsText: null,
   fontsTitle: null,
+  bodyEndsAt: null,
   kinds: new Map(),
 };
 
@@ -168,6 +171,8 @@ export interface PresetFile {
   readonly template: string | null;
   /** Other names the venue goes by in a paper's text; empty when the file names none. */
   readonly aliases: readonly string[];
+  /** Whether the venue reviews double-blind; null when the file does not say. */
+  readonly blind: boolean | null;
   /** Sections the venue requires; null when the file names none (a child's list replaces its parent's). */
   readonly requiredSections: readonly RequiredSection[] | null;
   /** Null when the file declares no `tex` block (allowed only with `extends`). */
@@ -192,6 +197,7 @@ interface FormatJson {
   readonly ref_pt_max?: number;
   readonly fonts_text?: string;
   readonly fonts_title?: string;
+  readonly body_ends_at?: "references";
   readonly kinds?: KindsJson;
 }
 
@@ -201,6 +207,7 @@ interface PresetJson {
   readonly name?: string;
   readonly template?: string;
   readonly aliases?: readonly string[];
+  readonly blind?: boolean;
   readonly required_sections?: readonly {
     readonly title: string;
     readonly position?: "last";
@@ -238,6 +245,7 @@ function formatOf(j: FormatJson = {}): VenueFormat {
     refPtMax: orNull(j.ref_pt_max),
     fontsText: orNull(j.fonts_text),
     fontsTitle: orNull(j.fonts_title),
+    bodyEndsAt: orNull(j.body_ends_at),
     kinds: kindsOf(j.kinds),
   };
 }
@@ -281,6 +289,7 @@ export function parsePreset(
     name: orNull(j.name),
     template: orNull(j.template),
     aliases: j.aliases ?? [],
+    blind: orNull(j.blind),
     requiredSections: sectionsOf(j.required_sections),
     tex: j.tex ? { packages: j.tex.packages, tools: j.tex.tools ?? {} } : null,
     format: formatOf(j.format),

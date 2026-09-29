@@ -6,6 +6,7 @@ import type { Include } from "../domain/paper-source.ts";
 import type {
   ClassLine,
   DocumentClass,
+  LayoutOverride,
   Outline,
   Passage,
   Span,
@@ -39,4 +40,6 @@ export interface LatexReader {
    * option `want` names (the author's own options stay), or it has none.
    */
   readonly withDocumentClass: (src: string, want: DocumentClass) => string;
+  /** Every command that changes the layout the class sets: margins, text block, spacing, negative skips. */
+  readonly layoutOverrides: (src: string) => readonly LayoutOverride[];
 }

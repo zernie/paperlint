@@ -1,0 +1,31 @@
+% B: the name in an acknowledgments paragraph.
+% The declared identity is invented: "Ada Example", handle "adaexample" (paperlint.json).
+\documentclass[conference,compsoc]{IEEEtran}
+\begin{filecontents*}{refs.bib}
+@article{knuth84,
+  title   = {Literate Programming},
+  author  = {Knuth, Donald E.},
+  journal = {The Computer Journal},
+  volume  = {27},
+  number  = {2},
+  pages   = {97--111},
+  year    = {1984},
+  doi     = {10.1093/comjnl/27.2.97}
+}
+\end{filecontents*}
+\begin{document}
+\title{A Fixture for Double-Blind Review}
+\author{\IEEEauthorblockN{Anonymous Authors}}
+\maketitle
+\section{Introduction}
+This paper builds on earlier work~\cite{knuth84}.
+
+\section{Conclusion}
+The conclusion restates that the fixture builds.
+\section*{Acknowledgments}
+We thank Ada Example for comments on a draft.
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+\section*{LLM Usage Statement}
+No LLMs were used in writing this fixture.
+\end{document}

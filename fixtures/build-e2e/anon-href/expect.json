@@ -1,0 +1,19 @@
+{
+  "$comment": "anonymity/identity on a real IEEEtran build: E: a link whose visible text names nobody and whose target is the author's account. The anonymous mirror beside it is not reported. Exactly one finding, naming where.",
+  "build": {
+    "outcome": "pdf"
+  },
+  "lint": {
+    "rules": {
+      "anonymity/identity": [
+        {
+          "severity": 2,
+          "says": [
+            "link target on page 1 (https://github.com/adaexample/tool)",
+            "«adaexample»"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -63,9 +63,17 @@ const NONE: Shown = { kind: "none" };
  */
 const SHOWN_ARGUMENT: ReadonlyMap<string, Shown> = new Map<string, Shown>([
   ["texorpdfstring", { kind: "argument", at: 0 }],
-  ...["color", "fontsize", "vspace", "hspace", "setlength", "addtolength"].map(
-    (m) => [m, NONE] as const,
-  ),
+  ...[
+    "color",
+    "fontsize",
+    "vspace",
+    "hspace",
+    "setlength",
+    "addtolength",
+    "linespread",
+    "geometry",
+    "newgeometry",
+  ].map((m) => [m, NONE] as const),
 ]);
 
 /** The text a (non-key) macro typesets: see `SHOWN_ARGUMENT`. */

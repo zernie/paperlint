@@ -45,6 +45,8 @@ paper, left for a later change; one line each.
 | agenticdev-acm26 | `tex/register` | 1 | real | 7 sentences open with _And_, _So_, _But_ or _Nor_ — 1.60 per 1000 words against a limit of 0.8; the two papers written by others read 0 |
 | llm-splained-acsac25 | `paper/leading-zero` | 2 | real | probabilities written without the zero ("with probability greater than $.58$", and `.73`) in `sections/5-discussion.tex`; IEEE style, which the rule follows, asks for `0.58` — APA would omit it for a probability |
 | llm-splained-acsac25 | `tex/claim-provenance` | 11 | real | the authors' own results in `sections/*.tex` stated without a subject or a pointer ("GPT errors exceeded 30% in both categories …"); the owner is in a neighbouring sentence. One ("ranged from 1 to 13") is in a list item, which the rules did not read before; one is in the reviews' disabled branch (below) |
+| secure-acsac24 | `format/layout-override` | 2 | real | the source loads `geometry` and sets `\geometry{a4paper, margin=1in}` over IEEEtran's letter layout — what the rule exists to say. This is the public source, which may not be the camera-ready as built |
+| llm-splained-acsac25 | `format/layout-override` | 3 | real | three `\vspace{-1em}` in `sections/2-background.tex` and `sections/3-methodology.tex`, pulling space back around floats. An accepted ACSAC paper did it, which is why the rule is a warning and not an error |
 
 One limit the corpus shows and no count records:
 

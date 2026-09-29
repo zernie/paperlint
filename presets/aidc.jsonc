@@ -22,6 +22,10 @@
 {
   "extends": "paperlint:ieee-conference",
 
+  // «Submissions must be properly anonymized for double-blind review.» (the call above), and
+  // `"blind":true` in the portal's data. pdf/anonymity then requires the paper's `identity`.
+  "blind": true,
+
   // What the venue is called in a paper's text (tex/venue-leftover): the workshop, and the
   // conference it is held at.
   "aliases": ["AIDC", "ACSAC"],
@@ -44,30 +48,25 @@
     "textblock_w_in": 7.0,
     "textblock_h_in": 9.02,
 
-    // 🔴 PAGE LIMITS ARE NOT GATED HERE, AND THAT IS A MEASUREMENT. banal splits pages into body
-    // and references by what is on them, and a page that holds ANY non-bibliography text counts as
-    // body. Measured 2026-09-27 on a [conference,compsoc] paper whose body ends at the foot of
-    // page 12:
+    // 🔴 THE PAGE LIMIT IS COUNTED BEFORE THE REFERENCES, NOT BY banal. banal splits pages into
+    // body and references by what is on them, and a page that holds ANY non-bibliography text
+    // counts as body. Measured 2026-09-27 on a [conference,compsoc] paper whose body ends at the
+    // foot of page 12:
     //   LLM Usage Statement before the references → body 13, references 0
     //   an appendix before the references         → body 13, references 2
     //   both placed after the references          → body right, the tail counted as references
     // AIDC counts neither in the limit («excluding references and appendices»; the ACSAC AI policy:
-    // the LLM Usage Statement «does not count towards the page limit»), and tex/required-section
-    // accepts the statement before or after the bibliography. A gate on banal's body count would
-    // therefore fail a correct 12-page paper — the realm.jsonc case again. The numbers below are
-    // data for humans, not an input to pdf/limits.
-    "page_limits_not_gated": {
-      "_": "Body pages, excluding references, appendices and the LLM Usage Statement. banal counts a page holding an appendix or the statement before the bibliography as body, so its body count is not this number.",
-      "regular": 12,
-      "short": 6,
-      "references_and_appendices": "unlimited",
-      "llm_usage_statement": "not counted (ACSAC AI policy)",
-    },
+    // the LLM Usage Statement «does not count towards the page limit»). So pdf/limits counts the
+    // body as the pages BEFORE the page on which the references heading first appears
+    // (`body_ends_at`), and the limit below is gated. An appendix placed BEFORE the references is
+    // counted as body by this count too: put it after them.
+    "body_ends_at": "references",
 
     // «Short position papers or work-in-progress (WIP) papers» share one limit, so one kind.
+    // References, appendices and the LLM Usage Statement: unlimited.
     "kinds": {
-      "regular": {},
-      "short": {},
+      "regular": { "body_pages_max": 12 },
+      "short": { "body_pages_max": 6 },
     },
   },
 }

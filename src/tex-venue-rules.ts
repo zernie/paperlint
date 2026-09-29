@@ -8,6 +8,11 @@
  *   tex/venue-leftover    warn   the text a reader sees names ANOTHER shipped venue — its `name`
  *                                or one of its `aliases` — than the one the paper extends
  *
+ * and, in the `format` plugin (named for the requirement, not the input — paperlint#151):
+ *
+ *   format/layout-override  warn  the source changes the layout the venue's template sets —
+ *                                 margins, text block, line spacing, space pulled back
+ *
  * ── WHY THEY LIVE HERE AND NOT IN `eslint-rules/` ────────────────────────────────
  * Like the `pdf/*` venue rules (`venue-rules.ts`), they need the paper's resolved preset —
  * `paperPreset`, the one answer to "which venue is this paper judged against" — and read it through
@@ -32,6 +37,7 @@ import {
   type ClassLine,
   type DocumentClass,
   type Heading,
+  type LayoutOverride,
   type Outline,
   type Place,
   type Span,
@@ -306,9 +312,26 @@ type Judge = (r: Reading) => readonly Located[];
 export type TexVenueRuleName =
   "template" | "required-section" | "venue-leftover";
 
+/** Every rule this module builds: the `tex` plugin's three and the `format` plugin's one. */
+type RuleName = TexVenueRuleName | "layout-override";
+
+/** Each layout override, where it stands. Silent for a preset that names no template. */
+export function judgeLayout(
+  overrides: readonly LayoutOverride[],
+  preset: Preset,
+): readonly Located[] {
+  const template = preset.template;
+  if (template === null) return [];
+  return overrides.map((o) => ({
+    messageId: "override",
+    data: { command: o.command, venue: preset.label, template: template.text },
+    at: spanOf(o.place),
+  }));
+}
+
 const RULES: Readonly<
   Record<
-    TexVenueRuleName,
+    RuleName,
     { readonly judge: Judge; readonly meta: TexRuleModule["meta"] }
   >
 > = {
@@ -357,6 +380,22 @@ const RULES: Readonly<
       },
     },
   },
+  "layout-override": {
+    judge: (r) => judgeLayout(r.latex.layoutOverrides(r.src), r.preset),
+    meta: {
+      type: "suggestion",
+      docs: {
+        description:
+          "the source changes the layout the venue's template sets: margins, text block, line spacing, or space pulled back",
+        url: "https://github.com/zernie/paperlint/blob/main/docs/rules/format/layout-override.md",
+      },
+      schema: [],
+      messages: {
+        override:
+          "`{{command}}` changes the layout {{venue}}'s template sets (`{{template}}`) — a desk-reject reason at venues that check the format. Remove it; if the venue allows it, disable this line with a comment saying so",
+      },
+    },
+  },
   "venue-leftover": {
     judge: (r) =>
       judgeLeftover(r.latex.renderedRuns(r.src), r.preset, r.others()),
@@ -383,6 +422,13 @@ export const TEX_VENUE_RULE_LEVELS: Readonly<
   "tex/template": "error",
   "tex/required-section": "error",
   "tex/venue-leftover": "warn",
+};
+
+/** The `format` plugin's rule and its level, on for every `paper.tex`. */
+export const FORMAT_RULE_LEVELS: Readonly<
+  Record<"format/layout-override", "warn">
+> = {
+  "format/layout-override": "warn",
 };
 
 /**
@@ -430,7 +476,7 @@ function readingOf(
   };
 }
 
-function rule(name: TexVenueRuleName, deps: TexVenueRuleDeps): TexRuleModule {
+function rule(name: RuleName, deps: TexVenueRuleDeps): TexRuleModule {
   const { judge, meta } = RULES[name];
   return {
     meta,
@@ -458,4 +504,11 @@ export function texVenueRules(
     "required-section": rule("required-section", deps),
     "venue-leftover": rule("venue-leftover", deps),
   };
+}
+
+/** The rules of the `format` plugin. */
+export function formatRules(
+  deps: TexVenueRuleDeps,
+): Readonly<Record<"layout-override", TexRuleModule>> {
+  return { "layout-override": rule("layout-override", deps) };
 }

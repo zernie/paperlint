@@ -1,0 +1,19 @@
+{
+  "$comment": "anonymity/identity on a real IEEEtran build: F: the name hidden behind a macro; only the typeset text shows it. Exactly one finding, naming where.",
+  "build": {
+    "outcome": "pdf"
+  },
+  "lint": {
+    "rules": {
+      "anonymity/identity": [
+        {
+          "severity": 2,
+          "says": [
+            "«Ada Example»",
+            "PDF, page 1"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -45,6 +45,12 @@ export interface PaperSettings {
    * against the shipped rules.
    */
   readonly rules: Readonly<Record<string, unknown>> | readonly unknown[] | null;
+  /**
+   * What identifies the authors — `pdf/anonymity` requires a blind venue's PDF to say none of it.
+   * The root's list and the paper's own, joined: a paper adds its co-authors to the project's author
+   * and cannot drop them by accident. Null when neither declares one.
+   */
+  readonly identity: readonly string[] | null;
 }
 
 /** Why a paper's settings cannot be read. */
@@ -86,6 +92,23 @@ export function stringFields(
   });
 }
 
+/**
+ * `identity`: absent is null; otherwise a list of strings, each with a letter or digit in it — a
+ * blank entry would match nothing and read as a declared, clean identity.
+ */
+export function identityField(
+  d: Readonly<Record<string, unknown>>,
+): Result<readonly string[] | null, string> {
+  const v = d["identity"];
+  if (v === undefined) return ok(null);
+  return Array.isArray(v) &&
+    v.every((x) => typeof x === "string" && /[\p{L}\p{N}]/u.test(x))
+    ? ok(v.filter((x): x is string => typeof x === "string"))
+    : err(
+        `"identity" must be a list of strings, each with a letter or digit, got ${JSON.stringify(v)}`,
+      );
+}
+
 /** The parsed JSON of `paperlint.json` → the settings, or one line saying what is wrong. Pure. */
 export function parsePaperSettings(
   json: unknown,
@@ -103,6 +126,8 @@ export function parsePaperSettings(
     );
   const fields = stringFields(json);
   if (!fields.ok) return fields;
+  const identity = identityField(json);
+  if (!identity.ok) return identity;
   const rules = json["rules"];
   if (rules !== undefined && !isObject(rules) && !Array.isArray(rules))
     return err(
@@ -111,6 +136,7 @@ export function parsePaperSettings(
   return ok({
     ...fields.value,
     rules: rules ?? null,
+    identity: identity.value,
   });
 }
 
@@ -144,9 +170,18 @@ function rootDefaults(
   if (!json.ok) return json;
   if (!isObject(json.value)) return ok(null);
   const fields = stringFields(json.value);
-  return fields.ok
-    ? fields
-    : err({ kind: "broken", why: `the root ${CONFIG_FILE}: ${fields.error}` });
+  const identity = identityField(json.value);
+  if (!fields.ok)
+    return err({
+      kind: "broken",
+      why: `the root ${CONFIG_FILE}: ${fields.error}`,
+    });
+  return identity.ok
+    ? ok({ ...fields.value, identity: identity.value })
+    : err({
+        kind: "broken",
+        why: `the root ${CONFIG_FILE}: ${identity.error}`,
+      });
 }
 
 /**
@@ -167,8 +202,20 @@ export function readPaperSettings(
   return ok(merge(defaults.value, parsed.value));
 }
 
-type Defaults = Pick<PaperSettings, "extends" | "kind" | "pdf">;
-const NO_DEFAULTS: Defaults = { extends: null, kind: null, pdf: null };
+type Defaults = Pick<PaperSettings, "extends" | "kind" | "pdf" | "identity">;
+const NO_DEFAULTS: Defaults = {
+  extends: null,
+  kind: null,
+  pdf: null,
+  identity: null,
+};
+
+/** Both lists, joined without repeats; null when neither side has one. */
+const joined = (
+  a: readonly string[] | null,
+  b: readonly string[] | null,
+): readonly string[] | null =>
+  a === null && b === null ? null : [...new Set([...(a ?? []), ...(b ?? [])])];
 
 /** The paper's own values win; each absent one falls back to the root's. */
 function merge(
@@ -182,6 +229,7 @@ function merge(
     kind: p.kind ?? r.kind,
     pdf: p.pdf ?? r.pdf,
     rules: p.rules,
+    identity: joined(r.identity, p.identity),
   };
   return paper === null && Object.values(merged).every((v) => v === null)
     ? null

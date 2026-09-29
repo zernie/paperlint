@@ -34,6 +34,13 @@ import {
 import type { PageLayout, TextBox } from "./domain/page-layout.ts";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import { fillsFor, isUpright } from "./adapters/pdfjs/fill.ts";
+import {
+  linkTargetsOf,
+  metadataOf,
+  pageTextOf,
+  paintsImage,
+  xmpOf,
+} from "./pdf-content.ts";
 import { messageOf } from "./domain/text.ts";
 import { fieldOf, isRecord, numbersOf } from "./domain/record.ts";
 
@@ -83,12 +90,19 @@ interface Page {
     [Symbol.iterator](): Iterator<readonly unknown[]>;
   };
   getViewport(params: { scale: number }): Viewport;
+  /** pdf.js's annotations; the link ones carry `url`. */
+  getAnnotations(): Promise<readonly unknown[]>;
 }
 
 /** A document as this module reads it; pdf.js's `PDFDocumentProxy` is one. */
 interface Doc {
   readonly numPages: number;
   getPage(pageNumber: number): Promise<Page>;
+  /** The Info dictionary, and the XMP packet when there is one. */
+  getMetadata(): Promise<{
+    readonly info: unknown;
+    readonly metadata: Iterable<unknown> | null;
+  }>;
 }
 
 /** A viewport point, which pdf.js types as `any[]`: the two numbers it holds. */
@@ -106,6 +120,20 @@ export interface PdfFacts {
   readonly fonts: Fonts;
   readonly last: PageText;
   readonly layout: readonly PageLayout[];
+  /** Each page's text, in content order, a line break after each line (`pageTextOf`). */
+  readonly pageTexts: readonly string[];
+  /** The target of every link, with its 1-based page. */
+  readonly links: readonly PdfLink[];
+  /** The 1-based pages that paint a raster image. */
+  readonly imagePages: readonly number[];
+  /** The Info dictionary and XMP packet, flat (`metadataOf`). */
+  readonly metadata: Readonly<Record<string, string>>;
+}
+
+/** A link annotation's target, and the page it is on. */
+export interface PdfLink {
+  readonly page: number;
+  readonly uri: string;
 }
 
 export type PdfReadFailure =
@@ -198,10 +226,18 @@ async function readPage(
   page: Page,
   seen: ReadonlySet<string>,
   lib: PdfJs,
-): Promise<{ raw: RawPage; items: TextItem[]; layout: PageLayout }> {
+): Promise<{
+  raw: RawPage;
+  items: TextItem[];
+  layout: PageLayout;
+  text: string;
+  links: readonly string[];
+  image: boolean;
+}> {
   // The operator list is what makes pdf.js load a page's fonts into `commonObjs`.
   const ops = await page.getOperatorList();
-  const items = (await page.getTextContent()).items.filter(isText);
+  const all = (await page.getTextContent()).items;
+  const items = all.filter(isText);
   const loaded = loadedFonts(page);
   const named = new Set(items.map((it) => it.fontName));
   const fonts = [...loaded.values()].filter(
@@ -211,6 +247,9 @@ async function readPage(
     raw: { hasText: items.length > 0, fonts },
     items,
     layout: layoutOf(page, items, ops, lib),
+    text: pageTextOf(all),
+    links: linkTargetsOf(await page.getAnnotations()),
+    image: paintsImage(lib.OPS, ops.fnArray),
   };
 }
 
@@ -310,12 +349,7 @@ function layoutOf(
  * transform, no pages) — `readPdf` below is the one production caller.
  */
 export async function factsOf(doc: Doc, lib: PdfJs): Promise<PdfRead> {
-  const read: {
-    page: Page;
-    raw: RawPage;
-    items: TextItem[];
-    layout: PageLayout;
-  }[] = [];
+  const read: (Awaited<ReturnType<typeof readPage>> & { page: Page })[] = [];
   const seen = new Set<string>();
   for (let i = 1; i <= doc.numPages; i++) {
     const page = await doc.getPage(i);
@@ -340,7 +374,24 @@ export async function factsOf(doc: Doc, lib: PdfJs): Promise<PdfRead> {
       fonts,
       last: pageText(last.page, last.items),
       layout: read.map((r) => r.layout),
+      ...saidOf(read, await doc.getMetadata()),
     },
+  };
+}
+
+/** What the pages say, from each page's read, and the document's metadata. */
+function saidOf(
+  read: readonly Pick<
+    Awaited<ReturnType<typeof readPage>>,
+    "text" | "links" | "image"
+  >[],
+  meta: Awaited<ReturnType<Doc["getMetadata"]>>,
+): Pick<PdfFacts, "pageTexts" | "links" | "imagePages" | "metadata"> {
+  return {
+    pageTexts: read.map((r) => r.text),
+    links: read.flatMap((r, i) => r.links.map((uri) => ({ page: i + 1, uri }))),
+    imagePages: read.flatMap((r, i) => (r.image ? [i + 1] : [])),
+    metadata: metadataOf(meta.info, xmpOf(meta.metadata)),
   };
 }
 

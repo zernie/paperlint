@@ -30,18 +30,31 @@ describe("parsePaperSettings", () => {
         kind: "research",
         pdf: null,
         rules: null,
+        identity: null,
       },
     });
     expect(parsePaperSettings({})).toEqual({
       ok: true,
-      value: { extends: null, kind: null, pdf: null, rules: null },
+      value: {
+        extends: null,
+        kind: null,
+        pdf: null,
+        rules: null,
+        identity: null,
+      },
     });
   });
 
   it("extends: null is valid and means no venue chosen yet — what `paperlint new` writes", () => {
     expect(parsePaperSettings({ extends: null })).toEqual({
       ok: true,
-      value: { extends: null, kind: null, pdf: null, rules: null },
+      value: {
+        extends: null,
+        kind: null,
+        pdf: null,
+        rules: null,
+        identity: null,
+      },
     });
   });
 });
@@ -138,6 +151,9 @@ describe("readPaperSettings — a root paperlint.json that cannot be used", () =
   });
 });
 
+/** The fields a case does not set. */
+const UNSET = { pdf: null, rules: null, identity: null };
+
 describe("readPaperSettings — the root paperlint.json's defaults, the paper's file over them", () => {
   const ROOT = "/work";
   const withFiles = (f: Record<string, string>) =>
@@ -161,8 +177,7 @@ describe("readPaperSettings — the root paperlint.json's defaults, the paper's 
     ).toEqual({
       extends: "paperlint:agenticdev",
       kind: "short",
-      pdf: null,
-      rules: null,
+      ...UNSET,
     });
   });
 
@@ -172,8 +187,7 @@ describe("readPaperSettings — the root paperlint.json's defaults, the paper's 
     ).toEqual({
       extends: "paperlint:aisec",
       kind: null,
-      pdf: null,
-      rules: null,
+      ...UNSET,
     });
   });
 
@@ -191,6 +205,7 @@ describe("readPaperSettings — the root paperlint.json's defaults, the paper's 
       pdf: null,
       // The root's rules are the project's blocks (cli.ts), not this paper's.
       rules: { "pdf/fonts": "off" },
+      identity: null,
     });
   });
 
@@ -232,6 +247,7 @@ describe("paperRules — `rules` in paperlint.json", () => {
     kind: null,
     pdf: null,
     rules,
+    identity: null,
   });
 
   it("no rules: none", () => {
@@ -265,5 +281,46 @@ describe("paperRules — `rules` in paperlint.json", () => {
       expect(r.error).toMatch(why);
       expect(r.error).toMatch(/paperlint\.json/);
     }
+  });
+});
+
+describe("readPaperSettings — identity, at both levels", () => {
+  const ROOT = "/work";
+  const withFiles = (f: Record<string, string>) =>
+    memoryFiles({ [`${ROOT}/package.json`]: "{}", ...f });
+  const read = (f: Record<string, string>) => {
+    const r = readPaperSettings(withFiles(f), PAPER);
+    if (!r.ok) throw new Error(r.error.why);
+    return r.value;
+  };
+
+  it("identity: the root's list and the paper's, joined without repeats", () => {
+    expect(
+      read({
+        [`${ROOT}/paperlint.json`]: '{"identity":["Ada Example","adaexample"]}',
+        [`${PAPER}/paperlint.json`]:
+          '{"identity":["adaexample","Bob Coauthor"]}',
+      })?.identity,
+    ).toEqual(["Ada Example", "adaexample", "Bob Coauthor"]);
+    expect(
+      read({ [`${ROOT}/paperlint.json`]: '{"identity":["Ada Example"]}' })
+        ?.identity,
+    ).toEqual(["Ada Example"]);
+  });
+
+  it("identity of the wrong shape, at either level, is refused naming it", () => {
+    const why = (f: Record<string, string>) => {
+      const r = readPaperSettings(withFiles(f), PAPER);
+      return r.ok ? "" : r.error.why;
+    };
+    expect(why({ [`${PAPER}/paperlint.json`]: '{"identity":"Ada"}' })).toMatch(
+      /"identity" must be a list of strings/,
+    );
+    expect(why({ [`${PAPER}/paperlint.json`]: '{"identity":["  "]}' })).toMatch(
+      /"identity" must be a list of strings, each with a letter or digit/,
+    );
+    expect(why({ [`${ROOT}/paperlint.json`]: '{"identity":[3]}' })).toMatch(
+      /^the root paperlint\.json: "identity" must be/,
+    );
   });
 });

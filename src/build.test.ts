@@ -115,6 +115,10 @@ const reader =
         },
         last,
         layout: [],
+        pageTexts: [],
+        links: [],
+        imagePages: [],
+        metadata: {},
       },
     });
 const quiet = () => {};

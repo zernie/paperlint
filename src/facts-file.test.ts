@@ -82,14 +82,23 @@ const doc = (last: PageText, geometry: Geometry = NONE) =>
     sha: "a".repeat(64),
     venue: "agenticdev",
     kind: "short",
-    read: { pages: 4, fonts: FONTS, last, layout: [] },
+    read: {
+      pages: 4,
+      fonts: FONTS,
+      last,
+      layout: [],
+      pageTexts: [],
+      links: [],
+      imagePages: [],
+      metadata: {},
+    },
     geometry,
   });
 
 // ── the document ────────────────────────────────────────────────────────────────────────
-test("schema 2; a measured last page gives both heights, in both fields", () => {
+test("schema 3; a measured last page gives both heights, in both fields", () => {
   const d = doc(lastPage(60, 30));
-  assert.equal(d.schema, 2);
+  assert.equal(d.schema, 3);
   assert.deepEqual(d.last_page, { kind: "measured", columns_pt: [600, 300] });
   assert.deepEqual(d.last_page_cols_pt, [600, 300]);
   assert.equal(d.npages, 4);
@@ -150,7 +159,16 @@ const PDF_BYTES = "%PDF-pretend";
 const good: PdfReader = () =>
   Promise.resolve({
     ok: true,
-    facts: { pages: 2, fonts: FONTS, last: lastPage(60, 60), layout: [] },
+    facts: {
+      pages: 2,
+      fonts: FONTS,
+      last: lastPage(60, 60),
+      layout: [],
+      pageTexts: [],
+      links: [],
+      imagePages: [],
+      metadata: {},
+    },
   });
 /** The shipped presets at their real paths: `extends` resolves through the same Files port. */
 const SHIPPED_PRESETS = Object.fromEntries(
@@ -290,6 +308,10 @@ test("a PDF with no text has an empty font list, not a failed document", () => {
       fonts: { kind: "no-text" },
       last: lastPage(0, 0),
       layout: [],
+      pageTexts: [],
+      links: [],
+      imagePages: [],
+      metadata: {},
     },
     geometry: NONE,
   });
@@ -386,4 +408,62 @@ test("parseFactsText: a missing schema is reported as null, another schema by it
   });
   const other = parse({ ...written(), schema: 1 });
   assert.deepEqual(!other.ok && other.error, { kind: "schema", got: "1" });
+});
+
+test("schema 3: what the PDF says is written, and reads back typed", () => {
+  const said = {
+    ...written(),
+    pages_text: ["Ada Example\nIntroduction", "References"],
+    metadata: { Author: "Ada Example" },
+    links: [{ page: 1, uri: "https://github.com/adaexample" }],
+    image_pages: [2],
+  };
+  const r = parse(said);
+  assert.ok(r.ok);
+  assert.deepEqual(r.value.text, {
+    pages: ["Ada Example\nIntroduction", "References"],
+    metadata: { Author: "Ada Example" },
+    links: [{ page: 1, uri: "https://github.com/adaexample" }],
+    imagePages: [2],
+  });
+  const d = factsDocument({
+    pdf: "paper.pdf",
+    sha: "a".repeat(64),
+    venue: null,
+    kind: null,
+    read: {
+      pages: 1,
+      fonts: FONTS,
+      last: lastPage(1, 0),
+      layout: [],
+      pageTexts: ["x"],
+      links: [{ page: 1, uri: "u" }],
+      imagePages: [1],
+      metadata: { Title: "t" },
+    },
+    geometry: MEASURED,
+  });
+  assert.deepEqual(
+    [d.pages_text, d.links, d.image_pages, d.metadata],
+    [["x"], [{ page: 1, uri: "u" }], [1], { Title: "t" }],
+  );
+});
+
+test("schema 3: a missing or malformed text field is refused, naming it", () => {
+  const noText = Object.fromEntries(
+    Object.entries(written()).filter(([k]) => k !== "pages_text"),
+  );
+  assert.equal(why(noText), "`pages_text` is not a list of strings");
+  assert.equal(
+    why({ ...written(), metadata: { Author: 3 } }),
+    "`metadata` is not an object of strings",
+  );
+  assert.equal(
+    why({ ...written(), links: [{ page: 0, uri: "u" }] }),
+    "`links` is not a list of { page, uri }",
+  );
+  assert.equal(
+    why({ ...written(), image_pages: [1.5] }),
+    "`image_pages` is not a list of page numbers",
+  );
 });

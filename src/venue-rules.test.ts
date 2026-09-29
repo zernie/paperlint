@@ -13,7 +13,15 @@ import { describe, expect, it } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import { presetsDir } from "./package-dirs.ts";
-import { VENUE_RULE_LEVELS, venueRules } from "./venue-rules.ts";
+import {
+  ANONYMITY_RULE_LEVELS,
+  anonymityRules,
+  judgeBodyBeforeReferences,
+  VENUE_RULE_LEVELS,
+  venueRules,
+  type Resolved,
+} from "./venue-rules.ts";
+import { NO_FORMAT } from "./tex-requirements.ts";
 import { buildConfig, OPTIONAL_RULES, SHIPPED_RULES } from "./cli.ts";
 import { present } from "../test/support.ts";
 
@@ -44,7 +52,11 @@ type Patch = (f: Facts) => void;
 /** The facts of a short agenticdev paper that meets every number in its profile. */
 function goodFacts(): Facts {
   return {
-    schema: 2,
+    schema: 3,
+    pages_text: [],
+    metadata: {},
+    links: [],
+    image_pages: [],
     pdf: "paper.pdf",
     pdf_sha256: sha256Hex(PDF_BYTES),
     venue: "agenticdev",
@@ -122,18 +134,26 @@ function lint(
   cwd?: string,
 ): Finding[] {
   const files = memoryFiles(paperFiles(p));
-  const rules = venueRules({ files, venuesDir: VENUES });
+  const deps = { files, venuesDir: VENUES };
+  const rules = [
+    ...Object.entries(venueRules(deps)).map(
+      ([n, r]) => [`pdf/${n}`, r] as const,
+    ),
+    ...Object.entries(anonymityRules(deps)).map(
+      ([n, r]) => [`anonymity/${n}`, r] as const,
+    ),
+  ];
   const out: Finding[] = [];
-  for (const [name, rule] of Object.entries(rules)) {
+  for (const [id, rule] of rules) {
     const visitor = rule.create({
       filename,
       ...(cwd === undefined ? {} : { cwd }),
       sourceCode: { text: TEX },
       options:
-        name === "geometry" && Object.keys(options).length ? [options] : [],
+        id === "pdf/geometry" && Object.keys(options).length ? [options] : [],
       report: (d) =>
         out.push({
-          rule: `pdf/${name}`,
+          rule: id,
           messageId: d.messageId,
           message: Object.entries(d.data ?? {}).reduce(
             (m, [k, v]) => m.replaceAll(`{{${k}}}`, String(v)),
@@ -537,11 +557,14 @@ describe("paperlint's own config turns the venue rules on for every paper.tex", 
     "the paper.tex block's rules",
   );
 
-  it.each(Object.entries(VENUE_RULE_LEVELS))("%s is on at %s", (id, level) => {
-    expect(texRules[id]).toBe(level);
-    expect(SHIPPED_RULES.has(id)).toBe(true);
-    expect(OPTIONAL_RULES.has(id)).toBe(false);
-  });
+  it.each(Object.entries({ ...VENUE_RULE_LEVELS, ...ANONYMITY_RULE_LEVELS }))(
+    "%s is on at %s",
+    (id, level) => {
+      expect(texRules[id]).toBe(level);
+      expect(SHIPPED_RULES.has(id)).toBe(true);
+      expect(OPTIONAL_RULES.has(id)).toBe(false);
+    },
+  );
 
   it("the six rules of the issue are errors except body-size, and measured is a warning", () => {
     expect(VENUE_RULE_LEVELS).toEqual({
@@ -552,6 +575,10 @@ describe("paperlint's own config turns the venue rules on for every paper.tex", 
       "pdf/limits": "error",
       "pdf/body-size": "warn",
       "pdf/measured": "warn",
+    });
+    expect(ANONYMITY_RULE_LEVELS).toEqual({
+      "anonymity/identity": "error",
+      "anonymity/images": "warn",
     });
   });
 
@@ -573,6 +600,10 @@ const type1 = (names: readonly string[]): Font[] =>
     program: "Type1",
   }));
 
+/** `n` pages of body text, one per page, as `pages_text` holds them. */
+const bodyPages = (n: number): string[] =>
+  Array.from({ length: n }, (_, i) => `Body page ${String(i + 1)}\n`);
+
 const ieeeFacts = (patch: Patch = () => {}): Facts =>
   withFacts((f) => {
     f.page_w_in = 8.5;
@@ -582,6 +613,11 @@ const ieeeFacts = (patch: Patch = () => {}): Facts =>
     f.ref_pt = 8.3;
     f.body_pages = 12;
     f.ref_pages = 1;
+    // Twelve pages of body, the references heading on the thirteenth.
+    f.pages_text = [
+      ...bodyPages(12),
+      "R EFERENCES\n[1] D. E. Knuth, Literate Programming.\nLLM Usage Statement\n",
+    ];
     f.fonts = type1([
       "NimbusRomNo9L-Medi",
       "NimbusRomNo9L-Regu",
@@ -593,14 +629,32 @@ const ieeeFacts = (patch: Patch = () => {}): Facts =>
 
 describe("the IEEE conference family and AIDC", () => {
   const FAMILY = { extends: "paperlint:ieee-conference" };
-  const AIDC = { extends: "paperlint:aidc", kind: "regular" };
+  const IDENTITY = ["Ada Example", "adaexample", "ada@example.org"];
+  const AIDC = {
+    extends: "paperlint:aidc",
+    kind: "regular",
+    identity: IDENTITY,
+  };
 
   it.each([
     ["the family", FAMILY],
     ["aidc/regular", AIDC],
-    ["aidc/short", { extends: "paperlint:aidc", kind: "short" }],
   ])("the measured IEEEtran build passes %s", (_, venue) => {
     expect(lint({ venue, facts: ieeeFacts() })).toEqual([]);
+  });
+
+  it("aidc/short: six body pages pass, seven fail", () => {
+    const short = { ...AIDC, kind: "short" };
+    const pages = (n: number) =>
+      ieeeFacts((f) => {
+        f.pages_text = [...bodyPages(n), "References\n"];
+      });
+    expect(lint({ venue: short, facts: pages(6) })).toEqual([]);
+    const fs = lint({ venue: short, facts: pages(7) });
+    expect(ids(fs)).toEqual(["pdf/limits:pages"]);
+    expect(fs[0]?.message).toBe(
+      "body pages (before the references on page 8): 7, over the limit 6 for aidc/short — a desk reject; cut the text",
+    );
   });
 
   it.each([
@@ -633,14 +687,136 @@ describe("the IEEE conference family and AIDC", () => {
       ids(lint({ venue: AIDC, facts: ieeeFacts((f) => (f.body_pt = 9.3)) })),
     ).toEqual(["pdf/body-size:body"]);
   });
+});
 
-  it("🔴 AIDC's page limit is not gated: banal's body count of 13 — a correct paper with its LLM Usage Statement before the references — is not a finding", () => {
+describe("pdf/limits on AIDC: the body is counted before the references", () => {
+  const AIDC = {
+    extends: "paperlint:aidc",
+    kind: "regular",
+    identity: ["Ada Example"],
+  };
+
+  it("🔴 AIDC's body is counted before the references, not by banal: banal's 13 — the statement and an appendix after the references counted as body — is not a finding", () => {
     expect(
       lint({
         venue: AIDC,
         facts: ieeeFacts((f) => ((f.body_pages = 13), (f.ref_pages = 0))),
       }),
     ).toEqual([]);
+  });
+
+  it("…while a thirteenth page of body before the references is", () => {
+    const fs = lint({
+      venue: AIDC,
+      facts: ieeeFacts((f) => {
+        f.pages_text = [...bodyPages(13), "7 References\n"];
+      }),
+    });
+    expect(ids(fs)).toEqual(["pdf/limits:pages"]);
+  });
+
+  it("no references heading on any page: said, not passed", () => {
+    const fs = lint({
+      venue: AIDC,
+      facts: ieeeFacts((f) => (f.pages_text = ["Body\n", "Body\n"])),
+    });
+    expect(ids(fs)).toEqual(["pdf/limits:noReferences"]);
+    expect(fs[0]?.message).toMatch(/NOT counted/);
+  });
+
+  it("the references count needs no banal: facts without geometry are still judged", () => {
+    const fs = lint({
+      venue: AIDC,
+      facts: ieeeFacts((f) => {
+        f.geometry_source = null;
+        f.pages_text = [...bodyPages(13), "References\n"];
+      }),
+    });
+    expect(ids(fs)).toEqual(["pdf/limits:pages", "pdf/measured:noGeometry"]);
+  });
+});
+
+/** An AIDC paper that declares who wrote it. */
+const BLIND = {
+  extends: "paperlint:aidc",
+  kind: "regular",
+  identity: ["Ada Example", "adaexample", "ada@example.org"],
+};
+const said = (patch: Patch) => ieeeFacts(patch);
+
+describe("anonymity/identity — a blind venue (AIDC)", () => {
+  it("no identity declared: an error, built or not — a missing input is not a clean pass", () => {
+    const noIdentity = { extends: "paperlint:aidc", kind: "regular" };
+    const built = lint({ venue: noIdentity, facts: ieeeFacts() });
+    expect(ids(built)).toEqual(["anonymity/identity:noIdentity"]);
+    expect(built[0]?.message).toMatch(/"identity": \["Your Name"/);
+    expect(ids(lint({ venue: noIdentity, facts: null }))).toEqual([
+      "anonymity/identity:noIdentity",
+      "pdf/measured:unbuilt",
+    ]);
+    expect(
+      ids(lint({ venue: { ...noIdentity, identity: [] }, facts: ieeeFacts() })),
+    ).toEqual(["anonymity/identity:noIdentity"]);
+  });
+
+  it("declared and not built: silent — pdf/measured already says it was not built", () => {
+    expect(ids(lint({ venue: BLIND, facts: null }))).toEqual([
+      "pdf/measured:unbuilt",
+    ]);
+  });
+
+  it("a name on a page, the metadata and a link target: one finding each, with the place", () => {
+    const fs = lint({
+      venue: BLIND,
+      facts: said((f) => {
+        f.pages_text = [
+          "Title\nAda\nExample\n",
+          ...bodyPages(11),
+          "References\n",
+        ];
+        f.metadata = { Author: "Ada Example", Producer: "pdfTeX-1.40.25" };
+        f.links = [{ page: 2, uri: "https://github.com/adaexample/tool" }];
+      }),
+    });
+    expect(fs.map((f) => f.message)).toEqual([
+      "PDF, page 1: «Ada Example» matches «Ada Example» in `identity`, and aidc reviews double-blind — remove it, or refer to your own work in the third person",
+      "PDF metadata: Author: «Ada Example» matches «Ada Example» in `identity`, and aidc reviews double-blind — remove it, or refer to your own work in the third person",
+      "link target on page 2 (https://github.com/adaexample/tool): «adaexample» matches «Ada Example» in `identity`, and aidc reviews double-blind — remove it, or refer to your own work in the third person",
+    ]);
+  });
+
+  it("an anonymous-hosting link names nobody, and is not a finding", () => {
+    expect(
+      lint({
+        venue: BLIND,
+        facts: said((f) => {
+          f.links = [
+            { page: 1, uri: "https://anonymous.4open.science/r/tool-1A2B" },
+          ];
+        }),
+      }),
+    ).toEqual([]);
+  });
+
+  it("a venue that is not blind: silent, with or without identity, whatever the PDF says", () => {
+    const facts = withFacts((f) => (f.pages_text = ["Ada Example\n"]));
+    expect(lint({ venue: DECL, facts })).toEqual([]);
+    expect(
+      lint({ venue: { ...DECL, identity: ["Ada Example"] }, facts }),
+    ).toEqual([]);
+  });
+});
+
+describe("anonymity/images — a blind venue (AIDC)", () => {
+  it("raster images on a blind venue's pages: a warning naming them", () => {
+    const fs = lint({
+      venue: BLIND,
+      facts: said((f) => (f.image_pages = [2, 5])),
+    });
+    expect(ids(fs)).toEqual(["anonymity/images:images"]);
+    expect(fs[0]?.message).toMatch(/^PDF, page\(s\) 2, 5: raster images/);
+    const notBlind = withFacts((f) => (f.image_pages = [2]));
+    expect(lint({ venue: DECL, facts: notBlind })).toEqual([]);
   });
 
   it("an AIDC kind that does not exist names the two that do", () => {
@@ -707,5 +883,24 @@ describe("a project's own preset, and the facts' other spellings", () => {
     expect(at(`${PAPER}/paperlint.json`)).toMatch(
       /set "extends" in \/work\/papers\/p\/paperlint\.json/,
     );
+  });
+});
+
+describe("judgeBodyBeforeReferences, on a venue it does not apply to", () => {
+  const venue = (kind: Resolved["kind"]): Resolved => ({
+    venue: "house",
+    format: { ...NO_FORMAT, bodyEndsAt: "references" },
+    kind,
+    kindProblem: null,
+    blind: false,
+    identity: null,
+  });
+
+  it("a kind with no body limit, or no kind: nothing to count against", () => {
+    const limits = { bodyPagesMax: null, refPagesMax: null };
+    expect(
+      judgeBodyBeforeReferences([], venue({ name: "long", limits })),
+    ).toEqual([]);
+    expect(judgeBodyBeforeReferences([], venue(null))).toEqual([]);
   });
 });

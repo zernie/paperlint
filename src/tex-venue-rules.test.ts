@@ -13,6 +13,8 @@ import {
   judgeRequiredSections,
   judgeTemplate,
   otherVenues,
+  FORMAT_RULE_LEVELS,
+  formatRules,
   TEX_VENUE_RULE_LEVELS,
   texVenueRules,
 } from "./tex-venue-rules.ts";
@@ -66,9 +68,15 @@ function lint(
     ...extra,
   });
   const out: Finding[] = [];
-  for (const [name, rule] of Object.entries(
-    texVenueRules({ files, venuesDir: VENUES, latex: latexReader }),
-  )) {
+  const deps = { files, venuesDir: VENUES, latex: latexReader };
+  for (const [id, rule] of [
+    ...Object.entries(texVenueRules(deps)).map(
+      ([n, r]) => [`tex/${n}`, r] as const,
+    ),
+    ...Object.entries(formatRules(deps)).map(
+      ([n, r]) => [`format/${n}`, r] as const,
+    ),
+  ]) {
     const visitor = rule.create({
       filename,
       sourceCode: {
@@ -78,7 +86,7 @@ function lint(
       },
       report: (d) =>
         out.push({
-          rule: `tex/${name}`,
+          rule: id,
           // A finding from an included file arrives as a whole message, its file at the front.
           messageId: "messageId" in d ? d.messageId : "(message)",
           message:
@@ -720,7 +728,7 @@ describe("otherVenues", () => {
 });
 
 describe("paperlint's own config", () => {
-  it.each(Object.entries(TEX_VENUE_RULE_LEVELS))(
+  it.each(Object.entries({ ...TEX_VENUE_RULE_LEVELS, ...FORMAT_RULE_LEVELS }))(
     "turns %s on at %s for every paper.tex, and ships it",
     (id, level) => {
       const tex = buildConfig({}, { sentinel: "tex" }).find((b) =>
@@ -737,5 +745,91 @@ describe("paperlint's own config", () => {
       "tex/required-section": "error",
       "tex/venue-leftover": "warn",
     });
+  });
+});
+
+/** A conforming AIDC paper with `preamble` after its class line, and `body` before its statement. */
+const withPreamble = (preamble: string, body = "Text.") =>
+  paper(
+    `\\documentclass[conference,compsoc]{IEEEtran}\n${preamble}`,
+    `${body}\n\\section*{LLM Usage Statement}\nNone.`,
+  );
+const overrides = (tex: string, settings: object | undefined = AIDC) =>
+  lint(tex, settings).filter((f) => f.rule === "format/layout-override");
+
+describe("format/layout-override reports", () => {
+  it("each command that changes the template's layout, on its own line", () => {
+    const tex = withPreamble(
+      [
+        "\\usepackage[margin=1in]{geometry}",
+        "\\usepackage{amsmath,geometry}",
+        "\\setlength{\\textheight}{9.5in}",
+        "\\addtolength\\textwidth{1in}",
+        "\\setlength{\\columnsep}{0.1in}",
+        "\\linespread{0.95}",
+        "\\renewcommand{\\baselinestretch}{0.9}",
+        "\\geometry{left=1cm}",
+      ].join("\n"),
+      "Text.\n\\newgeometry{top=1cm}\nA \\vspace{-2mm} B \\vspace*{-1em} C \\vskip -3pt D.",
+    );
+    expect(
+      overrides(tex).map((f) => [f.line, f.message.split("`")[1]]),
+    ).toEqual([
+      [3, "\\usepackage{geometry}"],
+      [4, "\\usepackage{geometry}"],
+      [5, "\\setlength{\\textheight}"],
+      [6, "\\addtolength{\\textwidth}"],
+      [7, "\\setlength{\\columnsep}"],
+      [8, "\\linespread{0.95}"],
+      [9, "\\renewcommand{\\baselinestretch}"],
+      [10, "\\geometry"],
+      [13, "\\newgeometry"],
+      [14, "\\vspace{-2mm}"],
+      [14, "\\vspace{-1em}"],
+      [14, "\\vskip -…"],
+    ]);
+    expect(overrides(tex)[0]?.message).toBe(
+      "`\\usepackage{geometry}` changes the layout aidc's template sets (`\\documentclass[conference,compsoc]{IEEEtran}`) — a desk-reject reason at venues that check the format. Remove it; if the venue allows it, disable this line with a comment saying so",
+    );
+  });
+  it("a definition's body counts: the space it pulls back is pulled wherever it is used", () => {
+    const tex = withPreamble("\\newcommand{\\tight}{\\vspace{-3pt}}");
+    expect(overrides(tex).map((f) => f.line)).toEqual([3]);
+  });
+});
+
+describe("format/layout-override stays silent", () => {
+  it("silent on what leaves the layout alone", () => {
+    const tex = withPreamble(
+      [
+        "\\usepackage{amsmath}",
+        "\\setlength{\\parindent}{0pt}",
+        "\\renewcommand{\\thesection}{\\arabic{section}}",
+        "% \\usepackage{geometry} in a comment",
+        "\\begin{comment}\\linespread{0.9}\\end{comment}",
+        // A length command with no arguments at all names no length.
+        "{\\setlength}",
+      ].join("\n"),
+      "A \\vspace{2mm} B \\vskip 3pt C \\vskip\\baselineskip D.",
+    );
+    expect(overrides(tex)).toEqual([]);
+  });
+
+  it("silent without a preset, or with one that names no template", () => {
+    const tex = withPreamble("\\usepackage{geometry}");
+    expect(
+      lint(tex, undefined).filter((f) => f.rule === "format/layout-override"),
+    ).toEqual([]);
+    expect(overrides(tex, { extends: null })).toEqual([]);
+    const house = {
+      [`${PAPER}/house.jsonc`]: JSON.stringify({
+        tex: { packages: { ieeetran: ["IEEEtran.cls"] } },
+      }),
+    };
+    expect(
+      lint(tex, { extends: "./house.jsonc" }, { extra: house }).filter(
+        (f) => f.rule === "format/layout-override",
+      ),
+    ).toEqual([]);
   });
 });

@@ -43,11 +43,21 @@ const paper = (
 
 const PDF = "%PDF-1.5 a stand-in for the built PDF";
 const AGENTICDEV = { extends: "paperlint:agenticdev", kind: "short" };
+/** A double-blind venue's paper that declares who wrote it (`anonymity/*`). */
+const BLIND = {
+  extends: "paperlint:aidc",
+  kind: "regular",
+  identity: ["Ada Example", "adaexample"],
+};
 const ACM_TEX = tex("Text.", "\\documentclass[sigconf]{acmart}");
 
 /** The facts of a short agenticdev paper that meets every number in its preset. */
 const goodFacts = (): Record<string, unknown> => ({
-  schema: 2,
+  schema: 3,
+  pages_text: [],
+  metadata: {},
+  links: [],
+  image_pages: [],
   pdf: "paper.pdf",
   pdf_sha256: sha256Hex(new TextEncoder().encode(PDF)),
   venue: "agenticdev",
@@ -390,6 +400,25 @@ const CASES: Readonly<Record<string, RuleCases>> = {
   "pdf/body-size": {
     reports: { ...onPdf(built({ body_pt: 12 })), severity: 1 },
     silent: built(),
+  },
+  "anonymity/identity": {
+    reports: onPdf(
+      built({ pages_text: ["Ada Example\n", "References\n"] }, BLIND),
+    ),
+    silent: built({ pages_text: ["Anonymous\n", "References\n"] }, BLIND),
+  },
+  "anonymity/images": {
+    reports: { ...onPdf(built({ image_pages: [1] }, BLIND)), severity: 1 },
+    silent: built({}, BLIND),
+  },
+  "format/layout-override": {
+    reports: {
+      tree: aidc("\\vspace{-2mm}Text."),
+      file: TEX_FILE,
+      severity: 1,
+      line: 4,
+    },
+    silent: aidc("Text."),
   },
   "pdf/last-page-balance": {
     reports: onPdf(

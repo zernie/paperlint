@@ -9,6 +9,11 @@
  *   pdf/body-size  warn   body font size within the preset's tolerance
  *   pdf/measured   warn   the venue checks ran at all (a preset is named, facts exist, geometry measured)
  *
+ * and, in the `anonymity` plugin (named for the requirement, not the input — paperlint#151):
+ *
+ *   anonymity/identity  error  a blind venue: the paper declares `identity`, and the PDF says none of it
+ *   anonymity/images    warn   a blind venue: the pages whose raster images no text check can read
+ *
  * ── WHAT THEY READ ───────────────────────────────────────────────────────────────
  * Like `pdf/last-page-balance`, they run on a paper's `paper.tex` and judge the files beside it:
  * `paperlint.json` (which preset, which kind), `_build/paper.facts.json` (what `paperlint build`
@@ -37,19 +42,24 @@ import { dirname, isAbsolute, join, basename, relative } from "node:path";
 import {
   FACTS_DIR,
   FACTS_FILE,
+  FACTS_SCHEMA,
   factsPath,
   parseFactsText,
   type FontEntry,
   type ReadFacts,
 } from "./facts-file.ts";
 import type { KindLimits, VenueFormat } from "./tex-requirements.ts";
-import { paperPreset, presetProblemText } from "./presets.ts";
+import { paperPreset, presetProblemText, type Preset } from "./presets.ts";
+import type { PaperSettings } from "./paper-settings.ts";
 import type { FlatGeometry } from "./domain/geometry.ts";
 import { callerPath } from "./caller-path.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import { fieldOf } from "./domain/record.ts";
 import type { Files } from "./ports/files.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
+import { findLeaks, type Leak, type Searchable } from "./domain/anonymity.ts";
+import { referencesStart } from "./domain/body-pages.ts";
+import type { TextFacts } from "./facts-file.ts";
 
 // ── the verdict's vocabulary ─────────────────────────────────────────────────────────
 
@@ -71,6 +81,10 @@ export interface Resolved {
   readonly kind: { readonly name: string; readonly limits: KindLimits } | null;
   /** Why the kind did not resolve — `pdf/profile` reports it — or null. */
   readonly kindProblem: Finding | null;
+  /** Whether the venue reviews double-blind (the preset's `blind`). */
+  readonly blind: boolean;
+  /** What identifies the authors (`identity` in paperlint.json), or null when undeclared. */
+  readonly identity: readonly string[] | null;
 }
 
 /** Everything the rules need to know about one paper, decided once. */
@@ -125,6 +139,15 @@ function kindOf(
       };
 }
 
+/** How the venue reviews, and who the paper says wrote it: what `anonymity/*` judges by. */
+const reviewOf = (
+  preset: Pick<Preset, "blind">,
+  settings: Pick<PaperSettings, "identity">,
+): Pick<Resolved, "blind" | "identity"> => ({
+  blind: preset.blind,
+  identity: settings.identity,
+});
+
 /** The facts about the PDF on disk, or the `pdf/fresh` finding that says why they are not. */
 function freshFacts(
   files: Files,
@@ -134,7 +157,7 @@ function freshFacts(
   const parsed = parseFactsText(body);
   if (!parsed.ok)
     return parsed.error.kind === "schema"
-      ? finding("schema", { got: parsed.error.got })
+      ? finding("schema", { got: parsed.error.got, want: FACTS_SCHEMA })
       : finding("factsBroken", { why: parsed.error.why });
   const f = parsed.value;
   const pdf = files.readBytes(
@@ -168,6 +191,7 @@ export function assessPaper(paperDir: string, deps: VenueRuleDeps): Assessment {
     venue: label,
     format: p.preset.format,
     ...kindOf(label, p.preset.format, p.settings.kind),
+    ...reviewOf(p.preset, p.settings),
   };
   const factsText = text(deps.files, factsPath(paperDir));
   if (factsText === null) return { kind: "unbuilt", venue };
@@ -253,7 +277,9 @@ function judgePages(g: FlatGeometry, resolved: Resolved): Finding[] {
     [kind.limits.bodyPagesMax, g.body_pages, "body pages"],
     [kind.limits.refPagesMax, g.ref_pages, "reference pages"],
   ];
-  return pages.flatMap(([max, got, what]) =>
+  // A venue that counts the body before the references is judged by `judgeBodyBeforeReferences`.
+  const from = resolved.format.bodyEndsAt === "references" ? 1 : 0;
+  return pages.slice(from).flatMap(([max, got, what]) =>
     max !== null && got > max
       ? [
           finding("pages", {
@@ -285,6 +311,102 @@ function judgeRefPt(g: FlatGeometry, resolved: Resolved): Finding[] {
       ]
     : [];
 }
+
+/**
+ * The body counted as the pages before the references heading (`body_ends_at: references`), against
+ * the kind's limit. A limit to check and no heading found is said, not passed: the count has
+ * nothing to stand on.
+ */
+export function judgeBodyBeforeReferences(
+  pages: readonly string[],
+  resolved: Resolved,
+): readonly Finding[] {
+  const kind = resolved.kind;
+  const max = kind?.limits.bodyPagesMax ?? null;
+  if (
+    resolved.format.bodyEndsAt !== "references" ||
+    kind === null ||
+    max === null
+  )
+    return [];
+  const start = referencesStart(pages);
+  if (start.kind === "missing")
+    return [finding("noReferences", { venue: resolved.venue })];
+  return start.bodyPages > max
+    ? [
+        finding("pages", {
+          what: `body pages (before the references on page ${String(start.page)})`,
+          got: start.bodyPages,
+          max,
+          venue: resolved.venue,
+          kind: kind.name,
+        }),
+      ]
+    : [];
+}
+
+/** Everything the PDF says, as places to search: each page, each metadata field, each link. */
+export const searchable = (t: TextFacts): readonly Searchable[] => [
+  ...t.pages.map((text, i) => ({
+    place: { kind: "page" as const, page: i + 1 },
+    text,
+  })),
+  ...Object.entries(t.metadata).map(([field, text]) => ({
+    place: { kind: "metadata" as const, field },
+    text,
+  })),
+  ...t.links.map(({ page, uri }) => ({
+    place: { kind: "link" as const, page, uri },
+    text: uri,
+  })),
+];
+
+/** Where a leak is, in words. */
+function whereOf(l: Leak): string {
+  switch (l.place.kind) {
+    case "page":
+      return `PDF, page ${String(l.place.page)}`;
+    case "metadata":
+      return `PDF metadata: ${l.place.field}`;
+    case "link":
+      return `link target on page ${String(l.place.page)} (${l.place.uri})`;
+  }
+}
+
+/** A blind venue's paper: `identity` declared, and none of it in the PDF. */
+export function judgeAnonymity(
+  resolved: Resolved,
+  text: TextFacts | null,
+): readonly Finding[] {
+  if (!resolved.blind) return [];
+  const identity = resolved.identity ?? [];
+  if (identity.length === 0)
+    return [finding("noIdentity", { venue: resolved.venue })];
+  return text === null
+    ? []
+    : findLeaks(identity, searchable(text)).map((l) =>
+        finding("leak", {
+          found: l.found.replace(/\s+/gu, " "),
+          token: l.token,
+          where: whereOf(l),
+          venue: resolved.venue,
+        }),
+      );
+}
+
+/** A blind venue's paper whose pages paint raster images: the pages to check by eye. */
+export const judgeAnonymityImages = (
+  resolved: Resolved,
+  text: TextFacts,
+): readonly Finding[] =>
+  resolved.blind && text.imagePages.length > 0
+    ? [
+        finding("images", {
+          pages: text.imagePages.join(", "),
+          venue: resolved.venue,
+        }),
+      ]
+    : [];
 
 /** The body font size against `body_pt ± body_pt_tol`. */
 export function judgeBodySize(
@@ -323,7 +445,7 @@ export interface VenueRuleContext {
 export interface VenueRuleModule {
   readonly meta: {
     readonly type: "problem" | "suggestion";
-    readonly docs: { readonly description: string };
+    readonly docs: { readonly description: string; readonly url?: string };
     readonly schema: readonly object[];
     readonly messages: Readonly<Record<string, string>>;
   };
@@ -338,6 +460,10 @@ interface JudgeContext {
 type Judge = (a: Assessment, ctx: JudgeContext) => Finding[];
 
 const REBUILD = "rebuild the paper (`paperlint build`) to rewrite it";
+
+/** Where a rule's page lives: `docs/rules/<plugin>/<name>.md` on the default branch. */
+export const rulePageUrl = (id: string): string =>
+  `https://github.com/zernie/paperlint/blob/main/docs/rules/${id}.md`;
 
 /** Which rule reports what: each takes the assessment and returns its own findings. */
 const JUDGES: Readonly<Record<VenueRuleName, Judge>> = {
@@ -377,9 +503,20 @@ const JUDGES: Readonly<Record<VenueRuleName, Judge>> = {
         )
       : [],
   limits: (a) =>
-    a.kind === "ready" && a.facts.geometry
-      ? judgeLimits(a.facts.geometry, a.venue)
+    a.kind === "ready"
+      ? [
+          ...judgeBodyBeforeReferences(a.facts.text.pages, a.venue),
+          ...(a.facts.geometry ? judgeLimits(a.facts.geometry, a.venue) : []),
+        ]
       : [],
+  anonymity: (a) =>
+    a.kind === "ready"
+      ? [...judgeAnonymity(a.venue, a.facts.text)]
+      : a.kind === "unbuilt"
+        ? [...judgeAnonymity(a.venue, null)]
+        : [],
+  "anonymity-images": (a) =>
+    a.kind === "ready" ? [...judgeAnonymityImages(a.venue, a.facts.text)] : [],
   "body-size": (a) =>
     a.kind === "ready" && a.facts.geometry
       ? judgeBodySize(a.facts.geometry, a.venue.format, a.venue.venue)
@@ -408,7 +545,7 @@ const META: Readonly<Record<VenueRuleName, Meta>> = {
     },
     messages: {
       factsBroken: `_build/paper.facts.json cannot be read: {{why}} — ${REBUILD}`,
-      schema: `_build/paper.facts.json has schema {{got}}; the venue rules read schema 2 — ${REBUILD}`,
+      schema: `_build/paper.facts.json has schema {{got}}; the venue rules read schema {{want}} — ${REBUILD}`,
       pdfMissing:
         "_build/paper.facts.json describes {{pdf}}, which is not on disk (a failed build removes it) — rebuild the paper",
       stale:
@@ -485,8 +622,33 @@ const META: Readonly<Record<VenueRuleName, Meta>> = {
     messages: {
       pages:
         "{{what}}: {{got}}, over the limit {{max}} for {{venue}}/{{kind}} — a desk reject; cut the text",
+      noReferences:
+        "{{venue}} limits the body as the pages before the references, and no page of the PDF has a line reading «References» or «Bibliography» — so the body was NOT counted. Give the bibliography its heading",
       refPt:
         "the reference font size is {{got}} pt, outside {{min}}–{{max}} pt for {{venue}} (allowing ±{{slop}} pt for the measuring drift) — fix the bibliography's font size",
+    },
+  },
+  anonymity: {
+    docs: {
+      description:
+        "a double-blind venue's PDF names none of the authors' declared identity — in its text, its metadata or its links",
+      url: rulePageUrl("anonymity/identity"),
+    },
+    messages: {
+      noIdentity: `{{venue}} reviews double-blind, and this paper declares no \`identity\`, so nothing in the PDF can be checked against the authors. Declare it in ${CONFIG_FILE} (the root's for every paper, or this paper's): "identity": ["Your Name", "your-handle", "you@example.org", "Your University", "your-project"]`,
+      leak: "{{where}}: «{{found}}» matches «{{token}}» in `identity`, and {{venue}} reviews double-blind — remove it, or refer to your own work in the third person",
+    },
+  },
+  "anonymity-images": {
+    type: "suggestion",
+    docs: {
+      description:
+        "a double-blind venue's PDF paints raster images, whose text anonymity/identity cannot read — the pages to check by eye",
+      url: rulePageUrl("anonymity/images"),
+    },
+    messages: {
+      images:
+        "PDF, page(s) {{pages}}: raster images; anonymity/identity reads text, not pixels, so a name in a screenshot or a logo there is not checked. {{venue}} reviews double-blind: look at them, then turn this rule off for the paper",
     },
   },
   "body-size": {
@@ -510,14 +672,22 @@ export type VenueRuleName =
   | "fonts"
   | "geometry"
   | "limits"
-  | "body-size";
+  | "body-size"
+  | "anonymity"
+  | "anonymity-images";
+
+/** The venue rules of the `pdf` plugin; the anonymity two live in their own. */
+export type PdfRuleName = Exclude<
+  VenueRuleName,
+  "anonymity" | "anonymity-images"
+>;
 
 /**
  * The level each venue rule is on at in paperlint's own config, for every `paper.tex`. One owner:
  * the config reads it, the docs describe it, a consumer overrides it in `rules`.
  */
 export const VENUE_RULE_LEVELS: Readonly<
-  Record<`pdf/${VenueRuleName}`, "error" | "warn">
+  Record<`pdf/${PdfRuleName}`, "error" | "warn">
 > = {
   "pdf/fresh": "error",
   "pdf/profile": "error",
@@ -526,6 +696,14 @@ export const VENUE_RULE_LEVELS: Readonly<
   "pdf/limits": "error",
   "pdf/body-size": "warn",
   "pdf/measured": "warn",
+};
+
+/** The `anonymity` plugin's rules and their levels, on for every `paper.tex` like the venue rules. */
+export const ANONYMITY_RULE_LEVELS: Readonly<
+  Record<"anonymity/identity" | "anonymity/images", "error" | "warn">
+> = {
+  "anonymity/identity": "error",
+  "anonymity/images": "warn",
 };
 
 /** The line of `\documentclass`, where the class and its options — most of the fixes — live. */
@@ -569,7 +747,7 @@ function rule(name: VenueRuleName, deps: VenueRuleDeps): VenueRuleModule {
 /** The venue rules, as the rules of the `pdf` plugin (beside `last-page-balance`). */
 export function venueRules(
   deps: VenueRuleDeps,
-): Record<VenueRuleName, VenueRuleModule> {
+): Record<PdfRuleName, VenueRuleModule> {
   // Every name listed: a record missing one is a compile error.
   return {
     fresh: rule("fresh", deps),
@@ -579,5 +757,15 @@ export function venueRules(
     geometry: rule("geometry", deps),
     limits: rule("limits", deps),
     "body-size": rule("body-size", deps),
+  };
+}
+
+/** The rules of the `anonymity` plugin: `identity` and `images`. */
+export function anonymityRules(
+  deps: VenueRuleDeps,
+): Readonly<Record<"identity" | "images", VenueRuleModule>> {
+  return {
+    identity: rule("anonymity", deps),
+    images: rule("anonymity-images", deps),
   };
 }

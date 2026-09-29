@@ -51,7 +51,13 @@ describe("paperlint new — paperlint.json", () => {
     expect(String(s["$comment"])).toMatch(/paperlint:agenticdev/);
     expect(parsePaperSettings(s)).toEqual({
       ok: true,
-      value: { extends: null, kind: null, pdf: null, rules: null },
+      value: {
+        extends: null,
+        kind: null,
+        pdf: null,
+        rules: null,
+        identity: null,
+      },
     });
   });
 
