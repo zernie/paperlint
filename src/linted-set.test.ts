@@ -26,7 +26,11 @@ afterEach(() => {
   for (const d of dirs.splice(0)) rmSync(d, { recursive: true, force: true });
 });
 
-const TEX = "\\documentclass{article}\n\\begin{document}x\\end{document}\n";
+// The body is partly in `sections/intro.tex`, brought in by `\input` in the document; the preamble
+// `\input`s a macro file and paperlint's own `paper-guards`. Only the body file is the paper.
+const TEX =
+  "\\documentclass{article}\n\\input{macros}\n\\input{paper-guards}\n" +
+  "\\begin{document}x\n\\input{sections/intro}\n\\end{document}\n";
 const JS = "export const x = 1;\n";
 
 /** The files paperlint owns in the fixture paper. */
@@ -35,6 +39,7 @@ const OWNED = [
   "papers/a/PIPELINE-STATUS.md",
   "papers/a/reviews/r1.md",
   "papers/a/siblings/smith2025.md",
+  "papers/a/sections/intro.tex",
 ];
 
 /** Everything else a real paper folder and project carry. None of it may be linted. */
@@ -46,6 +51,10 @@ const NEIGHBOURS = {
   "papers/a/repro/lib/y.mjs": JS,
   "papers/a/repro/z.cjs": "module.exports = 1;\n",
   "papers/a/repro/t.ts": "const t: number = 1;\n",
+  // A preamble include, a frozen version and a .tex nothing includes: none is the paper's body.
+  "papers/a/macros.tex": "\\newcommand{\\x}{y}\n",
+  "papers/a/versions/2026-01-01-submitted.tex": TEX,
+  "papers/a/notes/scratch.tex": "Scratch.\n",
   "script.js": JS,
   "node_modules/pkg/index.js": JS,
 };
@@ -75,6 +84,7 @@ function project(): string {
     "papers/a/PIPELINE-STATUS.md": "---\nstages: []\n---\n",
     "papers/a/reviews/r1.md": "# review\n",
     "papers/a/siblings/smith2025.md": "---\nread: full\n---\n# Smith 2025\n",
+    "papers/a/sections/intro.tex": "Intro.\n",
     ...NEIGHBOURS,
   };
   for (const [p, text] of Object.entries(all)) {

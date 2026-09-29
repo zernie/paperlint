@@ -51,9 +51,12 @@
  *     paper. The projection counts differently: the same place gave 1239 words before macro
  *     blanking and 1208 after — a 2.5% discrepancy. The discrepancy is ACCEPTED deliberately;
  *     the thresholds were not recalibrated.
- *  4. A MULTI-FILE PAPER IS INVISIBLE. `\input` / `\include` are in OPAQUE — their contents
- *     are not read. The first `\input{sections/method}` yields a silent zero over all the
- *     prose it pulls in.
+ *  4. ONE FILE AT A TIME. `\input` / `\include` are in OPAQUE: the projection of `paper.tex`
+ *     does not hold what they pull in. `paperlint lint` hands ESLint each file the paper includes
+ *     from its body as a file of its own (src/paper-includes.ts), and a file with no `document`
+ *     environment is projected as body throughout — so an included file is read where it is,
+ *     and its findings point into it. An ESLint run outside `paperlint lint` reads only the
+ *     files it was given.
  *  5. `\appendix` IS NOT IMPLEMENTED and is INEXPRESSIBLE in a length-preserving projection:
  *     `\appendix` is 9 characters, `## Appendix` is 11, the synthesis does not fit. On the
  *     first paper with a real `\appendix`, `appendix-ref` / `appendix-ratio` yield a silent
@@ -209,6 +212,9 @@ export type MdNode =
       readonly value: string;
     };
 
+/** The root of a projection: a node that has children. */
+export type MdRoot = Extract<MdNode, { readonly type: "root" | "strong" }>;
+
 /** An inline-config comment: an `html` node's text and where it sits. */
 interface ConfigNode {
   readonly value: string;
@@ -305,7 +311,7 @@ export function texToMdast(
   {
     parse = (s: string): TexRoot => getParser().parse(s),
   }: { parse?: (s: string) => TexRoot } = {},
-): { root: MdNode; text: string } {
+): { root: MdRoot; text: string } {
   const ast = parse(src);
   const chars = src.split("");
   const blank = (from: number, to: number) => {

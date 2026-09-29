@@ -58,9 +58,11 @@ it("the corpus holds papers — an empty listing would make every case below vac
 
 /**
  * One run of the whole CLI over a full paper: 2.7 s here and 6.2 s on the CI runner (measured), so
- * the 5 s default is too tight; 30 s leaves room for the files `\input` pulls in.
+ * the 5 s default is too tight. Linting each included file on its own (#144) made the paper with
+ * eight of them 1.6 times slower (12.7 s → 20.3 s on a loaded container, 40 s under coverage there),
+ * so 60 s.
  */
-const LINT_TIMEOUT_MS = 30_000;
+const LINT_TIMEOUT_MS = 60_000;
 
 describe.each(PAPERS)("the accepted paper %s", (name) => {
   it(

@@ -43,16 +43,13 @@ paper, left for a later change; one line each.
 | secure-acsac24 | `tex/claim-provenance` | 6 | real | the authors' own results stated without a subject or a pointer ("LLMs experience a significant decrease in accuracy, with a 5.44% drop …"); the owner is in a neighbouring sentence, which the rule does not read |
 | secure-acsac24 | `tex/claim-provenance` | 1 | known | a range that defines a scale, not a result ("Typically set between 0 and 1, the temperature …") |
 | agenticdev-acm26 | `tex/register` | 1 | real | 7 sentences open with _And_, _So_, _But_ or _Nor_ — 1.60 per 1000 words against a limit of 0.8; the two papers written by others read 0 |
+| llm-splained-acsac25 | `paper/leading-zero` | 2 | real | probabilities written without the zero ("with probability greater than $.58$", and `.73`) in `sections/5-discussion.tex`; IEEE style, which the rule follows, asks for `0.58` — APA would omit it for a probability |
 | llm-splained-acsac25 | `tex/claim-provenance` | 11 | real | the authors' own results in `sections/*.tex` stated without a subject or a pointer ("GPT errors exceeded 30% in both categories …"); the owner is in a neighbouring sentence. One ("ranged from 1 to 13") is in a list item, which the rules did not read before; one is in the reviews' disabled branch (below) |
 
-Two limits the corpus shows and no count records:
+One limit the corpus shows and no count records:
 
 - **A disabled conditional branch is read as text.** `llm-splained-acsac25` keeps its reviews inside
   `\if\showreview1 … \fi` with the switch off; the prose rules read them.
-- **The rules over ESLint's own LaTeX text read `paper.tex` alone.** The parse-tree rules
-  (`tex/template`, `tex/required-section`, `tex/venue-leftover`, `tex/claim-provenance`) read the
-  included files; `paper/section-word`, `paper/leading-zero`, `paper/figure-ref-style` and
-  `tex/future-promise` do not yet, so `sections/*.tex` is not checked by them.
 
 False positives and blind spots this corpus has already caught, each fixed with a test first:
 `tex/claim-provenance` read the digit in `\if\conference1` as a number in prose, and did not

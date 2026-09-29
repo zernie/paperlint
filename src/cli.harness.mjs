@@ -132,8 +132,8 @@ check(
     Array.isArray(cfg) && ruleBlocks(cfg).length === 4,
   );
   check(
-    "with a LaTeX language a fifth block is added",
-    ruleBlocks(buildConfig({}, {})).length === 5,
+    "with a LaTeX language two blocks are added: paper.tex, and the files it includes",
+    ruleBlocks(buildConfig({}, {})).length === 6,
   );
   check(
     "🔴 the project's paper TEMPLATE directory is ignored — flat config does not skip dot-directories",

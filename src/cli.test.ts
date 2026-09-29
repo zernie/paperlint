@@ -259,7 +259,7 @@ test("build: a markdown-only paper is refused", async () => {
     code: 1,
     out: [
       "papers/md",
-      `  inputs: TEXINPUTS += ${venues}`,
+      `  inputs: TEXINPUTS += the paper's directory, then ${venues}`,
       "  compile: refused — no paper.tex; paperlint compiles LaTeX, and this paper has none",
       "  measure: skipped — nothing is compiled",
       "  references: skipped — nothing is compiled",
@@ -288,7 +288,7 @@ test("build: with no TeX Live a dry run says where a real run stops, and a real 
         out: [
           `engine: none — a real run would stop here: paperlint build: no TeX Live with every package these papers need — run \`npx paperlint toolchain\` (${missing})`,
           "papers/tex",
-          `  inputs: TEXINPUTS += ${venues}`,
+          `  inputs: TEXINPUTS += the paper's directory, then ${venues}`,
           "  compile: paper.tex (\\documentclass{article})",
           "  measure: pdf.js → _build/paper.facts.json (facts for the lint rules; nothing is judged here)",
           "  references: online: citations exist, titles and authors match → _build/references.json (never fails the build)",

@@ -1,11 +1,14 @@
 /**
- * The reading every parse-tree rule shares (`readPaper`), and where a finding of the assembled text
- * is reported (`reportInPaper`).
+ * The reading every parse-tree rule shares (`readPaper`), the files of the paper's body that lint
+ * reads on their own (`bodyFiles`), and where a finding of the assembled text is reported
+ * (`reportInPaper`).
  */
 import { describe, expect, it } from "vitest";
 import { latexReader } from "./adapters/latex/index.ts";
 import { memoryFiles } from "./adapters/memory/index.ts";
-import { readPaper, reportInPaper } from "./tex-paper.ts";
+import { join } from "node:path";
+import { texInputsDir } from "./package-dirs.ts";
+import { bodyFiles, readPaper, reportInPaper } from "./tex-paper.ts";
 
 describe("readPaper — the paper as the rules read it", () => {
   it("reads includes from the paper's own directory", () => {
@@ -15,6 +18,81 @@ describe("readPaper — the paper as the rules read it", () => {
     });
     expect(p.text).toBe("xAAAy");
     expect(p.main).toBe("paper.tex");
+  });
+
+  it("an include the paper's directory lacks is found in paperlint's own inputs, as the build finds it", () => {
+    const p = readPaper("/p/paper.tex", "x\\input{guards}y", {
+      files: memoryFiles({ [join(texInputsDir(), "guards.tex")]: "G" }),
+      latex: latexReader,
+    });
+    expect({ text: p.text, missing: p.missing }).toEqual({
+      text: "xGy",
+      missing: [],
+    });
+  });
+
+  it("the paper's directory comes first: its file wins over paperlint's of the same name", () => {
+    const p = readPaper("/p/paper.tex", "\\input{guards}", {
+      files: memoryFiles({
+        "/p/guards.tex": "mine",
+        [join(texInputsDir(), "guards.tex")]: "package",
+      }),
+      latex: latexReader,
+    });
+    expect(p.text).toBe("mine");
+  });
+});
+
+describe("bodyFiles — the files of the body lint reads on their own", () => {
+  const doc = (preamble: string, body: string): string =>
+    `\\documentclass{article}\n${preamble}\n\\begin{document}\n${body}\n\\end{document}\n`;
+  const files = (extra: Record<string, string> = {}) =>
+    memoryFiles({
+      "/p/macros.tex": "\\newcommand{\\x}{y}",
+      "/p/sections/a.tex": "A\n\\input{sections/b}\n",
+      "/p/sections/b.tex": "B",
+      [join(texInputsDir(), "guards.tex")]: "G",
+      ...extra,
+    });
+
+  it("every file an include in the document body brings in, nested ones too, by absolute path", () => {
+    expect(
+      bodyFiles("/p/paper.tex", doc("", "\\input{sections/a}"), {
+        files: files(),
+        latex: latexReader,
+      }),
+    ).toEqual({
+      files: ["/p/sections/a.tex", "/p/sections/b.tex"],
+      missing: [],
+    });
+  });
+
+  it("not a preamble include (macros), and not a file found only in paperlint's inputs", () => {
+    expect(
+      bodyFiles(
+        "/p/paper.tex",
+        doc("\\input{macros}", "\\input{guards}\nText."),
+        { files: files(), latex: latexReader },
+      ),
+    ).toEqual({ files: [], missing: [] });
+  });
+
+  it("an include that resolves nowhere is named, with the file that wrote it", () => {
+    expect(
+      bodyFiles("/p/paper.tex", doc("", "\\input{gone}"), {
+        files: files(),
+        latex: latexReader,
+      }),
+    ).toEqual({ files: [], missing: [{ file: "paper.tex", target: "gone" }] });
+  });
+
+  it("a main file with no document environment: every include is the body", () => {
+    expect(
+      bodyFiles("/p/paper.tex", "\\input{sections/b}", {
+        files: files(),
+        latex: latexReader,
+      }),
+    ).toEqual({ files: ["/p/sections/b.tex"], missing: [] });
   });
 });
 

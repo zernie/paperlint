@@ -64,6 +64,7 @@ export interface ConfigBlock {
   readonly languageOptions?: Readonly<Record<string, unknown>>;
   readonly linterOptions?: Readonly<Record<string, unknown>>;
   readonly rules?: Readonly<Record<string, unknown>>;
+  readonly settings?: Readonly<Record<string, unknown>>;
 }
 
 export type Parsed<T> =

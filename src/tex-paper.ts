@@ -6,6 +6,10 @@
  * back where its text came from: a finding in `paper.tex` at its own place; a finding in an included
  * file at the include in `paper.tex` that brought it in — the one place ESLint can point to in this
  * file — with the included file, line and column at the front of the message.
+ *
+ * An include is looked for where the build tells TeX to look (`texSearchPath`): the paper's own
+ * directory, then paperlint's inputs. `bodyFiles` names the files of the paper's BODY the author
+ * wrote — what the rules over ESLint's own LaTeX text read one by one, each at its own path.
  */
 import { basename, dirname, join } from "node:path";
 import {
@@ -17,6 +21,8 @@ import type { Span } from "./domain/tex-document.ts";
 import type { LatexReader } from "./ports/latex.ts";
 import type { Files } from "./ports/files.ts";
 import { callerPath } from "./caller-path.ts";
+import type { AbsolutePath } from "./domain/paths.ts";
+import { texSearchPath } from "./package-dirs.ts";
 import type { Located, TexRuleContext } from "./tex-venue-rules.ts";
 
 /** What reading a paper needs: the disk, and the LaTeX reader. */
@@ -36,10 +42,60 @@ export function readPaper(
     includes: deps.latex.includes,
     documentBody: deps.latex.documentBody,
     read: (rel) => {
-      const b = deps.files.readBytes(callerPath(join(dir, rel)));
+      const at = located(dir, rel, deps.files);
+      const b = at === null ? null : deps.files.readBytes(at);
       return b === null ? null : new TextDecoder().decode(b);
     },
   });
+}
+
+/** `rel` in the first directory of the paper's TeX search path that holds it, or null. */
+const located = (dir: string, rel: string, files: Files): AbsolutePath | null =>
+  texSearchPath(dir)
+    .map((d) => callerPath(join(d, rel)))
+    .find((p) => files.isFile(p)) ?? null;
+
+/** An include that resolved nowhere: the file that wrote it, and the path as written. */
+export interface Unread {
+  readonly file: string;
+  readonly target: string;
+}
+
+/**
+ * The files of the body of the paper whose main file is `filename`: every file an include inside its
+ * `document` environment brings in, nested ones too, found in the paper's own directory. Not a
+ * preamble include (macros are not the body), and not a file found only in paperlint's inputs (not
+ * the author's text). `missing` is every include, anywhere, that resolved nowhere.
+ */
+export function bodyFiles(
+  filename: string,
+  src: string,
+  deps: PaperDeps,
+): {
+  readonly files: readonly AbsolutePath[];
+  readonly missing: readonly Unread[];
+} {
+  const dir = dirname(filename);
+  const paper = readPaper(filename, src, deps);
+  const body = deps.latex.documentBody(src);
+  const inBody = (via: Span | null): boolean =>
+    via !== null &&
+    (body === null || (via.start >= body.start && via.end <= body.end));
+  const own = (rel: string): AbsolutePath | null => {
+    const at = located(dir, rel, deps.files);
+    return at === callerPath(join(dir, rel)) ? at : null;
+  };
+  return {
+    files: [
+      ...new Set(
+        paper.segments
+          .filter((s) => s.file !== paper.main && inBody(s.via))
+          .map((s) => own(s.file))
+          .filter((f): f is AbsolutePath => f !== null),
+      ),
+    ],
+    missing: paper.missing.map(({ file, target }) => ({ file, target })),
+  };
 }
 
 /** Line and column (1-based) of an offset in a text. */

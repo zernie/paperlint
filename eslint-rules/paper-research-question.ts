@@ -37,6 +37,7 @@ import { join, dirname } from "node:path";
 import { load } from "js-yaml";
 import { z } from "zod";
 import type { RuleContext } from "./rule-context.ts";
+import { otherTexts, paperOf } from "./paper-context.ts";
 
 /**
  * The two scorecard fields this rule reads, parsed rather than trusted: a field of the wrong shape
@@ -127,6 +128,17 @@ function scorecard(
   return { stages, question };
 }
 
+/**
+ * Whether the declared question is in the paper — the whole paper: a question stated in an included
+ * file (`sections/intro.tex`) is in it; `paperlint lint` names the paper's files (`paperOf`).
+ */
+const inPaper = (context: RuleContext, raw: string, question: string) =>
+  flatten(
+    [raw, ...otherTexts(paperOf(context.settings), context.filename)].join(
+      "\n",
+    ),
+  ).includes(flatten(question));
+
 export default {
   rules: {
     "research-question": {
@@ -185,7 +197,7 @@ export default {
             // Step 2 — does the paper carry what was written down? Bytes, not spelling. Only
             // whitespace is normalised, because a sentence wrapped across source lines is the
             // same sentence; everything else stays the author's.
-            if (flatten(raw).includes(flatten(question))) return;
+            if (inPaper(context, raw, question)) return;
             context.report({
               node,
               messageId: "notInPaper",

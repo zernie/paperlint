@@ -230,15 +230,16 @@ write. It prints its plan first, one line per step, then runs it:
 
 ```
 papers/my-paper
-  inputs: TEXINPUTS += <paperlint>/presets/tex
+  inputs: TEXINPUTS += the paper's directory, then <paperlint>/presets/tex
   compile: paper.tex (\documentclass[sigconf,screen]{acmart}, venue agenticdev)
   measure: pdf.js → _build/paper.facts.json (facts for the lint rules; nothing is judged here)
   ✓ paper.pdf — 4 pdflatex passes, 1 bibtex run; facts: _build/paper.facts.json, last page 621.5 / 264.8 pt
 ```
 
-- **inputs** — paperlint's own venue files (`paper-guards.tex`, `<venue>.tex`) are put on `TEXINPUTS`,
-  so `\input{paper-guards}` in a preamble resolves with no setup. The system tree still resolves
-  after them.
+- **inputs** — `TEXINPUTS` is the paper's directory, then paperlint's own venue files
+  (`paper-guards.tex`, `<venue>.tex`), so `\input{paper-guards}` in a preamble resolves with no
+  setup and a file of the paper's own wins over paperlint's of the same name. The system tree still
+  resolves after them. `paperlint lint` looks for an included file in the same places.
 - **compile** — `pdflatex -interaction=nonstopmode -halt-on-error -file-line-error`, then `bibtex`
   when the `.aux` names a bibliography, then pdflatex again until the `.aux`, `.toc`, `.out` and
   `.bbl` stop changing and the log stops asking for a rerun. bibtex runs again only when the cited

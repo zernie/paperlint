@@ -190,6 +190,9 @@ Every skill, by stage: [`docs/skills.md`](docs/skills.md).
 - Commit `repro/references-cache.json`: it keeps what the citation services answered, so a build
   asks only about new or edited entries (and answers older than 30 days), so an unchanged
   bibliography usually builds without the network ([`docs/references.md`](docs/references.md)).
+- A paper whose body is in other files (`\input{sections/intro}`) is linted file by file: a finding
+  lands at the file and line it is in, and `--fix` edits that file. The files are the ones
+  `paper.tex` includes from its body, found where the build finds them — not every `.tex` beside it.
 - Lint also checks the pipeline's own records: `PIPELINE-STATUS.md`, reviews, notes on related
   papers ([`docs/rules.md`](docs/rules.md)).
 - The rules run on ESLint, so a deliberate exception is a comment on the line above:

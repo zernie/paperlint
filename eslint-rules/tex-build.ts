@@ -51,6 +51,7 @@
  */
 import { readFileSync } from "node:fs";
 import type { RuleContext } from "./rule-context.ts";
+import { paperOf, textOnDisk } from "./paper-context.ts";
 
 /**
  * A copy rather than an import, for the same reason the prose lexicons are copies: a rule may
@@ -169,7 +170,13 @@ const futurePromise = {
         } catch {
           return;
         }
-        if (REVIEW_MODE_RE.test(text)) return;
+        // The build mode is the PAPER's: an included file declares none, `paper.tex` does.
+        const main = paperOf(context.settings)?.main;
+        const declares =
+          main === undefined || main === context.filename
+            ? text
+            : textOnDisk(main);
+        if (REVIEW_MODE_RE.test(declares)) return;
         // Comments are blanked by CUTTING THE TAIL of the line, exactly as the previous
         // implementation did. Columns do not shift: a match is only possible to the LEFT of
         // `%`, and the left part of the line stays in place character for character. An
