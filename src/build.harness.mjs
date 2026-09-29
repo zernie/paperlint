@@ -264,8 +264,10 @@ try {
     tex.calls.every((c) => c.cwd === clean),
   );
   check(
-    "🔴 pdflatex got paperlint's venues directory on TEXINPUTS, trailing separator kept",
-    tex.calls.every((c) => c.texinputs === `${venues}${delimiter}`),
+    "🔴 pdflatex got the paper's directory, then paperlint's venues directory, on TEXINPUTS, trailing separator kept",
+    tex.calls.every(
+      (c) => c.texinputs === `.${delimiter}${venues}${delimiter}`,
+    ),
   );
 
   // ── the measure step: facts for the lint rules ────────────────────────────────────────

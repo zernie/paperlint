@@ -21,8 +21,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { FRESH_CLONE_NOTE } from "./hooks-settings.ts";
+import { load as yamlLoad } from "js-yaml";
+import { z } from "zod";
 import {
-  UNPINNED_REF,
   WORKFLOW_PATH,
   choosePapers,
   declarePapers,
@@ -33,6 +34,7 @@ import {
   reportSkillLinks,
   reportTexLive,
   reportWorkflow,
+  workflowYaml,
 } from "./init.ts";
 import { runNode } from "../test/support.ts";
 
@@ -353,30 +355,48 @@ describe("paperlint init — how several candidate directories were decided, sai
 const here = (p: string) => `<${p}>`;
 
 describe("paperlint init — the workflow section, whole", () => {
-  it("the workflow: written unpinned, kept, declined, not asked", () => {
-    const ctx = { papersDir: "papers", why: "stdin is not a terminal" };
-    expect(reportWorkflow("written", ctx)).toEqual([
-      `  ✓ wrote ${WORKFLOW_PATH} — pin ${UNPINNED_REF} before pushing it`,
+  it("the written workflow installs the package, then runs the action from node_modules", () => {
+    // Guards: one revision. The action comes from the lockfile-pinned install, so there is no
+    // `zernie/paperlint@<ref>` to drift from package.json, and no `paths` to repeat papersDir.
+    const Workflow = z.object({
+      jobs: z.object({
+        papers: z.object({
+          steps: z.array(z.record(z.string(), z.unknown())),
+        }),
+      }),
+    });
+    expect(Workflow.parse(yamlLoad(workflowYaml())).jobs.papers.steps).toEqual([
+      { uses: "actions/checkout@v4" },
+      { uses: "actions/setup-node@v4", with: { "node-version": 22 } },
+      { run: "npm ci" },
+      { uses: "./node_modules/paperlint" },
     ]);
-    expect(reportWorkflow("written", { ...ctx, version: "1.2.3" })).toEqual([
-      `  ✓ wrote ${WORKFLOW_PATH}, pinned to v1.2.3`,
+  });
+
+  it("the workflow report: written, kept, declined, not asked", () => {
+    const ctx = { why: "stdin is not a terminal" };
+    expect(reportWorkflow("written", ctx)).toEqual([
+      `  ✓ wrote ${WORKFLOW_PATH}`,
     ]);
     expect(reportWorkflow("kept", ctx)).toEqual([
       `  ✓ ${WORKFLOW_PATH} is already there — kept, nothing overwritten`,
     ]);
-    const step = [
-      "      to run the same checks in CI, add this step to a workflow:",
-      `        - uses: zernie/paperlint@${UNPINNED_REF}`,
+    const steps = [
+      "      to run the same checks in CI, add these steps to a workflow:",
+      "        - uses: actions/checkout@v4",
+      "        - uses: actions/setup-node@v4",
       "          with:",
-      "            paths: papers",
+      "            node-version: 22",
+      "        - run: npm ci",
+      "        - uses: ./node_modules/paperlint",
     ];
     expect(reportWorkflow("declined", ctx)).toEqual([
       "  · declined — nothing written",
-      ...step,
+      ...steps,
     ]);
     expect(reportWorkflow("not-asked", ctx)).toEqual([
       "  · stdin is not a terminal, so nothing was asked. Default taken: NO file written.",
-      ...step,
+      ...steps,
     ]);
   });
 });

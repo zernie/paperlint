@@ -44,7 +44,7 @@ import { createHash } from "node:crypto";
 import { delimiter, join, relative } from "node:path";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import { getParser } from "@unified-latex/unified-latex-util-parse";
-import { texInputsDir } from "./package-dirs.ts";
+import { texInputsDir, texSearchPath } from "./package-dirs.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
 import {
   declaredVenue,
@@ -268,11 +268,15 @@ export const inputsStep: BuildStep = {
   required: false,
   applies: () => ({
     yes: true,
-    why: `TEXINPUTS += ${texInputsDir()}`,
+    why: `TEXINPUTS += the paper's directory, then ${texInputsDir()}`,
   }),
+  // The same search path the lint rules read includes through: one answer to which file is meant.
+  // A pass runs IN the paper's directory, so that directory is `.` here. TeX names a file it finds
+  // through an absolute entry by that absolute path: with the directory itself on TEXINPUTS, the
+  // `broken` build fixture's log said `/tmp/…/paper.tex:6:` instead of `./paper.tex:6:` (measured).
   run: (ctx) => ({
     ok: true,
-    env: withTexInputs(ctx.env, [texInputsDir()]),
+    env: withTexInputs(ctx.env, texSearchPath(".")),
   }),
 };
 

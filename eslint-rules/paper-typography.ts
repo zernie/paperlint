@@ -63,7 +63,13 @@ import assert from "node:assert/strict";
 import { getParser } from "@unified-latex/unified-latex-util-parse";
 import { takeWhile } from "remeda";
 import type { Nodes } from "mdast";
-import type { TexArg, TexNode, TexRoot } from "./latex-language.ts";
+import {
+  texToMdast,
+  type TexArg,
+  type TexNode,
+  type TexRoot,
+} from "./latex-language.ts";
+import { otherTexts, paperOf } from "./paper-context.ts";
 import type {
   RuleContext,
   RuleFixer,
@@ -102,16 +108,27 @@ export function bibRange(text: string): BibRange | null {
   return { start: m.index, end: m.index + whole.length, bodyStart, body };
 }
 
+/** A node of a file's projection, as far as its place goes: mdast's, or the `.tex` language's. */
+interface ProjectedNode {
+  readonly type: string;
+  readonly position?:
+    | {
+        readonly start: { readonly offset?: number | undefined };
+        readonly end: { readonly offset?: number | undefined };
+      }
+    | undefined;
+}
+
 /**
  * The ranges a markup rule must not read: LaTeX comments (the language gives them as `html`
  * nodes, with positions) and the inline bibliography.
  */
 function skippedRanges(
-  sourceCode: RuleSourceCode,
+  nodes: readonly ProjectedNode[],
   raw: string,
 ): [number, number][] {
   const out: [number, number][] = [];
-  for (const n of sourceCode.ast?.children ?? [])
+  for (const n of nodes)
     if (n.type === "html" && n.position) {
       // An offset-less point compares as NaN: inside no range, as `undefined` always did.
       const {
@@ -197,12 +214,22 @@ export function crefDefinitionRanges(
 const inside = (ranges: readonly [number, number][], i: number) =>
   ranges.some(([s, e]) => i >= s && i < e);
 
-/** Every match of `re` in `raw` outside the skipped ranges. */
-function markupMatches(sourceCode: TexSourceCode, re: RegExp) {
-  const raw = sourceCode.raw;
-  const skip = skippedRanges(sourceCode, raw);
+/** Every match of `re` in `raw` outside the ranges skipped in it (`nodes`: its projection's). */
+const markupMatchesIn = (
+  raw: string,
+  nodes: readonly ProjectedNode[],
+  re: RegExp,
+): readonly RegExpExecArray[] => {
+  const skip = skippedRanges(nodes, raw);
   return [...raw.matchAll(re)].filter((m) => !inside(skip, m.index));
-}
+};
+
+/** Every match of `re` in the linted file outside the skipped ranges. */
+const markupMatches = (
+  sourceCode: TexSourceCode,
+  re: RegExp,
+): readonly RegExpExecArray[] =>
+  markupMatchesIn(sourceCode.raw, sourceCode.ast?.children ?? [], re);
 
 const isTex = (sourceCode: RuleSourceCode): sourceCode is TexSourceCode =>
   typeof sourceCode.raw === "string";
@@ -510,25 +537,42 @@ function leadingZero(context: RuleContext) {
 
 const FIG_REF = /\b(Fig\.|Figure)(?=~?\\(?:ref|autoref)\b)/g;
 
+/** The reference forms another file of the paper writes, read the way the linted file is. */
+const figureFormsIn = (raw: string): readonly (string | undefined)[] =>
+  markupMatchesIn(raw, texToMdast(raw).root.children, FIG_REF).map(
+    ([, form]) => form,
+  );
+
+/**
+ * The minority form is rewritten to the majority one; on a tie, to the full word. The majority is
+ * the PAPER's: a body split into `sections/*.tex` is one document to its reader, so the other files
+ * `paperlint lint` names for this one (`paperOf`) are counted too, and only this file is reported.
+ */
 function figureRefStyle(context: RuleContext) {
   const sc = context.sourceCode;
   if (!isTex(sc)) return;
-  const all = markupMatches(sc, FIG_REF);
-  const short = all.filter((m) => m[1] === "Fig.");
-  const long = all.filter((m) => m[1] === "Figure");
-  if (!short.length || !long.length) return;
-  // The minority form is rewritten to the majority one; on a tie, to the full word.
-  const [minority, word] =
-    short.length > long.length ? [long, "Fig."] : [short, "Figure"];
-  for (const m of minority) {
-    const [, form = ""] = m;
-    const range: [number, number] = [m.index, m.index + form.length];
-    at(context, range[0], range[1], {
-      messageId: "mixed",
-      data: { form, word, n: String(all.length - minority.length) },
-      fix: (f) => f.replaceTextRange(range, word),
+  const own = markupMatches(sc, FIG_REF);
+  const forms: readonly (string | undefined)[] = [
+    ...own.map(([, form]) => form),
+    ...otherTexts(paperOf(context.settings), context.filename).flatMap(
+      figureFormsIn,
+    ),
+  ];
+  const short = forms.filter((f) => f === "Fig.").length;
+  const long = forms.filter((f) => f === "Figure").length;
+  if (short === 0 || long === 0) return;
+  const [minority, word, n] =
+    short > long ? ["Figure", "Fig.", short] : ["Fig.", "Figure", long];
+  own
+    .filter(([, form]) => form === minority)
+    .forEach((m) => {
+      const range = [m.index, m.index + minority.length] as const;
+      at(context, range[0], range[1], {
+        messageId: "mixed",
+        data: { form: minority, word, n: String(n) },
+        fix: (f) => f.replaceTextRange(range, word),
+      });
     });
-  }
 }
 
 const rule = (

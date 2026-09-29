@@ -11,8 +11,8 @@
  *
  * ── WHAT IS NOT DONE ─────────────────────────────────────────────────────────────
  * No macro is expanded, so a path built from a macro (`\input{\dir/intro}`) is read as written. A
- * file that cannot be found is reported and left out; a file that includes itself, directly or
- * through others, is spliced once.
+ * file that cannot be found is left out and named in `missing`; a file that includes itself,
+ * directly or through others, is spliced once.
  */
 import { extname, normalize } from "node:path";
 import type { Span } from "./tex-document.ts";

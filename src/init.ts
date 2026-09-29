@@ -55,7 +55,6 @@ import {
 } from "./doctor.ts";
 import { PAPER_MARKERS, papersIn } from "./build.ts";
 import { linkSkills, SKILLS_HOME, type LinkReport } from "./link-skills.ts";
-import { actionRef } from "./action-ref.ts";
 import {
   FRESH_CLONE_NOTE,
   SETTINGS_PATH,
@@ -270,29 +269,33 @@ export async function declarePapers(
 
 export const WORKFLOW_PATH = join(".github", "workflows", "papers.yml");
 
-/** Where the action is pinned when no release tag is known — obviously a placeholder. */
-export const UNPINNED_REF = "<commit-sha>";
-
 /**
- * The CI step, as a whole workflow, pinned to `ref` — the release tag of the running package
- * (`actionRef`). With no tag known (`null`: a git checkout, `npm link`) it keeps the placeholder
- * and says so: a wrong tag written confidently is worse than a placeholder that is obviously one.
+ * The CI steps, one list for the file `init` writes and for the steps it prints. The action is
+ * called from the installed package, after `npm ci`: it and the CLI it runs are then one revision,
+ * set by the lockfile, and the action finds papersDir in paperlint.json itself.
  */
-export function workflowYaml(papers: string, ref: string | null): string {
+const CI_STEPS = [
+  "- uses: actions/checkout@v4",
+  "- uses: actions/setup-node@v4",
+  "  with:",
+  "    node-version: 22",
+  "- run: npm ci",
+  "- uses: ./node_modules/paperlint",
+] as const;
+
+const indent = (by: number) => (line: string) => `${" ".repeat(by)}${line}`;
+
+/** The CI workflow `init` offers to write. */
+export function workflowYaml(): string {
   return [
-    ref === null
-      ? `# Written by \`paperlint init\`. Replace ${UNPINNED_REF} with a commit or release tag of the action.`
-      : `# Written by \`paperlint init\`, pinned to ${ref} — the release you installed.`,
+    `# Written by \`paperlint init\`.`,
     `name: papers`,
     `on: [push, pull_request]`,
     `jobs:`,
     `  papers:`,
     `    runs-on: ubuntu-latest`,
     `    steps:`,
-    `      - uses: actions/checkout@v4`,
-    `      - uses: zernie/paperlint@${ref ?? UNPINNED_REF}`,
-    `        with:`,
-    `          paths: ${papers}`,
+    ...CI_STEPS.map(indent(6)),
     ``,
   ].join("\n");
 }
@@ -301,16 +304,12 @@ export type WorkflowResult = "written" | "kept" | "declined" | "not-asked";
 
 export async function offerWorkflow(
   root: string,
-  papers: string,
   {
     ask,
     interactive,
-    version,
   }: {
     ask?: (q: string) => Promise<string>;
     interactive: boolean;
-    /** The running package's version; see `InitOptions.version`. */
-    version?: string | undefined;
   },
 ): Promise<WorkflowResult> {
   const path = join(root, WORKFLOW_PATH);
@@ -327,27 +326,17 @@ export async function offerWorkflow(
   // No answer — an empty line, or a stream that ended — is the safe default, which is "no file".
   if (answer !== "y" && answer !== "yes") return "declined";
   mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, workflowYaml(papers, actionRef(version)), "utf8");
+  writeFileSync(path, workflowYaml(), "utf8");
   return "written";
 }
 
 /** What `init` says about the CI workflow — and, when none was written, the step to paste. */
 export function reportWorkflow(
   wf: WorkflowResult,
-  {
-    version,
-    papersDir,
-    why,
-  }: { version?: string | undefined; papersDir: string; why: string },
+  { why }: { why: string },
 ): string[] {
-  const ref = actionRef(version);
   const out: string[] = [];
-  if (wf === "written")
-    out.push(
-      ref === null
-        ? `  ✓ wrote ${WORKFLOW_PATH} — pin ${UNPINNED_REF} before pushing it`
-        : `  ✓ wrote ${WORKFLOW_PATH}, pinned to ${ref}`,
-    );
+  if (wf === "written") out.push(`  ✓ wrote ${WORKFLOW_PATH}`);
   else if (wf === "kept")
     out.push(
       `  ✓ ${WORKFLOW_PATH} is already there — kept, nothing overwritten`,
@@ -359,10 +348,8 @@ export function reportWorkflow(
     );
   if (wf !== "written" && wf !== "kept")
     out.push(
-      `      to run the same checks in CI, add this step to a workflow:`,
-      `        - uses: zernie/paperlint@${ref ?? UNPINNED_REF}`,
-      `          with:`,
-      `            paths: ${papersDir}`,
+      `      to run the same checks in CI, add these steps to a workflow:`,
+      ...CI_STEPS.map(indent(8)),
     );
   return out;
 }
@@ -604,11 +591,6 @@ export interface InitOptions {
   /** Links the skills. Injected only so a test can stand in for the installed package. */
   link?: (root: string) => LinkReport;
   /**
-   * The version of the running package, read by the CLI from its own `package.json`. The CI
-   * workflow is pinned to its release tag (`actionRef`); absent or unreleased, the placeholder.
-   */
-  version?: string | undefined;
-  /**
    * TeX Live for `paperlint build`: whether paperlint's own tree is installed, and how to install
    * it (`paperlint toolchain`). Passed in by the CLI; without them the step only names the command.
    */
@@ -734,7 +716,6 @@ export async function init(
     run = spawnSync,
     resolveCliPapers,
     link = (r: string) => linkSkills(r),
-    version,
   } = opts;
   // An injected `interactive` is a test standing in for a terminal; its reason is the classic one.
   const { interactive, why } =
@@ -816,12 +797,8 @@ export async function init(
   // ── 5. the one expensive, unguessable thing ───────────────────────────────────────────
   log(``);
   log(`CI`);
-  const wf = await offerWorkflow(root, papersDir, {
-    ask,
-    interactive,
-    version,
-  });
-  for (const line of reportWorkflow(wf, { version, papersDir, why })) log(line);
+  const wf = await offerWorkflow(root, { ask, interactive });
+  for (const line of reportWorkflow(wf, { why })) log(line);
 
   // ── 6. a first paper — offered only where there is none, and only to a human ──────────
   log(``);

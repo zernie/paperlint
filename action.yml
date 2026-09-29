@@ -7,11 +7,12 @@
 # which is the one place it has to hold. The same bypass also meant the consumer's settings were never read and
 # the caller still had to keep an ESLint flat config — the exact thing the CLI exists to remove.
 #
-# WHY AN ACTION AND NOT A DOCUMENTED `run:` BLOCK. Two steps have to happen in this order and
-# neither is guessable from the outside: `texcount` must exist on PATH before linting starts, and
-# the scope has to be checked before any install spends minutes on a call that was already wrong.
-# A consumer who copies only the last step gets a green job over rules that silently degraded —
-# see the `texcount` note below.
+# WHY AN ACTION AND NOT A DOCUMENTED `run:` BLOCK. `texcount` must exist on PATH before linting
+# starts, and that is not guessable from the outside. A consumer who copies only the last step gets
+# a green job over rules that silently degraded — see the `texcount` note below.
+#
+# CALL IT AS `uses: ./node_modules/paperlint`, after `npm ci`: the action and the CLI it runs are
+# then one revision, pinned by the consumer's lockfile.
 #
 # 🔴 THE GREEN-ZERO GUARD IS PART OF THIS ACTION, NOT AN OPTIONAL EXTRA. `eslint` prints findings
 # and exits 0 when there are none — and "no findings" is byte-identical to "not one rule was handed
@@ -33,11 +34,12 @@ inputs:
     default: ""
   paths:
     description: >-
-      What to lint, as ESLint would take it on the command line. REQUIRED, and deliberately
-      without a default: the previous default was "." — the whole checkout — so a caller who
-      never thought about scope still got a green job, over whatever happened to be in the
-      repository. Scope is the one thing this action cannot guess.
-    required: true
+      What to lint, as `paperlint lint` takes it on the command line. Optional: empty — the
+      default — runs `paperlint lint` with no path, and the CLI lints the `papersDir` its root
+      `paperlint.json` declares (default `papers`), and fails when that directory holds no paper.
+      Name paths only to lint less than that.
+    required: false
+    default: ""
   max-warnings:
     description: >-
       Passed through to ESLint. The default -1 means warnings never fail the job: in this rule set
@@ -62,23 +64,6 @@ inputs:
 runs:
   using: composite
   steps:
-    # 🔴 `required: true` ABOVE IS A DECLARATION, NOT AN ENFORCEMENT. GitHub does not enforce
-    # required inputs for COMPOSITE actions — a caller who omits `paths` reaches this step with
-    # an empty string and no error of any kind. So the contract is checked here, where it can
-    # actually fail, rather than trusted where it is merely written down. Same reasoning as the
-    # green-zero guard below: the declaration and the check are different things.
-    - name: paths was actually given
-      shell: bash
-      env:
-        PAPERLINT_PATHS: ${{ inputs.paths }}
-      run: |
-        if [ -z "${PAPERLINT_PATHS// /}" ]; then
-          echo "::error::input \`paths\` is required and was empty. Name what to lint, e.g." \
-               "\`paths: papers\`. There is no default on purpose: linting the whole checkout" \
-               "by accident produces a green job over a scope nobody chose."
-          exit 1
-        fi
-
     # texlive-extra-utils is what carries /usr/bin/texcount. Cached, because the apt fetch is the
     # only network hop in this action and a slow mirror once cost a caller 14 minutes.
     - name: texcount (for a CONSUMER's texcount/* rules — this package ships none)

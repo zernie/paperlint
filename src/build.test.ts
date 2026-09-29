@@ -6,7 +6,8 @@
  */
 import assert from "node:assert/strict";
 import { existsSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { delimiter, join } from "node:path";
+import { texInputsDir } from "./package-dirs.ts";
 import { test } from "vitest";
 import { present, useTempDir, writeTree } from "../test/support.ts";
 import {
@@ -342,6 +343,22 @@ test("paths: a paper that IS the working directory is named by its full path", a
     ],
   );
   assert.equal(existsSync(join(dir, "paper.pdf")), false);
+});
+
+test("🔴 pdflatex looks for an \\input in the paper's directory, then paperlint's inputs, then the system tree", async () => {
+  const dir = paper();
+  const f: Fake = {};
+  const inner = fakeRun(f);
+  const seen: (string | undefined)[] = [];
+  await build(dir, f, {
+    run: (bin, args, opts) => {
+      if (bin === "pdflatex") seen.push(opts.env?.["TEXINPUTS"]);
+      return inner(bin, args, opts);
+    },
+  });
+  // The same search path the lint rules read includes through (`texSearchPath`).
+  // A pass runs in the paper's directory, where `.` is that directory.
+  assert.equal(seen[0], [".", texInputsDir(), ""].join(delimiter));
 });
 
 test("facts that cannot be read fail the build at `facts`", async () => {

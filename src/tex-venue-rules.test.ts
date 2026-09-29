@@ -199,7 +199,7 @@ describe("the venue rules read the whole paper: the files it \\inputs, spliced w
         "\\section*{LLM Usage Statement}\nNone.\n",
     };
     expect(lint(tex, AIDC, { extra })).toEqual([]);
-    // Without the file, the section is missing — and tex/missing-input (not a venue rule) says why.
+    // Without the file, the section is missing.
     expect(ids(lint(tex, AIDC))).toEqual(["tex/required-section:missing"]);
   });
 

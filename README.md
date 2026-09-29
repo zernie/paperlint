@@ -190,6 +190,9 @@ Every skill, by stage: [`docs/skills.md`](docs/skills.md).
 - Commit `repro/references-cache.json`: it keeps what the citation services answered, so a build
   asks only about new or edited entries (and answers older than 30 days), so an unchanged
   bibliography usually builds without the network ([`docs/references.md`](docs/references.md)).
+- A paper whose body is in other files (`\input{sections/intro}`) is linted file by file: a finding
+  lands at the file and line it is in, and `--fix` edits that file. The files are the ones
+  `paper.tex` includes from its body, found where the build finds them — not every `.tex` beside it.
 - Lint also checks the pipeline's own records: `PIPELINE-STATUS.md`, reviews, notes on related
   papers ([`docs/rules.md`](docs/rules.md)).
 - The rules run on ESLint, so a deliberate exception is a comment on the line above:
@@ -274,13 +277,21 @@ jobs:
       - run: npx paperlint lint
 ```
 
-Lint only — each paper then gets one warning that it was not built:
+Lint only — each paper then gets one warning that it was not built. Call the action from the
+installed package, after `npm ci`: the action and the CLI it runs are then one revision, pinned by
+your lockfile.
 
 ```yaml
-- uses: zernie/paperlint@v3.0.0
-  with:
-    paths: papers # your papersDir
+steps:
+  - uses: actions/checkout@v4
+  - uses: actions/setup-node@v4
+    with:
+      node-version: 22
+  - run: npm ci
+  - uses: ./node_modules/paperlint
 ```
+
+With no `paths` it lints the `papersDir` of your `paperlint.json`; pass `paths:` only to lint less.
 
 ## ❓ FAQ
 

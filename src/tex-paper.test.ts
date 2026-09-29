@@ -1,72 +1,14 @@
 /**
- * `tex/missing-input` and the reading every parse-tree rule shares (`readPaper`): an include that
- * names no file is reported where it stands in `paper.tex`, once, whether `paper.tex` wrote it or a
- * file it includes did; an include that resolves says nothing.
+ * The reading every parse-tree rule shares (`readPaper`), the files of the paper's body that lint
+ * reads on their own (`bodyFiles`), and where a finding of the assembled text is reported
+ * (`reportInPaper`).
  */
 import { describe, expect, it } from "vitest";
 import { latexReader } from "./adapters/latex/index.ts";
 import { memoryFiles } from "./adapters/memory/index.ts";
-import { missingInputRule, readPaper, reportInPaper } from "./tex-paper.ts";
-
-const doc = (body: string): string =>
-  `\\documentclass{article}\n\\begin{document}\n${body}\n\\end{document}\n`;
-
-/** What the rule reports over `/p/paper.tex` holding `src`, with `files` on disk. */
-function run(src: string, files: Record<string, string> = {}) {
-  const out: { line: number; messageId: string; data: unknown }[] = [];
-  const rule = missingInputRule({
-    files: memoryFiles(files),
-    latex: latexReader,
-  });
-  rule
-    .create({
-      filename: "/p/paper.tex",
-      sourceCode: {
-        text: src,
-        getLocFromIndex: (i) => ({
-          line: src.slice(0, i).split("\n").length,
-          column: 0,
-        }),
-      },
-      report: (d) => {
-        if ("messageId" in d)
-          out.push({
-            line: d.loc.start.line,
-            messageId: d.messageId,
-            data: d.data,
-          });
-      },
-    })
-    .root?.();
-  return out;
-}
-
-describe("tex/missing-input", () => {
-  it("an \\input naming no file is reported at its line, naming the target", () => {
-    expect(run(doc("Text.\n\\input{sections/gone}"))).toEqual([
-      {
-        line: 4,
-        messageId: "missing",
-        data: { target: "sections/gone", file: "paper.tex" },
-      },
-    ]);
-  });
-
-  it("one missing in an included file is reported at the include that brought that file in", () => {
-    expect(run(doc("\\input{a}"), { "/p/a.tex": "A\n\\input{b}\n" })).toEqual([
-      { line: 3, messageId: "missingIn", data: { target: "b", file: "a.tex" } },
-    ]);
-  });
-
-  it("silent when every include resolves, with `.tex` added or not", () => {
-    expect(
-      run(doc("\\input{a}\\include{b.tex}"), {
-        "/p/a.tex": "A",
-        "/p/b.tex": "B",
-      }),
-    ).toEqual([]);
-  });
-});
+import { join } from "node:path";
+import { texInputsDir } from "./package-dirs.ts";
+import { bodyFiles, readPaper, reportInPaper } from "./tex-paper.ts";
 
 describe("readPaper — the paper as the rules read it", () => {
   it("reads includes from the paper's own directory", () => {
@@ -76,6 +18,81 @@ describe("readPaper — the paper as the rules read it", () => {
     });
     expect(p.text).toBe("xAAAy");
     expect(p.main).toBe("paper.tex");
+  });
+
+  it("an include the paper's directory lacks is found in paperlint's own inputs, as the build finds it", () => {
+    const p = readPaper("/p/paper.tex", "x\\input{guards}y", {
+      files: memoryFiles({ [join(texInputsDir(), "guards.tex")]: "G" }),
+      latex: latexReader,
+    });
+    expect({ text: p.text, missing: p.missing }).toEqual({
+      text: "xGy",
+      missing: [],
+    });
+  });
+
+  it("the paper's directory comes first: its file wins over paperlint's of the same name", () => {
+    const p = readPaper("/p/paper.tex", "\\input{guards}", {
+      files: memoryFiles({
+        "/p/guards.tex": "mine",
+        [join(texInputsDir(), "guards.tex")]: "package",
+      }),
+      latex: latexReader,
+    });
+    expect(p.text).toBe("mine");
+  });
+});
+
+describe("bodyFiles — the files of the body lint reads on their own", () => {
+  const doc = (preamble: string, body: string): string =>
+    `\\documentclass{article}\n${preamble}\n\\begin{document}\n${body}\n\\end{document}\n`;
+  const files = (extra: Record<string, string> = {}) =>
+    memoryFiles({
+      "/p/macros.tex": "\\newcommand{\\x}{y}",
+      "/p/sections/a.tex": "A\n\\input{sections/b}\n",
+      "/p/sections/b.tex": "B",
+      [join(texInputsDir(), "guards.tex")]: "G",
+      ...extra,
+    });
+
+  it("every file an include in the document body brings in, nested ones too, by absolute path", () => {
+    expect(
+      bodyFiles("/p/paper.tex", doc("", "\\input{sections/a}"), {
+        files: files(),
+        latex: latexReader,
+      }),
+    ).toEqual({
+      files: ["/p/sections/a.tex", "/p/sections/b.tex"],
+      missing: [],
+    });
+  });
+
+  it("not a preamble include (macros), and not a file found only in paperlint's inputs", () => {
+    expect(
+      bodyFiles(
+        "/p/paper.tex",
+        doc("\\input{macros}", "\\input{guards}\nText."),
+        { files: files(), latex: latexReader },
+      ),
+    ).toEqual({ files: [], missing: [] });
+  });
+
+  it("an include that resolves nowhere is named, with the file that wrote it", () => {
+    expect(
+      bodyFiles("/p/paper.tex", doc("", "\\input{gone}"), {
+        files: files(),
+        latex: latexReader,
+      }),
+    ).toEqual({ files: [], missing: [{ file: "paper.tex", target: "gone" }] });
+  });
+
+  it("a main file with no document environment: every include is the body", () => {
+    expect(
+      bodyFiles("/p/paper.tex", "\\input{sections/b}", {
+        files: files(),
+        latex: latexReader,
+      }),
+    ).toEqual({ files: ["/p/sections/b.tex"], missing: [] });
   });
 });
 

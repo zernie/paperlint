@@ -5,6 +5,9 @@
  *
  *   presets/       the venue presets (`paperlint:<name>`) and their JSON Schema
  *   presets/tex/   the LaTeX inputs `paperlint build` puts on TEXINPUTS
+ *
+ * `texSearchPath` is where an `\input` is looked for, in order. The build hands it to TeX and the
+ * lint rules read includes through it, so the two cannot disagree about which file a paper means.
  */
 import { fileURLToPath } from "node:url";
 
@@ -15,3 +18,9 @@ export const presetsDir = (): string =>
 /** The LaTeX inputs a paper `\input`s by name (`paper-guards`, a venue's numbers). */
 export const texInputsDir = (): string =>
   fileURLToPath(new URL("../presets/tex", import.meta.url));
+
+/** Where an `\input` in the paper in `paperDir` is looked for, first to last. */
+export const texSearchPath = (paperDir: string): readonly string[] => [
+  paperDir,
+  texInputsDir(),
+];

@@ -9,8 +9,8 @@
  * but that is INTERNAL machinery, and you no longer need to know it in order to run them.
  *
  * Two entry points into the tool, and both are whole now:
- *     npx paperlint lint              ← here
- *     uses: zernie/paperlint@<sha>    ← action.yml
+ *     npx paperlint lint                ← here
+ *     uses: ./node_modules/paperlint    ← action.yml, after `npm ci`
  *
  * ⚠️ THE BOUNDARY THIS UTILITY HAS NO RIGHT TO ERASE: the consumer's data stays with the consumer.
  * Where the papers are and the project's own rule blocks — that is about ONE corpus, so it lives in
@@ -42,6 +42,7 @@ import {
   asEslintResults,
 } from "./structure.ts";
 import { buildPapers, papersIn, anyFailed, remedyFor, MAIN } from "./build.ts";
+import { includeBlocks, paperBodies, unreadLines } from "./paper-includes.ts";
 import { prepareEngine } from "./build-engine.ts";
 import { cacheRoot, cachedTree, runToolchain } from "./toolchain.ts";
 import { banalInstaller, parseBanalSettings } from "./adapters/banal/index.ts";
@@ -52,7 +53,6 @@ import { VENUE_RULE_LEVELS, venueRules } from "./venue-rules.ts";
 import { TEX_VENUE_RULE_LEVELS, texVenueRules } from "./tex-venue-rules.ts";
 import { claimProvenanceRule } from "./claim-provenance.ts";
 import { registerRule } from "./register.ts";
-import { missingInputRule } from "./tex-paper.ts";
 import {
   paperRules,
   stringFields,
@@ -125,7 +125,6 @@ export { init };
 export { nextSteps } from "./init.ts";
 
 import paperStages from "#eslint-rules/paper-stages";
-import researchQuestion from "#eslint-rules/paper-research-question";
 import typography from "#eslint-rules/paper-typography";
 import texBuild from "#eslint-rules/tex-build";
 import bibReachable from "#eslint-rules/bib-reachable-entry";
@@ -228,7 +227,7 @@ export function buildConfig(
   opts: PaperlintConfig = {},
   texLanguage: unknown,
 ): ConfigBlock[] {
-  const paperRules = { ...researchQuestion.rules, ...typography.rules };
+  const paperRules = { ...typography.rules };
   // The reference rules judge `_build/references.json`, and only on `paper.tex`.
   const texPaperRules = {
     ...paperRules,
@@ -236,7 +235,6 @@ export function buildConfig(
   };
   // Each typography rule reports every occurrence where it is, and fixes it (`--fix`).
   const prose = {
-    "paper/research-question": "warn",
     "paper/section-word": "warn",
     "paper/leading-zero": "warn",
   };
@@ -319,10 +317,6 @@ export function buildConfig(
               files: nodeFiles,
               latex: latexReader,
             }),
-            "missing-input": missingInputRule({
-              files: nodeFiles,
-              latex: latexReader,
-            }),
             register: registerRule({
               files: nodeFiles,
               latex: latexReader,
@@ -341,7 +335,6 @@ export function buildConfig(
         "tex/future-promise": "warn",
         // A number with no owner: a prose rule, on beside the others above.
         "tex/claim-provenance": "warn",
-        "tex/missing-input": "warn",
         // Sentence-initial conjunctions over the whole body: register, not vocabulary.
         "tex/register": "warn",
         "tex/acm-frontmatter-override": "error",
@@ -350,17 +343,54 @@ export function buildConfig(
         ...TEX_VENUE_RULE_LEVELS,
       },
     });
+  // THE FILES A paper.tex INCLUDES FROM ITS BODY, each read on its own and reported at its own path
+  // (#144). The block claims every `.tex` but `paper.tex` — yet it is left out of the scope below, so
+  // it reaches only the files `paperlint lint` un-ignores by name for each paper (src/paper-includes.ts):
+  // a frozen version or a macro file is never enumerated. The rules are the ones that read a file as
+  // a fragment (no `document` environment: all of it is body); the whole-paper rules stay on
+  // `paper.tex`, which reads its includes itself (src/tex-paper.ts).
+  const fragments: readonly ConfigBlock[] = texLanguage
+    ? [
+        {
+          files: ["**/*.tex"],
+          ignores: ["**/paper.tex"],
+          plugins: {
+            tex: {
+              languages: { latex: texLanguage },
+              rules: { "future-promise": texBuild["future-promise"] },
+            },
+            paper: {
+              rules: {
+                "section-word": typography.rules["section-word"],
+                "leading-zero": typography.rules["leading-zero"],
+                "figure-ref-style": typography.rules["figure-ref-style"],
+              },
+            },
+          },
+          language: "tex/latex",
+          rules: {
+            "paper/section-word": "warn",
+            "paper/leading-zero": "warn",
+            "paper/figure-ref-style": "warn",
+            "tex/future-promise": "warn",
+          },
+        },
+      ]
+    : [];
   // 🔴 ONLY THE FILES THESE BLOCKS CLAIM ARE LINTED (src/paper-files.ts). Without this block ESLint's
   // built-in defaults lint every .js/.mjs/.cjs under the papers directory — a paper's vendored
   // `repro/` code failed the run with 74 parse errors and not one finding on a paper file. It goes
   // FIRST: the `.template/` ignore below must come after its directory un-ignore to win.
-  const owners = ruleOwners(cfg);
+  const owners = ruleOwners([...cfg, ...fragments]);
   cfg.unshift(scopeToOwned(ownedPatterns(cfg)));
   // The consumer's own blocks, LAST, so a later block wins — ESLint's rule. Parsed by
   // `readConfig`; each carries the settings file's directory as its `basePath`. Each is split so a
   // rule reaches only the files its plugin is registered for: `paper` is a different plugin beside
   // PIPELINE-STATUS.md than beside paper.tex, and ESLint throws on a rule its plugin lacks.
-  cfg.push(...(opts.rules ?? []).flatMap((b) => narrowToOwners(b, owners)));
+  cfg.push(
+    ...fragments,
+    ...(opts.rules ?? []).flatMap((b) => narrowToOwners(b, owners)),
+  );
   return cfg;
 }
 
@@ -502,6 +532,17 @@ export async function silentOptionalRules(
 }
 
 /**
+ * The paper directories `paths` reach: each directory and the papers under it. A FILE named on the
+ * command line belongs to the paper it sits in.
+ */
+function paperDirs(paths: readonly string[]): readonly string[] {
+  const dirs = paths.map((p) =>
+    existsSync(p) && statSync(p).isFile() ? dirname(p) : p,
+  );
+  return [...new Set(dirs.flatMap((p) => [p, ...papersIn(p)]))];
+}
+
+/**
  * Every linted paper's rules, as ESLint blocks scoped to that paper, in two groups: what its venue
  * preset turns on, and what its own `paperlint.json` says. The caller puts the root's blocks between
  * them. A file that does not parse, or names a rule paperlint does not ship, stops the run with one
@@ -510,11 +551,7 @@ export async function silentOptionalRules(
 export function paperRuleBlocks(
   paths: readonly string[],
 ): Parsed<{ preset: RuleBlock[]; own: RuleBlock[] }> {
-  // A FILE named on the command line belongs to the paper it sits in: that paper's settings apply.
-  const dirs = paths.map((p) =>
-    existsSync(p) && statSync(p).isFile() ? dirname(p) : p,
-  );
-  const papers = [...new Set(dirs.flatMap((p) => [p, ...papersIn(p)]))];
+  const papers = paperDirs(paths);
   const out: { preset: RuleBlock[]; own: RuleBlock[] } = {
     preset: [],
     own: [],
@@ -764,28 +801,6 @@ const VALUE_FLAGS: ReadonlySet<string> = new Set([
   "--options",
   "--max-warnings",
 ]);
-
-/**
- * This package's own version, from the `package.json` beside `src/` and `dist/` alike. `init` pins
- * the CI action to its release tag; an unreadable manifest yields `undefined`, and init then keeps
- * the placeholder instead of guessing.
- */
-export function ownVersion(
-  readManifest: () => string = () =>
-    readFileSync(new URL("../package.json", import.meta.url), "utf8"),
-): string | undefined {
-  try {
-    const manifest: unknown = JSON.parse(readManifest());
-    return typeof manifest === "object" &&
-      manifest !== null &&
-      "version" in manifest &&
-      typeof manifest.version === "string"
-      ? manifest.version
-      : undefined;
-  } catch {
-    return undefined;
-  }
-}
 
 /**
  * Reading the config, ONE reader for all commands. Pulled out of `run()` the moment a second
@@ -1421,7 +1436,6 @@ async function runInit(
     log,
     err,
     cwd,
-    version: ownVersion(),
     yes: a.yes,
     hooks: !a.noHooks,
     paper: a.paper,
@@ -1557,10 +1571,32 @@ export async function run(
     texLanguage = null;
   }
 
+  // Each paper's body files, resolved the way the build resolves them — only when the LaTeX language
+  // loaded, since only its rules read them. The project's papers too: `paperlint lint .` reaches
+  // papers two levels down, which a directory's immediate papers do not.
+  const bodies = texLanguage
+    ? paperBodies(paperDirs([...paths, ...papersRoots(cfg)]), {
+        files: nodeFiles,
+        latex: latexReader,
+      })
+    : [];
+  // Named only for the papers this run lints: a paper elsewhere in the project is not this run's.
+  const inScope = (dir: string) =>
+    paths.some((p) => dir === p || dir.startsWith(`${p}${sep}`));
+  unreadLines(
+    bodies.filter((b) => inScope(b.dir)),
+    (p) => shown(cwd, p),
+  ).forEach((l) => {
+    err(l);
+  });
+
   const eslint = new ESLint({
     cwd: lintRoot(root, paths),
     overrideConfigFile: true,
-    overrideConfig: eslintConfig(buildConfig(withPapers, texLanguage)),
+    overrideConfig: eslintConfig([
+      ...buildConfig(withPapers, texLanguage),
+      ...includeBlocks(bodies),
+    ]),
     fix: a.fix,
   });
 

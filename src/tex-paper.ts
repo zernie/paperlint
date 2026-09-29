@@ -7,11 +7,9 @@
  * file at the include in `paper.tex` that brought it in — the one place ESLint can point to in this
  * file — with the included file, line and column at the front of the message.
  *
- *   tex/missing-input  warn  an `\input`, `\include` or `\subfile` names a file that is not there
- *
- * A missing file is a finding, not a silent skip: the rules would otherwise report a clean body for
- * text they never read, and TeX stops on it too. Warn, not error: a file a build step writes (a
- * table of generated numbers) is legitimately absent before that step has run.
+ * An include is looked for where the build tells TeX to look (`texSearchPath`): the paper's own
+ * directory, then paperlint's inputs. `bodyFiles` names the files of the paper's BODY the author
+ * wrote — what the rules over ESLint's own LaTeX text read one by one, each at its own path.
  */
 import { basename, dirname, join } from "node:path";
 import {
@@ -23,11 +21,9 @@ import type { Span } from "./domain/tex-document.ts";
 import type { LatexReader } from "./ports/latex.ts";
 import type { Files } from "./ports/files.ts";
 import { callerPath } from "./caller-path.ts";
-import type {
-  Located,
-  TexRuleContext,
-  TexRuleModule,
-} from "./tex-venue-rules.ts";
+import type { AbsolutePath } from "./domain/paths.ts";
+import { texSearchPath } from "./package-dirs.ts";
+import type { Located, TexRuleContext } from "./tex-venue-rules.ts";
 
 /** What reading a paper needs: the disk, and the LaTeX reader. */
 export interface PaperDeps {
@@ -46,10 +42,60 @@ export function readPaper(
     includes: deps.latex.includes,
     documentBody: deps.latex.documentBody,
     read: (rel) => {
-      const b = deps.files.readBytes(callerPath(join(dir, rel)));
+      const at = located(dir, rel, deps.files);
+      const b = at === null ? null : deps.files.readBytes(at);
       return b === null ? null : new TextDecoder().decode(b);
     },
   });
+}
+
+/** `rel` in the first directory of the paper's TeX search path that holds it, or null. */
+const located = (dir: string, rel: string, files: Files): AbsolutePath | null =>
+  texSearchPath(dir)
+    .map((d) => callerPath(join(d, rel)))
+    .find((p) => files.isFile(p)) ?? null;
+
+/** An include that resolved nowhere: the file that wrote it, and the path as written. */
+export interface Unread {
+  readonly file: string;
+  readonly target: string;
+}
+
+/**
+ * The files of the body of the paper whose main file is `filename`: every file an include inside its
+ * `document` environment brings in, nested ones too, found in the paper's own directory. Not a
+ * preamble include (macros are not the body), and not a file found only in paperlint's inputs (not
+ * the author's text). `missing` is every include, anywhere, that resolved nowhere.
+ */
+export function bodyFiles(
+  filename: string,
+  src: string,
+  deps: PaperDeps,
+): {
+  readonly files: readonly AbsolutePath[];
+  readonly missing: readonly Unread[];
+} {
+  const dir = dirname(filename);
+  const paper = readPaper(filename, src, deps);
+  const body = deps.latex.documentBody(src);
+  const inBody = (via: Span | null): boolean =>
+    via !== null &&
+    (body === null || (via.start >= body.start && via.end <= body.end));
+  const own = (rel: string): AbsolutePath | null => {
+    const at = located(dir, rel, deps.files);
+    return at === callerPath(join(dir, rel)) ? at : null;
+  };
+  return {
+    files: [
+      ...new Set(
+        paper.segments
+          .filter((s) => s.file !== paper.main && inBody(s.via))
+          .map((s) => own(s.file))
+          .filter((f): f is AbsolutePath => f !== null),
+      ),
+    ],
+    missing: paper.missing.map(({ file, target }) => ({ file, target })),
+  };
 }
 
 /** Line and column (1-based) of an offset in a text. */
@@ -113,40 +159,3 @@ export function reportInPaper(
       });
   });
 }
-
-const MISSING_META: TexRuleModule["meta"] = {
-  type: "problem",
-  docs: {
-    description:
-      "an \\input, \\include or \\subfile names a file that is not there, so no rule read its text",
-    url: "https://github.com/zernie/paperlint/blob/main/docs/rules/tex/missing-input.md",
-  },
-  schema: [],
-  messages: {
-    missing:
-      "`{{target}}` is not there (tried `{{target}}.tex` and `{{target}}`, from the paper's directory): TeX stops on it, and no rule read what it should hold",
-    missingIn:
-      "`{{target}}`, which {{file}} includes, is not there (tried `{{target}}.tex` and `{{target}}`, from the paper's directory): TeX stops on it, and no rule read what it should hold",
-  },
-};
-
-/** The includes that name no file, each reported where it stands in the main file. */
-export const missingInputRule = (deps: PaperDeps): TexRuleModule => ({
-  meta: MISSING_META,
-  create(context) {
-    return {
-      root() {
-        const sc = context.sourceCode;
-        const paper = readPaper(context.filename, sc.raw ?? sc.text, deps);
-        const loc = (i: number) => sc.getLocFromIndex(i);
-        paper.missing.forEach((m) => {
-          context.report({
-            loc: { start: loc(m.via.start), end: loc(m.via.end) },
-            messageId: m.file === paper.main ? "missing" : "missingIn",
-            data: { target: m.target, file: m.file },
-          });
-        });
-      },
-    };
-  },
-});

@@ -55,10 +55,18 @@ export const includesOf = (t: ParsedTex): readonly Include[] =>
 const isDocument = (n: Node): n is Readonly<Ast.Environment> =>
   n.type === "environment" && n.env === "document";
 
-/** The span of the `document` environment's body, or null when the source has none. */
+/**
+ * The span of the `document` environment's body, or null when the source has none. A macro's own
+ * position ends at its name, so its place is taken with its arguments: a body ending in
+ * `\input{sections/a}` ends at the closing brace.
+ */
 export const documentBodyOf = (t: ParsedTex): Span | null =>
   (t.root.content.find(isDocument)?.content ?? [])
-    .flatMap((n) => inPlace(placeOf(n), (span) => [span]))
+    .flatMap((n) =>
+      inPlace(n.type === "macro" ? macroPlace(n) : placeOf(n), (span) => [
+        span,
+      ]),
+    )
     .reduce<Span | null>(
       (body, span) =>
         body === null ? span : { start: body.start, end: span.end },
