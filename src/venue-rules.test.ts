@@ -574,13 +574,13 @@ describe("paperlint's own config turns the venue rules on for every paper.tex", 
     expect(OPTIONAL_RULES.has(id)).toBe(false);
   });
 
-  it("the venue rules are errors except body-size and measured, which are warnings", () => {
+  it("the venue rules are errors except measured, which is a warning", () => {
     expect(VENUE_RULE_LEVELS).toEqual({
       "pdf/fresh": "error",
       "pdf/profile": "error",
       "pdf/fonts": "error",
       "pdf/geometry": "error",
-      "pdf/body-size": "warn",
+      "pdf/body-size": "error",
       "pdf/measured": "warn",
     });
     expect(PAGE_LIMIT_RULE_LEVELS).toEqual({ "format/page-limit": "error" });
@@ -690,12 +690,39 @@ describe("the IEEE conference family and AIDC", () => {
     expect(ids(fs)).toEqual(["pdf/fonts:noFamily"]);
     expect(fs[0]?.message).toMatch(/NimbusRomNo9L/);
   });
+});
 
+describe("pdf/body-size on the IEEE family: 10 pt body, 8 pt references", () => {
   it("a body size off the family's 10 pt fails pdf/body-size", () => {
     expect(
-      ids(lint({ venue: AIDC, facts: ieeeFacts((f) => (f.body_pt = 9.3)) })),
+      ids(
+        lint({
+          venue: {
+            extends: "paperlint:aidc",
+            kind: "regular",
+            identity: ["Ada Example"],
+          },
+          facts: ieeeFacts((f) => (f.body_pt = 9.3)),
+        }),
+      ),
     ).toEqual(["pdf/body-size:body"]);
   });
+
+  it.each([
+    ["\\scriptsize, 7 pt", 7.3],
+    ["\\small, 9 pt", 9.3],
+  ])(
+    "a bibliography in %s instead of the class's 8 pt fails pdf/body-size",
+    (_, got) => {
+      const fs = lint({
+        venue: { extends: "paperlint:ieee-conference" },
+        facts: ieeeFacts((f) => (f.ref_pt = got)),
+      });
+      expect(fs.map((f) => f.message)).toEqual([
+        `the reference font size is ${String(got)} pt, outside 8 pt for ieee-conference (allowing ±0.5 pt for the measuring drift) — fix the bibliography's font size`,
+      ]);
+    },
+  );
 });
 
 /** An AIDC regular paper (12 body pages), for the page-limit tests. */

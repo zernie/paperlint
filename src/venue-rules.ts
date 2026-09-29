@@ -5,7 +5,7 @@
  *   pdf/profile    error  the preset the paper extends resolves, and the kind it names exists
  *   pdf/fonts      error  every font is embedded, none is Type 3, the venue's families are present
  *   pdf/geometry   error  page size and column count match the preset
- *   pdf/body-size  warn   body and reference font sizes within the preset's ranges
+ *   pdf/body-size  error  body and reference font sizes within the preset's ranges
  *   pdf/measured   warn   the venue checks ran at all (a preset is named, facts exist, geometry measured)
  *
  * and, in plugins named for the requirement rather than the input (paperlint#151):
@@ -431,8 +431,10 @@ function judgeRefPt(
     ? [
         finding("refPt", {
           got: g.ref_pt,
-          min: format.refPtMin,
-          max: format.refPtMax,
+          range:
+            format.refPtMin === format.refPtMax
+              ? String(format.refPtMin)
+              : `${String(format.refPtMin)}–${String(format.refPtMax)}`,
           slop,
           venue,
         }),
@@ -656,14 +658,14 @@ const META: Readonly<Record<VenueRuleName, Meta>> = {
     },
   },
   "body-size": {
-    type: "suggestion",
     docs: {
       description:
-        "body and reference font sizes within the venue preset's ranges (a measured mode, so a warning)",
+        "the body and reference font sizes are the venue template's, within the preset's tolerance",
+      url: rulePageUrl("pdf/body-size"),
     },
     messages: {
       refPt:
-        "the reference font size is {{got}} pt, outside {{min}}–{{max}} pt for {{venue}} (allowing ±{{slop}} pt for the measuring drift) — fix the bibliography's font size",
+        "the reference font size is {{got}} pt, outside {{range}} pt for {{venue}} (allowing ±{{slop}} pt for the measuring drift) — fix the bibliography's font size",
       body: "the body font size measures {{got}} pt against {{want}} ± {{tol}} pt for {{venue}}. The measurement is the mode of the rendered text, not the declared size — check \\documentclass and its options",
       bodyMissing:
         "the build did not measure a body font size — rebuild the paper",
@@ -695,7 +697,7 @@ export const VENUE_RULE_LEVELS: Readonly<
   "pdf/profile": "error",
   "pdf/fonts": "error",
   "pdf/geometry": "error",
-  "pdf/body-size": "warn",
+  "pdf/body-size": "error",
   "pdf/measured": "warn",
 };
 

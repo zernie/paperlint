@@ -29,7 +29,6 @@ const AWAITING_PAGE: ReadonlySet<string> = new Set([
   "paper/section-word",
   "paper/source",
   "paper/stages",
-  "pdf/body-size",
   "pdf/fonts",
   "pdf/fresh",
   "pdf/geometry",

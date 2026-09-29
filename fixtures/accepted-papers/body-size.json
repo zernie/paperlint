@@ -1,0 +1,107 @@
+{
+  "$comment": "pdf/body-size on real built papers. `papers`: accepted papers whose built PDF must draw no finding, each with the size its source declares, the size pdf.js reads off the rendered glyphs (the mode of a body page and of a reference page, weighted by characters), and what banal measured into the facts. `variants`: one of those papers with ONE change to a font size, and the exact findings it must draw. Built and linted by test/e2e/tex/page-count.e2e.ts; each edit's `find` must occur exactly once. The rendered sizes were read with pdf.js (text items' transform scale), not by the rule, and the reference pages were looked at: banal reads every size 0.3 pt above what the glyphs are set in.",
+  "papers": {
+    "barovox-acsac24": {
+      "declared": "\\documentclass[conference,compsoc]{IEEEtran}: the class default 10 pt; the bibliography in \\footnotesize, 8 pt (IEEEtran.cls \\thebibliography)",
+      "rendered_body_pt": 10,
+      "rendered_ref_pt": 8,
+      "body_pt": 10.3,
+      "ref_pt": 8.3,
+      "evidence": "pdf.js, page 3: 4126 characters at 10.00 pt, 119 at 11.00, 69 at 8.00; page 14 (references): 6330 at 8.00."
+    },
+    "leaking-queries-acsac25": {
+      "declared": "\\documentclass[conference,compsoc]{IEEEtran}: 10 pt; the bibliography (paper.bbl, input by hand) in \\footnotesize, 8 pt",
+      "rendered_body_pt": 10,
+      "rendered_ref_pt": 8,
+      "body_pt": 10.3,
+      "ref_pt": 8.3,
+      "evidence": "pdf.js, page 3: 4329 characters at 10.00 pt; page 14 (references): 6118 at 8.00."
+    },
+    "rr-dataset-quality-acsac24": {
+      "declared": "\\documentclass[conference,compsoc]{IEEEtran}: 10 pt; the bibliography in \\footnotesize, 8 pt",
+      "rendered_body_pt": 10,
+      "rendered_ref_pt": 8,
+      "body_pt": 10.3,
+      "ref_pt": 8.3,
+      "evidence": "pdf.js, page 3: 4789 characters at 10.00 pt; page 15 (references): 3739 at 8.00. The page shows 23 references over one and a half columns."
+    },
+    "secure-acsac24": {
+      "declared": "\\documentclass[conference]{IEEEtran}: 10 pt; the bibliography in \\footnotesize, 8 pt",
+      "rendered_body_pt": 9.96,
+      "rendered_ref_pt": 7.97,
+      "body_pt": 10.3,
+      "ref_pt": 8.3,
+      "evidence": "pdf.js, page 3: 4961 characters at 9.96 pt; page 13 (references): 6768 at 7.97. Without compsoc the class sets its sizes in big points (10 bp = 9.96 pt)."
+    },
+    "agenticdev-acm26": {
+      "declared": "\\documentclass[sigconf,screen]{acmart}: 9 pt; acmart sets the sigconf bibliography at 7 pt",
+      "rendered_body_pt": 8.97,
+      "rendered_ref_pt": 6.97,
+      "body_pt": 9.3,
+      "ref_pt": 7.3,
+      "evidence": "pdf.js, page 2: 5034 characters at 8.97 pt; page 6 (references): 6003 at 6.97."
+    }
+  },
+  "variants": [
+    {
+      "name": "barovox-body-9pt",
+      "from": "barovox-acsac24",
+      "change": "IEEEtran's 9pt option: the body in 9 pt, the bibliography still in \\footnotesize, which is 8 pt at 9pt too",
+      "edits": [
+        {
+          "file": "paper.tex",
+          "find": "\\documentclass[conference,compsoc]{IEEEtran}",
+          "replace": "\\documentclass[9pt,conference,compsoc]{IEEEtran}"
+        }
+      ],
+      "rendered_body_pt": 9,
+      "rendered_ref_pt": 8,
+      "body_pt": 9.3,
+      "ref_pt": 8.3,
+      "findings": [
+        "the body font size measures 9.3 pt against 10 ± 0.5 pt for ieee-conference. The measurement is the mode of the rendered text, not the declared size — check \\documentclass and its options"
+      ],
+      "evidence": "pdf.js, page 3: 5310 characters at 9.00 pt; page 12 (references): 6615 at 8.00. The body runs to 11 pages instead of 13."
+    },
+    {
+      "name": "rr-references-scriptsize",
+      "from": "rr-dataset-quality-acsac24",
+      "change": "the bibliography shrunk to \\scriptsize, 7 pt, by setting \\footnotesize to \\scriptsize around \\bibliography",
+      "edits": [
+        {
+          "file": "paper.tex",
+          "find": "\\bibliography{ACSAC2024_bibliography}",
+          "replace": "{\\let\\footnotesize\\scriptsize\\bibliography{ACSAC2024_bibliography}}"
+        }
+      ],
+      "rendered_body_pt": 10,
+      "rendered_ref_pt": 7,
+      "body_pt": 10.3,
+      "ref_pt": 7.3,
+      "findings": [
+        "the reference font size is 7.3 pt, outside 8 pt for ieee-conference (allowing ±0.5 pt for the measuring drift) — fix the bibliography's font size"
+      ],
+      "evidence": "pdf.js, page 15 (references): 3734 characters at 7.00 pt. On the rendered page the same 23 references fit in one column, where the paper takes one and a half."
+    },
+    {
+      "name": "secure-references-small",
+      "from": "secure-acsac24",
+      "change": "the bibliography enlarged to \\small, 9 pt, by setting \\footnotesize to \\small around \\bibliography",
+      "edits": [
+        {
+          "file": "paper.tex",
+          "find": "\\bibliography{references}",
+          "replace": "{\\let\\footnotesize\\small\\bibliography{references}}"
+        }
+      ],
+      "rendered_body_pt": 9.96,
+      "rendered_ref_pt": 8.97,
+      "body_pt": 10.3,
+      "ref_pt": 9.3,
+      "findings": [
+        "the reference font size is 9.3 pt, outside 8 pt for ieee-conference (allowing ±0.5 pt for the measuring drift) — fix the bibliography's font size"
+      ],
+      "evidence": "pdf.js, page 13 (references): 5642 characters at 8.97 pt; page 14: 4701 at 8.97."
+    }
+  ]
+}

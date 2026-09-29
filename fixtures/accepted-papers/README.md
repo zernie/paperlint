@@ -104,6 +104,26 @@ before the bibliography as body.
 TeX Live 2026 `biblatex` refuses (it expects 3.3), and regenerating it needs `biber`, which
 paperlint's toolchain does not install. `agenticdev-acm26` is an ACM paper, outside AIDC's template.
 
+## What size the text is set in — `body-size.json`
+
+`pdf/body-size` compares the body and reference font sizes banal measures with the preset's. The
+same build also builds `agenticdev-acm26`, and `body-size.json` records, for the four ACSAC papers
+and it, the size the source declares, the size pdf.js reads off the rendered glyphs (independently
+of banal and of the rule), and what banal measured. None may draw a finding. Three variants change
+one size each and must draw exactly the recorded finding.
+
+| paper | declared | rendered (pdf.js) body / refs | banal | finding |
+| --- | --- | --- | --- | --- |
+| barovox-acsac24 · leaking-queries-acsac25 · rr-dataset-quality-acsac24 | 10 pt / 8 pt | 10.00 / 8.00 | 10.3 / 8.3 | none |
+| secure-acsac24 (no compsoc: sizes in bp) | 10 pt / 8 pt | 9.96 / 7.97 | 10.3 / 8.3 | none |
+| agenticdev-acm26 | 9 pt / 7 pt | 8.97 / 6.97 | 9.3 / 7.3 | none |
+| *variants* | | | | |
+| barovox-body-9pt | `\documentclass[9pt,…]` | 9.00 / 8.00 | 9.3 / 8.3 | `body` |
+| rr-references-scriptsize | bibliography in `\scriptsize` | 10.00 / 7.00 | 10.3 / 7.3 | `refPt` |
+| secure-references-small | bibliography in `\small` | 9.96 / 8.97 | 10.3 / 9.3 | `refPt` |
+
+banal reads 0.3 pt above the rendered size on both templates; `body_pt_tol` of 0.5 absorbs it.
+
 ## Licence rule — read before adding a paper
 
 Only papers under **CC BY, CC BY-SA or CC0** may be added. The licence is the one the arXiv abstract

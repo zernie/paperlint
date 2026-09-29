@@ -399,7 +399,7 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     silent: built(),
   },
   "pdf/body-size": {
-    reports: { ...onPdf(built({ body_pt: 12 })), severity: 1 },
+    reports: onPdf(built({ body_pt: 12 })),
     silent: built(),
   },
   "anonymity/identity": {

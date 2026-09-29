@@ -10,6 +10,11 @@
  * Then the limit itself, through the real rule: under AIDC's regular limit of 12 body pages, the
  * paper whose body is 12 passes and the one whose body is 13 is reported.
  *
+ * And `pdf/body-size` on the same build (`body-size.json`): every accepted paper there — the ACSAC
+ * ones and an ACM one — draws no finding, and each variant, one font size changed, draws exactly
+ * the finding recorded for it. The sizes the build measured are compared with the recorded ones, so
+ * a drift in the measurement shows as itself and not as a rule that went quiet.
+ *
  *   npm run test:e2e:tex
  */
 import {
@@ -85,6 +90,34 @@ const variants = Variants.parse(
   readJson(join(CORPUS, "page-count-variants.json")),
 ).variants;
 
+/** The font sizes banal measured into the facts, as recorded. */
+const Sizes = z.object({ body_pt: z.number(), ref_pt: z.number() });
+
+/** The sizes read off the rendered glyphs with pdf.js, independently of banal and of the rule. */
+const Rendered = z.object({
+  rendered_body_pt: z.number(),
+  rendered_ref_pt: z.number(),
+  evidence: z.string().min(1),
+});
+
+const BodySize = z.object({
+  papers: z.record(
+    z.string(),
+    Sizes.extend({ ...Rendered.shape, declared: z.string().min(1) }),
+  ),
+  variants: z.array(
+    Sizes.extend({
+      ...Rendered.shape,
+      name: z.string().min(1),
+      from: z.string().min(1),
+      change: z.string().min(1),
+      edits: Variants.shape.variants.element.shape.edits,
+      findings: z.array(z.string()).min(1),
+    }),
+  ),
+});
+const bodySize = BodySize.parse(readJson(join(CORPUS, "body-size.json")));
+
 /** A consumer holding every paper and every variant under `papers/`, each variant's edits applied. */
 function consumer(): string {
   const work = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-pages-")));
@@ -94,8 +127,12 @@ function consumer(): string {
       verbatimSymlinks: true,
     });
   };
-  for (const p of papers) copy(p.name, p.name);
-  for (const v of variants) {
+  const names = new Set([
+    ...papers.map((p) => p.name),
+    ...Object.keys(bodySize.papers),
+  ]);
+  for (const name of names) copy(name, name);
+  for (const v of [...variants, ...bodySize.variants]) {
     copy(v.from, v.name);
     for (const e of v.edits) {
       const file = join(work, "papers", v.name, e.file);
@@ -142,45 +179,76 @@ const endOf = (name: string) => {
   });
 };
 
-/** `format/page-limit`'s messages for one paper, linted under `settings`. */
-function pageLimit(name: string, settings: object): string[] {
-  writeFileSync(
-    join(work, "papers", name, "paperlint.json"),
-    JSON.stringify(settings),
-  );
+const Report = z.array(
+  z.looseObject({
+    filePath: z.string(),
+    messages: z.array(
+      z.looseObject({ ruleId: z.string().nullable(), message: z.string() }),
+    ),
+  }),
+);
+
+/**
+ * One rule's messages for each paper, from ONE `paperlint lint --json` of their `paper.tex` — the
+ * file the venue rules judge — under the `paperlint.json` each has on disk. One run, because a
+ * lint of one real paper takes 10–25 s, most of it in the prose rules.
+ */
+function ruleMessages(
+  names: readonly string[],
+  ruleId: string,
+): Map<string, string[]> {
   const r = spawnSync(
     process.execPath,
-    [CLI, "lint", `papers/${name}`, "--json"],
+    [CLI, "lint", ...names.map((n) => `papers/${n}/paper.tex`), "--json"],
     { cwd: work, encoding: "utf8" },
   );
-  const report = z
-    .array(
-      z.looseObject({
-        messages: z.array(
-          z.looseObject({ ruleId: z.string().nullable(), message: z.string() }),
-        ),
-      }),
-    )
-    .parse(JSON.parse(r.stdout));
-  return report
-    .flatMap((f) => f.messages)
-    .filter((m) => m.ruleId === "format/page-limit")
-    .map((m) => m.message);
+  const report = Report.parse(JSON.parse(r.stdout));
+  const of = (n: string) => {
+    const file = report.find(
+      (f) => f.filePath === join(work, "papers", n, "paper.tex"),
+    );
+    // A paper missing from the report would read as "no finding" — the silence this test exists to tell apart.
+    if (!file) throw new Error(`${n}: not in the lint report\n${r.stderr}`);
+    return file.messages
+      .filter((m) => m.ruleId === ruleId)
+      .map((m) => m.message);
+  };
+  return new Map(names.map((n) => [n, of(n)]));
 }
 
-describe.skipIf(skip)("where the body ends, on real ACSAC papers", () => {
-  let built = { status: -1, out: "" };
-  beforeAll(async () => {
-    const t0 = Date.now();
-    built = await buildIn(work, ["--all"], {
-      asked: [],
-      checkReferences: referencesChecker({ today: () => "2026-09-29" }),
-    });
-    console.log(
-      `built ${String(papers.length + variants.length)} papers in ${String(Math.round((Date.now() - t0) / 1000))} s`,
-    );
-  });
+/** One rule's messages for one paper, linted under `settings`; its own `paperlint.json` is put back after. */
+function messagesOf(name: string, ruleId: string, settings: unknown): string[] {
+  const file = join(work, "papers", name, "paperlint.json");
+  const own = readFileSync(file, "utf8");
+  writeFileSync(file, JSON.stringify(settings));
+  try {
+    return ruleMessages([name], ruleId).get(name) ?? [];
+  } finally {
+    writeFileSync(file, own);
+  }
+}
 
+/** The font sizes the build measured in one paper. */
+const sizesOf = (name: string) =>
+  Sizes.parse(
+    readJson(join(work, "papers", name, "_build", "paper.facts.json")),
+  );
+
+// One build of every paper and variant, shared by both describes below.
+let built = { status: -1, out: "" };
+beforeAll(async () => {
+  if (skip) return;
+  const t0 = Date.now();
+  built = await buildIn(work, ["--all"], {
+    asked: [],
+    checkReferences: referencesChecker({ today: () => "2026-09-29" }),
+  });
+  console.log(
+    `built ${String(readdirSync(join(work, "papers")).length)} papers in ${String(Math.round((Date.now() - t0) / 1000))} s`,
+  );
+});
+
+describe.skipIf(skip)("where the body ends, on real ACSAC papers", () => {
   it(`${engine} — under CI, paperlint's own cache`, () => {
     if (STRICT) expect(engine).toContain("paperlint cache");
     expect(built.status, built.out).toBe(0);
@@ -210,9 +278,46 @@ describe.skipIf(skip)("where the body ends, on real ACSAC papers", () => {
       kind: "regular",
       identity: ["Nobody In These Papers"],
     };
-    expect(pageLimit("secure-acsac24", aidc)).toEqual([]);
-    expect(pageLimit("barovox-acsac24", aidc)).toEqual([
+    const pageLimit = (name: string) =>
+      messagesOf(name, "format/page-limit", aidc);
+    expect(pageLimit("secure-acsac24")).toEqual([]);
+    expect(pageLimit("barovox-acsac24")).toEqual([
       "body pages (up to the references on page 13): 13, over the limit 12 for aidc/regular — a desk reject; cut the text",
     ]);
+  });
+});
+
+describe.skipIf(skip)("pdf/body-size, on real accepted papers", () => {
+  const names = [
+    ...Object.keys(bodySize.papers),
+    ...bodySize.variants.map((v) => v.name),
+  ];
+  let found = new Map<string, string[]>();
+  beforeAll(() => {
+    found = ruleMessages(names, "pdf/body-size");
+  });
+
+  it("every variant changes a paper of the corpus", () => {
+    const papersOf = new Set(Object.keys(bodySize.papers));
+    expect(bodySize.variants.filter((v) => !papersOf.has(v.from))).toEqual([]);
+  });
+
+  it.each(Object.entries(bodySize.papers))(
+    "%s, an accepted paper, draws no finding",
+    (name, truth) => {
+      expect(sizesOf(name), truth.evidence).toEqual({
+        body_pt: truth.body_pt,
+        ref_pt: truth.ref_pt,
+      });
+      expect(found.get(name)).toEqual([]);
+    },
+  );
+
+  it.each(bodySize.variants)("$name ($change) is reported", (v) => {
+    expect(sizesOf(v.name), v.evidence).toEqual({
+      body_pt: v.body_pt,
+      ref_pt: v.ref_pt,
+    });
+    expect(found.get(v.name)).toEqual(v.findings);
   });
 });

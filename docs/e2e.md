@@ -116,6 +116,13 @@ builds all of them in one `build --all` and requires the detector's count to equ
 one, then lints two of them under AIDC's regular limit of 12: the 12-page body passes, the 13-page
 body is reported. Eleven builds, the lint runs included, took 95 s here.
 
+The same build carries `pdf/body-size` (`body-size.json` beside the papers): the four ACSAC papers
+and the ACM `agenticdev-acm26` must draw no finding, and three variants — the body in IEEEtran's
+`9pt`, the bibliography in `\scriptsize`, the bibliography in `\small` — exactly the recorded one.
+The sizes the build measured are compared with the recorded ones first, so a drift in banal shows as
+itself. The rule is linted once over all eight `paper.tex`, since a lint of a real paper takes
+10–25 s, nearly all of it in the prose rules.
+
 Beside the fixtures, one test proves the refusal with no TeX at all: PATH holds `node` alone, the
 cache directory is empty and `CI` is set, and `paperlint build` must exit 1 with one line naming
 `npx paperlint toolchain` and the venue's packages, print no plan and create no PDF and no cache.
