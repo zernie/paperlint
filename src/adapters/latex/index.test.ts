@@ -526,6 +526,14 @@ describe("documentBodyOf — the body of a source that is a document of its own"
     expect(latexReader.documentBody(src)).toEqual(body);
   });
 
+  it("a body ending in a macro ends after that macro's arguments, not after its name", () => {
+    const src = "\\begin{document}\nText.\n\\input{sections/a}\\end{document}";
+    const body = documentBodyOf(parseLatex(src));
+    expect(body && src.slice(body.start, body.end)).toBe(
+      "Text.\n\\input{sections/a}",
+    );
+  });
+
   it("none without a document environment, or with an empty one", () => {
     expect(documentBodyOf(parseLatex("just text"))).toBe(null);
     expect(documentBodyOf(parseLatex("\\begin{document}\\end{document}"))).toBe(
