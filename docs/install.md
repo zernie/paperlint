@@ -33,7 +33,7 @@ In order:
    on the defaults gets no config file at all.
 3. **Links each shipped skill** into `.claude/skills/<name>`, where Claude Code looks for skills.
 4. **Writes the hook commands** into `.claude/settings.json`, beside your own entries.
-5. **Offers a GitHub Actions workflow**, pinned to the release tag of the version you installed.
+5. **Offers a GitHub Actions workflow** that runs `npm ci`, then the action from `node_modules`.
 6. **Offers a first paper** (`paperlint new`) if the papers directory has none.
 7. **Offers TeX Live** for `paperlint build` (`paperlint toolchain`, ~270 MB, ~3 min, once), with
    the size in the question and NO as the default. Without a terminal it asks nothing and lists the
@@ -47,13 +47,13 @@ question (Ctrl+D) also takes the default.
 
 ## What `paperlint init` writes
 
-| what                                                               | where                   | when                                                                                                                                                                              |
-| ------------------------------------------------------------------ | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `{ "papersDir": … }` naming your papers directory                  | `paperlint.json`        | only when it is not the default `papers`                                                                                                                                          |
-| the three hook commands, merged in beside your own entries         | `.claude/settings.json` | by default. A human at a terminal is asked [Y/n]; an agent, CI or `--yes` gets YES; `--no-hooks` skips. Hand-wired under another spelling: nothing written, so nothing runs twice |
-| a GitHub Actions workflow, pinned to `@v<installed version>`       | `.github/workflows/`    | only if you say yes; it asks once, and only when a human is at a terminal (stdin and stdout, no `CI`, no `--yes`)                                                                 |
-| a first paper, via `paperlint new`                                 | `<papers>/<name>/`      | only when the papers directory holds none: asked of a human at a terminal, otherwise only with `--paper <name>`                                                                   |
-| one relative symlink per shipped skill, into the installed package | `.claude/skills/<name>` | always — except where that name is already taken (a directory, a file, a link elsewhere): that entry is left as it is and named in the report                                     |
+| what                                                                 | where                   | when                                                                                                                                                                              |
+| -------------------------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `{ "papersDir": … }` naming your papers directory                    | `paperlint.json`        | only when it is not the default `papers`                                                                                                                                          |
+| the three hook commands, merged in beside your own entries           | `.claude/settings.json` | by default. A human at a terminal is asked [Y/n]; an agent, CI or `--yes` gets YES; `--no-hooks` skips. Hand-wired under another spelling: nothing written, so nothing runs twice |
+| a GitHub Actions workflow: `npm ci`, then `./node_modules/paperlint` | `.github/workflows/`    | only if you say yes; it asks once, and only when a human is at a terminal (stdin and stdout, no `CI`, no `--yes`)                                                                 |
+| a first paper, via `paperlint new`                                   | `<papers>/<name>/`      | only when the papers directory holds none: asked of a human at a terminal, otherwise only with `--paper <name>`                                                                   |
+| one relative symlink per shipped skill, into the installed package   | `.claude/skills/<name>` | always — except where that name is already taken (a directory, a file, a link elsewhere): that entry is left as it is and named in the report                                     |
 
 It installs no software you did not say yes to, and touches nothing else. Commit `.claude/settings.json` so every clone
 gets the hooks; the hook commands run files inside `node_modules`, so a fresh clone needs

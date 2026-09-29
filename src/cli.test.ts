@@ -14,7 +14,6 @@ import type { runToolchain } from "./toolchain.ts";
 import {
   chooseVenue,
   initTexLive,
-  ownVersion,
   paperRuleBlocks,
   parseArgs,
   parseSettings,
@@ -527,21 +526,6 @@ test("chooseVenue: a question that fails (the stream ended) takes the default, n
     ask: () => Promise.reject(new Error("Aborted with Ctrl+D")),
   });
   assert.deepEqual(r, { ok: true, value: null });
-});
-
-test("ownVersion: the manifest's version; an unreadable manifest or a non-string version is undefined", () => {
-  assert.deepEqual(
-    [
-      ownVersion(() => '{"version": "1.2.3"}'),
-      ownVersion(() => "{ nope"),
-      ownVersion(() => '{"version": 3}'),
-      ownVersion(() => {
-        throw new Error("ENOENT");
-      }),
-      typeof ownVersion(),
-    ],
-    ["1.2.3", undefined, undefined, undefined, "string"],
-  );
 });
 
 test("init's TeX Live install runs the toolchain over the project's papers, never a check", () => {

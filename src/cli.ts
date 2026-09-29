@@ -9,8 +9,8 @@
  * but that is INTERNAL machinery, and you no longer need to know it in order to run them.
  *
  * Two entry points into the tool, and both are whole now:
- *     npx paperlint lint              ← here
- *     uses: zernie/paperlint@<sha>    ← action.yml
+ *     npx paperlint lint                ← here
+ *     uses: ./node_modules/paperlint    ← action.yml, after `npm ci`
  *
  * ⚠️ THE BOUNDARY THIS UTILITY HAS NO RIGHT TO ERASE: the consumer's data stays with the consumer.
  * Where the papers are and the project's own rule blocks — that is about ONE corpus, so it lives in
@@ -805,28 +805,6 @@ const VALUE_FLAGS: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * This package's own version, from the `package.json` beside `src/` and `dist/` alike. `init` pins
- * the CI action to its release tag; an unreadable manifest yields `undefined`, and init then keeps
- * the placeholder instead of guessing.
- */
-export function ownVersion(
-  readManifest: () => string = () =>
-    readFileSync(new URL("../package.json", import.meta.url), "utf8"),
-): string | undefined {
-  try {
-    const manifest: unknown = JSON.parse(readManifest());
-    return typeof manifest === "object" &&
-      manifest !== null &&
-      "version" in manifest &&
-      typeof manifest.version === "string"
-      ? manifest.version
-      : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-/**
  * Reading the config, ONE reader for all commands. Pulled out of `run()` the moment a second
  * command needed the same config (`build`): two copies of this block would have drifted apart on
  * the very first edit — exactly the class that already cost us the empty-set guard in two places.
@@ -1460,7 +1438,6 @@ async function runInit(
     log,
     err,
     cwd,
-    version: ownVersion(),
     yes: a.yes,
     hooks: !a.noHooks,
     paper: a.paper,

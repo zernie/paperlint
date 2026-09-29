@@ -209,8 +209,8 @@ again on every build, so a checker fix reaches every paper ([`docs/references.md
 then does what only a command can, because it depends on the project it lands in: it finds the
 papers directory and declares it in a root `paperlint.json` when it is not the default `papers`, links each skill into `.claude/skills/`, writes
 the hook commands into `.claude/settings.json` (vigiles' `mergeRegistrations`, reading
-`plugin/hooks/hooks.json` as the one source), and offers a CI workflow pinned to the installed
-release's tag. `paperlint doctor` reads all of it back. Details: `docs/install.md`.
+`plugin/hooks/hooks.json` as the one source), and offers a CI workflow that runs the action from
+`node_modules` after `npm ci`. `paperlint doctor` reads all of it back. Details: `docs/install.md`.
 
 **There is no Claude Code plugin or marketplace entry; it was removed in the release after 1.0.0
 (#82).** Do not bring it back without answering these, each measured:

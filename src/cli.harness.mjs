@@ -441,32 +441,14 @@ check(
         !existsSync(join(dir, WORKFLOW_PATH)),
       );
       check(
-        "and the CI step is still printed — it just gets pasted in by hand",
-        /uses: zernie\/paperlint@/.test(out.text()) &&
-          /paths: writing/.test(out.text()),
-      );
-    }
-    {
-      // Guards: the printed step carries the tag of the running release, not a placeholder.
-      const dir = project("ci-printed-pin", { papers: ["writing"] });
-      const out = say();
-      await init(dir, {
-        log: out.log,
-        err: out.log,
-        interactive: false,
-        run: haveAll,
-        version: "1.2.3",
-      });
-      check(
-        "🔴 a released version — the printed step is pinned to its tag, no <commit-sha>",
-        /uses: zernie\/paperlint@v1\.2\.3\b/.test(out.text()) &&
-          !/<commit-sha>/.test(out.text()),
+        "and the CI steps are still printed — they just get pasted in by hand",
+        out.text().includes("- uses: ./node_modules/paperlint"),
       );
     }
     {
       const dir = project("ci-yes", { papers: ["writing"] });
       const asked = [];
-      const wf = await offerWorkflow(dir, "writing", {
+      const wf = await offerWorkflow(dir, {
         interactive: true,
         ask: async (q) => {
           asked.push(q);
@@ -477,16 +459,22 @@ check(
         "saying yes WRITES the workflow",
         wf === "written" && existsSync(join(dir, WORKFLOW_PATH)),
       );
+      const steps =
+        yamlLoad(readFileSync(join(dir, WORKFLOW_PATH), "utf8"))?.jobs?.papers
+          ?.steps ?? [];
       check(
-        "and the workflow carries THE directory that was actually discussed",
-        /paths: writing/.test(readFileSync(join(dir, WORKFLOW_PATH), "utf8")),
+        "🔴 the workflow runs the action from the installed package — one revision, set by the lockfile",
+        steps.some((st) => st.uses === "./node_modules/paperlint") &&
+          !steps.some((st) =>
+            String(st.uses ?? "").startsWith("zernie/paperlint"),
+          ),
       );
       check(
-        "without a known release the action keeps the obvious placeholder, never a guessed tag",
-        /@<commit-sha>/.test(readFileSync(join(dir, WORKFLOW_PATH), "utf8")),
+        "and it repeats no papers directory — the action reads papersDir from paperlint.json",
+        steps.every((st) => st.with?.paths === undefined),
       );
       check("the question is asked exactly once", asked.length === 1);
-      const again = await offerWorkflow(dir, "writing", {
+      const again = await offerWorkflow(dir, {
         interactive: true,
         ask: async () => "y",
       });
@@ -496,28 +484,8 @@ check(
       );
     }
     {
-      const dir = project("ci-pinned", { papers: ["writing"] });
-      const wf = await offerWorkflow(dir, "writing", {
-        interactive: true,
-        ask: async () => "y",
-        version: "1.2.3",
-      });
-      const yaml = existsSync(join(dir, WORKFLOW_PATH))
-        ? readFileSync(join(dir, WORKFLOW_PATH), "utf8")
-        : "";
-      const uses = (yamlLoad(yaml)?.jobs?.papers?.steps ?? []).map(
-        (s) => s.uses,
-      );
-      check(
-        "🔴 a released version — the written workflow is pinned to its tag, no <commit-sha> left",
-        wf === "written" &&
-          uses.includes("zernie/paperlint@v1.2.3") &&
-          !yaml.includes("<commit-sha>"),
-      );
-    }
-    {
       const dir = project("ci-no", { papers: ["writing"] });
-      const no = await offerWorkflow(dir, "writing", {
+      const no = await offerWorkflow(dir, {
         interactive: true,
         ask: async () => "",
       });
@@ -532,7 +500,7 @@ check(
       // 🔴 THE `.catch` HERE IS LOAD-BEARING, NOT CAUTION. A leaked exception is a PROPERTY that
       // gets asserted; without it, the harness crashes instead of failing a named assertion,
       // i.e. the real defect would look like a hole in the test rather than a caught one.
-      const aborted = await offerWorkflow(dir, "writing", {
+      const aborted = await offerWorkflow(dir, {
         interactive: true,
         ask: async () => {
           throw new Error("Aborted with Ctrl+D");
