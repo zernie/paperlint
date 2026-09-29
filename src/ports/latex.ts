@@ -40,6 +40,6 @@ export interface LatexReader {
    * option `want` names (the author's own options stay), or it has none.
    */
   readonly withDocumentClass: (src: string, want: DocumentClass) => string;
-  /** Every command that changes the layout the class sets: margins, text block, spacing, negative skips. */
+  /** Every command that changes the page layout the class sets: margins, text block, line spacing. */
   readonly layoutOverrides: (src: string) => readonly LayoutOverride[];
 }

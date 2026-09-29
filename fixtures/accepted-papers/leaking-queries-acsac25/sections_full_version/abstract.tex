@@ -1,0 +1,9 @@
+\begin{abstract}
+Stream processing systems are important in modern applications in which data arrive continuously and need to be processed in real time. Because of their resource and scalability requirements, many of these systems run on the cloud, which is considered untrusted. Existing works on securing databases on the cloud focus on protecting the data, and most
+systems leverage trusted hardware for high performance. However, in stream processing systems, queries are as sensitive as the data because they contain the application logics.  
+
+We demonstrate that it is practical to extract the queries from stream processing systems that use Intel SGX for securing the execution engine. The attack performed by a malicious cloud provider is based on timing side channels, and it works in two phases. In the offline phase, the attacker profiles the execution time of individual stream operators,
+based on synthetic data. This phase outputs a model that identifies individual stream operators.  In the online phase, the attacker isolates the operators that make up the query, monitors its execution, and recovers the operators using the
+model in the previous phase. We implement the attack based on popular data stream benchmarks using SecureStream and NEXMark, and demonstrate attack success rates of up to 92\%. We further discuss approaches that can harden streaming processing systems against our attacks without incurring high overhead.
+ 
+\end{abstract}

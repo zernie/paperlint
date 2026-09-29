@@ -1,0 +1,118 @@
+\documentclass[conference,compsoc]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{xcolor,colortbl} % column color in table
+% \usepackage{todonotes}
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}%
+\usepackage{setspace}%
+\usepackage{textcomp}
+
+\newcolumntype{?}{!{\vrule width 1pt}}
+\newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
+
+\newcolumntype{L}[1]{>{\centering\arraybackslash}p{#1}}
+
+\newcommand{\graycell}[0]{\cellcolor [gray]{0.85}}
+\usepackage{url}
+% \usepackage{url}
+\def\UrlBreaks{\do\/\do-}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{amsmath,amssymb,amsfonts} %
+\usepackage{graphicx}
+\usepackage{multirow}%
+\usepackage{microtype}
+\usepackage{cite}
+%%%%%%%%%%%%%%%%%%%
+\usepackage{xurl}
+\usepackage{bm}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\finetunned}[1]{\textcolor{blue}{#1}}
+
+\newcommand{\todo}[1]{\textcolor{red}{#1}}
+\newcommand{\revision}[1]{\textcolor{black}{#1}}
+\newcommand{\toremove}[1]{\textcolor{green}{}}
+
+\newcommand{\remove}[1]{\textcolor{red}{}}
+
+\newcommand{\mycomment}[1]{\textcolor{red}{#1}}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{A Fly on the Wall - Exploiting Acoustic Side-Channels in Differential Pressure Sensors
+}
+
+
+\author{\IEEEauthorblockN{Yonatan~Gizachew~Achamyeleh$^1$, Mohamad Habib Fakih$^1$, Gabriel Garcia$^1$, Anomadarshi Barua$^2$, \\ Mohammad Abdullah Al Faruque$^1$}
+\IEEEauthorblockA{
+{\textit{$^1$Dept. of Electrical Engineering and Computer Science, University of California, Irvine, CA, USA}} \\
+{\textit{\{yachamye, mhfakih, gegarci1, alfaruqu\}@uci.edu}} \\
+{\textit{$^2$Dept. of Cyber Security Engineering, George Mason University, VA, USA.}} 
+{\textit{abarua8@gmu.edu}} 
+}
+
+}
+
+% \author{
+%     \IEEEauthorblockN{Shih-Yuan~Yu$^1$, Yonatan~Gizachew~Achamyeleh$^1$, Chonghan~Wang$^1$, Anton~Kocheturov$^2$, Patrick Eisen$^2$,
+%     \linebreakand
+%     Mohammad~Abdullah~Al~Faruque$^1$}
+%     \linebreakand
+%     {\textit{$^1$Dept. of Electrical Engineering and Computer Science, University of California, Irvine, CA, USA}}
+%     \linebreakand
+%     {\textit{\{shihyuay, yachamye, chonghaw, alfaruqu\}@uci.edu}} 
+%     \linebreakand
+%     {\textit{$^2$Siemens Technology, Princeton, NJ, USA, \{anton.kocheturov, patrick.eisen\}@siemens.com}}
+% }
+
+\maketitle
+\thispagestyle{plain}
+\pagestyle{plain}
+\begin{abstract}
+%-------------------------------------------------------------------------------
+Differential Pressure Sensors are widely deployed to monitor critical environments. However, our research unveils a previously overlooked vulnerability: their high sensitivity to pressure variations makes them susceptible to acoustic side-channel attacks. We demonstrate that the pressure-sensing diaphragms in DPS can inadvertently capture subtle air vibrations caused by speech, which propagate through the sensor's components and affect the pressure readings.
+Exploiting this discovery, we introduce \textbf{BaroVox}, a novel attack that reconstructs speech from DPS readings, effectively turning DPS into ``a fly on the wall." We model the effect of sound on DPS, exploring the limits and challenges of acoustic leakage. To overcome these challenges, we propose two solutions: a signal-processing approach using a unique spectral subtraction method and a deep learning-based approach for keyword classification.
+Evaluations under various conditions demonstrate BaroVox's effectiveness, achieving a word error rate of 0.29 for manual recognition and 90.51\% accuracy for automatic recognition. Our findings highlight the significant privacy implications of this vulnerability. 
+We also discuss potential defense strategies to mitigate the risks posed by BaroVox.
+
+\end{abstract}
+
+
+\begin{IEEEkeywords}
+Differential pressure sensors; Side-channel attacks; Privacy
+\end{IEEEkeywords}
+
+\input{Chapters/01_introduction}
+
+\input{Chapters/02_background}
+
+\input{Chapters/09_Related_Works}
+
+% \input{Chapters/03_basics_of_a_cleanroom}
+
+\input{Chapters/04_attack_model}
+
+\input{Chapters/05_Visibility_study}
+
+\input{Chapters/06_Attack_Design_and_Implementation}
+
+\input{Chapters/07_Evaluation}
+
+\input{Chapters/08_Discussion}
+
+% \input{Chapters/09 Related Works}
+\input{Chapters/10_Conclusion}
+
+\section*{Acknowledgment}
+
+The authors would like to thank our shepherd and the anonymous reviewers for their valuable comments, which greatly improved this paper. We also express our gratitude to Harsh Thomare for his contributions during the early stages of this research. 
+This work was partially supported by the National Science Foundation (NSF) under award ECCS-2028269. Any opinions, findings, conclusions, or recommendations expressed in this paper are those of the authors and do not necessarily reflect the views of the funding agencies.
+
+% \section*{References}
+
+\bibliographystyle{IEEEtran}
+\bibliography{barovox}
+\input{Chapters/11_APPENDIX}
+\end{document}

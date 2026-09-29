@@ -1,0 +1,336 @@
+\appendices
+\section{Basics of Cleanrooms}
+\label{appendix:cleanroombasics}
+To assess the impact of targeted eavesdropping on sensitive information, this section explains cleanroom and IP in the semiconductor manufacturing industry,  including the implication of side-channel eavesdropping in these types of secure environments. 
+
+\subsection{Cleanroom in semiconductor industry}
+\label{subsec:Cleanroom}
+% {To contextualize our BaroVox attack, we first highlight the role of cleanrooms in semiconductor chip production.}
+% Defined technically, a cleanroom is a meticulously designed environment with stringent controls in place to mitigate the presence of pollutants, thereby maintaining airborne particulates at quantifiably low concentrations.
+Cleanrooms are controlled environments designed to filter out pollutants, ensuring that airborne contaminants remain at acceptable low-level concentrations~\cite{cobo2008airborne, standard2004cleanrooms}. 
+% To provide a clearer perspective of our attack BaroVox, we first discuss cleanrooms and the importance of their security here, primarily focusing on their use in semiconductor chip fabrication. % It is designed to filter out pollutants like dust, airborne microbes, and aerosol particles to provide the cleanest area possible \cite{cobo2008airborne, standard2004cleanrooms}.} 
+% A cleanroom is a controlled environment designed to filter out pollutants like dust, airborne microbes, and aerosol particles to keep the number of airborne particles at an acceptable low-level \cite{cobo2008airborne, standard2004cleanrooms}.
+While employed across various sectors ~\cite{holbrook2009controlling}, cleanrooms are paramount in semiconductor manufacturing where even a single speck of dust can drastically compromise chip quality~\cite{cooper1986particulate,
+kitajima1997requirements}.
+Consequently, cleanrooms are integral to assuring semiconductor product integrity.
+Emphasizing their importance, contamination mishaps at giants like Samsung and TSMC have previously led to staggering combined losses of more than $\$1$ billion~\cite{shilov_2019, yap_2018}
+
+\subsection{Cleanroom and Intellectual Property (IP)}
+\label{subsec:CleanroomSecurity and IPs}
+
+%\textbf{Cleanroom Security}: 
+Cleanrooms not only protect the semiconductor industry from contaminants but also play a vital role by protecting proprietary products from unauthorized access and tampering. 
+With \textbf{\textit{IP and national security}} at stake, a lapse in cleanroom security can be costly, especially amid the rising IP war.
+Numerous theft incidents underscore this; for instance, TSMC grappled with a major trade secret theft attempt~\cite{taipeitimes_tsmc_2017}, and arrests have been made regarding IP theft from US semiconductor firms~\cite{justice_chinese_2018,justice_chinese_2021,justice2018lexington}.
+To counter these threats, rigorous security protocols are enforced. 
+
+
+\subsection{{Pressure sensors used in cleanrooms}}
+\label{subsection:psincleanrooms}
+
+{ 
+DPSs are at the heart of maintaining a cleanroom's integrity for chip manufacturing.
+These sensors are crucial in regulating the airflow and maintaining a specific pressure level within the cleanroom. 
+Specifically, the cleanroom must be maintained at a higher static pressure than adjacent spaces to prevent contaminants from entering. 
+To achieve this, a Room Pressure Monitoring (RPM) system with an integrated pressure sensor offers real-time differential pressure tracking between distinct points.
+Table \ref{table:DPS in cleanroom} 
+shows popular manufacturers' RPM systems used in semiconductor cleanrooms, all predominantly incorporating DPSs, providing evidence of DPSs' industry prevalence.
+}
+
+ % \vspace{-0.1em}
+\begin{table}[h!]
+% \vspace{-0.5em}
+	\footnotesize
+	\centering
+		
+		\begin{tabular}{p{0.12cm}|p{2.3cm}|p{1.5cm}|p{1.40cm}}
+			\hline
+			 \cellcolor [gray]{0.85} \textbf{Sl.} & \cellcolor [gray]{0.85} \textbf{RPM} &  \cellcolor [gray]{0.85} \textbf{Manufacturer} & \cellcolor [gray]{0.85} \textbf{Type}   \\
+			\hline
+			\hline
+			1 & Alpha 161 \cite{Alpha161} & Alpha Inst. & Differential  \\
+			\hline
+    		2 & Testo 6383 \cite{testo-6383}  & Testo  & Differential\\
+			\hline
+                3 & Siemens 547-203 \cite{siemens547} & Siemens & Differential \\
+			\hline
+		    4 & PASCAL-ST/ZB \cite{PASCAL-ST} & Novasina & Differential  \\
+			\hline
+			5 & RSME-B-003 \cite{RSMEB003}& Dwyer    & Differential  \\
+			\hline
+			6 & B20-200-OTA \cite{sensos}& Sensoscientific   & Differential \\
+			\hline			
+                % 6 & B20-200-OTA \cite{sensos}& Sensoscientific   & Differential \\
+                % \hline
+		\end{tabular}
+  \caption{\label{table:DPS in cleanroom}Differential pressure sensors used in cleanrooms.}
+		% \vspace{-01.30em}
+		
+	% \vspace{-2.900em}
+\end{table}
+\vspace{-0.40em}
+
+
+
+
+% \begin{figure*}[ht]
+% % \vspace{-01.320em}
+% \centering
+% \includegraphics[width=0.85\textwidth,trim=1pt 1pt 1pt 1pt,clip]{newestPDF/ResNetAudio.pdf}
+% % \vspace{-1.400em}
+%     \caption{ASR model architecture.}
+% \label{fig:resnetArchitecture}
+% \vspace{-1.00em}
+% \end{figure*}
+
+
+
+\section{Miscellaneous}
+
+\subsection{Modeling effects of sound on DPS}
+\label{appendix:modelingsound}
+Fig.~\ref{fig:soundpressure} shows the model of sound signal a s a pressure wave and its effect on a pressure reading.
+\begin{figure}[h]
+% \vspace{-01.320em}
+\centering
+\includegraphics[width=0.45\textwidth,height=0.205\textheight]{newPDF/sound_as_pressure.pdf}
+\vspace{-1.00em}
+\caption{Modeling sound signal as a pressure wave. }
+\label{fig:soundpressure}
+\vspace{-0.900em}
+\end{figure}
+
+% \section{Dataset Summary and Preprocessing}
+
+
+
+\subsection{Percussive-Harmoinic Separation using Median Filtering}
+\label{appendix:phs}
+Fig~\ref{fig:harm_perc_filtering} visually illustrates the spectral subtraction process.
+\begin{figure*}[h]
+% \vspace{-00.70em}
+\centering
+\includegraphics[trim={10px 59px 10px 25px},clip,width=0.85\linewidth]{newPDF/harm_perc_filtering_2.pdf}
+% \vspace{-2.50em}
+\caption{Spectral subtraction by Percussive-Harmonic Separation using median filtering technique.}
+\label{fig:harm_perc_filtering}
+% \vspace{-.400em}
+\end{figure*}
+
+\subsection{SpeechCommands dataset composition}
+\label{appendix:data}
+
+The SpeechCommands v2 dataset ~\cite{speechcommandsv2} is a collection of spoken commands in English, consisting of $105,829$ utterances across 35 different words and phrases, such as "yes", "no", "stop", "go", "bed", "bird", "tree", and "wow". The dataset includes recordings from $2,618$ different speakers, spanning a wide range of ages and genders. The dataset was recorded in various acoustic conditions, including different background noise and reverberation levels, and contains both clean and noisy recordings. A complete list of the number of utterances per word can be found in ~\cite{speechcommandsv2}.
+
+% \subsection{Splitting speech by word from pressure signal}
+
+
+% \subsection{Signal spectral density}
+
+% We aim to visualize and compare the frequency content of the two different signal sets before and after the Accoustic-Pressure Transformation Strategy used in section~\ref{subsection:experimental_setup} in order to validate our approach. The signals $x_i(t)$ are first normalized by dividing each by its absolute maximum value which is equivalent to its $\mathbb{L}^{\infty}$ norm. The Fourier transform of each signal is computed as $X_i(f)$ then the average spectral density is computed frequency-wise for each set to provide the expected relative power at each frequency:
+% \begin{equation}
+%     \mathcal{P}(f) = \frac{1}{N} \sum^{N} \left(X_i(f)\right) \\
+% \end{equation}
+% The resulting spectral distributions are $\mathcal{P}_{Original}(f)$ and $\mathcal{P}_{Pressure}(f)$ for the original and pressure datasets respectively. Since the sensor's response is in the lower frequency range, we also model theoretical downsampling of the true density $\mathcal{P}_{Original}(f)$ to verify that it matches the experimental density $\mathcal{P}_{Pressure}(f)$. We use the formula for sampling rate integer decimation described in~\cite{fancyDSP}, where $n$ is the decimation/downsampling integer factor:
+% \begin{equation}
+%     Y'(f) = Y(n * f)
+% \end{equation}
+
+% Additionally, we model the offset incurred 
+
+
+% We consider downsampled and offset candidate distributions of the form $\mathcal{P}_{C}(f) = \mathcal{P}_{Original}(A * f - B)$ where $A$ and $B$ are the downsampling factors and offset size respectively. 
+% Given that we have discrete signals and not continuous, we compute $\mathcal{C}_{(A, B)}[f] = \frac{1}{A}\sum_{i=0}^{A - 1}\left(\mathcal{P}_{Original}[A * f - B + i]\right)$, i.e. the average of the signal over a window of size $A$ for each downsample. 
+% To find the parameters that yield the best correlation, we find the pair that maximizes the dot product of the signals: $\sum\left(\mathcal{C}_{(A, B)} * \mathcal{P}_{Pressure}\right)$. We sweep over the pair of parameters $(A, B)$ such that $A\in\{2, 8\}$ and $B\in[0, 1000]$. We find that $(A,B) = (2, 393)$ yields the highest correlation and we plot the resulting distribution $\mathcal{P}_{OriginalDownsampled}(f)$ alongside $\mathcal{P}_{Pressure}(f)$ and $\mathcal{P}_{Original}(f)$ in figure~\ref{fig:density}
+
+% The visualization highlights the fact that the pressure signals are highly correlated with their acoustic counterparts with extensive non-linearities that were previously discussed as part of \textbf{DS-I}. The signal bulk in $\mathcal{P}_{Original}(f)$ resides primarily in $1kHz < f < 4kHz$, while both $\mathcal{P}_{OriginalDownsampled}(f)$ and $\mathcal{P}_{Pressure}(f)$ reside in $f<1kHz$. Although the signals occupy a much smaller bandwidth exhibit similar composition in terms of signal color, which verifies that our \textbf{Accoustic-Pressure Transformation Strategy} is valid. In fact, the density distribution also shows considerable presence of noise above $3kHz$ in the pressure signals, with most of the correlated data residing below $1kHz$. It is worth mentioning that inverting this transformation is not a valid \textbf{Pressure-Accoustic Transformation Strategy} since it does not resolve the issues of aliasing and non-linearity.
+
+% \begin{figure}[h!]
+%     \centering
+%     \includegraphics[trim=0 1.2cm 0 1cm, clip]{newPDF/frequency_study.pdf}
+%     \caption{Signal Spectral Density Analysis}
+%     \vspace{-0.7cm}
+%     \label{fig:density}
+% \end{figure}
+
+\section{ASR Model Architecture Summary}
+\label{appendix:models}
+\subsection{Spectrogram parameters}
+This section provides an overview of the primary parameters of the $Spectrogram$ transform, which plays a vital role in time series signal processing. Understanding these parameters, including $NFFT$, window length, and window hop, is essential for effectively analyzing and interpreting time series data. For a more in-depth analysis of the effect of these parameters, we refer our readers to~\cite{spectrogramnfft}.
+
+(1) \textbf{Number of FFT bins ($NFFT$)} is a parameter in the $Spectrogram$ process determining the frequency resolution of the spectrogram. A higher $NFFT$ value offers better frequency resolution but increased computational complexity. Alternatively, if the NFFT size is increased, the time resolution of the spectrogram will decrease. This occurs because the window used for each time segment becomes larger. As a result, rapid changes in the signal may be overlooked or smoothed out, leading to a loss of temporal information. It is important to tune the $NFFT$ value to fit the specific purpose of the application. Typically, $NFFT$ is set to a power of 2 for optimization. In our experiment $NFFT$ size of 256 results in better accuracy. 
+
+(2) \textbf{Window length} refers to the length of the window function applied to audio segments in the $Spectrogram$ process. It affects both time and frequency resolutions, with longer windows providing better frequency resolution at the expense of time resolution. Typically, the window length is equal to or larger than $NFFT$.
+    
+(3) \textbf{Window hop} defines the distance between adjacent windows in the $Spectrogram$ process, influencing time resolution and computational complexity. A smaller window hop increases overlap and time resolution but also raises computational complexity.
+    % Typically, the Window hop is equal to half of the window length.
+
+
+
+
+
+\subsection{Architecture description}
+% This appendix briefly describes the ResNet and Convolutional Models used to run our experiments. Please note that the Convolutional Models were not described in the text, given their worse performance, which is shown in Appx.~\ref{appendix:results}. 
+% A visual representation of our Automatic Speech Recognition (ASR) model is depicted in Fig.~\ref{fig:resnetArchitecture}. 
+Our ASR model is a 2D convolutional neural network designed for spectrogram-based audio processing. It is inspired by the ResNet~\cite{resnet, audioresnet} architecture and consists of a series of normal and transition blocks. 
+Our contribution centers around the challenges posed by low SNR and non-linear frequency response of the DPS. Our ASR model introduces \textit{learnable} \textbf{\textit{denoising autoencoder}} and \textbf{\textit{equalization layers}} to the {ResNet} architecture to provide a robust solution to the specific issues posed by the sensor.
+The normal blocks contain a residual connection, while the transition blocks are responsible for reducing the spatial dimensions and increasing the number of channels. The model employs SubSpectralNorm~\cite{subspectral}, a normalization technique that applies batch normalization across sub-bands in the frequency domain, improving the model's performance on spectrogram-based tasks. ResNet also utilizes depth-wise separable convolutions for increased efficiency and reduced computational complexity. The final layers include a depth-wise convolution, a 1x1 convolution, and a head convolution for classification. The model is suitable for various audio tasks, such as speech recognition or sound event detection, where the input is a time-frequency representation of the audio signal.
+
+% \subsection{Performance on General Speech-Focused Sentences}
+% \label{appendix:performance}
+
+% Table~\ref{table:generalMSR} shows the average WER and MOS of each
+% ground truth sentence over the responses of the 18 volunteers.
+
+% \begin{table}[h!]
+% 		\footnotesize
+% 		\centering
+% 			% \vspace{-0.90em}
+			
+
+% \begin{tabular}{|p{6.3cm}|p{0.5cm}|p{0.5cm}|}
+% \hline
+% \graycell \textbf{Ground Truth Sentence }& \graycell \textbf{WER} &\graycell \textbf{MOS}\\ 
+% \hline
+% An object will remain at rest. & 0.54 & 3.89 \\ \hline
+% For every action in nature there is an equal and opposite reaction. & 0.49 & 3.89 \\ \hline
+% Here is my password  7 5 6 2 3. & 0.29 & 4.25 \\ \hline
+% He said the weather will be cold today. & 0.43 & 4.06 \\ \hline
+% The white egg is bigger than the green one. & 0.21 & 4.36 \\ \hline
+% A picture is worth a thousand words. & 0.20 & 4.22 \\ \hline
+% A journey of a thousand miles begins with a single step. & 0.31 & 4.11 \\ \hline
+% A bird in the hand is worth two in the bush. & 0.30 & 3.75 \\ \hline
+% Actions speak louder than words. & 0.27 & 4.50 \\ \hline
+% Never put off until tomorrow what you can do today. & 0.43 & 3.86 \\ \hline
+% \textbf{Average} & 0.35 & 4.09 \\ \hline
+% \multicolumn{3}{l}{${\textbf{NB:}}$  IRB exemption approval obtained to conduct the survey.} \\\end{tabular}
+% \caption{\label{table:generalMSR}Performance on general speech-focused sentences.}
+% 			% \vspace{-01.60em}
+			
+%     \vspace{-2.0em}
+% \end{table}
+
+% \begin{figure*}[h!]
+% % \vspace{-00.70em}
+% \centering
+% \includegraphics[width=\linewidth,height=0.18\textheight]{newPDF/semiconductor.pdf}
+% \vspace{-2.00em}
+% \caption{Major steps of semiconductor manufacturing process.}
+% \label{fig:semiconductorProcess}
+% % \vspace{-1.00em}
+% \end{figure*}
+
+\section{Performance on General Speech-Focused Sentences}
+\label{appendix:performance}
+Table~\ref{table:generalMSR} shows the average WER and MOS of each
+ground truth sentence over the responses of the 18 volunteers.
+
+\begin{table}[h!]
+		\footnotesize
+		\centering
+			% \vspace{-0.90em}
+			
+
+\begin{tabular}{|p{6.3cm}|p{0.5cm}|p{0.5cm}|}
+\hline
+\graycell \textbf{Ground Truth Sentence }& \graycell \textbf{WER} &\graycell \textbf{MOS}\\ 
+\hline
+An object will remain at rest. & 0.54 & 3.89 \\ \hline
+For every action in nature there is an equal and opposite reaction. & 0.49 & 3.89 \\ \hline
+Here is my password  7 5 6 2 3. & 0.29 & 4.25 \\ \hline
+He said the weather will be cold today. & 0.43 & 4.06 \\ \hline
+The white egg is bigger than the green one. & 0.21 & 4.36 \\ \hline
+A picture is worth a thousand words. & 0.20 & 4.22 \\ \hline
+A journey of a thousand miles begins with a single step. & 0.31 & 4.11 \\ \hline
+A bird in the hand is worth two in the bush. & 0.30 & 3.75 \\ \hline
+Actions speak louder than words. & 0.27 & 4.50 \\ \hline
+Never put off until tomorrow what you can do today. & 0.43 & 3.86 \\ \hline
+\textbf{Average} & 0.35 & 4.09 \\ \hline
+\multicolumn{3}{l}{${\textbf{NB:}}$  IRB exemption approval obtained to conduct the survey.} \\\end{tabular}
+\caption{\label{table:generalMSR}Performance on general speech-focused sentences.}
+			% \vspace{-01.60em}
+			
+    % \vspace{-2.0em}
+\end{table}
+
+% \begin{figure*}[h!]
+% % \vspace{-00.70em}
+% \centering
+% \includegraphics[width=\linewidth,height=0.18\textheight]{newPDF/semiconductor.pdf}
+% \vspace{-2.00em}
+% \caption{Major steps of semiconductor manufacturing process.}
+% \label{fig:semiconductorProcess}
+% % \vspace{-1.00em}
+% \end{figure*}
+
+
+\section{Semiconductor Manufacturing Process}
+\label{appendix:semiconductorInfo}
+
+\subsection{{Process description}}
+\label{appendix:semiconductorProcessDesc}
+\textit{As part of our survey, we provided volunteers with the following information to help them understand the manufacturing process.}
+Semiconductor manufacturing is the process of creating electronic components from semiconductor materials, such as silicon. These components are used in a wide range of electronic devices, from smartphones to computers to cars. The key stages of this process are explained as follows~\cite{kamal2022}:
+
+\begin{itemize}
+    \item Wafer fabrication: In this step, silicon wafers are created by growing a single crystal of silicon and slicing it into thin, circular wafers.
+    \item Photolitography: A beam of UV light of specific wavelength is passed through a template mask onto a layer of photoresistive material on the waffer to carve a pattern onto the material.
+    \item Etching: Chemicals are used to remove material from the wafer, leaving only the desired pattern behind.
+    \item Deposition: A layer of material is deposited onto the wafer, either by chemical vapor deposition or physical vapor deposition, to create specific features.
+    \item Packaging: The individual chips are cut from the wafer and packaged into the final product.
+\end{itemize}
+
+
+
+% \subsection{Fabrication Secrets}
+% \label{appendix:secrets}
+
+% This appendix offers a concise overview of sensitive data that may be unintentionally exposed through side-channel speech reconstruction attacks such as BaroVox. Each step in the fabrication process incorporates multiple proprietary techniques, which the manufacturer strives to protect against potential unauthorized disclosures. 
+% The most critical phase is the photolithography imprinting, which is pivotal to achieving denser transistors. 
+% Crucial design characteristics can be leaked at each stage, we include such examples here:
+
+% \begin{itemize}
+%     \item \textbf{Wafer Composition}: All wafers are silicon-based material, however, the exact composition and crystalline structure adopted could differ.
+%     \item \textbf{Photoresist Material}: The material that reacts to the presence of UV light. Typical options include\textit{ poly cis-isoprene}, \textit{Phenol-formaldehyde copolymer}, or \textit{polybutene-1-sulfone}.
+%     \item \textbf{Etching material}: Typically Plasma-based or Wet etching.
+%     \item \textbf{Base Exposure Wavelength}: The wavelength of the UV beam used to carve the photoresist layer. Typical values are $193nm$ for 5, 7, 10 and $14nm$ technology nodes, and $13.5nm$ for $3nm$ nodes.
+%     \item \textbf{Exposure Technique}: By using multiple patterns over multiple exposures, designers can shrink the technology node while using a longer exposure wavelength. Typical strategies for exposure include: Single Exposure, Double exposure, SADP, SAQP, LELE/LELELE. 
+%     \item \textbf{Transistor type}: FinFET (Intel~\cite{intelfinfet}, TSMC~\cite{tsmc7nm}, GlobalFoundries~\cite{globalfoundries2023}, Samsung~\cite{samsung2017}) or GAAFET (Samsung~\cite{samsung2022}).
+%     \item \textbf{Transistor dimensions and density}: Width, Heigth, gate-length, minimum connection distance, center-to-center distance. Typically measured in $nm$.
+%     \item \textbf{SRAM dimensions}: Area of a 1-bit SRAM cell in each SRAM block (High-Performance, High-Density, and Low-Voltage). Typically measured in $\mu m^2$.
+% \end{itemize}
+
+
+% % \subsection{Global Concerns}
+% % \label{appendix:concerns}
+% % In recent years, semiconductor fabrication intellectual property (IP) has emerged as a critical focal point in geopolitical, economic, and technological arenas. The control and advancement of semiconductor fabrication processes have significant implications for national security and economic competitiveness. To mitigate these risks and foster domestic innovation, the United States enacted Law 117-167, known as the \textbf{Creating Helpful Incentives to Produce Semiconductors (CHIPS) for America Act}~\cite{CHIPS2020}. The CHIPS Act is a substantial investment to revive and bolster the US's semiconductor fabrication capabilities. It aims to provide billions in financial incentives to stimulate R\&D. By centering semiconductor innovation domestically, the CHIPS Act aims not only to reduce reliance on foreign manufacturing but also to protect and advance critical intellectual property. In this way, the legislation serves as a blueprint for safeguarding technological assets and driving forward scientific and engineering breakthroughs in the semiconductor domain.
+
+\section{Future Work}
+\label{appendix:futureWork}
+
+\textbf{Effect of Distance on ASR Model Performance:} Based on the findings in Table~\ref{tab:factorsASR}, we have discovered that the distance between the DPS and the sound source affects the accuracy of our ASR model. 
+With increasing distance, the sensor registers a weaker signal strength. Although this presents a limitation to the current effectiveness of the BaroVox approach, further study is warranted. As the STFT plots in Fig.~\ref{fig:distance} suggest, even with reduced signal strength due to increased distance (from 0.5m to 2m), the pressure sensor continues to detect speech signals. There's potential for refining the model by accounting for these distance variations.
+
+\textbf{Vocabulary Limitations of the Current Model:} The current model is bound by vocabulary constraints, limiting its speech recognition capability. A strong attacker can enhance the capabilities by creating a complete speech-to-text translation system. Addressing challenges such as frequency spectrum unfolding for under-sampled pressure sensor data could provide a pathway to navigate the sampling rate constraints of the DPS~\cite{nader2011harmonic, nader2011unfolding}.
+ 
+
+\textbf{Exploration of Advanced ASR Models:} We plan to build upon other advanced speech recognition models~\cite{chung2021w2vbert,zhang2022pushing, hasani2022liquid}. Leveraging these models alongside digital signal processing techniques may offer avenues to mitigate existing limitations.
+
+\textbf{Impact of Sampling Rate}: In this study, the exploration of sampling rate's influence on model performance was limited due to space constraints. An in-depth investigation into this aspect remains a subject for future research.
+
+\begin{figure}[h]
+% \vspace{-01.320em}
+\centering
+\includegraphics[width=0.495\textwidth,height=0.13\textheight]{newPDF/distance.pdf}
+
+
+
+\vspace{-1.000em}
+
+
+
+\caption{STFT plot of speech signals recovered from pressure readings when the sound source is put at various distances from the sensor.
+}
+\label{fig:distance}
+
+\end{figure}

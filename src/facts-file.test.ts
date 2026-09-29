@@ -89,7 +89,8 @@ const doc = (last: PageText, geometry: Geometry = NONE) =>
       layout: [],
       pageTexts: [],
       links: [],
-      imagePages: [],
+      bibAnchorPage: null,
+      appendixAnchorPage: null,
       metadata: {},
     },
     geometry,
@@ -166,7 +167,8 @@ const good: PdfReader = () =>
       layout: [],
       pageTexts: [],
       links: [],
-      imagePages: [],
+      bibAnchorPage: null,
+      appendixAnchorPage: null,
       metadata: {},
     },
   });
@@ -310,7 +312,8 @@ test("a PDF with no text has an empty font list, not a failed document", () => {
       layout: [],
       pageTexts: [],
       links: [],
-      imagePages: [],
+      bibAnchorPage: null,
+      appendixAnchorPage: null,
       metadata: {},
     },
     geometry: NONE,
@@ -416,7 +419,8 @@ test("schema 3: what the PDF says is written, and reads back typed", () => {
     pages_text: ["Ada Example\nIntroduction", "References"],
     metadata: { Author: "Ada Example" },
     links: [{ page: 1, uri: "https://github.com/adaexample" }],
-    image_pages: [2],
+    bib_anchor_page: 2,
+    appendix_anchor_page: 3,
   };
   const r = parse(said);
   assert.ok(r.ok);
@@ -424,7 +428,8 @@ test("schema 3: what the PDF says is written, and reads back typed", () => {
     pages: ["Ada Example\nIntroduction", "References"],
     metadata: { Author: "Ada Example" },
     links: [{ page: 1, uri: "https://github.com/adaexample" }],
-    imagePages: [2],
+    bibAnchorPage: 2,
+    appendixAnchorPage: 3,
   });
   const d = factsDocument({
     pdf: "paper.pdf",
@@ -438,14 +443,21 @@ test("schema 3: what the PDF says is written, and reads back typed", () => {
       layout: [],
       pageTexts: ["x"],
       links: [{ page: 1, uri: "u" }],
-      imagePages: [1],
+      bibAnchorPage: 1,
+      appendixAnchorPage: null,
       metadata: { Title: "t" },
     },
     geometry: MEASURED,
   });
   assert.deepEqual(
-    [d.pages_text, d.links, d.image_pages, d.metadata],
-    [["x"], [{ page: 1, uri: "u" }], [1], { Title: "t" }],
+    [
+      d.pages_text,
+      d.links,
+      d.bib_anchor_page,
+      d.appendix_anchor_page,
+      d.metadata,
+    ],
+    [["x"], [{ page: 1, uri: "u" }], 1, null, { Title: "t" }],
   );
 });
 
@@ -463,7 +475,11 @@ test("schema 3: a missing or malformed text field is refused, naming it", () => 
     "`links` is not a list of { page, uri }",
   );
   assert.equal(
-    why({ ...written(), image_pages: [1.5] }),
-    "`image_pages` is not a list of page numbers",
+    why({ ...written(), bib_anchor_page: 0 }),
+    "`bib_anchor_page` is neither a page number nor null",
+  );
+  assert.equal(
+    why({ ...written(), appendix_anchor_page: "3" }),
+    "`appendix_anchor_page` is neither a page number nor null",
   );
 });

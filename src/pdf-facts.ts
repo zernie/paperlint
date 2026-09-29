@@ -35,10 +35,12 @@ import type { PageLayout, TextBox } from "./domain/page-layout.ts";
 // eslint-disable-next-line boundaries/dependencies -- legacy layer, moves behind a port in #76
 import { fillsFor, isUpright } from "./adapters/pdfjs/fill.ts";
 import {
+  appendixOutlineDests,
   linkTargetsOf,
   metadataOf,
+  namedRefs,
   pageTextOf,
-  paintsImage,
+  refOf,
   xmpOf,
 } from "./pdf-content.ts";
 import { messageOf } from "./domain/text.ts";
@@ -103,6 +105,14 @@ interface Doc {
     readonly info: unknown;
     readonly metadata: Iterable<unknown> | null;
   }>;
+  /** Every named destination: name → explicit destination. */
+  getDestinations(): Promise<unknown>;
+  /** The 0-based index of the page a destination's reference names. */
+  getPageIndex(ref: object): Promise<number>;
+  /** One named destination, or null. */
+  getDestination(id: string): Promise<unknown>;
+  /** The bookmarks: `{ title, dest, items }`, or null. */
+  getOutline(): Promise<unknown>;
 }
 
 /** A viewport point, which pdf.js types as `any[]`: the two numbers it holds. */
@@ -124,8 +134,10 @@ export interface PdfFacts {
   readonly pageTexts: readonly string[];
   /** The target of every link, with its 1-based page. */
   readonly links: readonly PdfLink[];
-  /** The 1-based pages that paint a raster image. */
-  readonly imagePages: readonly number[];
+  /** The 1-based page of the first bibliography entry hyperref anchored, or null without one. */
+  readonly bibAnchorPage: number | null;
+  /** The 1-based page the appendix starts on, from hyperref's destinations and bookmarks, or null. */
+  readonly appendixAnchorPage: number | null;
   /** The Info dictionary and XMP packet, flat (`metadataOf`). */
   readonly metadata: Readonly<Record<string, string>>;
 }
@@ -232,7 +244,6 @@ async function readPage(
   layout: PageLayout;
   text: string;
   links: readonly string[];
-  image: boolean;
 }> {
   // The operator list is what makes pdf.js load a page's fonts into `commonObjs`.
   const ops = await page.getOperatorList();
@@ -249,7 +260,6 @@ async function readPage(
     layout: layoutOf(page, items, ops, lib),
     text: pageTextOf(all),
     links: linkTargetsOf(await page.getAnnotations()),
-    image: paintsImage(lib.OPS, ops.fnArray),
   };
 }
 
@@ -375,22 +385,59 @@ export async function factsOf(doc: Doc, lib: PdfJs): Promise<PdfRead> {
       last: pageText(last.page, last.items),
       layout: read.map((r) => r.layout),
       ...saidOf(read, await doc.getMetadata()),
+      ...(await anchorsOf(doc)),
     },
   };
 }
 
+/**
+ * Where hyperref anchored the bibliography's first entry (the lowest page of a `cite.<key>`
+ * destination) and the appendix (the lowest page of an `appendix.<letter>` destination or of a
+ * bookmark titled «Appendix…»). A reference pdf.js cannot place is skipped.
+ */
+async function anchorsOf(
+  doc: Doc,
+): Promise<Pick<PdfFacts, "bibAnchorPage" | "appendixAnchorPage">> {
+  const destinations = await doc.getDestinations();
+  const bookmarked = await Promise.all(
+    appendixOutlineDests(await doc.getOutline()).map(async (d) =>
+      refOf(typeof d === "string" ? await doc.getDestination(d) : d),
+    ),
+  );
+  return {
+    bibAnchorPage: await lowestPage(doc, namedRefs(destinations, "cite.")),
+    appendixAnchorPage: await lowestPage(doc, [
+      ...namedRefs(destinations, "appendix."),
+      ...bookmarked.filter((r): r is object => r !== null),
+    ]),
+  };
+}
+
+/** The lowest 1-based page any of `refs` names, or null when none can be placed. */
+async function lowestPage(
+  doc: Doc,
+  refs: readonly object[],
+): Promise<number | null> {
+  const pages = await Promise.all(
+    refs.map((r) =>
+      doc.getPageIndex(r).then(
+        (i) => [i + 1],
+        () => [],
+      ),
+    ),
+  );
+  const found = pages.flat();
+  return found.length === 0 ? null : Math.min(...found);
+}
+
 /** What the pages say, from each page's read, and the document's metadata. */
 function saidOf(
-  read: readonly Pick<
-    Awaited<ReturnType<typeof readPage>>,
-    "text" | "links" | "image"
-  >[],
+  read: readonly Pick<Awaited<ReturnType<typeof readPage>>, "text" | "links">[],
   meta: Awaited<ReturnType<Doc["getMetadata"]>>,
-): Pick<PdfFacts, "pageTexts" | "links" | "imagePages" | "metadata"> {
+): Pick<PdfFacts, "pageTexts" | "links" | "metadata"> {
   return {
     pageTexts: read.map((r) => r.text),
     links: read.flatMap((r, i) => r.links.map((uri) => ({ page: i + 1, uri }))),
-    imagePages: read.flatMap((r, i) => (r.image ? [i + 1] : [])),
     metadata: metadataOf(meta.info, xmpOf(meta.metadata)),
   };
 }

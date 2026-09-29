@@ -14,6 +14,9 @@ the preamble, which is what the rules read.
 | --- | --- | --- | --- |
 | [`llm-splained-acsac25/`](llm-splained-acsac25/README.md) | ACSAC 2025 | CC BY-SA 4.0 | `[conference,compsoc]{IEEEtran}`, behind a `\conference` switch |
 | [`secure-acsac24/`](secure-acsac24/README.md) | ACSAC 2024 | CC BY 4.0 | `[conference]{IEEEtran}` |
+| [`barovox-acsac24/`](barovox-acsac24/README.md) | ACSAC 2024 | CC BY 4.0 | `[conference,compsoc]{IEEEtran}` |
+| [`rr-dataset-quality-acsac24/`](rr-dataset-quality-acsac24/README.md) | ACSAC 2024 | CC BY 4.0 | `[conference,compsoc]{IEEEtran}` |
+| [`leaking-queries-acsac25/`](leaking-queries-acsac25/README.md) | ACSAC 2025 | CC BY 4.0 | `[conference,compsoc]{IEEEtran}` |
 | [`agenticdev-acm26/`](agenticdev-acm26/README.md) | AgenticDev '26 (ASE 2026) | CC BY 4.0 | `[sigconf,screen]{acmart}` |
 
 ## The test
@@ -33,20 +36,25 @@ A new rule is measured here the day it is registered. The corpus is excluded fro
 
 Every recorded finding, classified. **real** — the paper does what the rule reports, and the rule is
 right to say so. **known** — a false positive, or a statement about the fixture rather than the
-paper, left for a later change; one line each.
+paper, left for a later change; one line each. **sampled** — recorded when the paper joined the
+corpus for its page count (below); five messages were looked at, the sentences were not read, and
+the count is not yet classified.
 
 | paper | rule | n | kind | why |
 | --- | --- | ---: | --- | --- |
-| all three | `pdf/measured` | 1 | known | the fixtures are source only and never built, so the PDF rules cannot run; the rule says so, correctly |
+| all six | `pdf/measured` | 1 | known | the lint test reads the source and never builds, so the PDF rules cannot run; the rule says so, correctly |
 | agenticdev-acm26 | `paper/refs-checked` | 1 | known | the same: the inline bibliography was never checked by `paperlint build` here |
 | agenticdev-acm26 | `tex/claim-provenance` | 9 | real | numbers stated with no owner in the sentence ("The first is that the tool cuts output tokens by 65%.") — the paper reviewers called too informal |
 | secure-acsac24 | `tex/claim-provenance` | 6 | real | the authors' own results stated without a subject or a pointer ("LLMs experience a significant decrease in accuracy, with a 5.44% drop …"); the owner is in a neighbouring sentence, which the rule does not read |
 | secure-acsac24 | `tex/claim-provenance` | 1 | known | a range that defines a scale, not a result ("Typically set between 0 and 1, the temperature …") |
-| agenticdev-acm26 | `tex/register` | 1 | real | 7 sentences open with _And_, _So_, _But_ or _Nor_ — 1.60 per 1000 words against a limit of 0.8; the two papers written by others read 0 |
+| agenticdev-acm26 | `tex/register` | 1 | real | 7 sentences open with _And_, _So_, _But_ or _Nor_ — 1.60 per 1000 words against a limit of 0.8; the papers written by others read 0 to 0.37 |
 | llm-splained-acsac25 | `paper/leading-zero` | 2 | real | probabilities written without the zero ("with probability greater than $.58$", and `.73`) in `sections/5-discussion.tex`; IEEE style, which the rule follows, asks for `0.58` — APA would omit it for a probability |
 | llm-splained-acsac25 | `tex/claim-provenance` | 11 | real | the authors' own results in `sections/*.tex` stated without a subject or a pointer ("GPT errors exceeded 30% in both categories …"); the owner is in a neighbouring sentence. One ("ranged from 1 to 13") is in a list item, which the rules did not read before; one is in the reviews' disabled branch (below) |
-| secure-acsac24 | `format/layout-override` | 2 | real | the source loads `geometry` and sets `\geometry{a4paper, margin=1in}` over IEEEtran's letter layout — what the rule exists to say. This is the public source, which may not be the camera-ready as built |
-| llm-splained-acsac25 | `format/layout-override` | 3 | real | three `\vspace{-1em}` in `sections/2-background.tex` and `sections/3-methodology.tex`, pulling space back around floats. An accepted ACSAC paper did it, which is why the rule is a warning and not an error |
+| secure-acsac24 | `format/layout-override` | 2 | real | the source loads `geometry` and sets `\geometry{a4paper, margin=1in}` over IEEEtran's letter layout. It is the arXiv source, not the paper as submitted to ACSAC, and the rule is right to flag it |
+| barovox-acsac24 | `tex/claim-provenance` | 28 | sampled | percentages in the evaluation and discussion («81.38%», «90.51%» in `Chapters/08_Discussion.tex`) |
+| rr-dataset-quality-acsac24 | `tex/claim-provenance` | 15 | sampled | percentages in the results («31.3%», «17%» in `Result.tex`) and one in the related work («60%») |
+| leaking-queries-acsac25 | `tex/claim-provenance` | 25 | sampled | percentages in the experiments and the appendix («86%», «90%», «72%») |
+| leaking-queries-acsac25 | `paper/section-word` | 1 | real | `\S\ref{subsec:results}` in `sections_full_version/discussion.tex`, where IEEE style writes «Section» |
 
 One limit the corpus shows and no count records:
 
@@ -62,6 +70,39 @@ the parse-tree rules did not follow `\input`, so this paper's body in `sections/
 `tex/claim-provenance` read an inline list's enumerators ("are: 1. …, 2. …") and a number inside a
 quoted example as claims; the body's prose dropped every `\item` whole (the parser hands an item
 its text as an argument), and read run-in headings (`\textbf{Threats.}`) as sentences.
+
+## Where the body ends — the papers that are also built
+
+`format/page-limit` counts a body that ends at the references or the appendix, whichever comes
+first (AIDC's `body_ends_at`). ACSAC is AIDC's parent venue, with the same IEEEtran template, so
+the ACSAC papers here are the real test of that count. Four of them carry a `page-count.json`:
+where the body ends, established by rendering the built PDF and looking at the page, with the
+evidence in words. `test/e2e/tex/page-count.e2e.ts` builds them on a real pdflatex and requires the
+detector to agree; `page-count-variants.json` derives seven more, each changing one thing.
+
+| paper | evidence (rendered page) | ends at | body | detector | before this count |
+| --- | --- | --- | ---: | ---: | ---: |
+| barovox-acsac24 | p. 13: conclusion and acknowledgment, then «References» mid-column | references, p. 13 | 13 | 13 | 12 ✗ |
+| leaking-queries-acsac25 | p. 13: Table 6, body in both columns, «References» in the right one | references, p. 13 | 13 | 13 | 12 ✗ |
+| rr-dataset-quality-acsac24 | p. 12 opens with «Appendix A.»; the references open p. 15 | appendix, p. 12 | 11 | 11 | 14 ✗ |
+| secure-acsac24 | p. 13 opens with «REFERENCES», nothing above it | references, p. 13 | 12 | 12 | 12 |
+| *variants* | | | | | |
+| barovox-references-at-top | `\clearpage` before the bibliography: p. 14 opens with «References» | references, p. 14 | 13 | 13 | 13 |
+| barovox-subsection-references | `\subsection*{References}` on p. 2 | references, p. 13 | 13 | 13 | 1 ✗ |
+| barovox-table-references-header | a table headed «References» on p. 2 | references, p. 13 | 13 | 13 | 1 ✗ |
+| barovox-appendix-before-references | «Appendix A.» below the acknowledgment on p. 13 | appendix, p. 13 | 13 | 13 | 14 ✗ |
+| leaking-no-hyperref | no anchors: the heading alone | references, p. 13 | 13 | 13 | 12 ✗ |
+| leaking-no-hyperref-subsection-references | no anchors, and `\subsection*{References}` on p. 2 | references, p. 13 | 13 | 13 | 1 ✗ |
+| rr-appendix-after-references | the appendix moved after the bibliography | references, p. 11 | 11 | 11 | 10 ✗ |
+
+*Before this count* is the one `format/page-limit` shipped with first: the pages before the first
+line reading «References», anywhere. It undercounted every body that runs onto the references page,
+took a table header or an unnumbered subsection for the bibliography, and counted an appendix
+before the bibliography as body.
+
+`llm-splained-acsac25` is not built: its e-print ships a `biblatex` `.bbl` in format 3.2, which the
+TeX Live 2026 `biblatex` refuses (it expects 3.3), and regenerating it needs `biber`, which
+paperlint's toolchain does not install. `agenticdev-acm26` is an ACM paper, outside AIDC's template.
 
 ## Licence rule — read before adding a paper
 

@@ -1,0 +1,11 @@
+{
+  "$comment": [
+    "What the rules say about this accepted paper today. Growth fails; a drop never does.",
+    "Each count is classified in ../README.md, 'What the rules say about the corpus'.",
+    "Recorded when the paper joined the corpus, 2026-09-29."
+  ],
+  "findings": {
+    "pdf/measured": 1,
+    "tex/claim-provenance": 28
+  }
+}

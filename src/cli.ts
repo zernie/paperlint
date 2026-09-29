@@ -52,6 +52,8 @@ import { hostDirs, nodeAdapters, nodeFiles } from "./adapters/node/index.ts";
 import {
   ANONYMITY_RULE_LEVELS,
   anonymityRules,
+  PAGE_LIMIT_RULE_LEVELS,
+  pageLimitRules,
   VENUE_RULE_LEVELS,
   venueRules,
 } from "./venue-rules.ts";
@@ -229,8 +231,9 @@ settings — paperlint.json, at two levels, one schema. Both are optional.
   blocks (files, ignores, rules) with globs relative to that file. Order, later wins: paperlint's
   own, the venue preset's, the root file's, the paper's. Optional rules (off unless turned on):
   pdf/last-page-balance. The venue rules (pdf/fresh, pdf/profile, pdf/fonts, pdf/geometry,
-  pdf/limits, pdf/body-size, pdf/measured) are on for every paper with a venue preset; set one to
-  "off" to skip it. An unknown key, in either file, is an error.
+  pdf/body-size, pdf/measured, format/page-limit, format/layout-override, anonymity/identity) are
+  on for every paper with a venue preset; set one to "off" to skip it. An unknown key, in either
+  file, is an error.
 `;
 
 /** The config the user would otherwise write by hand. The data comes from `opts`, the mechanism is here. */
@@ -340,11 +343,14 @@ export function buildConfig(
         paper: { rules: texPaperRules },
         bib: bibReachable,
         format: {
-          rules: formatRules({
-            files: nodeFiles,
-            venuesDir: presetsDir(),
-            latex: latexReader,
-          }),
+          rules: {
+            ...formatRules({
+              files: nodeFiles,
+              venuesDir: presetsDir(),
+              latex: latexReader,
+            }),
+            ...pageLimitRules({ files: nodeFiles, venuesDir: presetsDir() }),
+          },
         },
       },
       language: "tex/latex",
@@ -364,6 +370,7 @@ export function buildConfig(
         ...ANONYMITY_RULE_LEVELS,
         ...TEX_VENUE_RULE_LEVELS,
         ...FORMAT_RULE_LEVELS,
+        ...PAGE_LIMIT_RULE_LEVELS,
       },
     });
   // THE FILES A paper.tex INCLUDES FROM ITS BODY, each read on its own and reported at its own path

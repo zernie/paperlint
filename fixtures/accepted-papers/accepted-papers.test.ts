@@ -60,9 +60,10 @@ it("the corpus holds papers — an empty listing would make every case below vac
  * One run of the whole CLI over a full paper: 2.7 s here and 6.2 s on the CI runner (measured), so
  * the 5 s default is too tight. Linting each included file on its own (#144) made the paper with
  * eight of them 1.6 times slower (12.7 s → 20.3 s on a loaded container, 40 s under coverage there),
- * so 60 s.
+ * so 60 s. `leaking-queries-acsac25`, ten included files, went past 60 s under coverage in a local
+`npm run check` (2026-09-29), so 120 s.
  */
-const LINT_TIMEOUT_MS = 60_000;
+const LINT_TIMEOUT_MS = 120_000;
 
 describe.each(PAPERS)("the accepted paper %s", (name) => {
   it(
@@ -80,13 +81,16 @@ describe.each(PAPERS)("the accepted paper %s", (name) => {
 
 /**
  * What `tex/register` measures on each paper, recorded: sentences opening with And, So, But, Nor,
- * Or or Yet per 1000 words. The two papers written by others read 0; `agenticdev-acm26` is ours,
- * and its rate is over the limit — the one finding its baseline records. A change to how the body
- * is read moves these.
+ * Or or Yet per 1000 words. The papers written by others read at most 0.37, under the limit;
+ * `agenticdev-acm26` is ours, and its rate is over the limit — the one finding its baseline records.
+ * A change to how the body is read moves these.
  */
 const CONJUNCTION_STARTS_PER_1000: Readonly<Record<string, string>> = {
   "agenticdev-acm26": "1.60",
+  "barovox-acsac24": "0.00",
+  "leaking-queries-acsac25": "0.00",
   "llm-splained-acsac25": "0.00",
+  "rr-dataset-quality-acsac24": "0.37",
   "secure-acsac24": "0.00",
 };
 

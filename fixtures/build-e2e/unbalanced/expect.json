@@ -45,7 +45,7 @@
       "pdf/profile": [],
       "pdf/fonts": [],
       "pdf/geometry": [],
-      "pdf/limits": [],
+      "format/page-limit": [],
       "pdf/body-size": [],
       "pdf/measured": [
         {

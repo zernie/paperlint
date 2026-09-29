@@ -54,10 +54,9 @@ import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { z } from "zod";
 import { PAPERS_DIR_FIELD } from "../../../lib/paper-config.ts";
-// `run` is what `bin/paperlint.mjs` re-exports; imported from the build it re-exports, which has types.
-import { run } from "../../../dist/cli.js";
 import { referencesChecker } from "../../../dist/adapters/references/index.js";
 import { missing, STRICT } from "../need.ts";
+import { buildIn, engineIn, type Services } from "./build-in.ts";
 import {
   embeddedNames,
   fontNames,
@@ -163,69 +162,6 @@ function consumer(): string {
     JSON.stringify({ [PAPERS_DIR_FIELD]: "papers" }, null, 2),
   );
   return work;
-}
-
-/** The TeX Live the real run will use, as `build --dry-run` names it. */
-function engineIn(work: string): string {
-  const plan = spawnSync(
-    process.execPath,
-    [CLI, "build", "--all", "--dry-run"],
-    { cwd: work, encoding: "utf8", env: { ...process.env, CI: "1" } },
-  );
-  return plan.stdout.split("\n").find((l) => l.startsWith("engine: ")) ?? "";
-}
-
-/** What the real `build --all` produced, and what it asked the (fake) citation services. */
-interface Built {
-  readonly status: number;
-  readonly out: string;
-  readonly asked: string[];
-  readonly checkReferences: ReturnType<typeof referencesChecker>;
-}
-
-/**
- * 🔴 NO LIVE CITATION SERVICE. The references step asks Crossref, OpenAlex, Semantic Scholar,
- * arXiv and DBLP; a run that depended on them took ~9 minutes and failed when DBLP did. The build
- * runs in-process through the CLI's own composition root, `run()`, with the REAL references
- * adapter over a fake `fetch` that answers every service and counts what it was asked — so the
- * lookup cache, the reachability probe and DBLP's pacing are the shipped ones. Everything else
- * is the real command: real pdflatex and bibtex.
- */
-function fakeServices(asked: string[]): typeof fetch {
-  return (url: string | URL | Request) => {
-    const u = url instanceof Request ? url.url : String(url);
-    asked.push(u);
-    if (u.startsWith("https://export.arxiv.org/"))
-      return Promise.resolve(new Response("<feed></feed>"));
-    if (u.startsWith("https://dblp.org/"))
-      return Promise.resolve(Response.json({}));
-    return Promise.resolve(
-      Response.json({ message: { items: [] }, results: [], data: [] }),
-    );
-  };
-}
-
-/** `paperlint build <args>` in-process, over the fake services; what it printed and returned. */
-async function buildIn(
-  work: string,
-  args: readonly string[],
-  services: { asked: string[]; checkReferences: Built["checkReferences"] },
-): Promise<{ status: number; out: string }> {
-  const realFetch = globalThis.fetch;
-  globalThis.fetch = fakeServices(services.asked);
-  const printed: string[] = [];
-  const say = (...a: unknown[]) => printed.push(a.join(" "));
-  try {
-    const status = await run(["build", ...args], {
-      cwd: work,
-      log: say,
-      err: say,
-      checkReferences: services.checkReferences,
-    });
-    return { status, out: printed.join("\n") };
-  } finally {
-    globalThis.fetch = realFetch;
-  }
 }
 
 /** The plan and result lines of ONE paper: its name, then the indented lines under it. */
@@ -527,7 +463,7 @@ function lintTest(name: string, want: NonNullable<FixtureExpect["lint"]>) {
 /** The references step on the `cite` fixture: answers recorded, then a warm build that asks nothing. */
 function referenceTests(services: {
   asked: string[];
-  checkReferences: Built["checkReferences"];
+  checkReferences: Services["checkReferences"];
 }): void {
   const cite = join(work, "papers", "cite");
   it("cite: _build/references.json holds the verdict derived from the services' answers", () => {

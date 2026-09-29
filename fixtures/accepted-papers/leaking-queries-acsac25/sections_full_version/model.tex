@@ -1,0 +1,118 @@
+\section{System and Threat Model}
+\label{sec:model}
+
+\subsection{System Model}
+\label{sec:model-system}
+There are three entities in our system model: an application owner, a cloud provider, and the users. The application
+owner runs an application, for example, IoT or an e-commerce, to which multiple users send their data. The owner deploys
+a distributed stream processing (DSP) system on the platform managed by the cloud provider. The owner builds a stream query
+that is to be executed on the deployed DSP. The cloud provider provisions and manages the resources, and we assume that
+the cloud hardware contains Intel SGX. 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.48\textwidth]{Figures/flink_architecture.pdf}
+    \caption{Architecture of the distributed stream processing system.}
+    \label{fig:flink-architecture}
+\end{figure}
+
+Figure~\ref{fig:flink-architecture} illustrates the typical architecture of DSP systems, which is adopted by Apache Flink~\cite{carbone2015apache}. 
+%
+The Flink system can process  unbounded data streams with low latency, high throughput, and support
+stateful computations. 
+%
+It uses a master-worker model, with a central Job Manager that coordinates query execution, and
+several Task Managers that perform the actual computation and forward the intermediate results among themselves. Given a
+query, the owner invokes the Graph Builder that translates it to the query DAG which is represented by the Job Graph.
+This component is an optimized, lower-level representation of the query DAG, in which multiple operators might be "chained"
+together into a single Task for efficiency. The owner submits the Job Graph to the Job Manager, which typically includes
+the application file (e.g., Jar file in Flink) and any other dependencies.  The Job Manager invokes the Scheduler, which allocates Tasks to the available Task Managers. 
+
+A Task Manager executes the Tasks. There is typically one Task Manager per physical machine (or node), since the Task Manager consists of multiple {\em slots}, each of which can execute one Task. The Job Manager dispatches Tasks to these slots.  It communicates with the runtime components in the Task Managers, e.g., the Actor system in Flink, to specify the resource requirements and how the intermediate data is exchanged among the Tasks. The data from the user
+are sent to the first Task, that is, the source node, and traverse through the DAG of Tasks. 
+
+We assume that the Graph Builder is run by the application owner, whereas the Job Managers and Task Managers are managed by the cloud. Specifically, the latter two run inside SGX enclaves, and all the communications to and from the enclaves are protected with SSL. Data sent by the user is encrypted such that it can only be decrypted inside the enclaves belonging to the applications. Specifically, the user authenticates with the application through a gateway, which also runs inside an enclave. This gateway establishes secure channels with the corresponding Job Manager and Task Managers after performing attestation. The user sends the data through a secure channel to the gateway, which then forwards the data to the application's source Task through another secure channel.  
+
+Our attack focuses oonly on the execution at individual Task slots. Therefore, we implement a simplified Task Manager that has a single Task slot. Our implementation retains the same execution model as Flink's, that is, data flows
+through a series of Tasks, each processing one data record at a time. We leave the implementation of Job Manager nd other production features necessary for performance and scalability to future work.  
+
+   
+
+%Our system is a custom-built, simplified DSP engine designed to execute these queries securely. It is implemented with
+%minimal complexity to allow for fine-grained analysis of side-channel vulnerabilities. Although our prototype is not
+%distributed or feature-rich like production systems such as Flink, it retains the essential execution model: data flows
+%through a series of operators, each processing one record at a time. For broader context, we reference Apache Flink’s
+%architecture as a representative example of real-world DSP systems and draw structural comparisons where appropriate.
+
+
+
+\subsection{Threat Model}
+\label{sec:model-threat}
+
+\textbf{Attacker's goals}. 
+%
+In our system model, when deploying secure streaming jobs on a TEE-enabled cloud, such as Azure Confidential Computing using the Apache Flink framework, we consider the cloud provider as the attacker. This can be due to the cloud being malicious, or being compromised by external attackers~\cite{Thalesgroup22,AkamaiIntel20,Upguard19,Bitdefender20,Zdnet19}.
+%
+%Its goals is to break the confidentiality of the user data and the stream queries. 
+%
+However, unlike conventional adversarial goals of data breaches, revealing the confidentiality of streaming data as in previous works~\cite{DBLP:journals/corr/abs-1805-01752,
+234964,schuster2015vc3, dauterman2022waldo}, the attacker is interested in compromising the privacy of query operations.
+%
+Specifically, this privacy information reveals which operations, i.e., Filter, Map, Reduce, and Join, are being executed inside the enclaves.
+%
+We stress that query operations are sensitive and critical because they contain proprietary application logic of the end-user.
+%
+
+\subsubsection*{Attacker's capabilities} 
+%
+{We assume the attacker has full control over the
+hardware and software stack on the cloud, in line with previous studies~\cite{Silva19, sasy2018zerotrace, xiao2021privacy, Sasy19, Kim17, Ahmad18}
+}. 
+% 
+%It can start and stop arbitrary enclaves. ->> it is true, but not prractical much.
+%
+Specifically, the attacker can intercept all the enclave's interactions with the external environments, including the OS and host process. It can interrupt the enclave execution and provide arbitrary input to the ecalls and return its own data for the ocalls. 
+%
+The attacker can roll back the
+states outside of the enclave~\cite{matetic2017rote,strackx2016ariadne}. We assume that the code inside the enclave, 
+including the application code and the enclave runtime, are free of bugs. Furthermore, we assume Intel SGX hardware is secure and
+it is free from micro-architectural side-channel attacks~\cite{van2018foreshadow, murdock2020plundervolt,van2020lvi}. 
+The attacker targets the Job Manager and Task Manager components of the DSP, as shown in Figure~\ref{fig:flink-architecture}. In particular, the application query and its corresponding DAG, i.e., the output of the Job Graph component, are outside the cloud. The application owner submits the Job Graph to the Job Manager via a secure channel, which is not accessible by the attacker. 
+
+
+\subsubsection*{Attacker's knowledge} The attacker knows the source code of the DSP system deployed on the cloud, as the system is open source. Specifically, it knows how the components in Figure~\ref{fig:flink-architecture} work in their default settings. We assume that the attacker knows the data schema, that is, the fields in the data records. This knowledge can be obtained via the information about the data sources, for example, by knowing the specification of the IoT device, the attacker can have samples of the data generated by the device. Alternatively, the attacker can register as a valid user of the target application and, therefore, know what data is sent to the application. 
+
+\subsubsection*{Knowledge of the query DAG} We assume that the attacker knows the DAG structure, but not the content of individual operators. Specifically, it knows how many operators there are in the DAG, and the data flow among them, but it does not know the operators' content. In the example in Figure~\ref{fig:data-stream-illustration}, it does not know that the first operator is a map and the two operators after that are filters. There are two scenarios in which the attacker gains knowledge of the DAG. First, the application owner does not encrypt the DAG structure. This happens when the application owner trusts the cloud for scheduling the DAG execution, therefore allowing the Scheduler component (in Figure~\ref{fig:flink-architecture}) to run outside the enclave. In this scenario, the Job Graph output contains the encrypted operators and the data flow between them, which are sent to the Job Manager via non-secure channels. Second, even when the entire DAG is encrypted, the attacker can influence the scheduler to execute one operator at a time. {For example, suppose a query has three operators, each requiring 8 GB of memory. The attacker can restrict the Task Manager’s memory to 10 GB (e.g., using \texttt {cgroups}), allowing one operator to run at a time. By monitoring which enclaves are running, the attacker learns the DAG structure.}
+
+%Specifically, the attacker restricts the resources available on the Task Manager nodes such that there are only resources for executing one slot. This forces the scheduler to assign the slot to the next operator in the DAG. By monitoring the communication between the slots, the attacker can recover the original DAG. 
+
+
+
+\subsubsection*{Out-of-scope attacks} {Unlike previous side-channel attacks~\cite{van2017telling, wang2017leaky,van2017sgx,Jaehyuk17,chen2021voltpillager}, we do not assume page fault and timer
+interrupt side channels~\cite{van2017telling, wang2017leaky}. We do not consider attacks based on time-stepping the 
+enclave execution~\cite{van2017sgx}, implementation bugs against TEE~\cite{Jaehyuk17}, or employing power outage attacks~\cite{chen2021voltpillager}.
+%
+These out-of-scope attacks are either orthogonal, as there have been hardware
+fixes~\cite{constable2023aex}, or they are complex to execute.
+%
+For instance, MI6~\cite{Bourgeat19} and KeyStone~\cite{Lee20} can be deployed to address the attack's execution. 
+%
+Additionally, hardware providers have the option to release microcode patches to rectify these vulnerabilities~\cite{Bourgeat19,Costan161, constable2023aex}.
+%
+}
+
+%\noindent \textbf{Remarks}. \vvo{Although our attack is also classified as side- channel attacks against TEEs, there are two main significant contribution difference compared to traditional attacks~\cite{van2017telling, wang2017leaky,van2017sgx,Jaehyuk17,chen2021voltpillager}. 
+%
+%Specifically, at first, our attack goal focuses on the query privacy, not the data confidentiality. 
+%
+%Secondly, our attacks unprecedentedly leverage the adversarial machine learning approach to leak queries using simple timing side channel leveraging without relying on page fault and high-precision timer interrupts. 
+%
+%This approach is more feasible because cloud providers nowadays like Microsoft Azure with confidential computing always actively investigate and monitor physical hardware attacks on a daily basis~\cite{cloudflare21}, making the traditional attacks are less practical}.
+
+
+
+%How effective these complex side channels are at extracting the queries is left to future work. 
+
+
+
+% In this work, malicious adversaries are considered to be interested in learning IoT data, tampering with data processing outcomes, or obstructing processing progress. This work assumes powerful adversaries who already control the entire OS and all applications on the data stream processing servers by exploiting weak configurations or bugs in the servers' software.

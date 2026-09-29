@@ -1,0 +1,192 @@
+\section{Methodology}\label{Methodology}
+
+\subsection{Dataset}
+
+\subsubsection{Types of Duplicates}
+A training dataset can have two types of duplicates: in-set duplicates and cross-set duplicates. Both categories introduce bias in some form.
+An in-set duplicate is a sample that appears multiple times within one of either the training, validation, or test set.
+Test-set duplicates can distort performance estimates, either positively or negatively, based on whether the duplicate is correctly or incorrectly repaired. 
+Validation set duplicates can cause training to stop prematurely or continue longer than necessary, depending on whether the duplicates are correctly repaired.
+Training set duplicates introduce a slight bias toward favoring correct results on duplicated entries over non-duplicated ones.
+Cross-set duplicates are identical samples that are present in two or more of the training, validation, and test sets.
+Cross-set duplicates introduce data leakage if samples from the training or validation sets are present in the test set, as the model has already encountered those samples during training.
+As a result, the model can memorize responses to these specific instances, leading to a high evaluation score, overfitting, and a compromised ability to generalize.
+To ensure our analysis was free of duplicates, we implemented a two-step process.
+First, we eliminated in-set duplicates within each of the three datasets (training, validation, and test sets).
+This step removed repeated entries within each set.
+Next, we addressed cross-set duplicates by removing any instances that appeared in multiple sets.
+This process prevents data leakage, ensuring that no data from the training set appears in the validation or test sets, thereby improving the validity of our model evaluation.
+
+\subsubsection{Method for Identifying Duplicates}
+The simplest way to identify  duplicates is to perform an exact string match between the samples or compare string hashes.
+We have implemented deduplication by applying the Pandas drop\_duplicates() method to the input data.
+Pandas drop\_duplicates() performs an element-wise comparison of the data in the DataFrame to identify exact duplicates.
+We kept the first occurrence of a duplicate in each case.
+This addresses the uniqueness attribute discussed in Section \ref{Uniqueness} but the VulRepair dataset also suffers from consistency problems discussed in Section \ref{Consistency}.
+To ensure consistency, we first remove the CWE pre-tag from all input samples and apply the drop\_duplicates() method to help identify more duplicate samples.
+After removing the duplicates, we restore CWE pre-tags to the appropriate input samples.
+
+\subsubsection{Pre-training} \label{Pre-training}
+Chen et al.\cite{chen2022neural} introduced VRepair, a neural network model designed for vulnerability repair using a vanilla transformer architecture.
+The model undergoes pre-training with a generic bug-fix corpus followed by fine-tuning on a specific vulnerability dataset.
+In the bug-fix corpus, each input buggy function is prefixed with a \texttt{CWE-\emph{XXX}} tag, which denotes the type of CWE category, followed by the buggy function itself.
+The sections of the code in the buggy function that contain bugs are demarcated with \texttt{<S2SV\_StartBug>} and \texttt{<S2SV\_EndBug>} tags.
+The \texttt{<S2SV\_StartBug>} tag indicates the beginning of the buggy snippet, while \texttt{<S2SV\_EndBug>} marks its end.
+As the pre-training corpus is not tailored to specific bug types, all buggy functions are tagged with \texttt{CWE-000}.
+The corresponding corrections in the patched versions of these snippets are marked with \texttt{<ModStart>}, indicating the start of the corrected code, and end with \texttt{<ModEnd>}, marking the conclusion of the modification that repairs the vulnerability.
+Table \ref{Methodology:bug-fix-dataset} presents the dataset overview, featuring 534,858 training samples and 10,000 validation samples.
+Our analysis identified 6,192 \emph{in-set} duplicates in the training set and 4 in the validation set, as well as 247 \emph{cross-set} duplicates.
+%In-set duplicates denote instances where identical samples appear multiple times within one of either the training, validation, or  test set, while cross-set duplicates indicate identical samples that are present in two or more of the training, validation, and test sets.
+The presence of such duplicates points out the need for a thorough dataset cleaning before using it for pre-training.
+\begin{table}[h]
+\centering
+  \caption{Bug-fix Dataset Analysis}
+  \label{Methodology:bug-fix-dataset}
+  \begin{tabular}{|l|r|r|}
+    \hline
+    Samples &Train &Validation\\
+    \hline
+    Total Samples (TS)                                  &534,858  &10,000\\
+    \hline
+    In-Set Duplicates (IS Dup)                          &6,192  &4\\
+    \hline
+    Samples Left (SL = TS - IS Dup)                     &528,666  &9,996\\
+    \hline
+    {Cross-Set Duplicates (CS Dup)}  &\multicolumn{2}{c|}{247}\\
+    %Unique Samples (US = SL- CS DUP)                    &5183   &819\\
+  \hline
+\end{tabular}
+\end{table}
+
+
+\subsubsection{Fine-tuning}
+For all of our fine-tuning experiments, we use the VulRepair \cite{fu2022vulrepair} dataset provided on Hugging Face\cite{VulRepair-HuggingFace}.
+The dataset was created by combining two existing vulnerability datasets, Big-Vul\cite{fan2020ac} and CVEfixes\cite{bhandari2021cvefixes}.
+Both datasets were gathered by crawling CVE databases and extracting information such as CWE ID, CVE ID, and git commit link related to the vulnerabilities, with the Big-Vul dataset encompassing vulnerabilities from 2002 to 2019, and CVEfixes covering vulnerabilities from 1999 to 2021.
+The VulRepair dataset consists of a train and test set.
+As with VRepair, each input in both the train and validation set is prefixed with a \texttt{CWE-\emph{XXX}} tag, which denotes the CWE category of the vulnerability, followed by the vulnerable function.
+The training set consists of samples that span 93 unique CWEs and the test set spans 74 unique CWEs.
+The sections of the vulnerable code that contain vulnerabilities are demarcated with \texttt{<S2SV\_StartBug>} and \texttt{<S2SV\_EndBug>} tags and the corrected code is marked with \texttt{<ModStart>} and \texttt{<ModEnd>} as per Chen et al. described above.
+Table \ref{Methodology:VulRepair-dataset-Unique} presents an overview of the dataset.
+The dataset has 6,776 training samples and 1,707 test samples.
+
+Our examination of the uniqueness of the VulRepair dataset samples revealed the presence of numerous in-set and cross-set duplicates.
+Overall, we identified 1593 duplicates in the training set, 91 duplicates in the test set, and 796 cross-set duplicates.
+The prevalence of duplicates can largely be attributed to the overlap of samples resulting from merging the Big-Vul and CVEfixes which contain many of the same samples with conflicting labels.
+%
+\begin{table}[h]
+\centering
+  \caption{VulRepair Dataset Analysis-Uniqueness}
+  \label{Methodology:VulRepair-dataset-Unique}
+  \begin{tabular}{|l|r|r|}
+    \hline
+    Samples &Train &Test\\
+    \hline
+    Total Samples (TS)                                  &6,776  &1,706\\
+    \hline
+    In-Set Duplicates (IS Dup)                          &1,593  &91\\
+    \hline
+    Samples Left (SL = TS - IS Dup)                     &5,183  &1,615\\
+    \hline
+    {Cross-Set Duplicates (CS Dup)}  & \multicolumn{2}{c|}{796}\\
+    %Unique Samples (US = SL- CS DUP)                    &5183   &819\\
+  \hline
+\end{tabular}
+\end{table}
+%
+
+We performed another analysis addressing labeling consistency in the VulRepair dataset in which we removed the \texttt{CWE-\emph{XXX} tags} from the input sequences in both training and test sets, to reveal numerous samples we refer to as \emph{CWE-duplicates}.
+Table \ref{Methodology:VulRepair-dataset-Consistency} presents our analysis. 
+%
+\begin{table}
+\centering
+  \caption{VulRepair Dataset Analysis-Consistency}
+  \label{Methodology:VulRepair-dataset-Consistency}
+  \begin{tabular}{|l|r|r|}
+    \hline
+    Samples &Train &Test\\
+    \hline
+    Total Samples (TS)                                  &6,776  &1,706\\
+    \hline
+    In-Set Duplicates (IS Dup)                          &1,858  &111\\
+    \hline
+    Samples Left (SL = TS - IS Dup)                     &4,918  &1,595\\ 
+    \hline
+    {Cross-Set Duplicates (CF Dup)}  &\multicolumn{2}{c|}{923}\\
+    %Unique Samples (US = SL- CF DUP)                    &4918   &672\\
+  \hline
+\end{tabular}
+\end{table}
+
+Compared to Table \ref{Methodology:VulRepair-dataset-Unique}, we identified an additional 265 (1858-1593) in-set duplicates in the training set and  20 (111-91) in the test set, as well as  127 (923-796) more cross-set duplicates.
+This analysis underscores the necessity of addressing both duplicate and mislabeled entries to ensure the effectiveness of machine learning models in vulnerability repair tasks.
+% We investigate the impact of eliminating cross-set duplicates from the training or test datasets on the vulnerability repair model in RQ2 and RQ3.
+
+
+\subsection{Models}
+\subsubsection{VulRepair/CodeT5:} CodeT5\cite{wang2021codet5} is a pre-trained encoder-decoder model that extends the T5 architecture by incorporating token-type information tailored to coding languages.
+It is pre-trained with the CodeSearchNet dataset, which has both programming language-only as well as programming and natural language data. Further refinement of the model is conducted through fine-tuning tasks such as code defect detection and summarization.
+
+\subsubsection{CodeBERT:} CodeBERT\cite{feng2020codebert} is a bimodal, pre-trained model adept at processing both natural language (NL) and various programming languages (PL).
+It incorporates two key components: standard masked language modeling (MLM) and replaced token detection.
+In MLM, a certain percentage of the input tokens are randomly masked, and the model is trained to predict the original tokens based solely on the context provided by the remaining unmasked tokens.
+The replaced token detection approach extends this by replacing some tokens with other plausible alternatives, challenging the model not only to predict the original tokens but also to identify which tokens have been altered.
+Implementation of these components enhances CodeBERT and boosts the model's efficiency and effectiveness for handling unimodal and bimodal tasks.
+CodeBERT is trained using data from GitHub repositories across six programming languages, including function-level natural language documentation alongside the corresponding code.
+
+\subsubsection{GraphCodeBERT:} GraphCodeBERT\cite{guo2020graphcodebert} is a pre-trained model focusing on semantic-level structures over syntactic-level structures in a programming language.
+In addition to implementing masked language modeling (MLM), it incorporates structure-aware pre-training tasks.
+These tasks enable the model to comprehend and anticipate data flows and dependencies within the code, aligning the learned representations of the raw source code with its corresponding structural (data flow) representations.
+This enhances its capacity to interpret and generate code, taking into account both its textual and structural elements.
+
+\subsubsection{UniXcoder:} UniXcoder\cite{guo2022unixcoder} is a cross-modal pre-trained model designed specifically for programming languages, aimed at enhancing both code-related understanding and generation tasks.
+The model undergoes pre-training using three distinct language modeling tasks: masked language modeling, unidirectional language modeling, and a denoising objective.
+To improve code representation, UniXcoder integrates multiple modalities, including Abstract Syntax Trees (AST) and code comments.
+It employs mask attention matrices combined with prefix adapters to guide model behavior and utilizes a one-to-one mapping method to convert the tree-structured AST into sequential formats.
+This multifaceted approach allows UniXcoder to capture a deeper understanding of code semantics and structure.
+
+\subsection{Evaluation Metrics}
+We use perfect prediction/exact-match as implemented by Fu and Zhang et al.\cite{fu2022vulrepair,zhang2023pre} to evaluate the performance of these models.
+
+\subsection{Experiment Setup}
+\subsubsection{Pre-training hyperparameter settings for bug-fix}\label{Pre-training-hyperparameters}
+For the pre-training of our dataset, we employed the default parameters consistent across the prior studies.
+We used the Adam optimizer with a learning rate of 2e-5, and set the input and output sequence lengths to 512 and 256, respectively.
+The training is designed to run for 75 epochs; however, training will stop early if the evaluation loss does not change over three consecutive epochs.
+This early stopping mechanism helps prevent overfitting.
+The batch size for both training and evaluation is set at 128.
+During inference, we experimented with beam sizes 1,3,5 and 50 to explore the impact of beam size on model performance, which is detailed in Section \ref{TransferLearning}.
+
+\subsubsection{Fine-tuning hyperparameter settings for VulRepair}\label{Fine-tuning-hyperparameters}
+We adhered to the standard training practices established in previous research for the fine-tuning phase. The Adam optimizer was used with a learning rate of 2e-5 and the input and output sequence lengths were maintained at 512 and 256, respectively. The training duration was set for 75 epochs. A fixed beam size of 50 was used during inference, following the practices of prior studies. For transfer learning, we assessed the model with a collection of beam sizes ranging from 1 to 50 to determine their effects. These findings are discussed in Section \ref{TransferLearning}.
+
+\subsubsection{Hardware parameters}
+All training and evaluation was performed on NVIDIA A100-SXM4-80GB GPUs.
+
+\subsection{Mean Performance}
+
+In an attempt to provide robust performance evaluations, each result is reported as the mean performance of six networks trained using different random seeds.
+We have noted significant performance differences in which perfect prediction rate can vary by more than one and one half times from one seed to another.
+
+
+\subsection{Data Attributes Analysis}\label{Data-Attributes-Analysis}
+Determining the accuracy and completeness attributes for each sample was performed manually, as no definitive oracle exists to guarantee the presence or absence of vulnerabilities in a specific piece of code.
+Our analysis is confined to individual functions rather than the entire code base, which means our measures of accuracy and completeness are restricted to the function level.
+Our primary objective is to confirm that the identified buggy function associated with a particular CWE vulnerability clearly contains the vulnerability and is accurately classified under the correct CWE.
+After verifying the accuracy, we evaluate the available code changes. 
+
+
+ We implemented the following subsequent steps to ascertain the functional relevance of the identified vulnerable sample in relation to the assigned CWE label.
+ \begin{enumerate}
+\item For each instance in the VulRepair dataset, extract the CVE-ID and code commit that addresses the vulnerability.
+The CVE-ID is crucial for cross-validation with the NVD database, which serves as the foundation for the VulRepair database.
+\item Review pertinent details related to the vulnerable sample, such as a description of the vulnerability and applied fix as documented in the commit message.
+\item Analyze the code changes in a code commit as well as the entire function to understand the relevance of the assigned CWE label.
+\item Examine the fixed code to ensure it contains comprehensive information necessary for the relevant code changes.
+\item Scrutinize the data attributes of the vulnerable sample.
+\item If the data attributes could not be examined, we classified such samples as \textit{unverifiable samples}. This classification indicates that either the vulnerable sample or the repaired code lacked the necessary information to determine the data attributes.
+ \end{enumerate}
+
+
+
+

@@ -746,6 +746,10 @@ describe("paperlint's own config", () => {
       "tex/venue-leftover": "warn",
     });
   });
+
+  it("format/layout-override is an error: the layout it guards is the template's", () => {
+    expect(FORMAT_RULE_LEVELS).toEqual({ "format/layout-override": "error" });
+  });
 });
 
 /** A conforming AIDC paper with `preamble` after its class line, and `body` before its statement. */
@@ -770,7 +774,7 @@ describe("format/layout-override reports", () => {
         "\\renewcommand{\\baselinestretch}{0.9}",
         "\\geometry{left=1cm}",
       ].join("\n"),
-      "Text.\n\\newgeometry{top=1cm}\nA \\vspace{-2mm} B \\vspace*{-1em} C \\vskip -3pt D.",
+      "Text.\n\\newgeometry{top=1cm}\nMore text.",
     );
     expect(
       overrides(tex).map((f) => [f.line, f.message.split("`")[1]]),
@@ -784,16 +788,15 @@ describe("format/layout-override reports", () => {
       [9, "\\renewcommand{\\baselinestretch}"],
       [10, "\\geometry"],
       [13, "\\newgeometry"],
-      [14, "\\vspace{-2mm}"],
-      [14, "\\vspace{-1em}"],
-      [14, "\\vskip -…"],
     ]);
     expect(overrides(tex)[0]?.message).toBe(
-      "`\\usepackage{geometry}` changes the layout aidc's template sets (`\\documentclass[conference,compsoc]{IEEEtran}`) — a desk-reject reason at venues that check the format. Remove it; if the venue allows it, disable this line with a comment saying so",
+      "`\\usepackage{geometry}` changes the page layout aidc's template sets (`\\documentclass[conference,compsoc]{IEEEtran}`) — a desk-reject reason at venues that check the format. Remove it; if the venue allows it, disable this line with a comment saying so",
     );
   });
-  it("a definition's body counts: the space it pulls back is pulled wherever it is used", () => {
-    const tex = withPreamble("\\newcommand{\\tight}{\\vspace{-3pt}}");
+  it("a definition's body counts: the length it sets is set wherever it is used", () => {
+    const tex = withPreamble(
+      "\\newcommand{\\tall}{\\setlength{\\textheight}{10in}}",
+    );
     expect(overrides(tex).map((f) => f.line)).toEqual([3]);
   });
 });
@@ -813,6 +816,14 @@ describe("format/layout-override stays silent", () => {
       "A \\vspace{2mm} B \\vskip 3pt C \\vskip\\baselineskip D.",
     );
     expect(overrides(tex)).toEqual([]);
+  });
+
+  it("silent on local space pulled back: no venue's call names a negative skip", () => {
+    const tex = withPreamble(
+      "\\newcommand{\\tight}{\\vspace{-3pt}}",
+      "A \\vspace{-2mm} B \\vspace*{-1em} C \\vskip -3pt D.",
+    );
+    expect(lint(tex, AIDC)).toEqual([]);
   });
 
   it("silent without a preset, or with one that names no template", () => {

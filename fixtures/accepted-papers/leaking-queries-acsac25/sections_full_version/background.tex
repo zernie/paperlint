@@ -1,0 +1,73 @@
+\section{Background}
+\label{sec:background}
+
+\subsection{Data Stream Processing}
+\label{sec:data_stream_processing}
+
+
+A data stream is a set of \textit{data events} (or data records) that is produced incrementally over time, rather than being fully available before the processing starts, as illustrated in Figure \ref{fig:data-stream-illustration}. Data streams typically consist of real-time data that might be unbounded. As a result, data stream processing systems are unable to control the rate at which data events arrive or store the entire stream in an accessible manner. In contrast to traditional data-management infrastructure, streaming systems have to process data events in real time using constrained memory. Continually arriving data events usually have at least one timestamp, which can be assigned to the events at the data source or on arrival.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.49\textwidth]{Figures/dsp-illustration_small.pdf}
+    \caption{Data stream processing model.}
+    \label{fig:data-stream-illustration}
+\end{figure}
+
+% \begin{figure}[!htb]
+%     \centering
+%     \includegraphics[width=0.45\textwidth]{Figures/data-stream-illustration.pdf}
+%     \caption{Data stream illustration}
+%     \label{fig:data-stream-illustration}
+% \end{figure}
+
+%In the context of IoT, a data stream consists of events containing collected data, for instance temperature and humidity, which are captured continuously by sensors. These events are then sent to data stream processing servers and go through a \textit{pipeline} of continuous computations.
+
+The \textit{stream pipeline} is used by stream processing systems (or engines) to process incoming data. As data events arrive at the servers, the stream engine ingests these events, pushes them through the pipeline to perform necessary computations, and produces results at the end of the pipeline. A stream pipeline is a group of stream \textit{operators}, e.g \textit{Map} and \textit{Filter}, which are connected to each other to form a directed acyclic graph (DAG). Each operator applies a type of transformation or calculation on a single event or a limited number of events (called a \textit{window}) over the stream. The output of an operator becomes the input of the next operator in the DAG pipeline until the last operator. Figure \ref{fig:data-stream-illustration} presents an example of DAG pipelines with 4 operators: \textit{Map, Filter, Join,} and \textit{Join}. Data events are first ingested by Map, and then the outputs of Map are fed into two Filter operators. Results produced by two Filter operators are pushed into the Join and Average operators to produce final results.
+
+% \begin{figure}[!htb]
+%     \centering
+%     \includegraphics[width=0.45\textwidth]{Figures/dag-pipeline.pdf}
+%     \caption{A DAG pipeline of operators}
+%     \label{fig:dag-pipeline-example}
+% \end{figure}
+
+Some operators need to window the data stream before processing. Windowing slices up the data stream into finite chunks for processing as a group. When working with unbounded data, windowing is required for some operators (aggregations, join, etc.) but unnecessary for others (map, filter). Three main types of windows in stream processing are (1) {\em tumbling window} in which there is no overlap between two adjacent windows, (2) {\em sliding window} in which adjacent windows overlaps, and (3) {\em session window} whose size is defined via timeouts. The window size and sliding step (in the case of sliding windows) can be event-based, i.e., adding or removing events from the window based on the number of events, or time-based, which means the timestamp of events inside the window must fit into a period of time starting from a specific time point.
+
+\subsection{Trusted Execution Environment and Intel SGX}
+\label{sec:trusted_execution_environment}
+
+A trusted execution environment (TEE) is a secure area of a main processor. It helps the code and data loaded inside it be protected with respect to confidentiality and integrity. Data confidentiality prevents unauthorized entities from outside the TEE from reading data, while code integrity prevents code in the TEE from being replaced or modified by unauthorized entities, which may also be the computer owner itself. This is done by implementing unique, immutable, and confidential architectural security, which offers hardware-based memory encryption that isolates specific application code and data in memory. This allows user-level code to allocate private regions of memory, called \textbf{\textit{enclaves}}, which are designed to be protected from processes running at higher privilege levels.
+
+TEEs are supported in several hardware technologies in modern processors successively, including Intel SGX \cite{SGX}, ARM TrustZone \cite{armtrustzone}, AMD's SEV. This work focuses on Intel SGX, which guarantees that an attacker with physical access to a machine will not be able to tamper with the application data without being noticed. The CPU package represents the security boundary. Data belonging to an enclave is automatically encrypted and authenticated when stored in main memory. A memory dump on a victim’s machine will produce encrypted data. A remote attestation protocol allows a user to verify that an enclave runs on a genuine Intel® processor with SGX. 
+
+%\begin{figure}
+%    \centering
+%    \includegraphics[width=0.49\textwidth]{Figures/sgx_illustration.pdf}
+%    \caption{SGX mechanism \cite{DBLP:journals/corr/abs-1805-01752}}
+%    \label{fig:sgx-mechanism}
+%\end{figure}
+
+% \begin{figure}[!htb]
+%     \centering
+%     \includegraphics[width=0.5\textwidth]{Figures/sgx-mechanism.pdf}
+%     \caption{SGX mechanism \cite{DBLP:journals/corr/abs-1805-01752}}
+%     \label{fig:sgx-mechanism}
+% \end{figure}
+
+We use the first version of SGX, in which the enclave's memory, or enclave page cache (EPC), is a 128 MB area of memory predefined at boot to store enclaved code and data. At most around 90 MB can be used by the application’s memory pages, while the remaining area is used to maintain SGX metadata. Any access to an enclave page that does not reside in the EPC triggers a page fault. The SGX driver interacts with the CPU to choose which pages to evict. The traffic between the CPU and the system memory is kept confidential by the memory encryption engine (MEE). If a cache miss hits a protected region, the MEE encrypts or decrypts data before sending to or fetching from, respectively, the system memory and performs integrity checks. Data can also be persisted on stable storage protected by a seal key. 
+%This allows the storage of certificates, waiving the need for a new remote attestation every time an enclave application restarts \cite{DBLP:journals/corr/abs-1805-01752}.
+
+%The execution flow of a program using SGX enclaves is demonstrated in Figure \ref{fig:sgx-mechanism}. First, an enclave is created (1). As soon as a program needs to execute a trusted function, it executes SGX’s primitive ecall (2). The call goes through the SGX call gate (3) to bring the execution flow inside the enclave (4). Once the trusted function is executed by one of the enclave’s threads, its result is encrypted and sent back (6) before giving back the control to the main processing thread (7).
+
+
+% \label{sec:machineLearning}
+% \subsection{Machine Learning}
+
+% Machine Learning, especially Deep Learning, has been widely used in several tasks and achieves impressive results. One of the most popular application of Machine Learning is to learn (hidden) patterns in data, the use learned knowledge to classify data into finite categories, which is called classification, or to predict values, which is called regression.
+
+% This work aims to develop a Machine Learning model which take a series or distribution of processing time of an operator as input and detect which operator the fed processing time belongs to. Furthermore, the developed model is expected to predict value of some parameters used inside the operator, for instance window size.
+
+% To realize this objective, from the obtained processing time data, some statistical aspects of the data can be analyzed and feed into a chosen model for training. This work's trying to different models and compare their results. However, due to time constraint, only results of CNN are presented in this report.
+
+

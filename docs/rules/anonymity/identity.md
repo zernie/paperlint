@@ -92,8 +92,7 @@ No rule options.
 ## What it does not check
 
 - **Text inside raster images.** A screenshot with your name, a logo, a scanned figure: text
-  extraction reads text, not pixels. [`anonymity/images`](images.md) names the pages that paint
-  raster images, to be checked by eye.
+  extraction reads text, not pixels, so a name there is not seen. Look at the figures yourself.
 - **What you did not declare.** A co-author missing from `identity`, a nickname, an old handle.
 - **Self-citation in the third person** is allowed by most double-blind venues, and a cited name is
   still a declared name: the rule reports it. Check the venue's policy; if it allows the citation,

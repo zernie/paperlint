@@ -1,7 +1,7 @@
 /**
- * Where a source changes the layout its class sets — the input of `format/layout-override`. Read
- * from the parse tree, never the text: a command in a comment is not a command, and `\vspace` with
- * a negative length is told from one with a positive length by its argument, not by a pattern.
+ * Where a source changes the page layout its class sets for the whole document — the input of
+ * `format/layout-override`. Read from the parse tree, never the text: a command in a comment is not
+ * a command.
  *
  * What counts, each by its node:
  *
@@ -9,12 +9,14 @@
  *   \geometry{…} · \newgeometry{…}                        its commands
  *   \setlength / \addtolength on a layout length          \textheight \textwidth \topmargin …
  *   \linespread{…} · \renewcommand{\baselinestretch}      the line spacing
- *   \vspace{-…} · \vspace*{-…} · \vskip -…                space pulled back
+ *
+ * Local spacing — a negative `\vspace` or `\vskip` around one float — is not a layout the template
+ * sets, and no venue's call names it; it is not read.
  *
  * A comment and a `comment` environment are not read — the parser hands both back as text, not
- * macros. Everything else is — the bibliography, math,
- * floats — and a macro definition too: a `\newcommand` whose body pulls space back does so wherever
- * it is used. Conditionals are not evaluated.
+ * macros. Everything else is — the bibliography, math, floats — and a macro definition too: a
+ * `\newcommand` whose body sets a layout length does so wherever it is used. Conditionals are not
+ * evaluated.
  */
 import type { LayoutOverride } from "../../domain/tex-document.ts";
 import {
@@ -25,7 +27,6 @@ import {
   textOf,
   visited,
   type Macro,
-  type Node,
 } from "./nodes.ts";
 import type { ParsedTex } from "./parse.ts";
 
@@ -52,14 +53,8 @@ function firstMacro(m: Macro, i: number): string | undefined {
 const argText = (m: Macro, i: number): string =>
   collapse(textOf(mandatory(m)[i]?.content));
 
-/** The next sibling that is not whitespace or a comment. */
-const nextOf = (list: readonly Node[], i: number): Node | undefined =>
-  list
-    .slice(i + 1)
-    .find((n) => n.type !== "whitespace" && n.type !== "comment");
-
-/** What names a macro that overrides the layout, given it and its next sibling; null: it does not. */
-type Namer = (m: Macro, next: Node | undefined) => string | null;
+/** What names a macro that overrides the layout; null: this use of it does not. */
+type Namer = (m: Macro) => string | null;
 
 const usesGeometry: Namer = (m) =>
   argText(m, 0)
@@ -92,34 +87,20 @@ const OVERRIDES: ReadonlyMap<string, Namer> = new Map<string, Namer>([
         ? "\\renewcommand{\\baselinestretch}"
         : null,
   ],
-  [
-    "vspace",
-    (m) =>
-      argText(m, 0).startsWith("-") ? `\\vspace{${argText(m, 0)}}` : null,
-  ],
-  [
-    "vskip",
-    (_, next) =>
-      next?.type === "string" && next.content.startsWith("-")
-        ? "\\vskip -…"
-        : null,
-  ],
 ]);
 
 /** How a message names a macro that overrides the layout, or null when it does not. */
-const overrideOf: Namer = (m, next) =>
-  OVERRIDES.get(m.content)?.(m, next) ?? null;
+const overrideOf: Namer = (m) => OVERRIDES.get(m.content)?.(m) ?? null;
 
 /** Every layout override in the source, in document order. */
 export function layoutOverridesOf(t: ParsedTex): readonly LayoutOverride[] {
   // Nothing is pruned: a comment, and a `comment` environment, reach the tree as leaves of text.
   const lists = visited(t.root, () => false).filter(isList);
-  return lists.flatMap((list) => {
-    const nodes = list.filter((n): n is Node => n.type !== "argument");
-    return nodes.flatMap((n, i) => {
+  return lists.flatMap((list) =>
+    list.flatMap((n) => {
       if (n.type !== "macro") return [];
-      const command = overrideOf(n, nextOf(nodes, i));
+      const command = overrideOf(n);
       return command === null ? [] : [{ command, place: macroPlace(n) }];
-    });
-  });
+    }),
+  );
 }

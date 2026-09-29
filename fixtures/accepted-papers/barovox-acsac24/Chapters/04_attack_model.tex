@@ -1,0 +1,60 @@
+\section{Threat Model}
+
+
+\begin{figure*}[!t]
+\centering
+% \includegraphics[width=\linewidth,height=0.232\textheight]{newPDF/attack_design.pdf}
+\includegraphics[trim=2pt 10pt 2pt 2pt,clip,width=0.7\textwidth, height=0.1655\textheight]{newPDF/attack_design.pdf}
+\vspace{-0.50em}
+\caption{Overview of the attack model.}
+\label{fig:attack_model}
+\vspace{-1.00em}
+\end{figure*}
+
+
+Fig.~\ref{fig:attack_model} depicts an overview of our attack model, outlining the attacker's target system, goals, capabilities, and assumptions.
+
+\textbf{Attacker's Target:}
+We consider a scenario in which the attacker targets a sensitive conversation or meeting taking place in an environment equipped with DPSs, such as a corporate boardroom, a secure research facility, a cleanroom in a semiconductor manufacturing plant, or any pressure-regulated room. The participants in the conversation are unaware of the potential for eavesdropping through the DPSs and assume that their discussion is confidential.
+
+\textbf{Attacker's Goal:}
+The attacker aims to reconstruct speech stealthily or recover sensitive information from the environment by exploiting the acoustic side-channel vulnerability in DPSs. 
+The attacker could use this data for malicious activities, including espionage, blackmail, and theft.
+
+
+\textbf{Attacker's Capabilities:}
+The attacker is assumed to know the type and characteristics of the DPS deployed in the target environment. This information can be obtained through technical specifications or by studying similar systems as discussed in Sec.~\ref{sec:visibility}. The attacker also possesses the necessary technical skills and resources to process and analyze the captured pressure data using signal processing and machine learning techniques.
+
+\textbf{Attack Scenarios:}
+BaroVox can be used for either \textit{targeted eavesdropping}, where the attacker targets specific individuals, conversations, or events, or \textit{broad-spectrum eavesdropping}, where the attacker indiscriminately monitors the environment to recover any valuable or sensitive audio content.
+
+\revision{
+These attacks can be executed across various settings. In industrial and corporate environments, attackers can intercept confidential discussions about trade secrets or strategic plans. The vulnerability extends to private spaces, where DPSs in smart home or hotel HVAC systems could capture personal conversations. In healthcare facilities, government buildings, or military installations, BaroVox could be used to eavesdrop on confidential patient-doctor conversations or gather classified intelligence. The attack's effectiveness may vary based on factors like DPS model and environmental conditions, but the range of potential scenarios underscores the critical need to address this acoustic side-channel vulnerability.
+}
+\remove{\textit{Industrial espionage:} In industrial settings, such as manufacturing plants or research facilities, DPSs are used for process control and monitoring. An attacker can employ BaroVox to eavesdrop on confidential discussions related to trade secrets, proprietary technologies, or production processes.
+
+\textit{Corporate espionage:} An attacker may target DPSs in corporate offices or meeting rooms to eavesdrop on confidential discussions, negotiations, or strategic planning sessions.
+
+\textit{Privacy invasion in residential or hotel settings:} In smart home environments or hotel rooms equipped with DPSs for HVAC control or air quality monitoring, an attacker can exploit the BaroVox vulnerability to listen to private conversations or capture intimate audio content without the occupants' awareness.
+
+\textit{Eavesdropping in healthcare facilities:} DPSs are commonly used in healthcare settings, such as hospital rooms or medical laboratories, to maintain proper room pressurization. An attacker can leverage BaroVox to eavesdrop on confidential patient-doctor conversations or sensitive medical discussions.
+
+\textit{Intelligence gathering in government or military facilities:} In high-security environments, such as government buildings or military installations, DPSs may be deployed for monitoring and controlling critical infrastructure. An attacker can utilize BaroVox to intercept classified discussions or gather intelligence.
+
+The effectiveness of the BaroVox attack may vary depending on factors such as the specific DPS model, the distance between the audio source and the DPS, the acoustic properties of the environment, and the presence of background noise. Nevertheless, the wide range of potential attack scenarios emphasizes the need to address the acoustic side-channel vulnerability of DPSs.
+}
+
+{\textbf{Attacker's Access Level:} 
+\label{subsection:accessLevel}We assume that the attacker does not have physical access to the targeted environment or the ability to tamper with the DPS hardware. Instead, the attacker relies on remote access to the pressure sensor readings, either through a compromised system, a malicious insider, or by intercepting the sensor data transmitted over a network.
+
+Attackers may obtain pressure reading data by exploiting personnel with clearance to access pressure sensor logs but not necessarily the targeted environment itself, such as a rogue employee, visitor, or maintenance worker. Our attack model focuses on situations where security measures protecting pressure log data are less stringent than those within the targeted environment.
+
+Attackers may also tamper with the pressure monitoring system during delivery or installation, enabling it to transmit data via the Interne. 
+\revision{Modern RPMs often have internet modules that allow remote connections, which can be exploited by the attacker to intercept data without being physically present~\cite{primex2021}}.
+Attackers may also access archived pressure sensor logs, which are often overlooked but preserved for diagnostics or maintenance. Studies have shown that attackers exploit vulnerabilities in log security, using techniques like mapping sensor locations through security alerts or bypassing log protections~\cite{lee2019securely, paccagnella2020logging}.
+
+\textbf{Assumptions:}
+{We assume that the DPSs in the target environment are deployed in proximity to audio sources, such as speakers, intercoms, or areas where conversations occur. This assumption is based on the common practice of integrating audio systems with DPSs for various purposes}.
+
+
+

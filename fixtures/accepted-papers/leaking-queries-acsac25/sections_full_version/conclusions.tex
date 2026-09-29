@@ -1,0 +1,3 @@
+\section{Conclusions}
+\label{sec:conclusions}
+In this paper, we demonstrated a side channel attack that leaks encrypted queries from a streaming application. The query runs as a DAG of operators on a distributed stream processing system, which executes the operators inside SGX enclaves. The attacker profiles the execution timing of individual operators based on its synthetic data. It then trains machine learning models that predict the operator's identity and internal parameters. Our experiments show that the attack is effective, with success rates up to 92\%. We then discussed several system-level mitigation approaches that can defend against the attack, thereby making the first steps toward securing modern streaming applications. 

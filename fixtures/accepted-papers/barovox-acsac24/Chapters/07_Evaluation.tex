@@ -1,0 +1,187 @@
+
+\section{Evaluation}
+\label{sec:evaluation}
+
+This section evaluates BaroVox's design solutions across various metrics and scenarios. The experiments are conducted in a seminar room of an anonymous research lab, simulating real-world conditions while ensuring a controlled environment for data collection.
+\toremove{First, we describe the methodologies and metrics employed to assess each design solution. Then, we present the experimental outcomes.}
+
+\subsection{Methodology and metrics}
+
+\subsubsection{\textbf{Manual Speech Recognition (MSR)}}
+{
+We evaluate DS-I using MSR. For this task, we recruited 18 volunteers from our institution. The survey includes people with diverse linguistic backgrounds, with only eight considering English as their primary language. Others speak languages from Africa, South Asia, and East Asia.
+% All of our volunteers are informed of the purpose of our experiments. 
+We use the setup discussed in Sec.~\ref{subsection:experimental_setup} to prepare the evaluation dataset.
+We record 20 sentences focused on general conversations, scientific theories, and semiconductor fabrications using an iPhone 13 microphone and DPS. 
+We use DS-1 to perform pressure-acoustic transformation, remove background noise, and improve the overall quality of the speech. 
+We then use the \textbf{word error rate (WER)} and the \textbf{mean opinion score (MOS)} metrics for evaluation. 
+For both metrics, each volunteer is kept in a quiet room for listening. 
+
+	
+\textbf{WER}: WER is a standard measure for speech recognition tasks~\cite{errattahi2018automatic}. To calculate WER, we play the reconstructed audio data from the DPS separately for each volunteer and request them to transcribe it based on their comprehension. 
+WER is computed by comparing the transcription to the actual spoken words and counting errors using the formula: $WER = (S + D + I) / N $.
+$S$, $D$, and $I$ denote the number of incorrectly transcribed, missing, and incorrectly added words by the volunteer, while N represents the total number of words in the actual spoken recording. 
+A lower WER indicates greater intelligibility of the reconstructed audio.
+
+
+
+\textbf{MOS}: MOS serves as a subjective measure of the perceived speech \textit{quality}~\cite{leng2021mbnet}. 
+MOS assesses how well volunteers can comprehend the content of the reconstructed speech. 
+Participants are instructed to listen to the reconstructed speech first and then the original audio. 
+Subsequently, they rate the content-wise similarity between the two on a scale of 1 to 5. 
+For instance, if volunteers perceive that the reconstructed audio is understandable and resembles the original audio content, they assign a score of 5. 
+Conversely, if they believe that the reconstructed speech differs significantly from the original speech, they assign a score of 1. 
+This approach allows us to quantify how effectively our system reconstructs speech that is understandable and akin to the original content.
+}
+
+\subsubsection{\textbf{Automatic Speech Recognition (ASR)}}
+{
+We evaluate DS-II on automated classification tasks through the transformed SpeechCommands~\cite{speechcommandsv2} datasets. 
+We mainly use \textbf{accuracy} as the evaluation metric to measure our model's ability to accurately and truthfully recognize the given classes. \toremove{A higher classification accuracy makes it easier for attackers to extract information reliably.}
+
+
+\subsection{Results for MSR}
+\label{subsec:MSRevaluation}
+
+\subsubsection{\textbf{Performance on general speech}}
+Table~\ref{table:generalMSR} in Appx.~\ref{appendix:performance} shows the average \textbf{WER} and \textbf{MOS} of each ground truth sentence over the responses of the 18 volunteers. 
+On average, participants had a WER of \textbf{0.35}, and a MOS of \textbf{4.09/5}. A WER of 0.35 means volunteers can reconstruct more than 60\% of the speech effectively, a significant achievement from the attacker's perspective. 
+A MOS of 4.09/5 also shows volunteers perceived a notable content resemblance between the reconstructed speech and the original audio. 
+These results show that humans can identify and reconstruct everyday speech partially from pressure-wave signals. 
+
+
+
+{\subsubsection{\textbf{Performance on sensitive information}}
+To assess the impact of targeted eavesdropping on sensitive information, we focus on sentences containing confidential data related to semiconductor manufacturing processes. A detailed discussion of the key components of a cleanroom, including the deployment of DPSs and sound systems, is provided in Appx.~\ref{appendix:cleanroombasics} to contextualize the BaroVox attack in such environments.
+Table~\ref{table:semicondMSR} shows the aggregated responses of the 10 volunteers on the chosen sentences and the type of confidentiality breach each sentence target. The results are an average \textbf{WER} and \textbf{MOS} of \textbf{0.45} and \textbf{3.36/5}, respectively. These results confirm that humans can partially understand speech related to semiconductor fabrication from pressure-wave signals even without extensive field knowledge. The results are comparatively lower than the performance on general speech,  and this is due to the participants' limited familiarity with semiconductor cleanroom contexts. To validate that, we conduct the survey on the remaining 8 volunteers, but at this time, we provide them with a short text about the semiconductor manufacturing process. The content of the text is available in Appx.~\ref{appendix:semiconductorProcessDesc}. The survey results in an average \textbf{$\mathcal{WER}$} score of \textbf{0.29} and \textbf{$\mathcal{MOS}$} score of \textbf{3.71}. The score for each individual sentence is provided in Tab.~\ref{table:semicondMSR}. Given an attacker's presumed familiarity with the content in Appx.~\ref{appendix:semiconductorProcessDesc}, we infer that employing the BaroVox attack could enable them to accurately reconstruct over 70\% of cleanroom speech. \revision{In the semiconductor industry, even fragments of information about processes or specifications can be valuable to competitors, making this level of reconstruction particularly concerning.}
+
+
+We demonstrate the effect of DS-I on some of the sentences that we used in the survey in the following link: 
+\textcolor{blue}{\href{https://sites.google.com/view/barovox-a-fly-on-the-wall/home}{{BaroVox}}}.
+
+\setlength{\tabcolsep}{2pt}
+\begin{table}[t!]
+		\footnotesize
+		\centering
+			% % \vspace{-1.10em}
+			
+
+\begin{tabular}
+{|p{4.5cm}|L{1.1cm}|L{1.1cm}|p{1.1cm}|}
+\hline
+\graycell \textbf{Ground Truth Sentence} & \graycell \textbf{WER /$\mathcal{WER}^1$}&\graycell{ \textbf{MOS /$\mathcal{MOS}^1$}} & \graycell{ \textbf{Breach Type$^2$}} \\ 
+\hline
+Run the diffusion process at three hundred kelvin for nine minutes &  0.38/0.20 & 3.45/3.50 & TC\\ \hline
+Use process B for the trench isolation & 0.62/0.32 & 3.00/3.88 & TC \\ \hline
+ Etch the pattern using SF6 plasma &   0.40/0.25 & 3.55/3.25 & TC\\ \hline
+Sputter a one hundred and fifty nano meter layer of Aluminum copper alloy for contacts & 0.48/0.45 & 3.00/3.38 & TC \\ \hline
+The defect rate for lot number seven is two percent & 0.30/0.15 & 3.27/3.88 & TC\&QC\\ \hline
+Overheating issues impacted four percent of the latest batch & 0.28/0.23 & 3.64/4.00 & QC \\ \hline
+Decrease metal layer flowrate & 0.67/0.65 & 3.00/2.75 & TC\\ \hline
+Use different etching gas for oxide layer & 0.40/0.29 & 3.36/3.50 & TC \\ \hline
+Perform a defect analysis on the wafer batch &  0.39/0.29 & 3.55/3.50 & TC\&QC \\ \hline
+Reduce the concentration of the cleaning solution. & 0.53/0.29 & 3.82/4.50 & TC\&QC \\ \hline
+ \textbf{Average}& 0.45/0.29 & 3.36/3.71 & \\ \hline
+\multicolumn{4}{l}{${\textbf{1:}}$ $\mathcal{WER}$ \& $\mathcal{MOS}$: Volunteers' scores after receiving context.} \\\multicolumn{4}{l}{${\textbf{2:}}$ TC - Trade secret, QC - Quality control} \\
+\multicolumn{4}{l}{${\textbf{NB:}}$  IRB exemption approval obtained to conduct the survey.} \\
+\end{tabular}
+{\centering\caption{\label{table:semicondMSR}Performance on semiconductor-focused sentences.}}
+ \vspace{-01.60em}
+
+\end{table}
+
+
+% {\color{blue}\url{}}. We have included some of the sentences that were used for the survey.
+\subsection{Results for ASR}
+
+\begin{table}[b]
+    
+		\footnotesize
+  \centering
+\vspace{-1.0em}
+    \begin{tabular}{|c|c|c|c|c|}
+         \hline
+         \graycell \textbf{Models} &\graycell \textbf{FFT size} &\graycell  \textbf{Our ASR Model} &\graycell  \textbf{ResNet}  \\
+         
+         \hline
+        SpeechCommand64 &  64 & 80.37\% &68.16 \\ \hline
+        SpeechCommand128 &  128 & 86.82\% &70.35\\ \hline
+        \textbf{SpeechCommand256} &  \textbf{256} & \textbf{90.51\%} &{80.14} \\ \hline 
+    \end{tabular}
+    \caption{\label{tab:ASRperf}Performance metrics of ASR.}
+    \vspace{-1.0em}
+\end{table}
+
+\subsubsection{ \textbf{Performance on the testing dataset}}
+Table~\ref{tab:ASRperf} demonstrates the performance of the model when trained across various FFT bin sizes, specifically 256, 128, and 64 bins. A clear correlation between the number of bins and performance is observed, with larger bins yielding improved results. In particular, models using 256 FFT bins (\textbf{SpeechCommand256}) outperform the others, achieving accuracy of {90.51}\%. This is not surprising since larger bins imply a more receptive field, which provides better frequency resolution. 
+We compare our model's performance to others who conducted word classification on the original SpeechCommand dataset. We find that the current state-of-the-art ML technique achieves 98.32\% accuracy~\cite{gu2021efficiently}.
+This difference is deemed acceptable, given the speech signals used in the original model have a higher sampling rate (16 kHz). 
+To demonstrate the impact of our contribution --- the addition of \textit{denoising autoencoder} and \textit{equalization layers} --- we trained and tested the unmodified ResNet model, and as shown {in Table~\ref{tab:ASRperf}}, the performance drops by 10.37\% percent. 
+Using a 2 m sampling tube reduces our model's performance to 72.8\% (see Appx.~\ref{appendix:futureWork}). 
+Subsequently, we evaluate BaroVox in different scenarios that influence the recovered speech quality.
+
+
+
+
+\subsubsection{\textbf{Performance analysis under various scenarios}}
+
+\textbf{Evaluation setup}. 
+We investigate BaroVox's responses to speaker volume, distance, and orientation variations.
+\revision{Our experiments cover distances from 5cm to 2m and sound levels from 65dB to 90dB, reflecting common deployments in cleanrooms and other DPS environments. This range of configurations allows us to evaluate the attack's viability across realistic scenarios.}
+Initially, the model’s generalized parameters led to suboptimal performance due to their lack of specificity to the nuanced conditions of each scenario. 
+Without fine-tuning, the model struggles with reduced SNRs during lower volume levels or increased distances, impairing its classification accuracy. Different orientations present additional challenges by introducing phase variations and amplitude alterations, which the unadjusted model could not effectively handle.
+To mitigate these performance issues, fine-tuning is deemed essential. The process involves retraining our ASR model using scenario-specific datasets, each reflecting the unique acoustical and signal characteristics associated with particular volume, distance, and orientation variations. Through this focused retraining, the model’s parameters are recalibrated, allowing it to more accurately navigate and adapt to the challenges within each scenario, leading to improved performance. 
+
+
+\textbf{Varying the volume of the audio source}. To investigate the speaker volume’s effect (measured in dB) on audio recovery, we record pressure readings at {{$90~dB$, $80~dB$, and $65~dB$}} of volume. 
+Table~\ref{tab:factorsASR} reveals a significant correlation between volume and the classification model’s efficacy. 
+As the volume decreases from $90~dB$ to $65~dB$, there's a notable decline in accuracy from {90.51\% to 81.38\%}. Furthermore, Table~\ref{tab:factorsASR} shows fine-tuning the model for this specific scenario boosted ASR model performance by a huge margin.
+
+
+\begin{table}[h!]
+    
+		\footnotesize
+  \centering    
+    \begin{tabular}{|P{0.9cm}|P{0.98cm}|P{1.5cm}|P{1.5cm}|P{1.5cm}|}
+    \hline
+ \rowcolor{lightgray} \multicolumn{2}{|c|}{\multirow{3}{*}}  & \multicolumn{3}{c|}{\textbf{Performance} (in \%)} \\ \cline{3-5}
+\rowcolor{lightgray}\multicolumn{2}{|c|}{ \textbf{Factors}} &  \multicolumn{3}{c|}{\textbf{\finetunned{Fine-tunned} / Unmodified}} \\ \cline{3-5}
+\rowcolor{lightgray} \multicolumn{2}{|c|}{}&  \multicolumn{3}{c|} {\textbf{Speaker Orientation}} \\ \cline{3-5}
+         \hline
+         \rowcolor{lightgray}  \textbf{Volume}& \textbf{Distance}&$0$\textdegree& $90$\textdegree& $180$\textdegree\\
+         \hline
+
+          
+         \multirow{3}{*}{\textbf{$90 dB$}} & $5 cm$& \finetunned{90.51}    / 90.51  & \finetunned{82.16} / 13.87  & \finetunned{82.19} / 10.15 \\ \cline{2-5}
+                         &  $50 cm$&  \finetunned{78.75} / 7.24  & \finetunned{55.00} / 4.27 & \finetunned{69.81} /  7.24\\ \cline{2-5}   
+                         &  $1 m$&\finetunned{78.27} / 2.48 &\finetunned{23.27} /  2.57 & \finetunned{30.76} /  3.41  \\\hline
+         \multirow{3}{*}{}& $5 cm$ &\finetunned{86.65} / 12.91 & \finetunned{86.47} / 13.61   & \finetunned{57.45} / 9.47 \\ \cline{2-5}
+         \textbf{$80 dB$} &  $50 cm$ & \finetunned{46.21} / 6.45  & \finetunned{43.50} / 3.82  & \finetunned{31.13} / 6.62 \\ \cline{2-5}
+          &  $1 m$&  \finetunned{68.59} / 2.42 & \finetunned{19.94} / 1.97  & \finetunned{49.25} / 2.58 \\ \hline
+        & $5cm$ &  \finetunned{81.38} / 17.13  & \finetunned{75.44} / 12.39   & \finetunned{80.83} / 8.98 \\ \cline{2-5}
+        \textbf{$65 dB$} &  $50cm$ & \finetunned{65.68 } / 6.19 & \finetunned{77.36} / 3.46  & \finetunned{55.34} / 6.03  \\ \cline{2-5}
+         &  $1m$ &\finetunned{56.30} / 2.34  & \finetunned{25.80} /  2.43 & \finetunned{33.71} / 3.00 \\ \hline
+    \end{tabular}\caption{\label{tab:factorsASR}Performance of BaroVox in different scenarios. }
+    \vspace{-1.5em}
+\end{table}
+
+
+
+{\textbf{Varying the distance of the audio source}}.
+\label{subsection:distanceeffect} 
+We explore the effect of increasing speaker-DPS distance on attack accuracy, testing at distances of $5cm$, $50cm$, and $1m$. 
+The results are depicted in Table~\ref{tab:factorsASR}. Unsurprisingly, the model's performance varies inversely to the distance, given that sound amplitudes drop off with respect to the square of the distance. 
+\revision{While the attack's effectiveness decreases with distance, this is a fundamental limitation shared by all sensor-based side-channel attacks that rely on sound waves. However, our attack model demonstrates robust performance up to 2m, which is comparable to or exceeds the effective range of many other sensor-based side-channel attacks. This range is sufficient for numerous real-world scenarios, particularly in cleanrooms and healthcare settings where DPS and sound sources are often in close proximity.
+}
+
+To further evaluate the BaroVox's robustness at a larger distance, we experimented by putting the speaker at a distance of  {$2m$} from the DPS. The classifiers' accuracy was 36.09\%,  much higher than random-guess accuracy. 
+Nevertheless, the attacker must employ improved ASR models to overcome the distance limitation. 
+We defer this task to future research, but the motivation is explained in Appx.~\ref{appendix:futureWork}.
+
+
+ 
+
+{\textbf{Varying the orientation of the sound source from the DSP}}.
+Given that human speech and speakers produce directed sound waves, we probe how a source's angle to the sensor influences ASR performance. We mount the pressure sensor at 0\textdegree,  90\textdegree, and 180\textdegree \,(when the speaker and DPS face similar direction) from the speaker and we report the result in Table~\ref{tab:factorsASR}. 
+The results indicate that there exists a considerable effect on accuracy. The accuracy is higher at 0\textdegree \,because the sound wave's energy will be focused in the direction of the DPS, potentially creating a strong vibration.  The performance reduced to {82.19\% accuracy at 180\textdegree}.
+

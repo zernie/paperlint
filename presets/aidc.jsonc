@@ -56,10 +56,10 @@
     //   an appendix before the references         → body 13, references 2
     //   both placed after the references          → body right, the tail counted as references
     // AIDC counts neither in the limit («excluding references and appendices»; the ACSAC AI policy:
-    // the LLM Usage Statement «does not count towards the page limit»). So pdf/limits counts the
-    // body as the pages BEFORE the page on which the references heading first appears
-    // (`body_ends_at`), and the limit below is gated. An appendix placed BEFORE the references is
-    // counted as body by this count too: put it after them.
+    // the LLM Usage Statement «does not count towards the page limit»). So format/page-limit counts
+    // the body up to where the references start (`body_ends_at`): the page they start on counts
+    // when body text stands above the heading there, and the limit below is gated. An appendix
+    // ends the body too, wherever it sits, when hyperref anchors it (docs/rules/format/page-limit.md).
     "body_ends_at": "references",
 
     // «Short position papers or work-in-progress (WIP) papers» share one limit, so one kind.

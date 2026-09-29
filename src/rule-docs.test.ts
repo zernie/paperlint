@@ -34,7 +34,6 @@ const AWAITING_PAGE: ReadonlySet<string> = new Set([
   "pdf/fresh",
   "pdf/geometry",
   "pdf/last-page-balance",
-  "pdf/limits",
   "pdf/measured",
   "pdf/profile",
   "review/frontmatter",

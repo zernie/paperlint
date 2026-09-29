@@ -1,0 +1,65 @@
+\section{Dataset Quality}
+
+In this section, we briefly review a few properties that must be satisfied by samples contained within a dataset in order to ensure that systems trained on it do not overestimate their performance on unseen data as a result of poor generalization.
+A more complete discussion of this topic can be found in Croft et al.\cite{croft2023data} which deals with datasets for software vulnerability detection.
+The data quality attributes discussed by Croft et al. are standardized in the ISO/IEC 25012 data quality framework\cite{iso/iec25012}.
+They employ these attributes in an analysis of several datasets including Big-Vul.
+Let's consider the data quality attributes relevant to our work.
+
+\subsection{Uniqueness}
+A datum is \emph{unique} if it is represented exactly once within the dataset.
+Supervised learning systems typically employ datasets that are partitioned into one or more of training, validation, and test sets.
+Duplicates within any of these subsets can lead to biased model performance.
+Duplicates across these subsets lead to data leakage which can have the negative result of overestimating model performance.
+
+\subsection{Consistency}
+In the context of software vulnerability repair datasets, a datum is \emph{consistent} if it does not appear in the dataset with conflicting labels.
+There are two possible reasons for a single code sample to be labeled in different ways in a data set:
+
+\begin{enumerate}
+    \item The labels employed do not partition the space of possible data, that is, they are not exclusive of each other.
+
+    \item At most one of the labels for such a sample is the appropriate label and all other labels are incorrect.
+\end{enumerate}
+
+Inconsistent labels arising from either of these causes are inappropriate for machine learning systems intended to identify or repair security vulnerabilities.
+If the system is to identify the unique class associated with a program vulnerability, it must be trained using samples with only a single label.
+On the other hand, if the system is to repair such vulnerabilities, then inconsistent labels will make it more difficult to learn class-specific repairs. 
+
+\subsection{Accuracy}
+
+A datum in a dataset is \emph{accurate} if it embodies \emph{semantic label correctness}.
+In the setting of a vulnerability dataset aimed at program repair, this means samples must correctly identify code as being vulnerable or correct.
+If the dataset identifies the particular vulnerability exhibited by code, that vulnerability must be present in the sample.
+If the dataset marks the vulnerable code, it must mark it correctly.
+If a repaired sample is provided, the vulnerability must be correctly repaired.
+And if the dataset marks the repaired code, it must mark it correctly.
+
+Numerous samples in the VulRepair dataset are labeled with the wrong CWE tag.
+This occurs for a variety of reasons.
+In some cases, a change appears in a commit that addresses a CVE but the specific change is unrelated to that CVE.
+In other cases the CWE labels from Big-Vul and CVEfixes do not agree as a result of a change to the NIST database during the time between the creation of the two data collections.
+
+In some cases, correct code is labeled as being incorrect.
+Other samples contain incomplete target patches.
+In addition to such labeling problems, there are meta-problems associated with the sample labeling approach adopted by these datasets.
+One such case is samples in which code must be moved in order to address a vulnerability.
+Applying \texttt{<Startbug>} and \texttt{<EndBug>} labels to such incorrectly placed code is conflated with the use of these tags to identify code that must be changed in-place.
+Perhaps we need an alternate mechanism to identify repairs that involve code motion rather than modification.
+
+
+
+
+\subsection{Completeness}
+A vulnerability repair dataset sample is considered to be \emph{complete} if the sample itself contains all information necessary to determine that the identified vulnerability exists and is correctly repaired.
+
+\subsection{Discussion}
+\label{Dataset:Discussion}
+
+When Fu et al. published their work on VulRepair, their dataset was assigned two different quality certifications by ACM, namely, \emph{Artifacts Available} and \emph{Artifacts Evaluated - Reusable}\cite{acm-badges}.
+The second of these badges is to be assigned only to artifacts that have successfully completed ``an independent audit.''
+The nature of the audit is not reported, but clearly that audit did not effectively assess the data quality attributes discussed above.
+
+Construction of datasets containing the numbers of samples necessary to effectively fine-tune code language models to deal with security vulnerability repair is a difficult task.
+Attempts to construct such data sets in an automated way have been fraught with data quality problems.
+We discuss our recommendations concerning construction and maintenance of such datasets in Section \ref{Conclusion}.

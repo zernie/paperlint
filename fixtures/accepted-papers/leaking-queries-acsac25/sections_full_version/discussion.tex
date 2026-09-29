@@ -1,0 +1,51 @@
+\section{Discussions}
+\label{sec:discussion}
+
+\noindent \textbf{Insecure privacy-preserving implementation}.
+%
+From the experimental results in \S\ref{subsec:results}, we observe that the success of the attack depends on mismatched execution latencies among operations when deployed across individual enclaves.
+%
+Therefore, even naive adaptations of existing privacy-preserving techniques, such as HE and secure multiparty computation, are insufficient to mitigate these attacks.
+%
+For example, one might consider implementing secret sharing or functional encryption \cite{Xing25,Boyle25,Gilboa14,Boyle16} across multiple enclaves to ensure data confidentiality and integrity.
+%
+However, if both parties jointly execute the same operation, e.g.,  \textit{Max} operation as in Figure \ref{fig:cdf_of_each_operators} with identical computational complexity, an attacker can still distinguish this from the secure computation of other operations, e.g., from the \textit{Map} operation.
+%
+Therefore, the mitigation should be obfuscating the query operations to prevent the attacks.
+
+\vspace{0.1cm}
+\noindent \textbf{Obfuscation}.
+%
+The first simple-yet solution is to pad dummy operations to ensure indistinguishable execution latency among operations. 
+%
+For example, the enclave can leverage both the oblivious data structure, i.e., ORAM and its variations~\cite{Elaine20}, and existing instruction sets in Intel SGX~\cite{Ohrimenko16,Sasy17,Rane15} to build new oblivious primitives for comparisons, assignment, sort, and selection. 
+%
+These primitives could be combined together to protect the query operations.
+%
+
+Another mitigation is by preventing the DAG from being known or isolating operators from queries.
+%
+For example, the cloud provider can employ new oblivious scheduling policies to ensure a certain number of operators must be batched and executed per enclave to ensure uniform computational complexity distribution across enclaves.
+%
+Alternatively, to prevent the operation profiling, one can make custom code by merging or de-modularizing operators, e.g., Map and Filter logic, to avoid distinguishability.
+%
+%or doperations  uses the code-level mitigation can be employed 
+%- prevent profiling, CODE-LEVEL mitigation e.g. custom code (merging map and filter logic, etc.),  (merging operators)
+
+We stress that all the above mitigation approaches typically require a significant effort and dedication to review the implementation of streaming applications.
+
+\vspace{0.1cm}
+\noindent \textbf{Attack limitations}.
+%
+There are certain factors omitted during the attack experiments.
+%
+At first, our proposed attacks are experimented with in isolated Intel SGX enclaves without other background processes.
+%
+In addition, the attacks have not been experimented with and evaluated on commercial TEE-enabled clouds for full-scale DSP systems.
+%
+Moreover, the attacks also have not been evaluated in the second generation of Intel SGX and other trusted platforms like ARM Zone.
+%
+Therefore, we believe these factors may add noise to the execution latency due to both hardware and context switching, which certainly reduces the attack prediction accuracy.
+%
+A promising complement solution is to further investigate the capabilities of ML and recent AI foundation models in this attack and mitigation directions \cite{Umar25,Wu25}.
+%

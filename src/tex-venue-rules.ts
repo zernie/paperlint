@@ -10,8 +10,10 @@
  *
  * and, in the `format` plugin (named for the requirement, not the input — paperlint#151):
  *
- *   format/layout-override  warn  the source changes the layout the venue's template sets —
- *                                 margins, text block, line spacing, space pulled back
+ *   format/layout-override  error  the source changes the page layout the venue's template sets for
+ *                                  the whole document — margins, text block, line spacing
+ *
+ * The `format` plugin's other rule, `format/page-limit`, judges the built PDF (`venue-rules.ts`).
  *
  * ── WHY THEY LIVE HERE AND NOT IN `eslint-rules/` ────────────────────────────────
  * Like the `pdf/*` venue rules (`venue-rules.ts`), they need the paper's resolved preset —
@@ -383,16 +385,16 @@ const RULES: Readonly<
   "layout-override": {
     judge: (r) => judgeLayout(r.latex.layoutOverrides(r.src), r.preset),
     meta: {
-      type: "suggestion",
+      type: "problem",
       docs: {
         description:
-          "the source changes the layout the venue's template sets: margins, text block, line spacing, or space pulled back",
+          "the source changes the page layout the venue's template sets for the whole document: margins, text block, line spacing",
         url: "https://github.com/zernie/paperlint/blob/main/docs/rules/format/layout-override.md",
       },
       schema: [],
       messages: {
         override:
-          "`{{command}}` changes the layout {{venue}}'s template sets (`{{template}}`) — a desk-reject reason at venues that check the format. Remove it; if the venue allows it, disable this line with a comment saying so",
+          "`{{command}}` changes the page layout {{venue}}'s template sets (`{{template}}`) — a desk-reject reason at venues that check the format. Remove it; if the venue allows it, disable this line with a comment saying so",
       },
     },
   },
@@ -424,11 +426,11 @@ export const TEX_VENUE_RULE_LEVELS: Readonly<
   "tex/venue-leftover": "warn",
 };
 
-/** The `format` plugin's rule and its level, on for every `paper.tex`. */
+/** The `format` plugin's rule over the source and its level, on for every `paper.tex`. */
 export const FORMAT_RULE_LEVELS: Readonly<
-  Record<"format/layout-override", "warn">
+  Record<"format/layout-override", "error">
 > = {
-  "format/layout-override": "warn",
+  "format/layout-override": "error",
 };
 
 /**
@@ -506,7 +508,7 @@ export function texVenueRules(
   };
 }
 
-/** The rules of the `format` plugin. */
+/** The `format` plugin's rule over the source (`page-limit`, over the PDF, is in `venue-rules.ts`). */
 export function formatRules(
   deps: TexVenueRuleDeps,
 ): Readonly<Record<"layout-override", TexRuleModule>> {

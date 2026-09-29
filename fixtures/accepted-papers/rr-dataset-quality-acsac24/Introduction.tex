@@ -1,0 +1,135 @@
+\section{Introduction}\label{Introduction}
+There are many recent publications presenting systems that use neural models to detect and repair security vulnerabilities in programs\cite{chen2022neural,fu2022vulrepair,zhang2023pre,huang2023empirical,fu2024vision,mastropaolo2024training}.
+In the past few months a number of reports have surfaced concerning the quality of the datasets employed to train and test these systems in an effort to characterize their performance\cite{mastropaolo2024training,ding2024vulnerability}.
+We join these other works by reporting here on the many data quality problems embodied in what we will call the \emph{VulRepair dataset}, first employed in the work of Fu et al.\cite{fu2022vulrepair}
+This dataset is a combination of Big-Vul\cite{fan2020ac} and CVEfixes\cite{bhandari2021cvefixes}.
+
+
+We first encountered the data quality problems in the VulRepair dataset while attempting to understand the performance of several systems that employed it.
+At first, we took the results at face value.
+However, when replicating their behavior and looking at the specific repairs being made by the systems, it became clear that they exhibited effects associated with data leakage--the model was able to make repairs to \emph{vulnerable} code that required it to have information available only in the \emph{repaired} code.
+
+Once we identified the existence of numerous duplicate samples in the data collection, we realized there might be other data quality issues as well.
+Some of the problems in BigVul and CVEfixes datasets are reported by Ding et al.\cite{ding2024vulnerability} in the context of vulnerability detection, which deals primarily with the issue of duplicate samples that lead to data leakage.
+
+%Many of the problems in this dataset are reported by Ding et al.\cite{ding2024vulnerability} in the context of vulnerability detection which deals primarily with the issue of duplicate samples that lead to data leakage.
+
+This paper, on the other hand, reports initial results of our comprehensive review of the quality of the VulRepair data set and its effect on expected model performance.
+
+A number of papers have been written employing the VulRepair dataset. The first is the report describing VulRepair in November 2022\cite{fu2022vulrepair}, which introduced this dataset's use in fine-tuning a CodeT5-based system. 
+This same dataset was employed by Zhang et al. in an August 2023 paper evaluating CodeT5, CodeBERT, GraphCodeBERT, UniXcoder, and CodeGPT models trained on the VulRepair dataset\cite{zhang2023pre}.
+Huang et al. employed the VulRepair dataset in a September 2023 paper benchmarking security-related tasks with CodeT5, CodeBERT, GraphCodeBERT, UniXcoder, and PLBART\cite{huang2023empirical}.
+
+%Rewording as per Anurag
+Fu et al. reported further work leveraging VRepair's pre-training bug-fix dataset in conjunction with the VQM vulnerability fine-tuning dataset for program repair tasks.
+That report asserts that VRepair\cite{chen2022neural} was initially pre-trained on a dataset having 23,607 C/C++ functions, however, this claim appears to be incorrect as VRepair was pre-trained on a bug-fix dataset that has 534,848 training samples and 10,000 validation samples (see Chen et al.\cite{chen2022neural} last sentence of Section 4.21).
+We conducted a brief analysis of both the pre-training bug-fix dataset and VQM vulnerability fine-tuning dataset\cite{vqm2024} used in that paper. The pre-training dataset contains 21,246 training samples and 2,362 validation samples.
+Our review revealed 18,622 duplicated entries in the training set and 782 duplicates in the validation set.
+After removing those, 1,579 cross-set duplicates (in both train and validation) were identified, that is to say, \textit{all of the validation set samples} were present in the training set. 
+Additionally, our analysis uncovered a substantial overlap between the bug-fix dataset and the VQM vulnerability fine-tuning dataset. Specifically, there were 511 matching entries in the test set, 243 in the validation set, and 1,747 in the training set of the vulnerability dataset that overlapped with the bug-fix dataset. 
+The detailed analysis is discussed in Section \ref{Related-Work}.
+These findings make it clear that retraining is necessary in order to understand the expected performance of the models reported in that work.
+
+
+
+% Fu et al. reported further work with the VQM dataset.
+% That report asserts that VRepair\cite{chen2022neural} was initially pre-trained on a dataset having 23,607 C/C++ functions, however, this claim appears to be incorrect as VRepair was pre-trained on a bug-fix dataset that has 534,848 training samples and 10,000 validation samples.
+% We conducted a brief analysis of the VQM dataset\cite{vqm2024} used to pre-train in that paper and found that it contains 21,246 training samples and 2,362 validation samples.
+% Our review revealed 17,303 duplicated entries in the training dataset and 666 duplicates in the validation set.
+% After removing those, 1,613 cross-set duplicates (in both train and validation) were identified.
+% These findings make it clear that retraining is necessary to understand the expected performance of the models reported in that work.
+
+In this paper, we analyze the effect some of the data quality problems in the VulRepair dataset have had on skewing the expected performance of VulRepair, CodeBERT, GraphCodeBERT, and UniXcoder when applied to repair of security vulnerabilities.
+In addition we consider the impact of pre-training models with the deduplicated VRepair bug-fix dataset, addressing the duplicate entries present in the original VRepair pre-training dataset as discussed in Section \ref{Pre-training}.
+
+Our analysis incorporates the following steps:
+\begin{enumerate}
+    \item Replicate the results of previous papers using a more robust approach involving finding the mean performance of multiple models fine-tuned using different seeds.
+    \item Determine the impact of duplicate samples on the performance of these models.
+    \item Determine the performance impact of inconsistent labeling.
+    \item Partially identify and analyze the inaccurate labeling.
+%   \item Partially determine the performance impact of inaccurate labeling.
+    \item Partially identify and analyze the incomplete data samples.
+%   \item Partially determine the performance impact of incomplete data samples.
+    \item Determine the impact of pre-training with the deduplicated VRepair bug-fix dataset. 
+\end{enumerate}
+
+These data-quality-driven analyses are addressed by the following research questions:
+
+\begin{itemize}
+\item {\textbf{RQ1}}: Can we replicate the results of VulRepair, CodeBERT, GraphCodeBERT, and UniXcoder?
+
+\item {\textbf{RQ2A}}: What is the performance of the models after removing all duplicate data from the VulRepair dataset (removing cross-set duplicates from the \emph{training} dataset)?
+
+\item {\textbf{RQ2B}}: What is the performance of the models after removing all duplicates from the VulRepair dataset (removing cross-set duplicates from the \emph{test} dataset)?
+
+\item {\textbf{RQ3A}}: What is the performance of the models after removing duplicates and inconsistently labeled samples from the VulRepair dataset (removing cross-set duplicates and inconsistent samples from the \emph{training} dataset)?
+
+\item {\textbf{RQ3B}}: What is the performance of the models after removing duplicates and inconsistently labeled samples from the VulRepair dataset (removing cross-set duplicates and inconsistent samples from the \emph{test} dataset)?
+
+\item{\textbf{RQ4A}}: What effect does removing duplicate data from VulRepair have on the repair of vulnerabilities included in the top ten CWEs.
+
+
+\item {\textbf{RQ4B}}: How does identifying and analyzing inaccurate and incomplete samples of the top ten CWEs in the test set of the deduplicated VulRepair dataset change our understanding of its performance?
+
+%\item {\textbf{RQ4B}}: What effect does removing inaccurate and incomplete samples have on the number of top ten CWEs in the test set of the deduplicated VulRepair dataset?
+
+\item {\textbf{RQ5}}: What is the performance of the systems after pre-training with a deduplicated bug-fix dataset?
+
+\end{itemize}
+
+Scripts used to verify data duplication and to replicate experiments are available from \href{https://github.com/Anurag-Swarnim-Yadav/DatasetQuality}{https://github.com/Anurag-Swarnim-Yadav/DatasetQuality}.
+
+
+% \begin{comment}
+    
+
+% \begin{table*}
+%   \caption{Research Papers Under Question}
+%   \label{Introduction:Research_Paper_Under-Question}
+%   \begin{tabular}{llll}
+%     \toprule
+%     Paper                                                                                                   & Year          & Conference   & Problem\\
+%     \midrule
+%       VulRepair: A T5-based automated software \\vulnerability repair                                         & Nov. 2022     & ESEC/FSE     & Fine-tuned Data Quality Issue.\\    
+%       Pre-Trained Model-Based Automated Software \\Vulnerability Repair: How Far Are We?                      & Aug. 2023     & IEEE TDSC    & Pre-training and Fine-tuned Data Quality Issue. \\
+%       An Empirical Study on Fine-Tuning Large Language \\Models of Code for Automated Program Repair          & Sep. 2023     & ASE          & Fine-tuned Data Quality Issue. \\
+%       Vision Transformer Inspired Automated \\Vulnerability Repair (VQM)                                      & Mar. 2024     & ACM TOSEM    & Pre-training and accuracy and incomplete Data Quality Issue. \\
+%       How the Training Procedure Impacts the Performance of \\Deep Learning-based Vulnerability Patching      & Apr. 2024     & -            & Pre-training and Fine-tuned Data Quality Issue. \\
+%   \bottomrule
+% \end{tabular}
+% \end{table*}
+
+% \begin{itemize}
+% \item {\textbf{VulRepair: A T5-based automated software vulnerability repair (VulRepair) :}} 1) The VulRepair model is trained on the VulRepair dataset, which is formed by merging the Big-Vul and CVEfixes datasets. This dataset exhibits several data quality issues, including a high number of duplicate samples, questionable accuracy of labels, and the presence of incomplete programs. 2) The VRepair Model (M8) implementation available on VulRepair GitHUB is incorrect.
+
+% \item {\textbf{Pre-Trained Model-Based Automated Software Vulnerability Repair: How Far Are We? (Zhang et al.) :}} Implements CodeT5, CodeBERT, GraphCodeBERT, and UniXcoder models, which are trained on the VulRepair dataset, but the VulRepair dataset has data quality issues. 2)  In the context of RQ5, which explores transfer learning, the process initially involved using the VRepair dataset for pre-training, followed by fine-tuning on the VulRepair dataset. However, the pre-training dataset is inaccurately described in the paper, which claims VRepair was pre-trained using 23,607 C/C++ functions. Therefore, all the models require re-training with an accurate pre-training and correct VulRepair dataset to ensure the validity of the results.
+
+% \item {\textbf{An Empirical Study on Fine-Tuning Large Language Models of Code for Automated Program Repair (Huang et al.) :}} Huang et al. implemented several models for program repair, including CodeT5, CodeBERT, GraphCodeBERT, UniXcoder, and PLBART, utilizing various benchmark datasets. For security-related tasks, they employed the VulRepair dataset, which, as previously noted, has significant quality issues. These dataset quality concerns are critical and need to be addressed to ensure the reliability of their findings.
+
+% \item {\textbf{Vision Transformer Inspired Automated Vulnerability Repair (VQM) :}} Fu et al. reported that VRepair was initially Pre-trained on a dataset comprising 23,607 C/C++ functions and later fine-tuned on a vulnerability dataset; however, this assertion appears to be incorrect. As per the VRepair paper, it was initially Pre-trained on a dataset comprising 534,858 training samples and 10,000 validation samples. Therefore We conducted an investigation of the dataset accessible on the VQM GitHub and found that it comprises 21,246 training samples and 2,362 validation samples. A thorough review of the data revealed 17,303 duplicated entries within the training dataset and 666 duplicates within the validation dataset, resulting in only 3,943 unique training entries and 1,695 unique validation entries. After eliminating duplicates within files, we further discovered 1,613 duplicates between the training and validation datasets. These findings underscore the necessity of retraining their model, highlighting the importance of thorough pre-training prior to fine-tuning on the VulRepair dataset.
+
+% \item {\textbf{How the Training Procedure Impacts the Performance of Deep Learning-based Vulnerability Patching :}} Antonio et al. explored various training methodologies and analyzed their effects on model performance. For the supervised pre-training, they utilized the VRepair dataset, and for fine-tuning, they employed the VulRepair dataset. Although they did not rectify the issue of code duplicates in the VRepair dataset used for pre-training, they partially addressed this concern in the VulRepair dataset. The refined VulRepair dataset consisted of 4,905 training samples, 836 validation samples, and 1,696 test samples. Our examination uncovered 1,237 duplicates in the training set, 28 in the validation set, 93 in the test set, and one duplicate spanning both the training and test datasets. The significant number of duplicates in the training set could lead to model overfitting, and the duplicates in the test could lead to bias, which may be reflected in the poor performance observed in the results presented in the paper.
+
+
+% \item{\textbf{Other Problems With The Dataset :}} 
+% \begin{itemize}
+% \item  In certain inputs, the correct code snippet is marked with <StartBug> and <EndBug>, which results in problematic code snippets lacking these markers, leading the model to focus on the wrong area rather than where the actual issue resides. This misdirection can hinder the model's ability to accurately identify and rectify the real bugs.
+
+% \item Some of the target fixes in the test file are incomplete and potentially misleading, for example, code that needs to be added may be missing. This can lead to situations where, even if the model generates the correct code, the output will be erroneously marked as incorrect because it is compared against these flawed targets. Without manual inspection to verify the accuracy of the model's output against the intended fixes, there's a risk of misjudging the model's performance.
+% \item Certain code changes to address CWE vulnerabilities require the precise placement of a code snippet rather than modifications to the code itself. Labeling the snippet with tags like <StartBug> and <EndBug> inaccurately suggests that the snippet contains errors, which can mislead the model. This might prompt the model to generate an incorrect fix, as the issue isn't with the code snippet itself but with its order. A more appropriate approach would involve highlighting the need for reordering without implying that the snippet is faulty.
+% \item One of the reasons why conflicting labels in the VulRepair dataset occur is because numerous code changes are derived from the same git commit, which shares the same CVE number and  CWE. Not all these code changes directly address the CWE vulnerabilities. Some changes, like modifications in function calls, variable adjustments, and removal of the code snippet, are made to align the code with necessary updates that target the vulnerabilities. While these changes are related, they do not directly remedy the vulnerabilities but are still included in the VulRepair dataset as pertinent samples. Another problem with the samples that need the removal of the code snippet is that when such samples are given as input into the model, the expectation is for the model to predict a fixed version of the code. However, in reality, there is no actual fix but in VulRepair data, a fix inaccurately appears as a line before or after the relevant code, which is incorrect. This discrepancy leads to confusion and inaccuracies in training machine learning models for vulnerability repair.
+
+
+
+
+
+ 
+% \item CWE-119 Blank Targets.
+% \end{itemize}
+% \end{itemize}
+
+% \end{comment}
+
+
+

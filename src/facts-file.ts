@@ -29,11 +29,10 @@
  * ── SCHEMA 3 (2026-09-29) ───────────────────────────────────────────────────────
  * Adds what the PDF SAYS, for the rules that judge text rather than geometry: `pages_text` (each
  * page's text, in content order), `metadata` (the Info dictionary and the XMP packet, flat),
- * `links` (every link annotation's target and page) and `image_pages` (pages that paint a raster
- * image, whose text no extraction reads). Every schema-2 field keeps its name and meaning. The
- * number moves anyway: `anonymity/identity` and `pdf/limits` read these fields, and schema-2 facts
- * without them would be judged as a PDF that says nothing — a clean pass over no input. A schema-2
- * file is refused by `pdf/fresh` with "rebuild", which is one `paperlint build`.
+ * `links` (every link annotation's target and page), `bib_anchor_page` and `appendix_anchor_page`
+ * (the pages hyperref anchored the bibliography's first entry and the appendix on, or null). Every schema-2 field keeps its name and meaning. The number moves anyway: `anonymity/identity` and `format/page-limit` read these fields,
+ * and schema-2 facts without them would be judged as a PDF that says nothing — a clean pass over no
+ * input. A schema-2 file is refused by `pdf/fresh` with "rebuild", which is one `paperlint build`.
  *
  * 🔴 STALENESS. The PDF is not committed, so neither are these facts: they live in `_build/` and
  * carry `pdf_sha256`. A rule compares it with the PDF on disk and refuses facts about another build.
@@ -140,7 +139,8 @@ export interface FactsTextFields {
   readonly pages_text: readonly string[];
   readonly metadata: Readonly<Record<string, string>>;
   readonly links: readonly { readonly page: number; readonly uri: string }[];
-  readonly image_pages: readonly number[];
+  readonly bib_anchor_page: number | null;
+  readonly appendix_anchor_page: number | null;
 }
 
 export function fontEntry(f: FontFact): FontEntry {
@@ -191,7 +191,8 @@ export function factsDocument(i: FactsInput): FactsDocument {
     pages_text: i.read.pageTexts,
     metadata: i.read.metadata,
     links: i.read.links,
-    image_pages: i.read.imagePages,
+    bib_anchor_page: i.read.bibAnchorPage,
+    appendix_anchor_page: i.read.appendixAnchorPage,
     ...flatGeometry(i.geometry),
   };
 }
@@ -280,7 +281,10 @@ export interface TextFacts {
   readonly pages: readonly string[];
   readonly metadata: Readonly<Record<string, string>>;
   readonly links: readonly { readonly page: number; readonly uri: string }[];
-  readonly imagePages: readonly number[];
+  /** The page of the first bibliography entry hyperref anchored, or null. */
+  readonly bibAnchorPage: number | null;
+  /** The page hyperref anchored the appendix on, or null. */
+  readonly appendixAnchorPage: number | null;
 }
 
 /** Why a facts file cannot be judged. */
@@ -365,6 +369,8 @@ function geometryOf(
 
 const isPage = (v: unknown): v is number =>
   typeof v === "number" && Number.isInteger(v) && v > 0;
+const isPageOrNull = (v: unknown): v is number | null =>
+  v === null || isPage(v);
 const isStrings = (v: unknown): v is readonly string[] =>
   Array.isArray(v) && v.every((x) => typeof x === "string");
 const isStringRecord = (v: unknown): v is Readonly<Record<string, string>> =>
@@ -376,22 +382,29 @@ const isLinks = (
   v.every(
     (l) => isRecord(l) && isPage(l["page"]) && typeof l["uri"] === "string",
   );
-const isPages = (v: unknown): v is readonly number[] =>
-  Array.isArray(v) && v.every(isPage);
 
 /** Schema 3's fields, or which one is wrong. */
 function textOf(
   d: Readonly<Record<string, unknown>>,
 ): Result<TextFacts, string> {
-  const { pages_text, metadata, links, image_pages } = d;
+  const { pages_text, metadata, links } = d;
+  const { bib_anchor_page, appendix_anchor_page } = d;
   if (!isStrings(pages_text))
     return err("`pages_text` is not a list of strings");
   if (!isStringRecord(metadata))
     return err("`metadata` is not an object of strings");
   if (!isLinks(links)) return err("`links` is not a list of { page, uri }");
-  if (!isPages(image_pages))
-    return err("`image_pages` is not a list of page numbers");
-  return ok({ pages: pages_text, metadata, links, imagePages: image_pages });
+  if (!isPageOrNull(bib_anchor_page))
+    return err("`bib_anchor_page` is neither a page number nor null");
+  if (!isPageOrNull(appendix_anchor_page))
+    return err("`appendix_anchor_page` is neither a page number nor null");
+  return ok({
+    pages: pages_text,
+    metadata,
+    links,
+    bibAnchorPage: bib_anchor_page,
+    appendixAnchorPage: appendix_anchor_page,
+  });
 }
 
 /** What the PDF measures and what it says: the geometry columns and schema 3's fields. */

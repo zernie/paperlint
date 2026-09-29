@@ -1,13 +1,6 @@
-/** What a page says, read from pdf.js's shapes: text, links, raster images, metadata. */
-import { getResolvedPDFJS } from "unpdf";
+/** What a page says, read from pdf.js's shapes: text, links, metadata. */
 import { describe, expect, it } from "vitest";
-import {
-  linkTargetsOf,
-  metadataOf,
-  pageTextOf,
-  paintsImage,
-  xmpOf,
-} from "./pdf-content.ts";
+import { linkTargetsOf, metadataOf, pageTextOf, xmpOf } from "./pdf-content.ts";
 
 describe("pageTextOf", () => {
   it("joins items without a space, and breaks the line where pdf.js marks one", () => {
@@ -35,15 +28,6 @@ describe("linkTargetsOf", () => {
         { subtype: "Widget", url: "https://b.example" },
       ]),
     ).toEqual(["https://a.example", "mailto:x@example.org"]);
-  });
-});
-
-describe("paintsImage", () => {
-  it("true for an operator list that paints a raster image, false for one that does not", async () => {
-    const { OPS } = await getResolvedPDFJS();
-    expect(paintsImage(OPS, [OPS.save, OPS.paintImageXObject])).toBe(true);
-    expect(paintsImage(OPS, [OPS.paintInlineImageXObject])).toBe(true);
-    expect(paintsImage(OPS, [OPS.save, OPS.showText, OPS.restore])).toBe(false);
   });
 });
 

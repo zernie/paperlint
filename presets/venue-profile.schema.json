@@ -110,7 +110,7 @@
           "minLength": 1
         },
         "body_ends_at": {
-          "description": "How `pdf/limits` counts body pages. Absent: banal's body count (every page holding non-bibliography text). `references`: the pages before the one where the references heading first appears — for a venue whose limit excludes references and what follows them (appendices, statements).",
+          "description": "How `format/page-limit` counts body pages. Absent: banal's body count (every page holding non-bibliography text). `references`: the pages up to where the body ends — at the references or the appendix, whichever comes first, found by hyperref's anchors and then the heading line — with that page counted when body text stands above the heading on it; for a venue whose limit excludes references and appendices (and what follows them, such as statements).",
           "type": "string",
           "enum": ["references"]
         },

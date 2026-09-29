@@ -57,7 +57,8 @@ const goodFacts = (): Record<string, unknown> => ({
   pages_text: [],
   metadata: {},
   links: [],
-  image_pages: [],
+  bib_anchor_page: null,
+  appendix_anchor_page: null,
   pdf: "paper.pdf",
   pdf_sha256: sha256Hex(new TextEncoder().encode(PDF)),
   venue: "agenticdev",
@@ -391,7 +392,7 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     reports: onPdf(built({ page_w_in: 8.264 })),
     silent: built(),
   },
-  "pdf/limits": {
+  "format/page-limit": {
     reports: onPdf(
       built({ body_pages: 9, pages_by_type: { body: 9, bib: 2 } }),
     ),
@@ -407,18 +408,14 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     ),
     silent: built({ pages_text: ["Anonymous\n", "References\n"] }, BLIND),
   },
-  "anonymity/images": {
-    reports: { ...onPdf(built({ image_pages: [1] }, BLIND)), severity: 1 },
-    silent: built({}, BLIND),
-  },
   "format/layout-override": {
     reports: {
-      tree: aidc("\\vspace{-2mm}Text."),
+      tree: aidc("\\linespread{0.9}Text."),
       file: TEX_FILE,
-      severity: 1,
+      severity: 2,
       line: 4,
     },
-    silent: aidc("Text."),
+    silent: aidc("\\vspace{-2mm}Text."),
   },
   "pdf/last-page-balance": {
     reports: onPdf(

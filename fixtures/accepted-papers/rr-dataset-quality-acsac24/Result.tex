@@ -1,0 +1,596 @@
+\section{Results}\label{Result}
+
+We first replicate the results of the respective previous works to get a baseline performance estimate on the VulRepair dataset.
+We follow that by eliminating defective samples in the VulRepair set that fail to satisfy the data quality attributes of uniqueness and consistency, and then we analyze samples for accuracy and completeness.
+%We follow that by eliminating, in turn, defective samples in the VulRepair set that fail to satisfy the data quality attributes of uniqueness, consistency, accuracy and completeness.
+We follow that by investigating the impact of transfer learning on model performance.
+
+\subsection{Replication}
+
+%\textbf{Design:}
+%Can we replicate the results of VulRepair, CodeBERT, GraphCodeBERT, and UniXcode reported in their respective papers?\\
+This experiment aims to replicate the results of code repair methods whose performance on the VulRepair dataset has been reported.
+% VulRepair, CodeBERT, GraphCodeBERT, and UniXcode on the VulRepair dataset.
+
+\textbf{RQ1: Can we replicate the result of VulRepair, CodeBERT, GraphCodeBERT, and UniXcoder?} 
+
+
+\begin{table}[h]
+\centering
+  \caption{VulRepair Hugging Face Dataset Overview}
+  \label{Methodology:RQ1-dataset}
+  \begin{tabular}{|l|r|l|}
+    \hline
+    Dataset&Number of Samples&Comments\\
+     \hline
+    Train & 6,776    & Contains IS and CS duplicates\\
+     \hline
+    Test  & 1,706    & Contains IS and CS duplicates\\
+   \hline
+\end{tabular}
+\end{table}
+
+Table \ref{Methodology:RQ1-dataset} shows the number of samples in the VulRepair dataset.
+
+\textbf{Result:} The detailed results of this experiment are shown in Table \ref{Appendices:RQ1} and recapped in Table \ref{Methodology:RQ1-dataset-ModelPerformance} which shows reported perfect prediction (\emph{PP}) scores (see citations in the table) and our replicated scores.
+The mean replicated performance for VulRepair is somewhat lower than published reports while CodeBERT, GraphCodeBERT, and UniXcoder are slightly higher.
+
+
+\begin{table}[h]
+\centering
+  \caption{Model Performance on RQ1}
+  \label{Methodology:RQ1-dataset-ModelPerformance}
+  \begin{tabular}{|l|r|r|r|}
+    \hline
+    Models          & PP Reported    & PP Replicated & Change\\
+    \hline
+    VulRepair/CodeT5       & 44\%\cite{fu2022vulrepair}     & 40.42\% & -3.58\%\\
+    &44.96\%\cite{zhang2023pre}  & & -4.54\%\\
+    \hline
+    CodeBERT        & 31\%\cite{fu2022vulrepair}      & 33.20\% & +2.20\%\\
+    & 32.94\%\cite{zhang2023pre} && +0.74\%\\
+    \hline
+    GraphCodeBERT   & 37.98\%\cite{zhang2023pre}      & 38.51\%\ & +0.53\%\\
+    \hline
+    UniXcoder       & 40.62\%\cite{zhang2023pre}      & 40.96\% & +0.34\%\\
+  \hline
+  \multicolumn{4}{l}{Note: Huang et al.\cite{huang2023empirical} results are NOT reported as they used}\\
+  \multicolumn{4}{l}{PPL and BLUE metrics instead.}\\
+\end{tabular}
+\end{table}
+
+
+% \begin{comment}
+
+% \subsection{Data Quality}
+
+% \subsubsection{Duplicates}
+% Data leakage stemming from code duplicates has emerged as a significant issue with detrimental impacts on machine learning models. Within our study, we define a sample as a duplicate if an identical code snippet appears more than once in the dataset. Such duplicates introduce data leakage during model evaluation, as the models can readily classify test samples that exist in the training data, thereby inflating performance metrics. Hence, ensuring the uniqueness of dataset samples is paramount. To detect code duplicates, we utilized the dataset provided by VulRepair in our analysis, which is available on Hugging Face. The dataset has 6,776 train samples and 1,707 test samples. Our examination revealed the presence of jn-set and cross-set duplicates within the dataset. In-set duplicates denote instances where identical samples appear multiple times within either the test or training file, while cross-set duplicates indicate that training samples are present in the test set or vice versa. Overall, we identified XXXXX duplicates in the test file, XXXXXX duplicates in the training file, and XXXXX cross-set duplicates. 
+% To comprehensively understand the adverse effects of code duplicates, we conducted two distinct tests:
+
+% Eliminating cross-set duplicates from the training file while retaining samples in the test file.
+% Removing cross-set duplicates from the test file while preserving samples in the training file.
+
+% \end{comment}
+
+\subsection{Uniqueness}\label{Uniqueness}
+
+In these experiments, we consider the effect of remediating VulRepair dataset uniqueness defects on the performance of the models fine-tuned with that dataset.
+
+ In order to make minimal changes to the semantic content of the dataset, we preserve all unique data in the training and test sets---but cross-set duplicates must be removed from one set or the other.
+This means the proportion of samples in the training and test sets will vary from experiment to experiment and will not match that of the original dataset.
+To understand the resulting bias in our estimates of performance, we run the models in two different ways to determine the impact of first removing the cross-set duplicates from the \emph{training} set and then removing them from the \emph{test} set.
+Our hypothesis was that removing them from the test set will yield poorer performance because test samples that were subject to data leakage would be less likely to be correctly repaired.
+Furthermore we would expect that removing such samples from the training set will yield even poorer performance because of the significant reduction in training samples. 
+We preserve all unique elements in both the training and test sets.
+The number of samples in these modified train/test sets are reduced by this process, however, the amount of information in this modified set is unchanged from the original set because every unique sample is included.
+
+\textbf{RQ2A: 
+What is the performance of the models after removing all duplicates data from the VulRepair dataset (removing cross-set duplicates from the \emph{training} dataset)?}
+
+For this research question, we first removed in-set duplicates and then removed cross-set duplicates from the training dataset to avoid data leakage issues and keep the test set as large as possible. Table \ref{Methodology:RQ2-removed-crossfile-from-train} presents our analysis.
+
+
+\begin{table}[h]
+\centering
+ \caption{RQ2A Dataset Composition (removing cross-set duplicates from the training set). See Table \ref{Methodology:VulRepair-dataset-Unique} for SL and CS DUP.}
+ \label{Methodology:RQ2-removed-crossfile-from-train}
+ \begin{tabular}{|l|r|r|}
+   \hline
+   Samples &Train &Test\\
+   \hline
+   Unique Samples (US = SL - CS DUP)                    &4,387   &1,615\\
+ \hline
+\end{tabular}
+\end{table}
+
+
+
+\begin{table}[h]
+\centering
+  \caption{Model Performance on RQ2A}
+  \label{Methodology:RQ2A-dataset-ModelPerformance}
+  \begin{tabular}{|l|r|r|}
+    \hline
+    Model           & PP RQ2A & \% PP Replicated\\
+    \hline
+    VulRepair       & 8.91\% & 22.0\% (8.91/40.42)\\
+    \hline
+    CodeBERT        & 5.58\% & 16.8\% (5.58/33.20)\\
+    \hline
+    GraphCodeBERT   & 5.31\% & 13.7\% (5.31/38.51)\\
+    \hline
+    UniXcoder       & 4.82\% & 11.8\% (4.82/40.96)\\
+  \hline
+\end{tabular}
+\end{table}
+
+
+\textbf{Result:} Detailed results of this experiment are shown in Table \ref{Appendices:RQ2A} and recapped in Table \ref{Methodology:RQ2A-dataset-ModelPerformance} where column \emph{PP RQ2A} shows perfect prediction scores on running on RQ2A dataset and \emph{\% PP Replicated} shows the fraction of perfect prediction in our replicated results from the VulRepair dataset shown in Table \ref{Methodology:RQ1-dataset-ModelPerformance}.
+All models suffered extreme performance degradation when duplicates were removed from the dataset, providing perfect prediction rates ranging from 12 to 22\% of the rates they achieved when trained with a set that exhibited data leakage.  
+
+\textbf{RQ2B: What is the performance of the models after removing all duplicates from the VulRepair dataset (removing cross-set duplicates from the \emph{test} dataset)?}
+
+In this research question, we removed cross-set duplicates from the test dataset, keeping the train set as large as possible. Table \ref{Methodology:RQ2B-removed-crossfile-from-test} presents our analysis.
+
+
+\begin{table}[h]
+\centering
+ \caption{RQ2B Dataset composition (removing cross-set duplicates from the test set). See Table \ref{Methodology:VulRepair-dataset-Unique} for SL and CS DUP.}
+ \label{Methodology:RQ2B-removed-crossfile-from-test}
+ \begin{tabular}{|l|r|r|}
+   \hline
+   Samples &Train &Test\\
+   \hline
+   %Total Samples (TS)                                  &6776  &1706\\
+   %In-Set Duplicates (IS Dup)                          &1593  &91\\
+   %Samples Left (SL = TS - IS Dup)                     &5183  &1615\\ 
+   %\multicolumn{1}{l}{Cross-Set Duplicates (CS Dup)}  &\multicolumn{2}{c}{796}\\
+   Unique Samples (US = SL - CS DUP)                    &5,183   &819\\
+ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+  \caption{Model Performance on RQ2B}
+  \label{Methodology:RQ2Bdataset-ModelPerformance}
+  \begin{tabular}{|l|r|r|}
+    \hline
+    Models          & PP RQ2B & \% PP Replicated\\
+    \hline
+    VulRepair       & 13.17\% & 33\% (13.17/40.42)\\
+    \hline
+    CodeBERT        & 8.83\% &  27\% \enspace(8.83/33.20)\\
+    \hline
+    GraphCodeBERT   & 9.22\% & 24\% \enspace(9.22/38.51)\\
+    \hline
+    UniXcoder       & 9.10\% & 22\% \enspace(9.10/40.96)\\
+  \hline
+\end{tabular}
+\end{table}
+
+\textbf{Result:}
+As predicted, performance of all models was much better in RQ2B than  RQ2A. Detailed results are shown in Table \ref{Appendices:RQ2B} and recapped in Table \ref{Methodology:RQ2Bdataset-ModelPerformance}.
+The increase in training samples from 4,387 to 5,183 provided perfect prediction increases of about 50\% over RQ2A in all cases, but still much lower (a third or less) than the performance when trained with the VulRepair dataset.
+%
+%
+
+\subsection{Consistency}\label{Consistency}
+In this section, we consider the impact that inconsistent labeling has on these models using the same two approaches as before.
+Recall that inconsistent labels are associated with samples that have the identical buggy and repaired code, but different CWE labels.
+Again, we remove these from the training set in one experiment and the test set in another.
+
+\textbf{RQ3A: What is the performance of the models after removing duplicates and inconsistently labeled samples from the VulRepair dataset (removing cross-set duplicates and inconsistent samples from the \emph{training} dataset)?}
+
+Table \ref{Methodology:RQ3A--removed-samples-with-multilple-CWEs} presents our analysis. See Table \ref{Methodology:VulRepair-dataset-Consistency} for SL and CS DUP.
+
+
+\begin{table}[h]
+\centering
+  \caption{RQ3A Dataset composition (removing cross-set duplicates and inconsistent samples from the training set)}
+  \label{Methodology:RQ3A--removed-samples-with-multilple-CWEs}
+  \begin{tabular}{|l|r|r|}
+    \hline
+    Samples &Train &Test\\
+    %\hline
+    %Total Samples (TS)                                  &6776  &1706\\
+    %\hline
+    %In-Set Duplicates (IS Dup)                          &1858   &111\\
+    %\hline
+    %Samples Left (SL = TS - IS Dup)                     &4918  &1595\\ 
+    %\hline
+    %\multicolumn{1}{|l|}{Cross-Set Duplicates (CS Dup)}  &\multicolumn{2}{|c|}{923}\\
+    \hline
+    Unique Samples (US = SL - CS DUP)                    &3,995  &1,595\\
+  \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Model Performance on RQ3A}
+  \label{Methodology:RQ3Adataset-ModelPerformance}
+  \begin{tabular}{|l|r|r|}
+    \hline
+    Models          & PP RQ3A & \% PP Replicated\\ 
+    \hline
+    VulRepair       & 7.14\%  & 17.7\% (7.14/40.42)\\
+    \hline
+    CodeBERT        & 3.59\% & 10.8\% (3.59/33.20)\\
+    \hline
+    GraphCodeBERT   & 3.75\% & 9.7\% (3.75/38.51)\\
+    \hline
+    UniXcoder       & 4.11\% & 10.0\% (4.11/40.96)\\
+  \hline
+\end{tabular}
+\end{table}
+
+\textbf{Result:}
+Detailed results of this experiment are shown in Table \ref{Appendices:RQ3A}. Table \ref{Methodology:RQ3Adataset-ModelPerformance} shows that all models suffered further performance degradation from the results shown in RQ2A.
+This suggests that data leakage from the sample code occurs even when the CWE tag is incorrect.
+
+
+\textbf{RQ3B: What is the performance of the models after removing duplicates and inconsistently labeled samples from the VulRepair dataset (removing cross-set duplicates and inconsistent samples from the \emph{test} dataset)?}
+
+Table \ref{Methodology:RQ3B--removed-samples-with-multilple-CWEs} presents our analysis based on Table \ref{Methodology:VulRepair-dataset-Consistency}.
+
+\begin{table}[h]
+\centering
+  \caption{RQ3B Dataset composition (removing cross-set duplicates and inconsistent samples from the test set)}
+  \label{Methodology:RQ3B--removed-samples-with-multilple-CWEs}
+  \begin{tabular}{|l|r|r|}
+    \hline
+    Samples &Train &Test\\
+    \hline
+    %Total Samples (TS)                                  &6776  &1706\\
+    %In-Set Duplicates (IS Dup)                          &1858  &111\\
+    %Samples Left (SL = TS - IS Dup)                     &4918  &1595\\ 
+    %\multicolumn{1}{l}{Cross-Set Duplicates (CS Dup)}  &\multicolumn{2}{c}{923}\\
+    Unique Samples (US = SL - CS DUP)                    &4,918   &672\\
+  \hline
+\end{tabular}
+\end{table}
+
+
+\begin{table}[h]
+\centering
+  \caption{Model Performance on RQ3B}
+  \label{Methodology:RQ3B-dataset-ModelPerformance}
+  \begin{tabular}{|l|r|r|}
+    \hline
+    Models          & PP RQ3B & \% PP Replicated\\
+    \hline
+    VulRepair       & 10.27\% & 25.5\% (10.27/40.24)\\
+    \hline
+    CodeBERT        & 5.38\% & 16.2\% \enspace(5.38/33.20)\\
+    \hline
+    GraphCodeBERT   & 6.25\% & 16.2\% \enspace(6.25/38.51)\\
+    \hline
+    UniXcoder       & 6.18\% & 15.0\% \enspace(6.18/40.96)\\
+  \hline
+\end{tabular}
+\end{table}
+
+\textbf{Result:}
+Table \ref{Methodology:RQ3B-dataset-ModelPerformance} summarizes the results of Table \ref{Appendices:RQ3B} and shows that just as was seen in the uniqueness experiments, providing more training data (4,918 vs. 3,995 samples) yielded performance increases in each of the models tested, but the performance is well below that yielded on the RQ2B dataset.
+
+
+
+
+% \begin{table*}
+%   \caption{Model Performance on RQ1 and RQ3A -Top10CWEs}
+%   \label{Experiment:RQ1-RQ3dataset-ModelPerformance-Top10CWEs}
+%   \begin{tabular}{cllcccccccccc}
+%     \toprule
+%     Rank    & CWE Type  & Name  &\multicolumn{2}{c}{Total Samples} &\multicolumn{2}{c}{VulRepair} &\multicolumn{2}{c}{CodeBERT}  &\multicolumn{2}{c}{GraphCodeBERT}  &\multicolumn{2}{c}{UniXcoder}\\
+%             &           &                              &{RQ1}&{RQ3} &{RQ1}&{RQ3} &{RQ1}&{RQ3}  &{RQ1}&{RQ3}     &{RQ1}&{RQ3}\\
+%     \midrule
+%     1       & CWE-787   & Out-of-bounds Write           &53&33      &33\% &3\%  &18\%  &2\%   &25\%  &2\%      &28\%  &5\%\\
+%     2       & CWE-79    & Cross-site Scripting          &1&0        &0\%  &0\%  &0\%   &0\%   &0\%   &0\%      &0\%   &0\%\\
+%     3       & CWE-125   & Out-of-bounds Read            &170&68     &30\% &6\%  &31\%  &11\%  &38\%  &11\%     &43\%  &12\%\\
+%     4       & CWE-20    & Improper Input Validation     &152&73     &45\% &13\% &34\%  &7\%   &38\%  &10\%     &39\%  &10\%\\
+%     5       & CWE-78    & OS Command Injection          &3&1        &22\% &0\%  &22\%  &0\%   &33\%  &0\%      &44\%  &0\%\\
+%     6       & CWE-89    & SQL Injection                 &5&1        &57\% &0\%  &40\%  &0\%   &53\%  &0\%      &57\%  &0\%\\
+%     7       & CWE-416   & Use After Free                &55&29      &51\% &7\%  &41\%  &6\%   &49\%  &9\%      &49\%  &6\%\\
+%     8       & CWE-22    & Path Traversal                &8&2        &33\% &0\%  &29\%  &0\%   &33\%  &0\%      &35\%  &0\%\\
+%     9       & CWE-352   & Cross-Site Request Forgery    &2&2        &0\%  &0\%  &0\%   &0\%   &0\%   &0\%      &0\%   &0\%\\
+%     10      & CWE-434   & Dangerous File Type           &-&-        &-    &-    &-     &-     &-     &-        &-     &-\\
+%             &           & Total                         &449&209    &\%   &\%   &\%    &\%    &\%    &\%       &\%    &\%\\
+    
+%   \bottomrule
+% \end{tabular}
+% \end{table*}
+
+
+
+\begin{table*}
+\centering
+  \caption{Model Performance on RQ1 vs RQ2B vs RQ3B - Top10CWEs}
+  \label{Experiment:RQ1-RQ3-RQ4dataset-ModelPerformance-Top10CWEs}
+  \resizebox{\textwidth}{!}{
+  \begin{tabular}{|r|c|r|r|r|r|r|r|r|r|r|r|r|r|r|r|r|}
+    \hline
+    Rank    & CWE      &\multicolumn{3}{c|}{Total Samples} &\multicolumn{3}{c|}{VulRepair} &\multicolumn{3}{c|}{CodeBERT}  &\multicolumn{3}{c|}{GraphCodeBERT}  &\multicolumn{3}{c|}{UniXcoder}\\
+    \cline{3-17}
+            &               &{\footnotesize RQ1}&{\footnotesize RQ2B}&{\footnotesize RQ3B}      &{\footnotesize RQ1}&{\footnotesize RQ2B}&{\footnotesize RQ3B}   &{\footnotesize RQ1}&{\footnotesize RQ2B}&{\footnotesize RQ3B}  &{\footnotesize RQ1}&{\footnotesize RQ2B}&{\footnotesize RQ3B}     &{\footnotesize RQ1}&{\footnotesize RQ2B}&{\footnotesize RQ3B}\\
+    \hline
+    1       & {\footnotesize CWE-787}       &53&33&22                &32.7\%&3.5\%&\cellcolor[gray]{0.8}2.3\%      &17.6\%&2.5\%&0.0\%     &24.8\%&2.5\%&0.0\%       &28.0\%&5.0\%&1.5\%\\
+    \hline
+    2       & {\footnotesize CWE-79}        &1&0&0                   &0\% &0\%&0\%            &0\% &0\%&0\%           &0\%&0\%&0\%              &0\%&0\%&0\%\\
+    \hline
+    3       & {\footnotesize CWE-125}       &170&68&67               &29.9\%&5.9\%&6.5\%      &30.8\%&10.8\%&8.7\%    &38.2\%&11.0\%&\cellcolor[gray]{0.8}10.5\%     &42.7\%&12.2\%&10.0\%\\
+    \hline
+    4       & {\footnotesize CWE-20}        &152&73&63               &44.8\%&13.2\%&\cellcolor[gray]{0.8}9.0\%    &33.9\%&7.3\%&6.1\%     &38.4\%&10.3\%&7.9\%      &39.0\%&9.6\%&7.7\%\\
+    \hline
+    5       & {\footnotesize CWE-78}        &3&1&1                   &22.2\%&0\%&0\%          &22.2\%&0\%&0\%         &33.3\%&0\%&0\%           &44.4\%&0\%&0\%\\
+    \hline
+    6       & {\footnotesize CWE-89}        &5&1&1                   &56.7\%&0\%&0\%          &40.0\%&0\%&0\%         &53.3\%&0\%&0\%           &56.7\%&0\%&0\%\\
+    \hline
+    7       & {\footnotesize CWE-416}       &55&29&17                &51.2\%&6.9\%&0\%        &40.9\%&5.8\%&0\%       &48.8\%&9.2\%&0\%         &48.8\%&6.3\%&0\%\\
+    \hline
+    8       & {\footnotesize CWE-22}        &8&2&2                   &33.3\%&0\%&0\%          &29.2\%&0\% &0\%        &33.3\%&0\%&0\%           &35.4\%&0\%&0\%\\
+    \hline
+    9       & {\footnotesize CWE-352}       &2&2&2                   &0\%&0\%&0\%             &0\% &0\%&0\%           &0\%&0\%&0\%              &0\%&0\%&0\%\\
+    \hline
+    10      & {\footnotesize CWE-434}       &-&-&-                   &-&-&-                   &-&-&-                  &-&- &-                   &-&- &-\\
+    \hline
+            &                               &449&209&175             &38.0\%&8.05\%&6.0\%     &31.3\%&7.3\% &5.5\%    &37.8\%&8.85\%&\cellcolor[gray]{0.8}6.9\%      &40.2\%&9.0\% &6.8\%\\   
+  \hline
+\end{tabular}
+}
+\end{table*}
+
+
+
+\subsection{Revisiting the Top 10 CWEs}
+
+One of the interesting and compelling results in the initial VulRepair paper\cite{fu2022vulrepair} is a table discussing performance of VulRepair on CWE samples appearing in the 2021 comparitech list of the top 10 CWEs\cite{top10}.
+Fu et al. reported that 38\% of the 449 such samples in the VulRepair dataset were correctly repaired but we observed a substantial reduction in model performance, highlighting the critical role that these defective samples play in model effectiveness. We now turn to the question of how much the removal of inaccurate and incomplete samples will reduce the top 10 dataset.
+
+%The rest of this section deals with the question of how much removal of inaccurate and incomplete samples will reduce this dataset.
+
+\textbf{RQ4A: What effect does removing duplicate data from VulRepair have on the repair of vulnerabilities included in the top ten CWEs.}
+
+We first revisit this question in Table \ref{Experiment:RQ1-RQ3-RQ4dataset-ModelPerformance-Top10CWEs}.
+The detailed results are in \cref{Appendices:RQ1-RQ2B-CWE-787,Appendices:RQ1-RQ2B-CWE-125,Appendices:RQ1-RQ2B-CWE-20,Appendices:RQ1-RQ2B-CWE-78,Appendices:RQ1-RQ2B-CWE-89,Appendices:RQ1-RQ2B-CWE-416,Appendices:RQ1-RQ2B-CWE-22,Appendices:RQ1-RQ2B-CWE-352}.
+We report the performance of each of the models studied on the top 10 CWEs, showing their performance when duplicate and inconsistent samples are removed from consideration.
+First, we note the significant reduction in the number of top 10 CWE samples--only 39\% remain when the defective samples are removed.
+But of even greater concern is the fact that across all four models, when these samples are removed the average performance drops to 
+17\% of the original performance on average.
+For instance, looking at the performance of CodeBERT on the RQ1 dataset, the model achieved 31.3\%. However, when evaluated on the RQ3B dataset, its performance fell to just 5.5\%, resulting in an average performance drop to 17\%. This highlights how heavily the samples introduced errors.
+
+That means that the performance report on the top 10 CWEs was severely overestimated as a result of data leakage.
+
+\textbf{RQ4B: How does identifying and analyzing inaccurate and incomplete samples of the top ten CWEs in the test set of the deduplicated VulRepair dataset change our understanding of its performance?}
+
+% \textbf{RQ4B: What effect does removing inaccurate and incomplete samples have on the number of top ten CWEs in the test set of the deduplicated VulRepair dataset}
+
+Once duplicate samples are removed from the VulRepair dataset, many inaccurate and incomplete samples will remain.
+We were able to address this question only in part, however, due to time constraints we were only able to consider 8 of the top 10 categories.
+
+\subsubsection{Accuracy}\label{Result-Accuracy}
+In this work, the primary determiner of accuracy is the correctness of the CWE label associated with a vulnerable sample.
+Accuracy plays an essential role during model training and validation.
+An incorrect label potentially leads the model to learn an incorrect pattern associated with given CWE type, thereby adversely affecting model evaluation.
+The accuracy of sample labeling is largely determined by the methods used in data collection.
+The VulRepair dataset collection process involved gathering data related to real-world vulnerabilities and tracing the sample to its vulnerability fix commit.
+These links are derived from external vulnerability reports listed in databases such as the NVD.
+This method assumes that each vulnerability fix commit is exclusively dedicated to addressing that vulnerability, overlooking potential confounding factors.
+These factors include non-functional changes (such as stylistic modifications), tertiary alterations (such as adjustment of various variables and multiple functions in a way that is unrelated to the vulnerability), and tangled commits (where a single change addresses multiple issues simultaneously)\cite{herzig2013impact}.
+
+In Table \ref{Experiment:RQ3Adataset-AccuracyPerformance-Top10CWEs} we show the number of samples from RQ2B that remain when only accurate samples are included in 8 of the top 10 CWEs.
+Note that these inaccurate samples form a superset of inconsistent samples (such as are removed in RQ3B).
+Removing inaccurate samples preserves only 44\% (30/68) of the unique samples.
+Given the extremely small numbers in each category, the statistical importance of the results becomes much less apparent.
+
+
+
+\begin{table*}
+\centering
+  \caption{RQ2B Data Quality - Top10CWEs}
+  \label{Experiment:RQ3Adataset-AccuracyPerformance-Top10CWEs}
+  \begin{tabular}{|l|l|l|r|r|r|r|}
+    \hline
+    Rank    & CWE Type & Name                          & RQ2B Samples   &Accurate &Complete & Accurate \& Complete\\
+    \hline
+    1       & CWE-787   & Out-of-bounds Write          &33              &15        &18      &12\\
+    \hline
+    2       & CWE-79    & Cross-site Scripting         &0               &0         &0       &0\\
+    \hline
+    %3       & CWE-125   & Out-of-bounds Read          &68\\            &--        &--      &--\\
+    %4       & CWE-20    & Improper Input Validation   &73              &--        &--      &--\\
+    5       & CWE-78    & OS Command Injection         &1               &0         &0       &0\\
+    \hline
+    6       & CWE-89    & SQL Injection                &1               & 1        &1       &1\\
+    \hline
+    7       & CWE-416   & Use After Free               &29              &11        &18      &7\\
+    \hline
+    8       & CWE-22    & Path Traversal               &2               & 1        &0       &0\\
+    \hline
+    9       & CWE-352   & Cross-Site Request Forgery   &2               & 2        &1       &1\\
+    \hline
+    10      & CWE-434   & Dangerous File Type          &-               &-         &-       &-\\
+    \hline
+            &           & Total                        &68              &30        &38      &21\\    
+  \hline
+\end{tabular}
+\end{table*}
+
+
+% \begin{comment}
+% % Anurag: I need to think on this before we could include this -- perhaps we actually need some data or examples.
+
+% \textbf{Need to Make sure this!!
+% We observed an interesting observation. If code comes from the same git commit, even though the function is not exactly the same, the change is almost the same. Then, the model predicts the change. } 
+% \end{comment}
+
+
+
+\subsubsection{Completeness}\label{Result-Completeness}
+The concept of completeness is pivotal and pertains to the acquisition of comprehensive information necessary to identify and remedy vulnerabilities within a given dataset or individual CWE sample (VulRepair sample).
+In some cases, not all of the code necessary to either understand or repair a vulnerability is available in the sample itself.
+Such incomplete samples can adversely affect the learning efficacy of the model, thus leading to incomplete or ineffective model prediction.
+During analysis, we observed that many samples lack relevant code related to the vulnerability repair.
+These samples were subsequently classified as \emph{unverifiable samples}. Also discussed in Section \ref{Data-Attributes-Analysis}.
+
+When incomplete samples are removed from the dataset, only 56\% (38/68) of samples remain as shown in Table \ref{Experiment:RQ3Adataset-AccuracyPerformance-Top10CWEs}.
+Furthermore, when we remove those samples that are either inaccurate or incomplete, we are left with less that 1/3 of the unique samples, and only 16.5\% (21/127 for the 8 CWE categories) of the samples reported in Fu et al.\cite{fu2022vulrepair}
+We would hesitate to try to draw significant conclusions about performance of a model from such a small collection of samples.
+
+% \begin{comment}
+    
+% \begin{table}[H]
+%   \caption{Completene on RQ3A -Top10CWEs}
+%   \label{Experiment:RQ3Adataset-CompletenessPerformance-Top10CWEs}
+%   \begin{tabular}{lllll}
+%     \toprule
+%     Rank    & CWE Type  & Name                         &Completeness\\
+%     \midrule
+%     1       & CWE-787   & Out-of-bounds Write          &18/33\\
+%     2       & CWE-79    & Cross-site Scripting         &0/0\\
+%     %3       & CWE-125   & Out-of-bounds Read           &/68\\
+%     4       & CWE-20    & Improper Input Validation    &--/73\\
+%     5       & CWE-78    & OS Command Injection         &0/1\\
+%     6       & CWE-89    & SQL Injection                &1/1\\
+%     7       & CWE-416   & Use After Free               &18/29\\
+%     8       & CWE-22    & Path Traversal               &0/2\\
+%     9       & CWE-352   & Cross-Site Request Forgery   &1/2\\
+%     10      & CWE-434   & Dangerous File Type          &-\\
+%             &           & Total                        &/141\\
+    
+%   \bottomrule
+% \end{tabular}
+% \end{table}
+% \end{comment}
+
+% \begin{comment}
+% % Anurag: If you feel strongly that we must include this, we can do so, but I don't think it goes right here.
+
+%  \textbf{Requirement for completion in our case: we define a function change as complete when it involves the use of an inbuilt standard function, such as functions found in the Linux kernel. While our model may not always be capable of generating these specific changes, we consider any use of standard, non-developer-defined functions as relevant and satisfactory for the purposes of our analysis. This approach ensures that we focus on changes that leverage established, reliable functionalities}   
+% \end{comment}
+
+
+
+
+
+
+
+
+
+\subsection{Transfer Learning}\label{TransferLearning}
+As discussed in the introduction and detailed in the related work, Fu et al.\cite{fu2024vision} did not utilize the bug-fix dataset provided by Chen et al.\cite{chen2022neural} 
+The pre-training using the employed bug-fix dataset is compromised by a high number of in-set and cross-set duplicates, as well as significant overlap between the bug-fix pre-training dataset and the vulnerability fine-tuning dataset. 
+This significantly undermines the purpose of pre-training on the bug-fix dataset before fine-tuning. This suggest that the results presented based on that training set require reevaluation.
+
+Zhang et al.\cite{zhang2023pre} and Antonio et al.\cite{mastropaolo2024training} also present results of transfer learning in their respective papers, but both suffer from data leakage issues in pre-training and fine-tuning.
+Both authors used the bug-fix dataset for pre-training, but it contains 6,192 duplicate entries in the training dataset, 4 duplicate entries in the validation dataset, and 247 cross-set duplicates.
+Therefore that dataset needs to be cleaned before it can be effectively employed.
+Furthermore, both authors used the VulRepair dataset, which is plagued by high duplication rates.
+While Antonio et al. addressed cross-set duplicates they did not address in-set duplicates and inconsistently labeled samples leading to potential bias.
+Thus, the  performance of transfer learning remains dubious.
+All of these previously reported transfer learning results employed data sets with quality issues.
+
+In this section, we evaluate the documented approach presented by Chen et al.\cite{chen2022neural}, which suggests that using a larger, generic bug-fix corpus can improve the performance of vulnerability repair models but only with datasets that are free from duplicate entries.
+We have three training scenarios. The first scenario, termed the \emph{bug-fix scenario}, involves training the model solely on the de-duplicated bug-fix dataset of Chen et al.\cite{chen2022neural}. The hyperparameter settings for this scenario are described in \ref{Pre-training-hyperparameters}.
+The second scenario, which we call the \emph{vulnerability repair scenario}, focuses exclusively on training using the RQ3B dataset.
+The hyperparameter settings for this scenario are described in \ref{Fine-tuning-hyperparameters}.
+The third scenario, the \emph{transfer learning scenario}, involves a two-step training process where the model is initially trained on the bug-fix dataset and subsequently fine-tuned on the RQ3B dataset. 
+This structure allows us to evaluate model effectiveness under different training conditions and ascertain the benefits of transfer learning in enhancing model performance on vulnerability repair tasks.
+
+In this section, we also analyze model performance across different beam sizes, which serves two critical purposes.
+First, as highlighted in previous research, a smaller beam size is more feasible for manual inspection of the generated repairs\cite{fu2024vision,mastropaolo2024training}.
+Second, this analysis provides a clearer picture of how the model performs at various beam sizes compared to prior studies, which helps pinpoint irregularities in reported model performance across different studies.
+For instance, recent findings by VQM \cite{fu2024vision} report their new vision-transformer model achieves accuracy rates of 32.33\%, 42.72\%, and 45.14\% at beam sizes of 1, 3, and 5, respectively. In the same study, VulRepair attains accuracy rates of 29.65\%, 39.85\%, and 42.79\% at the corresponding beam sizes.
+Because of the data quality issues in the bug-fix dataset model used to train them, these likely overestimate model performance.
+In contrast, research by Antonio et al.\cite{mastropaolo2024training} reports lower performance for the VulRepair model, with accuracy scores of 12.28\%, 17.58\%, and 18.64\% at the same beam sizes. This discrepancy is almost surely due to data leakage in both the bug-fix and vulnerability repair datasets as well as inconsistently labeled samples in the vulnerability dataset.
+
+
+
+
+\begin{table}[h]
+\centering
+  \caption{Bug-Fix and Transfer Learning Performance at Beam size of 1,3 and 5}
+  \label{Experiment:Transfer-Learning-Beam1-5}
+  \resizebox{\columnwidth}{!}{
+  \begin{tabular}{|l|r|r|r|r|r|r|}
+    \hline
+    Models                  &\multicolumn{2}{c|}{Beam = 1}   &\multicolumn{2}{c|}{Beam = 3}   &\multicolumn{2}{c|}{Beam = 5} \\
+    \cline{2-7}
+                            &{BF}&{TL}                      &{BF}&{TL}                     &{BF}&{TL}\\
+    \hline
+    VulRepair               &3.6\%&13.5\%                  &7.4\%&19.0\%                &7.6\%&20.2\%\\
+    \hline
+    CodeBERT                &3.0\%&12.5\%                  &4.6\%&17.3\%                &5.4\%&18.9\%\\
+    \hline
+    GraphCodeBERT           &2.2\%&11.5\%                  &4.6\%&16.9\%                &5.8\%&19.0\%\\
+    \hline
+    UniXcoder               &1.9\%&12.9\%                  &5.2\%&18.1\%                &6.6\%&19.7\%\\
+    \hline
+    \multicolumn{7}{l}{Note: BF = Bug-Fix, TL = Transfer Learning}\\
+\end{tabular}
+}
+\end{table}
+
+
+Tables \ref{Experiment:Transfer-Learning-Beam1-5} present the results of bug-fix and transfer learning achieved by the models at beam sizes 1, 3, and 5. 
+Detailed outcomes are reported in Table \ref{Appendices:RQ5-pretrain}. 
+As anticipated, VulRepair exhibited a performance decline compared to the findings reported by Fu et al.\cite{fu2024vision} However, it achieved superior results relative to Antonio et al.\cite{mastropaolo2024training}.
+
+Table \ref{Experiment:Transfer-Learning-Beam50} present the overall result of the models in three different scenarios: bug-fix training, vulnerability training, and transfer learning at beam size 50.
+
+
+% Tables \ref{Experiment:Transfer-Learning-Beam1-5} and \ref{Experiment:Transfer-Learning-Beam50} present the overall result of the models in three different scenarios: bug-fix training, vulnerability training, and transfer learning.
+
+\begin{table}[h]
+\centering
+  \caption{Transfer Learning Performance at Beam size 50}
+  \label{Experiment:Transfer-Learning-Beam50}
+  \begin{tabular}{|l|r|r|r|}
+    \hline
+    Models                  &\multicolumn{3}{c|}{Beam = 50}\\
+    \cline{2-4}
+                            &{BF}&{VR}&{TL}\\
+    \hline
+    VulRepair               &6.55\%&10.27\%&18.67\%\\
+    \hline
+    CodeBERT                &11.76\%&5.38\%&24.55\%\\
+    \hline
+    GraphCodeBERT           &11.76\%&6.25\%&25.42\%\\
+    \hline
+    UniXcoder               &11.31\%&6.18\%&26.07\%\\
+    \hline
+    \multicolumn{4}{l}{Note: BF = Bug-Fix, VR = Vulnerability Repair}\\
+    \multicolumn{4}{l}{and TL = Transfer Learning}\\
+\end{tabular}
+\end{table}
+
+These results clearly show that pre-training with a large corpus can provide improved performance on security vulnerability repair, achieving results nearly as good as models trained on the de-duplicated VulRepair dataset.
+But the more important result is that employing models pre-trained with bug-fix and using deduplicated VulRepair data for transfer learning lets each model achieve performance that is slightly better than that or our RQ3B experiment with a beam size of 50 even when a beam size of just 1 is used and more than twice that of RQ3B with a beam size of 5. As shown in Table \ref{Experiment:Transfer-Learning-Beam1-5}.
+
+
+\begin{figure}[h]
+   \centering
+   \includegraphics[width=\linewidth]{beam_size}
+   \caption{\%PP as a Function of Beam Size for RQ5 (Transfer Learning)}
+   \label{Experiment:Transfer-Learning-Beam-1-50}
+   %\Description{What the caption says, duh.}
+   \centering
+ \end{figure}
+
+ 
+
+To more fully understand the impact of beam size on performance of training the models with transfer learning, we evaluated these models using beam sizes in the range 1 to 50 as reported in \cref{Appendices:RQ5-finetrain-VulRepair,Appendices:RQ5-finetrain-CodeBERT,Appendices:RQ5-finetrain-GraphCodeBERT,Appendices:RQ5-finetrain-UniXcoder}.
+Figure \ref{Experiment:Transfer-Learning-Beam-1-50} shows the results of this analysis.
+It demonstrates that VulRepair/CodeT5 reaches its best performance around beam size 5, whereas the rest of the models show diminishing performance improvements thereafter.
+% Discuss this performance change from the VulRepair paper???
+This behavior is different from that reported in Fu et al.\cite{fu2022vulrepair} and our experiments RQ1 through RQ3B where performance increases through beam size 50.
+We are uncertain of the cause of this change in behavior.
+Choosing an appropriate beam size for program repair represents a trade-off between programmer effort and possible better performance.
+This work suggests that a beam size somewhere between 5 and 10 may be most appropriate for the task of program repair.
+
+% \begin{comment}
+%    With this analysis, we contribute as accurate an assessment as we can of model efficacy and provide a better understanding of the dynamics between different beam sizes and model accuracy. 
+% \end{comment}
+
+

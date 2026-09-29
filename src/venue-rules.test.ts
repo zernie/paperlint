@@ -1,6 +1,6 @@
 /**
- * The venue rules (`pdf/fresh` · `pdf/profile` · `pdf/fonts` · `pdf/geometry` · `pdf/limits` ·
- * `pdf/body-size` · `pdf/measured`) over a paper held in memory: `paper.tex`, `paperlint.json`,
+ * The venue rules (`pdf/fresh` · `pdf/profile` · `pdf/fonts` · `pdf/geometry` · `pdf/body-size` ·
+ * `pdf/measured` · `format/page-limit` · `anonymity/identity`) over a paper held in memory: `paper.tex`, `paperlint.json`,
  * `_build/paper.facts.json` and the PDF the facts describe. The venue profiles are the SHIPPED
  * ones, read from the package's venues directory, so a profile edit that breaks a check shows here.
  *
@@ -16,7 +16,9 @@ import { presetsDir } from "./package-dirs.ts";
 import {
   ANONYMITY_RULE_LEVELS,
   anonymityRules,
-  judgeBodyBeforeReferences,
+  judgeBodyEnd,
+  PAGE_LIMIT_RULE_LEVELS,
+  pageLimitRules,
   VENUE_RULE_LEVELS,
   venueRules,
   type Resolved,
@@ -56,7 +58,8 @@ function goodFacts(): Facts {
     pages_text: [],
     metadata: {},
     links: [],
-    image_pages: [],
+    bib_anchor_page: null,
+    appendix_anchor_page: null,
     pdf: "paper.pdf",
     pdf_sha256: sha256Hex(PDF_BYTES),
     venue: "agenticdev",
@@ -138,6 +141,9 @@ function lint(
   const rules = [
     ...Object.entries(venueRules(deps)).map(
       ([n, r]) => [`pdf/${n}`, r] as const,
+    ),
+    ...Object.entries(pageLimitRules(deps)).map(
+      ([n, r]) => [`format/${n}`, r] as const,
     ),
     ...Object.entries(anonymityRules(deps)).map(
       ([n, r]) => [`anonymity/${n}`, r] as const,
@@ -476,39 +482,21 @@ describe("pdf/geometry", () => {
   });
 });
 
-describe("pdf/limits", () => {
+describe("format/page-limit", () => {
   it.each<[string, (f: Facts) => void, string[], RegExp | null]>([
     [
       "one body page over the short-paper limit",
       (f: Facts) => (f.body_pages = 6),
-      ["pdf/limits:pages"],
+      ["format/page-limit:pages"],
       /body pages: 6, over the limit 5 for agenticdev\/short/,
     ],
     [
       "one reference page over",
       (f: Facts) => (f.ref_pages = 3),
-      ["pdf/limits:pages"],
+      ["format/page-limit:pages"],
       /reference pages: 3, over the limit 2/,
     ],
     ["exactly at the limit", (f: Facts) => (f.body_pages = 5), [], null],
-    [
-      "a reference font below the range",
-      (f: Facts) => (f.ref_pt = 6),
-      ["pdf/limits:refPt"],
-      /6 pt/,
-    ],
-    [
-      "6.8 pt is inside the range once the measuring drift (body_pt_tol) is allowed",
-      (f: Facts) => (f.ref_pt = 6.8),
-      [],
-      null,
-    ],
-    [
-      "no reference font measured (no bibliography) is not a finding",
-      (f: Facts) => (f.ref_pt = null),
-      [],
-      null,
-    ],
   ])("%s", (_, patch, want, text) => {
     const fs = lint({ venue: DECL, facts: withFacts(patch) });
     expect(ids(fs)).toEqual(want);
@@ -517,7 +505,9 @@ describe("pdf/limits", () => {
 
   it("a longer kind of the same venue passes the same page count", () => {
     const facts = withFacts((f) => (f.body_pages = 9));
-    expect(ids(lint({ venue: DECL, facts }))).toEqual(["pdf/limits:pages"]);
+    expect(ids(lint({ venue: DECL, facts }))).toEqual([
+      "format/page-limit:pages",
+    ]);
     expect(
       lint({ venue: { extends: "paperlint:agenticdev", kind: "full" }, facts }),
     ).toEqual([]);
@@ -536,6 +526,21 @@ describe("pdf/body-size", () => {
       "no body size measured",
       (f: Facts) => (f.body_pt = null),
       ["pdf/body-size:bodyMissing"],
+    ],
+    [
+      "a reference font below the range",
+      (f: Facts) => (f.ref_pt = 6),
+      ["pdf/body-size:refPt"],
+    ],
+    [
+      "6.8 pt is inside the reference range once the measuring drift (body_pt_tol) is allowed",
+      (f: Facts) => (f.ref_pt = 6.8),
+      [],
+    ],
+    [
+      "no reference font measured (no bibliography) is not a finding",
+      (f: Facts) => (f.ref_pt = null),
+      [],
     ],
   ])("%s", (_, patch, want) => {
     expect(ids(lint({ venue: DECL, facts: withFacts(patch) }))).toEqual(want);
@@ -557,29 +562,33 @@ describe("paperlint's own config turns the venue rules on for every paper.tex", 
     "the paper.tex block's rules",
   );
 
-  it.each(Object.entries({ ...VENUE_RULE_LEVELS, ...ANONYMITY_RULE_LEVELS }))(
-    "%s is on at %s",
-    (id, level) => {
-      expect(texRules[id]).toBe(level);
-      expect(SHIPPED_RULES.has(id)).toBe(true);
-      expect(OPTIONAL_RULES.has(id)).toBe(false);
-    },
-  );
+  it.each(
+    Object.entries({
+      ...VENUE_RULE_LEVELS,
+      ...PAGE_LIMIT_RULE_LEVELS,
+      ...ANONYMITY_RULE_LEVELS,
+    }),
+  )("%s is on at %s", (id, level) => {
+    expect(texRules[id]).toBe(level);
+    expect(SHIPPED_RULES.has(id)).toBe(true);
+    expect(OPTIONAL_RULES.has(id)).toBe(false);
+  });
 
-  it("the six rules of the issue are errors except body-size, and measured is a warning", () => {
+  it("the venue rules are errors except body-size and measured, which are warnings", () => {
     expect(VENUE_RULE_LEVELS).toEqual({
       "pdf/fresh": "error",
       "pdf/profile": "error",
       "pdf/fonts": "error",
       "pdf/geometry": "error",
-      "pdf/limits": "error",
       "pdf/body-size": "warn",
       "pdf/measured": "warn",
     });
-    expect(ANONYMITY_RULE_LEVELS).toEqual({
-      "anonymity/identity": "error",
-      "anonymity/images": "warn",
-    });
+    expect(PAGE_LIMIT_RULE_LEVELS).toEqual({ "format/page-limit": "error" });
+    expect(ANONYMITY_RULE_LEVELS).toEqual({ "anonymity/identity": "error" });
+  });
+
+  it("the rule the page limit was checked by before is not shipped", () => {
+    expect(SHIPPED_RULES.has("pdf/limits")).toBe(false);
   });
 
   it("pdf/last-page-balance stays optional", () => {
@@ -651,9 +660,9 @@ describe("the IEEE conference family and AIDC", () => {
       });
     expect(lint({ venue: short, facts: pages(6) })).toEqual([]);
     const fs = lint({ venue: short, facts: pages(7) });
-    expect(ids(fs)).toEqual(["pdf/limits:pages"]);
+    expect(ids(fs)).toEqual(["format/page-limit:pages"]);
     expect(fs[0]?.message).toBe(
-      "body pages (before the references on page 8): 7, over the limit 6 for aidc/short — a desk reject; cut the text",
+      "body pages (up to the references on page 8): 7, over the limit 6 for aidc/short — a desk reject; cut the text",
     );
   });
 
@@ -689,12 +698,15 @@ describe("the IEEE conference family and AIDC", () => {
   });
 });
 
-describe("pdf/limits on AIDC: the body is counted before the references", () => {
-  const AIDC = {
-    extends: "paperlint:aidc",
-    kind: "regular",
-    identity: ["Ada Example"],
-  };
+/** An AIDC regular paper (12 body pages), for the page-limit tests. */
+const AIDC_REGULAR = {
+  extends: "paperlint:aidc",
+  kind: "regular",
+  identity: ["Ada Example"],
+};
+
+describe("format/page-limit on AIDC: the body is counted up to the references", () => {
+  const AIDC = AIDC_REGULAR;
 
   it("🔴 AIDC's body is counted before the references, not by banal: banal's 13 — the statement and an appendix after the references counted as body — is not a finding", () => {
     expect(
@@ -712,7 +724,23 @@ describe("pdf/limits on AIDC: the body is counted before the references", () => 
         f.pages_text = [...bodyPages(13), "7 References\n"];
       }),
     });
-    expect(ids(fs)).toEqual(["pdf/limits:pages"]);
+    expect(ids(fs)).toEqual(["format/page-limit:pages"]);
+  });
+
+  it("🔴 a body that runs onto the thirteenth page, the references below it there: 13 pages, a finding", () => {
+    const fs = lint({
+      venue: AIDC,
+      facts: ieeeFacts((f) => {
+        f.pages_text = [
+          ...bodyPages(12),
+          "the last lines of the conclusion\nR EFERENCES\n[1] D. E. Knuth.\n",
+        ];
+      }),
+    });
+    expect(ids(fs)).toEqual(["format/page-limit:pages"]);
+    expect(fs[0]?.message).toMatch(
+      /^body pages \(up to the references on page 13\): 13, over the limit 12/,
+    );
   });
 
   it("no references heading on any page: said, not passed", () => {
@@ -720,7 +748,7 @@ describe("pdf/limits on AIDC: the body is counted before the references", () => 
       venue: AIDC,
       facts: ieeeFacts((f) => (f.pages_text = ["Body\n", "Body\n"])),
     });
-    expect(ids(fs)).toEqual(["pdf/limits:noReferences"]);
+    expect(ids(fs)).toEqual(["format/page-limit:noReferences"]);
     expect(fs[0]?.message).toMatch(/NOT counted/);
   });
 
@@ -732,7 +760,79 @@ describe("pdf/limits on AIDC: the body is counted before the references", () => 
         f.pages_text = [...bodyPages(13), "References\n"];
       }),
     });
-    expect(ids(fs)).toEqual(["pdf/limits:pages", "pdf/measured:noGeometry"]);
+    expect(ids(fs)).toEqual([
+      "format/page-limit:pages",
+      "pdf/measured:noGeometry",
+    ]);
+  });
+});
+
+describe("format/page-limit on AIDC: an appendix ends the body too", () => {
+  const AIDC = AIDC_REGULAR;
+
+  it("🔴 an appendix before the references is not body: the body ends where hyperref anchors the appendix", () => {
+    const facts = ieeeFacts((f) => {
+      f.pages_text = [
+        ...bodyPages(12),
+        "Appendix A.\nDetailed results\n",
+        "References\n[1] A.\n",
+      ];
+      f.bib_anchor_page = 14;
+      f.appendix_anchor_page = 13;
+    });
+    expect(ids(lint({ venue: AIDC, facts }))).toEqual([]);
+    // Without hyperref's anchor for it, the appendix is body — the count this rule had before.
+    facts.appendix_anchor_page = null;
+    expect(lint({ venue: AIDC, facts })[0]?.message).toMatch(
+      /^body pages \(up to the references on page 14\): 13, over the limit 12/,
+    );
+  });
+});
+
+describe("format/page-limit on AIDC: the two signals of where the references start disagree", () => {
+  const AIDC = AIDC_REGULAR;
+
+  it("hyperref's first entry on a page with no «References» line: unclear, said, not passed", () => {
+    const fs = lint({
+      venue: AIDC,
+      facts: ieeeFacts((f) => {
+        f.pages_text = [...bodyPages(12), "References\n[1] A.\n", "[2] B.\n"];
+        f.bib_anchor_page = 14;
+      }),
+    });
+    expect(ids(fs)).toEqual(["format/page-limit:unclear"]);
+    expect(fs[0]?.message).toBe(
+      "could not tell where the body ends, so it was NOT counted against aidc's limit: the first bibliography entry is on page 14 (hyperref's destination), and no line on page 14 reads «References». Check the headings of the bibliography and the appendix, and that nothing before them reads «References» above a [1]",
+    );
+  });
+
+  it("hyperref anchors the appendix on a page with no line reading «Appendix»: unclear", () => {
+    const fs = lint({
+      venue: AIDC,
+      facts: ieeeFacts((f) => {
+        f.appendix_anchor_page = 5;
+      }),
+    });
+    expect(fs[0]?.message).toMatch(
+      /: hyperref anchors the appendix on page 5, and no line on page 5 reads «Appendix»\./,
+    );
+  });
+
+  it("a confirmed heading on another page than hyperref's first entry: unclear, naming both", () => {
+    const fs = lint({
+      venue: AIDC,
+      facts: ieeeFacts((f) => {
+        f.pages_text = [
+          "References\n[1] quoted in the body\n",
+          ...bodyPages(11),
+          "References\n[1] A.\n",
+        ];
+        f.bib_anchor_page = 13;
+      }),
+    });
+    expect(fs[0]?.message).toMatch(
+      /and the «References» heading followed by \[1\] is on page 1\./,
+    );
   });
 });
 
@@ -807,18 +907,7 @@ describe("anonymity/identity — a blind venue (AIDC)", () => {
   });
 });
 
-describe("anonymity/images — a blind venue (AIDC)", () => {
-  it("raster images on a blind venue's pages: a warning naming them", () => {
-    const fs = lint({
-      venue: BLIND,
-      facts: said((f) => (f.image_pages = [2, 5])),
-    });
-    expect(ids(fs)).toEqual(["anonymity/images:images"]);
-    expect(fs[0]?.message).toMatch(/^PDF, page\(s\) 2, 5: raster images/);
-    const notBlind = withFacts((f) => (f.image_pages = [2]));
-    expect(lint({ venue: DECL, facts: notBlind })).toEqual([]);
-  });
-
+describe("an AIDC kind", () => {
   it("an AIDC kind that does not exist names the two that do", () => {
     const fs = lint({ venue: { extends: "paperlint:aidc", kind: "wip" } });
     expect(ids(fs)).toContain("pdf/profile:kindUnknown");
@@ -853,7 +942,9 @@ describe("a project's own preset, and the facts' other spellings", () => {
   it("a body size with no tolerance is not judged; a reference range with none is judged exactly", () => {
     expect(ids(house((f) => (f.body_pt = 12)))).toEqual([]);
     // 6.9 pt passes agenticdev (its body_pt_tol widens the range) and fails here, where nothing does.
-    expect(ids(house((f) => (f.ref_pt = 6.9)))).toEqual(["pdf/limits:refPt"]);
+    expect(ids(house((f) => (f.ref_pt = 6.9)))).toEqual([
+      "pdf/body-size:refPt",
+    ]);
   });
 
   it("facts naming the PDF by an absolute path are checked against that file", () => {
@@ -886,7 +977,8 @@ describe("a project's own preset, and the facts' other spellings", () => {
   });
 });
 
-describe("judgeBodyBeforeReferences, on a venue it does not apply to", () => {
+describe("judgeBodyEnd, on a venue it does not apply to", () => {
+  const NO_TEXT = { pages: [], bibAnchorPage: null, appendixAnchorPage: null };
   const venue = (kind: Resolved["kind"]): Resolved => ({
     venue: "house",
     format: { ...NO_FORMAT, bodyEndsAt: "references" },
@@ -898,9 +990,7 @@ describe("judgeBodyBeforeReferences, on a venue it does not apply to", () => {
 
   it("a kind with no body limit, or no kind: nothing to count against", () => {
     const limits = { bodyPagesMax: null, refPagesMax: null };
-    expect(
-      judgeBodyBeforeReferences([], venue({ name: "long", limits })),
-    ).toEqual([]);
-    expect(judgeBodyBeforeReferences([], venue(null))).toEqual([]);
+    expect(judgeBodyEnd(NO_TEXT, venue({ name: "long", limits }))).toEqual([]);
+    expect(judgeBodyEnd(NO_TEXT, venue(null))).toEqual([]);
   });
 });

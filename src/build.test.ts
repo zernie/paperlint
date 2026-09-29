@@ -117,7 +117,8 @@ const reader =
         layout: [],
         pageTexts: [],
         links: [],
-        imagePages: [],
+        bibAnchorPage: null,
+        appendixAnchorPage: null,
         metadata: {},
       },
     });

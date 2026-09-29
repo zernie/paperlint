@@ -1,0 +1,37 @@
+\section{Related Work}
+\label{sec:related}
+\subsubsection*{Distributed stream processing systems}
+Apache Storm~\cite{toshniwal2014storm} is among the first distributed stream processing systems. It adopts the execution model in 
+which the query is represented as a DAG of operators, and data flows from one operator to the next. Subsequent systems 
+follow the same model and add more features to the original Storm design. Spark Streaming \cite{zaharia2013discretized}, 
+Flink \cite{carbone2015apache} and Samza \cite{noghabi2017samza} support both batch and stream processing in a single framework and include
+many stateful operators such as joins and aggregates. These systems handle operator failures, which can affect query 
+correctness, by replicating the operators, checkpointing \cite{murray2013naiad}, or a combination thereof \cite{lin2016streamscope}. Other works focus on improving the performance of DAG 
+execution by detecting bottlenecks via backpressure \cite{kulkarni2015twitter}, or by dynamically replicating the
+operators to adapt to workload changes \cite{castro2013integrating,wu2015chronostream}. Our work demonstrates attacks 
+against a generic DSP system, which can be applied to systems other than Flink.  
+
+\subsubsection*{Outsourced data processing}
+Designing an outsourced database running on an untrusted cloud requires making trade-offs between security, 
+functionality, and performance. Cryptographic solutions such as CryptDB \cite{popa2011cryptdb} and 
+Arx \cite{poddar2016arx} protect data confidentiality using cryptographic techniques, namely, using homomorphic and
+functional encryption schemes. However, they support limited computation over the data, and have been shown to leak data 
+in practical settings \cite{naveed2015inference}. Secure databases built on top of trusted hardware include 
+Cipherbase~\cite{arasu2013orthogonal} and TrustedDB~\cite{bajaj2011trusteddb} that use older hardware.                      
+More recent systems based on Intel SGX, such as ObliDB \cite{oblidb}, Opaque \cite{zheng2017opaque}, Obaldi \cite{crooks2018obladi}, focus on obliviousness to prevent leakage through memory access patterns \cite{priebe2018enclavedb}. They achieve high performance and more functionalities than purely cryptographic solutions, but their security assumptions are stronger, i.e. the hardware is secure. Furthermore, they incur non-trivial
+overhead due to obliviousness.
+
+Our work focuses data stream processing systems --- one type of database that handles continuous, infinite streams of 
+data. In these systems, query confidentiality, which is overlooked in the other works targeting relational databsaes, is 
+as important as data confidentiality. StreamBox-TZ~\cite{234964} and SecureStream~\cite{DBLP:journals/corr/abs-1805-01752} are the two most 
+relevant streaming systems using secure hardware, but they also do not provide query confidentiality. 
+
+\subsubsection*{Side channels}
+Trusted hardware, in particular Intel SGX, has been a popular target for side channel attacks. The attacker gains
+knowledge of the code and data running inside the enclaves via both hardware and software side channels. Since SGX
+assumes a strong threat model, the attacker can manipulate page faults~\cite{van2017telling}, timer                         interrupt~\cite{van2017sgx}, and exception~\cite{cui2021smashex} to leak content from inside the enclave. Despite the           closed design, recent works have uncovered multiple hardware, micro-architectural side channels, including hardware              
+cache~\cite{brasser2017software, van2021cacheout}, transient execution~\cite{van2018foreshadow}, and branch
+prediction~\cite{lee2017inferring}. A comprehensive list of attacks against SGX can be found in~\cite{van2024sok}. Our 
+work demonstrates another side channel specific to distributed stream processing systems. It is simpler to execute than 
+other state-of-the-art channels, and we demonstrate that it is highly effective at leaking the application queries. How 
+our attack can be improved with the other side channels is left as future work.

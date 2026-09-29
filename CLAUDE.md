@@ -77,6 +77,19 @@ and stay QUIET on a clean fixture. A check that has only been seen quiet is
 indistinguishable from a dead one — silence is its success state. Prove the fire half by
 seeing the test go RED before the fix lands ([`docs/testing.md`](docs/testing.md)).
 
+**One rule, one requirement.** A rule checks one thing a user would want to switch off, or set a
+severity for, on its own; two checks with different reasons to disable them are two rules. Several
+messageIds for facets of one requirement are fine. Example: `pdf/limits` checked body pages,
+reference pages and the reference font size — the first two are one page budget and became
+`format/page-limit`; the font size is a different requirement and moved to `pdf/body-size`.
+
+**A rule that judges a venue requirement is validated on real accepted papers of that venue** (or
+of its parent venue, with the same template), built to PDF, with the ground truth established
+independently of the rule — rendered and looked at — plus variant fixtures derived from those real
+sources, one change each. Synthetic minimal fixtures alone are not enough: they are written by the
+same hand as the rule, and share its blind spots. Example: `format/page-limit`'s body count, on the
+built ACSAC papers in `fixtures/accepted-papers/` (`test/e2e/tex/page-count.e2e.ts`).
+
 **A new rule ships with its page**, `docs/rules/<group>/<rule>.md`, in these sections: What it
 catches · Why · Examples (failing / passing) · Options / preset fields · What it does not check ·
 How to fix. Its `meta.docs.url` points at that page, and its row in `docs/rules.md` is one line

@@ -1,0 +1,31 @@
+\section{Threats to Validity}
+As the goal of this paper is to show how the effect of dataset quality issues may have caused inappropriate estimates of model performance and this work is aimed at comparing reported performance to that of the same models with dataset quality issues removed, the primary threats to the validity of our reported results arise from two issues:
+
+\begin{enumerate}
+    \item The model implementations we have employed may be faulty.
+    \item The dataset quality improvements we have applied may be flawed.
+\end{enumerate}
+
+We have taken precautions against model implementation errors by employing the referenced authors' websites for  VulRepair and CodeBERT\cite{vulrepairgit} as well as  GraphCodeBERT and UniXCoder\cite{isenglabgit}.
+Minimal changes were made to the code, namely
+\begin{enumerate}
+    \item The CodeBERT model was modified to generate output to a CSV file.
+    %\item The VulRepair and CodeBERT models were modified to use early stopping for RQ5.
+    \item The number of GPUs for GraphCodeBERT and UniXcoder were modified for RQ1, RQ2A, RQ2B, RQ3A, RQ3B, and RQ5.
+\end{enumerate}
+
+The datasets we have used by the previous authors are available from the sources cited in their respective works.
+Determination of label accuracy and completeness for results on the top 10 CWEs was initially carried out by author 1 and those samples that raised questions were also inspected by author 2.
+We are open to the possibility that errors may have occurred in this analysis.
+That is why all the data and analysis notes are available from our github site.
+
+The more compelling issue associated with data quality in the VulRepair dataset, concerns the issues of accuracy and completeness.
+The work reported in Sections \ref{Result-Accuracy} and \ref{Result-Completeness} regarding accuracy and completeness only partially identifies and analyzes inaccurate and incomplete samples from the RQ2B test set samples that were used to create results for the referenced experiments.
+The amount of labor required to scour the entire dataset for such defective samples could not be carried out in time for this presentation.
+It is certain that numerous inaccurate and incomplete samples persist in that dataset's training, validation, and test samples.
+The full extent of the effect of these samples on model performance is still unknown.
+
+% \begin{comment}
+%     We observed that a higher beam size does not necessarily equate to better performance. During the pre-training and transfer learning model evaluation, we observed that VulRepair demonstrates better accuracy on a beam size of 5 than 50, highlighting that larger beam sizes are not always the optimal solution.
+% \end{comment}
+

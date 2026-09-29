@@ -94,7 +94,7 @@ A new venue fixture is a new folder: its paper, its `paperlint.json`, its `expec
 | `broken`     | a failing build names pdflatex and its exit code, quotes the error line and its `l.NNN` context, and deletes the stale `paper.pdf` planted before the run                                                                                                                                                                                                                                                                                                                                              |
 | `no-source`  | a paper with no `paper.tex` is named separately, and the run as a whole is a failure                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `empty`      | a document with no pages: pdflatex exits 0 and writes no PDF, and that is a failure, not a green `paper.pdf`                                                                                                                                                                                                                                                                                                                                                                                           |
-| `aidc`       | a real `[conference,compsoc]{IEEEtran}` paper builds on paperlint's TeX Live in NimbusRomNo9L, `tex/template`, `tex/required-section` and the `pdf/*` rules find nothing, and `tex/venue-leftover` warns once, on its planted line. It declares `identity` and names nobody, so `anonymity/identity` is silent on a real build, and `pdf/limits` finds the IEEEtran «References» heading                                                                                                               |
+| `aidc`       | a real `[conference,compsoc]{IEEEtran}` paper builds on paperlint's TeX Live in NimbusRomNo9L, `tex/template`, `tex/required-section` and the `pdf/*` rules find nothing, and `tex/venue-leftover` warns once, on its planted line. It declares `identity` and names nobody, so `anonymity/identity` is silent on a real build, and `format/page-limit` finds the IEEEtran «References» heading                                                                                                        |
 | `anon-*`     | six AIDC papers, each planting the declared (invented) name on ONE path, and `anonymity/identity` reports exactly one finding naming where: `author` the author block · `ack` an acknowledgments paragraph · `bib` a self-citation, printed by `IEEEtran.bst` as «A. Example» · `pdfauthor` `\hypersetup{pdfauthor=…}`, on no page · `href` a link whose target is the author's account while its text is not (the anonymous mirror beside it is not reported) · `macro` the name behind `\newcommand` |
 
 The `fallback` row is the point of the whole file. `acmart.cls` checks for `libertine.sty`,
@@ -102,6 +102,19 @@ The `fallback` row is the point of the whole file. `acmart.cls` checks for `libe
 typesets the paper in Computer Modern. The build is green, the PDF looks fine, the metrics differ,
 and therefore so does the pagination. A submitted paper went out that way. **An exit code cannot
 see it, so the content of the artifact is what gets measured.**
+
+**Where the body ends, on real papers** (`test/e2e/tex/page-count.e2e.ts`). `format/page-limit`
+counts a body that ends at the references, and that count is checked on papers nobody here wrote:
+the accepted ACSAC papers in `fixtures/accepted-papers/` that carry a `page-count.json` (ACSAC is
+AIDC's parent venue, same IEEEtran template), built with figures replaced by blank boxes of the
+same size and the packages paperlint's TeX Live lacks vendored beside them. Each `page-count.json`
+holds the references page and the body count established by rendering the PDF and looking at it,
+with the evidence in words. `page-count-variants.json` derives papers from them, each changing ONE
+thing: the references forced to the top of a page, a `\subsection*{References}` or a table headed
+«References» in the body, the appendix moved before or after the bibliography, hyperref removed. The test
+builds all of them in one `build --all` and requires the detector's count to equal the recorded
+one, then lints two of them under AIDC's regular limit of 12: the 12-page body passes, the 13-page
+body is reported. Eleven builds, the lint runs included, took 95 s here.
 
 Beside the fixtures, one test proves the refusal with no TeX at all: PATH holds `node` alone, the
 cache directory is empty and `CI` is set, and `paperlint build` must exit 1 with one line naming
