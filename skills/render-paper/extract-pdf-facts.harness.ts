@@ -119,8 +119,8 @@ try {
   const fonts = Fonts.safeParse(facts.fonts);
   const fontList = fonts.success ? fonts.data : [];
   check(
-    "the facts are schema 2, about paper.pdf, for the venue paperlint.json declares",
-    facts.schema === 2 &&
+    "the facts are schema 3, about paper.pdf, for the venue paperlint.json declares",
+    facts.schema === 3 &&
       facts.pdf === "paper.pdf" &&
       facts.venue === "agenticdev" &&
       facts.kind === "short",
@@ -236,5 +236,5 @@ try {
 }
 
 console.log(
-  `✓ ${String(check.count)} assertions passed — extract-pdf-facts: the exit-code contract, schema 2, and the no-no-yes font`,
+  `✓ ${String(check.count)} assertions passed — extract-pdf-facts: the exit-code contract, schema 3, and the no-no-yes font`,
 );

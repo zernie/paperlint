@@ -136,8 +136,10 @@ export const SETTINGS_KEYS: Readonly<Record<string, string>> = Object.freeze({
     "rule overrides: { id: severity } for every paper in scope, or ESLint blocks (files, ignores, rules) — paperlint lint",
   extends:
     "the venue preset: paperlint:<name> or ./path.jsonc — the pdf/ venue rules, paperlint build",
-  kind: "the kind of paper, whose page limit applies — pdf/limits",
+  kind: "the kind of paper, whose page limit applies — format/page-limit",
   pdf: "where the built PDF is, relative to the paper, when it is not paper.pdf — the facts",
+  identity:
+    "what identifies the authors — names, handles, emails, affiliations, own project names; a blind venue's PDF must not say any of them — anonymity/identity. The root's list and a paper's are joined",
   scripts: "how skill prose names the scripts — consumer.mjs",
   timezone: "the zone deadline anchors are written in — consumer.mjs",
   contactEmail: "the polite-pool address for citation lookups — consumer.mjs",

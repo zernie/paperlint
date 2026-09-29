@@ -141,3 +141,13 @@ export type ProsePiece =
 export interface Passage {
   readonly pieces: readonly [ProsePiece, ...ProsePiece[]];
 }
+
+/**
+ * A command that changes the page layout a venue's template sets: the text block, the margins,
+ * the line spacing, or space pulled back with a negative skip. `command` is how a message names it
+ * (`\setlength{\textheight}`, `\vspace{-2mm}`).
+ */
+export interface LayoutOverride {
+  readonly command: string;
+  readonly place: Place;
+}

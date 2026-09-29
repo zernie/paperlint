@@ -578,3 +578,16 @@ test("`paperlint hook` with no name: exit 2, and the usage names an example", as
     err: "`hook` needs a name, e.g. `paperlint hook paper-edit-guard`",
   });
 });
+
+test("parseSettings refuses a root `identity` that is not a list of words, and takes one that is", () => {
+  const bad = parseSettings({ identity: "Ada" }, "paperlint.json", "/r");
+  assert.deepEqual(bad, {
+    ok: false,
+    error:
+      'paperlint.json: "identity" must be a list of strings, each with a letter or digit, got "Ada"',
+  });
+  assert.equal(
+    parseSettings({ identity: ["Ada Example"] }, "paperlint.json", "/r").ok,
+    true,
+  );
+});

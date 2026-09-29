@@ -1,0 +1,148 @@
+\documentclass[conference,compsoc]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{hyperref}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{listings}
+\usepackage{multicol}
+\usepackage{multirow}
+% \usepackage{algcompatible}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\newcommand{\linebreakand}{%
+  \end{@IEEEauthorhalign}
+  \hfill\mbox{}\par
+  \mbox{}\hfill\begin{@IEEEauthorhalign}
+}
+
+\newcommand{\vvo}[1]{\textcolor{red}{Vvo: #1}}
+
+\lstset{style=mystyle}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{Leaking Queries On Secure Stream Processing Systems
+}
+
+% \author{
+%     \IEEEauthorblockN{Author One\IEEEauthorrefmark{1}, Author Two\IEEEauthorrefmark{2}, Author Three\IEEEauthorrefmark{3}}
+%     \\
+%     \IEEEauthorblockA{\IEEEauthorrefmark{1}Department A, University X}
+%     \\
+%     \IEEEauthorblockA{\IEEEauthorrefmark{2}Department B, University Y}
+%     \\
+%     \IEEEauthorblockA{\IEEEauthorrefmark{3}Department C, University Z}
+% }
+
+
+\author{
+\centering
+\IEEEauthorblockN{Hung Pham}
+\IEEEauthorblockA{
+\textit{Hanoi University of Science and Technology}\\
+Hanoi, Vietnam \\
+phammanhhung10501@gmail.com}
+
+\and
+
+\IEEEauthorblockN{Viet Vo}
+\IEEEauthorblockA{
+\textit{Swinburne University of Technology}\\
+Victoria, Australia \\
+vvo@swin.edu.au}
+
+\and
+
+\IEEEauthorblockN{Tien Tuan Anh Dinh
+\IEEEauthorrefmark{1}}
+\IEEEauthorblockA{
+\textit{Deakin University}\\
+Victoria, Australia \\
+anh.dinh@deakin.edu.au}
+
+\and
+
+\IEEEauthorblockN{Duc Tran}
+\IEEEauthorblockA{
+\textit{Hanoi University of Science and Technology} \\
+Hanoi, Vietnam \\
+ductq@soict.hust.edu.vn}
+
+\and
+
+\IEEEauthorblockN{Shuhao Zhang}
+\IEEEauthorblockA{
+\textit{Huazhong University of Science and Technology}\\
+Wuhan, China \\
+shuhao\_zhang@hust.edu.cn}
+
+\thanks{* Corresponding author}
+}
+
+\maketitle
+
+\input{sections_full_version/abstract}
+
+\begin{IEEEkeywords}
+side channel attack, sgx, streaming
+\end{IEEEkeywords}
+
+\input{sections_full_version/intro}
+\input{sections_full_version/background}
+\input{sections_full_version/model}
+\input{sections_full_version/methodology}
+\input{sections_full_version/experiments}
+\input{sections_full_version/discussion}
+\input{sections_full_version/related}
+\input{sections_full_version/conclusions}
+
+
+% \section*{Acknowledgment}
+
+%%
+%% The next two lines define the bibliography style to be used, and
+%% the bibliography file.
+\bibliographystyle{IEEEtran}
+% The e-print ships no .bib, so bibtex must not run; this is the one line \bibliography{} typesets.
+\makeatletter\@input{paper.bbl}\makeatother
+
+%\vspace{12pt}
+%\color{red}
+%IEEE conference templates contain guidance text for composing and formatting conference papers. Please ensure that all template text is removed from your conference paper prior to submission to the conference. Failure to remove the template text from your paper may result in your paper not being published.
+
+\input{sections_full_version/appendix}
+
+\end{document}

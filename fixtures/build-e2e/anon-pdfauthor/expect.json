@@ -1,0 +1,19 @@
+{
+  "$comment": "anonymity/identity on a real IEEEtran build: D: the name only in the PDF metadata, set by hyperref; no page shows it. Exactly one finding, naming where.",
+  "build": {
+    "outcome": "pdf"
+  },
+  "lint": {
+    "rules": {
+      "anonymity/identity": [
+        {
+          "severity": 2,
+          "says": [
+            "PDF metadata: Author",
+            "«Ada Example»"
+          ]
+        }
+      ]
+    }
+  }
+}

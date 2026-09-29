@@ -1,0 +1,20 @@
+{
+  "$comment": "anonymity/identity on a real IEEEtran build: C: a self-citation: the name only in a .bib author field, printed by IEEEtran.bst as \"A. Example\". Exactly one finding, naming where.",
+  "build": {
+    "outcome": "pdf"
+  },
+  "lint": {
+    "rules": {
+      "anonymity/identity": [
+        {
+          "severity": 2,
+          "says": [
+            "«A. Example»",
+            "matches «Ada Example»",
+            "PDF, page"
+          ]
+        }
+      ]
+    }
+  }
+}

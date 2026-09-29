@@ -1,0 +1,87 @@
+\section{Feasibility Study}
+\label{sec:visibility}
+Exploiting DPSs' acoustic side-channel vulnerability to recover speech signals requires a thorough understanding of the sensor's behavior, sampling rate, and frequency response. 
+Sensor datasheets often conceal these details, which presents challenges for attackers attempting to reconstruct audio from pressure readings. Our analysis aims to highlight these challenges and demonstrate the attack's feasibility.
+
+\begin{figure}[t!]
+\centering
+\includegraphics[trim={1px 1px 1px 1px},clip,width=0.75\linewidth]{newestPDF/Expt_setup.pdf}
+\vspace{-0.5em}
+  \caption{Our experimental setup for a feasibility study.}
+  \label{fig:experiment}
+  \vspace{-0.8em}
+\end{figure}
+
+
+\subsection{Experimental setup}
+\label{subsection:experimental_setup}
+The experimental setup is depicted in Fig. \ref{fig:experiment}. To showcase our attack's feasibility, we use the SDP800 DPS~\cite{datasheetsdp} (see~\ref{subsection:physicsofDPS}), securely mounted to avoid movement-related noise. 
+A Sony XB13 \cite{xb13} speaker is placed 5 cm directly underneath one of the pressure ports to play the audio clips. 
+To prevent sound signals from influencing the pressure in the other port, we connect a sampling tube to it, isolated by positioning its opening a meter away, shielded by a hard surface. 
+Signals from the sensor are read using a Raspberry Pi 3 Model B~\cite{rs-online}.
+We employ a custom Python script to convert the pressure readings into a format an attacker can process. 
+
+\begin{figure}[b]
+% \vspace{-00.120em}
+\centering
+\includegraphics[trim={10px 22px 10px 18px},clip,width=0.49\textwidth]{newPDF/one_STFT.pdf}
+  \vspace{-01.60em}
+  \caption{STFT plot of a spoken word "one".}
+  \label{fig:one_stft}
+\vspace{-0.800em}
+\end{figure}
+
+
+\subsection{Primary observation}
+Fig.~\ref{fig:one_stft} compares the Short-Time Fourier Transform (STFT) spectrum of the word "one" captured by an iPhone 13 microphone (right) and the SDP800 DPS (left). 
+The spectrum demonstrates the variations in power across different audio frequency components over time.
+Notably, the DPS's response is discernibly feebler and less extensive than the microphone’s, especially in frequencies surpassing $0.4$ kHz. 
+Distortions are observable even in zones of ostensibly strong signals ($0.4$ - $0.85$ kHz). 
+Furthermore, the DPS fails to register signals exceeding $0.9$ kHz. 
+A comparative analysis of the Fast Fourier Transform (FFT) plots in Fig.~\ref{fig:one_FFT} echoes these observations, with the DPS showing subpar responsiveness to signals above $0.4$ kHz.
+{This indicates a notable loss in acoustic fidelity when reconstructing speech from the DPS data (also see Fig.~\ref{fig:nonLinearity}).} 
+
+\begin{figure}[h]
+% \vspace{-01.120em}
+\centering
+\includegraphics[trim={5px 20px 5px 20px},clip,width=0.41\textwidth]{newPDF/one_FFT_2.pdf}
+\vspace{-0.5em}
+  \caption{FFT plot of a spoken word "one".}
+  \label{fig:one_FFT}
+\vspace{-01.0em}
+\end{figure}
+
+\subsection{Challenges}
+\label{subsection:challenges}
+A successful attack requires recovery of information lost from pressure readings, at least partially.
+Here, we examine the challenges attackers may face during this process.
+
+\subsubsection{\textbf{Low sampling rate}} 
+The sensor's low sampling rate is a significant challenge in executing the BaroVox attack.
+For example, the SDP800 sensor used in our experiment has a theoretical maximum sampling rate of 2.2 kHz~\cite{datasheetsdp}.
+However, as demonstrated in Fig.~\ref{fig:one_FFT}, it only captures frequencies up to approximately 0.9 kHz, with notably weak signals within the 0.6 - 0.9 kHz range. 
+Consequently, given Nyquist’s theorem~\cite{vaidyanathan2001generalizations}, the sensor's effective sampling rate is approximated at 1.8 kHz, a shortfall of 0.4 kHz from its potential. 
+This limitation restricts speech recovery within the sub-0.9 kHz range, significantly below the 4 kHz threshold necessary for intelligible speech~\cite{heide1998speech, villchur1973signal}, causing aliasing and complicating the recovery stage.   
+
+
+
+
+
+
+\subsubsection{\textbf{Non-linear frequency response}}
+\label{subsection:non-linearity}
+
+DPS can be depicted as a second-order dynamic system since it employs an elastic diaphragm for pressure force collection~\cite{whitmore2009improved}.
+This leads to a non-linear frequency response to sound waves of varying frequencies.
+To investigate this, we construct an audio file with a sine sweep wave ranging from 1 Hz to 2 kHz. We play the audio file through a speaker using the setup specified in Sec. \ref{subsection:experimental_setup}. We then reconstruct audio from pressure reading and analyze the data using FFT plots.
+FFT plots of the reconstructed audio (Fig. ~\ref{fig:nonLinearity}) show reduced signal strength across frequencies compared to the original. 
+{The original audio has consistent power up to 2 kHz, whereas the reconstructed signal loses power as frequency increases, dropping sharply after 0.4 kHz. }
+At frequencies above 0.65 kHz, its power nears mere noise levels.
+These insights can be leveraged to equalize the signal by boosting the strength of the affected frequencies (see Sec.\ref{subsubsection:equalization}).
+
+\subsubsection{\textbf{Low Signal-to-Noise Ratio (SNR)}}
+\label{subsection:lowSNR} 
+DPSs yield non-zero readings even in the absence of sound due to the presence of ambient noise and pressure fluctuations.
+Acoustic disturbances like machinery operation, air conditioning noise, and door activities further affect the readings.
+These ambient noises introduce unwanted interference to the sensor's data, lowering the SNR and degrading the quality of reconstructed speech.
+To mitigate this issue, we applied filters and spectral subtraction techniques to improve the audio recovery quality (see Sec.~\ref{subsection:DS-1}).

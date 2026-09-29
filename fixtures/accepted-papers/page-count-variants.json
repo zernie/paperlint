@@ -1,0 +1,122 @@
+{
+  "$comment": "Variants of the corpus papers, each changing ONE thing about where the body ends. Built and counted by test/e2e/tex/page-count.e2e.ts; each edit's `find` must occur exactly once. The expected end was established by rendering the built PDF, not by the detector.",
+  "variants": [
+    {
+      "name": "barovox-references-at-top",
+      "from": "barovox-acsac24",
+      "change": "a \\clearpage before the bibliography: the references start at the top of a page",
+      "edits": [
+        {
+          "file": "paper.tex",
+          "find": "\\bibliographystyle{IEEEtran}",
+          "replace": "\\clearpage\n\\bibliographystyle{IEEEtran}"
+        }
+      ],
+      "ends_at": "references",
+      "ends_page": 14,
+      "body_pages": 13,
+      "evidence": "Page 13 ends with the acknowledgment and blank space; page 14 opens with «References» at the top of the left column."
+    },
+    {
+      "name": "barovox-subsection-references",
+      "from": "barovox-acsac24",
+      "change": "an unnumbered \\subsection*{References} in the body, and a sentence opening with the word",
+      "edits": [
+        {
+          "file": "Chapters/02_background.tex",
+          "find": "\\section{Background}",
+          "replace": "\\section{Background}\n\\subsection*{References}\nReferences to the vendors' datasheets follow in each subsection below."
+        }
+      ],
+      "ends_at": "references",
+      "ends_page": 13,
+      "body_pages": 13,
+      "evidence": "The inserted «References» subsection heading is on page 2; page 13 is as in the paper: conclusion and acknowledgment, then «References» mid-column."
+    },
+    {
+      "name": "barovox-table-references-header",
+      "from": "barovox-acsac24",
+      "change": "a table in the body whose column header reads «References»",
+      "edits": [
+        {
+          "file": "Chapters/02_background.tex",
+          "find": "\\section{Background}",
+          "replace": "\\section{Background}\n\\begin{table}[h]\\centering\\begin{tabular}{c}References\\\\\\hline 12 papers\\\\ 4 datasheets\\end{tabular}\\end{table}"
+        }
+      ],
+      "ends_at": "references",
+      "ends_page": 13,
+      "body_pages": 13,
+      "evidence": "The inserted one-column table with the header «References» is on page 2; page 13 is as in the paper."
+    },
+    {
+      "name": "barovox-appendix-before-references",
+      "from": "barovox-acsac24",
+      "change": "the appendix moved before the bibliography",
+      "edits": [
+        {
+          "file": "paper.tex",
+          "find": "\\bibliographystyle{IEEEtran}\n\\bibliography{barovox}\n\\input{Chapters/11_APPENDIX}",
+          "replace": "\\input{Chapters/11_APPENDIX}\n\\bibliographystyle{IEEEtran}\n\\bibliography{barovox}"
+        }
+      ],
+      "ends_at": "appendix",
+      "ends_page": 13,
+      "body_pages": 13,
+      "evidence": "Page 13: the conclusion and the acknowledgment, then «Appendix A. Basics of Cleanrooms» in the left column; the bibliography now starts on page 15, after Appendix F."
+    },
+    {
+      "name": "leaking-no-hyperref",
+      "from": "leaking-queries-acsac25",
+      "change": "hyperref replaced by url: no bibliography anchors, so the text heading decides",
+      "edits": [
+        {
+          "file": "paper.tex",
+          "find": "\\usepackage{hyperref}",
+          "replace": "\\usepackage{url}"
+        }
+      ],
+      "ends_at": "references",
+      "ends_page": 13,
+      "body_pages": 13,
+      "evidence": "Page 13 as in the paper: Table 6, body in both columns, «References» in the right column. No hyperref: the PDF has no bibliography anchors."
+    },
+    {
+      "name": "leaking-no-hyperref-subsection-references",
+      "from": "leaking-queries-acsac25",
+      "change": "hyperref replaced by url, and an unnumbered \\subsection*{References} in the body: the heading followed by [1] must win",
+      "edits": [
+        {
+          "file": "paper.tex",
+          "find": "\\usepackage{hyperref}",
+          "replace": "\\usepackage{url}"
+        },
+        {
+          "file": "sections_full_version/background.tex",
+          "find": "\\subsection{Data Stream Processing}",
+          "replace": "\\subsection*{References}\nReferences to the systems this section describes follow below.\n\\subsection{Data Stream Processing}"
+        }
+      ],
+      "ends_at": "references",
+      "ends_page": 13,
+      "body_pages": 13,
+      "evidence": "The inserted «References» subsection heading is on page 2; page 13 as in the paper. No hyperref: the heading followed by [1] must be told from the inserted one."
+    },
+    {
+      "name": "rr-appendix-after-references",
+      "from": "rr-dataset-quality-acsac24",
+      "change": "the appendix moved after the bibliography",
+      "edits": [
+        {
+          "file": "paper.tex",
+          "find": "\\appendices\n\\include{Appendices}\n\n\\bibliographystyle{IEEEtran}\n\\bibliography{ACSAC2024_bibliography}",
+          "replace": "\\bibliographystyle{IEEEtran}\n\\bibliography{ACSAC2024_bibliography}\n\n\\appendices\n\\include{Appendices}"
+        }
+      ],
+      "ends_at": "references",
+      "ends_page": 11,
+      "body_pages": 11,
+      "evidence": "Page 11: «7. Conclusion» in the right column, then «References» below it; the appendix follows the bibliography."
+    }
+  ]
+}

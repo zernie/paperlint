@@ -1,0 +1,57 @@
+\section{Introduction}
+Differential Pressure Sensors (DPS) have become ubiquitous in various environments, ranging from industrial facilities and cleanrooms to residential buildings, offices, hotels, and hospitals~\cite{avnet2024pressure, standard2004cleanrooms, datasheetsdp}. These sensors are designed to measure minute pressure differences between two points, enabling precise control and monitoring of critical systems such as HVAC, airflow management, and room pressure regulation~\cite{bradford_hvac_2024, standard2004cleanrooms}. 
+\revision{While DPS find applications in various sectors, their role is particularly critical in the semiconductor industry, where they are essential for maintaining cleanroom integrity.}
+However, the widespread deployment of DPS has inadvertently introduced a hidden vulnerability that can be exploited for eavesdropping.
+
+In many real-world applications, audio systems, including speakers and intercoms, are often installed in close proximity to DPS. This practice is driven by various factors, such as the need for effective communication, audio notifications, or entertainment purposes. For instance, intercoms are used in industrial cleanrooms to facilitate coordination among workers without compromising the controlled environment~\cite{standard2004cleanrooms}. 
+
+While the co-location of audio systems and DPS serves practical purposes, it unintentionally creates an acoustic side channel that attackers can exploit. DPS's high sensitivity to pressure variations makes them susceptible to unintended acoustic coupling. When sound waves from nearby speakers or intercoms impinge upon the DPS, they induce minute vibrations on the sensor's diaphragm, causing measurable changes in its output. This unintended interaction effectively transforms the DPS into a makeshift microphone, allowing potential attackers to eavesdrop on confidential conversations or recover sensitive audio information.
+
+In this paper, we introduce BaroVox, a novel side-channel attack that exploits DPS's acoustic vulnerability to recover speech from their output signals. BaroVox leverages audio systems' close proximity to DPS, which is a common deployment scenario in various real-world settings. By carefully analyzing the pressure variations captured by the DPS, BaroVox enables the reconstruction of speech signals, effectively turning these ubiquitous sensors into unintended listening devices.
+
+
+\color{black}
+We argue that if an attacker manages to get the pressure reading of this DPS, they can process the pressure data and partially reconstruct speech to still confidential information. 
+The main challenge in realizing BaroVox lies in extracting intelligible audio from the low-bandwidth, noisy signals captured by DPS, which are primarily designed for measuring pressure differences rather than recording sound.
+The sensor's non-linear frequency response adds another layer of complexity. 
+BaroVox offers a unique \textbf{Pressure-Acoustic Transformation (PAT)} to mitigate these challenges, presenting two approaches for eavesdropping conversations.
+
+The first design solution employs PAT for speech reconstruction and then focuses on enhancing the reconstructed speech's signal-to-noise ratio (SNR).
+This enhancement is achieved by integrating multiple digital signal processing techniques, comprising a novel spectral subtraction method, normalization, high-pass filtering, and equalization.
+In the spectral subtraction phase, first,
+our design divides the reconstructed speech into percussive and harmonic segments using median filtering~\cite{fitzgerald2010harmonic, driedger2014extending}.
+Then, after evaluating the statistical property of noise in the target environment, we apply tailored spectral noise removal to both components, adjusting the degree of removal for each before their reintegration. 
+{This results in an improved SNR of the speech while keeping the integrity of other speech elements.}
+
+The second design solution leverages deep learning techniques to extract pertinent audio features, classifying words from a specific vocabulary dataset. Our Automatic Speech Recognition (ASR) model introduces \textbf{denoising autoencoder} and \textbf{equalization
+layers} on top of ResNet to address the challenges posed by low SNR and non-linear frequency response of the sensor. This solution can be preferred by attackers when more precision is desired, and focus is required on specific critical keywords. 
+
+We extensively evaluate the effectiveness of BaroVox through real-world experiments, considering various factors that influence the success of the attack.
+We evaluate the first solution's capability in Manual Speech Recognition (MSR) by engaging {18 volunteers to transcribe 20} reconstructed speeches from pressure data. 
+The performance metrics are Mean Opinion Score (MOS)~\cite{leng2021mbnet} and Word Error Rate (WER)~\cite{errattahi2018automatic}. 
+Our results demonstrate BaroVox's alarming efficacy. The proposed signal processing pipeline achieves a WER of 0.29, comprehending over 70\% of the discourse.
+The second solution's efficacy was gauged on its word classification prowess within a restricted vocabulary dataset. 
+Our ASR model achieved an impressive {{90.51}}\% accuracy for a 35-keyword, speaker-independent classification.
+
+These findings highlight the serious privacy implications of BaroVox.
+Attackers can exploit this vulnerability to eavesdrop on sensitive conversations, compromise confidential information, or invade privacy without physical access to the targeted premises.
+The implications are particularly severe in critical environments such as industrial facilities, corporate offices, and healthcare institutions, where the loss of sensitive data can have far-reaching consequences.
+Our main \textbf{contributions} are summarized as follows:
+
+
+ \textbf{(1)} We discover a previously overlooked acoustic side-channel vulnerability in deploying DPS in proximity to sound sources.
+ 
+\textbf{(2)} We characterize the limits and challenges of speech recovery from pressure reading. We propose \textbf{BaroVox} to overcome these challenges. To the best of our knowledge, \textit{BaroVox is the first side-channel attack on pressure sensors}.
+
+% \textbf{(3)} We introduce a smart spectral subtraction method utilizing median filtering to improve the reconstructed speech quality. 
+
+\textbf{(3)} We evaluate BaroVox on MSR and ASR tasks and show an attacker can partially reconstruct a speech with $0.29$ WER using MSR and {$90.51\%$ accuracy} using ASR. 
+We present sample reconstructed audio for demonstration here: {\href{https://sites.google.com/view/barovox-a-fly-on-the-wall/home}{\textcolor{blue}{{BaroVox}}}.
+
+
+\textbf{(4)} 
+We propose practical countermeasures and defense strategies to mitigate the risks associated with BaroVox.
+
+
+\color{black}
+% \vspace{-0.3em}

@@ -1,0 +1,18 @@
+\section{Related work}
+%-----------------------------------------
+In this section, we comparatively discuss BaroVox with state-of-the-art works in the following two categories. 
+
+
+{\textbf{Side-channel speech eavesdropping:}} Side-channel eavesdropping has been considerably studied in academic literature~\cite{michalevsky2014gyrophone, zhang2015accelword, anand2018speechless, anand2021spearphone, han2017pitchln, 7878599, marquardt2011sp,9517289, 9095984, cpams}. Several works, such as \cite{michalevsky2014gyrophone, zhang2015accelword, anand2018speechless, anand2021spearphone, han2017pitchln, marquardt2011sp, ba2020learning, wang2022mmphone, gao2022device, gao2022kite}, have investigated the vulnerabilities of motion sensor eavesdropping, most notably in mobile devices.
+Sami et al. \cite{sami2020spying} devised a novel acoustic side-channel threat using the lidar sensors found in consumer-grade robot vacuums. 
+Roy et al. \cite{roy2016listening} looked into the practicality of using a mobile device's vibration motor as a sound sensor. Nassi et al. \cite{nassi2022lamphone} exploit the vibrations of a hanging bulb inside a room to retrieve sound from desk lamp light bulbs through an optical side-channel attack. 
+\cite{kwong2019hard,long2023side,nassi2021glowworm,nassi2023little,nassi2022little,wang2022wavesdropper,basak2022mmspy} are other works that focus on acoustic signal eavesdropping. 
+These studies raised public awareness of the feasibility of recovering sound by analyzing non-acoustic data. Our work takes a unique approach to side-channel attacks by demonstrating the \textit{\textbf{first-ever use of this technique on pressure sensors}}, adding a new dimension to this field of study. 
+
+\textbf{Attacks on pressure sensors:}
+Tu et al. \cite{tu2021transduction} reveal threats of Electromagnetic interference spoofing attacks on tire pressure sensors to over/under-inflate car tire.
+Barua et al. designed malicious music to create resonance in pressure sensors to fool the pressure sensor used in the RPM systems of a negative pressure room (NPR) to turn NPR's negative pressure into positive one~\cite{barua2022wolf}.   Our research distinguishes itself by highlighting the sensitivity of pressure sensors across a range of frequencies beyond the resonant frequency. Moreover, while both papers engage DPS sensors, they diverge significantly in focus and methodology. 
+Barua et al. exploit resonant frequencies to manipulate pressure readings and create hazardous conditions --- an integrity attack. In contrast, our work reveals the potential of DPS as a covert channel for leaking acoustic information 
+ --- a confidentiality attack. Additionally, we demonstrate the potential to extract sound signals from minor fluctuations in pressure readings, a new avenue for exploiting pressure sensors.
+
+% \textbf{Attacks on other sensors:}

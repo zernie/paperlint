@@ -59,6 +59,14 @@
     "body_pt": 10,
     "body_pt_tol": 0.5,
 
+    // The class sets the bibliography in \footnotesize, 8 pt at 10pt and at 9pt (IEEEtran.cls,
+    // \thebibliography). Measured 2026-09-29 on the four built ACSAC papers in
+    // fixtures/accepted-papers (body-size.json): pdf.js reads the reference glyphs at 8.00 pt
+    // (7.97 without compsoc), banal gives 8.3 on all four. body_pt_tol widens it to 7.5-8.5, so a
+    // bibliography shrunk to \scriptsize (7.3) or grown to \small (9.3) is reported.
+    "ref_pt_min": 8,
+    "ref_pt_max": 8,
+
     // The Times clone. Headings and the title are set in the same family, so a `fonts_title` would
     // repeat this check and report a Computer Modern build twice.
     "fonts_text": "NimbusRomNo9L",

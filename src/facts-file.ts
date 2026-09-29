@@ -26,6 +26,14 @@
  * fonts are all named `Type3`; `embedded` means a usable program is present, so a corrupted one is
  * false. `pdf` is now relative to the PAPER directory, not to wherever the command ran.
  *
+ * ── SCHEMA 3 (2026-09-29) ───────────────────────────────────────────────────────
+ * Adds what the PDF SAYS, for the rules that judge text rather than geometry: `pages_text` (each
+ * page's text, in content order), `metadata` (the Info dictionary and the XMP packet, flat),
+ * `links` (every link annotation's target and page), `bib_anchor_page` and `appendix_anchor_page`
+ * (the pages hyperref anchored the bibliography's first entry and the appendix on, or null). Every schema-2 field keeps its name and meaning. The number moves anyway: `anonymity/identity` and `format/page-limit` read these fields,
+ * and schema-2 facts without them would be judged as a PDF that says nothing — a clean pass over no
+ * input. A schema-2 file is refused by `pdf/fresh` with "rebuild", which is one `paperlint build`.
+ *
  * 🔴 STALENESS. The PDF is not committed, so neither are these facts: they live in `_build/` and
  * carry `pdf_sha256`. A rule compares it with the PDF on disk and refuses facts about another build.
  */
@@ -52,7 +60,7 @@ import { paperPreset, paperPresetProblem } from "./presets.ts";
 import { presetsDir } from "./package-dirs.ts";
 import { messageOf } from "./domain/text.ts";
 
-export const FACTS_SCHEMA = 2;
+export const FACTS_SCHEMA = 3;
 export const FACTS_DIR = "_build";
 export const FACTS_FILE = "paper.facts.json";
 
@@ -123,7 +131,17 @@ export type FactsDocument = {
   readonly last_page: LastPageEntry;
   /** Schema 1's field, kept: the two heights, or null when the last page is a stub or a review build. */
   readonly last_page_cols_pt: readonly [number, number] | null;
-} & FactsGeometryFields;
+} & FactsTextFields &
+  FactsGeometryFields;
+
+/** Schema 3's fields: what the PDF says (see the module header). */
+export interface FactsTextFields {
+  readonly pages_text: readonly string[];
+  readonly metadata: Readonly<Record<string, string>>;
+  readonly links: readonly { readonly page: number; readonly uri: string }[];
+  readonly bib_anchor_page: number | null;
+  readonly appendix_anchor_page: number | null;
+}
 
 export function fontEntry(f: FontFact): FontEntry {
   return {
@@ -170,6 +188,11 @@ export function factsDocument(i: FactsInput): FactsDocument {
       i.read.fonts.kind === "drawn" ? i.read.fonts.list.map(fontEntry) : [],
     last_page: last,
     last_page_cols_pt: last.kind === "measured" ? last.columns_pt : null,
+    pages_text: i.read.pageTexts,
+    metadata: i.read.metadata,
+    links: i.read.links,
+    bib_anchor_page: i.read.bibAnchorPage,
+    appendix_anchor_page: i.read.appendixAnchorPage,
     ...flatGeometry(i.geometry),
   };
 }
@@ -249,6 +272,19 @@ export interface ReadFacts {
   readonly fonts: readonly FontEntry[];
   /** The geometry columns, or null when no measurer ran (`geometry_source` is null). */
   readonly geometry: FlatGeometry | null;
+  /** What the PDF says: schema 3's fields, parsed. */
+  readonly text: TextFacts;
+}
+
+/** Schema 3's fields as a rule reads them. */
+export interface TextFacts {
+  readonly pages: readonly string[];
+  readonly metadata: Readonly<Record<string, string>>;
+  readonly links: readonly { readonly page: number; readonly uri: string }[];
+  /** The page of the first bibliography entry hyperref anchored, or null. */
+  readonly bibAnchorPage: number | null;
+  /** The page hyperref anchored the appendix on, or null. */
+  readonly appendixAnchorPage: number | null;
 }
 
 /** Why a facts file cannot be judged. */
@@ -331,6 +367,56 @@ function geometryOf(
   });
 }
 
+const isPage = (v: unknown): v is number =>
+  typeof v === "number" && Number.isInteger(v) && v > 0;
+const isPageOrNull = (v: unknown): v is number | null =>
+  v === null || isPage(v);
+const isStrings = (v: unknown): v is readonly string[] =>
+  Array.isArray(v) && v.every((x) => typeof x === "string");
+const isStringRecord = (v: unknown): v is Readonly<Record<string, string>> =>
+  isRecord(v) && Object.values(v).every((x) => typeof x === "string");
+const isLinks = (
+  v: unknown,
+): v is readonly { readonly page: number; readonly uri: string }[] =>
+  Array.isArray(v) &&
+  v.every(
+    (l) => isRecord(l) && isPage(l["page"]) && typeof l["uri"] === "string",
+  );
+
+/** Schema 3's fields, or which one is wrong. */
+function textOf(
+  d: Readonly<Record<string, unknown>>,
+): Result<TextFacts, string> {
+  const { pages_text, metadata, links } = d;
+  const { bib_anchor_page, appendix_anchor_page } = d;
+  if (!isStrings(pages_text))
+    return err("`pages_text` is not a list of strings");
+  if (!isStringRecord(metadata))
+    return err("`metadata` is not an object of strings");
+  if (!isLinks(links)) return err("`links` is not a list of { page, uri }");
+  if (!isPageOrNull(bib_anchor_page))
+    return err("`bib_anchor_page` is neither a page number nor null");
+  if (!isPageOrNull(appendix_anchor_page))
+    return err("`appendix_anchor_page` is neither a page number nor null");
+  return ok({
+    pages: pages_text,
+    metadata,
+    links,
+    bibAnchorPage: bib_anchor_page,
+    appendixAnchorPage: appendix_anchor_page,
+  });
+}
+
+/** What the PDF measures and what it says: the geometry columns and schema 3's fields. */
+function contentOf(
+  d: Readonly<Record<string, unknown>>,
+): Result<Pick<ReadFacts, "geometry" | "text">, string> {
+  const geometry = geometryOf(d);
+  if (!geometry.ok) return geometry;
+  const text = textOf(d);
+  return text.ok ? ok({ geometry: geometry.value, text: text.value }) : text;
+}
+
 /** The PDF the facts describe: its path and its sha256. */
 function artifactOf(
   d: Readonly<Record<string, unknown>>,
@@ -368,11 +454,7 @@ export function parseFactsText(text: string): Result<ReadFacts, FactsProblem> {
       kind: "broken",
       why: "`fonts` is not a list of { name, type, embedded, program }",
     });
-  const geometry = geometryOf(d);
-  if (!geometry.ok) return err({ kind: "broken", why: geometry.error });
-  return ok({
-    ...artifact.value,
-    fonts,
-    geometry: geometry.value,
-  });
+  const content = contentOf(d);
+  if (!content.ok) return err({ kind: "broken", why: content.error });
+  return ok({ ...artifact.value, fonts, ...content.value });
 }

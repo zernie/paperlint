@@ -1,0 +1,44 @@
+\section{Related Work} \label{Related-Work}
+Mastropaolo et al.\cite{mastropaolo2024training} investigate different training strategies for vulnerability repair.
+They begin by replicating the VulRepair work, identifying issues with cross-set duplicates in the VulRepair dataset.
+However, they were unable to fully resolve the problem due to the presence of unresolved duplicates with label mismatches, i.e., inconsistent labels (duplicate code with conflicting CWE tags).
+This resulted in 259 cross-set duplicate samples in the test set and 49 in the validation set overlapping with the training set. 
+Additionally, the dataset contains in-file duplicates, comprising 1,424 in the training set, 35 in the validation set, and 109 in the test set. 
+In total, the dataset suffers from 1,424 duplicates in the training set, 84 in the validation set, and 368 in the test set.
+
+%Their dataset contains 1,424 duplicates in the training set, 84 in the validation set, and 368 in the test set.
+%Additionally, there are in-file duplicates across the train, validation, and test sets.
+
+Test set duplicates can skew performance estimates either positively or negatively, depending on whether the duplicated instances are correctly or incorrectly repaired. 
+Validation set duplicates may lead to premature termination of the training process or cause it to run longer than necessary, contingent on the correctness of the repairs for these duplicates.
+Training set duplicates introduce a slight bias, preferentially enhancing the model's performance on duplicated entries compared to non-duplicated ones.
+These issues are addressed in Sections \ref{Uniqueness} and \ref{Consistency} of our paper.
+While Mastropaolo et al. limit their evaluation to CodeT5, we extend the analysis by including CodeBERT, GraphCodeBERT, and UniXCoder, demonstrating their superior performance compared to CodeT5 at beam sizes of 10 or more.
+Furthermore, unlike Mastropaolo et al.\cite{mastropaolo2024training}, we performed a manual analysis of the top 10 CWE categories in the dataset, verifying the accuracy and completeness of the samples, which is crucial for understanding the characteristics of vulnerability samples.
+Our findings also indicate that transfer learning outperforms the prompt tuning method used by the authors.
+
+Ding et al.\cite{ding2024vulnerability} similarly highlight issues with exact code duplicates and low label accuracy in datasets like CVEfixes and BigVul.
+Their focus, however, is on the effectiveness of large language models (LLMs) for vulnerability detection, which is distinct from program repair.
+Their work lacks a comprehensive evaluation of models on deduplicated datasets, instead proposing a new method for constructing a robust dataset and evaluating models on it.
+Their proposed dataset is not well-suited for program repair as many samples lack CWE types which are essential for characterizing vulnerability samples and training repair models.
+
+Fu et al.\cite{fu2024vision} reported further work on program repair by introducing a vision transformer model leveraging the bug-fix provided by VRepair\cite{chen2022neural} and vulnerability datasets (VQM).
+The authors claim that VRepair was initially pre-trained on a bug-fix dataset of 23,607 C/C++ functions.
+In fact, as noted in Section \ref{Introduction}, VRepair was pre-trained on a bug-fix dataset with 534,848 training and 10,000 validation samples\cite{chen2022neural}.
+Our analysis of the bug-fix dataset\cite{vqm2024} used for VQM pre-training revealed that it contains 21,246 training samples and 2,362 validation samples.
+We identified 17,303 duplicate entries in the training set and 666 duplicates in the validation set, reducing the dataset to 3,943 unique training samples and 1,695 unique validation samples.
+Following the removal of in-set duplicates, we also performed a cross-set duplicate analysis, which identified 1,613 duplicates shared between the training and validation sets.
+During manual verification, we noticed several samples appeared identical except for misplaced \texttt{<S2SV\_StartBug>} and \texttt{<S2SV\_EndBug>} tags, which the Pandas \texttt{drop\_duplicates()} will not identify as matches even though their code is identical.
+After removing these tags and reanalyzing the data, we found an extra 1319 (18,622 - 17303) duplicate entries in the training set and 116 (782 - 666) duplicates in the validation set, leaving 2,624 unique training samples and 1,579 unique validation samples.
+A subsequent cross-set duplicate check revealed that \emph{all} of the validation set code samples are present in the training set, suggesting significant data overlap.
+Additionally, we observed that the pre-tag of the samples in the bug-fix dataset includes vulnerability CWE tags, indicating that these samples belong to vulnerability categories rather than generic bug-fix categories (CWE-000).
+This observation led us to suspect potential data leakage between the bug-fix and fine-tuned vulnerability datasets (VQM).
+To investigate further, we conducted a cross-set duplicate analysis by comparing the test, validation, and training sets from the fine-tuned vulnerability dataset against the training set of the bug-fix dataset used by VQM.
+Our analysis revealed 511 matching entries out of 1,090 test set samples, 243 matches from the 536 validation set samples, and 1,747 duplicates from the 3,790 training set samples in the bug-fix dataset's training set.
+These results demonstrate a significant overlap between the datasets.
+These findings raise concerns about data leakage, which could have contributed to the reported performance results of 32.33\%, 42.72\%, and 45.14\% at beam sizes of 1, 3, and 5, respectively.
+Given this overlap, we contend that retraining the model without these duplicates is necessary to assess its true performance accurately.
+
+Another recent work, DiverseVul\cite{chen2023diversevul}, is a vulnerability dataset that follows an automated labeling approach, collecting vulnerability-fixing commits from open-source databases such as NVD, assuming that all such commits modify only the vulnerable function.
+This approach introduces significant label noise, however, with the dataset being reported as only 60\% accurate.
+Furthermore, this dataset does not include repaired code and is unsuitable for use in vulnerability repair systems.

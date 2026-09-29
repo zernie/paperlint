@@ -31,6 +31,7 @@ import { outlineOf } from "./outline.ts";
 import { parseLatex } from "./parse.ts";
 import { bodyProse } from "./prose.ts";
 import { renderedRuns } from "./rendered.ts";
+import { layoutOverridesOf } from "./layout.ts";
 
 export {
   documentClassOf,
@@ -51,6 +52,7 @@ export { outlineOf } from "./outline.ts";
 export { parseLatex, type ParsedTex } from "./parse.ts";
 export { bodyProse } from "./prose.ts";
 export { renderedRuns } from "./rendered.ts";
+export { layoutOverridesOf } from "./layout.ts";
 
 /** The `LatexReader` port over unified-latex: each call parses its source once. */
 export const latexReader: LatexReader = {
@@ -62,4 +64,5 @@ export const latexReader: LatexReader = {
   documentBody: (src) => documentBodyOf(parseLatex(src)),
   template: parseTemplate,
   withDocumentClass: (src, want) => replaceDocumentClass(parseLatex(src), want),
+  layoutOverrides: (src) => layoutOverridesOf(parseLatex(src)),
 };

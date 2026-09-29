@@ -1,5 +1,5 @@
 {
-  "$comment": "A real IEEEtran [conference,compsoc] paper for AIDC, built on paperlint's TeX Live: IEEE's Times, and not one finding from any rule — which is what judges pdf/limits, pdf/body-size and the rest against a real PDF of the class.",
+  "$comment": "A real IEEEtran [conference,compsoc] paper for AIDC, built on paperlint's TeX Live: IEEE's Times, and not one finding from any rule — which is what judges format/page-limit, pdf/body-size and the rest against a real PDF of the class.",
   "build": {
     "outcome": "pdf"
   },

@@ -74,7 +74,9 @@
     // «font size is 9 pt for all body text»
     "body_pt": 9,
     // banal measures the MODE of the rendered text, not the declared size (measured 08-26: 9.30 at
-    // acmart's declared 9). Hence the tolerance — and hence why body size stays a nudge, not a gate.
+    // acmart's declared 9). Hence the tolerance: banal reads 0.3 pt high on every template measured
+    // (fixtures/accepted-papers/body-size.json), and 0.5 absorbs that while a paper one size off is
+    // still reported.
     "body_pt_tol": 0.5,
 
     // «font size of the references can be from 7 pt to 9 pt»

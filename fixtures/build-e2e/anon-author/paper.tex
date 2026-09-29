@@ -1,0 +1,29 @@
+% A: the name in the author block.
+% The declared identity is invented: "Ada Example", handle "adaexample" (paperlint.json).
+\documentclass[conference,compsoc]{IEEEtran}
+\begin{filecontents*}{refs.bib}
+@article{knuth84,
+  title   = {Literate Programming},
+  author  = {Knuth, Donald E.},
+  journal = {The Computer Journal},
+  volume  = {27},
+  number  = {2},
+  pages   = {97--111},
+  year    = {1984},
+  doi     = {10.1093/comjnl/27.2.97}
+}
+\end{filecontents*}
+\begin{document}
+\title{A Fixture for Double-Blind Review}
+\author{\IEEEauthorblockN{Ada Example}\IEEEauthorblockA{Anonymous Institution}}
+\maketitle
+\section{Introduction}
+This paper builds on earlier work~\cite{knuth84}.
+
+\section{Conclusion}
+The conclusion restates that the fixture builds.
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+\section*{LLM Usage Statement}
+No LLMs were used in writing this fixture.
+\end{document}

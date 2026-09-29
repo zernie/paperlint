@@ -1,0 +1,7 @@
+{
+  "$comment": "Where the body of this paper's PDF ends, as paperlint builds it — at the references or the appendix, whichever comes first — established by rendering the pages and looking at them, not by the detector. test/e2e/tex/page-count.e2e.ts asserts the detector agrees.",
+  "ends_at": "appendix",
+  "ends_page": 12,
+  "body_pages": 11,
+  "evidence": "Page 11 ends with «7. Conclusion» in the right column; page 12 opens with «Appendix A. DETAILED RESULTS» — the appendix tables, placed before the bibliography — with nothing above it. The appendix is not body wherever it sits, so the body is 11 pages; «References» starts at the top of page 15."
+}

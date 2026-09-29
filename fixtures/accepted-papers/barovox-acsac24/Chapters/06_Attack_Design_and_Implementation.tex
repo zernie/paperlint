@@ -1,0 +1,260 @@
+\section{{Attack Design and Implementation}}
+
+This section outlines the attack system design.
+We begin with a mathematical model to demonstrate sound waves' impact on DPSs and introduce two BaroVox design solutions. 
+
+\begin{figure}[t]
+\centering
+\includegraphics[trim={5px 20px 5px 35px},clip,width=0.445\textwidth]{newPDF/nonLinear.pdf}
+\caption{Non-linear frequency response of the SDP800 DPS for a sine sweep wave with a frequency range of 1 to 2 kHz. }
+\label{fig:nonLinearity}
+\end{figure}
+\subsection{Modeling effects of sound on DPSs}
+\label{subsec: Modeling Sound effects on DPSs}
+
+Sound waves, as disturbances propagating through matter, create varying local pressures by compressing and expanding air. Thus, sound can be modeled as a pressure wave. 
+If a sound is played at a frequency $f$ with an initial phase $\phi$ and a wavelength of $\lambda$, then the change in pressure due to sound ($\Delta P_s(t)$) at a distance $x$ from the sound source can be represented: 
+\begin{equation}
+\begin{aligned}
+\Delta P_s(t, x) &= A(x, f, \mu) \cdot P_{smax}\cdot sin(kx \pm f t + \phi )
+\label{eqn:sound_as_pressure}
+\end{aligned}
+\end{equation}
+\noindent
+where $P_{smax}$ is the maximum pressure change due to sound and $A(x, f)$ represents the attenuation of a sound wave, which depends on distance $x$ and frequency $f$ of the audio source and noise $\mu$.
+
+If there is a DPS at a distance $x=x_0$ from a sound source, we model the perturbation in the reading of the DPS as a result of a sound wave as follows:
+\begin{equation}
+P(t) = P_o(t) + \Delta P_s(t, x_0)
+\label{eqn:sound_effect}
+\end{equation}
+\noindent
+where $P(t)$ is the total measured pressure by the DPS, and $P_o(t)$ is the original pressure and noise read by the DPS without sound. 
+\toremove{A visual representation of sound's effect on DPSs is provided in Appx.~\ref{appendix:modelingsound}.
+The subsequent sections discuss designs allowing attackers to translate pressure readings into sound waves.}
+
+\begin{figure*}[ht]
+\centering
+\includegraphics[trim={5px 33px 5px 30px},clip,width=1.01\textwidth]{newPDF/SD_1_4.pdf}
+\vspace{-0.99000em}
+\caption{System Design I: Design overview and its effect on a speech recorded by a pressure sensor.}
+
+\label{fig:systemDesignOne}
+\vspace{-0.90000em}
+\end{figure*}
+\subsection{Design solutions: overview}
+\label{subsec:ds-overview}
+BaroVox offers two design approaches to address challenges discussed in Sec.~\ref{subsection:challenges}.
+% , aiding attackers in extracting confidential data from sensitive environments. 
+Both designs pivot on a Pressure-Acoustic Transformation (PAT) outlined below. 
+Fig.~\ref{fig:attack_model} summarizes how these designs integrate into the attack model.
+
+
+\textbf{Pressure-Acoustic Transformation (PAT)}:
+PAT converts DPS readings into wave files.
+PAT reduces the influence of the normal differential pressure of the target environment using Eqn.~\ref{eqn:sound_recov}. 
+
+\vspace{-0.90000em}
+\begin{equation}
+S(t) = P(t) - \bar{P}(t)
+\label{eqn:sound_recov}
+\end{equation}
+
+\noindent
+where $S(t)$ is the amplitude of the sound wave at time $t$, $P(t)$ is the instantaneous pressure reading from the DPS and $\bar{P}(t)$ is the mean value of $P(t)$. 
+This levels the DC offset due to the normal differential pressure of the room by subtracting the mean of the pressure signal $(\bar{P}(t))$ from $P(t)$.
+$S(t)$ is further refined using either of the design solutions discussed below.
+
+\textbf{Design Solution I (DS-I):}
+\textbf{DS-I} aims to enhance the SNR of reconstructed speech ($S(t)$) using a series of cascaded digital signal processing techniques for improved audio quality.
+It employs a smart spectral subtraction method in conjunction with standard normalization, high-pass filtering, and DC-offset reduction techniques. 
+This approach proves valuable for attackers when the retrieved speech is substantially distorted by noise, efficiently mitigating noise and other audio signal distortions.
+Furthermore, DS-I is not bound by vocabulary size, providing flexibility in recognizing a wide range of words and phrases.
+Sec.~\ref{subsection:DS-1} discusses \textbf{DS-I} in detail.
+
+\textbf{Design Solution II (DS-II):}  \textbf{DS-II} develops an Automated Speech Recognition system employing Deep Learning. It utilizes SpeechCommands datasets and utilizes a classification model.
+{Attackers may prefer DS-II when more precision is desired and focus is required on specific critical words, numbers, or instructions in the target environment setting.}
+\toremove{In the subsequent sections, we will delve into both design solutions, starting with DS-I. }
+
+\subsection{Design solution I (DS-I)}
+\label{subsection:DS-1}
+Fig.~\ref{fig:systemDesignOne} provides a comprehensive overview of the techniques used in DS-I. 
+Below, we delve into a deeper analysis of each technique. 
+
+
+
+\subsubsection{\textbf{High-pass filter}} 
+A high-pass filter refines the recovered audio ($S(t)$) by enhancing its SNR. 
+We initially acquire samples from the DPS without sound to observe acoustical disturbances induced by various environmental conditions in the target environment.
+The FFT of this noise data, shown in Fig.~\ref{fig:nonLinearity} (red line), displays dispersed noise energy across frequency components. 
+However, the speech recorded by an iPhone 13 in Fig.~\ref{fig:one_stft} (right) does not contain speech data in frequencies less than $40$ Hz. 
+In contrast, the audio from the SDP800 DPS in Fig.~\ref{fig:one_stft} (left) is filled with noise below $40$ Hz, which is undesirable. 
+Therefore, we apply a 3rd-order Butterworth high-pass filter with a cutoff frequency of $40$ Hz to remove the low-frequency component of the noise.
+If not removed fully during PAT (see Eqn.~\ref{eqn:sound_recov}), the DC offset generated by the ambient pressure in the room would likewise be nullified using the filter. 
+
+To further study the filter's influence,  we record a short three-second speech and reconstructed the audio from the sensor data using Eqn.~\ref{eqn:sound_recov}.
+The speech reads: "\textit{All good things come to an end.}" 
+The resulting SNR value of the reconstructed speech is $7.464~dB$. With the high pass filter, SNR rises to $8.888~dB$ -- 19.08\% improvement.
+This effect is evident in Fig.~\ref{fig:systemDesignOne} (C)'s spectrum and waveform plot. 
+Post PAT transformation from pressure wave (A) to speech data (B), prominent power in the low-frequency domain emerges. However, after the high-pass filter application, this noise diminishes (C), making the waveform more congruent with the original audio.
+
+Given the noise in other frequency ranges overlaps with speech data (see Fig.~\ref{fig:one_stft} (right)), a more sophisticated method to eliminate this is discussed in the upcoming subsection.
+
+
+\subsubsection{\textbf{Spectral subtraction}}
+\label{subsubsection:Spectral} 
+Spectral subtraction subtracts an estimate of the noise spectrum from the speech spectrum to get a denoised spectrum. 
+Direct subtraction of noise from speech is theoretically ideal but can distort elements of the speech signal with noise-like characteristics. 
+To address this, we differentiate between two sound types within the speech signal: percussive and harmonic components, and their susceptibility to noise.
+
+
+\textbf{Percussive components:} 
+Characterized by their brief, non-steady nature, percussive sounds lack a clear pitch or tonal quality~\cite{ladefoged2014course}. Examples include consonants like plosives and non-pulmonic sounds produced by rapid, irregular vibrations within the vocal tract~\cite{gilman2019science}. With sharp attack and decay times, these components exhibit noise-like spectral characteristics.
+
+
+
+\textbf{Harmonic components:} 
+In contrast, harmonic components possess a clear, identifiable pitch or tone, produced by steady-state vibrations of the vocal cords~\cite{ladefoged2014course}. These components encompass vowels and voiced consonants like \textit{`l'}, \textit{`n'}, and \textit{`r'}, exhibiting periodic characteristics~\cite{moulines1995non}.
+
+
+Given the noise-like attributes of percussive sounds, they are inherently vulnerable to distortion during spectral subtraction, impacting the speech signal's integrity~\cite{cano2014phase, tachibana2014harmonic}. 
+Consequently, while employing spectral subtraction,\textit{ emphasis should be on mitigating noise within harmonic components}.
+Subtraction should be \textit{cautiously applied to percussive elements to preserve crucial signal information}. 
+Fig.~\ref{fig:harm_perc_filtering} in Appx~\ref{appendix:phs} illustrates the spectral subtraction process. Hereafter, we comprehensively analyze each part of the process separately.
+\begin{algorithm}[ht!]
+\setstretch{1}
+	\footnotesize
+	%\scriptsize
+	\DontPrintSemicolon
+	\caption{PHS using median filtering.}
+	\label{alg:MFAlgorithm}
+
+\KwIn{$s$: Input audio, $W$: Window size, $H$: Hop size, $n\_iter$: Number of iterations}
+\KwOut{$P$: Complex spectrogram of percussive component, \newline
+$H$:  Complex spectrogram of the harmonic component}
+
+$S[n\_iter,K] \gets$ STFT of $s$ with window size $W$ and hop size $H$, where N is the time frame index, and K is the frequency index\\
+$S\_mag \gets$ magnitude spectrogram of $S$\\
+$S\_phase \gets$ phase spectrogram of $S$
+
+\For{$n = 1$ to $n\_iter$}{
+Compute the harmonic component energy envelope:
+$E_h[n, k] \gets \sum\limits_{j=1}^{\infty}S\_mag[n, j\cdot k]$ \\
+Compute the percussive component energy envelope:
+$E_p[n, k] \gets \max\limits_{j\neq 0, j\cdot k\leq K} S\_mag[n, j\cdot k]$; \\
+Compute the percussive mask: 
+$M_p[n, k] \gets \frac{E_p[n, k]}{E_h[n, k] + E_p[n, k]}$ \\
+Compute the harmonic mask:
+$M_h[n, k] \gets \frac{E_h[n, k]}{E_h[n, k] + E_p[n, k]}$\\
+Compute the complex spectrogram of the percussive component: 
+$P[n, k] \gets M_p[n, k] \cdot S[n, k] \cdot~exp(i \cdot S\_phase[n, k])$ \\
+Compute the complex spectrogram of the harmonic component: 
+$H[n, k] \gets M_h[n, k] \cdot S[n, k] \cdot~exp(i \cdot S\_phase[n, k])$\\
+}
+
+\Return{$P$, $H$}
+\end{algorithm}
+% \vspace{-00.70em}
+
+
+
+\textbf{Percussive-Harmonic Separation (PHS)}: PHS is the initial step in spectral subtraction (see Fig. \ref{fig:harm_perc_filtering} (B)). We use a technique based on median filtering to separate the speech signal into harmonic and percussive components~\cite{fitzgerald2010harmonic, driedger2014extending}. 
+\textbf{Median filtering} is a signal processing technique that aims to remove noise from a signal by replacing each sample with the median value of a group of neighboring samples. 
+Algorithm~\ref{alg:MFAlgorithm} shows the technique we used for PHS. 
+First, the STFT of the signal is calculated \textit{(line 1)}, followed by computing the magnitude and phase of the spectra \textit{(lines 2-3)}.
+Median filtering is then applied to the magnitude spectra across sequential frames, enhancing percussive components and suppressing harmonic ones~\textit{(line 5)}.
+Subsequently, median filtering across frequency bins is performed on magnitude spectra to bolster harmonic components while suppressing percussive events~\textit{(line 6)}. 
+We use the two resulting median-filtered spectrograms to generate masks~\textit{(lines 7-8)}.
+These masks are applied to the original spectrogram to separate the harmonic and percussive parts of the signal~\textit{(lines 9-10)}. 
+The algorithm yields two signals: one containing only percussive components and one containing only harmonic components~\textit{(line 11)} (also see Fig.~\ref{fig:harm_perc_filtering} (B)). 
+
+
+
+\textbf{Characterizing noise:} 
+Before implementing noise reduction, it is vital to model the noise properties~\cite{zhang2021influence, nishimura2004noise}. 
+To characterize the statistical features of noise, we capture a segment of noise in the target environment and produce its power spectrum.
+
+\textbf{Spectral subtraction}: We then apply spectral subtraction only to the harmonic signal using an estimate of the residual noise spectrum obtained above (see Fig. \ref{fig:harm_perc_filtering} (C)). 
+This step results in an enhanced harmonic signal with minimized noise artifacts. 
+Prior to applying spectral subtraction to the percussive component, the residual noise spectrum is downscaled to prevent compromising the speech signal quality. 
+The optimal downscale factor is determined through subjective listening tests. 
+Subsequently, a denoised speech signal is reconstructed by combining the adjusted harmonic and percussive signals. 
+\toremove{Fig.~\ref{fig:harm_perc_filtering}  in Appx~\ref{appendix:phs} visualizes an example of the spectral subtraction process facilitated by the PHS process.}
+Fig.~\ref{fig:systemDesignOne} (D) demonstrates the amalgamated effect of spectral subtraction and equalization (see Sec.~\ref{subsubsection:equalization}) on the spectrum and waveform plot, highlighting the noise reduction across various frequency ranges.
+Notably, applying spectral subtraction alone leads to an $11.6\%$ increase in the SNR of the reconstructed speech, improving it from $8.888$ to $9.921~dB$. The ensuing section will address the final step of DS-I: equalization.
+
+
+
+
+\subsubsection{\textbf{Equalization}}
+\label{subsubsection:equalization} 
+As noted in Sec.~\ref{subsection:non-linearity}, DPS exhibits a non-linear frequency response. 
+To rectify this, we implement equalization, aiming to establish a desired tonal balance and sound quality. 
+This process involves adjusting the gain of various frequency components of the signal to offset any deviations from a flat frequency response.
+We use \textbf{frequency-domain equalization} technique to modify the sensor's frequency response. 
+This technique efficiently amplifies or diminishes specific frequency ranges without influencing other portions of the signal~\cite{li2020time}.
+
+\begin{figure}[t]
+% \vspace{-00.8em}
+\centering
+\includegraphics[trim={8px 10px 8px 25px},clip,width=0.46\textwidth]{newPDF/Equalization_2.pdf}
+\vspace{-0.80em}
+\caption{(Left) Frequency response of the SDP800 DPS for a sine sweep wave (1 Hz - 2 kHz). (Right) The gain factor for each frequency band.}
+\label{fig:equalization}
+ \vspace{-1.01000em}
+\end{figure}
+
+\textbf{Frequency-Domain Equalizer (FDE):} We design our FDE using a bank of bandpass filters. 
+The design process involves choosing the right number of filters, setting their center frequencies and bandwidths, and defining the necessary gain or attenuation for each frequency~\cite{falconer2002frequency}.
+An experiment was conducted to define these parameters: a sine wave with frequencies ranging from 1 to 1 kHz was played and recorded using the SDP800 DPS. 
+Normalized FFT plots of both the original and the DPS-reconstructed signals are presented in Fig.~\ref{fig:equalization} (left). 
+It is clear that the sensor's non-linear response affected the reconstructed signal. 
+
+\textbf{Filter specifications}: 
+The number of bandpass filters required is determined by various parameters, including the signal’s frequency range (1 kHz in our case), desired frequency resolution, and the filter bank's complexity.
+A balance between filter bank complexity and required frequency resolution is needed for optimal computational efficiency and equalization accuracy. 
+Our approach uses 40 bandpass filters, each with 25 Hz equal-width bands.
+Subjective tests indicated that increasing the filter count did not significantly improve sound quality, guiding our decision for $40$ filters. 
+
+
+
+
+To calculate the gain at each frequency band, we used the reconstructed signal and the original sine wave. We put them through Fourier transformation to get their frequency spectrums. The gain for each band is computed as the ratio of the original sine wave's amplitude to the amplitude of the reconstructed signal at the band's center frequency. Fig.~\ref{fig:equalization} depicts the gain factor for each frequency band. These gain factors were then applied to the output signal for each frequency band to produce an equalized signal that balanced the non-linear response of the DPS. 
+Fig.~\ref{fig:systemDesignOne} depicts the result of the equalization process, in which the higher frequencies of the input signal are amplified after passing through the equalizer, increasing the SNR value by $55.04\%$ from $9.921~dB$ to $15.382~dB$.
+
+
+\subsection{Design solution II (DS-II)}
+\label{subsection:DS-2}
+DS-I offers enhanced audio with a lower SNR, enabling attackers to perform partial manual speech recognition.
+However, there are times when the attacker wants to get a more precise and accurate recognition of words spoken inside the target environment.
+For this purpose, we develop an Automated Speech Recognition (ASR) DL model. The ASR solution classifies the pressure signals into their textual representations. 
+\toremove{Subsequent sections detail task and dataset selection, data collection methodology, and DL model architecture.}
+
+\subsubsection{\textbf{Task and dataset selection}}
+With DS-II in operation, the attacker aims to \textbf{automatically extract and categorize} spoken words from the captured pressure signals.
+Given communication inside sensitive environments is often restricted for clarity and brevity, we want our model to learn to classify pressure wave signals into a limited set of \textbf{keywords}. 
+For this, we focus on types of speech containing critical information; specifically, we target spoken digits and commands. 
+For example, the sentence "Load 3.1-millimeter wafers" presents insight into both the manufacturing process and product specification within a semiconductor manufacturing cleanroom through the command "load" and the number "3.1," respectively. 
+We focus on digit and command classification using the 
+\textbf{SpeechCommands}~\cite{speechcommandsv2} dataset. SpeechCommands contains common speech commands from multiple speakers in various environments.
+An overview of the datasets is available in Appx.~\ref{appendix:data}. 
+
+\textbf{Considerations on vocabulary limitations:} While it is evident that real-world applications would present a more diverse vocabulary, the current task is focused on unveiling the latent risks tied to this unexplored side-channel attack. Employing a constrained vocabulary for this proof-of-concept might not entirely reflect the breadth of real-world scenarios, yet it aptly illustrates the potential of the proposed approach. Generating a comprehensive dataset is undoubtedly resource-intensive and costly. However, it is crucial to emphasize that the primary aim here is to spotlight potential security vulnerabilities. {In a scenario where confidential information is the target, it is reasonable to assume that attackers, understanding the value of the information at stake, would not balk at investing in a robust dataset to realize their illicit objectives.}
+
+
+
+\subsubsection{\textbf{Dataset transformation}}
+As the dataset involves perfect \textit{microphone} recordings of speech utterances, we use an \textbf{{acoustic-pressure transformation strategy}} to transform them into \textit{pressure-wave} datasets.
+% For each sound clip, $x_i(t)$, and its keyword label $(y_i$
+Given sound clips and keyword labels, denoted as $(x_i(t), y_i)$, we play the speech through a speaker in the proximity of a pressure sensor.  The data is collected in a research facility, with varying distances and orientations between the speaker and the pressure sensor, as discussed in Sec.~\ref{sec:evaluation}.
+This creates a new dataset that pairs each sound signal $x_i(t)$ with the recorded pressure $P_i(t)$. 
+We then process $P_i(t)$ by using \textbf{{PAT}} (see Sec.~\ref{subsec:ds-overview}) yielding the signal ${S_i}(t)$. We create a final dataset by pairing the reconstructed speech signal ${S_i}(t)$ with their original keyword labels, forming pairs $({S_i}(t), y_i)$.
+An attacker can use this new dataset to train models.
+
+\subsubsection{\textbf{ASR model architecture}} 
+While numerous time series classification models are available in the literature~\cite{ts1, ts2, ts3}, not all of them are well-suited for our specific application due to the challenges posed by the low SNR and the low sampling rate of the sensor. 
+We build upon \textit{ResNet}~\cite{resnet, audioresnet}, known for extracting information from sparse signals~\cite{receptivefields}.
+Our contribution centers around our ASR model, designed to address the challenges posed by low SNR and non-linear frequency response of the DPS. This  includes \textit{learnable} \textbf{\textit{denoising autoencoder}} and \textbf{\textit{equalization layers}}, providing a robust solution to these specific issues.
+It also employs a spectrogram representation defined by FFT bins, window length, and hop size parameters. 
+We sweep these parameters to find the optimal receptive field for our transformed dataset. 
+The full explanation of each spectrogram parameter and the model architecture is included in Appx.~\ref{appendix:models}. 

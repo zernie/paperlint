@@ -40,4 +40,8 @@ const { run, isMain } = await import("../dist/cli.js");
 // The question is about THIS file, not `dist/cli.js`: `bin` is the target of a symlink from
 // `node_modules/.bin`, and `isMain` can compare it to the real path. For `cli.js` itself
 // the answer is now always "no" — it is imported, not invoked.
-if (isMain(import.meta.url)) process.exit(await run(process.argv.slice(2)));
+// Not process.exit(): on macOS stdout into a pipe is written asynchronously, and exit() drops
+// whatever has not drained yet, cutting `lint --json` at the 64 KiB pipe buffer. Setting exitCode
+// lets Node exit once the output has drained — what the Node docs recommend over exit().
+if (isMain(import.meta.url))
+  process.exitCode = await run(process.argv.slice(2));

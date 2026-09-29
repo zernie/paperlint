@@ -26,6 +26,8 @@ export interface PaperlintConfig {
   kind?: string;
   /** The default path of the built PDF, relative to each paper. */
   pdf?: string;
+  /** What identifies the authors, for every paper (joined with a paper's own list). */
+  identity?: readonly string[];
   /** A note for humans; ignored. */
   $comment?: unknown;
 }

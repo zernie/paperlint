@@ -1,0 +1,36 @@
+\section{Conclusion}
+\label{Conclusion}
+
+
+When one trains a model to correctly repair program vulnerabilities, its accuracy depends on several critical factors concerning data employed in training or fine-tuning.
+First, the presence of the actual vulnerability within each buggy program sample is essential.
+Second, each buggy sample program must be accurately described using a Common Weakness Enumeration (CWE) label that correctly identifies the type of vulnerability.
+Additionally, for each sample needing repair, it is crucial that the \texttt{<StartBug>} and \texttt{<EndBug>} tags are precisely placed to assist the model in recognizing and understanding the vulnerability.
+Finally, when validating the model's output, it is imperative to compare it against a reference code that is complete and contains no missing tokens.
+These components are vital to ensuring that the model's predictions are both accurate and reliable.
+We observed that a significant number of samples in various datasets lack one or more of these criteria, adversely affecting the overall performance of vulnerability repair models.
+
+The work we reported was verified over multiple runs of models trained with different random seeds.
+When reporting model performance, it is crucial to report the mean accuracy because significant variations in performance are observed even when testing on the same dataset. 
+
+Our work has replicated the results of others using datasets with uniqueness and consistency defects removed.
+The results we achieved removing only these two kinds of problems make is clear that previous studies have overestimated the capabilities of the models.
+We demonstrated that simply pre-training a model with a large corpus of bug-fix data can yield performance similar to the actual performance of the reported systems on a deduplicated VulRepair dataset and that employing transfer learning can improve them dramatically more.
+We have seen nothing that proves that automated program repair is beyond the capability of LLMs, only that the datasets we have used to train and test such systems are hopelessly small and have been riddled with errors.
+
+We showed that inconsistently labeled samples, repeating the same buggy and repaired code with different CWE tags, yield over-estimated performance similar to duplicate samples.
+All of the models tested showed the impact of data leakage from such samples.
+
+The value of high-quality, large datasets to support program repair cannot be overstated.
+Collecting and curating these datasets is a monumental task.
+The ACM artifact review and badging effort is a good start, but if we are to address the needs of the security vulnerability repair community, it needs to be expanded.
+The fact that the primary dataset studied here received an \emph{Artifacts Evaluated-Reusable} badge (as discussed in Section \ref{Dataset:Discussion}) indicates both the difficulty of such evaluations and the need to take extreme care.
+Such datasets should be the property and responsibility of the community with well-defined methods for contributions and public auditing.
+Only when we can trust our data can we trust our results.
+
+
+% \begin{comment}
+% % Anurag: I don't think we're sure what we'll try to say conclusively about beam size until your current runs are finished.
+
+%     A higher beam size does not necessarily equate to better performance, as observed in the case of VulRepair using transfer learning. For instance, a beam size of 5 demonstrates better accuracy than a beam size of 50, highlighting that larger beam sizes are not always the optimal solution.
+% \end{comment}

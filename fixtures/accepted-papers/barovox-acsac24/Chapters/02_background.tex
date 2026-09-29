@@ -1,0 +1,111 @@
+
+\section{Background}
+
+
+
+In this section, we discuss DPSs and their applications across various domains, as well as the privacy implications of deploying DPS in close proximity to audio systems.
+
+\subsection{Physics of Differential Pressure Sensors}
+\label{subsection:physicsofDPS}
+The structure of a DPS is illustrated in Fig.~\ref{fig:thermalDPSComp}. A DPS consists of three fundamental components: 1) pressure ports, 2) a pressure-sensing element, and 3) a transducer. Pressure ports are openings in the sensor where pressure gets applied and are connected directly to the pressure-sensing element.
+
+The pressure-sensing element is a force collector constructed of a flexible diaphragm such as a thin semiconductor material film, a silicon membrane, or another material that responds to the measured pressure. \textit{In our attack, we show that the thin and flexible nature of the diaphragm enables the sensing element to respond to tiny vibrations created by sound waves. We then utilize these vibrations collected by the sensing element to reconstruct speech.}
+
+\remove{The transducer component transforms the pressure-sensing element's mechanical strain into a measurable and interpretable electrical signal.}
+Various physical mechanisms, such as thermal mass-flow, capacitive sensing, or piezoresistive sensing, could form the basis of the transducer element.
+Of all DPSs, thermal mass-flow and piezoresistive sensing-based DPSs are widely used in various applications. However, thermal mass-flow-based DPSs are preferable due to their high measuring accuracy even on long connecting hoses~\cite{firstsensor:2020}. For this reason, we used a thermal mass-flow DPS to show the feasibility of our attack.
+Specifically, we utilized the SDP800~\cite{datasheetsdp} DPS from Sensirion, and we will provide a detailed explanation of its structure below.
+\revision{\textit{Importantly, the vulnerability we have discovered is inherent to the fundamental design of DPS, specifically the flexible diaphragm used as a force collector. This diaphragm-based sensing mechanism is common across various DPS types. This makes all DPSs vulnerable to our attack as they can pick up tiny vibrations.}}
+
+\textbf{Thermal mass-flow DPS}: Fig.~\ref{fig:thermalDPSComp} depicts the structure of a thermal mass-flow DPS. This DPS uses a pressure-sensing element which consists of a thin semiconductor diaphragm (Silicon Nitrate film), two temperature sensors, and a heating element.
+As air moves across this diaphragm, it prompts a temperature differential between the temperature sensors.
+This temperature shift, which correlates with the mass flow rate of the air, is then adeptly translated by the transducer into an electrical signal, reflecting the differential pressure.
+
+\textbf{Electronics inside of DPSs:} DPS has other electronic circuits to condition and relay signals. These circuits process the signal derived from the sensing element, ultimately generating an output indicative of the measured differential pressure.
+The circuitry amplifies the output signal, including any pressure differential captured by the pressure-sensing element due to sound vibration.
+As illustrated in Fig.\ref{fig:thermalDPSComp}, this processing sequence involves components like an amplifier, a Digital Signal Processor (DSP), and an Analog-to-Digital Converter (ADC).
+Once digitized, the signal is directed to a microcontroller via the Communication Interface (CI). The ADC's sampling rate might constrain data transfer to the controller, influencing the sampling rate of the pressure reading --- an aspect detailed in Sec.~\ref{subsection:challenges}.
+\vspace{-.50em}
+\begin{figure}[h!]
+\centering
+\includegraphics[trim=1pt 1pt 1pt 25pt,clip,width=0.50\textwidth]{newPDF/DPS_Electronics_b.pdf}
+\vspace{-1.0em}
+\caption{Components of a DPS. }
+\label{fig:thermalDPSComp}
+\end{figure}
+
+
+\subsection{\revision{DPS's Critical Role in Controlled Environments}}
+DPS are widely used in applications that require monitoring the pressure difference between two points in a system. 
+These sensors regulate airflow and maintain specific pressure levels within controlled environments. 
+DPS offers high sensitivity, accuracy, and reliability.
+
+\revision{While DPS find applications in various sectors, their role is particularly critical in the semiconductor industry, where they are essential for maintaining cleanroom integrity.}
+Cleanrooms in semiconductor manufacturing serve as highly controlled environments designed to minimize airborne contaminants ~\cite{cooper1986particulate, kitajima1997requirements}.
+\revision{Recent contamination incidents at major companies like Samsung and TSMC, resulting in losses exceeding \$1 billion~\cite{shilov_2019, yap_2018}, underscore the critical nature of maintaining cleanroom integrity.}
+
+Besides cleanrooms, DPSs are commonly used in HVAC systems for buildings, offices, and hotels. Monitoring and controlling airflow enable efficient temperature regulation, air quality management, and energy optimization. DPSs are also employed in smart home systems, where they contribute to creating a comfortable and energy-efficient living environment.
+DPSs are also used in healthcare settings, commonly in Negative Pressure Rooms (NPRs), to measure the negative pressure in the facility~\cite{miller2017implementing}. 
+% The safety of NPRs is paramount, as spreading airborne microbes from NPRs may result in catastrophic consequences.
+
+\revision{To contextualize our BaroVox attack, we examine the deployment of DPSs and sound systems in semiconductor cleanrooms as an example of a secure pressure-regulated facilities. 
+The following sections dissect the cleanroom components pertinent to this attack, focusing on the integration of pressure sensors and audio systems. }
+
+
+
+\subsection{{Components of a real-world cleanroom}}
+
+\revision{Cleanrooms may vary in design and specifications across different organizations. 
+However, the primary objective remains consistent: to prevent contamination by maintaining a sterile environment. 
+Fig.~\ref{fig:cleanroom_diag} illustrates a standard cleanroom design.
+The process begins with intake vents that channel outdoor air into the HVAC system. 
+This system filters and conditions air by adjusting temperature and humidity, which are crucial for semiconductor production. Air pumps and compressors then push the air through HEPA filters, which remove contaminants, ensuring a clean environment. 
+The RPM system is instrumental in constantly overseeing the pressure differences across cleanroom areas. 
+The Room Pressure Monitoring (RPM) feeds data from the DPS into the HVAC, directing adjustments in airflow. 
+The ensuing subsections spotlight the deployment of DPSs and sound systems within cleanrooms, given their significance to BaroVox. }
+
+\begin{figure}[hb!]
+    \centering
+    % \vspace{-1.0em}
+    \includegraphics[trim=1pt 1pt 1pt 1pt,clip,width=0.9\columnwidth]{newestPDF/Cleanroom_CCS_newest2.pdf}
+    % \vspace{-1.0em}
+    \caption{\revision{Components of a semiconductor cleanroom.}}
+    \label{fig:cleanroom_diag}
+    \vspace{-0.50em}
+\end{figure}
+
+\subsubsection{\revision{Sound Systems in Cleanrooms and Their Deployment}}
+\revision{
+Cleanroom operations \textit{demand} robust communication for coordination and safety adherence. 
+Consequently, these environments often feature comprehensive sound systems~\cite{standard2004cleanrooms}. 
+Intercoms serve a dual purpose of ensuring clear communication while reducing contamination risk. 
+Additionally, cleanroom personnel often use protective clothing with integrated microphones, enabling efficient communication without removing protective gear, thus preserving the controlled environment. 
+Wall-mounted speakers are strategically placed to broadcast announcements and facilitate communications. }
+
+\revision{
+These audio systems, crucial for operational efficiency, are frequently installed in close proximity to DPS due to space constraints and the need for integrated environmental control and communication. 
+Moreover, the audio systems are channels for disseminating \textbf{\textit{proprietary and confidential data}} --- encompassing \textit{\textbf{process parameters, recipes, design information, and quality control protocols}}.
+}
+
+\subsubsection{\revision{DPS Deployment in Cleanrooms}}
+\revision{DPSs are typically mounted in the cleanroom walls or close to the Building Management System (BMS). 
+Each DPS employs a dual-port system connected to sampling tubes, strategically positioned to monitor pressure differentials between the cleanroom and adjacent spaces. 
+One sensor port often connects to the cleanroom interior, while the other links to a reference point, usually via sampling tubes, enabling accurate pressure differential measurements. 
+The RPM system utilizes these DPS to continuously monitor cleanroom pressure, transmitting readings to the BMS.
+}
+
+
+
+\subsection{Privacy implications of DPS deployment}
+In this research, we show that the deployment of DPS in close proximity to audio systems, such as intercoms and speakers, raises significant privacy concerns. 
+While this co-location is often necessary for facilitating communication~\cite{standard2004cleanrooms, litheaudio2023, zenitel2023}, it inadvertently creates an acoustic side-channel that can be exploited by attackers. 
+
+The high sensitivity of DPS to pressure variations makes them vulnerable to unintentional acoustic coupling. Sound waves from nearby audio systems can induce minute vibrations on the sensor's diaphragm, causing measurable changes in the DPS output. Consequently, the DPS effectively functions as a makeshift microphone, allowing attackers to analyze the output variations and partially reconstruct the original audio signal. This enables eavesdropping on confidential conversations.
+
+The privacy implications of this vulnerability are particularly concerning in environments where confidential discussions occur, such as cleanrooms, corporate meetings, healthcare consultations, or personal conversations in residential settings. Attackers may leverage this to gather valuable intelligence, compromise trade secrets, or invade personal privacy, all without the need for physical intrusion.
+\revision{ Amid the rising IP war, this can be costly with IP and national security at stake.
+Privacy implications of BaroVox in cleanrooms are discussed in detail in Appx.~\ref{appendix:cleanroombasics}.
+}
+
+
+

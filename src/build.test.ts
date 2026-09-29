@@ -115,6 +115,11 @@ const reader =
         },
         last,
         layout: [],
+        pageTexts: [],
+        links: [],
+        bibAnchorPage: null,
+        appendixAnchorPage: null,
+        metadata: {},
       },
     });
 const quiet = () => {};

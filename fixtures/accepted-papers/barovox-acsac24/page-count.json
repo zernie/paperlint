@@ -1,0 +1,7 @@
+{
+  "$comment": "Where the body of this paper's PDF ends, as paperlint builds it — at the references or the appendix, whichever comes first — established by rendering the pages and looking at them, not by the detector. test/e2e/tex/page-count.e2e.ts asserts the detector agrees.",
+  "ends_at": "references",
+  "ends_page": 13,
+  "body_pages": 13,
+  "evidence": "Page 13 opens with «9. Conclusion» and the acknowledgment in the left column; «References» starts below them, mid-column. The body runs onto page 13, so page 13 counts."
+}

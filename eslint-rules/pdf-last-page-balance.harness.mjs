@@ -39,7 +39,12 @@ const TEX =
 const PDF = "%PDF-1.5 pretend";
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const facts = (lastPage, over = {}) => ({
-  schema: 2,
+  schema: 3,
+  pages_text: [],
+  metadata: {},
+  links: [],
+  bib_anchor_page: null,
+  appendix_anchor_page: null,
   pdf: "paper.pdf",
   pdf_sha256: sha(PDF),
   last_page: lastPage,

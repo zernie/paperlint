@@ -18,7 +18,7 @@
     }
   },
   "facts": {
-    "schema": 2,
+    "schema": 3,
     "lastPageColumnsPt": [
       621.5,
       264.8
@@ -45,7 +45,7 @@
       "pdf/profile": [],
       "pdf/fonts": [],
       "pdf/geometry": [],
-      "pdf/limits": [],
+      "format/page-limit": [],
       "pdf/body-size": [],
       "pdf/measured": [
         {

@@ -289,8 +289,8 @@ try {
   if (existsSync(factsFile)) {
     const f = JSON.parse(readFileSync(factsFile, "utf8"));
     check(
-      "measure: the facts are schema 2, about paper.pdf, with the last page's heights",
-      f.schema === 2 &&
+      "measure: the facts are schema 3, about paper.pdf, with the last page's heights",
+      f.schema === 3 &&
         f.pdf === "paper.pdf" &&
         JSON.stringify(f.last_page_cols_pt) === "[400,400]",
     );

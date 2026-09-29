@@ -83,6 +83,8 @@ export interface Preset {
   readonly template: PresetTemplate | null;
   /** Every `name` and `aliases` along the chain: what this venue is called in a paper's text. */
   readonly aliases: readonly string[];
+  /** Whether the venue reviews double-blind (`anonymity/identity`); false when no file of the chain says. */
+  readonly blind: boolean;
   readonly requiredSections: readonly RequiredSection[];
   readonly tex: TexRequirements;
   readonly format: VenueFormat;
@@ -196,6 +198,7 @@ export function mergeFormat(
     refPtMax: pick("refPtMax"),
     fontsText: pick("fontsText"),
     fontsTitle: pick("fontsTitle"),
+    bodyEndsAt: pick("bodyEndsAt"),
     kinds: new Map([...parent.kinds, ...child.kinds]),
   };
 }
@@ -205,18 +208,13 @@ function merged(
   spec: string,
   rootFirst: readonly { readonly preset: PresetFile; readonly file: string }[],
 ): Preset {
-  const base: {
-    name: string | null;
-    template: PresetTemplate | null;
-    aliases: readonly string[];
-    requiredSections: readonly RequiredSection[];
-    tex: TexRequirements;
-    format: VenueFormat;
-    rules: Readonly<Record<string, unknown>>;
+  const base: Omit<Preset, "label" | "chain"> & {
+    readonly name: string | null;
   } = {
     name: null,
     template: null,
     aliases: [],
+    blind: false,
     requiredSections: [],
     tex: NO_REQUIREMENTS,
     format: NO_FORMAT,
@@ -233,6 +231,7 @@ function merged(
           ...p.aliases,
         ]),
       ],
+      blind: p.blind ?? acc.blind,
       requiredSections: p.requiredSections ?? acc.requiredSections,
       tex: p.tex ? mergeRequirements(acc.tex, p.tex) : acc.tex,
       format: mergeFormat(acc.format, p.format),
@@ -245,6 +244,7 @@ function merged(
     chain: rootFirst.map((x) => x.file),
     template: m.template,
     aliases: m.aliases,
+    blind: m.blind,
     requiredSections: m.requiredSections,
     tex: m.tex,
     format: m.format,

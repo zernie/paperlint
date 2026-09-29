@@ -77,6 +77,9 @@ Most of the package's rules run on users' papers and are described for users in
 [`docs/rules.md`](docs/rules.md); the rest lint this package's own source and never see a user's
 files.
 
+One rule checks one requirement, and a rule that judges a venue requirement is validated on real
+accepted papers built to PDF — both in [`CLAUDE.md`](CLAUDE.md#the-ten-rules-that-decide-what-may-live-here--and-what-may-not-be-written), rule 3.
+
 A new rule ships with its page, `docs/rules/<group>/<rule>.md`, in these sections: What it
 catches · Why · Examples (failing / passing) · Options / preset fields · What it does not check ·
 How to fix. Its `meta.docs.url` points at that page, and its row in `docs/rules.md` is one line

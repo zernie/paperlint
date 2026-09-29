@@ -1,0 +1,51 @@
+\section{Discussion}
+
+\subsection{Potential Outcomes and their Implications}
+Our study reveals a critical security vulnerability in DPSs, demonstrating the feasibility of extracting speech from pressure data. 
+
+\subsubsection{Information leakage across industries}
+Our evaluation demonstrates significant potential for information leakage.
+The Mean Opinion Score (MOS) of 3.36/5 for semiconductor-focused sentences indicates substantial semantic content in the reconstructed speech. 
+The semiconductor industry exemplifies the potential impact of BaroVox. Given past IP theft incidents and the presence of sensitive information in cleanrooms (Appendices~\ref{subsec:CleanroomSecurity and IPs} and \ref{appendix:semiconductorInfo}), even fragments of reconstructed information could be highly valuable to competitors. In healthcare settings, similar reconstruction rates could lead to breaches of patient confidentiality, potentially violating regulations and trust.
+
+\subsubsection{Automated threat scaling}
+Our ASR model's 90.51\% accuracy on the SpeechCommand256 dataset represents a significant threat escalation. This high accuracy enables potential automated, large-scale eavesdropping in real-world scenarios. It could facilitate continuous monitoring, data mining of partially reconstructed speech, and contextual attacks based on identified key terms.
+
+The combination of accurate speech reconstruction, high-performance ASR, and increasing connectivity of DPS in smart building systems creates a scenario where automated eavesdropping becomes a tangible threat. 
+
+\subsubsection{Attack effectiveness in various conditions}
+Our comprehensive evaluation of BaroVox reveals its effectiveness across various real-world conditions. The attack demonstrates high accuracy at close range (90.51\% at 5cm) and maintains significant effectiveness up to 1m (78.27\% after fine-tuning), with detectable speech components persisting at 2m. This performance curve aligns with many real-world DPS deployments. Notably, BaroVox adapts well to different volume levels, maintaining 81.38\% accuracy at conversational volume (65dB) at close range. The attack also shows remarkable resilience to source orientation, with accuracy remaining above 82\% even at perpendicular and opposite angles to the sound source.
+
+These results indicate BaroVox's adaptability to diverse environments, from industrial settings to quieter spaces like offices or healthcare facilities. When compared to other sensor-based side-channel attacks, BaroVox demonstrates comparable or superior performance, suggesting that DPS are as vulnerable to acoustic side-channel attacks as sensors more commonly associated with such vulnerabilities. The significant improvements achieved through fine-tuning (e.g., from 2.48\% to 78.27\% at 1m) indicate potential for further enhancements, implying that the attack's effectiveness could increase with more sophisticated processing techniques. In conclusion, BaroVox presents a practical and adaptable attack vector, with its performance characteristics closely aligning with real-world DPS deployment scenarios, underscoring the urgent need for comprehensive countermeasures.
+
+\subsubsection{Technological trends and future enhancements}
+The increasing integration of DPS into IoT and smart building systems amplifies BaroVox's potential impact. The trend towards networked, often under-secured sensors significantly expands the attack surface. Future enhancements could further increase the threat level, including advanced signal processing techniques like adaptive noise cancellation, machine learning improvements such as attention mechanisms or transformers, and multi-sensor fusion in environments with multiple DPS. These improvements could extend the attack's effective range beyond 2m and enhance its performance in challenging acoustic environments.
+
+ 
+\color{black}
+\subsection{Limitation}
+\revision{
+While our research demonstrates the significant potential of BaroVox, it's important to consider the context and limitations of our findings. The attack's effectiveness depends on the attacker's ability to access pressure sensor readings, which varies across different deployment scenarios. This aspect highlights the importance of secure data handling practices in DPS-equipped environments.
+}
+
+\revision{
+The performance of BaroVox is influenced by the specific characteristics of the DPS employed and environmental factors such as the proximity of sound sources. Our experiments with the ASR model in DS-II showed that fine-tuning might be necessary to adapt to diverse scenarios, indicating the attack's adaptability but also the need for scenario-specific optimizations.
+}
+
+\revision{
+Our controlled experiments, while providing crucial insights, represent a first step in understanding this vulnerability. Real-world environments may present additional complexities not fully captured in our current study. 
+Nonetheless, our work serves as a foundation for understanding the risks associated with the acoustic side-channel vulnerability in DPS and highlights the need for further research and development of countermeasures.
+}
+
+\subsection{Countermeasures}
+Potential defenses against BaroVox attacks include:
+
+{\textbf{Sound dampening}}. Dampening the sound wave by putting a sound-dampening material around the pressure ports is an inexpensive countermeasure. We conduct sound-dampening experiments using 3 materials: acrylic sheet, foam, and paper box. Using these materials, the performance of BaroVox decreased to $4.13\%$, $3.95\%$, and $4.04\%$, respectively. 
+
+ 
+ 
+{\textbf{Filtering}}. Incorporating a low-pass filter into the electronic components of the DPS can help mitigate the attack. The low-pass filter smooths the pressure readings and removes higher-frequency data representing speech, making it more difficult for an attacker to extract sensitive information. In our experiments, a third-order Butterworth low-pass filter with a cutoff frequency of 40 Hz successfully prevented the attack.
+
+{\textbf{Increasing audio source distance}}. The proximity of the audio source to the DPS impacts the attack's efficacy. 
+Our research indicates that placing the DPS at a distance exceeding $3.5$ m from sound sources effectively thwarts the attack. 
+

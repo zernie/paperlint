@@ -1,0 +1,163 @@
+\begin{appendices}
+
+\section{Benchmark}
+\label{app:benchmark}
+\subsubsection*{SecureStream}
+The pipeline consists of three operators. The \textbf{\textit{Map}} operator transforms each raw CSV line into a structured object containing only relevant fields (e.g., carrier ID and delay time), discarding unnecessary information. The \textbf{\textit{Filter}} operator evaluates each structured event and retains only those corresponding to delayed flights (i.e., delay time $>0$). The \textbf{\textit{Reduce}} operator computes aggregate statistics—specifically, the average delay duration—using a windowed processing mechanism.
+
+The first two operators, Map and Filter, are stateless: they operate on a per-event basis and do not maintain any internal state between inputs. In contrast, the Reduce operator is stateful, as it processes a window of multiple events and must retain internal state (e.g., cumulative delay and count) to compute aggregate results. This distinction is critical, as the presence or absence of a state affects the processing time characteristics exploited in our attack.
+
+\subsubsection*{NexMark}
+
+In summary, our implementation of the NEXMark benchmark evaluates seven distinct stream processing operators (see Table~\ref{tab:NEXMark_summary}). Notably, the Average operator appears in both Q4 and Q6, but with different windowing mechanisms: Q4 employs an Average operator over all data events, whereas Q6 uses a Partitioning, or Keying, average mechanism. Given that different aggregation strategies significantly affect operator behavior and processing characteristics, we treat the same operation with different aggregation mechanisms as separate operator types in our analysis.
+
+Unlike the SecureStream benchmark, which uses a pre-existing real-world dataset, the NEXMark dataset must be synthetically generated. While the original authors provide a Java-based XML generator, we opted to use the \textit{NEXMark Event Generator} \cite{nexmark_data_generator}, a Rust-based tool that offers a more convenient command-line interface and produces output in a structured JSON format. This tool allowed us to generate a substantial volume of data: over 20,000 Person events, 60,000 Auction events, and 920,000 Bid events, which were used as input for the selected queries.
+
+\section{Evaluation}
+\label{app:evalution}
+
+\subsection{Hyperparameters}
+Table~\ref{tab:model_hyperparameters} lists the parameters of the models. 
+
+\begin{table}[htb]
+\centering
+\caption{Model Hyperparameters}
+\label{tab:model_hyperparameters}
+\begin{tabular}{lll}
+\hline
+\multicolumn{1}{c}{\textbf{Models}} & \textbf{Hyperparameters} & \textbf{Values}                  \\ \hline
+\multirow{4}{*}{Random Forest}      & no. of estimators        & 100, 150, 200, 250, 300          \\
+                                    & max depth                & no limit, 10, 20                 \\
+                                    & max features             & sqrt, log2                       \\
+                                    & booststrap               & true, false                      \\ \hline
+\multirow{3}{*}{SVM}                & C                        & 0.1, 1, 10, 100                  \\
+                                    & gamma                    & scale, auto, 0.001, 0.01, 0.1, 1 \\
+                                    & kernel                   & linear, rbf, poly                \\ \hline
+\multirow{3}{*}{XGBoost}            & no. of estimators        & 100, 150, 200, 250, 300          \\
+                                    & max depth                & 3, 6, 10                         \\
+                                    & gamma                    & 0, 1, 5                          \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table*}
+\centering
+\caption{Summarization of deployed queries in NEXMark}
+\label{tab:NEXMark_summary}
+\begin{tabular}{lll}
+\hline
+\multicolumn{1}{c}{\textbf{No}} & \multicolumn{1}{c}{\textbf{Summary}}                                                                                                                             & \multicolumn{1}{c}{\textbf{Operators}} \\ \hline
+Q1                              & Convert the value of each Bid from dollars to euros                                                                                                              & Map                                    \\
+Q2                              & Find Bids belong to specific Auctions, then return those Auctions and Bids' price                                                                                & Filter, Map                            \\
+Q3                              & \begin{tabular}[c]{@{}l@{}}Find People who are selling items of a specific category and their Auctions,\\ then return specific People's information\end{tabular} & Filter, Join, Map                      \\
+Q4                              & Calculate the average prices of winning Bids of all Auctions                                                                                                     & Join, Max, Average                     \\
+Q5                              & Count Auctions that have the most Bids                                                                                                                           & Count                                  \\
+Q6                              & Calculate the average price per Person/seller                                                                                                                    & Join, Filter, Max, Average (Partition) \\ \hline
+\end{tabular}
+\end{table*}
+
+\subsection{Confusion Matrix} To gain deeper insights into model performance, we examine the confusion matrices of the best-performing TS2Vec-based models for both benchmarks, which are presented in Figure \ref{fig:confusion_matrix}.
+
+In the SecureStream benchmark, the model exhibits difficulty in distinguishing between the Map and Filter operators, which was anticipated from the t-SNE visualization. Specifically, 32\% of Filter samples are misclassified as Map. This confusion likely arises from the similarity in their stateless nature and processing characteristics. In the NEXMark benchmark, similar challenges are observed. The model misclassifies 64\% of Map samples and 17\% of Filter samples as the other class. Additionally, the model struggles to differentiate between the Max and Average operators. This may be attributed to their shared characteristics as aggregation functions operating over sliding windows. Interestingly, the Count operator—despite also being an aggregation function with the same windowing mechanism—is classified more accurately. This could be because it performs simpler logic (i.e., incrementing a count) without the need for value comparisons or numerical calculations, making its timing behavior more consistent and distinguishable.
+
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[t]{0.4\textwidth}
+        \includegraphics[width=\linewidth]{Figures/xgb_secure_sgx_ts2vec_confusion_matrix.pdf}
+        \caption{SecureStream}
+    \end{subfigure}%
+
+    \vspace{1mm}
+    \begin{subfigure}[t]{0.45\textwidth}
+        \includegraphics[width=\linewidth]{Figures/svr_nexmark_ts2vec_confusion_matrix.pdf}
+        \caption{NEXMark}
+    \end{subfigure}
+    \caption{Confusion matrix} % of the best models of each benchmark}
+    \label{fig:confusion_matrix}
+\end{figure}
+
+
+\begin{table*}
+\centering
+\scriptsize
+\caption{Performances of Sliding Step Prediction Models on NEXMark}
+\label{tab:sliding_step_pred_perfomance}
+\begin{tabular}{lcccccccccc}
+\hline
+\multicolumn{1}{c}{\multirow{2}{*}{\textbf{\begin{tabular}[c]{@{}c@{}}Sliding Step\\ Prediction Models\end{tabular}}}} & \multicolumn{2}{c}{\textbf{Join}} & \multicolumn{2}{c}{\textbf{Max}} & \multicolumn{2}{c}{\textbf{Average}} & \multicolumn{2}{c}{\textbf{Avg (Partition)}} & \multicolumn{2}{c}{\textbf{Count}} \\ \cline{2-11} 
+\multicolumn{1}{c}{}                                                                                                   & \textbf{MSE ($\times10^5$)}     & \textbf{R2}    & \textbf{MSE ($\times10^5$)}    & \textbf{R2}    & \textbf{MSE ($\times10^5$)}        & \textbf{R2}        & \textbf{MSE ($\times10^5$)}          & \textbf{R2}         & \textbf{MSE ($\times10^5$)}     & \textbf{R2}     \\ \hline
+\multicolumn{11}{c}{\textbf{CDF}}                                                                                                                                                                                                                                                                                           \\ \hline
+Random Forest                                                                                                          & \textbf{0.0023}           & \textbf{0.7223}         & \textbf{0.0186}          & \textbf{0.9979}         & \textbf{0.0355}              & \textbf{0.9978}             & \textbf{0.0387}                & \textbf{0.8356}              & \textbf{0.0000}           & \textbf{0.9997}          \\
+SVM                                                                                                                    & 0.3841           & -45.4959       & 6.5675          & 0.2528         & 0.6475              & 0.9599             & 0.1015                & 0.5693              & 0.00007          & 0.9911          \\
+XGBoost                                                                                                                & 0.0065           & 0.2184         & 0.6448          & 0.9266         & 0.0560              & 0.9965             & 0.0398                & 0.8309              & 0.00008          & 0.9900          \\ \hline
+\multicolumn{11}{c}{\textbf{TS2Vec Embedding}}                                                                                                                                                                                                                                                                            \\ \hline
+Random Forest                                                                                                          & 1.1531           & -138.5797      & 3.5716          & 0.5936         & 7.9254              & 0.5261             & 0.0755                & 0.6550              & 0.0002           & 0.9737          \\
+SVM                                                                                                                    & 0.9418           & -112.9975      & 5.5350          & 0.3703         & 12.7500             & 0.2376             & 0.0978                & 0.5529              & 0.0030           & 0.6480          \\
+XGBoost                                                                                                                & 2.2325           & -269.2285      & 7.9687          & 0.0934         & 13.5072             & 0.1924             & 0.1155                & 0.4717              & 0.0072           & 0.1702          \\ \hline
+\end{tabular}
+\end{table*}
+
+\subsection{Operator Parameter Prediction}
+Table \ref{tab:sliding_step_pred_perfomance} shows the results for predicting sliding steps. For sliding step prediction, CDF-based models yield better results overall. In particular, the CDF-based Random Forest consistently outperforms other models across all operators, achieving $R^2$ scores above 99\% for Max, Average (Sliding), and Count. Its performance only declines for the Join operator, where the $R^2$ score drops to 72\%, though this still surpasses all other models. Notably, CDF-based XGBoost performs closely behind, typically within 0.5\% of the Random Forest model in 3/5 cases.
+
+
+% With the rapid advancement of information technology, data has become a critical resource that is increasingly invested
+% in and leveraged across various domains of society. The volume, velocity, and variety of data generated daily continue
+% to grow at an unprecedented rate \cite{DBLP:journals/corr/abs-1805-01752}. A prominent example of this trend is the
+% Internet of Things (IoT), which comprises numerous sensors that continuously collect environmental data and transmit it
+% to centralized servers for processing \cite{234964}.
+
+% To handle the vast and continuous influx of data, systems capable of processing information efficiently and, in many
+% cases, in real time are essential. In response to this demand, Data Stream Processing (DSP) systems have emerged and
+% been widely adopted for their ability to process large-scale, continuous data streams. A range of DSP technologies and
+% frameworks have been developed and refined, including Spark Streaming \cite{SparkStreaming}, Apache Kafka
+% \cite{ApacheKafka}, and Apache Flink \cite{ApacheFlink}. These are often deployed alongside cloud-based services such as
+% AWS (Kinesis \cite{AWSKinesi}, Redshift \cite{AWSRedshift}), Microsoft Azure (Azure Stream Analytics
+% \cite{AzureStreamAnalytics}), and Google Cloud (Dataflow \cite{GoogleDataflow}, BigQuery \cite{GoogleBigQuery}).
+
+% The rapid expansion of DSP systems has raised increasing concerns regarding their security. Attacks that lead to data
+% leakage in these systems can have severe consequences, especially given the sensitive nature of the data they often
+% handle. While migrating DSP workloads to cloud infrastructures allows for the integration of additional security tools,
+% such solutions inherently require users to trust the cloud service providers \cite{SGXStream}.
+
+% To address this issue, several cryptographic approaches have been proposed, including Secure Multi-Party Computation
+% (SMPC) \cite{ZHAO2019357} and Homomorphic Encryption (HE) \cite{OGBURN2013502}, which enable computation over encrypted
+% data. However, these methods typically incur significant computational and communication overhead, making them
+% unsuitable for DSP scenarios that demand low latency and high throughput \cite{SGXStream}. An alternative approach is to
+% leverage hardware-assisted security through Trusted Execution Environments (TEEs). TEEs provide a protected area, known
+% as an enclave, where data can be processed securely and is shielded from external interference. Any unauthorized access
+% or tampering attempts can be detected \cite{DBLP:journals/corr/abs-1805-01752}. By deploying DSP systems within a TEE,
+% developers can enhance the system’s confidentiality and integrity without compromising performance.
+
+% The growing potential of Trusted Execution Environment (TEE) technologies has spurred significant research into both
+% attack vectors and corresponding defense mechanisms. Among the various attack strategies, side-channel attacks are
+% particularly noteworthy due to their architecture-agnostic nature. Rather than exploiting software vulnerabilities or
+% implementation flaws, these attacks extract sensitive information by observing indirect side-channel signals such as
+% memory access patterns, cache behavior, or paging activity \cite{Jiang2022}, \cite{sgxcacheattack}. Prior works have
+% demonstrated the feasibility of such attacks on TEEs, including those targeting SGX-based systems, revealing
+% vulnerabilities in enclaved applications. \textcolor{red}{Insert some related works}. To counteract these threats,
+% several defense techniques have been proposed, including the use of oblivious RAM (ORAM) \cite{obliviousram}, which
+% obscures access patterns to mitigate information leakage.
+
+% In this work, we investigate and implement a specific type of side-channel attack—a timing attack—on DSP systems that
+% utilize TEE technology. The core idea is to exploit variations in data processing time within an enclave to infer the
+% internal processing logic of the DSP system. Specifically, we design and implement a minimal DSP system integrated with
+% a TEE, modeled after those in previous literature. Within this system, we deploy several data processing pipelines, each
+% consisting of distinct operators. By carefully measuring the execution time of each operator under various scenarios, we
+% collect timing traces that reflect the internal behavior of the enclave. We then apply statistical analysis and machine
+% learning techniques to these traces in order to classify the operators, thereby demonstrating the effectiveness of
+% timing-based inference.
+
+% In summary, this work makes the following contributions:
+% \begin{itemize}
+%     \item Implementing a simple DSP engine with popular operators that run inside the SGX enclave natively. The implementation of the engine is available at: https://anonymous.4open.science/r/Simple-SGX-based-DSP-Engine-62EA.
+%     \item Proposing a side-channel attack based on measuring the processing time of deployed operators to exploit the operator and its parameters.
+% \end{itemize}
+
+% The remainder of this paper is organized as follows. In Section \ref{sec:background}, an overview of Data Stream
+% Processing and Trusted Execution Environment technology is thoroughly presented. Section \ref{sec:methodology} discusses
+% in detail the architecture of the DSP system built in this work and the methods used to measure the processing time of
+% each operator in that system. Section \ref{sec:experiment} presents the experimental results. The report concludes with
+% Section \ref{sec:conclusion}, which highlights achieved results and the future work.
+
+\end{appendices}

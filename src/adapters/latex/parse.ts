@@ -82,7 +82,11 @@ const LINK_SIGNATURES = Object.fromEntries(signed(["href"], "m m"));
  * Declarations unified-latex has no signature for: signed so their arguments (sizes, not text)
  * attach to them instead of standing beside them as groups a reader would seem to see.
  */
-const DECLARATION_SIGNATURES = Object.fromEntries(signed(["fontsize"], "m m"));
+const DECLARATION_SIGNATURES = Object.fromEntries([
+  ...signed(["fontsize"], "m m"),
+  // The layout commands `format/layout-override` reads: a spacing factor, geometry's key list.
+  ...signed(["linespread", "geometry", "newgeometry"], "m"),
+]);
 
 /**
  * Macros that define other macros or environments. A heading in a body is no section where it is
