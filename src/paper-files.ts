@@ -16,8 +16,8 @@
  *
  * 2. **Each rule scoped to the files it was written for** (`ruleOwners` + `narrowToOwners`).
  *    One plugin NAME is bound to different plugin objects in different blocks: `paper` holds
- *    `stages`/`source`/`author-list` beside `PIPELINE-STATUS.md` and `research-question`/
- *    `typography` beside `paper.md`/`paper.tex`. So a consumer block that named `paper/source`
+ *    `stages`/`source`/`author-list` beside `PIPELINE-STATUS.md` and `typography` beside
+ *    `paper.md`/`paper.tex`. So a consumer block that named `paper/source`
  *    for every file under the papers directory reached `paper.tex`, where `paper` has no `source`
  *    — and ESLint threw `Could not find "source" in plugin "paper"` from inside `lintFiles`,
  *    after paperlint's own validation had (correctly) accepted the id. A block is therefore split

@@ -19,5 +19,5 @@ article itself from the repository into the consumer, the same way it copies
 `fixtures/build-e2e/acmart`.
 
 **It is deliberately NOT a clean corpus.** Findings on this fixture are measurements, not defects to
-be tuned away: the article states no research question, because blog posts do not, and that is the
-sort of fact only a real document surfaces.
+be tuned away: the article writes its p-values without a leading zero (`.006`), because a blog post
+for a general audience does, and that is the sort of fact only a real document surfaces.

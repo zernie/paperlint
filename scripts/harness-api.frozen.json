@@ -5,7 +5,6 @@
     "action.harness.mjs",
     "eslint-rules/install-path-literals.harness.mjs",
     "eslint-rules/latex-language.harness.mjs",
-    "eslint-rules/paper-research-question.harness.mjs",
     "eslint-rules/paper-stages.harness.mjs",
     "eslint-rules/papers.harness.mjs",
     "eslint-rules/pdf-last-page-balance.harness.mjs",

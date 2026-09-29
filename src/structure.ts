@@ -122,7 +122,7 @@ export function checkStructure(
  */
 function whyMissingMatters(file: string, dirName: string): string {
   if (file === "PIPELINE-STATUS.md")
-    return `the stage, source and research-question checks are skipped for \`${dirName}\``;
+    return `the stage and source checks are skipped for \`${dirName}\``;
   return `declared as required by your \`structure\` configuration`;
 }
 

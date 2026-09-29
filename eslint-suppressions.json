@@ -18,14 +18,6 @@
       "count": 23
     }
   },
-  "eslint-rules/paper-research-question.ts": {
-    "functional/no-let": {
-      "count": 2
-    },
-    "functional/prefer-immutable-types": {
-      "count": 1
-    }
-  },
   "eslint-rules/paper-stages.ts": {
     "functional/immutable-data": {
       "count": 2

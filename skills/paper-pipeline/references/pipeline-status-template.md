@@ -11,7 +11,7 @@ the verdict line's wording and the `☐`/`☑` marks as they are, or the hook go
 
 ## The front matter
 
-Above the sections, the file carries YAML. Two fields are read by rules:
+Above the sections, the file carries YAML. The rules read its `stages` field:
 
 ```yaml
 ---
@@ -22,19 +22,8 @@ stages:
     bytes: 305412
     source: versions/2026-07-22-submitted.tex
     sourceBytes: 57210
-researchQuestion: "Does pruning the state space reduce review cost?"
 ---
 ```
-
-`researchQuestion` is **your sentence, written once** — not a label the checker hunts for in the
-prose. `paper/research-question` then asks two things it can actually answer: is it written down,
-and does the paper contain it (whitespace collapsed). Leave the field out and a shipped paper gets
-an advisory finding, which is the right outcome for a position paper with no question: the absence
-becomes a decision on the record rather than an omission.
-
-⚠️ Write the sentence the way it appears in the paper. If the paper breaks it across lines that is
-fine — only whitespace is normalised — but LaTeX markup inside the sentence (`\emph{cost}`) will not
-match, and the finding will quote exactly what it looked for.
 
 ## The row ids, and what each one runs
 
@@ -118,8 +107,7 @@ root (beside `templates/paper/paper.tex` and `paper.md`). `paperlint new <name>`
 name filled in, and a project that keeps its own richer scorecard puts one at
 `<papers>/.template/PIPELINE-STATUS.md`, which `paperlint new` prefers. It used to live in a fenced block
 here, which meant a command would have had to parse markdown to extract it, and a human had to copy
-it by hand. The copy carries `researchQuestion` (empty) and no `stages` — a new paper has shipped
-nothing.
+it by hand. The copy carries no `stages` — a new paper has shipped nothing.
 
 ---
 

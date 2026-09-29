@@ -135,67 +135,6 @@ check(
 
 // ── HALF TWO: variations, one planted defect each ──────────────────────────────────────────
 
-// The question is declared AND present → the rule goes quiet. The silence half of the rule that
-// replaced a regex earlier today: without this, "it never fires" and "it fires correctly" are
-// indistinguishable on this fixture.
-{
-  const f = findings((dir) => { edit(
-      dir,
-      "PIPELINE-STATUS.md",
-      "    date: 2026-07-07\n",
-      '    date: 2026-07-07\nresearchQuestion: "My bill didn\'t budge."\n',
-    ); },
-  );
-  check(
-    "a research question that is declared AND present in the article silences the rule",
-    (f["paper/research-question"] ?? 0) === 0,
-  );
-}
-
-// Declared but ABSENT → still a finding, and for the other reason. Same count as the baseline,
-// so the count alone cannot tell them apart — this is why the message is asserted here and only
-// here.
-{
-  const work = realpathSync(
-    mkdtempSync(join(tmpdir(), "paperlint-realpaper-msg-")),
-  );
-  try {
-    mkdirSync(join(work, "papers"), { recursive: true });
-    cpSync(HERE, join(work, "papers", "article"), {
-      recursive: true,
-      verbatimSymlinks: true,
-    });
-    writeFileSync(
-      join(work, "package.json"),
-      JSON.stringify(
-        {
-          name: "c",
-          version: "1.0.0",
-          private: true,
-        },
-        null,
-        2,
-      ),
-    );
-    edit(
-      join(work, "papers", "article"),
-      "PIPELINE-STATUS.md",
-      "    date: 2026-07-07\n",
-      '    date: 2026-07-07\nresearchQuestion: "Does pruning the state space reduce review cost?"\n',
-    );
-    const r = spawnSync(process.execPath, [BIN, "lint"], {
-      cwd: work,
-      encoding: "utf8",
-    });
-    check(
-      "a question declared but ABSENT from the article is reported as absent, quoting what was sought",
-      /does pruning the state space reduce review cost\?/i.test(r.stdout),
-    );
-  } finally {
-    rmSync(work, { recursive: true, force: true });
-  }
-}
-
 // A section sign appears in real prose → paper/section-word grows, and NOTHING ELSE does. The second half
 // of that sentence is the one that matters: a rule that reacts to an unrelated edit is reacting
 // to something other than what it claims.

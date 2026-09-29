@@ -86,7 +86,6 @@ listed so nobody thinks the two are consistent.
 | `paper/stages` (error)              | `eslint-rules/paper-stages.mjs:91`, glob `src/cli.ts:126`         | front matter `stages[]`: `stage`, `date`, `pdf`, `bytes`; and lists `versions/*.pdf`                          |
 | `paper/source` (error)              | `eslint-rules/paper-stages.mjs:377`, `:415`, `:442`               | `stages[].source`, `sourceBytes`, `sourceLost`                                                                |
 | `paper/author-list` (warn)          | `eslint-rules/paper-stages.mjs:296`, marker `:325`                | `stages[]` + searches the scorecard **table cells** for the marker `bib-authors`                              |
-| `paper/research-question` (warn)    | `eslint-rules/paper-research-question.mjs:142`                    | reads the status file from disk while linting `paper.tex`/`paper.md`: `stages`, `researchQuestion`            |
 | `paper/typography` (warn)           | `src/cli.ts:118`                                                  | **not** the status file — its per-paper allowance lives in the ROOT key `typographyDebt`, keyed by paper path |
 | `pipeline-check.mjs` (skill script) | `skills/paper-pipeline/scripts/pipeline-check.mjs:231-321`        | the `Venue:` / `Deadline:` header line, the verdict line, the five section tables                             |
 | `paper-status-gates` hook           | `hooks/paper-status-gates.hook.mjs`                               | surfaces the verdict and unrun gates after an edit                                                            |
@@ -111,7 +110,6 @@ content of those files is reproduced here.)
 | ------------------------------------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | paper short name / title                                                        | **config**            | human, once — `rpp new` can prefill from the folder name                                                                                                                  |
 | venue, deadline, blind model (the `Venue:` header line)                         | **config**            | human; changes when the paper is re-targeted                                                                                                                              |
-| `researchQuestion`                                                              | **config**            | human, once                                                                                                                                                               |
 | format (`.tex` vs `.md`)                                                        | **derived**           | from which source file exists                                                                                                                                             |
 | venue profile, paper kind, pdf path (a separate `venue.json` in one real paper) | **config**            | human; already a per-paper file in practice                                                                                                                               |
 | typography allowance (`typographyDebt`)                                         | **config**            | human, but it sits in the root key keyed by path today                                                                                                                    |
@@ -202,7 +200,7 @@ written once at freeze time, then checked forever — and today a human types it
 - **Root (`package.json` key): the papers directory only.** Unchanged. It stays a scope, like
   Quarto's project dir or Astro's collection glob. No list of papers.
 - **Per paper: the paper folder's `PIPELINE-STATUS.md` front matter** holds that paper's config
-  (`researchQuestion`, and the venue/deadline fields that today live in a prose header line) and
+  (the venue/deadline fields that today live in a prose header line) and
   its stage records. Unchanged carrier, so every existing paper keeps working.
 - **Not recommended now: a separate `paper.yml`.** It would split config from the journal cleanly
   (the 1 300-line files are 98% journal), but it moves every rule's input and every consumer's
@@ -214,9 +212,8 @@ written once at freeze time, then checked forever — and today a human types it
 **`rpp new <name> [--format tex|md]`** — creates `<papers>/<name>/` with:
 
 - `paper.tex` or `paper.md` (a minimal stub; `--format` defaults to `tex` — ask when interactive);
-- `PIPELINE-STATUS.md` from a **template file** shipped in the package, with the name filled in,
-  `researchQuestion` present but empty and commented, and **no** `stages` field (a new paper has
-  shipped nothing — `paper-stages.mjs:24`).
+- `PIPELINE-STATUS.md` from a **template file** shipped in the package, with the name filled in and
+  **no** `stages` field (a new paper has shipped nothing — `paper-stages.mjs:24`).
 
 Rules for it, each taken from a tool above:
 
@@ -251,7 +248,7 @@ the skills tell agents to update them.
 | ------------------------------------------ | ------------------------- | ----------------------------------------------------------------------- |
 | the folder and source stub                 | human                     | `rpp new`                                                               |
 | `PIPELINE-STATUS.md` skeleton              | human copies a code fence | `rpp new`                                                               |
-| `researchQuestion`, venue, deadline        | human                     | human (unchanged)                                                       |
+| venue, deadline                            | human                     | human (unchanged)                                                       |
 | `stages` records, bytes, the frozen copies | human types byte counts   | still human; `rpp freeze` is the later step that takes it over          |
 | `sourceLost` exceptions                    | human                     | human (unchanged)                                                       |
 | `State:`, `Updated:`, `Requires` cells     | human                     | still human; **derivable** — candidates to drop from the template later |

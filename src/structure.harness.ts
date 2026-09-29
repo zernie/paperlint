@@ -79,9 +79,7 @@ try {
   check(
     "and the message names the CONSEQUENCE, not a restatement of the condition",
     /are skipped/.test(at("no-scorecard")[0]?.message ?? "") &&
-      /stage, source and research-question checks/.test(
-        at("no-scorecard")[0]?.message ?? "",
-      ),
+      /stage and source checks/.test(at("no-scorecard")[0]?.message ?? ""),
   );
   check(
     "and the consequence names THIS directory by name",

@@ -125,7 +125,6 @@ export { init };
 export { nextSteps } from "./init.ts";
 
 import paperStages from "#eslint-rules/paper-stages";
-import researchQuestion from "#eslint-rules/paper-research-question";
 import typography from "#eslint-rules/paper-typography";
 import texBuild from "#eslint-rules/tex-build";
 import bibReachable from "#eslint-rules/bib-reachable-entry";
@@ -228,7 +227,7 @@ export function buildConfig(
   opts: PaperlintConfig = {},
   texLanguage: unknown,
 ): ConfigBlock[] {
-  const paperRules = { ...researchQuestion.rules, ...typography.rules };
+  const paperRules = { ...typography.rules };
   // The reference rules judge `_build/references.json`, and only on `paper.tex`.
   const texPaperRules = {
     ...paperRules,
@@ -236,7 +235,6 @@ export function buildConfig(
   };
   // Each typography rule reports every occurrence where it is, and fixes it (`--fix`).
   const prose = {
-    "paper/research-question": "warn",
     "paper/section-word": "warn",
     "paper/leading-zero": "warn",
   };

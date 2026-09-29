@@ -5,7 +5,7 @@
  *   - the scaffold is what `paperlint lint` ACCEPTS: the old first run opened with "missing
  *     PIPELINE-STATUS.md", and a scaffold that still produced a finding would move that error
  *     from a missing file into a created one;
- *   - the scorecard carries `researchQuestion` and NO `stages` — a new paper has shipped nothing,
+ *   - the scorecard carries NO `stages` — a new paper has shipped nothing,
  *     and a placeholder stage would be a red `paper/stages` on the very first run;
  *   - the scorecard carries the `**Readiness verdict:**` line the status hook surfaces on every
  *     paper edit — without it the hook reports that the paper cannot say whether it is ready;
@@ -103,10 +103,6 @@ try {
   check(
     "🔴 the scorecard has NO `stages` — a new paper has shipped nothing and owes nothing",
     !("stages" in fm),
-  );
-  check(
-    "and carries `researchQuestion`, present and empty",
-    "researchQuestion" in fm && fm.researchQuestion === "",
   );
   check(
     "the name is filled in, and no placeholder survives in any file",

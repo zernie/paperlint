@@ -3,9 +3,9 @@
  * `npm run check` — ONE command you run on yourself before pushing.
  *
  * ── WHY IT EXISTS, AND IT IS A MEASURED FAILURE, NOT A TIDINESS IDEA ───────────────────────
- * On 2026-09-19 a change to `paper/research-question` was pushed that broke the test suite.
+ * On 2026-09-19 a change to a lint rule was pushed that broke the test suite.
  * The gates were run afterwards — `lint`, `check:readme`, `check:globs`, `check:content-only`,
- * and the rule's own (since-removed) mutation battery, all green — but `npm test` and `test:install` were not,
+ * and the rule's own mutation battery, all green — but `npm test` and `test:install` were not,
  * because there were eleven separate scripts and no way to run them except from memory. Five
  * callers across two files had been left behind by the change, and the suite said so; nobody
  * asked it.

@@ -26,7 +26,6 @@ const AWAITING_PAGE: ReadonlySet<string> = new Set([
   "paper/leading-zero",
   "paper/refs-checked",
   "paper/refs-fresh",
-  "paper/research-question",
   "paper/section-word",
   "paper/source",
   "paper/stages",

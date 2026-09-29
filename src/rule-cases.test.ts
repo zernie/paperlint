@@ -186,25 +186,6 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     silent: paper(tex("x")),
   },
-  "paper/research-question": {
-    reports: {
-      tree: {
-        [STATUS_FILE]: fixture(
-          "paper-research-question/shipped-no-rq/PIPELINE-STATUS.md",
-        ),
-        [TEX_FILE]: fixture("paper-research-question/shipped-no-rq/paper.tex"),
-      },
-      file: TEX_FILE,
-      severity: 1,
-      line: 1,
-    },
-    silent: {
-      [STATUS_FILE]: fixture(
-        "paper-research-question/shipped-with-rq/PIPELINE-STATUS.md",
-      ),
-      [TEX_FILE]: fixture("paper-research-question/shipped-with-rq/paper.tex"),
-    },
-  },
   "paper/section-word": {
     reports: {
       tree: paper(tex("As in §2.")),

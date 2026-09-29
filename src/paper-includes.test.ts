@@ -1,9 +1,9 @@
 /**
  * `paperlint lint` over a paper whose body is in other files: the rules over ESLint's LaTeX text read
  * every file `paper.tex` includes from its document body, report at that file's own path and line,
- * and fix that file. What a rule decides for the whole paper — the majority reference form, whether
- * the build is in review mode, whether the declared research question is in the text — it decides
- * over all of the paper's files, not over the one it is reporting in.
+ * and fix that file. What a rule decides for the whole paper — the majority reference form and
+ * whether the build is in review mode — it decides over all of the paper's files, not over the one
+ * it is reporting in.
  */
 import {
   mkdirSync,
@@ -135,20 +135,6 @@ describe("what lint decides for the whole paper, it decides over every file of i
       }),
     );
     expect(review.byFile["papers/a/sections/intro.tex"]).toEqual([]);
-  });
-
-  it("paper/research-question finds the declared question in an included file", async () => {
-    const { byFile } = await lint(
-      project({
-        "papers/a/PIPELINE-STATUS.md":
-          "---\nstages:\n  - stage: submitted\nresearchQuestion: Does pruning reduce review cost?\n---\n",
-        "papers/a/sections/intro.tex":
-          "We ask: does pruning\nreduce review cost?\n",
-      }),
-    );
-    expect(byFile["papers/a/paper.tex"]).not.toContain(
-      "paper/research-question",
-    );
   });
 
   it("an include that resolves nowhere is named as a file lint did not read", async () => {
