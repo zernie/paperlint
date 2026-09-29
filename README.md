@@ -274,13 +274,21 @@ jobs:
       - run: npx paperlint lint
 ```
 
-Lint only — each paper then gets one warning that it was not built:
+Lint only — each paper then gets one warning that it was not built. Call the action from the
+installed package, after `npm ci`: the action and the CLI it runs are then one revision, pinned by
+your lockfile.
 
 ```yaml
-- uses: zernie/paperlint@v3.0.0
-  with:
-    paths: papers # your papersDir
+steps:
+  - uses: actions/checkout@v4
+  - uses: actions/setup-node@v4
+    with:
+      node-version: 22
+  - run: npm ci
+  - uses: ./node_modules/paperlint
 ```
+
+With no `paths` it lints the `papersDir` of your `paperlint.json`; pass `paths:` only to lint less.
 
 ## ❓ FAQ
 

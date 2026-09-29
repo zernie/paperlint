@@ -33,8 +33,8 @@ assert.equal(action.runs.using, "composite", "the action must be composite");
 const names = action.runs.steps.map((s) => s.name);
 assert.equal(
   action.runs.steps.length,
-  4,
-  `expected 4 steps, got ${action.runs.steps.length}: ${names}`,
+  3,
+  `expected 3 steps, got ${action.runs.steps.length}: ${names}`,
 );
 
 const eslintStep = action.runs.steps.find((s) => s.name === "paperlint lint");
@@ -92,7 +92,7 @@ assert.match(
 //
 // So: execute the REAL `run:` block under the REAL flags, with a stub standing in for `npx`, and
 // require that the guard was reached and that ESLint's code came through it.
-const stubbedStepRun = (stubRc) => {
+const stubbedStepRun = (stubRc, paths = ".") => {
   const bin = realpathSync(mkdtempSync(join(tmpdir(), "paperlint-bin-")));
   writeFileSync(
     join(bin, "npx"),
@@ -100,6 +100,7 @@ const stubbedStepRun = (stubRc) => {
     // `-o`, it REDIRECTS output. So the stub also checks the redirect itself — if it disappears
     // from the step, the file stays empty and the guard says "nothing was measured".
     `#!/usr/bin/env bash\n` +
+      `printf '%s\\n' "$@" > "$RUNNER_TEMP/npx-args"\n` +
       `printf '%s' "$REPORT_JSON"\n` +
       `exit "$STUB_RC"\n`,
     { mode: 0o755 },
@@ -115,8 +116,8 @@ const stubbedStepRun = (stubRc) => {
         PATH: `${bin}:${process.env.PATH}`,
         RUNNER_TEMP: TMP,
         GITHUB_ACTION_PATH: HERE,
-        PAPERLINT_CONFIG: "eslint.config.mjs",
-        PAPERLINT_PATHS: ".",
+        PAPERLINT_CONFIG: "",
+        PAPERLINT_PATHS: paths,
         PAPERLINT_MAXWARN: "-1",
         STUB_RC: String(stubRc),
         REPORT_JSON: JSON.stringify([{ filePath: "/x/a.md", messages: [] }]),
@@ -169,41 +170,46 @@ for (const key of [
 ])
   assert.ok(action.inputs[key], `input \`${key}\` is missing`);
 
-// ── `paths` is REQUIRED, and the requirement is ENFORCED, not merely declared ─────────────────
-// 🔴 GitHub does not enforce `required: true` for COMPOSITE actions. A caller who omits the
-// input reaches the first step with an empty string and no error at all. So two separate things
-// are asserted here, and neither implies the other: that the contract is DECLARED, and that a
-// step exists which can actually fail on it.
+// ── `paths` is OPTIONAL: with none, the CLI lints the papersDir its paperlint.json declares ──────
+// `paperlint lint` with no path finds the root paperlint.json and lints its `papersDir`, so that is
+// the normal call and the action must not refuse it. What is asserted is the behaviour: the real
+// `run:` block, handed an empty `paths`, calls the CLI with no path argument at all, and the guard
+// still runs over what the CLI reported.
 assert.equal(
   action.inputs.paths.required,
-  true,
-  "`paths` must be declared required",
+  false,
+  "`paths` must be optional — the CLI finds papersDir itself",
 );
-assert.ok(
-  !("default" in action.inputs.paths),
-  "`paths` must have NO default — the old default `.` linted the whole checkout, so a caller " +
-    "who never chose a scope still got a green job over one",
-);
-const pathsGuard = action.runs.steps.find((s) =>
-  /paths was actually given/i.test(s.name ?? ""),
-);
-assert.ok(
-  pathsGuard,
-  `no step enforcing the \`paths\` contract among: ${names}`,
-);
-assert.match(
-  pathsGuard.run,
-  /exit 1/,
-  "the `paths` guard must FAIL, not warn — a declaration nobody checks is documentation",
-);
-// And it must come FIRST: checking scope after texlive setup would burn apt minutes
-// for a call already wrong.
 assert.equal(
-  action.runs.steps[0].name,
-  pathsGuard.name,
-  "the `paths` guard must run FIRST — checking scope after an apt install burns minutes on a " +
-    "call that was already wrong",
+  action.inputs.paths.default,
+  "",
+  "`paths` must default to empty, which means: the papersDir of paperlint.json",
 );
+{
+  const r = stubbedStepRun(0, "");
+  assert.equal(r.status, 0, `an empty \`paths\` must run clean: ${r.stderr}`);
+  assert.deepEqual(
+    readFileSync(join(TMP, "npx-args"), "utf8").trim().split("\n"),
+    ["paperlint", "lint", "--max-warnings=-1", "--json"],
+    "with no `paths` the CLI must get no path argument — not an empty string, not `.`",
+  );
+  assert.match(r.stdout, /linted 1 file\(s\)/, "the guard must still run");
+}
+{
+  stubbedStepRun(0, "papers/a papers/b");
+  assert.deepEqual(
+    readFileSync(join(TMP, "npx-args"), "utf8").trim().split("\n"),
+    [
+      "paperlint",
+      "lint",
+      "papers/a",
+      "papers/b",
+      "--max-warnings=-1",
+      "--json",
+    ],
+    "named paths are handed to the CLI one argument each",
+  );
+}
 
 // ── II. BEHAVIOUR of the guard — both halves, on fixtures ─────────────────────────────────────
 const fixture = (name, body) => {
@@ -224,6 +230,18 @@ const fixture = (name, body) => {
     "a report of zero linted files must FAIL, not pass as clean",
   );
   assert.match(lines.join("\n"), /linted ZERO files/);
+}
+// With no paths given, the guard names where the scope came from instead of printing `paths=`.
+{
+  const { lines } = guard(fixture("empty2.json", "[]"), 0, {
+    paths: "",
+    config: "paperlint.json",
+  });
+  assert.match(
+    lines.join("\n"),
+    /paths=\(none: the papersDir of paperlint\.json\)/,
+    "an empty paths value must be named as the papersDir, not printed blank",
+  );
 }
 // FIRES: the report is absent or unparsable — nothing was measured either way.
 assert.equal(
@@ -283,5 +301,5 @@ assert.equal(
 }
 
 console.log(
-  "✓ action.yml shape (parsed, not grepped) + guard behaviour, both halves — 20 assertions",
+  "✓ action.yml shape (parsed, not grepped) + guard behaviour, both halves",
 );

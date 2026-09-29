@@ -17,6 +17,7 @@
  * proves the BEHAVIOUR rather than the presence of a string in YAML.
  *
  * Usage: node scripts/eslint-report-guard.mjs <report.json> <eslint-rc> [paths] [config]
+ * An empty or absent `paths` means the CLI was given none and linted the papersDir of the config.
  * Exit:  1 when nothing was measured (unparsable report, or zero files linted)
  *        otherwise ESLint's own return code, passed through untouched
  */
@@ -26,8 +27,10 @@ import { readFileSync } from "node:fs";
 export function guard(
   reportPath,
   eslintRc,
-  { paths = ".", config = "paperlint.json" } = {},
+  { paths = "", config = "paperlint.json" } = {},
 ) {
+  const scope =
+    paths.trim() === "" ? "(none: the papersDir of paperlint.json)" : paths;
   const lines = [];
   let res;
   try {
@@ -48,7 +51,7 @@ export function guard(
   if (res.length === 0) {
     lines.push(
       "::error::ESLint linted ZERO files. In the exit code this is indistinguishable from a clean " +
-        `run, and it means the paths or the config matched nothing. paths=${paths} config=${config}`,
+        `run, and it means the paths or the config matched nothing. paths=${scope} config=${config}`,
     );
     return { code: 1, lines };
   }
