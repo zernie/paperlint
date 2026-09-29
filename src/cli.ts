@@ -1796,9 +1796,4 @@ async function reportLint(
 // not work at all — and it looked like a clean run.
 // The helper WAS ALREADY in the package, and its docstring describes exactly this failure
 // verbatim: "turns a CLI into a no-op that exits 0". I wrote by hand what was lying there ready.
-// Not process.exit(): on macOS stdout into a pipe is written asynchronously, and exit()
-// drops whatever has not drained yet, cutting `lint --json` at the 64 KiB pipe buffer. Setting
-// exitCode lets Node exit once the output has drained — what the Node docs recommend over exit().
-if (isMain(import.meta.url))
-  // eslint-disable-next-line functional/immutable-data -- the process's exit status is set, not built
-  process.exitCode = await run(process.argv.slice(2));
+if (isMain(import.meta.url)) process.exit(await run(process.argv.slice(2)));
