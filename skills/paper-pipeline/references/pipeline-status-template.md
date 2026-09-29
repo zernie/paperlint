@@ -105,9 +105,7 @@ existed. Neither is expressible now. Keep new ids lowercase, one word, and say w
 The template itself is a FILE, not this page: `templates/paper/PIPELINE-STATUS.md` at the package
 root (beside `templates/paper/paper.tex` and `paper.md`). `paperlint new <name>` copies it with the paper's
 name filled in, and a project that keeps its own richer scorecard puts one at
-`<papers>/.template/PIPELINE-STATUS.md`, which `paperlint new` prefers. It used to live in a fenced block
-here, which meant a command would have had to parse markdown to extract it, and a human had to copy
-it by hand. The copy carries no `stages` — a new paper has shipped nothing.
+`<papers>/.template/PIPELINE-STATUS.md`, which `paperlint new` prefers. The copy carries no `stages` — a new paper has shipped nothing.
 
 ---
 
