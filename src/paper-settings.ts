@@ -46,7 +46,7 @@ export interface PaperSettings {
    */
   readonly rules: Readonly<Record<string, unknown>> | readonly unknown[] | null;
   /**
-   * What identifies the authors — `pdf/anonymity` requires a blind venue's PDF to say none of it.
+   * What identifies the authors — `anonymity/identity` requires a blind venue's PDF to say none of it.
    * The root's list and the paper's own, joined: a paper adds its co-authors to the project's author
    * and cannot drop them by accident. Null when neither declares one.
    */

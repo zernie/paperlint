@@ -23,7 +23,7 @@
   "extends": "paperlint:ieee-conference",
 
   // «Submissions must be properly anonymized for double-blind review.» (the call above), and
-  // `"blind":true` in the portal's data. pdf/anonymity then requires the paper's `identity`.
+  // `"blind":true` in the portal's data. anonymity/identity then requires the paper's `identity`.
   "blind": true,
 
   // What the venue is called in a paper's text (tex/venue-leftover): the workshop, and the

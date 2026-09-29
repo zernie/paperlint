@@ -83,7 +83,7 @@ export interface Preset {
   readonly template: PresetTemplate | null;
   /** Every `name` and `aliases` along the chain: what this venue is called in a paper's text. */
   readonly aliases: readonly string[];
-  /** Whether the venue reviews double-blind (`pdf/anonymity`); false when no file of the chain says. */
+  /** Whether the venue reviews double-blind (`anonymity/identity`); false when no file of the chain says. */
   readonly blind: boolean;
   readonly requiredSections: readonly RequiredSection[];
   readonly tex: TexRequirements;

@@ -31,7 +31,7 @@
  * page's text, in content order), `metadata` (the Info dictionary and the XMP packet, flat),
  * `links` (every link annotation's target and page) and `image_pages` (pages that paint a raster
  * image, whose text no extraction reads). Every schema-2 field keeps its name and meaning. The
- * number moves anyway: `pdf/anonymity` and `pdf/limits` read these fields, and schema-2 facts
+ * number moves anyway: `anonymity/identity` and `pdf/limits` read these fields, and schema-2 facts
  * without them would be judged as a PDF that says nothing — a clean pass over no input. A schema-2
  * file is refused by `pdf/fresh` with "rebuild", which is one `paperlint build`.
  *

@@ -1,5 +1,5 @@
 /**
- * WHO WROTE THIS PAPER, FOUND IN THE PAPER — the matching `pdf/anonymity` judges a blind submission
+ * WHO WROTE THIS PAPER, FOUND IN THE PAPER — the matching `anonymity/identity` judges a blind submission
  * by. A rule cannot know who the author is, so the author DECLARES it (`identity` in
  * `paperlint.json`); given that list, finding it is mechanical, and this module is the mechanism.
  *

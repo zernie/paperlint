@@ -25,7 +25,7 @@
       "minLength": 1
     },
     "blind": {
-      "description": "The venue reviews double-blind: its call says submissions must be anonymized. Read by `pdf/anonymity`, which then requires the paper's `identity` and finds none of it in the PDF. Set only where the venue says so, with the quote. A child's value replaces its parent's.",
+      "description": "The venue reviews double-blind: its call says submissions must be anonymized. Read by `anonymity/identity`, which then requires the paper's `identity` and finds none of it in the PDF. Set only where the venue says so, with the quote. A child's value replaces its parent's.",
       "type": "boolean"
     },
     "aliases": {
