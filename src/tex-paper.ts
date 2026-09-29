@@ -6,12 +6,6 @@
  * back where its text came from: a finding in `paper.tex` at its own place; a finding in an included
  * file at the include in `paper.tex` that brought it in — the one place ESLint can point to in this
  * file — with the included file, line and column at the front of the message.
- *
- *   tex/missing-input  warn  an `\input`, `\include` or `\subfile` names a file that is not there
- *
- * A missing file is a finding, not a silent skip: the rules would otherwise report a clean body for
- * text they never read, and TeX stops on it too. Warn, not error: a file a build step writes (a
- * table of generated numbers) is legitimately absent before that step has run.
  */
 import { basename, dirname, join } from "node:path";
 import {
@@ -23,11 +17,7 @@ import type { Span } from "./domain/tex-document.ts";
 import type { LatexReader } from "./ports/latex.ts";
 import type { Files } from "./ports/files.ts";
 import { callerPath } from "./caller-path.ts";
-import type {
-  Located,
-  TexRuleContext,
-  TexRuleModule,
-} from "./tex-venue-rules.ts";
+import type { Located, TexRuleContext } from "./tex-venue-rules.ts";
 
 /** What reading a paper needs: the disk, and the LaTeX reader. */
 export interface PaperDeps {
@@ -113,40 +103,3 @@ export function reportInPaper(
       });
   });
 }
-
-const MISSING_META: TexRuleModule["meta"] = {
-  type: "problem",
-  docs: {
-    description:
-      "an \\input, \\include or \\subfile names a file that is not there, so no rule read its text",
-    url: "https://github.com/zernie/paperlint/blob/main/docs/rules/tex/missing-input.md",
-  },
-  schema: [],
-  messages: {
-    missing:
-      "`{{target}}` is not there (tried `{{target}}.tex` and `{{target}}`, from the paper's directory): TeX stops on it, and no rule read what it should hold",
-    missingIn:
-      "`{{target}}`, which {{file}} includes, is not there (tried `{{target}}.tex` and `{{target}}`, from the paper's directory): TeX stops on it, and no rule read what it should hold",
-  },
-};
-
-/** The includes that name no file, each reported where it stands in the main file. */
-export const missingInputRule = (deps: PaperDeps): TexRuleModule => ({
-  meta: MISSING_META,
-  create(context) {
-    return {
-      root() {
-        const sc = context.sourceCode;
-        const paper = readPaper(context.filename, sc.raw ?? sc.text, deps);
-        const loc = (i: number) => sc.getLocFromIndex(i);
-        paper.missing.forEach((m) => {
-          context.report({
-            loc: { start: loc(m.via.start), end: loc(m.via.end) },
-            messageId: m.file === paper.main ? "missing" : "missingIn",
-            data: { target: m.target, file: m.file },
-          });
-        });
-      },
-    };
-  },
-});

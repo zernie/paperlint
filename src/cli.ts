@@ -52,7 +52,6 @@ import { VENUE_RULE_LEVELS, venueRules } from "./venue-rules.ts";
 import { TEX_VENUE_RULE_LEVELS, texVenueRules } from "./tex-venue-rules.ts";
 import { claimProvenanceRule } from "./claim-provenance.ts";
 import { registerRule } from "./register.ts";
-import { missingInputRule } from "./tex-paper.ts";
 import {
   paperRules,
   stringFields,
@@ -319,10 +318,6 @@ export function buildConfig(
               files: nodeFiles,
               latex: latexReader,
             }),
-            "missing-input": missingInputRule({
-              files: nodeFiles,
-              latex: latexReader,
-            }),
             register: registerRule({
               files: nodeFiles,
               latex: latexReader,
@@ -341,7 +336,6 @@ export function buildConfig(
         "tex/future-promise": "warn",
         // A number with no owner: a prose rule, on beside the others above.
         "tex/claim-provenance": "warn",
-        "tex/missing-input": "warn",
         // Sentence-initial conjunctions over the whole body: register, not vocabulary.
         "tex/register": "warn",
         "tex/acm-frontmatter-override": "error",
