@@ -14,7 +14,7 @@
  * own passage; one that cites or links leaves a citation mark in the sentence it hangs from.
  */
 import type * as Ast from "@unified-latex/unified-latex-types";
-import { hasAtLeast, mapWithFeedback, sortBy } from "remeda";
+import { hasAtLeast, mapWithFeedback, only, sortBy, zip } from "remeda";
 import type {
   Emphasis,
   EmphasisStyle,
@@ -431,7 +431,7 @@ const proseNodes = (list: readonly Node[]): readonly Node[] => {
   // Each node's step, fed the state the one before left: a scan, linear in the list.
   const start: ReturnType<typeof step> = { skip: false, state: "prose" };
   const steps = mapWithFeedback(list, (prev, n) => step(prev.state, n), start);
-  return list.filter((_, i) => steps[i]?.skip === false);
+  return zip(list, steps).flatMap(([n, st]) => (st.skip ? [] : [n]));
 };
 
 /** Formatting macros a run-in heading is set in: `\textbf{Correctness gate.} Each task…`. */
@@ -457,7 +457,7 @@ const soleChild = (n: Node): Node | null => {
   const kept = n.content.filter(
     (c) => c.type !== "whitespace" && c.type !== "comment",
   );
-  return kept.length === 1 ? (kept[0] ?? null) : null;
+  return only(kept) ?? null;
 };
 
 /** A node with the groups around it taken off: `{{\textbf{…}}}` → the `\textbf`. */
@@ -551,15 +551,16 @@ const untilEnd = (events: readonly Event[]): readonly Event[] => {
 
 /** Events → passages: pieces between breaks, each footnote a passage of its own. */
 function passagesOf(events: readonly Event[]): readonly Passage[] {
-  // Where each passage ends: at every break, and at the end. Slicing between them keeps this
-  // linear in the events — a paragraph of thousands of words is one slice, not a copy per word.
-  const ends = [
-    ...events.flatMap((e, i) => (e.kind === "break" ? [i] : [])),
-    events.length,
-  ];
-  const own = ends.flatMap((end, k) => {
+  // Where each passage starts and ends: between breaks. Slicing between them keeps this linear in
+  // the events — a paragraph of thousands of words is one slice, not a copy per word.
+  const breaks = events.flatMap((e, i) => (e.kind === "break" ? [i] : []));
+  const bounds = zip(
+    [0, ...breaks.map((b) => b + 1)],
+    [...breaks, events.length],
+  );
+  const own = bounds.flatMap(([from, to]) => {
     const pieces = events
-      .slice(k === 0 ? 0 : (ends[k - 1] ?? 0) + 1, end)
+      .slice(from, to)
       .flatMap((e) => (e.kind === "piece" ? [e.piece] : []));
     return hasAtLeast(pieces, 1) ? [{ pieces }] : [];
   });

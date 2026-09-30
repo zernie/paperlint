@@ -28,8 +28,15 @@ import {
 import { presetsDir } from "./package-dirs.ts";
 import { resolvePreset } from "./presets.ts";
 import { MIN_WORDS } from "./register.ts";
-import { anchorOf, judgeBand, standingOf } from "./register-bands.ts";
+import {
+  anchorOf,
+  judgeBand,
+  measureBody,
+  registerBandRules,
+  standingOf,
+} from "./register-bands.ts";
 import { readPaper } from "./tex-paper.ts";
+import { useTempDir, writeTree } from "../test/support.ts";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const CORPUS = join(ROOT, "fixtures", "accepted-papers");
@@ -261,5 +268,60 @@ describe("the measures a preset may set a band for", () => {
         [...REGISTER_MEASURES].sort(),
       );
     });
+  });
+});
+
+describe("the rules, as ESLint calls them", () => {
+  /** A paper directory extending `extends`, and what one rule reports on its paper.tex. */
+  const reported = (
+    rule: "contrast-frames" | "claim-emphasis" | "relation-markers",
+    src: string,
+    file = "paper.tex",
+  ): string[] => {
+    const dir = writeTree(useTempDir("paperlint-register-bands-"), {
+      "paperlint.json": JSON.stringify({ extends: "paperlint:aidc" }),
+    });
+    const seen: string[] = [];
+    const deps = {
+      files: nodeFiles,
+      venuesDir: presetsDir(),
+      latex: latexReader,
+    };
+    registerBandRules(deps)
+      [rule].create({
+        filename: join(dir, file),
+        // No `raw`: the rule falls back to the text ESLint gives every language.
+        sourceCode: {
+          text: src,
+          getLocFromIndex: () => ({ line: 1, column: 0 }),
+        },
+        report: (d) => {
+          seen.push("messageId" in d ? d.messageId : d.message);
+        },
+      })
+      .root?.();
+    return seen;
+  };
+  const LONG = `\\documentclass{article}\n\\begin{document}\n${Array.from(
+    { length: 200 },
+    () =>
+      "The rule reads the body of the paper and counts every sentence it holds.",
+  ).join(" ")}\n\\end{document}\n`;
+
+  it("🔴 reads the paper's text when the language gives no raw source", () => {
+    expect(reported("relation-markers", LONG)).toEqual(["below"]);
+  });
+
+  it("judges a paper once, on its paper.tex, and nothing else", () => {
+    expect(reported("relation-markers", LONG, "intro.tex")).toEqual([]);
+  });
+
+  it("an empty body is measured as no words, reported nowhere", () => {
+    const m = measureBody(
+      "contrast-frames",
+      "\\documentclass{article}\n\\begin{document}\n\\end{document}\n",
+      latexReader,
+    );
+    expect(m).toEqual({ words: 0, occurrences: [], at: null });
   });
 });
