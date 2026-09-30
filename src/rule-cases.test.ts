@@ -168,6 +168,14 @@ const FORMAL = Array.from(
   () =>
     "The rule reads the body of the paper and counts every sentence it holds.",
 ).join(" ");
+/** FORMAL with `n` more sentences `s`: a body whose rate of one register measure is set. */
+const formalWith = (n: number, s: string): string =>
+  `${FORMAL} ${Array.from({ length: n }, () => s).join(" ")}`;
+/** FORMAL with enough relation markers for AIDC's band (above 25.4 per 10,000 words). */
+const LINKED = formalWith(
+  10,
+  "Therefore, the rule counts the sentence because the body holds it.",
+);
 const STATUS_FILE = `${P}/PIPELINE-STATUS.md`;
 const SHIPPED_STATUS =
   "---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/a.pdf\n    bytes: 1\n---\n# PIPELINE-STATUS\n";
@@ -356,6 +364,32 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       line: 3,
     },
     silent: paper(tex(FORMAL)),
+  },
+  // The three register bands judge a body against the anchors of AIDC's preset; the body opens on
+  // line 3, right after the \\section, where the finding about the whole body stands.
+  "tex/contrast-frames": {
+    reports: {
+      tree: aidc(formalWith(5, "It reads the word, not the operation.")),
+      file: TEX_FILE,
+      severity: 1,
+      line: 3,
+    },
+    silent: aidc(LINKED),
+  },
+  "tex/claim-emphasis": {
+    reports: {
+      tree: aidc(
+        formalWith(6, "We find that \\textbf{the rule counts 46 sentences}."),
+      ),
+      file: TEX_FILE,
+      severity: 1,
+      line: 3,
+    },
+    silent: aidc(LINKED),
+  },
+  "tex/relation-markers": {
+    reports: { tree: aidc(FORMAL), file: TEX_FILE, severity: 1, line: 3 },
+    silent: aidc(LINKED),
   },
   "bib/reachable-entry": {
     reports: {

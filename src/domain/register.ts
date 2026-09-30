@@ -149,7 +149,10 @@ export const wordsOf = (ss: readonly BodySentence[]): number =>
 
 // ── the measures ──────────────────────────────────────────────────────────────────
 
-/** One occurrence of a measure: the words that make it, the sentence it stands in, where it is. */
+/**
+ * One occurrence of a measure: the words around it as the reader sees them, the sentence it stands
+ * in, and where it is.
+ */
 export interface Occurrence {
   readonly match: string;
   readonly sentence: string;
@@ -187,6 +190,28 @@ const CONTRAST_FRAME = anyOf([
 const RELATION_MARKERS =
   /(?<![\p{L}])(?:therefore|thus|hence|consequently|as a result|because|since|this means|this implies|which explains|in turn|that is,|i\.e\.|in contrast|by contrast|however|nevertheless|nonetheless|whereas|in other words|for this reason|it follows|accordingly|specifically,|in particular,|for example|for instance|e\.g\.)(?![\p{L}])/giu;
 
+/** How many characters of context an excerpt keeps on each side of a match. */
+const CONTEXT = 40;
+
+/**
+ * The words around `[from, to)` of a sentence as the reader sees them: the match with up to
+ * `CONTEXT` characters on each side, cut at a word, marks and math left out.
+ */
+export function excerpt(raw: string, from: number, to: number): string {
+  const start = Math.max(0, from - CONTEXT);
+  const end = Math.min(raw.length, to + CONTEXT);
+  const words = raw
+    .slice(start, end)
+    .replace(MARK, "")
+    .split(/\s+/u)
+    .filter((w) => w !== "");
+  const inner = words.slice(
+    start > 0 ? 1 : 0,
+    end < raw.length ? -1 : words.length,
+  );
+  return `${start > 0 ? "…" : ""}${inner.join(" ")}${end < raw.length ? "…" : ""}`;
+}
+
 /** Every match of `pattern` in every sentence, in order, with where it stands. */
 function occurrences(
   ss: readonly BodySentence[],
@@ -194,7 +219,7 @@ function occurrences(
 ): readonly Occurrence[] {
   return ss.flatMap((s) =>
     [...s.raw.matchAll(pattern)].map((m) => ({
-      match: m[0].replace(/^[,;—–]\s*/u, "").trim(),
+      match: excerpt(s.raw, m.index, m.index + m[0].length),
       sentence: s.text,
       at: spanIn(s.run, s.from + m.index, s.from + m.index + m[0].length),
     })),

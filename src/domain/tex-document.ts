@@ -110,9 +110,21 @@ export const runText = (run: TextRun): string =>
 
 /** The source offset of the `i`-th character of the text these segments make, or null outside it. */
 function offsetIn(segments: readonly Segment[], i: number): number | null {
-  const [s, ...rest] = segments;
-  if (s === undefined || i < 0) return null;
-  return i < s.text.length ? s.at + i : offsetIn(rest, i - s.text.length);
+  if (i < 0) return null;
+  // One pass, no copy of the rest per segment: a paragraph's run holds thousands of segments.
+  const found = segments.reduce<{
+    readonly rest: number;
+    readonly at: number | null;
+  }>(
+    (acc, s) =>
+      acc.at !== null
+        ? acc
+        : acc.rest < s.text.length
+          ? { rest: acc.rest, at: s.at + acc.rest }
+          : { rest: acc.rest - s.text.length, at: null },
+    { rest: i, at: null },
+  );
+  return found.at;
 }
 
 /**

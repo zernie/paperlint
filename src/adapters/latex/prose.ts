@@ -551,23 +551,20 @@ const untilEnd = (events: readonly Event[]): readonly Event[] => {
 
 /** Events → passages: pieces between breaks, each footnote a passage of its own. */
 function passagesOf(events: readonly Event[]): readonly Passage[] {
-  const { done, current } = events.reduce<{
-    readonly done: readonly (readonly ProsePiece[])[];
-    readonly current: readonly ProsePiece[];
-  }>(
-    (acc, e) =>
-      e.kind === "piece"
-        ? { done: acc.done, current: [...acc.current, e.piece] }
-        : e.kind === "break"
-          ? { done: [...acc.done, acc.current], current: [] }
-          : acc,
-    { done: [], current: [] },
-  );
+  // Where each passage ends: at every break, and at the end. Slicing between them keeps this
+  // linear in the events — a paragraph of thousands of words is one slice, not a copy per word.
+  const ends = [
+    ...events.flatMap((e, i) => (e.kind === "break" ? [i] : [])),
+    events.length,
+  ];
+  const own = ends.flatMap((end, k) => {
+    const pieces = events
+      .slice(k === 0 ? 0 : (ends[k - 1] ?? 0) + 1, end)
+      .flatMap((e) => (e.kind === "piece" ? [e.piece] : []));
+    return hasAtLeast(pieces, 1) ? [{ pieces }] : [];
+  });
   const asides = events.flatMap((e) =>
     e.kind === "aside" ? passagesOf(untilEnd(e.events)) : [],
-  );
-  const own = [...done, current].flatMap((pieces) =>
-    hasAtLeast(pieces, 1) ? [{ pieces }] : [],
   );
   return [...own, ...asides];
 }
