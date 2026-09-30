@@ -31,6 +31,7 @@ import {
   type RuleEntry,
 } from "./rules-config.ts";
 import { messageOf } from "./domain/text.ts";
+import { parsePaperTalk, type PaperTalk } from "./domain/talk.ts";
 
 /** What one paper declares. Every absent field is null. */
 export interface PaperSettings {
@@ -51,6 +52,8 @@ export interface PaperSettings {
    * and cannot drop them by accident. Null when neither declares one.
    */
   readonly identity: readonly string[] | null;
+  /** How this paper is presented (`talk/*`); null when it declares no talk. Never the root's. */
+  readonly talk: PaperTalk | null;
 }
 
 /** Why a paper's settings cannot be read. */
@@ -133,10 +136,13 @@ export function parsePaperSettings(
     return err(
       `"rules" must be an object of rule id → severity, or a list of ESLint blocks`,
     );
+  const talk = parsePaperTalk(json["talk"]);
+  if (!talk.ok) return talk;
   return ok({
     ...fields.value,
     rules: rules ?? null,
     identity: identity.value,
+    talk: talk.value,
   });
 }
 
@@ -223,13 +229,14 @@ function merge(
   paper: PaperSettings | null,
 ): PaperSettings | null {
   const r = root ?? NO_DEFAULTS;
-  const p = paper ?? { ...NO_DEFAULTS, rules: null };
+  const p = paper ?? { ...NO_DEFAULTS, rules: null, talk: null };
   const merged: PaperSettings = {
     extends: p.extends ?? r.extends,
     kind: p.kind ?? r.kind,
     pdf: p.pdf ?? r.pdf,
     rules: p.rules,
     identity: joined(r.identity, p.identity),
+    talk: p.talk,
   };
   return paper === null && Object.values(merged).every((v) => v === null)
     ? null

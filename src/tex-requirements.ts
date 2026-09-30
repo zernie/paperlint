@@ -29,6 +29,11 @@ import { presetsDir } from "./package-dirs.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
 import { fieldOf } from "./domain/record.ts";
 import type { RegisterAnchor, RegisterMeasureName } from "./domain/register.ts";
+import {
+  venueTalkOf,
+  type VenueTalk,
+  type VenueTalkJson,
+} from "./domain/talk.ts";
 
 /** CTAN package name → the names that prove it is installed. */
 export type PackageProofs = Readonly<Record<string, readonly string[]>>;
@@ -186,6 +191,8 @@ export interface PresetFile {
    * (a child's list replaces its parent's).
    */
   readonly registerAnchors: readonly RegisterAnchor[] | null;
+  /** What the venue asks a presenter to send; null when the file has no `talk` block. */
+  readonly talk: VenueTalk | null;
 }
 
 type KindsJson = Readonly<
@@ -229,6 +236,7 @@ interface PresetJson {
       readonly words: number;
     } & Readonly<Record<RegisterMeasureName, number>>)[];
   };
+  readonly talk?: VenueTalkJson;
 }
 
 /** An optional field as the typed preset holds it: absent is null. */
@@ -333,6 +341,7 @@ export function parsePreset(
     format: formatOf(j.format),
     rules: j.rules ?? {},
     registerAnchors: anchorsOf(j.register),
+    talk: j.talk === undefined ? null : venueTalkOf(j.talk),
   };
 }
 

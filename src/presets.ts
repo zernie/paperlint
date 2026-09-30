@@ -19,7 +19,7 @@
  *   tex        union — a child never removes a package its parent needs
  *   format     per key, the child wins; `kinds` by kind name, a child's kind replaces that kind
  *   rules      per rule id, the child wins
- *   template   the child wins; so does `name`, and `required_sections` and `register` (each whole)
+ *   template   the child wins; so does `name`, and `required_sections`, `register` and `talk` (each whole)
  *   aliases    union, with every `name` — what the venue is called along the chain
  *
  * ── THE LABEL ─────────────────────────────────────────────────────────────────────
@@ -52,6 +52,7 @@ import {
 import { CONFIG_FILE } from "#lib/paper-config";
 import { messageOf } from "./domain/text.ts";
 import type { RegisterAnchor } from "./domain/register.ts";
+import type { VenueTalk } from "./domain/talk.ts";
 
 /** The prefix of a shipped preset's spec. */
 export const SHIPPED_PREFIX = "paperlint:";
@@ -92,6 +93,8 @@ export interface Preset {
   readonly rules: Readonly<Record<string, unknown>>;
   /** The accepted papers the register rules measure a body against; empty when no file names any. */
   readonly registerAnchors: readonly RegisterAnchor[];
+  /** What the venue asks a presenter to send (`talk/*`); null when no file of the chain says. */
+  readonly talk: VenueTalk | null;
 }
 
 /** Why a spec does not resolve. */
@@ -223,6 +226,7 @@ function merged(
     format: NO_FORMAT,
     rules: {},
     registerAnchors: [],
+    talk: null,
   };
   const m = rootFirst.reduce(
     (acc, { preset: p, file }) => ({
@@ -241,6 +245,7 @@ function merged(
       format: mergeFormat(acc.format, p.format),
       rules: { ...acc.rules, ...p.rules },
       registerAnchors: p.registerAnchors ?? acc.registerAnchors,
+      talk: p.talk ?? acc.talk,
     }),
     base,
   );
@@ -255,6 +260,7 @@ function merged(
     format: m.format,
     rules: m.rules,
     registerAnchors: m.registerAnchors,
+    talk: m.talk,
   };
 }
 
