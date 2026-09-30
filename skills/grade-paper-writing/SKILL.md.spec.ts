@@ -178,16 +178,41 @@ is what happened.
 3. **For every dimension scoring ≤3, name the specific offending sentence or section** and write the fix —
    not "tighten the prose" but the rewritten sentence, or "move the point from ¶3 to ¶1", or "gloss
    \`operation-normalized\` in plain words at first use." Fixes must be applyable, not vibes.
-3a. **Grade #10, register distance, against the venue's own papers — not against the exemplars.**
-   Take 2–3 papers accepted at the target venue (or, for a first-edition workshop, at its parent
-   conference) in the same paper type: fetch them from the proceedings or the program page, or use the
-   ones the author supplies. Read the abstract, the introduction and the conclusion of each beside the
-   draft's, and record, for both sides: how each result is owned (*we measured* · a citation · a named
-   population), how often a point is made by contrast (*not X but Y*, *rather than*, *instead of* —
-   the measured difference between this corpus and accepted papers), sentence length and fragments,
-   and whether any sentence is an aphorism or a closing punchline. The
-   score is the distance: 5 = a reviewer could not tell the draft from the reference papers by register;
-   1 = it reads as a different genre. Quote the reference sentence beside each draft sentence you flag.
+3a. **Grade #10, register distance, against the venue's own papers, section by section — not against
+   the exemplars.** The rules count and this step judges; it starts from their numbers, not from a
+   count of its own.
+   - **Take the counts from the rules.** \`npx paperlint lint <paper-dir>\` reports
+     \`tex/contrast-frames\`, \`tex/claim-emphasis\` and \`tex/relation-markers\` when the venue preset
+     records anchors (AIDC does): each gives the body's rate per 10,000 words, the band, and the
+     anchors' range, and above the band it reports every frame and every claim in bold where it
+     stands. Those locations are the worklist. Do not recount them by grep — a narrower count is
+     gamed by rewording (*, not* → *rather than*), and the rules count every form.
+   - **Take the reference papers from the preset.** Its \`register.anchors\` names the accepted papers
+     the band comes from (AIDC: five ACSAC papers, all on arXiv under CC licences). Read two or three
+     of the same paper type as LaTeX source (\`https://arxiv.org/e-print/<id>\`) or as built PDFs. A
+     preset without anchors: fetch 2–3 accepted papers of the venue (or, for a first-edition workshop,
+     of its parent conference) from the proceedings or the program page, or use the ones the author
+     supplies.
+   - **Compare section by section, not the paper as a whole:** abstract, introduction, threat model or
+     background, method, results, limitations, conclusion. For each, put the draft's section beside the
+     same section of each reference paper and record, for both sides: how each result is owned (*we
+     measured* · a citation · a named population); how the relation between neighbouring sentences is
+     named (*because*, *therefore*, *however*, *for example*) or left to infer (a colon, a dash, a short
+     sentence); how often a point is made by what it is not; what is set in bold; and whether any
+     sentence is an aphorism, a fragment or a closing punchline. Quote the reference sentence beside
+     each draft sentence you flag.
+   - **Return concrete rewrites, and every one keeps every number and claim.** For each flagged sentence:
+     the draft sentence → the rewrite → the reference sentence it is modelled on → one line saying that
+     every number, citation and hedge is unchanged and the claim is neither softened nor strengthened.
+     A contrast frame is rewritten by saying what the thing is and naming the relation (*because*,
+     *as a result*), not by switching to another contrast form; a claim in bold loses the bold and
+     gains its owner (*we measured*, \`\\ref\` to the table); a relation left to infer gets its word.
+     Where the frame IS the claim (the paper's thesis sets one mechanism against another), keep it
+     once, in the abstract and the introduction, and say so.
+   - **Score the distance:** 5 = a reviewer could not tell the draft from the reference papers by
+     register, section by section; 1 = it reads as a different genre. After the rewrites, run
+     \`npx paperlint lint\` again: every register rule inside its band is the floor for a 4, not the
+     score itself.
    If no accepted paper can be fetched or supplied, write \`#10: not graded — no reference papers\` and
    say which were tried; a register score from memory is the guess this dimension exists to replace.
 4. **Find the paper's three-move opportunities:** what held assumption could open it? what is its single
@@ -359,10 +384,13 @@ changes neither meaning nor register — and never rewrite a cited work's title 
 **Signposting is the register, not a tic, and this skill never removes it on style grounds.** Frame
 markers and relation words — *we show*, *this section*, *first … finally*, *in contrast*, *therefore*,
 *however* — are how academic prose tells the reader what kind of claim comes next and how it relates to
-the last one. Their count does not separate a draft from accepted papers (see "Contrast framing"
-below); removing them does, in the wrong direction. Flag a connective only when it asserts a relation
-the two sentences do not have (a *therefore* that does not follow), or when it is empty filler (*it is
-worth noting that*). Never flag one for being academic.
+the last one. Relation words are a floor: \`tex/relation-markers\` reports a body below the band its
+venue's accepted papers set (AIDC: 25.4 per 10,000 words; the paper reviewers called a blog post stood
+at 19.1, and never wrote *however* once, where every accepted ACSAC paper writes it 6–11 times). Frame
+markers do not separate a draft from accepted papers in either direction (see "Contrast framing"
+below). Flag a connective only when it asserts a relation the two sentences do not have (a *therefore*
+that does not follow), or when it is empty filler (*it is worth noting that*). Never flag one for being
+academic.
 
 **Other markers worth a pass:** nominalisation density (*an honest accounting of what the construction
 costs* — abstract nouns doing the work verbs should do) and statistics chained through a paragraph
@@ -388,14 +416,15 @@ Two separable failures:
 
 ### 1. Contrast framing, and a frame that carries nothing
 
-**What separates this corpus from accepted papers is contrast, not signposting — measure that
-first.** Counted with the same counter on five accepted ACSAC 2024/25 ML-security papers against a
-paper of ours: *"not X but Y"* at 35.5 per 10,000 words in ours against at most 4.9 there (and five
-of their six hits were *"not only … but also"*); *"rather than / instead of"* at 19.9 against at most
-5.4. Every sentence that defines its point by what it is not is a sentence whose point the reader
-must reconstruct. **Rewrite heuristic:** state the thing; move the rejected alternative to its own
-sentence, or drop it if nobody proposed it. Check *instead of · rather than · not … but* first,
-against the same count on the reference papers of dimension #10.
+**What separates this corpus from accepted papers is contrast, not signposting — and a rule counts
+it.** \`tex/contrast-frames\` counts every form (*X, not Y* · *not X but Y* · *rather than* ·
+*instead of* · *as opposed to*) per 10,000 words against the band the venue preset's anchors set: the
+five accepted ACSAC papers measure 1.3–5.5, AIDC's band is 0–10.4, and the paper reviewers called a blog
+post measured 101 before its rewrite and 28 after it. Every sentence that defines its point by what
+it is not is a sentence whose point the reader must reconstruct. **Rewrite heuristic:** state the
+thing and name the relation; move the rejected alternative to its own sentence, or drop it if nobody
+proposed it. Swapping one form for another (*, not* → *rather than*) moves nothing — the rule counts
+both, and so does a reviewer.
 
 **Frame markers do not separate us from accepted papers, and are not a target in either direction.**
 Hyland's *frame markers* (*this paper · this section · we show · first … finally · in what follows*)
@@ -470,10 +499,13 @@ one did, and it was the worst section in the paper by measured density both time
 
 ### What is NOT mechanizable here
 
-Whether a frame marker carries its claim (*"we claim nothing there"* genuinely scopes one) and
-whether a hedge is honest or defensive. The mechanical leg that does exist: \`tex/claim-provenance\`
-reports every sentence of the body that holds a number and no owner. Count them, surface them, and leave the verdict to a reader.
-The counter's job is that nobody can say afterwards they did not know.
+Whether a frame marker carries its claim (*"we claim nothing there"* genuinely scopes one), whether a
+hedge is honest or defensive, whether a given contrast frame is the one a reader needs, and whether a
+rewrite kept every claim at its strength. The mechanical legs that do exist: \`tex/claim-provenance\`
+reports every sentence of the body that holds a number and no owner, and \`tex/contrast-frames\`,
+\`tex/claim-emphasis\` and \`tex/relation-markers\` report a body outside its venue's band. Count them,
+surface them, and leave the verdict to a reader. The counter's job is that nobody can say afterwards
+they did not know.
 
 ## Compose with
 - \`harden-paper\` — the multi-axis pre-submit gate calls this as its *writing* axis (the one a defect-hunt

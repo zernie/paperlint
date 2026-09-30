@@ -25,19 +25,19 @@ anchors, is not judged.
 Setting a finding in bold is how a post makes a point land; an accepted paper puts the number in a
 sentence that says whose it is, or in a table. Measured on the LaTeX source, per 10,000 words:
 
-| paper                                                          | words | claims in bold | per 10,000 |
-| -------------------------------------------------------------- | ----: | -------------: | ---------: |
-| `leaking-queries-acsac25` (ACSAC 2025)                         |  9133 |              0 |        0.0 |
-| `rr-dataset-quality-acsac24` (ACSAC 2024)                      |  8130 |              0 |        0.0 |
-| `secure-acsac24` (ACSAC 2024)                                  |  7519 |              0 |        0.0 |
-| `llm-splained-acsac25` (ACSAC 2025)                            |  9529 |              1 |        1.0 |
-| `barovox-acsac24` (ACSAC 2024)                                 |  7670 |              8 |       10.4 |
-| the paper reviewers called a blog post, as resubmitted to AIDC | 10476 |             42 |       40.1 |
-| the same paper, before its rewrite                             |  6128 |             42 |       68.5 |
-| `agenticdev-acm26` (ours, "too informal", ACM)                 |  4374 |              8 |       18.3 |
+| paper                                                   | words | claims in bold | per 10,000 |
+| ------------------------------------------------------- | ----: | -------------: | ---------: |
+| `leaking-queries-acsac25` (ACSAC 2025)                  |  9133 |              0 |        0.0 |
+| `rr-dataset-quality-acsac24` (ACSAC 2024)               |  8130 |              0 |        0.0 |
+| `secure-acsac24` (ACSAC 2024)                           |  7519 |              0 |        0.0 |
+| `llm-splained-acsac25` (ACSAC 2025)                     |  9529 |              1 |        1.0 |
+| `barovox-acsac24` (ACSAC 2024)                          |  7670 |              8 |       10.4 |
+| the paper reviewers called a blog post, current version | 10476 |             42 |       40.1 |
+| the same paper, before its rewrite                      |  6128 |             42 |       68.5 |
+| `agenticdev-acm26` (ours, "too informal", ACM)          |  4374 |              8 |       18.3 |
 
 Two shapes were measured and left out, because they do not separate the groups: all bold inside a
-sentence (accepted papers 0–44 per 10,000, the resubmitted paper 60 — terms in bold are common), and
+sentence (accepted papers 0–44 per 10,000, that paper 60 — terms in bold are common), and
 phrases of six words or more in italics (accepted 0–7.8, the paper 4.8 — italics carry quotes and
 examples). BaroVox's 8 are six of its results set in bold (_0.35_, _4.09/5_, …), its claim of a
 _first-ever use of this technique on pressure sensors_, and a dataset name with a digit

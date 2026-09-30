@@ -45,7 +45,7 @@ relation (_because_, _therefore_). Measured on the LaTeX source, per 10,000 word
 | `leaking-queries-acsac25` (ACSAC 2025)                     |  9133 |      5 |        5.5 |
 | the paper reviewers called a blog post, before its rewrite |  6128 |     62 |      101.2 |
 | the same paper, after a rewrite aimed at contrast frames   |  6121 |     25 |       40.8 |
-| the same paper, as resubmitted to AIDC                     | 10476 |     29 |       27.7 |
+| the same paper, its current version                        | 10476 |     29 |       27.7 |
 | `agenticdev-acm26` (ours, "too informal", ACM)             |  4374 |     22 |       50.3 |
 
 An independent blind hand count — a reader who did not know which text was which, counting every

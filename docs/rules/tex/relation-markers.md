@@ -26,18 +26,18 @@ behind.
 A reviewer wrote: _"Readers are often required to infer the intended relationships between claims."_
 Measured on the LaTeX source, per 10,000 words:
 
-| paper                                                          | words | markers | per 10,000 |
-| -------------------------------------------------------------- | ----: | ------: | ---------: |
-| `rr-dataset-quality-acsac24` (ACSAC 2024)                      |  8130 |      32 |       39.4 |
-| `barovox-acsac24` (ACSAC 2024)                                 |  7670 |      31 |       40.4 |
-| `secure-acsac24` (ACSAC 2024)                                  |  7519 |      38 |       50.5 |
-| `llm-splained-acsac25` (ACSAC 2025)                            |  9529 |      84 |       88.2 |
-| `leaking-queries-acsac25` (ACSAC 2025)                         |  9133 |     103 |      112.8 |
-| the paper reviewers called a blog post, as resubmitted to AIDC | 10476 |      20 |       19.1 |
-| the same paper, before its rewrite                             |  6128 |       9 |       14.7 |
-| `agenticdev-acm26` (ours, "too informal", ACM)                 |  4374 |      13 |       29.7 |
+| paper                                                   | words | markers | per 10,000 |
+| ------------------------------------------------------- | ----: | ------: | ---------: |
+| `rr-dataset-quality-acsac24` (ACSAC 2024)               |  8130 |      32 |       39.4 |
+| `barovox-acsac24` (ACSAC 2024)                          |  7670 |      31 |       40.4 |
+| `secure-acsac24` (ACSAC 2024)                           |  7519 |      38 |       50.5 |
+| `llm-splained-acsac25` (ACSAC 2025)                     |  9529 |      84 |       88.2 |
+| `leaking-queries-acsac25` (ACSAC 2025)                  |  9133 |     103 |      112.8 |
+| the paper reviewers called a blog post, current version | 10476 |      20 |       19.1 |
+| the same paper, before its rewrite                      |  6128 |       9 |       14.7 |
+| `agenticdev-acm26` (ours, "too informal", ACM)          |  4374 |      13 |       29.7 |
 
-_However_ alone stands 6–11 times in every accepted paper and never in the resubmitted one. The
+_However_ alone stands 6–11 times in every accepted paper and never in the current version of ours. The
 separation survives dropping any one marker from the list: with each of the 24 that occur removed in
 turn, the lowest accepted paper stays at least 1.38 times the highest version of ours (the worst case
 is dropping _however_). The list was fixed before this
