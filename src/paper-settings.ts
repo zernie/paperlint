@@ -112,6 +112,19 @@ export function identityField(
       );
 }
 
+/** `rules` (checked for shape only) and `talk`, each null when absent. */
+function rulesAndTalk(
+  json: Readonly<Record<string, unknown>>,
+): Result<Pick<PaperSettings, "rules" | "talk">, string> {
+  const rules = json["rules"];
+  if (rules !== undefined && !isObject(rules) && !Array.isArray(rules))
+    return err(
+      `"rules" must be an object of rule id → severity, or a list of ESLint blocks`,
+    );
+  const talk = parsePaperTalk(json["talk"]);
+  return talk.ok ? ok({ rules: rules ?? null, talk: talk.value }) : talk;
+}
+
 /** The parsed JSON of `paperlint.json` → the settings, or one line saying what is wrong. Pure. */
 export function parsePaperSettings(
   json: unknown,
@@ -131,19 +144,9 @@ export function parsePaperSettings(
   if (!fields.ok) return fields;
   const identity = identityField(json);
   if (!identity.ok) return identity;
-  const rules = json["rules"];
-  if (rules !== undefined && !isObject(rules) && !Array.isArray(rules))
-    return err(
-      `"rules" must be an object of rule id → severity, or a list of ESLint blocks`,
-    );
-  const talk = parsePaperTalk(json["talk"]);
-  if (!talk.ok) return talk;
-  return ok({
-    ...fields.value,
-    rules: rules ?? null,
-    identity: identity.value,
-    talk: talk.value,
-  });
+  const rest = rulesAndTalk(json);
+  if (!rest.ok) return rest;
+  return ok({ ...fields.value, ...rest.value, identity: identity.value });
 }
 
 /** A JSON file through `files`: undefined when absent, the problem when it does not parse. */

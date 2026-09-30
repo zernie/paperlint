@@ -17,11 +17,11 @@ const opensWithFtyp = (bytes: Uint8Array): boolean =>
   new TextDecoder("latin1").decode(bytes.subarray(4, 8)) === "ftyp";
 
 /** A track's duration in seconds, from its own media timescale. */
-const seconds = (t: Pick<Track, "duration" | "timescale">): number =>
+const seconds = (t: Readonly<Pick<Track, "duration" | "timescale">>): number =>
   t.duration / t.timescale;
 
 /** The movie's info, or null when the bytes hold no complete `moov` box. */
-function movieOf(bytes: Uint8Array): Movie | null {
+function movieOf(bytes: Uint8Array): Readonly<Movie> | null {
   const file = createFile();
   const copy = bytes.slice().buffer;
   file.appendBuffer(MP4BoxBuffer.fromArrayBuffer(copy, 0));

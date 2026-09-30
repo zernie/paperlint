@@ -22,11 +22,7 @@ export const TALK_MODES: readonly TalkMode[] = [
 
 /** A file a mode can owe. */
 export type TalkArtifact =
-  | "video"
-  | "one-slide"
-  | "captions"
-  | "slides-pdf"
-  | "poster";
+  "video" | "one-slide" | "captions" | "slides-pdf" | "poster";
 export const TALK_ARTIFACTS: readonly TalkArtifact[] = [
   "video",
   "one-slide",
@@ -158,51 +154,62 @@ export interface VenueTalkJson {
     readonly max_bytes?: number;
     readonly captions?: "required" | "optional";
   };
-  readonly one_slide?: { readonly width_px: number; readonly height_px: number };
-}
-
-/** The schema-checked block → the typed venue talk. Pure. */
-export function venueTalkOf(j: VenueTalkJson): VenueTalk {
-  return {
-    modes: j.modes ?? [],
-    artifacts: new Map(
-      TALK_MODES.flatMap((mode) => {
-        const o = j.artifacts?.[mode];
-        return o === undefined
-          ? []
-          : [[mode, { required: o.required, optional: o.optional ?? [] }]];
-      }),
-    ),
-    kinds: new Map(
-      Object.entries(j.kinds ?? {}).map(([name, k]) => [
-        name,
-        {
-          slotS: k.slot_s,
-          talkSMin: k.talk_s_min ?? null,
-          talkSMax: k.talk_s_max,
-          qaS: k.qa_s ?? null,
-        },
-      ]),
-    ),
-    video: {
-      container: j.video?.container ?? null,
-      minHeightPx: j.video?.min_height_px ?? null,
-      maxBytes: j.video?.max_bytes ?? null,
-      captions: j.video?.captions ?? null,
-    },
-    oneSlide:
-      j.one_slide === undefined
-        ? null
-        : { width: j.one_slide.width_px, height: j.one_slide.height_px },
+  readonly one_slide?: {
+    readonly width_px: number;
+    readonly height_px: number;
   };
 }
+
+type ArtifactsJson = NonNullable<VenueTalkJson["artifacts"]>;
+type KindsJson = NonNullable<VenueTalkJson["kinds"]>;
+
+const artifactsOf = (j: ArtifactsJson): ReadonlyMap<TalkMode, TalkObligation> =>
+  new Map(
+    TALK_MODES.flatMap((mode) => {
+      const o = j[mode];
+      return o === undefined
+        ? []
+        : [[mode, { required: o.required, optional: o.optional ?? [] }]];
+    }),
+  );
+
+const kindsOf = (j: KindsJson): ReadonlyMap<string, TalkSlot> =>
+  new Map(
+    Object.entries(j).map(([name, k]) => [
+      name,
+      {
+        slotS: k.slot_s,
+        talkSMin: k.talk_s_min ?? null,
+        talkSMax: k.talk_s_max,
+        qaS: k.qa_s ?? null,
+      },
+    ]),
+  );
+
+const videoOf = (v: VenueTalkJson["video"] = {}): VideoLimits => ({
+  container: v.container ?? null,
+  minHeightPx: v.min_height_px ?? null,
+  maxBytes: v.max_bytes ?? null,
+  captions: v.captions ?? null,
+});
+
+/** The schema-checked block → the typed venue talk. Pure. */
+export const venueTalkOf = (j: VenueTalkJson): VenueTalk => ({
+  modes: j.modes ?? [],
+  artifacts: artifactsOf(j.artifacts ?? {}),
+  kinds: kindsOf(j.kinds ?? {}),
+  video: videoOf(j.video),
+  oneSlide:
+    j.one_slide === undefined
+      ? null
+      : { width: j.one_slide.width_px, height: j.one_slide.height_px },
+});
 
 // ── a paper's `talk` key ───────────────────────────────────────────────────────────────────
 
 const PAPER_TALK_KEYS = ["mode", "dir", "files", "one_slide"];
 
-const isMode = (v: unknown): v is TalkMode =>
-  TALK_MODES.some((m) => m === v);
+const isMode = (v: unknown): v is TalkMode => TALK_MODES.some((m) => m === v);
 const isArtifact = (v: string): v is TalkArtifact =>
   TALK_ARTIFACTS.some((a) => a === v);
 const isPlainName = (v: unknown): v is string =>
@@ -236,7 +243,9 @@ function oneSlideOf(v: unknown): Result<PixelSize | null, string> {
   const h = fieldOf(v, "height_px");
   return isPositiveInt(w) && isPositiveInt(h)
     ? ok({ width: w, height: h })
-    : err(`"talk.one_slide" must be { "width_px": <integer>, "height_px": <integer> }`);
+    : err(
+        `"talk.one_slide" must be { "width_px": <integer>, "height_px": <integer> }`,
+      );
 }
 
 /**

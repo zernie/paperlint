@@ -249,18 +249,11 @@ function merged(
     }),
     base,
   );
+  const { name, ...rest } = m;
   return {
-    label: m.name ?? labelOf(spec),
+    label: name ?? labelOf(spec),
     chain: rootFirst.map((x) => x.file),
-    template: m.template,
-    aliases: m.aliases,
-    blind: m.blind,
-    requiredSections: m.requiredSections,
-    tex: m.tex,
-    format: m.format,
-    rules: m.rules,
-    registerAnchors: m.registerAnchors,
-    talk: m.talk,
+    ...rest,
   };
 }
 

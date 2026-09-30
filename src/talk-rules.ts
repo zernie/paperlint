@@ -30,7 +30,7 @@
 import { basename, dirname, join, relative } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
-import { paperPreset } from "./presets.ts";
+import { paperPreset, type Preset } from "./presets.ts";
 import { fieldOf } from "./domain/record.ts";
 import type { Files } from "./ports/files.ts";
 import type { ListDir, TalkMedia } from "./ports/talk-media.ts";
@@ -44,7 +44,11 @@ import {
   type VenueTalk,
   type VideoProbe,
 } from "./domain/talk.ts";
-import { rulePageUrl, type VenueRuleModule } from "./venue-rules.ts";
+import {
+  rulePageUrl,
+  type VenueRuleContext,
+  type VenueRuleModule,
+} from "./venue-rules.ts";
 
 // ── what one lint run knows about a paper's talk ─────────────────────────────────────
 
@@ -82,22 +86,28 @@ const straysOf = (paperDir: string, deps: TalkRuleDeps): readonly string[] =>
     .filter((n) => n.toLowerCase().endsWith(".mp4"))
     .map((n) => join(paperDir, DEFAULT_TALK_DIR, n));
 
+/** What the paper names as its venue: the label and the `talk` block, or nulls without a preset. */
+const venueOf = (
+  preset: Preset | null,
+): Pick<Declared, "venue" | "venueTalk"> =>
+  preset === null
+    ? { venue: null, venueTalk: null }
+    : { venue: preset.label, venueTalk: preset.talk };
+
 /** One paper, assessed. Reads through `deps` only; never throws on a paper's files. */
 function assess(paperDir: string, deps: TalkRuleDeps): Assessment {
   const p = paperPreset(paperDir, deps);
   if (p.kind === "settings-problem" || p.kind === "preset-problem")
     return { kind: "unreadable" };
-  const talk = p.settings?.talk ?? null;
-  if (talk === null)
+  const settings = p.settings;
+  if (settings?.talk == null)
     return { kind: "undeclared", strays: straysOf(paperDir, deps) };
-  const resolved = p.kind === "resolved" ? p.preset : null;
   return {
     kind: "declared",
     paperDir,
-    talk,
-    paperKind: p.settings?.kind ?? null,
-    venue: resolved?.label ?? null,
-    venueTalk: resolved?.talk ?? null,
+    talk: settings.talk,
+    paperKind: settings.kind,
+    ...venueOf(p.kind === "resolved" ? p.preset : null),
   };
 }
 
@@ -129,9 +139,7 @@ const bytesOf = (deps: TalkRuleDeps, path: string): Uint8Array | null =>
 
 /** The slot of the paper's kind, when the venue sets one. */
 const slotOf = (d: Declared): TalkSlot | null =>
-  d.paperKind === null
-    ? null
-    : (d.venueTalk?.kinds.get(d.paperKind) ?? null);
+  d.paperKind === null ? null : (d.venueTalk?.kinds.get(d.paperKind) ?? null);
 
 /** The video's probe; null when the file is absent or does not parse (other rules say which). */
 function videoOf(d: Declared, deps: TalkRuleDeps): VideoProbe | null {
@@ -341,15 +349,36 @@ function largestGap(
   cues: readonly Cue[],
 ): { readonly at: number; readonly s: number } | null {
   const sorted = [...cues].sort((a, b) => a.startS - b.startS);
-  return sorted.slice(1).reduce<{ at: number; s: number } | null>(
-    (best, cue, i) => {
+  return sorted
+    .slice(1)
+    .reduce<{ at: number; s: number } | null>((best, cue, i) => {
       const prevEnd = sorted[i]?.endS ?? cue.startS;
       const s = cue.startS - prevEnd;
       return best === null || s > best.s ? { at: prevEnd, s } : best;
-    },
-    null,
-  );
+    }, null);
 }
+
+/** The first cue later than the limit into the video. */
+const lateStart = (first: number, l: CoverLimits): readonly Finding[] =>
+  first > l.maxStartS
+    ? [finding("lateStart", { first: clock(first), max: l.maxStartS })]
+    : [];
+
+/** The last cue ending earlier than the limit before the video's end. */
+const earlyEnd = (
+  last: number,
+  durationS: number,
+  l: CoverLimits,
+): readonly Finding[] =>
+  last < durationS - l.maxEndGapS
+    ? [
+        finding("earlyEnd", {
+          last: clock(last),
+          video: clock(durationS),
+          max: l.maxEndGapS,
+        }),
+      ]
+    : [];
 
 /** How the cues cover a video of `durationS`. */
 export function judgeCover(
@@ -358,24 +387,18 @@ export function judgeCover(
   limits: CoverLimits,
 ): readonly Finding[] {
   if (cues.length === 0) return [finding("noCues", {})];
-  const first = Math.min(...cues.map((c) => c.startS));
-  const last = Math.max(...cues.map((c) => c.endS));
   const gap = largestGap(cues);
   return [
-    ...(first > limits.maxStartS
-      ? [finding("lateStart", { first: clock(first), max: limits.maxStartS })]
-      : []),
-    ...(last < durationS - limits.maxEndGapS
+    ...lateStart(Math.min(...cues.map((c) => c.startS)), limits),
+    ...earlyEnd(Math.max(...cues.map((c) => c.endS)), durationS, limits),
+    ...(gap !== null && gap.s > limits.maxGapS
       ? [
-          finding("earlyEnd", {
-            last: clock(last),
-            video: clock(durationS),
-            max: limits.maxEndGapS,
+          finding("gap", {
+            at: clock(gap.at),
+            s: gap.s.toFixed(1),
+            max: limits.maxGapS,
           }),
         ]
-      : []),
-    ...(gap !== null && gap.s > limits.maxGapS
-      ? [finding("gap", { at: clock(gap.at), s: gap.s.toFixed(1), max: limits.maxGapS })]
       : []),
   ];
 }
@@ -562,6 +585,23 @@ export const TALK_RULE_LEVELS: Readonly<
   "talk/captions-cover": "warn",
 };
 
+/** Every finding of rule `name` on the paper whose `paper.tex` ESLint is linting, reported at line 1. */
+function reportAll(
+  name: TalkRuleName,
+  context: VenueRuleContext,
+  deps: TalkRuleDeps,
+): void {
+  const cwd = context.cwd;
+  const shown = (p: string) => (cwd ? relative(cwd, p) || p : p);
+  const a = assess(dirname(context.filename), deps);
+  const loc = { start: { line: 1, column: 1 }, end: { line: 1, column: 2 } };
+  findingsOf(name, a, { deps, options: context.options, shown }).forEach(
+    (f) => {
+      context.report({ loc, messageId: f.messageId, data: f.data });
+    },
+  );
+}
+
 function rule(name: TalkRuleName, deps: TalkRuleDeps): VenueRuleModule {
   const meta = META[name];
   return {
@@ -572,18 +612,11 @@ function rule(name: TalkRuleName, deps: TalkRuleDeps): VenueRuleModule {
       messages: meta.messages,
     },
     create(context) {
+      // Judged once per paper, on its paper.tex: the paper directory is the file's directory.
       if (basename(context.filename) !== "paper.tex") return {};
       return {
         root() {
-          const cwd = context.cwd;
-          const shown = (p: string) => (cwd ? relative(cwd, p) || p : p);
-          const a = assess(dirname(context.filename), deps);
-          const loc = { start: { line: 1, column: 1 }, end: { line: 1, column: 2 } };
-          findingsOf(name, a, { deps, options: context.options, shown }).forEach(
-            (f) => {
-              context.report({ loc, messageId: f.messageId, data: f.data });
-            },
-          );
+          reportAll(name, context, deps);
         },
       };
     },
