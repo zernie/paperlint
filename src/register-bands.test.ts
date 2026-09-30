@@ -90,6 +90,9 @@ const WITHIN = {
 
 const ACSAC = readdirSync(CORPUS).filter((d) => /acsac\d\d$/u.test(d));
 
+/** Parsing a real paper takes a second or more, several under coverage with every suite running. */
+const PAPER_TIMEOUT_MS = 60_000;
+
 describe("AIDC's anchors are the accepted ACSAC papers, as the counters measure them today", () => {
   it("🔴 the preset records every ACSAC paper of the corpus, and nothing else", () => {
     expect(aidc.registerAnchors.map((a) => a.paper).sort()).toEqual(
@@ -99,6 +102,7 @@ describe("AIDC's anchors are the accepted ACSAC papers, as the counters measure 
 
   it.each(aidc.registerAnchors.map((a) => [a.paper, a] as const))(
     "🔴 %s: words and every count equal the fixture's, re-measured",
+    { timeout: PAPER_TIMEOUT_MS },
     (paper, recorded) => {
       expect(anchorFor(paper)).toEqual(recorded);
     },
@@ -106,7 +110,7 @@ describe("AIDC's anchors are the accepted ACSAC papers, as the counters measure 
 });
 
 describe("every accepted ACSAC paper stands inside AIDC's band on every measure", () => {
-  it.each(ACSAC)("%s", (paper) => {
+  it.each(ACSAC)("%s", { timeout: PAPER_TIMEOUT_MS }, (paper) => {
     expect(standings(anchorFor(paper))).toEqual(WITHIN);
   });
 });
@@ -133,52 +137,64 @@ const ADVERBIAL =
   /\b(?:however|therefore|thus|hence|consequently|as a result|in contrast|specifically|for example|for instance|in particular),\s*/giu;
 
 describe("variants of real accepted papers, one change each, leave the band on that measure only", () => {
-  it("🔴 secure-acsac24 with a contrast frame after 20 mentions of the model: contrast frames above", () => {
-    const src = inBody(
-      sourceOf("secure-acsac24"),
-      /\bthe model\b/gu,
-      () => "the model, not the prompt",
-      20,
-    );
-    expect(standings(anchorFor("secure-acsac24", src))).toEqual({
-      ...WITHIN,
-      contrast_frames: "above",
-    });
-  });
+  it(
+    "🔴 secure-acsac24 with a contrast frame after 20 mentions of the model: contrast frames above",
+    { timeout: PAPER_TIMEOUT_MS },
+    () => {
+      const src = inBody(
+        sourceOf("secure-acsac24"),
+        /\bthe model\b/gu,
+        () => "the model, not the prompt",
+        20,
+      );
+      expect(standings(anchorFor("secure-acsac24", src))).toEqual({
+        ...WITHIN,
+        contrast_frames: "above",
+      });
+    },
+  );
 
-  it("🔴 llm-splained-acsac25 with its first 20 percentages set in bold: claims in bold above", () => {
-    const src = inBody(
-      sourceOf("llm-splained-acsac25"),
-      /\b\d+(?:\.\d+)?\\%/gu,
-      (m) => `\\textbf{${m}}`,
-      20,
-    );
-    expect(standings(anchorFor("llm-splained-acsac25", src))).toEqual({
-      ...WITHIN,
-      claim_emphasis: "above",
-    });
-  });
+  it(
+    "🔴 llm-splained-acsac25 with its first 20 percentages set in bold: claims in bold above",
+    { timeout: PAPER_TIMEOUT_MS },
+    () => {
+      const src = inBody(
+        sourceOf("llm-splained-acsac25"),
+        /\b\d+(?:\.\d+)?\\%/gu,
+        (m) => `\\textbf{${m}}`,
+        20,
+      );
+      expect(standings(anchorFor("llm-splained-acsac25", src))).toEqual({
+        ...WITHIN,
+        claim_emphasis: "above",
+      });
+    },
+  );
 
-  it("🔴 rr-dataset-quality-acsac24 with its relations left to the reader: relation markers below", () => {
-    // One change: the sentence adverbials that name a relation are dropped, and «because» becomes
-    // «as» — the same claims, the relation between them no longer named.
-    const dropped = inBody(
-      sourceOf("rr-dataset-quality-acsac24"),
-      ADVERBIAL,
-      () => "",
-      Number.POSITIVE_INFINITY,
-    );
-    const src = inBody(
-      dropped,
-      /\bbecause\b/gu,
-      () => "as",
-      Number.POSITIVE_INFINITY,
-    );
-    expect(standings(anchorFor("rr-dataset-quality-acsac24", src))).toEqual({
-      ...WITHIN,
-      relation_markers: "below",
-    });
-  });
+  it(
+    "🔴 rr-dataset-quality-acsac24 with its relations left to the reader: relation markers below",
+    { timeout: PAPER_TIMEOUT_MS },
+    () => {
+      // One change: the sentence adverbials that name a relation are dropped, and «because» becomes
+      // «as» — the same claims, the relation between them no longer named.
+      const dropped = inBody(
+        sourceOf("rr-dataset-quality-acsac24"),
+        ADVERBIAL,
+        () => "",
+        Number.POSITIVE_INFINITY,
+      );
+      const src = inBody(
+        dropped,
+        /\bbecause\b/gu,
+        () => "as",
+        Number.POSITIVE_INFINITY,
+      );
+      expect(standings(anchorFor("rr-dataset-quality-acsac24", src))).toEqual({
+        ...WITHIN,
+        relation_markers: "below",
+      });
+    },
+  );
 });
 
 describe("judgeBand — a body's rate against a band", () => {

@@ -11,6 +11,7 @@ import {
   claimEmphasis,
   contrastFrames,
   excerpt,
+  rateOf,
   relationMarkers,
   type RegisterAnchor,
 } from "./register.ts";
@@ -133,8 +134,9 @@ describe("bandOf — the anchors' range, widened by two Poisson standard deviati
     expect(bandOf([anchor(10_000, 100)], "contrast_frames")?.min).toBe(80);
   });
 
-  it("no anchors, no band", () => {
+  it("no anchors, no band; a body of no words has a rate of zero", () => {
     expect(bandOf([], "contrast_frames")).toBeNull();
+    expect(rateOf(3, 0)).toBe(0);
   });
 });
 

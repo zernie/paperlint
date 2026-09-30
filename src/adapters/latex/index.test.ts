@@ -602,6 +602,14 @@ describe("bodyEmphasis — phrases set apart inside the body's prose, and where 
     ]);
   });
 
+  it("an empty bold macro sets nothing apart, opening a paragraph or not", () => {
+    expect(
+      shape(
+        "\\begin{document}\n\\textbf{} Opens. We \\textbf{ } go.\n\\end{document}",
+      ),
+    ).toEqual([]);
+  });
+
   it("an environment opening a paragraph opens nothing for the phrases inside it", () => {
     expect(
       shape(

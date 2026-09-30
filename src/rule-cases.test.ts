@@ -532,23 +532,39 @@ describe("every registered rule has cases, and every case names a registered rul
   });
 });
 
-describe.each(Object.entries(CASES))("%s, through real ESLint", (id, c) => {
-  it(`reports on ${c.reports.file}:${String(c.reports.line)} at severity ${String(c.reports.severity)}`, async () => {
-    const got = (await lintTree(c.reports.tree)).filter((m) => m.ruleId === id);
-    expect(
-      got.some(
-        (m) =>
-          m.file === c.reports.file &&
-          m.line === c.reports.line &&
-          m.severity === c.reports.severity,
-      ),
-      JSON.stringify(got),
-    ).toBe(true);
-  });
+/**
+ * A case lints its tree through the whole CLI: a body long enough for a rate to be judged (2 000
+ * words and more) takes seconds under coverage, on a machine running every suite at once.
+ */
+const CASE_TIMEOUT_MS = 30_000;
 
-  it("stays silent on a conforming paper", async () => {
-    expect((await lintTree(c.silent)).filter((m) => m.ruleId === id)).toEqual(
-      [],
-    );
-  });
+describe.each(Object.entries(CASES))("%s, through real ESLint", (id, c) => {
+  it(
+    `reports on ${c.reports.file}:${String(c.reports.line)} at severity ${String(c.reports.severity)}`,
+    { timeout: CASE_TIMEOUT_MS },
+    async () => {
+      const got = (await lintTree(c.reports.tree)).filter(
+        (m) => m.ruleId === id,
+      );
+      expect(
+        got.some(
+          (m) =>
+            m.file === c.reports.file &&
+            m.line === c.reports.line &&
+            m.severity === c.reports.severity,
+        ),
+        JSON.stringify(got),
+      ).toBe(true);
+    },
+  );
+
+  it(
+    "stays silent on a conforming paper",
+    { timeout: CASE_TIMEOUT_MS },
+    async () => {
+      expect((await lintTree(c.silent)).filter((m) => m.ruleId === id)).toEqual(
+        [],
+      );
+    },
+  );
 });
