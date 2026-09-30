@@ -587,6 +587,14 @@ describe("bodyEmphasis — phrases set apart inside the body's prose, and where 
       ),
     ).toEqual(["bold/opening: Increasing the distance"]);
   });
+});
+
+describe("bodyEmphasis — each style, and edge cases", () => {
+  /** Each phrase as `style/place: text`. */
+  const shape = (src: string): readonly string[] =>
+    bodyEmphasis(parseLatex(src)).map(
+      (e) => `${e.style}/${e.place}: ${e.text}`,
+    );
 
   it("each style: \\emph and \\textit italic, \\underline underline, a `{\\bfseries …}` group bold; a footnote's phrase counts", () => {
     expect(
