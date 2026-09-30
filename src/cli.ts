@@ -66,6 +66,10 @@ import {
 import { claimProvenanceRule } from "./claim-provenance.ts";
 import { registerRule } from "./register.ts";
 import {
+  REGISTER_BAND_RULE_LEVELS,
+  registerBandRules,
+} from "./register-bands.ts";
+import {
   paperRules,
   identityField,
   stringFields,
@@ -236,6 +240,13 @@ settings — paperlint.json, at two levels, one schema. Both are optional.
   file, is an error.
 `;
 
+/** What the rules over a paper.tex read with: the disk, the shipped presets, the LaTeX reader. */
+const TEX_RULE_DEPS = {
+  files: nodeFiles,
+  venuesDir: presetsDir(),
+  latex: latexReader,
+};
+
 /** The config the user would otherwise write by hand. The data comes from `opts`, the mechanism is here. */
 export function buildConfig(
   opts: PaperlintConfig = {},
@@ -325,30 +336,17 @@ export function buildConfig(
           languages: { latex: texLanguage },
           rules: {
             ...texBuild,
-            ...texVenueRules({
-              files: nodeFiles,
-              venuesDir: presetsDir(),
-              latex: latexReader,
-            }),
-            "claim-provenance": claimProvenanceRule({
-              files: nodeFiles,
-              latex: latexReader,
-            }),
-            register: registerRule({
-              files: nodeFiles,
-              latex: latexReader,
-            }),
+            ...texVenueRules(TEX_RULE_DEPS),
+            "claim-provenance": claimProvenanceRule(TEX_RULE_DEPS),
+            register: registerRule(TEX_RULE_DEPS),
+            ...registerBandRules(TEX_RULE_DEPS),
           },
         },
         paper: { rules: texPaperRules },
         bib: bibReachable,
         format: {
           rules: {
-            ...formatRules({
-              files: nodeFiles,
-              venuesDir: presetsDir(),
-              latex: latexReader,
-            }),
+            ...formatRules(TEX_RULE_DEPS),
             ...pageLimitRules({ files: nodeFiles, venuesDir: presetsDir() }),
           },
         },
@@ -364,6 +362,9 @@ export function buildConfig(
         "tex/claim-provenance": "warn",
         // Sentence-initial conjunctions over the whole body: register, not vocabulary.
         "tex/register": "warn",
+        // Contrast frames, claims in bold, relation markers: each against the band the venue
+        // preset's anchors set, silent for a preset without anchors (src/register-bands.ts).
+        ...REGISTER_BAND_RULE_LEVELS,
         "tex/acm-frontmatter-override": "error",
         // Silent for a paper whose paperlint.json names no venue (src/venue-rules.ts).
         ...VENUE_RULE_LEVELS,

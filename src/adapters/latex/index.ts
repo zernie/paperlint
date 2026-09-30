@@ -29,7 +29,7 @@ import {
 import { documentBodyOf, includesOf } from "./includes.ts";
 import { outlineOf } from "./outline.ts";
 import { parseLatex } from "./parse.ts";
-import { bodyProse } from "./prose.ts";
+import { bodyEmphasis, bodyProse } from "./prose.ts";
 import { renderedRuns } from "./rendered.ts";
 import { layoutOverridesOf } from "./layout.ts";
 
@@ -50,7 +50,7 @@ export {
 export { documentBodyOf, includesOf } from "./includes.ts";
 export { outlineOf } from "./outline.ts";
 export { parseLatex, type ParsedTex } from "./parse.ts";
-export { bodyProse } from "./prose.ts";
+export { bodyEmphasis, bodyProse } from "./prose.ts";
 export { renderedRuns } from "./rendered.ts";
 export { layoutOverridesOf } from "./layout.ts";
 
@@ -60,6 +60,7 @@ export const latexReader: LatexReader = {
   outline: (src) => outlineOf(parseLatex(src)),
   renderedRuns: (src) => renderedRuns(parseLatex(src)),
   bodyProse: (src) => bodyProse(parseLatex(src)),
+  bodyEmphasis: (src) => bodyEmphasis(parseLatex(src)),
   includes: (src) => includesOf(parseLatex(src)),
   documentBody: (src) => documentBodyOf(parseLatex(src)),
   template: parseTemplate,

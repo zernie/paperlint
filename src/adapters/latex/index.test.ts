@@ -8,6 +8,7 @@ import type * as Ast from "@unified-latex/unified-latex-types";
 import { describe, expect, it } from "vitest";
 import { runText, spanIn, type ProsePiece } from "../../domain/tex-document.ts";
 import {
+  bodyEmphasis,
   bodyProse,
   documentBodyOf,
   documentClassOf,
@@ -470,6 +471,15 @@ describe("bodyProse — run-in headings and list items", () => {
     ).toEqual(["It grows.", "It holds."]);
   });
 
+  it("🔴 braces around a run-in heading change nothing: `{\\textbf{Side-channel eavesdropping:}}` is a heading, left out", () => {
+    // barovox-acsac24, Chapters/09_Related_Works.tex, writes its run-in headings this way.
+    expect(
+      texts(
+        "\\begin{document}\n{\\textbf{Side-channel eavesdropping:}} It has been studied.\n\\end{document}",
+      ),
+    ).toEqual(["It has been studied."]);
+  });
+
   it("the same markup inside a sentence, or without the closing mark, is prose", () => {
     expect(
       texts(
@@ -539,5 +549,86 @@ describe("documentBodyOf — the body of a source that is a document of its own"
     expect(documentBodyOf(parseLatex("\\begin{document}\\end{document}"))).toBe(
       null,
     );
+  });
+});
+
+describe("bodyEmphasis — phrases set apart inside the body's prose, and where they stand", () => {
+  /** Each phrase as `style/place: text`. */
+  const shape = (src: string): readonly string[] =>
+    bodyEmphasis(parseLatex(src)).map(
+      (e) => `${e.style}/${e.place}: ${e.text}`,
+    );
+
+  it("🔴 a bold phrase inside a sentence is inline; one opening a paragraph or an item is a label (opening)", () => {
+    expect(
+      shape(
+        "\\begin{document}\nWe find that \\textbf{the guards react to the word}.\n\n\\textbf{Varying the volume}. We vary it.\n\\begin{itemize}\n\\item \\textbf{A corpus of questions}: we release it.\n\\end{itemize}\n\\end{document}",
+      ),
+    ).toEqual([
+      "bold/inline: the guards react to the word",
+      "bold/opening: Varying the volume",
+      "bold/opening: A corpus of questions",
+    ]);
+  });
+
+  it("🔴 never a heading, a run-in heading, a caption, a table, or anything after the bibliography", () => {
+    expect(
+      shape(
+        "\\begin{document}\n\\section{\\textbf{Big}}\n\\textbf{Threats.} None \\emph{here}.\n\\begin{table}\\caption{\\textbf{C}}\\begin{tabular}{l}\\textbf{cell}\\end{tabular}\\end{table}\n\\bibliography{refs}\nAfter \\textbf{this}.\n\\end{document}",
+      ),
+    ).toEqual(["italic/inline: here"]);
+  });
+
+  it("braces around a label change nothing: `{\\textbf{Filtering}}.` opening a paragraph is a label", () => {
+    // barovox-acsac24, Chapters/08_Discussion.tex.
+    expect(
+      shape(
+        "\\begin{document}\n{\\textbf{Increasing the distance}}. The proximity matters.\n\\end{document}",
+      ),
+    ).toEqual(["bold/opening: Increasing the distance"]);
+  });
+});
+
+describe("bodyEmphasis — each style, and edge cases", () => {
+  /** Each phrase as `style/place: text`. */
+  const shape = (src: string): readonly string[] =>
+    bodyEmphasis(parseLatex(src)).map(
+      (e) => `${e.style}/${e.place}: ${e.text}`,
+    );
+
+  it("each style: \\emph and \\textit italic, \\underline underline, a `{\\bfseries …}` group bold; a footnote's phrase counts", () => {
+    expect(
+      shape(
+        "\\begin{document}\nA \\emph{b} c \\textit{d} e \\underline{f} g {\\bfseries h i} j.\\footnote{In \\textbf{k}.}\n\\end{document}",
+      ),
+    ).toEqual([
+      "italic/inline: b",
+      "italic/inline: d",
+      "underline/inline: f",
+      "bold/inline: h i",
+      "bold/inline: k",
+    ]);
+  });
+
+  it("an empty bold macro sets nothing apart, opening a paragraph or not", () => {
+    expect(
+      shape(
+        "\\begin{document}\n\\textbf{} Opens. We \\textbf{ } go.\n\\end{document}",
+      ),
+    ).toEqual([]);
+  });
+
+  it("an environment opening a paragraph opens nothing for the phrases inside it", () => {
+    expect(
+      shape(
+        "\\begin{document}\n\\begin{quote}\nWe say \\textbf{this}.\n\\end{quote}\n\\end{document}",
+      ),
+    ).toEqual(["bold/inline: this"]);
+  });
+
+  it("the span is the macro with its argument, where the source has it", () => {
+    const src = "\\begin{document}\nWe \\textbf{see it}.\n\\end{document}";
+    const [e] = bodyEmphasis(parseLatex(src));
+    expect(e && src.slice(e.span.start, e.span.end)).toBe("\\textbf{see it}");
   });
 });

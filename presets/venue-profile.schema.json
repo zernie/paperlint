@@ -137,8 +137,55 @@
       }
     },
     "rules": {
-      "description": "Rules the venue implies, rule id \u2192 ESLint entry (a severity, or [severity, options]). Applied to every paper that extends this preset, before the paper's own rules.",
+      "description": "Rules the venue implies, rule id → ESLint entry (a severity, or [severity, options]). Applied to every paper that extends this preset, before the paper's own rules.",
       "type": "object"
+    },
+    "register": {
+      "description": "The register rules' anchors (`tex/contrast-frames`, `tex/claim-emphasis`, `tex/relation-markers`): accepted papers of the venue, or of its parent conference, each with its body's word count and its count of each measure as paperlint's own counters give them. A measure's band is the anchors' range widened by two Poisson standard deviations at each end (docs/rules/tex/contrast-frames.md). A child preset's block replaces its parent's.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["anchors"],
+      "properties": {
+        "anchors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "paper",
+              "words",
+              "contrast_frames",
+              "claim_emphasis",
+              "relation_markers"
+            ],
+            "properties": {
+              "paper": {
+                "description": "The anchor: a directory under fixtures/accepted-papers/ when the paper is there, or how to find it.",
+                "type": "string",
+                "minLength": 1
+              },
+              "words": {
+                "description": "Words of the body, as the register rules count them.",
+                "type": "integer",
+                "minimum": 1
+              },
+              "contrast_frames": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "claim_emphasis": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "relation_markers": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
     }
   },
   "allOf": [
