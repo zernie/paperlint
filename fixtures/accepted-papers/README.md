@@ -124,6 +124,32 @@ one size each and must draw exactly the recorded finding.
 
 banal reads 0.3 pt above the rendered size on both templates; `body_pt_tol` of 0.5 absorbs it.
 
+## The register band — AIDC's anchors are the ACSAC papers here
+
+`tex/contrast-frames`, `tex/claim-emphasis` and `tex/relation-markers` judge a body against the band
+its venue preset's anchors set. The five ACSAC papers are `paperlint:aidc`'s anchors (AIDC is ACSAC's
+workshop, on its template, with no accepted papers of its own yet); the preset records each one's
+words and counts, and `src/register-bands.test.ts` re-measures them from these sources and requires
+the same numbers. The papers here extend `paperlint:ieee-conference`, which records no anchors, so
+`accepted-papers.test.ts` sees none of the three rules; the same test file judges every ACSAC paper
+against AIDC's band instead, and all five stand inside it on all three measures. Per 10,000 words:
+
+| paper | words | contrast frames | claims in bold | relation markers |
+| --- | ---: | ---: | ---: | ---: |
+| barovox-acsac24 | 7670 | 1.3 | 10.4 | 40.4 |
+| leaking-queries-acsac25 | 9133 | 5.5 | 0.0 | 112.8 |
+| llm-splained-acsac25 | 9529 | 4.2 | 1.0 | 88.2 |
+| rr-dataset-quality-acsac24 | 8130 | 3.7 | 0.0 | 39.4 |
+| secure-acsac24 | 7519 | 4.0 | 0.0 | 50.5 |
+| *AIDC's band* | | 0–10.4 | 0–17.8 | 25.4–135.0 |
+| agenticdev-acm26 (ACM, not an anchor) | 4374 | 50.3 | 18.3 | 29.7 |
+
+Three variants in the same test change one thing in a real source and leave the band on that measure
+only: `secure-acsac24` with _, not the prompt_ after 20 mentions of _the model_ (contrast frames
+above); `llm-splained-acsac25` with its first 20 percentages in `\textbf` (claims in bold above);
+`rr-dataset-quality-acsac24` with its relation-naming adverbials dropped and _because_ read as _as_
+(relation markers below).
+
 ## Licence rule — read before adding a paper
 
 Only papers under **CC BY, CC BY-SA or CC0** may be added. The licence is the one the arXiv abstract
