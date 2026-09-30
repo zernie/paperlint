@@ -33,6 +33,7 @@ import {
   wordsOf,
   type Band,
   type Occurrence,
+  type RegisterAnchor,
   type RegisterMeasureName,
 } from "./domain/register.ts";
 import type { Emphasis, Passage, Span } from "./domain/tex-document.ts";
@@ -193,6 +194,37 @@ export function measureBody(
     words: wordsOf(bodySentences(passages)),
     occurrences: MEASURES[rule].count(body),
     at: first === undefined ? null : startOf(first),
+  };
+}
+
+/** Which rule counts each measure an anchor records. */
+const RULE_OF: Readonly<Record<RegisterMeasureName, RegisterBandRuleName>> = {
+  contrast_frames: "contrast-frames",
+  claim_emphasis: "claim-emphasis",
+  relation_markers: "relation-markers",
+};
+
+/**
+ * A paper as a preset records it among its anchors: its body's words and its count of every
+ * measure, by the rules' own counters — the one way an anchor is measured.
+ */
+export function anchorOf(
+  paper: string,
+  src: string,
+  latex: LatexReader,
+): RegisterAnchor {
+  const passages = latex.bodyProse(src);
+  const body: Body = { passages, emphasis: () => latex.bodyEmphasis(src) };
+  const count = (m: RegisterMeasureName): number =>
+    MEASURES[RULE_OF[m]].count(body).length;
+  return {
+    paper,
+    words: wordsOf(bodySentences(passages)),
+    counts: {
+      contrast_frames: count("contrast_frames"),
+      claim_emphasis: count("claim_emphasis"),
+      relation_markers: count("relation_markers"),
+    },
   };
 }
 

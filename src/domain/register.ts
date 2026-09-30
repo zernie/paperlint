@@ -164,11 +164,12 @@ const anyOf = (forms: readonly RegExp[]): Readonly<RegExp> =>
   new RegExp(forms.map((r) => `(?:${r.source})`).join("|"), "giu");
 
 /**
- * «not» after a comma, a dash or a semicolon — «the word, not the operation», «— not authenticity» —
+ * «not» after a comma, a dash (`---` as the source spells it) or a semicolon — «the word, not the
+ * operation», «--- not authenticity» —
  * unless it opens a phrase that rejects nothing («not only», «not yet», «not already in the corpus»).
  */
 const COMMA_NOT =
-  /[,;—–]\s*(?:and\s+|but\s+)?not\s+(?!(?:only|least|yet|always|necessarily|all|even|just|merely|surprisingly|already|to)\b)/giu;
+  /(?:[,;—–]|--)\s*(?:and\s+|but\s+)?not\s+(?!(?:only|least|yet|always|necessarily|all|even|just|merely|surprisingly|already|to)\b)/giu;
 
 /** «not X but Y» inside one clause — no comma, colon or semicolon between — but not «not only … but also». */
 const NOT_BUT = /\bnot\b(?!\s+only\b)[^.;:,]{1,60}?\bbut\b(?!\s+also\b)/giu;
