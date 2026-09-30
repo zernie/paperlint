@@ -298,7 +298,13 @@ export function judgeLeftover(
 
 /** Where a rule's page lives: `docs/rules/tex/<name>.md` on the default branch. */
 export const ruleDocsUrl = (
-  name: TexVenueRuleName | "claim-provenance" | "register",
+  name:
+    | TexVenueRuleName
+    | "claim-provenance"
+    | "register"
+    | "contrast-frames"
+    | "claim-emphasis"
+    | "relation-markers",
 ): string =>
   `https://github.com/zernie/paperlint/blob/main/docs/rules/tex/${name}.md`;
 

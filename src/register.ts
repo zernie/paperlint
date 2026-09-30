@@ -15,8 +15,8 @@
  * (src/domain/sentences.ts). A citation, a cross-reference or math reads as one word, as it does on
  * the page. A body under 2 000 words is not judged: there one sentence decides the rate.
  */
-import { runText, type Passage, type Span } from "./domain/tex-document.ts";
-import { runOf, sentences } from "./domain/sentences.ts";
+import type { Passage, Span } from "./domain/tex-document.ts";
+import { bodySentences, wordsOf } from "./domain/register.ts";
 import { readPaper, reportInPaper, type PaperDeps } from "./tex-paper.ts";
 import {
   ruleDocsUrl,
@@ -24,7 +24,7 @@ import {
   type TexRuleModule,
 } from "./tex-venue-rules.ts";
 
-/** Under this many words in the body, the rate is not judged. */
+/** Under this many words in the body, a rate is not judged: one sentence would decide it. */
 export const MIN_WORDS = 2000;
 
 /** The limit when the config sets none, from the measurement on the rule's page. */
@@ -40,30 +40,6 @@ const CONJUNCTIONS: ReadonlySet<string> = new Set([
   "Yet",
 ]);
 
-/** The characters a mark or math stands as in a sentence's text (src/domain/sentences.ts). */
-const MARK = /[-]/gu;
-
-const WORDS = new Intl.Segmenter("en", { granularity: "word" });
-
-/** A sentence as the rate sees it: its text, its words, and its first word. */
-interface Sentence {
-  readonly text: string;
-  readonly words: number;
-  readonly first: string;
-}
-
-/** A sentence's words: the word-like ones, and one for each mark or math. Null when it has none of its own. */
-function sentenceOf(text: string): Sentence | null {
-  const words = [...WORDS.segment(text)].filter((w) => w.isWordLike);
-  const [first] = words;
-  if (first === undefined) return null;
-  return {
-    text: text.replace(MARK, "").replace(/\s+/gu, " ").trim(),
-    words: words.length + (text.match(MARK)?.length ?? 0),
-    first: first.segment,
-  };
-}
-
 /** What the body measures. */
 export interface RegisterMeasure {
   readonly words: number;
@@ -74,8 +50,8 @@ export interface RegisterMeasure {
   readonly at: Span | null;
 }
 
-/** Where a passage's first piece stands. */
-function startOf(p: Passage): Span {
+/** Where a passage's first piece stands: where a finding about the whole body points. */
+export function startOf(p: Passage): Span {
   const first = p.pieces[0];
   return first.kind === "text"
     ? {
@@ -87,17 +63,11 @@ function startOf(p: Passage): Span {
 
 /** The body's words, and its sentences that open with a conjunction. */
 export function measureRegister(passages: readonly Passage[]): RegisterMeasure {
-  const all = passages.flatMap((p) => {
-    const text = runText(runOf(p));
-    return sentences(text).flatMap(([from, to]) => {
-      const s = sentenceOf(text.slice(from, to));
-      return s === null ? [] : [s];
-    });
-  });
+  const all = bodySentences(passages);
   const conj = all.filter((s) => CONJUNCTIONS.has(s.first));
   const [first] = passages;
   return {
-    words: all.reduce((n, s) => n + s.words, 0),
+    words: wordsOf(all),
     conjunctionStarts: conj.length,
     examples: conj.slice(0, 3).map((s) => s.text),
     at: first === undefined ? null : startOf(first),

@@ -28,6 +28,7 @@ import Ajv from "ajv";
 import { presetsDir } from "./package-dirs.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
 import { fieldOf } from "./domain/record.ts";
+import type { RegisterAnchor, RegisterMeasureName } from "./domain/register.ts";
 
 /** CTAN package name → the names that prove it is installed. */
 export type PackageProofs = Readonly<Record<string, readonly string[]>>;
@@ -180,6 +181,11 @@ export interface PresetFile {
   readonly format: VenueFormat;
   /** rule id → ESLint entry, checked against the shipped rules where a config is built. */
   readonly rules: Readonly<Record<string, unknown>>;
+  /**
+   * The accepted papers the register rules measure a body against; null when the file names none
+   * (a child's list replaces its parent's).
+   */
+  readonly registerAnchors: readonly RegisterAnchor[] | null;
 }
 
 type KindsJson = Readonly<
@@ -217,6 +223,12 @@ interface PresetJson {
     Partial<Pick<TexRequirements, "tools">>;
   readonly format?: FormatJson;
   readonly rules?: Readonly<Record<string, unknown>>;
+  readonly register?: {
+    readonly anchors: readonly ({
+      readonly paper: string;
+      readonly words: number;
+    } & Readonly<Record<RegisterMeasureName, number>>)[];
+  };
 }
 
 /** An optional field as the typed preset holds it: absent is null. */
@@ -258,6 +270,38 @@ const sectionsOf = (
     ? null
     : r.map((x) => ({ title: x.title, position: orNull(x.position) }));
 
+/** A preset's JSONC text → its value, or an Error naming the syntax problem. */
+function jsoncOf(text: string, file: string): unknown {
+  const parsed = typescript().parseConfigFileTextToJson(file, text);
+  const config: unknown = parsed.config;
+  const error = parsed.error;
+  if (error)
+    throw new Error(
+      `${file}: not valid JSONC — ${typescript().flattenDiagnosticMessageText(error.messageText, " ")}`,
+    );
+  return config;
+}
+
+/** A preset's `tex` block, `tools` defaulted; null when the file declares none. */
+const texOf = (t: PresetJson["tex"]): TexRequirements | null =>
+  t ? { packages: t.packages, tools: t.tools ?? {} } : null;
+
+/** A preset's `register.anchors`, each with its counts; null when the file names none. */
+const anchorsOf = (
+  r: PresetJson["register"],
+): readonly RegisterAnchor[] | null =>
+  r === undefined
+    ? null
+    : r.anchors.map((a) => ({
+        paper: a.paper,
+        words: a.words,
+        counts: {
+          contrast_frames: a.contrast_frames,
+          claim_emphasis: a.claim_emphasis,
+          relation_markers: a.relation_markers,
+        },
+      }));
+
 /**
  * The text of one preset file → the typed file, or an Error naming every problem. The ONE parser
  * of a preset: the toolchain reads its `tex`, the venue rules its `format`, the config its `rules`.
@@ -271,13 +315,7 @@ export function parsePreset(
   file: string,
   dir: string = presetsDir(),
 ): PresetFile {
-  const parsed = typescript().parseConfigFileTextToJson(file, text);
-  const config: unknown = parsed.config;
-  const error = parsed.error;
-  if (error)
-    throw new Error(
-      `${file}: not valid JSONC — ${typescript().flattenDiagnosticMessageText(error.messageText, " ")}`,
-    );
+  const config = jsoncOf(text, file);
   const validate = validatorFor(dir);
   if (!matchesSchema(config, validate))
     throw new Error(
@@ -291,9 +329,10 @@ export function parsePreset(
     aliases: j.aliases ?? [],
     blind: orNull(j.blind),
     requiredSections: sectionsOf(j.required_sections),
-    tex: j.tex ? { packages: j.tex.packages, tools: j.tex.tools ?? {} } : null,
+    tex: texOf(j.tex),
     format: formatOf(j.format),
     rules: j.rules ?? {},
+    registerAnchors: anchorsOf(j.register),
   };
 }
 

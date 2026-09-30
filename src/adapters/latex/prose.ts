@@ -14,7 +14,7 @@
  * own passage; one that cites or links leaves a citation mark in the sentence it hangs from.
  */
 import type * as Ast from "@unified-latex/unified-latex-types";
-import { hasAtLeast, sortBy } from "remeda";
+import { hasAtLeast, mapWithFeedback, sortBy } from "remeda";
 import type {
   Emphasis,
   EmphasisStyle,
@@ -427,20 +427,12 @@ function step(
  * macro the parser gave no signature — `\institution{…}`, `\ccsdesc[500]{…}`, `\tool{}`,
  * `\if\conference1` — which are its arguments, not text. A formatting macro's group (`\enquote{…}` without csquotes' signature) stays prose.
  */
-const proseNodes = (list: readonly Node[]): readonly Node[] =>
-  list.reduce<{
-    readonly kept: readonly Node[];
-    readonly state: ArgumentState;
-  }>(
-    (acc, n) => {
-      const next = step(acc.state, n);
-      return {
-        kept: next.skip ? acc.kept : [...acc.kept, n],
-        state: next.state,
-      };
-    },
-    { kept: [], state: "prose" },
-  ).kept;
+const proseNodes = (list: readonly Node[]): readonly Node[] => {
+  // Each node's step, fed the state the one before left: a scan, linear in the list.
+  const start: ReturnType<typeof step> = { skip: false, state: "prose" };
+  const steps = mapWithFeedback(list, (prev, n) => step(prev.state, n), start);
+  return list.filter((_, i) => steps[i]?.skip === false);
+};
 
 /** Formatting macros a run-in heading is set in: `\textbf{Correctness gate.} Each task…`. */
 const RUN_IN_MACROS: ReadonlySet<string> = new Set([
@@ -537,23 +529,18 @@ function walkList(
   list: readonly Node[],
   opens = false,
 ): readonly Event[] {
-  return proseNodes(list).reduce<{
-    readonly events: readonly Event[];
-    readonly opening: boolean;
-  }>(
-    (acc, n) => ({
-      events: [
-        ...acc.events,
-        ...(acc.opening && isRunInHeading(t, n)
-          ? [BREAK]
-          : acc.opening
-            ? asOpening(n, nodeEvents(t, n))
-            : nodeEvents(t, n)),
-      ],
-      opening: opensAfter(n) || (acc.opening && keepsOpening(n)),
-    }),
-    { events: [], opening: opens },
-  ).events;
+  const nodes = proseNodes(list);
+  // Whether a paragraph is open AFTER each node: a scan, so the walk stays linear in the list.
+  const after = mapWithFeedback(
+    nodes,
+    (opening, n) => opensAfter(n) || (opening && keepsOpening(n)),
+    opens,
+  );
+  return nodes.flatMap((n, i) => {
+    const opening = i === 0 ? opens : after[i - 1] === true;
+    if (!opening) return nodeEvents(t, n);
+    return isRunInHeading(t, n) ? [BREAK] : asOpening(n, nodeEvents(t, n));
+  });
 }
 
 /** The events before the back matter starts. */
