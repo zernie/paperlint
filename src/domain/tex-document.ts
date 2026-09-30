@@ -142,6 +142,28 @@ export interface Passage {
   readonly pieces: readonly [ProsePiece, ...ProsePiece[]];
 }
 
+/** How an emphasised phrase is set: bold, italic (or `\emph`), or underlined. */
+export type EmphasisStyle = "bold" | "italic" | "underline";
+
+/**
+ * Where an emphasised phrase stands: opening its paragraph or list item — a label, set like a run-in
+ * heading even without the full stop (`\item \textbf{A corpus of questions}: …`) — or inside the
+ * running text, after other words of its sentence.
+ */
+export type EmphasisPlace = "opening" | "inline";
+
+/**
+ * A phrase set in bold, italics or underline inside the body's running prose — not a heading, a
+ * run-in heading, a caption, a float or a table, which are never prose (`LatexReader.bodyProse`).
+ * `text` is what it typesets, marks and math left out.
+ */
+export interface Emphasis {
+  readonly style: EmphasisStyle;
+  readonly place: EmphasisPlace;
+  readonly text: string;
+  readonly span: Span;
+}
+
 /**
  * A command that changes the page layout a venue's template sets: the text block, the margins,
  * the line spacing, or space pulled back with a negative skip. `command` is how a message names it

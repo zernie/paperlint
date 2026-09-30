@@ -6,6 +6,7 @@ import type { Include } from "../domain/paper-source.ts";
 import type {
   ClassLine,
   DocumentClass,
+  Emphasis,
   LayoutOverride,
   Outline,
   Passage,
@@ -26,6 +27,11 @@ export interface LatexReader {
    * code or the title block. Citations, links and cross-references stay in place as marks.
    */
   readonly bodyProse: (src: string) => readonly Passage[];
+  /**
+   * The phrases set in bold, italics or underline inside that same prose, in document order — never
+   * a heading, a run-in heading (`\textbf{Threats.} …`), a caption, a float or a table.
+   */
+  readonly bodyEmphasis: (src: string) => readonly Emphasis[];
   /** Every `\input`, `\include` and `\subfile`, in source order: the path as written, where it stands. */
   readonly includes: (src: string) => readonly Include[];
   /** The span of the `document` environment's body, or null when the source has none. */

@@ -15,9 +15,17 @@
  */
 import type * as Ast from "@unified-latex/unified-latex-types";
 import { hasAtLeast, sortBy } from "remeda";
-import type { Owner, Passage, ProsePiece } from "../../domain/tex-document.ts";
+import type {
+  Emphasis,
+  EmphasisStyle,
+  Owner,
+  Passage,
+  Place,
+  ProsePiece,
+} from "../../domain/tex-document.ts";
 import {
   argumentsOf,
+  collapse,
   inPlace,
   macroPlace,
   mandatory,
@@ -28,12 +36,16 @@ import {
 } from "./nodes.ts";
 import { CITATION_MACROS, DEFINITION_MACROS, type ParsedTex } from "./parse.ts";
 
-/** What the walk yields: a piece, the end of a passage, the start of the back matter, a footnote. */
+/**
+ * What the walk yields: a piece, the end of a passage, the start of the back matter, a footnote, and
+ * an emphasised phrase — which stands beside the pieces it typesets, and makes no passage of its own.
+ */
 type Event =
   | { readonly kind: "piece"; readonly piece: ProsePiece }
   | { readonly kind: "break" }
   | { readonly kind: "end" }
-  | { readonly kind: "aside"; readonly events: readonly Event[] };
+  | { readonly kind: "aside"; readonly events: readonly Event[] }
+  | { readonly kind: "emphasis"; readonly emphasis: Emphasis };
 
 const BREAK: Event = { kind: "break" };
 const END: Event = { kind: "end" };
@@ -251,6 +263,75 @@ const OWN_EVENTS: ReadonlyMap<
   ],
 ]);
 
+/** Formatting macros that set their argument apart from the running text, and how. */
+const EMPHASIS_MACROS: ReadonlyMap<string, EmphasisStyle> = new Map([
+  ["textbf", "bold"],
+  ["emph", "italic"],
+  ["textit", "italic"],
+  ["textsl", "italic"],
+  ["underline", "underline"],
+  ["uline", "underline"],
+]);
+
+/**
+ * Declarations that set the rest of their group apart — `{\bfseries …}`, `{\em …}` — and how. The
+ * group is the phrase.
+ */
+const EMPHASIS_DECLARATIONS: ReadonlyMap<string, EmphasisStyle> = new Map([
+  ["bfseries", "bold"],
+  ["bf", "bold"],
+  ["em", "italic"],
+  ["itshape", "italic"],
+  ["it", "italic"],
+  ["slshape", "italic"],
+]);
+
+/** An emphasised phrase over `place`, typesetting what `inner` typesets; nothing when it has no place or no text. */
+const emphasisOf = (
+  style: EmphasisStyle,
+  place: Place,
+  inner: readonly Event[],
+): readonly Event[] =>
+  inPlace(place, (span) => {
+    const text = collapse(typeset(inner));
+    return text === ""
+      ? []
+      : [
+          {
+            kind: "emphasis",
+            emphasis: { style, place: "inline", text, span },
+          },
+        ];
+  });
+
+/** A formatting macro's events: what it typesets, and — for an emphasising one — the phrase. */
+function formattingEvents(t: ParsedTex, m: Macro): readonly Event[] {
+  const inner = walkList(t, lastArgument(m));
+  const style = EMPHASIS_MACROS.get(m.content);
+  return style === undefined
+    ? inner
+    : [...emphasisOf(style, macroPlace(m), inner), ...inner];
+}
+
+/** The style a group's opening declaration sets, when it opens with one (`{\bfseries …}`). */
+function declaredStyle(list: readonly Node[]): EmphasisStyle | undefined {
+  const first = list.find(
+    (n) => n.type !== "whitespace" && n.type !== "comment",
+  );
+  return first?.type === "macro"
+    ? EMPHASIS_DECLARATIONS.get(first.content)
+    : undefined;
+}
+
+/** A group's events: what it typesets, and — when it opens with an emphasis declaration — the phrase. */
+function groupEvents(t: ParsedTex, g: NodeOf<"group">): readonly Event[] {
+  const inner = walkList(t, g.content);
+  const style = declaredStyle(g.content);
+  return style === undefined
+    ? inner
+    : [...emphasisOf(style, placeOf(g), inner), ...inner];
+}
+
 function macroEvents(t: ParsedTex, m: Macro): readonly Event[] {
   const name = m.content;
   if (DEFINITION_MACROS.has(name)) return [];
@@ -260,7 +341,7 @@ function macroEvents(t: ParsedTex, m: Macro): readonly Event[] {
   const own = OWN_EVENTS.get(name);
   if (own !== undefined) return own(t, m);
   if (BREAK_MACROS.has(name)) return [BREAK];
-  if (INLINE_MACROS.has(name)) return walkList(t, lastArgument(m));
+  if (INLINE_MACROS.has(name)) return formattingEvents(t, m);
   const ch = CHARACTER_MACROS.get(name);
   return ch === undefined ? [] : characterAt(m, ch);
 }
@@ -298,7 +379,7 @@ function nodeEvents(t: ParsedTex, n: Node): readonly Event[] {
     case "whitespace":
       return textAt(n, " ");
     case "group":
-      return walkList(t, n.content);
+      return groupEvents(t, n);
     case "environment":
     case "mathenv":
       return environmentEvents(t, n);
@@ -378,11 +459,33 @@ const typeset = (events: readonly Event[]): string =>
     )
     .join("");
 
-/** A formatting macro whose phrase ends in `.` or `:` — a run-in heading, when it opens a paragraph. */
-const isRunInHeading = (t: ParsedTex, n: Node): boolean =>
-  n.type === "macro" &&
-  RUN_IN_MACROS.has(n.content) &&
-  /[.:]$/u.test(typeset(walkList(t, lastArgument(n))).trim());
+/** The one node a group holds besides spaces and comments — `{\textbf{…}}` → the `\textbf` — or null. */
+const soleChild = (n: Node): Node | null => {
+  if (n.type !== "group") return null;
+  const kept = n.content.filter(
+    (c) => c.type !== "whitespace" && c.type !== "comment",
+  );
+  return kept.length === 1 ? (kept[0] ?? null) : null;
+};
+
+/** A node with the groups around it taken off: `{{\textbf{…}}}` → the `\textbf`. */
+const unwrapped = (n: Node): Node => {
+  const inner = soleChild(n);
+  return inner === null ? n : unwrapped(inner);
+};
+
+/**
+ * A formatting macro whose phrase ends in `.` or `:` — a run-in heading, when it opens a paragraph.
+ * Braces around it change nothing on the page, so `{\textbf{Threats:}}` is one too.
+ */
+const isRunInHeading = (t: ParsedTex, node: Node): boolean => {
+  const n = unwrapped(node);
+  return (
+    n.type === "macro" &&
+    RUN_IN_MACROS.has(n.content) &&
+    /[.:]$/u.test(typeset(walkList(t, lastArgument(n))).trim())
+  );
+};
 
 /** Macros that typeset no text, and so leave a paragraph's opening where it was. */
 const SILENT_AT_OPENING: ReadonlySet<string> = new Set([
@@ -406,8 +509,28 @@ const opensAfter = (n: Node): boolean =>
   n.type === "parbreak" || (n.type === "macro" && BREAK_MACROS.has(n.content));
 
 /**
+ * An emphasising node's events when it opens a paragraph: its own phrase — the first event — is a
+ * label, not inline; braces around it change nothing on the page (`{\textbf{…}}.`). Any other node
+ * (an environment, a footnote) is left as it is: what it holds opens nothing here.
+ */
+const asOpening = (node: Node, events: readonly Event[]): readonly Event[] => {
+  const [own, ...rest] = events;
+  const n = unwrapped(node);
+  const emphasises =
+    (n.type === "macro" && EMPHASIS_MACROS.has(n.content)) ||
+    (n.type === "group" && declaredStyle(n.content) !== undefined);
+  return emphasises && own?.kind === "emphasis"
+    ? [
+        { kind: "emphasis", emphasis: { ...own.emphasis, place: "opening" } },
+        ...rest,
+      ]
+    : events;
+};
+
+/**
  * A list's events. `opens` says the list starts a paragraph (the body, an environment's content);
- * a run-in heading that opens a paragraph ends the passage before it and is left out, like a heading.
+ * a run-in heading that opens a paragraph ends the passage before it and is left out, like a heading,
+ * and a phrase emphasised there is a label (`opening`).
  */
 function walkList(
   t: ParsedTex,
@@ -421,7 +544,11 @@ function walkList(
     (acc, n) => ({
       events: [
         ...acc.events,
-        ...(acc.opening && isRunInHeading(t, n) ? [BREAK] : nodeEvents(t, n)),
+        ...(acc.opening && isRunInHeading(t, n)
+          ? [BREAK]
+          : acc.opening
+            ? asOpening(n, nodeEvents(t, n))
+            : nodeEvents(t, n)),
       ],
       opening: opensAfter(n) || (acc.opening && keepsOpening(n)),
     }),
@@ -458,6 +585,16 @@ function passagesOf(events: readonly Event[]): readonly Passage[] {
   return [...own, ...asides];
 }
 
+/** Every emphasised phrase among events, a footnote's included, up to the back matter. */
+const emphasesOf = (events: readonly Event[]): readonly Emphasis[] =>
+  untilEnd(events).flatMap((e) =>
+    e.kind === "emphasis"
+      ? [e.emphasis]
+      : e.kind === "aside"
+        ? emphasesOf(e.events)
+        : [],
+  );
+
 const isDocument = (n: Node): n is Readonly<Ast.Environment> =>
   n.type === "environment" && n.env === "document";
 
@@ -476,9 +613,17 @@ const startOf = (p: Passage): number => {
  * source when there is none), up to the first back-matter node.
  */
 export function bodyProse(t: ParsedTex): readonly Passage[] {
-  const body = t.root.content.find(isDocument)?.content ?? t.root.content;
-  return sortBy(
-    passagesOf(untilEnd(walkList(t, body, true))).filter(hasProse),
-    startOf,
-  );
+  return sortBy(passagesOf(untilEnd(bodyEvents(t))).filter(hasProse), startOf);
+}
+
+/** The walk of the body: the content of the `document` environment, or the whole source when there is none. */
+const bodyEvents = (t: ParsedTex): readonly Event[] =>
+  walkList(t, t.root.content.find(isDocument)?.content ?? t.root.content, true);
+
+/**
+ * The phrases set in bold, italics or underline inside the body's prose, in document order: what
+ * `bodyProse` reads, so never a heading, a run-in heading, a caption, a float or a table.
+ */
+export function bodyEmphasis(t: ParsedTex): readonly Emphasis[] {
+  return sortBy(emphasesOf(bodyEvents(t)), (e) => e.span.start);
 }
