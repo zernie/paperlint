@@ -45,7 +45,7 @@ const VENUE = {
 
 interface Report {
   readonly messageId: string;
-  readonly data?: Readonly<Record<string, string | number>>;
+  readonly data: Readonly<Record<string, string | number>> | undefined;
 }
 
 /** Rule `name` on a paper tree: the preset's talk block, the paper's settings, its files. */
@@ -208,8 +208,12 @@ const probe = (p: Partial<VideoProbe> = {}): VideoProbe => ({
   brands: ["isom"],
   ...p,
 });
-const slot = { slotS: 10, talkSMin: 2, talkSMax: 4, qaS: null };
-const at = { file: "t.mp4", tolS: 1, venue: "v" };
+const slot = {
+  venue: "v",
+  kind: "short",
+  slot: { slotS: 10, talkSMin: 2, talkSMax: 4, qaS: null },
+};
+const at = { file: "t.mp4", tolS: 1 };
 
 describe("talk/duration and talk/duration-floor", () => {
   it("reports a video over the slot, and an audio track more than the tolerance away", () => {
@@ -404,6 +408,48 @@ describe("talk/captions-cover", () => {
     ).toEqual([]);
     expect(
       run("captions-cover", { files: { "p/talk/talk.mp4": "x" } }),
+    ).toEqual([]);
+  });
+});
+
+describe("without a preset or a talk block, only talk/profile speaks", () => {
+  const noPreset = { talk: { mode: "remote-video" }, kind: "short" };
+  it.each([
+    "required-files",
+    "duration",
+    "duration-floor",
+    "video-format",
+  ] as const)("%s is silent", (name) => {
+    expect(run(name, { settings: noPreset })).toEqual([]);
+    expect(run(name, { venue: null })).toEqual([]);
+  });
+
+  it("a duration mismatch is still reported without a slot", () => {
+    const short = { "p/talk/talk.mp4": media("short-audio.mp4") };
+    expect(ids(run("duration", { settings: noPreset, files: short }))).toEqual([
+      "trackMismatch",
+    ]);
+  });
+
+  it("a kind the venue sets no slot for: no floor, and profile lists the kinds or (none)", () => {
+    const full = declared({ mode: "remote-video" }, { kind: "full" });
+    expect(run("duration-floor", { settings: full })).toEqual([]);
+    const r = run("profile", { venue: { kinds: {} } });
+    expect(r[0]?.data?.["known"]).toBe("(none)");
+  });
+});
+
+describe("largest gap, in time order", () => {
+  const cue = (startS: number, endS: number) => ({ startS, endS });
+  it("keeps the longest of several gaps, and an overlap leaves none", () => {
+    const r = judgeCover(
+      [cue(0, 1), cue(7, 8), cue(8.5, 9.5)],
+      10,
+      DEFAULT_COVER,
+    );
+    expect(r.map((f) => [f.messageId, f.data["s"]])).toEqual([["gap", "6.0"]]);
+    expect(
+      judgeCover([cue(0, 9), cue(1, 2), cue(8.5, 9.9)], 10, DEFAULT_COVER),
     ).toEqual([]);
   });
 });

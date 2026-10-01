@@ -30,7 +30,7 @@
 import { basename, dirname, join, relative } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
-import { paperPreset, type Preset } from "./presets.ts";
+import { paperPreset } from "./presets.ts";
 import { fieldOf } from "./domain/record.ts";
 import type { Files } from "./ports/files.ts";
 import type { ListDir, TalkMedia } from "./ports/talk-media.ts";
@@ -67,9 +67,11 @@ interface Declared {
   readonly paperDir: string;
   readonly talk: PaperTalk;
   readonly paperKind: string | null;
-  /** The preset's label; null when the paper names no preset. */
-  readonly venue: string | null;
-  readonly venueTalk: VenueTalk | null;
+  /** The preset's label and its `talk` block (null when it has none); null when the paper names no preset. */
+  readonly venue: {
+    readonly label: string;
+    readonly talk: VenueTalk | null;
+  } | null;
 }
 
 type Assessment =
@@ -86,14 +88,6 @@ const straysOf = (paperDir: string, deps: TalkRuleDeps): readonly string[] =>
     .filter((n) => n.toLowerCase().endsWith(".mp4"))
     .map((n) => join(paperDir, DEFAULT_TALK_DIR, n));
 
-/** What the paper names as its venue: the label and the `talk` block, or nulls without a preset. */
-const venueOf = (
-  preset: Preset | null,
-): Pick<Declared, "venue" | "venueTalk"> =>
-  preset === null
-    ? { venue: null, venueTalk: null }
-    : { venue: preset.label, venueTalk: preset.talk };
-
 /** One paper, assessed. Reads through `deps` only; never throws on a paper's files. */
 function assess(paperDir: string, deps: TalkRuleDeps): Assessment {
   const p = paperPreset(paperDir, deps);
@@ -107,7 +101,10 @@ function assess(paperDir: string, deps: TalkRuleDeps): Assessment {
     paperDir,
     talk: settings.talk,
     paperKind: settings.kind,
-    ...venueOf(p.kind === "resolved" ? p.preset : null),
+    venue:
+      p.kind === "resolved"
+        ? { label: p.preset.label, talk: p.preset.talk }
+        : null,
   };
 }
 
@@ -137,9 +134,30 @@ const fileOf = (d: Declared, a: TalkArtifact): string =>
 const bytesOf = (deps: TalkRuleDeps, path: string): Uint8Array | null =>
   deps.files.readBytes(callerPath(path));
 
-/** The slot of the paper's kind, when the venue sets one. */
-const slotOf = (d: Declared): TalkSlot | null =>
-  d.paperKind === null ? null : (d.venueTalk?.kinds.get(d.paperKind) ?? null);
+/** The venue's label and `talk` block, when the paper names a preset that has one. */
+interface Asked {
+  readonly label: string;
+  readonly talk: VenueTalk;
+}
+const askedOf = (d: Declared): Asked | null =>
+  d.venue === null || d.venue.talk === null
+    ? null
+    : { label: d.venue.label, talk: d.venue.talk };
+
+/** The slot of the paper's kind, with the names it is reported under. */
+export interface Slotted {
+  readonly venue: string;
+  readonly kind: string;
+  readonly slot: TalkSlot;
+}
+function slotOf(d: Declared): Slotted | null {
+  const asked = askedOf(d);
+  if (asked === null || d.paperKind === null) return null;
+  const slot = asked.talk.kinds.get(d.paperKind);
+  return slot === undefined
+    ? null
+    : { venue: asked.label, kind: d.paperKind, slot };
+}
 
 /** The video's probe; null when the file is absent or does not parse (other rules say which). */
 function videoOf(d: Declared, deps: TalkRuleDeps): VideoProbe | null {
@@ -158,9 +176,9 @@ type Judge = (d: Declared, ctx: JudgeContext) => readonly Finding[];
 
 /** What keeps the declaration from being judged, most basic first. */
 export function judgeProfile(d: Declared): readonly Finding[] {
-  const venue = d.venue;
-  if (venue === null) return [finding("noPreset")];
-  const vt = d.venueTalk;
+  if (d.venue === null) return [finding("noPreset")];
+  const venue = d.venue.label;
+  const vt = d.venue.talk;
   if (vt === null) return [finding("noTalkBlock", { venue })];
   const mode = d.talk.mode;
   const modes = vt.modes.join(", ");
@@ -192,19 +210,21 @@ export function requiredArtifacts(
   return [...new Set([...owed, ...captions])];
 }
 
-const judgeRequired: Judge = (d, { deps, shown }) =>
-  d.venueTalk === null
+const judgeRequired: Judge = (d, { deps, shown }) => {
+  const asked = askedOf(d);
+  return asked === null
     ? []
-    : requiredArtifacts(d.venueTalk, d.talk.mode)
+    : requiredArtifacts(asked.talk, d.talk.mode)
         .filter((a) => !deps.files.isFile(callerPath(fileOf(d, a))))
         .map((a) =>
           finding("missing", {
             artifact: a,
             file: shown(fileOf(d, a)),
-            venue: d.venue ?? "",
+            venue: asked.label,
             mode: d.talk.mode,
           }),
         );
+};
 
 /** Seconds a track may differ from the container before it is reported. */
 export const DEFAULT_TRACK_TOLERANCE_S = 1;
@@ -217,17 +237,17 @@ const numberOption = (options: unknown, key: string, dflt: number): number => {
 /** Over the slot's ceiling, and an audio track that ends away from the container's end. */
 export function judgeDuration(
   v: VideoProbe,
-  slot: TalkSlot | null,
-  at: { readonly file: string; readonly tolS: number; readonly venue: string },
+  slotted: Slotted | null,
+  at: { readonly file: string; readonly tolS: number },
 ): readonly Finding[] {
   const over =
-    slot !== null && v.durationS > slot.talkSMax
+    slotted !== null && v.durationS > slotted.slot.talkSMax
       ? [
           finding("tooLong", {
             file: at.file,
             got: clock(v.durationS),
-            max: clock(slot.talkSMax),
-            venue: at.venue,
+            max: clock(slotted.slot.talkSMax),
+            venue: slotted.venue,
           }),
         ]
       : [];
@@ -257,22 +277,22 @@ const judgeDurationRule: Judge = (d, { deps, options, shown }) => {
           "trackToleranceS",
           DEFAULT_TRACK_TOLERANCE_S,
         ),
-        venue: d.venue ?? "",
       });
 };
 
 const judgeFloor: Judge = (d, { deps, shown }) => {
   const v = videoOf(d, deps);
-  const min = slotOf(d)?.talkSMin ?? null;
-  return v === null || min === null || v.durationS >= min
+  const s = slotOf(d);
+  const min = s?.slot.talkSMin ?? null;
+  return v === null || s === null || min === null || v.durationS >= min
     ? []
     : [
         finding("tooShort", {
           file: shown(fileOf(d, "video")),
           got: clock(v.durationS),
           min: clock(min),
-          venue: d.venue ?? "",
-          kind: d.paperKind ?? "",
+          venue: s.venue,
+          kind: s.kind,
         }),
       ];
 };
@@ -303,20 +323,20 @@ export function judgeVideoFormat(
 
 const judgeFormat: Judge = (d, { deps, shown }) => {
   const bytes = bytesOf(deps, fileOf(d, "video"));
-  if (bytes === null || d.venueTalk === null) return [];
+  const asked = askedOf(d);
+  if (bytes === null || asked === null) return [];
   const v = deps.media.probeVideo(bytes);
   const file = shown(fileOf(d, "video"));
-  const venue = d.venue ?? "";
   return v === null
     ? [finding("unreadable", { file })]
-    : judgeVideoFormat(v, bytes.length, d.venueTalk.video).map((f) =>
-        finding(f.messageId, { ...f.data, file, venue }),
+    : judgeVideoFormat(v, bytes.length, asked.talk.video).map((f) =>
+        finding(f.messageId, { ...f.data, file, venue: asked.label }),
       );
 };
 
 /** The size to hold the one-slide to: the paper's own, else the venue's; null when neither says. */
 const oneSlideSizeOf = (d: Declared): PixelSize | null =>
-  d.talk.oneSlide ?? d.venueTalk?.oneSlide ?? null;
+  d.talk.oneSlide ?? askedOf(d)?.talk.oneSlide ?? null;
 
 const judgeOneSlide: Judge = (d, { deps, shown }) => {
   const want = oneSlideSizeOf(d);
@@ -344,18 +364,30 @@ export const DEFAULT_COVER: CoverLimits = {
   maxGapS: 5,
 };
 
-/** The longest silence between consecutive cues, and where it starts. */
-function largestGap(
-  cues: readonly Cue[],
-): { readonly at: number; readonly s: number } | null {
+/** A silence between captions: where it starts, and how long it lasts. */
+interface Gap {
+  readonly at: number;
+  readonly s: number;
+}
+
+/** The longest silence between cues in time order, and where it starts. Overlapping cues leave none. */
+function largestGap(cues: readonly Cue[]): Gap | null {
   const sorted = [...cues].sort((a, b) => a.startS - b.startS);
-  return sorted
-    .slice(1)
-    .reduce<{ at: number; s: number } | null>((best, cue, i) => {
-      const prevEnd = sorted[i]?.endS ?? cue.startS;
-      const s = cue.startS - prevEnd;
-      return best === null || s > best.s ? { at: prevEnd, s } : best;
-    }, null);
+  return sorted.reduce<{
+    readonly end: number | null;
+    readonly best: Gap | null;
+  }>(
+    (acc, cue) => {
+      const gap =
+        acc.end === null ? null : { at: acc.end, s: cue.startS - acc.end };
+      const longer = gap !== null && (acc.best === null || gap.s > acc.best.s);
+      return {
+        end: Math.max(acc.end ?? cue.endS, cue.endS),
+        best: longer ? gap : acc.best,
+      };
+    },
+    { end: null, best: null },
+  ).best;
 }
 
 /** The first cue later than the limit into the video. */
@@ -592,7 +624,7 @@ function reportAll(
   deps: TalkRuleDeps,
 ): void {
   const cwd = context.cwd;
-  const shown = (p: string) => (cwd ? relative(cwd, p) || p : p);
+  const shown = (p: string) => (cwd ? relative(cwd, p) : p);
   const a = assess(dirname(context.filename), deps);
   const loc = { start: { line: 1, column: 1 }, end: { line: 1, column: 2 } };
   findingsOf(name, a, { deps, options: context.options, shown }).forEach(
