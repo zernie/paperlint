@@ -246,8 +246,9 @@ settings — paperlint.json, at two levels, one schema. Both are optional.
   own, the venue preset's, the root file's, the paper's. Optional rules (off unless turned on):
   pdf/last-page-balance. The venue rules (pdf/fresh, pdf/profile, pdf/fonts, pdf/geometry,
   pdf/body-size, pdf/measured, format/page-limit, format/layout-override, anonymity/identity) are
-  on for every paper with a venue preset; set one to "off" to skip it. An unknown key, in either
-  file, is an error.
+  on for every paper with a venue preset; set one to "off" to skip it. The talk rules (talk/*) judge
+  the finished talk files of a paper whose paperlint.json declares "talk" (docs/talk.md). An
+  unknown key, in either file, is an error.
 `;
 
 /** What the rules over a paper.tex read with: the disk, the shipped presets, the LaTeX reader. */
