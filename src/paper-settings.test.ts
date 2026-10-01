@@ -31,6 +31,7 @@ describe("parsePaperSettings", () => {
         pdf: null,
         rules: null,
         identity: null,
+        talk: null,
       },
     });
     expect(parsePaperSettings({})).toEqual({
@@ -41,6 +42,7 @@ describe("parsePaperSettings", () => {
         pdf: null,
         rules: null,
         identity: null,
+        talk: null,
       },
     });
   });
@@ -54,6 +56,7 @@ describe("parsePaperSettings", () => {
         pdf: null,
         rules: null,
         identity: null,
+        talk: null,
       },
     });
   });
@@ -152,7 +155,7 @@ describe("readPaperSettings — a root paperlint.json that cannot be used", () =
 });
 
 /** The fields a case does not set. */
-const UNSET = { pdf: null, rules: null, identity: null };
+const UNSET = { pdf: null, rules: null, identity: null, talk: null };
 
 describe("readPaperSettings — the root paperlint.json's defaults, the paper's file over them", () => {
   const ROOT = "/work";
@@ -206,6 +209,7 @@ describe("readPaperSettings — the root paperlint.json's defaults, the paper's 
       // The root's rules are the project's blocks (cli.ts), not this paper's.
       rules: { "pdf/fonts": "off" },
       identity: null,
+      talk: null,
     });
   });
 
@@ -248,6 +252,7 @@ describe("paperRules — `rules` in paperlint.json", () => {
     pdf: null,
     rules,
     identity: null,
+    talk: null,
   });
 
   it("no rules: none", () => {
@@ -322,5 +327,17 @@ describe("readPaperSettings — identity, at both levels", () => {
     expect(why({ [`${ROOT}/paperlint.json`]: '{"identity":[3]}' })).toMatch(
       /^the root paperlint\.json: "identity" must be/,
     );
+  });
+});
+
+describe("talk in a paper's paperlint.json", () => {
+  it("is parsed into the paper's settings", () => {
+    const r = parsePaperSettings({ talk: { mode: "remote-video" } });
+    expect(r.ok && r.value.talk?.mode).toBe("remote-video");
+  });
+
+  it("refuses a talk it cannot parse, naming the key", () => {
+    const r = parsePaperSettings({ talk: { mode: "zoom" } });
+    expect(r.ok ? "" : r.error).toMatch(/"talk.mode"/);
   });
 });
