@@ -36,7 +36,9 @@ describe("parsePaperTalk", () => {
       },
     });
   });
+});
 
+describe("parsePaperTalk refuses", () => {
   it.each([
     ["not an object", "remote-video", '"talk" must be an object'],
     [
@@ -66,7 +68,7 @@ describe("parsePaperTalk", () => {
       { mode: "remote-video", one_slide: { width_px: 1.5, height_px: 2 } },
       '"talk.one_slide"',
     ],
-  ])("refuses %s", (_, v, msg) => {
+  ])("%s", (_, v, msg) => {
     const r = parsePaperTalk(v);
     expect(r.ok).toBe(false);
     expect(r.ok ? "" : r.error).toContain(msg);

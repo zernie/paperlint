@@ -178,12 +178,9 @@ describe("talk/required-files and talk/undeclared", () => {
         files: { video: "mine.mp4" },
       }),
     });
-    expect(r).toEqual([
-      expect.objectContaining({
-        messageId: "missing",
-        data: expect.objectContaining({ artifact: "video" }),
-      }),
-    ]);
+    expect(ids(r)).toEqual(["missing"]);
+    expect(r[0]?.data?.["artifact"]).toBe("video");
+    expect(String(r[0]?.data?.["file"])).toMatch(/p\/talk\/mine\.mp4$/);
     expect(run("required-files", { venue: null })).toEqual([]);
   });
 
