@@ -23,7 +23,9 @@ const seconds = (t: Readonly<Pick<Track, "duration" | "timescale">>): number =>
 /** The movie's info, or null when the bytes hold no complete `moov` box. */
 function movieOf(bytes: Uint8Array): Readonly<Movie> | null {
   const file = createFile();
-  const copy = bytes.slice().buffer;
+  // A copy into a buffer of its own: a Node Buffer's `.buffer` is a shared pool for small files,
+  // and `Buffer#slice` does not copy, so `bytes.slice().buffer` would hand MP4Box.js the whole pool.
+  const copy = new Uint8Array(bytes).buffer;
   file.appendBuffer(MP4BoxBuffer.fromArrayBuffer(copy, 0));
   file.flush();
   // `moov` is typed as always present and is undefined until the box has been parsed.
