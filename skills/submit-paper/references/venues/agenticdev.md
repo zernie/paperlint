@@ -118,6 +118,10 @@ the preamble, the copyright block, CCS, source files). Here — only what's spec
 
 ## Attendance and the talk (2026 edition)
 
+**Every year: the deadline and the upload channel come from the parent conference's
+not-in-person page, not from this card.** Look that page up again for the new edition; the dates
+below are 2026's.
+
 **Remote is allowed, but there is no live slot.** On 2026-08-27 the chairs told accepted authors
 who cannot travel (by email) that the workshop adopts ASE 2026's
 [Not-in-Person Presentations](https://conf.researchr.org/track/ase-2026/ase-2026-not-in-person-presentations)
@@ -128,19 +132,20 @@ policy. That page, verbatim:
 
 Instead the author sends:
 
-| artifact  | what the page says                                                                                                                | deadline                                                                    |
-| --------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| video     | "made available via a dedicated page on the conference website (recommendation: 10 min duration, mp4 file format, HD resolution)" | ASE page: 2026-10-08; the workshop chairs asked by email for **2026-10-01** |
-| one-slide | "shown during one of the conference sessions"; no size or format stated                                                           | same as the video                                                           |
-| poster    | optional for the workshop; ASE prints it                                                                                          | ASE page: 2026-09-21                                                        |
+| artifact  | what the page says                                                                                                                | deadline (2026)                                                                    |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| video     | "made available via a dedicated page on the conference website (recommendation: 10 min duration, mp4 file format, HD resolution)" | 2026-10-08 (ASE page; the chairs first asked for 10-01, then deferred to the page) |
+| one-slide | "shown during one of the conference sessions"; no size or format stated                                                           | same as the video                                                                  |
+| poster    | optional for the workshop; ASE prints it                                                                                          | ASE page: 2026-09-21                                                               |
 
 **Where to upload.** The page says: "find the submission link on the submission page for your paper
 (see author-kit e-mail from Conference Publishing Consulting)". That is the same personal page used
 for the camera-ready. On it, the block "Optional Archive/Appendix/Video/Picture Submissions … Submit
 Material to ACM" uploads straight into the ACM system, once per file. "All submitted material will be
 published in the ACM DL if the publishing-rights agreement gives permission for this", so tick
-permission for auxiliary material when filling in eRights. The chairs never named a channel in
-email; sending the files to them as attachments as well covers both readings.
+permission for auxiliary material when filling in eRights. Asked where to send the files, the
+chairs answered (2026-10-01) only with a link to the ASE page, so the page governs: channel and
+deadline both come from it, and email attachments are not needed.
 
 **The slot.** Per the chairs' email to all authors (2026-09-29), a short paper gets 10 minutes in
 total: approximately 6–7 for the presentation and 3–4 for questions. It is stated as approximate,
