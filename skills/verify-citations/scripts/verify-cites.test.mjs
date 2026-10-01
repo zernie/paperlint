@@ -104,17 +104,88 @@ console.log(
     title: "A Formal Verification Framework for Autonomous Agents",
     year: 2021,
   };
+  const wrongRecord = {
+    title: "Photosynthesis in Deep-Sea Bacteria",
+    year: 2009,
+  };
+  const crossref = {
+    db: "crossref",
+    transport: "ok",
+    query: "doi",
+    record: wrongRecord,
+  };
+  const ev = classifyResolver(cite, crossref);
+  eq(ev.status, "doi_mismatch", "classify → doi_mismatch");
+  const v = reduceVerdict(cite, [ev], checkCommit(cite));
+  eq(v.verdict, "false", "the DOI's own registry (Crossref) disagrees → false");
+  ok(/DOI_MISMATCH/.test(v.reason), "reason names DOI_MISMATCH");
+
+  // An aggregator alone is not proof: it can attach a DOI to the wrong work.
   const openalex = {
     db: "openalex",
     transport: "ok",
     query: "doi",
-    record: { title: "Photosynthesis in Deep-Sea Bacteria", year: 2009 },
+    record: wrongRecord,
   };
-  const ev = classifyResolver(cite, openalex);
-  eq(ev.status, "doi_mismatch", "classify → doi_mismatch");
-  const v = reduceVerdict(cite, [ev], checkCommit(cite));
-  eq(v.verdict, "false", "verdict false");
-  ok(/DOI_MISMATCH/.test(v.reason), "reason names DOI_MISMATCH");
+  const agg = reduceVerdict(cite, [classifyResolver(cite, openalex)]);
+  eq(
+    agg.verdict,
+    "unresolvable",
+    "only OpenAlex disagrees → unresolvable, not false",
+  );
+  ok(
+    /DOI_MISMATCH unconfirmed/.test(agg.reason),
+    "reason says the mismatch is unconfirmed",
+  );
+}
+
+// ── (2b) 2026-10-01: OpenAlex mapped the SWE-bench arXiv DOI to another paper while
+//         arXiv answered 429. The entry is correct; it must not be called fabricated.
+console.log(
+  "\n(2b) aggregator mismatch on an arXiv DOI, arXiv rate-limited → unresolvable:",
+);
+{
+  const cite = normalizeIdentifiers({
+    id: "jimenez2024swebench",
+    doi: "10.48550/arXiv.2310.06770",
+    title: "SWE-bench: Can Language Models Resolve Real-World GitHub Issues?",
+    year: 2024,
+  });
+  const openalex = {
+    db: "openalex",
+    transport: "ok",
+    query: "doi",
+    record: {
+      title: "GardenBench: A lightweight, daily evaluation of LLM capabilities",
+      year: 2025,
+    },
+  };
+  const arxiv = {
+    db: "arxiv",
+    transport: "error",
+    query: "arxiv",
+    record: null,
+  };
+  const s2 = {
+    db: "semantic_scholar",
+    transport: "error",
+    query: "doi",
+    record: null,
+  };
+  const v = reduceVerdict(
+    cite,
+    [openalex, arxiv, s2].map((r) => classifyResolver(cite, r)),
+  );
+  eq(
+    v.verdict,
+    "unresolvable",
+    "correct entry with a corrupted aggregator record → unresolvable",
+  );
+
+  // …and arXiv itself putting the id on another paper is still misdirection.
+  const arxivWrong = { ...arxiv, transport: "ok", record: openalex.record };
+  const w = reduceVerdict(cite, [classifyResolver(cite, arxivWrong)]);
+  eq(w.verdict, "false", "arXiv (the id's registry) disagrees → false");
 }
 
 // ── (3) made-up arXiv id that resolves to nothing → false ────────────────────

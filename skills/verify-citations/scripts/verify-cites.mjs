@@ -159,6 +159,15 @@ export function normalizeArxiv(arxiv) {
 /** arXiv registers a DataCite DOI for every paper: `10.48550/arXiv.<id>`. */
 const ARXIV_DOI = /^10\.48550\/arxiv\.(.+)$/i;
 
+/** The one source whose record of an identifier is the identifier's own metadata: arXiv for an
+ *  arXiv id or an arXiv DOI, Crossref for any other DOI. OpenAlex and Semantic Scholar are
+ *  aggregators: they copy that metadata and can attach a DOI to the wrong work (OpenAlex did, for
+ *  SWE-bench and ReAct, on 2026-10-01), so a title they disagree on is not proof of anything. */
+function identifierAuthority(citation, query) {
+  if (query === "arxiv") return "arxiv";
+  return citation.doi && ARXIV_DOI.test(citation.doi) ? "arxiv" : "crossref";
+}
+
 /** Shallow copy of a citation with doi/arxiv identifiers normalized. Applied at the
  *  verify boundary so BOTH JSON input and .bib-parsed input are clean before any
  *  network / authority lookup.
@@ -367,6 +376,7 @@ export function classifyResolver(citation, response) {
           db,
           status: "doi_mismatch",
           foundTitle: response.record.title,
+          authoritative: identifierAuthority(citation, response.query) === db,
         };
       }
     }
@@ -473,8 +483,9 @@ export function checkCommit(citation) {
  * commit flags, produce the final verdict.
  *
  *   true          iff ANY evidence is `matched`  (a match always WINS)
- *   false         iff NOT matched AND ≥1 evidence is `id_unmatched` or `doi_mismatch`
- *                 (a resolvable id that fails, or a DOI on the wrong paper)
+ *   false         iff NOT matched AND ≥1 evidence is an authoritative `id_unmatched` or
+ *                 `doi_mismatch` (a resolvable id that fails, or an id that its own registry
+ *                 puts on the wrong paper)
  *   unresolvable  otherwise (only `title_miss` and/or `unreachable` — no disproof)
  */
 export function reduceVerdict(citation, evidence, commitFlags = []) {
@@ -500,8 +511,13 @@ export function reduceVerdict(citation, evidence, commitFlags = []) {
     );
   }
 
-  // A DOI/arXiv id that resolves to a CONFIDENTLY-DIFFERENT paper → misdirection.
-  const mismatch = ev.find((e) => e.status === "doi_mismatch");
+  // A DOI/arXiv id that resolves to a CONFIDENTLY-DIFFERENT paper AT ITS AUTHORITY → misdirection.
+  const mismatch = ev.find(
+    (e) => e.status === "doi_mismatch" && e.authoritative,
+  );
+  const aggregatorMismatch = ev.find(
+    (e) => e.status === "doi_mismatch" && !e.authoritative,
+  );
   if (mismatch) {
     return out(
       "false",
@@ -553,7 +569,9 @@ export function reduceVerdict(citation, evidence, commitFlags = []) {
   // ── No positive disproof → unresolvable, with the most informative reason ──
   const reachable = ev.some((e) => e.status !== "unreachable");
   let reason;
-  if (doiIdMiss && authorityPresent) {
+  if (aggregatorMismatch) {
+    reason = `DOI_MISMATCH unconfirmed: ${aggregatorMismatch.db} maps the identifier to "${aggregatorMismatch.foundTitle}" (claimed "${citation.title}"), but ${aggregatorMismatch.db} only aggregates metadata and the identifier's own registry did not confirm it — eyeball the entry → unresolvable, not false`;
+  } else if (doiIdMiss && authorityPresent) {
     reason = `DOI ${citation.doi} resolves at doi.org but no content registry (Crossref/OpenAlex/Semantic Scholar) has metadata for it — common for DataCite/Zenodo and freshly-minted DOIs; the work EXISTS, its metadata is just unindexed → unresolvable, NOT fabrication`;
   } else if (doiIdMiss) {
     reason = `DOI ${citation.doi} not found in any content registry, and the DOI authority (doi.org) was not reachable to confirm non-existence — cannot assert fabrication → unresolvable, never false`;
