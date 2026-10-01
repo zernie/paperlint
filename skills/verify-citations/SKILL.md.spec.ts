@@ -118,7 +118,7 @@ not-found, not mistaken for an unrelated paper.
 | verdict | when | meaning |
 |---|---|---|
 | \`true\` | any resolver **matched** (match always wins) | found, metadata matches |
-| \`false\` | no match **and** an *authoritative* disproof: doi.org says the DOI is \`responseCode 100\`, the reachable arXiv API definitively rejects the id, NVD has no such CVE, **or** a DOI/arXiv id resolves to a *confidently-different* paper (\`DOI_MISMATCH\`) | fabrication — the only thing we call fabrication |
+| \`false\` | no match **and** an *authoritative* disproof: doi.org says the DOI is \`responseCode 100\`, the reachable arXiv API definitively rejects the id, NVD has no such CVE, **or** the id's own registry (arXiv for an arXiv id or arXiv DOI, Crossref for any other DOI) puts it on a *confidently-different* paper (\`DOI_MISMATCH\`) | fabrication — the only thing we call fabrication |
 | \`unresolvable\` | title-misses, registry-404s with no authority disproof, uncomparable titles, and/or unreachable resolvers | couldn't verify, but **no positive disproof** |
 
 The whole point: **a title you simply can't find is NOT fabrication** → \`unresolvable\`, never \`false\`. A
@@ -233,13 +233,17 @@ by design, the gate **declines** in three situations rather than risk a false ac
   emit \`DOI_MISMATCH\` — the id counts as resolved (\`true\`) or, absent other confirmation, \`unresolvable\`.
   Never \`false\`. The \`doi_mismatch → false\` verdict fires **only** for two confidently-comparable titles that
   are genuinely different.
+- **An aggregator (OpenAlex, Semantic Scholar) that alone puts the id on another paper** →
+  \`unresolvable\` with \`DOI_MISMATCH unconfirmed\`. Aggregators copy metadata and do attach DOIs to the
+  wrong work; on 2026-10-01 OpenAlex mapped the arXiv DOIs of SWE-bench and ReAct to unrelated papers while
+  arXiv was rate-limiting. Only the id's own registry can disprove it.
 - **A DOI that resolves at doi.org but has no content-registry metadata** (DataCite/Zenodo, fresh 2026 DOIs)
   → \`unresolvable\`, because the work exists but its metadata (title/year) cannot be cross-checked here. This
   is the correct verdict for a paper's own artifact DOI; treat \`unresolvable\` as advisory, not a failure.
 
 **Known narrow residue (rare, treat a lone \`DOI_MISMATCH → false\` as advisory, eyeball it).** Two edge cases
-can still mis-fire: (a) a correct DOI whose *every* registry records junk metadata — e.g. the container /
-proceedings title instead of the paper's — reads as "unrelated" (mitigated when any one registry has the real
+can still mis-fire: (a) a correct DOI whose *own* registry records junk metadata — e.g. the container /
+proceedings title instead of the paper's — reads as "unrelated" (mitigated when any other registry has the real
 title, since a match wins); (b) a translated-journal title in the *same script* (transliterated Latin vs
 English) that shares no tokens. Both need semantics the gate doesn't have; both are near-zero frequency in an
 English CS bib. Identifier-prefix / trailing-punctuation mangling (\`doi:\`, \`arXiv:\`, a bib-swallowed \`.\`) is
