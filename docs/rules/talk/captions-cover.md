@@ -32,8 +32,8 @@ Passing: cues from 0 s to within 2 s of the end, no silence between cues over 5 
 ## Options / preset fields
 
 `{ "maxStartS": 1, "maxEndGapS": 2, "maxGapS": 5 }`. ⚠️ **These thresholds are not calibrated.**
-They are a first guess, checked against one real talk only (which ends on a 4 s closing slide and
-so warns on `maxEndGapS`). They should be set from the posted talks of a venue, measured with this
+They are a first guess, checked against one real talk only (93 cues, first at 0 s, largest gap
+1.4 s; its last cue ends 4.2 s before the video does, so it warns on `maxEndGapS`). They should be set from the posted talks of a venue, measured with this
 same rule, before the rule is raised above a warning.
 
 ## What it does not check
