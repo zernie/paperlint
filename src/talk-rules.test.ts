@@ -190,7 +190,11 @@ describe("talk/required-files and talk/undeclared", () => {
       cwd: "/",
     });
     expect(ids(r)).toEqual(["undeclared"]);
-    expect(String(r[0]?.data?.["file"])).toMatch(/^tmp\/.*p\/talk\/talk\.mp4$/);
+    // Shown relative to cwd "/": no leading slash. The temp root differs by OS
+    // (/tmp on Linux, /private/var/folders on macOS), so only the tail is fixed.
+    const shown = String(r[0]?.data?.["file"]);
+    expect(shown).not.toMatch(/^\//);
+    expect(shown).toMatch(/p\/talk\/talk\.mp4$/);
     expect(run("undeclared")).toEqual([]);
     expect(
       run("duration", {
