@@ -38,14 +38,15 @@
     // AgenticDev adopted ASE's «not in person presentation» policy (co-chairs, 2026-08-27).
     "modes": ["remote-video"],
     "artifacts": {
-      // «a presentation video … a one-slide presentation … and optionally a poster»
+      // The chairs' email to accepted authors: a video and a one-slide; a poster is optional.
       "remote-video": {
         "required": ["video", "one-slide"],
         "optional": ["poster"],
       },
     },
     "kinds": {
-      // «short paper = 10 min: 6–7 min talk + 3–4 min questions» (co-chairs, 2026-09-29).
+      // The chairs' email to all authors (2026-09-29): a short paper gets 10 min, about 6–7 for the
+      // talk and 3–4 for questions.
       // qa_s is the middle of 3–4 min; it is informational and not judged. The full-paper slot
       // was not in the email, so `full` and `demo` have no entry and talk/profile says so.
       "short": {
