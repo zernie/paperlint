@@ -31,6 +31,7 @@ import {
   type RuleEntry,
 } from "./rules-config.ts";
 import { messageOf } from "./domain/text.ts";
+import { parsePaperTalk, type PaperTalk } from "./domain/talk.ts";
 
 /** What one paper declares. Every absent field is null. */
 export interface PaperSettings {
@@ -51,6 +52,8 @@ export interface PaperSettings {
    * and cannot drop them by accident. Null when neither declares one.
    */
   readonly identity: readonly string[] | null;
+  /** How this paper is presented (`talk/*`); null when it declares no talk. Never the root's. */
+  readonly talk: PaperTalk | null;
 }
 
 /** Why a paper's settings cannot be read. */
@@ -109,6 +112,19 @@ export function identityField(
       );
 }
 
+/** `rules` (checked for shape only) and `talk`, each null when absent. */
+function rulesAndTalk(
+  json: Readonly<Record<string, unknown>>,
+): Result<Pick<PaperSettings, "rules" | "talk">, string> {
+  const rules = json["rules"];
+  if (rules !== undefined && !isObject(rules) && !Array.isArray(rules))
+    return err(
+      `"rules" must be an object of rule id → severity, or a list of ESLint blocks`,
+    );
+  const talk = parsePaperTalk(json["talk"]);
+  return talk.ok ? ok({ rules: rules ?? null, talk: talk.value }) : talk;
+}
+
 /** The parsed JSON of `paperlint.json` → the settings, or one line saying what is wrong. Pure. */
 export function parsePaperSettings(
   json: unknown,
@@ -128,16 +144,9 @@ export function parsePaperSettings(
   if (!fields.ok) return fields;
   const identity = identityField(json);
   if (!identity.ok) return identity;
-  const rules = json["rules"];
-  if (rules !== undefined && !isObject(rules) && !Array.isArray(rules))
-    return err(
-      `"rules" must be an object of rule id → severity, or a list of ESLint blocks`,
-    );
-  return ok({
-    ...fields.value,
-    rules: rules ?? null,
-    identity: identity.value,
-  });
+  const rest = rulesAndTalk(json);
+  if (!rest.ok) return rest;
+  return ok({ ...fields.value, ...rest.value, identity: identity.value });
 }
 
 /** A JSON file through `files`: undefined when absent, the problem when it does not parse. */
@@ -223,13 +232,14 @@ function merge(
   paper: PaperSettings | null,
 ): PaperSettings | null {
   const r = root ?? NO_DEFAULTS;
-  const p = paper ?? { ...NO_DEFAULTS, rules: null };
+  const p = paper ?? { ...NO_DEFAULTS, rules: null, talk: null };
   const merged: PaperSettings = {
     extends: p.extends ?? r.extends,
     kind: p.kind ?? r.kind,
     pdf: p.pdf ?? r.pdf,
     rules: p.rules,
     identity: joined(r.identity, p.identity),
+    talk: p.talk,
   };
   return paper === null && Object.values(merged).every((v) => v === null)
     ? null

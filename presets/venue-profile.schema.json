@@ -186,6 +186,138 @@
           }
         }
       }
+    },
+    "talk": {
+      "description": "What the venue asks a presenter to send, judged by the talk/* rules on the finished files (src/talk-rules.ts). Read only for a paper whose paperlint.json declares `talk`. A child preset's block replaces its parent's whole. Durations in seconds.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "modes": {
+          "description": "The presentation modes the venue allows.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["in-person", "remote-video", "remote-live"]
+          },
+          "uniqueItems": true,
+          "minItems": 1
+        },
+        "artifacts": {
+          "description": "What each mode owes: the files required, and those that may be sent.",
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "enum": ["in-person", "remote-video", "remote-live"]
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["required"],
+            "properties": {
+              "required": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "video",
+                    "one-slide",
+                    "captions",
+                    "slides-pdf",
+                    "poster"
+                  ]
+                },
+                "uniqueItems": true
+              },
+              "optional": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "video",
+                    "one-slide",
+                    "captions",
+                    "slides-pdf",
+                    "poster"
+                  ]
+                },
+                "uniqueItems": true
+              }
+            }
+          }
+        },
+        "kinds": {
+          "description": "The talk slot per paper kind (the names of format.kinds; the paper's `kind` selects one).",
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["slot_s", "talk_s_max"],
+            "properties": {
+              "slot_s": {
+                "description": "The whole slot, talk and questions. Informational.",
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "talk_s_min": {
+                "description": "The shortest talk the venue asks for (talk/duration-floor).",
+                "type": "number",
+                "minimum": 0
+              },
+              "talk_s_max": {
+                "description": "The longest talk (talk/duration).",
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "qa_s": {
+                "description": "The questions' share. Informational.",
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "video": {
+          "description": "The venue's limits on the video file (talk/video-format).",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "container": {
+              "type": "string",
+              "enum": ["mp4"]
+            },
+            "min_height_px": {
+              "description": "The lowest vertical resolution; HD is 720.",
+              "type": "integer",
+              "minimum": 1
+            },
+            "max_bytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "captions": {
+              "description": "`required`: a captions file is owed with the video (talk/required-files).",
+              "type": "string",
+              "enum": ["required", "optional"]
+            }
+          }
+        },
+        "one_slide": {
+          "description": "The one-slide image's size in pixels (talk/one-slide-size), when the venue states one.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["width_px", "height_px"],
+          "properties": {
+            "width_px": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "height_px": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
     }
   },
   "allOf": [

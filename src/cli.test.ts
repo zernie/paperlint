@@ -70,6 +70,18 @@ test("🔴 parseSettings refuses a mistyped `structure` instead of letting `lint
   assert.equal(off.ok && off.value.structure, false);
 });
 
+test("parseSettings refuses `talk` in the root file: it is one paper's setting", () => {
+  const r = parseSettings(
+    { talk: { mode: "remote-video" } },
+    "paperlint.json",
+    "/r",
+  );
+  assert.equal(
+    r.ok ? null : r.error,
+    "paperlint.json: \"talk\" is a paper's setting — set it in that paper's paperlint.json",
+  );
+});
+
 test("parseSettings refuses a non-object, names one unknown key or several, and a mistyped default", () => {
   const error = (json: unknown) => {
     const r = parseSettings(json, "paperlint.json", "/r");

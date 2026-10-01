@@ -48,7 +48,16 @@ import { cacheRoot, cachedTree, runToolchain } from "./toolchain.ts";
 import { banalInstaller, parseBanalSettings } from "./adapters/banal/index.ts";
 import { curlDownload } from "./adapters/curl/index.ts";
 import { latexReader } from "./adapters/latex/index.ts";
-import { hostDirs, nodeAdapters, nodeFiles } from "./adapters/node/index.ts";
+import {
+  hostDirs,
+  nodeAdapters,
+  nodeFiles,
+  nodeListDir,
+} from "./adapters/node/index.ts";
+import { probeVideo } from "./adapters/mp4box/index.ts";
+import { imageSize } from "./adapters/png/index.ts";
+import { captions } from "./adapters/srt/index.ts";
+import { TALK_RULE_LEVELS, talkRules } from "./talk-rules.ts";
 import {
   ANONYMITY_RULE_LEVELS,
   anonymityRules,
@@ -125,6 +134,7 @@ import {
   CONFIG_FILE,
   DEFAULT_PAPERS_ROOT,
   PAPERS_DIR_FIELD,
+  PAPER_ONLY_KEYS,
   SETTINGS_KEYS,
   findProjectRoot,
 } from "#lib/paper-config";
@@ -236,8 +246,9 @@ settings — paperlint.json, at two levels, one schema. Both are optional.
   own, the venue preset's, the root file's, the paper's. Optional rules (off unless turned on):
   pdf/last-page-balance. The venue rules (pdf/fresh, pdf/profile, pdf/fonts, pdf/geometry,
   pdf/body-size, pdf/measured, format/page-limit, format/layout-override, anonymity/identity) are
-  on for every paper with a venue preset; set one to "off" to skip it. An unknown key, in either
-  file, is an error.
+  on for every paper with a venue preset; set one to "off" to skip it. The talk rules (talk/*) judge
+  the finished talk files of a paper whose paperlint.json declares "talk" (docs/talk.md). An
+  unknown key, in either file, is an error.
 `;
 
 /** What the rules over a paper.tex read with: the disk, the shipped presets, the LaTeX reader. */
@@ -245,6 +256,14 @@ const TEX_RULE_DEPS = {
   files: nodeFiles,
   venuesDir: presetsDir(),
   latex: latexReader,
+};
+
+/** What the talk rules read with: the disk, the shipped presets, and the three media readers. */
+const TALK_RULE_DEPS = {
+  files: nodeFiles,
+  venuesDir: presetsDir(),
+  media: { probeVideo, imageSize, captions },
+  listDir: nodeListDir,
 };
 
 /** The config the user would otherwise write by hand. The data comes from `opts`, the mechanism is here. */
@@ -344,6 +363,7 @@ export function buildConfig(
         },
         paper: { rules: texPaperRules },
         bib: bibReachable,
+        talk: { rules: talkRules(TALK_RULE_DEPS) },
         format: {
           rules: {
             ...formatRules(TEX_RULE_DEPS),
@@ -372,6 +392,8 @@ export function buildConfig(
         ...TEX_VENUE_RULE_LEVELS,
         ...FORMAT_RULE_LEVELS,
         ...PAGE_LIMIT_RULE_LEVELS,
+        // Silent for a paper that declares no `talk` (src/talk-rules.ts), but talk/undeclared.
+        ...TALK_RULE_LEVELS,
       },
     });
   // THE FILES A paper.tex INCLUDES FROM ITS BODY, each read on its own and reported at its own path
@@ -695,6 +717,12 @@ export function parseSettings(
       error:
         `${where}: unknown key${unknown.length > 1 ? "s" : ""} ${unknown.map((k) => `"${k}"`).join(", ")} — ` +
         `a typo would otherwise read as "not set". Known keys: ${Object.keys(SETTINGS_KEYS).join(", ")}`,
+    };
+  const paperOnly = PAPER_ONLY_KEYS.find((k) => k in raw);
+  if (paperOnly !== undefined)
+    return {
+      ok: false,
+      error: `${where}: "${paperOnly}" is a paper's setting — set it in that paper's ${CONFIG_FILE}`,
     };
   const defaults = stringFields(raw);
   if (!defaults.ok) return { ok: false, error: `${where}: ${defaults.error}` };

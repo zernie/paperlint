@@ -31,6 +31,35 @@
     },
   },
 
+  // The talk (talk/* rules), for a paper whose paperlint.json declares `talk`. The numbers are the
+  // organizers', each with its source; one_slide is left out on purpose — the venue never stated a
+  // size, so a paper that wants its own checked declares it in its own `talk` key.
+  "talk": {
+    // AgenticDev adopted ASE's «not in person presentation» policy (co-chairs, 2026-08-27).
+    "modes": ["remote-video"],
+    "artifacts": {
+      // «a presentation video … a one-slide presentation … and optionally a poster»
+      "remote-video": {
+        "required": ["video", "one-slide"],
+        "optional": ["poster"],
+      },
+    },
+    "kinds": {
+      // «short paper = 10 min: 6–7 min talk + 3–4 min questions» (co-chairs, 2026-09-29).
+      // qa_s is the middle of 3–4 min; it is informational and not judged. The full-paper slot
+      // was not in the email, so `full` and `demo` have no entry and talk/profile says so.
+      "short": {
+        "slot_s": 600,
+        "talk_s_min": 360,
+        "talk_s_max": 420,
+        "qa_s": 210,
+      },
+    },
+    // ASE 2026's not-in-person page: «recommendation: 10 min duration, mp4 file format, HD
+    // resolution» — the parent conference's recommendation; the workshop's own slot is above.
+    "video": { "container": "mp4", "min_height_px": 720 },
+  },
+
   // The proceedings are produced by Conference Publishing Consulting — agenticdev.md takes its
   // numbers from their author instructions — which require "balanced columns on the last page, if
   // the page is not filled" and sent an accepted camera-ready back for it on 2026-08-29, the day

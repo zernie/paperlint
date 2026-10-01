@@ -140,6 +140,7 @@ export const SETTINGS_KEYS: Readonly<Record<string, string>> = Object.freeze({
   pdf: "where the built PDF is, relative to the paper, when it is not paper.pdf — the facts",
   identity:
     "what identifies the authors — names, handles, emails, affiliations, own project names; a blind venue's PDF must not say any of them — anonymity/identity. The root's list and a paper's are joined",
+  talk: 'how this paper is presented: { "mode": "remote-video", "dir"?, "files"?, "one_slide"? } — the talk/ rules. A paper\'s own; refused in the root file',
   scripts: "how skill prose names the scripts — consumer.mjs",
   timezone: "the zone deadline anchors are written in — consumer.mjs",
   contactEmail: "the polite-pool address for citation lookups — consumer.mjs",
@@ -147,6 +148,9 @@ export const SETTINGS_KEYS: Readonly<Record<string, string>> = Object.freeze({
     "the consumer's own skill trigger cases — lib/skill-trigger-cases.mjs",
   $comment: "a note for humans (JSON Schema's own comment keyword); ignored",
 });
+
+/** The keys that only mean something for one paper: refused in the root `paperlint.json`. */
+export const PAPER_ONLY_KEYS: readonly string[] = Object.freeze(["talk"]);
 
 /** The keys that only mean something for the whole project: refused in a paper's `paperlint.json`. */
 export const ROOT_ONLY_KEYS: readonly string[] = Object.freeze([

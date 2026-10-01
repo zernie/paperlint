@@ -36,7 +36,7 @@ export function useTempDir(prefix = "paperlint-test-"): string {
 /** Write `{ "relative/path": "contents" }` under `root`, creating directories. Returns `root`. */
 export function writeTree(
   root: string,
-  files: Readonly<Record<string, string>>,
+  files: Readonly<Record<string, string | Uint8Array>>,
 ): string {
   for (const [rel, text] of Object.entries(files)) {
     const p = join(root, rel);

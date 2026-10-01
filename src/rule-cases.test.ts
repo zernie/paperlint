@@ -145,10 +145,65 @@ const switched = (second: string): string =>
 const aidc = (body: string, cls = IEEE) =>
   paper(tex(`\\section{Introduction}\n${body}\n${STATEMENT}`, cls), AIDC);
 
+// ── a paper that declares a talk: a preset of its own over agenticdev, and synthetic media ───────
+
+const media = (name: string): Uint8Array =>
+  readFileSync(join(ROOT, "fixtures", "talk", name));
+/** The talk block of the tree's own preset: every limit the 3 s, 1280×720 fixture meets. */
+const TALK_VENUE = {
+  modes: ["remote-video"],
+  artifacts: {
+    "remote-video": { required: ["video", "one-slide", "captions"] },
+  },
+  kinds: { short: { slot_s: 10, talk_s_min: 2, talk_s_max: 4 } },
+  video: { container: "mp4", min_height_px: 720, max_bytes: 100_000 },
+  one_slide: { width_px: 16, height_px: 9 },
+};
+/** A paper declaring a talk, its preset's `talk` patched, its files replaced or (null) removed. */
+const talkPaper = (
+  venue: Record<string, unknown> = {},
+  talk: Record<string, unknown> | null = { mode: "remote-video" },
+  files: Record<string, string | Uint8Array | null> = {},
+): Record<string, string | Uint8Array> => {
+  const all: Record<string, string | Uint8Array | null> = {
+    [`${P}/talk/talk.mp4`]: media("talk.mp4"),
+    [`${P}/talk/one-slide.png`]: media("one-slide.png"),
+    [`${P}/talk/talk.srt`]: media("talk.srt"),
+    ...files,
+  };
+  return {
+    ...paper(ACM_TEX, {
+      [`${P}/talk-venue.jsonc`]: JSON.stringify({
+        extends: "paperlint:agenticdev",
+        talk: { ...TALK_VENUE, ...venue },
+      }),
+      [`${P}/paperlint.json`]: JSON.stringify({
+        extends: "./talk-venue.jsonc",
+        kind: "short",
+        ...(talk === null ? {} : { talk }),
+      }),
+    }),
+    ...Object.fromEntries(
+      Object.entries(all).filter(
+        (e): e is [string, string | Uint8Array] => e[1] !== null,
+      ),
+    ),
+  };
+};
+const onTalk = (
+  tree: Record<string, string | Uint8Array>,
+  severity: 1 | 2 = 2,
+) => ({
+  tree,
+  file: TEX_FILE,
+  severity,
+  line: 1,
+});
+
 // ── the case table ─────────────────────────────────────────────────────────────────────────────
 
 interface Reports {
-  readonly tree: Record<string, string>;
+  readonly tree: Record<string, string | Uint8Array>;
   /** The file the finding is on, relative to the project. */
   readonly file: string;
   readonly severity: 1 | 2;
@@ -157,7 +212,7 @@ interface Reports {
 interface RuleCases {
   readonly reports: Reports;
   /** A tree on which the rule says nothing, on any file. */
-  readonly silent: Record<string, string>;
+  readonly silent: Record<string, string | Uint8Array>;
 }
 
 const TEX_FILE = `${P}/paper.tex`;
@@ -463,6 +518,56 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       { ...AGENTICDEV, rules: { "pdf/last-page-balance": "error" } },
     ),
   },
+  "talk/profile": {
+    reports: onTalk(talkPaper({}, { mode: "in-person" })),
+    silent: talkPaper(),
+  },
+  "talk/required-files": {
+    reports: onTalk(
+      talkPaper({}, undefined, { [`${P}/talk/one-slide.png`]: null }),
+    ),
+    silent: talkPaper(),
+  },
+  "talk/undeclared": {
+    reports: onTalk(talkPaper({}, null), 1),
+    silent: talkPaper(),
+  },
+  "talk/duration": {
+    reports: onTalk(
+      talkPaper({ kinds: { short: { slot_s: 10, talk_s_max: 2 } } }),
+    ),
+    silent: talkPaper(),
+  },
+  "talk/duration-floor": {
+    reports: onTalk(
+      talkPaper({
+        kinds: { short: { slot_s: 10, talk_s_min: 5, talk_s_max: 9 } },
+      }),
+      1,
+    ),
+    silent: talkPaper(),
+  },
+  "talk/video-format": {
+    reports: onTalk(
+      talkPaper({ video: { container: "mp4", min_height_px: 1080 } }),
+    ),
+    silent: talkPaper(),
+  },
+  "talk/one-slide-size": {
+    reports: onTalk(
+      talkPaper({ one_slide: { width_px: 1920, height_px: 1080 } }),
+    ),
+    silent: talkPaper(),
+  },
+  "talk/captions-cover": {
+    reports: onTalk(
+      talkPaper({}, undefined, {
+        [`${P}/talk/talk.srt`]: "1\n00:00:02,000 --> 00:00:02,900\nLate.\n",
+      }),
+      1,
+    ),
+    silent: talkPaper(),
+  },
 };
 
 /**
@@ -491,7 +596,9 @@ type Message = z.infer<typeof LintResults>[number]["messages"][number] & {
 };
 
 /** `paperlint lint --json` over the tree, in-process through the CLI: every message, by file. */
-async function lintTree(tree: Record<string, string>): Promise<Message[]> {
+async function lintTree(
+  tree: Record<string, string | Uint8Array>,
+): Promise<Message[]> {
   const dir = writeTree(useTempDir("paperlint-rule-cases-"), {
     "package.json": '{"name":"consumer","private":true}',
     ...tree,

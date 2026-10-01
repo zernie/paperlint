@@ -57,6 +57,7 @@ describe("paperlint new — paperlint.json", () => {
         pdf: null,
         rules: null,
         identity: null,
+        talk: null,
       },
     });
   });
