@@ -33,7 +33,7 @@
     "ts-essentials": "^10.2.1",
     "typescript": "^6.0.3",
     "unpdf": "^1.8.1",
-    "vigiles": "^31.0.1",
+    "vigiles": "^32.1.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
