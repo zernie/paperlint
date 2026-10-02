@@ -37,6 +37,9 @@ import {
   workflowYaml,
 } from "./init.ts";
 import { runNode } from "../test/support.ts";
+import { nodeFiles } from "./adapters/node/index.ts";
+import { presetsDir } from "./package-dirs.ts";
+import { shippedVenueNames } from "./presets.ts";
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -511,6 +514,25 @@ describe("paperlint init — a first paper", () => {
     expect(made).toEqual([]);
     expect(r.out[r.out.indexOf("first paper") + 1]).toBe(
       "  · none yet. `npx paperlint new <name>` or `--paper <name>` creates one",
+    );
+  });
+});
+
+describe("paperlint init — a first paper named after a venue", () => {
+  it("--paper aisec-2026 is refused before anything is asked, and createPaper is not called", async () => {
+    const made: string[] = [];
+    const asked: string[] = [];
+    const r = await initRun(tree({}), {
+      interactive: true,
+      paper: "aisec-2026",
+      venues: shippedVenueNames({ files: nodeFiles, venuesDir: presetsDir() }),
+      ask: (q) => Promise.resolve((asked.push(q), "")),
+      createPaper: (_root, name) => Promise.resolve((made.push(name), 0)),
+    });
+    expect(made).toEqual([]);
+    expect(asked.filter((q) => /format/.test(q))).toEqual([]);
+    expect(r.out[r.out.indexOf("first paper") + 1]).toBe(
+      '  ✗ no paper created — `aisec-2026` — the paper folder names a venue ("aisec"); venues change on resubmission, so name it after the work\n    if the venue really belongs in the name, rerun `paperlint new` with --allow-venue-name',
     );
   });
 });

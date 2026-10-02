@@ -109,6 +109,12 @@ npx paperlint new my-paper --venue ./venues/my-workshop.jsonc     # "extends": "
   `--kind` is written anyway; `new` then says that lint reports `pdf/profile` until `kind` is set.
 - On a terminal without `--venue`, `new` asks for the venue (default: none) and then its kind.
 - An existing `paperlint.json` is never overwritten, so `--venue` for it is refused.
+- A `<name>` that names a venue — a shipped preset's label or alias as a whole word, case ignored:
+  `aisec-2026`, `acsac_2026`, `realm2026` — is refused and nothing is written, the venue in
+  `--venue` included: a rejected paper moves to another venue and keeps its folder. Name it after the
+  work. `--allow-venue-name` creates it anyway, when the word really is the work's (a paper about
+  realms); it skips this refusal and no other. A folder whose name goes stale later is
+  [`paper/folder-venue-leftover`](rules/paper/folder-venue-leftover.md)'s to report.
 
 Without a venue the file has `"extends": null` and a `$comment` saying what goes there. Until
 `extends` names a preset (here or in the root file), `paperlint lint` gives that paper one warning,

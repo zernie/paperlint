@@ -24,7 +24,7 @@ can see.
 
 Warning — the AgenticDev talk's last cue ends 4.2 s before the video:
 
-> papers/agenticdev-2026/talk/agenticdev-2026-talk.srt: the last caption ends at 5:16.6 (316.6 s),
+> papers/rule-drift/talk/rule-drift-talk.srt: the last caption ends at 5:16.6 (316.6 s),
 > and the video runs 5:20.8 (320.84 s) — more than 2 s uncaptioned at the end
 
 Passing: cues from 0 s to within 2 s of the end, no silence between cues over 5 s.

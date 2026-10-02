@@ -1029,12 +1029,12 @@ function stepAidc(c: Consumer): void {
   const { consumer, bin } = c;
   const made = sh(
     bin,
-    ["new", "aidc-demo", "--venue", "aidc", "--kind", "short"],
+    ["new", "preset-demo", "--venue", "aidc", "--kind", "short"],
     {
       cwd: consumer,
     },
   );
-  const tex = join(consumer, "papers", "aidc-demo", "paper.tex");
+  const tex = join(consumer, "papers", "preset-demo", "paper.tex");
   verdict(
     existsSync(tex) &&
       readFileSync(tex, "utf8").includes(
@@ -1043,7 +1043,7 @@ function stepAidc(c: Consumer): void {
     "`paperlint new --venue aidc` resolves paperlint:aidc from the installed presets/ and sets its class",
     made.stdout + made.stderr,
   );
-  const lint = sh(bin, ["lint", "papers/aidc-demo", "--json"], {
+  const lint = sh(bin, ["lint", "papers/preset-demo", "--json"], {
     cwd: consumer,
   });
   let rules: (string | null)[] = [];

@@ -68,6 +68,11 @@ export interface Args {
   venue: string | null;
   /** `--kind <kind>` for `new`: one of the venue preset's kinds. */
   kind: string | null;
+  /**
+   * `--allow-venue-name` for `new`: create the folder even though its name names a venue. Skips
+   * that one refusal and no other.
+   */
+  allowVenueName: boolean;
   /** `--hooks=<mode>` — parsed only so it can be REFUSED by name rather than read as a path. */
   hooksMode: string | null;
   help?: boolean;

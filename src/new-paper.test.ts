@@ -6,6 +6,7 @@
 import {
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   realpathSync,
   rmSync,
@@ -40,7 +41,7 @@ const settingsOf = (dir: string) =>
 describe("paperlint new — paperlint.json", () => {
   it("is always written, from the package template: no venue chosen yet, and valid", () => {
     const papers = join(tmp(), "papers");
-    const r = newPaper(papers, "demo", "tex");
+    const r = newPaper(papers, "demo", "tex", { venues: [] });
     expect(r.ok && r.files.find((f) => f.file === "paperlint.json")).toEqual({
       file: "paperlint.json",
       status: "created",
@@ -69,7 +70,7 @@ describe("paperlint new — paperlint.json", () => {
       join(papers, OVERRIDE_DIR, "paperlint.json"),
       '{ "extends": "paperlint:aisec", "kind": "research" }\n',
     );
-    const r = newPaper(papers, "house", "tex");
+    const r = newPaper(papers, "house", "tex", { venues: [] });
     expect(r.ok && r.files.find((f) => f.file === "paperlint.json")?.from).toBe(
       "project",
     );
@@ -86,7 +87,7 @@ describe("paperlint new — paperlint.json", () => {
       join(papers, "p", "paperlint.json"),
       '{"extends":"paperlint:aisec"}',
     );
-    const r = newPaper(papers, "p", "tex");
+    const r = newPaper(papers, "p", "tex", { venues: [] });
     expect(
       r.ok && r.files.find((f) => f.file === "paperlint.json")?.status,
     ).toBe("kept");
@@ -103,7 +104,7 @@ describe("paperlint lint — a paper with no venue preset chosen", () => {
       join(root, "package.json"),
       JSON.stringify({ name: "c", private: true }),
     );
-    newPaper(join(root, "papers"), "demo", "tex");
+    newPaper(join(root, "papers"), "demo", "tex", { venues: [] });
     if (extendsValue !== null)
       writeFileSync(
         join(root, "papers", "demo", "paperlint.json"),
@@ -140,7 +141,11 @@ describe("paperlint lint — a paper with no venue preset chosen", () => {
 });
 
 /** `paperlint new <args>` in a fresh project (not a terminal: vitest's stdin is not a TTY). */
-async function newIn(args: string[], files: Record<string, string> = {}) {
+async function newIn(
+  args: string[],
+  files: Record<string, string> = {},
+  name = "demo",
+) {
   const root = tmp();
   const all = {
     "package.json": JSON.stringify({ name: "c", private: true }),
@@ -152,12 +157,12 @@ async function newIn(args: string[], files: Record<string, string> = {}) {
   }
   const out: string[] = [];
   const err: string[] = [];
-  const code = await run(["new", "demo", ...args], {
+  const code = await run(["new", name, ...args], {
     cwd: root,
     log: (s: string) => out.push(s),
     err: (s: string) => err.push(s),
   });
-  const dir = join(root, "papers", "demo");
+  const dir = join(root, "papers", name);
   return {
     code,
     out: out.join("\n"),
@@ -286,6 +291,117 @@ describe("paperlint new --venue / --kind — refusals and defaults", () => {
   });
 });
 
+describe("paperlint new — a name that names a venue is refused", () => {
+  it.each<[string, string, string[], string]>([
+    [
+      "a venue's label, with the work's name left to suggest",
+      "aisec-agent-drift",
+      [],
+      '`aisec-agent-drift` — the paper folder names a venue ("aisec"); venues change on resubmission, so name it after the work (e.g. "agent-drift")',
+    ],
+    [
+      "nothing but a year left: no example",
+      "aisec-2026",
+      [],
+      '`aisec-2026` — the paper folder names a venue ("aisec"); venues change on resubmission, so name it after the work',
+    ],
+    [
+      "its own venue too: right today, stale on the next resubmission",
+      "aidc-2026",
+      ["--venue", "aidc"],
+      '`aidc-2026` — the paper folder names a venue ("aidc"); venues change on resubmission, so name it after the work',
+    ],
+    [
+      "by an alias, glued to a year",
+      "acsac2026-rules",
+      [],
+      '`acsac2026-rules` — the paper folder names a venue ("ACSAC"); venues change on resubmission, so name it after the work',
+    ],
+    [
+      "two venues",
+      "realm-aisec-rules",
+      [],
+      '`realm-aisec-rules` — the paper folder names a venue ("aisec", "realm"); venues change on resubmission, so name it after the work (e.g. "rules")',
+    ],
+  ])("%s: exit 2, nothing written", async (_, name, args, reason) => {
+    const r = await newIn(args, {}, name);
+    expect(r.code).toBe(2);
+    expect(r.out).toBe(
+      `  ✗ ${reason}\n    if the venue really belongs in the name, rerun \`paperlint new\` with --allow-venue-name`,
+    );
+    expect(existsSync(r.dir)).toBe(false);
+  });
+
+  it("an existing folder that names a venue gets no missing files either", async () => {
+    const r = await newIn(
+      [],
+      { "papers/aisec-2026/paper.tex": "x" },
+      "aisec-2026",
+    );
+    expect(r.code).toBe(2);
+    expect(readdirSync(r.dir)).toEqual(["paper.tex"]);
+  });
+
+  it.each(["agent-rule-drift", "overrealm-realms"])(
+    "%s names no venue: created, as before",
+    async (name) => {
+      const r = await newIn([], {}, name);
+      expect(r.out).not.toMatch(/names a venue/);
+      expect(existsSync(join(r.dir, "PIPELINE-STATUS.md"))).toBe(true);
+      expect(r.code).toBe(0);
+    },
+  );
+});
+
+describe("paperlint new --allow-venue-name", () => {
+  it("the folder is created as any other, and nothing is said about the venue", async () => {
+    const r = await newIn(["--allow-venue-name"], {}, "realm-of-agents");
+    expect(r.code).toBe(0);
+    expect(r.out).not.toMatch(/venue really belongs|names a venue/);
+    expect(readdirSync(r.dir).sort()).toEqual([
+      "PIPELINE-STATUS.md",
+      "paper.tex",
+      "paperlint.json",
+    ]);
+  });
+
+  it.each<{
+    readonly what: string;
+    readonly name: string;
+    readonly args: readonly string[];
+    readonly files: Record<string, string>;
+    readonly says: RegExp;
+  }>([
+    {
+      what: "an invalid name",
+      name: "Realm",
+      args: [],
+      files: {},
+      says: /may hold only a-z/,
+    },
+    {
+      what: "an unknown preset",
+      name: "realm-of-agents",
+      args: ["--venue", "nope"],
+      files: {},
+      says: /no such venue preset/,
+    },
+    {
+      what: "an existing paperlint.json with --venue",
+      name: "realm-of-agents",
+      args: ["--venue", "aisec"],
+      files: {
+        "papers/realm-of-agents/paperlint.json": '{ "extends": null }\n',
+      },
+      says: /already exists and is never overwritten/,
+    },
+  ])("skips no other refusal: $what", async ({ name, args, files, says }) => {
+    const r = await newIn(["--allow-venue-name", ...args], files, name);
+    expect(r.code).toBe(2);
+    expect(`${r.out}\n${r.err}`).toMatch(says);
+  });
+});
+
 describe("chooseVenue — on a terminal", () => {
   const at = (answers: string[]) => {
     const asked: string[] = [];
@@ -340,6 +456,7 @@ describe("a project's own template", () => {
     const src = join(papers, OVERRIDE_DIR, "paperlint.json");
     writeFileSync(src, '{\n  // our house venue\n  "extends": null\n}\n');
     const r = newPaper(papers, "p", "tex", {
+      venues: [],
       venue: { extends: "paperlint:aisec", kind: null },
     });
     expect(r).toEqual({
@@ -353,7 +470,10 @@ describe("a project's own template", () => {
     const papers = join(tmp(), "papers");
     mkdirSync(join(papers, OVERRIDE_DIR), { recursive: true });
     writeFileSync(join(papers, OVERRIDE_DIR, "paperlint.json"), "{}\n");
-    const lines = reportNewPaper(newPaper(papers, "p", "tex"), (p) => p);
+    const lines = reportNewPaper(
+      newPaper(papers, "p", "tex", { venues: [] }),
+      (p) => p,
+    );
     expect(lines).toContain(
       "      + paperlint.json  (from the project's .template/ template)",
     );

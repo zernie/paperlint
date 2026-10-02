@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import { andThen, err, map, match, ok, type Result } from "./result.ts";
+import { andThen, err, isOk, map, match, ok, type Result } from "./result.ts";
 
 const half = (n: number): Result<number, string> =>
   n % 2 === 0 ? ok(n / 2) : err(`${String(n)} is odd`);
@@ -27,4 +27,12 @@ test("match picks the branch by `ok`", () => {
     match(r, { ok: (n) => `got ${String(n)}`, err: (e) => `no: ${e}` });
   assert.equal(say(half(4)), "got 2");
   assert.equal(say(half(5)), "no: 5 is odd");
+});
+
+test("isOk: filter keeps the successes, and their values are read without a cast", () => {
+  const rs = [2, 3, 4].map(half);
+  assert.deepEqual(
+    rs.filter(isOk).map((r) => r.value),
+    [1, 2],
+  );
 });

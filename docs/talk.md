@@ -41,7 +41,7 @@ A video named after the paper is declared once:
 ```json
 "talk": {
   "mode": "remote-video",
-  "files": { "video": "agenticdev-2026-talk.mp4", "captions": "agenticdev-2026-talk.srt" }
+  "files": { "video": "rule-drift-talk.mp4", "captions": "rule-drift-talk.srt" }
 }
 ```
 

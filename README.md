@@ -103,9 +103,12 @@ REALM.
    ```
 
 3. Create a paper. `--venue` names its venue preset from the table above, `--kind` which of its page
-   limits applies:
+   limits applies. Name the folder after the work, not the venue: a rejected paper moves to another
+   venue and keeps its folder, so `new` refuses a name like `aisec-2026` (`--allow-venue-name` when
+   the word really is the work's):
 
    <!-- `vigiles:symbol src/new-paper.ts#newPaper` — `npm run check` fails if this function is renamed or removed. -->
+   <!-- `vigiles:symbol src/new-paper.ts#ALLOW_VENUE_NAME` — the flag's one spelling; `npm run check` fails if it is renamed or removed. -->
 
    ```sh
    npx paperlint new my-paper --venue agenticdev --kind short

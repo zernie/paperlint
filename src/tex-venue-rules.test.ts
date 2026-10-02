@@ -719,7 +719,7 @@ describe("otherVenues", () => {
     const aidc = resolvePreset("paperlint:aidc", from, deps);
     expect(aidc.ok).toBe(true);
     if (!aidc.ok) return;
-    expect(otherVenues(aidc.value, from, deps).map((o) => o.label)).toEqual([
+    expect(otherVenues(aidc.value, deps).map((o) => o.label)).toEqual([
       "acm-sigconf",
       "agenticdev",
       "aisec",

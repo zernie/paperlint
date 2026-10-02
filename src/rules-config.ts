@@ -6,7 +6,7 @@
  * A consumer turns an optional rule on, or changes a built-in rule's severity, by writing what they
  * would write in an ESLint flat config — a list of `{ files, ignores, rules }` blocks:
  *
- *   "rules": [ { "files": ["papers/agenticdev-2026/**"],
+ *   "rules": [ { "files": ["papers/rule-drift/**"],
  *                "rules": { "pdf/last-page-balance": ["error", { "tolerancePt": 120 }] } } ]
  *
  * The blocks are appended AFTER paperlint's built-in config, so a later block wins, exactly as in ESLint.

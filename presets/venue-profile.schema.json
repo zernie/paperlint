@@ -29,7 +29,7 @@
       "type": "boolean"
     },
     "aliases": {
-      "description": "Other names the venue goes by in a paper's text — its acronym, its parent conference (`[\"AISec\", \"ACM CCS\"]`). Read by `tex/venue-leftover`: a paper that extends another venue and says one of these is flagged. Matched as whole words, case-sensitive. Collected along the `extends` chain, with `name`.",
+      "description": "Other names the venue goes by in a paper's text — its acronym, its parent conference (`[\"AISec\", \"ACM CCS\"]`). Read by `tex/venue-leftover`: a paper that extends another venue and says one of these is flagged. Matched as whole words, case-sensitive. Also read by `paper/folder-venue-leftover`, against the words of the paper's folder name, case ignored. Collected along the `extends` chain, with `name`.",
       "type": "array",
       "uniqueItems": true,
       "items": {

@@ -27,6 +27,11 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CONFIG_FILE } from "#lib/paper-config";
 import { isRecord } from "./domain/record.ts";
+import {
+  venuesNamedBy,
+  withoutVenues,
+  type NamedVenue,
+} from "./domain/venue-name.ts";
 
 export type PaperFormat = "tex" | "md";
 export const FORMATS: readonly PaperFormat[] = ["tex", "md"];
@@ -50,6 +55,9 @@ export const SOURCE_FILE: Readonly<Record<PaperFormat, string>> = {
   md: "paper.md",
 };
 
+/** The flag that lets `paperlint new` create a folder whose name names a venue. */
+export const ALLOW_VENUE_NAME = "--allow-venue-name";
+
 export const isFormat = (v: unknown): v is PaperFormat =>
   FORMATS.some((f) => f === v);
 
@@ -57,13 +65,30 @@ export const isFormat = (v: unknown): v is PaperFormat =>
  * Why a name is refused, or null. `[a-z0-9._-]+` is the charset; a LEADING dot is refused on top
  * of it, because discovery skips dot-directories — a paper named `.x` would be created and then
  * never linted, which is worse than a refusal.
+ *
+ * A name that names a venue — one of `venues`' names as whole words (`aisec-2026`) — is refused
+ * too, the paper's own venue included: a paper that is rejected goes to another venue and keeps its
+ * folder, so the name goes stale, and nothing at creation time knows the paper will not move. A
+ * folder made by hand, and one made with `--allow-venue-name` (a whole word can be the work's own:
+ * a paper about realms), is what `paper/folder-venue-leftover` judges once the venue changes. The
+ * flag passes no `venues`, so it skips this refusal and no other.
  */
-export function nameProblem(name: string): string | null {
+export function nameProblem(
+  name: string,
+  venues: readonly NamedVenue[],
+): string | null {
   if (!/^[a-z0-9._-]+$/.test(name))
     return `\`${name}\` — a paper name may hold only a-z, 0-9, dot, underscore and hyphen (it becomes a path and a shell argument)`;
   if (name.startsWith("."))
     return `\`${name}\` — a name starting with a dot is skipped by paper discovery, so it would never be linted`;
-  return null;
+  const named = venuesNamedBy(name, venues);
+  if (named.length === 0) return null;
+  const which = named.map((n) => `"${n.name}"`).join(", ");
+  const instead = withoutVenues(name, venues);
+  return [
+    `\`${name}\` — the paper folder names a venue (${which}); venues change on resubmission, so name it after the work${instead === null ? "" : ` (e.g. "${instead}")`}`,
+    `    if the venue really belongs in the name, rerun \`paperlint new\` with ${ALLOW_VENUE_NAME}`,
+  ].join("\n");
 }
 
 export interface FileOutcome {
@@ -180,17 +205,23 @@ function fromTemplate(
     : edited;
 }
 
+/** What `newPaper` is told besides the name: the venues a name may not name, and what to write. */
+export interface NewPaperOptions {
+  readonly packageTemplates?: string;
+  readonly venue?: VenueSetting | null;
+  /** Every venue paperlint knows (`shippedVenueNames`): a name naming one is refused. */
+  readonly venues: readonly NamedVenue[];
+}
+
 // Documented in README.md#getting-started — update it when this changes.
 export function newPaper(
   papersRoot: string,
   name: string,
   format: PaperFormat,
-  {
-    packageTemplates = PACKAGE_TEMPLATES,
-    venue = null,
-  }: { packageTemplates?: string; venue?: VenueSetting | null } = {},
+  opts: NewPaperOptions,
 ): NewPaperResult {
-  const problem = nameProblem(name);
+  const { packageTemplates = PACKAGE_TEMPLATES, venue = null } = opts;
+  const problem = nameProblem(name, opts.venues);
   if (problem) return { ok: false, reason: problem };
   const dir = join(papersRoot, name);
   const fresh = !existsSync(dir);

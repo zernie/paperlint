@@ -35,6 +35,25 @@ describe("parseArgs — `--flag=value` is the same as `--flag value`", () => {
   });
 });
 
+describe("parseArgs — the switches, each turning one field on", () => {
+  it.each([
+    ["--json", "json"],
+    ["--fix", "fix"],
+    ["--all", "all"],
+    ["--dry-run", "dryRun"],
+    ["--check", "check"],
+    ["--yes", "yes"],
+    ["-y", "yes"],
+    ["--no-hooks", "noHooks"],
+    ["--allow-venue-name", "allowVenueName"],
+  ] as const)("%s → %s", (flag, key) => {
+    const off = parseArgs(["new", "x"]);
+    const on = parseArgs(["new", "x", flag]);
+    expect(off[key]).toBe(false);
+    expect(on).toEqual({ ...off, [key]: true });
+  });
+});
+
 describe("an unknown flag is refused, not read as a path", () => {
   it("exits 2 and names the flag", async () => {
     const err: string[] = [];
