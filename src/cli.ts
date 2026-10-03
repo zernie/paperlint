@@ -78,6 +78,7 @@ import {
   REGISTER_BAND_RULE_LEVELS,
   registerBandRules,
 } from "./register-bands.ts";
+import { headingCaseRule } from "./heading-case.ts";
 import {
   paperRules,
   identityField,
@@ -403,6 +404,7 @@ export function buildConfig(
             "claim-provenance": claimProvenanceRule(TEX_RULE_DEPS),
             register: registerRule(TEX_RULE_DEPS),
             ...registerBandRules(TEX_RULE_DEPS),
+            "heading-case": headingCaseRule(TEX_RULE_DEPS),
           },
         },
         paper: { rules: texPaperRules },
@@ -454,7 +456,10 @@ export function buildConfig(
           plugins: {
             tex: {
               languages: { latex: texLanguage },
-              rules: { "future-promise": texBuild["future-promise"] },
+              rules: {
+                "future-promise": texBuild["future-promise"],
+                "heading-case": headingCaseRule(TEX_RULE_DEPS),
+              },
             },
             paper: {
               rules: {
@@ -623,7 +628,11 @@ export async function silentOptionalRules(
   for (const f of new Set(files.filter((p) => basename(p) === MAIN))) {
     // Undefined for a file outside ESLint's cwd or scope: it reaches nothing.
     const cfg = ComputedConfig.parse(await eslint.calculateConfigForFile(f));
-    for (const id of turnedOn) if (isOn(cfg?.rules?.[id])) reached.add(id);
+    // Reached is "some block names the rule for this paper", on OR off: a paper that turns off what
+    // its venue preset turned on is the documented way out, and reads the same as a glob that missed
+    // only if "off" is counted as "not there" — which refused every such paper.
+    for (const id of turnedOn)
+      if (cfg?.rules?.[id] !== undefined) reached.add(id);
   }
   return [...turnedOn].filter((id) => !reached.has(id));
 }

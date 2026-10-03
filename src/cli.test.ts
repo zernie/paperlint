@@ -394,6 +394,38 @@ test("silentOptionalRules: a config with no rules turns nothing on", async () =>
   assert.deepEqual(await silentOptionalRules(eslint, [], {}), []);
 });
 
+const lastPageOn = {
+  rules: [
+    { basePath: ".", rules: { "pdf/last-page-balance": "error" as const } },
+  ],
+};
+const eslintWith = (rules: Record<string, unknown>) => ({
+  calculateConfigForFile: () => Promise.resolve({ rules }),
+});
+
+test("silentOptionalRules: a rule on for a paper is reached", async () => {
+  const eslint = eslintWith({ "pdf/last-page-balance": [2, {}] });
+  assert.deepEqual(
+    await silentOptionalRules(eslint, ["p/paper.tex"], lastPageOn),
+    [],
+  );
+});
+
+test("silentOptionalRules: a rule a paper's own block turns off is reached — the way out of a preset's", async () => {
+  const eslint = eslintWith({ "pdf/last-page-balance": [0] });
+  assert.deepEqual(
+    await silentOptionalRules(eslint, ["p/paper.tex"], lastPageOn),
+    [],
+  );
+});
+
+test("silentOptionalRules: a rule no block names for any paper is silent — a glob that matched nothing", async () => {
+  assert.deepEqual(
+    await silentOptionalRules(eslintWith({}), ["p/paper.tex"], lastPageOn),
+    ["pdf/last-page-balance"],
+  );
+});
+
 test("init with no path and --format md sets up the current directory", async () => {
   const dir = writeTree(join(root, "init-here"), { "package.json": "{}" });
   const r = await cli(

@@ -137,6 +137,11 @@ const AIDC = {
     kind: "short",
   }),
 };
+const ACM_CLASS = "\\documentclass[sigconf]{acmart}";
+/** A paper on the ACM family's preset: it turns `tex/heading-case` on, headline style. */
+const ACM_PRESET = {
+  [`${P}/paperlint.json`]: JSON.stringify({ extends: "paperlint:acm-sigconf" }),
+};
 const IEEE = "\\documentclass[conference,compsoc]{IEEEtran}";
 const STATEMENT = "\\section*{LLM Usage Statement}\nNone.";
 /** Two `\\documentclass` lines behind a switch: `article` for one venue, `second` for this one. */
@@ -388,6 +393,15 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       line: 5,
     },
     silent: aidc("Text."),
+  },
+  "tex/heading-case": {
+    reports: {
+      tree: paper(tex("\\section{Related work}", ACM_CLASS), ACM_PRESET),
+      file: TEX_FILE,
+      severity: 2,
+      line: 3,
+    },
+    silent: paper(tex("\\section{Related Work}", ACM_CLASS), ACM_PRESET),
   },
   "paper/folder-venue-leftover": {
     reports: {
