@@ -180,6 +180,7 @@ what it does — "is this idea worth a paper?", "find me a venue for this". `ini
 - **A hostile review before the real one.** `paper-adversarial-review`
 - **A ready / not ready verdict before you submit**, worst problem first. `harden-paper`
 - **Where your paper stands**, measured from the real build. `paper-status`
+- **The PDF and abstract replaced on HotCRP**, dry run first, and proof the portal holds your build. `submission-portal`
 
 Every skill, by stage: [`docs/skills.md`](docs/skills.md).
 
