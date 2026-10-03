@@ -12,6 +12,7 @@ import type {
   Passage,
   Span,
   TextRun,
+  TitledHeading,
 } from "../domain/tex-document.ts";
 
 export interface LatexReader {
@@ -19,6 +20,11 @@ export interface LatexReader {
   readonly documentClass: (src: string) => ClassLine;
   /** Its sections, where the back matter begins, and where the document ends. */
   readonly outline: (src: string) => Outline;
+  /**
+   * The titles of its `\section`, `\subsection`, `\subsubsection` and `\paragraph` (starred or
+   * not, and the optional short title), each as the text the case judge reads: in document order.
+   */
+  readonly headings: (src: string) => readonly TitledHeading[];
   /** The text a reader sees: prose, the author block, footnotes — not comments, keys, math, code. */
   readonly renderedRuns: (src: string) => readonly TextRun[];
   /**

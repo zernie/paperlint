@@ -26,6 +26,7 @@ import {
   parseTemplate,
   replaceDocumentClass,
 } from "./document-class.ts";
+import { headingsOf } from "./headings.ts";
 import { documentBodyOf, includesOf } from "./includes.ts";
 import { outlineOf } from "./outline.ts";
 import { parseLatex } from "./parse.ts";
@@ -48,6 +49,7 @@ export {
   textOf,
 } from "./nodes.ts";
 export { documentBodyOf, includesOf } from "./includes.ts";
+export { headingsOf } from "./headings.ts";
 export { outlineOf } from "./outline.ts";
 export { parseLatex, type ParsedTex } from "./parse.ts";
 export { bodyEmphasis, bodyProse } from "./prose.ts";
@@ -58,6 +60,7 @@ export { layoutOverridesOf } from "./layout.ts";
 export const latexReader: LatexReader = {
   documentClass: (src) => documentClassOf(parseLatex(src)),
   outline: (src) => outlineOf(parseLatex(src)),
+  headings: (src) => headingsOf(parseLatex(src)),
   renderedRuns: (src) => renderedRuns(parseLatex(src)),
   bodyProse: (src) => bodyProse(parseLatex(src)),
   bodyEmphasis: (src) => bodyEmphasis(parseLatex(src)),
