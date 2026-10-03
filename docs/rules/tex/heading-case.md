@@ -202,6 +202,37 @@ among the lowercase words, which the publisher's text makes major. What is reusa
 the rule is the word classes, the places, the compounds and what it leaves unread, so it is written
 here.
 
+## Measured on real ACM papers
+
+A rule that judges a venue's requirement is validated on papers of that venue, not on fixtures its
+author wrote. Two corpora, 2026-10-03:
+
+- **The accepted paper in this repository**, `fixtures/accepted-papers/agenticdev-acm26`: 9
+  headings, 6 of them in sentence case — the camera-ready the publisher sent back for exactly that.
+  The rule reports 18 words, every one a true positive, and its fixes write the six corrected
+  headings ([`fixtures/accepted-papers/README.md`](../../../fixtures/accepted-papers/README.md)).
+- **277 `acmart` sources from arXiv** (authors' versions of papers whose arXiv comment names an ACM
+  venue — ICSE, ASE, FSE, ISSTA, CCS, CHI, CSCW, MSR and others; acceptance was **not** verified
+  paper by paper, and they are not the copy-edited proceedings versions, so many are in sentence
+  case). Not committed: the licences differ. 9 515 headings; 93 papers drew no finding, 184 drew
+  2 697 findings, and **a finding is not a miss of the rule**: in a sentence-case paper nearly every
+  heading is one.
+
+On the second corpus the findings were read, not counted: all 60 where a capital would become
+lowercase (`Across`, `With`, `Between`, `To`, `From`, `Of`, `Without`, `Against`, `And`, `Versus`
+…), every compound, every flagged word of six letters or fewer, and every finding in the 59 papers
+with one or two. Three false-finding classes came out of that reading, each now a test:
+
+| what the rule did                                                       | what it was                                                              | now                                                  |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------- |
+| lowercased `A` in `Module A: Element Relation`                          | a capital letter that labels something, not an article                   | a single letter other than lowercase `a` is not read |
+| capitalized `using`, `following`, `including`, `given`                  | prepositions in some grammars, verbs in others                           | in the **either** class                              |
+| read the words of `\finding{label}{a sentence of words}` as title words | a group right after a macro of the author's own is that macro's argument | not read                                             |
+
+One class remains and is documented, not fixed: a **lowercase name set in plain text** is read as a
+lowercase word (`\paragraph{libssh}`, `keygen`: 2 findings in 2 697). The rule cannot tell a tool
+from a noun without a dictionary; set the name in `\texttt{}` or keep it with a directive (above).
+
 ## What it does not check
 
 - A title in **sentence** style past its first word, for the reason above.
