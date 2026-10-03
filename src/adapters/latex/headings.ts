@@ -67,6 +67,10 @@ const levelOf = (m: Macro): readonly HeadingLevel[] => {
   return level === undefined ? [] : [level];
 };
 
+/** A macro that is neither left out of the title nor read as the words it wraps. */
+const isOpaqueMacro = (m: Macro): boolean =>
+  !INVISIBLE.has(m.content) && !TRANSPARENT.has(m.content);
+
 /** What one macro says in a title. */
 function macroSegments(m: Macro): readonly Segment[] {
   if (INVISIBLE.has(m.content)) return [];
@@ -89,8 +93,28 @@ function nodeSegments(n: Node): readonly Segment[] {
   return textAt(n, OPAQUE);
 }
 
-const segmentsOf = (nodes: readonly Node[] | undefined): readonly Segment[] =>
-  (nodes ?? []).flatMap(nodeSegments);
+/**
+ * A group written right after a command the parser has no signature for (`\ours{…}`, a macro of the
+ * author's own): the parser leaves such a group beside the macro, but TeX hands it to the macro as an
+ * argument, so it is part of what the macro prints and not words of the title. A chain of groups
+ * (`\findingdes{label}{a sentence}`) is all argument.
+ */
+function isArgumentGroup(nodes: readonly Node[], i: number): boolean {
+  const n = nodes[i];
+  const prev = nodes[i - 1];
+  if (n === undefined || prev === undefined || n.type !== "group") return false;
+  if (prev.position?.end.offset !== n.position?.start.offset) return false;
+  return prev.type === "macro"
+    ? isOpaqueMacro(prev)
+    : isArgumentGroup(nodes, i - 1);
+}
+
+const segmentsOf = (nodes: readonly Node[] | undefined): readonly Segment[] => {
+  const list = nodes ?? [];
+  return list.flatMap((n, i) =>
+    isArgumentGroup(list, i) ? [] : nodeSegments(n),
+  );
+};
 
 /** One argument's contents → the heading it makes, or none when it says nothing. */
 function titled(

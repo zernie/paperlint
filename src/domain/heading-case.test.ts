@@ -110,8 +110,23 @@ describe("headline style — the corrected forms are silent", () => {
     ["a dotted abbreviation", "Pitfalls, e.g., Timeouts"],
     ["a slash compound", "Input/output Handling"],
     ["a title that is only math", "$O(n)$"],
+    ["a capital letter that labels something", "Module A: Element Relation"],
+    ["…and the same letter inside a compound", "Plan A-Prime Results"],
   ])("%s", (_why, title) => {
     expect(findingsOf(section(title))).toEqual([]);
+  });
+
+  it("a group right after a macro the parser has no signature for is that macro's argument, not title words", () => {
+    expect(
+      findingsOf(section("Evaluating \\ours{some words} on Data")),
+    ).toEqual([]);
+    expect(
+      findingsOf("\\subsubsection*{\\finding{label}{a sentence of words}}"),
+    ).toEqual([]);
+    expect(wordsOf(section("related \\ours {work}"))).toEqual([
+      "related",
+      "work",
+    ]);
   });
 
   it("emphasis commands are read as the words they wrap", () => {
@@ -145,6 +160,10 @@ describe("headline style — words whose class is ambiguous are never reported",
     "so",
     "yet",
     "how",
+    "using",
+    "following",
+    "including",
+    "given",
   ])("🔴 «%s», mid-title, either case", (word) => {
     const upper = word.charAt(0).toUpperCase() + word.slice(1);
     expect(findingsOf(section(`Turning ${word} the Cache`))).toEqual([]);

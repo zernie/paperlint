@@ -79,6 +79,10 @@ const KINDS: ReadonlyMap<string, Kind> = new Map([
     "either",
     "if because while when where whether although though whereas unless once so yet that how",
   ),
+  ...kinds(
+    "either",
+    "using following including regarding concerning given excluding considering besides",
+  ),
   ...kinds("name", "von van de der den da di du del della la le el"),
 ]);
 
@@ -186,9 +190,11 @@ const kindOf = (element: string): Kind =>
 const isMixed = (el: string): boolean =>
   el.slice(1) !== el.slice(1).toLowerCase();
 
-/** A single letter other than the article: a symbol, not a word. */
-const isSymbol = (el: string): boolean =>
-  el.length === 1 && el.toLowerCase() !== "a";
+/**
+ * A single letter other than a lowercase article: a symbol, not a word. A capital «A» in the middle
+ * of a title is a label (_Module A_, _Appendix A_, _Vitamin A_), never an article set wrong.
+ */
+const isSymbol = (el: string): boolean => el.length === 1 && el !== "a";
 
 const capitalized = (el: string): string =>
   el.charAt(0).toUpperCase() + el.slice(1);
