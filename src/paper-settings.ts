@@ -4,7 +4,7 @@
  * One file name at two levels, one schema (lib/paper-config.mjs → SETTINGS_KEYS):
  *
  *   paperlint.json                 the project (optional): papersDir, rules, defaults
- *   <paper>/paperlint.json         this paper: { extends, kind, pdf, rules }
+ *   <paper>/paperlint.json         this paper: { extends, kind, pdf, rules, identity, talk, submission }
  *   a venue preset                 `paperlint:<name>` (shipped) or `./x.jsonc` (src/presets.ts)
  *
  * The paper's `extends`, `kind` and `pdf` win over the root's; with no own value, the root's is
@@ -32,6 +32,10 @@ import {
 } from "./rules-config.ts";
 import { messageOf } from "./domain/text.ts";
 import { parsePaperTalk, type PaperTalk } from "./domain/talk.ts";
+import {
+  parsePaperSubmission,
+  type PaperSubmission,
+} from "./domain/submission.ts";
 
 /** What one paper declares. Every absent field is null. */
 export interface PaperSettings {
@@ -54,6 +58,8 @@ export interface PaperSettings {
   readonly identity: readonly string[] | null;
   /** How this paper is presented (`talk/*`); null when it declares no talk. Never the root's. */
   readonly talk: PaperTalk | null;
+  /** Which submission on the venue's portal is this paper's; null when it says none. Never the root's. */
+  readonly submission: PaperSubmission | null;
 }
 
 /** Why a paper's settings cannot be read. */
@@ -112,17 +118,25 @@ export function identityField(
       );
 }
 
-/** `rules` (checked for shape only) and `talk`, each null when absent. */
+/** `rules` (checked for shape only), `talk` and `submission`, each null when absent. */
 function rulesAndTalk(
   json: Readonly<Record<string, unknown>>,
-): Result<Pick<PaperSettings, "rules" | "talk">, string> {
+): Result<Pick<PaperSettings, "rules" | "talk" | "submission">, string> {
   const rules = json["rules"];
   if (rules !== undefined && !isObject(rules) && !Array.isArray(rules))
     return err(
       `"rules" must be an object of rule id → severity, or a list of ESLint blocks`,
     );
   const talk = parsePaperTalk(json["talk"]);
-  return talk.ok ? ok({ rules: rules ?? null, talk: talk.value }) : talk;
+  if (!talk.ok) return talk;
+  const submission = parsePaperSubmission(json["submission"]);
+  return submission.ok
+    ? ok({
+        rules: rules ?? null,
+        talk: talk.value,
+        submission: submission.value,
+      })
+    : submission;
 }
 
 /** The parsed JSON of `paperlint.json` → the settings, or one line saying what is wrong. Pure. */
@@ -232,7 +246,12 @@ function merge(
   paper: PaperSettings | null,
 ): PaperSettings | null {
   const r = root ?? NO_DEFAULTS;
-  const p = paper ?? { ...NO_DEFAULTS, rules: null, talk: null };
+  const p = paper ?? {
+    ...NO_DEFAULTS,
+    rules: null,
+    talk: null,
+    submission: null,
+  };
   const merged: PaperSettings = {
     extends: p.extends ?? r.extends,
     kind: p.kind ?? r.kind,
@@ -240,6 +259,7 @@ function merge(
     rules: p.rules,
     identity: joined(r.identity, p.identity),
     talk: p.talk,
+    submission: p.submission,
   };
   return paper === null && Object.values(merged).every((v) => v === null)
     ? null

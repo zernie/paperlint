@@ -86,6 +86,10 @@ import {
 } from "./paper-settings.ts";
 import { referenceRules, REFERENCE_RULE_LEVELS } from "./reference-rules.ts";
 import { onlineReferences } from "./adapters/references/index.ts";
+import { hotcrpPortal } from "./adapters/hotcrp/index.ts";
+import { runSubmission } from "./submission.ts";
+import type { PortalKind, SupportedPortal } from "./domain/submission.ts";
+import type { SubmissionPortal } from "./ports/submission-portal.ts";
 import type { CheckReferences } from "./ports/check-references.ts";
 import {
   narrowToOwners,
@@ -195,6 +199,14 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       into ~/.cache/paperlint/texlive (PAPERLINT_TEXLIVE_DIR overrides); a second
                                       run does nothing. --check: report what is missing, change nothing
   npx paperlint doctor                say what is actually wired — and what only LOOKS wired
+  npx paperlint submission show [paper]
+                                      the paper's submission on the venue's portal: status, title,
+                                      type, topics, abstract length, the PDF the portal holds, and
+                                      whether it is the local paper.pdf (sha256)
+  npx paperlint submission update [paper] [--pdf <file>] [--abstract <file>] [--submit] [--save]
+                                      send the PDF (default: the paper's own), an abstract, or
+                                      "submitted". A DRY RUN unless --save: the portal checks the
+                                      change and keeps nothing
   npx paperlint hook <name>           run an editor hook (.claude/settings.json calls this)
   npx paperlint --help
 
@@ -216,6 +228,16 @@ new:
   --allow-venue-name  create the folder even though its name names a venue (a whole word such as
                       "realm" can be the work's own). Without it such a name is refused: a rejected
                       paper moves to another venue and keeps its folder
+
+submission:
+  The venue preset declares the portal — "portal": { "kind": "hotcrp", "url": "<site>" } — and the
+  paper's paperlint.json its submission there — "submission": { "id": <number> }. The token comes
+  only from the environment: HOTCRP_TOKEN (HotCRP: Account settings → Developer).
+  [paper]             the paper's folder; default the current directory
+  --pdf <file>        the PDF to compare (show) or send (update) instead of the paper's own
+  --abstract <file>   update: a plain-text file whose text replaces the abstract
+  --submit            update: mark the submission submitted
+  --save              update: really change the submission. Without it, nothing is saved
 
 lint:
   npx paperlint lint [paths…] [--fix] [--config <file.json>] [--json]
@@ -808,6 +830,10 @@ export function parseArgs(argv: readonly string[]): Args {
     format: null,
     venue: null,
     kind: null,
+    pdf: null,
+    abstract: null,
+    submit: false,
+    save: false,
     hooksMode: null,
     // -1 = warnings NEVER fail the run. In this set most findings are advisory by design, and a
     // gate that fails on advice gets muted entirely.
@@ -851,10 +877,10 @@ export function parseArgs(argv: readonly string[]): Args {
     if (on !== undefined) out[on] = true;
     else if (a.startsWith("--hooks="))
       out.hooksMode = a.slice("--hooks=".length);
-    else if (a === "--paper") out.paper = take() ?? null;
-    else if (a === "--format") out.format = take() ?? null;
-    else if (a === "--venue") out.venue = take() ?? null;
-    else if (a === "--kind") out.kind = take() ?? null;
+    else if (STRING_FLAGS.has(a)) {
+      const field = STRING_FLAGS.get(a);
+      if (field !== undefined) out[field] = take() ?? null;
+    }
     // `--options` was the first spelling and is kept working. It named the wrong thing — every
     // other tool in the stack calls this file its config — but a flag in someone's CI is not
     // ours to break.
@@ -881,6 +907,8 @@ const SWITCHES: ReadonlyMap<
   | "yes"
   | "noHooks"
   | "allowVenueName"
+  | "submit"
+  | "save"
 > = new Map([
   ["--json", "json"],
   ["--fix", "fix"],
@@ -891,14 +919,26 @@ const SWITCHES: ReadonlyMap<
   ["-y", "yes"],
   ["--no-hooks", "noHooks"],
   ["--allow-venue-name", "allowVenueName"],
+  ["--submit", "submit"],
+  ["--save", "save"],
+]);
+
+/** The flags whose value is one string field of `Args`. */
+const STRING_FLAGS: ReadonlyMap<
+  string,
+  "paper" | "format" | "venue" | "kind" | "pdf" | "abstract"
+> = new Map([
+  ["--paper", "paper"],
+  ["--format", "format"],
+  ["--venue", "venue"],
+  ["--kind", "kind"],
+  ["--pdf", "pdf"],
+  ["--abstract", "abstract"],
 ]);
 
 /** The flags that take a value, in either spelling: `--flag value` or `--flag=value`. */
 const VALUE_FLAGS: ReadonlySet<string> = new Set([
-  "--paper",
-  "--format",
-  "--venue",
-  "--kind",
+  ...STRING_FLAGS.keys(),
   "--config",
   "--options",
   "--max-warnings",
@@ -1468,7 +1508,37 @@ const SIMPLE: Readonly<
       banal: hostBanalInstaller(),
       tex: toolchainTex(cwd),
     }),
+  submission: (a, { log, err, cwd }) =>
+    runSubmission(
+      {
+        sub: a.paths[0],
+        paperDir: a.paths[1] ?? ".",
+        extra: a.paths.slice(2),
+        pdf: a.pdf,
+        abstract: a.abstract,
+        submit: a.submit,
+        save: a.save,
+      },
+      {
+        files: nodeFiles,
+        presets: PRESET_DEPS,
+        cwd,
+        env: (name) => process.env[name],
+        portalFor,
+        log,
+        err,
+      },
+    ),
 };
+
+/** The adapter of each portal kind — one per kind, chosen here at the root. */
+const PORTALS: Readonly<
+  Record<PortalKind, (url: string, token: string) => SubmissionPortal>
+> = {
+  hotcrp: (url, token) => hotcrpPortal({ url, token }),
+};
+const portalFor = (p: SupportedPortal, token: string): SubmissionPortal =>
+  PORTALS[p.kind](p.url, token);
 
 /** banal's installer, wired from this process's environment: the composition root's work. */
 function hostBanalInstaller(): ToolInstaller {

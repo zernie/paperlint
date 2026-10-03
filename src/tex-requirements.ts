@@ -34,6 +34,7 @@ import {
   type VenueTalk,
   type VenueTalkJson,
 } from "./domain/talk.ts";
+import type { VenuePortal } from "./domain/submission.ts";
 
 /** CTAN package name → the names that prove it is installed. */
 export type PackageProofs = Readonly<Record<string, readonly string[]>>;
@@ -193,6 +194,8 @@ export interface PresetFile {
   readonly registerAnchors: readonly RegisterAnchor[] | null;
   /** What the venue asks a presenter to send; null when the file has no `talk` block. */
   readonly talk: VenueTalk | null;
+  /** Where the venue takes submissions (`paperlint submission`); null when the file does not say. */
+  readonly portal: VenuePortal | null;
 }
 
 type KindsJson = Readonly<
@@ -237,6 +240,7 @@ interface PresetJson {
     } & Readonly<Record<RegisterMeasureName, number>>)[];
   };
   readonly talk?: VenueTalkJson;
+  readonly portal?: VenuePortal;
 }
 
 /** An optional field as the typed preset holds it: absent is null. */
@@ -342,6 +346,10 @@ export function parsePreset(
     rules: j.rules ?? {},
     registerAnchors: anchorsOf(j.register),
     talk: j.talk === undefined ? null : venueTalkOf(j.talk),
+    portal:
+      j.portal === undefined
+        ? null
+        : { kind: j.portal.kind, url: j.portal.url },
   };
 }
 

@@ -32,6 +32,7 @@ describe("parsePaperSettings", () => {
         rules: null,
         identity: null,
         talk: null,
+        submission: null,
       },
     });
     expect(parsePaperSettings({})).toEqual({
@@ -43,6 +44,7 @@ describe("parsePaperSettings", () => {
         rules: null,
         identity: null,
         talk: null,
+        submission: null,
       },
     });
   });
@@ -57,6 +59,7 @@ describe("parsePaperSettings", () => {
         rules: null,
         identity: null,
         talk: null,
+        submission: null,
       },
     });
   });
@@ -155,7 +158,13 @@ describe("readPaperSettings — a root paperlint.json that cannot be used", () =
 });
 
 /** The fields a case does not set. */
-const UNSET = { pdf: null, rules: null, identity: null, talk: null };
+const UNSET = {
+  pdf: null,
+  rules: null,
+  identity: null,
+  talk: null,
+  submission: null,
+};
 
 describe("readPaperSettings — the root paperlint.json's defaults, the paper's file over them", () => {
   const ROOT = "/work";
@@ -210,6 +219,7 @@ describe("readPaperSettings — the root paperlint.json's defaults, the paper's 
       rules: { "pdf/fonts": "off" },
       identity: null,
       talk: null,
+      submission: null,
     });
   });
 
@@ -253,6 +263,7 @@ describe("paperRules — `rules` in paperlint.json", () => {
     rules,
     identity: null,
     talk: null,
+    submission: null,
   });
 
   it("no rules: none", () => {

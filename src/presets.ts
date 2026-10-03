@@ -19,7 +19,8 @@
  *   tex        union — a child never removes a package its parent needs
  *   format     per key, the child wins; `kinds` by kind name, a child's kind replaces that kind
  *   rules      per rule id, the child wins
- *   template   the child wins; so does `name`, and `required_sections`, `register` and `talk` (each whole)
+ *   template   the child wins; so does `name`, and `required_sections`, `register`, `talk` and
+ *              `portal` (each whole)
  *   aliases    union, with every `name` — what the venue is called along the chain
  *
  * ── THE LABEL ─────────────────────────────────────────────────────────────────────
@@ -53,6 +54,7 @@ import { CONFIG_FILE } from "#lib/paper-config";
 import { messageOf } from "./domain/text.ts";
 import type { RegisterAnchor } from "./domain/register.ts";
 import type { VenueTalk } from "./domain/talk.ts";
+import type { VenuePortal } from "./domain/submission.ts";
 
 /** The prefix of a shipped preset's spec. */
 export const SHIPPED_PREFIX = "paperlint:";
@@ -95,6 +97,8 @@ export interface Preset {
   readonly registerAnchors: readonly RegisterAnchor[];
   /** What the venue asks a presenter to send (`talk/*`); null when no file of the chain says. */
   readonly talk: VenueTalk | null;
+  /** Where the venue takes submissions (`paperlint submission`); null when no file of the chain says. */
+  readonly portal: VenuePortal | null;
 }
 
 /** Why a spec does not resolve. */
@@ -227,6 +231,7 @@ function merged(
     rules: {},
     registerAnchors: [],
     talk: null,
+    portal: null,
   };
   const m = rootFirst.reduce(
     (acc, { preset: p, file }) => ({
@@ -246,6 +251,7 @@ function merged(
       rules: { ...acc.rules, ...p.rules },
       registerAnchors: p.registerAnchors ?? acc.registerAnchors,
       talk: p.talk ?? acc.talk,
+      portal: p.portal ?? acc.portal,
     }),
     base,
   );
