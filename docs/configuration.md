@@ -81,18 +81,19 @@ refused by name. `node_modules/`, `.git/` and `<papers>/.template/` are skipped.
 ```
 
 The same keys as the root file, minus the project-only ones (`papersDir`, `structure` and the
-skills' keys), which are refused here by name, plus `talk`, which only a paper has. **It merges over the root file:** its `extends`,
+skills' keys), which are refused here by name, plus `talk` and `submission`, which only a paper has. **It merges over the root file:** its `extends`,
 `kind` and `pdf` win; one it does not set comes from the root.
 
-| key        | what it is                                                                                                                                                                                                             |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `extends`  | the venue preset the built PDF is judged against: `paperlint:<name>` (shipped) or `./path` / `../path` (your own, relative to this file) — [`rules.md`](rules.md#checks-against-the-venue)                             |
-| `kind`     | the kind of paper (`short`, `research`, …) whose page limit applies                                                                                                                                                    |
-| `pdf`      | where the built PDF is, relative to the paper, when it is not `paper.pdf`                                                                                                                                              |
-| `identity` | what identifies the authors — names, handles, emails, affiliations, your own project names. A blind venue's PDF must say none of it ([`anonymity/identity`](rules/anonymity/identity.md)). Joined with the root's list |
-| `talk`     | how this paper is presented, `{ "mode": "remote-video" }` plus optional `dir`, `files`, `one_slide` — the `talk/*` rules judge its finished files ([`talk.md`](talk.md)). Only here: the root file refuses it          |
-| `rules`    | rule overrides for this paper alone — `{ "<rule>": "<severity>" }`, or blocks with globs relative to the paper                                                                                                         |
-| `$comment` | a note for humans; ignored                                                                                                                                                                                             |
+| key          | what it is                                                                                                                                                                                                             |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `extends`    | the venue preset the built PDF is judged against: `paperlint:<name>` (shipped) or `./path` / `../path` (your own, relative to this file) — [`rules.md`](rules.md#checks-against-the-venue)                             |
+| `kind`       | the kind of paper (`short`, `research`, …) whose page limit applies                                                                                                                                                    |
+| `pdf`        | where the built PDF is, relative to the paper, when it is not `paper.pdf`                                                                                                                                              |
+| `identity`   | what identifies the authors — names, handles, emails, affiliations, your own project names. A blind venue's PDF must say none of it ([`anonymity/identity`](rules/anonymity/identity.md)). Joined with the root's list |
+| `talk`       | how this paper is presented, `{ "mode": "remote-video" }` plus optional `dir`, `files`, `one_slide` — the `talk/*` rules judge its finished files ([`talk.md`](talk.md)). Only here: the root file refuses it          |
+| `submission` | which submission on the venue's portal is this paper's, `{ "id": 7 }` — read by [`paperlint submission`](submission.md), with the preset's `portal`. Only here: the root file refuses it                               |
+| `rules`      | rule overrides for this paper alone — `{ "<rule>": "<severity>" }`, or blocks with globs relative to the paper                                                                                                         |
+| `$comment`   | a note for humans; ignored                                                                                                                                                                                             |
 
 `paperlint new` writes this file from the template (`templates/paper/paperlint.json`, or your
 `<papers>/.template/paperlint.json` if you keep one). With `--venue` it writes the venue into it:

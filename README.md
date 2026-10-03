@@ -164,6 +164,8 @@ paperlint finds a paper by its folder: `<papersDir>/<name>/`, with the main file
 | `npx paperlint lint`                                        | runs every check over your papers; `--fix` fixes what can be fixed             |
 | `npx paperlint toolchain`                                   | installs TeX Live with the packages your venues need (~270 MB, ~3 min, once)   |
 | `npx paperlint doctor`                                      | checks the setup and exits non-zero if something is miswired                   |
+| `npx paperlint submission show <paper>`                     | the paper's submission on the venue's portal, and whether it holds your build  |
+| `npx paperlint submission update <paper>`                   | checks a new PDF/abstract against the portal; `--save` sends it for real       |
 | `npx paperlint --help`                                      | every command and flag                                                         |
 
 ## 🧠 Skills
@@ -316,6 +318,7 @@ Only `paperlint lint --fix`, and only three rules: `paper/section-word` (`§` �
 - [`docs/configuration.md`](docs/configuration.md) — every setting, how `build` compiles, using your own ESLint
 - [`docs/rules.md`](docs/rules.md) — every check, venue presets, recording a submitted PDF
 - [`docs/references.md`](docs/references.md) — the reference check, and the cache file to commit
+- [`docs/submission.md`](docs/submission.md) — reading and updating a submission on the venue's portal (HotCRP)
 - [`docs/optional-rules.md`](docs/optional-rules.md) — checks only some venues need
 - [`docs/toolchain.md`](docs/toolchain.md) — TeX Live, and Banal (HotCRP's page-geometry checker, GPL)
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — how the package is tested and released, and adding a venue to it
