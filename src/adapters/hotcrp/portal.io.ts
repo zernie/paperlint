@@ -21,8 +21,14 @@ import type {
 import type { SubmissionPortal } from "../../ports/submission-portal.ts";
 import { parseShow, parseUpdate } from "./response.ts";
 
-/** The form field the PDF travels in, and the name the `json` object refers to it by. */
-export const CONTENT_FIELD = "paper.pdf";
+/**
+ * The form field the PDF travels in, and the name the `json` object's `content_file` refers to it
+ * by. 🔴 NO DOT, SPACE OR BRACKET: HotCRP looks the name up in PHP's `$_FILES`, and PHP renames a
+ * dot or a space in a field name to `_`. The documented `-F paper.pdf=@paper.pdf` therefore arrives
+ * as `paper_pdf`, the lookup of `paper.pdf` misses, and HotCRP answers "Ignored attempt to upload
+ * document without any content" with `valid: false` — measured on a real HotCRP, 2026-10-03.
+ */
+export const CONTENT_FIELD = "paperlint_pdf";
 
 /** Uploads take a while on a slow link; a read should not. */
 const READ_TIMEOUT_MS = 60_000;

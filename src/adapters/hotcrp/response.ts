@@ -67,14 +67,21 @@ export function sha256OfHash(hash: string): Sha256 | null {
   return hex === undefined ? null : parseSha256(hex);
 }
 
+/** HotCRP prefixes a message with its format (`<0>` plain text, `<5>` HTML); the text is the rest. */
+const textOf = (message: string | undefined): string =>
+  (message ?? "").replace(/^<\d+>/, "").trim();
+
+/** The messages that say something: HotCRP also sends entries with no text, which print as blanks. */
 const messagesOf = (
   list: Readonly<z.infer<typeof Messages>>,
 ): readonly PortalMessage[] =>
-  (list ?? []).map((m) => ({
-    message: m.message ?? "",
-    field: m.field ?? null,
-    status: m.status ?? null,
-  }));
+  (list ?? [])
+    .map((m) => ({
+      message: textOf(m.message),
+      field: m.field ?? null,
+      status: m.status ?? null,
+    }))
+    .filter((m) => m.message !== "");
 
 const documentOf = (
   d: Readonly<z.infer<typeof Document>> | null | undefined,

@@ -11,6 +11,7 @@ import {
   type ServerResponse,
 } from "node:http";
 import { afterAll, beforeAll, test } from "vitest";
+import { fieldOf } from "../../domain/record.ts";
 import { sha256Hex } from "../../domain/sha256.ts";
 import type { SubmissionChange } from "../../domain/submission.ts";
 import {
@@ -41,23 +42,64 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
   const chunks: Buffer[] = [];
   req.on("data", (c: Buffer) => chunks.push(c));
   req.on("end", () => {
-    seen.push({
+    const s: Seen = {
       method: req.method ?? "",
       url: new URL(req.url ?? "/", "http://127.0.0.1"),
       headers: req.headers,
       body: Buffer.concat(chunks),
-    });
+    };
+    seen.push(s);
+    const answer = ignoredDocument(s) ?? reply;
     res.writeHead(
-      reply.status,
-      reply.type === ""
+      answer.status,
+      answer.type === ""
         ? {}
-        : { "content-type": reply.type ?? "application/json" },
+        : { "content-type": answer.type ?? "application/json" },
     );
-    res.end(reply.body);
+    res.end(answer.body);
   });
 });
 
 /** The port a listening server was given. */
+/**
+ * What HotCRP answers when `submission.content_file` names no uploaded file — as its source does
+ * (kohler/hotcrp, read 2026-10-03): `DocumentLocator::on_document_import` looks the name up with
+ * `Qrequest::file()`, which holds `$_FILES` as PHP built it, and PHP renames a dot or a space in a
+ * form field's name to `_` there. A part without a filename is a plain field, not a file. When the
+ * lookup misses, `DocumentImporter` reports "Ignored attempt to upload document without any
+ * content" and the change is not valid — measured on a real HotCRP with the field `paper.pdf`.
+ */
+function ignoredDocument(s: Seen): Reply | null {
+  if (!String(s.headers["content-type"]).startsWith("multipart/form-data"))
+    return null;
+  const parts = partsOf(s);
+  const json: unknown = JSON.parse(
+    parts.get("json")?.body.toString("utf8") ?? "{}",
+  );
+  const named = fieldOf(fieldOf(json, "submission"), "content_file");
+  const files = [...parts]
+    .filter(([, p]) => /filename="/.test(p.headers))
+    .map(([name]) => name.replace(/[. ]/g, "_"));
+  if (typeof named !== "string" || files.includes(named)) return null;
+  return {
+    status: 200,
+    body: JSON.stringify({
+      ok: true,
+      valid: false,
+      change_list: [],
+      message_list: [
+        {
+          field: "submission",
+          message: "<0>Ignored attempt to upload document without any content",
+          status: 2,
+        },
+        { field: "submission", message: "", status: 2 },
+        { message: "" },
+      ],
+    }),
+  };
+}
+
 const portOf = (s: Server): number => {
   const a = s.address();
   assert.ok(a !== null && typeof a === "object", "the server is not listening");
@@ -198,18 +240,24 @@ test("show: a submission without a PDF, fields absent, a paper type that is not 
       },
       submittedAt: null,
       modifiedAt: null,
-      messages: [
-        { message: "note", field: "title", status: 1 },
-        { message: "", field: null, status: null },
-      ],
+      messages: [{ message: "note", field: "title", status: 1 }],
     },
   });
+});
+
+test("show: a null paper type and a null submission read as none", async () => {
+  answer(200, {
+    ok: true,
+    paper: { pid: 7, status: "draft", paper_type: null, submission: null },
+  });
+  const r = await portal().show(7);
+  assert.deepEqual(r.ok && [r.value.paperType, r.value.pdf], [null, null]);
 });
 
 test("🔴 show: 401 surfaces HotCRP's own message, and the token is in no part of it", async () => {
   answer(401, {
     ok: false,
-    message_list: [{ status: 2, message: "Missing credentials" }],
+    message_list: [{ status: 2, message: "<0>Missing credentials" }],
   });
   const r = await portal().show(7);
   assert.deepEqual(r, {
@@ -271,6 +319,35 @@ test("update: a dry run by default — dry_run=1, the json field, the PDF under 
       dryRun: true,
     },
   });
+});
+
+test("🔴 the mock is HotCRP here: a file part named with a dot is not found under that name", async () => {
+  // Guards: the rule the dry-run test relies on FIRES — the form a real HotCRP refused.
+  answer(200, { ok: true, valid: true, change_list: ["submission"] });
+  const form = new FormData();
+  form.append(
+    "json",
+    JSON.stringify({
+      object: "paper",
+      pid: 7,
+      submission: { content_file: "paper.pdf" },
+    }),
+  );
+  form.append(
+    "paper.pdf",
+    new Blob([PDF], { type: "application/pdf" }),
+    "paper.pdf",
+  );
+  const r = await fetch(`${base}/api/paper?p=7&dry_run=1`, {
+    method: "POST",
+    body: form,
+  });
+  const body: unknown = await r.json();
+  assert.equal(fieldOf(body, "valid"), false);
+});
+
+test("the PDF's field name survives PHP's renaming of form fields: no dot, space or bracket", () => {
+  assert.doesNotMatch(CONTENT_FIELD, /[. [\]]/);
 });
 
 test("update with save: no dry_run parameter at all", async () => {
