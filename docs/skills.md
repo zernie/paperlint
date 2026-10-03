@@ -62,10 +62,11 @@ the skill whose description matches starts. `paperlint init` installs them into
 
 ## 6 · Submit
 
-| you get                                                             | skill                 |
-| ------------------------------------------------------------------- | --------------------- |
-| the submission, step by step: anonymization, the form, the artifact | `submit-paper`        |
-| the reproduction artifact uploaded to OSF for anonymous review      | `osf-artifact-upload` |
+| you get                                                                        | skill                 |
+| ------------------------------------------------------------------------------ | --------------------- |
+| the submission, step by step: anonymization, the form, the artifact            | `submit-paper`        |
+| the reproduction artifact uploaded to OSF for anonymous review                 | `osf-artifact-upload` |
+| the PDF and abstract replaced on HotCRP, and proof the portal holds your build | `submission-portal`   |
 
 ## 7 · Camera-ready
 

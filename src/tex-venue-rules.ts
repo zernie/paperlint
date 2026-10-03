@@ -27,8 +27,7 @@
  * `pdf/profile` already say so, once. A preset that names no template: silent — there is nothing to
  * compare, and a template-family preset is where it is named.
  */
-import { basename, dirname, join } from "node:path";
-import { CONFIG_FILE } from "#lib/paper-config";
+import { basename, dirname } from "node:path";
 import {
   collapse,
   documentClassLine,
@@ -46,13 +45,8 @@ import {
   type TextRun,
 } from "./domain/tex-document.ts";
 import type { LatexReader } from "./ports/latex.ts";
-import {
-  paperPreset,
-  resolvePreset,
-  SHIPPED_PREFIX,
-  shippedPresets,
-  type Preset,
-} from "./presets.ts";
+import { paperPreset, shippedVenueNames, type Preset } from "./presets.ts";
+import type { NamedVenue } from "./domain/venue-name.ts";
 import type { PaperSource } from "./domain/paper-source.ts";
 import { readPaper, reportInPaper } from "./tex-paper.ts";
 import type { RequiredSection } from "./tex-requirements.ts";
@@ -255,10 +249,7 @@ export function judgeRequiredSections(
 }
 
 /** Another shipped venue: the word for it, and what it is called in a paper's text. */
-export interface OtherVenue {
-  readonly label: string;
-  readonly aliases: readonly string[];
-}
+export type OtherVenue = NamedVenue;
 
 /** `s` as a pattern that matches it literally. */
 const literal = (s: string): string =>
@@ -440,21 +431,17 @@ export const FORMAT_RULE_LEVELS: Readonly<
 };
 
 /**
- * Every shipped venue but the ones on this paper's own chain, each resolved the way a paper
- * extending it would be. A preset that does not resolve is skipped: `pdf/profile` owns that.
+ * Every shipped venue but the ones on this paper's own chain, from the one source of venue names
+ * (`shippedVenueNames`). A preset all of whose files are on this paper's chain is this venue or one
+ * it extends.
  */
 export function otherVenues(
-  preset: Preset,
-  fromFile: string,
+  preset: Pick<Preset, "chain">,
   deps: VenueRuleDeps,
 ): readonly OtherVenue[] {
-  return shippedPresets(deps.venuesDir).flatMap((name) => {
-    const r = resolvePreset(`${SHIPPED_PREFIX}${name}`, fromFile, deps);
-    // A preset all of whose files are on this paper's chain is this venue or one it extends.
-    return r.ok && !r.value.chain.every((f) => preset.chain.includes(f))
-      ? [{ label: r.value.label, aliases: r.value.aliases }]
-      : [];
-  });
+  return shippedVenueNames(deps)
+    .filter((v) => !v.chain.every((f) => preset.chain.includes(f)))
+    .map(({ label, aliases }) => ({ label, aliases }));
 }
 
 /** What the venue-conformance rules are built with: the preset store, and the LaTeX reader. */
@@ -476,7 +463,7 @@ function readingOf(
   const p = paperPreset(dir, deps);
   if (p.kind !== "resolved") return null;
   const preset = p.preset;
-  const others = () => otherVenues(preset, join(dir, CONFIG_FILE), deps);
+  const others = () => otherVenues(preset, deps);
   const paper = readPaper(filename, src, deps);
   return {
     reading: { src: paper.text, latex: deps.latex, preset, others },

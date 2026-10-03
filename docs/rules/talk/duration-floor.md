@@ -18,7 +18,7 @@ an error, without touching the ceiling.
 
 Warning — the AgenticDev talk measured 320.84 s against the organizers' 6–7 minutes:
 
-> papers/agenticdev-2026/talk/agenticdev-2026-talk.mp4 runs 5:20.8 (320.84 s), under the 6:00.0
+> papers/rule-drift/talk/rule-drift-talk.mp4 runs 5:20.8 (320.84 s), under the 6:00.0
 > (360 s) talk agenticdev asks for a short paper — decide whether that is fine, or set this rule to
 > off for the paper
 

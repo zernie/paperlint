@@ -26,6 +26,12 @@
   // `"blind":true` in the portal's data. anonymity/identity then requires the paper's `identity`.
   "blind": true,
 
+  // Where submissions go: the HotCRP site named in the deadline note above. `paperlint submission`
+  // reads and updates a paper's submission there through HotCRP's API (`/api/paper`). Recorded
+  // 2026-10-03: `/api/whoami` on this site answers 401 "Missing credentials" without a token —
+  // the HotCRP API, there.
+  "portal": { "kind": "hotcrp", "url": "https://aidc.submit.acsac.org" },
+
   // What the venue is called in a paper's text (tex/venue-leftover): the workshop, and the
   // conference it is held at.
   "aliases": ["AIDC", "ACSAC"],

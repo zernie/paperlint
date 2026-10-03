@@ -7,6 +7,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
+import { createServer } from "node:http";
 import { dirname, join } from "node:path";
 import { test } from "vitest";
 import { runNode, useTempDir, writeTree } from "../test/support.ts";
@@ -79,6 +80,14 @@ test("parseSettings refuses `talk` in the root file: it is one paper's setting",
   assert.equal(
     r.ok ? null : r.error,
     "paperlint.json: \"talk\" is a paper's setting — set it in that paper's paperlint.json",
+  );
+});
+
+test("parseSettings refuses `submission` in the root file: a submission is one paper's", () => {
+  const r = parseSettings({ submission: { id: 7 } }, "paperlint.json", "/r");
+  assert.equal(
+    r.ok ? null : r.error,
+    "paperlint.json: \"submission\" is a paper's setting — set it in that paper's paperlint.json",
   );
 });
 
@@ -602,4 +611,104 @@ test("parseSettings refuses a root `identity` that is not a list of words, and t
     parseSettings({ identity: ["Ada Example"] }, "paperlint.json", "/r").ok,
     true,
   );
+});
+
+test("parseArgs: submission's flags — two values and two switches", () => {
+  assert.deepEqual(
+    parseArgs([
+      "submission",
+      "update",
+      "papers/p",
+      "--pdf=build/p.pdf",
+      "--abstract",
+      "abs.txt",
+      "--submit",
+      "--save",
+    ]),
+    {
+      ...parseArgs([]),
+      cmd: "submission",
+      paths: ["update", "papers/p"],
+      pdf: "build/p.pdf",
+      abstract: "abs.txt",
+      submit: true,
+      save: true,
+    },
+  );
+  assert.equal(
+    parseArgs(["submission", "update", "--pdf"]).missingValue,
+    "--pdf",
+  );
+});
+
+/** A paper whose venue's HotCRP portal is `site`, submission 7, with a paper.pdf. */
+const submissionPaper = (dir: string, site: string): void => {
+  writeTree(dir, {
+    "package.json": "{}",
+    "venue.jsonc": JSON.stringify({
+      extends: "paperlint:aidc",
+      portal: { kind: "hotcrp", url: site },
+    }),
+    "papers/p/paperlint.json": JSON.stringify({
+      extends: "../../venue.jsonc",
+      submission: { id: 7 },
+    }),
+    "papers/p/paper.pdf": "%PDF fake",
+  });
+};
+
+test("🔴 submission: without HOTCRP_TOKEN it names the variable and asks the portal nothing", async () => {
+  const dir = join(root, "submission-no-token");
+  submissionPaper(dir, "http://127.0.0.1:9");
+  const saved = process.env["HOTCRP_TOKEN"];
+  delete process.env["HOTCRP_TOKEN"];
+  try {
+    const r = await cli(["submission", "show", "papers/p"], dir);
+    assert.equal(r.code, 2);
+    assert.match(r.err, /^HOTCRP_TOKEN is not set — /);
+  } finally {
+    if (saved !== undefined) process.env["HOTCRP_TOKEN"] = saved;
+  }
+});
+
+test("submission show: through the HotCRP adapter to a local portal, the token in the header only", async () => {
+  const seen: { url: string; auth: string }[] = [];
+  const server = createServer((req, res) => {
+    seen.push({ url: req.url ?? "", auth: req.headers.authorization ?? "" });
+    res.writeHead(200, { "content-type": "application/json" });
+    res.end(
+      JSON.stringify({
+        ok: true,
+        paper: { object: "paper", pid: 7, status: "submitted", title: "T" },
+      }),
+    );
+  });
+  await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
+  const address = server.address();
+  assert.ok(address !== null && typeof address === "object");
+  const dir = join(root, "submission-show");
+  submissionPaper(dir, `http://127.0.0.1:${String(address.port)}`);
+  const saved = process.env["HOTCRP_TOKEN"];
+  process.env["HOTCRP_TOKEN"] = "hct_cli_test";
+  try {
+    const r = await cli(["submission", "show"], join(dir, "papers/p"));
+    assert.equal(r.code, 0, r.err);
+    assert.deepEqual(seen, [
+      { url: "/api/paper?p=7&word_limit=hard", auth: "bearer hct_cli_test" },
+    ]);
+    assert.match(
+      r.out,
+      /^submission 7 on http:\/\/127\.0\.0\.1:\d+ \(hotcrp\)$/m,
+    );
+    assert.match(r.out, /^match {9}NO — the portal holds no PDF$/m);
+    assert.doesNotMatch(r.out + r.err, /hct_cli_test/);
+  } finally {
+    if (saved === undefined) delete process.env["HOTCRP_TOKEN"];
+    else process.env["HOTCRP_TOKEN"] = saved;
+    await new Promise<void>((r) => {
+      server.close(() => {
+        r();
+      });
+    });
+  }
 });

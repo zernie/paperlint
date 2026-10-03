@@ -10,6 +10,11 @@ export type Result<T, E> =
 export const ok = <T>(value: T): Result<T, never> => ({ ok: true, value });
 export const err = <E>(error: E): Result<never, E> => ({ ok: false, error });
 
+/** Whether `r` succeeded — a type guard, so `filter(isOk)` keeps the successes as successes. */
+export const isOk = <T, E>(
+  r: Result<T, E>,
+): r is Extract<Result<T, E>, { readonly ok: true }> => r.ok;
+
 export const map = <T, U, E>(r: Result<T, E>, f: (t: T) => U): Result<U, E> =>
   r.ok ? ok(f(r.value)) : r;
 

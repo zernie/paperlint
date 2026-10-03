@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "paper": {
+    "object": "paper",
+    "pid": 7,
+    "title": "An Example Paper Title",
+    "submission": {
+      "mimetype": "application/pdf",
+      "hash": "sha2-b3e602c135f2455f64aecfdc2e1e7f81dad20c5d69f0981e965b1a0131d47163",
+      "timestamp": 1790000000,
+      "size": 17,
+      "pages": 2
+    },
+    "abstract": "An example abstract of exactly ten words for the test.",
+    "contacts": [
+      {
+        "email": "author@example.org",
+        "given_name": "A.",
+        "family_name": "Author",
+        "affiliation": "Example University"
+      }
+    ],
+    "paper_type": "Example paper type",
+    "authors": [
+      {
+        "email": "author@example.org",
+        "given_name": "A.",
+        "family_name": "Author",
+        "affiliation": "Example University"
+      }
+    ],
+    "topics": ["Example topic one", "Example topic two"],
+    "pc_conflicts": {},
+    "status": "submitted",
+    "submitted": true,
+    "submitted_at": 1790000100,
+    "modified_at": 1790000100
+  }
+}

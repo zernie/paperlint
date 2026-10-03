@@ -86,6 +86,10 @@ import {
 } from "./paper-settings.ts";
 import { referenceRules, REFERENCE_RULE_LEVELS } from "./reference-rules.ts";
 import { onlineReferences } from "./adapters/references/index.ts";
+import { hotcrpPortal } from "./adapters/hotcrp/index.ts";
+import { runSubmission } from "./submission.ts";
+import type { PortalKind, SupportedPortal } from "./domain/submission.ts";
+import type { SubmissionPortal } from "./ports/submission-portal.ts";
 import type { CheckReferences } from "./ports/check-references.ts";
 import {
   narrowToOwners,
@@ -99,6 +103,8 @@ import {
   presetProblemText,
   resolvePreset,
   shippedPresets,
+  shippedSpec,
+  shippedVenueNames,
   SHIPPED_PREFIX,
   type PaperPreset,
   type PresetTemplate,
@@ -152,6 +158,10 @@ export { init };
 export { nextSteps } from "./init.ts";
 
 import paperStages from "#eslint-rules/paper-stages";
+import {
+  FOLDER_VENUE_RULE_LEVELS,
+  folderVenueRules,
+} from "./folder-venue-rule.ts";
 import typography from "#eslint-rules/paper-typography";
 import texBuild from "#eslint-rules/tex-build";
 import bibReachable from "#eslint-rules/bib-reachable-entry";
@@ -171,7 +181,9 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       .claude/settings.json, offer the CI step, report what is missing
   npx paperlint new <name> [--venue <preset>] [--kind <kind>] [--format tex|md]
                                       create <papers>/<name>/ from the template; never overwrites,
-                                      on an existing folder adds only the missing files, then lints it
+                                      on an existing folder adds only the missing files, then lints it.
+                                      A <name> that names a venue (aisec-2026) is refused: name the
+                                      paper after the work
   npx paperlint lint [paths…]         run every rule over your papers
   npx paperlint build <paper> | --all
                                       compile paper.tex to paper.pdf: pdflatex and bibtex, rerun until
@@ -187,6 +199,14 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
                                       into ~/.cache/paperlint/texlive (PAPERLINT_TEXLIVE_DIR overrides); a second
                                       run does nothing. --check: report what is missing, change nothing
   npx paperlint doctor                say what is actually wired — and what only LOOKS wired
+  npx paperlint submission show [paper]
+                                      the paper's submission on the venue's portal: status, title,
+                                      type, topics, abstract length, the PDF the portal holds, and
+                                      whether it is the local paper.pdf (sha256)
+  npx paperlint submission update [paper] [--pdf <file>] [--abstract <file>] [--submit] [--save]
+                                      send the PDF (default: the paper's own), an abstract, or
+                                      "submitted". A DRY RUN unless --save: the portal checks the
+                                      change and keeps nothing
   npx paperlint hook <name>           run an editor hook (.claude/settings.json calls this)
   npx paperlint --help
 
@@ -205,6 +225,19 @@ new:
   --kind <kind>       the paper's kind at that venue (its page limit), e.g. short — one of the
                       preset's kinds; needs --venue
   --format tex|md     the paper's source format; default tex
+  --allow-venue-name  create the folder even though its name names a venue (a whole word such as
+                      "realm" can be the work's own). Without it such a name is refused: a rejected
+                      paper moves to another venue and keeps its folder
+
+submission:
+  The venue preset declares the portal — "portal": { "kind": "hotcrp", "url": "<site>" } — and the
+  paper's paperlint.json its submission there — "submission": { "id": <number> }. The token comes
+  only from the environment: HOTCRP_TOKEN (HotCRP: Account settings → Developer).
+  [paper]             the paper's folder; default the current directory
+  --pdf <file>        the PDF to compare (show) or send (update) instead of the paper's own
+  --abstract <file>   update: a plain-text file whose text replaces the abstract
+  --submit            update: mark the submission submitted
+  --save              update: really change the submission. Without it, nothing is saved
 
 lint:
   npx paperlint lint [paths…] [--fix] [--config <file.json>] [--json]
@@ -313,11 +346,22 @@ export function buildConfig(
     },
     {
       files: ["**/PIPELINE-STATUS.md"],
-      plugins: { markdown, paper: paperStages },
+      // Every paper folder has one, whatever its source format: the rules about the folder itself
+      // (its stages, its frozen sources, its name) are judged here, once per paper.
+      plugins: {
+        markdown,
+        paper: {
+          rules: {
+            ...paperStages.rules,
+            ...folderVenueRules({ files: nodeFiles, venuesDir: presetsDir() }),
+          },
+        },
+      },
       ...md,
       rules: {
         "paper/stages": "error",
         "paper/source": "error",
+        ...FOLDER_VENUE_RULE_LEVELS,
       },
     },
     {
@@ -781,10 +825,15 @@ export function parseArgs(argv: readonly string[]): Args {
     check: false,
     yes: false,
     noHooks: false,
+    allowVenueName: false,
     paper: null,
     format: null,
     venue: null,
     kind: null,
+    pdf: null,
+    abstract: null,
+    submit: false,
+    save: false,
     hooksMode: null,
     // -1 = warnings NEVER fail the run. In this set most findings are advisory by design, and a
     // gate that fails on advice gets muted entirely.
@@ -824,19 +873,14 @@ export function parseArgs(argv: readonly string[]): Args {
       if (inline === "") out.missingValue = a;
       return inline === "" ? undefined : inline;
     };
-    if (a === "--json") out.json = true;
-    else if (a === "--fix") out.fix = true;
-    else if (a === "--all") out.all = true;
-    else if (a === "--dry-run") out.dryRun = true;
-    else if (a === "--check") out.check = true;
-    else if (a === "--yes" || a === "-y") out.yes = true;
-    else if (a === "--no-hooks") out.noHooks = true;
+    const on = SWITCHES.get(a);
+    if (on !== undefined) out[on] = true;
     else if (a.startsWith("--hooks="))
       out.hooksMode = a.slice("--hooks=".length);
-    else if (a === "--paper") out.paper = take() ?? null;
-    else if (a === "--format") out.format = take() ?? null;
-    else if (a === "--venue") out.venue = take() ?? null;
-    else if (a === "--kind") out.kind = take() ?? null;
+    else if (STRING_FLAGS.has(a)) {
+      const field = STRING_FLAGS.get(a);
+      if (field !== undefined) out[field] = take() ?? null;
+    }
     // `--options` was the first spelling and is kept working. It named the wrong thing — every
     // other tool in the stack calls this file its config — but a flag in someone's CI is not
     // ours to break.
@@ -852,12 +896,49 @@ export function parseArgs(argv: readonly string[]): Args {
   return out;
 }
 
+/** The flags that take no value: each turns one field of `Args` on. */
+const SWITCHES: ReadonlyMap<
+  string,
+  | "json"
+  | "fix"
+  | "all"
+  | "dryRun"
+  | "check"
+  | "yes"
+  | "noHooks"
+  | "allowVenueName"
+  | "submit"
+  | "save"
+> = new Map([
+  ["--json", "json"],
+  ["--fix", "fix"],
+  ["--all", "all"],
+  ["--dry-run", "dryRun"],
+  ["--check", "check"],
+  ["--yes", "yes"],
+  ["-y", "yes"],
+  ["--no-hooks", "noHooks"],
+  ["--allow-venue-name", "allowVenueName"],
+  ["--submit", "submit"],
+  ["--save", "save"],
+]);
+
+/** The flags whose value is one string field of `Args`. */
+const STRING_FLAGS: ReadonlyMap<
+  string,
+  "paper" | "format" | "venue" | "kind" | "pdf" | "abstract"
+> = new Map([
+  ["--paper", "paper"],
+  ["--format", "format"],
+  ["--venue", "venue"],
+  ["--kind", "kind"],
+  ["--pdf", "pdf"],
+  ["--abstract", "abstract"],
+]);
+
 /** The flags that take a value, in either spelling: `--flag value` or `--flag=value`. */
 const VALUE_FLAGS: ReadonlySet<string> = new Set([
-  "--paper",
-  "--format",
-  "--venue",
-  "--kind",
+  ...STRING_FLAGS.keys(),
   "--config",
   "--options",
   "--max-warnings",
@@ -1048,15 +1129,21 @@ export async function createPaperAt(
     err,
     cwd,
     venue = null,
+    allowVenueName = false,
   }: {
     log: typeof console.log;
     err: typeof console.error;
     cwd: string;
     /** What `--venue` chose; null writes the template's `paperlint.json` as it is. */
     venue?: VenueChoice | null;
+    /** `--allow-venue-name`: a name that names a venue is created, not refused. */
+    allowVenueName?: boolean;
   },
 ): Promise<number> {
-  const result = newPaper(papersRoot, name, format, { venue });
+  const result = newPaper(papersRoot, name, format, {
+    venue,
+    venues: allowVenueName ? [] : shippedVenueNames(PRESET_DEPS),
+  });
   const here = (p: string): string => shown(cwd, p);
   for (const line of reportNewPaper(result, here)) log(line);
   if (!result.ok) return 2;
@@ -1194,7 +1281,7 @@ function venueSpec(
     return bad(
       `--venue ${venue}: no such venue preset. Shipped: ${shipped.join(", ")} — or a path to your own preset, starting with ./ or ../`,
     );
-  return { ok: true, value: `${SHIPPED_PREFIX}${name}` };
+  return { ok: true, value: shippedSpec(name) };
 }
 
 /**
@@ -1274,6 +1361,7 @@ async function runNew(
     err,
     cwd,
     venue: venue.value,
+    allowVenueName: a.allowVenueName,
   });
 }
 
@@ -1420,7 +1508,37 @@ const SIMPLE: Readonly<
       banal: hostBanalInstaller(),
       tex: toolchainTex(cwd),
     }),
+  submission: (a, { log, err, cwd }) =>
+    runSubmission(
+      {
+        sub: a.paths[0],
+        paperDir: a.paths[1] ?? ".",
+        extra: a.paths.slice(2),
+        pdf: a.pdf,
+        abstract: a.abstract,
+        submit: a.submit,
+        save: a.save,
+      },
+      {
+        files: nodeFiles,
+        presets: PRESET_DEPS,
+        cwd,
+        env: (name) => process.env[name],
+        portalFor,
+        log,
+        err,
+      },
+    ),
 };
+
+/** The adapter of each portal kind — one per kind, chosen here at the root. */
+const PORTALS: Readonly<
+  Record<PortalKind, (url: string, token: string) => SubmissionPortal>
+> = {
+  hotcrp: (url, token) => hotcrpPortal({ url, token }),
+};
+const portalFor = (p: SupportedPortal, token: string): SubmissionPortal =>
+  PORTALS[p.kind](p.url, token);
 
 /** banal's installer, wired from this process's environment: the composition root's work. */
 function hostBanalInstaller(): ToolInstaller {
@@ -1503,6 +1621,7 @@ async function runInit(
     format: isFormat(a.format) ? a.format : null,
     createPaper: (papersRoot, name, format) =>
       createPaperAt(papersRoot, name, format, { log, err, cwd }),
+    venues: shippedVenueNames(PRESET_DEPS),
     tex: initTexLive(a, { log, err, cwd }),
     resolveCliPapers: (root: string): string | null =>
       cliPapers({ ...a, config: null }, root),
@@ -1584,8 +1703,8 @@ export async function run(
   // editing a file.
   //
   // 🔴 A path FROM THE CONFIG is resolved relative to the PROJECT ROOT, not the current directory.
-  // Otherwise walking up is pointless: from `papers/aisec-2026` the root would be found, but
-  // `"papersDir": "papers"` would point at `papers/aisec-2026/papers`. A command-line argument stays
+  // Otherwise walking up is pointless: from `papers/rule-drift` the root would be found, but
+  // `"papersDir": "papers"` would point at `papers/rule-drift/papers`. A command-line argument stays
   // relative to the current directory: it was typed here and now.
   //
   // Both kinds end up ABSOLUTE: ESLint below runs from `lintRoot`, not from here, and would resolve a

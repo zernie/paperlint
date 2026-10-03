@@ -81,18 +81,19 @@ refused by name. `node_modules/`, `.git/` and `<papers>/.template/` are skipped.
 ```
 
 The same keys as the root file, minus the project-only ones (`papersDir`, `structure` and the
-skills' keys), which are refused here by name, plus `talk`, which only a paper has. **It merges over the root file:** its `extends`,
+skills' keys), which are refused here by name, plus `talk` and `submission`, which only a paper has. **It merges over the root file:** its `extends`,
 `kind` and `pdf` win; one it does not set comes from the root.
 
-| key        | what it is                                                                                                                                                                                                             |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `extends`  | the venue preset the built PDF is judged against: `paperlint:<name>` (shipped) or `./path` / `../path` (your own, relative to this file) — [`rules.md`](rules.md#checks-against-the-venue)                             |
-| `kind`     | the kind of paper (`short`, `research`, …) whose page limit applies                                                                                                                                                    |
-| `pdf`      | where the built PDF is, relative to the paper, when it is not `paper.pdf`                                                                                                                                              |
-| `identity` | what identifies the authors — names, handles, emails, affiliations, your own project names. A blind venue's PDF must say none of it ([`anonymity/identity`](rules/anonymity/identity.md)). Joined with the root's list |
-| `talk`     | how this paper is presented, `{ "mode": "remote-video" }` plus optional `dir`, `files`, `one_slide` — the `talk/*` rules judge its finished files ([`talk.md`](talk.md)). Only here: the root file refuses it          |
-| `rules`    | rule overrides for this paper alone — `{ "<rule>": "<severity>" }`, or blocks with globs relative to the paper                                                                                                         |
-| `$comment` | a note for humans; ignored                                                                                                                                                                                             |
+| key          | what it is                                                                                                                                                                                                             |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `extends`    | the venue preset the built PDF is judged against: `paperlint:<name>` (shipped) or `./path` / `../path` (your own, relative to this file) — [`rules.md`](rules.md#checks-against-the-venue)                             |
+| `kind`       | the kind of paper (`short`, `research`, …) whose page limit applies                                                                                                                                                    |
+| `pdf`        | where the built PDF is, relative to the paper, when it is not `paper.pdf`                                                                                                                                              |
+| `identity`   | what identifies the authors — names, handles, emails, affiliations, your own project names. A blind venue's PDF must say none of it ([`anonymity/identity`](rules/anonymity/identity.md)). Joined with the root's list |
+| `talk`       | how this paper is presented, `{ "mode": "remote-video" }` plus optional `dir`, `files`, `one_slide` — the `talk/*` rules judge its finished files ([`talk.md`](talk.md)). Only here: the root file refuses it          |
+| `submission` | which submission on the venue's portal is this paper's, `{ "id": 7 }` — read by [`paperlint submission`](submission.md), with the preset's `portal`. Only here: the root file refuses it                               |
+| `rules`      | rule overrides for this paper alone — `{ "<rule>": "<severity>" }`, or blocks with globs relative to the paper                                                                                                         |
+| `$comment`   | a note for humans; ignored                                                                                                                                                                                             |
 
 `paperlint new` writes this file from the template (`templates/paper/paperlint.json`, or your
 `<papers>/.template/paperlint.json` if you keep one). With `--venue` it writes the venue into it:
@@ -109,6 +110,12 @@ npx paperlint new my-paper --venue ./venues/my-workshop.jsonc     # "extends": "
   `--kind` is written anyway; `new` then says that lint reports `pdf/profile` until `kind` is set.
 - On a terminal without `--venue`, `new` asks for the venue (default: none) and then its kind.
 - An existing `paperlint.json` is never overwritten, so `--venue` for it is refused.
+- A `<name>` that names a venue — a shipped preset's label or alias as a whole word, case ignored:
+  `aisec-2026`, `acsac_2026`, `realm2026` — is refused and nothing is written, the venue in
+  `--venue` included: a rejected paper moves to another venue and keeps its folder. Name it after the
+  work. `--allow-venue-name` creates it anyway, when the word really is the work's (a paper about
+  realms); it skips this refusal and no other. A folder whose name goes stale later is
+  [`paper/folder-venue-leftover`](rules/paper/folder-venue-leftover.md)'s to report.
 
 Without a venue the file has `"extends": null` and a `$comment` saying what goes there. Until
 `extends` names a preset (here or in the root file), `paperlint lint` gives that paper one warning,

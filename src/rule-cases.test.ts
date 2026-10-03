@@ -389,6 +389,25 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     silent: aidc("Text."),
   },
+  "paper/folder-venue-leftover": {
+    reports: {
+      // An AIDC paper still in the folder it had when it targeted AISec.
+      tree: {
+        "papers/aisec-2026/PIPELINE-STATUS.md": STATUS,
+        "papers/aisec-2026/paper.tex": tex("x"),
+        "papers/aisec-2026/paperlint.json": AIDC[`${P}/paperlint.json`],
+      },
+      file: "papers/aisec-2026/PIPELINE-STATUS.md",
+      severity: 1,
+      line: 1,
+    },
+    // The folder names the paper's own venue.
+    silent: {
+      "papers/aidc-2026/PIPELINE-STATUS.md": STATUS,
+      "papers/aidc-2026/paper.tex": tex("x"),
+      "papers/aidc-2026/paperlint.json": AIDC[`${P}/paperlint.json`],
+    },
+  },
   "tex/venue-leftover": {
     reports: {
       tree: aidc("First written for AISec."),

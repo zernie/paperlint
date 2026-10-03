@@ -29,12 +29,28 @@
       "type": "boolean"
     },
     "aliases": {
-      "description": "Other names the venue goes by in a paper's text — its acronym, its parent conference (`[\"AISec\", \"ACM CCS\"]`). Read by `tex/venue-leftover`: a paper that extends another venue and says one of these is flagged. Matched as whole words, case-sensitive. Collected along the `extends` chain, with `name`.",
+      "description": "Other names the venue goes by in a paper's text — its acronym, its parent conference (`[\"AISec\", \"ACM CCS\"]`). Read by `tex/venue-leftover`: a paper that extends another venue and says one of these is flagged. Matched as whole words, case-sensitive. Also read by `paper/folder-venue-leftover`, against the words of the paper's folder name, case ignored. Collected along the `extends` chain, with `name`.",
       "type": "array",
       "uniqueItems": true,
       "items": {
         "type": "string",
         "minLength": 1
+      }
+    },
+    "portal": {
+      "description": "Where the venue takes submissions, read by `paperlint submission`: the portal's kind (an adapter exists for `hotcrp`) and the site's base URL, the one its pages and `/api/` hang off. A paper says which submission is its own with `submission: { id }` in its paperlint.json. A child's value replaces its parent's.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "url"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https?://[^\\s/]+[^\\s]*$"
+        }
       }
     },
     "required_sections": {

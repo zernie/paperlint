@@ -103,9 +103,12 @@ REALM.
    ```
 
 3. Create a paper. `--venue` names its venue preset from the table above, `--kind` which of its page
-   limits applies:
+   limits applies. Name the folder after the work, not the venue: a rejected paper moves to another
+   venue and keeps its folder, so `new` refuses a name like `aisec-2026` (`--allow-venue-name` when
+   the word really is the work's):
 
    <!-- `vigiles:symbol src/new-paper.ts#newPaper` — `npm run check` fails if this function is renamed or removed. -->
+   <!-- `vigiles:symbol src/new-paper.ts#ALLOW_VENUE_NAME` — the flag's one spelling; `npm run check` fails if it is renamed or removed. -->
 
    ```sh
    npx paperlint new my-paper --venue agenticdev --kind short
@@ -161,6 +164,8 @@ paperlint finds a paper by its folder: `<papersDir>/<name>/`, with the main file
 | `npx paperlint lint`                                        | runs every check over your papers; `--fix` fixes what can be fixed             |
 | `npx paperlint toolchain`                                   | installs TeX Live with the packages your venues need (~270 MB, ~3 min, once)   |
 | `npx paperlint doctor`                                      | checks the setup and exits non-zero if something is miswired                   |
+| `npx paperlint submission show <paper>`                     | the paper's submission on the venue's portal, and whether it holds your build  |
+| `npx paperlint submission update <paper>`                   | checks a new PDF/abstract against the portal; `--save` sends it for real       |
 | `npx paperlint --help`                                      | every command and flag                                                         |
 
 ## 🧠 Skills
@@ -175,6 +180,7 @@ what it does — "is this idea worth a paper?", "find me a venue for this". `ini
 - **A hostile review before the real one.** `paper-adversarial-review`
 - **A ready / not ready verdict before you submit**, worst problem first. `harden-paper`
 - **Where your paper stands**, measured from the real build. `paper-status`
+- **The PDF and abstract replaced on HotCRP**, dry run first, and proof the portal holds your build. `submission-portal`
 
 Every skill, by stage: [`docs/skills.md`](docs/skills.md).
 
@@ -313,6 +319,7 @@ Only `paperlint lint --fix`, and only three rules: `paper/section-word` (`§` �
 - [`docs/configuration.md`](docs/configuration.md) — every setting, how `build` compiles, using your own ESLint
 - [`docs/rules.md`](docs/rules.md) — every check, venue presets, recording a submitted PDF
 - [`docs/references.md`](docs/references.md) — the reference check, and the cache file to commit
+- [`docs/submission.md`](docs/submission.md) — reading and updating a submission on the venue's portal (HotCRP)
 - [`docs/optional-rules.md`](docs/optional-rules.md) — checks only some venues need
 - [`docs/toolchain.md`](docs/toolchain.md) — TeX Live, and Banal (HotCRP's page-geometry checker, GPL)
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — how the package is tested and released, and adding a venue to it

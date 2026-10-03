@@ -19,7 +19,8 @@
  *   tex        union — a child never removes a package its parent needs
  *   format     per key, the child wins; `kinds` by kind name, a child's kind replaces that kind
  *   rules      per rule id, the child wins
- *   template   the child wins; so does `name`, and `required_sections`, `register` and `talk` (each whole)
+ *   template   the child wins; so does `name`, and `required_sections`, `register`, `talk` and
+ *              `portal` (each whole)
  *   aliases    union, with every `name` — what the venue is called along the chain
  *
  * ── THE LABEL ─────────────────────────────────────────────────────────────────────
@@ -42,7 +43,7 @@ import {
   type VenueFormat,
 } from "./tex-requirements.ts";
 import { callerPath } from "./caller-path.ts";
-import { err, ok, type Result } from "./domain/result.ts";
+import { err, isOk, ok, type Result } from "./domain/result.ts";
 import type { Files } from "./ports/files.ts";
 import {
   readPaperSettings,
@@ -53,6 +54,7 @@ import { CONFIG_FILE } from "#lib/paper-config";
 import { messageOf } from "./domain/text.ts";
 import type { RegisterAnchor } from "./domain/register.ts";
 import type { VenueTalk } from "./domain/talk.ts";
+import type { VenuePortal } from "./domain/submission.ts";
 
 /** The prefix of a shipped preset's spec. */
 export const SHIPPED_PREFIX = "paperlint:";
@@ -95,6 +97,8 @@ export interface Preset {
   readonly registerAnchors: readonly RegisterAnchor[];
   /** What the venue asks a presenter to send (`talk/*`); null when no file of the chain says. */
   readonly talk: VenueTalk | null;
+  /** Where the venue takes submissions (`paperlint submission`); null when no file of the chain says. */
+  readonly portal: VenuePortal | null;
 }
 
 /** Why a spec does not resolve. */
@@ -227,6 +231,7 @@ function merged(
     rules: {},
     registerAnchors: [],
     talk: null,
+    portal: null,
   };
   const m = rootFirst.reduce(
     (acc, { preset: p, file }) => ({
@@ -246,6 +251,7 @@ function merged(
       rules: { ...acc.rules, ...p.rules },
       registerAnchors: p.registerAnchors ?? acc.registerAnchors,
       talk: p.talk ?? acc.talk,
+      portal: p.portal ?? acc.portal,
     }),
     base,
   );
@@ -280,11 +286,48 @@ export function shippedPresets(venuesDir: string): string[] {
   return venueNames(venuesDir);
 }
 
+/** The spec a paper writes in `extends` for the shipped preset `name`: `paperlint:<name>`. */
+export const shippedSpec = (name: string): string => `${SHIPPED_PREFIX}${name}`;
+
+/**
+ * Every shipped preset that resolves, each read the way a paper extending it would read it. The one
+ * piece that reads the presets directory. One that does not resolve is left out: `pdf/profile`
+ * owns that.
+ */
+export function resolveShipped(deps: PresetDeps): readonly Preset[] {
+  const from = join(deps.venuesDir, CONFIG_FILE);
+  return shippedPresets(deps.venuesDir)
+    .map((name) => resolvePreset(shippedSpec(name), from, deps))
+    .filter(isOk)
+    .map((r) => r.value);
+}
+
+/** A shipped venue as a name knows it, and the files of its chain: what tells it from a paper's own. */
+export type ShippedVenue = Pick<Preset, "label" | "aliases" | "chain">;
+
+/**
+ * A resolved preset as a name knows it: its label, its aliases, its chain. Pure. (Not Remeda's
+ * `pick`: the app layer may not import it — `boundaries/dependencies`, `APP_EXTERNALS`.)
+ */
+export const venueOf = ({ label, aliases, chain }: Preset): ShippedVenue => ({
+  label,
+  aliases,
+  chain,
+});
+
+/**
+ * THE ONE SOURCE OF VENUE NAMES: every shipped venue's label and `aliases` (with each `name` along
+ * its chain). Read by `paperlint new`, which refuses a folder name naming one, and through
+ * `otherVenues` by `tex/venue-leftover` and `paper/folder-venue-leftover`.
+ */
+export const shippedVenueNames = (deps: PresetDeps): readonly ShippedVenue[] =>
+  resolveShipped(deps).map(venueOf);
+
 /** One line for a problem, naming what to change. Pure. */
 export function presetProblemText(p: PresetProblem): string {
   switch (p.kind) {
     case "unsupported":
-      return `"extends": "${p.spec}" — a preset is \`paperlint:<name>\` (shipped) or a path starting with ./ or ../ (your own); npm presets: not yet supported. Did you mean "${SHIPPED_PREFIX}${p.spec}"?`;
+      return `"extends": "${p.spec}" — a preset is \`paperlint:<name>\` (shipped) or a path starting with ./ or ../ (your own); npm presets: not yet supported. Did you mean "${shippedSpec(p.spec)}"?`;
     case "not-found":
       return `"extends": "${p.spec}" names no preset (${p.file}); shipped presets (${SHIPPED_PREFIX}<name>): ${p.shipped.join(", ")}`;
     case "cycle":

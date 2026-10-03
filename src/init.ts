@@ -79,6 +79,7 @@ import {
 } from "#lib/paper-config";
 import { messageOf } from "./domain/text.ts";
 import { isRecord } from "./domain/record.ts";
+import type { NamedVenue } from "./domain/venue-name.ts";
 
 /** How the papers directory was arrived at. Printed, because a guess must not read as a fact. */
 export type PapersHow =
@@ -582,6 +583,11 @@ export interface InitOptions {
     name: string,
     format: PaperFormat,
   ) => Promise<number>;
+  /**
+   * The venues a paper name may not name (`shippedVenueNames`), so `--paper aisec-2026` is refused
+   * before anything is asked. `createPaper` refuses it again whatever this holds.
+   */
+  venues?: readonly NamedVenue[];
   run?: ProgramProbe;
   /**
    * What `paperlint lint` would resolve from the declaration, asked of the CLI's OWN reader. A second
@@ -713,6 +719,7 @@ export async function init(
     paper = null,
     format = null,
     createPaper,
+    venues = [],
     run = spawnSync,
     resolveCliPapers,
     link = (r: string) => linkSkills(r),
@@ -816,7 +823,7 @@ export async function init(
     wanted = answer ? answer : null;
   }
   if (wanted !== null && createPaper) {
-    const problem = nameProblem(wanted);
+    const problem = nameProblem(wanted, venues);
     let fmt: PaperFormat = format ?? DEFAULT_FORMAT;
     if (!problem && format === null && interactive) {
       const f = (
@@ -825,7 +832,7 @@ export async function init(
       if (isFormat(f)) fmt = f;
     }
     if (problem) {
-      log(`  ✗ ${problem} — no paper created`);
+      log(`  ✗ no paper created — ${problem}`);
       paperCode = 2;
     } else {
       const code = await createPaper(papersAbs, wanted, fmt);

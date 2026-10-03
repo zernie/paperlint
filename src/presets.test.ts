@@ -16,6 +16,7 @@ import {
   MAX_PRESET_DEPTH,
   SHIPPED_PREFIX,
   shippedPresets,
+  shippedVenueNames,
   labelOf,
   presetProblemText,
   resolvePreset,
@@ -295,5 +296,26 @@ describe("labelOf — display only, never used to resolve", () => {
     ["paperlint:", ""],
   ])("%s → %s", (spec, label) => {
     expect(labelOf(spec)).toBe(label);
+  });
+});
+
+describe("shippedVenueNames — what each shipped venue is called", () => {
+  it("every shipped preset, by its label and the names along its chain", () => {
+    const names = shippedVenueNames(deps());
+    expect(names.map((n) => n.label)).toEqual(shippedPresets(VENUES));
+    expect(names.find((n) => n.label === "aisec")?.aliases).toEqual(
+      expect.arrayContaining(["AISec", "ACM CCS"]),
+    );
+  });
+
+  it("a preset that does not resolve is left out", () => {
+    const files = memoryFiles(
+      Object.fromEntries(
+        Object.entries(shipped).filter(([f]) => !f.endsWith("realm.jsonc")),
+      ),
+    );
+    expect(
+      shippedVenueNames({ files, venuesDir: VENUES }).map((n) => n.label),
+    ).toEqual(shippedPresets(VENUES).filter((n) => n !== "realm"));
   });
 });

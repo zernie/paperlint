@@ -4,7 +4,7 @@ description: End-to-end playbook for submitting a peer-reviewed paper to a doubl
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Skill]
 ---
 
-<!-- vigiles:sha256:9e57bcb2ba1fb055 compiled from skills/submit-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:767a4757d1df67d3 compiled from skills/submit-paper/SKILL.md.spec.ts -->
 
 # submit-paper — get a reviewed paper from "done" to "ready for review"
 
@@ -110,6 +110,7 @@ Many workshop HotCRPs have **no supplementary-upload field** — check first; if
   is the step people miss.
 - You can edit until the deadline: use **Replace** on the Submission field to swap the PDF for a late
   fix (e.g. adding the artifact link after you host it). Submit early, upgrade before the deadline.
+- When the venue preset declares its HotCRP portal, replacing the PDF or abstract and proving the portal holds the latest build is `submission-portal` (`paperlint submission show|update`).
 
 ## 6. Independent-researcher / dossier notes
 - **Name consistency** is the quiet risk: publications, LinkedIn, passport, letters must resolve to one

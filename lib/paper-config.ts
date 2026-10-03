@@ -141,6 +141,8 @@ export const SETTINGS_KEYS: Readonly<Record<string, string>> = Object.freeze({
   identity:
     "what identifies the authors — names, handles, emails, affiliations, own project names; a blind venue's PDF must not say any of them — anonymity/identity. The root's list and a paper's are joined",
   talk: 'how this paper is presented: { "mode": "remote-video", "dir"?, "files"?, "one_slide"? } — the talk/ rules. A paper\'s own; refused in the root file',
+  submission:
+    "which submission on the venue's portal is this paper's: { \"id\": <number> } — paperlint submission, with the preset's \"portal\". A paper's own; refused in the root file",
   scripts: "how skill prose names the scripts — consumer.mjs",
   timezone: "the zone deadline anchors are written in — consumer.mjs",
   contactEmail: "the polite-pool address for citation lookups — consumer.mjs",
@@ -150,7 +152,10 @@ export const SETTINGS_KEYS: Readonly<Record<string, string>> = Object.freeze({
 });
 
 /** The keys that only mean something for one paper: refused in the root `paperlint.json`. */
-export const PAPER_ONLY_KEYS: readonly string[] = Object.freeze(["talk"]);
+export const PAPER_ONLY_KEYS: readonly string[] = Object.freeze([
+  "talk",
+  "submission",
+]);
 
 /** The keys that only mean something for the whole project: refused in a paper's `paperlint.json`. */
 export const ROOT_ONLY_KEYS: readonly string[] = Object.freeze([
