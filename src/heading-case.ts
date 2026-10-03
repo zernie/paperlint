@@ -87,8 +87,8 @@ function report(context: HeadingCaseContext, f: CaseFinding): void {
   const { fix } = f;
   context.report({
     loc: {
-      start: sc.getLocFromIndex(f.at?.start ?? 0),
-      end: sc.getLocFromIndex(f.at?.end ?? 0),
+      start: sc.getLocFromIndex(f.at.start),
+      end: sc.getLocFromIndex(f.at.end),
     },
     messageId: f.messageId,
     data: f.data,
@@ -101,48 +101,51 @@ function report(context: HeadingCaseContext, f: CaseFinding): void {
   });
 }
 
-/** The rule: its schema takes `style`, and nothing else. */
-export function headingCaseRule(deps: HeadingCaseDeps): HeadingCaseRule {
-  return {
-    meta: {
-      type: "suggestion",
-      fixable: "code",
-      docs: {
-        description:
-          "the words of a heading are in the capitalization the venue asks: headline style, or sentence style",
-        url: ruleDocsUrl("heading-case"),
-      },
-      schema: [
-        {
-          type: "object",
-          properties: { style: { enum: STYLES } },
-          required: ["style"],
-          additionalProperties: false,
-        },
-      ],
-      messages: MESSAGES,
+const META: HeadingCaseRule["meta"] = {
+  type: "suggestion",
+  fixable: "code",
+  docs: {
+    description:
+      "the words of a heading are in the capitalization the venue asks: headline style, or sentence style",
+    url: ruleDocsUrl("heading-case"),
+  },
+  schema: [
+    {
+      type: "object",
+      properties: { style: { enum: STYLES } },
+      required: ["style"],
+      additionalProperties: false,
     },
-    create(context) {
-      return {
-        root() {
-          const style = styleOf(context.options);
-          if (style === null) {
-            const start = context.sourceCode.getLocFromIndex(0);
-            context.report({
-              loc: { start, end: start },
-              messageId: "noStyle",
-            });
-            return;
-          }
-          const sc = context.sourceCode;
-          const src = sc.raw ?? sc.text;
-          judgeHeadingCase(deps.latex.headings(src), style, src).forEach(
-            (f) => {
-              report(context, f);
-            },
-          );
-        },
-      };
-    },
-  };
+  ],
+  messages: MESSAGES,
+};
+
+/** The rule turned on with no style: said once, at the top of the file. */
+function reportNoStyle(context: HeadingCaseContext): void {
+  const start = context.sourceCode.getLocFromIndex(0);
+  context.report({ loc: { start, end: start }, messageId: "noStyle" });
 }
+
+/** One file against the style the rule was given. */
+function judgeFile(context: HeadingCaseContext, deps: HeadingCaseDeps): void {
+  const style = styleOf(context.options);
+  if (style === null) {
+    reportNoStyle(context);
+    return;
+  }
+  const sc = context.sourceCode;
+  const src = sc.raw ?? sc.text;
+  judgeHeadingCase(deps.latex.headings(src), style, src).forEach((f) => {
+    report(context, f);
+  });
+}
+
+/** The rule: its schema takes `style`, and nothing else. */
+export const headingCaseRule = (deps: HeadingCaseDeps): HeadingCaseRule => ({
+  meta: META,
+  create: (context) => ({
+    root: () => {
+      judgeFile(context, deps);
+    },
+  }),
+});

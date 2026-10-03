@@ -292,6 +292,18 @@ const TEX_RULE_DEPS = {
   latex: latexReader,
 };
 
+/** The register band rules and `tex/heading-case`: the rules of the `tex` plugin that read a paper's words. */
+const REGISTER_AND_CASE_RULES = {
+  ...registerBandRules(TEX_RULE_DEPS),
+  "heading-case": headingCaseRule(TEX_RULE_DEPS),
+};
+
+/** The rules of the files `paper.tex` includes, each read on its own as a fragment (#144). */
+const FRAGMENT_RULES = {
+  "future-promise": texBuild["future-promise"],
+  "heading-case": REGISTER_AND_CASE_RULES["heading-case"],
+};
+
 /** What the talk rules read with: the disk, the shipped presets, and the three media readers. */
 const TALK_RULE_DEPS = {
   files: nodeFiles,
@@ -403,8 +415,7 @@ export function buildConfig(
             ...texVenueRules(TEX_RULE_DEPS),
             "claim-provenance": claimProvenanceRule(TEX_RULE_DEPS),
             register: registerRule(TEX_RULE_DEPS),
-            ...registerBandRules(TEX_RULE_DEPS),
-            "heading-case": headingCaseRule(TEX_RULE_DEPS),
+            ...REGISTER_AND_CASE_RULES,
           },
         },
         paper: { rules: texPaperRules },
@@ -456,10 +467,7 @@ export function buildConfig(
           plugins: {
             tex: {
               languages: { latex: texLanguage },
-              rules: {
-                "future-promise": texBuild["future-promise"],
-                "heading-case": headingCaseRule(TEX_RULE_DEPS),
-              },
+              rules: FRAGMENT_RULES,
             },
             paper: {
               rules: {

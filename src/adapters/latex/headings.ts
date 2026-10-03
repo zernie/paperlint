@@ -94,25 +94,23 @@ function nodeSegments(n: Node): readonly Segment[] {
 }
 
 /**
- * A group written right after a command the parser has no signature for (`\ours{…}`, a macro of the
+ * A group that is the very next node after a command the parser has no signature for (`\ours{…}`, a macro of the
  * author's own): the parser leaves such a group beside the macro, but TeX hands it to the macro as an
  * argument, so it is part of what the macro prints and not words of the title. A chain of groups
  * (`\findingdes{label}{a sentence}`) is all argument.
  */
-function isArgumentGroup(nodes: readonly Node[], i: number): boolean {
-  const n = nodes[i];
+function isArgumentGroup(nodes: readonly Node[], n: Node, i: number): boolean {
   const prev = nodes[i - 1];
-  if (n === undefined || prev === undefined || n.type !== "group") return false;
-  if (prev.position?.end.offset !== n.position?.start.offset) return false;
+  if (prev === undefined || n.type !== "group") return false;
   return prev.type === "macro"
     ? isOpaqueMacro(prev)
-    : isArgumentGroup(nodes, i - 1);
+    : isArgumentGroup(nodes, prev, i - 1);
 }
 
 const segmentsOf = (nodes: readonly Node[] | undefined): readonly Segment[] => {
   const list = nodes ?? [];
   return list.flatMap((n, i) =>
-    isArgumentGroup(list, i) ? [] : nodeSegments(n),
+    isArgumentGroup(list, n, i) ? [] : nodeSegments(n),
   );
 };
 

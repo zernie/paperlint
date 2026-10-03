@@ -86,7 +86,9 @@ describe("headline style — the corrected forms are silent", () => {
   ])("🔴 %s", (title) => {
     expect(findingsOf(section(title))).toEqual([]);
   });
+});
 
+describe("headline style — what the rule does not read", () => {
   it.each([
     ["a bound prefix keeps its second element lowercase", "Multi-turn Agents"],
     [
@@ -127,6 +129,11 @@ describe("headline style — the corrected forms are silent", () => {
       "related",
       "work",
     ]);
+  });
+
+  it("a comment inside a title says nothing, and a group may open it", () => {
+    expect(findingsOf("\\section{Related % note\nWork}")).toEqual([]);
+    expect(findingsOf(section("{GitHub} and Friends"))).toEqual([]);
   });
 
   it("emphasis commands are read as the words they wrap", () => {

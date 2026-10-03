@@ -28,12 +28,7 @@
  * and everything `OPAQUE` in the title (math, code, citations). A word beside such a thing is not
  * known to be first or last, so a minor word there is left as it is.
  */
-import {
-  runText,
-  spanIn,
-  type Span,
-  type TitledHeading,
-} from "./tex-document.ts";
+import { runText, type Span, type TitledHeading } from "./tex-document.ts";
 
 /** The style a venue sets: headline, sentence (first word only: a proper noun cannot be told), or none. */
 export type HeadingStyle = "headline" | "sentence" | "off";
@@ -48,7 +43,7 @@ export interface CaseFix {
 export interface CaseFinding {
   readonly messageId: "capitalize" | "lowercase" | "sentenceFirst";
   readonly data: Readonly<Record<string, string>>;
-  readonly at: Span | null;
+  readonly at: Span;
   readonly fix: CaseFix | null;
 }
 
@@ -284,15 +279,27 @@ function whyOf(j: Judged, p: Place): string {
 const wordText = (h: TitledHeading, w: Word): string =>
   runText(h.title).slice(w.from, w.to);
 
-/** The fix for a word, only where the source holds exactly the letters read. */
+/**
+ * Where the letters `[from, to)` of a title stand in the source: from its first character to past its
+ * last. Total, no null: the title's characters are the source's, each at its own offset.
+ */
+function spanOf(h: TitledHeading, from: number, to: number): Span {
+  const offsets = h.title.segments
+    .flatMap((s) => s.text.split("").map((_, k) => s.at + k))
+    .slice(from, to);
+  return { start: Math.min(...offsets), end: Math.max(...offsets) + 1 };
+}
+
+/** The fix for a word, only where the source holds exactly the letters read, side by side. */
 function fixOf(
   h: TitledHeading,
   w: Word,
   expected: string,
   source: string,
 ): CaseFix | null {
-  const span = spanIn(h.title, w.from, w.to);
-  if (span === null || source.slice(span.start, span.end) !== wordText(h, w))
+  const span = spanOf(h, w.from, w.to);
+  const contiguous = span.end - span.start === w.to - w.from;
+  if (!contiguous || source.slice(span.start, span.end) !== wordText(h, w))
     return null;
   return { span, text: expected };
 }
@@ -322,7 +329,7 @@ function judgeHeadlineWord(
         why: whyOf(changed, p),
         where: whereOf(h),
       },
-      at: spanIn(h.title, word.from, word.to),
+      at: spanOf(h, word.from, word.to),
       fix: fixOf(h, word, expected, source),
     },
   ];
@@ -344,7 +351,7 @@ function judgeSentenceWord(
     {
       messageId: "sentenceFirst",
       data: { word: got, expected, where: whereOf(h) },
-      at: spanIn(h.title, word.from, word.to),
+      at: spanOf(h, word.from, word.to),
       fix: null,
     },
   ];

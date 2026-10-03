@@ -208,8 +208,24 @@ describe("the rule's own contract", () => {
     expect(rule.meta.fixable).toBe("code");
   });
 
-  it("a finding without a place is reported at the top of the file", () => {
-    const reported: unknown[] = [];
+  it("reads the file's text when the language gives no raw source", () => {
+    const reported: string[] = [];
+    rule
+      .create({
+        options: [{ style: "headline" }],
+        sourceCode: {
+          text: "\\section{related}",
+          getLocFromIndex: (i: number) => ({ line: 1, column: i }),
+        },
+        report: (d) => reported.push(d.messageId),
+      })
+      .root?.();
+    expect(reported).toEqual(["capitalize"]);
+  });
+
+  it("a word split by markup is reported, and without a fix", () => {
+    const reported: { readonly messageId: string; readonly fix?: unknown }[] =
+      [];
     const sourceCode = {
       text: "",
       getLocFromIndex: (i: number) => ({ line: 1, column: i }),
@@ -221,6 +237,7 @@ describe("the rule's own contract", () => {
         report: (d) => reported.push(d),
       })
       .root?.();
-    expect(reported).toHaveLength(1);
+    expect(reported.map((d) => d.messageId)).toEqual(["capitalize"]);
+    expect(reported[0]?.fix).toBeUndefined();
   });
 });

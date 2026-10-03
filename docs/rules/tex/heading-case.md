@@ -128,12 +128,14 @@ A finding at error level that is wrong costs more than a finding missed, so the 
 read:
 
 - a word with a capital anywhere past its first letter (`LLM`, `LLMs`, `GitHub`, `iOS`);
-- a single letter other than the article (`k`, `n`);
-- anything with a digit, a dot, a slash or an apostrophe-less accent in it (`GPT-4`, `e.g.`,
+- a single letter other than the lowercase article (`k`, `n`, and the capital in `Module A`);
+- anything with a digit, a dot, a slash or a TeX accent in it (`GPT-4`, `e.g.`,
   `input/output`, `Caf\'e`);
 - everything set in math or code, and every command whose text is not plain: `\texttt`, `\textsc`,
   `\cite`, `\ref`, … A formatting command is read as the words it wraps (`\emph{very}`, `\textbf{…}`,
   `\textit{…}`); `\label`, `\footnote`, `\thanks` and `\index` are not part of the title.
+  A group written right after a macro of your own (`\ours{…}`, `\finding{label}{a sentence}`) is
+  that macro's argument, and is not read either.
 
 A word that stands beside something the rule does not read is not known to be first or last, so a
 minor word there is left as it is (`\texttt{grep} And Friends`, `Results For $k$`).

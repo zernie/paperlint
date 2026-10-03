@@ -203,7 +203,7 @@ describe("papersDir — optional, `papers` by default", () => {
 });
 
 describe("paperlint lint — the venue preset's rules", () => {
-  it("agenticdev's preset turns pdf/last-page-balance on for its paper alone", async () => {
+  it("agenticdev's preset turns pdf/last-page-balance on for its paper alone, and tex/heading-case from the ACM family it extends", async () => {
     const root = project({
       "papers/a/paperlint.json": JSON.stringify({
         extends: "paperlint:agenticdev",
@@ -219,7 +219,10 @@ describe("paperlint lint — the venue preset's rules", () => {
           // Scoped to the paper by `basePath` alone: which of its files the rule reaches is decided
           // once, by narrowing to paperlint's owned scopes (#101), not by a copy of their globs.
           basePath: join(root, "papers/a"),
-          rules: { "pdf/last-page-balance": ["error", { tolerancePt: 120 }] },
+          rules: {
+            "pdf/last-page-balance": ["error", { tolerancePt: 120 }],
+            "tex/heading-case": ["error", { style: "headline" }],
+          },
         },
       ],
       own: [],
@@ -256,6 +259,7 @@ describe("paperlint lint — the paper over its preset, and the project's own pr
     // The preset's block comes first and the paper's own after it: the later block wins.
     expect(blocks.ok && blocks.value.preset[0]?.rules).toEqual({
       "pdf/last-page-balance": ["error", { tolerancePt: 120 }],
+      "tex/heading-case": ["error", { style: "headline" }],
     });
     expect(blocks.ok && blocks.value.own[0]?.rules).toEqual({
       "pdf/last-page-balance": "off",
