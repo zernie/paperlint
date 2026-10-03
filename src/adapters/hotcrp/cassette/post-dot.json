@@ -1,0 +1,21 @@
+{
+  "ok": false,
+  "message_list": [
+    {
+      "status": 2,
+      "field": "submission",
+      "message": "<0>Ignored attempt to upload document without any content"
+    },
+    {
+      "status": 3,
+      "field": "submission"
+    },
+    {
+      "status": -3
+    }
+  ],
+  "dry_run": true,
+  "valid": false,
+  "change_list": [],
+  "pid": 7
+}

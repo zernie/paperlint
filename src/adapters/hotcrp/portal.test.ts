@@ -4,6 +4,7 @@
  * HotCRP would receive, and answers with what HotCRP documents.
  */
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   createServer,
   type IncomingMessage,
@@ -18,6 +19,8 @@ import {
   CONTENT_FIELD,
   changeObject,
   hotcrpPortal,
+  parseShow,
+  parseUpdate,
   sha256OfHash,
 } from "./index.ts";
 
@@ -69,6 +72,18 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
  * lookup misses, `DocumentImporter` reports "Ignored attempt to upload document without any
  * content" and the change is not valid — measured on a real HotCRP with the field `paper.pdf`.
  */
+/** A recorded HotCRP answer (`cassette/README.md`), as the text it was sent as. */
+function cassette(
+  name: "get-paper" | "get-noauth" | "post-dot" | "post-ok",
+): string {
+  return readFileSync(
+    new URL(`./cassette/${name}.json`, import.meta.url),
+    "utf8",
+  );
+}
+const parsed = (name: Parameters<typeof cassette>[0]): unknown =>
+  JSON.parse(cassette(name));
+
 function ignoredDocument(s: Seen): Reply | null {
   if (!String(s.headers["content-type"]).startsWith("multipart/form-data"))
     return null;
@@ -81,23 +96,7 @@ function ignoredDocument(s: Seen): Reply | null {
     .filter(([, p]) => /filename="/.test(p.headers))
     .map(([name]) => name.replace(/[. ]/g, "_"));
   if (typeof named !== "string" || files.includes(named)) return null;
-  return {
-    status: 200,
-    body: JSON.stringify({
-      ok: true,
-      valid: false,
-      change_list: [],
-      message_list: [
-        {
-          field: "submission",
-          message: "<0>Ignored attempt to upload document without any content",
-          status: 2,
-        },
-        { field: "submission", message: "", status: 2 },
-        { message: "" },
-      ],
-    }),
-  };
+  return { status: 200, body: cassette("post-dot") };
 }
 
 const portOf = (s: Server): number => {
@@ -132,24 +131,8 @@ const last = (): Seen => {
 
 const PDF = new TextEncoder().encode("%PDF-1.5 fake bytes");
 const HEX = sha256Hex(PDF);
-const PAPER = {
-  object: "paper",
-  pid: 7,
-  status: "submitted",
-  title: "A Fake Title",
-  abstract: "one two three four",
-  paper_type: "Regular",
-  topics: ["Topic A", "Topic B"],
-  submission: {
-    hash: `sha2-${HEX}`,
-    size: PDF.length,
-    mimetype: "application/pdf",
-    timestamp: 1_700_000_000,
-  },
-  submitted: true,
-  submitted_at: 1_700_000_100,
-  modified_at: 1_700_000_200,
-};
+const CASSETTE_HEX =
+  "b3e602c135f2455f64aecfdc2e1e7f81dad20c5d69f0981e965b1a0131d47163";
 
 interface Part {
   readonly headers: string;
@@ -178,7 +161,8 @@ function partsOf(s: Seen): ReadonlyMap<string, Part> {
 }
 
 test("show: GET /api/paper?p=<id>&word_limit=hard with the bearer token, parsed whole", async () => {
-  answer(200, { ok: true, paper: PAPER });
+  seen.length = 0;
+  reply = { status: 200, body: cassette("get-paper") };
   const r = await portal().show(7);
   const s = last();
   assert.equal(s.method, "GET");
@@ -193,19 +177,19 @@ test("show: GET /api/paper?p=<id>&word_limit=hard with the bearer token, parsed 
     value: {
       id: 7,
       status: "submitted",
-      title: "A Fake Title",
-      paperType: "Regular",
-      topics: ["Topic A", "Topic B"],
-      abstract: "one two three four",
+      title: "An Example Paper Title",
+      paperType: "Example paper type",
+      topics: ["Example topic one", "Example topic two"],
+      abstract: "An example abstract of exactly ten words for the test.",
       pdf: {
-        sha256: HEX,
-        hash: `sha2-${HEX}`,
-        size: PDF.length,
+        sha256: CASSETTE_HEX,
+        hash: `sha2-${CASSETTE_HEX}`,
+        size: 17,
         mimetype: "application/pdf",
-        uploadedAt: 1_700_000_000,
+        uploadedAt: 1_790_000_000,
       },
-      submittedAt: 1_700_000_100,
-      modifiedAt: 1_700_000_200,
+      submittedAt: 1_790_000_100,
+      modifiedAt: 1_790_000_100,
       messages: [],
     },
   });
@@ -255,10 +239,8 @@ test("show: a null paper type and a null submission read as none", async () => {
 });
 
 test("🔴 show: 401 surfaces HotCRP's own message, and the token is in no part of it", async () => {
-  answer(401, {
-    ok: false,
-    message_list: [{ status: 2, message: "<0>Missing credentials" }],
-  });
+  seen.length = 0;
+  reply = { status: 401, body: cassette("get-noauth") };
   const r = await portal().show(7);
   assert.deepEqual(r, {
     ok: false,
@@ -279,14 +261,8 @@ const CHANGE: SubmissionChange = {
 };
 
 test("update: a dry run by default — dry_run=1, the json field, the PDF under its content_file name", async () => {
-  answer(200, {
-    ok: true,
-    valid: true,
-    change_list: ["submission", "abstract"],
-    message_list: [],
-    dry_run: true,
-    pid: 7,
-  });
+  seen.length = 0;
+  reply = { status: 200, body: cassette("post-ok") };
   const r = await portal().update(7, CHANGE, { save: false });
   const s = last();
   assert.equal(s.method, "POST");
@@ -314,7 +290,7 @@ test("update: a dry run by default — dry_run=1, the json field, the PDF under 
     value: {
       httpStatus: 200,
       valid: true,
-      changes: ["submission", "abstract"],
+      changes: ["submission"],
       messages: [],
       dryRun: true,
     },
@@ -482,4 +458,46 @@ test("sha256OfHash: sha2-<hex> is a sha256; any other hash is not claimed to be 
   assert.equal(sha256OfHash(`sha2-${HEX}`), HEX);
   assert.equal(sha256OfHash("da39a3ee5e6b4b0d3255bfef95601890afd80709"), null);
   assert.equal(sha256OfHash(`sha2-${HEX.toUpperCase()}`), null);
+});
+
+test("🔴 every recorded HotCRP answer parses through the real schemas, into what it means", () => {
+  // Guards: a schema that rejects a real answer — the class a hand-written body cannot show.
+  assert.equal(parseShow(200, parsed("get-paper")).ok, true);
+  const refused = {
+    ok: false,
+    error: {
+      kind: "refused",
+      httpStatus: 401,
+      messages: [{ message: "Missing credentials", field: null, status: 2 }],
+    },
+  };
+  assert.deepEqual(parseShow(401, parsed("get-noauth")), refused);
+  // The body's own `status_code` decides when the transport says 2xx.
+  assert.deepEqual(parseShow(200, parsed("get-noauth")), refused);
+  assert.deepEqual(parseUpdate(200, parsed("post-dot")), {
+    ok: true,
+    value: {
+      httpStatus: 200,
+      valid: false,
+      changes: [],
+      messages: [
+        {
+          message: "Ignored attempt to upload document without any content",
+          field: "submission",
+          status: 2,
+        },
+      ],
+      dryRun: true,
+    },
+  });
+  assert.deepEqual(parseUpdate(200, parsed("post-ok")), {
+    ok: true,
+    value: {
+      httpStatus: 200,
+      valid: true,
+      changes: ["submission"],
+      messages: [],
+      dryRun: true,
+    },
+  });
 });

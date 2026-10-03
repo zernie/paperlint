@@ -122,6 +122,18 @@ function viewOf(b: Readonly<z.infer<typeof ShowBody>>): SubmissionView {
 
 const is2xx = (status: number): boolean => status >= 200 && status < 300;
 
+const StatusCode = z.object({ status_code: z.number() });
+
+/**
+ * The status HotCRP meant. Its error envelope repeats the status in the body (`status_code: 401`
+ * beside `ok: false`, recorded in `cassette/get-noauth.json`); when something between us and HotCRP
+ * turns the transport status into a 2xx, the body's code still decides.
+ */
+function statusOf(transport: number, body: unknown): number {
+  const c = StatusCode.safeParse(body);
+  return is2xx(transport) && c.success ? c.data.status_code : transport;
+}
+
 /** A body that is no answer of HotCRP's: the portal's messages when it sent any, else "malformed". */
 function refusal(
   httpStatus: number,
@@ -140,10 +152,11 @@ export function parseShow(
   httpStatus: number,
   body: unknown,
 ): Result<SubmissionView, PortalFailure> {
+  const status = statusOf(httpStatus, body);
   const b = ShowBody.safeParse(body);
-  return b.success && is2xx(httpStatus)
+  return b.success && is2xx(status)
     ? ok(viewOf(b.data))
-    : err(refusal(httpStatus, body, "the answer has no submission in `paper`"));
+    : err(refusal(status, body, "the answer has no submission in `paper`"));
 }
 
 /**
@@ -154,11 +167,12 @@ export function parseUpdate(
   httpStatus: number,
   body: unknown,
 ): Result<UpdateOutcome, PortalFailure> {
+  const status = statusOf(httpStatus, body);
   const b = UpdateBody.safeParse(body);
   if (!b.success)
-    return err(refusal(httpStatus, body, "the answer has no `valid`"));
+    return err(refusal(status, body, "the answer has no `valid`"));
   return ok({
-    httpStatus,
+    httpStatus: status,
     valid: b.data.valid,
     changes: b.data.change_list ?? [],
     messages: messagesOf(b.data.message_list),
