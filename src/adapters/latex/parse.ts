@@ -12,6 +12,7 @@
 import type * as Ast from "@unified-latex/unified-latex-types";
 import { getParser } from "@unified-latex/unified-latex-util-parse";
 import { once } from "remeda";
+import { withoutFalseBranches } from "./conditionals.ts";
 
 const signed = (
   names: readonly string[],
@@ -133,9 +134,9 @@ const parser = once(() =>
   }),
 );
 
-/** A LaTeX source → its tree. */
+/** A LaTeX source → its tree, without the branches `\iffalse … \fi` hides (`conditionals.ts`). */
 export const parseLatex = (src: string): ParsedTex => ({
   src,
-  root: parser().parse(src),
+  root: withoutFalseBranches(src, parser().parse(src)),
   [PARSED]: true,
 });

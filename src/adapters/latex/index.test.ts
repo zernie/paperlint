@@ -324,6 +324,71 @@ describe("outlineOf — a heading that is never rendered is not in the outline",
   });
 });
 
+describe("\\iffalse … \\fi — a branch TeX never reads is not in the tree any reader walks", () => {
+  const dead = [
+    "A",
+    "\\iffalse",
+    "\\section{Old Title}",
+    "dead words",
+    "\\ifx\\a\\b nested\\fi",
+    "still dead",
+    "\\fi",
+    "B",
+  ].join("\n");
+  const doc = (body: string) => `\\begin{document}\n${body}\n\\end{document}`;
+
+  it("🔴 outline, headings and rendered text skip it, nested conditionals included", () => {
+    const t = parseLatex(doc(dead));
+    expect(outlineOf(t).sections).toEqual([]);
+    expect(latexReader.headings(doc(dead))).toEqual([]);
+    // Guards: the dead strings are gone from the list itself, so A and B are one run.
+    expect(
+      renderedRuns(t).map((r) => runText(r).replace(/\s+/gu, " ").trim()),
+    ).toEqual(["A B"]);
+  });
+
+  it("the \\else branch of an \\iffalse is read, and the text after its \\fi", () => {
+    const src = doc(
+      "\\iffalse\n\\section{Old}\n\\else\n\\section{New}\n\\fi\n\\section{After}",
+    );
+    expect(outlineOf(parseLatex(src)).sections.map((h) => h.title)).toEqual([
+      "New",
+      "After",
+    ]);
+  });
+
+  it("inside a group too, and `\\ifthenelse` (which has no \\fi) does not swallow the rest", () => {
+    const src = doc(
+      "{\\iffalse\\section{Old}\\ifthenelse{x}{y}{z}\\fi}\\section{Real}",
+    );
+    expect(outlineOf(parseLatex(src)).sections.map((h) => h.title)).toEqual([
+      "Real",
+    ]);
+  });
+
+  it("inside an environment with arguments, in math, and an \\else holding its own conditional", () => {
+    const src = doc(
+      [
+        "\\begin{minipage}{4cm}\\iffalse\\section{Old}\\fi\\section{Kept}\\end{minipage}",
+        "$x \\iffalse y \\fi$ \\[ z \\] \\begin{align*} a \\end{align*}",
+        "\\iffalse\\section{Old}\\else\\ifx\\a\\b\\section{Inner}\\fi\\section{New}\\fi",
+      ].join("\n"),
+    );
+    expect(outlineOf(parseLatex(src)).sections.map((h) => h.title)).toEqual([
+      "Kept",
+      "Inner",
+      "New",
+    ]);
+  });
+
+  it("an \\iffalse that is never closed leaves out everything after it, as TeX does", () => {
+    const src = doc("\\section{Real}\n\\iffalse\n\\section{Old}");
+    expect(outlineOf(parseLatex(src)).sections.map((h) => h.title)).toEqual([
+      "Real",
+    ]);
+  });
+});
+
 describe("renderedRuns", () => {
   it("runs of strings and spaces, each character mapped to its source offset", () => {
     const src = "A~B \\emph{C D}\n\n E";
