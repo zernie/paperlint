@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "vitest";
 import {
   identityHint,
+  identityHints,
   loadTypescript,
   parsePreset,
 } from "./tex-requirements.ts";
@@ -130,4 +131,17 @@ test("identityHint has nothing to add to a violation that is not about the ident
     }),
     null,
   );
+});
+
+test("identityHints: Ajv's null errors give none; a hint two violations share is given once", () => {
+  assert.deepEqual(identityHints({ errors: null }), []);
+  const missing = {
+    keyword: "required",
+    dataPath: "",
+    schemaPath: "#/required",
+    params: { missingProperty: "type" },
+  };
+  const hints = identityHints({ errors: [missing, missing] });
+  assert.equal(hints.length, 1);
+  assert.deepEqual(hints, [identityHint(missing)]);
 });

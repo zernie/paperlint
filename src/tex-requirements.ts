@@ -335,12 +335,12 @@ export function identityHint(e: SchemaError): string | null {
   return null;
 }
 
-/** The hints for every violation that has one, each once. */
-const hints = (
-  errors: readonly SchemaError[] | null | undefined,
+/** The hints for every violation that has one, each once. Ajv's null `errors` has none. */
+export const identityHints = (
+  v: Readonly<Pick<Validate, "errors">>,
 ): readonly string[] => [
   ...new Set(
-    (errors ?? []).map(identityHint).filter((h): h is string => h !== null),
+    (v.errors ?? []).map(identityHint).filter((h): h is string => h !== null),
   ),
 ];
 
@@ -393,7 +393,7 @@ export function parsePreset(
   const validate = validatorFor(dir);
   if (!matchesSchema(config, validate))
     throw new Error(
-      `${file} does not match ${SCHEMA_FILE}:\n  ${[...hints(validate.errors), ...violations(file, validate)].join("\n  ")}`,
+      `${file} does not match ${SCHEMA_FILE}:\n  ${[...identityHints(validate), ...violations(file, validate)].join("\n  ")}`,
     );
   const j = config;
   return {

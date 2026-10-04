@@ -2,7 +2,13 @@
  * `preset/card-rules` through real ESLint, on a copy of the shipped presets and the rule pages: the
  * section a card must hold, the findings for each way a card can be wrong, and what `--fix` writes.
  */
-import { cpSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  cpSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import { ESLint } from "eslint";
 import markdown from "@eslint/markdown";
@@ -157,6 +163,41 @@ describe("the origin column: set here, or inherited from the file of the chain t
         `# Fixture\n\n${SECTION_START}\n`,
       ),
     ).toBe(true);
+  });
+});
+
+describe("a chain that leaves presets/", () => {
+  it("a rule set by a preset outside presets/ names that file by its path from the card", async () => {
+    mkdirSync(join(root, "shared"), { recursive: true });
+    writeFileSync(
+      join(root, "shared", "fixture-base.jsonc"),
+      JSON.stringify({
+        type: "family",
+        extends: "paperlint:acm-sigconf",
+        rules: { "pdf/body-size": "warn" },
+      }),
+    );
+    writeFileSync(
+      join(P, "fixture-outside.jsonc"),
+      JSON.stringify({
+        type: "venue",
+        name: "Outside",
+        url: "https://example.org/cfp",
+        extends: "../shared/fixture-base.jsonc",
+      }),
+    );
+    writeFileSync(join(P, "fixture-outside.md"), "# Outside\n");
+    // Guards: a file of the chain that is not a shipped preset is not given a `paperlint:` name
+    // that would resolve nowhere; it is the path a reader can open from the card.
+    expect(
+      (await fixed("fixture-outside.md"))
+        .split("\n")
+        .filter((l) => l.startsWith("| [")),
+    ).toEqual([
+      "| [`pdf/body-size`](../docs/rules/pdf/body-size.md) | warn | — | inherited from `../shared/fixture-base.jsonc` |",
+    ]);
+    rmSync(join(P, "fixture-outside.jsonc"));
+    rmSync(join(P, "fixture-outside.md"));
   });
 });
 
