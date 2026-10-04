@@ -138,9 +138,12 @@ const AIDC = {
   }),
 };
 const ACM_CLASS = "\\documentclass[sigconf]{acmart}";
-/** A paper on the ACM family's preset: it turns `tex/heading-case` on, headline style. */
+/** A paper on AgenticDev's preset: it turns `tex/heading-case` on, headline style. */
 const ACM_PRESET = {
-  [`${P}/paperlint.json`]: JSON.stringify({ extends: "paperlint:acm-sigconf" }),
+  [`${P}/paperlint.json`]: JSON.stringify({
+    extends: "paperlint:agenticdev",
+    kind: "short",
+  }),
 };
 const IEEE = "\\documentclass[conference,compsoc]{IEEEtran}";
 const STATEMENT = "\\section*{LLM Usage Statement}\nNone.";
