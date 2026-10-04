@@ -37,7 +37,7 @@ the Conference Publishing author instructions for ACM (2026-08-25).
 
 **`paperlint:acm-sigconf`** — template family, no venue of its own · extended by `paperlint:agenticdev`, `paperlint:aisec`
 
-This preset sets no rules: a paper that extends it runs with paperlint's defaults.
+No preset of this chain sets a rule: a paper that extends it runs with paperlint's defaults.
 
 <!-- prettier-ignore-end -->
 <!-- /paperlint:preset-rules -->

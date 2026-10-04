@@ -100,7 +100,8 @@ test("the TeX base set holds its packages and nothing else", () => {
 });
 
 test("a venue is parsed into its identity; a family and the base set carry none of a venue's fields", () => {
-  const read = (p: object) => parsePreset(JSON.stringify(p), "p.jsonc").identity;
+  const read = (p: object) =>
+    parsePreset(JSON.stringify(p), "p.jsonc").identity;
   assert.deepEqual(
     [
       read({

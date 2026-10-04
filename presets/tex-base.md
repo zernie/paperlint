@@ -24,7 +24,7 @@ silently rasterizes Computer Modern in some contexts, a bitmap font that ACM and
 
 **`tex-base.jsonc`** — the TeX base set: every paper gets it, whatever it extends, and no preset extends it
 
-This preset sets no rules: a paper that extends it runs with paperlint's defaults.
+No preset of this chain sets a rule: a paper that extends it runs with paperlint's defaults.
 
 <!-- prettier-ignore-end -->
 <!-- /paperlint:preset-rules -->

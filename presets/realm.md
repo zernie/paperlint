@@ -160,7 +160,7 @@ A paper never submitted to ARR needs an ARR submission first, on ARR's own cycle
 
 **`paperlint:realm`** — venue preset for REALM · call for papers: <https://realm-workshop.github.io/call_for_papers>
 
-This preset sets no rules: a paper that extends it runs with paperlint's defaults.
+No preset of this chain sets a rule: a paper that extends it runs with paperlint's defaults.
 
 <!-- prettier-ignore-end -->
 <!-- /paperlint:preset-rules -->

@@ -260,55 +260,55 @@ const nameOf = (i: PresetIdentity): string | null =>
 const namesOf = (i: PresetIdentity): readonly string[] =>
   i.type === "venue" ? [i.name] : [];
 
+/** What the merge carries from file to file: the preset without what only the whole chain knows. */
+type Merging = Omit<Preset, "label" | "chain" | "identity"> & {
+  readonly name: string | null;
+};
+
+const NOTHING_MERGED: Merging = {
+  name: null,
+  template: null,
+  aliases: [],
+  blind: false,
+  requiredSections: [],
+  tex: NO_REQUIREMENTS,
+  format: NO_FORMAT,
+  rules: {},
+  ruleOrigins: {},
+  registerAnchors: [],
+  talk: null,
+  portal: null,
+};
+
+/** One file of the chain, `file`, merged over what its parents gave. Pure. */
+const mergeOne = (
+  acc: Merging,
+  { preset: p, file }: { readonly preset: PresetFile; readonly file: string },
+): Merging => ({
+  name: nameOf(p.identity) ?? acc.name,
+  template: p.template === null ? acc.template : { text: p.template, file },
+  aliases: [...new Set([...acc.aliases, ...namesOf(p.identity), ...p.aliases])],
+  blind: p.blind ?? acc.blind,
+  requiredSections: p.requiredSections ?? acc.requiredSections,
+  tex: p.tex ? mergeRequirements(acc.tex, p.tex) : acc.tex,
+  format: mergeFormat(acc.format, p.format),
+  rules: { ...acc.rules, ...p.rules },
+  ruleOrigins: {
+    ...acc.ruleOrigins,
+    ...Object.fromEntries(Object.keys(p.rules).map((id) => [id, file])),
+  },
+  registerAnchors: p.registerAnchors ?? acc.registerAnchors,
+  talk: p.talk ?? acc.talk,
+  portal: p.portal ?? acc.portal,
+});
+
 /** The chain, root first, merged into one preset. Pure. */
 function merged(
   spec: string,
   rootFirst: readonly { readonly preset: PresetFile; readonly file: string }[],
   leaf: { readonly preset: PresetFile },
 ): Preset {
-  const base: Omit<Preset, "label" | "chain" | "identity"> & {
-    readonly name: string | null;
-  } = {
-    name: null,
-    template: null,
-    aliases: [],
-    blind: false,
-    requiredSections: [],
-    tex: NO_REQUIREMENTS,
-    format: NO_FORMAT,
-    rules: {},
-    ruleOrigins: {},
-    registerAnchors: [],
-    talk: null,
-    portal: null,
-  };
-  const m = rootFirst.reduce(
-    (acc, { preset: p, file }) => ({
-      name: nameOf(p.identity) ?? acc.name,
-      template: p.template === null ? acc.template : { text: p.template, file },
-      aliases: [
-        ...new Set([
-          ...acc.aliases,
-          ...namesOf(p.identity),
-          ...p.aliases,
-        ]),
-      ],
-      blind: p.blind ?? acc.blind,
-      requiredSections: p.requiredSections ?? acc.requiredSections,
-      tex: p.tex ? mergeRequirements(acc.tex, p.tex) : acc.tex,
-      format: mergeFormat(acc.format, p.format),
-      rules: { ...acc.rules, ...p.rules },
-      ruleOrigins: {
-        ...acc.ruleOrigins,
-        ...Object.fromEntries(Object.keys(p.rules).map((id) => [id, file])),
-      },
-      registerAnchors: p.registerAnchors ?? acc.registerAnchors,
-      talk: p.talk ?? acc.talk,
-      portal: p.portal ?? acc.portal,
-    }),
-    base,
-  );
-  const { name, ...rest } = m;
+  const { name, ...rest } = rootFirst.reduce(mergeOne, NOTHING_MERGED);
   return {
     label: name ?? labelOf(spec),
     chain: rootFirst.map((x) => x.file),

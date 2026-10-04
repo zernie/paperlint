@@ -177,7 +177,7 @@ function rulesTable(
   originSpec: (file: string) => string,
 ): string {
   if (rows.length === 0)
-    return "This preset sets no rules: a paper that extends it runs with paperlint's defaults.";
+    return "No preset of this chain sets a rule: a paper that extends it runs with paperlint's defaults.";
   return [
     "| rule | severity | options | set in |",
     "| --- | --- | --- | --- |",
@@ -237,10 +237,7 @@ export function cardSection(o: {
 }
 
 /** The shipped presets whose chain runs through `file`, by their spec, `file` itself left out. */
-const extendedByOf = (
-  file: string,
-  deps: PresetCardDeps,
-): readonly string[] =>
+const extendedByOf = (file: string, deps: PresetCardDeps): readonly string[] =>
   resolveShipped(deps)
     .flatMap((p) => (p.chain.includes(file) ? p.chain.slice(-1) : []))
     .filter((leaf) => leaf !== file)

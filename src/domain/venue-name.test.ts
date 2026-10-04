@@ -87,7 +87,10 @@ describe("venuesNamedBy — which venues a folder name names", () => {
     writeFileSync(
       join(dir, "dash.jsonc"),
       JSON.stringify(
-        venuePreset("dash", { extends: "paperlint:acm-sigconf", aliases: ["—"] }),
+        venuePreset("dash", {
+          extends: "paperlint:acm-sigconf",
+          aliases: ["—"],
+        }),
       ),
     );
     const venues = shippedVenueNames({ files: nodeFiles, venuesDir: dir });

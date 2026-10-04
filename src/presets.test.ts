@@ -95,21 +95,20 @@ describe("shipped presets", () => {
   });
 });
 
-describe("the naming convention of shipped presets (docs/rules.md)", () => {
-  // Each shipped preset, parsed: its file name and what it extends. The families are DERIVED — a
-  // shipped preset another shipped preset extends — so a new family is checked the day it ships.
-  const presets = shippedPresets(VENUES).map((name) => {
-    const file = join(VENUES, `${name}.jsonc`);
-    return {
-      name,
-      extends: parsePreset(readFileSync(file, "utf8"), file, VENUES).extends,
-    };
-  });
-  const families = presets.filter((p) =>
-    presets.some((q) => q.extends === `${SHIPPED_PREFIX}${p.name}`),
-  );
-  const publishers = families.map((f) => f.name.slice(0, f.name.indexOf("-")));
+// Each shipped preset, parsed: its file name and what it extends. The families are DERIVED — a
+// shipped preset another shipped preset extends — so a new family is checked the day it ships.
+const PARSED = shippedPresets(VENUES).map((name) => {
+  const file = join(VENUES, `${name}.jsonc`);
+  return {
+    name,
+    preset: parsePreset(readFileSync(file, "utf8"), file, VENUES),
+  };
+});
+const FAMILIES = PARSED.filter((p) =>
+  PARSED.some((q) => q.preset.extends === `${SHIPPED_PREFIX}${p.name}`),
+);
 
+describe("what each shipped preset declares itself to be", () => {
   it("every shipped preset loads and declares what it is; a venue links its call", () => {
     const declared = Object.fromEntries(
       readdirSync(VENUES)
@@ -148,15 +147,21 @@ describe("the naming convention of shipped presets (docs/rules.md)", () => {
   });
 
   it("the families another preset extends are exactly the ones that declare `family`", () => {
-    const declaredFamilies = shippedPresets(VENUES).filter((name) => {
-      const file = join(VENUES, `${name}.jsonc`);
-      return (
-        parsePreset(readFileSync(file, "utf8"), file, VENUES).identity.type ===
-        "family"
-      );
-    });
-    expect(declaredFamilies).toEqual(families.map((f) => f.name));
+    expect(
+      PARSED.filter((p) => p.preset.identity.type === "family").map(
+        (p) => p.name,
+      ),
+    ).toEqual(FAMILIES.map((f) => f.name));
   });
+});
+
+describe("the naming convention of shipped presets (docs/rules.md)", () => {
+  const families = FAMILIES;
+  const presets = PARSED.map((p) => ({
+    name: p.name,
+    extends: p.preset.extends,
+  }));
+  const publishers = families.map((f) => f.name.slice(0, f.name.indexOf("-")));
 
   it("there are families to check (else the checks below see nothing)", () => {
     expect(families.map((f) => f.name).sort()).toEqual([
@@ -223,7 +228,9 @@ describe("a project's own preset, by relative path", () => {
     expect(r.ok && r.value.label).toBe("usenix-sec");
     expect(r.ok && r.value.identity).toEqual({ type: "family" });
   });
+});
 
+describe("a project's own preset: what its children replace", () => {
   it("a child kind replaces that kind wholesale; other kinds are kept", () => {
     const r = resolve("./mine.jsonc", {
       "/work/papers/p/mine.jsonc": venue({
@@ -343,7 +350,9 @@ describe("chains that do not resolve", () => {
     });
     expect(r.ok && r.value.chain.length).toBe(MAX_PRESET_DEPTH);
   });
+});
 
+describe("chains that do not resolve: the files themselves", () => {
   it("a preset that fails the schema is named with its file", () => {
     const r = resolve("./bad.jsonc", {
       "/work/papers/p/bad.jsonc": family({
@@ -452,6 +461,12 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
     );
     expect(
       shippedVenueNames({ files, venuesDir: VENUES }).map((n) => n.label),
-    ).toEqual(["acm-sigconf", "AgenticDev", "AIDC", "AISec", "ieee-conference"]);
+    ).toEqual([
+      "acm-sigconf",
+      "AgenticDev",
+      "AIDC",
+      "AISec",
+      "ieee-conference",
+    ]);
   });
 });

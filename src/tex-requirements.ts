@@ -336,11 +336,11 @@ export function identityHint(e: SchemaError): string | null {
 }
 
 /** The hints for every violation that has one, each once. */
-const hints = (errors: readonly SchemaError[] | null | undefined): string[] => [
+const hints = (
+  errors: readonly SchemaError[] | null | undefined,
+): readonly string[] => [
   ...new Set(
-    (errors ?? [])
-      .map(identityHint)
-      .filter((h): h is string => h !== null),
+    (errors ?? []).map(identityHint).filter((h): h is string => h !== null),
   ),
 ];
 

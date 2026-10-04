@@ -130,7 +130,11 @@ copyFileSync(join(VENUES, R.SCHEMA_FILE), join(tmp, R.SCHEMA_FILE));
 const bad = (text: string) =>
   throws(() => R.parseProfile(text, "bad.jsonc", tmp));
 const BAD: [string, string, string][] = [
-  ["no `tex` block at all", `{ "type": "family", "template": "acmart" }`, "tex"],
+  [
+    "no `tex` block at all",
+    `{ "type": "family", "template": "acmart" }`,
+    "tex",
+  ],
   // Guards: typo detection — `templat` would be accepted and the field silently unread.
   [
     "an unknown top-level key (a typo)",
@@ -152,7 +156,11 @@ const BAD: [string, string, string][] = [
     `{ "type": "family", "tex": { "packages": { "a": ["tex/a.sty"] } } }`,
     "pattern",
   ],
-  ["an empty packages map", `{ "type": "family", "tex": { "packages": {} } }`, "fewer than 1"],
+  [
+    "an empty packages map",
+    `{ "type": "family", "tex": { "packages": {} } }`,
+    "fewer than 1",
+  ],
   [
     "an unknown key inside tex",
     `{ "type": "family", "tex": { "packages": { "a": ["a.sty"] }, "pkgs": {} } }`,

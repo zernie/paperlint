@@ -361,7 +361,9 @@ describe("tex/template — a template the reader cannot read, a bare class name,
       ids(lint(paper("\\documentclass{report}"), settings, { extra })),
     ).toEqual(["tex/template:wrongClass"]);
   });
+});
 
+describe("tex/template — nothing to judge", () => {
   it.each<[string, object | undefined, string]>([
     ["no paperlint.json", undefined, `${PAPER}/paper.tex`],
     [

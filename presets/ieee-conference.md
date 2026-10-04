@@ -32,7 +32,7 @@ versions. `compsoc` changes the text block and the headings, and nothing the `pd
 
 **`paperlint:ieee-conference`** — template family, no venue of its own · extended by `paperlint:aidc`
 
-This preset sets no rules: a paper that extends it runs with paperlint's defaults.
+No preset of this chain sets a rule: a paper that extends it runs with paperlint's defaults.
 
 <!-- prettier-ignore-end -->
 <!-- /paperlint:preset-rules -->

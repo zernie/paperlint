@@ -175,9 +175,7 @@ async function newIn(
 
 describe("paperlint new --venue / --kind", () => {
   const PRESET = `{
-  "type": "venue",
-  "name": "my-workshop",
-  "url": "https://example.org/cfp",
+  "type": "venue", "name": "my-workshop", "url": "https://example.org/cfp",
   "extends": "paperlint:acm-sigconf",
   "format": { "kinds": { "short": { "body_pages_max": 4 } } },
 }
@@ -234,7 +232,9 @@ describe("paperlint new --venue / --kind", () => {
     expect(r.out).not.toMatch(/pdf\/profile/);
     expect(r.code).toBe(0);
   });
+});
 
+describe("paperlint new --venue — a venue it cannot use", () => {
   it("an unknown venue exits 2, lists the shipped presets, and creates nothing", async () => {
     const r = await newIn(["--venue", "icse"]);
     expect(r.code).toBe(2);

@@ -69,7 +69,7 @@ See `docs/rules/format/page-limit.md`.
 
 **`paperlint:aidc`** — venue preset for AIDC · call for papers: <https://aidcworkshop.github.io/> · extends `paperlint:ieee-conference`
 
-This preset sets no rules: a paper that extends it runs with paperlint's defaults.
+No preset of this chain sets a rule: a paper that extends it runs with paperlint's defaults.
 
 <!-- prettier-ignore-end -->
 <!-- /paperlint:preset-rules -->
