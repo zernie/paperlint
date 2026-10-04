@@ -192,6 +192,13 @@ export interface LayoutOverride {
  */
 export const OPAQUE = "￼";
 
+/**
+ * What stands in a heading's text for a forced line break (`\\`, `\newline`, `\linebreak`): one
+ * character no title contains. A title broken over two lines is two parts — a title and its
+ * subtitle — so the case judge reads the word after it as a start, like the word after a dash.
+ */
+export const LINE_BREAK = "\u2028";
+
 /** The headings whose title a venue sets in a case style. */
 export type HeadingLevel =
   "section" | "subsection" | "subsubsection" | "paragraph" | "subparagraph";

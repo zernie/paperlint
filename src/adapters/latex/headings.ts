@@ -17,7 +17,7 @@ import type {
   TitledCommand,
   TitledHeading,
 } from "../../domain/tex-document.ts";
-import { OPAQUE } from "../../domain/tex-document.ts";
+import { LINE_BREAK, OPAQUE } from "../../domain/tex-document.ts";
 import { isDefinition, isUnrendered } from "./hidden.ts";
 import {
   inPlace,
@@ -55,6 +55,13 @@ const TRANSPARENT: ReadonlySet<string> = new Set([
   "textrm",
 ]);
 
+/** Commands that break the line: the title goes on as a second part, a subtitle. */
+const LINE_BREAKS: ReadonlySet<string> = new Set([
+  "\\\\",
+  "newline",
+  "linebreak",
+]);
+
 /** Commands that put nothing in the title's words: a label, a footnote, an index entry. */
 const INVISIBLE: ReadonlySet<string> = new Set([
   "label",
@@ -76,11 +83,14 @@ const commandOf = (m: Macro): readonly TitledCommand[] => {
 
 /** A macro that is neither left out of the title nor read as the words it wraps. */
 const isOpaqueMacro = (m: Macro): boolean =>
-  !INVISIBLE.has(m.content) && !TRANSPARENT.has(m.content);
+  !INVISIBLE.has(m.content) &&
+  !TRANSPARENT.has(m.content) &&
+  !LINE_BREAKS.has(m.content);
 
 /** What one macro says in a title. */
 function macroSegments(m: Macro): readonly Segment[] {
   if (INVISIBLE.has(m.content)) return [];
+  if (LINE_BREAKS.has(m.content)) return textAt(m, LINE_BREAK);
   if (TRANSPARENT.has(m.content))
     return segmentsOf(mandatory(m).at(-1)?.content);
   return textAt(m, OPAQUE);
@@ -94,7 +104,8 @@ const textAt = (n: Node, text: string): readonly Segment[] =>
 function nodeSegments(n: Node): readonly Segment[] {
   if (n.type === "string") return textAt(n, stringText(n.content));
   if (n.type === "whitespace" || n.type === "parbreak") return textAt(n, " ");
-  if (n.type === "comment") return [];
+  // A comment ends its line: the words on either side of it are two words.
+  if (n.type === "comment") return textAt(n, " ");
   if (n.type === "group") return segmentsOf(n.content);
   if (n.type === "macro") return macroSegments(n);
   return textAt(n, OPAQUE);

@@ -364,7 +364,7 @@ describe("chicago-headline — which headings, which arguments", () => {
   it("does not read a heading in a comment, a definition or a comment environment", () => {
     const src = [
       "% \\section{related work}",
-      "\\newcommand{\\mine}{\\section{related work}}",
+      "\\newcommand{\\ours}{\\section{related work}}",
       "\\begin{comment}\\section{related work}\\end{comment}",
       "\\section{Related Work}",
     ].join("\n");
@@ -565,6 +565,96 @@ describe("which style each title and heading gets", () => {
   it("`levels` does not reach the title", () => {
     expect(
       judged({ title: "any", headings: "any", levels: { section: "any" } }),
+    ).toEqual([]);
+  });
+});
+
+describe("chicago-headline — a title in parts: a line break, a colon, a question, a dash", () => {
+  it.each([
+    "Agents and Tools:\\\\ The Empirical Study",
+    "Agents and Tools: \\\\ An Empirical Study",
+    "Agents and Tools:\\newline The Study",
+    "People \\\\[1ex] For the People",
+    "Main Title\\\\ The Subtitle",
+    "Main Title \\linebreak[3] The Subtitle",
+  ])(
+    "🔴 a minor word after a line break is a start, not reported: %s",
+    (title) => {
+      expect(findingsOf(section(title))).toEqual([]);
+    },
+  );
+
+  it("…and a lowercase major word after it still is", () => {
+    expect(
+      wordsOf(section("Agents and Tools:\\\\ the empirical Study")),
+    ).toEqual(["empirical"]);
+  });
+
+  it.each([
+    "What Is It Good For: An Analysis",
+    "What Is It Good for: An Analysis",
+    "Something to Look Out For: Bugs in CI",
+    "Agents to Talk To --- A Study",
+    "Agents to Talk to --- A Study",
+    "Who Are We Talking To? A Study",
+    "Who Are We Talking to? A Study",
+    "Worth Fighting For! A Study",
+  ])(
+    "🔴 the last word of a part (before : ? ! or a dash) is not asked either way: %s",
+    (title) => {
+      expect(findingsOf(section(title))).toEqual([]);
+    },
+  );
+
+  it("a minor word right beside something the rule does not read is left as it is", () => {
+    expect(findingsOf(section("Fast And \\cite{x} Safe"))).toEqual([]);
+    expect(findingsOf(section("Fast \\cite{x} And Safe"))).toEqual([]);
+    expect(findingsOf(section("Speed With Safety"))).toHaveLength(1);
+  });
+});
+
+describe("chicago-headline — abbreviations, comments, ligatures", () => {
+  it.each([
+    "Replicating Smith et al. on New Data",
+    "Replicating Smith et al on New Data",
+    "Tools, etc. and More",
+    "Results, cf. Prior Work",
+    "Results, i.e. Prior Work",
+    "Speed vs. Safety",
+    "An approx. Answer",
+    "Tools, Fonts, etc.",
+  ])("🔴 never read, never fixed: %s", (title) => {
+    expect(findingsOf(section(title))).toEqual([]);
+    expect(fixed(section(title))).toBe(section(title));
+  });
+
+  it("a word followed by a full stop inside the title is not read; the last word still is", () => {
+    expect(findingsOf(section("Fast. Then Slow"))).toEqual([]);
+    expect(fixed(section("Threats to validity."))).toBe(
+      section("Threats to Validity."),
+    );
+  });
+
+  it("🔴 a % comment inside a title separates the words around it", () => {
+    const src = "\\title{Agents for % a comment\nthe Masses}";
+    expect(wordsOf(src)).toEqual([]);
+    expect(wordsOf("\\title{Agents for % a comment\nthe masses}")).toEqual([
+      "masses",
+    ]);
+  });
+
+  it("🔴 a word starting with a ligature is not read: its capital is two letters", () => {
+    expect(findingsOf(section("The \uFB01nding"))).toEqual([]);
+    expect(fixed(section("The \uFB01nding"))).toBe(section("The \uFB01nding"));
+  });
+});
+
+describe("\\iffalse … \\fi", () => {
+  it("🔴 a title or heading TeX never reads is not judged", () => {
+    expect(
+      findingsOf(
+        "\\iffalse\n\\title{old dead title}\n\\section{old dead}\n\\fi",
+      ),
     ).toEqual([]);
   });
 });

@@ -34,11 +34,19 @@
  *   name    the particle of a surname (`von`, `de`): never read
  *
  * What the rule cannot tell from a word is not read at all: a word with a capital inside (`LLM`,
- * `GitHub`, `iOS`), a single letter, anything with a digit, a dot, a slash or an accent in it,
- * and everything `OPAQUE` in the title (math, code, citations). A word beside such a thing is not
- * known to be first or last, so a minor word there is left as it is.
+ * `GitHub`, `iOS`), a single letter, anything with a digit, a dot, a slash or an accent in it, a
+ * piece followed by a full stop before the title ends (`al.`, `etc.`, `vs.`), the abbreviations
+ * `et al etc cf eg ie approx viz`, a word whose capital is not one letter (a ligature, `ﬁ`), and
+ * everything `OPAQUE` in the title (math, code, citations). A word right beside such a thing is
+ * not known to be first or last, so a minor word there is left as it is.
+ *
+ * A title comes in parts — a subtitle after a colon, a question mark, a dash or a line break
+ * (`LINE_BREAK`). The first word of a part is a start: a minor word there is not asked either way.
+ * The last word of a part is capitalized by Chicago and may be a particle (_What Is It Good For:_),
+ * so a minor word there is not asked either way either.
  */
 import {
+  LINE_BREAK,
   runText,
   type HeadingLevel,
   type Span,
@@ -144,6 +152,8 @@ const KINDS: ReadonlyMap<string, Kind> = new Map([
     "using following including regarding concerning given excluding considering besides",
   ),
   ...kinds("name", "von van de der den da di du del della la le el"),
+  // Abbreviations a title borrows from running text: never words of it, in any place.
+  ...kinds("name", "et al etc cf eg ie approx viz"),
 ]);
 
 /**
@@ -181,8 +191,16 @@ interface Place {
   /** No word before it, but something unread may stand there. */
   readonly mayBeFirst: boolean;
   readonly mayBeLast: boolean;
-  /** After a dash, a question mark, a full stop: a new start, capitalized or not. */
+  /** After a dash, a line break, a question mark, a full stop: a new start, capitalized or not. */
   readonly afterBreak: boolean;
+  /**
+   * Before a colon, a question or exclamation mark, a dash or a line break: the last word of a part
+   * of the title. Chicago capitalizes it, and a minor word there may be a particle (_Good For_) or a
+   * preposition, so it is not asked either way.
+   */
+  readonly beforeBreak: boolean;
+  /** Right beside something the rule does not read: not known to be first or last of anything. */
+  readonly besideOpaque: boolean;
 }
 
 /** A word the rule reads: its elements (a compound has several) and where its letters stand in the title. */
@@ -195,26 +213,48 @@ interface Word {
 type Token =
   | { readonly kind: "word"; readonly word: Word; readonly trail: string }
   | { readonly kind: "opaque"; readonly trail: string }
-  | { readonly kind: "dash" };
+  | { readonly kind: "break" };
 
 const isNonEmpty = <T>(a: readonly T[]): a is readonly [T, ...T[]] =>
   a.length > 0;
 
-/** A piece of the title: up to a space or a dash. A lone hyphen is a piece; two or more are a dash. */
-const PIECES = /(?:[^\s—–-]|-(?!-))+|-{2,}|[—–]/gu;
-const DASH = /^(?:-+|[—–])$/u;
+/**
+ * A piece of the title: up to a space, a dash or a line break. A lone hyphen is a piece; two or more
+ * are a dash. A dash and a line break each break the title into parts.
+ */
+const PIECES = new RegExp(
+  `(?:[^\\s—–${LINE_BREAK}-]|-(?!-))+|-{2,}|[—–${LINE_BREAK}]`,
+  "gu",
+);
+const BREAK = new RegExp(`^(?:-+|[—–${LINE_BREAK}])$`, "u");
 const LEADING = /^[("'“‘`[{¿¡]+/u;
 const TRAILING = /[.,;:!?)"'”’\]}»]+$/u;
 const READABLE = /^\p{L}[\p{L}'’]*(?:-\p{L}[\p{L}'’]*)*$/u;
 
-/** One piece → what it is: a dash, a word the rule reads, or something it does not. */
-function tokenOf(piece: string, index: number): Token {
-  if (DASH.test(piece)) return { kind: "dash" };
+/**
+ * An element whose capital is not one letter (a ligature: `ﬁ` → `FI`): capitalizing it would
+ * rewrite the word, so it is not read.
+ */
+const hasPlainCapital = (el: string): boolean =>
+  el.charAt(0).toUpperCase().length === 1;
+
+/**
+ * One piece → what it is: a break, a word the rule reads, or something it does not. A piece followed
+ * by a full stop that does not end the title is an abbreviation (`al.`, `etc.`, `vs.`), not a word.
+ */
+function tokenOf(piece: string, index: number, final: boolean): Token {
+  if (BREAK.test(piece)) return { kind: "break" };
   const unopened = piece.replace(LEADING, "");
   const core = unopened.replace(TRAILING, "");
   const trail = unopened.slice(core.length);
   const elements = core.split("-");
-  if (!READABLE.test(core) || !isNonEmpty(elements))
+  const abbreviated = trail.startsWith(".") && !final;
+  if (
+    !READABLE.test(core) ||
+    !isNonEmpty(elements) ||
+    abbreviated ||
+    !elements.every(hasPlainCapital)
+  )
     return { kind: "opaque", trail };
   const from = index + piece.length - unopened.length;
   return {
@@ -224,22 +264,27 @@ function tokenOf(piece: string, index: number): Token {
   };
 }
 
-const tokensOf = (text: string): readonly Token[] =>
-  [...text.matchAll(PIECES)].map((m) => tokenOf(m[0], m.index));
+const tokensOf = (text: string): readonly Token[] => {
+  const pieces = [...text.matchAll(PIECES)];
+  return pieces.map((m, k) => tokenOf(m[0], m.index, k === pieces.length - 1));
+};
 
 const isWord = (t: Token): boolean => t.kind === "word";
 const trailOf = (t: Token | undefined): string =>
-  t === undefined || t.kind === "dash" ? "" : t.trail;
+  t === undefined || t.kind === "break" ? "" : t.trail;
 
 function placeOf(tokens: readonly Token[], i: number): Place {
   const prev = tokens[i - 1];
+  const next = tokens[i + 1];
   return {
     first: i === 0,
     last: i === tokens.length - 1,
     afterColon: trailOf(prev).includes(":"),
     mayBeFirst: !tokens.slice(0, i).some(isWord),
     mayBeLast: !tokens.slice(i + 1).some(isWord),
-    afterBreak: prev?.kind === "dash" || /[.?!]/u.test(trailOf(prev)),
+    afterBreak: prev?.kind === "break" || /[.?!]/u.test(trailOf(prev)),
+    beforeBreak: next?.kind === "break" || /[:?!]/u.test(trailOf(tokens[i])),
+    besideOpaque: prev?.kind === "opaque" || next?.kind === "opaque",
   };
 }
 
@@ -262,7 +307,13 @@ const capitalized = (el: string): string =>
 /** A word of the `lower` class: capitalized at either end and after a colon, else lowercase unless unsure. */
 function wantOfMinor(edge: boolean, p: Place): Want {
   if (edge) return "upper";
-  return p.mayBeFirst || p.mayBeLast || p.afterBreak ? "any" : "lower";
+  const unsure =
+    p.mayBeFirst ||
+    p.mayBeLast ||
+    p.afterBreak ||
+    p.beforeBreak ||
+    p.besideOpaque;
+  return unsure ? "any" : "lower";
 }
 
 /** What chicago-headline asks of a whole word standing alone. */
