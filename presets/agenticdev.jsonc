@@ -69,13 +69,18 @@
   // paperlint.json. 120 pt is the rule's default, measured: the balanced build ended 2.7 pt apart,
   // the returned one 321.4 pt apart (docs/optional-rules.md).
   //
-  // The same vendor asks for headline-style headings: its help page
-  // (https://www.conference-publishing.com/Help.php) — «Headline-Style Capitalization (according to
-  // the Chicago Manual of Style, Sections 8.157, 8.158, and 8.159)» — and its author checklist —
-  // «has the title and all headings properly capitalized». It asked an accepted AgenticDev paper to
-  // fix its headings on 2026-10-03. The rule lives here and not in acm-sigconf: the other vendors
-  // that produce ACM proceedings were not read, and an error on a requirement nobody has seen
-  // would block correct papers. A venue whose author kit says the same adds the same line.
+  // The same vendor asks for headline style in the title and in every heading. Its help page
+  // (https://www.conference-publishing.com/Help.php) defines it: «Headline-Style Capitalization
+  // (according to the Chicago Manual of Style, Sections 8.157, 8.158, and 8.159)», with the word
+  // lists the rule's chicago-headline style judges by. Its instructions for an event
+  // (https://www.conference-publishing.com/Instructions.php?Event=ITICSE18) set both scopes:
+  // «The title should use headline-style capitalization (e.g., 'The Best POPL Paper of All Time')»
+  // and «All levels of headings use headline-style capitalization.» It asked an accepted AgenticDev
+  // paper to fix its headings on 2026-10-03. The rule lives here and not in acm-sigconf: ACM's own
+  // pages and the other vendors that produce ACM proceedings were not read, and an error on a
+  // requirement nobody has seen would block correct papers. A venue whose author kit names the
+  // same authority adds the same line; one that names another (APA, IEEE, Springer) waits for that
+  // style (docs/rules/tex/heading-case.md, «Adding a style»).
   "rules": {
     "pdf/last-page-balance": ["error", { "tolerancePt": 120 }],
     "tex/heading-case": [
