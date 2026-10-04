@@ -8,6 +8,11 @@
 // acmart (letter 8.5x11, size 9, Libertine) shares NOTHING with this — copying the numbers from
 // `agenticdev.jsonc` would give a gate that reddens on a correct paper.
 {
+  "type": "venue",
+  "name": "REALM",
+  // The workshop's call for papers, which the page limits below are quoted from.
+  "url": "https://realm-workshop.github.io/call_for_papers",
+
   // ACL's template is not a class: `acl_latex.tex` opens with `\documentclass[11pt]{article}` and
   // loads `acl.sty` as a package (https://github.com/acl-org/acl-style-files, checked 2026-09-27).
   // So the class `tex/template` compares against is article, at 11pt.

@@ -214,7 +214,7 @@ test("measure: venue and kind from paperlint.json, pdf relative to the paper, th
   );
   assert.deepEqual(
     [m.value.facts.venue, m.value.facts.kind],
-    ["agenticdev", "short"],
+    ["AgenticDev", "short"],
   );
   const over = await measurePaper(PAPER, PDF, { ...o, venue: "aisec" });
   assert.equal(over.ok && over.value.facts.venue, "aisec");
@@ -284,7 +284,7 @@ test("declaredVenue: the label is the preset's, and an extends that resolves now
     ...SHIPPED_PRESETS,
     [`${PAPER}/paperlint.json`]: '{"extends":"paperlint:aisec"}',
   });
-  assert.equal(declaredVenue(ok, PAPER)?.label, "aisec");
+  assert.equal(declaredVenue(ok, PAPER)?.label, "AISec");
   const typo = memoryFiles({
     ...SHIPPED_PRESETS,
     [`${PAPER}/paperlint.json`]: '{"extends":"paperlint:aisek"}',

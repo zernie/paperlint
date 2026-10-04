@@ -83,13 +83,13 @@ export function judgeFolder(
 }
 
 /**
- * A template family (`acm-sigconf`, `ieee-conference`): a preset with no kinds, which a paper for a
- * venue paperlint has no preset for extends directly (`src/venue-rules.ts` reads it the same way).
- * Such a paper declares a format, not a venue, so a venue in its folder name may be its own: the
- * accepted ACSAC papers in `fixtures/accepted-papers/` extend `ieee-conference` from folders named
- * `…-acsac24`, and ACSAC is the parent conference `aidc` names as an alias.
+ * A template family (`acm-sigconf`, `ieee-conference`), as the preset declares itself (`"type":
+ * "family"`), which a paper for a venue paperlint has no preset for extends directly. Such a paper
+ * declares a format, not a venue, so a venue in its folder name may be its own: the accepted ACSAC
+ * papers in `fixtures/accepted-papers/` extend `ieee-conference` from folders named `…-acsac24`, and
+ * ACSAC is the parent conference `aidc` names as an alias.
  */
-const isFamily = (preset: Preset): boolean => preset.format.kinds.size === 0;
+const isFamily = (preset: Preset): boolean => preset.identity.type === "family";
 
 /** The findings for the paper folder `dir`; none when it has no resolved venue, or only a family. */
 function findingsFor(dir: string, deps: VenueRuleDeps): readonly Finding[] {

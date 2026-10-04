@@ -23,7 +23,7 @@ import {
   talkRules,
   type TalkRuleName,
 } from "./talk-rules.ts";
-import { useTempDir, writeTree } from "../test/support.ts";
+import { useTempDir, venuePreset, writeTree } from "../test/support.ts";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const media = (name: string): Uint8Array =>
@@ -62,8 +62,11 @@ function run(
   const dir = useTempDir("paperlint-talk-rules-");
   const venue =
     o.venue === null
-      ? { extends: "paperlint:acm-sigconf" }
-      : { extends: "paperlint:agenticdev", talk: { ...VENUE, ...o.venue } };
+      ? { type: "family", extends: "paperlint:acm-sigconf" }
+      : venuePreset("venue", {
+          extends: "paperlint:agenticdev",
+          talk: { ...VENUE, ...o.venue },
+        });
   writeTree(dir, {
     "package.json": "{}",
     "p/paper.tex": "x",

@@ -166,14 +166,27 @@ export interface RequiredSection {
 }
 
 /**
+ * What a preset file IS, as its `type` declares it. A venue names itself and its call for papers; a
+ * template family and the base set name no venue, so they cannot carry either — the union has no
+ * field to put them in, the way the schema refuses them.
+ */
+export type PresetIdentity =
+  | { readonly type: "venue"; readonly name: string; readonly url: string }
+  | { readonly type: "family" }
+  | { readonly type: "base" };
+
+/** A preset's kind of file: `venue`, `family` or `base`. */
+export type PresetType = PresetIdentity["type"];
+
+/**
  * One preset FILE, parsed — before its `extends` chain is resolved (`src/presets.ts` does that).
- * A preset is a venue or a template family: `{ extends?, name?, template?, format?, tex?, rules? }`.
+ * A preset is a venue, a template family, or the TeX base set (`identity`).
  */
 export interface PresetFile {
+  /** What the file is, and for a venue, its name and call for papers. */
+  readonly identity: PresetIdentity;
   /** The preset this one builds on: `paperlint:<name>` or a relative path. */
   readonly extends: string | null;
-  /** A display name for messages; the file name otherwise. */
-  readonly name: string | null;
   /** The `\\documentclass` the venue's template uses, as the file spells it; null when it names none. */
   readonly template: string | null;
   /** Other names the venue goes by in a paper's text; empty when the file names none. */
@@ -217,10 +230,19 @@ interface FormatJson {
   readonly kinds?: KindsJson;
 }
 
-/** The preset's JSON after the schema accepted it — the shape `venue-profile.schema.json` allows. */
-interface PresetJson {
+/**
+ * The preset's JSON after the schema accepted it — the shape `venue-profile.schema.json` allows,
+ * the identity included: a venue has its `name` and `url`, a family and the base set have neither.
+ */
+type PresetJson = PresetBodyJson &
+  (
+    | { readonly type: "venue"; readonly name: string; readonly url: string }
+    | { readonly type: "family" | "base" }
+  );
+
+/** Every key of a preset but its identity. */
+interface PresetBodyJson {
   readonly extends?: string;
-  readonly name?: string;
   readonly template?: string;
   readonly aliases?: readonly string[];
   readonly blind?: boolean;
@@ -282,6 +304,46 @@ const sectionsOf = (
     ? null
     : r.map((x) => ({ title: x.title, position: orNull(x.position) }));
 
+/** The identity a preset's `type` declares. Pure. */
+const identityOf = (j: PresetJson): PresetIdentity =>
+  j.type === "venue"
+    ? { type: "venue", name: j.name, url: j.url }
+    : { type: j.type };
+
+/** One ajv error, as far as the hints read it. */
+interface SchemaError {
+  readonly keyword: string;
+  readonly dataPath: string;
+  readonly params: object;
+}
+
+/**
+ * What to write instead, for the violations of a preset's identity — ajv's own words for them
+ * ("should have required property 'url'", "boolean schema is false") name the key but not why.
+ * Read off the error's keyword and parameters, never its message text. Pure.
+ */
+export function identityHint(e: SchemaError): string | null {
+  const missing = fieldOf(e.params, "missingProperty");
+  if (e.keyword === "required" && missing === "type")
+    return 'say what this preset is: "type": "venue" (one venue\'s call for papers), "family" (a publisher\'s template that venues extend) or "base" (the TeX base set)';
+  if (e.keyword === "required" && (missing === "name" || missing === "url"))
+    return 'a venue preset names its venue and links its call for papers: "name": "<the venue, as its call spells it>", "url": "https://<the call for papers>"';
+  if (e.keyword === "false schema")
+    return `a template family names no venue: drop "${e.dataPath.slice(1)}" — "name" and "url" belong to the venue presets that extend it`;
+  if (e.keyword === "maxProperties")
+    return 'the TeX base set holds "type" and "tex" only — a venue\'s or a family\'s settings go in its own preset';
+  return null;
+}
+
+/** The hints for every violation that has one, each once. */
+const hints = (errors: readonly SchemaError[] | null | undefined): string[] => [
+  ...new Set(
+    (errors ?? [])
+      .map(identityHint)
+      .filter((h): h is string => h !== null),
+  ),
+];
+
 /** A preset's JSONC text → its value, or an Error naming the syntax problem. */
 function jsoncOf(text: string, file: string): unknown {
   const parsed = typescript().parseConfigFileTextToJson(file, text);
@@ -331,12 +393,12 @@ export function parsePreset(
   const validate = validatorFor(dir);
   if (!matchesSchema(config, validate))
     throw new Error(
-      `${file} does not match ${SCHEMA_FILE}:\n  ${violations(file, validate).join("\n  ")}`,
+      `${file} does not match ${SCHEMA_FILE}:\n  ${[...hints(validate.errors), ...violations(file, validate)].join("\n  ")}`,
     );
   const j = config;
   return {
+    identity: identityOf(j),
     extends: orNull(j.extends),
-    name: orNull(j.name),
     template: orNull(j.template),
     aliases: j.aliases ?? [],
     blind: orNull(j.blind),

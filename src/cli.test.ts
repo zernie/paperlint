@@ -10,7 +10,12 @@ import { existsSync } from "node:fs";
 import { createServer } from "node:http";
 import { dirname, join } from "node:path";
 import { test } from "vitest";
-import { runNode, useTempDir, writeTree } from "../test/support.ts";
+import {
+  runNode,
+  useTempDir,
+  venuePreset,
+  writeTree,
+} from "../test/support.ts";
 import type { runToolchain } from "./toolchain.ts";
 import {
   chooseVenue,
@@ -195,8 +200,12 @@ test("runHook: a runtime with no cli.js beside it, and a hook killed by a signal
 test("chooseVenue: a preset by path (inside and outside the paper), by prefixed name, and a broken one", async () => {
   const dir = join(root, "venues");
   writeTree(dir, {
-    "papers/p/mine.jsonc": JSON.stringify({ extends: "paperlint:agenticdev" }),
-    "shared/ours.jsonc": JSON.stringify({ extends: "paperlint:agenticdev" }),
+    "papers/p/mine.jsonc": JSON.stringify(
+      venuePreset("mine", { extends: "paperlint:agenticdev" }),
+    ),
+    "shared/ours.jsonc": JSON.stringify(
+      venuePreset("ours", { extends: "paperlint:agenticdev" }),
+    ),
     "shared/broken.jsonc": "{ nope",
   });
   const paperDir = join(dir, "papers", "p");
@@ -677,10 +686,12 @@ test("parseArgs: submission's flags — two values and two switches", () => {
 const submissionPaper = (dir: string, site: string): void => {
   writeTree(dir, {
     "package.json": "{}",
-    "venue.jsonc": JSON.stringify({
-      extends: "paperlint:aidc",
-      portal: { kind: "hotcrp", url: site },
-    }),
+    "venue.jsonc": JSON.stringify(
+      venuePreset("venue", {
+        extends: "paperlint:aidc",
+        portal: { kind: "hotcrp", url: site },
+      }),
+    ),
     "papers/p/paperlint.json": JSON.stringify({
       extends: "../../venue.jsonc",
       submission: { id: 7 },

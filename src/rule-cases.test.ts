@@ -18,7 +18,7 @@ import { z } from "zod";
 import { run, rulePlugins } from "./cli.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import { bibHash } from "./references.ts";
-import { useTempDir, writeTree } from "../test/support.ts";
+import { useTempDir, venuePreset, writeTree } from "../test/support.ts";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const fixture = (p: string): string =>
@@ -181,10 +181,12 @@ const talkPaper = (
   };
   return {
     ...paper(ACM_TEX, {
-      [`${P}/talk-venue.jsonc`]: JSON.stringify({
-        extends: "paperlint:agenticdev",
-        talk: { ...TALK_VENUE, ...venue },
-      }),
+      [`${P}/talk-venue.jsonc`]: JSON.stringify(
+        venuePreset("talk-venue", {
+          extends: "paperlint:agenticdev",
+          talk: { ...TALK_VENUE, ...venue },
+        }),
+      ),
       [`${P}/paperlint.json`]: JSON.stringify({
         extends: "./talk-venue.jsonc",
         kind: "short",

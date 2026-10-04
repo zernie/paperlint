@@ -14,6 +14,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { run, toolchainTex } from "./cli.ts";
 import { lintReport } from "../test/lint-report.ts";
+import { venuePreset } from "../test/support.ts";
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -274,10 +275,12 @@ describe("paperlint lint — the paper over its preset, and the project's own pr
 
   it("a project's own preset, by relative path: its rules apply, an unknown rule id is refused", async () => {
     const root = project({
-      "venues/usenix-sec.jsonc": JSON.stringify({
-        extends: "paperlint:acm-sigconf",
-        rules: { "pdf/no-such-rule": "error" },
-      }),
+      "venues/usenix-sec.jsonc": JSON.stringify(
+        venuePreset("usenix-sec", {
+          extends: "paperlint:acm-sigconf",
+          rules: { "pdf/no-such-rule": "error" },
+        }),
+      ),
       "papers/a/paperlint.json": JSON.stringify({
         extends: "../../venues/usenix-sec.jsonc",
       }),
@@ -304,10 +307,12 @@ describe("paperlint lint — the paper over its preset, and the project's own pr
 describe("paperlint toolchain — installs what the project's own presets need", () => {
   it("the shipped union plus a relative preset's tex packages", () => {
     const root = project({
-      "venues/usenix-sec.jsonc": JSON.stringify({
-        extends: "paperlint:acm-sigconf",
-        tex: { packages: { usenix: ["usenix.sty"] } },
-      }),
+      "venues/usenix-sec.jsonc": JSON.stringify(
+        venuePreset("usenix-sec", {
+          extends: "paperlint:acm-sigconf",
+          tex: { packages: { usenix: ["usenix.sty"] } },
+        }),
+      ),
       "papers/a/paperlint.json": JSON.stringify({
         extends: "../../venues/usenix-sec.jsonc",
       }),

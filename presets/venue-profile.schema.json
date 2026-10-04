@@ -11,10 +11,20 @@
       "type": "string",
       "minLength": 1
     },
+    "type": {
+      "description": "What this file is. `venue`: one venue's call for papers, and it must say which venue (`name`) and where its call is (`url`). `family`: a publisher's template (acm-sigconf, ieee-conference) that venue presets extend; it names no venue, so it has neither `name` nor `url`. `base`: the TeX packages every paper gets (tex-base.jsonc); it holds only `tex` and nothing extends it.",
+      "type": "string",
+      "enum": ["venue", "family", "base"]
+    },
     "name": {
-      "description": "A display name for messages; the file name otherwise.",
+      "description": "A venue's name as its call for papers spells it (`AgenticDev`). Required on a venue, refused on a family. The label of messages, and one of the names `tex/venue-leftover` looks for.",
       "type": "string",
       "minLength": 1
+    },
+    "url": {
+      "description": "A venue's call for papers or author instructions: the page its numbers are quoted from. Required on a venue, refused on a family.",
+      "type": "string",
+      "pattern": "^https://[^\\s/]+[^\\s]*$"
     },
     "tex": {
       "$ref": "#/definitions/tex"
@@ -336,6 +346,7 @@
       }
     }
   },
+  "required": ["type"],
   "allOf": [
     {
       "if": {
@@ -345,6 +356,34 @@
       },
       "then": {
         "required": ["tex"]
+      }
+    },
+    {
+      "if": {
+        "required": ["type"],
+        "properties": { "type": { "const": "venue" } }
+      },
+      "then": {
+        "required": ["name", "url"]
+      }
+    },
+    {
+      "if": {
+        "required": ["type"],
+        "properties": { "type": { "const": "family" } }
+      },
+      "then": {
+        "properties": { "name": false, "url": false }
+      }
+    },
+    {
+      "if": {
+        "required": ["type"],
+        "properties": { "type": { "const": "base" } }
+      },
+      "then": {
+        "required": ["type", "tex"],
+        "maxProperties": 2
       }
     }
   ],

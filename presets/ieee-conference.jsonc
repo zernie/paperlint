@@ -25,6 +25,9 @@
 //   `a4paper` added to the options        → page 8.264 x 11.694 in: pdf/geometry
 //   Computer Modern (`\rmdefault{cmr}`)   → fonts CMR10, CMBX12, …: pdf/fonts, no NimbusRomNo9L
 {
+  // A template family: it names no venue, so no `name` and no `url` (the venues that extend it do).
+  "type": "family",
+
   "template": "\\documentclass[conference]{IEEEtran}",
 
   // TeX Live packages the IEEEtran template needs ON TOP OF tex-base.jsonc, each with the files that

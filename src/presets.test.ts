@@ -7,7 +7,7 @@
  * resolving shows here.
  */
 import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import { presetsDir } from "./package-dirs.ts";
@@ -35,6 +35,17 @@ const deps = (extra: Record<string, string> = {}) => ({
 });
 const resolve = (spec: string, extra: Record<string, string> = {}) =>
   resolvePreset(spec, PAPER_FILE, deps(extra));
+/** A venue preset of a project's own: the identity every venue declares, then `body`. */
+const venue = (body: Record<string, unknown>, name = "Our Workshop"): string =>
+  JSON.stringify({
+    type: "venue",
+    name,
+    url: "https://example.org/cfp",
+    ...body,
+  });
+/** A template family of a project's own. */
+const family = (body: Record<string, unknown>): string =>
+  JSON.stringify({ type: "family", ...body });
 
 describe("shipped presets", () => {
   it("paperlint:agenticdev → agenticdev over acm-sigconf: the family's format, the venue's kinds", () => {
@@ -54,7 +65,13 @@ describe("shipped presets", () => {
       file: join(VENUES, "acm-sigconf.jsonc"),
     });
     expect("acmart" in r.value.tex.packages).toBe(true);
-    expect(r.value.label).toBe("agenticdev");
+    // The label is the venue's own name, from its file's `name`.
+    expect(r.value.label).toBe("AgenticDev");
+    expect(r.value.identity).toEqual({
+      type: "venue",
+      name: "AgenticDev",
+      url: "https://conf.researchr.org/home/ase-2026/agenticdev-2026",
+    });
   });
 
   it("a paper may extend a family directly: format and fonts, and no kinds", () => {
@@ -93,6 +110,54 @@ describe("the naming convention of shipped presets (docs/rules.md)", () => {
   );
   const publishers = families.map((f) => f.name.slice(0, f.name.indexOf("-")));
 
+  it("every shipped preset loads and declares what it is; a venue links its call", () => {
+    const declared = Object.fromEntries(
+      readdirSync(VENUES)
+        .filter((f) => f.endsWith(".jsonc"))
+        .map((f) => [
+          f,
+          parsePreset(readFileSync(join(VENUES, f), "utf8"), f, VENUES)
+            .identity,
+        ]),
+    );
+    expect(declared).toEqual({
+      "acm-sigconf.jsonc": { type: "family" },
+      "agenticdev.jsonc": {
+        type: "venue",
+        name: "AgenticDev",
+        url: "https://conf.researchr.org/home/ase-2026/agenticdev-2026",
+      },
+      "aidc.jsonc": {
+        type: "venue",
+        name: "AIDC",
+        url: "https://aidcworkshop.github.io/",
+      },
+      "aisec.jsonc": {
+        type: "venue",
+        name: "AISec",
+        url: "https://aisec.cc/",
+      },
+      "ieee-conference.jsonc": { type: "family" },
+      "realm.jsonc": {
+        type: "venue",
+        name: "REALM",
+        url: "https://realm-workshop.github.io/call_for_papers",
+      },
+      "tex-base.jsonc": { type: "base" },
+    });
+  });
+
+  it("the families another preset extends are exactly the ones that declare `family`", () => {
+    const declaredFamilies = shippedPresets(VENUES).filter((name) => {
+      const file = join(VENUES, `${name}.jsonc`);
+      return (
+        parsePreset(readFileSync(file, "utf8"), file, VENUES).identity.type ===
+        "family"
+      );
+    });
+    expect(declaredFamilies).toEqual(families.map((f) => f.name));
+  });
+
   it("there are families to check (else the checks below see nothing)", () => {
     expect(families.map((f) => f.name).sort()).toEqual([
       "acm-sigconf",
@@ -118,16 +183,18 @@ describe("the naming convention of shipped presets (docs/rules.md)", () => {
 });
 
 describe("a project's own preset, by relative path", () => {
-  const usenix = JSON.stringify({
-    extends: "paperlint:acm-sigconf",
-    name: "USENIX Security",
-    format: {
-      columns: 1,
-      kinds: { full: { body_pages_max: 13, ref_pages_max: 0 } },
+  const usenix = venue(
+    {
+      extends: "paperlint:acm-sigconf",
+      format: {
+        columns: 1,
+        kinds: { full: { body_pages_max: 13, ref_pages_max: 0 } },
+      },
+      tex: { packages: { usenix: ["usenix.sty"] } },
+      rules: { "pdf/body-size": "off" },
     },
-    tex: { packages: { usenix: ["usenix.sty"] } },
-    rules: { "pdf/body-size": "off" },
-  });
+    "USENIX Security",
+  );
 
   it("./ is relative to the file that says it; merged per block, child wins", () => {
     const r = resolve("../../venues/usenix-sec.jsonc", {
@@ -147,18 +214,19 @@ describe("a project's own preset, by relative path", () => {
     expect(r.value.label).toBe("USENIX Security");
   });
 
-  it("without `name`, the label is the file name without its extension", () => {
+  it("a family names no venue: its label is the file name without its extension", () => {
     const r = resolve("./venues/usenix-sec.jsonc", {
-      "/work/papers/p/venues/usenix-sec.jsonc": JSON.stringify({
+      "/work/papers/p/venues/usenix-sec.jsonc": family({
         extends: "paperlint:acm-sigconf",
       }),
     });
     expect(r.ok && r.value.label).toBe("usenix-sec");
+    expect(r.ok && r.value.identity).toEqual({ type: "family" });
   });
 
   it("a child kind replaces that kind wholesale; other kinds are kept", () => {
     const r = resolve("./mine.jsonc", {
-      "/work/papers/p/mine.jsonc": JSON.stringify({
+      "/work/papers/p/mine.jsonc": venue({
         extends: "paperlint:agenticdev",
         format: { kinds: { short: { body_pages_max: 6 } } },
       }),
@@ -174,12 +242,39 @@ describe("a project's own preset, by relative path", () => {
 
   it("rules: the leaf wins over its parent, per rule id", () => {
     const r = resolve("./mine.jsonc", {
-      "/work/papers/p/mine.jsonc": JSON.stringify({
+      "/work/papers/p/mine.jsonc": venue({
         extends: "paperlint:agenticdev",
         rules: { "pdf/last-page-balance": "off" },
       }),
     });
     expect(r.ok && r.value.rules["pdf/last-page-balance"]).toBe("off");
+  });
+
+  it("ruleOrigins: each rule's entry names the file of the chain that set it", () => {
+    const r = resolve("./mine.jsonc", {
+      "/work/papers/p/mine.jsonc": venue({
+        extends: "paperlint:agenticdev",
+        rules: { "pdf/body-size": "off" },
+      }),
+    });
+    // Guards: an own rule is the leaf's, an inherited one names the parent that set it.
+    expect(r.ok && r.value.ruleOrigins).toEqual({
+      "pdf/last-page-balance": join(VENUES, "agenticdev.jsonc"),
+      "tex/heading-case": join(VENUES, "agenticdev.jsonc"),
+      "pdf/body-size": "/work/papers/p/mine.jsonc",
+    });
+  });
+
+  it("ruleOrigins: a rule the leaf sets again is the leaf's, not its parent's", () => {
+    const r = resolve("./mine.jsonc", {
+      "/work/papers/p/mine.jsonc": venue({
+        extends: "paperlint:agenticdev",
+        rules: { "tex/heading-case": "off" },
+      }),
+    });
+    expect(r.ok && r.value.ruleOrigins["tex/heading-case"]).toBe(
+      "/work/papers/p/mine.jsonc",
+    );
   });
 });
 
@@ -217,8 +312,8 @@ describe("what does not resolve, and says why", () => {
 describe("chains that do not resolve", () => {
   it("a cycle is refused, naming the chain", () => {
     const r = resolve("./a.jsonc", {
-      "/work/papers/p/a.jsonc": JSON.stringify({ extends: "./b.jsonc" }),
-      "/work/papers/p/b.jsonc": JSON.stringify({ extends: "./a.jsonc" }),
+      "/work/papers/p/a.jsonc": family({ extends: "./b.jsonc" }),
+      "/work/papers/p/b.jsonc": family({ extends: "./a.jsonc" }),
     });
     expect(r.ok).toBe(false);
     if (r.ok) return;
@@ -231,7 +326,7 @@ describe("chains that do not resolve", () => {
   it(`a chain longer than ${String(MAX_PRESET_DEPTH)} is refused, printing it`, () => {
     const files: Record<string, string> = {};
     for (let i = 1; i <= 5; i++)
-      files[`/work/papers/p/p${String(i)}.jsonc`] = JSON.stringify({
+      files[`/work/papers/p/p${String(i)}.jsonc`] = venue({
         extends: i < 5 ? `./p${String(i + 1)}.jsonc` : "paperlint:acm-sigconf",
       });
     const r = resolve("./p1.jsonc", files);
@@ -243,17 +338,15 @@ describe("chains that do not resolve", () => {
 
   it("a chain of exactly the limit resolves", () => {
     const r = resolve("./p1.jsonc", {
-      "/work/papers/p/p1.jsonc": JSON.stringify({ extends: "./p2.jsonc" }),
-      "/work/papers/p/p2.jsonc": JSON.stringify({
-        extends: "paperlint:agenticdev",
-      }),
+      "/work/papers/p/p1.jsonc": venue({ extends: "./p2.jsonc" }),
+      "/work/papers/p/p2.jsonc": venue({ extends: "paperlint:agenticdev" }),
     });
     expect(r.ok && r.value.chain.length).toBe(MAX_PRESET_DEPTH);
   });
 
   it("a preset that fails the schema is named with its file", () => {
     const r = resolve("./bad.jsonc", {
-      "/work/papers/p/bad.jsonc": JSON.stringify({
+      "/work/papers/p/bad.jsonc": family({
         extends: "paperlint:acm-sigconf",
         colums: 2,
       }),
@@ -266,16 +359,51 @@ describe("chains that do not resolve", () => {
 
   it("a preset with no `extends` must carry `tex` (it is a root)", () => {
     const r = resolve("./root.jsonc", {
-      "/work/papers/p/root.jsonc": JSON.stringify({ format: { columns: 1 } }),
+      "/work/papers/p/root.jsonc": family({ format: { columns: 1 } }),
     });
     expect(r.ok).toBe(false);
+  });
+
+  it("a family that extends a venue is refused, naming both files", () => {
+    const r = resolve("./fam.jsonc", {
+      "/work/papers/p/fam.jsonc": family({ extends: "paperlint:aisec" }),
+    });
+    expect(r.ok).toBe(false);
+    if (r.ok) return;
+    expect(presetProblemText(r.error)).toBe(
+      `the preset /work/papers/p/fam.jsonc is a template family and extends ${join(VENUES, "aisec.jsonc")}, a venue — a family builds only on a family; a venue extends a family or another venue`,
+    );
+  });
+
+  it("nothing extends the TeX base set, even by a relative path", () => {
+    const r = resolve("./mine.jsonc", {
+      "/work/papers/p/mine.jsonc": venue({
+        extends: relative("/work/papers/p", join(VENUES, "tex-base.jsonc")),
+      }),
+    });
+    expect(r.ok).toBe(false);
+    if (r.ok) return;
+    expect(presetProblemText(r.error)).toBe(
+      `the preset /work/papers/p/mine.jsonc extends ${join(VENUES, "tex-base.jsonc")}, the TeX base set — every paper gets that set already, and no preset extends it`,
+    );
+  });
+
+  it("a venue may extend a venue, and the resolved identity is the leaf's", () => {
+    const r = resolve("./mine.jsonc", {
+      "/work/papers/p/mine.jsonc": venue({ extends: "paperlint:aisec" }),
+    });
+    expect(r.ok && r.value.identity).toEqual({
+      type: "venue",
+      name: "Our Workshop",
+      url: "https://example.org/cfp",
+    });
   });
 });
 
 describe("a preset's template: kept as its file spells it, with that file", () => {
   it("a child's template replaces its parent's, and names its own file", () => {
     const r = resolve("./own.jsonc", {
-      "/work/papers/p/own.jsonc": JSON.stringify({
+      "/work/papers/p/own.jsonc": venue({
         extends: "paperlint:aidc",
         template: "\\documentclass[conference]{IEEEtran}",
       }),
@@ -302,8 +430,16 @@ describe("labelOf — display only, never used to resolve", () => {
 describe("shippedVenueNames — what each shipped venue is called", () => {
   it("every shipped preset, by its label and the names along its chain", () => {
     const names = shippedVenueNames(deps());
-    expect(names.map((n) => n.label)).toEqual(shippedPresets(VENUES));
-    expect(names.find((n) => n.label === "aisec")?.aliases).toEqual(
+    // A venue is labelled by its `name`, a family by its file name.
+    expect(names.map((n) => n.label)).toEqual([
+      "acm-sigconf",
+      "AgenticDev",
+      "AIDC",
+      "AISec",
+      "ieee-conference",
+      "REALM",
+    ]);
+    expect(names.find((n) => n.label === "AISec")?.aliases).toEqual(
       expect.arrayContaining(["AISec", "ACM CCS"]),
     );
   });
@@ -316,6 +452,6 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
     );
     expect(
       shippedVenueNames({ files, venuesDir: VENUES }).map((n) => n.label),
-    ).toEqual(shippedPresets(VENUES).filter((n) => n !== "realm"));
+    ).toEqual(["acm-sigconf", "AgenticDev", "AIDC", "AISec", "ieee-conference"]);
   });
 });

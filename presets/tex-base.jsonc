@@ -15,6 +15,10 @@
 //     bitmap font in the PDF; measured 2026-09-01 on an ACL paper: 1 Type 3 font before, 0 after).
 //     ACM and ACL both reject such a PDF, and the build does not complain.
 {
+  // The base set: not a venue and not a template family. No preset extends it — every paper gets it
+  // anyway, under whatever it extends — so it holds `tex` and nothing else (the schema says so).
+  "type": "base",
+
   "tex": {
     "packages": {
       "latex": ["latex.ltx", "article.cls"],

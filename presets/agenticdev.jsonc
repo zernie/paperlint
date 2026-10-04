@@ -4,6 +4,10 @@
 // papers sets.
 // Source for the numbers: the Conference Publishing author instructions 2026-08-25.
 {
+  "type": "venue",
+  "name": "AgenticDev",
+  // The workshop's call for papers on the ASE 2026 site.
+  "url": "https://conf.researchr.org/home/ase-2026/agenticdev-2026",
   "extends": "paperlint:acm-sigconf",
 
   // What the venue is called in a paper's text (tex/venue-leftover). Its parent conference, ASE,

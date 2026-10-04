@@ -130,32 +130,32 @@ copyFileSync(join(VENUES, R.SCHEMA_FILE), join(tmp, R.SCHEMA_FILE));
 const bad = (text: string) =>
   throws(() => R.parseProfile(text, "bad.jsonc", tmp));
 const BAD: [string, string, string][] = [
-  ["no `tex` block at all", `{ "template": "acmart" }`, "tex"],
+  ["no `tex` block at all", `{ "type": "family", "template": "acmart" }`, "tex"],
   // Guards: typo detection — `templat` would be accepted and the field silently unread.
   [
     "an unknown top-level key (a typo)",
-    `{ "tex": { "packages": { "a": ["a.sty"] } }, "templat": "x" }`,
+    `{ "type": "family", "tex": { "packages": { "a": ["a.sty"] } }, "templat": "x" }`,
     "additional properties",
   ],
   [
     "a package with NO proof file",
-    `{ "tex": { "packages": { "acmart": [] } } }`,
+    `{ "type": "family", "tex": { "packages": { "acmart": [] } } }`,
     ".tex.packages['acmart']",
   ],
   [
     "a package name tlmgr would not know (upper case)",
-    `{ "tex": { "packages": { "Acmart": ["acmart.cls"] } } }`,
+    `{ "type": "family", "tex": { "packages": { "Acmart": ["acmart.cls"] } } }`,
     "property name",
   ],
   [
     "a proof that is a path, not a file name",
-    `{ "tex": { "packages": { "a": ["tex/a.sty"] } } }`,
+    `{ "type": "family", "tex": { "packages": { "a": ["tex/a.sty"] } } }`,
     "pattern",
   ],
-  ["an empty packages map", `{ "tex": { "packages": {} } }`, "fewer than 1"],
+  ["an empty packages map", `{ "type": "family", "tex": { "packages": {} } }`, "fewer than 1"],
   [
     "an unknown key inside tex",
-    `{ "tex": { "packages": { "a": ["a.sty"] }, "pkgs": {} } }`,
+    `{ "type": "family", "tex": { "packages": { "a": ["a.sty"] }, "pkgs": {} } }`,
     "additional properties",
   ],
 ];
@@ -174,7 +174,9 @@ check(
 );
 check(
   "comments and trailing commas ARE JSONC",
-  bad(`// quote\n{ "tex": { "packages": { "a": ["a.sty"], }, }, }`) === "",
+  bad(
+    `// quote\n{ "type": "family", "tex": { "packages": { "a": ["a.sty"], }, }, }`,
+  ) === "",
 );
 rmSync(tmp, { recursive: true, force: true });
 
@@ -239,7 +241,7 @@ rmSync(tmp, { recursive: true, force: true });
 // ── 5. the parser's tolerances: an optional block left out, and Ajv's optional fields ───
 {
   const bare = R.parsePreset(
-    '{ "extends": "paperlint:aisec" }',
+    '{ "type": "venue", "name": "X", "url": "https://x.org/", "extends": "paperlint:aisec" }',
     "bare.jsonc",
     VENUES,
   );
@@ -254,9 +256,13 @@ rmSync(tmp, { recursive: true, force: true });
   check(
     "a tex block without `packages` is refused by the schema, before anything reads it",
     /tex\.jsonc: \.tex should have required property 'packages'/.test(
-      throws(() => R.parsePreset('{ "tex": {} }', "tex.jsonc", VENUES)),
+      throws(() =>
+        R.parsePreset('{ "type": "family", "tex": {} }', "tex.jsonc", VENUES),
+      ),
     ),
-    throws(() => R.parsePreset('{ "tex": {} }', "tex.jsonc", VENUES)),
+    throws(() =>
+      R.parsePreset('{ "type": "family", "tex": {} }', "tex.jsonc", VENUES),
+    ),
   );
   check(
     "violations: Ajv's null `errors` is no violation; a message Ajv left out is an empty one",

@@ -23,6 +23,10 @@
 // but that is the main conference). Turn pdf/last-page-balance on in the paper's paperlint.json if
 // the camera-ready instructions ask for it.
 {
+  "type": "venue",
+  "name": "AISec",
+  // The call quoted above.
+  "url": "https://aisec.cc/",
   "extends": "paperlint:acm-sigconf",
 
   // What the venue is called in a paper's text (tex/venue-leftover): the workshop, and the

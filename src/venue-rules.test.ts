@@ -488,7 +488,7 @@ describe("format/page-limit", () => {
       "one body page over the short-paper limit",
       (f: Facts) => (f.body_pages = 6),
       ["format/page-limit:pages"],
-      /body pages: 6, over the limit 5 for agenticdev\/short/,
+      /body pages: 6, over the limit 5 for AgenticDev\/short/,
     ],
     [
       "one reference page over",
@@ -662,7 +662,7 @@ describe("the IEEE conference family and AIDC", () => {
     const fs = lint({ venue: short, facts: pages(7) });
     expect(ids(fs)).toEqual(["format/page-limit:pages"]);
     expect(fs[0]?.message).toBe(
-      "body pages (up to the references on page 8): 7, over the limit 6 for aidc/short — a desk reject; cut the text",
+      "body pages (up to the references on page 8): 7, over the limit 6 for AIDC/short — a desk reject; cut the text",
     );
   });
 
@@ -829,7 +829,7 @@ describe("format/page-limit on AIDC: the two signals of where the references sta
     });
     expect(ids(fs)).toEqual(["format/page-limit:unclear"]);
     expect(fs[0]?.message).toBe(
-      "could not tell where the body ends, so it was NOT counted against aidc's limit: the first bibliography entry is on page 14 (hyperref's destination), and no line on page 14 reads «References». Check the headings of the bibliography and the appendix, and that nothing before them reads «References» above a [1]",
+      "could not tell where the body ends, so it was NOT counted against AIDC's limit: the first bibliography entry is on page 14 (hyperref's destination), and no line on page 14 reads «References». Check the headings of the bibliography and the appendix, and that nothing before them reads «References» above a [1]",
     );
   });
 
@@ -906,9 +906,9 @@ describe("anonymity/identity — a blind venue (AIDC)", () => {
       }),
     });
     expect(fs.map((f) => f.message)).toEqual([
-      "PDF, page 1: «Ada Example» matches «Ada Example» in `identity`, and aidc reviews double-blind — remove it, or refer to your own work in the third person",
-      "PDF metadata: Author: «Ada Example» matches «Ada Example» in `identity`, and aidc reviews double-blind — remove it, or refer to your own work in the third person",
-      "link target on page 2 (https://github.com/adaexample/tool): «adaexample» matches «Ada Example» in `identity`, and aidc reviews double-blind — remove it, or refer to your own work in the third person",
+      "PDF, page 1: «Ada Example» matches «Ada Example» in `identity`, and AIDC reviews double-blind — remove it, or refer to your own work in the third person",
+      "PDF metadata: Author: «Ada Example» matches «Ada Example» in `identity`, and AIDC reviews double-blind — remove it, or refer to your own work in the third person",
+      "link target on page 2 (https://github.com/adaexample/tool): «adaexample» matches «Ada Example» in `identity`, and AIDC reviews double-blind — remove it, or refer to your own work in the third person",
     ]);
   });
 
@@ -949,6 +949,7 @@ describe("a project's own preset, and the facts' other spellings", () => {
   // tolerance, a reference range, two columns — and no page size and no font families.
   const HOUSE = {
     [`${PAPER}/house.jsonc`]: JSON.stringify({
+      type: "family",
       tex: { packages: { acmart: ["acmart.cls"] } },
       format: { columns: 2, body_pt: 9, ref_pt_min: 7, ref_pt_max: 8 },
     }),

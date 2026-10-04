@@ -175,6 +175,9 @@ async function newIn(
 
 describe("paperlint new --venue / --kind", () => {
   const PRESET = `{
+  "type": "venue",
+  "name": "my-workshop",
+  "url": "https://example.org/cfp",
   "extends": "paperlint:acm-sigconf",
   "format": { "kinds": { "short": { "body_pages_max": 4 } } },
 }
@@ -205,6 +208,7 @@ describe("paperlint new --venue / --kind", () => {
     for (const template of [undefined, "\\documentclass[a]{}"]) {
       const r = await newIn(["--venue", "./venues/bare.jsonc"], {
         "venues/bare.jsonc": JSON.stringify({
+          type: "family",
           ...(template === undefined ? {} : { template }),
           tex: { packages: { x: ["x.sty"] } },
         }),
@@ -246,7 +250,7 @@ describe("paperlint new --venue / --kind — refusals and defaults", () => {
     [
       "a kind the preset lacks",
       ["--venue", "agenticdev", "--kind", "long"],
-      /`agenticdev` has no kind `long`; its kinds: short, full, demo/,
+      /`AgenticDev` has no kind `long`; its kinds: short, full, demo/,
     ],
     ["a kind without a venue", ["--kind", "short"], /--kind needs --venue/],
     [
@@ -270,7 +274,7 @@ describe("paperlint new --venue / --kind — refusals and defaults", () => {
     const r = await newIn(["--venue", "agenticdev"]);
     expect(r.settings()).toEqual({ extends: "paperlint:agenticdev" });
     expect(r.out).toMatch(
-      /kind: not set — `agenticdev` sets a page limit per kind/,
+      /kind: not set — `AgenticDev` sets a page limit per kind/,
     );
     expect(r.out).toMatch(/pdf\/profile/);
   });
@@ -298,19 +302,19 @@ describe("paperlint new — a name that names a venue is refused", () => {
       "a venue's label, with the work's name left to suggest",
       "aisec-agent-drift",
       [],
-      '`aisec-agent-drift` — the paper folder names a venue ("aisec"); venues change on resubmission, so name it after the work (e.g. "agent-drift")',
+      '`aisec-agent-drift` — the paper folder names a venue ("AISec"); venues change on resubmission, so name it after the work (e.g. "agent-drift")',
     ],
     [
       "nothing but a year left: no example",
       "aisec-2026",
       [],
-      '`aisec-2026` — the paper folder names a venue ("aisec"); venues change on resubmission, so name it after the work',
+      '`aisec-2026` — the paper folder names a venue ("AISec"); venues change on resubmission, so name it after the work',
     ],
     [
       "its own venue too: right today, stale on the next resubmission",
       "aidc-2026",
       ["--venue", "aidc"],
-      '`aidc-2026` — the paper folder names a venue ("aidc"); venues change on resubmission, so name it after the work',
+      '`aidc-2026` — the paper folder names a venue ("AIDC"); venues change on resubmission, so name it after the work',
     ],
     [
       "by an alias, glued to a year",
@@ -322,7 +326,7 @@ describe("paperlint new — a name that names a venue is refused", () => {
       "two venues",
       "realm-aisec-rules",
       [],
-      '`realm-aisec-rules` — the paper folder names a venue ("aisec", "realm"); venues change on resubmission, so name it after the work (e.g. "rules")',
+      '`realm-aisec-rules` — the paper folder names a venue ("AISec", "REALM"); venues change on resubmission, so name it after the work (e.g. "rules")',
     ],
   ])("%s: exit 2, nothing written", async (_, name, args, reason) => {
     const r = await newIn(args, {}, name);
