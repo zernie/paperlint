@@ -211,6 +211,27 @@ describe("tex/heading-case on an AgenticDev paper — what the paper changes for
       "papers/p/paper.tex:4:2 \\paragraph: capitalize the first word, «threats» → «Threats» (sentence; not fixed: a product name written in lowercase looks the same)",
     ]);
   });
+});
+
+describe("tex/heading-case on an AgenticDev paper — where a finding stands, and the directive", () => {
+  it("🔴 a heading over several lines: each word on its own line, and a directive below it still applies (LF and CRLF)", async () => {
+    for (const nl of ["\n", "\r\n"]) {
+      const body = [
+        "\\section{Related",
+        "work in the field}",
+        "% eslint-disable-next-line tex/heading-case -- the tool's own name is lowercase",
+        "\\section{Evaluating vigiles}",
+      ].join(nl);
+      const { found } = await lint(paper(doc(body), PRESET));
+      expect(found.map((f) => f.slice(0, f.indexOf(" ")))).toEqual([
+        "papers/p/paper.tex:4:2",
+        "papers/p/paper.tex:4:2",
+      ]);
+      expect(
+        found.map((f) => f.slice(f.indexOf("«"), f.indexOf("»") + 1)),
+      ).toEqual(["«work»", "«field»"]);
+    }
+  });
 
   it("a disable directive with its reason silences one heading", async () => {
     const body = [
