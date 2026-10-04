@@ -4,7 +4,7 @@
     "Each count is classified in ../README.md, 'What the rules say about the corpus'.",
     "tex/register: 7 sentences open with And/So/But/Nor (1.60 per 1000 words, limit 0.8) - this is OUR paper,",
     "the one of the three whose prose reviewers called informal; the two others read 0.",
-    "tex/heading-case: 18 words in the 6 sentence-case headings of the camera-ready the publisher sent back for exactly this; all true positives (../README.md)."
+    "tex/heading-case: 18 words in the paper's 6 sentence-case headings, which the proceedings vendor's checklist does not accept; all true positives under chicago-headline (../README.md)."
   ],
   "findings": {
     "pdf/measured": 1,

@@ -58,9 +58,10 @@ as a new style, when a preset needs one: [Adding a style](#adding-a-style).
 
 ## Why
 
-An ACM proceedings publisher accepted a camera-ready with sentence-case headings
-(`\section{Related work}`) and said so weeks later, when the paper had to be sent again for another
-reason. Nothing in paperlint looked at heading case, so the defect went through every gate.
+Some proceedings vendors check the case of the title and of every heading before a paper goes
+into the proceedings: the vendor's checklist names it, and papers that miss it are returned to
+their authors. A heading in sentence case (`\section{Related work}`) passes every other gate
+paperlint has, so without this rule nothing catches it before the vendor does.
 
 The requirement, verbatim, from Conference Publishing Consulting's help page
 (https://www.conference-publishing.com/Help.php, read 2026-10-03). The vendor produces SIGSOFT and
@@ -274,14 +275,36 @@ read:
 - a single letter other than the lowercase article (`k`, `n`, and the capital in `Module A`);
 - anything with a digit, a dot, a slash or a TeX accent in it (`GPT-4`, `e.g.`,
   `input/output`, `Caf\'e`);
+- a word followed by a full stop before the title ends (`al.`, `etc.`, `vs.`, `cf.`), and the
+  abbreviations `et`, `al`, `etc`, `cf`, `eg`, `ie`, `approx`, `viz` wherever they stand;
+- a word whose capital is not one letter, such as one starting with the ligature `ﬁ` (its capital
+  is `FI`);
 - everything set in math or code, and every command whose text is not plain: `\texttt`, `\textsc`,
   `\cite`, `\ref`, … A formatting command is read as the words it wraps (`\emph{very}`, `\textbf{…}`,
   `\textit{…}`); `\label`, `\footnote`, `\thanks` and `\index` are not part of the title.
   A group written right after a macro of your own (`\ours{…}`, `\finding{label}{a sentence}`) is
   that macro's argument, and is not read either.
 
-A word that stands beside something the rule does not read is not known to be first or last, so a
-minor word there is left as it is (`\texttt{grep} And Friends`, `Results For $k$`).
+A word that stands right beside something the rule does not read is not known to be first or
+last, so a minor word there is left as it is (`\texttt{grep} And Friends`, `Results For $k$`,
+`Fast And \cite{x} Safe`).
+
+A `%` comment inside a title ends its line: the words on either side of it are two words. Text
+inside `\iffalse … \fi` is not read at all — TeX never reads it, and neither does any paperlint
+rule that reads the LaTeX tree.
+
+### A title in parts
+
+A title or heading can have parts: a subtitle after a colon, a question or exclamation mark, a
+dash (`--`, `---`, `—`), or a line break (`\\`, `\\[1ex]`, `\newline`, `\linebreak`). Chicago
+capitalizes the first and the last word of a title and of its subtitle, so:
+
+- the first word of a part is a start. A word of the **lower** class there is not asked either way
+  (`Agents and Tools:\\ The Empirical Study`, `Main Title\\ The Subtitle`); after a colon it is
+  capitalized, as above;
+- the last word of a part is the end of a title. A word of the **lower** class there may be a
+  particle (_What Is It Good For: An Analysis_) or a preposition the author ends on, so it is not
+  asked either way either (`Agents to Talk To --- A Study` and `… Talk to --- …` both pass).
 
 ### Hyphenated compounds
 
@@ -351,8 +374,8 @@ A rule that judges a venue's requirement is validated on papers of that venue, n
 author wrote. Two corpora, 2026-10-03, both measured on headings, before the rule read `\title`:
 
 - **The accepted paper in this repository**, `fixtures/accepted-papers/agenticdev-acm26`: 9
-  headings, 6 of them in sentence case — the camera-ready the publisher sent back for exactly that.
-  The rule reports 18 words, every one a true positive, and its fixes write the six corrected
+  headings, 6 of them in sentence case, which the vendor's checklist does not accept. The rule
+  reports 18 words, every one a true positive, and its fixes write the six corrected
   headings ([`fixtures/accepted-papers/README.md`](../../../fixtures/accepted-papers/README.md)).
   Its `\title` and short title, read since 2026-10-04, are already in headline style and add no
   finding.

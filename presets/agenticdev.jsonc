@@ -63,11 +63,10 @@
 
   // The proceedings are produced by Conference Publishing Consulting — agenticdev.md takes its
   // numbers from their author instructions — which require "balanced columns on the last page, if
-  // the page is not filled" and sent an accepted camera-ready back for it on 2026-08-29, the day
-  // after AgenticDev's camera-ready deadline ("Please correct the last page balancing"). So every
-  // AgenticDev paper gets the optional rule; a paper can still turn it off in its own
-  // paperlint.json. 120 pt is the rule's default, measured: the balanced build ended 2.7 pt apart,
-  // the returned one 321.4 pt apart (docs/optional-rules.md).
+  // the page is not filled", checked before the proceedings are produced: "problem papers are sent
+  // back to the authors". So every AgenticDev paper gets the optional rule; a paper can still turn
+  // it off in its own paperlint.json. 120 pt is the rule's default, measured: a balanced build ended
+  // 2.7 pt apart, an unbalanced one 321.4 pt apart (docs/optional-rules.md).
   //
   // The same vendor asks for headline style in the title and in every heading. Its help page
   // (https://www.conference-publishing.com/Help.php) defines it: «Headline-Style Capitalization
@@ -75,8 +74,8 @@
   // lists the rule's chicago-headline style judges by. Its instructions for an event
   // (https://www.conference-publishing.com/Instructions.php?Event=ITICSE18) set both scopes:
   // «The title should use headline-style capitalization (e.g., 'The Best POPL Paper of All Time')»
-  // and «All levels of headings use headline-style capitalization.» It asked an accepted AgenticDev
-  // paper to fix its headings on 2026-10-03. The rule lives here and not in acm-sigconf: ACM's own
+  // and «All levels of headings use headline-style capitalization.» Its checklist names it, and
+  // papers that miss it are returned to their authors. The rule lives here and not in acm-sigconf: ACM's own
   // pages and the other vendors that produce ACM proceedings were not read, and an error on a
   // requirement nobody has seen would block correct papers. A venue whose author kit names the
   // same authority adds the same line; one that names another (APA, IEEE, Springer) waits for that
