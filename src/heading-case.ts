@@ -137,10 +137,12 @@ function levelsOf(v: unknown): Levels | { readonly why: string } {
 }
 
 /** Whether every scope is `any`: the rule turned off, said in a second way. */
-const asksNothing = (o: HeadingCaseOptions): boolean =>
+const asksNothing = (
+  o: HeadingCaseOptions & { readonly levels: Levels },
+): boolean =>
   o.title === "any" &&
   o.headings === "any" &&
-  Object.values(o.levels ?? {}).every((s) => s === "any");
+  Object.values(o.levels).every((s) => s === "any");
 
 /** ESLint's options for the rule → what it is asked, parsed once. */
 function parseOptions(options: readonly unknown[]): Asked {
