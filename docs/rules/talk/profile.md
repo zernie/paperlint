@@ -43,7 +43,7 @@ Failing — the email gave the short-paper slot only:
 }
 ```
 
-> `agenticdev` sets no talk slot for a `full` paper, so the video's length is not checked; its talk
+> `AgenticDev` sets no talk slot for a `full` paper, so the video's length is not checked; its talk
 > kinds: short
 
 Passing: `"kind": "short", "talk": { "mode": "remote-video" }`.

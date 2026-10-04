@@ -174,7 +174,7 @@ describe("a family the shipped presets do not extend", () => {
     ).toEqual([
       "**`paperlint:fixture-family`** — template family, no venue of its own · extends `paperlint:acm-sigconf` · extended by no shipped preset",
       "",
-      "No preset of this chain sets a rule: a paper that extends it runs with paperlint's defaults.",
+      "No preset of this chain sets a rule: under it, every rule keeps paperlint's default.",
     ]);
     rmSync(join(P, "fixture-family.jsonc"));
     rmSync(join(P, "fixture-family.md"));

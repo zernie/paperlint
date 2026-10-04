@@ -1179,7 +1179,7 @@ export async function createPaperAt(
 
 /** A venue `paperlint new` will write, with what the messages need to say about it. */
 export interface VenueChoice extends VenueSetting {
-  /** The preset's word in messages (`agenticdev`, `my-workshop`). */
+  /** The preset's word in messages: the venue's name (`AgenticDev`), else the file name (`my-workshop`). */
   readonly label: string;
   /** The preset's kinds; empty when it sets no page limit. */
   readonly kinds: readonly string[];

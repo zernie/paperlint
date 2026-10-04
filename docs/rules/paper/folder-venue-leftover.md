@@ -35,7 +35,7 @@ in `papers/aisec-2026/`:
 
 ```text
 papers/aisec-2026/PIPELINE-STATUS.md
-  1:1  warning  the folder name «aisec-2026» names the venue aisec, and this paper extends aidc — the
+  1:1  warning  the folder name «aisec-2026» names the venue AISec, and this paper extends AIDC — the
                 name went stale when the venue changed, and venues change on every resubmission. Name
                 the folder after the work (what the paper shows), not the venue
                 paper/folder-venue-leftover

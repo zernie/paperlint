@@ -111,7 +111,7 @@ DOI, ISBN, copyright line and dates are added here when the venue publishes them
 
 **`paperlint:aisec`** — venue preset for AISec · call for papers: <https://aisec.cc/> · extends `paperlint:acm-sigconf`
 
-No preset of this chain sets a rule: a paper that extends it runs with paperlint's defaults.
+No preset of this chain sets a rule: under it, every rule keeps paperlint's default.
 
 <!-- prettier-ignore-end -->
 <!-- /paperlint:preset-rules -->

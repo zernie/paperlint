@@ -177,7 +177,7 @@ function rulesTable(
   originSpec: (file: string) => string,
 ): string {
   if (rows.length === 0)
-    return "No preset of this chain sets a rule: a paper that extends it runs with paperlint's defaults.";
+    return "No preset of this chain sets a rule: under it, every rule keeps paperlint's default.";
   return [
     "| rule | severity | options | set in |",
     "| --- | --- | --- | --- |",
