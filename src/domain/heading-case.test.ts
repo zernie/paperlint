@@ -1,27 +1,38 @@
 /**
- * Heading case, judged on real parses of `\section`-family titles: what headline style asks of each
- * word, and — as much — what it does not, because a finding at error level that is wrong is worse
- * than a miss. Every title is parsed by the LaTeX adapter, judged, and the fixes are applied to the
- * source, so what is asserted is the heading an author would end up with.
+ * Heading case, judged on real parses of the paper's `\title` and its `\section`-family headings:
+ * what each style asks of each word, and — as much — what it does not, because a finding at error
+ * level that is wrong is worse than a miss. Every title is parsed by the LaTeX adapter, judged, and
+ * the fixes are applied to the source, so what is asserted is the text an author would end up with.
  */
 import { describe, expect, it } from "vitest";
 import { latexReader } from "../adapters/latex/index.ts";
 import {
   BOUND_PREFIXES,
   judgeHeadingCase,
-  type HeadingStyle,
+  type CaseStyle,
+  type HeadingCaseOptions,
 } from "./heading-case.ts";
 
-const findingsOf = (src: string, style: HeadingStyle = "headline") =>
-  judgeHeadingCase(latexReader.headings(src), style, src);
+/** One style for the title and every heading: the shape most venues state. */
+const everywhere = (style: CaseStyle): HeadingCaseOptions => ({
+  title: style,
+  headings: style,
+});
+
+type Asked = CaseStyle | HeadingCaseOptions;
+const optionsOf = (asked: Asked): HeadingCaseOptions =>
+  typeof asked === "string" ? everywhere(asked) : asked;
+
+const findingsOf = (src: string, asked: Asked = "chicago-headline") =>
+  judgeHeadingCase(latexReader.headings(src), optionsOf(asked), src);
 
 /** The words a source's findings name, in order. */
-const wordsOf = (src: string, style: HeadingStyle = "headline"): string[] =>
-  findingsOf(src, style).map((f) => String(f.data["word"]));
+const wordsOf = (src: string, asked: Asked = "chicago-headline"): string[] =>
+  findingsOf(src, asked).map((f) => String(f.data["word"]));
 
 /** The source after every fix is applied, last first so offsets stay true. */
-function fixed(src: string, style: HeadingStyle = "headline"): string {
-  const fixes = findingsOf(src, style)
+function fixed(src: string, asked: Asked = "chicago-headline"): string {
+  const fixes = findingsOf(src, asked)
     .flatMap((f) => (f.fix === null ? [] : [f.fix]))
     .toSorted((a, b) => b.span.start - a.span.start);
   return fixes.reduce(
@@ -32,7 +43,7 @@ function fixed(src: string, style: HeadingStyle = "headline"): string {
 
 const section = (title: string): string => `\\section{${title}}`;
 
-describe("headline style — sentence-case headings are reported and fixed", () => {
+describe("chicago-headline — sentence-case headings are reported and fixed", () => {
   it.each([
     ["Related work", "Related Work"],
     [
@@ -69,7 +80,7 @@ describe("headline style — sentence-case headings are reported and fixed", () 
   });
 });
 
-describe("headline style — the corrected forms are silent", () => {
+describe("chicago-headline — the corrected forms are silent", () => {
   it.each([
     "Related Work",
     "The Advertised Savings Don't Show Up",
@@ -88,7 +99,7 @@ describe("headline style — the corrected forms are silent", () => {
   });
 });
 
-describe("headline style — what the rule does not read", () => {
+describe("chicago-headline — what the rule does not read", () => {
   it.each([
     ["a bound prefix keeps its second element lowercase", "Multi-turn Agents"],
     [
@@ -144,7 +155,7 @@ describe("headline style — what the rule does not read", () => {
   });
 });
 
-describe("headline style — words whose class is ambiguous are never reported", () => {
+describe("chicago-headline — words whose class is ambiguous are never reported", () => {
   it.each([
     "up",
     "down",
@@ -186,7 +197,7 @@ describe("headline style — words whose class is ambiguous are never reported",
   });
 });
 
-describe("headline style — what the publisher asks lowercase stays lowercase", () => {
+describe("chicago-headline — what the publisher asks lowercase stays lowercase", () => {
   it.each([
     ["The", "the"],
     ["And", "and"],
@@ -233,7 +244,7 @@ describe("headline style — what the publisher asks lowercase stays lowercase",
   });
 });
 
-describe("headline style — hyphenated compounds", () => {
+describe("chicago-headline — hyphenated compounds", () => {
   it.each([
     ["Cost-aware Gating", "Cost-Aware Gating"],
     ["cost-aware Gating", "Cost-Aware Gating"],
@@ -284,7 +295,7 @@ describe("headline style — hyphenated compounds", () => {
   });
 });
 
-describe("headline style — punctuation, dashes and quotes", () => {
+describe("chicago-headline — punctuation, dashes and quotes", () => {
   it("a colon, a question mark and a full stop are read around, not into, the word", () => {
     expect(fixed(section("Threats to validity."))).toBe(
       section("Threats to Validity."),
@@ -320,7 +331,7 @@ describe("headline style — punctuation, dashes and quotes", () => {
   });
 });
 
-describe("headline style — which headings, which arguments", () => {
+describe("chicago-headline — which headings, which arguments", () => {
   it.each([
     "\\section",
     "\\section*",
@@ -330,6 +341,8 @@ describe("headline style — which headings, which arguments", () => {
     "\\subsubsection*",
     "\\paragraph",
     "\\paragraph*",
+    "\\subparagraph",
+    "\\subparagraph*",
   ])("%s", (cmd) => {
     expect(wordsOf(`${cmd}{related work}`)).toEqual(["related", "work"]);
   });
@@ -358,10 +371,10 @@ describe("headline style — which headings, which arguments", () => {
     expect(findingsOf(src)).toEqual([]);
   });
 
-  it("does not read other commands: \\caption, \\textbf, \\subparagraph", () => {
+  it("does not read other commands: \\caption, \\textbf, \\subtitle", () => {
     expect(findingsOf("\\caption{related work}")).toEqual([]);
     expect(findingsOf("\\textbf{related work}")).toEqual([]);
-    expect(findingsOf("\\subparagraph{related work}")).toEqual([]);
+    expect(findingsOf("\\subtitle{related work}")).toEqual([]);
   });
 
   it("an empty title, or one with only invisible parts, has nothing to judge", () => {
@@ -406,8 +419,152 @@ describe("sentence style", () => {
   });
 });
 
-describe("style off", () => {
-  it("judges nothing", () => {
-    expect(findingsOf(section("related work and more"), "off")).toEqual([]);
+describe("any", () => {
+  it("judges nothing in the scope it is given", () => {
+    expect(findingsOf(section("related work and more"), "any")).toEqual([]);
+    expect(findingsOf("\\title{related work and more}", "any")).toEqual([]);
+  });
+});
+
+describe("the paper's title, \\title[short]{long}", () => {
+  const preamble = (title: string): string =>
+    `\\documentclass[sigconf]{acmart}\n${title}\n\\begin{document}\n\\maketitle\n\\end{document}\n`;
+
+  it("🔴 is judged in the preamble, at the place each word stands", () => {
+    const src = preamble("\\title{Measuring the wrong thing}");
+    const found = findingsOf(src);
+    expect(found.map((f) => f.data)).toEqual([
+      {
+        word: "wrong",
+        expected: "Wrong",
+        why: "nouns, pronouns, verbs, adjectives and adverbs are capitalized",
+        where: "\\title",
+      },
+      {
+        word: "thing",
+        expected: "Thing",
+        why: "the last word of a title is capitalized",
+        where: "\\title",
+      },
+    ]);
+    // Guards: the span is the word in the preamble, not an offset into the body.
+    expect(found[0]?.at).toEqual({
+      start: src.indexOf("wrong"),
+      end: src.indexOf("wrong") + "wrong".length,
+    });
+    expect(fixed(src)).toBe(preamble("\\title{Measuring the Wrong Thing}"));
+  });
+
+  it("🔴 judges the short title and the long one, each saying which it is", () => {
+    const src = preamble("\\title[short form]{The Long Form}");
+    expect(
+      findingsOf(src).map((f) => [f.data["where"], f.data["word"]]),
+    ).toEqual([
+      ["\\title[…]", "short"],
+      ["\\title[…]", "form"],
+    ]);
+    expect(fixed(src)).toBe(preamble("\\title[Short Form]{The Long Form}"));
+    expect(wordsOf(preamble("\\title[Short Form]{the long form}"))).toEqual([
+      "the",
+      "long",
+      "form",
+    ]);
+  });
+
+  it("reads a title written over several lines, and fixes each word where it is", () => {
+    const src = preamble("\\title{Efficiency claims\n  in agentic\n  coding}");
+    expect(wordsOf(src)).toEqual(["claims", "agentic", "coding"]);
+    expect(fixed(src)).toBe(
+      preamble("\\title{Efficiency Claims\n  in Agentic\n  Coding}"),
+    );
+  });
+});
+
+describe("the paper's title — what it does not read", () => {
+  const preamble = (title: string): string =>
+    `\\documentclass[sigconf]{acmart}\n${title}\n\\begin{document}\n\\maketitle\n\\end{document}\n`;
+
+  it("does not read code, math or a footnote in a title, as in a heading", () => {
+    expect(
+      findingsOf(preamble("\\title{Why \\texttt{grep} Fails for $k=3$}")),
+    ).toEqual([]);
+    expect(
+      findingsOf(preamble("\\title{Measuring It Right\\thanks{a note}}")),
+    ).toEqual([]);
+    expect(wordsOf(preamble("\\title{\\texttt{grep}: the tool}"))).toEqual([
+      "the",
+      "tool",
+    ]);
+  });
+
+  it("an empty title has nothing to judge", () => {
+    expect(findingsOf(preamble("\\title{}"))).toEqual([]);
+  });
+
+  it("a title in sentence style asks for its first word only, and is never fixed", () => {
+    const asked = { title: "sentence", headings: "any" } as const;
+    const [f] = findingsOf(preamble("\\title{measuring things}"), asked);
+    expect(f?.data).toEqual({
+      word: "measuring",
+      expected: "Measuring",
+      where: "\\title",
+    });
+    expect(f?.fix).toBeNull();
+  });
+});
+
+describe("which style each title and heading gets", () => {
+  const src = [
+    "\\title{measuring the thing}",
+    "\\section{related work}",
+    "\\subsection{related work}",
+    "\\paragraph{related work}",
+    "\\subparagraph{related work}",
+  ].join("\n");
+  const judged = (asked: HeadingCaseOptions): string[] =>
+    findingsOf(src, asked).map(
+      (f) => `${String(f.data["where"])} ${String(f.data["word"])}`,
+    );
+
+  it("🔴 the title follows `title`, every heading follows `headings`", () => {
+    expect(judged({ title: "chicago-headline", headings: "any" })).toEqual([
+      "\\title measuring",
+      "\\title thing",
+    ]);
+    expect(judged({ title: "any", headings: "sentence" })).toEqual([
+      "\\section related",
+      "\\subsection related",
+      "\\paragraph related",
+      "\\subparagraph related",
+    ]);
+  });
+
+  it("🔴 a level named in `levels` follows its own style instead of `headings`", () => {
+    expect(
+      judged({
+        title: "any",
+        headings: "chicago-headline",
+        levels: { paragraph: "sentence", subparagraph: "any" },
+      }),
+    ).toEqual([
+      "\\section related",
+      "\\section work",
+      "\\subsection related",
+      "\\subsection work",
+      "\\paragraph related",
+    ]);
+    expect(
+      judged({
+        title: "any",
+        headings: "any",
+        levels: { section: "chicago-headline" },
+      }),
+    ).toEqual(["\\section related", "\\section work"]);
+  });
+
+  it("`levels` does not reach the title", () => {
+    expect(
+      judged({ title: "any", headings: "any", levels: { section: "any" } }),
+    ).toEqual([]);
   });
 });

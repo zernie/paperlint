@@ -194,18 +194,23 @@ export const OPAQUE = "￼";
 
 /** The headings whose title a venue sets in a case style. */
 export type HeadingLevel =
-  "section" | "subsection" | "subsubsection" | "paragraph";
+  "section" | "subsection" | "subsubsection" | "paragraph" | "subparagraph";
 
-/** Which argument of the heading command: the title, or the optional short title in brackets. */
+/** Which command a title belongs to: the paper's own `\title`, or a heading at its level. */
+export type TitledCommand =
+  | { readonly kind: "title" }
+  | { readonly kind: "heading"; readonly level: HeadingLevel };
+
+/** Which argument of the command: the title, or the optional short title in brackets. */
 export type TitleArgument = "title" | "short";
 
 /**
- * One heading's title as the case judge reads it: its text, each character with the source offset
- * it came from, and `OPAQUE` where something it does not read stands. A label, a footnote and a
- * comment are not in it; a title with nothing else has no `TitledHeading`.
+ * One title as the case judge reads it — the paper's or a heading's: its text, each character with
+ * the source offset it came from, and `OPAQUE` where something it does not read stands. A label, a
+ * footnote and a comment are not in it; a title with nothing else has no `TitledHeading`.
  */
 export interface TitledHeading {
-  readonly level: HeadingLevel;
+  readonly command: TitledCommand;
   readonly argument: TitleArgument;
   readonly title: TextRun;
 }

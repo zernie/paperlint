@@ -1,6 +1,6 @@
 /**
- * The titles of the document's headings as the case judge reads them: each as one run of text, every
- * character with the source offset it came from.
+ * The paper's `\title` and the titles of its headings as the case judge reads them: each as one run
+ * of text, every character with the source offset it came from.
  *
  * What a title says is its strings and spaces, and the words a formatting command wraps
  * (`\emph{very}` says "very"). A label, a footnote or an index entry says nothing in the title and
@@ -14,6 +14,7 @@ import type {
   HeadingLevel,
   Segment,
   TitleArgument,
+  TitledCommand,
   TitledHeading,
 } from "../../domain/tex-document.ts";
 import { OPAQUE } from "../../domain/tex-document.ts";
@@ -37,6 +38,7 @@ const LEVELS: ReadonlyMap<string, HeadingLevel> = new Map<string, HeadingLevel>(
     ["subsection", "subsection"],
     ["subsubsection", "subsubsection"],
     ["paragraph", "paragraph"],
+    ["subparagraph", "subparagraph"],
   ],
 );
 
@@ -61,10 +63,15 @@ const INVISIBLE: ReadonlySet<string> = new Set([
   "index",
 ]);
 
-/** The heading level a macro names: none for any other command. */
-const levelOf = (m: Macro): readonly HeadingLevel[] => {
+/**
+ * The command a macro is, for the case judge: the paper's `\title`, a heading at its level, or none.
+ * `\title` is read wherever it stands — in the preamble, where acmart and IEEEtran put it, or in a
+ * file the paper includes.
+ */
+const commandOf = (m: Macro): readonly TitledCommand[] => {
+  if (m.content === "title") return [{ kind: "title" }];
   const level = LEVELS.get(m.content);
-  return level === undefined ? [] : [level];
+  return level === undefined ? [] : [{ kind: "heading", level }];
 };
 
 /** A macro that is neither left out of the title nor read as the words it wraps. */
@@ -116,27 +123,28 @@ const segmentsOf = (nodes: readonly Node[] | undefined): readonly Segment[] => {
 
 /** One argument's contents → the heading it makes, or none when it says nothing. */
 function titled(
-  level: HeadingLevel,
+  command: TitledCommand,
   argument: TitleArgument,
   nodes: readonly Node[] | undefined,
 ): readonly TitledHeading[] {
   const segments = segmentsOf(nodes);
   return hasAtLeast(segments, 1)
-    ? [{ level, argument, title: { segments } }]
+    ? [{ command, argument, title: { segments } }]
     : [];
 }
 
-/** One heading command → the short title (`[…]`) and the title (the last `{…}`), each a heading. */
+/** One titled command → the short title (`[…]`) and the title (the last `{…}`), each judged. */
 const headingsOfMacro = (m: Macro): readonly TitledHeading[] =>
-  levelOf(m).flatMap((level) => [
-    ...titled(level, "short", optional(m)?.content),
-    ...titled(level, "title", mandatory(m).at(-1)?.content),
+  commandOf(m).flatMap((command) => [
+    ...titled(command, "short", optional(m)?.content),
+    ...titled(command, "title", mandatory(m).at(-1)?.content),
   ]);
 
 /**
- * Every `\section`, `\subsection`, `\subsubsection` and `\paragraph`, starred or not, in document
- * order. What the PDF never shows is pruned (`isUnrendered`), and so is a macro definition's body: a
- * heading in a comment environment or in a definition is not a heading where it is written.
+ * The paper's `\title` and every `\section`, `\subsection`, `\subsubsection`, `\paragraph` and
+ * `\subparagraph`, starred or not, each with its optional short title, in document order. What the
+ * PDF never shows is pruned (`isUnrendered`), and so is a macro definition's body: a heading in a
+ * comment environment or in a definition is not a heading where it is written.
  */
 export const headingsOf = (t: ParsedTex): readonly TitledHeading[] =>
   visited(t.root, (v, parent) => isUnrendered(v, parent) || isDefinition(v))

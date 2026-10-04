@@ -78,6 +78,9 @@
   // would block correct papers. A venue whose author kit says the same adds the same line.
   "rules": {
     "pdf/last-page-balance": ["error", { "tolerancePt": 120 }],
-    "tex/heading-case": ["error", { "style": "headline" }],
+    "tex/heading-case": [
+      "error",
+      { "title": "chicago-headline", "headings": "chicago-headline" },
+    ],
   },
 }

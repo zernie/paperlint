@@ -221,7 +221,10 @@ describe("paperlint lint — the venue preset's rules", () => {
           basePath: join(root, "papers/a"),
           rules: {
             "pdf/last-page-balance": ["error", { tolerancePt: 120 }],
-            "tex/heading-case": ["error", { style: "headline" }],
+            "tex/heading-case": [
+              "error",
+              { title: "chicago-headline", headings: "chicago-headline" },
+            ],
           },
         },
       ],
@@ -259,7 +262,10 @@ describe("paperlint lint — the paper over its preset, and the project's own pr
     // The preset's block comes first and the paper's own after it: the later block wins.
     expect(blocks.ok && blocks.value.preset[0]?.rules).toEqual({
       "pdf/last-page-balance": ["error", { tolerancePt: 120 }],
-      "tex/heading-case": ["error", { style: "headline" }],
+      "tex/heading-case": [
+        "error",
+        { title: "chicago-headline", headings: "chicago-headline" },
+      ],
     });
     expect(blocks.ok && blocks.value.own[0]?.rules).toEqual({
       "pdf/last-page-balance": "off",

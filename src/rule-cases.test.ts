@@ -138,7 +138,7 @@ const AIDC = {
   }),
 };
 const ACM_CLASS = "\\documentclass[sigconf]{acmart}";
-/** A paper on AgenticDev's preset: it turns `tex/heading-case` on, headline style. */
+/** A paper on AgenticDev's preset: it turns `tex/heading-case` on, chicago-headline for the title and every heading. */
 const ACM_PRESET = {
   [`${P}/paperlint.json`]: JSON.stringify({
     extends: "paperlint:agenticdev",

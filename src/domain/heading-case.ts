@@ -1,14 +1,24 @@
 /**
- * HEADING CASE — what a venue's capitalization style asks of the words of a heading's title, decided
- * on the text the LaTeX adapter hands over (`TitledHeading`), never on the source.
+ * HEADING CASE — what a venue's capitalization style asks of the words of the paper's title and of
+ * its headings, decided on the text the LaTeX adapter hands over (`TitledHeading`), never on the
+ * source.
  *
- * ── HEADLINE STYLE, THE PUBLISHER'S WORDS ────────────────────────────────────────
- * ACM's proceedings instructions, which the rule was written for (the text is quoted on the rule's
- * page): capitalize the first and the last word, the first word after a colon, and every major word
- * (nouns, pronouns, verbs, adjectives, adverbs); lowercase articles, prepositions «regardless of
- * length», the conjunctions and, but, for, or, nor, and «to» and «as»; in a hyphenated compound
- * always capitalize the first element and lowercase the others when they are an article, a
- * preposition or a conjunction, or when the first is a prefix that cannot stand by itself.
+ * ── A STYLE IS NAMED AFTER THE TEXT THAT DEFINES IT ──────────────────────────────
+ * Venues name the authority precisely and the scope loosely: «headline-style capitalization
+ * (according to the Chicago Manual of Style …)» for «the title and all headings». Headline variants
+ * disagree on real words — Chicago lowercases `With`, `Between` and `From` «regardless of length»,
+ * APA title case and IEEE's manual capitalize them — so there is no style called just «headline»:
+ * one word would let a preset apply Chicago where a venue asks APA. A new variant is a new member of
+ * `CaseStyle`, added with the venue text that defines it and its own word table.
+ *
+ * ── CHICAGO-HEADLINE, THE PUBLISHER'S WORDS ──────────────────────────────────────
+ * Conference Publishing Consulting's quote of the Chicago Manual of Style 8.157–8.159 (the text is
+ * quoted on the rule's page): capitalize the first and the last word, the first word after a colon,
+ * and every major word (nouns, pronouns, verbs, adjectives, adverbs); lowercase articles,
+ * prepositions «regardless of length», the conjunctions and, but, for, or, nor, and «to» and «as»; in
+ * a hyphenated compound always capitalize the first element and lowercase the others when they are
+ * an article, a preposition or a conjunction, or when the first is a prefix that cannot stand by
+ * itself.
  *
  * ── SILENCE IS THE DEFAULT ───────────────────────────────────────────────────────
  * A finding here is an error at a venue that rejects on it, and a wrong one costs more than a miss.
@@ -28,10 +38,65 @@
  * and everything `OPAQUE` in the title (math, code, citations). A word beside such a thing is not
  * known to be first or last, so a minor word there is left as it is.
  */
-import { runText, type Span, type TitledHeading } from "./tex-document.ts";
+import {
+  runText,
+  type HeadingLevel,
+  type Span,
+  type TitledCommand,
+  type TitledHeading,
+} from "./tex-document.ts";
 
-/** The style a venue sets: headline, sentence (first word only: a proper noun cannot be told), or none. */
-export type HeadingStyle = "headline" | "sentence" | "off";
+/**
+ * A capitalization style, named after the text that defines it. Add a member only with a venue's
+ * quote and a word table of its own.
+ *
+ *   chicago-headline  Conference Publishing's quote of the Chicago Manual of Style 8.157–8.159
+ *   sentence          the first word capitalized; nothing else judged, never fixed (proper nouns)
+ *   any               this scope is unconstrained
+ */
+export type CaseStyle = "chicago-headline" | "sentence" | "any";
+
+/** Every style, in the order a message lists them. */
+export const CASE_STYLES: readonly CaseStyle[] = [
+  "chicago-headline",
+  "sentence",
+  "any",
+];
+
+/** Every heading level, in the order of the outline. */
+export const HEADING_LEVELS: readonly HeadingLevel[] = [
+  "section",
+  "subsection",
+  "subsubsection",
+  "paragraph",
+  "subparagraph",
+];
+
+/**
+ * What a venue asks, in the two scopes venues speak in: the paper's title, and every heading — with
+ * a level the venue names on its own as an exception.
+ */
+export interface HeadingCaseOptions {
+  /** `\title{…}`, and its optional short title `\title[short]{long}`. */
+  readonly title: CaseStyle;
+  /** Every heading command, starred or not, short title included. */
+  readonly headings: CaseStyle;
+  /** A level whose style differs from `headings`. */
+  readonly levels?: Readonly<Partial<Record<HeadingLevel, CaseStyle>>>;
+}
+
+/** The style a title is judged by: the title's own, or its level's, else every heading's. */
+export function styleFor(
+  options: HeadingCaseOptions,
+  command: TitledCommand,
+): CaseStyle {
+  switch (command.kind) {
+    case "title":
+      return options.title;
+    case "heading":
+      return options.levels?.[command.level] ?? options.headings;
+  }
+}
 
 /** An edit that makes a finding go away: replace `span` of the source with `text`. */
 export interface CaseFix {
@@ -200,7 +265,7 @@ function wantOfMinor(edge: boolean, p: Place): Want {
   return p.mayBeFirst || p.mayBeLast || p.afterBreak ? "any" : "lower";
 }
 
-/** What headline style asks of a whole word standing alone. */
+/** What chicago-headline asks of a whole word standing alone. */
 function wantOfWord(el: string, p: Place): Want {
   if (isSymbol(el)) return "any";
   const edge = p.first || p.last || p.afterColon;
@@ -216,7 +281,7 @@ function wantOfWord(el: string, p: Place): Want {
   }
 }
 
-/** What headline style asks of the `k`-th element (k > 0) of a compound whose first element is `first`. */
+/** What chicago-headline asks of the `k`-th element (k > 0) of a compound whose first element is `first`. */
 function wantOfLater(el: string, k: number, first: string): Want {
   switch (kindOf(el)) {
     case "lower":
@@ -237,7 +302,7 @@ function applied(el: string, want: Want): string {
   return want === "upper" ? capitalized(el) : el.toLowerCase();
 }
 
-/** One element of a word: as written, what headline style asks of it, and the element that results. */
+/** One element of a word: as written, what chicago-headline asks of it, and the element that results. */
 interface Judged {
   readonly k: number;
   readonly want: Want;
@@ -246,7 +311,7 @@ interface Judged {
 }
 
 /**
- * What headline style asks of each element of a word. A compound with a single-letter element
+ * What chicago-headline asks of each element of a word. A compound with a single-letter element
  * (`k-means`, `e-mail`) is not read; otherwise the first element is capitalized always and the rest
  * follow `wantOfLater`.
  */
@@ -263,14 +328,24 @@ function judgedElements(word: Word, p: Place): readonly Judged[] {
   });
 }
 
+/** What a message calls the thing a word stands in. */
+function nounOf(c: TitledCommand): string {
+  switch (c.kind) {
+    case "title":
+      return "title";
+    case "heading":
+      return "heading";
+  }
+}
+
 /** Why an element is wanted the way it is, as the message says it. */
-function whyOf(j: Judged, p: Place): string {
+function whyOf(j: Judged, p: Place, h: TitledHeading): string {
   if (j.want === "lower")
     return "an article, preposition or conjunction is lowercase";
   if (j.k > 0)
     return "the elements of a hyphenated compound are capitalized unless one is an article, a preposition or a conjunction, or follows a prefix such as «non-»";
-  if (p.first) return "the first word of a heading is capitalized";
-  if (p.last) return "the last word of a heading is capitalized";
+  if (p.first) return `the first word of a ${nounOf(h.command)} is capitalized`;
+  if (p.last) return `the last word of a ${nounOf(h.command)} is capitalized`;
   if (p.afterColon) return "the first word after a colon is capitalized";
   return "nouns, pronouns, verbs, adjectives and adverbs are capitalized";
 }
@@ -304,11 +379,23 @@ function fixOf(
   return { span, text: expected };
 }
 
+/** The macro a title is the argument of. */
+function macroOf(c: TitledCommand): string {
+  switch (c.kind) {
+    case "title":
+      return "title";
+    case "heading":
+      return c.level;
+  }
+}
+
 /** `\section` for a title, `\section[…]` for the optional short one: how a message names the heading. */
 const whereOf = (h: TitledHeading): string =>
-  h.argument === "short" ? `\\${h.level}[…]` : `\\${h.level}`;
+  h.argument === "short"
+    ? `\\${macroOf(h.command)}[…]`
+    : `\\${macroOf(h.command)}`;
 
-/** One word against headline style: nothing, or a finding with the fix where it is certain. */
+/** One word against chicago-headline: nothing, or a finding with the fix where it is certain. */
 function judgeHeadlineWord(
   h: TitledHeading,
   word: Word,
@@ -326,7 +413,7 @@ function judgeHeadlineWord(
       data: {
         word: wordText(h, word),
         expected,
-        why: whyOf(changed, p),
+        why: whyOf(changed, p, h),
         where: whereOf(h),
       },
       at: spanOf(h, word.from, word.to),
@@ -335,7 +422,7 @@ function judgeHeadlineWord(
   ];
 }
 
-/** Sentence style: the first word of a title is capitalized, and nothing else is read. */
+/** Sentence: the first word of a title is capitalized, and nothing else is read. */
 function judgeSentenceWord(
   h: TitledHeading,
   word: Word,
@@ -357,31 +444,44 @@ function judgeSentenceWord(
   ];
 }
 
-/** The findings of one title. */
-function judgeTitle(
+/** The findings of one title, each word judged where it stands by `judge`. */
+function judgeWords(
   h: TitledHeading,
-  style: "headline" | "sentence",
-  source: string,
+  judge: (word: Word, p: Place) => readonly CaseFinding[],
 ): readonly CaseFinding[] {
   const tokens = tokensOf(runText(h.title));
-  return tokens.flatMap((t, i) => {
-    if (t.kind !== "word") return [];
-    const p = placeOf(tokens, i);
-    return style === "headline"
-      ? judgeHeadlineWord(h, t.word, p, source)
-      : judgeSentenceWord(h, t.word, p);
-  });
+  return tokens.flatMap((t, i) =>
+    t.kind === "word" ? judge(t.word, placeOf(tokens, i)) : [],
+  );
+}
+
+/** The findings of one title under the style its scope asks. */
+function judgeTitle(
+  h: TitledHeading,
+  style: CaseStyle,
+  source: string,
+): readonly CaseFinding[] {
+  switch (style) {
+    case "any":
+      return [];
+    case "chicago-headline":
+      return judgeWords(h, (w, p) => judgeHeadlineWord(h, w, p, source));
+    case "sentence":
+      return judgeWords(h, (w, p) => judgeSentenceWord(h, w, p));
+  }
 }
 
 /**
- * Every title against a style, in document order. `source` is the text the titles were read from:
- * a fix is offered only where it holds the very letters the judge read.
+ * The paper's title and every heading, each against the style its scope asks (`styleFor`), in
+ * document order. `source` is the text the titles were read from: a fix is offered only where it
+ * holds the very letters the judge read.
  */
 export function judgeHeadingCase(
   headings: readonly TitledHeading[],
-  style: HeadingStyle,
+  options: HeadingCaseOptions,
   source: string,
 ): readonly CaseFinding[] {
-  if (style === "off") return [];
-  return headings.flatMap((h) => judgeTitle(h, style, source));
+  return headings.flatMap((h) =>
+    judgeTitle(h, styleFor(options, h.command), source),
+  );
 }

@@ -21,8 +21,9 @@ export interface LatexReader {
   /** Its sections, where the back matter begins, and where the document ends. */
   readonly outline: (src: string) => Outline;
   /**
-   * The titles of its `\section`, `\subsection`, `\subsubsection` and `\paragraph` (starred or
-   * not, and the optional short title), each as the text the case judge reads: in document order.
+   * Its `\title` and the titles of its `\section`, `\subsection`, `\subsubsection`, `\paragraph`
+   * and `\subparagraph` (starred or not, and each optional short title), each as the text the case
+   * judge reads: in document order.
    */
   readonly headings: (src: string) => readonly TitledHeading[];
   /** The text a reader sees: prose, the author block, footnotes — not comments, keys, math, code. */
