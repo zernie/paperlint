@@ -1,6 +1,6 @@
 // AISec @ ACM CCS — a VENUE preset over the ACM sigconf family. Data for the `pdf/*` rules over
 // `_build/paper.facts.json`.
-// Prose about the venue and tracks is in `aisec.md` nearby.
+// Prose about the venue and tracks is in its card, `aisec.md` beside this file.
 //
 // PAGE LIMITS — verbatim from https://aisec.cc/ (verified 2026-08-26, not from memory):
 //   «Submitted papers must be at most 10 pages long in double-column ACM format---excluding

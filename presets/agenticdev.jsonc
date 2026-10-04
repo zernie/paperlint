@@ -1,5 +1,6 @@
 // AgenticDev (an ASE workshop) — a VENUE preset over the ACM sigconf family. Prose about the venue
-// is in agenticdev.md nearby. Everything the ACM template decides (page size, columns, fonts, font
+// is in its card, agenticdev.md beside this file (every preset has one: `npm run lint` fails
+// without it, and the card's rules section is generated from this file). Everything the ACM template decides (page size, columns, fonts, font
 // sizes, TeX packages) comes from acm-sigconf.jsonc; this file adds what AgenticDev's call for
 // papers sets.
 // Source for the numbers: the Conference Publishing author instructions 2026-08-25.

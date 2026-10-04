@@ -6,6 +6,8 @@
 // the Conference Publishing author instructions for ACM (2026-08-25), which state ACM's own
 // requirements. A paper may extend this family directly for an ACM venue nobody has profiled:
 // page size, columns and fonts are checked; with no kinds, the page limit is not.
+//
+// Its card, in prose: `acm-sigconf.md` beside this file.
 {
   // A template family: it names no venue, so no `name` and no `url` (the venues that extend it do).
   "type": "family",

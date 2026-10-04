@@ -24,6 +24,8 @@
 // aidc.jsonc). The planted defects fail as they should, measured on the same compsoc paper:
 //   `a4paper` added to the options        → page 8.264 x 11.694 in: pdf/geometry
 //   Computer Modern (`\rmdefault{cmr}`)   → fonts CMR10, CMBX12, …: pdf/fonts, no NimbusRomNo9L
+//
+// Its card, in prose: `ieee-conference.md` beside this file.
 {
   // A template family: it names no venue, so no `name` and no `url` (the venues that extend it do).
   "type": "family",
