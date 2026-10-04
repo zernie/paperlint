@@ -65,8 +65,10 @@ describe("shipped presets", () => {
       file: join(VENUES, "acm-sigconf.jsonc"),
     });
     expect("acmart" in r.value.tex.packages).toBe(true);
-    // The label is the venue's own name, from its file's `name`.
+    // The label is the venue's own name, from its file's `name`; the id stays the file name — the
+    // stable key the facts file and the build plan carry.
     expect(r.value.label).toBe("AgenticDev");
+    expect(r.value.id).toBe("agenticdev");
     expect(r.value.identity).toEqual({
       type: "venue",
       name: "AgenticDev",

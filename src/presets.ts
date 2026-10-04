@@ -29,9 +29,10 @@
  *              `portal` (each whole)
  *   aliases    union, with every `name` — what the venue is called along the chain
  *
- * ── THE LABEL ─────────────────────────────────────────────────────────────────────
- * Messages, the facts file and the build plan need a word for the venue. It is the most derived
- * venue's `name` when the chain has a venue, else the spec's file name without its extension
+ * ── THE ID AND THE LABEL ──────────────────────────────────────────────────────────
+ * The facts file and the build plan carry the preset's `id`: the spec's file name without its
+ * extension, a stable key consumers match against preset ids. Messages say the `label`: the most
+ * derived venue's `name` when the chain has a venue, else the id
  * (`paperlint:agenticdev` → `agenticdev`, `./venues/usenix-sec.jsonc` → `usenix-sec`). Display
  * only: nothing is ever resolved by it.
  */
@@ -82,7 +83,12 @@ export interface PresetTemplate {
 
 /** A resolved chain, merged. */
 export interface Preset {
-  /** The word for this venue in messages. */
+  /**
+   * The preset's id: the spec's file name without its extension (`agenticdev`, `usenix-sec`). The
+   * stable key a machine reads — the facts file and the build plan carry it — whatever `name` says.
+   */
+  readonly id: string;
+  /** The word for this venue in messages: the venue's `name`, else the id. */
   readonly label: string;
   /** Every file of the chain, root first. */
   readonly chain: readonly string[];
@@ -261,7 +267,7 @@ const namesOf = (i: PresetIdentity): readonly string[] =>
   i.type === "venue" ? [i.name] : [];
 
 /** What the merge carries from file to file: the preset without what only the whole chain knows. */
-type Merging = Omit<Preset, "label" | "chain" | "identity"> & {
+type Merging = Omit<Preset, "id" | "label" | "chain" | "identity"> & {
   readonly name: string | null;
 };
 
@@ -310,6 +316,7 @@ function merged(
 ): Preset {
   const { name, ...rest } = rootFirst.reduce(mergeOne, NOTHING_MERGED);
   return {
+    id: labelOf(spec),
     label: name ?? labelOf(spec),
     chain: rootFirst.map((x) => x.file),
     identity: leaf.preset.identity,
