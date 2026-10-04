@@ -67,7 +67,7 @@ async function lint(
   return { found, dir };
 }
 
-const PRESET = { extends: "paperlint:acm-sigconf" };
+const PRESET = { extends: "paperlint:agenticdev", kind: "short" };
 const SENTENCE_CASE = [
   "\\section{Related work}",
   "\\subsection{The advertised savings don't show up}",
@@ -81,7 +81,7 @@ const HEADLINE_CASE = [
   "\\subsection{A Ceiling for Any Output-Trimming Tool}",
 ].join("\n");
 
-describe("tex/heading-case on a paper that extends an ACM preset", () => {
+describe("tex/heading-case on a paper that extends the AgenticDev preset", () => {
   it("🔴 reports every sentence-case heading, as an error, on its line", async () => {
     const { found } = await lint(paper(doc(SENTENCE_CASE), PRESET));
     expect(found.map((f) => f.slice(0, f.indexOf(" ")))).toEqual([
@@ -147,11 +147,18 @@ describe("tex/heading-case on a paper that extends an ACM preset", () => {
   });
 });
 
-describe("tex/heading-case on a paper that does not extend an ACM preset", () => {
+describe("tex/heading-case on a paper whose preset does not turn it on", () => {
   it("🔴 is silent on a paper with no preset and on an IEEE preset", async () => {
     expect((await lint(paper(doc(SENTENCE_CASE), null))).found).toEqual([]);
     const ieee = { extends: "paperlint:aidc", kind: "short" };
     expect((await lint(paper(doc(SENTENCE_CASE), ieee))).found).toEqual([]);
+  });
+
+  it("🔴 is silent on the ACM family and on AISec: only AgenticDev's vendor was read", async () => {
+    const family = { extends: "paperlint:acm-sigconf" };
+    expect((await lint(paper(doc(SENTENCE_CASE), family))).found).toEqual([]);
+    const aisec = { extends: "paperlint:aisec", kind: "research" };
+    expect((await lint(paper(doc(SENTENCE_CASE), aisec))).found).toEqual([]);
   });
 
   it("a paper turns it on for itself", async () => {

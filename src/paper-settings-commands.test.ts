@@ -203,7 +203,7 @@ describe("papersDir — optional, `papers` by default", () => {
 });
 
 describe("paperlint lint — the venue preset's rules", () => {
-  it("agenticdev's preset turns pdf/last-page-balance on for its paper alone, and tex/heading-case from the ACM family it extends", async () => {
+  it("agenticdev's preset turns pdf/last-page-balance and tex/heading-case on for its paper alone", async () => {
     const root = project({
       "papers/a/paperlint.json": JSON.stringify({
         extends: "paperlint:agenticdev",

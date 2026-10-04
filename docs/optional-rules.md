@@ -11,7 +11,7 @@ paper's own file still has the last word for that paper.
 | rule                                            | what it checks                                                     | who needs it                                                                                |
 | ----------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
 | `pdf/last-page-balance`                         | the two columns of the last page end at about the same height      | two-column papers whose publisher asks for it — see below                                   |
-| [`tex/heading-case`](rules/tex/heading-case.md) | the words of each heading are in the capitalization the venue asks | ACM papers (headline style); the ACM presets turn it on — [page](rules/tex/heading-case.md) |
+| [`tex/heading-case`](rules/tex/heading-case.md) | the words of each heading are in the capitalization the venue asks | AgenticDev papers (headline style); the AgenticDev preset turns it on — [page](rules/tex/heading-case.md) |
 
 ## `pdf/last-page-balance`
 

@@ -45,9 +45,10 @@ and all headings properly capitalized":
 
 **What was checked and what was not.** That is one production vendor's page. The other vendors that
 produce ACM proceedings (Sheridan, for CCS) were not read, and neither were IEEE's or ACL's author
-kits. So the ACM family preset turns the rule on because the ACM venues share a template and the
-requirement came from ACM proceedings, and **no other preset does**: a preset whose author kit has
-been read and says the same adds the same line to its `rules`.
+kits. So only the AgenticDev preset, whose proceedings that vendor produces, turns the rule on;
+**the ACM family preset and every other preset do not**, because an error on a requirement nobody
+has read would block correct papers. A preset whose author kit has been read and says the same adds
+the same line to its `rules`, and any paper can turn it on in its own `paperlint.json`.
 
 ## Examples
 
@@ -82,7 +83,7 @@ A finding reads:
 One option, `style`, and it is required once the rule is given options:
 
 ```jsonc
-// a venue preset (presets/acm-sigconf.jsonc) or a paper's own paperlint.json
+// a venue preset (presets/agenticdev.jsonc) or a paper's own paperlint.json
 "rules": { "tex/heading-case": ["error", { "style": "headline" }] }
 ```
 

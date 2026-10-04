@@ -56,18 +56,6 @@
     },
   },
 
-  // Headline-style capitalization, from Conference Publishing Consulting (read 2026-10-03): its help
-  // page (https://www.conference-publishing.com/Help.php) — «Headline-Style Capitalization (according
-  // to the Chicago Manual of Style, Sections 8.157, 8.158, and 8.159)» — and the checklist of its
-  // author instructions (…/Instructions.php?Conf=ICSE12) — «has the title and all headings properly
-  // capitalized». Those are the instructions of ONE production vendor, the one that produces the SIGSOFT and SIGPLAN proceedings (ASE, ICSE);
-  // the other ACM vendors' pages were not read. The rule is on for the family because ACM's venues
-  // share the template, and a paper whose venue asks for something else turns it off in its own
-  // paperlint.json. What it asks and what it leaves alone: docs/rules/tex/heading-case.md.
-  "rules": {
-    "tex/heading-case": ["error", { "style": "headline" }],
-  },
-
   "format": {
     // 8.5 x 11 in
     "page_size": "letter",
