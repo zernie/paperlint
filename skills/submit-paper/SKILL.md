@@ -1,10 +1,10 @@
 ---
 name: submit-paper
-description: End-to-end playbook for submitting a peer-reviewed paper to a double-blind venue (HotCRP workshops/conferences) — from a hardened draft to "ready for review." Covers building and anonymously hosting a reproduction artifact, HotCRP profile + form mechanics, double-blind hygiene, and the authorship/credential angles for an independent researcher. Use when the paper is drafted and reviewed and it's time to actually submit. Compose with pc-panel-review / paper-adversarial-review (harden first), and with the venue data card (references/venues/<venue>.md) for venue specifics.
+description: End-to-end playbook for submitting a peer-reviewed paper to a double-blind venue (HotCRP workshops/conferences) — from a hardened draft to "ready for review." Covers building and anonymously hosting a reproduction artifact, HotCRP profile + form mechanics, double-blind hygiene, and the authorship/credential angles for an independent researcher. Use when the paper is drafted and reviewed and it's time to actually submit. Compose with pc-panel-review / paper-adversarial-review (harden first), and with the venue card (presets/<venue>.md in the paperlint package) for venue specifics.
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Skill]
 ---
 
-<!-- vigiles:sha256:767a4757d1df67d3 compiled from skills/submit-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:8f53cae32633b002 compiled from skills/submit-paper/SKILL.md.spec.ts -->
 
 # submit-paper — get a reviewed paper from "done" to "ready for review"
 
@@ -12,26 +12,30 @@ Assumes the paper is already hardened (run `pc-panel-review` — incl. its venue
 `paper-adversarial-review` first). This skill is the submission mechanics — the part that bit us with
 avoidable friction the first time. Distilled from the AgenticDev 2026 submission.
 
-## Venue specifics — a DATA card, not a skill
+## Venue specifics — a CARD beside the venue's preset, not a skill
 The venue-specific facts (deadline, page limits, tracks, PC-member conflict list, blind model, format
-quirks, whether a supplementary-upload field exists, the extension target) live as **plain reference
-data files** under `references/venues/<venue>.md`:
-- `references/venues/agenticdev.md` — AgenticDev @ ASE (workshop; ACM DL/IEEE Xplore).
-- `references/venues/aisec.md` — AISec @ ACM CCS (security workshop; ACM DL; harder bar).
+quirks, whether a supplementary-upload field exists) live in the venue's **card**, `presets/<venue>.md`
+in the paperlint package, beside the preset `presets/<venue>.jsonc` that the lint rules check a
+paper against:
+- `presets/agenticdev.md` — AgenticDev @ ASE (workshop; ASE workshop proceedings).
+- `presets/aisec.md` — AISec @ ACM CCS (security workshop; ACM DL; harder bar).
+- `presets/aidc.md` — AIDC @ IEEE ACSAC (workshop; IEEE template, LLM Usage Statement).
+- `presets/realm.md` — REALM @ EMNLP (ACL family, OpenReview).
 
-**The pattern (follow it for every new venue):** when you fetch a venue's exact submission instructions,
-save them as a new **data file** `references/venues/<venue>.md` (short `title:` frontmatter only — NOT a
-skill with `name:`/`description:`). This preserves the "save the exact venue instructions" rule while
-keeping the skill namespace from proliferating one card per venue. The *mechanics* stay here; the venue
-file is only the facts.
-
-**The card is prose; the machine-checked format is a PRESET beside it.** A paper declares its venue
+**The card is prose; the machine-checked format is the PRESET beside it.** A paper declares its venue
 in `<paper>/paperlint.json`: `{ "extends": "paperlint:<venue>", "kind": "<kind>" }`, and the
 `pdf/*` lint rules judge the built PDF against that preset (page limit per kind, fonts, page size,
-columns, font sizes). A venue with no shipped preset extends a family — `paperlint:acm-sigconf`
-for an ACM venue — or a preset of the project's own, `./venues/<name>.jsonc` (paperlint's
-`docs/rules.md`, "Writing your own venue preset"). Put the page limits you fetched from the CFP in
-the preset's `format.kinds`, each with its quote.
+columns, font sizes). The card's last section — what the preset is, its call for papers, the rules it
+sets and where each comes from — is generated from the preset, so read the numbers there, not from
+memory.
+
+**The pattern (follow it for every new venue):** when you fetch a venue's exact submission
+instructions, write the numbers into a preset with their quotes and the rest into a card beside it.
+A venue with no shipped preset extends a family — `paperlint:acm-sigconf` for an ACM venue — in a
+preset of the project's own, `./venues/<name>.jsonc`, with its card `./venues/<name>.md` next to
+it (paperlint's `docs/rules.md`, "Writing your own venue preset"). A venue preset declares
+`"type": "venue"`, the venue's `name` and the `url` of its call for papers. The *mechanics*
+stay here; the card is only the facts.
 
 ## Publisher specifics — one level ABOVE the venue
 Camera-ready mechanics belong to the **publisher**, not the venue: ACM eRights, the submit-vs-final
@@ -148,9 +152,9 @@ convention with no reader.
 ## Compose with
 - Harden first: `pc-panel-review` (incl. its venue-fit mode), `paper-adversarial-review`, `render-paper`.
 - Publisher mechanics (camera-ready): `references/publishers/<publisher>.md`.
-- Venue specifics: the matching data card `references/venues/<venue>.md` (e.g.
-  `references/venues/agenticdev.md`) for deadlines, page limits, PC-member conflict lists, whether
-  supplementary upload exists, and the extension target.
+- Venue specifics: the venue's card `presets/<venue>.md` in the paperlint package (e.g.
+  `presets/agenticdev.md`) for deadlines, page limits, PC-member conflict lists, and whether a
+  supplementary upload exists.
 
 ## Provenance
 Written from the AgenticDev 2026 @ ASE submission (2026-07-13): PC-panel-reviewed, self-checking

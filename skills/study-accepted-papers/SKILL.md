@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:e199b342e4e98338 compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:b68bde442319a605 compiled from skills/study-accepted-papers/SKILL.md.spec.ts -->
 
 # study-accepted-papers — learn the venue's bar from its own accepted corpus, then lever your draft up
 
@@ -24,7 +24,7 @@ It answers a different question than the neighboring skills:
 
 Grounding: the authorship criterion — why a *strong* accept at an indexed venue is
 worth more to the dossier than a borderline one — reviewer enthusiasm shows up in the acceptance and in
-letters), and the venue data card `../submit-paper/references/venues/<venue>.md` if one exists.
+letters), and the venue's card `presets/<venue>.md` in the paperlint package if one exists.
 
 ## Step 1 — pin the venue's stated bar (fetch, don't guess)
 
@@ -162,7 +162,7 @@ short enough that it survives being loaded into every session.
 - `pc-panel-review` / `paper-adversarial-review` — run those to red-team the draft; run this to learn the bar the red-team should hold it to. Complementary, not redundant.
 - `verify-citations` — consumes the Step-4 citation gaps.
 - `extend-paper` — the natural home for every EXPENSIVE lever this skill surfaces.
-- `submit-paper` venue data card (`submit-paper/references/venues/<venue>.md`) — save durable venue-bar findings there as data, not as a new skill per venue.
+- the venue card (`presets/<venue>.md` in the paperlint package, or the project's own `./venues/<name>.md` beside its preset) — save durable venue-bar findings there as data, not as a new skill per venue.
 - the paper's `<paper>/paperlint.json` (`{ "extends": "paperlint:<venue>", "kind": "<kind>" }`) — which venue preset the `pdf/*` rules check the built PDF against; a venue with no shipped preset extends a family (`paperlint:acm-sigconf`) or the project's own `./venues/<name>.jsonc`. Findings about the venue's page limit or format belong in that preset, with their source quote.
 
 ## Provenance

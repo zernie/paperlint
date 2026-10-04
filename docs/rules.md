@@ -195,7 +195,10 @@ papers/
 ```jsonc
 // venues/usenix-sec.jsonc
 {
+  // a venue says so, names itself, and links the call for papers its numbers are quoted from
+  "type": "venue",
   "name": "USENIX Security",
+  "url": "https://www.usenix.org/conference/usenixsecurity27/call-for-papers",
   // a standalone preset needs its template's TeX packages; one that extends a family inherits them
   "template": "article",
   // TeX Live packages only, each with a file that proves it is installed. The USENIX style file
@@ -220,8 +223,10 @@ The numbers and packages above illustrate the shape; take yours from the venue's
 
 | key                 | what it is                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `type`              | what the file is, required: `venue` (one venue's call for papers), `family` (a publisher's template that venues extend; it names no venue, so it has no `name` and no `url`), or `base` (the TeX base set, `tex` only, extended by nothing). A family may extend only a family; a venue a family or another venue                                                                                                                                                  |
 | `extends`           | the preset this one builds on: `paperlint:<name>` or `./path` / `../path`, relative to this file                                                                                                                                                                                                                                                                                                                                                                   |
-| `name`              | how messages name the venue; the file name otherwise                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `name`              | a venue's name, required on a venue: how messages name it, and one of the names `tex/venue-leftover` looks for. A family's messages use its file name                                                                                                                                                                                                                                                                                                              |
+| `url`               | a venue's call for papers or author instructions (`https://`), required on a venue — the page its numbers are quoted from                                                                                                                                                                                                                                                                                                                                          |
 | `template`          | the `\documentclass` the venue's template uses — a whole line (`\documentclass[conference,compsoc]{IEEEtran}`) or a bare class name; `tex/template` requires the paper's class and every option named here                                                                                                                                                                                                                                                         |
 | `aliases`           | other names the venue goes by in a paper's text — its acronym, its parent conference: `["AISec", "ACM CCS"]`. Collected along `extends`, with `name`. Read by `tex/venue-leftover` and `paper/folder-venue-leftover`                                                                                                                                                                                                                                               |
 | `portal`            | where the venue takes submissions, `{ "kind": "hotcrp", "url": "https://…" }` — read by [`paperlint submission`](submission.md); a child's value replaces its parent's                                                                                                                                                                                                                                                                                             |
@@ -237,6 +242,9 @@ package; `format` keys are replaced one by one, and a child's kind replaces that
 `rules` are replaced rule by rule, and the paper's own `rules` come last; `register` is replaced whole. A chain is at most four
 presets long, and a cycle is refused by name. `paperlint toolchain` installs the packages of every
 shipped preset and of every preset your papers extend.
+
+Keep a card beside your preset, `venues/usenix-sec.md`, for what the call says that no rule
+checks — as the shipped presets do (`presets/<name>.md`, [configuration](configuration.md)).
 
 Presets from npm packages are not supported yet.
 

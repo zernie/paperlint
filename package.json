@@ -49,6 +49,7 @@
     "eslint-plugin-boundaries": "^7.2.0",
     "eslint-plugin-functional": "^10.0.1",
     "eslint-plugin-n": "^18.3.0",
+    "eslint-plugin-project-structure": "^3.14.5",
     "eslint-plugin-sonarjs": "^4.2.1",
     "prettier": "^3.8.1",
     "semantic-release": "25.0.9",
@@ -131,6 +132,11 @@
       "paperlint-source": "./lib/*.ts",
       "types": "./dist/lib/*.d.ts",
       "default": "./dist/lib/*.js"
+    },
+    "#src/*": {
+      "paperlint-source": "./src/*.ts",
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
     },
     "#eslint-rules/*": {
       "paperlint-source": "./eslint-rules/*.ts",

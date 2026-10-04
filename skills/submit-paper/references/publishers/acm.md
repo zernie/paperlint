@@ -8,7 +8,7 @@ tags: [publisher, acm, camera-ready, erights, ccs]
 # ACM: what camera-ready requires
 
 > This is the **publisher** level, not the venue level. Identical for AgenticDev@ASE, AISec@CCS,
-> and any other ACM conference. The venue card (`../venues/<venue>.md`) holds only what's its own:
+> and any other ACM conference. The venue card (`presets/<venue>.md` in the paperlint package) holds only what's its own:
 > dates, page limit, its own DOI/ISBN, blind model.
 >
 > Captured 2026-08-24 from the live AgenticDev #20 HotCRP form — field by field, not from memory.
