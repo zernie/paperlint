@@ -109,6 +109,13 @@ and going over is a hard reject at the proceedings stage. Recompile
 If tight, ACM allows references to spill into the reference-only extra pages.
 
 ## 5. Ship
+- **Before the final PDF goes up, hand the last check to the author, in plain words.** Tell them that
+  paperlint passing is not the venue or the publisher accepting the format, and ask them to open the
+  exact PDF they are about to upload and check it against the venue's call for papers and its
+  camera-ready instructions themselves — the page count and what counts toward the limit (the
+  camera-ready's extra page, if any), the template and its class options, the author block and
+  acknowledgements now de-anonymized, and that every figure, table and reference renders. Upload once
+  they say they have looked.
 - Rebuild the final PDF, upload to the camera-ready system (often the same HotCRP, or an ACM eRights /
   TAPS pipeline — follow the copyright email).
 - Complete the **ACM/IEEE eRights** copyright form → paste the returned copyright block + DOI into the

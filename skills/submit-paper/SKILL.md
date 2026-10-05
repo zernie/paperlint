@@ -4,7 +4,7 @@ description: End-to-end playbook for submitting a peer-reviewed paper to a doubl
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Skill]
 ---
 
-<!-- vigiles:sha256:1e475c4f9b104569 compiled from skills/submit-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:81d5777962c2864a compiled from skills/submit-paper/SKILL.md.spec.ts -->
 
 # submit-paper — get a reviewed paper from "done" to "ready for review"
 
@@ -111,6 +111,13 @@ Many workshop HotCRPs have **no supplementary-upload field** — check first; if
   An independent researcher with no ties usually checks **none** — that's honest.
 
 ## 5. Submit
+- **Before the PDF goes up — and before every Replace — hand the last check to the author, in plain
+  words.** Tell them that paperlint passing is not the venue accepting the format: the preset is
+  transcribed from a call that can change, and any check can miss something. Ask them to open the
+  exact PDF they are about to upload and check it against the venue's call for papers themselves —
+  the page count and what counts toward the limit (appendices, references), the template and its
+  class options, anonymity, and that every figure, table and reference renders. Upload once they say
+  they have looked. (`paperlint submission update` prints the same request before it sends.)
 - **Save and submit**, then **mark it "ready for review."** A saved draft alone is NOT evaluated — this
   is the step people miss.
 - You can edit until the deadline: use **Replace** on the Submission field to swap the PDF for a late
