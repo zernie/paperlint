@@ -339,18 +339,36 @@ const DISORDERED = JSON.stringify({
       id: "open-2027",
       venue: { kind: "preset", extends: "paperlint:acm-sigconf" },
       opened: "2026-09-09",
+      // The call's own abstract day after its paper day: a date typed wrong. (The portal's and the
+      // call's readings disagreeing is not a finding: the earlier binds.)
       deadlines: [
         {
-          what: "submission",
-          at: "2026-10-20T04:00:00Z",
-          source: "portal",
-          url: "https://conf.example/deadlines",
+          what: "registration",
+          observed: [
+            {
+              at: "2026-10-25 AoE",
+              source: "call",
+              url: "https://conf.example/cfp",
+              read: "2026-09-09",
+            },
+          ],
         },
         {
-          what: "registration",
-          at: "2026-10-21T04:00:00Z",
-          source: "call",
-          url: "https://conf.example/cfp",
+          what: "submission",
+          observed: [
+            {
+              at: "2026-10-20T04:00:00Z",
+              source: "portal",
+              url: "https://conf.example/deadlines",
+              read: "2026-09-09",
+            },
+            {
+              at: "2026-10-23 AoE",
+              source: "call",
+              url: "https://conf.example/cfp",
+              read: "2026-09-09",
+            },
+          ],
         },
       ],
     },
