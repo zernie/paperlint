@@ -34,6 +34,16 @@
       "type": "string",
       "minLength": 1
     },
+    "template_forbids": {
+      "description": "Class options the venue's call forbids in the \\documentclass line (`[\"compsoc\", \"compsocconf\"]`: MSR's «without including the compsoc or compsocconf options»). `tex/template` reports each one a paper's class line carries. Read with the `template` of the same file, and only with it: a child's `template` replaces both.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
     "blind": {
       "description": "The venue reviews double-blind: its call says submissions must be anonymized. Read by `anonymity/identity`, which then requires the paper's `identity` and finds none of it in the PDF. Set only where the venue says so, with the quote. A child's value replaces its parent's.",
       "type": "boolean"
@@ -347,6 +357,9 @@
     }
   },
   "required": ["type"],
+  "dependencies": {
+    "template_forbids": ["template"]
+  },
   "allOf": [
     {
       "if": {

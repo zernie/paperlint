@@ -63,6 +63,7 @@ describe("shipped presets", () => {
     expect(r.value.template).toEqual({
       text: "\\documentclass[sigconf]{acmart}",
       file: join(VENUES, "acm-sigconf.jsonc"),
+      forbids: [],
     });
     expect("acmart" in r.value.tex.packages).toBe(true);
     // The label is the venue's own name, from its file's `name`; the id stays the file name — the
@@ -422,7 +423,31 @@ describe("a preset's template: kept as its file spells it, with that file", () =
     expect(r.ok && r.value.template).toEqual({
       text: "\\documentclass[conference]{IEEEtran}",
       file: "/work/papers/p/own.jsonc",
+      forbids: [],
     });
+  });
+
+  it("the options a file forbids travel with its template", () => {
+    const r = resolve("./own.jsonc", {
+      "/work/papers/p/own.jsonc": venue({
+        extends: "paperlint:ieee-conference",
+        template: "\\documentclass[conference]{IEEEtran}",
+        template_forbids: ["compsoc"],
+      }),
+    });
+    expect(r.ok && r.value.template?.forbids).toEqual(["compsoc"]);
+  });
+
+  it("forbidden options without a template of the same file are refused by the schema", () => {
+    const r = resolve("./own.jsonc", {
+      "/work/papers/p/own.jsonc": venue({
+        extends: "paperlint:aidc",
+        template_forbids: ["compsoc"],
+      }),
+    });
+    expect(r.ok).toBe(false);
+    if (r.ok) return;
+    expect(presetProblemText(r.error)).toMatch(/template_forbids/);
   });
 });
 

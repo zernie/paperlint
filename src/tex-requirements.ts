@@ -189,6 +189,8 @@ export interface PresetFile {
   readonly extends: string | null;
   /** The `\\documentclass` the venue's template uses, as the file spells it; null when it names none. */
   readonly template: string | null;
+  /** Class options the venue forbids, read with `template`; empty when the file names none. */
+  readonly templateForbids: readonly string[];
   /** Other names the venue goes by in a paper's text; empty when the file names none. */
   readonly aliases: readonly string[];
   /** Whether the venue reviews double-blind; null when the file does not say. */
@@ -244,6 +246,7 @@ type PresetJson = PresetBodyJson &
 interface PresetBodyJson {
   readonly extends?: string;
   readonly template?: string;
+  readonly template_forbids?: readonly string[];
   readonly aliases?: readonly string[];
   readonly blind?: boolean;
   readonly required_sections?: readonly {
@@ -376,6 +379,10 @@ const anchorsOf = (
         },
       }));
 
+/** A preset's `portal`, or null when it names none. */
+const portalOf = (p: PresetJson["portal"]): Readonly<VenuePortal> | null =>
+  p === undefined ? null : { kind: p.kind, url: p.url };
+
 /**
  * The text of one preset file → the typed file, or an Error naming every problem. The ONE parser
  * of a preset: the toolchain reads its `tex`, the venue rules its `format`, the config its `rules`.
@@ -400,6 +407,7 @@ export function parsePreset(
     identity: identityOf(j),
     extends: orNull(j.extends),
     template: orNull(j.template),
+    templateForbids: j.template_forbids ?? [],
     aliases: j.aliases ?? [],
     blind: orNull(j.blind),
     requiredSections: sectionsOf(j.required_sections),
@@ -408,10 +416,7 @@ export function parsePreset(
     rules: j.rules ?? {},
     registerAnchors: anchorsOf(j.register),
     talk: j.talk === undefined ? null : venueTalkOf(j.talk),
-    portal:
-      j.portal === undefined
-        ? null
-        : { kind: j.portal.kind, url: j.portal.url },
+    portal: portalOf(j.portal),
   };
 }
 

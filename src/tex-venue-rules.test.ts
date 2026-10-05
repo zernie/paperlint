@@ -322,6 +322,88 @@ describe("tex/template — a project's own preset, and nothing to judge", () => 
   });
 });
 
+/** A project's own venue on IEEEtran's conference class that forbids the two compsoc options. */
+const forbidding = (body: Record<string, unknown> = {}) => ({
+  [`${PAPER}/own.jsonc`]: JSON.stringify(
+    venuePreset("Own", {
+      extends: "paperlint:ieee-conference",
+      template: "\\documentclass[10pt,conference]{IEEEtran}",
+      template_forbids: ["compsoc", "compsocconf"],
+      ...body,
+    }),
+  ),
+});
+
+describe("tex/template — class options the preset forbids (`template_forbids`)", () => {
+  const judge = (cls: string, extra = forbidding()) =>
+    lint(paper(cls, "Text."), { extends: "./own.jsonc" }, { extra });
+
+  it("the template's own line passes, and so does an extra option the preset does not forbid", () => {
+    expect(judge("\\documentclass[10pt,conference]{IEEEtran}")).toEqual([]);
+    expect(
+      judge("\\documentclass[10pt,conference,letterpaper]{IEEEtran}"),
+    ).toEqual([]);
+  });
+
+  it("🔴 a forbidden option is reported at the class line, naming it and the venue's line", () => {
+    const fs = judge("\\documentclass[10pt,conference,compsoc]{IEEEtran}");
+    expect(ids(fs)).toEqual(["tex/template:forbiddenOption"]);
+    expect(fs[0]?.message).toBe(
+      "the class option `compsoc` is forbidden: Own requires `\\documentclass[10pt,conference]{IEEEtran}` without `compsoc`, `compsocconf`",
+    );
+    expect(fs[0]?.line).toBe(2);
+  });
+
+  it("each forbidden option is one finding, beside a missing one", () => {
+    expect(
+      ids(judge("\\documentclass[compsoc,compsocconf,conference]{IEEEtran}")),
+    ).toEqual([
+      "tex/template:forbiddenOption",
+      "tex/template:forbiddenOption",
+      "tex/template:missingOption",
+    ]);
+  });
+});
+
+describe("tex/template — forbidden options behind a switch, and down a chain", () => {
+  it("behind a TeX switch, a candidate with a forbidden option is not the venue's class", () => {
+    const two = (a: string, b: string) =>
+      `\\def\\v{1}\n\\if\\v1 ${a} \\fi\n\\if\\v2 ${b} \\fi\n\\begin{document}\nText.\n\\end{document}\n`;
+    const compsoc = "\\documentclass[10pt,conference,compsoc]{IEEEtran}";
+    const opts = { extra: forbidding() };
+    expect(
+      ids(lint(two(compsoc, compsoc), { extends: "./own.jsonc" }, opts)),
+    ).toEqual(["tex/template:noCandidate"]);
+    expect(
+      lint(
+        two(compsoc, "\\documentclass[10pt,conference]{IEEEtran}"),
+        { extends: "./own.jsonc" },
+        opts,
+      ),
+    ).toEqual([]);
+  });
+
+  it("a child's template replaces its parent's, the forbidden options with it", () => {
+    const child = `${PAPER}/child.jsonc`;
+    const extra = {
+      ...forbidding(),
+      [child]: JSON.stringify(
+        venuePreset("Child", {
+          extends: "./own.jsonc",
+          template: "\\documentclass[conference]{IEEEtran}",
+        }),
+      ),
+    };
+    expect(
+      lint(
+        paper("\\documentclass[conference,compsoc]{IEEEtran}", "Text."),
+        { extends: "./child.jsonc" },
+        { extra },
+      ),
+    ).toEqual([]);
+  });
+});
+
 describe("tex/template — a template the reader cannot read, a bare class name, nothing to judge", () => {
   it("a template the reader cannot read is said once, naming its file — the class is not judged", () => {
     const own = `${PAPER}/own.jsonc`;

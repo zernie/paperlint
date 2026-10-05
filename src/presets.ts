@@ -25,7 +25,7 @@
  *   tex        union — a child never removes a package its parent needs
  *   format     per key, the child wins; `kinds` by kind name, a child's kind replaces that kind
  *   rules      per rule id, the child wins; `ruleOrigins` keeps which file set each
- *   template   the child wins; so does `name`, and `required_sections`, `register`, `talk` and
+ *   template   the child wins, with its `template_forbids`; so does `name`, and `required_sections`, `register`, `talk` and
  *              `portal` (each whole)
  *   aliases    union, with every `name` — what the venue is called along the chain
  *
@@ -75,10 +75,12 @@ export interface PresetDeps {
   readonly venuesDir: string;
 }
 
-/** A preset's `template`, as its file spells it. */
+/** A preset's `template`, as its file spells it, and the class options that file forbids. */
 export interface PresetTemplate {
   readonly text: string;
   readonly file: string;
+  /** `template_forbids` of the same file: options the paper's class line must not carry. */
+  readonly forbids: readonly string[];
 }
 
 /** A resolved chain, merged. */
@@ -292,7 +294,10 @@ const mergeOne = (
   { preset: p, file }: { readonly preset: PresetFile; readonly file: string },
 ): Merging => ({
   name: nameOf(p.identity) ?? acc.name,
-  template: p.template === null ? acc.template : { text: p.template, file },
+  template:
+    p.template === null
+      ? acc.template
+      : { text: p.template, file, forbids: p.templateForbids },
   aliases: [...new Set([...acc.aliases, ...namesOf(p.identity), ...p.aliases])],
   blind: p.blind ?? acc.blind,
   requiredSections: p.requiredSections ?? acc.requiredSections,

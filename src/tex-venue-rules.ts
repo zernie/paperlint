@@ -3,6 +3,7 @@
  * requires of the LaTeX itself, before any build:
  *
  *   tex/template          error  the `\documentclass` is the preset's class, with every option it names
+ *                                and none it forbids (`template_forbids`)
  *   tex/required-section  error  each section the preset requires is there, titled exactly, and
  *                                where the preset says (`last`: after every section of the body)
  *   tex/venue-leftover    warn   the text a reader sees names ANOTHER shipped venue — its `name`
@@ -107,20 +108,38 @@ type TemplateData = {
   readonly template: string;
 };
 
-/** A class line that names a class, against the template's: the same class, with every option. */
+/** What the template requires of a class line: its class and options, and the options it forbids. */
+interface Wanted {
+  readonly cls: DocumentClass;
+  readonly forbids: readonly string[];
+}
+
+/**
+ * A class line that names a class, against the template's: the same class, with every option, and
+ * none of the options the preset forbids.
+ */
 function judgeClass(
   line: Extract<ClassLine, { readonly kind: "class" }>,
-  want: DocumentClass,
+  want: Wanted,
   data: TemplateData,
 ): readonly Located[] {
   const at = spanOf(line.place);
-  if (line.cls !== want.cls)
+  if (line.cls !== want.cls.cls)
     return [{ messageId: "wrongClass", data: { ...data, got: line.cls }, at }];
-  return missingOptions(line, want).map((option) => ({
-    messageId: "missingOption",
-    data: { ...data, option },
-    at,
-  }));
+  const forbidden = want.forbids.filter((o) => line.options.includes(o));
+  const without = want.forbids.map((o) => `\`${o}\``).join(", ");
+  return [
+    ...forbidden.map((option) => ({
+      messageId: "forbiddenOption",
+      data: { ...data, option, without },
+      at,
+    })),
+    ...missingOptions(line, want.cls).map((option) => ({
+      messageId: "missingOption",
+      data: { ...data, option },
+      at,
+    })),
+  ];
 }
 
 /** A candidate as the message names it: its line, or an empty `\documentclass{}`. */
@@ -133,7 +152,7 @@ const candidateLine = (c: ClassCandidate): string =>
  */
 function judgeCandidates(
   candidates: readonly [ClassCandidate, ...ClassCandidate[]],
-  want: DocumentClass,
+  want: Wanted,
   data: TemplateData,
 ): readonly Located[] {
   const matches = candidates.some(
@@ -150,7 +169,7 @@ function judgeCandidates(
 /** The paper's class line against a template that was read: present, naming a class, that class. */
 function judgeClassLine(
   line: ClassLine,
-  want: DocumentClass,
+  want: Wanted,
   data: TemplateData,
 ): readonly Located[] {
   switch (line.kind) {
@@ -183,7 +202,7 @@ export function judgeTemplate(
     return [{ messageId: "badTemplate", data, at: null }];
   }
   const data = { venue: preset.label, template: documentClassLine(want) };
-  return judgeClassLine(line, want, data);
+  return judgeClassLine(line, { cls: want, forbids: t.forbids }, data);
 }
 
 /** Where a heading starts, or null when the parser gave it no place. */
@@ -357,6 +376,8 @@ const RULES: Readonly<
           "the class is `{{got}}`, and {{venue}} requires `{{template}}` — the page size, fonts and layout the venue checks come from the class",
         missingOption:
           "the class option `{{option}}` is missing: {{venue}} requires `{{template}}`",
+        forbiddenOption:
+          "the class option `{{option}}` is forbidden: {{venue}} requires `{{template}}` without {{without}}",
         noCandidate:
           "none of the {{count}} \\documentclass lines is `{{template}}`, which {{venue}} requires: {{candidates}}. The source picks one behind a TeX switch, which is not evaluated; make one of them the venue's",
       },
