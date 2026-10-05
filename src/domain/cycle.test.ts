@@ -172,6 +172,11 @@ describe("parseCycles refuses a malformed deadline, outcome or submission", () =
       /"outcome" of kind rejected needs "evidence"/,
     ],
     [
+      "a desk flag that is not a boolean",
+      [{ ...REJECTED, outcome: { ...REJECTED.outcome, desk: "yes" } }],
+      /"outcome.desk" must be true or false/,
+    ],
+    [
       "an outcome of an unknown kind",
       [{ ...OPEN, outcome: { kind: "desk-reject" } }],
       /"outcome" kind must be one of open, accepted, rejected, withdrawn/,
@@ -282,19 +287,27 @@ describe("currentCycle — closed lists", () => {
       { ...REJECTED, outcome: { kind: "open" } },
       { ...OPEN, outcome: REJECTED.outcome },
     ]);
-    expect(currentCycle(list)).toEqual({
+    const r = currentCycle(list);
+    expect(r).toEqual({
       ok: false,
       error: { kind: "open-not-last", id: "alpha-2026" },
     });
+    if (!r.ok)
+      expect(cycleProblemText(r.error)).toMatch(
+        /cycle «alpha-2026» is open but is not the last entry/,
+      );
   });
 
   it("two cycles with one id cannot be told apart by a stage", () => {
-    expect(
-      currentCycle(parsed([REJECTED, { ...OPEN, id: "alpha-2026" }])),
-    ).toEqual({
+    const r = currentCycle(parsed([REJECTED, { ...OPEN, id: "alpha-2026" }]));
+    expect(r).toEqual({
       ok: false,
       error: { kind: "duplicate-id", id: "alpha-2026" },
     });
+    if (!r.ok)
+      expect(cycleProblemText(r.error)).toMatch(
+        /two cycles carry the id «alpha-2026»/,
+      );
   });
 });
 

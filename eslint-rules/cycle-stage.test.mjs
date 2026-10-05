@@ -84,9 +84,17 @@ test("a PDF sent from a cycle still porting is named; a stage that sends none is
     "the «submitted» stage (2026-08-06) belongs to the cycle «beta-2027», whose phase is still `porting`: a PDF was sent while the record says the source is in the previous venue's template. Finish the port and drop the phase, or the stage is wrong",
   ]);
   assert.deepEqual(
-    lint("arxiv-porting", SUBMITTED("cycle: beta-2027").replace("submitted", "arxiv")),
+    lint(
+      "arxiv-porting",
+      SUBMITTED("cycle: beta-2027").replace("submitted", "arxiv"),
+    ),
     [],
   );
+});
+
+test("a settings file that is not JSON, or frontmatter that is not YAML: silent — other rules report those", () => {
+  assert.deepEqual(lint("not-json", SUBMITTED("venue: X"), "{ not json"), []);
+  assert.deepEqual(lint("not-yaml", "stages: [unclosed"), []);
 });
 
 test("a YAML date without quotes is still a date in the message", () => {

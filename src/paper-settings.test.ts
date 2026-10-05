@@ -470,6 +470,15 @@ describe("parsePaperSettings — `cycles` refused", () => {
     opened: "2026-07-01",
   };
 
+  it("one derived key beside `cycles` is refused in the singular", () => {
+    expect(parsePaperSettings({ kind: "short", cycles: [open] })).toEqual({
+      ok: false,
+      error: expect.stringMatching(
+        /^"kind" beside "cycles": with cycles, it is the current attempt's/,
+      ) as unknown,
+    });
+  });
+
   it("a derived key written beside `cycles` is refused, naming it — two sources for one fact", () => {
     const error: unknown = expect.stringMatching(
       /^"extends", "kind" beside "cycles": with cycles, they are the current attempt's/,

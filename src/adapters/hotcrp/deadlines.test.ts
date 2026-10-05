@@ -138,6 +138,8 @@ describe("parseDeadlinesPage — AoE and non-pages", () => {
     });
     const r = parseDeadlinesPage(200, 'hotcrp.init_deadlines({"sub":1})');
     expect(r.ok ? "parsed" : r.error.kind).toBe("malformed");
+    const notJson = parseDeadlinesPage(200, "hotcrp.init_deadlines({now: 1})");
+    expect(notJson.ok ? "parsed" : notJson.error.kind).toBe("malformed");
   });
 });
 

@@ -346,6 +346,36 @@ describe("cycle/port-done — the declared port is finished", () => {
     ).toEqual([]);
     expect(lint(OFFICIAL, AIDC)).toEqual([]);
   });
+
+  it("judges the text when the source carries no `raw`", () => {
+    expect(
+      lint(OFFICIAL, { cycles: [PORTING] }, { raw: false }).map(
+        (f) => `${f.rule}:${f.messageId}`,
+      ),
+    ).toContain("cycle/port-done:done");
+  });
+
+  it("silent when the venue names no template, and when the preset does not resolve", () => {
+    const own = `${PAPER}/own.jsonc`;
+    const porting = (ext: string) => ({
+      cycles: [{ ...PORTING, venue: { kind: "preset", extends: ext } }],
+    });
+    expect(
+      lint(OFFICIAL, porting("./own.jsonc"), {
+        extra: {
+          [own]: JSON.stringify({
+            type: "family",
+            tex: { packages: { x: ["x"] } },
+          }),
+        },
+      }).filter((f) => f.rule === "cycle/port-done"),
+    ).toEqual([]);
+    expect(
+      lint(OFFICIAL, porting("./missing.jsonc")).filter(
+        (f) => f.rule === "cycle/port-done",
+      ),
+    ).toEqual([]);
+  });
 });
 
 describe("tex/template — a project's own preset, and nothing to judge", () => {
