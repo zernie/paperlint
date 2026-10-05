@@ -186,8 +186,11 @@ function appendixAt(
       };
 }
 
+/** A body end that was found. */
+type Found = Extract<BodyEnd, { readonly kind: "found" }>;
+
 /** The body's end at a heading: the heading's page counts when body text stands above it. */
-function endAt(pages: readonly PageReading[], at: At): BodyEnd {
+function endAt(pages: readonly PageReading[], at: At): Found {
   const running = runningLines(pages);
   const body = at.above.some((l) => /\p{L}/u.test(l) && !running.has(shape(l)));
   return {
@@ -220,4 +223,61 @@ export function bodyEnd(
     .filter((s): s is At => s.kind === "at")
     .toSorted((a, b) => a.page - b.page || a.line - b.line)[0];
   return first === undefined ? { kind: "missing" } : endAt(pages, first);
+}
+
+/**
+ * The pages of a paper split as a venue counts them when its body limit includes the appendices
+ * and only the pages holding nothing but references are reference pages (MSR: «10 pages for the
+ * main text, inclusive of all figures, tables, appendices, etc. Two more pages containing only
+ * references are permitted.»):
+ *
+ *   body        the pages up to the references — their page too when body text stands above the
+ *               heading — and, when the appendix starts after the references, every page from the
+ *               appendix's to the last, which holds appendix text
+ *   references  the pages between, which hold only references
+ *
+ * An appendix before the references is body like any other text, and ends nothing. The appendix is
+ * found by hyperref's anchor only (`appendixAt`): without hyperref, an appendix after the references
+ * is not told from them and is counted with them. Pure.
+ */
+export type PageSplit =
+  | {
+      readonly kind: "found";
+      /** 1-based page holding the references heading. */
+      readonly page: number;
+      readonly bodyPages: number;
+      readonly refPages: number;
+      /** 1-based page the appendix starts on, when it follows the references; else null. */
+      readonly appendixFrom: number | null;
+    }
+  | { readonly kind: "missing" }
+  | Extract<BodyEnd, { readonly kind: "disagree" }>;
+
+/** Whether heading `a` stands after heading `b` in the document. */
+const after = (a: At, b: At): boolean =>
+  a.page > b.page || (a.page === b.page && a.line > b.line);
+
+export function pageSplit(
+  texts: readonly string[],
+  anchors: Anchors = { bib: null, appendix: null },
+): PageSplit {
+  const pages = texts.map(readPage);
+  const refs = referencesAt(pages, anchors.bib);
+  const appendix = appendixAt(pages, anchors.appendix);
+  if (refs.kind === "disagree") return refs;
+  if (appendix.kind === "disagree") return appendix;
+  if (refs.kind === "missing") return { kind: "missing" };
+  const upTo = endAt(pages, refs).bodyPages;
+  const tail =
+    appendix.kind === "at" && after(appendix, refs) ? appendix.page : null;
+  // The pages from the appendix to the end, less the ones already counted up to the references.
+  const appendixPages = tail === null ? 0 : pages.length - Math.max(tail, upTo);
+  const bodyPages = upTo + appendixPages;
+  return {
+    kind: "found",
+    page: refs.page + 1,
+    bodyPages,
+    refPages: pages.length - bodyPages,
+    appendixFrom: tail === null ? null : tail + 1,
+  };
 }

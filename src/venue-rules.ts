@@ -58,7 +58,12 @@ import { fieldOf } from "./domain/record.ts";
 import type { Files } from "./ports/files.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
 import { findLeaks, type Leak, type Searchable } from "./domain/anonymity.ts";
-import { bodyEnd, type BodyEnd } from "./domain/body-pages.ts";
+import {
+  bodyEnd,
+  pageSplit,
+  type BodyEnd,
+  type PageSplit,
+} from "./domain/body-pages.ts";
 import type { TextFacts } from "./facts-file.ts";
 
 // ── the verdict's vocabulary ─────────────────────────────────────────────────────────
@@ -262,8 +267,18 @@ export function judgeGeometry(
 }
 
 /**
+ * How many of banal's two counts — body, then references — a venue's counting replaces with its own
+ * from the text: none for banal's count, the body for `body_ends_at`, both with `appendix_in_body`.
+ */
+function countedFromText(format: VenueFormat): number {
+  if (format.bodyEndsAt !== "references") return 0;
+  return format.appendixInBody === true ? 2 : 1;
+}
+
+/**
  * Body and reference pages, as banal classifies them, against the kind's limits. A venue that counts
- * the body before the references is judged on its body by `judgeBodyEnd` instead.
+ * the body before the references is judged on its body by `judgeBodyEnd` instead, and one that
+ * counts the appendix as body on both.
  */
 export function judgePages(g: FlatGeometry, resolved: Resolved): Finding[] {
   const kind = resolved.kind;
@@ -272,7 +287,7 @@ export function judgePages(g: FlatGeometry, resolved: Resolved): Finding[] {
     [kind.limits.bodyPagesMax, g.body_pages, "body pages"],
     [kind.limits.refPagesMax, g.ref_pages, "reference pages"],
   ];
-  const from = resolved.format.bodyEndsAt === "references" ? 1 : 0;
+  const from = countedFromText(resolved.format);
   return pages.slice(from).flatMap(([max, got, what]) =>
     max !== null && got > max
       ? [
@@ -300,13 +315,11 @@ export function judgeBodyEnd(
   resolved: Resolved,
 ): readonly Finding[] {
   const kind = resolved.kind;
-  const max = kind?.limits.bodyPagesMax ?? null;
-  if (
-    resolved.format.bodyEndsAt !== "references" ||
-    kind === null ||
-    max === null
-  )
-    return [];
+  if (resolved.format.bodyEndsAt !== "references" || kind === null) return [];
+  if (resolved.format.appendixInBody === true)
+    return judgeSplit(text, resolved, kind);
+  const max = kind.limits.bodyPagesMax;
+  if (max === null) return [];
   const end = endOfBody(text);
   const venue = resolved.venue;
   switch (end.kind) {
@@ -321,6 +334,54 @@ export function judgeBodyEnd(
         ? [finding("pages", { what, got, max, venue, kind: kind.name })]
         : [];
     }
+  }
+}
+
+/** The findings of a split that was found: the body, and the pages holding only references. */
+function splitFindings(
+  split: Extract<PageSplit, { readonly kind: "found" }>,
+  limits: KindLimits,
+  at: { readonly venue: string; readonly kind: string },
+): readonly Finding[] {
+  const refs = `the references on page ${String(split.page)}`;
+  const body =
+    split.appendixFrom === null
+      ? `body pages (up to ${refs}, appendices included)`
+      : `body pages (up to ${refs}, and the appendix from page ${String(split.appendixFrom)})`;
+  const counts: readonly [number | null, number, string][] = [
+    [limits.bodyPagesMax, split.bodyPages, body],
+    [limits.refPagesMax, split.refPages, "pages holding only references"],
+  ];
+  return counts.flatMap(([max, got, what]) =>
+    max !== null && got > max
+      ? [finding("pages", { what, got, max, ...at })]
+      : [],
+  );
+}
+
+/**
+ * The body, appendices included, and the pages holding only references (`appendix_in_body`),
+ * against the kind's two limits. Like `judgeBodyEnd`, an end it cannot find is said, not passed.
+ */
+function judgeSplit(
+  text: Pick<TextFacts, "pages" | "bibAnchorPage" | "appendixAnchorPage">,
+  resolved: Resolved,
+  kind: NonNullable<Resolved["kind"]>,
+): readonly Finding[] {
+  const limits = kind.limits;
+  if (limits.bodyPagesMax === null && limits.refPagesMax === null) return [];
+  const split = pageSplit(text.pages, {
+    bib: text.bibAnchorPage,
+    appendix: text.appendixAnchorPage,
+  });
+  const venue = resolved.venue;
+  switch (split.kind) {
+    case "missing":
+      return [finding("noReferences", { venue })];
+    case "disagree":
+      return [finding("unclear", { venue, why: disagreement(split) })];
+    case "found":
+      return splitFindings(split, limits, { venue, kind: kind.name });
   }
 }
 

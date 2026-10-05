@@ -140,6 +140,11 @@ export interface VenueFormat {
   readonly fontsTitle: string | null;
   /** How the body is counted: null is banal's count; `references`, the pages before the references. */
   readonly bodyEndsAt: "references" | null;
+  /**
+   * With `bodyEndsAt`: appendices count as body wherever they sit, and the reference pages are the
+   * ones holding only references. Null: the appendix ends the body, as `references` alone counts it.
+   */
+  readonly appendixInBody: boolean | null;
   readonly kinds: ReadonlyMap<string, KindLimits>;
 }
 
@@ -155,6 +160,7 @@ export const NO_FORMAT: VenueFormat = {
   fontsText: null,
   fontsTitle: null,
   bodyEndsAt: null,
+  appendixInBody: null,
   kinds: new Map(),
 };
 
@@ -229,6 +235,7 @@ interface FormatJson {
   readonly fonts_text?: string;
   readonly fonts_title?: string;
   readonly body_ends_at?: "references";
+  readonly appendix_in_body?: boolean;
   readonly kinds?: KindsJson;
 }
 
@@ -295,6 +302,7 @@ function formatOf(j: FormatJson = {}): VenueFormat {
     fontsText: orNull(j.fonts_text),
     fontsTitle: orNull(j.fonts_title),
     bodyEndsAt: orNull(j.body_ends_at),
+    appendixInBody: orNull(j.appendix_in_body),
     kinds: kindsOf(j.kinds),
   };
 }

@@ -256,6 +256,7 @@ export function mergeFormat(
     fontsText: pick("fontsText"),
     fontsTitle: pick("fontsTitle"),
     bodyEndsAt: pick("bodyEndsAt"),
+    appendixInBody: pick("appendixInBody"),
     kinds: new Map([...parent.kinds, ...child.kinds]),
   };
 }

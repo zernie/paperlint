@@ -96,6 +96,9 @@
       "description": "What the venue's call for papers sets. Every key is optional; a child preset's key replaces its parent's, and a child's kind replaces that kind.",
       "type": "object",
       "additionalProperties": false,
+      "dependencies": {
+        "appendix_in_body": ["body_ends_at"]
+      },
       "properties": {
         "page_size": {
           "type": "string",
@@ -149,6 +152,10 @@
           "description": "How `format/page-limit` counts body pages. Absent: banal's body count (every page holding non-bibliography text). `references`: the pages up to where the body ends — at the references or the appendix, whichever comes first, found by hyperref's anchors and then the heading line — with that page counted when body text stands above the heading on it; for a venue whose limit excludes references and appendices (and what follows them, such as statements).",
           "type": "string",
           "enum": ["references"]
+        },
+        "appendix_in_body": {
+          "description": "With `body_ends_at: references`: the venue counts its appendices in the body limit and allows reference pages that hold only references (MSR: «10 pages for the main text, inclusive of all figures, tables, appendices, etc. Two more pages containing only references are permitted.»). `format/page-limit` then counts as body the pages up to the references and, when the appendix starts after them, every page from the appendix (found by hyperref's anchor) to the last; the pages between are the reference pages, judged against `ref_pages_max`. An appendix before the references is body and ends nothing.",
+          "type": "boolean"
         },
         "page_limits_not_gated": {
           "type": "object"
