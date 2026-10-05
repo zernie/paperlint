@@ -16,7 +16,7 @@ venues/usenix-sec.jsonc      (optional, your own) a VENUE PRESET: format, page l
 
 The shipped presets (`paperlint:<name>`) live in the package, under
 `presets/`: `acm-sigconf`, `agenticdev`, `aidc`, `aisec`,
-`ieee-conference`, `realm`. Each declares what it is — `"type": "venue"` with the venue's `name` and
+`ieee-conference`, `msr`, `realm`. Each declares what it is — `"type": "venue"` with the venue's `name` and
 the `url` of its call for papers, or `"type": "family"` for a publisher's template, which names no
 venue (`tex-base.jsonc`, the TeX packages every paper gets, is `"base"`).
 

@@ -4,7 +4,7 @@ description: End-to-end playbook for submitting a peer-reviewed paper to a doubl
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Skill]
 ---
 
-<!-- vigiles:sha256:8f53cae32633b002 compiled from skills/submit-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:1e475c4f9b104569 compiled from skills/submit-paper/SKILL.md.spec.ts -->
 
 # submit-paper — get a reviewed paper from "done" to "ready for review"
 
@@ -20,6 +20,7 @@ paper against:
 - `presets/agenticdev.md` — AgenticDev @ ASE (workshop; ASE workshop proceedings).
 - `presets/aisec.md` — AISec @ ACM CCS (security workshop; ACM DL; harder bar).
 - `presets/aidc.md` — AIDC @ IEEE ACSAC (workshop; IEEE template, LLM Usage Statement).
+- `presets/msr.md` — MSR Technical Papers (conference; IEEE template from 2027, appendices count in the page limit).
 - `presets/realm.md` — REALM @ EMNLP (ACL family, OpenReview).
 
 **The card is prose; the machine-checked format is the PRESET beside it.** A paper declares its venue

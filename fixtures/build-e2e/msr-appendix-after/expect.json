@@ -1,0 +1,20 @@
+{
+  "$comment": "MSR: an appendix after the references brings the main text to eleven pages. Exactly one format/page-limit finding, naming where the appendix starts. banal's own count (body 9, references 2) would pass it.",
+  "build": {
+    "outcome": "pdf",
+    "pages": 11
+  },
+  "lint": {
+    "rules": {
+      "format/page-limit": [
+        {
+          "severity": 2,
+          "says": [
+            "body pages (up to the references on page 10, and the appendix from page 10): 11, over the limit 10 for MSR/technical"
+          ]
+        }
+      ],
+      "tex/template": []
+    }
+  }
+}

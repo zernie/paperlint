@@ -6,6 +6,7 @@
   ],
   "findings": {
     "pdf/measured": 1,
-    "tex/claim-provenance": 28
+    "tex/claim-provenance": 28,
+    "tex/venue-leftover": 6
   }
 }

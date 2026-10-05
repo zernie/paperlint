@@ -91,6 +91,7 @@ describe("the shipped cards", () => {
       "aidc.md",
       "aisec.md",
       "ieee-conference.md",
+      "msr.md",
       "realm.md",
       "tex-base.md",
     ]);

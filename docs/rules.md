@@ -114,14 +114,15 @@ for papers, each with the quote it came from, the TeX packages its template need
 the venue implies. A preset may itself extend another: the ACM venues extend the `acm-sigconf`
 family, which holds everything the ACM template decides.
 
-| preset                      | extends                     | template                              | kinds                                                    | page limit checked                     | rules it turns on                           |
-| --------------------------- | --------------------------- | ------------------------------------- | -------------------------------------------------------- | -------------------------------------- | ------------------------------------------- |
-| `paperlint:acm-sigconf`     | —                           | ACM `acmart` sigconf                  | none                                                     | no (no kinds)                          | —                                           |
-| `paperlint:agenticdev`      | `paperlint:acm-sigconf`     | ACM `acmart` sigconf                  | `short` (5 + 2 refs), `full` (10 + 2), `demo` (5 + 2)    | yes                                    | `pdf/last-page-balance`, `tex/heading-case` |
-| `paperlint:aisec`           | `paperlint:acm-sigconf`     | ACM `acmart` sigconf                  | `research`, `benchmark`, `position`, `sok` (10 + 2 each) | yes                                    | —                                           |
-| `paperlint:realm`           | —                           | ACL                                   | `long`, `short`                                          | no — see below                         | —                                           |
-| `paperlint:ieee-conference` | —                           | IEEE `IEEEtran` conference            | none                                                     | no (no kinds)                          | —                                           |
-| `paperlint:aidc`            | `paperlint:ieee-conference` | IEEE `IEEEtran` conference, `compsoc` | `regular` (12), `short` (6)                              | yes, before the references — see below | — (`blind`)                                 |
+| preset                      | extends                     | template                                          | kinds                                                    | page limit checked                     | rules it turns on                           |
+| --------------------------- | --------------------------- | ------------------------------------------------- | -------------------------------------------------------- | -------------------------------------- | ------------------------------------------- |
+| `paperlint:acm-sigconf`     | —                           | ACM `acmart` sigconf                              | none                                                     | no (no kinds)                          | —                                           |
+| `paperlint:agenticdev`      | `paperlint:acm-sigconf`     | ACM `acmart` sigconf                              | `short` (5 + 2 refs), `full` (10 + 2), `demo` (5 + 2)    | yes                                    | `pdf/last-page-balance`, `tex/heading-case` |
+| `paperlint:aisec`           | `paperlint:acm-sigconf`     | ACM `acmart` sigconf                              | `research`, `benchmark`, `position`, `sok` (10 + 2 each) | yes                                    | —                                           |
+| `paperlint:realm`           | —                           | ACL                                               | `long`, `short`                                          | no — see below                         | —                                           |
+| `paperlint:ieee-conference` | —                           | IEEE `IEEEtran` conference                        | none                                                     | no (no kinds)                          | —                                           |
+| `paperlint:aidc`            | `paperlint:ieee-conference` | IEEE `IEEEtran` conference, `compsoc`             | `regular` (12), `short` (6)                              | yes, before the references — see below | — (`blind`)                                 |
+| `paperlint:msr`             | `paperlint:ieee-conference` | IEEE `IEEEtran` `[10pt,conference]`, no `compsoc` | `technical` (10 + 2 of only references)                  | yes, appendices included — see below   | — (`blind`)                                 |
 
 That is all that ships today. There is no NeurIPS, USENIX or Springer preset. A paper for an ACM or
 IEEE conference venue nobody has profiled can extend `paperlint:acm-sigconf` or
@@ -133,7 +134,12 @@ would fail a correct paper. AIDC's limit is checked by another count, for the sa
 a page as body when an appendix or the LLM Usage Statement sits on it, and AIDC counts neither, so a
 correct 12-page paper measured 13. Its preset sets `"body_ends_at": "references"`: the body is the
 pages before the one where the references heading first appears. It is also `"blind": true`, which
-turns on [`anonymity/identity`](rules/anonymity/identity.md). AgenticDev's turns on `pdf/last-page-balance`
+turns on [`anonymity/identity`](rules/anonymity/identity.md). MSR's limit is checked by a third
+count: its ten pages of main text include the appendices, and only pages holding nothing but
+references are the two extra ones. banal types a page whose first heading reads «Appendix» as
+bibliography and an appendix after the references as references, so its preset adds
+`"appendix_in_body": true` ([page](rules/format/page-limit.md)); it also forbids the `compsoc` and
+`compsocconf` class options its call rules out (`template_forbids`). AgenticDev's turns on `pdf/last-page-balance`
 because its proceedings are produced by Conference Publishing Consulting, which sends back an
 unbalanced last page; AISec's does not, because nothing in hand says who produces the AISec
 proceedings.
@@ -141,7 +147,7 @@ proceedings.
 **How presets are named.** A template family — the preset venues extend, owning the template,
 the format and the TeX packages — is `<publisher>-<template variant>`: `acm-sigconf`, `ieee-conference`. A venue
 is its own short name, lowercase, with no publisher and no parent-conference prefix: `aisec`,
-`agenticdev`, `realm`, `aidc`. Which template a venue uses is said by its `extends`, not by its
+`agenticdev`, `realm`, `aidc`, `msr`. Which template a venue uses is said by its `extends`, not by its
 name — a name repeating it would be wrong the day the venue changes template — and the parent
 conference (CCS, ASE, ACSAC) goes into the preset's comment and its `aliases`.
 

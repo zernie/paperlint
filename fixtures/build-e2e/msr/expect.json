@@ -1,0 +1,18 @@
+{
+  "$comment": "A real IEEEtran [10pt,conference] paper for MSR whose ten pages of main text include an appendix before the references, with two pages of only references: format/page-limit, tex/template and anonymity/identity have nothing to say. banal's own count (body 9, references 3) would fail it.",
+  "build": {
+    "outcome": "pdf",
+    "pages": 12
+  },
+  "fonts": {
+    "some": "NimbusRomNo9L",
+    "none": "^(CMR|CMBX|CMTI|CMTT|CMSS|LMRoman)"
+  },
+  "lint": {
+    "rules": {
+      "format/page-limit": [],
+      "tex/template": [],
+      "anonymity/identity": []
+    }
+  }
+}

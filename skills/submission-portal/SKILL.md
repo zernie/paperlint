@@ -4,7 +4,7 @@ description: "Read or change a paper's submission on the venue's HotCRP portal v
 allowed-tools: [Read, Grep, Glob, Bash]
 ---
 
-<!-- vigiles:sha256:deb3d74f5c3f93a8 compiled from skills/submission-portal/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:4b3a8c0b51ebe206 compiled from skills/submission-portal/SKILL.md.spec.ts -->
 
 # submission-portal — read and update the submission on the portal, then prove it landed
 
@@ -14,7 +14,7 @@ supported; for any other portal the command says so and the upload is done by ha
 ## What must be in place
 
 - **The venue preset declares the portal**: `"portal": { "kind": "hotcrp", "url": "<the site>" }`
-  (`paperlint:aidc` has it). For your own venue preset, add it there.
+  (`paperlint:aidc` and `paperlint:msr` have it). For your own venue preset, add it there.
 - **The paper's `paperlint.json` names its submission**: `"submission": { "id": <number> }` — the
   number HotCRP shows for the paper.
 - **A token in `HOTCRP_TOKEN`**, created by the author on the HotCRP site under Account settings →

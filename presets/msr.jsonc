@@ -1,0 +1,67 @@
+// MSR 2027 Technical Papers (the 24th International Conference on Mining Software Repositories) — a
+// VENUE preset over the IEEE conference family. Everything the IEEEtran template decides (page
+// size, columns, fonts, body size, TeX packages) comes from ieee-conference.jsonc; this file adds
+// what MSR's call for papers sets.
+//
+// Verbatim from https://2027.msrconf.org/track/msr-2027-technical-papers (fetched 2026-10-05):
+//   «All submissions must conform to the IEEE conference proceedings template, specified in the
+//    IEEE Conference Proceedings Formatting Guidelines (title in 24pt font and full text in 10pt
+//    type, LaTeX users must use \documentclass[10pt,conference]{IEEEtran} without including the
+//    compsoc or compsocconf options).»
+//   «Note that IEEE format is being used this year, whereas last year it was ACM format.»
+//   «All submissions must not exceed 10 pages for the main text, inclusive of all figures, tables,
+//    appendices, etc. Two more pages containing only references are permitted. All submissions
+//    must be in PDF. Accepted papers will be allowed one extra page for the main text of the
+//    camera-ready version.»
+//   «The MSR 2027 Technical Track will employ a double-anonymous review process.»
+//
+// The dates are not lint facts; they are in the card, msr.md beside this file.
+{
+  "type": "venue",
+  "name": "MSR",
+  // The call quoted above.
+  "url": "https://2027.msrconf.org/track/msr-2027-technical-papers",
+  "extends": "paperlint:ieee-conference",
+
+  // «The MSR 2027 Technical Track will employ a double-anonymous review process. Thus, no
+  // submission may reveal its authors' identities.» (the call above), and `"blind":true` in the
+  // portal's data (https://msr2027.hotcrp.com/deadlines, 2026-10-05). anonymity/identity then
+  // requires the paper's `identity`.
+  "blind": true,
+
+  // «Papers must be submitted through HotCRP: https://msr2027.hotcrp.com/» (the call above).
+  // Recorded 2026-10-05: `/api/whoami` on this site answers 401 "Missing credentials" without a
+  // token — the HotCRP API, there.
+  "portal": { "kind": "hotcrp", "url": "https://msr2027.hotcrp.com" },
+
+  // What the venue is called in a paper's text (tex/venue-leftover).
+  "aliases": ["MSR"],
+
+  // The class line the call names, with the two options it forbids (tex/template). The family's
+  // `[conference]` text block (7.14 x 9.30 in) is the one this line builds, so no `format` override.
+  "template": "\\documentclass[10pt,conference]{IEEEtran}",
+  "template_forbids": ["compsoc", "compsocconf"],
+
+  "format": {
+    // 🔴 THE MAIN TEXT INCLUDES THE APPENDICES, AND THE REFERENCE PAGES ARE THE ONES WITH ONLY
+    // REFERENCES — not banal's count. Measured 2026-10-05 on IEEEtran [10pt,conference] builds:
+    //   10 pages of main text, its appendix before the references, 2 reference-only pages
+    //     → banal: body 9, references 3 (a page whose first heading reads «Appendix» is typed as
+    //       bibliography) — a correct paper fails
+    //   11 pages of main text, the appendix after the references
+    //     → banal: body 10, references 2 (the appendix taken for more references) — an over-long
+    //       paper passes
+    // So format/page-limit counts from the text (`appendix_in_body`): the body is every page up to
+    // the references, that page too when body text stands above the heading, plus every page from
+    // an appendix that follows the references; the pages between are the reference pages
+    // (docs/rules/format/page-limit.md). An appendix after the references is found by hyperref's
+    // anchor: load hyperref.
+    "body_ends_at": "references",
+    "appendix_in_body": true,
+
+    // One kind: the Technical Track's papers. The camera-ready's extra page is not this limit.
+    "kinds": {
+      "technical": { "body_pages_max": 10, "ref_pages_max": 2 },
+    },
+  },
+}

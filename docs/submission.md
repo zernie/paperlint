@@ -19,7 +19,7 @@ Two keys, each in the file that owns the fact, and a token:
 | the paper's `paperlint.json` | `"submission": { "id": 7 }`                          | which submission on that portal is this paper's |
 | the environment              | `HOTCRP_TOKEN`                                       | an API token for your HotCRP account            |
 
-`paperlint:aidc` declares its portal. For another venue, add `portal` to your own preset (see
+`paperlint:aidc` and `paperlint:msr` declare their portals. For another venue, add `portal` to your own preset (see
 [`rules.md`](rules.md)) — or upload by hand: a kind paperlint has no adapter for is refused with
 `portal kind "<kind>" is not supported; upload by hand`.
 

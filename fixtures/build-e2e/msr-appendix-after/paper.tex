@@ -1,0 +1,48 @@
+% A paper in the class MSR's call names, built by the e2e on paperlint's own TeX Live, that is ONE
+% PAGE OVER MSR's limit through its appendix: the body ends on page 10, the references follow it
+% there, and the appendix after them runs from the foot of page 10 through page 11 (rendered and
+% looked at, 2026-10-05) — eleven pages holding main text. banal's count says body 9, references 2,
+% and would pass it; format/page-limit counts the appendix as body and must not.
+%
+% The prose is one paragraph set many times; each copy carries its own number in words on every
+% line, so no line repeats from page to page as a running header would.
+\documentclass[10pt,conference]{IEEEtran}
+\usepackage{hyperref}
+\newcount\paracount
+\newcommand{\n}{\romannumeral\paracount}
+\newcommand{\para}{\global\advance\paracount by 1
+Paragraph \n{} studies the history of a repository, and \n{} counts its commits by author \n{}
+and by month \n{}, so that the measurement \n{} has a body of prose \n{} set in the two columns
+\n{} of the conference format. Paragraph \n{} says nothing new, and \n{} does not need to: the
+fixture \n{} is about the class, \n{} the fonts and \n{} the page count, and \n{} not about its
+content. A reviewer of \n{} would find it dull, \n{} which is what a measurement \n{} should be.\par}
+\newcount\loopcount
+\newcommand{\paras}[1]{\loopcount=0 \loop\para\advance\loopcount by 1 \ifnum\loopcount<#1\repeat}
+\newcount\bibcount
+\newcommand{\entries}[1]{\bibcount=0 \loop\advance\bibcount by 1
+\bibitem{r\the\bibcount} A. Author, ``Mining study \romannumeral\bibcount,'' in \emph{Proc.
+Workshop}, 2024, pp. 1--10.\ifnum\bibcount<#1\repeat}
+\begin{document}
+\title{A Fixture Typeset in the Class the Venue Requires}
+\author{\IEEEauthorblockN{Anonymous Author}\IEEEauthorblockA{Anonymous Institution}}
+\maketitle
+\begin{abstract}
+The abstract exists so the build has the front matter an IEEE paper carries.
+\end{abstract}
+\section{Introduction}
+\paras{24}
+\section{Part Two}
+\paras{24}
+\section{Part Three}
+\paras{24}
+\section{Part Four}
+\paras{24}
+\section{Part Five}
+\paras{24}
+\begin{thebibliography}{999}
+\entries{60}
+\end{thebibliography}
+\appendix
+\section{Detailed Results}
+\paras{12}
+\end{document}

@@ -30,7 +30,7 @@ versions. `compsoc` changes the text block and the headings, and nothing the `pd
 <!-- prettier-ignore-start -->
 <!-- Generated from ieee-conference.jsonc by `npx eslint --fix` (rule preset/card-rules). Edit the preset, not this section. -->
 
-**`paperlint:ieee-conference`** — template family, no venue of its own · extended by `paperlint:aidc`
+**`paperlint:ieee-conference`** — template family, no venue of its own · extended by `paperlint:aidc`, `paperlint:msr`
 
 No preset of this chain sets a rule: under it, every rule keeps paperlint's default.
 

@@ -1,0 +1,1 @@
+{"extends": "paperlint:msr", "kind": "technical", "identity": ["Ada Example", "adaexample", "ada@example.org", "Example University", "exampletool"]}

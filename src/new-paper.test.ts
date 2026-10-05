@@ -234,6 +234,33 @@ describe("paperlint new --venue / --kind", () => {
   });
 });
 
+describe("paperlint new --venue msr", () => {
+  it("`new --venue msr` writes MSR's class line, and once the paper declares who wrote it, lint is clean", async () => {
+    const r = await newIn(["--venue", "msr", "--kind", "technical"]);
+    const tex = readFileSync(join(r.dir, "paper.tex"), "utf8");
+    expect(tex).toContain("\\documentclass[10pt,conference]{IEEEtran}\n");
+    expect(r.out).not.toMatch(/tex\/template|format\/page-limit|pdf\/profile/);
+    // MSR reviews double-anonymously: the one thing the stub lacks is the authors' identity.
+    expect(r.out).toMatch(/anonymity\/identity/);
+    expect(r.code).toBe(1);
+    writeFileSync(
+      join(r.dir, "paperlint.json"),
+      JSON.stringify({ ...r.settings(), identity: ["Ada Example"] }),
+    );
+    const out: string[] = [];
+    const code = await run(["lint", r.dir], {
+      cwd: r.dir,
+      log: (s: string) => out.push(s),
+      err: () => {},
+    });
+    // Guards: what remains is the reminder that the PDF is not built yet — a warning, not a finding
+    // about the paper.
+    expect(out.join("\n")).toMatch(/\(0 errors, 1 warning\)/);
+    expect(out.join("\n")).toMatch(/pdf\/measured/);
+    expect(code).toBe(0);
+  });
+});
+
 describe("paperlint new --venue — a venue it cannot use", () => {
   it("an unknown venue exits 2, lists the shipped presets, and creates nothing", async () => {
     const r = await newIn(["--venue", "icse"]);

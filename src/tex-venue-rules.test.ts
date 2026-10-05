@@ -365,6 +365,37 @@ describe("tex/template — class options the preset forbids (`template_forbids`)
   });
 });
 
+describe("tex/template under paperlint:msr — `[10pt,conference]`, without compsoc or compsocconf", () => {
+  const MSR = { extends: "paperlint:msr", kind: "technical" };
+
+  it("the class line MSR's call names passes", () => {
+    expect(
+      lint(paper("\\documentclass[10pt,conference]{IEEEtran}", "Text."), MSR),
+    ).toEqual([]);
+  });
+
+  it.each([["compsoc"], ["compsocconf"]])(
+    "🔴 `%s` in the class options fails tex/template",
+    (option) => {
+      const fs = lint(
+        paper(`\\documentclass[10pt,conference,${option}]{IEEEtran}`, "Text."),
+        MSR,
+      );
+      expect(ids(fs)).toEqual(["tex/template:forbiddenOption"]);
+      expect(fs[0]?.message).toMatch(
+        `the class option \`${option}\` is forbidden: MSR requires`,
+      );
+    },
+  );
+
+  it("AIDC's class line fails MSR on both counts: compsoc forbidden, 10pt missing", () => {
+    expect(ids(lint(OFFICIAL, MSR))).toEqual([
+      "tex/template:forbiddenOption",
+      "tex/template:missingOption",
+    ]);
+  });
+});
+
 describe("tex/template — forbidden options behind a switch, and down a chain", () => {
   it("behind a TeX switch, a candidate with a forbidden option is not the venue's class", () => {
     const two = (a: string, b: string) =>
@@ -818,6 +849,7 @@ describe("otherVenues", () => {
       "acm-sigconf",
       "AgenticDev",
       "AISec",
+      "MSR",
     ]);
   });
 });
