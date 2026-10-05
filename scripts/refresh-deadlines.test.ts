@@ -346,29 +346,37 @@ function presetsDirWith(): string {
 }
 
 describe("the script, as .github/workflows/deadlines.yml runs it", () => {
-  test("rewrites the moved deadline, reports the site it could not read, writes the summary — and exits 0", async () => {
-    const dir = presetsDirWith();
-    const summary = join(dir, "summary.md");
-    // Asynchronously: the local server answers from THIS process, which a synchronous spawn blocks.
-    const r = await promisify(execFile)(process.execPath, [
-      join(ROOT, "scripts", "refresh-deadlines.ts"),
-      "--presets",
-      dir,
-      "--summary",
-      summary,
-    ]); // rejects on a non-zero exit, with the output
-    expect(readings(readFileSync(join(dir, "msr.jsonc"), "utf8"))[0]?.at).toBe(
-      "2026-10-20T04:00:00Z",
-    );
-    expect(r.stdout).toMatch(
-      /^::warning title=deadlines::gone\.jsonc: could not read http:\/\/127\.0\.0\.1:\d+\/gone\/deadlines — HTTP 404: No such conference$/m,
-    );
-    const md = readFileSync(summary, "utf8");
-    expect(md).toMatch(
-      /^- `msr\.jsonc` \(http:\/\/127\.0\.0\.1:\d+\/msr\/deadlines\)\n {2}- submission: 2026-10-19T04:00:00Z → 2026-10-20T04:00:00Z$/m,
-    );
-    expect(md).toMatch(/could not read/);
-  });
+  // A real `node` process: Node strips the types of the script and everything it imports (TypeScript's
+  // JSON parser, Prettier) cold — about a second alone, several on a loaded machine, past vitest's 5 s.
+  test(
+    "rewrites the moved deadline, reports the site it could not read, writes the summary — and exits 0",
+    {
+      timeout: 60_000,
+    },
+    async () => {
+      const dir = presetsDirWith();
+      const summary = join(dir, "summary.md");
+      // Asynchronously: the local server answers from THIS process, which a synchronous spawn blocks.
+      const r = await promisify(execFile)(process.execPath, [
+        join(ROOT, "scripts", "refresh-deadlines.ts"),
+        "--presets",
+        dir,
+        "--summary",
+        summary,
+      ]); // rejects on a non-zero exit, with the output
+      expect(
+        readings(readFileSync(join(dir, "msr.jsonc"), "utf8"))[0]?.at,
+      ).toBe("2026-10-20T04:00:00Z");
+      expect(r.stdout).toMatch(
+        /^::warning title=deadlines::gone\.jsonc: could not read http:\/\/127\.0\.0\.1:\d+\/gone\/deadlines — HTTP 404: No such conference$/m,
+      );
+      const md = readFileSync(summary, "utf8");
+      expect(md).toMatch(
+        /^- `msr\.jsonc` \(http:\/\/127\.0\.0\.1:\d+\/msr\/deadlines\)\n {2}- submission: 2026-10-19T04:00:00Z → 2026-10-20T04:00:00Z$/m,
+      );
+      expect(md).toMatch(/could not read/);
+    },
+  );
 });
 
 describe("main — what it prints and returns", () => {
