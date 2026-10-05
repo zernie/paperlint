@@ -37,6 +37,8 @@
  *   no geometry (no banal)  pdf/measured (warn); geometry and body-size silent, page-limit judges
  *                           only a body counted before the references; fonts still judge
  *   kind does not resolve   pdf/profile (error); page-limit silent; everything else still judges
+ *   cycle phase `porting`   every rule silent — the source is in the previous venue's template by
+ *                           declaration (src/domain/cycle.ts); cycle/port-done watches the declaration
  */
 import { dirname, isAbsolute, join, basename, relative } from "node:path";
 import {
@@ -65,6 +67,7 @@ import {
   type PageSplit,
 } from "./domain/body-pages.ts";
 import type { TextFacts } from "./facts-file.ts";
+import { effectiveBlind, isPorting } from "./domain/cycle.ts";
 
 // ── the verdict's vocabulary ─────────────────────────────────────────────────────────
 
@@ -98,6 +101,12 @@ export type Assessment =
   /** A `paperlint.json` that extends no preset yet — `pdf/measured` names the file to set. */
   | { readonly kind: "no-preset"; readonly file: string }
   | { readonly kind: "unresolved"; readonly finding: Finding }
+  /**
+   * The current cycle declares its port to the venue's template as open work (`"phase": "porting"`):
+   * a PDF built with the previous venue's template says nothing about this venue's limits, so every
+   * venue rule is silent, and `cycle/port-done` speaks when the port is done and the phase still says so.
+   */
+  | { readonly kind: "porting" }
   | { readonly kind: "unbuilt"; readonly venue: Resolved }
   | { readonly kind: "stale"; readonly finding: Finding }
   | {
@@ -147,9 +156,13 @@ function kindOf(
 /** How the venue reviews, and who the paper says wrote it: what `anonymity/*` judges by. */
 const reviewOf = (
   preset: Pick<Preset, "blind">,
-  settings: Pick<PaperSettings, "identity">,
+  settings: Pick<PaperSettings, "identity" | "cycles">,
 ): Pick<Resolved, "blind" | "identity"> => ({
-  blind: preset.blind,
+  // An accepted attempt's camera-ready carries the authors: no longer blind.
+  blind: effectiveBlind(
+    preset.blind,
+    settings.cycles?.current ?? { kind: "none" },
+  ),
   identity: settings.identity,
 });
 
@@ -174,6 +187,14 @@ function freshFacts(
 
 const isFinding = (v: object): v is Finding => "messageId" in v;
 
+/** The paper's declared venue and kind, resolved: what the judges compare the facts against. */
+const resolvedOf = (preset: Preset, settings: PaperSettings): Resolved => ({
+  venue: preset.label,
+  format: preset.format,
+  ...kindOf(preset.label, preset.format, settings.kind),
+  ...reviewOf(preset, settings),
+});
+
 /** One paper, assessed. Reads through `deps.files` only; never throws on a paper's files. */
 export function assessPaper(paperDir: string, deps: VenueRuleDeps): Assessment {
   const p = paperPreset(paperDir, deps);
@@ -191,13 +212,9 @@ export function assessPaper(paperDir: string, deps: VenueRuleDeps): Assessment {
       kind: "unresolved",
       finding: finding("preset", { why: presetProblemText(p.problem) }),
     };
-  const label = p.preset.label;
-  const venue: Resolved = {
-    venue: label,
-    format: p.preset.format,
-    ...kindOf(label, p.preset.format, p.settings.kind),
-    ...reviewOf(p.preset, p.settings),
-  };
+  if (p.settings.cycles !== null && isPorting(p.settings.cycles.current))
+    return { kind: "porting" };
+  const venue = resolvedOf(p.preset, p.settings);
   const factsText = text(deps.files, factsPath(paperDir));
   if (factsText === null) return { kind: "unbuilt", venue };
   const facts = freshFacts(deps.files, paperDir, factsText);

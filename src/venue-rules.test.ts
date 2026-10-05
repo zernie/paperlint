@@ -1193,3 +1193,52 @@ describe("judgeBodyEnd, on a venue it does not apply to", () => {
     expect(judgeBodyEnd(NO_TEXT, venue(null))).toEqual([]);
   });
 });
+
+/** A paper on AIDC through `cycles`: one attempt, open unless `outcome` says otherwise. */
+const onCycle = (cycle: Record<string, unknown>) => ({
+  identity: ["Ada Example"],
+  cycles: [
+    {
+      id: "aidc-2026",
+      venue: { kind: "preset", extends: "paperlint:aidc" },
+      kind: "regular",
+      opened: "2026-09-26",
+      ...cycle,
+    },
+  ],
+});
+
+describe("the cycle decides what applies", () => {
+  it("an open cycle reads as the flat form: the same findings on the same facts", () => {
+    const facts = said((f) => (f.columns = 1));
+    expect(ids(lint({ venue: onCycle({}), facts }))).toEqual(
+      ids(lint({ venue: BLIND, facts })),
+    );
+    expect(ids(lint({ venue: onCycle({}), facts }))).toContain(
+      "pdf/geometry:columns",
+    );
+  });
+
+  it("`phase: porting` — the source is in the previous venue's template by declaration: every venue rule is silent", () => {
+    const facts = said(
+      (f) => ((f.columns = 1), (f.pages_text = ["Ada Example\n"])),
+    );
+    expect(lint({ venue: onCycle({ phase: "porting" }), facts })).toEqual([]);
+    expect(lint({ venue: onCycle({ phase: "porting" }), facts: null })).toEqual(
+      [],
+    );
+  });
+
+  it("an ACCEPTED cycle at a blind venue: the camera-ready carries the authors, anonymity/identity is silent", () => {
+    const facts = said((f) => (f.pages_text = ["Ada Example\n"]));
+    const accepted = {
+      kind: "accepted",
+      date: "2026-10-16",
+      evidence: "reviews/decision.md",
+    };
+    expect(ids(lint({ venue: onCycle({}), facts }))).toContain(
+      "anonymity/identity:leak",
+    );
+    expect(lint({ venue: onCycle({ outcome: accepted }), facts })).toEqual([]);
+  });
+});

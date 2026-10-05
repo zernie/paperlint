@@ -52,6 +52,7 @@ import type { PaperSource } from "./domain/paper-source.ts";
 import { readPaper, reportInPaper } from "./tex-paper.ts";
 import type { RequiredSection } from "./tex-requirements.ts";
 import type { Finding, VenueRuleDeps } from "./venue-rules.ts";
+import { isPorting } from "./domain/cycle.ts";
 
 /** A finding and where it points; null points at the top of the file. */
 export interface Located extends Finding {
@@ -493,6 +494,10 @@ function readingOf(
   const dir = dirname(filename);
   const p = paperPreset(dir, deps);
   if (p.kind !== "resolved") return null;
+  // The port to this venue's template is declared open work: the class line is the previous
+  // venue's by declaration, and `cycle/port-done` watches that declaration.
+  if (p.settings.cycles !== null && isPorting(p.settings.cycles.current))
+    return null;
   const preset = p.preset;
   const others = () => otherVenues(preset, deps);
   const paper = readPaper(filename, src, deps);

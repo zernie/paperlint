@@ -302,6 +302,26 @@ describe("tex/template — the shipped ACM and ACL templates", () => {
   });
 });
 
+describe("tex/template — a cycle in `porting`", () => {
+  it("the class line is the previous venue's by declaration: silent, where the flat form reports", () => {
+    const src = paper("\\documentclass[sigconf]{acmart}");
+    expect(lint(src, AIDC).map((f) => f.messageId)).toEqual(["wrongClass"]);
+    const cycle = {
+      id: "aidc-2026",
+      venue: { kind: "preset", extends: "paperlint:aidc" },
+      kind: "regular",
+      opened: "2026-09-26",
+      phase: "porting",
+    };
+    expect(lint(src, { cycles: [cycle] })).toEqual([]);
+    expect(
+      lint(src, { cycles: [{ ...cycle, phase: "prepared" }] }).map(
+        (f) => f.messageId,
+      ),
+    ).toEqual(["wrongClass"]);
+  });
+});
+
 describe("tex/template — a project's own preset, and nothing to judge", () => {
   it("a preset with no template: nothing to compare, no finding", () => {
     const own = `${PAPER}/own.jsonc`;
