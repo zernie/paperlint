@@ -204,3 +204,15 @@ test("a source code made from a parse result without the raw text reads the proj
     [true, undefined, true],
   );
 });
+
+test("🔴 a heading written over several lines keeps every newline, so the projection's lines are the source's", () => {
+  const src = "\\section{Related\nwork in\nthe field}\nText.\n";
+  const { text } = texToMdast(src);
+  // Guards: a line number computed on the projection (ESLint's getLocFromIndex) is the source's.
+  assert.equal(text.length, src.length);
+  assert.deepEqual(
+    [...text].flatMap((c, i) => (c === "\n" ? [i] : [])),
+    [...src].flatMap((c, i) => (c === "\n" ? [i] : [])),
+  );
+  assert.equal(text.split("\n")[3], "Text.");
+});

@@ -9,7 +9,7 @@ import { experimental_skill } from "vigiles/spec";
 export default experimental_skill({
   name: "find-venue",
   description:
-    "Discover and rank real venues for a given paper, scored by authorship credit not just prestige. Fetch candidate CFPs (WebSearch/WebFetch), capture deadline / page limit / paper-type fit / indexing (ACM DL / IEEE Xplore / archival vs non-archival) / double-blind / remote-attendance / selectivity, then rank by credit-weight (peer-reviewed + indexed + parent-venue prestige) × topic fit × accept-probability × deadline feasibility × remote-friendliness. Emit a comparison table and a keep/switch recommendation. Encodes: workshop newness does NOT hurt authorship; non-archival workshops rank LOW; the prestige move is to EXTEND the accepted paper later, not hold out. Compose with research-ideate (upstream), plan-paper-timeline, the submit-paper venue data cards (submit-paper/references/venues/<venue>.md), and extend-paper.",
+    "Discover and rank real venues for a given paper, scored by authorship credit not just prestige. Fetch candidate CFPs (WebSearch/WebFetch), capture deadline / page limit / paper-type fit / indexing (ACM DL / IEEE Xplore / archival vs non-archival) / double-blind / remote-attendance / selectivity, then rank by credit-weight (peer-reviewed + indexed + parent-venue prestige) × topic fit × accept-probability × deadline feasibility × remote-friendliness. Emit a comparison table and a keep/switch recommendation. Encodes: workshop newness does NOT hurt authorship; non-archival workshops rank LOW; the prestige move is to EXTEND the accepted paper later, not hold out. Compose with research-ideate (upstream), plan-paper-timeline, the venue cards (presets/<venue>.md in the paperlint package), and extend-paper.",
   tools: ["Read", "Write", "Grep", "Glob", "WebSearch", "WebFetch", "Agent"],
   body: `
 # find-venue — rank real venues by what earns the credit, then keep or switch
@@ -87,9 +87,10 @@ rank = credit-weight × topic-fit × accept-probability × deadline-feasibility 
   \`{ "extends": "paperlint:<venue>", "kind": "<kind>" }\` — a shipped preset, else a family
   (\`paperlint:acm-sigconf\`) or the project's own \`./venues/<name>.jsonc\`; the \`pdf/*\` rules then
   check the built PDF against its page limit and format.
-- \`submit-paper\` venue data cards (\`submit-paper/references/venues/<venue>.md\`, e.g. \`agenticdev.md\`,
-  \`aisec.md\`) — the winner gets a venue-specific data card with its HotCRP quirks; save a new one per
-  venue as plain data, not a new skill.
+- the venue cards, \`presets/<venue>.md\` in the paperlint package beside each venue preset (e.g.
+  \`agenticdev.md\`, \`aisec.md\`) — the winner gets a card with its HotCRP quirks beside its preset;
+  for a venue with no shipped preset, the project's own \`./venues/<name>.md\` beside its
+  \`./venues/<name>.jsonc\`. Plain data, not a new skill.
 - \`extend-paper\` — the prestige-upgrade target this skill names but defers.
 
 ## Provenance

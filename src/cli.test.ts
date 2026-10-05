@@ -10,7 +10,12 @@ import { existsSync } from "node:fs";
 import { createServer } from "node:http";
 import { dirname, join } from "node:path";
 import { test } from "vitest";
-import { runNode, useTempDir, writeTree } from "../test/support.ts";
+import {
+  runNode,
+  useTempDir,
+  venuePreset,
+  writeTree,
+} from "../test/support.ts";
 import type { runToolchain } from "./toolchain.ts";
 import {
   chooseVenue,
@@ -195,8 +200,12 @@ test("runHook: a runtime with no cli.js beside it, and a hook killed by a signal
 test("chooseVenue: a preset by path (inside and outside the paper), by prefixed name, and a broken one", async () => {
   const dir = join(root, "venues");
   writeTree(dir, {
-    "papers/p/mine.jsonc": JSON.stringify({ extends: "paperlint:agenticdev" }),
-    "shared/ours.jsonc": JSON.stringify({ extends: "paperlint:agenticdev" }),
+    "papers/p/mine.jsonc": JSON.stringify(
+      venuePreset("mine", { extends: "paperlint:agenticdev" }),
+    ),
+    "shared/ours.jsonc": JSON.stringify(
+      venuePreset("ours", { extends: "paperlint:agenticdev" }),
+    ),
     "shared/broken.jsonc": "{ nope",
   });
   const paperDir = join(dir, "papers", "p");
@@ -392,6 +401,38 @@ test("a paper's paperlint.json that does not parse stops the lint with its path"
 test("silentOptionalRules: a config with no rules turns nothing on", async () => {
   const eslint = { calculateConfigForFile: () => Promise.resolve(undefined) };
   assert.deepEqual(await silentOptionalRules(eslint, [], {}), []);
+});
+
+const lastPageOn = {
+  rules: [
+    { basePath: ".", rules: { "pdf/last-page-balance": "error" as const } },
+  ],
+};
+const eslintWith = (rules: Record<string, unknown>) => ({
+  calculateConfigForFile: () => Promise.resolve({ rules }),
+});
+
+test("silentOptionalRules: a rule on for a paper is reached", async () => {
+  const eslint = eslintWith({ "pdf/last-page-balance": [2, {}] });
+  assert.deepEqual(
+    await silentOptionalRules(eslint, ["p/paper.tex"], lastPageOn),
+    [],
+  );
+});
+
+test("silentOptionalRules: a rule a paper's own block turns off is reached — the way out of a preset's", async () => {
+  const eslint = eslintWith({ "pdf/last-page-balance": [0] });
+  assert.deepEqual(
+    await silentOptionalRules(eslint, ["p/paper.tex"], lastPageOn),
+    [],
+  );
+});
+
+test("silentOptionalRules: a rule no block names for any paper is silent — a glob that matched nothing", async () => {
+  assert.deepEqual(
+    await silentOptionalRules(eslintWith({}), ["p/paper.tex"], lastPageOn),
+    ["pdf/last-page-balance"],
+  );
 });
 
 test("init with no path and --format md sets up the current directory", async () => {
@@ -645,10 +686,12 @@ test("parseArgs: submission's flags — two values and two switches", () => {
 const submissionPaper = (dir: string, site: string): void => {
   writeTree(dir, {
     "package.json": "{}",
-    "venue.jsonc": JSON.stringify({
-      extends: "paperlint:aidc",
-      portal: { kind: "hotcrp", url: site },
-    }),
+    "venue.jsonc": JSON.stringify(
+      venuePreset("venue", {
+        extends: "paperlint:aidc",
+        portal: { kind: "hotcrp", url: site },
+      }),
+    ),
     "papers/p/paperlint.json": JSON.stringify({
       extends: "../../venue.jsonc",
       submission: { id: 7 },

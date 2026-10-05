@@ -8,9 +8,10 @@ rules apply to that paper. The root `paperlint.json` can turn it on for every pa
 with a block ([`configuration.md`](configuration.md#the-rules-key-turning-rules-on-and-off)); a
 paper's own file still has the last word for that paper.
 
-| rule                    | what it checks                                                | who needs it                                              |
-| ----------------------- | ------------------------------------------------------------- | --------------------------------------------------------- |
-| `pdf/last-page-balance` | the two columns of the last page end at about the same height | two-column papers whose publisher asks for it — see below |
+| rule                                            | what it checks                                                                              | who needs it                                                                                                                                                                            |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pdf/last-page-balance`                         | the two columns of the last page end at about the same height                               | two-column papers whose publisher asks for it — see below                                                                                                                               |
+| [`tex/heading-case`](rules/tex/heading-case.md) | the words of the paper's title and of each heading are in the capitalization the venue asks | papers whose venue names a case style paperlint builds; only the AgenticDev preset turns it on (`chicago-headline` for the title and every heading) — [page](rules/tex/heading-case.md) |
 
 ## `pdf/last-page-balance`
 

@@ -1,5 +1,5 @@
-// REALM @ EMNLP 2026 format profile — ACL family, NOT ACM. Prose is in `realm.md` nearby,
-// the family's shared rules are in `paper-pipeline/references/acl-venue-rules.md`.
+// REALM @ EMNLP 2026 format profile — ACL family, NOT ACM. Prose is in its card, `realm.md`
+// beside this file; the family's shared rules are in `paper-pipeline/references/acl-venue-rules.md`.
 //
 // 🔴 THE GEOMETRY NUMBERS ARE MEASURED, NOT COPIED. banal run against our own build
 // (`repro/build-submission.sh` → `build/acl_latex.pdf`, 2026-08-26):
@@ -8,6 +8,11 @@
 // acmart (letter 8.5x11, size 9, Libertine) shares NOTHING with this — copying the numbers from
 // `agenticdev.jsonc` would give a gate that reddens on a correct paper.
 {
+  "type": "venue",
+  "name": "REALM",
+  // The workshop's call for papers, which the page limits below are quoted from.
+  "url": "https://realm-workshop.github.io/call_for_papers",
+
   // ACL's template is not a class: `acl_latex.tex` opens with `\documentclass[11pt]{article}` and
   // loads `acl.sty` as a package (https://github.com/acl-org/acl-style-files, checked 2026-09-27).
   // So the class `tex/template` compares against is article, at 11pt.

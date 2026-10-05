@@ -567,10 +567,23 @@ export function texToMdast(
         // project to ATX: `##` where `\se` was, the rest spaces; the closing `}` too
         blank(pos.start.offset, end.offset + 1);
         for (let i = 0; i < depth; i++) chars[pos.start.offset + i] = "#";
-        const tStart = end.offset - title.length;
-        title.split("").forEach((ch, i) => {
-          chars[tStart + i] = ch;
-        });
+        // 🔴 The title is written right-aligned against the closing `}`, into the cells that are
+        // not a newline: a heading written over several lines keeps every `\n` where it was. The
+        // projection's lines must be the source's — ESLint turns an offset into a line on this
+        // text (`getLocFromIndex`), and a rule that reports a raw offset after a two-line heading
+        // was reported one line up, outside the reach of a disable directive. Measured 2026-10-04.
+        const cells = [...Array(end.offset - pos.start.offset - depth).keys()]
+          .map((k) => end.offset - 1 - k)
+          .filter((o) => src[o] !== "\n")
+          .slice(0, title.length)
+          .reverse();
+        const tStart = cells[0] ?? end.offset;
+        title
+          .slice(title.length - cells.length)
+          .split("")
+          .forEach((ch, i) => {
+            chars[nth(cells, i)] = ch;
+          });
         const tPos = { start: loc(tStart), end: loc(end.offset) };
         children.push({
           type: "heading",

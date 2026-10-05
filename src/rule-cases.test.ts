@@ -18,7 +18,7 @@ import { z } from "zod";
 import { run, rulePlugins } from "./cli.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import { bibHash } from "./references.ts";
-import { useTempDir, writeTree } from "../test/support.ts";
+import { useTempDir, venuePreset, writeTree } from "../test/support.ts";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const fixture = (p: string): string =>
@@ -39,19 +39,87 @@ const paper = (
   ...extra,
 });
 
+// ── the venues: presets of the tree's own, never the shipped ones ──────────────────────────────
+//
+// A case judges a RULE, so every number it is sized against is written here, beside the facts and
+// the bodies that meet or miss it. A shipped venue preset changes when its call for papers does;
+// its own tests resolve and judge it (presets.test.ts, venue-rules.test.ts, tex-venue-rules.test.ts,
+// register-bands.test.ts, heading-case.test.ts). The one exception is the leftover rules, below:
+// they name SHIPPED venues by design, so their reporting cases need one shipped venue's name.
+// The venues below extend a template family only for what the schema asks of a chain's root (its
+// `tex`), and set every key a case reads themselves.
+
+/** A short-paper venue on the ACM template: the format the facts of `goodFacts` meet. */
+const EXAMPLECONF = venuePreset("ExampleConf", {
+  extends: "paperlint:acm-sigconf",
+  format: {
+    page_w_in: 8.5,
+    page_h_in: 11,
+    columns: 2,
+    body_pt: 9,
+    body_pt_tol: 0.5,
+    ref_pt_min: 7,
+    ref_pt_max: 9,
+    fonts_text: "LinLibertine",
+    fonts_title: "LinBiolinum",
+    kinds: { short: { body_pages_max: 5, ref_pages_max: 2 } },
+  },
+  // chicago-headline for the title and every heading (tex/heading-case).
+  rules: {
+    "tex/heading-case": [
+      "error",
+      { title: "chicago-headline", headings: "chicago-headline" },
+    ],
+  },
+});
+const IEEE = "\\documentclass[conference,compsoc]{IEEEtran}";
+const STATEMENT_TITLE = "LLM Usage Statement";
+/**
+ * A double-blind venue on the IEEE template: the class options it requires, the section it requires
+ * last, and one accepted paper of 10,000 words for the register bands. Its rates (contrast frames 4,
+ * claims in bold 4, relation markers 64 per 10,000 words), widened by two Poisson standard
+ * deviations, set the bands 0–8, 0–8 and 48–80.
+ */
+const BLINDCONF = venuePreset("BlindConf", {
+  extends: "paperlint:ieee-conference",
+  blind: true,
+  template: IEEE,
+  required_sections: [{ title: STATEMENT_TITLE, position: "last" }],
+  register: {
+    anchors: [
+      {
+        paper: "an-accepted-paper",
+        words: 10_000,
+        contrast_frames: 4,
+        claim_emphasis: 4,
+        relation_markers: 64,
+      },
+    ],
+  },
+});
+/** The venue presets every built paper carries beside it, extended or not. */
+const VENUES = {
+  [`${P}/exampleconf.jsonc`]: JSON.stringify(EXAMPLECONF),
+  [`${P}/blindconf.jsonc`]: JSON.stringify(BLINDCONF),
+};
+/** A paper folder on BlindConf: the preset beside its `paperlint.json`. */
+const onBlindConf = (dir: string): Record<string, string> => ({
+  [`${dir}/blindconf.jsonc`]: JSON.stringify(BLINDCONF),
+  [`${dir}/paperlint.json`]: JSON.stringify({ extends: "./blindconf.jsonc" }),
+});
+
 // ── the venue rules' inputs: a PDF and the facts `paperlint build` would write about it ─────────
 
 const PDF = "%PDF-1.5 a stand-in for the built PDF";
-const AGENTICDEV = { extends: "paperlint:agenticdev", kind: "short" };
+const EXAMPLE = { extends: "./exampleconf.jsonc", kind: "short" };
 /** A double-blind venue's paper that declares who wrote it (`anonymity/*`). */
 const BLIND = {
-  extends: "paperlint:aidc",
-  kind: "regular",
+  extends: "./blindconf.jsonc",
   identity: ["Ada Example", "adaexample"],
 };
 const ACM_TEX = tex("Text.", "\\documentclass[sigconf]{acmart}");
 
-/** The facts of a short agenticdev paper that meets every number in its preset. */
+/** The facts of a short ExampleConf paper that meets every number in its preset. */
 const goodFacts = (): Record<string, unknown> => ({
   schema: 3,
   pages_text: [],
@@ -61,7 +129,7 @@ const goodFacts = (): Record<string, unknown> => ({
   appendix_anchor_page: null,
   pdf: "paper.pdf",
   pdf_sha256: sha256Hex(new TextEncoder().encode(PDF)),
-  venue: "agenticdev",
+  venue: "exampleconf",
   kind: "short",
   npages: 7,
   fonts_source: "pdfjs-drawn",
@@ -85,12 +153,13 @@ const goodFacts = (): Record<string, unknown> => ({
   pages_by_type: { body: 5, bib: 2 },
 });
 
-/** An agenticdev paper, built: its settings, the PDF, and facts with `patch` applied. */
+/** An ExampleConf paper, built: its settings, the PDF, and facts with `patch` applied. */
 const built = (
   patch: Record<string, unknown> = {},
-  settings: Record<string, unknown> = AGENTICDEV,
+  settings: Record<string, unknown> = EXAMPLE,
 ): Record<string, string> =>
   paper(ACM_TEX, {
+    ...VENUES,
     [`${P}/paperlint.json`]: JSON.stringify(settings),
     [`${P}/paper.pdf`]: PDF,
     [`${P}/_build/paper.facts.json`]: JSON.stringify({
@@ -129,23 +198,26 @@ const checked = (exists: string, authors: string) => ({
   entries: [{ key: "a", exists, authors }],
 });
 
-// ── an AIDC paper, for the LaTeX venue rules ──────────────────────────────────────────────────
+// ── a BlindConf paper, for the LaTeX venue rules ──────────────────────────────────────────────
 
-const AIDC = {
-  [`${P}/paperlint.json`]: JSON.stringify({
-    extends: "paperlint:aidc",
-    kind: "short",
-  }),
+const BLIND_PAPER = onBlindConf(P);
+const ACM_CLASS = "\\documentclass[sigconf]{acmart}";
+/** A paper on ExampleConf's preset: it turns `tex/heading-case` on, chicago-headline for the title and every heading. */
+const ACM_PRESET = {
+  ...VENUES,
+  [`${P}/paperlint.json`]: JSON.stringify(EXAMPLE),
 };
-const IEEE = "\\documentclass[conference,compsoc]{IEEEtran}";
-const STATEMENT = "\\section*{LLM Usage Statement}\nNone.";
+const STATEMENT = `\\section*{${STATEMENT_TITLE}}\nNone.`;
 /** Two `\\documentclass` lines behind a switch: `article` for one venue, `second` for this one. */
 const switched = (second: string): string =>
   `\\def\\venue{2}\n\\if\\venue1\n\\documentclass{article}\n\\fi\n\\if\\venue2\n${second}\n\\fi`;
-const aidc = (body: string, cls = IEEE) =>
-  paper(tex(`\\section{Introduction}\n${body}\n${STATEMENT}`, cls), AIDC);
+const blind = (body: string, cls = IEEE) =>
+  paper(
+    tex(`\\section{Introduction}\n${body}\n${STATEMENT}`, cls),
+    BLIND_PAPER,
+  );
 
-// ── a paper that declares a talk: a preset of its own over agenticdev, and synthetic media ───────
+// ── a paper that declares a talk: a preset of its own over ExampleConf, and synthetic media ──────
 
 const media = (name: string): Uint8Array =>
   readFileSync(join(ROOT, "fixtures", "talk", name));
@@ -173,10 +245,13 @@ const talkPaper = (
   };
   return {
     ...paper(ACM_TEX, {
-      [`${P}/talk-venue.jsonc`]: JSON.stringify({
-        extends: "paperlint:agenticdev",
-        talk: { ...TALK_VENUE, ...venue },
-      }),
+      ...VENUES,
+      [`${P}/talk-venue.jsonc`]: JSON.stringify(
+        venuePreset("talk-venue", {
+          extends: "./exampleconf.jsonc",
+          talk: { ...TALK_VENUE, ...venue },
+        }),
+      ),
       [`${P}/paperlint.json`]: JSON.stringify({
         extends: "./talk-venue.jsonc",
         kind: "short",
@@ -226,7 +301,7 @@ const FORMAL = Array.from(
 /** FORMAL with `n` more sentences `s`: a body whose rate of one register measure is set. */
 const formalWith = (n: number, s: string): string =>
   `${FORMAL} ${Array.from({ length: n }, () => s).join(" ")}`;
-/** FORMAL with enough relation markers for AIDC's band (above 25.4 per 10,000 words). */
+/** FORMAL with 20 relation markers, 68.7 per 10,000 words: inside BlindConf's band (48–80). */
 const LINKED = formalWith(
   10,
   "Therefore, the rule counts the sentence because the body holds it.",
@@ -373,49 +448,60 @@ const CASES: Readonly<Record<string, RuleCases>> = {
   // The class picked behind a TeX switch: two candidates, one of them the venue's or none.
   "tex/template": {
     reports: {
-      tree: aidc("Text.", switched("\\documentclass[conference]{IEEEtran}")),
+      tree: blind("Text.", switched("\\documentclass[conference]{IEEEtran}")),
       file: TEX_FILE,
       severity: 2,
       line: 3,
     },
-    silent: aidc("Text.", switched(IEEE)),
+    silent: blind("Text.", switched(IEEE)),
   },
   "tex/required-section": {
     reports: {
-      tree: paper(tex("\\section{Introduction}\nText.", IEEE), AIDC),
+      tree: paper(tex("\\section{Introduction}\nText.", IEEE), BLIND_PAPER),
       file: TEX_FILE,
       severity: 2,
       line: 5,
     },
-    silent: aidc("Text."),
+    silent: blind("Text."),
+  },
+  "tex/heading-case": {
+    reports: {
+      tree: paper(tex("\\section{Related work}", ACM_CLASS), ACM_PRESET),
+      file: TEX_FILE,
+      severity: 2,
+      line: 3,
+    },
+    silent: paper(tex("\\section{Related Work}", ACM_CLASS), ACM_PRESET),
   },
   "paper/folder-venue-leftover": {
     reports: {
-      // An AIDC paper still in the folder it had when it targeted AISec.
+      // A BlindConf paper in a folder named for EMNLP. The rule knows only the SHIPPED venues'
+      // names (REALM's preset calls it by its conference, EMNLP), so the other venue is one of them.
       tree: {
-        "papers/aisec-2026/PIPELINE-STATUS.md": STATUS,
-        "papers/aisec-2026/paper.tex": tex("x"),
-        "papers/aisec-2026/paperlint.json": AIDC[`${P}/paperlint.json`],
+        "papers/emnlp-2026/PIPELINE-STATUS.md": STATUS,
+        "papers/emnlp-2026/paper.tex": tex("x"),
+        ...onBlindConf("papers/emnlp-2026"),
       },
-      file: "papers/aisec-2026/PIPELINE-STATUS.md",
+      file: "papers/emnlp-2026/PIPELINE-STATUS.md",
       severity: 1,
       line: 1,
     },
     // The folder names the paper's own venue.
     silent: {
-      "papers/aidc-2026/PIPELINE-STATUS.md": STATUS,
-      "papers/aidc-2026/paper.tex": tex("x"),
-      "papers/aidc-2026/paperlint.json": AIDC[`${P}/paperlint.json`],
+      "papers/blindconf-2026/PIPELINE-STATUS.md": STATUS,
+      "papers/blindconf-2026/paper.tex": tex("x"),
+      ...onBlindConf("papers/blindconf-2026"),
     },
   },
+  // EMNLP, a shipped venue's name (REALM's conference), in a BlindConf paper's text.
   "tex/venue-leftover": {
     reports: {
-      tree: aidc("First written for AISec."),
+      tree: blind("First written for EMNLP."),
       file: TEX_FILE,
       severity: 1,
       line: 4,
     },
-    silent: aidc("Text."),
+    silent: blind("Text."),
   },
   "tex/claim-provenance": {
     reports: {
@@ -439,31 +525,31 @@ const CASES: Readonly<Record<string, RuleCases>> = {
     },
     silent: paper(tex(FORMAL)),
   },
-  // The three register bands judge a body against the anchors of AIDC's preset; the body opens on
-  // line 3, right after the \\section, where the finding about the whole body stands.
+  // The three register bands judge a body against the anchor of BlindConf's preset; the body opens
+  // on line 3, right after the \\section, where the finding about the whole body stands.
   "tex/contrast-frames": {
     reports: {
-      tree: aidc(formalWith(5, "It reads the word, not the operation.")),
+      tree: blind(formalWith(5, "It reads the word, not the operation.")),
       file: TEX_FILE,
       severity: 1,
       line: 3,
     },
-    silent: aidc(LINKED),
+    silent: blind(LINKED),
   },
   "tex/claim-emphasis": {
     reports: {
-      tree: aidc(
+      tree: blind(
         formalWith(6, "We find that \\textbf{the rule counts 46 sentences}."),
       ),
       file: TEX_FILE,
       severity: 1,
       line: 3,
     },
-    silent: aidc(LINKED),
+    silent: blind(LINKED),
   },
   "tex/relation-markers": {
-    reports: { tree: aidc(FORMAL), file: TEX_FILE, severity: 1, line: 3 },
-    silent: aidc(LINKED),
+    reports: { tree: blind(FORMAL), file: TEX_FILE, severity: 1, line: 3 },
+    silent: blind(LINKED),
   },
   "bib/reachable-entry": {
     reports: {
@@ -518,23 +604,23 @@ const CASES: Readonly<Record<string, RuleCases>> = {
   },
   "format/layout-override": {
     reports: {
-      tree: aidc("\\linespread{0.9}Text."),
+      tree: blind("\\linespread{0.9}Text."),
       file: TEX_FILE,
       severity: 2,
       line: 4,
     },
-    silent: aidc("\\vspace{-2mm}Text."),
+    silent: blind("\\vspace{-2mm}Text."),
   },
   "pdf/last-page-balance": {
     reports: onPdf(
       built(
         { last_page: { kind: "measured", columns_pt: [621.5, 264.8] } },
-        { ...AGENTICDEV, rules: { "pdf/last-page-balance": "error" } },
+        { ...EXAMPLE, rules: { "pdf/last-page-balance": "error" } },
       ),
     ),
     silent: built(
       {},
-      { ...AGENTICDEV, rules: { "pdf/last-page-balance": "error" } },
+      { ...EXAMPLE, rules: { "pdf/last-page-balance": "error" } },
     ),
   },
   "talk/profile": {

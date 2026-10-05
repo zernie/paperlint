@@ -20,3 +20,7 @@ _build/
 dist/
 # c8's report and raw V8 data (`npm run coverage`).
 coverage/
+
+# eslint-plugin-project-structure writes this into the project root when a preset has no card
+# (eslint.config.mjs, presetCards); a clean run removes it.
+projectStructure.cache.json

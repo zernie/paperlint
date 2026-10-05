@@ -67,7 +67,7 @@ A 12-page AIDC paper whose conclusion ends at the foot of page 12, «References�
 
 The same paper with the conclusion running four lines onto page 13, «References» below them:
 
-> body pages (up to the references on page 13): 13, over the limit 12 for aidc/regular — a desk
+> body pages (up to the references on page 13): 13, over the limit 12 for AIDC/regular — a desk
 > reject; cut the text
 
 An accepted ACSAC paper that places its appendix tables before the bibliography: the appendix starts

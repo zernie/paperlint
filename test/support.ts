@@ -46,6 +46,21 @@ export function writeTree(
   return root;
 }
 
+/**
+ * A venue preset of a test's own, as an object: the identity every venue declares, then `body`. Its
+ * `name` is `label` — the file name a preset without one was labelled by — so the messages a test
+ * expects keep naming it as before.
+ */
+export const venuePreset = (
+  label: string,
+  body: Readonly<Record<string, unknown>> = {},
+): Readonly<Record<string, unknown>> => ({
+  type: "venue",
+  name: label,
+  url: "https://example.org/cfp",
+  ...body,
+});
+
 /** `JSON.parse`, typed as what it is: a value nobody has checked yet. */
 export const parseJson = (text: string): unknown => JSON.parse(text);
 

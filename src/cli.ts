@@ -78,6 +78,7 @@ import {
   REGISTER_BAND_RULE_LEVELS,
   registerBandRules,
 } from "./register-bands.ts";
+import { headingCaseRule } from "./heading-case.ts";
 import {
   paperRules,
   identityField,
@@ -291,6 +292,18 @@ const TEX_RULE_DEPS = {
   latex: latexReader,
 };
 
+/** The register band rules and `tex/heading-case`: the rules of the `tex` plugin that read a paper's words. */
+const REGISTER_AND_CASE_RULES = {
+  ...registerBandRules(TEX_RULE_DEPS),
+  "heading-case": headingCaseRule(TEX_RULE_DEPS),
+};
+
+/** The rules of the files `paper.tex` includes, each read on its own as a fragment (#144). */
+const FRAGMENT_RULES = {
+  "future-promise": texBuild["future-promise"],
+  "heading-case": REGISTER_AND_CASE_RULES["heading-case"],
+};
+
 /** What the talk rules read with: the disk, the shipped presets, and the three media readers. */
 const TALK_RULE_DEPS = {
   files: nodeFiles,
@@ -402,7 +415,7 @@ export function buildConfig(
             ...texVenueRules(TEX_RULE_DEPS),
             "claim-provenance": claimProvenanceRule(TEX_RULE_DEPS),
             register: registerRule(TEX_RULE_DEPS),
-            ...registerBandRules(TEX_RULE_DEPS),
+            ...REGISTER_AND_CASE_RULES,
           },
         },
         paper: { rules: texPaperRules },
@@ -454,7 +467,7 @@ export function buildConfig(
           plugins: {
             tex: {
               languages: { latex: texLanguage },
-              rules: { "future-promise": texBuild["future-promise"] },
+              rules: FRAGMENT_RULES,
             },
             paper: {
               rules: {
@@ -623,7 +636,11 @@ export async function silentOptionalRules(
   for (const f of new Set(files.filter((p) => basename(p) === MAIN))) {
     // Undefined for a file outside ESLint's cwd or scope: it reaches nothing.
     const cfg = ComputedConfig.parse(await eslint.calculateConfigForFile(f));
-    for (const id of turnedOn) if (isOn(cfg?.rules?.[id])) reached.add(id);
+    // Reached is "some block names the rule for this paper", on OR off: a paper that turns off what
+    // its venue preset turned on is the documented way out, and reads the same as a glob that missed
+    // only if "off" is counted as "not there" — which refused every such paper.
+    for (const id of turnedOn)
+      if (cfg?.rules?.[id] !== undefined) reached.add(id);
   }
   return [...turnedOn].filter((id) => !reached.has(id));
 }
@@ -1162,7 +1179,7 @@ export async function createPaperAt(
 
 /** A venue `paperlint new` will write, with what the messages need to say about it. */
 export interface VenueChoice extends VenueSetting {
-  /** The preset's word in messages (`agenticdev`, `my-workshop`). */
+  /** The preset's word in messages: the venue's name (`AgenticDev`), else the file name (`my-workshop`). */
   readonly label: string;
   /** The preset's kinds; empty when it sets no page limit. */
   readonly kinds: readonly string[];

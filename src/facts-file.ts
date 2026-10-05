@@ -68,10 +68,10 @@ export const FACTS_FILE = "paper.facts.json";
 export const factsPath = (paperDir: string): string =>
   join(paperDir, FACTS_DIR, FACTS_FILE);
 
-/** What the facts need from a paper's `paperlint.json`: its venue's label, its kind, where its PDF is. */
+/** What the facts need from a paper's `paperlint.json`: its venue's preset id, its kind, where its PDF is. */
 export interface VenueDecl {
-  /** The venue preset's display label (`agenticdev`), or null when the paper extends none. */
-  readonly label: string | null;
+  /** The venue preset's id (`agenticdev`, never its display name), or null when the paper extends none. */
+  readonly id: string | null;
   readonly kind: string | null;
   readonly pdf: string | null;
 }
@@ -91,12 +91,12 @@ export function declaredVenue(
   if (problem !== null) throw new Error(problem);
   if (p.kind === "resolved")
     return {
-      label: p.preset.label,
+      id: p.preset.id,
       kind: p.settings.kind,
       pdf: p.settings.pdf,
     };
   return p.kind === "none" && p.settings
-    ? { label: null, kind: p.settings.kind, pdf: p.settings.pdf }
+    ? { id: null, kind: p.settings.kind, pdf: p.settings.pdf }
     : null;
 }
 
@@ -237,7 +237,7 @@ export async function measurePaper(
   const facts = factsDocument({
     pdf: posix(relative(paperDir, pdf)),
     sha: sha256Hex(bytes),
-    venue: o.venue ?? decl?.label ?? null,
+    venue: o.venue ?? decl?.id ?? null,
     kind: o.kind ?? decl?.kind ?? null,
     read: r.facts,
     geometry,

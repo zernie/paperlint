@@ -295,7 +295,8 @@ export const ruleDocsUrl = (
     | "register"
     | "contrast-frames"
     | "claim-emphasis"
-    | "relation-markers",
+    | "relation-markers"
+    | "heading-case",
 ): string =>
   `https://github.com/zernie/paperlint/blob/main/docs/rules/tex/${name}.md`;
 

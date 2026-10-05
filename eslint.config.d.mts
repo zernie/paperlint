@@ -7,5 +7,7 @@ export declare const APP_EXTERNALS: readonly string[];
 export declare const IO_GLOBALS: Linter.Config;
 /** The layer block, with `boundaries/root-path` pinned to `root`. */
 export declare function layerBoundaries(root: string): Linter.Config;
+/** The preset-card blocks (every preset has a card; its rules table is generated), rooted at `root`. */
+export declare function presetCards(root: string): Linter.Config[];
 declare const config: Linter.Config[];
 export default config;

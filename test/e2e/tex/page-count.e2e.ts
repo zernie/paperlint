@@ -282,7 +282,7 @@ describe.skipIf(skip)("where the body ends, on real ACSAC papers", () => {
       messagesOf(name, "format/page-limit", aidc);
     expect(pageLimit("secure-acsac24")).toEqual([]);
     expect(pageLimit("barovox-acsac24")).toEqual([
-      "body pages (up to the references on page 13): 13, over the limit 12 for aidc/regular — a desk reject; cut the text",
+      "body pages (up to the references on page 13): 13, over the limit 12 for AIDC/regular — a desk reject; cut the text",
     ]);
   });
 });

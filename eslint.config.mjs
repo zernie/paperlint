@@ -21,7 +21,13 @@ import tseslint from "typescript-eslint";
 import boundaries from "eslint-plugin-boundaries";
 import functional from "eslint-plugin-functional";
 import sonarjs from "eslint-plugin-sonarjs";
-import { dirname } from "node:path";
+import {
+  projectStructureParser,
+  projectStructurePlugin,
+} from "eslint-plugin-project-structure";
+import { presetCardRules } from "#src/preset-card-rule";
+import { nodeFiles } from "#src/adapters/node/index";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // The complexity set, shared by the TypeScript block and the ratchet below. Every function
@@ -407,6 +413,57 @@ export const IO_GLOBALS = {
   },
 };
 
+/**
+ * EVERY PRESET HAS A CARD, AND EVERY CARD'S RULES TABLE IS THE PRESET'S. Two checks, one block each:
+ *
+ * - `project-structure/folder-structure` (its `enforceExistence`): each `presets/<name>.jsonc` needs
+ *   `presets/<name>.md` beside it, and is named in kebab case. Its rule listens for a `Program` node,
+ *   so the presets are read with the plugin's own parser, which gives every file an empty one.
+ *   Measured 2026-10-04: under `@eslint/json`'s `json/jsonc` language (root node `Document`) the same
+ *   rule never ran — RC 0 with seven cards missing.
+ * - `preset/card-rules` (src/preset-card-rule.ts): the section between the card's markers is the
+ *   resolved preset — what it is, its call for papers, its rules and where each was set. `--fix`
+ *   writes it.
+ *
+ * `root` is a parameter only so a test can lint a copy of the presets: the plugin resolves
+ * `structureRoot` against `projectRoot`, and the card rule reads the presets and docs under it.
+ * On an error the plugin writes `projectStructure.cache.json` into `projectRoot` (gitignored).
+ */
+export const presetCards = (root) => [
+  {
+    files: ["presets/*.jsonc"],
+    plugins: { "project-structure": projectStructurePlugin },
+    languageOptions: { parser: projectStructureParser },
+    rules: {
+      "project-structure/folder-structure": [
+        "error",
+        {
+          projectRoot: root,
+          structureRoot: "presets",
+          structure: [
+            { name: "{kebab-case}.jsonc", enforceExistence: "{node-name}.md" },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["presets/*.md"],
+    plugins: {
+      markdown,
+      preset: {
+        rules: presetCardRules({
+          files: nodeFiles,
+          venuesDir: join(root, "presets"),
+          docsRoot: root,
+        }),
+      },
+    },
+    language: "markdown/gfm",
+    rules: { "preset/card-rules": "error" },
+  },
+];
+
 const ceiling = (rule, n) =>
   rule === "max-lines-per-function"
     ? ["error", { ...MAX_LINES, max: n }]
@@ -667,6 +724,7 @@ export default [
     languageOptions: { frontmatter: "yaml" },
     rules: { "port/md-install-path": "warn" },
   },
+  ...presetCards(dirname(fileURLToPath(import.meta.url))),
   {
     files: ["**/*.tex"],
     plugins: {

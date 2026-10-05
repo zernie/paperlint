@@ -16,7 +16,19 @@ venues/usenix-sec.jsonc      (optional, your own) a VENUE PRESET: format, page l
 
 The shipped presets (`paperlint:<name>`) live in the package, under
 `presets/`: `acm-sigconf`, `agenticdev`, `aidc`, `aisec`,
-`ieee-conference`, `realm`.
+`ieee-conference`, `realm`. Each declares what it is — `"type": "venue"` with the venue's `name` and
+the `url` of its call for papers, or `"type": "family"` for a publisher's template, which names no
+venue (`tex-base.jsonc`, the TeX packages every paper gets, is `"base"`).
+
+**Every preset has a card beside it**, `presets/<name>.md`: what the venue or the family is, its
+call for papers, its kinds and limits, and what else the preset encodes — the prose the
+`submit-paper` skill reads. The card ends with a section between
+`<!-- paperlint:preset-rules -->` and `<!-- /paperlint:preset-rules -->` that is generated from the
+preset: what it is, its call for papers or the presets that extend it, and every rule it sets with
+its severity, its options and the file of the chain that set it. In this repository `npm run lint`
+fails when a preset has no card (`project-structure/folder-structure`) or when a card's section no
+longer matches its preset (`preset/card-rules`); `npx eslint --fix presets/` rewrites the section.
+Edit the preset, never the section.
 
 ## The root `paperlint.json`
 

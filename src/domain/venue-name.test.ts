@@ -11,6 +11,7 @@ import {
   withoutVenues,
   type NamedVenue,
 } from "./venue-name.ts";
+import { venuePreset } from "../../test/support.ts";
 
 describe("nameTokens — a name as the words it is made of", () => {
   it.each<[string, readonly string[]]>([
@@ -39,21 +40,21 @@ const VENUES: readonly NamedVenue[] = shippedVenueNames({
 
 describe("venuesNamedBy — which venues a folder name names", () => {
   it.each<[string, string, readonly { venue: string; name: string }[]]>([
-    ["the label", "aisec-2026", [{ venue: "aisec", name: "aisec" }]],
-    ["an alias", "acsac-2026", [{ venue: "aidc", name: "ACSAC" }]],
+    ["the label", "aisec-2026", [{ venue: "AISec", name: "AISec" }]],
+    ["an alias", "acsac-2026", [{ venue: "AIDC", name: "ACSAC" }]],
     [
       "a two-word alias, as two tokens in a row",
       "acm-ccs-agents",
-      [{ venue: "aisec", name: "ACM CCS" }],
+      [{ venue: "AISec", name: "ACM CCS" }],
     ],
     ["the two words of an alias apart are not it", "acm-agents-ccs", []],
-    ["glued to a year", "realm2026", [{ venue: "realm", name: "realm" }]],
+    ["glued to a year", "realm2026", [{ venue: "REALM", name: "REALM" }]],
     [
       "two venues, each once, in the order they are listed",
       "realm-aisec-aisec",
       [
-        { venue: "aisec", name: "aisec" },
-        { venue: "realm", name: "realm" },
+        { venue: "AISec", name: "AISec" },
+        { venue: "REALM", name: "REALM" },
       ],
     ],
     // Whole tokens only: a venue's name inside another word is that other word.
@@ -85,7 +86,12 @@ describe("venuesNamedBy — which venues a folder name names", () => {
     cpSync(presetsDir(), dir, { recursive: true });
     writeFileSync(
       join(dir, "dash.jsonc"),
-      JSON.stringify({ extends: "paperlint:acm-sigconf", aliases: ["—"] }),
+      JSON.stringify(
+        venuePreset("dash", {
+          extends: "paperlint:acm-sigconf",
+          aliases: ["—"],
+        }),
+      ),
     );
     const venues = shippedVenueNames({ files: nodeFiles, venuesDir: dir });
     expect(venues.find((v) => v.label === "dash")?.aliases).toContain("—");

@@ -532,7 +532,7 @@ describe("paperlint init — a first paper named after a venue", () => {
     expect(made).toEqual([]);
     expect(asked.filter((q) => /format/.test(q))).toEqual([]);
     expect(r.out[r.out.indexOf("first paper") + 1]).toBe(
-      '  ✗ no paper created — `aisec-2026` — the paper folder names a venue ("aisec"); venues change on resubmission, so name it after the work\n    if the venue really belongs in the name, rerun `paperlint new` with --allow-venue-name',
+      '  ✗ no paper created — `aisec-2026` — the paper folder names a venue ("AISec"); venues change on resubmission, so name it after the work\n    if the venue really belongs in the name, rerun `paperlint new` with --allow-venue-name',
     );
   });
 });

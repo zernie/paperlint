@@ -19,7 +19,13 @@
 // what refuses the upload.
 //
 // THE REVIEW IS DOUBLE-BLIND: `"blind":true` in the same portal data, and the call above.
+//
+// Its card, in prose: `aidc.md` beside this file.
 {
+  "type": "venue",
+  "name": "AIDC",
+  // The call quoted above.
+  "url": "https://aidcworkshop.github.io/",
   "extends": "paperlint:ieee-conference",
 
   // «Submissions must be properly anonymized for double-blind review.» (the call above), and

@@ -27,6 +27,7 @@ import {
   usageProblem,
   type SubmissionArgs,
 } from "./submission.ts";
+import { venuePreset } from "../test/support.ts";
 
 const PAPER = "/w/papers/p";
 const SITE = "http://127.0.0.1:9";
@@ -41,7 +42,7 @@ const withPresets = (fs: Files): Files => ({
 });
 
 const venue = (portal: unknown): string =>
-  JSON.stringify({ extends: "paperlint:aidc", portal });
+  JSON.stringify(venuePreset("venue", { extends: "paperlint:aidc", portal }));
 const files = (o: {
   readonly portal?: unknown;
   readonly paper?: Readonly<Record<string, unknown>>;

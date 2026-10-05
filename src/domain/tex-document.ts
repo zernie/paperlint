@@ -185,3 +185,39 @@ export interface LayoutOverride {
   readonly command: string;
   readonly place: Place;
 }
+
+/**
+ * What stands in a heading's text for something the reader sees and the case judge does not read —
+ * math, code, a citation, any command whose text is not plain: one character no title contains.
+ */
+export const OPAQUE = "￼";
+
+/**
+ * What stands in a heading's text for a forced line break (`\\`, `\newline`, `\linebreak`): one
+ * character no title contains. A title broken over two lines is two parts — a title and its
+ * subtitle — so the case judge reads the word after it as a start, like the word after a dash.
+ */
+export const LINE_BREAK = "\u2028";
+
+/** The headings whose title a venue sets in a case style. */
+export type HeadingLevel =
+  "section" | "subsection" | "subsubsection" | "paragraph" | "subparagraph";
+
+/** Which command a title belongs to: the paper's own `\title`, or a heading at its level. */
+export type TitledCommand =
+  | { readonly kind: "title" }
+  | { readonly kind: "heading"; readonly level: HeadingLevel };
+
+/** Which argument of the command: the title, or the optional short title in brackets. */
+export type TitleArgument = "title" | "short";
+
+/**
+ * One title as the case judge reads it — the paper's or a heading's: its text, each character with
+ * the source offset it came from, and `OPAQUE` where something it does not read stands. A label, a
+ * footnote and a comment are not in it; a title with nothing else has no `TitledHeading`.
+ */
+export interface TitledHeading {
+  readonly command: TitledCommand;
+  readonly argument: TitleArgument;
+  readonly title: TextRun;
+}

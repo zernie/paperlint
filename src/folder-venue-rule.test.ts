@@ -13,6 +13,7 @@ import {
   FOLDER_VENUE_RULE_LEVELS,
   folderVenueRules,
 } from "./folder-venue-rule.ts";
+import { venuePreset } from "../test/support.ts";
 
 const VENUES = presetsDir();
 const PAPERS = "/work/papers";
@@ -77,7 +78,7 @@ describe("paper/folder-venue-leftover — the folder names another venue", () =>
         messageId: "leftover",
         line: 1,
         message:
-          "the folder name «aisec-2026» names the venue aisec, and this paper extends aidc — the name went stale when the venue changed, and venues change on every resubmission. Name the folder after the work (what the paper shows), not the venue",
+          "the folder name «aisec-2026» names the venue AISec, and this paper extends AIDC — the name went stale when the venue changed, and venues change on every resubmission. Name the folder after the work (what the paper shows), not the venue",
       },
     ]);
   });
@@ -87,7 +88,7 @@ describe("paper/folder-venue-leftover — the folder names another venue", () =>
       lint("acm-ccs-agents", AIDC).map(
         (r) => /names the venue (.*?), and/u.exec(r.message)?.[1],
       ),
-    ).toEqual(["aisec («ACM CCS»)"]);
+    ).toEqual(["AISec («ACM CCS»)"]);
   });
 
   it("two other venues are two findings", () => {
@@ -95,15 +96,14 @@ describe("paper/folder-venue-leftover — the folder names another venue", () =>
       lint("realm-then-aisec", AIDC).map(
         (r) => /names the venue (\w+)/u.exec(r.message)?.[1],
       ),
-    ).toEqual(["aisec", "realm"]);
+    ).toEqual(["AISec", "REALM"]);
   });
 
   it("a project's own preset is judged like a shipped one: its label and aliases are its own", () => {
     const extra = {
-      [`${PAPERS}/aidc-redux/venue.jsonc`]: JSON.stringify({
-        extends: "paperlint:aisec",
-        name: "AISec 2027",
-      }),
+      [`${PAPERS}/aidc-redux/venue.jsonc`]: JSON.stringify(
+        venuePreset("AISec 2027", { extends: "paperlint:aisec" }),
+      ),
     };
     // Its chain is AISec's, so aisec is its own; aidc is another venue.
     expect(
@@ -119,9 +119,9 @@ describe("paper/folder-venue-leftover — the folder names another venue", () =>
         { extends: "./venue.jsonc", kind: "short" },
         {
           extra: {
-            [`${PAPERS}/aisec-redux/venue.jsonc`]: JSON.stringify({
-              extends: "paperlint:aisec",
-            }),
+            [`${PAPERS}/aisec-redux/venue.jsonc`]: JSON.stringify(
+              venuePreset("venue", { extends: "paperlint:aisec" }),
+            ),
           },
         },
       ),

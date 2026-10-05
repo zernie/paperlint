@@ -121,7 +121,7 @@ export interface PaperFacts {
     readonly name: string;
     readonly options: readonly string[];
   } | null;
-  /** The label of the venue preset `paperlint.json` extends, or null. */
+  /** The id of the venue preset `paperlint.json` extends (`agenticdev`), or null. */
   readonly venue: string | null;
   /** Paper-supplied build scripts found on disk — reported as ignored. */
   readonly ignoredScripts: readonly string[];
@@ -239,7 +239,7 @@ export function readFacts(paperDir: string): PaperFacts {
   return {
     main,
     documentclass: documentclassOf(ast),
-    venue: venue?.label ?? null,
+    venue: venue?.id ?? null,
     ignoredScripts: IGNORED_SCRIPTS.filter((s) =>
       existsSync(join(paperDir, s)),
     ),

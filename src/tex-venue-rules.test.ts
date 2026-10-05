@@ -20,6 +20,7 @@ import {
 } from "./tex-venue-rules.ts";
 import { resolvePreset } from "./presets.ts";
 import { buildConfig, SHIPPED_RULES } from "./cli.ts";
+import { venuePreset } from "../test/support.ts";
 
 const VENUES = presetsDir();
 const PAPER = "/work/papers/p";
@@ -136,13 +137,13 @@ describe("tex/template — the class and every option the preset names", () => {
       "[conference]{IEEEtran} — compsoc missing",
       "\\documentclass[conference]{IEEEtran}",
       ["tex/template:missingOption"],
-      /the class option `compsoc` is missing: aidc requires `\\documentclass\[conference,compsoc\]\{IEEEtran\}`/,
+      /the class option `compsoc` is missing: AIDC requires `\\documentclass\[conference,compsoc\]\{IEEEtran\}`/,
     ],
     [
       "{acmart} under an IEEE preset",
       "\\documentclass[sigconf]{acmart}",
       ["tex/template:wrongClass"],
-      /the class is `acmart`, and aidc requires/,
+      /the class is `acmart`, and AIDC requires/,
     ],
     [
       "[journal,compsoc]{IEEEtran} — conference missing",
@@ -183,7 +184,7 @@ describe("tex/template — the class line's states: missing, empty, commented ou
     expect(ids(fs)).toEqual(["tex/template:emptyClass"]);
     expect(fs[0]?.line).toBe(2);
     expect(fs[0]?.message).toBe(
-      "the \\documentclass names no class; aidc requires `\\documentclass[conference,compsoc]{IEEEtran}`",
+      "the \\documentclass names no class; AIDC requires `\\documentclass[conference,compsoc]{IEEEtran}`",
     );
   });
 
@@ -258,7 +259,7 @@ describe("tex/template — several \\documentclass lines behind a TeX switch", (
     // Line 4: the first candidate, after the comment, `\\def` and `\\if` lines.
     expect(fs[0]?.line).toBe(4);
     expect(fs[0]?.message).toBe(
-      "none of the 2 \\documentclass lines is `\\documentclass[conference,compsoc]{IEEEtran}`, which aidc requires: `\\documentclass{article}`, `\\documentclass[conference]{IEEEtran}`. The source picks one behind a TeX switch, which is not evaluated; make one of them the venue's",
+      "none of the 2 \\documentclass lines is `\\documentclass[conference,compsoc]{IEEEtran}`, which AIDC requires: `\\documentclass{article}`, `\\documentclass[conference]{IEEEtran}`. The source picks one behind a TeX switch, which is not evaluated; make one of them the venue's",
     );
   });
 
@@ -309,7 +310,12 @@ describe("tex/template — a project's own preset, and nothing to judge", () => 
         paper("\\documentclass{whatever}"),
         { extends: "./own.jsonc" },
         {
-          extra: { [own]: JSON.stringify({ tex: { packages: { x: ["x"] } } }) },
+          extra: {
+            [own]: JSON.stringify({
+              type: "family",
+              tex: { packages: { x: ["x"] } },
+            }),
+          },
         },
       ),
     ).toEqual([]);
@@ -325,6 +331,7 @@ describe("tex/template — a template the reader cannot read, a bare class name,
       {
         extra: {
           [own]: JSON.stringify({
+            type: "family",
             template: "\\documentclass[a]{}",
             tex: { packages: { x: ["x"] } },
           }),
@@ -341,6 +348,7 @@ describe("tex/template — a template the reader cannot read, a bare class name,
     const own = `${PAPER}/own.jsonc`;
     const extra = {
       [own]: JSON.stringify({
+        type: "family",
         template: "article",
         tex: { packages: { x: ["x"] } },
       }),
@@ -353,7 +361,9 @@ describe("tex/template — a template the reader cannot read, a bare class name,
       ids(lint(paper("\\documentclass{report}"), settings, { extra })),
     ).toEqual(["tex/template:wrongClass"]);
   });
+});
 
+describe("tex/template — nothing to judge", () => {
   it.each<[string, object | undefined, string]>([
     ["no paperlint.json", undefined, `${PAPER}/paper.tex`],
     [
@@ -428,7 +438,7 @@ describe("tex/required-section — what fails", () => {
     const fs = required(lint(tex, AIDC));
     expect(ids(fs)).toEqual(["tex/required-section:missing"]);
     expect(fs[0]?.message).toBe(
-      "aidc requires a section titled «LLM Usage Statement» and there is none — add `\\section*{LLM Usage Statement}` (the title exactly; a bold paragraph does not count)",
+      "AIDC requires a section titled «LLM Usage Statement» and there is none — add `\\section*{LLM Usage Statement}` (the title exactly; a bold paragraph does not count)",
     );
     // At `\end{document}`, where the section would go.
     expect(fs[0]?.line).toBe(tex.split("\n").indexOf("\\end{document}") + 1);
@@ -503,10 +513,12 @@ describe("tex/required-section — the edges", () => {
   it("a position other than last (none): anywhere will do; a child's list replaces its parent's", () => {
     const own = `${PAPER}/own.jsonc`;
     const extra = {
-      [own]: JSON.stringify({
-        extends: "paperlint:aidc",
-        required_sections: [{ title: "Ethics" }],
-      }),
+      [own]: JSON.stringify(
+        venuePreset("own", {
+          extends: "paperlint:aidc",
+          required_sections: [{ title: "Ethics" }],
+        }),
+      ),
     };
     const settings = { extends: "./own.jsonc", kind: "regular" };
     expect(
@@ -528,8 +540,8 @@ describe("tex/venue-leftover — another venue named in the text", () => {
     const tex = aidcPaper(`${INSTITUTION}\n${BODY}${STATEMENT}`);
     const fs = leftovers(lint(tex, AIDC));
     expect(fs.map((f) => f.message)).toEqual([
-      "«AISec» names aisec, and this paper extends aidc — a leftover from an earlier submission? A reviewer reads it before the abstract. Comments and citation keys are not reported; a sentence that names the other venue on purpose can keep it with a disable directive",
-      expect.stringContaining("«ACM CCS» names aisec"),
+      "«AISec» names AISec, and this paper extends AIDC — a leftover from an earlier submission? A reviewer reads it before the abstract. Comments and citation keys are not reported; a sentence that names the other venue on purpose can keep it with a disable directive",
+      expect.stringContaining("«ACM CCS» names AISec"),
     ]);
     const line = tex.split("\n").indexOf(INSTITUTION) + 1;
     expect(fs.map((f) => f.line)).toEqual([line, line]);
@@ -591,7 +603,7 @@ describe("tex/venue-leftover — a URL is not text, a definition body is", () =>
       );
       const fs = leftovers(lint(tex, AIDC));
       expect(fs.map((f) => [f.line, f.message.slice(0, 16)])).toEqual([
-        [4, "«AISec» names ai"],
+        [4, "«AISec» names AI"],
       ]);
     },
   );
@@ -622,11 +634,12 @@ describe("tex/venue-leftover — where names are found, and whose they are", () 
   it("a name a venue shares with this paper's own chain is not a leftover", () => {
     const own = `${PAPER}/own.jsonc`;
     const extra = {
-      [own]: JSON.stringify({
-        extends: "paperlint:aidc",
-        name: "AIDC 2027",
-        aliases: ["ACM CCS"],
-      }),
+      [own]: JSON.stringify(
+        venuePreset("AIDC 2027", {
+          extends: "paperlint:aidc",
+          aliases: ["ACM CCS"],
+        }),
+      ),
     };
     const tex = aidcPaper(`ACM CCS and AIDC 2027.\n${BODY}${STATEMENT}`);
     expect(
@@ -721,8 +734,8 @@ describe("otherVenues", () => {
     if (!aidc.ok) return;
     expect(otherVenues(aidc.value, deps).map((o) => o.label)).toEqual([
       "acm-sigconf",
-      "agenticdev",
-      "aisec",
+      "AgenticDev",
+      "AISec",
     ]);
   });
 });
@@ -790,7 +803,7 @@ describe("format/layout-override reports", () => {
       [13, "\\newgeometry"],
     ]);
     expect(overrides(tex)[0]?.message).toBe(
-      "`\\usepackage{geometry}` changes the page layout aidc's template sets (`\\documentclass[conference,compsoc]{IEEEtran}`) — a desk-reject reason at venues that check the format. Remove it; if the venue allows it, disable this line with a comment saying so",
+      "`\\usepackage{geometry}` changes the page layout AIDC's template sets (`\\documentclass[conference,compsoc]{IEEEtran}`) — a desk-reject reason at venues that check the format. Remove it; if the venue allows it, disable this line with a comment saying so",
     );
   });
   it("a definition's body counts: the length it sets is set wherever it is used", () => {
@@ -834,6 +847,7 @@ describe("format/layout-override stays silent", () => {
     expect(overrides(tex, { extends: null })).toEqual([]);
     const house = {
       [`${PAPER}/house.jsonc`]: JSON.stringify({
+        type: "family",
         tex: { packages: { ieeetran: ["IEEEtran.cls"] } },
       }),
     };

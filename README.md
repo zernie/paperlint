@@ -136,8 +136,8 @@ REALM.
 
    ```text
    papers/my-paper/paper.tex
-     1:1   error    1 column(s), agenticdev requires 2 — the wrong document class or class option   pdf/geometry
-     1:1   error    no font starts with `LinLibertine` (body text of agenticdev); the PDF has: CMR10, …   pdf/fonts
+     1:1   error    1 column(s), AgenticDev requires 2 — the wrong document class or class option   pdf/geometry
+     1:1   error    no font starts with `LinLibertine` (body text of AgenticDev); the PDF has: CMR10, …   pdf/fonts
      8:4   warning  `§` instead of the word «Section» — `paperlint lint --fix` writes it              paper/section-word
    ```
 

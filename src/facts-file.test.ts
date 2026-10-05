@@ -267,24 +267,24 @@ test("writeFactsFile: <paper>/_build/paper.facts.json holds exactly the document
   assert.deepEqual(JSON.parse(text), m.value.facts);
 });
 
-test("declaredVenue: none without paperlint.json; no label when it extends no preset", () => {
+test("declaredVenue: none without paperlint.json; no id when it extends no preset", () => {
   assert.equal(declaredVenue(memoryFiles(), PAPER), null);
   const files = memoryFiles({
     [`${PAPER}/paperlint.json`]: '{"kind":"x","pdf":"b/p.pdf"}',
   });
   assert.deepEqual(declaredVenue(files, PAPER), {
-    label: null,
+    id: null,
     kind: "x",
     pdf: "b/p.pdf",
   });
 });
 
-test("declaredVenue: the label is the preset's, and an extends that resolves nowhere is refused", () => {
+test("declaredVenue: the id is the preset's — its file name, not its display name — and an extends that resolves nowhere is refused", () => {
   const ok = memoryFiles({
     ...SHIPPED_PRESETS,
     [`${PAPER}/paperlint.json`]: '{"extends":"paperlint:aisec"}',
   });
-  assert.equal(declaredVenue(ok, PAPER)?.label, "aisec");
+  assert.equal(declaredVenue(ok, PAPER)?.id, "aisec");
   const typo = memoryFiles({
     ...SHIPPED_PRESETS,
     [`${PAPER}/paperlint.json`]: '{"extends":"paperlint:aisek"}',

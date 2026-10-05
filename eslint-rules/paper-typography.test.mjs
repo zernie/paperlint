@@ -250,6 +250,18 @@ describe("paper/leading-zero", () => {
   });
 });
 
+describe("a finding after a heading written over several lines", () => {
+  it("🔴 is reported on its own line, with CRLF line ends too", async () => {
+    for (const nl of ["\n", "\r\n"]) {
+      const text = doc(
+        ["\\section{Related", "work}", "We use .05 here."].join(nl),
+      );
+      const [m] = ids(await lint(text), "paper/leading-zero");
+      expect([m?.line, m?.column]).toEqual([5, 8]);
+    }
+  });
+});
+
 describe("paper/leading-zero — a number after ¶ or § is not a decimal (#102)", () => {
   // From a consumer's bibliography: `--fix` rewrote the paragraph number `¶¶.42` to `¶¶0.42`.
   const CITE =

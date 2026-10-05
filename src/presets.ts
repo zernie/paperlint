@@ -12,20 +12,27 @@
  * Anything else — an npm package name, a bare name — is refused by name. npm presets are not
  * supported yet; a bare name is almost always a shipped name missing its prefix, and the message says so.
  *
+ * ── WHAT EACH FILE IS ─────────────────────────────────────────────────────────────
+ * Every preset declares its `type` (`venue-profile.schema.json`): a `venue` names itself and links
+ * its call for papers, a template `family` names no venue, and the TeX `base` set is extended by
+ * nothing. A chain must read top-down as template → venue: a family extends only a family, and
+ * nothing extends the base set. A chain that does not is refused naming both files.
+ *
  * ── THE CHAIN ─────────────────────────────────────────────────────────────────────
  * At most `MAX_PRESET_DEPTH` files, root to leaf. A cycle (relative paths can form one) is refused
  * naming the chain. The chain is merged block by block:
  *
  *   tex        union — a child never removes a package its parent needs
  *   format     per key, the child wins; `kinds` by kind name, a child's kind replaces that kind
- *   rules      per rule id, the child wins
+ *   rules      per rule id, the child wins; `ruleOrigins` keeps which file set each
  *   template   the child wins; so does `name`, and `required_sections`, `register`, `talk` and
  *              `portal` (each whole)
  *   aliases    union, with every `name` — what the venue is called along the chain
  *
- * ── THE LABEL ─────────────────────────────────────────────────────────────────────
- * Messages, the facts file and the build plan need a word for the venue. It is the most derived
- * preset's `name` when one sets it, else the spec's file name without its extension
+ * ── THE ID AND THE LABEL ──────────────────────────────────────────────────────────
+ * The facts file and the build plan carry the preset's `id`: the spec's file name without its
+ * extension, a stable key consumers match against preset ids. Messages say the `label`: the most
+ * derived venue's `name` when the chain has a venue, else the id
  * (`paperlint:agenticdev` → `agenticdev`, `./venues/usenix-sec.jsonc` → `usenix-sec`). Display
  * only: nothing is ever resolved by it.
  */
@@ -38,6 +45,7 @@ import {
   profileFileOf,
   venueNames,
   type PresetFile,
+  type PresetIdentity,
   type RequiredSection,
   type TexRequirements,
   type VenueFormat,
@@ -75,10 +83,17 @@ export interface PresetTemplate {
 
 /** A resolved chain, merged. */
 export interface Preset {
-  /** The word for this venue in messages. */
+  /**
+   * The preset's id: the spec's file name without its extension (`agenticdev`, `usenix-sec`). The
+   * stable key a machine reads — the facts file and the build plan carry it — whatever `name` says.
+   */
+  readonly id: string;
+  /** The word for this venue in messages: the venue's `name`, else the id. */
   readonly label: string;
   /** Every file of the chain, root first. */
   readonly chain: readonly string[];
+  /** What the spec names — the leaf file of the chain: a venue (with its call), or a family. */
+  readonly identity: PresetIdentity;
   /**
    * The `\\documentclass` the venue's template uses, as the preset spells it, and the file that
    * spells it; null when no file of the chain names one. Read by the rules and `paperlint new`,
@@ -93,6 +108,8 @@ export interface Preset {
   readonly tex: TexRequirements;
   readonly format: VenueFormat;
   readonly rules: Readonly<Record<string, unknown>>;
+  /** Rule id → the file of the chain that set its entry in `rules` (the last one to name it). */
+  readonly ruleOrigins: Readonly<Record<string, string>>;
   /** The accepted papers the register rules measure a body against; empty when no file names any. */
   readonly registerAnchors: readonly RegisterAnchor[];
   /** What the venue asks a presenter to send (`talk/*`); null when no file of the chain says. */
@@ -112,6 +129,14 @@ export type PresetProblem =
     }
   | { readonly kind: "cycle"; readonly chain: readonly string[] }
   | { readonly kind: "too-deep"; readonly chain: readonly string[] }
+  /** `file` extends `parent`, which a preset of its type may not extend. */
+  | {
+      readonly kind: "wrong-parent";
+      readonly file: string;
+      readonly parent: string;
+      /** A family extending a venue, or anything extending the base set. */
+      readonly parentType: "venue" | "base";
+    }
   | { readonly kind: "broken"; readonly file: string; readonly why: string };
 
 /** The display label of a spec: the file name without its extension. Pure. */
@@ -166,27 +191,47 @@ function readPreset(
   }
 }
 
-/** The chain's files, leaf first, each parsed. */
-function chainOf(
-  spec: string,
-  from: string,
+/** One file of a chain: where it is, and what it says. */
+interface Link {
+  readonly file: string;
+  readonly preset: PresetFile;
+}
+
+/**
+ * The chain from `child` up, leaf first: `below` is every file read so far, `child` the last of them.
+ * Each parent is refused when it closes a cycle, makes the chain too long, or is of a type `child`
+ * may not extend.
+ */
+function chainUp(
+  below: readonly Link[],
+  child: Link,
   deps: PresetDeps,
-): Result<{ file: string; preset: PresetFile }[], PresetProblem> {
-  const out: { file: string; preset: PresetFile }[] = [];
-  let next: { spec: string; from: string } | null = { spec, from };
-  while (next !== null) {
-    const r = readPreset(next.spec, next.from, deps);
-    if (!r.ok) return r;
-    const files = out.map((x) => x.file);
-    if (files.includes(r.value.file))
-      return err({ kind: "cycle", chain: [...files, r.value.file] });
-    if (out.length === MAX_PRESET_DEPTH)
-      return err({ kind: "too-deep", chain: [...files, r.value.file] });
-    out.push(r.value);
-    const up: string | null = r.value.preset.extends;
-    next = up === null ? null : { spec: up, from: r.value.file };
-  }
-  return ok(out);
+): Result<readonly Link[], PresetProblem> {
+  const up = child.preset.extends;
+  if (up === null) return ok(below);
+  const r = readPreset(up, child.file, deps);
+  if (!r.ok) return r;
+  const files = below.map((x) => x.file);
+  if (files.includes(r.value.file))
+    return err({ kind: "cycle", chain: [...files, r.value.file] });
+  if (below.length === MAX_PRESET_DEPTH)
+    return err({ kind: "too-deep", chain: [...files, r.value.file] });
+  const parentType = r.value.preset.identity.type;
+  if (parentType === "venue" && child.preset.identity.type === "family")
+    return err({
+      kind: "wrong-parent",
+      file: child.file,
+      parent: r.value.file,
+      parentType,
+    });
+  if (parentType === "base")
+    return err({
+      kind: "wrong-parent",
+      file: child.file,
+      parent: r.value.file,
+      parentType,
+    });
+  return chainUp([...below, r.value], r.value, deps);
 }
 
 /** A child's format over its parent's: per key the child wins, kinds by name. Pure. */
@@ -213,52 +258,68 @@ export function mergeFormat(
   };
 }
 
+/** A venue's name; a family and the base set have none. Pure. */
+const nameOf = (i: PresetIdentity): string | null =>
+  i.type === "venue" ? i.name : null;
+
+/** A venue's name as a list, empty for a family and the base set. Pure. */
+const namesOf = (i: PresetIdentity): readonly string[] =>
+  i.type === "venue" ? [i.name] : [];
+
+/** What the merge carries from file to file: the preset without what only the whole chain knows. */
+type Merging = Omit<Preset, "id" | "label" | "chain" | "identity"> & {
+  readonly name: string | null;
+};
+
+const NOTHING_MERGED: Merging = {
+  name: null,
+  template: null,
+  aliases: [],
+  blind: false,
+  requiredSections: [],
+  tex: NO_REQUIREMENTS,
+  format: NO_FORMAT,
+  rules: {},
+  ruleOrigins: {},
+  registerAnchors: [],
+  talk: null,
+  portal: null,
+};
+
+/** One file of the chain, `file`, merged over what its parents gave. Pure. */
+const mergeOne = (
+  acc: Merging,
+  { preset: p, file }: { readonly preset: PresetFile; readonly file: string },
+): Merging => ({
+  name: nameOf(p.identity) ?? acc.name,
+  template: p.template === null ? acc.template : { text: p.template, file },
+  aliases: [...new Set([...acc.aliases, ...namesOf(p.identity), ...p.aliases])],
+  blind: p.blind ?? acc.blind,
+  requiredSections: p.requiredSections ?? acc.requiredSections,
+  tex: p.tex ? mergeRequirements(acc.tex, p.tex) : acc.tex,
+  format: mergeFormat(acc.format, p.format),
+  rules: { ...acc.rules, ...p.rules },
+  ruleOrigins: {
+    ...acc.ruleOrigins,
+    ...Object.fromEntries(Object.keys(p.rules).map((id) => [id, file])),
+  },
+  registerAnchors: p.registerAnchors ?? acc.registerAnchors,
+  talk: p.talk ?? acc.talk,
+  portal: p.portal ?? acc.portal,
+});
+
 /** The chain, root first, merged into one preset. Pure. */
 function merged(
   spec: string,
   rootFirst: readonly { readonly preset: PresetFile; readonly file: string }[],
+  leaf: { readonly preset: PresetFile },
 ): Preset {
-  const base: Omit<Preset, "label" | "chain"> & {
-    readonly name: string | null;
-  } = {
-    name: null,
-    template: null,
-    aliases: [],
-    blind: false,
-    requiredSections: [],
-    tex: NO_REQUIREMENTS,
-    format: NO_FORMAT,
-    rules: {},
-    registerAnchors: [],
-    talk: null,
-    portal: null,
-  };
-  const m = rootFirst.reduce(
-    (acc, { preset: p, file }) => ({
-      name: p.name ?? acc.name,
-      template: p.template === null ? acc.template : { text: p.template, file },
-      aliases: [
-        ...new Set([
-          ...acc.aliases,
-          ...(p.name === null ? [] : [p.name]),
-          ...p.aliases,
-        ]),
-      ],
-      blind: p.blind ?? acc.blind,
-      requiredSections: p.requiredSections ?? acc.requiredSections,
-      tex: p.tex ? mergeRequirements(acc.tex, p.tex) : acc.tex,
-      format: mergeFormat(acc.format, p.format),
-      rules: { ...acc.rules, ...p.rules },
-      registerAnchors: p.registerAnchors ?? acc.registerAnchors,
-      talk: p.talk ?? acc.talk,
-      portal: p.portal ?? acc.portal,
-    }),
-    base,
-  );
-  const { name, ...rest } = m;
+  const { name, ...rest } = rootFirst.reduce(mergeOne, NOTHING_MERGED);
   return {
+    id: labelOf(spec),
     label: name ?? labelOf(spec),
     chain: rootFirst.map((x) => x.file),
+    identity: leaf.preset.identity,
     ...rest,
   };
 }
@@ -272,13 +333,17 @@ export function resolvePreset(
   fromFile: string,
   deps: PresetDeps,
 ): Result<Preset, PresetProblem> {
-  const chain = chainOf(spec, fromFile, deps);
-  if (!chain.ok)
-    return chain.error.kind === "not-found"
-      ? err({ ...chain.error, shipped: shippedPresets(deps.venuesDir) })
-      : chain;
-  const rootFirst = [...chain.value].reverse();
-  return ok(merged(spec, rootFirst));
+  const refused = (p: PresetProblem): Result<Preset, PresetProblem> =>
+    err(
+      p.kind === "not-found"
+        ? { ...p, shipped: shippedPresets(deps.venuesDir) }
+        : p,
+    );
+  const leaf = readPreset(spec, fromFile, deps);
+  if (!leaf.ok) return refused(leaf.error);
+  const chain = chainUp([leaf.value], leaf.value, deps);
+  if (!chain.ok) return refused(chain.error);
+  return ok(merged(spec, [...chain.value].reverse(), leaf.value));
 }
 
 /** The shipped presets' names (each is spelled `paperlint:<name>`). */
@@ -336,6 +401,10 @@ export function presetProblemText(p: PresetProblem): string {
       return `the preset chain is longer than ${String(MAX_PRESET_DEPTH)}: ${p.chain.join(" → ")}`;
     case "broken":
       return `the preset ${p.file} does not parse: ${p.why}`;
+    case "wrong-parent":
+      return p.parentType === "base"
+        ? `the preset ${p.file} extends ${p.parent}, the TeX base set — every paper gets that set already, and no preset extends it`
+        : `the preset ${p.file} is a template family and extends ${p.parent}, a venue — a family builds only on a family; a venue extends a family or another venue`;
   }
 }
 

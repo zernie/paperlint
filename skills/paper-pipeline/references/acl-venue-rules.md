@@ -139,4 +139,4 @@ year.
 
 Page counts per track · archival vs non-archival · ARR commitment route and its deadline · the
 submission portal URL and its form fields · anonymity period · attendance requirements · the review
-criteria. All of that lives in `submit-paper/references/venues/<venue>.md`.
+criteria. All of that lives in the venue's card, `presets/<venue>.md` in the paperlint package.
