@@ -36,6 +36,7 @@ paper against:
 - \`presets/agenticdev.md\` — AgenticDev @ ASE (workshop; ASE workshop proceedings).
 - \`presets/aisec.md\` — AISec @ ACM CCS (security workshop; ACM DL; harder bar).
 - \`presets/aidc.md\` — AIDC @ IEEE ACSAC (workshop; IEEE template, LLM Usage Statement).
+- \`presets/msr.md\` — MSR Technical Papers (conference; IEEE template from 2027, appendices count in the page limit).
 - \`presets/realm.md\` — REALM @ EMNLP (ACL family, OpenReview).
 
 **The card is prose; the machine-checked format is the PRESET beside it.** A paper declares its venue
@@ -126,6 +127,13 @@ Many workshop HotCRPs have **no supplementary-upload field** — check first; if
   An independent researcher with no ties usually checks **none** — that's honest.
 
 ## 5. Submit
+- **Before the PDF goes up — and before every Replace — hand the last check to the author, in plain
+  words.** Tell them that paperlint passing is not the venue accepting the format: the preset is
+  transcribed from a call that can change, and any check can miss something. Ask them to open the
+  exact PDF they are about to upload and check it against the venue's call for papers themselves —
+  the page count and what counts toward the limit (appendices, references), the template and its
+  class options, anonymity, and that every figure, table and reference renders. Upload once they say
+  they have looked. (\`paperlint submission update\` prints the same request before it sends.)
 - **Save and submit**, then **mark it "ready for review."** A saved draft alone is NOT evaluated — this
   is the step people miss.
 - You can edit until the deadline: use **Replace** on the Submission field to swap the PDF for a late

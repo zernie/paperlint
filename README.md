@@ -30,6 +30,11 @@ before you submit.** It comes in two parts:
 - 🧠 **Skills for [Claude Code](https://claude.com/claude-code)** — optional, covering the
   whole pipeline: the idea, the venue, the study, the draft, the reviews, submission.
 
+> ⚠️ **An aid, not a guarantee.** A clean run does not mean your paper meets the venue's rules:
+> presets are transcribed from calls for papers that change, and any check can miss something.
+> Check against the venue's own call and template. Provided "as is", without warranty — see
+> [LICENSE](LICENSE).
+
 ## Contents
 
 - [The pipeline](#-the-pipeline)
@@ -69,16 +74,17 @@ build:  compiles and measures the PDF; lint then checks pages, fonts, references
 A **venue preset** holds a venue's format and page limits. A paper's **kind** picks which limit
 applies: at AgenticDev a `short` paper gets 5 pages and a `full` one 10. You choose it once per paper.
 
-| preset                      | venue               | format                     | kinds and page limits                                                                                                                                    |
-| --------------------------- | ------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `paperlint:acm-sigconf`     | any ACM conference  | ACM two-column             | no kinds: the format only, no page limit                                                                                                                 |
-| `paperlint:agenticdev`      | AgenticDev @ ASE    | ACM two-column             | `short` 5, `full` 10, `demo` 5 pages, + 2 pages of references                                                                                            |
-| `paperlint:aisec`           | AISec @ ACM CCS     | ACM two-column             | `research`, `benchmark`, `position`, `sok`: 10 pages + 2 pages of references                                                                             |
-| `paperlint:realm`           | REALM @ EMNLP       | ACL two-column, A4         | `long` 8, `short` 4 — recorded, not checked ([why](docs/rules.md#checks-against-the-venue))                                                              |
-| `paperlint:ieee-conference` | any IEEE conference | IEEE two-column            | no kinds: the format only, no page limit                                                                                                                 |
-| `paperlint:aidc`            | AIDC @ IEEE ACSAC   | IEEE two-column, `compsoc` | `regular` 12, `short` 6, counted before the references ([why](docs/rules.md#checks-against-the-venue)); requires the «LLM Usage Statement»; double-blind |
+| preset                      | venue               | format                        | kinds and page limits                                                                                                                                    |
+| --------------------------- | ------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `paperlint:acm-sigconf`     | any ACM conference  | ACM two-column                | no kinds: the format only, no page limit                                                                                                                 |
+| `paperlint:agenticdev`      | AgenticDev @ ASE    | ACM two-column                | `short` 5, `full` 10, `demo` 5 pages, + 2 pages of references                                                                                            |
+| `paperlint:aisec`           | AISec @ ACM CCS     | ACM two-column                | `research`, `benchmark`, `position`, `sok`: 10 pages + 2 pages of references                                                                             |
+| `paperlint:realm`           | REALM @ EMNLP       | ACL two-column, A4            | `long` 8, `short` 4 — recorded, not checked ([why](docs/rules.md#checks-against-the-venue))                                                              |
+| `paperlint:ieee-conference` | any IEEE conference | IEEE two-column               | no kinds: the format only, no page limit                                                                                                                 |
+| `paperlint:aidc`            | AIDC @ IEEE ACSAC   | IEEE two-column, `compsoc`    | `regular` 12, `short` 6, counted before the references ([why](docs/rules.md#checks-against-the-venue)); requires the «LLM Usage Statement»; double-blind |
+| `paperlint:msr`             | MSR (Technical)     | IEEE two-column, no `compsoc` | `technical` 10 pages, appendices included, + 2 pages of only references ([why](docs/rules.md#checks-against-the-venue)); double-blind                    |
 
-Not shipped yet: USENIX, NeurIPS, Springer, IEEE venues other than AIDC, and ACL venues other than
+Not shipped yet: USENIX, NeurIPS, Springer, IEEE venues other than AIDC and MSR, and ACL venues other than
 REALM.
 [Add yours](#-add-a-venue-that-isnt-listed) in one small file.
 
@@ -198,7 +204,8 @@ Every skill, by stage: [`docs/skills.md`](docs/skills.md).
   bibliography usually builds without the network ([`docs/references.md`](docs/references.md)).
 - A paper whose body is in other files (`\input{sections/intro}`) is linted file by file: a finding
   lands at the file and line it is in, and `--fix` edits that file. The files are the ones
-  `paper.tex` includes from its body, found where the build finds them — not every `.tex` beside it.
+  `paper.tex` includes from its body, found where the build finds them — not every `.tex` beside it,
+  and not an included `.bbl` (a tool's output, read only as part of the whole paper).
 - Lint also checks the pipeline's own records: `PIPELINE-STATUS.md`, reviews, notes on related
   papers ([`docs/rules.md`](docs/rules.md)).
 - The rules run on ESLint, so a deliberate exception is a comment on the line above:

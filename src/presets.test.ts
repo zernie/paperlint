@@ -63,6 +63,7 @@ describe("shipped presets", () => {
     expect(r.value.template).toEqual({
       text: "\\documentclass[sigconf]{acmart}",
       file: join(VENUES, "acm-sigconf.jsonc"),
+      forbids: [],
     });
     expect("acmart" in r.value.tex.packages).toBe(true);
     // The label is the venue's own name, from its file's `name`; the id stays the file name — the
@@ -75,7 +76,40 @@ describe("shipped presets", () => {
       url: "https://conf.researchr.org/home/ase-2026/agenticdev-2026",
     });
   });
+});
 
+describe("shipped presets: paperlint:msr", () => {
+  it("paperlint:msr → msr over ieee-conference: one kind, appendices counted as body, compsoc forbidden", () => {
+    const r = resolve("paperlint:msr");
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.chain.map((f) => f.split("/").pop())).toEqual([
+      "ieee-conference.jsonc",
+      "msr.jsonc",
+    ]);
+    expect([...r.value.format.kinds]).toEqual([
+      ["technical", { bodyPagesMax: 10, refPagesMax: 2 }],
+    ]);
+    expect(r.value.format.bodyEndsAt).toBe("references");
+    expect(r.value.format.appendixInBody).toBe(true);
+    expect(r.value.format.pageWidthIn).toBe(8.5);
+    expect(r.value.template).toEqual({
+      text: "\\documentclass[10pt,conference]{IEEEtran}",
+      file: join(VENUES, "msr.jsonc"),
+      forbids: ["compsoc", "compsocconf"],
+    });
+    expect(r.value.blind).toBe(true);
+    expect(r.value.portal).toEqual({
+      kind: "hotcrp",
+      url: "https://msr2027.hotcrp.com",
+    });
+    // No rule turned on: the IEEE capitalization rule has not been read and quoted.
+    expect(r.value.rules).toEqual({});
+    expect(r.value.registerAnchors).toEqual([]);
+  });
+});
+
+describe("shipped presets: a family, and a venue that stands alone", () => {
   it("a paper may extend a family directly: format and fonts, and no kinds", () => {
     const r = resolve("paperlint:acm-sigconf");
     expect(r.ok && r.value.format.kinds.size).toBe(0);
@@ -139,6 +173,11 @@ describe("what each shipped preset declares itself to be", () => {
         url: "https://aisec.cc/",
       },
       "ieee-conference.jsonc": { type: "family" },
+      "msr.jsonc": {
+        type: "venue",
+        name: "MSR",
+        url: "https://2027.msrconf.org/track/msr-2027-technical-papers",
+      },
       "realm.jsonc": {
         type: "venue",
         name: "REALM",
@@ -300,7 +339,7 @@ describe("what does not resolve, and says why", () => {
       "a shipped name with a typo",
       "paperlint:agenticdve",
       "not-found",
-      /acm-sigconf, agenticdev, aidc, aisec, ieee-conference, realm/,
+      /acm-sigconf, agenticdev, aidc, aisec, ieee-conference, msr, realm/,
     ],
     ["the base TeX set", "paperlint:tex-base", "not-found", /agenticdev/],
     [
@@ -422,7 +461,31 @@ describe("a preset's template: kept as its file spells it, with that file", () =
     expect(r.ok && r.value.template).toEqual({
       text: "\\documentclass[conference]{IEEEtran}",
       file: "/work/papers/p/own.jsonc",
+      forbids: [],
     });
+  });
+
+  it("the options a file forbids travel with its template", () => {
+    const r = resolve("./own.jsonc", {
+      "/work/papers/p/own.jsonc": venue({
+        extends: "paperlint:ieee-conference",
+        template: "\\documentclass[conference]{IEEEtran}",
+        template_forbids: ["compsoc"],
+      }),
+    });
+    expect(r.ok && r.value.template?.forbids).toEqual(["compsoc"]);
+  });
+
+  it("forbidden options without a template of the same file are refused by the schema", () => {
+    const r = resolve("./own.jsonc", {
+      "/work/papers/p/own.jsonc": venue({
+        extends: "paperlint:aidc",
+        template_forbids: ["compsoc"],
+      }),
+    });
+    expect(r.ok).toBe(false);
+    if (r.ok) return;
+    expect(presetProblemText(r.error)).toMatch(/template_forbids/);
   });
 });
 
@@ -448,6 +511,7 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
       "AIDC",
       "AISec",
       "ieee-conference",
+      "MSR",
       "REALM",
     ]);
     expect(names.find((n) => n.label === "AISec")?.aliases).toEqual(
@@ -469,6 +533,7 @@ describe("shippedVenueNames — what each shipped venue is called", () => {
       "AIDC",
       "AISec",
       "ieee-conference",
+      "MSR",
     ]);
   });
 });

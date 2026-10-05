@@ -299,7 +299,7 @@ describe("paperlint lint — the paper over its preset, and the project's own pr
     const r = await lint(root);
     expect(r.code).toBe(1);
     expect(r.out).toMatch(
-      /acm-sigconf, agenticdev, aidc, aisec, ieee-conference, realm/,
+      /acm-sigconf, agenticdev, aidc, aisec, ieee-conference, msr, realm/,
     );
   });
 });

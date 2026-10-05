@@ -3,6 +3,8 @@ import {
   bodyEnd,
   isAppendixHeading,
   isReferencesHeading,
+  pageSplit,
+  type Anchors,
 } from "./body-pages.ts";
 
 describe("isReferencesHeading", () => {
@@ -295,6 +297,148 @@ describe("bodyEnd: where the appendix is not taken, or not found", () => {
       what: "appendix",
       heading: null,
       anchor: 4,
+    });
+  });
+});
+
+describe("pageSplit: the appendix counts as body, the reference pages are the ones holding only references", () => {
+  it("no appendix: the body up to the references, the rest references", () => {
+    expect(
+      pageSplit(["body", "end\nReferences\n[1] A.", "[2] B.", "[3] C."], {
+        bib: 2,
+        appendix: null,
+      }),
+    ).toEqual({
+      kind: "found",
+      page: 2,
+      bodyPages: 2,
+      refPages: 2,
+      appendixFrom: null,
+    });
+  });
+
+  it("🔴 an appendix before the references is body: it does not end the body", () => {
+    expect(
+      pageSplit(
+        [
+          "body",
+          "Appendix A.\nDetails",
+          "more details\nReferences\n[1] A.",
+          "[2] B.",
+        ],
+        { bib: 3, appendix: 2 },
+      ),
+    ).toEqual({
+      kind: "found",
+      page: 3,
+      bodyPages: 3,
+      refPages: 1,
+      appendixFrom: null,
+    });
+  });
+
+  it("🔴 an appendix after the references is body: the pages from it to the end", () => {
+    expect(
+      pageSplit(
+        [
+          "body",
+          "end\nReferences\n[1] A.",
+          "[2] B.",
+          "[3] C.\nAppendix A.\nx",
+          "y",
+        ],
+        { bib: 2, appendix: 4 },
+      ),
+    ).toEqual({
+      kind: "found",
+      page: 2,
+      bodyPages: 4,
+      refPages: 1,
+      appendixFrom: 4,
+    });
+  });
+});
+
+describe("pageSplit: the appendix and the references on one page", () => {
+  it("an appendix after the references on their own page: that page is counted once", () => {
+    expect(
+      pageSplit(["body", "end\nReferences\n[1] A.\nAppendix A.\nx"], {
+        bib: 2,
+        appendix: 2,
+      }),
+    ).toEqual({
+      kind: "found",
+      page: 2,
+      bodyPages: 2,
+      refPages: 0,
+      appendixFrom: 2,
+    });
+  });
+
+  it("an appendix above the references on their page is body before them, like any text", () => {
+    expect(
+      pageSplit(["body", "end\nAppendix A.\nx\nReferences\n[1] A.", "[2] B."], {
+        bib: 2,
+        appendix: 2,
+      }),
+    ).toEqual({
+      kind: "found",
+      page: 2,
+      bodyPages: 2,
+      refPages: 1,
+      appendixFrom: null,
+    });
+  });
+
+  it("the references at the top of their page: that page holds only references", () => {
+    expect(
+      pageSplit(["body", "References\n[1] A.", "Appendix A.\nx"], {
+        bib: 2,
+        appendix: 3,
+      }),
+    ).toEqual({
+      kind: "found",
+      page: 2,
+      bodyPages: 2,
+      refPages: 1,
+      appendixFrom: 3,
+    });
+  });
+});
+
+describe("pageSplit: what is said rather than counted, and what is not looked for", () => {
+  it.each<[string, readonly string[], Anchors, string]>([
+    [
+      "no references heading",
+      ["body", "Appendix\nx"],
+      { bib: null, appendix: 2 },
+      "missing",
+    ],
+    [
+      "an appendix anchor with no heading",
+      ["body", "References\n[1] A.", "x"],
+      { bib: 2, appendix: 3 },
+      "disagree",
+    ],
+    [
+      "a references anchor with no heading",
+      ["body", "x"],
+      { bib: 2, appendix: null },
+      "disagree",
+    ],
+  ])("%s: said, not counted", (_, pages, anchors, kind) => {
+    expect(pageSplit(pages, anchors).kind).toBe(kind);
+  });
+
+  it("without anchors the references heading is found in the text, and no appendix is looked for", () => {
+    expect(
+      pageSplit(["body", "end\nReferences\n[1] A.", "Appendix A.\nx"]),
+    ).toEqual({
+      kind: "found",
+      page: 2,
+      bodyPages: 2,
+      refPages: 1,
+      appendixFrom: null,
     });
   });
 });

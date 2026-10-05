@@ -117,6 +117,10 @@ const fakePortal = (answers: {
   return { seen, portalFor };
 };
 
+/** The line `update` prints before it sends `pdf`, naming `call`. */
+const CHECK = (pdf: string, call: string): string =>
+  `before you rely on it, open ${pdf} yourself and check it against ${call}: the page count and what counts toward the limit, the template and its class options, anonymity, and that every figure, table and reference renders — paperlint passing is not the venue accepting the format`;
+
 const ARGS: SubmissionArgs = {
   sub: "show",
   paperDir: "papers/p",
@@ -287,6 +291,7 @@ test("update: a dry run by default — the paper's PDF sent, nothing saved, exit
     ],
   ]);
   assert.deepEqual(r.out, [
+    CHECK("papers/p/paper.pdf", "the call for papers, https://example.org/cfp"),
     "dry run — the portal checked the change and kept nothing; --save sends it for real",
     "HTTP          200",
     "valid         yes",
@@ -322,7 +327,41 @@ test("update --save --submit --abstract --pdf: all of it sent, and said to be sa
       { save: true },
     ],
   ]);
-  assert.equal(r.out[0], "saved");
+  // Guards: the PDF that is sent is the one named, and --save is told to check it too.
+  assert.deepEqual(r.out.slice(0, 2), [
+    CHECK("other.pdf", "the call for papers, https://example.org/cfp"),
+    "saved",
+  ]);
+});
+
+test("🔴 update: the check line names the venue's call from the preset's `url`; a preset that names no venue gets the generic line", async () => {
+  const family = memoryFiles({
+    "/w/package.json": "{}",
+    "/w/house.jsonc": JSON.stringify({
+      type: "family",
+      extends: "paperlint:ieee-conference",
+      portal: { kind: "hotcrp", url: `${SITE}/` },
+    }),
+    [`${PAPER}/paperlint.json`]: JSON.stringify({
+      extends: "../../house.jsonc",
+      submission: { id: 7 },
+    }),
+    [`${PAPER}/paper.pdf`]: PDF,
+  });
+  const r = await run({ sub: "update" }, { files: family });
+  assert.equal(r.code, 0);
+  assert.equal(
+    r.out[0],
+    CHECK("papers/p/paper.pdf", "the venue's call for papers"),
+  );
+});
+
+test("show sends nothing, so it asks for no check", async () => {
+  const r = await run({});
+  assert.equal(
+    r.out.some((l) => l.includes("call for papers")),
+    false,
+  );
 });
 
 test("update: valid:false, or a non-2xx status, exits 1 with the portal's messages", async () => {
@@ -338,7 +377,7 @@ test("update: valid:false, or a non-2xx status, exits 1 with the portal's messag
     { portal: fakePortal({ update: invalid }) },
   );
   assert.equal(r1.code, 1);
-  assert.deepEqual(r1.out.slice(2), [
+  assert.deepEqual(r1.out.slice(3), [
     "valid         NO",
     "changes       —",
     `local PDF     papers/p/paper.pdf sha2-${HEX}`,
@@ -380,7 +419,7 @@ test("update --save that the portal withheld says so", async () => {
     { sub: "update", save: true },
     { portal: fakePortal({ update: withheld }) },
   );
-  assert.equal(r.out[0], "SAVE WITHHELD by the portal — nothing changed");
+  assert.equal(r.out[1], "SAVE WITHHELD by the portal — nothing changed");
 });
 
 test("update: no PDF to send, or no abstract file, is refused before the portal is asked", async () => {

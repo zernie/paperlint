@@ -17,6 +17,19 @@ How the body is counted depends on the preset:
   appendices» excludes an appendix wherever it sits. What follows is not counted. The page the body
   ends on counts as body when body text stands above the heading there: a body that runs half a
   page past the limit is over the limit.
+- **With `"appendix_in_body": true` as well** (MSR: «All submissions must not exceed 10 pages for
+  the main text, inclusive of all figures, tables, appendices, etc. Two more pages containing only
+  references are permitted.»), the appendix is body wherever it sits, and banal's two counts are
+  replaced by the text's. The body is every page up to the references — that page too when body
+  text stands above the heading — and, when the appendix starts after the references, every page
+  from the appendix's to the last. The pages between hold only references, and they are what
+  `ref_pages_max` limits. An appendix before the references ends nothing.
+
+Why not banal's count for such a venue, measured on IEEEtran `[10pt,conference]` builds
+(2026-10-05): banal types a page whose first heading reads «Appendix» as bibliography, so ten pages
+of main text whose appendix stands before the references measured body 9, references 3 — a correct
+paper failed on its references; and an appendix after the references was counted as reference
+pages, so eleven pages of main text measured body 10, references 2 — an over-long paper passed.
 
 ## How it finds where the body ends
 
@@ -83,13 +96,17 @@ When a structural signal and the text disagree, the count is not made and the ru
 ## Options / preset fields
 
 No rule options. It reads, from the preset, `format.kinds.<kind>.body_pages_max`,
-`format.kinds.<kind>.ref_pages_max` and `format.body_ends_at`; from the paper's `paperlint.json`,
+`format.kinds.<kind>.ref_pages_max`, `format.body_ends_at` and `format.appendix_in_body` (which
+the schema accepts only beside `body_ends_at`); from the paper's `paperlint.json`,
 `kind`. A preset with no kinds, or a kind with no limits, has nothing to check.
 
 ## What it does not check
 
 - **An appendix before the references, without hyperref**, is counted as body: nothing structural
   says where it starts. With hyperref it ends the body.
+- **An appendix after the references, without hyperref, under `appendix_in_body`**, is counted
+  as reference pages: nothing structural says where it starts. `ref_pages_max` still limits the
+  pages after the references, so a long one is reported, as references.
 - **An appendix whose heading does not read «Appendix…»** (the standard classes print `A` and the
   title) is reported as `unclear` when hyperref anchors it.
 - **A bibliography that is not numbered and not linked by hyperref** has no confirmed heading and no

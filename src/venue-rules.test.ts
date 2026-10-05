@@ -239,13 +239,13 @@ describe("pdf/profile — the declaration must resolve, or nothing is judged", (
       "an unknown venue (a typo would silently disable every check)",
       { extends: "paperlint:agentic-dev", kind: "short" },
       "preset",
-      /agenticdev, aidc, aisec, ieee-conference, realm/,
+      /agenticdev, aidc, aisec, ieee-conference, msr, realm/,
     ],
     [
       "the base TeX set is not a venue",
       { extends: "paperlint:tex-base" },
       "preset",
-      /agenticdev, aidc, aisec, ieee-conference, realm/,
+      /agenticdev, aidc, aisec, ieee-conference, msr, realm/,
     ],
     [
       "paperlint.json that is not JSON",
@@ -860,6 +860,177 @@ describe("format/page-limit on AIDC: the two signals of where the references sta
     expect(fs[0]?.message).toMatch(
       /and the «References» heading followed by \[1\] is on page 1\./,
     );
+  });
+});
+
+/**
+ * A project's own venue that counts its appendices in the body (`appendix_in_body`): a body of ten
+ * pages, appendices included, and two pages holding only references — MSR's rule.
+ */
+const OWN_APPENDIX_IN_BODY = {
+  [`${PAPER}/own.jsonc`]: JSON.stringify({
+    type: "venue",
+    name: "Own",
+    url: "https://example.org/cfp",
+    extends: "paperlint:ieee-conference",
+    format: {
+      body_ends_at: "references",
+      appendix_in_body: true,
+      kinds: {
+        technical: { body_pages_max: 10, ref_pages_max: 2 },
+        open: {},
+        refs: { ref_pages_max: 2 },
+      },
+    },
+  }),
+};
+
+/** `own.jsonc` papers of the kind named, over IEEE facts with `pages` and the two anchors. */
+const ownSplit = (
+  pages: readonly string[],
+  bib: number | null,
+  appendix: number | null,
+  kind = "technical",
+) =>
+  lint({
+    venue: { extends: "./own.jsonc", kind },
+    extra: OWN_APPENDIX_IN_BODY,
+    facts: ieeeFacts((f) => {
+      f.pages_text = [...pages];
+      f.bib_anchor_page = bib;
+      f.appendix_anchor_page = appendix;
+      // banal's counts, which this counting replaces: neither is judged.
+      f.body_pages = 99;
+      f.ref_pages = 99;
+    }),
+  });
+
+describe("format/page-limit with `appendix_in_body`: the appendix is body, the reference pages hold only references", () => {
+  const REFS = ["the end\nReferences\n[1] A.\n", "[2] B.\n", "[3] C.\n"];
+
+  it("ten pages of body and two of references pass; banal's counts are not judged", () => {
+    expect(ownSplit([...bodyPages(9), ...REFS], 10, null)).toEqual([]);
+  });
+
+  it("🔴 an appendix after the references that brings the body to eleven fails, naming where it starts", () => {
+    const fs = ownSplit(
+      [...bodyPages(9), ...REFS.slice(0, 2), "Appendix A.\nDetails\n"],
+      10,
+      12,
+    );
+    expect(fs.map((f) => f.message)).toEqual([
+      "body pages (up to the references on page 10, and the appendix from page 12): 11, over the limit 10 for Own/technical — a desk reject; cut the text",
+    ]);
+  });
+
+  it("🔴 three pages holding only references fail", () => {
+    const fs = ownSplit([...bodyPages(9), ...REFS, "[4] D.\n"], 10, null);
+    expect(fs.map((f) => f.message)).toEqual([
+      "pages holding only references: 3, over the limit 2 for Own/technical — a desk reject; cut the text",
+    ]);
+  });
+
+  it("an eleventh page of body before the references fails, appendices included", () => {
+    expect(ids(ownSplit([...bodyPages(10), ...REFS], 11, null))).toEqual([
+      "format/page-limit:pages",
+    ]);
+  });
+
+  it.each<
+    [string, readonly string[], readonly [number | null, number | null], string]
+  >([
+    [
+      "no references heading",
+      bodyPages(3),
+      [null, null],
+      "format/page-limit:noReferences",
+    ],
+    [
+      "an appendix anchor on a page with no «Appendix» line",
+      [...bodyPages(3), ...REFS],
+      [4, 6],
+      "format/page-limit:unclear",
+    ],
+  ])("%s: said, not counted", (_, pages, [bib, appendix], want) => {
+    expect(ids(ownSplit(pages, bib, appendix))).toEqual([want]);
+  });
+
+  it("a kind with no limits judges nothing; one with a reference limit only judges that", () => {
+    expect(ownSplit(bodyPages(3), null, null, "open")).toEqual([]);
+    expect(
+      ids(ownSplit([...bodyPages(12), ...REFS, "[4] D.\n"], 13, null, "refs")),
+    ).toEqual(["format/page-limit:pages"]);
+  });
+});
+
+/** An MSR technical paper that declares who wrote it. */
+const MSR = {
+  extends: "paperlint:msr",
+  kind: "technical",
+  identity: ["Ada Example"],
+};
+
+/** MSR facts: `pages` as the PDF's text, the two anchors where hyperref put them. */
+const msrFacts = (
+  pages: readonly string[],
+  bib: number,
+  appendix: number | null = null,
+) =>
+  ieeeFacts((f) => {
+    f.pages_text = [...pages];
+    f.bib_anchor_page = bib;
+    f.appendix_anchor_page = appendix;
+  });
+
+/** References that start below the last body text on their page, then `more` pages of them. */
+const refsFrom = (more: number): string[] => [
+  "the last lines of the conclusion\nR EFERENCES\n[1] D. E. Knuth.\n",
+  ...Array.from({ length: more }, (_, i) => `[${String(i + 2)}] More.\n`),
+];
+
+describe("format/page-limit on MSR: ten pages of main text, appendices included, and two of only references", () => {
+  it("🔴 ten pages of body, the references starting on the tenth, and two pages of only references pass", () => {
+    expect(
+      lint({
+        venue: MSR,
+        facts: msrFacts([...bodyPages(9), ...refsFrom(2)], 10),
+      }),
+    ).toEqual([]);
+  });
+
+  it("🔴 eleven pages of body fail", () => {
+    const fs = lint({
+      venue: MSR,
+      facts: msrFacts([...bodyPages(10), ...refsFrom(2)], 11),
+    });
+    expect(fs.map((f) => f.message)).toEqual([
+      "body pages (up to the references on page 11, appendices included): 11, over the limit 10 for MSR/technical — a desk reject; cut the text",
+    ]);
+  });
+
+  it("🔴 an appendix before the references that brings the body to eleven fails", () => {
+    const pages = [...bodyPages(9), "Appendix A.\nDetails\n", ...refsFrom(2)];
+    expect(ids(lint({ venue: MSR, facts: msrFacts(pages, 11, 10) }))).toEqual([
+      "format/page-limit:pages",
+    ]);
+  });
+
+  it("🔴 an appendix after the references that brings the body to eleven fails", () => {
+    const pages = [...bodyPages(9), ...refsFrom(1), "Appendix A.\nDetails\n"];
+    const fs = lint({ venue: MSR, facts: msrFacts(pages, 10, 12) });
+    expect(fs[0]?.message).toMatch(
+      /^body pages \(up to the references on page 10, and the appendix from page 12\): 11, over the limit 10/,
+    );
+  });
+
+  it("🔴 three pages of only references fail", () => {
+    const fs = lint({
+      venue: MSR,
+      facts: msrFacts([...bodyPages(9), ...refsFrom(3)], 10),
+    });
+    expect(fs.map((f) => f.message)).toEqual([
+      "pages holding only references: 3, over the limit 2 for MSR/technical — a desk reject; cut the text",
+    ]);
   });
 });
 

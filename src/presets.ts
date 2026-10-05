@@ -25,7 +25,7 @@
  *   tex        union — a child never removes a package its parent needs
  *   format     per key, the child wins; `kinds` by kind name, a child's kind replaces that kind
  *   rules      per rule id, the child wins; `ruleOrigins` keeps which file set each
- *   template   the child wins; so does `name`, and `required_sections`, `register`, `talk` and
+ *   template   the child wins, with its `template_forbids`; so does `name`, and `required_sections`, `register`, `talk` and
  *              `portal` (each whole)
  *   aliases    union, with every `name` — what the venue is called along the chain
  *
@@ -75,10 +75,12 @@ export interface PresetDeps {
   readonly venuesDir: string;
 }
 
-/** A preset's `template`, as its file spells it. */
+/** A preset's `template`, as its file spells it, and the class options that file forbids. */
 export interface PresetTemplate {
   readonly text: string;
   readonly file: string;
+  /** `template_forbids` of the same file: options the paper's class line must not carry. */
+  readonly forbids: readonly string[];
 }
 
 /** A resolved chain, merged. */
@@ -104,6 +106,11 @@ export interface Preset {
   readonly aliases: readonly string[];
   /** Whether the venue reviews double-blind (`anonymity/identity`); false when no file of the chain says. */
   readonly blind: boolean;
+  /**
+   * When the venue's names count as a mention in a paper's text (`tex/venue-leftover`): `any`
+   * whole-word use, or `with-year` beside it; `any` when no file of the chain says.
+   */
+  readonly mentions: "any" | "with-year";
   readonly requiredSections: readonly RequiredSection[];
   readonly tex: TexRequirements;
   readonly format: VenueFormat;
@@ -254,6 +261,7 @@ export function mergeFormat(
     fontsText: pick("fontsText"),
     fontsTitle: pick("fontsTitle"),
     bodyEndsAt: pick("bodyEndsAt"),
+    appendixInBody: pick("appendixInBody"),
     kinds: new Map([...parent.kinds, ...child.kinds]),
   };
 }
@@ -276,6 +284,7 @@ const NOTHING_MERGED: Merging = {
   template: null,
   aliases: [],
   blind: false,
+  mentions: "any",
   requiredSections: [],
   tex: NO_REQUIREMENTS,
   format: NO_FORMAT,
@@ -292,9 +301,13 @@ const mergeOne = (
   { preset: p, file }: { readonly preset: PresetFile; readonly file: string },
 ): Merging => ({
   name: nameOf(p.identity) ?? acc.name,
-  template: p.template === null ? acc.template : { text: p.template, file },
+  template:
+    p.template === null
+      ? acc.template
+      : { text: p.template, file, forbids: p.templateForbids },
   aliases: [...new Set([...acc.aliases, ...namesOf(p.identity), ...p.aliases])],
   blind: p.blind ?? acc.blind,
+  mentions: p.mentions ?? acc.mentions,
   requiredSections: p.requiredSections ?? acc.requiredSections,
   tex: p.tex ? mergeRequirements(acc.tex, p.tex) : acc.tex,
   format: mergeFormat(acc.format, p.format),
@@ -368,17 +381,21 @@ export function resolveShipped(deps: PresetDeps): readonly Preset[] {
 }
 
 /** A shipped venue as a name knows it, and the files of its chain: what tells it from a paper's own. */
-export type ShippedVenue = Pick<Preset, "label" | "aliases" | "chain">;
+export type ShippedVenue = Pick<
+  Preset,
+  "label" | "aliases" | "chain" | "mentions"
+>;
 
 /**
  * A resolved preset as a name knows it: its label, its aliases, its chain. Pure. (Not Remeda's
  * `pick`: the app layer may not import it — `boundaries/dependencies`, `APP_EXTERNALS`.)
  */
-export const venueOf = ({ label, aliases, chain }: Preset): ShippedVenue => ({
+export const venueOf = ({
   label,
   aliases,
   chain,
-});
+  mentions,
+}: Preset): ShippedVenue => ({ label, aliases, chain, mentions });
 
 /**
  * THE ONE SOURCE OF VENUE NAMES: every shipped venue's label and `aliases` (with each `name` along

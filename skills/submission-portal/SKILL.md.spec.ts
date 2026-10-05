@@ -15,7 +15,7 @@ supported; for any other portal the command says so and the upload is done by ha
 ## What must be in place
 
 - **The venue preset declares the portal**: \`"portal": { "kind": "hotcrp", "url": "<the site>" }\`
-  (\`paperlint:aidc\` has it). For your own venue preset, add it there.
+  (\`paperlint:aidc\` and \`paperlint:msr\` have it). For your own venue preset, add it there.
 - **The paper's \`paperlint.json\` names its submission**: \`"submission": { "id": <number> }\` — the
   number HotCRP shows for the paper.
 - **A token in \`HOTCRP_TOKEN\`**, created by the author on the HotCRP site under Account settings →

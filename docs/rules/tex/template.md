@@ -5,8 +5,9 @@
 ## What it catches
 
 The paper is not set in the class its venue requires. The rule compares the `\documentclass` line
-of `paper.tex` with the preset's `template`: the class must be the same, and every option the
-template names must be there. The paper may add options of its own.
+of `paper.tex` with the preset's `template`: the class must be the same, every option the
+template names must be there, and no option the preset forbids (`template_forbids`) may be. The
+paper may add other options of its own.
 
 A source that keeps one file for several venues and picks the class behind a TeX switch has several
 `\documentclass` lines. The switch is not evaluated: each line is a candidate, the paper passes when
@@ -49,6 +50,16 @@ The first line reports:
 
 > the class option `compsoc` is missing: aidc requires `\documentclass[conference,compsoc]{IEEEtran}`
 
+Under a preset that forbids options — MSR: «LaTeX users must use \documentclass[10pt,conference]{IEEEtran}
+without including the compsoc or compsocconf options» (https://2027.msrconf.org/track/msr-2027-technical-papers):
+
+```latex
+\documentclass[10pt,conference,compsoc]{IEEEtran} % fails: compsoc is forbidden
+\documentclass[10pt,conference]{IEEEtran}         % passes
+```
+
+> the class option `compsoc` is forbidden: MSR requires `\documentclass[10pt,conference]{IEEEtran}` without `compsoc`, `compsocconf`
+
 ## Preset field
 
 No rule options. It reads `template`, merged along `extends` (a child's replaces its parent's):
@@ -60,15 +71,24 @@ No rule options. It reads `template`, merged along `extends` (a child's replaces
 A whole `\documentclass[…]{…}` line, or a bare class name (`"article"`), which requires the class
 and no option. A value that is neither is reported as a finding that names the preset file.
 
+```jsonc
+"template_forbids": ["compsoc", "compsocconf"]
+```
+
+Class options the venue's call forbids, each reported where the class line carries it. Read with the
+`template` of the same file, and only with it: the schema refuses it alone, and a child preset's
+`template` replaces both.
+
 ## What it does not check
 
-- Options a venue forbids (`review`, `anonymous` in a camera-ready): only that what the venue
-  requires is there.
+- An option a venue forbids that its preset does not list in `template_forbids` (`review` in a
+  camera-ready).
 - The version of the class file (#94).
 - A `\documentclass` inside a comment: the rule reads the parse tree, so it does not count.
 - Which branch of a TeX switch builds: with several class lines, one matching candidate is enough.
 
 ## How to fix
 
-Set the `\documentclass` line to the one the message quotes, keeping your own extra options. A new
+Set the `\documentclass` line to the one the message quotes, keeping your own extra options
+and dropping a forbidden one. A new
 paper made with `paperlint new <name> --venue <preset>` already has it.

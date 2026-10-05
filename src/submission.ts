@@ -80,6 +80,8 @@ export interface SubmissionTarget {
   readonly id: number;
   /** The paper's built PDF, absolute. */
   readonly pdf: string;
+  /** The venue's call for papers (the preset's `url`); null when the preset names no venue. */
+  readonly call: string | null;
 }
 
 const configOf = (dir: string): string => join(dir, CONFIG_FILE);
@@ -109,7 +111,9 @@ export function submissionTarget(
   const portal = supportedPortal(declared);
   if (!portal.ok) return portal;
   const pdf = join(paperDir, p.settings.pdf ?? "paper.pdf");
-  return ok({ portal: portal.value, id: sub.id, pdf });
+  const identity = p.preset.identity;
+  const call = identity.type === "venue" ? identity.url : null;
+  return ok({ portal: portal.value, id: sub.id, pdf, call });
 }
 
 /** The token from the environment, or the line naming the variable and where to get one. */
@@ -182,6 +186,14 @@ export function showLines(
   ];
 }
 
+/**
+ * What `update` says before it sends a PDF, dry run or not: the author opens that file and checks it
+ * against the venue's call. paperlint's checks are an aid; the venue's reading of the PDF is what
+ * counts. Pure.
+ */
+export const checkPdfLine = (shown: string, call: string | null): string =>
+  `before you rely on it, open ${shown} yourself and check it against ${call === null ? "the venue's call for papers" : `the call for papers, ${call}`}: the page count and what counts toward the limit, the template and its class options, anonymity, and that every figure, table and reference renders — paperlint passing is not the venue accepting the format`;
+
 /** `update`'s report. Pure. */
 export function updateLines(
   o: UpdateOutcome,
@@ -243,6 +255,17 @@ function abstractOf(
     : ok(new TextDecoder().decode(bytes).trim());
 }
 
+/** What `update` sends: the PDF's bytes, the abstract's text, and whether to mark it submitted. */
+const changeOf = (
+  a: SubmissionArgs & { readonly pdfPath: string },
+  bytes: Uint8Array,
+  abstract: string | null,
+) => ({
+  pdf: { name: basename(a.pdfPath), bytes },
+  abstract,
+  submit: a.submit,
+});
+
 /** `update`: send the PDF (and the abstract, and "submitted" when asked); a dry run unless saving. */
 async function runUpdate(
   t: SubmissionTarget,
@@ -259,12 +282,10 @@ async function runUpdate(
     );
   const abstract = abstractOf(a, deps);
   if (!abstract.ok) return (deps.err(abstract.error), 2);
-  const change = {
-    pdf: { name: basename(a.pdfPath), bytes },
-    abstract: abstract.value,
-    submit: a.submit,
-  };
-  const r = await portal.update(t.id, change, { save: a.save });
+  deps.log(checkPdfLine(shown, t.call));
+  const r = await portal.update(t.id, changeOf(a, bytes, abstract.value), {
+    save: a.save,
+  });
   if (!r.ok) return (deps.err(failureText(r.error)), 1);
   const local = { shown, sha256: sha256Hex(bytes) };
   updateLines(r.value, local, a.save).forEach((l) => {

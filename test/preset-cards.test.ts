@@ -27,7 +27,7 @@ async function lintPresets(): Promise<string[]> {
   });
   const results = await eslint.lintFiles(["presets"]);
   // Guards: the pairing rule must SEE the presets — a block that matches no .jsonc reports clean.
-  expect(results.filter((r) => r.filePath.endsWith(".jsonc"))).toHaveLength(7);
+  expect(results.filter((r) => r.filePath.endsWith(".jsonc"))).toHaveLength(8);
   return results.flatMap((r) =>
     r.messages.map(
       (m) =>

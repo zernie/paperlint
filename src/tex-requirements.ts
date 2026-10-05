@@ -140,6 +140,11 @@ export interface VenueFormat {
   readonly fontsTitle: string | null;
   /** How the body is counted: null is banal's count; `references`, the pages before the references. */
   readonly bodyEndsAt: "references" | null;
+  /**
+   * With `bodyEndsAt`: appendices count as body wherever they sit, and the reference pages are the
+   * ones holding only references. Null: the appendix ends the body, as `references` alone counts it.
+   */
+  readonly appendixInBody: boolean | null;
   readonly kinds: ReadonlyMap<string, KindLimits>;
 }
 
@@ -155,6 +160,7 @@ export const NO_FORMAT: VenueFormat = {
   fontsText: null,
   fontsTitle: null,
   bodyEndsAt: null,
+  appendixInBody: null,
   kinds: new Map(),
 };
 
@@ -189,10 +195,14 @@ export interface PresetFile {
   readonly extends: string | null;
   /** The `\\documentclass` the venue's template uses, as the file spells it; null when it names none. */
   readonly template: string | null;
+  /** Class options the venue forbids, read with `template`; empty when the file names none. */
+  readonly templateForbids: readonly string[];
   /** Other names the venue goes by in a paper's text; empty when the file names none. */
   readonly aliases: readonly string[];
   /** Whether the venue reviews double-blind; null when the file does not say. */
   readonly blind: boolean | null;
+  /** When the venue's names count as a mention in a paper's text; null when the file does not say. */
+  readonly mentions: "with-year" | null;
   /** Sections the venue requires; null when the file names none (a child's list replaces its parent's). */
   readonly requiredSections: readonly RequiredSection[] | null;
   /** Null when the file declares no `tex` block (allowed only with `extends`). */
@@ -227,6 +237,7 @@ interface FormatJson {
   readonly fonts_text?: string;
   readonly fonts_title?: string;
   readonly body_ends_at?: "references";
+  readonly appendix_in_body?: boolean;
   readonly kinds?: KindsJson;
 }
 
@@ -244,8 +255,10 @@ type PresetJson = PresetBodyJson &
 interface PresetBodyJson {
   readonly extends?: string;
   readonly template?: string;
+  readonly template_forbids?: readonly string[];
   readonly aliases?: readonly string[];
   readonly blind?: boolean;
+  readonly mentions?: "with-year";
   readonly required_sections?: readonly {
     readonly title: string;
     readonly position?: "last";
@@ -292,6 +305,7 @@ function formatOf(j: FormatJson = {}): VenueFormat {
     fontsText: orNull(j.fonts_text),
     fontsTitle: orNull(j.fonts_title),
     bodyEndsAt: orNull(j.body_ends_at),
+    appendixInBody: orNull(j.appendix_in_body),
     kinds: kindsOf(j.kinds),
   };
 }
@@ -376,6 +390,10 @@ const anchorsOf = (
         },
       }));
 
+/** A preset's `portal`, or null when it names none. */
+const portalOf = (p: PresetJson["portal"]): Readonly<VenuePortal> | null =>
+  p === undefined ? null : { kind: p.kind, url: p.url };
+
 /**
  * The text of one preset file → the typed file, or an Error naming every problem. The ONE parser
  * of a preset: the toolchain reads its `tex`, the venue rules its `format`, the config its `rules`.
@@ -400,18 +418,17 @@ export function parsePreset(
     identity: identityOf(j),
     extends: orNull(j.extends),
     template: orNull(j.template),
+    templateForbids: j.template_forbids ?? [],
     aliases: j.aliases ?? [],
     blind: orNull(j.blind),
+    mentions: orNull(j.mentions),
     requiredSections: sectionsOf(j.required_sections),
     tex: texOf(j.tex),
     format: formatOf(j.format),
     rules: j.rules ?? {},
     registerAnchors: anchorsOf(j.register),
     talk: j.talk === undefined ? null : venueTalkOf(j.talk),
-    portal:
-      j.portal === undefined
-        ? null
-        : { kind: j.portal.kind, url: j.portal.url },
+    portal: portalOf(j.portal),
   };
 }
 
