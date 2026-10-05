@@ -35,6 +35,7 @@ import {
   type VenueTalkJson,
 } from "./domain/talk.ts";
 import type { VenuePortal } from "./domain/submission.ts";
+import type { Reading } from "./domain/deadline.ts";
 
 /** CTAN package name → the names that prove it is installed. */
 export type PackageProofs = Readonly<Record<string, readonly string[]>>;
@@ -219,6 +220,8 @@ export interface PresetFile {
   readonly talk: VenueTalk | null;
   /** Where the venue takes submissions (`paperlint submission`); null when the file does not say. */
   readonly portal: VenuePortal | null;
+  /** The edition's deadlines as they were read; null when the file names none (a child's list replaces its parent's). */
+  readonly deadlines: readonly Reading[] | null;
 }
 
 type KindsJson = Readonly<
@@ -276,6 +279,7 @@ interface PresetBodyJson {
   };
   readonly talk?: VenueTalkJson;
   readonly portal?: VenuePortal;
+  readonly deadlines?: readonly Reading[];
 }
 
 /** An optional field as the typed preset holds it: absent is null. */
@@ -395,6 +399,32 @@ const portalOf = (p: PresetJson["portal"]): Readonly<VenuePortal> | null =>
   p === undefined ? null : { kind: p.kind, url: p.url };
 
 /**
+ * A preset's `deadlines`, or null when it names none. Two readings of one kind from one source are
+ * refused: the schema cannot say it, and a paper could not tell which binds.
+ */
+function deadlinesOf(
+  d: PresetJson["deadlines"],
+  file: string,
+): readonly Reading[] | null {
+  if (d === undefined) return null;
+  const twice = d.find(
+    (r, i) =>
+      d.findIndex((x) => x.what === r.what && x.source === r.source) !== i,
+  );
+  if (twice !== undefined)
+    throw new Error(
+      `${file}: "deadlines" holds two "${twice.source}" readings of "${twice.what}" — keep one, the latest`,
+    );
+  return d.map(({ what, at, source, url, read }) => ({
+    what,
+    at,
+    source,
+    url,
+    read,
+  }));
+}
+
+/**
  * The text of one preset file → the typed file, or an Error naming every problem. The ONE parser
  * of a preset: the toolchain reads its `tex`, the venue rules its `format`, the config its `rules`.
  *
@@ -429,6 +459,7 @@ export function parsePreset(
     registerAnchors: anchorsOf(j.register),
     talk: j.talk === undefined ? null : venueTalkOf(j.talk),
     portal: portalOf(j.portal),
+    deadlines: deadlinesOf(j.deadlines, file),
   };
 }
 

@@ -28,7 +28,11 @@ whereas last year it was ACM format.»), and limits and dates change between edi
   (`"sub":1792468800`, 2026-10-20 04:00 UTC) and «Resubmission deadline: Friday Oct 23, 2026, 12 AM
   EDT» («Completed submissions may be updated until this deadline»). Midnight EDT at the start of
   each day is about a day and a half before the end of that day AoE. The portal is what refuses the
-  upload: plan for its times, and re-read the page, since chairs change them.
+  upload: plan for its times. The preset carries them as `deadlines` (`source: "portal"`, with the
+  day read), refreshed by paperlint's scheduled workflow when the portal changes them; a paper whose
+  current cycle names `paperlint:msr` derives them. Recording the call's days in the paper's own
+  cycle maps «abstract» to `registration` and «paper» to `submission` — and the portal's earlier
+  `submission` is then the one in force.
 - **Format**, verbatim from the call: «LaTeX users must use \documentclass[10pt,conference]{IEEEtran}
   without including the compsoc or compsocconf options», «title in 24pt font and full text in 10pt
   type», and «Alterations of spacing, font size, and other changes that deviate from the

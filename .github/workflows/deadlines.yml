@@ -1,0 +1,100 @@
+# THE VENUE PRESETS' DEADLINES, RE-READ FROM THEIR PORTALS ONCE A DAY.
+#
+# A shipped venue preset (presets/msr.jsonc, presets/aidc.jsonc) carries its portal's deadlines,
+# each with the day it was read. Chairs move deadlines; a paper only learns it if the preset does.
+# So this job reads every preset's portal (`scripts/refresh-deadlines.ts`, through the HotCRP adapter
+# in src/adapters/hotcrp/ — the public deadlines page, no account, no secret) and, when a value
+# changed, opens ONE pull request with the new values, or updates the one already open. Its commit
+# and title are `fix(presets): …`, which semantic-release (.releaserc.json, conventionalcommits)
+# releases as a PATCH; a paper's normal dependency update (Dependabot) then brings the new dates.
+# Nothing in a paper's own lint reads the network or the clock.
+#
+# 🔴 IT REPORTS, IT DOES NOT BLOCK. A portal that is down or gone is a `::warning::` annotation and a
+# line in the pull request's body, and the script exits 0: the venue's outage is not a defect of this
+# repository, and tomorrow's run reads it again. Only a preset that does not parse fails the run
+# (exit 1) — that one IS ours, and `ci` fails on it too. `ci` itself never touches the network for
+# this: scripts/refresh-deadlines.test.ts replays the pages recorded in src/adapters/hotcrp/cassette/.
+#
+# ⚠️ A pull request opened with GITHUB_TOKEN does not start other workflows (GitHub's rule against
+# loops), so `ci` would never run on it and the PR could not show green. The last step therefore
+# dispatches `ci` on the branch (ci.yml declares `workflow_dispatch` for this); its checks land on
+# the branch's head commit, which is what the pull request shows. Two repository settings are
+# needed, and both are switches in Settings → Actions → General, not in this file: workflows may
+# have "Read and write permissions", and "Allow GitHub Actions to create and approve pull requests".
+#
+# ⛽ The repository is public, so the minutes are free (CLAUDE.md, "Cost"). Measured locally
+# 2026-10-05: the script reads both portals in about 2 s; `npm ci` dominates.
+name: deadlines
+
+on:
+  schedule:
+    # 05:17 UTC daily: off the top of the hour, when GitHub's scheduler is busiest and runs late.
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+# One run at a time: two runs pushing the same branch would race.
+concurrency:
+  group: deadlines
+  cancel-in-progress: false
+
+# Push the bot's branch · open or edit its pull request · dispatch `ci` on it. Nothing else.
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BRANCH: bot/preset-deadlines
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+
+      # `--ignore-scripts`: the script runs from source (Node strips the types); `prepare`'s tsc
+      # build is not needed to read a page and rewrite a JSONC file.
+      - name: npm ci
+        run: npm ci --ignore-scripts
+        timeout-minutes: 5
+
+      - name: read every preset's portal
+        run: node scripts/refresh-deadlines.ts --summary "$RUNNER_TEMP/deadlines.md"
+        timeout-minutes: 3
+
+      - name: open or update the pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- presets; then
+            echo "no deadline changed — nothing to propose"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$BRANCH"
+          # Only the presets: the script writes nothing else, and nothing else may ride along.
+          git add -- presets
+          git commit -F - <<'MSG'
+          fix(presets): venue deadlines as their portals publish them now
+
+          Re-read by .github/workflows/deadlines.yml (scripts/refresh-deadlines.ts); the pull
+          request's body lists each value that changed and where it was read.
+          MSG
+          # The branch is the bot's own and is rebuilt from main on every run: force is the point.
+          git push --force origin "$BRANCH"
+          title="fix(presets): venue deadlines as their portals publish them now"
+          open=$(gh pr list --repo "$REPO" --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [ -z "$open" ]; then
+            gh pr create --repo "$REPO" --base main --head "$BRANCH" --title "$title" --body-file "$RUNNER_TEMP/deadlines.md"
+          else
+            gh pr edit "$open" --repo "$REPO" --title "$title" --body-file "$RUNNER_TEMP/deadlines.md"
+          fi
+          gh workflow run ci.yml --repo "$REPO" --ref "$BRANCH"

@@ -4,7 +4,9 @@
  * One file name at two levels, one schema (lib/paper-config.mjs → SETTINGS_KEYS):
  *
  *   paperlint.json                 the project (optional): papersDir, rules, defaults
- *   <paper>/paperlint.json         this paper: { extends, kind, pdf, rules, identity, talk, submission }
+ *   <paper>/paperlint.json         this paper: { extends, kind, pdf, rules, identity, talk, submission } —
+ *                                  or `cycles`, from whose current attempt extends, kind and submission
+ *                                  are DERIVED (src/domain/cycle.ts); the two forms do not mix
  *   a venue preset                 `paperlint:<name>` (shipped) or `./x.jsonc` (src/presets.ts)
  *
  * The paper's `extends`, `kind` and `pdf` win over the root's; with no own value, the root's is
@@ -36,6 +38,13 @@ import {
   parsePaperSubmission,
   type PaperSubmission,
 } from "./domain/submission.ts";
+import {
+  cycleProblemText,
+  cyclesOf,
+  parseCycles,
+  venueCycleOf,
+  type Cycles,
+} from "./domain/cycle.ts";
 
 /** What one paper declares. Every absent field is null. */
 export interface PaperSettings {
@@ -60,6 +69,12 @@ export interface PaperSettings {
   readonly talk: PaperTalk | null;
   /** Which submission on the venue's portal is this paper's; null when it says none. Never the root's. */
   readonly submission: PaperSubmission | null;
+  /**
+   * The paper's attempts at venues and the current one, when the file declares `cycles`; null for a
+   * file in the flat form. With cycles, `extends`, `kind` and `submission` above are the current
+   * attempt's — derived, never written beside it. Never the root's.
+   */
+  readonly cycles: Cycles | null;
 }
 
 /** Why a paper's settings cannot be read. */
@@ -139,28 +154,85 @@ function rulesAndTalk(
     : submission;
 }
 
-/** The parsed JSON of `paperlint.json` → the settings, or one line saying what is wrong. Pure. */
-export function parsePaperSettings(
-  json: unknown,
-): Result<PaperSettings, string> {
-  if (!isObject(json)) return err("must be a JSON object");
+/** The keys the current cycle supplies: writing one beside `cycles` is a second source for it. */
+const DERIVED_FROM_CYCLE = ["extends", "kind", "submission"] as const;
+
+/**
+ * `cycles`, parsed with its current attempt, or null when the file is in the flat form. A file that
+ * has both `cycles` and a derived key is refused: two sources for one fact drift apart.
+ */
+function cyclesField(
+  json: Readonly<Record<string, unknown>>,
+): Result<Cycles | null, string> {
+  const list = parseCycles(json["cycles"]);
+  if (!list.ok) return list;
+  if (list.value === null) return ok(null);
+  const beside = DERIVED_FROM_CYCLE.filter((k) => k in json);
+  if (beside.length > 0)
+    return err(
+      `"${beside.join('", "')}" beside "cycles": with cycles, ${beside.length === 1 ? "it is" : "they are"} the current attempt's and cannot be set here — move the value into the open cycle`,
+    );
+  const cycles = cyclesOf(list.value);
+  return cycles.ok ? cycles : err(cycleProblemText(cycles.error));
+}
+
+/**
+ * The current attempt's venue, kind and submission, as the flat keys every reader takes. An accepted
+ * attempt keeps them: the camera-ready and the talk are judged against the venue that accepted.
+ */
+function derived(
+  cycles: Cycles,
+): Pick<PaperSettings, (typeof DERIVED_FROM_CYCLE)[number]> {
+  const c = venueCycleOf(cycles.current);
+  if (c === null) return { extends: null, kind: null, submission: null };
+  return {
+    extends: c.venue.kind === "preset" ? c.venue.extends : null,
+    kind: c.kind,
+    submission: c.submission,
+  };
+}
+
+/** The keys that may not be in a paper's file: unknown ones, and the project's. */
+function refusedKeys(
+  json: Readonly<Record<string, unknown>>,
+): Result<Readonly<Record<string, unknown>>, string> {
   const unknown = Object.keys(json).filter((k) => !KNOWN.includes(k));
   if (unknown.length > 0)
     return err(
       `unknown key "${String(unknown[0])}" — known keys: ${KNOWN.join(", ")}`,
     );
   const project = Object.keys(json).filter((k) => ROOT_ONLY_KEYS.includes(k));
-  if (project.length > 0)
-    return err(
-      `"${String(project[0])}" is a project setting — set it in the root ${CONFIG_FILE}, not in a paper's`,
-    );
+  return project.length > 0
+    ? err(
+        `"${String(project[0])}" is a project setting — set it in the root ${CONFIG_FILE}, not in a paper's`,
+      )
+    : ok(json);
+}
+
+/** The parsed JSON of `paperlint.json` → the settings, or one line saying what is wrong. Pure. */
+export function parsePaperSettings(
+  json: unknown,
+): Result<PaperSettings, string> {
+  if (!isObject(json)) return err("must be a JSON object");
+  const keys = refusedKeys(json);
+  if (!keys.ok) return keys;
   const fields = stringFields(json);
   if (!fields.ok) return fields;
   const identity = identityField(json);
   if (!identity.ok) return identity;
   const rest = rulesAndTalk(json);
   if (!rest.ok) return rest;
-  return ok({ ...fields.value, ...rest.value, identity: identity.value });
+  const cycles = cyclesField(json);
+  if (!cycles.ok) return cycles;
+  const flat = {
+    ...fields.value,
+    ...rest.value,
+    identity: identity.value,
+    cycles: cycles.value,
+  };
+  return ok(
+    cycles.value === null ? flat : { ...flat, ...derived(cycles.value) },
+  );
 }
 
 /** A JSON file through `files`: undefined when absent, the problem when it does not parse. */
@@ -251,6 +323,7 @@ function merge(
     rules: null,
     talk: null,
     submission: null,
+    cycles: null,
   };
   const merged: PaperSettings = {
     extends: p.extends ?? r.extends,
@@ -260,6 +333,7 @@ function merge(
     identity: joined(r.identity, p.identity),
     talk: p.talk,
     submission: p.submission,
+    cycles: p.cycles,
   };
   return paper === null && Object.values(merged).every((v) => v === null)
     ? null

@@ -20,3 +20,7 @@ skills/*/SKILL.md
 docs/prior-art/repro/
 skills/paper-pipeline/repro/
 skills/paper-pipeline/references/occupancy-2026-08-06-probe/
+
+# HotCRP deadlines pages, recorded whole (src/adapters/hotcrp/cassette/README.md): the bytes a live site
+# answered are the fixture; reformatting them would test the formatter, not the parser.
+src/adapters/hotcrp/cassette/*.html

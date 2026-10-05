@@ -414,6 +414,40 @@ export const IO_GLOBALS = {
 };
 
 /**
+ * `paperlint lint` NEVER READS THE CLOCK. Its findings are a function of the files and the installed
+ * package: the same checkout lints the same tomorrow, and a deadline's distance belongs to a status
+ * view or a calendar, not to a gate (a lint that turns red on an untouched tree gets muted). The
+ * clock is an effect like the disk, so it is read where effects are — an adapter's `*.io.ts` and the
+ * root, `src/cli.ts` — and passed in. Matched on the AST: `Date.now` (called or passed along),
+ * `new Date()` and `Date()` without an argument. `new Date(ms)` converts a given time and passes.
+ * `toolchain.ts` and `build-engine.ts` keep `Date.now` as a default for their own timing (build and
+ * install only, neither runs under `lint`); that legacy I/O moves behind a port in #76.
+ */
+const READS_THE_CLOCK = [
+  "MemberExpression[object.name='Date'][property.name='now']",
+  "NewExpression[callee.name='Date'][arguments.length=0]",
+  "CallExpression[callee.name='Date']",
+].map((selector) => ({
+  selector,
+  message:
+    "Lint never reads the clock: its findings are a function of the files. Take the time as an argument; read it in an adapter's *.io.ts or src/cli.ts.",
+}));
+
+/** Every source file the checks are made of, but the places effects are allowed. Same scope as axis B. */
+export const NO_CLOCK = {
+  files: ["src/**/*.ts"],
+  ignores: [
+    ...IO_GLOBALS.ignores,
+    // Legacy I/O, moves behind a port in #76 (see READS_THE_CLOCK).
+    "src/toolchain.ts",
+    "src/build-engine.ts",
+  ],
+  rules: {
+    "no-restricted-syntax": ["error", AS_UNKNOWN_AS, ...READS_THE_CLOCK],
+  },
+};
+
+/**
  * EVERY PRESET HAS A CARD, AND EVERY CARD'S RULES TABLE IS THE PRESET'S. Two checks, one block each:
  *
  * - `project-structure/folder-structure` (its `enforceExistence`): each `presets/<name>.jsonc` needs
@@ -608,6 +642,7 @@ export default [
   },
   // Hexagonal layers, both axes (src/CLAUDE.md): knowledge by element, purity by file category.
   IO_GLOBALS,
+  NO_CLOCK,
   layerBoundaries(dirname(fileURLToPath(import.meta.url))),
   // The ratchet: per-file ceilings for the files written before the limits existed. See RATCHET.
   ...Object.entries(RATCHET).map(([file, max]) => ({
@@ -805,7 +840,12 @@ export default [
     files: ["eslint-rules/*.ts", "eslint-rules/*.mjs"],
     ignores: ["eslint-rules/*.test.*", "eslint-rules/*.harness.*"],
     rules: {
-      "no-restricted-syntax": ["error", AS_UNKNOWN_AS, ...GIT_IN_A_RULE],
+      "no-restricted-syntax": [
+        "error",
+        AS_UNKNOWN_AS,
+        ...GIT_IN_A_RULE,
+        ...READS_THE_CLOCK,
+      ],
     },
   },
   // LAST, so no block above can replace its `no-restricted-syntax` options for these files (none

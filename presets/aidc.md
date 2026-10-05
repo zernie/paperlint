@@ -21,9 +21,12 @@ from it. The `submit-paper` skill reads this card for the venue's specifics.
 - **Double-blind**: «Submissions must be properly anonymized for double-blind review.», and
   `"blind":true` in the portal's data.
 - **Portal**: HotCRP at `https://aidc.submit.acsac.org`.
-- 🔴 **The deadline people get wrong**: the HotCRP portal closes 2026-10-02 11:59:59 UTC
-  (`"sub":1790942399` on `https://aidc.submit.acsac.org/deadlines`), while the workshop page says
-  «October 2, 2026 (Anywhere-on-Earth, AoE)» — a day later. The portal is what refuses the upload.
+- 🔴 **The deadline people get wrong**: the HotCRP portal closed 2026-10-02 11:59:59 UTC first
+  (`"sub":1790942399` on `https://aidc.submit.acsac.org/deadlines`), while the workshop page said
+  «October 2, 2026 (Anywhere-on-Earth, AoE)» — a day later; on 2026-10-05 the portal read
+  2026-10-03 11:59:59 UTC (`"sub":1791028799`). The portal is what refuses the upload. The preset
+  carries its readings as `deadlines`, refreshed by paperlint's scheduled workflow when the portal
+  changes them.
 
 ## Paper kinds and limits
 

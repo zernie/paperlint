@@ -344,6 +344,15 @@ test("no command prints the usage and exits 2; --kind with no value is refused",
   assert.equal(parseArgs(["new", "x", "--kind"]).missingValue, "--kind");
 });
 
+test("--help names the cycles and where a deadline comes from — the only place a newcomer looks first", async () => {
+  const r = await cli(["--help"], root);
+  assert.equal(r.code, 0);
+  assert.match(r.out, /"cycles": \[ \{ "id"/);
+  assert.match(r.out, /A venue preset carries the portal's deadlines/);
+  assert.match(r.out, /"override": \{ "at", "reason", "evidence" \}/);
+  assert.match(r.out, /the earlier reading binds/);
+});
+
 test("src/cli.ts run as the program itself answers like the bin", () => {
   const r = runNode(join(import.meta.dirname, "cli.ts"), ["--help"]);
   assert.equal(r.status, 0);

@@ -103,6 +103,23 @@ describe("shipped presets: paperlint:msr", () => {
       kind: "hotcrp",
       url: "https://msr2027.hotcrp.com",
     });
+    // The portal's deadlines, read 2026-10-05 off cassette/deadlines-msr2027.html's page.
+    expect(r.value.deadlines).toEqual([
+      {
+        what: "submission",
+        at: "2026-10-20T04:00:00Z",
+        source: "portal",
+        url: "https://msr2027.hotcrp.com/deadlines",
+        read: "2026-10-05",
+      },
+      {
+        what: "resubmission",
+        at: "2026-10-23T04:00:00Z",
+        source: "portal",
+        url: "https://msr2027.hotcrp.com/deadlines",
+        read: "2026-10-05",
+      },
+    ]);
     // No rule turned on: the IEEE capitalization rule has not been read and quoted.
     expect(r.value.rules).toEqual({});
     expect(r.value.registerAnchors).toEqual([]);
@@ -323,6 +340,94 @@ describe("a project's own preset: what its children replace", () => {
     expect(r.ok && r.value.ruleOrigins["tex/heading-case"]).toBe(
       "/work/papers/p/mine.jsonc",
     );
+  });
+});
+
+describe("a project's own preset: its deadlines", () => {
+  const reading = (what: string, at: string, source = "portal") => ({
+    what,
+    at,
+    source,
+    url: "https://example.org/deadlines",
+    read: "2026-10-05",
+  });
+
+  it("a child's deadlines replace its parent's whole; none named keeps the parent's", () => {
+    const own = resolve("./mine.jsonc", {
+      "/work/papers/p/mine.jsonc": venue({
+        extends: "paperlint:msr",
+        deadlines: [reading("submission", "2026-10-21T04:00:00Z")],
+      }),
+    });
+    expect(own.ok && own.value.deadlines).toEqual([
+      reading("submission", "2026-10-21T04:00:00Z"),
+    ]);
+    const inherited = resolve("./mine.jsonc", {
+      "/work/papers/p/mine.jsonc": venue({ extends: "paperlint:msr" }),
+    });
+    expect(inherited.ok && inherited.value.deadlines.length).toBe(2);
+    const none = resolve("./mine.jsonc", {
+      "/work/papers/p/mine.jsonc": venue({ extends: "paperlint:aisec" }),
+    });
+    expect(none.ok && none.value.deadlines).toEqual([]);
+  });
+
+  it("the portal's and the call's reading of one kind may stand side by side", () => {
+    const r = resolve("./mine.jsonc", {
+      "/work/papers/p/mine.jsonc": venue({
+        extends: "paperlint:aisec",
+        deadlines: [
+          reading("submission", "2026-10-20T04:00:00Z"),
+          reading("submission", "2026-10-21T11:59:59Z", "call"),
+        ],
+      }),
+    });
+    expect(r.ok && r.value.deadlines.map((d) => d.source)).toEqual([
+      "portal",
+      "call",
+    ]);
+  });
+});
+
+describe("a project's own preset: deadlines it refuses", () => {
+  const reading = (what: string, at: string, source = "portal") => ({
+    what,
+    at,
+    source,
+    url: "https://example.org/deadlines",
+    read: "2026-10-05",
+  });
+
+  it.each([
+    [
+      "two readings of one kind from one source",
+      [
+        reading("submission", "2026-10-20T04:00:00Z"),
+        reading("submission", "2026-10-21T04:00:00Z"),
+      ],
+      /"deadlines" holds two "portal" readings of "submission" — keep one, the latest/,
+    ],
+    [
+      "an instant that is not UTC as a portal publishes it",
+      [reading("submission", "2026-10-20 AoE")],
+      /deadlines/,
+    ],
+    [
+      "a reading without the day it was read",
+      [{ ...reading("submission", "2026-10-20T04:00:00Z"), read: undefined }],
+      /deadlines/,
+    ],
+  ])("refuses %s, naming the file", (_what, deadlines, re) => {
+    const r = resolve("./mine.jsonc", {
+      "/work/papers/p/mine.jsonc": venue({
+        extends: "paperlint:aisec",
+        deadlines,
+      }),
+    });
+    expect(r.ok).toBe(false);
+    if (r.ok) return;
+    expect(presetProblemText(r.error)).toMatch(/mine\.jsonc/);
+    expect(presetProblemText(r.error)).toMatch(re);
   });
 });
 

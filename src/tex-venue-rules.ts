@@ -52,6 +52,7 @@ import type { PaperSource } from "./domain/paper-source.ts";
 import { readPaper, reportInPaper } from "./tex-paper.ts";
 import type { RequiredSection } from "./tex-requirements.ts";
 import type { Finding, VenueRuleDeps } from "./venue-rules.ts";
+import { isPorting } from "./domain/cycle.ts";
 
 /** A finding and where it points; null points at the top of the file. */
 export interface Located extends Finding {
@@ -493,6 +494,10 @@ function readingOf(
   const dir = dirname(filename);
   const p = paperPreset(dir, deps);
   if (p.kind !== "resolved") return null;
+  // The port to this venue's template is declared open work: the class line is the previous
+  // venue's by declaration, and `cycle/port-done` watches that declaration.
+  if (p.settings.cycles !== null && isPorting(p.settings.cycles.current))
+    return null;
   const preset = p.preset;
   const others = () => otherVenues(preset, deps);
   const paper = readPaper(filename, src, deps);
@@ -538,3 +543,83 @@ export function formatRules(
 ): Readonly<Record<"layout-override", TexRuleModule>> {
   return { "layout-override": rule("layout-override", deps) };
 }
+
+// ── cycle/port-done: the declared port is finished ───────────────────────────────────────
+
+/**
+ * `cycle/port-done` (error): the current cycle declares `"phase": "porting"`, and the paper's
+ * `\documentclass` is already the venue's template. The declaration silences every venue rule
+ * (`src/venue-rules.ts`, `readingOf` above); once the class line is the venue's, the port is done
+ * and the declaration is stale — this is the other half that keeps `porting` from being a mute
+ * button. Silent when the preset names no template: there is nothing to compare, as for `tex/template`.
+ */
+export function judgePortDone(
+  r: Pick<Reading, "src" | "latex" | "preset">,
+  cycleId: string,
+): readonly Located[] {
+  if (r.preset.template === null) return [];
+  const mismatch = judgeTemplate(
+    r.latex.documentClass(r.src),
+    r.preset,
+    r.latex,
+  );
+  return mismatch.length > 0
+    ? []
+    : [
+        {
+          messageId: "done",
+          data: {
+            venue: r.preset.label,
+            template: r.preset.template.text,
+            id: cycleId,
+          },
+          at: null,
+        },
+      ];
+}
+
+const PORT_DONE_META: TexRuleModule["meta"] = {
+  type: "problem",
+  docs: {
+    description:
+      "the current cycle still says `porting` while the \\documentclass is already the venue's template — the port is done, drop the phase",
+    url: "https://github.com/zernie/paperlint/blob/main/docs/rules/cycle/port-done.md",
+  },
+  schema: [],
+  messages: {
+    done: 'the \\documentclass is already `{{template}}`, which {{venue}} requires, and the cycle «{{id}}» still declares "phase": "porting" — the port is done: remove the phase, so the venue\'s format rules judge this paper again',
+  },
+};
+
+/** The `cycle` plugin's rule over the source, for every `paper.tex`. */
+export function cyclePortRules(
+  deps: TexVenueRuleDeps,
+): Readonly<Record<"port-done", TexRuleModule>> {
+  return {
+    "port-done": {
+      meta: PORT_DONE_META,
+      create(context) {
+        if (basename(context.filename) !== "paper.tex") return {};
+        return {
+          root() {
+            const p = paperPreset(dirname(context.filename), deps);
+            if (p.kind !== "resolved") return;
+            const current = p.settings.cycles?.current;
+            if (current?.kind !== "cycle" || !isPorting(current)) return;
+            const sc = context.sourceCode;
+            const paper = readPaper(context.filename, sc.raw ?? sc.text, deps);
+            const found = judgePortDone(
+              { src: paper.text, latex: deps.latex, preset: p.preset },
+              current.cycle.id,
+            );
+            reportInPaper(context, PORT_DONE_META.messages, paper, found);
+          },
+        };
+      },
+    },
+  };
+}
+
+export const CYCLE_PORT_RULE_LEVELS: Readonly<
+  Record<"cycle/port-done", "error">
+> = { "cycle/port-done": "error" };

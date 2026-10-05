@@ -15,7 +15,10 @@
 //    camera-ready version.»
 //   «The MSR 2027 Technical Track will employ a double-anonymous review process.»
 //
-// The dates are not lint facts; they are in the card, msr.md beside this file.
+// THE DEADLINES ARE THE PORTAL'S, as read: `deadlines` below is rewritten by the scheduled refresh
+// in paperlint's repository (.github/workflows/deadlines.yml) when the portal changes them, and a
+// paper reaches the new dates through its normal update of paperlint. The call's own wording
+// (abstract and paper days, AoE) is in the card, msr.md beside this file.
 {
   "type": "venue",
   "name": "MSR",
@@ -33,6 +36,27 @@
   // Recorded 2026-10-05: `/api/whoami` on this site answers 401 "Missing credentials" without a
   // token — the HotCRP API, there.
   "portal": { "kind": "hotcrp", "url": "https://msr2027.hotcrp.com" },
+
+  // Read from the portal's public deadlines page (no account) by the adapter in src/adapters/hotcrp/.
+  // «Submissions must be completed by this deadline» is the `submission`: on the CALL's abstract
+  // day, 04:00 UTC — four days before the call's paper day. «Completed submissions may be updated
+  // until this deadline» is the `resubmission`.
+  "deadlines": [
+    {
+      "what": "submission",
+      "at": "2026-10-20T04:00:00Z",
+      "source": "portal",
+      "url": "https://msr2027.hotcrp.com/deadlines",
+      "read": "2026-10-05",
+    },
+    {
+      "what": "resubmission",
+      "at": "2026-10-23T04:00:00Z",
+      "source": "portal",
+      "url": "https://msr2027.hotcrp.com/deadlines",
+      "read": "2026-10-05",
+    },
+  ],
 
   // What the venue is called in a paper's text (tex/venue-leftover) — and only beside a year
   // («MSR 2027», «MSR'27»): «MSR» is also Microsoft Research, and an acronym papers define for

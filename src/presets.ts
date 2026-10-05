@@ -25,8 +25,8 @@
  *   tex        union — a child never removes a package its parent needs
  *   format     per key, the child wins; `kinds` by kind name, a child's kind replaces that kind
  *   rules      per rule id, the child wins; `ruleOrigins` keeps which file set each
- *   template   the child wins, with its `template_forbids`; so does `name`, and `required_sections`, `register`, `talk` and
- *              `portal` (each whole)
+ *   template   the child wins, with its `template_forbids`; so does `name`, and `required_sections`, `register`, `talk`,
+ *              `portal` and `deadlines` (each whole)
  *   aliases    union, with every `name` — what the venue is called along the chain
  *
  * ── THE ID AND THE LABEL ──────────────────────────────────────────────────────────
@@ -63,6 +63,7 @@ import { messageOf } from "./domain/text.ts";
 import type { RegisterAnchor } from "./domain/register.ts";
 import type { VenueTalk } from "./domain/talk.ts";
 import type { VenuePortal } from "./domain/submission.ts";
+import type { Reading } from "./domain/deadline.ts";
 
 /** The prefix of a shipped preset's spec. */
 export const SHIPPED_PREFIX = "paperlint:";
@@ -123,6 +124,11 @@ export interface Preset {
   readonly talk: VenueTalk | null;
   /** Where the venue takes submissions (`paperlint submission`); null when no file of the chain says. */
   readonly portal: VenuePortal | null;
+  /**
+   * The edition's deadlines as they were read (the portal's, refreshed by paperlint's scheduled
+   * workflow); empty when no file of the chain names any. A paper's current cycle derives them.
+   */
+  readonly deadlines: readonly Reading[];
 }
 
 /** Why a spec does not resolve. */
@@ -293,7 +299,23 @@ const NOTHING_MERGED: Merging = {
   registerAnchors: [],
   talk: null,
   portal: null,
+  deadlines: [],
 };
+
+/** The blocks a child replaces whole: the child's when it names one, else its parents'. Pure. */
+const wholeBlocks = (
+  acc: Merging,
+  p: PresetFile,
+): Pick<
+  Merging,
+  "requiredSections" | "registerAnchors" | "talk" | "portal" | "deadlines"
+> => ({
+  requiredSections: p.requiredSections ?? acc.requiredSections,
+  registerAnchors: p.registerAnchors ?? acc.registerAnchors,
+  talk: p.talk ?? acc.talk,
+  portal: p.portal ?? acc.portal,
+  deadlines: p.deadlines ?? acc.deadlines,
+});
 
 /** One file of the chain, `file`, merged over what its parents gave. Pure. */
 const mergeOne = (
@@ -308,7 +330,6 @@ const mergeOne = (
   aliases: [...new Set([...acc.aliases, ...namesOf(p.identity), ...p.aliases])],
   blind: p.blind ?? acc.blind,
   mentions: p.mentions ?? acc.mentions,
-  requiredSections: p.requiredSections ?? acc.requiredSections,
   tex: p.tex ? mergeRequirements(acc.tex, p.tex) : acc.tex,
   format: mergeFormat(acc.format, p.format),
   rules: { ...acc.rules, ...p.rules },
@@ -316,9 +337,7 @@ const mergeOne = (
     ...acc.ruleOrigins,
     ...Object.fromEntries(Object.keys(p.rules).map((id) => [id, file])),
   },
-  registerAnchors: p.registerAnchors ?? acc.registerAnchors,
-  talk: p.talk ?? acc.talk,
-  portal: p.portal ?? acc.portal,
+  ...wholeBlocks(acc, p),
 });
 
 /** The chain, root first, merged into one preset. Pure. */
@@ -457,15 +476,29 @@ export function paperPreset(paperDir: string, deps: PresetDeps): PaperPreset {
     : { kind: "preset-problem", settings, problem: r.error };
 }
 
+/** A paper's settings or preset that cannot be used. */
+export type UnusablePreset = Extract<
+  PaperPreset,
+  { readonly kind: "settings-problem" | "preset-problem" }
+>;
+
+/** The one-line reason a paper's settings or preset cannot be used. */
+export const unusablePresetLine = (
+  paperDir: string,
+  p: UnusablePreset,
+): string =>
+  p.kind === "preset-problem"
+    ? `${join(paperDir, CONFIG_FILE)}: ${presetProblemText(p.problem)}`
+    : settingsProblemLine(paperDir, p.problem);
+
 /** The one-line reason a paper's settings or preset cannot be used, or null when they can. */
 export function paperPresetProblem(
   paperDir: string,
   p: PaperPreset,
 ): string | null {
-  if (p.kind === "preset-problem")
-    return `${join(paperDir, CONFIG_FILE)}: ${presetProblemText(p.problem)}`;
-  if (p.kind !== "settings-problem") return null;
-  return settingsProblemLine(paperDir, p.problem);
+  return p.kind === "preset-problem" || p.kind === "settings-problem"
+    ? unusablePresetLine(paperDir, p)
+    : null;
 }
 
 /** The one line naming a paper's `paperlint.json` that does not parse, and why. */

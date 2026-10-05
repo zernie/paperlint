@@ -33,6 +33,7 @@ describe("parsePaperSettings", () => {
         identity: null,
         talk: null,
         submission: null,
+        cycles: null,
       },
     });
     expect(parsePaperSettings({})).toEqual({
@@ -45,6 +46,7 @@ describe("parsePaperSettings", () => {
         identity: null,
         talk: null,
         submission: null,
+        cycles: null,
       },
     });
   });
@@ -60,6 +62,7 @@ describe("parsePaperSettings", () => {
         identity: null,
         talk: null,
         submission: null,
+        cycles: null,
       },
     });
   });
@@ -164,6 +167,7 @@ const UNSET = {
   identity: null,
   talk: null,
   submission: null,
+  cycles: null,
 };
 
 describe("readPaperSettings — the root paperlint.json's defaults, the paper's file over them", () => {
@@ -220,8 +224,14 @@ describe("readPaperSettings — the root paperlint.json's defaults, the paper's 
       identity: null,
       talk: null,
       submission: null,
+      cycles: null,
     });
   });
+});
+
+describe("readPaperSettings — a project key in a paper's file", () => {
+  const withFiles = (f: Record<string, string>) =>
+    memoryFiles({ "/work/package.json": "{}", ...f });
 
   it("papersDir in a paper's file: broken, naming the root file as its place", () => {
     const r = readPaperSettings(
@@ -264,6 +274,7 @@ describe("paperRules — `rules` in paperlint.json", () => {
     identity: null,
     talk: null,
     submission: null,
+    cycles: null,
   });
 
   it("no rules: none", () => {
@@ -350,5 +361,161 @@ describe("talk in a paper's paperlint.json", () => {
   it("refuses a talk it cannot parse, naming the key", () => {
     const r = parsePaperSettings({ talk: { mode: "zoom" } });
     expect(r.ok ? "" : r.error).toMatch(/"talk.mode"/);
+  });
+});
+
+describe("parsePaperSettings — `cycles`: the current attempt supplies extends, kind and submission", () => {
+  const closed = {
+    id: "alpha-2026",
+    venue: { kind: "preset", extends: "paperlint:acm-sigconf" },
+    kind: "short",
+    opened: "2026-07-01",
+    outcome: {
+      kind: "rejected",
+      date: "2026-09-08",
+      desk: true,
+      evidence: "reviews/alpha.md",
+    },
+  };
+  const open = {
+    id: "beta-2027",
+    venue: { kind: "preset", extends: "paperlint:ieee-conference" },
+    kind: "technical",
+    opened: "2026-09-09",
+    submission: { id: 52 },
+    outcome: { kind: "open" },
+  };
+  const settingsOf = (json: unknown) => {
+    const r = parsePaperSettings(json);
+    if (!r.ok) throw new Error(r.error);
+    return r.value;
+  };
+
+  it("an open cycle: its venue, kind and submission are the paper's", () => {
+    const s = settingsOf({ cycles: [closed, open] });
+    expect(s.extends).toBe("paperlint:ieee-conference");
+    expect(s.kind).toBe("technical");
+    expect(s.submission).toEqual({ id: 52 });
+    expect(s.cycles?.current.kind).toBe("cycle");
+    expect(s.cycles?.list.map((c) => c.id)).toEqual([
+      "alpha-2026",
+      "beta-2027",
+    ]);
+  });
+
+  it("parked (the last cycle closed) and none (`cycles: []`): no venue, as `extends: null` reads", () => {
+    const parked = settingsOf({ cycles: [closed] });
+    expect([parked.extends, parked.kind, parked.submission]).toEqual([
+      null,
+      null,
+      null,
+    ]);
+    expect(parked.cycles?.current.kind).toBe("parked");
+    expect(settingsOf({ cycles: [] }).cycles?.current).toEqual({
+      kind: "none",
+    });
+  });
+});
+
+describe("parsePaperSettings — `cycles`, closed and named", () => {
+  const closed = {
+    id: "alpha-2026",
+    venue: { kind: "preset", extends: "paperlint:acm-sigconf" },
+    kind: "short",
+    opened: "2026-07-01",
+    outcome: { kind: "withdrawn", date: "2026-09-08", evidence: "n.md" },
+  };
+  const open = {
+    id: "beta-2027",
+    venue: { kind: "preset", extends: "paperlint:ieee-conference" },
+    kind: "technical",
+    opened: "2026-09-09",
+  };
+  const settingsOf = (json: unknown) => {
+    const r = parsePaperSettings(json);
+    if (!r.ok) throw new Error(r.error);
+    return r.value;
+  };
+
+  it("an accepted last cycle keeps its venue and kind: camera-ready and talk are judged against it", () => {
+    const accepted = { kind: "accepted", date: "2026-08-21", evidence: "r.md" };
+    const s = settingsOf({ cycles: [{ ...closed, outcome: accepted }] });
+    expect([s.extends, s.kind, s.cycles?.current.kind]).toEqual([
+      "paperlint:acm-sigconf",
+      "short",
+      "accepted",
+    ]);
+  });
+
+  it("a named venue (no preset yet) resolves no preset: extends is null, the record stays", () => {
+    const venue = {
+      kind: "named",
+      name: "X '27",
+      url: "https://example.org/c",
+    };
+    const s = settingsOf({ cycles: [{ ...open, venue }] });
+    expect([s.extends, s.kind]).toEqual([null, "technical"]);
+  });
+});
+
+describe("parsePaperSettings — `cycles` refused", () => {
+  const open = {
+    id: "beta-2027",
+    venue: { kind: "preset", extends: "paperlint:ieee-conference" },
+    opened: "2026-09-09",
+  };
+  const alsoOpen = {
+    id: "alpha-2026",
+    venue: { kind: "preset", extends: "paperlint:acm-sigconf" },
+    opened: "2026-07-01",
+  };
+
+  it("one derived key beside `cycles` is refused in the singular", () => {
+    const error: unknown = expect.stringMatching(
+      /^"kind" beside "cycles": with cycles, it is the current attempt's/,
+    );
+    expect(parsePaperSettings({ kind: "short", cycles: [open] })).toEqual({
+      ok: false,
+      error,
+    });
+  });
+
+  it("a derived key written beside `cycles` is refused, naming it — two sources for one fact", () => {
+    const error: unknown = expect.stringMatching(
+      /^"extends", "kind" beside "cycles": with cycles, they are the current attempt's/,
+    );
+    expect(
+      parsePaperSettings({
+        extends: "paperlint:acm-sigconf",
+        kind: "short",
+        cycles: [open],
+      }),
+    ).toEqual({ ok: false, error });
+  });
+
+  it("two open cycles is refused as the file's problem: dual submission has no current venue", () => {
+    const error: unknown = expect.stringMatching(
+      /are both open — a paper is on one attempt/,
+    );
+    expect(parsePaperSettings({ cycles: [alsoOpen, open] })).toEqual({
+      ok: false,
+      error,
+    });
+  });
+
+  it("a malformed cycle is refused with the entry and key, through readPaperSettings as `broken`", () => {
+    const files = memoryFiles({
+      "/work/package.json": "{}",
+      [`${PAPER}/paperlint.json`]: JSON.stringify({
+        cycles: [{ ...open, opened: "soon" }],
+      }),
+    });
+    const why: unknown = expect.stringMatching(
+      /^cycles\[0\]: "opened" must be a date/,
+    );
+    expect(readPaperSettings(files, PAPER)).toEqual({
+      ok: false,
+      error: { kind: "broken", why },
+    });
   });
 });

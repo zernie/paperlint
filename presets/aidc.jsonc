@@ -13,10 +13,12 @@
 //    and appendices.»
 //   «Submissions must be properly anonymized for double-blind review.»
 //
-// THE DEADLINE PEOPLE GET WRONG (not a lint fact): the HotCRP portal closes 2026-10-02 11:59:59 UTC
+// THE DEADLINE PEOPLE GET WRONG: the HotCRP portal closed 2026-10-02 11:59:59 UTC first
 // (`"sub":1790942399` on https://aidc.submit.acsac.org/deadlines, recorded in paperlint#90), while
-// the workshop page says «October 2, 2026 (Anywhere-on-Earth, AoE)» — a day later. The portal is
-// what refuses the upload.
+// the workshop page said «October 2, 2026 (Anywhere-on-Earth, AoE)» — a day later; by 2026-10-05
+// the portal had moved it a day (`"sub":1791028799`). The portal is what refuses the upload, so its
+// readings are `deadlines` below, rewritten by the scheduled refresh in paperlint's repository
+// (.github/workflows/deadlines.yml) when the portal changes them.
 //
 // THE REVIEW IS DOUBLE-BLIND: `"blind":true` in the same portal data, and the call above.
 //
@@ -37,6 +39,25 @@
   // 2026-10-03: `/api/whoami` on this site answers 401 "Missing credentials" without a token —
   // the HotCRP API, there.
   "portal": { "kind": "hotcrp", "url": "https://aidc.submit.acsac.org" },
+
+  // Read from the portal's public deadlines page; the camera-ready only in its status object
+  // (`"final":{"done":1793447999}`).
+  "deadlines": [
+    {
+      "what": "submission",
+      "at": "2026-10-03T11:59:59Z",
+      "source": "portal",
+      "url": "https://aidc.submit.acsac.org/deadlines",
+      "read": "2026-10-05",
+    },
+    {
+      "what": "camera-ready",
+      "at": "2026-10-31T11:59:59Z",
+      "source": "portal",
+      "url": "https://aidc.submit.acsac.org/deadlines",
+      "read": "2026-10-05",
+    },
+  ],
 
   // What the venue is called in a paper's text (tex/venue-leftover): the workshop, and the
   // conference it is held at.
