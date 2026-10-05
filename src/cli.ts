@@ -42,7 +42,12 @@ import {
   asEslintResults,
 } from "./structure.ts";
 import { buildPapers, papersIn, anyFailed, remedyFor, MAIN } from "./build.ts";
-import { includeBlocks, paperBodies, unreadLines } from "./paper-includes.ts";
+import {
+  FRAGMENT_FILES,
+  includeBlocks,
+  paperBodies,
+  unreadLines,
+} from "./paper-includes.ts";
 import { prepareEngine } from "./build-engine.ts";
 import { cacheRoot, cachedTree, runToolchain } from "./toolchain.ts";
 import { banalInstaller, parseBanalSettings } from "./adapters/banal/index.ts";
@@ -462,7 +467,7 @@ export function buildConfig(
   const fragments: readonly ConfigBlock[] = texLanguage
     ? [
         {
-          files: ["**/*.tex"],
+          files: [...FRAGMENT_FILES],
           ignores: ["**/paper.tex"],
           plugins: {
             tex: {

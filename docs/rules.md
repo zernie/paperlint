@@ -49,8 +49,10 @@ reads and when it fails. Errors fail `paperlint lint`; warnings print and do not
 
 **Body files** are the files `paper.tex` includes from its document body (`\input`, `\include`,
 `\subfile`, nested ones too), found in the paper's directory — not a preamble include, not a file
-found only in paperlint's own inputs, and not any other `.tex` beside the paper (`versions/`). A
-finding in one is reported at that file and line, and `--fix` edits that file. Which reference form
+found only in paperlint's own inputs, and not any other `.tex` beside the paper (`versions/`). Only
+the `.tex` ones are linted on their own: an included `.bbl` or `.pgf` is a tool's output, read into
+the whole paper where TeX typesets it, but not judged or fixed as prose of its own. A
+finding in a body file is reported at that file and line, and `--fix` edits that file. Which reference form
 is the majority and whether the build is a review build are decided over the whole paper. An include
 that names no file is printed as a note: lint did not read it, and the build will stop on it.
 

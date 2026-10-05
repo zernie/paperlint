@@ -198,7 +198,8 @@ Every skill, by stage: [`docs/skills.md`](docs/skills.md).
   bibliography usually builds without the network ([`docs/references.md`](docs/references.md)).
 - A paper whose body is in other files (`\input{sections/intro}`) is linted file by file: a finding
   lands at the file and line it is in, and `--fix` edits that file. The files are the ones
-  `paper.tex` includes from its body, found where the build finds them — not every `.tex` beside it.
+  `paper.tex` includes from its body, found where the build finds them — not every `.tex` beside it,
+  and not an included `.bbl` (a tool's output, read only as part of the whole paper).
 - Lint also checks the pipeline's own records: `PIPELINE-STATUS.md`, reviews, notes on related
   papers ([`docs/rules.md`](docs/rules.md)).
 - The rules run on ESLint, so a deliberate exception is a comment on the line above:
