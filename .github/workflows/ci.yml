@@ -44,6 +44,9 @@ on:
   # with zero checks. macOS is a cell of the build-e2e matrix below.
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  # The deadlines bot's pull request (deadlines.yml) is opened with GITHUB_TOKEN, which starts no
+  # other workflow; that job dispatches this one on its branch, so the PR's head commit gets checks.
+  workflow_dispatch:
 
 # A newer push supersedes an older one on the same ref. Note this does NOT make the cancelled
 # run free — cancellation arrives after the expensive steps have already run and been billed —
