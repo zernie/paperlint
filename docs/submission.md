@@ -54,6 +54,10 @@ abstract (`--abstract <file>`, plain text) and the status "submitted" (`--submit
 change touched (`change_list`), HotCRP's messages — and the local file's sha256. Exit 1 when the
 change is not valid or the HTTP status is not 2xx.
 
+Before it sends anything, dry run or not, it prints one line asking you to open that exact PDF and
+check it against the venue's call for papers — named by the preset's `url` when the preset is a
+venue: what paperlint checks is an aid, and the venue's reading of the PDF is what counts.
+
 The safe order: `show`, `update` (dry run), read what it says, `update --save`, then `show` again and
 check `match yes`.
 
