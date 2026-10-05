@@ -120,10 +120,10 @@ export default {
         const cycles = cyclesOf(dirname(context.filename));
         if (cycles === null) return {};
         return {
-          yaml(node: { readonly value?: string }) {
+          yaml(node: { readonly value: string }) {
             const data = ((): unknown => {
               try {
-                return load(node.value ?? "");
+                return load(node.value);
               } catch {
                 return undefined; // `paper/stages` reports the unreadable YAML
               }

@@ -117,6 +117,22 @@ describe("parseCycles", () => {
   });
 });
 
+describe("parseCycles — the outcomes", () => {
+  it("a withdrawn outcome: date and evidence, nothing else", () => {
+    const [c] = parsed([
+      {
+        ...REJECTED,
+        outcome: { kind: "withdrawn", date: "2026-07-18", evidence: "n.md" },
+      },
+    ]);
+    expect(c?.outcome).toEqual({
+      kind: "withdrawn",
+      date: "2026-07-18",
+      evidence: "n.md",
+    });
+  });
+});
+
 describe("parseCycles refuses, naming the entry and the key", () => {
   it.each([
     ["not a list", "a cycle", /must be a LIST/],
@@ -287,27 +303,34 @@ describe("currentCycle — closed lists", () => {
       { ...REJECTED, outcome: { kind: "open" } },
       { ...OPEN, outcome: REJECTED.outcome },
     ]);
-    const r = currentCycle(list);
-    expect(r).toEqual({
+    expect(currentCycle(list)).toEqual({
       ok: false,
       error: { kind: "open-not-last", id: "alpha-2026" },
     });
-    if (!r.ok)
-      expect(cycleProblemText(r.error)).toMatch(
-        /cycle «alpha-2026» is open but is not the last entry/,
-      );
   });
 
   it("two cycles with one id cannot be told apart by a stage", () => {
-    const r = currentCycle(parsed([REJECTED, { ...OPEN, id: "alpha-2026" }]));
-    expect(r).toEqual({
+    expect(
+      currentCycle(parsed([REJECTED, { ...OPEN, id: "alpha-2026" }])),
+    ).toEqual({
       ok: false,
       error: { kind: "duplicate-id", id: "alpha-2026" },
     });
-    if (!r.ok)
-      expect(cycleProblemText(r.error)).toMatch(
-        /two cycles carry the id «alpha-2026»/,
-      );
+  });
+});
+
+describe("cycleProblemText — one line per problem, naming what to change", () => {
+  it.each([
+    [
+      { kind: "open-not-last", id: "alpha-2026" },
+      /cycle «alpha-2026» is open but is not the last entry/,
+    ],
+    [
+      { kind: "duplicate-id", id: "alpha-2026" },
+      /two cycles carry the id «alpha-2026»/,
+    ],
+  ] as const)("%j", (problem, text) => {
+    expect(cycleProblemText(problem)).toMatch(text);
   });
 });
 

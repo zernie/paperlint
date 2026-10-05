@@ -111,6 +111,22 @@ describe("parseDeadlinesPage — AoE and non-pages", () => {
     ]);
   });
 
+  it("a status object with no submission round: closed, blindness unknown, no deadlines", () => {
+    expect(
+      parseDeadlinesPage(200, 'hotcrp.init_deadlines({"now": 1})'),
+    ).toEqual({
+      ok: true,
+      value: { now: 1, open: false, blind: null, deadlines: [] },
+    });
+  });
+
+  it("a refusal without a page title carries no message", () => {
+    expect(parseDeadlinesPage(503, "<html>down</html>")).toEqual({
+      ok: false,
+      error: { kind: "refused", httpStatus: 503, messages: [] },
+    });
+  });
+
   it("a site that does not exist: refused with the page's title", () => {
     expect(parseDeadlinesPage(404, page("nosuch"))).toEqual({
       ok: false,

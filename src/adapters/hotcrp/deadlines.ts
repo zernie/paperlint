@@ -82,7 +82,8 @@ function fromStatus(s: StatusJson): readonly PortalDeadline[] {
 /** Every deadline the page lists, with its label as the page spells it. */
 function fromList(html: string): readonly PortalDeadline[] {
   return [...html.matchAll(ENTRY)].map((m) => {
-    const label = (m[1] ?? "").trim();
+    // Both groups always participate in a match of ENTRY: there is no fallback to take.
+    const label = String(m[1]).trim();
     return { what: whatOf(label), label, at: instantOfUnix(Number(m[2])) };
   });
 }
@@ -125,7 +126,7 @@ function statusOf(
     });
   const json = ((): unknown => {
     try {
-      return JSON.parse(m[1] ?? "");
+      return JSON.parse(String(m[1])); // the group always participates in a match of INIT
     } catch {
       return undefined;
     }

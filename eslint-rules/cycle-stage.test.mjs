@@ -97,6 +97,23 @@ test("a settings file that is not JSON, or frontmatter that is not YAML: silent 
   assert.deepEqual(lint("not-yaml", "stages: [unclosed"), []);
 });
 
+test("`cycles: []` declared: a stage without a cycle is told there are none to name", () => {
+  const [msg] = lint(
+    "no-cycles",
+    SUBMITTED("venue: X"),
+    JSON.stringify({ cycles: [] }),
+  );
+  assert.match(msg, /one of \(none\)$/);
+});
+
+test("a stage and a cycle that are not strings, and a quoted date, are shown as written", () => {
+  const [msg] = lint(
+    "numbers",
+    'stages:\n  - stage: 5\n    cycle: 7\n    date: "2026-08-06"\n    pdf: versions/a.pdf\n    bytes: 1',
+  );
+  assert.match(msg, /the «5» stage \(2026-08-06\) names the cycle «7»/);
+});
+
 test("a YAML date without quotes is still a date in the message", () => {
   const [msg] = lint("yaml-date", SUBMITTED("venue: X"));
   assert.match(msg, /\(2026-08-06\)/);
