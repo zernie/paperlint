@@ -26,7 +26,7 @@ import {
   type DeadlineWhat,
   type PortalDeadline,
   type PortalDeadlines,
-} from "../../domain/cycle.ts";
+} from "../../domain/deadline.ts";
 import { err, ok, type Result } from "../../domain/result.ts";
 import type { PortalFailure } from "../../domain/submission.ts";
 

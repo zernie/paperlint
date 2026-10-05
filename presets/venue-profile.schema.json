@@ -78,6 +78,45 @@
         }
       }
     },
+    "deadlines": {
+      "description": "The edition's deadlines as they were READ — the portal's readings, rewritten by the scheduled refresh in paperlint's repository when the portal changes them (a patch release), each with the page and the day it was read. A paper whose current cycle names this preset derives them; its own record adds the call's readings and overrides on top, and the earlier reading binds. `what`: registration (abstract registration — a call's \"abstract\" date), submission (the full paper), resubmission (updates to a completed submission), notification, camera-ready. At most one reading per kind and source. A child's list replaces its parent's.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["what", "at", "source", "url", "read"],
+        "properties": {
+          "what": {
+            "type": "string",
+            "enum": [
+              "registration",
+              "submission",
+              "resubmission",
+              "notification",
+              "camera-ready"
+            ]
+          },
+          "at": {
+            "description": "An instant in UTC, as the portal publishes it: 2026-10-20T04:00:00Z.",
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+          },
+          "source": {
+            "type": "string",
+            "enum": ["portal", "call"]
+          },
+          "url": {
+            "type": "string",
+            "pattern": "^https?://[^\\s/]+[^\\s]*$"
+          },
+          "read": {
+            "description": "The day the page was read, YYYY-MM-DD.",
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          }
+        }
+      }
+    },
     "required_sections": {
       "description": "Sections the venue requires, read by `tex/required-section`. Each is a `\\section` or `\\section*` whose title equals `title` once whitespace is collapsed. `position: \"last\"`: after every section of the body (the ones before the appendix and the bibliography); it may stand after the bibliography. A child preset's list replaces its parent's.",
       "type": "array",

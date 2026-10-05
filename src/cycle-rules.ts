@@ -5,15 +5,23 @@
  *
  *   cycle/record    error  `cycles` in paperlint.json parses and names one current attempt: no two
  *                          open cycles, the open one last, ids unique, every deadline an instant
- *                          with its zone, the deadlines in order
- *   cycle/evidence  error  every closed cycle's `outcome.evidence` is a file in the paper folder
+ *                          with its zone; each source's deadlines in order; no portal reading the
+ *                          venue's preset already carries
+ *   cycle/evidence  error  every closed cycle's `outcome.evidence`, and every deadline override's
+ *                          `evidence`, is a file in the paper folder
  *
  * ── WHY ERROR, NOT WARN ───────────────────────────────────────────────────────────
  * A warning is read once and never again. Each of these names a state that cannot be worked in:
  * two open cycles is dual submission or a decision nobody recorded; a deadline without its zone is
- * the mistake the record exists to prevent; a decision whose evidence is not in the folder is a
- * claim with nothing behind it. Nothing here depends on a clock or the network — the record is judged
- * against itself and against the disk, like `paper/stages`.
+ * the mistake the record exists to prevent; a decision or an override whose evidence is not in the
+ * folder is a claim with nothing behind it. Nothing here depends on a clock or the network — the
+ * record is judged against itself, the installed venue preset and the disk, like `paper/stages`.
+ *
+ * ── THE PRESET'S READINGS ARE DERIVED, NOT COPIED ──────────────────────────────────
+ * A cycle whose venue is a preset gets that preset's `deadlines` (the portal's readings, refreshed in
+ * the package); the paper adds the call's readings and its overrides. A paper's own portal reading
+ * of a deadline the preset carries is a second copy of one fact, and it drifts the day the preset is
+ * updated — so it is reported.
  *
  * ── WHO SPEAKS WHEN THERE IS NOTHING TO JUDGE ──────────────────────────────────────
  * No `paperlint.json`, one that is not JSON, or one without `cycles` (the flat form): silent — the
@@ -29,11 +37,12 @@ import { callerPath } from "./caller-path.ts";
 import {
   cycleProblemText,
   cyclesOf,
-  deadlineOrderProblems,
   parseCycles,
   type Cycle,
   type Cycles,
 } from "./domain/cycle.ts";
+import { deadlineOrderProblems, type Reading } from "./domain/deadline.ts";
+import { resolvePreset } from "./presets.ts";
 import { fieldOf } from "./domain/record.ts";
 import { err, ok, type Result } from "./domain/result.ts";
 import type {
@@ -71,40 +80,101 @@ export function readCycles(
   return cycles.ok ? cycles : err(cycleProblemText(cycles.error));
 }
 
-/** `cycle/record`: the record's own problems. Pure over the read. */
+/** A cycle's venue preset — its spec, as the cycle names it — and the readings it carries. */
+export interface PresetOfCycle {
+  readonly spec: string;
+  readonly readings: readonly Reading[];
+}
+
+/** The preset of a cycle; null for a named venue or a preset that does not resolve. */
+export type PresetReadings = (c: Cycle) => PresetOfCycle | null;
+
+/** A paper's portal readings of deadlines its venue's preset already carries. */
+function presetCopies(c: Cycle, preset: PresetOfCycle): readonly Finding[] {
+  return c.deadlines.flatMap((d) => {
+    const theirs = preset.readings.find(
+      (r) => r.what === d.what && r.source === "portal",
+    );
+    const ours = d.observed.some((o) => o.source === "portal");
+    return theirs !== undefined && ours
+      ? [
+          {
+            messageId: "presetCopy",
+            data: {
+              id: c.id,
+              what: d.what,
+              preset: preset.spec,
+              at: theirs.at,
+              read: theirs.read,
+            },
+          },
+        ]
+      : [];
+  });
+}
+
+/** `cycle/record`: the record's own problems. Pure over the read and the presets' readings. */
 export function judgeRecord(
   read: Result<Cycles | null, string>,
+  presetReadings: PresetReadings,
 ): readonly Finding[] {
   if (!read.ok) return [{ messageId: "broken", data: { why: read.error } }];
   if (read.value === null) return [];
-  return read.value.list.flatMap((c) =>
-    deadlineOrderProblems(c.deadlines).map((why) => ({
-      messageId: "order",
-      data: { id: c.id, why },
-    })),
-  );
+  return read.value.list.flatMap((c) => {
+    const preset = presetReadings(c);
+    return [
+      ...deadlineOrderProblems(c.deadlines, preset?.readings ?? []).map(
+        (why) => ({ messageId: "order", data: { id: c.id, why } }),
+      ),
+      ...(preset === null ? [] : presetCopies(c, preset)),
+    ];
+  });
 }
 
-/** The closed cycles whose evidence is not on disk. */
+/** The overrides whose evidence is not on disk. */
+const overrideEvidence = (
+  c: Cycle,
+  isFile: (relative: string) => boolean,
+): readonly Finding[] =>
+  c.deadlines.flatMap((d) =>
+    d.override !== null && !isFile(d.override.evidence)
+      ? [
+          {
+            messageId: "overrideMissing",
+            data: {
+              id: c.id,
+              what: d.what,
+              at: d.override.at,
+              evidence: d.override.evidence,
+            },
+          },
+        ]
+      : [],
+  );
+
+/** The closed cycles, and the overrides, whose evidence is not on disk. */
 export function judgeEvidence(
   cycles: readonly Cycle[],
   isFile: (relative: string) => boolean,
 ): readonly Finding[] {
   return cycles.flatMap((c) => {
     const o = c.outcome;
-    return o.kind !== "open" && !isFile(o.evidence)
-      ? [
-          {
-            messageId: "missing",
-            data: {
-              id: c.id,
-              outcome: o.kind,
-              date: o.date,
-              evidence: o.evidence,
+    return [
+      ...(o.kind !== "open" && !isFile(o.evidence)
+        ? [
+            {
+              messageId: "missing",
+              data: {
+                id: c.id,
+                outcome: o.kind,
+                date: o.date,
+                evidence: o.evidence,
+              },
             },
-          },
-        ]
-      : [];
+          ]
+        : []),
+      ...overrideEvidence(c, isFile),
+    ];
   });
 }
 
@@ -113,29 +183,42 @@ const META: Readonly<Record<CycleRuleName, FolderRuleModule["meta"]>> = {
     type: "suggestion",
     docs: {
       description:
-        "the paper's `cycles` record parses and names one current attempt, its deadlines instants in order",
+        "the paper's `cycles` record parses and names one current attempt, each source's deadlines in order, no copy of the preset's portal readings",
       url: rulePageUrl("cycle/record"),
     },
     schema: [],
     messages: {
       broken: `${CONFIG_FILE}: {{why}}`,
-      order: `${CONFIG_FILE}, cycle «{{id}}»: {{why}} — a date typed wrong, or an AoE day miscounted (write the call's date as "YYYY-MM-DD AoE" and let paperlint convert it)`,
+      order: `${CONFIG_FILE}, cycle «{{id}}»: {{why}} — a date typed wrong, or an AoE day miscounted (write a call's date as "YYYY-MM-DD AoE" and paperlint converts it)`,
+      presetCopy: `${CONFIG_FILE}, cycle «{{id}}»: the "{{what}}" deadline records a portal reading, and the preset {{preset}} carries the portal's reading of it ({{at}}, read {{read}}) — a second copy drifts when paperlint updates the preset: delete this one (the call's reading and an override stay)`,
     },
   },
   evidence: {
     type: "suggestion",
     docs: {
       description:
-        "every closed cycle's decision points at a file in the paper folder — the mail, the reviews, the note",
+        "every closed cycle's decision, and every deadline override, points at a file in the paper folder — the mail, the reviews, the note",
       url: rulePageUrl("cycle/evidence"),
     },
     schema: [],
     messages: {
       missing:
         "cycle «{{id}}» is {{outcome}} ({{date}}) with evidence `{{evidence}}`, which is not in the paper folder — save the decision mail, the reviews or the note that records the decision there, or correct the path",
+      overrideMissing:
+        'cycle «{{id}}»: the override of the "{{what}}" deadline ({{at}}) rests on `{{evidence}}`, which is not in the paper folder — save the mail or the page that grants it there, or correct the path',
     },
   },
 };
+
+/** Each cycle's venue preset's readings, resolved from the paper's settings file like `extends`. */
+const presetReadingsOf =
+  (dir: string, deps: VenueRuleDeps): PresetReadings =>
+  (c) => {
+    if (c.venue.kind !== "preset") return null;
+    const spec = c.venue.extends;
+    const p = resolvePreset(spec, join(dir, CONFIG_FILE), deps);
+    return p.ok ? { spec, readings: p.value.deadlines } : null;
+  };
 
 /** The findings of one rule for the paper folder `dir`. */
 function findingsFor(
@@ -146,7 +229,7 @@ function findingsFor(
   const read = readCycles(dir, deps);
   switch (name) {
     case "record":
-      return judgeRecord(read);
+      return judgeRecord(read, presetReadingsOf(dir, deps));
     case "evidence":
       return read.ok && read.value !== null
         ? judgeEvidence(read.value.list, (rel) =>

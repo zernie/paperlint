@@ -9,7 +9,7 @@
  *     "kind": "technical",
  *     "opened": "2026-09-09",
  *     "phase": "porting",                                             // default "prepared"
- *     "deadlines": [{ "what": "submission", "at": "2026-10-20T04:00:00Z", "source": "portal", "url": "…" }],
+ *     "deadlines": [{ "what": "submission", "observed": [{ "at": "2026-10-23 AoE", "source": "call", "url": "…", "read": "2026-09-09" }] }],
  *     "submission": { "id": 7 },
  *     "outcome": { "kind": "open" }
  *   }
@@ -29,70 +29,23 @@
  * and the phase still says porting. The declaration cannot lie for long in either direction, and it
  * is a record of work, not a softer severity. Absent, the phase is `prepared`.
  *
- * ── THE DEADLINE SAYS WHERE IT WAS READ ───────────────────────────────────────────────────
- * The portal refuses uploads; the call only announces. The two differ (an AoE date in a call is a
- * day after the portal's UTC instant), so a deadline carries its `source` and `url`, and `at` is an
- * INSTANT with its zone, never a bare date. `instantOf` does the one piece of arithmetic a call
- * needs: `YYYY-MM-DD AoE` is the end of that day at UTC−12.
+ * ── THE DEADLINES ARE READINGS ───────────────────────────────────────────────────────────
+ * Each deadline records what the portal and the call said, where and when, and an optional human
+ * override; the earlier reading binds unless overridden (`deadline.ts`). For a venue with a preset,
+ * the portal's readings come from the preset — updated with the package — and the paper adds the
+ * call's readings and its overrides on top.
  *
  * Parsed by hand: the domain imports no schema library (see `src/CLAUDE.md`).
  */
 import { err, ok, type Result } from "./result.ts";
 import { fieldOf, isRecord } from "./record.ts";
-
-/** A calendar day, `YYYY-MM-DD`. */
-export type IsoDate = string;
-/** A moment, as an ISO string in UTC: `2026-10-20T04:00:00Z`. Never a bare date. */
-export type Instant = string;
-
-export type DeadlineWhat =
-  | "registration"
-  | "submission"
-  | "resubmission"
-  | "notification"
-  | "camera-ready";
-export const DEADLINE_WHATS: readonly DeadlineWhat[] = [
-  "registration",
-  "submission",
-  "resubmission",
-  "notification",
-  "camera-ready",
-];
-
-export type DeadlineSource = "portal" | "call";
-
-/** One deadline, and where it was read. */
-export interface Deadline {
-  readonly what: DeadlineWhat;
-  readonly at: Instant;
-  readonly source: DeadlineSource;
-  readonly url: string;
-}
-
-/** Unix seconds → the instant, in UTC. */
-export const instantOfUnix = (seconds: number): Instant =>
-  asInstant(seconds * 1000);
-
-/**
- * What a venue's portal says about its deadlines, in paperlint's words — the answer `paperlint cycle
- * open` records and `paperlint cycle check` compares against. One adapter per portal kind.
- */
-export interface PortalDeadlines {
-  /** The portal's clock when it answered, Unix seconds. */
-  readonly now: number;
-  /** Whether the portal takes submissions now. */
-  readonly open: boolean;
-  /** How the venue reviews, as the portal says it; null when it does not say. */
-  readonly blind: boolean | "optional" | "until-review" | null;
-  readonly deadlines: readonly PortalDeadline[];
-}
-
-/** One deadline the portal lists: its kind when it is one paperlint names, the portal's own label, and when. */
-export interface PortalDeadline {
-  readonly what: DeadlineWhat | null;
-  readonly label: string;
-  readonly at: Instant;
-}
+import {
+  isIsoDate,
+  parseDeadlines,
+  unknownKey,
+  type Deadline,
+  type IsoDate,
+} from "./deadline.ts";
 
 /** The venue of an attempt: a preset paperlint resolves, or a venue named by hand (no preset yet). */
 export type CycleVenue =
@@ -174,98 +127,55 @@ const KNOWN_KEYS: readonly string[] = [
   "outcome",
 ];
 
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-const isIsoDate = (v: unknown): v is IsoDate =>
-  typeof v === "string" && ISO_DATE.test(v) && !Number.isNaN(Date.parse(v));
-
-/**
- * An ISO instant with its zone (`Z` or `±hh:mm`), or a call's `YYYY-MM-DD AoE`; normalised to UTC.
- * A bare date or a zoneless time is refused: it is the deadline people get wrong.
- */
-export function instantOf(text: string): Result<Instant, string> {
-  const bad = err(
-    `"${text}" must be an instant with its zone (2026-10-20T04:00:00Z, 2026-10-20T09:00:00+05:00) or a call's "YYYY-MM-DD AoE"`,
-  );
-  const aoe = /^(\d{4}-\d{2}-\d{2}) AoE$/i.exec(text.trim());
-  if (aoe) {
-    const day = String(aoe[1]); // the group always participates in a match
-    // The end of that day at UTC−12: 23:59:59 there is 11:59:59 UTC of the next day.
-    const ms = Date.parse(`${day}T23:59:59-12:00`);
-    return Number.isNaN(ms) ? bad : ok(asInstant(ms));
-  }
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(Z|[+-]\d{2}:\d{2})$/.test(text))
-    return bad;
-  const ms = Date.parse(text);
-  return Number.isNaN(ms) ? bad : ok(asInstant(ms));
-}
-
-const asInstant = (ms: number): Instant =>
-  new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
-
 const where = (i: number): string => `cycles[${String(i)}]`;
 
-function parseVenue(v: unknown, at: string): Result<CycleVenue, string> {
-  const bad = err(
-    `${at}: "venue" must be { "kind": "preset", "extends": … } or { "kind": "named", "name": …, "url": … }`,
-  );
-  if (!isRecord(v)) return bad;
-  const kind = v["kind"];
-  const ext = v["extends"];
-  if (kind === "preset" && typeof ext === "string" && ext !== "")
-    return ok({ kind: "preset", extends: ext });
-  const name = v["name"];
-  const url = v["url"];
-  if (
-    kind === "named" &&
-    typeof name === "string" &&
-    name !== "" &&
-    typeof url === "string" &&
-    url !== ""
-  )
-    return ok({ kind: "named", name, url });
-  return bad;
+const nonEmpty = (v: unknown): v is string => typeof v === "string" && v !== "";
+
+const VENUE_KEYS = {
+  preset: ["kind", "extends"],
+  named: ["kind", "name", "url"],
+} as const;
+
+/** The fields of a venue of `kind`, when they are there. */
+function venueFields(
+  kind: CycleVenue["kind"],
+  v: Readonly<Record<string, unknown>>,
+): CycleVenue | null {
+  const { extends: ext, name, url } = v;
+  switch (kind) {
+    case "preset":
+      return nonEmpty(ext) ? { kind, extends: ext } : null;
+    case "named":
+      return nonEmpty(name) && nonEmpty(url) ? { kind, name, url } : null;
+  }
 }
 
-const isWhat = (v: unknown): v is DeadlineWhat =>
-  DEADLINE_WHATS.some((w) => w === v);
-
-function parseDeadline(v: unknown, at: string): Result<Deadline, string> {
-  if (!isRecord(v))
-    return err(`${at}: a deadline must be { "what", "at", "source", "url" }`);
-  const what = v["what"];
-  if (!isWhat(what))
-    return err(
-      `${at}: "what" must be one of ${DEADLINE_WHATS.join(", ")}, got ${JSON.stringify(what)}`,
-    );
-  const atText = v["at"];
-  const instant =
-    typeof atText === "string" ? instantOf(atText) : err("not a string");
-  if (!instant.ok)
-    return err(
-      `${at}: "at" must be an instant with its zone (2026-10-20T04:00:00Z), got ${JSON.stringify(atText)}`,
-    );
-  const source = v["source"];
-  if (source !== "portal" && source !== "call")
-    return err(
-      `${at}: "source" must be "portal" or "call", got ${JSON.stringify(source)}`,
-    );
-  const url = v["url"];
-  if (typeof url !== "string" || url === "")
-    return err(`${at}: "url" must be where the deadline was read`);
-  return ok({ what, at: instant.value, source, url });
-}
-
-function parseDeadlines(
-  v: unknown,
+/** The venue's own keys refused when unknown, then its shape; null when the kind is neither. */
+function venueShape(
+  v: Readonly<Record<string, unknown>>,
   at: string,
-): Result<readonly Deadline[], string> {
-  if (v === undefined) return ok([]);
-  if (!Array.isArray(v)) return err(`${at}: "deadlines" must be a list`);
-  return v.reduce<Result<readonly Deadline[], string>>((acc, d: unknown, i) => {
-    if (!acc.ok) return acc;
-    const p = parseDeadline(d, `${at}.deadlines[${String(i)}]`);
-    return p.ok ? ok([...acc.value, p.value]) : p;
-  }, ok([]));
+): Result<CycleVenue, string> | null {
+  const kind = v["kind"];
+  if (kind !== "preset" && kind !== "named") return null;
+  const unknown = unknownKey(
+    v,
+    VENUE_KEYS[kind],
+    `${at}.venue`,
+    `a ${kind} venue's`,
+  );
+  if (unknown !== null) return err(unknown);
+  const venue = venueFields(kind, v);
+  return venue === null ? null : ok(venue);
+}
+
+function parseVenue(v: unknown, at: string): Result<CycleVenue, string> {
+  const shaped = isRecord(v) ? venueShape(v, at) : null;
+  return (
+    shaped ??
+    err(
+      `${at}: "venue" must be { "kind": "preset", "extends": … } or { "kind": "named", "name": …, "url": … }`,
+    )
+  );
 }
 
 const isOutcomeKind = (v: unknown): v is Outcome["kind"] =>
@@ -290,12 +200,26 @@ const decisionOf = (
   }
 };
 
+const OUTCOME_KEYS: Readonly<Record<Outcome["kind"], readonly string[]>> = {
+  open: ["kind"],
+  accepted: ["kind", "date", "evidence"],
+  rejected: ["kind", "date", "evidence", "desk"],
+  withdrawn: ["kind", "date", "evidence"],
+};
+
 function parseOutcome(v: unknown, at: string): Result<Outcome, string> {
   const kind = fieldOf(v, "kind");
   if (!isRecord(v) || !isOutcomeKind(kind))
     return err(
       `${at}: "outcome" kind must be one of ${OUTCOME_KINDS.join(", ")}, got ${JSON.stringify(kind)}`,
     );
+  const unknown = unknownKey(
+    v,
+    OUTCOME_KEYS[kind],
+    `${at}.outcome`,
+    `${kind === "open" || kind === "accepted" ? "an" : "a"} ${kind} outcome's`,
+  );
+  if (unknown !== null) return err(unknown);
   if (kind === "open") return ok({ kind });
   const date = v["date"];
   if (!isIsoDate(date))
@@ -313,6 +237,10 @@ function parseSubmission(
   at: string,
 ): Result<{ readonly id: number } | null, string> {
   if (v === undefined || v === null) return ok(null);
+  const unknown = isRecord(v)
+    ? unknownKey(v, ["id"], `${at}.submission`, "a submission's")
+    : null;
+  if (unknown !== null) return err(unknown);
   const id = fieldOf(v, "id");
   return typeof id === "number" && Number.isInteger(id) && id > 0
     ? ok({ id })
@@ -453,34 +381,6 @@ export function cycleProblemText(p: CycleProblem): string {
     case "duplicate-id":
       return `two cycles carry the id «${p.id}» — a stage's \`cycle:\` could name either; give each attempt its own id`;
   }
-}
-
-const ORDER: readonly DeadlineWhat[] = DEADLINE_WHATS;
-
-/**
- * A deadline recorded twice, and each pair out of the order registration ≤ submission ≤ resubmission
- * < notification < camera-ready — the shape a typo in a date or an AoE day miscounted takes. Pure.
- */
-export function deadlineOrderProblems(
-  deadlines: readonly Deadline[],
-): readonly string[] {
-  const twice = ORDER.filter(
-    (w) => deadlines.filter((d) => d.what === w).length > 1,
-  ).map((w) => `the "${w}" deadline is recorded twice`);
-  const byWhat = (w: DeadlineWhat): Deadline | undefined =>
-    deadlines.find((d) => d.what === w);
-  const present = ORDER.map(byWhat).filter(
-    (d): d is Deadline => d !== undefined,
-  );
-  const inversions = present.flatMap((d, i) => {
-    const earlier = present[i - 1];
-    return earlier !== undefined && earlier.at > d.at
-      ? [
-          `the "${earlier.what}" deadline (${earlier.at}) is after the "${d.what}" deadline (${d.at})`,
-        ]
-      : [];
-  });
-  return [...twice, ...inversions];
 }
 
 /** A paper's `cycles`, parsed, with the attempt they name: minted only when the list is consistent. */

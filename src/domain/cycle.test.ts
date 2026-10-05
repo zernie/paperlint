@@ -7,9 +7,7 @@ import { present } from "../../test/support.ts";
 import {
   currentCycle,
   cycleProblemText,
-  deadlineOrderProblems,
   effectiveBlind,
-  instantOf,
   parseCycles,
   type Cycle,
 } from "./cycle.ts";
@@ -22,9 +20,14 @@ const REJECTED = {
   deadlines: [
     {
       what: "submission",
-      at: "2026-08-06T11:59:00Z",
-      source: "call",
-      url: "https://example.org/cfp",
+      observed: [
+        {
+          at: "2026-08-06T11:59:00Z",
+          source: "call",
+          url: "https://example.org/cfp",
+          read: "2026-07-01",
+        },
+      ],
     },
   ],
   outcome: {
@@ -43,9 +46,14 @@ const OPEN = {
   deadlines: [
     {
       what: "submission",
-      at: "2026-10-20T04:00:00Z",
-      source: "portal",
-      url: "https://beta2027.example.org/deadlines",
+      observed: [
+        {
+          at: "2026-10-20T04:00:00Z",
+          source: "call",
+          url: "https://beta2027.example.org/call",
+          read: "2026-09-09",
+        },
+      ],
     },
   ],
   submission: { id: 7 },
@@ -76,9 +84,15 @@ describe("parseCycles", () => {
       deadlines: [
         {
           what: "submission",
-          at: "2026-08-06T11:59:00Z",
-          source: "call",
-          url: "https://example.org/cfp",
+          observed: [
+            {
+              at: "2026-08-06T11:59:00Z",
+              source: "call",
+              url: "https://example.org/cfp",
+              read: "2026-07-01",
+            },
+          ],
+          override: null,
         },
       ],
       submission: null,
@@ -163,20 +177,64 @@ describe("parseCycles refuses, naming the entry and the key", () => {
 describe("parseCycles refuses a malformed deadline, outcome or submission", () => {
   it.each([
     [
-      "a deadline of an unknown kind",
-      [{ ...OPEN, deadlines: [{ ...OPEN.deadlines[0], what: "abstract" }] }],
-      /"what" must be one of registration, submission, resubmission, notification, camera-ready/,
+      "a deadline the deadline parser refuses, named by its place in the list",
+      [{ ...OPEN, deadlines: [{ what: "submission", notes: "x" }] }],
+      /^cycles\[0\]\.deadlines\[0\]: unknown key "notes"/,
     ],
     [
-      "a deadline without a time zone",
-      [{ ...OPEN, deadlines: [{ ...OPEN.deadlines[0], at: "2026-10-20" }] }],
-      /"at" must be an instant with its zone/,
+      "an unknown key in an open outcome",
+      [{ ...OPEN, outcome: { kind: "open", foo: 1 } }],
+      /^cycles\[0\]\.outcome: unknown key "foo" — an open outcome's keys: kind$/,
     ],
     [
-      "a deadline whose source is neither portal nor call",
-      [{ ...OPEN, deadlines: [{ ...OPEN.deadlines[0], source: "email" }] }],
-      /"source" must be "portal" or "call"/,
+      "an unknown key in a decision",
+      [{ ...REJECTED, outcome: { ...REJECTED.outcome, reviews: 3 } }],
+      /^cycles\[0\]\.outcome: unknown key "reviews" — a rejected outcome's keys: kind, date, evidence, desk$/,
     ],
+    [
+      "a desk flag on an acceptance",
+      [
+        {
+          ...REJECTED,
+          outcome: {
+            kind: "accepted",
+            date: "2026-08-21",
+            evidence: "r.md",
+            desk: false,
+          },
+        },
+      ],
+      /^cycles\[0\]\.outcome: unknown key "desk" — an accepted outcome's keys: kind, date, evidence$/,
+    ],
+    [
+      "an unknown key in a venue",
+      [{ ...OPEN, venue: { ...OPEN.venue, portal: "https://x" } }],
+      /^cycles\[0\]\.venue: unknown key "portal" — a preset venue's keys: kind, extends$/,
+    ],
+    [
+      "an unknown key in a named venue",
+      [
+        {
+          ...OPEN,
+          venue: { kind: "named", name: "X", url: "https://x", year: 2027 },
+        },
+      ],
+      /^cycles\[0\]\.venue: unknown key "year" — a named venue's keys: kind, name, url$/,
+    ],
+    [
+      "an unknown key in a submission",
+      [{ ...OPEN, submission: { id: 7, url: "https://x" } }],
+      /^cycles\[0\]\.submission: unknown key "url" — a submission's keys: id$/,
+    ],
+  ])("refuses %s, naming the entry and the key", (_what, input, re) => {
+    const r = parseCycles(input);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toMatch(re);
+  });
+});
+
+describe("parseCycles refuses a malformed decision, phase or submission", () => {
+  it.each([
     [
       "a decision without evidence",
       [
@@ -229,31 +287,6 @@ describe("parseCycles refuses a value of the wrong shape, naming the entry and t
       /"venue" must be \{ "kind": "preset"/,
     ],
     [
-      "a deadline that is not an object",
-      [{ ...OPEN, deadlines: ["2026-10-20T04:00:00Z"] }],
-      /a deadline must be \{ "what", "at", "source", "url" \}/,
-    ],
-    [
-      "a deadline whose `at` is not a string",
-      [{ ...OPEN, deadlines: [{ ...OPEN.deadlines[0], at: 1792468800 }] }],
-      /"at" must be an instant with its zone/,
-    ],
-    [
-      "a deadline without the url it was read at",
-      [{ ...OPEN, deadlines: [{ ...OPEN.deadlines[0], url: "" }] }],
-      /"url" must be where the deadline was read/,
-    ],
-    [
-      "deadlines that are not a list",
-      [{ ...OPEN, deadlines: OPEN.deadlines[0] }],
-      /"deadlines" must be a list/,
-    ],
-    [
-      "two bad deadlines: the first is named, the second never read",
-      [{ ...OPEN, deadlines: ["x", "y"] }],
-      /deadlines\[0\]: a deadline must be/,
-    ],
-    [
       "a decision whose date is not a day",
       [{ ...REJECTED, outcome: { ...REJECTED.outcome, date: "08.09.2026" } }],
       /"outcome" of kind rejected needs "date" \(YYYY-MM-DD\)/,
@@ -269,43 +302,6 @@ describe("parseCycles refuses a value of the wrong shape, naming the entry and t
       /^cycles\[0\]: "id" must be a non-empty string/,
     ],
   ])("refuses %s", refuses);
-});
-
-describe("instantOf", () => {
-  it("refuses a day that is no day, as AoE and as a zoned instant", () => {
-    expect(instantOf("2026-13-45 AoE").ok).toBe(false);
-    expect(instantOf("2026-13-45T00:00:00Z").ok).toBe(false);
-  });
-
-  it("accepts an ISO instant with Z or an offset, normalised to Z", () => {
-    expect(instantOf("2026-10-20T04:00:00Z")).toEqual({
-      ok: true,
-      value: "2026-10-20T04:00:00Z",
-    });
-    expect(instantOf("2026-10-20T09:00:00+05:00")).toEqual({
-      ok: true,
-      value: "2026-10-20T04:00:00Z",
-    });
-  });
-
-  it("turns a call's `YYYY-MM-DD AoE` into the instant it means: the end of that day at UTC-12", () => {
-    // «October 2, 2026 (AoE)» ends at 2026-10-03T11:59:59Z — the day after, in UTC.
-    expect(instantOf("2026-10-02 AoE")).toEqual({
-      ok: true,
-      value: "2026-10-03T11:59:59Z",
-    });
-    expect(instantOf("2026-12-31 AoE")).toEqual({
-      ok: true,
-      value: "2027-01-01T11:59:59Z",
-    });
-  });
-
-  it("refuses a bare date, a bare local time and nonsense: an instant without a zone is the deadline people get wrong", () => {
-    for (const bad of ["2026-10-20", "2026-10-20T04:00:00", "soon", ""]) {
-      const r = instantOf(bad);
-      expect(r.ok, bad).toBe(false);
-    }
-  });
 });
 
 describe("currentCycle", () => {
@@ -393,47 +389,6 @@ describe("cycleProblemText — one line per problem, naming what to change", () 
     ],
   ] as const)("%j", (problem, text) => {
     expect(cycleProblemText(problem)).toMatch(text);
-  });
-});
-
-describe("deadlineOrderProblems", () => {
-  const dl = (what: string, at: string) => ({
-    what,
-    at,
-    source: "call",
-    url: "https://example.org/cfp",
-  });
-  it("registration ≤ submission ≤ resubmission < notification < camera-ready is silent", () => {
-    const [c] = parsed([
-      {
-        ...OPEN,
-        deadlines: [
-          dl("registration", "2026-10-13T11:59:59Z"),
-          dl("submission", "2026-10-20T04:00:00Z"),
-          dl("resubmission", "2026-10-23T04:00:00Z"),
-          dl("notification", "2027-01-08T11:59:00Z"),
-          dl("camera-ready", "2027-02-01T11:59:00Z"),
-        ],
-      },
-    ]);
-    expect(deadlineOrderProblems(present(c, "cycle").deadlines)).toEqual([]);
-  });
-
-  it("names the pair that is out of order, and a kind recorded twice", () => {
-    const [c] = parsed([
-      {
-        ...OPEN,
-        deadlines: [
-          dl("submission", "2026-10-20T04:00:00Z"),
-          dl("registration", "2026-10-21T11:59:59Z"),
-          dl("submission", "2026-10-22T04:00:00Z"),
-        ],
-      },
-    ]);
-    expect(deadlineOrderProblems(present(c, "cycle").deadlines)).toEqual([
-      'the "submission" deadline is recorded twice',
-      'the "registration" deadline (2026-10-21T11:59:59Z) is after the "submission" deadline (2026-10-20T04:00:00Z)',
-    ]);
   });
 });
 
