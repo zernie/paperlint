@@ -13,20 +13,34 @@ npx paperlint submission update papers/my-paper --save          # changes the re
 
 Two keys, each in the file that owns the fact, and a token:
 
-| where                        | key                                                  | what it says                                    |
-| ---------------------------- | ---------------------------------------------------- | ----------------------------------------------- |
-| the venue preset             | `"portal": { "kind": "hotcrp", "url": "https://…" }` | where the venue takes submissions               |
-| the paper's `paperlint.json` | `"submission": { "id": 7 }`                          | which submission on that portal is this paper's |
-| the environment              | `HOTCRP_TOKEN`                                       | an API token for your HotCRP account            |
+| where                        | key                                                                   | what it says                                    |
+| ---------------------------- | --------------------------------------------------------------------- | ----------------------------------------------- |
+| the venue preset             | `"portal": { "kind": "hotcrp", "url": "https://…" }`                  | where the venue takes submissions               |
+| the paper's `paperlint.json` | `"submission": { "id": 7 }` — with `cycles`, inside the current cycle | which submission on that portal is this paper's |
+| the environment              | `HOTCRP_TOKEN`                                                        | an API token for your HotCRP account            |
 
 `paperlint:aidc` and `paperlint:msr` declare their portals. For another venue, add `portal` to your own preset (see
 [`rules.md`](rules.md)) — or upload by hand: a kind paperlint has no adapter for is refused with
 `portal kind "<kind>" is not supported; upload by hand`.
 
 ```jsonc
-// papers/my-paper/paperlint.json
-{ "extends": "paperlint:aidc", "kind": "regular", "submission": { "id": 7 } }
+// papers/my-paper/paperlint.json — a paper that keeps cycles: the id is the current attempt's
+{
+  "cycles": [
+    {
+      "id": "aidc-2026",
+      "venue": { "kind": "preset", "extends": "paperlint:aidc" },
+      "kind": "regular",
+      "opened": "2026-07-01",
+      "submission": { "id": 7 },
+    },
+  ],
+}
 ```
+
+A top-level `submission` beside `cycles` is refused — the next attempt at another venue has another
+submission, so the id belongs to the cycle. Only a paper in the flat form, with no `cycles`, writes it
+at the top level: `{ "extends": "paperlint:aidc", "kind": "regular", "submission": { "id": 7 } }`.
 
 **The token** is read only from `HOTCRP_TOKEN`. Create it on the HotCRP site under **Account
 settings → Developer**; `show` needs the scopes `submeta:read` and `document:read`, `update` also

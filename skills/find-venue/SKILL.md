@@ -4,7 +4,7 @@ description: "Discover and rank real venues for a given paper, scored by authors
 allowed-tools: [Read, Write, Grep, Glob, WebSearch, WebFetch, Agent]
 ---
 
-<!-- vigiles:sha256:8b332cbc072b46ee compiled from skills/find-venue/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:eb3b25640b88d339 compiled from skills/find-venue/SKILL.md.spec.ts -->
 
 # find-venue — rank real venues by what earns the credit, then keep or switch
 
@@ -77,10 +77,21 @@ rank = credit-weight × topic-fit × accept-probability × deadline-feasibility 
 ## Compose with
 - `research-ideate` (upstream) — consumes its candidate venue *types* and sharpest framing.
 - `plan-paper-timeline` — feed it the chosen deadline to back-plan the work.
-- once a venue is chosen, the paper declares it in `<paper>/paperlint.json`:
-  `{ "extends": "paperlint:<venue>", "kind": "<kind>" }` — a shipped preset, else a family
-  (`paperlint:acm-sigconf`) or the project's own `./venues/<name>.jsonc`; the `pdf/*` rules then
-  check the built PDF against its page limit and format.
+- once a venue is chosen, the paper declares it in `<paper>/paperlint.json` as an attempt — one
+  entry in its `cycles` list, oldest first:
+  `{ "id": "<venue>-<year>", "venue": { "kind": "preset", "extends": "paperlint:<venue>" }, "kind": "<kind>", "opened": "<YYYY-MM-DD>" }`
+  — a shipped preset, else a family (`paperlint:acm-sigconf`) or the project's own
+  `./venues/<name>.jsonc`; a venue with no preset yet is `"venue": { "kind": "named", "name", "url" }`.
+  The `pdf/*` rules then check the built PDF against its page limit and format.
+- **a switch opens a NEW cycle — it never edits the current one.** A current attempt still open gets its
+  `outcome` first (`rejected` or `withdrawn`, a `date` and an `evidence` file in the paper
+  folder) — two open cycles are refused — then append the new entry, with `"phase": "porting"` while the source is still in the old venue's
+  template. `extends`, `kind` and `submission` are the current cycle's: written at the top level
+  beside `cycles`, the file is refused. A **keep** verdict changes nothing.
+- legacy alternative — a paper with no `cycles` (the flat form `paperlint new` writes) keeps
+  `{ "extends": "paperlint:<venue>", "kind": "<kind>" }` and is still read as before. To switch such
+  a paper, replace those keys (`"extends": null` included) with a `cycles` list — paperlint's
+  `docs/configuration.md`, "The paper's cycles".
 - the venue cards, `presets/<venue>.md` in the paperlint package beside each venue preset (e.g.
   `agenticdev.md`, `aisec.md`) — the winner gets a card with its HotCRP quirks beside its preset;
   for a venue with no shipped preset, the project's own `./venues/<name>.md` beside its

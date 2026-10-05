@@ -38,6 +38,40 @@ const settingsOf = (dir: string) =>
     .record(z.string(), z.unknown())
     .parse(JSON.parse(readFileSync(join(dir, "paperlint.json"), "utf8")));
 
+describe("paperlint new — the flat form, and the way to cycles", () => {
+  // Decided 2026-10-05: `new` keeps writing the flat form, not `"cycles": []`. A cycle needs an
+  // `opened` day (a clock `new` does not read) and an id, `--venue` and project templates write the
+  // flat keys, and an empty list has no current cycle for pdf/measured's advice to name. What the
+  // skills and the template's `$comment` teach instead is the conversion, pinned here.
+  it("is the flat form, and turns into the cycles form by REPLACING `extends` — beside `cycles` even its null is refused", () => {
+    const papers = join(tmp(), "papers");
+    newPaper(papers, "demo", "tex", { venues: [] });
+    const written = settingsOf(join(papers, "demo"));
+    expect(parsePaperSettings(written).ok && "cycles" in written).toBe(false);
+    const cycle = {
+      id: "agenticdev-2026",
+      venue: { kind: "preset", extends: "paperlint:agenticdev" },
+      kind: "short",
+      opened: "2026-10-05",
+    };
+    expect(parsePaperSettings({ ...written, cycles: [cycle] })).toEqual({
+      ok: false,
+      error:
+        '"extends" beside "cycles": with cycles, it is the current attempt\'s and cannot be set here — move the value into the open cycle',
+    });
+    const rest = Object.fromEntries(
+      Object.entries(written).filter(([k]) => k !== "extends"),
+    );
+    const converted = parsePaperSettings({ ...rest, cycles: [cycle] });
+    expect(
+      converted.ok && {
+        extends: converted.value.extends,
+        kind: converted.value.kind,
+      },
+    ).toEqual({ extends: "paperlint:agenticdev", kind: "short" });
+  });
+});
+
 describe("paperlint new — paperlint.json", () => {
   it("is always written, from the package template: no venue chosen yet, and valid", () => {
     const papers = join(tmp(), "papers");

@@ -4,7 +4,7 @@ description: "Read or change a paper's submission on the venue's HotCRP portal v
 allowed-tools: [Read, Grep, Glob, Bash]
 ---
 
-<!-- vigiles:sha256:4b3a8c0b51ebe206 compiled from skills/submission-portal/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:3dd12dff394577ce compiled from skills/submission-portal/SKILL.md.spec.ts -->
 
 # submission-portal — read and update the submission on the portal, then prove it landed
 
@@ -16,7 +16,9 @@ supported; for any other portal the command says so and the upload is done by ha
 - **The venue preset declares the portal**: `"portal": { "kind": "hotcrp", "url": "<the site>" }`
   (`paperlint:aidc` and `paperlint:msr` have it). For your own venue preset, add it there.
 - **The paper's `paperlint.json` names its submission**: `"submission": { "id": <number> }` — the
-  number HotCRP shows for the paper.
+  number HotCRP shows for the paper. With `cycles`, it goes INSIDE the current (open) cycle; a
+  top-level `submission` beside `cycles` is refused. Only the legacy flat form (no `cycles`)
+  has it at the top level.
 - **A token in `HOTCRP_TOKEN`**, created by the author on the HotCRP site under Account settings →
   Developer (scopes `submeta:read` and `document:read` to read; `submeta:write` and
   `document:write` to update). Never ask for it in chat, never print it, never write it to a file:

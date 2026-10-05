@@ -34,7 +34,7 @@ dates, limits and tracks change between editions.
 
 ## Paper kinds and limits
 
-The preset's `format.kinds`; a paper names its own in its `paperlint.json` (`kind`).
+The preset's `format.kinds`; a paper names its own in its `paperlint.json` (`kind` — in the current cycle when the paper keeps `cycles`).
 
 | kind    | body pages | extra pages of references | what it is            |
 | ------- | ---------: | ------------------------: | --------------------- |

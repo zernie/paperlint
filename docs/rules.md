@@ -112,6 +112,11 @@ A paper says where it is submitted in a `paperlint.json` beside `paper.tex`
 { "extends": "paperlint:aisec", "kind": "research" }
 ```
 
+A paper that keeps `cycles` writes the same two in its current cycle instead —
+`"venue": { "kind": "preset", "extends": "paperlint:aisec" }` and `"kind"` — and a new venue is a new
+cycle; `extends` and `kind` at the top level beside `cycles` are refused
+([`configuration.md`](configuration.md#the-papers-cycles)).
+
 `extends` names a **venue preset** — the way an ESLint config extends a shareable config. `kind`
 names the kind of paper, whose page limit applies. A preset holds the numbers from the venue's call
 for papers, each with the quote it came from, the TeX packages its template needs, and the rules

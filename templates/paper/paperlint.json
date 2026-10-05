@@ -1,4 +1,4 @@
 {
-  "$comment": "Name this paper's venue preset in \"extends\": \"paperlint:<name>\" for a shipped one, e.g. \"paperlint:agenticdev\" (`npx paperlint --help` lists them), or a path to your own preset relative to THIS file, e.g. \"../../venues/my-venue.jsonc\"; add \"kind\" for its page limit. `npx paperlint new <name> --venue <preset>` writes both for a new paper. Until then the page limit, fonts and format are not checked.",
+  "$comment": "Name this paper's venue preset in \"extends\": \"paperlint:<name>\" for a shipped one, e.g. \"paperlint:agenticdev\" (`npx paperlint --help` lists them), or a path to your own preset relative to THIS file, e.g. \"../../venues/my-venue.jsonc\"; add \"kind\" for its page limit. `npx paperlint new <name> --venue <preset>` writes both for a new paper. Until then the page limit, fonts and format are not checked. To track the paper's attempts at venues instead, replace \"extends\" (and \"kind\") with a \"cycles\" list, the venue and kind inside each attempt — beside \"cycles\", \"extends\" is refused, even as null (docs/configuration.md, \"The paper's cycles\").",
   "extends": null
 }

@@ -4,7 +4,7 @@ description: End-to-end playbook for submitting a peer-reviewed paper to a doubl
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Skill]
 ---
 
-<!-- vigiles:sha256:81d5777962c2864a compiled from skills/submit-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:a092abea8873fccc compiled from skills/submit-paper/SKILL.md.spec.ts -->
 
 # submit-paper — get a reviewed paper from "done" to "ready for review"
 
@@ -24,7 +24,11 @@ paper against:
 - `presets/realm.md` — REALM @ EMNLP (ACL family, OpenReview).
 
 **The card is prose; the machine-checked format is the PRESET beside it.** A paper declares its venue
-in `<paper>/paperlint.json`: `{ "extends": "paperlint:<venue>", "kind": "<kind>" }`, and the
+in `<paper>/paperlint.json`, in its current (open) cycle:
+`"venue": { "kind": "preset", "extends": "paperlint:<venue>" }` and `"kind": "<kind>"`, plus
+`"submission": { "id": <the number the portal shows> }` once the portal has assigned one — never at
+the top level beside `cycles`, where the file is refused. (Legacy flat form, a paper with no
+`cycles`: `{ "extends": "paperlint:<venue>", "kind": "<kind>" }` at the top level.) The
 `pdf/*` lint rules judge the built PDF against that preset (page limit per kind, fonts, page size,
 columns, font sizes). The card's last section — what the preset is, its call for papers, the rules it
 sets and where each comes from — is generated from the preset, so read the numbers there, not from

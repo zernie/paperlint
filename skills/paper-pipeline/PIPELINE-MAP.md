@@ -203,8 +203,10 @@ format.
 > presets**, JSONC files in the package's `presets/`: `acm-sigconf.jsonc` is the ACM
 > family (the `format` block — page size, columns, fonts, font sizes — plus the `tex` packages),
 > `agenticdev.jsonc` and `aisec.jsonc` extend it and add their `kinds` (page limits) and `rules`,
-> `realm.jsonc` stands alone. A paper picks one in `<paper>/paperlint.json`
-> (`{ "extends": "paperlint:<venue>", "kind": "…" }`); the `pdf/*` lint rules judge the built PDF
+> `realm.jsonc` stands alone. A paper picks one in `<paper>/paperlint.json`, in its current
+> cycle (`"cycles": [{ …, "venue": { "kind": "preset", "extends": "paperlint:<venue>" }, "kind": "…" }]`;
+> a new venue is a new cycle) — or, in the legacy flat form with no `cycles`,
+> `{ "extends": "paperlint:<venue>", "kind": "…" }`; the `pdf/*` lint rules judge the built PDF
 > against it. The `.md` cards stay as prose. What follows is the plan as it was written.
 
 Right now `LinLibertine`, `LinBiolinum`, `acmart` are hardcoded into `check-render.sh`. This is
