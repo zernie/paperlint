@@ -114,6 +114,17 @@ test("a stage and a cycle that are not strings, and a quoted date, are shown as 
   assert.match(msg, /the «5» stage \(2026-08-06\) names the cycle «7»/);
 });
 
+test("a stage entry with no `stage` key is shown as an empty name", () => {
+  const [msg] = lint(
+    "no-stage",
+    "stages:\n  - cycle: gamma-2028\n    date: 2026-08-06\n    pdf: versions/a.pdf\n    bytes: 1",
+  );
+  assert.match(
+    msg,
+    /^the «» stage \(2026-08-06\) names the cycle «gamma-2028»/,
+  );
+});
+
 test("a YAML date without quotes is still a date in the message", () => {
   const [msg] = lint("yaml-date", SUBMITTED("venue: X"));
   assert.match(msg, /\(2026-08-06\)/);

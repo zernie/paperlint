@@ -214,7 +214,69 @@ describe("parseCycles refuses a malformed deadline, outcome or submission", () =
   });
 });
 
+/** The one-line refusal, as every table below asserts it. */
+const refuses = (_what: string, input: unknown, re: RegExp): void => {
+  const r = parseCycles(input);
+  expect(r.ok).toBe(false);
+  if (!r.ok) expect(r.error).toMatch(re);
+};
+
+describe("parseCycles refuses a value of the wrong shape, naming the entry and the key", () => {
+  it.each([
+    [
+      "a venue that is not an object",
+      [{ ...OPEN, venue: "paperlint:ieee-conference" }],
+      /"venue" must be \{ "kind": "preset"/,
+    ],
+    [
+      "a deadline that is not an object",
+      [{ ...OPEN, deadlines: ["2026-10-20T04:00:00Z"] }],
+      /a deadline must be \{ "what", "at", "source", "url" \}/,
+    ],
+    [
+      "a deadline whose `at` is not a string",
+      [{ ...OPEN, deadlines: [{ ...OPEN.deadlines[0], at: 1792468800 }] }],
+      /"at" must be an instant with its zone/,
+    ],
+    [
+      "a deadline without the url it was read at",
+      [{ ...OPEN, deadlines: [{ ...OPEN.deadlines[0], url: "" }] }],
+      /"url" must be where the deadline was read/,
+    ],
+    [
+      "deadlines that are not a list",
+      [{ ...OPEN, deadlines: OPEN.deadlines[0] }],
+      /"deadlines" must be a list/,
+    ],
+    [
+      "two bad deadlines: the first is named, the second never read",
+      [{ ...OPEN, deadlines: ["x", "y"] }],
+      /deadlines\[0\]: a deadline must be/,
+    ],
+    [
+      "a decision whose date is not a day",
+      [{ ...REJECTED, outcome: { ...REJECTED.outcome, date: "08.09.2026" } }],
+      /"outcome" of kind rejected needs "date" \(YYYY-MM-DD\)/,
+    ],
+    [
+      "a kind that is not a string",
+      [{ ...OPEN, kind: 5 }],
+      /"kind" must be a string or null/,
+    ],
+    [
+      "two broken cycles: the first is named, the second never read",
+      [{}, {}],
+      /^cycles\[0\]: "id" must be a non-empty string/,
+    ],
+  ])("refuses %s", refuses);
+});
+
 describe("instantOf", () => {
+  it("refuses a day that is no day, as AoE and as a zoned instant", () => {
+    expect(instantOf("2026-13-45 AoE").ok).toBe(false);
+    expect(instantOf("2026-13-45T00:00:00Z").ok).toBe(false);
+  });
+
   it("accepts an ISO instant with Z or an offset, normalised to Z", () => {
     expect(instantOf("2026-10-20T04:00:00Z")).toEqual({
       ok: true,

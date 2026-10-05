@@ -188,7 +188,7 @@ export function instantOf(text: string): Result<Instant, string> {
   );
   const aoe = /^(\d{4}-\d{2}-\d{2}) AoE$/i.exec(text.trim());
   if (aoe) {
-    const day = aoe[1] ?? "";
+    const day = String(aoe[1]); // the group always participates in a match
     // The end of that day at UTC−12: 23:59:59 there is 11:59:59 UTC of the next day.
     const ms = Date.parse(`${day}T23:59:59-12:00`);
     return Number.isNaN(ms) ? bad : ok(asInstant(ms));
@@ -405,14 +405,11 @@ export function parseCycles(
     return err(
       `"cycles" must be a LIST of attempts, oldest first — a paper can go to several venues`,
     );
-  return v.reduce<Result<readonly Cycle[] | null, string>>(
-    (acc, c: unknown, i) => {
-      if (!acc.ok) return acc;
-      const p = parseCycle(c, i);
-      return p.ok ? ok([...(acc.value ?? []), p.value]) : p;
-    },
-    ok([]),
-  );
+  return v.reduce<Result<readonly Cycle[], string>>((acc, c: unknown, i) => {
+    if (!acc.ok) return acc;
+    const p = parseCycle(c, i);
+    return p.ok ? ok([...acc.value, p.value]) : p;
+  }, ok([]));
 }
 
 // ── deriving ───────────────────────────────────────────────────────────────────────────
