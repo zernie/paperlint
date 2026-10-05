@@ -238,6 +238,30 @@ describe("currentCycle", () => {
       value: { kind: "parked", last: a },
     });
   });
+});
+
+describe("currentCycle — closed lists", () => {
+  it("an ACCEPTED last cycle is not parked: the paper lives on at that venue", () => {
+    const [a] = parsed([
+      {
+        ...REJECTED,
+        outcome: { kind: "accepted", date: "2026-08-21", evidence: "r.md" },
+      },
+    ]);
+    expect(
+      currentCycle(
+        parsed([
+          {
+            ...REJECTED,
+            outcome: { kind: "accepted", date: "2026-08-21", evidence: "r.md" },
+          },
+        ]),
+      ),
+    ).toEqual({
+      ok: true,
+      value: { kind: "accepted", cycle: a },
+    });
+  });
 
   it("two open cycles is dual submission (or a cycle never closed), by name", () => {
     const r = currentCycle(
@@ -328,12 +352,10 @@ describe("effectiveBlind", () => {
       },
     };
     expect(effectiveBlind(true, { kind: "cycle", cycle: open })).toBe(true);
-    expect(effectiveBlind(true, { kind: "cycle", cycle: accepted })).toBe(
+    expect(effectiveBlind(true, { kind: "accepted", cycle: accepted })).toBe(
       false,
     );
-    expect(effectiveBlind(true, { kind: "parked", last: accepted })).toBe(
-      false,
-    );
+    expect(effectiveBlind(true, { kind: "parked", last: accepted })).toBe(true);
     expect(effectiveBlind(true, { kind: "none" })).toBe(true);
     expect(effectiveBlind(false, { kind: "cycle", cycle: open })).toBe(false);
   });

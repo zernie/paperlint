@@ -415,6 +415,37 @@ describe("parsePaperSettings — `cycles`: the current attempt supplies extends,
       kind: "none",
     });
   });
+});
+
+describe("parsePaperSettings — `cycles`, closed and named", () => {
+  const closed = {
+    id: "alpha-2026",
+    venue: { kind: "preset", extends: "paperlint:acm-sigconf" },
+    kind: "short",
+    opened: "2026-07-01",
+    outcome: { kind: "withdrawn", date: "2026-09-08", evidence: "n.md" },
+  };
+  const open = {
+    id: "beta-2027",
+    venue: { kind: "preset", extends: "paperlint:ieee-conference" },
+    kind: "technical",
+    opened: "2026-09-09",
+  };
+  const settingsOf = (json: unknown) => {
+    const r = parsePaperSettings(json);
+    if (!r.ok) throw new Error(r.error);
+    return r.value;
+  };
+
+  it("an accepted last cycle keeps its venue and kind: camera-ready and talk are judged against it", () => {
+    const accepted = { kind: "accepted", date: "2026-08-21", evidence: "r.md" };
+    const s = settingsOf({ cycles: [{ ...closed, outcome: accepted }] });
+    expect([s.extends, s.kind, s.cycles?.current.kind]).toEqual([
+      "paperlint:acm-sigconf",
+      "short",
+      "accepted",
+    ]);
+  });
 
   it("a named venue (no preset yet) resolves no preset: extends is null, the record stays", () => {
     const venue = {

@@ -143,10 +143,14 @@ export interface Cycle {
   readonly outcome: Outcome;
 }
 
-/** Which attempt the paper is on. */
+/**
+ * Which attempt the paper is on. An ACCEPTED last cycle is not "parked": the paper lives on at that
+ * venue — camera-ready, talk, proceedings — so its venue and kind stay the paper's.
+ */
 export type Current =
   | { readonly kind: "cycle"; readonly cycle: Cycle }
-  /** The last cycle is closed and none is open: between venues. */
+  | { readonly kind: "accepted"; readonly cycle: Cycle }
+  /** The last cycle was rejected or withdrawn and none is open: between venues. */
   | { readonly kind: "parked"; readonly last: Cycle }
   /** `cycles: []`. */
   | { readonly kind: "none" };
@@ -434,8 +438,11 @@ export function currentCycle(
   const [only] = open;
   if (only !== undefined && only !== last)
     return err({ kind: "open-not-last", id: only.id });
+  if (isOpen(last)) return ok({ kind: "cycle", cycle: last });
   return ok(
-    isOpen(last) ? { kind: "cycle", cycle: last } : { kind: "parked", last },
+    last.outcome.kind === "accepted"
+      ? { kind: "accepted", cycle: last }
+      : { kind: "parked", last },
   );
 }
 
@@ -493,13 +500,18 @@ export const cyclesOf = (
   return current.ok ? ok({ list, current: current.value }) : current;
 };
 
-/** The cycle a `Current` stands on: the open one, or the last closed one; null for none. */
-export const cycleOf = (c: Current): Cycle | null => {
+/**
+ * The cycle whose venue and kind are the paper's: the open attempt, or the accepted one; null when
+ * the paper is between venues or has none.
+ */
+export const venueCycleOf = (c: Current): Cycle | null => {
   switch (c.kind) {
     case "cycle":
       return c.cycle;
+    case "accepted":
+      return c.cycle;
     case "parked":
-      return c.last;
+      return null;
     case "none":
       return null;
   }
@@ -512,7 +524,7 @@ export const cycleOf = (c: Current): Cycle | null => {
 export const effectiveBlind = (
   venueBlind: boolean,
   current: Current,
-): boolean => venueBlind && cycleOf(current)?.outcome.kind !== "accepted";
+): boolean => venueBlind && current.kind !== "accepted";
 
 /** Whether the current attempt declares its port to the venue's template as open work. */
 export const isPorting = (current: Current): boolean =>

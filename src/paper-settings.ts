@@ -42,6 +42,7 @@ import {
   cycleProblemText,
   cyclesOf,
   parseCycles,
+  venueCycleOf,
   type Cycles,
 } from "./domain/cycle.ts";
 
@@ -175,18 +176,19 @@ function cyclesField(
   return cycles.ok ? cycles : err(cycleProblemText(cycles.error));
 }
 
-/** The current attempt's venue, kind and submission, as the flat keys every reader takes. */
+/**
+ * The current attempt's venue, kind and submission, as the flat keys every reader takes. An accepted
+ * attempt keeps them: the camera-ready and the talk are judged against the venue that accepted.
+ */
 function derived(
   cycles: Cycles,
 ): Pick<PaperSettings, (typeof DERIVED_FROM_CYCLE)[number]> {
-  const c = cycles.current;
-  if (c.kind !== "cycle")
-    return { extends: null, kind: null, submission: null };
-  const venue = c.cycle.venue;
+  const c = venueCycleOf(cycles.current);
+  if (c === null) return { extends: null, kind: null, submission: null };
   return {
-    extends: venue.kind === "preset" ? venue.extends : null,
-    kind: c.cycle.kind,
-    submission: c.cycle.submission,
+    extends: c.venue.kind === "preset" ? c.venue.extends : null,
+    kind: c.kind,
+    submission: c.submission,
   };
 }
 

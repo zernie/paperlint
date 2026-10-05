@@ -1230,7 +1230,10 @@ describe("the cycle decides what applies", () => {
   });
 
   it("an ACCEPTED cycle at a blind venue: the camera-ready carries the authors, anonymity/identity is silent", () => {
-    const facts = said((f) => (f.pages_text = ["Ada Example\n"]));
+    const facts = said(
+      (f) =>
+        (f.pages_text = ["Ada Example\n", ...bodyPages(11), "References\n"]),
+    );
     const accepted = {
       kind: "accepted",
       date: "2026-10-16",
