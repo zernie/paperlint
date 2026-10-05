@@ -509,6 +509,89 @@ test("🔴 the file and key to set: no portal in the preset, no submission in th
   assert.match(!t4.ok ? t4.error : "", /"submission" must be \{ "id"/);
 });
 
+const presetDeps = (fs: Files) => ({
+  files: withPresets(fs),
+  venuesDir: presetsDir(),
+});
+const CYCLE = {
+  id: "venue-2027",
+  venue: { kind: "preset", extends: "../../venue.jsonc" },
+  opened: "2026-10-05",
+};
+
+test("🔴 no submission id, with cycles: the advice puts it in the current cycle, where the parser takes it — not at the top level, which it refuses", () => {
+  const withCycles = files({ paper: { cycles: [CYCLE] } });
+  const message = `${PAPER}/paperlint.json: the current cycle «venue-2027» has no "submission" — add "submission": { "id": <the submission number on ${SITE}/> } inside that cycle; beside "cycles" a top-level "submission" is refused`;
+  assert.deepEqual(submissionTarget(PAPER, presetDeps(withCycles)), {
+    ok: false,
+    error: message,
+  });
+  // Following the advice works: the same file with the id inside the cycle resolves.
+  const followed = files({
+    paper: { cycles: [{ ...CYCLE, submission: { id: 7 } }] },
+  });
+  const t = submissionTarget(PAPER, presetDeps(followed));
+  assert.equal(t.ok && t.value.id, 7);
+  // An accepted attempt is still the current one (camera-ready): the same advice, naming it.
+  const accepted = files({
+    paper: {
+      cycles: [
+        {
+          ...CYCLE,
+          outcome: {
+            kind: "accepted",
+            date: "2027-01-10",
+            evidence: "mail/accept.eml",
+          },
+        },
+      ],
+    },
+  });
+  assert.deepEqual(submissionTarget(PAPER, presetDeps(accepted)), {
+    ok: false,
+    error: message,
+  });
+  // The flat form keeps the top-level advice: there, the key belongs at the top.
+  const flat = files({ paper: { extends: "../../venue.jsonc" } });
+  assert.deepEqual(submissionTarget(PAPER, presetDeps(flat)), {
+    ok: false,
+    error: `${PAPER}/paperlint.json: no "submission" — add "submission": { "id": <the submission number on ${SITE}/> }`,
+  });
+});
+
+test("🔴 no submission id, between venues (the venue is the root's default): the advice is a new cycle, never a top-level key", () => {
+  const withRoot = (paper: Readonly<Record<string, unknown>>) =>
+    files({
+      paper,
+      extra: {
+        "/w/paperlint.json": JSON.stringify({ extends: "../../venue.jsonc" }),
+      },
+    });
+  const parked = withRoot({
+    cycles: [
+      {
+        ...CYCLE,
+        outcome: {
+          kind: "rejected",
+          date: "2027-01-10",
+          evidence: "mail/reject.eml",
+        },
+      },
+    ],
+  });
+  assert.deepEqual(submissionTarget(PAPER, presetDeps(parked)), {
+    ok: false,
+    error: `${PAPER}/paperlint.json: no cycle is open — the last, «venue-2027», has ended; open a new cycle for this venue and add "submission": { "id": <the submission number on ${SITE}/> } inside it; beside "cycles" a top-level "submission" is refused`,
+  });
+  assert.deepEqual(
+    submissionTarget(PAPER, presetDeps(withRoot({ cycles: [] }))),
+    {
+      ok: false,
+      error: `${PAPER}/paperlint.json: "cycles" is empty — open a cycle for this venue and add "submission": { "id": <the submission number on ${SITE}/> } inside it; beside "cycles" a top-level "submission" is refused`,
+    },
+  );
+});
+
 test("🔴 an unknown portal kind is refused: upload by hand", async () => {
   const r = await run(
     {},

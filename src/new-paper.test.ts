@@ -320,6 +320,8 @@ describe("paperlint new --venue / --kind — refusals and defaults", () => {
     });
     expect(r.code).toBe(2);
     expect(r.err).toMatch(/already exists and is never overwritten/);
+    // A file in the cycles form refuses a top-level "extends": the hint names the cycle too.
+    expect(r.err).toMatch(/or, if it keeps "cycles", in a new cycle$/m);
     expect(r.settings()).toEqual({ extends: null });
   });
 });

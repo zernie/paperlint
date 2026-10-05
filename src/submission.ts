@@ -112,6 +112,32 @@ const noPresetLine = (
     ? `${configOf(paperDir)}: no "extends" — the venue preset it names declares the portal ("portal": { "kind": …, "url": … })`
     : `${configOf(paperDir)}: the current cycle names no venue preset, and the preset is what declares the portal — set the venue in the current cycle ("venue": { "kind": "preset", "extends": "paperlint:…" }), or upload by hand`;
 
+/**
+ * Why a paper names no submission, and where the id goes: at the top level in the flat form; with
+ * cycles, inside the current one — a top-level `submission` beside `cycles` is refused by the parser.
+ * Between venues (the venue then comes from the root's default), the advice is a new cycle.
+ */
+function noSubmissionLine(
+  paperDir: string,
+  settings: PaperSettings,
+  site: string,
+): string {
+  const file = configOf(paperDir);
+  const add = `add "submission": { "id": <the submission number on ${site}> }`;
+  const refused = `beside "cycles" a top-level "submission" is refused`;
+  if (settings.cycles === null) return `${file}: no "submission" — ${add}`;
+  const current = settings.cycles.current;
+  switch (current.kind) {
+    case "cycle":
+    case "accepted":
+      return `${file}: the current cycle «${current.cycle.id}» has no "submission" — ${add} inside that cycle; ${refused}`;
+    case "parked":
+      return `${file}: no cycle is open — the last, «${current.last.id}», has ended; open a new cycle for this venue and ${add} inside it; ${refused}`;
+    case "none":
+      return `${file}: "cycles" is empty — open a cycle for this venue and ${add} inside it; ${refused}`;
+  }
+}
+
 /** A resolved paper → its portal and submission, or the line naming the file and key to set. */
 function targetOf(
   paperDir: string,
@@ -124,9 +150,7 @@ function targetOf(
     );
   const sub = p.settings.submission;
   if (sub === null)
-    return err(
-      `${configOf(paperDir)}: no "submission" — add "submission": { "id": <the submission number on ${declared.url}> }`,
-    );
+    return err(noSubmissionLine(paperDir, p.settings, declared.url));
   const portal = supportedPortal(declared);
   if (!portal.ok) return portal;
   const pdf = join(paperDir, p.settings.pdf ?? "paper.pdf");

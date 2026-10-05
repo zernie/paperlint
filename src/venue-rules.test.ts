@@ -308,6 +308,92 @@ describe("pdf/profile — the declaration must resolve, or nothing is judged", (
   });
 });
 
+/** A paperlint.json in the cycles form, its one open cycle at `venue`. */
+const oneCycle = (venue: Readonly<Record<string, unknown>>) => ({
+  cycles: [{ id: "venue-2027", venue, opened: "2026-10-05" }],
+});
+
+describe("pdf/profile — with `cycles`, the fix goes in the current cycle, never at the top level the parser refuses", () => {
+  it("no kind: the current cycle is named as what lacks it", () => {
+    const fs = lint({
+      venue: oneCycle({ kind: "preset", extends: "paperlint:agenticdev" }),
+      facts: null,
+      pdf: null,
+    });
+    const profile = fs.filter((f) => f.rule === "pdf/profile");
+    expect(ids(profile)).toEqual(["pdf/profile:kindMissing"]);
+    expect(profile[0]?.message).toBe(
+      'the current cycle «venue-2027» in paperlint.json names no `kind`, so the page limit of `AgenticDev` is not checked; its kinds: short, full, demo — add "kind" inside that cycle',
+    );
+  });
+  it("in the flat form the same finding names the file and the top-level key", () => {
+    const fs = lint({
+      venue: { extends: "paperlint:agenticdev" },
+      facts: null,
+      pdf: null,
+    });
+    const profile = fs.filter((f) => f.rule === "pdf/profile");
+    expect(ids(profile)).toEqual(["pdf/profile:kindMissing"]);
+    expect(profile[0]?.message).toBe(
+      "paperlint.json names no `kind`, so the page limit of `AgenticDev` is not checked; its kinds: short, full, demo",
+    );
+  });
+});
+
+describe("pdf/profile — with `cycles` and no cycle open, the venue is the root's default", () => {
+  it("the advice is a new cycle, and the bad `extends` is that default", () => {
+    const parked = {
+      cycles: [
+        {
+          id: "first-2026",
+          venue: { kind: "preset", extends: "paperlint:aisec" },
+          opened: "2026-07-01",
+          outcome: { kind: "withdrawn", date: "2026-07-18", evidence: "n.md" },
+        },
+      ],
+    };
+    const root = (ext: string) => ({
+      "/work/paperlint.json": JSON.stringify({ extends: ext }),
+    });
+    const noKind = lint({
+      venue: parked,
+      facts: null,
+      pdf: null,
+      extra: root("paperlint:agenticdev"),
+    }).filter((f) => f.rule === "pdf/profile");
+    expect(noKind.map((f) => f.message)).toEqual([
+      'paperlint.json names no `kind`, so the page limit of `AgenticDev` is not checked; its kinds: short, full, demo — no cycle is open: open a new cycle with its "kind"',
+    ]);
+    const typo = lint({
+      venue: parked,
+      facts: null,
+      pdf: null,
+      extra: root("paperlint:agentic-dev"),
+    });
+    expect(ids(typo)).toEqual(["pdf/profile:preset"]);
+    expect(typo[0]?.message).toMatch(/Fix `extends` in its paperlint\.json,/);
+  });
+  it("a preset that does not resolve: fix the cycle's venue, not a top-level `extends`", () => {
+    const fs = lint({
+      venue: oneCycle({ kind: "preset", extends: "paperlint:agentic-dev" }),
+      facts: null,
+      pdf: null,
+    });
+    expect(ids(fs)).toEqual(["pdf/profile:preset"]);
+    expect(fs[0]?.message).toMatch(
+      /so this paper's page limit, fonts and format are not checked\. Fix the current cycle's "venue" in its paperlint\.json, or turn pdf\/profile off for this paper$/,
+    );
+    const flat = lint({
+      venue: { extends: "paperlint:agentic-dev" },
+      facts: null,
+      pdf: null,
+    });
+    expect(flat[0]?.message).toMatch(
+      /Fix `extends` in its paperlint\.json, or turn pdf\/profile off for this paper$/,
+    );
+  });
+});
+
 describe("pdf/profile — the kind", () => {
   it.each([
     ["no kind", { extends: "paperlint:agenticdev" }, "kindMissing"],

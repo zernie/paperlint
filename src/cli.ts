@@ -1404,7 +1404,7 @@ async function runNew(
   const hasConfig = existsSync(join(paperDir, CONFIG_FILE));
   if (hasConfig && (a.venue !== null || a.kind !== null)) {
     err(
-      `${relative(cwd, join(paperDir, CONFIG_FILE))} already exists and is never overwritten — set "extends" and "kind" in it by hand`,
+      `${relative(cwd, join(paperDir, CONFIG_FILE))} already exists and is never overwritten — set the venue in it by hand: "extends" and "kind" at the top level, or, if it keeps "cycles", in a new cycle`,
     );
     return 2;
   }

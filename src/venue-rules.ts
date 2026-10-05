@@ -51,7 +51,12 @@ import {
   type ReadFacts,
 } from "./facts-file.ts";
 import type { KindLimits, VenueFormat } from "./tex-requirements.ts";
-import { paperPreset, presetProblemText, type Preset } from "./presets.ts";
+import {
+  paperPreset,
+  presetProblemText,
+  type Preset,
+  type PresetProblem,
+} from "./presets.ts";
 import type { PaperSettings } from "./paper-settings.ts";
 import type { FlatGeometry } from "./domain/geometry.ts";
 import { callerPath } from "./caller-path.ts";
@@ -67,7 +72,7 @@ import {
   type PageSplit,
 } from "./domain/body-pages.ts";
 import type { TextFacts } from "./facts-file.ts";
-import { effectiveBlind, isPorting } from "./domain/cycle.ts";
+import { effectiveBlind, isPorting, venueCycleOf } from "./domain/cycle.ts";
 
 // ── the verdict's vocabulary ─────────────────────────────────────────────────────────
 
@@ -133,10 +138,53 @@ const text = (files: Files, p: string): string | null => {
 
 // ── resolving the declaration ────────────────────────────────────────────────────────
 
+/** Where a paper's `kind` is written, as the `kindMissing` message names it. */
+interface KindPlace {
+  /** What names no kind: the file, or the current cycle in it. */
+  readonly where: string;
+  /** How to add one, led by a dash; empty in the flat form, whose message has always ended there. */
+  readonly fix: string;
+}
+
+/**
+ * Where `kind` goes: the file in the flat form, the current cycle with `cycles` — a top-level
+ * `kind` beside `cycles` is refused by the parser. Between venues there is no cycle to put it in.
+ */
+function kindPlace(settings: Pick<PaperSettings, "cycles">): KindPlace {
+  if (settings.cycles === null) return { where: CONFIG_FILE, fix: "" };
+  const c = venueCycleOf(settings.cycles.current);
+  return c === null
+    ? {
+        where: CONFIG_FILE,
+        fix: ' — no cycle is open: open a new cycle with its "kind"',
+      }
+    : {
+        where: `the current cycle «${c.id}» in ${CONFIG_FILE}`,
+        fix: ' — add "kind" inside that cycle',
+      };
+}
+
+/**
+ * `pdf/profile`'s finding for a venue preset that does not resolve, naming what to fix: `extends`,
+ * or — with `cycles` — the current cycle's venue, since a top-level `extends` there is refused.
+ */
+const presetFinding = (
+  problem: PresetProblem,
+  settings: Pick<PaperSettings, "cycles">,
+): Finding =>
+  finding("preset", {
+    why: presetProblemText(problem),
+    fix:
+      settings.cycles !== null && venueCycleOf(settings.cycles.current) !== null
+        ? `the current cycle's "venue" in its ${CONFIG_FILE}`
+        : `\`extends\` in its ${CONFIG_FILE}`,
+  });
+
 function kindOf(
   venue: string,
   format: VenueFormat,
   kind: string | null,
+  place: KindPlace,
 ): Pick<Resolved, "kind" | "kindProblem"> {
   const known = [...format.kinds.keys()].join(", ") || "(none)";
   // A preset with no kinds (`acm-sigconf`, a family a paper for an unprofiled venue extends
@@ -147,7 +195,7 @@ function kindOf(
   if (kind === null)
     return {
       kind: null,
-      kindProblem: finding("kindMissing", { venue, known }),
+      kindProblem: finding("kindMissing", { venue, known, ...place }),
     };
   const limits = format.kinds.get(kind);
   return limits
@@ -196,7 +244,7 @@ const isFinding = (v: object): v is Finding => "messageId" in v;
 const resolvedOf = (preset: Preset, settings: PaperSettings): Resolved => ({
   venue: preset.label,
   format: preset.format,
-  ...kindOf(preset.label, preset.format, settings.kind),
+  ...kindOf(preset.label, preset.format, settings.kind, kindPlace(settings)),
   ...reviewOf(preset, settings),
 });
 
@@ -219,7 +267,7 @@ export function assessPaper(paperDir: string, deps: VenueRuleDeps): Assessment {
   if (p.kind === "preset-problem")
     return {
       kind: "unresolved",
-      finding: finding("preset", { why: presetProblemText(p.problem) }),
+      finding: presetFinding(p.problem, p.settings),
     };
   if (p.settings.cycles !== null && isPorting(p.settings.cycles.current))
     return { kind: "porting" };
@@ -668,8 +716,9 @@ const META: Readonly<Record<VenueRuleName, Meta>> = {
     messages: {
       settingsBroken: `${CONFIG_FILE} cannot be read: {{why}}`,
       preset:
-        "{{why}} — so this paper's page limit, fonts and format are not checked. Fix `extends` in its paperlint.json, or turn pdf/profile off for this paper",
-      kindMissing: `${CONFIG_FILE} names no \`kind\`, so the page limit of \`{{venue}}\` is not checked; its kinds: {{known}}`,
+        "{{why}} — so this paper's page limit, fonts and format are not checked. Fix {{fix}}, or turn pdf/profile off for this paper",
+      kindMissing:
+        "{{where}} names no `kind`, so the page limit of `{{venue}}` is not checked; its kinds: {{known}}{{fix}}",
       kindUnknown:
         "`{{venue}}` has no kind `{{kind}}`, so the page limit is not checked; its kinds: {{known}}",
     },
