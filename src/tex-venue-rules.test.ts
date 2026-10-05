@@ -10,6 +10,7 @@ import { memoryFiles } from "./adapters/memory/index.ts";
 import { presetsDir } from "./package-dirs.ts";
 import { latexReader } from "./adapters/latex/index.ts";
 import {
+  cyclePortRules,
   judgeRequiredSections,
   judgeTemplate,
   otherVenues,
@@ -76,6 +77,9 @@ function lint(
     ),
     ...Object.entries(formatRules(deps)).map(
       ([n, r]) => [`format/${n}`, r] as const,
+    ),
+    ...Object.entries(cyclePortRules(deps)).map(
+      ([n, r]) => [`cycle/${n}`, r] as const,
     ),
   ]) {
     const visitor = rule.create({
@@ -302,23 +306,45 @@ describe("tex/template — the shipped ACM and ACL templates", () => {
   });
 });
 
+const PORTING = {
+  id: "aidc-2026",
+  venue: { kind: "preset", extends: "paperlint:aidc" },
+  kind: "regular",
+  opened: "2026-09-26",
+  phase: "porting",
+};
+
 describe("tex/template — a cycle in `porting`", () => {
   it("the class line is the previous venue's by declaration: silent, where the flat form reports", () => {
     const src = paper("\\documentclass[sigconf]{acmart}");
     expect(lint(src, AIDC).map((f) => f.messageId)).toEqual(["wrongClass"]);
-    const cycle = {
-      id: "aidc-2026",
-      venue: { kind: "preset", extends: "paperlint:aidc" },
-      kind: "regular",
-      opened: "2026-09-26",
-      phase: "porting",
-    };
-    expect(lint(src, { cycles: [cycle] })).toEqual([]);
+    expect(lint(src, { cycles: [PORTING] })).toEqual([]);
     expect(
-      lint(src, { cycles: [{ ...cycle, phase: "prepared" }] }).map(
+      lint(src, { cycles: [{ ...PORTING, phase: "prepared" }] }).map(
         (f) => f.messageId,
       ),
     ).toEqual(["wrongClass"]);
+  });
+});
+
+describe("cycle/port-done — the declared port is finished", () => {
+  it("porting declared and the class line already the venue's: the one finding, naming the cycle", () => {
+    const fs = lint(OFFICIAL, { cycles: [PORTING] });
+    expect(fs.map((f) => `${f.rule}:${f.messageId}`)).toEqual([
+      "cycle/port-done:done",
+    ]);
+    expect(fs[0]?.message).toMatch(
+      /already `\\documentclass\[conference,compsoc\]\{IEEEtran\}`, which AIDC requires, and the cycle «aidc-2026» still declares "phase": "porting"/,
+    );
+  });
+
+  it("silent while the class line is still the old venue's, once the phase is dropped, and on the flat form", () => {
+    const old = paper("\\documentclass[sigconf]{acmart}");
+    expect(lint(old, { cycles: [PORTING] })).toEqual([]);
+    expect(
+      lint(OFFICIAL, { cycles: [{ ...PORTING, phase: "prepared" }] }),
+    ).toEqual([]);
+    expect(lint(OFFICIAL, AIDC)).toEqual([]);
   });
 });
 

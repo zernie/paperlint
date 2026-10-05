@@ -74,6 +74,8 @@ import {
 import {
   FORMAT_RULE_LEVELS,
   formatRules,
+  CYCLE_PORT_RULE_LEVELS,
+  cyclePortRules,
   TEX_VENUE_RULE_LEVELS,
   texVenueRules,
 } from "./tex-venue-rules.ts";
@@ -164,6 +166,8 @@ export { init };
 export { nextSteps } from "./init.ts";
 
 import paperStages from "#eslint-rules/paper-stages";
+import cycleStage from "#eslint-rules/cycle-stage";
+import { CYCLE_RULE_LEVELS, cycleRules } from "./cycle-rules.ts";
 import {
   FOLDER_VENUE_RULE_LEVELS,
   folderVenueRules,
@@ -303,6 +307,22 @@ const REGISTER_AND_CASE_RULES = {
   "heading-case": headingCaseRule(TEX_RULE_DEPS),
 };
 
+/**
+ * The paper's attempts (`cycles` in paperlint.json), judged on `PIPELINE-STATUS.md`: the record itself
+ * and its evidence (src/cycle-rules.ts), and the stages that name a cycle (eslint-rules/cycle-stage.ts).
+ * The `cycle` plugin's other rule, `port-done`, reads `paper.tex` (src/tex-venue-rules.ts).
+ */
+/** The markdown language with YAML frontmatter: what every markdown block of the config lints as. */
+const MARKDOWN_WITH_FRONTMATTER = {
+  language: "markdown/gfm",
+  languageOptions: { frontmatter: "yaml" },
+};
+
+const CYCLE_STATUS_RULES = {
+  ...cycleRules({ files: nodeFiles, venuesDir: presetsDir() }),
+  ...cycleStage.rules,
+};
+
 /** The rules of the files `paper.tex` includes, each read on its own as a fragment (#144). */
 const FRAGMENT_RULES = {
   "future-promise": texBuild["future-promise"],
@@ -333,10 +353,7 @@ export function buildConfig(
     "paper/section-word": "warn",
     "paper/leading-zero": "warn",
   };
-  const md = {
-    language: "markdown/gfm",
-    languageOptions: { frontmatter: "yaml" },
-  };
+  const md = MARKDOWN_WITH_FRONTMATTER;
 
   const cfg: ConfigBlock[] = [
     // 🔴 THE PROJECT'S PAPER TEMPLATE IS NOT A PAPER. `paperlint new` reads `<papers>/.template/`, and
@@ -374,12 +391,14 @@ export function buildConfig(
             ...folderVenueRules({ files: nodeFiles, venuesDir: presetsDir() }),
           },
         },
+        cycle: { rules: CYCLE_STATUS_RULES },
       },
       ...md,
       rules: {
         "paper/stages": "error",
         "paper/source": "error",
         ...FOLDER_VENUE_RULE_LEVELS,
+        ...CYCLE_RULE_LEVELS,
       },
     },
     {
@@ -432,6 +451,7 @@ export function buildConfig(
             ...pageLimitRules({ files: nodeFiles, venuesDir: presetsDir() }),
           },
         },
+        cycle: { rules: cyclePortRules(TEX_RULE_DEPS) },
       },
       language: "tex/latex",
       rules: {
@@ -454,6 +474,7 @@ export function buildConfig(
         ...TEX_VENUE_RULE_LEVELS,
         ...FORMAT_RULE_LEVELS,
         ...PAGE_LIMIT_RULE_LEVELS,
+        ...CYCLE_PORT_RULE_LEVELS,
         // Silent for a paper that declares no `talk` (src/talk-rules.ts), but talk/undeclared.
         ...TALK_RULE_LEVELS,
       },
