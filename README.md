@@ -228,6 +228,12 @@ papers/my-paper/paperlint.json   one paper: its venue preset ("extends"), its ki
 - The paper's venue preset is its `"extends"` key — the one `new --venue` writes.
 - A paper's `paperlint.json` overrides the project's, key by key.
 - **An unknown key is an error**, so a typo cannot silently turn a setting off.
+- A paper that moves between venues keeps a list of attempts, `cycles`, instead of `"extends"`; each
+  records its deadlines as read from the portal and the call, plus any override the chairs granted,
+  and the earlier reading binds ([`docs/configuration.md`](docs/configuration.md#deadlines)).
+- **Deadlines of a shipped venue preset stay current on their own:** paperlint's repository re-reads
+  each preset's portal daily and releases a patch when a date moves, so your normal dependency update
+  (Dependabot, Renovate) brings it. `paperlint lint` itself never reads the clock or the network.
 
 Every key: [`docs/configuration.md`](docs/configuration.md). Already use ESLint for other files? See
 [`docs/configuration.md`](docs/configuration.md#using-the-rules-from-an-existing-eslint-config).

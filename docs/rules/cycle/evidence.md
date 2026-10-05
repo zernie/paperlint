@@ -9,6 +9,10 @@ A closed cycle — `outcome.kind` is `accepted`, `rejected` or `withdrawn` — n
 file that is not in the paper folder: the decision mail, the reviews, or the note that records the
 withdrawal was never saved, or the path is wrong.
 
+The same for a deadline's `override`: the instant a human decided binds instead of what the pages
+said rests on its `evidence` — the chairs' mail that extended the deadline, a saved page — and that
+file must be in the paper folder.
+
 ## Why
 
 The outcome of an attempt is a claim about what a venue decided, and the record is read by people
@@ -47,6 +51,14 @@ papers/my-paper/PIPELINE-STATUS.md
               the decision there, or correct the path  cycle/evidence
 ```
 
+An override whose evidence was never saved:
+
+```text
+  1:1  error  cycle «msr-2027»: the override of the "submission" deadline (2026-10-27T04:00:00Z)
+              rests on `mail/extension.eml`, which is not in the paper folder — save the mail or the
+              page that grants it there, or correct the path  cycle/evidence
+```
+
 Passing:
 
 - the same record with `reviews/decision.md` present;
@@ -61,7 +73,8 @@ saved mail, a markdown note with the reviews, a PDF.
 ## What it does not check
 
 - What the file says. A rejection recorded as `accepted` with the rejection mail as evidence passes
-  here; the person who records the outcome reads the mail.
+  here; the person who records the outcome reads the mail. Likewise an override's mail is not read
+  for its date.
 - The `date`. It must be a day (`YYYY-MM-DD`), nothing more.
 - Whether a `desk` rejection is marked as such (`"desk": true`); it changes what work follows, not
   whether the record is consistent.
@@ -70,4 +83,5 @@ saved mail, a markdown note with the reviews, a PDF.
 
 Save the decision in the paper folder — the mail as it arrived, the reviews as the portal shows
 them, or a dated note that records a withdrawal and why — and name that file in `evidence`. If the
-file exists under another name, correct the path.
+file exists under another name, correct the path. For an override, save the mail or page that moved
+the deadline and name it in the override's `evidence`.
