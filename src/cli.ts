@@ -284,6 +284,24 @@ settings — paperlint.json, at two levels, one schema. Both are optional.
   "extends" names a venue preset: paperlint:<name> (shipped: ${SHIPPED_VENUES().join(", ")})
   or ./path.jsonc, relative to the paperlint.json. npm presets are not supported yet.
 
+  cycles and deadlines — a paper's attempts at venues, oldest first, instead of "extends",
+  "kind" and "submission" (those are then the current attempt's, and refused beside "cycles"):
+
+    { "cycles": [ { "id": "msr-2027", "venue": { "kind": "preset", "extends": "paperlint:msr" },
+                    "kind": "technical", "opened": "2026-10-05",
+                    "deadlines": [ { "what": "submission",
+                                     "observed": [ { "at": "2026-10-23 AoE", "source": "call",
+                                                     "url": "<the call>", "read": "2026-10-05" } ] } ] } ] }
+
+  A venue preset carries the portal's deadlines, read and dated; the package updates them and
+  your dependency update brings them. A paper adds what the call says ("source": "call") and,
+  for a deadline moved by the chairs, "override": { "at", "reason", "evidence" } — evidence a
+  file in the paper folder. The override wins; otherwise the earlier reading binds. "what":
+  registration (the call's abstract), submission (the full paper), resubmission, notification,
+  camera-ready. A venue without a preset: "venue": { "kind": "named", "name", "url" }, every
+  deadline typed from its call. Lint never reads the clock: it checks the record, not the time
+  left. docs/configuration.md#the-papers-cycles
+
   "rules" is { "<rule>": "<severity>" } for every paper file in scope, or ESLint flat-config
   blocks (files, ignores, rules) with globs relative to that file. Order, later wins: paperlint's
   own, the venue preset's, the root file's, the paper's. Optional rules (off unless turned on):

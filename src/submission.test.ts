@@ -476,6 +476,28 @@ test("🔴 the file and key to set: no portal in the preset, no submission in th
   const noExtends = files({ paper: { submission: { id: 7 } } });
   const t3 = submissionTarget(PAPER, deps(noExtends));
   assert.match(!t3.ok ? t3.error : "", /paperlint\.json: no "extends"/);
+  // With cycles, `extends` beside them is refused: the message names the cycle, not the key.
+  const named = files({
+    paper: {
+      cycles: [
+        {
+          id: "secdev-2027",
+          venue: {
+            kind: "named",
+            name: "SecDev 2027",
+            url: "https://x.example",
+          },
+          opened: "2027-01-10",
+          submission: { id: 3 },
+        },
+      ],
+    },
+  });
+  const t5 = submissionTarget(PAPER, deps(named));
+  assert.equal(
+    !t5.ok ? t5.error : "",
+    `${PAPER}/paperlint.json: the current cycle names no venue preset, and the preset is what declares the portal — set the venue in the current cycle ("venue": { "kind": "preset", "extends": "paperlint:…" }), or upload by hand`,
+  );
   const broken = files({
     paper: { extends: "../../venue.jsonc", submission: { id: "7" } },
   });

@@ -476,15 +476,29 @@ export function paperPreset(paperDir: string, deps: PresetDeps): PaperPreset {
     : { kind: "preset-problem", settings, problem: r.error };
 }
 
+/** A paper's settings or preset that cannot be used. */
+export type UnusablePreset = Extract<
+  PaperPreset,
+  { readonly kind: "settings-problem" | "preset-problem" }
+>;
+
+/** The one-line reason a paper's settings or preset cannot be used. */
+export const unusablePresetLine = (
+  paperDir: string,
+  p: UnusablePreset,
+): string =>
+  p.kind === "preset-problem"
+    ? `${join(paperDir, CONFIG_FILE)}: ${presetProblemText(p.problem)}`
+    : settingsProblemLine(paperDir, p.problem);
+
 /** The one-line reason a paper's settings or preset cannot be used, or null when they can. */
 export function paperPresetProblem(
   paperDir: string,
   p: PaperPreset,
 ): string | null {
-  if (p.kind === "preset-problem")
-    return `${join(paperDir, CONFIG_FILE)}: ${presetProblemText(p.problem)}`;
-  if (p.kind !== "settings-problem") return null;
-  return settingsProblemLine(paperDir, p.problem);
+  return p.kind === "preset-problem" || p.kind === "settings-problem"
+    ? unusablePresetLine(paperDir, p)
+    : null;
 }
 
 /** The one line naming a paper's `paperlint.json` that does not parse, and why. */

@@ -231,6 +231,36 @@ describe("a paper that names no venue", () => {
       lint({ venue: DECL, facts: null }, `${PAPER}/PIPELINE-STATUS.md`),
     ).toEqual([]);
   });
+
+  it.each([
+    [
+      "a named venue",
+      {
+        id: "secdev-2027",
+        venue: { kind: "named", name: "SecDev 2027", url: "https://x.example" },
+        opened: "2027-01-10",
+      },
+    ],
+    [
+      "the last cycle closed, none open",
+      {
+        id: "first-2026",
+        venue: { kind: "preset", extends: "paperlint:aisec" },
+        opened: "2026-07-01",
+        outcome: { kind: "withdrawn", date: "2026-07-18", evidence: "n.md" },
+      },
+    ],
+  ])(
+    "with `cycles` and %s: the warning says to set the venue IN THE CYCLE — `extends` beside `cycles` is refused",
+    (_, cycle) => {
+      const fs = lint({ venue: { cycles: [cycle] }, facts: null, pdf: null });
+      expect(ids(fs)).toEqual(["pdf/measured:noPresetCycle"]);
+      expect(fs[0]?.message).toMatch(
+        /^this paper's current cycle names no venue preset, so its page limit, fonts and format are not checked — set the venue in the current cycle in .*paperlint\.json \("venue": \{ "kind": "preset", "extends": "paperlint:…" \}\), or open a new cycle when the last one has ended$/,
+      );
+      expect(fs[0]?.message).not.toMatch(/set "extends"/);
+    },
+  );
 });
 
 describe("pdf/profile — the declaration must resolve, or nothing is judged", () => {

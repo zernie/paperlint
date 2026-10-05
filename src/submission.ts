@@ -30,7 +30,13 @@ import {
 } from "./domain/submission.ts";
 import type { Files } from "./ports/files.ts";
 import type { SubmissionPortal } from "./ports/submission-portal.ts";
-import { paperPreset, paperPresetProblem, type PresetDeps } from "./presets.ts";
+import {
+  paperPreset,
+  unusablePresetLine,
+  type PaperPreset,
+  type PresetDeps,
+} from "./presets.ts";
+import type { PaperSettings } from "./paper-settings.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
 
 /** The environment variable each portal kind's token is read from. */
@@ -86,18 +92,20 @@ export interface SubmissionTarget {
 
 const configOf = (dir: string): string => join(dir, CONFIG_FILE);
 
-/** The paper directory → its portal and submission, or the line naming the file and key to set. */
-export function submissionTarget(
+/** Why a paper without a venue preset has no portal: the key to set, or — with cycles — where. */
+const noPresetLine = (
   paperDir: string,
-  deps: PresetDeps,
+  settings: PaperSettings | null,
+): string =>
+  settings === null || settings.cycles === null
+    ? `${configOf(paperDir)}: no "extends" — the venue preset it names declares the portal ("portal": { "kind": …, "url": … })`
+    : `${configOf(paperDir)}: the current cycle names no venue preset, and the preset is what declares the portal — set the venue in the current cycle ("venue": { "kind": "preset", "extends": "paperlint:…" }), or upload by hand`;
+
+/** A resolved paper → its portal and submission, or the line naming the file and key to set. */
+function targetOf(
+  paperDir: string,
+  p: Extract<PaperPreset, { readonly kind: "resolved" }>,
 ): Result<SubmissionTarget, string> {
-  const p = paperPreset(paperDir, deps);
-  const problem = paperPresetProblem(paperDir, p);
-  if (problem !== null) return err(problem);
-  if (p.kind !== "resolved")
-    return err(
-      `${configOf(paperDir)}: no "extends" — the venue preset it names declares the portal ("portal": { "kind": …, "url": … })`,
-    );
   const declared = p.preset.portal;
   if (declared === null)
     return err(
@@ -114,6 +122,23 @@ export function submissionTarget(
   const identity = p.preset.identity;
   const call = identity.type === "venue" ? identity.url : null;
   return ok({ portal: portal.value, id: sub.id, pdf, call });
+}
+
+/** The paper directory → its portal and submission, or the line naming the file and key to set. */
+export function submissionTarget(
+  paperDir: string,
+  deps: PresetDeps,
+): Result<SubmissionTarget, string> {
+  const p = paperPreset(paperDir, deps);
+  switch (p.kind) {
+    case "none":
+      return err(noPresetLine(paperDir, p.settings));
+    case "settings-problem":
+    case "preset-problem":
+      return err(unusablePresetLine(paperDir, p));
+    case "resolved":
+      return targetOf(paperDir, p);
+  }
 }
 
 /** The token from the environment, or the line naming the variable and where to get one. */

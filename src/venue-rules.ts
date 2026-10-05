@@ -99,7 +99,12 @@ export interface Resolved {
 export type Assessment =
   | { readonly kind: "no-venue" }
   /** A `paperlint.json` that extends no preset yet — `pdf/measured` names the file to set. */
-  | { readonly kind: "no-preset"; readonly file: string }
+  | {
+      readonly kind: "no-preset";
+      readonly file: string;
+      /** The paper keeps `cycles`: its venue is the current cycle's, and `extends` beside them is refused. */
+      readonly cycles: boolean;
+    }
   | { readonly kind: "unresolved"; readonly finding: Finding }
   /**
    * The current cycle declares its port to the venue's template as open work (`"phase": "porting"`):
@@ -201,7 +206,11 @@ export function assessPaper(paperDir: string, deps: VenueRuleDeps): Assessment {
   if (p.kind === "none")
     return p.settings === null
       ? { kind: "no-venue" }
-      : { kind: "no-preset", file: join(paperDir, CONFIG_FILE) };
+      : {
+          kind: "no-preset",
+          file: join(paperDir, CONFIG_FILE),
+          cycles: p.settings.cycles !== null,
+        };
   if (p.kind === "settings-problem")
     return {
       kind: "unresolved",
@@ -575,7 +584,11 @@ const JUDGES: Readonly<Record<VenueRuleName, Judge>> = {
   fresh: (a) => (a.kind === "stale" ? [a.finding] : []),
   measured: (a, { shown }) =>
     a.kind === "no-preset"
-      ? [finding("noPreset", { file: shown(a.file) })]
+      ? [
+          finding(a.cycles ? "noPresetCycle" : "noPreset", {
+            file: shown(a.file),
+          }),
+        ]
       : a.kind === "unbuilt"
         ? [
             finding("unbuilt", {
@@ -672,6 +685,8 @@ const META: Readonly<Record<VenueRuleName, Meta>> = {
         "not built yet, so `{{venue}}`'s page limit, fonts and format are not checked — run `paperlint build`",
       noPreset:
         'this paper names no venue preset yet, so its page limit, fonts and format are not checked — set "extends" in {{file}} (e.g. "paperlint:agenticdev"; see docs/rules.md)',
+      noPresetCycle:
+        'this paper\'s current cycle names no venue preset, so its page limit, fonts and format are not checked — set the venue in the current cycle in {{file}} ("venue": { "kind": "preset", "extends": "paperlint:…" }), or open a new cycle when the last one has ended',
       noGeometry:
         "the build measured no page geometry (banal was not found or failed), so page size, columns, page limits and font sizes were NOT checked — run `paperlint toolchain`, then `paperlint build`",
     },
