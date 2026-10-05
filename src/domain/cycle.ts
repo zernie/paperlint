@@ -454,6 +454,20 @@ export function deadlineOrderProblems(
   return [...twice, ...inversions];
 }
 
+/** A paper's `cycles`, parsed, with the attempt they name: minted only when the list is consistent. */
+export interface Cycles {
+  readonly list: readonly Cycle[];
+  readonly current: Current;
+}
+
+/** The list with its current attempt, or why the list names none. Pure. */
+export const cyclesOf = (
+  list: readonly Cycle[],
+): Result<Cycles, CycleProblem> => {
+  const current = currentCycle(list);
+  return current.ok ? ok({ list, current: current.value }) : current;
+};
+
 /** The cycle a `Current` stands on: the open one, or the last closed one; null for none. */
 export const cycleOf = (c: Current): Cycle | null => {
   switch (c.kind) {
