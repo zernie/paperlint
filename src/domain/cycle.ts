@@ -69,6 +69,31 @@ export interface Deadline {
   readonly url: string;
 }
 
+/** Unix seconds → the instant, in UTC. */
+export const instantOfUnix = (seconds: number): Instant =>
+  asInstant(seconds * 1000);
+
+/**
+ * What a venue's portal says about its deadlines, in paperlint's words — the answer `paperlint cycle
+ * open` records and `paperlint cycle check` compares against. One adapter per portal kind.
+ */
+export interface PortalDeadlines {
+  /** The portal's clock when it answered, Unix seconds. */
+  readonly now: number;
+  /** Whether the portal takes submissions now. */
+  readonly open: boolean;
+  /** How the venue reviews, as the portal says it; null when it does not say. */
+  readonly blind: boolean | "optional" | "until-review" | null;
+  readonly deadlines: readonly PortalDeadline[];
+}
+
+/** One deadline the portal lists: its kind when it is one paperlint names, the portal's own label, and when. */
+export interface PortalDeadline {
+  readonly what: DeadlineWhat | null;
+  readonly label: string;
+  readonly at: Instant;
+}
+
 /** The venue of an attempt: a preset paperlint resolves, or a venue named by hand (no preset yet). */
 export type CycleVenue =
   | { readonly kind: "preset"; readonly extends: string }
