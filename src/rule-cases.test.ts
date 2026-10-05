@@ -316,6 +316,70 @@ const onPdf = (tree: Record<string, string>, line = 1) => ({
   line,
 });
 
+/** One open cycle on the ACM family: what a flat `{ "extends": "paperlint:acm-sigconf" }` says, as a record. */
+const OPEN_CYCLE = JSON.stringify({
+  cycles: [
+    {
+      id: "open-2027",
+      venue: { kind: "preset", extends: "paperlint:acm-sigconf" },
+      opened: "2026-09-09",
+    },
+  ],
+});
+/**
+ * One open cycle whose registration deadline is after its submission deadline: a date typed wrong.
+ * The record's STRUCTURAL problems — two open cycles, a bare date, an unknown key — never reach a
+ * rule: `paperRuleBlocks` refuses the settings file before lint runs (measured 2026-10-05: one line
+ * naming the file and both ids, exit 2), as it refuses any unreadable `paperlint.json`. The order of
+ * the deadlines is what the record parses with and the rule still judges.
+ */
+const DISORDERED = JSON.stringify({
+  cycles: [
+    {
+      id: "open-2027",
+      venue: { kind: "preset", extends: "paperlint:acm-sigconf" },
+      opened: "2026-09-09",
+      deadlines: [
+        {
+          what: "submission",
+          at: "2026-10-20T04:00:00Z",
+          source: "portal",
+          url: "https://conf.example/deadlines",
+        },
+        {
+          what: "registration",
+          at: "2026-10-21T04:00:00Z",
+          source: "call",
+          url: "https://conf.example/cfp",
+        },
+      ],
+    },
+  ],
+});
+/** One closed cycle whose evidence is `reviews/decision.md`. */
+const CLOSED_CYCLE = JSON.stringify({
+  cycles: [
+    {
+      id: "first-2026",
+      venue: { kind: "preset", extends: "paperlint:acm-sigconf" },
+      opened: "2026-07-01",
+      outcome: {
+        kind: "rejected",
+        date: "2026-09-08",
+        evidence: "reviews/decision.md",
+      },
+    },
+  ],
+});
+/** A BlindConf cycle still declared porting — on a paper whose class line is already BlindConf's. */
+const BLIND_PORTING = {
+  id: "blindconf-2027",
+  venue: { kind: "preset", extends: "./blindconf.jsonc" },
+  opened: "2026-09-09",
+  phase: "porting",
+  // What `blind()` declares flat; with cycles it moves into the record's siblings, not the cycle.
+};
+
 const CASES: Readonly<Record<string, RuleCases>> = {
   "paper/stages": {
     reports: {
@@ -325,6 +389,68 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       line: 1,
     },
     silent: paper(tex("x")),
+  },
+  // ── the cycle rules: the paper's attempts in paperlint.json, judged on PIPELINE-STATUS.md ──────
+  "cycle/record": {
+    reports: {
+      tree: { ...paper(tex("x")), [`${P}/paperlint.json`]: DISORDERED },
+      file: STATUS_FILE,
+      severity: 2,
+      line: 1,
+    },
+    silent: paper(tex("x")),
+  },
+  "cycle/evidence": {
+    reports: {
+      tree: { ...paper(tex("x")), [`${P}/paperlint.json`]: CLOSED_CYCLE },
+      file: STATUS_FILE,
+      severity: 2,
+      line: 1,
+    },
+    silent: {
+      ...paper(tex("x")),
+      [`${P}/paperlint.json`]: CLOSED_CYCLE,
+      [`${P}/reviews/decision.md`]: "# decision\n",
+    },
+  },
+  "cycle/stage": {
+    reports: {
+      tree: {
+        ...paper(tex("x")),
+        [STATUS_FILE]: SHIPPED_STATUS,
+        [`${P}/paperlint.json`]: OPEN_CYCLE,
+        [`${P}/versions/a.pdf`]: "x",
+      },
+      file: STATUS_FILE,
+      severity: 2,
+      line: 1,
+    },
+    silent: {
+      ...paper(tex("x")),
+      [STATUS_FILE]: SHIPPED_STATUS.replace(
+        "date: 2026-07-22",
+        "cycle: open-2027\n    date: 2026-07-22",
+      ),
+      [`${P}/paperlint.json`]: OPEN_CYCLE,
+      [`${P}/versions/a.pdf`]: "x",
+    },
+  },
+  "cycle/port-done": {
+    reports: {
+      tree: {
+        ...blind("Text."),
+        [`${P}/paperlint.json`]: JSON.stringify({ cycles: [BLIND_PORTING] }),
+      },
+      file: TEX_FILE,
+      severity: 2,
+      line: 1,
+    },
+    silent: {
+      ...blind("Text."),
+      [`${P}/paperlint.json`]: JSON.stringify({
+        cycles: [{ ...BLIND_PORTING, phase: "prepared" }],
+      }),
+    },
   },
   "paper/source": {
     reports: {

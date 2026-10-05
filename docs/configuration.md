@@ -96,16 +96,17 @@ The same keys as the root file, minus the project-only ones (`papersDir`, `struc
 skills' keys), which are refused here by name, plus `talk` and `submission`, which only a paper has. **It merges over the root file:** its `extends`,
 `kind` and `pdf` win; one it does not set comes from the root.
 
-| key          | what it is                                                                                                                                                                                                             |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `extends`    | the venue preset the built PDF is judged against: `paperlint:<name>` (shipped) or `./path` / `../path` (your own, relative to this file) — [`rules.md`](rules.md#checks-against-the-venue)                             |
-| `kind`       | the kind of paper (`short`, `research`, …) whose page limit applies                                                                                                                                                    |
-| `pdf`        | where the built PDF is, relative to the paper, when it is not `paper.pdf`                                                                                                                                              |
-| `identity`   | what identifies the authors — names, handles, emails, affiliations, your own project names. A blind venue's PDF must say none of it ([`anonymity/identity`](rules/anonymity/identity.md)). Joined with the root's list |
-| `talk`       | how this paper is presented, `{ "mode": "remote-video" }` plus optional `dir`, `files`, `one_slide` — the `talk/*` rules judge its finished files ([`talk.md`](talk.md)). Only here: the root file refuses it          |
-| `submission` | which submission on the venue's portal is this paper's, `{ "id": 7 }` — read by [`paperlint submission`](submission.md), with the preset's `portal`. Only here: the root file refuses it                               |
-| `rules`      | rule overrides for this paper alone — `{ "<rule>": "<severity>" }`, or blocks with globs relative to the paper                                                                                                         |
-| `$comment`   | a note for humans; ignored                                                                                                                                                                                             |
+| key          | what it is                                                                                                                                                                                                                                                            |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `extends`    | the venue preset the built PDF is judged against: `paperlint:<name>` (shipped) or `./path` / `../path` (your own, relative to this file) — [`rules.md`](rules.md#checks-against-the-venue)                                                                            |
+| `kind`       | the kind of paper (`short`, `research`, …) whose page limit applies                                                                                                                                                                                                   |
+| `pdf`        | where the built PDF is, relative to the paper, when it is not `paper.pdf`                                                                                                                                                                                             |
+| `identity`   | what identifies the authors — names, handles, emails, affiliations, your own project names. A blind venue's PDF must say none of it ([`anonymity/identity`](rules/anonymity/identity.md)). Joined with the root's list                                                |
+| `talk`       | how this paper is presented, `{ "mode": "remote-video" }` plus optional `dir`, `files`, `one_slide` — the `talk/*` rules judge its finished files ([`talk.md`](talk.md)). Only here: the root file refuses it                                                         |
+| `submission` | which submission on the venue's portal is this paper's, `{ "id": 7 }` — read by [`paperlint submission`](submission.md), with the preset's `portal`. Only here: the root file refuses it                                                                              |
+| `cycles`     | the paper's attempts at venues, one entry per attempt, oldest first — see [The paper's cycles](#the-papers-cycles) below. With it, `extends`, `kind` and `submission` are the current attempt's and may not be written beside it. Only here: the root file refuses it |
+| `rules`      | rule overrides for this paper alone — `{ "<rule>": "<severity>" }`, or blocks with globs relative to the paper                                                                                                                                                        |
+| `$comment`   | a note for humans; ignored                                                                                                                                                                                                                                            |
 
 `paperlint new` writes this file from the template (`templates/paper/paperlint.json`, or your
 `<papers>/.template/paperlint.json` if you keep one). With `--venue` it writes the venue into it:
@@ -143,6 +144,75 @@ configuration → the preset chain's `rules`, from the root preset to the one th
 the root `paperlint.json`'s `rules` → the paper's own `rules`. So a venue can turn a rule on, the
 project can change that for every paper, and one paper can still change it for itself. Only rules
 paperlint ships may be named, at every level.
+
+## The paper's cycles
+
+A paper goes to a venue, is rejected, and goes to the next one. `cycles` records each attempt as
+one entry, oldest first; `extends`, `kind` and `submission` are then **derived** from the current
+attempt — the one open cycle, or the accepted last one — and writing any of them beside `cycles`
+is refused as a second source for one fact.
+
+```jsonc
+{
+  "pdf": "build/paper.pdf",
+  "cycles": [
+    {
+      "id": "alpha-2026", // what a stage's `cycle:` names
+      "venue": { "kind": "preset", "extends": "paperlint:acm-sigconf" },
+      "kind": "short",
+      "opened": "2026-07-01", // the day this attempt was decided
+      "deadlines": [
+        {
+          "what": "submission",
+          "at": "2026-08-06 AoE",
+          "source": "call",
+          "url": "https://alpha.example/cfp",
+        },
+      ],
+      "outcome": {
+        "kind": "rejected",
+        "date": "2026-09-08",
+        "desk": false,
+        "evidence": "reviews/alpha-decision.md",
+      },
+    },
+    {
+      "id": "beta-2027",
+      "venue": { "kind": "preset", "extends": "paperlint:ieee-conference" },
+      "opened": "2026-09-09",
+      "phase": "porting", // the source is still in alpha's template
+      "deadlines": [
+        {
+          "what": "submission",
+          "at": "2026-10-20T04:00:00Z",
+          "source": "portal",
+          "url": "https://beta.example/deadlines",
+        },
+      ],
+      "submission": { "id": 7 },
+    },
+  ],
+}
+```
+
+| field        | what it is                                                                                                                                                                                                                                                                                                                       |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`         | unique in the list; a scorecard stage names it as `cycle: <id>` ([`cycle/stage`](rules/cycle/stage.md))                                                                                                                                                                                                                          |
+| `venue`      | `{ "kind": "preset", "extends": "paperlint:<name>" \| "./path" }` — resolved as `extends` is; or `{ "kind": "named", "name", "url" }` for a venue with no preset yet. A named venue has no format rules                                                                                                                          |
+| `kind`       | a key of the preset's `format.kinds`; omit when the venue has one kind                                                                                                                                                                                                                                                           |
+| `opened`     | `YYYY-MM-DD`, the day this attempt was decided — the boundary a consumer judges the scorecard's rows against                                                                                                                                                                                                                     |
+| `phase`      | `"porting"` while the source is still in the previous venue's template: every `pdf/*`, `format/*`, `anonymity/*` and `tex/*` venue rule is silent for the paper, and [`cycle/port-done`](rules/cycle/port-done.md) fires once the class line is the venue's. Default `"prepared"`                                                |
+| `deadlines`  | a list of `{ "what", "at", "source", "url" }`: `what` is `registration`, `submission`, `resubmission`, `notification` or `camera-ready`; `at` an instant with its zone (`2026-10-20T04:00:00Z`) or a call's `"YYYY-MM-DD AoE"`; `source` is `"portal"` or `"call"` — where it was read ([`cycle/record`](rules/cycle/record.md)) |
+| `submission` | which submission on the venue's portal is this paper's, `{ "id": 7 }` — what the flat `submission` key is                                                                                                                                                                                                                        |
+| `outcome`    | `{ "kind": "open" }` (the default), or `accepted` \| `rejected` \| `withdrawn` with `date` and `evidence`, a file in the paper folder ([`cycle/evidence`](rules/cycle/evidence.md)); `rejected` may add `"desk": true`                                                                                                           |
+
+**One open cycle at most, and it is the last entry.** Two open cycles is dual submission or a
+decision nobody recorded; `paperlint lint` refuses the file with one line naming both ids. A paper
+whose last cycle is rejected or withdrawn and has no open one is between venues: `extends` derives
+to null and the venue rules say nothing. An accepted last cycle keeps the paper at that venue —
+camera-ready and talk are judged against it, and the venue's blindness no longer applies.
+
+Papers without `cycles` read exactly as before.
 
 ## Records in frontmatter, checked by shipped JSON Schemas
 

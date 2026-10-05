@@ -18,7 +18,11 @@
  * ── WHO SPEAKS WHEN THERE IS NOTHING TO JUDGE ──────────────────────────────────────
  * No `paperlint.json`, one that is not JSON, or one without `cycles` (the flat form): silent — the
  * flat form is still valid, and `pdf/profile` says when the whole file is broken. A `cycles` that
- * does not parse is reported HERE, on every paper, including the markdown ones `pdf/*` never sees.
+ * does not parse, or names no current attempt (two open cycles), never reaches this rule through
+ * `paperlint lint`: `paperRuleBlocks` (src/cli.ts) refuses the settings file before ESLint runs, one
+ * line naming the file and the problem, exit 2 — the same strictness as an unknown key (measured
+ * 2026-10-05). The `broken` message below is what the rule says when a host runs it without that
+ * refusal; under the CLI only `order` is reachable.
  */
 import { basename, dirname, join } from "node:path";
 import { callerPath } from "./caller-path.ts";
