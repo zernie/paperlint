@@ -44,6 +44,11 @@ whether that PDF is the local one: HotCRP stores a PDF's sha256 as `sha2-<hex>`,
 compares it with the sha256 of the paper's `paper.pdf` (or its `pdf` setting, or `--pdf <file>`).
 `match yes` means the portal holds exactly the file you built. Exit 0 whenever the portal answered.
 
+Then one `deadline` line per deadline in force for the current attempt — the venue preset's portal
+readings with the paper's own call readings and overrides over them ([Deadlines](configuration.md#deadlines)):
+the instant that binds, what set it (a reading and the day it was read, or an override with its
+reason and evidence), and the other readings of it. Instants only; how long is left is not printed.
+
 ## `update`
 
 Sends the PDF — the paper's own unless `--pdf <file>` names another — and, when asked, a new

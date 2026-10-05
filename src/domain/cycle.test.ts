@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { present } from "../../test/support.ts";
 import {
   currentCycle,
+  currentDeadlines,
   cycleProblemText,
   effectiveBlind,
   parseCycles,
@@ -206,6 +207,15 @@ describe("parseCycles refuses a malformed deadline, outcome or submission", () =
       ],
       /^cycles\[0\]\.outcome: unknown key "desk" — an accepted outcome's keys: kind, date, evidence$/,
     ],
+  ])("refuses %s, naming the entry and the key", (_what, input, re) => {
+    const r = parseCycles(input);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toMatch(re);
+  });
+});
+
+describe("parseCycles refuses an unknown key or a bad shape in a venue or a submission", () => {
+  it.each([
     [
       "an unknown key in a venue",
       [{ ...OPEN, venue: { ...OPEN.venue, portal: "https://x" } }],
@@ -220,6 +230,21 @@ describe("parseCycles refuses a malformed deadline, outcome or submission", () =
         },
       ],
       /^cycles\[0\]\.venue: unknown key "year" — a named venue's keys: kind, name, url$/,
+    ],
+    [
+      "a preset venue with an empty extends",
+      [{ ...OPEN, venue: { kind: "preset", extends: "" } }],
+      /^cycles\[0\]: "venue" must be \{ "kind": "preset"/,
+    ],
+    [
+      "a named venue without its url",
+      [{ ...OPEN, venue: { kind: "named", name: "X" } }],
+      /^cycles\[0\]: "venue" must be \{ "kind": "preset"/,
+    ],
+    [
+      "a submission that is a bare number",
+      [{ ...OPEN, submission: 7 }],
+      /^cycles\[0\]: "submission" must be \{ "id"/,
     ],
     [
       "an unknown key in a submission",
@@ -389,6 +414,22 @@ describe("cycleProblemText — one line per problem, naming what to change", () 
     ],
   ] as const)("%j", (problem, text) => {
     expect(cycleProblemText(problem)).toMatch(text);
+  });
+});
+
+describe("currentDeadlines", () => {
+  it("the open or accepted attempt's entries; none when parked or with no cycles", () => {
+    const [a, b] = parsed([REJECTED, OPEN]);
+    const open = present(b, "open cycle");
+    const closed = present(a, "closed cycle");
+    expect(currentDeadlines({ kind: "cycle", cycle: open })).toBe(
+      open.deadlines,
+    );
+    expect(currentDeadlines({ kind: "accepted", cycle: closed })).toBe(
+      closed.deadlines,
+    );
+    expect(currentDeadlines({ kind: "parked", last: closed })).toEqual([]);
+    expect(currentDeadlines({ kind: "none" })).toEqual([]);
   });
 });
 

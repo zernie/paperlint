@@ -176,6 +176,11 @@ describe("parseDeadlines refuses a reading that cannot be in force, naming the p
       /observed\[0\]: "at" must be an instant with its zone \(2026-10-20T04:00:00Z\) or a call's "YYYY-MM-DD AoE", got "2026-10-24"/,
     ],
     [
+      "a reading whose instant is a number (Unix seconds)",
+      [{ what: "submission", observed: [{ ...PORTAL, at: 1792468800 }] }],
+      /observed\[0\]: "at" must be an instant with its zone .*, got 1792468800/,
+    ],
+    [
       "a reading without the page it was read on",
       [{ what: "submission", observed: [{ ...CALL, url: "" }] }],
       /observed\[0\]: "url" must be where the deadline was read/,

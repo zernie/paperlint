@@ -22,6 +22,7 @@ import type { SubmissionPortal } from "./ports/submission-portal.ts";
 import {
   failureText,
   runSubmission,
+  deadlineLine,
   submissionTarget,
   tokenFor,
   usageProblem,
@@ -41,8 +42,11 @@ const withPresets = (fs: Files): Files => ({
   readBytes: (p) => fs.readBytes(p) ?? nodeFiles.readBytes(p),
 });
 
+/** A venue over aidc's format with a portal of its own — so none of aidc's deadline readings. */
 const venue = (portal: unknown): string =>
-  JSON.stringify(venuePreset("venue", { extends: "paperlint:aidc", portal }));
+  JSON.stringify(
+    venuePreset("venue", { extends: "paperlint:aidc", portal, deadlines: [] }),
+  );
 const files = (o: {
   readonly portal?: unknown;
   readonly paper?: Readonly<Record<string, unknown>>;
@@ -555,4 +559,82 @@ test("usage: a subcommand is required, one paper folder, update-only flags refus
     "--abstract, --submit, --save: only `submission update` changes anything; `show` reads",
   );
   assert.equal(usageProblem({ ...ARGS, sub: "update", save: true }), null);
+});
+
+test("show prints the current attempt's deadlines in force: the preset's portal readings, the paper's call readings and override over them", () => {
+  const fs = memoryFiles({
+    "/w/package.json": "{}",
+    [`${PAPER}/paperlint.json`]: JSON.stringify({
+      cycles: [
+        {
+          id: "msr-2027",
+          venue: { kind: "preset", extends: "paperlint:msr" },
+          kind: "technical",
+          opened: "2026-10-05",
+          submission: { id: 7 },
+          deadlines: [
+            {
+              what: "registration",
+              observed: [
+                {
+                  at: "2026-10-20 AoE",
+                  source: "call",
+                  url: "https://2027.msrconf.org/cfp",
+                  read: "2026-10-05",
+                },
+              ],
+            },
+            {
+              what: "submission",
+              observed: [
+                {
+                  at: "2026-10-23 AoE",
+                  source: "call",
+                  url: "https://2027.msrconf.org/cfp",
+                  read: "2026-10-05",
+                },
+              ],
+            },
+            {
+              what: "resubmission",
+              override: {
+                at: "2026-10-27T04:00:00Z",
+                reason: "the chairs extended updates by mail",
+                evidence: "mail/extension.eml",
+              },
+            },
+          ],
+        },
+      ],
+    }),
+  });
+  const t = submissionTarget(PAPER, {
+    files: withPresets(fs),
+    venuesDir: presetsDir(),
+  });
+  assert.ok(t.ok, JSON.stringify(t));
+  assert.deepEqual(t.value.deadlines.map(deadlineLine), [
+    "deadline      registration 2026-10-21T11:59:59Z — call, read 2026-10-05",
+    "deadline      submission 2026-10-20T04:00:00Z — portal, read 2026-10-05; also call 2026-10-24T11:59:59Z, read 2026-10-05",
+    "deadline      resubmission 2026-10-27T04:00:00Z — override: the chairs extended updates by mail (mail/extension.eml); also portal 2026-10-23T04:00:00Z, read 2026-10-05",
+  ]);
+});
+
+test("show, in the flat form: the deadlines in force are the preset's readings alone", () => {
+  const flat = memoryFiles({
+    "/w/package.json": "{}",
+    [`${PAPER}/paperlint.json`]: JSON.stringify({
+      extends: "paperlint:msr",
+      kind: "technical",
+      submission: { id: 7 },
+    }),
+  });
+  const f = submissionTarget(PAPER, {
+    files: withPresets(flat),
+    venuesDir: presetsDir(),
+  });
+  assert.deepEqual(f.ok ? f.value.deadlines.map((d) => [d.what, d.at]) : f, [
+    ["submission", "2026-10-20T04:00:00Z"],
+    ["resubmission", "2026-10-23T04:00:00Z"],
+  ]);
 });

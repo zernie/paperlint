@@ -442,7 +442,9 @@ export const NO_CLOCK = {
     "src/toolchain.ts",
     "src/build-engine.ts",
   ],
-  rules: { "no-restricted-syntax": ["error", AS_UNKNOWN_AS, ...READS_THE_CLOCK] },
+  rules: {
+    "no-restricted-syntax": ["error", AS_UNKNOWN_AS, ...READS_THE_CLOCK],
+  },
 };
 
 /**

@@ -414,6 +414,10 @@ export const venueCycleOf = (c: Current): Cycle | null => {
   }
 };
 
+/** The current attempt's own deadline entries; none between venues or before the first attempt. Pure. */
+export const currentDeadlines = (c: Current): readonly Deadline[] =>
+  venueCycleOf(c)?.deadlines ?? [];
+
 /**
  * Whether the paper is judged as a blind submission: the venue reviews blind, and this attempt has
  * not been accepted — an accepted paper's camera-ready carries its authors. Pure.
