@@ -72,7 +72,9 @@ references is found by hyperref's anchor, and without it is counted as reference
   declared `identity`.
 - **Where submissions go** (`portal`): `paperlint submission` reads and updates a paper's
   submission through HotCRP's API on that site.
-- **Names**: `MSR`, what `tex/venue-leftover` looks for in another venue's paper.
+- **Names**: `MSR`, what `tex/venue-leftover` looks for in another venue's paper — only with a year
+  beside it (`mentions: with-year`: «MSR 2027», «MSR'27»), since «MSR» is also Microsoft Research
+  and an acronym papers define for themselves.
 - **Not encoded**: the capitalization of the title and headings (`tex/heading-case` stays off: the
   IEEE guidelines' rule has not been read and quoted here), and the register of the body (no
   accepted MSR paper in the IEEE template exists yet to anchor `tex/contrast-frames` and its

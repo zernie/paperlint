@@ -267,8 +267,17 @@ export function judgeRequiredSections(
   );
 }
 
-/** Another shipped venue: the word for it, and what it is called in a paper's text. */
-export type OtherVenue = NamedVenue;
+/**
+ * Another shipped venue: the word for it, what it is called in a paper's text, and when a name
+ * counts as naming it (`mentions`).
+ */
+export type OtherVenue = NamedVenue & Pick<Preset, "mentions">;
+
+/**
+ * What must follow a name for it to name a `with-year` venue: a year beside it — `2027`, `'27` or
+ * `’27`, after spaces or none (`~` renders as a space). A lookahead, so the finding is the name.
+ */
+const YEAR_BESIDE = "(?=[\\s\\u00a0]*(?:\\d{4}|['’]\\d{2})(?![\\p{L}\\p{N}]))";
 
 /** `s` as a pattern that matches it literally. */
 const literal = (s: string): string =>
@@ -290,7 +299,7 @@ export function judgeLeftover(
       .map((alias) => ({
         other: o.label,
         re: new RegExp(
-          `(?<![\\p{L}\\p{N}])${literal(alias)}(?![\\p{L}\\p{N}])`,
+          `(?<![\\p{L}\\p{N}])${literal(alias)}(?![\\p{L}\\p{N}])${o.mentions === "with-year" ? YEAR_BESIDE : ""}`,
           "gu",
         ),
       })),
@@ -463,7 +472,7 @@ export function otherVenues(
 ): readonly OtherVenue[] {
   return shippedVenueNames(deps)
     .filter((v) => !v.chain.every((f) => preset.chain.includes(f)))
-    .map(({ label, aliases }) => ({ label, aliases }));
+    .map(({ label, aliases, mentions }) => ({ label, aliases, mentions }));
 }
 
 /** What the venue-conformance rules are built with: the preset store, and the LaTeX reader. */

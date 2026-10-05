@@ -693,6 +693,53 @@ describe("tex/venue-leftover — another venue named in the text", () => {
   });
 });
 
+describe("tex/venue-leftover — MSR, a name that is also an acronym, counts only with a year (`mentions`)", () => {
+  const under = (text: string) =>
+    leftovers(lint(aidcPaper(`${text}\n${BODY}${STATEMENT}`), AIDC));
+
+  it.each([
+    [
+      "an acronym the paper defines",
+      "We score it by Manual Speech Recognition (MSR), and MSR scores rise.",
+    ],
+    [
+      "Microsoft Research",
+      "Researchers at Microsoft Research (MSR) built it, and MSR released it.",
+    ],
+    [
+      "a citation of an MSR paper: the key, and the entry in the bibliography",
+      "As shown~\\cite{msr2024}.\n\\begin{thebibliography}{1}\\bibitem{msr2024} A. Author, ``Mining,'' in \\emph{Proc. MSR 2024}, 2024.\\end{thebibliography}",
+    ],
+    ["a year that is not beside the name", "MSR, in 2027, scored best."],
+  ])("silent: %s", (_, text) => {
+    expect(under(text)).toEqual([]);
+  });
+
+  it.each([
+    ["First written for MSR 2027.", "MSR"],
+    ["A version appeared as MSR'27 work.", "MSR"],
+    ["Submitted to MSR~2027.", "MSR"],
+  ])("🔴 reported: «%s»", (text, name) => {
+    const fs = under(text);
+    expect(fs.map((f) => f.message)).toEqual([
+      expect.stringMatching(
+        new RegExp(`^«${name}» names MSR, and this paper extends AIDC`),
+      ),
+    ]);
+    expect(fs[0]?.line).toBe(4);
+  });
+
+  it("under msr itself, its own name with a year is never a leftover", () => {
+    const tex = paper(
+      "\\documentclass[10pt,conference]{IEEEtran}",
+      "First written for MSR 2027.",
+    );
+    expect(
+      leftovers(lint(tex, { extends: "paperlint:msr", kind: "technical" })),
+    ).toEqual([]);
+  });
+});
+
 describe("tex/venue-leftover — a URL is not text, a definition body is", () => {
   it("\\href: a name in the URL is not reported, a name in the link text is", () => {
     const inUrl = aidcPaper(

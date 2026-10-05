@@ -57,10 +57,23 @@ No rule options. It reads every shipped preset's `name` and `aliases`, collected
 A name the paper's own chain also declares (two workshops of one parent conference) is never
 reported.
 
+```jsonc
+"mentions": "with-year"
+```
+
+A venue whose name is also a common acronym counts only with a year beside the name: under
+`paperlint:msr`, «First written for MSR 2027.», «MSR'27» and «MSR~2027» are reported, and
+«Manual Speech Recognition (MSR)», «Microsoft Research (MSR)» or «MSR, in 2027» are not. Any
+whole-word use counted for MSR at first, and an accepted ACSAC paper that defines «MSR» for itself
+drew six warnings. Per preset, not hard-coded: a name that only a venue uses (`AgenticDev`) stays
+reported with or without a year.
+
 ## What it does not check
 
 - A venue no shipped preset describes.
 - A name split by markup (`\textbf{AI}Sec`).
+- A `with-year` venue named without a year («submitted to MSR»): the rule cannot tell it from the
+  acronym.
 
 ## How to fix
 

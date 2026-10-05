@@ -55,7 +55,6 @@ the count is not yet classified.
 | barovox-acsac24 | `tex/claim-provenance` | 28 | sampled | percentages in the evaluation and discussion («81.38%», «90.51%» in `Chapters/08_Discussion.tex`) |
 | rr-dataset-quality-acsac24 | `tex/claim-provenance` | 15 | sampled | percentages in the results («31.3%», «17%» in `Result.tex`) and one in the related work («60%») |
 | leaking-queries-acsac25 | `tex/claim-provenance` | 25 | sampled | percentages in the experiments and the appendix («86%», «90%», «72%») |
-| barovox-acsac24 | `tex/venue-leftover` | 6 | known | «MSR» is the paper's own acronym — «Manual Speech Recognition (MSR)» in `Chapters/07_Evaluation.tex`, and in the introduction — and since 2026-10-05 the `name` of the shipped `msr` preset, which the rule matches as a whole word. A three-letter venue name collides with acronyms a paper defines; the rule does not yet skip a name the paper defines as its own (`Expansion (MSR)`) |
 | leaking-queries-acsac25 | `paper/section-word` | 1 | real | `\S\ref{subsec:results}` in `sections_full_version/discussion.tex`, where IEEE style writes «Section» |
 
 One limit the corpus shows and no count records:

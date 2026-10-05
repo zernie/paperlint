@@ -106,6 +106,11 @@ export interface Preset {
   readonly aliases: readonly string[];
   /** Whether the venue reviews double-blind (`anonymity/identity`); false when no file of the chain says. */
   readonly blind: boolean;
+  /**
+   * When the venue's names count as a mention in a paper's text (`tex/venue-leftover`): `any`
+   * whole-word use, or `with-year` beside it; `any` when no file of the chain says.
+   */
+  readonly mentions: "any" | "with-year";
   readonly requiredSections: readonly RequiredSection[];
   readonly tex: TexRequirements;
   readonly format: VenueFormat;
@@ -279,6 +284,7 @@ const NOTHING_MERGED: Merging = {
   template: null,
   aliases: [],
   blind: false,
+  mentions: "any",
   requiredSections: [],
   tex: NO_REQUIREMENTS,
   format: NO_FORMAT,
@@ -301,6 +307,7 @@ const mergeOne = (
       : { text: p.template, file, forbids: p.templateForbids },
   aliases: [...new Set([...acc.aliases, ...namesOf(p.identity), ...p.aliases])],
   blind: p.blind ?? acc.blind,
+  mentions: p.mentions ?? acc.mentions,
   requiredSections: p.requiredSections ?? acc.requiredSections,
   tex: p.tex ? mergeRequirements(acc.tex, p.tex) : acc.tex,
   format: mergeFormat(acc.format, p.format),
@@ -374,17 +381,21 @@ export function resolveShipped(deps: PresetDeps): readonly Preset[] {
 }
 
 /** A shipped venue as a name knows it, and the files of its chain: what tells it from a paper's own. */
-export type ShippedVenue = Pick<Preset, "label" | "aliases" | "chain">;
+export type ShippedVenue = Pick<
+  Preset,
+  "label" | "aliases" | "chain" | "mentions"
+>;
 
 /**
  * A resolved preset as a name knows it: its label, its aliases, its chain. Pure. (Not Remeda's
  * `pick`: the app layer may not import it — `boundaries/dependencies`, `APP_EXTERNALS`.)
  */
-export const venueOf = ({ label, aliases, chain }: Preset): ShippedVenue => ({
+export const venueOf = ({
   label,
   aliases,
   chain,
-});
+  mentions,
+}: Preset): ShippedVenue => ({ label, aliases, chain, mentions });
 
 /**
  * THE ONE SOURCE OF VENUE NAMES: every shipped venue's label and `aliases` (with each `name` along

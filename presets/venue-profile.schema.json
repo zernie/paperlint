@@ -57,6 +57,11 @@
         "minLength": 1
       }
     },
+    "mentions": {
+      "description": "When the venue's `name` and `aliases` count as naming it in a paper's text (`tex/venue-leftover`). Absent: any whole-word use. `with-year`: only with a year beside the name — `MSR 2027`, `MSR'27`, `MSR~2027` — for a name that is also a common acronym (MSR: Microsoft Research, or an acronym a paper defines), where a bare use names something else far more often than the venue. A child's value replaces its parent's.",
+      "type": "string",
+      "enum": ["with-year"]
+    },
     "portal": {
       "description": "Where the venue takes submissions, read by `paperlint submission`: the portal's kind (an adapter exists for `hotcrp`) and the site's base URL, the one its pages and `/api/` hang off. A paper says which submission is its own with `submission: { id }` in its paperlint.json. A child's value replaces its parent's.",
       "type": "object",

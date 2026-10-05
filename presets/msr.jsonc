@@ -34,8 +34,12 @@
   // token — the HotCRP API, there.
   "portal": { "kind": "hotcrp", "url": "https://msr2027.hotcrp.com" },
 
-  // What the venue is called in a paper's text (tex/venue-leftover).
+  // What the venue is called in a paper's text (tex/venue-leftover) — and only beside a year
+  // («MSR 2027», «MSR'27»): «MSR» is also Microsoft Research, and an acronym papers define for
+  // themselves («Manual Speech Recognition (MSR)», in an accepted ACSAC paper of
+  // fixtures/accepted-papers/, warned six times when any whole word counted).
   "aliases": ["MSR"],
+  "mentions": "with-year",
 
   // The class line the call names, with the two options it forbids (tex/template). The family's
   // `[conference]` text block (7.14 x 9.30 in) is the one this line builds, so no `format` override.
