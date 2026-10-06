@@ -30,6 +30,10 @@ it("the body's prose, a blank line between passages, includes spliced; the pream
     // A citation stands as `[1]`, where it is set; a heading — here an included one — ends a passage.
     body: "We measure it [1].\n\nA second paragraph\n\nends here.",
     headings: ["Introduction", "Method"],
+    files: [
+      { file: "paper.tex", text: SRC },
+      { file: "body.tex", text: "\\subsection{Method}\nends here." },
+    ],
   });
 });
 

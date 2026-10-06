@@ -39,7 +39,7 @@ const tex = (body: string): string =>
 
 writeTree(root, {
   "p/paper.tex": tex(
-    "\\section{Introduction}\nIn this paper we present a linter. It might possibly help.",
+    "\\section{Introduction}\nIn this paper we present a linter. It might possibly help.\n\\input{figures/fig1}\n\\input{figures/fig2}\n\\input{figures/fig4}",
   ),
   "p/figures/fig1.tex": `\\begin{figure}\\caption{\\textbf{Big.} ${LONG_CAPTION_SENTENCE}. ${"More words here. ".repeat(20)}}\\end{figure}`,
   // Empty once LaTeX commands and braces are stripped: skipped, not counted as a zero-word caption.
@@ -48,6 +48,11 @@ writeTree(root, {
   "p/figures/fig4.tex": "\\caption{{#}}",
   "p/figures/notes.txt": "not a figure",
   "clean/paper.tex": tex("Short and plain. Nothing else."),
+  // Captions in the paper itself and in a section it includes — not under figures/.
+  "inline/paper.tex": tex(
+    `Prose here. \\begin{figure}\\caption{${LONG_CAPTION_SENTENCE}.}\\end{figure}\n\\input{sec/results}`,
+  ),
+  "inline/sec/results.tex": `\\begin{figure}\\caption{${"Short words here. ".repeat(40)}}\\end{figure}`,
   "ends-on-marks/paper.tex": tex(
     "The method holds on every input~\\cite{knuth}. The proof is given in full (Section~\\ref{proof}). The result is new.",
   ),
@@ -174,4 +179,54 @@ test("🔴 in a paper.tex, a sentence ending on a citation or a cross-reference 
     r.stdout,
     /^FLAG sentences ending on a cross-ref\/citation\/hedge \(wasted stress position\): 2$/m,
   );
+});
+
+test("🔴 --flags-only reads the captions of the paper.tex and of the files it includes", () => {
+  const r = runNode(SCRIPT, [
+    "--flags-only",
+    join(root, "inline", "paper.tex"),
+  ]);
+  // Guards: captions were read only from figures/*.tex beside the paper, so a caption set inline,
+  // or in an included section, was never checked and the run exited clean.
+  assert.deepEqual(
+    {
+      status: r.status,
+      stdout: r.stdout,
+      flagged: r.stderr
+        .split("\n")
+        .filter((l) => l.startsWith("   "))
+        .map((l) => l.split(":")[0]),
+    },
+    {
+      status: 1,
+      stdout: "",
+      flagged: [
+        "   paper.tex",
+        "   sec/results.tex",
+        "   run prose-lint.mjs on the file without --flags-only for the sentences",
+      ],
+    },
+  );
+});
+
+test("--flags-only on a rendered page reads the captions in figures/*.tex beside it", () => {
+  writeTree(root, {
+    "rendered/page.txt": "A rendered page. Its prose is fine.\n",
+    "rendered/figures/f.tex": `\\caption{${LONG_CAPTION_SENTENCE}.}`,
+    "rendered/figures/notes.txt": "not a figure",
+  });
+  const r = runNode(SCRIPT, [
+    "--flags-only",
+    join(root, "rendered", "page.txt"),
+  ]);
+  assert.deepEqual(
+    { status: r.status, first: r.stderr.split("\n")[1]?.split(":")[0] },
+    { status: 1, first: "   figures/f.tex" },
+  );
+  // …and a page with no figures/ beside it has no caption to flag.
+  assert.deepEqual(runNode(SCRIPT, ["--flags-only", join(root, "page.txt")]), {
+    status: 0,
+    stdout: "",
+    stderr: "",
+  });
 });

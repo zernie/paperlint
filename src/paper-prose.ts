@@ -28,10 +28,15 @@ const rendered = (raw: string): string =>
     .replace(/\s+/gu, " ")
     .trim();
 
-/** A paper's body prose, one passage per paragraph, and its section titles in document order. */
+/**
+ * A paper's body prose, one passage per paragraph, its section titles in document order, and the
+ * text of each file it is made of — `paper.tex` and every file it includes, once, named as the
+ * include names it — for what the body leaves out, such as captions.
+ */
 export interface PaperProse {
   readonly body: string;
   readonly headings: readonly string[];
+  readonly files: readonly { readonly file: string; readonly text: string }[];
 }
 
 /** The prose and the headings of the paper whose main file is `filename` with the text `src`. */
@@ -40,7 +45,7 @@ export function paperProse(
   src: string,
   deps: PaperDeps,
 ): PaperProse {
-  const { text } = readPaper(filename, src, deps);
+  const { text, segments } = readPaper(filename, src, deps);
   const passages = deps.latex
     .bodyProse(text)
     .map((p) =>
@@ -55,5 +60,8 @@ export function paperProse(
       .headings(text)
       .filter((h) => h.command.kind === "heading" && h.argument === "title")
       .map((h) => runText(h.title).replace(/\s+/g, " ").trim()),
+    files: [...new Map(segments.map((s) => [s.file, s.source])).entries()].map(
+      ([file, text]) => ({ file, text }),
+    ),
   };
 }

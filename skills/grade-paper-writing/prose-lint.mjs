@@ -15,7 +15,8 @@
  *
  * A `.txt` is the text of the rendered PDF — the page a reviewer actually reads.
  *
- * The figure captions in `figures/*.tex` beside the paper are measured too (`--flags-only`).
+ * The figure captions are measured too (`--flags-only`): every `\caption{}` in `paper.tex` and the
+ * files it includes, or, beside a rendered page, in `figures/*.tex`.
  *
  * Advisory: it prints findings; `--flags-only` exits with code 1 if anything was found.
  */
@@ -52,8 +53,8 @@ const THRESHOLDS = {
     src: 'ours. "rather than" is an ordinary connective; a pile of them is a register problem, but it is NOT the construction Boggia measured and must not borrow that baseline.',
   },
 
-  // 🔴 FIGURE CAPTIONS ARE PROSE THAT NOTHING WAS READING. They live in figures/*.tex, outside the
-  // body the other metrics read, so every writing pass and every persona read was blind to them by
+  // 🔴 FIGURE CAPTIONS ARE PROSE THAT NOTHING WAS READING. They sit in floats, outside the body
+  // the other metrics read, so every writing pass and every persona read was blind to them by
   // construction. Found 2026-08-05 when a reader hit a 136-word caption
   // containing a 54-word sentence — one word under the limit that would have blocked the same
   // sentence had it been typed into the paper. An entire text surface, unchecked.
@@ -341,18 +342,25 @@ function analyse(text, sents) {
   };
 }
 
-/** Captions from figures/*.tex beside the paper — the text surface nothing was reading. */
-function captions(paperPath, fs, path) {
-  const dir = path.join(path.dirname(paperPath), "figures");
+/** The `.tex` files of `figures/` beside a rendered page, each as `{ file, text }`. */
+function figureFiles(pagePath, fs, path) {
+  const dir = path.join(path.dirname(pagePath), "figures");
   let files; // no initialiser: the catch branch returns, only try assigns (2026-08-28)
   try {
     files = fs.readdirSync(dir).filter((f) => f.endsWith(".tex"));
   } catch {
     return [];
   }
+  return files.map((f) => ({
+    file: `figures/${f}`,
+    text: fs.readFileSync(path.join(dir, f), "utf8"),
+  }));
+}
+
+/** Every `\caption{…}` of `sources` (`{ file, text }`), measured. */
+function captions(sources) {
   const out = [];
-  for (const f of files) {
-    const s = fs.readFileSync(path.join(dir, f), "utf8");
+  for (const { file: f, text: s } of sources) {
     for (const m of s.matchAll(/\\caption\{/g)) {
       let i = m.index + m[0].length,
         depth = 1,
@@ -478,14 +486,16 @@ for (const f of args.filter((a) => !a.startsWith("--"))) {
   const r = analyse(text, sentences);
   if (flagsOnly) {
     const lines = [];
-    for (const c of captions(f, fs, path)) {
+    // A paper's captions are in its own files — paper.tex and what it includes, wherever a figure
+    // is set; a rendered page has the `.tex` of `figures/` beside it.
+    for (const c of captions(tex ? tex.files : figureFiles(f, fs, path))) {
       if (c.longest > THRESHOLDS.captionSentenceWords.warn)
         lines.push(
-          `   figures/${c.file}: caption sentence of ${c.longest} words (warn >${THRESHOLDS.captionSentenceWords.warn}) — "${c.longestSentence.slice(0, 110)}…"`,
+          `   ${c.file}: caption sentence of ${c.longest} words (warn >${THRESHOLDS.captionSentenceWords.warn}) — "${c.longestSentence.slice(0, 110)}…"`,
         );
       if (c.words > THRESHOLDS.captionWords.warn)
         lines.push(
-          `   figures/${c.file}: caption is ${c.words} words (warn >${THRESHOLDS.captionWords.warn}) — a caption this long is a section under a picture`,
+          `   ${c.file}: caption is ${c.words} words (warn >${THRESHOLDS.captionWords.warn}) — a caption this long is a section under a picture`,
         );
     }
     if (lines.length) {
