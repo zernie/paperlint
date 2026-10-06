@@ -6,13 +6,27 @@
  * bibliography into that count (8127 "words" against about 4636 real ones on one paper), so every
  * rate comes out roughly halved. This reads the paper the way the `tex/register` rule does: the
  * includes spliced in (`readPaper`), then the body's prose as passages (`bodyProse` — the abstract
- * to the back matter, without headings, captions, floats or code), each passage's sentences as the
- * reader sees them (`bodySentences` — citations and math left out). A blank line separates two
- * passages, so no sentence runs across them.
+ * to the back matter, without headings, captions, floats or code), each passage's sentences
+ * (`bodySentences`). A blank line separates two passages, so no sentence runs across them.
+ *
+ * A citation stands as `[1]` and a cross-reference as `1`, where they are set — not left out:
+ * prose-lint judges a sentence that ENDS on one (a wasted stress position) and counts references
+ * to other parts of the paper (`(Section 1)`), and both are invisible in a sentence the marks
+ * were cut out of. Math is left out; prose-lint counts no formula.
  */
 import { bodySentences } from "./domain/register.ts";
+import { CITATION, MATH, REFERENCE } from "./domain/sentences.ts";
 import { runText } from "./domain/tex-document.ts";
 import { readPaper, type PaperDeps } from "./tex-paper.ts";
+
+/** A sentence's text with each mark as a reader would see it set, and math left out. */
+const rendered = (raw: string): string =>
+  raw
+    .replaceAll(CITATION, "[1]")
+    .replaceAll(REFERENCE, "1")
+    .replaceAll(MATH, "")
+    .replace(/\s+/gu, " ")
+    .trim();
 
 /** A paper's body prose, one passage per paragraph, and its section titles in document order. */
 export interface PaperProse {
@@ -31,7 +45,7 @@ export function paperProse(
     .bodyProse(text)
     .map((p) =>
       bodySentences([p])
-        .map((s) => s.text)
+        .map((s) => rendered(s.raw))
         .join(" "),
     )
     .filter((p) => p !== "");

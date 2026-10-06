@@ -48,6 +48,9 @@ writeTree(root, {
   "p/figures/fig4.tex": "\\caption{{#}}",
   "p/figures/notes.txt": "not a figure",
   "clean/paper.tex": tex("Short and plain. Nothing else."),
+  "ends-on-marks/paper.tex": tex(
+    "The method holds on every input~\\cite{knuth}. The proof is given in full (Section~\\ref{proof}). The result is new.",
+  ),
   "empty/paper.tex": "\\documentclass{article}",
   "page.txt":
     "A rendered page. It was hyphen-\nated across a line.\n\n12\n\fNext page text here.\nReferences\n[1] cut here.\n",
@@ -162,4 +165,13 @@ test("a rendered page with no sentence before its references is refused the same
     stdout: "",
     stderr: `prose-lint: ${file} has no prose to measure — no sentence is left before the references.\n`,
   });
+});
+
+test("🔴 in a paper.tex, a sentence ending on a citation or a cross-reference wastes its stress position", () => {
+  const r = runNode(SCRIPT, [join(root, "ends-on-marks", "paper.tex")]);
+  // Guards: the marks used to be dropped from the prose, so neither ending could be seen.
+  assert.match(
+    r.stdout,
+    /^FLAG sentences ending on a cross-ref\/citation\/hedge \(wasted stress position\): 2$/m,
+  );
 });

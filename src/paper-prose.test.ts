@@ -27,8 +27,19 @@ it("the body's prose, a blank line between passages, includes spliced; the pream
   expect(
     paperProse("/p/paper.tex", SRC, { files, latex: latexReader }),
   ).toEqual({
-    // A citation mark leaves its space; a heading — here an included one — ends a passage.
-    body: "We measure it .\n\nA second paragraph\n\nends here.",
+    // A citation stands as `[1]`, where it is set; a heading — here an included one — ends a passage.
+    body: "We measure it [1].\n\nA second paragraph\n\nends here.",
     headings: ["Introduction", "Method"],
   });
+});
+
+it("a citation stands as `[1]` and a cross-reference as `1`, so the sentence still ends on them", () => {
+  const src =
+    "\\documentclass{article}\n\\begin{document}\nIt holds~\\cite{a}. It is shown (Section~\\ref{s}).\n\\end{document}\n";
+  expect(
+    paperProse("/p/paper.tex", src, {
+      files: memoryFiles({ "/p/paper.tex": src }),
+      latex: latexReader,
+    }).body,
+  ).toBe("It holds [1]. It is shown (Section 1).");
 });
