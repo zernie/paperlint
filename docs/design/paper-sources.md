@@ -1282,10 +1282,12 @@ PRs 2–5. Where the build differs from §3 and §7.2, and why:
    redefinition OF `\bibliography` (the accepted ACM paper's `\let` and `\renewcommand`) declares
    nothing.
 5. **bibtex's own reading, measured with bibtex 0.99d:** an entry behind `%` is read; `@comment` is
-   skipped as a word, so an entry inside its braces is read; an unclosed entry is not. A `%` at the
-   start of each line inside an entry does not drop the record (as `check-render.sh` says) — the
-   entry is printed and its fields after the `%` are lost (`to sort, need author or key in
-dead2020`). §7.2(4)'s finding is `bib/commented-entry` (warn).
+   skipped as a word, so an entry inside its braces is read. An entry left open is read with what it
+   has, and the next `@` at brace depth 0 starts the next entry; an `@` inside a field is text (§9 —
+   this item first said an unclosed entry is not read, which the second refutation showed wrong). A
+   `%` at the start of each line inside an entry does not drop the record (as `check-render.sh`
+   says): the entry is printed and its fields after the `%` are lost (`to sort, need author or key
+in dead2020`). §7.2(4)'s finding is `bib/commented-entry` (warn).
 6. **An entry in a `.bib` file is reported at its declaration.** §5 step 5 says `bib/reachable-entry`
    "reports in the file that holds the entry"; ESLint lints `paper.tex`, not the `.bib`. A finding
    about such an entry is reported at the `\bibliography` naming it, with `refs.bib:12:1:` in front
@@ -1297,8 +1299,10 @@ dead2020`). §7.2(4)'s finding is `bib/commented-entry` (warn).
    is used only by `paper-typography`'s `skippedRanges`, which PR 2 replaces.
 8. **Each rule reads the paper again, so the parse is memoised.** Measured on the accepted ACM paper:
    0.9 s per `paperSources`, seven calls per lint (four reference rules, three `bib` rules). The latex
-   adapter keeps the last 64 parse trees by source text (`parseLatex`); after the first parse a call
-   costs 30–40 ms.
+   adapter keeps parse trees by source text, least recently used first out, up to 512 KiB of source
+   (`parseLatex`); after the first parse a call costs 30–130 ms. (It first kept 64 trees, which in
+   an editor held 64 versions of the same file — §9, finding 5; then 8, which thrashed on a paper
+   with ten includes.)
 9. **`references.json` schema 2 has `bib.sources`, a list** — a paper may declare several databases.
    A schema-1 record reads as no record (`paper/refs-checked` warns until the next build), not as
    `stale` as §5 says.
@@ -1311,6 +1315,459 @@ dead2020`). §7.2(4)'s finding is `bib/commented-entry` (warn).
     `howpublished = {\url{…}}`, which the rule did not count; it does now.
 11. **Not moved here**: Q2 site #10 (the nudge's `[overwrite]` sentence) and #11 (`.bib` in the edit
     guard) are hooks, PR 3; #29 (`bibInput`'s path guess) is the build, PR 4.
+
+## 9. Second independent refutation (of PR 1 at `b8c92c9`)
+
+A second independent agent, framed to break the claim that `paperSources` names exactly the
+databases TeX reads, reviewed PR 1 with pdfTeX 1.40.25 and BibTeX 0.99d. Its report follows
+**verbatim**. The only edits: its title line is dropped, and its headings are one level deeper so they
+nest here. §9.2 is the author's response.
+
+### 9.1 The report
+
+Target claim: "for any paper, `paperSources(dir)` names exactly the bibliography database(s) TeX/bibtex
+actually reads, decided from committed bytes; every consumer (build references step,
+extract-ref-facts, bib-authors, reference rules, bib/reachable-entry) uses it;
+`bib/filecontents-overwrite` (error, autofix) and `bib/commented-entry` (warn) are correct and silent
+on the 6 accepted corpus papers."
+
+Ground truth: pdfTeX 3.141592653-2.6-1.40.25 + BibTeX 0.99d (TeX Live 2023/Debian), `pdflatex -recorder`,
+then `bibtex`, reading `.aux` (`\bibdata`), `.fls`, `.log`, `.blg` and the keys in `.bbl`. No biber in
+the container, so nothing below about biber is measured. The worktree was not modified (`git status`
+clean at the end); all experiments ran on copies in a scratch directory.
+
+### Verdict: DOES NOT HOLD (as stated)
+
+The universal claim fails on reproducible inputs, and one of §8's bibtex measurements is wrong:
+
+- bibtex **does** read an unclosed entry, and every entry after it. The module's scanner drops all
+  of them, so `bib/reachable-entry` and `bib/commented-entry` go silent for the rest of the file
+  (finding 1). The PR's own test string, run through bibtex, contradicts the test's assertion.
+- `\bibliography{\jobname}` with a `filecontents{\jobname.bib}` block is reported as `none`. Every
+  consumer then says "no bibliography", which is the silent pass the design was written to remove
+  (finding 2).
+- The guarantee `bib/filecontents-overwrite` is meant to give ("with it, `shadowed` never arises")
+  does not cover a block in an `\input` file. The module reads such blocks; the rule only looks at
+  `paper.tex` (finding 3).
+- The autofix is idempotent and inserts bytes only. On the next build, though, it overwrites a
+  committed or untracked hand-maintained `.bib`, and the paper then compiles differently
+  (finding 4).
+
+None of these needs a redesign. The committed-bytes decision, the `[overwrite]` rule and the parse
+memo are sound on the corpus. With findings 1–4 fixed (and 5–6, which are cheap), I would expect
+**HOLDS WITH CAVEATS**: the notes in 7–17 are scope limits to write down, not defects to block on.
+
+### Harness used for every TeX comparison
+
+`tex.sh <dir>` builds a copy in place:
+
+```bash
+cd "$1" && pdflatex -recorder -interaction=nonstopmode paper.tex >/dev/null 2>&1
+bibtex paper >/dev/null 2>&1
+grep -o '\\bibdata{[^}]*}' paper.aux; grep -E '\.bib$' paper.fls | sort -u
+grep -E 'Writing file|already exists' paper.log
+grep -E 'Database file|couldn.t open|Illegal|Warning--|skipping' paper.blg
+grep -o '\\bibitem\(\[[^]]*\]\)\?{[^}]*}' paper.bbl | sed 's/.*{//;s/}//'   # TeX's keys
+```
+
+`probe.ts <dir>` (run with `node`, Node 22 strips types) prints the module's answer. It calls
+`paperSources(dir, {files: nodeFiles, latex: latexReader, committed: gitCommitted(spawnProcess(),
+process.env)})`, then prints `bibliography.kind`, and for each `databasesOf(...)` its kind and name,
+plus `texReads(db)` with the path and entry keys (`(%)` marks an entry with `percent`).
+
+Each case runs the probe on the pristine directory, then `tex.sh` on a copy. Cases with
+`\nocite{*}` make TeX print every entry it read. Lint runs are
+`node <worktree>/src/cli.ts lint .` from the paper directory.
+
+### Findings
+
+#### 1. bibtex reads an unclosed entry and everything after it; the module reads nothing after it — should-fix (and the §8.5 claim is wrong)
+
+§8.5 / `src/adapters/latex/bibtex.ts:11` say "an entry that is never closed is not read". The test
+`bibliography.test.ts:117` asserts `entries("@misc{a,}\n@misc{open, title={x}\n") → ["a"]`.
+
+Reproduction: the test's own string as `refs.bib`, with `paper.tex` =
+`\documentclass{article}\begin{document}\nocite{*}\bibliographystyle{plain}\bibliography{refs}\end{document}`.
+
+| case                                                                           | TeX `.bbl` keys       | module `texReads` keys |
+| ------------------------------------------------------------------------------ | --------------------- | ---------------------- |
+| the test's string (`.blg`: `Illegal end of database file`)                     | `a, open`             | `a`                    |
+| `a1` closed; `a2unclosed` missing its final `}`; `a3`, `a4` after a blank line | `a1,a4,a3,a2unclosed` | `a1`                   |
+| same, but the open brace is in a field: `title={Two {Unbalanced}, …}`          | `a2brace,a1,a4,a3`    | `a1`                   |
+
+bibtex reports "I'm skipping whatever remains of this entry". It keeps the entry with the fields it
+had read, and resynchronises at the next `@`. The module's scanner (`bibEntries`) instead stays
+inside the open entry until end of file.
+
+Effect, through the CLI. In this `refs.bib`, `a3` has no url and `a4` sits behind `%`:
+
+```
+@misc{a1, title={A}, author={A, B}, year={2020}, url={https://e.org/a1}}
+@misc{a2unclosed, title={Two}, author={A, B}, year={2020}, url={https://e.org/a2}
+
+@misc{a3, title={Three}, author={A, B}, year={2020}}
+% @misc{a4, title={Four}, author={A, B}, year={2020}}
+```
+
+`paperlint lint` prints 1 problem, `paper/refs-checked`. It gives no `bib/reachable-entry` for `a3`
+and no `bib/commented-entry` for `a4`. TeX prints `a4, a3, a2unclosed`. A malformed `.bib` is the
+moment these rules matter most, and it is where they go silent.
+
+`extract-ref-facts` (the `@retorquere/bibtex-parser` path) recovers on its own and reads
+`a1,a2unclosed,a3,a4` here. It still loses a `%`-prefixed entry that the scanner never reached,
+because `bibtexView` blanks only the `%` signs the scanner found. In note 16's mixed file, `k6pct` is
+lost this way, so the readers still disagree.
+
+Fix: on an `@` inside an open entry at depth 0, or on any `@` at the start of a line, close the
+entry the way bibtex does and start the next one. The existing test needs to flip.
+
+#### 2. A declaration whose argument is a macro is `none`, not `undecided`: the `\jobname` idiom reads as "no bibliography" — should-fix
+
+Reproduction:
+
+```latex
+\documentclass{article}
+\begin{filecontents*}[overwrite]{\jobname.bib}
+@misc{jkey, title={J}, author={Doe, J}, year={2024}}
+% @misc{jdead, title={D}, author={Doe, J}, year={2020}}
+\end{filecontents*}
+\begin{document}
+Text~\cite{jkey}.
+\bibliographystyle{plain}\bibliography{\jobname}
+\end{document}
+```
+
+- **TeX:** `\bibdata{paper}`, `.fls: OUTPUT paper.bib`, `Database file #1: paper.bib`, `.bbl: jkey`.
+- **Module:** `none`. `namesOf` (`bibliography.ts:100-110`) returns null for any argument holding a
+  macro. That was meant for `\bibliography{#1}` inside a redefinition, but it also drops `\jobname`
+  and `\bibliography{\bibfile}`.
+- **Consumers:** `extract-ref-facts` answers `"paper.tex declares no bibliography (no
+\bibliography, no \addbibresource)"`, which is false. The references step answers
+  `"no bibliography — nothing to check"`. Lint reports nothing about `jkey` (no url) or `jdead`
+  (behind `%`), and no `refs-checked` warning. Before `--fix` the only finding is
+  `bib/filecontents-overwrite`.
+
+`\jobname.bib` is the standard idiom in biblatex/natbib minimal examples. Fix: a declaration with
+a non-literal argument goes to `undecided`, or a new `unresolved` state that consumers must surface.
+Resolve `\jobname` → `paper` outright, since the main file is fixed as `paper.tex`.
+
+#### 3. `bib/filecontents-overwrite` does not see blocks in included files; the module reads them — should-fix
+
+§7.2(1) says that with the rule, "the `shadowed` state never arises". The module collects blocks from
+`paper.tex` and every own include (`sourcesOf` → `decideBibliography`). The rule reads only
+`deps.latex.filecontents(raw)` of `paper.tex` (`bib-rules.ts:333`), and `isMain` returns early for any
+other file.
+
+Reproduction, in a git repo:
+
+- `paper.tex`:
+  `\documentclass{article}\input{bibblock}\begin{document}Text~\cite{fresh}.\bibliographystyle{plain}\bibliography{refs}\end{document}`
+- `bibblock.tex`, committed: `\begin{filecontents*}{refs.bib}` … `@misc{fresh,…}` … `\end{filecontents*}`,
+  with no `[overwrite]`.
+- `.gitignore` lists `refs.bib`, and a `refs.bib` from an earlier build holds `@misc{stale,…}`.
+
+What each side says:
+
+- **Module:** `embedded:refs [block ow=false]`, reading `bibblock.tex`, keys `fresh`.
+- **TeX:** `.log` says `File 'refs.bib' already exists on the system`; `.fls` shows `INPUT ./refs.bib`;
+  the `.blg` warns `I didn't find a database entry for "fresh"`; the `.bbl` is empty.
+- **Lint:** 2 warnings (`refs-checked`, and `reachable-entry` on `bibblock.tex:2:1: fresh`), and **no
+  `bib/filecontents-overwrite`**.
+
+The module and every consumer read `fresh`. This machine's PDF has no reference, and nothing in the
+static lint says why.
+
+Fix: run the rule over the blocks of every own include. Report them the way `reachable-entry` already
+reports into other files, at the include, with `file:line:` in front. Or have the rule walk
+`PaperSources.includes`.
+
+#### 4. The autofix is byte-safe and idempotent, but after the next build it overwrites a committed or hand-maintained `.bib` — should-fix
+
+Byte behaviour (git repo, three blocks, then `lint --fix` twice):
+
+```
+< \begin{filecontents*}{refs.bib}            > \begin{filecontents*}[overwrite]{refs.bib}
+< \begin{filecontents} [noheader] {other.bib} > \begin{filecontents} [overwrite,noheader] {other.bib}
+< \begin{filecontents}[]{third.bib}          > \begin{filecontents}[overwrite,]{third.bib}
+second --fix: no diff (idempotent). `[overwrite,]` compiles; LaTeX writes the file.
+```
+
+That part holds. The problem is what the fix makes the next build do.
+
+- **(a) Committed `.bib` (the `shadowed` message case).** `refs.bib` is committed and holds `real1`
+  and `real2`. A stale block in `paper.tex` holds `oldblock`. The paper cites `real1`. Before the
+  fix, TeX reads `refs.bib` and `real1` resolves. Then `lint --fix` and one build: `.fls` shows
+  `OUTPUT refs.bib`, the `.blg` warns `I didn't find a database entry for "real1"`, and `git status`
+  shows ` M refs.bib`. The committed file is overwritten with the stale block, and the PDF changes.
+  The fix chose the block, while the conflict message itself says the two disagree and the author
+  may have meant the file.
+- **(b) Untracked hand-maintained `.bib` (the `noOverwrite` message case).** `refs.bib` is
+  untracked; it is, say, a fresh export from a reference manager holding `zotero1`, the key the
+  paper cites. Its sha256 was `36f547ec…` before. After `lint --fix` and one build it is
+  `954d09d0…`, and its contents are now `oldblock`. **Unrecoverable:** git never had the file.
+
+ESLint's guidance is that an autofix must not change what the code does. This one changes which
+bibliography is typeset and can delete data on the next build.
+
+Fix: make it an autofix only when no file of that name exists, or when the existing file equals the
+block (`sameEntries`). Otherwise use `hasSuggestions` with two suggestions: "add `[overwrite]` (the
+block wins)" and "delete the block (the file wins)".
+
+#### 5. The parse memo holds up to 63 old versions of `paper.tex` in an editor session: 186 MiB for a 48 KiB paper — should-fix (cheap)
+
+The cache key is correct: the full source text, so any edit is a miss. Correctness also held:
+`JSON.stringify(parseLatex(src).root)` was identical before and after calling every `LatexReader`
+method twice, on all 6 accepted papers and on `p1`. Each method returned identical results on the
+second call, and `parseLatex(src) === parseLatex(src)`. No consumer mutates the shared tree.
+
+But `parse.ts`'s comment says a long editor session "holds a paper's worth of trees, not every
+version". What it holds is up to 64 versions of the same file, because each keystroke is a new key:
+
+```
+node --expose-gc heap.ts agenticdev-acm26/paper.tex   → src 48 KiB; heap retained by 63 memoised edits: 186 MiB
+node --expose-gc heap.ts barovox-acsac24/paper.tex     → src 5 KiB;  …: 17 MiB
+```
+
+`heap.ts` runs `parseLatex(src + " ".repeat(i))` for i = 1..63, then measures heap after `gc()`.
+
+Timing does match §8.8: cold 0.49–0.88 s per `paperSources`, warm 30–130 ms. An edited buffer
+costs 110–400 ms, which is one reparse.
+
+Fix: a much smaller memo (e.g. 8 entries, LRU), or one keyed by path that keeps only the latest
+text.
+
+#### 6. An absolute path in `\bibliography` is `missing` — should-fix (one line)
+
+`\bibliography{<abs>/shared/lib,../shared/rel}`:
+
+- **TeX:** `Database file #1: <abs>/shared/lib.bib`, `#2: ../shared/rel.bib`; `.bbl: abskey,relkey`.
+- **Module:** `missing:<abs>/shared/lib`, `file:../shared/rel`.
+
+The cause is `bibDisk.bib` in `src/paper-sources.ts`, which uses `join(dir, name)`; join does not
+honour an absolute second argument. Use `resolve`. A personal global library at an absolute path is
+a common setup. With this bug the references step drops that database ("not on disk").
+
+### Notes: real divergences, scope to state rather than block on
+
+7. **Two `\bibliography` commands.** `\bibliography{one}` then `\bibliography{two}`. bibtex reads only
+   `one.bib` (`.blg`: `Illegal, another \bibdata command`, rc=2). The module reads both. A finding
+   for a second declaration would be cheap.
+8. **`\bibliography` after `\end{document}`.** TeX writes no `\bibdata`. The module reports
+   `file:refs`. Also, `\includeonly{body}` that excludes the file holding an `[overwrite]` block:
+   TeX writes nothing and bibtex fails with `couldn't open database file main.bib`, while the module
+   reports `embedded`. Q1 does not model `\includeonly` or `\endinput`.
+9. **`\ifthenelse{\boolean{anon}}{\bibliography{anon}}{\bibliography{real}}`.** TeX reads `anon.bib`
+   only. The module returns `databases` (certain) with both: `opensConditional` excludes
+   `ifthenelse` explicitly, and nothing else marks its arguments conditional. Consumers treat it like
+   `undecided` (they check both), but the state claims a certainty it lacks.
+10. **Two blocks writing `refs.bib`, the first without `[overwrite]`, the second with it.** TeX reads
+    the second (`second`). The module takes the first (`blocks.find`) and reads `first`. LaTeX's
+    rule is "last write wins once the file exists".
+11. **A block behind a false `\newif` switch, with `[overwrite]`, plus a committed `refs.bib`.** TeX
+    reads the file (`committed1`). The module returns `databases` / `conflict` with
+    `texReads = block` (`draftonly`). `undecided` is computed from declarations only; blocks behind a
+    switch are always counted live.
+12. **Unmodelled declarations.** `\nobibliography{refs}` (bibentry) writes `\bibdata{refs}` and bibtex
+    reads `refs.bib`, but the module returns `none`. `\addglobalbib`, `\addsectionbib`, multibib's
+    `\newcites` and bibunits' `\putbib` are also absent. biblatex with `backend=bibtex` and
+    `\addbibresource{refs}` (no extension) matched: TeX's `\bibdata{paper-blx,refs}`, module
+    `file:refs`. Whether biber accepts the extensionless name is not measured (no biber here).
+13. **kpathsea search.** `\bibliography{library}` with `library.bib` only under
+    `$TEXMFHOME/bibtex/bib/` and `BIBINPUTS` unset: bibtex reads it (`Database file #1: library.bib`,
+    key in the `.bbl`), and the module says `missing`. §8.3's reason ("bibtex reads `BIBINPUTS`,
+    which the build does not set") overlooks that kpathsea searches TEXMFHOME by default. The answer
+    is right for CI and wrong for a personal `~/texmf` library. Also, the `file` / `missing` state
+    reads the disk without asking `CommittedFiles`, so "decided from committed bytes" holds for
+    `conflict` only.
+14. **What the `CommittedFiles` port is ("index", not "commit") and when its answer flips.**
+    - A staged-but-uncommitted `.bib` counts as committed (`true` for a freshly `git add`ed file).
+    - A path whose directory is missing, such as outside a sparse cone, gets exit 128 and counts as
+      committed. That is harmless, because `disk.bib` is null first.
+    - Inside a git worktree it is correct.
+    - With `GIT_DIR=.git` in the environment (what a git hook sees at the repository root) and the
+      paper in a subdirectory, `git -C <paperdir>` resolves `.git` relative to the paper and exits
+      128 (`fatal: not a git repository: '.git'`). Every file then counts as committed, and the same
+      paper flips from `embedded` (reading the block) to `conflict` (reading the file). Reproduced.
+
+    Impact is low. The port only decides `conflict` vs `embedded`, and that changes `texReads` only
+    for a block without `[overwrite]`, which `bib/filecontents-overwrite` flags at `error` either
+    way. So the port changes a message and what is read before the author fixes the error.
+
+    Cost: about 5–10 ms per spawn, one spawn per `paperSources` call only when a block and a file
+    of the same name both exist. That is every built paper with a block: 7 spawns per lint, measured.
+    It is acceptable, but given the low impact, consider deleting the port and saying "a file of
+    that name exists" in the message instead.
+
+15. **The ESLint result cache.** The `bib` rules' output depends on files other than the linted one
+    (`.bib`, includes, git's index). `paperlint lint` passes no `--cache`, so it is fine there. But
+    a user running `eslint --cache` with the documented `buildConfig` gets stale results when only
+    `refs.bib` changes. The reference rules already have this property; it is worth one line in the
+    docs.
+16. **The readers still disagree on two shapes.** Mixed file
+    (`@comment{ @misc{k2inComment,…} }`, an unclosed `k4`, `% @misc{k6pct,…}`, and others):
+    - bibtex: `k1,k2inComment,k4unclosed,k5,k6pct,k7,k8paren,k9,k10`;
+    - module scanner: `k1,k2inComment` (finding 1);
+    - extract-ref-facts: `k1,k4unclosed,k5,k7,k8paren,k9,k10`. The parser drops the `@comment`-wrapped
+      entry that bibtex reads, and `k6pct` is lost because the scanner never reached it.
+
+    `bib-authors`' `parseBib` reads `@comment{ @misc{k2inComment,` as one entry with type `comment`
+    and key `@misc{k2inComment`. Also, `% see @misc{x,…}` (a `%` with text before the `@`) is an entry
+    to bibtex, but `percentBefore` returns null, so `bib/commented-entry` is silent and
+    `bibtexView` leaves the `%` in, so the parser drops it.
+
+17. **`paper-typography`'s `bibRange`** (`eslint-rules/paper-typography.ts:102`) is a non-global
+    regex: it skips only the first `.bib` block, and it matches a commented-out block. This is a Q3
+    site, scheduled for PR 2.
+
+### Attacks that failed (the claim held)
+
+- **Multi-database `\bibliography{a,b}`**, with `a` a file and `b` an `[overwrite]` block: TeX and the
+  module both read `a.bib` and `b.bib`, keys `akey`, `bkey`.
+- **Subdirectory `\bibliography{bib/refs}`** and **`\bibliography{refs.bib}`** (with extension), and
+  `../shared/rel`: they match.
+- **`\bibliography` inside `\iffalse`** and **inside a `comment` environment**: both sides say `none`.
+- **A `filecontents` name without `.bib` (`{refs}`)**: TeX writes `./refs` and bibtex cannot open
+  `refs.bib`; the module says `missing`. They match.
+- **A block in an `\input` file with a stale file**, outside git (every file counts as committed): the
+  module returns `conflict` → the file (`stale`), and TeX reads `stale`. They match. (Inside git,
+  finding 3 applies.)
+- **The legacy `\usepackage{filecontents}`**: no `[overwrite]` default in TeX Live 2023. TeX keeps the
+  existing file, and the module returns `conflict` → the file. They match.
+- **TeX's `filecontents` write** keeps UTF-8 byte for byte and turns a tab into a space. The built copy
+  equals the block under `sameEntries`, so an `[overwrite]` paper stays `embedded` after a build.
+- **The autofix bytes:** insert-only, idempotent, and `[ … ]` with spaces handled. `[]` becomes
+  `[overwrite,]`, which compiles.
+- **The parse memo's correctness:** the key is the full text, and the tree is not mutated (finding 5
+  is about memory only).
+- **The 6 accepted papers:** `bib/filecontents-overwrite` and `bib/commented-entry` are silent on all 6. `bib/reachable-entry` reports 92, 55, 11 and 75, as §8.10 says. The `leaking-queries` paper is
+  `none`, matching TeX: it has no `\bibdata`, because it uses `\@input{paper.bbl}`.
+- **§8.5, the other three bibtex claims, re-measured:**
+  - `% @misc{…}` is read (`dead2020`, `k6pct` in the `.bbl`);
+  - `@comment{ @misc{k2inComment,…} }` → the inner entry is read;
+  - `@Comment{k3text, …}` without an `@` inside is skipped;
+  - a `%` line inside an entry keeps the entry and drops the fields after it (`to sort, need author
+or key in k7`).
+- **Consumers.** I searched `src/`, `eslint-rules/`, `skills/`, `bin/`, `lib/`, `hooks/` and
+  `scripts/`, and every hit was checked.
+  - Nothing outside the module decides Q2, except the declared later-PR sites: the nudge hook (PR 3)
+    and `bibInput` (PR 4, which reads TeX's own `.aux`).
+  - These hits read the recorded `.blg` / `.bbl`, or only skip blocks (Q3): `check-render.sh`,
+    `check-numbers.sh`, `prose-lint.mjs`, `paper-prose.ts`, `latex-language.ts`.
+  - These take an explicit path: `verify-cites.mjs`, and `check-deanon.sh` (artifact scan).
+- **The PR's tests:** `vitest run` on `paper-sources`, `bib-rules`, `bibliography` and `git`:
+  61 tests passed. `e2e-tex paper-sources.e2e.ts`: 6 passed.
+
+### Where this review may be wrong
+
+- Every TeX measurement is one TeX Live (2023/Debian) with plain `bibtex`. Behaviour on bibtex8/bibtexu,
+  on biber, and on another LaTeX kernel date (the `filecontents` options) is not measured.
+- On findings 5 and 14, "should-fix" versus "note" is a judgement call. Neither changes what TeX
+  reads.
+- Finding 4(a) assumes the committed file is the one the author means. When the block is the
+  intended source, the fix is right, and that is why I suggest a suggestion and not a deleted fix.
+
+### 9.2 Response: each finding fixed with a test first, TeX as ground truth
+
+Every finding and note was first written as a failing test. Where TeX's answer was in question, the
+shape was added as a planted paper (`fixtures/paper-sources/v6`–`v16`) with its `tex-truth.json`
+recorded by `test/e2e/tex/paper-sources.e2e.ts`, and `src/paper-sources.test.ts` compares the
+module with that file. For an `undecided` bibliography it checks that TeX's choice is among the
+candidates.
+
+| paper                                           | TeX reads → `.bbl`                  | module before                           | module now                                    |
+| ----------------------------------------------- | ----------------------------------- | --------------------------------------- | --------------------------------------------- |
+| v6 unclosed entry                               | `refs.bib` → a1, a2unclosed, a3, a4 | a1 only                                 | a1, a2unclosed, a3, a4 (a4 behind `%`)        |
+| v7 field brace never closed                     | `refs.bib` → a1, a2brace, a3, a4    | a1 only                                 | a1, a2brace, a3, a4                           |
+| v8 `\jobname`                                   | `paper.bib` (the block) → jkey      | `none`                                  | `embedded:paper` → jkey, jdead                |
+| v9 two `\bibliography`                          | `one.bib` → onekey                  | one, two                                | `one` only                                    |
+| v10 `\ifthenelse`                               | `anon.bib` → anonkey                | `databases` (anon, real)                | `undecided` (anon, real)                      |
+| v11 two blocks, the second `[overwrite]`        | the second block → second           | the first block                         | the second block                              |
+| v12 `[overwrite]` block behind a false `\newif` | `refs.bib` → committed1             | `conflict` → the block                  | `undecided`: `file` or `conflict` → the block |
+| v13 `% see @misc{…}`, `@comment{ @misc{…} }`    | pt1, k2inComment, ok1               | pt1 not marked; the parser dropped both | pt1 marked `%`; the parser reads all three    |
+| v14 `\nobibliography{refs}`                     | `refs.bib` → nobkey                 | `none`                                  | `file:refs`                                   |
+| v15 `\bibliography` after `\end{document}`      | none                                | `file:refs`                             | `none`                                        |
+| v16 block in an `\input` file                   | `refs.bib` (committed, stale)       | `conflict` → `refs.bib` (already right) | unchanged; the rule now reports the block     |
+
+**1. Unclosed entries.** Measured further than the report did, with `\nocite{*}` on 20 shapes. An
+`@` at brace depth 0 inside an open entry starts the next entry (`title={T} @misc{y`, a field
+whose brace is never closed, an entry never closed). An `@` at depth ≥ 1 is text even at the start
+of a line: `abstract={one⏎@line two}` keeps one entry. So the report's "or on any `@` at the start
+of a line" does not hold, and only depth 0 resynchronises. Two more rules were measured and
+modelled. An `@` right after a comma, where bibtex expects a field name, is swallowed with the entry
+it starts (`@misc{m1, title={A},⏎@misc{m2…}⏎@misc{m3…}` → m1, m3). An entry still open at the end
+of the file is read. **Not modelled:** an entry bibtex reaches by resynchronising is dropped when
+nothing follows it in the file. Measured in six shapes and not understood. The module keeps such an
+entry, so it reads one entry too many, never one too few. The scanner test at
+`bibliography.test.ts` now asserts TeX's answer, and §8.5 is corrected.
+
+**2. `\jobname`.** It is expanded to the main file's name, in a declaration and in a block's file
+name. Any other macro in a name gives a new database state, `unresolved`. The bibliography is then
+`undecided`, and every consumer names it, never silence. `#1` (a parameter of a definition) is no
+declaration where it is written.
+
+**3. Blocks in included files.** `PaperSources.blocks` lists every live block that writes a `.bib`,
+in the main file and in its own includes. `bib/filecontents-overwrite` judges all of them. A block in
+an included file is reported at its `\input`, with `bibblock.tex:1:1:` first. There is no fix for it
+from `paper.tex`: the edit belongs to that file.
+
+**4. The fix overwrites a file.** The fix is offered only when no file of the block's name exists in
+the paper's directory, or when that file holds the block's entries (TeX's own copy). Otherwise the
+rule has no fix and offers a suggestion. The suggestion names the file the next build would
+overwrite, and the message says which case it is. A committed file gets `shadowed`. A local-only
+file gets `wouldOverwrite`, which covers the hand-maintained reference-manager export of 4(b). The
+report's second suggestion, "delete the block (the file wins)", is left to the author: a deletion is
+not an edit a linter should offer.
+
+**5. The memo.** It is now bounded by the source text it holds, 512 KiB, least recently used out, and
+the comment says why. The reviewer's "e.g. 8 entries" was tried first and failed the gate: a corpus
+paper with ten includes is read in a cycle by the rules, so with 8 trees every read missed, and the
+corpus lint (`accepted-papers.test.ts`) passed its 120 s timeout. With the byte bound that test runs
+in about 115 s as before, and, measured with the reviewer's method, 63 edits of the 48 KiB ACM paper
+retain 27 MiB, down from 186 MiB. A warm `paperSources` call costs 50–76 ms. `parse.test.ts` holds
+the bound both ways: eleven 30 KiB files read in a cycle all stay, and past 512 KiB the least
+recently used tree goes first.
+
+**6. Absolute paths.** `resolve`, not `join`.
+
+**Notes 7–17 — what changed, and what is now written down as not modelled:**
+
+- 7 (two `\bibliography`): **fixed**. Only the first unconditional `\bibliography` /
+  `\nobibliography` counts (v9).
+- 8 (`\bibliography` after `\end{document}`): **fixed** (v15). **Not modelled:** `\includeonly`
+  and `\endinput`. The module reads every include, so a block in a file `\includeonly` excludes is
+  still `embedded`.
+- 9 (`\ifthenelse`): **fixed**. Its three groups are read as conditional (v10).
+- 10 (two blocks for one file): **fixed**. The blocks run in order: a block writes when it has
+  `[overwrite]` or no file exists yet (v11).
+- 11 (a block behind a switch): **fixed**. Its database is both candidates (v12).
+- 12: **fixed** for `\nobibliography` (v14), `\addglobalbib` and `\addsectionbib`. **Not
+  modelled:** multibib's `\newcites` and bibunits' `\putbib`. Whether biber accepts an
+  extensionless `\addbibresource{refs}` is not measured (no biber).
+- 13 (kpathsea): **not modelled**, and now stated. A `.bib` that bibtex finds only through
+  kpathsea's default tree (`~/texmf/bibtex/bib/`) is `missing` to the module. The answer is right for
+  CI and wrong for a personal library there. `file` and `missing` read the disk and not
+  `CommittedFiles`: an untracked `.bib` that a paper declares is still read, because checking a
+  bibliography the author has not committed yet is better than skipping it. "Decided from committed
+  bytes" therefore holds for a block against a file of the same name, and nowhere else.
+- 14 (`CommittedFiles`): **kept**, with git's own variables (`GIT_DIR`, `GIT_WORK_TREE`, …) no longer
+  passed to the child process. That was the flip the report reproduced. The reviewer suggests
+  dropping the port. Without it, `conflict` would be "a file of that name exists and differs". That
+  is the machine-dependent answer the first refutation (§7.1, finding 2) rejected: on a built working
+  copy the block would read as shadowed, and on a fresh checkout as embedded. The port is the only
+  thing that keeps TeX's own output from counting against the block. Its cost (one `git ls-files` per
+  `paperSources`, only when a block and a file of the same name both exist) and its semantics are
+  stated where it is defined. "Committed" means in git's index, so a staged file counts.
+- 15 (`eslint --cache`): **documented** on the `bib` rule pages. Their findings depend on files
+  other than the linted one. `paperlint lint` does not cache.
+- 16: **fixed** for `% see @misc{…}` (the `%` and the text after it, up to the `@`, are the entry's
+  `percent`) and for `@comment` (its word is a `comments` span). `bibtexView` blanks both, so the
+  parser in `extract-ref-facts` and the reader in `bib-authors` read what bibtex reads (v13).
+  **Measured and not modelled:** an `@comment{ @misc{…} }` that is the last thing in the file is
+  dropped by bibtex (the same end-of-file quirk as finding 1), and the module reads it.
+- 17 (`bibRange`): PR 2, as planned.
+
+**Verdict after response:** findings 1–6 are fixed, each red first. Every note is either fixed or
+stated above as not modelled. The response has not been through a third refutation.
 
 ## Appendix A — prototype of the rule
 
