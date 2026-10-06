@@ -7,7 +7,9 @@ what happens in CI and without a network.
 
 ## What is checked, and where
 
-For each entry in the bibliography (the `filecontents` block inside `paper.tex`, else `refs.bib`):
+For each entry in the bibliography TeX reads — the `filecontents` block inside `paper.tex`, or the
+`.bib` files its `\bibliography` / `\addbibresource` declare, as `paperSources` decides it
+(`src/paper-sources.ts`; a block without `[overwrite]` is `bib/filecontents-overwrite`):
 
 | question                                                                                                 | asked of                                    |
 | -------------------------------------------------------------------------------------------------------- | ------------------------------------------- |

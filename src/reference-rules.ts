@@ -12,18 +12,24 @@
  * that no longer exists, and refs-fresh already says so once. A paper with no bibliography gets
  * nothing.
  *
+ * The bibliography is the one TeX reads (`paperSources`, src/paper-sources.ts). An entry in a block
+ * of `paper.tex` is reported on its line; an entry in a `.bib` file — which ESLint does not lint — at
+ * the `\bibliography` that declares it, the file, line and column at the front of the message.
+ *
  * `paper/author-list` used to live on PIPELINE-STATUS.md and ask whether the scorecard mentioned
  * a run. It lives here now because its subject is the bibliography, and the record of the run is
  * the run's own output.
  */
 import { basename, dirname } from "node:path";
-import type { Files } from "./ports/files.ts";
+import { entryReport, findEntry, type EntryReport } from "./bib-rules.ts";
+import { callerPath } from "./caller-path.ts";
+import { MAIN_FILE, type PaperSources } from "./domain/paper-sources.ts";
+import { paperSources, type SourcesDeps } from "./paper-sources.ts";
 import {
   bibHash,
-  bibliographyOf,
+  checkedBibliography,
   readReferences,
   REFERENCES_FILE,
-  type Bibliography,
 } from "./references.ts";
 
 interface Loc {
@@ -62,7 +68,7 @@ type Assessment =
   | { readonly kind: "stale" }
   | {
       readonly kind: "ready";
-      readonly bib: Bibliography;
+      readonly sources: PaperSources;
       readonly failing: readonly {
         readonly key: string;
         readonly rule: "author-list" | "cite-exists";
@@ -70,10 +76,11 @@ type Assessment =
       }[];
     };
 
-function assess(files: Files, paperDir: string): Assessment {
-  const bib = bibliographyOf(files, paperDir);
-  if (bib === null) return { kind: "no-bibliography" };
-  const doc = readReferences(files, paperDir);
+function assess(deps: SourcesDeps, paperDir: string): Assessment {
+  const read = paperSources(paperDir, deps);
+  const bib = read.ok ? checkedBibliography(read.value.bibliography) : null;
+  if (!read.ok || bib === null) return { kind: "no-bibliography" };
+  const doc = readReferences(deps.files, paperDir);
   if (doc === null) return { kind: "unrecorded" };
   if (doc.bib.sha256 !== bibHash(bib)) return { kind: "stale" };
   if (doc.status === "not-checked")
@@ -86,17 +93,22 @@ function assess(files: Files, paperDir: string): Assessment {
       ? [{ key: e.key, rule: "cite-exists" as const, why: e.why ?? "" }]
       : []),
   ]);
-  return { kind: "ready", bib, failing };
+  return { kind: "ready", sources: read.value, failing };
 }
 
-/** Where entry `key` starts in the source file: its `@type{key,` line, or the file's start. */
-function entryOffset(bib: Bibliography, key: string): number {
-  const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const m = new RegExp(`^@\\w+\\s*\\{\\s*${escaped}\\s*,`, "m").exec(bib.text);
-  return m ? bib.offset + m.index : 0;
-}
+/** Where a finding about entry `key` is reported in paper.tex (the file's start when no entry has it). */
+const keyReport = (sources: PaperSources, key: string): EntryReport => {
+  const found = findEntry(sources, key);
+  return found === null
+    ? { kind: "here", span: { start: 0, end: 0 } }
+    : entryReport(sources, found);
+};
 
 const BUILD = "`npx paperlint build`";
+
+const MISMATCH =
+  "`{{key}}`: the authors are not those of the version cited — {{why}}. The citation resolves and the id resolves, and the list is the PREPRINT's under a published venue";
+const MISSING = "`{{key}}` does not resolve to the work cited — {{why}}";
 
 const META: Readonly<Record<Name, ReferenceRuleModule["meta"]>> = {
   "author-list": {
@@ -107,8 +119,8 @@ const META: Readonly<Record<Name, ReferenceRuleModule["meta"]>> = {
     },
     schema: [],
     messages: {
-      mismatch:
-        "`{{key}}`: the authors are not those of the version cited — {{why}}. The citation resolves and the id resolves, and the list is the PREPRINT's under a published venue",
+      mismatch: MISMATCH,
+      mismatchIn: `{{where}}: ${MISMATCH}`,
     },
   },
   "cite-exists": {
@@ -119,7 +131,8 @@ const META: Readonly<Record<Name, ReferenceRuleModule["meta"]>> = {
     },
     schema: [],
     messages: {
-      missing: "`{{key}}` does not resolve to the work cited — {{why}}",
+      missing: MISSING,
+      missingIn: `{{where}}: ${MISSING}`,
     },
   },
   "refs-checked": {
@@ -147,7 +160,13 @@ const META: Readonly<Record<Name, ReferenceRuleModule["meta"]>> = {
   },
 };
 
-type Report = { at: number; messageId: string; data?: Record<string, string> };
+type Report = {
+  at: EntryReport;
+  messageId: string;
+  data?: Record<string, string>;
+};
+
+const AT_START: EntryReport = { kind: "here", span: { start: 0, end: 0 } };
 
 const JUDGES: Readonly<Record<Name, (a: Assessment) => Report[]>> = {
   "author-list": (a) =>
@@ -155,7 +174,7 @@ const JUDGES: Readonly<Record<Name, (a: Assessment) => Report[]>> = {
       ? a.failing
           .filter((f) => f.rule === "author-list")
           .map((f) => ({
-            at: entryOffset(a.bib, f.key),
+            at: keyReport(a.sources, f.key),
             messageId: "mismatch",
             data: { key: f.key, why: f.why },
           }))
@@ -165,50 +184,53 @@ const JUDGES: Readonly<Record<Name, (a: Assessment) => Report[]>> = {
       ? a.failing
           .filter((f) => f.rule === "cite-exists")
           .map((f) => ({
-            at: entryOffset(a.bib, f.key),
+            at: keyReport(a.sources, f.key),
             messageId: "missing",
             data: { key: f.key, why: f.why },
           }))
       : [],
   "refs-checked": (a) =>
     a.kind === "unrecorded"
-      ? [{ at: 0, messageId: "unrecorded" }]
+      ? [{ at: AT_START, messageId: "unrecorded" }]
       : a.kind === "not-checked"
-        ? [{ at: 0, messageId: "notChecked", data: { why: a.why } }]
+        ? [{ at: AT_START, messageId: "notChecked", data: { why: a.why } }]
         : [],
   "refs-fresh": (a) =>
-    a.kind === "stale" ? [{ at: 0, messageId: "stale" }] : [],
+    a.kind === "stale" ? [{ at: AT_START, messageId: "stale" }] : [],
 };
 
-/** The four rules, reading through `files`. They act on `paper.tex` only. */
-export function referenceRules({
-  files,
-}: {
-  files: Files;
-}): Record<Name, ReferenceRuleModule> {
+/**
+ * One finding, at its entry in paper.tex — or, for an entry in a `.bib`, at the declaration, with the
+ * `…In` message that names the entry's file, line and column first.
+ */
+function report(context: RuleContext, r: Report): void {
+  const loc = (i: number) => context.sourceCode.getLocFromIndex(i);
+  const where = { start: loc(r.at.span.start), end: loc(r.at.span.end) };
+  context.report({
+    loc: where,
+    ...(r.at.kind === "here"
+      ? { messageId: r.messageId, ...(r.data ? { data: r.data } : {}) }
+      : {
+          messageId: `${r.messageId}In`,
+          data: { ...r.data, where: r.at.where },
+        }),
+  });
+}
+
+/** The four rules, reading the paper through `deps`. They act on `paper.tex` only. */
+export function referenceRules(
+  deps: SourcesDeps,
+): Record<Name, ReferenceRuleModule> {
   const make = (name: Name): ReferenceRuleModule => ({
     meta: META[name],
     create: (context) =>
-      basename(context.filename) !== "paper.tex"
+      basename(context.filename) !== MAIN_FILE
         ? {}
         : {
             "root:exit": () => {
-              const paperDir = dirname(context.filename);
-              const a = assess(files, paperDir);
-              // An external refs.bib: the entry is not in this file, so the finding sits at its
-              // start and names the key.
-              const external =
-                a.kind === "ready" && a.bib.source !== "paper.tex";
-              for (const r of JUDGES[name](a)) {
-                const loc = context.sourceCode.getLocFromIndex(
-                  external ? 0 : r.at,
-                );
-                context.report({
-                  loc: { start: loc, end: loc },
-                  messageId: r.messageId,
-                  ...(r.data ? { data: r.data } : {}),
-                });
-              }
+              const paperDir = dirname(callerPath(context.filename));
+              const a = assess(deps, paperDir);
+              for (const r of JUDGES[name](a)) report(context, r);
             },
           },
   });

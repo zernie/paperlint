@@ -181,7 +181,7 @@ heavier than a typo, and it is exactly the class §"any regalia about third part
 
 **How to run.**
 \`\`\`
-node scripts/bib-authors.mjs <paper-dir>          # or a .bib, or a .tex with a filecontents block
+node scripts/bib-authors.mjs <paper-dir>          # the bibliography TeX reads; or a .bib, or a .tex
 node scripts/bib-authors.mjs <paper-dir> --json
 \`\`\`
 Exits **1** on any author-set or author-order disagreement, **0** when clean, **2** on usage/IO error.

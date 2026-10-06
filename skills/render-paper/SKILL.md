@@ -4,7 +4,7 @@ description: Compile a LaTeX paper (ACM/IEEE/arXiv) to PDF and render its pages 
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, SendUserFile]
 ---
 
-<!-- vigiles:sha256:ff8dca1e1be3977e compiled from skills/render-paper/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:3c0249f6eb895e5b compiled from skills/render-paper/SKILL.md.spec.ts -->
 
 # render-paper — .tex → PDF → readable page PNGs
 
@@ -85,6 +85,8 @@ clean" until this exits 0.** Common fixes when it fails:
    ⚠️ **The block IS the source of truth — it `overwrite`s `refs.bib` on every build.** Editing `refs.bib`
    directly does nothing (regenerated away); fix citations INSIDE the filecontents block in the `.tex`.
    Consider `.gitignore`-ing the generated `refs.bib` so it can't drift from the block.
+   Without `[overwrite]`, TeX writes `refs.bib` only while none exists — after one build the block stops
+   reaching the PDF; `bib/filecontents-overwrite` reports that, and `paperlint lint --fix` adds the option.
 4. **Double-blind:** ACM uses `\documentclass[sigconf,review,anonymous]{acmart}`; keep author
    `Anonymous Author(s)` for the review PDF.
 5. **`.gitignore`** the build junk (`*.aux *.log *.out *.bbl *.blg`); keep `paper.pdf` if you want it

@@ -69,7 +69,17 @@ import {
 } from "node:fs";
 import { createHash } from "node:crypto";
 import { join, resolve, dirname, basename } from "node:path";
-import { bibRange } from "#eslint-rules/paper-typography";
+import { gitCommitted } from "#src/adapters/git/index";
+import { latexReader } from "#src/adapters/latex/index";
+import { nodeFiles, spawnProcess } from "#src/adapters/node/index";
+import { absolutePath } from "#src/domain/paths";
+import {
+  bibTexts,
+  bibtexView,
+  databasesOf,
+  texReads,
+} from "#src/domain/paper-sources";
+import { paperSources, sourcesOf } from "#src/paper-sources";
 import { isMain } from "./consumer.mjs";
 
 const ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
@@ -398,40 +408,118 @@ export function recordFrom(key, cached) {
 // ── assembling the facts ─────────────────────────────────────────────────────
 
 /**
- * `paper.tex` when it embeds its `.bib` in `filecontents` → `refs.bib` → `build/custom.bib`.
- * `refs.bib` ADDED 26.08 (defect #1). The embedded one comes first, as in `paperlint build`
- * (`bibliographyOf`, src/references.ts): the author edits it there, and the `refs.bib` LaTeX
- * writes out of it is missing before a build and stale after an edit.
+ * WHICH BIBLIOGRAPHY: the one TeX reads, as `paperSources` decides it (src/paper-sources.ts) — never
+ * an order of file names of our own. Measured on the planted papers of fixtures/paper-sources, any
+ * such order reads the inline block where TeX reads a committed `refs.bib` (no `[overwrite]`), misses
+ * a `\bibliography{paper}`'s `paper.bib`, or reads a COMMENTED-OUT block as zero entries.
+ *
+ *   a directory   its paper.tex, and the databases its `\bibliography` / `\addbibresource` declare
+ *   a .tex        the same, for that file
+ *   a .bib        that file, as named
+ *
+ * The text each entry is parsed from is `bibtexView`: an entry behind `%` is one bibtex reads.
  */
-export const SOURCE_ORDER = ["paper.tex", "refs.bib", "build/custom.bib"];
+const committed = gitCommitted(spawnProcess(), process.env);
+const DEPS = { files: nodeFiles, latex: latexReader, committed };
 
-/** Whether `p` is a source: any `.bib`, and a `.tex` only when it carries a `.bib`. */
-const isSource = (p) =>
-  !p.endsWith(".tex") || bibRange(readFileSync(p, "utf8")) !== null;
-
-export function resolveSource(target) {
-  const t = resolve(target);
-  if (existsSync(t) && statSync(t).isFile()) return t;
-  for (const c of SOURCE_ORDER) {
-    const p = join(t, c);
-    if (existsSync(p) && isSource(p)) return p;
+/** Why a bibliography has no text to read, in words a person can act on. */
+function noTextWhy(where, b) {
+  switch (b.kind) {
+    case "none":
+      return `${where} declares no bibliography (no \\bibliography, no \\addbibresource)`;
+    case "thebibliography":
+      return `${where} writes its references by hand in thebibliography — there is no database to read`;
+    default:
+      return `${where} declares ${databasesOf(b)
+        .map((d) => `${d.name} (${d.kind})`)
+        .join(", ")}, and none of them is on disk`;
   }
-  return null;
+}
+
+/** What the reader should know about a bibliography it is about to read: conflicts, switches. */
+const notes = (b) => [
+  ...(b.kind === "undecided"
+    ? [
+        `⚠️ which bibliography TeX reads depends on a switch or a macro — reading every candidate: ${databasesOf(
+          b,
+        )
+          .map((d) => d.name)
+          .join(", ")}`,
+      ]
+    : []),
+  ...databasesOf(b)
+    .filter((d) => d.kind === "conflict")
+    .map(
+      (d) =>
+        `⚠️ ${d.name}.bib holds other entries than the filecontents block that writes it — TeX reads the ${
+          texReads(d) === d.file
+            ? "file (the block has no [overwrite])"
+            : "block"
+        }`,
+    ),
+];
+
+/**
+ * The bibliography of `target`: the texts to read, or why there are none. `paperDir` is where the
+ * cache and the facts go.
+ */
+export function bibliographyFrom(target) {
+  const t = resolve(target);
+  if (!existsSync(t))
+    return {
+      ok: false,
+      why: `${t} does not exist — nowhere to take a bibliography from`,
+    };
+  if (statSync(t).isFile()) return fromFile(t);
+  const r = paperSources(t, DEPS);
+  if (!r.ok)
+    return {
+      ok: false,
+      why: `no paper.tex in ${t} — name the paper's .tex, or a .bib to read it alone`,
+    };
+  return fromSources(t, rel(join(t, "paper.tex")), r.value.bibliography);
+}
+
+function fromFile(t) {
+  const text = readFileSync(t, "utf8");
+  if (t.endsWith(".bib"))
+    return {
+      ok: true,
+      paperDir: dirname(t),
+      texts: [latexReader.bibText(absolutePath(t), text)],
+      notes: [],
+    };
+  if (!t.endsWith(".tex"))
+    return {
+      ok: false,
+      why: `${rel(t)} is neither a .bib nor a .tex — give the paper's directory, its .tex, or a .bib`,
+    };
+  return fromSources(
+    dirname(t),
+    rel(t),
+    sourcesOf(absolutePath(t), text, DEPS).bibliography,
+  );
+}
+
+function fromSources(paperDir, where, b) {
+  const texts = bibTexts(b);
+  return texts.length === 0
+    ? { ok: false, why: noTextWhy(where, b) }
+    : { ok: true, paperDir, texts, notes: notes(b) };
 }
 
 /**
- * The entries of a `.bib`, or of the `.bib` a `.tex` embeds (none when it embeds none) — each
- * entry's `line` its line in the file read, so a finding points where the author edits.
+ * The entries of one text TeX reads — each with its file, and its line in that file, so a finding
+ * points where the author edits (the block's lines in paper.tex, or the `.bib`'s).
  */
-export async function loadEntries(path) {
-  const text = readFileSync(path, "utf8");
-  if (!path.endsWith(".tex")) return parseBib(text);
-  const bib = bibRange(text);
-  if (bib === null) return [];
-  const above = text.slice(0, bib.bodyStart).split("\n").length - 1;
-  return (await parseBib(bib.body)).map((e) =>
-    e.line === 0 ? e : { ...e, line: e.line + above },
-  );
+export async function loadEntries(bib) {
+  const above = bib.text.slice(0, bib.body.start).split("\n").length - 1;
+  const file = rel(bib.path);
+  return (await parseBib(bibtexView(bib))).map((e) => ({
+    ...e,
+    file,
+    line: e.line === 0 ? 0 : e.line + above,
+  }));
 }
 
 /** Every registry key a list of entries needs. Computed once so the requests go in one batch. */
@@ -443,7 +531,11 @@ export function keysFor(entries) {
 
 const rel = (p) => (p.startsWith(ROOT) ? p.slice(ROOT.length + 1) : p);
 
-export function buildFacts({ source, text, entries, cache, cachePath }) {
+/**
+ * The facts of a run. `source` is the file the first database was read from (the only one, for a
+ * paper with one), `sources` every one; `source_sha256` hashes those files' bytes, in order.
+ */
+export function buildFacts({ texts, entries, cache, cachePath }) {
   const withIds = entries.map((e) => {
     const ids = extractIds(e);
     return { ...e, ids, primary: primaryOf(ids), keys: allKeys(ids) };
@@ -454,9 +546,12 @@ export function buildFacts({ source, text, entries, cache, cachePath }) {
       if (!(k in records)) records[k] = recordFrom(k, cache[k]);
   return {
     schema: SCHEMA,
-    source: rel(source),
+    source: rel(texts[0].path),
+    sources: [...new Set(texts.map((b) => rel(b.path)))],
     source_kind: "bibtex",
-    source_sha256: createHash("sha256").update(text).digest("hex"),
+    source_sha256: [...new Set(texts.map((b) => b.text))]
+      .reduce((h, t) => h.update(t), createHash("sha256"))
+      .digest("hex"),
     cache: cachePath ? rel(cachePath) : null,
     generated: new Date().toISOString().slice(0, 10),
     entries: withIds,
@@ -478,24 +573,13 @@ async function main(argv) {
       .slice(1)
       .join("=");
 
-  const src = resolveSource(target);
-  if (!src) {
-    console.error(
-      `🛑 no ${SOURCE_ORDER.join(", ")} under ${resolve(target)} — nowhere to take a bibliography from.`,
-    );
+  const found = bibliographyFrom(target);
+  if (!found.ok) {
+    console.error(`🛑 ${found.why}.`);
     return 1;
   }
-  // A paper's references are read from a `.bib`, or the one a `.tex` embeds: any other file
-  // parsed as BibTeX would report zero entries for the wrong reason.
-  if (!src.endsWith(".bib") && !src.endsWith(".tex")) {
-    console.error(
-      `🛑 ${rel(src)} is neither a .bib nor a .tex — the bibliography is read from ${SOURCE_ORDER.join(", ")}.`,
-    );
-    return 1;
-  }
-  const paperDir = statSync(resolve(target)).isFile()
-    ? dirname(src)
-    : resolve(target);
+  for (const n of found.notes) console.error(n);
+  const { paperDir, texts } = found;
   const cachePath = opt("cache")
     ? resolve(opt("cache"))
     : join(paperDir, "repro", "refs-cache.json");
@@ -503,13 +587,13 @@ async function main(argv) {
     ? resolve(opt("out"))
     : join(paperDir, "_build", "refs.facts.json");
 
-  const text = readFileSync(src, "utf8");
-  const entries = await loadEntries(src);
+  const entries = (await Promise.all(texts.map(loadEntries))).flat();
+  const names = [...new Set(texts.map((b) => basename(b.path)))].join(", ");
   if (!entries.length) {
     // 🔴 Zero entries is a suspect, not a success. Facts with an empty list would look like a
     // clean bibliography, so we do not write them at all and exit with a non-zero code.
     console.error(
-      `🛑 parsed 0 entries out of ${rel(src)}. Silence here would look like a clean bibliography.`,
+      `🛑 parsed 0 entries out of ${[...new Set(texts.map((b) => rel(b.path)))].join(", ")}. Silence here would look like a clean bibliography.`,
     );
     return 1;
   }
@@ -536,12 +620,12 @@ async function main(argv) {
     if (fetched) saveCache(cachePath, cache);
   }
 
-  const facts = buildFacts({ source: src, text, entries, cache, cachePath });
+  const facts = buildFacts({ texts, entries, cache, cachePath });
   mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, `${JSON.stringify(facts, null, 2)}\n`);
   const resolved = Object.values(facts.records).filter((r) => r.found).length;
   console.log(
-    `📚 ${basename(src)} → ${rel(out)} (${entries.length} entries, ${Object.keys(facts.records).length} identifiers, ` +
+    `📚 ${names} → ${rel(out)} (${entries.length} entries, ${Object.keys(facts.records).length} identifiers, ` +
       `${resolved} resolved${offline ? ", offline" : fetched ? `, +${fetched} fetched` : ", all from cache"})`,
   );
   return 0;

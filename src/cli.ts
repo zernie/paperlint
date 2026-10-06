@@ -52,12 +52,14 @@ import { prepareEngine } from "./build-engine.ts";
 import { cacheRoot, cachedTree, runToolchain } from "./toolchain.ts";
 import { banalInstaller, parseBanalSettings } from "./adapters/banal/index.ts";
 import { curlDownload } from "./adapters/curl/index.ts";
+import { gitCommitted } from "./adapters/git/index.ts";
 import { latexReader } from "./adapters/latex/index.ts";
 import {
   hostDirs,
   nodeAdapters,
   nodeFiles,
   nodeListDir,
+  spawnProcess,
 } from "./adapters/node/index.ts";
 import { probeVideo } from "./adapters/mp4box/index.ts";
 import { imageSize } from "./adapters/png/index.ts";
@@ -93,6 +95,8 @@ import {
   type PaperSettings,
 } from "./paper-settings.ts";
 import { referenceRules, REFERENCE_RULE_LEVELS } from "./reference-rules.ts";
+import { BIB_RULE_LEVELS, bibRules } from "./bib-rules.ts";
+import { sourcesReader } from "./paper-sources.ts";
 import { onlineReferences } from "./adapters/references/index.ts";
 import { hotcrpPortal } from "./adapters/hotcrp/index.ts";
 import { runSubmission } from "./submission.ts";
@@ -166,7 +170,6 @@ import {
 } from "./folder-venue-rule.ts";
 import typography from "#eslint-rules/paper-typography";
 import texBuild from "#eslint-rules/tex-build";
-import bibReachable from "#eslint-rules/bib-reachable-entry";
 import reviewFrontmatter from "#eslint-rules/review-frontmatter";
 import siblingFrontmatter from "#eslint-rules/sibling-frontmatter";
 import pdfRules from "#eslint-rules/pdf-last-page-balance";
@@ -302,11 +305,17 @@ settings — paperlint.json, at two levels, one schema. Both are optional.
   unknown key, in either file, is an error.
 `;
 
-/** What the rules over a paper.tex read with: the disk, the shipped presets, the LaTeX reader. */
-const TEX_RULE_DEPS = {
+/** What reads a paper's sources (`paperSources`): the disk, the LaTeX reader, git's index. */
+const SOURCES_DEPS = {
   files: nodeFiles,
-  venuesDir: presetsDir(),
   latex: latexReader,
+  committed: gitCommitted(spawnProcess(), process.env),
+};
+
+/** What the rules over a paper.tex read with: the paper's sources, and the shipped presets. */
+const TEX_RULE_DEPS = {
+  ...SOURCES_DEPS,
+  venuesDir: presetsDir(),
 };
 
 /** The register band rules and `tex/heading-case`: the rules of the `tex` plugin that read a paper's words. */
@@ -354,7 +363,7 @@ export function buildConfig(
   // The reference rules judge `_build/references.json`, and only on `paper.tex`.
   const texPaperRules = {
     ...paperRules,
-    ...referenceRules({ files: nodeFiles }),
+    ...referenceRules(SOURCES_DEPS),
   };
   // Each typography rule reports every occurrence where it is, and fixes it (`--fix`).
   const prose = {
@@ -445,7 +454,7 @@ export function buildConfig(
           },
         },
         paper: { rules: texPaperRules },
-        bib: bibReachable,
+        bib: { rules: bibRules(SOURCES_DEPS) },
         talk: { rules: talkRules(TALK_RULE_DEPS) },
         format: {
           rules: {
@@ -460,7 +469,7 @@ export function buildConfig(
         ...prose,
         ...REFERENCE_RULE_LEVELS,
         "paper/figure-ref-style": "warn",
-        "bib/reachable-entry": "warn",
+        ...BIB_RULE_LEVELS,
         "tex/future-promise": "warn",
         // A number with no owner: a prose rule, on beside the others above.
         "tex/claim-provenance": "warn",
@@ -1443,6 +1452,7 @@ async function runBuild(
     dryRun: a.dryRun,
     log,
     checkReferences,
+    readSources: sourcesReader(SOURCES_DEPS),
     engine: () => engineEnv(targets, a, { log, err }),
   });
   if (out.kind === "no-engine") return 1;

@@ -66,6 +66,7 @@ import type { Runner } from "./engine.ts";
 import type { Files } from "./ports/files.ts";
 import type { MeasureGeometry } from "./ports/measure-geometry.ts";
 import type { CheckReferences } from "./ports/check-references.ts";
+import { notWiredSources, type ReadSources } from "./paper-sources.ts";
 import { recordReferences, REFERENCES_FILE } from "./references.ts";
 import {
   auxBib,
@@ -138,6 +139,8 @@ export interface BuildContext {
   readonly files: Files;
   /** The online reference checks; the CLI wires the real ones, a test passes a function. */
   readonly checkReferences: CheckReferences;
+  /** The paper's files and bibliography (`paperSources`); the CLI wires the real reader. */
+  readonly readSources: ReadSources;
 }
 
 export type StepOutcome =
@@ -585,7 +588,11 @@ export const referencesStep: BuildStep = {
       : { yes: false, why: "nothing is compiled" },
   run: async (ctx) => ({
     ok: true,
-    note: await recordReferences(ctx.files, ctx.paperDir, ctx.checkReferences),
+    note: await recordReferences(
+      ctx.files,
+      ctx.readSources(ctx.paperDir),
+      ctx.checkReferences,
+    ),
   }),
 };
 
@@ -648,6 +655,11 @@ export interface BuildOptions {
    * warns. The CLI passes the real ones (`adapters/references`).
    */
   checkReferences?: CheckReferences;
+  /**
+   * The paper's sources, for the references step. Default: none — the step says it was not wired
+   * and records nothing, and lint warns. The CLI passes `paperSources` over the real ports.
+   */
+  readSources?: ReadSources;
 }
 
 /**
@@ -669,7 +681,7 @@ function baseDefaults({
   readPdf = pdfjsReader,
   projectRoot = env["CLAUDE_PROJECT_DIR"] || cwd,
 }: BuildOptions): Required<
-  Omit<BuildOptions, "measure" | "files" | "checkReferences">
+  Omit<BuildOptions, "measure" | "files" | "checkReferences" | "readSources">
 > {
   return { run, cwd, env, steps, log, dryRun, readPdf, projectRoot };
 }
@@ -686,7 +698,9 @@ const notWired: CheckReferences = (_bib, cache) =>
 
 /** banal as the measurer, wired from the build's environment: the one piece of root work left here (#76). */
 function defaultMeasurer(
-  b: Required<Omit<BuildOptions, "measure" | "files" | "checkReferences">>,
+  b: Required<
+    Omit<BuildOptions, "measure" | "files" | "checkReferences" | "readSources">
+  >,
 ): MeasureGeometry {
   const dirs = hostDirs({ cwd: b.cwd });
   return banalMeasurer(
@@ -705,6 +719,7 @@ function withDefaults(o: BuildOptions): Required<BuildOptions> {
     measure,
     files: o.files ?? nodeFiles,
     checkReferences: o.checkReferences ?? notWired,
+    readSources: o.readSources ?? notWiredSources,
   };
 }
 
@@ -713,29 +728,14 @@ async function runSteps(
   paperDir: string,
   dir: string,
   plan: PlanLine[],
-  {
-    run,
-    env,
-    steps,
-    readPdf,
-    measure,
-    files,
-    checkReferences,
-  }: Required<BuildOptions>,
+  o: Required<BuildOptions>,
 ): Promise<BuildResult> {
-  let stepEnv = env;
+  let stepEnv = o.env;
   const notes: string[] = [];
-  for (const [i, step] of steps.entries()) {
+  for (const [i, step] of o.steps.entries()) {
     if (!plan[i]?.applies) continue;
-    const out = await step.run({
-      paperDir,
-      env: stepEnv,
-      run,
-      readPdf,
-      measure,
-      files,
-      checkReferences,
-    });
+    // Every port the options hold, the paper, and the environment so far.
+    const out = await step.run({ ...o, paperDir, env: stepEnv });
     if (!out.ok) {
       // The PDF THIS run wrote and the step then rejected (a partial pass).
       // A PDF from an earlier run is already gone — `buildPapers` removed it before anything ran.

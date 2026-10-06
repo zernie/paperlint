@@ -8,8 +8,9 @@
  * "bib-authors" in a scorecard table, or a command the project configured. Now the build runs
  * them and records the result as data, beside the facts it already writes about the PDF:
  *
- *   { "schema": 1,
- *     "bib": { "source": "paper.tex", "sha256": "…" },       the bibliography that was checked
+ *   { "schema": 2,
+ *     "bib": { "sources": ["paper.tex"], "sha256": "…" },    the bibliography that was checked: the
+ *                                                            files TeX reads it from (`paperSources`)
  *     "status": "checked" | "not-checked", "why": "…",       not-checked: nothing could be asked
  *     "entries": [ { "key", "exists", "authors", "why" } ] }
  *
@@ -27,7 +28,7 @@
  * step records `not-checked` and the lint rule says so, as a warning. Recording "not checked" as
  * a pass would be the counter that counts what it never looked at.
  */
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { callerPath } from "./caller-path.ts";
 import { sha256Hex } from "./domain/sha256.ts";
 import type { Files } from "./ports/files.ts";
@@ -44,10 +45,19 @@ import type {
   ReferencesCheck,
   ReferencesRun,
 } from "./ports/check-references.ts";
-import { bibRange } from "#eslint-rules/paper-typography";
 import { messageOf } from "./domain/text.ts";
+import {
+  bibTexts,
+  bibtexView,
+  databasesOf,
+  type BibText,
+  type Bibliography,
+  type PaperSources,
+} from "./domain/paper-sources.ts";
+import type { SourcesUnread } from "./paper-sources.ts";
 
-export const REFERENCES_SCHEMA = 1;
+/** 2 since `bib.source` became `bib.sources`, the files TeX reads; a record of 1 reads as none. */
+export const REFERENCES_SCHEMA = 2;
 export const REFERENCES_FILE = "references.json";
 
 /** The lookup cache's place in a paper: committed, beside the paper's other reproduction files. */
@@ -65,44 +75,66 @@ const text = (files: Files, p: string): string | null => {
   return b === null ? null : new TextDecoder().decode(b);
 };
 
-/** The bibliography a paper carries: inside `paper.tex` (`filecontents`), else `refs.bib`. */
-export interface Bibliography {
-  readonly source: "paper.tex" | "refs.bib";
+/**
+ * The bibliography the build checks: every text TeX reads for it (`paperSources`; for `undecided`,
+ * every candidate), and the one text the checkers read — each database as bibtex reads it, an entry
+ * behind `%` included (`bibtexView`).
+ */
+export interface CheckedBibliography {
+  readonly texts: readonly [BibText, ...BibText[]];
   readonly text: string;
-  /** Where `text` starts in the source file — so a finding can point at an entry. */
-  readonly offset: number;
 }
 
-export function bibliographyOf(
-  files: Files,
-  paperDir: string,
-): Bibliography | null {
-  const tex = text(files, join(paperDir, "paper.tex"));
-  const inline = tex === null ? null : bibRange(tex);
-  if (inline)
-    return { source: "paper.tex", text: inline.body, offset: inline.bodyStart };
-  const bib = text(files, join(paperDir, "refs.bib"));
-  return bib === null ? null : { source: "refs.bib", text: bib, offset: 0 };
+/** The bibliography to check, or null when TeX reads no database for this paper. */
+export function checkedBibliography(
+  b: Bibliography,
+): CheckedBibliography | null {
+  const [first, ...rest] = bibTexts(b);
+  if (first === undefined) return null;
+  const texts: readonly [BibText, ...BibText[]] = [first, ...rest];
+  return { texts, text: texts.map(bibtexView).join("\n") };
 }
 
-export const bibHash = (b: Bibliography): string =>
+export const bibHash = (b: CheckedBibliography): string =>
   sha256Hex(new TextEncoder().encode(b.text));
+
+/** Why a paper's references are not checked: there is no database TeX reads. */
+function nothingToCheck(b: Bibliography): string {
+  switch (b.kind) {
+    case "none":
+      return "no bibliography — nothing to check";
+    case "thebibliography":
+      return "the bibliography is written by hand (thebibliography) — no database to check";
+    case "databases":
+    case "undecided":
+      return `no bibliography database on disk (${databasesOf(b)
+        .map((d) => `${d.name}: ${d.kind}`)
+        .join(", ")}) — nothing to check`;
+  }
+}
 
 /** What `_build/references.json` holds. */
 export interface ReferencesDocument {
   readonly schema: number;
-  readonly bib: { readonly source: string; readonly sha256: string };
+  readonly bib: {
+    readonly sources: readonly string[];
+    readonly sha256: string;
+  };
   readonly status: "checked" | "not-checked";
   readonly why?: string;
   readonly entries: readonly EntryVerdict[];
 }
 
 export const documentOf = (
-  bib: Bibliography,
+  paperDir: string,
+  bib: CheckedBibliography,
   check: ReferencesCheck,
 ): ReferencesDocument => ({
   schema: REFERENCES_SCHEMA,
-  bib: { source: bib.source, sha256: bibHash(bib) },
+  bib: {
+    sources: [...new Set(bib.texts.map((t) => relative(paperDir, t.path)))],
+    sha256: bibHash(bib),
+  },
   ...(check.kind === "checked"
     ? { status: "checked" as const, entries: check.entries }
     : { status: "not-checked" as const, why: check.why, entries: [] }),
@@ -169,6 +201,16 @@ async function run(
   }
 }
 
+/** Why there was no paper to read the bibliography of. */
+function unread(e: SourcesUnread): string {
+  switch (e.kind) {
+    case "no-main":
+      return "no paper.tex — nothing to check";
+    case "not-wired":
+      return "references NOT checked — no paper reader was wired into this build; lint will say so";
+  }
+}
+
 /**
  * The build step's work: check the bibliography, serving what it can from the paper's lookup
  * cache, and record the verdicts. Returns the one-line note the build prints. A checker that
@@ -177,13 +219,15 @@ async function run(
  */
 export async function recordReferences(
   files: Files,
-  paperDir: string,
+  sources: Result<PaperSources, SourcesUnread>,
   check: CheckReferences,
 ): Promise<string> {
-  const bib = bibliographyOf(files, paperDir);
-  if (bib === null) return "no bibliography — nothing to check";
+  if (!sources.ok) return unread(sources.error);
+  const paperDir = sources.value.dir;
+  const bib = checkedBibliography(sources.value.bibliography);
+  if (bib === null) return nothingToCheck(sources.value.bibliography);
   const record = (c: ReferencesCheck): ReferencesDocument => {
-    const doc = documentOf(bib, c);
+    const doc = documentOf(paperDir, bib, c);
     files.writeAtomic(
       callerPath(referencesPath(paperDir)),
       new TextEncoder().encode(`${JSON.stringify(doc, null, 2)}\n`),
@@ -208,6 +252,11 @@ export async function recordReferences(
       callerPath(lookupCachePath(paperDir)),
       new TextEncoder().encode(serializeLookupCache(result.cache)),
     );
+  return summary(doc, fetched);
+}
+
+/** The note a checked run prints: how many entries, how many failing, what was fetched. */
+function summary(doc: ReferencesDocument, fetched: number): string {
   const bad = doc.entries.filter(
     (e) => e.exists === "false" || e.authors === "mismatch",
   ).length;

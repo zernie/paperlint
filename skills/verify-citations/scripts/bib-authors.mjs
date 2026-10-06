@@ -43,67 +43,63 @@
  * Usage:  node bib-authors.mjs <paper-dir-or-.bib-or-.tex> [--json]
  * Exit:   0 = no author-set/order differences   1 = differences found   2 = usage/IO error
  */
-import { readFileSync, existsSync, readdirSync } from "node:fs";
-import { join, extname } from "node:path";
+import { readFileSync, existsSync, statSync } from "node:fs";
+import { resolve } from "node:path";
+import { gitCommitted } from "#src/adapters/git/index";
+import { latexReader } from "#src/adapters/latex/index";
+import { nodeFiles, spawnProcess } from "#src/adapters/node/index";
+import { absolutePath } from "#src/domain/paths";
+import { bibTexts, bibtexView, databasesOf } from "#src/domain/paper-sources";
+import { paperSources, sourcesOf } from "#src/paper-sources";
 import { isMain } from "../../paper-pipeline/scripts/consumer.mjs";
 
 const DBLP = "https://dblp.org/search/publ/api";
 
-/* ---------- input: a .bib, a .tex with filecontents, or a paper dir ---------- */
+/* ---------- input: the bibliography TeX reads, or a .bib named ---------- */
 
-function bibTextFrom(target) {
-  let file = target;
-  if (!existsSync(file)) die(`no such path: ${file}`);
-  if (!extname(file)) {
-    const names = readdirSync(file);
-    // 🔴 THE CANONICAL NAME FIRST, then the only candidate, and never "whichever
-    // turns up first" (review #189). It used to be `names.find(f => f.endsWith(".tex"))`,
-    // that is, the first in directory order. Measured: one of the papers in the corpus
-    // has FIVE drafts lying around (paper-CONSTRUCTIVE-…, paper-FOLDED-…, paper-SAFE-…),
-    // while PIPELINE-STATUS.md names `paper.tex` as the submitted source. The author
-    // check went off into a stale draft and printed a verdict about the WRONG
-    // bibliography — a gate that checks the wrong file is worse than a missing one,
-    // because it says "checked".
-    const pick = (ext) => {
-      const canon = names.find((f) => f === `paper${ext}`);
-      if (canon) return canon;
-      const all = names.filter((f) => f.endsWith(ext)).sort();
-      if (all.length === 1) return all[0];
-      if (all.length > 1) {
-        // We do not fail: a new check here would set up one more surface, and its
-        // home is decided by the ladder in the `CLAUDE.md` next to the papers, not by
-        // this script (the `frozen-checks` ratchet is what guards that). It is enough
-        // to SAY it out loud and to choose DETERMINISTICALLY — the header below prints
-        // which file was checked anyway, so the reader sees the choice.
-        console.error(
-          `⚠️ ${file} holds several ${ext} files and no canonical paper${ext}: ` +
-            `${all.join(", ")} — took ${all[0]}. If that is the wrong one, name the file explicitly.`,
-        );
-        return all[0];
-      }
-      return undefined;
-    };
-    const found = pick(".bib") || pick(".tex");
-    if (!found) die(`no .bib or .tex in ${file}`);
-    file = join(file, found);
-  }
-  const text = readFileSync(file, "utf-8");
-  if (file.endsWith(".bib")) return { text, file };
-  // Only a .bib and a .tex are read: any other file would fall through to the refs.bib beside it,
-  // and the report would name a file nobody asked about.
-  if (!file.endsWith(".tex"))
-    die(`${file} is not a .bib or a .tex — give the paper's .bib or paper.tex`);
-  // A .tex may carry the bibliography inline via filecontents — that is how our papers do it.
-  const m = text.match(
-    /\\begin\{filecontents\*?\}(?:\[[^\]]*\])?\{[^}]*\.bib\}\r?\n([\s\S]*?)\\end\{filecontents\*?\}/,
-  );
-  if (m) return { text: m[1], file };
-  const sibling = join(file, "..", "refs.bib");
-  if (existsSync(sibling))
-    return { text: readFileSync(sibling, "utf-8"), file: sibling };
-  die(
-    `no bibliography found in ${file} (no filecontents block, no refs.bib beside it)`,
-  );
+const DEPS = {
+  files: nodeFiles,
+  latex: latexReader,
+  committed: gitCommitted(spawnProcess(), process.env),
+};
+
+/**
+ * The texts to read: a `.bib` as named; for a paper directory or a `.tex`, the databases TeX reads, as
+ * `paperSources` decides them (src/paper-sources.ts) — the block or the committed file, the
+ * `\bibliography{…}` the paper declares, every candidate when that depends on a switch. Never a guess
+ * by file name: a directory without `paper.tex` is refused, and the caller names the file.
+ */
+function bibliographyFrom(target) {
+  const t = resolve(target);
+  if (!existsSync(t)) die(`no such path: ${target}`);
+  if (statSync(t).isFile() && t.endsWith(".bib"))
+    return { files: [t], texts: [readFileSync(t, "utf-8")] };
+  if (statSync(t).isFile() && !t.endsWith(".tex"))
+    die(
+      `${target} is not a .bib or a .tex — give the paper's .bib or paper.tex`,
+    );
+  const b = statSync(t).isFile()
+    ? sourcesOf(absolutePath(t), readFileSync(t, "utf-8"), DEPS).bibliography
+    : sourcesOrDie(t).bibliography;
+  const texts = bibTexts(b);
+  if (texts.length === 0)
+    die(
+      b.kind === "none" || b.kind === "thebibliography"
+        ? `no bibliography database in ${target} (${b.kind === "none" ? "no \\bibliography or \\addbibresource" : "thebibliography is written by hand"})`
+        : `${target} declares ${databasesOf(b)
+            .map((d) => `${d.name} (${d.kind})`)
+            .join(", ")}, and none of them is on disk`,
+    );
+  return {
+    files: [...new Set(texts.map((x) => x.path))],
+    texts: texts.map(bibtexView),
+  };
+}
+
+function sourcesOrDie(dir) {
+  const r = paperSources(dir, DEPS);
+  if (!r.ok) die(`no paper.tex in ${dir} — name the paper's .tex, or its .bib`);
+  return r.value;
 }
 
 /* ---------- a deliberately small bib reader ----------
@@ -353,14 +349,22 @@ async function main() {
   if (!args[0])
     die("usage: bib-authors.mjs <paper-dir|file.bib|file.tex> [--json]");
 
-  const { text, file } = bibTextFrom(args[0]);
-  const parsed = parseBib(text);
+  const { files, texts } = bibliographyFrom(args[0]);
+  const file = files.join(", ");
+  const parsed = texts.flatMap(parseBib);
   const entries = parsed.filter((e) => e.title && e.author);
   const { findings, skipped, unchecked } = await checkAuthors(parsed);
   if (asJson) {
     console.log(
       JSON.stringify(
-        { file, entries: entries.length, findings, skipped, unchecked },
+        {
+          file: files[0],
+          files,
+          entries: entries.length,
+          findings,
+          skipped,
+          unchecked,
+        },
         null,
         2,
       ),

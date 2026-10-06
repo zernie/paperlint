@@ -1257,6 +1257,61 @@ order.
 **Verdict after response:** the reviewer's `DOES NOT HOLD` stands for the design as committed at
 `9593b1c` (the §3.3 table). The revised Q2 above has not been through a second refutation.
 
+## 8. PR 1 as built — module and Q2 consumers
+
+The first of the five PRs of finding 13: the module (Q1, Q2) and every Q2 consumer moved onto it.
+Q3 (`texToMdast`, `liveRanges`, captions), the hooks, the build facts and the enforcement rule are
+PRs 2–5. Where the build differs from §3 and §7.2, and why:
+
+1. **TeX's answer is recorded, not asserted by hand.** `test/e2e/tex/paper-sources.e2e.ts` builds each
+   planted paper of `fixtures/paper-sources/` (P, v1–v4, and v5: a `%`-prefixed entry) with
+   `pdflatex -recorder` and `bibtex` and compares `tex-truth.json` byte for byte;
+   `src/paper-sources.test.ts` compares the module's answer with that file, so it runs without TeX.
+   (§5 step 1 asked one e2e test to do both.) The run calls pdflatex directly: `paperlint build`
+   gains `-recorder` only in PR 4.
+2. **"Committed" asks git's index, through a port.** §7.2's `conflict` needs to know whether a `.bib`
+   is tracked. `CommittedFiles` (`src/ports/committed.ts`) is answered by git
+   (`ls-files --error-unmatch`, `src/adapters/git/`); outside a work tree every file counts as
+   committed — the disk is the only state. This is not the commit a rule may not name (`GIT_IN_A_RULE`): the index
+   names files, and a shallow checkout has all of them.
+3. **`file` needs no tracking, and is looked up where bibtex runs.** §7.2(2) reads "a `.bib` that is
+   tracked, or found on the search path". bibtex reads `BIBINPUTS`, which the build does not set, so
+   a database is resolved in the paper's directory only (finding 4's "two search paths").
+4. **`undecided` is a state of the bibliography, not of one database**, and covers a declaration in a
+   macro's body (`\newcommand{\refs}{\bibliography{refs}}`) as well as one behind a switch. A
+   redefinition OF `\bibliography` (the accepted ACM paper's `\let` and `\renewcommand`) declares
+   nothing.
+5. **bibtex's own reading, measured with bibtex 0.99d:** an entry behind `%` is read; `@comment` is
+   skipped as a word, so an entry inside its braces is read; an unclosed entry is not. A `%` at the
+   start of each line inside an entry does not drop the record (as `check-render.sh` says) — the
+   entry is printed and its fields after the `%` are lost (`to sort, need author or key in
+dead2020`). §7.2(4)'s finding is `bib/commented-entry` (warn).
+6. **An entry in a `.bib` file is reported at its declaration.** §5 step 5 says `bib/reachable-entry`
+   "reports in the file that holds the entry"; ESLint lints `paper.tex`, not the `.bib`. A finding
+   about such an entry is reported at the `\bibliography` naming it, with `refs.bib:12:1:` in front
+   (the `reportInPaper` precedent), and a disable directive on the line above the entry in the `.bib`
+   is honoured. The reference rules (`paper/author-list`, `paper/cite-exists`) do the same.
+7. **The `bib` rules are built by the root with their ports** (`src/bib-rules.ts`, as
+   `src/reference-rules.ts` is), not imported from `eslint-rules/` (§3.6) nor carried in `settings`
+   (finding 9). `eslint-rules/bib-reachable-entry.ts` is gone; `bibRange` is no longer exported and
+   is used only by `paper-typography`'s `skippedRanges`, which PR 2 replaces.
+8. **Each rule reads the paper again, so the parse is memoised.** Measured on the accepted ACM paper:
+   0.9 s per `paperSources`, seven calls per lint (four reference rules, three `bib` rules). The latex
+   adapter keeps the last 64 parse trees by source text (`parseLatex`); after the first parse a call
+   costs 30–40 ms.
+9. **`references.json` schema 2 has `bib.sources`, a list** — a paper may declare several databases.
+   A schema-1 record reads as no record (`paper/refs-checked` warns until the next build), not as
+   `stale` as §5 says.
+10. **Reading the declared `.bib` files changes what the corpus reports.** On
+    `fixtures/accepted-papers/`, four papers have their `.bib` read for the first time:
+    `bib/reachable-entry` reports 92, 55, 11 and 75 entries, and `paper/refs-checked` one warning
+    each. Of the entries split by the committed `paper.bbl`, 84 are cited (real) and 94 are uncited
+    entries of shared libraries — the rule has always judged every entry of the database. Limiting it
+    to cited keys needs the keyed citations of Q3 (PR 2). 89 entries carried their only link as
+    `howpublished = {\url{…}}`, which the rule did not count; it does now.
+11. **Not moved here**: Q2 site #10 (the nudge's `[overwrite]` sentence) and #11 (`.bib` in the edit
+    guard) are hooks, PR 3; #29 (`bibInput`'s path guess) is the build, PR 4.
+
 ## Appendix A — prototype of the rule
 
 Run as `node probe.mjs <cwd> <files…>` with an ESLint instance whose only rule is this one
