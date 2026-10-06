@@ -90,16 +90,16 @@
   },
   "lib/markdown.ts": {
     "functional/immutable-data": {
-      "count": 8
+      "count": 4
     },
     "functional/no-let": {
       "count": 3
     },
     "functional/no-loop-statements": {
-      "count": 8
+      "count": 5
     },
     "functional/prefer-immutable-types": {
-      "count": 11
+      "count": 5
     }
   },
   "lib/paper-config.ts": {
