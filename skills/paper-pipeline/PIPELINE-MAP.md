@@ -19,7 +19,7 @@ no fucking idea how the pipeline works right now."
 ```
 ┌─ TIER 1: WHILE WRITING ────────────────────── instant, in-session ──┐
 │                                                                      │
-│  you edit paper.md / paper.tex                                      │
+│  you edit paper.tex                                                 │
 │         │                                                            │
 │         ├─ PreToolUse   → paper-lint pre      🛑 THE ONLY BLOCKER   │
 │         │                  paragraph >200 words · ≥9 numbers ·      │

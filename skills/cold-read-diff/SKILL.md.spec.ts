@@ -60,7 +60,7 @@ one, and its confusion is the finding.
 
 ## How to run it
 
-1. **Take the diff.** \`git diff -U0 -- <paper.md>\` since the last commit, or the \`new_string\` of the
+1. **Take the diff.** \`git diff -U0 -- <paper.tex>\` since the last commit, or the \`new_string\` of the
    edits just applied. Prose only — skip comments, tables, bibliography.
 2. **Spawn TWO agents with no repository context, one per persona, in parallel.** Give each the
    changed paragraphs **as text in the prompt**, not as a file path. A path is an invitation to read

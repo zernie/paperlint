@@ -50,15 +50,6 @@ test("checkAuthors sorts every kind of entry into its bucket", async () => {
     entry("nomatch", "Ada Lovelace", "Nobody Has This"),
     entry("onlycorr", "Ada Lovelace", "Only On CoRR"),
     entry("down", "Ada Lovelace", "Service Down"),
-    {
-      type: "mdref",
-      key: "sw",
-      unparsed: true,
-      author: "",
-      title: "",
-      booktitle: "",
-      journal: "",
-    },
   ];
   const answers = {
     "Same Paper": [hit("Same Paper.", ["Ada Lovelace", "Alan Turing"])],
@@ -101,10 +92,6 @@ test("checkAuthors sorts every kind of entry into its bucket", async () => {
         },
       ],
       skipped: [
-        {
-          key: "sw",
-          why: "no author/title — a reference to software or a dataset, DBLP does not apply",
-        },
         {
           key: "etal",
           why: "author list ends in `and others` — completeness not checkable",

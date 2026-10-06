@@ -83,7 +83,8 @@ where your papers are, and writes `{ "papersDir": … }` only when that is not `
 Everything else — a paper's `repro/` scripts, vendored JavaScript, data files — is never handed to
 ESLint, so it cannot fail the run. A file you name on the command line that is not one of these is
 refused by name — a `paper.md` or `draft.md` as a Markdown paper: a paper's source is
-`paper.tex`, and paperlint does not read Markdown papers. `node_modules/`, `.git/` and `<papers>/.template/` are skipped.
+`paper.tex`, and paperlint does not read Markdown papers. `node_modules/`, `.git/` and
+`<papers>/.template/` are skipped.
 
 ## A paper's `paperlint.json`
 

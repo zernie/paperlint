@@ -4,7 +4,7 @@ description: The orchestrator for writing a research paper end-to-end, from idea
 allowed-tools: [Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:a8a20289badf1fa8 compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:21b8b528052fd239 compiled from skills/paper-pipeline/SKILL.md.spec.ts -->
 
 # paper-pipeline — the conductor for the whole organism
 
@@ -191,7 +191,7 @@ These have no position, because a position is what made them look finished. Each
 | any `\cite` added or moved | **`verify-citations`** | An edit on the last day adds a citation the last run never saw. "We checked last cycle" does not count — the project rule, and it was numbered as a one-shot anyway. |
 | a genuine sibling surfaces | **`analyze-sibling-paper`** | Deep-read, scoop/delta, saved in `<paper-dir>/siblings/`. |
 | the contribution's framing moves | **`map-prior-work`** (delta mode) | A cheap re-sweep. ⚠️ If a rival first surfaces during citation checking, the SETUP sweep was skipped and you are reshaping the contribution under deadline. |
-| any `.tex` / `paper.md` edit | **`render-paper`** + page count | **Not a stage — a command.** Render, then eyeball pages 1–2 before believing anything about the paper. 🔴 **Rendering is continuous; ACTING on the page count is not** — see the rule below. |
+| any `.tex` edit | **`render-paper`** + page count | **Not a stage — a command.** Render, then eyeball pages 1–2 before believing anything about the paper. 🔴 **Rendering is continuous; ACTING on the page count is not** — see the rule below. |
 | the deadline approaches | the `access` row | Re-check that the profile is still ACTIVE and the portal still opens. External state rots without telling you. |
 
 ## GATES — late, expensive, each blocked on a named input
@@ -312,8 +312,7 @@ says out loud how many figures still have no machine-checked path to data. On th
 
 **Adopting it in another paper:** copy `repro/paper_numbers.py`, `repro/paper_numbers.selftest.py` and
 the three lines in `md2submission.py` that call `expand()`; generate the grandfather list from the
-current draft; register the numbers a reviewer will actually check first. `check-provenance.mjs`
-reports `no-numbers-gate` for any paper that has not.
+current draft; register the numbers a reviewer will actually check first.
 
 🔴 **Do not write the substitution half — it is `jinja2`, and `{{name}}` is already its syntax.**
 Eleven candidates were installed and run on a real markdown-source ACL paper on 2026-08-05. The

@@ -21,7 +21,7 @@ first try.
 ## 🔴 This is a COMMAND, not a stage
 
 You run it twenty times a day. It has no position in the pipeline and nothing waits its turn to reach
-it: **any \`.tex\` / \`paper.md\` edit is the trigger** — render, then eyeball pages 1–2 before believing
+it: **any \`.tex\` edit is the trigger** — render, then eyeball pages 1–2 before believing
 anything you say about the paper. Scorecard row **\`render\`** (in the CONTINUOUS section of
 \`paper-pipeline\`) records the last render and its page count; that page count is the hard input the
 \`tighten-paper\` structure gate is blocked on, which is the only sense in which anything "comes after"

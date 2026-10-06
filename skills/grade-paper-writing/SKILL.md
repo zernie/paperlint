@@ -4,7 +4,7 @@ description: Use when asking "does this paper read well?" / "is the writing any 
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:03d0377baf71967f compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:50e2d475a95e5704 compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
 
 # grade-paper-writing — grade how the paper READS, then fix it sentence by sentence
 
@@ -226,21 +226,6 @@ is what happened.
    point; judging it is"*) and the appositive that reaches headings (*"Admission, not translation"*).
    A number printed without a threshold is prose; that is this project's own thesis, and the linter
    was violating it.
-
-6a. 🔴 **`prose-lint.mjs` IS NO LONGER ALONE — seven of its twelve gating metrics moved
-   on 2026-08-26 into ESLint rules, and running only it shows you five twelfths.** A second
-   run is mandatory; without it, step 6 is incomplete:
-
-   ```
-   npx eslint "papers/*/paper.md" "papers/*/draft.md"
-   ```
-
-   From there come: `paper/citation-density` · `paper/unexplained-jargon` ·
-   `paper/multi-claim-sentence` · `paper/conceits` · `paper/hedge-density` ·
-   `paper/discourse-subject` · `paper/undefined-coinage` (file — `eslint-rules/paper-craft.mjs`).
-   Gain from the move — `file:line:col` on each finding: the old report printed the sentence head,
-   and you had to find it in the article by eye. Everything step 6b says about
-   meaning regression applies to them just the same: this is diagnosis, not objective.
 
 6b. 🔴 **A lint fix that costs meaning is a REGRESSION, and no linter can see it.** The metrics above
    are diagnostics, never objectives. Optimising one directly is how a sentence gets worse while the

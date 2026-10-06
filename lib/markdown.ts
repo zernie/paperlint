@@ -2,8 +2,8 @@
  * markdown.mjs — markup parsing for EVERYTHING in this repo that reads markdown.
  *
  * Three kinds of consumer: two advisory linters (`kb-lint`, `paper-lint` — through the
- * re-export from `lint-core.mjs`) and skill scripts (`tighten-paper/structure.mjs`,
- * `grade-paper-writing/prose-lint.mjs`, `paper-pipeline/scripts/*`). Hence the home is
+ * re-export from `lint-core.mjs`) and skill scripts (`grade-paper-writing/prose-lint.mjs`,
+ * `paper-pipeline/scripts/*`). Hence the home is
  * here and not in the linter core: importing "the linter core" from a skill script
  * would be a lie about the direction of the dependency.
  *
@@ -182,7 +182,7 @@ export function headings(
  * `heading` — `null` on the zeroth element (the preamble before the first heading). It
  * is ALWAYS there, including empty: the former `split` also always returned the chunk
  * before the first separator as its zeroth element, and callers rely on that
- * (`sub === chunk` in `artifact-coverage` meant "there are no subsections").
+ * (`sub === chunk` means "there are no subsections").
  *
  * `raw` — WITH the heading line (it is used to count `§` references and bold numbers,
  * which occur in the heading itself too), `body` — without it (it is used to count words).

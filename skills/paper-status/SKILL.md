@@ -4,7 +4,7 @@ description: Answer "what's the status of the paper?" in one pass — MEASURE wh
 allowed-tools: [Bash, Read, Grep, Glob]
 ---
 
-<!-- vigiles:sha256:cdf5e1fcefdb916d compiled from skills/paper-status/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:c90bd362b565fa22 compiled from skills/paper-status/SKILL.md.spec.ts -->
 
 # paper-status — state, measured before it is narrated
 
@@ -65,7 +65,7 @@ git log --oneline @{u}..HEAD                # unpushed commits
 A gate is stale if the paper changed after the gate ran. Check it mechanically, not by recall:
 
 ```bash
-git log -1 --format=%cd --date=short -- paper.md          # when the text last moved
+git log -1 --format=%cd --date=short -- paper.tex         # when the text last moved
 ls -la reviews/ | tail -20                                # when each gate last reported
 ```
 

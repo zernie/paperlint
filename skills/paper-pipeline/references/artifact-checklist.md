@@ -65,15 +65,14 @@ Observed: a paper's released bundle contained **no data at all** for the section
 with. Six `harden-paper` passes and five review panels had not noticed. It surfaced because the
 author asked a plain question — _"did we ever actually run the artifact?"_
 
-**Run `paper-pipeline/scripts/artifact-coverage.mjs <paper-dir>` — wired into pre-commit and CI.**
-Two checks, deliberately dumb:
+**Check two things, deliberately dumb:**
 
 1. every body section that prints a figure is named in the bundle's index (`NUMBERS.md`);
 2. every path the index names exists in the bundle.
 
-Its first run found **three** gaps: one real absence, and two experiments whose data shipped but
-which the index never named — so a reviewer following the index would have concluded they were
-unreleased. Absence and unfindability fail the same way for a reader.
+The first time they were checked they found **three** gaps: one real absence, and two experiments
+whose data shipped but which the index never named — so a reviewer following the index would have
+concluded they were unreleased. Absence and unfindability fail the same way for a reader.
 
 ## Running `aclpubcheck` locally
 

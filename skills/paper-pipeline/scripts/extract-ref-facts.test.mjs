@@ -1,6 +1,6 @@
 /**
- * extract-ref-facts.mjs beyond its harness: the edges of each reader (markdown list, .bib, CrossRef,
- * arXiv, cache) and the command itself — sources, flags, the network loop (with `fetch` stubbed in
+ * extract-ref-facts.mjs beyond its harness: the edges of each reader (.bib, CrossRef, arXiv,
+ * cache) and the command itself — sources, flags, the network loop (with `fetch` stubbed in
  * the child process), and the refusals.
  */
 import assert from "node:assert/strict";
@@ -15,7 +15,6 @@ import {
   loadCache,
   loadEntries,
   parseBib,
-  parseMarkdownRefs,
   primaryOf,
   readArxiv,
   readCrossref,
@@ -28,68 +27,6 @@ const SCRIPT = join(
   "extract-ref-facts.mjs",
 );
 const root = useTempDir("extract-ref-facts-");
-
-test("markdown: the list ends at the file's end or a second References heading; lines continue an entry", () => {
-  assert.deepEqual(parseMarkdownRefs("# P\n\n## References"), []);
-  const refs = parseMarkdownRefs(
-    [
-      "## References",
-      "",
-      "1. A. Author, B. Author. *A Title.* Venue,",
-      "   continued 2021.",
-      "2. *Untitled Authors.* 2019 note",
-      "3. C. Writer 2018. *Late Year.* Venue",
-      "4. No title here at all",
-      "",
-      "## References",
-      "5. Never read. *X.* 2000",
-    ].join("\n"),
-  );
-  assert.deepEqual(
-    refs.map(({ n, line, authors, title, year, venue_text }) => ({
-      n,
-      line,
-      authors,
-      title,
-      year,
-      venue_text,
-    })),
-    [
-      {
-        n: 1,
-        line: 3,
-        authors: ["A. Author", "B. Author"],
-        title: "A Title",
-        year: "2021",
-        venue_text: "Venue, continued 2021.",
-      },
-      {
-        n: 2,
-        line: 5,
-        authors: [],
-        title: "Untitled Authors",
-        year: "2019",
-        venue_text: "2019 note",
-      },
-      {
-        n: 3,
-        line: 6,
-        authors: ["C. Writer 2018"],
-        title: "Late Year",
-        year: "2018",
-        venue_text: "Venue",
-      },
-      {
-        n: 4,
-        line: 7,
-        authors: [],
-        title: null,
-        year: null,
-        venue_text: "No title here at all",
-      },
-    ],
-  );
-});
 
 test(".bib: a key the text spells with spaces has no line; a missing title or year is null, not empty", async () => {
   const [entry] = await parseBib(
@@ -269,9 +206,11 @@ const CROSSREF_OK = JSON.stringify({
   },
 });
 writeTree(root, {
-  "paper/paper.md":
-    "## References\n\n1. A. A. *Found.* doi:10.1234/ok\n2. B. B. *Lost.* doi:10.1234/down\n",
-  "empty/paper.md": "# Nothing cited\n",
+  "paper/refs.bib":
+    "@misc{a, author={A. A}, title={Found}, note={doi:10.1234/ok}}\n" +
+    "@misc{b, author={B. B}, title={Lost}, note={doi:10.1234/down}}\n",
+  "empty/refs.bib": "% nothing cited\n",
+  "markdown/paper.md": "## References\n\n1. A. A. *Found.* doi:10.1234/ok\n",
   // `fetch` in the child: 10.1234/down fails at the transport, anything else is a CrossRef hit.
   "fetch.mjs":
     `globalThis.fetch = async (url) => {\n` +
@@ -309,7 +248,7 @@ test("online: hits are fetched and cached, a transport failure is named and stay
     {
       status: 0,
       stdout:
-        "📚 paper.md → paper/_build/refs.facts.json (2 entries, 2 identifiers, 1 resolved, +1 fetched)\n",
+        "📚 refs.bib → paper/_build/refs.facts.json (2 entries, 2 identifiers, 1 resolved, +1 fetched)\n",
       stderr: "   … doi:10.1234/down: network down\n",
       cached: ["doi:10.1234/ok"],
     },
@@ -321,7 +260,7 @@ test("online again: cached keys are not refetched; --quiet hides the failure; --
   assert.deepEqual(again, {
     status: 0,
     stdout:
-      "📚 paper.md → paper/_build/refs.facts.json (2 entries, 2 identifiers, 1 resolved, all from cache)\n",
+      "📚 refs.bib → paper/_build/refs.facts.json (2 entries, 2 identifiers, 1 resolved, all from cache)\n",
     stderr: "",
   });
   const refresh = cli(["paper", "--refresh", "--quiet"], { nodeArgs: FETCH });
@@ -330,7 +269,7 @@ test("online again: cached keys are not refetched; --quiet hides the failure; --
 
 test("the paper file itself as the target, with --cache, --out and --offline", () => {
   const r = cli([
-    join(root, "paper/paper.md"),
+    join(root, "paper/refs.bib"),
     "--offline",
     `--cache=${join(root, "paper/repro/refs-cache.json")}`,
     `--out=${join(root, "out/facts.json")}`,
@@ -338,7 +277,7 @@ test("the paper file itself as the target, with --cache, --out and --offline", (
   assert.deepEqual(r, {
     status: 0,
     stdout:
-      "📚 paper.md → out/facts.json (2 entries, 2 identifiers, 1 resolved, offline)\n",
+      "📚 refs.bib → out/facts.json (2 entries, 2 identifiers, 1 resolved, offline)\n",
     stderr: "",
   });
 });
@@ -348,17 +287,25 @@ test("no target: the current directory", () => {
   assert.equal(r.status, 0, r.stderr);
 });
 
-test("refusals: nowhere to read from, and zero entries (not written as a clean bibliography)", () => {
+test("refusals: nowhere to read from, a file that is not a .bib, and zero entries (not written as a clean bibliography)", () => {
   assert.deepEqual(cli([join(root, "nope"), "--offline"]), {
     status: 1,
     stdout: "",
-    stderr: `🛑 no paper.md, draft.md, refs.bib, build/custom.bib under ${join(root, "nope")} — nowhere to take a bibliography from.\n`,
+    stderr: `🛑 no refs.bib, build/custom.bib under ${join(root, "nope")} — nowhere to take a bibliography from.\n`,
   });
   assert.deepEqual(cli(["empty", "--offline"]), {
     status: 1,
     stdout: "",
     stderr:
-      "🛑 parsed 0 entries out of empty/paper.md. Silence here would look like a clean bibliography.\n",
+      "🛑 parsed 0 entries out of empty/refs.bib. Silence here would look like a clean bibliography.\n",
+  });
+  // Guards: a Markdown paper's reference list is not a source — named, not parsed as BibTeX, and
+  // nothing is written.
+  assert.deepEqual(cli([join(root, "markdown/paper.md"), "--offline"]), {
+    status: 1,
+    stdout: "",
+    stderr:
+      "🛑 markdown/paper.md is not a .bib — the bibliography is read from refs.bib or build/custom.bib.\n",
   });
 });
 

@@ -1,7 +1,7 @@
 /**
- * bib-authors.mjs as a process: which file it picks from a paper directory, the three
- * bibliography sources it reads (.bib, a .tex's filecontents or its sibling refs.bib, a markdown
- * reference list), and the report and exit code for each outcome. DBLP is a preload that answers
+ * bib-authors.mjs as a process: which file it picks from a paper directory, the bibliography
+ * sources it reads (.bib, a .tex's filecontents or its sibling refs.bib), the Markdown file it
+ * refuses, and the report and exit code for each outcome. DBLP is a preload that answers
  * by title from a table (the documented `result.hits.hit[].info` shape) — no network.
  */
 import assert from "node:assert/strict";
@@ -59,7 +59,10 @@ writeTree(root, {
   "sibling/refs.bib": bib("good", "Ada Lovelace", "All Good"),
   "nobib/paper.tex": "\\documentclass{article}\n",
   "md/paper.md":
-    "# P\n\n## References\n\n1. A. Lovelace. *All Good.* Proc. X, 2024.\n2. some-npm-package, https://npm.example\n",
+    "# P\n\n## References\n\n1. A. Lovelace. *All Good.* Proc. X, 2024.\n",
+  "md/refs.bib":
+    bib("good", "Ada Lovelace", "All Good") +
+    bib("etal", "Ada Lovelace and others", "Truncated"),
   "down/refs.bib": bib("down", "Ada Lovelace", "Service Down"),
   "empty/.keep": "",
 });
@@ -98,7 +101,7 @@ test("refusals: no argument, no such path, a directory with nothing to read, a .
       {
         status: 2,
         stdout: "",
-        stderr: "bib-authors: no .bib, .tex or paper.md in <root>/empty\n",
+        stderr: "bib-authors: no .bib or .tex in <root>/empty\n",
       },
       {
         status: 2,
@@ -162,15 +165,27 @@ test("a .tex with no filecontents reads the refs.bib beside it — PASS, exit 0"
   });
 });
 
-test("a markdown reference list: a software entry is not applicable, not dropped", () => {
+test("a Markdown paper is refused by name, not read — not even for the refs.bib beside it", () => {
+  // Guards: a paper's bibliography is BibTeX; a reference list in paper.md is not a source, and a
+  // Markdown file named on the command line must not quietly stand in for its sibling .bib.
+  const r = run(join(root, "md", "paper.md"));
+  assert.deepEqual(r, {
+    status: 2,
+    stdout: "",
+    stderr:
+      "bib-authors: <root>/md/paper.md is Markdown — give the paper's .bib or paper.tex\n",
+  });
+});
+
+test("a directory holding a stray paper.md reads its .bib; an `and others` entry is printed as not applicable", () => {
   const r = run(join(root, "md"));
   assert.deepEqual(r, {
     status: 0,
     stderr: "",
     stdout:
-      "== bib-authors: <root>/md/paper.md ==\n" +
-      "  · n/a ref2 — no author/title — a reference to software or a dataset, DBLP does not apply\n\n" +
-      "-- 1 entries · 0 difference(s) · 1 not applicable · 0 NOT CHECKED\nPASS: no author-list disagreement.\n",
+      "== bib-authors: <root>/md/refs.bib ==\n" +
+      "  · n/a etal — author list ends in `and others` — completeness not checkable\n\n" +
+      "-- 2 entries · 0 difference(s) · 1 not applicable · 0 NOT CHECKED\nPASS: no author-list disagreement.\n",
   });
 });
 

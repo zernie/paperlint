@@ -70,8 +70,8 @@ drive**.
 
 "The PDF compiled" needs no taste. "The PDF is a good paper" is nothing but taste. "The number
 recomputes from the committed data" needs no taste. "The number supports the sentence around it"
-needed taste right up until we built `check-provenance.mjs`, which is the interesting move — see the
-fourth rung.
+needed taste right up until we built the numbers gate's `requires`/`forbids` guards, which is the
+interesting move — see the fourth rung.
 
 ### Compound gates: split, never average
 
@@ -119,7 +119,7 @@ it caught a defect the judgement gates had passed:
 
 | the taste question                              | the surrogate we built                                                                              | what it caught                                                                                 |
 | ----------------------------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| does this number support this sentence          | `check-provenance.mjs` — arm word in the data path vs condition word in the sentence                | the 2026-08-05 abstract defect, 29 hours before a deadline; five judgement gates had passed it |
+| does this number support this sentence          | `repro/numbers.tsv` guards — the arm word the paragraph must name, the condition it must not claim  | the 2026-08-05 abstract defect, 29 hours before a deadline; five judgement gates had passed it |
 | is this quantity really bound to its data       | `repro/arm_permutation.py` — permute the arm labels, rebuild, an unchanged quantity was never bound | a whole class the artifact reviewer recomputes and passes, because the number is _correct_     |
 | did the number survive into the delivered paper | `repro/delivered_pdf.py` — read the built PDF back                                                  | a superscript minus lost in typesetting                                                        |
 | is this reference real                          | `extract-ref-facts.mjs` + rules `refs/*` — arXiv / CrossRef                                         | nine fabricated titles carrying correct arXiv ids, and one invented award                      |
@@ -248,21 +248,19 @@ Everything in `.claude/skills/paper-pipeline/scripts/`, `.claude/lib/` and `<pap
 construction — that is why it is trustworthy, and it is not a coincidence but a selection effect: a
 program is what you can write only when the question is Type A.
 
-| unit                                                 | question                                                                                 | rung                                                                                                                  |
-| ---------------------------------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `repro/report-submission.py`                         | body pages, overfull boxes, unresolved refs, dropped characters                          | A (3)                                                                                                                 |
-| `repro/check-anon.sh`, `check-figure.sh`             | deanonymising strings; does the figure fit the column                                    | A (3)                                                                                                                 |
-| `structure.mjs`, `prose-lint.mjs`                    | section weights, unjustified blocks, thresholds with published baselines                 | A (3) — _measuring_ a B question, which is legitimate and is not the same as answering it                             |
-| `check-provenance.mjs`                               | untraced number; arm word in the path vs condition word in the sentence                  | A (3)                                                                                                                 |
-| `population-map.mjs`, `artifact-coverage.mjs`        | which set does this number count; does the bundle hold data for what the paper points at | A (3)                                                                                                                 |
-| rules `refs/*` (facts by `extract-ref-facts.mjs`)    | does the registry have this record                                                       | A (3), **external adjudicator**                                                                                       |
-| `paper-lint.mjs`                                     | appendix ratio, shaved passages                                                          | A (3)                                                                                                                 |
-| `repro/arm_permutation.py`, `repro/delivered_pdf.py` | is the quantity bound to its arm; did it survive typesetting                             | A (3), metamorphic                                                                                                    |
-| **`repro/paper_numbers.py` + `numbers.tsv`**         | —                                                                                        | **rung 1: no PDF exists in which the number is wrong**                                                                |
-| `paper-edit-guard.hook.ts`                           | writing to a paper from Bash                                                             | rung 2 — **leaky**, an interpreter reading its program from stdin still gets through (`papers/CLAUDE.md`, 2026-08-06) |
+| unit                                                 | question                                                        | rung                                                                                                                  |
+| ---------------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `repro/report-submission.py`                         | body pages, overfull boxes, unresolved refs, dropped characters | A (3)                                                                                                                 |
+| `repro/check-anon.sh`, `check-figure.sh`             | deanonymising strings; does the figure fit the column           | A (3)                                                                                                                 |
+| `prose-lint.mjs`                                     | thresholds with published baselines                             | A (3) — _measuring_ a B question, which is legitimate and is not the same as answering it                             |
+| rules `refs/*` (facts by `extract-ref-facts.mjs`)    | does the registry have this record                              | A (3), **external adjudicator**                                                                                       |
+| `paper-lint.mjs`                                     | appendix ratio, shaved passages                                 | A (3)                                                                                                                 |
+| `repro/arm_permutation.py`, `repro/delivered_pdf.py` | is the quantity bound to its arm; did it survive typesetting    | A (3), metamorphic                                                                                                    |
+| **`repro/paper_numbers.py` + `numbers.tsv`**         | —                                                               | **rung 1: no PDF exists in which the number is wrong**                                                                |
+| `paper-edit-guard.hook.ts`                           | writing to a paper from Bash                                    | rung 2 — **leaky**, an interpreter reading its program from stdin still gets through (`papers/CLAUDE.md`, 2026-08-06) |
 
-`structure.mjs` and `prose-lint.mjs` deserve their note. They put a **number with a threshold** on
-questions that are Type B — does this section earn its place, is this sentence readable. That is not
+`prose-lint.mjs` deserves its note. It puts a **number with a threshold** on a question that is
+Type B — is this sentence readable. That is not
 cheating and it is not acquittal either: a threshold breach is a fact, and the fact drives a human or
 a judgement pass. The failure to avoid is reading a green threshold as an acquittal, which is what
 happened when a prose metric stood at 50.8 against a machine norm of 7.8 and printed as a neutral
@@ -318,7 +316,5 @@ questions into programs.
 ## See also
 
 - `review-ratchet.md` — what a caught overclaim costs, and the pass that pays it back.
-- `../scripts/round-diff.mjs` — the per-round edit gate: a driving pass may only change what it
-  declared, and the whole document's growth is measured every round.
 - the papers tree's own `CLAUDE.md` — the four-rung ladder, and the rule that a rule written in prose is
   a construction somebody did not build.

@@ -486,9 +486,7 @@ function structure(body) {
   // 🔴 The document's SHAPE — outline, order, section weights — deliberately does NOT live here.
   // It was written here first and the author drew the line correctly: "I thought prose was about
   // prose, and structure is something else entirely" (said in Russian). Prose-lint judges sentences.
-  // Structure belongs to tighten-paper, which had no mechanical leg at all, so the inventory now
-  // lives there:
-  //   node .claude/skills/tighten-paper/structure.mjs <paper.md> [--section=N]
+  // Structure belongs to tighten-paper.
   return { headings };
 }
 

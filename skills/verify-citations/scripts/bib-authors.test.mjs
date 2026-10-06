@@ -14,12 +14,7 @@
  */
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import {
-  surnames,
-  compare,
-  claimsPublished,
-  parseMarkdownRefs,
-} from "./bib-authors.mjs";
+import { surnames, compare, claimsPublished } from "./bib-authors.mjs";
 
 const t = test;
 
@@ -133,43 +128,5 @@ t("a proceedings entry IS in scope", () => {
       journal: "",
     }),
     true,
-  );
-});
-
-console.log("bib-authors — where the bibliography begins");
-
-// Both halves. "Silent on a fence" without "finds the real one" is indistinguishable from a broken parse.
-t("a real ## References is parsed", () => {
-  const md = [
-    "# Paper",
-    "text",
-    "",
-    "## References",
-    "",
-    "1. A. Author. *A title*. In NeurIPS, 2023.",
-  ].join("\n");
-  const refs = parseMarkdownRefs(md);
-  assert.equal(refs.length, 1);
-  assert.match(refs[0].title, /A title/);
-});
-
-t("a ## References inside a ``` fence does NOT open the bibliography", () => {
-  const md = [
-    "# Paper",
-    "",
-    "The section is written like this:",
-    "",
-    "```markdown",
-    "## References",
-    "",
-    "1. Z. Ghost. *Not a reference, but a markup example*. In Nowhere, 2020.",
-    "```",
-    "",
-    "The end.",
-  ].join("\n");
-  assert.deepEqual(
-    parseMarkdownRefs(md),
-    [],
-    "quoted markup is not a bibliography — the ^#+ regex counted it as a heading",
   );
 });

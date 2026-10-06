@@ -68,7 +68,7 @@ function run(dir, flagsOnly = true) {
 function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
   const d = join(tmp, `f${++n}`);
   mkdirSync(d, { recursive: true });
-  writeFileSync(join(d, "paper.md"), "## 1. x\n\nprose\n");
+  writeFileSync(join(d, "paper.tex"), "\\section{x}\nprose\n");
   if (at === null) return d;
   mkdirSync(join(d, at), { recursive: true });
   for (const [p, src] of Object.entries(scripts)) {
@@ -142,13 +142,13 @@ function fixture({ scripts = {}, allow = null, bundle = {}, at = "repro" }) {
     fixture({
       scripts: {
         "wc.py":
-          'text = open("/home/example/papers/paper.md").read()\nprint(len(text.split()))\n',
+          'text = open("/home/example/papers/paper.tex").read()\nprint(len(text.split()))\n',
       },
     }),
   );
   assert.match(
     r.out,
-    /ABS_PATH\s+repro\/wc\.py — hard-codes 1 absolute path\(s\), e\.g\. `\/home\/example\/papers\/paper\.md`/,
+    /ABS_PATH\s+repro\/wc\.py — hard-codes 1 absolute path\(s\), e\.g\. `\/home\/example\/papers\/paper\.tex`/,
     "a script that only runs on its author's laptop shipped in the reproduction directory unremarked:\n" +
       r.out,
   );
