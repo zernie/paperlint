@@ -186,7 +186,7 @@ export const papersRoot = (rawConfig) => {
 /**
  * Redirection targets (`> f`, `>> f`, `1> f`, `&> f`), which `touches` cannot see.
  *
- * MEASURED, not assumed: `leafCommandsNormalized("echo x > p/x/paper.md")` returns
+ * MEASURED, not assumed: `leafCommandsNormalized("echo x > p/x/paper.tex")` returns
  * `[{head:"echo", argv:["echo","x"], args:["x"], …}]` — the redirection and its target are
  * DROPPED by the parser, so they appear in no field of any leaf. The closed vocabulary
  * (`runs` / `touches` / `pipesToShell` / `isSideEffecting`) has no way to ask what a command
@@ -196,9 +196,9 @@ export const papersRoot = (rawConfig) => {
  * 🔴 THE SCAN IS QUOTE-AWARE, and the version before it was not. It stripped quoted spans
  * wholesale, so a quoted redirection target vanished with them. MEASURED on this guard:
  *
- *   echo x > <root>/x/paper.md     → blocked
- *   echo x > "<root>/x/paper.md"   → ALLOWED
- *   echo x > '<root>/x/paper.md'   → ALLOWED
+ *   echo x > <root>/x/paper.tex     → blocked
+ *   echo x > "<root>/x/paper.tex"   → ALLOWED
+ *   echo x > '<root>/x/paper.tex'   → ALLOWED
  *
  * Stripping was not merely careless: a `>` INSIDE quotes is not a redirection at all, so the
  * guard has to know about quoting or it fires on any command that merely QUOTES a paper write —
@@ -376,10 +376,7 @@ const runsMutator = (cmd) => MUTATORS.some((m) => cmd.runs(m));
  */
 const isPaperSource = (p) => !isFrozenSnapshot(p) && hasSourceExtension(p);
 
-const hasSourceExtension = (p) =>
-  p.endsWith(".tex") ||
-  /\/(paper|draft)\.md$/.test(p) ||
-  /^(paper|draft)\.md$/.test(p);
+const hasSourceExtension = (p) => p.endsWith(".tex");
 
 /**
  * A FROZEN SNAPSHOT — a file under a paper's `versions/`, which is the same carve-out as the

@@ -63,12 +63,7 @@ import {
   type Merge,
   type WireResult,
 } from "./hooks-settings.ts";
-import {
-  DEFAULT_FORMAT,
-  isFormat,
-  nameProblem,
-  type PaperFormat,
-} from "./new-paper.ts";
+import { nameProblem } from "./new-paper.ts";
 // The one source for the consumer's config key lives in lib/ (the ESLint rules and the skill scripts
 // import it too). It is imported compiled, from dist/, the one path that resolves the same from src/
 // and from dist/ — see CONTRIBUTING.md.
@@ -572,17 +567,11 @@ export interface InitOptions {
   merge?: Merge | undefined;
   /** `--paper <name>`: create this paper, even without a terminal. */
   paper?: string | null;
-  /** `--format tex|md` for that paper. */
-  format?: PaperFormat | null;
   /**
    * Creates one paper and lints it — `paperlint new`'s own routine, passed in by the CLI so `init` and
    * `new` cannot drift into two implementations.
    */
-  createPaper?: (
-    papersRoot: string,
-    name: string,
-    format: PaperFormat,
-  ) => Promise<number>;
+  createPaper?: (papersRoot: string, name: string) => Promise<number>;
   /**
    * The venues a paper name may not name (`shippedVenueNames`), so `--paper aisec-2026` is refused
    * before anything is asked. `createPaper` refuses it again whatever this holds.
@@ -717,7 +706,6 @@ export async function init(
     hooks = true,
     merge,
     paper = null,
-    format = null,
     createPaper,
     venues = [],
     run = spawnSync,
@@ -824,18 +812,11 @@ export async function init(
   }
   if (wanted !== null && createPaper) {
     const problem = nameProblem(wanted, venues);
-    let fmt: PaperFormat = format ?? DEFAULT_FORMAT;
-    if (!problem && format === null && interactive) {
-      const f = (
-        await askOrDefault(ask, `  format: tex / md [${DEFAULT_FORMAT}] `)
-      )?.trim();
-      if (isFormat(f)) fmt = f;
-    }
     if (problem) {
       log(`  ✗ no paper created — ${problem}`);
       paperCode = 2;
     } else {
-      const code = await createPaper(papersAbs, wanted, fmt);
+      const code = await createPaper(papersAbs, wanted);
       if (code !== 0) {
         log(`  ⚠ the new paper's lint exited ${String(code)} — see above`);
         paperCode = code;

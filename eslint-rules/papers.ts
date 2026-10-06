@@ -41,7 +41,7 @@
  *
  *   A FILENAME MARKER, no root at all (`**\/paper.tex`).
  *     Measured on the first consumer: `paper.tex` ×4 with one outside the corpus,
- *     `PIPELINE-STATUS.md` ×6 with two of them test fixtures, `paper.md` ×3 with two outside.
+ *     `PIPELINE-STATUS.md` ×6 with two of them test fixtures.
  *     The guard that would consume this is a `deny` at `error` severity; a denial on writing
  *     a fixture gets the hook switched off the same day.
  *
@@ -134,15 +134,13 @@ export function papersRoot(
  * The glob sets a consumer declares its blocks on, derived from one root.
  *
  * 🔴 THE SHAPES LIVE HERE, NOT IN THE CONSUMER, and that is the half that keeps a rule from
- * going blind later. `paper.md` + `draft.md`, `_build/*.facts.json`, `PIPELINE-STATUS.md` are
+ * going blind later. `paper.tex`, `_build/*.facts.json`, `PIPELINE-STATUS.md` are
  * this pipeline's CONVENTION; if a rule starts reading a new file, the glob for it must arrive
  * with the rule, in the same package, rather than as a line every consumer has to add by hand
  * to keep up. A hand-maintained list of paths is the thing that rots, and rots silently.
  */
 export function paperFiles(root: string) {
   return {
-    /** Markdown drafts — the two names a paper's prose is allowed to have. */
-    md: [`${root}/*/paper.md`, `${root}/*/draft.md`],
     /** The LaTeX source of a paper (not its figures, not its vendored drafts). */
     tex: [`${root}/*/paper.tex`],
     /** The per-paper stage ledger. */

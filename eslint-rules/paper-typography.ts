@@ -41,11 +41,9 @@
  * IEEE Editorial Style Manual ("0.25, not .25") require the zero. A regex over the raw source
  * found 22 decimals on a real corpus and none was a defect: every one sat in markup (an option,
  * a column spec, a comment, a listing, a tikz coordinate). So this walks the TREE and keeps only
- * what the reader sees as a number:
- *   LaTeX     prose, inline and display math, table cells, and the text arguments of a known
- *             set of text macros. Not: any other macro's arguments, environment arguments,
- *             comments, verbatim/listings/`\lstinline`, tikz, the preamble, the bibliography.
- *   Markdown  text nodes, table cells included. Not: code, inline code, html, front matter.
+ * what the reader sees as a number: prose, inline and display math, table cells, and the text
+ * arguments of a known set of text macros. Not: any other macro's arguments, environment
+ * arguments, comments, verbatim/listings/`\lstinline`, tikz, the preamble, the bibliography.
  * Each character of a run keeps its source offset, so the finding points at the dot and the fix
  * inserts the zero there. The arXiv lookbehind stays: in `2310.05736` the dot follows a digit.
  * A text macro outside the known set (`\hl{.05}`) is read as a parameter and NOT reported — a
@@ -62,7 +60,6 @@
 import assert from "node:assert/strict";
 import { getParser } from "@unified-latex/unified-latex-util-parse";
 import { takeWhile } from "remeda";
-import type { Nodes } from "mdast";
 import {
   texToMdast,
   type TexArg,
@@ -108,7 +105,7 @@ export function bibRange(text: string): BibRange | null {
   return { start: m.index, end: m.index + whole.length, bodyStart, body };
 }
 
-/** A node of a file's projection, as far as its place goes: mdast's, or the `.tex` language's. */
+/** A node of the `.tex` language's projection, as far as its place goes. */
 interface ProjectedNode {
   readonly type: string;
   readonly position?:
@@ -372,66 +369,6 @@ export function texVisibleRuns(
   return texRuns(document ? document.content : root, false, raw, []);
 }
 
-// Markdown node types that are not prose.
-const MD_HIDDEN = new Set([
-  "code",
-  "inlineCode",
-  "html",
-  "yaml",
-  "toml",
-  "math",
-  "inlineMath",
-]);
-/**
- * The source offset of each character of a text node's value. The value is the source with
- * markdown's escapes (`\*`) and character references (`&lt;`) resolved, so the two are walked
- * side by side; a character whose source cannot be followed gets null (reported, not fixed).
- */
-function mdOffsets(value: string, src: string, start: number) {
-  const offs: (number | null)[] = [];
-  let j = start;
-  for (const ch of value) {
-    if (src[j] === ch) offs.push(j++);
-    else if (src[j] === "\\" && src[j + 1] === ch) {
-      offs.push(j + 1);
-      j += 2;
-    } else if (src[j] === "&" && /^&#?\w{1,8};/.test(src.slice(j, j + 10))) {
-      offs.push(null);
-      j = src.indexOf(";", j) + 1;
-    } else {
-      offs.push(null);
-      j++;
-    }
-  }
-  return offs;
-}
-
-function mdVisibleRuns(
-  node: Nodes | undefined,
-  src: string,
-  out: Run[] = [],
-): Run[] {
-  if (!node || MD_HIDDEN.has(node.type)) return out;
-  if (node.type === "text") {
-    const start = node.position?.start.offset;
-    out.push({
-      text: node.value,
-      offs:
-        typeof start === "number"
-          ? mdOffsets(node.value, src, start)
-          : Array.from(node.value, () => null),
-    });
-  }
-  for (const c of "children" in node ? node.children : [])
-    mdVisibleRuns(c, src, out);
-  return out;
-}
-
-const visibleRuns = (sourceCode: RuleSourceCode): Run[] =>
-  isTex(sourceCode)
-    ? texVisibleRuns(sourceCode.raw)
-    : mdVisibleRuns(sourceCode.ast, sourceCode.text);
-
 /** A report at `[from, to)` of the file. */
 const at = (
   context: RuleContext,
@@ -455,36 +392,22 @@ const SECTION_GLYPH = /§/g;
 
 function sectionWord(context: RuleContext) {
   const sc = context.sourceCode;
-  if (isTex(sc)) {
-    const seen = new Set();
-    for (const m of markupMatches(sc, SECTION_TEX)) {
-      seen.add(m.index);
-      const word = m[3] ? "Section~" : "Section ";
-      const range: [number, number] = [m.index, m.index + m[0].length];
-      at(context, range[0], range[1], {
-        messageId: "sign",
-        fix: (f) => f.replaceTextRange(range, word),
-      });
-    }
-    // A glyph before neither a reference nor a number: reported, not rewritten — there is no
-    // single right word for a doubled sign or a sign before prose.
-    for (const m of markupMatches(sc, SECTION_GLYPH))
-      if (!seen.has(m.index))
-        at(context, m.index, m.index + 1, { messageId: "sign" });
-    return;
+  if (!isTex(sc)) return;
+  const seen = new Set();
+  for (const m of markupMatches(sc, SECTION_TEX)) {
+    seen.add(m.index);
+    const word = m[3] ? "Section~" : "Section ";
+    const range: [number, number] = [m.index, m.index + m[0].length];
+    at(context, range[0], range[1], {
+      messageId: "sign",
+      fix: (f) => f.replaceTextRange(range, word),
+    });
   }
-  for (const r of visibleRuns(sc))
-    for (const m of r.text.matchAll(/§([ \t]*)(\d)?/g)) {
-      const from = r.offs[m.index];
-      if (from === null || from === undefined) continue;
-      // The sign and the space after it; the number stays.
-      const [, gap = ""] = m;
-      const range: [number, number] = [from, from + 1 + gap.length];
-      at(context, range[0], range[1], {
-        messageId: "sign",
-        ...(m[2] ? { fix: (f) => f.replaceTextRange(range, "Section ") } : {}),
-      });
-    }
+  // A glyph before neither a reference nor a number: reported, not rewritten — there is no
+  // single right word for a doubled sign or a sign before prose.
+  for (const m of markupMatches(sc, SECTION_GLYPH))
+    if (!seen.has(m.index))
+      at(context, m.index, m.index + 1, { messageId: "sign" });
 }
 
 // ── paper/leading-zero ─────────────────────────────────────────────────────────────────
@@ -508,8 +431,9 @@ const paragraphBefore = (src: string, i: number) => {
 
 function leadingZero(context: RuleContext) {
   const sc = context.sourceCode;
-  const src = isTex(sc) ? sc.raw : sc.text;
-  for (const r of visibleRuns(sc))
+  if (!isTex(sc)) return;
+  const src = sc.raw;
+  for (const r of texVisibleRuns(src))
     for (const m of r.text.matchAll(BARE_DECIMAL)) {
       const dot = r.offs[m.index];
       if (dot === null || dot === undefined) continue;

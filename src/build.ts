@@ -89,12 +89,7 @@ import { messageOf, printed } from "./domain/text.ts";
 const PIPED: ["ignore", "pipe", "pipe"] = ["ignore", "pipe", "pipe"];
 
 /** A directory counts as a paper by the same markers as `structure.ts` — one shared dictionary. */
-export const PAPER_MARKERS = [
-  "PIPELINE-STATUS.md",
-  "paper.tex",
-  "paper.md",
-  CONFIG_FILE,
-];
+export const PAPER_MARKERS = ["PIPELINE-STATUS.md", "paper.tex", CONFIG_FILE];
 
 /** The source paperlint compiles, and the job name every output file carries. */
 export const MAIN = "paper.tex";

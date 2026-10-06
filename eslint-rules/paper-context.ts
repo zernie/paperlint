@@ -8,8 +8,8 @@
  * them under `settings.paperlint.paper`
  * for `paper.tex` and for every file it includes. A rule reads the other files from disk.
  *
- * No setting — a file linted outside `paperlint lint`, or a markdown paper — means a paper of one
- * file: every rule decides on the file it was handed, as it did before.
+ * No setting — a file linted outside `paperlint lint` — means a paper of one file: every rule
+ * decides on the file it was handed, as it did before.
  */
 import { readFileSync } from "node:fs";
 import { z } from "zod";

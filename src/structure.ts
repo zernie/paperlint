@@ -26,6 +26,13 @@ import { readdirSync, existsSync } from "node:fs";
 import { join, relative, basename, isAbsolute, sep } from "node:path";
 import type { StructureConfig, StructureFinding } from "./types.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
+import { SOURCE_FILE } from "./new-paper.ts";
+
+/** Why a Markdown paper is refused — one wording for the flag, the file named to lint, the folder. */
+export const LATEX_ONLY = `a paper's source is \`${SOURCE_FILE}\` (LaTeX); paperlint does not read Markdown papers`;
+
+/** The files a Markdown paper was kept in: named when they are found, never linted. */
+export const MARKDOWN_SOURCES: readonly string[] = ["paper.md", "draft.md"];
 
 /** The requirements after the consumer's config is laid over the defaults. */
 type Rules = Required<StructureConfig>;
@@ -38,9 +45,9 @@ type Rules = Required<StructureConfig>;
  * byte-compared by the `paper/stages` rule anyway.
  */
 export const STRUCTURE_DEFAULTS = {
-  markers: ["PIPELINE-STATUS.md", "paper.tex", "paper.md", CONFIG_FILE],
+  markers: ["PIPELINE-STATUS.md", SOURCE_FILE, CONFIG_FILE],
   require: ["PIPELINE-STATUS.md"],
-  requireOneOf: [["paper.tex", "paper.md"]],
+  requireOneOf: [[SOURCE_FILE]],
   ignore: [],
 };
 
@@ -107,7 +114,7 @@ export function checkStructure(
         if (!group.some((f: string) => existsSync(join(dir, f))))
           findings.push({
             file: say(dir),
-            message: `missing all of ${group.map((f: string) => `\`${f}\``).join(", ")} — a paper directory with no source is not something the rules can check`,
+            message: `missing all of ${group.map((f: string) => `\`${f}\``).join(", ")} — ${whySourceMatters(dir)}`,
           });
     }
   }
@@ -115,10 +122,21 @@ export function checkStructure(
 }
 
 /**
+ * A folder without its source: a Markdown one beside it is named, since that is the paper the
+ * author thinks is being linted.
+ */
+function whySourceMatters(dir: string): string {
+  const markdown = MARKDOWN_SOURCES.find((f) => existsSync(join(dir, f)));
+  return markdown === undefined
+    ? `a paper directory with no source is not something the rules can check`
+    : `\`${markdown}\` is a Markdown paper: ${LATEX_ONLY} — port it to \`${SOURCE_FILE}\``;
+}
+
+/**
  * The message NAMES THE CONSEQUENCE rather than restating the condition. "missing
  * PIPELINE-STATUS.md" without the second half reads as nitpicking about formatting; with it you
  * can see which checks the directory silently loses — the rules that read the scorecard; the rules
- * over `paper.md` / `paper.tex` still run.
+ * over `paper.tex` still run.
  */
 function whyMissingMatters(file: string, dirName: string): string {
   if (file === "PIPELINE-STATUS.md")

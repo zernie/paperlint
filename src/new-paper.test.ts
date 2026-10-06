@@ -41,7 +41,7 @@ const settingsOf = (dir: string) =>
 describe("paperlint new — paperlint.json", () => {
   it("is always written, from the package template: no venue chosen yet, and valid", () => {
     const papers = join(tmp(), "papers");
-    const r = newPaper(papers, "demo", "tex", { venues: [] });
+    const r = newPaper(papers, "demo", { venues: [] });
     expect(r.ok && r.files.find((f) => f.file === "paperlint.json")).toEqual({
       file: "paperlint.json",
       status: "created",
@@ -72,7 +72,7 @@ describe("paperlint new — paperlint.json", () => {
       join(papers, OVERRIDE_DIR, "paperlint.json"),
       '{ "extends": "paperlint:aisec", "kind": "research" }\n',
     );
-    const r = newPaper(papers, "house", "tex", { venues: [] });
+    const r = newPaper(papers, "house", { venues: [] });
     expect(r.ok && r.files.find((f) => f.file === "paperlint.json")?.from).toBe(
       "project",
     );
@@ -89,7 +89,7 @@ describe("paperlint new — paperlint.json", () => {
       join(papers, "p", "paperlint.json"),
       '{"extends":"paperlint:aisec"}',
     );
-    const r = newPaper(papers, "p", "tex", { venues: [] });
+    const r = newPaper(papers, "p", { venues: [] });
     expect(
       r.ok && r.files.find((f) => f.file === "paperlint.json")?.status,
     ).toBe("kept");
@@ -106,7 +106,7 @@ describe("paperlint lint — a paper with no venue preset chosen", () => {
       join(root, "package.json"),
       JSON.stringify({ name: "c", private: true }),
     );
-    newPaper(join(root, "papers"), "demo", "tex", { venues: [] });
+    newPaper(join(root, "papers"), "demo", { venues: [] });
     if (extendsValue !== null)
       writeFileSync(
         join(root, "papers", "demo", "paperlint.json"),
@@ -488,7 +488,7 @@ describe("a project's own template", () => {
     mkdirSync(join(papers, OVERRIDE_DIR), { recursive: true });
     const src = join(papers, OVERRIDE_DIR, "paperlint.json");
     writeFileSync(src, '{\n  // our house venue\n  "extends": null\n}\n');
-    const r = newPaper(papers, "p", "tex", {
+    const r = newPaper(papers, "p", {
       venues: [],
       venue: { extends: "paperlint:aisec", kind: null },
     });
@@ -504,7 +504,7 @@ describe("a project's own template", () => {
     mkdirSync(join(papers, OVERRIDE_DIR), { recursive: true });
     writeFileSync(join(papers, OVERRIDE_DIR, "paperlint.json"), "{}\n");
     const lines = reportNewPaper(
-      newPaper(papers, "p", "tex", { venues: [] }),
+      newPaper(papers, "p", { venues: [] }),
       (p) => p,
     );
     expect(lines).toContain(

@@ -11,7 +11,6 @@
  */
 import { describe, expect, it } from "vitest";
 import { ESLint } from "eslint";
-import markdown from "@eslint/markdown";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -48,16 +47,6 @@ const eslint = (fix = false) =>
         language: "tex/latex",
         linterOptions: { reportUnusedDisableDirectives: "error" },
         rules: RULES,
-      },
-      {
-        files: ["**/*.md"],
-        plugins: { markdown, paper: typography },
-        language: "markdown/gfm",
-        languageOptions: { frontmatter: "yaml" },
-        rules: {
-          "paper/section-word": "warn",
-          "paper/leading-zero": "warn",
-        },
       },
     ],
   });
@@ -164,14 +153,6 @@ describe("paper/section-word", () => {
       "\\documentclass{article}\n\\crefname{section}{§}{§§}\n\\begin{document}\nSee §5.\n\\end{document}\n";
     expect(ids(await lint(src), "paper/section-word")).toHaveLength(1);
   });
-
-  it("markdown: `§5` → `Section 5`, code untouched", async () => {
-    const src = "See §5 and `§3` here.\n";
-    expect(ids(await lint(src, "paper.md"), "paper/section-word")).toHaveLength(
-      1,
-    );
-    expect(await fixed(src, "paper.md")).toBe("See Section 5 and `§3` here.\n");
-  });
 });
 
 describe("paper/leading-zero", () => {
@@ -237,17 +218,6 @@ describe("paper/leading-zero", () => {
       doc("At $p < 0.05$ and $d=0.21$; cell & 0.037 \\\\ and .5 or 0.25."),
     );
   });
-
-  it("markdown: prose and a table cell are fixed, code is not", async () => {
-    const src =
-      "Significant at p<.05.\n\n| task | p |\n| --- | --- |\n| bugfix | .002 |\n\nRun `.25`.\n";
-    expect(ids(await lint(src, "paper.md"), "paper/leading-zero")).toHaveLength(
-      2,
-    );
-    expect(await fixed(src, "paper.md")).toBe(
-      "Significant at p<0.05.\n\n| task | p |\n| --- | --- |\n| bugfix | 0.002 |\n\nRun `.25`.\n",
-    );
-  });
 });
 
 describe("a finding after a heading written over several lines", () => {
@@ -290,14 +260,10 @@ describe("paper/leading-zero — a number after ¶ or § is not a decimal (#102)
     expect(await fixed(doc(CITE))).toBe(doc(CITE));
   });
 
-  it("…while a real decimal still fixes, in markdown too, even beside a cited paragraph", async () => {
+  it("…while a real decimal still fixes, even beside a cited paragraph", async () => {
     const body = `${CITE}\n\nWe use a threshold of .05 throughout.`;
     expect(await fixed(doc(body))).toBe(
       doc(`${CITE}\n\nWe use a threshold of 0.05 throughout.`),
-    );
-    const md = "See ¶¶.42 and .44.\n\nSignificant at p<.05.\n";
-    expect(await fixed(md, "paper.md")).toBe(
-      "See ¶¶.42 and .44.\n\nSignificant at p<0.05.\n",
     );
   });
 });
@@ -467,48 +433,6 @@ describe("where visible text comes from — the walk's other paths", () => {
   });
 });
 
-describe("markdown: offsets that cannot be followed, and rules that are LaTeX-only", () => {
-  const mdLint = async (text, rules) => {
-    const [res] = await new ESLint({
-      cwd: FIX,
-      overrideConfigFile: true,
-      overrideConfig: [
-        {
-          files: ["**/*.md"],
-          plugins: { markdown, paper: typography },
-          language: "markdown/gfm",
-          rules,
-        },
-      ],
-    }).lintText(text, { filePath: join(FIX, "inline", "paper.md") });
-    expect(res.messages.filter((m) => m.fatal)).toEqual([]);
-    return res;
-  };
-
-  it("`§` before prose is reported without a fix", async () => {
-    const src = "As § above.\n";
-    const res = await mdLint(src, { "paper/section-word": "warn" });
-    expect(res.messages.map((m) => [m.ruleId, m.column, m.fix])).toEqual([
-      ["paper/section-word", 4, undefined],
-    ]);
-  });
-
-  it("a sign or a dot written as a character reference has no source offset: nothing is reported", async () => {
-    const res = await mdLint("See &#167; 5 and &#46;25.\n", {
-      "paper/section-word": "warn",
-      "paper/leading-zero": "warn",
-    });
-    expect(res.messages).toEqual([]);
-  });
-
-  it("figure-ref-style is LaTeX-only: silent on markdown", async () => {
-    const res = await mdLint("Figure~\\ref{a} and Fig.~\\ref{b}.\n", {
-      "paper/figure-ref-style": "warn",
-    });
-    expect(res.messages).toEqual([]);
-  });
-});
-
 describe("a source code the rules did not expect — the defaults hold", () => {
   const reports = (ruleId, sourceCode) => {
     const out = [];
@@ -530,12 +454,20 @@ describe("a source code the rules did not expect — the defaults hold", () => {
     ]);
   });
 
-  it("markdown text nodes without positions: seen, never reported at a guessed place", () => {
-    const ast = {
-      type: "root",
-      children: [{ type: "text", value: "§5 and .25" }],
-    };
-    expect(reports("section-word", { text: "§5 and .25", ast })).toEqual([]);
-    expect(reports("leading-zero", { text: "§5 and .25", ast })).toEqual([]);
-  });
+  it.each(["section-word", "leading-zero", "figure-ref-style"])(
+    "%s reads LaTeX only: a source without `raw` (any other language) is not reported",
+    (ruleId) => {
+      const ast = {
+        type: "root",
+        children: [
+          {
+            type: "text",
+            value: "§5 and .25",
+            position: { start: { offset: 0 }, end: { offset: 10 } },
+          },
+        ],
+      };
+      expect(reports(ruleId, { text: "§5 and .25", ast })).toEqual([]);
+    },
+  );
 });

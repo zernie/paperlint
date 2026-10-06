@@ -96,9 +96,8 @@ const papersRoot = (rawConfig) => {
   return root;
 };
 
-/** A paper SOURCE — a `.tex`, or a markdown-drafted `paper.md` / `draft.md`. Not every note or README. */
-const isPaperSource = (p) =>
-  p.endsWith(".tex") || /\/(paper|draft)\.md$/.test(p);
+/** A paper SOURCE — a `.tex`. Not every note or README. */
+const isPaperSource = (p) => p.endsWith(".tex");
 
 const CHECKLIST = `📄 Editing a paper — drive it with the \`paper-pipeline\` skill, don't wing the review.
   → Update <paper-dir>/PIPELINE-STATUS.md: mark the row for any stage you (re)ran, and read its

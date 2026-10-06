@@ -179,10 +179,6 @@ everything.
 - **macOS and Windows.** Locally these run on whatever machine you have. In CI `build-e2e` is a
   matrix over `ubuntu-latest` and `macos-latest`; Windows is not run anywhere, and `paperlint toolchain`
   refuses it.
-- **The rules, on a real document.** `fixtures/real-markdown-paper/` holds a published article and
-  a recorded baseline of what the rules say about it. That is a **lint** fixture, driven by a
-  harness — it does not go through the installed package. Wiring it into the install corpus is
-  open work, not something already done.
 - **The skills as behaviour.** The install run proves a skill arrived and that its paths resolve.
   Whether the agent then does the right thing with it is a different measurement, and it belongs
   to the harness tier of `vigiles`, not here.
@@ -199,5 +195,7 @@ PDF, its byte counts, the cross-check between them — and copies `fixtures/buil
 it so the LaTeX rules see LaTeX rather than a placeholder.
 
 ⚠️ **Every line of that corpus was written by somebody who already knew which rule would read it.**
-It keeps the stage machinery honest and it cannot tell you anything about false positives. That is
-what the real-article fixture is for, and why the two tiers are not substitutes.
+It keeps the stage machinery honest and it cannot tell you anything about false positives. So the
+run then adds one accepted paper from `fixtures/accepted-papers/` (`secure-acsac24`) and holds the
+installed binary to that paper's recorded `baseline.json` — the same recording
+`fixtures/accepted-papers/accepted-papers.test.ts` holds the repository's own `run` to.

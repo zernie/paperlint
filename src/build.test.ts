@@ -162,7 +162,7 @@ test("documentclass: an empty name is no class; a macro inside the name contribu
 });
 
 test("facts of a paper with no paper.tex: no class", () => {
-  assert.deepEqual(readFacts(paper({ "paper.md": "# P\n" })), {
+  assert.deepEqual(readFacts(paper({ "PIPELINE-STATUS.md": "# P\n" })), {
     main: null,
     documentclass: null,
     venue: null,

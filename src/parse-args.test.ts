@@ -22,7 +22,6 @@ describe("parseArgs — `--flag=value` is the same as `--flag value`", () => {
     ["--config=o.json", "config", "o.json"],
     ["--venue=agenticdev", "venue", "agenticdev"],
     ["--kind=short", "kind", "short"],
-    ["--format=md", "format", "md"],
     ["--paper=p", "paper", "p"],
   ] as const)("%s", (flag, key, value) => {
     const a = parseArgs(["new", "x", flag]);

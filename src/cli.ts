@@ -40,6 +40,8 @@ import {
   checkStructure,
   formatStructure,
   asEslintResults,
+  LATEX_ONLY,
+  MARKDOWN_SOURCES,
 } from "./structure.ts";
 import { buildPapers, papersIn, anyFailed, remedyFor, MAIN } from "./build.ts";
 import {
@@ -133,12 +135,9 @@ import {
   processInteractivity,
 } from "./init.ts";
 import {
-  DEFAULT_FORMAT,
-  FORMATS,
-  isFormat,
   newPaper,
   reportNewPaper,
-  type PaperFormat,
+  SOURCE_FILE,
   type VenueSetting,
 } from "./new-paper.ts";
 // The one source for the consumer's config key lives in lib/ (the ESLint rules and the skill scripts
@@ -189,7 +188,7 @@ const USAGE = `paperlint — machine-checkable gates for a paper kept in git
   npx paperlint init [dir]            set the project up: detect the papers directory, declare it
                                       in package.json, link the skills, wire the hooks into
                                       .claude/settings.json, offer the CI step, report what is missing
-  npx paperlint new <name> [--venue <preset>] [--kind <kind>] [--format tex|md]
+  npx paperlint new <name> [--venue <preset>] [--kind <kind>]
                                       create <papers>/<name>/ from the template; never overwrites,
                                       on an existing folder adds only the missing files, then lints it.
                                       A <name> that names a venue (aisec-2026) is refused: name the
@@ -225,7 +224,6 @@ init:
                       or with CI set, nothing is asked either
   --no-hooks          do not wire the hooks (the default without a human is to wire them)
   --paper <name>      create this paper too (without a human, the only way init creates one)
-  --format tex|md     the new paper's source format; default tex
 
 new:
   --venue <preset>    the venue preset, written as "extends" into the paper's paperlint.json:
@@ -234,7 +232,6 @@ new:
                       On a terminal without --venue, new asks; "none" leaves it unset
   --kind <kind>       the paper's kind at that venue (its page limit), e.g. short — one of the
                       preset's kinds; needs --venue
-  --format tex|md     the paper's source format; default tex
   --allow-venue-name  create the folder even though its name names a venue (a whole word such as
                       "realm" can be the work's own). Without it such a name is refused: a rejected
                       paper moves to another venue and keeps its folder
@@ -399,8 +396,8 @@ export function buildConfig(
     },
     {
       files: ["**/PIPELINE-STATUS.md"],
-      // Every paper folder has one, whatever its source format: the rules about the folder itself
-      // (its stages, its frozen sources, its name) are judged here, once per paper.
+      // Every paper folder has one: the rules about the folder itself (its stages, its frozen
+      // sources, its name) are judged here, once per paper.
       plugins: {
         markdown,
         paper: {
@@ -418,12 +415,6 @@ export function buildConfig(
         ...FOLDER_VENUE_RULE_LEVELS,
         ...CYCLE_RULE_LEVELS,
       },
-    },
-    {
-      files: ["**/paper.md", "**/draft.md"],
-      plugins: { markdown, paper: { rules: paperRules } },
-      ...md,
-      rules: prose,
     },
     {
       files: ["**/reviews/*.md"],
@@ -585,8 +576,7 @@ export interface RulePlugin {
  * file knows every rule id. `@eslint/markdown` is a dependency's plugin and is left out. The LaTeX
  * language rides on `tex` when `texLanguage` is given, and that is how a consumer registers it: a
  * second `tex` plugin of its own is refused by ESLint ("Cannot redefine plugin "tex"", measured
- * with and without the language here). Without it, `tex` carries rules only — for a config that
- * lints markdown papers alone.
+ * with and without the language here). Without it, `tex` carries rules only.
  */
 export function rulePlugins(texLanguage?: unknown): Record<string, RulePlugin> {
   const out: Record<string, { rules: Record<string, unknown> }> = {};
@@ -872,6 +862,16 @@ const commonDir = (paths: readonly string[]): string => {
   return first.slice(0, end === -1 ? undefined : end).join(sep) || sep;
 };
 
+/**
+ * The refusal of an unknown flag. `--format` chose a Markdown source once, so it is answered with
+ * what a paper's source is rather than with the generic line.
+ */
+export function unknownFlagMessage(flag: string): string {
+  return flag === "--format" || flag.startsWith("--format=")
+    ? `\`--format\` is not a flag: ${LATEX_ONLY}`
+    : `unknown flag \`${flag}\` — \`paperlint --help\` lists every flag`;
+}
+
 export function parseArgs(argv: readonly string[]): Args {
   // `--help` is parsed BEFORE argv[0] becomes the command: otherwise `paperlint --help` answers
   // "unknown command `--help`" — caught by the very first run of the utility.
@@ -888,7 +888,6 @@ export function parseArgs(argv: readonly string[]): Args {
     noHooks: false,
     allowVenueName: false,
     paper: null,
-    format: null,
     venue: null,
     kind: null,
     pdf: null,
@@ -987,10 +986,9 @@ const SWITCHES: ReadonlyMap<
 /** The flags whose value is one string field of `Args`. */
 const STRING_FLAGS: ReadonlyMap<
   string,
-  "paper" | "format" | "venue" | "kind" | "pdf" | "abstract"
+  "paper" | "venue" | "kind" | "pdf" | "abstract"
 > = new Map([
   ["--paper", "paper"],
-  ["--format", "format"],
   ["--venue", "venue"],
   ["--kind", "kind"],
   ["--pdf", "pdf"],
@@ -1184,7 +1182,6 @@ export function runHook(
 export async function createPaperAt(
   papersRoot: string,
   name: string,
-  format: PaperFormat,
   {
     log,
     err,
@@ -1201,7 +1198,7 @@ export async function createPaperAt(
     allowVenueName?: boolean;
   },
 ): Promise<number> {
-  const result = newPaper(papersRoot, name, format, {
+  const result = newPaper(papersRoot, name, {
     venue,
     venues: allowVenueName ? [] : shippedVenueNames(PRESET_DEPS),
   });
@@ -1366,24 +1363,9 @@ async function runNew(
   const [name, ...extra] = a.paths;
   if (!name || extra.length > 0) {
     err(
-      `\`new\` takes exactly one paper name: \`paperlint new my-paper [--venue <preset>] [--kind <kind>] [--format tex|md]\``,
+      `\`new\` takes exactly one paper name: \`paperlint new my-paper [--venue <preset>] [--kind <kind>]\``,
     );
     return 2;
-  }
-  let format: PaperFormat = DEFAULT_FORMAT;
-  if (a.format !== null) {
-    if (!isFormat(a.format)) {
-      err(
-        `--format must be one of ${FORMATS.join(", ")} — got \`${a.format}\``,
-      );
-      return 2;
-    }
-    format = a.format;
-  } else if (processInteractivity(a.yes).interactive) {
-    const f = (
-      await askOrDefault(ask, `format: tex / md [${DEFAULT_FORMAT}] `)
-    )?.trim();
-    if (isFormat(f)) format = f;
   }
   const cfg = readConfig({ ...a, json: false }, { log: () => {}, err, cwd });
   if (cfg.code !== undefined) return cfg.code;
@@ -1417,7 +1399,7 @@ async function runNew(
         ask,
       });
   if (!venue.ok) return (err(venue.error), 2);
-  return createPaperAt(papersRoot, name, format, {
+  return createPaperAt(papersRoot, name, {
     log,
     err,
     cwd,
@@ -1668,10 +1650,6 @@ async function runInit(
     );
     return 2;
   }
-  if (a.format !== null && !isFormat(a.format)) {
-    err(`--format must be one of ${FORMATS.join(", ")} — got \`${a.format}\``);
-    return 2;
-  }
   return await init(a.paths[0] ?? ".", {
     log,
     err,
@@ -1679,9 +1657,8 @@ async function runInit(
     yes: a.yes,
     hooks: !a.noHooks,
     paper: a.paper,
-    format: isFormat(a.format) ? a.format : null,
-    createPaper: (papersRoot, name, format) =>
-      createPaperAt(papersRoot, name, format, { log, err, cwd }),
+    createPaper: (papersRoot, name) =>
+      createPaperAt(papersRoot, name, { log, err, cwd }),
     venues: shippedVenueNames(PRESET_DEPS),
     tex: initTexLive(a, { log, err, cwd }),
     resolveCliPapers: (root: string): string | null =>
@@ -1720,9 +1697,7 @@ export async function run(
     return 2;
   }
   if (a.unknownFlag !== undefined) {
-    err(
-      `unknown flag \`${a.unknownFlag}\` — \`paperlint --help\` lists every flag`,
-    );
+    err(unknownFlagMessage(a.unknownFlag));
     return 2;
   }
   if (a.help || !a.cmd) {
@@ -1803,8 +1778,8 @@ export async function run(
   };
 
   // Loaded lazily because only `lint` needs it. If the module cannot be loaded (a broken install:
-  // the file missing from the package), lint still runs over the markdown papers rather than
-  // failing outright — the LaTeX rules simply have no language to run in.
+  // the file missing from the package), lint still runs over the scorecards and the review notes
+  // rather than failing outright — the LaTeX rules simply have no language to run in.
   let texLanguage: unknown = null;
   try {
     ({ texLanguage } = await import("#eslint-rules/latex-language"));
@@ -1844,7 +1819,9 @@ export async function run(
   const unowned = await firstUnownedFile(eslint, paths);
   if (unowned !== null) {
     err(
-      `${shown(cwd, unowned)} is not a file paperlint lints — it lints ${PAPER_FILE_PATTERNS.join(", ")}`,
+      MARKDOWN_SOURCES.includes(basename(unowned))
+        ? `${shown(cwd, unowned)} is a Markdown paper: ${LATEX_ONLY} — port it to \`${SOURCE_FILE}\``
+        : `${shown(cwd, unowned)} is not a file paperlint lints — it lints ${PAPER_FILE_PATTERNS.join(", ")}`,
     );
     return 2;
   }
@@ -1870,7 +1847,7 @@ export async function run(
   // is not invoked — and, not being invoked, it physically cannot report that.
   if (results.length === 0) {
     err(
-      `nothing was linted under ${paths.map((x) => shown(cwd, x)).join(", ")} — no PIPELINE-STATUS.md, paper.md/tex or reviews/ found there. A clean report over zero files is not a clean report.`,
+      `nothing was linted under ${paths.map((x) => shown(cwd, x)).join(", ")} — no PIPELINE-STATUS.md, paper.tex or reviews/ found there. A clean report over zero files is not a clean report.`,
     );
     return 1;
   }

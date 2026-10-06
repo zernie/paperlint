@@ -170,7 +170,7 @@ for (const bad of ["", null, 0, false, [], {}, 42])
   const names = Object.keys(sets).sort();
   assert.deepEqual(
     names,
-    ["all", "md", "pdfFacts", "refFacts", "status", "tex", "venue"],
+    ["all", "pdfFacts", "refFacts", "status", "tex", "venue"],
     "the glob set changed — a consumer's config enumerates these by name, and a renamed or " +
       "dropped key is a block that silently lints nothing",
   );

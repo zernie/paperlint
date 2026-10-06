@@ -35,8 +35,8 @@
  *   (`284:will be released`, `284:Upon acceptance` + `285:will be made publicly available`).
  *
  * 🔴 AND ONE DISAGREEMENT, WHICH IS NOT IN THE LOGIC BUT IN THE INPUT — and it is the whole
- * gain. The old implementation picked its file by looking for `paper.md` / `draft.md` and
- * otherwise taking the FIRST `.tex` in `readdirSync` order. Measured 2026-09-07:
+ * gain. The old implementation picked its file by taking the FIRST `.tex` in `readdirSync`
+ * order. Measured 2026-09-07:
  *   paper A → a 536-BYTE file of nine `\def`s with venue numbers. The check, added
  *             specifically BECAUSE of paper A, was not reading paper A;
  *   paper B → a four-month-old draft, one of seven `.tex` files in that directory;

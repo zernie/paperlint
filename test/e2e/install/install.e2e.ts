@@ -190,7 +190,10 @@ function stageCorpus(root: string): void {
     join(paper, "versions", "2026-07-22-submitted.pdf"),
     "x".repeat(100),
   );
-  writeFileSync(join(paper, "paper.md"), "# Intro\n\nRQ1: does it hold?\n");
+  writeFileSync(
+    join(paper, "paper.tex"),
+    "\\documentclass{article}\n\\begin{document}\nRQ1: does it hold?\n\\end{document}\n",
+  );
   writeFileSync(
     join(paper, "PIPELINE-STATUS.md"),
     `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: 100\n    source: versions/s.tex\n    sourceBytes: 4\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`,
@@ -612,7 +615,7 @@ function scenario(m: Manager & { version: string }): void {
   stepImports(c);
   stepRerun(c, view, settings);
   stepLintClean(c);
-  stepRealArticle(c);
+  stepRealPaper(c);
   stepHooksAndContent(c);
   stepTaken(c, view);
   stepAidc(c);
@@ -937,45 +940,48 @@ function stepLintClean(c: Consumer): void {
   }
 }
 
-function stepRealArticle(c: Consumer): void {
+/** The accepted paper the installed binary is held to: a real IEEE paper nobody here wrote. */
+const REAL_PAPER = "secure-acsac24";
+
+function stepRealPaper(c: Consumer): void {
   const { consumer, bin } = c;
-  // 🔴 THE REAL ARTICLE, AND IT IS NOT EXPECTED TO BE CLEAN. The two papers above were written
-  // for the rules; this one was published before the rules existed, so it is the only input on
-  // which a false positive can show up. It is added AFTER the clean run, and only its own files
-  // are counted, so every finding below is the article's. The verdict is the recorded
-  // baseline — growth fails, a full vanish fails, a partial drop does not — read through the
-  // same module the in-repo harness uses, so the installed binary and the repository's own are
-  // held to one recording.
-  cpSync(
-    join(ROOT, "fixtures", "real-markdown-paper"),
-    join(consumer, "papers", "real-article"),
-    { recursive: true, verbatimSymlinks: true },
-  );
+  // 🔴 A REAL PAPER, AND IT IS NOT EXPECTED TO BE CLEAN. The two papers above were written
+  // for the rules; this one was accepted at a venue before the rules existed, so it is the only
+  // input here on which a false positive can show up. It is added AFTER the clean run, and only
+  // its own files are counted, so every finding below is the paper's. The verdict is the
+  // recorded baseline — growth fails, a full vanish fails, a partial drop does not — read through
+  // the same module `fixtures/accepted-papers/accepted-papers.test.ts` uses, so the installed
+  // binary and the repository's own `run` are held to one recording.
+  const source = join(ROOT, "fixtures", "accepted-papers", REAL_PAPER);
+  cpSync(source, join(consumer, "papers", REAL_PAPER), {
+    recursive: true,
+    verbatimSymlinks: true,
+  });
   const realLint = sh(bin, ["lint", "--json"], { cwd: consumer });
   let found: Counts | null = null;
   try {
-    // Only the article's own files: the rest of the corpus is judged above.
+    // Only the paper's own files: the rest of the corpus is judged above.
     found = countByRule(
       JSON.stringify(
         LintFiles.parse(JSON.parse(realLint.stdout)).filter((f) =>
-          f.filePath.includes(join("papers", "real-article")),
+          f.filePath.includes(join("papers", REAL_PAPER)),
         ),
       ),
     );
   } catch (e) {
     bad(
-      "`paperlint lint --json` on the real article parses",
+      "`paperlint lint --json` on the accepted paper parses",
       `${messageOf(e)}\n${realLint.stderr}`,
     );
   }
   if (found) {
     const { grew, vanished } = compareToBaseline(
       found,
-      recordedFindings(join(ROOT, "fixtures", "real-markdown-paper")),
+      recordedFindings(source),
     );
     verdict(
       grew.length === 0 && vanished.length === 0,
-      "the real article matches its baseline",
+      "the accepted paper matches its baseline",
       [
         ...grew.map(
           (g) =>
@@ -983,7 +989,7 @@ function stepRealArticle(c: Consumer): void {
         ),
         ...vanished.map((r) => `vanished: ${r}`),
       ].join("\n"),
-      `the real article matches its baseline (${Object.entries(found)
+      `the accepted paper matches its baseline (${Object.entries(found)
         .map(([r, n]) => `${r} ${String(n)}`)
         .join(", ")})`,
     );

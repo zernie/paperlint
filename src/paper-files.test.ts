@@ -20,6 +20,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { buildConfig, eslintConfig, run } from "./cli.ts";
+import { texLanguage } from "#eslint-rules/latex-language";
 import {
   narrowToOwners,
   ownedPatterns,
@@ -247,7 +248,7 @@ describe("`rules` blocks — where the rule lands", () => {
               },
             ],
           },
-          null,
+          texLanguage,
         ),
       ),
     });
@@ -257,9 +258,9 @@ describe("`rules` blocks — where the rule lands", () => {
     const status = await on("papers/a/PIPELINE-STATUS.md");
     expect(status["paper/source"]).toEqual([1]);
     expect(status["paper/section-word"]).toBeUndefined();
-    const draft = await on("papers/a/paper.md");
-    expect(draft["paper/section-word"]).toEqual([0]);
-    expect(draft["paper/source"]).toBeUndefined();
+    const source = await on("papers/a/paper.tex");
+    expect(source["paper/section-word"]).toEqual([0]);
+    expect(source["paper/source"]).toBeUndefined();
   });
 });
 

@@ -1,8 +1,8 @@
 /**
  * THE FILES PAPERLINT OWNS — read off its own config, and made the only thing ESLint may reach.
  *
- * paperlint's blocks name the files they lint (`PIPELINE-STATUS.md`, `paper.md`, `paper.tex`,
- * `reviews/*.md`, …). That list is the whole scope of `paperlint lint`, and this module turns it
+ * paperlint's blocks name the files they lint (`PIPELINE-STATUS.md`, `paper.tex`, `reviews/*.md`,
+ * …). That list is the whole scope of `paperlint lint`, and this module turns it
  * into two things ESLint understands:
  *
  * 1. **A global ignore of everything else** (`scopeToOwned`). Handing ESLint a directory is not
@@ -17,7 +17,7 @@
  * 2. **Each rule scoped to the files it was written for** (`ruleOwners` + `narrowToOwners`).
  *    One plugin NAME is bound to different plugin objects in different blocks: `paper` holds
  *    `stages`/`source`/`author-list` beside `PIPELINE-STATUS.md` and `typography` beside
- *    `paper.md`/`paper.tex`. So a consumer block that named `paper/source`
+ *    `paper.tex`. So a consumer block that named `paper/source`
  *    for every file under the papers directory reached `paper.tex`, where `paper` has no `source`
  *    — and ESLint threw `Could not find "source" in plugin "paper"` from inside `lintFiles`,
  *    after paperlint's own validation had (correctly) accepted the id. A block is therefore split
@@ -36,7 +36,7 @@
  * - a global-ignore pattern that matches a DIRECTORY hides everything inside it, so directories
  *   must be un-ignored (`!` + a pattern ending in a slash) before owned files can be;
  * - that un-ignores `node_modules/` and `.git/` too — ESLint's own defaults — so they are
- *   re-ignored after, or a `paper.md` inside a dependency would be linted;
+ *   re-ignored after, or a `paper.tex` inside a dependency would be linted;
  * - later global-ignore patterns win, across blocks, in config order;
  * - `files: [["a", "b"]]` matches a file only when BOTH patterns match.
  */

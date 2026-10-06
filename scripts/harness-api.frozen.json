@@ -10,7 +10,6 @@
     "eslint-rules/pdf-last-page-balance.harness.mjs",
     "eslint-rules/temp-root-realpath.harness.mjs",
     "eslint-rules/tex-build.harness.mjs",
-    "fixtures/real-markdown-paper/real-markdown-paper.harness.ts",
     "lib/agent-cli-version.harness.mjs",
     "lib/paper-config.harness.mjs",
     "lib/skill-trigger-cases.harness.mjs",

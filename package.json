@@ -114,7 +114,6 @@
     "eslint.config.mjs",
     "fixtures",
     "!fixtures/accepted-papers",
-    "!fixtures/real-markdown-paper",
     "hooks",
     "lib",
     "presets",

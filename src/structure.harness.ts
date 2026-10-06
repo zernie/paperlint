@@ -47,7 +47,10 @@ const paper = (name: string, files: readonly string[]) => {
 
 try {
   paper("complete", ["PIPELINE-STATUS.md", "paper.tex", "refs.bib"]);
-  paper("complete-md", ["PIPELINE-STATUS.md", "paper.md"]);
+  // a scorecard beside a Markdown paper: the paper the author thinks is linted is not a source
+  paper("markdown", ["PIPELINE-STATUS.md", "paper.md"]);
+  // a Markdown file alone is no marker: not a paper at all
+  paper("markdown-alone", ["draft.md"]);
   // the marker is present (paper.tex), the scorecard is not — the directory is linted by ZERO
   // rules and reports clean
   paper("no-scorecard", ["paper.tex", "refs.bib"]);
@@ -66,8 +69,18 @@ try {
     at("complete").length === 0,
   );
   check(
-    "and `paper.md` counts on equal footing with `paper.tex` — the corpus holds both forms",
-    at("complete-md").length === 0,
+    "🔴 a scorecard beside `paper.md` is a paper with no source, and the finding says why: Markdown is not read",
+    at("markdown").length === 1 &&
+      /missing all of `paper\.tex` — `paper\.md` is a Markdown paper: a paper's source is `paper\.tex` \(LaTeX\); paperlint does not read Markdown papers — port it to `paper\.tex`/.test(
+        at("markdown")[0]?.message ?? "",
+      ),
+  );
+  check(
+    "a Markdown file is not a marker: a folder holding only one is left alone",
+    at("markdown-alone").length === 0 &&
+      !STRUCTURE_DEFAULTS.markers.some(
+        (m) => m.endsWith(".md") && m !== "PIPELINE-STATUS.md",
+      ),
   );
   check(
     "a missing scorecard — a finding",
@@ -86,10 +99,12 @@ try {
     /no-scorecard/.test(at("no-scorecard")[0]?.message ?? ""),
   );
   check(
-    "a directory with no source — a finding, and BOTH accepted forms are listed",
+    "a directory with no source — a finding naming `paper.tex`, and no Markdown is mentioned where there is none",
     at("no-source").length === 1 &&
-      /`paper\.tex`/.test(at("no-source")[0]?.message ?? "") &&
-      /`paper\.md`/.test(at("no-source")[0]?.message ?? ""),
+      /`paper\.tex` — a paper directory with no source/.test(
+        at("no-source")[0]?.message ?? "",
+      ) &&
+      !/Markdown/.test(at("no-source")[0]?.message ?? ""),
   );
 
   // 🔴 THE PAIRED HALF: detection is GENEROUS. Without this the check would scream about every
@@ -99,14 +114,17 @@ try {
     at("research").length === 0,
   );
   check("and so are hidden directories", at(".hidden").length === 0);
-  check("exactly two findings total — nothing extra turned up", f.length === 2);
+  check(
+    "exactly three findings total — nothing extra turned up",
+    f.length === 3,
+  );
 
   // ── consumer config ────────────────────────────────────────────────────────────────
   check(
     "`ignore` exempts a directory by name",
     checkStructure(
       [papers],
-      { ignore: ["no-scorecard", "no-source"] },
+      { ignore: ["no-scorecard", "no-source", "markdown"] },
       {
         cwd: root,
       },
@@ -124,9 +142,7 @@ try {
       {
         cwd: root,
       },
-    ).some(
-      (x) => x.file.endsWith("complete-md") && /refs\.bib/.test(x.message),
-    ),
+    ).some((x) => x.file.endsWith("markdown") && /refs\.bib/.test(x.message)),
   );
   check(
     "a nonexistent root does not crash it — that's the empty-set guard talking",
@@ -148,7 +164,7 @@ try {
   const asResults = EslintResults.parse(asEslintResults(f));
   check(
     "findings come back shaped like an ESLint result — `--json` stays one array",
-    asResults.length === 2 &&
+    asResults.length === 3 &&
       asResults.every(
         (r) =>
           r.errorCount === 1 &&

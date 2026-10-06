@@ -206,7 +206,7 @@ try {
   // ═══════════════════════════════════════════════════════════════════════════
   {
     const dir = fixture({ [PAPERS_DIR_FIELD]: "docs/papers" });
-    const P = "docs/papers/alpha/paper.md";
+    const P = "docs/papers/alpha/paper.tex";
     const T = "docs/papers/alpha/paper.tex";
     const deny = (label: string, cmd: string) => {
       const r = at(dir, "paper-edit-guard", onBash(cmd));
@@ -228,7 +228,7 @@ try {
     };
 
     // The two cases `touches` alone MISSES: a redirection target is not an argv token.
-    deny("a redirect write to paper.md", `echo x ${GT} ${P}`);
+    deny("a redirect write to paper.tex", `echo x ${GT} ${P}`);
     deny("an append write to a .tex", `cat /tmp/a ${GT}${GT} ${T}`);
     deny("sed -i on a paper", `sed -i s/a/b/ ${P}`);
     deny("cp onto a paper", `cp /tmp/a ${P}`);
@@ -358,8 +358,8 @@ try {
     // for a gate that had never read the declaration. Caught by its own negative control,
     // 2026-09-12. A declared root only demonstrates anything when the default would MISS it.
     const DECLARED = "writing/drafts";
-    const declaredWrite = onBash(`echo x ${GT} ${DECLARED}/alpha/paper.md`);
-    const defaultWrite = onBash(`echo x ${GT} papers/alpha/paper.md`);
+    const declaredWrite = onBash(`echo x ${GT} ${DECLARED}/alpha/paper.tex`);
+    const defaultWrite = onBash(`echo x ${GT} papers/alpha/paper.tex`);
 
     // (a) a declared root is used AS DECLARED — and the default is NOT.
     {
@@ -479,11 +479,11 @@ try {
         r.stdout.length === 0 && r.stderr.length === 0 && r.exitCode === 0,
       );
     };
-    lands("a relative paper.md", "docs/papers/alpha/paper.md");
+    lands("a relative paper.tex", "docs/papers/alpha/paper.tex");
     lands("a .tex", "docs/papers/alpha/paper.tex");
     // 🔴 THE ABSOLUTE SPELLING. The live harness sends absolute paths; a helper that only builds
     // relative ones let an anchored predecessor pass every test while being dead in production.
-    lands("an ABSOLUTE paper.md", join(dir, "docs/papers/alpha/paper.md"));
+    lands("an ABSOLUTE paper.tex", join(dir, "docs/papers/alpha/paper.tex"));
     silent("a README under the papers root", "docs/papers/README.md");
     silent("a file outside the papers root", "README.md");
     // The advisory's own asymmetry: it goes quiet where the gate refuses.
@@ -495,7 +495,7 @@ try {
       const r = at(
         broken,
         "paper-skills-nudge",
-        onEdit("docs/papers/alpha/paper.md"),
+        onEdit("docs/papers/alpha/paper.tex"),
       );
       check(
         "nudge is SILENT (not blocking) on an unusable declaration",
@@ -508,7 +508,7 @@ try {
       const d = at(
         broken,
         "paper-skills-nudge",
-        onEdit("papers/alpha/paper.md"),
+        onEdit("papers/alpha/paper.tex"),
       );
       check(
         "nudge: an explicit null is NOT read as an absence (no fallback to the default root)",
@@ -537,15 +537,15 @@ try {
         r.stdout.length === 0 && r.stderr.length === 0 && r.exitCode === 0,
       );
     };
-    fires("a relative paper.md", "docs/papers/alpha/paper.md");
-    fires("an ABSOLUTE paper.md", join(dir, "docs/papers/alpha/paper.md"));
+    fires("a relative paper.tex", "docs/papers/alpha/paper.tex");
+    fires("an ABSOLUTE paper.tex", join(dir, "docs/papers/alpha/paper.tex"));
     silent("a README under the papers root", "docs/papers/README.md");
     silent("a file outside the papers root", "README.md");
     // 🔴 THE BOUNDARY IN `(?:^|/)`: a directory merely ENDING in the root's last segment must
     // not smuggle a match. Without the boundary this is a hit.
     silent(
       "a look-alike root (`notdocs/papers/…`)",
-      "notdocs/papers/alpha/paper.md",
+      "notdocs/papers/alpha/paper.tex",
     );
     // A `.tex` whose directory name carries a shell metacharacter cannot reach a command.
     silent(
@@ -560,8 +560,8 @@ try {
       );
       check(
         "gates: an explicit null is NOT read as an absence (no fallback to the default root)",
-        at(broken, "paper-status-gates", onEdit("papers/alpha/paper.md")).stderr
-          .length === 0,
+        at(broken, "paper-status-gates", onEdit("papers/alpha/paper.tex"))
+          .stderr.length === 0,
       );
     }
     // The declared root is regex-ESCAPED: `.` in a root must not act as a wildcard.
@@ -576,7 +576,7 @@ try {
           at(
             dotted,
             "paper-status-gates",
-            onEdit("docs.v2/papers/alpha/paper.md"),
+            onEdit("docs.v2/papers/alpha/paper.tex"),
           ).stderr,
         ),
       );
@@ -585,7 +585,7 @@ try {
         at(
           dotted,
           "paper-status-gates",
-          onEdit("docsXv2/papers/alpha/paper.md"),
+          onEdit("docsXv2/papers/alpha/paper.tex"),
         ).stderr.length === 0,
       );
     }
