@@ -1,7 +1,7 @@
 /**
- * AN ESLint LANGUAGE FOR `.tex` — so that the ~30 prose rules of a paper pipeline read papers
- * written in LaTeX, and not only papers written in markdown. The spike it grew out of lives in
- * the source corpus as a coverage measurement plus an executable prototype kept as history.
+ * AN ESLint LANGUAGE FOR `.tex` — so that prose rules read a paper's LaTeX source. The spike it
+ * grew out of lives in the source corpus as a coverage measurement plus an executable prototype
+ * kept as history.
  *
  * ── CONSTRUCTION: two legs ──────────────────────────────────────────────────
  *  1. AST — a flat mdast-like root (heading / code / html / strong) with REAL positions taken
@@ -9,9 +9,8 @@
  *  2. TEXT — a projection of `.tex` into a markdown-like view THAT PRESERVES LENGTHS AND
  *     OFFSETS: comments, the preamble, math, service macros and code environments are blanked
  *     with spaces; `\section{X}` projects to `##      X `, `\texttt{X}` to `` `X` ``.
- *     The point: a rule receives what it used to see in markdown and KNOWS NOTHING about
- *     LaTeX, while the position of a finding points into the real `.tex`. Not one rule was
- *     rewritten for LaTeX.
+ *     The point: a rule reads a plain, heading-marked text and KNOWS NOTHING about LaTeX, while
+ *     the position of a finding points into the real `.tex`.
  *
  * ── HEADING SYNTHESIS: not decoration, but the repair of seven silent rules ──
  * Measured 2026-08-26 across three real papers: NONE of them has a `Limitations` /
@@ -47,10 +46,8 @@
  *     `95   of it, costing   5 and A  B`. This matters: a word splitter counts `%` as part of
  *     a word, and a plain-language rule counts NUMBERS — so the percent sign detaches from
  *     its number. Not fixed: three exceptions would have to be written and pinned.
- *  3. THRESHOLDS WERE CALIBRATED ON MARKDOWN. 60 / 350 / 700 words were taken from a markdown
- *     paper. The projection counts differently: the same place gave 1239 words before macro
- *     blanking and 1208 after — a 2.5% discrepancy. The discrepancy is ACCEPTED deliberately;
- *     the thresholds were not recalibrated.
+ *  3. MACRO BLANKING SHIFTS WORD COUNTS. The same place gave 1239 words before macro blanking
+ *     and 1208 after — a 2.5% discrepancy, ACCEPTED deliberately.
  *  4. ONE FILE AT A TIME. `\input` / `\include` are in OPAQUE: the projection of `paper.tex`
  *     does not hold what they pull in. `paperlint lint` hands ESLint each file the paper includes
  *     from its body as a file of its own (src/paper-includes.ts), and a file with no `document`
@@ -546,9 +543,9 @@ export function texToMdast(
       // 🔴 AND SYMMETRICALLY ON THE LEFT (found by a run on 2026-08-27, not by reading). A
       // comment that follows a line of text directly, rather than a blank line, comes back from
       // unified-latex with a position starting at the PREVIOUS newline instead of at `%`.
-      // Consumers recognise a comment by its first character (`<!--` in markdown, `%` in
-      // LaTeX), so such a node was not a comment to them: notes above bold appendix lead-ins
-      // never bound, and the block-note / block-verdict rules could NEVER fire. Measured:
+      // Consumers recognise a comment by its first character (`%`), so such a node was not a
+      // comment to them: notes above bold appendix lead-ins never bound, and the block-note /
+      // block-verdict rules could NEVER fire. Measured:
       // 2 out of 2 blocks were reported as "no note AT ALL" while the notes were right there.
       let cs = pos.start.offset;
       while (cs < ce && src[cs] !== "%") cs++;

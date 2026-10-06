@@ -72,7 +72,7 @@
     //
     // A gate on banal's number would give 13 against a limit of 8 and would redden on a paper that
     // is within the limit. For an `error`-level rule that is the worst outcome. The limit stays
-    // owned by the counter inside `build-submission.sh`: it reads the markdown source and therefore
+    // owned by the counter inside `build-submission.sh`: it reads the paper's source and therefore
     // KNOWS where the body ends, which the PDF does not.
     //
     // The numbers below are DATA for that counter and for humans, not an input to the rule. Source:

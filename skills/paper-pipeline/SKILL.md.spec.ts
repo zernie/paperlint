@@ -327,24 +327,22 @@ binds every row from now on, and the existing rows are *enumerated rather than e
 says out loud how many figures still have no machine-checked path to data. On the paper that has it:
 7 guarded, 248 grandfathered. That ratio is a finding, not a score.
 
-**Adopting it in another paper:** copy \`repro/paper_numbers.py\`, \`repro/paper_numbers.selftest.py\` and
-the three lines in \`md2submission.py\` that call \`expand()\`; generate the grandfather list from the
-current draft; register the numbers a reviewer will actually check first.
+**Adopting it in another paper:** copy \`repro/paper_numbers.py\`, \`repro/paper_numbers.selftest.py\`
+and the build step that calls \`expand()\` on \`paper.tex\` before \`pdflatex\`; generate the
+grandfather list from the current draft; register the numbers a reviewer will actually check first.
 
 🔴 **Do not write the substitution half — it is \`jinja2\`, and \`{{name}}\` is already its syntax.**
-Eleven candidates were installed and run on a real markdown-source ACL paper on 2026-08-05. The
-result is not a matter of taste:
+Eleven candidates were installed and run on a real ACL paper on 2026-08-05. The result is not a
+matter of taste:
 
 | candidate | verdict, from an actual run |
 |---|---|
 | **jinja2** | **adopt.** Our \`{{annotated.failRate}}\` was already valid Jinja2; dotted names are attribute access. Zero characters changed in the paper, byte-identical \`.tex\`. This is Manubot's mechanism, taken without Manubot. Use \`StrictUndefined\`, and move the block/comment delimiters off \`{%\`/\`{#\` if the paper might ever quote a config file |
 | **knitr** | equally proven, also byte-identical. Rejected only for putting an R runtime into an artifact that otherwise needs \`python3\` + \`pdflatex\` |
-| \`\\newcommand\` + \`numbers.tex\` | works (1 line in the converter); the folk convention, ~12 GitHub hits, all hand-rolled. No package exists |
-| **Quarto**, **pandoc lua filters** | ❌ **destroy the paper.** Markdown→markdown is a pandoc AST round-trip: HTML comments become raw blocks and \`[58]\` becomes \`\\[58\\]\`, so every citation renders as literal \`\\textbackslash{}[58]\`. 3,120 diff lines on the real source. No ACL format exists for Quarto either |
+| \`\\newcommand\` + \`numbers.tex\` | works; the folk convention, ~12 GitHub hits, all hand-rolled. No package exists |
 | **cog.py** | ❌ line-oriented; cannot substitute mid-sentence |
 | **pythontex** | ❌ not in Ubuntu TeX Live at any level, not on PyPI; CTAN zip + \`.ins\` build |
-| **showyourwork** | ❌ LaTeX-only, and it manages *figures*, not in-text numbers |
-| **Pweave** | ❌ dead — the one candidate with a markdown native format, broken against modern IPython |
+| **showyourwork** | ❌ it manages *figures*, not in-text numbers |
 | DVC · datalad · papermill | orthogonal and **worth adding**: they pin the data file to the pipeline that made it, a layer below anything here |
 
 **🔴 Computing the value DISSOLVES the freshness problem — do not build a checker for it.** With no

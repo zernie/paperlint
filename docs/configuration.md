@@ -82,9 +82,7 @@ where your papers are, and writes `{ "papersDir": … }` only when that is not `
 `PIPELINE-STATUS.md`, `paper.tex` (and the files it includes), `reviews/*.md` and `siblings/*.md`.
 Everything else — a paper's `repro/` scripts, vendored JavaScript, data files — is never handed to
 ESLint, so it cannot fail the run. A file you name on the command line that is not one of these is
-refused by name — a `paper.md` or `draft.md` as a Markdown paper: a paper's source is
-`paper.tex`, and paperlint does not read Markdown papers. `node_modules/`, `.git/` and
-`<papers>/.template/` are skipped.
+refused by name. `node_modules/`, `.git/` and `<papers>/.template/` are skipped.
 
 ## A paper's `paperlint.json`
 
@@ -330,7 +328,8 @@ can turn on a rule that is off by default, or change the severity of one that is
   A pattern ending in `/**` is the usual way to name one paper.
 - **Each rule reaches only the files it is written for.** A block with `"files": ["papers/**"]` and
   `"rules": { "paper/source": "warn" }` turns `paper/source` on for every `PIPELINE-STATUS.md` under
-  `papers/`; `paper/section-word` in the same block lands on every `paper.tex`. You do not need to know which file a rule reads: your `files` narrow where it runs,
+  `papers/`; `paper/section-word` in the same block lands on every `paper.tex`. You do not need to
+  know which file a rule reads: your `files` narrow where it runs,
   never widen it. The [rule tables](rules.md) name each rule's file.
 - **A rule entry** is a severity (`"off"`, `"warn"`, `"error"`, or `0`/`1`/`2`), or a list whose
   first element is a severity and the rest are the rule's options.
@@ -362,9 +361,7 @@ and the real findings leave with it.
 }
 ```
 
-Those are the defaults; you only write the block to change them. A paper folder whose only source
-is a `paper.md` or `draft.md` is reported as missing `paper.tex`, and the finding names the
-Markdown file: paperlint reads a paper from LaTeX only. The defaults were measured against a
+Those are the defaults; you only write the block to change them. They were measured against a
 real five-paper corpus rather than chosen — it passes with zero findings, while adding
 `paper.pdf` to `require` produces two findings on papers that are perfectly fine, which is why it
 is not there.

@@ -175,18 +175,24 @@ called it "fat for no reason" after a pass that cut almost nothing and left it 1
 
 A verdict that lives in a chat log is gone by the next session, and the next session then re-derives
 it or ignores it. **Every section and subsection gets a one-line verdict comment immediately above its
-heading**, in the paper source, stamped with the date and the skill that produced it:
+heading**, in \`paper.tex\`, as LaTeX \`%\` comments, stamped with the date and the skill that
+produced it:
 
-\`\`\`
-<!-- TIGHTEN 2026-08-06 · score 8/10 · verdict: KEEP · 190w
-     carries: tools get close but none resolves a NAMED rule against a committed config
-     because: it is the only place the tool-ecosystem gap is closed; a reviewer who skips it
-              asks "hasn't this been done" and gets no answer -->
-<!-- TIGHTEN 2026-08-06 · score 5/10 · verdict: SHORTEN -89w · 210w
-     carries: why a linter for the rules file cannot work
-     because: the point lands in two sentences; the rest re-establishes what §2 already did -->
-<!-- TIGHTEN 2026-08-06 · score 2/10 · verdict: MOVE→artifact · 45w
-     carries: nothing the reader must hold to judge the contribution -->
+\`\`\`latex
+% TIGHTEN 2026-08-06 · score 8/10 · verdict: KEEP · 190w
+%   carries: tools get close but none resolves a NAMED rule against a committed config
+%   because: it is the only place the tool-ecosystem gap is closed; a reviewer who skips it
+%            asks "hasn't this been done" and gets no answer
+\\section{Related tools}
+
+% TIGHTEN 2026-08-06 · score 5/10 · verdict: SHORTEN -89w · 210w
+%   carries: why a linter for the rules file cannot work
+%   because: the point lands in two sentences; the rest re-establishes what §2 already did
+\\subsection{Why not a linter}
+
+% TIGHTEN 2026-08-06 · score 2/10 · verdict: MOVE→artifact · 45w
+%   carries: nothing the reader must hold to judge the contribution
+\\subsection{Implementation notes}
 \`\`\`
 
 🔴 **Before assigning any \`MOVE→\` verdict, read \`paper-pipeline/references/body-vs-appendix.md\`.**
@@ -269,7 +275,7 @@ Rules for these comments:
 - **A verdict nobody executed is a note, not a decision.** List the blocks still carrying a
   non-KEEP verdict — a paper full of unexecuted CUTs is worse than one never graded,
   because it reads as decided.
-- They are working notes: stripped before typesetting, like every other \`<!-- -->\` block.
+- They are working notes: a \`%\` comment never reaches the PDF.
 - The chat summary still gets written — but it is the *derivative*, and the paper is the record.
 
 ## 🧱 Enforce subsections — a section without them is a wall

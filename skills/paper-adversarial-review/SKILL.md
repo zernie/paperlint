@@ -5,7 +5,7 @@ context: fork
 allowed-tools: [Read, Write, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:fe41e7c71eb4672d compiled from skills/paper-adversarial-review/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:cb852f6fb5fb9988 compiled from skills/paper-adversarial-review/SKILL.md.spec.ts -->
 
 # paper-adversarial-review — be the reviewer who wants to reject it
 
@@ -22,7 +22,7 @@ reviewer and returns an actionable critique.
 
 ## How to run it
 Prefer a **separate model as the reviewer** (e.g. Fable via a subagent) so it's not the author
-grading itself. Give the reviewer the full paper text (Read the `.tex`/`.md`/PDF) and the target
+grading itself. Give the reviewer the full paper text (Read the `.tex`/PDF) and the target
 venue + paper type (short/full/position/benchmark). Ask for the structured output below.
 
 ## The review must cover (ranked by how often it kills a paper)

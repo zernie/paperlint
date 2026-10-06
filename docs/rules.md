@@ -268,9 +268,6 @@ The paper body is `paper.tex`, and it gets three rules of its own: `paper/typogr
 run on it but judge the files beside it. The scorecard and the review notes are Markdown files, and
 the other five rules read those.
 
-A paper written in Markdown (`paper.md`, `draft.md`) is not read: `paperlint lint` reports its
-folder as missing `paper.tex`, names the Markdown file, and refuses it by name on the command line.
-
 ## The scorecard's `bytes:` and `sourceBytes:`
 
 **When you submit,** copy the PDF and `paper.tex` you sent into the paper's `versions/` folder and

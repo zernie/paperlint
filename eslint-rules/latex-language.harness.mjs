@@ -27,7 +27,7 @@
  * registry) through this language and froze their finding counts on three real papers
  * (35 · 52 · 15 at the 2026-08-27 measurement, later 32 · 53 · 20 after captions became
  * visible on 2026-09-06). None of those modules was extracted, and the papers are private, so:
- *   - the "rules see LaTeX the way they saw markdown" half is GONE. What is left proves the
+ *   - the "rules read the projection correctly" half is GONE. What is left proves the
  *     projection is correct, not that a downstream rule consumes it correctly;
  *   - the config half that listed the rules explicitly switched `off` on `.tex` WITH A
  *     REASON is GONE with the rules;

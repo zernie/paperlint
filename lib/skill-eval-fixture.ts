@@ -10,17 +10,16 @@
  * and the zero was an artifact of the empty directory, not a fact about the skill.
  *
  * Extracted from `paper-pipeline/pipeline-firing.eval.mjs`, which had it right
- * from the start. The paper here is `paper.tex`, the only source a paper has;
- * the `paper-pipeline/*.eval.mjs` experiments keep the Markdown copy their
- * recorded baselines were measured on, so a rerun of one of them compares like
- * with like.
+ * from the start; the `paper-pipeline/*.eval.mjs` experiments carry the same
+ * block, byte for byte.
  *
  * ⚠️ AND THE PRICE, so this file is not a one-sided story (measured 2026-08-12).
  * With a fixture present the model OPENS THE PAPER and looks around, so the number
  * stops being "did the DESCRIPTION fire" and becomes "did the model go investigate
  * and then fire". A different quantity, and a costlier one: ~590k → ~780k tokens
- * per skill (+190k) and 67s → 84s, while the fixture was 1,537 characters
- * ≈ 384 tokens (measured on its Markdown form; the paper is `paper.tex` since). The growth is reading, not input size (`cache` 470k → 652k).
+ * per skill (+190k) and 67s → 84s, while the fixture measured then was 1,537
+ * characters ≈ 384 tokens. The growth is reading, not input size (`cache`
+ * 470k → 652k).
  * Cite the trigger numbers with that caveat attached — it is written out in
  * `vigiles/repro/skill-trigger-2026-08-11/README.md` under "How to read".
  */
