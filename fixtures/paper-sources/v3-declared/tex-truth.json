@@ -1,0 +1,15 @@
+{
+  "inputs": [
+    "paper.tex"
+  ],
+  "written": [],
+  "databases": [
+    "paper.bib"
+  ],
+  "citations": [
+    "declared2023"
+  ],
+  "bibitems": [
+    "declared2023"
+  ]
+}

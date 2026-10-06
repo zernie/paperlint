@@ -1,0 +1,18 @@
+{
+  "inputs": [
+    "paper.tex"
+  ],
+  "written": [
+    "refs.bib"
+  ],
+  "databases": [
+    "refs.bib"
+  ],
+  "citations": [
+    "inline2024",
+    "stale2020"
+  ],
+  "bibitems": [
+    "inline2024"
+  ]
+}

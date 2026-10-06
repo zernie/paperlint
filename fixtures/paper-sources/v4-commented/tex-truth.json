@@ -1,0 +1,16 @@
+{
+  "inputs": [
+    "paper.tex"
+  ],
+  "written": [],
+  "databases": [
+    "refs.bib"
+  ],
+  "citations": [
+    "commented2024",
+    "stale2020"
+  ],
+  "bibitems": [
+    "stale2020"
+  ]
+}

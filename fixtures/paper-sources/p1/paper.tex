@@ -1,0 +1,30 @@
+\documentclass{article}
+\begin{filecontents*}{refs.bib}
+@misc{inline2024,
+  title = {The Inline Entry},
+  author = {Doe, Jane},
+  year = {2024},
+  url = {https://example.org/inline}
+}
+\end{filecontents*}
+\begin{document}
+\section{Introduction}
+We cite the inline entry~\cite{inline2024} and the stale one~\cite{stale2020}.
+% We cite~\cite{commented2020}. The harness will be released at camera-ready.
+\input{sections/intro}
+% \input{sections/dead}
+\iffalse
+\input{sections/parked}
+\begin{figure}[t]
+\caption{Parked caption this sentence keeps going with ordinary words so that it reaches the length a long caption has in a real paper and then it keeps going a little longer still until the count is right this sentence keeps going with ordinary words so that it reaches the length a long caption has in a real.}
+\end{figure}
+The harness will be released at camera-ready.
+\fi
+\begin{figure}[t]
+\centering
+\fbox{x}
+\caption[Short]{Optional-arg caption this sentence keeps going with ordinary words so that it reaches the length a long caption has in a real paper and then it keeps going a little longer still until the count is right this sentence keeps going with ordinary words so that it reaches the length a long caption has in a real.}
+\end{figure}
+\bibliographystyle{plain}
+\bibliography{refs}
+\end{document}
