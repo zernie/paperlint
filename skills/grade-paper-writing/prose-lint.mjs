@@ -23,6 +23,7 @@
 import { paperProse } from "#src/paper-prose";
 import { latexReader } from "#src/adapters/latex/index";
 import { nodeFiles } from "#src/adapters/node/index";
+import { texToMdast } from "#eslint-rules/latex-language";
 
 const THRESHOLDS = {
   metadiscourseTotalPer1000: {
@@ -357,10 +358,20 @@ function figureFiles(pagePath, fs, path) {
   }));
 }
 
-/** Every `\caption{…}` of `sources` (`{ file, text }`), measured. */
+/**
+ * Every `\caption{…}` of `sources` (`{ file, text }`) a reader sees, measured. The LaTeX
+ * language's projection blanks what never typesets — verbatim and code, macro definitions, the
+ * preamble — and keeps a caption's argument; it keeps comments too, as `html` nodes of its tree,
+ * for the rules that read notes. So a caption is skipped when its argument is blank in the
+ * projection or it starts inside a comment: a quoted or commented-out `\caption` is not one.
+ */
 function captions(sources) {
   const out = [];
   for (const { file: f, text: s } of sources) {
+    const { root, text: seen } = texToMdast(s);
+    const comments = root.children
+      .filter((n) => n.type === "html")
+      .map((n) => [n.position.start.offset, n.position.end.offset]);
     for (const m of s.matchAll(/\\caption\{/g)) {
       let i = m.index + m[0].length,
         depth = 1,
@@ -370,6 +381,11 @@ function captions(sources) {
         else if (s[j] === "}") depth--;
         j++;
       }
+      if (
+        !/\S/.test(seen.slice(i, j - 1)) ||
+        comments.some(([a, b]) => m.index >= a && m.index < b)
+      )
+        continue;
       const text = s
         .slice(i, j - 1)
         .replace(/\\[a-zA-Z]+\s*/g, " ")

@@ -39,13 +39,15 @@ const tex = (body: string): string =>
 
 writeTree(root, {
   "p/paper.tex": tex(
-    "\\section{Introduction}\nIn this paper we present a linter. It might possibly help.\n\\input{figures/fig1}\n\\input{figures/fig2}\n\\input{figures/fig4}",
+    "\\section{Introduction}\nIn this paper we present a linter. It might possibly help.\n\\input{figures/fig1}\n\\input{figures/fig2}\n\\input{figures/fig4}\n\\input{figures/fig5}",
   ),
   "p/figures/fig1.tex": `\\begin{figure}\\caption{\\textbf{Big.} ${LONG_CAPTION_SENTENCE}. ${"More words here. ".repeat(20)}}\\end{figure}`,
   // Empty once LaTeX commands and braces are stripped: skipped, not counted as a zero-word caption.
   "p/figures/fig2.tex": "\\caption{\\centering}",
   // A lone "#": no word at all — measured as zero words, never flagged.
   "p/figures/fig4.tex": "\\caption{{#}}",
+  // Rules only: seen by the reader, but no word once the dashes are stripped — skipped.
+  "p/figures/fig5.tex": "\\caption{---}",
   "p/figures/notes.txt": "not a figure",
   "clean/paper.tex": tex("Short and plain. Nothing else."),
   // Captions in the paper itself and in a section it includes — not under figures/.
@@ -53,6 +55,10 @@ writeTree(root, {
     `Prose here. \\begin{figure}\\caption{${LONG_CAPTION_SENTENCE}.}\\end{figure}\n\\input{sec/results}`,
   ),
   "inline/sec/results.tex": `\\begin{figure}\\caption{${"Short words here. ".repeat(40)}}\\end{figure}`,
+  // One real over-long caption, and the same caption commented out and inside verbatim.
+  "commented/paper.tex": tex(
+    `Prose here.\n% \\caption{Commented ${LONG_CAPTION_SENTENCE}.}\n\\begin{verbatim}\n\\caption{Quoted ${LONG_CAPTION_SENTENCE}.}\n\\end{verbatim}\n\\begin{figure}\\caption{Real ${LONG_CAPTION_SENTENCE}.}\\end{figure}`,
+  ),
   "ends-on-marks/paper.tex": tex(
     "The method holds on every input~\\cite{knuth}. The proof is given in full (Section~\\ref{proof}). The result is new.",
   ),
@@ -229,4 +235,22 @@ test("--flags-only on a rendered page reads the captions in figures/*.tex beside
     stdout: "",
     stderr: "",
   });
+});
+
+test("🔴 a caption commented out or quoted in verbatim is not measured; a real one still is", () => {
+  const r = runNode(SCRIPT, [
+    "--flags-only",
+    join(root, "commented", "paper.tex"),
+  ]);
+  // Guards: the scan matched every `\caption{` in the raw text, comments and verbatim included.
+  assert.deepEqual(
+    {
+      status: r.status,
+      findings: r.stderr
+        .split("\n")
+        .filter((l) => l.startsWith("   paper.tex:"))
+        .map((l) => /— "(\w+)/.exec(l)?.[1]),
+    },
+    { status: 1, findings: ["Real"] },
+  );
 });
