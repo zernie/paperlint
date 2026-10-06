@@ -3,6 +3,8 @@
  * parser. The one implementation is `src/adapters/latex/` (unified-latex); `src/cli.ts` wires it.
  */
 import type { Include } from "../domain/paper-source.ts";
+import type { BibText, Bibliography } from "../domain/paper-sources.ts";
+import type { AbsolutePath } from "../domain/paths.ts";
 import type {
   ClassLine,
   DocumentClass,
@@ -14,6 +16,30 @@ import type {
   TextRun,
   TitledHeading,
 } from "../domain/tex-document.ts";
+
+/** A `filecontents` block of a source: the file it writes, `[overwrite]`/`[force]` or not, where it is. */
+export interface Filecontents {
+  readonly writes: string;
+  readonly overwrite: boolean;
+  /** The whole environment, `\begin` to `\end`. */
+  readonly span: Span;
+  /** What it writes: from the line after `\begin{…}{…}` to `\end`. */
+  readonly body: Span;
+}
+
+/** One source of a paper, as the bibliography is decided over it. */
+export interface BibSource {
+  readonly path: AbsolutePath;
+  readonly text: string;
+}
+
+/** What deciding the bibliography asks of the disk. */
+export interface BibDisk {
+  /** The `.bib` named (relative to the paper directory, where bibtex runs), or null. */
+  readonly bib: (name: string) => BibSource | null;
+  /** Whether a file is committed — what a fresh checkout of the paper holds. */
+  readonly committed: (p: AbsolutePath) => boolean;
+}
 
 export interface LatexReader {
   /** The source's `\documentclass`, as one of its states. */
@@ -55,4 +81,16 @@ export interface LatexReader {
   readonly withDocumentClass: (src: string, want: DocumentClass) => string;
   /** Every command that changes the page layout the class sets: margins, text block, line spacing. */
   readonly layoutOverrides: (src: string) => readonly LayoutOverride[];
+  /** Every live `filecontents` block, in source order: not a commented-out one, not one in `\iffalse`. */
+  readonly filecontents: (src: string) => readonly Filecontents[];
+  /** A `.bib` file's text as bibtex reads it: its entries, an entry behind `%` included. */
+  readonly bibText: (path: AbsolutePath, text: string) => BibText;
+  /**
+   * The bibliography of a paper whose sources are `sources` (the main file first), decided as TeX and
+   * bibtex would from the committed bytes (`src/domain/paper-sources.ts`).
+   */
+  readonly bibliography: (
+    sources: readonly BibSource[],
+    disk: BibDisk,
+  ) => Bibliography;
 }

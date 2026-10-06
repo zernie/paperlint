@@ -59,10 +59,11 @@ export const KEY_SIGNATURES: Readonly<
       "subfile",
       "bibliography",
       "bibliographystyle",
-      "addbibresource",
     ],
     "m",
   ),
+  // biblatex's resource takes options (`[location=remote]`) before the name.
+  ...signed(["addbibresource"], "o m"),
   ...signed(["includegraphics"], "s o o m"),
   ...signed(["usepackage", "RequirePackage", "documentclass"], "o m o"),
 ]);
@@ -134,9 +135,28 @@ const parser = once(() =>
   }),
 );
 
+/**
+ * The trees parsed last, by their source. A tree is a pure function of its text, and one lint of a
+ * paper asks for the same texts many times: every rule that reads the paper (`readPaper`,
+ * `paperSources`) parses `paper.tex` and its includes again — measured 2026-10-06 on the accepted ACM
+ * paper of the corpus, 0.9 s per `paperSources`, seven of them per lint. Bounded: past `MEMO_SIZE`
+ * sources it starts over, so a long editor session holds a paper's worth of trees, not every version.
+ */
+const MEMO_SIZE = 64;
+const memo = new Map<string, ParsedTex>();
+
 /** A LaTeX source → its tree, without the branches `\iffalse … \fi` hides (`conditionals.ts`). */
-export const parseLatex = (src: string): ParsedTex => ({
-  src,
-  root: withoutFalseBranches(src, parser().parse(src)),
-  [PARSED]: true,
-});
+export function parseLatex(src: string): ParsedTex {
+  const hit = memo.get(src);
+  if (hit !== undefined) return hit;
+  const parsed: ParsedTex = {
+    src,
+    root: withoutFalseBranches(src, parser().parse(src)),
+    [PARSED]: true,
+  };
+  // eslint-disable-next-line functional/immutable-data -- the bounded memo, see above
+  if (memo.size >= MEMO_SIZE) memo.clear();
+  // eslint-disable-next-line functional/immutable-data -- the bounded memo, see above
+  memo.set(src, parsed);
+  return parsed;
+}

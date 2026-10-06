@@ -3,7 +3,7 @@
  * whose body is in `sections/*.tex`, and report each finding at its own file and line (#144).
  *
  * The set is what TeX reads, resolved by the reader the parse-tree rules use (`bodyFiles`,
- * src/tex-paper.ts): `paper.tex` and every file an include in its document body brings in, found in
+ * src/paper-sources.ts): `paper.tex` and every file an include in its document body brings in, found in
  * the paper's directory. Not a glob over every `.tex`: a frozen version under `versions/`, a macro
  * file the preamble includes and a scratch file nothing includes are not the paper.
  *
@@ -30,7 +30,8 @@ import { PAPERLINT_SETTINGS } from "#eslint-rules/paper-context";
 import { callerPath } from "./caller-path.ts";
 import type { AbsolutePath } from "./domain/paths.ts";
 import type { ConfigBlock } from "./rules-config.ts";
-import { bodyFiles, type PaperDeps, type Unread } from "./tex-paper.ts";
+import { bodyFiles } from "./paper-sources.ts";
+import type { PaperDeps, Unread } from "./tex-paper.ts";
 
 /** The files the fragment block (`buildConfig`) claims: the only body files ESLint is handed. */
 export const FRAGMENT_FILES: readonly string[] = ["**/*.tex"];

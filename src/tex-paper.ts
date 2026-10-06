@@ -8,8 +8,8 @@
  * file — with the included file, line and column at the front of the message.
  *
  * An include is looked for where the build tells TeX to look (`texSearchPath`): the paper's own
- * directory, then paperlint's inputs. `bodyFiles` names the files of the paper's BODY the author
- * wrote — what the rules over ESLint's own LaTeX text read one by one, each at its own path.
+ * directory, then paperlint's inputs. Which of them are the paper's BODY, and every other answer about
+ * what the paper is made of, is `paperSources` (src/paper-sources.ts).
  */
 import { basename, dirname, join } from "node:path";
 import {
@@ -49,11 +49,19 @@ export function readPaper(
   });
 }
 
-/** `rel` in the first directory of the paper's TeX search path that holds it, or null. */
-const located = (dir: string, rel: string, files: Files): AbsolutePath | null =>
+/** `rel` in every directory of the paper's TeX search path that holds it, first to last. */
+export const locations = (
+  dir: string,
+  rel: string,
+  files: Files,
+): readonly AbsolutePath[] =>
   texSearchPath(dir)
     .map((d) => callerPath(join(d, rel)))
-    .find((p) => files.isFile(p)) ?? null;
+    .filter((p) => files.isFile(p));
+
+/** `rel` in the first directory of the paper's TeX search path that holds it, or null. */
+const located = (dir: string, rel: string, files: Files): AbsolutePath | null =>
+  locations(dir, rel, files)[0] ?? null;
 
 /** An include that resolved nowhere: the file that wrote it, and the path as written. */
 export interface Unread {
@@ -61,45 +69,8 @@ export interface Unread {
   readonly target: string;
 }
 
-/**
- * The files of the body of the paper whose main file is `filename`: every file an include inside its
- * `document` environment brings in, nested ones too, found in the paper's own directory. Not a
- * preamble include (macros are not the body), and not a file found only in paperlint's inputs (not
- * the author's text). `missing` is every include, anywhere, that resolved nowhere.
- */
-export function bodyFiles(
-  filename: string,
-  src: string,
-  deps: PaperDeps,
-): {
-  readonly files: readonly AbsolutePath[];
-  readonly missing: readonly Unread[];
-} {
-  const dir = dirname(filename);
-  const paper = readPaper(filename, src, deps);
-  const body = deps.latex.documentBody(src);
-  const inBody = (via: Span | null): boolean =>
-    via !== null &&
-    (body === null || (via.start >= body.start && via.end <= body.end));
-  const own = (rel: string): AbsolutePath | null => {
-    const at = located(dir, rel, deps.files);
-    return at === callerPath(join(dir, rel)) ? at : null;
-  };
-  return {
-    files: [
-      ...new Set(
-        paper.segments
-          .filter((s) => s.file !== paper.main && inBody(s.via))
-          .map((s) => own(s.file))
-          .filter((f): f is AbsolutePath => f !== null),
-      ),
-    ],
-    missing: paper.missing.map(({ file, target }) => ({ file, target })),
-  };
-}
-
 /** Line and column (1-based) of an offset in a text. */
-function lineColumn(text: string, at: number): string {
+export function lineColumn(text: string, at: number): string {
   const line = text.slice(0, at).split("\n").length;
   const column = at - text.lastIndexOf("\n", at - 1);
   return `${String(line)}:${String(column)}`;

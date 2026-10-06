@@ -8,7 +8,8 @@ import { latexReader } from "./adapters/latex/index.ts";
 import { memoryFiles } from "./adapters/memory/index.ts";
 import { join } from "node:path";
 import { texInputsDir } from "./package-dirs.ts";
-import { bodyFiles, readPaper, reportInPaper } from "./tex-paper.ts";
+import { bodyFiles } from "./paper-sources.ts";
+import { readPaper, reportInPaper } from "./tex-paper.ts";
 
 describe("readPaper — the paper as the rules read it", () => {
   it("reads includes from the paper's own directory", () => {
