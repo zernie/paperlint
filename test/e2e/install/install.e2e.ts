@@ -54,8 +54,9 @@ import { z } from "zod";
 import {
   compareToBaseline,
   countByRule,
+  recordedFindings,
   type Counts,
-} from "../../../fixtures/real-markdown-paper/baseline.ts";
+} from "../../../fixtures/accepted-papers/baseline.ts";
 import { renderDetail } from "../../../lib/check.ts";
 import { afterAll, beforeAll, describe, it } from "vitest";
 import { check, missing } from "../need.ts";
@@ -968,7 +969,10 @@ function stepRealArticle(c: Consumer): void {
     );
   }
   if (found) {
-    const { grew, vanished } = compareToBaseline(found);
+    const { grew, vanished } = compareToBaseline(
+      found,
+      recordedFindings(join(ROOT, "fixtures", "real-markdown-paper")),
+    );
     verdict(
       grew.length === 0 && vanished.length === 0,
       "the real article matches its baseline",

@@ -5,8 +5,8 @@
  *
  * A rule that says MORE about an accepted paper than recorded has gained a false positive until
  * shown otherwise; a rule that goes fully quiet without the recording being updated has died. A
- * partial drop is what a fix looks like. The comparison is the one `fixtures/real-markdown-paper/`
- * uses (`baseline.ts`), not a second copy of it.
+ * partial drop is what a fix looks like. The comparison is `baseline.ts` beside this file, the one
+ * the install e2e uses too, not a second copy of it.
  *
  * The integration tier: the CLI's own `run`, in-process, on a copy of the paper under `papers/` —
  * nothing here is true only after an install, and no build artifact is read (docs/e2e.md).
@@ -25,7 +25,7 @@ import {
   compareToBaseline,
   countByRule,
   recordedFindings,
-} from "../real-markdown-paper/baseline.ts";
+} from "./baseline.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 

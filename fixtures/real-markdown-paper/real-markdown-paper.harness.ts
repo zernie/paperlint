@@ -46,7 +46,7 @@ import {
   compareToBaseline,
   countByRule,
   recordedFindings,
-} from "./baseline.ts";
+} from "../accepted-papers/baseline.ts";
 import { createChecker } from "../../lib/check.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -112,7 +112,7 @@ const edit = (dir: string, file: string, from: string, to: string) => {
 
 // ── HALF ONE: the baseline, as data ────────────────────────────────────────────────────────
 const base = findings(null);
-const recorded = recordedFindings();
+const recorded = recordedFindings(HERE);
 const { grew, vanished } = compareToBaseline(base, recorded);
 
 check(

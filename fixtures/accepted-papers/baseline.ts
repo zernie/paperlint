@@ -1,13 +1,12 @@
 /**
- * ONE reader of `baseline.json`, shared by every run that compares against one: the harness beside
- * this file (the repository's own `bin/paperlint.mjs`), `test/e2e/install/install.e2e.ts` (the
- * binary a consumer actually got), and `fixtures/accepted-papers/accepted-papers.test.ts` (one
- * baseline per accepted paper). Two copies of "growth fails, a drop never does" would drift the
- * first time one of them is tightened, and the runs would then disagree about the same rules.
+ * ONE reader of `baseline.json`, shared by every run that compares against one:
+ * `accepted-papers.test.ts` beside this file (one baseline per accepted paper, through the CLI's
+ * own `run`) and `test/e2e/install/install.e2e.ts` (the binary a consumer actually got). Two copies
+ * of "growth fails, a drop never does" would drift the first time one of them is tightened, and the
+ * runs would then disagree about the same rules.
  */
 import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { z } from "zod";
 
 /** Findings per rule id. */
@@ -20,10 +19,8 @@ const LintOutput = z.array(
   }),
 );
 
-const HERE = dirname(fileURLToPath(import.meta.url));
-
-/** The counts recorded in `dir`'s `baseline.json` (this article's by default), `{ruleId: n}`. */
-export function recordedFindings(dir: string = HERE): Counts {
+/** The counts recorded in `dir`'s `baseline.json`, `{ruleId: n}`. */
+export function recordedFindings(dir: string): Counts {
   return Baseline.parse(
     JSON.parse(readFileSync(join(dir, "baseline.json"), "utf8")),
   ).findings;
@@ -50,12 +47,12 @@ export function countByRule(stdout: string): Counts {
  *              otherwise. Always a failure.
  *   vanished — a recorded rule went fully quiet without the recording being updated: how a check
  *              dies unnoticed. Also a failure.
- * A partial drop is neither: it is what a fix looks like (paperlint#44 is expected to take typography
- * to zero, and then the recording is updated in the same change).
+ * A partial drop is neither: it is what a fix looks like, and the recording is updated in the same
+ * change.
  */
 export function compareToBaseline(
   found: Readonly<Counts>,
-  recorded: Readonly<Counts> = recordedFindings(),
+  recorded: Readonly<Counts>,
 ): {
   grew: { rule: string; now: number; recorded: number }[];
   vanished: string[];
