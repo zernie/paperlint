@@ -1,0 +1,18 @@
+{
+  "inputs": [
+    "paper.tex"
+  ],
+  "written": [],
+  "databases": [
+    "refs.bib"
+  ],
+  "citations": [
+    "*"
+  ],
+  "bibitems": [
+    "a2brace",
+    "a1",
+    "a4",
+    "a3"
+  ]
+}

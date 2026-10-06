@@ -1,0 +1,17 @@
+{
+  "inputs": [
+    "paper.tex"
+  ],
+  "written": [],
+  "databases": [
+    "refs.bib"
+  ],
+  "citations": [
+    "*"
+  ],
+  "bibitems": [
+    "pt1",
+    "k2inComment",
+    "ok1"
+  ]
+}

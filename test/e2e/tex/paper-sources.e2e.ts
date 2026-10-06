@@ -91,7 +91,9 @@ function truthOf(paper: string): Record<string, readonly string[]> {
   const first = pass();
   run(dir, "bibtex", ["paper"]);
   const fls = [first, pass(), pass()].join("\n");
-  const read = (name: string): string => readFileSync(join(dir, name), "utf8");
+  // A file the run did not write (no \bibdata: bibtex writes no .bbl) reads as empty.
+  const read = (name: string): string =>
+    existsSync(join(dir, name)) ? readFileSync(join(dir, name), "utf8") : "";
   return {
     inputs: distinct(
       flsLines(fls, "INPUT").filter(

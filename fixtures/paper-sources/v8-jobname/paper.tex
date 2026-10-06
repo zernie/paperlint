@@ -1,0 +1,9 @@
+\documentclass{article}
+\begin{filecontents*}[overwrite]{\jobname.bib}
+@misc{jkey, title={J}, author={Doe, J}, year={2024}}
+% @misc{jdead, title={D}, author={Doe, J}, year={2020}}
+\end{filecontents*}
+\begin{document}
+Text~\cite{jkey}.
+\bibliographystyle{plain}\bibliography{\jobname}
+\end{document}

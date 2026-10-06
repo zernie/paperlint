@@ -1,0 +1,17 @@
+{
+  "inputs": [
+    "paper.tex"
+  ],
+  "written": [
+    "paper.bib"
+  ],
+  "databases": [
+    "paper.bib"
+  ],
+  "citations": [
+    "jkey"
+  ],
+  "bibitems": [
+    "jkey"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "inputs": [
+    "paper.tex",
+    "bibblock.tex"
+  ],
+  "written": [],
+  "databases": [
+    "refs.bib"
+  ],
+  "citations": [
+    "fresh"
+  ],
+  "bibitems": []
+}

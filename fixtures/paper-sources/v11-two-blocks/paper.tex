@@ -1,0 +1,12 @@
+\documentclass{article}
+\begin{filecontents*}{refs.bib}
+@misc{first, title={First}, author={A, B}, year={2020}}
+\end{filecontents*}
+\begin{filecontents*}[overwrite]{refs.bib}
+@misc{second, title={Second}, author={A, B}, year={2020}}
+\end{filecontents*}
+\begin{document}
+\nocite{*}
+\bibliographystyle{plain}
+\bibliography{refs}
+\end{document}

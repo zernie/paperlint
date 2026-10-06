@@ -1,0 +1,15 @@
+{
+  "inputs": [
+    "paper.tex"
+  ],
+  "written": [],
+  "databases": [
+    "anon.bib"
+  ],
+  "citations": [
+    "*"
+  ],
+  "bibitems": [
+    "anonkey"
+  ]
+}

@@ -1,0 +1,9 @@
+\documentclass{article}
+\usepackage{ifthen}
+\newboolean{anon}
+\setboolean{anon}{true}
+\begin{document}
+\nocite{*}
+\bibliographystyle{plain}
+\ifthenelse{\boolean{anon}}{\bibliography{anon}}{\bibliography{real}}
+\end{document}
