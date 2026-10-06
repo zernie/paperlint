@@ -3,10 +3,10 @@
  * extract-ref-facts.mjs — parse a paper's bibliography, ask the registries and write FACTS to JSON.
  * It judges nothing.
  *
- * Usage: node extract-ref-facts.mjs <paper dir|refs.bib> [--offline] [--refresh]
+ * Usage: node extract-ref-facts.mjs <paper dir|paper.tex|refs.bib> [--offline] [--refresh]
  *                                   [--cache=PATH] [--out=PATH] [--quiet]
- * Exit: 0 — facts written · 1 — nothing to write (no source, a source that is not a .bib, no
- * entries).
+ * Exit: 0 — facts written · 1 — nothing to write (no source, a source that is neither a .bib nor
+ * a .tex, no entries).
  *
  * WHY THE SPLIT. Before 2026-08-26 measurement and judgement lived in one script
  * (`verify-refs.mjs`, 20 emit sites, 8 kinds of findings) — that is, on the fifth rung of the
@@ -69,6 +69,7 @@ import {
 } from "node:fs";
 import { createHash } from "node:crypto";
 import { join, resolve, dirname, basename } from "node:path";
+import { bibRange } from "#eslint-rules/paper-typography";
 import { isMain } from "./consumer.mjs";
 
 const ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
@@ -396,21 +397,41 @@ export function recordFrom(key, cached) {
 
 // ── assembling the facts ─────────────────────────────────────────────────────
 
-/** `refs.bib` → `build/custom.bib`. `refs.bib` ADDED 26.08 (defect #1). */
-export const SOURCE_ORDER = ["refs.bib", "build/custom.bib"];
+/**
+ * `paper.tex` when it embeds its `.bib` in `filecontents` → `refs.bib` → `build/custom.bib`.
+ * `refs.bib` ADDED 26.08 (defect #1). The embedded one comes first, as in `paperlint build`
+ * (`bibliographyOf`, src/references.ts): the author edits it there, and the `refs.bib` LaTeX
+ * writes out of it is missing before a build and stale after an edit.
+ */
+export const SOURCE_ORDER = ["paper.tex", "refs.bib", "build/custom.bib"];
+
+/** Whether `p` is a source: any `.bib`, and a `.tex` only when it carries a `.bib`. */
+const isSource = (p) =>
+  !p.endsWith(".tex") || bibRange(readFileSync(p, "utf8")) !== null;
 
 export function resolveSource(target) {
   const t = resolve(target);
   if (existsSync(t) && statSync(t).isFile()) return t;
   for (const c of SOURCE_ORDER) {
     const p = join(t, c);
-    if (existsSync(p)) return p;
+    if (existsSync(p) && isSource(p)) return p;
   }
   return null;
 }
 
+/**
+ * The entries of a `.bib`, or of the `.bib` a `.tex` embeds (none when it embeds none) — each
+ * entry's `line` its line in the file read, so a finding points where the author edits.
+ */
 export async function loadEntries(path) {
-  return parseBib(readFileSync(path, "utf8"));
+  const text = readFileSync(path, "utf8");
+  if (!path.endsWith(".tex")) return parseBib(text);
+  const bib = bibRange(text);
+  if (bib === null) return [];
+  const above = text.slice(0, bib.bodyStart).split("\n").length - 1;
+  return (await parseBib(bib.body)).map((e) =>
+    e.line === 0 ? e : { ...e, line: e.line + above },
+  );
 }
 
 /** Every registry key a list of entries needs. Computed once so the requests go in one batch. */
@@ -464,11 +485,11 @@ async function main(argv) {
     );
     return 1;
   }
-  // A paper's references are read from its `.bib` only: any other file parsed as BibTeX would
-  // report zero entries for the wrong reason.
-  if (!src.endsWith(".bib")) {
+  // A paper's references are read from a `.bib`, or the one a `.tex` embeds: any other file
+  // parsed as BibTeX would report zero entries for the wrong reason.
+  if (!src.endsWith(".bib") && !src.endsWith(".tex")) {
     console.error(
-      `🛑 ${rel(src)} is not a .bib — the bibliography is read from ${SOURCE_ORDER.join(" or ")}.`,
+      `🛑 ${rel(src)} is neither a .bib nor a .tex — the bibliography is read from ${SOURCE_ORDER.join(", ")}.`,
     );
     return 1;
   }

@@ -225,6 +225,18 @@ writeTree(root, {
     "import { register } from 'node:module';\n" +
     "register('data:text/javascript,' + encodeURIComponent(\"export async function resolve(s, c, next) { if (s === '@retorquere/bibtex-parser') throw Object.assign(new Error('broken install'), { code: 'EACCES' }); return next(s, c); }\"));\n",
   "bib/refs.bib": "@misc{k, title={T}, note={doi:10.1234/ok}}\n",
+  // The bibliography is embedded in paper.tex; the refs.bib beside it is a stale build output.
+  "inline/paper.tex":
+    "\\documentclass{article}\n" +
+    "\\begin{filecontents*}[overwrite]{refs.bib}\n" +
+    "@misc{a, author={A. A}, title={Found}, note={doi:10.1234/ok}}\n" +
+    "@misc{b, author={B. B}, title={Lost}, note={doi:10.1234/down}}\n" +
+    "\\end{filecontents*}\n\\begin{document}x\\end{document}\n",
+  "inline/refs.bib": "@misc{stale, title={Stale}, note={doi:10.1234/old}}\n",
+  // A paper.tex with no embedded .bib is not a source: the refs.bib beside it is.
+  "plain/paper.tex":
+    "\\documentclass{article}\\begin{document}x\\end{document}\n",
+  "plain/refs.bib": "@misc{k, title={T}, note={doi:10.1234/ok}}\n",
 });
 const cli = (args, { cwd = root, nodeArgs = [] } = {}) =>
   runNode(SCRIPT, args, {
@@ -291,7 +303,7 @@ test("refusals: nowhere to read from, a file that is not a .bib, and zero entrie
   assert.deepEqual(cli([join(root, "nope"), "--offline"]), {
     status: 1,
     stdout: "",
-    stderr: `🛑 no refs.bib, build/custom.bib under ${join(root, "nope")} — nowhere to take a bibliography from.\n`,
+    stderr: `🛑 no paper.tex, refs.bib, build/custom.bib under ${join(root, "nope")} — nowhere to take a bibliography from.\n`,
   });
   assert.deepEqual(cli(["empty", "--offline"]), {
     status: 1,
@@ -299,12 +311,12 @@ test("refusals: nowhere to read from, a file that is not a .bib, and zero entrie
     stderr:
       "🛑 parsed 0 entries out of empty/refs.bib. Silence here would look like a clean bibliography.\n",
   });
-  // Guards: a file that is not a .bib is named, not parsed as BibTeX, and nothing is written.
+  // Guards: a file that is neither a .bib nor a .tex is named, not parsed as BibTeX, and nothing is written.
   assert.deepEqual(cli([join(root, "notes/notes.txt"), "--offline"]), {
     status: 1,
     stdout: "",
     stderr:
-      "🛑 notes/notes.txt is not a .bib — the bibliography is read from refs.bib or build/custom.bib.\n",
+      "🛑 notes/notes.txt is neither a .bib nor a .tex — the bibliography is read from paper.tex, refs.bib, build/custom.bib.\n",
   });
 });
 
@@ -323,4 +335,52 @@ test(".bib without its optional parser: the error names the install; any other f
   assert.equal(broken.status, 1);
   assert.match(broken.stderr, /broken install/);
   assert.doesNotMatch(broken.stderr, /npm i -D/);
+});
+
+test("🔴 a paper directory whose paper.tex embeds its .bib: the embedded one is read, not a stale refs.bib", () => {
+  const r = cli(["inline", "--offline"]);
+  // Guards: only materialized .bib files were looked for, so a paper with its bibliography in
+  // `filecontents` was refused before a build and read from a stale refs.bib after an edit.
+  assert.deepEqual(r, {
+    status: 0,
+    stdout:
+      "📚 paper.tex → inline/_build/refs.facts.json (2 entries, 2 identifiers, 0 resolved, offline)\n",
+    stderr: "",
+  });
+  const facts = JSON.parse(
+    readFileSync(join(root, "inline/_build/refs.facts.json"), "utf8"),
+  );
+  // Each entry's line is its line in paper.tex, where the author edits it.
+  assert.deepEqual(
+    facts.entries.map((e) => [e.key, e.line]),
+    [
+      ["a", 3],
+      ["b", 4],
+    ],
+  );
+});
+
+test("a paper.tex that embeds no .bib: in a directory the refs.bib beside it is read; named alone, it has no entries", () => {
+  assert.deepEqual(
+    cli(["plain", "--offline"]).stdout,
+    "📚 refs.bib → plain/_build/refs.facts.json (1 entries, 1 identifiers, 0 resolved, offline)\n",
+  );
+  assert.deepEqual(cli([join(root, "plain/paper.tex"), "--offline"]), {
+    status: 1,
+    stdout: "",
+    stderr:
+      "🛑 parsed 0 entries out of plain/paper.tex. Silence here would look like a clean bibliography.\n",
+  });
+});
+
+test("an embedded entry whose key has no line of its own keeps line 0, not a shifted 0", async () => {
+  const tex = join(root, "spaced.tex");
+  writeFileSync(
+    tex,
+    "x\n\\begin{filecontents*}{refs.bib}\n@misc{ spaced ,\n  note={arXiv:2101.00001}\n}\n\\end{filecontents*}\n",
+  );
+  assert.deepEqual(
+    (await loadEntries(tex)).map((e) => e.line),
+    [0],
+  );
 });
