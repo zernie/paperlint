@@ -21,11 +21,21 @@ import type {
 import { referencesStep } from "./build.ts";
 import {
   bibHash,
-  bibliographyOf,
+  checkedBibliography,
   lookupCachePath,
+  recordReferences,
   readReferences,
   referencesPath,
 } from "./references.ts";
+import { latexReader } from "./adapters/latex/index.ts";
+import {
+  notWiredSources,
+  paperSources,
+  sourcesReader,
+} from "./paper-sources.ts";
+import { readdirSync, readFileSync } from "node:fs";
+import { dirname, relative } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   parseLookupCache,
   serializeLookupCache,
@@ -44,7 +54,7 @@ const TEX = (entries: string) =>
     entries,
     "\\end{filecontents*}",
     "\\begin{document}",
-    "x",
+    "x\\bibliography{refs}",
     "\\end{document}",
     "",
   ].join("\n");
@@ -75,8 +85,23 @@ const offline: CheckReferences = (_bib, cache) =>
     cache,
   });
 
+/** The paper's sources over `files`, every file counted as committed. */
+const depsOf = (files: ReturnType<typeof memoryFiles>) => ({
+  files,
+  latex: latexReader,
+  committed: { isCommitted: () => true },
+});
+
+/** The bibliography the build checks for the paper in `files`. */
+const checkedIn = (files: ReturnType<typeof memoryFiles>) => {
+  const r = paperSources(PAPER, depsOf(files));
+  if (!r.ok) throw new Error("no paper.tex");
+  return present(checkedBibliography(r.value.bibliography), "the bibliography");
+};
+
 /** The step's context over `files`, with every port it does not use stubbed. */
 const ctx = (files: ReturnType<typeof memoryFiles>) => ({
+  readSources: sourcesReader(depsOf(files)),
   paperDir: PAPER,
   env: {},
   run: () => ({ status: 0 }),
@@ -113,7 +138,7 @@ async function lint(files: ReturnType<typeof memoryFiles>, tex: string) {
         files: ["**/paper.tex"],
         plugins: {
           tex: { languages: { latex: texLanguage } },
-          paper: { rules: referenceRules({ files }) },
+          paper: { rules: referenceRules(depsOf(files)) },
         },
         language: "tex/latex",
         rules: REFERENCE_RULE_LEVELS,
@@ -136,9 +161,10 @@ describe("the references build step", () => {
     expect(out.ok).toBe(true);
     const doc = readReferences(files, PAPER);
     expect(doc?.status).toBe("checked");
-    expect(doc?.bib.sha256).toBe(
-      bibHash(present(bibliographyOf(files, PAPER), "the bibliography")),
-    );
+    expect(doc?.bib).toEqual({
+      sources: ["paper.tex"],
+      sha256: bibHash(checkedIn(files)),
+    });
     expect(await lint(files, tex)).toEqual([]);
   });
 
@@ -333,19 +359,25 @@ describe("the reference rules", () => {
 });
 
 describe("reading what is on disk", () => {
-  it("no paper.tex: the bibliography is refs.bib, from its first byte", () => {
-    const files = memoryFiles({ [`${PAPER}/refs.bib`]: ENTRIES });
-    expect(bibliographyOf(files, PAPER)).toEqual({
-      source: "refs.bib",
-      text: ENTRIES,
-      offset: 0,
+  it("a paper.tex that declares refs and embeds nothing: the bibliography is refs.bib, all of it", () => {
+    const files = memoryFiles({
+      [`${PAPER}/paper.tex`]:
+        "\\documentclass{article}\\begin{document}\\bibliography{refs}\\end{document}",
+      [`${PAPER}/refs.bib`]: ENTRIES,
     });
+    const [bib] = checkedIn(files).texts;
+    expect([bib.path, bib.body]).toEqual([
+      `${PAPER}/refs.bib`,
+      { start: 0, end: ENTRIES.length },
+    ]);
   });
 
   it("a references.json of another schema, without entries, or not JSON reads as none", () => {
     for (const body of [
       JSON.stringify({ schema: 999, entries: [] }),
-      JSON.stringify({ schema: 1 }),
+      // Schema 1 named one file in `bib.source`; the next build rewrites it.
+      JSON.stringify({ schema: 1, entries: [] }),
+      JSON.stringify({ schema: 2 }),
       "null",
       "{",
     ]) {
@@ -360,13 +392,13 @@ const record = (
   files: ReturnType<typeof memoryFiles>,
   body: Record<string, unknown>,
 ) => {
-  const bib = present(bibliographyOf(files, PAPER), "the bibliography");
+  const bib = checkedIn(files);
   files.writeAtomic(
     absolutePath(referencesPath(PAPER)),
     new TextEncoder().encode(
       JSON.stringify({
-        schema: 1,
-        bib: { source: bib.source, sha256: bibHash(bib) },
+        schema: 2,
+        bib: { sources: ["paper.tex"], sha256: bibHash(bib) },
         ...body,
       }),
     ),
@@ -402,8 +434,9 @@ describe("the reference rules over a record written by hand", () => {
 });
 
 describe("the reference rules over refs.bib, and on other files", () => {
-  it("an external refs.bib: findings sit at the start of paper.tex, naming the key", async () => {
-    const tex = "\\documentclass{acmart}\n\\begin{document}x\\end{document}\n";
+  it("an external refs.bib: the finding sits at the \\bibliography that declares it, naming the entry's file, line and column", async () => {
+    const tex =
+      "\\documentclass{acmart}\n\\begin{document}x\n\\bibliography{refs}\\end{document}\n";
     const files = memoryFiles({
       [`${PAPER}/paper.tex`]: tex,
       [`${PAPER}/refs.bib`]: ENTRIES,
@@ -413,15 +446,15 @@ describe("the reference rules over refs.bib, and on other files", () => {
       entries: [verdict("schick2023", "mismatch")],
     });
     const msgs = await lint(files, tex);
-    expect(msgs.map((m) => [m.ruleId, m.line])).toEqual([
-      ["paper/author-list", 1],
+    expect(msgs.map((m) => [m.ruleId, m.line, m.column])).toEqual([
+      ["paper/author-list", 3, 1],
     ]);
-    expect(msgs[0]?.message).toMatch(/schick2023/);
+    expect(msgs[0]?.message).toMatch(/^refs\.bib:1:1: `schick2023`/);
   });
 
   it("only paper.tex is judged", () => {
     const files = memoryFiles({});
-    const rules = referenceRules({ files });
+    const rules = referenceRules(depsOf(files));
     for (const rule of Object.values(rules))
       expect(
         rule.create({
@@ -466,5 +499,100 @@ describe("the lookup cache — refreshed answers", () => {
         dblp: new Map(),
       }),
     });
+  });
+});
+
+// ── the planted papers of fixtures/paper-sources: the build checks what TeX reads ─────────
+
+const PLANTED = join(
+  dirname(dirname(fileURLToPath(import.meta.url))),
+  "fixtures",
+  "paper-sources",
+);
+
+/** Every file of a planted paper, held in memory under PAPER. */
+const planted = (paper: string) =>
+  memoryFiles(
+    Object.fromEntries(
+      readdirSync(join(PLANTED, paper), {
+        recursive: true,
+        withFileTypes: true,
+      })
+        .filter((e) => e.isFile())
+        .map((e) => {
+          const at = join(e.parentPath, e.name);
+          return [
+            join(PAPER, relative(join(PLANTED, paper), at)),
+            readFileSync(at, "utf8"),
+          ];
+        }),
+    ),
+  );
+
+describe("the references step reads the bibliography TeX reads (tex-truth.json)", () => {
+  it.each([
+    ["v1-stale", ["refs.bib"], ["stale2020"]],
+    ["v2-overwrite", ["paper.tex"], ["inline2024"]],
+    ["v3-declared", ["paper.bib"], ["declared2023"]],
+    ["v4-commented", ["refs.bib"], ["stale2020"]],
+    ["v5-percent-entry", ["paper.tex"], ["inline2024", "dead2020"]],
+  ])("%s: checks %j, keys %j", async (paper, sources, keys) => {
+    const files = planted(paper);
+    const handed: string[] = [];
+    await referencesStep.run({
+      ...ctx(files),
+      checkReferences: (bib, cache) => {
+        handed.push(bib);
+        return Promise.resolve({
+          check: { kind: "checked", entries: [] },
+          cache,
+        });
+      },
+    });
+    expect({
+      sources: readReferences(files, PAPER)?.bib.sources,
+      keys: [...(handed[0] ?? "").matchAll(/@\w+\{([^,]+),/g)].map((m) => m[1]),
+    }).toEqual({ sources, keys });
+  });
+});
+
+describe("when there is nothing TeX reads, the step says why — and records nothing", () => {
+  const nothing = async (
+    files: ReturnType<typeof memoryFiles>,
+    wired = true,
+  ) => {
+    const note = await recordReferences(
+      files,
+      (wired ? sourcesReader(depsOf(files)) : notWiredSources)(PAPER),
+      () => Promise.reject(new Error("never asked")),
+    );
+    return { note, record: readReferences(files, PAPER) };
+  };
+  const doc = (body: string) =>
+    memoryFiles({
+      [`${PAPER}/paper.tex`]: `\\documentclass{article}\\begin{document}${body}\\end{document}`,
+    });
+
+  it.each([
+    ["no paper.tex", memoryFiles(), "no paper.tex — nothing to check"],
+    ["no declaration", doc("x"), "no bibliography — nothing to check"],
+    [
+      "thebibliography",
+      doc("\\begin{thebibliography}{9}\\bibitem{k} K.\\end{thebibliography}"),
+      "the bibliography is written by hand (thebibliography) — no database to check",
+    ],
+    [
+      "a declared database on no disk",
+      doc("\\bibliography{gone}"),
+      "no bibliography database on disk (gone: missing) — nothing to check",
+    ],
+  ])("%s", async (_what, files, note) => {
+    expect(await nothing(files)).toEqual({ note, record: null });
+  });
+
+  it("no reader wired into the build: it says so, and lint will", async () => {
+    expect((await nothing(doc("x"), false)).note).toBe(
+      "references NOT checked — no paper reader was wired into this build; lint will say so",
+    );
   });
 });

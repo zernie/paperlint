@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { test } from "vitest";
 import { runNode, useTempDir, writeTree } from "../../../test/support.ts";
 import {
+  bibliographyFrom,
   buildFacts,
   extractIds,
   loadCache,
@@ -19,7 +20,6 @@ import {
   readArxiv,
   readCrossref,
   recordFrom,
-  resolveSource,
 } from "./extract-ref-facts.mjs";
 
 const SCRIPT = join(
@@ -181,19 +181,22 @@ test("cache: no path and a corrupt file both read as empty", () => {
   assert.deepEqual([loadCache(undefined), loadCache(corrupt)], [{}, {}]);
 });
 
-test("sources: a file names itself; a .bib is read as BibTeX; facts without a cache say so", async () => {
+test("sources: a .bib named is read as itself, as BibTeX; facts without a cache say so", async () => {
   const bib = join(root, "one.bib");
   writeFileSync(bib, "@misc{k, title={T}, year={2020}}\n");
-  assert.equal(resolveSource(bib), bib);
-  const entries = await loadEntries(bib);
+  const found = bibliographyFrom(bib);
+  assert.deepEqual([found.ok, found.texts.map((t) => t.path)], [true, [bib]]);
+  const entries = await loadEntries(found.texts[0]);
   const facts = buildFacts({
-    source: bib,
-    text: "",
+    texts: found.texts,
     entries,
     cache: {},
     cachePath: null,
   });
-  assert.deepEqual([facts.source_kind, facts.cache], ["bibtex", null]);
+  assert.deepEqual(
+    [facts.source_kind, facts.cache, facts.sources],
+    ["bibtex", null, [bib]],
+  );
 });
 
 // ── the command ─────────────────────────────────────────────────────────────
@@ -205,10 +208,15 @@ const CROSSREF_OK = JSON.stringify({
     issued: { "date-parts": [[2020]] },
   },
 });
+/** A paper.tex declaring `\bibliography{refs}`, with `preamble` before its document. */
+const declaring = (preamble = "") =>
+  `\\documentclass{article}\n${preamble}\\begin{document}x\\bibliography{refs}\\end{document}\n`;
 writeTree(root, {
+  "paper/paper.tex": declaring(),
   "paper/refs.bib":
     "@misc{a, author={A. A}, title={Found}, note={doi:10.1234/ok}}\n" +
     "@misc{b, author={B. B}, title={Lost}, note={doi:10.1234/down}}\n",
+  "empty/paper.tex": declaring(),
   "empty/refs.bib": "% nothing cited\n",
   "notes/notes.txt": "A. A. Found. doi:10.1234/ok\n",
   // `fetch` in the child: 10.1234/down fails at the transport, anything else is a CrossRef hit.
@@ -224,16 +232,25 @@ writeTree(root, {
   "bad-parser.mjs":
     "import { register } from 'node:module';\n" +
     "register('data:text/javascript,' + encodeURIComponent(\"export async function resolve(s, c, next) { if (s === '@retorquere/bibtex-parser') throw Object.assign(new Error('broken install'), { code: 'EACCES' }); return next(s, c); }\"));\n",
+  "bib/paper.tex": declaring(),
+  "thebib/paper.tex":
+    "\\documentclass{article}\\begin{document}x\\begin{thebibliography}{9}\\bibitem{k} K.\\end{thebibliography}\\end{document}\n",
+  "gone/paper.tex":
+    "\\documentclass{article}\\begin{document}x\\bibliography{gone}\\end{document}\n",
+  "switched/paper.tex":
+    "\\documentclass{article}\\newif\\ifanon\\begin{document}x\\ifanon\\bibliography{anon}\\else\\bibliography{refs}\\fi\\end{document}\n",
+  "switched/anon.bib": "@misc{anon1, title={A}, note={doi:10.1234/a}}\n",
+  "switched/refs.bib": "@misc{refs1, title={R}, note={doi:10.1234/r}}\n",
   "bib/refs.bib": "@misc{k, title={T}, note={doi:10.1234/ok}}\n",
   // The bibliography is embedded in paper.tex; the refs.bib beside it is a stale build output.
-  "inline/paper.tex":
-    "\\documentclass{article}\n" +
+  "inline/paper.tex": declaring(
     "\\begin{filecontents*}[overwrite]{refs.bib}\n" +
-    "@misc{a, author={A. A}, title={Found}, note={doi:10.1234/ok}}\n" +
-    "@misc{b, author={B. B}, title={Lost}, note={doi:10.1234/down}}\n" +
-    "\\end{filecontents*}\n\\begin{document}x\\end{document}\n",
+      "@misc{a, author={A. A}, title={Found}, note={doi:10.1234/ok}}\n" +
+      "@misc{b, author={B. B}, title={Lost}, note={doi:10.1234/down}}\n" +
+      "\\end{filecontents*}\n",
+  ),
   "inline/refs.bib": "@misc{stale, title={Stale}, note={doi:10.1234/old}}\n",
-  // A paper.tex with no embedded .bib is not a source: the refs.bib beside it is.
+  // A paper.tex that declares no bibliography: TeX reads none, whatever lies beside it.
   "plain/paper.tex":
     "\\documentclass{article}\\begin{document}x\\end{document}\n",
   "plain/refs.bib": "@misc{k, title={T}, note={doi:10.1234/ok}}\n",
@@ -303,7 +320,12 @@ test("refusals: nowhere to read from, a file that is not a .bib, and zero entrie
   assert.deepEqual(cli([join(root, "nope"), "--offline"]), {
     status: 1,
     stdout: "",
-    stderr: `🛑 no paper.tex, refs.bib, build/custom.bib under ${join(root, "nope")} — nowhere to take a bibliography from.\n`,
+    stderr: `🛑 ${join(root, "nope")} does not exist — nowhere to take a bibliography from.\n`,
+  });
+  assert.deepEqual(cli(["notes", "--offline"]), {
+    status: 1,
+    stdout: "",
+    stderr: `🛑 no paper.tex in ${join(root, "notes")} — name the paper's .tex, or a .bib to read it alone.\n`,
   });
   assert.deepEqual(cli(["empty", "--offline"]), {
     status: 1,
@@ -316,7 +338,7 @@ test("refusals: nowhere to read from, a file that is not a .bib, and zero entrie
     status: 1,
     stdout: "",
     stderr:
-      "🛑 notes/notes.txt is neither a .bib nor a .tex — the bibliography is read from paper.tex, refs.bib, build/custom.bib.\n",
+      "🛑 notes/notes.txt is neither a .bib nor a .tex — give the paper's directory, its .tex, or a .bib.\n",
   });
 });
 
@@ -337,7 +359,7 @@ test(".bib without its optional parser: the error names the install; any other f
   assert.doesNotMatch(broken.stderr, /npm i -D/);
 });
 
-test("🔴 a paper directory whose paper.tex embeds its .bib: the embedded one is read, not a stale refs.bib", () => {
+test("🔴 a paper directory whose paper.tex embeds its .bib with [overwrite]: the embedded one is read, and the other refs.bib beside it named", () => {
   const r = cli(["inline", "--offline"]);
   // Guards: only materialized .bib files were looked for, so a paper with its bibliography in
   // `filecontents` was refused before a build and read from a stale refs.bib after an edit.
@@ -345,31 +367,51 @@ test("🔴 a paper directory whose paper.tex embeds its .bib: the embedded one i
     status: 0,
     stdout:
       "📚 paper.tex → inline/_build/refs.facts.json (2 entries, 2 identifiers, 0 resolved, offline)\n",
-    stderr: "",
+    stderr:
+      "⚠️ refs.bib holds other entries than the filecontents block that writes it — TeX reads the block\n",
   });
   const facts = JSON.parse(
     readFileSync(join(root, "inline/_build/refs.facts.json"), "utf8"),
   );
   // Each entry's line is its line in paper.tex, where the author edits it.
   assert.deepEqual(
-    facts.entries.map((e) => [e.key, e.line]),
+    facts.entries.map((e) => [e.file, e.key, e.line]),
     [
-      ["a", 3],
-      ["b", 4],
+      ["inline/paper.tex", "a", 3],
+      ["inline/paper.tex", "b", 4],
     ],
   );
 });
 
-test("a paper.tex that embeds no .bib: in a directory the refs.bib beside it is read; named alone, it has no entries", () => {
+test("a paper.tex that declares no bibliography is refused with why — TeX reads no refs.bib beside it", () => {
+  const why =
+    "🛑 plain/paper.tex declares no bibliography (no \\bibliography, no \\addbibresource).\n";
+  for (const target of ["plain", join(root, "plain/paper.tex")])
+    assert.deepEqual(cli([target, "--offline"]), {
+      status: 1,
+      stdout: "",
+      stderr: why,
+    });
+});
+
+test("no database to read: written by hand, or declared and on no disk — each refused with why", () => {
   assert.deepEqual(
-    cli(["plain", "--offline"]).stdout,
-    "📚 refs.bib → plain/_build/refs.facts.json (1 entries, 1 identifiers, 0 resolved, offline)\n",
+    cli(["thebib", "--offline"]).stderr,
+    "🛑 thebib/paper.tex writes its references by hand in thebibliography — there is no database to read.\n",
   );
-  assert.deepEqual(cli([join(root, "plain/paper.tex"), "--offline"]), {
-    status: 1,
-    stdout: "",
+  assert.deepEqual(
+    cli(["gone", "--offline"]).stderr,
+    "🛑 gone/paper.tex declares gone (missing), and none of them is on disk.\n",
+  );
+});
+
+test("a bibliography behind a switch: every candidate is read, and the run says so", () => {
+  assert.deepEqual(cli(["switched", "--offline"]), {
+    status: 0,
+    stdout:
+      "📚 anon.bib, refs.bib → switched/_build/refs.facts.json (2 entries, 2 identifiers, 0 resolved, offline)\n",
     stderr:
-      "🛑 parsed 0 entries out of plain/paper.tex. Silence here would look like a clean bibliography.\n",
+      "⚠️ which bibliography TeX reads depends on a switch or a macro — reading every candidate: anon, refs\n",
   });
 });
 
@@ -377,10 +419,54 @@ test("an embedded entry whose key has no line of its own keeps line 0, not a shi
   const tex = join(root, "spaced.tex");
   writeFileSync(
     tex,
-    "x\n\\begin{filecontents*}{refs.bib}\n@misc{ spaced ,\n  note={arXiv:2101.00001}\n}\n\\end{filecontents*}\n",
+    declaring(
+      "\\begin{filecontents*}{refs.bib}\n@misc{ spaced ,\n  note={arXiv:2101.00001}\n}\n\\end{filecontents*}\n",
+    ),
   );
+  const found = bibliographyFrom(tex);
   assert.deepEqual(
-    (await loadEntries(tex)).map((e) => e.line),
+    (await loadEntries(found.texts[0])).map((e) => e.line),
     [0],
+  );
+});
+
+// ── the planted papers of fixtures/paper-sources: the bibliography TeX reads ─────────
+
+const PLANTED = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../../../fixtures/paper-sources",
+);
+
+test.each([
+  // [paper, what the run prints, the keys read] — tex-truth.json beside each paper is TeX's own answer.
+  [
+    "v1-stale",
+    "⚠️ refs.bib holds other entries than the filecontents block that writes it — TeX reads the file (the block has no [overwrite])\n",
+    "refs.bib",
+    ["stale2020"],
+  ],
+  [
+    "v2-overwrite",
+    "⚠️ refs.bib holds other entries than the filecontents block that writes it — TeX reads the block\n",
+    "paper.tex",
+    ["inline2024"],
+  ],
+  ["v3-declared", "", "paper.bib", ["declared2023"]],
+  ["v4-commented", "", "refs.bib", ["stale2020"]],
+  ["v5-percent-entry", "", "paper.tex", ["inline2024", "dead2020"]],
+])("%s: the bibliography TeX reads", (paper, stderr, file, keys) => {
+  const out = join(root, "planted", `${paper}.json`);
+  const r = cli([
+    join(PLANTED, paper),
+    "--offline",
+    `--out=${out}`,
+    `--cache=${join(root, "planted", "cache.json")}`,
+  ]);
+  assert.deepEqual([r.status, r.stderr], [0, stderr]);
+  assert.match(r.stdout, new RegExp(`^📚 ${file} → `));
+  const facts = JSON.parse(readFileSync(out, "utf8"));
+  assert.deepEqual(
+    facts.entries.map((e) => e.key),
+    keys,
   );
 });

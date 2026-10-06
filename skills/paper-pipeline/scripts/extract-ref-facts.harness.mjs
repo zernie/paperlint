@@ -9,7 +9,7 @@
  * 🔴 THREE MEASUREMENTS HERE — THESE ARE THREE DEFECTS THAT LIVED THE ENTIRE LIFE OF THE PREDECESSOR. Each
  * is pinned by an assertion on a REAL repository file, not a fixture, because all three
  * held exactly because nobody ever passed the real file:
- *   1. `refs.bib` was not in the list of sources (`resolveSource`);
+ *   1. `refs.bib` was never opened;
  *   2. the regex `.bib` required `}` on a separate line and gave 0 entries on both our files;
  *   3. in `.bib` an author is written "LastName, FirstName", but comparison took the last token.
  *
@@ -74,34 +74,34 @@ const TMP = realpathSync(mkdtempSync(join(tmpdir(), "extract-ref-facts-")));
 // runs that are red.
 process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
 
-// ── 1. DEFECT #1: `refs.bib` must be in the list of sources ─────────────────
+// ── 1. DEFECT #1: the `.bib` a paper declares is opened ──────────────────────
+//
+// The paper's `\bibliography{refs}` names the file, and `paperSources` opens it. A fixture paper
+// declares the frozen real `.bib`, so the leg is proven on a real file in every checkout.
 {
-  assert.ok(
-    X.SOURCE_ORDER.includes("refs.bib"),
-    `refs.bib missing from SOURCE_ORDER — this is the defect that kept the .bib leg from ever opening: ${X.SOURCE_ORDER.join(", ")}`,
+  const dir = join(TMP, "declares-real-bib");
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(
+    join(dir, "paper.tex"),
+    "\\documentclass{article}\\begin{document}x\\bibliography{refs}\\end{document}\n",
   );
-  // 🔴 SUBJECT — FIXTURE, real papers ADDITION (12.09.2026). There used to be only a loop over
-  // our two papers with `continue` if file doesn't exist. In this repo they exist, and test is green;
-  // in the extracted pipeline their directories WON'T EXIST — both loops make no iteration, and
-  // harness prints success having checked zero files. "Green over void", a class this base has paid for thrice. Fixture makes an empty run INEXPRESSIBLE: it always lies nearby.
-  //
-  // ⚠️ Directory, not file: `resolveSource` returns the path itself if it IS A FILE, and only for
-  // a directory descends the `SOURCE_ORDER`. A fixture-file would check the wrong branch.
-  {
-    const dir = join(HERE, "fixtures", "real-bib");
-    assert.equal(
-      X.resolveSource(dir),
-      join(dir, "refs.bib"),
-      "resolveSource cannot find the frozen real .bib — .bib leg is dead again",
-    );
-  }
+  writeFileSync(
+    join(dir, "refs.bib"),
+    readFileSync(join(HERE, "fixtures", "real-bib", "refs.bib")),
+  );
+  const found = X.bibliographyFrom(dir);
+  assert.deepEqual(
+    found.ok && found.texts.map((t) => t.path),
+    [join(dir, "refs.bib")],
+    `a paper declaring \\bibliography{refs} does not open its refs.bib — the .bib leg is dead again: ${JSON.stringify(found.why ?? "")}`,
+  );
+  // Real consumer papers: whatever each declares is either read or refused WITH A REASON — never a
+  // silent nothing.
   for (const paper of REAL_PAPERS) {
-    const dir = join(PAPERS_ROOT, paper);
-    if (!existsSync(join(dir, "refs.bib"))) continue;
-    assert.equal(
-      X.resolveSource(dir),
-      join(dir, "refs.bib"),
-      `resolveSource cannot find real refs.bib for ${paper} — .bib leg is dead again`,
+    const r = X.bibliographyFrom(join(PAPERS_ROOT, paper));
+    assert.ok(
+      r.ok ? r.texts.length > 0 : r.why.length > 0,
+      `${paper}: neither a bibliography nor a reason`,
     );
   }
 }
@@ -313,6 +313,10 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
   const { spawnSync } = await import("node:child_process");
   const dir = join(TMP, "empty");
   mkdirSync(dir, { recursive: true });
+  writeFileSync(
+    join(dir, "paper.tex"),
+    "\\documentclass{article}\\begin{document}x\\bibliography{refs}\\end{document}\n",
+  );
   writeFileSync(join(dir, "refs.bib"), "% no entries at all\n");
   const r = spawnSync(
     "node",
@@ -346,8 +350,8 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
   );
   assert.equal(r.status, 1);
   assert.ok(
-    /refs\.bib/u.test(r.stderr),
-    "message must list sources, including refs.bib",
+    /no paper\.tex/u.test(r.stderr),
+    `message must say what is missing: ${r.stderr}`,
   );
 }
 
@@ -360,6 +364,10 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
     "@misc{lovelace2025,\n  author={Lovelace, Ada and Hopper, Grace},\n  title={A Study},\n" +
     "  note={arXiv:2503.09002},\n  year={2025}}\n";
   writeFileSync(join(dir, "refs.bib"), paper);
+  writeFileSync(
+    join(dir, "paper.tex"),
+    "\\documentclass{article}\\begin{document}x\\bibliography{refs}\\end{document}\n",
+  );
   writeFileSync(
     join(dir, "repro", "refs-cache.json"),
     JSON.stringify({
@@ -390,6 +398,6 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
 }
 
 console.log(
-  "✓ extract-ref-facts: refs.bib in sources, both real .bib parse completely, name order unwound, " +
+  "✓ extract-ref-facts: the declared refs.bib is opened, both real .bib parse completely, name order unwound, " +
     "arXiv-DOI does not go to CrossRef, registry readers run on raw bodies, zero entries = refusal",
 );

@@ -17,7 +17,6 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { run, rulePlugins } from "./cli.ts";
 import { sha256Hex } from "./domain/sha256.ts";
-import { bibHash } from "./references.ts";
 import { useTempDir, venuePreset, writeTree } from "../test/support.ts";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -172,7 +171,8 @@ const built = (
 
 const BIB =
   "@article{a,\n  title = {A},\n  author = {Doe, J.},\n  year = {2026},\n  doi = {10.1/x}\n}\n";
-const sha = bibHash({ source: "refs.bib", text: BIB, offset: 0 });
+/** The hash the build records for a bibliography that is BIB alone (`bibHash` over its one text). */
+const sha: string = sha256Hex(new TextEncoder().encode(BIB));
 /** A paper citing refs.bib, with its references record (`status`, `entries`) or none. */
 const cited = (
   body: Record<string, unknown> | null,
@@ -184,15 +184,15 @@ const cited = (
       ? {}
       : {
           [`${P}/_build/references.json`]: JSON.stringify({
-            schema: 1,
-            bib: { source: "refs.bib", sha256: bibSha },
+            schema: 2,
+            bib: { sources: ["refs.bib"], sha256: bibSha },
             ...body,
           }),
         }),
   });
-/** A paper whose bibliography is written inline, by `filecontents*`, as `bib/reachable-entry` reads it. */
-const inlineBib = (entry: string): string =>
-  `\\documentclass{article}\n\\begin{filecontents*}{refs.bib}\n${entry}\n\\end{filecontents*}\n\\begin{document}\nSee~\\cite{a}.\n\\bibliography{refs}\n\\end{document}\n`;
+/** A paper whose bibliography is written inline, by `filecontents*` (`[overwrite]` unless `option` says otherwise). */
+const inlineBib = (entry: string, option = "[overwrite]"): string =>
+  `\\documentclass{article}\n\\begin{filecontents*}${option}{refs.bib}\n${entry}\n\\end{filecontents*}\n\\begin{document}\nSee~\\cite{a}.\n\\bibliography{refs}\n\\end{document}\n`;
 const checked = (exists: string, authors: string) => ({
   status: "checked",
   entries: [{ key: "a", exists, authors }],
@@ -517,7 +517,7 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       tree: cited(checked("true", "mismatch")),
       file: TEX_FILE,
       severity: 2,
-      line: 1,
+      line: 4, // the \bibliography that declares refs.bib
     },
     silent: cited(checked("true", "match")),
   },
@@ -526,7 +526,7 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       tree: cited(checked("false", "match")),
       file: TEX_FILE,
       severity: 2,
-      line: 1,
+      line: 4, // the \bibliography that declares refs.bib
     },
     silent: cited(checked("true", "match")),
   },
@@ -701,6 +701,24 @@ const CASES: Readonly<Record<string, RuleCases>> = {
       file: TEX_FILE,
       severity: 1,
       line: 3,
+    },
+    silent: paper(inlineBib(BIB)),
+  },
+  "bib/filecontents-overwrite": {
+    reports: {
+      tree: paper(inlineBib(BIB, "")),
+      file: TEX_FILE,
+      severity: 2,
+      line: 2,
+    },
+    silent: paper(inlineBib(BIB)),
+  },
+  "bib/commented-entry": {
+    reports: {
+      tree: paper(inlineBib(`${BIB}% @misc{b, url = {https://example.org}}`)),
+      file: TEX_FILE,
+      severity: 1,
+      line: 9,
     },
     silent: paper(inlineBib(BIB)),
   },

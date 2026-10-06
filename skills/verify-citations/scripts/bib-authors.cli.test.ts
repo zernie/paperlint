@@ -1,7 +1,7 @@
 /**
- * bib-authors.mjs as a process: which file it picks from a paper directory, the bibliography
- * sources it reads (.bib, a .tex's filecontents or its sibling refs.bib), the file it refuses, and
- * the report and exit code for each outcome. DBLP is a preload that answers
+ * bib-authors.mjs as a process: the bibliography it reads (a .bib named, or what TeX reads for a
+ * paper directory or a .tex — `paperSources`), the targets it refuses, and the report and exit code
+ * for each outcome. DBLP is a preload that answers
  * by title from a table (the documented `result.hits.hit[].info` shape) — no network.
  */
 import assert from "node:assert/strict";
@@ -32,6 +32,10 @@ const bib = (
 ) =>
   `@inproceedings{${key}, author = {${author}}, title = {${title}}, ${venue}}\n`;
 
+/** A .tex that declares the database `name`, with `preamble` before its document. */
+const declaring = (name: string, preamble = "") =>
+  `\\documentclass{article}\n${preamble}\\begin{document}x\\bibliography{${name}}\\end{document}\n`;
+
 writeTree(root, {
   // The retry backoff (1.5 s, then 3 s) and the 900 ms courtesy pause are real sleeps in the
   // script. Under CPU load they made "DBLP down" take 11.7 s once and time out. The preload
@@ -46,22 +50,30 @@ writeTree(root, {
     "  const hit = (answers[q] ?? []).map((authors) => ({ info: { title: q, venue: 'X', year: '2024',\n" +
     "    type: 'Conference and Workshop Papers', authors: { author: authors.map((text) => ({ text })) } } }));\n" +
     "  return new Response(JSON.stringify({ result: { hits: { hit } } }), { status: 200 });\n};\n",
+  "findings/paper.tex": declaring("paper"),
   "findings/paper.bib":
     bib("dropped", "Ada Lovelace and Grace Hopper", "Dropped Author") +
     bib("order", "Alan Turing and Ada Lovelace", "Swapped Order"),
   "findings/other.bib": bib("never", "X", "Never Read"),
   "twotex/b.tex": "\\documentclass{article}\n",
-  "twotex/a.tex":
-    "\\begin{filecontents*}{refs.bib}\n" +
-    bib("pre", "Ada Lovelace", "A Preprint", "journal = {arXiv preprint}") +
-    "\\end{filecontents*}\n",
-  "sibling/paper.tex": "\\documentclass{article}\n",
+  "twotex/a.tex": declaring(
+    "refs",
+    "\\begin{filecontents*}[overwrite]{refs.bib}\n" +
+      bib("pre", "Ada Lovelace", "A Preprint", "journal = {arXiv preprint}") +
+      "\\end{filecontents*}\n",
+  ),
+  "sibling/paper.tex": declaring("refs"),
   "sibling/refs.bib": bib("good", "Ada Lovelace", "All Good"),
   "nobib/paper.tex": "\\documentclass{article}\n",
+  "thebib/paper.tex":
+    "\\documentclass{article}\\begin{document}\\begin{thebibliography}{9}\\bibitem{k} K.\\end{thebibliography}\\end{document}\n",
+  "gone/paper.tex": declaring("gone"),
+  "etal/paper.tex": declaring("refs"),
   "etal/notes.txt": "not a bibliography\n",
   "etal/refs.bib":
     bib("good", "Ada Lovelace", "All Good") +
     bib("etal", "Ada Lovelace and others", "Truncated"),
+  "down/paper.tex": declaring("refs"),
   "down/refs.bib": bib("down", "Ada Lovelace", "Service Down"),
   "empty/.keep": "",
 });
@@ -100,19 +112,20 @@ test("refusals: no argument, no such path, a directory with nothing to read, a .
       {
         status: 2,
         stdout: "",
-        stderr: "bib-authors: no .bib or .tex in <root>/empty\n",
+        stderr:
+          "bib-authors: no paper.tex in <root>/empty — name the paper's .tex, or its .bib\n",
       },
       {
         status: 2,
         stdout: "",
         stderr:
-          "bib-authors: no bibliography found in <root>/nobib/paper.tex (no filecontents block, no refs.bib beside it)\n",
+          "bib-authors: no bibliography database in <root>/nobib/paper.tex (no \\bibliography or \\addbibresource)\n",
       },
     ],
   );
 });
 
-test("a paper directory: the canonical paper.bib is read, and each difference is printed — FAIL, exit 1", () => {
+test("a paper directory: the paper.bib its \\bibliography{paper} declares is read, and each difference is printed — FAIL, exit 1", () => {
   assert.deepEqual(run(join(root, "findings")), {
     status: 1,
     stderr: "",
@@ -135,16 +148,22 @@ test("a paper directory: the canonical paper.bib is read, and each difference is
   });
 });
 
-test("two .tex files and no paper.tex: the first by name, said out loud; its filecontents is read", () => {
-  const r = run(join(root, "twotex"), "--json");
+test("a directory without paper.tex is refused — never a guess among its .tex files; the .tex named is read", () => {
+  assert.deepEqual(run(join(root, "twotex")), {
+    status: 2,
+    stdout: "",
+    stderr:
+      "bib-authors: no paper.tex in <root>/twotex — name the paper's .tex, or its .bib\n",
+  });
+  const r = run(join(root, "twotex", "a.tex"), "--json");
   assert.deepEqual(
     { status: r.status, stderr: r.stderr, report: parseJson(r.stdout) },
     {
       status: 0,
-      stderr:
-        "⚠️ <root>/twotex holds several .tex files and no canonical paper.tex: a.tex, b.tex — took a.tex. If that is the wrong one, name the file explicitly.\n",
+      stderr: "",
       report: {
         file: "<root>/twotex/a.tex",
+        files: ["<root>/twotex/a.tex"],
         entries: 1,
         findings: [],
         skipped: [],
@@ -154,7 +173,18 @@ test("two .tex files and no paper.tex: the first by name, said out loud; its fil
   );
 });
 
-test("a .tex with no filecontents reads the refs.bib beside it — PASS, exit 0", () => {
+test("a .bib named is read as itself", () => {
+  const r = run(join(root, "findings", "paper.bib"), "--json");
+  const report: unknown = parseJson(r.stdout);
+  assert.deepEqual(
+    report !== null && typeof report === "object" && "files" in report
+      ? report.files
+      : report,
+    ["<root>/findings/paper.bib"],
+  );
+});
+
+test("a .tex that declares refs and has no block reads refs.bib — PASS, exit 0", () => {
   const r = run(join(root, "sibling", "paper.tex"));
   assert.deepEqual(r, {
     status: 0,
@@ -162,6 +192,25 @@ test("a .tex with no filecontents reads the refs.bib beside it — PASS, exit 0"
     stdout:
       "== bib-authors: <root>/sibling/refs.bib ==\n\n-- 1 entries · 0 difference(s) · 0 not applicable · 0 NOT CHECKED\nPASS: no author-list disagreement.\n",
   });
+});
+
+test("no database: a bibliography written by hand, one declared and on no disk", () => {
+  assert.deepEqual(
+    [run(join(root, "thebib")), run(join(root, "gone"))].map((r) => [
+      r.status,
+      r.stderr,
+    ]),
+    [
+      [
+        2,
+        "bib-authors: no bibliography database in <root>/thebib (thebibliography is written by hand)\n",
+      ],
+      [
+        2,
+        "bib-authors: <root>/gone declares gone (missing), and none of them is on disk\n",
+      ],
+    ],
+  );
 });
 
 test("a file that is neither a .bib nor a .tex is refused — not swapped for the refs.bib beside it", () => {
@@ -197,4 +246,28 @@ test("DBLP down: NOT CHECKED, PARTIAL, exit 2 — never a pass", () => {
       "-- 1 entries · 0 difference(s) · 0 not applicable · 1 NOT CHECKED\n" +
       "PARTIAL: no disagreement among the entries reached, but 1 could not be checked — this is NOT a pass.\n",
   });
+});
+
+// The planted papers of fixtures/paper-sources: the file read is the one TeX reads (tex-truth.json).
+const PLANTED = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../../../fixtures/paper-sources",
+);
+
+test.each([
+  ["v1-stale", "refs.bib"],
+  ["v2-overwrite", "paper.tex"],
+  ["v3-declared", "paper.bib"],
+  ["v4-commented", "refs.bib"],
+])("%s: reads %s", (paper, file) => {
+  const r = runNode(SCRIPT, [join(PLANTED, paper), "--json"], {
+    nodeArgs: ["--import", join(root, "dblp.mjs")],
+  });
+  const report: unknown = parseJson(r.stdout);
+  assert.deepEqual(
+    report !== null && typeof report === "object" && "files" in report
+      ? report.files
+      : report,
+    [join(PLANTED, paper, file)],
+  );
 });

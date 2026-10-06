@@ -22,6 +22,9 @@ import {
   type PaperFacts,
 } from "./build.ts";
 import type { Geometry } from "./domain/geometry.ts";
+import { latexReader } from "./adapters/latex/index.ts";
+import { nodeFiles } from "./adapters/node/index.ts";
+import { sourcesReader } from "./paper-sources.ts";
 import type { PdfReader } from "./pdf-facts.ts";
 
 const root = useTempDir("paperlint-build-test-");
@@ -261,6 +264,33 @@ test("compile: warnings the final log still reports are named in the note", asyn
   });
   assert.equal(r.status, "built");
   assert.match(r.notes?.[0] ?? "", /— ⚠️ the final log still reports /);
+});
+
+test("references: without a reader the step says it was not wired; with one and no checker, the record says not checked", async () => {
+  const bib = {
+    "paper.tex":
+      "\\documentclass{article}\\begin{document}x\\bibliography{refs}\\end{document}",
+    "refs.bib": "@misc{a, url = {https://example.org}}\n",
+  };
+  const unwired = await build(paper(bib));
+  assert.ok(
+    unwired.r.notes?.includes(
+      "references NOT checked — no paper reader was wired into this build; lint will say so",
+    ),
+    JSON.stringify(unwired.r.notes),
+  );
+  const readSources = sourcesReader({
+    files: nodeFiles,
+    latex: latexReader,
+    committed: { isCommitted: () => true },
+  });
+  const wired = await build(paper(bib), {}, { readSources });
+  assert.ok(
+    wired.r.notes?.includes(
+      "references NOT checked — no reference checker was wired into this build; lint will say so",
+    ),
+    JSON.stringify(wired.r.notes),
+  );
 });
 
 test("measure: a review build and a stub last page are named; a measured geometry adds nothing", async () => {

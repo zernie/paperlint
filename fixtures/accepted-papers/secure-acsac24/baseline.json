@@ -2,11 +2,14 @@
   "$comment": [
     "What the rules say about this accepted paper today. Growth fails; a drop never does.",
     "Each count is classified in ../README.md, 'What the rules say about the corpus'.",
-    "format/layout-override 0 to 2 when the rule was added: `\\usepackage{geometry}` and `\\geometry{a4paper, margin=1in}` in the preamble. This is the arXiv source (A4, margin=1in), not the paper as submitted; the rule is right to flag it."
+    "format/layout-override 0 to 2 when the rule was added: `\\usepackage{geometry}` and `\\geometry{a4paper, margin=1in}` in the preamble. This is the arXiv source (A4, margin=1in), not the paper as submitted; the rule is right to flag it.",
+    "bib/reachable-entry and paper/refs-checked since the bibliography is read where TeX reads it (paperSources): the .bib files the paper declares. 75 entries have no doi, url, arXiv id or \\url (18 of them cited in the committed paper.bbl, 57 uncited)."
   ],
   "findings": {
     "format/layout-override": 2,
     "pdf/measured": 1,
-    "tex/claim-provenance": 7
+    "tex/claim-provenance": 7,
+    "paper/refs-checked": 1,
+    "bib/reachable-entry": 75
   }
 }
