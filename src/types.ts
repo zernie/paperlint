@@ -62,8 +62,6 @@ export interface Args {
   noHooks: boolean;
   /** `--paper <name>`: `init` creates this paper. */
   paper: string | null;
-  /** `--format tex|md` for `new` and `init --paper`. Validated by the command, not here. */
-  format: string | null;
   /** `--venue <preset>` for `new`: a shipped preset name, or a path to the project's own. */
   venue: string | null;
   /** `--kind <kind>` for `new`: one of the venue preset's kinds. */

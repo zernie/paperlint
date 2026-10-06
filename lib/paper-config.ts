@@ -49,8 +49,6 @@ export const CONFIG_FILE: string = "paperlint.json";
  */
 export const PAPER_MARKERS: readonly string[] = Object.freeze([
   "paper.tex",
-  "paper.md",
-  "draft.md",
   "PIPELINE-STATUS.md",
 ]);
 

@@ -7,12 +7,8 @@ installed package — see `consumer.mjs`).
 
 | file                    | what it answers                                                                                       |
 | ----------------------- | ----------------------------------------------------------------------------------------------------- |
-| `artifact-coverage.mjs` | does the released bundle actually contain what the paper points at?                                   |
-| `check-provenance.mjs`  | does the paper have a build-time numbers gate, and what does it still not cover?                      |
 | `extract-ref-facts.mjs` | parse the bibliography, ask the registries, write facts to JSON for the `refs/*` ESLint rules         |
 | `generated-code.mjs`    | lint the analysis scripts before they produce a number (unseeded randomness, absolute paths, …)       |
-| `population-map.mjs`    | does the population registry keep its link to the body of the paper?                                  |
-| `round-diff.mjs`        | did a review round change only what it declared?                                                      |
 | `consumer.mjs`          | where the consumer's repository is, and whether a script was executed or imported through the symlink |
 
 The checkers with a `--flags-only` mode print nothing on a clean paper and exit 0 — that mode is

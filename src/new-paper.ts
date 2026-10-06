@@ -8,8 +8,7 @@
  * Every rule below is taken from a tool that already solved it (docs/prior-art/paper-folder-scaffolding.md):
  *   - the template is a FILE with a lookup order — the project's `<papers>/.template/<file>` first,
  *     the package's `templates/paper/<file>` second (Hugo's archetypes);
- *   - it NEVER overwrites: on an existing folder it adds only the missing required files, which is
- *     also the migration for an old folder that has only `paper.md` (`cargo init`);
+ *   - it NEVER overwrites: on an existing folder it adds only the missing required files (`cargo init`);
  *   - the name is validated, because it becomes a path and, through the hooks, a shell argument.
  *
  * The only substitution is `{{name}}` → the folder name. Nothing else in a template is touched.
@@ -33,10 +32,6 @@ import {
   type NamedVenue,
 } from "./domain/venue-name.ts";
 
-export type PaperFormat = "tex" | "md";
-export const FORMATS: readonly PaperFormat[] = ["tex", "md"];
-export const DEFAULT_FORMAT: PaperFormat = "tex";
-
 /** The package's default templates. Read from disk, so they ship in the tarball (`files`). */
 export const PACKAGE_TEMPLATES = fileURLToPath(
   new URL("../templates/paper/", import.meta.url),
@@ -50,16 +45,11 @@ export const PACKAGE_TEMPLATES = fileURLToPath(
 export const OVERRIDE_DIR = ".template";
 
 export const STATUS_FILE = "PIPELINE-STATUS.md";
-export const SOURCE_FILE: Readonly<Record<PaperFormat, string>> = {
-  tex: "paper.tex",
-  md: "paper.md",
-};
+/** A paper's source: LaTeX, one file at the paper's root. */
+export const SOURCE_FILE = "paper.tex";
 
 /** The flag that lets `paperlint new` create a folder whose name names a venue. */
 export const ALLOW_VENUE_NAME = "--allow-venue-name";
-
-export const isFormat = (v: unknown): v is PaperFormat =>
-  FORMATS.some((f) => f === v);
 
 /**
  * Why a name is refused, or null. `[a-z0-9._-]+` is the charset; a LEADING dot is refused on top
@@ -109,20 +99,12 @@ export type NewPaperResult =
     }
   | { readonly ok: false; readonly reason: string };
 
-/**
- * The files a paper folder must end up with: the scorecard, a source in `format` — unless it
- * already has a source in EITHER format, in which case that one stands — and `paperlint.json`.
- */
-export function wantedFiles(dir: string, format: PaperFormat): string[] {
-  return [...scorecardAndSource(dir, format), CONFIG_FILE];
-}
-
-function scorecardAndSource(dir: string, format: PaperFormat): string[] {
-  const hasSource = Object.values(SOURCE_FILE).some((f) =>
-    existsSync(join(dir, f)),
-  );
-  return hasSource ? [STATUS_FILE] : [STATUS_FILE, SOURCE_FILE[format]];
-}
+/** The files a paper folder must end up with: the scorecard, the source and `paperlint.json`. */
+export const WANTED_FILES: readonly string[] = [
+  STATUS_FILE,
+  SOURCE_FILE,
+  CONFIG_FILE,
+];
 
 /** The venue `paperlint new --venue` chose: what goes into the new paper's `paperlint.json`. */
 export interface VenueSetting {
@@ -195,7 +177,7 @@ function fromTemplate(
     return { ok: false, reason: `no template for ${file}: ${src} is missing` };
   const text = readFileSync(src, "utf8").split("{{name}}").join(name);
   const setClass = venue?.setClass ?? null;
-  if (file === SOURCE_FILE.tex && setClass !== null)
+  if (file === SOURCE_FILE && setClass !== null)
     return { ok: true, value: { file, text: setClass(text), from } };
   if (file !== CONFIG_FILE || venue === null)
     return { ok: true, value: { file, text, from } };
@@ -217,7 +199,6 @@ export interface NewPaperOptions {
 export function newPaper(
   papersRoot: string,
   name: string,
-  format: PaperFormat,
   opts: NewPaperOptions,
 ): NewPaperResult {
   const { packageTemplates = PACKAGE_TEMPLATES, venue = null } = opts;
@@ -230,7 +211,7 @@ export function newPaper(
 
   const files: FileOutcome[] = [];
   const toWrite: Planned[] = [];
-  for (const file of wantedFiles(dir, format)) {
+  for (const file of WANTED_FILES) {
     if (existsSync(join(dir, file))) {
       files.push({ file, status: "kept" });
       continue;

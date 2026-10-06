@@ -27,10 +27,10 @@
  * registry) through this language and froze their finding counts on three real papers
  * (35 · 52 · 15 at the 2026-08-27 measurement, later 32 · 53 · 20 after captions became
  * visible on 2026-09-06). None of those modules was extracted, and the papers are private, so:
- *   - the "rules see LaTeX the way they saw markdown" half is GONE. What is left proves the
+ *   - the "rules read the projection correctly" half is GONE. What is left proves the
  *     projection is correct, not that a downstream rule consumes it correctly;
- *   - the config half that checked rule-set PARITY between `.tex` and `paper.md`, and the
- *     list of rules explicitly switched `off` on `.tex` WITH A REASON, is GONE with the rules;
+ *   - the config half that listed the rules explicitly switched `off` on `.tex` WITH A
+ *     REASON is GONE with the rules;
  *   - the only rule that still runs through this language here is `tex/future-promise`, and it
  *     reads the file from disk rather than the projection — so end-to-end it proves the
  *     language parses and dispatches, not that the projection is what a rule reads.

@@ -36,7 +36,6 @@ const ROOT = dirname(HERE);
 const {
   newPaper,
   nameProblem,
-  wantedFiles,
   PACKAGE_TEMPLATES,
   OVERRIDE_DIR,
   STATUS_FILE,
@@ -63,7 +62,7 @@ async function lint(dir) {
 
 try {
   // ── the templates are FILES in the package, one per required file ──────────────────────
-  for (const f of [STATUS_FILE, SOURCE_FILE.tex, SOURCE_FILE.md])
+  for (const f of [STATUS_FILE, SOURCE_FILE])
     check(
       `the package ships templates/paper/${f}`,
       existsSync(join(PACKAGE_TEMPLATES, f)),
@@ -85,13 +84,13 @@ try {
     );
   check(
     "a refused name creates nothing",
-    newPaper(work, "Bad", "tex", { venues: [] }).ok === false &&
+    newPaper(work, "Bad", { venues: [] }).ok === false &&
       !existsSync(join(work, "Bad")),
   );
 
   // ── a fresh LaTeX paper ─────────────────────────────────────────────────────────────
   const papers = join(work, "papers");
-  const r = newPaper(papers, "demo", "tex", { venues: [] });
+  const r = newPaper(papers, "demo", { venues: [] });
   check(
     "a fresh folder gets the scorecard, a .tex source and paperlint.json, all from the package",
     r.ok &&
@@ -129,36 +128,18 @@ try {
 
   // ── never overwrite; on an existing folder only the missing files ─────────────────────
   writeFileSync(join(papers, "demo", STATUS_FILE), "mine\n");
-  const again = newPaper(papers, "demo", "md", { venues: [] });
+  const again = newPaper(papers, "demo", { venues: [] });
   check(
-    "🔴 a second run overwrites nothing and adds no second source",
+    "🔴 a second run overwrites nothing",
     again.ok &&
       !again.fresh &&
       read(papers, "demo", STATUS_FILE) === "mine\n" &&
-      !existsSync(join(papers, "demo", "paper.md")) &&
       again.files.every((f) => f.status === "kept"),
-  );
-  mkdirSync(join(papers, "old"), { recursive: true });
-  writeFileSync(join(papers, "old", "paper.md"), "# Old\n");
-  const migrated = newPaper(papers, "old", "tex", { venues: [] });
-  check(
-    "an old folder with only paper.md gets ONLY the scorecard — that is the migration",
-    migrated.ok &&
-      existsSync(join(papers, "old", STATUS_FILE)) &&
-      !existsSync(join(papers, "old", "paper.tex")) &&
-      read(papers, "old", "paper.md") === "# Old\n",
-  );
-  check(
-    "wantedFiles asks for a source only when neither format is there",
-    wantedFiles(join(papers, "old"), "tex").join() ===
-      `${STATUS_FILE},paperlint.json` &&
-      wantedFiles(join(papers, "nowhere"), "md").join() ===
-        `${STATUS_FILE},paper.md,paperlint.json`,
   );
   writeFileSync(join(papers, "afile"), "x");
   check(
     "a name taken by a FILE is refused, not written through",
-    newPaper(papers, "afile", "tex", { venues: [] }).ok === false,
+    newPaper(papers, "afile", { venues: [] }).ok === false,
   );
 
   // ── the project's template wins, file by file ─────────────────────────────────────────
@@ -167,7 +148,7 @@ try {
     join(papers, OVERRIDE_DIR, STATUS_FILE),
     "---\n---\n# House scorecard for {{name}}\n",
   );
-  const own = newPaper(papers, "house", "md", { venues: [] });
+  const own = newPaper(papers, "house", { venues: [] });
   // Guards: the override slot — `fromTemplate` in new-paper.ts reads `<papers>/.template/<file>`
   // before the package's copy. Replace that lookup with the package's alone and this goes red.
   check(
@@ -176,11 +157,11 @@ try {
       read(papers, "house", STATUS_FILE) ===
         "---\n---\n# House scorecard for house\n" &&
       own.files.find((f) => f.file === STATUS_FILE)?.from === "project" &&
-      own.files.find((f) => f.file === "paper.md")?.from === "package",
+      own.files.find((f) => f.file === SOURCE_FILE)?.from === "package",
   );
 
   // ── a missing template is a broken install, not an empty file ─────────────────────────
-  const broken = newPaper(join(work, "b"), "x", "tex", {
+  const broken = newPaper(join(work, "b"), "x", {
     venues: [],
     packageTemplates: join(work, "no-such-dir"),
   });

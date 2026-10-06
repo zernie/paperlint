@@ -55,8 +55,8 @@ function project(): string {
     "paperlint.json": JSON.stringify({ papersDir: "papers" }),
     "papers/a/PIPELINE-STATUS.md": "---\nstages: []\n---\n",
     "eslint-rules/fixtures/x/PIPELINE-STATUS.md": "---\nstages: []\n---\n",
-    "eslint-rules/fixtures/y/paper.md": "# y\n",
-    "drafts/z/paper.md": "# z\n",
+    "eslint-rules/fixtures/y/paper.tex": "% y\n",
+    "drafts/z/paper.tex": "% z\n",
   };
   for (const [p, text] of Object.entries(files)) {
     mkdirSync(join(root, p, ".."), { recursive: true });
@@ -291,7 +291,7 @@ describe("paperlint init — a paperlint.json it cannot use stops it before anyt
     for (const json of ["null\n", "[1]\n"]) {
       const root = tree({
         "paperlint.json": json,
-        "drafts/a/paper.md": "# a\n",
+        "drafts/a/paper.tex": "% a\n",
       });
       const decl = await declarePapers(root, () =>
         choosePapers(root, { interactive: false }),
@@ -308,7 +308,7 @@ describe("paperlint init — a paperlint.json it cannot use stops it before anyt
   it("a file without a trailing newline keeps having none", async () => {
     const root = tree({
       "paperlint.json": '{"x":1}',
-      "drafts/a/paper.md": "# a\n",
+      "drafts/a/paper.tex": "% a\n",
     });
     const decl = await declarePapers(root, () =>
       choosePapers(root, { interactive: false }),
@@ -322,7 +322,7 @@ describe("paperlint init — a paperlint.json it cannot use stops it before anyt
 
 describe("paperlint init — how several candidate directories were decided, said", () => {
   const several = () =>
-    tree({ "drafts/a/paper.md": "# a\n", "writing/b/paper.md": "# b\n" });
+    tree({ "drafts/a/paper.tex": "% a\n", "writing/b/paper.tex": "% b\n" });
   const section = (out: string[]) =>
     out.slice(out.indexOf("papers directory") + 1, out.indexOf("settings") - 1);
 
@@ -530,7 +530,6 @@ describe("paperlint init — a first paper named after a venue", () => {
       createPaper: (_root, name) => Promise.resolve((made.push(name), 0)),
     });
     expect(made).toEqual([]);
-    expect(asked.filter((q) => /format/.test(q))).toEqual([]);
     expect(r.out[r.out.indexOf("first paper") + 1]).toBe(
       '  ✗ no paper created — `aisec-2026` — the paper folder names a venue ("AISec"); venues change on resubmission, so name it after the work\n    if the venue really belongs in the name, rerun `paperlint new` with --allow-venue-name',
     );
@@ -539,7 +538,7 @@ describe("paperlint init — a first paper named after a venue", () => {
 
 describe("paperlint init — paths are shown relative to where it was run", () => {
   it("a path that IS the working directory is shown whole, not as an empty string", async () => {
-    const root = tree({ "papers/a/paper.md": "# a\n" });
+    const root = tree({ "papers/a/paper.tex": "% a\n" });
     const home = join(root, ".claude", "skills");
     mkdirSync(home, { recursive: true });
     const r = await initRun(root, {

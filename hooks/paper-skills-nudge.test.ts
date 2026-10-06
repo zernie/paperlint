@@ -10,11 +10,11 @@ import { useTempDir } from "../test/support.ts";
 
 const root = useTempDir("paper-skills-nudge-");
 
-test("no paperlint.json: an edit to papers/<p>/paper.md gets the checklist", () => {
+test("no paperlint.json: an edit to papers/<p>/paper.tex gets the checklist", () => {
   const dir = hookConsumer(join(root, "default"));
   const r = runShippedHook(
     "paper-skills-nudge",
-    onEdit("papers/alpha/paper.md"),
+    onEdit("papers/alpha/paper.tex"),
     dir,
   );
   assert.equal(r.exitCode, 0);
@@ -27,7 +27,17 @@ test("a paperlint.json that does not parse: silent, exit 0", () => {
   });
   const r = runShippedHook(
     "paper-skills-nudge",
-    onEdit("papers/alpha/paper.md"),
+    onEdit("papers/alpha/paper.tex"),
+    dir,
+  );
+  assert.deepEqual([r.exitCode, r.stdout, r.stderr], [0, "", ""]);
+});
+
+test("an edit to a file of the paper other than its source: silent", () => {
+  const dir = hookConsumer(join(root, "not-a-source"));
+  const r = runShippedHook(
+    "paper-skills-nudge",
+    onEdit("papers/alpha/notes.txt"),
     dir,
   );
   assert.deepEqual([r.exitCode, r.stdout, r.stderr], [0, "", ""]);

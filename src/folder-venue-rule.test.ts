@@ -160,7 +160,7 @@ describe("paper/folder-venue-leftover — silent", () => {
   });
 
   it("judged once per paper, on PIPELINE-STATUS.md only", () => {
-    expect(lint("aisec-2026", AIDC, { file: "paper.md" })).toEqual([]);
+    expect(lint("aisec-2026", AIDC, { file: "paper.tex" })).toEqual([]);
   });
 
   it("a paper on a bare template family declares no venue: a venue in its folder may be its own", () => {

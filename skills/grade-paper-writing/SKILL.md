@@ -4,7 +4,7 @@ description: Use when asking "does this paper read well?" / "is the writing any 
 allowed-tools: [Read, Write, Edit, Grep, Glob, Agent, Skill]
 ---
 
-<!-- vigiles:sha256:03d0377baf71967f compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
+<!-- vigiles:sha256:6401b9117bbf899f compiled from skills/grade-paper-writing/SKILL.md.spec.ts -->
 
 # grade-paper-writing — grade how the paper READS, then fix it sentence by sentence
 
@@ -53,7 +53,7 @@ derived from that gap.
 ### 🔴 Read the BUILT PDF, not the source
 
 **The stall pass reads the typeset pages.** The source is for locating the fix afterwards, never for
-judging the read. This was previously written as "read the `.tex`/`.md`, **or** run `render-paper`",
+judging the read. This was previously written as "read the `.tex`, **or** run `render-paper`",
 and that *or* is why the pass kept missing what the author saw immediately: he reads the PDF.
 
 Things that exist only in the render, every one of which produces a real stall:
@@ -153,7 +153,7 @@ is what happened.
 
 ## How to run it
 
-1. **Read the actual draft** (the `.tex`/`.md`, or run `render-paper` to read the built pages as a reader
+1. **Read the actual draft** (the `.tex`, or run `render-paper` to read the built pages as a reader
    would). Grade the writing as written — never from a summary.
 2. **Run the cold-read stall pass FIRST — the full specification is below, under "The stall pass".**
    It was previously a pointer to a reference section that did not exist, which is why the pass drifted
@@ -215,10 +215,17 @@ is what happened.
 5. **Flag the two prose traps by name:** (a) Attention-style dense contribution-less prose used where the
    audience does NOT already care; (b) hedge-stacking ("may possibly in some cases potentially") — replace
    each pile with one precise scope sentence.
-6. 🔴 **Run `prose-lint.mjs` and treat every FLAG as a finding, not as context.** It is wired into
-   `paper-lint` on paper edits, so its output arrives whether or not this skill was invoked — but the
-   skill is what must ACT on it. Its thresholds are sourced; a FLAG means the text sits above a
-   published human or machine baseline, which is a defect with a number attached, not an opinion.
+6. 🔴 **Run `prose-lint.mjs` on the paper and treat every FLAG as a finding, not as context:**
+
+   ```
+   node ${CLAUDE_SKILL_DIR}/prose-lint.mjs <paper-dir>/paper.tex             # the report
+   node ${CLAUDE_SKILL_DIR}/prose-lint.mjs --headings <paper-dir>/paper.tex  # the headings as a set
+   ```
+
+   It measures the prose a reader sees — includes spliced, no preamble, comments, floats or inline
+   `.bib` — so its rates are the paper's, not the source file's. The skill is what must ACT on it.
+   Its thresholds are sourced; a FLAG means the text sits above a published human or machine
+   baseline, which is a defect with a number attached, not an opinion.
    Two entries in `THRESHOLDS` exist because this skill previously ran five times without either
    firing: the `"not X, but Y"` density had **no threshold at all** and printed as a neutral line
    while standing at 50.8 per 10,000 words against an LLM baseline of 7.8, and the lexicon missed
@@ -226,21 +233,6 @@ is what happened.
    point; judging it is"*) and the appositive that reaches headings (*"Admission, not translation"*).
    A number printed without a threshold is prose; that is this project's own thesis, and the linter
    was violating it.
-
-6a. 🔴 **`prose-lint.mjs` IS NO LONGER ALONE — seven of its twelve gating metrics moved
-   on 2026-08-26 into ESLint rules, and running only it shows you five twelfths.** A second
-   run is mandatory; without it, step 6 is incomplete:
-
-   ```
-   npx eslint "papers/*/paper.md" "papers/*/draft.md"
-   ```
-
-   From there come: `paper/citation-density` · `paper/unexplained-jargon` ·
-   `paper/multi-claim-sentence` · `paper/conceits` · `paper/hedge-density` ·
-   `paper/discourse-subject` · `paper/undefined-coinage` (file — `eslint-rules/paper-craft.mjs`).
-   Gain from the move — `file:line:col` on each finding: the old report printed the sentence head,
-   and you had to find it in the article by eye. Everything step 6b says about
-   meaning regression applies to them just the same: this is diagnosis, not objective.
 
 6b. 🔴 **A lint fix that costs meaning is a REGRESSION, and no linter can see it.** The metrics above
    are diagnostics, never objectives. Optimising one directly is how a sentence gets worse while the

@@ -17,7 +17,7 @@ test("no paperlint.json: an edit under papers/ runs the gates for that paper", (
   });
   const r = runShippedHook(
     "paper-status-gates",
-    onEdit("papers/alpha/paper.md"),
+    onEdit("papers/alpha/paper.tex"),
     dir,
   );
   assert.equal(r.exitCode, 0);
@@ -31,7 +31,19 @@ test("a paperlint.json that does not parse: silent, exit 0", () => {
   });
   const r = runShippedHook(
     "paper-status-gates",
-    onEdit("papers/alpha/paper.md"),
+    onEdit("papers/alpha/paper.tex"),
+    dir,
+  );
+  assert.deepEqual([r.exitCode, r.stdout, r.stderr], [0, "", ""]);
+});
+
+test("an edit to a file of the paper other than its source: no gates run", () => {
+  const dir = hookConsumer(join(root, "not-a-source"), {
+    "papers/alpha/PIPELINE-STATUS.md": STATUS,
+  });
+  const r = runShippedHook(
+    "paper-status-gates",
+    onEdit("papers/alpha/notes.txt"),
     dir,
   );
   assert.deepEqual([r.exitCode, r.stdout, r.stderr], [0, "", ""]);

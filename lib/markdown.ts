@@ -1,11 +1,10 @@
 /**
  * markdown.mjs — markup parsing for EVERYTHING in this repo that reads markdown.
  *
- * Three kinds of consumer: two advisory linters (`kb-lint`, `paper-lint` — through the
- * re-export from `lint-core.mjs`) and skill scripts (`tighten-paper/structure.mjs`,
- * `grade-paper-writing/prose-lint.mjs`, `paper-pipeline/scripts/*`). Hence the home is
- * here and not in the linter core: importing "the linter core" from a skill script
- * would be a lie about the direction of the dependency.
+ * Its consumers read the package's own markdown — skills' `SKILL.md` frontmatter
+ * (`skill-corpus.mjs`), fenced commands — and a consumer's linters of its own files.
+ * Hence the home is here and not in a linter core: importing "the linter core" from a
+ * skill script would be a lie about the direction of the dependency.
  *
  * CHECKS NOTHING AND PRINTS NOTHING: text in, data out. What to do with a missing
  * parser is the caller's decision, and the decisions DIFFER:
@@ -41,13 +40,6 @@ export interface Heading {
   readonly text: string;
   readonly line: number;
   readonly offset: number;
-}
-
-/** A chunk of the document: the heading it starts with (`null` for the preamble), with and without it. */
-export interface Section {
-  readonly heading: Heading | null;
-  readonly raw: string;
-  readonly body: string;
 }
 
 /** A block tokenizer with markdown-it's shape — the default, or one a test passes. */
@@ -170,56 +162,6 @@ export function headings(
 }
 
 /**
- * Slicing the document into chunks "a heading + everything up to the next heading FROM
- * THE SAME RANGE of levels". → `[{ heading, raw, body }]`.
- *
- * This is exactly what four scripts did as `split(/^(?=## )/m)` and
- * `split(/^(?=#{2,3} )/m)`. The shape of the expression lied about the intent: "two or
- * three hashes" is about CHARACTERS, while what is needed is the LEVEL, and `#{2,3}`
- * also caught a hash inside a ```-block, that is, it cut a quotation from someone
- * else's paper as a section of its own.
- *
- * `heading` — `null` on the zeroth element (the preamble before the first heading). It
- * is ALWAYS there, including empty: the former `split` also always returned the chunk
- * before the first separator as its zeroth element, and callers rely on that
- * (`sub === chunk` in `artifact-coverage` meant "there are no subsections").
- *
- * `raw` — WITH the heading line (it is used to count `§` references and bold numbers,
- * which occur in the heading itself too), `body` — without it (it is used to count words).
- *
- * 2026-08-11: moved here rather than copied into every script, because the chunk
- * boundary is the one place where an off-by-one is easy, and such a mistake has already
- * happened (`recordBlock` in `skill-corpus.mjs` returned a single "#" character for all
- * 21 skills).
- */
-export function splitSections(
-  text: string,
-  { min = 2, max = 6 }: { min?: number; max?: number } = {},
-): Section[] {
-  const hs = headings(text).filter((h) => h.depth >= min && h.depth <= max);
-  const out: Section[] = [];
-  const [first] = hs;
-  const preEnd = first ? first.offset : text.length;
-  out.push({
-    heading: null,
-    raw: text.slice(0, preEnd),
-    body: text.slice(0, preEnd),
-  });
-  for (const [i, h] of hs.entries()) {
-    const next = hs[i + 1];
-    const end = next ? next.offset : text.length;
-    const nl = text.indexOf("\n", h.offset);
-    const bodyStart = nl === -1 || nl + 1 > end ? end : nl + 1;
-    out.push({
-      heading: h,
-      raw: text.slice(h.offset, end),
-      body: text.slice(bodyStart, end),
-    });
-  }
-  return out;
-}
-
-/**
  * The text without the contents of ```-blocks (the fence lines themselves go too).
  *
  * Through the parser, not `/```[\s\S]*?```/g`: that pattern glues the end of one block
@@ -229,14 +171,11 @@ export function splitSections(
  * `blank: true` — the block's lines are NOT deleted but REPLACED with empty ones. The
  * difference is not cosmetic: deleting the lines GLUES the paragraph before the block to
  * the paragraph after it, and a code block is a block boundary — on the other side a
- * different paragraph starts. Measured 2026-08-11 on `<papers-root>/<paper>/README.md`:
- * `prose-lint` counted 82 sentences there, and after the lines were deleted it counted
- * 81 — the lead paragraph "**Reproduction commands:**" merged with the text AFTER the
- * block into one sentence. That is exactly the failure against which `prose-lint` itself
- * says "Paragraph and heading boundaries END a sentence", and it inflates the
- * claims-per-sentence counter — the threshold at which the file emits findings. The
- * former regex preserved the boundary (it left one newline on each side), so `blank` is
- * also a preservation of the former behaviour where that behaviour was right.
+ * different paragraph starts. Measured 2026-08-11 on a README: a sentence counter counted
+ * 82 sentences there, and after the lines were deleted it counted 81 — the lead paragraph
+ * "**Reproduction commands:**" merged with the text AFTER the block into one sentence.
+ * The former regex preserved the boundary (it left one newline on each side), so `blank`
+ * is also a preservation of the former behaviour where that behaviour was right.
  */
 /**
  * The CONTENTS of fenced blocks — the other side of `stripFences`.
@@ -303,70 +242,4 @@ export function requireMarkdown({
         : "  Cured by `npm i` at the repo root."),
   );
   process.exit(2);
-}
-
-/**
- * GFM tables — rows, cells and the line range, WITH THE PARSER.
- *
- * The only consumer as of 2026-08-20 is `crosspost-article`, which needs to re-lay a
- * table into a monospace block for a platform without tables (Medium). It lives here
- * and not in the skill, by the rule "markup is parsed with a parser, and in one place":
- * with a regex a table is told apart from a line of text with pipes only by its
- * neighbours, and that is exactly the class that has already cost this repo 27 places.
- *
- * Returns `{ line, endLine, rows }`, where `rows[0]` is the header; the alignment row
- * (`| --- |`) is thrown away, because in monospace output it has nothing to express.
- */
-/**
- * The document's paragraphs — `paragraph_open` line ranges, WITH THE PARSER.
- * `[{ line, endLine }]`.
- *
- * The only consumer as of 2026-08-21 is `crosspost-article`: the blog's sources are
- * hard-wrapped at a column (an editorial habit, not markdown), and the platforms render
- * a single `\n` inside a paragraph DIFFERENTLY — dev.to (Redcarpet) keeps it as a
- * literal line break, and the paragraph arrives torn into short lines exactly at the
- * source file's boundaries. Medium has no such defect not because the platform is more
- * honest, but because the paste goes through "Import a story" — the importer takes the
- * ALREADY RENDERED page of the site (where the breaks were collapsed by the browser long
- * ago), not the raw markdown.
- *
- * The range is EXACTLY the one `t.map` gives on `paragraph_open` — that is, a code
- * fence, a heading, a table, a list (in a TIGHT list the item is not wrapped in a
- * `paragraph_open` at all, it has no paragraph of its own) fall outside this function
- * automatically, by the construction of the parser, and not by a separate line-type
- * check.
- */
-export function paragraphs(text: string): { line: number; endLine: number }[] {
-  if (md === null) return [];
-  return md
-    .parse(blankFrontmatter(text), {})
-    .flatMap((t) =>
-      t.type === "paragraph_open" && t.map
-        ? [{ line: t.map[0], endLine: t.map[1] }]
-        : [],
-    );
-}
-
-export function tables(
-  text: string,
-): { line: number; endLine: number; rows: string[][] }[] {
-  if (md === null) return [];
-  const lines = blankFrontmatter(text).split("\n");
-  const out: { line: number; endLine: number; rows: string[][] }[] = [];
-  for (const t of md.parse(blankFrontmatter(text), {})) {
-    if (t.type !== "table_open" || !t.map) continue;
-    const rows: string[][] = [];
-    for (const raw of lines.slice(t.map[0], t.map[1])) {
-      if (/^\s*\|?[\s:|-]+\|?\s*$/.test(raw) && raw.includes("-")) continue; // alignment
-      rows.push(
-        raw
-          .replace(/^\s*\|/, "")
-          .replace(/\|\s*$/, "")
-          .split("|")
-          .map((c) => c.trim()),
-      );
-    }
-    out.push({ line: t.map[0], endLine: t.map[1], rows });
-  }
-  return out;
 }

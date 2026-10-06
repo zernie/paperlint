@@ -79,7 +79,7 @@ where your papers are, and writes `{ "papersDir": … }` only when that is not `
 `papersDir` already declared is kept, and nothing is measured or asked.
 
 **Under `papersDir`, only the files paperlint's own rules are written for are linted:**
-`PIPELINE-STATUS.md`, `paper.md`, `draft.md`, `paper.tex`, `reviews/*.md` and `siblings/*.md`.
+`PIPELINE-STATUS.md`, `paper.tex` (and the files it includes), `reviews/*.md` and `siblings/*.md`.
 Everything else — a paper's `repro/` scripts, vendored JavaScript, data files — is never handed to
 ESLint, so it cannot fail the run. A file you name on the command line that is not one of these is
 refused by name. `node_modules/`, `.git/` and `<papers>/.template/` are skipped.
@@ -328,8 +328,8 @@ can turn on a rule that is off by default, or change the severity of one that is
   A pattern ending in `/**` is the usual way to name one paper.
 - **Each rule reaches only the files it is written for.** A block with `"files": ["papers/**"]` and
   `"rules": { "paper/source": "warn" }` turns `paper/source` on for every `PIPELINE-STATUS.md` under
-  `papers/`; `paper/section-word` in the same block lands on every `paper.md`, `draft.md` and
-  `paper.tex`. You do not need to know which file a rule reads: your `files` narrow where it runs,
+  `papers/`; `paper/section-word` in the same block lands on every `paper.tex`. You do not need to
+  know which file a rule reads: your `files` narrow where it runs,
   never widen it. The [rule tables](rules.md) name each rule's file.
 - **A rule entry** is a severity (`"off"`, `"warn"`, `"error"`, or `0`/`1`/`2`), or a list whose
   first element is a severity and the rest are the rule's options.
@@ -354,16 +354,14 @@ and the real findings leave with it.
 
 ```json
 "structure": {
-  "markers":      ["PIPELINE-STATUS.md", "paper.tex", "paper.md", "paperlint.json"],
+  "markers":      ["PIPELINE-STATUS.md", "paper.tex", "paperlint.json"],
   "require":      ["PIPELINE-STATUS.md"],
-  "requireOneOf": [["paper.tex", "paper.md"]],
+  "requireOneOf": [["paper.tex"]],
   "ignore":       []
 }
 ```
 
-Those are the defaults; you only write the block to change them. `paper.md` is still in them
-because Markdown papers are deprecated but not yet removed
-([#57](https://github.com/zernie/paperlint/issues/57)). They were measured against a
+Those are the defaults; you only write the block to change them. They were measured against a
 real five-paper corpus rather than chosen — it passes with zero findings, while adding
 `paper.pdf` to `require` produces two findings on papers that are perfectly fine, which is why it
 is not there.
@@ -493,7 +491,7 @@ export default [
 It registers every rule paperlint ships, each turned off (`paperlint lint` is where they run), and
 the LaTeX language as `tex/latex` — use that instead of registering a `tex` plugin of your own, or
 ESLint refuses the config with `Cannot redefine plugin "tex"`, with or without the language. Without
-`texLanguage` it registers the rules only, for a config that lints markdown papers alone.
+`texLanguage` it registers the rules only.
 
 On the files paperlint lints it also turns off ESLint's report of unused disable directives: a
 directive naming a rule that is off suppresses nothing, and would be reported as unused in every such

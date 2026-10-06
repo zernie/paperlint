@@ -1,6 +1,11 @@
 /**
  * pipeline-language.eval.mjs — does prompt LANGUAGE change whether a skill fires?
  *
+ * ⚠️ THE FIXTURE CHANGED AFTER THE RECORDED RUNS. The paper the model is shown is now `paper.tex`;
+ * every result recorded for this eval (here and in `repro/`) was measured on the previous fixture,
+ * the same paper in a source form paperlint no longer reads. The next run is a fresh, deliberate
+ * measurement — record it, do not compare it against those numbers.
+ *
  * Run:  node .claude/skills/paper-pipeline/pipeline-language.eval.mjs [flags]
  *   --trials N        trials per prompt (default 3)
  *   --concurrency N   parallel runs (default 3)
@@ -184,42 +189,47 @@ const CONCURRENCY = Number(val("concurrency", "3"));
 // Byte-identical to the sibling eval's FIXTURE on purpose. If the two files drift, a difference
 // between this run and that one stops being attributable to language.
 const FIXTURE = {
-  "paper/paper.md": [
-    "# Prose Isn't Policy: Measuring Whether Agent-Config Rules Are Enforceable",
+  "paper/paper.tex": [
+    "\\documentclass{article}",
+    "\\title{Prose Isn't Policy: Measuring Whether Agent-Config Rules Are Enforceable}",
+    "\\begin{document}",
+    "\\maketitle",
     "",
-    "## Abstract",
+    "\\begin{abstract}",
     "Agent configuration files state rules in prose and assume the model obeys them. We compile a",
-    "corpus of real rules and measure what fraction can be mechanically enforced. We find that 84%",
+    "corpus of real rules and measure what fraction can be mechanically enforced. We find that 84\\%",
     "of rules in our corpus are enforceable, and that LLM-authored checkers for the remainder leak",
-    "silently in 84-96% of adversarial cases \\cite{greshake2023}.",
+    "silently in 84--96\\% of adversarial cases~\\cite{greshake2023}.",
+    "\\end{abstract}",
     "",
-    "## 1 Introduction",
+    "\\section{Introduction}",
     "Every agent harness ships a natural-language rulebook. Nothing checks it. This is the same",
-    "mistake as a code comment that claims an invariant no test enforces \\cite{thompson1984}.",
+    "mistake as a code comment that claims an invariant no test enforces~\\cite{thompson1984}.",
     "",
-    "## 2 Method",
+    "\\section{Method}",
     "We gather rules from public repositories, classify each by enforceability, and build a",
     "two-stage adversarial gate that validates a synthesized rule against a blind gold set.",
     "",
-    "## 3 Results",
-    "See Table 1. The headline number is 84%.",
+    "\\section{Results}",
+    "See Table~1. The headline number is 84\\%.",
     "",
-    "## 4 Discussion",
+    "\\section{Discussion}",
     "The result generalizes beyond our corpus in the sense that the mechanism is not corpus-specific,",
     "though of course the specific percentages are, and it is important to note in this context that",
     "the framing itself may be what carries, rather than the measurement.",
     "",
-    "## 5 Threats to Validity",
+    "\\section{Threats to Validity}",
     "Our corpus is drawn from public repositories and may not represent private configurations.",
     "",
-    "## 6 Related Work",
+    "\\section{Related Work}",
     "TODO",
     "",
-    "## 7 Conclusion",
+    "\\section{Conclusion}",
     "Prose is not policy.",
+    "\\end{document}",
   ].join("\n"),
   "paper/repro/README.md":
-    "# Reproduction artifact\n\n`python3 paper_numbers.py` recomputes every bolded figure in paper.md.\n",
+    "# Reproduction artifact\n\n`python3 paper_numbers.py` recomputes every bolded figure in paper.tex.\n",
   "paper/PIPELINE-STATUS.md":
     "# Pipeline status\n\n| gate | state |\n|---|---|\n| numbers | pass |\n| structure | not run |\n| citations | not run |\n",
 };

@@ -308,71 +308,12 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
   );
 }
 
-// ── 7. markdown: reference list, source lines, `et al.`, appendix ───
-{
-  const md = [
-    "# Paper",
-    "",
-    "## 1. Intro",
-    "",
-    "Prose.",
-    "",
-    "## References",
-    "",
-    "1. C. Yang, Z. Zhao, L. Zhang. *KNighter: Transforming Static Analysis.* arXiv:2503.09002, 2025.",
-    "2. Z. Xiang et al. *Another Work.* ICSE 2024. arXiv:2401.00001",
-    "",
-    "## Appendix A",
-    "",
-    "1. Not a reference at all.",
-    "",
-  ].join("\n");
-  const es = X.parseMarkdownRefs(md);
-  assert.equal(
-    es.length,
-    2,
-    `heading must close the reference list, parsed ${es.length}`,
-  );
-  assert.equal(
-    es[0].line,
-    9,
-    `line of first entry is ${es[0].line}, but it is ninth in file`,
-  );
-  assert.equal(es[0].title, "KNighter: Transforming Static Analysis");
-  assert.equal(es[1].truncated, true, "`et al.` must be marked as truncation");
-  assert.deepEqual(es[1].authors, ["Z. Xiang"]);
-  assert.equal(es[1].year, "2024");
-}
-
-// ── 8. `## References` inside ```-block does NOT open list ──────────────────
-// Papers in this repo cite their own markup in pieces; the old `split` would open
-// bibliography in the middle of a code example.
-{
-  const md = [
-    "# P",
-    "",
-    "## Body",
-    "",
-    "```md",
-    "## References",
-    "",
-    "1. Fake. *X.* arXiv:1111.11111",
-    "```",
-    "",
-  ].join("\n");
-  assert.deepEqual(
-    X.parseMarkdownRefs(md),
-    [],
-    "heading inside ```-block is not a heading",
-  );
-}
-
-// ── 9. CLI: ZERO ENTRIES — REFUSAL, not empty facts ─────────────────────────
+// ── 7. CLI: ZERO ENTRIES — REFUSAL, not empty facts ─────────────────────────
 {
   const { spawnSync } = await import("node:child_process");
   const dir = join(TMP, "empty");
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, "paper.md"), "# P\n\nNo links at all.\n");
+  writeFileSync(join(dir, "refs.bib"), "% no entries at all\n");
   const r = spawnSync(
     "node",
     [join(HERE, "extract-ref-facts.mjs"), dir, "--offline"],
@@ -393,7 +334,7 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
   );
 }
 
-// ── 10. CLI: no source — also refusal, not silence ─────────────────────────
+// ── 8. CLI: no source — also refusal, not silence ─────────────────────────
 {
   const { spawnSync } = await import("node:child_process");
   const dir = join(TMP, "nosrc");
@@ -410,20 +351,15 @@ process.on("exit", () => rmSync(TMP, { recursive: true, force: true }));
   );
 }
 
-// ── 11. end-to-end: real paper → facts, freshness is computed ───────────────
+// ── 9. end-to-end: real paper → facts, freshness is computed ───────────────
 {
   const { spawnSync } = await import("node:child_process");
   const dir = join(TMP, "e2e");
   mkdirSync(join(dir, "repro"), { recursive: true });
-  const paper = [
-    "# P",
-    "",
-    "## References",
-    "",
-    "1. A. Lovelace, G. Hopper. *A Study.* arXiv:2503.09002, 2025.",
-    "",
-  ].join("\n");
-  writeFileSync(join(dir, "paper.md"), paper);
+  const paper =
+    "@misc{lovelace2025,\n  author={Lovelace, Ada and Hopper, Grace},\n  title={A Study},\n" +
+    "  note={arXiv:2503.09002},\n  year={2025}}\n";
+  writeFileSync(join(dir, "refs.bib"), paper);
   writeFileSync(
     join(dir, "repro", "refs-cache.json"),
     JSON.stringify({

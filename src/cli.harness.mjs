@@ -42,6 +42,10 @@ const { PROGRAMS } = await import(join(HERE, "doctor.ts"));
 // loads vigiles without recording a check is reported as having verified nothing.
 const check = createChecker();
 
+/** A paper.tex whose whole body is `body`. */
+const tex = (body) =>
+  `\\documentclass{article}\n\\begin{document}\n${body}\n\\end{document}\n`;
+
 /** Runs the utility with output captured — quieter and faster than spawning a process. */
 async function cli(args, cwd) {
   // 🔴 THE STREAMS ARE SPLIT, AND THAT IS LOAD-BEARING. As long as the harness dumped log and
@@ -129,11 +133,11 @@ check(
   const ruleBlocks = (c) => c.filter((b) => Array.isArray(b.files));
   check(
     "without a LaTeX language the config still gets built — a corpus with no .tex is not a reason to refuse",
-    Array.isArray(cfg) && ruleBlocks(cfg).length === 4,
+    Array.isArray(cfg) && ruleBlocks(cfg).length === 3,
   );
   check(
     "with a LaTeX language two blocks are added: paper.tex, and the files it includes",
-    ruleBlocks(buildConfig({}, {})).length === 6,
+    ruleBlocks(buildConfig({}, {})).length === 5,
   );
   check(
     "🔴 the project's paper TEMPLATE directory is ignored — flat config does not skip dot-directories",
@@ -178,7 +182,7 @@ check(
       join(paper, "versions", "2026-07-22-submitted.pdf"),
       "x".repeat(100),
     );
-    writeFileSync(join(paper, "paper.md"), "# Intro\n\nRQ1: does it hold?\n");
+    writeFileSync(join(paper, "paper.tex"), tex("RQ1: does it hold?"));
     writeFileSync(
       join(paper, "PIPELINE-STATUS.md"),
       `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: 100\n    source: versions/s.tex\n    sourceBytes: 4\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`,
@@ -703,7 +707,7 @@ check(
     const status = (bytes) =>
       `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: ${bytes}\n    source: versions/s.tex\n    sourceBytes: 4\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`;
     writeFileSync(join(paper, "versions", "s.tex"), "abcd");
-    writeFileSync(join(paper, "paper.md"), "# Intro\n\nRQ1: does it hold?\n");
+    writeFileSync(join(paper, "paper.tex"), tex("RQ1: does it hold?"));
 
     writeFileSync(join(paper, "PIPELINE-STATUS.md"), status(100));
     const clean = await cli(["lint", "papers"], root);
@@ -788,7 +792,7 @@ check(
       join(paper, "versions", "2026-07-22-submitted.pdf"),
       "x".repeat(100),
     );
-    writeFileSync(join(paper, "paper.md"), "# Intro\n\nRQ1: does it hold?\n");
+    writeFileSync(join(paper, "paper.tex"), tex("RQ1: does it hold?"));
     const status = (bytes) =>
       `---\nstages:\n  - stage: submitted\n    date: 2026-07-22\n    pdf: versions/2026-07-22-submitted.pdf\n    bytes: ${bytes}\n    source: versions/s.tex\n    sourceBytes: 4\n---\n# S\n\n| id | note |\n|---|---|\n| cites | bib-authors run |\n`;
     writeFileSync(join(paper, "PIPELINE-STATUS.md"), status(100));
@@ -897,8 +901,8 @@ check(
     );
     // Three § signs — `paper/section-word`, warn level and only warn.
     writeFileSync(
-      join(paper, "paper.md"),
-      "# Intro\n\nRQ1: does it hold?\n\nSee \u00a7 5 and \u00a7 6 and \u00a7 7.\n",
+      join(paper, "paper.tex"),
+      tex("RQ1: does it hold?\n\nSee \u00a7 5 and \u00a7 6 and \u00a7 7."),
     );
     writeFileSync(
       join(paper, "PIPELINE-STATUS.md"),
@@ -1040,7 +1044,7 @@ check(
     const paper = join(tree, "papers", "p");
     mkdirSync(paper, { recursive: true });
     // Two findings of different kinds: a structural one (no scorecard) and a rule one (`§`).
-    writeFileSync(join(paper, "paper.md"), "# T\n\nSee § 3 and §4.\n");
+    writeFileSync(join(paper, "paper.tex"), tex("See § 3 and §4."));
 
     const inside = await cli(["lint", "--json", "papers"], tree);
     const outside = await cli(
@@ -1273,22 +1277,10 @@ console.log(
 
 // ── the new flags parse, and none of them becomes the directory argument ─────────────────
 {
-  const a = parseArgs([
-    "init",
-    "--yes",
-    "--no-hooks",
-    "--paper",
-    "demo",
-    "--format",
-    "md",
-  ]);
+  const a = parseArgs(["init", "--yes", "--no-hooks", "--paper", "demo"]);
   check(
     "init flags parse into fields, not into paths",
-    a.yes &&
-      a.noHooks &&
-      a.paper === "demo" &&
-      a.format === "md" &&
-      a.paths.length === 0,
+    a.yes && a.noHooks && a.paper === "demo" && a.paths.length === 0,
   );
   check("-y is --yes", parseArgs(["init", "-y"]).yes === true);
   check(
@@ -1300,11 +1292,6 @@ console.log(
     "🔴 --hooks=local is NOT implemented, and it is refused by name rather than read as a path",
     r.code === 2 && /--hooks=local is not implemented/.test(r.out),
   );
-  const f = await cli(["init", "--format", "pdf"]);
-  check(
-    "an unknown --format is refused before anything is written",
-    f.code === 2 && /--format must be one of tex, md/.test(f.out),
-  );
 }
 
 // ── init wires the hooks, and a human can say no ─────────────────────────────────────────
@@ -1315,7 +1302,7 @@ console.log(
   const mk = (name) => {
     const dir = join(root, name);
     mkdirSync(join(dir, "papers", "p1"), { recursive: true });
-    writeFileSync(join(dir, "papers", "p1", "paper.md"), "# P\n");
+    writeFileSync(join(dir, "papers", "p1", "paper.tex"), "% P\n");
     writeFileSync(
       join(dir, "papers", "p1", "PIPELINE-STATUS.md"),
       "---\n---\n",
@@ -1426,19 +1413,17 @@ console.log(
         ask: async (q) => {
           asked.push(q);
           if (/create a first paper/.test(q)) return "first";
-          if (/format:/.test(q)) return "md";
           return "";
         },
-        createPaper: async (papersRoot, name, format) => {
-          made.push({ papersRoot, name, format });
+        createPaper: async (papersRoot, name) => {
+          made.push({ papersRoot, name });
           return 0;
         },
       });
       check(
-        "a human with no paper is offered one, and the answer and format reach `paperlint new`'s routine",
+        "a human with no paper is offered one, and the answer reaches `paperlint new`'s routine",
         made.length === 1 &&
           made[0].name === "first" &&
-          made[0].format === "md" &&
           made[0].papersRoot === join(dir, "papers"),
       );
     }
@@ -1466,22 +1451,17 @@ console.log(
         log: () => {},
         interactive: false,
         paper: "given",
-        createPaper: async (papersRoot, name, format) => (
-          made.push({ name, format }),
-          0
-        ),
+        createPaper: async (papersRoot, name) => (made.push({ name }), 0),
       });
       check(
-        "--paper creates it without a human, in the default format",
-        made.length === 1 &&
-          made[0].name === "given" &&
-          made[0].format === "tex",
+        "--paper creates it without a human",
+        made.length === 1 && made[0].name === "given",
       );
     }
     {
       const dir = bare("has-one");
       mkdirSync(join(dir, "papers", "p1"), { recursive: true });
-      writeFileSync(join(dir, "papers", "p1", "paper.md"), "# P\n");
+      writeFileSync(join(dir, "papers", "p1", "paper.tex"), "% P\n");
       const asked = [];
       await init(dir, {
         ...base,
@@ -1569,7 +1549,7 @@ console.log(
       `{"${PAPERS_DIR_FIELD}":"papers"}\n`,
     );
     mkdirSync(join(root, "papers", "p1"), { recursive: true });
-    writeFileSync(join(root, "papers", "p1", "paper.md"), "# P\n");
+    writeFileSync(join(root, "papers", "p1", "paper.tex"), "% P\n");
     writeFileSync(
       join(root, "papers", "p1", "PIPELINE-STATUS.md"),
       "---\n---\n",
@@ -1591,7 +1571,7 @@ console.log(
       join(root, "papers", "p2", "PIPELINE-STATUS.md"),
       readFileSync(join(root, "papers", ".template", "PIPELINE-STATUS.md")),
     );
-    writeFileSync(join(root, "papers", "p2", "paper.md"), "# P\n");
+    writeFileSync(join(root, "papers", "p2", "paper.tex"), "% P\n");
     const r2 = await cli(["lint"], root);
     check(
       "and the same scorecard in a real paper folder fails — the ignore is scoped, not a blind spot",
@@ -1625,11 +1605,11 @@ console.log(
         /names no venue preset yet/.test(r.out) &&
         /\(0 errors, 1 warning\)/.test(r.out),
     );
-    const again = await cli(["new", "demo", "--format", "md"], root);
+    const again = await cli(["new", "demo"], root);
     check(
       "a second run on the same folder adds nothing — the tex source already stands",
       again.code === 0 &&
-        !existsSync(join(root, "writing", "demo", "paper.md")) &&
+        !/\+ /.test(again.out) &&
         /kept — never overwritten/.test(again.out),
     );
     const bad = await cli(["new", "Demo"], root);

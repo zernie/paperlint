@@ -1,5 +1,5 @@
 /**
- * prose-lint.mjs as a process — the way the skill runs it. Every mode, on
+ * prose-lint.mjs as a process — the way the skill runs it. Every mode, on an accepted paper and on
  * fixtures written here, with the WHOLE output compared: the report is the product, so a changed
  * number or a dropped line is a changed result.
  */
@@ -11,84 +11,111 @@ import { expect, test } from "vitest";
 import { runNode, useTempDir, writeTree } from "../../test/support.ts";
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), "prose-lint.mjs");
+/**
+ * One process that loads the LaTeX parser and reads a full accepted paper: about 1 s alone, 5.6 s
+ * measured under coverage with the suite running in parallel — past vitest's 5 s default.
+ */
+const SPAWN_LATEX_MS = 60_000;
+/** An accepted paper whose bibliography sits inline in `filecontents`, beside a long preamble. */
+const ACCEPTED = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "fixtures",
+  "accepted-papers",
+  "agenticdev-acm26",
+  "paper.tex",
+);
 const root = useTempDir("prose-lint-");
 
 const LONG_CAPTION_SENTENCE = Array.from(
   { length: 45 },
   (_, i) => `word${String(i)}`,
 ).join(" ");
-const PAPER = `---
-title: A title the linter must not read as a sentence
----
-# The paper
 
-<!-- TIGHTEN: a working note, not prose -->
-
-## Introduction
-
-In this paper we present a linter. It might possibly help, but this is not a proof. Clearly the
-first result matters (Section 3). Prior work agrees [1, 2]. The speedup was 40% on average across the
-full suite of papers, which suggests the method might hold generally.
-
-- The first item is short.
-- The second item is not long either.
-
-\`\`\`
-# a heading inside a code block is code
-\`\`\`
-
-| a | table |
-|---|---|
-| is | data |
-
-### Method
-
-We believe that rather than guessing, we measure. Instead of prose, the numbers speak.
-
-## References
-
-[1] A reference that is not prose.
-`;
+/** A paper.tex whose body is `body`. */
+const tex = (body: string): string =>
+  `\\documentclass{article}\n\\begin{document}\n${body}\n\\end{document}\n`;
 
 writeTree(root, {
-  "p/paper.md": PAPER,
+  "p/paper.tex": tex(
+    "\\section{Introduction}\nIn this paper we present a linter. It might possibly help.\n\\input{figures/fig1}\n\\input{figures/fig2}\n\\input{figures/fig4}\n\\input{figures/fig5}",
+  ),
   "p/figures/fig1.tex": `\\begin{figure}\\caption{\\textbf{Big.} ${LONG_CAPTION_SENTENCE}. ${"More words here. ".repeat(20)}}\\end{figure}`,
   // Empty once LaTeX commands and braces are stripped: skipped, not counted as a zero-word caption.
   "p/figures/fig2.tex": "\\caption{\\centering}",
-  // A lone "#": no word at all, and no sentence either.
+  // A lone "#": no word at all — measured as zero words, never flagged.
   "p/figures/fig4.tex": "\\caption{{#}}",
+  // Rules only: seen by the reader, but no word once the dashes are stripped — skipped.
+  "p/figures/fig5.tex": "\\caption{---}",
   "p/figures/notes.txt": "not a figure",
-  // Reads as a markdown heading once LaTeX is stripped ("# Big"), so it splits into NO sentence:
-  // the caption scan must not flag it and must not crash.
-  "p/figures/fig3.tex": "\\caption{{#} Big}",
-  "clean/paper.md": "## Intro\n\nShort and plain. Nothing else.\n",
+  "clean/paper.tex": tex("Short and plain. Nothing else."),
+  // Captions in the paper itself and in a section it includes — not under figures/.
+  "inline/paper.tex": tex(
+    `Prose here. \\begin{figure}\\caption{${LONG_CAPTION_SENTENCE}.}\\end{figure}\n\\input{sec/results}`,
+  ),
+  "inline/sec/results.tex": `\\begin{figure}\\caption{${"Short words here. ".repeat(40)}}\\end{figure}`,
+  // One real over-long caption, and the same caption commented out and inside verbatim.
+  "commented/paper.tex": tex(
+    `Prose here.\n% \\caption{Commented ${LONG_CAPTION_SENTENCE}.}\n\\begin{verbatim}\n\\caption{Quoted ${LONG_CAPTION_SENTENCE}.}\n\\end{verbatim}\n\\begin{figure}\\caption{Real ${LONG_CAPTION_SENTENCE}.}\\end{figure}`,
+  ),
+  "ends-on-marks/paper.tex": tex(
+    "The method holds on every input~\\cite{knuth}. The proof is given in full (Section~\\ref{proof}). The result is new.",
+  ),
+  "empty/paper.tex": "\\documentclass{article}",
   "page.txt":
     "A rendered page. It was hyphen-\nated across a line.\n\n12\n\fNext page text here.\nReferences\n[1] cut here.\n",
-  "paper.tex": "\\documentclass{article}",
+  "notes.rtf": "not a paper",
 });
 
 test("no arguments: the usage line, exit 0", () => {
   assert.deepEqual(runNode(SCRIPT), {
     status: 0,
     stdout: "",
-    stderr: "usage: node prose-lint.mjs <file.md|file.txt> [more files]\n",
+    stderr:
+      "usage: node prose-lint.mjs <paper.tex|page.txt> [more files] [--flags-only|--headings]\n",
   });
 });
 
-test("a .tex file is refused with exit 2, and nothing is measured", () => {
-  const r = runNode(SCRIPT, [join(root, "paper.tex")]);
-  assert.deepEqual(
-    { status: r.status, stdout: r.stdout },
-    { status: 2, stdout: "" },
-  );
-  expect(r.stderr.replaceAll(root, "<root>")).toMatchSnapshot();
-});
+test(
+  "🔴 a paper.tex is measured on the prose a reader sees — not its preamble, comments or inline .bib",
+  { timeout: SPAWN_LATEX_MS },
+  () => {
+    const r = runNode(SCRIPT, [ACCEPTED]);
+    // Guards: a .tex read as raw text counted the preamble, the comments and the `filecontents`
+    // bibliography — 8127 "words" on this paper's submitted version against about 4636 real ones.
+    const words = Number(
+      /^=== paper\.tex — (\d+) words, \d+ sentences ===$/m.exec(r.stdout)?.[1],
+    );
+    assert.deepEqual(
+      {
+        status: r.status,
+        stderr: r.stderr,
+        inBand: words > 4000 && words < 5500,
+      },
+      { status: 0, stderr: "", inBand: true },
+    );
+    // No BibTeX field and no preamble command reaches the measured text.
+    assert.doesNotMatch(r.stdout, /author\s*=|\\usepackage|\\documentclass/);
+    expect(r.stdout).toMatchSnapshot();
+  },
+);
 
-test("the full report over markdown and rendered text", () => {
-  const r = runNode(SCRIPT, [
-    join(root, "p", "paper.md"),
-    join(root, "page.txt"),
-  ]);
+test(
+  "--headings on a paper.tex lists its section titles, in order",
+  { timeout: SPAWN_LATEX_MS },
+  () => {
+    const r = runNode(SCRIPT, ["--headings", ACCEPTED]);
+    assert.deepEqual(
+      { status: r.status, stderr: r.stderr },
+      { status: 0, stderr: "" },
+    );
+    expect(r.stdout).toMatchSnapshot();
+  },
+);
+
+test("the report over a rendered page: page numbers, hyphenation and the references are dropped", () => {
+  const r = runNode(SCRIPT, [join(root, "page.txt")]);
   assert.deepEqual(
     { status: r.status, stderr: r.stderr },
     { status: 0, stderr: "" },
@@ -96,17 +123,26 @@ test("the full report over markdown and rendered text", () => {
   expect(r.stdout).toMatchSnapshot();
 });
 
-test("--headings lists every heading from level 2 to 4, in order", () => {
-  const r = runNode(SCRIPT, ["--headings", join(root, "p", "paper.md")]);
-  assert.deepEqual(
-    { status: r.status, stderr: r.stderr },
-    { status: 0, stderr: "" },
-  );
-  expect(r.stdout).toMatchSnapshot();
+test("--headings on a rendered page is refused: it marks no heading", () => {
+  const file = join(root, "page.txt");
+  assert.deepEqual(runNode(SCRIPT, ["--headings", file]), {
+    status: 2,
+    stdout: "",
+    stderr: `prose-lint: --headings reads a paper.tex — a rendered page (${file}) marks no heading\n`,
+  });
+});
+
+test("a file that is neither a paper.tex nor a rendered page is refused with exit 2, and nothing is measured", () => {
+  const file = join(root, "notes.rtf");
+  assert.deepEqual(runNode(SCRIPT, [file]), {
+    status: 2,
+    stdout: "",
+    stderr: `prose-lint reads a paper.tex or the text of its rendered PDF (.txt), not: ${file}\n`,
+  });
 });
 
 test("--flags-only: an over-long caption flags and exits 1", () => {
-  const r = runNode(SCRIPT, ["--flags-only", join(root, "p", "paper.md")]);
+  const r = runNode(SCRIPT, ["--flags-only", join(root, "p", "paper.tex")]);
   assert.deepEqual(
     { status: r.status, stdout: r.stdout },
     { status: 1, stdout: "" },
@@ -116,38 +152,105 @@ test("--flags-only: an over-long caption flags and exits 1", () => {
 
 test("--flags-only: a paper with no figures directory is clean, exit 0 and silent", () => {
   assert.deepEqual(
-    runNode(SCRIPT, ["--flags-only", join(root, "clean", "paper.md")]),
+    runNode(SCRIPT, ["--flags-only", join(root, "clean", "paper.tex")]),
+    { status: 0, stdout: "", stderr: "" },
+  );
+});
+
+test("a .tex with no prose in its body is refused with exit 2, not reported as NaN", () => {
+  const file = join(root, "empty", "paper.tex");
+  assert.deepEqual(runNode(SCRIPT, [file]), {
+    status: 2,
+    stdout: "",
+    stderr:
+      `prose-lint: ${file} has no prose to measure — after the preamble, comments, floats and ` +
+      "the back matter are left out, no word is left.\n",
+  });
+});
+
+test("a rendered page with no sentence before its references is refused the same way", () => {
+  writeTree(root, { "blank.txt": "12\nReferences\n[1] only this.\n" });
+  const file = join(root, "blank.txt");
+  assert.deepEqual(runNode(SCRIPT, [file]), {
+    status: 2,
+    stdout: "",
+    stderr: `prose-lint: ${file} has no prose to measure — no sentence is left before the references.\n`,
+  });
+});
+
+test("🔴 in a paper.tex, a sentence ending on a citation or a cross-reference wastes its stress position", () => {
+  const r = runNode(SCRIPT, [join(root, "ends-on-marks", "paper.tex")]);
+  // Guards: the marks used to be dropped from the prose, so neither ending could be seen.
+  assert.match(
+    r.stdout,
+    /^FLAG sentences ending on a cross-ref\/citation\/hedge \(wasted stress position\): 2$/m,
+  );
+});
+
+test("🔴 --flags-only reads the captions of the paper.tex and of the files it includes", () => {
+  const r = runNode(SCRIPT, [
+    "--flags-only",
+    join(root, "inline", "paper.tex"),
+  ]);
+  // Guards: captions were read only from figures/*.tex beside the paper, so a caption set inline,
+  // or in an included section, was never checked and the run exited clean.
+  assert.deepEqual(
     {
-      status: 0,
+      status: r.status,
+      stdout: r.stdout,
+      flagged: r.stderr
+        .split("\n")
+        .filter((l) => l.startsWith("   "))
+        .map((l) => l.split(":")[0]),
+    },
+    {
+      status: 1,
       stdout: "",
-      stderr: "",
+      flagged: [
+        "   paper.tex",
+        "   sec/results.tex",
+        "   run prose-lint.mjs on the file without --flags-only for the sentences",
+      ],
     },
   );
 });
 
-test("a file with no prose left to measure is refused with exit 2, not reported as NaN", () => {
+test("--flags-only on a rendered page reads the captions in figures/*.tex beside it", () => {
   writeTree(root, {
-    "empty/paper.md":
-      "---\ntitle: only frontmatter\n---\n<!-- and a note -->\n",
+    "rendered/page.txt": "A rendered page. Its prose is fine.\n",
+    "rendered/figures/f.tex": `\\caption{${LONG_CAPTION_SENTENCE}.}`,
+    "rendered/figures/notes.txt": "not a figure",
   });
-  const file = join(root, "empty", "paper.md");
-  assert.deepEqual(runNode(SCRIPT, [file]), {
-    status: 2,
+  const r = runNode(SCRIPT, [
+    "--flags-only",
+    join(root, "rendered", "page.txt"),
+  ]);
+  assert.deepEqual(
+    { status: r.status, first: r.stderr.split("\n")[1]?.split(":")[0] },
+    { status: 1, first: "   figures/f.tex" },
+  );
+  // …and a page with no figures/ beside it has no caption to flag.
+  assert.deepEqual(runNode(SCRIPT, ["--flags-only", join(root, "page.txt")]), {
+    status: 0,
     stdout: "",
-    stderr:
-      `prose-lint: ${file} has no prose to measure — after the frontmatter, comments, code ` +
-      "blocks, tables and the reference section are stripped, no word is left.\n",
+    stderr: "",
   });
 });
 
-test("a body of headings only has no sentence to measure, and is refused the same way", () => {
-  writeTree(root, { "headings/paper.md": "## Intro\n\n### Method\n" });
-  const file = join(root, "headings", "paper.md");
-  assert.deepEqual(runNode(SCRIPT, [file]), {
-    status: 2,
-    stdout: "",
-    stderr:
-      `prose-lint: ${file} has no prose to measure — after the frontmatter, comments, code ` +
-      "blocks, tables and the reference section are stripped, no word is left.\n",
-  });
+test("🔴 a caption commented out or quoted in verbatim is not measured; a real one still is", () => {
+  const r = runNode(SCRIPT, [
+    "--flags-only",
+    join(root, "commented", "paper.tex"),
+  ]);
+  // Guards: the scan matched every `\caption{` in the raw text, comments and verbatim included.
+  assert.deepEqual(
+    {
+      status: r.status,
+      findings: r.stderr
+        .split("\n")
+        .filter((l) => l.startsWith("   paper.tex:"))
+        .map((l) => /— "(\w+)/.exec(l)?.[1]),
+    },
+    { status: 1, findings: ["Real"] },
+  );
 });

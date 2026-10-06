@@ -16,10 +16,6 @@ still left to a human copying something by hand?**
 > - `--hooks=local` is **deferred, not implemented**; `init` refuses it by name.
 >
 > Where the build differed from this text, it is listed at the end, in § 8.
->
-> **Later, 2026-09-24:** Markdown papers are deprecated and being removed
-> ([#57](https://github.com/zernie/research-paper-pipeline/issues/57)). Where this record mentions
-> `paper.md` or `--format md`, it describes the tool as it was when written.
 
 1. A paper folder needs a `PIPELINE-STATUS.md`, and today nothing makes it — you copy a template.
    Should there be a command, and where should per-paper settings live: in a file in every paper
@@ -66,11 +62,11 @@ changes, no migration.
   (`src/init.ts:448`), offers a CI workflow, reports missing programs, and **prints** the two
   `/plugin` lines (`src/init.ts:257-258`). It never creates the papers directory and never creates
   a paper.
-- **A directory is a paper** if it holds any of `PIPELINE-STATUS.md`, `paper.tex`, `paper.md`,
-  `venue.json` (`src/build.ts:41-46`, `src/structure.ts:39`). Detection is generous.
-- **`rpp lint` requires `PIPELINE-STATUS.md`** in every such directory, plus one of
-  `paper.tex`/`paper.md` (`src/structure.ts:38-43`). A paper with only `paper.md` fails the very
-  first `rpp lint` with `missing PIPELINE-STATUS.md` — that is the README's own "First run" example.
+- **A directory is a paper** if it holds any of `PIPELINE-STATUS.md`, `paper.tex`, `venue.json`
+  (`src/build.ts`, `src/structure.ts`). Detection is generous.
+- **`rpp lint` requires `PIPELINE-STATUS.md`** in every such directory, plus `paper.tex`
+  (`src/structure.ts`). A paper with only `paper.tex` fails the very first `rpp lint` with
+  `missing PIPELINE-STATUS.md` — that is the README's own "First run" example.
 
 ⚠️ **One inconsistency worth knowing.** `paper/stages` says in its header that a missing `stages`
 field is _legitimate_ — "a paper that has shipped nothing owes nothing" (`eslint-rules/paper-stages.mjs:24-27`) —
@@ -101,7 +97,7 @@ human to copy and tick them.
 ## 2. What `PIPELINE-STATUS.md` actually holds — the split
 
 Read from the template (`skills/paper-pipeline/references/pipeline-status-template.md`), the
-fixtures (`fixtures/paper-stages/*`, `fixtures/real-markdown-paper/`) and four real files in the
+fixtures (`fixtures/paper-stages/*`) and four real files in the
 owner's corpus. Real sizes: 86, 95, 1 057 and 1 301 lines. In the two big ones the machine-read
 part is the first 10–25 lines of front matter; the rest is a dated journal of decisions. (No
 content of those files is reproduced here.)
@@ -110,7 +106,6 @@ content of those files is reproduced here.)
 | ------------------------------------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | paper short name / title                                                        | **config**            | human, once — `rpp new` can prefill from the folder name                                                                                                                  |
 | venue, deadline, blind model (the `Venue:` header line)                         | **config**            | human; changes when the paper is re-targeted                                                                                                                              |
-| format (`.tex` vs `.md`)                                                        | **derived**           | from which source file exists                                                                                                                                             |
 | venue profile, paper kind, pdf path (a separate `venue.json` in one real paper) | **config**            | human; already a per-paper file in practice                                                                                                                               |
 | typography allowance (`typographyDebt`)                                         | **config**            | human, but it sits in the root key keyed by path today                                                                                                                    |
 | `stages[]`: `stage`, `date`, `venue`                                            | **state**             | **tool** at the moment of freezing (`rpp freeze`, a later step)                                                                                                           |
@@ -172,9 +167,9 @@ parsing markdown — the fix is to ship the template as its own file and have th
    (entry front matter), Cargo (member `Cargo.toml`), Eleventy (directory data). The tools that put
    per-unit settings in the root (ESLint `files`, Vale sections) are _linters of code_, where units
    have no identity of their own — a paper does.
-3. **Front matter of the source itself is not available to rpp**, because half the papers are
-   LaTeX, which has no YAML front matter. Quarto and Astro can use the document's own header only
-   because every document is markdown. So rpp needs a per-paper **file**, and it already has one:
+3. **Front matter of the source itself is not available to rpp**, because a paper is LaTeX, which
+   has no YAML front matter. Quarto and Astro can use the document's own header only because their
+   documents carry one. So rpp needs a per-paper **file**, and it already has one:
    `PIPELINE-STATUS.md`, whose front matter is exactly where Quarto would put these fields.
 4. **Root-level keys that are really per-paper** (`typographyDebt: { "papers/my-paper": … }`,
    `src/cli.ts:104`) are the ESLint-overrides style. They work, but they break silently on a folder
@@ -209,9 +204,9 @@ written once at freeze time, then checked forever — and today a human types it
 
 ### Commands
 
-**`rpp new <name> [--format tex|md]`** — creates `<papers>/<name>/` with:
+**`rpp new <name>`** — creates `<papers>/<name>/` with:
 
-- `paper.tex` or `paper.md` (a minimal stub; `--format` defaults to `tex` — ask when interactive);
+- `paper.tex` (a minimal stub);
 - `PIPELINE-STATUS.md` from a **template file** shipped in the package, with the name filled in and
   **no** `stages` field (a new paper has shipped nothing — `paper-stages.mjs:24`).
 
@@ -228,7 +223,7 @@ Rules for it, each taken from a tool above:
 **Later step, NOT part of this change — `rpp freeze <paper> <stage> [--pdf <file>] [--date <iso>]`**,
 the release-please move, recorded so the design is not lost:
 
-- copies the built pdf and the source into `versions/<date>-<stage>.pdf|.tex|.md`;
+- copies the built pdf and the source into `versions/<date>-<stage>.pdf|.tex`;
 - **appends** one record to `stages` with `stage`, `date`, `pdf`, `bytes`, `source`, `sourceBytes`;
 - refuses a stage outside `STAGES` (`paper-stages.mjs:53`) and a date/stage pair already present.
 
@@ -259,15 +254,15 @@ the skills tell agents to update them.
 
 - **Existing folders with a `PIPELINE-STATUS.md`** (the owner's four): nothing changes. Their
   front matter is already the per-paper carrier; a later `rpp freeze` would append to their lists.
-- **Existing folders without one** (a draft that has only `paper.md`): `rpp new <that-name>` fills
-  the missing file and touches nothing else.
+- **Existing folders without one** (a draft that has only `paper.tex`): `rpp new <that-name>`
+  fills the missing file and touches nothing else.
 - **No `rpp migrate` is needed** for this recommendation. One would be needed only if the carrier
   later moves to `paper.yml`.
 
 ### The smallest first step
 
 Move the template out of the code fence into its own file (say
-`templates/paper/PIPELINE-STATUS.md`, plus `paper.tex` and `paper.md` stubs), make
+`templates/paper/PIPELINE-STATUS.md`, plus a `paper.tex` stub), make
 `pipeline-status-template.md` point at it instead of containing it, and add `rpp new` that copies
 it. Then the README sentence "Nothing generates it and no command refreshes it" becomes "`rpp new`
 creates it". No rule changes, no consumer migration. `rpp freeze` is step two; `init` offering to
@@ -435,13 +430,13 @@ unset **and** no `--yes`._
 
 ### What `init` asks, and what it does without asking
 
-| decision          | human at a terminal                                                                                         | agent / CI / `--yes`                                                                              | flag                                    |
-| ----------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| papers directory  | asked only if several candidates (today)                                                                    | first candidate, said so (today)                                                                  | `init <dir>` then the key               |
-| **hooks**         | "Wire the three paper hooks into `.claude/settings.json` (committed, shared)? **[Y/n]**"                    | **yes** — the guard is what the package is for, the edit is idempotent and shows up in `git diff` | `--no-hooks` (`--hooks=local` deferred) |
-| CI workflow       | "Add a GitHub Actions workflow? **[y/N]**" (today)                                                          | **no** (today) — it writes into `.github/` and spends Actions minutes, which are metered          | `--ci` / `--no-ci`                      |
-| first paper       | only when the papers dir holds no paper: "Create a first paper? name: [skip]" then "format: tex / md [tex]" | **no**, unless `--paper <name>` is given                                                          | `--paper <name> --format tex\|md`       |
-| external programs | reported (today)                                                                                            | reported (today)                                                                                  | —                                       |
+| decision          | human at a terminal                                                                      | agent / CI / `--yes`                                                                              | flag                                    |
+| ----------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| papers directory  | asked only if several candidates (today)                                                 | first candidate, said so (today)                                                                  | `init <dir>` then the key               |
+| **hooks**         | "Wire the three paper hooks into `.claude/settings.json` (committed, shared)? **[Y/n]**" | **yes** — the guard is what the package is for, the edit is idempotent and shows up in `git diff` | `--no-hooks` (`--hooks=local` deferred) |
+| CI workflow       | "Add a GitHub Actions workflow? **[y/N]**" (today)                                       | **no** (today) — it writes into `.github/` and spends Actions minutes, which are metered          | `--ci` / `--no-ci`                      |
+| first paper       | only when the papers dir holds no paper: "Create a first paper? name: [skip]"            | **no**, unless `--paper <name>` is given                                                          | `--paper <name>`                        |
+| external programs | reported (today)                                                                         | reported (today)                                                                                  | —                                       |
 
 Why the hooks default is "yes" even without asking, while CI is "no": the rule `install.md` already
 adopted from Playwright is _"ask only about what cannot be guessed or is expensive"_. Installing a
@@ -495,8 +490,8 @@ Recorded so the design and the code do not quietly disagree.
 - **`rpp new` lints the new folder itself** (`rpp lint <papers>/<name>`), so the structure check —
   which looks at the subdirectories of the path it is given — does not run there; the folder was
   just made with the required files, so there is nothing for it to find.
-- **Interactive `init` asks "Create a first paper? name: [skip]" and then the format** only when the
-  name was given and `--format` was not.
+- **Interactive `init` asks "Create a first paper? name: [skip]"** only when the papers directory
+  holds no paper.
 
 ## Sources checked
 

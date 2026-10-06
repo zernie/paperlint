@@ -6,7 +6,7 @@
  */
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { createServer } from "node:http";
 import { dirname, join } from "node:path";
 import { test } from "vitest";
@@ -50,14 +50,14 @@ test("parseArgs: the boolean flags of build and toolchain, and a value flag with
     [
       parseArgs(["build", "--all", "--dry-run", "papers/p"]),
       parseArgs(["toolchain", "--check"]),
-      parseArgs(["new", "x", "--format"]),
+      parseArgs(["new", "x", "--paper"]),
       parseArgs(["new", "x", "--venue="]),
       parseArgs(["new", "x", "--kind", "short", "--max-warnings=3"]),
     ],
     [
       { ...base, cmd: "build", all: true, dryRun: true, paths: ["papers/p"] },
       { ...base, cmd: "toolchain", check: true },
-      { ...base, cmd: "new", paths: ["x"], missingValue: "--format" },
+      { ...base, cmd: "new", paths: ["x"], missingValue: "--paper" },
       { ...base, cmd: "new", paths: ["x"], missingValue: "--venue" },
       { ...base, cmd: "new", paths: ["x"], kind: "short", maxWarnings: 3 },
     ],
@@ -142,20 +142,18 @@ test("build refuses with no target, and --all over no papers", async () => {
   );
 });
 
-test("new refuses an unknown format, a broken config, and a config that names no papers directory", async () => {
+test("new refuses a broken config, and a config that names no papers directory", async () => {
   const broken = join(root, "new-broken");
   writeTree(broken, { "paperlint.json": "{ not json" });
   const none = join(root, "new-none");
   writeTree(none, { "paperlint.json": JSON.stringify({ papersDir: [] }) });
   const results = [
-    await cli(["new", "p", "--format", "docx"], root),
-    await cli(["new", "p", "--format", "md"], broken),
-    await cli(["new", "p", "--format", "md"], none),
+    await cli(["new", "p"], broken),
+    await cli(["new", "p"], none),
   ];
   assert.deepEqual(
     results.map((r) => ({ code: r.code, err: r.err.split(":")[0] })),
     [
-      { code: 2, err: "--format must be one of tex, md — got `docx`" },
       { code: 2, err: join(broken, "paperlint.json is not valid JSON") },
       {
         code: 2,
@@ -170,7 +168,7 @@ test("new with several papers directories says which one it used", async () => {
   writeTree(dir, {
     "paperlint.json": JSON.stringify({ papersDir: ["a", "b"] }),
   });
-  const r = await cli(["new", "p", "--format", "md", "--yes"], dir);
+  const r = await cli(["new", "p", "--yes"], dir);
   assert.equal(
     r.out.split("\n")[0],
     "several papers directories are declared — using the first: a",
@@ -274,20 +272,20 @@ async function withoutTex<T>(dir: string, fn: () => Promise<T>): Promise<T> {
 const noTexDir = join(root, "build-notex");
 writeTree(noTexDir, {
   "package.json": "{}",
-  "papers/md/paper.md": "# P\n\nx\n",
+  "papers/nosource/notes.txt": "x\n",
   "papers/tex/paper.tex":
     "\\documentclass{article}\\begin{document}x\\end{document}\n",
 });
 const venues = texInputsDir();
 
-test("build: a markdown-only paper is refused", async () => {
-  const md = await withoutTex(noTexDir, () =>
-    cli(["build", "papers/md"], noTexDir),
+test("build: a paper with no paper.tex is refused, naming paper.tex", async () => {
+  const none = await withoutTex(noTexDir, () =>
+    cli(["build", "papers/nosource"], noTexDir),
   );
-  assert.deepEqual(md, {
+  assert.deepEqual(none, {
     code: 1,
     out: [
-      "papers/md",
+      "papers/nosource",
       `  inputs: TEXINPUTS += the paper's directory, then ${venues}`,
       "  compile: refused — no paper.tex; paperlint compiles LaTeX, and this paper has none",
       "  measure: skipped — nothing is compiled",
@@ -295,7 +293,7 @@ test("build: a markdown-only paper is refused", async () => {
       "  ✗ nothing to compile: no paper.tex",
     ].join("\n"),
     err:
-      "\nNo paper.tex in: papers/md.\n" +
+      "\nNo paper.tex in: papers/nosource.\n" +
       'This is NOT "nothing to build" — paperlint compiles LaTeX, and these papers have no LaTeX source.\n' +
       "Write the paper in paper.tex; `paperlint new <name>` creates one.",
   });
@@ -399,7 +397,7 @@ test("build --dry-run on a paper with a venue plans for the preset's packages", 
 
 test("a paper's paperlint.json that does not parse stops the lint with its path", () => {
   const dir = writeTree(join(root, "rules-broken"), {
-    "p/paper.md": "# P\n",
+    "p/paper.tex": "% P\n",
     "p/paperlint.json": "{ nope",
   });
   const r = paperRuleBlocks([join(dir, "p")]);
@@ -444,15 +442,12 @@ test("silentOptionalRules: a rule no block names for any paper is silent — a g
   );
 });
 
-test("init with no path and --format md sets up the current directory", async () => {
+test("init with no path sets up the current directory, and its first paper is paper.tex", async () => {
   const dir = writeTree(join(root, "init-here"), { "package.json": "{}" });
-  const r = await cli(
-    ["init", "--yes", "--no-hooks", "--paper", "first", "--format", "md"],
-    dir,
-  );
-  assert.equal(
-    existsSync(join(dir, "papers", "first", "paper.md")),
-    true,
+  const r = await cli(["init", "--yes", "--no-hooks", "--paper", "first"], dir);
+  assert.deepEqual(
+    readdirSync(join(dir, "papers", "first")).sort(),
+    ["PIPELINE-STATUS.md", "paper.tex", "paperlint.json"],
     r.out + r.err,
   );
 });
@@ -488,12 +483,9 @@ test("lint: a named directory with nothing paperlint lints is named in full when
 test("new from inside the paper it names adds the missing files and names the paper in full", async () => {
   const dir = writeTree(join(root, "new-inside"), {
     "paperlint.json": JSON.stringify({ papersDir: "papers" }),
-    "papers/p/paper.md": "# P\n",
+    "papers/p/paper.tex": "% P\n",
   });
-  const r = await cli(
-    ["new", "p", "--format", "md", "--yes"],
-    join(dir, "papers", "p"),
-  );
+  const r = await cli(["new", "p", "--yes"], join(dir, "papers", "p"));
   assert.match(
     r.out,
     new RegExp(
@@ -507,7 +499,7 @@ test("new with several directories, run from the first, names it in full", async
     "paperlint.json": JSON.stringify({ papersDir: ["a", "b"] }),
     "a/.keep": "",
   });
-  const r = await cli(["new", "p", "--format", "md", "--yes"], join(dir, "a"));
+  const r = await cli(["new", "p", "--yes"], join(dir, "a"));
   assert.equal(
     r.out.split("\n")[0],
     `several papers directories are declared — using the first: ${join(dir, "a")}`,
@@ -519,7 +511,7 @@ test("lint: an ESLint failure that is not an empty set is not swallowed", async 
     "paperlint.json": JSON.stringify({
       rules: { "paper/stages": ["error", { x: 1 }] },
     }),
-    "papers/p/paper.md": "# P\n",
+    "papers/p/paper.tex": "% P\n",
     "papers/p/PIPELINE-STATUS.md": "---\nstages: []\n---\n# S\n",
   });
   await assert.rejects(cli(["lint"], dir), {
@@ -582,11 +574,11 @@ function newAtTerminal(cwd: string, answers: Record<string, string>) {
   });
 }
 
-test("new at a terminal asks for the format and the venue; the answers pick them", async () => {
-  const md = writeTree(join(root, "new-tty-md"), { "package.json": "{}" });
-  const r = await newAtTerminal(md, { "format:": "md\n", "venue:": "none\n" });
+test("new at a terminal asks for the venue; the answer picks it", async () => {
+  const dir = writeTree(join(root, "new-tty"), { "package.json": "{}" });
+  const r = await newAtTerminal(dir, { "venue:": "none\n" });
   assert.equal(r.status, 0, r.out);
-  assert.equal(existsSync(join(md, "papers", "first", "paper.md")), true);
+  assert.equal(existsSync(join(dir, "papers", "first", "paper.tex")), true);
 });
 
 test("chooseVenue: a question that fails (the stream ended) takes the default, no venue", async () => {
@@ -625,9 +617,9 @@ test("init's TeX Live install runs the toolchain over the project's papers, neve
   assert.equal(typeof here.installed(), "boolean");
 });
 
-test("lint with its LaTeX language missing from the install still lints the markdown papers", () => {
+test("lint with its LaTeX language missing from the install still lints the scorecards", () => {
   const dir = writeTree(join(root, "lint-no-tex-language"), {
-    "papers/p/paper.md": "# P\n\nSome prose.\n",
+    "papers/p/PIPELINE-STATUS.md": "---\nstages: []\n---\n# S\n",
     "no-latex.mjs":
       "import { register } from 'node:module';\n" +
       "register('data:text/javascript,' + encodeURIComponent(\"export async function resolve(s, c, next) { if (s === '#eslint-rules/latex-language') throw Object.assign(new Error('gone'), { code: 'ERR_MODULE_NOT_FOUND' }); return next(s, c); }\"));\n",
@@ -637,9 +629,9 @@ test("lint with its LaTeX language missing from the install still lints the mark
     nodeArgs: ["--import", join(dir, "no-latex.mjs")],
   });
   const whole = runNode(BIN, ["lint", "papers"], { cwd: dir });
-  // A markdown paper needs no LaTeX language: the same report, the same code.
+  // A scorecard needs no LaTeX language: the same report, the same code.
   assert.deepEqual(without, whole);
-  assert.match(whole.stdout, /missing `PIPELINE-STATUS\.md`/);
+  assert.match(whole.stdout, /missing all of `paper\.tex`/);
 });
 
 test("`paperlint hook` with no name: exit 2, and the usage names an example", async () => {

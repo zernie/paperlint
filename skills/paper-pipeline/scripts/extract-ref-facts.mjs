@@ -3,34 +3,32 @@
  * extract-ref-facts.mjs — parse a paper's bibliography, ask the registries and write FACTS to JSON.
  * It judges nothing.
  *
- * Usage: node extract-ref-facts.mjs <paper dir|paper.md|refs.bib> [--offline] [--refresh]
+ * Usage: node extract-ref-facts.mjs <paper dir|paper.tex|refs.bib> [--offline] [--refresh]
  *                                   [--cache=PATH] [--out=PATH] [--quiet]
- * Exit: 0 — facts written · 1 — nothing to write (no source, no entries).
+ * Exit: 0 — facts written · 1 — nothing to write (no source, a source that is neither a .bib nor
+ * a .tex, no entries).
  *
  * WHY THE SPLIT. Before 2026-08-26 measurement and judgement lived in one script
  * (`verify-refs.mjs`, 20 emit sites, 8 kinds of findings) — that is, on the fifth rung of the
  * ladder in `the consumer's papers CLAUDE.md`. The judgement moved into ESLint rules
  * (`eslint-rules/ref-facts.mjs`): a registry of rules, severity from config, `eslint-disable` with a
- * reason, `file:line:col` positions. What stayed here is the plumbing: parsing markup, parsing
- * `.bib`, the network, parsing the registries' responses.
+ * reason, `file:line:col` positions. What stayed here is the plumbing: parsing `.bib`, the network,
+ * parsing the registries' responses.
  *
  * The precedent in this same knowledge base is `render-paper/extract-pdf-facts.mjs` +
  * `eslint-rules/pdf-facts.mjs`. The boundary is exactly the same: the script goes out into the
  * world, the rule passes the judgement.
  *
- * 🔴 WHY THE RULE CANNOT LIVE OVER THE PAPER ITSELF. Of the three papers in the knowledge base one
- * has a `paper.md` (`<paper-a>`); in `<paper-b>` and `<paper-c>` the bibliography is `refs.bib`, and
- * no ESLint language plugin parses `.bib`. The common input that can do both is the facts JSON.
- * The price is known and written down: a finding is addressed into the facts, not into a line of
- * `paper.md`; that is why every entry in the facts carries the `line` of its source, and the rule
- * prints it in the message.
+ * 🔴 WHY THE RULE CANNOT LIVE OVER THE BIBLIOGRAPHY ITSELF. No ESLint language plugin parses
+ * `.bib`, so the rule's input is the facts JSON. The price is known and written down: a finding is
+ * addressed into the facts, not into a line of the `.bib`; that is why every entry in the facts
+ * carries the `line` of its source, and the rule prints it in the message.
  *
  * 🔴 WHAT THIS MOVE FIXED (both legs were DEAD, measured 2026-08-26):
  *
- *  1. `.bib` WAS NEVER OPENED. `resolveSource` walked `paper.md` → `draft.md` →
- *     `build/custom.bib`; `refs.bib` was not on the list, although the error text promised
- *     "or .bib". The run: `verify-refs.mjs <papers-root>/<paper-b>` →
- *     "no paper.md, draft.md or .bib … nothing to check".
+ *  1. `.bib` WAS NEVER OPENED. `resolveSource` did not list `refs.bib`, although the error text
+ *     promised "or .bib". The run: `verify-refs.mjs <papers-root>/<paper-b>` →
+ *     "… or .bib … nothing to check".
  *  2. THE `.bib` PARSER DID NOT TAKE THE REAL FILES. The regex `/@\w+\{([^,]+),([\s\S]*?)\n\}/g`
  *     required a `}` on a line of its own, while both of our `refs.bib` close an entry on the line
  *     of the last field (`note={arXiv:2310.06770}}`). A run straight at the file: "parsed 0
@@ -71,13 +69,8 @@ import {
 } from "node:fs";
 import { createHash } from "node:crypto";
 import { join, resolve, dirname, basename } from "node:path";
-import { headings as mdHeadings, requireMarkdown } from "#lib/markdown";
+import { bibRange } from "#eslint-rules/paper-typography";
 import { isMain } from "./consumer.mjs";
-
-// Markup is parsed with a parser (`CLAUDE.md`, 2026-08-11). We fail rather than degrade: without
-// the parser the reference list would not be found at all, and the facts would come out empty —
-// that is, a clean verdict about a paper that in fact has forty references.
-requireMarkdown();
 
 const ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 const CROSSREF = "https://api.crossref.org/works/";
@@ -89,135 +82,12 @@ const UA =
 
 export const SCHEMA = 1;
 
-// ── parsing: the reference list in markdown ──────────────────────────────────
-//
-// The same shape that `repro/md2submission.py` reads, deliberately: that script turns the list into
-// the .bib actually uploaded to the venue, so whatever it counts as an entry is an entry.
-// `^\d{1,2}. ` opens an entry, an indent continues it, a blank line closes it.
-
-const REF_OPEN = /^(\d{1,2})\.\s+(.*)$/;
-/** Working notes that never reach the PDF; md2submission strips them, so we do too. */
-const BRACKET_NOTE = /\[(VERIFY|ANONYMIZ)[^\]]*\]/g;
-
-export function parseMarkdownRefs(text) {
-  // The section is cut by the parser. The former `text.split(/^## References\s*$/m)[1]` opened the
-  // reference list on a `## References` quoted inside a ```-block — and in this repo papers quote
-  // their own markup in chunks.
-  const refsHs = mdHeadings(text).filter(
-    (h) => h.depth === 2 && /^References\s*$/u.test(h.text),
-  );
-  if (refsHs.length === 0) return [];
-  const nl = text.indexOf("\n", refsHs[0].offset);
-  const body = text.slice(
-    nl === -1 ? text.length : nl,
-    refsHs[1] ? refsHs[1].offset : text.length,
-  );
-  // The line where the body starts in the source file — so that an entry has an ADDRESS in
-  // `paper.md` and not just a number in a list. The rule prints it in the message: the facts file
-  // lives in `_build/`, and without the source line a finding would have to be hunted for by eye.
-  const bodyLine = text
-    .slice(0, nl === -1 ? text.length : nl)
-    .split("\n").length;
-  // A heading closes the list — appendices come AFTER the bibliography, and without this their
-  // numbered prose would be parsed as references. The line numbers come from the parser:
-  // `/^#{1,6}\s/` also counted a hash inside a ```-block as a heading.
-  const headingLines = new Set(mdHeadings(body).map((h) => h.line));
-  const entries = [];
-  let cur = null;
-  let buf = [];
-  let curLine = 0;
-  const flush = () => {
-    if (cur !== null)
-      entries.push({
-        n: cur,
-        line: curLine,
-        raw: buf.join(" ").replace(BRACKET_NOTE, "").trim(),
-      });
-    cur = null;
-    buf = [];
-  };
-  const lns = body.split("\n");
-  for (let i = 0; i < lns.length; i++) {
-    const ln = lns[i];
-    if (headingLines.has(i)) break;
-    const m = REF_OPEN.exec(ln);
-    if (m) {
-      flush();
-      cur = Number(m[1]);
-      curLine = bodyLine + i;
-      buf = [m[2].trim()];
-    } else if (cur !== null && ln.trim()) buf.push(ln.trim());
-    else if (cur !== null) flush();
-  }
-  flush();
-  return entries.map(splitEntry).filter(Boolean);
-}
-
-/** `A, B, C. *Title.* rest` → authors / title / remainder — the shape md2submission produces. */
-function splitEntry(e) {
-  const base = { n: e.n, line: e.line, key: null, raw: e.raw };
-  const mt = /\*(.+?)\*/.exec(e.raw);
-  if (!mt)
-    return {
-      ...base,
-      authors: [],
-      truncated: false,
-      title: null,
-      year: yearIn(e.raw),
-      venue_text: e.raw,
-    };
-  const title = mt[1].trim().replace(/\.$/, "");
-  const rawAuthors = splitAuthors(e.raw.slice(0, mt.index));
-  const note = e.raw
-    .slice(mt.index + mt[0].length)
-    .trim()
-    .replace(/^,\s*/, "");
-  const { authors, truncated } = dropEtAl(rawAuthors);
-  return {
-    ...base,
-    authors,
-    truncated,
-    title,
-    year: yearIn(note) ?? yearIn(e.raw),
-    venue_text: note,
-  };
-}
-
-function splitAuthors(a) {
-  const s = a
-    .trim()
-    .replace(/\.\s*$/, "")
-    .trim();
-  if (!s) return [];
-  return s
-    .split(",")
-    .map((p) => p.trim())
-    .filter(Boolean);
-}
-
-/**
- * `Z. Xiang et al.` — the entry deliberately gives a PREFIX of the author list. That is a fact about
- * the entry, not a judgement, so the truncation is removed here and the rule receives an honest
- * prefix plus a flag.
- */
-const ET_AL = /\bet\s+al\.?$/i;
-function dropEtAl(authors) {
-  if (!authors.length || !ET_AL.test(authors[authors.length - 1].trim()))
-    return { authors, truncated: false };
-  const out = authors.slice();
-  out[out.length - 1] = out[out.length - 1].replace(ET_AL, "").trim();
-  return { authors: out.filter(Boolean), truncated: true };
-}
-
-const yearIn = (s) => (/\b(19|20)\d{2}\b/.exec(s) ?? [null])[0];
-
 // ── parsing: .bib WITH A REAL PARSER ─────────────────────────────────────────
 
 /**
- * The name order is normalised to "First name Surname" — the same shape in which authors are written
- * in markdown. Then the rule has ONE `surname()` function (the last alphabetic token) for both
- * sources instead of two branches. Normalising the format is the parser's job; comparing is the
- * rule's job.
+ * The name order is normalised to "First name Surname". Then the rule has ONE `surname()` function
+ * (the last alphabetic token). Normalising the format is the parser's job; comparing is the rule's
+ * job.
  *
  * 🔴 TWO SHAPES, AND BOTH ARE LISTED EXPLICITLY. The parser returns an institution
  * (`author={{Adversa AI}}` — the double brace means "one name as a whole, do not split") as
@@ -527,27 +397,41 @@ export function recordFrom(key, cached) {
 
 // ── assembling the facts ─────────────────────────────────────────────────────
 
-/** `paper.md` → `draft.md` → `refs.bib` → `build/custom.bib`. `refs.bib` ADDED 26.08 (defect #1). */
-export const SOURCE_ORDER = [
-  "paper.md",
-  "draft.md",
-  "refs.bib",
-  "build/custom.bib",
-];
+/**
+ * `paper.tex` when it embeds its `.bib` in `filecontents` → `refs.bib` → `build/custom.bib`.
+ * `refs.bib` ADDED 26.08 (defect #1). The embedded one comes first, as in `paperlint build`
+ * (`bibliographyOf`, src/references.ts): the author edits it there, and the `refs.bib` LaTeX
+ * writes out of it is missing before a build and stale after an edit.
+ */
+export const SOURCE_ORDER = ["paper.tex", "refs.bib", "build/custom.bib"];
+
+/** Whether `p` is a source: any `.bib`, and a `.tex` only when it carries a `.bib`. */
+const isSource = (p) =>
+  !p.endsWith(".tex") || bibRange(readFileSync(p, "utf8")) !== null;
 
 export function resolveSource(target) {
   const t = resolve(target);
   if (existsSync(t) && statSync(t).isFile()) return t;
   for (const c of SOURCE_ORDER) {
     const p = join(t, c);
-    if (existsSync(p)) return p;
+    if (existsSync(p) && isSource(p)) return p;
   }
   return null;
 }
 
+/**
+ * The entries of a `.bib`, or of the `.bib` a `.tex` embeds (none when it embeds none) — each
+ * entry's `line` its line in the file read, so a finding points where the author edits.
+ */
 export async function loadEntries(path) {
   const text = readFileSync(path, "utf8");
-  return path.endsWith(".bib") ? parseBib(text) : parseMarkdownRefs(text);
+  if (!path.endsWith(".tex")) return parseBib(text);
+  const bib = bibRange(text);
+  if (bib === null) return [];
+  const above = text.slice(0, bib.bodyStart).split("\n").length - 1;
+  return (await parseBib(bib.body)).map((e) =>
+    e.line === 0 ? e : { ...e, line: e.line + above },
+  );
 }
 
 /** Every registry key a list of entries needs. Computed once so the requests go in one batch. */
@@ -571,7 +455,7 @@ export function buildFacts({ source, text, entries, cache, cachePath }) {
   return {
     schema: SCHEMA,
     source: rel(source),
-    source_kind: source.endsWith(".bib") ? "bibtex" : "markdown",
+    source_kind: "bibtex",
     source_sha256: createHash("sha256").update(text).digest("hex"),
     cache: cachePath ? rel(cachePath) : null,
     generated: new Date().toISOString().slice(0, 10),
@@ -598,6 +482,14 @@ async function main(argv) {
   if (!src) {
     console.error(
       `🛑 no ${SOURCE_ORDER.join(", ")} under ${resolve(target)} — nowhere to take a bibliography from.`,
+    );
+    return 1;
+  }
+  // A paper's references are read from a `.bib`, or the one a `.tex` embeds: any other file
+  // parsed as BibTeX would report zero entries for the wrong reason.
+  if (!src.endsWith(".bib") && !src.endsWith(".tex")) {
+    console.error(
+      `🛑 ${rel(src)} is neither a .bib nor a .tex — the bibliography is read from ${SOURCE_ORDER.join(", ")}.`,
     );
     return 1;
   }

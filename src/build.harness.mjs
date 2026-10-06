@@ -482,7 +482,7 @@ try {
   );
 
   // ── no paper.tex: a REFUSAL, not a skip ───────────────────────────────────────────────
-  const bare = paper("bare", { "paper.md": "# x" });
+  const bare = paper("bare", { "PIPELINE-STATUS.md": "# x" });
   const ntex = fakeTex();
   const nr = await buildPaper(bare, {
     cwd: root,
@@ -546,7 +546,7 @@ try {
 
   // (c) no paper.tex: refused, and a PDF left from some earlier build goes too.
   const bareStale = paper("bare-stale", {
-    "paper.md": "# x",
+    "PIPELINE-STATUS.md": "# x",
     "paper.pdf": "%PDF-stale-from-yesterday",
   });
   const bsTex = fakeTex();

@@ -20,6 +20,10 @@ afterEach(() => {
   for (const d of dirs.splice(0)) rmSync(d, { recursive: true, force: true });
 });
 
+/** A paper.tex whose whole body is `body`. */
+const PAPER = (body: string): string =>
+  `\\documentclass{article}\n\\begin{document}\n${body}\n\\end{document}\n`;
+
 function project(
   settings: Record<string, unknown>,
   files: Record<string, string> = {},
@@ -30,7 +34,7 @@ function project(
     "package.json": JSON.stringify({ name: "c", private: true }),
     "paperlint.json": JSON.stringify({ papersDir: "papers", ...settings }),
     "papers/a/PIPELINE-STATUS.md": "---\nstages: []\n---\n",
-    "papers/a/paper.md": "# Intro\n\nSee §5, §6 and §7; p < .05.\n",
+    "papers/a/paper.tex": PAPER("See §5, §6 and §7; $p < .05$."),
     ...files,
   };
   for (const [p, text] of Object.entries(all)) {
@@ -64,15 +68,17 @@ describe("paperlint lint --fix", () => {
     const fixed = await lint(root, ["--fix"]);
     expect(ruleIds(fixed.out)).not.toContain("paper/section-word");
     expect(ruleIds(fixed.out)).not.toContain("paper/leading-zero");
-    expect(readFileSync(join(root, "papers/a/paper.md"), "utf8")).toBe(
-      "# Intro\n\nSee Section 5, Section 6 and Section 7; p < 0.05.\n",
+    expect(readFileSync(join(root, "papers/a/paper.tex"), "utf8")).toBe(
+      PAPER("See Section 5, Section 6 and Section 7; $p < 0.05$."),
     );
   });
 
   it("without --fix nothing is written", async () => {
     const root = project({});
     await lint(root);
-    expect(readFileSync(join(root, "papers/a/paper.md"), "utf8")).toMatch(/§5/);
+    expect(readFileSync(join(root, "papers/a/paper.tex"), "utf8")).toMatch(
+      /§5/,
+    );
   });
 });
 

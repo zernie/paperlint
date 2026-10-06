@@ -71,7 +71,7 @@ git log --oneline @{u}..HEAD                # unpushed commits
 A gate is stale if the paper changed after the gate ran. Check it mechanically, not by recall:
 
 \`\`\`bash
-git log -1 --format=%cd --date=short -- paper.md          # when the text last moved
+git log -1 --format=%cd --date=short -- paper.tex         # when the text last moved
 ls -la reviews/ | tail -20                                # when each gate last reported
 \`\`\`
 

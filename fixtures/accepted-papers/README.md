@@ -23,7 +23,7 @@ the preamble, which is what the rules read.
 
 `accepted-papers.test.ts` copies each paper under `papers/` in a temporary project, runs
 `paperlint lint --json` through the CLI's own `run`, and compares the findings per rule with the
-paper's `baseline.json`, using the reader in `../real-markdown-paper/baseline.ts`:
+paper's `baseline.json`, using the reader in [`baseline.ts`](baseline.ts):
 
 - a rule that reports **more** than recorded fails — a false positive until shown otherwise;
 - a recorded rule that goes **fully quiet** fails — that is how a check dies unnoticed;

@@ -1,6 +1,11 @@
 /**
  * pipeline-firing.eval.mjs — do the paper-pipeline skills actually FIRE when they should?
  *
+ * ⚠️ THE FIXTURE CHANGED AFTER THE RECORDED RUNS. The paper the model is shown is now `paper.tex`;
+ * every result recorded for this eval (here and in `repro/`) was measured on the previous fixture,
+ * the same paper in a source form paperlint no longer reads. The next run is a fresh, deliberate
+ * measurement — record it, do not compare it against those numbers.
+ *
  * Run:  node .claude/skills/paper-pipeline/pipeline-firing.eval.mjs [flags]
  *   --only <skill>        run one case (repeatable: --only tighten-paper --only argument-arc)
  *   --trials N            trials per prompt (default 1)
@@ -117,7 +122,8 @@
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * FIRST RUN — 2026-08-07, sonnet, 64 runs, 1 trial/prompt, 36 competitors, ~$9.55 API-equivalent
- * (billed to a Claude subscription, $0 metered). Recorded in pipeline-firing.baseline.json.
+ * (billed to a Claude subscription, $0 metered). Its baseline file was dropped when the fixture
+ * changed; `--update-baseline` records the next one.
  *
  *   skill                      recall  FP-rate  precision   n
  *   tighten-paper                75%     0%      100%       4
@@ -235,42 +241,47 @@ const GATE = !flag("no-gate");
 // therefore a LOWER bound, and a low number for that case is partly an artifact of this gap, not
 // necessarily a description defect. Do not report it as one.
 const FIXTURE = {
-  "paper/paper.md": [
-    "# Prose Isn't Policy: Measuring Whether Agent-Config Rules Are Enforceable",
+  "paper/paper.tex": [
+    "\\documentclass{article}",
+    "\\title{Prose Isn't Policy: Measuring Whether Agent-Config Rules Are Enforceable}",
+    "\\begin{document}",
+    "\\maketitle",
     "",
-    "## Abstract",
+    "\\begin{abstract}",
     "Agent configuration files state rules in prose and assume the model obeys them. We compile a",
-    "corpus of real rules and measure what fraction can be mechanically enforced. We find that 84%",
+    "corpus of real rules and measure what fraction can be mechanically enforced. We find that 84\\%",
     "of rules in our corpus are enforceable, and that LLM-authored checkers for the remainder leak",
-    "silently in 84-96% of adversarial cases \\cite{greshake2023}.",
+    "silently in 84--96\\% of adversarial cases~\\cite{greshake2023}.",
+    "\\end{abstract}",
     "",
-    "## 1 Introduction",
+    "\\section{Introduction}",
     "Every agent harness ships a natural-language rulebook. Nothing checks it. This is the same",
-    "mistake as a code comment that claims an invariant no test enforces \\cite{thompson1984}.",
+    "mistake as a code comment that claims an invariant no test enforces~\\cite{thompson1984}.",
     "",
-    "## 2 Method",
+    "\\section{Method}",
     "We gather rules from public repositories, classify each by enforceability, and build a",
     "two-stage adversarial gate that validates a synthesized rule against a blind gold set.",
     "",
-    "## 3 Results",
-    "See Table 1. The headline number is 84%.",
+    "\\section{Results}",
+    "See Table~1. The headline number is 84\\%.",
     "",
-    "## 4 Discussion",
+    "\\section{Discussion}",
     "The result generalizes beyond our corpus in the sense that the mechanism is not corpus-specific,",
     "though of course the specific percentages are, and it is important to note in this context that",
     "the framing itself may be what carries, rather than the measurement.",
     "",
-    "## 5 Threats to Validity",
+    "\\section{Threats to Validity}",
     "Our corpus is drawn from public repositories and may not represent private configurations.",
     "",
-    "## 6 Related Work",
+    "\\section{Related Work}",
     "TODO",
     "",
-    "## 7 Conclusion",
+    "\\section{Conclusion}",
     "Prose is not policy.",
+    "\\end{document}",
   ].join("\n"),
   "paper/repro/README.md":
-    "# Reproduction artifact\n\n`python3 paper_numbers.py` recomputes every bolded figure in paper.md.\n",
+    "# Reproduction artifact\n\n`python3 paper_numbers.py` recomputes every bolded figure in paper.tex.\n",
   "paper/PIPELINE-STATUS.md":
     "# Pipeline status\n\n| gate | state |\n|---|---|\n| numbers | pass |\n| structure | not run |\n| citations | not run |\n",
 };

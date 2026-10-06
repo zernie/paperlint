@@ -47,7 +47,6 @@ const paper = (name: string, files: readonly string[]) => {
 
 try {
   paper("complete", ["PIPELINE-STATUS.md", "paper.tex", "refs.bib"]);
-  paper("complete-md", ["PIPELINE-STATUS.md", "paper.md"]);
   // the marker is present (paper.tex), the scorecard is not — the directory is linted by ZERO
   // rules and reports clean
   paper("no-scorecard", ["paper.tex", "refs.bib"]);
@@ -66,10 +65,6 @@ try {
     at("complete").length === 0,
   );
   check(
-    "and `paper.md` counts on equal footing with `paper.tex` — the corpus holds both forms",
-    at("complete-md").length === 0,
-  );
-  check(
     "a missing scorecard — a finding",
     at("no-scorecard").length === 1 &&
       /missing `PIPELINE-STATUS\.md`/.test(
@@ -86,10 +81,11 @@ try {
     /no-scorecard/.test(at("no-scorecard")[0]?.message ?? ""),
   );
   check(
-    "a directory with no source — a finding, and BOTH accepted forms are listed",
+    "a directory with no source — a finding naming `paper.tex`",
     at("no-source").length === 1 &&
-      /`paper\.tex`/.test(at("no-source")[0]?.message ?? "") &&
-      /`paper\.md`/.test(at("no-source")[0]?.message ?? ""),
+      /`paper\.tex` — a paper directory with no source/.test(
+        at("no-source")[0]?.message ?? "",
+      ),
   );
 
   // 🔴 THE PAIRED HALF: detection is GENEROUS. Without this the check would scream about every
@@ -124,9 +120,7 @@ try {
       {
         cwd: root,
       },
-    ).some(
-      (x) => x.file.endsWith("complete-md") && /refs\.bib/.test(x.message),
-    ),
+    ).some((x) => x.file.endsWith("no-source") && /refs\.bib/.test(x.message)),
   );
   check(
     "a nonexistent root does not crash it — that's the empty-set guard talking",

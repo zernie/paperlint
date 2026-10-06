@@ -26,6 +26,7 @@ import { readdirSync, existsSync } from "node:fs";
 import { join, relative, basename, isAbsolute, sep } from "node:path";
 import type { StructureConfig, StructureFinding } from "./types.ts";
 import { CONFIG_FILE } from "#lib/paper-config";
+import { SOURCE_FILE } from "./new-paper.ts";
 
 /** The requirements after the consumer's config is laid over the defaults. */
 type Rules = Required<StructureConfig>;
@@ -38,9 +39,9 @@ type Rules = Required<StructureConfig>;
  * byte-compared by the `paper/stages` rule anyway.
  */
 export const STRUCTURE_DEFAULTS = {
-  markers: ["PIPELINE-STATUS.md", "paper.tex", "paper.md", CONFIG_FILE],
+  markers: ["PIPELINE-STATUS.md", SOURCE_FILE, CONFIG_FILE],
   require: ["PIPELINE-STATUS.md"],
-  requireOneOf: [["paper.tex", "paper.md"]],
+  requireOneOf: [[SOURCE_FILE]],
   ignore: [],
 };
 
@@ -118,7 +119,7 @@ export function checkStructure(
  * The message NAMES THE CONSEQUENCE rather than restating the condition. "missing
  * PIPELINE-STATUS.md" without the second half reads as nitpicking about formatting; with it you
  * can see which checks the directory silently loses — the rules that read the scorecard; the rules
- * over `paper.md` / `paper.tex` still run.
+ * over `paper.tex` still run.
  */
 function whyMissingMatters(file: string, dirName: string): string {
   if (file === "PIPELINE-STATUS.md")

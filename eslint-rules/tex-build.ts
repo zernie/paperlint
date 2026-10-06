@@ -3,27 +3,11 @@
  * how the prose is written.
  *
  * ── WHY ITS OWN NAMESPACE, AND NOT `paper/*` ────────────────────────────────
- * In the source corpus the `paper/*` family is declared on BOTH `paper.md` and `paper.tex`,
- * and that parity is pinned by an assertion: "a rule added for markdown must not silently
- * fail to reach LaTeX (or the other way round)". The subject here is the BUILD MODE
- * (`\documentclass[review]`, `printacmref=false`), and in markdown it does not exist: a draft
- * has no mechanical sign saying "this build is the final one". Writing
- * `paper/future-promise: "off"` on markdown would be an exemption justified by "there is no
- * subject", and that same parity assertion requires the rule to be ALIVE on the other side —
- * i.e. the machinery exists but is built for the opposite direction (off on `.tex`, alive on
- * `.md`).
- *
- * Hence a namespace of its own, the same way an external word-counter gets one: it has a word
- * count markdown does not have, we have a preamble markdown does not have. Where the config
- * enumerates non-`paper/*` rules on `.tex`, the list is CLOSED and `tex/future-promise` is
- * named explicitly, so that a new namespace arrives by decision rather than as a side effect
- * of editing a config.
- *
- * ⚠️ THE MEASUREMENT THIS DECISION RESTS ON (source corpus, 2026-09-06 → 2026-09-07): had the
- * rule been declared on `paper.md` it would produce ZERO there TODAY — not one match of
- * `FUTURE_PROMISE_RE` in the markdown draft of the one paper that has one. So the choice is
- * about semantics, not noise: markdown has no input distinguishing a draft from a shipped
- * build, and the rule would fire on a draft's honest promise.
+ * The subject here is the BUILD MODE (`\documentclass[review]`, `printacmref=false`), not the
+ * prose the `paper/*` rules read. Hence a namespace of its own, the same way an external
+ * word-counter gets one. Where the config enumerates non-`paper/*` rules on `.tex`, the list is
+ * CLOSED and `tex/future-promise` is named explicitly, so that a new namespace arrives by
+ * decision rather than as a side effect of editing a config.
  *
  * ── THE RULE READS THE FILE FROM DISK, NOT THE PROJECTION. This is load-bearing ──
  * The LaTeX language in `latex-language.mjs` hands rules a PROJECTION of `.tex` into a
@@ -37,9 +21,8 @@
  * run (and in CI) there is no such difference.
  *
  * ── WHAT THE MOVE TO A LINT RULE FIXED BESIDES THE FORM (measured 2026-09-07) ──
- * 🔴 The previous implementation, a script, picked its input like this: look for `paper.md` /
- * `draft.md`, and failing that take `readdirSync(dir).find((f) => f.endsWith(".tex"))` — the
- * FIRST `.tex` in directory order. Measured across the three papers of the source corpus:
+ * 🔴 The previous implementation, a script, picked its input like this:
+ * `readdirSync(dir).find((f) => f.endsWith(".tex"))` — the FIRST `.tex` in directory order. Measured across the three papers of the source corpus:
  *   paper A → a 536-BYTE file holding nine `\def`s with venue numbers. The check, added
  *             specifically BECAUSE of paper A, was not reading paper A;
  *   paper B → a four-month-old draft, one of SEVEN `.tex` files in that directory (the real
@@ -121,7 +104,7 @@ const FRONTMATTER_OVERRIDES = [
 // is looking.
 //
 // The scope is DELIBERATELY NARROW, because a noisy gate is a silenced gate:
-//   - `.tex` only (see the file header: markdown has no sign of "this build is final");
+//   - `.tex` only: the build mode is read from the preamble;
 //   - a review-mode build is EXEMPT, and that is the whole point: during peer review
 //     "at camera-ready" is a true and ordinary promise. The defect is only a promise that
 //     outlived its own delivery;

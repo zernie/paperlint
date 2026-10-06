@@ -56,8 +56,8 @@ const ROOT = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 /**
  * Accept either a path to a PDF or a PAPER DIRECTORY — and in the second case find the artifact on
  * its own: the path the paper declares in the `pdf` field of `paperlint.json`, else `paper.pdf` beside
- * it. A paper written in markdown and built by its own script into `build/acl_latex.pdf` would
- * otherwise be skipped silently. The facts ALWAYS go into `<paper directory>/_build/`, not next to
+ * it. A paper built by its own script into `build/acl_latex.pdf` would otherwise be skipped
+ * silently. The facts ALWAYS go into `<paper directory>/_build/`, not next to
  * the PDF, where neither a rule's glob nor a human looks.
  */
 export function resolveTarget(arg) {

@@ -1,18 +1,25 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`--flags-only: an over-long caption flags and exits 1 1`] = `
-"✍️  prose-lint — paper.md — 2 finding(s):
+"✍️  prose-lint — paper.tex — 2 finding(s):
    figures/fig1.tex: caption sentence of 46 words (warn >40) — "Big. word0 word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12 word13 word14 word15 wor…"
    figures/fig1.tex: caption is 106 words (warn >100) — a caption this long is a section under a picture
-   run \`node .claude/skills/grade-paper-writing/prose-lint.mjs <file>\` for the sentences
+   run prose-lint.mjs on the file without --flags-only for the sentences
 "
 `;
 
-exports[`--headings lists every heading from level 2 to 4, in order 1`] = `
+exports[`--headings on a paper.tex lists its section titles, in order 1`] = `
 "
-=== paper.md — every heading, in order ===
+=== paper.tex — every heading, in order ===
   1. Introduction
-  2. Method
+  2. The measurement pitfall
+  3. Method: a cost-aware, correctness-gated harness
+  4. Results
+  5. The advertised savings don't show up
+  6. A ceiling for any output-trimming tool
+  7. Discussion and threats to validity
+  8. Related work
+  9. Conclusion
 
 Read these as a stranger who will read nothing else. Each should name a thing:
 a linter, a configuration, a repository, a rule — not "answers", "kinds", "moves".
@@ -21,28 +28,8 @@ a linter, a configuration, a repository, a rule — not "answers", "kinds", "mov
 "
 `;
 
-exports[`a .tex file is refused with exit 2, and nothing is measured 1`] = `
-"prose-lint reads markdown, not LaTeX: <root>/paper.tex
-There is no .tex stripping here — the word count would include the preamble and the .bib,
-and every metric (they are all fractions of the word count) would be understated by roughly half.
-What to cover prose in .tex with — papers/research/2026-08-26-proza-v-latex-zanyatost.md
+exports[`the report over a rendered page: page numbers, hyphenation and the references are dropped 1`] = `
 "
-`;
-
-exports[`the full report over markdown and rendered text 1`] = `
-"
-=== paper.md — 82 words, 9 sentences ===
-sentence lengths [7,10,8,6,19,6,8,8,6]  mean 8.7  sd 3.9  CV 0.45
-FLAG all metadiscourse/1000w  195.1   (Hyland RA baseline 64.9, warn >90)
-     nominalisations/1000w    12.2
-FLAG "rather than"/instead-of/10,000w  243.9   (warn >25; not epanorthosis, no published baseline)
-FLAG sentences ending on a cross-ref/citation/hedge (wasted stress position): 3
-       > …Clearly the first result matters (Section 3).
-       > …Prior work agrees [1, 2].
-       > … full suite of papers, which suggests the method might hold generally.
-ok   sentences whose main claim is a negation: 22%
-     topic positions (whose story is this?): "in this paper we present" | "it might possibly help, but" | "clearly the first result matters" | "prior work agrees [1, 2]." | "the speedup was 40% on" | "- the first item is" | "- the second item is" | "we believe that rather than" | "instead of prose, the numbers"
-
 === page.txt — 13 words, 3 sentences ===
 sentence lengths [3,6,4]  mean 4.3  sd 1.2  CV 0.29
 ok   all metadiscourse/1000w  0   (Hyland RA baseline 64.9, warn >90)
@@ -51,6 +38,33 @@ ok   "rather than"/instead-of/10,000w  0   (warn >25; not epanorthosis, no publi
 ok   sentences ending on a cross-ref/citation/hedge (wasted stress position): 0
 ok   sentences whose main claim is a negation: 0%
      topic positions (whose story is this?): "a rendered page." | "it was hyphenated across a" | "next page text here."
+
+(thresholds and their sources are in THRESHOLDS at the top of this file)
+"
+`;
+
+exports[`🔴 a paper.tex is measured on the prose a reader sees — not its preamble, comments or inline .bib 1`] = `
+"
+=== paper.tex — 4181 words, 166 sentences ===
+sentence lengths [16,24,12,44,37,27,45,26,33,25,23,16,19,23,9,75,42,14,11,28,19,4,34,15,32,24,39,38,38,9,15,29,26,42,45,78,23,27,18,44,57,20,23,43,30,42,31,27,46,30,30,29,16,53,33,41,23,7,28,27,30,26,14,48,9,26,11,15,5,24,14,16,11,1,38,48,12,18,31,20,44,15,30,36,57,22,25,13,25,52,14,7,17,13,16,7,21,19,18,10,20,7,23,7,5,21,7,27,29,8,14,7,23,16,11,9,20,36,32,25,37,18,7,13,35,37,35,27,16,15,23,29,26,26,12,9,15,19,24,10,22,30,24,18,34,16,50,22,32,63,36,26,12,37,36,12,17,48,10,35,27,24,22,19,35,32]  mean 25.2  sd 13.6  CV 0.54
+ok   all metadiscourse/1000w  50.2   (Hyland RA baseline 64.9, warn >90)
+     nominalisations/1000w    27.3
+FLAG "rather than"/instead-of/10,000w  28.7   (warn >25; not epanorthosis, no published baseline)
+FLAG sentences ending on a cross-ref/citation/hedge (wasted stress position): 12
+       > … this kind are already woven into how programmers work day to day [1].
+       > …the cost claims of the surrounding tooling are largely taken on trust.
+       > …, none of which describe how a coding agent actually runs (Section 1).
+       > …n class, and rejects any trial that regresses correctness (Section 1).
+       > …und explains why no output-trimming tool can move it much (Section 1).
+       > …eaningful under the conditions its consumers face, or it misleads [1].
+       > …ently no-ops, which invalidated an earlier run until we caught it [1].
+       > …irk of these two tools; it follows from the cost structure (Figure 1).
+       > … flagship's output change ranges from a growth to a cut (Table 1) [1].
+       > … right [1], compressing prompts [1], and caching repeated context [1].
+       > …], and that results from a handful of runs need honest statistics [1].
+       > …g code [1], and models that memorize answers instead of reasoning [1].
+ok   sentences whose main claim is a negation: 37%
+     topic positions (whose story is this?): "a fast-growing ecosystem of plugins," | "the most popular single artifact---a" | "we show that such claims," | "efficiency tools are validated on" | "we introduce a reproducible, cost-aware," | "across 140 runs on two" | "output falls far short of" | "the ceiling is also structural:" | "we argue that trustworthy evaluation" | "ai coding agents and their" | "built on the reasoning-and-acting loops" | "assistants of this kind are" | "an unverified performance claim about" | "while the community has invested" | "we focus on the most" | "the flagship example is a" | "naming the commits matters more" | "two separate claims are bundled" | "the first is that the" | "that one has already been" | "the second claim is the" | "nobody had measured it." | "it fails for a reason" | "this paper is about the" | "rq: when a token-efficiency tool" | "the first half is measured," | "our contribution is not that" | "we identify why the headline" | "we build a cost-aware, correctness-gated" | "we measure two widely used" | "output falls far short of" | "the dollar bill does not" | "the broader point is about" | "a modern agent bills tokens" | "a multi-turn agentic session [1]" | "reading the upstream benchmark code" | "the reported number measures something" | "the fix is to measure" | "the compression literature these tools" | "the harness --- the ecosystem" | "we implement the evaluation as" | "figure 1 shows the whole" | "each tool is delivered as" | "a skill that ships as" | "this step is load-bearing: a" | "we use seven self-contained coding" | "the suite deliberately skews short" | "each task is run with" | "the runs date from july" | "the two tools are the" | "for every run we record" | "on a subscription the \`\`bill''" | "we report dollars---the weighting most" | "each task carries a deterministic" | "these are lightweight structural checks" | "a trial where the skill" | "for each task we report" | "we call an effect significant" | "we also note which effects" | "for the bill we report" | "averages taken over a few" | "this protocol is sized to" | "two things are still required" | "the flagship skill (claim 65%)" | "we sign bill changes so" | "for the flagship, the bill" | "either way the answer is" | "the second tool (claim 63%)" | "it is also not significant." | "its one per-task cell that" | "the intervals are wide: at" | "but they exclude anything near" | "whatever room remains is capped" | "correctness." | "both arms passed the correctness" | "a sharper signal hides in" | "this is a short-session effect" | "this is not a quirk" | "both shares below are measured," | "pooled across all tasks and" | "if output is a fraction" | "even a perfect 65% output" | "the advertised 63--75% and the" | "the flagship's other feature trims" | "output is a small fraction" | "we measure cost: latency and" | "we do not claim \`\`these" | "nor do we dispute the" | "our point is that they" | "we label each by its" | "we run five trials per" | "that is itself part of" | "across tasks the flagship's output" | "the honest quantity is therefore" | "our design refutes the advertised" | "what caps those is the" | "a formal equivalence test (tost---a" | "the harness is not toothless," | "at that scale we read" | "we test one model, and" | "anthropic's tiers all share a" | "the ceiling scales linearly with" | "even if output were priced" | "our tasks top out around" | "this cuts in our favor." | "a longer session re-reads a" | "that pushes the ceiling lower," | "one might object that terser" | "but that downstream saving is" | "so it adds a few" | "the compounded ceiling is --," | "the overhead runs the other" | "an always-loaded tool prompt adds" | "that fixed cost amortizes over" | "the durable long-session prediction is" | "an empirical long-session demonstration is" | "every run in the main" | "the harness decides how many" | "a wordier model would raise" | "the ceiling of section 1" | "a pilot on claude haiku" | "nearly double, and still about" | "both runs ship in the" | "a second harness is reachable" | "the flagship now ships wrappers" | "measuring a second harness therefore" | "wrapper list and the rejected" | "we do not study multi-agent" | "we test two tools, and" | "the harness can a/b any" | "the bias runs in our" | "our per-run bill uses the" | "a user can also invalidate" | "(the first two rewrite the" | "that is, they push cost" | "they lower the ceiling and" | "so our clean-caching tasks, if" | "the correctness gate is a" | "so \`\`zero regressions'' bounds gross" | "a stronger gate that runs" | "still, a gate that never" | "without it, a harness would" | "the efficiency-claim failure is a" | "a community norm of cost-aware," | "execution-based, correctness-gated benchmarks such as" | "we keep their correctness-first discipline" | "several lines of work push" | "we take the same stance---price" | "closest to us, [1] argue" | "we turn that lens on" | "a long line of work" | "capability benchmarks show the same" | "we aim the same critique" | "the industry a/b test cited" | "what we add over such" | "the efficiency-tool market runs on" | "these tools trim what the" | "we measured two of the" | "the numbers are not fabricated;" | "the output you are shown" | "trimming the model's replies to" | "we release the measurements with" | "before you install the next" | "the complete harness of section" | "the measurements are released per" | "individual trial rows are not"
 
 (thresholds and their sources are in THRESHOLDS at the top of this file)
 "

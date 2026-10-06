@@ -45,89 +45,11 @@
  */
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join, extname } from "node:path";
-import { headings as mdHeadings, requireMarkdown } from "#lib/markdown";
 import { isMain } from "../../paper-pipeline/scripts/consumer.mjs";
 
 const DBLP = "https://dblp.org/search/publ/api";
 
 /* ---------- input: a .bib, a .tex with filecontents, or a paper dir ---------- */
-
-/**
- * Some papers carry no BibTeX at all. `compile-rules-2026` writes its 67 references as a
- * hand-numbered markdown list that `repro/md2acl.py` turns into ACL format at build time:
- *
- *   12. N. F. Liu, K. Lin, J. Hewitt. *Lost in the Middle: How Language Models Use Long
- *       Contexts.* TACL, 2024. arXiv:2307.03172.
- *
- * 🔴 Exempting such a paper would be the wrong call, and measurably so: a hand-written author
- * list has NO machine-checkable source, so it is the MORE exposed of the two formats, not the
- * less. The class this script hunts lives exactly where an entry names a published venue and an
- * arXiv id in the same breath — which is most of this list.
- *
- * Authors are taken only from the text BEFORE the first `*`, on purpose: entries here sometimes
- * append a second work ("— and the reanalysis: S. B. Hossain, ...") after the title, and folding
- * those names in would invent co-authors that the first work does not have.
- */
-export function parseMarkdownRefs(text) {
-  // 🔴 The heading comes FROM THE PARSER, not from a regex (the base's rule "parse markdown with a
-  // parser"). The previous `text.search(/^#+\s*References\s*$/m)` opened the bibliography on a
-  // `## References` line QUOTED inside a ``` fence — and the papers in this repo quote their own
-  // markup in chunks. Exactly this assert already stands at a neighbour
-  // (`paper-pipeline/scripts/extract-ref-facts.harness.mjs`: "a heading inside a ``` block is not a
-  // heading"), that is, the class was known and was being reproduced here again.
-  // `requireMarkdown()` — so that a missing markdown-it fails LOUDLY: with an empty parser
-  // `headings()` returns [], and the gate would report "no references" instead of refusing. That is
-  // the same trade of one silent failure for another that the rule was written against.
-  requireMarkdown();
-  const h = mdHeadings(text).find((x) => /^References\s*$/u.test(x.text));
-  if (!h) return [];
-  const body = text.slice(h.offset);
-  const out = [];
-  // 🔴 `$(?![\s\S])`, NOT `\Z`. JavaScript has no `\Z` anchor — outside a unicode-mode pattern it
-  // is an identity escape meaning the LETTER Z, so the first version of this lookahead ended entry
-  // 1 in the middle of "J. Zhou", at the Z. Measured: 48 of 67 references parsed, and the missing
-  // 19 looked like ordinary gaps rather than a bug. Same family as the `\b`-over-Cyrillic defect
-  // already recorded in this repo: an escape that means one thing in Perl/Python and another here.
-  const re = /^(\d+)\.[ \t]+([\s\S]*?)(?=^\d+\.[ \t]|^#|$(?![\s\S]))/gm;
-  let m;
-  while ((m = re.exec(body))) {
-    const entry = m[2].replace(/\s*\n\s*/g, " ").trim();
-    const t = entry.match(/\*([^*]+)\*/);
-    if (!t) {
-      // No italic title and no author list — in this corpus these are SOFTWARE references
-      // (npm packages, repos). Nothing for DBLP to disagree with. They are surfaced as
-      // not-applicable rather than dropped: an entry that silently vanishes between the file
-      // and the report is indistinguishable from an entry that passed.
-      out.push({
-        type: "mdref",
-        key: `ref${m[1]}`,
-        unparsed: true,
-        author: "",
-        title: "",
-        booktitle: "",
-        journal: "",
-      });
-      continue;
-    }
-    const authorPart = entry
-      .slice(0, entry.indexOf("*"))
-      .trim()
-      .replace(/[.,;]\s*$/, "");
-    const rest = entry.slice(entry.indexOf(t[0]) + t[0].length);
-    out.push({
-      type: "mdref",
-      key: `ref${m[1]}`,
-      author: authorPart
-        .split(/,\s*|\s+and\s+/)
-        .filter(Boolean)
-        .join(" and "),
-      title: t[1].replace(/\.$/, "").trim(),
-      booktitle: rest.trim(),
-      journal: "",
-    });
-  }
-  return out;
-}
 
 function bibTextFrom(target) {
   let file = target;
@@ -161,16 +83,16 @@ function bibTextFrom(target) {
       }
       return undefined;
     };
-    const found =
-      pick(".bib") ||
-      pick(".tex") ||
-      names.find((f) => f === "paper.md" || f === "draft.md");
-    if (!found) die(`no .bib, .tex or paper.md in ${file}`);
+    const found = pick(".bib") || pick(".tex");
+    if (!found) die(`no .bib or .tex in ${file}`);
     file = join(file, found);
   }
   const text = readFileSync(file, "utf-8");
-  if (file.endsWith(".md")) return { text, file, markdown: true };
   if (file.endsWith(".bib")) return { text, file };
+  // Only a .bib and a .tex are read: any other file would fall through to the refs.bib beside it,
+  // and the report would name a file nobody asked about.
+  if (!file.endsWith(".tex"))
+    die(`${file} is not a .bib or a .tex — give the paper's .bib or paper.tex`);
   // A .tex may carry the bibliography inline via filecontents — that is how our papers do it.
   const m = text.match(
     /\\begin\{filecontents\*?\}(?:\[[^\]]*\])?\{[^}]*\.bib\}\r?\n([\s\S]*?)\\end\{filecontents\*?\}/,
@@ -358,13 +280,6 @@ export async function checkAuthors(
   const matched = []; // compared against the published record, and equal
   const entries = parsed.filter((e) => e.title && e.author);
 
-  for (const e of parsed.filter((x) => x.unparsed)) {
-    skipped.push({
-      key: e.key,
-      why: "no author/title — a reference to software or a dataset, DBLP does not apply",
-    });
-  }
-
   for (const e of entries) {
     if (!claimsPublished(e)) continue; // a preprint entry is allowed to carry preprint metadata
     if (truncated(e.author)) {
@@ -438,8 +353,8 @@ async function main() {
   if (!args[0])
     die("usage: bib-authors.mjs <paper-dir|file.bib|file.tex> [--json]");
 
-  const { text, file, markdown } = bibTextFrom(args[0]);
-  const parsed = markdown ? parseMarkdownRefs(text) : parseBib(text);
+  const { text, file } = bibTextFrom(args[0]);
+  const parsed = parseBib(text);
   const entries = parsed.filter((e) => e.title && e.author);
   const { findings, skipped, unchecked } = await checkAuthors(parsed);
   if (asJson) {

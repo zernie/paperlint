@@ -31,7 +31,7 @@
  * harness's own edit helper builds a RELATIVE path. The live harness sends an ABSOLUTE one.
  * Measured against the real runtime:
  *
- *   file_path "<root>/<paper>/paper.md"                → fires
+ *   file_path "<root>/<paper>/paper.tex"               → fires
  *   file_path "/abs/path/to/repo/<root>/<paper>/…"      → SILENT
  *
  * So the hook would have been dead in production and green in the tests: precisely the
@@ -120,7 +120,7 @@ const papersRoot = (rawConfig) => {
  */
 const paperSourceRe = (root) =>
   new RegExp(
-    `(?:^|/)${root.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/([A-Za-z0-9._-]+)/(?:[^/]*\\.tex|(?:.*/)?(?:paper|draft)\\.md)$`,
+    `(?:^|/)${root.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/([A-Za-z0-9._-]+)/[^/]*\\.tex$`,
   );
 
 /**

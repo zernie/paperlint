@@ -68,7 +68,6 @@ any other rule.
   3 of the model_) is read as a quantity, and so is the number of a name that opens the sentence
   (_Claude 3 fails …_).
 - Whether a count followed by a plural noun is really the sample (_3 times faster_ passes as one).
-- Markdown papers (`paper.md`): it reads the LaTeX parse tree only.
 
 ## How to fix
 

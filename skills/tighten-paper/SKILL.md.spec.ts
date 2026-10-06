@@ -40,31 +40,12 @@ counter, is not this skill; it is the damage this skill exists to undo.
 If you are invoked while the author is still adding material, say so and decline the pass. The right
 answer is "not yet", not a smaller cut.
 
-## 🏗 START WITH THE MECHANICAL LEG — run \`structure.mjs\` (added 2026-08-05)
+## 🏗 START WITH THE SHAPE — weigh every section before judging it
 
-\`\`\`
-node .claude/skills/tighten-paper/structure.mjs <paper.md>              # whole paper
-node .claude/skills/tighten-paper/structure.mjs <paper.md> --section=3  # one section
-\`\`\`
-
-🔴 **THE SCRIPT NO LONGER FINDS ANYTHING — it is an INVENTORY (2026-08-26).** All sixteen of its
-checks moved into ESLint rules (\`eslint-rules/paper-structure.mjs\`). The findings you used to read
-here now come from:
-
-\`\`\`
-npx eslint --no-config-lookup --config eslint.config.mjs <paper.md>
-\`\`\`
-
-⚠️ Do NOT pass \`--flags-only\`. It is kept only because two harnesses assert on its silence, and it
-prints nothing and exits 0 whatever the paper looks like. Measured 26.08 on \`the reference paper\`:
-\`--flags-only\` printed 0 lines while ESLint on the same bytes reported **6 structural findings**
-(subsection-size ×2 · section-lead · free-section-size ×2 · block-ungraded). A mode that cannot
-speak is not a check, and reading its silence as "clean" is the defect this pipeline is named for.
-
-What the inventory prints, and why it stays a script: the outline **in order** — every heading, its
-own words, its total with subsections, its share of the body, and the \`carries:\`/\`score:\`/\`verdict:\`
-note the section wrote about itself, printed beside its weight. That comparison is the whole point
-and a linter cannot make it: a finding has nowhere to put a table.
+Write the outline out **in order**: every heading, its own words before its first subsection, its
+total with subsections, its share of the body — and beside each, the \`carries:\`/\`score:\`/\`verdict:\`
+note the section wrote about itself. That comparison, a section's weight printed next to what it
+claims about itself, is the whole point.
 
 🔴 **Why this exists, and why word counts alone mislead.** Asked whether a paper short-changed its
 contribution, per-section word counts said no — the contribution had 38% more words than related
@@ -73,7 +54,7 @@ owned **0, 28 and 38** words before their first subsection. Nothing in the toolc
 question, because every metric was per-sentence or per-document and none was per-section. The author's
 word for the result was a "salad" — a jumbled mix — and he was right while the numbers said fine.
 
-**What the script does NOT decide, and you must:** the ORDER, the NAMES, and whether a section earns
+**What the count does NOT decide, and you must:** the ORDER, the NAMES, and whether a section earns
 its place. Those are judgement, and pretending otherwise would be the failure this whole pipeline
 exists to prevent.
 
@@ -194,18 +175,24 @@ called it "fat for no reason" after a pass that cut almost nothing and left it 1
 
 A verdict that lives in a chat log is gone by the next session, and the next session then re-derives
 it or ignores it. **Every section and subsection gets a one-line verdict comment immediately above its
-heading**, in the paper source, stamped with the date and the skill that produced it:
+heading**, in \`paper.tex\`, as LaTeX \`%\` comments, stamped with the date and the skill that
+produced it:
 
-\`\`\`
-<!-- TIGHTEN 2026-08-06 · score 8/10 · verdict: KEEP · 190w
-     carries: tools get close but none resolves a NAMED rule against a committed config
-     because: it is the only place the tool-ecosystem gap is closed; a reviewer who skips it
-              asks "hasn't this been done" and gets no answer -->
-<!-- TIGHTEN 2026-08-06 · score 5/10 · verdict: SHORTEN -89w · 210w
-     carries: why a linter for the rules file cannot work
-     because: the point lands in two sentences; the rest re-establishes what §2 already did -->
-<!-- TIGHTEN 2026-08-06 · score 2/10 · verdict: MOVE→artifact · 45w
-     carries: nothing the reader must hold to judge the contribution -->
+\`\`\`latex
+% TIGHTEN 2026-08-06 · score 8/10 · verdict: KEEP · 190w
+%   carries: tools get close but none resolves a NAMED rule against a committed config
+%   because: it is the only place the tool-ecosystem gap is closed; a reviewer who skips it
+%            asks "hasn't this been done" and gets no answer
+\\section{Related tools}
+
+% TIGHTEN 2026-08-06 · score 5/10 · verdict: SHORTEN -89w · 210w
+%   carries: why a linter for the rules file cannot work
+%   because: the point lands in two sentences; the rest re-establishes what §2 already did
+\\subsection{Why not a linter}
+
+% TIGHTEN 2026-08-06 · score 2/10 · verdict: MOVE→artifact · 45w
+%   carries: nothing the reader must hold to judge the contribution
+\\subsection{Implementation notes}
 \`\`\`
 
 🔴 **Before assigning any \`MOVE→\` verdict, read \`paper-pipeline/references/body-vs-appendix.md\`.**
@@ -230,7 +217,7 @@ written and **not one ever concluded "cut me"**. Author, 2026-08-06, reading the
 value on every page and compared nothing.
 
 The pairing is the mechanism: **a low score beside a KEEP verdict is a visible contradiction**, and
-\`structure.mjs\` reports it. Prose cannot contradict itself; a number can.
+the outline above puts the two side by side. Prose cannot contradict itself; a number can.
 
 **Calibration, so the scale does not drift to "everything is an 8":**
 - **9–10** — remove it and a reviewer cannot assess the contribution. The claim, its evidence, its price.
@@ -285,10 +272,10 @@ Rules for these comments:
   unpriced prose accumulates, because nothing there costs a page.
 - **Stale beats absent, but not by much.** A comment whose date precedes the last substantive edit to
   its section is stale; re-grade it rather than trusting it.
-- **A verdict nobody executed is a note, not a decision.** \`structure.mjs\` reports blocks still
-  carrying a non-KEEP verdict — a paper full of unexecuted CUTs is worse than one never graded,
+- **A verdict nobody executed is a note, not a decision.** List the blocks still carrying a
+  non-KEEP verdict — a paper full of unexecuted CUTs is worse than one never graded,
   because it reads as decided.
-- They are working notes: stripped before typesetting, like every other \`<!-- -->\` block.
+- They are working notes: a \`%\` comment never reaches the PDF.
 - The chat summary still gets written — but it is the *derivative*, and the paper is the record.
 
 ## 🧱 Enforce subsections — a section without them is a wall

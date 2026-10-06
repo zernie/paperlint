@@ -28,7 +28,7 @@ reviewer and returns an actionable critique.
 
 ## How to run it
 Prefer a **separate model as the reviewer** (e.g. Fable via a subagent) so it's not the author
-grading itself. Give the reviewer the full paper text (Read the \`.tex\`/\`.md\`/PDF) and the target
+grading itself. Give the reviewer the full paper text (Read the \`.tex\`/PDF) and the target
 venue + paper type (short/full/position/benchmark). Ask for the structured output below.
 
 ## The review must cover (ranked by how often it kills a paper)
